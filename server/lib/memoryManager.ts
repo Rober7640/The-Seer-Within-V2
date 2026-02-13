@@ -1,0 +1,173 @@
+import Anthropic from '@anthropic-ai/sdk';
+import { db } from './db';
+import { chatMessages, chatSessions, userMemory, users } from '@shared/schema';
+import { eq, and, or, isNull, lt, desc } from 'drizzle-orm';
+
+const anthropic = new Anthropic({
+  apiKey: process.env.ANTHROPIC_API_KEY || '',
+});
+
+async function callClaudeForSummary(prompt: string): Promise<string> {
+  try {
+    const response = await anthropic.messages.create({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 1000,
+      messages: [{ role: 'user', content: prompt }],
+    });
+
+    const text = response.content[0].type === 'text'
+      ? response.content[0].text
+      : '';
+
+    return text;
+  } catch (error) {
+    console.error('Claude summary API error:', error);
+    return '';
+  }
+}
+
+export async function summarizeSession(sessionId: string): Promise<void> {
+  const session = await db.select().from(chatSessions)
+    .where(eq(chatSessions.id, sessionId)).limit(1);
+
+  if (!session[0]) return;
+
+  const messages = await db.select().from(chatMessages)
+    .where(eq(chatMessages.sessionId, sessionId))
+    .orderBy(chatMessages.sentAt);
+
+  if (messages.length === 0) return;
+
+  const transcript = messages.map(m => `${m.role}: ${m.content}`).join('\n\n');
+
+  const summaryPrompt = `
+You are summarizing a conversation between a user and a spiritual guide persona.
+
+TRANSCRIPT:
+${transcript}
+
+Generate a JSON summary with this exact structure:
+{
+  "keyTopics": ["topic1", "topic2"],
+  "userConcerns": ["concern1", "concern2"],
+  "importantDetails": {
+    "names": ["person1"],
+    "emotions": ["emotion1"]
+  },
+  "overallSummary": "2-3 sentence summary",
+  "nextSessionContext": "What the guide should remember for next session"
+}
+
+Respond ONLY with valid JSON.
+  `;
+
+  const responseText = await callClaudeForSummary(summaryPrompt);
+  if (!responseText) return;
+
+  try {
+    const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) return;
+
+    const summary = JSON.parse(jsonMatch[0]);
+
+    await db.insert(userMemory).values({
+      userId: session[0].userId,
+      personaId: session[0].personaId,
+      memoryType: 'session_summary',
+      summary: summary.overallSummary || 'Session summary',
+      fullContext: JSON.stringify(summary),
+      sourceSessionId: sessionId,
+      importance: 7,
+      category: session[0].lastBucket || 'general',
+    });
+  } catch (error) {
+    console.error('Failed to parse or save session summary:', error);
+  }
+}
+
+export async function loadUserContext(userId: string, personaId?: string): Promise<string> {
+  // Memories persist as long as the user is active (activity-based retention).
+  // Cleanup of inactive user memories is handled by cleanupInactiveUserMemories().
+  const conditions = [
+    eq(userMemory.userId, userId),
+  ];
+
+  if (personaId) {
+    conditions.push(
+      or(
+        eq(userMemory.personaId, personaId),
+        isNull(userMemory.personaId)
+      )!
+    );
+  }
+
+  const memories = await db.select().from(userMemory)
+    .where(and(...conditions))
+    .orderBy(desc(userMemory.importance), desc(userMemory.lastAccessedAt))
+    .limit(5);
+
+  // Update access tracking
+  const now = new Date();
+  for (const memory of memories) {
+    await db.update(userMemory)
+      .set({
+        lastAccessedAt: now,
+        updatedAt: now,
+      })
+      .where(eq(userMemory.id, memory.id));
+  }
+
+  if (memories.length === 0) return '';
+
+  const contextParts = memories.map(m => {
+    let details: { keyTopics?: string[]; nextSessionContext?: string } | null = null;
+    try {
+      details = m.fullContext ? JSON.parse(m.fullContext) : null;
+    } catch {
+      // ignore parse errors
+    }
+    return `[Previous Conversation - ${m.category || 'general'}]
+${m.summary}
+${details?.keyTopics ? `Topics: ${details.keyTopics.join(', ')}` : ''}
+${details?.nextSessionContext || ''}`.trim();
+  });
+
+  return contextParts.join('\n\n---\n\n');
+}
+
+/**
+ * Delete memories for users who have been inactive for 6+ months (no logins).
+ * Active users keep all their memories indefinitely.
+ * Run this as a scheduled job (e.g. daily cron).
+ */
+export async function cleanupInactiveUserMemories(): Promise<number> {
+  const sixMonthsAgo = new Date();
+  sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+
+  // Find users who haven't logged in for 6+ months
+  const inactiveUsers = await db.select({ id: users.id })
+    .from(users)
+    .where(
+      or(
+        lt(users.lastLoginAt, sixMonthsAgo),
+        isNull(users.lastLoginAt)
+      )
+    );
+
+  if (inactiveUsers.length === 0) return 0;
+
+  let deletedCount = 0;
+  for (const user of inactiveUsers) {
+    const result = await db.delete(userMemory)
+      .where(eq(userMemory.userId, user.id))
+      .returning({ id: userMemory.id });
+
+    deletedCount += result.length;
+  }
+
+  if (deletedCount > 0) {
+    console.log(`Memory cleanup: Deleted ${deletedCount} memories for ${inactiveUsers.length} inactive users`);
+  }
+
+  return deletedCount;
+}

@@ -1,0 +1,10 @@
+id,email,first_name,bucket,purchased,purchase_type,stripe_session_id,main_purchase_amount,upsell_purchased,upsell_amount,shipping_name,shipping_line1,shipping_city,shipping_state,shipping_postal,shipping_country,created_at
+110471aa-a89b-4547-b273-50c22c6c1e18,sunny.kanmahale@gmail.com,Sunny,love,true,main,cs_live_a1NAadXius4yGSVUbWkb0mUlfRQJYLSKDqoeRQfJd5iFO63L64lX2Ormui,3500,false,,,,,,,2026-01-28 09:32:16
+1279d7bb-d66c-4d03-af2c-b8b1135a7621,robertoutsource88@gmail.com,Robert,money,true,main,cs_live_a11qfankMPV7Ytb9TTnnLzKJ4reAFC0iIXRgnPlX6JM2N8Llb8XpR3XqAF,3500,false,,,,,,,2026-01-28 07:56:58
+8a0bedea-1465-40d6-a021-ddb8cf3d677a,outsourcemike@gmail.com,Mike,purpose,true,main,cs_live_a1V2oSHH0uizUaXhiiN7iQyU2CA6nhvS0OJq51viBN2OjX3KojIcTz22Pc,3500,false,,,,,,,2026-01-28 06:40:58
+a821d183-7261-44ab-81c0-f92aa1115e05,swati.vadje10@gmail.com,Swati,love,true,main,cs_live_a1go2RNs3Ykjmr3txbjihiRcTv72sTi6fa2YMa7JDRQ12QeisFGgs2HxPE,3500,false,,,,,,,2026-01-28 05:37:39
+e1e6fe24-5eac-470e-89b8-19829a151ed3,swapnil.kanmahale88@gmail.com,Swapnil,someone,true,main,cs_live_a1Mai32DymvbeKQ6pv5UyTFPuAQRBEhXlijxB3rQ3y2Vmn8RTKREHyxOBn,3500,false,,,,,,,2026-01-27 11:33:13
+fa38de4c-7dc9-418f-b84a-9a18091f6f4e,rio@altiuspublishing.com,Rio,purpose,false,,,,false,,,,,,,2026-01-27 11:10:04
+b7f6e992-08b7-4ff0-a5ca-d76adbdebc01,mike@altiuspublishing.com,Mike,purpose,false,,,,false,,,,,,,2026-01-27 10:56:23
+78174dac-7b60-4572-b559-37bc5f481a3e,lewis@altiuspublishing.com,Lewis,money,true,main,,,false,,,,,,,2026-01-27 09:27:31
+c791c3a0-ca28-4bc8-a950-b0ef68ba4815,outsourcejoel@gmail.com,Jo,love,false,,,,false,,,,,,,2026-01-26 00:57:30
