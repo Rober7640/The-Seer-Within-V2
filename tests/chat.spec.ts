@@ -5,14 +5,19 @@ test.describe('Chat Service Flow', () => {
   const testPassword = 'ChatTest123!';
 
   test.beforeEach(async ({ page }) => {
-    // Register and login
-    await page.goto('/');
-    await page.click('text=Get Started');
+    // Register a new user
+    await page.goto('/login');
+    await page.click('text=/New here|Create an account/i');
+    await page.waitForTimeout(500);
+
+    await page.fill('input[name="firstName"]', 'ChatTester');
     await page.fill('input[name="email"], input[type="email"]', testEmail);
     await page.fill('input[name="password"], input[type="password"]', testPassword);
-    await page.fill('input[name="firstName"]', 'ChatTester');
     await page.click('button[type="submit"]');
-    await page.waitForTimeout(2000);
+
+    // Wait for redirect to reading page
+    await page.waitForURL(/.*reading|personas/, { timeout: 10000 });
+    await page.waitForTimeout(1000);
   });
 
   test('should start a chat session with Evelyn Cross', async ({ page }) => {

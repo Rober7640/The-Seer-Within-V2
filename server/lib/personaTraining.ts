@@ -9,6 +9,8 @@ import { db } from './db';
 import { personas, personaPrompts, chatSessions, chatMessages } from '@shared/schema';
 import { eq, and, desc, gte } from 'drizzle-orm';
 import Anthropic from '@anthropic-ai/sdk';
+import logger from './logger';
+import { fireWithBreaker, anthropicBreaker } from './circuitBreaker';
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY || '',
@@ -130,11 +132,13 @@ Return JSON:
 }`;
 
   try {
-    const response = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 500,
-      messages: [{ role: 'user', content: prompt }],
-    });
+    const response = await fireWithBreaker(anthropicBreaker, () =>
+      anthropic.messages.create({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 500,
+        messages: [{ role: 'user', content: prompt }],
+      }),
+    );
 
     const text = response.content[0].type === 'text' ? response.content[0].text : '';
     const jsonMatch = text.match(/\{[\s\S]*\}/);
@@ -153,7 +157,7 @@ Return JSON:
       };
     }
   } catch (error) {
-    console.error('Failed to score session quality:', error);
+    logger.error('Failed to score session quality', { sessionId, error: (error as Error).message });
   }
 
   return {
@@ -249,11 +253,13 @@ Return JSON:
 }`;
 
   try {
-    const response = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 500,
-      messages: [{ role: 'user', content: prompt }],
-    });
+    const response = await fireWithBreaker(anthropicBreaker, () =>
+      anthropic.messages.create({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 500,
+        messages: [{ role: 'user', content: prompt }],
+      }),
+    );
 
     const text = response.content[0].type === 'text' ? response.content[0].text : '';
     const jsonMatch = text.match(/\{[\s\S]*\}/);
@@ -267,7 +273,7 @@ Return JSON:
       };
     }
   } catch (error) {
-    console.error('Failed to generate prompt improvement suggestions:', error);
+    logger.error('Failed to generate prompt improvement suggestions', { personaId, error: (error as Error).message });
   }
 
   return {

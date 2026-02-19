@@ -6,6 +6,7 @@ import { conversations, users, userMemory } from '@shared/schema';
 import { desc, isNotNull } from 'drizzle-orm';
 import { hashPassword } from './auth';
 import crypto from 'crypto';
+import logger from './logger';
 
 interface MigrationResult {
   totalProcessed: number;
@@ -39,7 +40,7 @@ export async function migrateConversationsToUsers(): Promise<MigrationResult> {
     }
   }
 
-  console.log(`Found ${allConversations.length} conversations, ${uniqueEmails.size} unique emails`);
+  logger.info(`Found ${allConversations.length} conversations, ${uniqueEmails.size} unique emails`);
 
   for (const [email, conv] of uniqueEmails) {
     result.totalProcessed++;
@@ -49,9 +50,9 @@ export async function migrateConversationsToUsers(): Promise<MigrationResult> {
       const tempPassword = crypto.randomBytes(12).toString('base64url').slice(0, 16);
       const passwordHash = await hashPassword(tempPassword);
 
-      // Bonus credits: paying customers get 10 bonus minutes, leads get 5
-      const bonusMinutes = conv.purchased ? 10 : 5;
-      const totalCredits = 3 + bonusMinutes; // 3 base + bonus
+      // Bonus coins: paying customers get 600 (10 min), leads get 300 (5 min)
+      const bonusCoins = conv.purchased ? 600 : 300;
+      const totalCoins = 180 + bonusCoins; // 180 base (3 min) + bonus
 
       // Create user account
       const newUser = await db
@@ -60,7 +61,7 @@ export async function migrateConversationsToUsers(): Promise<MigrationResult> {
           email,
           passwordHash,
           firstName: conv.firstName || 'Friend',
-          creditMinutes: totalCredits,
+          coinBalance: totalCoins,
           migratedFromConversationId: conv.id,
         })
         .returning();
@@ -112,10 +113,10 @@ export async function migrateConversationsToUsers(): Promise<MigrationResult> {
         result.memoriesSeeded++;
       }
 
-      console.log(`Migrated ${email} (${totalCredits} credits, password: ${tempPassword})`);
+      logger.info(`Migrated ${email} (${totalCoins} coins, password: ${tempPassword})`);
     } catch (error: any) {
       const errorMsg = `Failed to migrate ${email}: ${error.message || error}`;
-      console.error(errorMsg);
+      logger.error(errorMsg);
       result.errors.push(errorMsg);
     }
   }

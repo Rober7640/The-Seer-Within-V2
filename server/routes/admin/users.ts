@@ -6,12 +6,13 @@ import { z } from 'zod';
 import { db } from '../../lib/db';
 import { users, chatSessions, chatMessages, userMemory, creditPurchases, personas } from '@shared/schema';
 import { eq, and, desc, sql, count, like, or } from 'drizzle-orm';
+import logger from '../../lib/logger';
 
 const router = Router();
 
 // Zod schemas
 const adjustCreditsSchema = z.object({
-  minutes: z.number().int(),   // Positive to add, negative to deduct
+  coins: z.number().int(),   // Positive to add, negative to deduct
   reason: z.string().min(1),
 });
 
@@ -62,9 +63,11 @@ router.get('/', async (req: Request, res: Response) => {
         id: users.id,
         email: users.email,
         firstName: users.firstName,
-        creditMinutes: users.creditMinutes,
-        totalMinutesUsed: users.totalMinutesUsed,
+        coinBalance: users.coinBalance,
+        totalCoinsUsed: users.totalCoinsUsed,
         accountStatus: users.accountStatus,
+        suspensionReason: users.suspensionReason,
+        suspendedAt: users.suspendedAt,
         lastLoginAt: users.lastLoginAt,
         createdAt: users.createdAt,
       })
@@ -103,7 +106,7 @@ router.get('/', async (req: Request, res: Response) => {
       },
     });
   } catch (error: any) {
-    console.error('List users error:', error);
+    logger.error('List users error:', error);
     return res.status(500).json({ error: 'Failed to list users' });
   }
 });
@@ -133,7 +136,7 @@ router.get('/:id', async (req: Request, res: Response) => {
         personaId: chatSessions.personaId,
         personaName: personas.displayName,
         sessionCount: count(),
-        totalMinutes: sql<number>`COALESCE(SUM(${chatSessions.minutesCharged}), 0)`,
+        totalCoins: sql<number>`COALESCE(SUM(${chatSessions.coinsCharged}), 0)`,
         lastSession: sql<string>`MAX(${chatSessions.startedAt})`,
       })
       .from(chatSessions)
@@ -162,7 +165,7 @@ router.get('/:id', async (req: Request, res: Response) => {
       memoryCount: memoryCount[0]?.count || 0,
     });
   } catch (error: any) {
-    console.error('Get user details error:', error);
+    logger.error('Get user details error:', error);
     return res.status(500).json({ error: 'Failed to get user details' });
   }
 });
@@ -183,7 +186,7 @@ router.patch('/:id/credits', async (req: Request, res: Response) => {
       });
     }
 
-    const { minutes, reason } = parseResult.data;
+    const { coins, reason } = parseResult.data;
 
     // Get current user
     const user = await db
@@ -197,10 +200,10 @@ router.patch('/:id/credits', async (req: Request, res: Response) => {
     }
 
     // Prevent negative balance
-    const newBalance = user[0].creditMinutes + minutes;
+    const newBalance = user[0].coinBalance + coins;
     if (newBalance < 0) {
       return res.status(400).json({
-        error: `Cannot deduct ${Math.abs(minutes)} minutes. User only has ${user[0].creditMinutes} minutes.`,
+        error: `Cannot deduct ${Math.abs(coins)} coins. User only has ${user[0].coinBalance} coins.`,
       });
     }
 
@@ -208,7 +211,7 @@ router.patch('/:id/credits', async (req: Request, res: Response) => {
     await db
       .update(users)
       .set({
-        creditMinutes: newBalance,
+        coinBalance: newBalance,
         updatedAt: new Date(),
       })
       .where(eq(users.id, userId));
@@ -217,25 +220,25 @@ router.patch('/:id/credits', async (req: Request, res: Response) => {
     await db.insert(creditPurchases).values({
       userId,
       packageType: 'admin_adjustment',
-      minutesPurchased: minutes,
+      coinsPurchased: coins,
       priceUsd: 0,
       status: 'completed',
     });
 
-    console.log(`Admin adjusted credits for ${user[0].email}: ${minutes > 0 ? '+' : ''}${minutes} (reason: ${reason})`);
+    logger.info(`Admin adjusted coins for ${user[0].email}: ${coins > 0 ? '+' : ''}${coins} (reason: ${reason})`);
 
     return res.json({
       user: {
         id: userId,
         email: user[0].email,
-        previousBalance: user[0].creditMinutes,
+        previousBalance: user[0].coinBalance,
         newBalance,
-        adjustment: minutes,
+        adjustment: coins,
         reason,
       },
     });
   } catch (error: any) {
-    console.error('Adjust credits error:', error);
+    logger.error('Adjust credits error:', error);
     return res.status(500).json({ error: 'Failed to adjust credits' });
   }
 });
@@ -265,7 +268,7 @@ router.get('/:id/sessions', async (req: Request, res: Response) => {
         startedAt: chatSessions.startedAt,
         endedAt: chatSessions.endedAt,
         durationSeconds: chatSessions.durationSeconds,
-        minutesCharged: chatSessions.minutesCharged,
+        coinsCharged: chatSessions.coinsCharged,
         status: chatSessions.status,
         lastTopic: chatSessions.lastTopic,
         lastBucket: chatSessions.lastBucket,
@@ -293,7 +296,7 @@ router.get('/:id/sessions', async (req: Request, res: Response) => {
       },
     });
   } catch (error: any) {
-    console.error('Get user sessions error:', error);
+    logger.error('Get user sessions error:', error);
     return res.status(500).json({ error: 'Failed to get sessions' });
   }
 });
@@ -320,7 +323,7 @@ router.get('/:id/memory', async (req: Request, res: Response) => {
 
     return res.json({ memories });
   } catch (error: any) {
-    console.error('Get user memory error:', error);
+    logger.error('Get user memory error:', error);
     return res.status(500).json({ error: 'Failed to get memory entries' });
   }
 });
@@ -377,7 +380,7 @@ router.patch('/:id/memory/:memoryId', async (req: Request, res: Response) => {
 
     return res.json({ memory: updated[0] });
   } catch (error: any) {
-    console.error('Edit memory error:', error);
+    logger.error('Edit memory error:', error);
     return res.status(500).json({ error: 'Failed to edit memory' });
   }
 });
@@ -458,7 +461,7 @@ router.post('/:id/transfer-persona', async (req: Request, res: Response) => {
       }
     }
 
-    console.log(
+    logger.info(
       `Transferred user ${user[0].email} from persona ${fromPersona[0].name} to ${toPersona[0].name}` +
       (transferMemory ? ` (${memoriesTransferred} memories transferred)` : ''),
     );
@@ -473,8 +476,256 @@ router.post('/:id/transfer-persona', async (req: Request, res: Response) => {
       },
     });
   } catch (error: any) {
-    console.error('Transfer persona error:', error);
+    logger.error('Transfer persona error:', error);
     return res.status(500).json({ error: 'Failed to transfer persona' });
+  }
+});
+
+// ============================================
+// Suspension / Ban Schemas
+// ============================================
+
+const suspendSchema = z.object({
+  reason: z.string().min(1, 'Suspension reason is required'),
+});
+
+const banSchema = z.object({
+  reason: z.string().min(1, 'Ban reason is required'),
+});
+
+// ============================================
+// POST /api/admin/users/:id/suspend - Suspend a user account
+// ============================================
+
+router.post('/:id/suspend', async (req: Request, res: Response) => {
+  try {
+    const userId = req.params.id as string;
+
+    const parseResult = suspendSchema.safeParse(req.body);
+    if (!parseResult.success) {
+      return res.status(400).json({
+        error: 'Validation failed',
+        details: parseResult.error.errors,
+      });
+    }
+
+    const { reason } = parseResult.data;
+
+    // Get user
+    const user = await db
+      .select({ id: users.id, email: users.email, accountStatus: users.accountStatus })
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1);
+
+    if (!user[0]) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    if (user[0].accountStatus === 'suspended') {
+      return res.status(409).json({ error: 'User is already suspended' });
+    }
+
+    if (user[0].accountStatus === 'banned') {
+      return res.status(409).json({ error: 'User is banned. Use unsuspend first to change status.' });
+    }
+
+    // Suspend the user
+    await db
+      .update(users)
+      .set({
+        accountStatus: 'suspended',
+        suspensionReason: reason,
+        suspendedAt: new Date(),
+        suspendedBy: req.adminId!,
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, userId));
+
+    logger.info(`Admin ${req.adminEmail} suspended user ${user[0].email}: ${reason}`);
+
+    return res.json({
+      success: true,
+      user: {
+        id: userId,
+        email: user[0].email,
+        accountStatus: 'suspended',
+        suspensionReason: reason,
+        suspendedAt: new Date().toISOString(),
+      },
+    });
+  } catch (error: any) {
+    logger.error('Suspend user error:', error);
+    return res.status(500).json({ error: 'Failed to suspend user' });
+  }
+});
+
+// ============================================
+// POST /api/admin/users/:id/ban - Permanently ban a user account
+// ============================================
+
+router.post('/:id/ban', async (req: Request, res: Response) => {
+  try {
+    const userId = req.params.id as string;
+
+    const parseResult = banSchema.safeParse(req.body);
+    if (!parseResult.success) {
+      return res.status(400).json({
+        error: 'Validation failed',
+        details: parseResult.error.errors,
+      });
+    }
+
+    const { reason } = parseResult.data;
+
+    // Get user
+    const user = await db
+      .select({ id: users.id, email: users.email, accountStatus: users.accountStatus })
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1);
+
+    if (!user[0]) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    if (user[0].accountStatus === 'banned') {
+      return res.status(409).json({ error: 'User is already banned' });
+    }
+
+    // Ban the user
+    await db
+      .update(users)
+      .set({
+        accountStatus: 'banned',
+        suspensionReason: reason,
+        suspendedAt: new Date(),
+        suspendedBy: req.adminId!,
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, userId));
+
+    logger.info(`Admin ${req.adminEmail} banned user ${user[0].email}: ${reason}`);
+
+    return res.json({
+      success: true,
+      user: {
+        id: userId,
+        email: user[0].email,
+        accountStatus: 'banned',
+        suspensionReason: reason,
+        bannedAt: new Date().toISOString(),
+      },
+    });
+  } catch (error: any) {
+    logger.error('Ban user error:', error);
+    return res.status(500).json({ error: 'Failed to ban user' });
+  }
+});
+
+// ============================================
+// POST /api/admin/users/:id/unsuspend - Restore a suspended or banned user
+// ============================================
+
+router.post('/:id/unsuspend', async (req: Request, res: Response) => {
+  try {
+    const userId = req.params.id as string;
+
+    // Get user
+    const user = await db
+      .select({ id: users.id, email: users.email, accountStatus: users.accountStatus })
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1);
+
+    if (!user[0]) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    if (user[0].accountStatus === 'active') {
+      return res.status(409).json({ error: 'User account is already active' });
+    }
+
+    const previousStatus = user[0].accountStatus;
+
+    // Restore the user
+    await db
+      .update(users)
+      .set({
+        accountStatus: 'active',
+        suspensionReason: null,
+        suspendedAt: null,
+        suspendedBy: null,
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, userId));
+
+    logger.info(`Admin ${req.adminEmail} unsuspended user ${user[0].email} (was: ${previousStatus})`);
+
+    return res.json({
+      success: true,
+      user: {
+        id: userId,
+        email: user[0].email,
+        accountStatus: 'active',
+        previousStatus,
+      },
+    });
+  } catch (error: any) {
+    logger.error('Unsuspend user error:', error);
+    return res.status(500).json({ error: 'Failed to unsuspend user' });
+  }
+});
+
+// ============================================
+// POST /api/admin/users/:id/flag - Flag user for review
+// ============================================
+
+router.post('/:id/flag', async (req: Request, res: Response) => {
+  try {
+    const userId = req.params.id as string;
+    const reason = req.body.reason as string || 'Flagged for manual review';
+
+    // Get user
+    const user = await db
+      .select({ id: users.id, email: users.email, accountStatus: users.accountStatus })
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1);
+
+    if (!user[0]) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    if (user[0].accountStatus === 'banned') {
+      return res.status(409).json({ error: 'User is banned; cannot flag for review' });
+    }
+
+    // Flag the user (does not block access, just marks for review)
+    await db
+      .update(users)
+      .set({
+        accountStatus: 'flagged_for_review',
+        suspensionReason: reason,
+        suspendedBy: req.adminId!,
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, userId));
+
+    logger.info(`Admin ${req.adminEmail} flagged user ${user[0].email} for review: ${reason}`);
+
+    return res.json({
+      success: true,
+      user: {
+        id: userId,
+        email: user[0].email,
+        accountStatus: 'flagged_for_review',
+        reason,
+      },
+    });
+  } catch (error: any) {
+    logger.error('Flag user error:', error);
+    return res.status(500).json({ error: 'Failed to flag user' });
   }
 });
 

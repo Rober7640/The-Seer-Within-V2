@@ -3,6 +3,9 @@
 
 import { Router, Request, Response } from 'express';
 import { z } from 'zod';
+import multer from 'multer';
+import path from 'path';
+import fs from 'fs';
 import {
   createPersona,
   updatePersona,
@@ -12,6 +15,37 @@ import {
   clonePersona,
   getPersonaAnalytics,
 } from '../../lib/personaManager';
+import logger from '../../lib/logger';
+
+// ── Avatar upload configuration ──────────────────────────────────────────────
+// Required dimensions: 400×400 px minimum, square (1:1 ratio)
+// Accepted formats: JPEG, PNG, WebP
+// Max file size: 2 MB
+const AVATAR_MAX_BYTES = 2 * 1024 * 1024; // 2 MB
+const AVATAR_ALLOWED_MIME = ['image/jpeg', 'image/png', 'image/webp'];
+
+const avatarsDir = path.join(process.cwd(), 'uploads', 'avatars');
+fs.mkdirSync(avatarsDir, { recursive: true });
+
+const avatarStorage = multer.diskStorage({
+  destination: (_req, _file, cb) => cb(null, avatarsDir),
+  filename: (_req, file, cb) => {
+    const ext = path.extname(file.originalname).toLowerCase() || '.jpg';
+    cb(null, `avatar-${Date.now()}${ext}`);
+  },
+});
+
+const avatarUpload = multer({
+  storage: avatarStorage,
+  limits: { fileSize: AVATAR_MAX_BYTES },
+  fileFilter: (_req, file, cb) => {
+    if (AVATAR_ALLOWED_MIME.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only JPEG, PNG, or WebP images are accepted'));
+    }
+  },
+});
 
 const router = Router();
 
@@ -21,7 +55,7 @@ const createPersonaSchema = z.object({
   displayName: z.string().min(1).max(100),
   tagline: z.string().max(200).optional(),
   description: z.string().max(2000).optional(),
-  avatarUrl: z.string().url().optional(),
+  avatarUrl: z.string().optional(),
   baseSystemPrompt: z.string().min(1),
   personality: z.object({
     tone: z.string().min(1),
@@ -36,7 +70,7 @@ const createPersonaSchema = z.object({
   }).optional(),
   categories: z.array(z.string()).optional(),
   customPricing: z.object({
-    freeMinutes: z.number().int().min(0).max(60),
+    freeCoins: z.number().int().min(0).max(3600),
     '15min': z.number().int().min(0),
     '30min': z.number().int().min(0),
     customPackages: z.array(z.object({
@@ -53,13 +87,23 @@ const updatePersonaSchema = z.object({
   displayName: z.string().min(1).max(100).optional(),
   tagline: z.string().max(200).optional(),
   description: z.string().max(2000).optional(),
-  avatarUrl: z.string().url().nullable().optional(),
+  avatarUrl: z.string().nullable().optional(),
   baseSystemPrompt: z.string().min(1).optional(),
   personality: z.record(z.unknown()).optional(),
   categories: z.array(z.string()).optional(),
   customPricing: z.record(z.unknown()).optional(),
   isDefault: z.boolean().optional(),
   sortOrder: z.number().int().optional(),
+  availabilitySchedule: z.object({
+    timezone: z.string(),
+    windows: z.array(z.object({
+      days: z.array(z.number().int().min(0).max(6)),
+      startTime: z.string().regex(/^\d{2}:\d{2}$/),
+      endTime: z.string().regex(/^\d{2}:\d{2}$/),
+    })),
+  }).nullable().optional(),
+  onlineOverride: z.enum(['online', 'offline']).nullable().optional(),
+  overrideExpiresAt: z.string().datetime().nullable().optional(),
 });
 
 const statusSchema = z.object({
@@ -83,7 +127,7 @@ router.get('/', async (req: Request, res: Response) => {
     const result = await listPersonas({ activeOnly, includeStats });
     return res.json({ personas: result });
   } catch (error: any) {
-    console.error('List personas error:', error);
+    logger.error('List personas error:', error);
     return res.status(500).json({ error: 'Failed to list personas' });
   }
 });
@@ -110,7 +154,7 @@ router.post('/', async (req: Request, res: Response) => {
 
     return res.status(201).json({ persona });
   } catch (error: any) {
-    console.error('Create persona error:', error);
+    logger.error('Create persona error:', error);
     return res.status(500).json({ error: error.message || 'Failed to create persona' });
   }
 });
@@ -130,7 +174,7 @@ router.get('/:id', async (req: Request, res: Response) => {
 
     return res.json({ persona });
   } catch (error: any) {
-    console.error('Get persona error:', error);
+    logger.error('Get persona error:', error);
     return res.status(500).json({ error: 'Failed to get persona' });
   }
 });
@@ -164,7 +208,7 @@ router.patch('/:id/config', async (req: Request, res: Response) => {
 
     return res.json({ persona: updated });
   } catch (error: any) {
-    console.error('Update persona error:', error);
+    logger.error('Update persona error:', error);
     return res.status(500).json({ error: error.message || 'Failed to update persona' });
   }
 });
@@ -190,7 +234,7 @@ router.patch('/:id/status', async (req: Request, res: Response) => {
 
     return res.json({ persona: updated });
   } catch (error: any) {
-    console.error('Set persona status error:', error);
+    logger.error('Set persona status error:', error);
 
     if (error.message?.includes('Cannot activate')) {
       return res.status(400).json({ error: error.message });
@@ -224,7 +268,7 @@ router.get('/:id/analytics', async (req: Request, res: Response) => {
     const analytics = await getPersonaAnalytics(personaId, dateRange);
     return res.json({ analytics });
   } catch (error: any) {
-    console.error('Persona analytics error:', error);
+    logger.error('Persona analytics error:', error);
     return res.status(500).json({ error: 'Failed to get analytics' });
   }
 });
@@ -254,9 +298,33 @@ router.post('/:id/clone', async (req: Request, res: Response) => {
 
     return res.status(201).json({ persona: newPersona });
   } catch (error: any) {
-    console.error('Clone persona error:', error);
+    logger.error('Clone persona error:', error);
     return res.status(500).json({ error: error.message || 'Failed to clone persona' });
   }
+});
+
+// POST /api/admin/personas/upload-avatar
+// Accepts a multipart file field named "avatar".
+// Returns: { url: "/uploads/avatars/avatar-<timestamp>.ext" }
+// Requirements: JPEG/PNG/WebP · max 2 MB · 400×400 px minimum (square recommended)
+router.post('/upload-avatar', avatarUpload.single('avatar'), (req: Request, res: Response) => {
+  if (!req.file) {
+    return res.status(400).json({ error: 'No file uploaded' });
+  }
+  const url = `/uploads/avatars/${req.file.filename}`;
+  logger.info('Avatar uploaded', { filename: req.file.filename, size: req.file.size });
+  return res.json({ url });
+});
+
+// Multer error handler for this route (file too large / wrong type)
+router.use((err: any, _req: Request, res: Response, next: any) => {
+  if (err instanceof multer.MulterError && err.code === 'LIMIT_FILE_SIZE') {
+    return res.status(400).json({ error: 'Image must be 2 MB or smaller' });
+  }
+  if (err?.message) {
+    return res.status(400).json({ error: err.message });
+  }
+  return next(err);
 });
 
 export default router;

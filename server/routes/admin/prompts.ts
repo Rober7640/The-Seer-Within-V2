@@ -16,6 +16,7 @@ import { getPersonaById } from '../../lib/personaManager';
 import { personaPrompts } from '@shared/schema';
 import { db } from '../../lib/db';
 import { eq } from 'drizzle-orm';
+import logger from '../../lib/logger';
 
 const router = Router();
 
@@ -63,7 +64,7 @@ router.get('/personas/:id/prompts', async (req: Request, res: Response) => {
 
     return res.json({ prompts });
   } catch (error: any) {
-    console.error('List prompts error:', error);
+    logger.error('List prompts error:', error);
     return res.status(500).json({ error: 'Failed to list prompts' });
   }
 });
@@ -106,7 +107,7 @@ router.post('/personas/:id/prompts', async (req: Request, res: Response) => {
 
     return res.status(201).json({ prompt: created[0] });
   } catch (error: any) {
-    console.error('Create prompt error:', error);
+    logger.error('Create prompt error:', error);
     return res.status(500).json({ error: error.message || 'Failed to create prompt' });
   }
 });
@@ -143,7 +144,7 @@ router.patch('/prompts/:promptId', async (req: Request, res: Response) => {
       isNewVersion: newId !== promptId,
     });
   } catch (error: any) {
-    console.error('Update prompt error:', error);
+    logger.error('Update prompt error:', error);
 
     if (error.message === 'Prompt not found') {
       return res.status(404).json({ error: 'Prompt not found' });
@@ -174,7 +175,7 @@ router.post('/prompts/:promptId/activate', async (req: Request, res: Response) =
       message: 'Prompt activated successfully',
     });
   } catch (error: any) {
-    console.error('Activate prompt error:', error);
+    logger.error('Activate prompt error:', error);
 
     if (error.message === 'Prompt not found') {
       return res.status(404).json({ error: 'Prompt not found' });
@@ -212,7 +213,7 @@ router.get('/prompts/:promptId/performance', async (req: Request, res: Response)
       variants: performance,
     });
   } catch (error: any) {
-    console.error('Prompt performance error:', error);
+    logger.error('Prompt performance error:', error);
     return res.status(500).json({ error: 'Failed to get performance data' });
   }
 });
@@ -241,7 +242,7 @@ router.post('/prompts/:promptId/test', async (req: Request, res: Response) => {
       sampleData: parseResult.data,
     });
   } catch (error: any) {
-    console.error('Test prompt error:', error);
+    logger.error('Test prompt error:', error);
 
     if (error.message === 'Prompt not found') {
       return res.status(404).json({ error: 'Prompt not found' });

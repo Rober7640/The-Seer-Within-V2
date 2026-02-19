@@ -6,11 +6,12 @@ test.describe('Credit Purchase Flow', () => {
 
   test.beforeEach(async ({ page }) => {
     // Register and login
-    await page.goto('/');
-    await page.click('text=Get Started');
-    await page.fill('input[name="email"], input[type="email"]', testEmail);
-    await page.fill('input[name="password"], input[type="password"]', testPassword);
+    await page.goto('/login');
+    await page.click('text=/New here|Create an account/i');
+    await page.waitForTimeout(500);
     await page.fill('input[name="firstName"]', 'CreditTester');
+    await page.fill('input[name="email"]', testEmail);
+    await page.fill('input[name="password"]', testPassword);
     await page.click('button[type="submit"]');
     await page.waitForTimeout(2000);
   });
@@ -19,8 +20,8 @@ test.describe('Credit Purchase Flow', () => {
     await page.goto('/credits');
 
     // Should show pricing tiers
-    await expect(page.locator('text=/15 Minutes|15.*min/i')).toBeVisible({ timeout: 10000 });
-    await expect(page.locator('text=/30 Minutes|30.*min/i')).toBeVisible();
+    await expect(page.locator('text=/15 Minutes|15.*min/i').first()).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('text=/30 Minutes|30.*min/i').first()).toBeVisible();
 
     // Should show prices
     await expect(page.locator('text=/\\$15|15.*dollar/i')).toBeVisible();
@@ -93,14 +94,14 @@ test.describe('Credit Purchase Flow', () => {
     // This test would require actually using up all credits
     // For now, we can check if the UI handles zero credits
 
-    await page.goto('/chat-service');
+    await page.goto('/reading');
 
     // If user runs out during a session, should see purchase prompt
     // This is a placeholder - in real test would need to deplete credits first
   });
 
   test('should navigate from out-of-credits modal to purchase page', async ({ page }) => {
-    await page.goto('/chat-service');
+    await page.goto('/reading');
 
     // Look for "Get More Credits" or similar link
     const getCreditsButton = page.locator('button:has-text("Get More Credits"), a:has-text("Purchase Credits")');

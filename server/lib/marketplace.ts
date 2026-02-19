@@ -8,6 +8,7 @@ import { eq, and, sql, desc, gte } from 'drizzle-orm';
 import Stripe from 'stripe';
 import { getPersonaPricing } from './personaPricing';
 import type { PricingTier } from '../../shared/types';
+import logger from './logger';
 
 const stripeKey = process.env.STRIPE_SECRET_KEY;
 const stripe = stripeKey && stripeKey !== 'sk_test_placeholder'
@@ -21,7 +22,7 @@ interface RevenueReport {
   consultantId: string;
   period: string;
   totalSessions: number;
-  totalMinutes: number;
+  totalCoins: number;
   grossRevenue: number;
   platformFee: number;
   consultantPayout: number;
@@ -29,7 +30,7 @@ interface RevenueReport {
     personaId: string;
     personaName: string;
     sessions: number;
-    minutes: number;
+    coins: number;
     revenue: number;
   }>;
 }
@@ -72,7 +73,7 @@ export async function registerConsultant(
   }
 
   if (!stripe) {
-    console.warn('Stripe not configured - marketplace registration skipped');
+    logger.warn('Stripe not configured - marketplace registration skipped');
     return { onboardingUrl: null };
   }
 
@@ -195,7 +196,7 @@ export async function getMarketplaceListings(): Promise<MarketplacePersona[]> {
 
 /**
  * Calculate revenue for a consultant over a given period.
- * Revenue is derived from session minutes * rate per minute.
+ * Revenue is derived from session coins charged, converted to minutes for rate calculation.
  */
 export async function calculateConsultantRevenue(
   consultantPersonaIds: string[],
@@ -204,7 +205,7 @@ export async function calculateConsultantRevenue(
 ): Promise<RevenueReport> {
   const personaReports: RevenueReport['personas'] = [];
   let totalSessions = 0;
-  let totalMinutes = 0;
+  let totalCoins = 0;
   let grossRevenue = 0;
 
   for (const personaId of consultantPersonaIds) {
@@ -234,19 +235,19 @@ export async function calculateConsultantRevenue(
       );
 
     const personaSessions = sessions.length;
-    const personaMinutes = sessions.reduce((sum, s) => sum + s.minutesCharged, 0);
-    const personaRevenue = personaMinutes * ratePerMinute;
+    const personaCoins = sessions.reduce((sum, s) => sum + s.coinsCharged, 0);
+    const personaRevenue = Math.round(personaCoins * ratePerMinute / 60);
 
     personaReports.push({
       personaId: persona[0].id,
       personaName: persona[0].displayName,
       sessions: personaSessions,
-      minutes: personaMinutes,
+      coins: personaCoins,
       revenue: personaRevenue,
     });
 
     totalSessions += personaSessions;
-    totalMinutes += personaMinutes;
+    totalCoins += personaCoins;
     grossRevenue += personaRevenue;
   }
 
@@ -257,7 +258,7 @@ export async function calculateConsultantRevenue(
     consultantId: consultantPersonaIds[0] || '',
     period: `${startDate.toISOString().split('T')[0]} to ${endDate.toISOString().split('T')[0]}`,
     totalSessions,
-    totalMinutes,
+    totalCoins,
     grossRevenue,
     platformFee,
     consultantPayout,

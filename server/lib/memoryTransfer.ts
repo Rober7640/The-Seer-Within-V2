@@ -7,6 +7,8 @@ import { db } from './db';
 import { userMemory, personas, chatSessions } from '@shared/schema';
 import { eq, and, desc } from 'drizzle-orm';
 import Anthropic from '@anthropic-ai/sdk';
+import logger from './logger';
+import { fireWithBreaker, anthropicBreaker } from './circuitBreaker';
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY || '',
@@ -146,16 +148,18 @@ Frame it as general awareness of the client's situation.
 Keep it under 100 words.`;
 
   try {
-    const response = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 200,
-      messages: [{ role: 'user', content: prompt }],
-    });
+    const response = await fireWithBreaker(anthropicBreaker, () =>
+      anthropic.messages.create({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 200,
+        messages: [{ role: 'user', content: prompt }],
+      }),
+    );
 
     const text = response.content[0].type === 'text' ? response.content[0].text : '';
     return text.trim();
   } catch (error) {
-    console.error('Failed to generate transfer summary:', error);
+    logger.error('Failed to generate transfer summary', { error: (error as Error).message });
     return memories.map((m) => m.summary).join('. ');
   }
 }

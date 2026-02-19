@@ -103,24 +103,40 @@ export interface ShippingSaveRequest {
   address: ShippingAddress
 }
 
+// Coin system: 60 coins = 1 minute of chat
+export const COINS_PER_MINUTE = 60;
+
+export function coinsToMinutes(coins: number): number {
+  return Math.floor(coins / COINS_PER_MINUTE);
+}
+
+export function minutesToCoins(minutes: number): number {
+  return minutes * COINS_PER_MINUTE;
+}
+
 // Per-persona pricing types
 export interface PricingTier {
-  packageType: string   // e.g. "15min", "30min", "60min"
-  minutes: number       // e.g. 15, 30, 60
-  priceUsd: number      // in cents, e.g. 1500 = $15.00
-  label: string         // display label, e.g. "15 Minutes"
+  packageType: string    // "starter", "popular", "best_value", "premium"
+  coins: number          // base coins (e.g. 525)
+  bonusCoins: number     // bonus on top (e.g. 230)
+  totalCoins: number     // coins + bonusCoins (e.g. 755)
+  priceUsd: number       // in cents, e.g. 2499 = $24.99
+  label: string          // display label, e.g. "525 coins"
+  badge?: string         // optional badge, e.g. "BEST VALUE"
 }
 
 export interface PersonaPricing {
-  freeMinutes: number
+  freeCoins: number
   tiers: PricingTier[]
 }
 
 // Default global pricing (used when persona has no custom pricing)
 export const DEFAULT_PRICING: PersonaPricing = {
-  freeMinutes: 3,
+  freeCoins: 180,
   tiers: [
-    { packageType: '15min', minutes: 15, priceUsd: 1500, label: '15 Minutes' },
-    { packageType: '30min', minutes: 30, priceUsd: 2500, label: '30 Minutes' },
+    { packageType: 'starter',    coins: 180,  bonusCoins: 0,    totalCoins: 180,  priceUsd: 999,   label: '180 coins' },
+    { packageType: 'popular',    coins: 360,  bonusCoins: 180,  totalCoins: 540,  priceUsd: 1999,  label: '540 coins' },
+    { packageType: 'best_value', coins: 540,  bonusCoins: 360,  totalCoins: 900,  priceUsd: 2999,  label: '900 coins', badge: 'MOST POPULAR' },
+    { packageType: 'premium',    coins: 720,  bonusCoins: 1080, totalCoins: 1800, priceUsd: 3999,  label: '1800 coins' },
   ],
 }

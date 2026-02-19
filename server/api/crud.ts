@@ -2,6 +2,7 @@ import { Request, Response, NextFunction, Router } from "express";
 import { db } from "../lib/db";
 import { conversations, insertConversationSchema } from "../../shared/schema";
 import { eq, and, SQL } from "drizzle-orm";
+import logger from "../lib/logger";
 
 // Valid column names for filtering (maps query param to schema column)
 const columnMap: Record<string, any> = {
@@ -131,7 +132,7 @@ router.get("/conversations", async (req: Request, res: Response) => {
       filters: appliedFilters.length > 0 ? appliedFilters : undefined
     });
   } catch (error) {
-    console.error("Error fetching conversations:", error);
+    logger.error("Error fetching conversations:", error);
     return res.status(500).json({ error: "Failed to fetch conversations" });
   }
 });
@@ -152,7 +153,7 @@ router.get("/conversations/:id", async (req: Request, res: Response) => {
 
     return res.json({ data: conversation[0] });
   } catch (error) {
-    console.error("Error fetching conversation:", error);
+    logger.error("Error fetching conversation:", error);
     return res.status(500).json({ error: "Failed to fetch conversation" });
   }
 });
@@ -168,7 +169,7 @@ router.get("/conversations/email/:email", async (req: Request, res: Response) =>
 
     return res.json({ data: conversation, count: conversation.length });
   } catch (error) {
-    console.error("Error fetching conversation by email:", error);
+    logger.error("Error fetching conversation by email:", error);
     return res.status(500).json({ error: "Failed to fetch conversation" });
   }
 });
@@ -192,7 +193,7 @@ router.post("/conversations", async (req: Request, res: Response) => {
 
     return res.status(201).json({ data: inserted[0] });
   } catch (error) {
-    console.error("Error creating conversation:", error);
+    logger.error("Error creating conversation:", error);
     return res.status(500).json({ error: "Failed to create conversation" });
   }
 });
@@ -221,7 +222,7 @@ router.put("/conversations/:id", async (req: Request, res: Response) => {
 
     return res.json({ data: updated[0] });
   } catch (error) {
-    console.error("Error updating conversation:", error);
+    logger.error("Error updating conversation:", error);
     return res.status(500).json({ error: "Failed to update conversation" });
   }
 });
@@ -250,7 +251,7 @@ router.patch("/conversations/:id", async (req: Request, res: Response) => {
 
     return res.json({ data: updated[0] });
   } catch (error) {
-    console.error("Error updating conversation:", error);
+    logger.error("Error updating conversation:", error);
     return res.status(500).json({ error: "Failed to update conversation" });
   }
 });
@@ -275,7 +276,7 @@ router.delete("/conversations/:id", async (req: Request, res: Response) => {
 
     return res.json({ message: "Conversation deleted successfully" });
   } catch (error) {
-    console.error("Error deleting conversation:", error);
+    logger.error("Error deleting conversation:", error);
     return res.status(500).json({ error: "Failed to delete conversation" });
   }
 });

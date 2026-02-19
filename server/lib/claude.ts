@@ -1,6 +1,8 @@
 // Server-side Claude API wrapper
 
 import Anthropic from '@anthropic-ai/sdk'
+import logger from './logger'
+import { fireWithBreaker, anthropicBreaker, isCircuitOpenError } from './circuitBreaker'
 import type { UserData } from '../../shared/types'
 import {
   buildReading1Prompt,
@@ -32,11 +34,13 @@ interface ClaudeResponse {
 
 async function callClaude(prompt: string): Promise<ClaudeResponse> {
   try {
-    const response = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 1000,
-      messages: [{ role: 'user', content: prompt }],
-    })
+    const response = await fireWithBreaker(anthropicBreaker, () =>
+      anthropic.messages.create({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        messages: [{ role: 'user', content: prompt }],
+      }),
+    )
 
     const text = response.content[0].type === 'text'
       ? response.content[0].text
@@ -57,10 +61,14 @@ async function callClaude(prompt: string): Promise<ClaudeResponse> {
       }
     }
 
-    console.error('Failed to parse Claude response:', text)
+    logger.error('Failed to parse Claude response:', text)
     return { messages: getFallbackMessages() }
   } catch (error) {
-    console.error('Claude API error:', error)
+    if (isCircuitOpenError(error)) {
+      logger.warn('Anthropic circuit open, using fallback messages')
+    } else {
+      logger.error('Claude API error:', error)
+    }
     return { messages: getFallbackMessages() }
   }
 }

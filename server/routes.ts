@@ -1,7 +1,10 @@
 // Force server restart
 import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
+import path from "path";
+import express from "express";
 import { z } from "zod";
+import logger from "./lib/logger";
 
 function getBaseUrl(req: Request): string {
   const origin = req.headers.origin;
@@ -18,6 +21,16 @@ import chatServiceRouter from "./routes/chatService";
 import creditsRouter from "./routes/credits";
 import adminRouter from "./routes/admin/index";
 import personasRouter from "./routes/personas";
+import webhooksRouter from "./routes/webhooks";
+import userStatsRouter from "./routes/userStats";
+import migrateRouter from "./routes/migrate";
+import {
+  runHealthCheck,
+  runReadinessCheck,
+  getMetrics,
+  recordApiRequest,
+  recordApiError,
+} from "./lib/healthCheck";
 import {
   generateReading1,
   generateReading2,
@@ -123,7 +136,7 @@ export async function registerRoutes(
 ): Promise<Server> {
   // Health check endpoint - visit this URL to verify production server is running
   app.get("/api/health-check", async (req: Request, res: Response) => {
-    console.log("Health check called");
+    logger.info("Health check called");
     return res.json({
       status: "ok",
       timestamp: new Date().toISOString(),
@@ -131,6 +144,56 @@ export async function registerRoutes(
       environment: process.env.NODE_ENV || "development",
     });
   });
+
+  // Comprehensive health endpoint - checks all dependencies (DB, Stripe, Anthropic, Resend, memory)
+  app.get("/api/health", async (_req: Request, res: Response) => {
+    try {
+      const result = await runHealthCheck();
+      const statusCode = result.status === 'unhealthy' ? 503 : 200;
+      return res.status(statusCode).json(result);
+    } catch (error) {
+      return res.status(503).json({
+        status: 'unhealthy',
+        timestamp: new Date().toISOString(),
+        error: 'Health check failed',
+      });
+    }
+  });
+
+  // Readiness probe - lightweight check for load balancer / orchestrator
+  app.get("/api/ready", async (_req: Request, res: Response) => {
+    try {
+      const result = await runReadinessCheck();
+      return res.status(result.ready ? 200 : 503).json(result);
+    } catch (error) {
+      return res.status(503).json({ ready: false });
+    }
+  });
+
+  // Prometheus-format metrics endpoint
+  app.get("/api/metrics", async (_req: Request, res: Response) => {
+    try {
+      const metrics = await getMetrics();
+      res.set('Content-Type', 'text/plain; version=0.0.4; charset=utf-8');
+      return res.send(metrics);
+    } catch (error) {
+      return res.status(500).send('# Error collecting metrics\n');
+    }
+  });
+
+  // Track API request/error counts for Prometheus metrics
+  app.use("/api", (req: Request, res: Response, next) => {
+    recordApiRequest();
+    res.on('finish', () => {
+      if (res.statusCode >= 500) {
+        recordApiError();
+      }
+    });
+    next();
+  });
+
+  // Serve uploaded persona avatars (persists across builds)
+  app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 
   // CRUD API routes (secured with API key)
   app.use("/api/v1", crudRouter);
@@ -141,6 +204,9 @@ export async function registerRoutes(
   app.use("/api/credits", creditsRouter);
   app.use("/api/admin", adminRouter);
   app.use("/api/personas", personasRouter);
+  app.use("/api/webhooks", webhooksRouter);
+  app.use("/api/user", userStatsRouter);
+  app.use("/api/migrate", migrateRouter);
 
   // Diagnostic endpoint to test Stripe session retrieval
   // Usage: GET /api/upsell/test-session/cs_xxx (replace cs_xxx with actual Stripe session ID)
@@ -148,7 +214,7 @@ export async function registerRoutes(
     "/api/upsell/test-session/:sessionId",
     async (req: Request, res: Response) => {
       const sessionId = req.params.sessionId as string;
-      console.log(`=== TEST SESSION ENDPOINT CALLED for ${sessionId} ===`);
+      logger.info(`=== TEST SESSION ENDPOINT CALLED for ${sessionId} ===`);
 
       if (!stripe) {
         return res.json({
@@ -173,7 +239,7 @@ export async function registerRoutes(
           topLevelShipping: sessionAny.shipping_details || null,
         });
       } catch (error: any) {
-        console.error("Test session error:", error);
+        logger.error("Test session error:", error);
         return res.json({
           success: false,
           error: error.message,
@@ -236,7 +302,7 @@ export async function registerRoutes(
 
       return res.json(result);
     } catch (error) {
-      console.error("Chat API error:", error);
+      logger.error("Chat API error:", error);
       return res.json({
         messages: ["I sense something shifting...", "Let me focus..."],
       });
@@ -275,7 +341,7 @@ export async function registerRoutes(
         country: data.country || null,
       });
     } catch (error) {
-      console.error("Location API error:", error);
+      logger.error("Location API error:", error);
       return res.json({ city: null, country: null });
     }
   });
@@ -297,7 +363,7 @@ export async function registerRoutes(
 
       // Check if Stripe is configured
       if (!stripe) {
-        console.warn("Stripe not configured - returning mock checkout URL");
+        logger.warn("Stripe not configured - returning mock checkout URL");
         return res.json({ url: "/success" });
       }
 
@@ -364,16 +430,16 @@ export async function registerRoutes(
               bucket,
             },
           );
-          console.log(`Saved Stripe session ${session.id} for ${email}`);
+          logger.info(`Saved Stripe session ${session.id} for ${email}`);
         } catch (dbError) {
           // Log but don't fail - the fallback in /api/upsell/user-data will handle this
-          console.error("Failed to save Stripe session to DB:", dbError);
+          logger.error("Failed to save Stripe session to DB:", dbError);
         }
       }
 
       return res.json({ url: session.url });
     } catch (error) {
-      console.error("Checkout error:", error);
+      logger.error("Checkout error:", error);
       return res.status(500).json({ error: "Checkout failed" });
     }
   });
@@ -383,7 +449,7 @@ export async function registerRoutes(
     try {
       const { email, firstName, bucket, location, timeOfDay } = req.body;
 
-      console.log("Lead captured:", { email, firstName, bucket });
+      logger.info("Lead captured:", { email, firstName, bucket });
 
       // Save to database
       await saveConversation({
@@ -402,18 +468,18 @@ export async function registerRoutes(
       })
         .then((result) => {
           if (result.success) {
-            console.log(`AWeber: Added ${email} to list`);
+            logger.info(`AWeber: Added ${email} to list`);
           } else {
-            console.warn(`AWeber: Failed to add ${email}:`, result.error);
+            logger.warn(`AWeber: Failed to add ${email}:`, result.error);
           }
         })
         .catch((err) => {
-          console.warn("AWeber error (non-blocking):", err);
+          logger.warn("AWeber error (non-blocking):", err);
         });
 
       return res.json({ success: true });
     } catch (error) {
-      console.error("Lead capture error:", error);
+      logger.error("Lead capture error:", error);
       return res.status(500).json({ error: "Failed to capture lead" });
     }
   });
@@ -448,7 +514,7 @@ export async function registerRoutes(
 
       return res.json({ success: true });
     } catch (error) {
-      console.error("Save progress error:", error);
+      logger.error("Save progress error:", error);
       return res.status(500).json({ error: "Failed to save progress" });
     }
   });
@@ -484,7 +550,7 @@ export async function registerRoutes(
           : [],
       });
     } catch (error) {
-      console.error("Get conversation error:", error);
+      logger.error("Get conversation error:", error);
       return res.status(500).json({ error: "Failed to get conversation" });
     }
   });
@@ -508,7 +574,7 @@ export async function registerRoutes(
       // FALLBACK: If not found in database, fetch directly from Stripe and create the record
       // This handles race conditions where the redirect is faster than the database write
       if (!conversation && stripe) {
-        console.log(`Session ${sessionId} not in DB, fetching from Stripe...`);
+        logger.info(`Session ${sessionId} not in DB, fetching from Stripe...`);
 
         try {
           const stripeSession = await stripe.checkout.sessions.retrieve(
@@ -544,7 +610,7 @@ export async function registerRoutes(
                 },
               );
 
-              console.log(
+              logger.info(
                 `Created DB record for ${email} from Stripe fallback`,
               );
 
@@ -552,12 +618,12 @@ export async function registerRoutes(
               conversation = await getConversationByStripeSession(sessionId);
             }
           } else {
-            console.warn(
+            logger.warn(
               `Stripe session ${sessionId} not paid: ${stripeSession.payment_status}`,
             );
           }
         } catch (stripeErr) {
-          console.error("Stripe fallback error:", stripeErr);
+          logger.error("Stripe fallback error:", stripeErr);
         }
       }
 
@@ -600,23 +666,23 @@ export async function registerRoutes(
               })
                 .then((result) => {
                   if (result.success) {
-                    console.log(
+                    logger.info(
                       `AWeber Paid: Added ${conversation!.email} to paid list`,
                     );
                   } else {
-                    console.warn(
+                    logger.warn(
                       `AWeber Paid: Failed to add ${conversation!.email}:`,
                       result.error,
                     );
                   }
                 })
                 .catch((err) => {
-                  console.warn("AWeber paid list error (non-blocking):", err);
+                  logger.warn("AWeber paid list error (non-blocking):", err);
                 });
             }
           })
           .catch((err) => {
-            console.warn("Stripe session retrieve error (non-blocking):", err);
+            logger.warn("Stripe session retrieve error (non-blocking):", err);
           });
       }
 
@@ -628,7 +694,7 @@ export async function registerRoutes(
         stripeCustomerId: conversation.stripeCustomerId,
       });
     } catch (error) {
-      console.error("Get upsell user data error:", error);
+      logger.error("Get upsell user data error:", error);
       return res.status(500).json({ error: "Failed to get user data" });
     }
   });
@@ -657,7 +723,7 @@ export async function registerRoutes(
         upsell2Purchased: conversation.upsell2Purchased || false,
       });
     } catch (error) {
-      console.error("Get order details error:", error);
+      logger.error("Get order details error:", error);
       return res.status(500).json({ error: "Failed to get order details" });
     }
   });
@@ -666,20 +732,20 @@ export async function registerRoutes(
   app.post(
     "/api/upsell/confirm-fallback",
     async (req: Request, res: Response) => {
-      console.log("=== CONFIRM-FALLBACK ENDPOINT CALLED ===");
-      console.log("Request body:", JSON.stringify(req.body));
+      logger.info("=== CONFIRM-FALLBACK ENDPOINT CALLED ===");
+      logger.info("Request body:", JSON.stringify(req.body));
 
       try {
         const { originalSessionId, fallbackSessionId } = req.body;
 
         if (!originalSessionId) {
-          console.log("Missing originalSessionId");
+          logger.info("Missing originalSessionId");
           return res.status(400).json({ error: "Missing originalSessionId" });
         }
 
         // If no Stripe, just mark as purchased (dev mode)
         if (!stripe) {
-          console.log("No Stripe configured - dev mode");
+          logger.info("No Stripe configured - dev mode");
           await markUpsellPurchased(
             originalSessionId,
             "fallback_checkout_dev",
@@ -690,36 +756,36 @@ export async function registerRoutes(
 
         // If we have a fallback session ID, verify the payment completed
         if (fallbackSessionId) {
-          console.log(`Retrieving Stripe session: ${fallbackSessionId}`);
+          logger.info(`Retrieving Stripe session: ${fallbackSessionId}`);
 
           // Retrieve the session - shipping_details is not expandable, it's included by default
           const session =
             await stripe.checkout.sessions.retrieve(fallbackSessionId);
 
-          console.log("Session payment_status:", session.payment_status);
-          console.log("Session metadata:", JSON.stringify(session.metadata));
+          logger.info("Session payment_status:", session.payment_status);
+          logger.info("Session metadata:", JSON.stringify(session.metadata));
 
           if (session.payment_status !== "paid") {
-            console.log("Payment not completed");
+            logger.info("Payment not completed");
             return res.status(400).json({ error: "Payment not completed" });
           }
 
           // Verify this session is for protection ritual product
           if (session.metadata?.product !== "protection_ritual") {
-            console.log("Invalid session - wrong product metadata");
+            logger.info("Invalid session - wrong product metadata");
             return res.status(400).json({ error: "Invalid session" });
           }
 
           // Verify session is tied to the original checkout session
           if (session.metadata?.originalSession !== originalSessionId) {
-            console.log(
+            logger.info(
               `Session mismatch: expected ${originalSessionId}, got ${session.metadata?.originalSession}`,
             );
             return res.status(400).json({ error: "Session mismatch" });
           }
 
           // Mark upsell as purchased in DB
-          console.log(
+          logger.info(
             `Marking upsell purchased for session ${originalSessionId}, payment ${session.payment_intent}`,
           );
           await markUpsellPurchased(
@@ -727,26 +793,26 @@ export async function registerRoutes(
             session.payment_intent as string,
             4700,
           );
-          console.log("markUpsellPurchased completed");
+          logger.info("markUpsellPurchased completed");
 
           // Save shipping address from fallback checkout to database
           // Try multiple Stripe API paths for shipping data (varies by API version)
           const sessionAny = session as any;
-          console.log(
+          logger.info(
             "Session shipping_details:",
             JSON.stringify(sessionAny.shipping_details),
           );
-          console.log(
+          logger.info(
             "Session collected_information:",
             JSON.stringify(sessionAny.collected_information),
           );
-          console.log("Session shipping:", JSON.stringify(sessionAny.shipping));
+          logger.info("Session shipping:", JSON.stringify(sessionAny.shipping));
 
           const shippingDetails =
             sessionAny.shipping_details ||
             sessionAny.collected_information?.shipping_details ||
             sessionAny.shipping;
-          console.log(
+          logger.info(
             "Extracted shippingDetails:",
             JSON.stringify(shippingDetails),
           );
@@ -762,17 +828,17 @@ export async function registerRoutes(
                 postal: shippingDetails.address?.postal_code || "",
                 country: shippingDetails.address?.country || "",
               });
-              console.log(
+              logger.info(
                 `Saved shipping address from fallback checkout for session ${originalSessionId}`,
               );
             } catch (shippingErr) {
-              console.error(
+              logger.error(
                 "Failed to save fallback shipping address:",
                 shippingErr,
               );
             }
           } else {
-            console.warn(
+            logger.warn(
               `No shipping details found in fallback session ${fallbackSessionId}`,
             );
           }
@@ -787,7 +853,7 @@ export async function registerRoutes(
             upsell1Conversation?.email;
           const customerName =
             session.metadata?.firstName || upsell1Conversation?.firstName;
-          console.log(
+          logger.info(
             `AWeber upsell - email: ${customerEmail}, name: ${customerName}`,
           );
 
@@ -810,23 +876,23 @@ export async function registerRoutes(
                 : undefined,
             })
               .then(() => {
-                console.log("AWeber upsell subscriber added successfully");
+                logger.info("AWeber upsell subscriber added successfully");
               })
               .catch((err) =>
-                console.error("AWeber upsell fallback list error:", err),
+                logger.error("AWeber upsell fallback list error:", err),
               );
           } else {
-            console.log("No customer email found anywhere - skipping AWeber");
+            logger.info("No customer email found anywhere - skipping AWeber");
           }
 
-          console.log("=== CONFIRM-FALLBACK SUCCESS ===");
+          logger.info("=== CONFIRM-FALLBACK SUCCESS ===");
           return res.json({ success: true });
         }
 
-        console.log("Missing fallbackSessionId");
+        logger.info("Missing fallbackSessionId");
         return res.status(400).json({ error: "Missing fallbackSessionId" });
       } catch (error) {
-        console.error("Confirm fallback error:", error);
+        logger.error("Confirm fallback error:", error);
         return res.status(500).json({ error: "Failed to confirm purchase" });
       }
     },
@@ -849,7 +915,7 @@ export async function registerRoutes(
       const { checkoutSessionId, email, firstName } = parseResult.data;
 
       if (!stripe) {
-        console.warn("Stripe not configured - returning fallback");
+        logger.warn("Stripe not configured - returning fallback");
         return res.json({ success: false, fallback: true });
       }
 
@@ -862,7 +928,7 @@ export async function registerRoutes(
 
       // Validate session is paid
       if (session.payment_status !== "paid") {
-        console.warn("Session not paid:", session.id, session.payment_status);
+        logger.warn("Session not paid:", session.id, session.payment_status);
         return res.json({
           success: false,
           fallback: true,
@@ -876,7 +942,7 @@ export async function registerRoutes(
         session.customer_email &&
         session.customer_email.toLowerCase() !== email.toLowerCase()
       ) {
-        console.warn(
+        logger.warn(
           "Session email mismatch:",
           session.customer_email,
           "vs",
@@ -889,7 +955,7 @@ export async function registerRoutes(
       }
 
       if (!session.customer || !session.payment_intent) {
-        console.warn("Missing customer or payment intent:", session.id);
+        logger.warn("Missing customer or payment intent:", session.id);
         return res.json({ success: false, fallback: true });
       }
 
@@ -902,7 +968,7 @@ export async function registerRoutes(
 
       // Validate the original payment succeeded
       if (paymentIntent.status !== "succeeded") {
-        console.warn("Original payment not succeeded:", paymentIntent.status);
+        logger.warn("Original payment not succeeded:", paymentIntent.status);
         return res.json({ success: false, fallback: true });
       }
 
@@ -918,7 +984,7 @@ export async function registerRoutes(
       }
 
       if (!paymentMethodId) {
-        console.warn("No reusable payment method found");
+        logger.warn("No reusable payment method found");
         return res.json({ success: false, fallback: true });
       }
 
@@ -948,7 +1014,7 @@ export async function registerRoutes(
         (async () => {
           try {
             // Wait 3 seconds to allow shipping form submission to complete
-            console.log(
+            logger.info(
               "1-click upsell: Waiting 3 seconds for shipping form to save...",
             );
             await new Promise((resolve) => setTimeout(resolve, 3000));
@@ -959,7 +1025,7 @@ export async function registerRoutes(
 
             // If shipping not found, retry once after another 2 seconds
             if (!conversation?.shippingLine1) {
-              console.log(
+              logger.info(
                 "1-click upsell: Shipping not found, retrying in 2 seconds...",
               );
               await new Promise((resolve) => setTimeout(resolve, 2000));
@@ -968,7 +1034,7 @@ export async function registerRoutes(
             }
 
             const hasShipping = !!conversation?.shippingLine1;
-            console.log(
+            logger.info(
               `1-click upsell: Shipping ${hasShipping ? "found" : "not found"} for session ${checkoutSessionId}`,
             );
 
@@ -988,11 +1054,11 @@ export async function registerRoutes(
                     shipping_country: conversation.shippingCountry || "",
                   },
                 });
-                console.log(
+                logger.info(
                   "1-click upsell: Updated Stripe payment with shipping metadata",
                 );
               } catch (stripeErr) {
-                console.error(
+                logger.error(
                   "1-click upsell: Failed to update Stripe metadata:",
                   stripeErr,
                 );
@@ -1020,16 +1086,16 @@ export async function registerRoutes(
                     : undefined,
               })
                 .then(() => {
-                  console.log(
+                  logger.info(
                     "1-click upsell: AWeber subscriber added successfully",
                   );
                 })
                 .catch((err) =>
-                  console.error("1-click upsell: AWeber error:", err),
+                  logger.error("1-click upsell: AWeber error:", err),
                 );
             }
           } catch (bgErr) {
-            console.error("1-click upsell: Background task error:", bgErr);
+            logger.error("1-click upsell: Background task error:", bgErr);
           }
         })();
 
@@ -1042,13 +1108,13 @@ export async function registerRoutes(
         upsellPayment.status === "requires_confirmation"
       ) {
         // Card requires authentication - fallback to full checkout
-        console.log("Payment requires action, falling back to checkout");
+        logger.info("Payment requires action, falling back to checkout");
         return res.json({ success: false, fallback: true });
       } else {
         return res.json({ success: false, fallback: true });
       }
     } catch (error: any) {
-      console.error("Upsell charge error:", error?.message || error);
+      logger.error("Upsell charge error:", error?.message || error);
 
       // Handle Stripe-specific errors that require fallback
       const fallbackCodes = [
@@ -1085,7 +1151,7 @@ export async function registerRoutes(
           parseResult.data;
 
         if (!stripe) {
-          console.warn("Stripe not configured - returning mock URL");
+          logger.warn("Stripe not configured - returning mock URL");
           return res.json({
             url: `/welcome2?session_id=${encodeURIComponent(originalSessionId)}&fallback_session_id=mock_fallback`,
           });
@@ -1133,7 +1199,7 @@ export async function registerRoutes(
 
         return res.json({ url: session.url });
       } catch (error) {
-        console.error("Fallback checkout error:", error);
+        logger.error("Fallback checkout error:", error);
         return res.status(500).json({ error: "Checkout failed" });
       }
     },
@@ -1168,7 +1234,7 @@ export async function registerRoutes(
         // Save to database using session ID
         await saveShippingAddress(sessionId, address);
 
-        console.log("Upsell order to ship (by session):", {
+        logger.info("Upsell order to ship (by session):", {
           sessionId,
           address,
           createdAt: new Date().toISOString(),
@@ -1203,12 +1269,12 @@ export async function registerRoutes(
                 },
               })
                 .then(() => {
-                  console.log(
+                  logger.info(
                     "Shipping save: AWeber upsell subscriber updated with shipping",
                   );
                 })
                 .catch((err) =>
-                  console.error("Shipping save: AWeber update error:", err),
+                  logger.error("Shipping save: AWeber update error:", err),
                 );
             }
 
@@ -1231,18 +1297,18 @@ export async function registerRoutes(
                     },
                   },
                 );
-                console.log(
+                logger.info(
                   "Shipping save: Updated Stripe payment with shipping metadata",
                 );
               } catch (stripeErr) {
-                console.error(
+                logger.error(
                   "Shipping save: Failed to update Stripe metadata:",
                   stripeErr,
                 );
               }
             }
           } catch (bgErr) {
-            console.error(
+            logger.error(
               "Shipping save: Background AWeber/Stripe update error:",
               bgErr,
             );
@@ -1264,7 +1330,7 @@ export async function registerRoutes(
 
       const { paymentIntentId, firstName, email, address } = parseResult.data;
 
-      console.log("Upsell order to ship (legacy):", {
+      logger.info("Upsell order to ship (legacy):", {
         paymentIntentId,
         firstName,
         email,
@@ -1274,7 +1340,7 @@ export async function registerRoutes(
 
       return res.json({ success: true });
     } catch (error) {
-      console.error("Shipping save error:", error);
+      logger.error("Shipping save error:", error);
       return res.status(500).json({ error: "Failed to save address" });
     }
   });
@@ -1318,7 +1384,7 @@ export async function registerRoutes(
           : null,
       });
     } catch (error) {
-      console.error("Upsell2 user-data error:", error);
+      logger.error("Upsell2 user-data error:", error);
       return res.status(500).json({ error: "Failed to fetch user data" });
     }
   });
@@ -1357,7 +1423,7 @@ export async function registerRoutes(
 
       return res.json(result);
     } catch (error) {
-      console.error("Upsell2 reading error:", error);
+      logger.error("Upsell2 reading error:", error);
       return res.status(500).json({ error: "Failed to generate reading" });
     }
   });
@@ -1378,7 +1444,7 @@ export async function registerRoutes(
       const amount = type === "full" ? 4700 : 3000;
 
       if (!stripe) {
-        console.warn("Stripe not configured - returning fallback");
+        logger.warn("Stripe not configured - returning fallback");
         return res.json({ success: false, fallback: true });
       }
 
@@ -1390,7 +1456,7 @@ export async function registerRoutes(
       );
 
       if (session.payment_status !== "paid") {
-        console.warn(
+        logger.warn(
           "Upsell2: Session not paid:",
           session.id,
           session.payment_status,
@@ -1407,7 +1473,7 @@ export async function registerRoutes(
         session.customer_email &&
         session.customer_email.toLowerCase() !== email.toLowerCase()
       ) {
-        console.warn(
+        logger.warn(
           "Upsell2: Session email mismatch:",
           session.customer_email,
           "vs",
@@ -1420,7 +1486,7 @@ export async function registerRoutes(
       }
 
       if (!session.customer || !session.payment_intent) {
-        console.warn(
+        logger.warn(
           "Upsell2: Missing customer or payment intent:",
           session.id,
         );
@@ -1435,7 +1501,7 @@ export async function registerRoutes(
       const paymentIntent = session.payment_intent as Stripe.PaymentIntent;
 
       if (paymentIntent.status !== "succeeded") {
-        console.warn(
+        logger.warn(
           "Upsell2: Original payment not succeeded:",
           paymentIntent.status,
         );
@@ -1453,7 +1519,7 @@ export async function registerRoutes(
       }
 
       if (!paymentMethodId) {
-        console.warn("Upsell2: No reusable payment method found");
+        logger.warn("Upsell2: No reusable payment method found");
         return res.json({ success: false, fallback: true });
       }
 
@@ -1489,7 +1555,7 @@ export async function registerRoutes(
 
         (async () => {
           try {
-            console.log(
+            logger.info(
               "Upsell2 1-click: Waiting 3 seconds for shipping form to save...",
             );
             await new Promise((resolve) => setTimeout(resolve, 3000));
@@ -1498,7 +1564,7 @@ export async function registerRoutes(
               await getConversationByStripeSession(checkoutSessionId);
 
             if (!conversation?.shipping2Line1 && !conversation?.shippingLine1) {
-              console.log(
+              logger.info(
                 "Upsell2 1-click: Shipping not found, retrying in 2 seconds...",
               );
               await new Promise((resolve) => setTimeout(resolve, 2000));
@@ -1525,11 +1591,11 @@ export async function registerRoutes(
                     shipping_country: conversation.shipping2Country || "",
                   },
                 });
-                console.log(
+                logger.info(
                   "Upsell2 1-click: Updated Stripe with shipping2 metadata",
                 );
               } catch (stripeErr) {
-                console.error(
+                logger.error(
                   "Upsell2 1-click: Failed to update Stripe metadata:",
                   stripeErr,
                 );
@@ -1550,11 +1616,11 @@ export async function registerRoutes(
                     shipping_country: conversation.shippingCountry || "",
                   },
                 });
-                console.log(
+                logger.info(
                   "Upsell2 1-click: Updated Stripe with shipping1 metadata (reused)",
                 );
               } catch (stripeErr) {
-                console.error(
+                logger.error(
                   "Upsell2 1-click: Failed to update Stripe metadata:",
                   stripeErr,
                 );
@@ -1591,16 +1657,16 @@ export async function registerRoutes(
                       : undefined,
               })
                 .then(() => {
-                  console.log(
+                  logger.info(
                     "Upsell2 1-click: AWeber subscriber added to list 6939683",
                   );
                 })
                 .catch((err) =>
-                  console.error("Upsell2 1-click: AWeber error:", err),
+                  logger.error("Upsell2 1-click: AWeber error:", err),
                 );
             }
           } catch (bgErr) {
-            console.error("Upsell2 1-click: Background task error:", bgErr);
+            logger.error("Upsell2 1-click: Background task error:", bgErr);
           }
         })();
 
@@ -1612,7 +1678,7 @@ export async function registerRoutes(
         upsell2Payment.status === "requires_action" ||
         upsell2Payment.status === "requires_confirmation"
       ) {
-        console.log(
+        logger.info(
           "Upsell2: Payment requires action, falling back to checkout",
         );
         return res.json({ success: false, fallback: true });
@@ -1620,7 +1686,7 @@ export async function registerRoutes(
         return res.json({ success: false, fallback: true });
       }
     } catch (error: any) {
-      console.error("Upsell2 charge error:", error?.message || error);
+      logger.error("Upsell2 charge error:", error?.message || error);
 
       const fallbackCodes = [
         "card_declined",
@@ -1655,7 +1721,7 @@ export async function registerRoutes(
         const amount = type === "full" ? 4700 : 3000;
 
         if (!stripe) {
-          console.warn("Stripe not configured - returning mock URL");
+          logger.warn("Stripe not configured - returning mock URL");
           return res.json({
             url: `/success?upsell2=true&session_id=${encodeURIComponent(originalSessionId)}&fallback_session_id=mock_fallback`,
           });
@@ -1711,7 +1777,7 @@ export async function registerRoutes(
 
         return res.json({ url: session.url });
       } catch (error) {
-        console.error("Upsell2 fallback checkout error:", error);
+        logger.error("Upsell2 fallback checkout error:", error);
         return res.status(500).json({ error: "Checkout failed" });
       }
     },
@@ -1732,7 +1798,7 @@ export async function registerRoutes(
 
       await saveShipping2Address(sessionId, address);
 
-      console.log("Upsell2 bracelet order to ship:", {
+      logger.info("Upsell2 bracelet order to ship:", {
         sessionId,
         address,
         createdAt: new Date().toISOString(),
@@ -1770,12 +1836,12 @@ export async function registerRoutes(
               },
             })
               .then(() => {
-                console.log(
+                logger.info(
                   "Upsell2 shipping save: AWeber subscriber updated with shipping",
                 );
               })
               .catch((err) =>
-                console.error(
+                logger.error(
                   "Upsell2 shipping save: AWeber update error:",
                   err,
                 ),
@@ -1802,18 +1868,18 @@ export async function registerRoutes(
                   },
                 },
               );
-              console.log(
+              logger.info(
                 "Upsell2 shipping save: Updated Stripe payment with shipping metadata",
               );
             } catch (stripeErr) {
-              console.error(
+              logger.error(
                 "Upsell2 shipping save: Failed to update Stripe metadata:",
                 stripeErr,
               );
             }
           }
         } catch (bgErr) {
-          console.error(
+          logger.error(
             "Upsell2 shipping save: Background AWeber/Stripe update error:",
             bgErr,
           );
@@ -1822,7 +1888,7 @@ export async function registerRoutes(
 
       return res.json({ success: true });
     } catch (error) {
-      console.error("Upsell2 shipping save error:", error);
+      logger.error("Upsell2 shipping save error:", error);
       return res.status(500).json({ error: "Failed to save address" });
     }
   });
@@ -1831,20 +1897,20 @@ export async function registerRoutes(
   app.post(
     "/api/upsell2/confirm-fallback",
     async (req: Request, res: Response) => {
-      console.log("=== UPSELL2 CONFIRM-FALLBACK ENDPOINT CALLED ===");
-      console.log("Request body:", JSON.stringify(req.body));
+      logger.info("=== UPSELL2 CONFIRM-FALLBACK ENDPOINT CALLED ===");
+      logger.info("Request body:", JSON.stringify(req.body));
 
       try {
         const { originalSessionId, fallbackSessionId } = req.body;
 
         if (!originalSessionId) {
-          console.log("Missing originalSessionId");
+          logger.info("Missing originalSessionId");
           return res.status(400).json({ error: "Missing originalSessionId" });
         }
 
         // If no Stripe, just mark as purchased (dev mode)
         if (!stripe) {
-          console.log("No Stripe configured - dev mode");
+          logger.info("No Stripe configured - dev mode");
           await markUpsell2Purchased(
             originalSessionId,
             "fallback_checkout_dev",
@@ -1855,31 +1921,31 @@ export async function registerRoutes(
         }
 
         if (!fallbackSessionId) {
-          console.log("Missing fallbackSessionId");
+          logger.info("Missing fallbackSessionId");
           return res.status(400).json({ error: "Missing fallbackSessionId" });
         }
 
-        console.log(`Retrieving Stripe session: ${fallbackSessionId}`);
+        logger.info(`Retrieving Stripe session: ${fallbackSessionId}`);
         const session =
           await stripe.checkout.sessions.retrieve(fallbackSessionId);
 
-        console.log("Session payment_status:", session.payment_status);
-        console.log("Session metadata:", JSON.stringify(session.metadata));
+        logger.info("Session payment_status:", session.payment_status);
+        logger.info("Session metadata:", JSON.stringify(session.metadata));
 
         if (session.payment_status !== "paid") {
-          console.log("Payment not completed");
+          logger.info("Payment not completed");
           return res.status(400).json({ error: "Payment not completed" });
         }
 
         // Verify this session is for manifestation bracelet product
         if (session.metadata?.product !== "manifestation_bracelet") {
-          console.log("Invalid session - wrong product metadata");
+          logger.info("Invalid session - wrong product metadata");
           return res.status(400).json({ error: "Invalid session" });
         }
 
         // Verify session is tied to the original checkout session
         if (session.metadata?.originalSession !== originalSessionId) {
-          console.log(
+          logger.info(
             `Session mismatch: expected ${originalSessionId}, got ${session.metadata?.originalSession}`,
           );
           return res.status(400).json({ error: "Session mismatch" });
@@ -1890,7 +1956,7 @@ export async function registerRoutes(
           session.amount_total || (braceletType === "full" ? 4700 : 3000);
 
         // Mark upsell2 as purchased in DB
-        console.log(
+        logger.info(
           `Marking upsell2 purchased for session ${originalSessionId}, payment ${session.payment_intent}`,
         );
         await markUpsell2Purchased(
@@ -1899,26 +1965,26 @@ export async function registerRoutes(
           amount,
           braceletType,
         );
-        console.log("markUpsell2Purchased completed");
+        logger.info("markUpsell2Purchased completed");
 
         // Save shipping address from fallback checkout to database
         // Try multiple Stripe API paths for shipping data (varies by API version)
         const sessionAny = session as any;
-        console.log(
+        logger.info(
           "Session shipping_details:",
           JSON.stringify(sessionAny.shipping_details),
         );
-        console.log(
+        logger.info(
           "Session collected_information:",
           JSON.stringify(sessionAny.collected_information),
         );
-        console.log("Session shipping:", JSON.stringify(sessionAny.shipping));
+        logger.info("Session shipping:", JSON.stringify(sessionAny.shipping));
 
         const shippingDetails =
           sessionAny.shipping_details ||
           sessionAny.collected_information?.shipping_details ||
           sessionAny.shipping;
-        console.log(
+        logger.info(
           "Extracted shippingDetails:",
           JSON.stringify(shippingDetails),
         );
@@ -1934,17 +2000,17 @@ export async function registerRoutes(
               postal: shippingDetails.address?.postal_code || "",
               country: shippingDetails.address?.country || "",
             });
-            console.log(
+            logger.info(
               `Saved shipping2 address from fallback checkout for session ${originalSessionId}`,
             );
           } catch (shippingErr) {
-            console.error(
+            logger.error(
               "Failed to save fallback shipping2 address:",
               shippingErr,
             );
           }
         } else {
-          console.warn(
+          logger.warn(
             `No shipping details found in fallback session ${fallbackSessionId}`,
           );
         }
@@ -1959,7 +2025,7 @@ export async function registerRoutes(
           conversation?.email;
         const customerName =
           session.metadata?.firstName || conversation?.firstName;
-        console.log(
+        logger.info(
           `AWeber upsell2 - email: ${customerEmail}, name: ${customerName}`,
         );
 
@@ -1982,19 +2048,19 @@ export async function registerRoutes(
               : undefined,
           })
             .then(() => {
-              console.log("AWeber upsell2 subscriber added successfully");
+              logger.info("AWeber upsell2 subscriber added successfully");
             })
             .catch((err) =>
-              console.error("AWeber upsell2 fallback list error:", err),
+              logger.error("AWeber upsell2 fallback list error:", err),
             );
         } else {
-          console.log("No customer email found anywhere - skipping AWeber");
+          logger.info("No customer email found anywhere - skipping AWeber");
         }
 
-        console.log("=== UPSELL2 CONFIRM-FALLBACK SUCCESS ===");
+        logger.info("=== UPSELL2 CONFIRM-FALLBACK SUCCESS ===");
         return res.json({ success: true });
       } catch (error) {
-        console.error("Upsell2 confirm fallback error:", error);
+        logger.error("Upsell2 confirm fallback error:", error);
         return res.status(500).json({ error: "Failed to confirm purchase" });
       }
     },
@@ -2062,7 +2128,7 @@ export async function registerRoutes(
 
       return res.json(result);
     } catch (error) {
-      console.error("FB event error:", error);
+      logger.error("FB event error:", error);
       return res.status(500).json({ error: "Failed to send event" });
     }
   });

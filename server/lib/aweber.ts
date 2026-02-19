@@ -1,3 +1,5 @@
+import logger from './logger';
+
 const AWEBER_API_BASE = 'https://api.aweber.com/1.0';
 
 interface AWeberTokens {
@@ -64,7 +66,7 @@ async function refreshAccessToken(): Promise<string> {
     const credentials = Buffer.from(`${clientId}:${clientSecret}`).toString('base64');
     headers['Authorization'] = `Basic ${credentials}`;
   } else {
-    console.warn('AWeber client credentials not set - token refresh may fail');
+    logger.warn('AWeber client credentials not set - token refresh may fail');
   }
   
   const response = await fetch('https://auth.aweber.com/oauth2/token', {
@@ -75,7 +77,7 @@ async function refreshAccessToken(): Promise<string> {
   
   if (!response.ok) {
     const error = await response.text();
-    console.error('AWeber token refresh failed:', error);
+    logger.error('AWeber token refresh failed:', error);
     throw new Error('Failed to refresh AWeber token');
   }
   
@@ -85,7 +87,7 @@ async function refreshAccessToken(): Promise<string> {
     refreshToken: data.refresh_token || tokens.refreshToken,
   };
   
-  console.log('AWeber token refreshed successfully');
+  logger.info('AWeber token refreshed successfully');
   return cachedTokens.accessToken;
 }
 
@@ -106,7 +108,7 @@ async function makeAWeberRequest(
   });
   
   if (response.status === 401 && retry) {
-    console.log('AWeber token expired, refreshing...');
+    logger.info('AWeber token expired, refreshing...');
     await refreshAccessToken();
     return makeAWeberRequest(endpoint, options, false);
   }
@@ -119,12 +121,12 @@ export async function addSubscriberToList(params: AddSubscriberParams): Promise<
   const listId = process.env.AWEBER_LIST_ID;
   
   if (!accountId || !listId) {
-    console.warn('AWeber account/list not configured');
+    logger.warn('AWeber account/list not configured');
     return { success: false, error: 'AWeber not configured' };
   }
   
   if (!process.env.AWEBER_ACCESS_TOKEN || !process.env.AWEBER_REFRESH_TOKEN) {
-    console.warn('AWeber tokens not configured');
+    logger.warn('AWeber tokens not configured');
     return { success: false, error: 'AWeber tokens not configured' };
   }
   
@@ -151,24 +153,24 @@ export async function addSubscriberToList(params: AddSubscriberParams): Promise<
     );
     
     if (response.ok || response.status === 201) {
-      console.log(`AWeber: Successfully added subscriber ${params.email}`);
+      logger.info(`AWeber: Successfully added subscriber ${params.email}`);
       return { success: true };
     }
     
     if (response.status === 400) {
       const errorData = await response.json();
       if (errorData.error?.message?.includes('already subscribed')) {
-        console.log(`AWeber: Subscriber ${params.email} already exists`);
+        logger.info(`AWeber: Subscriber ${params.email} already exists`);
         return { success: true };
       }
     }
     
     const errorText = await response.text();
-    console.error('AWeber add subscriber failed:', response.status, errorText);
+    logger.error('AWeber add subscriber failed:', response.status, errorText);
     return { success: false, error: `AWeber API error: ${response.status}` };
     
   } catch (error) {
-    console.error('AWeber error:', error);
+    logger.error('AWeber error:', error);
     return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
   }
 }
@@ -178,12 +180,12 @@ export async function addUpsellSubscriber(params: AddPaidSubscriberParams): Prom
   const upsellListId = '6937139';
   
   if (!accountId) {
-    console.warn('AWeber account not configured');
+    logger.warn('AWeber account not configured');
     return { success: false, error: 'AWeber not configured' };
   }
   
   if (!process.env.AWEBER_ACCESS_TOKEN || !process.env.AWEBER_REFRESH_TOKEN) {
-    console.warn('AWeber tokens not configured');
+    logger.warn('AWeber tokens not configured');
     return { success: false, error: 'AWeber tokens not configured' };
   }
   
@@ -227,24 +229,24 @@ export async function addUpsellSubscriber(params: AddPaidSubscriberParams): Prom
     );
     
     if (response.ok || response.status === 201) {
-      console.log(`AWeber Upsell List: Successfully added subscriber ${params.email} with order ${params.stripeOrderId}`);
+      logger.info(`AWeber Upsell List: Successfully added subscriber ${params.email} with order ${params.stripeOrderId}`);
       return { success: true };
     }
     
     if (response.status === 400) {
       const errorData = await response.json();
       if (errorData.error?.message?.includes('already subscribed')) {
-        console.log(`AWeber Upsell List: Subscriber ${params.email} already exists`);
+        logger.info(`AWeber Upsell List: Subscriber ${params.email} already exists`);
         return { success: true };
       }
     }
     
     const errorText = await response.text();
-    console.error('AWeber upsell list add subscriber failed:', response.status, errorText);
+    logger.error('AWeber upsell list add subscriber failed:', response.status, errorText);
     return { success: false, error: `AWeber API error: ${response.status}` };
     
   } catch (error) {
-    console.error('AWeber upsell list error:', error);
+    logger.error('AWeber upsell list error:', error);
     return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
   }
 }
@@ -254,12 +256,12 @@ export async function addUpsell2Subscriber(params: AddPaidSubscriberParams): Pro
   const upsell2ListId = '6939683';
   
   if (!accountId) {
-    console.warn('AWeber account not configured');
+    logger.warn('AWeber account not configured');
     return { success: false, error: 'AWeber not configured' };
   }
   
   if (!process.env.AWEBER_ACCESS_TOKEN || !process.env.AWEBER_REFRESH_TOKEN) {
-    console.warn('AWeber tokens not configured');
+    logger.warn('AWeber tokens not configured');
     return { success: false, error: 'AWeber tokens not configured' };
   }
   
@@ -301,24 +303,24 @@ export async function addUpsell2Subscriber(params: AddPaidSubscriberParams): Pro
     );
     
     if (response.ok || response.status === 201) {
-      console.log(`AWeber Upsell2 List (${upsell2ListId}): Successfully added subscriber ${params.email} with order ${params.stripeOrderId}`);
+      logger.info(`AWeber Upsell2 List (${upsell2ListId}): Successfully added subscriber ${params.email} with order ${params.stripeOrderId}`);
       return { success: true };
     }
     
     if (response.status === 400) {
       const errorData = await response.json();
       if (errorData.error?.message?.includes('already subscribed')) {
-        console.log(`AWeber Upsell2 List: Subscriber ${params.email} already exists`);
+        logger.info(`AWeber Upsell2 List: Subscriber ${params.email} already exists`);
         return { success: true };
       }
     }
     
     const errorText = await response.text();
-    console.error('AWeber upsell2 list add subscriber failed:', response.status, errorText);
+    logger.error('AWeber upsell2 list add subscriber failed:', response.status, errorText);
     return { success: false, error: `AWeber API error: ${response.status}` };
     
   } catch (error) {
-    console.error('AWeber upsell2 list error:', error);
+    logger.error('AWeber upsell2 list error:', error);
     return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
   }
 }
@@ -328,12 +330,12 @@ export async function addPaidSubscriber(params: AddPaidSubscriberParams): Promis
   const paidListId = process.env.AWEBER_PAID_LIST_ID || '6936955';
   
   if (!accountId) {
-    console.warn('AWeber account not configured');
+    logger.warn('AWeber account not configured');
     return { success: false, error: 'AWeber not configured' };
   }
   
   if (!process.env.AWEBER_ACCESS_TOKEN || !process.env.AWEBER_REFRESH_TOKEN) {
-    console.warn('AWeber tokens not configured');
+    logger.warn('AWeber tokens not configured');
     return { success: false, error: 'AWeber tokens not configured' };
   }
   
@@ -363,24 +365,24 @@ export async function addPaidSubscriber(params: AddPaidSubscriberParams): Promis
     );
     
     if (response.ok || response.status === 201) {
-      console.log(`AWeber Paid List: Successfully added subscriber ${params.email} with order ${params.stripeOrderId}`);
+      logger.info(`AWeber Paid List: Successfully added subscriber ${params.email} with order ${params.stripeOrderId}`);
       return { success: true };
     }
     
     if (response.status === 400) {
       const errorData = await response.json();
       if (errorData.error?.message?.includes('already subscribed')) {
-        console.log(`AWeber Paid List: Subscriber ${params.email} already exists`);
+        logger.info(`AWeber Paid List: Subscriber ${params.email} already exists`);
         return { success: true };
       }
     }
     
     const errorText = await response.text();
-    console.error('AWeber paid list add subscriber failed:', response.status, errorText);
+    logger.error('AWeber paid list add subscriber failed:', response.status, errorText);
     return { success: false, error: `AWeber API error: ${response.status}` };
     
   } catch (error) {
-    console.error('AWeber paid list error:', error);
+    logger.error('AWeber paid list error:', error);
     return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
   }
 }

@@ -19,7 +19,7 @@ interface UserSummary {
   id: string;
   email: string;
   firstName: string;
-  creditMinutes: number;
+  coinBalance: number;
   totalMinutesUsed: number;
   accountStatus: string;
   sessionCount: number;
@@ -178,7 +178,7 @@ export default function UsersList() {
                       </td>
                       <td className="px-4 py-3 text-right">
                         <span className="text-sm text-white">
-                          {user.creditMinutes}m
+                          {user.coinBalance} coins
                         </span>
                         <span className="text-xs text-gray-600 block">
                           {user.totalMinutesUsed}m used

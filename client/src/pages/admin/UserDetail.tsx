@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { toast } from "@/hooks/use-toast";
 import {
   ArrowLeft,
   Clock,
@@ -20,8 +21,8 @@ interface UserProfile {
   id: string;
   email: string;
   firstName: string;
-  creditMinutes: number;
-  totalMinutesUsed: number;
+  coinBalance: number;
+  totalCoinsUsed: number;
   accountStatus: string;
   defaultPersonaId: string | null;
   lastLoginAt: string | null;
@@ -36,7 +37,7 @@ interface UserSession {
   startedAt: string;
   endedAt: string | null;
   durationSeconds: number;
-  minutesCharged: number;
+  coinsCharged: number;
   status: string;
   messageCount: number;
 }
@@ -44,7 +45,7 @@ interface UserSession {
 interface UserPurchase {
   id: string;
   packageType: string;
-  minutesPurchased: number;
+  coinsPurchased: number;
   priceUsd: number;
   status: string;
   createdAt: string;
@@ -113,24 +114,53 @@ export default function UserDetail() {
   }
 
   const handleGrantCredits = async () => {
-    const minutesStr = window.prompt("Minutes to grant:");
-    if (!minutesStr) return;
-    const minutes = parseInt(minutesStr);
-    if (isNaN(minutes) || minutes <= 0) return;
+    const coinsStr = window.prompt("Coins to grant (use negative to deduct):");
+    if (!coinsStr) return;
+    const coins = parseInt(coinsStr);
+    if (isNaN(coins) || coins === 0) {
+      toast({
+        title: "Invalid Input",
+        description: "Please enter a valid number of coins (cannot be 0).",
+        variant: "destructive",
+      });
+      return;
+    }
 
     try {
       const res = await adminFetch(`/api/admin/users/${userId}/credits`, {
         method: "PATCH",
-        body: JSON.stringify({ minutes, reason: "Admin grant" }),
+        body: JSON.stringify({ coins, reason: "Admin grant" }),
       });
+
       if (res.ok) {
         const data = await res.json();
         setUser((prev) =>
-          prev ? { ...prev, creditMinutes: data.user?.newBalance ?? prev.creditMinutes } : prev,
+          prev ? { ...prev, coinBalance: data.user?.newBalance ?? prev.coinBalance } : prev,
         );
+
+        toast({
+          title: "Credits Updated",
+          description: `${coins > 0 ? 'Granted' : 'Deducted'} ${Math.abs(coins)} coins. New balance: ${data.user?.newBalance} coins.`,
+          variant: "default",
+        });
+
+        // Refresh data to show transaction in purchase history
+        fetchUserData();
+      } else {
+        const error = await res.json();
+        toast({
+          title: "Failed to Update Credits",
+          description: error.error || "An unknown error occurred.",
+          variant: "destructive",
+        });
       }
     } catch (err) {
       console.error("Failed to grant credits:", err);
+      toast({
+        title: "Network Error",
+        description: "Unable to connect to server. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -203,9 +233,9 @@ export default function UserDetail() {
               <CardContent className="p-4 text-center">
                 <Clock className="w-5 h-5 text-purple-400 mx-auto mb-1" />
                 <p className="text-2xl font-bold text-white">
-                  {user.creditMinutes}
+                  {user.coinBalance}
                 </p>
-                <p className="text-xs text-gray-500">Credits (min)</p>
+                <p className="text-xs text-gray-500">Credits (coins)</p>
               </CardContent>
             </Card>
             <Card className="bg-gray-900 border-gray-800">
@@ -400,7 +430,7 @@ export default function UserDetail() {
                       >
                         <div>
                           <p className="text-sm text-white">
-                            {p.minutesPurchased} minutes ({p.packageType})
+                            {p.coinsPurchased} coins ({p.packageType})
                           </p>
                           <p className="text-xs text-gray-500">
                             {new Date(p.createdAt).toLocaleString()}

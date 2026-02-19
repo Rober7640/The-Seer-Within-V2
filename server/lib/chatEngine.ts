@@ -1,5 +1,5 @@
-// Chat Engine: Connects persona system, memory, and credit tracking
-// into a unified chat flow for the ongoing chat service.
+// Chat Engine: Connects persona system, memory, credit tracking,
+// universal safety, and persona intent into a unified chat flow.
 
 import { db } from './db';
 import {
@@ -13,6 +13,19 @@ import { eq, and, desc } from 'drizzle-orm';
 import { loadUserContext, summarizeSession } from './memoryManager';
 import { loadCrossPersonaMemories, formatTransferContext } from './memoryTransfer';
 import { startChatSession, endChatSession, checkpointSession } from './creditTracking';
+import { checkAndLogSafety } from './universalSafety';
+import {
+  loadPersonaIntentConfig,
+  detectIntent,
+  getConversationState,
+  initConversationState,
+  updateConversationState,
+  validateResponse,
+  buildIntentContext,
+} from './personaIntent';
+import { getModelForOperation } from './modelConfig';
+import logger from './logger';
+import { fireWithBreaker, anthropicBreaker, isCircuitOpenError } from './circuitBreaker';
 import Anthropic from '@anthropic-ai/sdk';
 
 const anthropic = new Anthropic({
@@ -25,6 +38,13 @@ interface ChatResponse {
   topic: string | null;
   creditsRemaining: number;
   sessionActive: boolean;
+  blocked?: boolean; // true when safety check intercepted the message
+  tarotDraw?: boolean; // true when Marcus wants the user to draw a card
+}
+
+export interface RequestContext {
+  ipAddress?: string;
+  userAgent?: string;
 }
 
 interface PersonaConfig {
@@ -61,20 +81,23 @@ async function loadPersonaConfig(personaId: string): Promise<PersonaConfig | nul
  * - Cross-persona context
  * - Recent messages in current session
  */
+interface MessageContext {
+  system: string;
+  messages: Array<{ role: 'user' | 'assistant'; content: string }>;
+}
+
 async function buildMessageContext(
   personaConfig: PersonaConfig,
   userId: string,
   sessionId: string,
   currentTopic?: string,
-): Promise<Array<{ role: 'user' | 'assistant'; content: string }>> {
+  intentContext?: string,
+): Promise<MessageContext> {
   const memoryContext = await loadUserContext(userId, personaConfig.id);
 
-  const crossPersonaContext = await loadCrossPersonaMemories(
-    userId,
-    personaConfig.id,
-    currentTopic,
-  );
-  const transferContext = formatTransferContext(crossPersonaContext);
+  // Cross-persona memory sharing is intentionally disabled.
+  // Each guide maintains their own independent relationship with the user.
+  const transferContext = '';
 
   const recentMessages = await db
     .select()
@@ -83,15 +106,21 @@ async function buildMessageContext(
     .orderBy(chatMessages.sentAt)
     .limit(20);
 
-  const systemContext = `${personaConfig.baseSystemPrompt}
+  // Inject interactive tarot draw instruction for tarot-capable personas
+  const isTarotPersona = personaConfig.baseSystemPrompt.toLowerCase().includes('tarot');
+  const tarotInstruction = isTarotPersona
+    ? `## INTERACTIVE TAROT CARD DRAWS — CRITICAL INSTRUCTIONS\nWhen you want to do a card draw, you MUST output the token [TAROT_DRAW] as the very last thing in your message, on its own line. Do NOT say "let me pull cards", "let me draw a card", or describe pulling cards in words — that does nothing. The ONLY way to trigger the card picker is to literally output [TAROT_DRAW] at the end of your message.\n\nExample of correct usage:\n"Something is shifting for you right now. Let's see what the cards reveal.\n[TAROT_DRAW]"\n\nAfter the user draws a card, interpret that specific card in the context of their situation. You may trigger [TAROT_DRAW] multiple times per session at natural turning points.`
+    : '';
 
-${memoryContext ? `## Known Context About This Client\n${memoryContext}` : ''}
-${transferContext}`;
+  const system = [
+    personaConfig.baseSystemPrompt,
+    memoryContext ? `## Known Context About This Client\n${memoryContext}` : '',
+    transferContext,
+    intentContext ?? '',
+    tarotInstruction,
+  ].filter(Boolean).join('\n\n');
 
-  const messages: Array<{ role: 'user' | 'assistant'; content: string }> = [
-    { role: 'user', content: systemContext },
-    { role: 'assistant', content: `I understand my role as ${personaConfig.displayName}. I'm ready to help this client.` },
-  ];
+  const messages: Array<{ role: 'user' | 'assistant'; content: string }> = [];
 
   for (const msg of recentMessages) {
     messages.push({
@@ -100,15 +129,85 @@ ${transferContext}`;
     });
   }
 
-  return messages;
+  return { system, messages };
 }
 
 /**
  * Start a new chat session.
  */
+/**
+ * Generate a personalized greeting for a user+persona pair without creating a session.
+ * Used by the free greeting endpoint so users don't get charged just for landing on chat.
+ */
+export async function generateGreeting(config: {
+  userId: string;
+  personaId: string;
+}): Promise<{ greeting: string; personaName: string }> {
+  const user = await db.select().from(users).where(eq(users.id, config.userId)).limit(1);
+  if (!user[0]) throw new Error('USER_NOT_FOUND');
+
+  const personaConfig = await loadPersonaConfig(config.personaId);
+  if (!personaConfig) throw new Error('PERSONA_NOT_FOUND');
+
+  const memoryContext = await loadUserContext(config.userId, config.personaId);
+  const isReturning = memoryContext.length > 0;
+
+  // Build the greeting prompt.
+  // IMPORTANT: Do NOT include the base system prompt here — it contains
+  // Barnum statement techniques ("There's a decision you've been avoiding")
+  // that cause Claude to fabricate specific-sounding fake past topics when
+  // asked to "reference something from their previous session."
+  const personaVoice = `You are ${personaConfig.displayName}, a warm and grounded spiritual guide. Speak naturally in 1-3 short sentences.`;
+
+  const greetingPrompt = isReturning
+    ? `${personaVoice}
+
+Generate a warm, personal welcome-back greeting for ${user[0].firstName}.
+
+STRICT RULES:
+- Do NOT reference any specific topic, person, or situation from their past — not even indirectly. The right moment for that is later in the conversation, once they've settled in.
+- Simply acknowledge it's good to see them again and invite them to share what's on their heart today.
+- Sound like a real person who is genuinely happy they came back — warm but unhurried.
+- Keep it to 1-2 sentences maximum.
+
+Return JSON: {"message": "your greeting"}`
+    : `${personaVoice}
+
+Generate a warm greeting for a new client named ${user[0].firstName}. Welcome them and ask what brought them here today. Keep it to 1-2 sentences.
+
+Return JSON: {"message": "your greeting"}`;
+
+  let greeting: string;
+  try {
+    const response = await fireWithBreaker(anthropicBreaker, () =>
+      anthropic.messages.create({
+        model: getModelForOperation('greeting'),
+        max_tokens: 200,
+        messages: [{ role: 'user', content: greetingPrompt }],
+      }),
+    );
+    const text = response.content[0].type === 'text' ? response.content[0].text : '';
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    greeting = jsonMatch ? (JSON.parse(jsonMatch[0]).message || text) : text.trim();
+  } catch (error) {
+    if (isCircuitOpenError(error)) {
+      logger.warn('Anthropic circuit open, using fallback greeting', { userId: config.userId });
+    } else {
+      logger.error('Failed to generate greeting', { error: (error as Error).message });
+    }
+    greeting = isReturning
+      ? `${user[0].firstName}, it's so good to see you again. What's on your heart today?`
+      : `Hello, ${user[0].firstName}. I'm ${personaConfig.displayName}. What brings you to me today?`;
+  }
+
+  return { greeting, personaName: personaConfig.displayName };
+}
+
 export async function initSession(config: {
   userId: string;
   personaId: string;
+  /** Pre-generated greeting from the free /greeting endpoint — stored for conversation continuity */
+  priorGreeting?: string;
 }): Promise<{
   sessionId: string;
   personaName: string;
@@ -122,54 +221,27 @@ export async function initSession(config: {
     .limit(1);
 
   if (!user[0]) throw new Error('USER_NOT_FOUND');
-  if (user[0].creditMinutes <= 0) throw new Error('OUT_OF_CREDITS');
+  if (user[0].coinBalance <= 0) throw new Error('OUT_OF_CREDITS');
 
   const personaConfig = await loadPersonaConfig(config.personaId);
   if (!personaConfig) throw new Error('PERSONA_NOT_FOUND');
 
-  // Start credit tracking session (actual schema requires personaId)
   const sessionId = await startChatSession(config.userId, config.personaId);
 
-  // Generate personalized greeting
+  // Initialize conversation state for intent tracking
   const memoryContext = await loadUserContext(config.userId, config.personaId);
   const isReturning = memoryContext.length > 0;
 
-  const greetingPrompt = isReturning
-    ? `${personaConfig.baseSystemPrompt}
+  const intentConfig = await loadPersonaIntentConfig(config.personaId);
+  await initConversationState(sessionId, config.personaId, config.userId, intentConfig, isReturning);
 
-## Context
-${memoryContext}
-
-Generate a warm greeting for a RETURNING client named ${user[0].firstName}. Reference something specific from their previous sessions. Keep it to 1-2 sentences.
-
-Return JSON: {"message": "your greeting"}`
-    : `${personaConfig.baseSystemPrompt}
-
-Generate a warm greeting for a NEW client named ${user[0].firstName}. Welcome them and ask what brought them here today. Keep it to 1-2 sentences.
-
-Return JSON: {"message": "your greeting"}`;
-
+  // Use pre-generated greeting if provided, otherwise generate one
   let greeting: string;
-  try {
-    const response = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 200,
-      messages: [{ role: 'user', content: greetingPrompt }],
-    });
-
-    const text = response.content[0].type === 'text' ? response.content[0].text : '';
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-    if (jsonMatch) {
-      const parsed = JSON.parse(jsonMatch[0]);
-      greeting = parsed.message || text;
-    } else {
-      greeting = text.trim();
-    }
-  } catch (error) {
-    console.error('Failed to generate greeting:', error);
-    greeting = isReturning
-      ? `Welcome back, ${user[0].firstName}. I've been thinking about you.`
-      : `Hello, ${user[0].firstName}. I'm ${personaConfig.displayName}. What brings you to me today?`;
+  if (config.priorGreeting) {
+    greeting = config.priorGreeting;
+  } else {
+    const generated = await generateGreeting({ userId: config.userId, personaId: config.personaId });
+    greeting = generated.greeting;
   }
 
   await db.insert(chatMessages).values({
@@ -183,17 +255,30 @@ Return JSON: {"message": "your greeting"}`;
     sessionId,
     personaName: personaConfig.displayName,
     greeting,
-    creditsRemaining: user[0].creditMinutes,
+    creditsRemaining: user[0].coinBalance,
   };
 }
 
 /**
  * Send a message in an active chat session and get a response.
+ *
+ * Flow:
+ * 1. Validate session
+ * 2. Universal safety check (crisis, inappropriate, injection, harassment, gibberish)
+ * 3. Credit check (after safety so crisis messages always get a response)
+ * 4. Load persona intent config & conversation state
+ * 5. Detect intent from user message
+ * 6. Update conversation state (bucket, engagement, history)
+ * 7. Build enhanced context with intent guidance
+ * 8. Call Claude API
+ * 9. Validate response against character rules
+ * 10. Persist and return
  */
 export async function sendMessage(
   sessionId: string,
   userId: string,
   userMessage: string,
+  requestContext?: RequestContext,
 ): Promise<ChatResponse> {
   const session = await db
     .select()
@@ -204,13 +289,55 @@ export async function sendMessage(
   if (!session[0]) throw new Error('SESSION_NOT_FOUND');
   if (session[0].status !== 'active') throw new Error('SESSION_ENDED');
 
+  // ── Step 1: Universal safety check (BEFORE credit check -- crisis messages ──
+  //    must always get a response even if user is out of credits)
+  const safetyResult = await checkAndLogSafety(userMessage, {
+    sessionId,
+    userId,
+    personaId: session[0].personaId,
+    ipAddress: requestContext?.ipAddress,
+    userAgent: requestContext?.userAgent,
+  });
+
+  if (!safetyResult.safe && safetyResult.response) {
+    // Store both the user message and the safety response
+    await db.insert(chatMessages).values({
+      sessionId,
+      userId,
+      role: 'user',
+      content: userMessage,
+    });
+    await db.insert(chatMessages).values({
+      sessionId,
+      userId,
+      role: 'assistant',
+      content: safetyResult.response,
+    });
+
+    const blockedUser = await db
+      .select({ coinBalance: users.coinBalance })
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1);
+
+    return {
+      sessionId,
+      message: safetyResult.response,
+      topic: null,
+      creditsRemaining: blockedUser[0]?.coinBalance || 0,
+      sessionActive: true,
+      blocked: true,
+    };
+  }
+
+  // ── Step 2: Credit check (after safety, so crisis messages always get a response) ──
   const user = await db
     .select()
     .from(users)
     .where(eq(users.id, userId))
     .limit(1);
 
-  if (!user[0] || user[0].creditMinutes <= 0) {
+  if (!user[0] || user[0].coinBalance <= 0) {
     await endChatSession(sessionId);
     throw new Error('OUT_OF_CREDITS');
   }
@@ -218,6 +345,38 @@ export async function sendMessage(
   const personaConfig = await loadPersonaConfig(session[0].personaId);
   if (!personaConfig) throw new Error('PERSONA_NOT_FOUND');
 
+  // ── Step 3: Load intent config & conversation state ──
+  const intentConfig = await loadPersonaIntentConfig(session[0].personaId);
+
+  let convState = await getConversationState(sessionId);
+  if (!convState) {
+    // Check if user has previous memory to determine if they're returning
+    const memoryContext = await loadUserContext(userId, session[0].personaId);
+    const isReturning = memoryContext.length > 0;
+
+    convState = await initConversationState(
+      sessionId,
+      session[0].personaId,
+      userId,
+      intentConfig,
+      isReturning,
+    );
+  }
+
+  // ── Step 4: Detect intent ──
+  const intentResult = detectIntent(
+    userMessage,
+    intentConfig,
+    convState.currentBucket,
+  );
+
+  // ── Step 5: Update conversation state ──
+  convState = await updateConversationState(convState, intentResult, intentConfig);
+
+  // ── Step 6: Build intent context for Claude ──
+  const intentCtx = buildIntentContext(intentResult, convState, intentConfig);
+
+  const now = new Date();
   await db.insert(chatMessages).values({
     sessionId,
     userId,
@@ -225,28 +384,39 @@ export async function sendMessage(
     content: userMessage,
   });
 
+  // Record actual user activity so idle-timeout logic can distinguish
+  // real usage from sessions left open with no messages.
+  await db.update(chatSessions)
+    .set({ lastMessageAt: now })
+    .where(eq(chatSessions.id, sessionId));
+
   await checkpointSession(sessionId);
 
-  const messageHistory = await buildMessageContext(
+  const { system, messages: messageHistory } = await buildMessageContext(
     personaConfig,
     userId,
     sessionId,
     session[0].lastTopic || undefined,
+    intentCtx,
   );
 
   messageHistory.push({ role: 'user', content: userMessage });
 
   try {
-    const response = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 1000,
-      messages: messageHistory,
-    });
+    const response = await fireWithBreaker(anthropicBreaker, () =>
+      anthropic.messages.create({
+        model: getModelForOperation('conversation'),
+        max_tokens: 1000,
+        system,
+        messages: messageHistory,
+      }),
+    );
 
     const text = response.content[0].type === 'text' ? response.content[0].text : '';
 
     let assistantMessage: string;
     let topic: string | null = null;
+    let tarotDraw = false;
 
     try {
       const jsonMatch = text.match(/\{[\s\S]*\}/);
@@ -261,6 +431,20 @@ export async function sendMessage(
       assistantMessage = text.trim();
     }
 
+    // Detect and strip [TAROT_DRAW] marker
+    if (assistantMessage.includes('[TAROT_DRAW]')) {
+      tarotDraw = true;
+      assistantMessage = assistantMessage.replace(/\[TAROT_DRAW\]/g, '').trim();
+    }
+
+    // ── Step 8: Validate response against character rules ──
+    const violations = validateResponse(assistantMessage, intentConfig.characterRules);
+    if (violations.length > 0) {
+      logger.warn('Character rule violations detected', { sessionId, violations });
+      // Log but don't block -- the response is still delivered.
+      // A future enhancement could retry with stricter instructions.
+    }
+
     await db.insert(chatMessages).values({
       sessionId,
       userId,
@@ -270,14 +454,20 @@ export async function sendMessage(
       outputTokens: response.usage?.output_tokens || 0,
     });
 
-    if (topic) {
+    // Update session topic and bucket from intent state
+    const bucketForSession = convState.currentBucket || topic;
+    if (topic || bucketForSession) {
       await db.update(chatSessions)
-        .set({ lastTopic: topic, lastBucket: topic, updatedAt: new Date() })
+        .set({
+          lastTopic: topic || session[0].lastTopic,
+          lastBucket: bucketForSession || session[0].lastBucket,
+          updatedAt: new Date(),
+        })
         .where(eq(chatSessions.id, sessionId));
     }
 
     const updatedUser = await db
-      .select({ creditMinutes: users.creditMinutes })
+      .select({ coinBalance: users.coinBalance })
       .from(users)
       .where(eq(users.id, userId))
       .limit(1);
@@ -286,11 +476,16 @@ export async function sendMessage(
       sessionId,
       message: assistantMessage,
       topic,
-      creditsRemaining: updatedUser[0]?.creditMinutes || 0,
+      creditsRemaining: updatedUser[0]?.coinBalance || 0,
       sessionActive: true,
+      tarotDraw,
     };
   } catch (error) {
-    console.error('Chat engine error:', error);
+    if (isCircuitOpenError(error)) {
+      logger.warn('Anthropic circuit open, using fallback response', { sessionId, userId });
+    } else {
+      logger.error('Chat engine error', { error: (error as Error).message, sessionId, userId });
+    }
 
     const fallback = 'The energy is shifting... give me a moment to refocus.';
     await db.insert(chatMessages).values({
@@ -304,7 +499,7 @@ export async function sendMessage(
       sessionId,
       message: fallback,
       topic: null,
-      creditsRemaining: user[0].creditMinutes,
+      creditsRemaining: user[0].coinBalance,
       sessionActive: true,
     };
   }
@@ -316,11 +511,11 @@ export async function sendMessage(
 export async function closeSession(
   sessionId: string,
   userId: string,
-): Promise<{ minutesUsed: number; creditsRemaining: number }> {
+): Promise<{ coinsUsed: number; creditsRemaining: number }> {
   await endChatSession(sessionId);
 
   summarizeSession(sessionId).catch((err) =>
-    console.error(`Memory summarization failed for session ${sessionId}:`, err)
+    logger.error('Memory summarization failed', { sessionId, error: (err as Error).message })
   );
 
   const session = await db
@@ -330,14 +525,14 @@ export async function closeSession(
     .limit(1);
 
   const user = await db
-    .select({ creditMinutes: users.creditMinutes })
+    .select({ coinBalance: users.coinBalance })
     .from(users)
     .where(eq(users.id, userId))
     .limit(1);
 
   return {
-    minutesUsed: session[0]?.minutesCharged || 0,
-    creditsRemaining: user[0]?.creditMinutes || 0,
+    coinsUsed: session[0]?.coinsCharged || 0,
+    creditsRemaining: user[0]?.coinBalance || 0,
   };
 }
 
@@ -352,7 +547,7 @@ export async function getUserSessions(
   personaName: string;
   startedAt: Date;
   endedAt: Date | null;
-  minutesCharged: number;
+  coinsCharged: number;
   lastTopic: string | null;
   status: string;
 }>> {
@@ -362,7 +557,7 @@ export async function getUserSessions(
       personaId: chatSessions.personaId,
       startedAt: chatSessions.startedAt,
       endedAt: chatSessions.endedAt,
-      minutesCharged: chatSessions.minutesCharged,
+      coinsCharged: chatSessions.coinsCharged,
       lastTopic: chatSessions.lastTopic,
       status: chatSessions.status,
     })
@@ -384,7 +579,7 @@ export async function getUserSessions(
       personaName: persona[0]?.displayName || 'Unknown',
       startedAt: session.startedAt,
       endedAt: session.endedAt,
-      minutesCharged: session.minutesCharged,
+      coinsCharged: session.coinsCharged,
       lastTopic: session.lastTopic,
       status: session.status,
     });

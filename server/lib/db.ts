@@ -2,9 +2,15 @@ import { drizzle } from "drizzle-orm/node-postgres";
 import pg from "pg";
 import { conversations, type Conversation, type InsertConversation } from "@shared/schema";
 import { eq, desc } from "drizzle-orm";
+import logger from "./logger";
 
-const pool = new pg.Pool({
+export const pool = new pg.Pool({
   connectionString: process.env.DATABASE_URL,
+});
+
+// Prevent idle connection drops from crashing the process
+pool.on('error', (err) => {
+  logger.error('Unexpected DB pool error', { error: err.message });
 });
 
 export const db = drizzle(pool);
@@ -32,7 +38,7 @@ export interface ConversationRecord {
 }
 
 export async function saveConversation(data: ConversationRecord): Promise<string | null> {
-  console.log('DB: Saving conversation for:', data.email);
+  logger.info('DB: Saving conversation for:', data.email);
   try {
     const existing = await db
       .select({ id: conversations.id })
@@ -66,7 +72,7 @@ export async function saveConversation(data: ConversationRecord): Promise<string
         })
         .where(eq(conversations.id, existing[0].id));
 
-      console.log('DB: Updated existing conversation:', existing[0].id);
+      logger.info('DB: Updated existing conversation:', existing[0].id);
       return existing[0].id;
     } else {
       const inserted = await db
@@ -93,11 +99,11 @@ export async function saveConversation(data: ConversationRecord): Promise<string
         })
         .returning({ id: conversations.id });
 
-      console.log('DB: Created new conversation:', inserted[0]?.id);
+      logger.info('DB: Created new conversation:', inserted[0]?.id);
       return inserted[0]?.id || null;
     }
   } catch (error) {
-    console.error("DB ERROR - Database save error:", error);
+    logger.error("DB ERROR - Database save error:", error);
     return null;
   }
 }
@@ -113,7 +119,7 @@ export async function getConversationByEmail(email: string): Promise<Conversatio
 
     return result[0] || null;
   } catch (error) {
-    console.error("Database fetch error:", error);
+    logger.error("Database fetch error:", error);
     return null;
   }
 }
@@ -129,7 +135,7 @@ export async function markPurchased(email: string, purchaseType: "main" | "downs
       })
       .where(eq(conversations.email, email));
   } catch (error) {
-    console.error("Database purchase update error:", error);
+    logger.error("Database purchase update error:", error);
   }
 }
 
@@ -177,10 +183,10 @@ export async function updateStripeData(
           stripePaymentMethodId: stripeData.stripePaymentMethodId,
           mainPurchaseAmount: stripeData.mainPurchaseAmount,
         });
-      console.log(`Created new conversation for ${email} with Stripe session`);
+      logger.info(`Created new conversation for ${email} with Stripe session`);
     }
   } catch (error) {
-    console.error("Database Stripe update error:", error);
+    logger.error("Database Stripe update error:", error);
   }
 }
 
@@ -194,7 +200,7 @@ export async function getConversationByStripeSession(sessionId: string): Promise
 
     return result[0] || null;
   } catch (error) {
-    console.error("Database fetch by session error:", error);
+    logger.error("Database fetch by session error:", error);
     return null;
   }
 }
@@ -209,7 +215,7 @@ export async function markUpsellOffered(sessionId: string): Promise<void> {
       })
       .where(eq(conversations.stripeSessionId, sessionId));
   } catch (error) {
-    console.error("Database upsell offered update error:", error);
+    logger.error("Database upsell offered update error:", error);
   }
 }
 
@@ -229,7 +235,7 @@ export async function markUpsellPurchased(
       })
       .where(eq(conversations.stripeSessionId, sessionId));
   } catch (error) {
-    console.error("Database upsell purchase update error:", error);
+    logger.error("Database upsell purchase update error:", error);
   }
 }
 
@@ -260,7 +266,7 @@ export async function saveShippingAddress(
       })
       .where(eq(conversations.stripeSessionId, sessionId));
   } catch (error) {
-    console.error("Database shipping save error:", error);
+    logger.error("Database shipping save error:", error);
   }
 }
 
@@ -274,7 +280,7 @@ export async function markUpsell2Offered(sessionId: string): Promise<void> {
       })
       .where(eq(conversations.stripeSessionId, sessionId));
   } catch (error) {
-    console.error("Database upsell2 offered update error:", error);
+    logger.error("Database upsell2 offered update error:", error);
   }
 }
 
@@ -296,7 +302,7 @@ export async function markUpsell2Purchased(
       })
       .where(eq(conversations.stripeSessionId, sessionId));
   } catch (error) {
-    console.error("Database upsell2 purchase update error:", error);
+    logger.error("Database upsell2 purchase update error:", error);
   }
 }
 
@@ -327,6 +333,6 @@ export async function saveShipping2Address(
       })
       .where(eq(conversations.stripeSessionId, sessionId));
   } catch (error) {
-    console.error("Database shipping2 save error:", error);
+    logger.error("Database shipping2 save error:", error);
   }
 }

@@ -1,24 +1,25 @@
-// Admin Persona Pricing Management Routes
-// GET/PATCH per-persona pricing (free minutes + credit packages)
-
 import { Router, Request, Response } from 'express';
 import { z } from 'zod';
 import { db } from '../../lib/db';
 import { personas } from '@shared/schema';
 import { eq } from 'drizzle-orm';
 import { getPersonaPricing, updatePersonaPricing } from '../../lib/personaPricing';
+import logger from '../../lib/logger';
 
 const router = Router();
 
 const pricingTierSchema = z.object({
   packageType: z.string().min(1),
-  minutes: z.number().int().positive(),
-  priceUsd: z.number().int().positive(), // in cents
+  coins: z.number().int().positive(),
+  bonusCoins: z.number().int().min(0),
+  totalCoins: z.number().int().positive(),
+  priceUsd: z.number().int().positive(),
   label: z.string().min(1),
+  badge: z.string().optional(),
 });
 
 const updatePricingSchema = z.object({
-  freeMinutes: z.number().int().min(0).optional(),
+  freeCoins: z.number().int().min(0).optional(),
   tiers: z.array(pricingTierSchema).optional(),
 });
 
@@ -27,7 +28,6 @@ router.get('/:personaId/pricing', async (req: Request, res: Response) => {
   try {
     const personaId = req.params.personaId as string;
 
-    // Verify persona exists
     const persona = await db.select({
       id: personas.id,
       displayName: personas.displayName,
@@ -44,21 +44,20 @@ router.get('/:personaId/pricing', async (req: Request, res: Response) => {
 
     const pricing = await getPersonaPricing(personaId);
 
-    // Calculate price per minute for each tier
     const tiersWithRate = pricing.tiers.map(t => ({
       ...t,
-      pricePerMinute: Math.round(t.priceUsd / t.minutes),
+      pricePerCoin: t.totalCoins > 0 ? Math.round((t.priceUsd / t.totalCoins) * 100) / 100 : 0,
     }));
 
     res.json({
       personaId: persona[0].id,
       personaName: persona[0].displayName,
       personaSlug: persona[0].slug,
-      freeMinutes: pricing.freeMinutes,
+      freeCoins: pricing.freeCoins,
       tiers: tiersWithRate,
     });
   } catch (error) {
-    console.error('Get persona pricing error:', error);
+    logger.error('Get persona pricing error:', error);
     res.status(500).json({ error: 'Failed to get pricing' });
   }
 });
@@ -68,7 +67,6 @@ router.patch('/:personaId/pricing', async (req: Request, res: Response) => {
   try {
     const personaId = req.params.personaId as string;
 
-    // Verify persona exists
     const persona = await db.select({ id: personas.id })
       .from(personas)
       .where(eq(personas.id, personaId))
@@ -89,32 +87,31 @@ router.patch('/:personaId/pricing', async (req: Request, res: Response) => {
 
     await updatePersonaPricing(personaId, parseResult.data);
 
-    // Return the updated pricing
     const updatedPricing = await getPersonaPricing(personaId);
     const tiersWithRate = updatedPricing.tiers.map(t => ({
       ...t,
-      pricePerMinute: Math.round(t.priceUsd / t.minutes),
+      pricePerCoin: t.totalCoins > 0 ? Math.round((t.priceUsd / t.totalCoins) * 100) / 100 : 0,
     }));
 
     res.json({
       personaId,
-      freeMinutes: updatedPricing.freeMinutes,
+      freeCoins: updatedPricing.freeCoins,
       tiers: tiersWithRate,
     });
   } catch (error) {
-    console.error('Update persona pricing error:', error);
+    logger.error('Update persona pricing error:', error);
     res.status(500).json({ error: 'Failed to update pricing' });
   }
 });
 
-// GET /api/admin/pricing/all - Get pricing for all personas (overview)
+// GET /api/admin/pricing/all
 router.get('/all', async (_req: Request, res: Response) => {
   try {
     const allPersonas = await db.select({
       id: personas.id,
       displayName: personas.displayName,
       slug: personas.slug,
-      freeMinutes: personas.freeMinutes,
+      freeCoins: personas.freeCoins,
       customPricing: personas.customPricing,
       isActive: personas.isActive,
     })
@@ -136,7 +133,7 @@ router.get('/all', async (_req: Request, res: Response) => {
         personaName: p.displayName,
         personaSlug: p.slug,
         isActive: p.isActive,
-        freeMinutes: p.freeMinutes,
+        freeCoins: p.freeCoins,
         tiers: tiers || null,
         usingDefaults: !tiers,
       };
@@ -144,7 +141,7 @@ router.get('/all', async (_req: Request, res: Response) => {
 
     res.json({ personas: result });
   } catch (error) {
-    console.error('Get all pricing error:', error);
+    logger.error('Get all pricing error:', error);
     res.status(500).json({ error: 'Failed to get pricing overview' });
   }
 });

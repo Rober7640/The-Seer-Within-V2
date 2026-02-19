@@ -9,6 +9,9 @@ import {
   Settings,
   LogOut,
   Sparkles,
+  Shield,
+  Brain,
+  Mail,
 } from "lucide-react";
 
 const NAV_ITEMS = [
@@ -16,6 +19,9 @@ const NAV_ITEMS = [
   { path: "/admin/prompts", label: "Prompts", icon: FileText },
   { path: "/admin/analytics", label: "Analytics", icon: BarChart3 },
   { path: "/admin/users", label: "Users", icon: Users },
+  { path: "/admin/safety", label: "Safety", icon: Shield },
+  { path: "/admin/intent-configs", label: "Intent Configs", icon: Brain },
+  { path: "/admin/follow-ups", label: "Follow-Ups", icon: Mail },
 ];
 
 interface AdminLayoutProps {

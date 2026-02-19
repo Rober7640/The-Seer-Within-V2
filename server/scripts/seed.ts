@@ -1,7 +1,9 @@
+import "dotenv/config";
 import { db } from '../lib/db';
 import { personas, personaPrompts, adminUsers, systemConfig } from '@shared/schema';
 import { hashPassword } from '../lib/auth';
 import { eq } from 'drizzle-orm';
+import { seedEvelynIntentConfig, seedMarcusIntentConfig } from '../lib/seedIntentConfigs';
 
 async function seedDatabase() {
   console.log('🌱 Starting database seed...\n');
@@ -152,7 +154,13 @@ async function seedDatabase() {
         createdBy: adminId,
       });
     } else {
-      console.log('   ℹ️  Marcus Stone already exists');
+      marcusId = existingMarcus[0].id;
+      console.log('   ℹ️  Marcus Stone already exists — updating system prompt...');
+      // Update system prompt to remove conflicting card-pulling instructions
+      await db.update(personas)
+        .set({ baseSystemPrompt: getMarcusSystemPrompt() })
+        .where(eq(personas.id, marcusId));
+      console.log('   ✅ Marcus system prompt updated');
     }
 
     // 5. Create system config entries
@@ -166,10 +174,10 @@ async function seedDatabase() {
         description: 'Platform display name',
       },
       {
-        configKey: 'default_free_minutes',
-        configValue: '3',
+        configKey: 'default_free_coins',
+        configValue: '180',
         configType: 'number',
-        description: 'Default free minutes for new users (overridden by persona settings)',
+        description: 'Default free coins for new users (overridden by persona settings)',
       },
       {
         configKey: 'memory_retention_days',
@@ -217,6 +225,13 @@ async function seedDatabase() {
         console.log(`   ✅ ${config.configKey} = ${config.configValue}`);
       }
     }
+
+    // 6. Seed intent configurations for all personas
+    console.log('\n6️⃣  Seeding intent configurations...');
+    await seedEvelynIntentConfig();
+    console.log('   ✅ Evelyn Cross intent config seeded');
+    await seedMarcusIntentConfig();
+    console.log('   ✅ Marcus Stone intent config seeded');
 
     console.log('\n🎉 Database seed completed successfully!\n');
     console.log('📌 Next steps:');
@@ -307,24 +322,18 @@ YOUR SPECIALTIES:
 4. Divination - Interpreting signs, synchronicities, universal messages
 
 YOUR APPROACH:
-1. When appropriate, mention pulling cards for the reading
-2. Name specific cards and their positions (e.g., "I'm seeing The Tower in your past position...")
-3. Interpret cards in context of their question
-4. Connect tarot symbolism to their real-life situation
+1. Ask one focused question to understand their situation before reading
+2. When you're ready to draw cards, output [TAROT_DRAW] — the user will choose a card from the interface
+3. Once they tell you which card they drew, interpret it specifically in context of their question
+4. Connect the card's archetype to what they're experiencing
 5. Empower them to embrace the message, even if challenging
 
 TAROT READING STRUCTURE:
-When doing a reading:
-1. State which spread you're using (3-card, Celtic Cross, etc.)
-2. Name each card as you "pull" it
-3. Explain what each card means in its position
-4. Synthesize the overall message
-5. Give clear guidance based on the reading
-
-EXAMPLE CARDS TO USE (mix these up):
-Major Arcana: The Fool, Magician, High Priestess, Empress, Emperor, Hierophant, Lovers, Chariot, Strength, Hermit, Wheel of Fortune, Justice, Hanged Man, Death, Temperance, Devil, Tower, Star, Moon, Sun, Judgment, World
-
-Minor Arcana: Various cups, swords, wands, pentacles (use when relevant)
+1. Understand their question first (one clarifying question)
+2. Invite the draw with [TAROT_DRAW] at the end of your message
+3. When the user tells you their card, interpret it with precision
+4. Give one clear, grounded insight based on the card
+5. Invite a follow-up draw only when natural
 
 YOUR TONE:
 - Mystical but grounded
@@ -333,11 +342,12 @@ YOUR TONE:
 - Serious about the work, but not heavy or dour
 
 IMPORTANT:
-- Don't just list cards - interpret them meaningfully
+- Keep responses SHORT — maximum 2-3 sentences per message
+- ONE idea per message. ONE question per message — never stack questions
+- Never describe pulling cards in words — the user picks from the UI when you output [TAROT_DRAW]
+- Interpret cards meaningfully with specific, grounded insights
 - Connect archetypal wisdom to practical life
-- Encourage shadow integration, not spiritual bypassing
-- If they're avoiding something, call it out gently
-- Keep responses focused (2-4 paragraphs)
+- If they're avoiding something, name it directly in one sentence
 
 MEMORY & CONTINUITY:
 - Reference past readings if you have context
@@ -348,17 +358,15 @@ MEMORY & CONTINUITY:
 Remember: The cards are mirrors. Your job is to help them see what they already know deep down, and give them the courage to act on that wisdom.`;
 }
 
-// Run seed if executed directly
-if (import.meta.url === `file://${process.argv[1]}`) {
-  seedDatabase()
-    .then(() => {
-      console.log('✅ Seed complete');
-      process.exit(0);
-    })
-    .catch((error) => {
-      console.error('❌ Seed failed:', error);
-      process.exit(1);
-    });
-}
+// Always run when this script is executed directly
+seedDatabase()
+  .then(() => {
+    console.log('✅ Seed complete');
+    process.exit(0);
+  })
+  .catch((error) => {
+    console.error('❌ Seed failed:', error);
+    process.exit(1);
+  });
 
 export { seedDatabase };

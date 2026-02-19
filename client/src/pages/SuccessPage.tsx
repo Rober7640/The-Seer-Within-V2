@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useSearch } from "wouter";
 import { CosmicBackground } from "../components/CosmicBackground";
 import { Link } from "wouter";
-import { CheckCircle, Package, Mail, Sparkles, Gem } from "lucide-react";
+import { CheckCircle, Package, Mail, Sparkles, Gem, MessageCircle } from "lucide-react";
 
 interface OrderData {
   firstName: string;
@@ -220,6 +220,16 @@ export default function SuccessPage() {
           <p className="text-purple-200/60 text-sm mb-4">
             The universe is already responding to your commitment.
           </p>
+
+          {/* Migration bridge: Chat Service access for paid customers */}
+          {orderData?.email && (
+            <Link href={`/welcome-chat?email=${encodeURIComponent(orderData.email)}`}>
+              <button className="w-full mb-4 px-6 py-3 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white rounded-lg font-medium transition-all flex items-center justify-center gap-2">
+                <MessageCircle className="w-4 h-4" />
+                Access Your Personal Chat Service
+              </button>
+            </Link>
+          )}
 
           <Link href="/">
             <button

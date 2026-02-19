@@ -12,6 +12,7 @@ import {
   personaPrompts,
 } from '@shared/schema';
 import { eq, and, sql, desc, count, gte, lte } from 'drizzle-orm';
+import logger from '../../lib/logger';
 
 const router = Router();
 
@@ -55,7 +56,7 @@ router.get('/overview', async (req: Request, res: Response) => {
     const sessionStats = await db
       .select({
         totalSessions: count(),
-        totalMinutes: sql<number>`COALESCE(SUM(${chatSessions.minutesCharged}), 0)`,
+        totalCoins: sql<number>`COALESCE(SUM(${chatSessions.coinsCharged}), 0)`,
         avgDuration: sql<number>`COALESCE(AVG(${chatSessions.durationSeconds}), 0)`,
       })
       .from(chatSessions)
@@ -106,7 +107,7 @@ router.get('/overview', async (req: Request, res: Response) => {
         newUsers: newUsers[0]?.count || 0,
         activeUsers: Number(activeUsers[0]?.count || 0),
         totalSessions: sessionStats[0]?.totalSessions || 0,
-        totalMinutesUsed: Number(sessionStats[0]?.totalMinutes || 0),
+        totalCoinsUsed: Number(sessionStats[0]?.totalCoins || 0),
         averageSessionDuration: Number(sessionStats[0]?.avgDuration || 0),
         totalRevenue: Number(revenueStats[0]?.totalRevenue || 0),
         totalPurchases: revenueStats[0]?.totalPurchases || 0,
@@ -115,7 +116,7 @@ router.get('/overview', async (req: Request, res: Response) => {
       dateRange: { start, end },
     });
   } catch (error: any) {
-    console.error('Analytics overview error:', error);
+    logger.error('Analytics overview error:', error);
     return res.status(500).json({ error: 'Failed to get overview' });
   }
 });
@@ -143,7 +144,7 @@ router.get('/personas', async (req: Request, res: Response) => {
         const sessions = await db
           .select({
             totalSessions: count(),
-            totalMinutes: sql<number>`COALESCE(SUM(${chatSessions.minutesCharged}), 0)`,
+            totalCoins: sql<number>`COALESCE(SUM(${chatSessions.coinsCharged}), 0)`,
             uniqueUsers: sql<number>`COUNT(DISTINCT ${chatSessions.userId})`,
             avgDuration: sql<number>`COALESCE(AVG(${chatSessions.durationSeconds}), 0)`,
           })
@@ -174,7 +175,7 @@ router.get('/personas', async (req: Request, res: Response) => {
           name: persona.name,
           isActive: persona.isActive,
           totalSessions: sessions[0]?.totalSessions || 0,
-          totalMinutes: Number(sessions[0]?.totalMinutes || 0),
+          totalCoins: Number(sessions[0]?.totalCoins || 0),
           uniqueUsers: Number(sessions[0]?.uniqueUsers || 0),
           avgSessionDuration: Number(sessions[0]?.avgDuration || 0),
           totalMessages: messages[0]?.count || 0,
@@ -190,7 +191,7 @@ router.get('/personas', async (req: Request, res: Response) => {
       dateRange: { start, end },
     });
   } catch (error: any) {
-    console.error('Analytics personas error:', error);
+    logger.error('Analytics personas error:', error);
     return res.status(500).json({ error: 'Failed to get persona analytics' });
   }
 });
@@ -210,7 +211,7 @@ router.get('/revenue', async (req: Request, res: Response) => {
         packageType: creditPurchases.packageType,
         totalRevenue: sql<number>`COALESCE(SUM(${creditPurchases.priceUsd}), 0)`,
         totalPurchases: count(),
-        totalMinutes: sql<number>`COALESCE(SUM(${creditPurchases.minutesPurchased}), 0)`,
+        totalCoins: sql<number>`COALESCE(SUM(${creditPurchases.coinsPurchased}), 0)`,
       })
       .from(creditPurchases)
       .where(
@@ -253,7 +254,7 @@ router.get('/revenue', async (req: Request, res: Response) => {
           packageType: p.packageType,
           revenue: Number(p.totalRevenue),
           purchases: p.totalPurchases,
-          minutes: Number(p.totalMinutes),
+          coins: Number(p.totalCoins),
         })),
         daily: dailyRevenue.map((d) => ({
           date: d.date,
@@ -264,7 +265,7 @@ router.get('/revenue', async (req: Request, res: Response) => {
       dateRange: { start, end },
     });
   } catch (error: any) {
-    console.error('Analytics revenue error:', error);
+    logger.error('Analytics revenue error:', error);
     return res.status(500).json({ error: 'Failed to get revenue analytics' });
   }
 });
@@ -361,7 +362,7 @@ router.get('/users', async (req: Request, res: Response) => {
       dateRange: { start, end },
     });
   } catch (error: any) {
-    console.error('Analytics users error:', error);
+    logger.error('Analytics users error:', error);
     return res.status(500).json({ error: 'Failed to get user analytics' });
   }
 });
@@ -453,7 +454,7 @@ router.get('/prompts', async (req: Request, res: Response) => {
       },
     });
   } catch (error: any) {
-    console.error('Analytics prompts error:', error);
+    logger.error('Analytics prompts error:', error);
     return res.status(500).json({ error: 'Failed to get prompt analytics' });
   }
 });
@@ -473,7 +474,7 @@ router.get('/buckets', async (req: Request, res: Response) => {
         personaName: personas.displayName,
         bucket: chatSessions.lastBucket,
         sessionCount: count(),
-        totalMinutes: sql<number>`COALESCE(SUM(${chatSessions.minutesCharged}), 0)`,
+        totalCoins: sql<number>`COALESCE(SUM(${chatSessions.coinsCharged}), 0)`,
       })
       .from(chatSessions)
       .leftJoin(personas, eq(chatSessions.personaId, personas.id))
@@ -515,7 +516,7 @@ router.get('/buckets', async (req: Request, res: Response) => {
           personaName: b.personaName || 'Unknown',
           bucket: b.bucket,
           sessions: b.sessionCount,
-          minutes: Number(b.totalMinutes),
+          coins: Number(b.totalCoins),
         })),
         overall: overallBuckets.map((b) => ({
           bucket: b.bucket,
@@ -525,7 +526,7 @@ router.get('/buckets', async (req: Request, res: Response) => {
       dateRange: { start, end },
     });
   } catch (error: any) {
-    console.error('Analytics buckets error:', error);
+    logger.error('Analytics buckets error:', error);
     return res.status(500).json({ error: 'Failed to get bucket analytics' });
   }
 });

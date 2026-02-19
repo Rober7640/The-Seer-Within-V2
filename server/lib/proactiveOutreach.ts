@@ -6,6 +6,8 @@ import { db } from './db';
 import { users, userMemory, chatSessions, personas, personaPrompts, systemConfig } from '@shared/schema';
 import { eq, and, desc, sql } from 'drizzle-orm';
 import Anthropic from '@anthropic-ai/sdk';
+import logger from './logger';
+import { fireWithBreaker, anthropicBreaker } from './circuitBreaker';
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY || '',
@@ -17,7 +19,7 @@ interface OutreachCandidate {
   firstName: string;
   reason: OutreachReason;
   lastSessionDate: Date | null;
-  creditMinutes: number;
+  coinBalance: number;
   recentMemories: string[];
 }
 
@@ -99,7 +101,7 @@ export async function findOutreachCandidates(): Promise<OutreachCandidate[]> {
       reason = 'inactive_30_days';
     } else if (lastSessionDate < sevenDaysAgo) {
       reason = 'inactive_7_days';
-    } else if (user.creditMinutes <= 1 && user.creditMinutes > 0) {
+    } else if (user.coinBalance <= 60 && user.coinBalance > 0) {
       reason = 'low_credits';
     } else if (lastSessionDate > sevenDaysAgo && recentMemories.length > 0) {
       reason = 'session_followup';
@@ -112,7 +114,7 @@ export async function findOutreachCandidates(): Promise<OutreachCandidate[]> {
         firstName: user.firstName,
         reason,
         lastSessionDate,
-        creditMinutes: user.creditMinutes,
+        coinBalance: user.coinBalance,
         recentMemories,
       });
     }
@@ -198,11 +200,13 @@ Return JSON:
 }`;
 
   try {
-    const response = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 300,
-      messages: [{ role: 'user', content: prompt }],
-    });
+    const response = await fireWithBreaker(anthropicBreaker, () =>
+      anthropic.messages.create({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 300,
+        messages: [{ role: 'user', content: prompt }],
+      }),
+    );
 
     const text = response.content[0].type === 'text' ? response.content[0].text : '';
     const jsonMatch = text.match(/\{[\s\S]*\}/);
@@ -222,7 +226,7 @@ Return JSON:
 
     return null;
   } catch (error) {
-    console.error(`Failed to generate outreach for ${candidate.firstName}:`, error);
+    logger.error('Failed to generate outreach', { firstName: candidate.firstName, error: (error as Error).message });
     return null;
   }
 }
@@ -231,10 +235,10 @@ Return JSON:
  * Run the outreach cycle: find candidates and generate messages.
  */
 export async function runOutreachCycle(): Promise<OutreachMessage[]> {
-  console.log('Running proactive outreach cycle...');
+  logger.info('Running proactive outreach cycle');
 
   const candidates = await findOutreachCandidates();
-  console.log(`Found ${candidates.length} outreach candidates`);
+  logger.info('Outreach candidates found', { count: candidates.length });
 
   const messages: OutreachMessage[] = [];
 
@@ -242,11 +246,11 @@ export async function runOutreachCycle(): Promise<OutreachMessage[]> {
     const message = await generateOutreachMessage(candidate);
     if (message) {
       messages.push(message);
-      console.log(`Generated outreach for ${candidate.firstName} (${candidate.reason})`);
+      logger.info('Generated outreach', { firstName: candidate.firstName, reason: candidate.reason });
     }
   }
 
-  console.log(`Generated ${messages.length} outreach messages`);
+  logger.info('Outreach cycle complete', { messagesGenerated: messages.length });
   return messages;
 }
 
@@ -254,15 +258,15 @@ export async function runOutreachCycle(): Promise<OutreachMessage[]> {
  * Start a periodic outreach check.
  */
 export function startOutreachScheduler(intervalMs: number = 24 * 60 * 60 * 1000): NodeJS.Timeout {
-  console.log('Starting proactive outreach scheduler');
+  logger.info('Starting proactive outreach scheduler');
 
   runOutreachCycle().catch((err) =>
-    console.error('Outreach cycle error:', err)
+    logger.error('Outreach cycle error', { error: (err as Error).message })
   );
 
   return setInterval(() => {
     runOutreachCycle().catch((err) =>
-      console.error('Outreach cycle error:', err)
+      logger.error('Outreach cycle error', { error: (err as Error).message })
     );
   }, intervalMs);
 }

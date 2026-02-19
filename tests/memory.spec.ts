@@ -6,13 +6,18 @@ test.describe('Memory Continuity', () => {
 
   test('should maintain memory across sessions', async ({ page }) => {
     // First session - register and chat
-    await page.goto('/');
-    await page.click('text=Get Started');
+    await page.goto('/login');
+    await page.click('text=/New here|Create an account/i');
+    await page.waitForTimeout(500);
+
+    await page.fill('input[name="firstName"]', 'MemoryTester');
     await page.fill('input[name="email"]', testEmail);
     await page.fill('input[name="password"]', testPassword);
-    await page.fill('input[name="firstName"]', 'MemoryTester');
     await page.click('button[type="submit"]');
-    await page.waitForTimeout(2000);
+
+    // Wait for redirect
+    await page.waitForURL(/.*reading|personas/, { timeout: 10000 });
+    await page.waitForTimeout(1000);
 
     // Start chat with Evelyn
     await page.goto('/chat-service');

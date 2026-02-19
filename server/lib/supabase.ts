@@ -1,6 +1,7 @@
 // Supabase client and conversation storage
 
 import { createClient } from '@supabase/supabase-js'
+import logger from './logger'
 
 const supabaseUrl = process.env.SUPABASE_URL || ''
 const supabaseKey = process.env.SUPABASE_ANON_KEY || ''
@@ -49,7 +50,7 @@ export async function saveConversation(data: ConversationRecord): Promise<string
         .eq('id', existing.id)
 
       if (error) {
-        console.error('Supabase update error:', error)
+        logger.error('Supabase update error:', error)
         return null
       }
       return existing.id
@@ -62,13 +63,13 @@ export async function saveConversation(data: ConversationRecord): Promise<string
         .single()
 
       if (error) {
-        console.error('Supabase insert error:', error)
+        logger.error('Supabase insert error:', error)
         return null
       }
       return inserted?.id || null
     }
   } catch (error) {
-    console.error('Supabase error:', error)
+    logger.error('Supabase error:', error)
     return null
   }
 }
@@ -90,7 +91,7 @@ export async function getConversationByEmail(email: string): Promise<Conversatio
 
     return data as ConversationRecord
   } catch (error) {
-    console.error('Supabase fetch error:', error)
+    logger.error('Supabase fetch error:', error)
     return null
   }
 }
@@ -103,6 +104,6 @@ export async function markPurchased(email: string, purchaseType: 'main' | 'downs
       .update({ purchased: true, purchase_type: purchaseType })
       .eq('email', email)
   } catch (error) {
-    console.error('Supabase purchase update error:', error)
+    logger.error('Supabase purchase update error:', error)
   }
 }

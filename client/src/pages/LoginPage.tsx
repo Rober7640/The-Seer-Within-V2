@@ -1,10 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation, Link } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import { CosmicBackground } from "@/components/CosmicBackground";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Sparkles, LogIn, UserPlus } from "lucide-react";
+import { Sparkles, LogIn, UserPlus, Mail } from "lucide-react";
 
 export default function LoginPage() {
   const [, navigate] = useLocation();
@@ -16,6 +16,21 @@ export default function LoginPage() {
   const [firstName, setFirstName] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [showVerificationSent, setShowVerificationSent] = useState(false);
+  const [verificationSuccess, setVerificationSuccess] = useState(false);
+  const [resendLoading, setResendLoading] = useState(false);
+  const [resendEmail, setResendEmail] = useState("");
+
+  // Check for verification callback in URL params
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const verified = params.get("verified");
+    if (verified === "success") {
+      setVerificationSuccess(true);
+    } else if (verified === "already") {
+      setVerificationSuccess(true);
+    }
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -24,7 +39,12 @@ export default function LoginPage() {
 
     try {
       if (isSignUp) {
-        await register(email, password, firstName);
+        const data = await register(email, password, firstName);
+        if (data.requiresVerification) {
+          setShowVerificationSent(true);
+          setResendEmail(email);
+          return;
+        }
       } else {
         await login(email, password);
       }
@@ -39,6 +59,92 @@ export default function LoginPage() {
       setLoading(false);
     }
   };
+
+  const handleResendVerification = async () => {
+    setResendLoading(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/auth/resend-verification", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: resendEmail }),
+      });
+      if (res.ok) {
+        setError(null);
+      } else {
+        const data = await res.json();
+        setError(data.error || "Failed to resend verification email");
+      }
+    } catch {
+      setError("Failed to resend verification email");
+    } finally {
+      setResendLoading(false);
+    }
+  };
+
+  // Show verification sent screen after registration
+  if (showVerificationSent) {
+    return (
+      <div className="min-h-screen relative flex items-center justify-center p-4">
+        <CosmicBackground />
+
+        <Card className="bg-white/95 backdrop-blur-md border-white/20 w-full max-w-sm relative z-10">
+          <CardHeader className="text-center">
+            <div className="flex items-center justify-center gap-2 mb-2">
+              <Mail className="w-5 h-5 text-purple-600" />
+              <CardTitle className="font-serif text-xl text-gray-900">
+                Check Your Email
+              </CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent className="text-center space-y-4">
+            <p className="text-sm text-gray-600">
+              We sent a verification link to <strong>{resendEmail}</strong>.
+              Please check your email and click the link to activate your account
+              and receive your 3 free minutes.
+            </p>
+            <p className="text-xs text-gray-400">
+              The link expires in 24 hours.
+            </p>
+
+            <div className="pt-2 space-y-2">
+              <Button
+                onClick={handleResendVerification}
+                disabled={resendLoading}
+                variant="outline"
+                className="w-full text-sm"
+              >
+                {resendLoading ? (
+                  <div className="w-4 h-4 border-2 border-purple-600 border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  "Resend Verification Email"
+                )}
+              </Button>
+
+              <button
+                onClick={() => {
+                  setShowVerificationSent(false);
+                  setIsSignUp(false);
+                }}
+                className="text-xs text-purple-600 hover:underline"
+              >
+                Back to sign in
+              </button>
+            </div>
+
+            <div className="mt-4 text-center">
+              <Link
+                href="/"
+                className="text-xs text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                Back to home
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen relative flex items-center justify-center p-4">
@@ -59,6 +165,12 @@ export default function LoginPage() {
           </p>
         </CardHeader>
         <CardContent>
+          {verificationSuccess && (
+            <p className="text-green-700 text-xs p-2 bg-green-50 rounded-lg text-center mb-4">
+              Email verified successfully! You now have 3 free minutes. Sign in to start.
+            </p>
+          )}
+
           <form onSubmit={handleSubmit} className="space-y-4">
             {error && (
               <p className="text-red-600 text-xs p-2 bg-red-50 rounded-lg text-center">
@@ -73,6 +185,7 @@ export default function LoginPage() {
                 </label>
                 <input
                   type="text"
+                  name="firstName"
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
                   required={isSignUp}
@@ -86,6 +199,7 @@ export default function LoginPage() {
               <label className="text-xs text-gray-500 mb-1 block">Email</label>
               <input
                 type="email"
+                name="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -99,6 +213,7 @@ export default function LoginPage() {
               </label>
               <input
                 type="password"
+                name="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
@@ -128,11 +243,23 @@ export default function LoginPage() {
             </Button>
           </form>
 
+          {!isSignUp && (
+            <div className="mt-3 text-center">
+              <Link
+                href="/forgot-password"
+                className="text-xs text-gray-400 hover:text-purple-600 transition-colors"
+              >
+                Forgot your password?
+              </Link>
+            </div>
+          )}
+
           <div className="mt-4 text-center">
             <button
               onClick={() => {
                 setIsSignUp(!isSignUp);
                 setError(null);
+                setVerificationSuccess(false);
               }}
               className="text-xs text-purple-600 hover:underline"
             >

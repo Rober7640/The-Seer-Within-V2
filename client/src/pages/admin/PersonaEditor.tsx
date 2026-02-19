@@ -1,11 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useLocation, useRoute } from "wouter";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { adminFetch } from "@/hooks/useAdmin";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Save, ArrowLeft, Trash2, Eye, Plus, X } from "lucide-react";
+import { Save, ArrowLeft, Trash2, Eye, Plus, X, Upload, ImageIcon } from "lucide-react";
 
 interface PricingPackage {
   id: string;
@@ -17,9 +17,22 @@ interface PricingPackage {
 }
 
 interface PricingConfig {
-  freeMinutes: number;
+  freeCoins: number;
   packages: PricingPackage[];
 }
+
+interface AvailabilityWindow {
+  days: number[];
+  startTime: string;
+  endTime: string;
+}
+
+interface AvailabilitySchedule {
+  timezone: string;
+  windows: AvailabilityWindow[];
+}
+
+const DAY_LABELS = ['Su', 'M', 'T', 'W', 'Th', 'F', 'Sa'];
 
 interface PersonaFormData {
   slug: string;
@@ -71,21 +84,66 @@ export default function PersonaEditor() {
   const [loading, setLoading] = useState(!isNew);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [suggestedQuestions, setSuggestedQuestions] = useState<string[]>([]);
   const [pricing, setPricing] = useState<PricingConfig>({
-    freeMinutes: 0,
+    freeCoins: 0,
     packages: [],
   });
+  const [onlineOverride, setOnlineOverride] = useState<null | 'online' | 'offline'>(null);
+  const [availabilitySchedule, setAvailabilitySchedule] = useState<AvailabilitySchedule>({
+    timezone: 'America/New_York',
+    windows: [],
+  });
+
+  // Extract suggestedQuestions from personality JSON
+  const extractSuggestedQuestions = (personalityJson: string): string[] => {
+    try {
+      const parsed = personalityJson ? JSON.parse(personalityJson) : {};
+      const qs = parsed?.suggestedQuestions;
+      return Array.isArray(qs) ? qs : [];
+    } catch {
+      return [];
+    }
+  };
+
+  // Merge suggestedQuestions into personality JSON
+  const mergeQuestionsIntoPersonality = (personalityJson: string, questions: string[]): string => {
+    try {
+      const base = personalityJson ? JSON.parse(personalityJson) : {};
+      const merged = { ...base, suggestedQuestions: questions.filter(q => q.trim()) };
+      return JSON.stringify(merged, null, 2);
+    } catch {
+      return personalityJson;
+    }
+  };
 
   const parsePricing = (raw: string): PricingConfig => {
     try {
       const parsed = typeof raw === "string" ? JSON.parse(raw) : raw;
+      if (Array.isArray(parsed)) {
+        // Old DB format: array of PricingTier — migrate to new shape
+        return {
+          freeCoins: 0,
+          packages: parsed.map((pkg: any, i: number) => ({
+            id: pkg.id || `pkg-${i}`,
+            label: pkg.label || "",
+            minutes: pkg.minutes || 15,
+            priceUsd: pkg.priceUsd || 0,
+            popular: pkg.popular,
+            savings: pkg.savings,
+          })),
+        };
+      }
       return {
-        freeMinutes: parsed.freeMinutes ?? 0,
+        freeCoins: parsed.freeCoins ?? 0,
         packages: Array.isArray(parsed.packages) ? parsed.packages : [],
       };
     } catch {
-      return { freeMinutes: 0, packages: [] };
+      return { freeCoins: 0, packages: [] };
     }
   };
 
@@ -129,8 +187,8 @@ export default function PersonaEditor() {
     syncPricingToForm(next);
   };
 
-  const setFreeMinutes = (mins: number) => {
-    const next: PricingConfig = { ...pricing, freeMinutes: mins };
+  const setFreeCoins = (coins: number) => {
+    const next: PricingConfig = { ...pricing, freeCoins: coins };
     syncPricingToForm(next);
   };
 
@@ -145,6 +203,15 @@ export default function PersonaEditor() {
           const resData = await res.json();
           // Backend wraps in { persona: {...} }
           const data = resData.persona || resData;
+          // Normalize customPricing to the current { freeCoins, packages } shape
+          // regardless of whether the DB stored it as an array (old format) or object.
+          const pricingRaw =
+            typeof data.customPricing === "object"
+              ? JSON.stringify(data.customPricing)
+              : data.customPricing || "";
+          const normalizedPricing = parsePricing(pricingRaw);
+          setPricing(normalizedPricing);
+
           setForm({
             slug: data.slug || "",
             displayName: data.displayName || "",
@@ -163,18 +230,16 @@ export default function PersonaEditor() {
             isActive: data.isActive ?? true,
             isDefault: data.isDefault ?? false,
             sortOrder: data.sortOrder ?? 0,
-            customPricing:
-              typeof data.customPricing === "object"
-                ? JSON.stringify(data.customPricing)
-                : data.customPricing || "",
+            // Always store the normalised object shape so save() sends a valid object
+            customPricing: pricingRaw ? JSON.stringify(normalizedPricing) : "",
           });
 
-          // Parse pricing config
-          const pricingRaw =
-            typeof data.customPricing === "object"
-              ? JSON.stringify(data.customPricing)
-              : data.customPricing || "";
-          setPricing(parsePricing(pricingRaw));
+          // Extract suggestedQuestions from personality
+          const personalityRaw =
+            typeof data.personality === "object"
+              ? JSON.stringify(data.personality, null, 2)
+              : data.personality || "";
+          setSuggestedQuestions(extractSuggestedQuestions(personalityRaw));
 
           try {
             const cats =
@@ -184,6 +249,20 @@ export default function PersonaEditor() {
             setSelectedCategories(Array.isArray(cats) ? cats : []);
           } catch {
             setSelectedCategories([]);
+          }
+
+          // Availability scheduling
+          setOnlineOverride(data.onlineOverride ?? null);
+          if (data.availabilitySchedule) {
+            try {
+              const sched =
+                typeof data.availabilitySchedule === "object"
+                  ? data.availabilitySchedule
+                  : JSON.parse(data.availabilitySchedule);
+              setAvailabilitySchedule(sched);
+            } catch {
+              // leave default
+            }
           }
         }
       } catch (err) {
@@ -223,10 +302,55 @@ export default function PersonaEditor() {
     setError(null);
 
     try {
-      const payload = {
-        ...form,
-        categories: JSON.stringify(selectedCategories),
+      const personalityWithQuestions = mergeQuestionsIntoPersonality(
+        form.personality,
+        suggestedQuestions,
+      );
+
+      // Build payload with properly typed fields.
+      // The API schema expects objects/arrays — not JSON strings.
+      const payload: Record<string, unknown> = {
+        displayName: form.displayName,
+        tagline: form.tagline || undefined,
+        description: form.description || undefined,
+        baseSystemPrompt: form.baseSystemPrompt,
+        isDefault: form.isDefault,
+        sortOrder: form.sortOrder,
+        categories: selectedCategories, // array, not JSON string
       };
+
+      // avatarUrl must be a valid URL or omitted — never send an empty string
+      if (form.avatarUrl.trim()) {
+        payload.avatarUrl = form.avatarUrl.trim();
+      }
+
+      // personality must be an object, not a JSON string
+      if (personalityWithQuestions) {
+        try {
+          payload.personality = JSON.parse(personalityWithQuestions);
+        } catch {
+          setError("Personality JSON is invalid — please check the format.");
+          setSaving(false);
+          return;
+        }
+      }
+
+      // customPricing must be an object, not a JSON string
+      if (form.customPricing) {
+        try {
+          payload.customPricing = JSON.parse(form.customPricing);
+        } catch {
+          setError("Custom pricing JSON is invalid — please check the format.");
+          setSaving(false);
+          return;
+        }
+      }
+
+      // Availability
+      payload.onlineOverride = onlineOverride;
+      payload.availabilitySchedule = availabilitySchedule.windows.length > 0
+        ? availabilitySchedule
+        : null;
 
       const url = isNew
         ? "/api/admin/personas"
@@ -242,7 +366,8 @@ export default function PersonaEditor() {
         navigate("/admin/personas");
       } else {
         const data = await res.json();
-        setError(data.error || "Failed to save");
+        const details = data.details?.map((d: any) => `${d.path || 'field'}: ${d.message}`).join('; ');
+        setError(details ? `${data.error} — ${details}` : data.error || "Failed to save");
       }
     } catch (err) {
       setError("Failed to save persona");
@@ -264,6 +389,33 @@ export default function PersonaEditor() {
       navigate("/admin/personas");
     } catch (err) {
       setError("Failed to deactivate persona");
+    }
+  };
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadError(null);
+    setUploadingAvatar(true);
+    try {
+      const formData = new FormData();
+      formData.append("avatar", file);
+      const res = await adminFetch("/api/admin/personas/upload-avatar", {
+        method: "POST",
+        body: formData,
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setUploadError(data.error || "Upload failed");
+        return;
+      }
+      const data = await res.json();
+      updateField("avatarUrl", data.url);
+    } catch {
+      setUploadError("Upload failed — check your connection");
+    } finally {
+      setUploadingAvatar(false);
+      if (avatarInputRef.current) avatarInputRef.current.value = "";
     }
   };
 
@@ -357,17 +509,67 @@ export default function PersonaEditor() {
                   />
                 </div>
 
+                {/* ── Avatar Photo ──────────────────────────────────────── */}
                 <div>
                   <label className="text-xs text-gray-400 mb-1 block">
-                    Avatar URL
+                    Avatar Photo
                   </label>
-                  <input
-                    type="text"
-                    value={form.avatarUrl}
-                    onChange={(e) => updateField("avatarUrl", e.target.value)}
-                    className="w-full bg-gray-800 text-white rounded-lg px-3 py-2 text-sm border border-gray-700 focus:border-purple-500 focus:outline-none"
-                    placeholder="/evelyn-avatar.png"
-                  />
+                  <p className="text-xs text-gray-500 mb-2">
+                    Recommended: <span className="text-gray-300 font-medium">400 × 400 px</span>, square (1:1).
+                    Formats: JPEG, PNG, WebP. Max size: 2 MB.
+                  </p>
+
+                  <div className="flex items-center gap-3">
+                    {/* Preview */}
+                    <div className="w-16 h-16 rounded-full bg-gray-800 border border-gray-700 flex items-center justify-center overflow-hidden flex-shrink-0">
+                      {form.avatarUrl ? (
+                        <img
+                          src={form.avatarUrl}
+                          alt="Avatar preview"
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <ImageIcon className="w-6 h-6 text-gray-600" />
+                      )}
+                    </div>
+
+                    {/* Upload button */}
+                    <div className="flex flex-col gap-1.5 flex-1">
+                      <input
+                        ref={avatarInputRef}
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp"
+                        className="hidden"
+                        onChange={handleAvatarUpload}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => avatarInputRef.current?.click()}
+                        disabled={uploadingAvatar}
+                        className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gray-700 hover:bg-gray-600 text-white text-xs transition-colors disabled:opacity-50 disabled:cursor-not-allowed w-fit"
+                      >
+                        <Upload className="w-3 h-3" />
+                        {uploadingAvatar ? "Uploading…" : "Upload photo"}
+                      </button>
+                      {uploadError && (
+                        <p className="text-xs text-red-400">{uploadError}</p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Manual URL override */}
+                  <div className="mt-2">
+                    <label className="text-xs text-gray-500 mb-1 block">
+                      Or paste URL directly
+                    </label>
+                    <input
+                      type="text"
+                      value={form.avatarUrl}
+                      onChange={(e) => updateField("avatarUrl", e.target.value)}
+                      className="w-full bg-gray-800 text-white rounded-lg px-3 py-2 text-sm border border-gray-700 focus:border-purple-500 focus:outline-none"
+                      placeholder="/uploads/avatars/avatar-123.jpg"
+                    />
+                  </div>
                 </div>
 
                 <div>
@@ -436,6 +638,63 @@ export default function PersonaEditor() {
                 />
               </CardContent>
             </Card>
+
+            {/* Suggested Questions */}
+            <Card className="bg-gray-900 border-gray-800">
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-white text-sm">
+                    Suggested Questions (Chat Bubbles)
+                  </CardTitle>
+                  <button
+                    type="button"
+                    onClick={() => setSuggestedQuestions((prev) => [...prev, ""])}
+                    className="text-xs text-purple-400 hover:text-purple-300 flex items-center gap-1 transition-colors"
+                  >
+                    <Plus className="w-3 h-3" />
+                    Add Question
+                  </button>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <p className="text-xs text-gray-500 mb-3">
+                  Shown as tappable bubbles after the greeting. Tapping auto-sends the question.
+                </p>
+                {suggestedQuestions.length === 0 ? (
+                  <p className="text-xs text-gray-600 text-center py-4 bg-gray-800/50 rounded-lg">
+                    No questions yet. Click "Add Question" to add one.
+                  </p>
+                ) : (
+                  suggestedQuestions.map((q, i) => (
+                    <div key={i} className="flex gap-2 items-center">
+                      <input
+                        type="text"
+                        value={q}
+                        onChange={(e) => {
+                          const updated = [...suggestedQuestions];
+                          updated[i] = e.target.value;
+                          setSuggestedQuestions(updated);
+                        }}
+                        className="flex-1 bg-gray-800 text-white rounded-lg px-3 py-2 text-sm border border-gray-700 focus:border-purple-500 focus:outline-none"
+                        placeholder="e.g. Will I find love this year?"
+                      />
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setSuggestedQuestions((prev) =>
+                            prev.filter((_, idx) => idx !== i)
+                          )
+                        }
+                        className="text-gray-600 hover:text-red-400 transition-colors shrink-0"
+                        aria-label="Remove question"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ))
+                )}
+              </CardContent>
+            </Card>
           </div>
 
           {/* Sidebar */}
@@ -496,6 +755,146 @@ export default function PersonaEditor() {
               </CardContent>
             </Card>
 
+            {/* Availability Scheduling */}
+            <Card className="bg-gray-900 border-gray-800">
+              <CardHeader>
+                <CardTitle className="text-white text-sm">Availability</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {/* Manual Override */}
+                <div>
+                  <label className="text-xs text-gray-400 mb-2 block">Manual Override</label>
+                  <div className="flex gap-1">
+                    {([null, 'online', 'offline'] as const).map((val) => (
+                      <button
+                        key={String(val)}
+                        type="button"
+                        onClick={() => setOnlineOverride(val)}
+                        className={`flex-1 px-2 py-1.5 rounded text-xs font-medium transition-colors ${
+                          onlineOverride === val
+                            ? val === 'online'
+                              ? 'bg-green-600 text-white'
+                              : val === 'offline'
+                              ? 'bg-red-700 text-white'
+                              : 'bg-purple-600 text-white'
+                            : 'bg-gray-800 text-gray-400 hover:text-white'
+                        }`}
+                      >
+                        {val === null ? 'Schedule' : val === 'online' ? 'Force Online' : 'Force Offline'}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Schedule */}
+                <div>
+                  <label className="text-xs text-gray-400 mb-1 block">Timezone</label>
+                  <input
+                    type="text"
+                    value={availabilitySchedule.timezone}
+                    onChange={(e) =>
+                      setAvailabilitySchedule((s) => ({ ...s, timezone: e.target.value }))
+                    }
+                    className="w-full bg-gray-800 text-white rounded-lg px-3 py-2 text-xs border border-gray-700 focus:border-purple-500 focus:outline-none"
+                    placeholder="America/New_York"
+                  />
+                </div>
+
+                {availabilitySchedule.windows.map((win, idx) => (
+                  <div key={idx} className="bg-gray-800/50 rounded-lg p-3 space-y-2 border border-gray-700/50">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-gray-500">Window {idx + 1}</span>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setAvailabilitySchedule((s) => ({
+                            ...s,
+                            windows: s.windows.filter((_, i) => i !== idx),
+                          }))
+                        }
+                        className="text-gray-600 hover:text-red-400 transition-colors"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                    {/* Day toggles */}
+                    <div className="flex gap-1 flex-wrap">
+                      {DAY_LABELS.map((label, dayNum) => (
+                        <button
+                          key={dayNum}
+                          type="button"
+                          onClick={() => {
+                            setAvailabilitySchedule((s) => {
+                              const updated = [...s.windows];
+                              const days = updated[idx].days.includes(dayNum)
+                                ? updated[idx].days.filter((d) => d !== dayNum)
+                                : [...updated[idx].days, dayNum].sort();
+                              updated[idx] = { ...updated[idx], days };
+                              return { ...s, windows: updated };
+                            });
+                          }}
+                          className={`w-7 h-7 rounded text-[10px] font-medium transition-colors ${
+                            win.days.includes(dayNum)
+                              ? 'bg-purple-600 text-white'
+                              : 'bg-gray-700 text-gray-400 hover:text-white'
+                          }`}
+                        >
+                          {label}
+                        </button>
+                      ))}
+                    </div>
+                    {/* Time range */}
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        value={win.startTime}
+                        onChange={(e) =>
+                          setAvailabilitySchedule((s) => {
+                            const updated = [...s.windows];
+                            updated[idx] = { ...updated[idx], startTime: e.target.value };
+                            return { ...s, windows: updated };
+                          })
+                        }
+                        className="flex-1 bg-gray-800 text-white rounded px-2 py-1.5 text-xs border border-gray-700 focus:border-purple-500 focus:outline-none"
+                        placeholder="09:00"
+                      />
+                      <span className="text-gray-500 text-xs">to</span>
+                      <input
+                        type="text"
+                        value={win.endTime}
+                        onChange={(e) =>
+                          setAvailabilitySchedule((s) => {
+                            const updated = [...s.windows];
+                            updated[idx] = { ...updated[idx], endTime: e.target.value };
+                            return { ...s, windows: updated };
+                          })
+                        }
+                        className="flex-1 bg-gray-800 text-white rounded px-2 py-1.5 text-xs border border-gray-700 focus:border-purple-500 focus:outline-none"
+                        placeholder="17:00"
+                      />
+                    </div>
+                  </div>
+                ))}
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    setAvailabilitySchedule((s) => ({
+                      ...s,
+                      windows: [
+                        ...s.windows,
+                        { days: [1, 2, 3, 4, 5], startTime: '09:00', endTime: '17:00' },
+                      ],
+                    }))
+                  }
+                  className="w-full text-xs text-purple-400 hover:text-purple-300 flex items-center justify-center gap-1 py-1.5 border border-dashed border-gray-700 rounded-lg transition-colors"
+                >
+                  <Plus className="w-3 h-3" />
+                  Add Window
+                </button>
+              </CardContent>
+            </Card>
+
             {/* Per-Persona Pricing */}
             <Card className="bg-gray-900 border-gray-800">
               <CardHeader>
@@ -507,20 +906,20 @@ export default function PersonaEditor() {
                 {/* Free minutes */}
                 <div>
                   <label className="text-xs text-gray-400 mb-1 block">
-                    Free Minutes (per new user)
+                    Free Coins (per new user)
                   </label>
                   <input
                     type="number"
                     min={0}
-                    value={pricing.freeMinutes}
+                    value={pricing.freeCoins}
                     onChange={(e) =>
-                      setFreeMinutes(parseInt(e.target.value) || 0)
+                      setFreeCoins(parseInt(e.target.value) || 0)
                     }
                     className="w-full bg-gray-800 text-white rounded-lg px-3 py-2 text-sm border border-gray-700 focus:border-purple-500 focus:outline-none"
                     placeholder="0"
                   />
                   <p className="text-xs text-gray-600 mt-1">
-                    Minutes granted free before credits are needed.
+                    Coins granted free before credits are needed.
                   </p>
                 </div>
 

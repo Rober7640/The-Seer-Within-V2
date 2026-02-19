@@ -6,6 +6,7 @@ import { db } from '../lib/db';
 import { personas, chatSessions } from '@shared/schema';
 import { eq, and, sql, count, desc } from 'drizzle-orm';
 import { getPersonaPricing } from '../lib/personaPricing';
+import logger from '../lib/logger';
 
 const router = Router();
 
@@ -47,10 +48,12 @@ router.get('/', async (req: Request, res: Response) => {
         tagline: p.tagline,
         description: p.description,
         avatarUrl: p.avatarUrl,
+        isActive: p.isActive,
         isDefault: p.isDefault,
-        freeMinutes: p.freeMinutes,
+        freeCoins: p.freeCoins,
         categories: parsedCategories,
         customPricing: p.customPricing,
+        personality: p.personality ?? null,
         ...(includesPricing && parsedPricing ? { pricingTiers: parsedPricing } : {}),
       };
     });
@@ -70,7 +73,7 @@ router.get('/', async (req: Request, res: Response) => {
 
     res.json(results);
   } catch (error) {
-    console.error('Public personas list error:', error);
+    logger.error('Public personas list error:', error);
     res.status(500).json({ error: 'Failed to load guides' });
   }
 });
@@ -127,10 +130,10 @@ router.get('/:slug', async (req: Request, res: Response) => {
       description: p.description,
       avatarUrl: p.avatarUrl,
       isDefault: p.isDefault,
-      freeMinutes: pricing.freeMinutes,
+      freeCoins: pricing.freeCoins,
       categories: parsedCategories,
       pricing: {
-        freeMinutes: pricing.freeMinutes,
+        freeCoins: pricing.freeCoins,
         tiers: pricing.tiers.map((t) => ({
           ...t,
           pricePerMinute: Math.round(t.priceUsd / t.minutes),
@@ -144,7 +147,7 @@ router.get('/:slug', async (req: Request, res: Response) => {
       },
     });
   } catch (error) {
-    console.error('Public persona detail error:', error);
+    logger.error('Public persona detail error:', error);
     res.status(500).json({ error: 'Failed to load guide details' });
   }
 });

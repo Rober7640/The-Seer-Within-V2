@@ -42,8 +42,13 @@ export async function adminFetch(
   url: string,
   options: RequestInit = {},
 ): Promise<Response> {
+  const base = adminHeaders();
+  // When the body is FormData let the browser set Content-Type (with boundary).
+  if (options.body instanceof FormData) {
+    delete (base as Record<string, string>)["Content-Type"];
+  }
   const headers = {
-    ...adminHeaders(),
+    ...base,
     ...(options.headers || {}),
   };
   return fetch(url, { ...options, headers, credentials: "include" });

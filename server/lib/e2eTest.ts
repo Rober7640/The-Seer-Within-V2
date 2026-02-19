@@ -73,10 +73,10 @@ async function testSeedAndSetup(): Promise<void> {
   testPersonaId = evelynPersonas[0].id;
 
   // Verify system config
-  const freeMinutesConfig = await db.select().from(systemConfig)
-    .where(eq(systemConfig.configKey, 'credit_free_minutes')).limit(1);
-  assert(freeMinutesConfig.length === 1, 'Free minutes config exists');
-  assert(freeMinutesConfig[0].configValue === '3', 'Free minutes default is 3');
+  const freeCoinsConfig = await db.select().from(systemConfig)
+    .where(eq(systemConfig.configKey, 'credit_free_coins')).limit(1);
+  assert(freeCoinsConfig.length === 1, 'Free coins config exists');
+  assert(freeCoinsConfig[0].configValue === '180', 'Free coins default is 180');
 }
 
 // ============================================
@@ -127,11 +127,11 @@ async function testUserCreation(): Promise<void> {
     email: testEmail,
     passwordHash,
     firstName: 'TestUser',
-    creditMinutes: 3,
+    coinBalance: 180,
   }).returning();
 
   assert(newUser.length === 1, 'User created');
-  assert(newUser[0].creditMinutes === 3, 'User has 3 free credits');
+  assert(newUser[0].coinBalance === 180, 'User has 180 free coins');
   assert(newUser[0].accountStatus === 'active', 'User is active');
 
   testUserId = newUser[0].id;
@@ -364,7 +364,7 @@ async function testOutOfCredits(): Promise<void> {
 
   // Set credits to 0
   await db.update(users)
-    .set({ creditMinutes: 0 })
+    .set({ coinBalance: 0 })
     .where(eq(users.id, testUserId));
 
   // Attempting to start a session should fail
@@ -375,7 +375,7 @@ async function testOutOfCredits(): Promise<void> {
 
   // Restore credits for cleanup
   await db.update(users)
-    .set({ creditMinutes: 3 })
+    .set({ coinBalance: 180 })
     .where(eq(users.id, testUserId));
 }
 

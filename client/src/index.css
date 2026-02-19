@@ -40,6 +40,12 @@
   --animate-flicker: flicker 0.5s ease-out forwards;
   --animate-glow: glow 2s ease-in-out infinite;
   --animate-cta-appear: cta-appear 0.5s ease-out forwards;
+  --animate-slide-down: slide-down 0.3s ease-out forwards;
+
+  @keyframes slide-down {
+    0% { transform: translateY(-100%); opacity: 0; }
+    100% { transform: translateY(0); opacity: 1; }
+  }
 
   @keyframes twinkle {
     0%, 100% { opacity: 1; }
@@ -84,6 +90,25 @@
       box-shadow: 0 4px 15px rgba(124, 58, 237, 0.3);
     }
   }
+
+  --animate-mp-fade-up: mp-fade-up 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+  --animate-mp-section: mp-section 0.65s cubic-bezier(0.22, 1, 0.36, 1) both;
+  --animate-mp-aura: mp-aura 4s ease-in-out infinite;
+
+  @keyframes mp-fade-up {
+    from { opacity: 0; transform: translateY(18px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes mp-section {
+    from { opacity: 0; transform: translateY(26px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes mp-aura {
+    0%, 100% { box-shadow: 0 0 30px rgba(124, 58, 237, 0.06), inset 0 1px 0 rgba(255,255,255,0.015); }
+    50% { box-shadow: 0 0 60px rgba(124, 58, 237, 0.14), inset 0 1px 0 rgba(255,255,255,0.03); }
+  }
 }
 
 @layer base {
@@ -94,6 +119,28 @@
   h1, h2, h3, h4, h5, h6 {
     @apply font-serif;
   }
+}
+
+/* Marketplace card hover */
+.mp-card {
+  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+              box-shadow 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+              border-color 0.25s ease;
+}
+.mp-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 40px rgba(124, 58, 237, 0.12),
+              0 0 0 1px rgba(124, 58, 237, 0.2);
+  border-color: rgba(124, 58, 237, 0.35);
+}
+
+/* Hide scrollbar while keeping scroll functionality */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
 /* Custom Utilities for Stars */

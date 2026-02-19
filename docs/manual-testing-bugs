@@ -1,0 +1,21 @@
+1.  Did manual testing . here are some Frontend quirks 1. Evenlyn Cross sends messages in chunks instead of what practiced in system 1. 2.
+  there's no typing animation as well, please study the typing speed, animations etc in system 1 and report back first before
+  implementing  
+
+  2. At the chat session, the UX shows a countdown timer progress bar as well as the on the wall countdown timer. remove the progress bar , keep the wall countdown timer. 
+
+  3. Backend. The safety guardrails are empty. Please study guardrails from system 1, and suggest what to import over 
+
+  4. Backend. Intent configs are empty for evenlyn cross. Please study intent configs from system 1 and suggest what to import over. The main purpose of intent is to keep the conversation engaging and going through questions and suggest?
+
+==== NEW ==== 
+https://www.notion.so/Advisor-App-Project-Briefing-1d2758407cae8005b149d6a6470562de
+
+  5. Afer logging in, if existing user redirect to last psychic/guide consulted. 
+
+  6. On the pre-reading session page , mock up a new page using layout and text found from C:\Users\joelc\Downloads\the-seer-within-2\attached\attached3.png
+
+  7. - 30 seconds before the end of the free trial, there will be a pop-up message at the top with the ‘Refill’ button.
+    - Refill button - if the lead clicks the refill button, they will be presented with different prices. Like the photo below: C:\Users\joelc\Downloads\the-seer-within-2\attached\attached4.png 
+
+8. To transform the per minute, per dollar system into a credit/coin system - DONE

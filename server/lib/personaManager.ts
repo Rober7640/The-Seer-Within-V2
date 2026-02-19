@@ -5,6 +5,7 @@
 import { db } from './db';
 import { personas, personaPrompts, chatSessions, chatMessages, creditPurchases } from '@shared/schema';
 import { eq, and, sql, desc, count } from 'drizzle-orm';
+import logger from './logger';
 
 // Types for persona configuration stored in JSON columns
 export interface PersonalityConfig {
@@ -26,6 +27,58 @@ export interface PricingPackage {
   label: string;                 // Display label
 }
 
+export interface AvailabilityWindow {
+  days: number[];      // 0=Sun … 6=Sat
+  startTime: string;   // "HH:MM" 24h
+  endTime: string;     // "HH:MM" 24h
+}
+
+export interface AvailabilitySchedule {
+  timezone: string;
+  windows: AvailabilityWindow[];
+}
+
+/**
+ * Determine whether a persona is currently available for new sessions.
+ * Priority: expired-override → manual override → schedule → default (online)
+ */
+export function isPersonaOnline(persona: {
+  onlineOverride?: string | null;
+  overrideExpiresAt?: Date | null;
+  availabilitySchedule?: string | null;
+}): boolean {
+  // 1. Expire override if past
+  let override = persona.onlineOverride;
+  if (override && persona.overrideExpiresAt && new Date() > persona.overrideExpiresAt) {
+    override = null;
+  }
+  // 2. Manual override wins
+  if (override === 'online') return true;
+  if (override === 'offline') return false;
+  // 3. No schedule = always online
+  if (!persona.availabilitySchedule) return true;
+  // 4. Evaluate schedule
+  try {
+    const { timezone, windows } = JSON.parse(persona.availabilitySchedule) as AvailabilitySchedule;
+    const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const parts = new Intl.DateTimeFormat('en-US', {
+      timeZone: timezone,
+      weekday: 'short',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+    }).formatToParts(new Date());
+    const weekdayPart = parts.find(p => p.type === 'weekday')?.value ?? '';
+    const hourPart = parts.find(p => p.type === 'hour')?.value ?? '00';
+    const minutePart = parts.find(p => p.type === 'minute')?.value ?? '00';
+    const day = dayNames.indexOf(weekdayPart);
+    const time = `${hourPart.padStart(2, '0')}:${minutePart.padStart(2, '0')}`;
+    return windows.some(w => w.days.includes(day) && time >= w.startTime && time < w.endTime);
+  } catch {
+    return true;
+  }
+}
+
 export interface CreatePersonaInput {
   slug: string;
   displayName: string;
@@ -35,7 +88,7 @@ export interface CreatePersonaInput {
   baseSystemPrompt: string;
   personality?: PersonalityConfig;
   categories?: string[];
-  freeMinutes?: number;
+  freeCoins?: number;
   customPricing?: PricingPackage[];
   isDefault?: boolean;
   sortOrder?: number;
@@ -49,10 +102,13 @@ export interface UpdatePersonaInput {
   baseSystemPrompt?: string;
   personality?: Partial<PersonalityConfig>;
   categories?: string[];
-  freeMinutes?: number;
+  freeCoins?: number;
   customPricing?: PricingPackage[];
   isDefault?: boolean;
   sortOrder?: number;
+  availabilitySchedule?: AvailabilitySchedule | null;
+  onlineOverride?: 'online' | 'offline' | null;
+  overrideExpiresAt?: Date | string | null;
 }
 
 export interface PersonaWithStats {
@@ -65,7 +121,7 @@ export interface PersonaWithStats {
   isActive: boolean;
   isDefault: boolean;
   sortOrder: number;
-  freeMinutes: number;
+  freeCoins: number;
   categories: string[];
   totalSessions: number;
   totalRevenue: number;
@@ -85,10 +141,13 @@ export interface PersonaDetail {
   isActive: boolean;
   isDefault: boolean;
   sortOrder: number;
-  freeMinutes: number;
+  freeCoins: number;
   personality: PersonalityConfig | null;
   categories: string[];
   customPricing: PricingPackage[];
+  availabilitySchedule: AvailabilitySchedule | null;
+  onlineOverride: string | null;
+  overrideExpiresAt: Date | null;
   promptCount: number;
   createdAt: Date;
   updatedAt: Date;
@@ -110,7 +169,7 @@ export async function createPersona(input: CreatePersonaInput): Promise<string> 
       baseSystemPrompt: input.baseSystemPrompt,
       personality: input.personality ? JSON.stringify(input.personality) : null,
       categories: input.categories ? JSON.stringify(input.categories) : null,
-      freeMinutes: input.freeMinutes ?? 3,
+      freeCoins: input.freeCoins ?? 180,
       customPricing: input.customPricing ? JSON.stringify(input.customPricing) : null,
       isActive: false,   // Always start inactive
       isDefault: input.isDefault || false,
@@ -122,7 +181,7 @@ export async function createPersona(input: CreatePersonaInput): Promise<string> 
     throw new Error('Failed to create persona');
   }
 
-  console.log(`Created persona: ${input.displayName} (${result[0].id})`);
+  logger.info('Created persona', { displayName: input.displayName, personaId: result[0].id });
   return result[0].id;
 }
 
@@ -153,7 +212,7 @@ export async function updatePersona(
   if (updates.baseSystemPrompt !== undefined) setValues.baseSystemPrompt = updates.baseSystemPrompt;
   if (updates.isDefault !== undefined) setValues.isDefault = updates.isDefault;
   if (updates.sortOrder !== undefined) setValues.sortOrder = updates.sortOrder;
-  if (updates.freeMinutes !== undefined) setValues.freeMinutes = updates.freeMinutes;
+  if (updates.freeCoins !== undefined) setValues.freeCoins = updates.freeCoins;
 
   // Merge personality JSON
   if (updates.personality) {
@@ -176,12 +235,28 @@ export async function updatePersona(
     setValues.customPricing = JSON.stringify(updates.customPricing);
   }
 
+  // Availability scheduling fields
+  if ('availabilitySchedule' in updates) {
+    setValues.availabilitySchedule = updates.availabilitySchedule
+      ? JSON.stringify(updates.availabilitySchedule)
+      : null;
+  }
+  if ('onlineOverride' in updates) {
+    setValues.onlineOverride = updates.onlineOverride ?? null;
+  }
+  if ('overrideExpiresAt' in updates) {
+    const exp = updates.overrideExpiresAt;
+    setValues.overrideExpiresAt = exp
+      ? (exp instanceof Date ? exp : new Date(exp))
+      : null;
+  }
+
   await db
     .update(personas)
     .set(setValues)
     .where(eq(personas.id, personaId));
 
-  console.log(`Updated persona: ${personaId}`);
+  logger.info('Updated persona', { personaId });
 }
 
 // ============================================
@@ -217,7 +292,7 @@ export async function setPersonaActive(
     })
     .where(eq(personas.id, personaId));
 
-  console.log(`Persona ${personaId} isActive set to: ${isActive}`);
+  logger.info('Persona activation changed', { personaId, isActive });
 }
 
 // ============================================
@@ -306,7 +381,7 @@ export async function listPersonas(options?: {
       isActive: p.isActive,
       isDefault: p.isDefault,
       sortOrder: p.sortOrder,
-      freeMinutes: p.freeMinutes,
+      freeCoins: p.freeCoins,
       categories: parseJsonArray(p.categories),
       totalSessions: 0,
       totalRevenue: 0,
@@ -351,7 +426,7 @@ export async function listPersonas(options?: {
       isActive: persona.isActive,
       isDefault: persona.isDefault,
       sortOrder: persona.sortOrder,
-      freeMinutes: persona.freeMinutes,
+      freeCoins: persona.freeCoins,
       categories: parseJsonArray(persona.categories),
       totalSessions: sessionStats[0]?.totalSessions || 0,
       totalRevenue: 0, // Computed separately if needed
@@ -375,7 +450,7 @@ export async function listActivePersonas(): Promise<Array<{
   tagline: string | null;
   description: string | null;
   avatarUrl: string | null;
-  freeMinutes: number;
+  freeCoins: number;
   categories: string[];
   customPricing: PricingPackage[];
 }>> {
@@ -392,7 +467,7 @@ export async function listActivePersonas(): Promise<Array<{
     tagline: p.tagline,
     description: p.description,
     avatarUrl: p.avatarUrl,
-    freeMinutes: p.freeMinutes,
+    freeCoins: p.freeCoins,
     categories: parseJsonArray(p.categories),
     customPricing: parseJsonArray(p.customPricing) as unknown as PricingPackage[],
   }));
@@ -449,7 +524,7 @@ export async function clonePersona(
     });
   }
 
-  console.log(`Cloned persona ${sourcePersonaId} -> ${newId} (${newDisplayName})`);
+  logger.info('Cloned persona', { sourcePersonaId, newPersonaId: newId, newDisplayName });
   return newId;
 }
 
@@ -462,7 +537,7 @@ export interface PersonaAnalytics {
   totalSessions: number;
   totalMessages: number;
   averageSessionDuration: number;
-  totalMinutesUsed: number;
+  totalCoinsUsed: number;
   uniqueUsers: number;
   topBuckets: Array<{ bucket: string; count: number }>;
 }
@@ -485,7 +560,7 @@ export async function getPersonaAnalytics(
     .select({
       totalSessions: count(),
       avgDuration: sql<number>`COALESCE(AVG(${chatSessions.durationSeconds}), 0)`,
-      totalMinutes: sql<number>`COALESCE(SUM(${chatSessions.minutesCharged}), 0)`,
+      totalCoins: sql<number>`COALESCE(SUM(${chatSessions.coinsCharged}), 0)`,
       uniqueUsers: sql<number>`COUNT(DISTINCT ${chatSessions.userId})`,
     })
     .from(chatSessions)
@@ -520,7 +595,7 @@ export async function getPersonaAnalytics(
     totalSessions: sessionStats[0]?.totalSessions || 0,
     totalMessages: messageStats[0]?.totalMessages || 0,
     averageSessionDuration: Number(sessionStats[0]?.avgDuration || 0),
-    totalMinutesUsed: Number(sessionStats[0]?.totalMinutes || 0),
+    totalCoinsUsed: Number(sessionStats[0]?.totalCoins || 0),
     uniqueUsers: Number(sessionStats[0]?.uniqueUsers || 0),
     topBuckets: bucketStats.map((b) => ({
       bucket: b.bucket || 'unknown',
@@ -565,6 +640,11 @@ async function formatPersonaDetail(
     personality: persona.personality ? JSON.parse(persona.personality) : null,
     categories: parseJsonArray(persona.categories),
     customPricing: persona.customPricing ? JSON.parse(persona.customPricing) : null,
+    availabilitySchedule: persona.availabilitySchedule
+      ? JSON.parse(persona.availabilitySchedule) as AvailabilitySchedule
+      : null,
+    onlineOverride: persona.onlineOverride ?? null,
+    overrideExpiresAt: persona.overrideExpiresAt ?? null,
     promptCount: promptResult[0]?.count || 0,
     createdAt: persona.createdAt,
     updatedAt: persona.updatedAt,

@@ -1,4 +1,5 @@
 import crypto from 'crypto';
+import logger from './logger';
 
 const FB_PIXEL_ID = process.env.FB_PIXEL_ID || '446814716830295';
 const FB_ACCESS_TOKEN = process.env.FB_ACCESS_TOKEN;
@@ -26,7 +27,7 @@ function hashValue(value: string): string {
 
 export async function sendFacebookEvent(data: EventData): Promise<{ success: boolean; error?: string }> {
   if (!FB_ACCESS_TOKEN) {
-    console.warn('FB_ACCESS_TOKEN not configured - skipping server-side event');
+    logger.warn('FB_ACCESS_TOKEN not configured - skipping server-side event');
     return { success: false, error: 'FB_ACCESS_TOKEN not configured' };
   }
 
@@ -80,15 +81,15 @@ export async function sendFacebookEvent(data: EventData): Promise<{ success: boo
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('Facebook Conversions API error:', errorText);
+      logger.error('Facebook Conversions API error', { error: errorText });
       return { success: false, error: errorText };
     }
 
     const result = await response.json();
-    console.log(`FB Event sent: ${data.eventName} (${data.eventId})`);
+    logger.debug('FB Event sent', { eventName: data.eventName, eventId: data.eventId });
     return { success: true };
   } catch (error) {
-    console.error('Failed to send Facebook event:', error);
+    logger.error('Failed to send Facebook event', { error: String(error) });
     return { success: false, error: String(error) };
   }
 }

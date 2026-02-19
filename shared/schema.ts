@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, boolean, integer, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, boolean, integer, timestamp, real, index, uniqueIndex } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -98,8 +98,16 @@ export const personas = pgTable("personas", {
   sortOrder: integer("sort_order").default(0).notNull(),
 
   // Per-persona pricing (fully admin-editable)
-  freeMinutes: integer("free_minutes").default(3).notNull(),
-  customPricing: text("custom_pricing"), // JSON array: [{ packageType, minutes, priceUsd, label }]
+  freeCoins: integer("free_coins").default(180).notNull(),
+  customPricing: text("custom_pricing"), // JSON array: PricingTier[]
+
+  // Session timeout (configurable per advisor, default 30 minutes)
+  sessionTimeoutMinutes: integer("session_timeout_minutes").default(30).notNull(),
+
+  // Availability scheduling
+  availabilitySchedule: text("availability_schedule"), // JSON: { timezone, windows: [{days, startTime, endTime}] }
+  onlineOverride: text("online_override"),             // null | 'online' | 'offline'
+  overrideExpiresAt: timestamp("override_expires_at"), // optional expiry for the override
 
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
@@ -131,16 +139,38 @@ export const users = pgTable("users", {
   passwordHash: text("password_hash").notNull(),
   firstName: text("first_name").notNull(),
 
-  // Credit tracking
-  creditMinutes: integer("credit_minutes").default(3).notNull(),
-  totalMinutesUsed: integer("total_minutes_used").default(0).notNull(),
+  // Email verification
+  emailVerified: boolean("email_verified").default(false).notNull(),
+  verificationToken: text("verification_token"),
+  verificationTokenExpiry: timestamp("verification_token_expiry"),
+
+  // Coin balance (60 coins = 1 minute)
+  coinBalance: integer("coin_balance").default(0).notNull(),
+  totalCoinsUsed: integer("total_coins_used").default(0).notNull(),
 
   // Multi-persona
   defaultPersonaId: varchar("default_persona_id").references(() => personas.id, { onDelete: "set null" }),
 
   // Account status
-  accountStatus: text("account_status").default("active").notNull(),
+  accountStatus: text("account_status").default("active").notNull(), // active, suspended, banned, flagged_for_review
   lastLoginAt: timestamp("last_login_at"),
+
+  // Suspension tracking
+  suspensionReason: text("suspension_reason"),
+  suspendedAt: timestamp("suspended_at"),
+  suspendedBy: varchar("suspended_by"),
+
+  // Password reset
+  passwordResetToken: text("password_reset_token"),
+  passwordResetExpiry: timestamp("password_reset_expiry"),
+  passwordChangedAt: timestamp("password_changed_at"),
+
+  // Fraud detection / device tracking
+  registrationIp: text("registration_ip"),
+  lastLoginIp: text("last_login_ip"),
+  registrationUserAgent: text("registration_user_agent"),
+  deviceFingerprint: text("device_fingerprint"),
+  accountFlags: text("account_flags"), // JSON array: ["ip_flagged", "manual_review", etc.]
 
   // Migration from funnel
   migratedFromConversationId: varchar("migrated_from_conversation_id"),
@@ -158,11 +188,13 @@ export const chatSessions = pgTable("chat_sessions", {
   startedAt: timestamp("started_at").defaultNow().notNull(),
   endedAt: timestamp("ended_at"),
   durationSeconds: integer("duration_seconds").default(0).notNull(),
-  minutesCharged: integer("minutes_charged").default(0).notNull(),
+  coinsCharged: integer("coins_charged").default(0).notNull(),
   status: text("status").default("active").notNull(), // active, ended, out_of_credits
 
   lastTopic: text("last_topic"),
   lastBucket: text("last_bucket"),
+  lastHeartbeatAt: timestamp("last_heartbeat_at"),
+  lastMessageAt: timestamp("last_message_at"),
 
   // A/B testing - which prompt variant was used
   promptVariantId: varchar("prompt_variant_id"),
@@ -216,8 +248,9 @@ export const creditPurchases = pgTable("credit_purchases", {
   userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   personaId: varchar("persona_id").references(() => personas.id, { onDelete: "set null" }),
 
-  packageType: text("package_type").notNull(), // "15min", "30min", or custom
-  minutesPurchased: integer("minutes_purchased").notNull(),
+  packageType: text("package_type").notNull(), // "starter", "popular", "best_value", "premium"
+  coinsPurchased: integer("coins_purchased").notNull(),
+  bonusCoins: integer("bonus_coins").default(0).notNull(),
   priceUsd: integer("price_usd").notNull(), // in cents
 
   stripeSessionId: text("stripe_session_id"),
@@ -253,6 +286,133 @@ export const systemConfig = pgTable("system_config", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
+
+// ============================================================
+// Persona Safety, Intent & Follow-Up Tables
+// ============================================================
+
+// 10. Safety Violations - Universal safety logging
+export const safetyViolations = pgTable("safety_violations", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  sessionId: varchar("session_id").references(() => chatSessions.id, { onDelete: "set null" }),
+  userId: varchar("user_id").references(() => users.id, { onDelete: "set null" }),
+  personaId: varchar("persona_id").references(() => personas.id, { onDelete: "set null" }),
+
+  violationType: text("violation_type").notNull(), // crisis, inappropriate, prompt_injection, harassment, gibberish
+  userMessage: text("user_message").notNull(),
+  systemResponse: text("system_response").notNull(),
+
+  ipAddress: text("ip_address"),
+  userAgent: text("user_agent"),
+
+  flaggedForReview: boolean("flagged_for_review").default(false).notNull(),
+  reviewedAt: timestamp("reviewed_at"),
+  reviewNotes: text("review_notes"),
+
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_safety_violations_user_created").on(table.userId, table.createdAt),
+  index("idx_safety_violations_type_created").on(table.violationType, table.createdAt),
+  index("idx_safety_violations_flagged").on(table.flaggedForReview, table.createdAt),
+]);
+
+// 11. Persona Intent Configs - Per-persona intent/bucket/character configuration
+export const personaIntentConfigs = pgTable("persona_intent_configs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  personaId: varchar("persona_id").notNull().references(() => personas.id, { onDelete: "cascade" }),
+  specialty: text("specialty").notNull(), // tarot, astrology, mediumship, etc.
+
+  conversationBuckets: text("conversation_buckets").notNull(), // JSON array
+  intents: text("intents").notNull(), // JSON array
+  characterRules: text("character_rules").notNull(), // JSON object
+
+  version: integer("version").default(1).notNull(),
+  isActive: boolean("is_active").default(true).notNull(),
+
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_persona_intent_configs_persona").on(table.personaId, table.isActive, table.version),
+]);
+
+// 12. Conversation States - Per-session conversation tracking
+export const conversationStates = pgTable("conversation_states", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  sessionId: varchar("session_id").notNull().references(() => chatSessions.id, { onDelete: "cascade" }),
+  personaId: varchar("persona_id").notNull().references(() => personas.id, { onDelete: "cascade" }),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+
+  currentBucket: text("current_bucket"),
+  turnCount: integer("turn_count").default(0).notNull(),
+  detectedIntents: text("detected_intents"), // JSON array
+
+  userEngagement: text("user_engagement").default("medium").notNull(), // high, medium, low
+  lastIntentConfidence: real("last_intent_confidence").default(0.5).notNull(),
+
+  bucketTransitions: text("bucket_transitions"), // JSON array
+
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => [
+  uniqueIndex("idx_conversation_states_session").on(table.sessionId),
+  index("idx_conversation_states_user_persona").on(table.userId, table.personaId, table.createdAt),
+]);
+
+// 13. Follow-Up Emails - Re-engagement email tracking
+export const followUpEmails = pgTable("follow_up_emails", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  personaId: varchar("persona_id").notNull().references(() => personas.id, { onDelete: "cascade" }),
+  lastSessionId: varchar("last_session_id").references(() => chatSessions.id, { onDelete: "set null" }),
+
+  recipientEmail: text("recipient_email").notNull(),
+  subject: text("subject").notNull(),
+  bodyHtml: text("body_html").notNull(),
+  bodyText: text("body_text").notNull(),
+
+  status: text("status").default("pending").notNull(), // pending, sent, failed, bounced
+  sentAt: timestamp("sent_at"),
+  deliveryStatus: text("delivery_status"),
+  resendEmailId: text("resend_email_id"),
+
+  opened: boolean("opened").default(false).notNull(),
+  clicked: boolean("clicked").default(false).notNull(),
+  openedAt: timestamp("opened_at"),
+  clickedAt: timestamp("clicked_at"),
+
+  generatedBy: text("generated_by").default("claude-haiku").notNull(),
+  generationTokens: integer("generation_tokens"),
+  daysSinceLastSession: integer("days_since_last_session"),
+
+  unsubscribeToken: text("unsubscribe_token").notNull().unique(),
+
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_follow_up_emails_user_persona").on(table.userId, table.personaId, table.createdAt),
+  index("idx_follow_up_emails_status").on(table.status, table.sentAt),
+]);
+
+// 14. User Follow-Up Preferences - Per-user email preferences
+export const userFollowUpPreferences = pgTable("user_follow_up_preferences", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }).unique(),
+
+  enableFollowUps: boolean("enable_follow_ups").default(true).notNull(),
+  followUpDays: integer("follow_up_days").default(2).notNull(),
+  maxFollowUpsPerMonth: integer("max_follow_ups_per_month").default(4).notNull(),
+
+  followUpsSentThisMonth: integer("follow_ups_sent_this_month").default(0).notNull(),
+  lastFollowUpSentAt: timestamp("last_follow_up_sent_at"),
+
+  unsubscribedAt: timestamp("unsubscribed_at"),
+  unsubscribeReason: text("unsubscribe_reason"),
+
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_user_follow_up_prefs_enabled").on(table.enableFollowUps, table.lastFollowUpSentAt),
+]);
 
 // ============================================================
 // Insert Schemas (Zod validation)
@@ -311,6 +471,35 @@ export const insertSystemConfigSchema = createInsertSchema(systemConfig).omit({
   updatedAt: true,
 });
 
+export const insertSafetyViolationSchema = createInsertSchema(safetyViolations).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertPersonaIntentConfigSchema = createInsertSchema(personaIntentConfigs).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertConversationStateSchema = createInsertSchema(conversationStates).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertFollowUpEmailSchema = createInsertSchema(followUpEmails).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertUserFollowUpPreferenceSchema = createInsertSchema(userFollowUpPreferences).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 // ============================================================
 // Type Exports
 // ============================================================
@@ -341,3 +530,18 @@ export type InsertAdminUser = z.infer<typeof insertAdminUserSchema>;
 
 export type SystemConfig = typeof systemConfig.$inferSelect;
 export type InsertSystemConfig = z.infer<typeof insertSystemConfigSchema>;
+
+export type SafetyViolation = typeof safetyViolations.$inferSelect;
+export type InsertSafetyViolation = z.infer<typeof insertSafetyViolationSchema>;
+
+export type PersonaIntentConfig = typeof personaIntentConfigs.$inferSelect;
+export type InsertPersonaIntentConfig = z.infer<typeof insertPersonaIntentConfigSchema>;
+
+export type ConversationState = typeof conversationStates.$inferSelect;
+export type InsertConversationState = z.infer<typeof insertConversationStateSchema>;
+
+export type FollowUpEmail = typeof followUpEmails.$inferSelect;
+export type InsertFollowUpEmail = z.infer<typeof insertFollowUpEmailSchema>;
+
+export type UserFollowUpPreference = typeof userFollowUpPreferences.$inferSelect;
+export type InsertUserFollowUpPreference = z.infer<typeof insertUserFollowUpPreferenceSchema>;

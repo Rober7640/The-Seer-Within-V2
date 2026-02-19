@@ -7,6 +7,8 @@ import { requireAuth } from '../lib/auth';
 import { getPersonaPricing } from '../lib/personaPricing';
 import { DEFAULT_PRICING } from '../../shared/types';
 import Stripe from 'stripe';
+import logger from '../lib/logger';
+import { fireWithBreaker, stripeBreaker, isCircuitOpenError } from '../lib/circuitBreaker';
 
 const router = Router();
 
@@ -17,7 +19,7 @@ const stripe = stripeKey && stripeKey !== 'sk_test_placeholder'
 
 const checkoutSchema = z.object({
   packageType: z.string().min(1),
-  personaId: z.string().min(1),
+  personaId: z.string().min(1).optional(),
 });
 
 function getBaseUrl(req: Request): string {
@@ -33,8 +35,8 @@ function getBaseUrl(req: Request): string {
 router.get('/balance', requireAuth, async (req: Request, res: Response) => {
   try {
     const result = await db.select({
-      creditMinutes: users.creditMinutes,
-      totalMinutesUsed: users.totalMinutesUsed,
+      coinBalance: users.coinBalance,
+      totalCoinsUsed: users.totalCoinsUsed,
     })
       .from(users)
       .where(eq(users.id, req.userId!))
@@ -46,11 +48,11 @@ router.get('/balance', requireAuth, async (req: Request, res: Response) => {
     }
 
     res.json({
-      creditMinutes: result[0].creditMinutes,
-      totalMinutesUsed: result[0].totalMinutesUsed,
+      coinBalance: result[0].coinBalance,
+      totalCoinsUsed: result[0].totalCoinsUsed,
     });
   } catch (error) {
-    console.error('Get balance error:', error);
+    logger.error('Get balance error:', error);
     res.status(500).json({ error: 'Failed to get balance' });
   }
 });
@@ -64,11 +66,10 @@ router.get('/pricing', async (req: Request, res: Response) => {
       const pricing = await getPersonaPricing(personaId);
       res.json(pricing);
     } else {
-      // Return default pricing when no persona specified
       res.json(DEFAULT_PRICING);
     }
   } catch (error) {
-    console.error('Get pricing error:', error);
+    logger.error('Get pricing error:', error);
     res.status(500).json({ error: 'Failed to get pricing' });
   }
 });
@@ -84,7 +85,7 @@ router.get('/purchases', requireAuth, async (req: Request, res: Response) => {
 
     res.json({ purchases });
   } catch (error) {
-    console.error('Get purchases error:', error);
+    logger.error('Get purchases error:', error);
     res.status(500).json({ error: 'Failed to get purchases' });
   }
 });
@@ -102,23 +103,24 @@ router.post('/checkout', requireAuth, async (req: Request, res: Response) => {
 
     const { packageType, personaId } = parseResult.data;
 
-    // Load persona-specific pricing
-    const pricing = await getPersonaPricing(personaId);
+    const pricing = personaId
+      ? await getPersonaPricing(personaId)
+      : DEFAULT_PRICING;
     const tier = pricing.tiers.find(t => t.packageType === packageType);
     if (!tier) {
-      res.status(400).json({ error: 'Invalid package type for this persona' });
+      res.status(400).json({ error: 'Invalid package type' });
       return;
     }
 
-    // Load persona display name for Stripe product description
-    const personaResult = await db.select({ displayName: personas.displayName })
-      .from(personas)
-      .where(eq(personas.id, personaId))
-      .limit(1);
+    let personaName = 'Chat';
+    if (personaId) {
+      const personaResult = await db.select({ displayName: personas.displayName })
+        .from(personas)
+        .where(eq(personas.id, personaId))
+        .limit(1);
+      personaName = personaResult[0]?.displayName || 'Chat';
+    }
 
-    const personaName = personaResult[0]?.displayName || 'Chat';
-
-    // Get user email for Stripe
     const userResult = await db.select({ email: users.email, firstName: users.firstName })
       .from(users)
       .where(eq(users.id, req.userId!))
@@ -129,25 +131,24 @@ router.post('/checkout', requireAuth, async (req: Request, res: Response) => {
       return;
     }
 
-    // Create pending purchase record
     const purchase = await db.insert(creditPurchases).values({
       userId: req.userId!,
-      personaId,
+      personaId: personaId || null,
       packageType: tier.packageType,
-      minutesPurchased: tier.minutes,
+      coinsPurchased: tier.totalCoins,
+      bonusCoins: tier.bonusCoins,
       priceUsd: tier.priceUsd,
       status: 'pending',
     }).returning();
 
     if (!stripe) {
-      // Dev mode: auto-complete purchase
       await db.update(creditPurchases)
         .set({ status: 'completed', updatedAt: new Date() })
         .where(eq(creditPurchases.id, purchase[0].id));
 
       await db.update(users)
         .set({
-          creditMinutes: sql`credit_minutes + ${tier.minutes}`,
+          coinBalance: sql`coin_balance + ${tier.totalCoins}`,
           updatedAt: new Date(),
         })
         .where(eq(users.id, req.userId!));
@@ -156,42 +157,49 @@ router.post('/checkout', requireAuth, async (req: Request, res: Response) => {
       return;
     }
 
-    const session = await stripe.checkout.sessions.create({
-      customer_email: userResult[0].email,
-      payment_method_types: ['card'],
-      line_items: [{
-        price_data: {
-          currency: 'usd',
-          product_data: {
-            name: `${personaName} - ${tier.label}`,
-            description: `${tier.minutes} minutes of chat time with ${personaName}`,
+    const bonusLabel = tier.bonusCoins > 0 ? ` (+${tier.bonusCoins} bonus)` : '';
+    const session = await fireWithBreaker(stripeBreaker, () =>
+      stripe!.checkout.sessions.create({
+        customer_email: userResult[0].email,
+        payment_method_types: ['card'],
+        line_items: [{
+          price_data: {
+            currency: 'usd',
+            product_data: {
+              name: `${personaName} - ${tier.coins} Coins${bonusLabel}`,
+              description: `${tier.totalCoins} coins for consultation with ${personaName}`,
+            },
+            unit_amount: tier.priceUsd,
           },
-          unit_amount: tier.priceUsd,
+          quantity: 1,
+        }],
+        mode: 'payment',
+        metadata: {
+          app: 'the-seer-within-chat',
+          purchaseId: purchase[0].id,
+          userId: req.userId!,
+          ...(personaId ? { personaId } : {}),
+          packageType: tier.packageType,
+          totalCoins: String(tier.totalCoins),
         },
-        quantity: 1,
-      }],
-      mode: 'payment',
-      metadata: {
-        app: 'the-seer-within-chat',
-        purchaseId: purchase[0].id,
-        userId: req.userId!,
-        personaId,
-        packageType: tier.packageType,
-        minutes: String(tier.minutes),
-      },
-      success_url: `${getBaseUrl(req)}/chat-service?purchased=true&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${getBaseUrl(req)}/chat-service?cancelled=true`,
-    });
+        success_url: `${getBaseUrl(req)}/chat-service?purchased=true&session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${getBaseUrl(req)}/chat-service?cancelled=true`,
+      }),
+    );
 
-    // Update purchase with Stripe session ID
     await db.update(creditPurchases)
       .set({ stripeSessionId: session.id, updatedAt: new Date() })
       .where(eq(creditPurchases.id, purchase[0].id));
 
     res.json({ url: session.url });
   } catch (error) {
-    console.error('Credits checkout error:', error);
-    res.status(500).json({ error: 'Checkout failed' });
+    if (isCircuitOpenError(error)) {
+      logger.warn('Stripe circuit open, checkout unavailable');
+      res.status(503).json({ error: 'Payment service temporarily unavailable. Please try again shortly.' });
+    } else {
+      logger.error('Credits checkout error:', error);
+      res.status(500).json({ error: 'Checkout failed' });
+    }
   }
 });
 
@@ -206,18 +214,17 @@ router.post('/webhook', async (req: Request, res: Response) => {
   const webhookSecret = process.env.STRIPE_CREDITS_WEBHOOK_SECRET;
 
   if (!webhookSecret) {
-    console.error('Missing STRIPE_CREDITS_WEBHOOK_SECRET');
+    logger.error('Missing STRIPE_CREDITS_WEBHOOK_SECRET');
     res.status(500).json({ error: 'Webhook not configured' });
     return;
   }
 
   let event: Stripe.Event;
   try {
-    // req.body should be the raw buffer for webhook verification
     const rawBody = typeof req.body === 'string' ? req.body : JSON.stringify(req.body);
     event = stripe.webhooks.constructEvent(rawBody, sig, webhookSecret);
   } catch (err: any) {
-    console.error('Webhook signature verification failed:', err.message);
+    logger.error('Webhook signature verification failed:', err.message);
     res.status(400).json({ error: 'Invalid signature' });
     return;
   }
@@ -225,7 +232,6 @@ router.post('/webhook', async (req: Request, res: Response) => {
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object as Stripe.Checkout.Session;
 
-    // Only process chat credit purchases
     if (session.metadata?.app !== 'the-seer-within-chat') {
       res.json({ received: true });
       return;
@@ -233,16 +239,15 @@ router.post('/webhook', async (req: Request, res: Response) => {
 
     const purchaseId = session.metadata?.purchaseId;
     const userId = session.metadata?.userId;
-    const minutes = parseInt(session.metadata?.minutes || '0', 10);
+    const totalCoins = parseInt(session.metadata?.totalCoins || '0', 10);
 
-    if (!purchaseId || !userId || !minutes) {
-      console.error('Missing webhook metadata:', session.metadata);
+    if (!purchaseId || !userId || !totalCoins) {
+      logger.error('Missing webhook metadata:', session.metadata);
       res.status(400).json({ error: 'Missing metadata' });
       return;
     }
 
     try {
-      // Update purchase status
       await db.update(creditPurchases)
         .set({
           status: 'completed',
@@ -251,17 +256,16 @@ router.post('/webhook', async (req: Request, res: Response) => {
         })
         .where(eq(creditPurchases.id, purchaseId));
 
-      // Add credits to user
       await db.update(users)
         .set({
-          creditMinutes: sql`credit_minutes + ${minutes}`,
+          coinBalance: sql`coin_balance + ${totalCoins}`,
           updatedAt: new Date(),
         })
         .where(eq(users.id, userId));
 
-      console.log(`Credits added: ${minutes} minutes for user ${userId}`);
+      logger.info('Coins added', { totalCoins, userId });
     } catch (dbError) {
-      console.error('Webhook DB error:', dbError);
+      logger.error('Webhook DB error:', dbError);
       res.status(500).json({ error: 'Database error' });
       return;
     }

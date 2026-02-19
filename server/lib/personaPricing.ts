@@ -10,7 +10,7 @@ import { DEFAULT_PRICING } from '../../shared/types';
  */
 export async function getPersonaPricing(personaId: string): Promise<PersonaPricing> {
   const result = await db.select({
-    freeMinutes: personas.freeMinutes,
+    freeCoins: personas.freeCoins,
     customPricing: personas.customPricing,
   })
     .from(personas)
@@ -21,13 +21,17 @@ export async function getPersonaPricing(personaId: string): Promise<PersonaPrici
     return DEFAULT_PRICING;
   }
 
-  const freeMinutes = result[0].freeMinutes;
+  const freeCoins = result[0].freeCoins;
   let tiers: PricingTier[];
 
   if (result[0].customPricing) {
     try {
       const parsed = JSON.parse(result[0].customPricing);
-      if (Array.isArray(parsed) && parsed.length > 0) {
+      // Validate each tier has the required coins fields (guards against pre-migration format)
+      const isValid = Array.isArray(parsed) &&
+        parsed.length > 0 &&
+        parsed.every((t: any) => t.packageType && typeof t.totalCoins === 'number' && typeof t.priceUsd === 'number');
+      if (isValid) {
         tiers = parsed;
       } else {
         tiers = DEFAULT_PRICING.tiers;
@@ -39,7 +43,7 @@ export async function getPersonaPricing(personaId: string): Promise<PersonaPrici
     tiers = DEFAULT_PRICING.tiers;
   }
 
-  return { freeMinutes, tiers };
+  return { freeCoins, tiers };
 }
 
 /**
@@ -59,12 +63,12 @@ export async function getPersonaTier(
  */
 export async function updatePersonaPricing(
   personaId: string,
-  pricing: { freeMinutes?: number; tiers?: PricingTier[] },
+  pricing: { freeCoins?: number; tiers?: PricingTier[] },
 ): Promise<void> {
   const updates: Record<string, any> = { updatedAt: new Date() };
 
-  if (pricing.freeMinutes !== undefined) {
-    updates.freeMinutes = pricing.freeMinutes;
+  if (pricing.freeCoins !== undefined) {
+    updates.freeCoins = pricing.freeCoins;
   }
 
   if (pricing.tiers !== undefined) {

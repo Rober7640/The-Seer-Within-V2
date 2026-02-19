@@ -7,6 +7,8 @@ import { personas, personaPrompts, chatSessions, chatMessages } from '@shared/sc
 import { eq, and } from 'drizzle-orm';
 import { loadUserContext } from './memoryManager';
 import Anthropic from '@anthropic-ai/sdk';
+import logger from './logger';
+import { fireWithBreaker, anthropicBreaker } from './circuitBreaker';
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY || '',
@@ -96,11 +98,13 @@ Return JSON:
 }`;
 
   try {
-    const response = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 300,
-      messages: [{ role: 'user', content: prompt }],
-    });
+    const response = await fireWithBreaker(anthropicBreaker, () =>
+      anthropic.messages.create({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 300,
+        messages: [{ role: 'user', content: prompt }],
+      }),
+    );
 
     const text = response.content[0].type === 'text' ? response.content[0].text : '';
     const jsonMatch = text.match(/\{[\s\S]*\}/);
@@ -122,7 +126,7 @@ Return JSON:
       topic: null,
     };
   } catch (error) {
-    console.error(`Panel response failed for ${persona.displayName}:`, error);
+    logger.error(`Panel response failed for ${persona.displayName}:`, error);
     return {
       personaId: persona.id,
       personaName: persona.displayName,
@@ -159,17 +163,19 @@ Write a brief synthesis (2-3 sentences) that:
 Keep it warm and encouraging. Under 75 words. Do not use "the guides" - say "the reading reveals" or similar.`;
 
   try {
-    const response = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 200,
-      messages: [{ role: 'user', content: prompt }],
-    });
+    const response = await fireWithBreaker(anthropicBreaker, () =>
+      anthropic.messages.create({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 200,
+        messages: [{ role: 'user', content: prompt }],
+      }),
+    );
 
     return response.content[0].type === 'text'
       ? response.content[0].text.trim()
       : 'The energies converge on a single message for you.';
   } catch (error) {
-    console.error('Failed to generate panel synthesis:', error);
+    logger.error('Failed to generate panel synthesis:', error);
     return 'Multiple perspectives have been shared. Consider how each resonates with your heart.';
   }
 }

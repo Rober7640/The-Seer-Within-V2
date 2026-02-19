@@ -5,6 +5,7 @@ import { db } from './db';
 import { personas, personaPrompts, systemConfig, adminUsers } from '@shared/schema';
 import { hashPassword } from './auth';
 import { eq } from 'drizzle-orm';
+import logger from './logger';
 
 const EVELYN_BASE_SYSTEM_PROMPT = `You are Evelyn Cross, a spiritual guide and seer in your late 50s.
 
@@ -70,7 +71,7 @@ Return valid JSON:
 Respond ONLY with valid JSON.`;
 
 export async function seedEvelynPersona(): Promise<void> {
-  console.log('Seeding Evelyn Cross persona...');
+  logger.info('Seeding Evelyn Cross persona...');
 
   // Check if Evelyn already exists
   const existing = await db
@@ -80,7 +81,7 @@ export async function seedEvelynPersona(): Promise<void> {
     .limit(1);
 
   if (existing.length > 0) {
-    console.log('Evelyn Cross persona already exists, skipping seed.');
+    logger.info('Evelyn Cross persona already exists, skipping seed.');
     return;
   }
 
@@ -115,7 +116,7 @@ export async function seedEvelynPersona(): Promise<void> {
   }
 
   const personaId = persona[0].id;
-  console.log(`Created persona: ${personaId}`);
+  logger.info(`Created persona: ${personaId}`);
 
   // Create prompt versions (matches actual schema columns)
   const prompts = [
@@ -150,21 +151,21 @@ export async function seedEvelynPersona(): Promise<void> {
 
   for (const prompt of prompts) {
     await db.insert(personaPrompts).values(prompt);
-    console.log(`Created ${prompt.promptType} prompt v${prompt.version}`);
+    logger.info(`Created ${prompt.promptType} prompt v${prompt.version}`);
   }
 
-  console.log('Evelyn Cross persona seeded successfully.');
+  logger.info('Evelyn Cross persona seeded successfully.');
 }
 
 export async function seedSystemConfig(): Promise<void> {
-  console.log('Seeding system configuration...');
+  logger.info('Seeding system configuration...');
 
   const configs = [
     {
-      configKey: 'credit_free_minutes',
-      configValue: '3',
+      configKey: 'credit_free_coins',
+      configValue: '180',
       configType: 'number' as const,
-      description: 'Free minutes given to new users on signup',
+      description: 'Free coins given to new users on signup',
     },
     {
       configKey: 'credit_package_15min_price',
@@ -219,17 +220,17 @@ export async function seedSystemConfig(): Promise<void> {
 
     if (existing.length === 0) {
       await db.insert(systemConfig).values(config);
-      console.log(`Config: ${config.configKey} = ${config.configValue}`);
+      logger.info(`Config: ${config.configKey} = ${config.configValue}`);
     } else {
-      console.log(`Config: ${config.configKey} already exists, skipping`);
+      logger.info(`Config: ${config.configKey} already exists, skipping`);
     }
   }
 
-  console.log('System configuration seeded successfully.');
+  logger.info('System configuration seeded successfully.');
 }
 
 export async function seedDefaultAdmin(): Promise<void> {
-  console.log('Seeding default admin account...');
+  logger.info('Seeding default admin account...');
 
   const adminEmail = process.env.ADMIN_EMAIL || 'admin@theseerwithin.com';
 
@@ -240,7 +241,7 @@ export async function seedDefaultAdmin(): Promise<void> {
     .limit(1);
 
   if (existing.length > 0) {
-    console.log('Default admin already exists, skipping.');
+    logger.info('Default admin already exists, skipping.');
     return;
   }
 
@@ -254,10 +255,10 @@ export async function seedDefaultAdmin(): Promise<void> {
     displayName: 'Admin',
   });
 
-  console.log(`Default admin created: ${adminEmail}`);
+  logger.info(`Default admin created: ${adminEmail}`);
   if (!process.env.ADMIN_PASSWORD) {
-    console.log(`Generated password: ${adminPassword}`);
-    console.log('Set ADMIN_EMAIL and ADMIN_PASSWORD env vars in production.');
+    logger.info(`Generated password: ${adminPassword}`);
+    logger.info('Set ADMIN_EMAIL and ADMIN_PASSWORD env vars in production.');
   }
 }
 
@@ -270,15 +271,15 @@ export async function seedAll(): Promise<void> {
 // Standalone execution
 const isDirectRun = process.argv[1]?.endsWith('seedPersona.ts') || process.argv[1]?.endsWith('seedPersona.js');
 if (isDirectRun) {
-  console.log('Starting seed process...\n');
+  logger.info('Starting seed process...\n');
 
   seedAll()
     .then(() => {
-      console.log('\nSeed complete.');
+      logger.info('\nSeed complete.');
       process.exit(0);
     })
     .catch((err) => {
-      console.error('Seed failed:', err);
+      logger.error('Seed failed', { error: (err as Error).message });
       process.exit(1);
     });
 }

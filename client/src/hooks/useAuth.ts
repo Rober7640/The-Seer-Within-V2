@@ -1,14 +1,16 @@
 import { useState, useCallback, useEffect } from "react";
+import * as Sentry from "@sentry/react";
 import { apiRequest } from "@/lib/queryClient";
 
 interface AuthUser {
   id: string;
   email: string;
   firstName: string;
-  creditMinutes: number;
-  totalMinutesUsed: number;
+  coinBalance: number;
+  totalCoinsUsed: number;
   defaultPersonaId: string | null;
   accountStatus: string;
+  emailVerified: boolean;
 }
 
 interface AuthState {
@@ -74,7 +76,7 @@ export function useAuth() {
       if (res.ok) {
         const data = await res.json();
         setState({
-          user: data.user,
+          user: data,
           isLoading: false,
           isAuthenticated: true,
         });
@@ -90,6 +92,15 @@ export function useAuth() {
   useEffect(() => {
     fetchUser();
   }, [fetchUser]);
+
+  // Set Sentry user context when auth state changes
+  useEffect(() => {
+    if (state.user) {
+      Sentry.setUser({ id: state.user.id, email: state.user.email });
+    } else if (!state.isLoading) {
+      Sentry.setUser(null);
+    }
+  }, [state.user, state.isLoading]);
 
   const login = useCallback(
     async (email: string, password: string) => {

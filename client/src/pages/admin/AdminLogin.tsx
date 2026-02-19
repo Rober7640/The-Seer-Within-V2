@@ -51,6 +51,7 @@ export default function AdminLogin() {
               <label className="text-xs text-gray-400 mb-1 block">Email</label>
               <input
                 type="email"
+                name="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -64,6 +65,7 @@ export default function AdminLogin() {
               </label>
               <input
                 type="password"
+                name="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required

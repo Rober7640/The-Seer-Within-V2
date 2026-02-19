@@ -2,6 +2,9 @@ import Anthropic from '@anthropic-ai/sdk';
 import { db } from './db';
 import { chatMessages, chatSessions, userMemory, users } from '@shared/schema';
 import { eq, and, or, isNull, lt, desc } from 'drizzle-orm';
+import { getModelForOperation } from './modelConfig';
+import logger from './logger';
+import { fireWithBreaker, anthropicBreaker } from './circuitBreaker';
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY || '',
@@ -9,11 +12,13 @@ const anthropic = new Anthropic({
 
 async function callClaudeForSummary(prompt: string): Promise<string> {
   try {
-    const response = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 1000,
-      messages: [{ role: 'user', content: prompt }],
-    });
+    const response = await fireWithBreaker(anthropicBreaker, () =>
+      anthropic.messages.create({
+        model: getModelForOperation('summarization'),
+        max_tokens: 1000,
+        messages: [{ role: 'user', content: prompt }],
+      }),
+    );
 
     const text = response.content[0].type === 'text'
       ? response.content[0].text
@@ -21,7 +26,7 @@ async function callClaudeForSummary(prompt: string): Promise<string> {
 
     return text;
   } catch (error) {
-    console.error('Claude summary API error:', error);
+    logger.error('Claude summary API error', { error: (error as Error).message });
     return '';
   }
 }
@@ -41,21 +46,30 @@ export async function summarizeSession(sessionId: string): Promise<void> {
   const transcript = messages.map(m => `${m.role}: ${m.content}`).join('\n\n');
 
   const summaryPrompt = `
-You are summarizing a conversation between a user and a spiritual guide persona.
+You are extracting factual memory from a conversation between a user and a spiritual guide.
 
 TRANSCRIPT:
 ${transcript}
 
+Your job is to record ONLY what the USER explicitly said — their own words, questions, concerns, names, and facts they shared.
+
+STRICT RULES:
+- Do NOT include anything the guide said, sensed, interpreted, or predicted
+- Do NOT include phrases like "the guide sensed", "energy shifts", "crossroads", or any mystical interpretation
+- Do NOT invent or infer facts the user did not explicitly state
+- If the user said very little, record only what they actually said — even if it is just one sentence
+- Names, relationships, places, timelines the user mentioned are valuable — capture those exactly
+
 Generate a JSON summary with this exact structure:
 {
-  "keyTopics": ["topic1", "topic2"],
-  "userConcerns": ["concern1", "concern2"],
+  "keyTopics": ["topics the USER asked about or mentioned"],
+  "userConcerns": ["specific worries or questions the USER expressed in their own words"],
   "importantDetails": {
-    "names": ["person1"],
-    "emotions": ["emotion1"]
+    "names": ["names of people the user mentioned"],
+    "emotions": ["emotions the user expressed about themselves — not what the guide projected"]
   },
-  "overallSummary": "2-3 sentence summary",
-  "nextSessionContext": "What the guide should remember for next session"
+  "overallSummary": "2-3 sentences describing what the USER said and asked, written as factual notes",
+  "nextSessionContext": "Factual notes for next session — only things the user actually shared"
 }
 
 Respond ONLY with valid JSON.
@@ -81,7 +95,7 @@ Respond ONLY with valid JSON.
       category: session[0].lastBucket || 'general',
     });
   } catch (error) {
-    console.error('Failed to parse or save session summary:', error);
+    logger.error('Failed to parse or save session summary', { error: (error as Error).message, sessionId });
   }
 }
 
@@ -166,7 +180,7 @@ export async function cleanupInactiveUserMemories(): Promise<number> {
   }
 
   if (deletedCount > 0) {
-    console.log(`Memory cleanup: Deleted ${deletedCount} memories for ${inactiveUsers.length} inactive users`);
+    logger.info('Memory cleanup completed', { deletedCount, inactiveUsers: inactiveUsers.length });
   }
 
   return deletedCount;

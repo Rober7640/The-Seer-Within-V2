@@ -2,9 +2,11 @@ import { useEffect, lazy, Suspense } from "react";
 import { Switch, Route, useLocation } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
+import * as Sentry from "@sentry/react";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { trackPageView } from "./lib/facebook";
+import { ChatServiceLayout } from "@/components/ChatServiceLayout";
 import NotFound from "@/pages/not-found";
 import LandingPage from "@/pages/LandingPage";
 import ChatPage from "@/pages/ChatPage";
@@ -21,6 +23,10 @@ const LoginPage = lazy(() => import("@/pages/LoginPage"));
 const ChatServicePage = lazy(() => import("@/pages/ChatServicePage"));
 const CreditsPage = lazy(() => import("@/pages/CreditsPage"));
 const PersonasDirectory = lazy(() => import("@/pages/PersonasDirectory"));
+const Dashboard = lazy(() => import("@/pages/Dashboard"));
+const WelcomeChatPage = lazy(() => import("@/pages/WelcomeChatPage"));
+const ForgotPasswordPage = lazy(() => import("@/pages/ForgotPasswordPage"));
+const ResetPasswordPage = lazy(() => import("@/pages/ResetPasswordPage"));
 
 // Admin pages (lazy loaded)
 const AdminLogin = lazy(() => import("@/pages/admin/AdminLogin"));
@@ -30,6 +36,9 @@ const PromptsEditor = lazy(() => import("@/pages/admin/PromptsEditor"));
 const AnalyticsDashboard = lazy(() => import("@/pages/admin/AnalyticsDashboard"));
 const UsersList = lazy(() => import("@/pages/admin/UsersList"));
 const UserDetail = lazy(() => import("@/pages/admin/UserDetail"));
+const SafetyDashboard = lazy(() => import("@/pages/admin/SafetyDashboard"));
+const IntentConfigEditor = lazy(() => import("@/pages/admin/IntentConfigEditor"));
+const FollowUpsDashboard = lazy(() => import("@/pages/admin/FollowUpsDashboard"));
 
 function LazyFallback() {
   return (
@@ -60,11 +69,44 @@ function Router() {
         <Route path="/terms" component={TermsPage} />
         <Route path="/refund" component={RefundPage} />
 
-        {/* Chat service routes */}
+        {/* Auth routes (no layout wrapper) */}
         <Route path="/login" component={LoginPage} />
-        <Route path="/reading" component={ChatServicePage} />
-        <Route path="/credits" component={CreditsPage} />
-        <Route path="/personas" component={PersonasDirectory} />
+        <Route path="/forgot-password" component={ForgotPasswordPage} />
+        <Route path="/reset-password/:token" component={ResetPasswordPage} />
+
+        {/* Chat service routes with layout */}
+        <Route path="/chat/:personaSlug">
+          {(params) => (
+            <ChatServiceLayout showNav={false}>
+              <ChatServicePage params={params} />
+            </ChatServiceLayout>
+          )}
+        </Route>
+        <Route path="/reading">
+          <ChatServiceLayout showNav={false}>
+            <ChatServicePage />
+          </ChatServiceLayout>
+        </Route>
+        <Route path="/credits">
+          <ChatServiceLayout maxWidth="2xl" centerContent>
+            <CreditsPage />
+          </ChatServiceLayout>
+        </Route>
+        <Route path="/personas">
+          <ChatServiceLayout>
+            <PersonasDirectory />
+          </ChatServiceLayout>
+        </Route>
+        <Route path="/dashboard">
+          <ChatServiceLayout maxWidth="3xl" centerContent>
+            <Dashboard />
+          </ChatServiceLayout>
+        </Route>
+        <Route path="/welcome-chat">
+          <ChatServiceLayout showNav={false}>
+            <WelcomeChatPage />
+          </ChatServiceLayout>
+        </Route>
 
         {/* Admin routes */}
         <Route path="/admin/login" component={AdminLogin} />
@@ -75,6 +117,10 @@ function Router() {
         <Route path="/admin/analytics" component={AnalyticsDashboard} />
         <Route path="/admin/users/:id" component={UserDetail} />
         <Route path="/admin/users" component={UsersList} />
+        <Route path="/admin/safety" component={SafetyDashboard} />
+        <Route path="/admin/intent-configs/:personaId" component={IntentConfigEditor} />
+        <Route path="/admin/intent-configs" component={IntentConfigEditor} />
+        <Route path="/admin/follow-ups" component={FollowUpsDashboard} />
 
         <Route component={NotFound} />
       </Switch>
@@ -82,14 +128,33 @@ function Router() {
   );
 }
 
+function SentryFallback() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-bg-deep text-white">
+      <div className="text-center p-8">
+        <h1 className="text-2xl font-bold mb-4">Something went wrong</h1>
+        <p className="text-gray-400 mb-6">An unexpected error occurred. Please refresh the page.</p>
+        <button
+          onClick={() => window.location.reload()}
+          className="px-6 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg transition-colors"
+        >
+          Refresh Page
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Router />
-      </TooltipProvider>
-    </QueryClientProvider>
+    <Sentry.ErrorBoundary fallback={SentryFallback}>
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <Toaster />
+          <Router />
+        </TooltipProvider>
+      </QueryClientProvider>
+    </Sentry.ErrorBoundary>
   );
 }
 

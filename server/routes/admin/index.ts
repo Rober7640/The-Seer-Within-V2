@@ -10,6 +10,12 @@ import promptRoutes from './prompts';
 import userRoutes from './users';
 import analyticsRoutes from './analytics';
 import pricingRoutes from './pricing';
+import safetyRoutes from './safety';
+import intentConfigRoutes from './intentConfigs';
+import followUpRoutes from './followUps';
+import seedDataRoutes from './seedData';
+import fraudRoutes from './fraud';
+import logger from '../../lib/logger';
 
 const router = Router();
 
@@ -59,7 +65,7 @@ async function requireAdmin(req: Request, res: Response, next: NextFunction) {
     req.adminEmail = admin[0].email;
     next();
   } catch (error) {
-    console.error('Admin auth error:', error);
+    logger.error('Admin auth error:', error);
     return res.status(401).json({ error: 'Authentication failed' });
   }
 }
@@ -69,13 +75,14 @@ async function requireAdmin(req: Request, res: Response, next: NextFunction) {
 // ============================================
 
 import { z } from 'zod';
+import { adminLoginLimiter, adminLimiter } from '../../lib/rateLimiter';
 
 const adminLoginSchema = z.object({
   email: z.string().email(),
   password: z.string().min(1),
 });
 
-router.post('/login', async (req: Request, res: Response) => {
+router.post('/login', adminLoginLimiter, async (req: Request, res: Response) => {
   try {
     const parseResult = adminLoginSchema.safeParse(req.body);
     if (!parseResult.success) {
@@ -121,7 +128,7 @@ router.post('/login', async (req: Request, res: Response) => {
       },
     });
   } catch (error: any) {
-    console.error('Admin login error:', error);
+    logger.error('Admin login error:', error);
     return res.status(500).json({ error: 'Login failed' });
   }
 });
@@ -130,8 +137,9 @@ router.post('/login', async (req: Request, res: Response) => {
 // PROTECTED ADMIN ROUTES
 // ============================================
 
-// Apply admin auth middleware to all routes below
+// Apply admin auth middleware and rate limiting to all routes below
 router.use(requireAdmin);
+router.use(adminLimiter);
 
 // GET /api/admin/me - Get current admin info
 router.get('/me', async (req: Request, res: Response) => {
@@ -154,7 +162,7 @@ router.get('/me', async (req: Request, res: Response) => {
 
     return res.json({ admin: admin[0] });
   } catch (error: any) {
-    console.error('Get admin error:', error);
+    logger.error('Get admin error:', error);
     return res.status(500).json({ error: 'Failed to get admin info' });
   }
 });
@@ -166,5 +174,10 @@ router.use('/pricing', pricingRoutes);  // Handles /pricing/all
 router.use('/', promptRoutes);          // Handles both /personas/:id/prompts and /prompts/:promptId
 router.use('/users', userRoutes);
 router.use('/analytics', analyticsRoutes);
+router.use('/safety', safetyRoutes);
+router.use('/intent-configs', intentConfigRoutes);
+router.use('/follow-ups', followUpRoutes);
+router.use('/seed', seedDataRoutes);
+router.use('/fraud', fraudRoutes);
 
 export default router;

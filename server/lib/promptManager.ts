@@ -4,6 +4,7 @@
 import { db } from './db';
 import { personaPrompts, personas } from '@shared/schema';
 import { eq, and, desc, sql, count } from 'drizzle-orm';
+import logger from './logger';
 
 // Prompt types supported by the system
 export type PromptType =
@@ -84,7 +85,7 @@ export async function createPrompt(input: CreatePromptInput): Promise<string> {
     throw new Error('Failed to create prompt');
   }
 
-  console.log(`Created prompt: type=${input.promptType} for persona ${input.personaId} (${result[0].id})`);
+  logger.info(`Created prompt: type=${input.promptType} for persona ${input.personaId} (${result[0].id})`);
   return result[0].id;
 }
 
@@ -144,7 +145,7 @@ export async function updatePrompt(
       })
       .returning({ id: personaPrompts.id });
 
-    console.log(`Created prompt version ${nextVersion} for type=${oldPrompt.promptType}`);
+    logger.info(`Created prompt version ${nextVersion} for type=${oldPrompt.promptType}`);
     return result[0]!.id;
   }
 
@@ -197,7 +198,7 @@ export async function activatePrompt(promptId: string): Promise<void> {
     .set({ isActive: true, updatedAt: new Date() })
     .where(eq(personaPrompts.id, promptId));
 
-  console.log(`Activated prompt ${promptId} (type=${promptType} v${prompt[0].version})`);
+  logger.info(`Activated prompt ${promptId} (type=${promptType} v${prompt[0].version})`);
 }
 
 // ============================================
