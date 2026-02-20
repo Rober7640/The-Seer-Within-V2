@@ -19,20 +19,37 @@ interface GuideSidebarProps {
   selectedPersonaId: string | null;
   mobileOpen: boolean;
   onMobileClose: () => void;
-  /** Called with the target slug when user picks a different guide */
-  onSwitchGuide: (slug: string) => void;
+  /** Called with the target slug and the guide's full teaser message when user picks a different guide */
+  onSwitchGuide: (slug: string, teaserFull: string) => void;
 }
 
 const DEFAULT_AVATAR = "/evelyn-avatar-new.png";
 
-// Deterministic teaser message per guide so it doesn't flicker on re-render
-function getTeaserMessage(guide: Guide): string {
+// Deterministic teaser message per guide so it doesn't flicker on re-render.
+// Returns a short `preview` shown in the sidebar and a `full` message delivered
+// to the user as the guide's opening line when they click through.
+function getTeaserMessage(guide: Guide): { preview: string; full: string } {
   const messages = [
-    `${guide.displayName} may know an answer to your question. Ask now.`,
-    `I've been sensing some energy around you. Come chat with me.`,
-    `Do you want to have a spiritual reading? I am a psychic...`,
-    `There are 3 things you can do right now to shift your...`,
-    `${guide.displayName} may know an answer to your question. Ask...`,
+    {
+      preview: `${guide.displayName} may know an answer to your question. Ask now.`,
+      full: `I may have an answer to what's been weighing on your mind. Something tells me you've been seeking clarity. Tell me — what's going on?`,
+    },
+    {
+      preview: `I've been sensing some energy around you. Come chat with me.`,
+      full: `I've been sensing some energy around you lately — something is shifting. It could be something you've been carrying for a while. I'd love to talk it through with you. What's going on?`,
+    },
+    {
+      preview: `Do you want to have a spiritual reading? I am a psychic...`,
+      full: `I am a psychic and spiritual advisor, and I've been picking up on some energy around you. I'd love to give you a reading. What's been on your mind lately?`,
+    },
+    {
+      preview: `There are 3 things you can do right now to shift your...`,
+      full: `There are 3 things you can do right now to shift your energy and open the door to what you've been asking for. I've been holding this for you. Are you ready to hear them?`,
+    },
+    {
+      preview: `${guide.displayName} may know an answer to your question. Ask...`,
+      full: `I may have some insight into the question you've been turning over in your mind. I'm here and ready to help. What would you like to explore?`,
+    },
   ];
   // Pick based on slug character sum so it's stable per guide
   const idx = guide.slug
@@ -52,7 +69,7 @@ function GuideItem({
   guide: Guide;
   onClick: () => void;
 }) {
-  const teaserText = getTeaserMessage(guide);
+  const teaser = getTeaserMessage(guide);
   const timeLabel = formatTime();
   const avatarSrc = guide.avatarUrl?.trim() ? guide.avatarUrl : DEFAULT_AVATAR;
 
@@ -93,7 +110,7 @@ function GuideItem({
 
           {/* Message preview */}
           <p className="text-white/55 text-xs leading-snug line-clamp-2">
-            {teaserText}
+            {teaser.preview}
           </p>
         </div>
       </div>
@@ -121,7 +138,7 @@ function SidebarContent({
 }: {
   guides: Guide[];
   selectedPersonaId: string | null;
-  onSelect: (slug: string) => void;
+  onSelect: (slug: string, teaserFull: string) => void;
 }) {
   const otherGuides = guides.filter(
     (g) => g.isActive && g.id !== selectedPersonaId
@@ -147,7 +164,7 @@ function SidebarContent({
             <GuideItem
               key={guide.id}
               guide={guide}
-              onClick={() => onSelect(guide.slug)}
+              onClick={() => onSelect(guide.slug, getTeaserMessage(guide).full)}
             />
           ))
         )}
@@ -163,9 +180,9 @@ export function GuideSidebar({
   onMobileClose,
   onSwitchGuide,
 }: GuideSidebarProps) {
-  const handleSelect = (slug: string) => {
+  const handleSelect = (slug: string, teaserFull: string) => {
     onMobileClose();
-    onSwitchGuide(slug);
+    onSwitchGuide(slug, teaserFull);
   };
 
   return (

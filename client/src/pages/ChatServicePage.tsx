@@ -23,10 +23,14 @@ import {
   HelpCircle,
   Lock,
   MessageCircle,
+  Bookmark,
 } from "lucide-react";
+import NatalChartWheel, { type NatalChartData } from "@/components/NatalChartWheel";
+import CityAutocomplete from "@/components/CityAutocomplete";
 import BuyCreditsModal from "@/components/BuyCreditsModal";
 import OutOfCreditsModal from "@/components/OutOfCreditsModal";
 import TeaserCreditModal from "@/components/TeaserCreditModal";
+import SessionFeedbackModal from "@/components/SessionFeedbackModal";
 import { COINS_PER_MINUTE, type PricingTier } from "@shared/types";
 
 // Status indicator type
@@ -82,6 +86,7 @@ interface ChatMessageData {
   isCardReveal?: boolean;       // standalone card reveal display (not a normal bubble)
   tarotCardName?: string;       // card name for reveal display
   tarotCardImageUrl?: string;   // card image for reveal display
+  chartData?: NatalChartData;   // renders natal chart wheel when present
 }
 
 interface SessionData {
@@ -147,9 +152,27 @@ export default function ChatServicePage() {
   const [switchingToPersonaSlug, setSwitchingToPersonaSlug] = useState<string | null>(null);
   const [queuedQuestion, setQueuedQuestion] = useState<string | null>(null);
 
+  // Saved messages (bookmarks)
+  const [savedMessageIds, setSavedMessageIds] = useState<Set<string>>(new Set());
+
   // Idle protection state
   const [idleWarning, setIdleWarning] = useState(false);
   const [idleCountdown, setIdleCountdown] = useState(60);
+
+  // Feedback modal — shown once after 5 minutes of active session time
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+  const feedbackTriggeredRef = useRef(false);
+
+  // Birth data form (for astrology personas like Luna Voss)
+  // null = checking, true = chart exists (skip form), false = no chart (show form)
+  const [birthChartExists, setBirthChartExists] = useState<boolean | null>(null);
+  const [birthDataForm, setBirthDataForm] = useState({
+    birthDate: '', birthTime: '', birthCity: '', unknownTime: false,
+  });
+  const [birthDataSubmitting, setBirthDataSubmitting] = useState(false);
+  const [birthDataError, setBirthDataError] = useState<string | null>(null);
+  const [birthChartSummary, setBirthChartSummary] = useState<{ sun?: string; moon?: string; rising?: string } | null>(null);
+  const [storedChartData, setStoredChartData]   = useState<NatalChartData | null>(null);
 
   // Refs
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -286,6 +309,12 @@ export default function ChatServicePage() {
             }
           }
 
+          // Show feedback modal once after 5 minutes of active session time
+          if (next >= 300 && !feedbackTriggeredRef.current) {
+            feedbackTriggeredRef.current = true;
+            setShowFeedbackModal(true);
+          }
+
           // Check if out of coins every 60 seconds
           if (next % 60 === 0 && coinsUsed >= coinBalance) {
             setShowOutOfCredits(true);
@@ -353,14 +382,25 @@ export default function ChatServicePage() {
     setIsPersonaOffline(false);
   }, [selectedPersonaId]);
 
-  // Auto-fetch greeting on initial load or when persona changes (only when no active session)
+  // Auto-fetch greeting on initial load or when persona changes (only when no active session).
+  // For astrology personas we wait for the birth-chart check to resolve before fetching.
   useEffect(() => {
     if (!selectedPersona || personasLoading || session || isStarting || preSessionGreeting || switchingToPersonaSlug) return;
     if (lastAutoFetchedPersonaId.current === selectedPersona.id) return;
+    const personality = selectedPersona.personality ? (() => {
+      try { return JSON.parse(selectedPersona.personality!); } catch { return {}; }
+    })() : {};
+    // Block until the birth-chart existence check has resolved
+    if (personality?.requiresBirthData && birthChartExists === null) return;
+    // If chart is missing, show the form — don't fetch a greeting yet
+    if (personality?.requiresBirthData && birthChartExists === false) return;
     lastAutoFetchedPersonaId.current = selectedPersona.id;
-    fetchGreeting();
+    const chartToInject = (personality?.requiresBirthData && birthChartExists === true)
+      ? storedChartData
+      : null;
+    fetchGreeting(undefined, false, chartToInject);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedPersona?.id, personasLoading]);
+  }, [selectedPersona?.id, personasLoading, birthChartExists, storedChartData]);
 
   // Fetch teaser message when persona changes (for low-credit users)
   // Placed AFTER selectedPersona declaration to avoid temporal dead zone
@@ -383,6 +423,32 @@ export default function ChatServicePage() {
       }
     }
     fetchTeaser();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedPersona?.id, session]);
+
+  // Check if a natal chart already exists for astrology personas (e.g. Luna Voss)
+  useEffect(() => {
+    if (!selectedPersona || session) return;
+    const personality = selectedPersona.personality ? (() => {
+      try { return JSON.parse(selectedPersona.personality!); } catch { return {}; }
+    })() : {};
+    if (!personality?.requiresBirthData) {
+      setBirthChartExists(null); // not applicable
+      return;
+    }
+    setBirthChartExists(null); // reset while loading
+    setBirthChartSummary(null);
+    setStoredChartData(null);
+    authFetch(`/api/astrology/natal-chart/${selectedPersona.id}`)
+      .then(r => r.json())
+      .then(data => {
+        // Treat legacy charts (exists but no raw chartData) as missing —
+        // re-collecting birth info upgrades them to the new format with the visual wheel.
+        const hasUsableChart = data.exists && data.chartData != null;
+        setBirthChartExists(hasUsableChart);
+        if (hasUsableChart) setStoredChartData(data.chartData);
+      })
+      .catch(() => setBirthChartExists(false));
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedPersona?.id, session]);
 
@@ -410,14 +476,43 @@ export default function ChatServicePage() {
 
   // Fetch a free greeting for the selected persona — does NOT create a session or charge credits.
   // Call this when the user clicks "Begin Reading". Session is only created when they send the first message.
-  const fetchGreeting = useCallback(async (overrideSlug?: string) => {
+  const fetchGreeting = useCallback(async (overrideSlug?: string, appendMode?: boolean, injectChartData?: NatalChartData | null, teaserContent?: string) => {
     const slug = overrideSlug || selectedPersona?.slug;
     if (!slug) return;
     setSwitchingToPersonaSlug(null); // Clear any switching overlay when greeting starts loading
     setIsStarting(true);
     setIsPersonaOffline(false);
-    setMessages([]);
-    setPreSessionGreeting(null);
+    if (!appendMode) {
+      setMessages([]);
+      setPreSessionGreeting(null);
+    }
+
+    const addMsg = (msg: ChatMessageData) => {
+      setMessages(prev => [...prev, msg]);
+    };
+
+    // If the user clicked through from a sidebar teaser, deliver that message directly
+    // without an API round-trip — the guide "says" exactly what was previewed.
+    if (teaserContent) {
+      setIsTyping(true);
+      await sleep(calculateTypingDelay(teaserContent));
+      addMsg({
+        id: `greeting-${Date.now()}`,
+        role: 'assistant',
+        content: teaserContent,
+        sentAt: new Date().toISOString(),
+      });
+      setPreSessionGreeting(teaserContent);
+      setPersonaStatus('connecting');
+      setPersonaStatusText('Connecting...');
+      setTimeout(() => {
+        setPersonaStatus('online');
+        setPersonaStatusText('Online');
+      }, 800);
+      setIsStarting(false);
+      setIsTyping(false);
+      return;
+    }
 
     try {
       const res = await authFetch(`/api/chat-service/greeting/${slug}`);
@@ -432,6 +527,62 @@ export default function ChatServicePage() {
       if (res.ok) {
         const data = await res.json();
 
+        // For returning astrology users: human-feeling chart retrieval sequence
+        if (injectChartData) {
+          const firstName = (user as any)?.firstName;
+
+          // Step 1: Warm welcome back
+          const welcomeText = firstName
+            ? `Welcome back, ${firstName}. Good to see you again.`
+            : `Welcome back. Good to see you again.`;
+          setIsTyping(true);
+          await sleep(calculateTypingDelay(welcomeText));
+          setIsTyping(false);
+          setMessages(prev => [...prev, {
+            id: `welcome-back-${Date.now()}`,
+            role: 'assistant' as const,
+            content: welcomeText,
+            sentAt: new Date().toISOString(),
+          }]);
+          await sleep(500);
+
+          // Step 2: Simulate checking for the chart
+          const searchText = `Let me check if I still have your chart...`;
+          setIsTyping(true);
+          await sleep(calculateTypingDelay(searchText) + 1000);
+          setIsTyping(false);
+          setMessages(prev => [...prev, {
+            id: `chart-search-${Date.now()}`,
+            role: 'assistant' as const,
+            content: searchText,
+            sentAt: new Date().toISOString(),
+          }]);
+          await sleep(1400);
+
+          // Step 3: Found it
+          const foundText = `I found it. Pulling it out now.`;
+          setIsTyping(true);
+          await sleep(calculateTypingDelay(foundText));
+          setIsTyping(false);
+          setMessages(prev => [...prev, {
+            id: `chart-found-${Date.now()}`,
+            role: 'assistant' as const,
+            content: foundText,
+            sentAt: new Date().toISOString(),
+          }]);
+          await sleep(700);
+
+          // Step 4: Chart renders
+          setMessages(prev => [...prev, {
+            id: `chart-wheel-${Date.now()}`,
+            role: 'assistant' as const,
+            content: '',
+            chartData: injectChartData,
+            sentAt: new Date().toISOString(),
+          }]);
+          await sleep(600);
+        }
+
         // Show typing indicator then reveal greeting
         setIsTyping(true);
         const typingDelay = calculateTypingDelay(data.greeting);
@@ -443,7 +594,7 @@ export default function ChatServicePage() {
           content: data.greeting,
           sentAt: new Date().toISOString(),
         };
-        setMessages([greetingMsg]);
+        addMsg(greetingMsg);
         setPreSessionGreeting(data.greeting);
         setIsTyping(false);
 
@@ -473,7 +624,7 @@ export default function ChatServicePage() {
           content: fallbackGreeting,
           sentAt: new Date().toISOString(),
         };
-        setMessages([greetingMsg]);
+        addMsg(greetingMsg);
         setPreSessionGreeting(fallbackGreeting);
         setIsTyping(false);
         setPersonaStatus('connecting');
@@ -495,7 +646,7 @@ export default function ChatServicePage() {
         content: fallbackGreeting,
         sentAt: new Date().toISOString(),
       };
-      setMessages([greetingMsg]);
+      addMsg(greetingMsg);
       setPreSessionGreeting(fallbackGreeting);
       setIsTyping(false);
       setPersonaStatus('online');
@@ -504,7 +655,96 @@ export default function ChatServicePage() {
       setIsStarting(false);
       setIsTyping(false);
     }
-  }, [selectedPersona?.slug]);
+  }, [selectedPersona?.slug, user]);
+
+  // Submit birth data for astrology personas — calculates natal chart and then fetches greeting
+  const handleBirthDataSubmit = useCallback(async () => {
+    if (!selectedPersona) return;
+    setBirthDataError(null);
+    setBirthDataSubmitting(true);
+
+    const time = birthDataForm.unknownTime ? '12:00' : birthDataForm.birthTime;
+
+    try {
+      const res = await authFetch('/api/astrology/natal-chart', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          birthDate: birthDataForm.birthDate,
+          birthTime: time,
+          birthCity: birthDataForm.birthCity,
+          personaId: selectedPersona.id,
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setBirthDataError(data.error || data.message || 'Something went wrong. Please try again.');
+        return;
+      }
+      // Block the auto-fetch effect from firing a second greeting when birthChartExists flips to true
+      lastAutoFetchedPersonaId.current = selectedPersona.id;
+      setBirthChartExists(true);
+      setBirthChartSummary({ sun: data.sunSign, moon: data.moonSign, rising: data.risingSign });
+
+      // Format birth date for display e.g. "June 15, 1990"
+      const [year, month, day] = birthDataForm.birthDate.split('-').map(Number);
+      const formattedDate = new Date(year, month - 1, day).toLocaleDateString('en-US', {
+        year: 'numeric', month: 'long', day: 'numeric',
+      });
+      const firstName = user?.firstName || 'there';
+      const city = birthDataForm.birthCity;
+      const sun  = data.sunSign  || '';
+      const moon = data.moonSign || '';
+      const rising = data.risingSign || '';
+
+      // Build-up sequence — paced messages that bring the chart to life
+      const sequence = [
+        { text: `Thank you, ${firstName}. Give me a moment — I want to do this properly.`, pause: 800 },
+        { text: `I'm mapping the sky over ${city} on ${formattedDate}...`, pause: 700 },
+        { text: `Placing each planet in the exact position it held the moment you took your first breath.`, pause: 900 },
+        { text: `${sun} Sun... ${moon} Moon... ${rising} Rising. Your chart is coming into focus.`, pause: 800 },
+        { text: `I'm reading the aspects now — the angles between your planets. This is where things get interesting.`, pause: 900 },
+        { text: `All right. I have you.`, pause: 600 },
+      ];
+
+      setIsStarting(true);
+      setMessages([]);
+      setPreSessionGreeting(null);
+
+      for (const step of sequence) {
+        setIsTyping(true);
+        await sleep(calculateTypingDelay(step.text));
+        setMessages(prev => [...prev, {
+          id: `chart-reveal-${Date.now()}-${Math.random()}`,
+          role: 'assistant' as const,
+          content: step.text,
+          sentAt: new Date().toISOString(),
+        }]);
+        setIsTyping(false);
+        await sleep(step.pause);
+      }
+
+      // Inject the chart wheel as a special message
+      if (data.chartData) {
+        setMessages(prev => [...prev, {
+          id: `chart-wheel-${Date.now()}`,
+          role: 'assistant' as const,
+          content: '',
+          chartData: data.chartData as NatalChartData,
+          sentAt: new Date().toISOString(),
+        }]);
+        await sleep(600);
+      }
+
+      setIsStarting(false);
+      // Fetch personalized AI greeting and append it after the sequence
+      await fetchGreeting(undefined, true);
+    } catch {
+      setBirthDataError('Network error. Please check your connection and try again.');
+    } finally {
+      setBirthDataSubmitting(false);
+    }
+  }, [selectedPersona, birthDataForm, fetchGreeting, user]);
 
   // End the current session
   const endSession = useCallback(async () => {
@@ -535,12 +775,13 @@ export default function ChatServicePage() {
       setMessages([]);
       setElapsedSeconds(0);
       setShowRefillBanner(false);
+      feedbackTriggeredRef.current = false;
     }
   }, [session, coinBalance]);
 
   // Switch to a different guide: always fetch greeting immediately without any intermediate screen.
   // If there was an active billing session, end it silently and show a toast.
-  const switchGuide = useCallback((slug: string) => {
+  const switchGuide = useCallback((slug: string, teaserFull?: string) => {
     const targetPersona = personas.find((p) => p.slug === slug);
     if (!targetPersona) return;
 
@@ -573,13 +814,14 @@ export default function ChatServicePage() {
       setSession(null);
       setElapsedSeconds(0);
       setShowRefillBanner(false);
+      feedbackTriggeredRef.current = false;
     }
 
     // Always fetch greeting immediately — no instructions screen
     setMessages([]);
     setPreSessionGreeting(null);
     lastAutoFetchedPersonaId.current = targetPersona.id; // Prevent auto-fetch effect from double-triggering
-    fetchGreeting(slug);
+    fetchGreeting(slug, false, null, teaserFull);
   }, [session, personas, navigate, fetchGreeting]);
 
   // Confirm transition from instructions screen — fetch greeting for the new guide
@@ -606,6 +848,25 @@ export default function ChatServicePage() {
       setMessages((prev) => [...prev, userMessage]);
       setIsSending(true);
       setIsTyping(true);
+
+      // For astrology personas: show a brief loading message while the chart is retrieved
+      const isChartRequest = (() => {
+        try {
+          const personality = selectedPersona?.personality ? JSON.parse(selectedPersona.personality!) : {};
+          return !!personality?.requiresBirthData &&
+            /\b(show|display|see|view|give me|let me see|pull up)\b.{0,25}\bchart\b/i.test(content.trim());
+        } catch { return false; }
+      })();
+      const chartLoadingMsgId = `chart-loading-${Date.now()}`;
+      if (isChartRequest) {
+        setIsTyping(false);
+        setMessages(prev => [...prev, {
+          id: chartLoadingMsgId,
+          role: 'assistant' as const,
+          content: "Give me a minute to pull your chart out...",
+          sentAt: new Date().toISOString(),
+        }]);
+      }
 
       // Reset idle timer on every user message
       lastUserMessageAt.current = Date.now();
@@ -675,11 +936,36 @@ export default function ChatServicePage() {
         if (res.ok) {
           const data = await res.json();
 
+          // Remove chart loading placeholder now that the real response is ready
+          if (isChartRequest) {
+            setMessages(prev => prev.filter(m => m.id !== chartLoadingMsgId));
+            setIsTyping(true);
+          }
+
+          // Replace temp user message ID with real DB ID
+          if (data.userMessageId) {
+            setMessages(prev => prev.map(m =>
+              m.id === userMessage.id ? { ...m, id: data.userMessageId } : m
+            ));
+          }
+
           const typingDelay = calculateTypingDelay(data.message);
           await sleep(typingDelay);
 
+          // If the AI triggered [SHOW_CHART], inject the chart wheel first
+          if (data.chartData) {
+            setMessages(prev => [...prev, {
+              id: `chart-wheel-${Date.now()}`,
+              role: 'assistant' as const,
+              content: '',
+              chartData: data.chartData,
+              sentAt: new Date().toISOString(),
+            }]);
+            await sleep(400);
+          }
+
           const assistantMsg: ChatMessageData = {
-            id: `assistant-${Date.now()}`,
+            id: data.assistantMessageId || `assistant-${Date.now()}`,
             role: "assistant",
             content: data.message,
             sentAt: new Date().toISOString(),
@@ -717,6 +1003,30 @@ export default function ChatServicePage() {
       onSubmit(e);
     }
   };
+
+  const handleSaveMessage = useCallback(async (messageId: string) => {
+    const isCurrentlySaved = savedMessageIds.has(messageId);
+    // Optimistic update
+    setSavedMessageIds(prev => {
+      const next = new Set(prev);
+      if (isCurrentlySaved) next.delete(messageId);
+      else next.add(messageId);
+      return next;
+    });
+    try {
+      await authFetch(`/api/user/messages/${messageId}/save`, {
+        method: isCurrentlySaved ? 'DELETE' : 'POST',
+      });
+    } catch {
+      // Revert on error
+      setSavedMessageIds(prev => {
+        const next = new Set(prev);
+        if (isCurrentlySaved) next.add(messageId);
+        else next.delete(messageId);
+        return next;
+      });
+    }
+  }, [savedMessageIds]);
 
   // Parse persona suggested questions from personality JSON
   const suggestedQuestions: string[] = (() => {
@@ -759,7 +1069,7 @@ export default function ChatServicePage() {
           selectedPersonaId={selectedPersonaId}
           mobileOpen={mobileSidebarOpen}
           onMobileClose={() => setMobileSidebarOpen(false)}
-          onSwitchGuide={switchGuide}
+          onSwitchGuide={(slug, teaserFull) => switchGuide(slug, teaserFull)}
         />
       )}
 
@@ -970,7 +1280,7 @@ export default function ChatServicePage() {
           )}
 
           {/* Loading greeting — show persona info while waiting instead of a spinner */}
-          {!session && !preSessionGreeting && !switchingToPersonaSlug && isStarting && selectedPersona && (
+          {!session && !preSessionGreeting && !switchingToPersonaSlug && isStarting && !isTyping && messages.length === 0 && selectedPersona && (
             <div className="flex flex-col items-center flex-1 py-8 px-6 gap-5">
               <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-purple-200 shadow-md">
                 <img
@@ -1011,8 +1321,116 @@ export default function ChatServicePage() {
             </div>
           )}
 
+          {/* Birth data form — shown for astrology personas (e.g. Luna Voss) before first session */}
+          {!session && !preSessionGreeting && !isStarting && !switchingToPersonaSlug && selectedPersona && (() => {
+            const personality = selectedPersona.personality ? (() => {
+              try { return JSON.parse(selectedPersona.personality!); } catch { return {}; }
+            })() : {};
+            return personality?.requiresBirthData && birthChartExists === false;
+          })() && (
+            <div className="flex-1 flex flex-col items-center justify-center px-4 py-8">
+              <div className="w-full max-w-sm bg-[#0d0824]/80 border border-purple-500/30 rounded-2xl p-6 shadow-xl">
+                {/* Header */}
+                <div className="text-center mb-6">
+                  <div className="text-3xl mb-2">♈♌♎</div>
+                  <h2 className="text-white font-serif text-xl font-semibold mb-1">
+                    Your Birth Chart
+                  </h2>
+                  <p className="text-gray-400 text-sm">
+                    {selectedPersona.displayName} reads your actual natal chart — not generic horoscopes. Enter your birth details to begin.
+                  </p>
+                </div>
+
+                {/* Birth Date */}
+                <div className="mb-4">
+                  <label className="block text-sm text-gray-300 mb-1 font-medium">
+                    Date of Birth <span className="text-purple-400">*</span>
+                  </label>
+                  <input
+                    type="date"
+                    className="w-full bg-white/10 border border-purple-500/40 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-purple-400 placeholder-gray-500"
+                    value={birthDataForm.birthDate}
+                    onChange={e => setBirthDataForm(f => ({ ...f, birthDate: e.target.value }))}
+                    max={new Date().toISOString().split('T')[0]}
+                    min="1900-01-01"
+                  />
+                </div>
+
+                {/* Birth Time */}
+                <div className="mb-4">
+                  <label className="block text-sm text-gray-300 mb-1 font-medium">
+                    Time of Birth{' '}
+                    <span className="text-gray-400 font-normal">(affects Rising sign & houses)</span>
+                  </label>
+                  <input
+                    type="time"
+                    className="w-full bg-white/10 border border-purple-500/40 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-purple-400 disabled:opacity-40"
+                    value={birthDataForm.birthTime}
+                    disabled={birthDataForm.unknownTime}
+                    onChange={e => setBirthDataForm(f => ({ ...f, birthTime: e.target.value }))}
+                  />
+                  <label className="flex items-center gap-2 mt-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      className="accent-purple-500 w-4 h-4"
+                      checked={birthDataForm.unknownTime}
+                      onChange={e => setBirthDataForm(f => ({ ...f, unknownTime: e.target.checked, birthTime: '' }))}
+                    />
+                    <span className="text-xs text-gray-400">I don't know my birth time (noon will be used)</span>
+                  </label>
+                </div>
+
+                {/* Birth City */}
+                <div className="mb-6">
+                  <label className="block text-sm text-gray-300 mb-1 font-medium">
+                    City of Birth <span className="text-purple-400">*</span>
+                  </label>
+                  <CityAutocomplete
+                    value={birthDataForm.birthCity}
+                    onChange={v => setBirthDataForm(f => ({ ...f, birthCity: v }))}
+                    placeholder="Start typing a city..."
+                    className="w-full bg-white/10 border border-purple-500/40 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-purple-400 placeholder-gray-500"
+                    required
+                  />
+                </div>
+
+                {/* Error */}
+                {birthDataError && (
+                  <div className="mb-4 text-sm text-red-400 bg-red-400/10 border border-red-400/20 rounded-lg px-3 py-2">
+                    {birthDataError}
+                  </div>
+                )}
+
+                {/* Submit */}
+                <button
+                  className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 disabled:opacity-50 text-white font-semibold rounded-xl py-3 text-sm transition-all"
+                  disabled={
+                    birthDataSubmitting ||
+                    !birthDataForm.birthDate ||
+                    !birthDataForm.birthCity ||
+                    (!birthDataForm.birthTime && !birthDataForm.unknownTime)
+                  }
+                  onClick={handleBirthDataSubmit}
+                >
+                  {birthDataSubmitting ? 'Calculating your chart...' : 'Calculate My Birth Chart'}
+                </button>
+
+                <p className="text-center text-xs text-gray-500 mt-3">
+                  Your birth data is private and only used for your reading.
+                </p>
+              </div>
+            </div>
+          )}
+
           {/* Pre-reading welcome — shown when guide hasn't greeted yet */}
-          {!session && !preSessionGreeting && !isStarting && !switchingToPersonaSlug && selectedPersona && (
+          {!session && !preSessionGreeting && !isStarting && !switchingToPersonaSlug && selectedPersona && (() => {
+            const personality = selectedPersona.personality ? (() => {
+              try { return JSON.parse(selectedPersona.personality!); } catch { return {}; }
+            })() : {};
+            // For astrology personas: only show PreReadingWelcome once chart is confirmed to exist
+            if (personality?.requiresBirthData && birthChartExists !== true) return false;
+            return true;
+          })() && (
             <PreReadingWelcome
               persona={selectedPersona}
               memoryContext={memoryContext}
@@ -1033,7 +1451,7 @@ export default function ChatServicePage() {
           )}
 
           {/* Pre-session or active session messages */}
-          {(session || !!preSessionGreeting) && (
+          {(session || !!preSessionGreeting || (isStarting && (isTyping || messages.length > 0))) && (
             <>
               {session && (
                 <div className="text-center text-xs text-gray-400 my-4">
@@ -1064,6 +1482,30 @@ export default function ChatServicePage() {
               {messages.map((msg, index) => {
                 const isLastMsg = index === messages.length - 1;
 
+                // Natal chart wheel — rendered inline as a Luna message
+                if (msg.chartData) {
+                  return (
+                    <div key={msg.id} className="flex flex-col items-start w-full py-2 animate-fade-in">
+                      <div className="w-full max-w-sm rounded-2xl overflow-hidden bg-[#0d0824]/80 border border-purple-500/20 shadow-lg shadow-purple-900/20 p-3">
+                        <NatalChartWheel data={msg.chartData} />
+                      </div>
+                      <button
+                        onClick={async () => {
+                          if (session) await endSession();
+                          setBirthChartExists(false);
+                          setStoredChartData(null);
+                          setMessages([]);
+                          setPreSessionGreeting(null);
+                          lastAutoFetchedPersonaId.current = null;
+                        }}
+                        className="mt-1.5 ml-1 text-xs text-white/30 hover:text-purple-400 transition-colors"
+                      >
+                        Wrong details? Re-enter birth info
+                      </button>
+                    </div>
+                  );
+                }
+
                 // Standalone card reveal — not a normal chat bubble
                 if (msg.isCardReveal) {
                   return (
@@ -1086,6 +1528,10 @@ export default function ChatServicePage() {
                   );
                 }
 
+                // A "real" DB message ID is a UUID — not a temp- or assistant- prefixed local ID
+                const isRealId = !msg.id.startsWith('temp-') && !msg.id.startsWith('assistant-') && !msg.id.startsWith('reveal-');
+                const isSaved = savedMessageIds.has(msg.id);
+
                 return (
                   <div key={msg.id} className={`flex flex-col w-full ${msg.role === "user" ? "items-end" : "items-start"}`}>
                     {/* Message bubble */}
@@ -1099,6 +1545,22 @@ export default function ChatServicePage() {
                     >
                       {msg.content}
                     </div>
+
+                    {/* Save button — only for messages with real DB IDs */}
+                    {isRealId && (
+                      <button
+                        onClick={() => handleSaveMessage(msg.id)}
+                        className={`mt-1 flex items-center gap-1 transition-colors ${
+                          isSaved
+                            ? "text-purple-500"
+                            : "text-gray-300 hover:text-gray-500"
+                        }`}
+                        title={isSaved ? "Remove from saved" : "Save this message"}
+                      >
+                        <Bookmark className={`w-3 h-3 ${isSaved ? "fill-current" : ""}`} />
+                        {isSaved && <span className="text-[10px]">Saved</span>}
+                      </button>
+                    )}
 
                     {/* Tarot card draw UI — only on the last assistant message that requested it */}
                     {msg.tarotDraw && msg.role === "assistant" && isLastMsg && !isSending && (
@@ -1254,6 +1716,15 @@ export default function ChatServicePage() {
         open={showTeaserModal}
         onOpenChange={setShowTeaserModal}
         personaId={selectedPersonaId}
+      />
+
+      {/* Session Feedback Modal — shown after 5 minutes of active chat */}
+      <SessionFeedbackModal
+        open={showFeedbackModal}
+        onOpenChange={setShowFeedbackModal}
+        sessionId={session?.id ?? null}
+        personaName={selectedPersona?.displayName ?? "your guide"}
+        personaAvatarUrl={selectedPersona?.avatarUrl}
       />
       </div>{/* end main chat panel wrapper */}
     </div>
