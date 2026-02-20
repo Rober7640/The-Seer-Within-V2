@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import {
   Sheet,
   SheetContent,
@@ -64,9 +65,11 @@ function formatTime(): string {
 
 function GuideItem({
   guide,
+  showBadge,
   onClick,
 }: {
   guide: Guide;
+  showBadge: boolean;
   onClick: () => void;
 }) {
   const teaser = getTeaserMessage(guide);
@@ -92,10 +95,12 @@ function GuideItem({
               }}
             />
           </div>
-          {/* Unread notification badge */}
-          <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-orange-500 rounded-full flex items-center justify-center text-[9px] font-black text-white shadow">
-            1
-          </span>
+          {/* Unread badge — only the one active guide for this session */}
+          {showBadge && (
+            <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-orange-500 rounded-full flex items-center justify-center text-[9px] font-black text-white shadow">
+              1
+            </span>
+          )}
         </div>
 
         {/* Main content */}
@@ -105,12 +110,14 @@ function GuideItem({
             <p className="text-white text-sm font-semibold truncate leading-tight">
               {guide.displayName}
             </p>
-            <span className="text-white/40 text-[10px] shrink-0">{timeLabel}</span>
+            {showBadge && (
+              <span className="text-white/40 text-[10px] shrink-0">{timeLabel}</span>
+            )}
           </div>
 
-          {/* Message preview */}
+          {/* Teaser preview when badge is active, tagline otherwise */}
           <p className="text-white/55 text-xs leading-snug line-clamp-2">
-            {teaser.preview}
+            {showBadge ? teaser.preview : (guide.tagline ?? "Available for a reading")}
           </p>
         </div>
       </div>
@@ -144,6 +151,36 @@ function SidebarContent({
     (g) => g.isActive && g.id !== selectedPersonaId
   );
 
+  // Pick exactly one guide per session to show the "1 message" badge (~33% of guides).
+  // The index is chosen randomly on first render and stored in sessionStorage so it
+  // survives page refreshes but resets when the user opens a new tab/session.
+  // If the chosen guide is currently selected (being chatted with), the badge
+  // temporarily shifts to the next guide in the list.
+  const activeBadgeSlug = useMemo(() => {
+    const activeGuides = guides.filter((g) => g.isActive);
+    if (activeGuides.length === 0) return null;
+
+    let idx: number;
+    try {
+      const stored = sessionStorage.getItem("seer-badge-guide-idx");
+      if (stored !== null) {
+        idx = parseInt(stored, 10);
+      } else {
+        idx = Math.floor(Math.random() * activeGuides.length);
+        sessionStorage.setItem("seer-badge-guide-idx", String(idx));
+      }
+    } catch {
+      idx = 0;
+    }
+
+    const badgeGuide = activeGuides[idx % activeGuides.length];
+    if (badgeGuide.id === selectedPersonaId) {
+      // Badge guide is currently selected — shift to the next one
+      return activeGuides[(idx + 1) % activeGuides.length]?.slug ?? null;
+    }
+    return badgeGuide.slug;
+  }, [guides, selectedPersonaId]);
+
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
@@ -164,6 +201,7 @@ function SidebarContent({
             <GuideItem
               key={guide.id}
               guide={guide}
+              showBadge={guide.slug === activeBadgeSlug}
               onClick={() => onSelect(guide.slug, getTeaserMessage(guide).full)}
             />
           ))
