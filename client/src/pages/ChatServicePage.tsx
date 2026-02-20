@@ -155,6 +155,17 @@ export default function ChatServicePage() {
   // Saved messages (bookmarks)
   const [savedMessageIds, setSavedMessageIds] = useState<Set<string>>(new Set());
 
+  // Tracks persona IDs where the user has started a real session (sent ≥1 message).
+  // Persisted to localStorage so it survives page refreshes and new sessions.
+  // Used to suppress the teaser greeting and badge for guides already spoken to.
+  const [chattedGuideIds, setChattedGuideIds] = useState<Set<string>>(() => {
+    try {
+      const stored = localStorage.getItem("seer-chatted-guide-ids");
+      if (stored) return new Set(JSON.parse(stored));
+    } catch {}
+    return new Set();
+  });
+
   // Idle protection state
   const [idleWarning, setIdleWarning] = useState(false);
   const [idleCountdown, setIdleCountdown] = useState(60);
@@ -817,12 +828,15 @@ export default function ChatServicePage() {
       feedbackTriggeredRef.current = false;
     }
 
-    // Always fetch greeting immediately — no instructions screen
+    // Always fetch greeting immediately — no instructions screen.
+    // Only use the teaser for first-time visitors; returning visitors get
+    // the normal AI greeting so the conversation picks up naturally.
     setMessages([]);
     setPreSessionGreeting(null);
     lastAutoFetchedPersonaId.current = targetPersona.id; // Prevent auto-fetch effect from double-triggering
-    fetchGreeting(slug, false, null, teaserFull);
-  }, [session, personas, navigate, fetchGreeting]);
+    const isReturning = chattedGuideIds.has(targetPersona.id);
+    fetchGreeting(slug, false, null, isReturning ? undefined : teaserFull);
+  }, [session, personas, navigate, fetchGreeting, chattedGuideIds]);
 
   // Confirm transition from instructions screen — fetch greeting for the new guide
   const confirmSwitch = useCallback(() => {
@@ -900,6 +914,16 @@ export default function ChatServicePage() {
               coinsCharged: 0,
             };
             setSession(activeSession);
+            // Mark this guide as chatted — suppresses teaser + badge on all future visits
+            if (selectedPersonaId) {
+              setChattedGuideIds(prev => {
+                if (prev.has(selectedPersonaId)) return prev;
+                const next = new Set(prev);
+                next.add(selectedPersonaId);
+                try { localStorage.setItem("seer-chatted-guide-ids", JSON.stringify([...next])); } catch {}
+                return next;
+              });
+            }
             setPreSessionGreeting(null);
             setElapsedSeconds(0);
             setShowRefillBanner(false);
@@ -1067,6 +1091,7 @@ export default function ChatServicePage() {
         <GuideSidebar
           guides={personas}
           selectedPersonaId={selectedPersonaId}
+          chattedGuideIds={chattedGuideIds}
           mobileOpen={mobileSidebarOpen}
           onMobileClose={() => setMobileSidebarOpen(false)}
           onSwitchGuide={(slug, teaserFull) => switchGuide(slug, teaserFull)}

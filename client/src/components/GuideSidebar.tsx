@@ -18,6 +18,8 @@ interface Guide {
 interface GuideSidebarProps {
   guides: Guide[];
   selectedPersonaId: string | null;
+  /** Persona IDs where the user has already sent at least one message */
+  chattedGuideIds: Set<string>;
   mobileOpen: boolean;
   onMobileClose: () => void;
   /** Called with the target slug and the guide's full teaser message when user picks a different guide */
@@ -141,10 +143,12 @@ function GuideItem({
 function SidebarContent({
   guides,
   selectedPersonaId,
+  chattedGuideIds,
   onSelect,
 }: {
   guides: Guide[];
   selectedPersonaId: string | null;
+  chattedGuideIds: Set<string>;
   onSelect: (slug: string, teaserFull: string) => void;
 }) {
   const otherGuides = guides.filter(
@@ -152,13 +156,16 @@ function SidebarContent({
   );
 
   // Pick exactly one guide per session to show the "1 message" badge (~33% of guides).
+  // Only guides the user has never sent a message to are eligible for the badge.
   // The index is chosen randomly on first render and stored in sessionStorage so it
   // survives page refreshes but resets when the user opens a new tab/session.
-  // If the chosen guide is currently selected (being chatted with), the badge
-  // temporarily shifts to the next guide in the list.
+  // If the chosen guide is currently selected, the badge shifts to the next eligible one.
   const activeBadgeSlug = useMemo(() => {
-    const activeGuides = guides.filter((g) => g.isActive);
-    if (activeGuides.length === 0) return null;
+    // Only un-chatted, active guides are eligible
+    const eligibleGuides = guides.filter(
+      (g) => g.isActive && !chattedGuideIds.has(g.id)
+    );
+    if (eligibleGuides.length === 0) return null;
 
     let idx: number;
     try {
@@ -166,20 +173,20 @@ function SidebarContent({
       if (stored !== null) {
         idx = parseInt(stored, 10);
       } else {
-        idx = Math.floor(Math.random() * activeGuides.length);
+        idx = Math.floor(Math.random() * eligibleGuides.length);
         sessionStorage.setItem("seer-badge-guide-idx", String(idx));
       }
     } catch {
       idx = 0;
     }
 
-    const badgeGuide = activeGuides[idx % activeGuides.length];
+    const badgeGuide = eligibleGuides[idx % eligibleGuides.length];
     if (badgeGuide.id === selectedPersonaId) {
-      // Badge guide is currently selected — shift to the next one
-      return activeGuides[(idx + 1) % activeGuides.length]?.slug ?? null;
+      // Badge guide is currently selected — shift to the next eligible one
+      return eligibleGuides[(idx + 1) % eligibleGuides.length]?.slug ?? null;
     }
     return badgeGuide.slug;
-  }, [guides, selectedPersonaId]);
+  }, [guides, selectedPersonaId, chattedGuideIds]);
 
   return (
     <div className="flex flex-col h-full">
@@ -214,6 +221,7 @@ function SidebarContent({
 export function GuideSidebar({
   guides,
   selectedPersonaId,
+  chattedGuideIds,
   mobileOpen,
   onMobileClose,
   onSwitchGuide,
@@ -230,6 +238,7 @@ export function GuideSidebar({
         <SidebarContent
           guides={guides}
           selectedPersonaId={selectedPersonaId}
+          chattedGuideIds={chattedGuideIds}
           onSelect={handleSelect}
         />
       </aside>
@@ -246,6 +255,7 @@ export function GuideSidebar({
           <SidebarContent
             guides={guides}
             selectedPersonaId={selectedPersonaId}
+            chattedGuideIds={chattedGuideIds}
             onSelect={handleSelect}
           />
         </SheetContent>
