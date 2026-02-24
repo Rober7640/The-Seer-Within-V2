@@ -2,7 +2,7 @@ import { Router, Request, Response } from 'express';
 import { z } from 'zod';
 import { db } from '../lib/db';
 import { pool } from '../lib/db';
-import { chatSessions, chatMessages, personas, users } from '@shared/schema';
+import { chatSessions, chatMessages, personas, users, sessionFeedback } from '@shared/schema';
 import { eq, and, desc } from 'drizzle-orm';
 import { requireAuth } from '../lib/auth';
 import {
@@ -21,6 +21,17 @@ const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY || '' })
 
 const router = Router();
 
+// In-memory TTL cache for greeting messages — avoids a Claude API call on every page
+// refresh or tab switch. Key: `${userId}:${personaId}`. TTL: 30 minutes.
+const greetingCache = new Map<string, { greeting: string; personaName: string; expiresAt: number }>();
+const GREETING_CACHE_TTL_MS = 30 * 60 * 1000;
+setInterval(() => {
+  const now = Date.now();
+  greetingCache.forEach((val, key) => {
+    if (val.expiresAt <= now) greetingCache.delete(key);
+  });
+}, 10 * 60 * 1000);
+
 const startSessionSchema = z.object({
   personaId: z.string().min(1, 'Persona ID is required'),
   /** Pre-generated greeting from the free /greeting endpoint */
@@ -28,7 +39,7 @@ const startSessionSchema = z.object({
 });
 
 const sendMessageSchema = z.object({
-  content: z.string().min(1, 'Message content is required'),
+  content: z.string().min(1, 'Message content is required').max(2000, 'Message too long'),
 });
 
 // GET /api/chat-service/greeting/:personaSlug
@@ -59,8 +70,21 @@ router.get('/greeting/:personaSlug', requireAuth, async (req: Request, res: Resp
       return;
     }
 
-    const result = await generateGreeting({ userId: req.userId!, personaId: persona[0].id });
     const pricing = await getPersonaPricing(persona[0].id);
+
+    const cacheKey = `${req.userId}:${persona[0].id}`;
+    const cached = greetingCache.get(cacheKey);
+    if (cached && cached.expiresAt > Date.now()) {
+      res.json({ greeting: cached.greeting, personaName: cached.personaName, pricing });
+      return;
+    }
+
+    const result = await generateGreeting({ userId: req.userId!, personaId: persona[0].id });
+    greetingCache.set(cacheKey, {
+      greeting: result.greeting,
+      personaName: result.personaName,
+      expiresAt: Date.now() + GREETING_CACHE_TTL_MS,
+    });
 
     res.json({
       greeting: result.greeting,
@@ -98,6 +122,7 @@ router.post('/session/start', requireAuth, async (req: Request, res: Response) =
     const personaRecord = await db.select({
       id: personas.id,
       isActive: personas.isActive,
+      coinsPerMinute: personas.coinsPerMinute,
       availabilitySchedule: personas.availabilitySchedule,
       onlineOverride: personas.onlineOverride,
       overrideExpiresAt: personas.overrideExpiresAt,
@@ -132,7 +157,7 @@ router.post('/session/start', requireAuth, async (req: Request, res: Response) =
       personaName: result.personaName,
       greeting: result.greeting,
       remainingCoins: result.creditsRemaining,
-      pricing,
+      pricing: { ...pricing, coinsPerMinute: personaRecord[0].coinsPerMinute },
     });
   } catch (error: any) {
     if (error.message === 'USER_NOT_FOUND') {
@@ -179,6 +204,9 @@ router.post('/session/:id/message', requireAuth, chatLimiter, async (req: Reques
       sessionStatus: result.sessionActive ? 'active' : 'ended',
       blocked: result.blocked || false,
       tarotDraw: result.tarotDraw || false,
+      chartData: result.chartData ?? null,
+      userMessageId: result.userMessageId,
+      assistantMessageId: result.assistantMessageId,
     });
   } catch (error: any) {
     if (error.message === 'SESSION_NOT_FOUND') {
@@ -348,11 +376,12 @@ router.get('/teaser/:personaSlug', requireAuth, async (req: Request, res: Respon
     }
 
     // Generate a new teaser message
-    const prompt = `${persona[0].baseSystemPrompt}
+    const sanitisedName = (firstName ?? '')
+      .replace(/[<>\[\]{}\\]/g, '')
+      .trim()
+      .slice(0, 50) || 'dear seeker';
 
-## Task: Proactive Teaser Message
-You want to reach out to ${firstName || 'a seeker'} who hasn't started a reading yet.
-Write a warm, intriguing 2-sentence message hinting that you have something important to share with them.
+    const prompt = `Write a warm, intriguing 2-sentence message hinting that you have something important to share with ${sanitisedName} who hasn't started a reading yet.
 DO NOT mention credits, payments, coins, or any technical/system details.
 Be personal, mystical, and leave them wanting to know more.
 Return only the message text, no quotes or labels.`;
@@ -362,6 +391,7 @@ Return only the message text, no quotes or labels.`;
       const response = await anthropic.messages.create({
         model: 'claude-3-5-haiku-20241022',
         max_tokens: 120,
+        system: persona[0].baseSystemPrompt,
         messages: [{ role: 'user', content: prompt }],
       });
       teaserText = response.content[0].type === 'text' ? response.content[0].text.trim() : '';
@@ -392,6 +422,69 @@ Return only the message text, no quotes or labels.`;
     logger.error('Teaser endpoint error:', error);
     // Fail gracefully — teaser is not critical
     res.json({ locked: false, message: null });
+  }
+});
+
+// POST /api/chat-service/session/:id/feedback
+// Submit a star rating + optional text feedback for a completed (or active) session.
+// One submission per session — silently ignores duplicates.
+const feedbackSchema = z.object({
+  starRating: z.number().int().min(1).max(5),
+  feedbackText: z.string().max(2000).optional(),
+  displayName: z.string().max(100).optional(), // null/undefined = user opted out of showing name
+});
+
+router.post('/session/:id/feedback', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const userId = (req as any).user?.id;
+    if (!userId) { res.status(401).json({ error: 'Unauthorized' }); return; }
+
+    const { id: sessionId } = req.params;
+
+    // Validate body
+    const parse = feedbackSchema.safeParse(req.body);
+    if (!parse.success) {
+      res.status(400).json({ error: 'Invalid feedback data', details: parse.error.issues });
+      return;
+    }
+    const { starRating, feedbackText, displayName } = parse.data;
+
+    // Verify session belongs to this user
+    const sessionRows = await db.select({
+      id: chatSessions.id,
+      personaId: chatSessions.personaId,
+      durationSeconds: chatSessions.durationSeconds,
+    })
+      .from(chatSessions)
+      .where(and(eq(chatSessions.id, sessionId), eq(chatSessions.userId, userId)))
+      .limit(1);
+
+    if (!sessionRows.length) {
+      res.status(404).json({ error: 'Session not found' });
+      return;
+    }
+
+    // Insert feedback (ignore duplicate — unique index on sessionId would prevent double-submit)
+    await db.insert(sessionFeedback).values({
+      sessionId,
+      userId,
+      personaId: sessionRows[0].personaId,
+      starRating,
+      feedbackText: feedbackText ?? null,
+      displayName: displayName?.trim() || null,
+      approved: false,
+    });
+
+    logger.info('Session feedback submitted', { sessionId, userId, starRating });
+    res.json({ success: true });
+  } catch (error: any) {
+    // Duplicate key → already submitted, treat as success
+    if (error?.code === '23505') {
+      res.json({ success: true });
+      return;
+    }
+    logger.error('Feedback submission error:', error);
+    res.status(500).json({ error: 'Failed to save feedback' });
   }
 });
 

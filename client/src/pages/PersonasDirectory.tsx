@@ -21,10 +21,12 @@ import {
   Sparkles,
   Award,
   Compass,
-  ChevronRight,
-  Zap,
   CheckCircle2,
   Briefcase,
+  LogIn,
+  UserPlus,
+  Mail,
+  Coins,
 } from "lucide-react";
 
 /* ================================================================
@@ -39,6 +41,14 @@ interface PricingTier {
   pricePerMinute?: number;
 }
 
+interface PersonaReview {
+  id: string;
+  reviewerName: string;
+  reviewText: string | null;
+  starRating: number;
+  createdAt: string;
+}
+
 interface PersonaDetail {
   id: string;
   slug: string;
@@ -48,11 +58,18 @@ interface PersonaDetail {
   avatarUrl: string | null;
   isDefault: boolean;
   freeCoins: number;
+  coinsPerMinute?: number;
   categories: string[];
   pricing: { freeCoins: number; tiers: PricingTier[] };
   specialties: string[];
   sampleGreeting: string | null;
   stats: { totalReadings: number; uniqueClients: number };
+  overallRating?: number | null;
+  yearsExperience?: number | null;
+  readingsCount?: number | null;
+  isOnline?: boolean;
+  reviews?: PersonaReview[];
+  userReviews?: PersonaReview[];
 }
 
 interface PersonaListing {
@@ -64,9 +81,16 @@ interface PersonaListing {
   avatarUrl: string | null;
   categories: string[];
   isDefault: boolean;
+  isFeatured?: boolean;
+  accuracyRank?: number | null;
   freeCoins: number;
+  coinsPerMinute?: number;
   customPricing: string | null;
   pricingTiers?: PricingTier[];
+  overallRating?: number | null;
+  yearsExperience?: number | null;
+  readingsCount?: number | null;
+  isOnline?: boolean;
 }
 
 /* ================================================================
@@ -188,6 +212,8 @@ function StarRating({
   );
 }
 
+/* Returns "~$X.XX/min" using the best-value pricing tier, or null if no tiers */
+
 /* ================================================================
    PersonaCard
    ================================================================ */
@@ -196,26 +222,31 @@ function PersonaCard({
   persona,
   index = 0,
   onViewDetails,
+  onStartChat,
+  showFreeMins = false,
 }: {
   persona: PersonaListing;
   index?: number;
   onViewDetails: () => void;
+  onStartChat: () => void;
+  showFreeMins?: boolean;
 }) {
   const rating = useMemo(
-    () => generateRating(persona.displayName),
-    [persona.displayName],
+    () => persona.overallRating ?? generateRating(persona.displayName),
+    [persona.displayName, persona.overallRating],
   );
-  const status = useMemo(
-    () => getStatus(persona.displayName),
-    [persona.displayName],
-  );
+  const status = useMemo((): Status => {
+    if (persona.isOnline === true) return { label: "Online", bgClass: "bg-teal-500/10", textClass: "text-teal-400", borderClass: "border-teal-500/20" };
+    if (persona.isOnline === false) return { label: "Busy", bgClass: "bg-rose-500/10", textClass: "text-rose-400", borderClass: "border-rose-500/20" };
+    return getStatus(persona.displayName);
+  }, [persona.displayName, persona.isOnline]);
   const yearsExp = useMemo(
-    () => generateYearsExp(persona.displayName),
-    [persona.displayName],
+    () => persona.yearsExperience ?? generateYearsExp(persona.displayName),
+    [persona.displayName, persona.yearsExperience],
   );
   const readings = useMemo(
-    () => generateReadings(persona.displayName),
-    [persona.displayName],
+    () => persona.readingsCount ?? generateReadings(persona.displayName),
+    [persona.displayName, persona.readingsCount],
   );
 
   return (
@@ -281,6 +312,13 @@ function PersonaCard({
             <CheckCircle2 className="w-3.5 h-3.5 text-white/30 shrink-0" />
             <span>{readings.toLocaleString()} readings</span>
           </div>
+          <div className="flex items-center gap-2 text-[12px] text-white/35">
+            <Coins className="w-3 h-3 text-amber-400/40 shrink-0" />
+            <span>
+              {persona.coinsPerMinute ?? 60} coins = 1 min
+              {showFreeMins && persona.freeCoins > 0 && ` · ${Math.floor(persona.freeCoins / (persona.coinsPerMinute ?? 60))} mins free`}
+            </span>
+          </div>
         </div>
 
         {/* ── Description ── */}
@@ -292,18 +330,16 @@ function PersonaCard({
 
         {/* ── Buttons ── */}
         <div className="flex gap-2 mt-auto pt-1">
-          <Link
-            href={`/reading?persona=${persona.slug}`}
-            className="flex-1"
-            onClick={(e: React.MouseEvent) => e.stopPropagation()}
+          <Button
+            size="sm"
+            className="flex-1 bg-purple-600 hover:bg-purple-500 text-white text-[13px] h-[38px] rounded-lg font-medium tracking-wide"
+            onClick={(e) => {
+              e.stopPropagation();
+              onStartChat();
+            }}
           >
-            <Button
-              size="sm"
-              className="w-full bg-purple-600 hover:bg-purple-500 text-white text-[13px] h-[38px] rounded-lg font-medium tracking-wide"
-            >
-              Start Chat
-            </Button>
-          </Link>
+            Start Chat
+          </Button>
           <Button
             size="sm"
             variant="outline"
@@ -343,22 +379,16 @@ function Section({
       className="animate-mp-section bg-[#0c0c24]/70 border border-white/[0.04] rounded-2xl p-5 md:p-6"
       style={{ animationDelay: `${delay}ms` }}
     >
-      <div className="flex items-start justify-between mb-4">
-        <div>
-          <div className="flex items-center gap-2 mb-[3px]">
-            <span className="w-[30px] h-[30px] rounded-md bg-amber-500/8 border border-amber-400/10 flex items-center justify-center shrink-0">
-              <Icon className="w-4 h-4 text-amber-400/80" />
-            </span>
-            <h2 className="text-[16px] font-bold text-white uppercase tracking-[0.1em] leading-none">
-              {title}
-            </h2>
-          </div>
-          <p className="text-[13px] text-white/40 pl-[38px]">{subtitle}</p>
+      <div className="mb-4">
+        <div className="flex items-center gap-2 mb-[3px]">
+          <span className="w-[30px] h-[30px] rounded-md bg-amber-500/8 border border-amber-400/10 flex items-center justify-center shrink-0">
+            <Icon className="w-4 h-4 text-amber-400/80" />
+          </span>
+          <h2 className="text-[16px] font-bold text-white uppercase tracking-[0.1em] leading-none">
+            {title}
+          </h2>
         </div>
-        <button className="flex items-center gap-0.5 text-[13px] text-white/40 hover:text-white/60 transition-colors font-medium shrink-0 mt-0.5 group">
-          View All
-          <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
-        </button>
+        <p className="text-[13px] text-white/40 pl-[38px]">{subtitle}</p>
       </div>
       {children}
     </div>
@@ -372,25 +402,30 @@ function Section({
 function FeaturedCard({
   persona,
   onViewDetails,
+  onStartChat,
+  showFreeMins = false,
 }: {
   persona: PersonaListing;
   onViewDetails: () => void;
+  onStartChat: () => void;
+  showFreeMins?: boolean;
 }) {
   const rating = useMemo(
-    () => generateRating(persona.displayName),
-    [persona.displayName],
+    () => persona.overallRating ?? generateRating(persona.displayName),
+    [persona.displayName, persona.overallRating],
   );
-  const status = useMemo(
-    () => getStatus(persona.displayName),
-    [persona.displayName],
-  );
+  const status = useMemo((): Status => {
+    if (persona.isOnline === true) return { label: "Online", bgClass: "bg-teal-500/10", textClass: "text-teal-400", borderClass: "border-teal-500/20" };
+    if (persona.isOnline === false) return { label: "Busy", bgClass: "bg-rose-500/10", textClass: "text-rose-400", borderClass: "border-rose-500/20" };
+    return getStatus(persona.displayName);
+  }, [persona.displayName, persona.isOnline]);
   const yearsExp = useMemo(
-    () => generateYearsExp(persona.displayName),
-    [persona.displayName],
+    () => persona.yearsExperience ?? generateYearsExp(persona.displayName),
+    [persona.displayName, persona.yearsExperience],
   );
   const readings = useMemo(
-    () => generateReadings(persona.displayName),
-    [persona.displayName],
+    () => persona.readingsCount ?? generateReadings(persona.displayName),
+    [persona.displayName, persona.readingsCount],
   );
 
   return (
@@ -441,7 +476,7 @@ function FeaturedCard({
             ))}
           </div>
 
-          <div className="flex items-center gap-5 text-[13px] text-white/50 mb-2.5">
+          <div className="flex items-center gap-5 text-[13px] text-white/50 mb-2.5 flex-wrap">
             <span className="flex items-center gap-1.5">
               <CheckCircle2 className="w-3.5 h-3.5 text-white/30" />
               {yearsExp} yrs experience
@@ -449,6 +484,11 @@ function FeaturedCard({
             <span className="flex items-center gap-1.5">
               <CheckCircle2 className="w-3.5 h-3.5 text-white/30" />
               {readings.toLocaleString()} readings
+            </span>
+            <span className="flex items-center gap-1.5 text-[12px] text-white/35">
+              <Coins className="w-3 h-3 text-amber-400/40" />
+              {persona.coinsPerMinute ?? 60} coins = 1 min
+              {showFreeMins && persona.freeCoins > 0 && ` · ${Math.floor(persona.freeCoins / (persona.coinsPerMinute ?? 60))} mins free`}
             </span>
           </div>
 
@@ -461,15 +501,16 @@ function FeaturedCard({
 
         {/* CTAs */}
         <div className="flex flex-row sm:flex-col gap-2.5 shrink-0">
-          <Link href={`/reading?persona=${persona.slug}`}>
-            <Button
-              size="sm"
-              className="bg-purple-600 hover:bg-purple-500 text-white text-[13px] font-medium px-5 h-[40px]"
-              onClick={(e: React.MouseEvent) => e.stopPropagation()}
-            >
-              Start Reading
-            </Button>
-          </Link>
+          <Button
+            size="sm"
+            className="bg-purple-600 hover:bg-purple-500 text-white text-[13px] font-medium px-5 h-[40px]"
+            onClick={(e) => {
+              e.stopPropagation();
+              onStartChat();
+            }}
+          >
+            Start Reading
+          </Button>
           <Button
             size="sm"
             variant="outline"
@@ -488,73 +529,11 @@ function FeaturedCard({
 }
 
 /* ================================================================
-   PromoCTA
-   ================================================================ */
-
-function PromoCTA() {
-  return (
-    <div className="animate-mp-aura relative overflow-hidden rounded-2xl border border-white/[0.04]">
-      <div className="absolute inset-0 bg-gradient-to-r from-[#0c0c24] via-[#14102e] to-[#0c0c24]" />
-
-      <div className="relative px-6 py-7 md:px-8 md:py-8 flex flex-col md:flex-row items-center gap-6">
-        <div className="flex-1">
-          <h3 className="font-serif text-[22px] md:text-[24px] text-white mb-3 leading-snug">
-            Accurate Insights in your App
-          </h3>
-          <div className="space-y-2.5 mb-5">
-            {[
-              "Personalized spiritual guidance",
-              "In-depth astrology, numerology & tarot",
-              "Connect with a guide at any time",
-            ].map((item) => (
-              <div key={item} className="flex items-center gap-2.5">
-                <span className="w-[20px] h-[20px] rounded-full bg-amber-500/8 border border-amber-400/10 flex items-center justify-center shrink-0">
-                  <CheckCircle2 className="w-2.5 h-2.5 text-amber-400/70" />
-                </span>
-                <span className="text-[13px] text-white/50 leading-snug">
-                  {item}
-                </span>
-              </div>
-            ))}
-          </div>
-          <Link href="/credits">
-            <Button className="bg-purple-600 hover:bg-purple-500 text-white font-medium px-7 h-10 text-[13px] tracking-wide">
-              <Zap className="w-4 h-4 mr-2" />
-              Get Free Credits
-            </Button>
-          </Link>
-        </div>
-
-        <div className="hidden md:flex items-center justify-center">
-          <div className="relative w-52 h-52">
-            <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-white/[0.03] to-white/[0.01] border border-white/[0.04] rotate-3" />
-            <div className="absolute inset-2 rounded-xl bg-gradient-to-br from-white/[0.02] to-transparent border border-white/[0.03] -rotate-2 flex items-center justify-center">
-              <div className="text-center">
-                <Sparkles className="w-10 h-10 text-amber-400/15 mx-auto mb-2" />
-                <span className="text-[11px] text-white/15 uppercase tracking-[0.2em] font-semibold">
-                  The Seer Within
-                </span>
-              </div>
-            </div>
-            <div className="absolute -top-2 -right-2">
-              <Sparkles className="w-5 h-5 text-amber-400/20" />
-            </div>
-            <div className="absolute -bottom-1 -left-1">
-              <Heart className="w-4 h-4 text-rose-400/15 fill-current" />
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/* ================================================================
    Main Page
    ================================================================ */
 
 export default function PersonasDirectory() {
-  const { user } = useAuth();
+  const { user, isLoading: authLoading, login, register } = useAuth();
   const isReturningUser = (user?.totalCoinsUsed ?? 0) > 0;
 
   const [personas, setPersonas] = useState<PersonaListing[]>([]);
@@ -565,6 +544,24 @@ export default function PersonasDirectory() {
   const [detailLoading, setDetailLoading] = useState(false);
   const [showAll, setShowAll] = useState(false);
   const [, navigate] = useLocation();
+
+  // Auth modal state (for guest "Start Chat" flow)
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [authPersonaSlug, setAuthPersonaSlug] = useState<string | null>(null);
+  const [authPersonaName, setAuthPersonaName] = useState<string | null>(null);
+  const [authPersonaAvatar, setAuthPersonaAvatar] = useState<string | null>(null);
+  const [authIsSignUp, setAuthIsSignUp] = useState(true);
+  const [authEmail, setAuthEmail] = useState("");
+  const [authPassword, setAuthPassword] = useState("");
+  const [authFirstName, setAuthFirstName] = useState("");
+  const [authError, setAuthError] = useState<string | null>(null);
+  const [formLoading, setFormLoading] = useState(false);
+  const [authVerificationSent, setAuthVerificationSent] = useState(false);
+  const [authResendEmail, setAuthResendEmail] = useState("");
+  const [authResendLoading, setAuthResendLoading] = useState(false);
+
+  // Queued Start Chat click received while auth was still loading (FRICTION-12)
+  const [pendingChatSlug, setPendingChatSlug] = useState<{ slug: string; name: string; avatar: string | null } | null>(null);
 
   useEffect(() => {
     async function fetchPersonas() {
@@ -583,6 +580,32 @@ export default function PersonasDirectory() {
     fetchPersonas();
   }, []);
 
+  // Resolve a queued Start Chat once auth finishes loading (FRICTION-12)
+  useEffect(() => {
+    if (authLoading || !pendingChatSlug) return;
+    const pending = pendingChatSlug;
+    setPendingChatSlug(null);
+    if (user) {
+      navigate(`/reading?persona=${pending.slug}`);
+    } else {
+      openAuthModal(pending.slug, pending.name, pending.avatar);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authLoading, pendingChatSlug, user]);
+
+  function openAuthModal(slug: string, displayName: string, avatarUrl: string | null) {
+    setAuthPersonaSlug(slug);
+    setAuthPersonaName(displayName);
+    setAuthPersonaAvatar(avatarUrl);
+    setAuthIsSignUp(true);
+    setAuthEmail("");
+    setAuthPassword("");
+    setAuthFirstName("");
+    setAuthError(null);
+    setAuthVerificationSent(false);
+    setShowAuthModal(true);
+  }
+
   async function openDetail(slug: string) {
     setDetailLoading(true);
     try {
@@ -598,8 +621,73 @@ export default function PersonasDirectory() {
     }
   }
 
+  function handleStartChat(slug: string, displayName: string, avatarUrl: string | null) {
+    if (authLoading) {
+      // Queue and resolve once auth finishes loading (FRICTION-12)
+      setPendingChatSlug({ slug, name: displayName, avatar: avatarUrl });
+      return;
+    }
+    if (user) {
+      navigate(`/reading?persona=${slug}`);
+    } else {
+      openAuthModal(slug, displayName, avatarUrl);
+    }
+  }
+
+  async function handleAuthSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setAuthError(null);
+    setFormLoading(true);
+    try {
+      if (authIsSignUp) {
+        const data = await register(authEmail, authPassword, authFirstName);
+        if (data.requiresVerification) {
+          // Persist slug so it survives the email-verification redirect (FRICTION-3)
+          if (authPersonaSlug) {
+            localStorage.setItem("seer-pending-persona", authPersonaSlug);
+          }
+          setAuthVerificationSent(true);
+          setAuthResendEmail(authEmail);
+          return;
+        }
+      } else {
+        await login(authEmail, authPassword);
+      }
+      setShowAuthModal(false);
+      navigate(`/reading?persona=${authPersonaSlug}`);
+    } catch (err: any) {
+      setAuthError(
+        err?.message?.includes("401")
+          ? "Invalid email or password"
+          : err?.message || "Something went wrong",
+      );
+    } finally {
+      setFormLoading(false);
+    }
+  }
+
+  async function handleModalResend() {
+    setAuthResendLoading(true);
+    setAuthError(null);
+    try {
+      const res = await fetch("/api/auth/resend-verification", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: authResendEmail }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        setAuthError(data.error || "Failed to resend");
+      }
+    } catch {
+      setAuthError("Failed to resend verification email");
+    } finally {
+      setAuthResendLoading(false);
+    }
+  }
+
   const featuredPersona = useMemo(
-    () => personas.find((p) => p.isDefault) || personas[0] || null,
+    () => personas.find((p) => p.isFeatured) || personas.find((p) => p.isDefault) || personas[0] || null,
     [personas],
   );
 
@@ -641,8 +729,8 @@ export default function PersonasDirectory() {
           Some connections are written before you arrive.
         </p>
 
-        {/* ── Promo Banner — new users only ── */}
-        {!isReturningUser && (
+        {/* ── Promo Banner — new users only (wait for auth to load) ── */}
+        {!authLoading && !isReturningUser && (
           <div
             className="animate-mp-fade-up flex justify-center mb-10"
             style={{ animationDelay: "80ms" }}
@@ -679,11 +767,14 @@ export default function PersonasDirectory() {
             >
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {[...personas]
-                  .sort(
-                    (a, b) =>
-                      generateRating(b.displayName) -
-                      generateRating(a.displayName),
-                  )
+                  .sort((a, b) => {
+                    const ar = a.accuracyRank ?? null;
+                    const br = b.accuracyRank ?? null;
+                    if (ar !== null && br !== null) return ar - br;
+                    if (ar !== null) return -1;
+                    if (br !== null) return 1;
+                    return generateRating(b.displayName) - generateRating(a.displayName);
+                  })
                   .slice(0, 3)
                   .map((p, i) => (
                     <PersonaCard
@@ -691,6 +782,8 @@ export default function PersonasDirectory() {
                       persona={p}
                       index={i}
                       onViewDetails={() => openDetail(p.slug)}
+                    onStartChat={() => handleStartChat(p.slug, p.displayName, p.avatarUrl ?? null)}
+                    showFreeMins={!isReturningUser}
                     />
                   ))}
               </div>
@@ -714,6 +807,8 @@ export default function PersonasDirectory() {
                         persona={p}
                         index={i}
                         onViewDetails={() => openDetail(p.slug)}
+                        onStartChat={() => handleStartChat(p.slug, p.displayName, p.avatarUrl ?? null)}
+                        showFreeMins={!isReturningUser}
                       />
                     ))}
                   </div>
@@ -731,6 +826,8 @@ export default function PersonasDirectory() {
                 <FeaturedCard
                   persona={featuredPersona}
                   onViewDetails={() => openDetail(featuredPersona.slug)}
+                  onStartChat={() => handleStartChat(featuredPersona.slug, featuredPersona.displayName, featuredPersona.avatarUrl ?? null)}
+                  showFreeMins={!isReturningUser}
                 />
               </Section>
             )}
@@ -749,18 +846,12 @@ export default function PersonasDirectory() {
                     persona={p}
                     index={i}
                     onViewDetails={() => openDetail(p.slug)}
+                    onStartChat={() => handleStartChat(p.slug, p.displayName, p.avatarUrl ?? null)}
+                    showFreeMins={!isReturningUser}
                   />
                 ))}
               </div>
             </Section>
-
-            {/* PROMO CTA */}
-            <div
-              className="animate-mp-section"
-              style={{ animationDelay: `${nextDelay()}ms` }}
-            >
-              <PromoCTA />
-            </div>
 
             {/* TOP RATED */}
             {personas.length > 1 && (
@@ -772,11 +863,11 @@ export default function PersonasDirectory() {
               >
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   {[...personas]
-                    .sort(
-                      (a, b) =>
-                        generateRating(b.displayName) -
-                        generateRating(a.displayName),
-                    )
+                    .sort((a, b) => {
+                      const ra = a.overallRating ?? generateRating(a.displayName);
+                      const rb = b.overallRating ?? generateRating(b.displayName);
+                      return rb - ra;
+                    })
                     .slice(0, 3)
                     .map((p, i) => (
                       <PersonaCard
@@ -784,6 +875,8 @@ export default function PersonasDirectory() {
                         persona={p}
                         index={i}
                         onViewDetails={() => openDetail(p.slug)}
+                        onStartChat={() => handleStartChat(p.slug, p.displayName, p.avatarUrl ?? null)}
+                        showFreeMins={!isReturningUser}
                       />
                     ))}
                 </div>
@@ -804,6 +897,8 @@ export default function PersonasDirectory() {
                     persona={p}
                     index={i}
                     onViewDetails={() => openDetail(p.slug)}
+                    onStartChat={() => handleStartChat(p.slug, p.displayName, p.avatarUrl ?? null)}
+                    showFreeMins={!isReturningUser}
                   />
                 ))}
               </div>
@@ -867,6 +962,172 @@ export default function PersonasDirectory() {
       </div>
 
       {/* ================================================================
+         Auth Modal — shown when a guest clicks Start Chat
+         ================================================================ */}
+      <Dialog
+        open={showAuthModal}
+        onOpenChange={(open) => {
+          // Keep modal open while awaiting email verification so the user
+          // doesn't accidentally lose the "Check Your Email" state (FRICTION-9)
+          if (!open && !authVerificationSent) setShowAuthModal(false);
+        }}
+      >
+        <DialogContent className="max-w-sm bg-[#0c0c24] border-white/[0.06] text-white !rounded-2xl">
+          {authVerificationSent ? (
+            /* ── Verification sent state ── */
+            <div className="flex flex-col items-center gap-4 py-2 text-center">
+              <div className="w-12 h-12 rounded-full bg-purple-600/20 border border-purple-500/20 flex items-center justify-center">
+                <Mail className="w-6 h-6 text-purple-300" />
+              </div>
+              <div>
+                <h2 className="font-serif text-xl text-white mb-2">Check Your Email</h2>
+                <p className="text-[14px] text-white/55 leading-relaxed">
+                  We sent a verification link to{" "}
+                  <strong className="text-white/80">{authResendEmail}</strong>.
+                  Click it to activate your account and get your 3 free minutes.
+                </p>
+              </div>
+              <button
+                onClick={handleModalResend}
+                disabled={authResendLoading}
+                className="text-[13px] text-purple-400 hover:text-purple-300 transition-colors disabled:opacity-50"
+              >
+                {authResendLoading ? "Sending..." : "Resend verification email"}
+              </button>
+              <button
+                onClick={() => { setAuthVerificationSent(false); setAuthIsSignUp(false); }}
+                className="text-[13px] text-white/35 hover:text-white/55 transition-colors"
+              >
+                Back to sign in
+              </button>
+            </div>
+          ) : (
+            <>
+              <DialogHeader>
+                <div className="flex flex-col items-center gap-3 mb-1">
+                  <Avatar className="w-16 h-16 ring-2 ring-white/[0.08] ring-offset-2 ring-offset-[#0c0c24]">
+                    <AvatarImage src={authPersonaAvatar || "/evelyn-avatar.png"} alt={authPersonaName || ""} />
+                    <AvatarFallback className="bg-white/5 text-white/60 text-xl">
+                      {authPersonaName?.charAt(0)}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="text-center">
+                    <p className="text-[13px] text-white/45 mb-0.5">
+                      {authIsSignUp ? "Create a free account to chat with" : "Sign in to chat with"}
+                    </p>
+                    <DialogTitle className="font-serif text-[22px] text-white">
+                      {authPersonaName}
+                    </DialogTitle>
+                  </div>
+                </div>
+              </DialogHeader>
+
+              {authIsSignUp && (
+                <div className="flex items-center gap-2.5 bg-purple-600/15 border border-purple-500/15 rounded-xl px-3.5 py-2.5">
+                  <Gift className="w-4 h-4 text-amber-400 shrink-0" />
+                  <span className="text-[13px] text-white/75">
+                    You get <strong className="text-white font-semibold">3 FREE minutes</strong> to get started
+                  </span>
+                </div>
+              )}
+
+              <form onSubmit={handleAuthSubmit} className="space-y-3 mt-1">
+                {authError && (
+                  <p className="text-red-400 text-[12px] p-2.5 bg-red-500/10 rounded-lg text-center">
+                    {authError}
+                  </p>
+                )}
+
+                {authIsSignUp && (
+                  <div>
+                    <label className="text-[12px] text-white/45 mb-1 block">First Name</label>
+                    <input
+                      type="text"
+                      name="firstName"
+                      value={authFirstName}
+                      onChange={(e) => setAuthFirstName(e.target.value)}
+                      required={authIsSignUp}
+                      className="w-full bg-white/[0.05] text-white rounded-lg px-3 py-2 text-[13px] border border-white/[0.1] focus:border-purple-500/50 focus:outline-none placeholder:text-white/25"
+                      placeholder="Your first name"
+                    />
+                  </div>
+                )}
+
+                <div>
+                  <label className="text-[12px] text-white/45 mb-1 block">Email</label>
+                  <input
+                    type="email"
+                    name="email"
+                    value={authEmail}
+                    onChange={(e) => setAuthEmail(e.target.value)}
+                    required
+                    className="w-full bg-white/[0.05] text-white rounded-lg px-3 py-2 text-[13px] border border-white/[0.1] focus:border-purple-500/50 focus:outline-none placeholder:text-white/25"
+                    placeholder="you@example.com"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-[12px] text-white/45 mb-1 block">Password</label>
+                  <input
+                    type="password"
+                    name="password"
+                    value={authPassword}
+                    onChange={(e) => setAuthPassword(e.target.value)}
+                    required
+                    minLength={8}
+                    className="w-full bg-white/[0.05] text-white rounded-lg px-3 py-2 text-[13px] border border-white/[0.1] focus:border-purple-500/50 focus:outline-none placeholder:text-white/25"
+                    placeholder={authIsSignUp ? "Min 8 characters" : "Your password"}
+                  />
+                </div>
+
+                <Button
+                  type="submit"
+                  disabled={formLoading}
+                  className="w-full bg-purple-600 hover:bg-purple-500 text-white h-[42px] text-[13px] font-medium tracking-wide mt-1"
+                >
+                  {formLoading ? (
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  ) : authIsSignUp ? (
+                    <>
+                      <UserPlus className="w-4 h-4 mr-2" />
+                      Create Account & Start Reading
+                    </>
+                  ) : (
+                    <>
+                      <LogIn className="w-4 h-4 mr-2" />
+                      Sign In
+                    </>
+                  )}
+                </Button>
+              </form>
+
+              {!authIsSignUp && (
+                <div className="text-center -mt-1">
+                  <a
+                    href="/forgot-password"
+                    className="text-[12px] text-white/30 hover:text-white/50 transition-colors"
+                  >
+                    Forgot your password?
+                  </a>
+                </div>
+              )}
+
+              <div className="text-center mt-1">
+                <button
+                  onClick={() => { setAuthIsSignUp(!authIsSignUp); setAuthError(null); }}
+                  className="text-[12px] text-purple-400 hover:text-purple-300 transition-colors"
+                >
+                  {authIsSignUp
+                    ? "Already have an account? Sign in"
+                    : "New here? Create a free account"}
+                </button>
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* ================================================================
          Detail Modal
          ================================================================ */}
       <Dialog
@@ -913,14 +1174,21 @@ export default function PersonasDirectory() {
                     )}
                     <div className="mt-2 flex items-center gap-2">
                       <StarRating
-                        rating={generateRating(selectedPersona.displayName)}
+                        rating={selectedPersona.overallRating ?? generateRating(selectedPersona.displayName)}
                         size="md"
                       />
-                      <span
-                        className={`text-[12px] px-2.5 py-[2px] rounded-full font-semibold ${getStatus(selectedPersona.displayName).bgClass} ${getStatus(selectedPersona.displayName).textClass} border ${getStatus(selectedPersona.displayName).borderClass}`}
-                      >
-                        {getStatus(selectedPersona.displayName).label}
-                      </span>
+                      {(() => {
+                        const s = selectedPersona.isOnline === true
+                          ? { label: "Online", bgClass: "bg-teal-500/10", textClass: "text-teal-400", borderClass: "border-teal-500/20" }
+                          : selectedPersona.isOnline === false
+                          ? { label: "Busy", bgClass: "bg-rose-500/10", textClass: "text-rose-400", borderClass: "border-rose-500/20" }
+                          : getStatus(selectedPersona.displayName);
+                        return (
+                          <span className={`text-[12px] px-2.5 py-[2px] rounded-full font-semibold ${s.bgClass} ${s.textClass} border ${s.borderClass}`}>
+                            {s.label}
+                          </span>
+                        );
+                      })()}
                     </div>
                   </div>
                 </div>
@@ -931,11 +1199,11 @@ export default function PersonasDirectory() {
                 <div className="flex flex-wrap gap-x-5 gap-y-2 text-[15px] text-white/55">
                   <span className="flex items-center gap-2">
                     <Clock className="w-4 h-4 text-white/35" />
-                    {generateYearsExp(selectedPersona.displayName)} years experience
+                    {(selectedPersona.yearsExperience ?? generateYearsExp(selectedPersona.displayName))} years experience
                   </span>
                   <span className="flex items-center gap-2">
                     <MessageCircle className="w-4 h-4 text-white/35" />
-                    {generateReadings(selectedPersona.displayName).toLocaleString()} readings
+                    {(selectedPersona.readingsCount ?? generateReadings(selectedPersona.displayName)).toLocaleString()} readings
                   </span>
                   {selectedPersona.stats.uniqueClients > 0 && (
                     <span className="flex items-center gap-2">
@@ -943,6 +1211,10 @@ export default function PersonasDirectory() {
                       {selectedPersona.stats.uniqueClients} clients
                     </span>
                   )}
+                  <span className="flex items-center gap-2">
+                    <Coins className="w-4 h-4 text-amber-400/50" />
+                    From {selectedPersona.coinsPerMinute ?? 60} coins / min
+                  </span>
                 </div>
 
                 {/* Description */}
@@ -992,6 +1264,67 @@ export default function PersonasDirectory() {
                   </div>
                 )}
 
+                {/* Admin testimonials */}
+                {selectedPersona.reviews && selectedPersona.reviews.length > 0 && (
+                  <div>
+                    <p className="text-[12px] font-bold text-white/30 uppercase tracking-[0.18em] mb-3">
+                      What clients say
+                    </p>
+                    <div className="space-y-3">
+                      {selectedPersona.reviews.map((review) => (
+                        <div key={review.id} className="bg-white/[0.02] border border-white/[0.05] rounded-xl p-4">
+                          <div className="flex items-center gap-2 mb-2">
+                            <span className="text-[13px] font-semibold text-white/80">{review.reviewerName}</span>
+                            <div className="flex gap-0.5">
+                              {[1,2,3,4,5].map((s) => (
+                                <Star
+                                  key={s}
+                                  className={`w-3 h-3 ${s <= review.starRating ? 'text-amber-400 fill-amber-400' : 'text-white/10'}`}
+                                />
+                              ))}
+                            </div>
+                          </div>
+                          {review.reviewText && (
+                            <p className="text-[14px] text-white/55 italic leading-relaxed">&ldquo;{review.reviewText}&rdquo;</p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* User Reviews — real feedback approved by admin */}
+                {selectedPersona.userReviews && selectedPersona.userReviews.length > 0 && (
+                  <div>
+                    <p className="text-[12px] font-bold text-white/30 uppercase tracking-[0.18em] mb-3">
+                      User Reviews
+                    </p>
+                    <div className="space-y-3">
+                      {selectedPersona.userReviews.map((review) => (
+                        <div key={review.id} className="bg-white/[0.02] border border-white/[0.05] rounded-xl p-4">
+                          <div className="flex items-center gap-2 mb-2">
+                            <span className="text-[13px] font-semibold text-white/80">{review.reviewerName}</span>
+                            <div className="flex gap-0.5">
+                              {[1,2,3,4,5].map((s) => (
+                                <Star
+                                  key={s}
+                                  className={`w-3 h-3 ${s <= review.starRating ? 'text-amber-400 fill-amber-400' : 'text-white/10'}`}
+                                />
+                              ))}
+                            </div>
+                            <span className="text-[11px] text-white/25 ml-auto">
+                              {new Date(review.createdAt).toLocaleDateString("en-US", { month: "short", year: "numeric" })}
+                            </span>
+                          </div>
+                          {review.reviewText && (
+                            <p className="text-[14px] text-white/55 italic leading-relaxed">&ldquo;{review.reviewText}&rdquo;</p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 {/* Session note */}
                 <div className="flex items-center gap-2 text-[15px] text-teal-400">
                   <Sparkles className="w-4 h-4" />
@@ -1005,9 +1338,10 @@ export default function PersonasDirectory() {
                 {/* CTA */}
                 <Button
                   className="w-full bg-purple-600 hover:bg-purple-500 text-white py-6 text-[15px] font-medium tracking-wide"
-                  onClick={() =>
-                    navigate(`/reading?persona=${selectedPersona.slug}`)
-                  }
+                  onClick={() => {
+                    setSelectedPersona(null);
+                    handleStartChat(selectedPersona.slug, selectedPersona.displayName, selectedPersona.avatarUrl);
+                  }}
                 >
                   <MessageCircle className="w-4 h-4 mr-2" />
                   Start Reading with {selectedPersona.displayName}

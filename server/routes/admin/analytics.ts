@@ -531,4 +531,43 @@ router.get('/buckets', async (req: Request, res: Response) => {
   }
 });
 
+// ============================================
+// GET /api/admin/analytics/alerts - Users with low coin balance
+// ============================================
+
+router.get('/alerts', async (req: Request, res: Response) => {
+  try {
+    const threshold = parseInt(req.query.threshold as string) || 30; // default: 30 coins (~30 sec)
+
+    const lowCreditUsers = await db
+      .select({
+        id: users.id,
+        email: users.email,
+        firstName: users.firstName,
+        coinBalance: users.coinBalance,
+        totalCoinsUsed: users.totalCoinsUsed,
+        lastLoginAt: users.lastLoginAt,
+        accountStatus: users.accountStatus,
+      })
+      .from(users)
+      .where(
+        and(
+          sql`${users.coinBalance} <= ${threshold}`,
+          eq(users.accountStatus, 'active'),
+        ),
+      )
+      .orderBy(users.coinBalance)
+      .limit(50);
+
+    return res.json({
+      alerts: lowCreditUsers,
+      threshold,
+      count: lowCreditUsers.length,
+    });
+  } catch (error: any) {
+    logger.error('Analytics alerts error:', error);
+    return res.status(500).json({ error: 'Failed to get low credit alerts' });
+  }
+});
+
 export default router;

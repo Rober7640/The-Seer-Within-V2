@@ -38,26 +38,52 @@ export interface AvailabilitySchedule {
   windows: AvailabilityWindow[];
 }
 
+export interface CyclicBreakSchedule {
+  enabled: boolean;
+  availableMinutes: number; // e.g. 30 — how long the guide is online each cycle
+  breakMinutes: number;     // e.g. 7  — how long the break lasts each cycle
+}
+
+/**
+ * Check whether the current moment falls inside a cyclic break period.
+ * The cycle is anchored to Unix epoch, so breaks recur at fixed clock intervals.
+ */
+function isInCyclicBreak(cyclicBreakScheduleJson?: string | null): boolean {
+  if (!cyclicBreakScheduleJson) return false;
+  try {
+    const sched = JSON.parse(cyclicBreakScheduleJson) as CyclicBreakSchedule;
+    if (!sched.enabled) return false;
+    const cycleMs = (sched.availableMinutes + sched.breakMinutes) * 60 * 1000;
+    const positionMs = Date.now() % cycleMs;
+    return positionMs >= sched.availableMinutes * 60 * 1000;
+  } catch {
+    return false;
+  }
+}
+
 /**
  * Determine whether a persona is currently available for new sessions.
- * Priority: expired-override → manual override → schedule → default (online)
+ * Priority: expired-override → manual override → schedule → cyclic break → default (online)
  */
 export function isPersonaOnline(persona: {
   onlineOverride?: string | null;
   overrideExpiresAt?: Date | null;
   availabilitySchedule?: string | null;
+  cyclicBreakSchedule?: string | null;
 }): boolean {
   // 1. Expire override if past
   let override = persona.onlineOverride;
   if (override && persona.overrideExpiresAt && new Date() > persona.overrideExpiresAt) {
     override = null;
   }
-  // 2. Manual override wins
+  // 2. Manual override wins (bypasses cyclic breaks too)
   if (override === 'online') return true;
   if (override === 'offline') return false;
-  // 3. No schedule = always online
-  if (!persona.availabilitySchedule) return true;
-  // 4. Evaluate schedule
+  // 3. No schedule — check cyclic break then default to online
+  if (!persona.availabilitySchedule) {
+    return !isInCyclicBreak(persona.cyclicBreakSchedule);
+  }
+  // 4. Evaluate day/time schedule
   try {
     const { timezone, windows } = JSON.parse(persona.availabilitySchedule) as AvailabilitySchedule;
     const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -73,9 +99,12 @@ export function isPersonaOnline(persona: {
     const minutePart = parts.find(p => p.type === 'minute')?.value ?? '00';
     const day = dayNames.indexOf(weekdayPart);
     const time = `${hourPart.padStart(2, '0')}:${minutePart.padStart(2, '0')}`;
-    return windows.some(w => w.days.includes(day) && time >= w.startTime && time < w.endTime);
+    const inSchedule = windows.some(w => w.days.includes(day) && time >= w.startTime && time < w.endTime);
+    if (!inSchedule) return false;
+    // 5. Within schedule — check cyclic break
+    return !isInCyclicBreak(persona.cyclicBreakSchedule);
   } catch {
-    return true;
+    return !isInCyclicBreak(persona.cyclicBreakSchedule);
   }
 }
 
@@ -89,9 +118,12 @@ export interface CreatePersonaInput {
   personality?: PersonalityConfig;
   categories?: string[];
   freeCoins?: number;
+  coinsPerMinute?: number;
   customPricing?: PricingPackage[];
   isDefault?: boolean;
   sortOrder?: number;
+  yearsExperience?: number;
+  readingsCount?: number;
 }
 
 export interface UpdatePersonaInput {
@@ -103,12 +135,20 @@ export interface UpdatePersonaInput {
   personality?: Partial<PersonalityConfig>;
   categories?: string[];
   freeCoins?: number;
-  customPricing?: PricingPackage[];
+  coinsPerMinute?: number;
+  customPricing?: PricingPackage[] | Record<string, unknown> | null;
   isDefault?: boolean;
+  isFeatured?: boolean;
   sortOrder?: number;
+  accuracyRank?: number | null;
+  sessionTimeoutMinutes?: number;
   availabilitySchedule?: AvailabilitySchedule | null;
   onlineOverride?: 'online' | 'offline' | null;
   overrideExpiresAt?: Date | string | null;
+  cyclicBreakSchedule?: CyclicBreakSchedule | null;
+  overallRating?: number | null;
+  yearsExperience?: number | null;
+  readingsCount?: number | null;
 }
 
 export interface PersonaWithStats {
@@ -140,14 +180,22 @@ export interface PersonaDetail {
   baseSystemPrompt: string;
   isActive: boolean;
   isDefault: boolean;
+  isFeatured: boolean;
   sortOrder: number;
+  accuracyRank: number | null;
   freeCoins: number;
+  coinsPerMinute: number;
+  sessionTimeoutMinutes: number;
   personality: PersonalityConfig | null;
   categories: string[];
-  customPricing: PricingPackage[];
+  customPricing: PricingPackage[] | null;
   availabilitySchedule: AvailabilitySchedule | null;
   onlineOverride: string | null;
   overrideExpiresAt: Date | null;
+  cyclicBreakSchedule: CyclicBreakSchedule | null;
+  overallRating: number | null;
+  yearsExperience: number | null;
+  readingsCount: number | null;
   promptCount: number;
   createdAt: Date;
   updatedAt: Date;
@@ -170,10 +218,13 @@ export async function createPersona(input: CreatePersonaInput): Promise<string> 
       personality: input.personality ? JSON.stringify(input.personality) : null,
       categories: input.categories ? JSON.stringify(input.categories) : null,
       freeCoins: input.freeCoins ?? 180,
+      coinsPerMinute: input.coinsPerMinute ?? 60,
       customPricing: input.customPricing ? JSON.stringify(input.customPricing) : null,
       isActive: false,   // Always start inactive
       isDefault: input.isDefault || false,
       sortOrder: input.sortOrder || 0,
+      yearsExperience: input.yearsExperience ?? null,
+      readingsCount: input.readingsCount ?? null,
     })
     .returning({ id: personas.id });
 
@@ -211,8 +262,12 @@ export async function updatePersona(
   if (updates.avatarUrl !== undefined) setValues.avatarUrl = updates.avatarUrl;
   if (updates.baseSystemPrompt !== undefined) setValues.baseSystemPrompt = updates.baseSystemPrompt;
   if (updates.isDefault !== undefined) setValues.isDefault = updates.isDefault;
+  if (updates.isFeatured !== undefined) setValues.isFeatured = updates.isFeatured;
   if (updates.sortOrder !== undefined) setValues.sortOrder = updates.sortOrder;
+  if (updates.accuracyRank !== undefined) setValues.accuracyRank = updates.accuracyRank ?? null;
   if (updates.freeCoins !== undefined) setValues.freeCoins = updates.freeCoins;
+  if (updates.coinsPerMinute !== undefined) setValues.coinsPerMinute = updates.coinsPerMinute;
+  if (updates.sessionTimeoutMinutes !== undefined) setValues.sessionTimeoutMinutes = updates.sessionTimeoutMinutes;
 
   // Merge personality JSON
   if (updates.personality) {
@@ -230,9 +285,14 @@ export async function updatePersona(
     setValues.categories = JSON.stringify(updates.categories);
   }
 
-  // Replace pricing packages array
-  if (updates.customPricing) {
-    setValues.customPricing = JSON.stringify(updates.customPricing);
+  // Replace pricing packages (null / empty array clears to global defaults)
+  if ('customPricing' in updates) {
+    const cp = updates.customPricing;
+    if (cp === null || cp === undefined || (Array.isArray(cp) && cp.length === 0)) {
+      setValues.customPricing = null;
+    } else {
+      setValues.customPricing = JSON.stringify(cp);
+    }
   }
 
   // Availability scheduling fields
@@ -244,11 +304,25 @@ export async function updatePersona(
   if ('onlineOverride' in updates) {
     setValues.onlineOverride = updates.onlineOverride ?? null;
   }
+  if ('cyclicBreakSchedule' in updates) {
+    setValues.cyclicBreakSchedule = updates.cyclicBreakSchedule
+      ? JSON.stringify(updates.cyclicBreakSchedule)
+      : null;
+  }
   if ('overrideExpiresAt' in updates) {
     const exp = updates.overrideExpiresAt;
     setValues.overrideExpiresAt = exp
       ? (exp instanceof Date ? exp : new Date(exp))
       : null;
+  }
+  if ('overallRating' in updates) {
+    setValues.overallRating = updates.overallRating ?? null;
+  }
+  if ('yearsExperience' in updates) {
+    setValues.yearsExperience = updates.yearsExperience ?? null;
+  }
+  if ('readingsCount' in updates) {
+    setValues.readingsCount = updates.readingsCount ?? null;
   }
 
   await db
@@ -504,6 +578,10 @@ export async function clonePersona(
     personality: s.personality ? JSON.parse(s.personality) : undefined,
     categories: parseJsonArray(s.categories),
     customPricing: s.customPricing ? JSON.parse(s.customPricing) : undefined,
+    coinsPerMinute: s.coinsPerMinute,
+    freeCoins: s.freeCoins,
+    yearsExperience: s.yearsExperience ?? undefined,
+    readingsCount: s.readingsCount ?? undefined,
   });
 
   // Clone all prompts from source persona
@@ -636,7 +714,12 @@ async function formatPersonaDetail(
     baseSystemPrompt: persona.baseSystemPrompt,
     isActive: persona.isActive,
     isDefault: persona.isDefault,
+    isFeatured: persona.isFeatured,
     sortOrder: persona.sortOrder,
+    accuracyRank: persona.accuracyRank ?? null,
+    freeCoins: persona.freeCoins,
+    coinsPerMinute: persona.coinsPerMinute,
+    sessionTimeoutMinutes: persona.sessionTimeoutMinutes,
     personality: persona.personality ? JSON.parse(persona.personality) : null,
     categories: parseJsonArray(persona.categories),
     customPricing: persona.customPricing ? JSON.parse(persona.customPricing) : null,
@@ -645,6 +728,12 @@ async function formatPersonaDetail(
       : null,
     onlineOverride: persona.onlineOverride ?? null,
     overrideExpiresAt: persona.overrideExpiresAt ?? null,
+    cyclicBreakSchedule: persona.cyclicBreakSchedule
+      ? JSON.parse(persona.cyclicBreakSchedule) as CyclicBreakSchedule
+      : null,
+    overallRating: persona.overallRating ?? null,
+    yearsExperience: persona.yearsExperience ?? null,
+    readingsCount: persona.readingsCount ?? null,
     promptCount: promptResult[0]?.count || 0,
     createdAt: persona.createdAt,
     updatedAt: persona.updatedAt,

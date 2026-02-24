@@ -5,7 +5,28 @@ import { adminFetch } from "@/hooks/useAdmin";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Save, ArrowLeft, Trash2, Eye, Plus, X, Upload, ImageIcon } from "lucide-react";
+import { Save, ArrowLeft, Trash2, Eye, Plus, X, Upload, ImageIcon, Star } from "lucide-react";
+
+interface Review {
+  id: string;
+  reviewerName: string;
+  reviewText: string | null;
+  starRating: number;
+  createdAt: string;
+}
+
+interface SessionFeedbackItem {
+  id: string;
+  sessionId: string;
+  userId: string;
+  starRating: number;
+  feedbackText: string | null;
+  displayName: string | null;
+  approved: boolean;
+  createdAt: string;
+  userEmail: string | null;
+  userFirstName: string | null;
+}
 
 interface PricingPackage {
   id: string;
@@ -32,6 +53,12 @@ interface AvailabilitySchedule {
   windows: AvailabilityWindow[];
 }
 
+interface CyclicBreakSchedule {
+  enabled: boolean;
+  availableMinutes: number;
+  breakMinutes: number;
+}
+
 const DAY_LABELS = ['Su', 'M', 'T', 'W', 'Th', 'F', 'Sa'];
 
 interface PersonaFormData {
@@ -47,6 +74,9 @@ interface PersonaFormData {
   isDefault: boolean;
   sortOrder: number;
   customPricing: string;
+  coinsPerMinute: number;
+  yearsExperience: number | null;
+  readingsCount: number | null;
 }
 
 const EMPTY_FORM: PersonaFormData = {
@@ -62,6 +92,9 @@ const EMPTY_FORM: PersonaFormData = {
   isDefault: false,
   sortOrder: 0,
   customPricing: "",
+  coinsPerMinute: 60,
+  yearsExperience: null,
+  readingsCount: null,
 };
 
 const CATEGORY_OPTIONS = [
@@ -88,6 +121,7 @@ export default function PersonaEditor() {
   const [uploadError, setUploadError] = useState<string | null>(null);
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [customCategoryInput, setCustomCategoryInput] = useState("");
   const [suggestedQuestions, setSuggestedQuestions] = useState<string[]>([]);
   const [pricing, setPricing] = useState<PricingConfig>({
     freeCoins: 0,
@@ -98,6 +132,18 @@ export default function PersonaEditor() {
     timezone: 'America/New_York',
     windows: [],
   });
+  const [cyclicBreak, setCyclicBreak] = useState<CyclicBreakSchedule>({
+    enabled: false,
+    availableMinutes: 30,
+    breakMinutes: 7,
+  });
+  const [overallRating, setOverallRating] = useState<number | null>(null);
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [newReview, setNewReview] = useState({ reviewerName: '', reviewText: '', starRating: 5 });
+  const [addingReview, setAddingReview] = useState(false);
+  const [reviewError, setReviewError] = useState<string | null>(null);
+  const [sessionFeedbackItems, setSessionFeedbackItems] = useState<SessionFeedbackItem[]>([]);
+  const [feedbackLoading, setFeedbackLoading] = useState(false);
 
   // Extract suggestedQuestions from personality JSON
   const extractSuggestedQuestions = (personalityJson: string): string[] => {
@@ -232,6 +278,9 @@ export default function PersonaEditor() {
             sortOrder: data.sortOrder ?? 0,
             // Always store the normalised object shape so save() sends a valid object
             customPricing: pricingRaw ? JSON.stringify(normalizedPricing) : "",
+            coinsPerMinute: data.coinsPerMinute ?? 60,
+            yearsExperience: data.yearsExperience ?? null,
+            readingsCount: data.readingsCount ?? null,
           });
 
           // Extract suggestedQuestions from personality
@@ -264,6 +313,47 @@ export default function PersonaEditor() {
               // leave default
             }
           }
+
+          // Cyclic break schedule
+          if (data.cyclicBreakSchedule) {
+            try {
+              const cb =
+                typeof data.cyclicBreakSchedule === "object"
+                  ? data.cyclicBreakSchedule
+                  : JSON.parse(data.cyclicBreakSchedule);
+              setCyclicBreak(cb);
+            } catch {
+              // leave default
+            }
+          }
+
+          // Overall rating
+          setOverallRating(data.overallRating ?? null);
+        }
+
+        // Fetch reviews separately
+        try {
+          const reviewsRes = await adminFetch(`/api/admin/personas/${personaId}/reviews`);
+          if (reviewsRes.ok) {
+            const reviewsData = await reviewsRes.json();
+            setReviews(reviewsData.reviews || []);
+          }
+        } catch {
+          // non-fatal — reviews just won't show
+        }
+
+        // Fetch session feedback queue
+        try {
+          setFeedbackLoading(true);
+          const feedbackRes = await adminFetch(`/api/admin/personas/${personaId}/session-feedback`);
+          if (feedbackRes.ok) {
+            const feedbackData = await feedbackRes.json();
+            setSessionFeedbackItems(feedbackData.feedback || []);
+          }
+        } catch {
+          // non-fatal
+        } finally {
+          setFeedbackLoading(false);
         }
       } catch (err) {
         console.error("Failed to fetch persona:", err);
@@ -283,6 +373,28 @@ export default function PersonaEditor() {
       const next = prev.includes(cat)
         ? prev.filter((c) => c !== cat)
         : [...prev, cat];
+      updateField("categories", JSON.stringify(next));
+      return next;
+    });
+  };
+
+  const addCustomCategory = () => {
+    const cat = customCategoryInput.trim().toLowerCase().replace(/\s+/g, "-");
+    if (!cat || selectedCategories.includes(cat)) {
+      setCustomCategoryInput("");
+      return;
+    }
+    setSelectedCategories((prev) => {
+      const next = [...prev, cat];
+      updateField("categories", JSON.stringify(next));
+      return next;
+    });
+    setCustomCategoryInput("");
+  };
+
+  const removeCategory = (cat: string) => {
+    setSelectedCategories((prev) => {
+      const next = prev.filter((c) => c !== cat);
       updateField("categories", JSON.stringify(next));
       return next;
     });
@@ -319,6 +431,11 @@ export default function PersonaEditor() {
         categories: selectedCategories, // array, not JSON string
       };
 
+      // slug is required when creating a new persona
+      if (isNew) {
+        payload.slug = form.slug;
+      }
+
       // avatarUrl must be a valid URL or omitted — never send an empty string
       if (form.avatarUrl.trim()) {
         payload.avatarUrl = form.avatarUrl.trim();
@@ -351,6 +468,17 @@ export default function PersonaEditor() {
       payload.availabilitySchedule = availabilitySchedule.windows.length > 0
         ? availabilitySchedule
         : null;
+      payload.cyclicBreakSchedule = cyclicBreak.enabled ? cyclicBreak : null;
+
+      // Overall rating
+      payload.overallRating = overallRating;
+
+      // Per-minute rate
+      payload.coinsPerMinute = form.coinsPerMinute;
+
+      // Social proof stats
+      payload.yearsExperience = form.yearsExperience;
+      payload.readingsCount = form.readingsCount;
 
       const url = isNew
         ? "/api/admin/personas"
@@ -389,6 +517,80 @@ export default function PersonaEditor() {
       navigate("/admin/personas");
     } catch (err) {
       setError("Failed to deactivate persona");
+    }
+  };
+
+  const handleAddReview = async () => {
+    if (!personaId || !newReview.reviewerName.trim()) return;
+    setAddingReview(true);
+    setReviewError(null);
+    try {
+      const res = await adminFetch(`/api/admin/personas/${personaId}/reviews`, {
+        method: "POST",
+        body: JSON.stringify({
+          reviewerName: newReview.reviewerName.trim(),
+          reviewText: newReview.reviewText.trim() || undefined,
+          starRating: newReview.starRating,
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setReviews((prev) => [...prev, data.review]);
+        setNewReview({ reviewerName: '', reviewText: '', starRating: 5 });
+      } else {
+        const data = await res.json();
+        setReviewError(data.error || "Failed to add review");
+      }
+    } catch {
+      setReviewError("Failed to add review");
+    } finally {
+      setAddingReview(false);
+    }
+  };
+
+  const handleDeleteReview = async (reviewId: string) => {
+    if (!personaId) return;
+    if (!window.confirm("Delete this review?")) return;
+    try {
+      const res = await adminFetch(`/api/admin/personas/${personaId}/reviews/${reviewId}`, {
+        method: "DELETE",
+      });
+      if (res.ok) {
+        setReviews((prev) => prev.filter((r) => r.id !== reviewId));
+      }
+    } catch {
+      // non-fatal
+    }
+  };
+
+  const handleApproveFeedback = async (feedbackId: string) => {
+    if (!personaId) return;
+    try {
+      const res = await adminFetch(`/api/admin/personas/${personaId}/session-feedback/${feedbackId}/approve`, {
+        method: "PATCH",
+      });
+      if (res.ok) {
+        setSessionFeedbackItems((prev) =>
+          prev.map((f) => f.id === feedbackId ? { ...f, approved: true } : f)
+        );
+      }
+    } catch {
+      // non-fatal
+    }
+  };
+
+  const handleDeleteFeedback = async (feedbackId: string) => {
+    if (!personaId) return;
+    if (!window.confirm("Permanently delete this feedback?")) return;
+    try {
+      const res = await adminFetch(`/api/admin/personas/${personaId}/session-feedback/${feedbackId}`, {
+        method: "DELETE",
+      });
+      if (res.ok) {
+        setSessionFeedbackItems((prev) => prev.filter((f) => f.id !== feedbackId));
+      }
+    } catch {
+      // non-fatal
     }
   };
 
@@ -576,10 +778,12 @@ export default function PersonaEditor() {
                   <label className="text-xs text-gray-400 mb-1 block">
                     Categories
                   </label>
-                  <div className="flex flex-wrap gap-2">
+                  {/* Quick-add preset buttons */}
+                  <div className="flex flex-wrap gap-2 mb-2">
                     {CATEGORY_OPTIONS.map((cat) => (
                       <button
                         key={cat}
+                        type="button"
                         onClick={() => toggleCategory(cat)}
                         className={`px-3 py-1 rounded-full text-xs transition-colors ${
                           selectedCategories.includes(cat)
@@ -590,6 +794,50 @@ export default function PersonaEditor() {
                         {cat}
                       </button>
                     ))}
+                  </div>
+                  {/* Custom categories (non-preset) shown as removable chips */}
+                  {selectedCategories.filter((c) => !CATEGORY_OPTIONS.includes(c)).length > 0 && (
+                    <div className="flex flex-wrap gap-2 mb-2">
+                      {selectedCategories
+                        .filter((c) => !CATEGORY_OPTIONS.includes(c))
+                        .map((cat) => (
+                          <span
+                            key={cat}
+                            className="flex items-center gap-1 px-3 py-1 rounded-full text-xs bg-indigo-700 text-white"
+                          >
+                            {cat}
+                            <button
+                              type="button"
+                              onClick={() => removeCategory(cat)}
+                              className="hover:text-red-300 transition-colors ml-0.5"
+                              aria-label={`Remove ${cat}`}
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          </span>
+                        ))}
+                    </div>
+                  )}
+                  {/* Free-text custom category input */}
+                  <div className="flex gap-2 mt-1">
+                    <input
+                      type="text"
+                      value={customCategoryInput}
+                      onChange={(e) => setCustomCategoryInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") { e.preventDefault(); addCustomCategory(); }
+                      }}
+                      className="flex-1 bg-gray-800 text-white rounded-lg px-3 py-1.5 text-xs border border-gray-700 focus:border-purple-500 focus:outline-none"
+                      placeholder="Add custom category (e.g. astrology)"
+                    />
+                    <button
+                      type="button"
+                      onClick={addCustomCategory}
+                      className="px-3 py-1.5 rounded-lg bg-gray-700 hover:bg-gray-600 text-white text-xs transition-colors flex items-center gap-1"
+                    >
+                      <Plus className="w-3 h-3" />
+                      Add
+                    </button>
                   </div>
                 </div>
               </CardContent>
@@ -695,6 +943,226 @@ export default function PersonaEditor() {
                 )}
               </CardContent>
             </Card>
+
+            {/* Feedback Queue — real user feedback pending/approved moderation */}
+          {!isNew && (
+            <Card className="bg-gray-900 border-gray-800">
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-white text-sm flex items-center gap-2">
+                    <Star className="w-4 h-4 text-teal-400" />
+                    Feedback Queue
+                  </CardTitle>
+                  <div className="flex items-center gap-2">
+                    {sessionFeedbackItems.filter((f) => !f.approved).length > 0 && (
+                      <span className="text-xs bg-amber-500/20 text-amber-300 border border-amber-500/20 px-2 py-0.5 rounded-full font-medium">
+                        {sessionFeedbackItems.filter((f) => !f.approved).length} pending
+                      </span>
+                    )}
+                    <span className="text-xs text-gray-500">
+                      {sessionFeedbackItems.filter((f) => f.approved).length} approved
+                    </span>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <p className="text-xs text-gray-500">
+                  Real feedback submitted by users after sessions. Approve to display publicly as "User Reviews".
+                </p>
+                {feedbackLoading ? (
+                  <div className="flex justify-center py-4">
+                    <div className="w-5 h-5 border-2 border-purple-400 border-t-transparent rounded-full animate-spin" />
+                  </div>
+                ) : sessionFeedbackItems.length === 0 ? (
+                  <p className="text-xs text-gray-600 text-center py-4 bg-gray-800/50 rounded-lg">
+                    No user feedback yet.
+                  </p>
+                ) : (
+                  <div className="space-y-2">
+                    {sessionFeedbackItems.map((f) => (
+                      <div
+                        key={f.id}
+                        className={`rounded-lg p-3 border ${f.approved ? 'bg-teal-900/10 border-teal-700/30' : 'bg-gray-800/50 border-gray-700/50'}`}
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-1 flex-wrap">
+                              <div className="flex gap-0.5 shrink-0">
+                                {[1,2,3,4,5].map((s) => (
+                                  <Star
+                                    key={s}
+                                    className={`w-3 h-3 ${s <= f.starRating ? 'text-yellow-400 fill-yellow-400' : 'text-gray-600'}`}
+                                  />
+                                ))}
+                              </div>
+                              <span className="text-xs text-gray-400">
+                                {f.userFirstName || f.userEmail || 'Unknown user'}
+                                {f.displayName && (
+                                  <span className="text-teal-400 ml-1">(shows as: {f.displayName})</span>
+                                )}
+                                {!f.displayName && (
+                                  <span className="text-gray-600 ml-1">(shows as: Verified User)</span>
+                                )}
+                              </span>
+                              <span className="text-[10px] text-gray-600">
+                                {new Date(f.createdAt).toLocaleDateString()}
+                              </span>
+                              {f.approved && (
+                                <span className="text-[10px] bg-teal-500/20 text-teal-400 border border-teal-500/20 px-1.5 py-0.5 rounded-full">
+                                  Live
+                                </span>
+                              )}
+                            </div>
+                            {f.feedbackText && (
+                              <p className="text-xs text-gray-400 leading-relaxed">&ldquo;{f.feedbackText}&rdquo;</p>
+                            )}
+                            {!f.feedbackText && (
+                              <p className="text-xs text-gray-600 italic">No written feedback</p>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-1 shrink-0">
+                            {!f.approved && (
+                              <button
+                                type="button"
+                                onClick={() => handleApproveFeedback(f.id)}
+                                className="text-xs bg-teal-600 hover:bg-teal-500 text-white rounded px-2 py-1 transition-colors"
+                              >
+                                Approve
+                              </button>
+                            )}
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteFeedback(f.id)}
+                              className="text-gray-600 hover:text-red-400 transition-colors mt-0.5"
+                              aria-label="Delete feedback"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Reviews — only shown for existing personas */}
+          {!isNew && (
+            <Card className="bg-gray-900 border-gray-800">
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-white text-sm flex items-center gap-2">
+                    <Star className="w-4 h-4 text-yellow-400" />
+                    Reviews & Testimonials
+                  </CardTitle>
+                  <span className="text-xs text-gray-500">{reviews.length} review{reviews.length !== 1 ? 's' : ''}</span>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {/* Existing reviews */}
+                {reviews.length === 0 ? (
+                  <p className="text-xs text-gray-600 text-center py-4 bg-gray-800/50 rounded-lg">
+                    No reviews yet. Add the first one below.
+                  </p>
+                ) : (
+                  <div className="space-y-3">
+                    {reviews.map((r) => (
+                      <div key={r.id} className="bg-gray-800/50 rounded-lg p-3 border border-gray-700/50">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="text-sm font-medium text-white truncate">{r.reviewerName}</span>
+                              <div className="flex gap-0.5 shrink-0">
+                                {[1,2,3,4,5].map((s) => (
+                                  <Star
+                                    key={s}
+                                    className={`w-3 h-3 ${s <= r.starRating ? 'text-yellow-400 fill-yellow-400' : 'text-gray-600'}`}
+                                  />
+                                ))}
+                              </div>
+                            </div>
+                            {r.reviewText && (
+                              <p className="text-xs text-gray-400 leading-relaxed">{r.reviewText}</p>
+                            )}
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteReview(r.id)}
+                            className="text-gray-600 hover:text-red-400 transition-colors shrink-0 mt-0.5"
+                            aria-label="Delete review"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Add new review form */}
+                <div className="border-t border-gray-800 pt-4 space-y-3">
+                  <p className="text-xs text-gray-500 font-medium">Add Review</p>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-xs text-gray-400 mb-1 block">Reviewer Name *</label>
+                      <input
+                        type="text"
+                        value={newReview.reviewerName}
+                        onChange={(e) => setNewReview((p) => ({ ...p, reviewerName: e.target.value }))}
+                        className="w-full bg-gray-800 text-white rounded-lg px-3 py-2 text-sm border border-gray-700 focus:border-purple-500 focus:outline-none"
+                        placeholder="e.g. Sarah M."
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs text-gray-400 mb-1 block">Star Rating *</label>
+                      <div className="flex gap-1 items-center h-9">
+                        {[1,2,3,4,5].map((s) => (
+                          <button
+                            key={s}
+                            type="button"
+                            onClick={() => setNewReview((p) => ({ ...p, starRating: s }))}
+                            className="transition-colors"
+                          >
+                            <Star
+                              className={`w-5 h-5 ${s <= newReview.starRating ? 'text-yellow-400 fill-yellow-400' : 'text-gray-600 hover:text-yellow-400'}`}
+                            />
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-xs text-gray-400 mb-1 block">Review Text <span className="text-gray-600">(optional)</span></label>
+                    <textarea
+                      value={newReview.reviewText}
+                      onChange={(e) => setNewReview((p) => ({ ...p, reviewText: e.target.value }))}
+                      rows={2}
+                      className="w-full bg-gray-800 text-white rounded-lg px-3 py-2 text-sm border border-gray-700 focus:border-purple-500 focus:outline-none resize-none"
+                      placeholder="She was incredibly accurate and insightful…"
+                    />
+                  </div>
+                  {reviewError && (
+                    <p className="text-red-400 text-xs">{reviewError}</p>
+                  )}
+                  <button
+                    type="button"
+                    onClick={handleAddReview}
+                    disabled={addingReview || !newReview.reviewerName.trim()}
+                    className="flex items-center gap-1.5 text-xs bg-purple-600 hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg px-3 py-2 transition-colors"
+                  >
+                    {addingReview ? (
+                      <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <Plus className="w-3 h-3" />
+                    )}
+                    Add Review
+                  </button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
           </div>
 
           {/* Sidebar */}
@@ -751,6 +1219,79 @@ export default function PersonaEditor() {
                     }
                     className="w-full bg-gray-800 text-white rounded-lg px-3 py-2 text-sm border border-gray-700 focus:border-purple-500 focus:outline-none"
                   />
+                </div>
+                <div>
+                  <label className="text-xs text-gray-400 mb-1 block flex items-center gap-1">
+                    <Star className="w-3 h-3 text-yellow-400" />
+                    Overall Rating (0–5)
+                  </label>
+                  <input
+                    type="number"
+                    min={0}
+                    max={5}
+                    step={0.1}
+                    value={overallRating ?? ''}
+                    onChange={(e) => {
+                      const v = parseFloat(e.target.value);
+                      setOverallRating(isNaN(v) ? null : Math.min(5, Math.max(0, v)));
+                    }}
+                    className="w-full bg-gray-800 text-white rounded-lg px-3 py-2 text-sm border border-gray-700 focus:border-purple-500 focus:outline-none"
+                    placeholder="e.g. 4.8"
+                  />
+                  <p className="text-xs text-gray-600 mt-1">Displayed on the persona browse page.</p>
+                </div>
+                <div>
+                  <label className="text-xs text-gray-400 mb-1 block">
+                    Years Experience
+                  </label>
+                  <input
+                    type="number"
+                    min={0}
+                    max={100}
+                    value={form.yearsExperience ?? ''}
+                    onChange={(e) => {
+                      const v = parseInt(e.target.value);
+                      updateField("yearsExperience", isNaN(v) ? null : Math.max(0, v));
+                    }}
+                    className="w-full bg-gray-800 text-white rounded-lg px-3 py-2 text-sm border border-gray-700 focus:border-purple-500 focus:outline-none"
+                    placeholder="e.g. 12"
+                  />
+                  <p className="text-xs text-gray-600 mt-1">Shown on persona cards.</p>
+                </div>
+                <div>
+                  <label className="text-xs text-gray-400 mb-1 block">
+                    Readings Count
+                  </label>
+                  <input
+                    type="number"
+                    min={0}
+                    value={form.readingsCount ?? ''}
+                    onChange={(e) => {
+                      const v = parseInt(e.target.value);
+                      updateField("readingsCount", isNaN(v) ? null : Math.max(0, v));
+                    }}
+                    className="w-full bg-gray-800 text-white rounded-lg px-3 py-2 text-sm border border-gray-700 focus:border-purple-500 focus:outline-none"
+                    placeholder="e.g. 3200"
+                  />
+                  <p className="text-xs text-gray-600 mt-1">Shown on persona cards.</p>
+                </div>
+                <div>
+                  <label className="text-xs text-gray-400 mb-1 block">
+                    Rate (coins / min)
+                  </label>
+                  <input
+                    type="number"
+                    min={1}
+                    max={1000}
+                    value={form.coinsPerMinute}
+                    onChange={(e) => {
+                      const v = parseInt(e.target.value);
+                      updateField("coinsPerMinute", isNaN(v) ? 60 : Math.max(1, v));
+                    }}
+                    className="w-full bg-gray-800 text-white rounded-lg px-3 py-2 text-sm border border-gray-700 focus:border-purple-500 focus:outline-none"
+                    placeholder="60"
+                  />
+                  <p className="text-xs text-gray-600 mt-1">Coins charged per minute of session. Shown on guide profile. Default: 60.</p>
                 </div>
               </CardContent>
             </Card>
@@ -892,6 +1433,71 @@ export default function PersonaEditor() {
                   <Plus className="w-3 h-3" />
                   Add Window
                 </button>
+
+                {/* Cyclic Breaks */}
+                <div className="pt-3 border-t border-gray-700/50">
+                  <div className="flex items-center justify-between mb-2">
+                    <div>
+                      <label className="text-xs text-gray-400 block">Cyclic Breaks</label>
+                      <p className="text-xs text-gray-600 mt-0.5">Guide goes "Busy" for a short break on a repeating cycle.</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setCyclicBreak((s) => ({ ...s, enabled: !s.enabled }))}
+                      className={`relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors ${
+                        cyclicBreak.enabled ? 'bg-purple-600' : 'bg-gray-700'
+                      }`}
+                    >
+                      <span
+                        className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform ${
+                          cyclicBreak.enabled ? 'translate-x-[18px]' : 'translate-x-[3px]'
+                        }`}
+                      />
+                    </button>
+                  </div>
+                  {cyclicBreak.enabled && (
+                    <div className="space-y-3">
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="text-xs text-gray-500 mb-1 block">Online duration (min)</label>
+                          <input
+                            type="number"
+                            min={1}
+                            max={120}
+                            value={cyclicBreak.availableMinutes}
+                            onChange={(e) =>
+                              setCyclicBreak((s) => ({
+                                ...s,
+                                availableMinutes: Math.max(1, parseInt(e.target.value) || 30),
+                              }))
+                            }
+                            className="w-full bg-gray-800 text-white rounded px-2 py-1.5 text-xs border border-gray-700 focus:border-purple-500 focus:outline-none"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-xs text-gray-500 mb-1 block">Break duration (min)</label>
+                          <input
+                            type="number"
+                            min={1}
+                            max={60}
+                            value={cyclicBreak.breakMinutes}
+                            onChange={(e) =>
+                              setCyclicBreak((s) => ({
+                                ...s,
+                                breakMinutes: Math.max(1, parseInt(e.target.value) || 7),
+                              }))
+                            }
+                            className="w-full bg-gray-800 text-white rounded px-2 py-1.5 text-xs border border-gray-700 focus:border-purple-500 focus:outline-none"
+                          />
+                        </div>
+                      </div>
+                      <p className="text-xs text-gray-500 bg-gray-800/60 rounded-lg px-3 py-2">
+                        Online for <span className="text-purple-400">{cyclicBreak.availableMinutes} min</span>, then busy for <span className="text-rose-400">{cyclicBreak.breakMinutes} min</span> — repeating all day.
+                        {' '}Cycle: every {cyclicBreak.availableMinutes + cyclicBreak.breakMinutes} min.
+                      </p>
+                    </div>
+                  )}
+                </div>
               </CardContent>
             </Card>
 

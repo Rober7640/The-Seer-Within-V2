@@ -15,6 +15,9 @@ import {
   clonePersona,
   getPersonaAnalytics,
 } from '../../lib/personaManager';
+import { db } from '../../lib/db';
+import { personaReviews, sessionFeedback, users } from '@shared/schema';
+import { eq, and, asc, desc } from 'drizzle-orm';
 import logger from '../../lib/logger';
 
 // ── Avatar upload configuration ──────────────────────────────────────────────
@@ -49,6 +52,30 @@ const avatarUpload = multer({
 
 const router = Router();
 
+// ── Persona prompt security validation ────────────────────────────────────────
+// Checks admin-supplied system prompts for patterns that could disable safety
+// guardrails if the admin account is ever compromised.
+const PROMPT_INJECTION_PATTERNS = [
+  /ignore\s+(?:all\s+)?(?:previous\s+)?(?:safety|instructions?|rules?|guidelines?|restrictions?)/i,
+  /override\s+(?:your|the|all)\s+(?:safety|instructions?|rules?|guidelines?)/i,
+  /disable\s+(?:safety|restrictions?|guidelines?|filters?)/i,
+  /bypass\s+(?:safety|restrictions?|guidelines?|filters?)/i,
+  /you\s+(?:have\s+no|are\s+free\s+from)\s+restrictions?/i,
+  /respond\s+to\s+(?:all|any)\s+requests?\s+without\s+restrictions?/i,
+  /do\s+not\s+(?:apply|use|follow)\s+(?:any\s+)?safety/i,
+  /safety\s+(?:checks?|guidelines?|filters?)\s+(?:are\s+)?disabled/i,
+  /act\s+as\s+(?:an?\s+)?(?:unrestricted|unfiltered|uncensored)/i,
+];
+
+function validatePersonaPrompt(prompt: string): string | null {
+  for (const pattern of PROMPT_INJECTION_PATTERNS) {
+    if (pattern.test(prompt)) {
+      return `System prompt contains a restricted phrase that could disable safety guardrails. Remove language matching: ${pattern.source}`;
+    }
+  }
+  return null;
+}
+
 // Zod schemas for request validation
 const createPersonaSchema = z.object({
   slug: z.string().min(1).max(100).regex(/^[a-z0-9-]+$/, 'Slug must be lowercase alphanumeric with hyphens'),
@@ -57,30 +84,14 @@ const createPersonaSchema = z.object({
   description: z.string().max(2000).optional(),
   avatarUrl: z.string().optional(),
   baseSystemPrompt: z.string().min(1),
-  personality: z.object({
-    tone: z.string().min(1),
-    speakingStyle: z.string().min(1),
-    archetype: z.string().min(1),
-    quirks: z.array(z.string()),
-    forbiddenPhrases: z.array(z.string()),
-    specialties: z.array(z.string()),
-    sampleGreeting: z.string().min(1),
-    maxWordsPerMessage: z.number().int().min(10).max(500).default(25),
-    claudeModel: z.string().default('claude-sonnet-4-20250514'),
-  }).optional(),
+  personality: z.record(z.unknown()).optional(),
   categories: z.array(z.string()).optional(),
-  customPricing: z.object({
-    freeCoins: z.number().int().min(0).max(3600),
-    '15min': z.number().int().min(0),
-    '30min': z.number().int().min(0),
-    customPackages: z.array(z.object({
-      minutes: z.number().int().min(1),
-      priceUsd: z.number().int().min(0),
-      label: z.string(),
-    })).optional(),
-  }).optional(),
+  customPricing: z.union([z.array(z.unknown()), z.record(z.unknown())]).nullable().optional(),
+  coinsPerMinute: z.number().int().min(1).max(1000).optional(),
   isDefault: z.boolean().optional(),
   sortOrder: z.number().int().optional(),
+  yearsExperience: z.number().int().min(0).max(100).nullable().optional(),
+  readingsCount: z.number().int().min(0).nullable().optional(),
 });
 
 const updatePersonaSchema = z.object({
@@ -91,9 +102,14 @@ const updatePersonaSchema = z.object({
   baseSystemPrompt: z.string().min(1).optional(),
   personality: z.record(z.unknown()).optional(),
   categories: z.array(z.string()).optional(),
-  customPricing: z.record(z.unknown()).optional(),
+  customPricing: z.union([z.array(z.unknown()), z.record(z.unknown())]).nullable().optional(),
+  coinsPerMinute: z.number().int().min(1).max(1000).optional(),
   isDefault: z.boolean().optional(),
+  isFeatured: z.boolean().optional(),
   sortOrder: z.number().int().optional(),
+  accuracyRank: z.number().int().min(1).nullable().optional(),
+  freeCoins: z.number().int().min(0).optional(),
+  sessionTimeoutMinutes: z.number().int().min(1).max(120).optional(),
   availabilitySchedule: z.object({
     timezone: z.string(),
     windows: z.array(z.object({
@@ -104,6 +120,20 @@ const updatePersonaSchema = z.object({
   }).nullable().optional(),
   onlineOverride: z.enum(['online', 'offline']).nullable().optional(),
   overrideExpiresAt: z.string().datetime().nullable().optional(),
+  cyclicBreakSchedule: z.object({
+    enabled: z.boolean(),
+    availableMinutes: z.number().int().min(1).max(120),
+    breakMinutes: z.number().int().min(1).max(60),
+  }).nullable().optional(),
+  overallRating: z.number().min(0).max(5).nullable().optional(),
+  yearsExperience: z.number().int().min(0).max(100).nullable().optional(),
+  readingsCount: z.number().int().min(0).nullable().optional(),
+});
+
+const createReviewSchema = z.object({
+  reviewerName: z.string().min(1).max(100),
+  reviewText: z.string().max(2000).optional(),
+  starRating: z.number().int().min(1).max(5),
 });
 
 const statusSchema = z.object({
@@ -149,11 +179,20 @@ router.post('/', async (req: Request, res: Response) => {
       });
     }
 
-    const personaId = await createPersona(parseResult.data);
+    const promptError = validatePersonaPrompt(parseResult.data.baseSystemPrompt);
+    if (promptError) {
+      return res.status(400).json({ error: promptError });
+    }
+
+    const personaId = await createPersona(parseResult.data as any);
     const persona = await getPersonaById(personaId);
 
     return res.status(201).json({ persona });
   } catch (error: any) {
+    // PostgreSQL unique constraint violation (slug must be unique)
+    if (error.code === '23505' || error.message?.toLowerCase().includes('unique')) {
+      return res.status(409).json({ error: 'A persona with this slug already exists' });
+    }
     logger.error('Create persona error:', error);
     return res.status(500).json({ error: error.message || 'Failed to create persona' });
   }
@@ -201,6 +240,13 @@ router.patch('/:id/config', async (req: Request, res: Response) => {
           message: e.message,
         })),
       });
+    }
+
+    if (parseResult.data.baseSystemPrompt) {
+      const promptError = validatePersonaPrompt(parseResult.data.baseSystemPrompt);
+      if (promptError) {
+        return res.status(400).json({ error: promptError });
+      }
     }
 
     await updatePersona(personaId, parseResult.data as any);
@@ -300,6 +346,183 @@ router.post('/:id/clone', async (req: Request, res: Response) => {
   } catch (error: any) {
     logger.error('Clone persona error:', error);
     return res.status(500).json({ error: error.message || 'Failed to clone persona' });
+  }
+});
+
+// ============================================
+// GET /api/admin/personas/:id/reviews - List reviews for a persona
+// ============================================
+
+router.get('/:id/reviews', async (req: Request, res: Response) => {
+  try {
+    const personaId = req.params.id as string;
+
+    const existing = await getPersonaById(personaId);
+    if (!existing) {
+      return res.status(404).json({ error: 'Persona not found' });
+    }
+
+    const reviews = await db
+      .select()
+      .from(personaReviews)
+      .where(eq(personaReviews.personaId, personaId))
+      .orderBy(asc(personaReviews.createdAt));
+
+    return res.json({ reviews });
+  } catch (error: any) {
+    logger.error('List persona reviews error:', error);
+    return res.status(500).json({ error: 'Failed to list reviews' });
+  }
+});
+
+// ============================================
+// POST /api/admin/personas/:id/reviews - Add a review
+// ============================================
+
+router.post('/:id/reviews', async (req: Request, res: Response) => {
+  try {
+    const personaId = req.params.id as string;
+
+    const existing = await getPersonaById(personaId);
+    if (!existing) {
+      return res.status(404).json({ error: 'Persona not found' });
+    }
+
+    const parseResult = createReviewSchema.safeParse(req.body);
+    if (!parseResult.success) {
+      return res.status(400).json({
+        error: 'Validation failed',
+        details: parseResult.error.errors.map((e) => ({
+          path: e.path.join('.'),
+          message: e.message,
+        })),
+      });
+    }
+
+    const { reviewerName, reviewText, starRating } = parseResult.data;
+    const inserted = await db
+      .insert(personaReviews)
+      .values({ personaId, reviewerName, reviewText: reviewText ?? null, starRating })
+      .returning();
+
+    return res.status(201).json({ review: inserted[0] });
+  } catch (error: any) {
+    logger.error('Create persona review error:', error);
+    return res.status(500).json({ error: 'Failed to create review' });
+  }
+});
+
+// ============================================
+// DELETE /api/admin/personas/:id/reviews/:reviewId - Delete a review
+// ============================================
+
+router.delete('/:id/reviews/:reviewId', async (req: Request, res: Response) => {
+  try {
+    const personaId = req.params.id as string;
+    const reviewId = req.params.reviewId as string;
+
+    const deleted = await db
+      .delete(personaReviews)
+      .where(and(eq(personaReviews.id, reviewId), eq(personaReviews.personaId, personaId)))
+      .returning();
+
+    if (!deleted.length) {
+      return res.status(404).json({ error: 'Review not found' });
+    }
+
+    return res.json({ success: true });
+  } catch (error: any) {
+    logger.error('Delete persona review error:', error);
+    return res.status(500).json({ error: 'Failed to delete review' });
+  }
+});
+
+// ============================================
+// GET /api/admin/personas/:id/session-feedback - List real user feedback for a persona
+// ============================================
+
+router.get('/:id/session-feedback', async (req: Request, res: Response) => {
+  try {
+    const personaId = req.params.id as string;
+
+    const existing = await getPersonaById(personaId);
+    if (!existing) {
+      return res.status(404).json({ error: 'Persona not found' });
+    }
+
+    const items = await db
+      .select({
+        id: sessionFeedback.id,
+        sessionId: sessionFeedback.sessionId,
+        userId: sessionFeedback.userId,
+        starRating: sessionFeedback.starRating,
+        feedbackText: sessionFeedback.feedbackText,
+        displayName: sessionFeedback.displayName,
+        approved: sessionFeedback.approved,
+        createdAt: sessionFeedback.createdAt,
+        userEmail: users.email,
+        userFirstName: users.firstName,
+      })
+      .from(sessionFeedback)
+      .leftJoin(users, eq(sessionFeedback.userId, users.id))
+      .where(eq(sessionFeedback.personaId, personaId))
+      .orderBy(desc(sessionFeedback.createdAt));
+
+    return res.json({ feedback: items });
+  } catch (error: any) {
+    logger.error('List session feedback error:', error);
+    return res.status(500).json({ error: 'Failed to list session feedback' });
+  }
+});
+
+// ============================================
+// PATCH /api/admin/personas/:id/session-feedback/:feedbackId/approve - Approve a feedback item
+// ============================================
+
+router.patch('/:id/session-feedback/:feedbackId/approve', async (req: Request, res: Response) => {
+  try {
+    const personaId = req.params.id as string;
+    const feedbackId = req.params.feedbackId as string;
+
+    const updated = await db
+      .update(sessionFeedback)
+      .set({ approved: true })
+      .where(and(eq(sessionFeedback.id, feedbackId), eq(sessionFeedback.personaId, personaId)))
+      .returning();
+
+    if (!updated.length) {
+      return res.status(404).json({ error: 'Feedback not found' });
+    }
+
+    return res.json({ success: true, feedback: updated[0] });
+  } catch (error: any) {
+    logger.error('Approve session feedback error:', error);
+    return res.status(500).json({ error: 'Failed to approve feedback' });
+  }
+});
+
+// ============================================
+// DELETE /api/admin/personas/:id/session-feedback/:feedbackId - Permanently delete feedback
+// ============================================
+
+router.delete('/:id/session-feedback/:feedbackId', async (req: Request, res: Response) => {
+  try {
+    const personaId = req.params.id as string;
+    const feedbackId = req.params.feedbackId as string;
+
+    const deleted = await db
+      .delete(sessionFeedback)
+      .where(and(eq(sessionFeedback.id, feedbackId), eq(sessionFeedback.personaId, personaId)))
+      .returning();
+
+    if (!deleted.length) {
+      return res.status(404).json({ error: 'Feedback not found' });
+    }
+
+    return res.json({ success: true });
+  } catch (error: any) {
+    logger.error('Delete session feedback error:', error);
+    return res.status(500).json({ error: 'Failed to delete feedback' });
   }
 });
 

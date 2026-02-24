@@ -95,23 +95,54 @@ export const personas = pgTable("personas", {
   // Status
   isActive: boolean("is_active").default(true).notNull(),
   isDefault: boolean("is_default").default(false).notNull(),
+  isFeatured: boolean("is_featured").default(false).notNull(),
   sortOrder: integer("sort_order").default(0).notNull(),
+  accuracyRank: integer("accuracy_rank"),  // null = unranked; 1 = top of "Voted Most Accurate"
 
   // Per-persona pricing (fully admin-editable)
   freeCoins: integer("free_coins").default(180).notNull(),
+  coinsPerMinute: integer("coins_per_minute").default(60).notNull(),
   customPricing: text("custom_pricing"), // JSON array: PricingTier[]
 
   // Session timeout (configurable per advisor, default 30 minutes)
   sessionTimeoutMinutes: integer("session_timeout_minutes").default(30).notNull(),
 
+  // Per-persona email sender identity (used for follow-up and session timeout emails)
+  fromEmail: text("from_email"),  // e.g. "evelyn@theseerwithin.com" — falls back to FOLLOW_UP_FROM_EMAIL env var
+  fromName: text("from_name"),    // e.g. "Evelyn Cross" — falls back to FOLLOW_UP_FROM_NAME env var
+
   // Availability scheduling
   availabilitySchedule: text("availability_schedule"), // JSON: { timezone, windows: [{days, startTime, endTime}] }
   onlineOverride: text("online_override"),             // null | 'online' | 'offline'
   overrideExpiresAt: timestamp("override_expires_at"), // optional expiry for the override
+  cyclicBreakSchedule: text("cyclic_break_schedule"),  // JSON: { enabled, availableMinutes, breakMinutes } — e.g. 30 min on, 7 min break
+
+  // Social proof stats (admin-editable)
+  yearsExperience: integer("years_experience"),  // e.g. 12 — shown on persona card
+  readingsCount: integer("readings_count"),       // e.g. 3200 — shown on persona card
+
+  // Reviews & ratings (admin-managed)
+  overallRating: real("overall_rating"),  // e.g. 4.8 — admin-set display rating
 
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
+}, (table) => [
+  index("idx_personas_active_sort").on(table.isActive, table.sortOrder),
+]);
+
+// 1b. Persona Reviews - Admin-managed testimonials displayed on persona profiles
+export const personaReviews = pgTable("persona_reviews", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  personaId: varchar("persona_id").notNull().references(() => personas.id, { onDelete: "cascade" }),
+
+  reviewerName: text("reviewer_name").notNull(),
+  reviewText: text("review_text"),          // optional — reviewer may leave no text
+  starRating: integer("star_rating").notNull(), // 1–5
+
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_persona_reviews_persona_created").on(table.personaId, table.createdAt),
+]);
 
 // 2. Persona Prompts - Versioned prompts per persona with A/B testing
 export const personaPrompts = pgTable("persona_prompts", {
@@ -177,7 +208,10 @@ export const users = pgTable("users", {
 
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
+}, (table) => [
+  index("idx_users_last_login").on(table.lastLoginAt),
+  index("idx_users_account_status").on(table.accountStatus),
+]);
 
 // 4. Chat Sessions - Individual conversation sessions
 export const chatSessions = pgTable("chat_sessions", {
@@ -204,7 +238,16 @@ export const chatSessions = pgTable("chat_sessions", {
 
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
+}, (table) => [
+  // Heartbeat and cleanup query: WHERE status = 'active' AND ended_at IS NULL
+  index("idx_chat_sessions_status_ended").on(table.status, table.endedAt),
+  // Session lookup per user: WHERE user_id = ? AND persona_id = ? AND status = 'active'
+  index("idx_chat_sessions_user_persona_status").on(table.userId, table.personaId, table.status),
+  // Session list per user: WHERE user_id = ?
+  index("idx_chat_sessions_user_id").on(table.userId),
+  // Cleanup query on idle sessions
+  index("idx_chat_sessions_last_message").on(table.lastMessageAt),
+]);
 
 // 5. Chat Messages - Individual messages in sessions
 export const chatMessages = pgTable("chat_messages", {
@@ -219,7 +262,23 @@ export const chatMessages = pgTable("chat_messages", {
 
   sentAt: timestamp("sent_at").defaultNow().notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-});
+}, (table) => [
+  // Most critical: fetching all messages for a session (memory manager, chat history)
+  index("idx_chat_messages_session_sent").on(table.sessionId, table.sentAt),
+  index("idx_chat_messages_user").on(table.userId),
+]);
+
+// 5b. Saved Messages - User-bookmarked messages
+export const savedMessages = pgTable("saved_messages", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  messageId: varchar("message_id").notNull().references(() => chatMessages.id, { onDelete: "cascade" }),
+  sessionId: varchar("session_id").notNull().references(() => chatSessions.id, { onDelete: "cascade" }),
+  savedAt: timestamp("saved_at").defaultNow().notNull(),
+}, (table) => [
+  uniqueIndex("idx_saved_messages_user_message").on(table.userId, table.messageId),
+  index("idx_saved_messages_user_session").on(table.userId, table.sessionId),
+]);
 
 // 6. User Memory - Persistent conversation context (per-persona)
 export const userMemory = pgTable("user_memory", {
@@ -240,7 +299,12 @@ export const userMemory = pgTable("user_memory", {
 
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
+}, (table) => [
+  // Primary filter: load memories for a user+persona, ordered by importance
+  index("idx_user_memory_user_persona").on(table.userId, table.personaId),
+  // Cleanup: find all memories for inactive users
+  index("idx_user_memory_user_id").on(table.userId),
+]);
 
 // 7. Credit Purchases - Transaction log
 export const creditPurchases = pgTable("credit_purchases", {
@@ -255,11 +319,17 @@ export const creditPurchases = pgTable("credit_purchases", {
 
   stripeSessionId: text("stripe_session_id"),
   stripePaymentIntentId: text("stripe_payment_intent_id"),
+  paypalOrderId: varchar('paypal_order_id', { length: 64 }),
+  paypalCaptureId: varchar('paypal_capture_id', { length: 64 }),
   status: text("status").default("pending").notNull(),
 
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
+}, (table) => [
+  index("idx_credit_purchases_user_status").on(table.userId, table.status),
+  index("idx_credit_purchases_stripe").on(table.stripeSessionId),
+  index("idx_credit_purchases_paypal").on(table.paypalOrderId),
+]);
 
 // 8. Admin Users - Super admin accounts
 export const adminUsers = pgTable("admin_users", {
@@ -380,6 +450,8 @@ export const followUpEmails = pgTable("follow_up_emails", {
   openedAt: timestamp("opened_at"),
   clickedAt: timestamp("clicked_at"),
 
+  sequenceNumber: integer("sequence_number").default(1).notNull(), // 1=day2, 2=day5, 3=day7
+
   generatedBy: text("generated_by").default("claude-haiku").notNull(),
   generationTokens: integer("generation_tokens"),
   daysSinceLastSession: integer("days_since_last_session"),
@@ -412,6 +484,72 @@ export const userFollowUpPreferences = pgTable("user_follow_up_preferences", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 }, (table) => [
   index("idx_user_follow_up_prefs_enabled").on(table.enableFollowUps, table.lastFollowUpSentAt),
+]);
+
+// 15. Magic Link Tokens - One-click re-engagement login from follow-up emails
+export const magicLinkTokens = pgTable("magic_link_tokens", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  token: text("token").notNull().unique(),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  personaId: varchar("persona_id").notNull().references(() => personas.id, { onDelete: "cascade" }),
+  personaSlug: text("persona_slug").notNull(), // denormalised for fast redirect
+  expiresAt: timestamp("expires_at").notNull(),
+  usedAt: timestamp("used_at"),               // null = not yet used
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_magic_link_tokens_user").on(table.userId, table.expiresAt),
+]);
+
+// 16. Session Feedback - User-submitted ratings after a session
+export const sessionFeedback = pgTable("session_feedback", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  sessionId: varchar("session_id").notNull().references(() => chatSessions.id, { onDelete: "cascade" }),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  personaId: varchar("persona_id").notNull().references(() => personas.id, { onDelete: "cascade" }),
+
+  starRating: integer("star_rating").notNull(), // 1–5
+  feedbackText: text("feedback_text"),           // optional written feedback
+
+  // Moderation
+  approved: boolean("approved").default(false).notNull(),
+  displayName: text("display_name"),             // null = opted out; set = user chose to show their name
+
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_session_feedback_persona").on(table.personaId, table.createdAt),
+  index("idx_session_feedback_user").on(table.userId, table.createdAt),
+]);
+
+// 17. Top-Up Emails - Credit replenishment email tracking
+export const topupEmails = pgTable("topup_emails", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  personaId: varchar("persona_id").references(() => personas.id, { onDelete: "set null" }), // last persona used
+
+  // Segment that triggered this email
+  segment: text("segment").notNull(), // 'empty_tank' | 'free_tier_dropoff' | 'loyal_refill' | 'dormant_low_balance'
+
+  recipientEmail: text("recipient_email").notNull(),
+  subject: text("subject").notNull(),
+  bodyHtml: text("body_html").notNull(),
+  bodyText: text("body_text").notNull(),
+
+  coinBalanceAtSend: integer("coin_balance_at_send").notNull(),
+
+  status: text("status").default("pending").notNull(), // pending, sent, failed
+  sentAt: timestamp("sent_at"),
+  resendEmailId: text("resend_email_id"),
+
+  generatedBy: text("generated_by").default("claude-haiku").notNull(),
+  generationTokens: integer("generation_tokens"),
+
+  unsubscribeToken: text("unsubscribe_token").notNull().unique(),
+
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_topup_emails_user_created").on(table.userId, table.createdAt),
+  index("idx_topup_emails_status").on(table.status, table.sentAt),
 ]);
 
 // ============================================================
@@ -476,6 +614,11 @@ export const insertSafetyViolationSchema = createInsertSchema(safetyViolations).
   createdAt: true,
 });
 
+export const insertPersonaReviewSchema = createInsertSchema(personaReviews).omit({
+  id: true,
+  createdAt: true,
+});
+
 export const insertPersonaIntentConfigSchema = createInsertSchema(personaIntentConfigs).omit({
   id: true,
   createdAt: true,
@@ -495,6 +638,17 @@ export const insertFollowUpEmailSchema = createInsertSchema(followUpEmails).omit
 });
 
 export const insertUserFollowUpPreferenceSchema = createInsertSchema(userFollowUpPreferences).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertSessionFeedbackSchema = createInsertSchema(sessionFeedback).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertTopupEmailSchema = createInsertSchema(topupEmails).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
@@ -545,3 +699,16 @@ export type InsertFollowUpEmail = z.infer<typeof insertFollowUpEmailSchema>;
 
 export type UserFollowUpPreference = typeof userFollowUpPreferences.$inferSelect;
 export type InsertUserFollowUpPreference = z.infer<typeof insertUserFollowUpPreferenceSchema>;
+
+export type SavedMessage = typeof savedMessages.$inferSelect;
+
+export type PersonaReview = typeof personaReviews.$inferSelect;
+export type InsertPersonaReview = z.infer<typeof insertPersonaReviewSchema>;
+
+export type SessionFeedback = typeof sessionFeedback.$inferSelect;
+
+export type TopupEmail = typeof topupEmails.$inferSelect;
+export type InsertTopupEmail = z.infer<typeof insertTopupEmailSchema>;
+export type InsertSessionFeedback = z.infer<typeof insertSessionFeedbackSchema>;
+
+export type MagicLinkToken = typeof magicLinkTokens.$inferSelect;

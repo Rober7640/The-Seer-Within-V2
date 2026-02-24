@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from "react";
-import { authFetch } from "@/hooks/useAuth";
+import { useAuth, authFetch } from "@/hooks/useAuth";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import type { PricingTier } from "@shared/types";
+import PayPalCreditButton from "@/components/PayPalCreditButton";
 
 interface OutOfCreditsModalProps {
   open: boolean;
@@ -11,6 +12,7 @@ interface OutOfCreditsModalProps {
   personaAvatarUrl?: string | null;
   pricingTiers?: PricingTier[];
   countdownSeconds?: number;
+  onSuccess?: (newBalance: number) => void;
 }
 
 const FALLBACK_TIERS: PricingTier[] = [
@@ -82,11 +84,20 @@ export default function OutOfCreditsModal({
   personaAvatarUrl,
   pricingTiers,
   countdownSeconds = 30,
+  onSuccess,
 }: OutOfCreditsModalProps) {
+  const { refreshUser } = useAuth();
   const [tiers, setTiers] = useState<PricingTier[]>(pricingTiers ?? FALLBACK_TIERS);
   const [timeLeft, setTimeLeft] = useState(countdownSeconds);
   const [isCheckingOut, setIsCheckingOut] = useState(false);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const handlePayPalSuccess = (newBalance: number) => {
+    if (intervalRef.current) clearInterval(intervalRef.current);
+    onOpenChange(false);
+    onSuccess?.(newBalance);
+    refreshUser();
+  };
 
   // Pick starter/cheapest tier to highlight
   const featuredTier = tiers.find((t) => t.packageType === "starter") ?? tiers[0];
@@ -155,14 +166,10 @@ export default function OutOfCreditsModal({
 
   const formatPrice = (cents: number) => `$${(cents / 100).toFixed(2)}`;
 
-  // Fake "original" price is 2x the actual for urgency
   const salePrice = featuredTier ? formatPrice(featuredTier.priceUsd) : "$9.99";
-  const originalPrice = featuredTier
-    ? formatPrice(featuredTier.priceUsd * 2)
-    : "$19.99";
   const coinsLabel = featuredTier
-    ? `${featuredTier.totalCoins} credits`
-    : "180 credits";
+    ? `${featuredTier.totalCoins} 🪙`
+    : "180 🪙";
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -183,13 +190,10 @@ export default function OutOfCreditsModal({
             {featuredTier && (
               <div className="inline-flex items-center gap-1.5 mt-2 mb-5 px-4 py-1.5 rounded-full bg-white/[0.06] border border-white/[0.08]">
                 <span className="text-[13px] text-white/55">
-                  Get credits in 1 click
+                  Top up
                 </span>
                 <span className="text-[13px] font-semibold text-white/50 ml-1">
                   {coinsLabel} for{" "}
-                </span>
-                <span className="text-[13px] text-white/40 line-through">
-                  {originalPrice}
                 </span>
                 <span className="text-[13px] font-bold text-teal-300">
                   {salePrice}
@@ -205,7 +209,16 @@ export default function OutOfCreditsModal({
               {personaName ? `${personaName} will wait for you!` : "Your guide will wait for you!"}
             </p>
 
-            {/* CTA Button */}
+            {/* PayPal primary */}
+            <div className="mb-3">
+              <PayPalCreditButton
+                packageType={featuredTier?.packageType ?? "starter"}
+                personaId={personaId}
+                onSuccess={handlePayPalSuccess}
+              />
+            </div>
+
+            {/* Stripe fallback */}
             <button
               onClick={handleGetCredits}
               disabled={isCheckingOut}
@@ -221,7 +234,7 @@ export default function OutOfCreditsModal({
                   Processing...
                 </span>
               ) : (
-                "Get credits"
+                "Pay with card instead"
               )}
             </button>
 

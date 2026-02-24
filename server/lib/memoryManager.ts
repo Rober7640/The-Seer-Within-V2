@@ -1,7 +1,7 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { db } from './db';
 import { chatMessages, chatSessions, userMemory, users } from '@shared/schema';
-import { eq, and, or, isNull, lt, desc } from 'drizzle-orm';
+import { eq, and, or, isNull, lt, desc, ne, inArray } from 'drizzle-orm';
 import { getModelForOperation } from './modelConfig';
 import logger from './logger';
 import { fireWithBreaker, anthropicBreaker } from './circuitBreaker';
@@ -84,12 +84,14 @@ Respond ONLY with valid JSON.
 
     const summary = JSON.parse(jsonMatch[0]);
 
+    const MAX_SUMMARY_LEN = 500;
+    const MAX_CONTEXT_LEN = 2000;
     await db.insert(userMemory).values({
       userId: session[0].userId,
       personaId: session[0].personaId,
       memoryType: 'session_summary',
-      summary: summary.overallSummary || 'Session summary',
-      fullContext: JSON.stringify(summary),
+      summary: (summary.overallSummary || 'Session summary').slice(0, MAX_SUMMARY_LEN),
+      fullContext: JSON.stringify(summary).slice(0, MAX_CONTEXT_LEN),
       sourceSessionId: sessionId,
       importance: 7,
       category: session[0].lastBucket || 'general',
@@ -104,6 +106,9 @@ export async function loadUserContext(userId: string, personaId?: string): Promi
   // Cleanup of inactive user memories is handled by cleanupInactiveUserMemories().
   const conditions = [
     eq(userMemory.userId, userId),
+    // birth_chart and numerology_profile are handled separately and injected directly
+    ne(userMemory.memoryType, 'birth_chart'),
+    ne(userMemory.memoryType, 'numerology_profile'),
   ];
 
   if (personaId) {
@@ -120,15 +125,12 @@ export async function loadUserContext(userId: string, personaId?: string): Promi
     .orderBy(desc(userMemory.importance), desc(userMemory.lastAccessedAt))
     .limit(5);
 
-  // Update access tracking
-  const now = new Date();
-  for (const memory of memories) {
+  // Batch-update access tracking in a single query instead of N separate UPDATEs
+  if (memories.length > 0) {
+    const now = new Date();
     await db.update(userMemory)
-      .set({
-        lastAccessedAt: now,
-        updatedAt: now,
-      })
-      .where(eq(userMemory.id, memory.id));
+      .set({ lastAccessedAt: now, updatedAt: now })
+      .where(inArray(userMemory.id, memories.map(m => m.id)));
   }
 
   if (memories.length === 0) return '';
@@ -170,15 +172,12 @@ export async function cleanupInactiveUserMemories(): Promise<number> {
 
   if (inactiveUsers.length === 0) return 0;
 
-  let deletedCount = 0;
-  for (const user of inactiveUsers) {
-    const result = await db.delete(userMemory)
-      .where(eq(userMemory.userId, user.id))
-      .returning({ id: userMemory.id });
+  // Single batched delete instead of N sequential deletes
+  const result = await db.delete(userMemory)
+    .where(inArray(userMemory.userId, inactiveUsers.map(u => u.id)))
+    .returning({ id: userMemory.id });
 
-    deletedCount += result.length;
-  }
-
+  const deletedCount = result.length;
   if (deletedCount > 0) {
     logger.info('Memory cleanup completed', { deletedCount, inactiveUsers: inactiveUsers.length });
   }

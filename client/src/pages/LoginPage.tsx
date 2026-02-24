@@ -9,6 +9,7 @@ import { Sparkles, LogIn, UserPlus, Mail } from "lucide-react";
 export default function LoginPage() {
   const [, navigate] = useLocation();
   const { login, register } = useAuth();
+  const returnTo = new URLSearchParams(window.location.search).get("returnTo");
 
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState("");
@@ -46,9 +47,13 @@ export default function LoginPage() {
           return;
         }
       } else {
-        await login(email, password);
+        const data = await login(email, password);
+        if (!returnTo && data?.user?.defaultPersonaSlug) {
+          navigate(`/reading?persona=${data.user.defaultPersonaSlug}`);
+          return;
+        }
       }
-      navigate("/reading");
+      navigate(returnTo ?? "/reading");
     } catch (err: any) {
       setError(
         err?.message?.includes("401")
@@ -217,9 +222,9 @@ export default function LoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                minLength={6}
+                minLength={8}
                 className="w-full bg-gray-100 text-gray-900 rounded-lg px-3 py-2 text-sm border border-gray-200 focus:border-purple-500 focus:outline-none focus:bg-white"
-                placeholder={isSignUp ? "Min 6 characters" : "Your password"}
+                placeholder={isSignUp ? "Min 8 characters" : "Your password"}
               />
             </div>
             <Button

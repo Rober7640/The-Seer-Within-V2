@@ -1,6 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { db } from '../lib/db';
-import { users, chatSessions, creditPurchases, chatMessages, personas } from '@shared/schema';
+import { users, chatSessions, creditPurchases, chatMessages, personas, savedMessages } from '@shared/schema';
 import { eq, desc, sql, and } from 'drizzle-orm';
 import { requireAuth } from '../lib/auth';
 import logger from '../lib/logger';
@@ -89,16 +89,18 @@ router.get('/stats', requireAuth, async (req: Request, res: Response) => {
       .groupBy(sql`to_char(${creditPurchases.createdAt}, 'YYYY-MM')`)
       .orderBy(sql`to_char(${creditPurchases.createdAt}, 'YYYY-MM')`);
 
-    // Usage over time: group sessions by month
-    const usageHistory = await db.select({
-      month: sql<string>`to_char(${chatSessions.startedAt}, 'YYYY-MM')`,
-      sessions: sql<number>`count(*)::int`,
-      coinsUsed: sql<number>`coalesce(sum(${chatSessions.coinsCharged}), 0)::int`,
+    // Saved messages (user bookmarks)
+    const userSavedMessages = await db.select({
+      messageId: savedMessages.messageId,
+      sessionId: savedMessages.sessionId,
+      content: chatMessages.content,
+      role: chatMessages.role,
+      savedAt: savedMessages.savedAt,
     })
-      .from(chatSessions)
-      .where(eq(chatSessions.userId, userId))
-      .groupBy(sql`to_char(${chatSessions.startedAt}, 'YYYY-MM')`)
-      .orderBy(sql`to_char(${chatSessions.startedAt}, 'YYYY-MM')`);
+      .from(savedMessages)
+      .innerJoin(chatMessages, eq(savedMessages.messageId, chatMessages.id))
+      .where(eq(savedMessages.userId, userId))
+      .orderBy(desc(savedMessages.savedAt));
 
     res.json({
       user: {
@@ -117,8 +119,7 @@ router.get('/stats', requireAuth, async (req: Request, res: Response) => {
       },
       recentSessions,
       purchaseHistory,
-      creditHistory,
-      usageHistory,
+      savedMessages: userSavedMessages,
     });
   } catch (error) {
     logger.error('Get user stats error:', error);
@@ -194,6 +195,55 @@ router.get('/session/:sessionId/transcript', requireAuth, async (req: Request, r
   } catch (error) {
     logger.error('Get transcript error:', error);
     res.status(500).json({ error: 'Failed to get transcript' });
+  }
+});
+
+// POST /api/user/messages/:messageId/save
+router.post('/messages/:messageId/save', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const userId = req.userId!;
+    const messageId = req.params.messageId as string;
+
+    // Verify the message belongs to this user
+    const message = await db.select({ sessionId: chatMessages.sessionId })
+      .from(chatMessages)
+      .where(and(eq(chatMessages.id, messageId), eq(chatMessages.userId, userId)))
+      .limit(1);
+
+    if (!message[0]) {
+      res.status(404).json({ error: 'Message not found' });
+      return;
+    }
+
+    await db.insert(savedMessages).values({
+      userId,
+      messageId,
+      sessionId: message[0].sessionId,
+    }).onConflictDoNothing();
+
+    res.json({ saved: true });
+  } catch (error) {
+    logger.error('Save message error:', error);
+    res.status(500).json({ error: 'Failed to save message' });
+  }
+});
+
+// DELETE /api/user/messages/:messageId/save
+router.delete('/messages/:messageId/save', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const userId = req.userId!;
+    const messageId = req.params.messageId as string;
+
+    await db.delete(savedMessages)
+      .where(and(
+        eq(savedMessages.userId, userId),
+        eq(savedMessages.messageId, messageId),
+      ));
+
+    res.json({ saved: false });
+  } catch (error) {
+    logger.error('Unsave message error:', error);
+    res.status(500).json({ error: 'Failed to unsave message' });
   }
 });
 

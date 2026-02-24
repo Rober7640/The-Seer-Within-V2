@@ -19,3 +19,120 @@ https://www.notion.so/Advisor-App-Project-Briefing-1d2758407cae8005b149d6a647056
     - Refill button - if the lead clicks the refill button, they will be presented with different prices. Like the photo below: C:\Users\joelc\Downloads\the-seer-within-2\attached\attached4.png 
 
 8. To transform the per minute, per dollar system into a credit/coin system - DONE
+
+9. Update the personas marketplace page to attached5.png . 
+
+10. For each persona/psychic/guide, there should be a more in-depth profile. 
+
+11. Building the Resend follow-up system where the guide sends a personalized follow-up email using Resend. The follow-up email will be based on the memory system. ask clarifying questions
+
+12. After a user has successfully engaged with a guide on chat for at least 5 minutes, ask user to rate and leave        
+  feedback. Ask clarifying questions.
+
+13. Backend admin panel for persona, an easy way to edit stars, add/manage reviews to display on persona profile . ask clarifying questions
+
+14. Backend admin panel for Users tab. New feature needed: delete function . Ask clarifying quetions 
+
+15. Create an Astrology natal chart persona since astrology is such a popular topic. need suggestions: birth chart focused, node astro? Is Claude capable of drawing a natal chart based on birth date and birth time? Ask clarifying quesitons. Part 2 feature : Build the astro chart image creator feature 
+
+16. We have just created Luna Voss persona. Lets Create another unique Astrology natal chart persona since astrology is such a popular topic. need suggestions: Vedic Astro. Her name will be  Nova Sharma. Ask clarifying questions. 
+
+17. Create an audit skills.md under skills folder - DONE 
+
+18. Create a supabase audit skills - this was done in point 17 - DONE
+
+19. The 1 message from another guide feature has a bug. When I switch from existing guide to another guide that supposedly has a message for me, upon clicked, I can't view the hidden message. Bad user experience, feels like a bait and switch. Let's fix this. Ask clarifying questions
+
+20. Claude, please suggest the next guide avatar. Love focused. what would be his/her speciality. Can you dig out reseach what is the most relatable and popular psychic?
+
+21. BUG: whenever I go to the personas tab, as a user with no more free trial, I would always see you have 3 free minutes for a split second then whe page loads, it disappears. This might cause confusion to user. - FIXED
+
+22. Create new avatar based on a real Numerologist Aiden Powers. Aiden was famous for coining the "Pinnacle Period" in Numerology. A lot of his readers are likely to ask about "Pinnacle Period", so we need to answer as much as we can, and lead to new conversations rather than always talking about it. Do research, validate with me, ask clarifying questions.
+
+23. THinking from user pov, there's no clear indicator when billing starts. We can either start the timer or simply have a button that says start reading or start journey. Ask clarifying questions and suggest.
+
+24. Lets start brainstorming test cases to test the first persona Evelyn Cross. Elaborate test cases: New user, returning user within a day, returning user from email, what other scenarios? Ask clarifying questions. Suggest and output a report before passing it to playwright
+
+25. Convert tests/EVELYN_CROSS_TEST_PLAN.md into a skill md to test other personas - completed
+
+26. Invoke persona-test skill for Aiden Powers
+
+27. Invoke persona-test skill for Marcus Stone
+
+28. Invoke persona-test skill for Luna Voss 
+
+29. Invoke persona-test skill for Maren Soleil - completed
+
+30. Maren did not reply error
+
+31. Investigate the best CRO for billing: AskNebula and Astroline
+
+32. Admin backend panel for editing individual persona. Frontend has fields such as years experience, 1061 readings, these fields are not editable at the backend. The categories were pre-defined, no way to edit at the backend. Ask clarifying questions - completed. Running tests next - ongoing 
+
+33. We implemented a feedback form to collect stars and actual reviews for each persona. We dont have a way to display this on the persona profile. Suggest. Ask clarifying questions. 
+
+34. Currently Luna Voss persona has a personal details gate that asks for birth date, birth place , birth time before the session starts. Can we change it to Luna asking for these details in the chat session itself. Ask clarifying questions.
+
+35. Revise Nova flow to be similar to Luna
+
+36 Audit 
+
+37 Ai audit
+
+38 Reword Browse Personas to Browse Guides 
+
+39 The homepage for system 2 should be personas. If user clicks on any profile to start chat, account creation pops out. Whats the current flow? Which is better? Suggest.
+
+40 Setting up avalable timings when each guide is avaliable. The 2 guides that are likely to be most popular are Evelyn Cross and Aiden Powers, so they should be avaliable most of the time. Suggestion is for every 30 minutes, they have a 5-10 minute break. I understand this can be programmed at the backend admin panel, so make sure these changes are reflected at the backend admin panel as well.
+
+41 Legal pages and FAQ
+
+42. New feature: add the rate to each guide proofile: 60 coins = 1min etc. suggest non intimidating format 
+
+43. Project handover doc. What are the core infra dev need to know, what tests are not done, what are remaining to-dos?
+
+44. Multi-language safety patterns. Ask clarifying questions. 
+
+45. Scope out Real-time analytics dashboard. Ask clarifying questions. For low credit users, can we trigger a top up email for different customer behaviors? ask clarifying questions and suggest.
+
+46. User outsourcejoel@gmail.com had a conversation with Marcus. The downloadable text file is 1mb for 6 messages. This might be a problem if conversation is 30mins long? Ask clarifying questions. - solved
+
+47. User flow experience audit
+
+48. personas marketplace. I have input Evenlyn Cross as 1 on sort order, but she doesnt as #1 on voted most accurate. What does sort order do?
+
+49. I've inputted Evelyn Cross rate to be 90 using the admin panel. It now reflects 86. Who is editing it?
+
+50. Backend admin flow audit. Create persona, change years of experience, categories etc etc etc, please suggest and this reflects at the frontend. For example, set the rate at 100 coins = 1 min, and check at different intervals if the rate stays the same. suggest all releavant tests for admin. ask clarifying questions.
+
+51. User experience interacting with the various personas. Do personas always open with the same greeting. Is that going to be a problem? Ask clarifying questions then suggest.
+
+52. What other big pieces of the system need tons of testing before we live it? Ask clarifying questions 
+
+53. we have lots of MD files . lets put into buckets, and decide which to delete
+
+54. Previously all guides charge the same rate, 60 coins = 1 min. Now we have certain guides charging a premium 90 coins = 1 min. As a result we can no longer use time as a metric on the live chat session. Currently, using my profile outsourcejoel@gmail.com, it says 6 min left. Ask clarifying questions.
+
+55. Hand over to junior developers. Need flowchart, database schema, instructions to write skills - audit, ai-audit, remaining to-dos. What else to handhold a junior dev to take over? ask clarifying questions. 
+
+56. Nova Sharma's intro "I am a psychic and spiritual advisor, and I've been picking up on some energy around you. I'd love to give you a reading. What's been on your mind lately?" does not tie back to her title of Vedic Astrologer. We need to make edits. 
+
+57. I'm logged in as a paid user, the sidebar at the chat still shows 3 minutes free. The 3 minutes free is reserved for new users only. 
+
+58. Credits page. We recently added the paypal feature which has that big yellow button with the tagline the safer,easier way to pay. Followed by Pay with card instead. The styling looks broken with the tagline hard to read (black font on our current bg). Pay with card instead has poor styling too. Ask clarify qns 
+
+59. suggest how we should give his guide their respective credentials: years experience, # of readings that would maximize earnings 
+
+60. For each guide, based on their capabilities programmed, suggest the question bubbles. 5 per persona. 
+
+Follow-ups 
+ Resend DNS setup (one-time, required before emails go out)
+
+  Since your domain isn't verified yet, do this in the Resend dashboard:
+
+  1. Go to resend.com → Domains → Add Domain → enter theseerwithin.com
+  2. Resend will give you 3 DNS records (2 DKIM + 1 SPF/Return-Path) to add in your DNS provider (Cloudflare, GoDaddy,     
+  etc.)
+  3. Once DNS propagates (~5–30 min), the domain turns green
+  4. That's it — because all your addresses (hello@, evelyn@, marcus@) share the same domain, one domain verification      
+  covers all of them. No separate sender identities needed per address.

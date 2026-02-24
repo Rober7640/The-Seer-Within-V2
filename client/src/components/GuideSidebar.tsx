@@ -24,6 +24,8 @@ interface GuideSidebarProps {
   onMobileClose: () => void;
   /** Called with the target slug and the guide's full teaser message when user picks a different guide */
   onSwitchGuide: (slug: string, teaserFull: string) => void;
+  /** Whether the user is still on their free trial (has not purchased credits) */
+  isNewUser: boolean;
 }
 
 const DEFAULT_AVATAR = "/evelyn-avatar-new.png";
@@ -42,8 +44,8 @@ function getTeaserMessage(guide: Guide): { preview: string; full: string } {
       full: `I've been sensing some energy around you lately — something is shifting. It could be something you've been carrying for a while. I'd love to talk it through with you. What's going on?`,
     },
     {
-      preview: `Do you want to have a spiritual reading? I am a psychic...`,
-      full: `I am a psychic and spiritual advisor, and I've been picking up on some energy around you. I'd love to give you a reading. What's been on your mind lately?`,
+      preview: `I've been picking up on some energy around you. Come talk.`,
+      full: `I've been picking up on some energy around you, and I'd love to give you a reading. I think there's something meaningful here for you. What's been on your mind lately?`,
     },
     {
       preview: `There are 3 things you can do right now to shift your...`,
@@ -68,10 +70,12 @@ function formatTime(): string {
 function GuideItem({
   guide,
   showBadge,
+  isNewUser,
   onClick,
 }: {
   guide: Guide;
   showBadge: boolean;
+  isNewUser: boolean;
   onClick: () => void;
 }) {
   const teaser = getTeaserMessage(guide);
@@ -124,15 +128,17 @@ function GuideItem({
         </div>
       </div>
 
-      {/* "3 min FREE" badge row */}
-      <div className="px-3 pb-2.5">
-        <div
-          className="w-full text-center py-1 rounded text-[10px] font-bold text-white/90 tracking-wide"
-          style={{ background: "linear-gradient(90deg, #4f46e5 0%, #7c3aed 100%)" }}
-        >
-          3 minutes FREE
+      {/* "3 min FREE" badge row — only shown to new/trial users */}
+      {isNewUser && (
+        <div className="px-3 pb-2.5">
+          <div
+            className="w-full text-center py-1 rounded text-[10px] font-bold text-white/90 tracking-wide"
+            style={{ background: "linear-gradient(90deg, #4f46e5 0%, #7c3aed 100%)" }}
+          >
+            3 minutes FREE
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Separator */}
       <div className="mx-3 border-b border-white/[0.06]" />
@@ -144,11 +150,13 @@ function SidebarContent({
   guides,
   selectedPersonaId,
   chattedGuideIds,
+  isNewUser,
   onSelect,
 }: {
   guides: Guide[];
   selectedPersonaId: string | null;
   chattedGuideIds: Set<string>;
+  isNewUser: boolean;
   onSelect: (slug: string, teaserFull: string) => void;
 }) {
   const otherGuides = guides.filter(
@@ -209,6 +217,7 @@ function SidebarContent({
               key={guide.id}
               guide={guide}
               showBadge={guide.slug === activeBadgeSlug}
+              isNewUser={isNewUser}
               onClick={() => onSelect(guide.slug, getTeaserMessage(guide).full)}
             />
           ))
@@ -225,6 +234,7 @@ export function GuideSidebar({
   mobileOpen,
   onMobileClose,
   onSwitchGuide,
+  isNewUser,
 }: GuideSidebarProps) {
   const handleSelect = (slug: string, teaserFull: string) => {
     onMobileClose();
@@ -239,6 +249,7 @@ export function GuideSidebar({
           guides={guides}
           selectedPersonaId={selectedPersonaId}
           chattedGuideIds={chattedGuideIds}
+          isNewUser={isNewUser}
           onSelect={handleSelect}
         />
       </aside>
@@ -256,6 +267,7 @@ export function GuideSidebar({
             guides={guides}
             selectedPersonaId={selectedPersonaId}
             chattedGuideIds={chattedGuideIds}
+            isNewUser={isNewUser}
             onSelect={handleSelect}
           />
         </SheetContent>

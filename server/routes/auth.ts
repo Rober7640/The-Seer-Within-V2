@@ -2,9 +2,10 @@ import { Router, Request, Response } from 'express';
 import { z } from 'zod';
 import { randomUUID } from 'crypto';
 import { db } from '../lib/db';
-import { users } from '@shared/schema';
+import { users, personas } from '@shared/schema';
 import { eq } from 'drizzle-orm';
 import { hashPassword, verifyPassword, generateToken, requireAuth } from '../lib/auth';
+import { verifyMagicLinkToken } from '../lib/magicLink';
 import { authLimiter, passwordResetLimiter } from '../lib/rateLimiter';
 import { sendVerificationEmail } from '../lib/verificationEmail';
 import { sendPasswordResetEmail } from '../lib/passwordResetEmail';
@@ -82,6 +83,9 @@ router.post('/register', authLimiter, async (req: Request, res: Response) => {
     // Check for fraud patterns before creating account
     const fraudCheck = await checkRegistrationFraud(clientIp, fingerprint);
 
+    // In test environments, auto-verify email and grant coins immediately
+    const isTestEnv = process.env.NODE_ENV === 'test' || process.env.DISABLE_RATE_LIMIT === 'true';
+
     // Generate email verification token
     const verificationToken = randomUUID();
     const verificationTokenExpiry = createVerificationExpiry();
@@ -90,10 +94,10 @@ router.post('/register', authLimiter, async (req: Request, res: Response) => {
       email: email.toLowerCase(),
       passwordHash,
       firstName,
-      coinBalance: 0, // No credits until email verified
-      emailVerified: false,
-      verificationToken,
-      verificationTokenExpiry,
+      coinBalance: isTestEnv ? FREE_COINS_ON_VERIFY : 0,
+      emailVerified: isTestEnv,
+      verificationToken: isTestEnv ? null : verificationToken,
+      verificationTokenExpiry: isTestEnv ? null : verificationTokenExpiry,
       registrationIp: clientIp,
       registrationUserAgent: userAgent,
       deviceFingerprint: fingerprint,
@@ -103,10 +107,12 @@ router.post('/register', authLimiter, async (req: Request, res: Response) => {
     const user = newUser[0];
     const token = generateToken(user.id, user.email);
 
-    // Send verification email (non-blocking - don't fail registration if email fails)
-    sendVerificationEmail(user.email, user.firstName, verificationToken).catch((err) => {
-      logger.error('Failed to send verification email:', err);
-    });
+    // Send verification email only in non-test environments
+    if (!isTestEnv) {
+      sendVerificationEmail(user.email, user.firstName, verificationToken).catch((err) => {
+        logger.error('Failed to send verification email:', err);
+      });
+    }
 
     res.status(201).json({
       token,
@@ -117,7 +123,7 @@ router.post('/register', authLimiter, async (req: Request, res: Response) => {
         coinBalance: user.coinBalance,
         emailVerified: user.emailVerified,
       },
-      requiresVerification: true,
+      requiresVerification: !isTestEnv,
     });
   } catch (error) {
     logger.error('Register error:', error);
@@ -283,6 +289,16 @@ router.post('/login', authLimiter, async (req: Request, res: Response) => {
 
     const token = generateToken(user.id, user.email);
 
+    // Resolve default persona slug so the client can redirect without a second request
+    let defaultPersonaSlug: string | null = null;
+    if (user.defaultPersonaId) {
+      const personaRow = await db.select({ slug: personas.slug })
+        .from(personas)
+        .where(eq(personas.id, user.defaultPersonaId))
+        .limit(1);
+      defaultPersonaSlug = personaRow[0]?.slug ?? null;
+    }
+
     res.json({
       token,
       user: {
@@ -291,6 +307,7 @@ router.post('/login', authLimiter, async (req: Request, res: Response) => {
         firstName: user.firstName,
         coinBalance: user.coinBalance,
         defaultPersonaId: user.defaultPersonaId,
+        defaultPersonaSlug,
         emailVerified: user.emailVerified,
       },
     });
@@ -551,6 +568,64 @@ router.get('/reset-password/:token/validate', async (req: Request, res: Response
   } catch (error) {
     logger.error('Validate reset token error:', error);
     res.json({ valid: false });
+  }
+});
+
+// POST /api/auth/magic-verify
+// Exchange a magic link token for a full session JWT.
+// Called by MagicAuthPage.tsx immediately on load.
+router.post('/magic-verify', authLimiter, async (req: Request, res: Response) => {
+  try {
+    const { token } = req.body;
+    if (!token || typeof token !== 'string') {
+      return res.status(400).json({ error: 'Token required' });
+    }
+
+    const result = await verifyMagicLinkToken(token);
+    if (!result) {
+      return res.status(401).json({ error: 'Invalid or expired magic link' });
+    }
+
+    // Load the user to build the session JWT
+    const userRows = await db
+      .select({
+        id: users.id,
+        email: users.email,
+        firstName: users.firstName,
+        coinBalance: users.coinBalance,
+        totalCoinsUsed: users.totalCoinsUsed,
+        defaultPersonaId: users.defaultPersonaId,
+        accountStatus: users.accountStatus,
+        emailVerified: users.emailVerified,
+      })
+      .from(users)
+      .where(eq(users.id, result.userId))
+      .limit(1);
+
+    const user = userRows[0];
+    if (!user) {
+      return res.status(401).json({ error: 'User not found' });
+    }
+
+    const jwtToken = generateToken(user.id, user.email);
+
+    return res.json({
+      token: jwtToken,
+      personaSlug: result.personaSlug,
+      user: {
+        id: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        coinBalance: user.coinBalance,
+        totalCoinsUsed: user.totalCoinsUsed,
+        defaultPersonaId: user.defaultPersonaId,
+        accountStatus: user.accountStatus,
+        emailVerified: user.emailVerified,
+      },
+    });
+  } catch (error: any) {
+    logger.error('Magic verify error:', error);
+    return res.status(500).json({ error: 'Verification failed' });
   }
 });
 

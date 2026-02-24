@@ -2,10 +2,11 @@ import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useAuth, authFetch } from "@/hooks/useAuth";
 import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Coins, Check, Sparkles } from "lucide-react";
+import { Coins, Check, Sparkles, Info } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { useToast } from "@/hooks/use-toast";
+import PaymentModal from "@/components/PaymentModal";
 import type { PricingTier, PersonaPricing } from "../../../shared/types";
 import { COINS_PER_MINUTE } from "../../../shared/types";
 
@@ -31,13 +32,14 @@ export default function CreditsPage() {
   const { user, isLoading: authLoading, isAuthenticated, refreshUser } =
     useAuth();
   const [, navigate] = useLocation();
+  const { toast } = useToast();
 
   const [tiers, setTiers] = useState<PricingTier[]>([]);
-  const [selectedTier, setSelectedTier] = useState<string | null>(null);
   const [purchases, setPurchases] = useState<PurchaseHistory[]>([]);
   const [isCheckingOut, setIsCheckingOut] = useState(false);
   const [purchasesLoading, setPurchasesLoading] = useState(true);
   const [personaInfo, setPersonaInfo] = useState<PersonaInfo | null>(null);
+  const [selectedTier, setSelectedTier] = useState<PricingTier | null>(null);
 
   const urlParams = new URLSearchParams(window.location.search);
   const personaId = urlParams.get("personaId");
@@ -62,12 +64,6 @@ export default function CreditsPage() {
             await pricingRes.json();
           if (data.tiers && data.tiers.length > 0) {
             setTiers(data.tiers);
-            const bestValue = data.tiers.find(
-              (t) => t.badge === "BEST VALUE",
-            );
-            setSelectedTier(
-              bestValue?.packageType || data.tiers[1]?.packageType || data.tiers[0]?.packageType,
-            );
           }
           if (data.persona) {
             setPersonaInfo(data.persona);
@@ -107,30 +103,32 @@ export default function CreditsPage() {
     }
   }, [refreshUser]);
 
-  const handlePurchase = async () => {
-    if (!selectedTier) return;
+  const handlePurchase = async (packageType: string) => {
     setIsCheckingOut(true);
     try {
       const res = await authFetch("/api/credits/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          packageType: selectedTier,
+          packageType,
           ...(personaId ? { personaId } : {}),
         }),
       });
 
       if (res.ok) {
         const data = await res.json();
-        if (data.url) {
-          window.location.href = data.url;
-        }
+        if (data.url) window.location.href = data.url;
       }
     } catch (err) {
       console.error("Checkout error:", err);
     } finally {
       setIsCheckingOut(false);
     }
+  };
+
+  const handleSuccess = (newBalance: number) => {
+    toast({ title: "Payment successful!", description: `Your balance has been updated.` });
+    refreshUser();
   };
 
   const formatPrice = (cents: number) => `$${(cents / 100).toFixed(2)}`;
@@ -197,6 +195,12 @@ export default function CreditsPage() {
         </CardContent>
       </Card>
 
+      {/* Rate definition */}
+      <div className="flex items-center justify-center gap-1.5 text-slate-500 text-xs -mt-6 mb-6">
+        <Info className="w-3 h-3 shrink-0" />
+        <span>60 coins = 1 minute &middot; same rate for all guides</span>
+      </div>
+
       {/* Promo banner */}
       <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-indigo-900 via-purple-900 to-indigo-900 p-6 text-center border border-purple-600/30">
         <Sparkles className="absolute top-3 left-3 w-5 h-5 text-purple-400/40" />
@@ -219,75 +223,55 @@ export default function CreditsPage() {
           : "Choose Your Package"}
       </h2>
       <div className="grid gap-3 mb-6">
-        {tiers.map((tier) => {
-          const isSelected = selectedTier === tier.packageType;
+        {tiers.map((tier) => (
+          <div
+            key={tier.packageType}
+            className="relative rounded-xl p-4 transition-all border-2 border-slate-600/50 bg-slate-800/60"
+          >
+            {/* Badge */}
+            {tier.badge && (
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                <Badge className="bg-emerald-500 text-white border-0 text-[10px] px-3 py-0.5 uppercase tracking-wider font-bold shadow-lg">
+                  {tier.badge}
+                </Badge>
+              </div>
+            )}
 
-          return (
-            <div
-              key={tier.packageType}
-              onClick={() => setSelectedTier(tier.packageType)}
-              className={`relative rounded-xl p-4 cursor-pointer transition-all border-2 ${
-                isSelected
-                  ? "border-teal-400 bg-slate-800/90 shadow-lg shadow-teal-500/10"
-                  : "border-slate-600/50 bg-slate-800/60 hover:border-slate-500"
-              }`}
-            >
-              {/* Badge */}
-              {tier.badge && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                  <Badge className="bg-emerald-500 text-white border-0 text-[10px] px-3 py-0.5 uppercase tracking-wider font-bold shadow-lg">
-                    {tier.badge}
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-2xl font-bold text-white">
+                    {tier.coins}
+                  </span>
+                  <span className="text-lg text-white">coins</span>
+                </div>
+                {tier.bonusCoins > 0 && (
+                  <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-xs font-medium">
+                    +{tier.bonusCoins} extra coins
                   </Badge>
-                </div>
-              )}
-
-              {/* Selection indicator */}
-              {isSelected && (
-                <div className="absolute top-3 right-3 w-5 h-5 bg-teal-400 rounded-full flex items-center justify-center">
-                  <Check className="w-3 h-3 text-slate-900" />
-                </div>
-              )}
-
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="text-2xl font-bold text-white">
-                      {tier.coins}
-                    </span>
-                    <span className="text-lg text-white">coins</span>
-                  </div>
-                  {tier.bonusCoins > 0 && (
-                    <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-xs font-medium">
-                      +{tier.bonusCoins} extra coins
-                    </Badge>
-                  )}
-                </div>
-                <div className="text-right">
-                  <p className="text-2xl font-bold text-white">
-                    {formatPrice(tier.priceUsd)}
-                  </p>
-                  <p className="text-[10px] text-slate-400">
-                    ~{Math.floor(tier.totalCoins / COINS_PER_MINUTE)} min
-                  </p>
-                </div>
+                )}
+              </div>
+              <div className="text-right">
+                <p className="text-2xl font-bold text-white">
+                  {formatPrice(tier.priceUsd)}
+                </p>
+                <p className="text-[10px] text-slate-400">
+                  ~{Math.floor(tier.totalCoins / COINS_PER_MINUTE)} min
+                </p>
               </div>
             </div>
-          );
-        })}
-      </div>
 
-      {/* Continue button */}
-      <Button
-        onClick={handlePurchase}
-        disabled={!selectedTier || isCheckingOut}
-        className="w-full h-14 text-lg font-semibold rounded-full bg-gradient-to-r from-purple-600 via-purple-500 to-orange-400 hover:from-purple-700 hover:via-purple-600 hover:to-orange-500 shadow-lg shadow-purple-500/30 transition-all"
-      >
-        {isCheckingOut ? (
-          <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-        ) : (
-          "Continue"
-        )}
-      </Button>
+            <div className="mt-4">
+              <button
+                onClick={() => setSelectedTier(tier)}
+                className="w-full py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-semibold text-sm transition-all shadow-lg shadow-purple-900/30"
+              >
+                Buy Coins
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
 
       {/* Purchase History */}
       <h2 className="font-serif text-xl text-white mb-4 mt-8">
@@ -352,9 +336,19 @@ export default function CreditsPage() {
 
       {/* Footer */}
       <div className="text-center mt-8 text-white/40 text-xs space-y-1">
-        <p>Secure payments powered by Stripe</p>
-        <p>60-day money-back guarantee on all purchases</p>
+        <p>Secure payments powered by PayPal & Stripe</p>
+        <p>30-day goodwill refund on unused credits</p>
       </div>
+
+      <PaymentModal
+        tier={selectedTier}
+        personaId={personaId}
+        isOpen={!!selectedTier}
+        onClose={() => setSelectedTier(null)}
+        onSuccess={handleSuccess}
+        onCardPay={handlePurchase}
+        isCardLoading={isCheckingOut}
+      />
     </div>
   );
 }

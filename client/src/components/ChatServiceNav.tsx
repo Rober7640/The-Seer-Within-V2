@@ -23,13 +23,14 @@ import {
   LogOut,
   Menu,
   User,
+  LogIn,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 
 const NAV_ITEMS = [
-  { path: "/reading", label: "Start Reading", shortLabel: "Reading", icon: Sparkles },
-  { path: "/personas", label: "Browse Personas", shortLabel: "Personas", icon: Users },
+  { path: "/personas", label: "Browse Guides", shortLabel: "Guides", icon: Users },
+  { path: "/reading", label: "My Reading", shortLabel: "Reading", icon: Sparkles },
   { path: "/credits", label: "Credits", shortLabel: "Credits", icon: Coins },
   { path: "/dashboard", label: "Dashboard", shortLabel: "Dashboard", icon: LayoutDashboard },
 ];
@@ -49,14 +50,42 @@ export function ChatServiceNav() {
     navigate(path);
   };
 
-  if (!user) return null;
+  // Guest nav — shown on public pages (e.g. /personas) when not logged in
+  if (!user) {
+    return (
+      <nav className="sticky top-0 z-50 w-full border-b border-white/10 bg-bg-mid/80 backdrop-blur-md">
+        <div className="container mx-auto px-4">
+          <div className="flex h-16 items-center justify-between">
+            <Link href="/personas">
+              <button className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+                <Sparkles className="w-5 h-5 text-purple-400" />
+                <span className="font-serif text-lg text-white hidden sm:inline">
+                  The Seer Within
+                </span>
+              </button>
+            </Link>
+            <Link href="/login">
+              <Button
+                size="sm"
+                variant="outline"
+                className="border-white/20 text-white/80 bg-transparent hover:bg-white/5 text-sm gap-1.5"
+              >
+                <LogIn className="w-4 h-4" />
+                Sign In
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </nav>
+    );
+  }
 
   return (
     <nav className="sticky top-0 z-50 w-full border-b border-white/10 bg-bg-mid/80 backdrop-blur-md">
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
-          <Link href="/reading">
+          <Link href="/personas">
             <button className="flex items-center gap-2 hover:opacity-80 transition-opacity">
               <Sparkles className="w-5 h-5 text-purple-400" />
               <span className="font-serif text-lg text-white hidden sm:inline">

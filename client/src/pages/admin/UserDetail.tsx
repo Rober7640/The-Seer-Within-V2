@@ -15,6 +15,7 @@ import {
   Brain,
   Ban,
   Gift,
+  Trash2,
 } from "lucide-react";
 
 interface UserProfile {
@@ -195,6 +196,42 @@ export default function UserDetail() {
     }
   };
 
+  const handleDeleteUser = async () => {
+    if (!user) return;
+    if (
+      !window.confirm(
+        `Permanently delete ${user.firstName} (${user.email})?\n\nThis will delete all their sessions, messages, memories, and purchase history. This cannot be undone.`,
+      )
+    )
+      return;
+
+    try {
+      const res = await adminFetch(`/api/admin/users/${userId}`, {
+        method: "DELETE",
+      });
+      if (res.ok) {
+        toast({
+          title: "User Deleted",
+          description: `${user.email} and all their data have been permanently deleted.`,
+        });
+        navigate("/admin/users");
+      } else {
+        const err = await res.json();
+        toast({
+          title: "Delete Failed",
+          description: err.error || "Failed to delete user.",
+          variant: "destructive",
+        });
+      }
+    } catch {
+      toast({
+        title: "Network Error",
+        description: "Unable to connect to server. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const formatDuration = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     if (mins < 60) return `${mins}m`;
@@ -295,7 +332,7 @@ export default function UserDetail() {
           </div>
 
           {/* Admin actions */}
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
             <Button
               size="sm"
               variant="outline"
@@ -317,6 +354,15 @@ export default function UserDetail() {
             >
               <Ban className="w-4 h-4 mr-1" />
               {user.accountStatus === "active" ? "Suspend" : "Reactivate"}
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              className="text-red-500 border-red-900 hover:bg-red-950 ml-auto"
+              onClick={handleDeleteUser}
+            >
+              <Trash2 className="w-4 h-4 mr-1" />
+              Delete User
             </Button>
           </div>
 

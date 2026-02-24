@@ -13,8 +13,8 @@ const resend = process.env.RESEND_API_KEY
   ? new Resend(process.env.RESEND_API_KEY)
   : null;
 
-const FROM_EMAIL = process.env.FOLLOW_UP_FROM_EMAIL || 'noreply@theseerwithin.com';
-const FROM_NAME = process.env.FOLLOW_UP_FROM_NAME || 'Spiritual Guidance';
+const GLOBAL_FROM_EMAIL = process.env.FOLLOW_UP_FROM_EMAIL || 'hello@theseerwithin.com';
+const GLOBAL_FROM_NAME = process.env.FOLLOW_UP_FROM_NAME || 'The Seer Within';
 const BASE_URL = process.env.BASE_URL || 'http://localhost:5000';
 
 /**
@@ -43,12 +43,16 @@ export async function sendSessionTimeoutEmail(sessionId: string): Promise<void> 
     const persona = await db.select({
       displayName: personas.displayName,
       avatarUrl: personas.avatarUrl,
+      fromEmail: personas.fromEmail,
+      fromName: personas.fromName,
     })
       .from(personas)
       .where(eq(personas.id, session[0].personaId))
       .limit(1);
 
     const personaName = persona[0]?.displayName || 'Your Advisor';
+    const fromEmail = persona[0]?.fromEmail || GLOBAL_FROM_EMAIL;
+    const fromName = persona[0]?.fromName || personaName;
 
     // Load recent messages for summary
     const messages = await db.select({
@@ -88,8 +92,9 @@ export async function sendSessionTimeoutEmail(sessionId: string): Promise<void> 
 
     await fireWithBreaker(resendBreaker, () =>
       resend!.emails.send({
-        from: `${FROM_NAME} <${FROM_EMAIL}>`,
+        from: `${fromName} <${fromEmail}>`,
         to: user[0].email,
+        replyTo: GLOBAL_FROM_EMAIL,
         subject: `Your session with ${personaName} has ended`,
         html: htmlContent,
         text: textContent,

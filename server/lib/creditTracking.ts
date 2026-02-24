@@ -47,14 +47,17 @@ export async function startChatSession(userId: string, personaId: string): Promi
     return existing[0].id;
   }
 
-  const pricing = await getPersonaPricing(personaId);
+  const [pricing, personaRow] = await Promise.all([
+    getPersonaPricing(personaId),
+    db.select({ coinsPerMinute: personas.coinsPerMinute }).from(personas).where(eq(personas.id, personaId)).limit(1),
+  ]);
 
   const now = new Date();
   const session = await db.insert(chatSessions).values({
     userId,
     personaId,
     status: 'active',
-    pricingApplied: JSON.stringify(pricing),
+    pricingApplied: JSON.stringify({ ...pricing, coinsPerMinute: personaRow[0]?.coinsPerMinute ?? 60 }),
     lastHeartbeatAt: now,
     durationSeconds: 0,
     coinsCharged: 0,
@@ -64,64 +67,102 @@ export async function startChatSession(userId: string, personaId: string): Promi
 }
 
 export async function checkpointSession(sessionId: string): Promise<void> {
-  const session = await db.select()
+  // Fetch persona config before entering the transaction to minimise lock hold time
+  const precheck = await db.select({ personaId: chatSessions.personaId })
     .from(chatSessions)
-    .where(and(
-      eq(chatSessions.id, sessionId),
-      eq(chatSessions.status, 'active'),
-    ))
+    .where(and(eq(chatSessions.id, sessionId), eq(chatSessions.status, 'active')))
     .limit(1);
 
-  if (!session[0]) return;
+  if (!precheck[0]) return;
 
-  const now = new Date();
-  const accumulatedSeconds = Math.floor(
-    (now.getTime() - session[0].startedAt.getTime()) / 1000
-  );
-  const totalCoins = Math.floor(accumulatedSeconds / 60) * COINS_PER_MINUTE;
+  const { coinsPerMinute } = await getPersonaConfig(precheck[0].personaId);
 
-  await db.update(chatSessions)
-    .set({
-      durationSeconds: accumulatedSeconds,
-      coinsCharged: totalCoins,
-      lastHeartbeatAt: now,
-      updatedAt: now,
-    })
-    .where(eq(chatSessions.id, sessionId));
+  await db.transaction(async (tx) => {
+    // Lock the session row — prevents concurrent checkpoints from double-billing
+    const locked = await tx.execute(
+      sql`SELECT id, user_id, started_at, coins_charged FROM chat_sessions WHERE id = ${sessionId} AND status = 'active' FOR UPDATE`
+    );
+    if (locked.rows.length === 0) return;
+    const row = locked.rows[0] as { id: string; user_id: string; started_at: Date; coins_charged: number };
+
+    const now = new Date();
+    const accumulatedSeconds = Math.floor((now.getTime() - new Date(row.started_at).getTime()) / 1000);
+
+    // Deduct only completed full minutes (Math.floor avoids billing partial minutes early)
+    const completedMinutes = Math.floor(accumulatedSeconds / 60);
+    const newTotalCharged = completedMinutes * coinsPerMinute;
+    const coinsToDeductNow = Math.max(0, newTotalCharged - Number(row.coins_charged));
+
+    if (coinsToDeductNow > 0) {
+      await tx.update(users)
+        .set({
+          coinBalance: sql`GREATEST(0, coin_balance - ${coinsToDeductNow})`,
+          totalCoinsUsed: sql`total_coins_used + ${coinsToDeductNow}`,
+          updatedAt: now,
+        })
+        .where(eq(users.id, row.user_id));
+    }
+
+    await tx.update(chatSessions)
+      .set({
+        durationSeconds: accumulatedSeconds,
+        coinsCharged: newTotalCharged,
+        lastHeartbeatAt: now,
+        updatedAt: now,
+      })
+      .where(eq(chatSessions.id, sessionId));
+  });
 }
 
 export async function endChatSession(sessionId: string): Promise<void> {
-  const session = await db.select()
+  // Fetch persona config before entering the transaction
+  const precheck = await db.select({ personaId: chatSessions.personaId })
     .from(chatSessions)
-    .where(eq(chatSessions.id, sessionId))
+    .where(and(eq(chatSessions.id, sessionId), eq(chatSessions.status, 'active')))
     .limit(1);
 
-  if (!session[0] || session[0].status !== 'active') return;
+  if (!precheck[0]) return;
 
-  const now = new Date();
-  const accumulatedSeconds = Math.floor(
-    (now.getTime() - session[0].startedAt.getTime()) / 1000
-  );
-  const totalCoins = Math.ceil(accumulatedSeconds / 60) * COINS_PER_MINUTE;
+  const { coinsPerMinute } = await getPersonaConfig(precheck[0].personaId);
 
-  await db.update(users)
-    .set({
-      coinBalance: sql`GREATEST(0, coin_balance - ${totalCoins})`,
-      totalCoinsUsed: sql`total_coins_used + ${totalCoins}`,
-      updatedAt: now,
-    })
-    .where(eq(users.id, session[0].userId));
+  await db.transaction(async (tx) => {
+    // Lock the session row — prevents a concurrent checkpoint from billing after we've ended
+    const locked = await tx.execute(
+      sql`SELECT id, user_id, started_at, coins_charged FROM chat_sessions WHERE id = ${sessionId} AND status = 'active' FOR UPDATE`
+    );
+    if (locked.rows.length === 0) return;
+    const row = locked.rows[0] as { id: string; user_id: string; started_at: Date; coins_charged: number };
 
-  await db.update(chatSessions)
-    .set({
-      status: 'ended',
-      endedAt: now,
-      durationSeconds: accumulatedSeconds,
-      coinsCharged: totalCoins,
-      lastHeartbeatAt: now,
-      updatedAt: now,
-    })
-    .where(eq(chatSessions.id, sessionId));
+    const now = new Date();
+    const accumulatedSeconds = Math.floor((now.getTime() - new Date(row.started_at).getTime()) / 1000);
+
+    // Round to nearest minute for the final charge (captures partial last minute)
+    const totalMinutes = Math.round(accumulatedSeconds / 60);
+    const finalCharge = totalMinutes * coinsPerMinute;
+    // Only deduct what hasn't already been billed by checkpoints
+    const remainingToDeduct = Math.max(0, finalCharge - Number(row.coins_charged));
+
+    if (remainingToDeduct > 0) {
+      await tx.update(users)
+        .set({
+          coinBalance: sql`GREATEST(0, coin_balance - ${remainingToDeduct})`,
+          totalCoinsUsed: sql`total_coins_used + ${remainingToDeduct}`,
+          updatedAt: now,
+        })
+        .where(eq(users.id, row.user_id));
+    }
+
+    await tx.update(chatSessions)
+      .set({
+        status: 'ended',
+        endedAt: now,
+        durationSeconds: accumulatedSeconds,
+        coinsCharged: finalCharge,
+        lastHeartbeatAt: now,
+        updatedAt: now,
+      })
+      .where(eq(chatSessions.id, sessionId));
+  });
 }
 
 export async function getRemainingCoins(userId: string): Promise<number> {
@@ -136,8 +177,16 @@ export async function getRemainingCoins(userId: string): Promise<number> {
 /**
  * Heartbeat: checkpoint all active sessions every 30 seconds.
  */
+const HEARTBEAT_BATCH_SIZE = 50; // Max concurrent checkpoints — keeps DB connection use bounded
+let heartbeatRunning = false;
+
 export function startHeartbeat() {
   setInterval(async () => {
+    if (heartbeatRunning) {
+      logger.warn('Heartbeat: previous cycle still running, skipping');
+      return;
+    }
+    heartbeatRunning = true;
     try {
       const active = await db.select({ id: chatSessions.id })
         .from(chatSessions)
@@ -146,27 +195,41 @@ export function startHeartbeat() {
           isNull(chatSessions.endedAt),
         ));
 
-      for (const session of active) {
-        checkpointSession(session.id).catch(err =>
-          logger.error('Checkpoint failed', { sessionId: session.id, error: (err as Error).message })
-        );
+      // Process in concurrent batches — avoids firing 200+ transactions simultaneously
+      for (let i = 0; i < active.length; i += HEARTBEAT_BATCH_SIZE) {
+        const batch = active.slice(i, i + HEARTBEAT_BATCH_SIZE);
+        const results = await Promise.allSettled(batch.map(s => checkpointSession(s.id)));
+        results.forEach((result, idx) => {
+          if (result.status === 'rejected') {
+            logger.error('Heartbeat: checkpoint failed', {
+              sessionId: batch[idx].id,
+              error: (result.reason as Error).message,
+            });
+          }
+        });
       }
     } catch (err) {
       logger.error('Heartbeat query failed', { error: (err as Error).message });
+    } finally {
+      heartbeatRunning = false;
     }
   }, 30000);
 }
 
-async function getPersonaTimeoutMs(personaId: string): Promise<number> {
+async function getPersonaConfig(personaId: string): Promise<{ timeoutMs: number; coinsPerMinute: number }> {
   try {
-    const persona = await db.select({ sessionTimeoutMinutes: personas.sessionTimeoutMinutes })
+    const persona = await db.select({
+      sessionTimeoutMinutes: personas.sessionTimeoutMinutes,
+      coinsPerMinute: personas.coinsPerMinute,
+    })
       .from(personas)
       .where(eq(personas.id, personaId))
       .limit(1);
     const minutes = persona[0]?.sessionTimeoutMinutes ?? DEFAULT_TIMEOUT_MINUTES;
-    return minutes * 60 * 1000;
+    const rate = persona[0]?.coinsPerMinute ?? COINS_PER_MINUTE;
+    return { timeoutMs: minutes * 60 * 1000, coinsPerMinute: rate };
   } catch {
-    return DEFAULT_INACTIVE_THRESHOLD_MS;
+    return { timeoutMs: DEFAULT_INACTIVE_THRESHOLD_MS, coinsPerMinute: COINS_PER_MINUTE };
   }
 }
 
@@ -195,22 +258,27 @@ export async function recoverActiveSessions(): Promise<void> {
     // Fall back to startedAt so brand-new sessions with no messages still time out.
     const lastActivity = session.lastMessageAt || session.startedAt;
     const inactiveDuration = now.getTime() - lastActivity.getTime();
-    const timeoutMs = await getPersonaTimeoutMs(session.personaId);
+    const { timeoutMs, coinsPerMinute } = await getPersonaConfig(session.personaId);
 
     if (inactiveDuration > timeoutMs) {
       // Bill only up to the last real message, not wall-clock now.
       const accumulatedSeconds = Math.floor(
         (lastActivity.getTime() - session.startedAt.getTime()) / 1000
       );
-      const totalCoins = Math.ceil(accumulatedSeconds / 60) * COINS_PER_MINUTE;
+      const totalMinutes = Math.round(accumulatedSeconds / 60);
+      const totalCoins = totalMinutes * coinsPerMinute;
+      // Delta: only deduct what checkpoints haven't already billed
+      const remainingToDeduct = Math.max(0, totalCoins - session.coinsCharged);
 
-      await db.update(users)
-        .set({
-          coinBalance: sql`GREATEST(0, coin_balance - ${totalCoins})`,
-          totalCoinsUsed: sql`total_coins_used + ${totalCoins}`,
-          updatedAt: now,
-        })
-        .where(eq(users.id, session.userId));
+      if (remainingToDeduct > 0) {
+        await db.update(users)
+          .set({
+            coinBalance: sql`GREATEST(0, coin_balance - ${remainingToDeduct})`,
+            totalCoinsUsed: sql`total_coins_used + ${remainingToDeduct}`,
+            updatedAt: now,
+          })
+          .where(eq(users.id, session.userId));
+      }
 
       await db.update(chatSessions)
         .set({
@@ -263,42 +331,67 @@ export async function cleanupInactiveSessions(): Promise<number> {
       // Real activity = lastMessageAt; fall back to startedAt for no-message sessions.
       const lastActivity = session.lastMessageAt || session.startedAt;
       const inactiveDuration = Date.now() - lastActivity.getTime();
-      const timeoutMs = await getPersonaTimeoutMs(session.personaId);
+      const { timeoutMs, coinsPerMinute } = await getPersonaConfig(session.personaId);
 
       if (inactiveDuration < timeoutMs) {
         continue;
       }
 
-      // Bill only up to the last real message (idle time is free).
-      const accumulatedSeconds = Math.floor(
-        (lastActivity.getTime() - session.startedAt.getTime()) / 1000
-      );
-      const totalCoins = Math.ceil(accumulatedSeconds / 60) * COINS_PER_MINUTE;
+      let sessionEnded = false;
+      try {
+        await db.transaction(async (tx) => {
+          // Lock the row — prevents a concurrent heartbeat checkpoint from billing at the same time
+          const locked = await tx.execute(
+            sql`SELECT id, user_id, started_at, coins_charged, last_message_at FROM chat_sessions WHERE id = ${session.id} AND status = 'active' FOR UPDATE`
+          );
+          if (locked.rows.length === 0) return; // already ended by another process
 
-      const now = new Date();
-      await db.update(users)
-        .set({
-          coinBalance: sql`GREATEST(0, coin_balance - ${totalCoins})`,
-          totalCoinsUsed: sql`total_coins_used + ${totalCoins}`,
-          updatedAt: now,
-        })
-        .where(eq(users.id, session.userId));
+          const row = locked.rows[0] as { id: string; user_id: string; started_at: Date; coins_charged: number; last_message_at: Date | null };
+          const rowLastActivity = row.last_message_at ? new Date(row.last_message_at) : new Date(row.started_at);
 
-      await db.update(chatSessions)
-        .set({
-          status: 'ended',
-          endedAt: lastActivity,
-          durationSeconds: accumulatedSeconds,
-          coinsCharged: totalCoins,
-          updatedAt: now,
-        })
-        .where(eq(chatSessions.id, session.id));
+          // Bill only up to the last real message (idle time is free).
+          const accumulatedSeconds = Math.floor(
+            (rowLastActivity.getTime() - new Date(row.started_at).getTime()) / 1000
+          );
+          const totalMinutes = Math.round(accumulatedSeconds / 60);
+          const totalCoins = totalMinutes * coinsPerMinute;
+          // Delta: only deduct what checkpoints haven't already billed (use fresh locked value)
+          const remainingToDeduct = Math.max(0, totalCoins - Number(row.coins_charged));
+
+          const now = new Date();
+          if (remainingToDeduct > 0) {
+            await tx.update(users)
+              .set({
+                coinBalance: sql`GREATEST(0, coin_balance - ${remainingToDeduct})`,
+                totalCoinsUsed: sql`total_coins_used + ${remainingToDeduct}`,
+                updatedAt: now,
+              })
+              .where(eq(users.id, row.user_id));
+          }
+
+          await tx.update(chatSessions)
+            .set({
+              status: 'ended',
+              endedAt: rowLastActivity,
+              durationSeconds: accumulatedSeconds,
+              coinsCharged: totalCoins,
+              updatedAt: now,
+            })
+            .where(eq(chatSessions.id, session.id));
+
+          sessionEnded = true;
+        });
+      } catch (txErr) {
+        logger.error('Cleanup: transaction failed for session', { sessionId: session.id, error: (txErr as Error).message });
+        continue;
+      }
+
+      if (!sessionEnded) continue;
 
       logger.info('Cleanup: auto-ended inactive session', {
         sessionId: session.id,
         personaId: session.personaId,
         inactiveMinutes: Math.round(inactiveDuration / 60000),
-        coinsCharged: totalCoins,
       });
 
       sendTimeoutNotification(session.id).catch(err =>

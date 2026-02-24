@@ -13,6 +13,7 @@ import {
   Clock,
   DollarSign,
   MessageSquare,
+  Trash2,
 } from "lucide-react";
 
 interface UserSummary {
@@ -73,6 +74,39 @@ export default function UsersList() {
   };
 
   const totalPages = data ? Math.ceil(data.total / data.pageSize) : 0;
+
+  async function handleDeleteUser(user: UserSummary, e: React.MouseEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    if (
+      !window.confirm(
+        `Permanently delete ${user.firstName} (${user.email})?\n\nThis will delete all their sessions, messages, memories, and purchase history. This cannot be undone.`,
+      )
+    )
+      return;
+
+    try {
+      const res = await adminFetch(`/api/admin/users/${user.id}`, {
+        method: "DELETE",
+      });
+      if (res.ok) {
+        setData((prev) =>
+          prev
+            ? {
+                ...prev,
+                users: prev.users.filter((u) => u.id !== user.id),
+                total: prev.total - 1,
+              }
+            : prev,
+        );
+      } else {
+        const err = await res.json();
+        alert(err.error || "Failed to delete user.");
+      }
+    } catch {
+      alert("Network error. Please try again.");
+    }
+  }
 
   return (
     <AdminLayout title="Users">
@@ -142,6 +176,7 @@ export default function UsersList() {
                     <th className="text-right text-xs text-gray-500 px-4 py-3 font-medium">
                       Joined
                     </th>
+                    <th className="px-4 py-3" />
                   </tr>
                 </thead>
                 <tbody>
@@ -192,6 +227,15 @@ export default function UsersList() {
                       </td>
                       <td className="px-4 py-3 text-right text-xs text-gray-500">
                         {new Date(user.createdAt).toLocaleDateString()}
+                      </td>
+                      <td className="px-4 py-3">
+                        <button
+                          onClick={(e) => handleDeleteUser(user, e)}
+                          title="Delete user"
+                          className="text-gray-600 hover:text-red-400 transition-colors"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
                       </td>
                     </tr>
                   ))}

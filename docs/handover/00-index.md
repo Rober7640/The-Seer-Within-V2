@@ -72,6 +72,7 @@ This is **not** a PHP app. The backend is Node.js. The concepts map across like 
 | **PayPal** | Alternative payment (credits purchase) | `PAYPAL_CLIENT_ID` |
 | **Resend** | Sends re-engagement emails from guides | `RESEND_API_KEY` |
 | **AWeber** | Email marketing list (optional) | `AWEBER_*` |
+| **Sentry** | Error monitoring (optional) | `SENTRY_DSN` |
 
 ---
 

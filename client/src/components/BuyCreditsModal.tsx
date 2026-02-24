@@ -1,11 +1,12 @@
 import { useState } from "react";
-import { authFetch } from "@/hooks/useAuth";
+import { useAuth, authFetch } from "@/hooks/useAuth";
 import { X } from "lucide-react";
 import {
   Dialog,
   DialogContent,
 } from "@/components/ui/dialog";
 import type { PricingTier } from "@shared/types";
+import PayPalCreditButton from "@/components/PayPalCreditButton";
 
 interface BuyCreditsModalProps {
   open: boolean;
@@ -13,6 +14,7 @@ interface BuyCreditsModalProps {
   personaId: string | null;
   personaName?: string;
   pricingTiers?: PricingTier[];
+  onSuccess?: (newBalance: number) => void;
 }
 
 const FALLBACK_TIERS: PricingTier[] = [
@@ -28,10 +30,20 @@ export default function BuyCreditsModal({
   personaId,
   personaName,
   pricingTiers,
+  onSuccess,
 }: BuyCreditsModalProps) {
+  const { refreshUser } = useAuth();
   const tiers = pricingTiers && pricingTiers.length > 0 ? pricingTiers : FALLBACK_TIERS;
-  const [selectedPackage, setSelectedPackage] = useState<string>("popular");
+  const [selectedPackage, setSelectedPackage] = useState<string>(
+    () => tiers.find((t) => t.badge)?.packageType ?? tiers[0]?.packageType ?? "popular",
+  );
   const [isCheckingOut, setIsCheckingOut] = useState(false);
+
+  const handleSuccess = (newBalance: number) => {
+    onOpenChange(false);
+    onSuccess?.(newBalance);
+    refreshUser();
+  };
 
   const handlePurchase = async () => {
     if (!personaId) return;
@@ -116,19 +128,19 @@ export default function BuyCreditsModal({
                       </div>
                     )}
 
-                    {/* Total coins */}
-                    <div className="flex items-center justify-center gap-1.5 mb-1 mt-1">
+                    {/* Coins — primary display */}
+                    <div className="flex items-center justify-center gap-1 mb-0.5 mt-1">
                       <span className="text-2xl font-bold text-white">
                         {tier.totalCoins}
                       </span>
-                      <span className="text-lg" role="img" aria-label="coins">🪙</span>
+                      <span className="text-sm" role="img" aria-label="coins">🪙</span>
                     </div>
 
                     {/* Bonus coins badge */}
                     {tier.bonusCoins > 0 && (
                       <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-teal-500/20 border border-teal-500/30 mb-2">
                         <span className="text-[11px] font-medium text-teal-300">
-                          {tier.bonusCoins} 🪙 free
+                          +{tier.bonusCoins} 🪙 free
                         </span>
                       </div>
                     )}
@@ -145,11 +157,20 @@ export default function BuyCreditsModal({
             {/* Coin rate info */}
             <div className="flex justify-center mb-3">
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/[0.07] border border-white/10">
-                <span className="text-xs text-white/70">🪙 60 coins = 1 min of consultation</span>
+                <span className="text-xs text-white/70">Billed per minute · rate varies by guide</span>
               </div>
             </div>
 
-            {/* Purchase button */}
+            {/* PayPal primary */}
+            <div className="mb-3">
+              <PayPalCreditButton
+                packageType={selectedPackage}
+                personaId={personaId}
+                onSuccess={handleSuccess}
+              />
+            </div>
+
+            {/* Stripe fallback */}
             <button
               onClick={handlePurchase}
               disabled={isCheckingOut}
@@ -161,7 +182,7 @@ export default function BuyCreditsModal({
                   Processing...
                 </div>
               ) : (
-                "Continue"
+                "Pay with card instead"
               )}
             </button>
 

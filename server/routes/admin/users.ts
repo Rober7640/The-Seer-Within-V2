@@ -5,7 +5,7 @@ import { Router, Request, Response } from 'express';
 import { z } from 'zod';
 import { db } from '../../lib/db';
 import { users, chatSessions, chatMessages, userMemory, creditPurchases, personas } from '@shared/schema';
-import { eq, and, desc, sql, count, like, or } from 'drizzle-orm';
+import { eq, and, desc, sql, count, like, or, inArray } from 'drizzle-orm';
 import logger from '../../lib/logger';
 
 const router = Router();
@@ -729,4 +729,50 @@ router.post('/:id/flag', async (req: Request, res: Response) => {
   }
 });
 
+// ============================================
+// DELETE /api/admin/users/:id - Hard delete user and all their data
+// ============================================
+
+router.delete('/:id', async (req: Request, res: Response) => {
+  try {
+    const userId = req.params.id as string;
+
+    // Verify user exists
+    const user = await db
+      .select({ id: users.id, email: users.email })
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1);
+
+    if (!user[0]) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Get all session IDs for this user (needed to delete messages)
+    const userSessions = await db
+      .select({ id: chatSessions.id })
+      .from(chatSessions)
+      .where(eq(chatSessions.userId, userId));
+
+    const sessionIds = userSessions.map((s) => s.id);
+
+    // Delete in dependency order
+    if (sessionIds.length > 0) {
+      await db.delete(chatMessages).where(inArray(chatMessages.sessionId, sessionIds));
+    }
+    await db.delete(chatSessions).where(eq(chatSessions.userId, userId));
+    await db.delete(userMemory).where(eq(userMemory.userId, userId));
+    await db.delete(creditPurchases).where(eq(creditPurchases.userId, userId));
+    await db.delete(users).where(eq(users.id, userId));
+
+    logger.info(`Admin ${req.adminEmail} permanently deleted user ${user[0].email} (${userId})`);
+
+    return res.json({ success: true, deletedEmail: user[0].email });
+  } catch (error: any) {
+    logger.error('Delete user error:', error);
+    return res.status(500).json({ error: 'Failed to delete user' });
+  }
+});
+
 export default router;
+

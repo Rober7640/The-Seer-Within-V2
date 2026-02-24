@@ -11,6 +11,7 @@ interface ChatServiceLayoutProps {
   maxWidth?: "sm" | "md" | "lg" | "xl" | "2xl" | "3xl" | "full";
   centerContent?: boolean;
   className?: string;
+  requiresAuth?: boolean;
 }
 
 export function ChatServiceLayout({
@@ -19,19 +20,20 @@ export function ChatServiceLayout({
   maxWidth = "full",
   centerContent = false,
   className,
+  requiresAuth = true,
 }: ChatServiceLayoutProps) {
   const { isAuthenticated, isLoading } = useAuth();
   const [, navigate] = useLocation();
 
-  // Auth protection - redirect to login if not authenticated
+  // Auth protection - redirect to login if not authenticated (only for protected routes)
   useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      navigate("/login");
+    if (requiresAuth && !isLoading && !isAuthenticated) {
+      navigate(`/login?returnTo=${encodeURIComponent(window.location.pathname + window.location.search)}`);
     }
-  }, [isLoading, isAuthenticated, navigate]);
+  }, [isLoading, isAuthenticated, navigate, requiresAuth]);
 
-  // Loading state
-  if (isLoading) {
+  // Loading state - only block render for auth-protected routes
+  if (requiresAuth && isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-bg-deep to-bg-mid flex items-center justify-center">
         <div className="w-8 h-8 border-2 border-purple-400 border-t-transparent rounded-full animate-spin" />
@@ -39,8 +41,8 @@ export function ChatServiceLayout({
     );
   }
 
-  // Not authenticated - return null while redirect happens
-  if (!isAuthenticated) {
+  // Not authenticated on protected route - return null while redirect happens
+  if (requiresAuth && !isAuthenticated) {
     return null;
   }
 

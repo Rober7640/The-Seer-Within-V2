@@ -7,8 +7,21 @@ import { followUpEmails, userFollowUpPreferences, users } from '@shared/schema';
 import { eq, and, desc, gte, lte, count, sql } from 'drizzle-orm';
 import { z } from 'zod';
 import logger from '../../lib/logger';
+import { processFollowUpQueue } from '../../lib/followUpEmailGenerator';
 
 const router = Router();
+
+// POST /api/admin/follow-ups/trigger - Manually trigger the follow-up queue
+router.post('/trigger', async (req: Request, res: Response) => {
+  try {
+    logger.info('Admin: manually triggering follow-up email queue', { adminId: req.adminId });
+    const stats = await processFollowUpQueue();
+    return res.json({ success: true, stats });
+  } catch (error: any) {
+    logger.error('Admin follow-ups trigger error:', error);
+    return res.status(500).json({ error: 'Failed to process follow-up queue' });
+  }
+});
 
 // GET /api/admin/follow-ups - List follow-up emails with filtering and pagination
 router.get('/', async (req: Request, res: Response) => {

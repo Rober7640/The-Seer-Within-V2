@@ -1,13 +1,17 @@
 import rateLimit from 'express-rate-limit';
 
-// Auth endpoints: 5 attempts per 15 minutes per IP
-// Protects login and register from brute force attacks
+const isTestEnv = process.env.NODE_ENV === 'test' || process.env.DISABLE_RATE_LIMIT === 'true';
+const isDevEnv = process.env.NODE_ENV === 'development';
+
+// Auth endpoints: 5 attempts per 15 minutes per IP (production)
+// In development, limit is relaxed to 100 per 15 minutes to avoid blocking during testing
 export const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5,
+  max: isDevEnv ? 100 : 5,
   standardHeaders: true, // Return rate limit info in `RateLimit-*` headers
   legacyHeaders: false,
   message: { error: 'Too many attempts. Please try again in 15 minutes.' },
+  skip: () => isTestEnv,
   // Using default IP-based key generation (handles IPv6 correctly)
 });
 
@@ -19,15 +23,12 @@ export const chatLimiter = rateLimit({
   legacyHeaders: false,
   message: { error: 'Message limit reached. Please wait before sending more messages.' },
   keyGenerator: (req) => {
-    // Use userId if authenticated (set by requireAuth middleware)
-    // If not authenticated, express-rate-limit will use default IP key generation
-    return (req as any).userId;
+    // Prefer userId (set by requireAuth); fall back to IP so the limiter is always
+    // enforced even if auth middleware fails to populate userId for any reason
+    return (req as any).userId || req.ip || 'unknown';
   },
-  skip: (req) => {
-    // Only apply rate limiting if user is authenticated
-    // Unauthenticated requests will be handled by other limiters
-    return !(req as any).userId;
-  },
+  // No skip — requireAuth will still reject unauthenticated requests before they reach handlers
+  skip: () => isTestEnv,
 });
 
 // Password reset: 3 per hour per IP
@@ -40,23 +41,26 @@ export const passwordResetLimiter = rateLimit({
   // Using default IP-based key generation (handles IPv6 correctly)
 });
 
-// Admin endpoints: 100 requests per hour per IP
+// Admin endpoints: 100 requests per hour per IP (production only)
+// Skipped entirely in dev/test to avoid blocking local development and test suites.
 export const adminLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 hour
   max: 100,
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: 'Too many admin requests. Please try again later.' },
+  skip: () => isTestEnv || isDevEnv,
   // Using default IP-based key generation (handles IPv6 correctly)
 });
 
-// Admin login: stricter limit - 5 attempts per 15 minutes per IP
-// Separate from general admin limiter to prevent brute force on admin login
+// Admin login: stricter limit - 5 attempts per 15 minutes per IP (production)
+// In development, limit is relaxed to 100 per 15 minutes
 export const adminLoginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5,
+  max: isDevEnv ? 100 : 5,
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: 'Too many login attempts. Please try again in 15 minutes.' },
+  skip: () => isTestEnv,
   // Using default IP-based key generation (handles IPv6 correctly)
 });

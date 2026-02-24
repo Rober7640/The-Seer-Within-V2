@@ -9,6 +9,7 @@ import { DEFAULT_PRICING } from '../../shared/types';
 import Stripe from 'stripe';
 import logger from '../lib/logger';
 import { fireWithBreaker, stripeBreaker, isCircuitOpenError } from '../lib/circuitBreaker';
+import * as paypal from '../lib/paypal';
 
 const router = Router();
 
@@ -92,27 +93,26 @@ router.get('/purchases', requireAuth, async (req: Request, res: Response) => {
 
 // POST /api/credits/checkout
 router.post('/checkout', requireAuth, async (req: Request, res: Response) => {
+  const parseResult = checkoutSchema.safeParse(req.body);
+  if (!parseResult.success) {
+    res.status(400).json({
+      error: parseResult.error.errors.map(e => e.message).join(', '),
+    });
+    return;
+  }
+
+  const { packageType, personaId } = parseResult.data;
+
+  let pricing, tier, personaName: string, userResult;
   try {
-    const parseResult = checkoutSchema.safeParse(req.body);
-    if (!parseResult.success) {
-      res.status(400).json({
-        error: parseResult.error.errors.map(e => e.message).join(', '),
-      });
-      return;
-    }
-
-    const { packageType, personaId } = parseResult.data;
-
-    const pricing = personaId
-      ? await getPersonaPricing(personaId)
-      : DEFAULT_PRICING;
-    const tier = pricing.tiers.find(t => t.packageType === packageType);
+    pricing = personaId ? await getPersonaPricing(personaId) : DEFAULT_PRICING;
+    tier = pricing.tiers.find(t => t.packageType === packageType);
     if (!tier) {
       res.status(400).json({ error: 'Invalid package type' });
       return;
     }
 
-    let personaName = 'Chat';
+    personaName = 'Chat';
     if (personaId) {
       const personaResult = await db.select({ displayName: personas.displayName })
         .from(personas)
@@ -121,7 +121,7 @@ router.post('/checkout', requireAuth, async (req: Request, res: Response) => {
       personaName = personaResult[0]?.displayName || 'Chat';
     }
 
-    const userResult = await db.select({ email: users.email, firstName: users.firstName })
+    userResult = await db.select({ email: users.email, firstName: users.firstName })
       .from(users)
       .where(eq(users.id, req.userId!))
       .limit(1);
@@ -130,33 +130,45 @@ router.post('/checkout', requireAuth, async (req: Request, res: Response) => {
       res.status(404).json({ error: 'User not found' });
       return;
     }
+  } catch (error) {
+    logger.error('Credits checkout setup error:', error);
+    res.status(500).json({ error: 'Checkout failed' });
+    return;
+  }
 
-    const purchase = await db.insert(creditPurchases).values({
-      userId: req.userId!,
-      personaId: personaId || null,
-      packageType: tier.packageType,
-      coinsPurchased: tier.totalCoins,
-      bonusCoins: tier.bonusCoins,
-      priceUsd: tier.priceUsd,
-      status: 'pending',
-    }).returning();
+  // Insert the pending record only now that we have all the data we need.
+  // If the Stripe call below fails we delete this record so we don't leak
+  // orphaned pending rows.
+  const purchase = await db.insert(creditPurchases).values({
+    userId: req.userId!,
+    personaId: personaId || null,
+    packageType: tier.packageType,
+    coinsPurchased: tier.totalCoins,
+    bonusCoins: tier.bonusCoins,
+    priceUsd: tier.priceUsd,
+    status: 'pending',
+  }).returning();
 
-    if (!stripe) {
-      await db.update(creditPurchases)
-        .set({ status: 'completed', updatedAt: new Date() })
-        .where(eq(creditPurchases.id, purchase[0].id));
+  const purchaseId = purchase[0].id;
 
-      await db.update(users)
-        .set({
-          coinBalance: sql`coin_balance + ${tier.totalCoins}`,
-          updatedAt: new Date(),
-        })
-        .where(eq(users.id, req.userId!));
+  if (!stripe) {
+    // Dev / test mode: instantly complete the purchase without a real Stripe session.
+    await db.update(creditPurchases)
+      .set({ status: 'completed', updatedAt: new Date() })
+      .where(eq(creditPurchases.id, purchaseId));
 
-      res.json({ url: '/chat-service?purchased=true', devMode: true });
-      return;
-    }
+    await db.update(users)
+      .set({
+        coinBalance: sql`coin_balance + ${tier.totalCoins}`,
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, req.userId!));
 
+    res.json({ url: '/chat-service?purchased=true', devMode: true });
+    return;
+  }
+
+  try {
     const bonusLabel = tier.bonusCoins > 0 ? ` (+${tier.bonusCoins} bonus)` : '';
     const session = await fireWithBreaker(stripeBreaker, () =>
       stripe!.checkout.sessions.create({
@@ -166,21 +178,21 @@ router.post('/checkout', requireAuth, async (req: Request, res: Response) => {
           price_data: {
             currency: 'usd',
             product_data: {
-              name: `${personaName} - ${tier.coins} Coins${bonusLabel}`,
-              description: `${tier.totalCoins} coins for consultation with ${personaName}`,
+              name: `${personaName} - ${tier!.coins} Coins${bonusLabel}`,
+              description: `${tier!.totalCoins} coins for consultation with ${personaName}`,
             },
-            unit_amount: tier.priceUsd,
+            unit_amount: tier!.priceUsd,
           },
           quantity: 1,
         }],
         mode: 'payment',
         metadata: {
           app: 'the-seer-within-chat',
-          purchaseId: purchase[0].id,
+          purchaseId,
           userId: req.userId!,
           ...(personaId ? { personaId } : {}),
-          packageType: tier.packageType,
-          totalCoins: String(tier.totalCoins),
+          packageType: tier!.packageType,
+          totalCoins: String(tier!.totalCoins),
         },
         success_url: `${getBaseUrl(req)}/chat-service?purchased=true&session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${getBaseUrl(req)}/chat-service?cancelled=true`,
@@ -189,10 +201,18 @@ router.post('/checkout', requireAuth, async (req: Request, res: Response) => {
 
     await db.update(creditPurchases)
       .set({ stripeSessionId: session.id, updatedAt: new Date() })
-      .where(eq(creditPurchases.id, purchase[0].id));
+      .where(eq(creditPurchases.id, purchaseId));
 
     res.json({ url: session.url });
   } catch (error) {
+    // Stripe call failed — remove the orphaned pending record so it doesn't
+    // accumulate and skew reporting.
+    try {
+      await db.delete(creditPurchases).where(eq(creditPurchases.id, purchaseId));
+    } catch (cleanupError) {
+      logger.error('Failed to clean up pending purchase after Stripe error:', cleanupError);
+    }
+
     if (isCircuitOpenError(error)) {
       logger.warn('Stripe circuit open, checkout unavailable');
       res.status(503).json({ error: 'Payment service temporarily unavailable. Please try again shortly.' });
@@ -200,6 +220,143 @@ router.post('/checkout', requireAuth, async (req: Request, res: Response) => {
       logger.error('Credits checkout error:', error);
       res.status(500).json({ error: 'Checkout failed' });
     }
+  }
+});
+
+// POST /api/credits/create-order - PayPal order creation
+const createOrderSchema = z.object({
+  packageType: z.string().min(1),
+  personaId: z.string().min(1).optional(),
+});
+
+router.post('/create-order', requireAuth, async (req: Request, res: Response) => {
+  const parseResult = createOrderSchema.safeParse(req.body);
+  if (!parseResult.success) {
+    res.status(400).json({
+      error: parseResult.error.errors.map(e => e.message).join(', '),
+    });
+    return;
+  }
+
+  const { packageType, personaId } = parseResult.data;
+
+  let tier;
+  try {
+    const pricing = personaId ? await getPersonaPricing(personaId) : DEFAULT_PRICING;
+    tier = pricing.tiers.find(t => t.packageType === packageType);
+    if (!tier) {
+      res.status(400).json({ error: 'Invalid package type' });
+      return;
+    }
+  } catch (error) {
+    logger.error('PayPal create-order setup error:', error);
+    res.status(500).json({ error: 'Failed to create PayPal order' });
+    return;
+  }
+
+  // Insert the pending record before calling PayPal so we have an ID to pass
+  // as reference. If the PayPal call fails we delete this record immediately
+  // to avoid orphaned pending rows.
+  const purchase = await db.insert(creditPurchases).values({
+    userId: req.userId!,
+    personaId: personaId || null,
+    packageType: tier.packageType,
+    coinsPurchased: tier.totalCoins,
+    bonusCoins: tier.bonusCoins,
+    priceUsd: tier.priceUsd,
+    status: 'pending',
+  }).returning();
+
+  const purchaseId = purchase[0].id;
+
+  try {
+    const priceFormatted = (tier.priceUsd / 100).toFixed(2);
+    const orderId = await paypal.createOrder(priceFormatted, purchaseId);
+
+    await db.update(creditPurchases)
+      .set({ paypalOrderId: orderId, updatedAt: new Date() })
+      .where(eq(creditPurchases.id, purchaseId));
+
+    res.json({ orderId });
+  } catch (error) {
+    // PayPal call failed — remove the orphaned pending record.
+    try {
+      await db.delete(creditPurchases).where(eq(creditPurchases.id, purchaseId));
+    } catch (cleanupError) {
+      logger.error('Failed to clean up pending purchase after PayPal error:', cleanupError);
+    }
+
+    logger.error('PayPal create-order error:', error);
+    res.status(500).json({ error: 'Failed to create PayPal order' });
+  }
+});
+
+// POST /api/credits/capture-order - PayPal order capture
+const captureOrderSchema = z.object({
+  orderId: z.string().min(1),
+});
+
+router.post('/capture-order', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const parseResult = captureOrderSchema.safeParse(req.body);
+    if (!parseResult.success) {
+      res.status(400).json({
+        error: parseResult.error.errors.map(e => e.message).join(', '),
+      });
+      return;
+    }
+
+    const { orderId } = parseResult.data;
+
+    const purchases = await db.select()
+      .from(creditPurchases)
+      .where(eq(creditPurchases.paypalOrderId, orderId))
+      .limit(1);
+
+    if (!purchases[0]) {
+      res.status(404).json({ error: 'Purchase not found' });
+      return;
+    }
+
+    const purchase = purchases[0];
+    if (purchase.userId !== req.userId) {
+      res.status(403).json({ error: 'Unauthorized' });
+      return;
+    }
+
+    if (purchase.status !== 'pending') {
+      res.status(400).json({ error: 'Purchase already processed' });
+      return;
+    }
+
+    const captureResult = await paypal.captureOrder(orderId);
+    if (captureResult.status !== 'COMPLETED') {
+      res.status(400).json({ error: `Payment not completed (status: ${captureResult.status})` });
+      return;
+    }
+
+    await db.update(creditPurchases)
+      .set({
+        status: 'completed',
+        paypalCaptureId: captureResult.captureId,
+        updatedAt: new Date(),
+      })
+      .where(eq(creditPurchases.id, purchase.id));
+
+    const updatedUser = await db.update(users)
+      .set({
+        coinBalance: sql`coin_balance + ${purchase.coinsPurchased}`,
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, req.userId!))
+      .returning({ coinBalance: users.coinBalance });
+
+    const newBalance = updatedUser[0]?.coinBalance ?? 0;
+
+    res.json({ success: true, newBalance });
+  } catch (error) {
+    logger.error('PayPal capture-order error:', error);
+    res.status(500).json({ error: 'Failed to capture PayPal order' });
   }
 });
 

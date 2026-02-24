@@ -12,6 +12,7 @@ import {
   Shield,
   Brain,
   Mail,
+  LayoutGrid,
 } from "lucide-react";
 
 const NAV_ITEMS = [
@@ -22,6 +23,7 @@ const NAV_ITEMS = [
   { path: "/admin/safety", label: "Safety", icon: Shield },
   { path: "/admin/intent-configs", label: "Intent Configs", icon: Brain },
   { path: "/admin/follow-ups", label: "Follow-Ups", icon: Mail },
+  { path: "/admin/marketplace", label: "Marketplace", icon: LayoutGrid },
 ];
 
 interface AdminLayoutProps {

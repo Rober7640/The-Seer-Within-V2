@@ -68,5 +68,9 @@ export default defineConfig({
     timeout: 180000, // Increased to 3 minutes for reliability
     stdout: 'pipe',
     stderr: 'pipe',
+    env: {
+      NODE_ENV: 'test',
+      DISABLE_RATE_LIMIT: 'true',
+    },
   },
 });

@@ -6,11 +6,20 @@ import logger from "./logger";
 
 export const pool = new pg.Pool({
   connectionString: process.env.DATABASE_URL,
+  max: 30,                    // Up from default 10 — supports 200-500 concurrent users
+  min: 2,                     // Keep 2 connections warm at all times
+  idleTimeoutMillis: 30000,   // Release idle connections after 30s
+  connectionTimeoutMillis: 3000, // Fail fast if pool is exhausted (vs hanging forever)
 });
 
 // Prevent idle connection drops from crashing the process
 pool.on('error', (err) => {
   logger.error('Unexpected DB pool error', { error: err.message });
+});
+
+// Kill runaway queries after 8 seconds so they don't hold connections under load
+pool.on('connect', (client) => {
+  client.query('SET statement_timeout = 8000').catch(() => {});
 });
 
 export const db = drizzle(pool);

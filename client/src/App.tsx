@@ -2,6 +2,7 @@ import { useEffect, lazy, Suspense } from "react";
 import { Switch, Route, useLocation } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
+import { PayPalScriptProvider } from "@paypal/react-paypal-js";
 import * as Sentry from "@sentry/react";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -17,6 +18,7 @@ import Upsell2Page from "@/pages/Upsell2Page";
 import PrivacyPage from "@/pages/PrivacyPage";
 import TermsPage from "@/pages/TermsPage";
 import RefundPage from "@/pages/RefundPage";
+import FAQPage from "@/pages/FAQPage";
 
 // Chat service pages (lazy loaded)
 const LoginPage = lazy(() => import("@/pages/LoginPage"));
@@ -27,6 +29,7 @@ const Dashboard = lazy(() => import("@/pages/Dashboard"));
 const WelcomeChatPage = lazy(() => import("@/pages/WelcomeChatPage"));
 const ForgotPasswordPage = lazy(() => import("@/pages/ForgotPasswordPage"));
 const ResetPasswordPage = lazy(() => import("@/pages/ResetPasswordPage"));
+const MagicAuthPage = lazy(() => import("@/pages/MagicAuthPage"));
 
 // Admin pages (lazy loaded)
 const AdminLogin = lazy(() => import("@/pages/admin/AdminLogin"));
@@ -39,6 +42,7 @@ const UserDetail = lazy(() => import("@/pages/admin/UserDetail"));
 const SafetyDashboard = lazy(() => import("@/pages/admin/SafetyDashboard"));
 const IntentConfigEditor = lazy(() => import("@/pages/admin/IntentConfigEditor"));
 const FollowUpsDashboard = lazy(() => import("@/pages/admin/FollowUpsDashboard"));
+const MarketplacePage = lazy(() => import("@/pages/admin/MarketplacePage"));
 
 function LazyFallback() {
   return (
@@ -68,11 +72,13 @@ function Router() {
         <Route path="/privacy" component={PrivacyPage} />
         <Route path="/terms" component={TermsPage} />
         <Route path="/refund" component={RefundPage} />
+        <Route path="/faq" component={FAQPage} />
 
         {/* Auth routes (no layout wrapper) */}
         <Route path="/login" component={LoginPage} />
         <Route path="/forgot-password" component={ForgotPasswordPage} />
         <Route path="/reset-password/:token" component={ResetPasswordPage} />
+        <Route path="/magic-auth" component={MagicAuthPage} />
 
         {/* Chat service routes with layout */}
         <Route path="/chat/:personaSlug">
@@ -93,7 +99,7 @@ function Router() {
           </ChatServiceLayout>
         </Route>
         <Route path="/personas">
-          <ChatServiceLayout>
+          <ChatServiceLayout requiresAuth={false}>
             <PersonasDirectory />
           </ChatServiceLayout>
         </Route>
@@ -121,6 +127,7 @@ function Router() {
         <Route path="/admin/intent-configs/:personaId" component={IntentConfigEditor} />
         <Route path="/admin/intent-configs" component={IntentConfigEditor} />
         <Route path="/admin/follow-ups" component={FollowUpsDashboard} />
+        <Route path="/admin/marketplace" component={MarketplacePage} />
 
         <Route component={NotFound} />
       </Switch>
@@ -148,12 +155,14 @@ function SentryFallback() {
 function App() {
   return (
     <Sentry.ErrorBoundary fallback={SentryFallback}>
-      <QueryClientProvider client={queryClient}>
-        <TooltipProvider>
-          <Toaster />
-          <Router />
-        </TooltipProvider>
-      </QueryClientProvider>
+      <PayPalScriptProvider options={{ clientId: import.meta.env.VITE_PAYPAL_CLIENT_ID || "sb", currency: "USD" }}>
+        <QueryClientProvider client={queryClient}>
+          <TooltipProvider>
+            <Toaster />
+            <Router />
+          </TooltipProvider>
+        </QueryClientProvider>
+      </PayPalScriptProvider>
     </Sentry.ErrorBoundary>
   );
 }

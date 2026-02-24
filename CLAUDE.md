@@ -289,7 +289,7 @@ The chat implements a state machine with phases:
 A running list of Playwright tests to write as features are built is maintained at:
 
 ```
-C:\Users\joelc\.cursor\plans\Test ideas MD.md
+docs/test-ideas.md
 ```
 
 **Convention:** Whenever a new feature is implemented, add the corresponding test cases to that file before considering the feature done. Each entry uses `[ ]` checklist format so tests can be converted directly into Playwright specs.

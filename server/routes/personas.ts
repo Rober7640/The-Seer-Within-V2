@@ -3,9 +3,10 @@
 
 import { Router, Request, Response } from 'express';
 import { db } from '../lib/db';
-import { personas, chatSessions } from '@shared/schema';
-import { eq, and, sql, count, desc } from 'drizzle-orm';
+import { personas, chatSessions, personaReviews, sessionFeedback } from '@shared/schema';
+import { eq, and, sql, count, asc } from 'drizzle-orm';
 import { getPersonaPricing } from '../lib/personaPricing';
+import { isPersonaOnline } from '../lib/personaManager';
 import logger from '../lib/logger';
 
 const router = Router();
@@ -50,10 +51,18 @@ router.get('/', async (req: Request, res: Response) => {
         avatarUrl: p.avatarUrl,
         isActive: p.isActive,
         isDefault: p.isDefault,
+        isFeatured: p.isFeatured,
+        accuracyRank: p.accuracyRank ?? null,
+        sortOrder: p.sortOrder,
         freeCoins: p.freeCoins,
+        coinsPerMinute: p.coinsPerMinute,
         categories: parsedCategories,
         customPricing: p.customPricing,
         personality: p.personality ?? null,
+        overallRating: p.overallRating ?? null,
+        yearsExperience: p.yearsExperience ?? null,
+        readingsCount: p.readingsCount ?? null,
+        isOnline: isPersonaOnline(p),
         ...(includesPricing && parsedPricing ? { pricingTiers: parsedPricing } : {}),
       };
     });
@@ -108,6 +117,32 @@ router.get('/:slug', async (req: Request, res: Response) => {
       .from(chatSessions)
       .where(eq(chatSessions.personaId, p.id));
 
+    // Get admin-managed reviews ordered by creation date
+    const reviews = await db
+      .select({
+        id: personaReviews.id,
+        reviewerName: personaReviews.reviewerName,
+        reviewText: personaReviews.reviewText,
+        starRating: personaReviews.starRating,
+        createdAt: personaReviews.createdAt,
+      })
+      .from(personaReviews)
+      .where(eq(personaReviews.personaId, p.id))
+      .orderBy(asc(personaReviews.createdAt));
+
+    // Get approved real-user feedback
+    const userReviews = await db
+      .select({
+        id: sessionFeedback.id,
+        displayName: sessionFeedback.displayName,
+        feedbackText: sessionFeedback.feedbackText,
+        starRating: sessionFeedback.starRating,
+        createdAt: sessionFeedback.createdAt,
+      })
+      .from(sessionFeedback)
+      .where(and(eq(sessionFeedback.personaId, p.id), eq(sessionFeedback.approved, true)))
+      .orderBy(asc(sessionFeedback.createdAt));
+
     let parsedCategories: string[] = [];
     try {
       parsedCategories = p.categories ? JSON.parse(p.categories) : [];
@@ -131,6 +166,7 @@ router.get('/:slug', async (req: Request, res: Response) => {
       avatarUrl: p.avatarUrl,
       isDefault: p.isDefault,
       freeCoins: pricing.freeCoins,
+      coinsPerMinute: p.coinsPerMinute,
       categories: parsedCategories,
       pricing: {
         freeCoins: pricing.freeCoins,
@@ -139,12 +175,24 @@ router.get('/:slug', async (req: Request, res: Response) => {
           pricePerMinute: Math.round(t.priceUsd / t.minutes),
         })),
       },
+      overallRating: p.overallRating ?? null,
+      yearsExperience: p.yearsExperience ?? null,
+      readingsCount: p.readingsCount ?? null,
+      isOnline: isPersonaOnline(p),
       specialties: parsedPersonality?.specialties || [],
       sampleGreeting: parsedPersonality?.sampleGreeting || null,
       stats: {
         totalReadings: stats[0]?.totalSessions || 0,
         uniqueClients: Number(stats[0]?.uniqueUsers || 0),
       },
+      reviews,
+      userReviews: userReviews.map((r) => ({
+        id: r.id,
+        reviewerName: r.displayName || 'Verified User',
+        reviewText: r.feedbackText,
+        starRating: r.starRating,
+        createdAt: r.createdAt,
+      })),
     });
   } catch (error) {
     logger.error('Public persona detail error:', error);

@@ -28,21 +28,63 @@ The app uses **UUID primary keys** everywhere (not auto-increment integers). All
 
 Key columns:
 ```
-id                  UUID, primary key
-sessionId           UUID, unique — browser session identifier
+id                  VARCHAR, primary key (UUID)
 email               TEXT — captured during chat
-name                TEXT — user's first name
-bucket              TEXT — what they asked about (love/money/purpose/someone)
-phase               TEXT — where in the conversation they are
-offerPresented      BOOLEAN — has the $35 offer been shown?
-checkoutSessionId   TEXT — Stripe checkout session ID
-paymentStatus       TEXT — pending / paid / failed
-upsell1Status       TEXT — pending / bought / skipped
-upsell2Status       TEXT — pending / bought / skipped
-shippingAddress     JSONB — shipping info collected during upsell
+firstName           TEXT — user's first name (column: first_name)
+location            TEXT — user's location
+timeOfDay           TEXT
+bucket              TEXT — love / money / purpose / someone
+subBucket           TEXT
+personName          TEXT — name of person mentioned by user
+concern             TEXT
+deeperResponse      TEXT
+vision              TEXT
+emotionalResponse   TEXT
+blockSource         TEXT
+commitmentResponse  TEXT
+purchased           BOOLEAN — has the main offer been paid?
+purchaseType        TEXT
+objectionCount      INTEGER
+conversationState   TEXT — current state machine phase
+messages            TEXT — serialised message history
+
+stripeSessionId     TEXT — Stripe checkout session ID
+stripeCustomerId    TEXT
+stripePaymentMethodId TEXT
+mainPurchaseAmount  INTEGER — amount in cents
+
+upsellOffered       BOOLEAN
+upsellPurchased     BOOLEAN
+upsellPaymentId     TEXT
+upsellAmount        INTEGER
+
+upsell2Offered      BOOLEAN
+upsell2Purchased    BOOLEAN
+upsell2PaymentId    TEXT
+upsell2Amount       INTEGER
+upsell2Type         TEXT
+
+shippingName        TEXT
+shippingLine1       TEXT
+shippingLine2       TEXT
+shippingCity        TEXT
+shippingState       TEXT
+shippingPostal      TEXT
+shippingCountry     TEXT
+
+shipping2Name       TEXT  (upsell 2 shipping, if different)
+shipping2Line1      TEXT
+shipping2Line2      TEXT
+shipping2City       TEXT
+shipping2State      TEXT
+shipping2Postal     TEXT
+shipping2Country    TEXT
+
 createdAt           TIMESTAMP
 updatedAt           TIMESTAMP
 ```
+
+Note: Shipping is stored as individual text columns, not a JSONB blob.
 
 ---
 
@@ -77,24 +119,33 @@ One row per AI guide/advisor.
 
 Key columns:
 ```
-id                  UUID, primary key
+id                  VARCHAR, primary key (UUID)
 slug                TEXT, unique — URL identifier (e.g. "evelyn-cross")
 displayName         TEXT — shown to users (e.g. "Evelyn Cross")
 tagline             TEXT — one-line description
 description         TEXT — longer bio shown on profile
 avatarUrl           TEXT — image URL
+baseSystemPrompt    TEXT — core AI instructions for this guide
+personality         TEXT — JSON: tone, style, specialties
+categories          TEXT — JSON array e.g. ["love", "money", "purpose"]
 isActive            BOOLEAN — hide/show guide
+isDefault           BOOLEAN — the default guide new users land on
 isFeatured          BOOLEAN — show in featured section
+sortOrder           INTEGER — display order on the directory
+accuracyRank        INTEGER — null = unranked; 1 = top of "Voted Most Accurate"
 coinsPerMinute      INTEGER — how many coins per minute this guide costs
-freeCoins           INTEGER — free coins granted to new users for this guide
-sessionTimeoutMinutes INTEGER — idle timeout before session auto-ends
+freeCoins           INTEGER — free coins granted to new users
+customPricing       TEXT — JSON array of PricingTier objects
+sessionTimeoutMinutes INTEGER — idle timeout (default 30 minutes)
 fromEmail           TEXT — email address for follow-up emails
 fromName            TEXT — sender name for follow-up emails
 yearsExperience     INTEGER — displayed on profile card
 readingsCount       INTEGER — displayed on profile card
-overallRating       DECIMAL — displayed as star rating
-baseSystemPrompt    TEXT — core AI instructions for this guide
-customPricing       JSONB — custom credit packages for this guide
+overallRating       REAL — displayed as star rating (admin-set)
+availabilitySchedule TEXT — JSON: timezone + time windows when guide is online
+onlineOverride      TEXT — null | 'online' | 'offline' (manual admin override)
+overrideExpiresAt   TIMESTAMP — optional expiry for manual override
+cyclicBreakSchedule TEXT — JSON: { enabled, availableMinutes, breakMinutes }
 createdAt           TIMESTAMP
 updatedAt           TIMESTAMP
 ```
@@ -124,13 +175,11 @@ Reviews displayed on guide profiles. Admin-managed (not user-submitted — use s
 
 Key columns:
 ```
-id                  UUID, primary key
-personaId           UUID → references personas(id)
+id                  VARCHAR, primary key (UUID)
+personaId           VARCHAR → references personas(id)
 reviewerName        TEXT
-rating              INTEGER — 1-5
-reviewText          TEXT
-isDisplayed         BOOLEAN
-displayOrder        INTEGER
+starRating          INTEGER — 1-5
+reviewText          TEXT — optional
 createdAt           TIMESTAMP
 ```
 
@@ -219,9 +268,9 @@ memoryType          TEXT — fact / preference / relationship / etc.
 summary             TEXT — short version (injected into prompts)
 fullContext         TEXT — longer version
 sourceSessionId     UUID → references chat_sessions(id)
-importance          INTEGER — 1-5, higher = more likely to be used
+importance          INTEGER — 1-10, higher = more likely to be used
 category            TEXT — love / family / work / etc.
-expiresAt           TIMESTAMP — null = never expires
+expiresAt           TIMESTAMP — deprecated; retention is now activity-based (inactive users 6+ months)
 lastAccessedAt      TIMESTAMP
 createdAt           TIMESTAMP
 ```
@@ -239,9 +288,11 @@ personaId           UUID — which guide's page they were on when they bought
 packageType         TEXT — starter / popular / best_value
 coinsPurchased      INTEGER
 bonusCoins          INTEGER
-priceUsd            DECIMAL
+priceUsd            INTEGER — price in cents (e.g. 999 = $9.99)
 stripeSessionId     TEXT — Stripe checkout session ID
-paypalOrderId       TEXT — PayPal order ID
+stripePaymentIntentId TEXT
+paypalOrderId       TEXT — PayPal order ID (max 64 chars)
+paypalCaptureId     TEXT — PayPal capture ID
 status              TEXT — pending / completed / refunded / failed
 createdAt           TIMESTAMP
 ```
@@ -272,35 +323,49 @@ Records of every re-engagement email sent. Prevents duplicate sends and tracks o
 
 Key columns:
 ```
-id                  UUID, primary key
-userId              UUID → references users(id)
-personaId           UUID → references personas(id)
+id                  VARCHAR, primary key (UUID)
+userId              VARCHAR → references users(id)
+personaId           VARCHAR → references personas(id)
+lastSessionId       VARCHAR → references chat_sessions(id) — null ok
 recipientEmail      TEXT
 subject             TEXT
 bodyHtml            TEXT
+bodyText            TEXT — plain text version
 status              TEXT — pending / sent / failed / bounced
 sentAt              TIMESTAMP
-opened              BOOLEAN — set by Resend webhook
-clicked             BOOLEAN — set by Resend webhook
-sequenceNumber      INTEGER — 1, 2, or 3
-unsubscribeToken    TEXT — unique token for one-click unsubscribe
+deliveryStatus      TEXT — Resend delivery status
+resendEmailId       TEXT — ID returned by Resend API
+opened              BOOLEAN
+clicked             BOOLEAN
+openedAt            TIMESTAMP
+clickedAt           TIMESTAMP
+sequenceNumber      INTEGER — 1=day2, 2=day5, 3=day7
+generatedBy         TEXT — default "claude-haiku"
+generationTokens    INTEGER — tokens used to generate this email
+daysSinceLastSession INTEGER
+unsubscribeToken    TEXT, unique — for one-click unsubscribe
 createdAt           TIMESTAMP
+updatedAt           TIMESTAMP
 ```
 
 ---
 
 ### `user_follow_up_preferences`
-Per-user opt-in/out settings for re-engagement emails.
+Per-user opt-in/out settings for re-engagement emails. One row per user.
 
 Key columns:
 ```
-id                  UUID, primary key
-userId              UUID → references users(id)
-enableFollowUps     BOOLEAN — default true
-maxFollowUpsPerMonth INTEGER
-unsubscribedAt      TIMESTAMP — null = still subscribed
-createdAt           TIMESTAMP
-updatedAt           TIMESTAMP
+id                        VARCHAR, primary key (UUID)
+userId                    VARCHAR, unique → references users(id)
+enableFollowUps           BOOLEAN — default true
+followUpDays              INTEGER — delay before first follow-up (default 2)
+maxFollowUpsPerMonth      INTEGER — default 4
+followUpsSentThisMonth    INTEGER — rolling monthly counter
+lastFollowUpSentAt        TIMESTAMP
+unsubscribedAt            TIMESTAMP — null = still subscribed
+unsubscribeReason         TEXT
+createdAt                 TIMESTAMP
+updatedAt                 TIMESTAMP
 ```
 
 ---
@@ -327,18 +392,23 @@ Records of credit nudge emails sent to users with low/no coins.
 
 Key columns:
 ```
-id                  UUID, primary key
-userId              UUID → references users(id)
-personaId           UUID → references personas(id)
+id                  VARCHAR, primary key (UUID)
+userId              VARCHAR → references users(id)
+personaId           VARCHAR → references personas(id) — last persona used (null ok)
 segment             TEXT — free_tier_dropoff / empty_tank / loyal_refill / dormant_low_balance
 recipientEmail      TEXT
 subject             TEXT
 bodyHtml            TEXT
+bodyText            TEXT — plain text version
 coinBalanceAtSend   INTEGER — snapshot of balance when email was sent
 status              TEXT — pending / sent / failed
 sentAt              TIMESTAMP
-unsubscribeToken    TEXT
+resendEmailId       TEXT — ID returned by Resend API
+generatedBy         TEXT — default "claude-haiku"
+generationTokens    INTEGER
+unsubscribeToken    TEXT, unique
 createdAt           TIMESTAMP
+updatedAt           TIMESTAMP
 ```
 
 ---

@@ -119,13 +119,13 @@ Mark each item done as you go. Do not skip items — each one has caught a real 
 
 ---
 
-## Part 10: Critical bugs fixed
+## Part 10: Previously known bugs — verify still fixed
 
-Check that the following known bugs (from `05-remaining-todos.md`) are resolved:
+These bugs were fixed during development (see `05-remaining-todos.md`). Do a quick smoke-test to confirm they haven't regressed:
 
-- [ ] BUG-1: "Start Chat" in Love & Recommended sections no longer crashes
-- [ ] BUG-2: Password field shows "Min 8 characters" and server accepts 8+ char passwords
-- [ ] BUG-3: Login redirect preserves the guide you selected
+- [ ] BUG-1 fixed: "Start Chat" in Love & Recommended sections works without crashing
+- [ ] BUG-2 fixed: Registration form shows "Min 8 characters" and accepts 8-char passwords
+- [ ] BUG-3 fixed: Visiting `/reading?persona=marcus-stone` while logged out → after login, returns to Marcus Stone (not default guide)
 
 ---
 

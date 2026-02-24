@@ -24,9 +24,10 @@ import {
   Lock,
   MessageCircle,
   Bookmark,
+  Clock,
 } from "lucide-react";
 import NatalChartWheel, { type NatalChartData } from "@/components/NatalChartWheel";
-import CityAutocomplete from "@/components/CityAutocomplete";
+import VedicChartDiamond, { type VedicChartData } from "@/components/VedicChartDiamond";
 import BuyCreditsModal from "@/components/BuyCreditsModal";
 import OutOfCreditsModal from "@/components/OutOfCreditsModal";
 import TeaserCreditModal from "@/components/TeaserCreditModal";
@@ -73,6 +74,7 @@ interface Persona {
   description: string | null;
   categories: string | null;
   isActive: boolean;
+  coinsPerMinute?: number;
   customPricing?: string | null;
   personality?: string | null; // JSON: { tone, style, specialties, suggestedQuestions?: string[] }
 }
@@ -86,7 +88,8 @@ interface ChatMessageData {
   isCardReveal?: boolean;       // standalone card reveal display (not a normal bubble)
   tarotCardName?: string;       // card name for reveal display
   tarotCardImageUrl?: string;   // card image for reveal display
-  chartData?: NatalChartData;   // renders natal chart wheel when present
+  chartData?: NatalChartData | VedicChartData;  // renders natal chart when present (western or vedic)
+  isReadingEndedDivider?: boolean; // shows the "Reading Ended" divider + CTAs
 }
 
 interface SessionData {
@@ -170,20 +173,20 @@ export default function ChatServicePage() {
   const [idleWarning, setIdleWarning] = useState(false);
   const [idleCountdown, setIdleCountdown] = useState(60);
 
-  // Feedback modal — shown once after 5 minutes of active session time
-  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
-  const feedbackTriggeredRef = useRef(false);
+  // End Reading confirm dialog
+  const [showEndConfirm, setShowEndConfirm] = useState(false);
 
-  // Birth data form (for astrology personas like Luna Voss)
-  // null = checking, true = chart exists (skip form), false = no chart (show form)
+  // Feedback modal — shown after user ends a reading with 5+ minutes elapsed
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+  const [feedbackSessionId, setFeedbackSessionId] = useState<string | null>(null);
+
+  // Tracks whether user has ended a reading (keeps chat history visible post-session)
+  const [readingEnded, setReadingEnded] = useState(false);
+
+  // Birth chart state for astrology personas (e.g. Luna Voss)
+  // null = checking, true = chart exists (returning user), false = no chart (new user, collects in-chat)
   const [birthChartExists, setBirthChartExists] = useState<boolean | null>(null);
-  const [birthDataForm, setBirthDataForm] = useState({
-    birthDate: '', birthTime: '', birthCity: '', unknownTime: false,
-  });
-  const [birthDataSubmitting, setBirthDataSubmitting] = useState(false);
-  const [birthDataError, setBirthDataError] = useState<string | null>(null);
-  const [birthChartSummary, setBirthChartSummary] = useState<{ sun?: string; moon?: string; rising?: string } | null>(null);
-  const [storedChartData, setStoredChartData]   = useState<NatalChartData | null>(null);
+  const [storedChartData, setStoredChartData]   = useState<NatalChartData | VedicChartData | null>(null);
 
   // Refs
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -203,10 +206,10 @@ export default function ChatServicePage() {
   const queryPersonaSlug = queryParams.get("persona");
   const urlPersonaSlug = pathPersonaSlug || queryPersonaSlug;
 
-  // Redirect if not authenticated
+  // Redirect if not authenticated — preserve destination so login can return here (FRICTION-5)
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
-      navigate("/login");
+      navigate(`/login?returnTo=${encodeURIComponent(window.location.pathname + window.location.search)}`);
     }
   }, [authLoading, isAuthenticated, navigate]);
 
@@ -227,16 +230,30 @@ export default function ChatServicePage() {
           const data = await res.json();
           setPersonas(data);
 
-          // Select persona from URL or user default or first active
+          // Select persona: URL param → pending (post-email-verify) → user default → first
           if (urlPersonaSlug) {
             const match = data.find(
               (p: Persona) => p.slug === urlPersonaSlug,
             );
             if (match) setSelectedPersonaId(match.id);
-          } else if (user?.defaultPersonaId) {
-            setSelectedPersonaId(user.defaultPersonaId);
-          } else if (data.length > 0) {
-            setSelectedPersonaId(data[0].id);
+          } else {
+            // Restore persona chosen before email verification redirect (FRICTION-3)
+            const pendingSlug = localStorage.getItem("seer-pending-persona");
+            if (pendingSlug) {
+              localStorage.removeItem("seer-pending-persona");
+              const match = data.find((p: Persona) => p.slug === pendingSlug);
+              if (match) {
+                setSelectedPersonaId(match.id);
+              } else if (user?.defaultPersonaId) {
+                setSelectedPersonaId(user.defaultPersonaId);
+              } else if (data.length > 0) {
+                setSelectedPersonaId(data[0].id);
+              }
+            } else if (user?.defaultPersonaId) {
+              setSelectedPersonaId(user.defaultPersonaId);
+            } else if (data.length > 0) {
+              setSelectedPersonaId(data[0].id);
+            }
           }
         }
       } catch (err) {
@@ -302,32 +319,38 @@ export default function ChatServicePage() {
     };
   }, [session]);
 
+  // Derived: current persona object — must be declared before any effect that uses it
+  const selectedPersona = personas.find((p) => p.id === selectedPersonaId);
+
   // Credit countdown timer + refill banner trigger
   useEffect(() => {
     if (session && session.status === "active") {
+      const coinsPerMinute = selectedPersona?.coinsPerMinute ?? 60;
+
       timerRef.current = setInterval(() => {
         setElapsedSeconds((prev) => {
           const next = prev + 1;
-          const coinsPerSecond = 1; // 60 coins/min = 1 coin/sec
-          const coinsUsed = next * coinsPerSecond;
+          // Coins consumed = completed full minutes × guide rate (matches server Math.floor logic)
+          const coinsUsed = Math.floor(next / 60) * coinsPerMinute;
 
-          // Show refill banner 30 seconds before free trial ends
-          // Only show if user's balance is at/below the free trial amount (not a paying user)
+          // Show refill banner 30 seconds before free trial ends (new users)
           if (freeTrialCoins > 0 && !refillBannerDismissed && coinBalance <= freeTrialCoins) {
-            const freeTrialSeconds = freeTrialCoins / coinsPerSecond;
+            const freeTrialSeconds = (freeTrialCoins / coinsPerMinute) * 60;
             if (next >= freeTrialSeconds - 30 && next < freeTrialSeconds) {
               setShowRefillBanner(true);
             }
           }
 
-          // Show feedback modal once after 5 minutes of active session time
-          if (next >= 300 && !feedbackTriggeredRef.current) {
-            feedbackTriggeredRef.current = true;
-            setShowFeedbackModal(true);
+          // Show refill banner when < 1 full minute remains at this guide's rate (FRICTION-7)
+          if (coinBalance > freeTrialCoins && !refillBannerDismissed) {
+            const coinsRemaining = coinBalance - coinsUsed;
+            if (coinsRemaining <= coinsPerMinute && coinsRemaining > 0) {
+              setShowRefillBanner(true);
+            }
           }
 
-          // Check if out of coins every 60 seconds
-          if (next % 60 === 0 && coinsUsed >= coinBalance) {
+          // Check if out of coins every tick — no 60s delay (FRICTION-6)
+          if (coinsUsed >= coinBalance) {
             setShowOutOfCredits(true);
             endSession();
           }
@@ -342,7 +365,7 @@ export default function ChatServicePage() {
         timerRef.current = null;
       }
     };
-  }, [session, coinBalance, freeTrialCoins, refillBannerDismissed]);
+  }, [session, coinBalance, freeTrialCoins, refillBannerDismissed, selectedPersona?.coinsPerMinute]);
 
   // Idle detection: warn after 2 min of no message sent, auto-end after 3 min
   useEffect(() => {
@@ -385,8 +408,6 @@ export default function ChatServicePage() {
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session]);
-
-  const selectedPersona = personas.find((p) => p.id === selectedPersonaId);
 
   // Reset offline state when persona selection changes
   useEffect(() => {
@@ -448,7 +469,6 @@ export default function ChatServicePage() {
       return;
     }
     setBirthChartExists(null); // reset while loading
-    setBirthChartSummary(null);
     setStoredChartData(null);
     authFetch(`/api/astrology/natal-chart/${selectedPersona.id}`)
       .then(r => r.json())
@@ -487,7 +507,7 @@ export default function ChatServicePage() {
 
   // Fetch a free greeting for the selected persona — does NOT create a session or charge credits.
   // Call this when the user clicks "Begin Reading". Session is only created when they send the first message.
-  const fetchGreeting = useCallback(async (overrideSlug?: string, appendMode?: boolean, injectChartData?: NatalChartData | null, teaserContent?: string) => {
+  const fetchGreeting = useCallback(async (overrideSlug?: string, appendMode?: boolean, injectChartData?: NatalChartData | VedicChartData | null, teaserContent?: string) => {
     const slug = overrideSlug || selectedPersona?.slug;
     if (!slug) return;
     setSwitchingToPersonaSlug(null); // Clear any switching overlay when greeting starts loading
@@ -669,94 +689,6 @@ export default function ChatServicePage() {
   }, [selectedPersona?.slug, user]);
 
   // Submit birth data for astrology personas — calculates natal chart and then fetches greeting
-  const handleBirthDataSubmit = useCallback(async () => {
-    if (!selectedPersona) return;
-    setBirthDataError(null);
-    setBirthDataSubmitting(true);
-
-    const time = birthDataForm.unknownTime ? '12:00' : birthDataForm.birthTime;
-
-    try {
-      const res = await authFetch('/api/astrology/natal-chart', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          birthDate: birthDataForm.birthDate,
-          birthTime: time,
-          birthCity: birthDataForm.birthCity,
-          personaId: selectedPersona.id,
-        }),
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        setBirthDataError(data.error || data.message || 'Something went wrong. Please try again.');
-        return;
-      }
-      // Block the auto-fetch effect from firing a second greeting when birthChartExists flips to true
-      lastAutoFetchedPersonaId.current = selectedPersona.id;
-      setBirthChartExists(true);
-      setBirthChartSummary({ sun: data.sunSign, moon: data.moonSign, rising: data.risingSign });
-
-      // Format birth date for display e.g. "June 15, 1990"
-      const [year, month, day] = birthDataForm.birthDate.split('-').map(Number);
-      const formattedDate = new Date(year, month - 1, day).toLocaleDateString('en-US', {
-        year: 'numeric', month: 'long', day: 'numeric',
-      });
-      const firstName = user?.firstName || 'there';
-      const city = birthDataForm.birthCity;
-      const sun  = data.sunSign  || '';
-      const moon = data.moonSign || '';
-      const rising = data.risingSign || '';
-
-      // Build-up sequence — paced messages that bring the chart to life
-      const sequence = [
-        { text: `Thank you, ${firstName}. Give me a moment — I want to do this properly.`, pause: 800 },
-        { text: `I'm mapping the sky over ${city} on ${formattedDate}...`, pause: 700 },
-        { text: `Placing each planet in the exact position it held the moment you took your first breath.`, pause: 900 },
-        { text: `${sun} Sun... ${moon} Moon... ${rising} Rising. Your chart is coming into focus.`, pause: 800 },
-        { text: `I'm reading the aspects now — the angles between your planets. This is where things get interesting.`, pause: 900 },
-        { text: `All right. I have you.`, pause: 600 },
-      ];
-
-      setIsStarting(true);
-      setMessages([]);
-      setPreSessionGreeting(null);
-
-      for (const step of sequence) {
-        setIsTyping(true);
-        await sleep(calculateTypingDelay(step.text));
-        setMessages(prev => [...prev, {
-          id: `chart-reveal-${Date.now()}-${Math.random()}`,
-          role: 'assistant' as const,
-          content: step.text,
-          sentAt: new Date().toISOString(),
-        }]);
-        setIsTyping(false);
-        await sleep(step.pause);
-      }
-
-      // Inject the chart wheel as a special message
-      if (data.chartData) {
-        setMessages(prev => [...prev, {
-          id: `chart-wheel-${Date.now()}`,
-          role: 'assistant' as const,
-          content: '',
-          chartData: data.chartData as NatalChartData,
-          sentAt: new Date().toISOString(),
-        }]);
-        await sleep(600);
-      }
-
-      setIsStarting(false);
-      // Fetch personalized AI greeting and append it after the sequence
-      await fetchGreeting(undefined, true);
-    } catch {
-      setBirthDataError('Network error. Please check your connection and try again.');
-    } finally {
-      setBirthDataSubmitting(false);
-    }
-  }, [selectedPersona, birthDataForm, fetchGreeting, user]);
-
   // End the current session
   const endSession = useCallback(async () => {
     if (!session) return;
@@ -786,9 +718,73 @@ export default function ChatServicePage() {
       setMessages([]);
       setElapsedSeconds(0);
       setShowRefillBanner(false);
-      feedbackTriggeredRef.current = false;
     }
   }, [session, coinBalance]);
+
+  // User-initiated "End Reading" — keeps chat history, inserts divider, triggers feedback if 5+ min
+  const handleEndReadingConfirm = useCallback(async () => {
+    setShowEndConfirm(false);
+    if (!session) return;
+
+    const sessionId = session.id;
+    const elapsed = elapsedSeconds;
+
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+
+    try {
+      const res = await authFetch(`/api/chat-service/session/${sessionId}/end`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setCoinBalance(data.remainingCoins ?? coinBalance);
+      }
+    } catch (err) {
+      console.error("Failed to end session:", err);
+    }
+
+    setSession(null);
+    setElapsedSeconds(0);
+    setShowRefillBanner(false);
+    setReadingEnded(true);
+
+    // Receipt toast — shows what was actually billed (server uses Math.round per minute)
+    const minutesBilled = Math.round(elapsed / 60);
+    toast({
+      title: minutesBilled === 0 ? "Reading ended" : `Reading ended · ${minutesBilled} min billed`,
+      description: minutesBilled === 0
+        ? "No coins were charged (under 30 seconds)"
+        : `${minutesBilled * 60} coins deducted from your balance`,
+    });
+
+    // Insert "Reading Ended" divider into chat history
+    const dividerMsg: ChatMessageData = {
+      id: `reading-ended-${Date.now()}`,
+      role: "assistant",
+      content: "",
+      sentAt: new Date().toISOString(),
+      isReadingEndedDivider: true,
+    };
+    setMessages((prev) => [...prev, dividerMsg]);
+
+    // Show feedback modal only if user engaged for 5+ minutes
+    if (elapsed >= 300) {
+      setFeedbackSessionId(sessionId);
+      setShowFeedbackModal(true);
+    }
+  }, [session, elapsedSeconds, coinBalance]);
+
+  // "Start a New Reading" — clears history and re-fetches greeting for the same guide
+  const startNewReading = useCallback(() => {
+    setReadingEnded(false);
+    setMessages([]);
+    setPreSessionGreeting(null);
+    lastAutoFetchedPersonaId.current = null; // allow auto-fetch to re-trigger for same persona
+  }, []);
 
   // Switch to a different guide: always fetch greeting immediately without any intermediate screen.
   // If there was an active billing session, end it silently and show a toast.
@@ -825,7 +821,6 @@ export default function ChatServicePage() {
       setSession(null);
       setElapsedSeconds(0);
       setShowRefillBanner(false);
-      feedbackTriggeredRef.current = false;
     }
 
     // Always fetch greeting immediately — no instructions screen.
@@ -976,7 +971,7 @@ export default function ChatServicePage() {
           const typingDelay = calculateTypingDelay(data.message);
           await sleep(typingDelay);
 
-          // If the AI triggered [SHOW_CHART], inject the chart wheel first
+          // If the AI triggered [SHOW_CHART] or just calculated a birth chart, inject the wheel first
           if (data.chartData) {
             setMessages(prev => [...prev, {
               id: `chart-wheel-${Date.now()}`,
@@ -986,6 +981,16 @@ export default function ChatServicePage() {
               sentAt: new Date().toISOString(),
             }]);
             await sleep(400);
+            // If the chart was just collected in-chat, update local state so returning
+            // user flow works correctly on their next visit
+            if (data.birthChartJustCalculated) {
+              setBirthChartExists(true);
+              setStoredChartData(data.chartData);
+            }
+          } else if (data.needsBirthData) {
+            // Birth chart not found — keep birthChartExists false so collection restarts
+            setBirthChartExists(false);
+            setStoredChartData(null);
           }
 
           const assistantMsg: ChatMessageData = {
@@ -1002,9 +1007,46 @@ export default function ChatServicePage() {
         } else if (res.status === 402) {
           setShowOutOfCredits(true);
           await endSession();
+        } else if (res.status === 410 || res.status === 404) {
+          // Session ended or not found — clear session state and show divider
+          if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
+          setSession(null);
+          setElapsedSeconds(0);
+          setReadingEnded(true);
+          setMessages((prev) => [
+            ...prev,
+            {
+              id: `reading-ended-${Date.now()}`,
+              role: "assistant" as const,
+              content: "",
+              sentAt: new Date().toISOString(),
+              isReadingEndedDivider: true,
+            },
+          ]);
+        } else {
+          // Server error (500, etc.) — show an in-chat error so the user knows to retry
+          setMessages((prev) => [
+            ...prev,
+            {
+              id: `error-${Date.now()}`,
+              role: "assistant" as const,
+              content: "Something went wrong on my end. Please try sending your message again.",
+              sentAt: new Date().toISOString(),
+            },
+          ]);
         }
       } catch (err) {
         console.error("Failed to send message:", err);
+        // Network error — show an in-chat message so the user isn't left staring at silence
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: `error-${Date.now()}`,
+            role: "assistant" as const,
+            content: "I lost the connection for a moment. Please try sending your message again.",
+            sentAt: new Date().toISOString(),
+          },
+        ]);
       } finally {
         setIsTyping(false);
         setIsSending(false);
@@ -1086,8 +1128,8 @@ export default function ChatServicePage() {
 
   return (
     <div className="fixed inset-0 flex overflow-hidden">
-      {/* Guide Sidebar — visible once guide has greeted user, during active session, switching, or while loading */}
-      {(session || !!preSessionGreeting || !!switchingToPersonaSlug || isStarting) && (
+      {/* Guide Sidebar — visible once guide has greeted user, during active session, switching, loading, or post-reading */}
+      {(session || !!preSessionGreeting || !!switchingToPersonaSlug || isStarting || readingEnded) && (
         <GuideSidebar
           guides={personas}
           selectedPersonaId={selectedPersonaId}
@@ -1095,13 +1137,14 @@ export default function ChatServicePage() {
           mobileOpen={mobileSidebarOpen}
           onMobileClose={() => setMobileSidebarOpen(false)}
           onSwitchGuide={(slug, teaserFull) => switchGuide(slug, teaserFull)}
+          isNewUser={(user?.coinBalance ?? 0) + (user?.totalCoinsUsed ?? 0) <= 180}
         />
       )}
 
       {/* Main Chat Panel */}
       <div className="flex-1 flex flex-col items-center justify-center p-0 md:p-4 overflow-hidden">
       <div className={`w-full max-w-lg h-full md:h-[90vh] flex flex-col backdrop-blur-md md:rounded-2xl shadow-2xl overflow-hidden relative z-10 ${
-        (session || !!preSessionGreeting || !!switchingToPersonaSlug || isStarting)
+        (session || !!preSessionGreeting || !!switchingToPersonaSlug || isStarting || readingEnded)
           ? 'bg-white/95 border border-white/20'
           : 'bg-[#0f1729]/95 border border-white/10'
       }`}>
@@ -1109,7 +1152,7 @@ export default function ChatServicePage() {
         <header className="bg-bg-mid text-white p-4 flex items-center justify-between gap-2 shadow-md shrink-0">
           <div className="flex items-center gap-3">
             {/* Mobile sidebar toggle — once guide has greeted or session is active */}
-            {(session || !!preSessionGreeting || !!switchingToPersonaSlug || isStarting) && (
+            {(session || !!preSessionGreeting || !!switchingToPersonaSlug || isStarting || readingEnded) && (
               <button
                 onClick={() => setMobileSidebarOpen(true)}
                 className="lg:hidden p-1.5 rounded-lg hover:bg-white/10 transition-colors text-white/70 hover:text-white shrink-0"
@@ -1145,6 +1188,33 @@ export default function ChatServicePage() {
             )}
           </div>
           <div className="flex items-center gap-2">
+            {/* Timer pill — paused pre-session, live during active session */}
+            {!!preSessionGreeting && !session && coinBalance > 0 && (
+              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/10 text-white/40 text-xs font-medium select-none">
+                <span className="w-1.5 h-1.5 rounded-full bg-white/30" />
+                {coinBalance} 🪙
+              </div>
+            )}
+            {session && (() => {
+              const coinsPerMinute = selectedPersona?.coinsPerMinute ?? 60;
+              const coinsUsed = Math.floor(elapsedSeconds / 60) * coinsPerMinute;
+              const remainingCoins = Math.max(0, coinBalance - coinsUsed);
+              return (
+                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300 text-xs font-medium select-none">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  {remainingCoins} 🪙
+                </div>
+              );
+            })()}
+            {session && (
+              <button
+                onClick={() => setShowEndConfirm(true)}
+                className="text-white/70 hover:text-red-400 text-sm transition-colors font-medium"
+                aria-label="End Reading"
+              >
+                End Reading
+              </button>
+            )}
             <button
               onClick={() => navigate("/dashboard")}
               className="text-white/70 hover:text-white text-sm"
@@ -1160,7 +1230,7 @@ export default function ChatServicePage() {
           <div className="bg-gradient-to-r from-amber-500 to-orange-500 px-4 py-2.5 flex items-center justify-between gap-2 shrink-0 animate-slide-down">
             <div className="flex items-center gap-2 text-white text-sm font-medium">
               <Coins className="w-4 h-4 shrink-0" />
-              <span>Your free trial is ending soon!</span>
+              <span>{coinBalance > freeTrialCoins ? "You're running low on credits" : "Your free trial is ending soon!"}</span>
             </div>
             <div className="flex items-center gap-2">
               <button
@@ -1192,7 +1262,7 @@ export default function ChatServicePage() {
           <div className="bg-gradient-to-r from-red-500 to-rose-600 px-4 py-2.5 flex items-center justify-between gap-2 shrink-0">
             <div className="flex items-center gap-2 text-white text-sm font-medium">
               <Coins className="w-4 h-4 shrink-0" />
-              <span>Are you still there? Session pausing in {idleCountdown}s to protect your credits.</span>
+              <span>Are you still there? Pausing in {idleCountdown}s — idle time is free.</span>
             </div>
             <button
               onClick={() => {
@@ -1261,7 +1331,7 @@ export default function ChatServicePage() {
         <div
           ref={scrollRef}
           className={`flex-1 overflow-y-auto scroll-smooth ${
-            (session || !!preSessionGreeting || !!switchingToPersonaSlug || isStarting)
+            (session || !!preSessionGreeting || !!switchingToPersonaSlug || isStarting || readingEnded)
               ? 'p-4 space-y-4 bg-gray-50/50'
               : 'p-5 bg-gradient-to-b from-[#0f1729] to-[#1a2744]'
           }`}
@@ -1346,116 +1416,8 @@ export default function ChatServicePage() {
             </div>
           )}
 
-          {/* Birth data form — shown for astrology personas (e.g. Luna Voss) before first session */}
-          {!session && !preSessionGreeting && !isStarting && !switchingToPersonaSlug && selectedPersona && (() => {
-            const personality = selectedPersona.personality ? (() => {
-              try { return JSON.parse(selectedPersona.personality!); } catch { return {}; }
-            })() : {};
-            return personality?.requiresBirthData && birthChartExists === false;
-          })() && (
-            <div className="flex-1 flex flex-col items-center justify-center px-4 py-8">
-              <div className="w-full max-w-sm bg-[#0d0824]/80 border border-purple-500/30 rounded-2xl p-6 shadow-xl">
-                {/* Header */}
-                <div className="text-center mb-6">
-                  <div className="text-3xl mb-2">♈♌♎</div>
-                  <h2 className="text-white font-serif text-xl font-semibold mb-1">
-                    Your Birth Chart
-                  </h2>
-                  <p className="text-gray-400 text-sm">
-                    {selectedPersona.displayName} reads your actual natal chart — not generic horoscopes. Enter your birth details to begin.
-                  </p>
-                </div>
-
-                {/* Birth Date */}
-                <div className="mb-4">
-                  <label className="block text-sm text-gray-300 mb-1 font-medium">
-                    Date of Birth <span className="text-purple-400">*</span>
-                  </label>
-                  <input
-                    type="date"
-                    className="w-full bg-white/10 border border-purple-500/40 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-purple-400 placeholder-gray-500"
-                    value={birthDataForm.birthDate}
-                    onChange={e => setBirthDataForm(f => ({ ...f, birthDate: e.target.value }))}
-                    max={new Date().toISOString().split('T')[0]}
-                    min="1900-01-01"
-                  />
-                </div>
-
-                {/* Birth Time */}
-                <div className="mb-4">
-                  <label className="block text-sm text-gray-300 mb-1 font-medium">
-                    Time of Birth{' '}
-                    <span className="text-gray-400 font-normal">(affects Rising sign & houses)</span>
-                  </label>
-                  <input
-                    type="time"
-                    className="w-full bg-white/10 border border-purple-500/40 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-purple-400 disabled:opacity-40"
-                    value={birthDataForm.birthTime}
-                    disabled={birthDataForm.unknownTime}
-                    onChange={e => setBirthDataForm(f => ({ ...f, birthTime: e.target.value }))}
-                  />
-                  <label className="flex items-center gap-2 mt-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      className="accent-purple-500 w-4 h-4"
-                      checked={birthDataForm.unknownTime}
-                      onChange={e => setBirthDataForm(f => ({ ...f, unknownTime: e.target.checked, birthTime: '' }))}
-                    />
-                    <span className="text-xs text-gray-400">I don't know my birth time (noon will be used)</span>
-                  </label>
-                </div>
-
-                {/* Birth City */}
-                <div className="mb-6">
-                  <label className="block text-sm text-gray-300 mb-1 font-medium">
-                    City of Birth <span className="text-purple-400">*</span>
-                  </label>
-                  <CityAutocomplete
-                    value={birthDataForm.birthCity}
-                    onChange={v => setBirthDataForm(f => ({ ...f, birthCity: v }))}
-                    placeholder="Start typing a city..."
-                    className="w-full bg-white/10 border border-purple-500/40 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-purple-400 placeholder-gray-500"
-                    required
-                  />
-                </div>
-
-                {/* Error */}
-                {birthDataError && (
-                  <div className="mb-4 text-sm text-red-400 bg-red-400/10 border border-red-400/20 rounded-lg px-3 py-2">
-                    {birthDataError}
-                  </div>
-                )}
-
-                {/* Submit */}
-                <button
-                  className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 disabled:opacity-50 text-white font-semibold rounded-xl py-3 text-sm transition-all"
-                  disabled={
-                    birthDataSubmitting ||
-                    !birthDataForm.birthDate ||
-                    !birthDataForm.birthCity ||
-                    (!birthDataForm.birthTime && !birthDataForm.unknownTime)
-                  }
-                  onClick={handleBirthDataSubmit}
-                >
-                  {birthDataSubmitting ? 'Calculating your chart...' : 'Calculate My Birth Chart'}
-                </button>
-
-                <p className="text-center text-xs text-gray-500 mt-3">
-                  Your birth data is private and only used for your reading.
-                </p>
-              </div>
-            </div>
-          )}
-
           {/* Pre-reading welcome — shown when guide hasn't greeted yet */}
-          {!session && !preSessionGreeting && !isStarting && !switchingToPersonaSlug && selectedPersona && (() => {
-            const personality = selectedPersona.personality ? (() => {
-              try { return JSON.parse(selectedPersona.personality!); } catch { return {}; }
-            })() : {};
-            // For astrology personas: only show PreReadingWelcome once chart is confirmed to exist
-            if (personality?.requiresBirthData && birthChartExists !== true) return false;
-            return true;
-          })() && (
+          {!session && !preSessionGreeting && !isStarting && !switchingToPersonaSlug && selectedPersona && (
             <PreReadingWelcome
               persona={selectedPersona}
               memoryContext={memoryContext}
@@ -1475,8 +1437,8 @@ export default function ChatServicePage() {
             />
           )}
 
-          {/* Pre-session or active session messages */}
-          {(session || !!preSessionGreeting || (isStarting && (isTyping || messages.length > 0))) && (
+          {/* Pre-session or active session messages, or post-reading history */}
+          {(session || !!preSessionGreeting || (isStarting && (isTyping || messages.length > 0)) || readingEnded) && (
             <>
               {session && (
                 <div className="text-center text-xs text-gray-400 my-4">
@@ -1507,12 +1469,16 @@ export default function ChatServicePage() {
               {messages.map((msg, index) => {
                 const isLastMsg = index === messages.length - 1;
 
-                // Natal chart wheel — rendered inline as a Luna message
+                // Natal chart — rendered inline (Western wheel or Vedic diamond)
                 if (msg.chartData) {
+                  const isVedic = (msg.chartData as any).chartType === 'vedic';
                   return (
                     <div key={msg.id} className="flex flex-col items-start w-full py-2 animate-fade-in">
                       <div className="w-full max-w-sm rounded-2xl overflow-hidden bg-[#0d0824]/80 border border-purple-500/20 shadow-lg shadow-purple-900/20 p-3">
-                        <NatalChartWheel data={msg.chartData} />
+                        {isVedic
+                          ? <VedicChartDiamond data={msg.chartData as VedicChartData} />
+                          : <NatalChartWheel data={msg.chartData as NatalChartData} />
+                        }
                       </div>
                       <button
                         onClick={async () => {
@@ -1553,8 +1519,37 @@ export default function ChatServicePage() {
                   );
                 }
 
+                // Reading Ended divider + CTA buttons
+                if (msg.isReadingEndedDivider) {
+                  return (
+                    <div key={msg.id} className="flex flex-col items-center gap-4 py-4 animate-fade-in">
+                      <div className="flex items-center gap-3 w-full">
+                        <div className="flex-1 h-px bg-gray-200" />
+                        <span className="text-xs text-gray-400 whitespace-nowrap">
+                          Reading ended · {new Date(msg.sentAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                        </span>
+                        <div className="flex-1 h-px bg-gray-200" />
+                      </div>
+                      <div className="flex flex-col gap-2 w-full max-w-xs">
+                        <button
+                          onClick={startNewReading}
+                          className="w-full py-3 bg-purple-600 text-white font-semibold rounded-xl hover:bg-purple-700 transition-colors text-sm shadow-sm"
+                        >
+                          Start a New Reading
+                        </button>
+                        <button
+                          onClick={() => navigate("/personas")}
+                          className="w-full py-3 border border-gray-300 text-gray-600 font-semibold rounded-xl hover:bg-gray-50 transition-colors text-sm"
+                        >
+                          Choose a New Guide
+                        </button>
+                      </div>
+                    </div>
+                  );
+                }
+
                 // A "real" DB message ID is a UUID — not a temp- or assistant- prefixed local ID
-                const isRealId = !msg.id.startsWith('temp-') && !msg.id.startsWith('assistant-') && !msg.id.startsWith('reveal-');
+                const isRealId = !msg.id.startsWith('temp-') && !msg.id.startsWith('assistant-') && !msg.id.startsWith('reveal-') && !msg.id.startsWith('reading-ended-');
                 const isSaved = savedMessageIds.has(msg.id);
 
                 return (
@@ -1687,16 +1682,23 @@ export default function ChatServicePage() {
               </button>
             </form>
             <div className="text-center mt-2">
-              <span className="text-[10px] text-gray-400 flex items-center justify-center gap-1">
-                <Sparkles className="w-3 h-3" />
-                Private & Confidential Reading
-              </span>
+              {!!preSessionGreeting && !session ? (
+                <span className="text-[11px] text-amber-400 font-medium flex items-center justify-center gap-1.5 bg-amber-500/10 px-3 py-1 rounded-full">
+                  <Clock className="w-3 h-3" />
+                  Timer starts when you send your first message
+                </span>
+              ) : (
+                <span className="text-[10px] text-gray-400 flex items-center justify-center gap-1">
+                  <Sparkles className="w-3 h-3" />
+                  Private & Confidential Reading
+                </span>
+              )}
             </div>
           </div>
         )}
 
         {/* Bottom bar — only on the pre-reading welcome screen */}
-        {!session && !preSessionGreeting && !switchingToPersonaSlug && !isStarting && (
+        {!session && !preSessionGreeting && !switchingToPersonaSlug && !isStarting && !readingEnded && (
           <div className="p-4 bg-[#0b1120] border-t border-white/10 shrink-0">
             <div className="flex items-center justify-center gap-6 text-xs text-white/40">
               <Link href="/personas" className="hover:text-emerald-400 transition-colors">
@@ -1716,6 +1718,31 @@ export default function ChatServicePage() {
             </div>
           </div>
         )}
+      {/* End Reading Confirm Dialog */}
+      {showEndConfirm && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm rounded-2xl">
+          <div className="bg-[#0d1f2d] border border-white/10 rounded-2xl p-6 mx-4 max-w-xs w-full text-center shadow-2xl">
+            <h3 className="text-white font-bold text-lg mb-2">End this reading?</h3>
+            <p className="text-white/60 text-sm mb-6">
+              Your chat history will be saved.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowEndConfirm(false)}
+                className="flex-1 py-2.5 rounded-xl border border-white/20 text-white/70 hover:text-white hover:border-white/40 transition-colors text-sm font-medium"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleEndReadingConfirm}
+                className="flex-1 py-2.5 rounded-xl bg-red-500/80 hover:bg-red-500 text-white transition-colors text-sm font-bold"
+              >
+                End Reading
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       </div>
 
       {/* Out of Credits Modal */}
@@ -1743,11 +1770,11 @@ export default function ChatServicePage() {
         personaId={selectedPersonaId}
       />
 
-      {/* Session Feedback Modal — shown after 5 minutes of active chat */}
+      {/* Session Feedback Modal — shown when user ends a reading after 5+ minutes */}
       <SessionFeedbackModal
         open={showFeedbackModal}
         onOpenChange={setShowFeedbackModal}
-        sessionId={session?.id ?? null}
+        sessionId={feedbackSessionId}
         personaName={selectedPersona?.displayName ?? "your guide"}
         personaAvatarUrl={selectedPersona?.avatarUrl}
       />

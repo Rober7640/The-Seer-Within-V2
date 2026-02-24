@@ -24,6 +24,7 @@ import personasRouter from "./routes/personas";
 import webhooksRouter from "./routes/webhooks";
 import userStatsRouter from "./routes/userStats";
 import migrateRouter from "./routes/migrate";
+import astrologyRouter from "./routes/astrology";
 import {
   runHealthCheck,
   runReadinessCheck,
@@ -207,6 +208,7 @@ export async function registerRoutes(
   app.use("/api/webhooks", webhooksRouter);
   app.use("/api/user", userStatsRouter);
   app.use("/api/migrate", migrateRouter);
+  app.use("/api/astrology", astrologyRouter);
 
   // Diagnostic endpoint to test Stripe session retrieval
   // Usage: GET /api/upsell/test-session/cs_xxx (replace cs_xxx with actual Stripe session ID)
