@@ -4,6 +4,13 @@ import { conversations, type Conversation, type InsertConversation } from "@shar
 import { eq, desc } from "drizzle-orm";
 import logger from "./logger";
 
+// Override pg's default timestamp parsers to ALWAYS treat as UTC.
+// OID 1114 = timestamp without time zone
+// OID 1184 = timestamp with time zone
+// Without this, pg parses "timestamp without time zone" in the server's LOCAL
+// timezone, causing a 5.5-hour billing error when the server runs in IST.
+pg.types.setTypeParser(1114, (str: string) => new Date(str + 'Z'));
+
 export const pool = new pg.Pool({
   connectionString: process.env.DATABASE_URL,
   max: 30,                    // Up from default 10 — supports 200-500 concurrent users
