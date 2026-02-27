@@ -174,7 +174,7 @@ export default function SafetyDashboard() {
           <SelectTrigger className="w-48 bg-gray-800 border-gray-700 text-white">
             <SelectValue placeholder="All types" />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="bg-gray-800 border-gray-700">
             <SelectItem value="all">All types</SelectItem>
             <SelectItem value="crisis">Crisis</SelectItem>
             <SelectItem value="inappropriate">Inappropriate</SelectItem>

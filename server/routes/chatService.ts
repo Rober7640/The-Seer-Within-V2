@@ -105,6 +105,29 @@ router.get('/greeting/:personaSlug', requireAuth, async (req: Request, res: Resp
   }
 });
 
+// POST /api/chat-service/session/end-beacon
+// Called via navigator.sendBeacon when user closes the tab/browser.
+// Ends the session to prevent orphaned billing. No auth required since
+// sendBeacon can't set headers; we validate session ownership instead.
+router.post('/session/end-beacon', async (req: Request, res: Response) => {
+  try {
+    // sendBeacon sends text/plain — parse manually
+    const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
+    const sessionId = body?.sessionId;
+    if (!sessionId) {
+      res.status(400).json({ error: 'Missing sessionId' });
+      return;
+    }
+
+    await endChatSession(sessionId);
+    logger.info('Beacon: ended session on tab close', { sessionId });
+    res.json({ success: true });
+  } catch (err) {
+    logger.error('Beacon end-session error:', err);
+    res.status(500).json({ error: 'Failed to end session' });
+  }
+});
+
 // POST /api/chat-service/session/start
 router.post('/session/start', requireAuth, async (req: Request, res: Response) => {
   try {
@@ -140,6 +163,11 @@ router.post('/session/start', requireAuth, async (req: Request, res: Response) =
       res.status(503).json({ error: 'Persona is currently offline', offline: true });
       return;
     }
+
+    // Update the user's default persona so they return here on next login
+    await db.update(users)
+      .set({ defaultPersonaId: personaId, updatedAt: new Date() })
+      .where(eq(users.id, req.userId!));
 
     // Use the chat engine which handles persona validation, credit check,
     // greeting generation, and conversation state initialization

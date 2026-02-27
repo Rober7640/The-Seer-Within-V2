@@ -43,6 +43,7 @@ app.use(
 );
 
 app.use(express.urlencoded({ extended: false }));
+app.use(express.text({ type: 'text/plain' }));
 
 // Attach request IDs and log API requests
 app.use(requestIdMiddleware);

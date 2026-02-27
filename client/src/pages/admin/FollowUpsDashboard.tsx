@@ -124,7 +124,9 @@ export default function FollowUpsDashboard() {
 
   async function handleExport() {
     try {
-      const res = await adminFetch("/api/admin/follow-ups/export");
+      const params = new URLSearchParams();
+      if (statusFilter !== "all") params.set("status", statusFilter);
+      const res = await adminFetch(`/api/admin/follow-ups/export?${params}`);
       if (res.ok) {
         const blob = await res.blob();
         const url = window.URL.createObjectURL(blob);
@@ -199,7 +201,7 @@ export default function FollowUpsDashboard() {
           <SelectTrigger className="w-40 bg-gray-800 border-gray-700 text-white">
             <SelectValue placeholder="All statuses" />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="bg-gray-800 border-gray-700">
             <SelectItem value="all">All statuses</SelectItem>
             <SelectItem value="pending">Pending</SelectItem>
             <SelectItem value="sent">Sent</SelectItem>

@@ -131,7 +131,19 @@ export function useAuth() {
     [fetchUser],
   );
 
-  const logout = useCallback(() => {
+  const logout = useCallback(async () => {
+    // End active chat sessions on the server before clearing the token
+    try {
+      const token = getToken();
+      if (token) {
+        await fetch("/api/auth/logout", {
+          method: "POST",
+          headers: { Authorization: `Bearer ${token}` },
+        });
+      }
+    } catch {
+      // Best-effort — don't block logout if the call fails
+    }
     clearToken();
     setState({ user: null, isLoading: false, isAuthenticated: false });
   }, []);

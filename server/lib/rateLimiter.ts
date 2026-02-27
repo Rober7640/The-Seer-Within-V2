@@ -1,4 +1,4 @@
-import rateLimit from 'express-rate-limit';
+import rateLimit, { ipKeyGenerator } from 'express-rate-limit';
 
 const isTestEnv = process.env.NODE_ENV === 'test' || process.env.DISABLE_RATE_LIMIT === 'true';
 const isDevEnv = process.env.NODE_ENV === 'development';
@@ -25,7 +25,7 @@ export const chatLimiter = rateLimit({
   keyGenerator: (req) => {
     // Prefer userId (set by requireAuth); fall back to IP so the limiter is always
     // enforced even if auth middleware fails to populate userId for any reason
-    return (req as any).userId || req.ip || 'unknown';
+    return (req as any).userId || ipKeyGenerator(req.ip ?? 'unknown');
   },
   // No skip — requireAuth will still reject unauthenticated requests before they reach handlers
   skip: () => isTestEnv,

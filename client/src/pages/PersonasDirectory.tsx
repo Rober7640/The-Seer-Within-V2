@@ -712,9 +712,20 @@ export default function PersonasDirectory() {
     return sectionDelay;
   }
 
+  // Show banner when redirected because previous persona is unavailable
+  const searchParams = new URLSearchParams(window.location.search);
+  const personaUnavailable = searchParams.get("unavailable") === "1";
+
   return (
     <>
       <div className="max-w-[960px] mx-auto px-4 py-8 md:py-10">
+        {/* ── Unavailable persona banner ── */}
+        {personaUnavailable && (
+          <div className="mb-6 rounded-lg bg-amber-600/20 border border-amber-500/30 px-4 py-3 text-center text-[14px] text-amber-200">
+            Your previous advisor is currently unavailable. Please choose another guide.
+          </div>
+        )}
+
         {/* ── Header ── */}
         <h1
           className="animate-mp-fade-up font-serif text-[36px] md:text-[44px] text-white text-center mb-2 tracking-tight leading-[1.1]"

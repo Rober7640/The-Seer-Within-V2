@@ -2,8 +2,8 @@ import { Router, Request, Response } from 'express';
 import { z } from 'zod';
 import { randomUUID } from 'crypto';
 import { db } from '../lib/db';
-import { users, personas } from '@shared/schema';
-import { eq } from 'drizzle-orm';
+import { users, personas, chatSessions } from '@shared/schema';
+import { eq, and, isNull } from 'drizzle-orm';
 import { hashPassword, verifyPassword, generateToken, requireAuth } from '../lib/auth';
 import { verifyMagicLinkToken } from '../lib/magicLink';
 import { authLimiter, passwordResetLimiter } from '../lib/rateLimiter';
@@ -16,6 +16,8 @@ import {
   extractFingerprint,
   serializeAccountFlags,
 } from '../lib/fraudDetection';
+import { isPersonaOnline } from '../lib/personaManager';
+import { endChatSession } from '../lib/creditTracking';
 import logger from '../lib/logger';
 
 const FREE_COINS_ON_VERIFY = 180;
@@ -289,14 +291,25 @@ router.post('/login', authLimiter, async (req: Request, res: Response) => {
 
     const token = generateToken(user.id, user.email);
 
-    // Resolve default persona slug so the client can redirect without a second request
+    // Resolve default persona slug so the client can redirect without a second request.
+    // Only return it if the persona is still active; otherwise clear it.
     let defaultPersonaSlug: string | null = null;
+    let defaultPersonaAvailable = false;
     if (user.defaultPersonaId) {
-      const personaRow = await db.select({ slug: personas.slug })
+      const personaRow = await db.select({
+        slug: personas.slug,
+        isActive: personas.isActive,
+        availabilitySchedule: personas.availabilitySchedule,
+        onlineOverride: personas.onlineOverride,
+        overrideExpiresAt: personas.overrideExpiresAt,
+      })
         .from(personas)
         .where(eq(personas.id, user.defaultPersonaId))
         .limit(1);
-      defaultPersonaSlug = personaRow[0]?.slug ?? null;
+      if (personaRow[0] && personaRow[0].isActive) {
+        defaultPersonaSlug = personaRow[0].slug;
+        defaultPersonaAvailable = isPersonaOnline(personaRow[0]);
+      }
     }
 
     res.json({
@@ -308,6 +321,7 @@ router.post('/login', authLimiter, async (req: Request, res: Response) => {
         coinBalance: user.coinBalance,
         defaultPersonaId: user.defaultPersonaId,
         defaultPersonaSlug,
+        defaultPersonaAvailable,
         emailVerified: user.emailVerified,
       },
     });
@@ -626,6 +640,34 @@ router.post('/magic-verify', authLimiter, async (req: Request, res: Response) =>
   } catch (error: any) {
     logger.error('Magic verify error:', error);
     return res.status(500).json({ error: 'Verification failed' });
+  }
+});
+
+// POST /api/auth/logout - End active sessions before logging out
+router.post('/logout', requireAuth, async (req: Request, res: Response) => {
+  try {
+    // Find all active sessions for this user and end them properly
+    const activeSessions = await db.select({ id: chatSessions.id })
+      .from(chatSessions)
+      .where(and(
+        eq(chatSessions.userId, req.userId!),
+        eq(chatSessions.status, 'active'),
+        isNull(chatSessions.endedAt),
+      ));
+
+    for (const session of activeSessions) {
+      try {
+        await endChatSession(session.id);
+        logger.info('Logout: ended active session', { userId: req.userId, sessionId: session.id });
+      } catch (err) {
+        logger.error('Logout: failed to end session', { sessionId: session.id, error: (err as Error).message });
+      }
+    }
+
+    res.json({ success: true, sessionsEnded: activeSessions.length });
+  } catch (error) {
+    logger.error('Logout error:', error);
+    res.status(500).json({ error: 'Logout failed' });
   }
 });
 

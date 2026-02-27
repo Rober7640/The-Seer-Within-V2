@@ -110,7 +110,7 @@ interface MemoryContext {
 }
 
 export default function ChatServicePage() {
-  const { user, isLoading: authLoading, isAuthenticated, logout } = useAuth();
+  const { user, isLoading: authLoading, isAuthenticated, logout, refreshUser } = useAuth();
   const [, navigate] = useLocation();
   const searchString = useSearch();
 
@@ -213,6 +213,20 @@ export default function ChatServicePage() {
     }
   }, [authLoading, isAuthenticated, navigate]);
 
+  // End active session when user closes tab/browser (safety net for billing)
+  useEffect(() => {
+    const handleUnload = () => {
+      if (session?.sessionId) {
+        navigator.sendBeacon(
+          "/api/chat-service/session/end-beacon",
+          JSON.stringify({ sessionId: session.sessionId }),
+        );
+      }
+    };
+    window.addEventListener("beforeunload", handleUnload);
+    return () => window.removeEventListener("beforeunload", handleUnload);
+  }, [session?.sessionId]);
+
   // Set coin balance from user auth data
   useEffect(() => {
     if (user) {
@@ -221,8 +235,10 @@ export default function ChatServicePage() {
     }
   }, [user]);
 
-  // Fetch available personas
+  // Fetch available personas (wait for auth to finish so we have user.defaultPersonaId)
   useEffect(() => {
+    if (authLoading) return;
+
     async function fetchPersonas() {
       try {
         const res = await fetch("/api/personas");
@@ -230,12 +246,18 @@ export default function ChatServicePage() {
           const data = await res.json();
           setPersonas(data);
 
-          // Select persona: URL param → pending (post-email-verify) → user default → first
+          // Select persona: URL param → pending (post-email-verify) → user default → choose
           if (urlPersonaSlug) {
             const match = data.find(
               (p: Persona) => p.slug === urlPersonaSlug,
             );
-            if (match) setSelectedPersonaId(match.id);
+            if (match) {
+              setSelectedPersonaId(match.id);
+            } else {
+              // URL persona not found/inactive — let user pick
+              navigate("/personas?unavailable=1");
+              return;
+            }
           } else {
             // Restore persona chosen before email verification redirect (FRICTION-3)
             const pendingSlug = localStorage.getItem("seer-pending-persona");
@@ -245,14 +267,30 @@ export default function ChatServicePage() {
               if (match) {
                 setSelectedPersonaId(match.id);
               } else if (user?.defaultPersonaId) {
-                setSelectedPersonaId(user.defaultPersonaId);
-              } else if (data.length > 0) {
-                setSelectedPersonaId(data[0].id);
+                const defaultMatch = data.find((p: Persona) => p.id === user.defaultPersonaId);
+                if (defaultMatch) {
+                  setSelectedPersonaId(defaultMatch.id);
+                } else {
+                  navigate("/personas?unavailable=1");
+                  return;
+                }
+              } else {
+                navigate("/personas");
+                return;
               }
             } else if (user?.defaultPersonaId) {
-              setSelectedPersonaId(user.defaultPersonaId);
-            } else if (data.length > 0) {
-              setSelectedPersonaId(data[0].id);
+              const defaultMatch = data.find((p: Persona) => p.id === user.defaultPersonaId);
+              if (defaultMatch) {
+                setSelectedPersonaId(defaultMatch.id);
+              } else {
+                // Default persona no longer active — let user choose
+                navigate("/personas?unavailable=1");
+                return;
+              }
+            } else {
+              // No default persona set — let user choose their first advisor
+              navigate("/personas");
+              return;
             }
           }
         }
@@ -263,7 +301,7 @@ export default function ChatServicePage() {
       }
     }
     fetchPersonas();
-  }, [urlPersonaSlug, user?.defaultPersonaId]);
+  }, [authLoading, urlPersonaSlug, user?.defaultPersonaId]);
 
   // After confirmSwitch → fetchGreeting resolves, auto-send the queued question
   useEffect(() => {
@@ -924,6 +962,8 @@ export default function ChatServicePage() {
             setShowRefillBanner(false);
             setRefillBannerDismissed(false);
             lastUserMessageAt.current = Date.now();
+            // Refresh user data so defaultPersonaId is up to date for navigation
+            refreshUser();
             if (startData.remainingCoins !== undefined) setCoinBalance(startData.remainingCoins);
             if (startData.pricing) {
               setSessionPricing(startData.pricing);

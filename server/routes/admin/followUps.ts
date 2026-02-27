@@ -155,38 +155,15 @@ router.get('/stats', async (req: Request, res: Response) => {
   }
 });
 
-// GET /api/admin/follow-ups/:id - Get single follow-up email with full content
-router.get('/:id', async (req: Request, res: Response) => {
-  try {
-    const id = req.params.id as string;
-
-    // Avoid matching "stats" and "export" as IDs
-    if (id === 'stats' || id === 'export') return res.status(404).json({ error: 'Not found' });
-
-    const email = await db
-      .select()
-      .from(followUpEmails)
-      .where(eq(followUpEmails.id, id) as any)
-      .limit(1);
-
-    if (!email[0]) {
-      return res.status(404).json({ error: 'Follow-up email not found' });
-    }
-
-    return res.json({ email: email[0] });
-  } catch (error: any) {
-    logger.error('Admin follow-up get error:', error);
-    return res.status(500).json({ error: 'Failed to fetch follow-up email' });
-  }
-});
-
-// GET /api/admin/follow-ups/export - Export as CSV
+// GET /api/admin/follow-ups/export - Export as CSV (must be before /:id)
 router.get('/export', async (req: Request, res: Response) => {
   try {
+    const status = req.query.status as string | undefined;
     const startDate = req.query.startDate as string | undefined;
     const endDate = req.query.endDate as string | undefined;
 
     const conditions = [];
+    if (status) conditions.push(eq(followUpEmails.status, status));
     if (startDate) conditions.push(gte(followUpEmails.createdAt, new Date(startDate)));
     if (endDate) conditions.push(lte(followUpEmails.createdAt, new Date(endDate)));
 
@@ -229,6 +206,28 @@ router.get('/export', async (req: Request, res: Response) => {
   } catch (error: any) {
     logger.error('Admin follow-ups export error:', error);
     return res.status(500).json({ error: 'Failed to export' });
+  }
+});
+
+// GET /api/admin/follow-ups/:id - Get single follow-up email with full content
+router.get('/:id', async (req: Request, res: Response) => {
+  try {
+    const id = req.params.id as string;
+
+    const email = await db
+      .select()
+      .from(followUpEmails)
+      .where(eq(followUpEmails.id, id) as any)
+      .limit(1);
+
+    if (!email[0]) {
+      return res.status(404).json({ error: 'Follow-up email not found' });
+    }
+
+    return res.json({ email: email[0] });
+  } catch (error: any) {
+    logger.error('Admin follow-up get error:', error);
+    return res.status(500).json({ error: 'Failed to fetch follow-up email' });
   }
 });
 

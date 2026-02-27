@@ -302,7 +302,7 @@ export default function PromptsEditor() {
             <SelectTrigger className="bg-gray-800 text-white border-gray-700">
               <SelectValue placeholder="Select Persona" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="max-h-60 overflow-y-auto bg-gray-800 border-gray-700">
               {personas.map((p) => (
                 <SelectItem key={p.id} value={p.id}>
                   {p.displayName}
@@ -579,7 +579,7 @@ export default function PromptsEditor() {
                   <SelectTrigger className="bg-gray-800 text-white border-gray-700">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-gray-800 border-gray-700">
                     {PROMPT_TYPES.map((t) => (
                       <SelectItem key={t.value} value={t.value}>
                         {t.label}

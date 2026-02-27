@@ -49,7 +49,11 @@ export default function LoginPage() {
       } else {
         const data = await login(email, password);
         if (!returnTo && data?.user?.defaultPersonaSlug) {
-          navigate(`/reading?persona=${data.user.defaultPersonaSlug}`);
+          if (data.user.defaultPersonaAvailable) {
+            navigate(`/reading?persona=${data.user.defaultPersonaSlug}`);
+          } else {
+            navigate("/personas?unavailable=1");
+          }
           return;
         }
       }
