@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { db } from '../lib/db';
 import { pool } from '../lib/db';
 import { chatSessions, chatMessages, personas, users, sessionFeedback } from '@shared/schema';
-import { eq, and, desc } from 'drizzle-orm';
+import { eq, and, desc, sql } from 'drizzle-orm';
 import { requireAuth } from '../lib/auth';
 import {
   endChatSession,
@@ -169,12 +169,38 @@ router.post('/session/start', requireAuth, async (req: Request, res: Response) =
       .set({ defaultPersonaId: personaId, updatedAt: new Date() })
       .where(eq(users.id, req.userId!));
 
+    // BILLING DEBUG: balance before initSession
+    const preInitBalance = await db.select({ coinBalance: users.coinBalance })
+      .from(users).where(eq(users.id, req.userId!)).limit(1);
+    const balancePreInit = preInitBalance[0]?.coinBalance ?? -1;
+
     // Use the chat engine which handles persona validation, credit check,
     // greeting generation, and conversation state initialization
     const result = await initSession({
       userId: req.userId!,
       personaId,
       priorGreeting: greeting,
+    });
+
+    // BILLING DEBUG: balance after initSession
+    const postInitBalance = await db.select({ coinBalance: users.coinBalance })
+      .from(users).where(eq(users.id, req.userId!)).limit(1);
+    const balancePostInit = postInitBalance[0]?.coinBalance ?? -1;
+
+    // BILLING DEBUG: count active sessions for this user
+    const activeSessions = await db.execute(
+      sql`SELECT id, coins_charged, status, started_at::text as started_at_raw
+          FROM chat_sessions WHERE user_id = ${req.userId!} AND status = 'active'`
+    );
+
+    logger.info('SESSION_START_BILLING_DEBUG', {
+      userId: req.userId,
+      personaId,
+      balancePreInit,
+      balancePostInit,
+      deducted: balancePreInit - balancePostInit,
+      creditsReturned: result.creditsRemaining,
+      activeSessions: activeSessions.rows,
     });
 
     const pricing = await getPersonaPricing(personaId);
@@ -186,6 +212,13 @@ router.post('/session/start', requireAuth, async (req: Request, res: Response) =
       greeting: result.greeting,
       remainingCoins: result.creditsRemaining,
       pricing: { ...pricing, coinsPerMinute: personaRecord[0].coinsPerMinute },
+      // TEMPORARY: billing debug info
+      _billingDebug: {
+        balancePreInit,
+        balancePostInit,
+        deducted: balancePreInit - balancePostInit,
+        activeSessions: activeSessions.rows,
+      },
     });
   } catch (error: any) {
     if (error.message === 'USER_NOT_FOUND') {
@@ -207,6 +240,7 @@ router.post('/session/start', requireAuth, async (req: Request, res: Response) =
 
 // POST /api/chat-service/session/:id/message
 router.post('/session/:id/message', requireAuth, chatLimiter, async (req: Request, res: Response) => {
+  let dbBalanceBefore = -1; // Declared outside try so catch block can access it
   try {
     const sessionId = req.params.id as string;
     const parseResult = sendMessageSchema.safeParse(req.body);
@@ -219,11 +253,43 @@ router.post('/session/:id/message', requireAuth, chatLimiter, async (req: Reques
 
     const { content } = parseResult.data;
 
+    // BILLING DEBUG: snapshot balance BEFORE sendMessage (use pool.query directly
+    // to bypass any Drizzle/pgbouncer stale read issues)
+    const { rows: preRows } = await pool.query(
+      'SELECT coin_balance FROM users WHERE id = $1', [req.userId!]
+    );
+    dbBalanceBefore = Number(preRows[0]?.coin_balance ?? -1);
+
     // Use the chat engine which handles safety checks, intent detection,
     // conversation state, Claude API call, and response validation
     const result = await sendMessage(sessionId, req.userId!, content, {
       ipAddress: req.ip || (req.headers['x-forwarded-for'] as string) || undefined,
       userAgent: req.headers['user-agent'] || undefined,
+    });
+
+    // BILLING DEBUG: snapshot balance AFTER sendMessage
+    const balanceAfter = await db.select({ coinBalance: users.coinBalance })
+      .from(users).where(eq(users.id, req.userId!)).limit(1);
+    const dbBalanceAfter = balanceAfter[0]?.coinBalance ?? -1;
+
+    // BILLING DEBUG: get session billing state
+    const sessionDebug = await db.execute(
+      sql`SELECT coins_charged, duration_seconds,
+                 started_at::text as started_at_raw,
+                 last_message_at::text as last_message_at_raw,
+                 EXTRACT(EPOCH FROM (NOW() - (started_at AT TIME ZONE 'UTC')))::int as elapsed_utc,
+                 current_setting('timezone') as session_timezone
+          FROM chat_sessions WHERE id = ${sessionId}`
+    );
+
+    logger.info('MESSAGE_BILLING_DEBUG', {
+      sessionId,
+      userId: req.userId,
+      dbBalanceBefore,
+      dbBalanceAfter,
+      deducted: dbBalanceBefore - dbBalanceAfter,
+      returnedCreditsRemaining: result.creditsRemaining,
+      sessionState: sessionDebug.rows[0] || null,
     });
 
     res.json({
@@ -235,6 +301,13 @@ router.post('/session/:id/message', requireAuth, chatLimiter, async (req: Reques
       chartData: result.chartData ?? null,
       userMessageId: result.userMessageId,
       assistantMessageId: result.assistantMessageId,
+      // TEMPORARY: billing debug info — remove after fixing
+      _billingDebug: {
+        dbBalanceBefore,
+        dbBalanceAfter,
+        deducted: dbBalanceBefore - dbBalanceAfter,
+        session: sessionDebug.rows[0] || null,
+      },
     });
   } catch (error: any) {
     if (error.message === 'SESSION_NOT_FOUND') {
@@ -246,7 +319,41 @@ router.post('/session/:id/message', requireAuth, chatLimiter, async (req: Reques
       return;
     }
     if (error.message === 'OUT_OF_CREDITS') {
-      res.status(402).json({ error: 'Out of coins', remainingCoins: 0 });
+      // Comprehensive 402 diagnostic: read balance via BOTH Drizzle and raw SQL
+      const oocBalance = await db.select({ coinBalance: users.coinBalance })
+        .from(users).where(eq(users.id, req.userId!)).limit(1);
+      const rawOocBalance = await db.execute(
+        sql`SELECT coin_balance, updated_at::text as updated_at FROM users WHERE id = ${req.userId!}`
+      );
+      // Get recent sessions and transactions for this user
+      const recentSessions = await db.execute(
+        sql`SELECT id, status, coins_charged, duration_seconds,
+                   started_at::text, ended_at::text
+            FROM chat_sessions WHERE user_id = ${req.userId!}
+            ORDER BY created_at DESC LIMIT 5`
+      );
+      const rawRow = rawOocBalance.rows[0] as any;
+
+      logger.error('OUT_OF_CREDITS thrown - FULL DIAGNOSTIC', {
+        sessionId: req.params.id,
+        userId: req.userId,
+        pid: process.pid,
+        drizzleBalance: oocBalance[0]?.coinBalance ?? -1,
+        rawSqlBalance: rawRow?.coin_balance ?? -1,
+        rawSqlUpdatedAt: rawRow?.updated_at ?? 'N/A',
+        dbBalanceBeforeSendMessage: dbBalanceBefore,
+        recentSessions: recentSessions.rows,
+      });
+      res.status(402).json({
+        error: 'Out of coins',
+        remainingCoins: 0,
+        dbBalance: oocBalance[0]?.coinBalance ?? -1,
+        rawSqlBalance: rawRow?.coin_balance ?? -1,
+        dbBalanceBeforeSendMessage: dbBalanceBefore,
+        rawSqlUpdatedAt: rawRow?.updated_at ?? 'N/A',
+        pid: process.pid,
+        recentSessions: recentSessions.rows,
+      });
       return;
     }
     logger.error('Send message error:', error);
@@ -513,6 +620,75 @@ router.post('/session/:id/feedback', requireAuth, async (req: Request, res: Resp
     }
     logger.error('Feedback submission error:', error);
     res.status(500).json({ error: 'Failed to save feedback' });
+  }
+});
+
+// ─── DIAGNOSTIC: billing debug endpoint (TEMPORARY — remove after debugging) ───
+// GET /api/chat-service/debug/billing
+// Returns the raw billing state for the current user: balance, all sessions, timestamps, etc.
+router.get('/debug/billing', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const userId = req.userId!;
+
+    // 1. User balance
+    const userRow = await db.select({
+      id: users.id,
+      coinBalance: users.coinBalance,
+      totalCoinsUsed: users.totalCoinsUsed,
+    }).from(users).where(eq(users.id, userId)).limit(1);
+
+    // 2. All sessions (last 10)
+    const sessions = await db.execute(
+      sql`SELECT id, persona_id, status, coins_charged, duration_seconds,
+                 started_at::text as started_at_raw,
+                 last_message_at::text as last_message_at_raw,
+                 ended_at::text as ended_at_raw,
+                 last_heartbeat_at::text as last_heartbeat_at_raw,
+                 created_at::text as created_at_raw,
+                 EXTRACT(EPOCH FROM (NOW() - (started_at AT TIME ZONE 'UTC')))::int as elapsed_utc,
+                 EXTRACT(EPOCH FROM (NOW() - started_at))::int as elapsed_session_tz,
+                 (NOW() AT TIME ZONE 'UTC')::text as server_now_utc,
+                 NOW()::text as server_now_session_tz,
+                 current_setting('timezone') as session_timezone
+          FROM chat_sessions
+          WHERE user_id = ${userId}
+          ORDER BY created_at DESC
+          LIMIT 10`
+    );
+
+    // 3. Credit transactions (last 10)
+    let transactions: any[] = [];
+    try {
+      const txResult = await pool.query(
+        `SELECT id, type, amount, description, created_at::text as created_at_raw
+         FROM credit_transactions
+         WHERE user_id = $1
+         ORDER BY created_at DESC
+         LIMIT 10`,
+        [userId],
+      );
+      transactions = txResult.rows;
+    } catch {
+      // Table may not exist
+    }
+
+    // 4. Persona coinsPerMinute for all active personas
+    const personaRates = await db.select({
+      id: personas.id,
+      displayName: personas.displayName,
+      coinsPerMinute: personas.coinsPerMinute,
+    }).from(personas).where(eq(personas.isActive, true));
+
+    res.json({
+      user: userRow[0] || null,
+      sessions: sessions.rows,
+      transactions,
+      personaRates,
+      _note: 'TEMPORARY DEBUG ENDPOINT — remove after fixing billing',
+    });
+  } catch (error) {
+    logger.error('Debug billing error:', error);
+    res.status(500).json({ error: 'Debug query failed', details: (error as Error).message });
   }
 });
 

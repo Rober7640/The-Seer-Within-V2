@@ -197,6 +197,13 @@ export default function ChatServicePage() {
   const lastUserMessageAt = useRef<number | null>(null);
   // Stores a queued question from the instructions screen to auto-send once greeting appears
   const pendingQuestionAfterGreeting = useRef<string | null>(null);
+
+  // Refs for volatile values used inside the credit timer (Fix 4: stabilize timer deps)
+  const coinBalanceRef = useRef(coinBalance);
+  const endSessionRef = useRef<() => void>(() => {});
+  const freeTrialCoinsRef = useRef(freeTrialCoins);
+  const refillBannerDismissedRef = useRef(refillBannerDismissed);
+  const coinsPerMinuteRef = useRef(60);
   // Tracks the last persona ID that triggered an auto-fetch, to prevent double-fetching
   const lastAutoFetchedPersonaId = useRef<string | null>(null);
 
@@ -216,24 +223,27 @@ export default function ChatServicePage() {
   // End active session when user closes tab/browser (safety net for billing)
   useEffect(() => {
     const handleUnload = () => {
-      if (session?.sessionId) {
+      if (session?.id) {
         navigator.sendBeacon(
           "/api/chat-service/session/end-beacon",
-          JSON.stringify({ sessionId: session.sessionId }),
+          JSON.stringify({ sessionId: session.id }),
         );
       }
     };
     window.addEventListener("beforeunload", handleUnload);
     return () => window.removeEventListener("beforeunload", handleUnload);
-  }, [session?.sessionId]);
+  }, [session?.id]);
 
-  // Set coin balance from user auth data
+  // Set coin balance from user auth data — but only when there's NO active session.
+  // During an active session, coinBalance is managed by server responses from
+  // /session/start and /session/:id/message to avoid stale overwrites from the
+  // async refreshUser() call racing with billing updates.
   useEffect(() => {
-    if (user) {
+    if (user && !session) {
       const coins = (user as any).coinBalance ?? 0;
       setCoinBalance(coins);
     }
-  }, [user]);
+  }, [user, session]);
 
   // Fetch available personas (wait for auth to finish so we have user.defaultPersonaId)
   useEffect(() => {
@@ -360,38 +370,51 @@ export default function ChatServicePage() {
   // Derived: current persona object — must be declared before any effect that uses it
   const selectedPersona = personas.find((p) => p.id === selectedPersonaId);
 
-  // Credit countdown timer + refill banner trigger
+  // Sync refs for volatile values used inside the credit timer (Fix 4)
+  useEffect(() => { coinBalanceRef.current = coinBalance; }, [coinBalance]);
+  useEffect(() => { freeTrialCoinsRef.current = freeTrialCoins; }, [freeTrialCoins]);
+  useEffect(() => { refillBannerDismissedRef.current = refillBannerDismissed; }, [refillBannerDismissed]);
+  useEffect(() => { coinsPerMinuteRef.current = selectedPersona?.coinsPerMinute ?? 60; }, [selectedPersona?.coinsPerMinute]);
+
+  // Credit countdown timer — display only.
+  // The timer handles ONLY the elapsed time counter and refill banner.
+  // It NEVER triggers "out of credits" or ends the session — only the server
+  // should decide when credits run out (via 402 response). This eliminates an
+  // entire class of client-side timing/race-condition bugs.
   useEffect(() => {
     if (session && session.status === "active") {
-      const coinsPerMinute = selectedPersona?.coinsPerMinute ?? 60;
-
       timerRef.current = setInterval(() => {
         setElapsedSeconds((prev) => {
           const next = prev + 1;
+          const cpm = coinsPerMinuteRef.current;
+          const balance = coinBalanceRef.current;
+          const ftCoins = freeTrialCoinsRef.current;
+          const dismissed = refillBannerDismissedRef.current;
+
           // Coins consumed = completed full minutes × guide rate (matches server Math.floor logic)
-          const coinsUsed = Math.floor(next / 60) * coinsPerMinute;
+          const coinsUsed = Math.floor(next / 60) * cpm;
 
           // Show refill banner 30 seconds before free trial ends (new users)
-          if (freeTrialCoins > 0 && !refillBannerDismissed && coinBalance <= freeTrialCoins) {
-            const freeTrialSeconds = (freeTrialCoins / coinsPerMinute) * 60;
+          if (ftCoins > 0 && !dismissed && balance <= ftCoins) {
+            const freeTrialSeconds = (ftCoins / cpm) * 60;
             if (next >= freeTrialSeconds - 30 && next < freeTrialSeconds) {
               setShowRefillBanner(true);
             }
           }
 
-          // Show refill banner when < 1 full minute remains at this guide's rate (FRICTION-7)
-          if (coinBalance > freeTrialCoins && !refillBannerDismissed) {
-            const coinsRemaining = coinBalance - coinsUsed;
-            if (coinsRemaining <= coinsPerMinute && coinsRemaining > 0) {
+          // Show refill banner when < 1 full minute remains at this guide's rate
+          if (balance > ftCoins && !dismissed) {
+            const coinsRemaining = balance - coinsUsed;
+            if (coinsRemaining <= cpm && coinsRemaining > 0) {
               setShowRefillBanner(true);
             }
           }
 
-          // Check if out of coins every tick — no 60s delay (FRICTION-6)
-          if (coinsUsed >= coinBalance) {
-            setShowOutOfCredits(true);
-            endSession();
-          }
+          // NOTE: We do NOT check for out-of-credits here. The server handles
+          // this via 402 responses on /session/start and /session/:id/message.
+          // Client-side timer checks caused false "out of credits" triggers due
+          // to race conditions with ref syncing, stale state, and timing.
+
           return next;
         });
       }, 1000);
@@ -403,7 +426,7 @@ export default function ChatServicePage() {
         timerRef.current = null;
       }
     };
-  }, [session, coinBalance, freeTrialCoins, refillBannerDismissed, selectedPersona?.coinsPerMinute]);
+  }, [session]);
 
   // Idle detection: warn after 2 min of no message sent, auto-end after 3 min
   useEffect(() => {
@@ -759,6 +782,9 @@ export default function ChatServicePage() {
     }
   }, [session, coinBalance]);
 
+  // Keep endSessionRef in sync so the timer can call endSession without a stale closure
+  useEffect(() => { endSessionRef.current = endSession; }, [endSession]);
+
   // User-initiated "End Reading" — keeps chat history, inserts divider, triggers feedback if 5+ min
   const handleEndReadingConfirm = useCallback(async () => {
     setShowEndConfirm(false);
@@ -965,6 +991,10 @@ export default function ChatServicePage() {
             // Refresh user data so defaultPersonaId is up to date for navigation
             refreshUser();
             if (startData.remainingCoins !== undefined) setCoinBalance(startData.remainingCoins);
+            // TEMPORARY: log billing debug info
+            if (startData._billingDebug) {
+              console.warn('[BILLING DEBUG] Session start:', JSON.stringify(startData._billingDebug, null, 2));
+            }
             if (startData.pricing) {
               setSessionPricing(startData.pricing);
               setFreeTrialCoins(startData.pricing.freeCoins ?? 0);
@@ -1044,7 +1074,23 @@ export default function ChatServicePage() {
           if (data.remainingCoins !== undefined) {
             setCoinBalance(data.remainingCoins);
           }
+          // TEMPORARY: log billing debug info to console
+          if (data._billingDebug) {
+            console.warn('[BILLING DEBUG] Message response:', JSON.stringify(data._billingDebug, null, 2));
+          }
         } else if (res.status === 402) {
+          // TEMPORARY: comprehensive 402 diagnostic — log EVERYTHING
+          try {
+            const errData = await res.clone().json();
+            console.error('[BILLING DEBUG] 402 OUT_OF_CREDITS - FULL DIAGNOSTIC:');
+            console.error('  dbBalance (Drizzle):', errData.dbBalance);
+            console.error('  rawSqlBalance:', errData.rawSqlBalance);
+            console.error('  balanceBeforeSendMessage:', errData.dbBalanceBeforeSendMessage);
+            console.error('  rawSqlUpdatedAt:', errData.rawSqlUpdatedAt);
+            console.error('  serverPID:', errData.pid);
+            console.error('  recentSessions:', JSON.stringify(errData.recentSessions, null, 2));
+            console.error('  Full response:', JSON.stringify(errData, null, 2));
+          } catch {}
           setShowOutOfCredits(true);
           await endSession();
         } else if (res.status === 410 || res.status === 404) {
@@ -1179,6 +1225,17 @@ export default function ChatServicePage() {
           onSwitchGuide={(slug, teaserFull) => switchGuide(slug, teaserFull)}
           isNewUser={(user?.coinBalance ?? 0) + (user?.totalCoinsUsed ?? 0) <= 180}
         />
+      )}
+
+      {/* TEMPORARY BILLING DEBUG BANNER — remove after fixing */}
+      {session && (
+        <div className="fixed top-0 left-0 right-0 z-[9999] bg-yellow-400 text-black text-xs font-mono px-3 py-1 flex gap-4 items-center justify-center">
+          <span>DB Balance: {coinBalance}</span>
+          <span>CPM: {selectedPersona?.coinsPerMinute ?? '?'}</span>
+          <span>Elapsed: {elapsedSeconds}s</span>
+          <span>Used: {Math.floor(elapsedSeconds / 60) * (selectedPersona?.coinsPerMinute ?? 60)}</span>
+          <span>Session: {session.status}</span>
+        </div>
       )}
 
       {/* Main Chat Panel */}

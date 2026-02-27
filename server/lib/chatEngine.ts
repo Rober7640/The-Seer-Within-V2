@@ -1,7 +1,7 @@
 // Chat Engine: Connects persona system, memory, credit tracking,
 // universal safety, and persona intent into a unified chat flow.
 
-import { db } from './db';
+import { db, pool } from './db';
 import {
   users,
   personas,
@@ -778,7 +778,15 @@ export async function initSession(config: {
     .limit(1);
 
   if (!user[0]) throw new Error('USER_NOT_FOUND');
-  if (user[0].coinBalance <= 0) throw new Error('OUT_OF_CREDITS');
+
+  // Verify balance with direct pool query to prevent stale reads from pgbouncer
+  const { rows: initBalRows } = await pool.query(
+    'SELECT coin_balance FROM users WHERE id = $1', [config.userId]
+  );
+  const initPoolBalance = Number(initBalRows[0]?.coin_balance ?? 0);
+  const initEffectiveBalance = Math.max(user[0].coinBalance, initPoolBalance);
+
+  if (initEffectiveBalance <= 0) throw new Error('OUT_OF_CREDITS');
 
   const personaConfig = await loadPersonaConfig(config.personaId);
   if (!personaConfig) throw new Error('PERSONA_NOT_FOUND');
@@ -808,11 +816,14 @@ export async function initSession(config: {
     content: greeting,
   });
 
+  // Re-read balance after startChatSession (which may have ended old sessions and deducted coins)
+  const freshUser = await db.select({ coinBalance: users.coinBalance }).from(users).where(eq(users.id, config.userId)).limit(1);
+
   return {
     sessionId,
     personaName: personaConfig.displayName,
     greeting,
-    creditsRemaining: user[0].coinBalance,
+    creditsRemaining: freshUser[0]?.coinBalance ?? 0,
   };
 }
 
@@ -891,13 +902,64 @@ export async function sendMessage(
   const softCrisisNote = safetyResult.softCrisisNote ?? null;
 
   // ── Step 2: Credit check (after safety, so crisis messages always get a response) ──
+  // IMPORTANT: pgbouncer transaction pooling can return stale reads when connections
+  // with uncommitted/cached snapshots are reused. We defend against this with:
+  //   1. A direct pool.query() that bypasses Drizzle entirely
+  //   2. If balance appears 0, a retry read to catch transient stale reads
+  //   3. Using the HIGHEST balance across all reads
+
+  // Read 1: Direct pool query (bypasses Drizzle, gets a fresh connection from pg pool)
+  const { rows: poolRows } = await pool.query(
+    'SELECT coin_balance, updated_at FROM users WHERE id = $1', [userId]
+  );
+  const poolBalance = Number(poolRows[0]?.coin_balance ?? 0);
+
+  // Read 2: Drizzle ORM query (for the full user object needed downstream)
   const user = await db
     .select()
     .from(users)
     .where(eq(users.id, userId))
     .limit(1);
+  const drizzleBalance = user[0]?.coinBalance ?? 0;
 
-  if (!user[0] || user[0].coinBalance <= 0) {
+  // Use the HIGHEST balance across reads to prevent false 402s from stale reads
+  let effectiveBalance = Math.max(poolBalance, drizzleBalance);
+
+  // If both reads returned 0, do a retry read with a fresh pool connection.
+  // This catches the exact scenario where pgbouncer returns a stale snapshot.
+  let retryBalance: number | null = null;
+  if (effectiveBalance <= 0 && user[0]) {
+    // Small delay to let any in-flight transaction commit
+    await new Promise(resolve => setTimeout(resolve, 50));
+    const { rows: retryRows } = await pool.query(
+      'SELECT coin_balance FROM users WHERE id = $1', [userId]
+    );
+    retryBalance = Number(retryRows[0]?.coin_balance ?? 0);
+    if (retryBalance > 0) {
+      effectiveBalance = retryBalance;
+    }
+  }
+
+  logger.info('CREDIT_CHECK_AUDIT', {
+    sessionId, userId, pid: process.pid,
+    poolBalance, drizzleBalance, effectiveBalance,
+    retryBalance,
+    userFound: !!user[0],
+  });
+
+  // Log anomaly if reads disagree
+  if (user[0] && poolBalance !== drizzleBalance) {
+    logger.error('BALANCE_MISMATCH: pool.query and Drizzle disagree!', {
+      sessionId, userId, poolBalance, drizzleBalance, retryBalance,
+    });
+  }
+
+  if (!user[0] || effectiveBalance <= 0) {
+    // Balance is genuinely 0 across all reads — user is out of credits
+    logger.error('OUT_OF_CREDITS_CONFIRMED', {
+      sessionId, userId, pid: process.pid,
+      poolBalance, drizzleBalance, retryBalance, effectiveBalance,
+    });
     await endChatSession(sessionId);
     throw new Error('OUT_OF_CREDITS');
   }
@@ -920,15 +982,16 @@ export async function sendMessage(
       }
 
       const firstName = user[0]?.firstName || 'friend';
-      const now = new Date();
 
       // Persist user message and update session heartbeat
       const [insertedUserMsgBD] = await db.insert(chatMessages)
         .values({ sessionId, userId, role: 'user', content: userMessage })
         .returning({ id: chatMessages.id });
-      await db.update(chatSessions)
-        .set({ lastMessageAt: sql`NOW()` })
-        .where(eq(chatSessions.id, sessionId));
+      // Use SQL NOW() AT TIME ZONE 'UTC' — NOT JavaScript new Date() — to ensure
+      // last_message_at is always stored in UTC, matching started_at's timezone.
+      await db.execute(
+        sql`UPDATE chat_sessions SET last_message_at = (NOW() AT TIME ZONE 'UTC') WHERE id = ${sessionId}`
+      );
       await checkpointSession(sessionId);
 
       let responseMessage: string;
@@ -1077,7 +1140,6 @@ export async function sendMessage(
   // ── Step 6: Build intent context for Claude ──
   const intentCtx = buildIntentContext(intentResult, convState, intentConfig);
 
-  const now = new Date();
   const [insertedUserMsg] = await db.insert(chatMessages).values({
     sessionId,
     userId,
@@ -1087,9 +1149,11 @@ export async function sendMessage(
 
   // Record actual user activity so idle-timeout logic can distinguish
   // real usage from sessions left open with no messages.
-  await db.update(chatSessions)
-    .set({ lastMessageAt: sql`NOW()` })
-    .where(eq(chatSessions.id, sessionId));
+  // Use SQL NOW() AT TIME ZONE 'UTC' — NOT JavaScript new Date() — to ensure
+  // last_message_at is always stored in UTC, matching started_at's timezone.
+  await db.execute(
+    sql`UPDATE chat_sessions SET last_message_at = (NOW() AT TIME ZONE 'UTC') WHERE id = ${sessionId}`
+  );
 
   await checkpointSession(sessionId);
 
