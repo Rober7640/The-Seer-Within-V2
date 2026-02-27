@@ -66,21 +66,25 @@ export async function startChatSession(userId: string, personaId: string): Promi
 
   logger.info('startChatSession: found existing active sessions', { count: existing.length, sessions: existing.map(s => ({ id: s.id, personaId: s.personaId })) });
 
-  for (const old of existing) {
-    try {
-      await endChatSession(old.id);
-      logger.info('startChatSession: ended stale session', { sessionId: old.id, userId });
-    } catch (err) {
-      logger.error('startChatSession: failed to end stale session', { sessionId: old.id, error: (err as Error).message });
+  // Force-close stale sessions WITHOUT additional billing.
+  // The checkpoint system already billed what it could during each session's lifetime.
+  // Using endChatSession here would compute "catch-up" billing on orphaned sessions
+  // that have been stuck as "active" for hours/days, draining all the user's credits.
+  if (existing.length > 0) {
+    for (const old of existing) {
+      try {
+        await db.execute(
+          sql`UPDATE chat_sessions SET
+                status = 'ended',
+                ended_at = COALESCE(last_message_at, started_at, (NOW() AT TIME ZONE 'UTC')),
+                updated_at = (NOW() AT TIME ZONE 'UTC')
+              WHERE id = ${old.id} AND status = 'active'`
+        );
+        logger.info('startChatSession: force-closed stale session (no extra billing)', { sessionId: old.id, userId });
+      } catch (err) {
+        logger.error('startChatSession: failed to close stale session', { sessionId: old.id, error: (err as Error).message });
+      }
     }
-  }
-
-  // Check balance after cleanup — reject if drained to zero
-  const userAfterCleanup = await db.select({ coinBalance: users.coinBalance }).from(users).where(eq(users.id, userId)).limit(1);
-  logger.info('startChatSession: balance after cleanup', { userId, balanceBefore: user[0].coinBalance, balanceAfter: userAfterCleanup[0]?.coinBalance });
-
-  if (!userAfterCleanup[0] || userAfterCleanup[0].coinBalance <= 0) {
-    throw new Error('OUT_OF_CREDITS');
   }
 
   const [pricing, personaRow] = await Promise.all([
@@ -393,20 +397,14 @@ async function getPersonaConfig(personaId: string): Promise<{ timeoutMs: number;
 
 /**
  * Recover active sessions on server startup.
- * Uses PostgreSQL EXTRACT(EPOCH FROM ...) to avoid JS timestamp parsing.
+ * Force-closes all orphaned sessions WITHOUT additional billing.
+ * The checkpoint system already billed incrementally during each session's lifetime.
+ * Attempting "catch-up" billing on old sessions risks draining users' credits due to
+ * timezone issues, stale timestamps, or sessions orphaned for hours/days.
  */
 export async function recoverActiveSessions(): Promise<void> {
-  // ALL timestamp columns use explicit AT TIME ZONE 'UTC' casts — immune to session timezone
   const active = await db.execute(
-    sql`SELECT id, user_id, persona_id, coins_charged,
-               EXTRACT(EPOCH FROM (NOW() AT TIME ZONE 'UTC' - (started_at AT TIME ZONE 'UTC')))::int as elapsed_seconds,
-               CASE WHEN last_message_at IS NOT NULL
-                    THEN EXTRACT(EPOCH FROM (NOW() AT TIME ZONE 'UTC' - (last_message_at AT TIME ZONE 'UTC')))::int
-                    ELSE EXTRACT(EPOCH FROM (NOW() AT TIME ZONE 'UTC' - (started_at AT TIME ZONE 'UTC')))::int
-               END as idle_seconds,
-               CASE WHEN last_message_at IS NOT NULL
-                    THEN EXTRACT(EPOCH FROM ((last_message_at AT TIME ZONE 'UTC') - (started_at AT TIME ZONE 'UTC')))::int
-                    ELSE 0 END as active_seconds
+    sql`SELECT id, user_id, persona_id
         FROM chat_sessions
         WHERE status = 'active' AND ended_at IS NULL`
   );
@@ -416,59 +414,20 @@ export async function recoverActiveSessions(): Promise<void> {
     return;
   }
 
-  logger.info('Recovering active sessions', { count: active.rows.length });
+  logger.info('Recovering active sessions (force-close, no extra billing)', { count: active.rows.length });
 
-  for (const row of active.rows as Array<{
-    id: string; user_id: string; persona_id: string; coins_charged: number;
-    elapsed_seconds: number; idle_seconds: number; active_seconds: number;
-  }>) {
-    const { timeoutMs, coinsPerMinute } = await getPersonaConfig(row.persona_id);
-    const timeoutSeconds = Math.floor(timeoutMs / 1000);
-
-    if (row.idle_seconds > timeoutSeconds) {
-      // Session timed out — bill only active time
-      const billableSeconds = capBillableSeconds(Math.max(0, row.active_seconds), row.id);
-      const totalMinutes = Math.floor(billableSeconds / 60);
-      const totalCoins = totalMinutes * coinsPerMinute;
-      const remainingToDeduct = Math.max(0, totalCoins - Number(row.coins_charged));
-
-      if (remainingToDeduct > 0) {
-        await db.update(users)
-          .set({
-            coinBalance: sql`GREATEST(0, coin_balance - ${remainingToDeduct})`,
-            totalCoinsUsed: sql`total_coins_used + ${remainingToDeduct}`,
-            updatedAt: sql`(NOW() AT TIME ZONE 'UTC')`,
-          })
-          .where(eq(users.id, row.user_id));
-      }
-
-      // Set ended_at to last_message_at (or started_at if no messages)
+  for (const row of active.rows as Array<{ id: string; user_id: string; persona_id: string }>) {
+    try {
       await db.execute(
         sql`UPDATE chat_sessions SET
               status = 'ended',
-              ended_at = COALESCE(last_message_at, started_at),
-              duration_seconds = ${billableSeconds},
-              coins_charged = ${totalCoins},
+              ended_at = COALESCE(last_message_at, started_at, (NOW() AT TIME ZONE 'UTC')),
               updated_at = (NOW() AT TIME ZONE 'UTC')
-            WHERE id = ${row.id}`
+            WHERE id = ${row.id} AND status = 'active'`
       );
-
-      logger.info('Auto-ended stale session', {
-        sessionId: row.id,
-        idleSeconds: row.idle_seconds,
-        billableSeconds,
-        totalCoins,
-        remainingToDeduct,
-      });
-
-      sendTimeoutNotification(row.id).catch(err =>
-        logger.error('Failed to send timeout email during recovery', { sessionId: row.id, error: (err as Error).message })
-      );
-    } else {
-      await db.execute(
-        sql`UPDATE chat_sessions SET last_heartbeat_at = (NOW() AT TIME ZONE 'UTC'), updated_at = (NOW() AT TIME ZONE 'UTC') WHERE id = ${row.id}`
-      );
-      logger.info('Recovered session', { sessionId: row.id });
+      logger.info('Force-closed orphaned session on startup', { sessionId: row.id, userId: row.user_id });
+    } catch (err) {
+      logger.error('Failed to close orphaned session on startup', { sessionId: row.id, error: (err as Error).message });
     }
   }
 }
