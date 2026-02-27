@@ -19,6 +19,9 @@ pool.on('error', (err) => {
 
 // Kill runaway queries after 8 seconds so they don't hold connections under load
 pool.on('connect', (client) => {
+  // Force UTC so pg's timestamp parser always creates correct Date objects,
+  // regardless of the server's local timezone (fixes IST billing bug).
+  client.query("SET timezone = 'UTC'").catch(() => {});
   client.query('SET statement_timeout = 8000').catch(() => {});
 });
 
