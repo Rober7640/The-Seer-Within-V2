@@ -989,6 +989,10 @@ export default function ChatServicePage() {
             // Refresh user data so defaultPersonaId is up to date for navigation
             refreshUser();
             if (startData.remainingCoins !== undefined) setCoinBalance(startData.remainingCoins);
+            // TEMPORARY: log billing debug info
+            if (startData._billingDebug) {
+              console.warn('[BILLING DEBUG] Session start:', JSON.stringify(startData._billingDebug, null, 2));
+            }
             if (startData.pricing) {
               setSessionPricing(startData.pricing);
               setFreeTrialCoins(startData.pricing.freeCoins ?? 0);
@@ -1068,7 +1072,13 @@ export default function ChatServicePage() {
           if (data.remainingCoins !== undefined) {
             setCoinBalance(data.remainingCoins);
           }
+          // TEMPORARY: log billing debug info to console
+          if (data._billingDebug) {
+            console.warn('[BILLING DEBUG] Message response:', JSON.stringify(data._billingDebug, null, 2));
+          }
         } else if (res.status === 402) {
+          // TEMPORARY: log 402 details
+          try { const errData = await res.clone().json(); console.error('[BILLING DEBUG] 402 OUT_OF_CREDITS:', JSON.stringify(errData, null, 2)); } catch {}
           setShowOutOfCredits(true);
           await endSession();
         } else if (res.status === 410 || res.status === 404) {
