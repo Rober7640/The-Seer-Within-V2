@@ -894,13 +894,62 @@ export async function sendMessage(
   const softCrisisNote = safetyResult.softCrisisNote ?? null;
 
   // ── Step 2: Credit check (after safety, so crisis messages always get a response) ──
+  // Use raw SQL to independently verify balance — catches Drizzle ORM edge cases
+  const rawBalanceResult = await db.execute(
+    sql`SELECT coin_balance, updated_at, email FROM users WHERE id = ${userId}`
+  );
+  const rawBalance = (rawBalanceResult.rows[0] as any)?.coin_balance;
+  const rawUpdatedAt = (rawBalanceResult.rows[0] as any)?.updated_at;
+
   const user = await db
     .select()
     .from(users)
     .where(eq(users.id, userId))
     .limit(1);
 
-  if (!user[0] || user[0].coinBalance <= 0) {
+  // Log both Drizzle and raw SQL balance for audit trail
+  const drizzleBalance = user[0]?.coinBalance;
+  logger.info('CREDIT_CHECK_AUDIT', {
+    sessionId,
+    userId,
+    drizzleBalance,
+    rawSqlBalance: rawBalance,
+    rawSqlUpdatedAt: rawUpdatedAt,
+    drizzleUserFound: !!user[0],
+    rawUserFound: rawBalanceResult.rows.length > 0,
+    pid: process.pid,
+  });
+
+  // If Drizzle and raw SQL disagree, log an anomaly
+  if (user[0] && rawBalance !== undefined && Number(rawBalance) !== drizzleBalance) {
+    logger.error('BALANCE_MISMATCH: Drizzle and raw SQL disagree!', {
+      sessionId, userId, drizzleBalance, rawSqlBalance: rawBalance,
+    });
+  }
+
+  // Use whichever balance is HIGHER to avoid false 402s from read anomalies
+  const effectiveBalance = Math.max(Number(rawBalance) || 0, drizzleBalance ?? 0);
+
+  if (!user[0] || effectiveBalance <= 0) {
+    // Gather comprehensive diagnostic data before throwing
+    const recentSessions = await db.execute(
+      sql`SELECT id, status, coins_charged, duration_seconds,
+                 started_at::text, ended_at::text, last_message_at::text
+          FROM chat_sessions WHERE user_id = ${userId}
+          ORDER BY created_at DESC LIMIT 5`
+    );
+    const recentTxns = await db.execute(
+      sql`SELECT id, package_type, coins_purchased, status, created_at::text
+          FROM credit_purchases WHERE user_id = ${userId}
+          ORDER BY created_at DESC LIMIT 5`
+    );
+    logger.error('OUT_OF_CREDITS_DIAGNOSTIC', {
+      sessionId, userId, pid: process.pid,
+      drizzleBalance, rawSqlBalance: rawBalance, effectiveBalance,
+      drizzleUserFound: !!user[0],
+      recentSessions: recentSessions.rows,
+      recentTransactions: recentTxns.rows,
+    });
     await endChatSession(sessionId);
     throw new Error('OUT_OF_CREDITS');
   }

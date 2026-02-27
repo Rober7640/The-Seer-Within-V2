@@ -240,6 +240,7 @@ router.post('/session/start', requireAuth, async (req: Request, res: Response) =
 
 // POST /api/chat-service/session/:id/message
 router.post('/session/:id/message', requireAuth, chatLimiter, async (req: Request, res: Response) => {
+  let dbBalanceBefore = -1; // Declared outside try so catch block can access it
   try {
     const sessionId = req.params.id as string;
     const parseResult = sendMessageSchema.safeParse(req.body);
@@ -255,7 +256,7 @@ router.post('/session/:id/message', requireAuth, chatLimiter, async (req: Reques
     // BILLING DEBUG: snapshot balance BEFORE sendMessage
     const balanceBefore = await db.select({ coinBalance: users.coinBalance })
       .from(users).where(eq(users.id, req.userId!)).limit(1);
-    const dbBalanceBefore = balanceBefore[0]?.coinBalance ?? -1;
+    dbBalanceBefore = balanceBefore[0]?.coinBalance ?? -1;
 
     // Use the chat engine which handles safety checks, intent detection,
     // conversation state, Claude API call, and response validation
@@ -274,7 +275,7 @@ router.post('/session/:id/message', requireAuth, chatLimiter, async (req: Reques
       sql`SELECT coins_charged, duration_seconds,
                  started_at::text as started_at_raw,
                  last_message_at::text as last_message_at_raw,
-                 EXTRACT(EPOCH FROM (NOW() AT TIME ZONE 'UTC' - (started_at AT TIME ZONE 'UTC')))::int as elapsed_utc,
+                 EXTRACT(EPOCH FROM (NOW() - (started_at AT TIME ZONE 'UTC')))::int as elapsed_utc,
                  current_setting('timezone') as session_timezone
           FROM chat_sessions WHERE id = ${sessionId}`
     );
@@ -316,15 +317,41 @@ router.post('/session/:id/message', requireAuth, chatLimiter, async (req: Reques
       return;
     }
     if (error.message === 'OUT_OF_CREDITS') {
-      // BILLING DEBUG: log balance when OUT_OF_CREDITS is thrown
+      // Comprehensive 402 diagnostic: read balance via BOTH Drizzle and raw SQL
       const oocBalance = await db.select({ coinBalance: users.coinBalance })
         .from(users).where(eq(users.id, req.userId!)).limit(1);
-      logger.error('OUT_OF_CREDITS thrown', {
+      const rawOocBalance = await db.execute(
+        sql`SELECT coin_balance, updated_at::text as updated_at FROM users WHERE id = ${req.userId!}`
+      );
+      // Get recent sessions and transactions for this user
+      const recentSessions = await db.execute(
+        sql`SELECT id, status, coins_charged, duration_seconds,
+                   started_at::text, ended_at::text
+            FROM chat_sessions WHERE user_id = ${req.userId!}
+            ORDER BY created_at DESC LIMIT 5`
+      );
+      const rawRow = rawOocBalance.rows[0] as any;
+
+      logger.error('OUT_OF_CREDITS thrown - FULL DIAGNOSTIC', {
         sessionId: req.params.id,
         userId: req.userId,
-        currentBalance: oocBalance[0]?.coinBalance ?? -1,
+        pid: process.pid,
+        drizzleBalance: oocBalance[0]?.coinBalance ?? -1,
+        rawSqlBalance: rawRow?.coin_balance ?? -1,
+        rawSqlUpdatedAt: rawRow?.updated_at ?? 'N/A',
+        dbBalanceBeforeSendMessage: dbBalanceBefore,
+        recentSessions: recentSessions.rows,
       });
-      res.status(402).json({ error: 'Out of coins', remainingCoins: 0, dbBalance: oocBalance[0]?.coinBalance ?? -1 });
+      res.status(402).json({
+        error: 'Out of coins',
+        remainingCoins: 0,
+        dbBalance: oocBalance[0]?.coinBalance ?? -1,
+        rawSqlBalance: rawRow?.coin_balance ?? -1,
+        dbBalanceBeforeSendMessage: dbBalanceBefore,
+        rawSqlUpdatedAt: rawRow?.updated_at ?? 'N/A',
+        pid: process.pid,
+        recentSessions: recentSessions.rows,
+      });
       return;
     }
     logger.error('Send message error:', error);
@@ -616,7 +643,7 @@ router.get('/debug/billing', requireAuth, async (req: Request, res: Response) =>
                  ended_at::text as ended_at_raw,
                  last_heartbeat_at::text as last_heartbeat_at_raw,
                  created_at::text as created_at_raw,
-                 EXTRACT(EPOCH FROM (NOW() AT TIME ZONE 'UTC' - (started_at AT TIME ZONE 'UTC')))::int as elapsed_utc,
+                 EXTRACT(EPOCH FROM (NOW() - (started_at AT TIME ZONE 'UTC')))::int as elapsed_utc,
                  EXTRACT(EPOCH FROM (NOW() - started_at))::int as elapsed_session_tz,
                  (NOW() AT TIME ZONE 'UTC')::text as server_now_utc,
                  NOW()::text as server_now_session_tz,

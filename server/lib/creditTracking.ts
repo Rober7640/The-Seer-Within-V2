@@ -127,12 +127,14 @@ export async function checkpointSession(sessionId: string): Promise<void> {
 
   await db.transaction(async (tx) => {
     // Lock the session row — prevents concurrent checkpoints from double-billing.
-    // ALL timestamp columns use explicit AT TIME ZONE 'UTC' casts to make the math
-    // completely immune to session timezone — critical with pgbouncer transaction pooler
-    // where different transactions can hit backends with different timezone settings.
+    // IMPORTANT: Use NOW() (timestamptz) minus (col AT TIME ZONE 'UTC') (timestamptz)
+    // so both sides are the SAME type (timestamptz - timestamptz = interval).
+    // DO NOT use NOW() AT TIME ZONE 'UTC' which returns plain timestamp — subtracting
+    // timestamp from timestamptz forces session-timezone conversion, causing billing
+    // errors on pgbouncer transaction pooler where sessions may not be UTC.
     const locked = await tx.execute(
       sql`SELECT id, user_id, coins_charged,
-                 EXTRACT(EPOCH FROM (NOW() AT TIME ZONE 'UTC' - (started_at AT TIME ZONE 'UTC')))::int as elapsed_seconds
+                 EXTRACT(EPOCH FROM (NOW() - (started_at AT TIME ZONE 'UTC')))::int as elapsed_seconds
           FROM chat_sessions
           WHERE id = ${sessionId} AND status = 'active'
           FOR UPDATE`
@@ -196,10 +198,18 @@ export async function checkpointSession(sessionId: string): Promise<void> {
       });
     }
 
+    // Track the ACTUAL amount charged (not the uncapped target) so future
+    // checkpoints correctly compute the delta.  When deduction was capped by
+    // MAX_COINS_PER_DEDUCTION, using newTotalCharged would falsely mark the
+    // session as fully billed, preventing future legitimate deductions.
+    const actualTotalCharged = coinsToDeductNow > 0
+      ? Number(row.coins_charged) + (coinsToDeductNow > MAX_COINS_PER_DEDUCTION ? MAX_COINS_PER_DEDUCTION : coinsToDeductNow)
+      : Number(row.coins_charged);
+
     await tx.update(chatSessions)
       .set({
         durationSeconds: accumulatedSeconds,
-        coinsCharged: newTotalCharged,
+        coinsCharged: actualTotalCharged,
         lastHeartbeatAt: sql`(NOW() AT TIME ZONE 'UTC')`,
         updatedAt: sql`(NOW() AT TIME ZONE 'UTC')`,
       })
@@ -224,13 +234,15 @@ export async function endChatSession(sessionId: string): Promise<void> {
   const timeoutSeconds = Math.floor(timeoutMs / 1000);
 
   await db.transaction(async (tx) => {
-    // Lock the session row. ALL timestamp columns use explicit AT TIME ZONE 'UTC' casts
-    // to make the math completely immune to session timezone (pgbouncer transaction pooler).
+    // Lock the session row. Use NOW() (timestamptz) for subtractions so both sides
+    // are the same type — avoids session-timezone conversion bugs with pgbouncer.
+    // (col AT TIME ZONE 'UTC') converts timestamp→timestamptz, so
+    // NOW() - (col AT TIME ZONE 'UTC') is always timestamptz - timestamptz = correct interval.
     const locked = await tx.execute(
       sql`SELECT id, user_id, coins_charged,
-                 EXTRACT(EPOCH FROM (NOW() AT TIME ZONE 'UTC' - (started_at AT TIME ZONE 'UTC')))::int as elapsed_seconds,
+                 EXTRACT(EPOCH FROM (NOW() - (started_at AT TIME ZONE 'UTC')))::int as elapsed_seconds,
                  CASE WHEN last_message_at IS NOT NULL
-                      THEN EXTRACT(EPOCH FROM (NOW() AT TIME ZONE 'UTC' - (last_message_at AT TIME ZONE 'UTC')))::int
+                      THEN EXTRACT(EPOCH FROM (NOW() - (last_message_at AT TIME ZONE 'UTC')))::int
                       ELSE NULL END as idle_seconds,
                  CASE WHEN last_message_at IS NOT NULL
                       THEN EXTRACT(EPOCH FROM ((last_message_at AT TIME ZONE 'UTC') - (started_at AT TIME ZONE 'UTC')))::int
@@ -314,7 +326,7 @@ export async function endChatSession(sessionId: string): Promise<void> {
             status = 'ended',
             ended_at = CASE
               WHEN last_message_at IS NOT NULL
-                   AND EXTRACT(EPOCH FROM (NOW() AT TIME ZONE 'UTC' - (last_message_at AT TIME ZONE 'UTC'))) > ${timeoutSeconds}
+                   AND EXTRACT(EPOCH FROM (NOW() - (last_message_at AT TIME ZONE 'UTC'))) > ${timeoutSeconds}
               THEN last_message_at
               ELSE (NOW() AT TIME ZONE 'UTC')
             END,
@@ -442,13 +454,13 @@ export async function cleanupInactiveSessions(): Promise<number> {
   try {
     const conservativeSeconds = DEFAULT_TIMEOUT_MINUTES * 60;
 
-    // Find sessions with idle time beyond the conservative cutoff
-    // ALL timestamp columns use AT TIME ZONE 'UTC' casts — immune to session timezone
+    // Find sessions with idle time beyond the conservative cutoff.
+    // Use NOW() (timestamptz) for subtractions — both sides are timestamptz, immune to session tz.
     const stale = await db.execute(
       sql`SELECT id, user_id, persona_id, coins_charged,
                  CASE WHEN last_message_at IS NOT NULL
-                      THEN EXTRACT(EPOCH FROM (NOW() AT TIME ZONE 'UTC' - (last_message_at AT TIME ZONE 'UTC')))::int
-                      ELSE EXTRACT(EPOCH FROM (NOW() AT TIME ZONE 'UTC' - (started_at AT TIME ZONE 'UTC')))::int
+                      THEN EXTRACT(EPOCH FROM (NOW() - (last_message_at AT TIME ZONE 'UTC')))::int
+                      ELSE EXTRACT(EPOCH FROM (NOW() - (started_at AT TIME ZONE 'UTC')))::int
                  END as idle_seconds,
                  CASE WHEN last_message_at IS NOT NULL
                       THEN EXTRACT(EPOCH FROM ((last_message_at AT TIME ZONE 'UTC') - (started_at AT TIME ZONE 'UTC')))::int
@@ -456,9 +468,9 @@ export async function cleanupInactiveSessions(): Promise<number> {
           FROM chat_sessions
           WHERE status = 'active' AND ended_at IS NULL
             AND (
-              (last_message_at IS NOT NULL AND EXTRACT(EPOCH FROM (NOW() AT TIME ZONE 'UTC' - (last_message_at AT TIME ZONE 'UTC'))) > ${conservativeSeconds})
+              (last_message_at IS NOT NULL AND EXTRACT(EPOCH FROM (NOW() - (last_message_at AT TIME ZONE 'UTC'))) > ${conservativeSeconds})
               OR
-              (last_message_at IS NULL AND EXTRACT(EPOCH FROM (NOW() AT TIME ZONE 'UTC' - (started_at AT TIME ZONE 'UTC'))) > ${conservativeSeconds})
+              (last_message_at IS NULL AND EXTRACT(EPOCH FROM (NOW() - (started_at AT TIME ZONE 'UTC'))) > ${conservativeSeconds})
             )`
     );
 

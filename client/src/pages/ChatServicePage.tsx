@@ -223,16 +223,16 @@ export default function ChatServicePage() {
   // End active session when user closes tab/browser (safety net for billing)
   useEffect(() => {
     const handleUnload = () => {
-      if (session?.sessionId) {
+      if (session?.id) {
         navigator.sendBeacon(
           "/api/chat-service/session/end-beacon",
-          JSON.stringify({ sessionId: session.sessionId }),
+          JSON.stringify({ sessionId: session.id }),
         );
       }
     };
     window.addEventListener("beforeunload", handleUnload);
     return () => window.removeEventListener("beforeunload", handleUnload);
-  }, [session?.sessionId]);
+  }, [session?.id]);
 
   // Set coin balance from user auth data — but only when there's NO active session.
   // During an active session, coinBalance is managed by server responses from
@@ -1079,8 +1079,18 @@ export default function ChatServicePage() {
             console.warn('[BILLING DEBUG] Message response:', JSON.stringify(data._billingDebug, null, 2));
           }
         } else if (res.status === 402) {
-          // TEMPORARY: log 402 details
-          try { const errData = await res.clone().json(); console.error('[BILLING DEBUG] 402 OUT_OF_CREDITS:', JSON.stringify(errData, null, 2)); } catch {}
+          // TEMPORARY: comprehensive 402 diagnostic — log EVERYTHING
+          try {
+            const errData = await res.clone().json();
+            console.error('[BILLING DEBUG] 402 OUT_OF_CREDITS - FULL DIAGNOSTIC:');
+            console.error('  dbBalance (Drizzle):', errData.dbBalance);
+            console.error('  rawSqlBalance:', errData.rawSqlBalance);
+            console.error('  balanceBeforeSendMessage:', errData.dbBalanceBeforeSendMessage);
+            console.error('  rawSqlUpdatedAt:', errData.rawSqlUpdatedAt);
+            console.error('  serverPID:', errData.pid);
+            console.error('  recentSessions:', JSON.stringify(errData.recentSessions, null, 2));
+            console.error('  Full response:', JSON.stringify(errData, null, 2));
+          } catch {}
           setShowOutOfCredits(true);
           await endSession();
         } else if (res.status === 410 || res.status === 404) {
