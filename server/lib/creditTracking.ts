@@ -9,6 +9,22 @@ import logger from './logger';
 const DEFAULT_TIMEOUT_MINUTES = 5;
 const DEFAULT_INACTIVE_THRESHOLD_MS = DEFAULT_TIMEOUT_MINUTES * 60 * 1000;
 
+// Safety cap: never bill more than 2 hours per session regardless of elapsed time.
+// If elapsed_seconds exceeds this, something is wrong (timezone drift, orphan, clock skew).
+const MAX_BILLABLE_SECONDS = 2 * 60 * 60; // 2 hours
+
+function capBillableSeconds(seconds: number, sessionId: string): number {
+  if (seconds > MAX_BILLABLE_SECONDS) {
+    logger.error('BILLING_ANOMALY: elapsed seconds exceeds safety cap', {
+      sessionId,
+      rawSeconds: seconds,
+      cappedTo: MAX_BILLABLE_SECONDS,
+    });
+    return MAX_BILLABLE_SECONDS;
+  }
+  return seconds;
+}
+
 /**
  * Get an active session from the database.
  */
@@ -67,18 +83,22 @@ export async function startChatSession(userId: string, personaId: string): Promi
     db.select({ coinsPerMinute: personas.coinsPerMinute }).from(personas).where(eq(personas.id, personaId)).limit(1),
   ]);
 
-  const now = new Date();
-  const session = await db.insert(chatSessions).values({
-    userId,
-    personaId,
-    status: 'active',
-    pricingApplied: JSON.stringify({ ...pricing, coinsPerMinute: personaRow[0]?.coinsPerMinute ?? 60 }),
-    lastHeartbeatAt: now,
-    durationSeconds: 0,
-    coinsCharged: 0,
-  }).returning();
+  // Use raw SQL to ensure started_at is always in UTC, regardless of connection timezone.
+  // This prevents timezone drift on Supabase's pgbouncer transaction pooler.
+  const session = await db.execute(
+    sql`INSERT INTO chat_sessions (user_id, persona_id, status, pricing_applied, last_heartbeat_at, duration_seconds, coins_charged, started_at, created_at)
+        VALUES (${userId}, ${personaId}, 'active',
+                ${JSON.stringify({ ...pricing, coinsPerMinute: personaRow[0]?.coinsPerMinute ?? 60 })},
+                (NOW() AT TIME ZONE 'UTC'), 0, 0,
+                (NOW() AT TIME ZONE 'UTC'), (NOW() AT TIME ZONE 'UTC'))
+        RETURNING id`
+  );
 
-  return session[0].id;
+  const sessionId = (session.rows[0] as any)?.id;
+  if (!sessionId) throw new Error('Failed to create chat session');
+
+  logger.info('startChatSession: created session', { sessionId, userId, personaId });
+  return sessionId;
 }
 
 /**
@@ -97,6 +117,9 @@ export async function checkpointSession(sessionId: string): Promise<void> {
   const { coinsPerMinute } = await getPersonaConfig(precheck[0].personaId);
 
   await db.transaction(async (tx) => {
+    // Force UTC within this transaction to prevent timezone drift on pooled connections
+    await tx.execute(sql`SET LOCAL timezone = 'UTC'`);
+
     // Lock the session row — prevents concurrent checkpoints from double-billing.
     // EXTRACT(EPOCH FROM ...) computes elapsed seconds IN POSTGRESQL — no JS timestamp parsing.
     const locked = await tx.execute(
@@ -109,7 +132,7 @@ export async function checkpointSession(sessionId: string): Promise<void> {
     if (locked.rows.length === 0) return;
     const row = locked.rows[0] as { id: string; user_id: string; coins_charged: number; elapsed_seconds: number };
 
-    const accumulatedSeconds = Math.max(0, row.elapsed_seconds);
+    const accumulatedSeconds = capBillableSeconds(Math.max(0, row.elapsed_seconds), sessionId);
 
     // Deduct only completed full minutes (Math.floor avoids billing partial minutes early)
     const completedMinutes = Math.floor(accumulatedSeconds / 60);
@@ -127,6 +150,12 @@ export async function checkpointSession(sessionId: string): Promise<void> {
     });
 
     if (coinsToDeductNow > 0) {
+      // Read balance before deduction for audit trail
+      const beforeBalance = await tx.execute(
+        sql`SELECT coin_balance FROM users WHERE id = ${row.user_id}`
+      );
+      const balanceBefore = (beforeBalance.rows[0] as any)?.coin_balance ?? '?';
+
       await tx.update(users)
         .set({
           coinBalance: sql`GREATEST(0, coin_balance - ${coinsToDeductNow})`,
@@ -134,6 +163,14 @@ export async function checkpointSession(sessionId: string): Promise<void> {
           updatedAt: sql`NOW()`,
         })
         .where(eq(users.id, row.user_id));
+
+      logger.info('checkpointSession: deducted coins', {
+        sessionId,
+        userId: row.user_id,
+        balanceBefore,
+        deducted: coinsToDeductNow,
+        expectedAfter: Math.max(0, Number(balanceBefore) - coinsToDeductNow),
+      });
     }
 
     await tx.update(chatSessions)
@@ -164,6 +201,9 @@ export async function endChatSession(sessionId: string): Promise<void> {
   const timeoutSeconds = Math.floor(timeoutMs / 1000);
 
   await db.transaction(async (tx) => {
+    // Force UTC within this transaction to prevent timezone drift on pooled connections
+    await tx.execute(sql`SET LOCAL timezone = 'UTC'`);
+
     // Lock the session row. All time math computed in PostgreSQL:
     // - elapsed_seconds: total wall-clock time since start
     // - idle_seconds: time since last message (NULL if no messages)
@@ -189,14 +229,21 @@ export async function endChatSession(sessionId: string): Promise<void> {
 
     // Bill up to last activity if idle beyond timeout, otherwise bill full elapsed time
     const idleSeconds = row.idle_seconds ?? row.elapsed_seconds;
-    const billableSeconds = idleSeconds > timeoutSeconds
+    const rawBillable = idleSeconds > timeoutSeconds
       ? Math.max(0, row.active_seconds)  // idle too long — bill only active time
       : Math.max(0, row.elapsed_seconds); // still active — bill full elapsed
+    const billableSeconds = capBillableSeconds(rawBillable, sessionId);
 
     // Only charge completed full minutes (Math.floor — consistent with checkpointSession)
     const totalMinutes = Math.floor(billableSeconds / 60);
     const finalCharge = totalMinutes * coinsPerMinute;
     const previouslyCharged = Number(row.coins_charged);
+
+    // Read balance before any changes for audit
+    const beforeBalance = await tx.execute(
+      sql`SELECT coin_balance FROM users WHERE id = ${row.user_id}`
+    );
+    const balanceBefore = (beforeBalance.rows[0] as any)?.coin_balance ?? '?';
 
     if (finalCharge > previouslyCharged) {
       // Deduct remaining owed
@@ -208,6 +255,11 @@ export async function endChatSession(sessionId: string): Promise<void> {
           updatedAt: sql`NOW()`,
         })
         .where(eq(users.id, row.user_id));
+
+      logger.info('endChatSession: deducted coins', {
+        sessionId, userId: row.user_id, balanceBefore, deducted: remainingToDeduct,
+        expectedAfter: Math.max(0, Number(balanceBefore) - remainingToDeduct),
+      });
     } else if (finalCharge < previouslyCharged) {
       // Checkpoint over-billed — refund the difference
       const refund = previouslyCharged - finalCharge;
@@ -218,16 +270,21 @@ export async function endChatSession(sessionId: string): Promise<void> {
           updatedAt: sql`NOW()`,
         })
         .where(eq(users.id, row.user_id));
-      logger.info('endChatSession: refunding over-billed coins', { sessionId, refund, previouslyCharged, finalCharge });
+      logger.info('endChatSession: refunding over-billed coins', {
+        sessionId, refund, previouslyCharged, finalCharge, balanceBefore,
+      });
     }
 
     logger.info('endChatSession: final billing', {
       sessionId,
+      userId: row.user_id,
+      balanceBefore,
       elapsedSeconds: row.elapsed_seconds,
       idleSeconds,
       activeSeconds: row.active_seconds,
       billableSeconds,
       totalMinutes,
+      coinsPerMinute,
       finalCharge,
       previouslyCharged,
       delta: finalCharge - previouslyCharged,
@@ -325,13 +382,13 @@ async function getPersonaConfig(personaId: string): Promise<{ timeoutMs: number;
  * Uses PostgreSQL EXTRACT(EPOCH FROM ...) to avoid JS timestamp parsing.
  */
 export async function recoverActiveSessions(): Promise<void> {
-  // Use raw SQL to compute durations in PostgreSQL
+  // Force UTC for all time computations in this query
   const active = await db.execute(
     sql`SELECT id, user_id, persona_id, coins_charged,
-               EXTRACT(EPOCH FROM (NOW() - started_at))::int as elapsed_seconds,
+               EXTRACT(EPOCH FROM (NOW() AT TIME ZONE 'UTC' - started_at))::int as elapsed_seconds,
                CASE WHEN last_message_at IS NOT NULL
-                    THEN EXTRACT(EPOCH FROM (NOW() - last_message_at))::int
-                    ELSE EXTRACT(EPOCH FROM (NOW() - started_at))::int
+                    THEN EXTRACT(EPOCH FROM (NOW() AT TIME ZONE 'UTC' - last_message_at))::int
+                    ELSE EXTRACT(EPOCH FROM (NOW() AT TIME ZONE 'UTC' - started_at))::int
                END as idle_seconds,
                CASE WHEN last_message_at IS NOT NULL
                     THEN EXTRACT(EPOCH FROM (last_message_at - started_at))::int
@@ -356,7 +413,7 @@ export async function recoverActiveSessions(): Promise<void> {
 
     if (row.idle_seconds > timeoutSeconds) {
       // Session timed out — bill only active time
-      const billableSeconds = Math.max(0, row.active_seconds);
+      const billableSeconds = capBillableSeconds(Math.max(0, row.active_seconds), row.id);
       const totalMinutes = Math.floor(billableSeconds / 60);
       const totalCoins = totalMinutes * coinsPerMinute;
       const remainingToDeduct = Math.max(0, totalCoins - Number(row.coins_charged));
@@ -416,8 +473,8 @@ export async function cleanupInactiveSessions(): Promise<number> {
     const stale = await db.execute(
       sql`SELECT id, user_id, persona_id, coins_charged,
                  CASE WHEN last_message_at IS NOT NULL
-                      THEN EXTRACT(EPOCH FROM (NOW() - last_message_at))::int
-                      ELSE EXTRACT(EPOCH FROM (NOW() - started_at))::int
+                      THEN EXTRACT(EPOCH FROM (NOW() AT TIME ZONE 'UTC' - last_message_at))::int
+                      ELSE EXTRACT(EPOCH FROM (NOW() AT TIME ZONE 'UTC' - started_at))::int
                  END as idle_seconds,
                  CASE WHEN last_message_at IS NOT NULL
                       THEN EXTRACT(EPOCH FROM (last_message_at - started_at))::int
@@ -425,9 +482,9 @@ export async function cleanupInactiveSessions(): Promise<number> {
           FROM chat_sessions
           WHERE status = 'active' AND ended_at IS NULL
             AND (
-              (last_message_at IS NOT NULL AND EXTRACT(EPOCH FROM (NOW() - last_message_at)) > ${conservativeSeconds})
+              (last_message_at IS NOT NULL AND EXTRACT(EPOCH FROM (NOW() AT TIME ZONE 'UTC' - last_message_at)) > ${conservativeSeconds})
               OR
-              (last_message_at IS NULL AND EXTRACT(EPOCH FROM (NOW() - started_at)) > ${conservativeSeconds})
+              (last_message_at IS NULL AND EXTRACT(EPOCH FROM (NOW() AT TIME ZONE 'UTC' - started_at)) > ${conservativeSeconds})
             )`
     );
 
@@ -444,6 +501,7 @@ export async function cleanupInactiveSessions(): Promise<number> {
 
       try {
         await db.transaction(async (tx) => {
+          await tx.execute(sql`SET LOCAL timezone = 'UTC'`);
           // Lock the row — prevents a concurrent heartbeat checkpoint from billing at the same time
           const locked = await tx.execute(
             sql`SELECT id, user_id, coins_charged,
@@ -458,7 +516,7 @@ export async function cleanupInactiveSessions(): Promise<number> {
 
           const lockedRow = locked.rows[0] as { id: string; user_id: string; coins_charged: number; active_seconds: number };
 
-          const billableSeconds = Math.max(0, lockedRow.active_seconds);
+          const billableSeconds = capBillableSeconds(Math.max(0, lockedRow.active_seconds), row.id);
           const totalMinutes = Math.floor(billableSeconds / 60);
           const totalCoins = totalMinutes * coinsPerMinute;
           const remainingToDeduct = Math.max(0, totalCoins - Number(lockedRow.coins_charged));

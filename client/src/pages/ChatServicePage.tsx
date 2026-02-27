@@ -234,13 +234,16 @@ export default function ChatServicePage() {
     return () => window.removeEventListener("beforeunload", handleUnload);
   }, [session?.sessionId]);
 
-  // Set coin balance from user auth data
+  // Set coin balance from user auth data — but only when there's NO active session.
+  // During an active session, coinBalance is managed by server responses from
+  // /session/start and /session/:id/message to avoid stale overwrites from the
+  // async refreshUser() call racing with billing updates.
   useEffect(() => {
-    if (user) {
+    if (user && !session) {
       const coins = (user as any).coinBalance ?? 0;
       setCoinBalance(coins);
     }
-  }, [user]);
+  }, [user, session]);
 
   // Fetch available personas (wait for auth to finish so we have user.defaultPersonaId)
   useEffect(() => {
