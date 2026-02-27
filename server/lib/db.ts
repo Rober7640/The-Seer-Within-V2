@@ -9,7 +9,7 @@ import logger from "./logger";
 // OID 1184 = timestamp with time zone
 // Without this, pg parses "timestamp without time zone" in the server's LOCAL
 // timezone, causing a 5.5-hour billing error when the server runs in IST.
-pg.types.setTypeParser(1114, (str: string) => new Date(str + 'Z'));
+pg.types.setTypeParser(1114, (str: string) => new Date(str.replace(' ', 'T') + 'Z'));
 
 export const pool = new pg.Pool({
   connectionString: process.env.DATABASE_URL,

@@ -107,10 +107,10 @@ export async function checkpointSession(sessionId: string): Promise<void> {
   await db.transaction(async (tx) => {
     // Lock the session row — prevents concurrent checkpoints from double-billing
     const locked = await tx.execute(
-      sql`SELECT id, user_id, started_at, coins_charged FROM chat_sessions WHERE id = ${sessionId} AND status = 'active' FOR UPDATE`
+      sql`SELECT id, user_id, started_at::text as started_at, coins_charged FROM chat_sessions WHERE id = ${sessionId} AND status = 'active' FOR UPDATE`
     );
     if (locked.rows.length === 0) return;
-    const row = locked.rows[0] as { id: string; user_id: string; started_at: Date; coins_charged: number };
+    const row = locked.rows[0] as { id: string; user_id: string; started_at: string; coins_charged: number };
 
     const now = new Date();
     const startedAtParsed = parseUtc(row.started_at);
@@ -169,10 +169,10 @@ export async function endChatSession(sessionId: string): Promise<void> {
   await db.transaction(async (tx) => {
     // Lock the session row — prevents a concurrent checkpoint from billing after we've ended
     const locked = await tx.execute(
-      sql`SELECT id, user_id, started_at, coins_charged, last_message_at FROM chat_sessions WHERE id = ${sessionId} AND status = 'active' FOR UPDATE`
+      sql`SELECT id, user_id, started_at::text as started_at, coins_charged, last_message_at::text as last_message_at FROM chat_sessions WHERE id = ${sessionId} AND status = 'active' FOR UPDATE`
     );
     if (locked.rows.length === 0) return;
-    const row = locked.rows[0] as { id: string; user_id: string; started_at: Date; coins_charged: number; last_message_at: Date | null };
+    const row = locked.rows[0] as { id: string; user_id: string; started_at: string; coins_charged: number; last_message_at: string | null };
 
     const now = new Date();
     const startedAt = parseUtc(row.started_at);
@@ -186,10 +186,11 @@ export async function endChatSession(sessionId: string): Promise<void> {
     // Round to nearest minute for the final charge (captures partial last minute)
     const totalMinutes = Math.round(accumulatedSeconds / 60);
     const finalCharge = totalMinutes * coinsPerMinute;
-    // Only deduct what hasn't already been billed by checkpoints
-    const remainingToDeduct = Math.max(0, finalCharge - Number(row.coins_charged));
+    const previouslyCharged = Number(row.coins_charged);
 
-    if (remainingToDeduct > 0) {
+    if (finalCharge > previouslyCharged) {
+      // Deduct remaining owed
+      const remainingToDeduct = finalCharge - previouslyCharged;
       await tx.update(users)
         .set({
           coinBalance: sql`GREATEST(0, coin_balance - ${remainingToDeduct})`,
@@ -197,6 +198,17 @@ export async function endChatSession(sessionId: string): Promise<void> {
           updatedAt: now,
         })
         .where(eq(users.id, row.user_id));
+    } else if (finalCharge < previouslyCharged) {
+      // Checkpoint over-billed (e.g. timezone bug) — refund the difference
+      const refund = previouslyCharged - finalCharge;
+      await tx.update(users)
+        .set({
+          coinBalance: sql`coin_balance + ${refund}`,
+          totalCoinsUsed: sql`GREATEST(0, total_coins_used - ${refund})`,
+          updatedAt: now,
+        })
+        .where(eq(users.id, row.user_id));
+      logger.info('endChatSession: refunding over-billed coins', { sessionId, refund, previouslyCharged, finalCharge });
     }
 
     logger.info('endChatSession: final billing', {
@@ -207,8 +219,8 @@ export async function endChatSession(sessionId: string): Promise<void> {
       accumulatedSeconds,
       totalMinutes,
       finalCharge,
-      previouslyCharged: Number(row.coins_charged),
-      remainingToDeduct,
+      previouslyCharged,
+      delta: finalCharge - previouslyCharged,
     });
 
     await tx.update(chatSessions)
@@ -401,11 +413,11 @@ export async function cleanupInactiveSessions(): Promise<number> {
         await db.transaction(async (tx) => {
           // Lock the row — prevents a concurrent heartbeat checkpoint from billing at the same time
           const locked = await tx.execute(
-            sql`SELECT id, user_id, started_at, coins_charged, last_message_at FROM chat_sessions WHERE id = ${session.id} AND status = 'active' FOR UPDATE`
+            sql`SELECT id, user_id, started_at::text as started_at, coins_charged, last_message_at::text as last_message_at FROM chat_sessions WHERE id = ${session.id} AND status = 'active' FOR UPDATE`
           );
           if (locked.rows.length === 0) return; // already ended by another process
 
-          const row = locked.rows[0] as { id: string; user_id: string; started_at: Date; coins_charged: number; last_message_at: Date | null };
+          const row = locked.rows[0] as { id: string; user_id: string; started_at: string; coins_charged: number; last_message_at: string | null };
           const rowLastActivity = row.last_message_at ? parseUtc(row.last_message_at) : parseUtc(row.started_at);
 
           // Bill only up to the last real message (idle time is free).
