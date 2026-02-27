@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { randomUUID } from 'crypto';
 import { db } from '../lib/db';
 import { users, personas, chatSessions } from '@shared/schema';
-import { eq, and, isNull } from 'drizzle-orm';
+import { eq, and, isNull, sql } from 'drizzle-orm';
 import { hashPassword, verifyPassword, generateToken, requireAuth } from '../lib/auth';
 import { verifyMagicLinkToken } from '../lib/magicLink';
 import { authLimiter, passwordResetLimiter } from '../lib/rateLimiter';
@@ -45,11 +45,8 @@ const resendVerificationSchema = z.object({
   email: z.string().email(),
 });
 
-function createVerificationExpiry(): Date {
-  const expiry = new Date();
-  expiry.setHours(expiry.getHours() + VERIFICATION_TOKEN_EXPIRY_HOURS);
-  return expiry;
-}
+// Verification expiry is computed in PostgreSQL via sql`NOW() + INTERVAL ...`
+// to avoid JS timezone serialization bugs with "timestamp without timezone" columns.
 
 // POST /api/auth/register
 router.post('/register', authLimiter, async (req: Request, res: Response) => {
@@ -90,7 +87,6 @@ router.post('/register', authLimiter, async (req: Request, res: Response) => {
 
     // Generate email verification token
     const verificationToken = randomUUID();
-    const verificationTokenExpiry = createVerificationExpiry();
 
     const newUser = await db.insert(users).values({
       email: email.toLowerCase(),
@@ -99,7 +95,7 @@ router.post('/register', authLimiter, async (req: Request, res: Response) => {
       coinBalance: isTestEnv ? FREE_COINS_ON_VERIFY : 0,
       emailVerified: isTestEnv,
       verificationToken: isTestEnv ? null : verificationToken,
-      verificationTokenExpiry: isTestEnv ? null : verificationTokenExpiry,
+      verificationTokenExpiry: isTestEnv ? null : sql`NOW() + INTERVAL '${sql.raw(String(VERIFICATION_TOKEN_EXPIRY_HOURS))} hours'`,
       registrationIp: clientIp,
       registrationUserAgent: userAgent,
       deviceFingerprint: fingerprint,
@@ -216,13 +212,12 @@ router.post('/resend-verification', authLimiter, async (req: Request, res: Respo
 
     // Generate new token
     const verificationToken = randomUUID();
-    const verificationTokenExpiry = createVerificationExpiry();
 
     await db.update(users)
       .set({
         verificationToken,
-        verificationTokenExpiry,
-        updatedAt: new Date(),
+        verificationTokenExpiry: sql`NOW() + INTERVAL '${sql.raw(String(VERIFICATION_TOKEN_EXPIRY_HOURS))} hours'`,
+        updatedAt: sql`NOW()`,
       })
       .where(eq(users.id, user.id));
 
@@ -455,14 +450,12 @@ router.post('/forgot-password', passwordResetLimiter, async (req: Request, res: 
 
     // Generate reset token
     const resetToken = randomUUID();
-    const resetExpiry = new Date();
-    resetExpiry.setHours(resetExpiry.getHours() + PASSWORD_RESET_EXPIRY_HOURS);
 
     await db.update(users)
       .set({
         passwordResetToken: resetToken,
-        passwordResetExpiry: resetExpiry,
-        updatedAt: new Date(),
+        passwordResetExpiry: sql`NOW() + INTERVAL '${sql.raw(String(PASSWORD_RESET_EXPIRY_HOURS))} hours'`,
+        updatedAt: sql`NOW()`,
       })
       .where(eq(users.id, user.id));
 
@@ -517,7 +510,7 @@ router.post('/reset-password/:token', async (req: Request, res: Response) => {
         .set({
           passwordResetToken: null,
           passwordResetExpiry: null,
-          updatedAt: new Date(),
+          updatedAt: sql`NOW()`,
         })
         .where(eq(users.id, user.id));
 
@@ -527,15 +520,14 @@ router.post('/reset-password/:token', async (req: Request, res: Response) => {
 
     // Hash new password and update
     const newHash = await hashPassword(password);
-    const now = new Date();
 
     await db.update(users)
       .set({
         passwordHash: newHash,
         passwordResetToken: null,
         passwordResetExpiry: null,
-        passwordChangedAt: now,
-        updatedAt: now,
+        passwordChangedAt: sql`NOW()`,
+        updatedAt: sql`NOW()`,
       })
       .where(eq(users.id, user.id));
 

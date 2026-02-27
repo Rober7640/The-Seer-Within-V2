@@ -10,7 +10,7 @@ import {
   chatMessages,
   userMemory,
 } from '@shared/schema';
-import { eq, and, desc } from 'drizzle-orm';
+import { eq, and, desc, sql } from 'drizzle-orm';
 import { loadUserContext, summarizeSession } from './memoryManager';
 import { loadCrossPersonaMemories, formatTransferContext } from './memoryTransfer';
 import { startChatSession, endChatSession, checkpointSession } from './creditTracking';
@@ -927,7 +927,7 @@ export async function sendMessage(
         .values({ sessionId, userId, role: 'user', content: userMessage })
         .returning({ id: chatMessages.id });
       await db.update(chatSessions)
-        .set({ lastMessageAt: now })
+        .set({ lastMessageAt: sql`NOW()` })
         .where(eq(chatSessions.id, sessionId));
       await checkpointSession(sessionId);
 
@@ -1088,7 +1088,7 @@ export async function sendMessage(
   // Record actual user activity so idle-timeout logic can distinguish
   // real usage from sessions left open with no messages.
   await db.update(chatSessions)
-    .set({ lastMessageAt: now })
+    .set({ lastMessageAt: sql`NOW()` })
     .where(eq(chatSessions.id, sessionId));
 
   await checkpointSession(sessionId);

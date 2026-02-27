@@ -10,6 +10,7 @@ import logger from "./logger";
 // Without this, pg parses "timestamp without time zone" in the server's LOCAL
 // timezone, causing a 5.5-hour billing error when the server runs in IST.
 pg.types.setTypeParser(1114, (str: string) => new Date(str.replace(' ', 'T') + 'Z'));
+pg.types.setTypeParser(1184, (str: string) => new Date(str));
 
 export const pool = new pg.Pool({
   connectionString: process.env.DATABASE_URL,
@@ -28,8 +29,12 @@ pool.on('error', (err) => {
 pool.on('connect', (client) => {
   // Force UTC so pg's timestamp parser always creates correct Date objects,
   // regardless of the server's local timezone (fixes IST billing bug).
-  client.query("SET timezone = 'UTC'").catch(() => {});
-  client.query('SET statement_timeout = 8000').catch(() => {});
+  client.query("SET timezone = 'UTC'").catch((err) => {
+    logger.error('CRITICAL: Failed to set timezone to UTC on DB connection', { error: err.message });
+  });
+  client.query('SET statement_timeout = 8000').catch((err) => {
+    logger.error('Failed to set statement_timeout on DB connection', { error: err.message });
+  });
 });
 
 export const db = drizzle(pool);

@@ -63,13 +63,12 @@ export async function startChatSession(userId: string, personaId: string): Promi
     db.select({ coinsPerMinute: personas.coinsPerMinute }).from(personas).where(eq(personas.id, personaId)).limit(1),
   ]);
 
-  const now = new Date();
   const session = await db.insert(chatSessions).values({
     userId,
     personaId,
     status: 'active',
     pricingApplied: JSON.stringify({ ...pricing, coinsPerMinute: personaRow[0]?.coinsPerMinute ?? 60 }),
-    lastHeartbeatAt: now,
+    lastHeartbeatAt: sql`NOW()`,
     durationSeconds: 0,
     coinsCharged: 0,
   }).returning();
@@ -140,6 +139,16 @@ export async function checkpointSession(sessionId: string): Promise<void> {
         updatedAt: sql`NOW()`,
       })
       .where(eq(chatSessions.id, sessionId));
+
+    // DEBUG: verify what was actually written
+    const verify = await tx.execute(
+      sql`SELECT coins_charged, duration_seconds FROM chat_sessions WHERE id = ${sessionId}`
+    );
+    logger.info('checkpointSession VERIFY after write', {
+      sessionId,
+      wrote: newTotalCharged,
+      readBack: verify.rows[0],
+    });
   });
 }
 
@@ -178,7 +187,9 @@ export async function endChatSession(sessionId: string): Promise<void> {
           FOR UPDATE`
     );
     if (locked.rows.length === 0) return;
-    const row = locked.rows[0] as {
+    const rawRow = locked.rows[0] as Record<string, unknown>;
+    logger.info('endChatSession DEBUG: raw row from DB', { sessionId, rawRow: JSON.stringify(rawRow) });
+    const row = rawRow as {
       id: string; user_id: string; coins_charged: number;
       elapsed_seconds: number; idle_seconds: number | null; active_seconds: number;
     };
