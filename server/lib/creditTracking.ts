@@ -1,4 +1,4 @@
-import { db } from './db';
+import { db, pool } from './db';
 import { users, chatSessions, personas } from '@shared/schema';
 import { eq, sql, and, isNull, lt, or } from 'drizzle-orm';
 import { getPersonaPricing } from './personaPricing';
@@ -48,11 +48,18 @@ export async function getActiveSession(sessionId: string) {
 
 export async function startChatSession(userId: string, personaId: string): Promise<string> {
   const user = await db.select().from(users).where(eq(users.id, userId)).limit(1);
-  if (!user[0] || user[0].coinBalance <= 0) {
+  // Verify balance with direct pool query to prevent stale reads from pgbouncer
+  const { rows: startBalRows } = await pool.query(
+    'SELECT coin_balance FROM users WHERE id = $1', [userId]
+  );
+  const startPoolBalance = Number(startBalRows[0]?.coin_balance ?? 0);
+  const startEffBalance = Math.max(user[0]?.coinBalance ?? 0, startPoolBalance);
+
+  if (!user[0] || startEffBalance <= 0) {
     throw new Error('OUT_OF_CREDITS');
   }
 
-  logger.info('startChatSession: starting', { userId, personaId, currentBalance: user[0].coinBalance });
+  logger.info('startChatSession: starting', { userId, personaId, drizzleBalance: user[0].coinBalance, poolBalance: startPoolBalance });
 
   // End ALL active sessions for this user (any persona). This prevents
   // orphaned sessions from accumulating unbounded billing time.

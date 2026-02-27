@@ -253,10 +253,12 @@ router.post('/session/:id/message', requireAuth, chatLimiter, async (req: Reques
 
     const { content } = parseResult.data;
 
-    // BILLING DEBUG: snapshot balance BEFORE sendMessage
-    const balanceBefore = await db.select({ coinBalance: users.coinBalance })
-      .from(users).where(eq(users.id, req.userId!)).limit(1);
-    dbBalanceBefore = balanceBefore[0]?.coinBalance ?? -1;
+    // BILLING DEBUG: snapshot balance BEFORE sendMessage (use pool.query directly
+    // to bypass any Drizzle/pgbouncer stale read issues)
+    const { rows: preRows } = await pool.query(
+      'SELECT coin_balance FROM users WHERE id = $1', [req.userId!]
+    );
+    dbBalanceBefore = Number(preRows[0]?.coin_balance ?? -1);
 
     // Use the chat engine which handles safety checks, intent detection,
     // conversation state, Claude API call, and response validation

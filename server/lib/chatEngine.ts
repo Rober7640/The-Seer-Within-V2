@@ -1,7 +1,7 @@
 // Chat Engine: Connects persona system, memory, credit tracking,
 // universal safety, and persona intent into a unified chat flow.
 
-import { db } from './db';
+import { db, pool } from './db';
 import {
   users,
   personas,
@@ -778,7 +778,15 @@ export async function initSession(config: {
     .limit(1);
 
   if (!user[0]) throw new Error('USER_NOT_FOUND');
-  if (user[0].coinBalance <= 0) throw new Error('OUT_OF_CREDITS');
+
+  // Verify balance with direct pool query to prevent stale reads from pgbouncer
+  const { rows: initBalRows } = await pool.query(
+    'SELECT coin_balance FROM users WHERE id = $1', [config.userId]
+  );
+  const initPoolBalance = Number(initBalRows[0]?.coin_balance ?? 0);
+  const initEffectiveBalance = Math.max(user[0].coinBalance, initPoolBalance);
+
+  if (initEffectiveBalance <= 0) throw new Error('OUT_OF_CREDITS');
 
   const personaConfig = await loadPersonaConfig(config.personaId);
   if (!personaConfig) throw new Error('PERSONA_NOT_FOUND');
@@ -894,61 +902,63 @@ export async function sendMessage(
   const softCrisisNote = safetyResult.softCrisisNote ?? null;
 
   // ── Step 2: Credit check (after safety, so crisis messages always get a response) ──
-  // Use raw SQL to independently verify balance — catches Drizzle ORM edge cases
-  const rawBalanceResult = await db.execute(
-    sql`SELECT coin_balance, updated_at, email FROM users WHERE id = ${userId}`
-  );
-  const rawBalance = (rawBalanceResult.rows[0] as any)?.coin_balance;
-  const rawUpdatedAt = (rawBalanceResult.rows[0] as any)?.updated_at;
+  // IMPORTANT: pgbouncer transaction pooling can return stale reads when connections
+  // with uncommitted/cached snapshots are reused. We defend against this with:
+  //   1. A direct pool.query() that bypasses Drizzle entirely
+  //   2. If balance appears 0, a retry read to catch transient stale reads
+  //   3. Using the HIGHEST balance across all reads
 
+  // Read 1: Direct pool query (bypasses Drizzle, gets a fresh connection from pg pool)
+  const { rows: poolRows } = await pool.query(
+    'SELECT coin_balance, updated_at FROM users WHERE id = $1', [userId]
+  );
+  const poolBalance = Number(poolRows[0]?.coin_balance ?? 0);
+
+  // Read 2: Drizzle ORM query (for the full user object needed downstream)
   const user = await db
     .select()
     .from(users)
     .where(eq(users.id, userId))
     .limit(1);
+  const drizzleBalance = user[0]?.coinBalance ?? 0;
 
-  // Log both Drizzle and raw SQL balance for audit trail
-  const drizzleBalance = user[0]?.coinBalance;
+  // Use the HIGHEST balance across reads to prevent false 402s from stale reads
+  let effectiveBalance = Math.max(poolBalance, drizzleBalance);
+
+  // If both reads returned 0, do a retry read with a fresh pool connection.
+  // This catches the exact scenario where pgbouncer returns a stale snapshot.
+  let retryBalance: number | null = null;
+  if (effectiveBalance <= 0 && user[0]) {
+    // Small delay to let any in-flight transaction commit
+    await new Promise(resolve => setTimeout(resolve, 50));
+    const { rows: retryRows } = await pool.query(
+      'SELECT coin_balance FROM users WHERE id = $1', [userId]
+    );
+    retryBalance = Number(retryRows[0]?.coin_balance ?? 0);
+    if (retryBalance > 0) {
+      effectiveBalance = retryBalance;
+    }
+  }
+
   logger.info('CREDIT_CHECK_AUDIT', {
-    sessionId,
-    userId,
-    drizzleBalance,
-    rawSqlBalance: rawBalance,
-    rawSqlUpdatedAt: rawUpdatedAt,
-    drizzleUserFound: !!user[0],
-    rawUserFound: rawBalanceResult.rows.length > 0,
-    pid: process.pid,
+    sessionId, userId, pid: process.pid,
+    poolBalance, drizzleBalance, effectiveBalance,
+    retryBalance,
+    userFound: !!user[0],
   });
 
-  // If Drizzle and raw SQL disagree, log an anomaly
-  if (user[0] && rawBalance !== undefined && Number(rawBalance) !== drizzleBalance) {
-    logger.error('BALANCE_MISMATCH: Drizzle and raw SQL disagree!', {
-      sessionId, userId, drizzleBalance, rawSqlBalance: rawBalance,
+  // Log anomaly if reads disagree
+  if (user[0] && poolBalance !== drizzleBalance) {
+    logger.error('BALANCE_MISMATCH: pool.query and Drizzle disagree!', {
+      sessionId, userId, poolBalance, drizzleBalance, retryBalance,
     });
   }
 
-  // Use whichever balance is HIGHER to avoid false 402s from read anomalies
-  const effectiveBalance = Math.max(Number(rawBalance) || 0, drizzleBalance ?? 0);
-
   if (!user[0] || effectiveBalance <= 0) {
-    // Gather comprehensive diagnostic data before throwing
-    const recentSessions = await db.execute(
-      sql`SELECT id, status, coins_charged, duration_seconds,
-                 started_at::text, ended_at::text, last_message_at::text
-          FROM chat_sessions WHERE user_id = ${userId}
-          ORDER BY created_at DESC LIMIT 5`
-    );
-    const recentTxns = await db.execute(
-      sql`SELECT id, package_type, coins_purchased, status, created_at::text
-          FROM credit_purchases WHERE user_id = ${userId}
-          ORDER BY created_at DESC LIMIT 5`
-    );
-    logger.error('OUT_OF_CREDITS_DIAGNOSTIC', {
+    // Balance is genuinely 0 across all reads — user is out of credits
+    logger.error('OUT_OF_CREDITS_CONFIRMED', {
       sessionId, userId, pid: process.pid,
-      drizzleBalance, rawSqlBalance: rawBalance, effectiveBalance,
-      drizzleUserFound: !!user[0],
-      recentSessions: recentSessions.rows,
-      recentTransactions: recentTxns.rows,
+      poolBalance, drizzleBalance, retryBalance, effectiveBalance,
     });
     await endChatSession(sessionId);
     throw new Error('OUT_OF_CREDITS');
