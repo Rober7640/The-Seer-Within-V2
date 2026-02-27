@@ -376,8 +376,11 @@ export default function ChatServicePage() {
   useEffect(() => { refillBannerDismissedRef.current = refillBannerDismissed; }, [refillBannerDismissed]);
   useEffect(() => { coinsPerMinuteRef.current = selectedPersona?.coinsPerMinute ?? 60; }, [selectedPersona?.coinsPerMinute]);
 
-  // Credit countdown timer + refill banner trigger
-  // Depends only on [session] — reads volatile values from refs to avoid teardown/recreate cycles
+  // Credit countdown timer — display only.
+  // The timer handles ONLY the elapsed time counter and refill banner.
+  // It NEVER triggers "out of credits" or ends the session — only the server
+  // should decide when credits run out (via 402 response). This eliminates an
+  // entire class of client-side timing/race-condition bugs.
   useEffect(() => {
     if (session && session.status === "active") {
       timerRef.current = setInterval(() => {
@@ -399,7 +402,7 @@ export default function ChatServicePage() {
             }
           }
 
-          // Show refill banner when < 1 full minute remains at this guide's rate (FRICTION-7)
+          // Show refill banner when < 1 full minute remains at this guide's rate
           if (balance > ftCoins && !dismissed) {
             const coinsRemaining = balance - coinsUsed;
             if (coinsRemaining <= cpm && coinsRemaining > 0) {
@@ -407,12 +410,11 @@ export default function ChatServicePage() {
             }
           }
 
-          // Check if out of coins every tick — no 60s delay (FRICTION-6)
-          // Guard: only trigger when balance is positive to avoid false trigger on stale 0
-          if (coinsUsed >= balance && balance > 0) {
-            setShowOutOfCredits(true);
-            endSessionRef.current();
-          }
+          // NOTE: We do NOT check for out-of-credits here. The server handles
+          // this via 402 responses on /session/start and /session/:id/message.
+          // Client-side timer checks caused false "out of credits" triggers due
+          // to race conditions with ref syncing, stale state, and timing.
+
           return next;
         });
       }, 1000);
@@ -1213,6 +1215,17 @@ export default function ChatServicePage() {
           onSwitchGuide={(slug, teaserFull) => switchGuide(slug, teaserFull)}
           isNewUser={(user?.coinBalance ?? 0) + (user?.totalCoinsUsed ?? 0) <= 180}
         />
+      )}
+
+      {/* TEMPORARY BILLING DEBUG BANNER — remove after fixing */}
+      {session && (
+        <div className="fixed top-0 left-0 right-0 z-[9999] bg-yellow-400 text-black text-xs font-mono px-3 py-1 flex gap-4 items-center justify-center">
+          <span>DB Balance: {coinBalance}</span>
+          <span>CPM: {selectedPersona?.coinsPerMinute ?? '?'}</span>
+          <span>Elapsed: {elapsedSeconds}s</span>
+          <span>Used: {Math.floor(elapsedSeconds / 60) * (selectedPersona?.coinsPerMinute ?? 60)}</span>
+          <span>Session: {session.status}</span>
+        </div>
       )}
 
       {/* Main Chat Panel */}
