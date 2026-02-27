@@ -10,22 +10,6 @@ const DEFAULT_TIMEOUT_MINUTES = 5;
 const DEFAULT_INACTIVE_THRESHOLD_MS = DEFAULT_TIMEOUT_MINUTES * 60 * 1000;
 
 /**
- * Parse a raw timestamp from PostgreSQL as UTC.
- * Raw SQL queries return `timestamp without time zone` as a bare string like
- * "2026-02-26 10:00:07.589215". JavaScript's `new Date()` treats that as local
- * time, causing a timezone-offset billing error. Appending "Z" forces UTC.
- */
-function parseUtc(raw: Date | string): Date {
-  const str = typeof raw === 'string' ? raw : raw.toISOString();
-  // If the string already has timezone info (ends with Z or +/-offset), parse as-is
-  if (/[Zz]$/.test(str) || /[+-]\d{2}:\d{2}$/.test(str)) {
-    return new Date(str);
-  }
-  // Otherwise append Z to treat as UTC
-  return new Date(str.replace(' ', 'T') + 'Z');
-}
-
-/**
  * Get an active session from the database.
  */
 export async function getActiveSession(sessionId: string) {
@@ -59,7 +43,7 @@ export async function startChatSession(userId: string, personaId: string): Promi
       isNull(chatSessions.endedAt),
     ));
 
-  logger.info('startChatSession: found existing active sessions', { count: existing.length, sessions: existing.map(s => ({ id: s.id, personaId: s.personaId, startedAt: s.startedAt })) });
+  logger.info('startChatSession: found existing active sessions', { count: existing.length, sessions: existing.map(s => ({ id: s.id, personaId: s.personaId })) });
 
   for (const old of existing) {
     try {
@@ -93,6 +77,10 @@ export async function startChatSession(userId: string, personaId: string): Promi
   return session[0].id;
 }
 
+/**
+ * Checkpoint: compute elapsed time ENTIRELY in PostgreSQL and bill accordingly.
+ * This avoids ALL JavaScript timestamp parsing — PostgreSQL handles the math.
+ */
 export async function checkpointSession(sessionId: string): Promise<void> {
   // Fetch persona config before entering the transaction to minimise lock hold time
   const precheck = await db.select({ personaId: chatSessions.personaId })
@@ -105,16 +93,19 @@ export async function checkpointSession(sessionId: string): Promise<void> {
   const { coinsPerMinute } = await getPersonaConfig(precheck[0].personaId);
 
   await db.transaction(async (tx) => {
-    // Lock the session row — prevents concurrent checkpoints from double-billing
+    // Lock the session row — prevents concurrent checkpoints from double-billing.
+    // EXTRACT(EPOCH FROM ...) computes elapsed seconds IN POSTGRESQL — no JS timestamp parsing.
     const locked = await tx.execute(
-      sql`SELECT id, user_id, started_at::text as started_at, coins_charged FROM chat_sessions WHERE id = ${sessionId} AND status = 'active' FOR UPDATE`
+      sql`SELECT id, user_id, coins_charged,
+                 EXTRACT(EPOCH FROM (NOW() - started_at))::int as elapsed_seconds
+          FROM chat_sessions
+          WHERE id = ${sessionId} AND status = 'active'
+          FOR UPDATE`
     );
     if (locked.rows.length === 0) return;
-    const row = locked.rows[0] as { id: string; user_id: string; started_at: string; coins_charged: number };
+    const row = locked.rows[0] as { id: string; user_id: string; coins_charged: number; elapsed_seconds: number };
 
-    const now = new Date();
-    const startedAtParsed = parseUtc(row.started_at);
-    const accumulatedSeconds = Math.floor((now.getTime() - startedAtParsed.getTime()) / 1000);
+    const accumulatedSeconds = Math.max(0, row.elapsed_seconds);
 
     // Deduct only completed full minutes (Math.floor avoids billing partial minutes early)
     const completedMinutes = Math.floor(accumulatedSeconds / 60);
@@ -123,9 +114,6 @@ export async function checkpointSession(sessionId: string): Promise<void> {
 
     logger.info('checkpointSession', {
       sessionId,
-      startedAtRaw: String(row.started_at),
-      startedAtParsed: startedAtParsed.toISOString(),
-      now: now.toISOString(),
       accumulatedSeconds,
       completedMinutes,
       coinsPerMinute,
@@ -139,7 +127,7 @@ export async function checkpointSession(sessionId: string): Promise<void> {
         .set({
           coinBalance: sql`GREATEST(0, coin_balance - ${coinsToDeductNow})`,
           totalCoinsUsed: sql`total_coins_used + ${coinsToDeductNow}`,
-          updatedAt: now,
+          updatedAt: sql`NOW()`,
         })
         .where(eq(users.id, row.user_id));
     }
@@ -148,13 +136,17 @@ export async function checkpointSession(sessionId: string): Promise<void> {
       .set({
         durationSeconds: accumulatedSeconds,
         coinsCharged: newTotalCharged,
-        lastHeartbeatAt: now,
-        updatedAt: now,
+        lastHeartbeatAt: sql`NOW()`,
+        updatedAt: sql`NOW()`,
       })
       .where(eq(chatSessions.id, sessionId));
   });
 }
 
+/**
+ * End a chat session. Computes final billing ENTIRELY in PostgreSQL.
+ * If checkpoint over-billed, refunds the difference.
+ */
 export async function endChatSession(sessionId: string): Promise<void> {
   // Fetch persona config before entering the transaction
   const precheck = await db.select({ personaId: chatSessions.personaId })
@@ -165,26 +157,40 @@ export async function endChatSession(sessionId: string): Promise<void> {
   if (!precheck[0]) return;
 
   const { coinsPerMinute, timeoutMs } = await getPersonaConfig(precheck[0].personaId);
+  const timeoutSeconds = Math.floor(timeoutMs / 1000);
 
   await db.transaction(async (tx) => {
-    // Lock the session row — prevents a concurrent checkpoint from billing after we've ended
+    // Lock the session row. All time math computed in PostgreSQL:
+    // - elapsed_seconds: total wall-clock time since start
+    // - idle_seconds: time since last message (NULL if no messages)
+    // - active_seconds: time from start to last message (0 if no messages)
     const locked = await tx.execute(
-      sql`SELECT id, user_id, started_at::text as started_at, coins_charged, last_message_at::text as last_message_at FROM chat_sessions WHERE id = ${sessionId} AND status = 'active' FOR UPDATE`
+      sql`SELECT id, user_id, coins_charged,
+                 EXTRACT(EPOCH FROM (NOW() - started_at))::int as elapsed_seconds,
+                 CASE WHEN last_message_at IS NOT NULL
+                      THEN EXTRACT(EPOCH FROM (NOW() - last_message_at))::int
+                      ELSE NULL END as idle_seconds,
+                 CASE WHEN last_message_at IS NOT NULL
+                      THEN EXTRACT(EPOCH FROM (last_message_at - started_at))::int
+                      ELSE 0 END as active_seconds
+          FROM chat_sessions
+          WHERE id = ${sessionId} AND status = 'active'
+          FOR UPDATE`
     );
     if (locked.rows.length === 0) return;
-    const row = locked.rows[0] as { id: string; user_id: string; started_at: string; coins_charged: number; last_message_at: string | null };
+    const row = locked.rows[0] as {
+      id: string; user_id: string; coins_charged: number;
+      elapsed_seconds: number; idle_seconds: number | null; active_seconds: number;
+    };
 
-    const now = new Date();
-    const startedAt = parseUtc(row.started_at);
-    // Bill only up to the last real user activity — idle time beyond the timeout is free.
-    const lastActivity = row.last_message_at ? parseUtc(row.last_message_at) : startedAt;
-    const idleDuration = now.getTime() - lastActivity.getTime();
-    const billingEnd = idleDuration > timeoutMs ? lastActivity : now;
+    // Bill up to last activity if idle beyond timeout, otherwise bill full elapsed time
+    const idleSeconds = row.idle_seconds ?? row.elapsed_seconds;
+    const billableSeconds = idleSeconds > timeoutSeconds
+      ? Math.max(0, row.active_seconds)  // idle too long — bill only active time
+      : Math.max(0, row.elapsed_seconds); // still active — bill full elapsed
 
-    const accumulatedSeconds = Math.floor((billingEnd.getTime() - startedAt.getTime()) / 1000);
-
-    // Round to nearest minute for the final charge (captures partial last minute)
-    const totalMinutes = Math.round(accumulatedSeconds / 60);
+    // Round to nearest minute for the final charge
+    const totalMinutes = Math.round(billableSeconds / 60);
     const finalCharge = totalMinutes * coinsPerMinute;
     const previouslyCharged = Number(row.coins_charged);
 
@@ -195,17 +201,17 @@ export async function endChatSession(sessionId: string): Promise<void> {
         .set({
           coinBalance: sql`GREATEST(0, coin_balance - ${remainingToDeduct})`,
           totalCoinsUsed: sql`total_coins_used + ${remainingToDeduct}`,
-          updatedAt: now,
+          updatedAt: sql`NOW()`,
         })
         .where(eq(users.id, row.user_id));
     } else if (finalCharge < previouslyCharged) {
-      // Checkpoint over-billed (e.g. timezone bug) — refund the difference
+      // Checkpoint over-billed — refund the difference
       const refund = previouslyCharged - finalCharge;
       await tx.update(users)
         .set({
           coinBalance: sql`coin_balance + ${refund}`,
           totalCoinsUsed: sql`GREATEST(0, total_coins_used - ${refund})`,
-          updatedAt: now,
+          updatedAt: sql`NOW()`,
         })
         .where(eq(users.id, row.user_id));
       logger.info('endChatSession: refunding over-billed coins', { sessionId, refund, previouslyCharged, finalCharge });
@@ -213,26 +219,32 @@ export async function endChatSession(sessionId: string): Promise<void> {
 
     logger.info('endChatSession: final billing', {
       sessionId,
-      startedAt: startedAt.toISOString(),
-      lastActivity: lastActivity.toISOString(),
-      billingEnd: billingEnd.toISOString(),
-      accumulatedSeconds,
+      elapsedSeconds: row.elapsed_seconds,
+      idleSeconds,
+      activeSeconds: row.active_seconds,
+      billableSeconds,
       totalMinutes,
       finalCharge,
       previouslyCharged,
       delta: finalCharge - previouslyCharged,
     });
 
-    await tx.update(chatSessions)
-      .set({
-        status: 'ended',
-        endedAt: billingEnd,
-        durationSeconds: accumulatedSeconds,
-        coinsCharged: finalCharge,
-        lastHeartbeatAt: now,
-        updatedAt: now,
-      })
-      .where(eq(chatSessions.id, sessionId));
+    // Use CASE to set ended_at to last_message_at (if idle timed out) or NOW()
+    await tx.execute(
+      sql`UPDATE chat_sessions SET
+            status = 'ended',
+            ended_at = CASE
+              WHEN last_message_at IS NOT NULL
+                   AND EXTRACT(EPOCH FROM (NOW() - last_message_at)) > ${timeoutSeconds}
+              THEN last_message_at
+              ELSE NOW()
+            END,
+            duration_seconds = ${billableSeconds},
+            coins_charged = ${finalCharge},
+            last_heartbeat_at = NOW(),
+            updated_at = NOW()
+          WHERE id = ${sessionId}`
+    );
   });
 }
 
@@ -306,170 +318,184 @@ async function getPersonaConfig(personaId: string): Promise<{ timeoutMs: number;
 
 /**
  * Recover active sessions on server startup.
+ * Uses PostgreSQL EXTRACT(EPOCH FROM ...) to avoid JS timestamp parsing.
  */
 export async function recoverActiveSessions(): Promise<void> {
-  const active = await db.select()
-    .from(chatSessions)
-    .where(and(
-      eq(chatSessions.status, 'active'),
-      isNull(chatSessions.endedAt),
-    ));
+  // Use raw SQL to compute durations in PostgreSQL
+  const active = await db.execute(
+    sql`SELECT id, user_id, persona_id, coins_charged,
+               EXTRACT(EPOCH FROM (NOW() - started_at))::int as elapsed_seconds,
+               CASE WHEN last_message_at IS NOT NULL
+                    THEN EXTRACT(EPOCH FROM (NOW() - last_message_at))::int
+                    ELSE EXTRACT(EPOCH FROM (NOW() - started_at))::int
+               END as idle_seconds,
+               CASE WHEN last_message_at IS NOT NULL
+                    THEN EXTRACT(EPOCH FROM (last_message_at - started_at))::int
+                    ELSE 0 END as active_seconds
+        FROM chat_sessions
+        WHERE status = 'active' AND ended_at IS NULL`
+  );
 
-  if (active.length === 0) {
+  if (active.rows.length === 0) {
     logger.info('No active sessions to recover');
     return;
   }
 
-  logger.info('Recovering active sessions', { count: active.length });
+  logger.info('Recovering active sessions', { count: active.rows.length });
 
-  const now = new Date();
+  for (const row of active.rows as Array<{
+    id: string; user_id: string; persona_id: string; coins_charged: number;
+    elapsed_seconds: number; idle_seconds: number; active_seconds: number;
+  }>) {
+    const { timeoutMs, coinsPerMinute } = await getPersonaConfig(row.persona_id);
+    const timeoutSeconds = Math.floor(timeoutMs / 1000);
 
-  for (const session of active) {
-    // Use lastMessageAt (real user activity) for idle detection.
-    // Fall back to startedAt so brand-new sessions with no messages still time out.
-    const lastActivity = session.lastMessageAt || session.startedAt;
-    const inactiveDuration = now.getTime() - lastActivity.getTime();
-    const { timeoutMs, coinsPerMinute } = await getPersonaConfig(session.personaId);
-
-    if (inactiveDuration > timeoutMs) {
-      // Bill only up to the last real message, not wall-clock now.
-      const accumulatedSeconds = Math.floor(
-        (lastActivity.getTime() - session.startedAt.getTime()) / 1000
-      );
-      const totalMinutes = Math.round(accumulatedSeconds / 60);
+    if (row.idle_seconds > timeoutSeconds) {
+      // Session timed out — bill only active time
+      const billableSeconds = Math.max(0, row.active_seconds);
+      const totalMinutes = Math.round(billableSeconds / 60);
       const totalCoins = totalMinutes * coinsPerMinute;
-      // Delta: only deduct what checkpoints haven't already billed
-      const remainingToDeduct = Math.max(0, totalCoins - session.coinsCharged);
+      const remainingToDeduct = Math.max(0, totalCoins - Number(row.coins_charged));
 
       if (remainingToDeduct > 0) {
         await db.update(users)
           .set({
             coinBalance: sql`GREATEST(0, coin_balance - ${remainingToDeduct})`,
             totalCoinsUsed: sql`total_coins_used + ${remainingToDeduct}`,
-            updatedAt: now,
+            updatedAt: sql`NOW()`,
           })
-          .where(eq(users.id, session.userId));
+          .where(eq(users.id, row.user_id));
       }
 
-      await db.update(chatSessions)
-        .set({
-          status: 'ended',
-          endedAt: lastActivity,
-          durationSeconds: accumulatedSeconds,
-          coinsCharged: totalCoins,
-          updatedAt: now,
-        })
-        .where(eq(chatSessions.id, session.id));
+      // Set ended_at to last_message_at (or started_at if no messages)
+      await db.execute(
+        sql`UPDATE chat_sessions SET
+              status = 'ended',
+              ended_at = COALESCE(last_message_at, started_at),
+              duration_seconds = ${billableSeconds},
+              coins_charged = ${totalCoins},
+              updated_at = NOW()
+            WHERE id = ${row.id}`
+      );
 
-      logger.info('Auto-ended stale session', { sessionId: session.id, inactiveMinutes: Math.round(inactiveDuration / 60000) });
+      logger.info('Auto-ended stale session', {
+        sessionId: row.id,
+        idleSeconds: row.idle_seconds,
+        billableSeconds,
+        totalCoins,
+        remainingToDeduct,
+      });
 
-      sendTimeoutNotification(session.id).catch(err =>
-        logger.error('Failed to send timeout email during recovery', { sessionId: session.id, error: (err as Error).message })
+      sendTimeoutNotification(row.id).catch(err =>
+        logger.error('Failed to send timeout email during recovery', { sessionId: row.id, error: (err as Error).message })
       );
     } else {
-      await db.update(chatSessions)
-        .set({ lastHeartbeatAt: now, updatedAt: now })
-        .where(eq(chatSessions.id, session.id));
-
-      logger.info('Recovered session', { sessionId: session.id });
+      await db.execute(
+        sql`UPDATE chat_sessions SET last_heartbeat_at = NOW(), updated_at = NOW() WHERE id = ${row.id}`
+      );
+      logger.info('Recovered session', { sessionId: row.id });
     }
   }
 }
 
 /**
  * Background job: auto-end sessions that have exceeded their persona's timeout.
+ * Uses PostgreSQL EXTRACT(EPOCH FROM ...) for all time math.
  */
 export async function cleanupInactiveSessions(): Promise<number> {
   let endedCount = 0;
 
   try {
-    const conservativeCutoff = new Date(Date.now() - DEFAULT_INACTIVE_THRESHOLD_MS);
-    // Find sessions with no real user activity (lastMessageAt) for longer than the cutoff.
-    // Also catch sessions that never had a message (lastMessageAt IS NULL) but were started
-    // before the cutoff.
-    const stale = await db.select()
-      .from(chatSessions)
-      .where(and(
-        eq(chatSessions.status, 'active'),
-        isNull(chatSessions.endedAt),
-        or(
-          lt(chatSessions.lastMessageAt, conservativeCutoff),
-          and(isNull(chatSessions.lastMessageAt), lt(chatSessions.startedAt, conservativeCutoff)),
-        )!,
-      ));
+    const conservativeSeconds = DEFAULT_TIMEOUT_MINUTES * 60;
 
-    for (const session of stale) {
-      // Real activity = lastMessageAt; fall back to startedAt for no-message sessions.
-      const lastActivity = session.lastMessageAt || session.startedAt;
-      const inactiveDuration = Date.now() - lastActivity.getTime();
-      const { timeoutMs, coinsPerMinute } = await getPersonaConfig(session.personaId);
+    // Find sessions with idle time beyond the conservative cutoff
+    const stale = await db.execute(
+      sql`SELECT id, user_id, persona_id, coins_charged,
+                 CASE WHEN last_message_at IS NOT NULL
+                      THEN EXTRACT(EPOCH FROM (NOW() - last_message_at))::int
+                      ELSE EXTRACT(EPOCH FROM (NOW() - started_at))::int
+                 END as idle_seconds,
+                 CASE WHEN last_message_at IS NOT NULL
+                      THEN EXTRACT(EPOCH FROM (last_message_at - started_at))::int
+                      ELSE 0 END as active_seconds
+          FROM chat_sessions
+          WHERE status = 'active' AND ended_at IS NULL
+            AND (
+              (last_message_at IS NOT NULL AND EXTRACT(EPOCH FROM (NOW() - last_message_at)) > ${conservativeSeconds})
+              OR
+              (last_message_at IS NULL AND EXTRACT(EPOCH FROM (NOW() - started_at)) > ${conservativeSeconds})
+            )`
+    );
 
-      if (inactiveDuration < timeoutMs) {
+    for (const row of stale.rows as Array<{
+      id: string; user_id: string; persona_id: string; coins_charged: number;
+      idle_seconds: number; active_seconds: number;
+    }>) {
+      const { timeoutMs, coinsPerMinute } = await getPersonaConfig(row.persona_id);
+      const timeoutSeconds = Math.floor(timeoutMs / 1000);
+
+      if (row.idle_seconds < timeoutSeconds) {
         continue;
       }
 
-      let sessionEnded = false;
       try {
         await db.transaction(async (tx) => {
           // Lock the row — prevents a concurrent heartbeat checkpoint from billing at the same time
           const locked = await tx.execute(
-            sql`SELECT id, user_id, started_at::text as started_at, coins_charged, last_message_at::text as last_message_at FROM chat_sessions WHERE id = ${session.id} AND status = 'active' FOR UPDATE`
+            sql`SELECT id, user_id, coins_charged,
+                       CASE WHEN last_message_at IS NOT NULL
+                            THEN EXTRACT(EPOCH FROM (last_message_at - started_at))::int
+                            ELSE 0 END as active_seconds
+                FROM chat_sessions
+                WHERE id = ${row.id} AND status = 'active'
+                FOR UPDATE`
           );
           if (locked.rows.length === 0) return; // already ended by another process
 
-          const row = locked.rows[0] as { id: string; user_id: string; started_at: string; coins_charged: number; last_message_at: string | null };
-          const rowLastActivity = row.last_message_at ? parseUtc(row.last_message_at) : parseUtc(row.started_at);
+          const lockedRow = locked.rows[0] as { id: string; user_id: string; coins_charged: number; active_seconds: number };
 
-          // Bill only up to the last real message (idle time is free).
-          const accumulatedSeconds = Math.floor(
-            (rowLastActivity.getTime() - parseUtc(row.started_at).getTime()) / 1000
-          );
-          const totalMinutes = Math.round(accumulatedSeconds / 60);
+          const billableSeconds = Math.max(0, lockedRow.active_seconds);
+          const totalMinutes = Math.round(billableSeconds / 60);
           const totalCoins = totalMinutes * coinsPerMinute;
-          // Delta: only deduct what checkpoints haven't already billed (use fresh locked value)
-          const remainingToDeduct = Math.max(0, totalCoins - Number(row.coins_charged));
+          const remainingToDeduct = Math.max(0, totalCoins - Number(lockedRow.coins_charged));
 
-          const now = new Date();
           if (remainingToDeduct > 0) {
             await tx.update(users)
               .set({
                 coinBalance: sql`GREATEST(0, coin_balance - ${remainingToDeduct})`,
                 totalCoinsUsed: sql`total_coins_used + ${remainingToDeduct}`,
-                updatedAt: now,
+                updatedAt: sql`NOW()`,
               })
-              .where(eq(users.id, row.user_id));
+              .where(eq(users.id, lockedRow.user_id));
           }
 
-          await tx.update(chatSessions)
-            .set({
-              status: 'ended',
-              endedAt: rowLastActivity,
-              durationSeconds: accumulatedSeconds,
-              coinsCharged: totalCoins,
-              updatedAt: now,
-            })
-            .where(eq(chatSessions.id, session.id));
+          await tx.execute(
+            sql`UPDATE chat_sessions SET
+                  status = 'ended',
+                  ended_at = COALESCE(last_message_at, started_at),
+                  duration_seconds = ${billableSeconds},
+                  coins_charged = ${totalCoins},
+                  last_heartbeat_at = NOW(),
+                  updated_at = NOW()
+                WHERE id = ${row.id}`
+          );
 
-          sessionEnded = true;
+          endedCount++;
         });
       } catch (txErr) {
-        logger.error('Cleanup: transaction failed for session', { sessionId: session.id, error: (txErr as Error).message });
+        logger.error('Cleanup: transaction failed for session', { sessionId: row.id, error: (txErr as Error).message });
         continue;
       }
 
-      if (!sessionEnded) continue;
-
       logger.info('Cleanup: auto-ended inactive session', {
-        sessionId: session.id,
-        personaId: session.personaId,
-        inactiveMinutes: Math.round(inactiveDuration / 60000),
+        sessionId: row.id,
+        personaId: row.persona_id,
+        idleSeconds: row.idle_seconds,
       });
 
-      sendTimeoutNotification(session.id).catch(err =>
-        logger.error('Failed to send timeout email', { sessionId: session.id, error: (err as Error).message })
+      sendTimeoutNotification(row.id).catch(err =>
+        logger.error('Failed to send timeout email', { sessionId: row.id, error: (err as Error).message })
       );
-
-      endedCount++;
     }
   } catch (err) {
     logger.error('Inactive session cleanup failed', { error: (err as Error).message });
