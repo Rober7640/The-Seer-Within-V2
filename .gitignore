@@ -21,7 +21,6 @@ vite.config.ts.*
 
 # Runtime directories
 logs/
-uploads/
 playwright-report/
 test-results/
 
