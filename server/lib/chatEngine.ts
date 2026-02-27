@@ -10,7 +10,7 @@ import {
   chatMessages,
   userMemory,
 } from '@shared/schema';
-import { eq, and, desc } from 'drizzle-orm';
+import { eq, and, desc, sql } from 'drizzle-orm';
 import { loadUserContext, summarizeSession } from './memoryManager';
 import { loadCrossPersonaMemories, formatTransferContext } from './memoryTransfer';
 import { startChatSession, endChatSession, checkpointSession } from './creditTracking';
@@ -923,15 +923,18 @@ export async function sendMessage(
       }
 
       const firstName = user[0]?.firstName || 'friend';
-      const now = new Date();
 
       // Persist user message and update session heartbeat
       const [insertedUserMsgBD] = await db.insert(chatMessages)
         .values({ sessionId, userId, role: 'user', content: userMessage })
         .returning({ id: chatMessages.id });
-      await db.update(chatSessions)
-        .set({ lastMessageAt: now })
-        .where(eq(chatSessions.id, sessionId));
+      // Use SQL NOW() AT TIME ZONE 'UTC' — NOT JavaScript new Date() — to ensure
+      // last_message_at is always stored in UTC, matching started_at's timezone.
+      // With pgbouncer transaction pooler, JS Date goes through session-tz conversion
+      // which can differ from UTC, causing a 5.5h billing error on IST backends.
+      await db.execute(
+        sql`UPDATE chat_sessions SET last_message_at = (NOW() AT TIME ZONE 'UTC') WHERE id = ${sessionId}`
+      );
       await checkpointSession(sessionId);
 
       let responseMessage: string;
@@ -1080,7 +1083,6 @@ export async function sendMessage(
   // ── Step 6: Build intent context for Claude ──
   const intentCtx = buildIntentContext(intentResult, convState, intentConfig);
 
-  const now = new Date();
   const [insertedUserMsg] = await db.insert(chatMessages).values({
     sessionId,
     userId,
@@ -1090,9 +1092,11 @@ export async function sendMessage(
 
   // Record actual user activity so idle-timeout logic can distinguish
   // real usage from sessions left open with no messages.
-  await db.update(chatSessions)
-    .set({ lastMessageAt: now })
-    .where(eq(chatSessions.id, sessionId));
+  // Use SQL NOW() AT TIME ZONE 'UTC' — NOT JavaScript new Date() — to ensure
+  // last_message_at is always stored in UTC, matching started_at's timezone.
+  await db.execute(
+    sql`UPDATE chat_sessions SET last_message_at = (NOW() AT TIME ZONE 'UTC') WHERE id = ${sessionId}`
+  );
 
   await checkpointSession(sessionId);
 
