@@ -54,9 +54,13 @@ export async function startChatSession(userId: string, personaId: string): Promi
     }
   }
 
-  // Check balance after cleanup
+  // Check balance after cleanup — reject if drained to zero
   const userAfterCleanup = await db.select({ coinBalance: users.coinBalance }).from(users).where(eq(users.id, userId)).limit(1);
   logger.info('startChatSession: balance after cleanup', { userId, balanceBefore: user[0].coinBalance, balanceAfter: userAfterCleanup[0]?.coinBalance });
+
+  if (!userAfterCleanup[0] || userAfterCleanup[0].coinBalance <= 0) {
+    throw new Error('OUT_OF_CREDITS');
+  }
 
   const [pricing, personaRow] = await Promise.all([
     getPersonaPricing(personaId),
@@ -189,8 +193,8 @@ export async function endChatSession(sessionId: string): Promise<void> {
       ? Math.max(0, row.active_seconds)  // idle too long — bill only active time
       : Math.max(0, row.elapsed_seconds); // still active — bill full elapsed
 
-    // Round to nearest minute for the final charge
-    const totalMinutes = Math.round(billableSeconds / 60);
+    // Only charge completed full minutes (Math.floor — consistent with checkpointSession)
+    const totalMinutes = Math.floor(billableSeconds / 60);
     const finalCharge = totalMinutes * coinsPerMinute;
     const previouslyCharged = Number(row.coins_charged);
 
@@ -353,7 +357,7 @@ export async function recoverActiveSessions(): Promise<void> {
     if (row.idle_seconds > timeoutSeconds) {
       // Session timed out — bill only active time
       const billableSeconds = Math.max(0, row.active_seconds);
-      const totalMinutes = Math.round(billableSeconds / 60);
+      const totalMinutes = Math.floor(billableSeconds / 60);
       const totalCoins = totalMinutes * coinsPerMinute;
       const remainingToDeduct = Math.max(0, totalCoins - Number(row.coins_charged));
 
@@ -455,7 +459,7 @@ export async function cleanupInactiveSessions(): Promise<number> {
           const lockedRow = locked.rows[0] as { id: string; user_id: string; coins_charged: number; active_seconds: number };
 
           const billableSeconds = Math.max(0, lockedRow.active_seconds);
-          const totalMinutes = Math.round(billableSeconds / 60);
+          const totalMinutes = Math.floor(billableSeconds / 60);
           const totalCoins = totalMinutes * coinsPerMinute;
           const remainingToDeduct = Math.max(0, totalCoins - Number(lockedRow.coins_charged));
 

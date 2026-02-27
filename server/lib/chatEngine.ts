@@ -808,11 +808,14 @@ export async function initSession(config: {
     content: greeting,
   });
 
+  // Re-read balance after startChatSession (which may have ended old sessions and deducted coins)
+  const freshUser = await db.select({ coinBalance: users.coinBalance }).from(users).where(eq(users.id, config.userId)).limit(1);
+
   return {
     sessionId,
     personaName: personaConfig.displayName,
     greeting,
-    creditsRemaining: user[0].coinBalance,
+    creditsRemaining: freshUser[0]?.coinBalance ?? 0,
   };
 }
 

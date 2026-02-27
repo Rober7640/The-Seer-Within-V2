@@ -197,6 +197,13 @@ export default function ChatServicePage() {
   const lastUserMessageAt = useRef<number | null>(null);
   // Stores a queued question from the instructions screen to auto-send once greeting appears
   const pendingQuestionAfterGreeting = useRef<string | null>(null);
+
+  // Refs for volatile values used inside the credit timer (Fix 4: stabilize timer deps)
+  const coinBalanceRef = useRef(coinBalance);
+  const endSessionRef = useRef<() => void>(() => {});
+  const freeTrialCoinsRef = useRef(freeTrialCoins);
+  const refillBannerDismissedRef = useRef(refillBannerDismissed);
+  const coinsPerMinuteRef = useRef(60);
   // Tracks the last persona ID that triggered an auto-fetch, to prevent double-fetching
   const lastAutoFetchedPersonaId = useRef<string | null>(null);
 
@@ -360,37 +367,48 @@ export default function ChatServicePage() {
   // Derived: current persona object — must be declared before any effect that uses it
   const selectedPersona = personas.find((p) => p.id === selectedPersonaId);
 
+  // Sync refs for volatile values used inside the credit timer (Fix 4)
+  useEffect(() => { coinBalanceRef.current = coinBalance; }, [coinBalance]);
+  useEffect(() => { freeTrialCoinsRef.current = freeTrialCoins; }, [freeTrialCoins]);
+  useEffect(() => { refillBannerDismissedRef.current = refillBannerDismissed; }, [refillBannerDismissed]);
+  useEffect(() => { coinsPerMinuteRef.current = selectedPersona?.coinsPerMinute ?? 60; }, [selectedPersona?.coinsPerMinute]);
+
   // Credit countdown timer + refill banner trigger
+  // Depends only on [session] — reads volatile values from refs to avoid teardown/recreate cycles
   useEffect(() => {
     if (session && session.status === "active") {
-      const coinsPerMinute = selectedPersona?.coinsPerMinute ?? 60;
-
       timerRef.current = setInterval(() => {
         setElapsedSeconds((prev) => {
           const next = prev + 1;
+          const cpm = coinsPerMinuteRef.current;
+          const balance = coinBalanceRef.current;
+          const ftCoins = freeTrialCoinsRef.current;
+          const dismissed = refillBannerDismissedRef.current;
+
           // Coins consumed = completed full minutes × guide rate (matches server Math.floor logic)
-          const coinsUsed = Math.floor(next / 60) * coinsPerMinute;
+          const coinsUsed = Math.floor(next / 60) * cpm;
 
           // Show refill banner 30 seconds before free trial ends (new users)
-          if (freeTrialCoins > 0 && !refillBannerDismissed && coinBalance <= freeTrialCoins) {
-            const freeTrialSeconds = (freeTrialCoins / coinsPerMinute) * 60;
+          if (ftCoins > 0 && !dismissed && balance <= ftCoins) {
+            const freeTrialSeconds = (ftCoins / cpm) * 60;
             if (next >= freeTrialSeconds - 30 && next < freeTrialSeconds) {
               setShowRefillBanner(true);
             }
           }
 
           // Show refill banner when < 1 full minute remains at this guide's rate (FRICTION-7)
-          if (coinBalance > freeTrialCoins && !refillBannerDismissed) {
-            const coinsRemaining = coinBalance - coinsUsed;
-            if (coinsRemaining <= coinsPerMinute && coinsRemaining > 0) {
+          if (balance > ftCoins && !dismissed) {
+            const coinsRemaining = balance - coinsUsed;
+            if (coinsRemaining <= cpm && coinsRemaining > 0) {
               setShowRefillBanner(true);
             }
           }
 
           // Check if out of coins every tick — no 60s delay (FRICTION-6)
-          if (coinsUsed >= coinBalance) {
+          // Guard: only trigger when balance is positive to avoid false trigger on stale 0
+          if (coinsUsed >= balance && balance > 0) {
             setShowOutOfCredits(true);
-            endSession();
+            endSessionRef.current();
           }
           return next;
         });
@@ -403,7 +421,7 @@ export default function ChatServicePage() {
         timerRef.current = null;
       }
     };
-  }, [session, coinBalance, freeTrialCoins, refillBannerDismissed, selectedPersona?.coinsPerMinute]);
+  }, [session]);
 
   // Idle detection: warn after 2 min of no message sent, auto-end after 3 min
   useEffect(() => {
@@ -758,6 +776,9 @@ export default function ChatServicePage() {
       setShowRefillBanner(false);
     }
   }, [session, coinBalance]);
+
+  // Keep endSessionRef in sync so the timer can call endSession without a stale closure
+  useEffect(() => { endSessionRef.current = endSession; }, [endSession]);
 
   // User-initiated "End Reading" — keeps chat history, inserts divider, triggers feedback if 5+ min
   const handleEndReadingConfirm = useCallback(async () => {
