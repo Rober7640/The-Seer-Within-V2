@@ -1074,6 +1074,7 @@ export default function ChatServicePage() {
           setMessages((prev) => [...prev, assistantMsg]);
           if (data.remainingCoins !== undefined) {
             setCoinBalance(data.remainingCoins);
+            setElapsedSeconds(0); // Reset timer so display doesn't double-count server deductions
           }
           // TEMPORARY: log billing debug info to console
           if (data._billingDebug) {
