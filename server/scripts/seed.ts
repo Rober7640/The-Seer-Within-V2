@@ -44,7 +44,7 @@ async function seedDatabase() {
         displayName: 'Evelyn Cross',
         tagline: 'Your Spiritual Guide Through Life\'s Mysteries',
         description: 'Evelyn Cross is a renowned spiritual guide with over 20 years of experience helping seekers find clarity in matters of love, money, and purpose. Her intuitive insights have transformed thousands of lives.',
-        avatarUrl: '/avatars/evelyn-cross.jpg',
+        avatarUrl: '/uploads/avatars/evelyn-cross.png',
         baseSystemPrompt: getEvelynSystemPrompt(),
         personality: JSON.stringify({
           tone: 'warm, mystical, empathetic',
@@ -150,7 +150,7 @@ async function seedDatabase() {
         displayName: 'Marcus Stone',
         tagline: 'Tarot Master & Spiritual Advisor',
         description: 'Marcus Stone is a master tarot reader with 15 years of experience. His profound connection to the cards reveals hidden truths and illuminates the path forward.',
-        avatarUrl: '/avatars/marcus-stone.jpg',
+        avatarUrl: '/uploads/avatars/marcus-stone.png',
         baseSystemPrompt: getMarcusSystemPrompt(),
         personality: JSON.stringify({
           tone: 'mystical, direct, insightful',
@@ -299,7 +299,7 @@ async function seedDatabase() {
         displayName: 'Luna Voss',
         tagline: 'Your Natal Chart, Decoded',
         description: 'Luna Voss is a modern astrologer who reads your birth chart with sharp accuracy and zero fluff. She decodes your Sun, Moon, and Rising signs and shows you exactly what your chart says about love, career, and where you\'re headed next.',
-        avatarUrl: '/avatars/luna-voss.jpg',
+        avatarUrl: '/uploads/avatars/luna-voss.png',
         baseSystemPrompt: getLunaSystemPrompt(),
         personality: JSON.stringify({
           tone: 'modern, direct, intellectually sharp',
@@ -386,7 +386,7 @@ async function seedDatabase() {
         displayName: 'Nova Sharma',
         tagline: 'Vedic Astrology, Karma & Remedies',
         description: 'Nova Sharma is a Vedic astrologer trained in the Jyotish tradition. She reads your birth chart through the lens of karma, nakshatras, and planetary cycles — and tells you exactly what to do about them. Expect gemstone guidance, mantras, and real-life timing, all explained in plain language.',
-        avatarUrl: '/avatars/nova-sharma.jpg',
+        avatarUrl: '/uploads/avatars/nova-sharma.png',
         baseSystemPrompt: getNovaSystemPrompt(),
         personality: JSON.stringify({
           tone: 'warm, calm, grounded, spiritually reverent',
@@ -473,7 +473,7 @@ async function seedDatabase() {
         displayName: 'Maren Soleil',
         tagline: 'Twin Flame Oracle & Love Empath',
         description: 'Maren Soleil is a clairvoyant empath who reads the energetic cord between two souls. Specializing in twin flame recognition, soulmate discernment, and reunion readings, she tells you the felt truth about your love connections — with warmth, clarity, and honesty.',
-        avatarUrl: '/avatars/maren-soleil.jpg',
+        avatarUrl: '/uploads/avatars/maren-soleil.png',
         baseSystemPrompt: getMarenSystemPrompt(),
         personality: JSON.stringify({
           tone: 'warm, intimate, honest, deeply empathic',
@@ -558,7 +558,7 @@ async function seedDatabase() {
         displayName: 'Aiden Powers',
         tagline: 'Master Numerologist & Life Blueprint Decoder',
         description: 'Aiden Powers is a master numerologist and the researcher who introduced Pinnacle Period theory to modern numerology. He doesn\'t claim psychic gifts — he decodes the mathematical blueprint encoded in your birth name and birthdate. His readings have helped over 9,000 people in 30 countries understand their Life Path, current Pinnacle cycle, and what this year\'s numbers are telling them to do.',
-        avatarUrl: '/avatars/aiden-powers.jpg',
+        avatarUrl: '/uploads/avatars/aiden-powers.png',
         baseSystemPrompt: getAidenSystemPrompt(),
         personality: JSON.stringify({
           tone: 'warm, credibility-first, analytical, scholar',

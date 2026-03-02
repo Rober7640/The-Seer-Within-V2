@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useAuth, authFetch } from "@/hooks/useAuth";
-import { X } from "lucide-react";
+import { X, Coins } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -133,14 +133,14 @@ export default function BuyCreditsModal({
                       <span className="text-2xl font-bold text-white">
                         {tier.totalCoins}
                       </span>
-                      <span className="text-sm" role="img" aria-label="coins">🪙</span>
+                      <Coins className="w-5 h-5 text-amber-400" />
                     </div>
 
                     {/* Bonus coins badge */}
                     {tier.bonusCoins > 0 && (
                       <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-teal-500/20 border border-teal-500/30 mb-2">
                         <span className="text-[11px] font-medium text-teal-300">
-                          +{tier.bonusCoins} 🪙 free
+                          +{tier.bonusCoins} <Coins className="w-3 h-3 inline" /> free
                         </span>
                       </div>
                     )}

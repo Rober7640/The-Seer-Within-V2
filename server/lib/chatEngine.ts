@@ -1297,7 +1297,7 @@ export async function sendMessage(
         .set({
           lastTopic: topic || session[0].lastTopic,
           lastBucket: bucketForSession || session[0].lastBucket,
-          updatedAt: new Date(),
+          updatedAt: sql`(NOW() AT TIME ZONE 'UTC')`,
         })
         .where(eq(chatSessions.id, sessionId));
     }

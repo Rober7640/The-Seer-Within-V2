@@ -37,7 +37,16 @@ pool.on('connect', (client) => {
   });
 });
 
-export const db = drizzle(pool);
+export const db = drizzle(pool, {
+  logger: {
+    logQuery(query: string, params: unknown[]) {
+      // Only log billing-related queries to avoid noise
+      if (query.includes('coins_charged') || query.includes('coin_balance') || query.includes('duration_seconds')) {
+        logger.info('DRIZZLE_SQL', { query: query.substring(0, 500), params: JSON.stringify(params).substring(0, 300) });
+      }
+    },
+  },
+});
 
 export interface ConversationRecord {
   id?: string;

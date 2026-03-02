@@ -188,13 +188,14 @@ export async function checkpointSession(sessionId: string): Promise<void> {
       );
       const balanceBefore = (beforeBalance.rows[0] as any)?.coin_balance ?? '?';
 
-      await tx.update(users)
-        .set({
-          coinBalance: sql`GREATEST(0, coin_balance - ${safeDeduction})`,
-          totalCoinsUsed: sql`total_coins_used + ${safeDeduction}`,
-          updatedAt: sql`(NOW() AT TIME ZONE 'UTC')`,
-        })
-        .where(eq(users.id, row.user_id));
+      // Use raw SQL for coin deduction too — consistent with session update
+      await tx.execute(
+        sql`UPDATE users SET
+              coin_balance = GREATEST(0, coin_balance - ${safeDeduction}),
+              total_coins_used = total_coins_used + ${safeDeduction},
+              updated_at = (NOW() AT TIME ZONE 'UTC')
+            WHERE id = ${row.user_id}`
+      );
 
       logger.info('checkpointSession: deducted coins', {
         sessionId,
@@ -213,25 +214,51 @@ export async function checkpointSession(sessionId: string): Promise<void> {
       ? Number(row.coins_charged) + (coinsToDeductNow > MAX_COINS_PER_DEDUCTION ? MAX_COINS_PER_DEDUCTION : coinsToDeductNow)
       : Number(row.coins_charged);
 
-    await tx.update(chatSessions)
-      .set({
-        durationSeconds: accumulatedSeconds,
-        coinsCharged: actualTotalCharged,
-        lastHeartbeatAt: sql`(NOW() AT TIME ZONE 'UTC')`,
-        updatedAt: sql`(NOW() AT TIME ZONE 'UTC')`,
-      })
-      .where(eq(chatSessions.id, sessionId));
+    // Use raw SQL (NOT Drizzle ORM) to bypass potential ORM serialization bugs.
+    // Drizzle's .set() was suspected of writing wrong values for integer columns
+    // when mixed with sql`` template literals for timestamp columns.
+    await tx.execute(
+      sql`UPDATE chat_sessions SET
+            duration_seconds = ${accumulatedSeconds},
+            coins_charged = ${actualTotalCharged},
+            last_heartbeat_at = (NOW() AT TIME ZONE 'UTC'),
+            updated_at = (NOW() AT TIME ZONE 'UTC')
+          WHERE id = ${sessionId}`
+    );
 
-    // DEBUG: verify what was actually written
+    // Verify within transaction
     const verify = await tx.execute(
       sql`SELECT coins_charged, duration_seconds FROM chat_sessions WHERE id = ${sessionId}`
     );
     logger.info('checkpointSession VERIFY after write', {
       sessionId,
-      wrote: newTotalCharged,
+      wrote: { duration: accumulatedSeconds, coins: actualTotalCharged },
       readBack: verify.rows[0],
     });
   });
+
+  // POST-COMMIT verification: read back OUTSIDE the transaction to catch any
+  // external actor (trigger, replication, ORM bug) that modifies values after commit.
+  const postCommit = await db.execute(
+    sql`SELECT coins_charged, duration_seconds FROM chat_sessions WHERE id = ${sessionId}`
+  );
+  const pc = postCommit.rows[0] as { coins_charged: number; duration_seconds: number } | undefined;
+  if (pc && (pc.coins_charged > MAX_BILLABLE_SECONDS || pc.duration_seconds > MAX_BILLABLE_SECONDS)) {
+    logger.error('BILLING_CORRUPTION_DETECTED: post-commit values exceed safety cap', {
+      sessionId,
+      postCommitCoins: pc.coins_charged,
+      postCommitDuration: pc.duration_seconds,
+      maxAllowed: MAX_BILLABLE_SECONDS,
+    });
+    // NUCLEAR FIX: force correct the corrupted values
+    await db.execute(
+      sql`UPDATE chat_sessions SET
+            coins_charged = LEAST(coins_charged, ${MAX_BILLABLE_SECONDS}),
+            duration_seconds = LEAST(duration_seconds, ${MAX_BILLABLE_SECONDS})
+          WHERE id = ${sessionId}`
+    );
+    logger.info('BILLING_CORRUPTION_FIXED: capped values to safety max', { sessionId });
+  }
 }
 
 /**
@@ -295,15 +322,15 @@ export async function endChatSession(sessionId: string): Promise<void> {
     const balanceBefore = (beforeBalance.rows[0] as any)?.coin_balance ?? '?';
 
     if (finalCharge > previouslyCharged) {
-      // Deduct remaining owed
+      // Deduct remaining owed — raw SQL to match checkpoint approach
       const remainingToDeduct = finalCharge - previouslyCharged;
-      await tx.update(users)
-        .set({
-          coinBalance: sql`GREATEST(0, coin_balance - ${remainingToDeduct})`,
-          totalCoinsUsed: sql`total_coins_used + ${remainingToDeduct}`,
-          updatedAt: sql`(NOW() AT TIME ZONE 'UTC')`,
-        })
-        .where(eq(users.id, row.user_id));
+      await tx.execute(
+        sql`UPDATE users SET
+              coin_balance = GREATEST(0, coin_balance - ${remainingToDeduct}),
+              total_coins_used = total_coins_used + ${remainingToDeduct},
+              updated_at = (NOW() AT TIME ZONE 'UTC')
+            WHERE id = ${row.user_id}`
+      );
 
       logger.info('endChatSession: deducted coins', {
         sessionId, userId: row.user_id, balanceBefore, deducted: remainingToDeduct,
@@ -312,13 +339,13 @@ export async function endChatSession(sessionId: string): Promise<void> {
     } else if (finalCharge < previouslyCharged) {
       // Checkpoint over-billed — refund the difference
       const refund = previouslyCharged - finalCharge;
-      await tx.update(users)
-        .set({
-          coinBalance: sql`coin_balance + ${refund}`,
-          totalCoinsUsed: sql`GREATEST(0, total_coins_used - ${refund})`,
-          updatedAt: sql`(NOW() AT TIME ZONE 'UTC')`,
-        })
-        .where(eq(users.id, row.user_id));
+      await tx.execute(
+        sql`UPDATE users SET
+              coin_balance = coin_balance + ${refund},
+              total_coins_used = GREATEST(0, total_coins_used - ${refund}),
+              updated_at = (NOW() AT TIME ZONE 'UTC')
+            WHERE id = ${row.user_id}`
+      );
       logger.info('endChatSession: refunding over-billed coins', {
         sessionId, refund, previouslyCharged, finalCharge, balanceBefore,
       });
@@ -527,13 +554,13 @@ export async function cleanupInactiveSessions(): Promise<number> {
           const remainingToDeduct = Math.max(0, totalCoins - Number(lockedRow.coins_charged));
 
           if (remainingToDeduct > 0) {
-            await tx.update(users)
-              .set({
-                coinBalance: sql`GREATEST(0, coin_balance - ${remainingToDeduct})`,
-                totalCoinsUsed: sql`total_coins_used + ${remainingToDeduct}`,
-                updatedAt: sql`(NOW() AT TIME ZONE 'UTC')`,
-              })
-              .where(eq(users.id, lockedRow.user_id));
+            await tx.execute(
+              sql`UPDATE users SET
+                    coin_balance = GREATEST(0, coin_balance - ${remainingToDeduct}),
+                    total_coins_used = total_coins_used + ${remainingToDeduct},
+                    updated_at = (NOW() AT TIME ZONE 'UTC')
+                  WHERE id = ${lockedRow.user_id}`
+            );
           }
 
           await tx.execute(

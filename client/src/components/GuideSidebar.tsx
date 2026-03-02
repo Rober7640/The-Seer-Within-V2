@@ -13,6 +13,7 @@ interface Guide {
   tagline: string | null;
   avatarUrl: string | null;
   isActive: boolean;
+  isOnline?: boolean;
 }
 
 interface GuideSidebarProps {
@@ -24,6 +25,8 @@ interface GuideSidebarProps {
   onMobileClose: () => void;
   /** Called with the target slug and the guide's full teaser message when user picks a different guide */
   onSwitchGuide: (slug: string, teaserFull: string) => void;
+  /** Called when user clicks a busy/offline persona */
+  onBusyClick?: (displayName: string) => void;
   /** Whether the user is still on their free trial (has not purchased credits) */
   isNewUser: boolean;
 }
@@ -71,11 +74,13 @@ function GuideItem({
   guide,
   showBadge,
   isNewUser,
+  isBusy,
   onClick,
 }: {
   guide: Guide;
   showBadge: boolean;
   isNewUser: boolean;
+  isBusy: boolean;
   onClick: () => void;
 }) {
   const teaser = getTeaserMessage(guide);
@@ -85,7 +90,7 @@ function GuideItem({
   return (
     <button
       onClick={onClick}
-      className="w-full text-left transition-colors hover:bg-white/5 active:bg-white/10"
+      className={`w-full text-left transition-colors ${isBusy ? "opacity-50 cursor-not-allowed" : "hover:bg-white/5 active:bg-white/10"}`}
     >
       {/* Row */}
       <div className="flex items-start gap-3 px-3 py-3">
@@ -101,8 +106,12 @@ function GuideItem({
               }}
             />
           </div>
+          {/* Status dot — green for online, rose for busy */}
+          <span
+            className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-[#0d1226] ${isBusy ? "bg-rose-500" : "bg-emerald-500"}`}
+          />
           {/* Unread badge — only the one active guide for this session */}
-          {showBadge && (
+          {showBadge && !isBusy && (
             <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-orange-500 rounded-full flex items-center justify-center text-[9px] font-black text-white shadow">
               1
             </span>
@@ -111,25 +120,31 @@ function GuideItem({
 
         {/* Main content */}
         <div className="flex-1 min-w-0">
-          {/* Name + time row */}
+          {/* Name + time/status row */}
           <div className="flex items-baseline justify-between gap-1 mb-0.5">
             <p className="text-white text-sm font-semibold truncate leading-tight">
               {guide.displayName}
             </p>
-            {showBadge && (
+            {isBusy ? (
+              <span className="text-rose-400/70 text-[10px] font-semibold shrink-0">Busy</span>
+            ) : showBadge ? (
               <span className="text-white/40 text-[10px] shrink-0">{timeLabel}</span>
-            )}
+            ) : null}
           </div>
 
-          {/* Teaser preview when badge is active, tagline otherwise */}
+          {/* Teaser preview when badge is active, "Currently unavailable" when busy, tagline otherwise */}
           <p className="text-white/55 text-xs leading-snug line-clamp-2">
-            {showBadge ? teaser.preview : (guide.tagline ?? "Available for a reading")}
+            {isBusy
+              ? "Currently unavailable — try again later"
+              : showBadge
+                ? teaser.preview
+                : (guide.tagline ?? "Available for a reading")}
           </p>
         </div>
       </div>
 
-      {/* "3 min FREE" badge row — only shown to new/trial users */}
-      {isNewUser && (
+      {/* "3 min FREE" badge row — only shown to new/trial users for online guides */}
+      {isNewUser && !isBusy && (
         <div className="px-3 pb-2.5">
           <div
             className="w-full text-center py-1 rounded text-[10px] font-bold text-white/90 tracking-wide"
@@ -152,12 +167,14 @@ function SidebarContent({
   chattedGuideIds,
   isNewUser,
   onSelect,
+  onBusyClick,
 }: {
   guides: Guide[];
   selectedPersonaId: string | null;
   chattedGuideIds: Set<string>;
   isNewUser: boolean;
   onSelect: (slug: string, teaserFull: string) => void;
+  onBusyClick?: (displayName: string) => void;
 }) {
   const otherGuides = guides.filter(
     (g) => g.isActive && g.id !== selectedPersonaId
@@ -212,15 +229,25 @@ function SidebarContent({
             No other guides available right now
           </p>
         ) : (
-          otherGuides.map((guide) => (
-            <GuideItem
-              key={guide.id}
-              guide={guide}
-              showBadge={guide.slug === activeBadgeSlug}
-              isNewUser={isNewUser}
-              onClick={() => onSelect(guide.slug, getTeaserMessage(guide).full)}
-            />
-          ))
+          otherGuides.map((guide) => {
+            const busy = guide.isOnline === false;
+            return (
+              <GuideItem
+                key={guide.id}
+                guide={guide}
+                showBadge={!busy && guide.slug === activeBadgeSlug}
+                isNewUser={isNewUser}
+                isBusy={busy}
+                onClick={() => {
+                  if (busy) {
+                    onBusyClick?.(guide.displayName);
+                  } else {
+                    onSelect(guide.slug, getTeaserMessage(guide).full);
+                  }
+                }}
+              />
+            );
+          })
         )}
       </div>
     </div>
@@ -234,6 +261,7 @@ export function GuideSidebar({
   mobileOpen,
   onMobileClose,
   onSwitchGuide,
+  onBusyClick,
   isNewUser,
 }: GuideSidebarProps) {
   const handleSelect = (slug: string, teaserFull: string) => {
@@ -251,6 +279,7 @@ export function GuideSidebar({
           chattedGuideIds={chattedGuideIds}
           isNewUser={isNewUser}
           onSelect={handleSelect}
+          onBusyClick={onBusyClick}
         />
       </aside>
 
@@ -269,6 +298,7 @@ export function GuideSidebar({
             chattedGuideIds={chattedGuideIds}
             isNewUser={isNewUser}
             onSelect={handleSelect}
+            onBusyClick={onBusyClick}
           />
         </SheetContent>
       </Sheet>

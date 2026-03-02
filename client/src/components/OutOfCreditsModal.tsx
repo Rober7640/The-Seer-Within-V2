@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useAuth, authFetch } from "@/hooks/useAuth";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Coins } from "lucide-react";
 import type { PricingTier } from "@shared/types";
 import PayPalCreditButton from "@/components/PayPalCreditButton";
 
@@ -167,9 +168,7 @@ export default function OutOfCreditsModal({
   const formatPrice = (cents: number) => `$${(cents / 100).toFixed(2)}`;
 
   const salePrice = featuredTier ? formatPrice(featuredTier.priceUsd) : "$9.99";
-  const coinsLabel = featuredTier
-    ? `${featuredTier.totalCoins} 🪙`
-    : "180 🪙";
+  const coinsAmount = featuredTier ? featuredTier.totalCoins : 180;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -192,8 +191,8 @@ export default function OutOfCreditsModal({
                 <span className="text-[13px] text-white/55">
                   Top up
                 </span>
-                <span className="text-[13px] font-semibold text-white/50 ml-1">
-                  {coinsLabel} for{" "}
+                <span className="text-[13px] font-semibold text-white/50 ml-1 inline-flex items-center gap-1">
+                  {coinsAmount} <Coins className="w-3.5 h-3.5 text-amber-400" /> for{" "}
                 </span>
                 <span className="text-[13px] font-bold text-teal-300">
                   {salePrice}

@@ -74,6 +74,7 @@ interface Persona {
   description: string | null;
   categories: string | null;
   isActive: boolean;
+  isOnline?: boolean;
   coinsPerMinute?: number;
   customPricing?: string | null;
   personality?: string | null; // JSON: { tone, style, specialties, suggestedQuestions?: string[] }
@@ -1223,20 +1224,13 @@ export default function ChatServicePage() {
           mobileOpen={mobileSidebarOpen}
           onMobileClose={() => setMobileSidebarOpen(false)}
           onSwitchGuide={(slug, teaserFull) => switchGuide(slug, teaserFull)}
+          onBusyClick={(name) => {
+            toast({ title: `${name} is currently busy`, description: "Please try again later.", variant: "destructive" });
+          }}
           isNewUser={(user?.coinBalance ?? 0) + (user?.totalCoinsUsed ?? 0) <= 180}
         />
       )}
 
-      {/* TEMPORARY BILLING DEBUG BANNER — remove after fixing */}
-      {session && (
-        <div className="fixed top-0 left-0 right-0 z-[9999] bg-yellow-400 text-black text-xs font-mono px-3 py-1 flex gap-4 items-center justify-center">
-          <span>DB Balance: {coinBalance}</span>
-          <span>CPM: {selectedPersona?.coinsPerMinute ?? '?'}</span>
-          <span>Elapsed: {elapsedSeconds}s</span>
-          <span>Used: {Math.floor(elapsedSeconds / 60) * (selectedPersona?.coinsPerMinute ?? 60)}</span>
-          <span>Session: {session.status}</span>
-        </div>
-      )}
 
       {/* Main Chat Panel */}
       <div className="flex-1 flex flex-col items-center justify-center p-0 md:p-4 overflow-hidden">
@@ -1289,7 +1283,7 @@ export default function ChatServicePage() {
             {!!preSessionGreeting && !session && coinBalance > 0 && (
               <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/10 text-white/40 text-xs font-medium select-none">
                 <span className="w-1.5 h-1.5 rounded-full bg-white/30" />
-                {coinBalance} 🪙
+                {coinBalance} <Coins className="w-3.5 h-3.5" />
               </div>
             )}
             {session && (() => {
@@ -1299,7 +1293,7 @@ export default function ChatServicePage() {
               return (
                 <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300 text-xs font-medium select-none">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                  {remainingCoins} 🪙
+                  {remainingCoins} <Coins className="w-3.5 h-3.5" />
                 </div>
               );
             })()}
