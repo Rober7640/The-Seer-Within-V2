@@ -1,0 +1,50 @@
+node_modules
+dist
+.DS_Store
+server/public
+vite.config.ts.*
+*.tar.gz
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Local config files that may contain credentials
+.mcp.json
+.claude/settings.local.json
+
+# IDE / AI tool directories
+.cursor/
+.agent/
+.agents/
+
+# Runtime directories
+logs/
+playwright-report/
+test-results/
+
+# Windows artifacts
+nul
+
+# Debug / one-off scripts (not part of the product)
+check-credits.js
+check-memory.cjs
+check_credits.js
+fix-sessions.cjs
+get-admin-token.cjs
+test-api.js
+
+# Pre-session design mockups (not production code)
+pre-session-backup.html
+pre-session-correct-design.html
+pre-session-final.html
+pre-session-improved.tsx
+pre-session-ux-improvements.html
+wireframes-pre-session.html
+
+# Duplicate avatar at repo root (real one is in client/public/)
+evelyn-avatar.png
+
+# Reference files
+attached/

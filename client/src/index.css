@@ -1,0 +1,160 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@theme inline {
+  --color-background: hsl(222 47% 11%);
+  --color-foreground: hsl(210 40% 98%);
+  
+  --color-bg-deep: hsl(222 47% 11%);
+  --color-bg-mid: hsl(214 52% 25%);
+  
+  --color-primary: hsl(262 83% 58%);
+  --color-primary-foreground: hsl(0 0% 100%);
+  
+  --color-secondary: hsl(46 65% 52%); /* Gold */
+  --color-secondary-foreground: hsl(222 47% 11%);
+  
+  --color-accent: hsl(263 70% 50%);
+  --color-accent-foreground: hsl(0 0% 100%);
+  
+  --color-muted: hsl(217 33% 17%);
+  --color-muted-foreground: hsl(215 20% 65%);
+  
+  --color-card: hsl(222 47% 11%); /* Deep background for cards if needed transparent */
+  --color-card-foreground: hsl(210 40% 98%);
+  
+  --color-border: hsl(217 33% 17%);
+  --color-input: hsl(217 33% 17%);
+  
+  /* Status Colors */
+  --color-status-busy: hsl(348 83% 47%);
+  --color-status-connecting: hsl(45 93% 47%);
+  --color-status-online: hsl(142 71% 45%);
+
+  --font-sans: 'Inter', sans-serif;
+  --font-serif: 'Playfair Display', serif;
+  
+  --animate-twinkle: twinkle 5s ease-in-out infinite;
+  --animate-pulse-slow: pulse-slow 1s ease-in-out infinite;
+  --animate-pulse-fast: pulse-fast 0.3s ease-in-out infinite;
+  --animate-flicker: flicker 0.5s ease-out forwards;
+  --animate-glow: glow 2s ease-in-out infinite;
+  --animate-cta-appear: cta-appear 0.5s ease-out forwards;
+  --animate-slide-down: slide-down 0.3s ease-out forwards;
+
+  @keyframes slide-down {
+    0% { transform: translateY(-100%); opacity: 0; }
+    100% { transform: translateY(0); opacity: 1; }
+  }
+
+  @keyframes twinkle {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+  }
+  
+  @keyframes pulse-slow {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(0.85); }
+  }
+  
+  @keyframes pulse-fast {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+  
+  @keyframes flicker {
+    0% { background-color: var(--color-status-busy); opacity: 1; }
+    20% { background-color: var(--color-status-busy); opacity: 0.2; }
+    40% { background-color: var(--color-status-connecting); opacity: 1; }
+    60% { background-color: var(--color-status-busy); opacity: 0.3; }
+    80% { background-color: var(--color-status-online); opacity: 0.7; }
+    100% { background-color: var(--color-status-online); opacity: 1; }
+  }
+  
+  @keyframes glow {
+    0%, 100% { box-shadow: 0 0 4px var(--color-status-online); }
+    50% { box-shadow: 0 0 8px var(--color-status-online), 0 0 16px var(--color-status-online); }
+  }
+  
+  @keyframes cta-appear {
+    0% { 
+      transform: scale(0.98); 
+      box-shadow: none;
+    }
+    50% { 
+      transform: scale(1.02); 
+      box-shadow: 0 0 20px rgba(124, 58, 237, 0.5);
+    }
+    100% { 
+      transform: scale(1); 
+      box-shadow: 0 4px 15px rgba(124, 58, 237, 0.3);
+    }
+  }
+
+  --animate-mp-fade-up: mp-fade-up 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+  --animate-mp-section: mp-section 0.65s cubic-bezier(0.22, 1, 0.36, 1) both;
+  --animate-mp-aura: mp-aura 4s ease-in-out infinite;
+
+  @keyframes mp-fade-up {
+    from { opacity: 0; transform: translateY(18px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes mp-section {
+    from { opacity: 0; transform: translateY(26px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes mp-aura {
+    0%, 100% { box-shadow: 0 0 30px rgba(124, 58, 237, 0.06), inset 0 1px 0 rgba(255,255,255,0.015); }
+    50% { box-shadow: 0 0 60px rgba(124, 58, 237, 0.14), inset 0 1px 0 rgba(255,255,255,0.03); }
+  }
+}
+
+@layer base {
+  body {
+    @apply font-sans antialiased bg-bg-deep text-foreground;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-serif;
+  }
+}
+
+/* Marketplace card hover */
+.mp-card {
+  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+              box-shadow 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+              border-color 0.25s ease;
+}
+.mp-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 40px rgba(124, 58, 237, 0.12),
+              0 0 0 1px rgba(124, 58, 237, 0.2);
+  border-color: rgba(124, 58, 237, 0.35);
+}
+
+/* Hide scrollbar while keeping scroll functionality */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Custom Utilities for Stars */
+.stars {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background-image: 
+    radial-gradient(2px 2px at 20px 30px, white, transparent),
+    radial-gradient(2px 2px at 40px 70px, rgba(255,255,255,0.8), transparent),
+    radial-gradient(1px 1px at 90px 40px, white, transparent),
+    radial-gradient(2px 2px at 160px 120px, rgba(255,255,255,0.9), transparent),
+    radial-gradient(1.5px 1.5px at 200px 50px, rgba(255,255,255,0.8), transparent),
+    radial-gradient(2px 2px at 250px 200px, rgba(255,255,255,0.7), transparent);
+  background-size: 300px 300px;
+  animation: twinkle 5s ease-in-out infinite;
+}
