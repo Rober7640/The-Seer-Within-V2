@@ -32,6 +32,7 @@ import BuyCreditsModal from "@/components/BuyCreditsModal";
 import OutOfCreditsModal from "@/components/OutOfCreditsModal";
 import TeaserCreditModal from "@/components/TeaserCreditModal";
 import SessionFeedbackModal from "@/components/SessionFeedbackModal";
+import DebugOverlay from "@/components/DebugOverlay";
 import { COINS_PER_MINUTE, type PricingTier } from "@shared/types";
 
 // Status indicator type
@@ -1243,6 +1244,18 @@ export default function ChatServicePage() {
 
   return (
     <div className="fixed inset-0 flex overflow-hidden">
+      {/* Temporary debug overlay for testing */}
+      <DebugOverlay
+        session={session}
+        coinBalance={coinBalance}
+        initialCoinBalance={initialCoinBalance}
+        freeTrialCoins={freeTrialCoins}
+        elapsedSeconds={elapsedSeconds}
+        sessionStartTime={sessionStartTimeRef.current}
+        selectedPersona={selectedPersona ?? null}
+        lastUserMessageAt={lastUserMessageAt.current}
+        messageCount={messages.filter((m) => m.role === "user").length}
+      />
       {/* Guide Sidebar — visible once guide has greeted user, during active session, switching, loading, or post-reading */}
       {(session || !!preSessionGreeting || !!switchingToPersonaSlug || isStarting || readingEnded) && (
         <GuideSidebar
