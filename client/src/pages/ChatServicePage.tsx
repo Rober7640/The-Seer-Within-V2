@@ -92,6 +92,7 @@ interface ChatMessageData {
   tarotCardImageUrl?: string;   // card image for reveal display
   chartData?: NatalChartData | VedicChartData;  // renders natal chart when present (western or vedic)
   isReadingEndedDivider?: boolean; // shows the "Reading Ended" divider + CTAs
+  isCreditsPurchasedDivider?: boolean; // shows the "Credits purchased" divider
 }
 
 interface SessionData {
@@ -1120,7 +1121,22 @@ export default function ChatServicePage() {
             console.error('  Full response:', JSON.stringify(errData, null, 2));
           } catch {}
           setShowOutOfCredits(true);
-          await endSession();
+          // End server session but keep session object + messages in state
+          // so the UI stays consistent (chat visible, no "Begin Reading" flash).
+          // The session is replaced with a new one in onSuccess after payment.
+          if (session) {
+            if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
+            try {
+              await authFetch(`/api/chat-service/session/${session.id}/end`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+              });
+            } catch {}
+            // DON'T clear session — keeps messages + input visible behind the modal
+            setElapsedSeconds(0);
+            sessionStartTimeRef.current = null;
+            setShowRefillBanner(false);
+          }
         } else if (res.status === 410 || res.status === 404) {
           // Session ended or not found — clear session state and show divider
           if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
@@ -1686,8 +1702,21 @@ export default function ChatServicePage() {
                   );
                 }
 
+                // Credits Purchased divider — marks the start of a new billing cycle
+                if (msg.isCreditsPurchasedDivider) {
+                  return (
+                    <div key={msg.id} className="flex items-center gap-3 w-full py-3 animate-fade-in">
+                      <div className="flex-1 h-px bg-gradient-to-r from-transparent via-emerald-400/40 to-transparent" />
+                      <span className="text-xs text-emerald-400 whitespace-nowrap font-medium">
+                        Credits purchased · reading continues
+                      </span>
+                      <div className="flex-1 h-px bg-gradient-to-r from-transparent via-emerald-400/40 to-transparent" />
+                    </div>
+                  );
+                }
+
                 // A "real" DB message ID is a UUID — not a temp- or assistant- prefixed local ID
-                const isRealId = !msg.id.startsWith('temp-') && !msg.id.startsWith('assistant-') && !msg.id.startsWith('reveal-') && !msg.id.startsWith('reading-ended-');
+                const isRealId = !msg.id.startsWith('temp-') && !msg.id.startsWith('assistant-') && !msg.id.startsWith('reveal-') && !msg.id.startsWith('reading-ended-') && !msg.id.startsWith('credits-purchased-');
                 const isSaved = savedMessageIds.has(msg.id);
 
                 return (
@@ -1886,11 +1915,135 @@ export default function ChatServicePage() {
       {/* Out of Credits Modal */}
       <OutOfCreditsModal
         open={showOutOfCredits}
-        onOpenChange={setShowOutOfCredits}
+        onOpenChange={(open) => {
+          setShowOutOfCredits(open);
+          // User dismissed without paying — clear the stale session and show divider
+          if (!open) {
+            setSession(null);
+            setInitialCoinBalance(0);
+            setReadingEnded(true);
+            setMessages((prev) => [
+              ...prev,
+              {
+                id: `reading-ended-${Date.now()}`,
+                role: "assistant" as const,
+                content: "",
+                sentAt: new Date().toISOString(),
+                isReadingEndedDivider: true,
+              },
+            ]);
+          }
+        }}
         personaId={selectedPersonaId}
         personaName={selectedPersona?.displayName}
         personaAvatarUrl={selectedPersona?.avatarUrl}
         pricingTiers={sessionPricing?.tiers}
+        onSuccess={async (newBalance: number) => {
+          setCoinBalance(newBalance);
+          setShowOutOfCredits(false);
+
+          toast({ title: "Credits purchased!", description: "Your reading will continue now." });
+
+          // Insert "Credits Purchased" divider
+          setMessages((prev) => [
+            ...prev,
+            {
+              id: `credits-purchased-${Date.now()}`,
+              role: "assistant" as const,
+              content: "",
+              sentAt: new Date().toISOString(),
+              isCreditsPurchasedDivider: true,
+            },
+          ]);
+
+          // Auto-start a new session with the last 4 real messages for context
+          if (selectedPersonaId) {
+            const realMessages = messages.filter(
+              (m) => m.content && !m.isReadingEndedDivider && !m.isCreditsPurchasedDivider
+            );
+            const last4 = realMessages.slice(-4).map((m) => ({
+              role: m.role,
+              content: m.content,
+            }));
+
+            try {
+              const startRes = await authFetch("/api/chat-service/session/start", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  personaId: selectedPersonaId,
+                  continuationMessages: last4,
+                }),
+              });
+
+              if (startRes.ok) {
+                const startData = await startRes.json();
+                const newSessionId = startData.sessionId;
+                setSession({
+                  id: newSessionId,
+                  personaId: startData.personaId,
+                  status: "active",
+                  startedAt: new Date().toISOString(),
+                  durationSeconds: 0,
+                  coinsCharged: 0,
+                });
+                setElapsedSeconds(0);
+                setShowRefillBanner(false);
+                setRefillBannerDismissed(false);
+                sessionStartTimeRef.current = Date.now();
+                lastUserMessageAt.current = Date.now();
+                setReadingEnded(false);
+                if (startData.remainingCoins !== undefined) {
+                  setCoinBalance(startData.remainingCoins);
+                  setInitialCoinBalance(startData.remainingCoins);
+                }
+                if (startData.pricing) {
+                  setSessionPricing(startData.pricing);
+                }
+
+                // If the last message was from the user (unanswered due to 402),
+                // auto-send it to the AI so they get a response without retyping
+                const lastReal = realMessages[realMessages.length - 1];
+                if (lastReal && lastReal.role === "user") {
+                  setIsTyping(true);
+                  try {
+                    const msgRes = await authFetch(
+                      `/api/chat-service/session/${newSessionId}/message`,
+                      {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ content: lastReal.content }),
+                      },
+                    );
+                    if (msgRes.ok) {
+                      const msgData = await msgRes.json();
+                      setMessages((prev) => [
+                        ...prev,
+                        {
+                          id: msgData.assistantMessageId || `assistant-${Date.now()}`,
+                          role: "assistant" as const,
+                          content: msgData.message,
+                          sentAt: new Date().toISOString(),
+                          tarotDraw: msgData.tarotDraw || false,
+                          chartData: msgData.chartData ?? undefined,
+                        },
+                      ]);
+                      if (msgData.remainingCoins !== undefined) {
+                        setCoinBalance(msgData.remainingCoins);
+                      }
+                    }
+                  } catch (err) {
+                    console.error("Failed to auto-send unanswered message:", err);
+                  } finally {
+                    setIsTyping(false);
+                  }
+                }
+              }
+            } catch (err) {
+              console.error("Failed to auto-start session after credit purchase:", err);
+            }
+          }
+        }}
       />
 
       {/* Buy Credits Modal */}

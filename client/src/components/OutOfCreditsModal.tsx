@@ -91,11 +91,14 @@ export default function OutOfCreditsModal({
   const [tiers, setTiers] = useState<PricingTier[]>(pricingTiers ?? FALLBACK_TIERS);
   const [timeLeft, setTimeLeft] = useState(countdownSeconds);
   const [isCheckingOut, setIsCheckingOut] = useState(false);
+  const [paypalActive, setPaypalActive] = useState(false);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const handlePayPalSuccess = (newBalance: number) => {
+    setPaypalActive(false);
     if (intervalRef.current) clearInterval(intervalRef.current);
-    onOpenChange(false);
+    // Don't call onOpenChange here — let onSuccess handle closing the modal.
+    // This way onOpenChange only fires for user dismissals (not payment success).
     onSuccess?.(newBalance);
     refreshUser();
   };
@@ -110,9 +113,9 @@ export default function OutOfCreditsModal({
     }
   }, [open, countdownSeconds]);
 
-  // Countdown timer
+  // Countdown timer — pauses while PayPal flow is active
   useEffect(() => {
-    if (!open) {
+    if (!open || paypalActive) {
       if (intervalRef.current) clearInterval(intervalRef.current);
       return;
     }
@@ -129,7 +132,7 @@ export default function OutOfCreditsModal({
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
-  }, [open, onOpenChange]);
+  }, [open, paypalActive, onOpenChange]);
 
   // Fetch pricing if not provided
   useEffect(() => {
@@ -214,6 +217,8 @@ export default function OutOfCreditsModal({
                 packageType={featuredTier?.packageType ?? "starter"}
                 personaId={personaId}
                 onSuccess={handlePayPalSuccess}
+                onClick={() => setPaypalActive(true)}
+                onCancel={() => setPaypalActive(false)}
               />
             </div>
 

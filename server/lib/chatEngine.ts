@@ -765,11 +765,14 @@ export async function initSession(config: {
   personaId: string;
   /** Pre-generated greeting from the free /greeting endpoint — stored for conversation continuity */
   priorGreeting?: string;
+  /** When continuing after a credit purchase, carry the last N messages into the new session for context */
+  continuationMessages?: Array<{ role: 'user' | 'assistant'; content: string }>;
 }): Promise<{
   sessionId: string;
   personaName: string;
   greeting: string;
   creditsRemaining: number;
+  isContinuation: boolean;
 }> {
   const user = await db
     .select()
@@ -800,21 +803,40 @@ export async function initSession(config: {
   const intentConfig = await loadPersonaIntentConfig(config.personaId);
   await initConversationState(sessionId, config.personaId, config.userId, intentConfig, isReturning);
 
+  const isContinuation = !!(config.continuationMessages && config.continuationMessages.length > 0);
+
+  if (isContinuation) {
+    // Carry over prior messages into the new session so Claude has context
+    for (const msg of config.continuationMessages!) {
+      await db.insert(chatMessages).values({
+        sessionId,
+        userId: config.userId,
+        role: msg.role,
+        content: msg.content,
+      });
+    }
+  }
+
   // Use pre-generated greeting if provided, otherwise generate one
+  // Skip greeting for continuations — the conversation is already flowing
   let greeting: string;
-  if (config.priorGreeting) {
+  if (isContinuation) {
+    greeting = '';
+  } else if (config.priorGreeting) {
     greeting = config.priorGreeting;
   } else {
     const generated = await generateGreeting({ userId: config.userId, personaId: config.personaId });
     greeting = generated.greeting;
   }
 
-  await db.insert(chatMessages).values({
-    sessionId,
-    userId: config.userId,
-    role: 'assistant',
-    content: greeting,
-  });
+  if (greeting) {
+    await db.insert(chatMessages).values({
+      sessionId,
+      userId: config.userId,
+      role: 'assistant',
+      content: greeting,
+    });
+  }
 
   // Re-read balance after startChatSession (which may have ended old sessions and deducted coins)
   const freshUser = await db.select({ coinBalance: users.coinBalance }).from(users).where(eq(users.id, config.userId)).limit(1);
@@ -824,6 +846,7 @@ export async function initSession(config: {
     personaName: personaConfig.displayName,
     greeting,
     creditsRemaining: freshUser[0]?.coinBalance ?? 0,
+    isContinuation,
   };
 }
 

@@ -53,6 +53,9 @@ export async function authFetch(
   return fetch(url, { ...options, headers, credentials: "include" });
 }
 
+// Custom event name for cross-instance auth sync
+const AUTH_SYNC_EVENT = 'seer-auth-updated';
+
 export function useAuth() {
   const [state, setState] = useState<AuthState>({
     user: null,
@@ -75,11 +78,14 @@ export function useAuth() {
 
       if (res.ok) {
         const data = await res.json();
-        setState({
+        const newState = {
           user: data,
           isLoading: false,
           isAuthenticated: true,
-        });
+        };
+        setState(newState);
+        // Broadcast to other useAuth instances so nav/header stay in sync
+        window.dispatchEvent(new CustomEvent(AUTH_SYNC_EVENT, { detail: newState }));
       } else {
         clearToken();
         setState({ user: null, isLoading: false, isAuthenticated: false });
@@ -92,6 +98,16 @@ export function useAuth() {
   useEffect(() => {
     fetchUser();
   }, [fetchUser]);
+
+  // Listen for auth updates from other useAuth instances (e.g. CreditsPage → Nav header)
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent<AuthState>).detail;
+      if (detail) setState(detail);
+    };
+    window.addEventListener(AUTH_SYNC_EVENT, handler);
+    return () => window.removeEventListener(AUTH_SYNC_EVENT, handler);
+  }, []);
 
   // Set Sentry user context when auth state changes
   useEffect(() => {
