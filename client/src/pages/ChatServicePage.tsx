@@ -1120,6 +1120,7 @@ export default function ChatServicePage() {
             console.error('  recentSessions:', JSON.stringify(errData.recentSessions, null, 2));
             console.error('  Full response:', JSON.stringify(errData, null, 2));
           } catch {}
+          setCoinBalance(0);
           setShowOutOfCredits(true);
           // End server session but keep session object + messages in state
           // so the UI stays consistent (chat visible, no "Begin Reading" flash).
@@ -1920,8 +1921,10 @@ export default function ChatServicePage() {
           // User dismissed without paying — clear the stale session and show divider
           if (!open) {
             setSession(null);
+            setCoinBalance(0);
             setInitialCoinBalance(0);
             setReadingEnded(true);
+            refreshUser(); // sync header coin display with actual DB balance
             setMessages((prev) => [
               ...prev,
               {
