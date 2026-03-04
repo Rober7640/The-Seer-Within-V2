@@ -16,8 +16,8 @@ import {
   getPersonaAnalytics,
 } from '../../lib/personaManager';
 import { db } from '../../lib/db';
-import { chatSessions, personaReviews, sessionFeedback, users } from '@shared/schema';
-import { eq, and, asc, desc, sql } from 'drizzle-orm';
+import { personaReviews, sessionFeedback, users } from '@shared/schema';
+import { eq, and, asc, desc } from 'drizzle-orm';
 import logger from '../../lib/logger';
 
 // ── Avatar upload configuration ──────────────────────────────────────────────
@@ -155,20 +155,7 @@ router.get('/', async (req: Request, res: Response) => {
     const includeStats = req.query.stats === 'true';
 
     const result = await listPersonas({ activeOnly, includeStats });
-
-    // Count truly unique users across all personas (last 30 days)
-    let totalUniqueUsers = 0;
-    if (includeStats) {
-      const thirtyDaysAgo = new Date();
-      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-      const [row] = await db
-        .select({ count: sql<number>`COUNT(DISTINCT ${chatSessions.userId})` })
-        .from(chatSessions)
-        .where(sql`${chatSessions.startedAt} >= ${thirtyDaysAgo}`);
-      totalUniqueUsers = Number(row?.count || 0);
-    }
-
-    return res.json({ personas: result, totalUniqueUsers });
+    return res.json({ personas: result });
   } catch (error: any) {
     logger.error('List personas error:', error);
     return res.status(500).json({ error: 'Failed to list personas' });

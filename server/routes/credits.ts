@@ -335,35 +335,23 @@ router.post('/capture-order', requireAuth, async (req: Request, res: Response) =
       return;
     }
 
-    // Use a transaction so purchase completion and coin grant are atomic
-    const newBalance = await db.transaction(async (tx) => {
-      await tx.update(creditPurchases)
-        .set({
-          status: 'completed',
-          paypalCaptureId: captureResult.captureId,
-          updatedAt: new Date(),
-        })
-        .where(eq(creditPurchases.id, purchase.id));
+    await db.update(creditPurchases)
+      .set({
+        status: 'completed',
+        paypalCaptureId: captureResult.captureId,
+        updatedAt: new Date(),
+      })
+      .where(eq(creditPurchases.id, purchase.id));
 
-      const updatedUser = await tx.update(users)
-        .set({
-          coinBalance: sql`coin_balance + ${purchase.coinsPurchased}`,
-          updatedAt: new Date(),
-        })
-        .where(eq(users.id, req.userId!))
-        .returning({ coinBalance: users.coinBalance });
+    const updatedUser = await db.update(users)
+      .set({
+        coinBalance: sql`coin_balance + ${purchase.coinsPurchased}`,
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, req.userId!))
+      .returning({ coinBalance: users.coinBalance });
 
-      const balance = updatedUser[0]?.coinBalance ?? 0;
-
-      logger.info('PayPal capture-order: coins granted', {
-        userId: req.userId,
-        purchaseId: purchase.id,
-        coinsAdded: purchase.coinsPurchased,
-        newBalance: balance,
-      });
-
-      return balance;
-    });
+    const newBalance = updatedUser[0]?.coinBalance ?? 0;
 
     res.json({ success: true, newBalance });
   } catch (error) {
@@ -417,24 +405,22 @@ router.post('/webhook', async (req: Request, res: Response) => {
     }
 
     try {
-      await db.transaction(async (tx) => {
-        await tx.update(creditPurchases)
-          .set({
-            status: 'completed',
-            stripePaymentIntentId: session.payment_intent as string,
-            updatedAt: new Date(),
-          })
-          .where(eq(creditPurchases.id, purchaseId));
+      await db.update(creditPurchases)
+        .set({
+          status: 'completed',
+          stripePaymentIntentId: session.payment_intent as string,
+          updatedAt: new Date(),
+        })
+        .where(eq(creditPurchases.id, purchaseId));
 
-        await tx.update(users)
-          .set({
-            coinBalance: sql`coin_balance + ${totalCoins}`,
-            updatedAt: new Date(),
-          })
-          .where(eq(users.id, userId));
-      });
+      await db.update(users)
+        .set({
+          coinBalance: sql`coin_balance + ${totalCoins}`,
+          updatedAt: new Date(),
+        })
+        .where(eq(users.id, userId));
 
-      logger.info('Stripe webhook: coins granted', { totalCoins, userId, purchaseId });
+      logger.info('Coins added', { totalCoins, userId });
     } catch (dbError) {
       logger.error('Webhook DB error:', dbError);
       res.status(500).json({ error: 'Database error' });

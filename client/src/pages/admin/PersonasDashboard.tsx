@@ -28,14 +28,14 @@ interface PersonaStats {
   sortOrder: number;
   categories: string | null;
   // Stats
-  activeUsers: number;
+  totalUsers: number;
   totalSessions: number;
   totalRevenue: number;
+  activeSessionsNow: number;
 }
 
 export default function PersonasDashboard() {
   const [personas, setPersonas] = useState<PersonaStats[]>([]);
-  const [totalUniqueUsers, setTotalUniqueUsers] = useState(0);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<
     "all" | "active" | "paused"
@@ -51,7 +51,6 @@ export default function PersonasDashboard() {
       if (res.ok) {
         const data = await res.json();
         setPersonas(data.personas || []);
-        setTotalUniqueUsers(data.totalUniqueUsers || 0);
       }
     } catch (err) {
       console.error("Failed to fetch personas:", err);
@@ -83,7 +82,12 @@ export default function PersonasDashboard() {
           statusFilter === "active" ? p.isActive : !p.isActive,
         );
 
+  const totalUsers = personas.reduce((sum, p) => sum + p.totalUsers, 0);
   const totalRevenue = personas.reduce((sum, p) => sum + p.totalRevenue, 0);
+  const activeSessions = personas.reduce(
+    (sum, p) => sum + p.activeSessionsNow,
+    0,
+  );
 
   return (
     <AdminLayout title="Personas">
@@ -112,7 +116,7 @@ export default function PersonasDashboard() {
               </div>
               <div>
                 <p className="text-xs text-gray-500">Total Users</p>
-                <p className="text-2xl font-bold text-white">{totalUniqueUsers}</p>
+                <p className="text-2xl font-bold text-white">{totalUsers}</p>
               </div>
             </div>
           </CardContent>
@@ -139,9 +143,9 @@ export default function PersonasDashboard() {
                 <MessageSquare className="w-5 h-5 text-amber-400" />
               </div>
               <div>
-                <p className="text-xs text-gray-500">Total Sessions</p>
+                <p className="text-xs text-gray-500">Active Sessions</p>
                 <p className="text-2xl font-bold text-white">
-                  {personas.reduce((sum, p) => sum + p.totalSessions, 0)}
+                  {activeSessions}
                 </p>
               </div>
             </div>
@@ -238,7 +242,7 @@ export default function PersonasDashboard() {
                 <div className="grid grid-cols-3 gap-2 mb-4">
                   <div className="text-center">
                     <p className="text-lg font-bold text-white">
-                      {persona.activeUsers}
+                      {persona.totalUsers}
                     </p>
                     <p className="text-[10px] text-gray-500">Users</p>
                   </div>

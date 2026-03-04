@@ -1,0 +1,27 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npm run check:*)",
+      "Bash(node_modules.bintsc:*)",
+      "Bash(./node_modules/.bin/tsc:*)",
+      "Bash(npm install:*)",
+      "Bash(findstr:*)",
+      "Bash(Select-String \"client/\")",
+      "Bash(npm run db:push:*)",
+      "Bash(dir:*)",
+      "mcp__ide__getDiagnostics",
+      "Bash(echo:*)",
+      "Bash(where:*)",
+      "Bash(npx playwright install:*)",
+      "Bash(git remote add:*)",
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nComplete multi-persona chat service implementation\n\n✨ Phase 1: Core Infrastructure\n- JWT authentication system \\(bcrypt + JWT\\)\n- Time-based credit tracking \\(30-second heartbeat\\)\n- AI-powered memory with activity-based retention\n- Stripe payment integration\n- Complete API routes \\(auth, chat, credits\\)\n\n✨ Phase 2: Multi-Persona System\n- Unlimited psychic consultant support\n- Per-persona pricing \\(admin-editable JSON\\)\n- Prompt versioning with A/B testing\n- Complete admin dashboard \\(personas, prompts, users, analytics\\)\n- Public persona directory with filters\n- Frontend UI for all features\n\n✨ Phase 3: Advanced Features\n- Cross-persona memory transfer\n- Panel readings \\(multi-persona collaboration\\)\n- Proactive AI outreach system\n- White-label marketplace with Stripe Connect\n- Persona training & quality scoring\n- Migration script for funnel users\n\n🧪 Testing Infrastructure\n- Playwright E2E test suite \\(50+ test cases\\)\n- 6 test suites covering all user flows\n- Automated browser testing with screenshots/videos\n- Backend E2E test script \\(33 assertions\\)\n\n📚 Documentation\n- QUICKSTART.md - 5-minute setup guide\n- TESTING_GUIDE.md - 20 detailed test scenarios\n- IMPLEMENTATION_REPORT.md - Complete technical docs\n- tests/README.md - Playwright testing guide\n- .env.example - Environment configuration\n\n📦 Deliverables\n- 48 new backend/frontend files\n- 9 new database tables\n- 25+ API endpoints\n- Zero TypeScript errors\n- Production-ready platform\n\nCo-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git push:*)",
+      "Bash(git fsck:*)",
+      "Bash(git checkout:*)",
+      "Bash(git commit:*)"
+    ]
+  }
+}

@@ -6,10 +6,9 @@ interface Props {
   packageType: string;
   personaId?: string | null;
   onSuccess: (newBalance: number) => void;
-  onPaymentStart?: () => void;
 }
 
-export default function PayPalCreditButton({ packageType, personaId, onSuccess, onPaymentStart }: Props) {
+export default function PayPalCreditButton({ packageType, personaId, onSuccess }: Props) {
   const [error, setError] = useState<string | null>(null);
 
   return (
@@ -17,7 +16,6 @@ export default function PayPalCreditButton({ packageType, personaId, onSuccess, 
       <div className="bg-white rounded-lg px-3 pt-2 pb-1">
       <PayPalButtons
         style={{ layout: "vertical", color: "gold", shape: "rect", label: "paypal", tagline: false }}
-        onClick={() => { onPaymentStart?.(); }}
         createOrder={async () => {
           setError(null);
           const res = await authFetch("/api/credits/create-order", {

@@ -214,9 +214,6 @@ export default function OutOfCreditsModal({
                 packageType={featuredTier?.packageType ?? "starter"}
                 personaId={personaId}
                 onSuccess={handlePayPalSuccess}
-                onPaymentStart={() => {
-                  if (intervalRef.current) clearInterval(intervalRef.current);
-                }}
               />
             </div>
 

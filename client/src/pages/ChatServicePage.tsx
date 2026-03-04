@@ -32,6 +32,7 @@ import BuyCreditsModal from "@/components/BuyCreditsModal";
 import OutOfCreditsModal from "@/components/OutOfCreditsModal";
 import TeaserCreditModal from "@/components/TeaserCreditModal";
 import SessionFeedbackModal from "@/components/SessionFeedbackModal";
+import DebugOverlay from "@/components/DebugOverlay";
 import { COINS_PER_MINUTE, type PricingTier } from "@shared/types";
 
 // Status indicator type
@@ -91,7 +92,6 @@ interface ChatMessageData {
   tarotCardImageUrl?: string;   // card image for reveal display
   chartData?: NatalChartData | VedicChartData;  // renders natal chart when present (western or vedic)
   isReadingEndedDivider?: boolean; // shows the "Reading Ended" divider + CTAs
-  isCreditsRefilledDivider?: boolean; // shows "Credits refilled" divider after top-up
 }
 
 interface SessionData {
@@ -137,6 +137,7 @@ export default function ChatServicePage() {
 
   // Coin state (60 coins = 1 minute)
   const [coinBalance, setCoinBalance] = useState(0);
+  const [initialCoinBalance, setInitialCoinBalance] = useState(0); // balance at session start, recalibrated on server sync
   const [freeTrialCoins, setFreeTrialCoins] = useState(0);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [showOutOfCredits, setShowOutOfCredits] = useState(false);
@@ -202,12 +203,15 @@ export default function ChatServicePage() {
 
   // Refs for volatile values used inside the credit timer (Fix 4: stabilize timer deps)
   const coinBalanceRef = useRef(coinBalance);
+  const initialCoinBalanceRef = useRef(initialCoinBalance);
   const endSessionRef = useRef<() => void>(() => {});
   const freeTrialCoinsRef = useRef(freeTrialCoins);
   const refillBannerDismissedRef = useRef(refillBannerDismissed);
   const coinsPerMinuteRef = useRef(60);
   // Tracks the last persona ID that triggered an auto-fetch, to prevent double-fetching
   const lastAutoFetchedPersonaId = useRef<string | null>(null);
+  // Continuous session start timestamp for debug overlay (never resets mid-session)
+  const sessionStartTimeRef = useRef<number | null>(null);
 
   // Parse persona from URL - check path params first, then query params
   const pathPersonaSlug = routeParams?.personaSlug;
@@ -374,6 +378,7 @@ export default function ChatServicePage() {
 
   // Sync refs for volatile values used inside the credit timer (Fix 4)
   useEffect(() => { coinBalanceRef.current = coinBalance; }, [coinBalance]);
+  useEffect(() => { initialCoinBalanceRef.current = initialCoinBalance; }, [initialCoinBalance]);
   useEffect(() => { freeTrialCoinsRef.current = freeTrialCoins; }, [freeTrialCoins]);
   useEffect(() => { refillBannerDismissedRef.current = refillBannerDismissed; }, [refillBannerDismissed]);
   useEffect(() => { coinsPerMinuteRef.current = selectedPersona?.coinsPerMinute ?? 60; }, [selectedPersona?.coinsPerMinute]);
@@ -389,24 +394,27 @@ export default function ChatServicePage() {
         setElapsedSeconds((prev) => {
           const next = prev + 1;
           const cpm = coinsPerMinuteRef.current;
-          const balance = coinBalanceRef.current;
+          const initBal = initialCoinBalanceRef.current;
           const ftCoins = freeTrialCoinsRef.current;
           const dismissed = refillBannerDismissedRef.current;
 
-          // Coins consumed = completed full minutes × guide rate (matches server Math.floor logic)
-          const coinsUsed = Math.floor(next / 60) * cpm;
+          // Use continuous session time for refill banner checks
+          const continuousElapsed = sessionStartTimeRef.current
+            ? Math.floor((Date.now() - sessionStartTimeRef.current) / 1000)
+            : next;
+          const coinsUsed = Math.floor(continuousElapsed / 60) * cpm;
+          const coinsRemaining = Math.max(0, initBal - coinsUsed);
 
           // Show refill banner 30 seconds before free trial ends (new users)
-          if (ftCoins > 0 && !dismissed && balance <= ftCoins) {
+          if (ftCoins > 0 && !dismissed && initBal <= ftCoins) {
             const freeTrialSeconds = (ftCoins / cpm) * 60;
-            if (next >= freeTrialSeconds - 30 && next < freeTrialSeconds) {
+            if (continuousElapsed >= freeTrialSeconds - 30 && continuousElapsed < freeTrialSeconds) {
               setShowRefillBanner(true);
             }
           }
 
           // Show refill banner when < 1 full minute remains at this guide's rate
-          if (balance > ftCoins && !dismissed) {
-            const coinsRemaining = balance - coinsUsed;
+          if (initBal > ftCoins && !dismissed) {
             if (coinsRemaining <= cpm && coinsRemaining > 0) {
               setShowRefillBanner(true);
             }
@@ -780,6 +788,8 @@ export default function ChatServicePage() {
       setSession(null);
       setMessages([]);
       setElapsedSeconds(0);
+      setInitialCoinBalance(0);
+      sessionStartTimeRef.current = null;
       setShowRefillBanner(false);
     }
   }, [session, coinBalance]);
@@ -815,6 +825,8 @@ export default function ChatServicePage() {
 
     setSession(null);
     setElapsedSeconds(0);
+    setInitialCoinBalance(0);
+    sessionStartTimeRef.current = null;
     setShowRefillBanner(false);
     setReadingEnded(true);
 
@@ -886,6 +898,8 @@ export default function ChatServicePage() {
 
       setSession(null);
       setElapsedSeconds(0);
+      setInitialCoinBalance(0);
+      sessionStartTimeRef.current = null;
       setShowRefillBanner(false);
     }
 
@@ -989,10 +1003,14 @@ export default function ChatServicePage() {
             setElapsedSeconds(0);
             setShowRefillBanner(false);
             setRefillBannerDismissed(false);
+            sessionStartTimeRef.current = Date.now();
             lastUserMessageAt.current = Date.now();
             // Refresh user data so defaultPersonaId is up to date for navigation
             refreshUser();
-            if (startData.remainingCoins !== undefined) setCoinBalance(startData.remainingCoins);
+            if (startData.remainingCoins !== undefined) {
+              setCoinBalance(startData.remainingCoins);
+              setInitialCoinBalance(startData.remainingCoins);
+            }
             // TEMPORARY: log billing debug info
             if (startData._billingDebug) {
               console.warn('[BILLING DEBUG] Session start:', JSON.stringify(startData._billingDebug, null, 2));
@@ -1075,34 +1093,41 @@ export default function ChatServicePage() {
           setMessages((prev) => [...prev, assistantMsg]);
           if (data.remainingCoins !== undefined) {
             setCoinBalance(data.remainingCoins);
+            // Recalibrate initialCoinBalance so continuous display stays in sync with server.
+            // Formula: initialBalance = serverBalance + coinsUsedSoFar
+            const continuousElapsed = sessionStartTimeRef.current
+              ? Math.floor((Date.now() - sessionStartTimeRef.current) / 1000)
+              : 0;
+            const cpm = coinsPerMinuteRef.current;
+            const coinsUsedSoFar = Math.floor(continuousElapsed / 60) * cpm;
+            setInitialCoinBalance(data.remainingCoins + coinsUsedSoFar);
           }
           // TEMPORARY: log billing debug info to console
           if (data._billingDebug) {
             console.warn('[BILLING DEBUG] Message response:', JSON.stringify(data._billingDebug, null, 2));
           }
         } else if (res.status === 402) {
-          // Out of credits — end billing session but KEEP chat history
-          // so the user can top up and continue from where they left off.
-          if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
-          if (session) {
-            try {
-              await authFetch(`/api/chat-service/session/${session.id}/end`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-              });
-            } catch {}
-          }
-          setSession(null);
-          setElapsedSeconds(0);
-          setShowRefillBanner(false);
-          setIsTyping(false);
-          setIsSending(false);
+          // TEMPORARY: comprehensive 402 diagnostic — log EVERYTHING
+          try {
+            const errData = await res.clone().json();
+            console.error('[BILLING DEBUG] 402 OUT_OF_CREDITS - FULL DIAGNOSTIC:');
+            console.error('  dbBalance (Drizzle):', errData.dbBalance);
+            console.error('  rawSqlBalance:', errData.rawSqlBalance);
+            console.error('  balanceBeforeSendMessage:', errData.dbBalanceBeforeSendMessage);
+            console.error('  rawSqlUpdatedAt:', errData.rawSqlUpdatedAt);
+            console.error('  serverPID:', errData.pid);
+            console.error('  recentSessions:', JSON.stringify(errData.recentSessions, null, 2));
+            console.error('  Full response:', JSON.stringify(errData, null, 2));
+          } catch {}
           setShowOutOfCredits(true);
+          await endSession();
         } else if (res.status === 410 || res.status === 404) {
           // Session ended or not found — clear session state and show divider
           if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
           setSession(null);
           setElapsedSeconds(0);
+          setInitialCoinBalance(0);
+          sessionStartTimeRef.current = null;
           setReadingEnded(true);
           setMessages((prev) => [
             ...prev,
@@ -1219,6 +1244,18 @@ export default function ChatServicePage() {
 
   return (
     <div className="fixed inset-0 flex overflow-hidden">
+      {/* Temporary debug overlay for testing */}
+      <DebugOverlay
+        session={session}
+        coinBalance={coinBalance}
+        initialCoinBalance={initialCoinBalance}
+        freeTrialCoins={freeTrialCoins}
+        elapsedSeconds={elapsedSeconds}
+        sessionStartTime={sessionStartTimeRef.current}
+        selectedPersona={selectedPersona ?? null}
+        lastUserMessageAt={lastUserMessageAt.current}
+        messageCount={messages.filter((m) => m.role === "user").length}
+      />
       {/* Guide Sidebar — visible once guide has greeted user, during active session, switching, loading, or post-reading */}
       {(session || !!preSessionGreeting || !!switchingToPersonaSlug || isStarting || readingEnded) && (
         <GuideSidebar
@@ -1292,8 +1329,11 @@ export default function ChatServicePage() {
             )}
             {session && (() => {
               const coinsPerMinute = selectedPersona?.coinsPerMinute ?? 60;
-              const coinsUsed = Math.floor(elapsedSeconds / 60) * coinsPerMinute;
-              const remainingCoins = Math.max(0, coinBalance - coinsUsed);
+              const continuousElapsed = sessionStartTimeRef.current
+                ? Math.floor((Date.now() - sessionStartTimeRef.current) / 1000)
+                : 0;
+              const coinsUsed = Math.floor(continuousElapsed / 60) * coinsPerMinute;
+              const remainingCoins = Math.max(0, initialCoinBalance - coinsUsed);
               return (
                 <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300 text-xs font-medium select-none">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
@@ -1311,7 +1351,10 @@ export default function ChatServicePage() {
               </button>
             )}
             <button
-              onClick={() => navigate("/dashboard")}
+              onClick={async () => {
+                if (session) await endSession();
+                navigate("/dashboard");
+              }}
               className="text-white/70 hover:text-white text-sm"
               aria-label="Exit to Dashboard"
             >
@@ -1614,19 +1657,6 @@ export default function ChatServicePage() {
                   );
                 }
 
-                // Credits Refilled divider (after top-up mid-chat)
-                if (msg.isCreditsRefilledDivider) {
-                  return (
-                    <div key={msg.id} className="flex items-center gap-3 w-full py-3 animate-fade-in">
-                      <div className="flex-1 h-px bg-emerald-200" />
-                      <span className="text-xs text-emerald-500 whitespace-nowrap font-medium">
-                        Credits refilled · Reading continues
-                      </span>
-                      <div className="flex-1 h-px bg-emerald-200" />
-                    </div>
-                  );
-                }
-
                 // Reading Ended divider + CTA buttons
                 if (msg.isReadingEndedDivider) {
                   return (
@@ -1657,7 +1687,7 @@ export default function ChatServicePage() {
                 }
 
                 // A "real" DB message ID is a UUID — not a temp- or assistant- prefixed local ID
-                const isRealId = !msg.id.startsWith('temp-') && !msg.id.startsWith('assistant-') && !msg.id.startsWith('reveal-') && !msg.id.startsWith('reading-ended-') && !msg.id.startsWith('credits-refill-');
+                const isRealId = !msg.id.startsWith('temp-') && !msg.id.startsWith('assistant-') && !msg.id.startsWith('reveal-') && !msg.id.startsWith('reading-ended-');
                 const isSaved = savedMessageIds.has(msg.id);
 
                 return (
@@ -1761,8 +1791,8 @@ export default function ChatServicePage() {
           </div>
         )}
 
-        {/* Input Area — once guide has greeted (pre-session), session is active, or resuming after top-up */}
-        {(session || !!preSessionGreeting || (messages.length > 0 && !readingEnded)) && (
+        {/* Input Area — once guide has greeted (pre-session) or session is active */}
+        {(session || !!preSessionGreeting) && (
           <div className="p-4 bg-white border-t border-gray-100 shrink-0">
             <form
               onSubmit={onSubmit}
@@ -1861,27 +1891,6 @@ export default function ChatServicePage() {
         personaName={selectedPersona?.displayName}
         personaAvatarUrl={selectedPersona?.avatarUrl}
         pricingTiers={sessionPricing?.tiers}
-        onSuccess={(newBalance) => {
-          setCoinBalance(newBalance);
-          refreshUser();
-          toast({ title: "Payment successful!", description: `${newBalance} coins added. Continuing your reading...` });
-          // Keep last few messages for context, add a divider, then re-fetch greeting
-          setMessages((prev) => {
-            const recent = prev.slice(-4);
-            const divider: ChatMessageData = {
-              id: `credits-refill-${Date.now()}`,
-              role: "assistant",
-              content: "",
-              sentAt: new Date().toISOString(),
-              isCreditsRefilledDivider: true,
-            };
-            return [...recent, divider];
-          });
-          setReadingEnded(false);
-          // Fetch greeting in append mode — persona has memory and will continue naturally
-          lastAutoFetchedPersonaId.current = null;
-          fetchGreeting(undefined, true);
-        }}
       />
 
       {/* Buy Credits Modal */}
