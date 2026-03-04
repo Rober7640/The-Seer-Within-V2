@@ -136,6 +136,7 @@ export default function ChatServicePage() {
 
   // Coin state (60 coins = 1 minute)
   const [coinBalance, setCoinBalance] = useState(0);
+  const [initialCoinBalance, setInitialCoinBalance] = useState(0); // balance at session start, recalibrated on server sync
   const [freeTrialCoins, setFreeTrialCoins] = useState(0);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [showOutOfCredits, setShowOutOfCredits] = useState(false);
@@ -201,12 +202,15 @@ export default function ChatServicePage() {
 
   // Refs for volatile values used inside the credit timer (Fix 4: stabilize timer deps)
   const coinBalanceRef = useRef(coinBalance);
+  const initialCoinBalanceRef = useRef(initialCoinBalance);
   const endSessionRef = useRef<() => void>(() => {});
   const freeTrialCoinsRef = useRef(freeTrialCoins);
   const refillBannerDismissedRef = useRef(refillBannerDismissed);
   const coinsPerMinuteRef = useRef(60);
   // Tracks the last persona ID that triggered an auto-fetch, to prevent double-fetching
   const lastAutoFetchedPersonaId = useRef<string | null>(null);
+  // Continuous session start timestamp for debug overlay (never resets mid-session)
+  const sessionStartTimeRef = useRef<number | null>(null);
 
   // Parse persona from URL - check path params first, then query params
   const pathPersonaSlug = routeParams?.personaSlug;
@@ -373,6 +377,7 @@ export default function ChatServicePage() {
 
   // Sync refs for volatile values used inside the credit timer (Fix 4)
   useEffect(() => { coinBalanceRef.current = coinBalance; }, [coinBalance]);
+  useEffect(() => { initialCoinBalanceRef.current = initialCoinBalance; }, [initialCoinBalance]);
   useEffect(() => { freeTrialCoinsRef.current = freeTrialCoins; }, [freeTrialCoins]);
   useEffect(() => { refillBannerDismissedRef.current = refillBannerDismissed; }, [refillBannerDismissed]);
   useEffect(() => { coinsPerMinuteRef.current = selectedPersona?.coinsPerMinute ?? 60; }, [selectedPersona?.coinsPerMinute]);
@@ -388,24 +393,27 @@ export default function ChatServicePage() {
         setElapsedSeconds((prev) => {
           const next = prev + 1;
           const cpm = coinsPerMinuteRef.current;
-          const balance = coinBalanceRef.current;
+          const initBal = initialCoinBalanceRef.current;
           const ftCoins = freeTrialCoinsRef.current;
           const dismissed = refillBannerDismissedRef.current;
 
-          // Coins consumed = completed full minutes × guide rate (matches server Math.floor logic)
-          const coinsUsed = Math.floor(next / 60) * cpm;
+          // Use continuous session time for refill banner checks
+          const continuousElapsed = sessionStartTimeRef.current
+            ? Math.floor((Date.now() - sessionStartTimeRef.current) / 1000)
+            : next;
+          const coinsUsed = Math.floor(continuousElapsed / 60) * cpm;
+          const coinsRemaining = Math.max(0, initBal - coinsUsed);
 
           // Show refill banner 30 seconds before free trial ends (new users)
-          if (ftCoins > 0 && !dismissed && balance <= ftCoins) {
+          if (ftCoins > 0 && !dismissed && initBal <= ftCoins) {
             const freeTrialSeconds = (ftCoins / cpm) * 60;
-            if (next >= freeTrialSeconds - 30 && next < freeTrialSeconds) {
+            if (continuousElapsed >= freeTrialSeconds - 30 && continuousElapsed < freeTrialSeconds) {
               setShowRefillBanner(true);
             }
           }
 
           // Show refill banner when < 1 full minute remains at this guide's rate
-          if (balance > ftCoins && !dismissed) {
-            const coinsRemaining = balance - coinsUsed;
+          if (initBal > ftCoins && !dismissed) {
             if (coinsRemaining <= cpm && coinsRemaining > 0) {
               setShowRefillBanner(true);
             }
@@ -779,6 +787,8 @@ export default function ChatServicePage() {
       setSession(null);
       setMessages([]);
       setElapsedSeconds(0);
+      setInitialCoinBalance(0);
+      sessionStartTimeRef.current = null;
       setShowRefillBanner(false);
     }
   }, [session, coinBalance]);
@@ -814,6 +824,8 @@ export default function ChatServicePage() {
 
     setSession(null);
     setElapsedSeconds(0);
+    setInitialCoinBalance(0);
+    sessionStartTimeRef.current = null;
     setShowRefillBanner(false);
     setReadingEnded(true);
 
@@ -885,6 +897,8 @@ export default function ChatServicePage() {
 
       setSession(null);
       setElapsedSeconds(0);
+      setInitialCoinBalance(0);
+      sessionStartTimeRef.current = null;
       setShowRefillBanner(false);
     }
 
@@ -988,10 +1002,14 @@ export default function ChatServicePage() {
             setElapsedSeconds(0);
             setShowRefillBanner(false);
             setRefillBannerDismissed(false);
+            sessionStartTimeRef.current = Date.now();
             lastUserMessageAt.current = Date.now();
             // Refresh user data so defaultPersonaId is up to date for navigation
             refreshUser();
-            if (startData.remainingCoins !== undefined) setCoinBalance(startData.remainingCoins);
+            if (startData.remainingCoins !== undefined) {
+              setCoinBalance(startData.remainingCoins);
+              setInitialCoinBalance(startData.remainingCoins);
+            }
             // TEMPORARY: log billing debug info
             if (startData._billingDebug) {
               console.warn('[BILLING DEBUG] Session start:', JSON.stringify(startData._billingDebug, null, 2));
@@ -1074,7 +1092,14 @@ export default function ChatServicePage() {
           setMessages((prev) => [...prev, assistantMsg]);
           if (data.remainingCoins !== undefined) {
             setCoinBalance(data.remainingCoins);
-            setElapsedSeconds(0); // Reset timer so display doesn't double-count server deductions
+            // Recalibrate initialCoinBalance so continuous display stays in sync with server.
+            // Formula: initialBalance = serverBalance + coinsUsedSoFar
+            const continuousElapsed = sessionStartTimeRef.current
+              ? Math.floor((Date.now() - sessionStartTimeRef.current) / 1000)
+              : 0;
+            const cpm = coinsPerMinuteRef.current;
+            const coinsUsedSoFar = Math.floor(continuousElapsed / 60) * cpm;
+            setInitialCoinBalance(data.remainingCoins + coinsUsedSoFar);
           }
           // TEMPORARY: log billing debug info to console
           if (data._billingDebug) {
@@ -1100,6 +1125,8 @@ export default function ChatServicePage() {
           if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
           setSession(null);
           setElapsedSeconds(0);
+          setInitialCoinBalance(0);
+          sessionStartTimeRef.current = null;
           setReadingEnded(true);
           setMessages((prev) => [
             ...prev,
@@ -1289,8 +1316,11 @@ export default function ChatServicePage() {
             )}
             {session && (() => {
               const coinsPerMinute = selectedPersona?.coinsPerMinute ?? 60;
-              const coinsUsed = Math.floor(elapsedSeconds / 60) * coinsPerMinute;
-              const remainingCoins = Math.max(0, coinBalance - coinsUsed);
+              const continuousElapsed = sessionStartTimeRef.current
+                ? Math.floor((Date.now() - sessionStartTimeRef.current) / 1000)
+                : 0;
+              const coinsUsed = Math.floor(continuousElapsed / 60) * coinsPerMinute;
+              const remainingCoins = Math.max(0, initialCoinBalance - coinsUsed);
               return (
                 <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300 text-xs font-medium select-none">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
@@ -1308,7 +1338,10 @@ export default function ChatServicePage() {
               </button>
             )}
             <button
-              onClick={() => navigate("/dashboard")}
+              onClick={async () => {
+                if (session) await endSession();
+                navigate("/dashboard");
+              }}
               className="text-white/70 hover:text-white text-sm"
               aria-label="Exit to Dashboard"
             >

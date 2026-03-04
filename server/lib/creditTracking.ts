@@ -130,26 +130,39 @@ export async function checkpointSession(sessionId: string): Promise<void> {
 
   if (!precheck[0]) return;
 
-  const { coinsPerMinute } = await getPersonaConfig(precheck[0].personaId);
+  const { coinsPerMinute, timeoutMs } = await getPersonaConfig(precheck[0].personaId);
+  const timeoutSeconds = Math.floor(timeoutMs / 1000);
 
   await db.transaction(async (tx) => {
     // Lock the session row — prevents concurrent checkpoints from double-billing.
-    // IMPORTANT: Use NOW() (timestamptz) minus (col AT TIME ZONE 'UTC') (timestamptz)
-    // so both sides are the SAME type (timestamptz - timestamptz = interval).
-    // DO NOT use NOW() AT TIME ZONE 'UTC' which returns plain timestamp — subtracting
-    // timestamp from timestamptz forces session-timezone conversion, causing billing
-    // errors on pgbouncer transaction pooler where sessions may not be UTC.
+    // Compute both total elapsed and idle time so we can cap billing at last_message_at
+    // when the user has gone idle beyond the timeout threshold.
     const locked = await tx.execute(
       sql`SELECT id, user_id, coins_charged,
-                 EXTRACT(EPOCH FROM (NOW() - (started_at AT TIME ZONE 'UTC')))::int as elapsed_seconds
+                 EXTRACT(EPOCH FROM (NOW() - (started_at AT TIME ZONE 'UTC')))::int as total_elapsed,
+                 CASE WHEN last_message_at IS NOT NULL
+                      THEN EXTRACT(EPOCH FROM (NOW() - (last_message_at AT TIME ZONE 'UTC')))::int
+                      ELSE EXTRACT(EPOCH FROM (NOW() - (started_at AT TIME ZONE 'UTC')))::int
+                 END as idle_seconds,
+                 CASE WHEN last_message_at IS NOT NULL
+                      THEN EXTRACT(EPOCH FROM ((last_message_at AT TIME ZONE 'UTC') - (started_at AT TIME ZONE 'UTC')))::int
+                      ELSE 0 END as active_seconds
           FROM chat_sessions
           WHERE id = ${sessionId} AND status = 'active'
           FOR UPDATE`
     );
     if (locked.rows.length === 0) return;
-    const row = locked.rows[0] as { id: string; user_id: string; coins_charged: number; elapsed_seconds: number };
+    const row = locked.rows[0] as {
+      id: string; user_id: string; coins_charged: number;
+      total_elapsed: number; idle_seconds: number; active_seconds: number;
+    };
 
-    const accumulatedSeconds = capBillableSeconds(Math.max(0, row.elapsed_seconds), sessionId);
+    // If idle beyond timeout, only bill up to last_message_at (active time).
+    // This prevents the heartbeat from endlessly billing idle/orphaned sessions.
+    const rawBillable = row.idle_seconds > timeoutSeconds
+      ? Math.max(0, row.active_seconds)
+      : Math.max(0, row.total_elapsed);
+    const accumulatedSeconds = capBillableSeconds(rawBillable, sessionId);
 
     // Deduct only completed full minutes (Math.floor avoids billing partial minutes early)
     const completedMinutes = Math.floor(accumulatedSeconds / 60);
@@ -158,7 +171,10 @@ export async function checkpointSession(sessionId: string): Promise<void> {
 
     logger.info('checkpointSession', {
       sessionId,
-      rawElapsed: row.elapsed_seconds,
+      totalElapsed: row.total_elapsed,
+      idleSeconds: row.idle_seconds,
+      activeSeconds: row.active_seconds,
+      idleCapped: row.idle_seconds > timeoutSeconds,
       accumulatedSeconds,
       completedMinutes,
       coinsPerMinute,
@@ -176,7 +192,7 @@ export async function checkpointSession(sessionId: string): Promise<void> {
           sessionId,
           requestedDeduction: coinsToDeductNow,
           cappedTo: MAX_COINS_PER_DEDUCTION,
-          rawElapsed: row.elapsed_seconds,
+          rawElapsed: row.total_elapsed,
           previouslyCharged: Number(row.coins_charged),
         });
         safeDeduction = MAX_COINS_PER_DEDUCTION;
