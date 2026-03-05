@@ -21,7 +21,12 @@
       "Bash(git push:*)",
       "Bash(git fsck:*)",
       "Bash(git checkout:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(cd:*)",
+      "Bash(curl:*)",
+      "Bash(netstat:*)",
+      "Bash(taskkill:*)",
+      "Bash(npx tsx:*)"
     ]
   }
 }
