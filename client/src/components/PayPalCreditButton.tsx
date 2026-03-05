@@ -6,9 +6,11 @@ interface Props {
   packageType: string;
   personaId?: string | null;
   onSuccess: (newBalance: number) => void;
+  onClick?: () => void;
+  onCancel?: () => void;
 }
 
-export default function PayPalCreditButton({ packageType, personaId, onSuccess }: Props) {
+export default function PayPalCreditButton({ packageType, personaId, onSuccess, onClick, onCancel }: Props) {
   const [error, setError] = useState<string | null>(null);
 
   return (
@@ -18,6 +20,7 @@ export default function PayPalCreditButton({ packageType, personaId, onSuccess }
         style={{ layout: "vertical", color: "gold", shape: "rect", label: "paypal", tagline: false }}
         createOrder={async () => {
           setError(null);
+          onClick?.();
           const res = await authFetch("/api/credits/create-order", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -40,7 +43,11 @@ export default function PayPalCreditButton({ packageType, personaId, onSuccess }
           const result = await res.json();
           onSuccess(result.newBalance);
         }}
+        onCancel={() => {
+          onCancel?.();
+        }}
         onError={() => {
+          onCancel?.();
           setError("PayPal encountered an error. Please try again.");
         }}
       />

@@ -50,6 +50,20 @@ export default function CreditsPage() {
     }
   }, [authLoading, isAuthenticated, navigate]);
 
+  async function fetchPurchaseHistory() {
+    try {
+      const historyRes = await authFetch("/api/credits/purchases");
+      if (historyRes.ok) {
+        const data = await historyRes.json();
+        setPurchases(data.purchases || []);
+      }
+    } catch (err) {
+      console.error("Failed to fetch history:", err);
+    } finally {
+      setPurchasesLoading(false);
+    }
+  }
+
   useEffect(() => {
     if (!isAuthenticated) return;
 
@@ -73,17 +87,7 @@ export default function CreditsPage() {
         console.error("Failed to fetch pricing:", err);
       }
 
-      try {
-        const historyRes = await authFetch("/api/credits/purchases");
-        if (historyRes.ok) {
-          const data = await historyRes.json();
-          setPurchases(data.purchases || []);
-        }
-      } catch (err) {
-        console.error("Failed to fetch history:", err);
-      } finally {
-        setPurchasesLoading(false);
-      }
+      await fetchPurchaseHistory();
     }
 
     fetchData();
@@ -129,6 +133,7 @@ export default function CreditsPage() {
   const handleSuccess = (newBalance: number) => {
     toast({ title: "Payment successful!", description: `Your balance has been updated.` });
     refreshUser();
+    fetchPurchaseHistory();
   };
 
   const formatPrice = (cents: number) => `$${(cents / 100).toFixed(2)}`;

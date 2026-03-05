@@ -36,6 +36,11 @@ const startSessionSchema = z.object({
   personaId: z.string().min(1, 'Persona ID is required'),
   /** Pre-generated greeting from the free /greeting endpoint */
   greeting: z.string().optional(),
+  /** Last messages from previous session to carry into new billing cycle */
+  continuationMessages: z.array(z.object({
+    role: z.enum(['user', 'assistant']),
+    content: z.string().max(4000),
+  })).max(4).optional(),
 });
 
 const sendMessageSchema = z.object({
@@ -139,7 +144,7 @@ router.post('/session/start', requireAuth, async (req: Request, res: Response) =
       return;
     }
 
-    const { personaId, greeting } = parseResult.data;
+    const { personaId, greeting, continuationMessages } = parseResult.data;
 
     // Check persona availability before creating a session
     const personaRecord = await db.select({
@@ -180,6 +185,7 @@ router.post('/session/start', requireAuth, async (req: Request, res: Response) =
       userId: req.userId!,
       personaId,
       priorGreeting: greeting,
+      continuationMessages,
     });
 
     // BILLING DEBUG: balance after initSession
@@ -211,6 +217,7 @@ router.post('/session/start', requireAuth, async (req: Request, res: Response) =
       personaName: result.personaName,
       greeting: result.greeting,
       remainingCoins: result.creditsRemaining,
+      isContinuation: result.isContinuation,
       pricing: { ...pricing, coinsPerMinute: personaRecord[0].coinsPerMinute },
       // TEMPORARY: billing debug info
       _billingDebug: {
