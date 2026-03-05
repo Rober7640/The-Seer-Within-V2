@@ -103,8 +103,10 @@ export interface ShippingSaveRequest {
   address: ShippingAddress
 }
 
-// Coin system: 60 coins = 1 minute of chat
+// Coin system: 60 coins = 1 minute of chat, billed in 15-second blocks
 export const COINS_PER_MINUTE = 60;
+export const BILLING_INTERVAL_SECONDS = 15;
+export const COINS_PER_INTERVAL = COINS_PER_MINUTE / (60 / BILLING_INTERVAL_SECONDS); // 15 coins per 15s block
 
 export function coinsToMinutes(coins: number): number {
   return Math.floor(coins / COINS_PER_MINUTE);
@@ -112,6 +114,12 @@ export function coinsToMinutes(coins: number): number {
 
 export function minutesToCoins(minutes: number): number {
   return minutes * COINS_PER_MINUTE;
+}
+
+/** Calculate coins charged for a given number of elapsed seconds */
+export function secondsToCoins(seconds: number, coinsPerMinute: number = COINS_PER_MINUTE): number {
+  const coinsPerInterval = coinsPerMinute / (60 / BILLING_INTERVAL_SECONDS);
+  return Math.floor(seconds / BILLING_INTERVAL_SECONDS) * coinsPerInterval;
 }
 
 // Per-persona pricing types

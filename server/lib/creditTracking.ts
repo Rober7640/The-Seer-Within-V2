@@ -3,7 +3,7 @@ import { users, chatSessions, personas } from '@shared/schema';
 import { eq, sql, and, isNull, lt, or } from 'drizzle-orm';
 import { getPersonaPricing } from './personaPricing';
 import { sendSessionTimeoutEmail } from './sessionTimeoutEmail';
-import { COINS_PER_MINUTE } from '@shared/types';
+import { COINS_PER_MINUTE, BILLING_INTERVAL_SECONDS, secondsToCoins } from '@shared/types';
 import logger from './logger';
 
 const DEFAULT_TIMEOUT_MINUTES = 5;
@@ -164,9 +164,8 @@ export async function checkpointSession(sessionId: string): Promise<void> {
       : Math.max(0, row.total_elapsed);
     const accumulatedSeconds = capBillableSeconds(rawBillable, sessionId);
 
-    // Deduct only completed full minutes (Math.floor avoids billing partial minutes early)
-    const completedMinutes = Math.floor(accumulatedSeconds / 60);
-    const newTotalCharged = completedMinutes * coinsPerMinute;
+    // Bill in 15-second blocks (e.g. 15 coins per 15s at 60 coins/min)
+    const newTotalCharged = secondsToCoins(accumulatedSeconds, coinsPerMinute);
     const coinsToDeductNow = Math.max(0, newTotalCharged - Number(row.coins_charged));
 
     logger.info('checkpointSession', {
@@ -176,7 +175,7 @@ export async function checkpointSession(sessionId: string): Promise<void> {
       activeSeconds: row.active_seconds,
       idleCapped: row.idle_seconds > timeoutSeconds,
       accumulatedSeconds,
-      completedMinutes,
+      billingIntervalSeconds: BILLING_INTERVAL_SECONDS,
       coinsPerMinute,
       newTotalCharged,
       previouslyCharged: Number(row.coins_charged),
@@ -326,9 +325,8 @@ export async function endChatSession(sessionId: string): Promise<void> {
       : Math.max(0, row.elapsed_seconds); // still active — bill full elapsed
     const billableSeconds = capBillableSeconds(rawBillable, sessionId);
 
-    // Only charge completed full minutes (Math.floor — consistent with checkpointSession)
-    const totalMinutes = Math.floor(billableSeconds / 60);
-    const finalCharge = totalMinutes * coinsPerMinute;
+    // Bill in 15-second blocks — consistent with checkpointSession
+    const finalCharge = secondsToCoins(billableSeconds, coinsPerMinute);
     const previouslyCharged = Number(row.coins_charged);
 
     // Read balance before any changes for audit
@@ -375,7 +373,7 @@ export async function endChatSession(sessionId: string): Promise<void> {
       idleSeconds,
       activeSeconds: row.active_seconds,
       billableSeconds,
-      totalMinutes,
+      billingIntervalSeconds: BILLING_INTERVAL_SECONDS,
       coinsPerMinute,
       finalCharge,
       previouslyCharged,

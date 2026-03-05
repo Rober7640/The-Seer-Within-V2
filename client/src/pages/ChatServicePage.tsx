@@ -33,7 +33,7 @@ import OutOfCreditsModal from "@/components/OutOfCreditsModal";
 import TeaserCreditModal from "@/components/TeaserCreditModal";
 import SessionFeedbackModal from "@/components/SessionFeedbackModal";
 import DebugOverlay from "@/components/DebugOverlay";
-import { COINS_PER_MINUTE, type PricingTier } from "@shared/types";
+import { COINS_PER_MINUTE, BILLING_INTERVAL_SECONDS, secondsToCoins, type PricingTier } from "@shared/types";
 
 // Status indicator type
 type Status = 'busy-slow' | 'busy-fast' | 'connecting' | 'online';
@@ -159,6 +159,11 @@ export default function ChatServicePage() {
   const [switchingToPersonaSlug, setSwitchingToPersonaSlug] = useState<string | null>(null);
   const [queuedQuestion, setQueuedQuestion] = useState<string | null>(null);
 
+  // Pending action after "End Reading" confirmation (for Exit/Switch when session >= 3 min)
+  const [pendingAfterEnd, setPendingAfterEnd] = useState<
+    { type: "exit" } | { type: "switch"; slug: string; teaserFull?: string } | null
+  >(null);
+
   // Saved messages (bookmarks)
   const [savedMessageIds, setSavedMessageIds] = useState<Set<string>>(new Set());
 
@@ -213,6 +218,8 @@ export default function ChatServicePage() {
   const lastAutoFetchedPersonaId = useRef<string | null>(null);
   // Continuous session start timestamp for debug overlay (never resets mid-session)
   const sessionStartTimeRef = useRef<number | null>(null);
+  // When true, the auth effect should NOT overwrite coinBalance (we just got a fresh value from the server)
+  const skipAuthCoinSyncRef = useRef(false);
 
   // Parse persona from URL - check path params first, then query params
   const pathPersonaSlug = routeParams?.personaSlug;
@@ -245,8 +252,14 @@ export default function ChatServicePage() {
   // During an active session, coinBalance is managed by server responses from
   // /session/start and /session/:id/message to avoid stale overwrites from the
   // async refreshUser() call racing with billing updates.
+  // Also skip if we just received a fresh balance from an end-session response
+  // (e.g. during persona switch) to avoid the stale auth cache overwriting it.
   useEffect(() => {
     if (user && !session) {
+      if (skipAuthCoinSyncRef.current) {
+        skipAuthCoinSyncRef.current = false;
+        return;
+      }
       const coins = (user as any).coinBalance ?? 0;
       setCoinBalance(coins);
     }
@@ -403,7 +416,7 @@ export default function ChatServicePage() {
           const continuousElapsed = sessionStartTimeRef.current
             ? Math.floor((Date.now() - sessionStartTimeRef.current) / 1000)
             : next;
-          const coinsUsed = Math.floor(continuousElapsed / 60) * cpm;
+          const coinsUsed = secondsToCoins(continuousElapsed, cpm);
           const coinsRemaining = Math.max(0, initBal - coinsUsed);
 
           // Show refill banner 30 seconds before free trial ends (new users)
@@ -798,6 +811,28 @@ export default function ChatServicePage() {
   // Keep endSessionRef in sync so the timer can call endSession without a stale closure
   useEffect(() => { endSessionRef.current = endSession; }, [endSession]);
 
+  // Execute pending action (exit or switch) after end-reading flow completes
+  const executePendingAfterEnd = useCallback(() => {
+    const action = pendingAfterEnd;
+    if (!action) return;
+    setPendingAfterEnd(null);
+    if (action.type === "exit") {
+      navigate("/dashboard");
+    } else if (action.type === "switch") {
+      setMessages([]);
+      setPreSessionGreeting(null);
+      setReadingEnded(false);
+      const targetPersona = personas.find((p) => p.slug === action.slug);
+      if (targetPersona) {
+        setSelectedPersonaId(targetPersona.id);
+        navigate(`/chat/${action.slug}`);
+        lastAutoFetchedPersonaId.current = targetPersona.id;
+        const isReturning = chattedGuideIds.has(targetPersona.id);
+        fetchGreeting(action.slug, false, null, isReturning ? undefined : action.teaserFull);
+      }
+    }
+  }, [pendingAfterEnd, navigate, personas, fetchGreeting, chattedGuideIds]);
+
   // User-initiated "End Reading" — keeps chat history, inserts divider, triggers feedback if 5+ min
   const handleEndReadingConfirm = useCallback(async () => {
     setShowEndConfirm(false);
@@ -819,6 +854,8 @@ export default function ChatServicePage() {
       if (res.ok) {
         const data = await res.json();
         setCoinBalance(data.remainingCoins ?? coinBalance);
+        // Prevent the auth effect from overwriting this fresh balance with stale cached data
+        if (pendingAfterEnd) skipAuthCoinSyncRef.current = true;
       }
     } catch (err) {
       console.error("Failed to end session:", err);
@@ -832,12 +869,12 @@ export default function ChatServicePage() {
     setReadingEnded(true);
 
     // Receipt toast — shows what was actually billed (server uses Math.round per minute)
-    const minutesBilled = Math.round(elapsed / 60);
+    const coinsBilled = secondsToCoins(elapsed, selectedPersona?.coinsPerMinute ?? COINS_PER_MINUTE);
     toast({
-      title: minutesBilled === 0 ? "Reading ended" : `Reading ended · ${minutesBilled} min billed`,
-      description: minutesBilled === 0
-        ? "No coins were charged (under 30 seconds)"
-        : `${minutesBilled * 60} coins deducted from your balance`,
+      title: coinsBilled === 0 ? "Reading ended" : `Reading ended · ${coinsBilled} coins billed`,
+      description: coinsBilled === 0
+        ? `No coins were charged (under ${BILLING_INTERVAL_SECONDS} seconds)`
+        : `${coinsBilled} coins deducted from your balance`,
     });
 
     // Insert "Reading Ended" divider into chat history
@@ -854,6 +891,9 @@ export default function ChatServicePage() {
     if (elapsed >= 300) {
       setFeedbackSessionId(sessionId);
       setShowFeedbackModal(true);
+    } else {
+      // No feedback modal — execute pending action immediately
+      executePendingAfterEnd();
     }
   }, [session, elapsedSeconds, coinBalance]);
 
@@ -866,10 +906,18 @@ export default function ChatServicePage() {
   }, []);
 
   // Switch to a different guide: always fetch greeting immediately without any intermediate screen.
-  // If there was an active billing session, end it silently and show a toast.
+  // If there was an active billing session >= 3 min, show end-reading confirmation first.
+  // Otherwise end it silently and show a toast.
   const switchGuide = useCallback((slug: string, teaserFull?: string) => {
     const targetPersona = personas.find((p) => p.slug === slug);
     if (!targetPersona) return;
+
+    if (session && elapsedSeconds >= 180) {
+      // Session >= 3 min: show end-reading confirmation, then switch
+      setPendingAfterEnd({ type: "switch", slug, teaserFull });
+      setShowEndConfirm(true);
+      return;
+    }
 
     setSelectedPersonaId(targetPersona.id);
     navigate(`/chat/${slug}`);
@@ -912,7 +960,7 @@ export default function ChatServicePage() {
     lastAutoFetchedPersonaId.current = targetPersona.id; // Prevent auto-fetch effect from double-triggering
     const isReturning = chattedGuideIds.has(targetPersona.id);
     fetchGreeting(slug, false, null, isReturning ? undefined : teaserFull);
-  }, [session, personas, navigate, fetchGreeting, chattedGuideIds]);
+  }, [session, elapsedSeconds, personas, navigate, fetchGreeting, chattedGuideIds]);
 
   // Confirm transition from instructions screen — fetch greeting for the new guide
   const confirmSwitch = useCallback(() => {
@@ -1100,7 +1148,7 @@ export default function ChatServicePage() {
               ? Math.floor((Date.now() - sessionStartTimeRef.current) / 1000)
               : 0;
             const cpm = coinsPerMinuteRef.current;
-            const coinsUsedSoFar = Math.floor(continuousElapsed / 60) * cpm;
+            const coinsUsedSoFar = secondsToCoins(continuousElapsed, cpm);
             setInitialCoinBalance(data.remainingCoins + coinsUsedSoFar);
           }
           // TEMPORARY: log billing debug info to console
@@ -1349,7 +1397,7 @@ export default function ChatServicePage() {
               const continuousElapsed = sessionStartTimeRef.current
                 ? Math.floor((Date.now() - sessionStartTimeRef.current) / 1000)
                 : 0;
-              const coinsUsed = Math.floor(continuousElapsed / 60) * coinsPerMinute;
+              const coinsUsed = secondsToCoins(continuousElapsed, coinsPerMinute);
               const remainingCoins = Math.max(0, initialCoinBalance - coinsUsed);
               return (
                 <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300 text-xs font-medium select-none">
@@ -1369,8 +1417,14 @@ export default function ChatServicePage() {
             )}
             <button
               onClick={async () => {
-                if (session) await endSession();
-                navigate("/dashboard");
+                if (session && elapsedSeconds >= 180) {
+                  // Session >= 3 min: show end-reading confirmation, then exit
+                  setPendingAfterEnd({ type: "exit" });
+                  setShowEndConfirm(true);
+                } else {
+                  if (session) await endSession();
+                  navigate("/dashboard");
+                }
               }}
               className="text-white/70 hover:text-white text-sm"
               aria-label="Exit to Dashboard"
@@ -1896,7 +1950,7 @@ export default function ChatServicePage() {
             </p>
             <div className="flex gap-3">
               <button
-                onClick={() => setShowEndConfirm(false)}
+                onClick={() => { setShowEndConfirm(false); setPendingAfterEnd(null); }}
                 className="flex-1 py-2.5 rounded-xl border border-white/20 text-white/70 hover:text-white hover:border-white/40 transition-colors text-sm font-medium"
               >
                 Cancel
@@ -2067,7 +2121,10 @@ export default function ChatServicePage() {
       {/* Session Feedback Modal — shown when user ends a reading after 5+ minutes */}
       <SessionFeedbackModal
         open={showFeedbackModal}
-        onOpenChange={setShowFeedbackModal}
+        onOpenChange={(open) => {
+          setShowFeedbackModal(open);
+          if (!open) executePendingAfterEnd();
+        }}
         sessionId={feedbackSessionId}
         personaName={selectedPersona?.displayName ?? "your guide"}
         personaAvatarUrl={selectedPersona?.avatarUrl}
