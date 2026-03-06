@@ -160,7 +160,7 @@ export default function OutOfCreditsModal({
           <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-purple-800/30 to-transparent" />
           <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-indigo-900/30 to-transparent" />
 
-          <div className="relative z-10 px-6 pt-7 pb-6 text-center">
+          <div className="relative z-10 px-6 pt-7 pb-6 text-center max-h-[85vh] overflow-y-auto">
             {/* Title */}
             <h2 className="text-[22px] font-bold text-white leading-tight mb-1">
               You've run out of credits

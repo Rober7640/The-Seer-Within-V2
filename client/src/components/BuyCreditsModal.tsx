@@ -63,7 +63,7 @@ export default function BuyCreditsModal({
             <X className="w-4 h-4" />
           </button>
 
-          <div className="relative z-10 px-6 pt-8 pb-6">
+          <div className="relative z-10 px-6 pt-8 pb-6 max-h-[85vh] overflow-y-auto">
             {/* Header */}
             <div className="text-center mb-6">
               <h2 className="text-2xl font-bold text-white font-serif mb-2">

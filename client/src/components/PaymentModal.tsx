@@ -32,7 +32,7 @@ export default function PaymentModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="bg-white text-gray-900 max-w-sm w-full p-0 rounded-2xl overflow-hidden border-0 shadow-2xl">
+      <DialogContent className="bg-white text-gray-900 max-w-sm w-full p-0 rounded-2xl overflow-hidden border-0 shadow-2xl max-h-[90vh] overflow-y-auto">
         {/* Order details */}
         <div className="px-5 pt-5 pb-4">
           <h3 className="font-semibold text-gray-800 text-sm mb-3">Order details:</h3>
