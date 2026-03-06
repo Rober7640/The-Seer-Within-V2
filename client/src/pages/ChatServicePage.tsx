@@ -220,6 +220,8 @@ export default function ChatServicePage() {
   const sessionStartTimeRef = useRef<number | null>(null);
   // When true, the auth effect should NOT overwrite coinBalance (we just got a fresh value from the server)
   const skipAuthCoinSyncRef = useRef(false);
+  // Tracks whether a session is logically active (avoids React state batching race)
+  const sessionActiveRef = useRef(false);
 
   // Parse persona from URL - check path params first, then query params
   const pathPersonaSlug = routeParams?.personaSlug;
@@ -255,7 +257,7 @@ export default function ChatServicePage() {
   // Also skip if we just received a fresh balance from an end-session response
   // (e.g. during persona switch) to avoid the stale auth cache overwriting it.
   useEffect(() => {
-    if (user && !session) {
+    if (user && !session && !sessionActiveRef.current) {
       if (skipAuthCoinSyncRef.current) {
         skipAuthCoinSyncRef.current = false;
         return;
@@ -799,6 +801,7 @@ export default function ChatServicePage() {
     } catch (err) {
       console.error("Failed to end session:", err);
     } finally {
+      sessionActiveRef.current = false;
       setSession(null);
       setMessages([]);
       setElapsedSeconds(0);
@@ -861,6 +864,7 @@ export default function ChatServicePage() {
       console.error("Failed to end session:", err);
     }
 
+    sessionActiveRef.current = false;
     setSession(null);
     setElapsedSeconds(0);
     setInitialCoinBalance(0);
@@ -945,6 +949,7 @@ export default function ChatServicePage() {
         .then(data => { if (data?.remainingCoins !== undefined) setCoinBalance(data.remainingCoins); })
         .catch(() => {});
 
+      sessionActiveRef.current = false;
       setSession(null);
       setElapsedSeconds(0);
       setInitialCoinBalance(0);
@@ -1055,6 +1060,10 @@ export default function ChatServicePage() {
             sessionStartTimeRef.current = Date.now();
             lastUserMessageAt.current = Date.now();
             // Refresh user data so defaultPersonaId is up to date for navigation
+            // Set skip flag BEFORE refreshUser() so the delayed auth response
+            // doesn't overwrite the fresh billing balance mid-session
+            skipAuthCoinSyncRef.current = true;
+            sessionActiveRef.current = true;
             refreshUser();
             if (startData.remainingCoins !== undefined) {
               setCoinBalance(startData.remainingCoins);
@@ -1141,15 +1150,24 @@ export default function ChatServicePage() {
           };
           setMessages((prev) => [...prev, assistantMsg]);
           if (data.remainingCoins !== undefined) {
-            setCoinBalance(data.remainingCoins);
+            // Only accept server balance if it's <= current display balance.
+            // The heartbeat checkpoint runs every 30s, so between checkpoints the
+            // server may return a stale (higher) balance that hasn't been decremented
+            // yet. Never let the displayed balance jump UP mid-session.
+            const serverCoins = data.remainingCoins;
+            const currentCoins = coinBalanceRef.current;
+            const acceptedCoins = session ? Math.min(serverCoins, currentCoins) : serverCoins;
+            setCoinBalance(acceptedCoins);
             // Recalibrate initialCoinBalance so continuous display stays in sync with server.
             // Formula: initialBalance = serverBalance + coinsUsedSoFar
+            // Guard: never let initialCoinBalance increase mid-session (same stale-balance protection).
             const continuousElapsed = sessionStartTimeRef.current
               ? Math.floor((Date.now() - sessionStartTimeRef.current) / 1000)
               : 0;
             const cpm = coinsPerMinuteRef.current;
             const coinsUsedSoFar = secondsToCoins(continuousElapsed, cpm);
-            setInitialCoinBalance(data.remainingCoins + coinsUsedSoFar);
+            const newInitial = acceptedCoins + coinsUsedSoFar;
+            setInitialCoinBalance((prev) => session ? Math.min(newInitial, prev) : newInitial);
           }
           // TEMPORARY: log billing debug info to console
           if (data._billingDebug) {
@@ -1189,6 +1207,7 @@ export default function ChatServicePage() {
         } else if (res.status === 410 || res.status === 404) {
           // Session ended or not found — clear session state and show divider
           if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
+          sessionActiveRef.current = false;
           setSession(null);
           setElapsedSeconds(0);
           setInitialCoinBalance(0);
@@ -1974,6 +1993,7 @@ export default function ChatServicePage() {
           setShowOutOfCredits(open);
           // User dismissed without paying — clear the stale session and show divider
           if (!open) {
+            sessionActiveRef.current = false;
             setSession(null);
             setCoinBalance(0);
             setInitialCoinBalance(0);

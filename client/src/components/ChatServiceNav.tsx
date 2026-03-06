@@ -35,7 +35,7 @@ const NAV_ITEMS = [
   { path: "/dashboard", label: "Dashboard", shortLabel: "Dashboard", icon: LayoutDashboard },
 ];
 
-export function ChatServiceNav() {
+export function ChatServiceNav({ coinBalanceOverride }: { coinBalanceOverride?: number } = {}) {
   const [location, navigate] = useLocation();
   const { user, logout } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -149,7 +149,7 @@ export function ChatServiceNav() {
             {/* Credit Badge - Desktop/Tablet */}
             <div className="hidden md:block">
               <CreditBadge
-                coins={(user as any).coinBalance ?? 0}
+                coins={coinBalanceOverride ?? (user as any).coinBalance ?? 0}
                 onClick={() => navigate("/credits")}
               />
             </div>
@@ -213,7 +213,7 @@ export function ChatServiceNav() {
                     {/* Credit Badge */}
                     <div className="flex justify-center">
                       <CreditBadge
-                        coins={(user as any).coinBalance ?? 0}
+                        coins={coinBalanceOverride ?? (user as any).coinBalance ?? 0}
                         size="lg"
                         onClick={() => handleNavClick("/credits")}
                       />
