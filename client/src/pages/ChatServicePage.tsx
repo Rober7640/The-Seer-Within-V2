@@ -222,6 +222,10 @@ export default function ChatServicePage() {
   const skipAuthCoinSyncRef = useRef(false);
   // Tracks whether a session is logically active (avoids React state batching race)
   const sessionActiveRef = useRef(false);
+  // Guards against firing out-of-credits modal multiple times from the timer
+  const outOfCreditsFiredRef = useRef(false);
+  // Tracks current session ID so the timer callback can end it without stale closures
+  const sessionIdRef = useRef<string | null>(null);
 
   // Parse persona from URL - check path params first, then query params
   const pathPersonaSlug = routeParams?.personaSlug;
@@ -397,6 +401,7 @@ export default function ChatServicePage() {
   useEffect(() => { initialCoinBalanceRef.current = initialCoinBalance; }, [initialCoinBalance]);
   useEffect(() => { freeTrialCoinsRef.current = freeTrialCoins; }, [freeTrialCoins]);
   useEffect(() => { refillBannerDismissedRef.current = refillBannerDismissed; }, [refillBannerDismissed]);
+  useEffect(() => { sessionIdRef.current = session?.id ?? null; }, [session]);
   useEffect(() => { coinsPerMinuteRef.current = selectedPersona?.coinsPerMinute ?? 60; }, [selectedPersona?.coinsPerMinute]);
 
   // Credit countdown timer — display only.
@@ -436,10 +441,31 @@ export default function ChatServicePage() {
             }
           }
 
-          // NOTE: We do NOT check for out-of-credits here. The server handles
-          // this via 402 responses on /session/start and /session/:id/message.
-          // Client-side timer checks caused false "out of credits" triggers due
-          // to race conditions with ref syncing, stale state, and timing.
+          // When balance hits 0, immediately show out-of-credits modal and end
+          // the server session. Uses a ref guard to fire only once per session.
+          if (coinsRemaining <= 0 && initBal > 0 && !outOfCreditsFiredRef.current) {
+            outOfCreditsFiredRef.current = true;
+            // Run async end-session outside the setState updater
+            setTimeout(async () => {
+              setCoinBalance(0);
+              setShowOutOfCredits(true);
+              // End the server session but keep messages visible behind the modal
+              // (user can refill and resume from the same point)
+              const sid = sessionIdRef.current;
+              if (sid) {
+                try {
+                  await authFetch(`/api/chat-service/session/${sid}/end`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                  });
+                } catch {}
+              }
+              if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
+              setElapsedSeconds(0);
+              sessionStartTimeRef.current = null;
+              setShowRefillBanner(false);
+            }, 0);
+          }
 
           return next;
         });
@@ -1078,6 +1104,7 @@ export default function ChatServicePage() {
             // doesn't overwrite the fresh billing balance mid-session
             skipAuthCoinSyncRef.current = true;
             sessionActiveRef.current = true;
+            outOfCreditsFiredRef.current = false;
             refreshUser();
             if (startData.remainingCoins !== undefined) {
               setCoinBalance(startData.remainingCoins);
@@ -2081,6 +2108,7 @@ export default function ChatServicePage() {
                 setElapsedSeconds(0);
                 setShowRefillBanner(false);
                 setRefillBannerDismissed(false);
+                outOfCreditsFiredRef.current = false;
                 sessionStartTimeRef.current = Date.now();
                 lastUserMessageAt.current = Date.now();
                 setReadingEnded(false);

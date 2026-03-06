@@ -22,12 +22,12 @@
       "Bash(git fsck:*)",
       "Bash(git checkout:*)",
       "Bash(git commit:*)",
-      "Bash(npm run:*)",
-      "Bash(node:*)",
-      "Bash(mv:*)",
+      "Bash(cd:*)",
+      "Bash(curl:*)",
       "Bash(netstat:*)",
       "Bash(taskkill:*)",
-      "Bash(nslookup:*)"
+      "Bash(npx tsx:*)",
+      "Bash(PGPASSWORD='GracyBhavsar@93' \"/c/Program Files/PostgreSQL/18/bin/psql.exe\":*)"
     ]
   }
 }
