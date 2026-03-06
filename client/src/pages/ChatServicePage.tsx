@@ -429,9 +429,9 @@ export default function ChatServicePage() {
             }
           }
 
-          // Show refill banner when < 1 full minute remains at this guide's rate
+          // Show refill banner when < 2 full minutes remain at this guide's rate
           if (initBal > ftCoins && !dismissed) {
-            if (coinsRemaining <= cpm && coinsRemaining > 0) {
+            if (coinsRemaining <= cpm * 2 && coinsRemaining > 0) {
               setShowRefillBanner(true);
             }
           }
@@ -469,6 +469,7 @@ export default function ChatServicePage() {
     const IDLE_END_COUNTDOWN = 60;         // 60 seconds countdown then auto-end
 
     idleCheckRef.current = setInterval(() => {
+      if (showBuyCredits) return; // Don't count idle time while refill modal is open
       const lastMsg = lastUserMessageAt.current;
       if (!lastMsg) return;
       const idleMs = Date.now() - lastMsg;
@@ -495,6 +496,19 @@ export default function ChatServicePage() {
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session]);
+
+  // Pause idle countdown while BuyCreditsModal is open; reset idle timer when it closes
+  useEffect(() => {
+    if (showBuyCredits) {
+      // Pause: clear the countdown so session doesn't end while user is paying
+      if (idleCountdownRef.current) { clearInterval(idleCountdownRef.current); idleCountdownRef.current = null; }
+      setIdleWarning(false);
+      setIdleCountdown(60);
+    } else {
+      // Modal closed — reset last message time so idle timer restarts fresh
+      lastUserMessageAt.current = Date.now();
+    }
+  }, [showBuyCredits]);
 
   // Reset offline state when persona selection changes
   useEffect(() => {
@@ -2129,6 +2143,36 @@ export default function ChatServicePage() {
         onOpenChange={setShowBuyCredits}
         personaId={selectedPersonaId}
         personaName={selectedPersona?.displayName}
+        onSuccess={(newBalance) => {
+          setCoinBalance(newBalance);
+          lastUserMessageAt.current = Date.now();
+
+          // Dismiss refill banner and reset its state
+          setShowRefillBanner(false);
+          setRefillBannerDismissed(false);
+
+          // Recalibrate initialCoinBalance so the header coin display updates
+          const continuousElapsed = sessionStartTimeRef.current
+            ? Math.floor((Date.now() - sessionStartTimeRef.current) / 1000)
+            : 0;
+          const cpm = coinsPerMinuteRef.current;
+          const coinsUsedSoFar = secondsToCoins(continuousElapsed, cpm);
+          setInitialCoinBalance(newBalance + coinsUsedSoFar);
+
+          // Show credits purchased divider in chat
+          setMessages((prev) => [
+            ...prev,
+            {
+              id: `credits-purchased-${Date.now()}`,
+              role: "assistant" as const,
+              content: "",
+              sentAt: new Date().toISOString(),
+              isCreditsPurchasedDivider: true,
+            },
+          ]);
+
+          toast({ title: "Credits purchased!", description: "Your reading continues." });
+        }}
       />
 
       {/* Teaser Credit Modal (Nebula-style) */}

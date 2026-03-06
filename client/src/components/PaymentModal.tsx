@@ -5,6 +5,7 @@ import { authFetch } from "@/hooks/useAuth";
 import { Shield, CreditCard } from "lucide-react";
 import { COINS_PER_MINUTE } from "../../../shared/types";
 import type { PricingTier } from "../../../shared/types";
+import StripeCardForm from "@/components/StripeCardForm";
 
 interface Props {
   tier: PricingTier | null;
@@ -12,8 +13,6 @@ interface Props {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: (newBalance: number) => void;
-  onCardPay: (packageType: string) => void;
-  isCardLoading: boolean;
 }
 
 export default function PaymentModal({
@@ -22,8 +21,6 @@ export default function PaymentModal({
   isOpen,
   onClose,
   onSuccess,
-  onCardPay,
-  isCardLoading,
 }: Props) {
   const [method, setMethod] = useState<"paypal" | "card">("paypal");
   const [paypalError, setPaypalError] = useState<string | null>(null);
@@ -136,17 +133,15 @@ export default function PaymentModal({
               )}
             </div>
           ) : (
-            <button
-              onClick={() => {
-                onCardPay(tier.packageType);
+            <StripeCardForm
+              packageType={tier.packageType}
+              personaId={personaId}
+              priceLabel={price}
+              onSuccess={(newBalance) => {
+                onSuccess(newBalance);
                 onClose();
               }}
-              disabled={isCardLoading}
-              className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-gray-900 hover:bg-gray-800 text-white font-semibold text-sm transition-colors disabled:opacity-50"
-            >
-              <CreditCard className="w-4 h-4" />
-              {isCardLoading ? "Redirecting..." : `Pay ${price} with Card`}
-            </button>
+            />
           )}
 
           {/* Trust signals */}

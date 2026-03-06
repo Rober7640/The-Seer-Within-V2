@@ -2,7 +2,7 @@ import { Router, Request, Response } from 'express';
 import { z } from 'zod';
 import { db } from '../lib/db';
 import { users, creditPurchases, personas } from '@shared/schema';
-import { eq, desc, sql } from 'drizzle-orm';
+import { eq, and, ne, desc, sql } from 'drizzle-orm';
 import { requireAuth } from '../lib/auth';
 import { getPersonaPricing } from '../lib/personaPricing';
 import { DEFAULT_PRICING } from '../../shared/types';
@@ -223,6 +223,179 @@ router.post('/checkout', requireAuth, async (req: Request, res: Response) => {
   }
 });
 
+// POST /api/credits/create-payment-intent - Stripe inline card payment
+const paymentIntentSchema = z.object({
+  packageType: z.string().min(1),
+  personaId: z.string().min(1).optional(),
+});
+
+router.post('/create-payment-intent', requireAuth, async (req: Request, res: Response) => {
+  const parseResult = paymentIntentSchema.safeParse(req.body);
+  if (!parseResult.success) {
+    res.status(400).json({ error: parseResult.error.errors.map(e => e.message).join(', ') });
+    return;
+  }
+
+  const { packageType, personaId } = parseResult.data;
+
+  let tier;
+  try {
+    const pricing = personaId ? await getPersonaPricing(personaId) : DEFAULT_PRICING;
+    tier = pricing.tiers.find(t => t.packageType === packageType);
+    if (!tier) {
+      res.status(400).json({ error: 'Invalid package type' });
+      return;
+    }
+  } catch (error) {
+    logger.error('Stripe create-payment-intent setup error:', error);
+    res.status(500).json({ error: 'Failed to create payment intent' });
+    return;
+  }
+
+  const purchase = await db.insert(creditPurchases).values({
+    userId: req.userId!,
+    personaId: personaId || null,
+    packageType: tier.packageType,
+    coinsPurchased: tier.totalCoins,
+    bonusCoins: tier.bonusCoins,
+    priceUsd: tier.priceUsd,
+    status: 'pending',
+  }).returning();
+
+  const purchaseId = purchase[0].id;
+
+  // Dev mode: auto-complete without Stripe
+  if (!stripe) {
+    await db.update(creditPurchases)
+      .set({ status: 'completed', updatedAt: new Date() })
+      .where(eq(creditPurchases.id, purchaseId));
+
+    const updatedUser = await db.update(users)
+      .set({
+        coinBalance: sql`coin_balance + ${tier.totalCoins}`,
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, req.userId!))
+      .returning({ coinBalance: users.coinBalance });
+
+    res.json({ devMode: true, newBalance: updatedUser[0]?.coinBalance ?? 0 });
+    return;
+  }
+
+  try {
+    const paymentIntent = await fireWithBreaker(stripeBreaker, () =>
+      stripe!.paymentIntents.create({
+        amount: tier!.priceUsd,
+        currency: 'usd',
+        metadata: {
+          app: 'the-seer-within-chat',
+          purchaseId,
+          userId: req.userId!,
+          ...(personaId ? { personaId } : {}),
+          packageType: tier!.packageType,
+          totalCoins: String(tier!.totalCoins),
+        },
+      }),
+    );
+
+    await db.update(creditPurchases)
+      .set({ stripePaymentIntentId: paymentIntent.id, updatedAt: new Date() })
+      .where(eq(creditPurchases.id, purchaseId));
+
+    res.json({ clientSecret: paymentIntent.client_secret, purchaseId });
+  } catch (error) {
+    try {
+      await db.delete(creditPurchases).where(eq(creditPurchases.id, purchaseId));
+    } catch (cleanupError) {
+      logger.error('Failed to clean up pending purchase after Stripe error:', cleanupError);
+    }
+
+    if (isCircuitOpenError(error)) {
+      logger.warn('Stripe circuit open, payment intent unavailable');
+      res.status(503).json({ error: 'Payment service temporarily unavailable. Please try again shortly.' });
+    } else {
+      logger.error('Stripe create-payment-intent error:', error);
+      res.status(500).json({ error: 'Failed to create payment intent' });
+    }
+  }
+});
+
+// POST /api/credits/confirm-payment - Stripe payment confirmation
+const confirmPaymentSchema = z.object({
+  paymentIntentId: z.string().min(1),
+});
+
+router.post('/confirm-payment', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const parseResult = confirmPaymentSchema.safeParse(req.body);
+    if (!parseResult.success) {
+      res.status(400).json({ error: parseResult.error.errors.map(e => e.message).join(', ') });
+      return;
+    }
+
+    const { paymentIntentId } = parseResult.data;
+
+    if (!stripe) {
+      res.status(400).json({ error: 'Stripe not configured' });
+      return;
+    }
+
+    const purchases = await db.select()
+      .from(creditPurchases)
+      .where(eq(creditPurchases.stripePaymentIntentId, paymentIntentId))
+      .limit(1);
+
+    if (!purchases[0]) {
+      res.status(404).json({ error: 'Purchase not found' });
+      return;
+    }
+
+    const purchase = purchases[0];
+    if (purchase.userId !== req.userId) {
+      res.status(403).json({ error: 'Unauthorized' });
+      return;
+    }
+
+    if (purchase.status !== 'pending') {
+      res.status(400).json({ error: 'Purchase already processed' });
+      return;
+    }
+
+    const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
+    if (paymentIntent.status !== 'succeeded') {
+      res.status(400).json({ error: `Payment not completed (status: ${paymentIntent.status})` });
+      return;
+    }
+
+    await db.update(creditPurchases)
+      .set({ status: 'completed', updatedAt: new Date() })
+      .where(eq(creditPurchases.id, purchase.id));
+
+    const updatedUser = await db.update(users)
+      .set({
+        coinBalance: sql`coin_balance + ${purchase.coinsPurchased}`,
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, req.userId!))
+      .returning({ coinBalance: users.coinBalance });
+
+    // Clean up any other pending purchases for this user (e.g. abandoned PayPal orders)
+    await db.delete(creditPurchases)
+      .where(and(
+        eq(creditPurchases.userId, req.userId!),
+        eq(creditPurchases.status, 'pending'),
+        ne(creditPurchases.id, purchase.id),
+      ))
+      .catch(err => logger.error('Failed to clean up pending purchases:', err));
+
+    const newBalance = updatedUser[0]?.coinBalance ?? 0;
+    res.json({ success: true, newBalance });
+  } catch (error) {
+    logger.error('Stripe confirm-payment error:', error);
+    res.status(500).json({ error: 'Failed to confirm payment' });
+  }
+});
+
 // POST /api/credits/create-order - PayPal order creation
 const createOrderSchema = z.object({
   packageType: z.string().min(1),
@@ -350,6 +523,15 @@ router.post('/capture-order', requireAuth, async (req: Request, res: Response) =
       })
       .where(eq(users.id, req.userId!))
       .returning({ coinBalance: users.coinBalance });
+
+    // Clean up any other pending purchases for this user (e.g. abandoned Stripe intents)
+    await db.delete(creditPurchases)
+      .where(and(
+        eq(creditPurchases.userId, req.userId!),
+        eq(creditPurchases.status, 'pending'),
+        ne(creditPurchases.id, purchase.id),
+      ))
+      .catch(err => logger.error('Failed to clean up pending purchases:', err));
 
     const newBalance = updatedUser[0]?.coinBalance ?? 0;
 

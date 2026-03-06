@@ -22,11 +22,12 @@
       "Bash(git fsck:*)",
       "Bash(git checkout:*)",
       "Bash(git commit:*)",
-      "Bash(cd:*)",
-      "Bash(curl:*)",
+      "Bash(npm run:*)",
+      "Bash(node:*)",
+      "Bash(mv:*)",
       "Bash(netstat:*)",
       "Bash(taskkill:*)",
-      "Bash(npx tsx:*)"
+      "Bash(nslookup:*)"
     ]
   }
 }

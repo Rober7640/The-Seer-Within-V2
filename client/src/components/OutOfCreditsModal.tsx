@@ -4,6 +4,7 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Coins } from "lucide-react";
 import type { PricingTier } from "@shared/types";
 import PayPalCreditButton from "@/components/PayPalCreditButton";
+import StripeCardForm from "@/components/StripeCardForm";
 
 interface OutOfCreditsModalProps {
   open: boolean;
@@ -90,7 +91,6 @@ export default function OutOfCreditsModal({
   const { refreshUser } = useAuth();
   const [tiers, setTiers] = useState<PricingTier[]>(pricingTiers ?? FALLBACK_TIERS);
   const [timeLeft, setTimeLeft] = useState(countdownSeconds);
-  const [isCheckingOut, setIsCheckingOut] = useState(false);
   const [paypalActive, setPaypalActive] = useState(false);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -146,28 +146,6 @@ export default function OutOfCreditsModal({
     }
   }, [open, personaId, pricingTiers]);
 
-  const handleGetCredits = async () => {
-    if (!personaId) return;
-    if (intervalRef.current) clearInterval(intervalRef.current);
-    setIsCheckingOut(true);
-    try {
-      const packageType = featuredTier?.packageType ?? "starter";
-      const res = await authFetch("/api/credits/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ packageType, personaId }),
-      });
-      if (res.ok) {
-        const data = await res.json();
-        if (data.url) window.location.href = data.url;
-      }
-    } catch (err) {
-      console.error("Checkout error:", err);
-    } finally {
-      setIsCheckingOut(false);
-    }
-  };
-
   const formatPrice = (cents: number) => `$${(cents / 100).toFixed(2)}`;
 
   const salePrice = featuredTier ? formatPrice(featuredTier.priceUsd) : "$9.99";
@@ -222,25 +200,15 @@ export default function OutOfCreditsModal({
               />
             </div>
 
-            {/* Stripe fallback */}
-            <button
-              onClick={handleGetCredits}
-              disabled={isCheckingOut}
-              className="w-full py-3.5 rounded-xl font-bold text-[15px] text-white shadow-lg transition-all disabled:opacity-60 disabled:cursor-not-allowed"
-              style={{
-                background: "linear-gradient(90deg, #a855f7 0%, #ec4899 100%)",
-                boxShadow: "0 4px 24px rgba(168,85,247,0.35)",
-              }}
-            >
-              {isCheckingOut ? (
-                <span className="flex items-center justify-center gap-2">
-                  <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  Processing...
-                </span>
-              ) : (
-                "Pay with card instead"
-              )}
-            </button>
+            {/* Stripe inline card */}
+            <StripeCardForm
+              packageType={featuredTier?.packageType ?? "starter"}
+              personaId={personaId}
+              priceLabel={salePrice}
+              onSuccess={handlePayPalSuccess}
+              onClick={() => setPaypalActive(true)}
+              onCancel={() => setPaypalActive(false)}
+            />
 
             {/* Dismiss */}
             <button

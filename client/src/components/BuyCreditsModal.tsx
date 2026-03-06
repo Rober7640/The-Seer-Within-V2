@@ -7,6 +7,7 @@ import {
 } from "@/components/ui/dialog";
 import type { PricingTier } from "@shared/types";
 import PayPalCreditButton from "@/components/PayPalCreditButton";
+import StripeCardForm from "@/components/StripeCardForm";
 
 interface BuyCreditsModalProps {
   open: boolean;
@@ -37,32 +38,10 @@ export default function BuyCreditsModal({
   const [selectedPackage, setSelectedPackage] = useState<string>(
     () => tiers.find((t) => t.badge)?.packageType ?? tiers[0]?.packageType ?? "popular",
   );
-  const [isCheckingOut, setIsCheckingOut] = useState(false);
-
   const handleSuccess = (newBalance: number) => {
     onOpenChange(false);
     onSuccess?.(newBalance);
     refreshUser();
-  };
-
-  const handlePurchase = async () => {
-    if (!personaId) return;
-    setIsCheckingOut(true);
-    try {
-      const res = await authFetch("/api/credits/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ packageType: selectedPackage, personaId }),
-      });
-      if (res.ok) {
-        const data = await res.json();
-        if (data.url) window.location.href = data.url;
-      }
-    } catch (err) {
-      console.error("Checkout error:", err);
-    } finally {
-      setIsCheckingOut(false);
-    }
   };
 
   const formatPrice = (cents: number) => `$${(cents / 100).toFixed(2)}`;
@@ -105,12 +84,11 @@ export default function BuyCreditsModal({
                   <button
                     key={tier.packageType}
                     onClick={() => setSelectedPackage(tier.packageType)}
-                    disabled={isCheckingOut}
                     className={`relative rounded-xl p-4 text-center transition-all duration-200 border-2 ${
                       isSelected
                         ? "border-teal-400 bg-teal-900/20 shadow-lg shadow-teal-500/10"
                         : "border-white/10 bg-white/5 hover:border-white/25 hover:bg-white/8"
-                    } disabled:opacity-60`}
+                    }`}
                   >
                     {/* Selection checkmark */}
                     {isSelected && (
@@ -170,21 +148,13 @@ export default function BuyCreditsModal({
               />
             </div>
 
-            {/* Stripe fallback */}
-            <button
-              onClick={handlePurchase}
-              disabled={isCheckingOut}
-              className="w-full py-3.5 rounded-xl bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-400 hover:to-teal-500 text-white font-bold text-base shadow-lg shadow-teal-500/25 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
-            >
-              {isCheckingOut ? (
-                <div className="flex items-center justify-center gap-2">
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  Processing...
-                </div>
-              ) : (
-                "Pay with card instead"
-              )}
-            </button>
+            {/* Stripe inline card */}
+            <StripeCardForm
+              packageType={selectedPackage}
+              personaId={personaId}
+              priceLabel={formatPrice(tiers.find(t => t.packageType === selectedPackage)?.priceUsd ?? 999)}
+              onSuccess={handleSuccess}
+            />
 
             <p className="text-xs text-white/50 text-center mt-3">
               One-time payment is non-refundable.

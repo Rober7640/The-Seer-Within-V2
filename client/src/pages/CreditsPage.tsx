@@ -36,7 +36,6 @@ export default function CreditsPage() {
 
   const [tiers, setTiers] = useState<PricingTier[]>([]);
   const [purchases, setPurchases] = useState<PurchaseHistory[]>([]);
-  const [isCheckingOut, setIsCheckingOut] = useState(false);
   const [purchasesLoading, setPurchasesLoading] = useState(true);
   const [personaInfo, setPersonaInfo] = useState<PersonaInfo | null>(null);
   const [selectedTier, setSelectedTier] = useState<PricingTier | null>(null);
@@ -106,29 +105,6 @@ export default function CreditsPage() {
       );
     }
   }, [refreshUser]);
-
-  const handlePurchase = async (packageType: string) => {
-    setIsCheckingOut(true);
-    try {
-      const res = await authFetch("/api/credits/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          packageType,
-          ...(personaId ? { personaId } : {}),
-        }),
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        if (data.url) window.location.href = data.url;
-      }
-    } catch (err) {
-      console.error("Checkout error:", err);
-    } finally {
-      setIsCheckingOut(false);
-    }
-  };
 
   const handleSuccess = (newBalance: number) => {
     toast({ title: "Payment successful!", description: `Your balance has been updated.` });
@@ -351,8 +327,6 @@ export default function CreditsPage() {
         isOpen={!!selectedTier}
         onClose={() => setSelectedTier(null)}
         onSuccess={handleSuccess}
-        onCardPay={handlePurchase}
-        isCardLoading={isCheckingOut}
       />
     </div>
   );
