@@ -443,9 +443,9 @@ export default function ChatServicePage() {
             }
           }
 
-          // Show refill banner when < 2 full minutes remain at this guide's rate
+          // Show refill banner when < 1 full minute remains at this guide's rate
           if (initBal > ftCoins && !dismissed) {
-            if (coinsRemaining <= cpm * 2 && coinsRemaining > 0) {
+            if (coinsRemaining <= cpm * 1 && coinsRemaining > 0) {
               setShowRefillBanner(true);
             }
           }
