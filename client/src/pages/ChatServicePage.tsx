@@ -226,6 +226,10 @@ export default function ChatServicePage() {
   const outOfCreditsFiredRef = useRef(false);
   // Tracks current session ID so the timer callback can end it without stale closures
   const sessionIdRef = useRef<string | null>(null);
+  // Ref mirror of showBuyCredits so the billing timer can pause while refill modal is open
+  const showBuyCreditsRef = useRef(false);
+  // Tracks when the refill modal opened, so we can shift sessionStartTime forward on close
+  const refillModalOpenedAtRef = useRef<number | null>(null);
 
   // Parse persona from URL - check path params first, then query params
   const pathPersonaSlug = routeParams?.personaSlug;
@@ -403,6 +407,7 @@ export default function ChatServicePage() {
   useEffect(() => { refillBannerDismissedRef.current = refillBannerDismissed; }, [refillBannerDismissed]);
   useEffect(() => { sessionIdRef.current = session?.id ?? null; }, [session]);
   useEffect(() => { coinsPerMinuteRef.current = selectedPersona?.coinsPerMinute ?? 60; }, [selectedPersona?.coinsPerMinute]);
+  useEffect(() => { showBuyCreditsRef.current = showBuyCredits; }, [showBuyCredits]);
 
   // Credit countdown timer — display only.
   // The timer handles ONLY the elapsed time counter and refill banner.
@@ -413,6 +418,10 @@ export default function ChatServicePage() {
     if (session && session.status === "active") {
       timerRef.current = setInterval(() => {
         setElapsedSeconds((prev) => {
+          // Pause billing while refill modal is open — don't tick elapsed time
+          // so coins freeze at their current value until user finishes paying
+          if (showBuyCreditsRef.current) return prev;
+
           const next = prev + 1;
           const cpm = coinsPerMinuteRef.current;
           const initBal = initialCoinBalanceRef.current;
@@ -523,15 +532,24 @@ export default function ChatServicePage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session]);
 
-  // Pause idle countdown while BuyCreditsModal is open; reset idle timer when it closes
+  // Pause idle + billing while BuyCreditsModal is open; resume when it closes
   useEffect(() => {
     if (showBuyCredits) {
       // Pause: clear the countdown so session doesn't end while user is paying
       if (idleCountdownRef.current) { clearInterval(idleCountdownRef.current); idleCountdownRef.current = null; }
       setIdleWarning(false);
       setIdleCountdown(60);
+      // Track when modal opened so we can shift sessionStartTime on close
+      refillModalOpenedAtRef.current = Date.now();
     } else {
-      // Modal closed — reset last message time so idle timer restarts fresh
+      // Modal closed — shift sessionStartTime forward by time spent in modal
+      // so continuousElapsed (wall-clock based) doesn't include payment time
+      if (refillModalOpenedAtRef.current && sessionStartTimeRef.current) {
+        const pausedMs = Date.now() - refillModalOpenedAtRef.current;
+        sessionStartTimeRef.current += pausedMs;
+      }
+      refillModalOpenedAtRef.current = null;
+      // Reset last message time so idle timer restarts fresh
       lastUserMessageAt.current = Date.now();
     }
   }, [showBuyCredits]);
@@ -1051,13 +1069,13 @@ export default function ChatServicePage() {
         }]);
       }
 
-      // Reset idle timer on every user message
+      // Reset idle timer on every user message — always clear countdown
+      // regardless of idleWarning state (avoids stale closure bug where
+      // idleWarning reads false even when the banner is showing)
       lastUserMessageAt.current = Date.now();
-      if (idleWarning) {
-        setIdleWarning(false);
-        setIdleCountdown(60);
-        if (idleCountdownRef.current) { clearInterval(idleCountdownRef.current); idleCountdownRef.current = null; }
-      }
+      setIdleWarning(false);
+      setIdleCountdown(60);
+      if (idleCountdownRef.current) { clearInterval(idleCountdownRef.current); idleCountdownRef.current = null; }
 
       try {
         // First message: create session now (billing starts here)
@@ -2172,6 +2190,9 @@ export default function ChatServicePage() {
         personaId={selectedPersonaId}
         personaName={selectedPersona?.displayName}
         onSuccess={(newBalance) => {
+          // Auto-close the refill modal so billing resumes immediately
+          setShowBuyCredits(false);
+
           setCoinBalance(newBalance);
           lastUserMessageAt.current = Date.now();
 

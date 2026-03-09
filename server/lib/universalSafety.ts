@@ -17,7 +17,8 @@ export type ViolationType =
   | 'prompt_injection'
   | 'harassment'
   | 'gibberish'
-  | 'non_english';
+  | 'non_english'
+  | 'minor';
 
 export interface SafetyCheckResult {
   safe: boolean;
@@ -60,9 +61,9 @@ const SAFETY_RESPONSES: Record<ViolationType, string> = {
     "Otherwise, I'll need to end this session.",
 
   prompt_injection:
-    "I sense you're trying to test my boundaries.\n" +
-    "I'm here to provide spiritual guidance - nothing more, nothing less.\n" +
-    "If you have a genuine question, I'm listening.",
+    "That's not really what I'm here for, love.\n" +
+    "I'm here to guide you — your path, your energy, your questions about life.\n" +
+    "What's actually on your heart right now?",
 
   harassment:
     "I don't respond to hostility.\n" +
@@ -77,6 +78,10 @@ const SAFETY_RESPONSES: Record<ViolationType, string> = {
   non_english:
     'My readings are conducted in English.\n' +
     'Please send your message in English and I will be happy to continue.',
+
+  minor:
+    "I appreciate you reaching out, but this service is for adults 18 and older.\n" +
+    "Please come back when you're of age. Take care of yourself. 💛",
 };
 
 // ============================================================
@@ -166,7 +171,55 @@ const PROMPT_INJECTION_PATTERNS: RegExp[] = [
   /\bDAN\s+mode\b/i,
   /\bdo\s+anything\s+now\b/i,
   /\bdevice?\s+mode\b/i,
+  // System prompt / instruction probing
+  /\b(?:reveal|show|share|display|print|output|repeat|recite)\s+(?:me\s+)?(?:your|the)\s+(?:system\s+)?(?:prompt|instructions?|rules?|programming|directives?|guidelines?)\b/i,
+  /\b(?:what(?:'s| is| are))\s+(?:your|the)\s+(?:system\s+)?(?:prompt|instructions?|rules?|programming|directives?|guidelines?)\b/i,
+  /\bsystem\s+prompt\b/i,
+  /\bcopy\s+(?:and\s+)?paste\s+(?:your|the)\s+(?:instructions?|prompt|rules?)\b/i,
+  /\b(?:what|how)\s+(?:were|are)\s+you\s+(?:programm?ed|instructed|prompted|told|configured|trained)\b/i,
+  // AI/model identity probing
+  /\b(?:are|r)\s+(?:you|u)\s+(?:an?\s+)?(?:ai|artificial|bot|machine|language\s+model|llm|chatbot|gpt|claude|gemini|openai|anthropic)\b/i,
+  /\b(?:what|which)\s+(?:ai|model|llm|language\s+model)\s+(?:are|r)\s+(?:you|u)\b/i,
+  /\b(?:are|r)\s+(?:you|u)\s+(?:built|based|running|powered)\s+(?:on|by|with)\b/i,
+  /\b(?:you'?re|you\s+are)\s+(?:an?\s+)?(?:ai|bot|machine|chatbot|language\s+model)\b/i,
+  /\busing\s+(?:claude|gpt|openai|anthropic|gemini|llama|chatgpt)\b/i,
 ];
+
+// Minor/underage detection — service is 18+ only
+const MINOR_PATTERNS: RegExp[] = [
+  /\bi[\u2019']?m\s+(\d{1,2})\s*(?:years?\s*old|yrs?\s*old|yo)\b/i,
+  /\bi\s+am\s+(\d{1,2})\s*(?:years?\s*old|yrs?\s*old|yo)\b/i,
+  /\bmy\s+age\s+is\s+(\d{1,2})\b/i,
+  /\bi[\u2019']?m\s+(?:a\s+)?(?:minor|underage|under\s*18|kid|child)\b/i,
+  /\bi\s+am\s+(?:a\s+)?(?:minor|underage|under\s*18|kid|child)\b/i,
+  /\bi[\u2019']?m\s+(?:only\s+)?(?:thirteen|fourteen|fifteen|sixteen|seventeen|twelve|eleven|ten)\b/i,
+  /\bi\s+am\s+(?:only\s+)?(?:thirteen|fourteen|fifteen|sixteen|seventeen|twelve|eleven|ten)\b/i,
+  /\b(?:in\s+)?(?:middle|high)\s+school\b/i,
+  /\bi[\u2019']?m\s+(?:in\s+)?(?:\d+(?:th|st|nd|rd)\s+grade)\b/i,
+];
+
+/**
+ * Checks if a message indicates the user is a minor (under 18).
+ * Numeric age patterns are checked against the captured age value.
+ */
+function indicatesMinor(message: string): boolean {
+  const trimmed = message.trim();
+  for (const pattern of MINOR_PATTERNS) {
+    const match = pattern.exec(trimmed);
+    if (match) {
+      // If the pattern captured a numeric age, verify it's under 18
+      if (match[1]) {
+        const age = parseInt(match[1], 10);
+        if (age >= 1 && age < 18) return true;
+        // Age >= 18 is fine, don't flag
+        continue;
+      }
+      // Non-numeric pattern (e.g. "I'm a minor", "I'm in high school") — always flag
+      return true;
+    }
+  }
+  return false;
+}
 
 // Harassment patterns
 const HARASSMENT_PATTERNS: RegExp[] = [
@@ -353,7 +406,17 @@ export function checkUniversalSafety(message: string): SafetyCheckResult {
     }
   }
 
-  // 2. Non-English detection — runs before other checks so non-English bypass attempts
+  // 2. Minor/underage detection — service is 18+ only
+  if (indicatesMinor(trimmed)) {
+    return {
+      safe: false,
+      violationType: 'minor',
+      response: SAFETY_RESPONSES.minor,
+      confidence: 0.9,
+    };
+  }
+
+  // 3. Non-English detection — runs before other checks so non-English bypass attempts
   //    (e.g. prompt injection or sexual content in another language) are blocked.
   //    Crisis check above already runs first so users in crisis still get the 988 response.
   if (isNonEnglish(trimmed)) {
@@ -365,7 +428,7 @@ export function checkUniversalSafety(message: string): SafetyCheckResult {
     };
   }
 
-  // 3. Inappropriate content
+  // 4. Inappropriate content
   for (const pattern of INAPPROPRIATE_PATTERNS) {
     if (pattern.test(trimmed)) {
       return {

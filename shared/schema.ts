@@ -368,7 +368,7 @@ export const safetyViolations = pgTable("safety_violations", {
   userId: varchar("user_id").references(() => users.id, { onDelete: "set null" }),
   personaId: varchar("persona_id").references(() => personas.id, { onDelete: "set null" }),
 
-  violationType: text("violation_type").notNull(), // crisis, inappropriate, prompt_injection, harassment, gibberish
+  violationType: text("violation_type").notNull(), // crisis, inappropriate, prompt_injection, harassment, gibberish, non_english, minor
   userMessage: text("user_message").notNull(),
   systemResponse: text("system_response").notNull(),
 
