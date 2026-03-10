@@ -518,6 +518,7 @@ export const sessionFeedback = pgTable("session_feedback", {
 }, (table) => [
   index("idx_session_feedback_persona").on(table.personaId, table.createdAt),
   index("idx_session_feedback_user").on(table.userId, table.createdAt),
+  uniqueIndex("idx_session_feedback_unique_session").on(table.sessionId),
 ]);
 
 // 17. Top-Up Emails - Credit replenishment email tracking

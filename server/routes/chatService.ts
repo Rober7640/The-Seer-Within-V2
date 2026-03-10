@@ -578,7 +578,7 @@ const feedbackSchema = z.object({
 
 router.post('/session/:id/feedback', requireAuth, async (req: Request, res: Response) => {
   try {
-    const userId = (req as any).user?.id;
+    const userId = req.userId;
     if (!userId) { res.status(401).json({ error: 'Unauthorized' }); return; }
 
     const { id: sessionId } = req.params;
