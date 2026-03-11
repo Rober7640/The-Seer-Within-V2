@@ -1708,6 +1708,7 @@ export default function ChatServicePage() {
             <PreReadingWelcome
               persona={selectedPersona}
               memoryContext={memoryContext}
+              lightMode={readingEnded}
               coinBalance={coinBalance}
               freeCoinsAvailable={
                 sessionPricing && coinBalance <= 0

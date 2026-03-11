@@ -24,6 +24,7 @@ type PersonaStatus = 'busy-slow' | 'busy-fast' | 'connecting' | 'online';
 interface PreReadingWelcomeProps {
   persona: PersonaData;
   memoryContext?: MemoryContext | null;
+  lightMode?: boolean;
   coinBalance: number;
   freeCoinsAvailable: number;
   personaStatus: PersonaStatus;
@@ -61,6 +62,7 @@ function parseCategories(categories: string | null | undefined): string[] {
 export function PreReadingWelcome({
   persona,
   memoryContext,
+  lightMode = false,
   coinBalance,
   freeCoinsAvailable,
   personaStatus,
@@ -87,10 +89,10 @@ export function PreReadingWelcome({
   const avatarSrc = persona.avatarUrl?.trim() ? persona.avatarUrl : DEFAULT_AVATAR;
 
   return (
-    <div className="flex flex-col min-h-full text-white">
+    <div className={`flex flex-col min-h-full ${lightMode ? 'text-gray-800' : 'text-white'}`}>
       {/* Heading */}
       <div className="text-center mb-5">
-        <h1 className="text-2xl font-bold tracking-tight mb-2">
+        <h1 className={`text-2xl font-bold tracking-tight mb-2 ${lightMode ? 'text-gray-900' : ''}`}>
           {statusHeading}
         </h1>
         <Link
@@ -169,19 +171,19 @@ export function PreReadingWelcome({
       <div className="space-y-3 mb-6">
         <div className="flex items-start gap-3">
           <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 shrink-0 mt-1" />
-          <p className="text-white/80 text-sm">
+          <p className={`text-sm ${lightMode ? 'text-gray-600' : 'text-white/80'}`}>
             It usually takes 15 seconds to connect
           </p>
         </div>
         <div className="flex items-start gap-3">
           <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 shrink-0 mt-1" />
-          <p className="text-white/80 text-sm">
+          <p className={`text-sm ${lightMode ? 'text-gray-600' : 'text-white/80'}`}>
             Once connected, ask anything you want
           </p>
         </div>
         <div className="flex items-start gap-3">
           <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 shrink-0 mt-1" />
-          <p className="text-white/80 text-sm">
+          <p className={`text-sm ${lightMode ? 'text-gray-600' : 'text-white/80'}`}>
             Your advisor is focused on you. Enjoy!
           </p>
         </div>
@@ -228,7 +230,7 @@ export function PreReadingWelcome({
               <span className="w-2.5 h-2.5 rounded-full bg-red-500 shrink-0" />
               {persona.displayName} is currently offline
             </div>
-            <p className="text-white/60 text-xs leading-relaxed">
+            <p className={`text-xs leading-relaxed ${lightMode ? 'text-gray-500' : 'text-white/60'}`}>
               Come back during her available hours to begin your reading.
             </p>
           </div>
@@ -259,7 +261,7 @@ export function PreReadingWelcome({
         ) : (
           <div className="flex items-center justify-center gap-3 py-4">
             <div className="w-5 h-5 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin" />
-            <span className="text-white/60 text-sm font-medium">
+            <span className={`text-sm font-medium ${lightMode ? 'text-gray-500' : 'text-white/60'}`}>
               Connecting to {persona.displayName}...
             </span>
           </div>
