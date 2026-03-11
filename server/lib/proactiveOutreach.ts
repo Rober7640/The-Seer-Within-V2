@@ -8,6 +8,7 @@ import { eq, and, desc, sql } from 'drizzle-orm';
 import Anthropic from '@anthropic-ai/sdk';
 import logger from './logger';
 import { fireWithBreaker, anthropicBreaker } from './circuitBreaker';
+import { getModelForOperation } from './modelConfig';
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY || '',
@@ -202,7 +203,7 @@ Return JSON:
   try {
     const response = await fireWithBreaker(anthropicBreaker, () =>
       anthropic.messages.create({
-        model: 'claude-sonnet-4-20250514',
+        model: getModelForOperation('conversation'),
         max_tokens: 300,
         messages: [{ role: 'user', content: prompt }],
       }),

@@ -107,6 +107,10 @@ export const personas = pgTable("personas", {
   // Session timeout (configurable per advisor, default 30 minutes)
   sessionTimeoutMinutes: integer("session_timeout_minutes").default(30).notNull(),
 
+  // Per-persona AI model overrides (null = use global default from system_config)
+  aiModel: text("ai_model"),        // conversation model override, e.g. "claude-sonnet-4-5-20250929"
+  basicModel: text("basic_model"),   // greeting/summarization model override, e.g. "claude-haiku-4-5-20251001"
+
   // Per-persona email sender identity (used for follow-up and session timeout emails)
   fromEmail: text("from_email"),  // e.g. "evelyn@theseerwithin.com" — falls back to FOLLOW_UP_FROM_EMAIL env var
   fromName: text("from_name"),    // e.g. "Evelyn Cross" — falls back to FOLLOW_UP_FROM_NAME env var

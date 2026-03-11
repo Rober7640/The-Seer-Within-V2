@@ -3,6 +3,7 @@
 import Anthropic from '@anthropic-ai/sdk'
 import logger from './logger'
 import { fireWithBreaker, anthropicBreaker, isCircuitOpenError } from './circuitBreaker'
+import { getModelForOperation } from './modelConfig'
 import type { UserData } from '../../shared/types'
 import {
   buildReading1Prompt,
@@ -36,7 +37,7 @@ async function callClaude(prompt: string): Promise<ClaudeResponse> {
   try {
     const response = await fireWithBreaker(anthropicBreaker, () =>
       anthropic.messages.create({
-        model: 'claude-sonnet-4-20250514',
+        model: getModelForOperation('conversation'),
         max_tokens: 1000,
         messages: [{ role: 'user', content: prompt }],
       }),

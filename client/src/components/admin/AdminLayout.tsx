@@ -24,6 +24,7 @@ const NAV_ITEMS = [
   { path: "/admin/intent-configs", label: "Intent Configs", icon: Brain },
   { path: "/admin/follow-ups", label: "Follow-Ups", icon: Mail },
   { path: "/admin/marketplace", label: "Marketplace", icon: LayoutGrid },
+  { path: "/admin/settings", label: "Settings", icon: Settings },
 ];
 
 interface AdminLayoutProps {

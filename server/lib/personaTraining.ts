@@ -8,6 +8,7 @@
 import { db } from './db';
 import { personas, personaPrompts, chatSessions, chatMessages } from '@shared/schema';
 import { eq, and, desc, gte } from 'drizzle-orm';
+import { getModelForOperation } from './modelConfig';
 import Anthropic from '@anthropic-ai/sdk';
 import logger from './logger';
 import { fireWithBreaker, anthropicBreaker } from './circuitBreaker';
@@ -134,7 +135,7 @@ Return JSON:
   try {
     const response = await fireWithBreaker(anthropicBreaker, () =>
       anthropic.messages.create({
-        model: 'claude-sonnet-4-20250514',
+        model: getModelForOperation('conversation'),
         max_tokens: 500,
         messages: [{ role: 'user', content: prompt }],
       }),
@@ -255,7 +256,7 @@ Return JSON:
   try {
     const response = await fireWithBreaker(anthropicBreaker, () =>
       anthropic.messages.create({
-        model: 'claude-sonnet-4-20250514',
+        model: getModelForOperation('conversation'),
         max_tokens: 500,
         messages: [{ role: 'user', content: prompt }],
       }),

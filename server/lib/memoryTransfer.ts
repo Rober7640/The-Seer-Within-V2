@@ -8,6 +8,7 @@ import { userMemory, personas, chatSessions } from '@shared/schema';
 import { eq, and, desc } from 'drizzle-orm';
 import Anthropic from '@anthropic-ai/sdk';
 import logger from './logger';
+import { getModelForOperation } from './modelConfig';
 import { fireWithBreaker, anthropicBreaker } from './circuitBreaker';
 
 const anthropic = new Anthropic({
@@ -150,7 +151,7 @@ Keep it under 100 words.`;
   try {
     const response = await fireWithBreaker(anthropicBreaker, () =>
       anthropic.messages.create({
-        model: 'claude-sonnet-4-20250514',
+        model: getModelForOperation('summarization'),
         max_tokens: 200,
         messages: [{ role: 'user', content: prompt }],
       }),

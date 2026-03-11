@@ -43,6 +43,7 @@ const SafetyDashboard = lazy(() => import("@/pages/admin/SafetyDashboard"));
 const IntentConfigEditor = lazy(() => import("@/pages/admin/IntentConfigEditor"));
 const FollowUpsDashboard = lazy(() => import("@/pages/admin/FollowUpsDashboard"));
 const MarketplacePage = lazy(() => import("@/pages/admin/MarketplacePage"));
+const SettingsPage = lazy(() => import("@/pages/admin/SettingsPage"));
 
 function LazyFallback() {
   return (
@@ -128,6 +129,7 @@ function Router() {
         <Route path="/admin/intent-configs" component={IntentConfigEditor} />
         <Route path="/admin/follow-ups" component={FollowUpsDashboard} />
         <Route path="/admin/marketplace" component={MarketplacePage} />
+        <Route path="/admin/settings" component={SettingsPage} />
 
         <Route component={NotFound} />
       </Switch>

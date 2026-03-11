@@ -5,6 +5,7 @@
 // Max 3 emails per user lifetime. Stops if user returns between sends.
 
 import Anthropic from '@anthropic-ai/sdk';
+import { getModelForOperation } from './modelConfig';
 import { Resend } from 'resend';
 import { db } from './db';
 import {
@@ -322,7 +323,7 @@ Return ONLY valid JSON with this exact structure:
   try {
     const response = await fireWithBreaker(anthropicBreaker, () =>
       anthropic.messages.create({
-        model: 'claude-haiku-4-5-20251001',
+        model: getModelForOperation('greeting'),
         max_tokens: 600,
         messages: [{ role: 'user', content: prompt }],
       }),

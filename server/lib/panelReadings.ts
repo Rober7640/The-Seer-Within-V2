@@ -8,6 +8,7 @@ import { eq, and } from 'drizzle-orm';
 import { loadUserContext } from './memoryManager';
 import Anthropic from '@anthropic-ai/sdk';
 import logger from './logger';
+import { getModelForOperation } from './modelConfig';
 import { fireWithBreaker, anthropicBreaker } from './circuitBreaker';
 
 const anthropic = new Anthropic({
@@ -100,7 +101,7 @@ Return JSON:
   try {
     const response = await fireWithBreaker(anthropicBreaker, () =>
       anthropic.messages.create({
-        model: 'claude-sonnet-4-20250514',
+        model: getModelForOperation('conversation'),
         max_tokens: 300,
         messages: [{ role: 'user', content: prompt }],
       }),
@@ -165,7 +166,7 @@ Keep it warm and encouraging. Under 75 words. Do not use "the guides" - say "the
   try {
     const response = await fireWithBreaker(anthropicBreaker, () =>
       anthropic.messages.create({
-        model: 'claude-sonnet-4-20250514',
+        model: getModelForOperation('conversation'),
         max_tokens: 200,
         messages: [{ role: 'user', content: prompt }],
       }),

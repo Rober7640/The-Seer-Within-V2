@@ -13,6 +13,7 @@ import { summarizeSession } from '../lib/memoryManager';
 import { getPersonaPricing } from '../lib/personaPricing';
 import { initSession, sendMessage, generateGreeting } from '../lib/chatEngine';
 import { isPersonaOnline } from '../lib/personaManager';
+import { getModelForOperation } from '../lib/modelConfig';
 import { chatLimiter } from '../lib/rateLimiter';
 import logger from '../lib/logger';
 import Anthropic from '@anthropic-ai/sdk';
@@ -531,7 +532,7 @@ Return only the message text, no quotes or labels.`;
     let teaserText = '';
     try {
       const response = await anthropic.messages.create({
-        model: 'claude-3-5-haiku-20241022',
+        model: getModelForOperation('greeting'),
         max_tokens: 120,
         system: persona[0].baseSystemPrompt,
         messages: [{ role: 'user', content: prompt }],

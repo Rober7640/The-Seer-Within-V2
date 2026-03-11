@@ -272,6 +272,27 @@ async function seedDatabase() {
         configType: 'number',
         description: 'Platform commission rate for marketplace vendors',
       },
+      {
+        configKey: 'available_models',
+        configValue: JSON.stringify([
+          { id: 'claude-sonnet-4-5-20250929', label: 'Sonnet 4.5', tier: 'premium' },
+          { id: 'claude-haiku-4-5-20251001', label: 'Haiku 4.5', tier: 'basic' },
+        ]),
+        configType: 'json',
+        description: 'List of available AI models for persona selection',
+      },
+      {
+        configKey: 'default_conversation_model',
+        configValue: 'claude-sonnet-4-5-20250929',
+        configType: 'text',
+        description: 'Default model for main conversation responses',
+      },
+      {
+        configKey: 'default_basic_model',
+        configValue: 'claude-haiku-4-5-20251001',
+        configType: 'text',
+        description: 'Default model for greetings and summaries',
+      },
     ];
 
     for (const config of configs) {

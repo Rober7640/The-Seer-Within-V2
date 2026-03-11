@@ -12,6 +12,7 @@
 
 import Anthropic from '@anthropic-ai/sdk';
 import { Resend } from 'resend';
+import { getModelForOperation } from './modelConfig';
 import { db } from './db';
 import {
   users,
@@ -401,7 +402,7 @@ Return ONLY valid JSON:
   try {
     const response = await fireWithBreaker(anthropicBreaker, () =>
       anthropic.messages.create({
-        model: 'claude-haiku-4-5-20251001',
+        model: getModelForOperation('greeting'),
         max_tokens: 600,
         messages: [{ role: 'user', content: prompt }],
       }),

@@ -92,6 +92,8 @@ const createPersonaSchema = z.object({
   sortOrder: z.number().int().optional(),
   yearsExperience: z.number().int().min(0).max(100).nullable().optional(),
   readingsCount: z.number().int().min(0).nullable().optional(),
+  aiModel: z.string().nullable().optional(),
+  basicModel: z.string().nullable().optional(),
 });
 
 const updatePersonaSchema = z.object({
@@ -128,6 +130,8 @@ const updatePersonaSchema = z.object({
   overallRating: z.number().min(0).max(5).nullable().optional(),
   yearsExperience: z.number().int().min(0).max(100).nullable().optional(),
   readingsCount: z.number().int().min(0).nullable().optional(),
+  aiModel: z.string().nullable().optional(),
+  basicModel: z.string().nullable().optional(),
 });
 
 const createReviewSchema = z.object({

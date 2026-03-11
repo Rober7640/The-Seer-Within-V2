@@ -24,7 +24,7 @@ import {
   validateResponse,
   buildIntentContext,
 } from './personaIntent';
-import { getModelForOperation } from './modelConfig';
+import { getModelForOperation, getConversationModel, getBasicModel } from './modelConfig';
 import {
   calculateVedicChart,
   formatVedicChartForPrompt,
@@ -308,6 +308,8 @@ interface PersonaConfig {
   displayName: string;
   baseSystemPrompt: string;
   personality: string | null;
+  aiModel: string | null;
+  basicModel: string | null;
 }
 
 /**
@@ -327,6 +329,8 @@ async function loadPersonaConfig(personaId: string): Promise<PersonaConfig | nul
     displayName: persona[0].displayName,
     baseSystemPrompt: persona[0].baseSystemPrompt,
     personality: persona[0].personality,
+    aiModel: persona[0].aiModel,
+    basicModel: persona[0].basicModel,
   };
 }
 
@@ -1234,9 +1238,10 @@ export async function sendMessage(
   messageHistory.push({ role: 'user', content: userMessage });
 
   try {
+    const conversationModel = await getConversationModel(personaConfig.aiModel);
     const response = await fireWithBreaker(anthropicBreaker, () =>
       anthropic.messages.create({
-        model: getModelForOperation('conversation'),
+        model: conversationModel,
         max_tokens: 1000,
         system,
         messages: messageHistory,

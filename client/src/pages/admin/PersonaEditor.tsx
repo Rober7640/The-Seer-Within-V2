@@ -145,6 +145,12 @@ export default function PersonaEditor() {
   const [sessionFeedbackItems, setSessionFeedbackItems] = useState<SessionFeedbackItem[]>([]);
   const [feedbackLoading, setFeedbackLoading] = useState(false);
 
+  // Per-persona AI model overrides
+  const [aiModel, setAiModel] = useState<string>("");  // "" = use default
+  const [basicModel, setBasicModel] = useState<string>("");  // "" = use default
+  const [availableModels, setAvailableModels] = useState<Array<{ id: string; label: string; tier: string }>>([]);
+  const [modelDefaults, setModelDefaults] = useState({ conversationModel: "", basicModel: "" });
+
   // Extract suggestedQuestions from personality JSON
   const extractSuggestedQuestions = (personalityJson: string): string[] => {
     try {
@@ -329,6 +335,10 @@ export default function PersonaEditor() {
 
           // Overall rating
           setOverallRating(data.overallRating ?? null);
+
+          // Per-persona model overrides
+          setAiModel(data.aiModel || "");
+          setBasicModel(data.basicModel || "");
         }
 
         // Fetch reviews separately
@@ -363,6 +373,26 @@ export default function PersonaEditor() {
     }
     fetchPersona();
   }, [isNew, personaId]);
+
+  // Fetch available AI models for dropdowns
+  useEffect(() => {
+    async function fetchModels() {
+      try {
+        const res = await adminFetch("/api/admin/settings/models");
+        if (res.ok) {
+          const data = await res.json();
+          setAvailableModels(data.availableModels || []);
+          setModelDefaults({
+            conversationModel: data.defaultConversationModel || "",
+            basicModel: data.defaultBasicModel || "",
+          });
+        }
+      } catch {
+        // non-fatal — dropdowns will just be empty
+      }
+    }
+    fetchModels();
+  }, []);
 
   const updateField = (field: keyof PersonaFormData, value: any) => {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -479,6 +509,10 @@ export default function PersonaEditor() {
       // Social proof stats
       payload.yearsExperience = form.yearsExperience;
       payload.readingsCount = form.readingsCount;
+
+      // Per-persona AI model overrides (empty string = null = use default)
+      payload.aiModel = aiModel || null;
+      payload.basicModel = basicModel || null;
 
       const url = isNew
         ? "/api/admin/personas"
@@ -1292,6 +1326,55 @@ export default function PersonaEditor() {
                     placeholder="60"
                   />
                   <p className="text-xs text-gray-600 mt-1">Coins charged per minute of session. Shown on guide profile. Default: 60.</p>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* AI Model Selection */}
+            <Card className="bg-gray-900 border-gray-800">
+              <CardHeader>
+                <CardTitle className="text-white text-sm">AI Model</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <label className="text-xs text-gray-400 mb-1 block">
+                    Conversation Model
+                  </label>
+                  <select
+                    value={aiModel}
+                    onChange={(e) => setAiModel(e.target.value)}
+                    className="w-full bg-gray-800 text-white rounded-lg px-3 py-2 text-sm border border-gray-700 focus:border-purple-500 focus:outline-none"
+                  >
+                    <option value="">
+                      Use default{modelDefaults.conversationModel ? ` (${availableModels.find(m => m.id === modelDefaults.conversationModel)?.label || modelDefaults.conversationModel})` : ""}
+                    </option>
+                    {availableModels.map((m) => (
+                      <option key={m.id} value={m.id}>
+                        {m.label} — {m.tier}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="text-xs text-gray-600 mt-1">Model for main chat responses. Leave as default unless you want to override.</p>
+                </div>
+                <div>
+                  <label className="text-xs text-gray-400 mb-1 block">
+                    Basic Model
+                  </label>
+                  <select
+                    value={basicModel}
+                    onChange={(e) => setBasicModel(e.target.value)}
+                    className="w-full bg-gray-800 text-white rounded-lg px-3 py-2 text-sm border border-gray-700 focus:border-purple-500 focus:outline-none"
+                  >
+                    <option value="">
+                      Use default{modelDefaults.basicModel ? ` (${availableModels.find(m => m.id === modelDefaults.basicModel)?.label || modelDefaults.basicModel})` : ""}
+                    </option>
+                    {availableModels.map((m) => (
+                      <option key={m.id} value={m.id}>
+                        {m.label} — {m.tier}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="text-xs text-gray-600 mt-1">Model for greetings & summaries. Recommended: a cheaper model like Haiku.</p>
                 </div>
               </CardContent>
             </Card>
