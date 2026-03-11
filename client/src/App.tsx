@@ -78,6 +78,12 @@ function Router() {
         <Route path="/login" component={LoginPage} />
         <Route path="/forgot-password" component={ForgotPasswordPage} />
         <Route path="/reset-password/:token" component={ResetPasswordPage} />
+        <Route path="/verify-email/:token">
+          {(params: { token: string }) => {
+            window.location.href = `/api/auth/verify-email/${params.token}`;
+            return null;
+          }}
+        </Route>
         <Route path="/magic-auth" component={MagicAuthPage} />
 
         {/* Chat service routes with layout */}

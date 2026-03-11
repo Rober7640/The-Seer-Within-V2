@@ -35,7 +35,7 @@ const resend = process.env.RESEND_API_KEY
   ? new Resend(process.env.RESEND_API_KEY)
   : null;
 
-const FROM_EMAIL = process.env.FOLLOW_UP_FROM_EMAIL || 'hello@theseerwithin.com';
+const FROM_EMAIL = process.env.FOLLOW_UP_FROM_EMAIL || 'hi@theseerwithin.com';
 const FROM_NAME  = process.env.FOLLOW_UP_FROM_NAME  || 'The Seer Within';
 const BASE_URL   = process.env.BASE_URL              || 'http://localhost:5000';
 
@@ -463,7 +463,9 @@ async function sendTopupEmail(
     ctaText: cfg.ctaText,
     unsubscribeUrl,
     privacyUrl: `${BASE_URL}/privacy`,
-    avatarUrl: candidate.avatarUrl || undefined,
+    avatarUrl: candidate.avatarUrl
+      ? (candidate.avatarUrl.startsWith('http') ? candidate.avatarUrl : `${BASE_URL}${candidate.avatarUrl}`)
+      : undefined,
   });
 
   const fullText = buildFollowUpText({
@@ -508,7 +510,7 @@ async function sendTopupEmail(
       resend!.emails.send({
         from: `${candidate.fromName} <${candidate.fromEmail}>`,
         to: candidate.email,
-        replyTo: FROM_EMAIL,
+        replyTo: candidate.fromEmail,
         subject: email.subject,
         html: fullHtml,
         text: fullText,

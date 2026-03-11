@@ -13,7 +13,7 @@ const resend = process.env.RESEND_API_KEY
   ? new Resend(process.env.RESEND_API_KEY)
   : null;
 
-const GLOBAL_FROM_EMAIL = process.env.FOLLOW_UP_FROM_EMAIL || 'hello@theseerwithin.com';
+const GLOBAL_FROM_EMAIL = process.env.FOLLOW_UP_FROM_EMAIL || 'hi@theseerwithin.com';
 const GLOBAL_FROM_NAME = process.env.FOLLOW_UP_FROM_NAME || 'The Seer Within';
 const BASE_URL = process.env.BASE_URL || 'http://localhost:5000';
 
@@ -42,6 +42,7 @@ export async function sendSessionTimeoutEmail(sessionId: string): Promise<void> 
     // Load persona
     const persona = await db.select({
       displayName: personas.displayName,
+      slug: personas.slug,
       avatarUrl: personas.avatarUrl,
       fromEmail: personas.fromEmail,
       fromName: personas.fromName,
@@ -51,6 +52,7 @@ export async function sendSessionTimeoutEmail(sessionId: string): Promise<void> 
       .limit(1);
 
     const personaName = persona[0]?.displayName || 'Your Advisor';
+    const personaSlug = persona[0]?.slug;
     const fromEmail = persona[0]?.fromEmail || GLOBAL_FROM_EMAIL;
     const fromName = persona[0]?.fromName || personaName;
 
@@ -66,7 +68,7 @@ export async function sendSessionTimeoutEmail(sessionId: string): Promise<void> 
 
     const sessionSummary = buildQuickSummary(messages.reverse(), personaName);
     const minutesUsed = session[0].coinsCharged || 0;
-    const ctaUrl = `${BASE_URL}/chat`;
+    const ctaUrl = personaSlug ? `${BASE_URL}/chat/${personaSlug}` : `${BASE_URL}/chat`;
 
     const htmlContent = buildSessionTimeoutHtml({
       personaName,
@@ -74,7 +76,9 @@ export async function sendSessionTimeoutEmail(sessionId: string): Promise<void> 
       sessionSummary,
       minutesUsed,
       ctaUrl,
-      logoUrl: persona[0]?.avatarUrl || undefined,
+      logoUrl: persona[0]?.avatarUrl
+        ? (persona[0].avatarUrl.startsWith('http') ? persona[0].avatarUrl : `${BASE_URL}${persona[0].avatarUrl}`)
+        : undefined,
     });
 
     const textContent = buildSessionTimeoutText({
@@ -94,7 +98,7 @@ export async function sendSessionTimeoutEmail(sessionId: string): Promise<void> 
       resend!.emails.send({
         from: `${fromName} <${fromEmail}>`,
         to: user[0].email,
-        replyTo: GLOBAL_FROM_EMAIL,
+        replyTo: fromEmail,
         subject: `Your session with ${personaName} has ended`,
         html: htmlContent,
         text: textContent,

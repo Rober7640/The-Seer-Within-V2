@@ -15,6 +15,7 @@ import { initSession, sendMessage, generateGreeting } from '../lib/chatEngine';
 import { isPersonaOnline } from '../lib/personaManager';
 import { chatLimiter } from '../lib/rateLimiter';
 import logger from '../lib/logger';
+import { sendSessionTimeoutEmail } from '../lib/sessionTimeoutEmail';
 import Anthropic from '@anthropic-ai/sdk';
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY || '' });
@@ -393,6 +394,14 @@ router.post('/session/:id/end', requireAuth, async (req: Request, res: Response)
     summarizeSession(sessionId).catch(err =>
       logger.error('Session summarization failed:', err)
     );
+
+    // Send timeout email if session was ended due to idle
+    const reason = req.body?.reason;
+    if (reason === 'idle') {
+      sendSessionTimeoutEmail(sessionId).catch(err =>
+        logger.error('Failed to send idle timeout email:', err)
+      );
+    }
 
     const remainingCoins = await getRemainingCoins(req.userId!);
 

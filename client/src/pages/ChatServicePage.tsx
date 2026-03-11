@@ -518,7 +518,7 @@ export default function ChatServicePage() {
           if (remaining <= 0) {
             if (idleCountdownRef.current) { clearInterval(idleCountdownRef.current); idleCountdownRef.current = null; }
             setIdleWarning(false);
-            endSession();
+            endSession('idle');
             toast({ title: "Session paused", description: "Your session was paused to protect your credits." });
           }
         }, 1000);
@@ -835,7 +835,7 @@ export default function ChatServicePage() {
 
   // Submit birth data for astrology personas — calculates natal chart and then fetches greeting
   // End the current session
-  const endSession = useCallback(async () => {
+  const endSession = useCallback(async (reason?: string) => {
     if (!session) return;
 
     try {
@@ -849,6 +849,7 @@ export default function ChatServicePage() {
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(reason ? { reason } : {}),
         },
       );
 
