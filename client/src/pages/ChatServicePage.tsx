@@ -149,6 +149,7 @@ export default function ChatServicePage() {
   const [refillBannerDismissed, setRefillBannerDismissed] = useState(false);
   const [teaserMessage, setTeaserMessage] = useState<string | null>(null);
   const [showTeaserModal, setShowTeaserModal] = useState(false);
+  const [welcomeEligible, setWelcomeEligible] = useState(true);
 
   // Persona status state
   const [personaStatus, setPersonaStatus] = useState<Status>('busy-slow');
@@ -274,6 +275,15 @@ export default function ChatServicePage() {
       setCoinBalance(coins);
     }
   }, [user, session]);
+
+  // Check if user is eligible for the one-time welcome pack
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    authFetch("/api/credits/welcome-eligible")
+      .then(res => res.ok ? res.json() : null)
+      .then(data => { if (data) setWelcomeEligible(data.eligible); })
+      .catch(() => {});
+  }, [isAuthenticated]);
 
   // Fetch available personas (wait for auth to finish so we have user.defaultPersonaId)
   useEffect(() => {
@@ -966,6 +976,114 @@ export default function ChatServicePage() {
     setPreSessionGreeting(null);
     lastAutoFetchedPersonaId.current = null; // allow auto-fetch to re-trigger for same persona
   }, []);
+
+  // Shared resume logic after a credit purchase (used by OutOfCreditsModal & TeaserCreditModal)
+  const resumeAfterPurchase = useCallback(async (newBalance: number) => {
+    setCoinBalance(newBalance);
+
+    toast({ title: "Credits purchased!", description: "Your reading will continue now." });
+
+    // Insert "Credits Purchased" divider
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: `credits-purchased-${Date.now()}`,
+        role: "assistant" as const,
+        content: "",
+        sentAt: new Date().toISOString(),
+        isCreditsPurchasedDivider: true,
+      },
+    ]);
+
+    // Auto-start a new session with the last 4 real messages for context
+    if (selectedPersonaId) {
+      const realMessages = messages.filter(
+        (m) => m.content && !m.isReadingEndedDivider && !m.isCreditsPurchasedDivider
+      );
+      const last4 = realMessages.slice(-4).map((m) => ({
+        role: m.role,
+        content: m.content,
+      }));
+
+      try {
+        const startRes = await authFetch("/api/chat-service/session/start", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            personaId: selectedPersonaId,
+            continuationMessages: last4,
+          }),
+        });
+
+        if (startRes.ok) {
+          const startData = await startRes.json();
+          const newSessionId = startData.sessionId;
+          setSession({
+            id: newSessionId,
+            personaId: startData.personaId,
+            status: "active",
+            startedAt: new Date().toISOString(),
+            durationSeconds: 0,
+            coinsCharged: 0,
+          });
+          setElapsedSeconds(0);
+          setShowRefillBanner(false);
+          setRefillBannerDismissed(false);
+          outOfCreditsFiredRef.current = false;
+          sessionStartTimeRef.current = Date.now();
+          lastUserMessageAt.current = Date.now();
+          setReadingEnded(false);
+          if (startData.remainingCoins !== undefined) {
+            setCoinBalance(startData.remainingCoins);
+            setInitialCoinBalance(startData.remainingCoins);
+          }
+          if (startData.pricing) {
+            setSessionPricing(startData.pricing);
+          }
+
+          // If the last message was from the user (unanswered due to 402),
+          // auto-send it to the AI so they get a response without retyping
+          const lastReal = realMessages[realMessages.length - 1];
+          if (lastReal && lastReal.role === "user") {
+            setIsTyping(true);
+            try {
+              const msgRes = await authFetch(
+                `/api/chat-service/session/${newSessionId}/message`,
+                {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ content: lastReal.content }),
+                },
+              );
+              if (msgRes.ok) {
+                const msgData = await msgRes.json();
+                setMessages((prev) => [
+                  ...prev,
+                  {
+                    id: msgData.assistantMessageId || `assistant-${Date.now()}`,
+                    role: "assistant" as const,
+                    content: msgData.message,
+                    sentAt: new Date().toISOString(),
+                    tarotDraw: msgData.tarotDraw || false,
+                    chartData: msgData.chartData ?? undefined,
+                  },
+                ]);
+                if (msgData.remainingCoins !== undefined) {
+                  setCoinBalance(msgData.remainingCoins);
+                }
+              }
+            } catch (err) {
+              console.error("Failed to auto-send unanswered message:", err);
+            } finally {
+              setIsTyping(false);
+            }
+          }
+        }
+      } catch (err) {
+        console.error("Failed to auto-start session after credit purchase:", err);
+      }
+    }
+  }, [selectedPersonaId, messages, toast]);
 
   // Switch to a different guide: always fetch greeting immediately without any intermediate screen.
   // If there was an active billing session >= 3 min, show end-reading confirmation first.
@@ -1721,7 +1839,7 @@ export default function ChatServicePage() {
               teaserMessage={teaserMessage}
               onStartSession={fetchGreeting}
               onBuyCredits={() => setShowBuyCredits(true)}
-              onRefillToSeeTeaser={() => setShowTeaserModal(true)}
+              onRefillToSeeTeaser={() => welcomeEligible ? setShowTeaserModal(true) : setShowBuyCredits(true)}
             />
           )}
 
@@ -2076,111 +2194,8 @@ export default function ChatServicePage() {
         personaAvatarUrl={selectedPersona?.avatarUrl}
         pricingTiers={sessionPricing?.tiers}
         onSuccess={async (newBalance: number) => {
-          setCoinBalance(newBalance);
           setShowOutOfCredits(false);
-
-          toast({ title: "Credits purchased!", description: "Your reading will continue now." });
-
-          // Insert "Credits Purchased" divider
-          setMessages((prev) => [
-            ...prev,
-            {
-              id: `credits-purchased-${Date.now()}`,
-              role: "assistant" as const,
-              content: "",
-              sentAt: new Date().toISOString(),
-              isCreditsPurchasedDivider: true,
-            },
-          ]);
-
-          // Auto-start a new session with the last 4 real messages for context
-          if (selectedPersonaId) {
-            const realMessages = messages.filter(
-              (m) => m.content && !m.isReadingEndedDivider && !m.isCreditsPurchasedDivider
-            );
-            const last4 = realMessages.slice(-4).map((m) => ({
-              role: m.role,
-              content: m.content,
-            }));
-
-            try {
-              const startRes = await authFetch("/api/chat-service/session/start", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                  personaId: selectedPersonaId,
-                  continuationMessages: last4,
-                }),
-              });
-
-              if (startRes.ok) {
-                const startData = await startRes.json();
-                const newSessionId = startData.sessionId;
-                setSession({
-                  id: newSessionId,
-                  personaId: startData.personaId,
-                  status: "active",
-                  startedAt: new Date().toISOString(),
-                  durationSeconds: 0,
-                  coinsCharged: 0,
-                });
-                setElapsedSeconds(0);
-                setShowRefillBanner(false);
-                setRefillBannerDismissed(false);
-                outOfCreditsFiredRef.current = false;
-                sessionStartTimeRef.current = Date.now();
-                lastUserMessageAt.current = Date.now();
-                setReadingEnded(false);
-                if (startData.remainingCoins !== undefined) {
-                  setCoinBalance(startData.remainingCoins);
-                  setInitialCoinBalance(startData.remainingCoins);
-                }
-                if (startData.pricing) {
-                  setSessionPricing(startData.pricing);
-                }
-
-                // If the last message was from the user (unanswered due to 402),
-                // auto-send it to the AI so they get a response without retyping
-                const lastReal = realMessages[realMessages.length - 1];
-                if (lastReal && lastReal.role === "user") {
-                  setIsTyping(true);
-                  try {
-                    const msgRes = await authFetch(
-                      `/api/chat-service/session/${newSessionId}/message`,
-                      {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ content: lastReal.content }),
-                      },
-                    );
-                    if (msgRes.ok) {
-                      const msgData = await msgRes.json();
-                      setMessages((prev) => [
-                        ...prev,
-                        {
-                          id: msgData.assistantMessageId || `assistant-${Date.now()}`,
-                          role: "assistant" as const,
-                          content: msgData.message,
-                          sentAt: new Date().toISOString(),
-                          tarotDraw: msgData.tarotDraw || false,
-                          chartData: msgData.chartData ?? undefined,
-                        },
-                      ]);
-                      if (msgData.remainingCoins !== undefined) {
-                        setCoinBalance(msgData.remainingCoins);
-                      }
-                    }
-                  } catch (err) {
-                    console.error("Failed to auto-send unanswered message:", err);
-                  } finally {
-                    setIsTyping(false);
-                  }
-                }
-              }
-            } catch (err) {
-              console.error("Failed to auto-start session after credit purchase:", err);
-            }
-          }
+          await resumeAfterPurchase(newBalance);
         }}
       />
 
@@ -2230,6 +2245,13 @@ export default function ChatServicePage() {
         open={showTeaserModal}
         onOpenChange={setShowTeaserModal}
         personaId={selectedPersonaId}
+        onSuccess={(newBalance) => {
+          setShowTeaserModal(false);
+          setWelcomeEligible(false);
+          setCoinBalance(newBalance);
+          setInitialCoinBalance(newBalance);
+          fetchGreeting();
+        }}
       />
 
       {/* Session Feedback Modal — shown when user ends a reading after 5+ minutes */}

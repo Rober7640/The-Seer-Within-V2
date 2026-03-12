@@ -18,6 +18,22 @@ const stripe = stripeKey && stripeKey !== 'sk_test_placeholder'
   ? new Stripe(stripeKey)
   : null;
 
+// Special one-time welcome pack — not part of regular persona pricing
+const WELCOME_TIER = {
+  packageType: 'welcome',
+  coins: 160,
+  bonusCoins: 0,
+  totalCoins: 160,
+  priceUsd: 299,   // $2.99
+  label: '160 coins',
+};
+
+/** Resolve tier: handle special "welcome" packageType or look up from persona pricing */
+function resolveTier(packageType: string, pricing: { tiers: Array<{ packageType: string; coins: number; bonusCoins: number; totalCoins: number; priceUsd: number; label: string }> }) {
+  if (packageType === 'welcome') return WELCOME_TIER;
+  return pricing.tiers.find(t => t.packageType === packageType);
+}
+
 const checkoutSchema = z.object({
   packageType: z.string().min(1),
   personaId: z.string().min(1).optional(),
@@ -55,6 +71,27 @@ router.get('/balance', requireAuth, async (req: Request, res: Response) => {
   } catch (error) {
     logger.error('Get balance error:', error);
     res.status(500).json({ error: 'Failed to get balance' });
+  }
+});
+
+// GET /api/credits/welcome-eligible — check if user can see the $2.99 welcome offer
+router.get('/welcome-eligible', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const existing = await db.select({ id: creditPurchases.id })
+      .from(creditPurchases)
+      .where(
+        and(
+          eq(creditPurchases.userId, req.userId!),
+          eq(creditPurchases.packageType, 'welcome'),
+          eq(creditPurchases.status, 'completed'),
+        ),
+      )
+      .limit(1);
+
+    res.json({ eligible: existing.length === 0 });
+  } catch (error) {
+    logger.error('Welcome eligibility check error:', error);
+    res.json({ eligible: false });
   }
 });
 
@@ -241,7 +278,7 @@ router.post('/create-payment-intent', requireAuth, async (req: Request, res: Res
   let tier;
   try {
     const pricing = personaId ? await getPersonaPricing(personaId) : DEFAULT_PRICING;
-    tier = pricing.tiers.find(t => t.packageType === packageType);
+    tier = resolveTier(packageType, pricing);
     if (!tier) {
       res.status(400).json({ error: 'Invalid package type' });
       return;
@@ -416,7 +453,7 @@ router.post('/create-order', requireAuth, async (req: Request, res: Response) =>
   let tier;
   try {
     const pricing = personaId ? await getPersonaPricing(personaId) : DEFAULT_PRICING;
-    tier = pricing.tiers.find(t => t.packageType === packageType);
+    tier = resolveTier(packageType, pricing);
     if (!tier) {
       res.status(400).json({ error: 'Invalid package type' });
       return;

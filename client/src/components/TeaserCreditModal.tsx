@@ -1,39 +1,28 @@
-import { useState } from "react";
-import { authFetch } from "@/hooks/useAuth";
+import { useState, useEffect } from "react";
+import { useAuth, authFetch } from "@/hooks/useAuth";
 import { X } from "lucide-react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+import PayPalCreditButton from "@/components/PayPalCreditButton";
+import StripeCardForm from "@/components/StripeCardForm";
 
 interface TeaserCreditModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   personaId: string | null;
+  onSuccess?: (newBalance: number) => void;
 }
 
 export default function TeaserCreditModal({
   open,
   onOpenChange,
   personaId,
+  onSuccess,
 }: TeaserCreditModalProps) {
-  const [isCheckingOut, setIsCheckingOut] = useState(false);
+  const { refreshUser } = useAuth();
 
-  const handleSeeAnswer = async () => {
-    if (!personaId) return;
-    setIsCheckingOut(true);
-    try {
-      const res = await authFetch("/api/credits/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ packageType: "starter", personaId }),
-      });
-      if (res.ok) {
-        const data = await res.json();
-        if (data.url) window.location.href = data.url;
-      }
-    } catch (err) {
-      console.error("Checkout error:", err);
-    } finally {
-      setIsCheckingOut(false);
-    }
+  const handleSuccess = (newBalance: number) => {
+    onSuccess?.(newBalance);
+    refreshUser();
   };
 
   return (
@@ -50,14 +39,13 @@ export default function TeaserCreditModal({
             <X className="w-4 h-4 text-white/70" />
           </button>
 
-          <div className="px-6 pt-8 pb-6">
+          <div className="px-6 pt-8 pb-6 max-h-[85vh] overflow-y-auto">
             {/* Title */}
             <h2 className="text-white text-xl font-bold text-center mb-2">
               Refill credits to see the answer
             </h2>
             <p className="text-white/60 text-sm text-center mb-6 leading-relaxed">
-              You need &gt;30 credits on the balance to see the message.
-              Credits will not be deducted.
+              Your reading is paused. Refill credits to pick up where you left off.
             </p>
 
             {/* Offer card */}
@@ -84,25 +72,29 @@ export default function TeaserCreditModal({
               </div>
             </div>
 
-            {/* CTA button */}
+            {/* PayPal */}
+            <div className="mb-3">
+              <PayPalCreditButton
+                packageType="welcome"
+                personaId={personaId}
+                onSuccess={handleSuccess}
+              />
+            </div>
+
+            {/* Stripe inline card */}
+            <StripeCardForm
+              packageType="welcome"
+              personaId={personaId}
+              priceLabel="$2.99"
+              onSuccess={handleSuccess}
+            />
+
+            {/* Dismiss */}
             <button
-              onClick={handleSeeAnswer}
-              disabled={isCheckingOut}
-              className="w-full py-3.5 rounded-xl text-white font-bold text-base transition-all disabled:opacity-70 disabled:cursor-not-allowed"
-              style={{
-                background: isCheckingOut
-                  ? "rgba(255,255,255,0.15)"
-                  : "linear-gradient(90deg, #7c3aed 0%, #c026d3 50%, #ea580c 100%)",
-              }}
+              onClick={() => onOpenChange(false)}
+              className="mt-4 w-full text-[13px] text-white/35 hover:text-white/55 transition-colors"
             >
-              {isCheckingOut ? (
-                <span className="flex items-center justify-center gap-2">
-                  <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  Processing...
-                </span>
-              ) : (
-                "See the answer"
-              )}
+              Not now
             </button>
           </div>
         </div>
