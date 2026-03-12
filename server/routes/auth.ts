@@ -146,7 +146,10 @@ router.get('/verify-email/:token', async (req: Request, res: Response) => {
 
     const user = result[0];
     if (!user) {
-      res.status(404).json({ error: 'Invalid or expired verification link' });
+      // Token was already used (cleared after first verification) or never existed.
+      // Redirect to login with a friendly message instead of raw JSON error.
+      const baseUrl = process.env.BASE_URL || 'http://localhost:5000';
+      res.redirect(`${baseUrl}/login?verified=already`);
       return;
     }
 
