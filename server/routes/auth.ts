@@ -5,7 +5,7 @@ import { db } from '../lib/db';
 import { users, personas, chatSessions } from '@shared/schema';
 import { eq, and, isNull, sql } from 'drizzle-orm';
 import { hashPassword, verifyPassword, generateToken, requireAuth } from '../lib/auth';
-import { verifyMagicLinkToken } from '../lib/magicLink';
+import { verifyMagicLinkToken, generateMagicLinkToken } from '../lib/magicLink';
 import { authLimiter, passwordResetLimiter } from '../lib/rateLimiter';
 import { sendVerificationEmail } from '../lib/verificationEmail';
 import { sendPasswordResetEmail } from '../lib/passwordResetEmail';
@@ -150,11 +150,11 @@ router.get('/verify-email/:token', async (req: Request, res: Response) => {
       return;
     }
 
-    // Check if already verified
+    // Check if already verified — still auto-login so the link works from any device
     if (user.emailVerified) {
-      // Redirect to login page with success message
+      const jwtToken = generateToken(user.id, user.email);
       const baseUrl = process.env.BASE_URL || 'http://localhost:5000';
-      res.redirect(`${baseUrl}/login?verified=already`);
+      res.redirect(`${baseUrl}/login?verified=already&token=${jwtToken}`);
       return;
     }
 
@@ -175,9 +175,10 @@ router.get('/verify-email/:token', async (req: Request, res: Response) => {
       })
       .where(eq(users.id, user.id));
 
-    // Redirect to login page with verification success
+    // Generate JWT so the user is auto-logged-in (works even on a different device/browser)
+    const jwtToken = generateToken(user.id, user.email);
     const baseUrl = process.env.BASE_URL || 'http://localhost:5000';
-    res.redirect(`${baseUrl}/login?verified=success`);
+    res.redirect(`${baseUrl}/login?verified=success&token=${jwtToken}`);
   } catch (error) {
     logger.error('Verify email error:', error);
     res.status(500).json({ error: 'Verification failed' });
@@ -632,6 +633,32 @@ router.post('/magic-verify', authLimiter, async (req: Request, res: Response) =>
   } catch (error: any) {
     logger.error('Magic verify error:', error);
     return res.status(500).json({ error: 'Verification failed' });
+  }
+});
+
+// POST /api/auth/generate-magic-token - Test helper to generate magic link tokens
+// Only available in development/test environments
+router.post('/generate-magic-token', async (req: Request, res: Response) => {
+  if (process.env.NODE_ENV === 'production') {
+    return res.status(404).json({ error: 'Not found' });
+  }
+  try {
+    const { userId, personaSlug } = req.body;
+    if (!userId || !personaSlug) {
+      return res.status(400).json({ error: 'userId and personaSlug are required' });
+    }
+    const persona = await db
+      .select({ id: personas.id })
+      .from(personas)
+      .where(eq(personas.slug, personaSlug))
+      .limit(1);
+    if (!persona[0]) {
+      return res.status(404).json({ error: `Persona '${personaSlug}' not found` });
+    }
+    const token = await generateMagicLinkToken(userId, persona[0].id, personaSlug);
+    return res.json({ token });
+  } catch (error: any) {
+    return res.status(500).json({ error: 'Failed to generate token' });
   }
 });
 

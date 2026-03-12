@@ -3,13 +3,41 @@
 
 import { Router, Request, Response } from 'express';
 import { db } from '../../lib/db';
-import { followUpEmails, userFollowUpPreferences, users } from '@shared/schema';
+import { followUpEmails, userFollowUpPreferences, users, personas } from '@shared/schema';
 import { eq, and, desc, gte, lte, count, sql } from 'drizzle-orm';
 import { z } from 'zod';
 import logger from '../../lib/logger';
 import { processFollowUpQueue } from '../../lib/followUpEmailGenerator';
+import { generateMagicLinkToken } from '../../lib/magicLink';
 
 const router = Router();
+
+// POST /api/admin/follow-ups/generate-token - Generate a magic link token for testing
+router.post('/generate-token', async (req: Request, res: Response) => {
+  try {
+    const { userId, personaSlug } = req.body;
+    if (!userId || !personaSlug) {
+      return res.status(400).json({ error: 'userId and personaSlug are required' });
+    }
+
+    // Look up the persona by slug to get its ID
+    const persona = await db
+      .select({ id: personas.id })
+      .from(personas)
+      .where(eq(personas.slug, personaSlug))
+      .limit(1);
+
+    if (!persona[0]) {
+      return res.status(404).json({ error: `Persona '${personaSlug}' not found` });
+    }
+
+    const token = await generateMagicLinkToken(userId, persona[0].id, personaSlug);
+    return res.json({ token });
+  } catch (error: any) {
+    logger.error('Admin generate-token error:', error);
+    return res.status(500).json({ error: 'Failed to generate magic link token' });
+  }
+});
 
 // POST /api/admin/follow-ups/trigger - Manually trigger the follow-up queue
 router.post('/trigger', async (req: Request, res: Response) => {

@@ -6,6 +6,7 @@ import { db } from './db';
 import { users, chatSessions, chatMessages, personas } from '@shared/schema';
 import { eq, desc } from 'drizzle-orm';
 import { buildSessionTimeoutHtml, buildSessionTimeoutText } from './emailTemplate';
+import { generateMagicLinkToken } from './magicLink';
 import logger from './logger';
 import { fireWithBreaker, resendBreaker } from './circuitBreaker';
 
@@ -68,7 +69,14 @@ export async function sendSessionTimeoutEmail(sessionId: string): Promise<void> 
 
     const sessionSummary = buildQuickSummary(messages.reverse(), personaName);
     const minutesUsed = session[0].coinsCharged || 0;
-    const ctaUrl = personaSlug ? `${BASE_URL}/chat/${personaSlug}` : `${BASE_URL}/chat`;
+
+    // Generate magic link so user is auto-logged-in when clicking the CTA
+    const magicToken = await generateMagicLinkToken(
+      session[0].userId,
+      session[0].personaId,
+      personaSlug || 'evelyn-cross',
+    );
+    const ctaUrl = `${BASE_URL}/magic-auth?t=${magicToken}`;
 
     const htmlContent = buildSessionTimeoutHtml({
       personaName,

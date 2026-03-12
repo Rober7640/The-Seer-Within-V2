@@ -453,7 +453,7 @@ async function sendTopupEmail(
     candidate.personaId,
     candidate.personaSlug,
   );
-  const ctaUrl = `${BASE_URL}/magic-auth?t=${magicToken}`;
+  const ctaUrl = `${BASE_URL}/magic-auth?t=${magicToken}&redirect=/credits`;
   const cfg = SEGMENT_CONFIG[candidate.segment];
 
   const fullHtml = buildFollowUpHtml({
