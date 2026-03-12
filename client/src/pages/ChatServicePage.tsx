@@ -1703,8 +1703,8 @@ export default function ChatServicePage() {
             </div>
           )}
 
-          {/* Pre-reading welcome — shown when guide hasn't greeted yet */}
-          {!session && !preSessionGreeting && !isStarting && !switchingToPersonaSlug && selectedPersona && (
+          {/* Pre-reading welcome — shown when guide hasn't greeted yet (hidden after reading ends) */}
+          {!session && !preSessionGreeting && !isStarting && !switchingToPersonaSlug && !readingEnded && selectedPersona && (
             <PreReadingWelcome
               persona={selectedPersona}
               memoryContext={memoryContext}

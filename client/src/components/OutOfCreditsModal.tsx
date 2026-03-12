@@ -93,6 +93,8 @@ export default function OutOfCreditsModal({
   const [timeLeft, setTimeLeft] = useState(countdownSeconds);
   const [paypalActive, setPaypalActive] = useState(false);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const onOpenChangeRef = useRef(onOpenChange);
+  onOpenChangeRef.current = onOpenChange;
 
   const handlePayPalSuccess = (newBalance: number) => {
     setPaypalActive(false);
@@ -123,7 +125,7 @@ export default function OutOfCreditsModal({
       setTimeLeft((prev) => {
         if (prev <= 1) {
           clearInterval(intervalRef.current!);
-          onOpenChange(false);
+          onOpenChangeRef.current(false);
           return 0;
         }
         return prev - 1;
@@ -132,7 +134,7 @@ export default function OutOfCreditsModal({
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
-  }, [open, paypalActive, onOpenChange]);
+  }, [open, paypalActive]);
 
   // Fetch pricing if not provided
   useEffect(() => {

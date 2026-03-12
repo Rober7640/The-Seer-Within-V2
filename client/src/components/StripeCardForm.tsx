@@ -125,7 +125,6 @@ export default function StripeCardForm({
     async function createIntent() {
       setLoading(true);
       setError(null);
-      onClick?.();
 
       try {
         const res = await authFetch("/api/credits/create-payment-intent", {
