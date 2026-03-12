@@ -165,7 +165,8 @@ export interface PersonaWithStats {
   categories: string[];
   totalSessions: number;
   totalRevenue: number;
-  activeUsers: number;
+  totalUsers: number;
+  activeSessionsNow: number;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -459,7 +460,8 @@ export async function listPersonas(options?: {
       categories: parseJsonArray(p.categories),
       totalSessions: 0,
       totalRevenue: 0,
-      activeUsers: 0,
+      totalUsers: 0,
+      activeSessionsNow: 0,
       createdAt: p.createdAt,
       updatedAt: p.updatedAt,
     }));
@@ -475,18 +477,34 @@ export async function listPersonas(options?: {
       .from(chatSessions)
       .where(eq(chatSessions.personaId, persona.id));
 
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-
-    const activeUserStats = await db
+    const totalUserStats = await db
       .select({
-        activeUsers: sql<number>`COUNT(DISTINCT ${chatSessions.userId})`,
+        totalUsers: sql<number>`COUNT(DISTINCT ${chatSessions.userId})`,
+      })
+      .from(chatSessions)
+      .where(eq(chatSessions.personaId, persona.id));
+
+    const activeNowStats = await db
+      .select({
+        activeNow: count(),
       })
       .from(chatSessions)
       .where(
         and(
           eq(chatSessions.personaId, persona.id),
-          sql`${chatSessions.startedAt} >= ${thirtyDaysAgo}`,
+          eq(chatSessions.status, 'active'),
+        ),
+      );
+
+    const revenueStats = await db
+      .select({
+        revenue: sql<number>`COALESCE(SUM(${creditPurchases.priceUsd}), 0)`,
+      })
+      .from(creditPurchases)
+      .where(
+        and(
+          eq(creditPurchases.personaId, persona.id),
+          eq(creditPurchases.status, 'completed'),
         ),
       );
 
@@ -503,8 +521,9 @@ export async function listPersonas(options?: {
       freeCoins: persona.freeCoins,
       categories: parseJsonArray(persona.categories),
       totalSessions: sessionStats[0]?.totalSessions || 0,
-      totalRevenue: 0, // Computed separately if needed
-      activeUsers: Number(activeUserStats[0]?.activeUsers || 0),
+      totalRevenue: Number(revenueStats[0]?.revenue || 0),
+      totalUsers: Number(totalUserStats[0]?.totalUsers || 0),
+      activeSessionsNow: activeNowStats[0]?.activeNow || 0,
       createdAt: persona.createdAt,
       updatedAt: persona.updatedAt,
     });
