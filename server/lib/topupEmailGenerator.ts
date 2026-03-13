@@ -138,7 +138,7 @@ async function isOnCooldown(userId: string): Promise<boolean> {
       and(
         eq(topupEmails.userId, userId),
         gte(topupEmails.createdAt, cutoff),
-        or(eq(topupEmails.status, 'sent'), eq(topupEmails.status, 'pending')),
+        or(eq(topupEmails.status, 'sent'), eq(topupEmails.status, 'pending'), eq(topupEmails.status, 'failed')),
       ),
     )
     .limit(1);
@@ -227,7 +227,7 @@ async function findCandidates(): Promise<TopupCandidate[]> {
   const threeDaysAgo  = new Date(now.getTime() - 3  * 24 * 60 * 60 * 1000);
   const sixHoursAgo   = new Date(now.getTime() - 6  * 60 * 60 * 1000);
 
-  // Fetch active users with low/zero balance
+  // Fetch active users with low/zero balance (exclude test emails)
   const lowBalanceUsers = await db
     .select({
       id: users.id,
@@ -243,6 +243,7 @@ async function findCandidates(): Promise<TopupCandidate[]> {
       and(
         eq(users.accountStatus, 'active'),
         lte(users.coinBalance, 30),
+        sql`${users.email} NOT LIKE '%@example.com' AND ${users.email} NOT LIKE '%@test.com'`,
       ),
     );
 
@@ -524,6 +525,12 @@ async function sendTopupEmail(
     );
 
     if (result.error) {
+      logger.error('Resend returned error for top-up email', {
+        email: candidate.email,
+        segment: candidate.segment,
+        error: result.error.message,
+        errorName: result.error.name,
+      });
       await db
         .update(topupEmails)
         .set({ status: 'failed', updatedAt: new Date() })
