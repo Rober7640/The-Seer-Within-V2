@@ -22,13 +22,22 @@ export default function LoginPage() {
   const [resendLoading, setResendLoading] = useState(false);
   const [resendEmail, setResendEmail] = useState("");
 
-  // Check for verification callback in URL params
+  // Check for verification callback in URL params — auto-login if token present
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const verified = params.get("verified");
-    if (verified === "success") {
-      setVerificationSuccess(true);
-    } else if (verified === "already") {
+    const urlToken = params.get("token");
+
+    if ((verified === "success" || verified === "already") && urlToken) {
+      // Store the JWT and redirect — works even on a different device/browser
+      localStorage.setItem("seer_auth_token", urlToken);
+      // Clean the URL to avoid token leaking in browser history
+      window.history.replaceState({}, "", "/login?verified=" + verified);
+      navigate("/reading");
+      return;
+    }
+
+    if (verified === "success" || verified === "already") {
       setVerificationSuccess(true);
     }
   }, []);

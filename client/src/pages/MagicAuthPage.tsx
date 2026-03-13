@@ -40,10 +40,11 @@ export default function MagicAuthPage() {
         // Store the JWT exactly as the normal login flow does
         localStorage.setItem(AUTH_TOKEN_KEY, data.token);
 
-        // Navigate to the persona chat, replacing history so Back doesn't re-verify
-        const target = data.personaSlug
+        // Check for an explicit redirect destination (e.g. /credits from top-up emails)
+        const redirectTo = params.get("redirect");
+        const target = redirectTo || (data.personaSlug
           ? `/chat/${data.personaSlug}`
-          : "/reading";
+          : "/reading");
 
         navigate(target, { replace: true });
       } catch {

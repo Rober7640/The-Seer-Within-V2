@@ -16,7 +16,7 @@ import {
   followUpEmails,
   userFollowUpPreferences,
 } from '@shared/schema';
-import { eq, and, lt, gt, desc, or, count } from 'drizzle-orm';
+import { eq, and, lt, gt, desc, or, count, sql } from 'drizzle-orm';
 import { randomUUID } from 'crypto';
 import { buildFollowUpHtml, buildFollowUpText } from './emailTemplate';
 import { generateMagicLinkToken } from './magicLink';
@@ -32,7 +32,7 @@ const resend = process.env.RESEND_API_KEY
   ? new Resend(process.env.RESEND_API_KEY)
   : null;
 
-const FROM_EMAIL = process.env.FOLLOW_UP_FROM_EMAIL || 'hello@theseerwithin.com';
+const FROM_EMAIL = process.env.FOLLOW_UP_FROM_EMAIL || 'hi@theseerwithin.com';
 const FROM_NAME = process.env.FOLLOW_UP_FROM_NAME || 'The Seer Within';
 const BASE_URL = process.env.BASE_URL || 'http://localhost:5000';
 
@@ -119,6 +119,7 @@ export async function findUsersNeedingFollowUp(): Promise<FollowUpCandidate[]> {
         eq(users.accountStatus, 'active'),
         eq(chatSessions.status, 'ended'),
         lt(chatSessions.endedAt, minCutoff),
+        sql`${users.email} NOT LIKE '%@example.com' AND ${users.email} NOT LIKE '%@test.com'`,
       ),
     )
     .orderBy(desc(chatSessions.endedAt));
@@ -144,7 +145,7 @@ export async function findUsersNeedingFollowUp(): Promise<FollowUpCandidate[]> {
     const pref = prefs[0];
     if (pref?.unsubscribedAt || (pref && !pref.enableFollowUps)) continue;
 
-    // Count lifetime confirmed follow-ups (sent or pending)
+    // Count lifetime follow-ups (sent, pending, or failed — all count toward cap)
     const countResult = await db
       .select({ total: count() })
       .from(followUpEmails)
@@ -154,6 +155,7 @@ export async function findUsersNeedingFollowUp(): Promise<FollowUpCandidate[]> {
           or(
             eq(followUpEmails.status, 'sent'),
             eq(followUpEmails.status, 'pending'),
+            eq(followUpEmails.status, 'failed'),
           ),
         ),
       );
@@ -187,7 +189,7 @@ export async function findUsersNeedingFollowUp(): Promise<FollowUpCandidate[]> {
 
     if (returned.length > 0) continue; // User came back — no need for follow-up
 
-    // Skip if this specific sequence email was already sent/queued
+    // Skip if this specific sequence email was already sent/queued/failed
     const alreadyQueued = await db
       .select({ id: followUpEmails.id })
       .from(followUpEmails)
@@ -198,6 +200,7 @@ export async function findUsersNeedingFollowUp(): Promise<FollowUpCandidate[]> {
           or(
             eq(followUpEmails.status, 'sent'),
             eq(followUpEmails.status, 'pending'),
+            eq(followUpEmails.status, 'failed'),
           ),
         ),
       )
@@ -405,7 +408,9 @@ export async function sendFollowUpEmail(
     ctaText: `Return to ${candidate.personaName}`,
     unsubscribeUrl,
     privacyUrl: `${BASE_URL}/privacy`,
-    avatarUrl: candidate.avatarUrl || undefined,
+    avatarUrl: candidate.avatarUrl
+      ? (candidate.avatarUrl.startsWith('http') ? candidate.avatarUrl : `${BASE_URL}${candidate.avatarUrl}`)
+      : undefined,
   });
 
   const fullText = buildFollowUpText({
@@ -454,7 +459,7 @@ export async function sendFollowUpEmail(
       resend!.emails.send({
         from: `${candidate.fromName} <${candidate.fromEmail}>`,
         to: candidate.email,
-        replyTo: FROM_EMAIL,
+        replyTo: candidate.fromEmail,
         subject: email.subject,
         html: fullHtml,
         text: fullText,

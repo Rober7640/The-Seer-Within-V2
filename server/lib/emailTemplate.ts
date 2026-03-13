@@ -37,7 +37,7 @@ export function buildFollowUpHtml(params: FollowUpHtmlParams): string {
          style="width:72px;height:72px;border-radius:50%;object-fit:cover;
                 border:3px solid #ede9fe;display:block;margin:0 auto 12px;">`
     : `<div style="width:72px;height:72px;border-radius:50%;
-                   background:linear-gradient(135deg,#7c3aed,#4f46e5);
+                   background-color:#6d28d9;
                    margin:0 auto 12px;line-height:72px;
                    font-size:28px;text-align:center;color:#fff;">✦</div>`;
 
@@ -187,54 +187,67 @@ export function buildSessionTimeoutHtml(params: SessionTimeoutHtmlParams): strin
   const summaryHtml = escapeHtml(sessionSummary)
     .replace(/\n/g, '<br>');
 
+  const avatarBlock = logoUrl
+    ? `<img src="${escapeHtml(logoUrl)}" alt="${escapeHtml(personaName)}" width="72" height="72" style="width:72px;height:72px;border-radius:50%;object-fit:cover;border:3px solid #ede9fe;display:block;margin:0 auto 12px;">`
+    : `<div style="width:72px;height:72px;border-radius:50%;background-color:#6d28d9;margin:0 auto 12px;line-height:72px;font-size:28px;text-align:center;color:#fff;">&#9733;</div>`;
+
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <title>Your session with ${escapeHtml(personaName)} has ended</title>
   <style>
-    body { font-family: Georgia, 'Times New Roman', serif; background-color: #0f0a1a; color: #e8e0f0; margin: 0; padding: 0; }
-    .email-container { max-width: 600px; margin: 0 auto; background-color: #1a1128; border-radius: 8px; overflow: hidden; }
-    .header { text-align: center; padding: 30px 20px 20px; background: linear-gradient(180deg, #1a0a2e 0%, #1a1128 100%); }
-    .header-title { font-size: 24px; color: #c4a0ff; margin: 10px 0 0; font-weight: normal; letter-spacing: 1px; }
-    .content { padding: 20px 30px; line-height: 1.7; font-size: 16px; color: #e8e0f0; }
-    .summary-box { background-color: #251a3a; border-left: 3px solid #7c3aed; padding: 16px 20px; margin: 16px 0; border-radius: 0 6px 6px 0; font-size: 14px; line-height: 1.6; }
-    .meta { font-size: 13px; color: #8a7aa0; margin-top: 12px; }
-    .cta-section { text-align: center; padding: 10px 20px 30px; }
-    .cta-button { display: inline-block; background: linear-gradient(135deg, #7c3aed 0%, #4A148C 100%); color: #ffffff !important; padding: 14px 32px; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: bold; letter-spacing: 0.5px; }
-    .footer { text-align: center; padding: 20px 30px; font-size: 12px; color: #8a7aa0; line-height: 1.6; }
+    body,table,td,a{-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%}
+    table,td{mso-table-lspace:0pt;mso-table-rspace:0pt}
+    table{border-collapse:collapse!important}
+    body{height:100%!important;margin:0!important;padding:0!important;width:100%!important;
+         font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+         background-color:#f5f3ff}
+    @media screen and (max-width:600px){
+      .card{width:100%!important;border-radius:0!important}
+      .body-cell{padding:28px 20px!important}
+    }
   </style>
 </head>
-<body style="margin: 0; padding: 0; background-color: #0f0a1a;">
-  <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color: #0f0a1a;">
+<body style="margin: 0; padding: 0; background-color: #f5f3ff;">
+  <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color: #f5f3ff;">
     <tr>
-      <td align="center" style="padding: 20px 10px;">
-        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="600" class="email-container" style="background-color: #1a1128; border-radius: 8px; overflow: hidden;">
+      <td align="center" style="padding: 32px 16px;">
+        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="560" class="card" style="background: #ffffff; border-radius: 16px; box-shadow: 0 1px 4px rgba(109,40,217,.08), 0 4px 24px rgba(0,0,0,.06); overflow: hidden;">
+          <!-- Header -->
           <tr>
-            <td class="header" style="text-align: center; padding: 30px 20px 20px; background: linear-gradient(180deg, #1a0a2e 0%, #1a1128 100%);">
-              ${logoUrl ? `<img src="${escapeHtml(logoUrl)}" alt="${escapeHtml(personaName)}" width="80" style="border-radius: 50%; margin-bottom: 10px;">` : `<div style="width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg, #7c3aed, #4A148C); margin: 0 auto 10px; display: flex; align-items: center; justify-content: center; font-size: 32px; color: #fff;">&starf;</div>`}
-              <div class="header-title" style="font-size: 24px; color: #c4a0ff; margin: 10px 0 0;">${escapeHtml(personaName)}</div>
+            <td align="center" style="padding: 36px 32px 24px; border-bottom: 1px solid #f3f4f6;">
+              ${avatarBlock}
+              <p style="margin: 0; font-size: 18px; font-weight: 600; color: #111827; letter-spacing: -0.01em;">${escapeHtml(personaName)}</p>
+              <p style="margin: 4px 0 0; font-size: 12px; font-weight: 500; color: #8b5cf6; text-transform: uppercase; letter-spacing: 0.08em;">The Seer Within</p>
             </td>
           </tr>
+
+          <!-- Content -->
           <tr>
-            <td class="content" style="padding: 20px 30px; line-height: 1.7; font-size: 16px; color: #e8e0f0;">
+            <td class="body-cell" style="padding: 32px 40px; font-size: 16px; line-height: 1.75; color: #374151;">
               <p style="margin: 0 0 16px;">Dear ${escapeHtml(userName)},</p>
               <p style="margin: 0 0 16px;">Your session with ${escapeHtml(personaName)} has ended due to inactivity. Here is a summary of what we discussed:</p>
-              <div class="summary-box" style="background-color: #251a3a; border-left: 3px solid #7c3aed; padding: 16px 20px; margin: 16px 0; border-radius: 0 6px 6px 0; font-size: 14px; line-height: 1.6;">
+              <div style="background-color: #f5f3ff; border-left: 3px solid #7c3aed; padding: 16px 20px; margin: 16px 0; border-radius: 0 6px 6px 0; font-size: 14px; line-height: 1.6; color: #4b5563;">
                 ${summaryHtml}
               </div>
-              <p class="meta" style="font-size: 13px; color: #8a7aa0; margin-top: 12px;">Session duration: ${minutesUsed} minute${minutesUsed !== 1 ? 's' : ''}</p>
+              <p style="font-size: 13px; color: #9ca3af; margin-top: 12px;">Session duration: ${minutesUsed} minute${minutesUsed !== 1 ? 's' : ''}</p>
               <p style="margin: 16px 0 0;">Whenever you are ready to continue your journey, ${escapeHtml(personaName)} will be here for you.</p>
             </td>
           </tr>
+
+          <!-- CTA -->
           <tr>
-            <td class="cta-section" style="text-align: center; padding: 10px 20px 30px;">
-              <a href="${escapeHtml(ctaUrl)}" class="cta-button" style="display: inline-block; background: linear-gradient(135deg, #7c3aed 0%, #4A148C 100%); color: #ffffff; padding: 14px 32px; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: bold;">Start a New Session</a>
+            <td align="center" style="padding: 0 40px 36px;">
+              <a href="${escapeHtml(ctaUrl)}" style="display: inline-block; background: #6d28d9; color: #ffffff; padding: 14px 32px; text-decoration: none; border-radius: 10px; font-size: 15px; font-weight: 600; letter-spacing: 0.01em; box-shadow: 0 2px 8px rgba(109,40,217,.35);">Start a New Session</a>
             </td>
           </tr>
+
+          <!-- Footer -->
           <tr>
-            <td class="footer" style="text-align: center; padding: 20px 30px; font-size: 12px; color: #8a7aa0;">
+            <td align="center" style="padding: 20px 32px 28px; border-top: 1px solid #f3f4f6; font-size: 12px; color: #9ca3af; line-height: 1.6;">
               <p style="margin: 0;">This is an automated notification from your session.</p>
             </td>
           </tr>

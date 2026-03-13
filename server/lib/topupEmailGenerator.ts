@@ -36,7 +36,7 @@ const resend = process.env.RESEND_API_KEY
   ? new Resend(process.env.RESEND_API_KEY)
   : null;
 
-const FROM_EMAIL = process.env.FOLLOW_UP_FROM_EMAIL || 'hello@theseerwithin.com';
+const FROM_EMAIL = process.env.FOLLOW_UP_FROM_EMAIL || 'hi@theseerwithin.com';
 const FROM_NAME  = process.env.FOLLOW_UP_FROM_NAME  || 'The Seer Within';
 const BASE_URL   = process.env.BASE_URL              || 'http://localhost:5000';
 
@@ -139,7 +139,7 @@ async function isOnCooldown(userId: string): Promise<boolean> {
       and(
         eq(topupEmails.userId, userId),
         gte(topupEmails.createdAt, cutoff),
-        or(eq(topupEmails.status, 'sent'), eq(topupEmails.status, 'pending')),
+        or(eq(topupEmails.status, 'sent'), eq(topupEmails.status, 'pending'), eq(topupEmails.status, 'failed')),
       ),
     )
     .limit(1);
@@ -228,7 +228,7 @@ async function findCandidates(): Promise<TopupCandidate[]> {
   const threeDaysAgo  = new Date(now.getTime() - 3  * 24 * 60 * 60 * 1000);
   const sixHoursAgo   = new Date(now.getTime() - 6  * 60 * 60 * 1000);
 
-  // Fetch active users with low/zero balance
+  // Fetch active users with low/zero balance (exclude test emails)
   const lowBalanceUsers = await db
     .select({
       id: users.id,
@@ -244,6 +244,7 @@ async function findCandidates(): Promise<TopupCandidate[]> {
       and(
         eq(users.accountStatus, 'active'),
         lte(users.coinBalance, 30),
+        sql`${users.email} NOT LIKE '%@example.com' AND ${users.email} NOT LIKE '%@test.com'`,
       ),
     );
 
@@ -454,7 +455,7 @@ async function sendTopupEmail(
     candidate.personaId,
     candidate.personaSlug,
   );
-  const ctaUrl = `${BASE_URL}/magic-auth?t=${magicToken}`;
+  const ctaUrl = `${BASE_URL}/magic-auth?t=${magicToken}&redirect=/credits`;
   const cfg = SEGMENT_CONFIG[candidate.segment];
 
   const fullHtml = buildFollowUpHtml({
@@ -464,7 +465,9 @@ async function sendTopupEmail(
     ctaText: cfg.ctaText,
     unsubscribeUrl,
     privacyUrl: `${BASE_URL}/privacy`,
-    avatarUrl: candidate.avatarUrl || undefined,
+    avatarUrl: candidate.avatarUrl
+      ? (candidate.avatarUrl.startsWith('http') ? candidate.avatarUrl : `${BASE_URL}${candidate.avatarUrl}`)
+      : undefined,
   });
 
   const fullText = buildFollowUpText({
@@ -509,7 +512,7 @@ async function sendTopupEmail(
       resend!.emails.send({
         from: `${candidate.fromName} <${candidate.fromEmail}>`,
         to: candidate.email,
-        replyTo: FROM_EMAIL,
+        replyTo: candidate.fromEmail,
         subject: email.subject,
         html: fullHtml,
         text: fullText,
@@ -523,6 +526,12 @@ async function sendTopupEmail(
     );
 
     if (result.error) {
+      logger.error('Resend returned error for top-up email', {
+        email: candidate.email,
+        segment: candidate.segment,
+        error: result.error.message,
+        errorName: result.error.name,
+      });
       await db
         .update(topupEmails)
         .set({ status: 'failed', updatedAt: new Date() })
