@@ -233,7 +233,8 @@ export default function UserDetail() {
   };
 
   const formatDuration = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
+    const s = seconds ?? 0;
+    const mins = Math.floor(s / 60);
     if (mins < 60) return `${mins}m`;
     return `${Math.floor(mins / 60)}h ${mins % 60}m`;
   };
@@ -290,7 +291,7 @@ export default function UserDetail() {
                 <p className="text-2xl font-bold text-white">
                   $
                   {(
-                    purchases.reduce((sum, p) => sum + p.priceUsd, 0) / 100
+                    purchases.reduce((sum, p) => sum + (p.priceUsd ?? 0), 0) / 100
                   ).toFixed(2)}
                 </p>
                 <p className="text-xs text-gray-500">Total Spent</p>
@@ -484,7 +485,7 @@ export default function UserDetail() {
                         </div>
                         <div className="flex items-center gap-2">
                           <span className="text-sm text-white">
-                            ${(p.priceUsd / 100).toFixed(2)}
+                            ${((p.priceUsd ?? 0) / 100).toFixed(2)}
                           </span>
                           <Badge
                             variant="outline"

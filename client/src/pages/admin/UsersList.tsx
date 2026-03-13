@@ -23,7 +23,7 @@ interface UserSummary {
   coinBalance: number;
   totalMinutesUsed: number;
   accountStatus: string;
-  sessionCount: number;
+  totalSessions: number;
   totalSpent: number;
   lastLoginAt: string | null;
   createdAt: string;
@@ -216,14 +216,14 @@ export default function UsersList() {
                           {user.coinBalance} coins
                         </span>
                         <span className="text-xs text-gray-600 block">
-                          {user.totalMinutesUsed}m used
+                          {user.totalMinutesUsed ?? 0}m used
                         </span>
                       </td>
                       <td className="px-4 py-3 text-right text-sm text-white">
-                        {user.sessionCount}
+                        {user.totalSessions ?? 0}
                       </td>
                       <td className="px-4 py-3 text-right text-sm text-white">
-                        ${(user.totalSpent / 100).toFixed(2)}
+                        ${((user.totalSpent ?? 0) / 100).toFixed(2)}
                       </td>
                       <td className="px-4 py-3 text-right text-xs text-gray-500">
                         {new Date(user.createdAt).toLocaleDateString()}

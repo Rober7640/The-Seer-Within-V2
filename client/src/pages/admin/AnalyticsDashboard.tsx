@@ -142,10 +142,11 @@ export default function AnalyticsDashboard() {
     }
   }
 
-  const formatCurrency = (cents: number) => `$${(cents / 100).toFixed(2)}`;
+  const formatCurrency = (cents: number) => `$${((cents ?? 0) / 100).toFixed(2)}`;
   const formatDuration = (minutes: number) => {
-    if (minutes < 60) return `${Math.round(minutes)}m`;
-    return `${Math.floor(minutes / 60)}h ${Math.round(minutes % 60)}m`;
+    const m = minutes ?? 0;
+    if (m < 60) return `${Math.round(m)}m`;
+    return `${Math.floor(m / 60)}h ${Math.round(m % 60)}m`;
   };
 
   return (
@@ -232,7 +233,7 @@ export default function AnalyticsDashboard() {
               <CardContent className="p-4 flex items-center gap-3">
                 <Activity className="w-5 h-5 text-green-400 animate-pulse" />
                 <span className="text-green-300 text-sm">
-                  {overview?.activePersonas} active persona
+                  {overview?.activePersonas ?? 0} active persona
                   {(overview?.activePersonas ?? 0) !== 1 ? "s" : ""}
                 </span>
               </CardContent>
@@ -315,7 +316,7 @@ export default function AnalyticsDashboard() {
                             </div>
                             <div>
                               <p className="text-lg font-bold text-white">
-                                {formatDuration(p.avgSessionDuration / 60)}
+                                {formatDuration((p.avgSessionDuration ?? 0) / 60)}
                               </p>
                               <p className="text-[10px] text-gray-500">
                                 Avg Duration
@@ -413,8 +414,9 @@ function LowCreditAlerts({
   };
 
   const formatCoins = (coins: number) => {
-    if (coins === 0) return "Empty";
-    const secs = Math.round(coins);
+    const c = coins ?? 0;
+    if (c === 0) return "Empty";
+    const secs = Math.round(c);
     if (secs < 60) return `${secs}s`;
     return `${Math.floor(secs / 60)}m ${secs % 60}s`;
   };
@@ -500,7 +502,7 @@ function LowCreditAlerts({
                       </p>
                       <p className="text-[10px] text-gray-600">
                         Last seen: {formatLastSeen(u.lastLoginAt)}
-                        {u.totalCoinsUsed > 0 && ` · ${Math.floor(u.totalCoinsUsed / 60)}m used total`}
+                        {(u.totalCoinsUsed ?? 0) > 0 && ` · ${Math.floor((u.totalCoinsUsed ?? 0) / 60)}m used total`}
                       </p>
                     </div>
                   </div>

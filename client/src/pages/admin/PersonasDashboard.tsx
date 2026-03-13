@@ -82,10 +82,10 @@ export default function PersonasDashboard() {
           statusFilter === "active" ? p.isActive : !p.isActive,
         );
 
-  const totalUsers = personas.reduce((sum, p) => sum + p.totalUsers, 0);
-  const totalRevenue = personas.reduce((sum, p) => sum + p.totalRevenue, 0);
+  const totalUsers = personas.reduce((sum, p) => sum + (p.totalUsers ?? 0), 0);
+  const totalRevenue = personas.reduce((sum, p) => sum + (p.totalRevenue ?? 0), 0);
   const activeSessions = personas.reduce(
-    (sum, p) => sum + p.activeSessionsNow,
+    (sum, p) => sum + (p.activeSessionsNow ?? 0),
     0,
   );
 
@@ -130,7 +130,7 @@ export default function PersonasDashboard() {
               <div>
                 <p className="text-xs text-gray-500">Total Revenue</p>
                 <p className="text-2xl font-bold text-white">
-                  ${(totalRevenue / 100).toFixed(0)}
+                  ${((totalRevenue ?? 0) / 100).toFixed(0)}
                 </p>
               </div>
             </div>
@@ -254,7 +254,7 @@ export default function PersonasDashboard() {
                   </div>
                   <div className="text-center">
                     <p className="text-lg font-bold text-white">
-                      ${(persona.totalRevenue / 100).toFixed(0)}
+                      ${((persona.totalRevenue ?? 0) / 100).toFixed(0)}
                     </p>
                     <p className="text-[10px] text-gray-500">Revenue</p>
                   </div>

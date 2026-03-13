@@ -77,21 +77,34 @@ router.get('/', async (req: Request, res: Response) => {
       .limit(limit)
       .offset(offset);
 
-    // For each user, get session count and persona interaction count
+    // For each user, get session count, persona count, total spent, and minutes used
     const enrichedUsers = await Promise.all(
       userList.map(async (user) => {
-        const sessionStats = await db
-          .select({
+        const [sessionStats, spentStats] = await Promise.all([
+          db.select({
             totalSessions: count(),
             personaCount: sql<number>`COUNT(DISTINCT ${chatSessions.personaId})`,
+            totalMinutesUsed: sql<number>`COALESCE(SUM(${chatSessions.durationSeconds}), 0)`,
           })
-          .from(chatSessions)
-          .where(eq(chatSessions.userId, user.id));
+            .from(chatSessions)
+            .where(eq(chatSessions.userId, user.id)),
+          db.select({
+            totalSpent: sql<number>`COALESCE(SUM(${creditPurchases.priceUsd}), 0)`,
+          })
+            .from(creditPurchases)
+            .where(and(
+              eq(creditPurchases.userId, user.id),
+              eq(creditPurchases.status, 'completed'),
+            )),
+        ]);
 
+        const totalSeconds = Number(sessionStats[0]?.totalMinutesUsed || 0);
         return {
           ...user,
           totalSessions: sessionStats[0]?.totalSessions || 0,
           personasUsed: Number(sessionStats[0]?.personaCount || 0),
+          totalSpent: Number(spentStats[0]?.totalSpent || 0),
+          totalMinutesUsed: Math.floor(totalSeconds / 60),
         };
       }),
     );
