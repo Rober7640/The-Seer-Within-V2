@@ -132,6 +132,8 @@ async function isOnCooldown(userId: string): Promise<boolean> {
   const cutoff = new Date();
   cutoff.setDate(cutoff.getDate() - COOLDOWN_DAYS);
 
+  // Only sent/pending emails trigger cooldown; failed emails do NOT —
+  // they should be retried on the next cron run.
   const recent = await db
     .select({ id: topupEmails.id })
     .from(topupEmails)
@@ -139,7 +141,7 @@ async function isOnCooldown(userId: string): Promise<boolean> {
       and(
         eq(topupEmails.userId, userId),
         gte(topupEmails.createdAt, cutoff),
-        or(eq(topupEmails.status, 'sent'), eq(topupEmails.status, 'pending'), eq(topupEmails.status, 'failed')),
+        or(eq(topupEmails.status, 'sent'), eq(topupEmails.status, 'pending')),
       ),
     )
     .limit(1);
@@ -477,6 +479,16 @@ async function sendTopupEmail(
     unsubscribeUrl,
   });
 
+  // Clean up any previous failed top-up records for this user so retry creates a fresh record
+  await db
+    .delete(topupEmails)
+    .where(
+      and(
+        eq(topupEmails.userId, candidate.userId),
+        eq(topupEmails.status, 'failed'),
+      ),
+    );
+
   // Save record before sending (safe re-run on crash)
   const emailRecord = await db
     .insert(topupEmails)
@@ -507,57 +519,90 @@ async function sendTopupEmail(
     return { success: false, error: 'Resend API key not configured' };
   }
 
-  try {
-    const result = await fireWithBreaker(resendBreaker, () =>
-      resend!.emails.send({
-        from: `${candidate.fromName} <${candidate.fromEmail}>`,
-        to: candidate.email,
-        replyTo: candidate.fromEmail,
-        subject: email.subject,
-        html: fullHtml,
-        text: fullText,
-        tags: [
-          { name: 'type',       value: 'topup' },
-          { name: 'segment',    value: candidate.segment },
-          { name: 'persona_id', value: candidate.personaId },
-          { name: 'user_id',    value: candidate.userId },
-        ],
-      }),
-    );
+  // Retry up to 3 times with exponential backoff for rate-limit (429) errors
+  const MAX_RETRIES = 3;
+  for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+    try {
+      const result = await fireWithBreaker(resendBreaker, () =>
+        resend!.emails.send({
+          from: `${candidate.fromName} <${candidate.fromEmail}>`,
+          to: candidate.email,
+          replyTo: candidate.fromEmail,
+          subject: email.subject,
+          html: fullHtml,
+          text: fullText,
+          tags: [
+            { name: 'type',       value: 'topup' },
+            { name: 'segment',    value: candidate.segment },
+            { name: 'persona_id', value: candidate.personaId },
+            { name: 'user_id',    value: candidate.userId },
+          ],
+        }),
+      );
 
-    if (result.error) {
-      logger.error('Resend returned error for top-up email', {
-        email: candidate.email,
-        segment: candidate.segment,
-        error: result.error.message,
-        errorName: result.error.name,
-      });
+      if (result.error) {
+        const isRateLimit = result.error.message?.toLowerCase().includes('rate') ||
+          result.error.name === 'rate_limit_exceeded';
+
+        if (isRateLimit && attempt < MAX_RETRIES) {
+          const delay = 1000 * Math.pow(2, attempt - 1); // 1s, 2s, 4s
+          logger.warn('Top-up email rate-limited, retrying', {
+            email: candidate.email, attempt, delay,
+          });
+          await new Promise((resolve) => setTimeout(resolve, delay));
+          continue;
+        }
+
+        logger.error('Resend returned error for top-up email', {
+          email: candidate.email,
+          segment: candidate.segment,
+          error: result.error.message,
+          errorName: result.error.name,
+          attempt,
+        });
+        await db
+          .update(topupEmails)
+          .set({ status: 'failed', updatedAt: new Date() })
+          .where(eq(topupEmails.id, recordId));
+        return { success: false, error: result.error.message };
+      }
+
+      await db
+        .update(topupEmails)
+        .set({ status: 'sent', sentAt: new Date(), resendEmailId: result.data?.id || null, updatedAt: new Date() })
+        .where(eq(topupEmails.id, recordId));
+
+      return { success: true, emailId: result.data?.id };
+    } catch (error: any) {
+      const isRateLimit = error?.statusCode === 429 ||
+        error?.message?.toLowerCase().includes('rate');
+
+      if (isRateLimit && attempt < MAX_RETRIES) {
+        const delay = 1000 * Math.pow(2, attempt - 1);
+        logger.warn('Top-up email rate-limited (exception), retrying', {
+          email: candidate.email, attempt, delay,
+        });
+        await new Promise((resolve) => setTimeout(resolve, delay));
+        continue;
+      }
+
       await db
         .update(topupEmails)
         .set({ status: 'failed', updatedAt: new Date() })
         .where(eq(topupEmails.id, recordId));
-      return { success: false, error: result.error.message };
+
+      logger.error('Failed to send top-up email', {
+        email: candidate.email,
+        segment: candidate.segment,
+        error: error?.message,
+        attempt,
+      });
+      return { success: false, error: error?.message || 'Send failed' };
     }
-
-    await db
-      .update(topupEmails)
-      .set({ status: 'sent', sentAt: new Date(), resendEmailId: result.data?.id || null, updatedAt: new Date() })
-      .where(eq(topupEmails.id, recordId));
-
-    return { success: true, emailId: result.data?.id };
-  } catch (error: any) {
-    await db
-      .update(topupEmails)
-      .set({ status: 'failed', updatedAt: new Date() })
-      .where(eq(topupEmails.id, recordId));
-
-    logger.error('Failed to send top-up email', {
-      email: candidate.email,
-      segment: candidate.segment,
-      error: (error as any)?.message,
-    });
-    return { success: false, error: (error as any)?.message || 'Send failed' };
   }
+
+  // Should not reach here, but just in case
+  return { success: false, error: 'Max retries exceeded' };
 }
 
 // ============================================================

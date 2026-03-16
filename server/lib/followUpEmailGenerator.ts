@@ -145,7 +145,8 @@ export async function findUsersNeedingFollowUp(): Promise<FollowUpCandidate[]> {
     const pref = prefs[0];
     if (pref?.unsubscribedAt || (pref && !pref.enableFollowUps)) continue;
 
-    // Count lifetime follow-ups (sent, pending, or failed — all count toward cap)
+    // Count lifetime follow-ups (sent or pending count toward cap; failed do NOT —
+    // they will be retried on the next cron run)
     const countResult = await db
       .select({ total: count() })
       .from(followUpEmails)
@@ -155,7 +156,6 @@ export async function findUsersNeedingFollowUp(): Promise<FollowUpCandidate[]> {
           or(
             eq(followUpEmails.status, 'sent'),
             eq(followUpEmails.status, 'pending'),
-            eq(followUpEmails.status, 'failed'),
           ),
         ),
       );
@@ -189,7 +189,8 @@ export async function findUsersNeedingFollowUp(): Promise<FollowUpCandidate[]> {
 
     if (returned.length > 0) continue; // User came back — no need for follow-up
 
-    // Skip if this specific sequence email was already sent/queued/failed
+    // Skip if this specific sequence email was already sent or is pending.
+    // Failed emails are NOT skipped — they will be retried on the next cron run.
     const alreadyQueued = await db
       .select({ id: followUpEmails.id })
       .from(followUpEmails)
@@ -200,13 +201,23 @@ export async function findUsersNeedingFollowUp(): Promise<FollowUpCandidate[]> {
           or(
             eq(followUpEmails.status, 'sent'),
             eq(followUpEmails.status, 'pending'),
-            eq(followUpEmails.status, 'failed'),
           ),
         ),
       )
       .limit(1);
 
     if (alreadyQueued.length > 0) continue;
+
+    // If a previous attempt failed for this sequence, delete it so a fresh record is created
+    await db
+      .delete(followUpEmails)
+      .where(
+        and(
+          eq(followUpEmails.userId, userId),
+          eq(followUpEmails.sequenceNumber, sequenceNumber),
+          eq(followUpEmails.status, 'failed'),
+        ),
+      );
 
     // Load persona info
     const personaRows = await db
@@ -454,66 +465,98 @@ export async function sendFollowUpEmail(
     return { success: false, error: 'Resend API key not configured' };
   }
 
-  try {
-    const result = await fireWithBreaker(resendBreaker, () =>
-      resend!.emails.send({
-        from: `${candidate.fromName} <${candidate.fromEmail}>`,
-        to: candidate.email,
-        replyTo: candidate.fromEmail,
-        subject: email.subject,
-        html: fullHtml,
-        text: fullText,
-        tags: [
-          { name: 'type', value: 'follow_up' },
-          { name: 'sequence', value: String(candidate.sequenceNumber) },
-          { name: 'persona_id', value: candidate.personaId },
-          { name: 'user_id', value: candidate.userId },
-        ],
-      }),
-    );
+  // Retry up to 3 times with exponential backoff for rate-limit (429) errors
+  const MAX_RETRIES = 3;
+  for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+    try {
+      const result = await fireWithBreaker(resendBreaker, () =>
+        resend!.emails.send({
+          from: `${candidate.fromName} <${candidate.fromEmail}>`,
+          to: candidate.email,
+          replyTo: candidate.fromEmail,
+          subject: email.subject,
+          html: fullHtml,
+          text: fullText,
+          tags: [
+            { name: 'type', value: 'follow_up' },
+            { name: 'sequence', value: String(candidate.sequenceNumber) },
+            { name: 'persona_id', value: candidate.personaId },
+            { name: 'user_id', value: candidate.userId },
+          ],
+        }),
+      );
 
-    if (result.error) {
+      if (result.error) {
+        const isRateLimit = result.error.message?.toLowerCase().includes('rate') ||
+          result.error.name === 'rate_limit_exceeded';
+
+        if (isRateLimit && attempt < MAX_RETRIES) {
+          const delay = 1000 * Math.pow(2, attempt - 1); // 1s, 2s, 4s
+          logger.warn('Follow-up email rate-limited, retrying', {
+            email: candidate.email, attempt, delay,
+          });
+          await new Promise((resolve) => setTimeout(resolve, delay));
+          continue;
+        }
+
+        await db
+          .update(followUpEmails)
+          .set({ status: 'failed', deliveryStatus: result.error.message, updatedAt: new Date() })
+          .where(eq(followUpEmails.id, recordId));
+
+        return { success: false, error: result.error.message };
+      }
+
+      // Mark as sent
       await db
         .update(followUpEmails)
-        .set({ status: 'failed', deliveryStatus: result.error.message, updatedAt: new Date() })
+        .set({
+          status: 'sent',
+          sentAt: new Date(),
+          resendEmailId: result.data?.id || null,
+          updatedAt: new Date(),
+        })
         .where(eq(followUpEmails.id, recordId));
 
-      return { success: false, error: result.error.message };
+      // Update user preferences tracking
+      await updateFollowUpTracking(candidate.userId);
+
+      return { success: true, emailId: result.data?.id };
+    } catch (error: any) {
+      const isRateLimit = error?.statusCode === 429 ||
+        error?.message?.toLowerCase().includes('rate');
+
+      if (isRateLimit && attempt < MAX_RETRIES) {
+        const delay = 1000 * Math.pow(2, attempt - 1);
+        logger.warn('Follow-up email rate-limited (exception), retrying', {
+          email: candidate.email, attempt, delay,
+        });
+        await new Promise((resolve) => setTimeout(resolve, delay));
+        continue;
+      }
+
+      logger.error('Failed to send follow-up email', {
+        email: candidate.email,
+        sequence: candidate.sequenceNumber,
+        error: error?.message,
+        attempt,
+      });
+
+      await db
+        .update(followUpEmails)
+        .set({
+          status: 'failed',
+          deliveryStatus: error?.message || 'Send failed',
+          updatedAt: new Date(),
+        })
+        .where(eq(followUpEmails.id, recordId));
+
+      return { success: false, error: error?.message || 'Send failed' };
     }
-
-    // Mark as sent
-    await db
-      .update(followUpEmails)
-      .set({
-        status: 'sent',
-        sentAt: new Date(),
-        resendEmailId: result.data?.id || null,
-        updatedAt: new Date(),
-      })
-      .where(eq(followUpEmails.id, recordId));
-
-    // Update user preferences tracking
-    await updateFollowUpTracking(candidate.userId);
-
-    return { success: true, emailId: result.data?.id };
-  } catch (error: any) {
-    logger.error('Failed to send follow-up email', {
-      email: candidate.email,
-      sequence: candidate.sequenceNumber,
-      error: (error as any)?.message,
-    });
-
-    await db
-      .update(followUpEmails)
-      .set({
-        status: 'failed',
-        deliveryStatus: error?.message || 'Send failed',
-        updatedAt: new Date(),
-      })
-      .where(eq(followUpEmails.id, recordId));
-
-    return { success: false, error: error?.message || 'Send failed' };
   }
+
+  // Should not reach here, but just in case
+  return { success: false, error: 'Max retries exceeded' };
 }
 
 /**

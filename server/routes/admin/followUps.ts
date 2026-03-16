@@ -8,6 +8,7 @@ import { eq, and, desc, gte, lte, count, sql } from 'drizzle-orm';
 import { z } from 'zod';
 import logger from '../../lib/logger';
 import { processFollowUpQueue } from '../../lib/followUpEmailGenerator';
+import { processTopupQueue } from '../../lib/topupEmailGenerator';
 import { generateMagicLinkToken } from '../../lib/magicLink';
 
 const router = Router();
@@ -48,6 +49,18 @@ router.post('/trigger', async (req: Request, res: Response) => {
   } catch (error: any) {
     logger.error('Admin follow-ups trigger error:', error);
     return res.status(500).json({ error: 'Failed to process follow-up queue' });
+  }
+});
+
+// POST /api/admin/follow-ups/trigger-topup - Manually trigger the top-up email queue
+router.post('/trigger-topup', async (req: Request, res: Response) => {
+  try {
+    logger.info('Admin: manually triggering top-up email queue', { adminId: req.adminId });
+    const stats = await processTopupQueue();
+    return res.json({ success: true, stats });
+  } catch (error: any) {
+    logger.error('Admin top-up trigger error:', error);
+    return res.status(500).json({ error: 'Failed to process top-up queue' });
   }
 });
 

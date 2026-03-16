@@ -20,6 +20,8 @@ import {
   ChevronLeft,
   ChevronRight,
   AlertCircle,
+  Play,
+  Loader2,
 } from "lucide-react";
 
 interface FollowUpEmail {
@@ -67,6 +69,9 @@ export default function FollowUpsDashboard() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [previewId, setPreviewId] = useState<string | null>(null);
   const [previewContent, setPreviewContent] = useState<any>(null);
+  const [triggeringFollowUp, setTriggeringFollowUp] = useState(false);
+  const [triggeringTopup, setTriggeringTopup] = useState(false);
+  const [triggerResult, setTriggerResult] = useState<string | null>(null);
 
   const pageSize = 20;
   const totalPages = Math.ceil(total / pageSize);
@@ -119,6 +124,44 @@ export default function FollowUpsDashboard() {
       }
     } catch (err) {
       console.error("Failed to fetch email preview:", err);
+    }
+  }
+
+  async function handleTriggerFollowUp() {
+    setTriggeringFollowUp(true);
+    setTriggerResult(null);
+    try {
+      const res = await adminFetch("/api/admin/follow-ups/trigger", { method: "POST" });
+      const data = await res.json();
+      if (data.success) {
+        setTriggerResult(`Follow-up: ${data.stats.sent} sent, ${data.stats.failed} failed out of ${data.stats.processed} candidates`);
+        fetchData();
+      } else {
+        setTriggerResult("Follow-up trigger failed");
+      }
+    } catch (err) {
+      setTriggerResult("Follow-up trigger error");
+    } finally {
+      setTriggeringFollowUp(false);
+    }
+  }
+
+  async function handleTriggerTopup() {
+    setTriggeringTopup(true);
+    setTriggerResult(null);
+    try {
+      const res = await adminFetch("/api/admin/follow-ups/trigger-topup", { method: "POST" });
+      const data = await res.json();
+      if (data.success) {
+        setTriggerResult(`Top-up: ${data.stats.sent} sent, ${data.stats.failed} failed out of ${data.stats.processed} candidates`);
+        fetchData();
+      } else {
+        setTriggerResult("Top-up trigger failed");
+      }
+    } catch (err) {
+      setTriggerResult("Top-up trigger error");
+    } finally {
+      setTriggeringTopup(false);
     }
   }
 
@@ -215,6 +258,28 @@ export default function FollowUpsDashboard() {
         <Button
           size="sm"
           variant="outline"
+          className="text-purple-400 border-purple-700 hover:bg-purple-900/30"
+          onClick={handleTriggerFollowUp}
+          disabled={triggeringFollowUp}
+        >
+          {triggeringFollowUp ? <Loader2 className="w-3 h-3 mr-1 animate-spin" /> : <Play className="w-3 h-3 mr-1" />}
+          Run Follow-Ups
+        </Button>
+
+        <Button
+          size="sm"
+          variant="outline"
+          className="text-amber-400 border-amber-700 hover:bg-amber-900/30"
+          onClick={handleTriggerTopup}
+          disabled={triggeringTopup}
+        >
+          {triggeringTopup ? <Loader2 className="w-3 h-3 mr-1 animate-spin" /> : <Play className="w-3 h-3 mr-1" />}
+          Run Top-Ups
+        </Button>
+
+        <Button
+          size="sm"
+          variant="outline"
           className="text-gray-400 border-gray-700"
           onClick={handleExport}
         >
@@ -222,6 +287,12 @@ export default function FollowUpsDashboard() {
           Export CSV
         </Button>
       </div>
+
+      {triggerResult && (
+        <div className="mb-4 p-3 rounded-lg bg-gray-800 border border-gray-700 text-sm text-gray-300">
+          {triggerResult}
+        </div>
+      )}
 
       {loading ? (
         <div className="flex justify-center py-12">
