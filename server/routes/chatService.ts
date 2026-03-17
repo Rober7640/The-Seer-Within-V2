@@ -221,13 +221,6 @@ router.post('/session/start', requireAuth, async (req: Request, res: Response) =
       remainingCoins: result.creditsRemaining,
       isContinuation: result.isContinuation,
       pricing: { ...pricing, coinsPerMinute: personaRecord[0].coinsPerMinute },
-      // TEMPORARY: billing debug info
-      _billingDebug: {
-        balancePreInit,
-        balancePostInit,
-        deducted: balancePreInit - balancePostInit,
-        activeSessions: activeSessions.rows,
-      },
     });
   } catch (error: any) {
     if (error.message === 'USER_NOT_FOUND') {
@@ -310,13 +303,6 @@ router.post('/session/:id/message', requireAuth, chatLimiter, async (req: Reques
       chartData: result.chartData ?? null,
       userMessageId: result.userMessageId,
       assistantMessageId: result.assistantMessageId,
-      // TEMPORARY: billing debug info — remove after fixing
-      _billingDebug: {
-        dbBalanceBefore,
-        dbBalanceAfter,
-        deducted: dbBalanceBefore - dbBalanceAfter,
-        session: sessionDebug.rows[0] || null,
-      },
     });
   } catch (error: any) {
     if (error.message === 'SESSION_NOT_FOUND') {

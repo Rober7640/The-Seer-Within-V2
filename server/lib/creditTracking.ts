@@ -261,17 +261,19 @@ export async function checkpointSession(sessionId: string): Promise<void> {
     sql`SELECT coins_charged, duration_seconds FROM chat_sessions WHERE id = ${sessionId}`
   );
   const pc = postCommit.rows[0] as { coins_charged: number; duration_seconds: number } | undefined;
-  if (pc && (pc.coins_charged > MAX_BILLABLE_SECONDS || pc.duration_seconds > MAX_BILLABLE_SECONDS)) {
+  const maxBillableCoins = secondsToCoins(MAX_BILLABLE_SECONDS);
+  if (pc && (pc.coins_charged > maxBillableCoins || pc.duration_seconds > MAX_BILLABLE_SECONDS)) {
     logger.error('BILLING_CORRUPTION_DETECTED: post-commit values exceed safety cap', {
       sessionId,
       postCommitCoins: pc.coins_charged,
       postCommitDuration: pc.duration_seconds,
-      maxAllowed: MAX_BILLABLE_SECONDS,
+      maxAllowedCoins: maxBillableCoins,
+      maxAllowedSeconds: MAX_BILLABLE_SECONDS,
     });
     // NUCLEAR FIX: force correct the corrupted values
     await db.execute(
       sql`UPDATE chat_sessions SET
-            coins_charged = LEAST(coins_charged, ${MAX_BILLABLE_SECONDS}),
+            coins_charged = LEAST(coins_charged, ${maxBillableCoins}),
             duration_seconds = LEAST(duration_seconds, ${MAX_BILLABLE_SECONDS})
           WHERE id = ${sessionId}`
     );

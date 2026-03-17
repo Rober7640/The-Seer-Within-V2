@@ -48,11 +48,6 @@ app.use(express.text({ type: 'text/plain' }));
 // Attach request IDs and log API requests
 app.use(requestIdMiddleware);
 
-/** @deprecated Use `import logger from './lib/logger'` instead. Kept for backward compat. */
-export function log(message: string, source = "express") {
-  logger.info(message, { source });
-}
-
 (async () => {
   await registerRoutes(httpServer, app);
 

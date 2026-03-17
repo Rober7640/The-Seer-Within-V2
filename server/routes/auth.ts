@@ -167,16 +167,16 @@ router.get('/verify-email/:token', async (req: Request, res: Response) => {
       return;
     }
 
-    // Mark email as verified and grant free credits
+    // Mark email as verified and grant free credits (atomic increment + guard against double-verify)
     await db.update(users)
       .set({
         emailVerified: true,
-        coinBalance: user.coinBalance + FREE_COINS_ON_VERIFY,
+        coinBalance: sql`coin_balance + ${FREE_COINS_ON_VERIFY}`,
         verificationToken: null,
         verificationTokenExpiry: null,
         updatedAt: new Date(),
       })
-      .where(eq(users.id, user.id));
+      .where(and(eq(users.id, user.id), eq(users.emailVerified, false)));
 
     // Generate JWT so the user is auto-logged-in (works even on a different device/browser)
     const jwtToken = generateToken(user.id, user.email);

@@ -180,7 +180,7 @@ router.post('/checkout', requireAuth, async (req: Request, res: Response) => {
     userId: req.userId!,
     personaId: personaId || null,
     packageType: tier.packageType,
-    coinsPurchased: tier.totalCoins,
+    coinsPurchased: tier.coins,
     bonusCoins: tier.bonusCoins,
     priceUsd: tier.priceUsd,
     status: 'pending',
@@ -293,7 +293,7 @@ router.post('/create-payment-intent', requireAuth, async (req: Request, res: Res
     userId: req.userId!,
     personaId: personaId || null,
     packageType: tier.packageType,
-    coinsPurchased: tier.totalCoins,
+    coinsPurchased: tier.coins,
     bonusCoins: tier.bonusCoins,
     priceUsd: tier.priceUsd,
     status: 'pending',
@@ -410,7 +410,7 @@ router.post('/confirm-payment', requireAuth, async (req: Request, res: Response)
 
     const updatedUser = await db.update(users)
       .set({
-        coinBalance: sql`coin_balance + ${purchase.coinsPurchased}`,
+        coinBalance: sql`coin_balance + ${purchase.coinsPurchased + (purchase.bonusCoins ?? 0)}`,
         updatedAt: new Date(),
       })
       .where(eq(users.id, req.userId!))
@@ -471,7 +471,7 @@ router.post('/create-order', requireAuth, async (req: Request, res: Response) =>
     userId: req.userId!,
     personaId: personaId || null,
     packageType: tier.packageType,
-    coinsPurchased: tier.totalCoins,
+    coinsPurchased: tier.coins,
     bonusCoins: tier.bonusCoins,
     priceUsd: tier.priceUsd,
     status: 'pending',
@@ -555,7 +555,7 @@ router.post('/capture-order', requireAuth, async (req: Request, res: Response) =
 
     const updatedUser = await db.update(users)
       .set({
-        coinBalance: sql`coin_balance + ${purchase.coinsPurchased}`,
+        coinBalance: sql`coin_balance + ${purchase.coinsPurchased + (purchase.bonusCoins ?? 0)}`,
         updatedAt: new Date(),
       })
       .where(eq(users.id, req.userId!))
@@ -597,7 +597,12 @@ router.post('/webhook', async (req: Request, res: Response) => {
 
   let event: Stripe.Event;
   try {
-    const rawBody = typeof req.body === 'string' ? req.body : JSON.stringify(req.body);
+    const rawBody = (req as any).rawBody as Buffer | undefined;
+    if (!rawBody) {
+      logger.error('Webhook: req.rawBody not available — check express.json verify middleware');
+      res.status(400).json({ error: 'Missing raw body' });
+      return;
+    }
     event = stripe.webhooks.constructEvent(rawBody, sig, webhookSecret);
   } catch (err: any) {
     logger.error('Webhook signature verification failed:', err.message);
@@ -624,13 +629,22 @@ router.post('/webhook', async (req: Request, res: Response) => {
     }
 
     try {
-      await db.update(creditPurchases)
+      // Idempotency: only grant coins if purchase is still pending.
+      // Stripe may retry webhooks — this prevents double-granting.
+      const updated = await db.update(creditPurchases)
         .set({
           status: 'completed',
           stripePaymentIntentId: session.payment_intent as string,
           updatedAt: new Date(),
         })
-        .where(eq(creditPurchases.id, purchaseId));
+        .where(and(eq(creditPurchases.id, purchaseId), eq(creditPurchases.status, 'pending')))
+        .returning({ id: creditPurchases.id });
+
+      if (updated.length === 0) {
+        logger.warn('Webhook: purchase already processed, skipping coin grant', { purchaseId });
+        res.json({ received: true });
+        return;
+      }
 
       await db.update(users)
         .set({
@@ -639,7 +653,7 @@ router.post('/webhook', async (req: Request, res: Response) => {
         })
         .where(eq(users.id, userId));
 
-      logger.info('Coins added', { totalCoins, userId });
+      logger.info('Coins added', { totalCoins, userId, purchaseId });
     } catch (dbError) {
       logger.error('Webhook DB error:', dbError);
       res.status(500).json({ error: 'Database error' });
