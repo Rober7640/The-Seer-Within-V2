@@ -31,9 +31,12 @@ export default function LoginPage() {
     if ((verified === "success" || verified === "already") && urlToken) {
       // Store the JWT and redirect — works even on a different device/browser
       localStorage.setItem("seer_auth_token", urlToken);
+      // Preserve persona from verification redirect (BUG-3: cross-device persona context)
+      const persona = params.get("persona");
+      const personaQuery = persona ? `?persona=${persona}` : "";
       // Clean the URL to avoid token leaking in browser history
       window.history.replaceState({}, "", "/login?verified=" + verified);
-      navigate("/reading");
+      navigate(`/reading${personaQuery}`);
       return;
     }
 

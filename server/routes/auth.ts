@@ -181,7 +181,19 @@ router.get('/verify-email/:token', async (req: Request, res: Response) => {
     // Generate JWT so the user is auto-logged-in (works even on a different device/browser)
     const jwtToken = generateToken(user.id, user.email);
     const baseUrl = process.env.BASE_URL || 'http://localhost:5000';
-    res.redirect(`${baseUrl}/login?verified=success&token=${jwtToken}`);
+
+    // Include default persona slug so cross-device verification preserves persona context (BUG-3)
+    let personaParam = '';
+    if (user.defaultPersonaId) {
+      const personaRow = await db.select({ slug: personas.slug })
+        .from(personas)
+        .where(eq(personas.id, user.defaultPersonaId))
+        .limit(1);
+      if (personaRow[0]?.slug) {
+        personaParam = `&persona=${personaRow[0].slug}`;
+      }
+    }
+    res.redirect(`${baseUrl}/login?verified=success&token=${jwtToken}${personaParam}`);
   } catch (error) {
     logger.error('Verify email error:', error);
     res.status(500).json({ error: 'Verification failed' });

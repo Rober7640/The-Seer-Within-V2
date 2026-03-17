@@ -894,6 +894,8 @@ export default function ChatServicePage() {
       setMessages([]);
       setPreSessionGreeting(null);
       setReadingEnded(false);
+      setBirthChartExists(null);
+      setStoredChartData(null);
       const targetPersona = personas.find((p) => p.slug === action.slug);
       if (targetPersona) {
         setSelectedPersonaId(targetPersona.id);
