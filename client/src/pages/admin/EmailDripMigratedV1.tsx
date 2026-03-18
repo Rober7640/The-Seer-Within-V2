@@ -4,7 +4,7 @@ import { useAdmin, adminFetch } from "@/hooks/useAdmin";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Play, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
+import { Play, Loader2, ChevronLeft, ChevronRight, Eye, X } from "lucide-react";
 
 interface DripEmail {
   id: string;
@@ -44,6 +44,8 @@ export default function EmailDripMigratedV1() {
   const [loading, setLoading] = useState(true);
   const [triggering, setTriggering] = useState(false);
   const [triggerResult, setTriggerResult] = useState<string | null>(null);
+  const [previewId, setPreviewId] = useState<string | null>(null);
+  const [previewHtml, setPreviewHtml] = useState<string | null>(null);
 
   const pageSize = 20;
   const totalPages = Math.ceil(total / pageSize);
@@ -90,6 +92,22 @@ export default function EmailDripMigratedV1() {
     } catch {
       setTriggerResult("Trigger error");
     } finally { setTriggering(false); }
+  }
+
+  async function handlePreview(id: string) {
+    if (previewId === id) {
+      setPreviewId(null);
+      setPreviewHtml(null);
+      return;
+    }
+    try {
+      const res = await adminFetch(`/api/admin/email-drip/${id}`);
+      if (res.ok) {
+        const data = await res.json();
+        setPreviewHtml(data.email.bodyHtml);
+        setPreviewId(id);
+      }
+    } catch {}
   }
 
   if (!isAuthenticated) return null;
@@ -190,32 +208,59 @@ export default function EmailDripMigratedV1() {
                     <th className="text-left p-3">Subject</th>
                     <th className="text-center p-3">Status</th>
                     <th className="text-left p-3">Sent At</th>
+                    <th className="text-center p-3">Preview</th>
                   </tr>
                 </thead>
                 <tbody>
                   {emails.map((e) => (
-                    <tr key={e.id} className="border-b border-gray-800/50 hover:bg-gray-800/30">
-                      <td className="p-3 text-gray-300 text-xs">{e.recipientEmail}</td>
-                      <td className="p-3 text-gray-300 text-xs">{e.firstName}</td>
-                      <td className="p-3 text-center">
-                        <span className="inline-block px-2 py-0.5 rounded text-xs font-medium bg-gray-800 text-gray-300">
-                          {e.sequenceNumber}
-                        </span>
-                      </td>
-                      <td className="p-3 text-gray-400 text-xs max-w-[200px] truncate">{e.subject}</td>
-                      <td className="p-3 text-center">
-                        <span className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${statusColors[e.status] || "text-gray-400 bg-gray-800"}`}>
-                          {e.status}
-                        </span>
-                      </td>
-                      <td className="p-3 text-gray-500 text-xs">
-                        {e.sentAt ? new Date(e.sentAt).toLocaleString() : "—"}
-                      </td>
-                    </tr>
+                    <>
+                      <tr key={e.id} className="border-b border-gray-800/50 hover:bg-gray-800/30">
+                        <td className="p-3 text-gray-300 text-xs">{e.recipientEmail}</td>
+                        <td className="p-3 text-gray-300 text-xs">{e.firstName}</td>
+                        <td className="p-3 text-center">
+                          <span className="inline-block px-2 py-0.5 rounded text-xs font-medium bg-gray-800 text-gray-300">
+                            {e.sequenceNumber}
+                          </span>
+                        </td>
+                        <td className="p-3 text-gray-400 text-xs max-w-[200px] truncate">{e.subject}</td>
+                        <td className="p-3 text-center">
+                          <span className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${statusColors[e.status] || "text-gray-400 bg-gray-800"}`}>
+                            {e.status}
+                          </span>
+                        </td>
+                        <td className="p-3 text-gray-500 text-xs">
+                          {e.sentAt ? new Date(e.sentAt).toLocaleString() : "—"}
+                        </td>
+                        <td className="p-3 text-center">
+                          <button
+                            onClick={() => handlePreview(e.id)}
+                            className="text-gray-500 hover:text-purple-400 transition-colors"
+                          >
+                            {previewId === e.id ? <X className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                          </button>
+                        </td>
+                      </tr>
+                      {previewId === e.id && previewHtml && (
+                        <tr key={`${e.id}-preview`}>
+                          <td colSpan={7} className="p-0">
+                            <div className="bg-gray-950 border-t border-b border-gray-700 p-4">
+                              <div className="bg-white rounded-lg overflow-hidden max-w-[600px] mx-auto" style={{ maxHeight: '500px', overflowY: 'auto' }}>
+                                <iframe
+                                  srcDoc={previewHtml}
+                                  className="w-full border-0"
+                                  style={{ height: '480px' }}
+                                  title="Email preview"
+                                />
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </>
                   ))}
                   {emails.length === 0 && (
                     <tr>
-                      <td colSpan={6} className="p-8 text-center text-gray-600 text-sm">
+                      <td colSpan={7} className="p-8 text-center text-gray-600 text-sm">
                         No migration drip emails yet
                       </td>
                     </tr>
