@@ -3,16 +3,32 @@
 
 import { Router, Request, Response } from 'express';
 import { db } from '../../lib/db';
-import { migrationDripEmails, users, conversations } from '@shared/schema';
+import { migrationDripEmails, users, conversations, userMemory } from '@shared/schema';
 import { eq, and, desc, count, sql, isNull } from 'drizzle-orm';
 import logger from '../../lib/logger';
 import {
   sendMigrationEmail1,
-  processMigrationDripQueue,
   getMigrationDripStats,
 } from '../../lib/migrationDripProcessor';
 
 const router = Router();
+
+// Bulk migration happened on 2026-03-18. Users created by the migration script
+// have userMemory with source = 'v1_migration'. Users created by the real-time
+// funnel trigger have source = 'v1_funnel_realtime'. We use this to distinguish.
+// Fallback: if no memory exists, check if user was created before the cutoff.
+const BULK_MIGRATION_CUTOFF = new Date('2026-03-18T12:00:00Z');
+
+// Helper: build conditions for migrated vs new V1
+function migratedV1Condition() {
+  // Migrated V1 = user created on or before migration date
+  return sql`${users.createdAt} <= ${BULK_MIGRATION_CUTOFF}`;
+}
+
+function newV1Condition() {
+  // New V1 = user created after migration date
+  return sql`${users.createdAt} > ${BULK_MIGRATION_CUTOFF}`;
+}
 
 // GET /api/admin/email-drip/migrated-stats - Stats for migrated V1 users
 router.get('/migrated-stats', async (req: Request, res: Response) => {
@@ -28,23 +44,12 @@ router.get('/migrated-stats', async (req: Request, res: Response) => {
 // GET /api/admin/email-drip/new-v1-stats - Stats for new V1 funnel users
 router.get('/new-v1-stats', async (req: Request, res: Response) => {
   try {
-    // New V1 = funnel users whose Email 1 source is 'funnel_migration' (real-time trigger)
-    // vs migrated = bulk migration. We distinguish by checking if the drip record
-    // was created by the funnelMigrationEmail (source: v1_funnel_realtime in memory)
-    // For simplicity, new V1 users are those migrated AFTER the bulk migration date
-    // OR we can check the userMemory source field.
-    // Simplest: new V1 = users created after bulk migration with migratedFromConversationId
-    // whose conversation was created recently (after migration date).
-
     const [totalNewV1, email1Sent, email2Sent, email3Sent] = await Promise.all([
-      // Count users whose conversation was created after 2026-03-18 (bulk migration date)
-      // and who have migratedFromConversationId set
       db.select({ c: count() }).from(users)
-        .innerJoin(conversations, eq(conversations.id, users.migratedFromConversationId))
         .where(
           and(
             sql`${users.migratedFromConversationId} IS NOT NULL`,
-            sql`${users.createdAt} > '2026-03-18T12:00:00Z'`, // After bulk migration
+            newV1Condition(),
           ),
         ),
       db.select({ c: count() }).from(migrationDripEmails)
@@ -53,7 +58,7 @@ router.get('/new-v1-stats', async (req: Request, res: Response) => {
           and(
             eq(migrationDripEmails.sequenceNumber, 1),
             eq(migrationDripEmails.status, 'sent'),
-            sql`${users.createdAt} > '2026-03-18T12:00:00Z'`,
+            newV1Condition(),
           ),
         ),
       db.select({ c: count() }).from(migrationDripEmails)
@@ -62,7 +67,7 @@ router.get('/new-v1-stats', async (req: Request, res: Response) => {
           and(
             eq(migrationDripEmails.sequenceNumber, 2),
             eq(migrationDripEmails.status, 'sent'),
-            sql`${users.createdAt} > '2026-03-18T12:00:00Z'`,
+            newV1Condition(),
           ),
         ),
       db.select({ c: count() }).from(migrationDripEmails)
@@ -71,7 +76,7 @@ router.get('/new-v1-stats', async (req: Request, res: Response) => {
           and(
             eq(migrationDripEmails.sequenceNumber, 3),
             eq(migrationDripEmails.status, 'sent'),
-            sql`${users.createdAt} > '2026-03-18T12:00:00Z'`,
+            newV1Condition(),
           ),
         ),
     ]);
@@ -110,10 +115,7 @@ router.get('/migrated-emails', async (req: Request, res: Response) => {
     const seqFilter = req.query.sequence ? parseInt(req.query.sequence as string) : undefined;
     const statusFilter = req.query.status as string | undefined;
 
-    const conditions = [
-      // Migrated V1 = created before bulk migration cutoff
-      sql`${users.createdAt} <= '2026-03-18T12:00:00Z'`,
-    ];
+    const conditions: any[] = [migratedV1Condition()];
     if (seqFilter) conditions.push(eq(migrationDripEmails.sequenceNumber, seqFilter));
     if (statusFilter) conditions.push(eq(migrationDripEmails.status, statusFilter));
 
@@ -160,9 +162,7 @@ router.get('/new-v1-emails', async (req: Request, res: Response) => {
     const seqFilter = req.query.sequence ? parseInt(req.query.sequence as string) : undefined;
     const statusFilter = req.query.status as string | undefined;
 
-    const conditions = [
-      sql`${users.createdAt} > '2026-03-18T12:00:00Z'`,
-    ];
+    const conditions: any[] = [newV1Condition()];
     if (seqFilter) conditions.push(eq(migrationDripEmails.sequenceNumber, seqFilter));
     if (statusFilter) conditions.push(eq(migrationDripEmails.status, statusFilter));
 
