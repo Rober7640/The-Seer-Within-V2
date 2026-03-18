@@ -40,6 +40,18 @@ export default function MagicAuthPage() {
         // Store the JWT exactly as the normal login flow does
         localStorage.setItem(AUTH_TOKEN_KEY, data.token);
 
+        // Migrated V1 users need to set a password on first login
+        if (data.needsPasswordSetup) {
+          // Store intended destination so SetPasswordPage can redirect after
+          const redirectTo = params.get("redirect");
+          const postTarget = redirectTo || (data.personaSlug
+            ? `/chat/${data.personaSlug}`
+            : "/reading");
+          sessionStorage.setItem("post_password_redirect", postTarget);
+          navigate("/set-password", { replace: true });
+          return;
+        }
+
         // Check for an explicit redirect destination (e.g. /credits from top-up emails)
         const redirectTo = params.get("redirect");
         const target = redirectTo || (data.personaSlug

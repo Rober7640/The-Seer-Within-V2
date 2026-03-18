@@ -607,6 +607,8 @@ router.post('/magic-verify', authLimiter, async (req: Request, res: Response) =>
         defaultPersonaId: users.defaultPersonaId,
         accountStatus: users.accountStatus,
         emailVerified: users.emailVerified,
+        migratedFromConversationId: users.migratedFromConversationId,
+        passwordChangedAt: users.passwordChangedAt,
       })
       .from(users)
       .where(eq(users.id, result.userId))
@@ -617,11 +619,15 @@ router.post('/magic-verify', authLimiter, async (req: Request, res: Response) =>
       return res.status(401).json({ error: 'User not found' });
     }
 
+    // Migrated V1 users who haven't set a password yet need to do so on first login
+    const needsPasswordSetup = !!(user.migratedFromConversationId && !user.passwordChangedAt);
+
     const jwtToken = generateToken(user.id, user.email);
 
     return res.json({
       token: jwtToken,
       personaSlug: result.personaSlug,
+      needsPasswordSetup,
       user: {
         id: user.id,
         email: user.email,
@@ -636,6 +642,60 @@ router.post('/magic-verify', authLimiter, async (req: Request, res: Response) =>
   } catch (error: any) {
     logger.error('Magic verify error:', error);
     return res.status(500).json({ error: 'Verification failed' });
+  }
+});
+
+// POST /api/auth/set-password
+// Allows migrated V1 users to set their password on first login via magic link.
+// Requires a valid JWT (user is already authenticated via magic link).
+router.post('/set-password', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const { password } = req.body;
+    if (!password || typeof password !== 'string' || password.length < 8) {
+      return res.status(400).json({ error: 'Password must be at least 8 characters' });
+    }
+
+    const userId = req.userId!;
+
+    // Verify user is a migrated user who hasn't set a password yet
+    const userRows = await db
+      .select({
+        migratedFromConversationId: users.migratedFromConversationId,
+        passwordChangedAt: users.passwordChangedAt,
+      })
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1);
+
+    const user = userRows[0];
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    if (!user.migratedFromConversationId) {
+      return res.status(400).json({ error: 'This endpoint is only for migrated accounts' });
+    }
+
+    if (user.passwordChangedAt) {
+      return res.status(400).json({ error: 'Password has already been set' });
+    }
+
+    const newHash = await hashPassword(password);
+    await db
+      .update(users)
+      .set({
+        passwordHash: newHash,
+        passwordChangedAt: new Date(),
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, userId));
+
+    logger.info('Migrated user set password', { userId });
+
+    return res.json({ success: true });
+  } catch (error: any) {
+    logger.error('Set password error:', error);
+    return res.status(500).json({ error: 'Failed to set password' });
   }
 });
 

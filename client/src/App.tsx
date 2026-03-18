@@ -30,6 +30,7 @@ const WelcomeChatPage = lazy(() => import("@/pages/WelcomeChatPage"));
 const ForgotPasswordPage = lazy(() => import("@/pages/ForgotPasswordPage"));
 const ResetPasswordPage = lazy(() => import("@/pages/ResetPasswordPage"));
 const MagicAuthPage = lazy(() => import("@/pages/MagicAuthPage"));
+const SetPasswordPage = lazy(() => import("@/pages/SetPasswordPage"));
 
 // Admin pages (lazy loaded)
 const AdminLogin = lazy(() => import("@/pages/admin/AdminLogin"));
@@ -86,6 +87,7 @@ function Router() {
           }}
         </Route>
         <Route path="/magic-auth" component={MagicAuthPage} />
+        <Route path="/set-password" component={SetPasswordPage} />
 
         {/* Chat service routes with layout */}
         <Route path="/chat/:personaSlug">
