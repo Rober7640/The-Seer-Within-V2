@@ -120,6 +120,8 @@ export async function findUsersNeedingFollowUp(): Promise<FollowUpCandidate[]> {
         eq(chatSessions.status, 'ended'),
         lt(chatSessions.endedAt, minCutoff),
         sql`${users.email} NOT LIKE '%@example.com' AND ${users.email} NOT LIKE '%@test.com'`,
+        // Exclude migrated V1 users who haven't logged in yet
+        sql`(${users.migratedFromConversationId} IS NULL OR ${users.lastLoginAt} IS NOT NULL)`,
       ),
     )
     .orderBy(desc(chatSessions.endedAt));
