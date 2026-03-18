@@ -1,18 +1,10 @@
 import { useState, useEffect } from "react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
-import { useAdmin } from "@/hooks/useAdmin";
+import { useAdmin, adminFetch } from "@/hooks/useAdmin";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Play, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
-
-function adminFetch(url: string, opts?: RequestInit) {
-  const token = localStorage.getItem("admin_auth_token");
-  return fetch(url, {
-    ...opts,
-    headers: { ...opts?.headers, "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-  });
-}
 
 interface DripEmail {
   id: string;
