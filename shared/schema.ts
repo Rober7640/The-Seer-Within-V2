@@ -557,6 +557,31 @@ export const topupEmails = pgTable("topup_emails", {
   index("idx_topup_emails_status").on(table.status, table.sentAt),
 ]);
 
+// 18. Migration Drip Emails - V1→V2 migration email sequence tracking
+export const migrationDripEmails = pgTable("migration_drip_emails", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+
+  sequenceNumber: integer("sequence_number").notNull(), // 1, 2, or 3
+  recipientEmail: text("recipient_email").notNull(),
+  subject: text("subject").notNull(),
+  bodyHtml: text("body_html").notNull(),
+  bodyText: text("body_text").notNull(),
+
+  status: text("status").default("pending").notNull(), // pending, sent, failed
+  sentAt: timestamp("sent_at"),
+  resendEmailId: text("resend_email_id"),
+
+  generatedBy: text("generated_by").default("claude-haiku").notNull(),
+  generationTokens: integer("generation_tokens"),
+
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_migration_drip_user_seq").on(table.userId, table.sequenceNumber),
+  index("idx_migration_drip_status").on(table.status, table.sentAt),
+]);
+
 // ============================================================
 // Insert Schemas (Zod validation)
 // ============================================================

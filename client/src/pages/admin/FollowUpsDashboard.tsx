@@ -71,6 +71,8 @@ export default function FollowUpsDashboard() {
   const [previewContent, setPreviewContent] = useState<any>(null);
   const [triggeringFollowUp, setTriggeringFollowUp] = useState(false);
   const [triggeringTopup, setTriggeringTopup] = useState(false);
+  const [triggeringMigration, setTriggeringMigration] = useState(false);
+  const [migrationStats, setMigrationStats] = useState<any>(null);
   const [triggerResult, setTriggerResult] = useState<string | null>(null);
 
   const pageSize = 20;
@@ -145,6 +147,41 @@ export default function FollowUpsDashboard() {
       setTriggeringFollowUp(false);
     }
   }
+
+  async function handleTriggerMigration() {
+    setTriggeringMigration(true);
+    setTriggerResult(null);
+    try {
+      const res = await adminFetch("/api/admin/follow-ups/trigger-migration", { method: "POST" });
+      const data = await res.json();
+      if (data.success) {
+        setTriggerResult(`Migration: ${data.stats.sent} sent, ${data.stats.failed} failed, ${data.stats.skipped} skipped out of ${data.stats.processed} candidates`);
+        fetchMigrationStats();
+        fetchData();
+      } else {
+        setTriggerResult("Migration trigger failed");
+      }
+    } catch (err) {
+      setTriggerResult("Migration trigger error");
+    } finally {
+      setTriggeringMigration(false);
+    }
+  }
+
+  async function fetchMigrationStats() {
+    try {
+      const res = await adminFetch("/api/admin/follow-ups/migration-stats");
+      if (res.ok) {
+        setMigrationStats(await res.json());
+      }
+    } catch (err) {
+      // ignore
+    }
+  }
+
+  useEffect(() => {
+    fetchMigrationStats();
+  }, []);
 
   async function handleTriggerTopup() {
     setTriggeringTopup(true);
@@ -280,6 +317,17 @@ export default function FollowUpsDashboard() {
         <Button
           size="sm"
           variant="outline"
+          className="text-emerald-400 border-emerald-700 hover:bg-emerald-900/30"
+          onClick={handleTriggerMigration}
+          disabled={triggeringMigration}
+        >
+          {triggeringMigration ? <Loader2 className="w-3 h-3 mr-1 animate-spin" /> : <Play className="w-3 h-3 mr-1" />}
+          Send Migration Emails
+        </Button>
+
+        <Button
+          size="sm"
+          variant="outline"
           className="text-gray-400 border-gray-700"
           onClick={handleExport}
         >
@@ -287,6 +335,17 @@ export default function FollowUpsDashboard() {
           Export CSV
         </Button>
       </div>
+
+      {migrationStats && (
+        <div className="mb-4 p-3 rounded-lg bg-gray-800 border border-gray-700 text-sm text-gray-300">
+          <span className="text-emerald-400 font-medium">Migration Drip:</span>{" "}
+          {migrationStats.totalEligible} eligible |
+          Email 1: {migrationStats.email1Sent} sent |
+          Email 2: {migrationStats.email2Sent} sent |
+          Email 3: {migrationStats.email3Sent} sent |
+          Logged in: {migrationStats.loggedIn}
+        </div>
+      )}
 
       {triggerResult && (
         <div className="mb-4 p-3 rounded-lg bg-gray-800 border border-gray-700 text-sm text-gray-300">
