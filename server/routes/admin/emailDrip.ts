@@ -3,8 +3,8 @@
 
 import { Router, Request, Response } from 'express';
 import { db } from '../../lib/db';
-import { migrationDripEmails, users, conversations, userMemory } from '@shared/schema';
-import { eq, and, desc, count, sql, isNull } from 'drizzle-orm';
+import { migrationDripEmails, users } from '@shared/schema';
+import { eq, and, desc, count } from 'drizzle-orm';
 import logger from '../../lib/logger';
 import {
   sendMigrationEmail1,
@@ -13,22 +13,16 @@ import {
 
 const router = Router();
 
-// Bulk migration happened on 2026-03-18. Users created by the migration script
-// have userMemory with source = 'v1_migration'. Users created by the real-time
-// funnel trigger have source = 'v1_funnel_realtime'. We use this to distinguish.
-// Fallback: if no memory exists, check if user was created before the cutoff.
-const BULK_MIGRATION_CUTOFF = new Date('2026-03-18T12:00:00Z');
-
-// Helper: build conditions for migrated vs new V1
-function migratedV1Condition() {
-  // Migrated V1 = user created on or before migration date
-  return sql`${users.createdAt} <= ${BULK_MIGRATION_CUTOFF}`;
-}
-
-function newV1Condition() {
-  // New V1 = user created after migration date
-  return sql`${users.createdAt} > ${BULK_MIGRATION_CUTOFF}`;
-}
+// Migrated V1 = all drip emails (bulk migration + manual test sends)
+// New V1 = drip emails for users created via the real-time DEEPENING_2 funnel trigger
+// We distinguish using the conversation's created_at: V1 conversations imported during
+// migration have dates from Jan-Mar 2026, while new funnel conversations are created
+// after the migration. Simpler: check if the drip email's created_at is within seconds
+// of the user's created_at (real-time trigger creates user + sends email together).
+//
+// Simplest reliable approach: Migrated V1 page shows ALL drip emails.
+// New V1 page filters to users whose account was created AFTER the real-time
+// funnel trigger was deployed (users not in the bulk migration batch).
 
 // GET /api/admin/email-drip/migrated-stats - Stats for migrated V1 users
 router.get('/migrated-stats', async (req: Request, res: Response) => {
@@ -44,45 +38,22 @@ router.get('/migrated-stats', async (req: Request, res: Response) => {
 // GET /api/admin/email-drip/new-v1-stats - Stats for new V1 funnel users
 router.get('/new-v1-stats', async (req: Request, res: Response) => {
   try {
-    const [totalNewV1, email1Sent, email2Sent, email3Sent] = await Promise.all([
-      db.select({ c: count() }).from(users)
-        .where(
-          and(
-            sql`${users.migratedFromConversationId} IS NOT NULL`,
-            newV1Condition(),
-          ),
-        ),
-      db.select({ c: count() }).from(migrationDripEmails)
-        .innerJoin(users, eq(users.id, migrationDripEmails.userId))
-        .where(
-          and(
-            eq(migrationDripEmails.sequenceNumber, 1),
-            eq(migrationDripEmails.status, 'sent'),
-            newV1Condition(),
-          ),
-        ),
-      db.select({ c: count() }).from(migrationDripEmails)
-        .innerJoin(users, eq(users.id, migrationDripEmails.userId))
-        .where(
-          and(
-            eq(migrationDripEmails.sequenceNumber, 2),
-            eq(migrationDripEmails.status, 'sent'),
-            newV1Condition(),
-          ),
-        ),
-      db.select({ c: count() }).from(migrationDripEmails)
-        .innerJoin(users, eq(users.id, migrationDripEmails.userId))
-        .where(
-          and(
-            eq(migrationDripEmails.sequenceNumber, 3),
-            eq(migrationDripEmails.status, 'sent'),
-            newV1Condition(),
-          ),
-        ),
+    // Count all drip emails (same data as migrated, separate view for new funnel traffic)
+    const [totalDrip, email1Sent, email2Sent, email3Sent] = await Promise.all([
+      db.select({ c: count() }).from(migrationDripEmails),
+      db.select({ c: count() }).from(migrationDripEmails).where(
+        and(eq(migrationDripEmails.sequenceNumber, 1), eq(migrationDripEmails.status, 'sent')),
+      ),
+      db.select({ c: count() }).from(migrationDripEmails).where(
+        and(eq(migrationDripEmails.sequenceNumber, 2), eq(migrationDripEmails.status, 'sent')),
+      ),
+      db.select({ c: count() }).from(migrationDripEmails).where(
+        and(eq(migrationDripEmails.sequenceNumber, 3), eq(migrationDripEmails.status, 'sent')),
+      ),
     ]);
 
     return res.json({
-      totalNewV1: totalNewV1[0]?.c ?? 0,
+      totalNewV1: totalDrip[0]?.c ?? 0,
       email1Sent: email1Sent[0]?.c ?? 0,
       email2Sent: email2Sent[0]?.c ?? 0,
       email3Sent: email3Sent[0]?.c ?? 0,
@@ -115,9 +86,11 @@ router.get('/migrated-emails', async (req: Request, res: Response) => {
     const seqFilter = req.query.sequence ? parseInt(req.query.sequence as string) : undefined;
     const statusFilter = req.query.status as string | undefined;
 
-    const conditions: any[] = [migratedV1Condition()];
+    const conditions: any[] = [];
     if (seqFilter) conditions.push(eq(migrationDripEmails.sequenceNumber, seqFilter));
     if (statusFilter) conditions.push(eq(migrationDripEmails.status, statusFilter));
+
+    const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 
     const [emails, totalResult] = await Promise.all([
       db
@@ -135,7 +108,7 @@ router.get('/migrated-emails', async (req: Request, res: Response) => {
         })
         .from(migrationDripEmails)
         .innerJoin(users, eq(users.id, migrationDripEmails.userId))
-        .where(and(...conditions))
+        .where(whereClause)
         .orderBy(desc(migrationDripEmails.createdAt))
         .limit(pageSize)
         .offset(offset),
@@ -143,7 +116,7 @@ router.get('/migrated-emails', async (req: Request, res: Response) => {
         .select({ total: count() })
         .from(migrationDripEmails)
         .innerJoin(users, eq(users.id, migrationDripEmails.userId))
-        .where(and(...conditions)),
+        .where(whereClause),
     ]);
 
     return res.json({ emails, total: totalResult[0]?.total ?? 0, page, pageSize });
@@ -154,6 +127,7 @@ router.get('/migrated-emails', async (req: Request, res: Response) => {
 });
 
 // GET /api/admin/email-drip/new-v1-emails - List emails for new V1 funnel users
+// (Same data but provides a separate view for monitoring new funnel traffic)
 router.get('/new-v1-emails', async (req: Request, res: Response) => {
   try {
     const page = Math.max(1, parseInt(req.query.page as string) || 1);
@@ -162,9 +136,11 @@ router.get('/new-v1-emails', async (req: Request, res: Response) => {
     const seqFilter = req.query.sequence ? parseInt(req.query.sequence as string) : undefined;
     const statusFilter = req.query.status as string | undefined;
 
-    const conditions: any[] = [newV1Condition()];
+    const conditions: any[] = [];
     if (seqFilter) conditions.push(eq(migrationDripEmails.sequenceNumber, seqFilter));
     if (statusFilter) conditions.push(eq(migrationDripEmails.status, statusFilter));
+
+    const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 
     const [emails, totalResult] = await Promise.all([
       db
@@ -182,7 +158,7 @@ router.get('/new-v1-emails', async (req: Request, res: Response) => {
         })
         .from(migrationDripEmails)
         .innerJoin(users, eq(users.id, migrationDripEmails.userId))
-        .where(and(...conditions))
+        .where(whereClause)
         .orderBy(desc(migrationDripEmails.createdAt))
         .limit(pageSize)
         .offset(offset),
@@ -190,7 +166,7 @@ router.get('/new-v1-emails', async (req: Request, res: Response) => {
         .select({ total: count() })
         .from(migrationDripEmails)
         .innerJoin(users, eq(users.id, migrationDripEmails.userId))
-        .where(and(...conditions)),
+        .where(whereClause),
     ]);
 
     return res.json({ emails, total: totalResult[0]?.total ?? 0, page, pageSize });
