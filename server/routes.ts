@@ -33,6 +33,7 @@ import {
   recordApiRequest,
   recordApiError,
 } from "./lib/healthCheck";
+import { isTier1State, migrateAndEmailFunnelUser } from "./lib/funnelMigrationEmail";
 import {
   generateReading1,
   generateReading2,
@@ -524,6 +525,27 @@ export async function registerRoutes(
         conversationState: conversationState,
         messages: JSON.stringify(messages),
       });
+
+      // Tier 1 funnel migration: auto-create V2 account and send personalized
+      // email when user reaches DEEPENING_2 or beyond (non-blocking)
+      if (conversationState && isTier1State(conversationState) && userData.email) {
+        migrateAndEmailFunnelUser({
+          email: userData.email,
+          firstName: userData.firstName,
+          bucket: userData.bucket,
+          subBucket: userData.subBucket,
+          concern: userData.concern,
+          deeperResponse: userData.deeperResponse,
+          vision: userData.desires,
+          emotionalResponse: userData.emotionalResponse,
+          blockSource: userData.blockSource,
+          personName: userData.personName,
+          location: userData.location,
+          timeOfDay: userData.timeOfDay,
+        }).catch((err) => {
+          logger.error('Funnel migration background error', { error: err?.message });
+        });
+      }
 
       return res.json({ success: true });
     } catch (error) {

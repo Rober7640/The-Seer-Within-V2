@@ -77,8 +77,17 @@ async function main() {
   await v1Client.connect();
   log('Connected to V1 (Neon)');
 
-  // Connect to V2 (Supabase)
-  const v2Pool = new pg.Pool({ connectionString: V2_DATABASE_URL, max: 5 });
+  // Connect to V2 (Supabase) with keepalive to prevent connection drops
+  const v2Pool = new pg.Pool({
+    connectionString: V2_DATABASE_URL,
+    max: 5,
+    idleTimeoutMillis: 0,           // Don't close idle connections
+    keepAlive: true,
+    keepAliveInitialDelayMillis: 10000,
+  });
+  v2Pool.on('error', (err) => {
+    log(`Pool error (non-fatal): ${err.message}`);
+  });
   const v2 = drizzle(v2Pool);
   log('Connected to V2 (Supabase)');
 
@@ -102,6 +111,10 @@ async function main() {
   );
   const v1Rows = v1Result.rows;
   log(`Fetched ${v1Rows.length} V1 conversations`);
+
+  // Close V1 connection early — all data is in memory now
+  await v1Client.end();
+  log('V1 connection closed (data in memory)');
 
   // ─── Step 3: Check existing V2 data ───────────────────────────
   // Get existing conversation IDs to skip duplicates
@@ -188,10 +201,18 @@ async function main() {
       continue;
     }
 
+    if (DRY_RUN) {
+      usersCreated++;
+      if (usersCreated % 500 === 0) {
+        log(`  Users (dry): ${usersCreated}/${emailToConvo.size - usersSkipped} counted...`);
+      }
+      continue;
+    }
+
     const tempPassword = generateTempPassword();
     const passwordHash = await bcrypt.hash(tempPassword, 10);
 
-    if (!DRY_RUN) {
+    {
       const inserted = await v2
         .insert(users)
         .values({
@@ -309,7 +330,6 @@ async function main() {
   }
 
   // Cleanup
-  await v1Client.end();
   await v2Pool.end();
   log('\nDone.');
 }
