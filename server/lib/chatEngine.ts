@@ -739,6 +739,24 @@ Return JSON: {"message": "your greeting"}`;
 Generate a warm, personal opening message for ${user[0].firstName} — a new client. Welcome them and ask what brings them here today or what they're hoping to understand about their life. Keep it to 1-2 sentences. Do NOT mention birth data, charts, or ask for any information yet — just make them feel welcome and invite them to share.
 
 Return JSON: {"message": "your greeting"}`;
+  } else if (user[0].migratedFromConversationId && memoryContext) {
+    // Migrated V1 user — Evelyn remembers them from their original reading
+    greetingPrompt = `${personaVoice}
+
+Generate a warm, personal welcome-back greeting for ${user[0].firstName} — someone you gave a reading to a while ago on a different platform, and who has now returned to continue their journey with you.
+
+Here is what you remember from their previous reading:
+${memoryContext}
+
+STRICT RULES:
+- Gently reference ONE specific detail from their previous reading (their area of focus, concern, or emotional state) to show you remember them. Keep it natural, not a data dump.
+- Express genuine warmth that they've come back — you've been thinking about them.
+- End with an open invitation to share what's on their mind now.
+- Do NOT start with "Welcome back" — be more personal and specific.
+- Sound like a real person reconnecting with someone they care about.
+- Keep it to 2-3 sentences maximum.
+
+Return JSON: {"message": "your greeting"}`;
   } else if (isReturning) {
     greetingPrompt = `${personaVoice}
 
