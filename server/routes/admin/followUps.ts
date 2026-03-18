@@ -10,7 +10,6 @@ import logger from '../../lib/logger';
 import { processFollowUpQueue } from '../../lib/followUpEmailGenerator';
 import { processTopupQueue } from '../../lib/topupEmailGenerator';
 import { generateMagicLinkToken } from '../../lib/magicLink';
-import { sendMigrationEmail1, getMigrationDripStats } from '../../lib/migrationDripProcessor';
 
 const router = Router();
 
@@ -62,30 +61,6 @@ router.post('/trigger-topup', async (req: Request, res: Response) => {
   } catch (error: any) {
     logger.error('Admin top-up trigger error:', error);
     return res.status(500).json({ error: 'Failed to process top-up queue' });
-  }
-});
-
-// POST /api/admin/follow-ups/trigger-migration - Manually trigger migration Email 1
-router.post('/trigger-migration', async (req: Request, res: Response) => {
-  try {
-    const limit = req.body.limit ? parseInt(req.body.limit) : undefined;
-    logger.info('Admin: manually triggering migration drip Email 1', { adminId: req.adminId, limit });
-    const stats = await sendMigrationEmail1(limit);
-    return res.json({ success: true, stats });
-  } catch (error: any) {
-    logger.error('Admin migration trigger error:', error);
-    return res.status(500).json({ error: 'Failed to process migration queue' });
-  }
-});
-
-// GET /api/admin/follow-ups/migration-stats - Migration drip statistics
-router.get('/migration-stats', async (req: Request, res: Response) => {
-  try {
-    const stats = await getMigrationDripStats();
-    return res.json(stats);
-  } catch (error: any) {
-    logger.error('Admin migration stats error:', error);
-    return res.status(500).json({ error: 'Failed to fetch migration stats' });
   }
 });
 

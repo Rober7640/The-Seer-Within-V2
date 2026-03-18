@@ -1,0 +1,203 @@
+// Admin Email Drip Routes
+// Provides endpoints for managing migration drip emails (Migrated V1 and New V1)
+
+import { Router, Request, Response } from 'express';
+import { db } from '../../lib/db';
+import { migrationDripEmails, users, conversations } from '@shared/schema';
+import { eq, and, desc, count, sql, isNull } from 'drizzle-orm';
+import logger from '../../lib/logger';
+import {
+  sendMigrationEmail1,
+  processMigrationDripQueue,
+  getMigrationDripStats,
+} from '../../lib/migrationDripProcessor';
+
+const router = Router();
+
+// GET /api/admin/email-drip/migrated-stats - Stats for migrated V1 users
+router.get('/migrated-stats', async (req: Request, res: Response) => {
+  try {
+    const stats = await getMigrationDripStats();
+    return res.json(stats);
+  } catch (error: any) {
+    logger.error('Admin migrated stats error:', error);
+    return res.status(500).json({ error: 'Failed to fetch stats' });
+  }
+});
+
+// GET /api/admin/email-drip/new-v1-stats - Stats for new V1 funnel users
+router.get('/new-v1-stats', async (req: Request, res: Response) => {
+  try {
+    // New V1 = funnel users whose Email 1 source is 'funnel_migration' (real-time trigger)
+    // vs migrated = bulk migration. We distinguish by checking if the drip record
+    // was created by the funnelMigrationEmail (source: v1_funnel_realtime in memory)
+    // For simplicity, new V1 users are those migrated AFTER the bulk migration date
+    // OR we can check the userMemory source field.
+    // Simplest: new V1 = users created after bulk migration with migratedFromConversationId
+    // whose conversation was created recently (after migration date).
+
+    const [totalNewV1, email1Sent, email2Sent, email3Sent] = await Promise.all([
+      // Count users whose conversation was created after 2026-03-18 (bulk migration date)
+      // and who have migratedFromConversationId set
+      db.select({ c: count() }).from(users)
+        .innerJoin(conversations, eq(conversations.id, users.migratedFromConversationId))
+        .where(
+          and(
+            sql`${users.migratedFromConversationId} IS NOT NULL`,
+            sql`${users.createdAt} > '2026-03-18T12:00:00Z'`, // After bulk migration
+          ),
+        ),
+      db.select({ c: count() }).from(migrationDripEmails)
+        .innerJoin(users, eq(users.id, migrationDripEmails.userId))
+        .where(
+          and(
+            eq(migrationDripEmails.sequenceNumber, 1),
+            eq(migrationDripEmails.status, 'sent'),
+            sql`${users.createdAt} > '2026-03-18T12:00:00Z'`,
+          ),
+        ),
+      db.select({ c: count() }).from(migrationDripEmails)
+        .innerJoin(users, eq(users.id, migrationDripEmails.userId))
+        .where(
+          and(
+            eq(migrationDripEmails.sequenceNumber, 2),
+            eq(migrationDripEmails.status, 'sent'),
+            sql`${users.createdAt} > '2026-03-18T12:00:00Z'`,
+          ),
+        ),
+      db.select({ c: count() }).from(migrationDripEmails)
+        .innerJoin(users, eq(users.id, migrationDripEmails.userId))
+        .where(
+          and(
+            eq(migrationDripEmails.sequenceNumber, 3),
+            eq(migrationDripEmails.status, 'sent'),
+            sql`${users.createdAt} > '2026-03-18T12:00:00Z'`,
+          ),
+        ),
+    ]);
+
+    return res.json({
+      totalNewV1: totalNewV1[0]?.c ?? 0,
+      email1Sent: email1Sent[0]?.c ?? 0,
+      email2Sent: email2Sent[0]?.c ?? 0,
+      email3Sent: email3Sent[0]?.c ?? 0,
+    });
+  } catch (error: any) {
+    logger.error('Admin new V1 stats error:', error);
+    return res.status(500).json({ error: 'Failed to fetch stats' });
+  }
+});
+
+// POST /api/admin/email-drip/trigger-migration - Manually trigger Email 1 for migrated users
+router.post('/trigger-migration', async (req: Request, res: Response) => {
+  try {
+    const limit = req.body.limit ? parseInt(req.body.limit) : undefined;
+    logger.info('Admin: triggering migration drip Email 1', { adminId: req.adminId, limit });
+    const stats = await sendMigrationEmail1(limit);
+    return res.json({ success: true, stats });
+  } catch (error: any) {
+    logger.error('Admin migration trigger error:', error);
+    return res.status(500).json({ error: 'Failed to process migration queue' });
+  }
+});
+
+// GET /api/admin/email-drip/migrated-emails - List migration drip emails for migrated V1
+router.get('/migrated-emails', async (req: Request, res: Response) => {
+  try {
+    const page = Math.max(1, parseInt(req.query.page as string) || 1);
+    const pageSize = Math.min(100, Math.max(1, parseInt(req.query.pageSize as string) || 20));
+    const offset = (page - 1) * pageSize;
+    const seqFilter = req.query.sequence ? parseInt(req.query.sequence as string) : undefined;
+    const statusFilter = req.query.status as string | undefined;
+
+    const conditions = [
+      // Migrated V1 = created before bulk migration cutoff
+      sql`${users.createdAt} <= '2026-03-18T12:00:00Z'`,
+    ];
+    if (seqFilter) conditions.push(eq(migrationDripEmails.sequenceNumber, seqFilter));
+    if (statusFilter) conditions.push(eq(migrationDripEmails.status, statusFilter));
+
+    const [emails, totalResult] = await Promise.all([
+      db
+        .select({
+          id: migrationDripEmails.id,
+          userId: migrationDripEmails.userId,
+          recipientEmail: migrationDripEmails.recipientEmail,
+          firstName: users.firstName,
+          sequenceNumber: migrationDripEmails.sequenceNumber,
+          subject: migrationDripEmails.subject,
+          status: migrationDripEmails.status,
+          sentAt: migrationDripEmails.sentAt,
+          resendEmailId: migrationDripEmails.resendEmailId,
+          createdAt: migrationDripEmails.createdAt,
+        })
+        .from(migrationDripEmails)
+        .innerJoin(users, eq(users.id, migrationDripEmails.userId))
+        .where(and(...conditions))
+        .orderBy(desc(migrationDripEmails.createdAt))
+        .limit(pageSize)
+        .offset(offset),
+      db
+        .select({ total: count() })
+        .from(migrationDripEmails)
+        .innerJoin(users, eq(users.id, migrationDripEmails.userId))
+        .where(and(...conditions)),
+    ]);
+
+    return res.json({ emails, total: totalResult[0]?.total ?? 0, page, pageSize });
+  } catch (error: any) {
+    logger.error('Admin migrated emails list error:', error);
+    return res.status(500).json({ error: 'Failed to fetch emails' });
+  }
+});
+
+// GET /api/admin/email-drip/new-v1-emails - List emails for new V1 funnel users
+router.get('/new-v1-emails', async (req: Request, res: Response) => {
+  try {
+    const page = Math.max(1, parseInt(req.query.page as string) || 1);
+    const pageSize = Math.min(100, Math.max(1, parseInt(req.query.pageSize as string) || 20));
+    const offset = (page - 1) * pageSize;
+    const seqFilter = req.query.sequence ? parseInt(req.query.sequence as string) : undefined;
+    const statusFilter = req.query.status as string | undefined;
+
+    const conditions = [
+      sql`${users.createdAt} > '2026-03-18T12:00:00Z'`,
+    ];
+    if (seqFilter) conditions.push(eq(migrationDripEmails.sequenceNumber, seqFilter));
+    if (statusFilter) conditions.push(eq(migrationDripEmails.status, statusFilter));
+
+    const [emails, totalResult] = await Promise.all([
+      db
+        .select({
+          id: migrationDripEmails.id,
+          userId: migrationDripEmails.userId,
+          recipientEmail: migrationDripEmails.recipientEmail,
+          firstName: users.firstName,
+          sequenceNumber: migrationDripEmails.sequenceNumber,
+          subject: migrationDripEmails.subject,
+          status: migrationDripEmails.status,
+          sentAt: migrationDripEmails.sentAt,
+          resendEmailId: migrationDripEmails.resendEmailId,
+          createdAt: migrationDripEmails.createdAt,
+        })
+        .from(migrationDripEmails)
+        .innerJoin(users, eq(users.id, migrationDripEmails.userId))
+        .where(and(...conditions))
+        .orderBy(desc(migrationDripEmails.createdAt))
+        .limit(pageSize)
+        .offset(offset),
+      db
+        .select({ total: count() })
+        .from(migrationDripEmails)
+        .innerJoin(users, eq(users.id, migrationDripEmails.userId))
+        .where(and(...conditions)),
+    ]);
+
+    return res.json({ emails, total: totalResult[0]?.total ?? 0, page, pageSize });
+  } catch (error: any) {
+    logger.error('Admin new V1 emails list error:', error);
+    return res.status(500).json({ error: 'Failed to fetch emails' });
+  }
+});
+
+export default router;

@@ -43,6 +43,8 @@ const UserDetail = lazy(() => import("@/pages/admin/UserDetail"));
 const SafetyDashboard = lazy(() => import("@/pages/admin/SafetyDashboard"));
 const IntentConfigEditor = lazy(() => import("@/pages/admin/IntentConfigEditor"));
 const FollowUpsDashboard = lazy(() => import("@/pages/admin/FollowUpsDashboard"));
+const EmailDripMigratedV1 = lazy(() => import("@/pages/admin/EmailDripMigratedV1"));
+const EmailDripNewV1 = lazy(() => import("@/pages/admin/EmailDripNewV1"));
 const MarketplacePage = lazy(() => import("@/pages/admin/MarketplacePage"));
 const SettingsPage = lazy(() => import("@/pages/admin/SettingsPage"));
 
@@ -136,6 +138,8 @@ function Router() {
         <Route path="/admin/intent-configs/:personaId" component={IntentConfigEditor} />
         <Route path="/admin/intent-configs" component={IntentConfigEditor} />
         <Route path="/admin/follow-ups" component={FollowUpsDashboard} />
+        <Route path="/admin/email-drip/migrated-v1" component={EmailDripMigratedV1} />
+        <Route path="/admin/email-drip/new-v1" component={EmailDripNewV1} />
         <Route path="/admin/marketplace" component={MarketplacePage} />
         <Route path="/admin/settings" component={SettingsPage} />
 

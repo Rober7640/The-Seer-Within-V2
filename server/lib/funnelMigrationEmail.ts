@@ -9,7 +9,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import { getModelForOperation } from './modelConfig';
 import { Resend } from 'resend';
 import { db } from './db';
-import { users, personas, userMemory, conversations } from '@shared/schema';
+import { users, personas, userMemory, conversations, migrationDripEmails } from '@shared/schema';
 import { eq } from 'drizzle-orm';
 import { randomBytes } from 'crypto';
 import bcrypt from 'bcrypt';
@@ -214,6 +214,23 @@ export async function migrateAndEmailFunnelUser(
       unsubscribeUrl: `${BASE_URL}/api/webhooks/unsubscribe?token=na`,
     });
 
+    // Track in migration_drip_emails table (Email 1)
+    const record = await db
+      .insert(migrationDripEmails)
+      .values({
+        userId,
+        sequenceNumber: 1,
+        recipientEmail: userData.email,
+        subject: emailContent.subject,
+        bodyHtml: fullHtml,
+        bodyText: fullText,
+        status: 'pending',
+        generatedBy: 'claude-haiku',
+      })
+      .returning({ id: migrationDripEmails.id });
+
+    const recordId = record[0]?.id;
+
     if (!resend) {
       logger.warn('Funnel migration: Resend not configured, email not sent', { email });
       return;
@@ -232,17 +249,28 @@ export async function migrateAndEmailFunnelUser(
         text: fullText,
         tags: [
           { name: 'type', value: 'funnel_migration' },
+          { name: 'sequence', value: '1' },
           { name: 'user_id', value: userId },
         ],
       }),
     );
 
     if (result.error) {
+      if (recordId) {
+        await db.update(migrationDripEmails)
+          .set({ status: 'failed', updatedAt: new Date() })
+          .where(eq(migrationDripEmails.id, recordId));
+      }
       logger.error('Funnel migration: email send failed', {
         email,
         error: result.error.message,
       });
     } else {
+      if (recordId) {
+        await db.update(migrationDripEmails)
+          .set({ status: 'sent', sentAt: new Date(), resendEmailId: result.data?.id || null, updatedAt: new Date() })
+          .where(eq(migrationDripEmails.id, recordId));
+      }
       logger.info('Funnel migration: email sent', {
         email,
         resendId: result.data?.id,
