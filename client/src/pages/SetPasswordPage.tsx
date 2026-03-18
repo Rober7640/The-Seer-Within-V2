@@ -52,6 +52,11 @@ export default function SetPasswordPage() {
       });
 
       if (res.ok) {
+        const data = await res.json().catch(() => ({}));
+        // Replace the old JWT with the fresh one (old one is invalidated by password change)
+        if (data.token) {
+          localStorage.setItem(AUTH_TOKEN_KEY, data.token);
+        }
         setSuccess(true);
       } else {
         const data = await res.json().catch(() => ({}));

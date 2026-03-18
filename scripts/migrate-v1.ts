@@ -19,7 +19,7 @@ import { drizzle } from 'drizzle-orm/node-postgres';
 import { eq, sql } from 'drizzle-orm';
 import { randomBytes } from 'crypto';
 import bcrypt from 'bcrypt';
-import { conversations, users, personas, magicLinkTokens } from '../shared/schema';
+import { conversations, users, personas, magicLinkTokens, userMemory } from '../shared/schema';
 
 // ─── Configuration ───────────────────────────────────────────────
 const V1_DATABASE_URL =
@@ -209,6 +209,47 @@ async function main() {
 
       const userId = inserted[0]?.id;
       if (userId) {
+        // Seed memory from V1 conversation data so Evelyn remembers them
+        const summaryParts: string[] = [];
+        if (convo.bucket) summaryParts.push(`Area of focus: ${convo.bucket}`);
+        if (convo.concern) summaryParts.push(`Main concern: ${convo.concern}`);
+        if (convo.person_name) summaryParts.push(`Important person: ${convo.person_name}`);
+        if (convo.vision) summaryParts.push(`Vision/desires: ${convo.vision}`);
+        if (convo.emotional_response) summaryParts.push(`Emotional state: ${convo.emotional_response}`);
+        if (convo.location) summaryParts.push(`Location: ${convo.location}`);
+
+        if (summaryParts.length > 0) {
+          const fullContext: Record<string, unknown> = {
+            source: 'v1_migration',
+            bucket: convo.bucket,
+            subBucket: convo.sub_bucket,
+            concern: convo.concern,
+            personName: convo.person_name,
+            vision: convo.vision,
+            deeperResponse: convo.deeper_response,
+            emotionalResponse: convo.emotional_response,
+            blockSource: convo.block_source,
+            location: convo.location,
+            timeOfDay: convo.time_of_day,
+            purchased: convo.purchased,
+            funnelDate: convo.created_at,
+            keyTopics: [convo.bucket, convo.sub_bucket].filter(Boolean),
+            nextSessionContext: convo.concern
+              ? `User previously discussed: ${convo.concern}. Pick up where you left off naturally.`
+              : undefined,
+          };
+
+          await v2.insert(userMemory).values({
+            userId,
+            personaId: evelynPersonaId,
+            memoryType: 'long_term_context',
+            summary: `From initial reading: ${summaryParts.join('. ')}`,
+            fullContext: JSON.stringify(fullContext),
+            importance: 8,
+            category: convo.bucket || 'general',
+          });
+        }
+
         migrationReport.push({
           email: convo.email,
           firstName: convo.first_name,

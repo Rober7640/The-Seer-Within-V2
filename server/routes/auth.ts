@@ -660,6 +660,7 @@ router.post('/set-password', requireAuth, async (req: Request, res: Response) =>
     // Verify user is a migrated user who hasn't set a password yet
     const userRows = await db
       .select({
+        email: users.email,
         migratedFromConversationId: users.migratedFromConversationId,
         passwordChangedAt: users.passwordChangedAt,
       })
@@ -692,7 +693,10 @@ router.post('/set-password', requireAuth, async (req: Request, res: Response) =>
 
     logger.info('Migrated user set password', { userId });
 
-    return res.json({ success: true });
+    // Issue a fresh JWT so the old one (issued before password change) isn't rejected
+    const freshToken = generateToken(userId, user.email);
+
+    return res.json({ success: true, token: freshToken });
   } catch (error: any) {
     logger.error('Set password error:', error);
     return res.status(500).json({ error: 'Failed to set password' });
