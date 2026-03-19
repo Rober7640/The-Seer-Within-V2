@@ -11,7 +11,7 @@ import { Resend } from 'resend';
 import { db } from './db';
 import { users, personas, userMemory, conversations, migrationDripEmails } from '@shared/schema';
 import { eq } from 'drizzle-orm';
-import { randomBytes } from 'crypto';
+import { randomBytes, randomUUID } from 'crypto';
 import bcrypt from 'bcrypt';
 import { buildFollowUpHtml, buildFollowUpText } from './emailTemplate';
 import { generateMagicLinkToken } from './magicLink';
@@ -197,12 +197,15 @@ export async function migrateAndEmailFunnelUser(
       ? (evelyn.avatarUrl.startsWith('http') ? evelyn.avatarUrl : `${BASE_URL}${evelyn.avatarUrl}`)
       : undefined;
 
+    const unsubscribeToken = randomUUID();
+    const unsubscribeUrl = `${BASE_URL}/api/webhooks/unsubscribe?token=${unsubscribeToken}`;
+
     const fullHtml = buildFollowUpHtml({
       personaName: evelyn.displayName,
       emailBody: emailContent.bodyHtml,
       ctaUrl: magicUrl,
       ctaText: 'Pick Up Where You Left Off',
-      unsubscribeUrl: `${BASE_URL}/api/webhooks/unsubscribe?token=na`,
+      unsubscribeUrl,
       privacyUrl: `${BASE_URL}/privacy`,
       avatarUrl,
     });
@@ -211,7 +214,7 @@ export async function migrateAndEmailFunnelUser(
       personaName: evelyn.displayName,
       emailBody: emailContent.bodyText,
       ctaUrl: magicUrl,
-      unsubscribeUrl: `${BASE_URL}/api/webhooks/unsubscribe?token=na`,
+      unsubscribeUrl,
     });
 
     // Track in migration_drip_emails table (Email 1)
@@ -226,6 +229,7 @@ export async function migrateAndEmailFunnelUser(
         bodyText: fullText,
         status: 'pending',
         generatedBy: 'claude-haiku',
+        unsubscribeToken,
       })
       .returning({ id: migrationDripEmails.id });
 

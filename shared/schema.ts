@@ -550,6 +550,9 @@ export const topupEmails = pgTable("topup_emails", {
 
   unsubscribeToken: text("unsubscribe_token").notNull().unique(),
 
+  openedAt: timestamp("opened_at"),
+  clickedAt: timestamp("clicked_at"),
+
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 }, (table) => [
@@ -577,6 +580,8 @@ export const migrationDripEmails = pgTable("migration_drip_emails", {
 
   openedAt: timestamp("opened_at"),
   clickedAt: timestamp("clicked_at"),
+
+  unsubscribeToken: text("unsubscribe_token").unique(),
 
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),

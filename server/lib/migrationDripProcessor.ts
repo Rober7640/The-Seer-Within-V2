@@ -2,7 +2,7 @@
 //
 // Handles the 3-email migration sequence for V1 funnel users migrated to V2.
 // - Email 1: Sent manually via admin trigger (or immediately for new funnel users)
-// - Email 2: Sent 48 hours after Email 1 (via cron)
+// - Email 2: Sent 24 hours after Email 1 (via cron)
 // - Email 3: Sent 24 hours after Email 2 (via cron)
 //
 // Stops if user logs into V2 (lastLoginAt gets set).
@@ -19,7 +19,7 @@ import {
   migrationDripEmails,
 } from '@shared/schema';
 import { eq, and, isNull, sql, desc, count } from 'drizzle-orm';
-import { randomBytes } from 'crypto';
+import { randomBytes, randomUUID } from 'crypto';
 import bcrypt from 'bcrypt';
 import { buildFollowUpHtml, buildFollowUpText } from './emailTemplate';
 import { generateMagicLinkToken } from './magicLink';
@@ -201,7 +201,7 @@ export async function processMigrationDripQueue(): Promise<{
 
   const now = new Date();
 
-  // Find users who need Email 2: Email 1 sent 48+ hours ago, no Email 2 yet, not logged in
+  // Find users who need Email 2: Email 1 sent 24+ hours ago, no Email 2 yet, not logged in
   const email2Candidates = await db
     .select({
       userId: migrationDripEmails.userId,
@@ -215,7 +215,7 @@ export async function processMigrationDripQueue(): Promise<{
         eq(migrationDripEmails.status, 'sent'),
         isNull(users.lastLoginAt),
         eq(users.accountStatus, 'active'),
-        // Email 1 sent 48+ hours ago
+        // Email 1 sent 24+ hours ago
         sql`${migrationDripEmails.sentAt} <= NOW() - INTERVAL '${sql.raw(String(EMAIL2_DELAY_HOURS))} hours'`,
         // No Email 2 yet
         sql`${migrationDripEmails.userId} NOT IN (SELECT user_id FROM migration_drip_emails WHERE sequence_number = 2)`,
@@ -342,12 +342,15 @@ async function sendDripEmail(
     3: 'Hear Evelyn\'s Final Message',
   };
 
+  const unsubscribeToken = randomUUID();
+  const unsubscribeUrl = `${BASE_URL}/api/webhooks/unsubscribe?token=${unsubscribeToken}`;
+
   const fullHtml = buildFollowUpHtml({
     personaName: evelyn.displayName,
     emailBody: emailContent.bodyHtml,
     ctaUrl: magicUrl,
     ctaText: ctaLabels[sequenceNumber],
-    unsubscribeUrl: `${BASE_URL}/api/webhooks/unsubscribe?token=na`,
+    unsubscribeUrl,
     privacyUrl: `${BASE_URL}/privacy`,
     avatarUrl,
   });
@@ -356,7 +359,7 @@ async function sendDripEmail(
     personaName: evelyn.displayName,
     emailBody: emailContent.bodyText,
     ctaUrl: magicUrl,
-    unsubscribeUrl: `${BASE_URL}/api/webhooks/unsubscribe?token=na`,
+    unsubscribeUrl,
   });
 
   // Save to DB as pending
@@ -372,6 +375,7 @@ async function sendDripEmail(
       status: 'pending',
       generatedBy: 'claude-haiku',
       generationTokens: emailContent.tokens,
+      unsubscribeToken,
     })
     .returning({ id: migrationDripEmails.id });
 

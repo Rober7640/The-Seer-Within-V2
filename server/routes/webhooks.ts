@@ -3,7 +3,7 @@
 import { Router, Request, Response } from 'express';
 import { Webhook } from 'svix';
 import { db } from '../lib/db';
-import { followUpEmails, userFollowUpPreferences, migrationDripEmails } from '@shared/schema';
+import { followUpEmails, userFollowUpPreferences, migrationDripEmails, topupEmails } from '@shared/schema';
 import { eq } from 'drizzle-orm';
 import logger from '../lib/logger';
 
@@ -141,6 +141,71 @@ router.post('/resend', async (req: Request, res: Response) => {
             .update(migrationDripEmails)
             .set({ status: 'failed', updatedAt: new Date() })
             .where(eq(migrationDripEmails.id, dripRecord.id));
+          await autoUnsubscribe(dripRecord.userId, 'bounced');
+          break;
+
+        case 'email.complained':
+          await db
+            .update(migrationDripEmails)
+            .set({ status: 'failed', updatedAt: new Date() })
+            .where(eq(migrationDripEmails.id, dripRecord.id));
+          await autoUnsubscribe(dripRecord.userId, 'spam_complaint');
+          break;
+      }
+
+      return res.status(200).json({ received: true });
+    }
+
+    // Check top-up emails
+    const topupRecords = await db
+      .select()
+      .from(topupEmails)
+      .where(eq(topupEmails.resendEmailId, emailId))
+      .limit(1);
+
+    const topupRecord = topupRecords[0];
+
+    if (topupRecord) {
+      switch (event.type) {
+        case 'email.delivered':
+          await db
+            .update(topupEmails)
+            .set({ status: 'sent', updatedAt: new Date() })
+            .where(eq(topupEmails.id, topupRecord.id));
+          break;
+
+        case 'email.opened':
+          if (!topupRecord.openedAt) {
+            await db
+              .update(topupEmails)
+              .set({ openedAt: new Date(), updatedAt: new Date() })
+              .where(eq(topupEmails.id, topupRecord.id));
+          }
+          break;
+
+        case 'email.clicked':
+          if (!topupRecord.clickedAt) {
+            await db
+              .update(topupEmails)
+              .set({ clickedAt: new Date(), updatedAt: new Date() })
+              .where(eq(topupEmails.id, topupRecord.id));
+          }
+          break;
+
+        case 'email.bounced':
+          await db
+            .update(topupEmails)
+            .set({ status: 'failed', updatedAt: new Date() })
+            .where(eq(topupEmails.id, topupRecord.id));
+          await autoUnsubscribe(topupRecord.userId, 'bounced');
+          break;
+
+        case 'email.complained':
+          await db
+            .update(topupEmails)
+            .set({ status: 'failed', updatedAt: new Date() })
+            .where(eq(topupEmails.id, topupRecord.id));
+          await autoUnsubscribe(topupRecord.userId, 'spam_complaint');
           break;
       }
 
@@ -167,20 +232,49 @@ router.get('/unsubscribe', async (req: Request, res: Response) => {
       return res.status(400).send(unsubscribePageHtml('Missing unsubscribe token.', false));
     }
 
-    // Find the email by unsubscribe token
-    const emailRecords = await db
-      .select()
+    // Find the email by unsubscribe token — check all 3 email tables
+    let userId: string | null = null;
+
+    const followUpRecord = await db
+      .select({ userId: followUpEmails.userId })
       .from(followUpEmails)
       .where(eq(followUpEmails.unsubscribeToken, token))
       .limit(1);
 
-    const record = emailRecords[0];
-    if (!record) {
+    if (followUpRecord[0]) {
+      userId = followUpRecord[0].userId;
+    }
+
+    if (!userId) {
+      const topupRecord = await db
+        .select({ userId: topupEmails.userId })
+        .from(topupEmails)
+        .where(eq(topupEmails.unsubscribeToken, token))
+        .limit(1);
+
+      if (topupRecord[0]) {
+        userId = topupRecord[0].userId;
+      }
+    }
+
+    if (!userId) {
+      const dripRecord = await db
+        .select({ userId: migrationDripEmails.userId })
+        .from(migrationDripEmails)
+        .where(eq(migrationDripEmails.unsubscribeToken, token))
+        .limit(1);
+
+      if (dripRecord[0]) {
+        userId = dripRecord[0].userId;
+      }
+    }
+
+    if (!userId) {
       return res.status(404).send(unsubscribePageHtml('Invalid or expired unsubscribe link.', false));
     }
 
     // Unsubscribe the user
-    await autoUnsubscribe(record.userId, 'user_unsubscribed');
+    await autoUnsubscribe(userId, 'user_unsubscribed');
 
     return res.status(200).send(unsubscribePageHtml(
       'You have been unsubscribed from follow-up emails. You will no longer receive these messages.',
@@ -204,18 +298,48 @@ router.post('/unsubscribe', async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Missing token' });
     }
 
-    const emailRecords = await db
-      .select()
+    // Find the email by unsubscribe token — check all 3 email tables
+    let userId: string | null = null;
+
+    const followUpRecord = await db
+      .select({ userId: followUpEmails.userId })
       .from(followUpEmails)
       .where(eq(followUpEmails.unsubscribeToken, token))
       .limit(1);
 
-    const record = emailRecords[0];
-    if (!record) {
+    if (followUpRecord[0]) {
+      userId = followUpRecord[0].userId;
+    }
+
+    if (!userId) {
+      const topupRecord = await db
+        .select({ userId: topupEmails.userId })
+        .from(topupEmails)
+        .where(eq(topupEmails.unsubscribeToken, token))
+        .limit(1);
+
+      if (topupRecord[0]) {
+        userId = topupRecord[0].userId;
+      }
+    }
+
+    if (!userId) {
+      const dripRecord = await db
+        .select({ userId: migrationDripEmails.userId })
+        .from(migrationDripEmails)
+        .where(eq(migrationDripEmails.unsubscribeToken, token))
+        .limit(1);
+
+      if (dripRecord[0]) {
+        userId = dripRecord[0].userId;
+      }
+    }
+
+    if (!userId) {
       return res.status(404).json({ error: 'Invalid token' });
     }
 
-    await autoUnsubscribe(record.userId, 'user_unsubscribed');
+    await autoUnsubscribe(userId, 'user_unsubscribed');
 
     return res.status(200).json({ success: true, message: 'Unsubscribed successfully' });
   } catch (error) {
