@@ -29,7 +29,7 @@ Mark each item done as you go. Do not skip items — each one has caught a real 
 - [ ] `STRIPE_CREDITS_WEBHOOK_SECRET` matches the second live webhook signing secret
 - [ ] `STRIPE_PRICE_ID_15MIN` and `STRIPE_PRICE_ID_30MIN` are live Stripe price IDs
 - [ ] `RESEND_API_KEY` is valid
-- [ ] `FOLLOW_UP_FROM_EMAIL=hello@theseerwithin.com`
+- [ ] `FOLLOW_UP_FROM_EMAIL=hi@theseerwithin.com`
 - [ ] `FOLLOW_UP_FROM_NAME=The Seer Within`
 - [ ] `CRON_TIMEZONE=America/New_York` (or correct timezone)
 

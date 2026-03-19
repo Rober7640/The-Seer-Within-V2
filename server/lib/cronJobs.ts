@@ -6,6 +6,7 @@ import { processFollowUpQueue, resetMonthlyCounters } from './followUpEmailGener
 import { processTopupQueue } from './topupEmailGenerator';
 import { cleanupInactiveSessions } from './creditTracking';
 import { cleanupExpiredMagicLinks } from './magicLink';
+import { processMigrationDripQueue } from './migrationDripProcessor';
 import logger from './logger';
 
 // Per-job concurrency guards — prevent overlapping runs if a job takes longer than its interval
@@ -13,6 +14,7 @@ let isFollowUpProcessing = false;
 let isTopupProcessing = false;
 let isMonthlyResetProcessing = false;
 let isSessionCleanupProcessing = false;
+let isMigrationDripProcessing = false;
 
 /**
  * Initialize all cron jobs.
@@ -118,6 +120,28 @@ export function initializeCronJobs(): void {
         logger.error('Cron: Session timeout cleanup failed', { error: (error as Error).message });
       } finally {
         isSessionCleanupProcessing = false;
+      }
+    },
+    { timezone },
+  );
+
+  // Migration drip Email 2 & 3 every 6 hours (midnight, 6 AM, noon, 6 PM)
+  cron.schedule(
+    '0 */6 * * *',
+    async () => {
+      if (isMigrationDripProcessing) {
+        logger.info('Cron: Migration drip already running, skipping');
+        return;
+      }
+      isMigrationDripProcessing = true;
+      logger.info('Cron: Starting migration drip processing (Email 2 & 3)');
+      try {
+        const stats = await processMigrationDripQueue();
+        logger.info('Cron: Migration drip processing complete', stats);
+      } catch (error) {
+        logger.error('Cron: Migration drip processing failed', { error: (error as Error).message });
+      } finally {
+        isMigrationDripProcessing = false;
       }
     },
     { timezone },

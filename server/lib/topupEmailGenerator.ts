@@ -247,6 +247,9 @@ async function findCandidates(): Promise<TopupCandidate[]> {
         eq(users.accountStatus, 'active'),
         lte(users.coinBalance, 30),
         sql`${users.email} NOT LIKE '%@example.com' AND ${users.email} NOT LIKE '%@test.com'`,
+        // Exclude migrated V1 users who haven't logged in yet — they haven't
+        // used the platform and shouldn't receive top-up emails prematurely
+        sql`(${users.migratedFromConversationId} IS NULL OR ${users.lastLoginAt} IS NOT NULL)`,
       ),
     );
 

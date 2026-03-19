@@ -13,6 +13,7 @@ import {
   Brain,
   Mail,
   LayoutGrid,
+  Send,
 } from "lucide-react";
 
 const NAV_ITEMS = [
@@ -23,6 +24,10 @@ const NAV_ITEMS = [
   { path: "/admin/safety", label: "Safety", icon: Shield },
   { path: "/admin/intent-configs", label: "Intent Configs", icon: Brain },
   { path: "/admin/follow-ups", label: "Follow-Ups", icon: Mail },
+  { path: "/admin/email-drip", label: "Email Drip", icon: Send, children: [
+    { path: "/admin/email-drip/migrated-v1", label: "Migrated V1" },
+    { path: "/admin/email-drip/new-v1", label: "New V1" },
+  ]},
   { path: "/admin/marketplace", label: "Marketplace", icon: LayoutGrid },
   { path: "/admin/settings", label: "Settings", icon: Settings },
 ];
@@ -67,6 +72,41 @@ export function AdminLayout({ children, title }: AdminLayoutProps) {
           {NAV_ITEMS.map((item) => {
             const isActive = location.startsWith(item.path);
             const Icon = item.icon;
+            const children = (item as any).children as Array<{ path: string; label: string }> | undefined;
+
+            if (children) {
+              return (
+                <div key={item.path}>
+                  <div
+                    className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm ${
+                      isActive ? "text-purple-300" : "text-gray-400"
+                    }`}
+                  >
+                    <Icon className="w-4 h-4" />
+                    {item.label}
+                  </div>
+                  <div className="ml-7 space-y-0.5 mt-0.5">
+                    {children.map((child) => {
+                      const childActive = location === child.path;
+                      return (
+                        <Link key={child.path} href={child.path}>
+                          <button
+                            className={`w-full text-left px-3 py-1.5 rounded-md text-xs transition-colors ${
+                              childActive
+                                ? "bg-purple-600/20 text-purple-300"
+                                : "text-gray-500 hover:text-white hover:bg-gray-800"
+                            }`}
+                          >
+                            {child.label}
+                          </button>
+                        </Link>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            }
+
             return (
               <Link key={item.path} href={item.path}>
                 <button

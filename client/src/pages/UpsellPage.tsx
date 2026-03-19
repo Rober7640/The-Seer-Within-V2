@@ -9,7 +9,7 @@ import { Volume2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import type { Bucket } from "@shared/types";
-import lavaStoneImage from "../assets/images/lava-stone.png";
+import lavaStoneImage from "../assets/images/lava-stone.jpg";
 
 interface UserData {
   firstName: string;

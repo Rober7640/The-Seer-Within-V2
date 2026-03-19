@@ -14,6 +14,7 @@ function getBaseUrl(req: Request): string {
   if (host) return `${proto}://${host}`;
   return process.env.BASE_URL || "http://localhost:5000";
 }
+import { checkUniversalSafety } from "./lib/universalSafety";
 import { storage } from "./storage";
 import crudRouter from "./api/crud";
 import authRouter from "./routes/auth";
@@ -32,6 +33,7 @@ import {
   recordApiRequest,
   recordApiError,
 } from "./lib/healthCheck";
+import { isTier1State, migrateAndEmailFunnelUser } from "./lib/funnelMigrationEmail";
 import {
   generateReading1,
   generateReading2,
@@ -255,6 +257,16 @@ export async function registerRoutes(
     try {
       const { action, userData, input, objectionCount } =
         req.body as ChatRequest;
+
+      // Universal safety check — same protections as V2 chat service
+      if (input && typeof input === "string") {
+        const safetyResult = checkUniversalSafety(input);
+        if (!safetyResult.safe && safetyResult.response) {
+          return res.json({
+            messages: [safetyResult.response],
+          });
+        }
+      }
 
       let result: {
         messages: string[];
@@ -513,6 +525,27 @@ export async function registerRoutes(
         conversationState: conversationState,
         messages: JSON.stringify(messages),
       });
+
+      // Tier 1 funnel migration: auto-create V2 account and send personalized
+      // email when user reaches DEEPENING_2 or beyond (non-blocking)
+      if (conversationState && isTier1State(conversationState) && userData.email) {
+        migrateAndEmailFunnelUser({
+          email: userData.email,
+          firstName: userData.firstName,
+          bucket: userData.bucket,
+          subBucket: userData.subBucket,
+          concern: userData.concern,
+          deeperResponse: userData.deeperResponse,
+          vision: userData.desires,
+          emotionalResponse: userData.emotionalResponse,
+          blockSource: userData.blockSource,
+          personName: userData.personName,
+          location: userData.location,
+          timeOfDay: userData.timeOfDay,
+        }).catch((err) => {
+          logger.error('Funnel migration background error', { error: err?.message });
+        });
+      }
 
       return res.json({ success: true });
     } catch (error) {

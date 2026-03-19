@@ -17,6 +17,7 @@ import seedDataRoutes from './seedData';
 import fraudRoutes from './fraud';
 import marketplaceRoutes from './marketplace';
 import settingsRoutes from './settings';
+import emailDripRoutes from './emailDrip';
 import logger from '../../lib/logger';
 
 const router = Router();
@@ -183,5 +184,6 @@ router.use('/seed', seedDataRoutes);
 router.use('/fraud', fraudRoutes);
 router.use('/marketplace', marketplaceRoutes);
 router.use('/settings', settingsRoutes);
+router.use('/email-drip', emailDripRoutes);
 
 export default router;

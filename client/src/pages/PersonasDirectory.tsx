@@ -653,13 +653,18 @@ export default function PersonasDirectory() {
       } else {
         await login(authEmail, authPassword);
       }
+      // Navigate first — closing the modal after navigate can cause React
+      // unmount races that swallow the successful login with a stale error.
+      const target = `/reading?persona=${authPersonaSlug}`;
       setShowAuthModal(false);
-      navigate(`/reading?persona=${authPersonaSlug}`);
+      navigate(target);
     } catch (err: any) {
+      console.error("[PersonasDirectory] auth error:", err);
+      const msg = typeof err?.message === "string" ? err.message : "";
       setAuthError(
-        err?.message?.includes("401")
+        msg.includes("401")
           ? "Invalid email or password"
-          : err?.message || "Something went wrong",
+          : msg || "Something went wrong",
       );
     } finally {
       setFormLoading(false);

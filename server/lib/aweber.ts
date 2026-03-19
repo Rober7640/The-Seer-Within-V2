@@ -156,18 +156,21 @@ export async function addSubscriberToList(params: AddSubscriberParams): Promise<
       logger.info(`AWeber: Successfully added subscriber ${params.email}`);
       return { success: true };
     }
-    
-    if (response.status === 400) {
-      const errorData = await response.json();
-      if (errorData.error?.message?.includes('already subscribed')) {
-        logger.info(`AWeber: Subscriber ${params.email} already exists`);
-        return { success: true };
-      }
-    }
-    
+
     const errorText = await response.text();
-    logger.error('AWeber add subscriber failed:', response.status, errorText);
-    return { success: false, error: `AWeber API error: ${response.status}` };
+    logger.error(`AWeber add subscriber failed: status=${response.status} body=${errorText}`);
+
+    if (response.status === 400) {
+      try {
+        const errorData = JSON.parse(errorText);
+        if (errorData.error?.message?.includes('already subscribed')) {
+          logger.info(`AWeber: Subscriber ${params.email} already exists`);
+          return { success: true };
+        }
+      } catch {}
+    }
+
+    return { success: false, error: `AWeber API error: ${response.status} - ${errorText}` };
     
   } catch (error) {
     logger.error('AWeber error:', error);
@@ -232,18 +235,21 @@ export async function addUpsellSubscriber(params: AddPaidSubscriberParams): Prom
       logger.info(`AWeber Upsell List: Successfully added subscriber ${params.email} with order ${params.stripeOrderId}`);
       return { success: true };
     }
-    
-    if (response.status === 400) {
-      const errorData = await response.json();
-      if (errorData.error?.message?.includes('already subscribed')) {
-        logger.info(`AWeber Upsell List: Subscriber ${params.email} already exists`);
-        return { success: true };
-      }
-    }
-    
+
     const errorText = await response.text();
-    logger.error('AWeber upsell list add subscriber failed:', response.status, errorText);
-    return { success: false, error: `AWeber API error: ${response.status}` };
+    logger.error(`AWeber upsell list add subscriber failed: status=${response.status} body=${errorText}`);
+
+    if (response.status === 400) {
+      try {
+        const errorData = JSON.parse(errorText);
+        if (errorData.error?.message?.includes('already subscribed')) {
+          logger.info(`AWeber Upsell List: Subscriber ${params.email} already exists`);
+          return { success: true };
+        }
+      } catch {}
+    }
+
+    return { success: false, error: `AWeber API error: ${response.status} - ${errorText}` };
     
   } catch (error) {
     logger.error('AWeber upsell list error:', error);
@@ -306,18 +312,21 @@ export async function addUpsell2Subscriber(params: AddPaidSubscriberParams): Pro
       logger.info(`AWeber Upsell2 List (${upsell2ListId}): Successfully added subscriber ${params.email} with order ${params.stripeOrderId}`);
       return { success: true };
     }
-    
-    if (response.status === 400) {
-      const errorData = await response.json();
-      if (errorData.error?.message?.includes('already subscribed')) {
-        logger.info(`AWeber Upsell2 List: Subscriber ${params.email} already exists`);
-        return { success: true };
-      }
-    }
-    
+
     const errorText = await response.text();
-    logger.error('AWeber upsell2 list add subscriber failed:', response.status, errorText);
-    return { success: false, error: `AWeber API error: ${response.status}` };
+    logger.error(`AWeber upsell2 list add subscriber failed: status=${response.status} body=${errorText}`);
+
+    if (response.status === 400) {
+      try {
+        const errorData = JSON.parse(errorText);
+        if (errorData.error?.message?.includes('already subscribed')) {
+          logger.info(`AWeber Upsell2 List: Subscriber ${params.email} already exists`);
+          return { success: true };
+        }
+      } catch {}
+    }
+
+    return { success: false, error: `AWeber API error: ${response.status} - ${errorText}` };
     
   } catch (error) {
     logger.error('AWeber upsell2 list error:', error);
@@ -368,18 +377,21 @@ export async function addPaidSubscriber(params: AddPaidSubscriberParams): Promis
       logger.info(`AWeber Paid List: Successfully added subscriber ${params.email} with order ${params.stripeOrderId}`);
       return { success: true };
     }
-    
-    if (response.status === 400) {
-      const errorData = await response.json();
-      if (errorData.error?.message?.includes('already subscribed')) {
-        logger.info(`AWeber Paid List: Subscriber ${params.email} already exists`);
-        return { success: true };
-      }
-    }
-    
+
     const errorText = await response.text();
-    logger.error('AWeber paid list add subscriber failed:', response.status, errorText);
-    return { success: false, error: `AWeber API error: ${response.status}` };
+    logger.error(`AWeber paid list add subscriber failed: status=${response.status} body=${errorText}`);
+
+    if (response.status === 400) {
+      try {
+        const errorData = JSON.parse(errorText);
+        if (errorData.error?.message?.includes('already subscribed')) {
+          logger.info(`AWeber Paid List: Subscriber ${params.email} already exists`);
+          return { success: true };
+        }
+      } catch {}
+    }
+
+    return { success: false, error: `AWeber API error: ${response.status} - ${errorText}` };
     
   } catch (error) {
     logger.error('AWeber paid list error:', error);
