@@ -100,7 +100,7 @@ Get from: PayPal Developer Dashboard → Apps & Credentials
 
 ```
 RESEND_API_KEY            re_...
-FOLLOW_UP_FROM_EMAIL      hello@theseerwithin.com
+FOLLOW_UP_FROM_EMAIL      hi@theseerwithin.com
 FOLLOW_UP_FROM_NAME       The Seer Within
 ```
 Get from: https://resend.com → API Keys

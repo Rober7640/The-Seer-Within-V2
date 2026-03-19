@@ -133,9 +133,9 @@ Add to this file whenever a new feature is implemented.
 - [ ] Email is tagged with `type=follow_up`, `sequence=N`, `persona_id`, `user_id` in Resend tags
 - [ ] Evelyn's follow-up email has `FROM = "Evelyn Cross <evelyn@theseerwithin.com>"`
 - [ ] Marcus's follow-up email has `FROM = "Marcus Stone <marcus@theseerwithin.com>"`
-- [ ] A persona with no `fromEmail` set falls back to `hello@theseerwithin.com` / `The Seer Within`
+- [ ] A persona with no `fromEmail` set falls back to `hi@theseerwithin.com` / `The Seer Within`
 - [ ] A persona with no `fromName` set falls back to the persona's `displayName` for session timeout emails
-- [ ] `Reply-To` on all follow-up emails is always `hello@theseerwithin.com` (shared inbox)
+- [ ] `Reply-To` on all follow-up emails is always `hi@theseerwithin.com` (shared inbox)
 - [ ] Session timeout email FROM also uses the persona's `fromEmail`/`fromName` (not the global default)
 
 ### Unsubscribe
@@ -238,7 +238,7 @@ Add to this file whenever a new feature is implemented.
 - [ ] Admin personas API (`GET /api/admin/personas/:id`) returns `fromEmail` and `fromName` fields
 - [ ] Admin can update `fromEmail` and `fromName` via `PATCH /api/admin/personas/:id`
 - [ ] A newly created persona with no `fromEmail` falls back to `FOLLOW_UP_FROM_EMAIL` env var on send
-- [ ] `replyTo` is always set to the global `hello@theseerwithin.com` regardless of persona's `fromEmail`
+- [ ] `replyTo` is always set to the global `hi@theseerwithin.com` regardless of persona's `fromEmail`
 
 ---
 
@@ -519,7 +519,7 @@ Add to this file whenever a new feature is implemented.
 - [ ] `coinBalanceAtSend` on the record matches the user's balance at time of send
 - [ ] `bodyHtml` contains `/magic-auth?t=` (magic link embedded)
 - [ ] FROM address uses persona's `fromEmail`/`fromName` (falls back to global defaults)
-- [ ] `Reply-To` is always `hello@theseerwithin.com`
+- [ ] `Reply-To` is always `hi@theseerwithin.com`
 
 ### Magic link + CTA
 - [ ] Each top-up email has a unique magic link token in the CTA href
@@ -705,7 +705,7 @@ Once Resend is connected, manually trigger each email type and verify rendering 
 - [ ] All top-up emails: verify lavender background, white card, purple CTA button render correctly on mobile (test at 375px width)
 - [ ] All top-up emails: verify plain-text version includes magic link URL and unsubscribe URL
 - [ ] All top-up emails: Resend dashboard shows correct tags — `type=topup`, `segment=<value>`, `persona_id`, `user_id`
-- [ ] Persona with no `fromEmail` set falls back to `hello@theseerwithin.com` — verify in Resend sent log
+- [ ] Persona with no `fromEmail` set falls back to `hi@theseerwithin.com` — verify in Resend sent log
 
 ### Follow-up re-engagement emails — per persona
 - [ ] Sequence #1 email for **Evelyn Cross** — verify FROM, avatar, tone is warm/gentle
