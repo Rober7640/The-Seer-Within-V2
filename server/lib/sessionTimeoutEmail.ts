@@ -68,7 +68,7 @@ export async function sendSessionTimeoutEmail(sessionId: string): Promise<void> 
       .limit(10);
 
     const sessionSummary = buildQuickSummary(messages.reverse(), personaName);
-    const minutesUsed = session[0].coinsCharged || 0;
+    const coinsUsed = session[0].coinsCharged || 0;
 
     // Generate magic link so user is auto-logged-in when clicking the CTA
     const magicToken = await generateMagicLinkToken(
@@ -82,7 +82,7 @@ export async function sendSessionTimeoutEmail(sessionId: string): Promise<void> 
       personaName,
       userName: user[0].firstName,
       sessionSummary,
-      minutesUsed,
+      coinsUsed,
       ctaUrl,
       logoUrl: persona[0]?.avatarUrl
         ? (persona[0].avatarUrl.startsWith('http') ? persona[0].avatarUrl : `${BASE_URL}${persona[0].avatarUrl}`)
@@ -93,7 +93,7 @@ export async function sendSessionTimeoutEmail(sessionId: string): Promise<void> 
       personaName,
       userName: user[0].firstName,
       sessionSummary,
-      minutesUsed,
+      coinsUsed,
       ctaUrl,
     });
 

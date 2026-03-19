@@ -115,8 +115,8 @@ export async function sendMigrationEmail1(
         isNull(users.lastLoginAt),
         eq(users.accountStatus, 'active'),
         sql`${users.email} NOT LIKE '%@example.com' AND ${users.email} NOT LIKE '%@test.com'`,
-        // No Email 1 sent yet
-        sql`${users.id} NOT IN (SELECT user_id FROM migration_drip_emails WHERE sequence_number = 1)`,
+        // No Email 1 sent/pending yet (failed records are retryable)
+        sql`${users.id} NOT IN (SELECT user_id FROM migration_drip_emails WHERE sequence_number = 1 AND status IN ('sent', 'pending'))`,
       ),
     )
     .limit(limit || 10000);
@@ -202,6 +202,11 @@ export async function processMigrationDripQueue(): Promise<{
 
   const now = new Date();
 
+  // Clean up failed records so they can be retried
+  await db
+    .delete(migrationDripEmails)
+    .where(eq(migrationDripEmails.status, 'failed'));
+
   // Find users who need Email 2: Email 1 sent 24+ hours ago, no Email 2 yet, not logged in
   const email2Candidates = await db
     .select({
@@ -218,8 +223,8 @@ export async function processMigrationDripQueue(): Promise<{
         eq(users.accountStatus, 'active'),
         // Email 1 sent 24+ hours ago
         sql`${migrationDripEmails.sentAt} <= NOW() - INTERVAL '${sql.raw(String(EMAIL2_DELAY_HOURS))} hours'`,
-        // No Email 2 yet
-        sql`${migrationDripEmails.userId} NOT IN (SELECT user_id FROM migration_drip_emails WHERE sequence_number = 2)`,
+        // No Email 2 sent/pending yet
+        sql`${migrationDripEmails.userId} NOT IN (SELECT user_id FROM migration_drip_emails WHERE sequence_number = 2 AND status IN ('sent', 'pending'))`,
       ),
     );
 
@@ -253,8 +258,8 @@ export async function processMigrationDripQueue(): Promise<{
         eq(users.accountStatus, 'active'),
         // Email 2 sent 24+ hours ago
         sql`${migrationDripEmails.sentAt} <= NOW() - INTERVAL '${sql.raw(String(EMAIL3_DELAY_HOURS))} hours'`,
-        // No Email 3 yet
-        sql`${migrationDripEmails.userId} NOT IN (SELECT user_id FROM migration_drip_emails WHERE sequence_number = 3)`,
+        // No Email 3 sent/pending yet
+        sql`${migrationDripEmails.userId} NOT IN (SELECT user_id FROM migration_drip_emails WHERE sequence_number = 3 AND status IN ('sent', 'pending'))`,
       ),
     );
 

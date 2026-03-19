@@ -210,13 +210,13 @@ interface SessionTimeoutHtmlParams {
   personaName: string;
   userName: string;
   sessionSummary: string;
-  minutesUsed: number;
+  coinsUsed: number;
   ctaUrl: string;
   logoUrl?: string;
 }
 
 export function buildSessionTimeoutHtml(params: SessionTimeoutHtmlParams): string {
-  const { personaName, userName, sessionSummary, minutesUsed, ctaUrl, logoUrl } = params;
+  const { personaName, userName, sessionSummary, coinsUsed, ctaUrl, logoUrl } = params;
 
   const summaryHtml = escapeHtml(sessionSummary)
     .replace(/\n/g, '<br>');
@@ -306,7 +306,7 @@ export function buildSessionTimeoutHtml(params: SessionTimeoutHtmlParams): strin
             <div style="background-color:#f8f6f1;border-left:3px solid #c9a84c;padding:16px 20px;margin:16px 0;border-radius:0 6px 6px 0;font-size:14px;line-height:1.6;color:#4a4a5a;">
               ${summaryHtml}
             </div>
-            <p style="font-size:13px;color:#b0a998;margin-top:12px;">Session duration: ${minutesUsed} minute${minutesUsed !== 1 ? 's' : ''}</p>
+            <p style="font-size:13px;color:#b0a998;margin-top:12px;">Session usage: ${coinsUsed} coin${coinsUsed !== 1 ? 's' : ''}</p>
             <p style="margin:16px 0 0;color:#4a4a5a;">Whenever you are ready to continue your journey, ${escapeHtml(personaName)} will be here for you.</p>
           </td>
         </tr>
@@ -355,7 +355,7 @@ export function buildSessionTimeoutHtml(params: SessionTimeoutHtmlParams): strin
 }
 
 export function buildSessionTimeoutText(params: SessionTimeoutHtmlParams): string {
-  const { personaName, userName, sessionSummary, minutesUsed, ctaUrl } = params;
+  const { personaName, userName, sessionSummary, coinsUsed, ctaUrl } = params;
 
   return `Dear ${userName},
 
@@ -365,7 +365,7 @@ Here is a summary of what we discussed:
 
 ${sessionSummary}
 
-Session duration: ${minutesUsed} minute${minutesUsed !== 1 ? 's' : ''}
+Session usage: ${coinsUsed} coin${coinsUsed !== 1 ? 's' : ''}
 
 Whenever you are ready to continue your journey, ${personaName} will be here for you.
 
