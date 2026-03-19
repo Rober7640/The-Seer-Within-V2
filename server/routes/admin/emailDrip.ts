@@ -28,6 +28,8 @@ const emailSelectFields = {
   subject: migrationDripEmails.subject,
   status: migrationDripEmails.status,
   sentAt: migrationDripEmails.sentAt,
+  openedAt: migrationDripEmails.openedAt,
+  clickedAt: migrationDripEmails.clickedAt,
   resendEmailId: migrationDripEmails.resendEmailId,
   createdAt: migrationDripEmails.createdAt,
 };
@@ -56,7 +58,7 @@ router.get('/migrated-stats', async (req: Request, res: Response) => {
 router.get('/new-v1-stats', async (req: Request, res: Response) => {
   try {
     const base = newV1Condition();
-    const [totalNewV1, email1Sent, email2Sent, email3Sent] = await Promise.all([
+    const [totalNewV1, email1Sent, email2Sent, email3Sent, opened, clicked, loggedIn] = await Promise.all([
       db.select({ c: count() }).from(migrationDripEmails)
         .innerJoin(users, eq(users.id, migrationDripEmails.userId))
         .where(base),
@@ -69,6 +71,14 @@ router.get('/new-v1-stats', async (req: Request, res: Response) => {
       db.select({ c: count() }).from(migrationDripEmails)
         .innerJoin(users, eq(users.id, migrationDripEmails.userId))
         .where(and(base, eq(migrationDripEmails.sequenceNumber, 3), eq(migrationDripEmails.status, 'sent'))),
+      db.select({ c: count() }).from(migrationDripEmails)
+        .innerJoin(users, eq(users.id, migrationDripEmails.userId))
+        .where(and(base, sql`${migrationDripEmails.openedAt} IS NOT NULL`)),
+      db.select({ c: count() }).from(migrationDripEmails)
+        .innerJoin(users, eq(users.id, migrationDripEmails.userId))
+        .where(and(base, sql`${migrationDripEmails.clickedAt} IS NOT NULL`)),
+      db.select({ c: count() }).from(users)
+        .where(and(newV1Condition(), sql`${users.lastLoginAt} IS NOT NULL`)),
     ]);
 
     return res.json({
@@ -76,6 +86,9 @@ router.get('/new-v1-stats', async (req: Request, res: Response) => {
       email1Sent: email1Sent[0]?.c ?? 0,
       email2Sent: email2Sent[0]?.c ?? 0,
       email3Sent: email3Sent[0]?.c ?? 0,
+      opened: opened[0]?.c ?? 0,
+      clicked: clicked[0]?.c ?? 0,
+      loggedIn: loggedIn[0]?.c ?? 0,
     });
   } catch (error: any) {
     logger.error('Admin new V1 stats error:', error);

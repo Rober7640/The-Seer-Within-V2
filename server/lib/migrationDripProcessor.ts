@@ -547,35 +547,44 @@ async function getEvelynConfig(): Promise<EvelynConfig | null> {
 
 /**
  * Get migration drip stats for admin dashboard.
+ * Only counts bulk-migrated users (V1 conversation created before 2026-03-18).
  */
 export async function getMigrationDripStats(): Promise<{
   totalEligible: number;
   email1Sent: number;
   email2Sent: number;
   email3Sent: number;
+  opened: number;
+  clicked: number;
   loggedIn: number;
 }> {
-  const [eligible, e1, e2, e3, loggedIn] = await Promise.all([
+  // Migrated V1 = users whose linked conversation was created before the migration date
+  const MIGRATION_DATE = '2026-03-18';
+  const migratedUserFilter = sql`${users.migratedFromConversationId} IN (SELECT id FROM conversations WHERE created_at < ${MIGRATION_DATE})`;
+  // Eligible = migrated users whose conversation has both concern AND vision filled (matches sendMigrationEmail1 filter)
+  const eligibleFilter = sql`${users.migratedFromConversationId} IN (SELECT id FROM conversations WHERE created_at < ${MIGRATION_DATE} AND concern IS NOT NULL AND concern != '' AND vision IS NOT NULL AND vision != '')`;
+
+  const [eligible, e1, e2, e3, opened, clicked, loggedIn] = await Promise.all([
     db.select({ c: count() }).from(users).where(
-      and(
-        sql`${users.migratedFromConversationId} IS NOT NULL`,
-        isNull(users.lastLoginAt),
-      ),
+      and(eligibleFilter, isNull(users.lastLoginAt)),
     ),
-    db.select({ c: count() }).from(migrationDripEmails).where(
-      and(eq(migrationDripEmails.sequenceNumber, 1), eq(migrationDripEmails.status, 'sent')),
-    ),
-    db.select({ c: count() }).from(migrationDripEmails).where(
-      and(eq(migrationDripEmails.sequenceNumber, 2), eq(migrationDripEmails.status, 'sent')),
-    ),
-    db.select({ c: count() }).from(migrationDripEmails).where(
-      and(eq(migrationDripEmails.sequenceNumber, 3), eq(migrationDripEmails.status, 'sent')),
-    ),
+    db.select({ c: count() }).from(migrationDripEmails)
+      .innerJoin(users, eq(users.id, migrationDripEmails.userId))
+      .where(and(migratedUserFilter, eq(migrationDripEmails.sequenceNumber, 1), eq(migrationDripEmails.status, 'sent'))),
+    db.select({ c: count() }).from(migrationDripEmails)
+      .innerJoin(users, eq(users.id, migrationDripEmails.userId))
+      .where(and(migratedUserFilter, eq(migrationDripEmails.sequenceNumber, 2), eq(migrationDripEmails.status, 'sent'))),
+    db.select({ c: count() }).from(migrationDripEmails)
+      .innerJoin(users, eq(users.id, migrationDripEmails.userId))
+      .where(and(migratedUserFilter, eq(migrationDripEmails.sequenceNumber, 3), eq(migrationDripEmails.status, 'sent'))),
+    db.select({ c: count() }).from(migrationDripEmails)
+      .innerJoin(users, eq(users.id, migrationDripEmails.userId))
+      .where(and(migratedUserFilter, sql`${migrationDripEmails.openedAt} IS NOT NULL`)),
+    db.select({ c: count() }).from(migrationDripEmails)
+      .innerJoin(users, eq(users.id, migrationDripEmails.userId))
+      .where(and(migratedUserFilter, sql`${migrationDripEmails.clickedAt} IS NOT NULL`)),
     db.select({ c: count() }).from(users).where(
-      and(
-        sql`${users.migratedFromConversationId} IS NOT NULL`,
-        sql`${users.lastLoginAt} IS NOT NULL`,
-      ),
+      and(migratedUserFilter, sql`${users.lastLoginAt} IS NOT NULL`),
     ),
   ]);
 
@@ -584,6 +593,8 @@ export async function getMigrationDripStats(): Promise<{
     email1Sent: e1[0]?.c ?? 0,
     email2Sent: e2[0]?.c ?? 0,
     email3Sent: e3[0]?.c ?? 0,
+    opened: opened[0]?.c ?? 0,
+    clicked: clicked[0]?.c ?? 0,
     loggedIn: loggedIn[0]?.c ?? 0,
   };
 }

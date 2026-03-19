@@ -575,6 +575,9 @@ export const migrationDripEmails = pgTable("migration_drip_emails", {
   generatedBy: text("generated_by").default("claude-haiku").notNull(),
   generationTokens: integer("generation_tokens"),
 
+  openedAt: timestamp("opened_at"),
+  clickedAt: timestamp("clicked_at"),
+
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 }, (table) => [

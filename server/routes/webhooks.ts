@@ -1,8 +1,9 @@
 // Webhook handler for Resend email events and unsubscribe actions.
 
 import { Router, Request, Response } from 'express';
+import { Webhook } from 'svix';
 import { db } from '../lib/db';
-import { followUpEmails, userFollowUpPreferences } from '@shared/schema';
+import { followUpEmails, userFollowUpPreferences, migrationDripEmails } from '@shared/schema';
 import { eq } from 'drizzle-orm';
 import logger from '../lib/logger';
 
@@ -11,10 +12,36 @@ const router = Router();
 /**
  * POST /api/webhooks/resend
  * Handles Resend webhook events: delivered, opened, clicked, bounced, complained.
+ * Verifies signature using Resend's svix-based signing when RESEND_WEBHOOK_SECRET is set.
  */
 router.post('/resend', async (req: Request, res: Response) => {
   try {
-    const event = req.body;
+    let event = req.body;
+
+    // Verify webhook signature if secret is configured
+    const webhookSecret = process.env.RESEND_WEBHOOK_SECRET;
+    if (webhookSecret) {
+      const svixHeaders = {
+        'svix-id': req.headers['svix-id'] as string,
+        'svix-timestamp': req.headers['svix-timestamp'] as string,
+        'svix-signature': req.headers['svix-signature'] as string,
+      };
+
+      if (!svixHeaders['svix-id'] || !svixHeaders['svix-timestamp'] || !svixHeaders['svix-signature']) {
+        logger.warn('Resend webhook: Missing svix headers');
+        return res.status(400).json({ error: 'Missing webhook signature headers' });
+      }
+
+      try {
+        const wh = new Webhook(webhookSecret);
+        const rawBody = (req as any).rawBody;
+        const payload = rawBody ? rawBody.toString() : JSON.stringify(req.body);
+        event = wh.verify(payload, svixHeaders) as any;
+      } catch (err: any) {
+        logger.error('Resend webhook signature verification failed:', err.message);
+        return res.status(400).json({ error: 'Invalid webhook signature' });
+      }
+    }
 
     if (!event || !event.type) {
       return res.status(400).json({ error: 'Invalid webhook payload' });
@@ -27,81 +54,100 @@ router.post('/resend', async (req: Request, res: Response) => {
       return res.status(200).json({ received: true });
     }
 
-    // Find the email record by Resend email ID
-    const emailRecords = await db
+    // Find the email record by Resend email ID — check followUpEmails first, then migrationDripEmails
+    const followUpRecords = await db
       .select()
       .from(followUpEmails)
       .where(eq(followUpEmails.resendEmailId, emailId))
       .limit(1);
 
-    const record = emailRecords[0];
-    if (!record) {
-      logger.info(`Resend webhook: No matching email record for ${emailId}`);
+    const record = followUpRecords[0];
+
+    if (record) {
+      // Handle follow-up email events
+      switch (event.type) {
+        case 'email.delivered':
+          await db
+            .update(followUpEmails)
+            .set({ deliveryStatus: 'delivered', updatedAt: new Date() })
+            .where(eq(followUpEmails.id, record.id));
+          break;
+
+        case 'email.opened':
+          await db
+            .update(followUpEmails)
+            .set({ opened: true, openedAt: new Date(), updatedAt: new Date() })
+            .where(eq(followUpEmails.id, record.id));
+          break;
+
+        case 'email.clicked':
+          await db
+            .update(followUpEmails)
+            .set({ clicked: true, clickedAt: new Date(), updatedAt: new Date() })
+            .where(eq(followUpEmails.id, record.id));
+          break;
+
+        case 'email.bounced':
+          await db
+            .update(followUpEmails)
+            .set({ status: 'bounced', deliveryStatus: 'bounced', updatedAt: new Date() })
+            .where(eq(followUpEmails.id, record.id));
+          await autoUnsubscribe(record.userId, 'bounced');
+          break;
+
+        case 'email.complained':
+          await db
+            .update(followUpEmails)
+            .set({ status: 'bounced', deliveryStatus: 'spam_complaint', updatedAt: new Date() })
+            .where(eq(followUpEmails.id, record.id));
+          await autoUnsubscribe(record.userId, 'spam_complaint');
+          break;
+      }
+
       return res.status(200).json({ received: true });
     }
 
-    switch (event.type) {
-      case 'email.delivered':
-        await db
-          .update(followUpEmails)
-          .set({ deliveryStatus: 'delivered', updatedAt: new Date() })
-          .where(eq(followUpEmails.id, record.id));
-        break;
+    // Check migration drip emails
+    const dripRecords = await db
+      .select()
+      .from(migrationDripEmails)
+      .where(eq(migrationDripEmails.resendEmailId, emailId))
+      .limit(1);
 
-      case 'email.opened':
-        await db
-          .update(followUpEmails)
-          .set({
-            opened: true,
-            openedAt: new Date(),
-            updatedAt: new Date(),
-          })
-          .where(eq(followUpEmails.id, record.id));
-        break;
+    const dripRecord = dripRecords[0];
 
-      case 'email.clicked':
-        await db
-          .update(followUpEmails)
-          .set({
-            clicked: true,
-            clickedAt: new Date(),
-            updatedAt: new Date(),
-          })
-          .where(eq(followUpEmails.id, record.id));
-        break;
+    if (dripRecord) {
+      switch (event.type) {
+        case 'email.opened':
+          if (!dripRecord.openedAt) {
+            await db
+              .update(migrationDripEmails)
+              .set({ openedAt: new Date(), updatedAt: new Date() })
+              .where(eq(migrationDripEmails.id, dripRecord.id));
+          }
+          break;
 
-      case 'email.bounced':
-        await db
-          .update(followUpEmails)
-          .set({
-            status: 'bounced',
-            deliveryStatus: 'bounced',
-            updatedAt: new Date(),
-          })
-          .where(eq(followUpEmails.id, record.id));
+        case 'email.clicked':
+          if (!dripRecord.clickedAt) {
+            await db
+              .update(migrationDripEmails)
+              .set({ clickedAt: new Date(), updatedAt: new Date() })
+              .where(eq(migrationDripEmails.id, dripRecord.id));
+          }
+          break;
 
-        // Auto-unsubscribe on bounce
-        await autoUnsubscribe(record.userId, 'bounced');
-        break;
+        case 'email.bounced':
+          await db
+            .update(migrationDripEmails)
+            .set({ status: 'failed', updatedAt: new Date() })
+            .where(eq(migrationDripEmails.id, dripRecord.id));
+          break;
+      }
 
-      case 'email.complained':
-        await db
-          .update(followUpEmails)
-          .set({
-            status: 'bounced',
-            deliveryStatus: 'spam_complaint',
-            updatedAt: new Date(),
-          })
-          .where(eq(followUpEmails.id, record.id));
-
-        // Auto-unsubscribe on spam complaint
-        await autoUnsubscribe(record.userId, 'spam_complaint');
-        break;
-
-      default:
-        logger.info(`Resend webhook: Unhandled event type ${event.type}`);
+      return res.status(200).json({ received: true });
     }
 
+    logger.info(`Resend webhook: No matching email record for ${emailId}`);
     return res.status(200).json({ received: true });
   } catch (error) {
     logger.error('Resend webhook error:', error);

@@ -15,6 +15,8 @@ interface DripEmail {
   subject: string;
   status: string;
   sentAt: string | null;
+  openedAt: string | null;
+  clickedAt: string | null;
   resendEmailId: string | null;
   createdAt: string;
 }
@@ -24,6 +26,9 @@ interface NewV1Stats {
   email1Sent: number;
   email2Sent: number;
   email3Sent: number;
+  opened: number;
+  clicked: number;
+  loggedIn: number;
 }
 
 const statusColors: Record<string, string> = {
@@ -95,7 +100,7 @@ export default function EmailDripNewV1() {
     <AdminLayout title="Email Drip — New V1 Funnel">
       {/* Stats */}
       {stats && (
-        <div className="grid grid-cols-4 gap-3 mb-6">
+        <div className="grid grid-cols-7 gap-3 mb-6">
           <Card className="bg-gray-900 border-gray-800 p-4 text-center">
             <div className="text-2xl font-bold text-white">{stats.totalNewV1}</div>
             <div className="text-xs text-gray-500 mt-1">Total Emails</div>
@@ -111,6 +116,18 @@ export default function EmailDripNewV1() {
           <Card className="bg-gray-900 border-gray-800 p-4 text-center">
             <div className="text-2xl font-bold text-purple-400">{stats.email3Sent}</div>
             <div className="text-xs text-gray-500 mt-1">Email 3 Sent</div>
+          </Card>
+          <Card className="bg-gray-900 border-gray-800 p-4 text-center">
+            <div className="text-2xl font-bold text-cyan-400">{stats.opened}</div>
+            <div className="text-xs text-gray-500 mt-1">Opened</div>
+          </Card>
+          <Card className="bg-gray-900 border-gray-800 p-4 text-center">
+            <div className="text-2xl font-bold text-orange-400">{stats.clicked}</div>
+            <div className="text-xs text-gray-500 mt-1">Clicked</div>
+          </Card>
+          <Card className="bg-gray-900 border-gray-800 p-4 text-center">
+            <div className="text-2xl font-bold text-amber-400">{stats.loggedIn}</div>
+            <div className="text-xs text-gray-500 mt-1">Logged In</div>
           </Card>
         </div>
       )}
@@ -168,6 +185,8 @@ export default function EmailDripNewV1() {
                     <th className="text-left p-3">Subject</th>
                     <th className="text-center p-3">Status</th>
                     <th className="text-left p-3">Sent At</th>
+                    <th className="text-center p-3">Opened</th>
+                    <th className="text-center p-3">Clicked</th>
                     <th className="text-center p-3">Preview</th>
                   </tr>
                 </thead>
@@ -191,6 +210,12 @@ export default function EmailDripNewV1() {
                         <td className="p-3 text-gray-500 text-xs">
                           {e.sentAt ? new Date(e.sentAt).toLocaleString() : "—"}
                         </td>
+                        <td className="p-3 text-center text-xs">
+                          {e.openedAt ? <span className="text-cyan-400">Yes</span> : <span className="text-gray-600">—</span>}
+                        </td>
+                        <td className="p-3 text-center text-xs">
+                          {e.clickedAt ? <span className="text-orange-400">Yes</span> : <span className="text-gray-600">—</span>}
+                        </td>
                         <td className="p-3 text-center">
                           <button
                             onClick={() => handlePreview(e.id)}
@@ -202,7 +227,7 @@ export default function EmailDripNewV1() {
                       </tr>
                       {previewId === e.id && previewHtml && (
                         <tr key={`${e.id}-preview`}>
-                          <td colSpan={7} className="p-0">
+                          <td colSpan={9} className="p-0">
                             <div className="bg-gray-950 border-t border-b border-gray-700 p-4">
                               <div className="bg-white rounded-lg overflow-hidden max-w-[600px] mx-auto" style={{ maxHeight: '500px', overflowY: 'auto' }}>
                                 <iframe
@@ -220,7 +245,7 @@ export default function EmailDripNewV1() {
                   ))}
                   {emails.length === 0 && (
                     <tr>
-                      <td colSpan={7} className="p-8 text-center text-gray-600 text-sm">
+                      <td colSpan={9} className="p-8 text-center text-gray-600 text-sm">
                         No new V1 drip emails yet
                       </td>
                     </tr>
