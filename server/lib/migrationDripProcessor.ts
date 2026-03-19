@@ -17,6 +17,7 @@ import {
   personas,
   userMemory,
   migrationDripEmails,
+  userFollowUpPreferences,
 } from '@shared/schema';
 import { eq, and, isNull, sql, desc, count } from 'drizzle-orm';
 import { randomBytes, randomUUID } from 'crypto';
@@ -292,6 +293,15 @@ async function loadCandidate(userId: string): Promise<MigrationCandidate | null>
     .limit(1);
 
   if (!user[0] || user[0].lastLoginAt || !user[0].conversationId) return null;
+
+  // Skip if user has unsubscribed
+  const prefs = await db
+    .select({ unsubscribedAt: userFollowUpPreferences.unsubscribedAt, enableFollowUps: userFollowUpPreferences.enableFollowUps })
+    .from(userFollowUpPreferences)
+    .where(eq(userFollowUpPreferences.userId, userId))
+    .limit(1);
+
+  if (prefs[0]?.unsubscribedAt || (prefs[0] && !prefs[0].enableFollowUps)) return null;
 
   const convo = await db
     .select({
