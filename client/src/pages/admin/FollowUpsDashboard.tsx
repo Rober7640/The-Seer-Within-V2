@@ -362,18 +362,18 @@ export default function FollowUpsDashboard() {
                             {email.status}
                           </Badge>
                         </td>
-                        <td className="px-4 py-3 text-center">
+                        <td className="px-4 py-3 text-center text-xs">
                           {email.opened ? (
-                            <Eye className="w-3 h-3 text-green-400 mx-auto" />
+                            <span className="text-cyan-400">Yes</span>
                           ) : (
-                            <span className="text-gray-700">-</span>
+                            <span className="text-gray-600">—</span>
                           )}
                         </td>
-                        <td className="px-4 py-3 text-center">
+                        <td className="px-4 py-3 text-center text-xs">
                           {email.clicked ? (
-                            <MousePointerClick className="w-3 h-3 text-green-400 mx-auto" />
+                            <span className="text-orange-400">Yes</span>
                           ) : (
-                            <span className="text-gray-700">-</span>
+                            <span className="text-gray-600">—</span>
                           )}
                         </td>
                         <td className="px-4 py-3 text-right text-sm text-gray-400">

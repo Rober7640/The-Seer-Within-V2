@@ -142,7 +142,7 @@ export default function EmailDripNewV1() {
           <SelectTrigger className="w-[140px] bg-gray-900 border-gray-700 text-gray-300 text-sm">
             <SelectValue placeholder="Sequence" />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="bg-gray-800 border-gray-700">
             <SelectItem value="all">All Emails</SelectItem>
             <SelectItem value="1">Email 1</SelectItem>
             <SelectItem value="2">Email 2</SelectItem>
@@ -154,7 +154,7 @@ export default function EmailDripNewV1() {
           <SelectTrigger className="w-[120px] bg-gray-900 border-gray-700 text-gray-300 text-sm">
             <SelectValue placeholder="Status" />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="bg-gray-800 border-gray-700">
             <SelectItem value="all">All Status</SelectItem>
             <SelectItem value="sent">Sent</SelectItem>
             <SelectItem value="pending">Pending</SelectItem>
