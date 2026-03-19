@@ -201,7 +201,7 @@ export async function migrateAndEmailFunnelUser(
       personaName: evelyn.displayName,
       emailBody: emailContent.bodyHtml,
       ctaUrl: magicUrl,
-      ctaText: 'Continue Your Reading with Evelyn',
+      ctaText: 'Pick Up Where You Left Off',
       unsubscribeUrl: `${BASE_URL}/api/webhooks/unsubscribe?token=na`,
       privacyUrl: `${BASE_URL}/privacy`,
       avatarUrl,

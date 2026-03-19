@@ -39,7 +39,7 @@ const FREE_COINS = 180;
 const EVELYN_SLUG = 'evelyn-cross';
 
 // Hours after previous email before next one fires
-const EMAIL2_DELAY_HOURS = 48;
+const EMAIL2_DELAY_HOURS = 24;
 const EMAIL3_DELAY_HOURS = 24; // 24h after Email 2
 
 // Sequence-specific guidance for Haiku
@@ -337,9 +337,9 @@ async function sendDripEmail(
     : undefined;
 
   const ctaLabels = {
-    1: 'Continue Your Reading with Evelyn',
-    2: 'Return to Evelyn',
-    3: 'Claim Your Free Reading',
+    1: 'Pick Up Where You Left Off',
+    2: 'Evelyn Has Something to Tell You',
+    3: 'Hear Evelyn\'s Final Message',
   };
 
   const fullHtml = buildFollowUpHtml({
