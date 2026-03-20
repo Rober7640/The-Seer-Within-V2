@@ -478,7 +478,7 @@ Rules:
 - Reference something specific from their reading (concern, vision, or emotional state)
 - Do NOT be pushy or use sales language — this is a spiritual message
 - Do NOT mention "platform", "app", "website", or "account" — say "a new space" or "a place I've created"
-${sequenceNumber === 1 ? '- Mention they have 3 free minutes waiting for them' : ''}
+${sequenceNumber === 1 ? '- Include this exact sentence somewhere in the body: "I\'ve set aside 3 minutes for you to ask anything and explore today\'s insights. Start your private conversation."' : ''}
 - Body: 80-150 words
 - Subject line: under 60 characters, personal, not clickbait
 
@@ -523,7 +523,7 @@ Return ONLY valid JSON:
     const fallbacks = {
       1: {
         subject: `I've been thinking about you, ${candidate.firstName}`,
-        body: `Dear ${candidate.firstName},\n\nIt's Evelyn. Since ${bucketRef}, I've been sensing there's more we need to explore. I've created a new space where we can continue our journey — and I've set aside 3 free minutes for you.\n\nI'll be here when you're ready.\n\nWith light,\nEvelyn`,
+        body: `Dear ${candidate.firstName},\n\nIt's Evelyn. Since ${bucketRef}, I've been sensing there's more we need to explore. I've created a new space where we can continue our journey. I've set aside 3 minutes for you to ask anything and explore today's insights. Start your private conversation.\n\nI'll be here when you're ready.\n\nWith light,\nEvelyn`,
       },
       2: {
         subject: `Something is shifting around you, ${candidate.firstName}`,

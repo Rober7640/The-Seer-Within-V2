@@ -306,7 +306,7 @@ ${userData.vision ? `- Their vision/desires: ${userData.vision}` : ''}
 ${userData.emotionalResponse ? `- Emotional state: ${userData.emotionalResponse}` : ''}
 ${userData.location ? `- Location: ${userData.location}` : ''}
 
-Write a warm, personal email inviting ${userData.firstName} to continue their journey with you on a new platform where they can chat with you anytime. They will receive 3 free minutes.
+Write a warm, personal email inviting ${userData.firstName} to continue their journey with you on a new platform where they can chat with you anytime. Include this exact sentence somewhere in the body: "I've set aside 3 minutes for you to ask anything and explore today's insights. Start your private conversation."
 
 Rules:
 - Stay fully in character as ${personaName}
@@ -363,7 +363,7 @@ Since ${bucketRef}, I've been sensing that there's more we need to explore. That
 
 I've created a new space where we can continue our journey together — a place where you can return to me anytime, and even connect with other gifted advisors who each bring their own unique sight.
 
-I've set aside 3 free minutes for you. No strings, no commitments — just a chance to reconnect.
+I've set aside 3 minutes for you to ask anything and explore today's insights. Start your private conversation.
 
 I'll be here when you're ready.
 
