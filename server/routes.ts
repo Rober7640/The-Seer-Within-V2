@@ -416,6 +416,7 @@ export async function registerRoutes(
             bucket,
             email,
             app: "the-seer-within",
+            product: "sacred_clearing_ritual",
           },
         },
         success_url: `${getBaseUrl(req)}/welcome1?session_id={CHECKOUT_SESSION_ID}`,
@@ -425,6 +426,7 @@ export async function registerRoutes(
           bucket,
           type,
           app: "the-seer-within",
+          product: "sacred_clearing_ritual",
         },
       });
 
