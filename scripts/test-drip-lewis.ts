@@ -58,7 +58,7 @@ Rules:
 - Reference something specific from their reading
 - Do NOT be pushy or use sales language — this is a spiritual message
 - Do NOT mention "platform", "app", "website", or "account" — say "a new space" or "a place I've created"
-- Mention they have 3 free minutes waiting for them
+- Include this exact sentence somewhere in the body: "I've set aside 3 minutes for you to ask anything and explore today's insights. Start your private conversation."
 - Body: 80-150 words
 - Subject line: under 60 characters, personal
 
