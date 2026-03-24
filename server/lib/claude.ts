@@ -4,6 +4,7 @@ import Anthropic from '@anthropic-ai/sdk'
 import logger from './logger'
 import { fireWithBreaker, anthropicBreaker, isCircuitOpenError } from './circuitBreaker'
 import { getModelForOperation } from './modelConfig'
+import { sanitizePredictionsV1 } from './predictionSanitizer'
 import type { UserData } from '../../shared/types'
 import {
   buildReading1Prompt,
@@ -53,7 +54,7 @@ async function callClaude(prompt: string): Promise<ClaudeResponse> {
       const parsed = JSON.parse(jsonMatch[0])
       if (Array.isArray(parsed.messages)) {
         return {
-          messages: parsed.messages,
+          messages: sanitizePredictionsV1(parsed.messages),
           needsClarification: parsed.needsClarification || false,
           detectedTopic: parsed.detectedTopic,
           subBucket: parsed.subBucket,

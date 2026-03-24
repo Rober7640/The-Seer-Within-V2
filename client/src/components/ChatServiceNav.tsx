@@ -173,7 +173,11 @@ export function ChatServiceNav({ coinBalanceOverride }: { coinBalanceOverride?: 
                     <div className="text-xs text-gray-400 truncate">{user.email}</div>
                   </div>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => navigate("/dashboard")}>
+                  <DropdownMenuItem onClick={() => {
+                    navigate("/dashboard");
+                    // Wouter doesn't handle hash — set it manually after navigation
+                    setTimeout(() => { window.location.hash = "account"; }, 50);
+                  }}>
                     <User className="w-4 h-4 mr-2" />
                     Account
                   </DropdownMenuItem>

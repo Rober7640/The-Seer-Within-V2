@@ -14,7 +14,8 @@ function getBaseUrl(req: Request): string {
   if (host) return `${proto}://${host}`;
   return process.env.BASE_URL || "http://localhost:5000";
 }
-import { checkUniversalSafety } from "./lib/universalSafety";
+import { checkUniversalSafety, checkAndLogSafety } from "./lib/universalSafety";
+import { getCountryFromIP } from "./lib/crisisHotlines";
 import { storage } from "./storage";
 import crudRouter from "./api/crud";
 import authRouter from "./routes/auth";
@@ -260,7 +261,13 @@ export async function registerRoutes(
 
       // Universal safety check — same protections as V2 chat service
       if (input && typeof input === "string") {
-        const safetyResult = checkUniversalSafety(input);
+        const userIP = req.ip || (req.headers['x-forwarded-for'] as string) || undefined;
+        const countryCode = await getCountryFromIP(userIP);
+        const safetyResult = await checkAndLogSafety(input, {
+          ipAddress: userIP,
+          userAgent: req.headers['user-agent'] || undefined,
+          countryCode,
+        });
         if (!safetyResult.safe && safetyResult.response) {
           return res.json({
             messages: [safetyResult.response],

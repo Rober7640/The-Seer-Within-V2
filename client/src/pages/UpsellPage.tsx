@@ -256,7 +256,8 @@ export default function UpsellPage() {
         </div>
       </div>
 
-      {/* Interactive Elements */}
+      {/* Interactive Elements — only render footer when something inside it is visible */}
+      {(showQuickReplies || (inputEnabled && !showCTA && !showShippingForm) || showCTA || showShippingForm) && (
       <div className="relative z-10 shrink-0 bg-black/30 backdrop-blur-sm border-t border-white/10">
         {/* Quick Replies */}
         {showQuickReplies && (
@@ -316,6 +317,7 @@ export default function UpsellPage() {
           </div>
         )}
       </div>
+      )}
     </div>
   );
 }

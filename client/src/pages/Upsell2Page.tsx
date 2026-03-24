@@ -279,6 +279,7 @@ export default function Upsell2Page() {
         </div>
       </div>
 
+      {(showQuickReplies || (inputEnabled && !showCTA && !showDownsellCTA && !showShippingForm) || showCTA || showDownsellCTA || showShippingForm) && (
       <div className="relative z-10 shrink-0 bg-black/30 backdrop-blur-sm border-t border-white/10">
         {showQuickReplies && (
           <QuickReplies
@@ -340,6 +341,7 @@ export default function Upsell2Page() {
           </div>
         )}
       </div>
+      )}
     </div>
   );
 }

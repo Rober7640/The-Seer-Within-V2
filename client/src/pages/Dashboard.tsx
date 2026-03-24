@@ -91,6 +91,25 @@ export default function Dashboard() {
     }
   }, [authLoading, isAuthenticated, navigate]);
 
+  // Scroll to #account section when navigated with hash
+  useEffect(() => {
+    if (statsLoading || !stats) return;
+
+    const scrollToHash = () => {
+      if (window.location.hash === "#account") {
+        const el = document.getElementById("account");
+        if (el) el.scrollIntoView({ behavior: "smooth" });
+      }
+    };
+
+    // Check on load
+    scrollToHash();
+
+    // Also listen for hash changes (Wouter sets hash after navigation)
+    window.addEventListener("hashchange", scrollToHash);
+    return () => window.removeEventListener("hashchange", scrollToHash);
+  }, [statsLoading, stats]);
+
   useEffect(() => {
     if (!isAuthenticated) return;
 
@@ -360,7 +379,7 @@ export default function Dashboard() {
       <div className="border-t border-white/10" />
 
       {/* Account */}
-      <section className="space-y-5">
+      <section id="account" className="space-y-5 scroll-mt-8">
         <h2 className="text-white/50 text-xs uppercase tracking-widest">
           Account
         </h2>
