@@ -283,9 +283,9 @@ export async function saveShippingAddress(
     postal: string;
     country: string;
   }
-): Promise<void> {
+): Promise<boolean> {
   try {
-    await db
+    const result = await db
       .update(conversations)
       .set({
         shippingName: address.name,
@@ -297,9 +297,18 @@ export async function saveShippingAddress(
         shippingCountry: address.country,
         updatedAt: new Date(),
       })
-      .where(eq(conversations.stripeSessionId, sessionId));
+      .where(eq(conversations.stripeSessionId, sessionId))
+      .returning({ id: conversations.id });
+
+    if (result.length === 0) {
+      logger.error("saveShippingAddress: 0 rows updated — no conversation found for session", { sessionId });
+      return false;
+    }
+    logger.info("saveShippingAddress: shipping saved successfully", { sessionId, rowsUpdated: result.length });
+    return true;
   } catch (error) {
     logger.error("Database shipping save error:", error);
+    return false;
   }
 }
 
@@ -350,9 +359,9 @@ export async function saveShipping2Address(
     postal: string;
     country: string;
   }
-): Promise<void> {
+): Promise<boolean> {
   try {
-    await db
+    const result = await db
       .update(conversations)
       .set({
         shipping2Name: address.name,
@@ -364,8 +373,17 @@ export async function saveShipping2Address(
         shipping2Country: address.country,
         updatedAt: new Date(),
       })
-      .where(eq(conversations.stripeSessionId, sessionId));
+      .where(eq(conversations.stripeSessionId, sessionId))
+      .returning({ id: conversations.id });
+
+    if (result.length === 0) {
+      logger.error("saveShipping2Address: 0 rows updated — no conversation found for session", { sessionId });
+      return false;
+    }
+    logger.info("saveShipping2Address: shipping2 saved successfully", { sessionId, rowsUpdated: result.length });
+    return true;
   } catch (error) {
     logger.error("Database shipping2 save error:", error);
+    return false;
   }
 }

@@ -397,11 +397,16 @@ export function useUpsellChat({
       setShowShippingForm(false);
 
       try {
-        await fetch("/api/shipping/save", {
+        const res = await fetch("/api/shipping/save", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ sessionId, address }),
         });
+
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          console.error("Shipping save failed:", res.status, errData);
+        }
 
         await processStage("COMPLETE");
       } catch (error) {

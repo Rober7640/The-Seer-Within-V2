@@ -1054,94 +1054,19 @@ export async function registerRoutes(
         // This ensures fast response while shipping form submission completes
         const customerEmail = email || session.customer_email;
 
-        // Background task: Wait for shipping to be saved, then update AWeber and Stripe
-        (async () => {
-          try {
-            // Wait 3 seconds to allow shipping form submission to complete
-            logger.info(
-              "1-click upsell: Waiting 3 seconds for shipping form to save...",
-            );
-            await new Promise((resolve) => setTimeout(resolve, 3000));
-
-            // Fetch conversation to get shipping details
-            let conversation =
-              await getConversationByStripeSession(checkoutSessionId);
-
-            // If shipping not found, retry once after another 2 seconds
-            if (!conversation?.shippingLine1) {
-              logger.info(
-                "1-click upsell: Shipping not found, retrying in 2 seconds...",
-              );
-              await new Promise((resolve) => setTimeout(resolve, 2000));
-              conversation =
-                await getConversationByStripeSession(checkoutSessionId);
-            }
-
-            const hasShipping = !!conversation?.shippingLine1;
-            logger.info(
-              `1-click upsell: Shipping ${hasShipping ? "found" : "not found"} for session ${checkoutSessionId}`,
-            );
-
-            // Update Stripe payment intent with shipping metadata
-            if (hasShipping && conversation) {
-              try {
-                await stripe.paymentIntents.update(upsellPayment.id, {
-                  metadata: {
-                    product: "protection_ritual",
-                    originalSession: checkoutSessionId,
-                    shipping_name: conversation.shippingName || "",
-                    shipping_line1: conversation.shippingLine1 || "",
-                    shipping_line2: conversation.shippingLine2 || "",
-                    shipping_city: conversation.shippingCity || "",
-                    shipping_state: conversation.shippingState || "",
-                    shipping_postal: conversation.shippingPostal || "",
-                    shipping_country: conversation.shippingCountry || "",
-                  },
-                });
-                logger.info(
-                  "1-click upsell: Updated Stripe payment with shipping metadata",
-                );
-              } catch (stripeErr) {
-                logger.error(
-                  "1-click upsell: Failed to update Stripe metadata:",
-                  stripeErr,
-                );
-              }
-            }
-
-            // Add to AWeber upsell paid list with shipping details
-            if (customerEmail) {
-              addUpsellSubscriber({
-                email: customerEmail,
-                name: firstName,
-                stripeOrderId: upsellPayment.id,
-                tags: ["seer-within-upsell"],
-                shipping:
-                  hasShipping && conversation
-                    ? {
-                        name: conversation.shippingName || "",
-                        line1: conversation.shippingLine1 || "",
-                        line2: conversation.shippingLine2 || "",
-                        city: conversation.shippingCity || "",
-                        state: conversation.shippingState || "",
-                        postal: conversation.shippingPostal || "",
-                        country: conversation.shippingCountry || "",
-                      }
-                    : undefined,
-              })
-                .then(() => {
-                  logger.info(
-                    "1-click upsell: AWeber subscriber added successfully",
-                  );
-                })
-                .catch((err) =>
-                  logger.error("1-click upsell: AWeber error:", err),
-                );
-            }
-          } catch (bgErr) {
-            logger.error("1-click upsell: Background task error:", bgErr);
-          }
-        })();
+        // Add subscriber to AWeber upsell list immediately (without shipping — shipping
+        // is added later when /api/shipping/save fires, using update_existing: true).
+        // This ensures the subscriber is on the list even if the user abandons the shipping form.
+        if (customerEmail) {
+          addUpsellSubscriber({
+            email: customerEmail,
+            name: firstName,
+            stripeOrderId: upsellPayment.id,
+            tags: ["seer-within-upsell"],
+          })
+            .then(() => logger.info("1-click upsell: AWeber subscriber added (without shipping — shipping added on form submit)"))
+            .catch((err) => logger.error("1-click upsell: AWeber error:", err));
+        }
 
         return res.json({
           success: true,
@@ -1276,9 +1201,14 @@ export async function registerRoutes(
         const { sessionId, address } = newSchemaResult.data;
 
         // Save to database using session ID
-        await saveShippingAddress(sessionId, address);
+        const saved = await saveShippingAddress(sessionId, address);
 
-        logger.info("Upsell order to ship (by session):", {
+        if (!saved) {
+          logger.error("Shipping save FAILED — 0 rows updated", { sessionId, address });
+          return res.status(500).json({ error: "Failed to save shipping address — session not found" });
+        }
+
+        logger.info("Upsell shipping saved to DB:", {
           sessionId,
           address,
           createdAt: new Date().toISOString(),
@@ -1868,9 +1798,14 @@ export async function registerRoutes(
 
       const { sessionId, address } = parseResult.data;
 
-      await saveShipping2Address(sessionId, address);
+      const saved = await saveShipping2Address(sessionId, address);
 
-      logger.info("Upsell2 bracelet order to ship:", {
+      if (!saved) {
+        logger.error("Upsell2 shipping save FAILED — 0 rows updated", { sessionId, address });
+        return res.status(500).json({ error: "Failed to save shipping address — session not found" });
+      }
+
+      logger.info("Upsell2 bracelet shipping saved to DB:", {
         sessionId,
         address,
         createdAt: new Date().toISOString(),
