@@ -1284,12 +1284,40 @@ export async function registerRoutes(
           createdAt: new Date().toISOString(),
         });
 
-        // Non-blocking: Update AWeber and Stripe with shipping data now that it's saved
+        // Update AWeber and Stripe with shipping data now that it's saved.
+        // Uses retry to handle race condition where upsellPaymentId may not
+        // be committed yet (1-click charge and shipping save can overlap).
         (async () => {
           try {
-            const conversation =
+            let conversation =
               await getConversationByStripeSession(sessionId);
             if (!conversation) return;
+
+            // If upsellPaymentId isn't set yet, retry after 2 seconds
+            // (the 1-click charge may still be committing)
+            if (!conversation.upsellPaymentId) {
+              logger.info("Shipping save: upsellPaymentId not found, retrying in 2s...");
+              await new Promise((r) => setTimeout(r, 2000));
+              conversation = await getConversationByStripeSession(sessionId);
+            }
+            // One more retry after 3 more seconds if still missing
+            if (!conversation?.upsellPaymentId) {
+              logger.info("Shipping save: upsellPaymentId still not found, retrying in 3s...");
+              await new Promise((r) => setTimeout(r, 3000));
+              conversation = await getConversationByStripeSession(sessionId);
+            }
+
+            if (!conversation) return;
+
+            const shippingData = {
+              name: address.name,
+              line1: address.line1,
+              line2: address.line2 || "",
+              city: address.city,
+              state: address.state,
+              postal: address.postal,
+              country: address.country,
+            };
 
             // Update AWeber with shipping data (update_existing: true handles dedup)
             if (
@@ -1302,15 +1330,7 @@ export async function registerRoutes(
                 name: conversation.firstName || undefined,
                 stripeOrderId: conversation.upsellPaymentId,
                 tags: ["seer-within-upsell", "shipping-confirmed"],
-                shipping: {
-                  name: address.name,
-                  line1: address.line1,
-                  line2: address.line2 || "",
-                  city: address.city,
-                  state: address.state,
-                  postal: address.postal,
-                  country: address.country,
-                },
+                shipping: shippingData,
               })
                 .then(() => {
                   logger.info(
@@ -1350,6 +1370,8 @@ export async function registerRoutes(
                   stripeErr,
                 );
               }
+            } else {
+              logger.warn("Shipping save: upsellPaymentId not found after retries — Stripe metadata not updated", { sessionId });
             }
           } catch (bgErr) {
             logger.error(
