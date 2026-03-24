@@ -143,6 +143,15 @@
   scrollbar-width: none;
 }
 
+/* Hide Stripe promotional badge that overlaps the send button. */
+a[href*="stripe.com"],
+a[href*="stripe.com"] > img,
+div[class*="StripeElement"] ~ a,
+iframe[name^="__privateStripeFrame"],
+iframe[name^="__stripeJSBridgeFrame"] {
+  display: none !important;
+}
+
 /* Custom Utilities for Stars */
 .stars {
   position: absolute;

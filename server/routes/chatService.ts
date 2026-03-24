@@ -17,6 +17,7 @@ import { getModelForOperation } from '../lib/modelConfig';
 import { chatLimiter } from '../lib/rateLimiter';
 import logger from '../lib/logger';
 import { sendSessionTimeoutEmail } from '../lib/sessionTimeoutEmail';
+import { getCountryFromIP } from '../lib/crisisHotlines';
 import Anthropic from '@anthropic-ai/sdk';
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY || '' });
@@ -262,11 +263,16 @@ router.post('/session/:id/message', requireAuth, chatLimiter, async (req: Reques
     );
     dbBalanceBefore = Number(preRows[0]?.coin_balance ?? -1);
 
+    // Resolve user's country from IP for localized crisis hotlines (non-blocking, cached)
+    const userIP = req.ip || (req.headers['x-forwarded-for'] as string) || undefined;
+    const countryCode = await getCountryFromIP(userIP);
+
     // Use the chat engine which handles safety checks, intent detection,
     // conversation state, Claude API call, and response validation
     const result = await sendMessage(sessionId, req.userId!, content, {
-      ipAddress: req.ip || (req.headers['x-forwarded-for'] as string) || undefined,
+      ipAddress: userIP,
       userAgent: req.headers['user-agent'] || undefined,
+      countryCode,
     });
 
     // BILLING DEBUG: snapshot balance AFTER sendMessage
@@ -301,6 +307,7 @@ router.post('/session/:id/message', requireAuth, chatLimiter, async (req: Reques
       blocked: result.blocked || false,
       tarotDraw: result.tarotDraw || false,
       chartData: result.chartData ?? null,
+      crisisDisclaimer: result.crisisDisclaimer ?? null,
       userMessageId: result.userMessageId,
       assistantMessageId: result.assistantMessageId,
     });

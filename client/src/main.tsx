@@ -16,3 +16,34 @@ if (sentryDsn) {
 }
 
 createRoot(document.getElementById("root")!).render(<App />);
+
+// Hide the Stripe promotional badge that overlaps the chat send button.
+// Stripe dynamically injects a fixed-position iframe/div badge at the bottom-right
+// after Elements loads. A MutationObserver catches it regardless of timing.
+const hideStripeBadge = () => {
+  const observer = new MutationObserver(() => {
+    // Stripe badge: a]fixed-position element linking to stripe.com
+    document.querySelectorAll<HTMLElement>('a[href*="stripe.com"]').forEach((el) => {
+      if (el.style.position === 'fixed' || el.closest('[style*="position: fixed"]')) {
+        el.style.display = 'none';
+      }
+    });
+    // Also catch fixed-position iframes injected by Stripe at body level
+    document.querySelectorAll<HTMLIFrameElement>('body > iframe').forEach((iframe) => {
+      const style = iframe.getAttribute('style') || '';
+      if (style.includes('position: fixed') && style.includes('z-index')) {
+        // Skip Stripe payment input frames — only hide the badge
+        const name = iframe.getAttribute('name') || '';
+        if (!name.includes('__privateStripeMetricsController')) {
+          iframe.style.display = 'none';
+        }
+      }
+    });
+  });
+  observer.observe(document.body, { childList: true, subtree: true });
+};
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', hideStripeBadge);
+} else {
+  hideStripeBadge();
+}

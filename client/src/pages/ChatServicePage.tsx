@@ -31,6 +31,7 @@ import VedicChartDiamond, { type VedicChartData } from "@/components/VedicChartD
 import BuyCreditsModal from "@/components/BuyCreditsModal";
 import OutOfCreditsModal from "@/components/OutOfCreditsModal";
 import TeaserCreditModal from "@/components/TeaserCreditModal";
+import CrisisDisclaimer from "@/components/CrisisDisclaimer";
 import SessionFeedbackModal from "@/components/SessionFeedbackModal";
 import DebugOverlay from "@/components/DebugOverlay";
 import { COINS_PER_MINUTE, BILLING_INTERVAL_SECONDS, secondsToCoins, type PricingTier } from "@shared/types";
@@ -93,6 +94,7 @@ interface ChatMessageData {
   chartData?: NatalChartData | VedicChartData;  // renders natal chart when present (western or vedic)
   isReadingEndedDivider?: boolean; // shows the "Reading Ended" divider + CTAs
   isCreditsPurchasedDivider?: boolean; // shows the "Credits purchased" divider
+  isCrisisMessage?: boolean; // true for crisis safety responses — styled differently
 }
 
 interface SessionData {
@@ -192,6 +194,10 @@ export default function ChatServicePage() {
 
   // Tracks whether user has ended a reading (keeps chat history visible post-session)
   const [readingEnded, setReadingEnded] = useState(false);
+  // Crisis disclaimer banner — shown when crisis content is detected
+  const [crisisDisclaimer, setCrisisDisclaimer] = useState<{
+    hotlineName: string; hotlineNumber: string; country: string;
+  } | null>(null);
 
   // Birth chart state for astrology personas (e.g. Luna Voss)
   // null = checking, true = chart exists (returning user), false = no chart (new user, collects in-chat)
@@ -199,6 +205,8 @@ export default function ChatServicePage() {
   const [storedChartData, setStoredChartData]   = useState<NatalChartData | VedicChartData | null>(null);
 
   // Refs
+  // Monotonically increasing ID to cancel in-flight greeting fetches on persona switch
+  const greetingFetchIdRef = useRef(0);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -231,6 +239,20 @@ export default function ChatServicePage() {
   const showBuyCreditsRef = useRef(false);
   // Tracks when the refill modal opened, so we can shift sessionStartTime forward on close
   const refillModalOpenedAtRef = useRef<number | null>(null);
+  // Guards OutOfCreditsModal onOpenChange from running dismissal logic after a successful payment
+  const oocPaymentSucceededRef = useRef(false);
+  // Notification sound for incoming assistant messages
+  const notificationAudioRef = useRef<HTMLAudioElement | null>(null);
+  useEffect(() => {
+    notificationAudioRef.current = new Audio('/notification.wav');
+    notificationAudioRef.current.volume = 0.5;
+  }, []);
+  const playNotificationSound = useCallback(() => {
+    if (notificationAudioRef.current) {
+      notificationAudioRef.current.currentTime = 0;
+      notificationAudioRef.current.play().catch(() => {});
+    }
+  }, []);
 
   // Parse persona from URL - check path params first, then query params
   const pathPersonaSlug = routeParams?.personaSlug;
@@ -564,9 +586,14 @@ export default function ChatServicePage() {
     }
   }, [showBuyCredits]);
 
-  // Reset offline state when persona selection changes
+  // Reset offline state and clear stale chart/crisis state when persona changes.
+  // This is the single source of truth — catches sidebar clicks, URL navigation,
+  // page refresh, and any other path that changes the selected persona.
   useEffect(() => {
     setIsPersonaOffline(false);
+    setBirthChartExists(null);
+    setStoredChartData(null);
+    setCrisisDisclaimer(null);
   }, [selectedPersonaId]);
 
   // Auto-fetch greeting on initial load or when persona changes (only when no active session).
@@ -582,9 +609,12 @@ export default function ChatServicePage() {
     // If chart is missing, show the form — don't fetch a greeting yet
     if (personality?.requiresBirthData && birthChartExists === false) return;
     lastAutoFetchedPersonaId.current = selectedPersona.id;
-    const chartToInject = (personality?.requiresBirthData && birthChartExists === true)
-      ? storedChartData
-      : null;
+    // Only inject chart for astrology personas that have requiresBirthData AND a stored chart.
+    // For all other personas, always pass null — never leak chart data across personas.
+    let chartToInject: NatalChartData | VedicChartData | null = null;
+    if (personality?.requiresBirthData && birthChartExists === true && storedChartData) {
+      chartToInject = storedChartData;
+    }
     fetchGreeting(undefined, false, chartToInject);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedPersona?.id, personasLoading, birthChartExists, storedChartData]);
@@ -665,6 +695,9 @@ export default function ChatServicePage() {
   const fetchGreeting = useCallback(async (overrideSlug?: string, appendMode?: boolean, injectChartData?: NatalChartData | VedicChartData | null, teaserContent?: string) => {
     const slug = overrideSlug || selectedPersona?.slug;
     if (!slug) return;
+    // Increment fetch ID — any in-flight greeting with an older ID will bail out
+    const myFetchId = ++greetingFetchIdRef.current;
+    const isStale = () => greetingFetchIdRef.current !== myFetchId;
     setSwitchingToPersonaSlug(null); // Clear any switching overlay when greeting starts loading
     setIsStarting(true);
     setIsPersonaOffline(false);
@@ -682,6 +715,7 @@ export default function ChatServicePage() {
     if (teaserContent) {
       setIsTyping(true);
       await sleep(calculateTypingDelay(teaserContent));
+      if (isStale()) { setIsTyping(false); setIsStarting(false); return; }
       addMsg({
         id: `greeting-${Date.now()}`,
         role: 'assistant',
@@ -723,6 +757,7 @@ export default function ChatServicePage() {
             : `Welcome back. Good to see you again.`;
           setIsTyping(true);
           await sleep(calculateTypingDelay(welcomeText));
+          if (isStale()) { setIsTyping(false); setIsStarting(false); return; }
           setIsTyping(false);
           setMessages(prev => [...prev, {
             id: `welcome-back-${Date.now()}`,
@@ -731,11 +766,13 @@ export default function ChatServicePage() {
             sentAt: new Date().toISOString(),
           }]);
           await sleep(500);
+          if (isStale()) { setIsStarting(false); return; }
 
           // Step 2: Simulate checking for the chart
           const searchText = `Let me check if I still have your chart...`;
           setIsTyping(true);
           await sleep(calculateTypingDelay(searchText) + 1000);
+          if (isStale()) { setIsTyping(false); setIsStarting(false); return; }
           setIsTyping(false);
           setMessages(prev => [...prev, {
             id: `chart-search-${Date.now()}`,
@@ -744,11 +781,13 @@ export default function ChatServicePage() {
             sentAt: new Date().toISOString(),
           }]);
           await sleep(1400);
+          if (isStale()) { setIsStarting(false); return; }
 
           // Step 3: Found it
           const foundText = `I found it. Pulling it out now.`;
           setIsTyping(true);
           await sleep(calculateTypingDelay(foundText));
+          if (isStale()) { setIsTyping(false); setIsStarting(false); return; }
           setIsTyping(false);
           setMessages(prev => [...prev, {
             id: `chart-found-${Date.now()}`,
@@ -757,6 +796,7 @@ export default function ChatServicePage() {
             sentAt: new Date().toISOString(),
           }]);
           await sleep(700);
+          if (isStale()) { setIsStarting(false); return; }
 
           // Step 4: Chart renders
           setMessages(prev => [...prev, {
@@ -767,12 +807,14 @@ export default function ChatServicePage() {
             sentAt: new Date().toISOString(),
           }]);
           await sleep(600);
+          if (isStale()) { setIsStarting(false); return; }
         }
 
         // Show typing indicator then reveal greeting
         setIsTyping(true);
         const typingDelay = calculateTypingDelay(data.greeting);
         await sleep(typingDelay);
+        if (isStale()) { setIsTyping(false); setIsStarting(false); return; }
 
         const greetingMsg: ChatMessageData = {
           id: `greeting-${Date.now()}`,
@@ -872,11 +914,26 @@ export default function ChatServicePage() {
     } finally {
       sessionActiveRef.current = false;
       setSession(null);
-      setMessages([]);
       setElapsedSeconds(0);
       setInitialCoinBalance(0);
       sessionStartTimeRef.current = null;
       setShowRefillBanner(false);
+      // Preserve chat history for idle timeout so user can "Continue Reading"
+      if (reason === 'idle') {
+        setReadingEnded(true);
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: `reading-ended-${Date.now()}`,
+            role: "assistant" as const,
+            content: "",
+            sentAt: new Date().toISOString(),
+            isReadingEndedDivider: true,
+          },
+        ]);
+      } else {
+        setMessages([]);
+      }
     }
   }, [session, coinBalance]);
 
@@ -894,6 +951,7 @@ export default function ChatServicePage() {
       setMessages([]);
       setPreSessionGreeting(null);
       setReadingEnded(false);
+      setCrisisDisclaimer(null);
       setBirthChartExists(null);
       setStoredChartData(null);
       const targetPersona = personas.find((p) => p.slug === action.slug);
@@ -975,6 +1033,7 @@ export default function ChatServicePage() {
   // "Start a New Reading" — clears history and re-fetches greeting for the same guide
   const startNewReading = useCallback(() => {
     setReadingEnded(false);
+    setCrisisDisclaimer(null);
     setMessages([]);
     setPreSessionGreeting(null);
     lastAutoFetchedPersonaId.current = null; // allow auto-fetch to re-trigger for same persona
@@ -986,9 +1045,10 @@ export default function ChatServicePage() {
 
     toast({ title: "Credits purchased!", description: "Your reading will continue now." });
 
-    // Insert "Credits Purchased" divider
+    // Remove any reading-ended dividers (so old "Continue Reading" buttons don't linger)
+    // and insert "Credits Purchased" divider
     setMessages((prev) => [
-      ...prev,
+      ...prev.filter((m) => !m.isReadingEndedDivider),
       {
         id: `credits-purchased-${Date.now()}`,
         role: "assistant" as const,
@@ -1033,6 +1093,8 @@ export default function ChatServicePage() {
           setShowRefillBanner(false);
           setRefillBannerDismissed(false);
           outOfCreditsFiredRef.current = false;
+          sessionActiveRef.current = true;
+          skipAuthCoinSyncRef.current = true;
           sessionStartTimeRef.current = Date.now();
           lastUserMessageAt.current = Date.now();
           setReadingEnded(false);
@@ -1141,6 +1203,10 @@ export default function ChatServicePage() {
     // the normal AI greeting so the conversation picks up naturally.
     setMessages([]);
     setPreSessionGreeting(null);
+    setReadingEnded(false);
+    setCrisisDisclaimer(null);
+    setBirthChartExists(null);
+    setStoredChartData(null);
     lastAutoFetchedPersonaId.current = targetPersona.id; // Prevent auto-fetch effect from double-triggering
     const isReturning = chattedGuideIds.has(targetPersona.id);
     fetchGreeting(slug, false, null, isReturning ? undefined : teaserFull);
@@ -1327,8 +1393,16 @@ export default function ChatServicePage() {
             content: data.message,
             sentAt: new Date().toISOString(),
             tarotDraw: data.tarotDraw || false,
+            isCrisisMessage: data.blocked && data.crisisDisclaimer ? true : undefined,
           };
           setMessages((prev) => [...prev, assistantMsg]);
+          // Show/hide crisis disclaimer based on whether this response has crisis data
+          if (data.crisisDisclaimer) {
+            setCrisisDisclaimer(data.crisisDisclaimer);
+          } else {
+            setCrisisDisclaimer(null);
+          }
+          playNotificationSound();
           if (data.remainingCoins !== undefined) {
             // Only accept server balance if it's <= current display balance.
             // The heartbeat checkpoint runs every 30s, so between checkpoints the
@@ -1928,7 +2002,7 @@ export default function ChatServicePage() {
                   );
                 }
 
-                // Reading Ended divider + CTA buttons
+                // Reading Ended divider + CTA buttons (buttons only when reading is still ended)
                 if (msg.isReadingEndedDivider) {
                   return (
                     <div key={msg.id} className="flex flex-col items-center gap-4 py-4 animate-fade-in">
@@ -1939,20 +2013,28 @@ export default function ChatServicePage() {
                         </span>
                         <div className="flex-1 h-px bg-gray-200" />
                       </div>
-                      <div className="flex flex-col gap-2 w-full max-w-xs">
-                        <button
-                          onClick={startNewReading}
-                          className="w-full py-3 bg-purple-600 text-white font-semibold rounded-xl hover:bg-purple-700 transition-colors text-sm shadow-sm"
-                        >
-                          Start a New Reading
-                        </button>
-                        <button
-                          onClick={() => navigate("/personas")}
-                          className="w-full py-3 border border-gray-300 text-gray-600 font-semibold rounded-xl hover:bg-gray-50 transition-colors text-sm"
-                        >
-                          Choose a New Guide
-                        </button>
-                      </div>
+                      {readingEnded && !session && (
+                        <div className="flex flex-col gap-2 w-full max-w-xs">
+                          <button
+                            onClick={() => setShowBuyCredits(true)}
+                            className="w-full py-3 bg-purple-600 text-white font-semibold rounded-xl hover:bg-purple-700 transition-colors text-sm shadow-sm"
+                          >
+                            Continue Reading
+                          </button>
+                          <button
+                            onClick={startNewReading}
+                            className="w-full py-3 border border-gray-300 text-gray-600 font-semibold rounded-xl hover:bg-gray-50 transition-colors text-sm"
+                          >
+                            Start a New Reading
+                          </button>
+                          <button
+                            onClick={() => navigate("/personas")}
+                            className="w-full py-3 border border-gray-300 text-gray-600 font-semibold rounded-xl hover:bg-gray-50 transition-colors text-sm"
+                          >
+                            Choose a New Guide
+                          </button>
+                        </div>
+                      )}
                     </div>
                   );
                 }
@@ -2075,6 +2157,15 @@ export default function ChatServicePage() {
           </div>
         )}
 
+        {/* Crisis disclaimer banner — shown when crisis content is detected */}
+        {crisisDisclaimer && (
+          <CrisisDisclaimer
+            hotlineName={crisisDisclaimer.hotlineName}
+            hotlineNumber={crisisDisclaimer.hotlineNumber}
+            country={crisisDisclaimer.country}
+          />
+        )}
+
         {/* Input Area — once guide has greeted (pre-session) or session is active */}
         {(session || !!preSessionGreeting) && (
           <div className="p-4 bg-white border-t border-gray-100 shrink-0">
@@ -2173,7 +2264,8 @@ export default function ChatServicePage() {
         onOpenChange={(open) => {
           setShowOutOfCredits(open);
           // User dismissed without paying — clear the stale session and show divider
-          if (!open) {
+          // Skip if payment just succeeded (onSuccess handles closing + resuming)
+          if (!open && !oocPaymentSucceededRef.current) {
             sessionActiveRef.current = false;
             setSession(null);
             setCoinBalance(0);
@@ -2197,8 +2289,10 @@ export default function ChatServicePage() {
         personaAvatarUrl={selectedPersona?.avatarUrl}
         pricingTiers={sessionPricing?.tiers}
         onSuccess={async (newBalance: number) => {
+          oocPaymentSucceededRef.current = true;
           setShowOutOfCredits(false);
           await resumeAfterPurchase(newBalance);
+          oocPaymentSucceededRef.current = false;
         }}
       />
 
@@ -2208,9 +2302,15 @@ export default function ChatServicePage() {
         onOpenChange={setShowBuyCredits}
         personaId={selectedPersonaId}
         personaName={selectedPersona?.displayName}
-        onSuccess={(newBalance) => {
+        onSuccess={async (newBalance) => {
           // Auto-close the refill modal so billing resumes immediately
           setShowBuyCredits(false);
+
+          // If reading had ended, resume the session with context (same as OutOfCreditsModal flow)
+          if (readingEnded) {
+            await resumeAfterPurchase(newBalance);
+            return;
+          }
 
           setCoinBalance(newBalance);
           lastUserMessageAt.current = Date.now();

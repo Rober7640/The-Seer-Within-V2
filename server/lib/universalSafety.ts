@@ -6,6 +6,7 @@
 import { db } from './db';
 import { safetyViolations } from '@shared/schema';
 import logger from './logger';
+import { getHotlineForCountry, buildCrisisResponse, buildSoftCrisisNote, buildCrisisDisclaimer } from './crisisHotlines';
 
 // ============================================================
 // Types
@@ -28,6 +29,12 @@ export interface SafetyCheckResult {
   // Present when passive ideation is detected but the message is still safe to respond to.
   // The chat engine prepends this note to the persona's normal response.
   softCrisisNote?: string;
+  // Crisis disclaimer data for the frontend "Help is available" banner
+  crisisDisclaimer?: {
+    hotlineName: string;
+    hotlineNumber: string;
+    country: string;
+  };
 }
 
 export interface ViolationLogEntry {
@@ -99,6 +106,7 @@ const SOFT_CRISIS_NOTE =
 // Passive ideation patterns — these do NOT block the conversation but trigger SOFT_CRISIS_NOTE.
 // Phrases users in emotional distress commonly use without stating explicit intent to harm.
 const SOFT_CRISIS_PATTERNS: RegExp[] = [
+  // Passive ideation
   /\bcan'?t\s+go\s+on\s+(?:anymore|any\s+more|like\s+this)\b/i,
   /\bi'?m\s+(?:such\s+)?a\s+burden\s+(?:to|on)\b/i,
   /\b(?:everyone|(?:they|he|she)\s+would)\s+(?:all\s+)?be\s+better\s+off\s+without\s+me\b/i,
@@ -111,6 +119,17 @@ const SOFT_CRISIS_PATTERNS: RegExp[] = [
   /\bdon'?t\s+care\s+if\s+i\s+(?:live\s+or\s+die|make\s+it)\b/i,
   /\bno\s+reason\s+to\s+keep\s+(?:going|living|trying)\b/i,
   /\bi\s+(?:just\s+)?give\s+up\s+on\s+(?:life|everything|living)\b/i,
+  // Depression / emotional distress (not suicidal but needs care)
+  /\bi(?:'m|\s+am)\s+(?:so|really|very|deeply|severely)\s+depressed\b/i,
+  /\bi(?:'ve|\s+have)\s+been\s+(?:really|so|very)?\s*depressed\b/i,
+  /\bmy\s+depression\s+is\s+(?:getting|so)\s+(?:worse|bad|unbearable)\b/i,
+  /\bi\s+feel\s+(?:so\s+)?(?:hopeless|worthless|empty|numb|broken)\b/i,
+  /\bi\s+(?:can'?t|don'?t)\s+(?:feel|see)\s+(?:anything|any)\s+(?:hope|point|purpose)\b/i,
+  /\blife\s+(?:feels|is)\s+(?:meaningless|pointless|not\s+worth)\b/i,
+  /\bi\s+(?:just\s+)?(?:cry|cried)\s+(?:all\s+(?:day|night|the\s+time)|myself\s+to\s+sleep)\b/i,
+  /\bi\s+(?:can'?t|don'?t)\s+(?:get\s+out\s+of|leave)\s+(?:my\s+)?bed\b/i,
+  /\bstruggling\s+with\s+(?:my\s+)?mental\s+health\b/i,
+  /\bi\s+(?:feel\s+)?(?:like\s+)?(?:i'?m\s+)?falling\s+apart\b/i,
 ];
 
 // Crisis detection - HIGHEST PRIORITY, most strict
@@ -524,9 +543,26 @@ export async function checkAndLogSafety(
     personaId?: string;
     ipAddress?: string;
     userAgent?: string;
+    countryCode?: string | null;
   },
 ): Promise<SafetyCheckResult> {
   const result = checkUniversalSafety(message);
+
+  // For crisis violations, replace generic response with country-specific version
+  if (result.violationType === 'crisis') {
+    const hotline = getHotlineForCountry(context.countryCode ?? null);
+    const disclaimer = buildCrisisDisclaimer(hotline);
+
+    if (!result.safe && result.response) {
+      // Hard crisis — replace response with warm, localized message
+      result.response = buildCrisisResponse(hotline);
+      result.crisisDisclaimer = disclaimer;
+    } else if (result.safe && result.softCrisisNote) {
+      // Soft crisis — replace note with localized version
+      result.softCrisisNote = buildSoftCrisisNote(hotline);
+      result.crisisDisclaimer = disclaimer;
+    }
+  }
 
   if (!result.safe && result.violationType && result.response) {
     // Fire and forget - don't await to keep response fast
