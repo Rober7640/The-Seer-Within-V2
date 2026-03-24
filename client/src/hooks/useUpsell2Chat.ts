@@ -89,6 +89,7 @@ export function useUpsell2Chat({
   const [showShippingForm, setShowShippingForm] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
+  const [upsell2Bought, setUpsell2Bought] = useState(false);
   const [objectionCount, setObjectionCount] = useState(0);
 
   const hasStartedRef = useRef(false);
@@ -422,6 +423,7 @@ export function useUpsell2Chat({
       const result = await response.json();
 
       if (result.success) {
+        setUpsell2Bought(true);
         trackUpsell2Purchase(
           47,
           "USD",
@@ -509,6 +511,7 @@ export function useUpsell2Chat({
       const result = await response.json();
 
       if (result.success) {
+        setUpsell2Bought(true);
         trackUpsell2Purchase(
           30,
           "USD",
@@ -616,6 +619,7 @@ export function useUpsell2Chat({
     showShippingForm,
     isProcessing,
     isComplete,
+    upsell2Bought,
     handleUserInput,
     handleQuickReply,
     handleAccept,

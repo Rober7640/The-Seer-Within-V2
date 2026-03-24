@@ -147,6 +147,7 @@ export default function Upsell2Page() {
     showShippingForm,
     isProcessing,
     isComplete,
+    upsell2Bought,
     handleUserInput,
     handleQuickReply,
     handleAccept,
@@ -173,11 +174,15 @@ export default function Upsell2Page() {
   useEffect(() => {
     if (isComplete && sessionId) {
       const timer = setTimeout(() => {
-        navigate(`/success?session_id=${sessionId}`);
+        // Pass upsell flags so the success page can show products immediately
+        // even before the DB is updated (belt-and-suspenders approach)
+        const upsell1Flag = userData?.upsellPurchased ? '&upsell=true' : '';
+        const upsell2Flag = upsell2Bought ? '&upsell2=true' : '';
+        navigate(`/success?session_id=${sessionId}${upsell1Flag}${upsell2Flag}`);
       }, 3000);
       return () => clearTimeout(timer);
     }
-  }, [isComplete, sessionId, navigate]);
+  }, [isComplete, sessionId, navigate, userData?.upsellPurchased, upsell2Bought]);
 
   const handleSubmitInput = (e: React.FormEvent) => {
     e.preventDefault();
@@ -336,6 +341,7 @@ export default function Upsell2Page() {
           <div className="max-w-lg mx-auto p-4">
             <ShippingForm
               defaultName={userData?.firstName || ''}
+              productLabel="manifestation bracelet"
               onSubmit={handleShippingSubmit}
             />
           </div>

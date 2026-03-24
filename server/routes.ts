@@ -1599,17 +1599,23 @@ export async function registerRoutes(
 
         (async () => {
           try {
-            logger.info(
-              "Upsell2 1-click: Waiting 3 seconds for shipping form to save...",
-            );
-            await new Promise((resolve) => setTimeout(resolve, 3000));
-
+            // First check if shipping already exists (Path A — reused from Upsell 1)
             let conversation =
               await getConversationByStripeSession(checkoutSessionId);
 
             if (!conversation?.shipping2Line1 && !conversation?.shippingLine1) {
+              // Path B — shipping form will be submitted separately; wait for it
               logger.info(
-                "Upsell2 1-click: Shipping not found, retrying in 2 seconds...",
+                "Upsell2 1-click: No shipping yet, waiting 3 seconds for form submission...",
+              );
+              await new Promise((resolve) => setTimeout(resolve, 3000));
+              conversation =
+                await getConversationByStripeSession(checkoutSessionId);
+            }
+
+            if (!conversation?.shipping2Line1 && !conversation?.shippingLine1) {
+              logger.info(
+                "Upsell2 1-click: Shipping still not found, retrying in 2 seconds...",
               );
               await new Promise((resolve) => setTimeout(resolve, 2000));
               conversation =

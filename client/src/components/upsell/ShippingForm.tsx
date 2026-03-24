@@ -20,6 +20,7 @@ import {
 
 interface ShippingFormProps {
   defaultName?: string
+  productLabel?: string
   onSubmit: (address: ShippingAddress) => void
 }
 
@@ -53,7 +54,7 @@ const countries = [
   { value: 'SG', label: 'Singapore' },
 ]
 
-export function ShippingForm({ defaultName = '', onSubmit }: ShippingFormProps) {
+export function ShippingForm({ defaultName = '', productLabel = 'protection stone', onSubmit }: ShippingFormProps) {
   const form = useForm<ShippingAddress>({
     resolver: zodResolver(shippingSchema),
     defaultValues: {
@@ -78,7 +79,7 @@ export function ShippingForm({ defaultName = '', onSubmit }: ShippingFormProps) 
       <form onSubmit={form.handleSubmit(handleFormSubmit)} className="p-4" data-testid="form-shipping">
         <h3 className="text-foreground font-semibold text-lg mb-4 flex items-center gap-2" data-testid="heading-shipping">
           <Package className="w-5 h-5 text-purple-400" data-testid="icon-package" />
-          <span data-testid="text-shipping-title">Where should I send your protection stone?</span>
+          <span data-testid="text-shipping-title">Where should I send your {productLabel}?</span>
         </h3>
 
         <div className="space-y-3">
@@ -221,7 +222,7 @@ export function ShippingForm({ defaultName = '', onSubmit }: ShippingFormProps) 
               <span data-testid="text-button-saving">Saving...</span>
             </span>
           ) : (
-            <span data-testid="text-button-submit">Ship My Protection Stone →</span>
+            <span data-testid="text-button-submit">Ship My {productLabel.charAt(0).toUpperCase() + productLabel.slice(1)} →</span>
           )}
         </Button>
       </form>

@@ -139,8 +139,10 @@ export default function SuccessPage() {
         const data = await res.json();
         if (data.firstName) {
           setOrderData(data);
-          setHasUpsell(data.upsellPurchased);
-          setHasUpsell2(data.upsell2Purchased || upsell2FromUrl);
+          // Use URL flags as primary (always up-to-date from the redirect),
+          // DB values as fallback (may have timing lag)
+          setHasUpsell(upsellFromUrl || data.upsellPurchased);
+          setHasUpsell2(upsell2FromUrl || data.upsell2Purchased);
         }
       } catch (err) {
         console.error("Failed to fetch order data:", err);
