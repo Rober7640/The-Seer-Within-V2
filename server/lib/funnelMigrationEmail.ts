@@ -130,6 +130,7 @@ export async function migrateAndEmailFunnelUser(
         email: userData.email, // preserve original casing
         passwordHash,
         firstName: userData.firstName || 'Friend',
+        location: userData.location || null,
         emailVerified: true,
         coinBalance: FREE_COINS,
         totalCoinsUsed: 0,

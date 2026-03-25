@@ -129,13 +129,10 @@ export default function UpsellPage() {
     }
   }, [messages, isTyping]);
 
-  // Redirect to upsell2 when complete (instead of success)
+  // Redirect to upsell2 immediately when complete
   useEffect(() => {
     if (isComplete && sessionId) {
-      const timer = setTimeout(() => {
-        navigate(`/welcome2?session_id=${sessionId}`);
-      }, 3000);
-      return () => clearTimeout(timer);
+      navigate(`/welcome2?session_id=${sessionId}`);
     }
   }, [isComplete, sessionId, navigate]);
 

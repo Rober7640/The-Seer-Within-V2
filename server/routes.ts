@@ -330,17 +330,48 @@ export async function registerRoutes(
     }
   });
 
-  // Location API - IP geolocation
-  app.get("/api/location", async (req: Request, res: Response) => {
+  // Helper: resolve location string from request IP (returns "City, Country" or null)
+  async function resolveLocationFromIP(req: Request): Promise<string | null> {
     try {
-      // Get IP from headers
       const forwarded = req.headers["x-forwarded-for"];
       const ip =
         typeof forwarded === "string"
           ? forwarded.split(",")[0]?.trim()
           : req.socket.remoteAddress || "";
 
-      // Skip for localhost
+      if (
+        !ip ||
+        ip === "::1" ||
+        ip.startsWith("127.") ||
+        ip.startsWith("192.168.") ||
+        ip === "::ffff:127.0.0.1"
+      ) {
+        return null;
+      }
+
+      const response = await fetch(
+        `http://ip-api.com/json/${ip}?fields=city,country`,
+      );
+      const data = await response.json();
+
+      if (data.city) {
+        return `${data.city}${data.country ? `, ${data.country}` : ""}`;
+      }
+      return data.country || null;
+    } catch {
+      return null;
+    }
+  }
+
+  // Location API - IP geolocation
+  app.get("/api/location", async (req: Request, res: Response) => {
+    try {
+      const forwarded = req.headers["x-forwarded-for"];
+      const ip =
+        typeof forwarded === "string"
+          ? forwarded.split(",")[0]?.trim()
+          : req.socket.remoteAddress || "";
+
       if (
         !ip ||
         ip === "::1" ||
@@ -351,7 +382,6 @@ export async function registerRoutes(
         return res.json({ city: null, country: null });
       }
 
-      // Call free IP geolocation API
       const response = await fetch(
         `http://ip-api.com/json/${ip}?fields=city,country`,
       );
@@ -474,12 +504,15 @@ export async function registerRoutes(
 
       logger.info("Lead captured:", { email, firstName, bucket });
 
+      // Server-side fallback if frontend didn't resolve location
+      const resolvedLocation = location || await resolveLocationFromIP(req);
+
       // Save to database
       await saveConversation({
         email,
         firstName,
         bucket,
-        location: location || null,
+        location: resolvedLocation || null,
         timeOfDay: timeOfDay || null,
       });
 
@@ -516,10 +549,13 @@ export async function registerRoutes(
         return res.status(400).json({ error: "Email required" });
       }
 
+      // Server-side fallback if frontend didn't resolve location
+      const resolvedLocation = userData.location || await resolveLocationFromIP(req);
+
       await saveConversation({
         email: userData.email,
         firstName: userData.firstName,
-        location: userData.location,
+        location: resolvedLocation,
         timeOfDay: userData.timeOfDay,
         bucket: userData.bucket,
         subBucket: userData.subBucket,
@@ -549,7 +585,7 @@ export async function registerRoutes(
           emotionalResponse: userData.emotionalResponse,
           blockSource: userData.blockSource,
           personName: userData.personName,
-          location: userData.location,
+          location: resolvedLocation,
           timeOfDay: userData.timeOfDay,
         }).catch((err) => {
           logger.error('Funnel migration background error', { error: err?.message });

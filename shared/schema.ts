@@ -173,6 +173,7 @@ export const users = pgTable("users", {
   email: text("email").notNull().unique(),
   passwordHash: text("password_hash").notNull(),
   firstName: text("first_name").notNull(),
+  location: text("location"),
 
   // Email verification
   emailVerified: boolean("email_verified").default(false).notNull(),

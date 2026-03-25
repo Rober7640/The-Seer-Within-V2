@@ -113,7 +113,13 @@ export default function Upsell2Page() {
           }
         }
 
-        const response = await fetch(`/api/upsell2/user-data?session_id=${sid}`);
+        let response = await fetch(`/api/upsell2/user-data?session_id=${sid}`);
+
+        // Retry once after 2s if first attempt fails (handles brief server delays)
+        if (!response.ok) {
+          await new Promise(r => setTimeout(r, 2000));
+          response = await fetch(`/api/upsell2/user-data?session_id=${sid}`);
+        }
 
         if (!response.ok) {
           throw new Error('Order not found');

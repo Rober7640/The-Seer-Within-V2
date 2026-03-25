@@ -283,7 +283,7 @@ export function useUpsellChat({
           break;
 
         case "COMPLETE":
-          await sendBotMessages(p(UPSELL_SHIPPING_CONFIRMED));
+          // Skip confirmation messages — redirect to upsell 2 immediately
           setIsComplete(true);
           break;
       }
@@ -350,7 +350,7 @@ export function useUpsellChat({
       const result = await response.json();
 
       if (result.success) {
-        setUpsellPaymentId(result.paymentId);
+        setUpsellPaymentId(result.paymentIntentId);
         await sendBotMessages(p(UPSELL_SUCCESS));
         setIsProcessing(false);
         setShowShippingForm(true);

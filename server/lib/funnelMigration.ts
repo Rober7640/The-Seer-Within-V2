@@ -137,6 +137,7 @@ export async function migrateFunnelCustomer(email: string): Promise<MigrationRes
       email: normalizedEmail,
       passwordHash,
       firstName: conv.firstName || 'Friend',
+      location: conv.location || null,
       coinBalance: totalCredits,
       emailVerified: true, // Bypass verification for paid customers
       migratedFromConversationId: conv.id,

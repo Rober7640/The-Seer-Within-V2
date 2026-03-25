@@ -61,6 +61,7 @@ export async function migrateConversationsToUsers(): Promise<MigrationResult> {
           email,
           passwordHash,
           firstName: conv.firstName || 'Friend',
+          location: conv.location || null,
           coinBalance: totalCoins,
           migratedFromConversationId: conv.id,
         })
@@ -85,6 +86,8 @@ export async function migrateConversationsToUsers(): Promise<MigrationResult> {
           vision: conv.vision,
           deeperResponse: conv.deeperResponse,
           emotionalResponse: conv.emotionalResponse,
+          location: conv.location,
+          timeOfDay: conv.timeOfDay,
           funnelDate: conv.createdAt,
           purchased: conv.purchased,
         };
@@ -95,6 +98,7 @@ export async function migrateConversationsToUsers(): Promise<MigrationResult> {
         if (conv.concern) summaryParts.push(`Main concern: ${conv.concern}`);
         if (conv.personName) summaryParts.push(`Important person: ${conv.personName}`);
         if (conv.vision) summaryParts.push(`Vision/desires: ${conv.vision}`);
+        if (conv.location) summaryParts.push(`Location: ${conv.location}`);
 
         const summary = summaryParts.length > 0
           ? `From initial reading: ${summaryParts.join('. ')}`
