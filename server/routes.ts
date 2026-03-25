@@ -719,20 +719,16 @@ export async function registerRoutes(
         stripe.checkout.sessions
           .retrieve(sessionId, { expand: ["payment_intent"] })
           .then((session) => {
-            // Only add to paid list for the main $35 purchase (3500 cents)
-            const isMainPurchase =
-              session.amount_total === 3500 ||
-              session.metadata?.type === "main";
-
             if (
               session.payment_status === "paid" &&
-              session.payment_intent &&
-              isMainPurchase
+              session.payment_intent
             ) {
               const paymentIntentId =
                 typeof session.payment_intent === "string"
                   ? session.payment_intent
                   : session.payment_intent.id;
+
+              const purchaseType = session.metadata?.type || "main";
 
               addPaidSubscriber({
                 email: conversation!.email!,
@@ -741,13 +737,13 @@ export async function registerRoutes(
                 tags: [
                   conversation!.bucket || "seer-within",
                   "paid",
-                  "initial-purchase",
+                  purchaseType === "downsell" ? "downsell" : "initial-purchase",
                 ],
               })
                 .then((result) => {
                   if (result.success) {
                     logger.info(
-                      `AWeber Paid: Added ${conversation!.email} to paid list`,
+                      `AWeber Paid: Added ${conversation!.email} to paid list (${purchaseType})`,
                     );
                   } else {
                     logger.warn(
@@ -772,6 +768,7 @@ export async function registerRoutes(
         bucket: conversation.bucket,
         personName: conversation.personName,
         stripeCustomerId: conversation.stripeCustomerId,
+        mainPurchaseAmount: conversation.mainPurchaseAmount || 3500,
       });
     } catch (error) {
       logger.error("Get upsell user data error:", error);

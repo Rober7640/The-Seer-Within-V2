@@ -73,11 +73,12 @@ export default function UpsellPage() {
         const data = await response.json();
         setUserData(data);
 
-        // Track Purchase event for initial $35 payment (user arrived at upsell page)
+        // Track Purchase event for initial payment (user arrived at upsell page)
         // Only fire once per session to avoid duplicates on page refreshes
         const purchaseKey = `${PURCHASE_TRACKED_KEY}_${sid}`;
         if (!sessionStorage.getItem(purchaseKey)) {
-          trackPurchase(35, "USD", data.email);
+          const purchaseAmount = (data.mainPurchaseAmount || 3500) / 100;
+          trackPurchase(purchaseAmount, "USD", data.email);
           sessionStorage.setItem(purchaseKey, "true");
         }
 
