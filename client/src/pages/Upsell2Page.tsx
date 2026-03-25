@@ -179,14 +179,11 @@ export default function Upsell2Page() {
 
   useEffect(() => {
     if (isComplete && sessionId) {
-      const timer = setTimeout(() => {
-        // Pass upsell flags so the success page can show products immediately
-        // even before the DB is updated (belt-and-suspenders approach)
-        const upsell1Flag = userData?.upsellPurchased ? '&upsell=true' : '';
-        const upsell2Flag = upsell2Bought ? '&upsell2=true' : '';
-        navigate(`/success?session_id=${sessionId}${upsell1Flag}${upsell2Flag}`);
-      }, 3000);
-      return () => clearTimeout(timer);
+      // Pass upsell flags so the success page can show products immediately
+      // even before the DB is updated (belt-and-suspenders approach)
+      const upsell1Flag = userData?.upsellPurchased ? '&upsell=true' : '';
+      const upsell2Flag = upsell2Bought ? '&upsell2=true' : '';
+      navigate(`/success?session_id=${sessionId}${upsell1Flag}${upsell2Flag}`);
     }
   }, [isComplete, sessionId, navigate, userData?.upsellPurchased, upsell2Bought]);
 

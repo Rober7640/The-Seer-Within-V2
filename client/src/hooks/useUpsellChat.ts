@@ -283,7 +283,7 @@ export function useUpsellChat({
           break;
 
         case "COMPLETE":
-          // Skip confirmation messages — redirect to upsell 2 immediately
+          await sendBotMessages(p(UPSELL_SHIPPING_CONFIRMED));
           setIsComplete(true);
           break;
       }
