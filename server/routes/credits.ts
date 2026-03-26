@@ -276,6 +276,7 @@ router.post('/create-payment-intent', requireAuth, async (req: Request, res: Res
   const { packageType, personaId } = parseResult.data;
 
   let tier;
+  let userEmail: string | undefined;
   try {
     const pricing = personaId ? await getPersonaPricing(personaId) : DEFAULT_PRICING;
     tier = resolveTier(packageType, pricing);
@@ -283,6 +284,12 @@ router.post('/create-payment-intent', requireAuth, async (req: Request, res: Res
       res.status(400).json({ error: 'Invalid package type' });
       return;
     }
+
+    const userResult = await db.select({ email: users.email })
+      .from(users)
+      .where(eq(users.id, req.userId!))
+      .limit(1);
+    userEmail = userResult[0]?.email;
   } catch (error) {
     logger.error('Stripe create-payment-intent setup error:', error);
     res.status(500).json({ error: 'Failed to create payment intent' });
@@ -324,6 +331,7 @@ router.post('/create-payment-intent', requireAuth, async (req: Request, res: Res
       stripe!.paymentIntents.create({
         amount: tier!.priceUsd,
         currency: 'usd',
+        ...(userEmail ? { receipt_email: userEmail } : {}),
         metadata: {
           app: 'the-seer-within-chat',
           purchaseId,
