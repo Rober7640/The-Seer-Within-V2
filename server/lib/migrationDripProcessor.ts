@@ -161,56 +161,53 @@ export async function sendMigrationEmail1(
     return stats;
   }
 
-  // Find migrated users with concern + vision who:
+  // Find migrated users who:
+  // - Have a linked conversation with concern + vision filled
   // - Haven't logged into V2 yet
   // - Haven't received Email 1 yet
+  // JOIN conversations in SQL so the LIMIT applies to truly eligible users only
   const candidates = await db
     .select({
       userId: users.id,
       email: users.email,
       firstName: users.firstName,
       conversationId: users.migratedFromConversationId,
+      bucket: conversations.bucket,
+      concern: conversations.concern,
+      vision: conversations.vision,
+      deeperResponse: conversations.deeperResponse,
+      emotionalResponse: conversations.emotionalResponse,
+      location: conversations.location,
     })
     .from(users)
+    .innerJoin(conversations, eq(conversations.id, users.migratedFromConversationId))
     .where(
       and(
         sql`${users.migratedFromConversationId} IS NOT NULL`,
         isNull(users.lastLoginAt),
         eq(users.accountStatus, 'active'),
         sql`${users.email} NOT LIKE '%@example.com' AND ${users.email} NOT LIKE '%@test.com'`,
+        // Concern + vision must exist (matches stats eligibility filter)
+        sql`${conversations.concern} IS NOT NULL AND ${conversations.concern} != ''`,
+        sql`${conversations.vision} IS NOT NULL AND ${conversations.vision} != ''`,
         // No Email 1 sent/pending yet (failed records are retryable)
         sql`${users.id} NOT IN (SELECT user_id FROM migration_drip_emails WHERE sequence_number = 1 AND status IN ('sent', 'pending'))`,
       ),
     )
     .limit(limit || 10000);
 
-  // Filter by concern + vision
-  const eligible: MigrationCandidate[] = [];
-  for (const c of candidates) {
-    if (!c.conversationId) continue;
-    const convo = await db
-      .select({
-        bucket: conversations.bucket,
-        concern: conversations.concern,
-        vision: conversations.vision,
-        deeperResponse: conversations.deeperResponse,
-        emotionalResponse: conversations.emotionalResponse,
-        location: conversations.location,
-      })
-      .from(conversations)
-      .where(eq(conversations.id, c.conversationId))
-      .limit(1);
-
-    if (convo[0]?.concern && convo[0]?.vision) {
-      eligible.push({
-        userId: c.userId,
-        email: c.email,
-        firstName: c.firstName,
-        conversationId: c.conversationId,
-        ...convo[0],
-      });
-    }
-  }
+  const eligible: MigrationCandidate[] = candidates.map((c) => ({
+    userId: c.userId,
+    email: c.email,
+    firstName: c.firstName,
+    conversationId: c.conversationId!,
+    bucket: c.bucket,
+    concern: c.concern,
+    vision: c.vision,
+    deeperResponse: c.deeperResponse,
+    emotionalResponse: c.emotionalResponse,
+    location: c.location,
+  }));
 
   logger.info('Migration Email 1: candidates found', { total: candidates.length, eligible: eligible.length });
 
