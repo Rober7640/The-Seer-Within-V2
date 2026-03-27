@@ -4,7 +4,7 @@ import { useAdmin, adminFetch } from "@/hooks/useAdmin";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Play, Loader2, ChevronLeft, ChevronRight, Eye, X } from "lucide-react";
+import { Play, Pause, RotateCcw, Loader2, ChevronLeft, ChevronRight, Eye, X, Settings2 } from "lucide-react";
 
 interface DripEmail {
   id: string;
@@ -31,36 +31,76 @@ interface MigrationStats {
   loggedIn: number;
 }
 
+interface BatchStatus {
+  status: "idle" | "running" | "paused";
+  batchSize: number;
+  currentBatchNumber: number;
+  startedAt: string | null;
+  lastBatchAt: string | null;
+  nextBatchAt: string | null;
+  remaining: number;
+  totalBatches: number;
+  email1Sent: number;
+  totalEligible: number;
+}
+
 const statusColors: Record<string, string> = {
   sent: "text-green-400 bg-green-900/30",
   pending: "text-yellow-400 bg-yellow-900/30",
   failed: "text-red-400 bg-red-900/30",
 };
 
+const campaignStatusColors: Record<string, string> = {
+  idle: "text-gray-400 bg-gray-800",
+  running: "text-emerald-400 bg-emerald-900/30",
+  paused: "text-yellow-400 bg-yellow-900/30",
+};
+
+function formatDateTime(iso: string | null): string {
+  if (!iso) return "—";
+  return new Date(iso).toLocaleString(undefined, {
+    month: "short", day: "numeric", hour: "numeric", minute: "2-digit",
+  });
+}
+
 export default function EmailDripMigratedV1() {
   const { isAuthenticated } = useAdmin();
   const [stats, setStats] = useState<MigrationStats | null>(null);
+  const [batch, setBatch] = useState<BatchStatus | null>(null);
   const [emails, setEmails] = useState<DripEmail[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [seqFilter, setSeqFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [loading, setLoading] = useState(true);
-  const [triggering, setTriggering] = useState(false);
-  const [triggerResult, setTriggerResult] = useState<string | null>(null);
+  const [actionLoading, setActionLoading] = useState(false);
+  const [actionResult, setActionResult] = useState<string | null>(null);
   const [previewId, setPreviewId] = useState<string | null>(null);
   const [previewHtml, setPreviewHtml] = useState<string | null>(null);
+  const [batchSizeInput, setBatchSizeInput] = useState("");
+  const [showBatchSizeEdit, setShowBatchSizeEdit] = useState(false);
 
   const pageSize = 20;
   const totalPages = Math.ceil(total / pageSize);
 
-  useEffect(() => { fetchStats(); }, []);
+  useEffect(() => { fetchStats(); fetchBatchStatus(); }, []);
   useEffect(() => { fetchEmails(); }, [page, seqFilter, statusFilter]);
 
   async function fetchStats() {
     try {
       const res = await adminFetch("/api/admin/email-drip/migrated-stats");
       if (res.ok) setStats(await res.json());
+    } catch {}
+  }
+
+  async function fetchBatchStatus() {
+    try {
+      const res = await adminFetch("/api/admin/email-drip/batch-status");
+      if (res.ok) {
+        const data = await res.json();
+        setBatch(data);
+        setBatchSizeInput(String(data.batchSize));
+      }
     } catch {}
   }
 
@@ -80,22 +120,72 @@ export default function EmailDripMigratedV1() {
     } catch {} finally { setLoading(false); }
   }
 
-  async function handleTrigger() {
-    setTriggering(true);
-    setTriggerResult(null);
+  async function handleStartCampaign() {
+    const size = parseInt(batchSizeInput) || 500;
+    if (!confirm(`Start campaign with batch size ${size}?\n\nThis will send Email #1 to the first ${size} eligible users now, then automatically send the next batch every 24 hours.`)) return;
+
+    setActionLoading(true);
+    setActionResult(null);
     try {
-      const res = await adminFetch("/api/admin/email-drip/trigger-migration", { method: "POST" });
+      const res = await adminFetch("/api/admin/email-drip/start-campaign", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ batchSize: size }),
+      });
       const data = await res.json();
       if (data.success) {
-        setTriggerResult(`Sent: ${data.stats.sent} | Failed: ${data.stats.failed} | Skipped: ${data.stats.skipped} | Processed: ${data.stats.processed}`);
+        setActionResult(`Batch 1 sent: ${data.stats.sent} emails | Failed: ${data.stats.failed} | Skipped: ${data.stats.skipped}`);
         fetchStats();
+        fetchBatchStatus();
         fetchEmails();
       } else {
-        setTriggerResult("Trigger failed");
+        setActionResult("Failed to start campaign");
       }
     } catch {
-      setTriggerResult("Trigger error");
-    } finally { setTriggering(false); }
+      setActionResult("Error starting campaign");
+    } finally { setActionLoading(false); }
+  }
+
+  async function handlePause() {
+    setActionLoading(true);
+    try {
+      const res = await adminFetch("/api/admin/email-drip/pause-campaign", { method: "POST" });
+      const data = await res.json();
+      if (data.success) {
+        setActionResult("Campaign paused. Email #2/#3 for already-sent users will still process.");
+        fetchBatchStatus();
+      }
+    } catch {} finally { setActionLoading(false); }
+  }
+
+  async function handleResume() {
+    setActionLoading(true);
+    try {
+      const res = await adminFetch("/api/admin/email-drip/resume-campaign", { method: "POST" });
+      const data = await res.json();
+      if (data.success) {
+        setActionResult(`Campaign resumed. Next batch at ${formatDateTime(data.config.nextBatchAt)}`);
+        fetchBatchStatus();
+      }
+    } catch {} finally { setActionLoading(false); }
+  }
+
+  async function handleUpdateBatchSize() {
+    const size = Math.max(1, parseInt(batchSizeInput) || 500);
+    setActionLoading(true);
+    try {
+      const res = await adminFetch("/api/admin/email-drip/batch-size", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ batchSize: size }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setActionResult(`Batch size updated to ${size}. Takes effect on next batch.`);
+        setShowBatchSizeEdit(false);
+        fetchBatchStatus();
+      }
+    } catch {} finally { setActionLoading(false); }
   }
 
   async function handlePreview(id: string) {
@@ -116,8 +206,153 @@ export default function EmailDripMigratedV1() {
 
   if (!isAuthenticated) return null;
 
+  const progressPercent = batch && batch.totalEligible > 0
+    ? Math.round((batch.email1Sent / batch.totalEligible) * 100)
+    : 0;
+
   return (
     <AdminLayout title="Email Drip — Migrated V1">
+      {/* Batch Campaign Control */}
+      {batch && (
+        <Card className="bg-gray-900 border-gray-800 p-5 mb-6">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <h3 className="text-white text-sm font-medium">Batch Campaign</h3>
+              <span className={`inline-block px-2.5 py-0.5 rounded text-xs font-medium uppercase tracking-wide ${campaignStatusColors[batch.status]}`}>
+                {batch.status}
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              {batch.status === "idle" && (
+                <Button
+                  size="sm"
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                  onClick={handleStartCampaign}
+                  disabled={actionLoading}
+                >
+                  {actionLoading ? <Loader2 className="w-3 h-3 mr-1 animate-spin" /> : <Play className="w-3 h-3 mr-1" />}
+                  Start Campaign
+                </Button>
+              )}
+              {batch.status === "running" && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="text-yellow-400 border-yellow-700 hover:bg-yellow-900/30"
+                  onClick={handlePause}
+                  disabled={actionLoading}
+                >
+                  <Pause className="w-3 h-3 mr-1" />
+                  Pause
+                </Button>
+              )}
+              {batch.status === "paused" && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="text-emerald-400 border-emerald-700 hover:bg-emerald-900/30"
+                  onClick={handleResume}
+                  disabled={actionLoading}
+                >
+                  <RotateCcw className="w-3 h-3 mr-1" />
+                  Resume
+                </Button>
+              )}
+            </div>
+          </div>
+
+          {/* Progress bar */}
+          <div className="mb-4">
+            <div className="flex items-center justify-between text-xs text-gray-400 mb-1.5">
+              <span>
+                Batch {batch.currentBatchNumber} of {batch.totalBatches}
+              </span>
+              <span>{progressPercent}%</span>
+            </div>
+            <div className="w-full h-2.5 bg-gray-800 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-gradient-to-r from-emerald-500 to-emerald-400 rounded-full transition-all duration-500"
+                style={{ width: `${progressPercent}%` }}
+              />
+            </div>
+          </div>
+
+          {/* Batch details grid */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+            <div className="bg-gray-800/50 rounded-lg p-2.5">
+              <div className="text-gray-500 mb-0.5">Batch Size</div>
+              <div className="flex items-center gap-1.5">
+                <span className="text-white font-medium">{batch.batchSize}</span>
+                <button
+                  onClick={() => setShowBatchSizeEdit(!showBatchSizeEdit)}
+                  className="text-gray-500 hover:text-purple-400 transition-colors"
+                >
+                  <Settings2 className="w-3 h-3" />
+                </button>
+              </div>
+            </div>
+            <div className="bg-gray-800/50 rounded-lg p-2.5">
+              <div className="text-gray-500 mb-0.5">Email #1 Sent</div>
+              <div className="text-emerald-400 font-medium">{batch.email1Sent}</div>
+            </div>
+            <div className="bg-gray-800/50 rounded-lg p-2.5">
+              <div className="text-gray-500 mb-0.5">Remaining</div>
+              <div className="text-orange-400 font-medium">{batch.remaining}</div>
+            </div>
+            <div className="bg-gray-800/50 rounded-lg p-2.5">
+              <div className="text-gray-500 mb-0.5">Next Batch</div>
+              <div className="text-purple-400 font-medium">
+                {batch.status === "running" && batch.nextBatchAt
+                  ? formatDateTime(batch.nextBatchAt)
+                  : "—"}
+              </div>
+            </div>
+          </div>
+
+          {/* Batch size editor */}
+          {showBatchSizeEdit && (
+            <div className="mt-3 flex items-center gap-2 p-3 bg-gray-800/50 rounded-lg">
+              <label className="text-xs text-gray-400">New batch size:</label>
+              <input
+                type="number"
+                min={1}
+                max={10000}
+                value={batchSizeInput}
+                onChange={(e) => setBatchSizeInput(e.target.value)}
+                className="w-24 bg-gray-800 text-white rounded px-2 py-1 text-xs border border-gray-700 focus:border-purple-500 focus:outline-none"
+              />
+              <Button
+                size="sm"
+                variant="outline"
+                className="text-purple-400 border-purple-700 hover:bg-purple-900/30 text-xs h-7"
+                onClick={handleUpdateBatchSize}
+                disabled={actionLoading}
+              >
+                Update
+              </Button>
+              <span className="text-[10px] text-gray-600">
+                Increase gradually: 500 &rarr; 1000 &rarr; 2000
+              </span>
+            </div>
+          )}
+
+          {/* Timestamps */}
+          {batch.startedAt && (
+            <div className="mt-3 flex gap-4 text-[10px] text-gray-600">
+              <span>Started: {formatDateTime(batch.startedAt)}</span>
+              {batch.lastBatchAt && <span>Last batch: {formatDateTime(batch.lastBatchAt)}</span>}
+            </div>
+          )}
+        </Card>
+      )}
+
+      {/* Action result message */}
+      {actionResult && (
+        <div className="mb-4 p-3 rounded-lg bg-gray-800 border border-gray-700 text-sm text-gray-300">
+          {actionResult}
+        </div>
+      )}
+
       {/* Stats */}
       {stats && (
         <div className="grid grid-cols-7 gap-3 mb-6">
@@ -177,26 +412,7 @@ export default function EmailDripMigratedV1() {
             <SelectItem value="failed">Failed</SelectItem>
           </SelectContent>
         </Select>
-
-        <div className="flex-1" />
-
-        <Button
-          size="sm"
-          variant="outline"
-          className="text-emerald-400 border-emerald-700 hover:bg-emerald-900/30"
-          onClick={handleTrigger}
-          disabled={triggering}
-        >
-          {triggering ? <Loader2 className="w-3 h-3 mr-1 animate-spin" /> : <Play className="w-3 h-3 mr-1" />}
-          Send Migration Emails
-        </Button>
       </div>
-
-      {triggerResult && (
-        <div className="mb-4 p-3 rounded-lg bg-gray-800 border border-gray-700 text-sm text-gray-300">
-          {triggerResult}
-        </div>
-      )}
 
       {/* Email table */}
       {loading ? (

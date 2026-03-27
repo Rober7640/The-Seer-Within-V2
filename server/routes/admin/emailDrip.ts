@@ -10,6 +10,11 @@ import logger from '../../lib/logger';
 import {
   sendMigrationEmail1,
   getMigrationDripStats,
+  getBatchConfig,
+  startBatchCampaign,
+  pauseBatchCampaign,
+  resumeBatchCampaign,
+  updateBatchSize,
 } from '../../lib/migrationDripProcessor';
 
 const router = Router();
@@ -106,6 +111,70 @@ router.post('/trigger-migration', async (req: Request, res: Response) => {
   } catch (error: any) {
     logger.error('Admin migration trigger error:', error);
     return res.status(500).json({ error: 'Failed to process migration queue' });
+  }
+});
+
+// GET /api/admin/email-drip/batch-status
+router.get('/batch-status', async (req: Request, res: Response) => {
+  try {
+    const config = await getBatchConfig();
+    const stats = await getMigrationDripStats();
+    const remaining = stats.totalEligible - stats.email1Sent;
+    const totalBatches = config.batchSize > 0 ? Math.ceil((stats.totalEligible) / config.batchSize) : 0;
+    return res.json({ ...config, remaining, totalBatches, email1Sent: stats.email1Sent, totalEligible: stats.totalEligible });
+  } catch (error: any) {
+    logger.error('Admin batch status error:', error);
+    return res.status(500).json({ error: 'Failed to fetch batch status' });
+  }
+});
+
+// POST /api/admin/email-drip/start-campaign
+router.post('/start-campaign', async (req: Request, res: Response) => {
+  try {
+    const batchSize = Math.max(1, parseInt(req.body.batchSize) || 500);
+    logger.info('Admin: starting batch campaign', { adminId: req.adminId, batchSize });
+    const result = await startBatchCampaign(batchSize);
+    return res.json({ success: true, config: result.config, stats: result.stats });
+  } catch (error: any) {
+    logger.error('Admin start campaign error:', error);
+    return res.status(500).json({ error: 'Failed to start campaign' });
+  }
+});
+
+// POST /api/admin/email-drip/pause-campaign
+router.post('/pause-campaign', async (req: Request, res: Response) => {
+  try {
+    logger.info('Admin: pausing batch campaign', { adminId: req.adminId });
+    const config = await pauseBatchCampaign();
+    return res.json({ success: true, config });
+  } catch (error: any) {
+    logger.error('Admin pause campaign error:', error);
+    return res.status(500).json({ error: 'Failed to pause campaign' });
+  }
+});
+
+// POST /api/admin/email-drip/resume-campaign
+router.post('/resume-campaign', async (req: Request, res: Response) => {
+  try {
+    logger.info('Admin: resuming batch campaign', { adminId: req.adminId });
+    const config = await resumeBatchCampaign();
+    return res.json({ success: true, config });
+  } catch (error: any) {
+    logger.error('Admin resume campaign error:', error);
+    return res.status(500).json({ error: 'Failed to resume campaign' });
+  }
+});
+
+// PATCH /api/admin/email-drip/batch-size
+router.patch('/batch-size', async (req: Request, res: Response) => {
+  try {
+    const batchSize = Math.max(1, parseInt(req.body.batchSize) || 500);
+    logger.info('Admin: updating batch size', { adminId: req.adminId, batchSize });
+    const config = await updateBatchSize(batchSize);
+    return res.json({ success: true, config });
+  } catch (error: any) {
+    logger.error('Admin batch size update error:', error);
+    return res.status(500).json({ error: 'Failed to update batch size' });
   }
 });
 

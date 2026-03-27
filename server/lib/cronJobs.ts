@@ -6,7 +6,7 @@ import { processFollowUpQueue, resetMonthlyCounters } from './followUpEmailGener
 import { processTopupQueue } from './topupEmailGenerator';
 import { cleanupInactiveSessions } from './creditTracking';
 import { cleanupExpiredMagicLinks } from './magicLink';
-import { processMigrationDripQueue } from './migrationDripProcessor';
+import { processNextBatch } from './migrationDripProcessor';
 import logger from './logger';
 
 // Per-job concurrency guards — prevent overlapping runs if a job takes longer than its interval
@@ -125,19 +125,24 @@ export function initializeCronJobs(): void {
     { timezone },
   );
 
-  // Migration drip Email 2 & 3 every 6 hours (midnight, 6 AM, noon, 6 PM)
+  // Migration drip batch processor — every 15 minutes
+  // Handles: auto-sending next Email #1 batch when due + Email #2/#3 queue processing
   cron.schedule(
-    '0 */6 * * *',
+    '*/15 * * * *',
     async () => {
       if (isMigrationDripProcessing) {
         logger.info('Cron: Migration drip already running, skipping');
         return;
       }
       isMigrationDripProcessing = true;
-      logger.info('Cron: Starting migration drip processing (Email 2 & 3)');
       try {
-        const stats = await processMigrationDripQueue();
-        logger.info('Cron: Migration drip processing complete', stats);
+        const result = await processNextBatch();
+        if (result.batchTriggered) {
+          logger.info('Cron: Migration drip batch sent', { batchStats: result.batchStats });
+        }
+        if (result.queueStats && (result.queueStats.sent > 0 || result.queueStats.failed > 0)) {
+          logger.info('Cron: Migration drip Email 2/3 processed', { queueStats: result.queueStats });
+        }
       } catch (error) {
         logger.error('Cron: Migration drip processing failed', { error: (error as Error).message });
       } finally {

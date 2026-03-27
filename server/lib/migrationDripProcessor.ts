@@ -18,6 +18,7 @@ import {
   userMemory,
   migrationDripEmails,
   userFollowUpPreferences,
+  systemConfig,
 } from '@shared/schema';
 import { eq, and, isNull, sql, desc, count } from 'drizzle-orm';
 import { randomBytes, randomUUID } from 'crypto';
@@ -61,6 +62,68 @@ const SEQUENCE_CONTEXT = {
     signOff: 'I will be here when you are ready, Evelyn',
   },
 } as const;
+
+// ============================================
+// BATCH CONFIG — stored in system_config table
+// ============================================
+
+const BATCH_CONFIG_KEY = 'migration_drip_batch';
+
+export interface BatchConfig {
+  status: 'idle' | 'running' | 'paused';
+  batchSize: number;
+  currentBatchNumber: number;
+  startedAt: string | null;       // ISO timestamp
+  lastBatchAt: string | null;     // ISO timestamp — when last batch was sent
+  nextBatchAt: string | null;     // ISO timestamp — when next batch should fire
+}
+
+const DEFAULT_BATCH_CONFIG: BatchConfig = {
+  status: 'idle',
+  batchSize: 500,
+  currentBatchNumber: 0,
+  startedAt: null,
+  lastBatchAt: null,
+  nextBatchAt: null,
+};
+
+export async function getBatchConfig(): Promise<BatchConfig> {
+  const row = await db
+    .select({ configValue: systemConfig.configValue })
+    .from(systemConfig)
+    .where(eq(systemConfig.configKey, BATCH_CONFIG_KEY))
+    .limit(1);
+
+  if (!row[0]) return { ...DEFAULT_BATCH_CONFIG };
+
+  try {
+    return { ...DEFAULT_BATCH_CONFIG, ...JSON.parse(row[0].configValue) };
+  } catch {
+    return { ...DEFAULT_BATCH_CONFIG };
+  }
+}
+
+export async function saveBatchConfig(config: BatchConfig): Promise<void> {
+  const value = JSON.stringify(config);
+  const existing = await db
+    .select({ id: systemConfig.id })
+    .from(systemConfig)
+    .where(eq(systemConfig.configKey, BATCH_CONFIG_KEY))
+    .limit(1);
+
+  if (existing[0]) {
+    await db.update(systemConfig)
+      .set({ configValue: value, updatedAt: new Date() })
+      .where(eq(systemConfig.configKey, BATCH_CONFIG_KEY));
+  } else {
+    await db.insert(systemConfig).values({
+      configKey: BATCH_CONFIG_KEY,
+      configValue: value,
+      configType: 'json',
+      description: 'Migration drip campaign batch configuration',
+    });
+  }
+}
 
 interface MigrationCandidate {
   userId: string;
@@ -543,6 +606,138 @@ Return ONLY valid JSON:
       tokens: 0,
     };
   }
+}
+
+// ============================================
+// BATCH CAMPAIGN ORCHESTRATION
+// ============================================
+
+/**
+ * Start the batch campaign. Sends the first batch and schedules the next one 24h later.
+ * Called once from the admin "Start Campaign" button.
+ */
+export async function startBatchCampaign(
+  batchSize: number,
+): Promise<{ config: BatchConfig; stats: { processed: number; sent: number; failed: number; skipped: number; errors: string[] } }> {
+  const now = new Date();
+  const nextBatch = new Date(now.getTime() + 24 * 60 * 60 * 1000); // +24 hours
+
+  const config: BatchConfig = {
+    status: 'running',
+    batchSize,
+    currentBatchNumber: 1,
+    startedAt: now.toISOString(),
+    lastBatchAt: now.toISOString(),
+    nextBatchAt: nextBatch.toISOString(),
+  };
+
+  await saveBatchConfig(config);
+
+  const stats = await sendMigrationEmail1(batchSize);
+
+  // If nothing was sent (no more eligible users), mark campaign as idle
+  if (stats.sent === 0 && stats.failed === 0) {
+    config.status = 'idle';
+    config.nextBatchAt = null;
+    await saveBatchConfig(config);
+  }
+
+  return { config, stats };
+}
+
+/**
+ * Process the next scheduled batch. Called by the cron job.
+ * Checks if nextBatchAt has passed and status is 'running'.
+ * Sends next Email #1 batch AND processes Email #2/#3 queue.
+ */
+export async function processNextBatch(): Promise<{
+  batchTriggered: boolean;
+  batchStats?: { processed: number; sent: number; failed: number; skipped: number; errors: string[] };
+  queueStats?: { processed: number; sent: number; failed: number; skipped: number; errors: string[] };
+}> {
+  const config = await getBatchConfig();
+
+  // Always process Email #2 and #3 queue regardless of batch status
+  let queueStats;
+  try {
+    queueStats = await processMigrationDripQueue();
+  } catch (error) {
+    logger.error('processNextBatch: Email 2/3 queue processing failed', { error: (error as Error).message });
+  }
+
+  // Check if a new Email #1 batch is due
+  if (config.status !== 'running' || !config.nextBatchAt) {
+    return { batchTriggered: false, queueStats };
+  }
+
+  const now = new Date();
+  const nextBatchTime = new Date(config.nextBatchAt);
+
+  if (now < nextBatchTime) {
+    return { batchTriggered: false, queueStats };
+  }
+
+  // Time for the next batch
+  logger.info('processNextBatch: Sending next Email #1 batch', {
+    batchNumber: config.currentBatchNumber + 1,
+    batchSize: config.batchSize,
+  });
+
+  const batchStats = await sendMigrationEmail1(config.batchSize);
+
+  // Update config
+  const nextBatch = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+  config.currentBatchNumber++;
+  config.lastBatchAt = now.toISOString();
+  config.nextBatchAt = nextBatch.toISOString();
+
+  // If nothing was sent, campaign is complete
+  if (batchStats.sent === 0 && batchStats.failed === 0) {
+    logger.info('processNextBatch: No more eligible users, campaign complete');
+    config.status = 'idle';
+    config.nextBatchAt = null;
+  }
+
+  await saveBatchConfig(config);
+
+  return { batchTriggered: true, batchStats, queueStats };
+}
+
+/**
+ * Pause the batch campaign. Stops auto-sending new batches.
+ * Email #2/#3 for already-sent Email #1s will still be processed by cron.
+ */
+export async function pauseBatchCampaign(): Promise<BatchConfig> {
+  const config = await getBatchConfig();
+  config.status = 'paused';
+  config.nextBatchAt = null;
+  await saveBatchConfig(config);
+  logger.info('Batch campaign paused', { batchNumber: config.currentBatchNumber });
+  return config;
+}
+
+/**
+ * Resume the batch campaign. Schedules next batch 24h from now.
+ */
+export async function resumeBatchCampaign(): Promise<BatchConfig> {
+  const config = await getBatchConfig();
+  const nextBatch = new Date(Date.now() + 24 * 60 * 60 * 1000);
+  config.status = 'running';
+  config.nextBatchAt = nextBatch.toISOString();
+  await saveBatchConfig(config);
+  logger.info('Batch campaign resumed', { batchNumber: config.currentBatchNumber, nextBatchAt: config.nextBatchAt });
+  return config;
+}
+
+/**
+ * Update the batch size. Takes effect on the next batch.
+ */
+export async function updateBatchSize(newSize: number): Promise<BatchConfig> {
+  const config = await getBatchConfig();
+  config.batchSize = newSize;
+  await saveBatchConfig(config);
+  logger.info('Batch size updated', { batchSize: newSize });
+  return config;
 }
 
 /**
