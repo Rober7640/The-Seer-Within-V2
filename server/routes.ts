@@ -197,7 +197,7 @@ export async function registerRoutes(
   });
 
   // Serve uploaded persona avatars (persists across builds)
-  app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
+  app.use("/uploads", express.static(path.join(process.cwd(), "uploads"), { maxAge: '30d' }));
 
   // CRUD API routes (secured with API key)
   app.use("/api/v1", crudRouter);
