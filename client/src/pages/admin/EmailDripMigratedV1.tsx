@@ -247,16 +247,27 @@ export default function EmailDripMigratedV1() {
                 </Button>
               )}
               {batch.status === "paused" && (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="text-emerald-400 border-emerald-700 hover:bg-emerald-900/30"
-                  onClick={handleResume}
-                  disabled={actionLoading}
-                >
-                  <RotateCcw className="w-3 h-3 mr-1" />
-                  Resume
-                </Button>
+                <>
+                  <Button
+                    size="sm"
+                    className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                    onClick={handleStartCampaign}
+                    disabled={actionLoading}
+                  >
+                    {actionLoading ? <Loader2 className="w-3 h-3 mr-1 animate-spin" /> : <Play className="w-3 h-3 mr-1" />}
+                    Send Now
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="text-emerald-400 border-emerald-700 hover:bg-emerald-900/30"
+                    onClick={handleResume}
+                    disabled={actionLoading}
+                  >
+                    <RotateCcw className="w-3 h-3 mr-1" />
+                    Resume (24h)
+                  </Button>
+                </>
               )}
             </div>
           </div>
