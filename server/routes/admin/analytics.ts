@@ -595,7 +595,7 @@ router.get('/checkout-conversion', async (req: Request, res: Response) => {
       )
       .groupBy(checkoutViews.source);
 
-    // Unique users who purchased per source (no cross-join duplication)
+    // Unique users who purchased AFTER viewing per source
     const completedBySource = await db
       .select({
         source: checkoutViews.source,
@@ -604,7 +604,12 @@ router.get('/checkout-conversion', async (req: Request, res: Response) => {
           WHERE ${creditPurchases.userId} = ${checkoutViews.userId}
           AND ${creditPurchases.status} = 'completed'
           AND ${creditPurchases.packageType} != 'admin_adjustment'
-          AND ${creditPurchases.createdAt} >= ${start}
+          AND ${creditPurchases.createdAt} >= (
+            SELECT MIN(cv2.created_at) FROM checkout_views cv2
+            WHERE cv2.user_id = ${checkoutViews.userId}
+            AND cv2.created_at >= ${start}
+            AND cv2.created_at <= ${end}
+          )
           AND ${creditPurchases.createdAt} <= ${end}
         ) THEN ${checkoutViews.userId} END)`,
       })
@@ -631,7 +636,7 @@ router.get('/checkout-conversion', async (req: Request, res: Response) => {
         ),
       );
 
-    // Unique users who viewed AND purchased (not all purchases globally)
+    // Unique users who purchased AFTER their first modal view (not before)
     const totalCompleted = await db
       .select({
         total: sql<number>`COUNT(DISTINCT ${checkoutViews.userId})`,
@@ -646,13 +651,18 @@ router.get('/checkout-conversion', async (req: Request, res: Response) => {
             WHERE ${creditPurchases.userId} = ${checkoutViews.userId}
             AND ${creditPurchases.status} = 'completed'
             AND ${creditPurchases.packageType} != 'admin_adjustment'
-            AND ${creditPurchases.createdAt} >= ${start}
+            AND ${creditPurchases.createdAt} >= (
+              SELECT MIN(cv2.created_at) FROM checkout_views cv2
+              WHERE cv2.user_id = ${checkoutViews.userId}
+              AND cv2.created_at >= ${start}
+              AND cv2.created_at <= ${end}
+            )
             AND ${creditPurchases.createdAt} <= ${end}
           )`,
         ),
       );
 
-    // Users who viewed but never purchased (drop-offs)
+    // Users who viewed but never purchased AFTER viewing (drop-offs)
     const dropOffUsers = await db
       .select({
         id: users.id,
@@ -672,7 +682,12 @@ router.get('/checkout-conversion', async (req: Request, res: Response) => {
             WHERE ${creditPurchases.userId} = ${checkoutViews.userId}
             AND ${creditPurchases.status} = 'completed'
             AND ${creditPurchases.packageType} != 'admin_adjustment'
-            AND ${creditPurchases.createdAt} >= ${start}
+            AND ${creditPurchases.createdAt} >= (
+              SELECT MIN(cv2.created_at) FROM checkout_views cv2
+              WHERE cv2.user_id = ${checkoutViews.userId}
+              AND cv2.created_at >= ${start}
+              AND cv2.created_at <= ${end}
+            )
             AND ${creditPurchases.createdAt} <= ${end}
           )`,
         ),
