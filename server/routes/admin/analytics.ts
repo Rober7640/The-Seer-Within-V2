@@ -10,6 +10,7 @@ import {
   creditPurchases,
   personas,
   personaPrompts,
+  checkoutViews,
 } from '@shared/schema';
 import { eq, and, sql, desc, count, gte, lte } from 'drizzle-orm';
 import logger from '../../lib/logger';
@@ -567,6 +568,141 @@ router.get('/alerts', async (req: Request, res: Response) => {
   } catch (error: any) {
     logger.error('Analytics alerts error:', error);
     return res.status(500).json({ error: 'Failed to get low credit alerts' });
+  }
+});
+
+// ============================================
+// GET /api/admin/analytics/checkout-conversion
+// ============================================
+
+router.get('/checkout-conversion', async (req: Request, res: Response) => {
+  try {
+    const { start, end } = parseDateRange(req);
+
+    // Views by source
+    const viewsBySource = await db
+      .select({
+        source: checkoutViews.source,
+        views: count(),
+        uniqueUsers: sql<number>`COUNT(DISTINCT ${checkoutViews.userId})`,
+      })
+      .from(checkoutViews)
+      .where(
+        and(
+          gte(checkoutViews.createdAt, start),
+          lte(checkoutViews.createdAt, end),
+        ),
+      )
+      .groupBy(checkoutViews.source);
+
+    // Completed purchases in same period
+    const completedBySource = await db
+      .select({
+        source: checkoutViews.source,
+        completed: count(),
+      })
+      .from(checkoutViews)
+      .innerJoin(
+        creditPurchases,
+        and(
+          eq(creditPurchases.userId, checkoutViews.userId),
+          eq(creditPurchases.status, 'completed'),
+          gte(creditPurchases.createdAt, start),
+          lte(creditPurchases.createdAt, end),
+        ),
+      )
+      .where(
+        and(
+          gte(checkoutViews.createdAt, start),
+          lte(checkoutViews.createdAt, end),
+        ),
+      )
+      .groupBy(checkoutViews.source);
+
+    // Totals
+    const totalViews = await db
+      .select({
+        total: count(),
+        uniqueUsers: sql<number>`COUNT(DISTINCT ${checkoutViews.userId})`,
+      })
+      .from(checkoutViews)
+      .where(
+        and(
+          gte(checkoutViews.createdAt, start),
+          lte(checkoutViews.createdAt, end),
+        ),
+      );
+
+    const totalCompleted = await db
+      .select({ total: count() })
+      .from(creditPurchases)
+      .where(
+        and(
+          eq(creditPurchases.status, 'completed'),
+          gte(creditPurchases.createdAt, start),
+          lte(creditPurchases.createdAt, end),
+          sql`${creditPurchases.packageType} != 'admin_adjustment'`,
+        ),
+      );
+
+    // Users who viewed but never purchased (drop-offs)
+    const dropOffUsers = await db
+      .select({
+        id: users.id,
+        email: users.email,
+        firstName: users.firstName,
+        lastViewedAt: sql<string>`MAX(${checkoutViews.createdAt})`,
+        viewCount: count(),
+      })
+      .from(checkoutViews)
+      .innerJoin(users, eq(users.id, checkoutViews.userId))
+      .where(
+        and(
+          gte(checkoutViews.createdAt, start),
+          lte(checkoutViews.createdAt, end),
+          sql`NOT EXISTS (
+            SELECT 1 FROM ${creditPurchases}
+            WHERE ${creditPurchases.userId} = ${checkoutViews.userId}
+            AND ${creditPurchases.status} = 'completed'
+            AND ${creditPurchases.packageType} != 'admin_adjustment'
+            AND ${creditPurchases.createdAt} >= ${start}
+            AND ${creditPurchases.createdAt} <= ${end}
+          )`,
+        ),
+      )
+      .groupBy(users.id, users.email, users.firstName)
+      .orderBy(sql`MAX(${checkoutViews.createdAt}) DESC`)
+      .limit(50);
+
+    // Build source breakdown
+    const completedMap = new Map(completedBySource.map(c => [c.source, c.completed]));
+    const bySource = viewsBySource.map(v => ({
+      source: v.source,
+      views: v.views,
+      uniqueUsers: v.uniqueUsers,
+      completed: completedMap.get(v.source) ?? 0,
+      conversionRate: v.views > 0
+        ? Math.round(((completedMap.get(v.source) ?? 0) / v.views) * 100)
+        : 0,
+    }));
+
+    const views = totalViews[0]?.total ?? 0;
+    const completed = totalCompleted[0]?.total ?? 0;
+
+    return res.json({
+      checkout: {
+        totalViews: views,
+        uniqueViewers: totalViews[0]?.uniqueUsers ?? 0,
+        totalCompleted: completed,
+        conversionRate: views > 0 ? Math.round((completed / views) * 100) : 0,
+        bySource,
+        dropOffUsers,
+      },
+      dateRange: { start, end },
+    });
+  } catch (error: any) {
+    logger.error('Analytics checkout-conversion error:', error);
+    return res.status(500).json({ error: 'Failed to get checkout conversion data' });
   }
 });
 

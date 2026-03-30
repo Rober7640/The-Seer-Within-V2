@@ -24,6 +24,11 @@ import {
   ChevronDown,
   ChevronUp,
   ExternalLink,
+  ShoppingCart,
+  Eye,
+  CheckCircle,
+  Percent,
+  UserX,
 } from "lucide-react";
 
 interface OverviewStats {
@@ -67,6 +72,31 @@ interface LowCreditUser {
   accountStatus: string;
 }
 
+interface CheckoutSourceBreakdown {
+  source: string;
+  views: number;
+  uniqueUsers: number;
+  completed: number;
+  conversionRate: number;
+}
+
+interface CheckoutDropOffUser {
+  id: string;
+  email: string;
+  firstName: string;
+  lastViewedAt: string;
+  viewCount: number;
+}
+
+interface CheckoutConversion {
+  totalViews: number;
+  uniqueViewers: number;
+  totalCompleted: number;
+  conversionRate: number;
+  bySource: CheckoutSourceBreakdown[];
+  dropOffUsers: CheckoutDropOffUser[];
+}
+
 type DateRange = "today" | "7d" | "30d" | "all";
 
 export default function AnalyticsDashboard() {
@@ -81,6 +111,8 @@ export default function AnalyticsDashboard() {
   >([]);
   const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
   const [lowCreditUsers, setLowCreditUsers] = useState<LowCreditUser[]>([]);
+  const [checkoutData, setCheckoutData] = useState<CheckoutConversion | null>(null);
+  const [checkoutOpen, setCheckoutOpen] = useState(true);
   const [alertThreshold, setAlertThreshold] = useState(30);
   const [alertsOpen, setAlertsOpen] = useState(true);
   const [loading, setLoading] = useState(true);
@@ -115,10 +147,11 @@ export default function AnalyticsDashboard() {
       });
       if (urlPersonaId) query.set("personaId", urlPersonaId);
 
-      const [overviewRes, breakdownRes, alertsRes] = await Promise.all([
+      const [overviewRes, breakdownRes, alertsRes, checkoutRes] = await Promise.all([
         adminFetch(`/api/admin/analytics/overview?${query}`),
         adminFetch(`/api/admin/analytics/personas?${query}`),
         adminFetch(`/api/admin/analytics/alerts?threshold=${alertThreshold}`),
+        adminFetch(`/api/admin/analytics/checkout-conversion?${query}`),
       ]);
 
       if (overviewRes.ok) {
@@ -134,6 +167,10 @@ export default function AnalyticsDashboard() {
       if (alertsRes.ok) {
         const data = await alertsRes.json();
         setLowCreditUsers(data.alerts || []);
+      }
+      if (checkoutRes.ok) {
+        const data = await checkoutRes.json();
+        setCheckoutData(data.checkout || null);
       }
     } catch (err) {
       console.error("Failed to fetch analytics:", err);
@@ -250,6 +287,13 @@ export default function AnalyticsDashboard() {
               setAlertThreshold(t);
               fetchAnalytics();
             }}
+          />
+
+          {/* Checkout Conversion Funnel */}
+          <CheckoutConversionSection
+            data={checkoutData}
+            open={checkoutOpen}
+            onToggle={() => setCheckoutOpen(!checkoutOpen)}
           />
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -384,6 +428,163 @@ export default function AnalyticsDashboard() {
         </>
       )}
     </AdminLayout>
+  );
+}
+
+// Source label mapping
+const SOURCE_LABELS: Record<string, string> = {
+  buy_credits_modal: "Refill (Mid-Session)",
+  out_of_credits: "Out of Credits",
+  teaser: "Welcome Offer",
+  credits_page: "Credits Page",
+};
+
+// Checkout Conversion Section
+function CheckoutConversionSection({
+  data,
+  open,
+  onToggle,
+}: {
+  data: CheckoutConversion | null;
+  open: boolean;
+  onToggle: () => void;
+}) {
+  if (!data) return null;
+
+  const hasData = data.totalViews > 0;
+
+  return (
+    <Card className={`border mb-6 ${hasData ? "bg-teal-950/20 border-teal-800/50" : "bg-gray-900 border-gray-800"}`}>
+      <CardHeader className="cursor-pointer select-none" onClick={onToggle}>
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-sm flex items-center gap-2">
+            <ShoppingCart className={`w-4 h-4 ${hasData ? "text-teal-400" : "text-gray-500"}`} />
+            <span className={hasData ? "text-teal-300" : "text-gray-400"}>
+              Checkout Conversion
+            </span>
+            {hasData && (
+              <span className="ml-1 px-1.5 py-0.5 rounded-full bg-teal-600/30 text-teal-300 text-[10px] font-bold">
+                {data.conversionRate}% rate
+              </span>
+            )}
+          </CardTitle>
+          {open ? (
+            <ChevronUp className="w-4 h-4 text-gray-500" />
+          ) : (
+            <ChevronDown className="w-4 h-4 text-gray-500" />
+          )}
+        </div>
+      </CardHeader>
+
+      {open && (
+        <CardContent>
+          {!hasData ? (
+            <p className="text-gray-600 text-sm text-center py-4">
+              No checkout data yet. Data will appear as users open payment modals.
+            </p>
+          ) : (
+            <>
+              {/* Summary cards */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
+                <div className="p-3 bg-gray-800/50 rounded-lg text-center">
+                  <Eye className="w-4 h-4 text-blue-400 mx-auto mb-1" />
+                  <p className="text-xl font-bold text-white">{data.totalViews}</p>
+                  <p className="text-[10px] text-gray-500">Modal Opens</p>
+                </div>
+                <div className="p-3 bg-gray-800/50 rounded-lg text-center">
+                  <Users className="w-4 h-4 text-purple-400 mx-auto mb-1" />
+                  <p className="text-xl font-bold text-white">{data.uniqueViewers}</p>
+                  <p className="text-[10px] text-gray-500">Unique Users</p>
+                </div>
+                <div className="p-3 bg-gray-800/50 rounded-lg text-center">
+                  <CheckCircle className="w-4 h-4 text-green-400 mx-auto mb-1" />
+                  <p className="text-xl font-bold text-white">{data.totalCompleted}</p>
+                  <p className="text-[10px] text-gray-500">Completed</p>
+                </div>
+                <div className="p-3 bg-gray-800/50 rounded-lg text-center">
+                  <Percent className="w-4 h-4 text-teal-400 mx-auto mb-1" />
+                  <p className="text-xl font-bold text-white">{data.conversionRate}%</p>
+                  <p className="text-[10px] text-gray-500">Conversion Rate</p>
+                </div>
+              </div>
+
+              {/* Source breakdown */}
+              {data.bySource.length > 0 && (
+                <div className="mb-5">
+                  <h4 className="text-xs text-gray-400 font-medium mb-2 flex items-center gap-1.5">
+                    <BarChart3 className="w-3.5 h-3.5" />
+                    Conversion by Source
+                  </h4>
+                  <div className="space-y-2">
+                    {data.bySource.map((s) => (
+                      <div key={s.source} className="p-3 bg-gray-800/50 rounded-lg">
+                        <div className="flex items-center justify-between mb-1.5">
+                          <span className="text-sm text-white font-medium">
+                            {SOURCE_LABELS[s.source] || s.source}
+                          </span>
+                          <span className={`text-xs font-bold ${s.conversionRate >= 20 ? "text-green-400" : s.conversionRate >= 10 ? "text-amber-400" : "text-red-400"}`}>
+                            {s.conversionRate}%
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-4 text-[11px] text-gray-500">
+                          <span>{s.views} views</span>
+                          <span>{s.uniqueUsers} users</span>
+                          <span>{s.completed} purchased</span>
+                        </div>
+                        {/* Progress bar */}
+                        <div className="mt-1.5 h-1.5 bg-gray-700 rounded-full overflow-hidden">
+                          <div
+                            className="h-full rounded-full bg-gradient-to-r from-teal-500 to-green-500 transition-all"
+                            style={{ width: `${Math.min(s.conversionRate, 100)}%` }}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Drop-off users */}
+              {data.dropOffUsers.length > 0 && (
+                <div>
+                  <h4 className="text-xs text-gray-400 font-medium mb-2 flex items-center gap-1.5">
+                    <UserX className="w-3.5 h-3.5" />
+                    Users Who Viewed But Didn't Purchase ({data.dropOffUsers.length})
+                  </h4>
+                  <div className="space-y-2 max-h-64 overflow-y-auto">
+                    {data.dropOffUsers.map((u) => (
+                      <div
+                        key={u.id}
+                        className="flex items-center justify-between p-3 bg-gray-800/60 rounded-lg"
+                      >
+                        <div className="min-w-0">
+                          <p className="text-sm text-white font-medium truncate">
+                            {u.firstName}
+                            <span className="text-gray-500 font-normal ml-1 text-xs">
+                              {u.email}
+                            </span>
+                          </p>
+                          <p className="text-[10px] text-gray-600">
+                            {u.viewCount} modal open{u.viewCount !== 1 ? "s" : ""} · Last: {new Date(u.lastViewedAt).toLocaleDateString()}
+                          </p>
+                        </div>
+                        <a
+                          href={`/admin/users/${u.id}`}
+                          className="text-gray-500 hover:text-purple-400 transition-colors shrink-0"
+                          title="View user"
+                        >
+                          <ExternalLink className="w-3.5 h-3.5" />
+                        </a>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+        </CardContent>
+      )}
+    </Card>
   );
 }
 
