@@ -751,3 +751,16 @@ export type InsertTopupEmail = z.infer<typeof insertTopupEmailSchema>;
 export type InsertSessionFeedback = z.infer<typeof insertSessionFeedbackSchema>;
 
 export type MagicLinkToken = typeof magicLinkTokens.$inferSelect;
+
+// Checkout Views - Tracks when users open payment modals (for conversion reporting)
+export const checkoutViews = pgTable("checkout_views", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  packageType: text("package_type").notNull(),
+  personaId: varchar("persona_id").references(() => personas.id, { onDelete: "set null" }),
+  source: text("source").notNull(), // "buy_credits_modal", "out_of_credits", "teaser", "credits_page"
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_checkout_views_user").on(table.userId),
+  index("idx_checkout_views_created").on(table.createdAt),
+]);

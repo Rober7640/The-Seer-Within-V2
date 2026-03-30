@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Elements, PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js";
 import { stripePromise } from "@/lib/stripe";
 import { authFetch } from "@/hooks/useAuth";
@@ -7,6 +7,7 @@ import { CreditCard } from "lucide-react";
 interface StripeCardFormProps {
   packageType: string;
   personaId?: string | null;
+  amount: number; // price in cents
   priceLabel: string;
   onSuccess: (newBalance: number) => void;
   onClick?: () => void;
@@ -14,10 +15,14 @@ interface StripeCardFormProps {
 }
 
 function StripeCardFormInner({
+  packageType,
+  personaId,
   priceLabel,
   onSuccess,
   onCancel,
 }: {
+  packageType: string;
+  personaId?: string | null;
   priceLabel: string;
   onSuccess: (newBalance: number) => void;
   onCancel?: () => void;
@@ -35,24 +40,59 @@ function StripeCardFormInner({
     setError(null);
 
     try {
-      const result = await stripe.confirmPayment({
+      // Step 1: Validate card details
+      const { error: submitError } = await elements.submit();
+      if (submitError) {
+        setError(submitError.message ?? "Please check your card details.");
+        setIsProcessing(false);
+        return;
+      }
+
+      // Step 2: Create Payment Intent on server (only NOW, not on mount)
+      const intentRes = await authFetch("/api/credits/create-payment-intent", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          packageType,
+          ...(personaId ? { personaId } : {}),
+        }),
+      });
+
+      if (!intentRes.ok) {
+        const data = await intentRes.json().catch(() => ({}));
+        setError(data.error || "Failed to initialize payment.");
+        setIsProcessing(false);
+        return;
+      }
+
+      const intentData = await intentRes.json();
+
+      // Dev mode: payment auto-completed
+      if (intentData.devMode) {
+        onSuccess(intentData.newBalance);
+        return;
+      }
+
+      // Step 3: Confirm payment with the clientSecret from server
+      const { error: confirmError, paymentIntent } = await stripe.confirmPayment({
         elements,
+        clientSecret: intentData.clientSecret,
         redirect: "if_required",
       });
 
-      if (result.error) {
-        setError(result.error.message ?? "Payment failed. Please try again.");
+      if (confirmError) {
+        setError(confirmError.message ?? "Payment failed. Please try again.");
         onCancel?.();
         setIsProcessing(false);
         return;
       }
 
-      if (result.paymentIntent?.status === "succeeded") {
-        // Confirm on our backend
+      if (paymentIntent?.status === "succeeded") {
+        // Step 4: Confirm on our backend
         const res = await authFetch("/api/credits/confirm-payment", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ paymentIntentId: result.paymentIntent.id }),
+          body: JSON.stringify({ paymentIntentId: paymentIntent.id }),
         });
 
         if (!res.ok) {
@@ -110,77 +150,19 @@ function StripeCardFormInner({
 export default function StripeCardForm({
   packageType,
   personaId,
+  amount,
   priceLabel,
   onSuccess,
   onClick,
   onCancel,
 }: StripeCardFormProps) {
-  const [clientSecret, setClientSecret] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    async function createIntent() {
-      setLoading(true);
-      setError(null);
-
-      try {
-        const res = await authFetch("/api/credits/create-payment-intent", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            packageType,
-            ...(personaId ? { personaId } : {}),
-          }),
-        });
-
-        if (!res.ok) {
-          const data = await res.json().catch(() => ({}));
-          if (!cancelled) setError(data.error || "Failed to initialize payment.");
-          return;
-        }
-
-        const data = await res.json();
-
-        if (data.devMode) {
-          // Dev mode: payment auto-completed
-          if (!cancelled) onSuccess(data.newBalance);
-          return;
-        }
-
-        if (!cancelled) setClientSecret(data.clientSecret);
-      } catch {
-        if (!cancelled) setError("Failed to initialize payment. Please try again.");
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    }
-
-    createIntent();
-    return () => { cancelled = true; };
-  }, [packageType, personaId]);
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center py-6">
-        <span className="w-5 h-5 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
-  }
-
-  if (error) {
-    return <p className="text-red-500 text-xs text-center py-4">{error}</p>;
-  }
-
-  if (!clientSecret) return null;
-
   return (
     <Elements
       stripe={stripePromise}
       options={{
-        clientSecret,
+        mode: "payment",
+        amount,
+        currency: "usd",
         appearance: {
           theme: "stripe",
           variables: {
@@ -190,6 +172,8 @@ export default function StripeCardForm({
       }}
     >
       <StripeCardFormInner
+        packageType={packageType}
+        personaId={personaId}
         priceLabel={priceLabel}
         onSuccess={onSuccess}
         onCancel={onCancel}

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth, authFetch } from "@/hooks/useAuth";
 import { X, Coins } from "lucide-react";
 import {
@@ -38,6 +38,17 @@ export default function BuyCreditsModal({
   const [selectedPackage, setSelectedPackage] = useState<string>(
     () => tiers.find((t) => t.badge)?.packageType ?? tiers[0]?.packageType ?? "popular",
   );
+  // Log checkout view when modal opens
+  useEffect(() => {
+    if (open) {
+      authFetch("/api/credits/checkout-view", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ packageType: selectedPackage, personaId, source: "buy_credits_modal" }),
+      }).catch(() => {});
+    }
+  }, [open]);
+
   const handleSuccess = (newBalance: number) => {
     onOpenChange(false);
     onSuccess?.(newBalance);
@@ -152,6 +163,7 @@ export default function BuyCreditsModal({
             <StripeCardForm
               packageType={selectedPackage}
               personaId={personaId}
+              amount={tiers.find(t => t.packageType === selectedPackage)?.priceUsd ?? 999}
               priceLabel={formatPrice(tiers.find(t => t.packageType === selectedPackage)?.priceUsd ?? 999)}
               onSuccess={handleSuccess}
             />

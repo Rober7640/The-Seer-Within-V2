@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { PayPalButtons, FUNDING } from "@paypal/react-paypal-js";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { authFetch } from "@/hooks/useAuth";
@@ -24,6 +24,17 @@ export default function PaymentModal({
 }: Props) {
   const [method, setMethod] = useState<"paypal" | "card">("paypal");
   const [paypalError, setPaypalError] = useState<string | null>(null);
+
+  // Log checkout view when modal opens
+  useEffect(() => {
+    if (isOpen && tier) {
+      authFetch("/api/credits/checkout-view", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ packageType: tier.packageType, personaId, source: "credits_page" }),
+      }).catch(() => {});
+    }
+  }, [isOpen]);
 
   if (!tier) return null;
 
@@ -136,6 +147,7 @@ export default function PaymentModal({
             <StripeCardForm
               packageType={tier.packageType}
               personaId={personaId}
+              amount={tier.priceUsd}
               priceLabel={price}
               onSuccess={(newBalance) => {
                 onSuccess(newBalance);

@@ -1,7 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { z } from 'zod';
 import { db } from '../lib/db';
-import { users, creditPurchases, personas } from '@shared/schema';
+import { users, creditPurchases, personas, checkoutViews } from '@shared/schema';
 import { eq, and, ne, desc, sql } from 'drizzle-orm';
 import { requireAuth } from '../lib/auth';
 import { getPersonaPricing } from '../lib/personaPricing';
@@ -125,6 +125,28 @@ router.get('/purchases', requireAuth, async (req: Request, res: Response) => {
   } catch (error) {
     logger.error('Get purchases error:', error);
     res.status(500).json({ error: 'Failed to get purchases' });
+  }
+});
+
+// POST /api/credits/checkout-view - Log when user opens a payment modal (for conversion tracking)
+router.post('/checkout-view', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const { packageType, personaId, source } = req.body;
+    if (!packageType || !source) {
+      res.status(400).json({ error: 'packageType and source are required' });
+      return;
+    }
+    await db.insert(checkoutViews).values({
+      userId: req.userId!,
+      packageType,
+      personaId: personaId || null,
+      source,
+    });
+    res.json({ ok: true });
+  } catch (error) {
+    logger.error('Checkout view tracking error:', error);
+    // Non-blocking — don't fail the user experience for tracking
+    res.json({ ok: true });
   }
 });
 

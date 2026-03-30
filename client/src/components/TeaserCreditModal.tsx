@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { useAuth, authFetch } from "@/hooks/useAuth";
 import { X } from "lucide-react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
@@ -19,6 +19,17 @@ export default function TeaserCreditModal({
   onSuccess,
 }: TeaserCreditModalProps) {
   const { refreshUser } = useAuth();
+
+  // Log checkout view when modal opens
+  useEffect(() => {
+    if (open) {
+      authFetch("/api/credits/checkout-view", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ packageType: "welcome", personaId, source: "teaser" }),
+      }).catch(() => {});
+    }
+  }, [open]);
 
   const handleSuccess = (newBalance: number) => {
     onSuccess?.(newBalance);
@@ -85,6 +96,7 @@ export default function TeaserCreditModal({
             <StripeCardForm
               packageType="welcome"
               personaId={personaId}
+              amount={299}
               priceLabel="$2.99"
               onSuccess={handleSuccess}
             />

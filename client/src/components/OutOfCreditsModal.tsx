@@ -96,6 +96,17 @@ export default function OutOfCreditsModal({
   const onOpenChangeRef = useRef(onOpenChange);
   onOpenChangeRef.current = onOpenChange;
 
+  // Log checkout view when modal opens
+  useEffect(() => {
+    if (open) {
+      authFetch("/api/credits/checkout-view", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ packageType: featuredTier?.packageType ?? "starter", personaId, source: "out_of_credits" }),
+      }).catch(() => {});
+    }
+  }, [open]);
+
   const handlePayPalSuccess = (newBalance: number) => {
     setPaypalActive(false);
     if (intervalRef.current) clearInterval(intervalRef.current);
@@ -206,6 +217,7 @@ export default function OutOfCreditsModal({
             <StripeCardForm
               packageType={featuredTier?.packageType ?? "starter"}
               personaId={personaId}
+              amount={featuredTier?.priceUsd ?? 999}
               priceLabel={salePrice}
               onSuccess={handlePayPalSuccess}
               onClick={() => setPaypalActive(true)}
