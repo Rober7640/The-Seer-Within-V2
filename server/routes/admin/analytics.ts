@@ -595,22 +595,20 @@ router.get('/checkout-conversion', async (req: Request, res: Response) => {
       )
       .groupBy(checkoutViews.source);
 
-    // Completed purchases in same period
+    // Unique users who purchased per source (no cross-join duplication)
     const completedBySource = await db
       .select({
         source: checkoutViews.source,
-        completed: count(),
+        completed: sql<number>`COUNT(DISTINCT CASE WHEN EXISTS (
+          SELECT 1 FROM ${creditPurchases}
+          WHERE ${creditPurchases.userId} = ${checkoutViews.userId}
+          AND ${creditPurchases.status} = 'completed'
+          AND ${creditPurchases.packageType} != 'admin_adjustment'
+          AND ${creditPurchases.createdAt} >= ${start}
+          AND ${creditPurchases.createdAt} <= ${end}
+        ) THEN ${checkoutViews.userId} END)`,
       })
       .from(checkoutViews)
-      .innerJoin(
-        creditPurchases,
-        and(
-          eq(creditPurchases.userId, checkoutViews.userId),
-          eq(creditPurchases.status, 'completed'),
-          gte(creditPurchases.createdAt, start),
-          lte(creditPurchases.createdAt, end),
-        ),
-      )
       .where(
         and(
           gte(checkoutViews.createdAt, start),
@@ -633,15 +631,24 @@ router.get('/checkout-conversion', async (req: Request, res: Response) => {
         ),
       );
 
+    // Unique users who viewed AND purchased (not all purchases globally)
     const totalCompleted = await db
-      .select({ total: count() })
-      .from(creditPurchases)
+      .select({
+        total: sql<number>`COUNT(DISTINCT ${checkoutViews.userId})`,
+      })
+      .from(checkoutViews)
       .where(
         and(
-          eq(creditPurchases.status, 'completed'),
-          gte(creditPurchases.createdAt, start),
-          lte(creditPurchases.createdAt, end),
-          sql`${creditPurchases.packageType} != 'admin_adjustment'`,
+          gte(checkoutViews.createdAt, start),
+          lte(checkoutViews.createdAt, end),
+          sql`EXISTS (
+            SELECT 1 FROM ${creditPurchases}
+            WHERE ${creditPurchases.userId} = ${checkoutViews.userId}
+            AND ${creditPurchases.status} = 'completed'
+            AND ${creditPurchases.packageType} != 'admin_adjustment'
+            AND ${creditPurchases.createdAt} >= ${start}
+            AND ${creditPurchases.createdAt} <= ${end}
+          )`,
         ),
       );
 
@@ -674,27 +681,27 @@ router.get('/checkout-conversion', async (req: Request, res: Response) => {
       .orderBy(sql`MAX(${checkoutViews.createdAt}) DESC`)
       .limit(50);
 
-    // Build source breakdown
+    // Build source breakdown (conversion = unique purchasers / unique viewers)
     const completedMap = new Map(completedBySource.map(c => [c.source, c.completed]));
     const bySource = viewsBySource.map(v => ({
       source: v.source,
       views: v.views,
       uniqueUsers: v.uniqueUsers,
       completed: completedMap.get(v.source) ?? 0,
-      conversionRate: v.views > 0
-        ? Math.round(((completedMap.get(v.source) ?? 0) / v.views) * 100)
+      conversionRate: v.uniqueUsers > 0
+        ? Math.round(((completedMap.get(v.source) ?? 0) / v.uniqueUsers) * 100)
         : 0,
     }));
 
-    const views = totalViews[0]?.total ?? 0;
+    const uniqueViewers = totalViews[0]?.uniqueUsers ?? 0;
     const completed = totalCompleted[0]?.total ?? 0;
 
     return res.json({
       checkout: {
-        totalViews: views,
-        uniqueViewers: totalViews[0]?.uniqueUsers ?? 0,
+        totalViews: totalViews[0]?.total ?? 0,
+        uniqueViewers,
         totalCompleted: completed,
-        conversionRate: views > 0 ? Math.round((completed / views) * 100) : 0,
+        conversionRate: uniqueViewers > 0 ? Math.round((completed / uniqueViewers) * 100) : 0,
         bySource,
         dropOffUsers,
       },

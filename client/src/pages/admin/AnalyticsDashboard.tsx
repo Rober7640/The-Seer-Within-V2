@@ -506,7 +506,7 @@ function CheckoutConversionSection({
                 <div className="p-3 bg-gray-800/50 rounded-lg text-center">
                   <CheckCircle className="w-4 h-4 text-green-400 mx-auto mb-1" />
                   <p className="text-xl font-bold text-white">{data.totalCompleted}</p>
-                  <p className="text-[10px] text-gray-500">Completed</p>
+                  <p className="text-[10px] text-gray-500">Users Purchased</p>
                 </div>
                 <div className="p-3 bg-gray-800/50 rounded-lg text-center">
                   <Percent className="w-4 h-4 text-teal-400 mx-auto mb-1" />
@@ -537,6 +537,7 @@ function CheckoutConversionSection({
                           <span>{s.views} views</span>
                           <span>{s.uniqueUsers} users</span>
                           <span>{s.completed} purchased</span>
+                          <span className="text-gray-600">({s.uniqueUsers > 0 ? Math.round((s.completed / s.uniqueUsers) * 100) : 0}% of users)</span>
                         </div>
                         {/* Progress bar */}
                         <div className="mt-1.5 h-1.5 bg-gray-700 rounded-full overflow-hidden">
