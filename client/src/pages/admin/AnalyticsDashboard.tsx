@@ -111,7 +111,14 @@ export default function AnalyticsDashboard() {
   >([]);
   const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
   const [lowCreditUsers, setLowCreditUsers] = useState<LowCreditUser[]>([]);
-  const [checkoutData, setCheckoutData] = useState<CheckoutConversion | null>(null);
+  const [checkoutData, setCheckoutData] = useState<CheckoutConversion>({
+    totalViews: 0,
+    uniqueViewers: 0,
+    totalCompleted: 0,
+    conversionRate: 0,
+    bySource: [],
+    dropOffUsers: [],
+  });
   const [checkoutOpen, setCheckoutOpen] = useState(true);
   const [alertThreshold, setAlertThreshold] = useState(30);
   const [alertsOpen, setAlertsOpen] = useState(true);
@@ -170,7 +177,9 @@ export default function AnalyticsDashboard() {
       }
       if (checkoutRes.ok) {
         const data = await checkoutRes.json();
-        setCheckoutData(data.checkout || null);
+        if (data.checkout) setCheckoutData(data.checkout);
+      } else {
+        console.error("Checkout conversion API error:", checkoutRes.status);
       }
     } catch (err) {
       console.error("Failed to fetch analytics:", err);
@@ -445,12 +454,10 @@ function CheckoutConversionSection({
   open,
   onToggle,
 }: {
-  data: CheckoutConversion | null;
+  data: CheckoutConversion;
   open: boolean;
   onToggle: () => void;
 }) {
-  if (!data) return null;
-
   const hasData = data.totalViews > 0;
 
   return (
