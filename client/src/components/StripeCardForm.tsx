@@ -77,6 +77,9 @@ function StripeCardFormInner({
       const { error: confirmError, paymentIntent } = await stripe.confirmPayment({
         elements,
         clientSecret: intentData.clientSecret,
+        confirmParams: {
+          return_url: window.location.href,
+        },
         redirect: "if_required",
       });
 
@@ -108,8 +111,9 @@ function StripeCardFormInner({
         setError("Payment was not completed. Please try again.");
         setIsProcessing(false);
       }
-    } catch (err) {
-      setError("An unexpected error occurred. Please try again.");
+    } catch (err: any) {
+      console.error("Stripe payment error:", err);
+      setError(err?.message || "An unexpected error occurred. Please try again.");
       setIsProcessing(false);
     }
   };
