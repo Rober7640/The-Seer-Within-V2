@@ -183,8 +183,10 @@ export async function sendVerificationEmail(
   email: string,
   firstName: string,
   token: string,
+  persona?: string,
 ): Promise<{ success: boolean; error?: string }> {
-  const verifyUrl = `${BASE_URL}/verify-email/${token}`;
+  const personaQuery = persona ? `?persona=${encodeURIComponent(persona)}` : '';
+  const verifyUrl = `${BASE_URL}/verify-email/${token}${personaQuery}`;
 
   const html = buildVerificationHtml(firstName, verifyUrl);
   const text = buildVerificationText(firstName, verifyUrl);

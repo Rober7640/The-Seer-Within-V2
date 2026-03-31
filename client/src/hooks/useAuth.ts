@@ -133,11 +133,12 @@ export function useAuth() {
   );
 
   const register = useCallback(
-    async (email: string, password: string, firstName: string) => {
+    async (email: string, password: string, firstName: string, persona?: string) => {
       const res = await apiRequest("POST", "/api/auth/register", {
         email,
         password,
         firstName,
+        ...(persona ? { persona } : {}),
       });
       const data = await res.json();
       setToken(data.token);

@@ -84,7 +84,8 @@ function Router() {
         <Route path="/reset-password/:token" component={ResetPasswordPage} />
         <Route path="/verify-email/:token">
           {(params: { token: string }) => {
-            window.location.href = `/api/auth/verify-email/${params.token}`;
+            const search = window.location.search;
+            window.location.href = `/api/auth/verify-email/${params.token}${search}`;
             return null;
           }}
         </Route>

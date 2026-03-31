@@ -29,6 +29,7 @@ const registerSchema = z.object({
   email: z.string().email(),
   password: z.string().min(8, 'Password must be at least 8 characters'),
   firstName: z.string().min(1, 'First name is required'),
+  persona: z.string().optional(),
 });
 
 const loginSchema = z.object({
@@ -59,7 +60,7 @@ router.post('/register', authLimiter, async (req: Request, res: Response) => {
       return;
     }
 
-    const { email, password, firstName } = parseResult.data;
+    const { email, password, firstName, persona } = parseResult.data;
 
     // Check if email already exists
     const existing = await db.select({ id: users.id })
@@ -107,7 +108,7 @@ router.post('/register', authLimiter, async (req: Request, res: Response) => {
 
     // Send verification email only in non-test environments
     if (!isTestEnv) {
-      sendVerificationEmail(user.email, user.firstName, verificationToken).catch((err) => {
+      sendVerificationEmail(user.email, user.firstName, verificationToken, persona).catch((err) => {
         logger.error('Failed to send verification email:', err);
       });
     }
@@ -182,9 +183,13 @@ router.get('/verify-email/:token', async (req: Request, res: Response) => {
     const jwtToken = generateToken(user.id, user.email);
     const baseUrl = process.env.BASE_URL || 'http://localhost:5000';
 
-    // Include default persona slug so cross-device verification preserves persona context (BUG-3)
+    // Include persona slug so cross-device verification preserves persona context (BUG-3)
+    // Priority: query param from signup link > user's default persona from DB
     let personaParam = '';
-    if (user.defaultPersonaId) {
+    const queryPersona = req.query.persona as string | undefined;
+    if (queryPersona) {
+      personaParam = `&persona=${encodeURIComponent(queryPersona)}`;
+    } else if (user.defaultPersonaId) {
       const personaRow = await db.select({ slug: personas.slug })
         .from(personas)
         .where(eq(personas.id, user.defaultPersonaId))

@@ -9,7 +9,9 @@ import { Sparkles, LogIn, UserPlus, Mail } from "lucide-react";
 export default function LoginPage() {
   const [, navigate] = useLocation();
   const { login, register } = useAuth();
-  const returnTo = new URLSearchParams(window.location.search).get("returnTo");
+  const searchParams = new URLSearchParams(window.location.search);
+  const returnTo = searchParams.get("returnTo");
+  const personaParam = searchParams.get("persona");
 
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState("");
@@ -51,8 +53,10 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
+      const personaRedirect = personaParam ? `/reading?persona=${personaParam}` : null;
+
       if (isSignUp) {
-        const data = await register(email, password, firstName);
+        const data = await register(email, password, firstName, personaParam || undefined);
         if (data.requiresVerification) {
           setShowVerificationSent(true);
           setResendEmail(email);
@@ -60,7 +64,7 @@ export default function LoginPage() {
         }
       } else {
         const data = await login(email, password);
-        if (!returnTo && data?.user?.defaultPersonaSlug) {
+        if (!returnTo && !personaParam && data?.user?.defaultPersonaSlug) {
           if (data.user.defaultPersonaAvailable) {
             navigate(`/reading?persona=${data.user.defaultPersonaSlug}`);
           } else {
@@ -69,7 +73,7 @@ export default function LoginPage() {
           return;
         }
       }
-      navigate(returnTo ?? "/reading");
+      navigate(returnTo ?? personaRedirect ?? "/reading");
     } catch (err: any) {
       setError(
         err?.message?.includes("401")
