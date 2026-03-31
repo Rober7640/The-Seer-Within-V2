@@ -16,6 +16,20 @@ function getPageUrl(): string {
   return typeof window !== 'undefined' ? window.location.href : '';
 }
 
+function getCookie(name: string): string | undefined {
+  if (typeof document === 'undefined') return undefined;
+  const match = document.cookie.match(new RegExp('(?:^|; )' + name + '=([^;]*)'));
+  return match ? decodeURIComponent(match[1]) : undefined;
+}
+
+function getFbClickId(): string | undefined {
+  return getCookie('_fbc');
+}
+
+function getFbBrowserId(): string | undefined {
+  return getCookie('_fbp');
+}
+
 export interface FBEventData {
   value?: number;
   currency?: string;
@@ -40,6 +54,8 @@ async function sendServerEvent(
         eventId,
         eventSourceUrl: getPageUrl(),
         userAgent: getUserAgent(),
+        fbc: getFbClickId(),
+        fbp: getFbBrowserId(),
         ...eventData,
       }),
     });
@@ -60,14 +76,16 @@ export function trackPageView(): void {
 
 export function trackLead(email: string, firstName?: string): void {
   const eventId = generateEventId();
-  
+
   if (typeof window !== 'undefined' && window.fbq) {
     window.fbq('track', 'Lead', {
       content_name: 'Email Capture',
+      value: 0,
+      currency: 'USD',
     }, { eventID: eventId });
   }
-  
-  sendServerEvent('Lead', eventId, { email, firstName, content_name: 'Email Capture' });
+
+  sendServerEvent('Lead', eventId, { email, firstName, content_name: 'Email Capture', value: 0, currency: 'USD' });
 }
 
 export function trackInitiateCheckout(value: number = 35, currency: string = 'USD'): void {

@@ -3,13 +3,16 @@ import { useSearch } from "wouter";
 import { CosmicBackground } from "../components/CosmicBackground";
 import { Link } from "wouter";
 import { CheckCircle, Package, Mail, Sparkles, Gem } from "lucide-react";
+import { trackPurchase, trackUpsell2Purchase } from "../lib/facebook";
 
 interface OrderData {
   firstName: string;
   email: string;
   bucket: string | null;
   upsellPurchased: boolean;
+  upsellAmount: number | null;
   upsell2Purchased: boolean;
+  upsell2Amount: number | null;
 }
 
 export default function SuccessPage() {
@@ -141,8 +144,20 @@ export default function SuccessPage() {
           setOrderData(data);
           // Use URL flags as primary (always up-to-date from the redirect),
           // DB values as fallback (may have timing lag)
-          setHasUpsell(upsellFromUrl || data.upsellPurchased);
-          setHasUpsell2(upsell2FromUrl || data.upsell2Purchased);
+          const boughtUpsell1 = upsellFromUrl || data.upsellPurchased;
+          const boughtUpsell2 = upsell2FromUrl || data.upsell2Purchased;
+          setHasUpsell(boughtUpsell1);
+          setHasUpsell2(boughtUpsell2);
+
+          // Track Upsell 2 Purchase event on /success load (fires once per session)
+          if (boughtUpsell2 && sessionId) {
+            const upsell2Key = `seer_upsell2_purchase_tracked_${sessionId}`;
+            if (!sessionStorage.getItem(upsell2Key)) {
+              const amount = (data.upsell2Amount || 4700) / 100;
+              trackUpsell2Purchase(amount, "USD", data.email, "Manifestation Bracelet");
+              sessionStorage.setItem(upsell2Key, "true");
+            }
+          }
         }
       } catch (err) {
         console.error("Failed to fetch order data:", err);

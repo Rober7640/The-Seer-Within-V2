@@ -797,7 +797,9 @@ export async function registerRoutes(
         email: conversation.email,
         bucket: conversation.bucket,
         upsellPurchased: conversation.upsellPurchased || false,
+        upsellAmount: conversation.upsellAmount || null,
         upsell2Purchased: conversation.upsell2Purchased || false,
+        upsell2Amount: conversation.upsell2Amount || null,
       });
     } catch (error) {
       logger.error("Get order details error:", error);
@@ -2115,6 +2117,8 @@ export async function registerRoutes(
     eventId: z.string().min(1),
     eventSourceUrl: z.string().optional(),
     userAgent: z.string().optional(),
+    fbc: z.string().optional(),
+    fbp: z.string().optional(),
     email: z.string().email().optional(),
     firstName: z.string().optional(),
     value: z.number().optional(),
@@ -2138,6 +2142,8 @@ export async function registerRoutes(
         eventId,
         eventSourceUrl,
         userAgent,
+        fbc,
+        fbp,
         email,
         firstName,
         value,
@@ -2163,6 +2169,8 @@ export async function registerRoutes(
           firstName,
           userAgent,
           clientIpAddress,
+          fbc,
+          fbp,
         },
       });
 

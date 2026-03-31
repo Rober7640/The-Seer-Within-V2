@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import type { Bucket } from "@shared/types";
 import { calculateTypingDelay, sleep, generateId } from "@/lib/typing";
-import { trackUpsell2Purchase } from "@/lib/facebook";
+
 import {
   Upsell2Stage,
   QuickReply,
@@ -424,12 +424,6 @@ export function useUpsell2Chat({
 
       if (result.success) {
         setUpsell2Bought(true);
-        trackUpsell2Purchase(
-          47,
-          "USD",
-          userData.email,
-          "Manifestation Bracelet (Attuned)",
-        );
         if (isPathA && userData.hasShipping) {
           await sendBotMessages(p(UPSELL2_SUCCESS_HAS_SHIPPING));
           setIsProcessing(false);
@@ -512,12 +506,6 @@ export function useUpsell2Chat({
 
       if (result.success) {
         setUpsell2Bought(true);
-        trackUpsell2Purchase(
-          30,
-          "USD",
-          userData.email,
-          "Manifestation Bracelet (Standard)",
-        );
         if (isPathA && userData.hasShipping) {
           await sendBotMessages(p(UPSELL2_SUCCESS_HAS_SHIPPING));
           setIsProcessing(false);

@@ -9,6 +9,8 @@ interface UserData {
   firstName?: string;
   userAgent?: string;
   clientIpAddress?: string;
+  fbc?: string;
+  fbp?: string;
 }
 
 interface EventData {
@@ -45,6 +47,12 @@ export async function sendFacebookEvent(data: EventData): Promise<{ success: boo
     }
     if (data.userData?.clientIpAddress) {
       userData.client_ip_address = data.userData.clientIpAddress;
+    }
+    if (data.userData?.fbc) {
+      userData.fbc = data.userData.fbc;
+    }
+    if (data.userData?.fbp) {
+      userData.fbp = data.userData.fbp;
     }
 
     const customData: Record<string, unknown> = {};
