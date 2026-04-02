@@ -2287,6 +2287,7 @@ export default function ChatServicePage() {
         }}
         personaId={selectedPersonaId}
         personaName={selectedPersona?.displayName}
+        isOutOfCredits={coinBalance <= 0}
         onSuccess={async (newBalance) => {
           oocPaymentSucceededRef.current = true;
           // Auto-close the refill modal so billing resumes immediately

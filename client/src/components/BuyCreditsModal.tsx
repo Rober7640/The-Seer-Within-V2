@@ -14,6 +14,7 @@ interface BuyCreditsModalProps {
   onOpenChange: (open: boolean) => void;
   personaId: string | null;
   personaName?: string;
+  isOutOfCredits?: boolean;
   pricingTiers?: PricingTier[];
   onSuccess?: (newBalance: number) => void;
 }
@@ -30,6 +31,7 @@ export default function BuyCreditsModal({
   onOpenChange,
   personaId,
   personaName,
+  isOutOfCredits = false,
   pricingTiers,
   onSuccess,
 }: BuyCreditsModalProps) {
@@ -78,7 +80,7 @@ export default function BuyCreditsModal({
             {/* Header */}
             <div className="text-center mb-6">
               <h2 className="text-2xl font-bold text-white font-serif mb-2">
-                Your Credits Have Run Out
+                {isOutOfCredits ? "Your Credits Have Run Out" : "Get More Coins"}
               </h2>
               <p className="text-white/60 text-sm">
                 Add more coins to continue your journey with {personaName || "your advisor"}
