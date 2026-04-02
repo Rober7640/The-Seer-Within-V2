@@ -487,6 +487,7 @@ export default function ChatServicePage() {
             // Run async end-session outside the setState updater
             setTimeout(async () => {
               setCoinBalance(0);
+              setReadingEnded(true);
               setShowBuyCredits(true);
               // End the server session but keep messages visible behind the modal
               // (user can refill and resume from the same point)
@@ -838,6 +839,7 @@ export default function ChatServicePage() {
           setPersonaStatusText('Online');
         }, 800);
       } else if (res.status === 402) {
+        setReadingEnded(true);
         setShowBuyCredits(true);
       } else {
         // API error (e.g. 404/500) — fall back to a local greeting so the user can still chat
@@ -1322,6 +1324,7 @@ export default function ChatServicePage() {
               setFreeTrialCoins(startData.pricing.freeCoins ?? 0);
             }
           } else if (startRes.status === 402) {
+            setReadingEnded(true);
             setShowBuyCredits(true);
             setMessages((prev) => prev.filter((m) => m.id !== userMessage.id));
             setIsTyping(false);
@@ -1439,6 +1442,7 @@ export default function ChatServicePage() {
             console.error('  Full response:', JSON.stringify(errData, null, 2));
           } catch {}
           setCoinBalance(0);
+          setReadingEnded(true);
           setShowBuyCredits(true);
           // End server session but keep session object + messages in state
           // so the UI stays consistent (chat visible, no "Begin Reading" flash).
