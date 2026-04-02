@@ -81,7 +81,7 @@ export default function BuyCreditsModal({
                 Your Credits Have Run Out
               </h2>
               <p className="text-white/60 text-sm">
-                Your conversation is saved — add coins to continue your {personaName ? `session with ${personaName}` : "reading"}
+                Add more coins to continue your journey with {personaName || "your advisor"}
               </p>
             </div>
 
