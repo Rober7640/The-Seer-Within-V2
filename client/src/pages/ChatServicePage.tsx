@@ -29,7 +29,6 @@ import {
 import NatalChartWheel, { type NatalChartData } from "@/components/NatalChartWheel";
 import VedicChartDiamond, { type VedicChartData } from "@/components/VedicChartDiamond";
 import BuyCreditsModal from "@/components/BuyCreditsModal";
-import OutOfCreditsModal from "@/components/OutOfCreditsModal";
 import TeaserCreditModal from "@/components/TeaserCreditModal";
 import CrisisDisclaimer from "@/components/CrisisDisclaimer";
 import SessionFeedbackModal from "@/components/SessionFeedbackModal";
@@ -143,7 +142,6 @@ export default function ChatServicePage() {
   const [initialCoinBalance, setInitialCoinBalance] = useState(0); // balance at session start, recalibrated on server sync
   const [freeTrialCoins, setFreeTrialCoins] = useState(0);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
-  const [showOutOfCredits, setShowOutOfCredits] = useState(false);
   const [sessionPricing, setSessionPricing] = useState<SessionPricing | null>(null);
   const [inputValue, setInputValue] = useState("");
   const [showBuyCredits, setShowBuyCredits] = useState(false);
@@ -239,7 +237,7 @@ export default function ChatServicePage() {
   const showBuyCreditsRef = useRef(false);
   // Tracks when the refill modal opened, so we can shift sessionStartTime forward on close
   const refillModalOpenedAtRef = useRef<number | null>(null);
-  // Guards OutOfCreditsModal onOpenChange from running dismissal logic after a successful payment
+  // Guards BuyCreditsModal onOpenChange from running dismissal logic after a successful payment
   const oocPaymentSucceededRef = useRef(false);
   // Notification sound for incoming assistant messages
   const notificationAudioRef = useRef<HTMLAudioElement | null>(null);
@@ -489,7 +487,7 @@ export default function ChatServicePage() {
             // Run async end-session outside the setState updater
             setTimeout(async () => {
               setCoinBalance(0);
-              setShowOutOfCredits(true);
+              setShowBuyCredits(true);
               // End the server session but keep messages visible behind the modal
               // (user can refill and resume from the same point)
               const sid = sessionIdRef.current;
@@ -840,7 +838,7 @@ export default function ChatServicePage() {
           setPersonaStatusText('Online');
         }, 800);
       } else if (res.status === 402) {
-        setShowOutOfCredits(true);
+        setShowBuyCredits(true);
       } else {
         // API error (e.g. 404/500) — fall back to a local greeting so the user can still chat
         const fallbackGreeting = `Hello! I'm here to help guide you. What's on your mind today?`;
@@ -1039,7 +1037,7 @@ export default function ChatServicePage() {
     lastAutoFetchedPersonaId.current = null; // allow auto-fetch to re-trigger for same persona
   }, []);
 
-  // Shared resume logic after a credit purchase (used by OutOfCreditsModal & TeaserCreditModal)
+  // Shared resume logic after a credit purchase (used by BuyCreditsModal & TeaserCreditModal)
   const resumeAfterPurchase = useCallback(async (newBalance: number) => {
     setCoinBalance(newBalance);
 
@@ -1324,7 +1322,7 @@ export default function ChatServicePage() {
               setFreeTrialCoins(startData.pricing.freeCoins ?? 0);
             }
           } else if (startRes.status === 402) {
-            setShowOutOfCredits(true);
+            setShowBuyCredits(true);
             setMessages((prev) => prev.filter((m) => m.id !== userMessage.id));
             setIsTyping(false);
             setIsSending(false);
@@ -1441,7 +1439,7 @@ export default function ChatServicePage() {
             console.error('  Full response:', JSON.stringify(errData, null, 2));
           } catch {}
           setCoinBalance(0);
-          setShowOutOfCredits(true);
+          setShowBuyCredits(true);
           // End server session but keep session object + messages in state
           // so the UI stays consistent (chat visible, no "Begin Reading" flash).
           // The session is replaced with a new one in onSuccess after payment.
@@ -2258,20 +2256,19 @@ export default function ChatServicePage() {
       )}
       </div>
 
-      {/* Out of Credits Modal */}
-      <OutOfCreditsModal
-        open={showOutOfCredits}
+      {/* Buy Credits Modal */}
+      <BuyCreditsModal
+        open={showBuyCredits}
         onOpenChange={(open) => {
-          setShowOutOfCredits(open);
-          // User dismissed without paying — clear the stale session and show divider
-          // Skip if payment just succeeded (onSuccess handles closing + resuming)
-          if (!open && !oocPaymentSucceededRef.current) {
+          setShowBuyCredits(open);
+          // User dismissed without paying while out of credits — clear stale session and show divider
+          if (!open && !oocPaymentSucceededRef.current && coinBalance <= 0) {
             sessionActiveRef.current = false;
             setSession(null);
             setCoinBalance(0);
             setInitialCoinBalance(0);
             setReadingEnded(true);
-            refreshUser(); // sync header coin display with actual DB balance
+            refreshUser();
             setMessages((prev) => [
               ...prev,
               {
@@ -2286,29 +2283,15 @@ export default function ChatServicePage() {
         }}
         personaId={selectedPersonaId}
         personaName={selectedPersona?.displayName}
-        personaAvatarUrl={selectedPersona?.avatarUrl}
-        pricingTiers={sessionPricing?.tiers}
-        onSuccess={async (newBalance: number) => {
-          oocPaymentSucceededRef.current = true;
-          setShowOutOfCredits(false);
-          await resumeAfterPurchase(newBalance);
-          oocPaymentSucceededRef.current = false;
-        }}
-      />
-
-      {/* Buy Credits Modal */}
-      <BuyCreditsModal
-        open={showBuyCredits}
-        onOpenChange={setShowBuyCredits}
-        personaId={selectedPersonaId}
-        personaName={selectedPersona?.displayName}
         onSuccess={async (newBalance) => {
+          oocPaymentSucceededRef.current = true;
           // Auto-close the refill modal so billing resumes immediately
           setShowBuyCredits(false);
 
-          // If reading had ended, resume the session with context (same as OutOfCreditsModal flow)
+          // If reading had ended, resume the session with context
           if (readingEnded) {
             await resumeAfterPurchase(newBalance);
+            oocPaymentSucceededRef.current = false;
             return;
           }
 
@@ -2340,6 +2323,7 @@ export default function ChatServicePage() {
           ]);
 
           toast({ title: "Credits purchased!", description: "Your reading continues." });
+          oocPaymentSucceededRef.current = false;
         }}
       />
 

@@ -78,10 +78,10 @@ export default function BuyCreditsModal({
             {/* Header */}
             <div className="text-center mb-6">
               <h2 className="text-2xl font-bold text-white font-serif mb-2">
-                Maximize Your Consultation
+                Your Credits Have Run Out
               </h2>
               <p className="text-white/60 text-sm">
-                Get the most out of your {personaName ? `session with ${personaName}` : "astrology consultation"} with more coins
+                Your conversation is saved — add coins to continue your {personaName ? `session with ${personaName}` : "reading"}
               </p>
             </div>
 
