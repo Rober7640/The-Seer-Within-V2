@@ -1,6 +1,7 @@
 declare global {
   interface Window {
     fbq: (...args: unknown[]) => void;
+    clarity: (...args: unknown[]) => void;
   }
 }
 

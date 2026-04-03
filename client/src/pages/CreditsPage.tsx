@@ -49,6 +49,14 @@ export default function CreditsPage() {
     }
   }, [authLoading, isAuthenticated, navigate]);
 
+  // Tag session for Microsoft Clarity filtering
+  useEffect(() => {
+    if (isAuthenticated && window.clarity) {
+      window.clarity("set", "intent", "purchase");
+      window.clarity("event", "credits_page_view");
+    }
+  }, [isAuthenticated]);
+
   async function fetchPurchaseHistory() {
     try {
       const historyRes = await authFetch("/api/credits/purchases");

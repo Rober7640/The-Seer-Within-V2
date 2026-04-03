@@ -28,6 +28,11 @@ export default function TeaserCreditModal({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ packageType: "welcome", personaId, source: "teaser" }),
       }).catch(() => {});
+      // Tag session for Microsoft Clarity filtering
+      if (window.clarity) {
+        window.clarity("set", "intent", "purchase");
+        window.clarity("event", "teaser_credit_modal");
+      }
     }
   }, [open]);
 

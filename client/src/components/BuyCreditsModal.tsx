@@ -48,6 +48,11 @@ export default function BuyCreditsModal({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ packageType: selectedPackage, personaId, source: "buy_credits_modal" }),
       }).catch(() => {});
+      // Tag session for Microsoft Clarity filtering
+      if (window.clarity) {
+        window.clarity("set", "intent", "purchase");
+        window.clarity("event", isOutOfCredits ? "out_of_credits_modal" : "buy_credits_modal");
+      }
     }
   }, [open]);
 
