@@ -280,8 +280,12 @@ export async function sendMigrationEmail1(
 
 /**
  * Process Emails 2-8 for users who haven't logged in.
- * Called by the cron job.
+ * Called by the cron job. Capped at 500 emails per run to avoid
+ * overwhelming Resend/Anthropic APIs. Remaining users are picked
+ * up in subsequent cron runs (every 15 minutes).
  */
+const FOLLOWUP_BATCH_LIMIT = 500;
+
 export async function processMigrationDripQueue(): Promise<{
   processed: number;
   sent: number;
@@ -302,10 +306,15 @@ export async function processMigrationDripQueue(): Promise<{
     .delete(migrationDripEmails)
     .where(eq(migrationDripEmails.status, 'failed'));
 
+  let totalSentThisRun = 0;
+
   // Process each sequence: Email 2 through Email 8
   for (let seq = 2; seq <= TOTAL_EMAILS; seq++) {
+    if (totalSentThisRun >= FOLLOWUP_BATCH_LIMIT) break;
+
     const prevSeq = seq - 1;
     const delayHours = DELAY_HOURS_BY_SEQUENCE[seq];
+    const remaining = FOLLOWUP_BATCH_LIMIT - totalSentThisRun;
 
     const candidates = await db
       .select({
@@ -325,15 +334,18 @@ export async function processMigrationDripQueue(): Promise<{
           // This email not yet sent/pending
           sql`${migrationDripEmails.userId} NOT IN (SELECT user_id FROM migration_drip_emails WHERE sequence_number = ${sql.raw(String(seq))} AND status IN ('sent', 'pending'))`,
         ),
-      );
+      )
+      .limit(remaining);
 
     for (const row of candidates) {
+      if (totalSentThisRun >= FOLLOWUP_BATCH_LIMIT) break;
       stats.processed++;
       try {
         const candidate = await loadCandidate(row.userId);
         if (!candidate) { stats.skipped++; continue; }
         await sendDripEmail(candidate, seq as SequenceNumber, evelyn);
         stats.sent++;
+        totalSentThisRun++;
       } catch (error: any) {
         stats.failed++;
         stats.errors.push(`Email ${seq} - ${row.userId}: ${error?.message}`);
@@ -342,7 +354,7 @@ export async function processMigrationDripQueue(): Promise<{
     }
   }
 
-  logger.info('Migration drip queue complete', stats);
+  logger.info('Migration drip queue complete', { ...stats, totalSentThisRun, limit: FOLLOWUP_BATCH_LIMIT });
   return stats;
 }
 
