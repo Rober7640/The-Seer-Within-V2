@@ -63,19 +63,25 @@ router.get('/migrated-stats', async (req: Request, res: Response) => {
 router.get('/new-v1-stats', async (req: Request, res: Response) => {
   try {
     const base = newV1Condition();
-    const [totalNewV1, email1Sent, email2Sent, email3Sent, opened, clicked, loggedIn] = await Promise.all([
+
+    // Build per-sequence count queries for all 8 emails
+    const emailCountQueries = [];
+    for (let seq = 1; seq <= 8; seq++) {
+      emailCountQueries.push(
+        db.select({ c: count() }).from(migrationDripEmails)
+          .innerJoin(users, eq(users.id, migrationDripEmails.userId))
+          .where(and(base, eq(migrationDripEmails.sequenceNumber, seq), eq(migrationDripEmails.status, 'sent'))),
+      );
+    }
+
+    const [totalNewV1, ...emailCounts] = await Promise.all([
       db.select({ c: count() }).from(migrationDripEmails)
         .innerJoin(users, eq(users.id, migrationDripEmails.userId))
         .where(base),
-      db.select({ c: count() }).from(migrationDripEmails)
-        .innerJoin(users, eq(users.id, migrationDripEmails.userId))
-        .where(and(base, eq(migrationDripEmails.sequenceNumber, 1), eq(migrationDripEmails.status, 'sent'))),
-      db.select({ c: count() }).from(migrationDripEmails)
-        .innerJoin(users, eq(users.id, migrationDripEmails.userId))
-        .where(and(base, eq(migrationDripEmails.sequenceNumber, 2), eq(migrationDripEmails.status, 'sent'))),
-      db.select({ c: count() }).from(migrationDripEmails)
-        .innerJoin(users, eq(users.id, migrationDripEmails.userId))
-        .where(and(base, eq(migrationDripEmails.sequenceNumber, 3), eq(migrationDripEmails.status, 'sent'))),
+      ...emailCountQueries,
+    ]);
+
+    const [opened, clicked, loggedIn] = await Promise.all([
       db.select({ c: count() }).from(migrationDripEmails)
         .innerJoin(users, eq(users.id, migrationDripEmails.userId))
         .where(and(base, sql`${migrationDripEmails.openedAt} IS NOT NULL`)),
@@ -86,11 +92,18 @@ router.get('/new-v1-stats', async (req: Request, res: Response) => {
         .where(and(newV1Condition(), sql`${users.lastLoginAt} IS NOT NULL`)),
     ]);
 
+    const emailSent: Record<number, number> = {};
+    for (let i = 0; i < 8; i++) {
+      emailSent[i + 1] = emailCounts[i]?.[0]?.c ?? 0;
+    }
+
     return res.json({
       totalNewV1: totalNewV1[0]?.c ?? 0,
-      email1Sent: email1Sent[0]?.c ?? 0,
-      email2Sent: email2Sent[0]?.c ?? 0,
-      email3Sent: email3Sent[0]?.c ?? 0,
+      emailSent,
+      // Legacy fields
+      email1Sent: emailSent[1] ?? 0,
+      email2Sent: emailSent[2] ?? 0,
+      email3Sent: emailSent[3] ?? 0,
       opened: opened[0]?.c ?? 0,
       clicked: clicked[0]?.c ?? 0,
       loggedIn: loggedIn[0]?.c ?? 0,

@@ -126,7 +126,7 @@ export function initializeCronJobs(): void {
   );
 
   // Migration drip batch processor — every 15 minutes
-  // Handles: auto-sending next Email #1 batch when due + Email #2/#3 queue processing
+  // Handles: auto-sending next Email #1 batch when due + Email #2-#8 queue processing
   cron.schedule(
     '*/15 * * * *',
     async () => {
@@ -141,7 +141,7 @@ export function initializeCronJobs(): void {
           logger.info('Cron: Migration drip batch sent', { batchStats: result.batchStats });
         }
         if (result.queueStats && (result.queueStats.sent > 0 || result.queueStats.failed > 0)) {
-          logger.info('Cron: Migration drip Email 2/3 processed', { queueStats: result.queueStats });
+          logger.info('Cron: Migration drip follow-up emails processed', { queueStats: result.queueStats });
         }
       } catch (error) {
         logger.error('Cron: Migration drip processing failed', { error: (error as Error).message });

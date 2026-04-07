@@ -23,6 +23,7 @@ interface DripEmail {
 
 interface MigrationStats {
   totalEligible: number;
+  emailSent: Record<number, number>;
   email1Sent: number;
   email2Sent: number;
   email3Sent: number;
@@ -152,7 +153,7 @@ export default function EmailDripMigratedV1() {
       const res = await adminFetch("/api/admin/email-drip/pause-campaign", { method: "POST" });
       const data = await res.json();
       if (data.success) {
-        setActionResult("Campaign paused. Email #2/#3 for already-sent users will still process.");
+        setActionResult("Campaign paused. Follow-up emails for already-sent users will still process.");
         fetchBatchStatus();
       }
     } catch {} finally { setActionLoading(false); }
@@ -366,35 +367,37 @@ export default function EmailDripMigratedV1() {
 
       {/* Stats */}
       {stats && (
-        <div className="grid grid-cols-7 gap-3 mb-6">
-          <Card className="bg-gray-900 border-gray-800 p-4 text-center">
-            <div className="text-2xl font-bold text-white">{stats.totalEligible}</div>
-            <div className="text-xs text-gray-500 mt-1">Eligible</div>
-          </Card>
-          <Card className="bg-gray-900 border-gray-800 p-4 text-center">
-            <div className="text-2xl font-bold text-emerald-400">{stats.email1Sent}</div>
-            <div className="text-xs text-gray-500 mt-1">Email 1 Sent</div>
-          </Card>
-          <Card className="bg-gray-900 border-gray-800 p-4 text-center">
-            <div className="text-2xl font-bold text-blue-400">{stats.email2Sent}</div>
-            <div className="text-xs text-gray-500 mt-1">Email 2 Sent</div>
-          </Card>
-          <Card className="bg-gray-900 border-gray-800 p-4 text-center">
-            <div className="text-2xl font-bold text-purple-400">{stats.email3Sent}</div>
-            <div className="text-xs text-gray-500 mt-1">Email 3 Sent</div>
-          </Card>
-          <Card className="bg-gray-900 border-gray-800 p-4 text-center">
-            <div className="text-2xl font-bold text-cyan-400">{stats.opened}</div>
-            <div className="text-xs text-gray-500 mt-1">Opened</div>
-          </Card>
-          <Card className="bg-gray-900 border-gray-800 p-4 text-center">
-            <div className="text-2xl font-bold text-orange-400">{stats.clicked}</div>
-            <div className="text-xs text-gray-500 mt-1">Clicked</div>
-          </Card>
-          <Card className="bg-gray-900 border-gray-800 p-4 text-center">
-            <div className="text-2xl font-bold text-amber-400">{stats.loggedIn}</div>
-            <div className="text-xs text-gray-500 mt-1">Logged In</div>
-          </Card>
+        <div className="space-y-3 mb-6">
+          <div className="grid grid-cols-4 gap-3">
+            <Card className="bg-gray-900 border-gray-800 p-4 text-center">
+              <div className="text-2xl font-bold text-white">{stats.totalEligible}</div>
+              <div className="text-xs text-gray-500 mt-1">Eligible</div>
+            </Card>
+            <Card className="bg-gray-900 border-gray-800 p-4 text-center">
+              <div className="text-2xl font-bold text-cyan-400">{stats.opened}</div>
+              <div className="text-xs text-gray-500 mt-1">Opened</div>
+            </Card>
+            <Card className="bg-gray-900 border-gray-800 p-4 text-center">
+              <div className="text-2xl font-bold text-orange-400">{stats.clicked}</div>
+              <div className="text-xs text-gray-500 mt-1">Clicked</div>
+            </Card>
+            <Card className="bg-gray-900 border-gray-800 p-4 text-center">
+              <div className="text-2xl font-bold text-amber-400">{stats.loggedIn}</div>
+              <div className="text-xs text-gray-500 mt-1">Logged In</div>
+            </Card>
+          </div>
+          <div className="grid grid-cols-8 gap-2">
+            {[1, 2, 3, 4, 5, 6, 7, 8].map((seq) => {
+              const count = stats.emailSent?.[seq] ?? (seq === 1 ? stats.email1Sent : seq === 2 ? stats.email2Sent : seq === 3 ? stats.email3Sent : 0);
+              const colors = ['', 'text-emerald-400', 'text-blue-400', 'text-purple-400', 'text-pink-400', 'text-indigo-400', 'text-teal-400', 'text-rose-400', 'text-sky-400'];
+              return (
+                <Card key={seq} className="bg-gray-900 border-gray-800 p-3 text-center">
+                  <div className={`text-xl font-bold ${colors[seq]}`}>{count}</div>
+                  <div className="text-[10px] text-gray-500 mt-1">Email {seq}</div>
+                </Card>
+              );
+            })}
+          </div>
         </div>
       )}
 
@@ -406,9 +409,9 @@ export default function EmailDripMigratedV1() {
           </SelectTrigger>
           <SelectContent className="bg-gray-800 border-gray-700">
             <SelectItem value="all">All Emails</SelectItem>
-            <SelectItem value="1">Email 1</SelectItem>
-            <SelectItem value="2">Email 2</SelectItem>
-            <SelectItem value="3">Email 3</SelectItem>
+            {[1, 2, 3, 4, 5, 6, 7, 8].map((seq) => (
+              <SelectItem key={seq} value={String(seq)}>Email {seq}</SelectItem>
+            ))}
           </SelectContent>
         </Select>
 

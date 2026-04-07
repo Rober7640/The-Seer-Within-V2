@@ -1,9 +1,10 @@
 // Migration Drip Email Processor
 //
-// Handles the 3-email migration sequence for V1 funnel users migrated to V2.
+// Handles the 8-email migration sequence for V1 funnel users migrated to V2.
 // - Email 1: Sent manually via admin trigger (or immediately for new funnel users)
 // - Email 2: Sent 24 hours after Email 1 (via cron)
 // - Email 3: Sent 24 hours after Email 2 (via cron)
+// - Emails 4-8: Sent 72 hours (3 days) apart after Email 3 (via cron)
 //
 // Stops if user logs into V2 (lastLoginAt gets set).
 
@@ -41,11 +42,22 @@ const FREE_COINS = 180;
 const EVELYN_SLUG = 'evelyn-cross';
 
 // Hours after previous email before next one fires
-const EMAIL2_DELAY_HOURS = 24;
-const EMAIL3_DELAY_HOURS = 24; // 24h after Email 2
+const DELAY_HOURS_BY_SEQUENCE: Record<number, number> = {
+  2: 24,   // 1 day after Email 1
+  3: 24,   // 1 day after Email 2
+  4: 72,   // 3 days after Email 3
+  5: 72,   // 3 days after Email 4
+  6: 72,   // 3 days after Email 5
+  7: 72,   // 3 days after Email 6
+  8: 72,   // 3 days after Email 7
+};
+
+const TOTAL_EMAILS = 8;
+
+type SequenceNumber = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
 
 // Sequence-specific guidance for Haiku
-const SEQUENCE_CONTEXT = {
+const SEQUENCE_CONTEXT: Record<SequenceNumber, { tone: string; angle: string; signOff: string }> = {
   1: {
     tone: 'warm and personal, like a friend reaching out',
     angle: 'reference their specific concern from the reading, invite them to a new space to continue',
@@ -61,7 +73,32 @@ const SEQUENCE_CONTEXT = {
     angle: 'a specific feeling or vision you have been holding for them — this is your last message',
     signOff: 'I will be here when you are ready, Evelyn',
   },
-} as const;
+  4: {
+    tone: 'casual and checking in, like a friend who texted and didn\'t hear back',
+    angle: 'I sent you something a few days ago — not sure if you saw it. Your reading stuck with me.',
+    signOff: 'Just checking in, Evelyn',
+  },
+  5: {
+    tone: 'gently concerned, slightly surprised you are following up again',
+    angle: 'I don\'t usually follow up like this, but something about your situation keeps coming back to me.',
+    signOff: 'Something keeps pulling me back, Evelyn',
+  },
+  6: {
+    tone: 'honest and personal, acknowledging they are busy',
+    angle: 'I know life gets busy. I just didn\'t want what I saw for you to go unheard.',
+    signOff: 'I didn\'t want this to go unsaid, Evelyn',
+  },
+  7: {
+    tone: 'one last heartfelt try, gentle urgency without pressure',
+    angle: 'I\'ve been holding onto something about their specific concern. This is me reaching out one last time.',
+    signOff: 'One last time, Evelyn',
+  },
+  8: {
+    tone: 'soft farewell, warm and respectful with no pressure',
+    angle: 'I won\'t keep filling your inbox. But if you ever want to pick up where we left off, I\'m here.',
+    signOff: 'The door is always open, Evelyn',
+  },
+};
 
 // ============================================
 // BATCH CONFIG — stored in system_config table
@@ -242,8 +279,8 @@ export async function sendMigrationEmail1(
 }
 
 /**
- * Process Email 2 and Email 3 for users who haven't logged in.
- * Called by the 6-hour cron.
+ * Process Emails 2-8 for users who haven't logged in.
+ * Called by the cron job.
  */
 export async function processMigrationDripQueue(): Promise<{
   processed: number;
@@ -260,81 +297,49 @@ export async function processMigrationDripQueue(): Promise<{
     return stats;
   }
 
-  const now = new Date();
-
   // Clean up failed records so they can be retried
   await db
     .delete(migrationDripEmails)
     .where(eq(migrationDripEmails.status, 'failed'));
 
-  // Find users who need Email 2: Email 1 sent 24+ hours ago, no Email 2 yet, not logged in
-  const email2Candidates = await db
-    .select({
-      userId: migrationDripEmails.userId,
-      sentAt: migrationDripEmails.sentAt,
-    })
-    .from(migrationDripEmails)
-    .innerJoin(users, eq(users.id, migrationDripEmails.userId))
-    .where(
-      and(
-        eq(migrationDripEmails.sequenceNumber, 1),
-        eq(migrationDripEmails.status, 'sent'),
-        isNull(users.lastLoginAt),
-        eq(users.accountStatus, 'active'),
-        // Email 1 sent 24+ hours ago
-        sql`${migrationDripEmails.sentAt} <= NOW() - INTERVAL '${sql.raw(String(EMAIL2_DELAY_HOURS))} hours'`,
-        // No Email 2 sent/pending yet
-        sql`${migrationDripEmails.userId} NOT IN (SELECT user_id FROM migration_drip_emails WHERE sequence_number = 2 AND status IN ('sent', 'pending'))`,
-      ),
-    );
+  // Process each sequence: Email 2 through Email 8
+  for (let seq = 2; seq <= TOTAL_EMAILS; seq++) {
+    const prevSeq = seq - 1;
+    const delayHours = DELAY_HOURS_BY_SEQUENCE[seq];
 
-  for (const row of email2Candidates) {
-    stats.processed++;
-    try {
-      const candidate = await loadCandidate(row.userId);
-      if (!candidate) { stats.skipped++; continue; }
-      await sendDripEmail(candidate, 2, evelyn);
-      stats.sent++;
-    } catch (error: any) {
-      stats.failed++;
-      stats.errors.push(`Email 2 - ${row.userId}: ${error?.message}`);
+    const candidates = await db
+      .select({
+        userId: migrationDripEmails.userId,
+        sentAt: migrationDripEmails.sentAt,
+      })
+      .from(migrationDripEmails)
+      .innerJoin(users, eq(users.id, migrationDripEmails.userId))
+      .where(
+        and(
+          eq(migrationDripEmails.sequenceNumber, prevSeq),
+          eq(migrationDripEmails.status, 'sent'),
+          isNull(users.lastLoginAt),
+          eq(users.accountStatus, 'active'),
+          // Previous email sent delay+ hours ago
+          sql`${migrationDripEmails.sentAt} <= NOW() - INTERVAL '${sql.raw(String(delayHours))} hours'`,
+          // This email not yet sent/pending
+          sql`${migrationDripEmails.userId} NOT IN (SELECT user_id FROM migration_drip_emails WHERE sequence_number = ${sql.raw(String(seq))} AND status IN ('sent', 'pending'))`,
+        ),
+      );
+
+    for (const row of candidates) {
+      stats.processed++;
+      try {
+        const candidate = await loadCandidate(row.userId);
+        if (!candidate) { stats.skipped++; continue; }
+        await sendDripEmail(candidate, seq as SequenceNumber, evelyn);
+        stats.sent++;
+      } catch (error: any) {
+        stats.failed++;
+        stats.errors.push(`Email ${seq} - ${row.userId}: ${error?.message}`);
+      }
+      await new Promise((resolve) => setTimeout(resolve, 100));
     }
-    await new Promise((resolve) => setTimeout(resolve, 100));
-  }
-
-  // Find users who need Email 3: Email 2 sent 24+ hours ago, no Email 3 yet, not logged in
-  const email3Candidates = await db
-    .select({
-      userId: migrationDripEmails.userId,
-      sentAt: migrationDripEmails.sentAt,
-    })
-    .from(migrationDripEmails)
-    .innerJoin(users, eq(users.id, migrationDripEmails.userId))
-    .where(
-      and(
-        eq(migrationDripEmails.sequenceNumber, 2),
-        eq(migrationDripEmails.status, 'sent'),
-        isNull(users.lastLoginAt),
-        eq(users.accountStatus, 'active'),
-        // Email 2 sent 24+ hours ago
-        sql`${migrationDripEmails.sentAt} <= NOW() - INTERVAL '${sql.raw(String(EMAIL3_DELAY_HOURS))} hours'`,
-        // No Email 3 sent/pending yet
-        sql`${migrationDripEmails.userId} NOT IN (SELECT user_id FROM migration_drip_emails WHERE sequence_number = 3 AND status IN ('sent', 'pending'))`,
-      ),
-    );
-
-  for (const row of email3Candidates) {
-    stats.processed++;
-    try {
-      const candidate = await loadCandidate(row.userId);
-      if (!candidate) { stats.skipped++; continue; }
-      await sendDripEmail(candidate, 3, evelyn);
-      stats.sent++;
-    } catch (error: any) {
-      stats.failed++;
-      stats.errors.push(`Email 3 - ${row.userId}: ${error?.message}`);
-    }
-    await new Promise((resolve) => setTimeout(resolve, 100));
   }
 
   logger.info('Migration drip queue complete', stats);
@@ -397,7 +402,7 @@ async function loadCandidate(userId: string): Promise<MigrationCandidate | null>
  */
 async function sendDripEmail(
   candidate: MigrationCandidate,
-  sequenceNumber: 1 | 2 | 3,
+  sequenceNumber: SequenceNumber,
   evelyn: EvelynConfig,
 ): Promise<void> {
   // Generate email content via Haiku
@@ -411,10 +416,15 @@ async function sendDripEmail(
     ? (evelyn.avatarUrl.startsWith('http') ? evelyn.avatarUrl : `${BASE_URL}${evelyn.avatarUrl}`)
     : undefined;
 
-  const ctaLabels = {
+  const ctaLabels: Record<SequenceNumber, string> = {
     1: 'Pick Up Where You Left Off',
     2: 'Evelyn Has Something to Tell You',
     3: 'Hear Evelyn\'s Final Message',
+    4: 'See What Evelyn Sent You',
+    5: 'Hear What Keeps Coming Back',
+    6: 'Don\'t Let This Go Unheard',
+    7: 'One Last Message From Evelyn',
+    8: 'The Door Is Still Open',
   };
 
   const unsubscribeToken = randomUUID();
@@ -512,7 +522,7 @@ async function sendDripEmail(
  */
 async function generateDripEmail(
   candidate: MigrationCandidate,
-  sequenceNumber: 1 | 2 | 3,
+  sequenceNumber: SequenceNumber,
   personaName: string,
 ): Promise<{ subject: string; bodyHtml: string; bodyText: string; tokens: number }> {
   const ctx = SEQUENCE_CONTEXT[sequenceNumber];
@@ -527,7 +537,7 @@ ${candidate.vision ? `- Their vision/desires: ${candidate.vision}` : ''}
 ${candidate.emotionalResponse ? `- Emotional state: ${candidate.emotionalResponse}` : ''}
 ${candidate.location ? `- Location: ${candidate.location}` : ''}
 
-This is email #${sequenceNumber} of 3 in a re-engagement sequence.
+This is email #${sequenceNumber} of ${TOTAL_EMAILS} in a re-engagement sequence.
 Tone: ${ctx.tone}
 Angle: ${ctx.angle}
 Sign off with: "${ctx.signOff}"
@@ -539,6 +549,7 @@ Rules:
 - Do NOT be pushy or use sales language — this is a spiritual message
 - Do NOT mention "platform", "app", "website", or "account" — say "a new space" or "a place I've created"
 ${sequenceNumber === 1 ? '- Include this exact sentence somewhere in the body: "I\'ve set aside 3 minutes for you to ask anything and explore today\'s insights. Start your private conversation."' : ''}
+${sequenceNumber >= 4 ? '- Write as if you previously sent them a message and haven\'t heard back — like a real person following up, not a marketing email' : ''}
 - Body: 80-150 words
 - Subject line: under 60 characters, personal, not clickbait
 
@@ -580,7 +591,7 @@ Return ONLY valid JSON:
 
     const bucketRef = candidate.bucket ? `our conversation about ${candidate.bucket}` : 'our reading together';
 
-    const fallbacks = {
+    const fallbacks: Record<number, { subject: string; body: string }> = {
       1: {
         subject: `I've been thinking about you, ${candidate.firstName}`,
         body: `Dear ${candidate.firstName},\n\nIt's Evelyn. Since ${bucketRef}, I've been sensing there's more we need to explore. I've created a new space where we can continue our journey. I've set aside 3 minutes for you to ask anything and explore today's insights. Start your private conversation.\n\nI'll be here when you're ready.\n\nWith light,\nEvelyn`,
@@ -592,6 +603,26 @@ Return ONLY valid JSON:
       3: {
         subject: `A final message from Evelyn`,
         body: `Dear ${candidate.firstName},\n\nI have held a feeling for you since our reading. I don't share such things lightly, but this one has stayed with me.\n\nWhenever you are ready to hear it, I will be waiting.\n\nI will be here when you are ready,\nEvelyn`,
+      },
+      4: {
+        subject: `Did you see my last message, ${candidate.firstName}?`,
+        body: `${candidate.firstName},\n\nI sent you something a few days ago — I'm not sure if you saw it. I don't normally follow up like this, but ${bucketRef} has stayed with me.\n\nI just wanted to make sure it reached you.\n\nJust checking in,\nEvelyn`,
+      },
+      5: {
+        subject: `Something about you keeps coming back to me`,
+        body: `${candidate.firstName},\n\nI don't usually follow up like this. But something about what you shared during ${bucketRef} keeps pulling me back.\n\nI can't quite let it go.\n\nSomething keeps pulling me back,\nEvelyn`,
+      },
+      6: {
+        subject: `I didn't want this to go unheard, ${candidate.firstName}`,
+        body: `${candidate.firstName},\n\nI know life gets busy. I really do. But I didn't want what I saw for you during ${bucketRef} to just quietly disappear.\n\nSome things are worth saying twice.\n\nI didn't want this to go unsaid,\nEvelyn`,
+      },
+      7: {
+        subject: `One last time, ${candidate.firstName}`,
+        body: `${candidate.firstName},\n\nI've been holding onto something about ${bucketRef}. This is me reaching out one last time.\n\nIf you ever want to hear what I've been sensing, I'm here.\n\nOne last time,\nEvelyn`,
+      },
+      8: {
+        subject: `The door is always open`,
+        body: `${candidate.firstName},\n\nI won't keep filling your inbox. But I want you to know — if you ever want to pick up where we left off with ${bucketRef}, I'm here. No pressure, no rush.\n\nI wish you nothing but light.\n\nThe door is always open,\nEvelyn`,
       },
     };
 
@@ -760,34 +791,43 @@ async function getEvelynConfig(): Promise<EvelynConfig | null> {
  * Get migration drip stats for admin dashboard.
  * Only counts bulk-migrated users (V1 conversation created before 2026-03-18).
  */
-export async function getMigrationDripStats(): Promise<{
+export interface MigrationDripStats {
   totalEligible: number;
-  email1Sent: number;
-  email2Sent: number;
-  email3Sent: number;
+  emailSent: Record<number, number>;
   opened: number;
   clicked: number;
   loggedIn: number;
-}> {
+  // Legacy fields for backward compatibility with admin UI
+  email1Sent: number;
+  email2Sent: number;
+  email3Sent: number;
+}
+
+export async function getMigrationDripStats(): Promise<MigrationDripStats> {
   // Migrated V1 = users whose linked conversation was created before the migration date
   const MIGRATION_DATE = '2026-03-18';
   const migratedUserFilter = sql`${users.migratedFromConversationId} IN (SELECT id FROM conversations WHERE created_at < ${MIGRATION_DATE})`;
   // Eligible = migrated users whose conversation has both concern AND vision filled (matches sendMigrationEmail1 filter)
   const eligibleFilter = sql`${users.migratedFromConversationId} IN (SELECT id FROM conversations WHERE created_at < ${MIGRATION_DATE} AND concern IS NOT NULL AND concern != '' AND vision IS NOT NULL AND vision != '')`;
 
-  const [eligible, e1, e2, e3, opened, clicked, loggedIn] = await Promise.all([
+  // Build per-sequence count queries
+  const emailCountQueries = [];
+  for (let seq = 1; seq <= TOTAL_EMAILS; seq++) {
+    emailCountQueries.push(
+      db.select({ c: count() }).from(migrationDripEmails)
+        .innerJoin(users, eq(users.id, migrationDripEmails.userId))
+        .where(and(migratedUserFilter, eq(migrationDripEmails.sequenceNumber, seq), eq(migrationDripEmails.status, 'sent'))),
+    );
+  }
+
+  const [eligible, ...emailCounts] = await Promise.all([
     db.select({ c: count() }).from(users).where(
       and(eligibleFilter, isNull(users.lastLoginAt)),
     ),
-    db.select({ c: count() }).from(migrationDripEmails)
-      .innerJoin(users, eq(users.id, migrationDripEmails.userId))
-      .where(and(migratedUserFilter, eq(migrationDripEmails.sequenceNumber, 1), eq(migrationDripEmails.status, 'sent'))),
-    db.select({ c: count() }).from(migrationDripEmails)
-      .innerJoin(users, eq(users.id, migrationDripEmails.userId))
-      .where(and(migratedUserFilter, eq(migrationDripEmails.sequenceNumber, 2), eq(migrationDripEmails.status, 'sent'))),
-    db.select({ c: count() }).from(migrationDripEmails)
-      .innerJoin(users, eq(users.id, migrationDripEmails.userId))
-      .where(and(migratedUserFilter, eq(migrationDripEmails.sequenceNumber, 3), eq(migrationDripEmails.status, 'sent'))),
+    ...emailCountQueries,
+  ]);
+
+  const [opened, clicked, loggedIn] = await Promise.all([
     db.select({ c: count() }).from(migrationDripEmails)
       .innerJoin(users, eq(users.id, migrationDripEmails.userId))
       .where(and(migratedUserFilter, sql`${migrationDripEmails.openedAt} IS NOT NULL`)),
@@ -799,11 +839,18 @@ export async function getMigrationDripStats(): Promise<{
     ),
   ]);
 
+  const emailSent: Record<number, number> = {};
+  for (let i = 0; i < TOTAL_EMAILS; i++) {
+    emailSent[i + 1] = emailCounts[i]?.[0]?.c ?? 0;
+  }
+
   return {
     totalEligible: eligible[0]?.c ?? 0,
-    email1Sent: e1[0]?.c ?? 0,
-    email2Sent: e2[0]?.c ?? 0,
-    email3Sent: e3[0]?.c ?? 0,
+    emailSent,
+    // Legacy fields
+    email1Sent: emailSent[1] ?? 0,
+    email2Sent: emailSent[2] ?? 0,
+    email3Sent: emailSent[3] ?? 0,
     opened: opened[0]?.c ?? 0,
     clicked: clicked[0]?.c ?? 0,
     loggedIn: loggedIn[0]?.c ?? 0,
