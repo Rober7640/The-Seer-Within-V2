@@ -4,7 +4,7 @@ import { CosmicBackground } from '../components/CosmicBackground';
 import { BackgroundMusic } from '../components/BackgroundMusic';
 import { Upsell2CTA, Upsell2DownsellCTA, ShippingForm, QuickReplies } from '../components/upsell';
 import { useUpsell2Chat, Message } from '../hooks/useUpsell2Chat';
-import { trackPurchase } from '../lib/facebook';
+import { trackUpsellPurchase } from '../lib/facebook';
 import { Volume2, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -129,13 +129,9 @@ export default function Upsell2Page() {
         const data = await response.json();
         setUserData(data);
 
-        // Track Upsell 1 Purchase event on /welcome2 load (fires once per session)
+        // Track Upsell 1 event on /welcome2 load (fires once per session)
         if (data.upsellPurchased) {
-          const upsell1Key = `seer_upsell1_purchase_tracked_${sid}`;
-          if (!sessionStorage.getItem(upsell1Key)) {
-            trackPurchase(47, "USD", data.email);
-            sessionStorage.setItem(upsell1Key, "true");
-          }
+          trackUpsellPurchase(47, "USD", data.email, "Protection Ritual + Lava Stone");
         }
 
         if (declined === 'true') {

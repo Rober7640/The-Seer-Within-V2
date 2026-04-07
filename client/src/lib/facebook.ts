@@ -126,8 +126,8 @@ export function trackPurchase(value: number = 35, currency: string = 'USD', emai
   });
 }
 
-export function trackUpsell2Purchase(value: number, currency: string = 'USD', email?: string, contentName: string = 'Manifestation Bracelet'): void {
-  const dedupKey = `upsell2_purchase_tracked_${value}`;
+export function trackUpsellPurchase(value: number, currency: string = 'USD', email?: string, contentName: string = 'Manifestation Bracelet'): void {
+  const dedupKey = `upsell_purchase_tracked_${contentName}_${value}`;
   if (typeof window !== 'undefined' && sessionStorage.getItem(dedupKey)) {
     return;
   }
@@ -136,16 +136,16 @@ export function trackUpsell2Purchase(value: number, currency: string = 'USD', em
   }
 
   const eventId = generateEventId();
-  
+
   if (typeof window !== 'undefined' && window.fbq) {
-    window.fbq('track', 'Purchase', {
+    window.fbq('trackCustom', 'Upsell', {
       value,
       currency,
       content_name: contentName,
     }, { eventID: eventId });
   }
-  
-  sendServerEvent('Purchase', eventId, {
+
+  sendServerEvent('Upsell', eventId, {
     value,
     currency,
     email,

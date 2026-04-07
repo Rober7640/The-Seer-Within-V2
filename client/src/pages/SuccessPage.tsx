@@ -3,7 +3,7 @@ import { useSearch } from "wouter";
 import { CosmicBackground } from "../components/CosmicBackground";
 import { Link } from "wouter";
 import { CheckCircle, Package, Mail, Sparkles, Gem } from "lucide-react";
-import { trackPurchase, trackUpsell2Purchase } from "../lib/facebook";
+import { trackPurchase, trackUpsellPurchase } from "../lib/facebook";
 
 interface OrderData {
   firstName: string;
@@ -149,14 +149,10 @@ export default function SuccessPage() {
           setHasUpsell(boughtUpsell1);
           setHasUpsell2(boughtUpsell2);
 
-          // Track Upsell 2 Purchase event on /success load (fires once per session)
+          // Track Upsell 2 event on /success load (fires once per session)
           if (boughtUpsell2 && sessionId) {
-            const upsell2Key = `seer_upsell2_purchase_tracked_${sessionId}`;
-            if (!sessionStorage.getItem(upsell2Key)) {
-              const amount = (data.upsell2Amount || 4700) / 100;
-              trackUpsell2Purchase(amount, "USD", data.email, "Manifestation Bracelet");
-              sessionStorage.setItem(upsell2Key, "true");
-            }
+            const amount = (data.upsell2Amount || 4700) / 100;
+            trackUpsellPurchase(amount, "USD", data.email, "Manifestation Bracelet");
           }
         }
       } catch (err) {
