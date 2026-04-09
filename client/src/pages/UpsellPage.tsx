@@ -79,6 +79,18 @@ export default function UpsellPage() {
         if (!sessionStorage.getItem(purchaseKey)) {
           const purchaseAmount = (data.mainPurchaseAmount || 3500) / 100;
           trackPurchase(purchaseAmount, "USD", data.email);
+
+          // Trackdesk affiliate conversion tracking - main purchase
+          if (typeof window.trackdesk === "function") {
+            window.trackdesk("the-seer-within", "conversion", {
+              conversionType: "sale",
+              amount: { value: purchaseAmount },
+              externalId: sid,
+              customerId: data.email,
+              currencyCode: "USD",
+            });
+          }
+
           sessionStorage.setItem(purchaseKey, "true");
         }
 

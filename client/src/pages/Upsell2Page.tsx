@@ -132,6 +132,17 @@ export default function Upsell2Page() {
         // Track Upsell 1 event on /welcome2 load (fires once per session)
         if (data.upsellPurchased) {
           trackUpsellPurchase(47, "USD", data.email, "Protection Ritual + Lava Stone");
+
+          // Trackdesk affiliate conversion tracking - upsell 1
+          if (typeof window.trackdesk === "function") {
+            window.trackdesk("the-seer-within", "conversion", {
+              conversionType: "sale",
+              amount: { value: 47 },
+              externalId: `${sid}_upsell1`,
+              customerId: data.email,
+              currencyCode: "USD",
+            });
+          }
         }
 
         if (declined === 'true') {
