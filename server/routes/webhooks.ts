@@ -478,10 +478,10 @@ async function reportTrackdeskConversion(params: {
       body: JSON.stringify({
         clickId: params.clickId,
         conversionType: 'sale',
-        amount: params.amount,
+        amount: { value: params.amount },
         externalId: params.externalId,
         customerId: params.customerId,
-        currency: params.currency || 'USD',
+        currencyCode: params.currency || 'USD',
       }),
     });
 
