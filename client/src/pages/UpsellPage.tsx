@@ -84,10 +84,10 @@ export default function UpsellPage() {
           if (typeof window.trackdesk === "function") {
             window.trackdesk("the-seer-within", "conversion", {
               conversionType: "sale",
-              amount: { value: purchaseAmount },
+              amount: purchaseAmount,
               externalId: sid,
               customerId: data.email,
-              currencyCode: "USD",
+              currency: "USD",
             });
           }
 
