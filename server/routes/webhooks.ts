@@ -478,7 +478,7 @@ async function reportTrackdeskConversion(params: {
       body: JSON.stringify({
         clickId: params.clickId,
         conversionType: 'sale',
-        amount: { value: params.amount },
+        amount: { value: String(params.amount) },
         externalId: params.externalId,
         customerId: params.customerId,
         currencyCode: params.currency || 'USD',
