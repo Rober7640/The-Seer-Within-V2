@@ -405,7 +405,8 @@ export async function registerRoutes(
         firstName,
         bucket,
         type = "main",
-      } = req.body as CheckoutRequest;
+        trackdeskClickId,
+      } = req.body as CheckoutRequest & { trackdeskClickId?: string };
 
       // Mark as purchased in Supabase (optimistic - will be confirmed by webhook in production)
       if (email) {
@@ -460,10 +461,12 @@ export async function registerRoutes(
         cancel_url: `${getBaseUrl(req)}/chat?cancelled=true`,
         metadata: {
           firstName,
+          email,
           bucket,
           type,
           app: "the-seer-within",
           product: "sacred_clearing_ritual",
+          ...(trackdeskClickId && { trackdeskClickId }),
         },
       });
 
@@ -1153,6 +1156,7 @@ export async function registerRoutes(
 
         const { email, firstName, bucket, originalSessionId } =
           parseResult.data;
+        const trackdeskClickId = req.body?.trackdeskClickId as string | undefined;
 
         if (!stripe) {
           logger.warn("Stripe not configured - returning mock URL");
@@ -1198,6 +1202,7 @@ export async function registerRoutes(
             originalSession: originalSessionId,
             firstName,
             bucket,
+            ...(trackdeskClickId && { trackdeskClickId }),
           },
         });
 

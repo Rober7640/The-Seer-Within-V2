@@ -16,7 +16,7 @@ import {
   getTooShortResponse,
   getPriceQuestionResponse
 } from '@/lib/intent'
-import { trackLead, trackInitiateCheckout } from '@/lib/facebook'
+import { trackLead, trackInitiateCheckout, getTrackdeskClickId } from '@/lib/facebook'
 
 const STORAGE_KEY = 'seer_conversation'
 const SESSION_EXPIRY_HOURS = 24
@@ -1170,6 +1170,7 @@ export function useConversation() {
           firstName: chat.userData.firstName,
           bucket: chat.userData.bucket,
           type,
+          trackdeskClickId: getTrackdeskClickId(),
         }),
       })
       const { url } = await response.json()

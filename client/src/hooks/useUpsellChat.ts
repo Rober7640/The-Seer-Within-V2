@@ -32,6 +32,7 @@ import {
   UPSELL_SUCCESS,
   UPSELL_SHIPPING_CONFIRMED,
 } from "@/lib/upsellMessages";
+import { getTrackdeskClickId } from "@/lib/facebook";
 
 // ============================================
 // TYPES
@@ -366,6 +367,7 @@ export function useUpsellChat({
             firstName: userData.firstName,
             bucket: userData.bucket,
             originalSessionId: sessionId,
+            trackdeskClickId: getTrackdeskClickId(),
           }),
         });
 

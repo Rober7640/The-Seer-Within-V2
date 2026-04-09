@@ -2,7 +2,14 @@ declare global {
   interface Window {
     fbq: (...args: unknown[]) => void;
     clarity: (...args: unknown[]) => void;
+    trackdesk: (...args: unknown[]) => void;
   }
+}
+
+/** Read the Trackdesk click-id cookie (set by their JS snippet). */
+export function getTrackdeskClickId(): string | null {
+  const match = document.cookie.match(/(?:^|;\s*)tdclick=([^;]*)/);
+  return match ? decodeURIComponent(match[1]) : null;
 }
 
 function generateEventId(): string {

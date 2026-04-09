@@ -1,7 +1,8 @@
-// Webhook handler for Resend email events and unsubscribe actions.
+// Webhook handler for Resend email events, Stripe payment events, and unsubscribe actions.
 
 import { Router, Request, Response } from 'express';
 import { Webhook } from 'svix';
+import Stripe from 'stripe';
 import { db } from '../lib/db';
 import { followUpEmails, userFollowUpPreferences, migrationDripEmails, topupEmails } from '@shared/schema';
 import { eq } from 'drizzle-orm';
@@ -438,5 +439,124 @@ function escapeHtml(str: string): string {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;');
 }
+
+// ============================================
+// STRIPE WEBHOOK — server-side conversion tracking
+// ============================================
+
+const stripeKey = process.env.STRIPE_SECRET_KEY;
+const stripeClient =
+  stripeKey && stripeKey !== 'sk_test_placeholder'
+    ? new Stripe(stripeKey)
+    : null;
+
+const TRACKDESK_API_KEY = process.env.TRACKDESK_API_KEY;
+
+/**
+ * Report a conversion to Trackdesk server-side.
+ * Fails silently — affiliate tracking should never block purchases.
+ */
+async function reportTrackdeskConversion(params: {
+  clickId: string;
+  amount: number;
+  externalId: string;
+  customerId: string;
+  currency?: string;
+}) {
+  if (!TRACKDESK_API_KEY) {
+    logger.warn('Trackdesk: API key not configured, skipping conversion');
+    return;
+  }
+
+  try {
+    const response = await fetch('https://api.trackdesk.com/v1/conversions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Api-Key': TRACKDESK_API_KEY,
+      },
+      body: JSON.stringify({
+        clickId: params.clickId,
+        conversionType: 'sale',
+        amount: { value: params.amount },
+        externalId: params.externalId,
+        customerId: params.customerId,
+        currencyCode: params.currency || 'USD',
+      }),
+    });
+
+    if (!response.ok) {
+      const text = await response.text();
+      logger.error(`Trackdesk conversion failed (${response.status}):`, text);
+    } else {
+      logger.info(`Trackdesk conversion reported: ${params.externalId} — $${params.amount}`);
+    }
+  } catch (err) {
+    logger.error('Trackdesk conversion error:', err);
+  }
+}
+
+/**
+ * POST /api/webhooks/stripe
+ * Handles Stripe checkout.session.completed events.
+ * - Reports affiliate conversions to Trackdesk (server-side, reliable)
+ */
+router.post('/stripe', async (req: Request, res: Response) => {
+  if (!stripeClient) {
+    logger.warn('Stripe webhook: Stripe not configured');
+    return res.status(400).json({ error: 'Stripe not configured' });
+  }
+
+  const sig = req.headers['stripe-signature'] as string;
+  const webhookSecret = process.env.STRIPE_TRACKDESK_WEBHOOK_SECRET;
+
+  if (!webhookSecret) {
+    logger.error('Stripe webhook: STRIPE_TRACKDESK_WEBHOOK_SECRET not set');
+    return res.status(500).json({ error: 'Webhook secret not configured' });
+  }
+
+  let event: Stripe.Event;
+
+  try {
+    const rawBody = (req as any).rawBody;
+    event = stripeClient.webhooks.constructEvent(rawBody, sig, webhookSecret);
+  } catch (err: any) {
+    logger.error('Stripe webhook signature verification failed:', err.message);
+    return res.status(400).json({ error: 'Invalid signature' });
+  }
+
+  // Handle checkout.session.completed
+  if (event.type === 'checkout.session.completed') {
+    const session = event.data.object as Stripe.Checkout.Session;
+    const metadata = session.metadata || {};
+    const trackdeskClickId = metadata.trackdeskClickId;
+    const product = metadata.product;
+    const email = metadata.email || metadata.firstName || session.customer_email || '';
+
+    logger.info(`Stripe webhook: checkout.session.completed — product=${product}, session=${session.id}`);
+
+    // Only report to Trackdesk if an affiliate click ID is present
+    if (trackdeskClickId) {
+      const amountTotal = (session.amount_total || 0) / 100; // cents to dollars
+
+      // Determine externalId based on product type
+      const externalId = product === 'protection_ritual'
+        ? `${metadata.originalSession || session.id}_upsell1`
+        : session.id;
+
+      reportTrackdeskConversion({
+        clickId: trackdeskClickId,
+        amount: amountTotal,
+        externalId,
+        customerId: email,
+      });
+    } else {
+      logger.info('Stripe webhook: No trackdeskClickId in metadata, skipping affiliate tracking');
+    }
+  }
+
+  // Always return 200 to acknowledge receipt
+  return res.json({ received: true });
+});
 
 export default router;
