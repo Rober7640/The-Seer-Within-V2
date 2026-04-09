@@ -8,8 +8,14 @@ declare global {
 
 /** Read the Trackdesk click-id cookie (set by their JS snippet). */
 export function getTrackdeskClickId(): string | null {
-  const match = document.cookie.match(/(?:^|;\s*)tdclick=([^;]*)/);
-  return match ? decodeURIComponent(match[1]) : null;
+  const match = document.cookie.match(/(?:^|;\s*)trakdesk_cid=([^;]*)/);
+  if (!match) return null;
+  try {
+    const parsed = JSON.parse(decodeURIComponent(match[1]));
+    return parsed.cid || null;
+  } catch {
+    return null;
+  }
 }
 
 function generateEventId(): string {
