@@ -23,7 +23,7 @@ import chatServiceRouter from "./routes/chatService";
 import creditsRouter from "./routes/credits";
 import adminRouter from "./routes/admin/index";
 import personasRouter from "./routes/personas";
-import webhooksRouter from "./routes/webhooks";
+import webhooksRouter, { reportTrackdeskConversion } from "./routes/webhooks";
 import userStatsRouter from "./routes/userStats";
 import migrateRouter from "./routes/migrate";
 import astrologyRouter from "./routes/astrology";
@@ -503,7 +503,7 @@ export async function registerRoutes(
   // Lead capture endpoint - saves to Supabase and AWeber
   app.post("/api/lead", async (req: Request, res: Response) => {
     try {
-      const { email, firstName, bucket, location, timeOfDay } = req.body;
+      const { email, firstName, bucket, location, timeOfDay, trackdeskClickId } = req.body;
 
       logger.info("Lead captured:", { email, firstName, bucket });
 
@@ -535,6 +535,18 @@ export async function registerRoutes(
         .catch((err) => {
           logger.warn("AWeber error (non-blocking):", err);
         });
+
+      // Report Lead conversion to Trackdesk (non-blocking)
+      if (trackdeskClickId && email) {
+        reportTrackdeskConversion({
+          clickId: trackdeskClickId,
+          conversionType: "lead",
+          externalId: email,
+          customerId: email,
+        }).catch((err) => {
+          logger.warn("Trackdesk lead error (non-blocking):", err);
+        });
+      }
 
       return res.json({ success: true });
     } catch (error) {

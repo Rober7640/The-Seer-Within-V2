@@ -456,11 +456,12 @@ const TRACKDESK_API_KEY = process.env.TRACKDESK_API_KEY;
  * Report a conversion to Trackdesk server-side.
  * Fails silently — affiliate tracking should never block purchases.
  */
-async function reportTrackdeskConversion(params: {
+export async function reportTrackdeskConversion(params: {
   clickId: string;
-  amount: number;
+  conversionType: 'sale' | 'lead';
   externalId: string;
   customerId: string;
+  amount?: number;
   currency?: string;
 }) {
   if (!TRACKDESK_API_KEY) {
@@ -469,27 +470,32 @@ async function reportTrackdeskConversion(params: {
   }
 
   try {
+    const body: Record<string, unknown> = {
+      clickId: params.clickId,
+      conversionType: params.conversionType,
+      externalId: params.externalId,
+      customerId: params.customerId,
+      currencyCode: params.currency || 'USD',
+    };
+    if (params.amount !== undefined) {
+      body.amount = { value: String(params.amount) };
+    }
+
     const response = await fetch('https://api.trackdesk.com/v1/conversions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'X-Api-Key': TRACKDESK_API_KEY,
       },
-      body: JSON.stringify({
-        clickId: params.clickId,
-        conversionType: 'sale',
-        amount: { value: String(params.amount) },
-        externalId: params.externalId,
-        customerId: params.customerId,
-        currencyCode: params.currency || 'USD',
-      }),
+      body: JSON.stringify(body),
     });
 
     if (!response.ok) {
       const text = await response.text();
       logger.error(`Trackdesk conversion failed (${response.status}):`, text);
     } else {
-      logger.info(`Trackdesk conversion reported: ${params.externalId} — $${params.amount}`);
+      const amountLabel = params.amount !== undefined ? ` — $${params.amount}` : '';
+      logger.info(`Trackdesk ${params.conversionType} reported: ${params.externalId}${amountLabel}`);
     }
   } catch (err) {
     logger.error('Trackdesk conversion error:', err);
@@ -546,6 +552,7 @@ router.post('/stripe', async (req: Request, res: Response) => {
 
       reportTrackdeskConversion({
         clickId: trackdeskClickId,
+        conversionType: 'sale',
         amount: amountTotal,
         externalId,
         customerId: email,

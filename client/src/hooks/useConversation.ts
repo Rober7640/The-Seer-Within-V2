@@ -365,6 +365,7 @@ export function useConversation() {
           email: input.trim(),
           firstName: currentChat.userData.firstName,
           bucket: currentChat.userData.bucket,
+          trackdeskClickId: getTrackdeskClickId(),
         }),
       })
       
