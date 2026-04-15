@@ -451,6 +451,7 @@ const stripeClient =
     : null;
 
 const TRACKDESK_API_KEY = process.env.TRACKDESK_API_KEY;
+const TRACKDESK_CONVERSION_URL = 'https://the-seer-within.trackdesk.com/tracking/conversion/v1';
 
 /**
  * Report a conversion to Trackdesk server-side.
@@ -464,6 +465,8 @@ export async function reportTrackdeskConversion(params: {
   amount?: number;
   currency?: string;
 }) {
+  // TRACKDESK_API_KEY acts as the feature flag for enabling tracking.
+  // The tenant-scoped conversion endpoint below does not require the key in headers.
   if (!TRACKDESK_API_KEY) {
     logger.warn('Trackdesk: API key not configured, skipping conversion');
     return;
@@ -471,21 +474,21 @@ export async function reportTrackdeskConversion(params: {
 
   try {
     const body: Record<string, unknown> = {
-      clickId: params.clickId,
-      conversionType: params.conversionType,
+      cid: params.clickId,
+      conversionTypeCode: params.conversionType,
       externalId: params.externalId,
       customerId: params.customerId,
-      currencyCode: params.currency || 'USD',
+      status: 'CONVERSION_STATUS_APPROVED',
     };
     if (params.amount !== undefined) {
       body.amount = { value: String(params.amount) };
+      body.currency = { code: params.currency || 'USD' };
     }
 
-    const response = await fetch('https://api.trackdesk.com/v1/conversions', {
+    const response = await fetch(TRACKDESK_CONVERSION_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'X-Api-Key': TRACKDESK_API_KEY,
       },
       body: JSON.stringify(body),
     });
