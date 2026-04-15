@@ -492,7 +492,7 @@ export async function reportTrackdeskConversion(params: {
 
     if (!response.ok) {
       const text = await response.text();
-      logger.error(`Trackdesk conversion failed (${response.status}):`, text);
+      logger.error(`Trackdesk ${params.conversionType} conversion failed (${response.status}) body=${text} payload=${JSON.stringify(body)}`);
     } else {
       const amountLabel = params.amount !== undefined ? ` — $${params.amount}` : '';
       logger.info(`Trackdesk ${params.conversionType} reported: ${params.externalId}${amountLabel}`);
