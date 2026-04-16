@@ -31,6 +31,7 @@ const ForgotPasswordPage = lazy(() => import("@/pages/ForgotPasswordPage"));
 const ResetPasswordPage = lazy(() => import("@/pages/ResetPasswordPage"));
 const MagicAuthPage = lazy(() => import("@/pages/MagicAuthPage"));
 const SetPasswordPage = lazy(() => import("@/pages/SetPasswordPage"));
+const AidenQuizPage = lazy(() => import("@/pages/AidenQuizPage"));
 
 // Admin pages (lazy loaded)
 const AdminLogin = lazy(() => import("@/pages/admin/AdminLogin"));
@@ -77,6 +78,9 @@ function Router() {
         <Route path="/terms" component={TermsPage} />
         <Route path="/refund" component={RefundPage} />
         <Route path="/faq" component={FAQPage} />
+
+        {/* Persona-specific landers (no layout wrapper) */}
+        <Route path="/aiden" component={AidenQuizPage} />
 
         {/* Auth routes (no layout wrapper) */}
         <Route path="/login" component={LoginPage} />

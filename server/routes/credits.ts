@@ -676,14 +676,33 @@ router.post('/webhook', async (req: Request, res: Response) => {
         return;
       }
 
+      // Rescue hatch: if user hasn't verified their email, a successful payment
+      // implicitly verifies them and grants the free 180 coins on top of the purchase.
+      const userRow = await db.select({ emailVerified: users.emailVerified })
+        .from(users)
+        .where(eq(users.id, userId))
+        .limit(1);
+
+      const needsImplicitVerify = userRow[0] && !userRow[0].emailVerified;
+      const FREE_COINS_ON_VERIFY = 180;
+      const coinsToAdd = needsImplicitVerify ? totalCoins + FREE_COINS_ON_VERIFY : totalCoins;
+
       await db.update(users)
         .set({
-          coinBalance: sql`coin_balance + ${totalCoins}`,
+          coinBalance: sql`coin_balance + ${coinsToAdd}`,
+          ...(needsImplicitVerify ? {
+            emailVerified: true,
+            verificationToken: null,
+            verificationTokenExpiry: null,
+          } : {}),
           updatedAt: new Date(),
         })
         .where(eq(users.id, userId));
 
-      logger.info('Coins added', { totalCoins, userId, purchaseId });
+      if (needsImplicitVerify) {
+        logger.info('Rescue hatch: email auto-verified via payment', { userId, purchaseId });
+      }
+      logger.info('Coins added', { totalCoins: coinsToAdd, userId, purchaseId });
     } catch (dbError) {
       logger.error('Webhook DB error:', dbError);
       res.status(500).json({ error: 'Database error' });

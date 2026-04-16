@@ -629,6 +629,9 @@ export default function PersonasDirectory() {
     }
     if (user) {
       navigate(`/reading?persona=${slug}`);
+    } else if (slug === 'aiden-powers') {
+      // Route to the Aiden quiz funnel instead of generic auth modal
+      navigate('/aiden');
     } else {
       openAuthModal(slug, displayName, avatarUrl);
     }

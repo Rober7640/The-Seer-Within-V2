@@ -2,7 +2,7 @@ import { Router, Request, Response } from 'express';
 import { z } from 'zod';
 import { randomUUID } from 'crypto';
 import { db } from '../lib/db';
-import { users, personas, chatSessions } from '@shared/schema';
+import { users, personas, chatSessions, userMemory, aidenQuizSessions } from '@shared/schema';
 import { eq, and, isNull, sql } from 'drizzle-orm';
 import { hashPassword, verifyPassword, generateToken, requireAuth } from '../lib/auth';
 import { verifyMagicLinkToken, generateMagicLinkToken } from '../lib/magicLink';
@@ -126,6 +126,138 @@ router.post('/register', authLimiter, async (req: Request, res: Response) => {
     });
   } catch (error) {
     logger.error('Register error:', error);
+    res.status(500).json({ error: 'Registration failed' });
+  }
+});
+
+// POST /api/auth/magic-register - Passwordless registration for quiz funnel (Version B)
+const magicRegisterSchema = z.object({
+  email: z.string().email(),
+  firstName: z.string().min(1, 'First name is required'),
+  confirmed18Plus: z.boolean().refine(v => v === true, 'Must confirm you are 18 or older'),
+  persona: z.string().optional().default('aiden-powers'),
+  quizSessionToken: z.string().optional(),
+  quizData: z.object({
+    topic: z.string(),
+    feeling: z.string(),
+    outcome: z.string(),
+  }).optional(),
+});
+
+router.post('/magic-register', authLimiter, async (req: Request, res: Response) => {
+  try {
+    const parseResult = magicRegisterSchema.safeParse(req.body);
+    if (!parseResult.success) {
+      res.status(400).json({
+        error: parseResult.error.errors.map(e => e.message).join(', '),
+      });
+      return;
+    }
+
+    const { email, firstName, persona, quizSessionToken, quizData } = parseResult.data;
+
+    // Check if email already exists
+    const existing = await db.select({ id: users.id, firstName: users.firstName })
+      .from(users)
+      .where(eq(users.email, email.toLowerCase()))
+      .limit(1);
+
+    if (existing.length > 0) {
+      res.status(409).json({
+        error: 'An account with this email already exists.',
+        code: 'EXISTING_ACCOUNT',
+        firstName: existing[0].firstName,
+      });
+      return;
+    }
+
+    // Extract fraud detection signals
+    const clientIp = extractClientIp(req);
+    const userAgent = extractUserAgent(req);
+    const fingerprint = extractFingerprint(req);
+
+    // Check for fraud patterns before creating account
+    const fraudCheck = await checkRegistrationFraud(clientIp, fingerprint);
+
+    // In test environments, auto-verify email and grant coins immediately
+    const isTestEnv = process.env.NODE_ENV === 'test' || process.env.DISABLE_RATE_LIMIT === 'true';
+
+    // Generate email verification token
+    const verificationToken = randomUUID();
+
+    const newUser = await db.insert(users).values({
+      email: email.toLowerCase(),
+      passwordHash: null,
+      firstName,
+      confirmed18Plus: true,
+      confirmed18PlusAt: new Date(),
+      coinBalance: isTestEnv ? FREE_COINS_ON_VERIFY : 0,
+      emailVerified: isTestEnv,
+      verificationToken: isTestEnv ? null : verificationToken,
+      verificationTokenExpiry: isTestEnv ? null : sql`NOW() + INTERVAL '${sql.raw(String(VERIFICATION_TOKEN_EXPIRY_HOURS))} hours'`,
+      registrationIp: clientIp,
+      registrationUserAgent: userAgent,
+      deviceFingerprint: fingerprint,
+      accountFlags: fraudCheck.flagged ? serializeAccountFlags(fraudCheck.flags) : null,
+    }).returning();
+
+    const user = newUser[0];
+    const token = generateToken(user.id, user.email);
+
+    // Store quiz data as a user memory for system prompt injection
+    if (quizData) {
+      // Look up persona ID for the memory record
+      const personaRow = await db.select({ id: personas.id })
+        .from(personas)
+        .where(eq(personas.slug, persona))
+        .limit(1);
+
+      const personaId = personaRow[0]?.id || null;
+
+      await db.insert(userMemory).values({
+        userId: user.id,
+        personaId,
+        memoryType: 'quiz_intake',
+        summary: `User's quiz intake: Topic: ${quizData.topic}, Feeling: ${quizData.feeling}, Desired outcome: ${quizData.outcome}`,
+        fullContext: JSON.stringify(quizData),
+        importance: 9,
+        category: quizData.topic === 'love_relationships' ? 'love' : quizData.topic === 'career_money' ? 'money' : 'general',
+      });
+    }
+
+    // Link quiz session to user if token provided
+    if (quizSessionToken) {
+      await db.update(aidenQuizSessions)
+        .set({
+          userId: user.id,
+          email: email.toLowerCase(),
+          completedSignup: true,
+          signedUpAt: new Date(),
+          updatedAt: new Date(),
+        })
+        .where(eq(aidenQuizSessions.sessionToken, quizSessionToken));
+    }
+
+    // Send verification email only in non-test environments
+    if (!isTestEnv) {
+      sendVerificationEmail(user.email, user.firstName, verificationToken, persona).catch((err) => {
+        logger.error('Failed to send verification email:', err);
+      });
+    }
+
+    res.status(201).json({
+      token,
+      user: {
+        id: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        coinBalance: user.coinBalance,
+        emailVerified: user.emailVerified,
+      },
+      requiresVerification: !isTestEnv,
+    });
+  } catch (error) {
+    logger.error('Magic register error:', error);
     res.status(500).json({ error: 'Registration failed' });
   }
 });
@@ -275,6 +407,15 @@ router.post('/login', authLimiter, async (req: Request, res: Response) => {
       return;
     }
 
+    // Magic-register accounts have no password — direct them to magic link login
+    if (!user.passwordHash) {
+      res.status(400).json({
+        error: 'This account uses magic link login. Check your email for a sign-in link, or request a new one.',
+        code: 'NO_PASSWORD',
+      });
+      return;
+    }
+
     const valid = await verifyPassword(password, user.passwordHash);
     if (!valid) {
       res.status(401).json({ error: 'Invalid email or password' });
@@ -399,6 +540,14 @@ router.post('/change-password', requireAuth, async (req: Request, res: Response)
     const user = result[0];
     if (!user) {
       res.status(404).json({ error: 'User not found' });
+      return;
+    }
+
+    if (!user.passwordHash) {
+      res.status(400).json({
+        error: 'This account uses magic link login. Set a password from your dashboard first.',
+        code: 'NO_PASSWORD',
+      });
       return;
     }
 
