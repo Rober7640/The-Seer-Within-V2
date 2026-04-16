@@ -2,7 +2,8 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useLocation } from "wouter";
 import { useAuth, authFetch } from "@/hooks/useAuth";
 import { QUIZ_QUESTIONS, getEmailAppLink } from "@/lib/aidenQuizData";
-import { apiRequest } from "@/lib/queryClient";
+// Note: we use fetch() directly instead of apiRequest() because apiRequest
+// throws on non-200 responses, and we need to read the 409 body for EXISTING_ACCOUNT.
 import { trackPageView, trackLead, trackInitiateCheckout } from "@/lib/facebook";
 
 const AUTH_TOKEN_KEY = "seer_auth_token";
@@ -187,13 +188,18 @@ export default function AidenQuizPage() {
       setExistingAccount(null);
 
       try {
-        const res = await apiRequest("POST", "/api/auth/magic-register", {
-          email: email.trim(),
-          firstName: firstName.trim(),
-          confirmed18Plus: confirmed18,
-          persona: "aiden-powers",
-          quizSessionToken,
-          quizData: answers as QuizAnswers,
+        const res = await fetch("/api/auth/magic-register", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({
+            email: email.trim(),
+            firstName: firstName.trim(),
+            confirmed18Plus: confirmed18,
+            persona: "aiden-powers",
+            quizSessionToken,
+            quizData: answers as QuizAnswers,
+          }),
         });
 
         const data = await res.json();
