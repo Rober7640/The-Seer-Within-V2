@@ -250,7 +250,7 @@ export default function AidenQuizPage() {
       const res = await authFetch("/api/credits/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ packageType: "starter" }),
+        body: JSON.stringify({ packageType: "starter", successPath: "/chat/aiden-powers" }),
       });
       const data = await res.json();
       if (data.url) {

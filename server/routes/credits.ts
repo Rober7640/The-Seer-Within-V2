@@ -37,6 +37,7 @@ function resolveTier(packageType: string, pricing: { tiers: Array<{ packageType:
 const checkoutSchema = z.object({
   packageType: z.string().min(1),
   personaId: z.string().min(1).optional(),
+  successPath: z.string().optional(), // Optional override for post-checkout redirect (e.g. /chat/aiden-powers)
 });
 
 function getBaseUrl(req: Request): string {
@@ -160,7 +161,7 @@ router.post('/checkout', requireAuth, async (req: Request, res: Response) => {
     return;
   }
 
-  const { packageType, personaId } = parseResult.data;
+  const { packageType, personaId, successPath } = parseResult.data;
 
   let pricing, tier, personaName: string, userResult;
   try {
@@ -223,7 +224,7 @@ router.post('/checkout', requireAuth, async (req: Request, res: Response) => {
       })
       .where(eq(users.id, req.userId!));
 
-    res.json({ url: '/chat-service?purchased=true', devMode: true });
+    res.json({ url: successPath || '/chat-service?purchased=true', devMode: true });
     return;
   }
 
@@ -253,8 +254,12 @@ router.post('/checkout', requireAuth, async (req: Request, res: Response) => {
           packageType: tier!.packageType,
           totalCoins: String(tier!.totalCoins),
         },
-        success_url: `${getBaseUrl(req)}/chat-service?purchased=true&session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${getBaseUrl(req)}/chat-service?cancelled=true`,
+        success_url: successPath
+          ? `${getBaseUrl(req)}${successPath}?purchased=true&session_id={CHECKOUT_SESSION_ID}`
+          : `${getBaseUrl(req)}/chat-service?purchased=true&session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: successPath
+          ? `${getBaseUrl(req)}${successPath}?cancelled=true`
+          : `${getBaseUrl(req)}/chat-service?cancelled=true`,
       }),
     );
 
