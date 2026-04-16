@@ -21,6 +21,11 @@ let isMigrationDripProcessing = false;
  * Call this once during server startup.
  */
 export function initializeCronJobs(): void {
+  if (process.env.DISABLE_CRONS === 'true') {
+    logger.info('Cron jobs disabled (DISABLE_CRONS=true)');
+    return;
+  }
+
   const timezone = process.env.CRON_TIMEZONE || 'America/New_York';
 
   // Daily follow-up processing at 10 AM
