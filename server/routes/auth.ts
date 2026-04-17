@@ -157,7 +157,7 @@ router.post('/magic-register', authLimiter, async (req: Request, res: Response) 
     const { email, firstName, persona, quizSessionToken, quizData } = parseResult.data;
 
     // Check if email already exists
-    const existing = await db.select({ id: users.id, firstName: users.firstName })
+    const existing = await db.select({ id: users.id, firstName: users.firstName, passwordHash: users.passwordHash })
       .from(users)
       .where(eq(users.email, email.toLowerCase()))
       .limit(1);
@@ -167,6 +167,7 @@ router.post('/magic-register', authLimiter, async (req: Request, res: Response) 
         error: 'An account with this email already exists.',
         code: 'EXISTING_ACCOUNT',
         firstName: existing[0].firstName,
+        hasPassword: !!existing[0].passwordHash,
       });
       return;
     }

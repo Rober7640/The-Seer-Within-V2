@@ -38,7 +38,7 @@ export default function AidenQuizPage() {
   const [confirmed18, setConfirmed18] = useState(false);
   const [gateError, setGateError] = useState("");
   const [gateLoading, setGateLoading] = useState(false);
-  const [existingAccount, setExistingAccount] = useState<{ firstName: string } | null>(null);
+  const [existingAccount, setExistingAccount] = useState<{ firstName: string; hasPassword: boolean } | null>(null);
   const [magicLinkSent, setMagicLinkSent] = useState(false);
   const [magicLinkLoading, setMagicLinkLoading] = useState(false);
 
@@ -208,7 +208,7 @@ export default function AidenQuizPage() {
 
         if (!res.ok) {
           if (data.code === "EXISTING_ACCOUNT") {
-            setExistingAccount({ firstName: data.firstName || "there" });
+            setExistingAccount({ firstName: data.firstName || "there", hasPassword: !!data.hasPassword });
           } else {
             setGateError(data.error || "Something went wrong. Please try again.");
           }
@@ -515,21 +515,31 @@ export default function AidenQuizPage() {
                         <p className="text-white/80 mb-2">
                           Welcome back, {existingAccount.firstName}! An account with this email already exists.
                         </p>
-                        <button
-                          type="button"
-                          onClick={handleSendMagicLink}
-                          disabled={magicLinkLoading}
-                          className="w-full mt-2 py-3 rounded-xl bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-500 hover:to-purple-400 text-white font-semibold text-sm transition-all duration-200 disabled:opacity-50"
-                        >
-                          {magicLinkLoading ? (
-                            <span className="flex items-center justify-center gap-2">
-                              <span className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                              Sending...
-                            </span>
-                          ) : (
-                            "Send me a sign-in link"
-                          )}
-                        </button>
+                        {existingAccount.hasPassword ? (
+                          <button
+                            type="button"
+                            onClick={() => navigate("/login?returnTo=/chat/aiden-powers")}
+                            className="w-full mt-2 py-3 rounded-xl bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-500 hover:to-purple-400 text-white font-semibold text-sm transition-all duration-200"
+                          >
+                            Sign in to continue your reading
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={handleSendMagicLink}
+                            disabled={magicLinkLoading}
+                            className="w-full mt-2 py-3 rounded-xl bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-500 hover:to-purple-400 text-white font-semibold text-sm transition-all duration-200 disabled:opacity-50"
+                          >
+                            {magicLinkLoading ? (
+                              <span className="flex items-center justify-center gap-2">
+                                <span className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                Sending...
+                              </span>
+                            ) : (
+                              "Send me a sign-in link"
+                            )}
+                          </button>
+                        )}
                       </>
                     )}
                   </div>
