@@ -11,6 +11,7 @@ import { sendVerificationEmail } from '../lib/verificationEmail';
 import { sendPasswordResetEmail } from '../lib/passwordResetEmail';
 import { isDisposableEmail } from '../lib/disposableEmailDomains';
 import { verifyTurnstileToken } from '../lib/turnstile';
+import { validateEmail } from '../lib/neverbounce';
 import {
   checkRegistrationFraud,
   extractClientIp,
@@ -185,11 +186,24 @@ router.post('/magic-register', authLimiter, async (req: Request, res: Response) 
       return;
     }
 
-    // Layer 1: Block disposable/temporary email domains
+    // Layer 1: Block disposable/temporary email domains (static blocklist)
     if (isDisposableEmail(email)) {
       res.status(400).json({
         error: 'Please use a permanent email address. Temporary email services are not accepted.',
         code: 'DISPOSABLE_EMAIL',
+      });
+      return;
+    }
+
+    // Layer 4: Validate email deliverability via NeverBounce
+    const emailValidation = await validateEmail(email);
+    if (!emailValidation.valid) {
+      res.status(400).json({
+        error: emailValidation.result === 'disposable'
+          ? 'Please use a permanent email address. Temporary email services are not accepted.'
+          : "This email address doesn't appear to be valid. Please double-check it.",
+        code: 'INVALID_EMAIL',
+        suggestedCorrection: emailValidation.suggestedCorrection,
       });
       return;
     }

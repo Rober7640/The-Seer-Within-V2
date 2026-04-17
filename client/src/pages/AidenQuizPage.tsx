@@ -43,6 +43,7 @@ export default function AidenQuizPage() {
   const [magicLinkSent, setMagicLinkSent] = useState(false);
   const [magicLinkLoading, setMagicLinkLoading] = useState(false);
   const [turnstileToken, setTurnstileToken] = useState("");
+  const [suggestedEmail, setSuggestedEmail] = useState<string | null>(null);
 
   // Check email state
   const [registeredEmail, setRegisteredEmail] = useState("");
@@ -190,6 +191,7 @@ export default function AidenQuizPage() {
       setGateError("");
       setGateLoading(true);
       setExistingAccount(null);
+      setSuggestedEmail(null);
 
       try {
         const res = await fetch("/api/auth/magic-register", {
@@ -212,6 +214,9 @@ export default function AidenQuizPage() {
         if (!res.ok) {
           if (data.code === "EXISTING_ACCOUNT") {
             setExistingAccount({ firstName: data.firstName || "there", hasPassword: !!data.hasPassword });
+          } else if (data.code === "INVALID_EMAIL" && data.suggestedCorrection) {
+            setSuggestedEmail(data.suggestedCorrection);
+            setGateError(data.error || "Please check your email address.");
           } else {
             setGateError(data.error || "Something went wrong. Please try again.");
           }
@@ -554,6 +559,23 @@ export default function AidenQuizPage() {
                 {/* Error */}
                 {gateError && (
                   <p className="text-red-400 text-sm text-center">{gateError}</p>
+                )}
+
+                {/* Did you mean? suggestion */}
+                {suggestedEmail && (
+                  <div className="text-center">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setEmail(suggestedEmail);
+                        setSuggestedEmail(null);
+                        setGateError("");
+                      }}
+                      className="text-purple-400 hover:text-purple-300 text-sm underline"
+                    >
+                      Did you mean <strong>{suggestedEmail}</strong>?
+                    </button>
+                  </div>
                 )}
 
                 {/* CTA — hidden when existing account detected */}
