@@ -10,6 +10,7 @@ import { authLimiter, passwordResetLimiter } from '../lib/rateLimiter';
 import { sendVerificationEmail } from '../lib/verificationEmail';
 import { sendPasswordResetEmail } from '../lib/passwordResetEmail';
 import { isDisposableEmail } from '../lib/disposableEmailDomains';
+import { verifyTurnstileToken } from '../lib/turnstile';
 import {
   checkRegistrationFraud,
   extractClientIp,
@@ -143,6 +144,7 @@ const magicRegisterSchema = z.object({
     feeling: z.string(),
     outcome: z.string(),
   }).optional(),
+  turnstileToken: z.string().optional(),
 });
 
 router.post('/magic-register', authLimiter, async (req: Request, res: Response) => {
@@ -155,7 +157,17 @@ router.post('/magic-register', authLimiter, async (req: Request, res: Response) 
       return;
     }
 
-    const { email, firstName, persona, quizSessionToken, quizData } = parseResult.data;
+    const { email, firstName, persona, quizSessionToken, quizData, turnstileToken } = parseResult.data;
+
+    // Layer 3: Verify Cloudflare Turnstile token (invisible CAPTCHA)
+    const turnstileValid = await verifyTurnstileToken(turnstileToken || '', extractClientIp(req));
+    if (!turnstileValid) {
+      res.status(400).json({
+        error: 'Security verification failed. Please refresh the page and try again.',
+        code: 'TURNSTILE_FAILED',
+      });
+      return;
+    }
 
     // Check if email already exists
     const existing = await db.select({ id: users.id, firstName: users.firstName, passwordHash: users.passwordHash })

@@ -5,6 +5,7 @@ import { QUIZ_QUESTIONS, getEmailAppLink } from "@/lib/aidenQuizData";
 // Note: we use fetch() directly instead of apiRequest() because apiRequest
 // throws on non-200 responses, and we need to read the 409 body for EXISTING_ACCOUNT.
 import { trackPageView, trackLead, trackInitiateCheckout } from "@/lib/facebook";
+import TurnstileWidget from "@/components/TurnstileWidget";
 
 const AUTH_TOKEN_KEY = "seer_auth_token";
 
@@ -41,6 +42,7 @@ export default function AidenQuizPage() {
   const [existingAccount, setExistingAccount] = useState<{ firstName: string; hasPassword: boolean } | null>(null);
   const [magicLinkSent, setMagicLinkSent] = useState(false);
   const [magicLinkLoading, setMagicLinkLoading] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState("");
 
   // Check email state
   const [registeredEmail, setRegisteredEmail] = useState("");
@@ -201,6 +203,7 @@ export default function AidenQuizPage() {
             persona: "aiden-powers",
             quizSessionToken,
             quizData: answers as QuizAnswers,
+            turnstileToken,
           }),
         });
 
@@ -228,7 +231,7 @@ export default function AidenQuizPage() {
         setGateLoading(false);
       }
     },
-    [email, firstName, confirmed18, quizSessionToken, answers],
+    [email, firstName, confirmed18, quizSessionToken, answers, turnstileToken],
   );
 
   const handleResendVerification = useCallback(async () => {
@@ -497,6 +500,9 @@ export default function AidenQuizPage() {
                     I confirm I am 18 years or older
                   </span>
                 </label>
+
+                {/* Invisible Turnstile CAPTCHA */}
+                <TurnstileWidget onToken={setTurnstileToken} />
 
                 {/* Existing account notice */}
                 {existingAccount && (
