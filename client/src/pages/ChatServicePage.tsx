@@ -296,6 +296,45 @@ export default function ChatServicePage() {
     }
   }, [user, session]);
 
+  // After rescue hatch (Stripe Checkout redirect), poll until webhook grants coins.
+  // The webhook may not have fired yet when the redirect lands, so a single fetch
+  // could still see coinBalance = 0. Poll /api/auth/me every 2s for up to 20s.
+  useEffect(() => {
+    const params = new URLSearchParams(searchString);
+    if (params.get("purchased") !== "true" || !isAuthenticated) return;
+
+    // Clean URL immediately so refresh doesn't re-trigger
+    window.history.replaceState({}, "", window.location.pathname);
+
+    let cancelled = false;
+    let attempts = 0;
+    const maxAttempts = 10;
+
+    const poll = async () => {
+      while (!cancelled && attempts < maxAttempts) {
+        attempts++;
+        try {
+          const res = await authFetch("/api/auth/me");
+          if (res.ok) {
+            const data = await res.json();
+            if (data.coinBalance > 0) {
+              setCoinBalance(data.coinBalance);
+              skipAuthCoinSyncRef.current = true;
+              refreshUser();
+              return;
+            }
+          }
+        } catch {}
+        if (!cancelled && attempts < maxAttempts) {
+          await new Promise(r => setTimeout(r, 2000));
+        }
+      }
+    };
+    poll();
+
+    return () => { cancelled = true; };
+  }, [searchString, isAuthenticated]);
+
   // Check if user is eligible for the one-time welcome pack
   useEffect(() => {
     if (!isAuthenticated) return;
