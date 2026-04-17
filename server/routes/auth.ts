@@ -407,10 +407,59 @@ router.post('/login', authLimiter, async (req: Request, res: Response) => {
       return;
     }
 
-    // Magic-register accounts have no password — direct them to magic link login
+    // Magic-register accounts have no password — send a magic sign-in link
     if (!user.passwordHash) {
+      // Find the user's last persona (or default to aiden-powers for rescue hatch users)
+      const lastSession = await db.select({ personaId: chatSessions.personaId })
+        .from(chatSessions)
+        .where(eq(chatSessions.userId, user.id))
+        .orderBy(sql`created_at DESC`)
+        .limit(1);
+
+      let personaId = lastSession[0]?.personaId || user.defaultPersonaId;
+      let personaSlug = 'aiden-powers';
+
+      if (personaId) {
+        const p = await db.select({ slug: personas.slug })
+          .from(personas)
+          .where(eq(personas.id, personaId))
+          .limit(1);
+        if (p[0]) personaSlug = p[0].slug;
+      } else {
+        // Fallback: look up Aiden's persona ID
+        const aiden = await db.select({ id: personas.id })
+          .from(personas)
+          .where(eq(personas.slug, 'aiden-powers'))
+          .limit(1);
+        if (aiden[0]) personaId = aiden[0].id;
+      }
+
+      if (personaId) {
+        try {
+          const magicToken = await generateMagicLinkToken(user.id, personaId, personaSlug);
+          const magicUrl = `${process.env.BASE_URL || 'http://localhost:5000'}/magic-auth?t=${magicToken}`;
+
+          // Send a simple sign-in email via Resend
+          const { Resend } = await import('resend');
+          const resendClient = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
+          if (resendClient) {
+            await resendClient.emails.send({
+              from: `The Seer Within <${process.env.FOLLOW_UP_FROM_EMAIL || 'noreply@theseerwithin.com'}>`,
+              to: user.email,
+              subject: 'Your sign-in link',
+              html: `<p>Hi ${user.firstName || 'there'},</p><p>Click the button below to sign in to your reading:</p><p style="margin:24px 0"><a href="${magicUrl}" style="background:#6d28d9;color:#fff;padding:12px 32px;border-radius:8px;text-decoration:none;font-weight:600">Sign In to My Reading</a></p><p style="color:#888;font-size:13px">This link expires in 30 days.</p>`,
+            });
+            logger.info('Magic sign-in link sent', { email: user.email, personaSlug });
+          } else {
+            logger.warn('Resend not configured, magic link URL:', magicUrl);
+          }
+        } catch (err) {
+          logger.error('Failed to send magic sign-in link:', err);
+        }
+      }
+
       res.status(400).json({
-        error: 'This account uses magic link login. Check your email for a sign-in link, or request a new one.',
+        error: 'We just sent a sign-in link to your email. Click it to continue your reading.',
         code: 'NO_PASSWORD',
       });
       return;

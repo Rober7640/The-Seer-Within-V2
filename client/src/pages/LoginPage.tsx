@@ -209,16 +209,12 @@ export default function LoginPage() {
             )}
             {error === "NO_PASSWORD" && (
               <div className="text-xs p-3 bg-purple-50 rounded-lg text-center space-y-2">
-                <p className="text-purple-800">
-                  This account was created without a password. Set one to sign in.
+                <p className="text-purple-800 font-medium">
+                  We just sent a sign-in link to your email.
                 </p>
-                <button
-                  type="button"
-                  onClick={() => navigate(`/forgot-password?email=${encodeURIComponent(email)}`)}
-                  className="text-purple-600 hover:text-purple-800 underline font-medium"
-                >
-                  Set a password via email
-                </button>
+                <p className="text-purple-600">
+                  Check your inbox and click the link to continue your reading.
+                </p>
               </div>
             )}
 

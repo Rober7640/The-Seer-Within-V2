@@ -39,6 +39,8 @@ export default function AidenQuizPage() {
   const [gateError, setGateError] = useState("");
   const [gateLoading, setGateLoading] = useState(false);
   const [existingAccount, setExistingAccount] = useState<{ firstName: string } | null>(null);
+  const [magicLinkSent, setMagicLinkSent] = useState(false);
+  const [magicLinkLoading, setMagicLinkLoading] = useState(false);
 
   // Check email state
   const [registeredEmail, setRegisteredEmail] = useState("");
@@ -259,6 +261,20 @@ export default function AidenQuizPage() {
     } catch {}
     setRescueLoading(false);
   }, []);
+
+  const handleSendMagicLink = useCallback(async () => {
+    setMagicLinkLoading(true);
+    try {
+      // Trigger the login endpoint which auto-sends a magic link for passwordless accounts
+      await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim(), password: "trigger-magic-link" }),
+      });
+      setMagicLinkSent(true);
+    } catch {}
+    setMagicLinkLoading(false);
+  }, [email]);
 
   const handleChangeEmail = useCallback(() => {
     if (pollRef.current) clearInterval(pollRef.current);
@@ -486,16 +502,37 @@ export default function AidenQuizPage() {
                 {/* Existing account notice */}
                 {existingAccount && (
                   <div className="bg-purple-900/30 border border-purple-500/30 rounded-xl px-4 py-3 text-sm">
-                    <p className="text-white/80 mb-2">
-                      Welcome back, {existingAccount.firstName}! An account with this email already exists.
-                    </p>
-                    <button
-                      type="button"
-                      onClick={() => navigate("/login?returnTo=/chat/aiden-powers")}
-                      className="w-full mt-2 py-3 rounded-xl bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-500 hover:to-purple-400 text-white font-semibold text-sm transition-all duration-200"
-                    >
-                      Sign in to continue your reading
-                    </button>
+                    {magicLinkSent ? (
+                      <>
+                        <p className="text-white/80 mb-1">
+                          We sent a sign-in link to <strong>{email}</strong>
+                        </p>
+                        <p className="text-white/50 text-xs">
+                          Check your inbox and click the link to continue your reading.
+                        </p>
+                      </>
+                    ) : (
+                      <>
+                        <p className="text-white/80 mb-2">
+                          Welcome back, {existingAccount.firstName}! An account with this email already exists.
+                        </p>
+                        <button
+                          type="button"
+                          onClick={handleSendMagicLink}
+                          disabled={magicLinkLoading}
+                          className="w-full mt-2 py-3 rounded-xl bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-500 hover:to-purple-400 text-white font-semibold text-sm transition-all duration-200 disabled:opacity-50"
+                        >
+                          {magicLinkLoading ? (
+                            <span className="flex items-center justify-center gap-2">
+                              <span className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                              Sending...
+                            </span>
+                          ) : (
+                            "Send me a sign-in link"
+                          )}
+                        </button>
+                      </>
+                    )}
                   </div>
                 )}
 
