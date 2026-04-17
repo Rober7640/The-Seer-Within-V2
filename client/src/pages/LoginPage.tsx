@@ -75,11 +75,16 @@ export default function LoginPage() {
       }
       navigate(returnTo ?? personaRedirect ?? "/reading");
     } catch (err: any) {
-      setError(
-        err?.message?.includes("401")
-          ? "Invalid email or password"
-          : err?.message || "Something went wrong",
-      );
+      const msg = err?.message || "";
+      if (msg.includes("NO_PASSWORD")) {
+        setError("NO_PASSWORD");
+      } else {
+        setError(
+          msg.includes("401")
+            ? "Invalid email or password"
+            : msg || "Something went wrong",
+        );
+      }
     } finally {
       setLoading(false);
     }
@@ -197,10 +202,24 @@ export default function LoginPage() {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            {error && (
+            {error && error !== "NO_PASSWORD" && (
               <p className="text-red-600 text-xs p-2 bg-red-50 rounded-lg text-center">
                 {error}
               </p>
+            )}
+            {error === "NO_PASSWORD" && (
+              <div className="text-xs p-3 bg-purple-50 rounded-lg text-center space-y-2">
+                <p className="text-purple-800">
+                  This account was created without a password. Set one to sign in.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => navigate(`/forgot-password?email=${encodeURIComponent(email)}`)}
+                  className="text-purple-600 hover:text-purple-800 underline font-medium"
+                >
+                  Set a password via email
+                </button>
+              </div>
             )}
 
             {isSignUp && (

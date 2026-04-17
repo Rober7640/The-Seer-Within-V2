@@ -492,7 +492,7 @@ export default function AidenQuizPage() {
                     <button
                       type="button"
                       onClick={() => navigate("/login?returnTo=/chat/aiden-powers")}
-                      className="text-purple-400 hover:text-purple-300 underline text-sm"
+                      className="w-full mt-2 py-3 rounded-xl bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-500 hover:to-purple-400 text-white font-semibold text-sm transition-all duration-200"
                     >
                       Sign in to continue your reading
                     </button>
@@ -504,26 +504,28 @@ export default function AidenQuizPage() {
                   <p className="text-red-400 text-sm text-center">{gateError}</p>
                 )}
 
-                {/* CTA */}
-                <button
-                  type="submit"
-                  disabled={
-                    !firstName.trim() ||
-                    !email.trim() ||
-                    !confirmed18 ||
-                    gateLoading
-                  }
-                  className="w-full py-4 rounded-xl bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-500 hover:to-purple-400 text-white font-semibold text-lg transition-all duration-200 shadow-lg shadow-purple-500/25 disabled:opacity-40 disabled:cursor-not-allowed"
-                >
-                  {gateLoading ? (
-                    <span className="flex items-center justify-center gap-2">
-                      <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                      Saving...
-                    </span>
-                  ) : (
-                    "Save & Continue My Reading \u2192"
-                  )}
-                </button>
+                {/* CTA — hidden when existing account detected */}
+                {!existingAccount && (
+                  <button
+                    type="submit"
+                    disabled={
+                      !firstName.trim() ||
+                      !email.trim() ||
+                      !confirmed18 ||
+                      gateLoading
+                    }
+                    className="w-full py-4 rounded-xl bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-500 hover:to-purple-400 text-white font-semibold text-lg transition-all duration-200 shadow-lg shadow-purple-500/25 disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    {gateLoading ? (
+                      <span className="flex items-center justify-center gap-2">
+                        <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        Saving...
+                      </span>
+                    ) : (
+                      "Save & Continue My Reading \u2192"
+                    )}
+                  </button>
+                )}
               </form>
 
               {/* Footer */}
