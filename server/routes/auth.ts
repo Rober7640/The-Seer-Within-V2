@@ -407,7 +407,7 @@ router.post('/send-magic-login', authLimiter, async (req: Request, res: Response
     const user = result[0];
 
     // Always return success to avoid leaking account existence
-    if (!user || user.passwordHash || user.accountStatus === 'banned') {
+    if (!user || user.accountStatus === 'banned') {
       res.json({ sent: true });
       return;
     }
