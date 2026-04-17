@@ -23,6 +23,7 @@ export default function LoginPage() {
   const [verificationSuccess, setVerificationSuccess] = useState(false);
   const [resendLoading, setResendLoading] = useState(false);
   const [resendEmail, setResendEmail] = useState("");
+  const [magicLinkSent, setMagicLinkSent] = useState(false);
 
   // Check for verification callback in URL params — auto-login if token present
   useEffect(() => {
@@ -63,6 +64,21 @@ export default function LoginPage() {
           return;
         }
       } else {
+        // If no password entered, try sending a magic sign-in link
+        if (!password.trim()) {
+          const res = await fetch("/api/auth/send-magic-login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email: email.trim() }),
+          });
+          if (res.ok) {
+            setMagicLinkSent(true);
+          } else {
+            setError("Something went wrong. Please try again.");
+          }
+          return;
+        }
+
         const data = await login(email, password);
         if (!returnTo && !personaParam && data?.user?.defaultPersonaSlug) {
           if (data.user.defaultPersonaAvailable) {
@@ -77,7 +93,8 @@ export default function LoginPage() {
     } catch (err: any) {
       const msg = err?.message || "";
       if (msg.includes("NO_PASSWORD")) {
-        setError("NO_PASSWORD");
+        // Server already sent the magic link from the login endpoint
+        setMagicLinkSent(true);
       } else {
         setError(
           msg.includes("401")
@@ -176,6 +193,47 @@ export default function LoginPage() {
     );
   }
 
+  // Show magic link sent confirmation
+  if (magicLinkSent) {
+    return (
+      <div className="min-h-screen relative flex items-center justify-center p-4">
+        <CosmicBackground />
+
+        <Card className="bg-white/95 backdrop-blur-md border-white/20 w-full max-w-sm relative z-10">
+          <CardHeader className="text-center">
+            <div className="flex items-center justify-center gap-2 mb-2">
+              <Mail className="w-5 h-5 text-purple-600" />
+              <CardTitle className="font-serif text-xl text-gray-900">
+                Check Your Email
+              </CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent className="text-center space-y-4">
+            <p className="text-sm text-gray-600">
+              We sent a sign-in link to <strong>{email}</strong>.
+              Click the link in your email to continue your reading.
+            </p>
+            <p className="text-xs text-gray-400">
+              Don't see it? Check your spam folder.
+            </p>
+
+            <div className="pt-2 space-y-2">
+              <button
+                onClick={() => {
+                  setMagicLinkSent(false);
+                  setError(null);
+                }}
+                className="text-xs text-purple-600 hover:underline"
+              >
+                Back to sign in
+              </button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen relative flex items-center justify-center p-4">
       <CosmicBackground />
@@ -202,20 +260,10 @@ export default function LoginPage() {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            {error && error !== "NO_PASSWORD" && (
+            {error && (
               <p className="text-red-600 text-xs p-2 bg-red-50 rounded-lg text-center">
                 {error}
               </p>
-            )}
-            {error === "NO_PASSWORD" && (
-              <div className="text-xs p-3 bg-purple-50 rounded-lg text-center space-y-2">
-                <p className="text-purple-800 font-medium">
-                  We just sent a sign-in link to your email.
-                </p>
-                <p className="text-purple-600">
-                  Check your inbox and click the link to continue your reading.
-                </p>
-              </div>
             )}
 
             {isSignUp && (
@@ -256,11 +304,16 @@ export default function LoginPage() {
                 name="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                required
-                minLength={8}
+                required={isSignUp}
+                minLength={isSignUp ? 8 : undefined}
                 className="w-full bg-gray-100 text-gray-900 rounded-lg px-3 py-2 text-sm border border-gray-200 focus:border-purple-500 focus:outline-none focus:bg-white"
                 placeholder={isSignUp ? "Min 8 characters" : "Your password"}
               />
+              {!isSignUp && (
+                <p className="text-[10px] text-gray-400 mt-1">
+                  No password? Just enter your email and click Sign In — we'll send you a link.
+                </p>
+              )}
             </div>
             <Button
               type="submit"

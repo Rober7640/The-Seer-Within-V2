@@ -383,6 +383,85 @@ router.post('/resend-verification', authLimiter, async (req: Request, res: Respo
   }
 });
 
+// POST /api/auth/send-magic-login - Send a magic sign-in link for passwordless accounts
+router.post('/send-magic-login', authLimiter, async (req: Request, res: Response) => {
+  try {
+    const { email } = req.body;
+    if (!email || typeof email !== 'string') {
+      res.status(400).json({ error: 'Email required' });
+      return;
+    }
+
+    const result = await db.select({
+      id: users.id,
+      email: users.email,
+      firstName: users.firstName,
+      passwordHash: users.passwordHash,
+      defaultPersonaId: users.defaultPersonaId,
+      accountStatus: users.accountStatus,
+    })
+      .from(users)
+      .where(eq(users.email, email.toLowerCase()))
+      .limit(1);
+
+    const user = result[0];
+
+    // Always return success to avoid leaking account existence
+    if (!user || user.passwordHash || user.accountStatus === 'banned') {
+      res.json({ sent: true });
+      return;
+    }
+
+    // Find the user's last persona or default to aiden-powers
+    const lastSession = await db.select({ personaId: chatSessions.personaId })
+      .from(chatSessions)
+      .where(eq(chatSessions.userId, user.id))
+      .orderBy(sql`created_at DESC`)
+      .limit(1);
+
+    let personaId = lastSession[0]?.personaId || user.defaultPersonaId;
+    let personaSlug = 'aiden-powers';
+
+    if (personaId) {
+      const p = await db.select({ slug: personas.slug })
+        .from(personas)
+        .where(eq(personas.id, personaId))
+        .limit(1);
+      if (p[0]) personaSlug = p[0].slug;
+    } else {
+      const aiden = await db.select({ id: personas.id })
+        .from(personas)
+        .where(eq(personas.slug, 'aiden-powers'))
+        .limit(1);
+      if (aiden[0]) personaId = aiden[0].id;
+    }
+
+    if (personaId) {
+      const magicToken = await generateMagicLinkToken(user.id, personaId, personaSlug);
+      const magicUrl = `${process.env.BASE_URL || 'http://localhost:5000'}/magic-auth?t=${magicToken}`;
+
+      const { Resend } = await import('resend');
+      const resendClient = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
+      if (resendClient) {
+        await resendClient.emails.send({
+          from: `The Seer Within <${process.env.FOLLOW_UP_FROM_EMAIL || 'noreply@theseerwithin.com'}>`,
+          to: user.email,
+          subject: 'Your sign-in link',
+          html: `<p>Hi ${user.firstName || 'there'},</p><p>Click the button below to sign in to your reading:</p><p style="margin:24px 0"><a href="${magicUrl}" style="background:#6d28d9;color:#fff;padding:12px 32px;border-radius:8px;text-decoration:none;font-weight:600">Sign In to My Reading</a></p><p style="color:#888;font-size:13px">This link expires in 30 days.</p>`,
+        });
+        logger.info('Magic sign-in link sent via send-magic-login', { email: user.email, personaSlug });
+      } else {
+        logger.warn('Resend not configured, magic link URL:', magicUrl);
+      }
+    }
+
+    res.json({ sent: true });
+  } catch (error) {
+    logger.error('send-magic-login error:', error);
+    res.status(500).json({ error: 'Failed to send sign-in link' });
+  }
+});
+
 // POST /api/auth/login
 router.post('/login', authLimiter, async (req: Request, res: Response) => {
   try {

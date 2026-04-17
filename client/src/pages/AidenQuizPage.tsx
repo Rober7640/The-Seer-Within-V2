@@ -265,11 +265,10 @@ export default function AidenQuizPage() {
   const handleSendMagicLink = useCallback(async () => {
     setMagicLinkLoading(true);
     try {
-      // Trigger the login endpoint which auto-sends a magic link for passwordless accounts
-      await fetch("/api/auth/login", {
+      await fetch("/api/auth/send-magic-login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: email.trim(), password: "trigger-magic-link" }),
+        body: JSON.stringify({ email: email.trim() }),
       });
       setMagicLinkSent(true);
     } catch {}
