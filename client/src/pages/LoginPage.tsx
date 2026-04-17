@@ -64,21 +64,6 @@ export default function LoginPage() {
           return;
         }
       } else {
-        // If no password entered, try sending a magic sign-in link
-        if (!password.trim()) {
-          const res = await fetch("/api/auth/send-magic-login", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ email: email.trim() }),
-          });
-          if (res.ok) {
-            setMagicLinkSent(true);
-          } else {
-            setError("Something went wrong. Please try again.");
-          }
-          return;
-        }
-
         const data = await login(email, password);
         if (!returnTo && !personaParam && data?.user?.defaultPersonaSlug) {
           if (data.user.defaultPersonaAvailable) {
@@ -304,16 +289,11 @@ export default function LoginPage() {
                 name="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                required={isSignUp}
-                minLength={isSignUp ? 8 : undefined}
+                required
+                minLength={isSignUp ? 8 : 1}
                 className="w-full bg-gray-100 text-gray-900 rounded-lg px-3 py-2 text-sm border border-gray-200 focus:border-purple-500 focus:outline-none focus:bg-white"
                 placeholder={isSignUp ? "Min 8 characters" : "Your password"}
               />
-              {!isSignUp && (
-                <p className="text-[10px] text-gray-400 mt-1">
-                  No password? Just enter your email and click Sign In — we'll send you a link.
-                </p>
-              )}
             </div>
             <Button
               type="submit"
