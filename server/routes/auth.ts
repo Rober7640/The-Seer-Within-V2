@@ -703,7 +703,10 @@ router.post('/reset-password/:token', async (req: Request, res: Response) => {
 
     logger.info('Password reset completed', { email: user.email });
 
-    res.json({ success: true, message: 'Password has been reset successfully. You can now sign in with your new password.' });
+    // Return a JWT so the frontend can auto-login after password reset
+    const jwtToken = generateToken(user.id, user.email);
+
+    res.json({ success: true, token: jwtToken, message: 'Password has been reset successfully.' });
   } catch (error) {
     logger.error('Reset password error:', error);
     res.status(500).json({ error: 'Failed to reset password' });

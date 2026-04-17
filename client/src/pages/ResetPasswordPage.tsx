@@ -62,6 +62,20 @@ export default function ResetPasswordPage({ params }: { params: { token: string 
       });
 
       if (res.ok) {
+        const data = await res.json();
+        // Auto-login if server returned a JWT
+        if (data.token) {
+          localStorage.setItem("seer_auth_token", data.token);
+          // Redirect to pending persona chat or default reading page
+          const pendingPersona = localStorage.getItem("seer-pending-persona");
+          if (pendingPersona) {
+            localStorage.removeItem("seer-pending-persona");
+            navigate(`/chat/${pendingPersona}`);
+            return;
+          }
+          navigate("/reading");
+          return;
+        }
         setSuccess(true);
       } else {
         const data = await res.json();
