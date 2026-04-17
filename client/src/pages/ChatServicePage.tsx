@@ -296,43 +296,31 @@ export default function ChatServicePage() {
     }
   }, [user, session]);
 
-  // After rescue hatch (Stripe Checkout redirect), poll until webhook grants coins.
-  // The webhook may not have fired yet when the redirect lands, so a single fetch
-  // could still see coinBalance = 0. Poll /api/auth/me every 2s for up to 20s.
+  // After Stripe Checkout redirect (rescue hatch), confirm the payment server-side
+  // and grant coins synchronously — don't rely on the webhook which may be delayed.
   useEffect(() => {
     const params = new URLSearchParams(searchString);
-    if (params.get("purchased") !== "true" || !isAuthenticated) return;
+    const purchased = params.get("purchased");
+    const sessionId = params.get("session_id");
+    if (purchased !== "true" || !sessionId || !isAuthenticated) return;
 
     // Clean URL immediately so refresh doesn't re-trigger
     window.history.replaceState({}, "", window.location.pathname);
 
-    let cancelled = false;
-    let attempts = 0;
-    const maxAttempts = 10;
-
-    const poll = async () => {
-      while (!cancelled && attempts < maxAttempts) {
-        attempts++;
-        try {
-          const res = await authFetch("/api/auth/me");
-          if (res.ok) {
-            const data = await res.json();
-            if (data.coinBalance > 0) {
-              setCoinBalance(data.coinBalance);
-              skipAuthCoinSyncRef.current = true;
-              refreshUser();
-              return;
-            }
-          }
-        } catch {}
-        if (!cancelled && attempts < maxAttempts) {
-          await new Promise(r => setTimeout(r, 2000));
+    authFetch("/api/credits/confirm-checkout", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ sessionId }),
+    })
+      .then(res => res.ok ? res.json() : null)
+      .then(data => {
+        if (data?.newBalance > 0) {
+          setCoinBalance(data.newBalance);
+          skipAuthCoinSyncRef.current = true;
+          refreshUser();
         }
-      }
-    };
-    poll();
-
-    return () => { cancelled = true; };
+      })
+      .catch(() => {});
   }, [searchString, isAuthenticated]);
 
   // Check if user is eligible for the one-time welcome pack

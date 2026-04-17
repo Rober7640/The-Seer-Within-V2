@@ -614,6 +614,97 @@ router.post('/capture-order', requireAuth, async (req: Request, res: Response) =
   }
 });
 
+// POST /api/credits/confirm-checkout - Confirm a Stripe Checkout Session and grant coins.
+// Called by the frontend after a Stripe Checkout redirect (e.g. rescue hatch).
+// This is the synchronous counterpart to the webhook — if the webhook already
+// processed the purchase, this is a no-op that returns the current balance.
+const confirmCheckoutSchema = z.object({
+  sessionId: z.string().min(1),
+});
+
+router.post('/confirm-checkout', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const parseResult = confirmCheckoutSchema.safeParse(req.body);
+    if (!parseResult.success) {
+      res.status(400).json({ error: parseResult.error.errors.map(e => e.message).join(', ') });
+      return;
+    }
+
+    const { sessionId } = parseResult.data;
+
+    if (!stripe) {
+      res.status(400).json({ error: 'Stripe not configured' });
+      return;
+    }
+
+    // Retrieve the Checkout Session from Stripe
+    const checkoutSession = await stripe.checkout.sessions.retrieve(sessionId);
+    if (checkoutSession.payment_status !== 'paid') {
+      res.status(400).json({ error: `Payment not completed (status: ${checkoutSession.payment_status})` });
+      return;
+    }
+
+    const purchaseId = checkoutSession.metadata?.purchaseId;
+    const totalCoins = parseInt(checkoutSession.metadata?.totalCoins || '0', 10);
+
+    if (!purchaseId || !totalCoins) {
+      res.status(400).json({ error: 'Missing checkout metadata' });
+      return;
+    }
+
+    // Idempotency: only grant coins if purchase is still pending.
+    // If the webhook already processed it, this is a safe no-op.
+    const updated = await db.update(creditPurchases)
+      .set({
+        status: 'completed',
+        stripePaymentIntentId: checkoutSession.payment_intent as string,
+        updatedAt: new Date(),
+      })
+      .where(and(eq(creditPurchases.id, purchaseId), eq(creditPurchases.status, 'pending')))
+      .returning({ id: creditPurchases.id });
+
+    if (updated.length > 0) {
+      // Purchase was still pending — grant coins now
+      const userRow = await db.select({ emailVerified: users.emailVerified })
+        .from(users)
+        .where(eq(users.id, req.userId!))
+        .limit(1);
+
+      const needsImplicitVerify = userRow[0] && !userRow[0].emailVerified;
+
+      await db.update(users)
+        .set({
+          coinBalance: sql`coin_balance + ${totalCoins}`,
+          ...(needsImplicitVerify ? {
+            emailVerified: true,
+            verificationToken: null,
+            verificationTokenExpiry: null,
+          } : {}),
+          updatedAt: new Date(),
+        })
+        .where(eq(users.id, req.userId!));
+
+      if (needsImplicitVerify) {
+        logger.info('Rescue hatch confirm-checkout: email auto-verified via payment', { userId: req.userId, purchaseId });
+      }
+      logger.info('Coins added via confirm-checkout', { totalCoins, userId: req.userId, purchaseId });
+    } else {
+      logger.info('confirm-checkout: purchase already processed (webhook beat us)', { purchaseId });
+    }
+
+    // Always return current balance regardless of who granted the coins
+    const currentUser = await db.select({ coinBalance: users.coinBalance })
+      .from(users)
+      .where(eq(users.id, req.userId!))
+      .limit(1);
+
+    res.json({ success: true, newBalance: currentUser[0]?.coinBalance ?? 0 });
+  } catch (error) {
+    logger.error('confirm-checkout error:', error);
+    res.status(500).json({ error: 'Failed to confirm checkout' });
+  }
+});
+
 // POST /api/credits/webhook - Stripe webhook handler
 router.post('/webhook', async (req: Request, res: Response) => {
   if (!stripe) {
