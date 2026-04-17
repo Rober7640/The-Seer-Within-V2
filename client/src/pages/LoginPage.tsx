@@ -95,12 +95,10 @@ export default function LoginPage() {
       if (msg.includes("NO_PASSWORD")) {
         // Server already sent the magic link from the login endpoint
         setMagicLinkSent(true);
+      } else if (msg.includes("401")) {
+        setError("WRONG_PASSWORD");
       } else {
-        setError(
-          msg.includes("401")
-            ? "Invalid email or password"
-            : msg || "Something went wrong",
-        );
+        setError(msg || "Something went wrong");
       }
     } finally {
       setLoading(false);
@@ -260,10 +258,33 @@ export default function LoginPage() {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            {error && (
+            {error && error !== "WRONG_PASSWORD" && (
               <p className="text-red-600 text-xs p-2 bg-red-50 rounded-lg text-center">
                 {error}
               </p>
+            )}
+            {error === "WRONG_PASSWORD" && (
+              <div className="text-xs p-3 bg-red-50 rounded-lg text-center space-y-2">
+                <p className="text-red-600">Invalid email or password</p>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    setLoading(true);
+                    try {
+                      const res = await fetch("/api/auth/send-magic-login", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ email: email.trim() }),
+                      });
+                      if (res.ok) setMagicLinkSent(true);
+                    } catch {}
+                    setLoading(false);
+                  }}
+                  className="text-purple-600 hover:text-purple-800 underline font-medium"
+                >
+                  Send me a sign-in link instead
+                </button>
+              </div>
             )}
 
             {isSignUp && (
