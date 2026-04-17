@@ -9,6 +9,7 @@ import { verifyMagicLinkToken, generateMagicLinkToken } from '../lib/magicLink';
 import { authLimiter, passwordResetLimiter } from '../lib/rateLimiter';
 import { sendVerificationEmail } from '../lib/verificationEmail';
 import { sendPasswordResetEmail } from '../lib/passwordResetEmail';
+import { isDisposableEmail } from '../lib/disposableEmailDomains';
 import {
   checkRegistrationFraud,
   extractClientIp,
@@ -172,6 +173,15 @@ router.post('/magic-register', authLimiter, async (req: Request, res: Response) 
       return;
     }
 
+    // Layer 1: Block disposable/temporary email domains
+    if (isDisposableEmail(email)) {
+      res.status(400).json({
+        error: 'Please use a permanent email address. Temporary email services are not accepted.',
+        code: 'DISPOSABLE_EMAIL',
+      });
+      return;
+    }
+
     // Extract fraud detection signals
     const clientIp = extractClientIp(req);
     const userAgent = extractUserAgent(req);
@@ -179,6 +189,16 @@ router.post('/magic-register', authLimiter, async (req: Request, res: Response) 
 
     // Check for fraud patterns before creating account
     const fraudCheck = await checkRegistrationFraud(clientIp, fingerprint);
+
+    // Layer 2: Block registration if too many accounts from same IP
+    if (fraudCheck.flagged && fraudCheck.flags.includes('ip_flagged')) {
+      logger.warn(`[Abuse Prevention] Registration blocked — IP rate limit exceeded`, { ip: clientIp, recentAccounts: fraudCheck.recentAccountsFromIp });
+      res.status(429).json({
+        error: 'Too many accounts created from this location. Please try again tomorrow.',
+        code: 'IP_RATE_LIMIT',
+      });
+      return;
+    }
 
     // In test environments, auto-verify email and grant coins immediately
     const isTestEnv = process.env.NODE_ENV === 'test' || process.env.DISABLE_RATE_LIMIT === 'true';
