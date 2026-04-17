@@ -8,7 +8,7 @@ import { Request } from 'express';
 import logger from './logger';
 
 // Thresholds
-const MAX_ACCOUNTS_PER_IP_24H = 3;
+const MAX_ACCOUNTS_PER_IP_24H = parseInt(process.env.MAX_ACCOUNTS_PER_IP_24H || '3', 10);
 
 export type FraudFlag = 'ip_flagged' | 'manual_review' | 'fingerprint_flagged' | 'cleared';
 
