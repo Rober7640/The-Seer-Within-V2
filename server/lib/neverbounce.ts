@@ -47,13 +47,13 @@ export async function validateEmail(email: string): Promise<EmailValidationResul
     const res = await fetch(url);
     const data: NeverBounceResponse = await res.json();
 
-    logger.info('[NeverBounce] Response', {
+    logger.info(`[NeverBounce] Response ${JSON.stringify({
       email,
       status: data.status,
       result: data.result,
       flags: data.flags,
       suggested_correction: data.suggested_correction,
-    });
+    })}`);
 
     if (data.status !== 'success') {
       logger.warn('[NeverBounce] API returned error', { status: data.status, message: data.message });
