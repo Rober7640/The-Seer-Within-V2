@@ -13,18 +13,18 @@ const variants: Record<string, {
   trust: string;
 }> = {
   default: {
-    headline: "Everything You Desire Is Within Reach",
-    subheadline: <>Evelyn has sensed the blessings you so richly deserve. <br/><strong className="text-gray-900 font-semibold"> Don't miss your chance for your life to be changed forever.</strong></>,
-    cta: "Yes Evelyn, Please Begin My FREE Reading!",
-    scarcity: "* Each reading drains Evelyn's energy. If you're reading this, you have been chosen...",
-    trust: "Trusted By 1,111+ Seekers",
-  },
-  a: {
     headline: "Something Is Holding You Back — I Can See It",
     subheadline: <>Evelyn has detected a disturbance in your energy field. A free reading will reveal what's standing in your way.</>,
     cta: "Yes Evelyn, Show Me What's Blocking My Path!",
     scarcity: "Evelyn can only hold a limited number of connections each day. Your spot is open now.",
     trust: "Trusted By 2,400+ Clients",
+  },
+  a: {
+    headline: "Everything You Desire Is Within Reach",
+    subheadline: <>Evelyn has sensed the blessings you so richly deserve. <br/><strong className="text-gray-900 font-semibold"> Don't miss your chance for your life to be changed forever.</strong></>,
+    cta: "Yes Evelyn, Please Begin My FREE Reading!",
+    scarcity: "* Each reading drains Evelyn's energy. If you're reading this, you have been chosen...",
+    trust: "Trusted By 1,111+ Seekers",
   },
   b: {
     headline: "Evelyn Has a Message for You",
