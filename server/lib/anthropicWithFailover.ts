@@ -30,11 +30,12 @@ interface KeyEntry {
 const COOLDOWN_MS = 60_000; // skip a failing key for 60s before re-probing
 const ALERT_DEBOUNCE_MS = 30 * 60 * 1000; // one alert per event type per 30 min
 
+// NOTE: Joel's email (outsourcejoel@gmail.com) intentionally omitted during
+// testing — add back before production rollout.
 const DEFAULT_ALERT_RECIPIENTS = [
   'hi@theseerwithin.com',
   'robertoutsource88@gmail.com',
   'mike@altiuspublishing.com',
-  'outsourcejoel@gmail.com',
 ];
 
 function buildKeyList(): KeyEntry[] {
