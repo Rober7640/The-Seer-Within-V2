@@ -333,11 +333,37 @@ router.get('/verify-email/:token', async (req: Request, res: Response) => {
       return;
     }
 
-    // Check if already verified — still auto-login so the link works from any device
+    // Check if already verified — still auto-login so the link works from any device.
+    // This branch is also hit when an email-scanner (Gmail/Outlook) prefetched the link
+    // before the real user clicked it.
     if (user.emailVerified) {
-      const jwtToken = generateToken(user.id, user.email);
       const baseUrl = process.env.BASE_URL || 'http://localhost:5000';
-      res.redirect(`${baseUrl}/login?verified=already&token=${jwtToken}`);
+
+      // If the original verification-token window has lapsed, don't auto-login via
+      // a stale link — just show the "already verified" message on the login page.
+      if (user.verificationTokenExpiry && user.verificationTokenExpiry < new Date()) {
+        res.redirect(`${baseUrl}/login?verified=already`);
+        return;
+      }
+
+      const jwtToken = generateToken(user.id, user.email);
+
+      // Include persona slug so cross-device verification preserves persona context.
+      // Same priority rule as the success branch below: query param > user's default persona.
+      let personaParam = '';
+      const queryPersona = req.query.persona as string | undefined;
+      if (queryPersona) {
+        personaParam = `&persona=${encodeURIComponent(queryPersona)}`;
+      } else if (user.defaultPersonaId) {
+        const personaRow = await db.select({ slug: personas.slug })
+          .from(personas)
+          .where(eq(personas.id, user.defaultPersonaId))
+          .limit(1);
+        if (personaRow[0]?.slug) {
+          personaParam = `&persona=${personaRow[0].slug}`;
+        }
+      }
+      res.redirect(`${baseUrl}/login?verified=already&token=${jwtToken}${personaParam}`);
       return;
     }
 
@@ -347,13 +373,14 @@ router.get('/verify-email/:token', async (req: Request, res: Response) => {
       return;
     }
 
-    // Mark email as verified and grant free credits (atomic increment + guard against double-verify)
+    // Mark email as verified and grant free credits (atomic increment + guard against double-verify).
+    // Intentionally keep verificationToken/Expiry in place so that if an email-scanner
+    // prefetches the link, the real user's later click still finds the token and auto-logs
+    // in via the "already verified" branch above. Expiry check there prevents stale reuse.
     await db.update(users)
       .set({
         emailVerified: true,
         coinBalance: sql`coin_balance + ${FREE_COINS_ON_VERIFY}`,
-        verificationToken: null,
-        verificationTokenExpiry: null,
         updatedAt: new Date(),
       })
       .where(and(eq(users.id, user.id), eq(users.emailVerified, false)));
