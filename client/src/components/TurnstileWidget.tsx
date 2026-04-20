@@ -8,6 +8,9 @@ const TURNSTILE_SITE_KEY = import.meta.env.VITE_TURNSTILE_SITE_KEY || "";
 
 interface TurnstileWidgetProps {
   onToken: (token: string) => void;
+  // When this value changes, the widget resets and issues a fresh token.
+  // Turnstile tokens are single-use, so reset after each form submission.
+  resetKey?: number;
 }
 
 declare global {
@@ -31,7 +34,7 @@ declare global {
   }
 }
 
-export default function TurnstileWidget({ onToken }: TurnstileWidgetProps) {
+export default function TurnstileWidget({ onToken, resetKey }: TurnstileWidgetProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const widgetIdRef = useRef<string | null>(null);
   const scriptLoadedRef = useRef(false);
@@ -83,6 +86,15 @@ export default function TurnstileWidget({ onToken }: TurnstileWidgetProps) {
       }
     };
   }, [renderWidget]);
+
+  // Reset on resetKey change so a fresh single-use token is issued.
+  useEffect(() => {
+    if (resetKey === undefined) return;
+    if (widgetIdRef.current && window.turnstile) {
+      onToken("");
+      window.turnstile.reset(widgetIdRef.current);
+    }
+  }, [resetKey, onToken]);
 
   if (!TURNSTILE_SITE_KEY) return null;
 

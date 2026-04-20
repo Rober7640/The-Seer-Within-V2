@@ -43,6 +43,7 @@ export default function AidenQuizPage() {
   const [magicLinkSent, setMagicLinkSent] = useState(false);
   const [magicLinkLoading, setMagicLinkLoading] = useState(false);
   const [turnstileToken, setTurnstileToken] = useState("");
+  const [turnstileResetKey, setTurnstileResetKey] = useState(0);
   const [suggestedEmail, setSuggestedEmail] = useState<string | null>(null);
 
   // Check email state
@@ -220,6 +221,8 @@ export default function AidenQuizPage() {
           } else {
             setGateError(data.error || "Something went wrong. Please try again.");
           }
+          // Turnstile tokens are single-use — reset so the next submit gets a fresh one.
+          setTurnstileResetKey(k => k + 1);
           setGateLoading(false);
           return;
         }
@@ -507,7 +510,7 @@ export default function AidenQuizPage() {
                 </label>
 
                 {/* Invisible Turnstile CAPTCHA */}
-                <TurnstileWidget onToken={setTurnstileToken} />
+                <TurnstileWidget onToken={setTurnstileToken} resetKey={turnstileResetKey} />
 
                 {/* Existing account notice */}
                 {existingAccount && (
