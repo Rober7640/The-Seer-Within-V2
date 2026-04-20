@@ -41,7 +41,7 @@ export type UpsellStage =
 // ============================================
 
 export const UPSELL_CONFIRMATION = [
-  "It's done, {firstName}. Your Sacred Clearing Ritual has been scheduled.",
+  "It's done, {firstName}. Your Energy Clearing Ritual has been scheduled.",
   "I'll begin the work tonight, and your reading will arrive within 24 hours.",
   "But before I let you go... there's something I need to tell you.",
 ]
