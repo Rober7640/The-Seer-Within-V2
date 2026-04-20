@@ -39,11 +39,7 @@ import { calculateNumerologyProfile, formatNumerologyProfileForPrompt } from './
 import { sanitizePredictions } from './predictionSanitizer';
 import logger from './logger';
 import { fireWithBreaker, anthropicBreaker, isCircuitOpenError } from './circuitBreaker';
-import Anthropic from '@anthropic-ai/sdk';
-
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY || '',
-});
+import { anthropicFailover as anthropic } from './anthropicWithFailover';
 
 interface ChatResponse {
   sessionId: string;

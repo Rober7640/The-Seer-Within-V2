@@ -9,13 +9,9 @@ import { db } from './db';
 import { personas, personaPrompts, chatSessions, chatMessages } from '@shared/schema';
 import { eq, and, desc, gte } from 'drizzle-orm';
 import { getModelForOperation } from './modelConfig';
-import Anthropic from '@anthropic-ai/sdk';
+import { anthropicFailover as anthropic } from './anthropicWithFailover';
 import logger from './logger';
 import { fireWithBreaker, anthropicBreaker } from './circuitBreaker';
-
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY || '',
-});
 
 // ============================================
 // EXAMPLE CONVERSATIONS (Few-Shot Learning)

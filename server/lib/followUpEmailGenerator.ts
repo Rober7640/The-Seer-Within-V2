@@ -4,7 +4,7 @@
 // Sequence: email #1 at day 2, #2 at day 5, #3 at day 7.
 // Max 3 emails per user lifetime. Stops if user returns between sends.
 
-import Anthropic from '@anthropic-ai/sdk';
+import { anthropicFailover as anthropic } from './anthropicWithFailover';
 import { getModelForOperation } from './modelConfig';
 import { Resend } from 'resend';
 import { db } from './db';
@@ -22,10 +22,6 @@ import { buildFollowUpHtml, buildFollowUpText } from './emailTemplate';
 import { generateMagicLinkToken } from './magicLink';
 import logger from './logger';
 import { fireWithBreaker, resendBreaker, anthropicBreaker } from './circuitBreaker';
-
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY || '',
-});
 
 // Initialize Resend only if API key is provided
 const resend = process.env.RESEND_API_KEY

@@ -1,6 +1,6 @@
 // Server-side Claude API wrapper
 
-import Anthropic from '@anthropic-ai/sdk'
+import { anthropicFailover as anthropic } from './anthropicWithFailover'
 import logger from './logger'
 import { fireWithBreaker, anthropicBreaker, isCircuitOpenError } from './circuitBreaker'
 import { getModelForOperation } from './modelConfig'
@@ -21,10 +21,6 @@ import {
   buildManifestRevealPrompt,
   buildManifestPersonalizePrompt,
 } from './prompts'
-
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY || '',
-})
 
 interface ClaudeResponse {
   messages: string[]
