@@ -1596,10 +1596,13 @@ export async function sendMessage(
     };
   } catch (error) {
     const errMessage = (error as Error).message || '';
-    // Only the Anthropic failover wrapper throws this exact string, and only after
+    // Only the Anthropic failover wrapper marks this, and only after
     // primary + backup_1 + backup_2 have all failed. Matching on it keeps us from
-    // ending sessions on transient blips or circuit-open states.
-    const isAllKeysExhausted = errMessage.includes('all keys exhausted');
+    // ending sessions on transient blips or circuit-open states. Check both the
+    // flag (new canonical path) and the message string (defensive fallback).
+    const isAllKeysExhausted =
+      (error as any)?.allKeysExhausted === true ||
+      errMessage.includes('all keys exhausted');
 
     if (isCircuitOpenError(error)) {
       logger.warn('Anthropic circuit open, using fallback response', { sessionId, userId });

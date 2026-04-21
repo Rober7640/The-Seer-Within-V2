@@ -219,7 +219,17 @@ async function runWithFailover<T>(
       `Check Anthropic status page + each key's billing/rate-limits immediately.`,
     'all_keys_down',
   );
-  throw lastErr ?? new Error('Anthropic failover: all keys exhausted');
+  // Always throw a wrapper error so callers can reliably detect total exhaustion.
+  // The original SDK error (including `status`) is preserved on `.cause` and mirrored
+  // on the wrapper so any caller that inspected `err.status` in the old code path
+  // continues to work.
+  const exhaustedErr = new Error('Anthropic failover: all keys exhausted');
+  (exhaustedErr as any).allKeysExhausted = true;
+  (exhaustedErr as any).cause = lastErr;
+  if (lastErr && typeof lastErr === 'object' && 'status' in (lastErr as any)) {
+    (exhaustedErr as any).status = (lastErr as any).status;
+  }
+  throw exhaustedErr;
 }
 
 // ---------- Public API (drop-in for `new Anthropic()`) ----------
