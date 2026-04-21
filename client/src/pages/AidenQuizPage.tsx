@@ -248,7 +248,7 @@ export default function AidenQuizPage() {
       await fetch("/api/auth/resend-verification", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: registeredEmail }),
+        body: JSON.stringify({ email: registeredEmail, persona: "aiden-powers" }),
       });
       setResendSent(true);
       setTimeout(() => setResendSent(false), 5000);

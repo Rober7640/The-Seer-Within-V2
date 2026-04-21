@@ -47,6 +47,7 @@ const changePasswordSchema = z.object({
 
 const resendVerificationSchema = z.object({
   email: z.string().email(),
+  persona: z.string().optional(),
 });
 
 // Verification expiry is computed in PostgreSQL via sql`NOW() + INTERVAL ...`
@@ -232,6 +233,16 @@ router.post('/magic-register', authLimiter, async (req: Request, res: Response) 
     // Generate email verification token
     const verificationToken = randomUUID();
 
+    // Look up persona ID up-front so we can stamp defaultPersonaId on the user.
+    // Without defaultPersonaId set, a resent verification link (which may lack
+    // ?persona=...) would land the user on generic /login instead of the Aiden chat,
+    // because verify-email's persona fallback reads defaultPersonaId.
+    const personaRow = await db.select({ id: personas.id })
+      .from(personas)
+      .where(eq(personas.slug, persona))
+      .limit(1);
+    const personaId = personaRow[0]?.id || null;
+
     const newUser = await db.insert(users).values({
       email: email.toLowerCase(),
       passwordHash: null,
@@ -246,6 +257,7 @@ router.post('/magic-register', authLimiter, async (req: Request, res: Response) 
       registrationUserAgent: userAgent,
       deviceFingerprint: fingerprint,
       accountFlags: fraudCheck.flagged ? serializeAccountFlags(fraudCheck.flags) : null,
+      defaultPersonaId: personaId,
     }).returning();
 
     const user = newUser[0];
@@ -253,14 +265,6 @@ router.post('/magic-register', authLimiter, async (req: Request, res: Response) 
 
     // Store quiz data as a user memory for system prompt injection
     if (quizData) {
-      // Look up persona ID for the memory record
-      const personaRow = await db.select({ id: personas.id })
-        .from(personas)
-        .where(eq(personas.slug, persona))
-        .limit(1);
-
-      const personaId = personaRow[0]?.id || null;
-
       await db.insert(userMemory).values({
         userId: user.id,
         personaId,
@@ -422,7 +426,7 @@ router.post('/resend-verification', authLimiter, async (req: Request, res: Respo
       return;
     }
 
-    const { email } = parseResult.data;
+    const { email, persona: personaFromBody } = parseResult.data;
 
     const result = await db.select()
       .from(users)
@@ -448,7 +452,19 @@ router.post('/resend-verification', authLimiter, async (req: Request, res: Respo
       })
       .where(eq(users.id, user.id));
 
-    await sendVerificationEmail(user.email, user.firstName, verificationToken);
+    // Preserve persona context on the resent link. Without this the verify-email
+    // redirect loses the persona query and lands the user on /login instead of
+    // the persona-specific chat. Priority: explicit body > user's defaultPersonaId.
+    let personaSlug: string | undefined = personaFromBody;
+    if (!personaSlug && user.defaultPersonaId) {
+      const personaRow = await db.select({ slug: personas.slug })
+        .from(personas)
+        .where(eq(personas.id, user.defaultPersonaId))
+        .limit(1);
+      personaSlug = personaRow[0]?.slug;
+    }
+
+    await sendVerificationEmail(user.email, user.firstName, verificationToken, personaSlug);
 
     res.json({ success: true, message: 'If an unverified account exists, a verification email has been sent.' });
   } catch (error) {
