@@ -5,6 +5,7 @@ import { BackgroundMusic } from '../components/BackgroundMusic';
 import { Upsell2CTA, Upsell2DownsellCTA, ShippingForm, QuickReplies } from '../components/upsell';
 import { useUpsell2Chat, Message } from '../hooks/useUpsell2Chat';
 import { trackUpsellPurchase } from '../lib/facebook';
+import { trackGAdsPurchase } from '../lib/gtm';
 import { Volume2, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -132,6 +133,7 @@ export default function Upsell2Page() {
         // Track Upsell 1 event on /welcome2 load (fires once per session)
         if (data.upsellPurchased) {
           trackUpsellPurchase(47, "USD", data.email, "Protection Ritual + Lava Stone");
+          trackGAdsPurchase("upsell1", 47, sid);
 
           // Trackdesk affiliate conversion tracking - upsell 1
           if (typeof window.trackdesk === "function") {

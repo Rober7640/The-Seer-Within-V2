@@ -4,6 +4,7 @@ import { CosmicBackground } from "../components/CosmicBackground";
 import { Link } from "wouter";
 import { CheckCircle, Package, Mail, Sparkles, Gem } from "lucide-react";
 import { trackPurchase, trackUpsellPurchase } from "../lib/facebook";
+import { trackGAdsPurchase } from "../lib/gtm";
 
 interface OrderData {
   firstName: string;
@@ -153,6 +154,7 @@ export default function SuccessPage() {
           if (boughtUpsell2 && sessionId) {
             const amount = (data.upsell2Amount || 4700) / 100;
             trackUpsellPurchase(amount, "USD", data.email, "Manifestation Bracelet");
+            trackGAdsPurchase("upsell2", amount, sessionId);
           }
         }
       } catch (err) {
