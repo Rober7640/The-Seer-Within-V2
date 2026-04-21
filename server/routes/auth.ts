@@ -1026,6 +1026,37 @@ router.post('/magic-verify', authLimiter, async (req: Request, res: Response) =>
       return res.status(401).json({ error: 'User not found' });
     }
 
+    // If the magic-link arrives for a still-unverified user (e.g. Aiden follow-up CTA),
+    // this click both verifies the email and grants the same free coins as the normal
+    // /verify-email path. The WHERE guard prevents double-grant on concurrent clicks.
+    let freshCoinBalance = user.coinBalance;
+    let freshEmailVerified = user.emailVerified;
+    if (!user.emailVerified) {
+      const updated = await db
+        .update(users)
+        .set({
+          emailVerified: true,
+          coinBalance: sql`coin_balance + ${FREE_COINS_ON_VERIFY}`,
+          updatedAt: new Date(),
+        })
+        .where(and(eq(users.id, user.id), eq(users.emailVerified, false)))
+        .returning({
+          coinBalance: users.coinBalance,
+          emailVerified: users.emailVerified,
+        });
+
+      if (updated[0]) {
+        freshCoinBalance = updated[0].coinBalance;
+        freshEmailVerified = updated[0].emailVerified;
+        // Halt the Aiden follow-up drip (non-blocking — must not fail the login).
+        skipAidenFollowupsForUser(user.id, 'user_verified').catch(() => { /* logged inside */ });
+        logger.info('Magic-link verified email and granted free coins', {
+          userId: user.id,
+          coinBalance: freshCoinBalance,
+        });
+      }
+    }
+
     // Migrated V1 users who haven't set a password yet need to do so on first login
     const needsPasswordSetup = !!(user.migratedFromConversationId && !user.passwordChangedAt);
 
@@ -1039,11 +1070,11 @@ router.post('/magic-verify', authLimiter, async (req: Request, res: Response) =>
         id: user.id,
         email: user.email,
         firstName: user.firstName,
-        coinBalance: user.coinBalance,
+        coinBalance: freshCoinBalance,
         totalCoinsUsed: user.totalCoinsUsed,
         defaultPersonaId: user.defaultPersonaId,
         accountStatus: user.accountStatus,
-        emailVerified: user.emailVerified,
+        emailVerified: freshEmailVerified,
       },
     });
   } catch (error: any) {
