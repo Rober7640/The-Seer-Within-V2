@@ -18,6 +18,7 @@ import fraudRoutes from './fraud';
 import marketplaceRoutes from './marketplace';
 import settingsRoutes from './settings';
 import emailDripRoutes from './emailDrip';
+import aidenFollowUpRoutes from './aidenFollowUps';
 import logger from '../../lib/logger';
 
 const router = Router();
@@ -185,5 +186,6 @@ router.use('/fraud', fraudRoutes);
 router.use('/marketplace', marketplaceRoutes);
 router.use('/settings', settingsRoutes);
 router.use('/email-drip', emailDripRoutes);
+router.use('/aiden-follow-ups', aidenFollowUpRoutes);
 
 export default router;

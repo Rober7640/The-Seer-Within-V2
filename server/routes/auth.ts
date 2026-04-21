@@ -21,6 +21,10 @@ import {
 } from '../lib/fraudDetection';
 import { isPersonaOnline } from '../lib/personaManager';
 import { endChatSession } from '../lib/creditTracking';
+import {
+  scheduleAidenFollowups,
+  skipAidenFollowupsForUser,
+} from '../lib/aidenFollowupEmailGenerator';
 import logger from '../lib/logger';
 
 const FREE_COINS_ON_VERIFY = 180;
@@ -296,6 +300,19 @@ router.post('/magic-register', authLimiter, async (req: Request, res: Response) 
       });
     }
 
+    // Schedule Aiden follow-up nurture sequence (+10m/+24h/+48h).
+    // Aiden persona only, non-test env only. Flag-gated at send time by ENABLE_AIDEN_FOLLOWUPS.
+    // Never blocks registration — swallowed inside scheduleAidenFollowups.
+    if (!isTestEnv && persona === 'aiden-powers') {
+      scheduleAidenFollowups({
+        userId: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        topic: quizData?.topic ?? null,
+        baseTime: user.createdAt ?? new Date(),
+      }).catch(() => { /* already logged inside */ });
+    }
+
     res.status(201).json({
       token,
       user: {
@@ -388,6 +405,9 @@ router.get('/verify-email/:token', async (req: Request, res: Response) => {
         updatedAt: new Date(),
       })
       .where(and(eq(users.id, user.id), eq(users.emailVerified, false)));
+
+    // Halt the Aiden follow-up drip (non-blocking — failure must not break verification).
+    skipAidenFollowupsForUser(user.id, 'user_verified').catch(() => { /* logged inside */ });
 
     // Generate JWT so the user is auto-logged-in (works even on a different device/browser)
     const jwtToken = generateToken(user.id, user.email);

@@ -595,6 +595,38 @@ export const migrationDripEmails = pgTable("migration_drip_emails", {
   index("idx_migration_drip_status").on(table.status, table.sentAt),
 ]);
 
+// 19. Aiden Follow-Up Emails - Nurture sequence for unverified /aiden signups (+10m/+24h/+48h)
+export const aidenFollowupEmails = pgTable("aiden_followup_emails", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+
+  sequenceNumber: integer("sequence_number").notNull(), // 1, 2, or 3
+  scheduledFor: timestamp("scheduled_for").notNull(),
+
+  recipientEmail: text("recipient_email").notNull(),
+  subject: text("subject").notNull(),
+  bodyHtml: text("body_html").notNull(),
+  bodyText: text("body_text").notNull(),
+
+  status: text("status").default("pending").notNull(), // pending, sent, failed, skipped
+  sentAt: timestamp("sent_at"),
+  resendEmailId: text("resend_email_id"),
+
+  attemptCount: integer("attempt_count").default(0).notNull(),
+  errorMessage: text("error_message"),
+
+  openedAt: timestamp("opened_at"),
+  clickedAt: timestamp("clicked_at"),
+
+  unsubscribeToken: text("unsubscribe_token").unique(),
+
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_aiden_followup_user_seq").on(table.userId, table.sequenceNumber),
+  index("idx_aiden_followup_status_scheduled").on(table.status, table.scheduledFor),
+]);
+
 // ============================================================
 // Insert Schemas (Zod validation)
 // ============================================================
