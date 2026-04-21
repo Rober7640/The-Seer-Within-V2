@@ -1595,13 +1595,39 @@ export async function sendMessage(
       assistantMessageId: insertedAssistantMsg?.id,
     };
   } catch (error) {
+    const errMessage = (error as Error).message || '';
+    // Only the Anthropic failover wrapper throws this exact string, and only after
+    // primary + backup_1 + backup_2 have all failed. Matching on it keeps us from
+    // ending sessions on transient blips or circuit-open states.
+    const isAllKeysExhausted = errMessage.includes('all keys exhausted');
+
     if (isCircuitOpenError(error)) {
       logger.warn('Anthropic circuit open, using fallback response', { sessionId, userId });
+    } else if (isAllKeysExhausted) {
+      logger.error('All Anthropic keys exhausted — auto-ending session to stop billing', { sessionId, userId });
     } else {
-      logger.error('Chat engine error', { error: (error as Error).message, sessionId, userId });
+      logger.error('Chat engine error', { error: errMessage, sessionId, userId });
     }
 
-    const fallback = 'The energy is shifting... give me a moment to refocus.';
+    // When every configured Anthropic key has failed, the session can't produce real
+    // responses. End it so the billing timer stops and the user isn't charged for
+    // dead air while Anthropic recovers. Wrapped in its own try/catch so an
+    // endChatSession failure still lets us return the fallback message.
+    if (isAllKeysExhausted) {
+      try {
+        await endChatSession(sessionId);
+      } catch (endErr) {
+        logger.error('Failed to end session after Anthropic outage', {
+          sessionId,
+          error: (endErr as Error).message,
+        });
+      }
+    }
+
+    const fallback = isAllKeysExhausted
+      ? "Our readers are briefly unreachable — your session has been paused so you won't be charged. Please try again in a few minutes."
+      : 'The energy is shifting... give me a moment to refocus.';
+
     const [fallbackMsg] = await db.insert(chatMessages).values({
       sessionId,
       userId,
@@ -1614,7 +1640,7 @@ export async function sendMessage(
       message: fallback,
       topic: null,
       creditsRemaining: user[0].coinBalance,
-      sessionActive: true,
+      sessionActive: !isAllKeysExhausted,
       userMessageId: insertedUserMsg?.id,
       assistantMessageId: fallbackMsg?.id,
     };
