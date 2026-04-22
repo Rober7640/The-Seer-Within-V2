@@ -818,7 +818,7 @@ export function useConversation() {
       `Thank you, ${chat.userData.firstName}. You're making the right decision...`,
       "For the clearing to be sealed, a Sacred Offering must be made...",
       "This isn't payment — it's a declaration to the universe.",
-      "It comes with my 60-day guarantee.",
+      "It comes with my 30-day guarantee.",
       `This is your moment, ${chat.userData.firstName}.`,
     ])
 
@@ -1097,7 +1097,7 @@ export function DownsellCTA({ onClick }: DownsellCTAProps) {
         ✨ Get Your Written Reading — $17
       </button>
       <div className="flex justify-center gap-4 text-xs text-gray-400">
-        <span>🔒 60-Day Guarantee</span>
+        <span>🔒 30-Day Guarantee</span>
         <span>•</span>
         <span>100% Secure</span>
       </div>

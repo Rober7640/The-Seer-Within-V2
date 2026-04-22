@@ -309,7 +309,7 @@ export const PITCH_MESSAGES = {
   ],
   
   guarantee: [
-    "It comes with my 60-day guarantee — if you don't feel a shift, every penny returned.",
+    "It comes with my 30-day guarantee — if you don't feel a shift, every penny returned.",
   ],
   
   urgency: [
@@ -329,7 +329,7 @@ export const OFFER_EXPLANATION = [
   "Let me explain what I'm offering, dear...",
   "I'll perform a Sacred Clearing Ritual — focusing my energy entirely on removing the shadow that's blocking your path.",
   "Within 24 hours, you'll receive a complete written reading via email: what I found, what I cleared, and guidance for the days ahead.",
-  "It's $35, and comes with my 60-day guarantee. If you feel nothing has shifted, you get every penny back.",
+  "It's $35, and comes with my 30-day guarantee. If you feel nothing has shifted, you get every penny back.",
   "I only offer this when the timing is right... and for you, it's right now.",
 ]
 

@@ -12,7 +12,7 @@ export function PurchaseCTA({ onClick }: PurchaseCTAProps) {
         Begin My Energy Clearing - $35
       </button>
       <div className="flex justify-center gap-4 text-xs text-gray-400">
-        <span>🔒 60-Day Guarantee</span>
+        <span>🔒 30-Day Guarantee</span>
         <span>100% Secure</span>
       </div>
     </div>

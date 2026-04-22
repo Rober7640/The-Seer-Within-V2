@@ -327,7 +327,7 @@ export const OFFER_EXPLANATION = [
   "I'll perform an Energy Clearing Ritual — focusing my energy entirely on removing the shadow that's blocking your path.",
   "Within 24 hours, you'll receive a complete written reading via email.",
   "It will show you exactly what I found, what I cleared, and guidance for the weeks ahead.",
-  "It's $35, and comes with my 60-day guarantee — if you feel nothing has shifted, every penny returned.",
+  "It's $35, and comes with my 30-day guarantee — if you feel nothing has shifted, every penny returned.",
   "I only offer this when the timing is right... and for you, it's right now.",
 ]
 
@@ -351,7 +351,7 @@ export const PITCH_MESSAGES = {
   ],
   
   guarantee: [
-    "It comes with my 60-day guarantee — if you don't feel a shift, every penny returned. No questions.",
+    "It comes with my 30-day guarantee — if you don't feel a shift, every penny returned. No questions.",
   ],
   
   urgency: [
