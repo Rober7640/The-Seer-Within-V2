@@ -1132,7 +1132,7 @@ export function useConversation() {
     // Step 5: Price + guarantee + SOCIAL PROOF
     await sendBotMessages([
       "The sacred offering is $35 — a declaration to the universe that you're ready for this change.",
-      "It comes with my 60-day guarantee. If you feel nothing has shifted, every penny returned.",
+      "It comes with my 30-day guarantee. If you feel nothing has shifted, every penny returned.",
       `I've done this work for hundreds of seekers, ${firstName}. Most feel a shift within the first week.`,
     ])
 

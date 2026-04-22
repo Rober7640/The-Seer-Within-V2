@@ -241,7 +241,7 @@ export const UPSELL2_SOCIAL_PROOF = [
 
 export const UPSELL2_PRICE = [
   "The Manifestation Bracelet, fully charged and attuned to your desire, is $47. Shipped directly to you.",
-  "Same 60-day guarantee. If you don't feel the shift... if nothing starts moving toward you... every penny back. Keep the bracelet.",
+  "Same 30-day guarantee. If you don't feel the shift... if nothing starts moving toward you... every penny back. Keep the bracelet.",
   "I've never had anyone return one.",
 ]
 

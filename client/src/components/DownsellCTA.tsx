@@ -12,7 +12,7 @@ export function DownsellCTA({ onClick }: DownsellCTAProps) {
         Get Your Written Reading - $25
       </button>
       <div className="flex justify-center gap-4 text-xs text-gray-400">
-        <span>🔒 60-Day Guarantee</span>
+        <span>🔒 30-Day Guarantee</span>
         <span>100% Secure</span>
       </div>
     </div>

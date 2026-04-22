@@ -38,7 +38,7 @@ Upsell 1 (Protection Ritual + Lava Stone — $47)
 - **Price:** $47 (downsell: $30)
 - **Trigger:** Appears in the chat flow immediately after upsell 1 (Protection Ritual + Lava Stone — $47), whether the user bought or declined it
 - **Delivery:** Physical bracelet shipped to buyer
-- **Guarantee:** 60-day money-back, keep the bracelet
+- **Guarantee:** 30-day money-back, keep the bracelet
 - **Angle:** The clearing removes what's blocking you. The stone protects you while you heal. But neither one actively PULLS your desire toward you. This bracelet is the magnet.
 
 ## The Trilogy
@@ -430,7 +430,7 @@ The Manifestation Bracelet, fully charged and attuned to your desire, is $47. Sh
 ```
 
 ```
-Same 60-day guarantee. If you don't feel the shift... if nothing starts moving toward you... every penny back. Keep the bracelet.
+Same 30-day guarantee. If you don't feel the shift... if nothing starts moving toward you... every penny back. Keep the bracelet.
 ```
 
 ```
@@ -461,7 +461,7 @@ Claim My Manifestation Bracelet — $47
 
 **Below CTA:**
 ```
-🔒 60-Day Guarantee | Free Shipping | 100% Secure
+🔒 30-Day Guarantee | Free Shipping | 100% Secure
 ```
 
 **Decline link:**
@@ -509,7 +509,7 @@ Claim My Manifestation Bracelet — $30
 
 **Below CTA:**
 ```
-🔒 60-Day Guarantee | Free Shipping | 100% Secure
+🔒 30-Day Guarantee | Free Shipping | 100% Secure
 ```
 
 **Decline link:**
