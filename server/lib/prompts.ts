@@ -324,7 +324,7 @@ export const BUCKET_PROMPTS: Record<Bucket, string> = {
 
 export const OFFER_EXPLANATION = [
   "Let me explain what I'm offering, dear...",
-  "I'll perform a Sacred Clearing Ritual — focusing my energy entirely on removing the shadow that's blocking your path.",
+  "I'll perform an Energy Clearing Ritual — focusing my energy entirely on removing the shadow that's blocking your path.",
   "Within 24 hours, you'll receive a complete written reading via email.",
   "It will show you exactly what I found, what I cleared, and guidance for the weeks ahead.",
   "It's $35, and comes with my 60-day guarantee — if you feel nothing has shifted, every penny returned.",

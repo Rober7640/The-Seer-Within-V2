@@ -4,6 +4,7 @@ import { CosmicBackground } from "../components/CosmicBackground";
 import { Link } from "wouter";
 import { CheckCircle, Package, Mail, Sparkles, Gem } from "lucide-react";
 import { trackPurchase, trackUpsellPurchase } from "../lib/facebook";
+import { trackGAdsPurchase } from "../lib/gtm";
 
 interface OrderData {
   firstName: string;
@@ -153,6 +154,7 @@ export default function SuccessPage() {
           if (boughtUpsell2 && sessionId) {
             const amount = (data.upsell2Amount || 4700) / 100;
             trackUpsellPurchase(amount, "USD", data.email, "Manifestation Bracelet");
+            trackGAdsPurchase("upsell2", amount, sessionId);
           }
         }
       } catch (err) {
@@ -184,7 +186,7 @@ export default function SuccessPage() {
             <div className="flex items-start gap-3 p-4 bg-white/5 rounded-lg">
               <Sparkles className="w-5 h-5 text-purple-400 mt-0.5 flex-shrink-0" />
               <div>
-                <p className="text-white font-medium">Sacred Clearing Ritual</p>
+                <p className="text-white font-medium">Energy Clearing Ritual</p>
                 <p className="text-purple-200/70 text-sm">
                   Your personalized clearing begins tonight
                 </p>

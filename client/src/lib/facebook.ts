@@ -109,14 +109,14 @@ export function trackInitiateCheckout(value: number = 35, currency: string = 'US
     window.fbq('track', 'InitiateCheckout', {
       value,
       currency,
-      content_name: 'Sacred Clearing Ritual',
+      content_name: 'Energy Clearing Ritual',
     }, { eventID: eventId });
   }
   
   sendServerEvent('InitiateCheckout', eventId, {
     value,
     currency,
-    content_name: 'Sacred Clearing Ritual',
+    content_name: 'Energy Clearing Ritual',
   });
 }
 
@@ -127,7 +127,7 @@ export function trackPurchase(value: number = 35, currency: string = 'USD', emai
     window.fbq('track', 'Purchase', {
       value,
       currency,
-      content_name: 'Sacred Clearing Ritual',
+      content_name: 'Energy Clearing Ritual',
     }, { eventID: eventId });
   }
   
@@ -135,7 +135,7 @@ export function trackPurchase(value: number = 35, currency: string = 'USD', emai
     value,
     currency,
     email,
-    content_name: 'Sacred Clearing Ritual',
+    content_name: 'Energy Clearing Ritual',
   });
 }
 

@@ -439,7 +439,7 @@ export async function registerRoutes(
             price_data: {
               currency: "usd",
               product_data: {
-                name: "Sacred Clearing Ritual",
+                name: "Energy Clearing Ritual",
                 description: `Personalized reading for ${firstName}`,
               },
               unit_amount: priceAmount,
@@ -449,14 +449,14 @@ export async function registerRoutes(
         ],
         mode: "payment",
         payment_intent_data: {
-          description: "Sacred Clearing Ritual",
+          description: "Energy Clearing Ritual",
           setup_future_usage: "off_session",
           metadata: {
             firstName,
             bucket,
             email,
             app: "the-seer-within",
-            product: "sacred_clearing_ritual",
+            product: "energy_clearing_ritual",
           },
         },
         success_url: `${getBaseUrl(req)}/welcome1?session_id={CHECKOUT_SESSION_ID}`,
@@ -467,7 +467,7 @@ export async function registerRoutes(
           bucket,
           type,
           app: "the-seer-within",
-          product: "sacred_clearing_ritual",
+          product: "energy_clearing_ritual",
           ...(trackdeskClickId && { trackdeskClickId }),
         },
       });

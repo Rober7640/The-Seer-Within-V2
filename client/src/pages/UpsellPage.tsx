@@ -5,6 +5,7 @@ import { BackgroundMusic } from "../components/BackgroundMusic";
 import { UpsellCTA, ShippingForm, QuickReplies } from "../components/upsell";
 import { useUpsellChat, Message } from "../hooks/useUpsellChat";
 import { trackPurchase } from "../lib/facebook";
+import { trackGAdsPurchase } from "../lib/gtm";
 import { Volume2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -79,6 +80,7 @@ export default function UpsellPage() {
         if (!sessionStorage.getItem(purchaseKey)) {
           const purchaseAmount = (data.mainPurchaseAmount || 3500) / 100;
           trackPurchase(purchaseAmount, "USD", data.email);
+          trackGAdsPurchase("main", purchaseAmount, sid);
 
           // Trackdesk affiliate conversion tracking - main purchase
           if (typeof window.trackdesk === "function") {

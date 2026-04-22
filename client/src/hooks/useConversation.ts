@@ -17,6 +17,7 @@ import {
   getPriceQuestionResponse
 } from '@/lib/intent'
 import { trackLead, trackInitiateCheckout, getTrackdeskClickId } from '@/lib/facebook'
+import { trackGAdsLead, trackGAdsCheckout } from '@/lib/gtm'
 
 const STORAGE_KEY = 'seer_conversation'
 const SESSION_EXPIRY_HOURS = 24
@@ -371,6 +372,7 @@ export function useConversation() {
       
       // Track Lead event with Facebook
       trackLead(input.trim(), currentChat.userData.firstName || undefined)
+      trackGAdsLead()
     } catch (e) {
       console.error('Failed to save lead:', e)
     }
@@ -1162,6 +1164,7 @@ export function useConversation() {
       // Track InitiateCheckout event with Facebook
       const price = type === 'downsell' ? 25 : 35
       trackInitiateCheckout(price, 'USD')
+      trackGAdsCheckout(price)
       
       const response = await fetch('/api/checkout', {
         method: 'POST',
