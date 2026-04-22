@@ -430,7 +430,7 @@ The Manifestation Bracelet, fully charged and attuned to your desire, is $47. Sh
 ```
 
 ```
-Same 30-day guarantee. If you don't feel the shift... if nothing starts moving toward you... every penny back. Keep the bracelet.
+Same 30-day guarantee. If you don't feel the shift... if nothing starts moving toward you... every penny back.
 ```
 
 ```
