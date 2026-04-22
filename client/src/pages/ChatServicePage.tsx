@@ -296,6 +296,33 @@ export default function ChatServicePage() {
     }
   }, [user, session]);
 
+  // After Stripe Checkout redirect (rescue hatch), confirm the payment server-side
+  // and grant coins synchronously — don't rely on the webhook which may be delayed.
+  useEffect(() => {
+    const params = new URLSearchParams(searchString);
+    const purchased = params.get("purchased");
+    const sessionId = params.get("session_id");
+    if (purchased !== "true" || !sessionId || !isAuthenticated) return;
+
+    // Clean URL immediately so refresh doesn't re-trigger
+    window.history.replaceState({}, "", window.location.pathname);
+
+    authFetch("/api/credits/confirm-checkout", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ sessionId }),
+    })
+      .then(res => res.ok ? res.json() : null)
+      .then(data => {
+        if (data?.newBalance > 0) {
+          setCoinBalance(data.newBalance);
+          skipAuthCoinSyncRef.current = true;
+          refreshUser();
+        }
+      })
+      .catch(() => {});
+  }, [searchString, isAuthenticated]);
+
   // Check if user is eligible for the one-time welcome pack
   useEffect(() => {
     if (!isAuthenticated) return;

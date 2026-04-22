@@ -171,9 +171,13 @@ export const personaPrompts = pgTable("persona_prompts", {
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   email: text("email").notNull().unique(),
-  passwordHash: text("password_hash").notNull(),
+  passwordHash: text("password_hash"),
   firstName: text("first_name").notNull(),
   location: text("location"),
+
+  // Age confirmation (18+ gate)
+  confirmed18Plus: boolean("confirmed_18_plus").default(false).notNull(),
+  confirmed18PlusAt: timestamp("confirmed_18_plus_at"),
 
   // Email verification
   emailVerified: boolean("email_verified").default(false).notNull(),
@@ -591,6 +595,38 @@ export const migrationDripEmails = pgTable("migration_drip_emails", {
   index("idx_migration_drip_status").on(table.status, table.sentAt),
 ]);
 
+// 19. Aiden Follow-Up Emails - Nurture sequence for unverified /aiden signups (+10m/+24h/+48h)
+export const aidenFollowupEmails = pgTable("aiden_followup_emails", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+
+  sequenceNumber: integer("sequence_number").notNull(), // 1, 2, or 3
+  scheduledFor: timestamp("scheduled_for").notNull(),
+
+  recipientEmail: text("recipient_email").notNull(),
+  subject: text("subject").notNull(),
+  bodyHtml: text("body_html").notNull(),
+  bodyText: text("body_text").notNull(),
+
+  status: text("status").default("pending").notNull(), // pending, sent, failed, skipped
+  sentAt: timestamp("sent_at"),
+  resendEmailId: text("resend_email_id"),
+
+  attemptCount: integer("attempt_count").default(0).notNull(),
+  errorMessage: text("error_message"),
+
+  openedAt: timestamp("opened_at"),
+  clickedAt: timestamp("clicked_at"),
+
+  unsubscribeToken: text("unsubscribe_token").unique(),
+
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_aiden_followup_user_seq").on(table.userId, table.sequenceNumber),
+  index("idx_aiden_followup_status_scheduled").on(table.status, table.scheduledFor),
+]);
+
 // ============================================================
 // Insert Schemas (Zod validation)
 // ============================================================
@@ -764,3 +800,43 @@ export const checkoutViews = pgTable("checkout_views", {
   index("idx_checkout_views_user").on(table.userId),
   index("idx_checkout_views_created").on(table.createdAt),
 ]);
+
+// Aiden Quiz Sessions - Analytics + abuse audit for the /aiden quiz funnel
+export const aidenQuizSessions = pgTable("aiden_quiz_sessions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  sessionToken: text("session_token").notNull().unique(),
+  personaSlug: text("persona_slug").notNull().default("aiden-powers"),
+
+  // Quiz answers
+  q1Topic: text("q1_topic"),
+  q2Feeling: text("q2_feeling"),
+  q3Outcome: text("q3_outcome"),
+
+  // Funnel progress
+  completedQuiz: boolean("completed_quiz").default(false).notNull(),
+  completedSignup: boolean("completed_signup").default(false).notNull(),
+  completedVerification: boolean("completed_verification").default(false).notNull(),
+
+  // Linked user (set after registration)
+  userId: varchar("user_id").references(() => users.id, { onDelete: "set null" }),
+  email: text("email"),
+
+  // Fraud/analytics signals
+  ipAddress: text("ip_address"),
+  userAgent: text("user_agent"),
+
+  // Timestamps
+  startedAt: timestamp("started_at").defaultNow().notNull(),
+  completedAt: timestamp("completed_at"),
+  signedUpAt: timestamp("signed_up_at"),
+  verifiedAt: timestamp("verified_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_aiden_quiz_user").on(table.userId),
+  index("idx_aiden_quiz_created").on(table.personaSlug, table.createdAt),
+]);
+
+export const insertAidenQuizSessionSchema = createInsertSchema(aidenQuizSessions);
+export type AidenQuizSession = typeof aidenQuizSessions.$inferSelect;
+export type InsertAidenQuizSession = z.infer<typeof insertAidenQuizSessionSchema>;

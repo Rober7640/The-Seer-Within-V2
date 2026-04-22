@@ -2,13 +2,16 @@ import { Router, Request, Response } from 'express';
 import { z } from 'zod';
 import { randomUUID } from 'crypto';
 import { db } from '../lib/db';
-import { users, personas, chatSessions } from '@shared/schema';
+import { users, personas, chatSessions, userMemory, aidenQuizSessions } from '@shared/schema';
 import { eq, and, isNull, sql } from 'drizzle-orm';
 import { hashPassword, verifyPassword, generateToken, requireAuth } from '../lib/auth';
 import { verifyMagicLinkToken, generateMagicLinkToken } from '../lib/magicLink';
 import { authLimiter, passwordResetLimiter } from '../lib/rateLimiter';
 import { sendVerificationEmail } from '../lib/verificationEmail';
 import { sendPasswordResetEmail } from '../lib/passwordResetEmail';
+import { isDisposableEmail } from '../lib/disposableEmailDomains';
+import { verifyTurnstileToken } from '../lib/turnstile';
+import { validateEmail } from '../lib/neverbounce';
 import {
   checkRegistrationFraud,
   extractClientIp,
@@ -18,6 +21,10 @@ import {
 } from '../lib/fraudDetection';
 import { isPersonaOnline } from '../lib/personaManager';
 import { endChatSession } from '../lib/creditTracking';
+import {
+  scheduleAidenFollowups,
+  skipAidenFollowupsForUser,
+} from '../lib/aidenFollowupEmailGenerator';
 import logger from '../lib/logger';
 
 const FREE_COINS_ON_VERIFY = 180;
@@ -44,6 +51,7 @@ const changePasswordSchema = z.object({
 
 const resendVerificationSchema = z.object({
   email: z.string().email(),
+  persona: z.string().optional(),
 });
 
 // Verification expiry is computed in PostgreSQL via sql`NOW() + INTERVAL ...`
@@ -130,6 +138,198 @@ router.post('/register', authLimiter, async (req: Request, res: Response) => {
   }
 });
 
+// POST /api/auth/magic-register - Passwordless registration for quiz funnel (Version B)
+const magicRegisterSchema = z.object({
+  email: z.string().email(),
+  firstName: z.string().min(1, 'First name is required'),
+  confirmed18Plus: z.boolean().refine(v => v === true, 'Must confirm you are 18 or older'),
+  persona: z.string().optional().default('aiden-powers'),
+  quizSessionToken: z.string().optional(),
+  quizData: z.object({
+    topic: z.string(),
+    feeling: z.string(),
+    outcome: z.string(),
+  }).optional(),
+  turnstileToken: z.string().optional(),
+});
+
+router.post('/magic-register', authLimiter, async (req: Request, res: Response) => {
+  try {
+    const parseResult = magicRegisterSchema.safeParse(req.body);
+    if (!parseResult.success) {
+      res.status(400).json({
+        error: parseResult.error.errors.map(e => e.message).join(', '),
+      });
+      return;
+    }
+
+    const { email, firstName, persona, quizSessionToken, quizData, turnstileToken } = parseResult.data;
+
+    // Layer 3: Verify Cloudflare Turnstile token (invisible CAPTCHA)
+    const turnstileValid = await verifyTurnstileToken(turnstileToken || '', extractClientIp(req));
+    if (!turnstileValid) {
+      res.status(400).json({
+        error: 'Security verification failed. Please refresh the page and try again.',
+        code: 'TURNSTILE_FAILED',
+      });
+      return;
+    }
+
+    // Check if email already exists
+    const existing = await db.select({ id: users.id, firstName: users.firstName, passwordHash: users.passwordHash })
+      .from(users)
+      .where(eq(users.email, email.toLowerCase()))
+      .limit(1);
+
+    if (existing.length > 0) {
+      res.status(409).json({
+        error: 'An account with this email already exists.',
+        code: 'EXISTING_ACCOUNT',
+        firstName: existing[0].firstName,
+        hasPassword: !!existing[0].passwordHash,
+      });
+      return;
+    }
+
+    // Layer 1: Block disposable/temporary email domains (static blocklist)
+    if (isDisposableEmail(email)) {
+      res.status(400).json({
+        error: 'Please use a permanent email address. Temporary email services are not accepted.',
+        code: 'DISPOSABLE_EMAIL',
+      });
+      return;
+    }
+
+    // Layer 4: Validate email deliverability via NeverBounce
+    const emailValidation = await validateEmail(email);
+    if (!emailValidation.valid) {
+      res.status(400).json({
+        error: emailValidation.result === 'disposable'
+          ? 'Please use a permanent email address. Temporary email services are not accepted.'
+          : "This email address doesn't appear to be valid. Please double-check it.",
+        code: 'INVALID_EMAIL',
+        suggestedCorrection: emailValidation.suggestedCorrection,
+      });
+      return;
+    }
+
+    // Extract fraud detection signals
+    const clientIp = extractClientIp(req);
+    const userAgent = extractUserAgent(req);
+    const fingerprint = extractFingerprint(req);
+
+    // Check for fraud patterns before creating account
+    const fraudCheck = await checkRegistrationFraud(clientIp, fingerprint);
+
+    // Layer 2: Block registration if too many accounts from same IP
+    if (fraudCheck.flagged && fraudCheck.flags.includes('ip_flagged')) {
+      logger.warn(`[Abuse Prevention] Registration blocked — IP rate limit exceeded`, { ip: clientIp, recentAccounts: fraudCheck.recentAccountsFromIp });
+      res.status(429).json({
+        error: 'Too many accounts created from this location. Please try again tomorrow.',
+        code: 'IP_RATE_LIMIT',
+      });
+      return;
+    }
+
+    // In test environments, auto-verify email and grant coins immediately
+    const isTestEnv = process.env.NODE_ENV === 'test' || process.env.DISABLE_RATE_LIMIT === 'true';
+
+    // Generate email verification token
+    const verificationToken = randomUUID();
+
+    // Look up persona ID up-front so we can stamp defaultPersonaId on the user.
+    // Without defaultPersonaId set, a resent verification link (which may lack
+    // ?persona=...) would land the user on generic /login instead of the Aiden chat,
+    // because verify-email's persona fallback reads defaultPersonaId.
+    const personaRow = await db.select({ id: personas.id })
+      .from(personas)
+      .where(eq(personas.slug, persona))
+      .limit(1);
+    const personaId = personaRow[0]?.id || null;
+
+    const newUser = await db.insert(users).values({
+      email: email.toLowerCase(),
+      passwordHash: null,
+      firstName,
+      confirmed18Plus: true,
+      confirmed18PlusAt: new Date(),
+      coinBalance: isTestEnv ? FREE_COINS_ON_VERIFY : 0,
+      emailVerified: isTestEnv,
+      verificationToken: isTestEnv ? null : verificationToken,
+      verificationTokenExpiry: isTestEnv ? null : sql`NOW() + INTERVAL '${sql.raw(String(VERIFICATION_TOKEN_EXPIRY_HOURS))} hours'`,
+      registrationIp: clientIp,
+      registrationUserAgent: userAgent,
+      deviceFingerprint: fingerprint,
+      accountFlags: fraudCheck.flagged ? serializeAccountFlags(fraudCheck.flags) : null,
+      defaultPersonaId: personaId,
+    }).returning();
+
+    const user = newUser[0];
+    const token = generateToken(user.id, user.email);
+
+    // Store quiz data as a user memory for system prompt injection
+    if (quizData) {
+      await db.insert(userMemory).values({
+        userId: user.id,
+        personaId,
+        memoryType: 'quiz_intake',
+        summary: `User's quiz intake: Topic: ${quizData.topic}, Feeling: ${quizData.feeling}, Desired outcome: ${quizData.outcome}`,
+        fullContext: JSON.stringify(quizData),
+        importance: 9,
+        category: quizData.topic === 'love_relationships' ? 'love' : quizData.topic === 'career_money' ? 'money' : 'general',
+      });
+    }
+
+    // Link quiz session to user if token provided
+    if (quizSessionToken) {
+      await db.update(aidenQuizSessions)
+        .set({
+          userId: user.id,
+          email: email.toLowerCase(),
+          completedSignup: true,
+          signedUpAt: new Date(),
+          updatedAt: new Date(),
+        })
+        .where(eq(aidenQuizSessions.sessionToken, quizSessionToken));
+    }
+
+    // Send verification email only in non-test environments
+    if (!isTestEnv) {
+      sendVerificationEmail(user.email, user.firstName, verificationToken, persona).catch((err) => {
+        logger.error('Failed to send verification email:', err);
+      });
+    }
+
+    // Schedule Aiden follow-up nurture sequence (+10m/+24h/+48h).
+    // Aiden persona only, non-test env only. Flag-gated at send time by ENABLE_AIDEN_FOLLOWUPS.
+    // Never blocks registration — swallowed inside scheduleAidenFollowups.
+    if (!isTestEnv && persona === 'aiden-powers') {
+      scheduleAidenFollowups({
+        userId: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        topic: quizData?.topic ?? null,
+        baseTime: user.createdAt ?? new Date(),
+      }).catch(() => { /* already logged inside */ });
+    }
+
+    res.status(201).json({
+      token,
+      user: {
+        id: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        coinBalance: user.coinBalance,
+        emailVerified: user.emailVerified,
+      },
+      requiresVerification: !isTestEnv,
+    });
+  } catch (error) {
+    logger.error('Magic register error:', error);
+    res.status(500).json({ error: 'Registration failed' });
+  }
+});
+
 // GET /api/auth/verify-email/:token - Verify email and grant free credits
 router.get('/verify-email/:token', async (req: Request, res: Response) => {
   try {
@@ -154,11 +354,37 @@ router.get('/verify-email/:token', async (req: Request, res: Response) => {
       return;
     }
 
-    // Check if already verified — still auto-login so the link works from any device
+    // Check if already verified — still auto-login so the link works from any device.
+    // This branch is also hit when an email-scanner (Gmail/Outlook) prefetched the link
+    // before the real user clicked it.
     if (user.emailVerified) {
-      const jwtToken = generateToken(user.id, user.email);
       const baseUrl = process.env.BASE_URL || 'http://localhost:5000';
-      res.redirect(`${baseUrl}/login?verified=already&token=${jwtToken}`);
+
+      // If the original verification-token window has lapsed, don't auto-login via
+      // a stale link — just show the "already verified" message on the login page.
+      if (user.verificationTokenExpiry && user.verificationTokenExpiry < new Date()) {
+        res.redirect(`${baseUrl}/login?verified=already`);
+        return;
+      }
+
+      const jwtToken = generateToken(user.id, user.email);
+
+      // Include persona slug so cross-device verification preserves persona context.
+      // Same priority rule as the success branch below: query param > user's default persona.
+      let personaParam = '';
+      const queryPersona = req.query.persona as string | undefined;
+      if (queryPersona) {
+        personaParam = `&persona=${encodeURIComponent(queryPersona)}`;
+      } else if (user.defaultPersonaId) {
+        const personaRow = await db.select({ slug: personas.slug })
+          .from(personas)
+          .where(eq(personas.id, user.defaultPersonaId))
+          .limit(1);
+        if (personaRow[0]?.slug) {
+          personaParam = `&persona=${personaRow[0].slug}`;
+        }
+      }
+      res.redirect(`${baseUrl}/login?verified=already&token=${jwtToken}${personaParam}`);
       return;
     }
 
@@ -168,16 +394,20 @@ router.get('/verify-email/:token', async (req: Request, res: Response) => {
       return;
     }
 
-    // Mark email as verified and grant free credits (atomic increment + guard against double-verify)
+    // Mark email as verified and grant free credits (atomic increment + guard against double-verify).
+    // Intentionally keep verificationToken/Expiry in place so that if an email-scanner
+    // prefetches the link, the real user's later click still finds the token and auto-logs
+    // in via the "already verified" branch above. Expiry check there prevents stale reuse.
     await db.update(users)
       .set({
         emailVerified: true,
         coinBalance: sql`coin_balance + ${FREE_COINS_ON_VERIFY}`,
-        verificationToken: null,
-        verificationTokenExpiry: null,
         updatedAt: new Date(),
       })
       .where(and(eq(users.id, user.id), eq(users.emailVerified, false)));
+
+    // Halt the Aiden follow-up drip (non-blocking — failure must not break verification).
+    skipAidenFollowupsForUser(user.id, 'user_verified').catch(() => { /* logged inside */ });
 
     // Generate JWT so the user is auto-logged-in (works even on a different device/browser)
     const jwtToken = generateToken(user.id, user.email);
@@ -216,7 +446,7 @@ router.post('/resend-verification', authLimiter, async (req: Request, res: Respo
       return;
     }
 
-    const { email } = parseResult.data;
+    const { email, persona: personaFromBody } = parseResult.data;
 
     const result = await db.select()
       .from(users)
@@ -242,12 +472,103 @@ router.post('/resend-verification', authLimiter, async (req: Request, res: Respo
       })
       .where(eq(users.id, user.id));
 
-    await sendVerificationEmail(user.email, user.firstName, verificationToken);
+    // Preserve persona context on the resent link. Without this the verify-email
+    // redirect loses the persona query and lands the user on /login instead of
+    // the persona-specific chat. Priority: explicit body > user's defaultPersonaId.
+    let personaSlug: string | undefined = personaFromBody;
+    if (!personaSlug && user.defaultPersonaId) {
+      const personaRow = await db.select({ slug: personas.slug })
+        .from(personas)
+        .where(eq(personas.id, user.defaultPersonaId))
+        .limit(1);
+      personaSlug = personaRow[0]?.slug;
+    }
+
+    await sendVerificationEmail(user.email, user.firstName, verificationToken, personaSlug);
 
     res.json({ success: true, message: 'If an unverified account exists, a verification email has been sent.' });
   } catch (error) {
     logger.error('Resend verification error:', error);
     res.status(500).json({ error: 'Failed to resend verification email' });
+  }
+});
+
+// POST /api/auth/send-magic-login - Send a magic sign-in link for passwordless accounts
+router.post('/send-magic-login', authLimiter, async (req: Request, res: Response) => {
+  try {
+    const { email } = req.body;
+    if (!email || typeof email !== 'string') {
+      res.status(400).json({ error: 'Email required' });
+      return;
+    }
+
+    const result = await db.select({
+      id: users.id,
+      email: users.email,
+      firstName: users.firstName,
+      passwordHash: users.passwordHash,
+      defaultPersonaId: users.defaultPersonaId,
+      accountStatus: users.accountStatus,
+    })
+      .from(users)
+      .where(eq(users.email, email.toLowerCase()))
+      .limit(1);
+
+    const user = result[0];
+
+    // Always return success to avoid leaking account existence
+    if (!user || user.accountStatus === 'banned') {
+      res.json({ sent: true });
+      return;
+    }
+
+    // Find the user's last persona or default to aiden-powers
+    const lastSession = await db.select({ personaId: chatSessions.personaId })
+      .from(chatSessions)
+      .where(eq(chatSessions.userId, user.id))
+      .orderBy(sql`created_at DESC`)
+      .limit(1);
+
+    let personaId = lastSession[0]?.personaId || user.defaultPersonaId;
+    let personaSlug = 'aiden-powers';
+
+    if (personaId) {
+      const p = await db.select({ slug: personas.slug })
+        .from(personas)
+        .where(eq(personas.id, personaId))
+        .limit(1);
+      if (p[0]) personaSlug = p[0].slug;
+    } else {
+      const aiden = await db.select({ id: personas.id })
+        .from(personas)
+        .where(eq(personas.slug, 'aiden-powers'))
+        .limit(1);
+      if (aiden[0]) personaId = aiden[0].id;
+    }
+
+    if (personaId) {
+      const magicToken = await generateMagicLinkToken(user.id, personaId, personaSlug);
+      const magicUrl = `${process.env.BASE_URL || 'http://localhost:5000'}/magic-auth?t=${magicToken}`;
+
+      const { Resend } = await import('resend');
+      const resendClient = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
+      if (resendClient) {
+        await resendClient.emails.send({
+          from: `The Seer Within <${process.env.FOLLOW_UP_FROM_EMAIL || 'noreply@theseerwithin.com'}>`,
+          to: user.email,
+          subject: 'Your sign-in link',
+          html: `<p>Hi ${user.firstName || 'there'},</p><p>Click the button below to sign in to your reading:</p><p style="margin:24px 0"><a href="${magicUrl}" style="background:#6d28d9;color:#fff;padding:12px 32px;border-radius:8px;text-decoration:none;font-weight:600">Sign In to My Reading</a></p><p style="color:#888;font-size:13px">This link expires in 30 days.</p>`,
+        });
+        logger.info('Magic sign-in link sent via send-magic-login', { email: user.email, personaSlug });
+      } else {
+        logger.warn('Resend not configured, magic link URL:', magicUrl);
+      }
+    }
+
+    res.json({ sent: true });
+  } catch (error) {
+    logger.error('send-magic-login error:', error);
+    res.status(500).json({ error: 'Failed to send sign-in link' });
   }
 });
 
@@ -272,6 +593,64 @@ router.post('/login', authLimiter, async (req: Request, res: Response) => {
     const user = result[0];
     if (!user) {
       res.status(401).json({ error: 'Invalid email or password' });
+      return;
+    }
+
+    // Magic-register accounts have no password — send a magic sign-in link
+    if (!user.passwordHash) {
+      // Find the user's last persona (or default to aiden-powers for rescue hatch users)
+      const lastSession = await db.select({ personaId: chatSessions.personaId })
+        .from(chatSessions)
+        .where(eq(chatSessions.userId, user.id))
+        .orderBy(sql`created_at DESC`)
+        .limit(1);
+
+      let personaId = lastSession[0]?.personaId || user.defaultPersonaId;
+      let personaSlug = 'aiden-powers';
+
+      if (personaId) {
+        const p = await db.select({ slug: personas.slug })
+          .from(personas)
+          .where(eq(personas.id, personaId))
+          .limit(1);
+        if (p[0]) personaSlug = p[0].slug;
+      } else {
+        // Fallback: look up Aiden's persona ID
+        const aiden = await db.select({ id: personas.id })
+          .from(personas)
+          .where(eq(personas.slug, 'aiden-powers'))
+          .limit(1);
+        if (aiden[0]) personaId = aiden[0].id;
+      }
+
+      if (personaId) {
+        try {
+          const magicToken = await generateMagicLinkToken(user.id, personaId, personaSlug);
+          const magicUrl = `${process.env.BASE_URL || 'http://localhost:5000'}/magic-auth?t=${magicToken}`;
+
+          // Send a simple sign-in email via Resend
+          const { Resend } = await import('resend');
+          const resendClient = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
+          if (resendClient) {
+            await resendClient.emails.send({
+              from: `The Seer Within <${process.env.FOLLOW_UP_FROM_EMAIL || 'noreply@theseerwithin.com'}>`,
+              to: user.email,
+              subject: 'Your sign-in link',
+              html: `<p>Hi ${user.firstName || 'there'},</p><p>Click the button below to sign in to your reading:</p><p style="margin:24px 0"><a href="${magicUrl}" style="background:#6d28d9;color:#fff;padding:12px 32px;border-radius:8px;text-decoration:none;font-weight:600">Sign In to My Reading</a></p><p style="color:#888;font-size:13px">This link expires in 30 days.</p>`,
+            });
+            logger.info('Magic sign-in link sent', { email: user.email, personaSlug });
+          } else {
+            logger.warn('Resend not configured, magic link URL:', magicUrl);
+          }
+        } catch (err) {
+          logger.error('Failed to send magic sign-in link:', err);
+        }
+      }
+
+      res.status(400).json({
+        error: 'We just sent a sign-in link to your email. Click it to continue your reading.',
+        code: 'NO_PASSWORD',
+      });
       return;
     }
 
@@ -399,6 +778,14 @@ router.post('/change-password', requireAuth, async (req: Request, res: Response)
     const user = result[0];
     if (!user) {
       res.status(404).json({ error: 'User not found' });
+      return;
+    }
+
+    if (!user.passwordHash) {
+      res.status(400).json({
+        error: 'This account uses magic link login. Set a password from your dashboard first.',
+        code: 'NO_PASSWORD',
+      });
       return;
     }
 
@@ -554,7 +941,10 @@ router.post('/reset-password/:token', async (req: Request, res: Response) => {
 
     logger.info('Password reset completed', { email: user.email });
 
-    res.json({ success: true, message: 'Password has been reset successfully. You can now sign in with your new password.' });
+    // Return a JWT so the frontend can auto-login after password reset
+    const jwtToken = generateToken(user.id, user.email);
+
+    res.json({ success: true, token: jwtToken, message: 'Password has been reset successfully.' });
   } catch (error) {
     logger.error('Reset password error:', error);
     res.status(500).json({ error: 'Failed to reset password' });
@@ -636,6 +1026,37 @@ router.post('/magic-verify', authLimiter, async (req: Request, res: Response) =>
       return res.status(401).json({ error: 'User not found' });
     }
 
+    // If the magic-link arrives for a still-unverified user (e.g. Aiden follow-up CTA),
+    // this click both verifies the email and grants the same free coins as the normal
+    // /verify-email path. The WHERE guard prevents double-grant on concurrent clicks.
+    let freshCoinBalance = user.coinBalance;
+    let freshEmailVerified = user.emailVerified;
+    if (!user.emailVerified) {
+      const updated = await db
+        .update(users)
+        .set({
+          emailVerified: true,
+          coinBalance: sql`coin_balance + ${FREE_COINS_ON_VERIFY}`,
+          updatedAt: new Date(),
+        })
+        .where(and(eq(users.id, user.id), eq(users.emailVerified, false)))
+        .returning({
+          coinBalance: users.coinBalance,
+          emailVerified: users.emailVerified,
+        });
+
+      if (updated[0]) {
+        freshCoinBalance = updated[0].coinBalance;
+        freshEmailVerified = updated[0].emailVerified;
+        // Halt the Aiden follow-up drip (non-blocking — must not fail the login).
+        skipAidenFollowupsForUser(user.id, 'user_verified').catch(() => { /* logged inside */ });
+        logger.info('Magic-link verified email and granted free coins', {
+          userId: user.id,
+          coinBalance: freshCoinBalance,
+        });
+      }
+    }
+
     // Migrated V1 users who haven't set a password yet need to do so on first login
     const needsPasswordSetup = !!(user.migratedFromConversationId && !user.passwordChangedAt);
 
@@ -649,11 +1070,11 @@ router.post('/magic-verify', authLimiter, async (req: Request, res: Response) =>
         id: user.id,
         email: user.email,
         firstName: user.firstName,
-        coinBalance: user.coinBalance,
+        coinBalance: freshCoinBalance,
         totalCoinsUsed: user.totalCoinsUsed,
         defaultPersonaId: user.defaultPersonaId,
         accountStatus: user.accountStatus,
-        emailVerified: user.emailVerified,
+        emailVerified: freshEmailVerified,
       },
     });
   } catch (error: any) {

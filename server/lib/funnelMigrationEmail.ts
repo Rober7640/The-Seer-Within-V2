@@ -5,7 +5,7 @@
 // Trigger: called from POST /api/save-progress when conversationState is
 // DEEPENING_2 or beyond.
 
-import Anthropic from '@anthropic-ai/sdk';
+import { anthropicFailover as anthropic } from './anthropicWithFailover';
 import { getModelForOperation } from './modelConfig';
 import { Resend } from 'resend';
 import { db } from './db';
@@ -17,10 +17,6 @@ import { buildFollowUpHtml, buildFollowUpText } from './emailTemplate';
 import { generateMagicLinkToken } from './magicLink';
 import logger from './logger';
 import { fireWithBreaker, resendBreaker, anthropicBreaker } from './circuitBreaker';
-
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY || '',
-});
 
 const resend = process.env.RESEND_API_KEY
   ? new Resend(process.env.RESEND_API_KEY)

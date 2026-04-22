@@ -10,7 +10,7 @@
 // 7-day cooldown per user across all segments.
 // Respects unsubscribe preferences from userFollowUpPreferences.
 
-import Anthropic from '@anthropic-ai/sdk';
+import { anthropicFailover as anthropic } from './anthropicWithFailover';
 import { Resend } from 'resend';
 import { getModelForOperation } from './modelConfig';
 import { db } from './db';
@@ -29,8 +29,6 @@ import { buildFollowUpHtml, buildFollowUpText } from './emailTemplate';
 import { generateMagicLinkToken } from './magicLink';
 import logger from './logger';
 import { fireWithBreaker, resendBreaker, anthropicBreaker } from './circuitBreaker';
-
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY || '' });
 
 const resend = process.env.RESEND_API_KEY
   ? new Resend(process.env.RESEND_API_KEY)

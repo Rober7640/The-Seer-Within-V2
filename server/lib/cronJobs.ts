@@ -7,6 +7,7 @@ import { processTopupQueue } from './topupEmailGenerator';
 import { cleanupInactiveSessions } from './creditTracking';
 import { cleanupExpiredMagicLinks } from './magicLink';
 import { processNextBatch } from './migrationDripProcessor';
+import { processAidenFollowupQueue } from './aidenFollowupEmailGenerator';
 import logger from './logger';
 
 // Per-job concurrency guards — prevent overlapping runs if a job takes longer than its interval
@@ -15,12 +16,18 @@ let isTopupProcessing = false;
 let isMonthlyResetProcessing = false;
 let isSessionCleanupProcessing = false;
 let isMigrationDripProcessing = false;
+let isAidenFollowupProcessing = false;
 
 /**
  * Initialize all cron jobs.
  * Call this once during server startup.
  */
 export function initializeCronJobs(): void {
+  if (process.env.DISABLE_CRONS === 'true') {
+    logger.info('Cron jobs disabled (DISABLE_CRONS=true)');
+    return;
+  }
+
   const timezone = process.env.CRON_TIMEZONE || 'America/New_York';
 
   // Daily follow-up processing at 10 AM
@@ -147,6 +154,31 @@ export function initializeCronJobs(): void {
         logger.error('Cron: Migration drip processing failed', { error: (error as Error).message });
       } finally {
         isMigrationDripProcessing = false;
+      }
+    },
+    { timezone },
+  );
+
+  // Aiden follow-up emails — every 5 minutes
+  // +10m / +24h / +48h nurture sequence for unverified /aiden signups.
+  // No-ops when ENABLE_AIDEN_FOLLOWUPS is not 'true'.
+  cron.schedule(
+    '*/5 * * * *',
+    async () => {
+      if (isAidenFollowupProcessing) {
+        logger.info('Cron: Aiden follow-up processing already running, skipping');
+        return;
+      }
+      isAidenFollowupProcessing = true;
+      try {
+        const stats = await processAidenFollowupQueue();
+        if (stats.processed > 0) {
+          logger.info('Cron: Aiden follow-up batch complete', stats);
+        }
+      } catch (error) {
+        logger.error('Cron: Aiden follow-up processing failed', { error: (error as Error).message });
+      } finally {
+        isAidenFollowupProcessing = false;
       }
     },
     { timezone },

@@ -1,14 +1,10 @@
-import Anthropic from '@anthropic-ai/sdk';
+import { anthropicFailover as anthropic } from './anthropicWithFailover';
 import { db } from './db';
 import { chatMessages, chatSessions, userMemory, users } from '@shared/schema';
 import { eq, and, or, isNull, lt, desc, ne, inArray } from 'drizzle-orm';
 import { getModelForOperation } from './modelConfig';
 import logger from './logger';
 import { fireWithBreaker, anthropicBreaker } from './circuitBreaker';
-
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY || '',
-});
 
 async function callClaudeForSummary(prompt: string): Promise<string> {
   try {

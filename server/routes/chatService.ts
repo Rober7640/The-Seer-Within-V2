@@ -18,9 +18,7 @@ import { chatLimiter } from '../lib/rateLimiter';
 import logger from '../lib/logger';
 import { sendSessionTimeoutEmail } from '../lib/sessionTimeoutEmail';
 import { getCountryFromIP } from '../lib/crisisHotlines';
-import Anthropic from '@anthropic-ai/sdk';
-
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY || '' });
+import { anthropicFailover as anthropic } from '../lib/anthropicWithFailover';
 
 const router = Router();
 

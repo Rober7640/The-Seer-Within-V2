@@ -5,14 +5,10 @@
 import { db } from './db';
 import { users, userMemory, chatSessions, personas, personaPrompts, systemConfig } from '@shared/schema';
 import { eq, and, desc, sql } from 'drizzle-orm';
-import Anthropic from '@anthropic-ai/sdk';
+import { anthropicFailover as anthropic } from './anthropicWithFailover';
 import logger from './logger';
 import { fireWithBreaker, anthropicBreaker } from './circuitBreaker';
 import { getModelForOperation } from './modelConfig';
-
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY || '',
-});
 
 interface OutreachCandidate {
   userId: string;

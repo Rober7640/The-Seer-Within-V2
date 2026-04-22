@@ -6,14 +6,10 @@
 import { db } from './db';
 import { userMemory, personas, chatSessions } from '@shared/schema';
 import { eq, and, desc } from 'drizzle-orm';
-import Anthropic from '@anthropic-ai/sdk';
+import { anthropicFailover as anthropic } from './anthropicWithFailover';
 import logger from './logger';
 import { getModelForOperation } from './modelConfig';
 import { fireWithBreaker, anthropicBreaker } from './circuitBreaker';
-
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY || '',
-});
 
 interface TransferableMemory {
   id: string;

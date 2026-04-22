@@ -6,14 +6,10 @@ import { db } from './db';
 import { personas, personaPrompts, chatSessions, chatMessages } from '@shared/schema';
 import { eq, and } from 'drizzle-orm';
 import { loadUserContext } from './memoryManager';
-import Anthropic from '@anthropic-ai/sdk';
+import { anthropicFailover as anthropic } from './anthropicWithFailover';
 import logger from './logger';
 import { getModelForOperation } from './modelConfig';
 import { fireWithBreaker, anthropicBreaker } from './circuitBreaker';
-
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY || '',
-});
 
 interface PanelPersona {
   id: string;

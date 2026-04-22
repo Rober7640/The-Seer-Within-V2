@@ -4,7 +4,7 @@ import { Router, Request, Response } from 'express';
 import { Webhook } from 'svix';
 import Stripe from 'stripe';
 import { db } from '../lib/db';
-import { followUpEmails, userFollowUpPreferences, migrationDripEmails, topupEmails } from '@shared/schema';
+import { followUpEmails, userFollowUpPreferences, migrationDripEmails, topupEmails, aidenFollowupEmails } from '@shared/schema';
 import { eq } from 'drizzle-orm';
 import logger from '../lib/logger';
 
@@ -213,6 +213,55 @@ router.post('/resend', async (req: Request, res: Response) => {
       return res.status(200).json({ received: true });
     }
 
+    // Check Aiden follow-up emails
+    const aidenRecords = await db
+      .select()
+      .from(aidenFollowupEmails)
+      .where(eq(aidenFollowupEmails.resendEmailId, emailId))
+      .limit(1);
+
+    const aidenRecord = aidenRecords[0];
+
+    if (aidenRecord) {
+      switch (event.type) {
+        case 'email.opened':
+          if (!aidenRecord.openedAt) {
+            await db
+              .update(aidenFollowupEmails)
+              .set({ openedAt: new Date(), updatedAt: new Date() })
+              .where(eq(aidenFollowupEmails.id, aidenRecord.id));
+          }
+          break;
+
+        case 'email.clicked':
+          if (!aidenRecord.clickedAt) {
+            await db
+              .update(aidenFollowupEmails)
+              .set({ clickedAt: new Date(), updatedAt: new Date() })
+              .where(eq(aidenFollowupEmails.id, aidenRecord.id));
+          }
+          break;
+
+        case 'email.bounced':
+          await db
+            .update(aidenFollowupEmails)
+            .set({ status: 'failed', errorMessage: 'bounced', updatedAt: new Date() })
+            .where(eq(aidenFollowupEmails.id, aidenRecord.id));
+          await autoUnsubscribe(aidenRecord.userId, 'bounced');
+          break;
+
+        case 'email.complained':
+          await db
+            .update(aidenFollowupEmails)
+            .set({ status: 'failed', errorMessage: 'spam_complaint', updatedAt: new Date() })
+            .where(eq(aidenFollowupEmails.id, aidenRecord.id));
+          await autoUnsubscribe(aidenRecord.userId, 'spam_complaint');
+          break;
+      }
+
+      return res.status(200).json({ received: true });
+    }
+
     logger.info(`Resend webhook: No matching email record for ${emailId}`);
     return res.status(200).json({ received: true });
   } catch (error) {
@@ -267,6 +316,18 @@ router.get('/unsubscribe', async (req: Request, res: Response) => {
 
       if (dripRecord[0]) {
         userId = dripRecord[0].userId;
+      }
+    }
+
+    if (!userId) {
+      const aidenRecord = await db
+        .select({ userId: aidenFollowupEmails.userId })
+        .from(aidenFollowupEmails)
+        .where(eq(aidenFollowupEmails.unsubscribeToken, token))
+        .limit(1);
+
+      if (aidenRecord[0]) {
+        userId = aidenRecord[0].userId;
       }
     }
 
@@ -333,6 +394,18 @@ router.post('/unsubscribe', async (req: Request, res: Response) => {
 
       if (dripRecord[0]) {
         userId = dripRecord[0].userId;
+      }
+    }
+
+    if (!userId) {
+      const aidenRecord = await db
+        .select({ userId: aidenFollowupEmails.userId })
+        .from(aidenFollowupEmails)
+        .where(eq(aidenFollowupEmails.unsubscribeToken, token))
+        .limit(1);
+
+      if (aidenRecord[0]) {
+        userId = aidenRecord[0].userId;
       }
     }
 
