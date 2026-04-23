@@ -599,7 +599,7 @@ async function seedDatabase() {
         isActive: true,
         isDefault: false,
         sortOrder: 6,
-        freeCoins: 180,
+        freeCoins: 600,
         availabilitySchedule: JSON.stringify({
           timezone: 'America/New_York',
           windows: [{ days: [0, 1, 2, 3, 4, 5, 6], startTime: '06:00', endTime: '23:00' }],

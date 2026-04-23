@@ -27,8 +27,21 @@ import {
 } from '../lib/aidenFollowupEmailGenerator';
 import logger from '../lib/logger';
 
-const FREE_COINS_ON_VERIFY = 180;
+// Default free-coin grant when the user has no default persona set or the
+// persona row has no freeCoins override. Per-persona amounts live on
+// `personas.freeCoins` and are read at verification time so policy changes
+// (e.g. Aiden's 10-minute onboarding) flow through without touching this file.
+const DEFAULT_FREE_COINS = 180;
 const VERIFICATION_TOKEN_EXPIRY_HOURS = 24;
+
+async function getFreeCoinsForPersona(personaId: string | null | undefined): Promise<number> {
+  if (!personaId) return DEFAULT_FREE_COINS;
+  const row = await db.select({ freeCoins: personas.freeCoins })
+    .from(personas)
+    .where(eq(personas.id, personaId))
+    .limit(1);
+  return row[0]?.freeCoins ?? DEFAULT_FREE_COINS;
+}
 
 const router = Router();
 
@@ -101,7 +114,7 @@ router.post('/register', authLimiter, async (req: Request, res: Response) => {
       email: email.toLowerCase(),
       passwordHash,
       firstName,
-      coinBalance: isTestEnv ? FREE_COINS_ON_VERIFY : 0,
+      coinBalance: isTestEnv ? DEFAULT_FREE_COINS : 0,
       emailVerified: isTestEnv,
       verificationToken: isTestEnv ? null : verificationToken,
       verificationTokenExpiry: isTestEnv ? null : sql`NOW() + INTERVAL '${sql.raw(String(VERIFICATION_TOKEN_EXPIRY_HOURS))} hours'`,
@@ -253,7 +266,7 @@ router.post('/magic-register', authLimiter, async (req: Request, res: Response) 
       firstName,
       confirmed18Plus: true,
       confirmed18PlusAt: new Date(),
-      coinBalance: isTestEnv ? FREE_COINS_ON_VERIFY : 0,
+      coinBalance: isTestEnv ? DEFAULT_FREE_COINS : 0,
       emailVerified: isTestEnv,
       verificationToken: isTestEnv ? null : verificationToken,
       verificationTokenExpiry: isTestEnv ? null : sql`NOW() + INTERVAL '${sql.raw(String(VERIFICATION_TOKEN_EXPIRY_HOURS))} hours'`,
@@ -398,10 +411,11 @@ router.get('/verify-email/:token', async (req: Request, res: Response) => {
     // Intentionally keep verificationToken/Expiry in place so that if an email-scanner
     // prefetches the link, the real user's later click still finds the token and auto-logs
     // in via the "already verified" branch above. Expiry check there prevents stale reuse.
+    const freeCoinsGrant = await getFreeCoinsForPersona(user.defaultPersonaId);
     await db.update(users)
       .set({
         emailVerified: true,
-        coinBalance: sql`coin_balance + ${FREE_COINS_ON_VERIFY}`,
+        coinBalance: sql`coin_balance + ${freeCoinsGrant}`,
         updatedAt: new Date(),
       })
       .where(and(eq(users.id, user.id), eq(users.emailVerified, false)));
@@ -1032,11 +1046,12 @@ router.post('/magic-verify', authLimiter, async (req: Request, res: Response) =>
     let freshCoinBalance = user.coinBalance;
     let freshEmailVerified = user.emailVerified;
     if (!user.emailVerified) {
+      const freeCoinsGrant = await getFreeCoinsForPersona(user.defaultPersonaId);
       const updated = await db
         .update(users)
         .set({
           emailVerified: true,
-          coinBalance: sql`coin_balance + ${FREE_COINS_ON_VERIFY}`,
+          coinBalance: sql`coin_balance + ${freeCoinsGrant}`,
           updatedAt: new Date(),
         })
         .where(and(eq(users.id, user.id), eq(users.emailVerified, false)))

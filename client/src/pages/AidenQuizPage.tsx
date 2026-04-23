@@ -265,7 +265,7 @@ export default function AidenQuizPage() {
       const res = await authFetch("/api/credits/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ packageType: "starter", successPath: "/chat/aiden-powers" }),
+        body: JSON.stringify({ packageType: "aiden_rescue", successPath: "/chat/aiden-powers" }),
       });
       const data = await res.json();
       if (data.url) {
@@ -376,7 +376,7 @@ export default function AidenQuizPage() {
 
             {/* Free minutes badge */}
             <div className="inline-block bg-purple-50 border border-purple-200 rounded-lg px-4 py-2 mb-6">
-              <span className="text-sm text-purple-900">&#127873; 3 FREE minutes to get started</span>
+              <span className="text-sm text-purple-900">&#127873; 10 FREE minutes to get started</span>
             </div>
 
             {/* CTA */}
@@ -623,7 +623,7 @@ export default function AidenQuizPage() {
             {/* Footer */}
             <div className="mt-4 text-center space-y-2">
               <p className="text-sm text-gray-500">
-                &#127873; Your first 3 minutes are free
+                &#127873; Your first 10 minutes are free
               </p>
               <p className="text-sm text-gray-400">
                 Already have an account?{" "}
@@ -731,7 +731,7 @@ export default function AidenQuizPage() {
                       Redirecting to checkout...
                     </span>
                   ) : (
-                    "Start My Reading \u2014 $9.99 (3 min included)"
+                    "Start My Reading \u2014 $9.99 (10 min included)"
                   )}
                 </button>
               </div>

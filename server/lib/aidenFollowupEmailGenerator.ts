@@ -143,7 +143,7 @@ function buildEmailContent(
     bodyHtml: [
       `<p>${fn},</p>`,
       `<p>This is the last time I'll reach out about this reading. Not because your numbers changed — they didn't — but because I don't re-run the same chart twice, and yours has been sitting on my desk for two days.</p>`,
-      `<p>Three free minutes are still waiting on the other side of one click. After that, it's your call.</p>`,
+      `<p>Ten free minutes are still waiting on the other side of one click. After that, it's your call.</p>`,
       `<p style="margin-top:28px;font-style:italic;color:#6a6275;">Either way — the number I saw for you was a good one.</p>`,
       `<p>— Aiden</p>`,
     ].join('\n'),
@@ -152,7 +152,7 @@ function buildEmailContent(
       '',
       `This is the last time I'll reach out about this reading. Not because your numbers changed — they didn't — but because I don't re-run the same chart twice, and yours has been sitting on my desk for two days.`,
       '',
-      `Three free minutes are still waiting on the other side of one click. After that, it's your call.`,
+      `Ten free minutes are still waiting on the other side of one click. After that, it's your call.`,
       '',
       `Either way — the number I saw for you was a good one.`,
       '',

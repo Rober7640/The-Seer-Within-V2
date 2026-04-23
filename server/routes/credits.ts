@@ -28,9 +28,23 @@ const WELCOME_TIER = {
   label: '160 coins',
 };
 
-/** Resolve tier: handle special "welcome" packageType or look up from persona pricing */
+// Aiden-only rescue hatch shown on the /aiden check-your-email screen after 60s.
+// Same price as the generic starter ($9.99) but grants 10 minutes (600 coins)
+// instead of 3, matching the Aiden onboarding policy. Purchases with this
+// packageType are directly attributable to the rescue hatch in reporting.
+const AIDEN_RESCUE_TIER = {
+  packageType: 'aiden_rescue',
+  coins: 600,
+  bonusCoins: 0,
+  totalCoins: 600,
+  priceUsd: 999,   // $9.99
+  label: '600 coins',
+};
+
+/** Resolve tier: handle special code-level packageTypes or look up from persona pricing */
 function resolveTier(packageType: string, pricing: { tiers: Array<{ packageType: string; coins: number; bonusCoins: number; totalCoins: number; priceUsd: number; label: string }> }) {
   if (packageType === 'welcome') return WELCOME_TIER;
+  if (packageType === 'aiden_rescue') return AIDEN_RESCUE_TIER;
   return pricing.tiers.find(t => t.packageType === packageType);
 }
 
@@ -166,7 +180,7 @@ router.post('/checkout', requireAuth, async (req: Request, res: Response) => {
   let pricing, tier, personaName: string, userResult;
   try {
     pricing = personaId ? await getPersonaPricing(personaId) : DEFAULT_PRICING;
-    tier = pricing.tiers.find(t => t.packageType === packageType);
+    tier = resolveTier(packageType, pricing);
     if (!tier) {
       res.status(400).json({ error: 'Invalid package type' });
       return;
