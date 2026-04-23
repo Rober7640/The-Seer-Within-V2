@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { randomUUID } from 'crypto';
 import { db } from '../lib/db';
 import { users, personas, chatSessions, userMemory, aidenQuizSessions } from '@shared/schema';
-import { eq, and, isNull, sql } from 'drizzle-orm';
+import { eq, and, isNull, desc, sql } from 'drizzle-orm';
 import { hashPassword, verifyPassword, generateToken, requireAuth } from '../lib/auth';
 import { verifyMagicLinkToken, generateMagicLinkToken } from '../lib/magicLink';
 import { authLimiter, passwordResetLimiter } from '../lib/rateLimiter';
@@ -25,6 +25,7 @@ import {
   scheduleAidenFollowups,
   skipAidenFollowupsForUser,
 } from '../lib/aidenFollowupEmailGenerator';
+import { scheduleAidenVerifiedDrip } from '../lib/aidenVerifiedDripGenerator';
 import logger from '../lib/logger';
 
 // Default free-coin grant when the user has no default persona set or the
@@ -41,6 +42,38 @@ async function getFreeCoinsForPersona(personaId: string | null | undefined): Pro
     .where(eq(personas.id, personaId))
     .limit(1);
   return row[0]?.freeCoins ?? DEFAULT_FREE_COINS;
+}
+
+// Used by the verification endpoints to decide whether to enroll the user into
+// the Aiden "verified, not purchased" nurture drip. Silent-fails to false so a
+// schema/DB hiccup can never block verification itself.
+async function isAidenUser(personaId: string | null | undefined): Promise<boolean> {
+  if (!personaId) return false;
+  try {
+    const row = await db.select({ slug: personas.slug })
+      .from(personas)
+      .where(eq(personas.id, personaId))
+      .limit(1);
+    return row[0]?.slug === 'aiden-powers';
+  } catch {
+    return false;
+  }
+}
+
+// Best-effort lookup of the user's /aiden quiz topic for personalizing post-verify
+// emails. Returns null when the user never took the quiz (e.g. migrated V1 users
+// who got a default-persona of Aiden some other way).
+async function lookupQuizTopicForUser(userId: string): Promise<string | null> {
+  try {
+    const row = await db.select({ q1Topic: aidenQuizSessions.q1Topic })
+      .from(aidenQuizSessions)
+      .where(eq(aidenQuizSessions.userId, userId))
+      .orderBy(desc(aidenQuizSessions.startedAt))
+      .limit(1);
+    return row[0]?.q1Topic || null;
+  } catch {
+    return null;
+  }
 }
 
 const router = Router();
@@ -422,6 +455,19 @@ router.get('/verify-email/:token', async (req: Request, res: Response) => {
 
     // Halt the Aiden follow-up drip (non-blocking — failure must not break verification).
     skipAidenFollowupsForUser(user.id, 'user_verified').catch(() => { /* logged inside */ });
+
+    // Schedule the post-verification "verified, not purchased" nurture drip for Aiden users.
+    // Non-blocking + flag-gated inside the processor (ENABLE_AIDEN_VERIFIED_DRIP).
+    if (await isAidenUser(user.defaultPersonaId)) {
+      const quizTopic = await lookupQuizTopicForUser(user.id);
+      scheduleAidenVerifiedDrip({
+        userId: user.id,
+        email: user.email,
+        firstName: user.firstName || 'there',
+        topic: quizTopic,
+        baseTime: new Date(),
+      }).catch(() => { /* logged inside */ });
+    }
 
     // Generate JWT so the user is auto-logged-in (works even on a different device/browser)
     const jwtToken = generateToken(user.id, user.email);
@@ -1065,6 +1111,21 @@ router.post('/magic-verify', authLimiter, async (req: Request, res: Response) =>
         freshEmailVerified = updated[0].emailVerified;
         // Halt the Aiden follow-up drip (non-blocking — must not fail the login).
         skipAidenFollowupsForUser(user.id, 'user_verified').catch(() => { /* logged inside */ });
+
+        // Schedule the post-verification "verified, not purchased" drip. Users who
+        // verify via a magic-link CTA (e.g. the +10m/+24h/+48h follow-up email click)
+        // enter the same nurture funnel as users who verify via the normal email button.
+        if (await isAidenUser(user.defaultPersonaId)) {
+          const quizTopic = await lookupQuizTopicForUser(user.id);
+          scheduleAidenVerifiedDrip({
+            userId: user.id,
+            email: user.email,
+            firstName: user.firstName || 'there',
+            topic: quizTopic,
+            baseTime: new Date(),
+          }).catch(() => { /* logged inside */ });
+        }
+
         logger.info('Magic-link verified email and granted free coins', {
           userId: user.id,
           coinBalance: freshCoinBalance,

@@ -181,6 +181,7 @@ export async function scheduleAidenFollowups(params: {
       const content = buildEmailContent(seq, params.firstName, topicPhrase);
       return {
         userId: params.userId,
+        sequenceType: 'unverified' as const,
         sequenceNumber: seq,
         scheduledFor: new Date(baseMs + DELAY_MS[seq]),
         recipientEmail: params.email,
@@ -224,6 +225,7 @@ export async function skipAidenFollowupsForUser(
       .where(
         and(
           eq(aidenFollowupEmails.userId, userId),
+          eq(aidenFollowupEmails.sequenceType, 'unverified'),
           eq(aidenFollowupEmails.status, 'pending'),
         ),
       );
@@ -260,11 +262,13 @@ export async function processAidenFollowupQueue(): Promise<ProcessResult> {
   const now = new Date();
 
   // Load ripe pending rows. Ordered so earlier-scheduled fires first.
+  // Restricted to 'unverified' drip — the 'verified_nopurchase' drip has its own processor.
   const rows = await db
     .select()
     .from(aidenFollowupEmails)
     .where(
       and(
+        eq(aidenFollowupEmails.sequenceType, 'unverified'),
         eq(aidenFollowupEmails.status, 'pending'),
         lte(aidenFollowupEmails.scheduledFor, now),
       ),
@@ -377,6 +381,7 @@ async function processSingleRow(
       .where(
         and(
           eq(aidenFollowupEmails.userId, row.userId),
+          eq(aidenFollowupEmails.sequenceType, 'unverified'),
           eq(aidenFollowupEmails.status, 'pending'),
         ),
       );
@@ -396,6 +401,7 @@ async function processSingleRow(
       .where(
         and(
           eq(aidenFollowupEmails.userId, row.userId),
+          eq(aidenFollowupEmails.sequenceType, 'unverified'),
           eq(aidenFollowupEmails.status, 'pending'),
         ),
       );
@@ -422,6 +428,7 @@ async function processSingleRow(
       .where(
         and(
           eq(aidenFollowupEmails.userId, row.userId),
+          eq(aidenFollowupEmails.sequenceType, 'unverified'),
           eq(aidenFollowupEmails.status, 'pending'),
         ),
       );

@@ -595,10 +595,17 @@ export const migrationDripEmails = pgTable("migration_drip_emails", {
   index("idx_migration_drip_status").on(table.status, table.sentAt),
 ]);
 
-// 19. Aiden Follow-Up Emails - Nurture sequence for unverified /aiden signups (+10m/+24h/+48h)
+// 19. Aiden Follow-Up Emails - Nurture sequences for Aiden users.
+// Two drip tracks share this table, discriminated by sequence_type:
+//   - 'unverified'           : +10m / +24h / +48h from magic-register (pre-verification)
+//   - 'verified_nopurchase'  : +1h  / +25h / +49h from verification (post-verify, pre-purchase)
 export const aidenFollowupEmails = pgTable("aiden_followup_emails", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+
+  // Discriminator for which drip this row belongs to. DB default preserves pre-existing rows
+  // on the original unverified track; inserts explicitly set this from here on.
+  sequenceType: text("sequence_type").default("unverified").notNull(), // 'unverified' | 'verified_nopurchase'
 
   sequenceNumber: integer("sequence_number").notNull(), // 1, 2, or 3
   scheduledFor: timestamp("scheduled_for").notNull(),
@@ -625,6 +632,7 @@ export const aidenFollowupEmails = pgTable("aiden_followup_emails", {
 }, (table) => [
   index("idx_aiden_followup_user_seq").on(table.userId, table.sequenceNumber),
   index("idx_aiden_followup_status_scheduled").on(table.status, table.scheduledFor),
+  index("idx_aiden_followup_type_status_scheduled").on(table.sequenceType, table.status, table.scheduledFor),
 ]);
 
 // ============================================================

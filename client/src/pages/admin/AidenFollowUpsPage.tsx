@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ChevronLeft, ChevronRight, Eye, X, PlayCircle } from "lucide-react";
 
+type SequenceType = "unverified" | "verified_nopurchase";
+
 interface AidenFollowupRow {
   id: string;
   userId: string;
@@ -24,6 +26,7 @@ interface AidenFollowupRow {
 }
 
 interface AidenFollowupStats {
+  sequenceType?: SequenceType;
   flagEnabled: boolean;
   breakdown: Array<{ status: string; sequenceNumber: number; total: number }>;
   openedTotal: number;
@@ -37,10 +40,33 @@ const statusColors: Record<string, string> = {
   skipped: "text-gray-400 bg-gray-800/50",
 };
 
-const sequenceLabel: Record<number, string> = {
-  1: "+10m",
-  2: "+24h",
-  3: "+48h",
+// Cadence labels per drip type — shown in the sequence stat cards and filter options.
+const sequenceLabel: Record<SequenceType, Record<number, string>> = {
+  unverified: { 1: "+10m", 2: "+24h", 3: "+48h" },
+  verified_nopurchase: { 1: "+1h", 2: "+25h", 3: "+49h" },
+};
+
+const TAB_META: Record<SequenceType, { title: string; description: string; envFlag: string; flagOnNote: string; flagOffNote: string }> = {
+  unverified: {
+    title: "Unverified",
+    description:
+      "Nurture sequence for users who sign up via /aiden but do not verify their email. Rows are scheduled at signup (+10m / +24h / +48h). Cron runs every 5 min. Skips if the user verifies, unsubscribes, changes email, suspends, or the window passes stale.",
+    envFlag: "ENABLE_AIDEN_FOLLOWUPS",
+    flagOnNote:
+      "ENABLE_AIDEN_FOLLOWUPS = true — cron WILL send unverified-drip emails to ripe pending rows.",
+    flagOffNote:
+      "ENABLE_AIDEN_FOLLOWUPS is OFF — cron and manual trigger will not send any unverified-drip emails. Set the env var to 'true' on Railway to enable.",
+  },
+  verified_nopurchase: {
+    title: "Verified — Not Purchased",
+    description:
+      "Post-verification nurture for /aiden users who verified and received their free minutes but haven't purchased credits. Rows are scheduled at verification (+1h / +25h / +49h). Cron runs every 5 min. Emails are Haiku-personalized at send time using the user's quiz topic and, if available, their last chat messages with Aiden. Skips on purchase, unsubscribe, email change, suspension, or staleness.",
+    envFlag: "ENABLE_AIDEN_VERIFIED_DRIP",
+    flagOnNote:
+      "ENABLE_AIDEN_VERIFIED_DRIP = true — cron WILL send verified-drip emails to ripe pending rows.",
+    flagOffNote:
+      "ENABLE_AIDEN_VERIFIED_DRIP is OFF — cron and manual trigger will not send any verified-drip emails. Set the env var to 'true' on Railway to enable.",
+  },
 };
 
 function sumStatus(breakdown: AidenFollowupStats["breakdown"] | undefined, status: string): number {
@@ -57,6 +83,7 @@ function sumSeq(breakdown: AidenFollowupStats["breakdown"] | undefined, seq: num
 
 export default function AidenFollowUpsPage() {
   const { isAuthenticated } = useAdmin();
+  const [activeTab, setActiveTab] = useState<SequenceType>("unverified");
   const [stats, setStats] = useState<AidenFollowupStats | null>(null);
   const [rows, setRows] = useState<AidenFollowupRow[]>([]);
   const [total, setTotal] = useState(0);
@@ -71,13 +98,27 @@ export default function AidenFollowUpsPage() {
 
   const pageSize = 25;
   const totalPages = Math.ceil(total / pageSize);
+  const tabMeta = TAB_META[activeTab];
 
-  useEffect(() => { fetchStats(); }, []);
-  useEffect(() => { fetchRows(); }, [page, seqFilter, statusFilter]);
+  // Refetch whenever active tab changes OR any filter/page changes.
+  useEffect(() => {
+    fetchStats();
+    // Reset table state when tab changes so filters don't leak across tabs.
+    setPage(1);
+    setSeqFilter("all");
+    setStatusFilter("all");
+    setPreviewId(null);
+    setPreviewHtml(null);
+    setTriggerMessage(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab]);
+
+  useEffect(() => { fetchRows(); }, [activeTab, page, seqFilter, statusFilter]);
 
   async function fetchStats() {
     try {
-      const res = await adminFetch("/api/admin/aiden-follow-ups/stats");
+      const params = new URLSearchParams({ sequenceType: activeTab });
+      const res = await adminFetch(`/api/admin/aiden-follow-ups/stats?${params}`);
       if (res.ok) setStats(await res.json());
     } catch {}
   }
@@ -85,7 +126,11 @@ export default function AidenFollowUpsPage() {
   async function fetchRows() {
     setLoading(true);
     try {
-      const params = new URLSearchParams({ page: page.toString(), pageSize: pageSize.toString() });
+      const params = new URLSearchParams({
+        sequenceType: activeTab,
+        page: page.toString(),
+        pageSize: pageSize.toString(),
+      });
       if (seqFilter !== "all") params.set("sequence", seqFilter);
       if (statusFilter !== "all") params.set("status", statusFilter);
 
@@ -118,7 +163,8 @@ export default function AidenFollowUpsPage() {
     setTriggering(true);
     setTriggerMessage(null);
     try {
-      const res = await adminFetch("/api/admin/aiden-follow-ups/trigger", { method: "POST" });
+      const params = new URLSearchParams({ sequenceType: activeTab });
+      const res = await adminFetch(`/api/admin/aiden-follow-ups/trigger?${params}`, { method: "POST" });
       if (res.ok) {
         const data = await res.json();
         const s = data.stats;
@@ -142,7 +188,24 @@ export default function AidenFollowUpsPage() {
   if (!isAuthenticated) return null;
 
   return (
-    <AdminLayout title="Aiden Follow-Ups (/aiden unverified signups)">
+    <AdminLayout title="Aiden Follow-Ups">
+      {/* Tab switcher */}
+      <div className="flex gap-2 mb-4 border-b border-gray-800">
+        {(Object.keys(TAB_META) as SequenceType[]).map((tab) => (
+          <button
+            key={tab}
+            onClick={() => setActiveTab(tab)}
+            className={`px-4 py-2 text-sm font-medium transition-colors ${
+              activeTab === tab
+                ? "text-white border-b-2 border-purple-500 -mb-px"
+                : "text-gray-500 hover:text-gray-300"
+            }`}
+          >
+            {TAB_META[tab].title}
+          </button>
+        ))}
+      </div>
+
       {/* Flag banner */}
       {stats && (
         <div
@@ -152,16 +215,14 @@ export default function AidenFollowUpsPage() {
               : "bg-amber-900/20 border-amber-800 text-amber-300"
           }`}
         >
-          {stats.flagEnabled
-            ? "ENABLE_AIDEN_FOLLOWUPS = true — cron WILL send emails to ripe pending rows."
-            : "ENABLE_AIDEN_FOLLOWUPS is OFF — cron and manual trigger will not send any emails. Set the env var to 'true' on Railway to enable."}
+          {stats.flagEnabled ? tabMeta.flagOnNote : tabMeta.flagOffNote}
         </div>
       )}
 
       {/* Stats cards */}
       {stats && (
         <div className="space-y-3 mb-6">
-          <div className="grid grid-cols-5 gap-3">
+          <div className="grid grid-cols-6 gap-3">
             <Card className="bg-gray-900 border-gray-800 p-4 text-center">
               <div className="text-2xl font-bold text-white">{sumStatus(stats.breakdown, "pending")}</div>
               <div className="text-xs text-gray-500 mt-1">Pending</div>
@@ -182,11 +243,15 @@ export default function AidenFollowUpsPage() {
               <div className="text-2xl font-bold text-cyan-400">{stats.openedTotal}</div>
               <div className="text-xs text-gray-500 mt-1">Opened</div>
             </Card>
+            <Card className="bg-gray-900 border-gray-800 p-4 text-center">
+              <div className="text-2xl font-bold text-orange-400">{stats.clickedTotal}</div>
+              <div className="text-xs text-gray-500 mt-1">Clicked</div>
+            </Card>
           </div>
           <div className="grid grid-cols-3 gap-2">
             {[1, 2, 3].map((seq) => (
               <Card key={seq} className="bg-gray-900 border-gray-800 p-3 text-center">
-                <div className="text-sm text-gray-400 mb-1">Email {seq} ({sequenceLabel[seq]})</div>
+                <div className="text-sm text-gray-400 mb-1">Email {seq} ({sequenceLabel[activeTab][seq]})</div>
                 <div className="flex items-center justify-center gap-3 text-xs">
                   <span className="text-emerald-400">sent {sumSeq(stats.breakdown, seq, "sent")}</span>
                   <span className="text-yellow-400">pending {sumSeq(stats.breakdown, seq, "pending")}</span>
@@ -198,20 +263,18 @@ export default function AidenFollowUpsPage() {
         </div>
       )}
 
-      <p className="text-sm text-gray-500 mb-4">
-        Nurture sequence for users who sign up via <code className="bg-gray-800 px-1 rounded text-xs">/aiden</code> but do not verify their email. Rows are scheduled at signup (+10m / +24h / +48h). Cron runs every 5 min. Skips if user verifies, unsubscribes, changes email, suspends account, or the window passes stale.
-      </p>
+      <p className="text-sm text-gray-500 mb-4">{tabMeta.description}</p>
 
       {/* Controls */}
       <div className="flex items-center gap-3 mb-4">
         <Select value={seqFilter} onValueChange={(v) => { setSeqFilter(v); setPage(1); }}>
-          <SelectTrigger className="w-[140px] bg-gray-900 border-gray-700 text-gray-300 text-sm">
+          <SelectTrigger className="w-[160px] bg-gray-900 border-gray-700 text-gray-300 text-sm">
             <SelectValue placeholder="Sequence" />
           </SelectTrigger>
           <SelectContent className="bg-gray-800 border-gray-700">
             <SelectItem value="all">All Emails</SelectItem>
             {[1, 2, 3].map((seq) => (
-              <SelectItem key={seq} value={String(seq)}>Email {seq} ({sequenceLabel[seq]})</SelectItem>
+              <SelectItem key={seq} value={String(seq)}>Email {seq} ({sequenceLabel[activeTab][seq]})</SelectItem>
             ))}
           </SelectContent>
         </Select>
@@ -240,7 +303,7 @@ export default function AidenFollowUpsPage() {
             className="bg-purple-600 hover:bg-purple-500 text-white"
           >
             <PlayCircle className="w-4 h-4 mr-1" />
-            {triggering ? "Running..." : "Run Aiden Follow-Ups"}
+            {triggering ? "Running..." : `Run ${tabMeta.title}`}
           </Button>
         </div>
       </div>
@@ -340,7 +403,9 @@ export default function AidenFollowUpsPage() {
                   {rows.length === 0 && (
                     <tr>
                       <td colSpan={12} className="p-8 text-center text-gray-600 text-sm">
-                        No Aiden follow-ups yet. Rows are created when a user signs up via /aiden.
+                        {activeTab === "unverified"
+                          ? "No unverified follow-ups yet. Rows are created when a user signs up via /aiden."
+                          : "No verified-drip rows yet. Rows are created when an Aiden user verifies their email."}
                       </td>
                     </tr>
                   )}

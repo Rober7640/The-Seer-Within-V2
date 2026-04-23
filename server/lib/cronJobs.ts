@@ -8,6 +8,7 @@ import { cleanupInactiveSessions } from './creditTracking';
 import { cleanupExpiredMagicLinks } from './magicLink';
 import { processNextBatch } from './migrationDripProcessor';
 import { processAidenFollowupQueue } from './aidenFollowupEmailGenerator';
+import { processVerifiedDripQueue } from './aidenVerifiedDripGenerator';
 import logger from './logger';
 
 // Per-job concurrency guards — prevent overlapping runs if a job takes longer than its interval
@@ -17,6 +18,7 @@ let isMonthlyResetProcessing = false;
 let isSessionCleanupProcessing = false;
 let isMigrationDripProcessing = false;
 let isAidenFollowupProcessing = false;
+let isAidenVerifiedDripProcessing = false;
 
 /**
  * Initialize all cron jobs.
@@ -179,6 +181,32 @@ export function initializeCronJobs(): void {
         logger.error('Cron: Aiden follow-up processing failed', { error: (error as Error).message });
       } finally {
         isAidenFollowupProcessing = false;
+      }
+    },
+    { timezone },
+  );
+
+  // Aiden verified-but-not-purchased drip — every 5 minutes (offset 1 min so it
+  // does not overlap the unverified batch when both run in the same tick).
+  // +1h / +25h / +49h nurture for users who verified and got free minutes but
+  // have not converted. No-ops when ENABLE_AIDEN_VERIFIED_DRIP is not 'true'.
+  cron.schedule(
+    '1-59/5 * * * *',
+    async () => {
+      if (isAidenVerifiedDripProcessing) {
+        logger.info('Cron: Aiden verified-drip processing already running, skipping');
+        return;
+      }
+      isAidenVerifiedDripProcessing = true;
+      try {
+        const stats = await processVerifiedDripQueue();
+        if (stats.processed > 0) {
+          logger.info('Cron: Aiden verified-drip batch complete', stats);
+        }
+      } catch (error) {
+        logger.error('Cron: Aiden verified-drip processing failed', { error: (error as Error).message });
+      } finally {
+        isAidenVerifiedDripProcessing = false;
       }
     },
     { timezone },

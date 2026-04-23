@@ -7,14 +7,30 @@ import { aidenFollowupEmails, users } from '@shared/schema';
 import { eq, and, desc, count, sql } from 'drizzle-orm';
 import logger from '../../lib/logger';
 import { processAidenFollowupQueue } from '../../lib/aidenFollowupEmailGenerator';
+import { processVerifiedDripQueue } from '../../lib/aidenVerifiedDripGenerator';
 
 const router = Router();
 
+const SEQUENCE_TYPES = ['unverified', 'verified_nopurchase'] as const;
+type SequenceType = (typeof SEQUENCE_TYPES)[number];
+
+// Parse and validate the ?sequenceType query param, defaulting to 'unverified'
+// so existing callers (that haven't yet been updated to pass the param) keep
+// seeing the original data set.
+function parseSequenceType(raw: unknown): SequenceType {
+  if (raw === 'verified_nopurchase') return 'verified_nopurchase';
+  return 'unverified';
+}
+
 // ============================================
 // GET /api/admin/aiden-follow-ups/stats
+// Query: ?sequenceType=unverified | verified_nopurchase
 // ============================================
-router.get('/stats', async (_req: Request, res: Response) => {
+router.get('/stats', async (req: Request, res: Response) => {
   try {
+    const sequenceType = parseSequenceType(req.query.sequenceType);
+    const typeFilter = eq(aidenFollowupEmails.sequenceType, sequenceType);
+
     const rows = await db
       .select({
         status: aidenFollowupEmails.status,
@@ -22,21 +38,26 @@ router.get('/stats', async (_req: Request, res: Response) => {
         total: count(),
       })
       .from(aidenFollowupEmails)
+      .where(typeFilter)
       .groupBy(aidenFollowupEmails.status, aidenFollowupEmails.sequenceNumber);
 
     const opened = await db
       .select({ total: count() })
       .from(aidenFollowupEmails)
-      .where(sql`${aidenFollowupEmails.openedAt} IS NOT NULL`);
+      .where(and(typeFilter, sql`${aidenFollowupEmails.openedAt} IS NOT NULL`));
 
     const clicked = await db
       .select({ total: count() })
       .from(aidenFollowupEmails)
-      .where(sql`${aidenFollowupEmails.clickedAt} IS NOT NULL`);
+      .where(and(typeFilter, sql`${aidenFollowupEmails.clickedAt} IS NOT NULL`));
 
-    const flagEnabled = process.env.ENABLE_AIDEN_FOLLOWUPS === 'true';
+    const flagEnabled =
+      sequenceType === 'verified_nopurchase'
+        ? process.env.ENABLE_AIDEN_VERIFIED_DRIP === 'true'
+        : process.env.ENABLE_AIDEN_FOLLOWUPS === 'true';
 
     return res.json({
+      sequenceType,
       flagEnabled,
       breakdown: rows,
       openedTotal: opened[0]?.total ?? 0,
@@ -58,17 +79,18 @@ router.get('/', async (req: Request, res: Response) => {
     const pageSize = Math.min(100, Math.max(1, parseInt(req.query.pageSize as string) || 25));
     const offset = (page - 1) * pageSize;
 
+    const sequenceType = parseSequenceType(req.query.sequenceType);
     const statusFilter = req.query.status as string | undefined;
     const seqFilter = req.query.sequence as string | undefined;
 
-    const conditions = [];
+    const conditions = [eq(aidenFollowupEmails.sequenceType, sequenceType)];
     if (statusFilter && ['pending', 'sent', 'failed', 'skipped'].includes(statusFilter)) {
       conditions.push(eq(aidenFollowupEmails.status, statusFilter));
     }
     if (seqFilter && ['1', '2', '3'].includes(seqFilter)) {
       conditions.push(eq(aidenFollowupEmails.sequenceNumber, parseInt(seqFilter)));
     }
-    const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+    const whereClause = and(...conditions);
 
     const rowsQuery = db
       .select({
@@ -90,18 +112,21 @@ router.get('/', async (req: Request, res: Response) => {
       .from(aidenFollowupEmails)
       .leftJoin(users, eq(aidenFollowupEmails.userId, users.id));
 
-    const rows = whereClause
-      ? await rowsQuery.where(whereClause).orderBy(desc(aidenFollowupEmails.scheduledFor)).limit(pageSize).offset(offset)
-      : await rowsQuery.orderBy(desc(aidenFollowupEmails.scheduledFor)).limit(pageSize).offset(offset);
+    const rows = await rowsQuery
+      .where(whereClause)
+      .orderBy(desc(aidenFollowupEmails.scheduledFor))
+      .limit(pageSize)
+      .offset(offset);
 
-    const totalCountQuery = db.select({ total: count() }).from(aidenFollowupEmails);
-    const totalCountRow = whereClause
-      ? await totalCountQuery.where(whereClause)
-      : await totalCountQuery;
+    const totalCountRow = await db
+      .select({ total: count() })
+      .from(aidenFollowupEmails)
+      .where(whereClause);
 
     const total = totalCountRow[0]?.total ?? 0;
 
     return res.json({
+      sequenceType,
       rows,
       pagination: {
         page,
@@ -118,17 +143,38 @@ router.get('/', async (req: Request, res: Response) => {
 
 // ============================================
 // POST /api/admin/aiden-follow-ups/trigger
-// Manually process the queue. Respects ENABLE_AIDEN_FOLLOWUPS flag.
+// Manually process the queue. Body/query: ?sequenceType=unverified|verified_nopurchase
+// Each sequence_type has its own env flag:
+//   - unverified         → ENABLE_AIDEN_FOLLOWUPS
+//   - verified_nopurchase → ENABLE_AIDEN_VERIFIED_DRIP
 // ============================================
 router.post('/trigger', async (req: Request, res: Response) => {
   try {
-    logger.info('Admin: manually triggering Aiden follow-up queue', { adminId: req.adminId });
+    const sequenceType = parseSequenceType(req.query.sequenceType ?? req.body?.sequenceType);
+    logger.info('Admin: manually triggering Aiden drip queue', {
+      adminId: req.adminId,
+      sequenceType,
+    });
+
+    if (sequenceType === 'verified_nopurchase') {
+      const stats = await processVerifiedDripQueue();
+      return res.json({
+        success: true,
+        sequenceType,
+        stats,
+        note: stats.flagEnabled
+          ? 'Verified-drip queue processed. Check stats for send counts.'
+          : 'ENABLE_AIDEN_VERIFIED_DRIP flag is OFF — no emails were sent. Set env var to "true" on Railway to enable.',
+      });
+    }
+
     const stats = await processAidenFollowupQueue();
     return res.json({
       success: true,
+      sequenceType,
       stats,
       note: stats.flagEnabled
-        ? 'Queue processed. Check stats for send counts.'
+        ? 'Unverified drip queue processed. Check stats for send counts.'
         : 'ENABLE_AIDEN_FOLLOWUPS flag is OFF — no emails were sent. Set env var to "true" on Railway to enable.',
     });
   } catch (error: any) {
