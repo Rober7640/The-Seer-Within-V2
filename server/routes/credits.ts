@@ -29,16 +29,17 @@ const WELCOME_TIER = {
 };
 
 // Aiden-only rescue hatch shown on the /aiden check-your-email screen after 60s.
-// Same price as the generic starter ($9.99) but grants 10 minutes (600 coins)
-// instead of 3, matching the Aiden onboarding policy. Purchases with this
-// packageType are directly attributable to the rescue hatch in reporting.
+// Same price, coins, and minutes as the generic starter ($9.99 / 180 coins / 3 min) —
+// the distinct packageType 'aiden_rescue' exists purely so these purchases are
+// directly attributable to the Aiden rescue-hatch flow in reporting, separate from
+// regular in-chat starter top-ups that use packageType 'starter'.
 const AIDEN_RESCUE_TIER = {
   packageType: 'aiden_rescue',
-  coins: 600,
+  coins: 180,
   bonusCoins: 0,
-  totalCoins: 600,
+  totalCoins: 180,
   priceUsd: 999,   // $9.99
-  label: '600 coins',
+  label: '180 coins',
 };
 
 /** Resolve tier: handle special code-level packageTypes or look up from persona pricing */

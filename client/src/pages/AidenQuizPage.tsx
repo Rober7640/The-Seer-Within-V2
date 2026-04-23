@@ -731,7 +731,7 @@ export default function AidenQuizPage() {
                       Redirecting to checkout...
                     </span>
                   ) : (
-                    "Start My Reading \u2014 $9.99 (10 min included)"
+                    "Start My Reading \u2014 $9.99 (3 min included)"
                   )}
                 </button>
               </div>

@@ -22,7 +22,16 @@ function escapeHtml(str: string): string {
     .replace(/'/g, '&#39;');
 }
 
-function buildVerificationHtml(firstName: string, verifyUrl: string): string {
+// Free-minutes grant shown in verification copy. Kept in sync with
+// personas.freeCoins in the DB: Aiden grants 600 coins = 10 min; other
+// personas grant the default 180 coins = 3 min. If more persona-specific
+// grants are added later, extend this map (or read from DB).
+function getFreeMinutesForPersona(persona?: string): number {
+  if (persona === 'aiden-powers') return 10;
+  return 3;
+}
+
+function buildVerificationHtml(firstName: string, verifyUrl: string, freeMinutes: number): string {
   const safeName = escapeHtml(firstName);
   const safeUrl = escapeHtml(verifyUrl);
 
@@ -107,7 +116,7 @@ function buildVerificationHtml(firstName: string, verifyUrl: string): string {
               style="padding:28px 44px 32px;font-size:16px;line-height:1.8;color:#4a4a5a;
                      font-family:Georgia,'Times New Roman',serif;">
             <p style="margin:0 0 16px;color:#1a1a2e;">Dear ${safeName},</p>
-            <p style="margin:0 0 16px;">Welcome to The Seer Within. To complete your registration and receive your <strong>3 free minutes</strong> of spiritual guidance, please verify your email address.</p>
+            <p style="margin:0 0 16px;">Welcome to The Seer Within. To complete your registration and receive your <strong>${freeMinutes} free minutes</strong> of spiritual guidance, please verify your email address.</p>
             <p style="margin:0 0 16px;">This link will expire in 24 hours.</p>
           </td>
         </tr>
@@ -164,13 +173,13 @@ function buildVerificationHtml(firstName: string, verifyUrl: string): string {
 </html>`;
 }
 
-function buildVerificationText(firstName: string, verifyUrl: string): string {
+function buildVerificationText(firstName: string, verifyUrl: string, freeMinutes: number): string {
   return `The Seer Within
 ================
 
 Dear ${firstName},
 
-Welcome to The Seer Within. To complete your registration and receive your 3 free minutes of spiritual guidance, please verify your email address by visiting:
+Welcome to The Seer Within. To complete your registration and receive your ${freeMinutes} free minutes of spiritual guidance, please verify your email address by visiting:
 
 ${verifyUrl}
 
@@ -187,9 +196,10 @@ export async function sendVerificationEmail(
 ): Promise<{ success: boolean; error?: string }> {
   const personaQuery = persona ? `?persona=${encodeURIComponent(persona)}` : '';
   const verifyUrl = `${BASE_URL}/verify-email/${token}${personaQuery}`;
+  const freeMinutes = getFreeMinutesForPersona(persona);
 
-  const html = buildVerificationHtml(firstName, verifyUrl);
-  const text = buildVerificationText(firstName, verifyUrl);
+  const html = buildVerificationHtml(firstName, verifyUrl, freeMinutes);
+  const text = buildVerificationText(firstName, verifyUrl, freeMinutes);
 
   if (!resend) {
     logger.warn(`[Email Verification] Resend not configured. Verification URL for ${email}: ${verifyUrl}`);
