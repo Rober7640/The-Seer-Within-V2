@@ -635,6 +635,23 @@ export const aidenFollowupEmails = pgTable("aiden_followup_emails", {
   index("idx_aiden_followup_type_status_scheduled").on(table.sequenceType, table.status, table.scheduledFor),
 ]);
 
+// 20. Email Suppression - Central list of every email that's opted out.
+// Populated by: public /unsubscribe (partner emails), our own token-click unsubs,
+// Resend bounce webhooks, Resend spam-complaint webhooks. Single source of truth
+// for CAN-SPAM compliance exports to partners (GPBL, etc.).
+export const emailSuppression = pgTable("email_suppression", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  email: text("email").notNull().unique(), // lowercased + trimmed before insert
+  reason: text("reason").notNull(),
+  // 'user_unsubscribed' | 'bounced' | 'spam_complaint' | 'partner_unsub'
+  source: text("source").notNull(),
+  // 'theseerwithin' | 'gpbl' | 'resend' | 'aweber_import' | 'other'
+  userId: varchar("user_id").references(() => users.id, { onDelete: "set null" }),
+  suppressedAt: timestamp("suppressed_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_email_suppression_suppressed_at").on(table.suppressedAt),
+]);
+
 // ============================================================
 // Insert Schemas (Zod validation)
 // ============================================================

@@ -24,6 +24,7 @@ import creditsRouter from "./routes/credits";
 import adminRouter from "./routes/admin/index";
 import personasRouter from "./routes/personas";
 import webhooksRouter, { reportTrackdeskConversion } from "./routes/webhooks";
+import unsubscribeRouter from "./routes/unsubscribe";
 import userStatsRouter from "./routes/userStats";
 import migrateRouter from "./routes/migrate";
 import astrologyRouter from "./routes/astrology";
@@ -214,6 +215,11 @@ export async function registerRoutes(
   app.use("/api/migrate", migrateRouter);
   app.use("/api/astrology", astrologyRouter);
   app.use("/api/quiz", quizRouter);
+
+  // Public unsubscribe endpoint for partner emails (CAN-SPAM compliance).
+  // Mounted at root so the URL is a clean https://www.theseerwithin.com/unsubscribe?email=...&src=...
+  // Kept separate from /api/webhooks/unsubscribe (token-based, for our own emails).
+  app.use("/", unsubscribeRouter);
 
   // Diagnostic endpoint to test Stripe session retrieval
   // Usage: GET /api/upsell/test-session/cs_xxx (replace cs_xxx with actual Stripe session ID)

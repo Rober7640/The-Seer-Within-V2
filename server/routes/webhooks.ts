@@ -4,7 +4,7 @@ import { Router, Request, Response } from 'express';
 import { Webhook } from 'svix';
 import Stripe from 'stripe';
 import { db } from '../lib/db';
-import { followUpEmails, userFollowUpPreferences, migrationDripEmails, topupEmails, aidenFollowupEmails } from '@shared/schema';
+import { followUpEmails, userFollowUpPreferences, migrationDripEmails, topupEmails, aidenFollowupEmails, users, emailSuppression } from '@shared/schema';
 import { eq } from 'drizzle-orm';
 import logger from '../lib/logger';
 
@@ -424,6 +424,16 @@ router.post('/unsubscribe', async (req: Request, res: Response) => {
 
 /**
  * Auto-unsubscribe a user from follow-up emails.
+ *
+ * Primary effect: updates userFollowUpPreferences so every ongoing drip
+ * (Aiden verified + unverified, persona follow-ups, top-ups, migration)
+ * cascade-skips this user at the next cron tick.
+ *
+ * Secondary effect: also records the email in the central email_suppression
+ * table so the same address appears in CAN-SPAM exports to partners.
+ * Wrapped in its own try/catch — a suppression-table write failure must
+ * never roll back the preferences update (which is the primary compliance
+ * requirement here).
  */
 async function autoUnsubscribe(userId: string, reason: string): Promise<void> {
   const existing = await db
@@ -452,6 +462,36 @@ async function autoUnsubscribe(userId: string, reason: string): Promise<void> {
   }
 
   logger.info(`User ${userId} unsubscribed from follow-ups (reason: ${reason})`);
+
+  // Mirror the unsubscribe into the central suppression list. Isolated so a
+  // failure here (e.g. migration not yet applied on a new environment)
+  // cannot break the follow-up preferences update above.
+  try {
+    const userRow = await db
+      .select({ email: users.email })
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1);
+
+    const email = userRow[0]?.email?.toLowerCase().trim();
+    if (email) {
+      await db
+        .insert(emailSuppression)
+        .values({
+          email,
+          reason,
+          source: 'theseerwithin',
+          userId,
+        })
+        .onConflictDoNothing();
+    }
+  } catch (suppressionError) {
+    logger.warn('[suppression] Central list write failed (userFollowUpPreferences still updated)', {
+      userId,
+      reason,
+      error: (suppressionError as Error).message,
+    });
+  }
 }
 
 /**
