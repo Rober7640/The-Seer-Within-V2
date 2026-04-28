@@ -293,6 +293,18 @@ async function seedDatabase() {
         configType: 'text',
         description: 'Default model for greetings and summaries',
       },
+      {
+        configKey: 'v1_price_variants',
+        configValue: JSON.stringify({
+          variants: [
+            { id: '35', priceCents: 3500, downsellCents: 2500, weight: 1 },
+            { id: '45', priceCents: 4500, downsellCents: 3200, weight: 1 },
+            { id: '59', priceCents: 5900, downsellCents: 4200, weight: 1 },
+          ],
+        }),
+        configType: 'json',
+        description: 'V1 funnel price split test variants. Edit weights to adjust traffic split. Set two weights to 0 to end the test.',
+      },
     ];
 
     for (const config of configs) {

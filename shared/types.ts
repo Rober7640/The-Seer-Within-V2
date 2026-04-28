@@ -38,6 +38,10 @@ export interface UserData {
   location: string | null
   timeOfDay: string | null
   objectionCount: number
+  // V1 price split test — populated server-side from the conversation row;
+  // drives pitch copy + button labels + Stripe charge + tracking values.
+  priceDollars?: number
+  downsellDollars?: number
 }
 
 export interface ShippingAddress {

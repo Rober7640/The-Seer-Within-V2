@@ -19,6 +19,7 @@ import marketplaceRoutes from './marketplace';
 import settingsRoutes from './settings';
 import emailDripRoutes from './emailDrip';
 import aidenFollowUpRoutes from './aidenFollowUps';
+import priceTestRoutes from './priceTest';
 import logger from '../../lib/logger';
 
 const router = Router();
@@ -187,5 +188,6 @@ router.use('/marketplace', marketplaceRoutes);
 router.use('/settings', settingsRoutes);
 router.use('/email-drip', emailDripRoutes);
 router.use('/aiden-follow-ups', aidenFollowUpRoutes);
+router.use('/price-test', priceTestRoutes);
 
 export default router;

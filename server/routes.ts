@@ -64,6 +64,7 @@ import {
   markUpsell2Purchased,
   saveShipping2Address,
 } from "./lib/db";
+import { assignVariantIfMissing, getVariantForEmail } from "./lib/priceVariant";
 import Stripe from "stripe";
 import type { ChatRequest, CheckoutRequest } from "../shared/types";
 import {
@@ -267,6 +268,15 @@ export async function registerRoutes(
       const { action, userData, input, objectionCount } =
         req.body as ChatRequest;
 
+      // V1 price split test — enrich userData with the variant prices
+      // server-side so prompts that quote price (objection handling,
+      // upsell context) always use the variant the user actually saw.
+      if (userData?.email) {
+        const variant = await getVariantForEmail(userData.email);
+        userData.priceDollars = Math.round(variant.priceCents / 100);
+        userData.downsellDollars = Math.round(variant.downsellCents / 100);
+      }
+
       // Universal safety check — same protections as V2 chat service
       if (input && typeof input === "string") {
         const userIP = req.ip || (req.headers['x-forwarded-for'] as string) || undefined;
@@ -427,8 +437,14 @@ export async function registerRoutes(
         return res.json({ url: "/success" });
       }
 
-      // Price in cents
-      const priceAmount = type === "downsell" ? 2500 : 3500;
+      // V1 price split test — pull the variant assigned at lead capture.
+      // Falls back to historical $35/$25 if no variant on row (old conversations
+      // or feature flag off via missing system_config row).
+      const variantInfo = email ? await getVariantForEmail(email) : null;
+      const mainCents = variantInfo?.priceCents ?? 3500;
+      const downsellCents = variantInfo?.downsellCents ?? 2500;
+      const priceAmount = type === "downsell" ? downsellCents : mainCents;
+      const variantId = variantInfo?.variant ?? "35";
 
       // Create or get existing customer
       const customers = await stripe.customers.list({ email, limit: 1 });
@@ -463,6 +479,7 @@ export async function registerRoutes(
             email,
             app: "the-seer-within",
             product: "energy_clearing_ritual",
+            priceVariant: variantId,
           },
         },
         success_url: `${getBaseUrl(req)}/welcome1?session_id={CHECKOUT_SESSION_ID}`,
@@ -474,6 +491,7 @@ export async function registerRoutes(
           type,
           app: "the-seer-within",
           product: "energy_clearing_ritual",
+          priceVariant: variantId,
           ...(trackdeskClickId && { trackdeskClickId }),
         },
       });
@@ -527,6 +545,10 @@ export async function registerRoutes(
         timeOfDay: timeOfDay || null,
       });
 
+      // V1 price split test — assign a variant on first lead capture, idempotent
+      // on subsequent calls (same email always gets the same price).
+      const assigned = await assignVariantIfMissing(email);
+
       // Add to AWeber email list (non-blocking)
       addSubscriberToList({
         email,
@@ -556,7 +578,12 @@ export async function registerRoutes(
         });
       }
 
-      return res.json({ success: true });
+      return res.json({
+        success: true,
+        priceVariant: assigned?.variant ?? null,
+        priceDollars: assigned ? Math.round(assigned.priceCents / 100) : null,
+        downsellDollars: assigned ? Math.round(assigned.downsellCents / 100) : null,
+      });
     } catch (error) {
       logger.error("Lead capture error:", error);
       return res.status(500).json({ error: "Failed to capture lead" });

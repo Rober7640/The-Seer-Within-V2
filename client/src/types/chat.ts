@@ -67,6 +67,9 @@ export interface UserData {
   location: string | null
   timeOfDay: string | null
   objectionCount: number
+  // V1 price split test — assigned at lead capture, drives pitch + button + tracking values
+  priceDollars?: number
+  downsellDollars?: number
 }
 
 export interface ShippingAddress {

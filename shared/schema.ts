@@ -29,7 +29,12 @@ export const conversations = pgTable("conversations", {
   stripeCustomerId: text("stripe_customer_id"),
   stripePaymentMethodId: text("stripe_payment_method_id"),
   mainPurchaseAmount: integer("main_purchase_amount"),
-  
+
+  // V1 price split test (variant assigned at lead capture, drives all price displays + Stripe charge)
+  priceVariant: text("price_variant"),
+  priceAmountCents: integer("price_amount_cents"),
+  downsellAmountCents: integer("downsell_amount_cents"),
+
   // Upsell 1 tracking (Protection Ritual + Lava Stone)
   upsellOffered: boolean("upsell_offered").default(false),
   upsellPurchased: boolean("upsell_purchased").default(false),

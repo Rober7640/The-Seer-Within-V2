@@ -322,45 +322,49 @@ export const BUCKET_PROMPTS: Record<Bucket, string> = {
 // OFFER EXPLANATION (when user asks "what is this?")
 // ============================================
 
-export const OFFER_EXPLANATION = [
-  "Let me explain what I'm offering, dear...",
-  "I'll perform an Energy Clearing Ritual — focusing my energy entirely on removing the shadow that's blocking your path.",
-  "Within 24 hours, you'll receive a complete written reading via email.",
-  "It will show you exactly what I found, what I cleared, and guidance for the weeks ahead.",
-  "It's $35, and comes with my 30-day guarantee — if you feel nothing has shifted, every penny returned.",
-  "I only offer this when the timing is right... and for you, it's right now.",
-]
+export function getOfferExplanation(priceDollars: number = 35): string[] {
+  return [
+    "Let me explain what I'm offering, dear...",
+    "I'll perform an Energy Clearing Ritual — focusing my energy entirely on removing the shadow that's blocking your path.",
+    "Within 24 hours, you'll receive a complete written reading via email.",
+    "It will show you exactly what I found, what I cleared, and guidance for the weeks ahead.",
+    `It's $${priceDollars}, and comes with my 30-day guarantee — if you feel nothing has shifted, every penny returned.`,
+    "I only offer this when the timing is right... and for you, it's right now.",
+  ]
+}
 
 // ============================================
 // PITCH MESSAGES (for explicit pitch)
 // ============================================
 
-export const PITCH_MESSAGES = {
-  intro: [
-    "Thank you, {firstName}. You're making the right decision...",
-    "To seal the clearing, a Sacred Offering is required.",
-  ],
-  
-  price: [
-    "It's $35 — a declaration to the universe that you're ready for change.",
-  ],
-  
-  whatYouGet: [
-    "Within 24 hours, you'll receive your complete clearing and written reading via email.",
-    "It will reveal exactly what I found, what I cleared, and guidance for the weeks ahead.",
-  ],
-  
-  guarantee: [
-    "It comes with my 30-day guarantee — if you don't feel a shift, every penny returned. No questions.",
-  ],
-  
-  urgency: [
-    "This window won't stay open forever, {firstName}. The energy is strongest right now.",
-  ],
-  
-  close: [
-    "This is your moment, {firstName}.",
-  ],
+export function getPitchMessages(priceDollars: number = 35) {
+  return {
+    intro: [
+      "Thank you, {firstName}. You're making the right decision...",
+      "To seal the clearing, a Sacred Offering is required.",
+    ],
+
+    price: [
+      `It's $${priceDollars} — a declaration to the universe that you're ready for change.`,
+    ],
+
+    whatYouGet: [
+      "Within 24 hours, you'll receive your complete clearing and written reading via email.",
+      "It will reveal exactly what I found, what I cleared, and guidance for the weeks ahead.",
+    ],
+
+    guarantee: [
+      "It comes with my 30-day guarantee — if you don't feel a shift, every penny returned. No questions.",
+    ],
+
+    urgency: [
+      "This window won't stay open forever, {firstName}. The energy is strongest right now.",
+    ],
+
+    close: [
+      "This is your moment, {firstName}.",
+    ],
+  }
 }
 
 // ============================================
@@ -791,6 +795,8 @@ ${userData.personName ? `Reference ${userData.personName} in the vision.` : ''}
 // ============================================
 
 export function buildObjectionPrompt(userData: UserData, objection: string, count: number): string {
+  const mainPrice = userData.priceDollars ?? 35
+  const downsellPrice = userData.downsellDollars ?? 25
   return `
 ${EVELYN_BASE_PROMPT}
 
@@ -801,6 +807,7 @@ ${EVELYN_BASE_PROMPT}
 - Their concern: ${userData.concern}
 - Their vision: ${userData.desires}
 - Objection #${count}: "${objection}"
+- Current offer price: $${mainPrice} (downsell available at $${downsellPrice}). If you mention a price, use these EXACT numbers — never invent or guess a different amount.
 
 ## Task
 Handle this objection with empathy. Never argue, never beg, stay warm.
@@ -899,10 +906,11 @@ export function buildManifestRevealPrompt(userData: UserData, concern: string): 
 
   const guidance = bucketGuidance[userData.bucket as keyof typeof bucketGuidance] || bucketGuidance.love
 
+  const paidPrice = userData.priceDollars ?? 35
   return `${EVELYN_BASE_PROMPT}
 
 ## Context
-You are transitioning from the clearing ritual to introducing the manifestation bracelet concept. The user has already purchased the clearing ritual ($35). You need to reveal what you saw BEYOND the block — their desire trying to reach them.
+You are transitioning from the clearing ritual to introducing the manifestation bracelet concept. The user has already purchased the clearing ritual ($${paidPrice}). You need to reveal what you saw BEYOND the block — their desire trying to reach them.
 
 ## User Info
 - Name: ${userData.firstName}

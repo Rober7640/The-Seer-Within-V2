@@ -49,6 +49,7 @@ const EmailDripNewV1 = lazy(() => import("@/pages/admin/EmailDripNewV1"));
 const AidenFollowUpsPage = lazy(() => import("@/pages/admin/AidenFollowUpsPage"));
 const MarketplacePage = lazy(() => import("@/pages/admin/MarketplacePage"));
 const SettingsPage = lazy(() => import("@/pages/admin/SettingsPage"));
+const PriceTestDashboard = lazy(() => import("@/pages/admin/PriceTestDashboard"));
 
 function LazyFallback() {
   return (
@@ -149,6 +150,7 @@ function Router() {
         <Route path="/admin/aiden-follow-ups" component={AidenFollowUpsPage} />
         <Route path="/admin/marketplace" component={MarketplacePage} />
         <Route path="/admin/settings" component={SettingsPage} />
+        <Route path="/admin/price-test" component={PriceTestDashboard} />
 
         <Route component={NotFound} />
       </Switch>

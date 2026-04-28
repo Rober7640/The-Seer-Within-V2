@@ -188,12 +188,18 @@ export default function ChatPage() {
 
           {/* Purchase CTA */}
           {chat.showPurchaseCTA && (
-            <PurchaseCTA onClick={() => handlePurchase("main")} />
+            <PurchaseCTA
+              onClick={() => handlePurchase("main")}
+              priceDollars={chat.userData.priceDollars ?? 35}
+            />
           )}
 
           {/* Downsell CTA */}
           {chat.showDownsellCTA && (
-            <DownsellCTA onClick={() => handlePurchase("downsell")} />
+            <DownsellCTA
+              onClick={() => handlePurchase("downsell")}
+              priceDollars={chat.userData.downsellDollars ?? 25}
+            />
           )}
 
           {/* Input Area */}

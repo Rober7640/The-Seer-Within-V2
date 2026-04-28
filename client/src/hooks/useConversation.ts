@@ -359,7 +359,7 @@ export function useConversation() {
     // Capture lead
     console.log('Lead captured:', input.trim())
     try {
-      await fetch('/api/lead', {
+      const leadRes = await fetch('/api/lead', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -369,7 +369,19 @@ export function useConversation() {
           trackdeskClickId: getTrackdeskClickId(),
         }),
       })
-      
+
+      // V1 price split test — server returns the variant assigned to this email.
+      // Capture into chat state so pitch copy + buttons + FB Pixel use it.
+      try {
+        const leadData = await leadRes.json()
+        if (leadData?.priceDollars && leadData?.downsellDollars) {
+          updateUserData({
+            priceDollars: leadData.priceDollars,
+            downsellDollars: leadData.downsellDollars,
+          })
+        }
+      } catch { /* response body parse is best-effort */ }
+
       // Track Lead event with Facebook
       trackLead(input.trim(), currentChat.userData.firstName || undefined)
       trackGAdsLead()
@@ -1130,8 +1142,9 @@ export function useConversation() {
     ])
 
     // Step 5: Price + guarantee + SOCIAL PROOF
+    const pitchPrice = chat.userData.priceDollars ?? 35
     await sendBotMessages([
-      "The sacred offering is $35 — a declaration to the universe that you're ready for this change.",
+      `The sacred offering is $${pitchPrice} — a declaration to the universe that you're ready for this change.`,
       "It comes with my 30-day guarantee. If you feel nothing has shifted, every penny returned.",
       `I've done this work for hundreds of seekers, ${firstName}. Most feel a shift within the first week.`,
     ])
@@ -1161,8 +1174,10 @@ export function useConversation() {
 
   const handlePurchase = useCallback(async (type: 'main' | 'downsell' = 'main') => {
     try {
-      // Track InitiateCheckout event with Facebook
-      const price = type === 'downsell' ? 25 : 35
+      // Track InitiateCheckout event with Facebook (variant-aware)
+      const mainPrice = chat.userData.priceDollars ?? 35
+      const downsellPrice = chat.userData.downsellDollars ?? 25
+      const price = type === 'downsell' ? downsellPrice : mainPrice
       trackInitiateCheckout(price, 'USD')
       trackGAdsCheckout(price)
       

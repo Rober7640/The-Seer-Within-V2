@@ -1,0 +1,235 @@
+# V1 Price Split Test — Implementation Plan
+
+## Background
+
+The v1 funnel is the original single-session conversion flow: a visitor lands on the site, chats with Evelyn Cross (an AI psychic), and is eventually offered a "Sacred Clearing Ritual" for $35 (with a $25 downsell after 3 objections). The full path is `/` → `/chat` → `/welcome1` → `/welcome2` → `/success`.
+
+### The problem: pricing is hard-coded everywhere
+
+The $35 price lives in multiple places across server and client with no variant infrastructure:
+
+| Location | What's hard-coded |
+|----------|-------------------|
+| `server/routes.ts:373` | `3500` cents for main, `2500` for downsell in the `POST /api/checkout` endpoint |
+| `server/routes.ts:607` | Fallback `3500` when storing `mainPurchaseAmount` from Stripe webhook |
+| `server/routes.ts:644-646` | `session.amount_total === 3500` check to identify main purchases in webhook verification |
+| `server/lib/prompts.ts:305,320` | Evelyn's objection-handling lines: `"It's $35, and comes with my 60-day guarantee..."` and `"It's $35 — a declaration to the universe..."` |
+| `client/src/hooks/useConversation.ts:1131` | Pitch copy: `"The sacred offering is $35"` |
+| `client/src/hooks/useConversation.ts:1162` | FB pixel value: `type === 'downsell' ? 25 : 35` |
+| `client/src/components/PurchaseCTA.tsx:12` | Button text: `"Begin My Sacred Clearing - $35"` |
+| `client/src/components/DownsellCTA.tsx:12` | Button text: `"Get Your Written Reading - $17"` |
+| `client/src/pages/UpsellPage.tsx:76` | FB pixel Purchase event tracked as $35 |
+
+**Note:** The DownsellCTA button says `$17` but the server charges `$25` (`2500` cents). This is a pre-existing mismatch unrelated to the split test, but the split test will fix it — both the button and the charge will read from the same variant data.
+
+There is no way to test whether a higher price converts better or produces more revenue per visitor.
+
+### Why server-side assignment (not the existing A/B system)
+
+The app already has A/B testing infrastructure for prompts (weighted traffic splitting in `promptManager.ts`). We considered extending that to pricing, but the price needs to flow consistently through five different places — server checkout, client pitch copy, CTA button, downsell button, and FB pixel tracking. A single source of truth in the database (assigned once, read everywhere) avoids mismatches between what the visitor sees and what Stripe charges.
+
+## Goal
+
+Run a price split test with three variants ($35, $45, $59) to find the price point that maximizes revenue. Each visitor is randomly assigned a variant when they enter the funnel, and every touchpoint — the pitch Evelyn delivers, the CTA button, the Stripe charge, and the FB pixel tracking — reflects their assigned price. Downsell prices scale proportionally (~71% of main).
+
+The variant definitions and traffic weights are stored in the database (`system_config` table) so they can be adjusted without redeploying.
+
+## Variants
+
+| Variant | Main Price | Downsell Price | Traffic Weight |
+|---------|-----------|---------------|----------------|
+| 35      | $35       | $25           | 1 (33%)        |
+| 45      | $45       | $32           | 1 (33%)        |
+| 59      | $59       | $42           | 1 (34%)        |
+
+---
+
+## Implementation
+
+### 1. Schema Changes
+
+Add columns to the `conversations` table:
+
+- `price_variant` (text) — variant label: `"35"`, `"45"`, or `"59"`
+- `price_amount_cents` (integer) — exact Stripe charge amount: `3500`, `4500`, `5900`
+
+Also add corresponding downsell columns:
+
+- `downsell_amount_cents` (integer) — the downsell price for this variant: `2500`, `3200`, `4200`
+
+**File:** `shared/schema.ts`
+
+## 2. System Config Entry
+
+Insert a row into `system_config` with key `v1_price_variants`:
+
+```json
+{
+  "variants": [
+    { "id": "35", "priceCents": 3500, "downsellCents": 2500, "weight": 1 },
+    { "id": "45", "priceCents": 4500, "downsellCents": 3200, "weight": 1 },
+    { "id": "59", "priceCents": 5900, "downsellCents": 4200, "weight": 1 }
+  ]
+}
+```
+
+Weights are relative. `1/1/1` = even thirds. Change to `2/1/1` for 50/25/25.
+
+To change variants or weights, update this JSON — no code deploy needed.
+
+**File:** `server/scripts/seed.ts` (initial seed), then editable directly in the `system_config` table via any DB client.
+
+### 3. Server — Variant Assignment
+
+When a conversation row is created (the email capture step in the chat — this is the first time the visitor hits the database), the server:
+
+1. Fetches `v1_price_variants` from `system_config`
+2. Rolls a weighted random selection
+3. Writes `price_variant`, `price_amount_cents`, and `downsell_amount_cents` to the conversation row
+
+**File:** `server/routes.ts` (lead endpoint) + new helper `server/lib/priceVariant.ts`
+
+## 4. Server — Checkout Reads Variant
+
+The `POST /api/checkout` endpoint:
+
+1. Looks up the conversation by email
+2. Reads `price_amount_cents` (for main) or `downsell_amount_cents` (for downsell) from the row
+3. Passes that amount to Stripe instead of the hard-coded `3500` / `2500`
+
+This replaces the current hard-coded `3500` / `2500` logic in the checkout endpoint.
+
+**File:** `server/routes.ts`
+
+### 5. Client — Expose Variant to Frontend
+
+Once the variant is assigned server-side, the client needs to know the prices so it can display the right numbers. New endpoint `GET /api/price-variant?email=...` (or piggyback on an existing response) that returns:
+
+```json
+{
+  "priceVariant": "45",
+  "priceDollars": 45,
+  "downsellDollars": 32
+}
+```
+
+The client uses these values in:
+
+- **Pitch copy** — `"The sacred offering is $45"` (dynamic)
+- **PurchaseCTA button** — `"Begin My Sacred Clearing - $45"` (dynamic)
+- **DownsellCTA button** — `"Get Your Written Reading - $32"` (dynamic)
+- **FB Pixel** — `trackInitiateCheckout(45, 'USD')` (dynamic)
+
+The visitor never sees a price until the pitch phase, and by that point their email is already captured and the variant is assigned — so there's no flicker or mismatch.
+
+**Files:** `client/src/hooks/useConversation.ts`, `client/src/components/PurchaseCTA.tsx`, `client/src/components/DownsellCTA.tsx`
+
+### 6. Query Endpoint — Conversion by Variant
+
+An admin page at `/admin/price-test` that displays the split test results in a table. Uses the same admin auth as the rest of the dashboard.
+
+`GET /api/admin/analytics/v1-price-test` returns:
+
+```json
+{
+  "variants": [
+    {
+      "variant": "35",
+      "priceDollars": 35,
+      "downsellDollars": 25,
+      "totalConversations": 412,
+      "mainPurchases": 38,
+      "downsellPurchases": 15,
+      "mainConversionRate": 9.22,
+      "downsellConversionRate": 3.64,
+      "revenueMainCents": 133000,
+      "revenueDownsellCents": 37500,
+      "revenueTotalCents": 170500,
+      "revenuePerVisitorCents": 414
+    }
+  ],
+  "significance": {
+    "sampleSizeAdequate": true,
+    "minimumPerVariant": 100,
+    "recommendation": "Variant 59 is the leader at $4.89 revenue/visitor. 94% confidence it beats variant 35 ($4.14). Keep running — aim for 95%+ to call it.",
+    "pairwise": [
+      {
+        "a": "59",
+        "b": "35",
+        "revenuePerVisitorA": 489,
+        "revenuePerVisitorB": 414,
+        "confidence": 94.2,
+        "significant": false
+      },
+      {
+        "a": "59",
+        "b": "45",
+        "revenuePerVisitorA": 489,
+        "revenuePerVisitorB": 445,
+        "confidence": 78.1,
+        "significant": false
+      },
+      {
+        "a": "45",
+        "b": "35",
+        "revenuePerVisitorA": 445,
+        "revenuePerVisitorB": 414,
+        "confidence": 71.3,
+        "significant": false
+      }
+    ]
+  }
+}
+```
+
+**How significance works:**
+
+- The key metric is **revenue per visitor** (total revenue / total conversations), not conversion rate alone — a higher price with slightly lower conversion can still win.
+- Uses a **z-test on revenue per visitor** to compare each pair of variants. Confidence is the probability that the higher-performing variant is genuinely better, not just noise.
+- `significant: true` when confidence reaches **95%+**. Below that, the `recommendation` field tells you to keep running.
+- `sampleSizeAdequate` flips to `true` once every variant has at least 100 conversations. Below that threshold the numbers are too noisy to trust.
+- The `recommendation` field is a plain-English summary: who's leading, how confident, and whether to act or wait.
+
+**The admin page shows:**
+
+- A table with one row per variant: price, downsell, conversations, main purchases, downsell purchases, conversion rate, revenue per visitor
+- The leading variant highlighted
+- A status badge per pair: "Not enough data", "Keep running", or "Winner — 95%+ confidence"
+- The plain-English recommendation at the top
+
+Groups by `price_variant`, counts purchases, calculates conversion rates and revenue per variant. Conversations without a `price_variant` (created before this feature) are excluded.
+
+**Files:** `server/routes/admin/analytics.ts` (API), `client/src/pages/admin/PriceTest.tsx` (UI)
+
+---
+
+## Notes
+
+- **Existing conversations** won't have a variant assigned. They'll continue to work as-is (the checkout endpoint falls back to $35 if no variant is set) but won't appear in split test results.
+- **Downsell ratio:** Each variant's downsell is ~71% of the main price, rounded to a clean dollar amount. This can be changed per-variant in the config.
+
+## How to Check Results
+
+1. Log in to the admin dashboard at `/admin/login` with your admin credentials.
+2. Go to `/admin/price-test`.
+3. The page shows all three variants side by side — conversion rates, revenue per visitor, and whether there's a statistically significant winner yet.
+
+The underlying API endpoint is `GET /api/admin/analytics/v1-price-test` (requires admin auth). The admin page calls this automatically — you don't need to touch it directly.
+
+## How to End the Test
+
+1. Wait until the page shows 95%+ confidence for a winner.
+2. Open your database client (e.g. Supabase dashboard) and find the `system_config` row with key `v1_price_variants`.
+3. Set the winning variant's weight to `1` and the other two to `0`. For example, if $45 wins:
+
+```json
+{
+  "variants": [
+    { "id": "35", "priceCents": 3500, "downsellCents": 2500, "weight": 0 },
+    { "id": "45", "priceCents": 4500, "downsellCents": 3200, "weight": 1 },
+    { "id": "59", "priceCents": 5900, "downsellCents": 4200, "weight": 0 }
+  ]
+}
+
+
+All new visitors will now get the winning price. No code deploy needed.
