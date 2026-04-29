@@ -81,3 +81,28 @@ export async function captureOrder(orderId: string): Promise<{ captureId: string
     status: data.status,
   };
 }
+
+export async function getOrder(orderId: string): Promise<{
+  status: string;
+  captureId?: string;
+}> {
+  const accessToken = await getAccessToken();
+
+  const res = await fetch(`${BASE}/v2/checkout/orders/${orderId}`, {
+    headers: { 'Authorization': `Bearer ${accessToken}` },
+  });
+
+  if (res.status === 404) {
+    return { status: 'NOT_FOUND' };
+  }
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`PayPal getOrder failed (${res.status}): ${text}`);
+  }
+  const data = await res.json();
+  const cap = data.purchase_units?.[0]?.payments?.captures?.[0];
+  return {
+    status: data.status,
+    captureId: cap?.status === 'COMPLETED' ? cap.id : undefined,
+  };
+}

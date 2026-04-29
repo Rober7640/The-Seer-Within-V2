@@ -9,6 +9,7 @@ import { cleanupExpiredMagicLinks } from './magicLink';
 import { processNextBatch } from './migrationDripProcessor';
 import { processAidenFollowupQueue } from './aidenFollowupEmailGenerator';
 import { processVerifiedDripQueue } from './aidenVerifiedDripGenerator';
+import { reconcilePendingPurchases } from './reconciliationProcessor';
 import logger from './logger';
 
 // Per-job concurrency guards — prevent overlapping runs if a job takes longer than its interval
@@ -19,6 +20,7 @@ let isSessionCleanupProcessing = false;
 let isMigrationDripProcessing = false;
 let isAidenFollowupProcessing = false;
 let isAidenVerifiedDripProcessing = false;
+let isReconciliationProcessing = false;
 
 /**
  * Initialize all cron jobs.
@@ -207,6 +209,32 @@ export function initializeCronJobs(): void {
         logger.error('Cron: Aiden verified-drip processing failed', { error: (error as Error).message });
       } finally {
         isAidenVerifiedDripProcessing = false;
+      }
+    },
+    { timezone },
+  );
+
+  // Pending-purchase reconciliation — every 15 minutes, offset to :05/:20/:35/:50
+  // Catches any captured payment whose webhook didn't flip the row to completed.
+  // Off by default; opt-in via ENABLE_RECONCILIATION_CRON=true.
+  cron.schedule(
+    '5-59/15 * * * *',
+    async () => {
+      if (process.env.ENABLE_RECONCILIATION_CRON !== 'true') return;
+      if (isReconciliationProcessing) {
+        logger.info('Cron: Reconciliation already running, skipping');
+        return;
+      }
+      isReconciliationProcessing = true;
+      try {
+        const stats = await reconcilePendingPurchases();
+        if (stats.checked > 0 || stats.credited > 0 || stats.errors > 0) {
+          logger.info('Cron: Reconciliation tick complete', stats);
+        }
+      } catch (error) {
+        logger.error('Cron: Reconciliation failed', { error: (error as Error).message });
+      } finally {
+        isReconciliationProcessing = false;
       }
     },
     { timezone },
