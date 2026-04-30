@@ -106,3 +106,55 @@ export async function getOrder(orderId: string): Promise<{
     captureId: cap?.status === 'COMPLETED' ? cap.id : undefined,
   };
 }
+
+export async function verifyWebhookSignature(
+  headers: Record<string, string | string[] | undefined>,
+  rawBody: string,
+  webhookId: string,
+): Promise<boolean> {
+  const get = (name: string) => {
+    const v = headers[name.toLowerCase()];
+    return Array.isArray(v) ? v[0] : v;
+  };
+
+  const required = {
+    auth_algo: get('paypal-auth-algo'),
+    cert_url: get('paypal-cert-url'),
+    transmission_id: get('paypal-transmission-id'),
+    transmission_sig: get('paypal-transmission-sig'),
+    transmission_time: get('paypal-transmission-time'),
+  };
+
+  for (const v of Object.values(required)) {
+    if (!v) return false;
+  }
+
+  let webhook_event: unknown;
+  try {
+    webhook_event = JSON.parse(rawBody);
+  } catch {
+    return false;
+  }
+
+  const accessToken = await getAccessToken();
+
+  const res = await fetch(`${BASE}/v1/notifications/verify-webhook-signature`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      ...required,
+      webhook_id: webhookId,
+      webhook_event,
+    }),
+  });
+
+  if (!res.ok) {
+    return false;
+  }
+
+  const data = await res.json();
+  return data.verification_status === 'SUCCESS';
+}
