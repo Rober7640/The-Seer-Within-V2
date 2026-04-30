@@ -4,9 +4,10 @@ import { Router, Request, Response } from 'express';
 import { Webhook } from 'svix';
 import Stripe from 'stripe';
 import { db } from '../lib/db';
-import { followUpEmails, userFollowUpPreferences, migrationDripEmails, topupEmails, aidenFollowupEmails, users, emailSuppression } from '@shared/schema';
-import { eq } from 'drizzle-orm';
+import { followUpEmails, userFollowUpPreferences, migrationDripEmails, topupEmails, aidenFollowupEmails, users, emailSuppression, creditPurchases } from '@shared/schema';
+import { and, eq, sql } from 'drizzle-orm';
 import logger from '../lib/logger';
+import * as paypal from '../lib/paypal';
 
 const router = Router();
 
@@ -680,6 +681,114 @@ router.post('/stripe', async (req: Request, res: Response) => {
 
   // Always return 200 to acknowledge receipt
   return res.json({ received: true });
+});
+
+/**
+ * POST /api/webhooks/paypal
+ * Handles PayPal PAYMENT.CAPTURE.COMPLETED events. Defense-in-depth alongside
+ * the browser-driven /api/credits/capture-order and the 15-min reconciliation
+ * cron. Race-safe via `WHERE status='pending'` guard.
+ */
+router.post('/paypal', async (req: Request, res: Response) => {
+  const webhookId = process.env.PAYPAL_WEBHOOK_ID;
+  if (!webhookId) {
+    logger.error('PayPal webhook: PAYPAL_WEBHOOK_ID not set');
+    return res.status(500).json({ error: 'Webhook not configured' });
+  }
+
+  const rawBody = (req as any).rawBody as Buffer | undefined;
+  if (!rawBody) {
+    logger.error('PayPal webhook: req.rawBody not available');
+    return res.status(400).json({ error: 'Missing raw body' });
+  }
+
+  let verified = false;
+  try {
+    verified = await paypal.verifyWebhookSignature(
+      req.headers,
+      rawBody.toString('utf8'),
+      webhookId,
+    );
+  } catch (err: any) {
+    logger.error('PayPal webhook: signature verification threw', err?.message ?? err);
+    return res.status(400).json({ error: 'Signature verification failed' });
+  }
+
+  if (!verified) {
+    logger.warn('PayPal webhook: invalid signature');
+    return res.status(400).json({ error: 'Invalid signature' });
+  }
+
+  const event = req.body;
+  const eventType = event?.event_type;
+  if (eventType !== 'PAYMENT.CAPTURE.COMPLETED') {
+    logger.info(`PayPal webhook: ignoring event type ${eventType}`);
+    return res.json({ received: true });
+  }
+
+  const orderId: string | undefined =
+    event?.resource?.supplementary_data?.related_ids?.order_id;
+  const captureId: string | undefined = event?.resource?.id;
+
+  if (!orderId || !captureId) {
+    logger.warn('PayPal webhook: missing orderId or captureId in event', {
+      eventId: event?.id,
+      orderId,
+      captureId,
+    });
+    return res.json({ received: true });
+  }
+
+  try {
+    const result = await db.transaction(async (tx) => {
+      const updated = await tx
+        .update(creditPurchases)
+        .set({
+          status: 'completed',
+          paypalCaptureId: captureId,
+          updatedAt: new Date(),
+        })
+        .where(
+          and(
+            eq(creditPurchases.paypalOrderId, orderId),
+            eq(creditPurchases.status, 'pending'),
+          ),
+        )
+        .returning({
+          id: creditPurchases.id,
+          userId: creditPurchases.userId,
+          coinsPurchased: creditPurchases.coinsPurchased,
+          bonusCoins: creditPurchases.bonusCoins,
+        });
+
+      if (updated.length === 0) return null;
+
+      const row = updated[0];
+      const totalCoins = (row.coinsPurchased ?? 0) + (row.bonusCoins ?? 0);
+      await tx
+        .update(users)
+        .set({
+          coinBalance: sql`coin_balance + ${totalCoins}`,
+          updatedAt: new Date(),
+        })
+        .where(eq(users.id, row.userId));
+
+      return { purchaseId: row.id, userId: row.userId, totalCoins };
+    });
+
+    if (result) {
+      logger.info('PayPal webhook credited', { orderId, captureId, ...result });
+    } else {
+      logger.info('PayPal webhook: order already processed or unknown', {
+        orderId,
+        captureId,
+      });
+    }
+    return res.json({ received: true });
+  } catch (err) {
+    logger.error('PayPal webhook DB error:', err);
+    return res.status(500).json({ error: 'Database error' });
+  }
 });
 
 export default router;

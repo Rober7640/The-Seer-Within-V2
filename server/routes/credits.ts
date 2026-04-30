@@ -584,6 +584,17 @@ router.post('/capture-order', requireAuth, async (req: Request, res: Response) =
       return;
     }
 
+    // Idempotent path: if the webhook or reconciliation cron already credited
+    // this purchase, return success with the current balance instead of 400.
+    if (purchase.status === 'completed' && purchase.paypalCaptureId) {
+      const currentUser = await db.select({ coinBalance: users.coinBalance })
+        .from(users)
+        .where(eq(users.id, req.userId!))
+        .limit(1);
+      res.json({ success: true, newBalance: currentUser[0]?.coinBalance ?? 0 });
+      return;
+    }
+
     if (purchase.status !== 'pending') {
       res.status(400).json({ error: 'Purchase already processed' });
       return;

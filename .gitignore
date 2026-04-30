@@ -23,6 +23,7 @@ vite.config.ts.*
 logs/
 playwright-report/
 test-results/
+scripts/audit/
 
 # Windows artifacts
 nul
