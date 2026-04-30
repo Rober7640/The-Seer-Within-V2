@@ -28,6 +28,12 @@ if (process.env.SENTRY_DSN) {
 const app = express();
 const httpServer = createServer(app);
 
+// Trust Railway's edge proxy so req.ip and X-Forwarded-For reflect the real
+// client IP. Required for express-rate-limit to bucket per visitor instead
+// of lumping all traffic under the proxy IP. Value `1` trusts only the
+// immediate upstream hop — does NOT trust arbitrary forwarded headers.
+app.set('trust proxy', 1);
+
 declare module "http" {
   interface IncomingMessage {
     rawBody: unknown;
