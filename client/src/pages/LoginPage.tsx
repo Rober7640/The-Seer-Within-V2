@@ -6,15 +6,26 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Sparkles, LogIn, UserPlus, Mail } from "lucide-react";
 
+// Open-redirect protection: `next` may only point at /reading (with optional
+// query/hash). Anything else is silently dropped so we never bounce a user
+// off-platform after auth.
+function sanitiseNext(raw: string | null): string | null {
+  if (!raw) return null;
+  return /^\/reading(?:[?#].*)?$/.test(raw) ? raw : null;
+}
+
 export default function LoginPage() {
   const [, navigate] = useLocation();
   const { login, register } = useAuth();
   const searchParams = new URLSearchParams(window.location.search);
   const returnTo = searchParams.get("returnTo");
   const personaParam = searchParams.get("persona");
+  const nextParam = sanitiseNext(searchParams.get("next"));
+  const modeParam = searchParams.get("mode");
+  const emailParam = searchParams.get("email");
 
-  const [isSignUp, setIsSignUp] = useState(false);
-  const [email, setEmail] = useState("");
+  const [isSignUp, setIsSignUp] = useState(modeParam === "signup");
+  const [email, setEmail] = useState(emailParam ?? "");
   const [password, setPassword] = useState("");
   const [firstName, setFirstName] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -65,7 +76,7 @@ export default function LoginPage() {
         }
       } else {
         const data = await login(email, password);
-        if (!returnTo && !personaParam && data?.user?.defaultPersonaSlug) {
+        if (!returnTo && !nextParam && !personaParam && data?.user?.defaultPersonaSlug) {
           if (data.user.defaultPersonaAvailable) {
             navigate(`/reading?persona=${data.user.defaultPersonaSlug}`);
           } else {
@@ -74,7 +85,9 @@ export default function LoginPage() {
           return;
         }
       }
-      navigate(returnTo ?? personaRedirect ?? "/reading");
+      // Redirect priority: existing returnTo (legacy contract) > sanitised next
+      // (new param from /evelyn lander) > persona-derived > default /reading.
+      navigate(returnTo ?? nextParam ?? personaRedirect ?? "/reading");
     } catch (err: any) {
       const msg = err?.message || "";
       if (msg.includes("NO_PASSWORD")) {
