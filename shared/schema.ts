@@ -870,3 +870,41 @@ export const aidenQuizSessions = pgTable("aiden_quiz_sessions", {
 export const insertAidenQuizSessionSchema = createInsertSchema(aidenQuizSessions);
 export type AidenQuizSession = typeof aidenQuizSessions.$inferSelect;
 export type InsertAidenQuizSession = z.infer<typeof insertAidenQuizSessionSchema>;
+
+// Evelyn lander sessions: tracks each visit to /evelyn for analytics + segment routing.
+// Mirrors aidenQuizSessions in shape but the lander is a chat, not a quiz.
+export const evelynLanderSessions = pgTable("evelyn_lander_sessions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  sessionToken: text("session_token").notNull().unique(),
+
+  // Resolved segment from URL params + DB lookup
+  // 'v2_active' | 'v2_password' | 'v1_migrated' | 'brand_new' | 'token_magic'
+  resolvedSegment: text("resolved_segment").notNull(),
+  resolvedUserId: varchar("resolved_user_id").references(() => users.id, { onDelete: "set null" }),
+
+  // Inputs (param-derived, sanitised, redacted where needed)
+  emailParamHash: text("email_param_hash"),
+  bucket: text("bucket"),
+  src: text("src"),
+  campaign: text("campaign"),
+  hadToken: boolean("had_token").default(false).notNull(),
+
+  // Funnel progress (chat layer fills these later)
+  turnCount: integer("turn_count").default(0).notNull(),
+  ctaClicked: boolean("cta_clicked").default(false).notNull(),
+  ctaAction: text("cta_action"),
+
+  // Fraud/analytics signals
+  ipAddress: text("ip_address"),
+  userAgent: text("user_agent"),
+
+  startedAt: timestamp("started_at").defaultNow().notNull(),
+  ctaClickedAt: timestamp("cta_clicked_at"),
+}, (table) => [
+  index("idx_evelyn_lander_user").on(table.resolvedUserId),
+  index("idx_evelyn_lander_segment").on(table.resolvedSegment, table.startedAt),
+]);
+
+export const insertEvelynLanderSessionSchema = createInsertSchema(evelynLanderSessions);
+export type EvelynLanderSession = typeof evelynLanderSessions.$inferSelect;
+export type InsertEvelynLanderSession = z.infer<typeof insertEvelynLanderSessionSchema>;

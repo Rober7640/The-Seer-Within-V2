@@ -29,6 +29,7 @@ import userStatsRouter from "./routes/userStats";
 import migrateRouter from "./routes/migrate";
 import astrologyRouter from "./routes/astrology";
 import quizRouter from "./routes/quiz";
+import evelynLanderRouter from "./routes/evelynLander";
 import {
   runHealthCheck,
   runReadinessCheck,
@@ -216,6 +217,7 @@ export async function registerRoutes(
   app.use("/api/migrate", migrateRouter);
   app.use("/api/astrology", astrologyRouter);
   app.use("/api/quiz", quizRouter);
+  app.use("/api/evelyn-lander", evelynLanderRouter);
 
   // Public unsubscribe endpoint for partner emails (CAN-SPAM compliance).
   // Mounted at root so the URL is a clean https://www.theseerwithin.com/unsubscribe?email=...&src=...
