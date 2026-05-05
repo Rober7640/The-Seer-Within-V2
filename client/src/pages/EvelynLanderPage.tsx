@@ -289,8 +289,15 @@ export default function EvelynLanderPage() {
           navigate(`/login?${emailQp.slice(1)}${nextQp}`, { replace: true });
           return;
         case "register":
+          // Persona context must travel through the register flow so the
+          // verification email URL embeds ?persona=evelyn-cross. Without it,
+          // post-verification the user lands on /reading with no persona and
+          // gets bounced to /personas instead of Evelyn's chat.
           clearSession();
-          navigate(`/login?mode=signup${emailQp}`, { replace: true });
+          navigate(
+            `/login?mode=signup${emailQp}&persona=${EVELYN_PERSONA_SLUG}`,
+            { replace: true },
+          );
           return;
         case "already_logged_in":
           clearSession();
