@@ -1,7 +1,9 @@
-// Evelyn Lander backend — segment resolution + auth handoff.
+// Evelyn Lander backend — segment resolution, anonymous chat, auth handoff.
 //
-// Two endpoints (chat layer comes in a later phase):
-//   POST /api/evelyn-lander/start  → resolve segment, insert session row
+//   POST /api/evelyn-lander/start  → resolve segment, insert session row,
+//                                    return Evelyn's static opener
+//   POST /api/evelyn-lander/turn   → run safety + Haiku for one chat turn,
+//                                    enforce 2-user-message hard cap
 //   POST /api/evelyn-lander/cta    → handoff (mint JWT only for token-magic path)
 //
 // Security note: JWTs are ONLY issued when a server-validated magic-link token is
@@ -11,14 +13,24 @@
 import { Router, Request, Response } from 'express';
 import { z } from 'zod';
 import { createHash } from 'crypto';
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import { db } from '../lib/db';
 import { evelynLanderSessions, users } from '@shared/schema';
 import { extractClientIp, extractUserAgent } from '../lib/fraudDetection';
 import { verifyMagicLinkToken } from '../lib/magicLink';
 import { generateToken } from '../lib/auth';
 import { landerLimiter } from '../lib/rateLimiter';
+import { checkAndLogSafety } from '../lib/universalSafety';
+import {
+  selectStaticOpener,
+  generateTurnReply,
+  type Bucket,
+  type ChatMessage,
+} from '../lib/evelynLanderEngine';
 import logger from '../lib/logger';
+
+// Hard cap on user messages allowed in the lander chat (PRD §6.3 — turn 5 = CTA).
+const MAX_USER_MESSAGES = 2;
 
 const router = Router();
 
@@ -194,10 +206,18 @@ async function resolveAndInsert(
     }
   }
 
+  // Static opener (no Haiku call here — PRD §9 prefetcher protection).
+  const opener = selectStaticOpener({
+    firstName: resolved.firstName,
+    bucket: (data.bucket as Bucket | undefined) ?? null,
+    isReturning: resolved.isReturning,
+  });
+
   res.json({
     segment: resolved.segment,
     firstName: resolved.firstName,
     isReturning: resolved.isReturning,
+    opener,
   });
 }
 
@@ -292,6 +312,121 @@ router.post('/cta', async (req: Request, res: Response) => {
   } catch (error: any) {
     logger.error('evelyn-lander cta error', { error: error?.message });
     res.status(500).json({ error: 'Failed to resolve handoff' });
+  }
+});
+
+// ---------- POST /turn ----------
+// Accepts a single user message + the conversation so far, runs universal
+// safety, calls Haiku for Evelyn's reply, and increments the server-side
+// turn counter. Hard caps user messages at MAX_USER_MESSAGES.
+//
+// Response shape:
+//   { reply: string, ctaReady: boolean, blocked?: 'cap'|'safety' }
+const turnSchema = z.object({
+  sessionToken: z.string().min(8).max(128),
+  userMessage: z.string().min(1).max(2000),
+  // Full conversation so far, including the static opener as the first
+  // assistant message. Server uses this verbatim to seed Haiku — server-side
+  // turnCount in the DB is the authoritative cap, so a tampered client
+  // history can't extend the chat.
+  history: z
+    .array(
+      z.object({
+        role: z.enum(['user', 'assistant']),
+        content: z.string().max(2000),
+      }),
+    )
+    .max(10)
+    .optional()
+    .default([]),
+});
+
+router.post('/turn', async (req: Request, res: Response) => {
+  try {
+    const parsed = turnSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ error: 'Invalid payload' });
+    }
+    const { sessionToken, userMessage, history } = parsed.data;
+
+    const rows = await db
+      .select()
+      .from(evelynLanderSessions)
+      .where(eq(evelynLanderSessions.sessionToken, sessionToken))
+      .limit(1);
+    const row = rows[0];
+    if (!row) {
+      return res.status(404).json({ error: 'Session not found' });
+    }
+
+    // Hard cap: server is authoritative on turn count.
+    if (row.turnCount >= MAX_USER_MESSAGES) {
+      return res.json({
+        reply:
+          'Continue your reading to keep going with Evelyn — there\'s more here than fits this moment.',
+        ctaReady: true,
+        blocked: 'cap',
+      });
+    }
+
+    // Universal safety on the new user message. We pass userId only when
+    // resolved — sessionId is intentionally omitted because it FKs to
+    // chat_sessions (lander has its own table).
+    const safety = await checkAndLogSafety(userMessage, {
+      userId: row.resolvedUserId ?? undefined,
+      ipAddress: extractClientIp(req),
+      userAgent: extractUserAgent(req),
+    });
+    if (!safety.safe && safety.response) {
+      // Increment turn count even on safety blocks so a probe can't loop.
+      await db
+        .update(evelynLanderSessions)
+        .set({ turnCount: sql`${evelynLanderSessions.turnCount} + 1` })
+        .where(eq(evelynLanderSessions.sessionToken, sessionToken));
+      const newCount = row.turnCount + 1;
+      return res.json({
+        reply: safety.response,
+        ctaReady: newCount >= MAX_USER_MESSAGES,
+        blocked: 'safety',
+      });
+    }
+
+    // Resolve user/bucket context for Haiku.
+    let firstName: string | null = null;
+    if (row.resolvedUserId) {
+      const userRows = await db
+        .select({ firstName: users.firstName })
+        .from(users)
+        .where(eq(users.id, row.resolvedUserId))
+        .limit(1);
+      firstName = userRows[0]?.firstName ?? null;
+    }
+
+    const willBeFinalTurn = row.turnCount + 1 >= MAX_USER_MESSAGES;
+    const messages: ChatMessage[] = [
+      ...history.map((m) => ({ role: m.role, content: m.content })),
+      { role: 'user' as const, content: userMessage },
+    ];
+
+    const { reply } = await generateTurnReply({
+      messages,
+      firstName,
+      bucket: (row.bucket as Bucket | null) ?? null,
+      isFinalTurn: willBeFinalTurn,
+    });
+
+    await db
+      .update(evelynLanderSessions)
+      .set({ turnCount: sql`${evelynLanderSessions.turnCount} + 1` })
+      .where(eq(evelynLanderSessions.sessionToken, sessionToken));
+
+    res.json({
+      reply,
+      ctaReady: willBeFinalTurn,
+    });
+  } catch (error: any) {
+    logger.error('evelyn-lander turn error', { error: error?.message });
+    res.status(500).json({ error: 'Failed to generate reply' });
   }
 });
 
