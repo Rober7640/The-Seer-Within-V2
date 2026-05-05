@@ -162,6 +162,7 @@ export default function BuyCreditsModal({
               <PayPalCreditButton
                 packageType={selectedPackage}
                 personaId={personaId}
+                amount={tiers.find(t => t.packageType === selectedPackage)?.priceUsd ?? 999}
                 onSuccess={handleSuccess}
               />
             </div>

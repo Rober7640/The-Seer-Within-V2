@@ -3,6 +3,7 @@ import { Elements, PaymentElement, useStripe, useElements } from "@stripe/react-
 import { stripePromise } from "@/lib/stripe";
 import { authFetch } from "@/hooks/useAuth";
 import { CreditCard } from "lucide-react";
+import { trackInitiateCheckout } from "@/lib/facebook";
 
 interface StripeCardFormProps {
   packageType: string;
@@ -17,12 +18,14 @@ interface StripeCardFormProps {
 function StripeCardFormInner({
   packageType,
   personaId,
+  amount,
   priceLabel,
   onSuccess,
   onCancel,
 }: {
   packageType: string;
   personaId?: string | null;
+  amount: number;
   priceLabel: string;
   onSuccess: (newBalance: number) => void;
   onCancel?: () => void;
@@ -46,6 +49,16 @@ function StripeCardFormInner({
         setError(submitError.message ?? "Please check your card details.");
         setIsProcessing(false);
         return;
+      }
+
+      // FB InitiateCheckout — fire AFTER card-details validation so we don't
+      // log intent for users who never had a fillable card to begin with,
+      // but BEFORE the create-payment-intent network call so a slow API
+      // doesn't delay the event.
+      if (typeof amount === "number" && amount > 0) {
+        trackInitiateCheckout(amount / 100, "USD");
+      } else {
+        trackInitiateCheckout();
       }
 
       // Step 2: Create Payment Intent on server (only NOW, not on mount)
@@ -178,6 +191,7 @@ export default function StripeCardForm({
       <StripeCardFormInner
         packageType={packageType}
         personaId={personaId}
+        amount={amount}
         priceLabel={priceLabel}
         onSuccess={onSuccess}
         onCancel={onCancel}

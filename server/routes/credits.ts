@@ -10,6 +10,7 @@ import Stripe from 'stripe';
 import logger from '../lib/logger';
 import { fireWithBreaker, stripeBreaker, isCircuitOpenError } from '../lib/circuitBreaker';
 import * as paypal from '../lib/paypal';
+import { maybeFireFirstPurchaseEvent } from '../lib/facebook';
 
 const router = Router();
 
@@ -454,9 +455,23 @@ router.post('/confirm-payment', requireAuth, async (req: Request, res: Response)
       return;
     }
 
-    await db.update(creditPurchases)
+    // Atomic flip: only the first caller (this confirm or the webhook) wins.
+    // Returning row(s) tells us whether WE were the one that completed it,
+    // so the FB first-purchase event fires exactly once per purchase.
+    const flipped = await db.update(creditPurchases)
       .set({ status: 'completed', updatedAt: new Date() })
-      .where(eq(creditPurchases.id, purchase.id));
+      .where(and(eq(creditPurchases.id, purchase.id), eq(creditPurchases.status, 'pending')))
+      .returning({ id: creditPurchases.id });
+
+    if (flipped.length === 0) {
+      // The webhook beat us to it — purchase is already credited. Return current balance.
+      const currentUser = await db.select({ coinBalance: users.coinBalance })
+        .from(users)
+        .where(eq(users.id, req.userId!))
+        .limit(1);
+      res.json({ success: true, newBalance: currentUser[0]?.coinBalance ?? 0 });
+      return;
+    }
 
     const updatedUser = await db.update(users)
       .set({
@@ -474,6 +489,10 @@ router.post('/confirm-payment', requireAuth, async (req: Request, res: Response)
         ne(creditPurchases.id, purchase.id),
       ))
       .catch(err => logger.error('Failed to clean up pending purchases:', err));
+
+    // Fire-and-forget — never block the response on FB tracking. Helper itself
+    // only emits a Meta Purchase event for first-ever completed purchase.
+    maybeFireFirstPurchaseEvent(purchase.id).catch(() => { /* logged inside */ });
 
     const newBalance = updatedUser[0]?.coinBalance ?? 0;
     res.json({ success: true, newBalance });
@@ -606,13 +625,26 @@ router.post('/capture-order', requireAuth, async (req: Request, res: Response) =
       return;
     }
 
-    await db.update(creditPurchases)
+    // Atomic flip: only the winner (this capture-order or the PayPal webhook)
+    // ends up calling the FB helper, so first-purchase fires exactly once.
+    const flipped = await db.update(creditPurchases)
       .set({
         status: 'completed',
         paypalCaptureId: captureResult.captureId,
         updatedAt: new Date(),
       })
-      .where(eq(creditPurchases.id, purchase.id));
+      .where(and(eq(creditPurchases.id, purchase.id), eq(creditPurchases.status, 'pending')))
+      .returning({ id: creditPurchases.id });
+
+    if (flipped.length === 0) {
+      // Webhook beat us. Return current balance, skip coin grant + FB event.
+      const currentUser = await db.select({ coinBalance: users.coinBalance })
+        .from(users)
+        .where(eq(users.id, req.userId!))
+        .limit(1);
+      res.json({ success: true, newBalance: currentUser[0]?.coinBalance ?? 0 });
+      return;
+    }
 
     const updatedUser = await db.update(users)
       .set({
@@ -621,6 +653,8 @@ router.post('/capture-order', requireAuth, async (req: Request, res: Response) =
       })
       .where(eq(users.id, req.userId!))
       .returning({ coinBalance: users.coinBalance });
+
+    maybeFireFirstPurchaseEvent(purchase.id).catch(() => { /* logged inside */ });
 
     // Clean up any other pending purchases for this user (e.g. abandoned Stripe intents)
     await db.delete(creditPurchases)
@@ -714,6 +748,11 @@ router.post('/confirm-checkout', requireAuth, async (req: Request, res: Response
         logger.info('Rescue hatch confirm-checkout: email auto-verified via payment', { userId: req.userId, purchaseId });
       }
       logger.info('Coins added via confirm-checkout', { totalCoins, userId: req.userId, purchaseId });
+
+      // Fire FB first-purchase event (no-op if not first ever). Includes the
+      // /aiden rescue hatch path per Q1=yes — rescue purchases are real V2
+      // purchases that should fire Purchase like any other.
+      maybeFireFirstPurchaseEvent(purchaseId).catch(() => { /* logged inside */ });
     } else {
       logger.info('confirm-checkout: purchase already processed (webhook beat us)', { purchaseId });
     }
@@ -823,6 +862,9 @@ router.post('/webhook', async (req: Request, res: Response) => {
         logger.info('Rescue hatch: email auto-verified via payment', { userId, purchaseId });
       }
       logger.info('Coins added', { totalCoins, userId, purchaseId });
+
+      // Fire FB first-purchase event (no-op if not first ever).
+      maybeFireFirstPurchaseEvent(purchaseId).catch(() => { /* logged inside */ });
     } catch (dbError) {
       logger.error('Webhook DB error:', dbError);
       res.status(500).json({ error: 'Database error' });

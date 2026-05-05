@@ -8,6 +8,7 @@ import { followUpEmails, userFollowUpPreferences, migrationDripEmails, topupEmai
 import { and, eq, sql } from 'drizzle-orm';
 import logger from '../lib/logger';
 import * as paypal from '../lib/paypal';
+import { maybeFireFirstPurchaseEvent } from '../lib/facebook';
 
 const router = Router();
 
@@ -778,6 +779,9 @@ router.post('/paypal', async (req: Request, res: Response) => {
 
     if (result) {
       logger.info('PayPal webhook credited', { orderId, captureId, ...result });
+
+      // Fire FB first-purchase event (no-op if not first ever).
+      maybeFireFirstPurchaseEvent(result.purchaseId).catch(() => { /* logged inside */ });
     } else {
       logger.info('PayPal webhook: order already processed or unknown', {
         orderId,

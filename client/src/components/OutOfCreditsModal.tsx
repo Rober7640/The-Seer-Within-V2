@@ -207,6 +207,7 @@ export default function OutOfCreditsModal({
               <PayPalCreditButton
                 packageType={featuredTier?.packageType ?? "starter"}
                 personaId={personaId}
+                amount={featuredTier?.priceUsd ?? 999}
                 onSuccess={handlePayPalSuccess}
                 onClick={() => setPaypalActive(true)}
                 onCancel={() => setPaypalActive(false)}
