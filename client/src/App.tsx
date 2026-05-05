@@ -32,6 +32,7 @@ const ResetPasswordPage = lazy(() => import("@/pages/ResetPasswordPage"));
 const MagicAuthPage = lazy(() => import("@/pages/MagicAuthPage"));
 const SetPasswordPage = lazy(() => import("@/pages/SetPasswordPage"));
 const AidenQuizPage = lazy(() => import("@/pages/AidenQuizPage"));
+const EvelynLanderPage = lazy(() => import("@/pages/EvelynLanderPage"));
 
 // Admin pages (lazy loaded)
 const AdminLogin = lazy(() => import("@/pages/admin/AdminLogin"));
@@ -83,6 +84,7 @@ function Router() {
 
         {/* Persona-specific landers (no layout wrapper) */}
         <Route path="/aiden" component={AidenQuizPage} />
+        <Route path="/evelyn" component={EvelynLanderPage} />
 
         {/* Auth routes (no layout wrapper) */}
         <Route path="/login" component={LoginPage} />

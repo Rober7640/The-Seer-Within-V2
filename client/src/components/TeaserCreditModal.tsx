@@ -93,6 +93,7 @@ export default function TeaserCreditModal({
               <PayPalCreditButton
                 packageType="welcome"
                 personaId={personaId}
+                amount={299}
                 onSuccess={handleSuccess}
               />
             </div>

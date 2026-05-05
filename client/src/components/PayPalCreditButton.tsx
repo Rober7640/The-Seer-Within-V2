@@ -1,16 +1,21 @@
 import { PayPalButtons } from "@paypal/react-paypal-js";
 import { authFetch } from "@/hooks/useAuth";
 import { useState } from "react";
+import { trackInitiateCheckout } from "@/lib/facebook";
 
 interface Props {
   packageType: string;
   personaId?: string | null;
+  // Price in cents — used only for FB InitiateCheckout reporting. Optional
+  // so legacy call sites that don't pass it still compile; tracking falls
+  // back to a value-less event in that case.
+  amount?: number;
   onSuccess: (newBalance: number) => void;
   onClick?: () => void;
   onCancel?: () => void;
 }
 
-export default function PayPalCreditButton({ packageType, personaId, onSuccess, onClick, onCancel }: Props) {
+export default function PayPalCreditButton({ packageType, personaId, amount, onSuccess, onClick, onCancel }: Props) {
   const [error, setError] = useState<string | null>(null);
 
   return (
@@ -21,6 +26,13 @@ export default function PayPalCreditButton({ packageType, personaId, onSuccess, 
         createOrder={async () => {
           setError(null);
           onClick?.();
+          // FB InitiateCheckout — fired before the order-creation API call
+          // so a slow/failed createOrder still records the user's intent.
+          if (typeof amount === "number" && amount > 0) {
+            trackInitiateCheckout(amount / 100, "USD");
+          } else {
+            trackInitiateCheckout();
+          }
           const res = await authFetch("/api/credits/create-order", {
             method: "POST",
             headers: { "Content-Type": "application/json" },

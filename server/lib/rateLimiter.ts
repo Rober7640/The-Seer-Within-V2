@@ -64,3 +64,13 @@ export const adminLoginLimiter = rateLimit({
   skip: () => isTestEnv,
   // Using default IP-based key generation (handles IPv6 correctly)
 });
+
+// Evelyn lander: 5 sessions per hour per IP (PRD §7.3). Relaxed in dev for testing.
+export const landerLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: isDevEnv ? 100 : 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many lander sessions from this IP. Please try again later.' },
+  skip: () => isTestEnv,
+});
