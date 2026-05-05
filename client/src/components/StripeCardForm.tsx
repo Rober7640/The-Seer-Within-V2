@@ -36,8 +36,8 @@ function StripeCardFormInner({
   const [isProcessing, setIsProcessing] = useState(false);
   const icTrackedRef = useRef(false);
 
-  const handleCardChange = () => {
-    if (icTrackedRef.current) return;
+  const handleCardChange = (event: { empty: boolean }) => {
+    if (icTrackedRef.current || event.empty) return;
     icTrackedRef.current = true;
     trackInitiateCheckout(typeof amount === "number" && amount > 0 ? amount / 100 : undefined, "USD");
   };
