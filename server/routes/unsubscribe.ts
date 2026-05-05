@@ -14,11 +14,27 @@
 // unsub everyone who just received the email. The confirmation button blocks
 // that while keeping the partner-facing URL a single unsigned template.
 
-import { Router, Request, Response } from 'express';
+import { Router, Request, Response, NextFunction, RequestHandler } from 'express';
+import rateLimit from 'express-rate-limit';
 import { eq } from 'drizzle-orm';
 import { db } from '../lib/db';
 import { emailSuppression, users, userFollowUpPreferences } from '@shared/schema';
 import logger from '../lib/logger';
+
+const isTestEnv = process.env.NODE_ENV === 'test' || process.env.DISABLE_RATE_LIMIT === 'true';
+
+// 3 submission attempts per IP per hour — applied to POST only (GET is read-only HTML).
+// Uses a custom HTML handler so the user sees a branded page instead of raw JSON.
+const unsubscribeLimiter: RequestHandler = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 3,
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: () => isTestEnv,
+  handler: (_req: Request, res: Response, _next: NextFunction) => {
+    res.status(429).send(renderRateLimitPage());
+  },
+});
 
 const router = Router();
 
@@ -29,6 +45,7 @@ const KNOWN_SOURCES = new Set([
   'theseerwithin',
   'resend',
   'aweber_import',
+  'self_service',
   'other',
 ]);
 const DEFAULT_PARTNER_SOURCE = 'partner_unsub';
@@ -58,7 +75,12 @@ router.get('/unsubscribe', (req: Request, res: Response) => {
   const email = normalizeEmail(req.query.email);
   const src = normalizeSource(req.query.src);
 
-  if (!email || !isValidEmail(email)) {
+  // No email in URL — show the self-service input form.
+  if (!email) {
+    return res.status(200).send(renderInputPage());
+  }
+
+  if (!isValidEmail(email)) {
     return res.status(400).send(renderInvalidPage());
   }
 
@@ -69,7 +91,7 @@ router.get('/unsubscribe', (req: Request, res: Response) => {
 // Step 2: POST /unsubscribe — actually suppress + stop our emails
 // ============================================================
 
-router.post('/unsubscribe', async (req: Request, res: Response) => {
+router.post('/unsubscribe', unsubscribeLimiter, async (req: Request, res: Response) => {
   try {
     const email = normalizeEmail(req.body?.email ?? req.query.email);
     const src = normalizeSource(req.body?.src ?? req.query.src);
@@ -243,6 +265,48 @@ function pageShell(title: string, statusColor: string, statusLabel: string, body
   </div>
 </body>
 </html>`;
+}
+
+function renderInputPage(): string {
+  const body = `
+    <div class="message">
+      Enter your email address below to unsubscribe from The Seer Within emails.
+    </div>
+    <form method="POST" action="/unsubscribe">
+      <input type="hidden" name="src" value="self_service">
+      <input
+        type="email"
+        name="email"
+        placeholder="your@email.com"
+        required
+        autocomplete="email"
+        style="
+          display:block;
+          width:100%;
+          box-sizing:border-box;
+          font-size:15px;
+          background-color:rgba(255,255,255,0.06);
+          border:1px solid rgba(255,255,255,0.15);
+          border-radius:6px;
+          padding:12px 14px;
+          color:#f5ecff;
+          margin-bottom:16px;
+          outline:none;
+        "
+      >
+      <button type="submit" class="confirm">Continue</button>
+    </form>
+    <p class="note">You will be asked to confirm before your email is removed.</p>`;
+  return pageShell('Unsubscribe', '#c4b5fd', 'Unsubscribe', body);
+}
+
+function renderRateLimitPage(): string {
+  const body = `
+    <div class="message">
+      Too many unsubscribe attempts from your connection.
+      Please try again in an hour.
+    </div>`;
+  return pageShell('Too Many Attempts', '#f87171', 'Too Many Attempts', body);
 }
 
 function renderConfirmPage(email: string, src: string): string {
