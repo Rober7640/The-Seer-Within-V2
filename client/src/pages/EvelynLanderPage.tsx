@@ -17,7 +17,7 @@ import { CosmicBackground } from "@/components/CosmicBackground";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Sparkles, Send } from "lucide-react";
-import { trackPageView } from "@/lib/facebook";
+import { trackPageView, trackEvelynLanderCTA } from "@/lib/facebook";
 
 const AUTH_TOKEN_KEY = "seer_auth_token";
 const EVELYN_PERSONA_SLUG = "evelyn-cross";
@@ -258,6 +258,9 @@ export default function EvelynLanderPage() {
   async function handleCta() {
     setPhase("handing_off");
     setErrorMsg(null);
+    // Fire BEFORE the network call so a slow/failed handoff still records the
+    // intent. trackEvelynLanderCTA never throws (defensive checks inside).
+    trackEvelynLanderCTA(segment ?? undefined);
     try {
       const res = await fetch("/api/evelyn-lander/cta", {
         method: "POST",
