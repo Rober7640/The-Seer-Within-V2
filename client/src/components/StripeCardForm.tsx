@@ -34,11 +34,13 @@ function StripeCardFormInner({
   const elements = useElements();
   const [error, setError] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
-  const icTrackedRef = useRef(false);
+  const IC_SESSION_KEY = 'v2_stripe_ic_tracked';
+  const icTrackedRef = useRef(typeof window !== 'undefined' && !!sessionStorage.getItem(IC_SESSION_KEY));
 
   const handleCardChange = (event: { empty: boolean }) => {
     if (icTrackedRef.current || event.empty) return;
     icTrackedRef.current = true;
+    sessionStorage.setItem(IC_SESSION_KEY, '1');
     trackInitiateCheckout(typeof amount === "number" && amount > 0 ? amount / 100 : undefined, "USD");
   };
 
