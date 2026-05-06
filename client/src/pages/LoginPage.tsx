@@ -24,6 +24,11 @@ export default function LoginPage() {
   const nextParam = sanitiseNext(searchParams.get("next"));
   const modeParam = searchParams.get("mode");
   const emailParam = searchParams.get("email");
+  // /evelyn lander handoff params — passed through to the register API call so the
+  // server can link the lander session row to the new user and schedule Drip 1.
+  const sourceParam = searchParams.get("source");
+  const bucketParam = searchParams.get("bucket");
+  const landerSessionTokenParam = searchParams.get("landerSessionToken");
 
   const [isSignUp, setIsSignUp] = useState(modeParam === "signup");
   const [email, setEmail] = useState(emailParam ?? "");
@@ -75,7 +80,19 @@ export default function LoginPage() {
       const personaRedirect = personaParam ? `/reading?persona=${personaParam}` : null;
 
       if (isSignUp) {
-        const data = await register(email, password, firstName, personaParam || undefined);
+        const data = await register(
+          email,
+          password,
+          firstName,
+          personaParam || undefined,
+          sourceParam || bucketParam || landerSessionTokenParam
+            ? {
+                ...(sourceParam ? { source: sourceParam } : {}),
+                ...(bucketParam ? { bucket: bucketParam } : {}),
+                ...(landerSessionTokenParam ? { landerSessionToken: landerSessionTokenParam } : {}),
+              }
+            : undefined,
+        );
         // Fire Lead now: account is created (verification pending). Pairs with
         // CompleteRegistration which fires once they verify. Wrapped — never throws.
         trackLead(email, firstName);

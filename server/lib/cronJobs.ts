@@ -9,6 +9,8 @@ import { cleanupExpiredMagicLinks } from './magicLink';
 import { processNextBatch } from './migrationDripProcessor';
 import { processAidenFollowupQueue } from './aidenFollowupEmailGenerator';
 import { processVerifiedDripQueue } from './aidenVerifiedDripGenerator';
+import { processEvelynFollowupQueue } from './evelynFollowupEmailGenerator';
+import { processEvelynVerifiedDripQueue } from './evelynVerifiedDripGenerator';
 import { reconcilePendingPurchases } from './reconciliationProcessor';
 import logger from './logger';
 
@@ -20,6 +22,8 @@ let isSessionCleanupProcessing = false;
 let isMigrationDripProcessing = false;
 let isAidenFollowupProcessing = false;
 let isAidenVerifiedDripProcessing = false;
+let isEvelynFollowupProcessing = false;
+let isEvelynVerifiedDripProcessing = false;
 let isReconciliationProcessing = false;
 
 /**
@@ -209,6 +213,58 @@ export function initializeCronJobs(): void {
         logger.error('Cron: Aiden verified-drip processing failed', { error: (error as Error).message });
       } finally {
         isAidenVerifiedDripProcessing = false;
+      }
+    },
+    { timezone },
+  );
+
+  // Evelyn unverified-track follow-up emails — every 5 minutes, offset 2 min so
+  // the four drip queues stagger across the cron window.
+  // +10m / +24h / +48h nurture sequence for /evelyn lander signups.
+  // No-ops when ENABLE_EVELYN_FOLLOWUPS is not 'true'.
+  cron.schedule(
+    '2-59/5 * * * *',
+    async () => {
+      if (isEvelynFollowupProcessing) {
+        logger.info('Cron: Evelyn follow-up processing already running, skipping');
+        return;
+      }
+      isEvelynFollowupProcessing = true;
+      try {
+        const stats = await processEvelynFollowupQueue();
+        if (stats.processed > 0) {
+          logger.info('Cron: Evelyn follow-up batch complete', stats);
+        }
+      } catch (error) {
+        logger.error('Cron: Evelyn follow-up processing failed', { error: (error as Error).message });
+      } finally {
+        isEvelynFollowupProcessing = false;
+      }
+    },
+    { timezone },
+  );
+
+  // Evelyn verified-but-not-purchased drip — every 5 minutes, offset 3 min.
+  // +1h / +25h / +49h nurture for /evelyn lander signups who verified + got
+  // free minutes but have not converted. No-ops when ENABLE_EVELYN_VERIFIED_DRIP
+  // is not 'true'.
+  cron.schedule(
+    '3-59/5 * * * *',
+    async () => {
+      if (isEvelynVerifiedDripProcessing) {
+        logger.info('Cron: Evelyn verified-drip processing already running, skipping');
+        return;
+      }
+      isEvelynVerifiedDripProcessing = true;
+      try {
+        const stats = await processEvelynVerifiedDripQueue();
+        if (stats.processed > 0) {
+          logger.info('Cron: Evelyn verified-drip batch complete', stats);
+        }
+      } catch (error) {
+        logger.error('Cron: Evelyn verified-drip processing failed', { error: (error as Error).message });
+      } finally {
+        isEvelynVerifiedDripProcessing = false;
       }
     },
     { timezone },

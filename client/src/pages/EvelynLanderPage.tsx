@@ -324,17 +324,26 @@ export default function EvelynLanderPage() {
           clearSession();
           navigate(`/login?${emailQp.slice(1)}${nextQp}`, { replace: true });
           return;
-        case "register":
+        case "register": {
           // Persona context must travel through the register flow so the
           // verification email URL embeds ?persona=evelyn-cross. Without it,
           // post-verification the user lands on /reading with no persona and
           // gets bounced to /personas instead of Evelyn's chat.
+          //
+          // We also pass `source=evelyn-lander` + `landerSessionToken` so the
+          // /api/auth/register handler can (a) link the lander session row to
+          // the new user and (b) schedule the Evelyn unverified-track drip.
+          // `bucket` is forwarded too so Drip 1's static content can use the
+          // bucket-specific phrase.
+          const sourceQp = `&source=evelyn-lander&landerSessionToken=${encodeURIComponent(sessionToken)}`;
+          const bucketQp = params.bucket ? `&bucket=${encodeURIComponent(params.bucket)}` : "";
           clearSession();
           navigate(
-            `/login?mode=signup${emailQp}&persona=${EVELYN_PERSONA_SLUG}`,
+            `/login?mode=signup${emailQp}&persona=${EVELYN_PERSONA_SLUG}${sourceQp}${bucketQp}`,
             { replace: true },
           );
           return;
+        }
         case "already_logged_in":
           clearSession();
           navigate(READING_DEST, { replace: true });

@@ -2,7 +2,7 @@ import { Router, Request, Response } from 'express';
 import { z } from 'zod';
 import { randomUUID } from 'crypto';
 import { db } from '../lib/db';
-import { users, personas, chatSessions, userMemory, aidenQuizSessions } from '@shared/schema';
+import { users, personas, chatSessions, userMemory, aidenQuizSessions, evelynLanderSessions } from '@shared/schema';
 import { eq, and, isNull, desc, sql } from 'drizzle-orm';
 import { hashPassword, verifyPassword, generateToken, requireAuth } from '../lib/auth';
 import { verifyMagicLinkToken, generateMagicLinkToken } from '../lib/magicLink';
@@ -26,6 +26,12 @@ import {
   skipAidenFollowupsForUser,
 } from '../lib/aidenFollowupEmailGenerator';
 import { scheduleAidenVerifiedDrip } from '../lib/aidenVerifiedDripGenerator';
+import {
+  scheduleEvelynFollowups,
+  skipEvelynFollowupsForUser,
+  lookupEvelynBucket,
+} from '../lib/evelynFollowupEmailGenerator';
+import { scheduleEvelynVerifiedDrip } from '../lib/evelynVerifiedDripGenerator';
 import logger from '../lib/logger';
 
 // Default free-coin grant when the user has no default persona set or the
@@ -60,6 +66,22 @@ async function isAidenUser(personaId: string | null | undefined): Promise<boolea
   }
 }
 
+// Used by verification endpoints to decide whether to enroll the user into the
+// Evelyn "verified, not purchased" drip. Silent-fails to false so a DB hiccup
+// can never block verification itself.
+async function isEvelynUser(personaId: string | null | undefined): Promise<boolean> {
+  if (!personaId) return false;
+  try {
+    const row = await db.select({ slug: personas.slug })
+      .from(personas)
+      .where(eq(personas.id, personaId))
+      .limit(1);
+    return row[0]?.slug === 'evelyn-cross';
+  } catch {
+    return false;
+  }
+}
+
 // Best-effort lookup of the user's /aiden quiz topic for personalizing post-verify
 // emails. Returns null when the user never took the quiz (e.g. migrated V1 users
 // who got a default-persona of Aiden some other way).
@@ -83,6 +105,11 @@ const registerSchema = z.object({
   password: z.string().min(8, 'Password must be at least 8 characters'),
   firstName: z.string().min(1, 'First name is required'),
   persona: z.string().optional(),
+  // /evelyn lander signups pass these so we can stamp the lander linkage and
+  // schedule the unverified-track drip. All optional — non-lander signups omit them.
+  source: z.string().max(32).optional(),
+  bucket: z.enum(['love', 'money', 'purpose', 'specific']).optional(),
+  landerSessionToken: z.string().min(8).max(128).optional(),
 });
 
 const loginSchema = z.object({
@@ -114,7 +141,7 @@ router.post('/register', authLimiter, async (req: Request, res: Response) => {
       return;
     }
 
-    const { email, password, firstName, persona } = parseResult.data;
+    const { email, password, firstName, persona, source, bucket, landerSessionToken } = parseResult.data;
 
     // Check if email already exists
     const existing = await db.select({ id: users.id })
@@ -143,6 +170,19 @@ router.post('/register', authLimiter, async (req: Request, res: Response) => {
     // Generate email verification token
     const verificationToken = randomUUID();
 
+    // Resolve persona id so the user record stamps `defaultPersonaId`. Without it,
+    // the verification email's persona-context fallback (and the post-verify drip
+    // eligibility checks) wouldn't have a persona to fall back to. Mirrors the
+    // magic-register pattern.
+    let personaId: string | null = null;
+    if (persona) {
+      const personaRow = await db.select({ id: personas.id })
+        .from(personas)
+        .where(eq(personas.slug, persona))
+        .limit(1);
+      personaId = personaRow[0]?.id || null;
+    }
+
     const newUser = await db.insert(users).values({
       email: email.toLowerCase(),
       passwordHash,
@@ -155,6 +195,7 @@ router.post('/register', authLimiter, async (req: Request, res: Response) => {
       registrationUserAgent: userAgent,
       deviceFingerprint: fingerprint,
       accountFlags: fraudCheck.flagged ? serializeAccountFlags(fraudCheck.flags) : null,
+      defaultPersonaId: personaId,
     }).returning();
 
     const user = newUser[0];
@@ -165,6 +206,31 @@ router.post('/register', authLimiter, async (req: Request, res: Response) => {
       sendVerificationEmail(user.email, user.firstName, verificationToken, persona).catch((err) => {
         logger.error('Failed to send verification email:', err);
       });
+    }
+
+    // Link the lander session row to this newly-created user so /verified drip
+    // bucket lookups (queryed by resolved_user_id) work. Non-blocking — must not
+    // fail registration. Only attempted when the lander explicitly handed us a token.
+    if (landerSessionToken && source === 'evelyn-lander') {
+      db.update(evelynLanderSessions)
+        .set({ resolvedUserId: user.id })
+        .where(eq(evelynLanderSessions.sessionToken, landerSessionToken))
+        .catch((err) => {
+          logger.warn('Failed to link evelyn_lander_session to user', { err: err?.message });
+        });
+    }
+
+    // Schedule Evelyn unverified-track follow-up drip (+10m / +24h / +48h). Only
+    // for /evelyn lander signups, non-test env. Flag-gated at send time by
+    // ENABLE_EVELYN_FOLLOWUPS. Non-blocking — swallowed inside the schedule fn.
+    if (!isTestEnv && source === 'evelyn-lander' && persona === 'evelyn-cross') {
+      scheduleEvelynFollowups({
+        userId: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        bucket: bucket ?? null,
+        baseTime: user.createdAt ?? new Date(),
+      }).catch(() => { /* logged inside */ });
     }
 
     res.status(201).json({
@@ -455,6 +521,8 @@ router.get('/verify-email/:token', async (req: Request, res: Response) => {
 
     // Halt the Aiden follow-up drip (non-blocking — failure must not break verification).
     skipAidenFollowupsForUser(user.id, 'user_verified').catch(() => { /* logged inside */ });
+    // Same for the Evelyn unverified-track drip.
+    skipEvelynFollowupsForUser(user.id, 'user_verified').catch(() => { /* logged inside */ });
 
     // Schedule the post-verification "verified, not purchased" nurture drip for Aiden users.
     // Non-blocking + flag-gated inside the processor (ENABLE_AIDEN_VERIFIED_DRIP).
@@ -467,6 +535,31 @@ router.get('/verify-email/:token', async (req: Request, res: Response) => {
         topic: quizTopic,
         baseTime: new Date(),
       }).catch(() => { /* logged inside */ });
+    }
+
+    // Same drip for Evelyn lander signups. Eligibility = defaultPersonaId is
+    // Evelyn AND we have a lander session row linked to this user (proving they
+    // came through /evelyn rather than /personas browse). Flag-gated at send
+    // time by ENABLE_EVELYN_VERIFIED_DRIP.
+    if (await isEvelynUser(user.defaultPersonaId)) {
+      const landerBucket = await lookupEvelynBucket(user.id);
+      // lookupEvelynBucket returns null both when no session exists AND when a
+      // session exists with bucket=null. The presence-of-row check below guards
+      // against false positives by also checking resolved_user_id linkage.
+      const linkedSession = await db
+        .select({ id: evelynLanderSessions.id })
+        .from(evelynLanderSessions)
+        .where(eq(evelynLanderSessions.resolvedUserId, user.id))
+        .limit(1);
+      if (linkedSession[0]) {
+        scheduleEvelynVerifiedDrip({
+          userId: user.id,
+          email: user.email,
+          firstName: user.firstName || 'there',
+          bucket: landerBucket,
+          baseTime: new Date(),
+        }).catch(() => { /* logged inside */ });
+      }
     }
 
     // Generate JWT so the user is auto-logged-in (works even on a different device/browser)
@@ -1111,6 +1204,8 @@ router.post('/magic-verify', authLimiter, async (req: Request, res: Response) =>
         freshEmailVerified = updated[0].emailVerified;
         // Halt the Aiden follow-up drip (non-blocking — must not fail the login).
         skipAidenFollowupsForUser(user.id, 'user_verified').catch(() => { /* logged inside */ });
+        // Same for the Evelyn unverified-track drip.
+        skipEvelynFollowupsForUser(user.id, 'user_verified').catch(() => { /* logged inside */ });
 
         // Schedule the post-verification "verified, not purchased" drip. Users who
         // verify via a magic-link CTA (e.g. the +10m/+24h/+48h follow-up email click)
@@ -1124,6 +1219,25 @@ router.post('/magic-verify', authLimiter, async (req: Request, res: Response) =>
             topic: quizTopic,
             baseTime: new Date(),
           }).catch(() => { /* logged inside */ });
+        }
+
+        // Evelyn equivalent — lander linkage gated.
+        if (await isEvelynUser(user.defaultPersonaId)) {
+          const landerBucket = await lookupEvelynBucket(user.id);
+          const linkedSession = await db
+            .select({ id: evelynLanderSessions.id })
+            .from(evelynLanderSessions)
+            .where(eq(evelynLanderSessions.resolvedUserId, user.id))
+            .limit(1);
+          if (linkedSession[0]) {
+            scheduleEvelynVerifiedDrip({
+              userId: user.id,
+              email: user.email,
+              firstName: user.firstName || 'there',
+              bucket: landerBucket,
+              baseTime: new Date(),
+            }).catch(() => { /* logged inside */ });
+          }
         }
 
         logger.info('Magic-link verified email and granted free coins', {
