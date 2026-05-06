@@ -102,32 +102,45 @@ export function trackLead(email: string, firstName?: string): void {
   sendServerEvent('Lead', eventId, { email, firstName, content_name: 'Email Capture', value: 0, currency: 'USD' });
 }
 
-export function trackInitiateCheckout(value: number = 35, currency: string = 'USD'): void {
+// `contentName` defaults to 'Energy Clearing Ritual' so V1-funnel callers
+// (useConversation.ts, UpsellPage.tsx, SuccessPage.tsx) stay unchanged. V2
+// callers pass an explicit value so Meta reporting separates V2 credit
+// purchases from the V1 ritual offer.
+export function trackInitiateCheckout(
+  value: number = 35,
+  currency: string = 'USD',
+  contentName: string = 'Energy Clearing Ritual',
+): void {
   const eventId = generateEventId();
-  
+
   if (typeof window !== 'undefined' && window.fbq) {
     window.fbq('track', 'InitiateCheckout', {
       value,
       currency,
-      content_name: 'Energy Clearing Ritual',
+      content_name: contentName,
     }, { eventID: eventId });
   }
-  
+
   sendServerEvent('InitiateCheckout', eventId, {
     value,
     currency,
-    content_name: 'Energy Clearing Ritual',
+    content_name: contentName,
   });
 }
 
-export function trackPurchase(value: number = 35, currency: string = 'USD', email?: string): void {
+export function trackPurchase(
+  value: number = 35,
+  currency: string = 'USD',
+  email?: string,
+  contentName: string = 'Energy Clearing Ritual',
+): void {
   const eventId = generateEventId();
-  
+
   if (typeof window !== 'undefined' && window.fbq) {
     window.fbq('track', 'Purchase', {
       value,
       currency,
-      content_name: 'Energy Clearing Ritual',
+      content_name: contentName,
     }, { eventID: eventId });
   }
   
@@ -135,7 +148,7 @@ export function trackPurchase(value: number = 35, currency: string = 'USD', emai
     value,
     currency,
     email,
-    content_name: 'Energy Clearing Ritual',
+    content_name: contentName,
   });
 }
 

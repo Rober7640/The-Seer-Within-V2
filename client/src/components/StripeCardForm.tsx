@@ -41,7 +41,11 @@ function StripeCardFormInner({
     if (icTrackedRef.current || event.empty) return;
     icTrackedRef.current = true;
     sessionStorage.setItem(IC_SESSION_KEY, '1');
-    trackInitiateCheckout(typeof amount === "number" && amount > 0 ? amount / 100 : undefined, "USD");
+    trackInitiateCheckout(
+      typeof amount === "number" && amount > 0 ? amount / 100 : undefined,
+      "USD",
+      "V2 Credits — Stripe",
+    );
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
