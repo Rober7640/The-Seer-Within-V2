@@ -19,8 +19,9 @@ import { evelynLanderSessions, users } from '@shared/schema';
 import { extractClientIp, extractUserAgent } from '../lib/fraudDetection';
 import { verifyMagicLinkToken } from '../lib/magicLink';
 import { generateToken } from '../lib/auth';
-import { landerLimiter } from '../lib/rateLimiter';
+import { landerLimiter, landerTurnLimiter } from '../lib/rateLimiter';
 import { checkAndLogSafety } from '../lib/universalSafety';
+import { verifyTurnstileToken } from '../lib/turnstile';
 import {
   selectStaticOpener,
   generateTurnReply,
@@ -325,6 +326,9 @@ router.post('/cta', async (req: Request, res: Response) => {
 const turnSchema = z.object({
   sessionToken: z.string().min(8).max(128),
   userMessage: z.string().min(1).max(2000),
+  // Cloudflare Turnstile token. Required server-side only on the first user
+  // message (turnCount === 0); the widget caches a single fresh token per send.
+  turnstileToken: z.string().max(2048).optional(),
   // Full conversation so far, including the static opener as the first
   // assistant message. Server uses this verbatim to seed Haiku — server-side
   // turnCount in the DB is the authoritative cap, so a tampered client
@@ -341,13 +345,13 @@ const turnSchema = z.object({
     .default([]),
 });
 
-router.post('/turn', async (req: Request, res: Response) => {
+router.post('/turn', landerTurnLimiter, async (req: Request, res: Response) => {
   try {
     const parsed = turnSchema.safeParse(req.body);
     if (!parsed.success) {
       return res.status(400).json({ error: 'Invalid payload' });
     }
-    const { sessionToken, userMessage, history } = parsed.data;
+    const { sessionToken, userMessage, turnstileToken, history } = parsed.data;
 
     const rows = await db
       .select()
@@ -367,6 +371,19 @@ router.post('/turn', async (req: Request, res: Response) => {
         ctaReady: true,
         blocked: 'cap',
       });
+    }
+
+    // Turnstile required on first user message only (PRD §7.3). verifyTurnstileToken
+    // fails open when TURNSTILE_SECRET_KEY is unset — same posture as the Aiden flow.
+    // Do NOT increment turnCount on failure so the user can retry with a fresh token.
+    if (row.turnCount === 0) {
+      const ok = await verifyTurnstileToken(turnstileToken ?? '', extractClientIp(req));
+      if (!ok) {
+        return res.status(400).json({
+          error: 'Security verification failed. Please refresh the page and try again.',
+          code: 'TURNSTILE_FAILED',
+        });
+      }
     }
 
     // Universal safety on the new user message. We pass userId only when

@@ -18,6 +18,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Sparkles, Send } from "lucide-react";
 import { trackPageView, trackEvelynLanderCTA } from "@/lib/facebook";
+import TurnstileWidget from "@/components/TurnstileWidget";
 
 const AUTH_TOKEN_KEY = "seer_auth_token";
 const EVELYN_PERSONA_SLUG = "evelyn-cross";
@@ -128,6 +129,10 @@ export default function EvelynLanderPage() {
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  // Cloudflare Turnstile — required on the first user message (PRD §7.3).
+  // Token is single-use; resetKey bumps issue a fresh one after each send.
+  const [turnstileToken, setTurnstileToken] = useState("");
+  const [turnstileResetKey, setTurnstileResetKey] = useState(0);
 
   const params = readParams();
   const sessionToken = getSessionToken();
@@ -232,17 +237,45 @@ export default function EvelynLanderPage() {
         body: JSON.stringify({
           sessionToken,
           userMessage: text,
+          // Server only verifies on first user message; after that we omit it.
+          ...(userTurns === 0 ? { turnstileToken } : {}),
           // Send everything BEFORE the new user message — server appends it.
           history: messages,
         }),
       });
-      if (!res.ok) throw new Error(`turn failed: ${res.status}`);
+      if (!res.ok) {
+        // Surface Turnstile failures specifically so the user gets actionable copy.
+        let code: string | undefined;
+        try {
+          const body = await res.json();
+          code = body?.code;
+        } catch {
+          // ignore non-JSON error bodies
+        }
+        // Roll back the optimistic user message + reissue a fresh Turnstile token.
+        setMessages(messages);
+        saveHistory(messages);
+        setDraft(text);
+        setTurnstileResetKey((k) => k + 1);
+        if (code === "TURNSTILE_FAILED") {
+          setErrorMsg("Security check failed. Please try again in a moment.");
+        } else if (res.status === 429) {
+          setErrorMsg("You're sending messages too quickly. Take a breath and try again shortly.");
+        } else {
+          setErrorMsg("Something interrupted the connection. Try sending again.");
+        }
+        return;
+      }
       const data: TurnResponse = await res.json();
 
       const finalHistory: ChatMessage[] = [...nextHistory, { role: "assistant", content: data.reply }];
       setMessages(finalHistory);
       saveHistory(finalHistory);
       setUserTurns((n) => n + 1);
+      // Token was single-use; bump resetKey so the widget issues a fresh one
+      // even though we won't send it on subsequent turns (defensive — keeps the
+      // widget healthy if a refresh resumes mid-session).
+      setTurnstileResetKey((k) => k + 1);
       if (data.ctaReady) setCtaReady(true);
     } catch {
       // Roll back the user message on hard failure so the user can retry.
@@ -428,6 +461,9 @@ export default function EvelynLanderPage() {
               I already have an account
             </button>
           </div>
+
+          {/* Invisible Turnstile — required on the first user message. */}
+          <TurnstileWidget onToken={setTurnstileToken} resetKey={turnstileResetKey} />
         </CardContent>
       </Card>
     </div>
