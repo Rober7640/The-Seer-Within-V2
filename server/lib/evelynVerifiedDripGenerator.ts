@@ -268,25 +268,28 @@ export async function scheduleEvelynVerifiedDrip(params: {
 }): Promise<void> {
   try {
     const baseMs = (params.baseTime ?? new Date()).getTime();
+    const bucketPhrase =
+      (params.bucket && BUCKET_PHRASES[params.bucket]) || BUCKET_DEFAULT;
 
-    // Body is placeholder at insert time — the processor regenerates fresh copy via
-    // Haiku at send time so it can include the latest chat context. If Haiku fails,
-    // the processor uses the static fallback content from buildFallbackContent().
-    const placeholderSubject = `(pending Haiku generation)`;
-    const placeholderBody = `(pending Haiku generation)`;
-
-    const rows = ([1, 2, 3] as const).map((seq) => ({
-      userId: params.userId,
-      sequenceType: 'verified_nopurchase' as const,
-      sequenceNumber: seq,
-      scheduledFor: new Date(baseMs + DELAY_MS[seq]),
-      recipientEmail: params.email,
-      subject: placeholderSubject,
-      bodyHtml: placeholderBody,
-      bodyText: placeholderBody,
-      status: 'pending' as const,
-      unsubscribeToken: randomUUID(),
-    }));
+    // We seed the row with the static fallback content so admin previews are
+    // meaningful before the cron has fired. The send-time processor still
+    // regenerates fresh Haiku copy and overwrites these fields on success —
+    // these values are only what gets sent if Haiku fails at send time.
+    const rows = ([1, 2, 3] as const).map((seq) => {
+      const fallback = buildFallbackContent(seq, params.firstName, bucketPhrase);
+      return {
+        userId: params.userId,
+        sequenceType: 'verified_nopurchase' as const,
+        sequenceNumber: seq,
+        scheduledFor: new Date(baseMs + DELAY_MS[seq]),
+        recipientEmail: params.email,
+        subject: fallback.subject,
+        bodyHtml: fallback.bodyHtml,
+        bodyText: fallback.bodyText,
+        status: 'pending' as const,
+        unsubscribeToken: randomUUID(),
+      };
+    });
 
     await db.insert(evelynFollowupEmails).values(rows);
     logger.info('[EvelynVerifiedDrip] Scheduled 3 post-verify emails', {

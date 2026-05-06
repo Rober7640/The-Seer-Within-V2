@@ -3,11 +3,25 @@
 
 import { Router, Request, Response } from 'express';
 import { db } from '../../lib/db';
-import { evelynFollowupEmails, users } from '@shared/schema';
+import { evelynFollowupEmails, users, personas } from '@shared/schema';
 import { eq, and, desc, count, sql } from 'drizzle-orm';
 import logger from '../../lib/logger';
 import { processEvelynFollowupQueue } from '../../lib/evelynFollowupEmailGenerator';
 import { processEvelynVerifiedDripQueue } from '../../lib/evelynVerifiedDripGenerator';
+import { buildFollowUpHtml } from '../../lib/emailTemplate';
+
+const BASE_URL = process.env.BASE_URL || 'http://localhost:5000';
+const EVELYN_SLUG = 'evelyn-cross';
+const EVELYN_FROM_NAME_FALLBACK = 'Evelyn Cross';
+const EVELYN_AVATAR_FALLBACK = '/uploads/avatars/evelyn-cross.png';
+
+// True for stored bodyHtml that's already a full email template (sent rows
+// get their bodyHtml overwritten with the full rendered HTML by processSingleRow).
+// Pending/failed/skipped rows still hold only the inner-content paragraphs.
+function isFullTemplateHtml(html: string): boolean {
+  const head = html.trim().slice(0, 200).toLowerCase();
+  return head.startsWith('<!doctype') || head.startsWith('<html');
+}
 
 const router = Router();
 
@@ -189,21 +203,76 @@ router.get('/preview/:id', async (req: Request, res: Response) => {
     const id = String(req.params.id);
     const rows = await db
       .select({
+        id: evelynFollowupEmails.id,
         subject: evelynFollowupEmails.subject,
         bodyHtml: evelynFollowupEmails.bodyHtml,
         bodyText: evelynFollowupEmails.bodyText,
         recipientEmail: evelynFollowupEmails.recipientEmail,
         sequenceNumber: evelynFollowupEmails.sequenceNumber,
+        sequenceType: evelynFollowupEmails.sequenceType,
+        status: evelynFollowupEmails.status,
+        unsubscribeToken: evelynFollowupEmails.unsubscribeToken,
       })
       .from(evelynFollowupEmails)
       .where(eq(evelynFollowupEmails.id, id))
       .limit(1);
 
-    if (!rows[0]) {
+    const row = rows[0];
+    if (!row) {
       return res.status(404).json({ error: 'Not found' });
     }
 
-    return res.json(rows[0]);
+    // For sent rows, bodyHtml is already the full rendered template — return as-is.
+    // For pending/failed/skipped rows, bodyHtml is just the inner paragraphs, so
+    // we wrap it with the same email template the cron uses at send time so the
+    // admin preview matches what the recipient will actually see.
+    if (isFullTemplateHtml(row.bodyHtml)) {
+      return res.json(row);
+    }
+
+    // Resolve Evelyn persona for branding. Fallbacks ensure the preview still
+    // renders even if the personas row is somehow missing.
+    const personaRow = await db
+      .select({
+        avatarUrl: personas.avatarUrl,
+        fromName: personas.fromName,
+      })
+      .from(personas)
+      .where(eq(personas.slug, EVELYN_SLUG))
+      .limit(1);
+
+    const fromName = personaRow[0]?.fromName || EVELYN_FROM_NAME_FALLBACK;
+    const avatarRel = personaRow[0]?.avatarUrl || EVELYN_AVATAR_FALLBACK;
+    const avatarUrl = avatarRel.startsWith('http') ? avatarRel : `${BASE_URL}${avatarRel}`;
+
+    // CTA text differs by drip: unverified rows push verification, verified-
+    // not-purchased rows push back to Evelyn's chat.
+    const ctaText =
+      row.sequenceType === 'verified_nopurchase' ? 'Return to Evelyn' : 'Confirm Your Email';
+
+    // Preview-only placeholder URLs — we don't want to mint a real magic-link
+    // token just to render an admin preview. Real CTAs are minted at send time
+    // inside processSingleRow.
+    const ctaUrl = `${BASE_URL}/login?preview=1`;
+    const unsubscribeUrl = row.unsubscribeToken
+      ? `${BASE_URL}/api/webhooks/unsubscribe?token=${row.unsubscribeToken}`
+      : `${BASE_URL}/unsubscribe`;
+
+    const fullHtml = buildFollowUpHtml({
+      personaName: fromName,
+      emailBody: row.bodyHtml,
+      ctaUrl,
+      ctaText,
+      unsubscribeUrl,
+      privacyUrl: `${BASE_URL}/privacy`,
+      avatarUrl,
+    });
+
+    return res.json({
+      ...row,
+      bodyHtml: fullHtml,
+      previewWrapped: true,
+    });
   } catch (error: any) {
     logger.error('Admin evelyn-follow-ups preview error:', error);
     return res.status(500).json({ error: 'Failed to load preview' });
