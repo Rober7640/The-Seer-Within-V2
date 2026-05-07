@@ -39,6 +39,9 @@ import logger from '../lib/logger';
 // `personas.freeCoins` and are read at verification time so policy changes
 // (e.g. Aiden's 10-minute onboarding) flow through without touching this file.
 const DEFAULT_FREE_COINS = 180;
+// /evelyn lander signups get 5 minutes free instead of the default 3 — soft-launch test
+// vs. competitors (Nebula 10 min, Astro 3 min). Eligibility = isFromEvelynLander() below.
+const EVELYN_LANDER_FREE_COINS = 300;
 const VERIFICATION_TOKEN_EXPIRY_HOURS = 24;
 
 async function getFreeCoinsForPersona(personaId: string | null | undefined): Promise<number> {
@@ -77,6 +80,23 @@ async function isEvelynUser(personaId: string | null | undefined): Promise<boole
       .where(eq(personas.id, personaId))
       .limit(1);
     return row[0]?.slug === 'evelyn-cross';
+  } catch {
+    return false;
+  }
+}
+
+// True when the user (a) has Evelyn as their default persona AND (b) has a linked
+// evelyn_lander_sessions row via resolved_user_id. Mirrors the eligibility check
+// already used at /verify-email + /magic-verify for the verified-not-purchased drip,
+// so the 5-min grant and the drip enrollment stay in lockstep. Silent-fails to false.
+async function isFromEvelynLander(userId: string, personaId: string | null | undefined): Promise<boolean> {
+  if (!(await isEvelynUser(personaId))) return false;
+  try {
+    const row = await db.select({ id: evelynLanderSessions.id })
+      .from(evelynLanderSessions)
+      .where(eq(evelynLanderSessions.resolvedUserId, userId))
+      .limit(1);
+    return !!row[0];
   } catch {
     return false;
   }
@@ -183,11 +203,17 @@ router.post('/register', authLimiter, async (req: Request, res: Response) => {
       personaId = personaRow[0]?.id || null;
     }
 
+    // /evelyn lander signups get 5 min free, everyone else gets the 3-min default.
+    // Production grants happen at /verify-email; this branch only fires in test env
+    // where verification is bypassed and coins are stamped at registration.
+    const isLanderSignup = source === 'evelyn-lander' && persona === 'evelyn-cross';
+    const testEnvCoinGrant = isLanderSignup ? EVELYN_LANDER_FREE_COINS : DEFAULT_FREE_COINS;
+
     const newUser = await db.insert(users).values({
       email: email.toLowerCase(),
       passwordHash,
       firstName,
-      coinBalance: isTestEnv ? DEFAULT_FREE_COINS : 0,
+      coinBalance: isTestEnv ? testEnvCoinGrant : 0,
       emailVerified: isTestEnv,
       verificationToken: isTestEnv ? null : verificationToken,
       verificationTokenExpiry: isTestEnv ? null : sql`NOW() + INTERVAL '${sql.raw(String(VERIFICATION_TOKEN_EXPIRY_HOURS))} hours'`,
@@ -510,7 +536,11 @@ router.get('/verify-email/:token', async (req: Request, res: Response) => {
     // Intentionally keep verificationToken/Expiry in place so that if an email-scanner
     // prefetches the link, the real user's later click still finds the token and auto-logs
     // in via the "already verified" branch above. Expiry check there prevents stale reuse.
-    const freeCoinsGrant = await getFreeCoinsForPersona(user.defaultPersonaId);
+    // /evelyn lander signups get 5 min free; everyone else gets the persona default (3 min).
+    const isLanderUser = await isFromEvelynLander(user.id, user.defaultPersonaId);
+    const freeCoinsGrant = isLanderUser
+      ? EVELYN_LANDER_FREE_COINS
+      : await getFreeCoinsForPersona(user.defaultPersonaId);
     await db.update(users)
       .set({
         emailVerified: true,
@@ -1185,7 +1215,11 @@ router.post('/magic-verify', authLimiter, async (req: Request, res: Response) =>
     let freshCoinBalance = user.coinBalance;
     let freshEmailVerified = user.emailVerified;
     if (!user.emailVerified) {
-      const freeCoinsGrant = await getFreeCoinsForPersona(user.defaultPersonaId);
+      // /evelyn lander signups get 5 min free; everyone else gets the persona default (3 min).
+      const isLanderUser = await isFromEvelynLander(user.id, user.defaultPersonaId);
+      const freeCoinsGrant = isLanderUser
+        ? EVELYN_LANDER_FREE_COINS
+        : await getFreeCoinsForPersona(user.defaultPersonaId);
       const updated = await db
         .update(users)
         .set({
