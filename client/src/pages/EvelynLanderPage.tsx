@@ -525,7 +525,7 @@ function ctaLabelFor(segment: Segment | null): string {
 }
 
 function subCopyFor(segment: Segment | null, firstName: string | null): string | null {
-  if (segment === "brand_new") return "3 free minutes when you join.";
+  if (segment === "brand_new") return "5 free minutes when you join.";
   if (segment === "v1_migrated") return "We've kept your history — just need a password.";
   if (segment === "token_magic") return "One tap. We've got you signed in.";
   if (segment === "v2_password" && firstName) return `Welcome back, ${firstName}.`;

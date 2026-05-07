@@ -139,7 +139,13 @@ export default function LoginPage() {
       const res = await fetch("/api/auth/resend-verification", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: resendEmail }),
+        body: JSON.stringify({
+          email: resendEmail,
+          // Forward source so the resent email keeps the lander-specific
+          // "5 free minutes" copy instead of reverting to the 3-min default.
+          ...(sourceParam ? { source: sourceParam } : {}),
+          ...(personaParam ? { persona: personaParam } : {}),
+        }),
       });
       if (res.ok) {
         setError(null);
@@ -173,7 +179,7 @@ export default function LoginPage() {
             <p className="text-sm text-gray-600">
               We sent a verification link to <strong>{resendEmail}</strong>.
               Please check your email and click the link to activate your account
-              and receive your 3 free minutes.
+              and receive your {sourceParam === "evelyn-lander" ? "5" : "3"} free minutes.
             </p>
             <p className="text-xs text-gray-400">
               The link expires in 24 hours.
@@ -280,7 +286,7 @@ export default function LoginPage() {
         <CardContent>
           {verificationSuccess && (
             <p className="text-green-700 text-xs p-2 bg-green-50 rounded-lg text-center mb-4">
-              Email verified successfully! You now have 3 free minutes. Sign in to start.
+              Email verified successfully! Sign in to start your reading.
             </p>
           )}
 

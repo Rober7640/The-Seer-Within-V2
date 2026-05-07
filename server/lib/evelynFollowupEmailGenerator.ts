@@ -154,7 +154,7 @@ function buildEmailContent(
     bodyHtml: [
       `<p>${fn},</p>`,
       `<p>This is the last time I'll write. Not because the reading has closed — it hasn't, your name is still on it — but some thresholds you have to cross on your own.</p>`,
-      `<p>Your three free minutes haven't moved. The thread we started is still here, exactly where you left it. Whenever you're ready, the door opens with one click.</p>`,
+      `<p>Your five free minutes haven't moved. The thread we started is still here, exactly where you left it. Whenever you're ready, the door opens with one click.</p>`,
       `<p>— Evelyn</p>`,
       `<p style="margin-top:28px;font-style:italic;color:#6a6275;">Whatever you choose, what brought you to me wasn't an accident.</p>`,
     ].join('\n'),
@@ -163,7 +163,7 @@ function buildEmailContent(
       '',
       `This is the last time I'll write. Not because the reading has closed — it hasn't, your name is still on it — but some thresholds you have to cross on your own.`,
       '',
-      `Your three free minutes haven't moved. The thread we started is still here, exactly where you left it. Whenever you're ready, the door opens with one click.`,
+      `Your five free minutes haven't moved. The thread we started is still here, exactly where you left it. Whenever you're ready, the door opens with one click.`,
       '',
       `— Evelyn`,
       '',

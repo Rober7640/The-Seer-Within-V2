@@ -22,11 +22,16 @@ function escapeHtml(str: string): string {
     .replace(/'/g, '&#39;');
 }
 
-// Free-minutes grant shown in verification copy. Kept in sync with
-// personas.freeCoins in the DB: Aiden grants 600 coins = 10 min; other
-// personas grant the default 180 coins = 3 min. If more persona-specific
-// grants are added later, extend this map (or read from DB).
-function getFreeMinutesForPersona(persona?: string): number {
+// Free-minutes grant shown in verification copy. Kept in sync with the actual
+// coin grant in server/routes/auth.ts (DEFAULT_FREE_COINS / EVELYN_LANDER_FREE_COINS
+// / personas.freeCoins). Mirrors the same eligibility branches:
+//   - /evelyn lander signup (source=evelyn-lander, persona=evelyn-cross): 5 min
+//   - aiden-powers persona: 10 min
+//   - everyone else: 3 min default
+// If the auth.ts grant logic changes, update this helper too — they must stay
+// in lockstep so the email never over- or under-promises.
+function getFreeMinutesForSignup(persona?: string, source?: string): number {
+  if (source === 'evelyn-lander' && persona === 'evelyn-cross') return 5;
   if (persona === 'aiden-powers') return 10;
   return 3;
 }
@@ -193,10 +198,11 @@ export async function sendVerificationEmail(
   firstName: string,
   token: string,
   persona?: string,
+  source?: string,
 ): Promise<{ success: boolean; error?: string }> {
   const personaQuery = persona ? `?persona=${encodeURIComponent(persona)}` : '';
   const verifyUrl = `${BASE_URL}/verify-email/${token}${personaQuery}`;
-  const freeMinutes = getFreeMinutesForPersona(persona);
+  const freeMinutes = getFreeMinutesForSignup(persona, source);
 
   const html = buildVerificationHtml(firstName, verifyUrl, freeMinutes);
   const text = buildVerificationText(firstName, verifyUrl, freeMinutes);
