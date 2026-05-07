@@ -43,7 +43,19 @@ const statusColors: Record<string, string> = {
 // Cadence labels per drip type — shown in the sequence stat cards and filter options.
 const sequenceLabel: Record<SequenceType, Record<number, string>> = {
   unverified: { 1: "+10m", 2: "+24h", 3: "+48h" },
-  verified_nopurchase: { 1: "+1h", 2: "+25h", 3: "+49h" },
+  verified_nopurchase: {
+    1: "+1h", 2: "+25h", 3: "+49h",
+    4: "+4d", 5: "+6d", 6: "+8d", 7: "+10d",
+    8: "+12d", 9: "+14d", 10: "+16d", 11: "+18d",
+    12: "+20d", 13: "+22d",
+  },
+};
+
+// Per-tab sequence numbers. Unverified drip stays at 3; verified_nopurchase
+// extends to 13 (emails 4–13 added at 48h spacing for a longer nurture window).
+const sequenceNumbers: Record<SequenceType, number[]> = {
+  unverified: [1, 2, 3],
+  verified_nopurchase: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13],
 };
 
 const TAB_META: Record<SequenceType, { title: string; description: string; envFlag: string; flagOnNote: string; flagOffNote: string }> = {
@@ -248,11 +260,11 @@ export default function AidenFollowUpsPage() {
               <div className="text-xs text-gray-500 mt-1">Clicked</div>
             </Card>
           </div>
-          <div className="grid grid-cols-3 gap-2">
-            {[1, 2, 3].map((seq) => (
+          <div className="grid grid-cols-3 md:grid-cols-7 gap-2">
+            {sequenceNumbers[activeTab].map((seq) => (
               <Card key={seq} className="bg-gray-900 border-gray-800 p-3 text-center">
                 <div className="text-sm text-gray-400 mb-1">Email {seq} ({sequenceLabel[activeTab][seq]})</div>
-                <div className="flex items-center justify-center gap-3 text-xs">
+                <div className="flex items-center justify-center gap-2 text-[11px] flex-wrap">
                   <span className="text-emerald-400">sent {sumSeq(stats.breakdown, seq, "sent")}</span>
                   <span className="text-yellow-400">pending {sumSeq(stats.breakdown, seq, "pending")}</span>
                   <span className="text-gray-500">skipped {sumSeq(stats.breakdown, seq, "skipped")}</span>
@@ -273,7 +285,7 @@ export default function AidenFollowUpsPage() {
           </SelectTrigger>
           <SelectContent className="bg-gray-800 border-gray-700">
             <SelectItem value="all">All Emails</SelectItem>
-            {[1, 2, 3].map((seq) => (
+            {sequenceNumbers[activeTab].map((seq) => (
               <SelectItem key={seq} value={String(seq)}>Email {seq} ({sequenceLabel[activeTab][seq]})</SelectItem>
             ))}
           </SelectContent>

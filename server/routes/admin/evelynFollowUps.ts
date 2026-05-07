@@ -7,8 +7,18 @@ import { evelynFollowupEmails, users, personas } from '@shared/schema';
 import { eq, and, desc, count, sql } from 'drizzle-orm';
 import logger from '../../lib/logger';
 import { processEvelynFollowupQueue } from '../../lib/evelynFollowupEmailGenerator';
-import { processEvelynVerifiedDripQueue } from '../../lib/evelynVerifiedDripGenerator';
+import {
+  processEvelynVerifiedDripQueue,
+  backfillEvelynVerifiedDripExtension,
+} from '../../lib/evelynVerifiedDripGenerator';
 import { buildFollowUpHtml } from '../../lib/emailTemplate';
+
+// Valid sequence numbers for the verified-not-purchased drip filter dropdown.
+// Both unverified (1–3) and verified_nopurchase (1–13) sequence_types share
+// this filter; we accept up to 13 here so the verified extension shows up.
+const VALID_SEQUENCE_NUMBERS: ReadonlySet<string> = new Set([
+  '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13',
+]);
 
 const BASE_URL = process.env.BASE_URL || 'http://localhost:5000';
 const EVELYN_SLUG = 'evelyn-cross';
@@ -98,7 +108,7 @@ router.get('/', async (req: Request, res: Response) => {
     if (statusFilter && ['pending', 'sent', 'failed', 'skipped'].includes(statusFilter)) {
       conditions.push(eq(evelynFollowupEmails.status, statusFilter));
     }
-    if (seqFilter && ['1', '2', '3'].includes(seqFilter)) {
+    if (seqFilter && VALID_SEQUENCE_NUMBERS.has(seqFilter)) {
       conditions.push(eq(evelynFollowupEmails.sequenceNumber, parseInt(seqFilter)));
     }
     const whereClause = and(...conditions);
@@ -191,6 +201,29 @@ router.post('/trigger', async (req: Request, res: Response) => {
   } catch (error: any) {
     logger.error('Admin evelyn-follow-ups trigger error:', error);
     return res.status(500).json({ error: 'Failed to process Evelyn follow-up queue' });
+  }
+});
+
+// ============================================
+// POST /api/admin/evelyn-follow-ups/backfill-extension
+// One-shot backfill: schedules emails 4–13 for users who already have rows 1–3
+// and haven't purchased / unsubscribed. Idempotent — safe to call multiple times.
+// Cadence: seq 4 fires at now + 1h, then 48h apart through seq 13.
+// ============================================
+router.post('/backfill-extension', async (req: Request, res: Response) => {
+  try {
+    logger.info('Admin: backfilling Evelyn verified drip extension (seq 4–13)', {
+      adminId: (req as any).adminId,
+    });
+    const result = await backfillEvelynVerifiedDripExtension();
+    return res.json({
+      success: true,
+      result,
+      note: `Found ${result.found} users with seq 1–3 rows. Scheduled extension for ${result.scheduled}, skipped ${result.skipped} (purchased / unsubscribed / already backfilled / inactive).`,
+    });
+  } catch (error: any) {
+    logger.error('Admin evelyn-follow-ups backfill-extension error:', error);
+    return res.status(500).json({ error: 'Backfill failed', message: error?.message });
   }
 });
 

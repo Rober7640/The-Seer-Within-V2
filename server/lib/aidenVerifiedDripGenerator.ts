@@ -29,7 +29,7 @@ import {
   chatSessions,
   chatMessages,
 } from '@shared/schema';
-import { eq, and, lte, ne, desc, sql } from 'drizzle-orm';
+import { eq, and, lte, gte, ne, desc, sql } from 'drizzle-orm';
 import { randomUUID } from 'crypto';
 import { buildFollowUpHtml, buildFollowUpText } from './emailTemplate';
 import { generateMagicLinkToken } from './magicLink';
@@ -45,19 +45,47 @@ const resend = process.env.RESEND_API_KEY
 const BASE_URL = process.env.BASE_URL || 'http://localhost:5000';
 const AIDEN_SLUG = 'aiden-powers';
 
+// Sequence 1–13. Emails 1–3 are the original opener arc; 4–13 were added later
+// at 48h spacing for a longer nurture window. Seq 13 is the true farewell.
+export type SequenceNumber = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13;
+const ALL_SEQUENCES: readonly SequenceNumber[] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13];
+const EXTENDED_SEQUENCES: readonly SequenceNumber[] = [4, 5, 6, 7, 8, 9, 10, 11, 12, 13];
+
 // Delays measured from user's email-verification time (passed in as baseTime).
-const DELAY_MS: Record<1 | 2 | 3, number> = {
-  1: 1 * 60 * 60 * 1000,         // +1h
-  2: 25 * 60 * 60 * 1000,        // +25h  (= +24h after Email 1)
-  3: 49 * 60 * 60 * 1000,        // +49h  (= +24h after Email 2)
+// Original opener arc: +1h / +25h / +49h. Extended arc (4–13): 48h spacing
+// from seq 3 onward, so seq N for N ≥ 4 fires at 49h + (N - 3) × 48h.
+const DELAY_MS: Record<SequenceNumber, number> = {
+  1:  1   * 60 * 60 * 1000, // +1h
+  2:  25  * 60 * 60 * 1000, // +25h
+  3:  49  * 60 * 60 * 1000, // +49h
+  4:  97  * 60 * 60 * 1000, // +97h  (≈4d)
+  5:  145 * 60 * 60 * 1000, // +145h (≈6d)
+  6:  193 * 60 * 60 * 1000, // +193h (≈8d)
+  7:  241 * 60 * 60 * 1000, // +241h (≈10d)
+  8:  289 * 60 * 60 * 1000, // +289h (≈12d)
+  9:  337 * 60 * 60 * 1000, // +337h (≈14d)
+  10: 385 * 60 * 60 * 1000, // +385h (≈16d)
+  11: 433 * 60 * 60 * 1000, // +433h (≈18d)
+  12: 481 * 60 * 60 * 1000, // +481h (≈20d)
+  13: 529 * 60 * 60 * 1000, // +529h (≈22d)
 };
 
 // Stale windows — if scheduledFor is more than this behind NOW, skip the email
-// rather than send something that no longer makes sense.
-const STALE_MS: Record<1 | 2 | 3, number> = {
-  1: 6 * 60 * 60 * 1000,         // +1h  : skip if >6h late
-  2: 20 * 60 * 60 * 1000,        // +25h : skip if >20h late
-  3: 24 * 60 * 60 * 1000,        // +49h : skip if >24h late
+// rather than send something that no longer makes sense. Emails 4–13 use 24h.
+const STALE_MS: Record<SequenceNumber, number> = {
+  1:  6  * 60 * 60 * 1000,
+  2:  20 * 60 * 60 * 1000,
+  3:  24 * 60 * 60 * 1000,
+  4:  24 * 60 * 60 * 1000,
+  5:  24 * 60 * 60 * 1000,
+  6:  24 * 60 * 60 * 1000,
+  7:  24 * 60 * 60 * 1000,
+  8:  24 * 60 * 60 * 1000,
+  9:  24 * 60 * 60 * 1000,
+  10: 24 * 60 * 60 * 1000,
+  11: 24 * 60 * 60 * 1000,
+  12: 24 * 60 * 60 * 1000,
+  13: 24 * 60 * 60 * 1000,
 };
 
 // Quiz topic → personalization phrase (second-person, fits in any email body).
@@ -99,7 +127,7 @@ function safeFirstName(raw: string | null | undefined): string {
 // ============================================================
 
 function buildFallbackContent(
-  seq: 1 | 2 | 3,
+  seq: SequenceNumber,
   firstName: string,
   topicPhrase: string,
 ): { subject: string; bodyHtml: string; bodyText: string } {
@@ -151,26 +179,256 @@ function buildFallbackContent(
     };
   }
 
-  // seq === 3 — respectful farewell
+  if (seq === 3) {
+    // Quiet third touch — Aiden lets the math sit. Not a farewell anymore
+    // (seq 13 is). A scholar's pause, no urgency.
+    return {
+      subject: `A short note, ${fn}`,
+      bodyHtml: [
+        `<p>${fn},</p>`,
+        `<p>I've been sitting with the chart. The pattern hasn't moved — and neither has my read on the timing around ${topic}.</p>`,
+        `<p>I'm not going to keep re-running the same numbers. They reveal what they reveal when you're ready to hear them.</p>`,
+        `<p>— Aiden</p>`,
+        `<p style="margin-top:28px;font-style:italic;color:#6a6275;">The chart isn't going anywhere.</p>`,
+      ].join('\n'),
+      bodyText: [
+        `${fn},`,
+        '',
+        `I've been sitting with the chart. The pattern hasn't moved — and neither has my read on the timing around ${topicPhrase}.`,
+        '',
+        `I'm not going to keep re-running the same numbers. They reveal what they reveal when you're ready to hear them.`,
+        '',
+        `— Aiden`,
+        '',
+        `The chart isn't going anywhere.`,
+      ].join('\n'),
+    };
+  }
+
+  if (seq === 4) {
+    return {
+      subject: `I keep going back, ${fn}`,
+      bodyHtml: [
+        `<p>${fn},</p>`,
+        `<p>I've returned to your numbers a few times this morning. The pattern around ${topic} doesn't want to settle — and that's information in itself.</p>`,
+        `<p>This isn't urgent. I just wanted you to know I haven't moved on from it.</p>`,
+        `<p>— Aiden</p>`,
+        `<p style="margin-top:28px;font-style:italic;color:#6a6275;">Your free minutes are still here, untouched.</p>`,
+      ].join('\n'),
+      bodyText: [
+        `${fn},`,
+        '',
+        `I've returned to your numbers a few times this morning. The pattern around ${topicPhrase} doesn't want to settle — and that's information in itself.`,
+        '',
+        `This isn't urgent. I just wanted you to know I haven't moved on from it.`,
+        '',
+        `— Aiden`,
+        '',
+        `Your free minutes are still here, untouched.`,
+      ].join('\n'),
+    };
+  }
+
+  if (seq === 5) {
+    return {
+      subject: `A transit is moving`,
+      bodyHtml: [
+        `<p>${fn},</p>`,
+        `<p>There's a transit shifting in your chart this week — subtle, not dramatic. Around ${topic}, the math points to a small turn rather than a big one.</p>`,
+        `<p>I don't want to over-read it from a distance. Numbers reveal themselves in conversation, not in inboxes.</p>`,
+        `<p>— Aiden</p>`,
+        `<p style="margin-top:28px;font-style:italic;color:#6a6275;">The cycles I track move on their own schedule. This one's worth noticing.</p>`,
+      ].join('\n'),
+      bodyText: [
+        `${fn},`,
+        '',
+        `There's a transit shifting in your chart this week — subtle, not dramatic. Around ${topicPhrase}, the math points to a small turn rather than a big one.`,
+        '',
+        `I don't want to over-read it from a distance. Numbers reveal themselves in conversation, not in inboxes.`,
+        '',
+        `— Aiden`,
+        '',
+        `The cycles I track move on their own schedule. This one's worth noticing.`,
+      ].join('\n'),
+    };
+  }
+
+  if (seq === 6) {
+    return {
+      subject: `A question for you, ${fn}`,
+      bodyHtml: [
+        `<p>${fn},</p>`,
+        `<p>Has anything shifted since we last spoke? In the work I do, the math often moves between sessions — and I miss the part where it lands.</p>`,
+        `<p>If something has changed, I'd be curious. If nothing has, that's also a real reading.</p>`,
+        `<p>— Aiden</p>`,
+      ].join('\n'),
+      bodyText: [
+        `${fn},`,
+        '',
+        `Has anything shifted since we last spoke? In the work I do, the math often moves between sessions — and I miss the part where it lands.`,
+        '',
+        `If something has changed, I'd be curious. If nothing has, that's also a real reading.`,
+        '',
+        `— Aiden`,
+      ].join('\n'),
+    };
+  }
+
+  if (seq === 7) {
+    return {
+      subject: `For the week ahead`,
+      bodyHtml: [
+        `<p>${fn},</p>`,
+        `<p>I've looked at what's surfacing for you over the next seven days. Around ${topic}, the quieter dates hold more than the louder ones.</p>`,
+        `<p>Watch for repeats this week. The same number, the same name, a familiar face. That's where the chart is pointing.</p>`,
+        `<p>— Aiden</p>`,
+        `<p style="margin-top:28px;font-style:italic;color:#6a6275;">The pattern isn't asking for action. It's asking for attention.</p>`,
+      ].join('\n'),
+      bodyText: [
+        `${fn},`,
+        '',
+        `I've looked at what's surfacing for you over the next seven days. Around ${topicPhrase}, the quieter dates hold more than the louder ones.`,
+        '',
+        `Watch for repeats this week. The same number, the same name, a familiar face. That's where the chart is pointing.`,
+        '',
+        `— Aiden`,
+        '',
+        `The pattern isn't asking for action. It's asking for attention.`,
+      ].join('\n'),
+    };
+  }
+
+  if (seq === 8) {
+    return {
+      subject: `Just checking in, ${fn}`,
+      bodyHtml: [
+        `<p>${fn},</p>`,
+        `<p>No reading today. Just a quiet check-in.</p>`,
+        `<p>I hold a few charts in mind between sessions, and yours has been one of them. The math is patient — it doesn't insist. Hope you're well.</p>`,
+        `<p>— Aiden</p>`,
+      ].join('\n'),
+      bodyText: [
+        `${fn},`,
+        '',
+        `No reading today. Just a quiet check-in.`,
+        '',
+        `I hold a few charts in mind between sessions, and yours has been one of them. The math is patient — it doesn't insist. Hope you're well.`,
+        '',
+        `— Aiden`,
+      ].join('\n'),
+    };
+  }
+
+  if (seq === 9) {
+    return {
+      subject: `Something you told me, ${fn}`,
+      bodyHtml: [
+        `<p>${fn},</p>`,
+        `<p>Something you told me on the way in has been sitting with me — the part about ${topic}.</p>`,
+        `<p>The numbers around it have answered, in a quieter way than I'd expected. When you have time, I'd want to walk you through what shifted.</p>`,
+        `<p>— Aiden</p>`,
+      ].join('\n'),
+      bodyText: [
+        `${fn},`,
+        '',
+        `Something you told me on the way in has been sitting with me — the part about ${topicPhrase}.`,
+        '',
+        `The numbers around it have answered, in a quieter way than I'd expected. When you have time, I'd want to walk you through what shifted.`,
+        '',
+        `— Aiden`,
+      ].join('\n'),
+    };
+  }
+
+  if (seq === 10) {
+    return {
+      subject: `The pattern we left, ${fn}`,
+      bodyHtml: [
+        `<p>${fn},</p>`,
+        `<p>The chart we left half-read isn't complete. I haven't tried to finish it on my own — that's not how this work goes. The numbers move when you're sitting with them, not when I'm staring at them alone.</p>`,
+        `<p>If the moment comes, I'm here. The same chart, the same integers, the same care.</p>`,
+        `<p>— Aiden</p>`,
+        `<p style="margin-top:28px;font-style:italic;color:#6a6275;">Some readings continue themselves. Yours has.</p>`,
+      ].join('\n'),
+      bodyText: [
+        `${fn},`,
+        '',
+        `The chart we left half-read isn't complete. I haven't tried to finish it on my own — that's not how this work goes. The numbers move when you're sitting with them, not when I'm staring at them alone.`,
+        '',
+        `If the moment comes, I'm here. The same chart, the same integers, the same care.`,
+        '',
+        `— Aiden`,
+        '',
+        `Some readings continue themselves. Yours has.`,
+      ].join('\n'),
+    };
+  }
+
+  if (seq === 11) {
+    return {
+      subject: `I won't keep writing if this isn't yours`,
+      bodyHtml: [
+        `<p>${fn},</p>`,
+        `<p>I notice my notes have been going one direction. That's a real reading, too — a pattern I want to respect.</p>`,
+        `<p>If this isn't where you want me, that's a clear answer. The unsubscribe link is below. No friction, no follow-ups. The path you're on is yours.</p>`,
+        `<p>— Aiden</p>`,
+      ].join('\n'),
+      bodyText: [
+        `${fn},`,
+        '',
+        `I notice my notes have been going one direction. That's a real reading, too — a pattern I want to respect.`,
+        '',
+        `If this isn't where you want me, that's a clear answer. The unsubscribe link is below. No friction, no follow-ups. The path you're on is yours.`,
+        '',
+        `— Aiden`,
+      ].join('\n'),
+    };
+  }
+
+  if (seq === 12) {
+    return {
+      subject: `One more thing, ${fn}`,
+      bodyHtml: [
+        `<p>${fn},</p>`,
+        `<p>There's something I've been holding back since we last spoke. It wasn't ready to send before — the math hadn't fully resolved. It has now.</p>`,
+        `<p>About ${topic}: the heavy part isn't the part you think it is. The actual weight is somewhere else in the chart. When you come back, that's where I'd start.</p>`,
+        `<p>— Aiden</p>`,
+        `<p style="margin-top:28px;font-style:italic;color:#6a6275;">The numbers waited a long time on this one. Whatever you do with it, the timing is yours.</p>`,
+      ].join('\n'),
+      bodyText: [
+        `${fn},`,
+        '',
+        `There's something I've been holding back since we last spoke. It wasn't ready to send before — the math hadn't fully resolved. It has now.`,
+        '',
+        `About ${topicPhrase}: the heavy part isn't the part you think it is. The actual weight is somewhere else in the chart. When you come back, that's where I'd start.`,
+        '',
+        `— Aiden`,
+        '',
+        `The numbers waited a long time on this one. Whatever you do with it, the timing is yours.`,
+      ].join('\n'),
+    };
+  }
+
+  // seq === 13 — true farewell, door left open.
   return {
-    subject: `Last note, ${fn}`,
+    subject: `A final note from me, ${fn}`,
     bodyHtml: [
       `<p>${fn},</p>`,
-      `<p>This will be my last note on this reading. I don't re-run the same chart twice — not out of stubbornness, but because the numbers don't change just because we look again.</p>`,
-      `<p>If the timing isn't right today, that's a real answer too. The door stays open for when it is.</p>`,
-      `<p style="margin-top:28px;font-style:italic;color:#6a6275;">Either way — the Life Path I saw for you was a good one.</p>`,
+      `<p>This is my last note in this thread. I don't push past silence — the math doesn't ask me to, and neither does the way I work.</p>`,
+      `<p>What I saw for you was a good chart. Not because the path is easy, but because you've already done the hard part — you came in asking. The rest does itself.</p>`,
       `<p>— Aiden</p>`,
+      `<p style="margin-top:28px;font-style:italic;color:#6a6275;">Whenever the moment comes, the door is here.</p>`,
     ].join('\n'),
     bodyText: [
       `${fn},`,
       '',
-      `This will be my last note on this reading. I don't re-run the same chart twice — not out of stubbornness, but because the numbers don't change just because we look again.`,
+      `This is my last note in this thread. I don't push past silence — the math doesn't ask me to, and neither does the way I work.`,
       '',
-      `If the timing isn't right today, that's a real answer too. The door stays open for when it is.`,
-      '',
-      `Either way — the Life Path I saw for you was a good one.`,
+      `What I saw for you was a good chart. Not because the path is easy, but because you've already done the hard part — you came in asking. The rest does itself.`,
       '',
       `— Aiden`,
+      '',
+      `Whenever the moment comes, the door is here.`,
     ].join('\n'),
   };
 }
@@ -180,14 +438,24 @@ function buildFallbackContent(
 // Falls back to the static template above if anything goes wrong.
 // ============================================================
 
-const TONE_GUIDE: Record<1 | 2 | 3, string> = {
-  1: 'Observant, fresh read. As if Aiden has just pulled the chart moments ago and is writing quickly from the desk. No sales language. Curiosity-first.',
-  2: 'Pattern-forward, gentle urgency. A number keeps repeating; the timing window is narrow but real. Aiden is a scholar, not a huckster — urgency is about cycles, not scarcity.',
-  3: 'Respectful farewell. Aiden does not re-run the same chart. Warmth over persuasion. A clean close with the door left open.',
+const TONE_GUIDE: Record<SequenceNumber, string> = {
+  1:  'Observant, fresh read. As if Aiden has just pulled the chart moments ago and is writing quickly from the desk. No sales language. Curiosity-first.',
+  2:  'Pattern-forward, gentle urgency. A number keeps repeating; the timing window is narrow but real. Aiden is a scholar, not a huckster — urgency is about cycles, not scarcity.',
+  3:  'Quiet third touch. Aiden lets the math sit. Not a farewell, not urgency — a scholar\'s pause. The chart holds; he is patient.',
+  4:  'Soft return after the pause. Aiden has been re-reading the chart without urgency. Continuity, not newness. Mentions the free minutes once as a gentle remainder, not a CTA.',
+  5:  'Astrology / timing observation. Aiden names a transit shifting in the chart — subtle, not dramatic. Scholarly humility: math is best read in conversation, not from a distance.',
+  6:  'Open inquiry. Aiden checks in honestly: has anything moved since they last spoke? He treats both yes and no as real readings. No nudge to come back — just curiosity.',
+  7:  'Forward-look for the next seven days. Aiden names what to watch for in repeating patterns — quieter dates hold more than louder ones. Attention over action.',
+  8:  'Pastoral check-in. No reading today. Just presence and warmth. Aiden says he has been holding the chart in mind. Brief — three short paragraphs, no advice, no CTA pressure.',
+  9:  'Direct callback to the user\'s opening conversation or quiz answers. Aiden names that something the user told him has stayed with him. The numbers have answered quietly.',
+  10: 'Continuity. The chart is unfinished, and Aiden names that it cannot be finished alone — the numbers move when the user is sitting with them. Patient, no fresh insight.',
+  11: 'Graceful opt-down signal. Aiden names the asymmetry as a reading in itself — his notes have been going one direction. Offers a clean exit via the unsubscribe link with no guilt.',
+  12: 'A withheld insight, finally ready. Aiden names something he had been holding back about the user\'s topic — the heavy part is not what they think; the actual weight is elsewhere in the chart.',
+  13: 'True farewell. Aiden names this is the last note in this thread. He affirms what he saw was a good chart. Door open. Quiet conviction over urgency.',
 };
 
 async function generateHaikuContent(
-  seq: 1 | 2 | 3,
+  seq: SequenceNumber,
   firstName: string,
   topicPhrase: string,
   chatSnippet: string | null,
@@ -196,7 +464,7 @@ async function generateHaikuContent(
     ? `\nRecent messages the user sent Aiden in chat (most recent last):\n${chatSnippet}\n`
     : '';
 
-  const prompt = `You are writing email ${seq} of 3 in a nurture sequence from Aiden Powers, a master numerologist on The Seer Within. The recipient verified their email, received 10 free minutes, but has not yet purchased credits.
+  const prompt = `You are writing email ${seq} of 13 in a nurture sequence from Aiden Powers, a master numerologist on The Seer Within. The recipient verified their email, received 10 free minutes, but has not yet purchased credits.
 
 Tone for this email: ${TONE_GUIDE[seq]}
 
@@ -276,7 +544,7 @@ export async function scheduleAidenVerifiedDrip(params: {
     const placeholderSubject = `(pending Haiku generation)`;
     const placeholderBody = `(pending Haiku generation)`;
 
-    const rows = ([1, 2, 3] as const).map((seq) => ({
+    const rows = ALL_SEQUENCES.map((seq) => ({
       userId: params.userId,
       sequenceType: 'verified_nopurchase' as const,
       sequenceNumber: seq,
@@ -290,7 +558,7 @@ export async function scheduleAidenVerifiedDrip(params: {
     }));
 
     await db.insert(aidenFollowupEmails).values(rows);
-    logger.info('[AidenVerifiedDrip] Scheduled 3 post-verify emails', {
+    logger.info('[AidenVerifiedDrip] Scheduled 13 post-verify emails', {
       userId: params.userId,
     });
   } catch (error) {
@@ -524,7 +792,7 @@ async function processSingleVerifiedRow(
 
   // (4) Stale window
   const ageMs = now.getTime() - row.scheduledFor.getTime();
-  const seq = row.sequenceNumber as 1 | 2 | 3;
+  const seq = row.sequenceNumber as SequenceNumber;
   if (STALE_MS[seq] && ageMs > STALE_MS[seq]) {
     await markSkipped(row.id, 'stale');
     return 'skipped';
@@ -722,4 +990,144 @@ async function markFailed(rowId: string, reason: string): Promise<void> {
       updatedAt: new Date(),
     })
     .where(eq(aidenFollowupEmails.id, rowId));
+}
+
+// ============================================================
+// backfillAidenVerifiedDripExtension — schedules emails 4–13 for users who
+// already have rows 1–3 from before the sequence was extended. Idempotent.
+// Cadence: seq 4 fires at backfillBaseTime + 1h, then 48h apart through seq 13.
+// Same eligibility cascade as the cron processor (verified, active, not-purchased,
+// not-unsubscribed). Triggered manually by admin endpoint after deploy.
+// ============================================================
+
+export interface AidenVerifiedDripBackfillResult {
+  found: number;
+  scheduled: number;
+  skipped: number;
+}
+
+export async function backfillAidenVerifiedDripExtension(
+  baseTime: Date = new Date(),
+): Promise<AidenVerifiedDripBackfillResult> {
+  const baseMs = baseTime.getTime();
+  const result: AidenVerifiedDripBackfillResult = {
+    found: 0,
+    scheduled: 0,
+    skipped: 0,
+  };
+
+  const candidateRows = await db
+    .selectDistinct({ userId: aidenFollowupEmails.userId })
+    .from(aidenFollowupEmails)
+    .where(
+      and(
+        eq(aidenFollowupEmails.sequenceType, 'verified_nopurchase'),
+        lte(aidenFollowupEmails.sequenceNumber, 3),
+      ),
+    );
+
+  result.found = candidateRows.length;
+
+  for (const candidate of candidateRows) {
+    try {
+      const existing = await db
+        .select({ id: aidenFollowupEmails.id })
+        .from(aidenFollowupEmails)
+        .where(
+          and(
+            eq(aidenFollowupEmails.userId, candidate.userId),
+            eq(aidenFollowupEmails.sequenceType, 'verified_nopurchase'),
+            gte(aidenFollowupEmails.sequenceNumber, 4),
+          ),
+        )
+        .limit(1);
+      if (existing[0]) {
+        result.skipped++;
+        continue;
+      }
+
+      const userRows = await db
+        .select({
+          id: users.id,
+          email: users.email,
+          firstName: users.firstName,
+          emailVerified: users.emailVerified,
+          accountStatus: users.accountStatus,
+        })
+        .from(users)
+        .where(eq(users.id, candidate.userId))
+        .limit(1);
+
+      const user = userRows[0];
+      if (!user || !user.emailVerified || user.accountStatus !== 'active') {
+        result.skipped++;
+        continue;
+      }
+
+      const purchaseRow = await db
+        .select({ id: creditPurchases.id })
+        .from(creditPurchases)
+        .where(
+          and(
+            eq(creditPurchases.userId, user.id),
+            eq(creditPurchases.status, 'completed'),
+            ne(creditPurchases.packageType, 'admin_adjustment'),
+          ),
+        )
+        .limit(1);
+      if (purchaseRow[0]) {
+        result.skipped++;
+        continue;
+      }
+
+      const prefs = await db
+        .select({
+          unsubscribedAt: userFollowUpPreferences.unsubscribedAt,
+          enableFollowUps: userFollowUpPreferences.enableFollowUps,
+        })
+        .from(userFollowUpPreferences)
+        .where(eq(userFollowUpPreferences.userId, user.id))
+        .limit(1);
+      if (
+        prefs[0] &&
+        (prefs[0].unsubscribedAt !== null || prefs[0].enableFollowUps === false)
+      ) {
+        result.skipped++;
+        continue;
+      }
+
+      // Aiden's schedule path inserts placeholder content and lets the cron
+      // regenerate via Haiku at send time — we mirror that here so the seed
+      // rows match the existing pattern exactly.
+      const placeholder = `(pending Haiku generation)`;
+      const HOUR_MS = 60 * 60 * 1000;
+      const rows = EXTENDED_SEQUENCES.map((seq) => {
+        const offsetMs = HOUR_MS + (seq - 4) * 48 * HOUR_MS;
+        return {
+          userId: user.id,
+          sequenceType: 'verified_nopurchase' as const,
+          sequenceNumber: seq,
+          scheduledFor: new Date(baseMs + offsetMs),
+          recipientEmail: user.email,
+          subject: placeholder,
+          bodyHtml: placeholder,
+          bodyText: placeholder,
+          status: 'pending' as const,
+          unsubscribeToken: randomUUID(),
+        };
+      });
+
+      await db.insert(aidenFollowupEmails).values(rows);
+      result.scheduled++;
+    } catch (innerError) {
+      logger.warn('[AidenVerifiedDrip] Backfill skipped one user', {
+        userId: candidate.userId,
+        error: (innerError as Error).message,
+      });
+      result.skipped++;
+    }
+  }
+
+  logger.info('[AidenVerifiedDrip] Backfill complete', result);
+  return result;
 }
