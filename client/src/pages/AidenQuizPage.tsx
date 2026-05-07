@@ -260,7 +260,7 @@ export default function AidenQuizPage() {
 
   const handleRescueHatch = useCallback(async () => {
     setRescueLoading(true);
-    trackInitiateCheckout(9.99, "USD");
+    trackInitiateCheckout(9.99, "USD", "Aiden Rescue");
     try {
       const res = await authFetch("/api/credits/checkout", {
         method: "POST",

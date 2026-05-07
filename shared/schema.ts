@@ -640,6 +640,46 @@ export const aidenFollowupEmails = pgTable("aiden_followup_emails", {
   index("idx_aiden_followup_type_status_scheduled").on(table.sequenceType, table.status, table.scheduledFor),
 ]);
 
+// 21. Evelyn Follow-Up Emails - Nurture sequences for /evelyn lander signups.
+// Two drip tracks share this table, discriminated by sequence_type:
+//   - 'unverified'           : +10m / +24h / +48h from lander signup (pre-verification)
+//   - 'verified_nopurchase'  : +1h  / +25h / +49h from verification (post-verify, pre-purchase)
+// Mirrors aiden_followup_emails in shape but is independent (different persona,
+// different scheduling triggers, different env-flag gates).
+export const evelynFollowupEmails = pgTable("evelyn_followup_emails", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+
+  sequenceType: text("sequence_type").default("unverified").notNull(), // 'unverified' | 'verified_nopurchase'
+
+  sequenceNumber: integer("sequence_number").notNull(), // 1, 2, or 3
+  scheduledFor: timestamp("scheduled_for").notNull(),
+
+  recipientEmail: text("recipient_email").notNull(),
+  subject: text("subject").notNull(),
+  bodyHtml: text("body_html").notNull(),
+  bodyText: text("body_text").notNull(),
+
+  status: text("status").default("pending").notNull(), // pending, sent, failed, skipped
+  sentAt: timestamp("sent_at"),
+  resendEmailId: text("resend_email_id"),
+
+  attemptCount: integer("attempt_count").default(0).notNull(),
+  errorMessage: text("error_message"),
+
+  openedAt: timestamp("opened_at"),
+  clickedAt: timestamp("clicked_at"),
+
+  unsubscribeToken: text("unsubscribe_token").unique(),
+
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_evelyn_followup_user_seq").on(table.userId, table.sequenceNumber),
+  index("idx_evelyn_followup_status_scheduled").on(table.status, table.scheduledFor),
+  index("idx_evelyn_followup_type_status_scheduled").on(table.sequenceType, table.status, table.scheduledFor),
+]);
+
 // 20. Email Suppression - Central list of every email that's opted out.
 // Populated by: public /unsubscribe (partner emails), our own token-click unsubs,
 // Resend bounce webhooks, Resend spam-complaint webhooks. Single source of truth

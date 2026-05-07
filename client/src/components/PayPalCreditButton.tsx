@@ -29,9 +29,9 @@ export default function PayPalCreditButton({ packageType, personaId, amount, onS
           // FB InitiateCheckout — fired before the order-creation API call
           // so a slow/failed createOrder still records the user's intent.
           if (typeof amount === "number" && amount > 0) {
-            trackInitiateCheckout(amount / 100, "USD");
+            trackInitiateCheckout(amount / 100, "USD", "V2 Credits — PayPal");
           } else {
-            trackInitiateCheckout();
+            trackInitiateCheckout(undefined, "USD", "V2 Credits — PayPal");
           }
           const res = await authFetch("/api/credits/create-order", {
             method: "POST",

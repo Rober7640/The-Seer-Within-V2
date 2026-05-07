@@ -74,3 +74,15 @@ export const landerLimiter = rateLimit({
   message: { error: 'Too many lander sessions from this IP. Please try again later.' },
   skip: () => isTestEnv,
 });
+
+// Evelyn lander chat turns: 30 turns per hour per IP (prod), 200/hr in dev.
+// Headroom over the 10 legit turns/hr ceiling (2 turns × 5 sessions from landerLimiter)
+// so retries and refresh-resumes don't get blocked, but a hot IP is throttled.
+export const landerTurnLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: isDevEnv ? 200 : 30,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many messages from this IP. Please try again later.' },
+  skip: () => isTestEnv,
+});

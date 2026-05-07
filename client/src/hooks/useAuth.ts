@@ -133,12 +133,22 @@ export function useAuth() {
   );
 
   const register = useCallback(
-    async (email: string, password: string, firstName: string, persona?: string) => {
+    async (
+      email: string,
+      password: string,
+      firstName: string,
+      persona?: string,
+      // /evelyn lander handoff fields. All optional — non-lander signups omit them.
+      extras?: { source?: string; bucket?: string; landerSessionToken?: string },
+    ) => {
       const res = await apiRequest("POST", "/api/auth/register", {
         email,
         password,
         firstName,
         ...(persona ? { persona } : {}),
+        ...(extras?.source ? { source: extras.source } : {}),
+        ...(extras?.bucket ? { bucket: extras.bucket } : {}),
+        ...(extras?.landerSessionToken ? { landerSessionToken: extras.landerSessionToken } : {}),
       });
       const data = await res.json();
       setToken(data.token);

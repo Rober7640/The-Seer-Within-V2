@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Elements, PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js";
 import { stripePromise } from "@/lib/stripe";
 import { authFetch } from "@/hooks/useAuth";
@@ -34,6 +34,19 @@ function StripeCardFormInner({
   const elements = useElements();
   const [error, setError] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const IC_SESSION_KEY = 'v2_stripe_ic_tracked';
+  const icTrackedRef = useRef(typeof window !== 'undefined' && !!sessionStorage.getItem(IC_SESSION_KEY));
+
+  const handleCardChange = (event: { empty: boolean }) => {
+    if (icTrackedRef.current || event.empty) return;
+    icTrackedRef.current = true;
+    sessionStorage.setItem(IC_SESSION_KEY, '1');
+    trackInitiateCheckout(
+      typeof amount === "number" && amount > 0 ? amount / 100 : undefined,
+      "USD",
+      "V2 Credits — Stripe",
+    );
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,16 +62,6 @@ function StripeCardFormInner({
         setError(submitError.message ?? "Please check your card details.");
         setIsProcessing(false);
         return;
-      }
-
-      // FB InitiateCheckout — fire AFTER card-details validation so we don't
-      // log intent for users who never had a fillable card to begin with,
-      // but BEFORE the create-payment-intent network call so a slow API
-      // doesn't delay the event.
-      if (typeof amount === "number" && amount > 0) {
-        trackInitiateCheckout(amount / 100, "USD");
-      } else {
-        trackInitiateCheckout();
       }
 
       // Step 2: Create Payment Intent on server (only NOW, not on mount)
@@ -135,9 +138,8 @@ function StripeCardFormInner({
     <form onSubmit={handleSubmit}>
       <div className="bg-white rounded-lg p-3 mb-3">
         <PaymentElement
-          options={{
-            layout: "tabs",
-          }}
+          options={{ layout: "tabs" }}
+          onChange={handleCardChange}
         />
       </div>
       {error && (

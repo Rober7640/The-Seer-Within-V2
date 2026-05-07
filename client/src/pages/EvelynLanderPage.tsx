@@ -18,6 +18,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Sparkles, Send } from "lucide-react";
 import { trackPageView, trackEvelynLanderCTA } from "@/lib/facebook";
+import TurnstileWidget from "@/components/TurnstileWidget";
+import { calculateTypingDelay, sleep } from "@/lib/typingAnimation";
 
 const AUTH_TOKEN_KEY = "seer_auth_token";
 const EVELYN_PERSONA_SLUG = "evelyn-cross";
@@ -128,6 +130,10 @@ export default function EvelynLanderPage() {
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  // Cloudflare Turnstile — required on the first user message (PRD §7.3).
+  // Token is single-use; resetKey bumps issue a fresh one after each send.
+  const [turnstileToken, setTurnstileToken] = useState("");
+  const [turnstileResetKey, setTurnstileResetKey] = useState(0);
 
   const params = readParams();
   const sessionToken = getSessionToken();
@@ -225,6 +231,8 @@ export default function EvelynLanderPage() {
     setDraft("");
     setSending(true);
 
+    const requestStart = Date.now();
+
     try {
       const res = await fetch("/api/evelyn-lander/turn", {
         method: "POST",
@@ -232,17 +240,51 @@ export default function EvelynLanderPage() {
         body: JSON.stringify({
           sessionToken,
           userMessage: text,
+          // Server only verifies on first user message; after that we omit it.
+          ...(userTurns === 0 ? { turnstileToken } : {}),
           // Send everything BEFORE the new user message — server appends it.
           history: messages,
         }),
       });
-      if (!res.ok) throw new Error(`turn failed: ${res.status}`);
+      if (!res.ok) {
+        // Surface Turnstile failures specifically so the user gets actionable copy.
+        let code: string | undefined;
+        try {
+          const body = await res.json();
+          code = body?.code;
+        } catch {
+          // ignore non-JSON error bodies
+        }
+        // Roll back the optimistic user message + reissue a fresh Turnstile token.
+        setMessages(messages);
+        saveHistory(messages);
+        setDraft(text);
+        setTurnstileResetKey((k) => k + 1);
+        if (code === "TURNSTILE_FAILED") {
+          setErrorMsg("Security check failed. Please try again in a moment.");
+        } else if (res.status === 429) {
+          setErrorMsg("You're sending messages too quickly. Take a breath and try again shortly.");
+        } else {
+          setErrorMsg("Something interrupted the connection. Try sending again.");
+        }
+        return;
+      }
       const data: TurnResponse = await res.json();
+
+      // Hold the reply behind a read-speed delay so it doesn't feel instant.
+      // Subtract elapsed network time so we don't double-wait when Haiku is slow.
+      const elapsed = Date.now() - requestStart;
+      const remaining = calculateTypingDelay(data.reply) - elapsed;
+      if (remaining > 0) await sleep(remaining);
 
       const finalHistory: ChatMessage[] = [...nextHistory, { role: "assistant", content: data.reply }];
       setMessages(finalHistory);
       saveHistory(finalHistory);
       setUserTurns((n) => n + 1);
+      // Token was single-use; bump resetKey so the widget issues a fresh one
+      // even though we won't send it on subsequent turns (defensive — keeps the
+      // widget healthy if a refresh resumes mid-session).
+      setTurnstileResetKey((k) => k + 1);
       if (data.ctaReady) setCtaReady(true);
     } catch {
       // Roll back the user message on hard failure so the user can retry.
@@ -291,17 +333,26 @@ export default function EvelynLanderPage() {
           clearSession();
           navigate(`/login?${emailQp.slice(1)}${nextQp}`, { replace: true });
           return;
-        case "register":
+        case "register": {
           // Persona context must travel through the register flow so the
           // verification email URL embeds ?persona=evelyn-cross. Without it,
           // post-verification the user lands on /reading with no persona and
           // gets bounced to /personas instead of Evelyn's chat.
+          //
+          // We also pass `source=evelyn-lander` + `landerSessionToken` so the
+          // /api/auth/register handler can (a) link the lander session row to
+          // the new user and (b) schedule the Evelyn unverified-track drip.
+          // `bucket` is forwarded too so Drip 1's static content can use the
+          // bucket-specific phrase.
+          const sourceQp = `&source=evelyn-lander&landerSessionToken=${encodeURIComponent(sessionToken)}`;
+          const bucketQp = params.bucket ? `&bucket=${encodeURIComponent(params.bucket)}` : "";
           clearSession();
           navigate(
-            `/login?mode=signup${emailQp}&persona=${EVELYN_PERSONA_SLUG}`,
+            `/login?mode=signup${emailQp}&persona=${EVELYN_PERSONA_SLUG}${sourceQp}${bucketQp}`,
             { replace: true },
           );
           return;
+        }
         case "already_logged_in":
           clearSession();
           navigate(READING_DEST, { replace: true });
@@ -428,6 +479,9 @@ export default function EvelynLanderPage() {
               I already have an account
             </button>
           </div>
+
+          {/* Invisible Turnstile — required on the first user message. */}
+          <TurnstileWidget onToken={setTurnstileToken} resetKey={turnstileResetKey} />
         </CardContent>
       </Card>
     </div>
@@ -455,11 +509,11 @@ function ChatBubble({ role, content }: { role: "user" | "assistant"; content: st
 
 function TypingIndicator() {
   return (
-    <div className="flex">
-      <div className="bg-purple-50 rounded-2xl rounded-tl-sm px-4 py-3 inline-flex items-center gap-1">
-        <span className="w-1.5 h-1.5 bg-purple-400 rounded-full animate-bounce [animation-delay:-0.3s]" />
-        <span className="w-1.5 h-1.5 bg-purple-400 rounded-full animate-bounce [animation-delay:-0.15s]" />
-        <span className="w-1.5 h-1.5 bg-purple-400 rounded-full animate-bounce" />
+    <div className="flex justify-start w-full animate-fade-in">
+      <div className="bg-white border border-gray-100 rounded-2xl rounded-bl-none px-4 py-3 shadow-sm flex items-center gap-1">
+        <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce [animation-delay:-0.3s]" />
+        <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce [animation-delay:-0.15s]" />
+        <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" />
       </div>
     </div>
   );

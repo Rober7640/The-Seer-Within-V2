@@ -48,6 +48,7 @@ const FollowUpsDashboard = lazy(() => import("@/pages/admin/FollowUpsDashboard")
 const EmailDripMigratedV1 = lazy(() => import("@/pages/admin/EmailDripMigratedV1"));
 const EmailDripNewV1 = lazy(() => import("@/pages/admin/EmailDripNewV1"));
 const AidenFollowUpsPage = lazy(() => import("@/pages/admin/AidenFollowUpsPage"));
+const EvelynFollowUpsPage = lazy(() => import("@/pages/admin/EvelynFollowUpsPage"));
 const MarketplacePage = lazy(() => import("@/pages/admin/MarketplacePage"));
 const SettingsPage = lazy(() => import("@/pages/admin/SettingsPage"));
 const PriceTestDashboard = lazy(() => import("@/pages/admin/PriceTestDashboard"));
@@ -150,6 +151,7 @@ function Router() {
         <Route path="/admin/email-drip/migrated-v1" component={EmailDripMigratedV1} />
         <Route path="/admin/email-drip/new-v1" component={EmailDripNewV1} />
         <Route path="/admin/aiden-follow-ups" component={AidenFollowUpsPage} />
+        <Route path="/admin/evelyn-follow-ups" component={EvelynFollowUpsPage} />
         <Route path="/admin/marketplace" component={MarketplacePage} />
         <Route path="/admin/settings" component={SettingsPage} />
         <Route path="/admin/price-test" component={PriceTestDashboard} />
