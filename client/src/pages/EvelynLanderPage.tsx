@@ -19,6 +19,7 @@ import { Button } from "@/components/ui/button";
 import { Sparkles, Send } from "lucide-react";
 import { trackPageView, trackEvelynLanderCTA } from "@/lib/facebook";
 import TurnstileWidget from "@/components/TurnstileWidget";
+import { calculateTypingDelay, sleep } from "@/lib/typingAnimation";
 
 const AUTH_TOKEN_KEY = "seer_auth_token";
 const EVELYN_PERSONA_SLUG = "evelyn-cross";
@@ -230,6 +231,8 @@ export default function EvelynLanderPage() {
     setDraft("");
     setSending(true);
 
+    const requestStart = Date.now();
+
     try {
       const res = await fetch("/api/evelyn-lander/turn", {
         method: "POST",
@@ -267,6 +270,12 @@ export default function EvelynLanderPage() {
         return;
       }
       const data: TurnResponse = await res.json();
+
+      // Hold the reply behind a read-speed delay so it doesn't feel instant.
+      // Subtract elapsed network time so we don't double-wait when Haiku is slow.
+      const elapsed = Date.now() - requestStart;
+      const remaining = calculateTypingDelay(data.reply) - elapsed;
+      if (remaining > 0) await sleep(remaining);
 
       const finalHistory: ChatMessage[] = [...nextHistory, { role: "assistant", content: data.reply }];
       setMessages(finalHistory);
@@ -500,11 +509,11 @@ function ChatBubble({ role, content }: { role: "user" | "assistant"; content: st
 
 function TypingIndicator() {
   return (
-    <div className="flex">
-      <div className="bg-purple-50 rounded-2xl rounded-tl-sm px-4 py-3 inline-flex items-center gap-1">
-        <span className="w-1.5 h-1.5 bg-purple-400 rounded-full animate-bounce [animation-delay:-0.3s]" />
-        <span className="w-1.5 h-1.5 bg-purple-400 rounded-full animate-bounce [animation-delay:-0.15s]" />
-        <span className="w-1.5 h-1.5 bg-purple-400 rounded-full animate-bounce" />
+    <div className="flex justify-start w-full animate-fade-in">
+      <div className="bg-white border border-gray-100 rounded-2xl rounded-bl-none px-4 py-3 shadow-sm flex items-center gap-1">
+        <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce [animation-delay:-0.3s]" />
+        <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce [animation-delay:-0.15s]" />
+        <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" />
       </div>
     </div>
   );
