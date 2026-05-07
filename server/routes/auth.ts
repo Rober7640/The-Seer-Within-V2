@@ -145,6 +145,9 @@ const changePasswordSchema = z.object({
 const resendVerificationSchema = z.object({
   email: z.string().email(),
   persona: z.string().optional(),
+  // Forwarded so the resent email matches the original "5 free minutes"
+  // copy for /evelyn lander signups (rather than reverting to the 3-min default).
+  source: z.string().max(32).optional(),
 });
 
 // Verification expiry is computed in PostgreSQL via sql`NOW() + INTERVAL ...`
@@ -229,7 +232,7 @@ router.post('/register', authLimiter, async (req: Request, res: Response) => {
 
     // Send verification email only in non-test environments
     if (!isTestEnv) {
-      sendVerificationEmail(user.email, user.firstName, verificationToken, persona).catch((err) => {
+      sendVerificationEmail(user.email, user.firstName, verificationToken, persona, source).catch((err) => {
         logger.error('Failed to send verification email:', err);
       });
     }
@@ -629,7 +632,7 @@ router.post('/resend-verification', authLimiter, async (req: Request, res: Respo
       return;
     }
 
-    const { email, persona: personaFromBody } = parseResult.data;
+    const { email, persona: personaFromBody, source: sourceFromBody } = parseResult.data;
 
     const result = await db.select()
       .from(users)
@@ -667,7 +670,7 @@ router.post('/resend-verification', authLimiter, async (req: Request, res: Respo
       personaSlug = personaRow[0]?.slug;
     }
 
-    await sendVerificationEmail(user.email, user.firstName, verificationToken, personaSlug);
+    await sendVerificationEmail(user.email, user.firstName, verificationToken, personaSlug, sourceFromBody);
 
     res.json({ success: true, message: 'If an unverified account exists, a verification email has been sent.' });
   } catch (error) {
