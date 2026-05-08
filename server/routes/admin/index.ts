@@ -20,6 +20,7 @@ import settingsRoutes from './settings';
 import emailDripRoutes from './emailDrip';
 import aidenFollowUpRoutes from './aidenFollowUps';
 import evelynFollowUpRoutes from './evelynFollowUps';
+import postPurchaseDripTestRoutes from './postPurchaseDripTest';
 import priceTestRoutes from './priceTest';
 import logger from '../../lib/logger';
 
@@ -190,6 +191,7 @@ router.use('/settings', settingsRoutes);
 router.use('/email-drip', emailDripRoutes);
 router.use('/aiden-follow-ups', aidenFollowUpRoutes);
 router.use('/evelyn-follow-ups', evelynFollowUpRoutes);
+router.use('/post-purchase-drip', postPurchaseDripTestRoutes);
 router.use('/price-test', priceTestRoutes);
 
 export default router;
