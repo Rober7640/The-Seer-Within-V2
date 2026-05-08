@@ -9,6 +9,7 @@ import { and, eq, sql } from 'drizzle-orm';
 import logger from '../lib/logger';
 import * as paypal from '../lib/paypal';
 import { maybeFireFirstPurchaseEvent } from '../lib/facebook';
+import { maybeSchedulePostPurchaseDrip } from '../lib/postPurchaseDripTrigger';
 
 const router = Router();
 
@@ -782,6 +783,7 @@ router.post('/paypal', async (req: Request, res: Response) => {
 
       // Fire FB first-purchase event (no-op if not first ever).
       maybeFireFirstPurchaseEvent(result.purchaseId).catch(() => { /* logged inside */ });
+      maybeSchedulePostPurchaseDrip(result.purchaseId).catch(() => { /* logged inside */ });
     } else {
       logger.info('PayPal webhook: order already processed or unknown', {
         orderId,
