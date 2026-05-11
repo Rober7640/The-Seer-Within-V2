@@ -9,6 +9,7 @@ import { BackgroundMusic } from "../components/BackgroundMusic";
 import { useConversation } from "../hooks/useConversation";
 import { Volume2, Send, Sparkles } from "lucide-react";
 import { Link } from "wouter";
+import { funnelPath } from "../lib/funnel";
 
 export default function ChatPage() {
   const {
@@ -34,7 +35,7 @@ export default function ChatPage() {
     // After successful purchase, redirect to upsell page
     if (sessionId && purchased === "true" && !redirected.current) {
       redirected.current = true;
-      navigate(`/welcome1?session_id=${sessionId}`);
+      navigate(`${funnelPath("/welcome1")}?session_id=${sessionId}`);
     }
   }, [searchString, navigate]);
 

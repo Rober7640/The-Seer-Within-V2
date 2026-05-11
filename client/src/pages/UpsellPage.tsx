@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import type { Bucket } from "@shared/types";
 import lavaStoneImage from "../assets/images/lava-stone.jpg";
+import { funnelPath } from "../lib/funnel";
 
 interface UserData {
   firstName: string;
@@ -147,7 +148,7 @@ export default function UpsellPage() {
   // Redirect to upsell2 immediately when complete
   useEffect(() => {
     if (isComplete && sessionId) {
-      navigate(`/welcome2?session_id=${sessionId}`);
+      navigate(`${funnelPath("/welcome2")}?session_id=${sessionId}`);
     }
   }, [isComplete, sessionId, navigate]);
 
@@ -181,7 +182,7 @@ export default function UpsellPage() {
         <div className="text-center">
           <p className="text-white/60 mb-4">{error}</p>
           <button
-            onClick={() => navigate("/")}
+            onClick={() => navigate(funnelPath("/"))}
             className="text-purple-400 hover:text-purple-300 transition-colors"
           >
             Return home
