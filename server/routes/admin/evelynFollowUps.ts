@@ -11,6 +11,7 @@ import {
   processEvelynVerifiedDripQueue,
   backfillEvelynVerifiedDripExtension,
 } from '../../lib/evelynVerifiedDripGenerator';
+import { processEvelynPostPurchaseDripQueue } from '../../lib/evelynPostPurchaseDripGenerator';
 import { buildFollowUpHtml } from '../../lib/emailTemplate';
 
 // Valid sequence numbers for the verified-not-purchased drip filter dropdown.
@@ -35,11 +36,12 @@ function isFullTemplateHtml(html: string): boolean {
 
 const router = Router();
 
-const SEQUENCE_TYPES = ['unverified', 'verified_nopurchase'] as const;
+const SEQUENCE_TYPES = ['unverified', 'verified_nopurchase', 'post_purchase'] as const;
 type SequenceType = (typeof SEQUENCE_TYPES)[number];
 
 function parseSequenceType(raw: unknown): SequenceType {
   if (raw === 'verified_nopurchase') return 'verified_nopurchase';
+  if (raw === 'post_purchase') return 'post_purchase';
   return 'unverified';
 }
 
@@ -75,7 +77,9 @@ router.get('/stats', async (req: Request, res: Response) => {
     const flagEnabled =
       sequenceType === 'verified_nopurchase'
         ? process.env.ENABLE_EVELYN_VERIFIED_DRIP === 'true'
-        : process.env.ENABLE_EVELYN_FOLLOWUPS === 'true';
+        : sequenceType === 'post_purchase'
+          ? process.env.ENABLE_POST_PURCHASE_DRIP === 'true'
+          : process.env.ENABLE_EVELYN_FOLLOWUPS === 'true';
 
     return res.json({
       sequenceType,
@@ -189,6 +193,18 @@ router.post('/trigger', async (req: Request, res: Response) => {
       });
     }
 
+    if (sequenceType === 'post_purchase') {
+      const stats = await processEvelynPostPurchaseDripQueue();
+      return res.json({
+        success: true,
+        sequenceType,
+        stats,
+        note: stats.flagEnabled
+          ? 'Post-purchase drip queue processed. Check stats for send counts.'
+          : 'ENABLE_POST_PURCHASE_DRIP flag is OFF — no emails were sent. Set env var to "true" on Railway to enable.',
+      });
+    }
+
     const stats = await processEvelynFollowupQueue();
     return res.json({
       success: true,
@@ -279,9 +295,14 @@ router.get('/preview/:id', async (req: Request, res: Response) => {
     const avatarUrl = avatarRel.startsWith('http') ? avatarRel : `${BASE_URL}${avatarRel}`;
 
     // CTA text differs by drip: unverified rows push verification, verified-
-    // not-purchased rows push back to Evelyn's chat.
+    // not-purchased rows return to Evelyn's chat, post-purchase rows soft-invite
+    // a return without urgency.
     const ctaText =
-      row.sequenceType === 'verified_nopurchase' ? 'Return to Evelyn' : 'Confirm Your Email';
+      row.sequenceType === 'verified_nopurchase'
+        ? 'Return to Evelyn'
+        : row.sequenceType === 'post_purchase'
+          ? 'Talk with Evelyn'
+          : 'Confirm Your Email';
 
     // Preview-only placeholder URLs — we don't want to mint a real magic-link
     // token just to render an admin preview. Real CTAs are minted at send time

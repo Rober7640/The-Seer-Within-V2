@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ChevronLeft, ChevronRight, Eye, X, PlayCircle } from "lucide-react";
 
-type SequenceType = "unverified" | "verified_nopurchase";
+type SequenceType = "unverified" | "verified_nopurchase" | "post_purchase";
 
 interface EvelynFollowupRow {
   id: string;
@@ -48,13 +48,20 @@ const sequenceLabel: Record<SequenceType, Record<number, string>> = {
     8: "+12d", 9: "+14d", 10: "+16d", 11: "+18d",
     12: "+20d", 13: "+22d",
   },
+  post_purchase: {
+    1: "+2d", 2: "+4d", 3: "+6d", 4: "+8d", 5: "+10d",
+    6: "+12d", 7: "+14d", 8: "+16d", 9: "+18d", 10: "+20d",
+  },
 };
 
 // Per-tab sequence numbers. Unverified drip stays at 3; verified_nopurchase
 // extends to 13 (emails 4–13 added at 48h spacing for a longer nurture window).
+// post_purchase is a 10-email pastoral-care drip starting +48h after a user's
+// FIRST completed purchase, then 48h between each.
 const sequenceNumbers: Record<SequenceType, number[]> = {
   unverified: [1, 2, 3],
   verified_nopurchase: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13],
+  post_purchase: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
 };
 
 const TAB_META: Record<SequenceType, { title: string; description: string; envFlag: string; flagOnNote: string; flagOffNote: string }> = {
@@ -77,6 +84,16 @@ const TAB_META: Record<SequenceType, { title: string; description: string; envFl
       "ENABLE_EVELYN_VERIFIED_DRIP = true — cron WILL send verified-drip emails to ripe pending rows.",
     flagOffNote:
       "ENABLE_EVELYN_VERIFIED_DRIP is OFF — cron and manual trigger will not send any verified-drip emails. Set the env var to 'true' on Railway to enable.",
+  },
+  post_purchase: {
+    title: "Post-Purchase",
+    description:
+      "Pastoral-care nurture for users on their FIRST completed purchase routed to Evelyn. 10 emails at 48h spacing (+2d through +20d). Cron runs every 5 min. Emails are Haiku-personalized at send time. Pastoral tone — never hard-sell, never discounts. Subsequent purchases do NOT halt the drip. Skips only on unsubscribe, email change, suspension, or staleness.",
+    envFlag: "ENABLE_POST_PURCHASE_DRIP",
+    flagOnNote:
+      "ENABLE_POST_PURCHASE_DRIP = true — cron WILL send post-purchase emails to ripe pending rows.",
+    flagOffNote:
+      "ENABLE_POST_PURCHASE_DRIP is OFF — cron and manual trigger will not send any post-purchase emails. Set the env var to 'true' on Railway to enable.",
   },
 };
 
@@ -414,7 +431,9 @@ export default function EvelynFollowUpsPage() {
                       <td colSpan={12} className="p-8 text-center text-gray-600 text-sm">
                         {activeTab === "unverified"
                           ? "No unverified follow-ups yet. Rows are created when a user signs up via /evelyn lander."
-                          : "No verified-drip rows yet. Rows are created when an /evelyn lander user verifies their email."}
+                          : activeTab === "verified_nopurchase"
+                            ? "No verified-drip rows yet. Rows are created when an /evelyn lander user verifies their email."
+                            : "No post-purchase rows yet. Rows are created on a user's FIRST completed purchase routed to Evelyn."}
                       </td>
                     </tr>
                   )}

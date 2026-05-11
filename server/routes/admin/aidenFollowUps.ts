@@ -11,6 +11,7 @@ import {
   processVerifiedDripQueue,
   backfillAidenVerifiedDripExtension,
 } from '../../lib/aidenVerifiedDripGenerator';
+import { processAidenPostPurchaseDripQueue } from '../../lib/aidenPostPurchaseDripGenerator';
 
 const router = Router();
 
@@ -21,7 +22,7 @@ const VALID_SEQUENCE_NUMBERS: ReadonlySet<string> = new Set([
   '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13',
 ]);
 
-const SEQUENCE_TYPES = ['unverified', 'verified_nopurchase'] as const;
+const SEQUENCE_TYPES = ['unverified', 'verified_nopurchase', 'post_purchase'] as const;
 type SequenceType = (typeof SEQUENCE_TYPES)[number];
 
 // Parse and validate the ?sequenceType query param, defaulting to 'unverified'
@@ -29,6 +30,7 @@ type SequenceType = (typeof SEQUENCE_TYPES)[number];
 // seeing the original data set.
 function parseSequenceType(raw: unknown): SequenceType {
   if (raw === 'verified_nopurchase') return 'verified_nopurchase';
+  if (raw === 'post_purchase') return 'post_purchase';
   return 'unverified';
 }
 
@@ -64,7 +66,9 @@ router.get('/stats', async (req: Request, res: Response) => {
     const flagEnabled =
       sequenceType === 'verified_nopurchase'
         ? process.env.ENABLE_AIDEN_VERIFIED_DRIP === 'true'
-        : process.env.ENABLE_AIDEN_FOLLOWUPS === 'true';
+        : sequenceType === 'post_purchase'
+          ? process.env.ENABLE_POST_PURCHASE_DRIP === 'true'
+          : process.env.ENABLE_AIDEN_FOLLOWUPS === 'true';
 
     return res.json({
       sequenceType,
@@ -175,6 +179,18 @@ router.post('/trigger', async (req: Request, res: Response) => {
         note: stats.flagEnabled
           ? 'Verified-drip queue processed. Check stats for send counts.'
           : 'ENABLE_AIDEN_VERIFIED_DRIP flag is OFF — no emails were sent. Set env var to "true" on Railway to enable.',
+      });
+    }
+
+    if (sequenceType === 'post_purchase') {
+      const stats = await processAidenPostPurchaseDripQueue();
+      return res.json({
+        success: true,
+        sequenceType,
+        stats,
+        note: stats.flagEnabled
+          ? 'Post-purchase drip queue processed. Check stats for send counts.'
+          : 'ENABLE_POST_PURCHASE_DRIP flag is OFF — no emails were sent. Set env var to "true" on Railway to enable.',
       });
     }
 

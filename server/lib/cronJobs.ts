@@ -11,6 +11,8 @@ import { processAidenFollowupQueue } from './aidenFollowupEmailGenerator';
 import { processVerifiedDripQueue } from './aidenVerifiedDripGenerator';
 import { processEvelynFollowupQueue } from './evelynFollowupEmailGenerator';
 import { processEvelynVerifiedDripQueue } from './evelynVerifiedDripGenerator';
+import { processEvelynPostPurchaseDripQueue } from './evelynPostPurchaseDripGenerator';
+import { processAidenPostPurchaseDripQueue } from './aidenPostPurchaseDripGenerator';
 import { reconcilePendingPurchases } from './reconciliationProcessor';
 import logger from './logger';
 
@@ -24,6 +26,8 @@ let isAidenFollowupProcessing = false;
 let isAidenVerifiedDripProcessing = false;
 let isEvelynFollowupProcessing = false;
 let isEvelynVerifiedDripProcessing = false;
+let isEvelynPostPurchaseDripProcessing = false;
+let isAidenPostPurchaseDripProcessing = false;
 let isReconciliationProcessing = false;
 
 /**
@@ -265,6 +269,56 @@ export function initializeCronJobs(): void {
         logger.error('Cron: Evelyn verified-drip processing failed', { error: (error as Error).message });
       } finally {
         isEvelynVerifiedDripProcessing = false;
+      }
+    },
+    { timezone },
+  );
+
+  // Evelyn post-purchase pastoral-care drip — every 5 minutes, offset 4 min.
+  // 10-email pastoral nurture starting +48h after a user's FIRST completed
+  // purchase routed to Evelyn. No-ops when ENABLE_POST_PURCHASE_DRIP is not 'true'.
+  cron.schedule(
+    '4-59/5 * * * *',
+    async () => {
+      if (isEvelynPostPurchaseDripProcessing) {
+        logger.info('Cron: Evelyn post-purchase drip already running, skipping');
+        return;
+      }
+      isEvelynPostPurchaseDripProcessing = true;
+      try {
+        const stats = await processEvelynPostPurchaseDripQueue();
+        if (stats.processed > 0) {
+          logger.info('Cron: Evelyn post-purchase drip batch complete', stats);
+        }
+      } catch (error) {
+        logger.error('Cron: Evelyn post-purchase drip processing failed', { error: (error as Error).message });
+      } finally {
+        isEvelynPostPurchaseDripProcessing = false;
+      }
+    },
+    { timezone },
+  );
+
+  // Aiden post-purchase pastoral-care drip — every 5 minutes, offset 4 min.
+  // 10-email pastoral nurture starting +48h after a user's FIRST completed
+  // purchase routed to Aiden. No-ops when ENABLE_POST_PURCHASE_DRIP is not 'true'.
+  cron.schedule(
+    '4-59/5 * * * *',
+    async () => {
+      if (isAidenPostPurchaseDripProcessing) {
+        logger.info('Cron: Aiden post-purchase drip already running, skipping');
+        return;
+      }
+      isAidenPostPurchaseDripProcessing = true;
+      try {
+        const stats = await processAidenPostPurchaseDripQueue();
+        if (stats.processed > 0) {
+          logger.info('Cron: Aiden post-purchase drip batch complete', stats);
+        }
+      } catch (error) {
+        logger.error('Cron: Aiden post-purchase drip processing failed', { error: (error as Error).message });
+      } finally {
+        isAidenPostPurchaseDripProcessing = false;
       }
     },
     { timezone },
