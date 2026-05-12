@@ -17,7 +17,6 @@ import { CosmicBackground } from "@/components/CosmicBackground";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Sparkles, Send } from "lucide-react";
-import { trackPageView, trackEvelynLanderCTA } from "@/lib/facebook";
 import TurnstileWidget from "@/components/TurnstileWidget";
 import { calculateTypingDelay, sleep } from "@/lib/typingAnimation";
 
@@ -143,10 +142,6 @@ export default function EvelynLanderPage() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages.length, sending]);
-
-  useEffect(() => {
-    trackPageView();
-  }, []);
 
   // PRD §3 critical rule: logged-in V2 user skips the lander entirely.
   useEffect(() => {
@@ -300,9 +295,6 @@ export default function EvelynLanderPage() {
   async function handleCta() {
     setPhase("handing_off");
     setErrorMsg(null);
-    // Fire BEFORE the network call so a slow/failed handoff still records the
-    // intent. trackEvelynLanderCTA never throws (defensive checks inside).
-    trackEvelynLanderCTA(segment ?? undefined);
     try {
       const res = await fetch("/api/evelyn-lander/cta", {
         method: "POST",

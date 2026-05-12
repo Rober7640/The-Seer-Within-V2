@@ -5,8 +5,6 @@ import { CosmicBackground } from "@/components/CosmicBackground";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Sparkles, LogIn, UserPlus, Mail } from "lucide-react";
-import { trackLead, trackCompleteRegistration } from "@/lib/facebook";
-
 // Open-redirect protection: `next` may only point at /reading (with optional
 // query/hash). Anything else is silently dropped so we never bounce a user
 // off-platform after auth.
@@ -48,12 +46,6 @@ export default function LoginPage() {
     const verified = params.get("verified");
     const urlToken = params.get("token");
 
-    // Fire CompleteRegistration once per account on first successful verify.
-    // Skip 'already' (re-clicks of the same email link) so we don't double-count.
-    if (verified === "success") {
-      trackCompleteRegistration();
-    }
-
     if ((verified === "success" || verified === "already") && urlToken) {
       // Store the JWT and redirect — works even on a different device/browser
       localStorage.setItem("seer_auth_token", urlToken);
@@ -93,9 +85,6 @@ export default function LoginPage() {
               }
             : undefined,
         );
-        // Fire Lead now: account is created (verification pending). Pairs with
-        // CompleteRegistration which fires once they verify. Wrapped — never throws.
-        trackLead(email, firstName);
         if (data.requiresVerification) {
           setShowVerificationSent(true);
           setResendEmail(email);

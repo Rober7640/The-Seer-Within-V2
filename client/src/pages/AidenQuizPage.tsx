@@ -5,7 +5,6 @@ import { useAuth, authFetch } from "@/hooks/useAuth";
 import { QUIZ_QUESTIONS, getEmailAppLink } from "@/lib/aidenQuizData";
 // Note: we use fetch() directly instead of apiRequest() because apiRequest
 // throws on non-200 responses, and we need to read the 409 body for EXISTING_ACCOUNT.
-import { trackPageView, trackLead, trackInitiateCheckout } from "@/lib/facebook";
 import TurnstileWidget from "@/components/TurnstileWidget";
 import { CosmicBackground } from "@/components/CosmicBackground";
 
@@ -68,11 +67,6 @@ export default function AidenQuizPage() {
     sessionStorage.setItem("aiden_quiz_token", token);
     return token;
   });
-
-  // Track page view
-  useEffect(() => {
-    trackPageView();
-  }, []);
 
   // Auth-based routing
   useEffect(() => {
@@ -160,7 +154,6 @@ export default function AidenQuizPage() {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ sessionToken: quizSessionToken, completedQuiz: true }),
           }).catch(() => {});
-          trackLead("");
           setFlowState("transition");
         }
       }, 250);
@@ -260,7 +253,6 @@ export default function AidenQuizPage() {
 
   const handleRescueHatch = useCallback(async () => {
     setRescueLoading(true);
-    trackInitiateCheckout(9.99, "USD", "Aiden Rescue");
     try {
       const res = await authFetch("/api/credits/checkout", {
         method: "POST",
