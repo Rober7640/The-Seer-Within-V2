@@ -37,6 +37,7 @@ import {
   UPSELL2_SHIPPING_CONFIRMED,
   UPSELL2_SOFT_DECLINE,
 } from "@/lib/upsell2Messages";
+import { currentFunnel } from "@/lib/funnel";
 
 export interface Message {
   id: string;
@@ -417,6 +418,7 @@ export function useUpsell2Chat({
           email: userData.email,
           firstName: userData.firstName,
           type: "full",
+          funnel: currentFunnel(),
         }),
       });
 
@@ -446,6 +448,7 @@ export function useUpsell2Chat({
             bucket: userData.bucket,
             originalSessionId: sessionId,
             type: "full",
+            funnel: currentFunnel(),
           }),
         });
 
@@ -499,6 +502,7 @@ export function useUpsell2Chat({
           email: userData.email,
           firstName: userData.firstName,
           type: "downsell",
+          funnel: currentFunnel(),
         }),
       });
 
@@ -528,6 +532,7 @@ export function useUpsell2Chat({
             bucket: userData.bucket,
             originalSessionId: sessionId,
             type: "downsell",
+            funnel: currentFunnel(),
           }),
         });
 

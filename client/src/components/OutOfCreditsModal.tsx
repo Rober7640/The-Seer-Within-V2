@@ -18,8 +18,10 @@ interface OutOfCreditsModalProps {
 }
 
 const FALLBACK_TIERS: PricingTier[] = [
-  { packageType: "starter", coins: 180, bonusCoins: 0, totalCoins: 180, priceUsd: 999, label: "180 coins" },
   { packageType: "popular", coins: 360, bonusCoins: 180, totalCoins: 540, priceUsd: 1999, label: "540 coins" },
+  { packageType: "best_value", coins: 540, bonusCoins: 360, totalCoins: 900, priceUsd: 2999, label: "900 coins" },
+  { packageType: "premium", coins: 1000, bonusCoins: 800, totalCoins: 1800, priceUsd: 4999, label: "1800 coins", badge: "MOST POPULAR" },
+  { packageType: "whale", coins: 2000, bonusCoins: 2500, totalCoins: 4500, priceUsd: 9999, label: "4500 coins", badge: "BEST DEAL" },
 ];
 
 // Circular countdown SVG ring

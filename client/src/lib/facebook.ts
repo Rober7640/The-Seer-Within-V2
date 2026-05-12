@@ -215,3 +215,40 @@ export function trackUpsellPurchase(value: number, currency: string = 'USD', ema
     content_name: contentName,
   });
 }
+
+// Custom "Upsell2" event used by the V1-FB funnel /eve_1/success page so the
+// Manifestation Bracelet purchase shows up as a distinct event line in Meta
+// Events Manager (separate from the Upsell event fired for the Volcanic
+// Stone). V1 (email-traffic) /success continues to fire trackUpsellPurchase
+// → "Upsell" so historical reporting is unaffected.
+export function trackUpsell2Purchase(
+  value: number,
+  currency: string = 'USD',
+  email?: string,
+  contentName: string = 'Manifestation Bracelet',
+): void {
+  const dedupKey = `upsell2_purchase_tracked_${contentName}_${value}`;
+  if (typeof window !== 'undefined' && sessionStorage.getItem(dedupKey)) {
+    return;
+  }
+  if (typeof window !== 'undefined') {
+    sessionStorage.setItem(dedupKey, 'true');
+  }
+
+  const eventId = generateEventId();
+
+  if (typeof window !== 'undefined' && window.fbq) {
+    window.fbq('trackCustom', 'Upsell2', {
+      value,
+      currency,
+      content_name: contentName,
+    }, { eventID: eventId });
+  }
+
+  sendServerEvent('Upsell2', eventId, {
+    value,
+    currency,
+    email,
+    content_name: contentName,
+  });
+}

@@ -33,6 +33,7 @@ import {
   UPSELL_SHIPPING_CONFIRMED,
 } from "@/lib/upsellMessages";
 import { getTrackdeskClickId } from "@/lib/facebook";
+import { currentFunnel } from "@/lib/funnel";
 
 // ============================================
 // TYPES
@@ -345,6 +346,7 @@ export function useUpsellChat({
           checkoutSessionId: sessionId,
           email: userData.email,
           firstName: userData.firstName,
+          funnel: currentFunnel(),
         }),
       });
 
@@ -368,6 +370,7 @@ export function useUpsellChat({
             bucket: userData.bucket,
             originalSessionId: sessionId,
             trackdeskClickId: getTrackdeskClickId(),
+            funnel: currentFunnel(),
           }),
         });
 

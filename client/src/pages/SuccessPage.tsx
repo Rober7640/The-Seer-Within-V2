@@ -3,8 +3,9 @@ import { useSearch } from "wouter";
 import { CosmicBackground } from "../components/CosmicBackground";
 import { Link } from "wouter";
 import { CheckCircle, Package, Mail, Sparkles, Gem } from "lucide-react";
-import { trackPurchase, trackUpsellPurchase } from "../lib/facebook";
+import { trackPurchase, trackUpsellPurchase, trackUpsell2Purchase } from "../lib/facebook";
 import { trackGAdsPurchase } from "../lib/gtm";
+import { isFbFunnel } from "../lib/funnel";
 
 interface OrderData {
   firstName: string;
@@ -150,10 +151,17 @@ export default function SuccessPage() {
           setHasUpsell(boughtUpsell1);
           setHasUpsell2(boughtUpsell2);
 
-          // Track Upsell 2 event on /success load (fires once per session)
+          // Track Upsell 2 event on /success load (fires once per session).
+          // V1-FB funnel (/eve_1/success) fires the distinct "Upsell2" custom
+          // event so Meta Events Manager separates the two upsell tiers; V1
+          // /success keeps firing "Upsell" for historical continuity.
           if (boughtUpsell2 && sessionId) {
             const amount = (data.upsell2Amount || 4700) / 100;
-            trackUpsellPurchase(amount, "USD", data.email, "Manifestation Bracelet");
+            if (isFbFunnel()) {
+              trackUpsell2Purchase(amount, "USD", data.email, "Manifestation Bracelet");
+            } else {
+              trackUpsellPurchase(amount, "USD", data.email, "Manifestation Bracelet");
+            }
             trackGAdsPurchase("upsell2", amount, sessionId);
           }
         }

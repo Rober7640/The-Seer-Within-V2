@@ -6,6 +6,7 @@ import { Upsell2CTA, Upsell2DownsellCTA, ShippingForm, QuickReplies } from '../c
 import { useUpsell2Chat, Message } from '../hooks/useUpsell2Chat';
 import { trackUpsellPurchase } from '../lib/facebook';
 import { trackGAdsPurchase } from '../lib/gtm';
+import { funnelPath } from '../lib/funnel';
 import { Volume2, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -202,7 +203,7 @@ export default function Upsell2Page() {
       // even before the DB is updated (belt-and-suspenders approach)
       const upsell1Flag = userData?.upsellPurchased ? '&upsell=true' : '';
       const upsell2Flag = upsell2Bought ? '&upsell2=true' : '';
-      navigate(`/success?session_id=${sessionId}${upsell1Flag}${upsell2Flag}`);
+      navigate(`${funnelPath("/success")}?session_id=${sessionId}${upsell1Flag}${upsell2Flag}`);
     }
   }, [isComplete, sessionId, navigate, userData?.upsellPurchased, upsell2Bought]);
 
@@ -233,7 +234,7 @@ export default function Upsell2Page() {
         <div className="text-center">
           <p className="text-white/60 mb-4">{error}</p>
           <button
-            onClick={() => navigate('/')}
+            onClick={() => navigate(funnelPath('/'))}
             className="text-purple-400 hover:text-purple-300 transition-colors"
             data-testid="link-return-home"
           >

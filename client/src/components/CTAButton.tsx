@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'wouter';
+import { funnelPath } from '@/lib/funnel';
 
 export function CTAButton({ label = "Yes Evelyn, Please Begin My FREE Reading!" }: { label?: string }) {
   const [enabled, setEnabled] = useState(false);
@@ -12,7 +13,7 @@ export function CTAButton({ label = "Yes Evelyn, Please Begin My FREE Reading!" 
 
   if (!enabled) {
     return (
-      <button 
+      <button
         disabled
         className="w-full py-4 px-6 rounded-lg bg-gray-100 text-gray-400 font-semibold cursor-not-allowed border border-gray-200"
         data-testid="button-cta-disabled"
@@ -23,7 +24,7 @@ export function CTAButton({ label = "Yes Evelyn, Please Begin My FREE Reading!" 
   }
 
   return (
-    <Link href="/chat">
+    <Link href={funnelPath('/chat')}>
       <button 
         className="w-full py-4 px-6 rounded-lg bg-gradient-to-r from-purple-600 to-purple-800 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300 animate-cta-appear hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
         data-testid="button-cta-enabled"

@@ -17,6 +17,7 @@ import {
   getPriceQuestionResponse
 } from '@/lib/intent'
 import { trackLead, trackInitiateCheckout, getTrackdeskClickId } from '@/lib/facebook'
+import { currentFunnel } from '@/lib/funnel'
 import { trackGAdsLead, trackGAdsCheckout } from '@/lib/gtm'
 
 const STORAGE_KEY = 'seer_conversation'
@@ -367,6 +368,7 @@ export function useConversation() {
           firstName: currentChat.userData.firstName,
           bucket: currentChat.userData.bucket,
           trackdeskClickId: getTrackdeskClickId(),
+          funnel: currentFunnel(),
         }),
       })
 
@@ -1190,6 +1192,7 @@ export function useConversation() {
           bucket: chat.userData.bucket,
           type,
           trackdeskClickId: getTrackdeskClickId(),
+          funnel: currentFunnel(),
         }),
       })
       const { url } = await response.json()

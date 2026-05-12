@@ -71,13 +71,22 @@ function Router() {
   return (
     <Suspense fallback={<LazyFallback />}>
       <Switch>
-        {/* Existing funnel routes */}
+        {/* Existing funnel routes (V1 — email traffic) */}
         <Route path="/" component={LandingPage} />
         <Route path="/chat" component={ChatPage} />
         <Route path="/welcome1" component={UpsellPage} />
         <Route path="/welcome2" component={Upsell2Page} />
         <Route path="/success" component={SuccessPage} />
         <Route path="/upsell-test" component={UpsellTestPage} />
+
+        {/* V1-FB funnel routes (Facebook ad traffic) — same components, new
+            URLs so FB Events Manager can segment by event_source_url and
+            Stripe products carry the "- FB" suffix. */}
+        <Route path="/eve_1" component={LandingPage} />
+        <Route path="/eve_1/chat" component={ChatPage} />
+        <Route path="/eve_1/welcome1" component={UpsellPage} />
+        <Route path="/eve_1/welcome2" component={Upsell2Page} />
+        <Route path="/eve_1/success" component={SuccessPage} />
         <Route path="/privacy" component={PrivacyPage} />
         <Route path="/terms" component={TermsPage} />
         <Route path="/refund" component={RefundPage} />

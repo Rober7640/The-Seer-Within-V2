@@ -20,10 +20,10 @@ interface BuyCreditsModalProps {
 }
 
 const FALLBACK_TIERS: PricingTier[] = [
-  { packageType: "starter", coins: 180, bonusCoins: 0, totalCoins: 180, priceUsd: 999, label: "180 coins" },
   { packageType: "popular", coins: 360, bonusCoins: 180, totalCoins: 540, priceUsd: 1999, label: "540 coins" },
-  { packageType: "best_value", coins: 540, bonusCoins: 360, totalCoins: 900, priceUsd: 2999, label: "900 coins", badge: "MOST POPULAR" },
-  { packageType: "premium", coins: 720, bonusCoins: 1080, totalCoins: 1800, priceUsd: 3999, label: "1800 coins" },
+  { packageType: "best_value", coins: 540, bonusCoins: 360, totalCoins: 900, priceUsd: 2999, label: "900 coins" },
+  { packageType: "premium", coins: 1000, bonusCoins: 800, totalCoins: 1800, priceUsd: 4999, label: "1800 coins", badge: "MOST POPULAR" },
+  { packageType: "whale", coins: 2000, bonusCoins: 2500, totalCoins: 4500, priceUsd: 9999, label: "4500 coins", badge: "BEST DEAL" },
 ];
 
 export default function BuyCreditsModal({
@@ -38,7 +38,7 @@ export default function BuyCreditsModal({
   const { refreshUser } = useAuth();
   const tiers = pricingTiers && pricingTiers.length > 0 ? pricingTiers : FALLBACK_TIERS;
   const [selectedPackage, setSelectedPackage] = useState<string>(
-    () => tiers.find((t) => t.badge)?.packageType ?? tiers[0]?.packageType ?? "popular",
+    () => tiers.findLast((t) => t.badge)?.packageType ?? tiers[0]?.packageType ?? "popular",
   );
   // Log checkout view when modal opens
   useEffect(() => {

@@ -77,10 +77,16 @@ import {
 import { sendFacebookEvent } from "./lib/facebook";
 
 // Zod schemas for request validation
+// `funnel` is an optional marker the FB-traffic flow (/eve_1) sends so we can
+// branch product names, AWeber tags, and success/cancel URLs without touching
+// the V1 (email-traffic) code path.
+const funnelSchema = z.literal("v1-fb").optional();
+
 const upsellChargeSchema = z.object({
   checkoutSessionId: z.string().min(1),
   email: z.string().email().optional(),
   firstName: z.string().optional(),
+  funnel: funnelSchema,
 });
 
 const upsellFallbackSchema = z.object({
@@ -88,6 +94,7 @@ const upsellFallbackSchema = z.object({
   firstName: z.string().min(1),
   bucket: z.string().min(1),
   originalSessionId: z.string().min(1),
+  funnel: funnelSchema,
 });
 
 const shippingSaveSchema = z.object({
@@ -110,6 +117,7 @@ const upsell2ChargeSchema = z.object({
   email: z.string().email().optional(),
   firstName: z.string().optional(),
   type: z.enum(["full", "downsell"]),
+  funnel: funnelSchema,
 });
 
 const upsell2FallbackSchema = z.object({
@@ -118,6 +126,7 @@ const upsell2FallbackSchema = z.object({
   bucket: z.string().min(1),
   originalSessionId: z.string().min(1),
   type: z.enum(["full", "downsell"]),
+  funnel: funnelSchema,
 });
 
 const upsell2ReadingSchema = z.object({
@@ -130,6 +139,44 @@ const upsell2ReadingSchema = z.object({
   }),
   concern: z.string().optional(),
 });
+
+// V1-FB funnel helpers — see /eve_1 routes on the client and project memory
+// "V1-FB Funnel" decisions doc. Customer-visible product names get a "- FB"
+// suffix, AWeber tags get a "-fb" suffix, and inter-page Stripe redirects
+// stay inside the /eve_1 path so the FB funnel preserves URL-based event
+// segmentation in Meta Events Manager.
+type FunnelId = "v1-fb" | undefined;
+
+function isFbFunnel(funnel: FunnelId): boolean {
+  return funnel === "v1-fb";
+}
+
+function fbSuffix(funnel: FunnelId): string {
+  return isFbFunnel(funnel) ? " - FB" : "";
+}
+
+function fbTagSuffix(funnel: FunnelId): string {
+  return isFbFunnel(funnel) ? "-fb" : "";
+}
+
+function funnelPath(v1Path: string, funnel: FunnelId): string {
+  if (!isFbFunnel(funnel)) return v1Path;
+  if (v1Path === "/") return "/eve_1";
+  return `/eve_1${v1Path}`;
+}
+
+// Tag the "seer-within" / "seer-within-upsell" / "seer-within-upsell2" base
+// AWeber tags with a "-fb" suffix when the user is in the FB funnel. Other
+// tags (bucket name, "shipping-confirmed", bracelet variant, etc.) are passed
+// through unchanged so the existing segmentation logic still works.
+function fbifyAweberTags(tags: string[], funnel: FunnelId): string[] {
+  if (!isFbFunnel(funnel)) return tags;
+  return tags.map((t) =>
+    t === "seer-within" || t.startsWith("seer-within-")
+      ? `${t}-fb`
+      : t,
+  );
+}
 
 // Initialize Stripe only if key is provided
 const stripeKey = process.env.STRIPE_SECRET_KEY;
@@ -427,6 +474,9 @@ export async function registerRoutes(
         type = "main",
         trackdeskClickId,
       } = req.body as CheckoutRequest & { trackdeskClickId?: string };
+      const funnel: FunnelId =
+        req.body?.funnel === "v1-fb" ? "v1-fb" : undefined;
+      const productName = `Energy Clearing Ritual${fbSuffix(funnel)}`;
 
       // Mark as purchased in Supabase (optimistic - will be confirmed by webhook in production)
       if (email) {
@@ -463,7 +513,7 @@ export async function registerRoutes(
             price_data: {
               currency: "usd",
               product_data: {
-                name: "Energy Clearing Ritual",
+                name: productName,
                 description: `Personalized reading for ${firstName}`,
               },
               unit_amount: priceAmount,
@@ -473,7 +523,7 @@ export async function registerRoutes(
         ],
         mode: "payment",
         payment_intent_data: {
-          description: "Energy Clearing Ritual",
+          description: productName,
           setup_future_usage: "off_session",
           metadata: {
             firstName,
@@ -482,10 +532,11 @@ export async function registerRoutes(
             app: "the-seer-within",
             product: "energy_clearing_ritual",
             priceVariant: variantId,
+            ...(funnel && { funnel }),
           },
         },
-        success_url: `${getBaseUrl(req)}/welcome1?session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${getBaseUrl(req)}/chat?cancelled=true`,
+        success_url: `${getBaseUrl(req)}${funnelPath("/welcome1", funnel)}?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${getBaseUrl(req)}${funnelPath("/chat", funnel)}?cancelled=true`,
         metadata: {
           firstName,
           email,
@@ -494,6 +545,7 @@ export async function registerRoutes(
           app: "the-seer-within",
           product: "energy_clearing_ritual",
           priceVariant: variantId,
+          ...(funnel && { funnel }),
           ...(trackdeskClickId && { trackdeskClickId }),
         },
       });
@@ -532,6 +584,7 @@ export async function registerRoutes(
   app.post("/api/lead", async (req: Request, res: Response) => {
     try {
       const { email, firstName, bucket, location, timeOfDay, trackdeskClickId } = req.body;
+      const funnel: FunnelId = req.body?.funnel === "v1-fb" ? "v1-fb" : undefined;
 
       logger.info("Lead captured:", { email, firstName, bucket });
 
@@ -555,7 +608,7 @@ export async function registerRoutes(
       addSubscriberToList({
         email,
         name: firstName,
-        tags: [bucket || "website", "seer-within"],
+        tags: fbifyAweberTags([bucket || "website", "seer-within"], funnel),
       })
         .then((result) => {
           if (result.success) {
@@ -781,16 +834,21 @@ export async function registerRoutes(
                   : session.payment_intent.id;
 
               const purchaseType = session.metadata?.type || "main";
+              const sessionFunnel: FunnelId =
+                session.metadata?.funnel === "v1-fb" ? "v1-fb" : undefined;
 
               addPaidSubscriber({
                 email: conversation!.email!,
                 name: conversation!.firstName || undefined,
                 stripeOrderId: paymentIntentId,
-                tags: [
-                  conversation!.bucket || "seer-within",
-                  "paid",
-                  purchaseType === "downsell" ? "downsell" : "initial-purchase",
-                ],
+                tags: fbifyAweberTags(
+                  [
+                    conversation!.bucket || "seer-within",
+                    "paid",
+                    purchaseType === "downsell" ? "downsell" : "initial-purchase",
+                  ],
+                  sessionFunnel,
+                ),
               })
                 .then((result) => {
                   if (result.success) {
@@ -988,12 +1046,15 @@ export async function registerRoutes(
             `AWeber upsell - email: ${customerEmail}, name: ${customerName}`,
           );
 
+          const fallbackFunnel: FunnelId =
+            session.metadata?.funnel === "v1-fb" ? "v1-fb" : undefined;
+
           if (customerEmail) {
             addUpsellSubscriber({
               email: customerEmail,
               name: customerName,
               stripeOrderId: session.payment_intent as string,
-              tags: ["seer-within-upsell"],
+              tags: fbifyAweberTags(["seer-within-upsell"], fallbackFunnel),
               shipping: shippingDetails?.address
                 ? {
                     name: shippingDetails.name || "",
@@ -1043,7 +1104,13 @@ export async function registerRoutes(
         });
       }
 
-      const { checkoutSessionId, email, firstName } = parseResult.data;
+      const { checkoutSessionId, email, firstName, funnel } = parseResult.data;
+      // FB funnel uses the cleaner PRD-spec name; V1 keeps its historical
+      // "Volcanic Stone (aka Black Lava)" label so existing email-traffic
+      // receipts stay byte-identical to today.
+      const upsell1ProductName = isFbFunnel(funnel)
+        ? "Protection Ritual + Volcanic Stone - FB"
+        : "Volcanic Stone (aka Black Lava)";
 
       if (!stripe) {
         logger.warn("Stripe not configured - returning fallback");
@@ -1126,10 +1193,11 @@ export async function registerRoutes(
         payment_method: paymentMethodId,
         off_session: true,
         confirm: true,
-        description: "Volcanic Stone (aka Black Lava)",
+        description: upsell1ProductName,
         metadata: {
           product: "protection_ritual",
           originalSession: checkoutSessionId,
+          ...(funnel && { funnel }),
         },
       });
 
@@ -1149,7 +1217,7 @@ export async function registerRoutes(
             email: customerEmail,
             name: firstName,
             stripeOrderId: upsellPayment.id,
-            tags: ["seer-within-upsell"],
+            tags: fbifyAweberTags(["seer-within-upsell"], funnel),
           })
             .then(() => logger.info("1-click upsell: AWeber subscriber added (without shipping — shipping added on form submit)"))
             .catch((err) => logger.error("1-click upsell: AWeber error:", err));
@@ -1203,14 +1271,17 @@ export async function registerRoutes(
           });
         }
 
-        const { email, firstName, bucket, originalSessionId } =
+        const { email, firstName, bucket, originalSessionId, funnel } =
           parseResult.data;
         const trackdeskClickId = req.body?.trackdeskClickId as string | undefined;
+        const upsell1ProductName = isFbFunnel(funnel)
+          ? "Protection Ritual + Volcanic Stone - FB"
+          : "Volcanic Stone (aka Black Lava)";
 
         if (!stripe) {
           logger.warn("Stripe not configured - returning mock URL");
           return res.json({
-            url: `/welcome2?session_id=${encodeURIComponent(originalSessionId)}&fallback_session_id=mock_fallback`,
+            url: `${funnelPath("/welcome2", funnel)}?session_id=${encodeURIComponent(originalSessionId)}&fallback_session_id=mock_fallback`,
           });
         }
 
@@ -1222,7 +1293,7 @@ export async function registerRoutes(
               price_data: {
                 currency: "usd",
                 product_data: {
-                  name: "Volcanic Stone (aka Black Lava)",
+                  name: upsell1ProductName,
                   description: "Charged black lava protection talisman",
                 },
                 unit_amount: 4700,
@@ -1232,25 +1303,27 @@ export async function registerRoutes(
           ],
           mode: "payment",
           payment_intent_data: {
-            description: "Volcanic Stone (aka Black Lava)",
+            description: upsell1ProductName,
             metadata: {
               product: "protection_ritual",
               originalSession: originalSessionId,
               firstName,
               email,
+              ...(funnel && { funnel }),
             },
           },
           shipping_address_collection: {
             allowed_countries: ["US", "CA", "GB", "AU", "NZ", "SG"],
           },
-          success_url: `${getBaseUrl(req)}/welcome2?session_id=${encodeURIComponent(originalSessionId)}&fallback_session_id={CHECKOUT_SESSION_ID}`,
-          cancel_url: `${getBaseUrl(req)}/welcome1?session_id=${encodeURIComponent(originalSessionId)}&declined=true`,
+          success_url: `${getBaseUrl(req)}${funnelPath("/welcome2", funnel)}?session_id=${encodeURIComponent(originalSessionId)}&fallback_session_id={CHECKOUT_SESSION_ID}`,
+          cancel_url: `${getBaseUrl(req)}${funnelPath("/welcome1", funnel)}?session_id=${encodeURIComponent(originalSessionId)}&declined=true`,
           metadata: {
             app: "the-seer-within",
             product: "protection_ritual",
             originalSession: originalSessionId,
             firstName,
             bucket,
+            ...(funnel && { funnel }),
             ...(trackdeskClickId && { trackdeskClickId }),
           },
         });
@@ -1344,11 +1417,31 @@ export async function registerRoutes(
               conversation.upsellPaymentId &&
               conversation.email
             ) {
+              // Read funnel from the upsell PaymentIntent metadata so FB-funnel
+              // shipping confirmations get the "-fb" AWeber tag suffix.
+              let shippingFunnel: FunnelId = undefined;
+              if (stripe) {
+                try {
+                  const pi = await stripe.paymentIntents.retrieve(
+                    conversation.upsellPaymentId,
+                  );
+                  if (pi.metadata?.funnel === "v1-fb") shippingFunnel = "v1-fb";
+                } catch (err) {
+                  logger.warn(
+                    "Shipping save: could not retrieve upsell PaymentIntent for funnel lookup",
+                    err,
+                  );
+                }
+              }
+
               addUpsellSubscriber({
                 email: conversation.email,
                 name: conversation.firstName || undefined,
                 stripeOrderId: conversation.upsellPaymentId,
-                tags: ["seer-within-upsell", "shipping-confirmed"],
+                tags: fbifyAweberTags(
+                  ["seer-within-upsell", "shipping-confirmed"],
+                  shippingFunnel,
+                ),
                 shipping: shippingData,
               })
                 .then(() => {
@@ -1525,7 +1618,8 @@ export async function registerRoutes(
         });
       }
 
-      const { checkoutSessionId, email, firstName, type } = parseResult.data;
+      const { checkoutSessionId, email, firstName, type, funnel } =
+        parseResult.data;
       const amount = type === "full" ? 4700 : 3000;
 
       if (!stripe) {
@@ -1608,10 +1702,11 @@ export async function registerRoutes(
         return res.json({ success: false, fallback: true });
       }
 
-      const productName =
+      const baseProductName =
         type === "full"
           ? "Manifestation Bracelet"
           : "Manifestation Bracelet (Standard)";
+      const productName = `${baseProductName}${fbSuffix(funnel)}`;
 
       const upsell2Payment = await stripe.paymentIntents.create({
         amount,
@@ -1625,6 +1720,7 @@ export async function registerRoutes(
           product: "manifestation_bracelet",
           type,
           originalSession: checkoutSessionId,
+          ...(funnel && { funnel }),
         },
       });
 
@@ -1723,7 +1819,10 @@ export async function registerRoutes(
                 email: customerEmail,
                 name: firstName,
                 stripeOrderId: upsell2Payment.id,
-                tags: ["seer-within-upsell2", `bracelet-${type}`],
+                tags: fbifyAweberTags(
+                  ["seer-within-upsell2", `bracelet-${type}`],
+                  funnel,
+                ),
                 shipping:
                   hasShipping2 && conversation
                     ? {
@@ -1807,21 +1906,22 @@ export async function registerRoutes(
           });
         }
 
-        const { email, firstName, bucket, originalSessionId, type } =
+        const { email, firstName, bucket, originalSessionId, type, funnel } =
           parseResult.data;
         const amount = type === "full" ? 4700 : 3000;
 
         if (!stripe) {
           logger.warn("Stripe not configured - returning mock URL");
           return res.json({
-            url: `/success?upsell2=true&session_id=${encodeURIComponent(originalSessionId)}&fallback_session_id=mock_fallback`,
+            url: `${funnelPath("/success", funnel)}?upsell2=true&session_id=${encodeURIComponent(originalSessionId)}&fallback_session_id=mock_fallback`,
           });
         }
 
-        const productName =
+        const baseProductName =
           type === "full"
             ? "Manifestation Bracelet (Attuned)"
             : "Manifestation Bracelet (Standard)";
+        const productName = `${baseProductName}${fbSuffix(funnel)}`;
 
         const session = await stripe.checkout.sessions.create({
           customer_email: email,
@@ -1849,13 +1949,14 @@ export async function registerRoutes(
               originalSession: originalSessionId,
               firstName,
               email,
+              ...(funnel && { funnel }),
             },
           },
           shipping_address_collection: {
             allowed_countries: ["US", "CA", "GB", "AU", "NZ", "SG"],
           },
-          success_url: `${getBaseUrl(req)}/success?upsell2=true&session_id=${encodeURIComponent(originalSessionId)}&fallback_session_id={CHECKOUT_SESSION_ID}`,
-          cancel_url: `${getBaseUrl(req)}/welcome2?session_id=${encodeURIComponent(originalSessionId)}&declined=true`,
+          success_url: `${getBaseUrl(req)}${funnelPath("/success", funnel)}?upsell2=true&session_id=${encodeURIComponent(originalSessionId)}&fallback_session_id={CHECKOUT_SESSION_ID}`,
+          cancel_url: `${getBaseUrl(req)}${funnelPath("/welcome2", funnel)}?session_id=${encodeURIComponent(originalSessionId)}&declined=true`,
           metadata: {
             app: "the-seer-within",
             product: "manifestation_bracelet",
@@ -1863,6 +1964,7 @@ export async function registerRoutes(
             originalSession: originalSessionId,
             firstName,
             bucket,
+            ...(funnel && { funnel }),
           },
         });
 
@@ -1912,15 +2014,33 @@ export async function registerRoutes(
             conversation.upsell2PaymentId &&
             conversation.email
           ) {
+            let shipping2Funnel: FunnelId = undefined;
+            if (stripe) {
+              try {
+                const pi = await stripe.paymentIntents.retrieve(
+                  conversation.upsell2PaymentId,
+                );
+                if (pi.metadata?.funnel === "v1-fb") shipping2Funnel = "v1-fb";
+              } catch (err) {
+                logger.warn(
+                  "Upsell2 shipping save: could not retrieve PaymentIntent for funnel lookup",
+                  err,
+                );
+              }
+            }
+
             addUpsell2Subscriber({
               email: conversation.email,
               name: conversation.firstName || undefined,
               stripeOrderId: conversation.upsell2PaymentId,
-              tags: [
-                "seer-within-upsell2",
-                `bracelet-${conversation.upsell2Type || "full"}`,
-                "shipping-confirmed",
-              ],
+              tags: fbifyAweberTags(
+                [
+                  "seer-within-upsell2",
+                  `bracelet-${conversation.upsell2Type || "full"}`,
+                  "shipping-confirmed",
+                ],
+                shipping2Funnel,
+              ),
               shipping: {
                 name: address.name,
                 line1: address.line1,
@@ -2125,12 +2245,18 @@ export async function registerRoutes(
           `AWeber upsell2 - email: ${customerEmail}, name: ${customerName}`,
         );
 
+        const upsell2FallbackFunnel: FunnelId =
+          session.metadata?.funnel === "v1-fb" ? "v1-fb" : undefined;
+
         if (customerEmail) {
           addUpsell2Subscriber({
             email: customerEmail,
             name: customerName,
             stripeOrderId: session.payment_intent as string,
-            tags: ["seer-within-upsell2", `bracelet-${braceletType}`],
+            tags: fbifyAweberTags(
+              ["seer-within-upsell2", `bracelet-${braceletType}`],
+              upsell2FallbackFunnel,
+            ),
             shipping: shippingDetails?.address
               ? {
                   name: shippingDetails.name || "",
