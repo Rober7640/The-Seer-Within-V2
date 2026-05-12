@@ -65,7 +65,18 @@ function Router() {
   const [location] = useLocation();
 
   useEffect(() => {
-    trackPageView();
+    // V1 funnel only — V2 persona system intentionally does not fire FB PageView.
+    const isV1Funnel =
+      location === '/' ||
+      location === '/chat' ||
+      location === '/welcome1' ||
+      location === '/welcome2' ||
+      location === '/success' ||
+      location === '/upsell-test' ||
+      location.startsWith('/eve_1');
+    if (isV1Funnel) {
+      trackPageView();
+    }
   }, [location]);
 
   return (

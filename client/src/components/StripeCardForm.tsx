@@ -1,9 +1,8 @@
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { Elements, PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js";
 import { stripePromise } from "@/lib/stripe";
 import { authFetch } from "@/hooks/useAuth";
 import { CreditCard } from "lucide-react";
-import { trackInitiateCheckout } from "@/lib/facebook";
 
 interface StripeCardFormProps {
   packageType: string;
@@ -34,19 +33,6 @@ function StripeCardFormInner({
   const elements = useElements();
   const [error, setError] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
-  const IC_SESSION_KEY = 'v2_stripe_ic_tracked';
-  const icTrackedRef = useRef(typeof window !== 'undefined' && !!sessionStorage.getItem(IC_SESSION_KEY));
-
-  const handleCardChange = (event: { empty: boolean }) => {
-    if (icTrackedRef.current || event.empty) return;
-    icTrackedRef.current = true;
-    sessionStorage.setItem(IC_SESSION_KEY, '1');
-    trackInitiateCheckout(
-      typeof amount === "number" && amount > 0 ? amount / 100 : undefined,
-      "USD",
-      "V2 Credits — Stripe",
-    );
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -139,7 +125,6 @@ function StripeCardFormInner({
       <div className="bg-white rounded-lg p-3 mb-3">
         <PaymentElement
           options={{ layout: "tabs" }}
-          onChange={handleCardChange}
         />
       </div>
       {error && (

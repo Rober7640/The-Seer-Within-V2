@@ -10,7 +10,6 @@ import Stripe from 'stripe';
 import logger from '../lib/logger';
 import { fireWithBreaker, stripeBreaker, isCircuitOpenError } from '../lib/circuitBreaker';
 import * as paypal from '../lib/paypal';
-import { maybeFireFirstPurchaseEvent } from '../lib/facebook';
 import { maybeSchedulePostPurchaseDrip } from '../lib/postPurchaseDripTrigger';
 
 const router = Router();
@@ -491,10 +490,7 @@ router.post('/confirm-payment', requireAuth, async (req: Request, res: Response)
       ))
       .catch(err => logger.error('Failed to clean up pending purchases:', err));
 
-    // Fire-and-forget — never block the response on FB tracking. Helper itself
-    // only emits a Meta Purchase event for first-ever completed purchase.
-    maybeFireFirstPurchaseEvent(purchase.id).catch(() => { /* logged inside */ });
-    // Same pattern: schedules the 10-email post-purchase pastoral-care drip,
+    // Fire-and-forget — schedules the 10-email post-purchase pastoral-care drip,
     // but only on the first-ever completed purchase. Gated behind
     // ENABLE_POST_PURCHASE_DRIP at send time (cron level).
     maybeSchedulePostPurchaseDrip(purchase.id).catch(() => { /* logged inside */ });
@@ -659,7 +655,6 @@ router.post('/capture-order', requireAuth, async (req: Request, res: Response) =
       .where(eq(users.id, req.userId!))
       .returning({ coinBalance: users.coinBalance });
 
-    maybeFireFirstPurchaseEvent(purchase.id).catch(() => { /* logged inside */ });
     maybeSchedulePostPurchaseDrip(purchase.id).catch(() => { /* logged inside */ });
 
     // Clean up any other pending purchases for this user (e.g. abandoned Stripe intents)
@@ -755,10 +750,6 @@ router.post('/confirm-checkout', requireAuth, async (req: Request, res: Response
       }
       logger.info('Coins added via confirm-checkout', { totalCoins, userId: req.userId, purchaseId });
 
-      // Fire FB first-purchase event (no-op if not first ever). Includes the
-      // /aiden rescue hatch path per Q1=yes — rescue purchases are real V2
-      // purchases that should fire Purchase like any other.
-      maybeFireFirstPurchaseEvent(purchaseId).catch(() => { /* logged inside */ });
       maybeSchedulePostPurchaseDrip(purchaseId).catch(() => { /* logged inside */ });
     } else {
       logger.info('confirm-checkout: purchase already processed (webhook beat us)', { purchaseId });
@@ -870,8 +861,6 @@ router.post('/webhook', async (req: Request, res: Response) => {
       }
       logger.info('Coins added', { totalCoins, userId, purchaseId });
 
-      // Fire FB first-purchase event (no-op if not first ever).
-      maybeFireFirstPurchaseEvent(purchaseId).catch(() => { /* logged inside */ });
       maybeSchedulePostPurchaseDrip(purchaseId).catch(() => { /* logged inside */ });
     } catch (dbError) {
       logger.error('Webhook DB error:', dbError);

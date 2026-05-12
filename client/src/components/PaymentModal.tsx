@@ -6,7 +6,6 @@ import { Shield, CreditCard } from "lucide-react";
 import { COINS_PER_MINUTE } from "../../../shared/types";
 import type { PricingTier } from "../../../shared/types";
 import StripeCardForm from "@/components/StripeCardForm";
-import { trackInitiateCheckout } from "@/lib/facebook";
 
 interface Props {
   tier: PricingTier | null;
@@ -110,17 +109,6 @@ export default function PaymentModal({
                 }}
                 createOrder={async () => {
                   setPaypalError(null);
-                  // FB InitiateCheckout — fired BEFORE the order-creation API
-                  // call so a slow/failed createOrder still records intent.
-                  // Mirrors the parity behavior of PayPalCreditButton used by
-                  // the in-chat OutOfCredits/BuyCredits modals; this brings
-                  // /credits-page PayPal flow to the same tracking shape.
-                  // Fire-and-forget — never throws up to PayPal SDK.
-                  trackInitiateCheckout(
-                    tier.priceUsd / 100,
-                    "USD",
-                    "V2 Credits — PayPal",
-                  );
                   const res = await authFetch("/api/credits/create-order", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
