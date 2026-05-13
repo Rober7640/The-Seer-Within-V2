@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { Elements, PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js";
 import { stripePromise } from "@/lib/stripe";
-import { authFetch } from "@/hooks/useAuth";
+import { authFetch, useAuth } from "@/hooks/useAuth";
 import { CreditCard } from "lucide-react";
+import { trackInitiateCheckout } from "@/lib/facebook";
 
 interface StripeCardFormProps {
   packageType: string;
@@ -33,6 +34,7 @@ function StripeCardFormInner({
   const elements = useElements();
   const [error, setError] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const { user } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,6 +42,16 @@ function StripeCardFormInner({
 
     setIsProcessing(true);
     setError(null);
+
+    // Fire InitiateCheckout for /aiden + /evelyn funnel users only.
+    // Unconditional per attempt — no first-time gate.
+    if (user?.signupFunnel === 'aiden' || user?.signupFunnel === 'evelyn') {
+      trackInitiateCheckout(
+        typeof amount === "number" && amount > 0 ? amount / 100 : undefined,
+        "USD",
+        "V2 Credits — Stripe",
+      );
+    }
 
     try {
       // Step 1: Validate card details
