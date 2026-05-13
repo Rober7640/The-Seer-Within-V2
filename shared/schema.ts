@@ -220,6 +220,12 @@ export const users = pgTable("users", {
   // Migration from funnel
   migratedFromConversationId: varchar("migrated_from_conversation_id"),
 
+  // FB-attribution funnel — set once at signup based on entry surface
+  // ('aiden' for /aiden quiz, 'evelyn' for /evelyn lander). Null for V1
+  // and direct /login signups. Read server-side by fireV2PurchaseEvent
+  // to decide whether to fire and how to set event_source_url.
+  signupFunnel: text("signup_funnel"),
+
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 }, (table) => [

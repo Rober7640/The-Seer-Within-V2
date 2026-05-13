@@ -225,6 +225,7 @@ router.post('/register', authLimiter, async (req: Request, res: Response) => {
       deviceFingerprint: fingerprint,
       accountFlags: fraudCheck.flagged ? serializeAccountFlags(fraudCheck.flags) : null,
       defaultPersonaId: personaId,
+      signupFunnel: isLanderSignup ? 'evelyn' : null,
     }).returning();
 
     const user = newUser[0];
@@ -403,6 +404,7 @@ router.post('/magic-register', authLimiter, async (req: Request, res: Response) 
       deviceFingerprint: fingerprint,
       accountFlags: fraudCheck.flagged ? serializeAccountFlags(fraudCheck.flags) : null,
       defaultPersonaId: personaId,
+      signupFunnel: persona === 'aiden-powers' ? 'aiden' : null,
     }).returning();
 
     const user = newUser[0];
@@ -935,6 +937,7 @@ router.get('/me', requireAuth, async (req: Request, res: Response) => {
       defaultPersonaId: user.defaultPersonaId,
       accountStatus: user.accountStatus,
       emailVerified: user.emailVerified,
+      signupFunnel: user.signupFunnel,
       createdAt: user.createdAt,
     });
   } catch (error) {

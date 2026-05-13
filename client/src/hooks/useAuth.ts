@@ -11,6 +11,7 @@ interface AuthUser {
   defaultPersonaId: string | null;
   accountStatus: string;
   emailVerified: boolean;
+  signupFunnel: 'aiden' | 'evelyn' | null;
 }
 
 interface AuthState {
