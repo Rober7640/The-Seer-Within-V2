@@ -65,16 +65,20 @@ function Router() {
   const [location] = useLocation();
 
   useEffect(() => {
-    // V1 funnel only — V2 persona system intentionally does not fire FB PageView.
-    const isV1Funnel =
+    // V1 funnel + the two V2 lander surfaces (/aiden, /evelyn) that have
+    // FB-attributed paid traffic. Other V2 routes (/login, /reading,
+    // /credits, /personas) intentionally stay quiet.
+    const isTrackedFunnel =
       location === '/' ||
       location === '/chat' ||
       location === '/welcome1' ||
       location === '/welcome2' ||
       location === '/success' ||
       location === '/upsell-test' ||
-      location.startsWith('/eve_1');
-    if (isV1Funnel) {
+      location.startsWith('/eve_1') ||
+      location === '/aiden' ||
+      location === '/evelyn';
+    if (isTrackedFunnel) {
       trackPageView();
     }
   }, [location]);
