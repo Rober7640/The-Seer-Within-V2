@@ -8,6 +8,7 @@ import { followUpEmails, userFollowUpPreferences, migrationDripEmails, topupEmai
 import { and, eq, sql } from 'drizzle-orm';
 import logger from '../lib/logger';
 import * as paypal from '../lib/paypal';
+import { fireV2PurchaseEvent } from '../lib/facebook';
 import { maybeSchedulePostPurchaseDrip } from '../lib/postPurchaseDripTrigger';
 
 const router = Router();
@@ -780,6 +781,7 @@ router.post('/paypal', async (req: Request, res: Response) => {
     if (result) {
       logger.info('PayPal webhook credited', { orderId, captureId, ...result });
 
+      fireV2PurchaseEvent(result.purchaseId).catch(() => { /* logged inside */ });
       maybeSchedulePostPurchaseDrip(result.purchaseId).catch(() => { /* logged inside */ });
     } else {
       logger.info('PayPal webhook: order already processed or unknown', {

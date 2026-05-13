@@ -10,6 +10,7 @@ import Stripe from 'stripe';
 import logger from '../lib/logger';
 import { fireWithBreaker, stripeBreaker, isCircuitOpenError } from '../lib/circuitBreaker';
 import * as paypal from '../lib/paypal';
+import { fireV2PurchaseEvent } from '../lib/facebook';
 import { maybeSchedulePostPurchaseDrip } from '../lib/postPurchaseDripTrigger';
 
 const router = Router();
@@ -490,6 +491,10 @@ router.post('/confirm-payment', requireAuth, async (req: Request, res: Response)
       ))
       .catch(err => logger.error('Failed to clean up pending purchases:', err));
 
+    // Fire-and-forget — never block the response on FB tracking. Helper
+    // emits a Meta Purchase event per completed purchase for /aiden +
+    // /evelyn funnel-attributed users (gated on users.signup_funnel).
+    fireV2PurchaseEvent(purchase.id).catch(() => { /* logged inside */ });
     // Fire-and-forget — schedules the 10-email post-purchase pastoral-care drip,
     // but only on the first-ever completed purchase. Gated behind
     // ENABLE_POST_PURCHASE_DRIP at send time (cron level).
@@ -655,6 +660,7 @@ router.post('/capture-order', requireAuth, async (req: Request, res: Response) =
       .where(eq(users.id, req.userId!))
       .returning({ coinBalance: users.coinBalance });
 
+    fireV2PurchaseEvent(purchase.id).catch(() => { /* logged inside */ });
     maybeSchedulePostPurchaseDrip(purchase.id).catch(() => { /* logged inside */ });
 
     // Clean up any other pending purchases for this user (e.g. abandoned Stripe intents)
@@ -750,6 +756,7 @@ router.post('/confirm-checkout', requireAuth, async (req: Request, res: Response
       }
       logger.info('Coins added via confirm-checkout', { totalCoins, userId: req.userId, purchaseId });
 
+      fireV2PurchaseEvent(purchaseId).catch(() => { /* logged inside */ });
       maybeSchedulePostPurchaseDrip(purchaseId).catch(() => { /* logged inside */ });
     } else {
       logger.info('confirm-checkout: purchase already processed (webhook beat us)', { purchaseId });
@@ -861,6 +868,7 @@ router.post('/webhook', async (req: Request, res: Response) => {
       }
       logger.info('Coins added', { totalCoins, userId, purchaseId });
 
+      fireV2PurchaseEvent(purchaseId).catch(() => { /* logged inside */ });
       maybeSchedulePostPurchaseDrip(purchaseId).catch(() => { /* logged inside */ });
     } catch (dbError) {
       logger.error('Webhook DB error:', dbError);

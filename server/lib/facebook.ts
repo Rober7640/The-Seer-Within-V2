@@ -108,17 +108,85 @@ export async function sendFacebookEvent(data: EventData): Promise<{ success: boo
 }
 
 // Fire-and-forget helper called from every place a V2 credit purchase flips
-// from `pending` → `completed`. Only emits a Meta `Purchase` event if this
-// turns out to be the user's FIRST EVER completed purchase across all
-// payment paths (Stripe inline, Stripe Checkout, PayPal sync, both webhooks).
+// from `pending` → `completed`. Emits a Meta `Purchase` event for EVERY
+// completed purchase by a /aiden or /evelyn funnel-attributed user (gated
+// on users.signup_funnel). Non-attributed users (signup_funnel IS NULL)
+// stay silent so V2 reporting only reflects FB-attributed traffic.
 //
-// Safe to call from any of those paths because every site already runs an
-// idempotent `WHERE status='pending'` update — only one race-winner ever flips
-// the row, and only the winner calls this. Subsequent purchases (count > 1)
-// silently no-op.
+// Sets event_source_url to ${BASE_URL}/${signupFunnel} so Meta Custom
+// Conversion rules can segment per funnel via "URL contains" matching
+// even though this event originates server-side.
 //
 // Never throws — payment processing must never be blocked by an FB tracking
 // failure.
+export async function fireV2PurchaseEvent(purchaseId: string): Promise<void> {
+  try {
+    const rows = await db
+      .select({
+        userId: creditPurchases.userId,
+        priceUsd: creditPurchases.priceUsd,
+      })
+      .from(creditPurchases)
+      .where(eq(creditPurchases.id, purchaseId))
+      .limit(1);
+    const purchase = rows[0];
+    if (!purchase) {
+      logger.warn('fireV2PurchaseEvent: purchase not found', { purchaseId });
+      return;
+    }
+
+    const userRows = await db
+      .select({
+        email: users.email,
+        firstName: users.firstName,
+        signupFunnel: users.signupFunnel,
+      })
+      .from(users)
+      .where(eq(users.id, purchase.userId))
+      .limit(1);
+    const user = userRows[0];
+    if (!user) return;
+
+    // Gate: only fire for /aiden or /evelyn funnel-attributed users
+    if (user.signupFunnel !== 'aiden' && user.signupFunnel !== 'evelyn') {
+      return;
+    }
+
+    const eventId = `${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
+    const baseUrl = process.env.BASE_URL || 'http://localhost:5000';
+    const eventSourceUrl = `${baseUrl}/${user.signupFunnel}`;
+    const contentName =
+      user.signupFunnel === 'aiden' ? 'V2 Credits — Aiden' : 'V2 Credits — Evelyn';
+
+    await sendFacebookEvent({
+      eventName: 'Purchase',
+      eventId,
+      eventSourceUrl,
+      value: (purchase.priceUsd ?? 0) / 100,
+      currency: 'USD',
+      contentName,
+      userData: {
+        email: user.email,
+        firstName: user.firstName,
+      },
+    });
+
+    logger.info('FB V2 Purchase event fired', {
+      userId: purchase.userId,
+      purchaseId,
+      eventId,
+      funnel: user.signupFunnel,
+      valueUsd: (purchase.priceUsd ?? 0) / 100,
+    });
+  } catch (err) {
+    logger.error('fireV2PurchaseEvent failed', { purchaseId, err: String(err) });
+  }
+}
+
+// LEGACY — kept dormant (zero callers as of 2026-05-12) for potential
+// "lifetime-first" custom event use later. Same body shape as
+// fireV2PurchaseEvent above but with a first-purchase gate. Do NOT call this
+// for standard Purchase tracking — use fireV2PurchaseEvent.
 export async function maybeFireFirstPurchaseEvent(purchaseId: string): Promise<void> {
   try {
     const rows = await db
