@@ -954,3 +954,53 @@ export const evelynLanderSessions = pgTable("evelyn_lander_sessions", {
 export const insertEvelynLanderSessionSchema = createInsertSchema(evelynLanderSessions);
 export type EvelynLanderSession = typeof evelynLanderSessions.$inferSelect;
 export type InsertEvelynLanderSession = z.infer<typeof insertEvelynLanderSessionSchema>;
+
+// ============================================================
+// A/B Testing Tables (Soulmate Funnel Split Testing)
+// ============================================================
+
+// AB Tests - Defines split tests for pages/elements
+export const abTests = pgTable("ab_tests", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  page: text("page").notNull(), // e.g. "soulmate_landing", "soulmate_reading", "soulmate_gift", "soulmate_gift2"
+  element: text("element").notNull(), // e.g. "headline", "cta_text", "price", "hero_image"
+  name: text("name").notNull(), // human label like "Landing page headline test"
+  variants: text("variants").notNull(), // JSON string of array: [{id: "a", label: "Control", value: "original text"}, ...]
+  trafficSplit: text("traffic_split").notNull().default("50/50"), // e.g. "50/50", "70/30", "33/33/34"
+  status: text("status").notNull().default("draft"), // draft, running, paused, completed
+  winnerVariantId: text("winner_variant_id"), // set when test is completed
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// AB Events - Tracks impressions and conversions per visitor per test
+export const abEvents = pgTable("ab_events", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  testId: varchar("test_id").notNull().references(() => abTests.id, { onDelete: "cascade" }),
+  variantId: text("variant_id").notNull(), // e.g. "a", "b"
+  visitorId: text("visitor_id").notNull(), // cookie-based visitor ID
+  eventType: text("event_type").notNull(), // "impression" or "conversion"
+  page: text("page").notNull(),
+  metadata: text("metadata"), // optional JSON string for extra info like price selected
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_ab_events_test_variant").on(table.testId, table.variantId, table.eventType),
+  index("idx_ab_events_visitor").on(table.visitorId, table.testId),
+]);
+
+export const insertAbTestSchema = createInsertSchema(abTests).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertAbEventSchema = createInsertSchema(abEvents).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type AbTest = typeof abTests.$inferSelect;
+export type InsertAbTest = z.infer<typeof insertAbTestSchema>;
+
+export type AbEvent = typeof abEvents.$inferSelect;
+export type InsertAbEvent = z.infer<typeof insertAbEventSchema>;

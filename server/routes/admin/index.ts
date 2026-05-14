@@ -22,6 +22,7 @@ import aidenFollowUpRoutes from './aidenFollowUps';
 import evelynFollowUpRoutes from './evelynFollowUps';
 import postPurchaseDripTestRoutes from './postPurchaseDripTest';
 import priceTestRoutes from './priceTest';
+import abTestingRoutes, { publicRouter as abTestingPublicRouter } from './abTesting';
 import logger from '../../lib/logger';
 
 const router = Router();
@@ -193,5 +194,7 @@ router.use('/aiden-follow-ups', aidenFollowUpRoutes);
 router.use('/evelyn-follow-ups', evelynFollowUpRoutes);
 router.use('/post-purchase-drip', postPurchaseDripTestRoutes);
 router.use('/price-test', priceTestRoutes);
+router.use('/ab-testing', abTestingRoutes);
 
+export { abTestingPublicRouter };
 export default router;

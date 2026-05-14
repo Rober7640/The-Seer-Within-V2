@@ -21,7 +21,7 @@ import crudRouter from "./api/crud";
 import authRouter from "./routes/auth";
 import chatServiceRouter from "./routes/chatService";
 import creditsRouter from "./routes/credits";
-import adminRouter from "./routes/admin/index";
+import adminRouter, { abTestingPublicRouter } from "./routes/admin/index";
 import personasRouter from "./routes/personas";
 import webhooksRouter, { reportTrackdeskConversion } from "./routes/webhooks";
 import unsubscribeRouter from "./routes/unsubscribe";
@@ -258,6 +258,7 @@ export async function registerRoutes(
   app.use("/api/chat-service", chatServiceRouter);
   app.use("/api/credits", creditsRouter);
   app.use("/api/admin", adminRouter);
+  app.use("/api/ab", abTestingPublicRouter);
   app.use("/api/personas", personasRouter);
   app.use("/api/webhooks", webhooksRouter);
   app.use("/api/user", userStatsRouter);
@@ -2358,6 +2359,317 @@ export async function registerRoutes(
     } catch (error) {
       logger.error("FB event error:", error);
       return res.status(500).json({ error: "Failed to send event" });
+    }
+  });
+
+  // ─── Soulmate Sketch Funnel ───────────────────────────────────────────────
+
+  // POST /api/soulmate/checkout — create Stripe session for sketch purchase
+  app.post("/api/soulmate/checkout", async (req: Request, res: Response) => {
+    try {
+      const { email, firstName, priceCents } = req.body as {
+        email: string;
+        firstName: string;
+        priceCents: number;
+      };
+
+      const validPrices = [2800, 4200, 5500];
+      const amount = validPrices.includes(Number(priceCents)) ? Number(priceCents) : 4200;
+
+      if (!stripe) {
+        logger.warn("Stripe not configured — returning mock URL");
+        return res.json({ url: `/soulmate/gift` });
+      }
+
+      const customers = await stripe.customers.list({ email, limit: 1 });
+      let customer = customers.data[0];
+      if (!customer) {
+        customer = await stripe.customers.create({ email, name: firstName });
+      }
+
+      const session = await stripe.checkout.sessions.create({
+        customer: customer.id,
+        payment_method_types: ["card"],
+        line_items: [
+          {
+            price_data: {
+              currency: "usd",
+              product_data: {
+                name: "Psychic Soulmate Love Sketch & Reading",
+                description: `Complete soulmate sketch for ${firstName} — 24hr delivery`,
+              },
+              unit_amount: amount,
+            },
+            quantity: 1,
+          },
+        ],
+        mode: "payment",
+        payment_intent_data: {
+          description: "Soulmate Sketch Reading",
+          setup_future_usage: "off_session",
+          metadata: {
+            firstName,
+            email,
+            app: "the-seer-within",
+            product: "soulmate_sketch",
+          },
+        },
+        success_url: `${getBaseUrl(req)}/soulmate/gift?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${getBaseUrl(req)}/soulmate`,
+        metadata: {
+          firstName,
+          email,
+          app: "the-seer-within",
+          product: "soulmate_sketch",
+        },
+      });
+
+      return res.json({ url: session.url });
+    } catch (error) {
+      logger.error("Soulmate checkout error:", error);
+      return res.status(500).json({ error: "Checkout failed" });
+    }
+  });
+
+  // POST /api/soulmate/upsell/charge — 1-click charge $47 for bracelet
+  app.post("/api/soulmate/upsell/charge", async (req: Request, res: Response) => {
+    try {
+      const { sessionId, email, firstName } = req.body as {
+        sessionId: string;
+        email: string;
+        firstName: string;
+      };
+
+      if (!stripe) {
+        return res.json({ success: false, fallback: true });
+      }
+
+      const session = await stripe.checkout.sessions.retrieve(sessionId, {
+        expand: ["payment_intent", "payment_intent.payment_method"],
+      });
+
+      if (session.payment_status !== "paid") {
+        return res.json({ success: false, fallback: true, error: "Session not paid" });
+      }
+
+      if (
+        email &&
+        session.customer_email &&
+        session.customer_email.toLowerCase() !== email.toLowerCase()
+      ) {
+        return res.status(403).json({ success: false, error: "Session ownership failed" });
+      }
+
+      if (!session.customer || !session.payment_intent) {
+        return res.json({ success: false, fallback: true });
+      }
+
+      const customerId =
+        typeof session.customer === "string" ? session.customer : session.customer.id;
+
+      const paymentIntent = session.payment_intent as Stripe.PaymentIntent;
+
+      if (paymentIntent.status !== "succeeded") {
+        return res.json({ success: false, fallback: true });
+      }
+
+      let paymentMethodId: string | null = null;
+      if (typeof paymentIntent.payment_method === "string") {
+        paymentMethodId = paymentIntent.payment_method;
+      } else if (
+        paymentIntent.payment_method &&
+        typeof paymentIntent.payment_method === "object"
+      ) {
+        paymentMethodId = paymentIntent.payment_method.id;
+      }
+
+      if (!paymentMethodId) {
+        // Fall back to Stripe checkout
+        const fallback = await stripe.checkout.sessions.create({
+          customer: customerId,
+          payment_method_types: ["card"],
+          line_items: [
+            {
+              price_data: {
+                currency: "usd",
+                product_data: { name: "Rose Quartz Soulmate Attraction Bracelet" },
+                unit_amount: 4700,
+              },
+              quantity: 1,
+            },
+          ],
+          mode: "payment",
+          success_url: `${getBaseUrl(req)}/soulmate/gift2?session_id=${sessionId}`,
+          cancel_url: `${getBaseUrl(req)}/soulmate/gift?session_id=${sessionId}`,
+        });
+        return res.json({ success: false, fallback: true, url: fallback.url });
+      }
+
+      await stripe.paymentIntents.create({
+        amount: 4700,
+        currency: "usd",
+        customer: customerId,
+        payment_method: paymentMethodId,
+        off_session: true,
+        confirm: true,
+        description: "Rose Quartz Soulmate Attraction Bracelet",
+        metadata: {
+          firstName,
+          email,
+          app: "the-seer-within",
+          product: "soulmate_bracelet",
+        },
+      });
+
+      return res.json({ success: true });
+    } catch (error) {
+      logger.error("Soulmate upsell charge error:", error);
+      return res.json({ success: false, fallback: true });
+    }
+  });
+
+  // POST /api/soulmate/upsell2/charge — 1-click charge $47 for Love Tuner
+  app.post("/api/soulmate/upsell2/charge", async (req: Request, res: Response) => {
+    try {
+      const { sessionId, email, firstName } = req.body as {
+        sessionId: string;
+        email: string;
+        firstName: string;
+      };
+
+      if (!stripe) {
+        return res.json({ success: false, fallback: true });
+      }
+
+      const session = await stripe.checkout.sessions.retrieve(sessionId, {
+        expand: ["payment_intent", "payment_intent.payment_method"],
+      });
+
+      if (session.payment_status !== "paid") {
+        return res.json({ success: false, fallback: true, error: "Session not paid" });
+      }
+
+      if (
+        email &&
+        session.customer_email &&
+        session.customer_email.toLowerCase() !== email.toLowerCase()
+      ) {
+        return res.status(403).json({ success: false, error: "Session ownership failed" });
+      }
+
+      if (!session.customer || !session.payment_intent) {
+        return res.json({ success: false, fallback: true });
+      }
+
+      const customerId =
+        typeof session.customer === "string" ? session.customer : session.customer.id;
+
+      const paymentIntent = session.payment_intent as Stripe.PaymentIntent;
+
+      if (paymentIntent.status !== "succeeded") {
+        return res.json({ success: false, fallback: true });
+      }
+
+      let paymentMethodId: string | null = null;
+      if (typeof paymentIntent.payment_method === "string") {
+        paymentMethodId = paymentIntent.payment_method;
+      } else if (
+        paymentIntent.payment_method &&
+        typeof paymentIntent.payment_method === "object"
+      ) {
+        paymentMethodId = paymentIntent.payment_method.id;
+      }
+
+      if (!paymentMethodId) {
+        const fallback = await stripe.checkout.sessions.create({
+          customer: customerId,
+          payment_method_types: ["card"],
+          line_items: [
+            {
+              price_data: {
+                currency: "usd",
+                product_data: { name: "528 Hz Frequency of Love Tuner Necklace" },
+                unit_amount: 7900,
+              },
+              quantity: 1,
+            },
+          ],
+          mode: "payment",
+          success_url: `${getBaseUrl(req)}/soulmate/thank-you`,
+          cancel_url: `${getBaseUrl(req)}/soulmate/gift2?session_id=${sessionId}`,
+        });
+        return res.json({ success: false, fallback: true, url: fallback.url });
+      }
+
+      await stripe.paymentIntents.create({
+        amount: 7900,
+        currency: "usd",
+        customer: customerId,
+        payment_method: paymentMethodId,
+        off_session: true,
+        confirm: true,
+        description: "528 Hz Frequency of Love Tuner Necklace",
+        metadata: {
+          firstName,
+          email,
+          app: "the-seer-within",
+          product: "soulmate_love_tuner",
+        },
+      });
+
+      return res.json({ success: true });
+    } catch (error) {
+      logger.error("Soulmate upsell2 charge error:", error);
+      return res.json({ success: false, fallback: true });
+    }
+  });
+
+  // POST /api/soulmate/upsell2/checkout — fallback Stripe checkout for Love Tuner
+  app.post("/api/soulmate/upsell2/checkout", async (req: Request, res: Response) => {
+    try {
+      const { email, firstName } = req.body as { email: string; firstName: string };
+
+      if (!stripe) {
+        return res.json({ url: `/soulmate/thank-you` });
+      }
+
+      const customers = await stripe.customers.list({ email, limit: 1 });
+      let customer = customers.data[0];
+      if (!customer) {
+        customer = await stripe.customers.create({ email, name: firstName });
+      }
+
+      const session = await stripe.checkout.sessions.create({
+        customer: customer.id,
+        payment_method_types: ["card"],
+        line_items: [
+          {
+            price_data: {
+              currency: "usd",
+              product_data: {
+                name: "528 Hz Frequency of Love Tuner Necklace",
+                description: "Mindfulness necklace tuned to 528 Hz — the Love Frequency",
+              },
+              unit_amount: 7900,
+            },
+            quantity: 1,
+          },
+        ],
+        mode: "payment",
+        success_url: `${getBaseUrl(req)}/soulmate/thank-you`,
+        cancel_url: `${getBaseUrl(req)}/soulmate/gift2`,
+        metadata: {
+          firstName,
+          email,
+          app: "the-seer-within",
+          product: "soulmate_love_tuner",
+        },
+      });
+
+      return res.json({ url: session.url });
+    } catch (error) {
+      logger.error("Soulmate upsell2 checkout error:", error);
+      return res.status(500).json({ error: "Checkout failed" });
     }
   });
 

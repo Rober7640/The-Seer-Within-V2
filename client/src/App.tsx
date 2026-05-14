@@ -34,6 +34,14 @@ const SetPasswordPage = lazy(() => import("@/pages/SetPasswordPage"));
 const AidenQuizPage = lazy(() => import("@/pages/AidenQuizPage"));
 const EvelynLanderPage = lazy(() => import("@/pages/EvelynLanderPage"));
 
+// Soulmate Sketch funnel pages (lazy loaded)
+const SoulmateLandingPage = lazy(() => import("@/pages/SoulmateLandingPage"));
+const SoulmateProcessPage = lazy(() => import("@/pages/SoulmateProcessPage"));
+const SoulmateSalesPage = lazy(() => import("@/pages/SoulmateSalesPage"));
+const SoulmateUpsellPage = lazy(() => import("@/pages/SoulmateUpsellPage"));
+const SoulmateUpsell2Page = lazy(() => import("@/pages/SoulmateUpsell2Page"));
+const SoulmateThankYouPage = lazy(() => import("@/pages/SoulmateThankYouPage"));
+
 // Admin pages (lazy loaded)
 const AdminLogin = lazy(() => import("@/pages/admin/AdminLogin"));
 const PersonasDashboard = lazy(() => import("@/pages/admin/PersonasDashboard"));
@@ -52,6 +60,7 @@ const EvelynFollowUpsPage = lazy(() => import("@/pages/admin/EvelynFollowUpsPage
 const MarketplacePage = lazy(() => import("@/pages/admin/MarketplacePage"));
 const SettingsPage = lazy(() => import("@/pages/admin/SettingsPage"));
 const PriceTestDashboard = lazy(() => import("@/pages/admin/PriceTestDashboard"));
+const ABTestingDashboard = lazy(() => import("@/pages/admin/ABTestingDashboard"));
 
 function LazyFallback() {
   return (
@@ -77,7 +86,8 @@ function Router() {
       location === '/upsell-test' ||
       location.startsWith('/eve_1') ||
       location === '/aiden' ||
-      location === '/evelyn';
+      location === '/evelyn' ||
+      location.startsWith('/soulmate');
     if (isTrackedFunnel) {
       trackPageView();
     }
@@ -110,6 +120,14 @@ function Router() {
         {/* Persona-specific landers (no layout wrapper) */}
         <Route path="/aiden" component={AidenQuizPage} />
         <Route path="/evelyn" component={EvelynLanderPage} />
+
+        {/* Soulmate Sketch funnel — specific paths BEFORE /soulmate catch-all */}
+        <Route path="/soulmate/process" component={SoulmateProcessPage} />
+        <Route path="/soulmate/reading" component={SoulmateSalesPage} />
+        <Route path="/soulmate/gift" component={SoulmateUpsellPage} />
+        <Route path="/soulmate/gift2" component={SoulmateUpsell2Page} />
+        <Route path="/soulmate/thank-you" component={SoulmateThankYouPage} />
+        <Route path="/soulmate" component={SoulmateLandingPage} />
 
         {/* Auth routes (no layout wrapper) */}
         <Route path="/login" component={LoginPage} />
@@ -179,6 +197,7 @@ function Router() {
         <Route path="/admin/marketplace" component={MarketplacePage} />
         <Route path="/admin/settings" component={SettingsPage} />
         <Route path="/admin/price-test" component={PriceTestDashboard} />
+        <Route path="/admin/ab-testing" component={ABTestingDashboard} />
 
         <Route component={NotFound} />
       </Switch>
