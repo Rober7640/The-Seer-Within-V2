@@ -1,6 +1,7 @@
 import { PayPalButtons } from "@paypal/react-paypal-js";
-import { authFetch } from "@/hooks/useAuth";
+import { authFetch, useAuth } from "@/hooks/useAuth";
 import { useState } from "react";
+import { trackInitiateCheckout } from "@/lib/facebook";
 
 interface Props {
   packageType: string;
@@ -16,6 +17,7 @@ interface Props {
 
 export default function PayPalCreditButton({ packageType, personaId, amount, onSuccess, onClick, onCancel }: Props) {
   const [error, setError] = useState<string | null>(null);
+  const { user } = useAuth();
 
   return (
     <div>
@@ -25,6 +27,15 @@ export default function PayPalCreditButton({ packageType, personaId, amount, onS
         createOrder={async () => {
           setError(null);
           onClick?.();
+          // Fire InitiateCheckout for /aiden + /evelyn funnel users only.
+          // Unconditional per attempt — no first-time gate.
+          if (user?.signupFunnel === 'aiden' || user?.signupFunnel === 'evelyn') {
+            trackInitiateCheckout(
+              typeof amount === "number" && amount > 0 ? amount / 100 : undefined,
+              "USD",
+              "V2 Credits — PayPal",
+            );
+          }
           const res = await authFetch("/api/credits/create-order", {
             method: "POST",
             headers: { "Content-Type": "application/json" },

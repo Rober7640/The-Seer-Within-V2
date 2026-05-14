@@ -5,6 +5,7 @@ import { CosmicBackground } from "@/components/CosmicBackground";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Sparkles, LogIn, UserPlus, Mail } from "lucide-react";
+import { trackLead } from "@/lib/facebook";
 // Open-redirect protection: `next` may only point at /reading (with optional
 // query/hash). Anything else is silently dropped so we never bounce a user
 // off-platform after auth.
@@ -85,6 +86,12 @@ export default function LoginPage() {
               }
             : undefined,
         );
+        // Fire Lead only for /evelyn lander signups (server-side has now
+        // stamped users.signupFunnel='evelyn' for these). Direct /login
+        // signups outside the FB-attribution flow stay silent.
+        if (sourceParam === 'evelyn-lander') {
+          trackLead(email, firstName);
+        }
         if (data.requiresVerification) {
           setShowVerificationSent(true);
           setResendEmail(email);

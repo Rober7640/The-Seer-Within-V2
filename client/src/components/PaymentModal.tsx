@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
 import { PayPalButtons, FUNDING } from "@paypal/react-paypal-js";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { authFetch } from "@/hooks/useAuth";
+import { authFetch, useAuth } from "@/hooks/useAuth";
 import { Shield, CreditCard } from "lucide-react";
 import { COINS_PER_MINUTE } from "../../../shared/types";
 import type { PricingTier } from "../../../shared/types";
 import StripeCardForm from "@/components/StripeCardForm";
+import { trackInitiateCheckout } from "@/lib/facebook";
 
 interface Props {
   tier: PricingTier | null;
@@ -24,6 +25,7 @@ export default function PaymentModal({
 }: Props) {
   const [method, setMethod] = useState<"paypal" | "card">("paypal");
   const [paypalError, setPaypalError] = useState<string | null>(null);
+  const { user } = useAuth();
 
   // Log checkout view when modal opens
   useEffect(() => {
@@ -109,6 +111,15 @@ export default function PaymentModal({
                 }}
                 createOrder={async () => {
                   setPaypalError(null);
+                  // Fire InitiateCheckout for /aiden + /evelyn funnel users only.
+                  // Unconditional per attempt — no first-time gate.
+                  if (user?.signupFunnel === 'aiden' || user?.signupFunnel === 'evelyn') {
+                    trackInitiateCheckout(
+                      tier.priceUsd / 100,
+                      "USD",
+                      "V2 Credits — PayPal",
+                    );
+                  }
                   const res = await authFetch("/api/credits/create-order", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },

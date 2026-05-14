@@ -5,6 +5,7 @@ import { useAuth, authFetch } from "@/hooks/useAuth";
 import { QUIZ_QUESTIONS, getEmailAppLink } from "@/lib/aidenQuizData";
 // Note: we use fetch() directly instead of apiRequest() because apiRequest
 // throws on non-200 responses, and we need to read the 409 body for EXISTING_ACCOUNT.
+import { trackLead, trackInitiateCheckout } from "@/lib/facebook";
 import TurnstileWidget from "@/components/TurnstileWidget";
 import { CosmicBackground } from "@/components/CosmicBackground";
 
@@ -225,6 +226,9 @@ export default function AidenQuizPage() {
         // Store JWT and transition
         localStorage.setItem(AUTH_TOKEN_KEY, data.token);
         localStorage.setItem("seer-pending-persona", "aiden-powers");
+        // Fire Lead now: account is created via magic-register, email captured.
+        // Server has already stamped users.signupFunnel = 'aiden'.
+        trackLead(email.trim(), firstName.trim());
         setRegisteredEmail(email.trim());
         setRegisteredName(firstName.trim());
         setFlowState("checking_email");
@@ -253,6 +257,13 @@ export default function AidenQuizPage() {
 
   const handleRescueHatch = useCallback(async () => {
     setRescueLoading(true);
+    // Fire InitiateCheckout for the Aiden rescue-hatch checkout. Gate on
+    // signupFunnel for parity with /credits payment paths — in practice the
+    // user always has signupFunnel='aiden' here since they signed up via this
+    // page, but the explicit gate keeps the firing condition consistent.
+    if (user?.signupFunnel === 'aiden') {
+      trackInitiateCheckout(9.99, "USD", "Aiden Rescue");
+    }
     try {
       const res = await authFetch("/api/credits/checkout", {
         method: "POST",
@@ -265,7 +276,7 @@ export default function AidenQuizPage() {
       }
     } catch {}
     setRescueLoading(false);
-  }, []);
+  }, [user?.signupFunnel]);
 
   const handleSendMagicLink = useCallback(async () => {
     setMagicLinkLoading(true);
