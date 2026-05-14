@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Elements, PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js";
 import { stripePromise } from "@/lib/stripe";
 import { authFetch, useAuth } from "@/hooks/useAuth";
@@ -35,16 +35,15 @@ function StripeCardFormInner({
   const [error, setError] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const { user } = useAuth();
+  const icFiredRef = useRef(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!stripe || !elements) return;
-
-    setIsProcessing(true);
-    setError(null);
-
-    // Fire InitiateCheckout for /aiden + /evelyn funnel users only.
-    // Unconditional per attempt — no first-time gate.
+  // Fire InitiateCheckout on first keystroke in the card field (engagement-
+  // moment IC). Mount-scoped: once per StripeCardForm instance. Switching
+  // tier remounts the form, which re-arms this fire.
+  const handlePaymentElementChange = (event: { empty: boolean }) => {
+    if (icFiredRef.current) return;
+    if (event.empty) return;
+    icFiredRef.current = true;
     if (user?.signupFunnel === 'aiden' || user?.signupFunnel === 'evelyn') {
       trackInitiateCheckout(
         typeof amount === "number" && amount > 0 ? amount / 100 : undefined,
@@ -52,6 +51,14 @@ function StripeCardFormInner({
         "V2 Credits — Stripe",
       );
     }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!stripe || !elements) return;
+
+    setIsProcessing(true);
+    setError(null);
 
     try {
       // Step 1: Validate card details
@@ -137,6 +144,7 @@ function StripeCardFormInner({
       <div className="bg-white rounded-lg p-3 mb-3">
         <PaymentElement
           options={{ layout: "tabs" }}
+          onChange={handlePaymentElementChange}
         />
       </div>
       {error && (
