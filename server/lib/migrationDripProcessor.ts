@@ -1,0 +1,866 @@
+// Migration Drip Email Processor
+//
+// Handles the 8-email migration sequence for V1 funnel users migrated to V2.
+// - Email 1: Sent manually via admin trigger (or immediately for new funnel users)
+// - Email 2: Sent 24 hours after Email 1 (via cron)
+// - Email 3: Sent 24 hours after Email 2 (via cron)
+// - Emails 4-8: Sent 72 hours (3 days) apart after Email 3 (via cron)
+//
+// Stops if user logs into V2 (lastLoginAt gets set).
+
+import { anthropicFailover as anthropic } from './anthropicWithFailover';
+import { getModelForOperation } from './modelConfig';
+import { Resend } from 'resend';
+import { db } from './db';
+import {
+  users,
+  conversations,
+  personas,
+  userMemory,
+  migrationDripEmails,
+  userFollowUpPreferences,
+  systemConfig,
+} from '@shared/schema';
+import { eq, and, isNull, sql, desc, count } from 'drizzle-orm';
+import { randomBytes, randomUUID } from 'crypto';
+import bcrypt from 'bcrypt';
+import { buildFollowUpHtml, buildFollowUpText } from './emailTemplate';
+import { generateMagicLinkToken } from './magicLink';
+import logger from './logger';
+import { fireWithBreaker, resendBreaker, anthropicBreaker } from './circuitBreaker';
+
+const resend = process.env.RESEND_API_KEY
+  ? new Resend(process.env.RESEND_API_KEY)
+  : null;
+
+const BASE_URL = process.env.BASE_URL || 'http://localhost:5000';
+const FREE_COINS = 180;
+const EVELYN_SLUG = 'evelyn-cross';
+
+// Hours after previous email before next one fires
+const DELAY_HOURS_BY_SEQUENCE: Record<number, number> = {
+  2: 24,   // 1 day after Email 1
+  3: 24,   // 1 day after Email 2
+  4: 72,   // 3 days after Email 3
+  5: 72,   // 3 days after Email 4
+  6: 72,   // 3 days after Email 5
+  7: 72,   // 3 days after Email 6
+  8: 72,   // 3 days after Email 7
+};
+
+const TOTAL_EMAILS = 8;
+
+type SequenceNumber = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
+
+// Sequence-specific guidance for Haiku
+const SEQUENCE_CONTEXT: Record<SequenceNumber, { tone: string; angle: string; signOff: string }> = {
+  1: {
+    tone: 'warm and personal, like a friend reaching out',
+    angle: 'reference their specific concern from the reading, invite them to a new space to continue',
+    signOff: 'With light, Evelyn',
+  },
+  2: {
+    tone: 'intuitive and sensing, as if you feel unfinished energy',
+    angle: 'hint that the energies around their topic are shifting and there is more to uncover',
+    signOff: 'The signs are becoming clearer, Evelyn',
+  },
+  3: {
+    tone: 'direct and personal, a final heartfelt message',
+    angle: 'a specific feeling or vision you have been holding for them — this is your last message',
+    signOff: 'I will be here when you are ready, Evelyn',
+  },
+  4: {
+    tone: 'casual and checking in, like a friend who texted and didn\'t hear back',
+    angle: 'I sent you something a few days ago — not sure if you saw it. Your reading stuck with me.',
+    signOff: 'Just checking in, Evelyn',
+  },
+  5: {
+    tone: 'gently concerned, slightly surprised you are following up again',
+    angle: 'I don\'t usually follow up like this, but something about your situation keeps coming back to me.',
+    signOff: 'Something keeps pulling me back, Evelyn',
+  },
+  6: {
+    tone: 'honest and personal, acknowledging they are busy',
+    angle: 'I know life gets busy. I just didn\'t want what I saw for you to go unheard.',
+    signOff: 'I didn\'t want this to go unsaid, Evelyn',
+  },
+  7: {
+    tone: 'one last heartfelt try, gentle urgency without pressure',
+    angle: 'I\'ve been holding onto something about their specific concern. This is me reaching out one last time.',
+    signOff: 'One last time, Evelyn',
+  },
+  8: {
+    tone: 'soft farewell, warm and respectful with no pressure',
+    angle: 'I won\'t keep filling your inbox. But if you ever want to pick up where we left off, I\'m here.',
+    signOff: 'The door is always open, Evelyn',
+  },
+};
+
+// ============================================
+// BATCH CONFIG — stored in system_config table
+// ============================================
+
+const BATCH_CONFIG_KEY = 'migration_drip_batch';
+
+export interface BatchConfig {
+  status: 'idle' | 'running' | 'paused';
+  batchSize: number;
+  currentBatchNumber: number;
+  startedAt: string | null;       // ISO timestamp
+  lastBatchAt: string | null;     // ISO timestamp — when last batch was sent
+  nextBatchAt: string | null;     // ISO timestamp — when next batch should fire
+}
+
+const DEFAULT_BATCH_CONFIG: BatchConfig = {
+  status: 'idle',
+  batchSize: 500,
+  currentBatchNumber: 0,
+  startedAt: null,
+  lastBatchAt: null,
+  nextBatchAt: null,
+};
+
+export async function getBatchConfig(): Promise<BatchConfig> {
+  const row = await db
+    .select({ configValue: systemConfig.configValue })
+    .from(systemConfig)
+    .where(eq(systemConfig.configKey, BATCH_CONFIG_KEY))
+    .limit(1);
+
+  if (!row[0]) return { ...DEFAULT_BATCH_CONFIG };
+
+  try {
+    return { ...DEFAULT_BATCH_CONFIG, ...JSON.parse(row[0].configValue) };
+  } catch {
+    return { ...DEFAULT_BATCH_CONFIG };
+  }
+}
+
+export async function saveBatchConfig(config: BatchConfig): Promise<void> {
+  const value = JSON.stringify(config);
+  const existing = await db
+    .select({ id: systemConfig.id })
+    .from(systemConfig)
+    .where(eq(systemConfig.configKey, BATCH_CONFIG_KEY))
+    .limit(1);
+
+  if (existing[0]) {
+    await db.update(systemConfig)
+      .set({ configValue: value, updatedAt: new Date() })
+      .where(eq(systemConfig.configKey, BATCH_CONFIG_KEY));
+  } else {
+    await db.insert(systemConfig).values({
+      configKey: BATCH_CONFIG_KEY,
+      configValue: value,
+      configType: 'json',
+      description: 'Migration drip campaign batch configuration',
+    });
+  }
+}
+
+interface MigrationCandidate {
+  userId: string;
+  email: string;
+  firstName: string;
+  conversationId: string;
+  bucket: string | null;
+  concern: string | null;
+  vision: string | null;
+  deeperResponse: string | null;
+  emotionalResponse: string | null;
+  location: string | null;
+}
+
+interface EvelynConfig {
+  id: string;
+  displayName: string;
+  avatarUrl: string | null;
+  fromEmail: string | null;
+  fromName: string | null;
+}
+
+/**
+ * Send Email 1 to all eligible migrated users who haven't received it yet.
+ * Called manually from admin dashboard.
+ */
+export async function sendMigrationEmail1(
+  limit?: number,
+): Promise<{ processed: number; sent: number; failed: number; skipped: number; errors: string[] }> {
+  const stats = { processed: 0, sent: 0, failed: 0, skipped: 0, errors: [] as string[] };
+
+  const evelyn = await getEvelynConfig();
+  if (!evelyn) {
+    stats.errors.push('Evelyn Cross persona not found');
+    return stats;
+  }
+
+  // Find migrated users who:
+  // - Have a linked conversation with concern + vision filled
+  // - Haven't logged into V2 yet
+  // - Haven't received Email 1 yet
+  // JOIN conversations in SQL so the LIMIT applies to truly eligible users only
+  const candidates = await db
+    .select({
+      userId: users.id,
+      email: users.email,
+      firstName: users.firstName,
+      conversationId: users.migratedFromConversationId,
+      bucket: conversations.bucket,
+      concern: conversations.concern,
+      vision: conversations.vision,
+      deeperResponse: conversations.deeperResponse,
+      emotionalResponse: conversations.emotionalResponse,
+      location: conversations.location,
+    })
+    .from(users)
+    .innerJoin(conversations, eq(conversations.id, users.migratedFromConversationId))
+    .where(
+      and(
+        sql`${users.migratedFromConversationId} IS NOT NULL`,
+        isNull(users.lastLoginAt),
+        eq(users.accountStatus, 'active'),
+        sql`${users.email} NOT LIKE '%@example.com' AND ${users.email} NOT LIKE '%@test.com'`,
+        // Concern + vision must exist (matches stats eligibility filter)
+        sql`${conversations.concern} IS NOT NULL AND ${conversations.concern} != ''`,
+        sql`${conversations.vision} IS NOT NULL AND ${conversations.vision} != ''`,
+        // No Email 1 sent/pending yet (failed records are retryable)
+        sql`${users.id} NOT IN (SELECT user_id FROM migration_drip_emails WHERE sequence_number = 1 AND status IN ('sent', 'pending'))`,
+      ),
+    )
+    .limit(limit || 10000);
+
+  const eligible: MigrationCandidate[] = candidates.map((c) => ({
+    userId: c.userId,
+    email: c.email,
+    firstName: c.firstName,
+    conversationId: c.conversationId!,
+    bucket: c.bucket,
+    concern: c.concern,
+    vision: c.vision,
+    deeperResponse: c.deeperResponse,
+    emotionalResponse: c.emotionalResponse,
+    location: c.location,
+  }));
+
+  logger.info('Migration Email 1: candidates found', { total: candidates.length, eligible: eligible.length });
+
+  for (const candidate of eligible) {
+    stats.processed++;
+    try {
+      // Re-check lastLoginAt (user may have logged in during processing)
+      const freshUser = await db
+        .select({ lastLoginAt: users.lastLoginAt })
+        .from(users)
+        .where(eq(users.id, candidate.userId))
+        .limit(1);
+
+      if (freshUser[0]?.lastLoginAt) {
+        stats.skipped++;
+        continue;
+      }
+
+      await sendDripEmail(candidate, 1, evelyn);
+      stats.sent++;
+    } catch (error: any) {
+      stats.failed++;
+      stats.errors.push(`${candidate.email}: ${error?.message}`);
+    }
+
+    // Rate limit: 100ms between emails
+    await new Promise((resolve) => setTimeout(resolve, 100));
+  }
+
+  logger.info('Migration Email 1 complete', stats);
+  return stats;
+}
+
+/**
+ * Process Emails 2-8 for users who haven't logged in.
+ * Called by the cron job. Capped at 500 emails per run to avoid
+ * overwhelming Resend/Anthropic APIs. Remaining users are picked
+ * up in subsequent cron runs (every 15 minutes).
+ */
+const FOLLOWUP_BATCH_LIMIT = 500;
+
+export async function processMigrationDripQueue(): Promise<{
+  processed: number;
+  sent: number;
+  failed: number;
+  skipped: number;
+  errors: string[];
+}> {
+  const stats = { processed: 0, sent: 0, failed: 0, skipped: 0, errors: [] as string[] };
+
+  const evelyn = await getEvelynConfig();
+  if (!evelyn) {
+    stats.errors.push('Evelyn Cross persona not found');
+    return stats;
+  }
+
+  // Clean up failed records so they can be retried
+  await db
+    .delete(migrationDripEmails)
+    .where(eq(migrationDripEmails.status, 'failed'));
+
+  let totalSentThisRun = 0;
+
+  // Process each sequence: Email 2 through Email 8
+  for (let seq = 2; seq <= TOTAL_EMAILS; seq++) {
+    if (totalSentThisRun >= FOLLOWUP_BATCH_LIMIT) break;
+
+    const prevSeq = seq - 1;
+    const delayHours = DELAY_HOURS_BY_SEQUENCE[seq];
+    const remaining = FOLLOWUP_BATCH_LIMIT - totalSentThisRun;
+
+    const candidates = await db
+      .select({
+        userId: migrationDripEmails.userId,
+        sentAt: migrationDripEmails.sentAt,
+      })
+      .from(migrationDripEmails)
+      .innerJoin(users, eq(users.id, migrationDripEmails.userId))
+      .where(
+        and(
+          eq(migrationDripEmails.sequenceNumber, prevSeq),
+          eq(migrationDripEmails.status, 'sent'),
+          isNull(users.lastLoginAt),
+          eq(users.accountStatus, 'active'),
+          // Previous email sent delay+ hours ago
+          sql`${migrationDripEmails.sentAt} <= NOW() - INTERVAL '${sql.raw(String(delayHours))} hours'`,
+          // This email not yet sent/pending
+          sql`${migrationDripEmails.userId} NOT IN (SELECT user_id FROM migration_drip_emails WHERE sequence_number = ${sql.raw(String(seq))} AND status IN ('sent', 'pending'))`,
+        ),
+      )
+      .limit(remaining);
+
+    for (const row of candidates) {
+      if (totalSentThisRun >= FOLLOWUP_BATCH_LIMIT) break;
+      stats.processed++;
+      try {
+        const candidate = await loadCandidate(row.userId);
+        if (!candidate) { stats.skipped++; continue; }
+        await sendDripEmail(candidate, seq as SequenceNumber, evelyn);
+        stats.sent++;
+        totalSentThisRun++;
+      } catch (error: any) {
+        stats.failed++;
+        stats.errors.push(`Email ${seq} - ${row.userId}: ${error?.message}`);
+      }
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    }
+  }
+
+  logger.info('Migration drip queue complete', { ...stats, totalSentThisRun, limit: FOLLOWUP_BATCH_LIMIT });
+  return stats;
+}
+
+/**
+ * Load a migration candidate's full data from the DB.
+ */
+async function loadCandidate(userId: string): Promise<MigrationCandidate | null> {
+  const user = await db
+    .select({
+      userId: users.id,
+      email: users.email,
+      firstName: users.firstName,
+      conversationId: users.migratedFromConversationId,
+      lastLoginAt: users.lastLoginAt,
+    })
+    .from(users)
+    .where(eq(users.id, userId))
+    .limit(1);
+
+  if (!user[0] || user[0].lastLoginAt || !user[0].conversationId) return null;
+
+  // Skip if user has unsubscribed
+  const prefs = await db
+    .select({ unsubscribedAt: userFollowUpPreferences.unsubscribedAt, enableFollowUps: userFollowUpPreferences.enableFollowUps })
+    .from(userFollowUpPreferences)
+    .where(eq(userFollowUpPreferences.userId, userId))
+    .limit(1);
+
+  if (prefs[0]?.unsubscribedAt || (prefs[0] && !prefs[0].enableFollowUps)) return null;
+
+  const convo = await db
+    .select({
+      bucket: conversations.bucket,
+      concern: conversations.concern,
+      vision: conversations.vision,
+      deeperResponse: conversations.deeperResponse,
+      emotionalResponse: conversations.emotionalResponse,
+      location: conversations.location,
+    })
+    .from(conversations)
+    .where(eq(conversations.id, user[0].conversationId))
+    .limit(1);
+
+  if (!convo[0]) return null;
+
+  return {
+    userId: user[0].userId,
+    email: user[0].email,
+    firstName: user[0].firstName,
+    conversationId: user[0].conversationId,
+    ...convo[0],
+  };
+}
+
+/**
+ * Generate and send a single drip email.
+ */
+async function sendDripEmail(
+  candidate: MigrationCandidate,
+  sequenceNumber: SequenceNumber,
+  evelyn: EvelynConfig,
+): Promise<void> {
+  // Generate email content via Haiku
+  const emailContent = await generateDripEmail(candidate, sequenceNumber, evelyn.displayName);
+
+  // Generate magic link
+  const magicToken = await generateMagicLinkToken(candidate.userId, evelyn.id, EVELYN_SLUG);
+  const magicUrl = `${BASE_URL}/magic-auth?t=${magicToken}`;
+
+  const avatarUrl = evelyn.avatarUrl
+    ? (evelyn.avatarUrl.startsWith('http') ? evelyn.avatarUrl : `${BASE_URL}${evelyn.avatarUrl}`)
+    : undefined;
+
+  const ctaLabels: Record<SequenceNumber, string> = {
+    1: 'Pick Up Where You Left Off',
+    2: 'Evelyn Has Something to Tell You',
+    3: 'Hear Evelyn\'s Final Message',
+    4: 'See What Evelyn Sent You',
+    5: 'Hear What Keeps Coming Back',
+    6: 'Don\'t Let This Go Unheard',
+    7: 'One Last Message From Evelyn',
+    8: 'The Door Is Still Open',
+  };
+
+  const unsubscribeToken = randomUUID();
+  const unsubscribeUrl = `${BASE_URL}/api/webhooks/unsubscribe?token=${unsubscribeToken}`;
+
+  const fullHtml = buildFollowUpHtml({
+    personaName: evelyn.displayName,
+    emailBody: emailContent.bodyHtml,
+    ctaUrl: magicUrl,
+    ctaText: ctaLabels[sequenceNumber],
+    unsubscribeUrl,
+    privacyUrl: `${BASE_URL}/privacy`,
+    avatarUrl,
+  });
+
+  const fullText = buildFollowUpText({
+    personaName: evelyn.displayName,
+    emailBody: emailContent.bodyText,
+    ctaUrl: magicUrl,
+    unsubscribeUrl,
+  });
+
+  // Save to DB as pending
+  const record = await db
+    .insert(migrationDripEmails)
+    .values({
+      userId: candidate.userId,
+      sequenceNumber,
+      recipientEmail: candidate.email,
+      subject: emailContent.subject,
+      bodyHtml: fullHtml,
+      bodyText: fullText,
+      status: 'pending',
+      generatedBy: 'claude-haiku',
+      generationTokens: emailContent.tokens,
+      unsubscribeToken,
+    })
+    .returning({ id: migrationDripEmails.id });
+
+  const recordId = record[0]?.id;
+
+  if (!resend) {
+    logger.warn('Migration drip: Resend not configured', { email: candidate.email, seq: sequenceNumber });
+    return;
+  }
+
+  const fromEmail = evelyn.fromEmail || 'evelyn@theseerwithin.com';
+  const fromName = evelyn.fromName || 'Evelyn Cross';
+
+  try {
+    const result = await fireWithBreaker(resendBreaker, () =>
+      resend!.emails.send({
+        from: `${fromName} <${fromEmail}>`,
+        to: candidate.email,
+        replyTo: fromEmail,
+        subject: emailContent.subject,
+        html: fullHtml,
+        text: fullText,
+        tags: [
+          { name: 'type', value: 'migration_drip' },
+          { name: 'sequence', value: String(sequenceNumber) },
+          { name: 'user_id', value: candidate.userId },
+        ],
+      }),
+    );
+
+    if (result.error) {
+      if (recordId) {
+        await db.update(migrationDripEmails)
+          .set({ status: 'failed', updatedAt: new Date() })
+          .where(eq(migrationDripEmails.id, recordId));
+      }
+      throw new Error(result.error.message);
+    }
+
+    if (recordId) {
+      await db.update(migrationDripEmails)
+        .set({ status: 'sent', sentAt: new Date(), resendEmailId: result.data?.id || null, updatedAt: new Date() })
+        .where(eq(migrationDripEmails.id, recordId));
+    }
+
+    logger.info('Migration drip sent', { email: candidate.email, seq: sequenceNumber, resendId: result.data?.id });
+  } catch (error: any) {
+    if (recordId) {
+      await db.update(migrationDripEmails)
+        .set({ status: 'failed', updatedAt: new Date() })
+        .where(eq(migrationDripEmails.id, recordId));
+    }
+    throw error;
+  }
+}
+
+/**
+ * Generate personalized email content using Haiku.
+ */
+async function generateDripEmail(
+  candidate: MigrationCandidate,
+  sequenceNumber: SequenceNumber,
+  personaName: string,
+): Promise<{ subject: string; bodyHtml: string; bodyText: string; tokens: number }> {
+  const ctx = SEQUENCE_CONTEXT[sequenceNumber];
+
+  const prompt = `You are ${personaName}, a warm and gifted spiritual guide.
+
+${candidate.firstName} had a reading with you. Here is what you know:
+- Area of focus: ${candidate.bucket || 'general guidance'}
+${candidate.concern ? `- Their concern: ${candidate.concern}` : ''}
+${candidate.deeperResponse ? `- Deeper context: ${candidate.deeperResponse}` : ''}
+${candidate.vision ? `- Their vision/desires: ${candidate.vision}` : ''}
+${candidate.emotionalResponse ? `- Emotional state: ${candidate.emotionalResponse}` : ''}
+${candidate.location ? `- Location: ${candidate.location}` : ''}
+
+This is email #${sequenceNumber} of ${TOTAL_EMAILS} in a re-engagement sequence.
+Tone: ${ctx.tone}
+Angle: ${ctx.angle}
+Sign off with: "${ctx.signOff}"
+
+Rules:
+- Stay fully in character as ${personaName}
+- Use ${candidate.firstName}'s name at least once
+- Reference something specific from their reading (concern, vision, or emotional state)
+- Do NOT be pushy or use sales language — this is a spiritual message
+- Do NOT mention "platform", "app", "website", or "account" — say "a new space" or "a place I've created"
+${sequenceNumber === 1 ? '- Include this exact sentence somewhere in the body: "I\'ve set aside 3 minutes for you to ask anything and explore today\'s insights. Start your private conversation."' : ''}
+${sequenceNumber >= 4 ? '- Write as if you previously sent them a message and haven\'t heard back — like a real person following up, not a marketing email' : ''}
+- Body: 80-150 words
+- Subject line: under 60 characters, personal, not clickbait
+
+Return ONLY valid JSON:
+{
+  "subject": "Your email subject line",
+  "bodyText": "Plain text version",
+  "bodyHtml": "<p>HTML version with basic formatting</p>"
+}`;
+
+  try {
+    const response = await fireWithBreaker(anthropicBreaker, () =>
+      anthropic.messages.create({
+        model: getModelForOperation('greeting'),
+        max_tokens: 600,
+        messages: [{ role: 'user', content: prompt }],
+      }),
+    );
+
+    const text = response.content[0].type === 'text' ? response.content[0].text : '';
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    const tokens = (response.usage?.input_tokens || 0) + (response.usage?.output_tokens || 0);
+
+    if (jsonMatch) {
+      const parsed = JSON.parse(jsonMatch[0]);
+      return {
+        subject: parsed.subject || `${personaName} has a message for you`,
+        bodyText: parsed.bodyText || '',
+        bodyHtml: parsed.bodyHtml || `<p>${parsed.bodyText || ''}</p>`,
+        tokens,
+      };
+    }
+    throw new Error('Failed to parse Haiku response');
+  } catch (error) {
+    logger.error('Migration drip email generation failed, using fallback', {
+      error: (error as Error).message,
+      seq: sequenceNumber,
+    });
+
+    const bucketRef = candidate.bucket ? `our conversation about ${candidate.bucket}` : 'our reading together';
+
+    const fallbacks: Record<number, { subject: string; body: string }> = {
+      1: {
+        subject: `I've been thinking about you, ${candidate.firstName}`,
+        body: `Dear ${candidate.firstName},\n\nIt's Evelyn. Since ${bucketRef}, I've been sensing there's more we need to explore. I've created a new space where we can continue our journey. I've set aside 3 minutes for you to ask anything and explore today's insights. Start your private conversation.\n\nI'll be here when you're ready.\n\nWith light,\nEvelyn`,
+      },
+      2: {
+        subject: `Something is shifting around you, ${candidate.firstName}`,
+        body: `Dear ${candidate.firstName},\n\nThe energies from ${bucketRef} have been speaking to me. There are shifts happening around what we explored together — things I sense you should know about.\n\nCome back when you can.\n\nThe signs are becoming clearer,\nEvelyn`,
+      },
+      3: {
+        subject: `A final message from Evelyn`,
+        body: `Dear ${candidate.firstName},\n\nI have held a feeling for you since our reading. I don't share such things lightly, but this one has stayed with me.\n\nWhenever you are ready to hear it, I will be waiting.\n\nI will be here when you are ready,\nEvelyn`,
+      },
+      4: {
+        subject: `Did you see my last message, ${candidate.firstName}?`,
+        body: `${candidate.firstName},\n\nI sent you something a few days ago — I'm not sure if you saw it. I don't normally follow up like this, but ${bucketRef} has stayed with me.\n\nI just wanted to make sure it reached you.\n\nJust checking in,\nEvelyn`,
+      },
+      5: {
+        subject: `Something about you keeps coming back to me`,
+        body: `${candidate.firstName},\n\nI don't usually follow up like this. But something about what you shared during ${bucketRef} keeps pulling me back.\n\nI can't quite let it go.\n\nSomething keeps pulling me back,\nEvelyn`,
+      },
+      6: {
+        subject: `I didn't want this to go unheard, ${candidate.firstName}`,
+        body: `${candidate.firstName},\n\nI know life gets busy. I really do. But I didn't want what I saw for you during ${bucketRef} to just quietly disappear.\n\nSome things are worth saying twice.\n\nI didn't want this to go unsaid,\nEvelyn`,
+      },
+      7: {
+        subject: `One last time, ${candidate.firstName}`,
+        body: `${candidate.firstName},\n\nI've been holding onto something about ${bucketRef}. This is me reaching out one last time.\n\nIf you ever want to hear what I've been sensing, I'm here.\n\nOne last time,\nEvelyn`,
+      },
+      8: {
+        subject: `The door is always open`,
+        body: `${candidate.firstName},\n\nI won't keep filling your inbox. But I want you to know — if you ever want to pick up where we left off with ${bucketRef}, I'm here. No pressure, no rush.\n\nI wish you nothing but light.\n\nThe door is always open,\nEvelyn`,
+      },
+    };
+
+    const fb = fallbacks[sequenceNumber];
+    return {
+      subject: fb.subject,
+      bodyText: fb.body,
+      bodyHtml: fb.body.split('\n\n').map((p) => `<p>${p.replace(/\n/g, '<br>')}</p>`).join(''),
+      tokens: 0,
+    };
+  }
+}
+
+// ============================================
+// BATCH CAMPAIGN ORCHESTRATION
+// ============================================
+
+/**
+ * Start the batch campaign. Sends the first batch and schedules the next one 24h later.
+ * Called once from the admin "Start Campaign" button.
+ */
+export async function startBatchCampaign(
+  batchSize: number,
+): Promise<{ config: BatchConfig; stats: { processed: number; sent: number; failed: number; skipped: number; errors: string[] } }> {
+  const now = new Date();
+  const nextBatch = new Date(now.getTime() + 24 * 60 * 60 * 1000); // +24 hours
+
+  const config: BatchConfig = {
+    status: 'running',
+    batchSize,
+    currentBatchNumber: 1,
+    startedAt: now.toISOString(),
+    lastBatchAt: now.toISOString(),
+    nextBatchAt: nextBatch.toISOString(),
+  };
+
+  await saveBatchConfig(config);
+
+  const stats = await sendMigrationEmail1(batchSize);
+
+  // If nothing was sent (no more eligible users), mark campaign as idle
+  if (stats.sent === 0 && stats.failed === 0) {
+    config.status = 'idle';
+    config.nextBatchAt = null;
+    await saveBatchConfig(config);
+  }
+
+  return { config, stats };
+}
+
+/**
+ * Process the next scheduled batch. Called by the cron job.
+ * Checks if nextBatchAt has passed and status is 'running'.
+ * Sends next Email #1 batch AND processes Email #2/#3 queue.
+ */
+export async function processNextBatch(): Promise<{
+  batchTriggered: boolean;
+  batchStats?: { processed: number; sent: number; failed: number; skipped: number; errors: string[] };
+  queueStats?: { processed: number; sent: number; failed: number; skipped: number; errors: string[] };
+}> {
+  const config = await getBatchConfig();
+
+  // Always process Email #2 and #3 queue regardless of batch status
+  let queueStats;
+  try {
+    queueStats = await processMigrationDripQueue();
+  } catch (error) {
+    logger.error('processNextBatch: Email 2/3 queue processing failed', { error: (error as Error).message });
+  }
+
+  // Check if a new Email #1 batch is due
+  if (config.status !== 'running' || !config.nextBatchAt) {
+    return { batchTriggered: false, queueStats };
+  }
+
+  const now = new Date();
+  const nextBatchTime = new Date(config.nextBatchAt);
+
+  if (now < nextBatchTime) {
+    return { batchTriggered: false, queueStats };
+  }
+
+  // Time for the next batch
+  logger.info('processNextBatch: Sending next Email #1 batch', {
+    batchNumber: config.currentBatchNumber + 1,
+    batchSize: config.batchSize,
+  });
+
+  const batchStats = await sendMigrationEmail1(config.batchSize);
+
+  // Update config
+  const nextBatch = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+  config.currentBatchNumber++;
+  config.lastBatchAt = now.toISOString();
+  config.nextBatchAt = nextBatch.toISOString();
+
+  // If nothing was sent, campaign is complete
+  if (batchStats.sent === 0 && batchStats.failed === 0) {
+    logger.info('processNextBatch: No more eligible users, campaign complete');
+    config.status = 'idle';
+    config.nextBatchAt = null;
+  }
+
+  await saveBatchConfig(config);
+
+  return { batchTriggered: true, batchStats, queueStats };
+}
+
+/**
+ * Pause the batch campaign. Stops auto-sending new batches.
+ * Email #2/#3 for already-sent Email #1s will still be processed by cron.
+ */
+export async function pauseBatchCampaign(): Promise<BatchConfig> {
+  const config = await getBatchConfig();
+  config.status = 'paused';
+  config.nextBatchAt = null;
+  await saveBatchConfig(config);
+  logger.info('Batch campaign paused', { batchNumber: config.currentBatchNumber });
+  return config;
+}
+
+/**
+ * Resume the batch campaign. Schedules next batch 24h from now.
+ */
+export async function resumeBatchCampaign(): Promise<BatchConfig> {
+  const config = await getBatchConfig();
+  const nextBatch = new Date(Date.now() + 24 * 60 * 60 * 1000);
+  config.status = 'running';
+  config.nextBatchAt = nextBatch.toISOString();
+  await saveBatchConfig(config);
+  logger.info('Batch campaign resumed', { batchNumber: config.currentBatchNumber, nextBatchAt: config.nextBatchAt });
+  return config;
+}
+
+/**
+ * Update the batch size. Takes effect on the next batch.
+ */
+export async function updateBatchSize(newSize: number): Promise<BatchConfig> {
+  const config = await getBatchConfig();
+  config.batchSize = newSize;
+  await saveBatchConfig(config);
+  logger.info('Batch size updated', { batchSize: newSize });
+  return config;
+}
+
+/**
+ * Get Evelyn Cross persona config.
+ */
+async function getEvelynConfig(): Promise<EvelynConfig | null> {
+  const rows = await db
+    .select({
+      id: personas.id,
+      displayName: personas.displayName,
+      avatarUrl: personas.avatarUrl,
+      fromEmail: personas.fromEmail,
+      fromName: personas.fromName,
+    })
+    .from(personas)
+    .where(eq(personas.slug, EVELYN_SLUG))
+    .limit(1);
+
+  return rows[0] || null;
+}
+
+/**
+ * Get migration drip stats for admin dashboard.
+ * Only counts bulk-migrated users (V1 conversation created before 2026-03-18).
+ */
+export interface MigrationDripStats {
+  totalEligible: number;
+  emailSent: Record<number, number>;
+  opened: number;
+  clicked: number;
+  loggedIn: number;
+  // Legacy fields for backward compatibility with admin UI
+  email1Sent: number;
+  email2Sent: number;
+  email3Sent: number;
+}
+
+export async function getMigrationDripStats(): Promise<MigrationDripStats> {
+  // Migrated V1 = users whose linked conversation was created before the migration date
+  const MIGRATION_DATE = '2026-03-18';
+  const migratedUserFilter = sql`${users.migratedFromConversationId} IN (SELECT id FROM conversations WHERE created_at < ${MIGRATION_DATE})`;
+  // Eligible = migrated users whose conversation has both concern AND vision filled (matches sendMigrationEmail1 filter)
+  const eligibleFilter = sql`${users.migratedFromConversationId} IN (SELECT id FROM conversations WHERE created_at < ${MIGRATION_DATE} AND concern IS NOT NULL AND concern != '' AND vision IS NOT NULL AND vision != '')`;
+
+  // Build per-sequence count queries
+  const emailCountQueries = [];
+  for (let seq = 1; seq <= TOTAL_EMAILS; seq++) {
+    emailCountQueries.push(
+      db.select({ c: count() }).from(migrationDripEmails)
+        .innerJoin(users, eq(users.id, migrationDripEmails.userId))
+        .where(and(migratedUserFilter, eq(migrationDripEmails.sequenceNumber, seq), eq(migrationDripEmails.status, 'sent'))),
+    );
+  }
+
+  const [eligible, ...emailCounts] = await Promise.all([
+    db.select({ c: count() }).from(users).where(
+      and(eligibleFilter, isNull(users.lastLoginAt)),
+    ),
+    ...emailCountQueries,
+  ]);
+
+  const [opened, clicked, loggedIn] = await Promise.all([
+    db.select({ c: count() }).from(migrationDripEmails)
+      .innerJoin(users, eq(users.id, migrationDripEmails.userId))
+      .where(and(migratedUserFilter, sql`${migrationDripEmails.openedAt} IS NOT NULL`)),
+    db.select({ c: count() }).from(migrationDripEmails)
+      .innerJoin(users, eq(users.id, migrationDripEmails.userId))
+      .where(and(migratedUserFilter, sql`${migrationDripEmails.clickedAt} IS NOT NULL`)),
+    db.select({ c: count() }).from(users).where(
+      and(migratedUserFilter, sql`${users.lastLoginAt} IS NOT NULL`),
+    ),
+  ]);
+
+  const emailSent: Record<number, number> = {};
+  for (let i = 0; i < TOTAL_EMAILS; i++) {
+    emailSent[i + 1] = emailCounts[i]?.[0]?.c ?? 0;
+  }
+
+  return {
+    totalEligible: eligible[0]?.c ?? 0,
+    emailSent,
+    // Legacy fields
+    email1Sent: emailSent[1] ?? 0,
+    email2Sent: emailSent[2] ?? 0,
+    email3Sent: emailSent[3] ?? 0,
+    opened: opened[0]?.c ?? 0,
+    clicked: clicked[0]?.c ?? 0,
+    loggedIn: loggedIn[0]?.c ?? 0,
+  };
+}

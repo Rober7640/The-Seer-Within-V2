@@ -1,0 +1,217 @@
+declare global {
+  interface Window {
+    fbq: (...args: unknown[]) => void;
+    clarity: (...args: unknown[]) => void;
+    trackdesk: (...args: unknown[]) => void;
+  }
+}
+
+/** Read the Trackdesk click-id cookie (set by their JS snippet). */
+export function getTrackdeskClickId(): string | null {
+  const match = document.cookie.match(/(?:^|;\s*)trakdesk_cid=([^;]*)/);
+  if (!match) return null;
+  try {
+    const parsed = JSON.parse(decodeURIComponent(match[1]));
+    return parsed.cid || null;
+  } catch {
+    return null;
+  }
+}
+
+function generateEventId(): string {
+  return `${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
+}
+
+function getUserAgent(): string {
+  return typeof navigator !== 'undefined' ? navigator.userAgent : '';
+}
+
+function getPageUrl(): string {
+  return typeof window !== 'undefined' ? window.location.href : '';
+}
+
+function getCookie(name: string): string | undefined {
+  if (typeof document === 'undefined') return undefined;
+  const match = document.cookie.match(new RegExp('(?:^|; )' + name + '=([^;]*)'));
+  return match ? decodeURIComponent(match[1]) : undefined;
+}
+
+function getFbClickId(): string | undefined {
+  return getCookie('_fbc');
+}
+
+function getFbBrowserId(): string | undefined {
+  return getCookie('_fbp');
+}
+
+export interface FBEventData {
+  value?: number;
+  currency?: string;
+  content_name?: string;
+  content_ids?: string[];
+  content_type?: string;
+  email?: string;
+  firstName?: string;
+}
+
+async function sendServerEvent(
+  eventName: string,
+  eventId: string,
+  eventData?: FBEventData
+): Promise<void> {
+  try {
+    await fetch('/api/fb-event', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        eventName,
+        eventId,
+        eventSourceUrl: getPageUrl(),
+        userAgent: getUserAgent(),
+        fbc: getFbClickId(),
+        fbp: getFbBrowserId(),
+        ...eventData,
+      }),
+    });
+  } catch (error) {
+    console.warn('Failed to send server-side FB event:', error);
+  }
+}
+
+export function trackPageView(): void {
+  const eventId = generateEventId();
+  
+  if (typeof window !== 'undefined' && window.fbq) {
+    window.fbq('track', 'PageView', {}, { eventID: eventId });
+  }
+  
+  sendServerEvent('PageView', eventId);
+}
+
+export function trackLead(email: string, firstName?: string): void {
+  const eventId = generateEventId();
+
+  if (typeof window !== 'undefined' && window.fbq) {
+    window.fbq('track', 'Lead', {
+      content_name: 'Email Capture',
+      value: 0,
+      currency: 'USD',
+    }, { eventID: eventId });
+  }
+
+  sendServerEvent('Lead', eventId, { email, firstName, content_name: 'Email Capture', value: 0, currency: 'USD' });
+}
+
+// `contentName` defaults to 'Energy Clearing Ritual' so V1-funnel callers
+// (useConversation.ts, UpsellPage.tsx, SuccessPage.tsx) stay unchanged. V2
+// callers pass an explicit value so Meta reporting separates V2 credit
+// purchases from the V1 ritual offer.
+export function trackInitiateCheckout(
+  value: number = 35,
+  currency: string = 'USD',
+  contentName: string = 'Energy Clearing Ritual',
+): void {
+  const eventId = generateEventId();
+
+  if (typeof window !== 'undefined' && window.fbq) {
+    window.fbq('track', 'InitiateCheckout', {
+      value,
+      currency,
+      content_name: contentName,
+    }, { eventID: eventId });
+  }
+
+  sendServerEvent('InitiateCheckout', eventId, {
+    value,
+    currency,
+    content_name: contentName,
+  });
+}
+
+export function trackPurchase(
+  value: number = 35,
+  currency: string = 'USD',
+  email?: string,
+  contentName: string = 'Energy Clearing Ritual',
+): void {
+  const eventId = generateEventId();
+
+  if (typeof window !== 'undefined' && window.fbq) {
+    window.fbq('track', 'Purchase', {
+      value,
+      currency,
+      content_name: contentName,
+    }, { eventID: eventId });
+  }
+  
+  sendServerEvent('Purchase', eventId, {
+    value,
+    currency,
+    email,
+    content_name: contentName,
+  });
+}
+
+// Custom event fired when a /evelyn lander visitor clicks the "Continue your
+// reading" CTA after the 2-message warm-up. Mirrored client-side via Pixel
+// (trackCustom) and server-side via CAPI with the same eventID for dedup.
+export function trackEvelynLanderCTA(segment?: string): void {
+  const eventId = generateEventId();
+
+  if (typeof window !== 'undefined' && window.fbq) {
+    window.fbq(
+      'trackCustom',
+      'EvelynLanderCTA',
+      segment ? { segment } : {},
+      { eventID: eventId },
+    );
+  }
+
+  sendServerEvent('EvelynLanderCTA', eventId);
+}
+
+// Standard FB event fired once per account when email verification completes.
+// Pairs with trackLead (which fires on signup form submit) for Meta's
+// recommended pre-/post-verify funnel split.
+export function trackCompleteRegistration(email?: string, firstName?: string): void {
+  const eventId = generateEventId();
+
+  if (typeof window !== 'undefined' && window.fbq) {
+    window.fbq('track', 'CompleteRegistration', {
+      content_name: 'Account Verified',
+    }, { eventID: eventId });
+  }
+
+  sendServerEvent('CompleteRegistration', eventId, {
+    email,
+    firstName,
+    content_name: 'Account Verified',
+  });
+}
+
+export function trackUpsellPurchase(value: number, currency: string = 'USD', email?: string, contentName: string = 'Manifestation Bracelet'): void {
+  const dedupKey = `upsell_purchase_tracked_${contentName}_${value}`;
+  if (typeof window !== 'undefined' && sessionStorage.getItem(dedupKey)) {
+    return;
+  }
+  if (typeof window !== 'undefined') {
+    sessionStorage.setItem(dedupKey, 'true');
+  }
+
+  const eventId = generateEventId();
+
+  if (typeof window !== 'undefined' && window.fbq) {
+    window.fbq('trackCustom', 'Upsell', {
+      value,
+      currency,
+      content_name: contentName,
+    }, { eventID: eventId });
+  }
+
+  sendServerEvent('Upsell', eventId, {
+    value,
+    currency,
+    email,
+    content_name: contentName,
+  });
+}

@@ -1,0 +1,265 @@
+// Admin routes for Aiden follow-up emails (/aiden unverified signups).
+// Separate from existing /admin/follow-ups to avoid mixing with the persona-aware follow-up system.
+
+import { Router, Request, Response } from 'express';
+import { db } from '../../lib/db';
+import { aidenFollowupEmails, users } from '@shared/schema';
+import { eq, and, desc, count, sql } from 'drizzle-orm';
+import logger from '../../lib/logger';
+import { processAidenFollowupQueue } from '../../lib/aidenFollowupEmailGenerator';
+import {
+  processVerifiedDripQueue,
+  backfillAidenVerifiedDripExtension,
+} from '../../lib/aidenVerifiedDripGenerator';
+import { processAidenPostPurchaseDripQueue } from '../../lib/aidenPostPurchaseDripGenerator';
+
+const router = Router();
+
+// Valid sequence numbers for the verified-not-purchased drip filter dropdown.
+// Both unverified (1–3) and verified_nopurchase (1–13) sequence_types share
+// this filter; we accept up to 13 here so the verified extension shows up.
+const VALID_SEQUENCE_NUMBERS: ReadonlySet<string> = new Set([
+  '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13',
+]);
+
+const SEQUENCE_TYPES = ['unverified', 'verified_nopurchase', 'post_purchase'] as const;
+type SequenceType = (typeof SEQUENCE_TYPES)[number];
+
+// Parse and validate the ?sequenceType query param, defaulting to 'unverified'
+// so existing callers (that haven't yet been updated to pass the param) keep
+// seeing the original data set.
+function parseSequenceType(raw: unknown): SequenceType {
+  if (raw === 'verified_nopurchase') return 'verified_nopurchase';
+  if (raw === 'post_purchase') return 'post_purchase';
+  return 'unverified';
+}
+
+// ============================================
+// GET /api/admin/aiden-follow-ups/stats
+// Query: ?sequenceType=unverified | verified_nopurchase
+// ============================================
+router.get('/stats', async (req: Request, res: Response) => {
+  try {
+    const sequenceType = parseSequenceType(req.query.sequenceType);
+    const typeFilter = eq(aidenFollowupEmails.sequenceType, sequenceType);
+
+    const rows = await db
+      .select({
+        status: aidenFollowupEmails.status,
+        sequenceNumber: aidenFollowupEmails.sequenceNumber,
+        total: count(),
+      })
+      .from(aidenFollowupEmails)
+      .where(typeFilter)
+      .groupBy(aidenFollowupEmails.status, aidenFollowupEmails.sequenceNumber);
+
+    const opened = await db
+      .select({ total: count() })
+      .from(aidenFollowupEmails)
+      .where(and(typeFilter, sql`${aidenFollowupEmails.openedAt} IS NOT NULL`));
+
+    const clicked = await db
+      .select({ total: count() })
+      .from(aidenFollowupEmails)
+      .where(and(typeFilter, sql`${aidenFollowupEmails.clickedAt} IS NOT NULL`));
+
+    const flagEnabled =
+      sequenceType === 'verified_nopurchase'
+        ? process.env.ENABLE_AIDEN_VERIFIED_DRIP === 'true'
+        : sequenceType === 'post_purchase'
+          ? process.env.ENABLE_POST_PURCHASE_DRIP === 'true'
+          : process.env.ENABLE_AIDEN_FOLLOWUPS === 'true';
+
+    return res.json({
+      sequenceType,
+      flagEnabled,
+      breakdown: rows,
+      openedTotal: opened[0]?.total ?? 0,
+      clickedTotal: clicked[0]?.total ?? 0,
+    });
+  } catch (error: any) {
+    logger.error('Admin aiden-follow-ups stats error:', error);
+    return res.status(500).json({ error: 'Failed to load stats' });
+  }
+});
+
+// ============================================
+// GET /api/admin/aiden-follow-ups
+// Paginated list with user info
+// ============================================
+router.get('/', async (req: Request, res: Response) => {
+  try {
+    const page = Math.max(1, parseInt(req.query.page as string) || 1);
+    const pageSize = Math.min(100, Math.max(1, parseInt(req.query.pageSize as string) || 25));
+    const offset = (page - 1) * pageSize;
+
+    const sequenceType = parseSequenceType(req.query.sequenceType);
+    const statusFilter = req.query.status as string | undefined;
+    const seqFilter = req.query.sequence as string | undefined;
+
+    const conditions = [eq(aidenFollowupEmails.sequenceType, sequenceType)];
+    if (statusFilter && ['pending', 'sent', 'failed', 'skipped'].includes(statusFilter)) {
+      conditions.push(eq(aidenFollowupEmails.status, statusFilter));
+    }
+    if (seqFilter && VALID_SEQUENCE_NUMBERS.has(seqFilter)) {
+      conditions.push(eq(aidenFollowupEmails.sequenceNumber, parseInt(seqFilter)));
+    }
+    const whereClause = and(...conditions);
+
+    const rowsQuery = db
+      .select({
+        id: aidenFollowupEmails.id,
+        userId: aidenFollowupEmails.userId,
+        userEmail: users.email,
+        userFirstName: users.firstName,
+        emailVerified: users.emailVerified,
+        sequenceNumber: aidenFollowupEmails.sequenceNumber,
+        scheduledFor: aidenFollowupEmails.scheduledFor,
+        status: aidenFollowupEmails.status,
+        sentAt: aidenFollowupEmails.sentAt,
+        openedAt: aidenFollowupEmails.openedAt,
+        clickedAt: aidenFollowupEmails.clickedAt,
+        errorMessage: aidenFollowupEmails.errorMessage,
+        subject: aidenFollowupEmails.subject,
+        createdAt: aidenFollowupEmails.createdAt,
+      })
+      .from(aidenFollowupEmails)
+      .leftJoin(users, eq(aidenFollowupEmails.userId, users.id));
+
+    const rows = await rowsQuery
+      .where(whereClause)
+      .orderBy(desc(aidenFollowupEmails.scheduledFor))
+      .limit(pageSize)
+      .offset(offset);
+
+    const totalCountRow = await db
+      .select({ total: count() })
+      .from(aidenFollowupEmails)
+      .where(whereClause);
+
+    const total = totalCountRow[0]?.total ?? 0;
+
+    return res.json({
+      sequenceType,
+      rows,
+      pagination: {
+        page,
+        pageSize,
+        total,
+        totalPages: Math.ceil(total / pageSize),
+      },
+    });
+  } catch (error: any) {
+    logger.error('Admin aiden-follow-ups list error:', error);
+    return res.status(500).json({ error: 'Failed to load follow-ups' });
+  }
+});
+
+// ============================================
+// POST /api/admin/aiden-follow-ups/trigger
+// Manually process the queue. Body/query: ?sequenceType=unverified|verified_nopurchase
+// Each sequence_type has its own env flag:
+//   - unverified         → ENABLE_AIDEN_FOLLOWUPS
+//   - verified_nopurchase → ENABLE_AIDEN_VERIFIED_DRIP
+// ============================================
+router.post('/trigger', async (req: Request, res: Response) => {
+  try {
+    const sequenceType = parseSequenceType(req.query.sequenceType ?? req.body?.sequenceType);
+    logger.info('Admin: manually triggering Aiden drip queue', {
+      adminId: req.adminId,
+      sequenceType,
+    });
+
+    if (sequenceType === 'verified_nopurchase') {
+      const stats = await processVerifiedDripQueue();
+      return res.json({
+        success: true,
+        sequenceType,
+        stats,
+        note: stats.flagEnabled
+          ? 'Verified-drip queue processed. Check stats for send counts.'
+          : 'ENABLE_AIDEN_VERIFIED_DRIP flag is OFF — no emails were sent. Set env var to "true" on Railway to enable.',
+      });
+    }
+
+    if (sequenceType === 'post_purchase') {
+      const stats = await processAidenPostPurchaseDripQueue();
+      return res.json({
+        success: true,
+        sequenceType,
+        stats,
+        note: stats.flagEnabled
+          ? 'Post-purchase drip queue processed. Check stats for send counts.'
+          : 'ENABLE_POST_PURCHASE_DRIP flag is OFF — no emails were sent. Set env var to "true" on Railway to enable.',
+      });
+    }
+
+    const stats = await processAidenFollowupQueue();
+    return res.json({
+      success: true,
+      sequenceType,
+      stats,
+      note: stats.flagEnabled
+        ? 'Unverified drip queue processed. Check stats for send counts.'
+        : 'ENABLE_AIDEN_FOLLOWUPS flag is OFF — no emails were sent. Set env var to "true" on Railway to enable.',
+    });
+  } catch (error: any) {
+    logger.error('Admin aiden-follow-ups trigger error:', error);
+    return res.status(500).json({ error: 'Failed to process Aiden follow-up queue' });
+  }
+});
+
+// ============================================
+// POST /api/admin/aiden-follow-ups/backfill-extension
+// One-shot backfill: schedules emails 4–13 for users who already have rows 1–3
+// and haven't purchased / unsubscribed. Idempotent — safe to call multiple times.
+// Cadence: seq 4 fires at now + 1h, then 48h apart through seq 13.
+// ============================================
+router.post('/backfill-extension', async (req: Request, res: Response) => {
+  try {
+    logger.info('Admin: backfilling Aiden verified drip extension (seq 4–13)', {
+      adminId: (req as any).adminId,
+    });
+    const result = await backfillAidenVerifiedDripExtension();
+    return res.json({
+      success: true,
+      result,
+      note: `Found ${result.found} users with seq 1–3 rows. Scheduled extension for ${result.scheduled}, skipped ${result.skipped} (purchased / unsubscribed / already backfilled / inactive).`,
+    });
+  } catch (error: any) {
+    logger.error('Admin aiden-follow-ups backfill-extension error:', error);
+    return res.status(500).json({ error: 'Backfill failed', message: error?.message });
+  }
+});
+
+// ============================================
+// GET /api/admin/aiden-follow-ups/preview/:id
+// Return the stored HTML for eye-icon preview.
+// ============================================
+router.get('/preview/:id', async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const rows = await db
+      .select({
+        subject: aidenFollowupEmails.subject,
+        bodyHtml: aidenFollowupEmails.bodyHtml,
+        bodyText: aidenFollowupEmails.bodyText,
+        recipientEmail: aidenFollowupEmails.recipientEmail,
+        sequenceNumber: aidenFollowupEmails.sequenceNumber,
+      })
+      .from(aidenFollowupEmails)
+      .where(eq(aidenFollowupEmails.id, id))
+      .limit(1);
+
+    if (!rows[0]) {
+      return res.status(404).json({ error: 'Not found' });
+    }
+
+    return res.json(rows[0]);
+  } catch (error: any) {
+    logger.error('Admin aiden-follow-ups preview error:', error);
+    return res.status(500).json({ error: 'Failed to load preview' });
+  }
+});
+
+export default router;
