@@ -77,7 +77,7 @@ import {
 import { sendFacebookEvent } from "./lib/facebook";
 
 // Zod schemas for request validation
-// `funnel` is an optional marker the FB-traffic flow (/eve_1) sends so we can
+// `funnel` is an optional marker the FB-traffic flow (/fb) sends so we can
 // branch product names, AWeber tags, and success/cancel URLs without touching
 // the V1 (email-traffic) code path.
 const funnelSchema = z.literal("v1-fb").optional();
@@ -140,10 +140,10 @@ const upsell2ReadingSchema = z.object({
   concern: z.string().optional(),
 });
 
-// V1-FB funnel helpers — see /eve_1 routes on the client and project memory
+// V1-FB funnel helpers — see /fb routes on the client and project memory
 // "V1-FB Funnel" decisions doc. Customer-visible product names get a "- FB"
 // suffix, AWeber tags get a "-fb" suffix, and inter-page Stripe redirects
-// stay inside the /eve_1 path so the FB funnel preserves URL-based event
+// stay inside the /fb path so the FB funnel preserves URL-based event
 // segmentation in Meta Events Manager.
 type FunnelId = "v1-fb" | undefined;
 
@@ -161,8 +161,8 @@ function fbTagSuffix(funnel: FunnelId): string {
 
 function funnelPath(v1Path: string, funnel: FunnelId): string {
   if (!isFbFunnel(funnel)) return v1Path;
-  if (v1Path === "/") return "/eve_1";
-  return `/eve_1${v1Path}`;
+  if (v1Path === "/") return "/fb";
+  return `/fb${v1Path}`;
 }
 
 // Tag the "seer-within" / "seer-within-upsell" / "seer-within-upsell2" base

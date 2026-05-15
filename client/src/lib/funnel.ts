@@ -1,10 +1,10 @@
-// Helpers for the parallel V1-FB funnel mounted at /eve_1/*.
+// Helpers for the parallel V1-FB funnel mounted at /fb/*.
 // V1 (email traffic) lives at /, /chat, /welcome1, /welcome2, /success.
-// V1-FB (Facebook ad traffic) mirrors the same components at the /eve_1 prefix
+// V1-FB (Facebook ad traffic) mirrors the same components at the /fb prefix
 // so Facebook Events Manager can segment Lead/IC/Purchase/Upsell by URL and
 // Stripe products carry a "- FB" suffix for finance-side attribution.
 
-export const FB_FUNNEL_PREFIX = "/eve_1";
+export const FB_FUNNEL_PREFIX = "/fb";
 export const FB_FUNNEL_PARAM = "v1-fb";
 
 function currentPath(): string {
@@ -23,7 +23,7 @@ export function currentFunnel(pathname?: string): "v1-fb" | undefined {
   return isFbFunnel(pathname) ? FB_FUNNEL_PARAM : undefined;
 }
 
-// Prefix a V1 path with /eve_1 when the user is in the FB funnel, otherwise
+// Prefix a V1 path with /fb when the user is in the FB funnel, otherwise
 // leave it alone. Use for in-funnel navigation so the user stays inside their
 // own funnel for the entire flow.
 export function funnelPath(v1Path: string, pathname?: string): string {
