@@ -75,7 +75,7 @@ function Router() {
       location === '/welcome2' ||
       location === '/success' ||
       location === '/upsell-test' ||
-      location.startsWith('/eve_1') ||
+      location.startsWith('/fb') ||
       location === '/aiden' ||
       location === '/evelyn';
     if (isTrackedFunnel) {
@@ -97,11 +97,11 @@ function Router() {
         {/* V1-FB funnel routes (Facebook ad traffic) — same components, new
             URLs so FB Events Manager can segment by event_source_url and
             Stripe products carry the "- FB" suffix. */}
-        <Route path="/eve_1" component={LandingPage} />
-        <Route path="/eve_1/chat" component={ChatPage} />
-        <Route path="/eve_1/welcome1" component={UpsellPage} />
-        <Route path="/eve_1/welcome2" component={Upsell2Page} />
-        <Route path="/eve_1/success" component={SuccessPage} />
+        <Route path="/fb" component={LandingPage} />
+        <Route path="/fb/chat" component={ChatPage} />
+        <Route path="/fb/welcome1" component={UpsellPage} />
+        <Route path="/fb/welcome2" component={Upsell2Page} />
+        <Route path="/fb/success" component={SuccessPage} />
         <Route path="/privacy" component={PrivacyPage} />
         <Route path="/terms" component={TermsPage} />
         <Route path="/refund" component={RefundPage} />
