@@ -1,7 +1,19 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useSearch, useLocation, Link } from 'wouter';
+import { SoulmateShippingForm, type ShippingFormSubmission } from '../components/soulmate/SoulmateShippingForm';
 
-type State = 'offer' | 'charging' | 'success' | 'declined';
+type State = 'offer' | 'collecting_shipping' | 'charging' | 'success' | 'declined';
+
+interface ExistingShipping {
+  name: string;
+  line1: string;
+  line2?: string;
+  city: string;
+  state: string;
+  postal: string;
+  country: string;
+  phone?: string;
+}
 
 const h2Style: React.CSSProperties = {
   fontFamily: 'Merriweather, serif',
@@ -37,36 +49,62 @@ export default function SoulmateUpsell2Page() {
   const sessionId = params.get('session_id');
 
   const [state, setState] = useState<State>('offer');
+  const [existingShipping, setExistingShipping] = useState<ExistingShipping | null>(null);
 
   const raw = sessionStorage.getItem('soulmate_form');
   const formData = raw ? JSON.parse(raw) : null;
   const firstName = formData?.firstName || '';
   const email     = formData?.email     || '';
 
-  const handleAddToCart = async () => {
+  // Look up saved shipping from upsell 1 (Path A) — if present, skip the form.
+  useEffect(() => {
+    if (!email) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(`/api/soulmate/shipping?email=${encodeURIComponent(email)}`);
+        const data = await res.json();
+        if (!cancelled && data?.shipping?.line1) {
+          setExistingShipping(data.shipping);
+        }
+      } catch {
+        // Ignore — user will go through Path B (collect form).
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [email]);
+
+  const chargeWithShipping = async (body: ShippingFormSubmission | Record<string, never>) => {
     setState('charging');
     try {
       if (sessionId) {
         const res = await fetch('/api/soulmate/upsell2/charge', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ sessionId, email, firstName }),
+          body: JSON.stringify({ sessionId, email, firstName, ...body }),
         });
         const data = await res.json();
         if (data.success) { navigate('/soulmate/thank-you'); return; }
         if (data.fallback && data.url) { window.location.href = data.url; return; }
       }
-      const res = await fetch('/api/soulmate/upsell2/checkout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, firstName }),
-      });
-      const data = await res.json();
-      if (data.url) { window.location.href = data.url; }
-      else setState('offer');
+      setState('offer');
     } catch {
       setState('offer');
     }
+  };
+
+  const handleAddToCart = () => {
+    // Path A: shipping already on file → charge immediately (server reuses it)
+    if (existingShipping) {
+      chargeWithShipping({});
+      return;
+    }
+    // Path B: declined upsell 1 → collect shipping fresh
+    setState('collecting_shipping');
+  };
+
+  const handleShippingSubmit = (payload: ShippingFormSubmission) => {
+    chargeWithShipping(payload);
   };
 
   const handleDecline = () => navigate('/soulmate/thank-you');
@@ -470,30 +508,53 @@ export default function SoulmateUpsell2Page() {
             with you every single day!
           </p>
 
-          {/* CTA */}
-          <button
-            className="upsell-btn"
-            onClick={handleAddToCart}
-            disabled={state === 'charging'}
-          >
-            {state === 'charging' ? 'Processing...' : 'Yes! Add the Love Tuner to My Order — $79'}
-          </button>
+          {state === 'collecting_shipping' || state === 'charging' ? (
+            <div style={{ background: '#fff', padding: 24, borderRadius: 10, boxShadow: '0 2px 7px rgba(0,0,0,0.08)', marginTop: 16 }}>
+              <SoulmateShippingForm
+                productLabel="Love Tuner"
+                defaultName={firstName}
+                submitLabel="Complete My Order — $79"
+                submitting={state === 'charging'}
+                onSubmit={handleShippingSubmit}
+              />
+            </div>
+          ) : (
+            <>
+              {/* Reused shipping summary (Path A) */}
+              {existingShipping && (
+                <div style={{ background: '#f0f9ff', borderRadius: 8, padding: '12px 16px', marginBottom: 16, fontSize: 14, color: '#414040', fontFamily: 'sans-serif' }}>
+                  <div style={{ fontWeight: 700, marginBottom: 4 }}>📦 Shipping to:</div>
+                  <div>{existingShipping.name}</div>
+                  <div>{existingShipping.line1}{existingShipping.line2 ? `, ${existingShipping.line2}` : ''}</div>
+                  <div>{existingShipping.city}, {existingShipping.state} {existingShipping.postal}, {existingShipping.country}</div>
+                </div>
+              )}
 
-          <p style={{ fontSize: 13, color: '#888', marginTop: -10, marginBottom: 20, textAlign: 'center' }}>
-            🔒 60-Day Money-Back Guarantee — no questions asked
-          </p>
+              {/* CTA */}
+              <button
+                className="upsell-btn"
+                onClick={handleAddToCart}
+              >
+                Yes! Add the Love Tuner to My Order — $79
+              </button>
 
-          {/* Decline link */}
-          <div style={{ textAlign: 'center' }}>
-            <button
-              onClick={handleDecline}
-              style={{ color: '#8f8f8f', textDecoration: 'none', background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, lineHeight: 1.5 }}
-              onMouseEnter={e => (e.currentTarget.style.textDecoration = 'underline')}
-              onMouseLeave={e => (e.currentTarget.style.textDecoration = 'none')}
-            >
-              No thank you, I don't need healing right now. Please take me to my order confirmation.
-            </button>
-          </div>
+              <p style={{ fontSize: 13, color: '#888', marginTop: -10, marginBottom: 20, textAlign: 'center' }}>
+                🔒 60-Day Money-Back Guarantee — no questions asked
+              </p>
+
+              {/* Decline link */}
+              <div style={{ textAlign: 'center' }}>
+                <button
+                  onClick={handleDecline}
+                  style={{ color: '#8f8f8f', textDecoration: 'none', background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, lineHeight: 1.5 }}
+                  onMouseEnter={e => (e.currentTarget.style.textDecoration = 'underline')}
+                  onMouseLeave={e => (e.currentTarget.style.textDecoration = 'none')}
+                >
+                  No thank you, I don't need healing right now. Please take me to my order confirmation.
+                </button>
+              </div>
+            </>
+          )}
         </div>
       </div>
 

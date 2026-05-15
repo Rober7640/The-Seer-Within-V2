@@ -75,6 +75,13 @@ import {
   addUpsell2Subscriber,
 } from "./lib/aweber";
 import { sendFacebookEvent } from "./lib/facebook";
+import {
+  getSoulmateOrderByEmail,
+  upsertSoulmateOrderShipping,
+  recordSoulmatePurchase,
+  type ShippingPayload,
+  type BillingPayload,
+} from "./lib/soulmateOrders";
 
 // Zod schemas for request validation
 // `funnel` is an optional marker the FB-traffic flow (/fb) sends so we can
@@ -2431,14 +2438,55 @@ export async function registerRoutes(
     }
   });
 
+  // GET /api/soulmate/shipping?email=X — returns saved shipping (or null) for upsell 2 to skip the form
+  app.get("/api/soulmate/shipping", async (req: Request, res: Response) => {
+    const email = String(req.query.email || "").toLowerCase();
+    if (!email) return res.json({ shipping: null });
+    try {
+      const order = await getSoulmateOrderByEmail(email);
+      if (!order || !order.shippingLine1) return res.json({ shipping: null });
+      return res.json({
+        shipping: {
+          name: order.shippingName,
+          line1: order.shippingLine1,
+          line2: order.shippingLine2,
+          city: order.shippingCity,
+          state: order.shippingState,
+          postal: order.shippingPostal,
+          country: order.shippingCountry,
+          phone: order.shippingPhone,
+        },
+      });
+    } catch (error) {
+      logger.error("Soulmate shipping lookup error:", error);
+      return res.json({ shipping: null });
+    }
+  });
+
   // POST /api/soulmate/upsell/charge — 1-click charge $47 for bracelet
   app.post("/api/soulmate/upsell/charge", async (req: Request, res: Response) => {
     try {
-      const { sessionId, email, firstName } = req.body as {
+      const { sessionId, email, firstName, shipping, billing, billingSameAsShipping } = req.body as {
         sessionId: string;
         email: string;
         firstName: string;
+        shipping?: ShippingPayload;
+        billing?: BillingPayload;
+        billingSameAsShipping?: boolean;
       };
+
+      if (!shipping || !shipping.line1 || !shipping.city || !shipping.state || !shipping.postal || !shipping.country) {
+        return res.status(400).json({ success: false, error: "Shipping address required" });
+      }
+
+      // Persist shipping immediately so a Stripe decline still leaves the address on file
+      await upsertSoulmateOrderShipping({
+        email,
+        firstName,
+        shipping,
+        billing,
+        billingSameAsShipping: billingSameAsShipping !== false,
+      });
 
       if (!stripe) {
         return res.json({ success: false, fallback: true });
@@ -2466,6 +2514,26 @@ export async function registerRoutes(
 
       const customerId =
         typeof session.customer === "string" ? session.customer : session.customer.id;
+
+      const stripeShipping = {
+        name: shipping.name,
+        phone: shipping.phone || undefined,
+        address: {
+          line1: shipping.line1,
+          line2: shipping.line2 || undefined,
+          city: shipping.city,
+          state: shipping.state,
+          postal_code: shipping.postal,
+          country: shipping.country,
+        },
+      };
+
+      // Persist shipping on the Stripe Customer so future PaymentIntents auto-populate
+      try {
+        await stripe.customers.update(customerId, { shipping: stripeShipping });
+      } catch (err) {
+        logger.warn("Stripe customer.shipping update failed (non-blocking):", err);
+      }
 
       const paymentIntent = session.payment_intent as Stripe.PaymentIntent;
 
@@ -2499,13 +2567,14 @@ export async function registerRoutes(
             },
           ],
           mode: "payment",
+          shipping_address_collection: { allowed_countries: ["US", "CA", "GB", "AU", "NZ", "IE", "SG"] },
           success_url: `${getBaseUrl(req)}/soulmate/gift2?session_id=${sessionId}`,
           cancel_url: `${getBaseUrl(req)}/soulmate/gift?session_id=${sessionId}`,
         });
         return res.json({ success: false, fallback: true, url: fallback.url });
       }
 
-      await stripe.paymentIntents.create({
+      const charged = await stripe.paymentIntents.create({
         amount: 4700,
         currency: "usd",
         customer: customerId,
@@ -2513,12 +2582,20 @@ export async function registerRoutes(
         off_session: true,
         confirm: true,
         description: "Rose Quartz Soulmate Attraction Bracelet",
+        shipping: stripeShipping,
         metadata: {
           firstName,
           email,
           app: "the-seer-within",
           product: "soulmate_bracelet",
         },
+      });
+
+      await recordSoulmatePurchase({
+        email,
+        product: "bracelet",
+        paymentIntentId: charged.id,
+        amountCents: 4700,
       });
 
       return res.json({ success: true });
@@ -2528,14 +2605,47 @@ export async function registerRoutes(
     }
   });
 
-  // POST /api/soulmate/upsell2/charge — 1-click charge $47 for Love Tuner
+  // POST /api/soulmate/upsell2/charge — 1-click charge $79 for Love Tuner
   app.post("/api/soulmate/upsell2/charge", async (req: Request, res: Response) => {
     try {
-      const { sessionId, email, firstName } = req.body as {
+      const { sessionId, email, firstName, shipping: bodyShipping, billing, billingSameAsShipping } = req.body as {
         sessionId: string;
         email: string;
         firstName: string;
+        shipping?: ShippingPayload;
+        billing?: BillingPayload;
+        billingSameAsShipping?: boolean;
       };
+
+      // Reuse-or-collect: if client didn't pass shipping, load from DB. Reject if neither.
+      let shipping: ShippingPayload | null = bodyShipping || null;
+      if (!shipping) {
+        const existing = await getSoulmateOrderByEmail(email);
+        if (existing && existing.shippingLine1) {
+          shipping = {
+            name: existing.shippingName || firstName,
+            line1: existing.shippingLine1,
+            line2: existing.shippingLine2 || undefined,
+            city: existing.shippingCity || "",
+            state: existing.shippingState || "",
+            postal: existing.shippingPostal || "",
+            country: existing.shippingCountry || "US",
+            phone: existing.shippingPhone || undefined,
+          };
+        }
+      } else {
+        await upsertSoulmateOrderShipping({
+          email,
+          firstName,
+          shipping,
+          billing,
+          billingSameAsShipping: billingSameAsShipping !== false,
+        });
+      }
+
+      if (!shipping || !shipping.line1) {
+        return res.status(400).json({ success: false, error: "Shipping address required" });
+      }
 
       if (!stripe) {
         return res.json({ success: false, fallback: true });
@@ -2563,6 +2673,26 @@ export async function registerRoutes(
 
       const customerId =
         typeof session.customer === "string" ? session.customer : session.customer.id;
+
+      const stripeShipping = {
+        name: shipping.name,
+        phone: shipping.phone || undefined,
+        address: {
+          line1: shipping.line1,
+          line2: shipping.line2 || undefined,
+          city: shipping.city,
+          state: shipping.state,
+          postal_code: shipping.postal,
+          country: shipping.country,
+        },
+      };
+
+      // Keep Stripe Customer.shipping in sync (no-op if same)
+      try {
+        await stripe.customers.update(customerId, { shipping: stripeShipping });
+      } catch (err) {
+        logger.warn("Stripe customer.shipping update failed (non-blocking):", err);
+      }
 
       const paymentIntent = session.payment_intent as Stripe.PaymentIntent;
 
@@ -2595,13 +2725,14 @@ export async function registerRoutes(
             },
           ],
           mode: "payment",
+          shipping_address_collection: { allowed_countries: ["US", "CA", "GB", "AU", "NZ", "IE", "SG"] },
           success_url: `${getBaseUrl(req)}/soulmate/thank-you`,
           cancel_url: `${getBaseUrl(req)}/soulmate/gift2?session_id=${sessionId}`,
         });
         return res.json({ success: false, fallback: true, url: fallback.url });
       }
 
-      await stripe.paymentIntents.create({
+      const charged = await stripe.paymentIntents.create({
         amount: 7900,
         currency: "usd",
         customer: customerId,
@@ -2609,12 +2740,20 @@ export async function registerRoutes(
         off_session: true,
         confirm: true,
         description: "528 Hz Frequency of Love Tuner Necklace",
+        shipping: stripeShipping,
         metadata: {
           firstName,
           email,
           app: "the-seer-within",
           product: "soulmate_love_tuner",
         },
+      });
+
+      await recordSoulmatePurchase({
+        email,
+        product: "tuner",
+        paymentIntentId: charged.id,
+        amountCents: 7900,
       });
 
       return res.json({ success: true });

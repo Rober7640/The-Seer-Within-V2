@@ -1004,3 +1004,50 @@ export type InsertAbTest = z.infer<typeof insertAbTestSchema>;
 
 export type AbEvent = typeof abEvents.$inferSelect;
 export type InsertAbEvent = z.infer<typeof insertAbEventSchema>;
+
+// ============================================================
+// Soulmate Sketch Funnel Orders
+// One row per email. Shipping collected once on first physical-product upsell
+// (bracelet or tuner) and reused thereafter.
+// ============================================================
+
+export const soulmateOrders = pgTable("soulmate_orders", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  email: text("email").notNull().unique(),
+  firstName: text("first_name"),
+
+  sketchPiId: text("sketch_pi_id"),
+  sketchCents: integer("sketch_cents"),
+  sketchAt: timestamp("sketch_at"),
+
+  braceletPiId: text("bracelet_pi_id"),
+  braceletCents: integer("bracelet_cents"),
+  braceletAt: timestamp("bracelet_at"),
+
+  tunerPiId: text("tuner_pi_id"),
+  tunerCents: integer("tuner_cents"),
+  tunerAt: timestamp("tuner_at"),
+
+  shippingName: text("shipping_name"),
+  shippingLine1: text("shipping_line1"),
+  shippingLine2: text("shipping_line2"),
+  shippingCity: text("shipping_city"),
+  shippingState: text("shipping_state"),
+  shippingPostal: text("shipping_postal"),
+  shippingCountry: text("shipping_country").default("US"),
+  shippingPhone: text("shipping_phone"),
+
+  billingSameAsShipping: boolean("billing_same_as_shipping").notNull().default(true),
+  billingLine1: text("billing_line1"),
+  billingLine2: text("billing_line2"),
+  billingCity: text("billing_city"),
+  billingState: text("billing_state"),
+  billingPostal: text("billing_postal"),
+  billingCountry: text("billing_country"),
+
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export type SoulmateOrder = typeof soulmateOrders.$inferSelect;
+export type InsertSoulmateOrder = typeof soulmateOrders.$inferInsert;

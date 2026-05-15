@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useSearch, useLocation, Link } from 'wouter';
+import { SoulmateShippingForm, type ShippingFormSubmission } from '../components/soulmate/SoulmateShippingForm';
 
 const STEPS = [
   { img: '/soulmate/step1.png', title: 'Set Your Intention',                  body: "Take a moment to reflect on your deepest desire for love and connection. Write this wish or intention on the provided wish paper. Be clear and specific, as this will help focus the energy on manifesting your soulmate." },
@@ -9,7 +10,7 @@ const STEPS = [
   { img: '/soulmate/step4.png', title: 'Trust the Process',                    body: "Trust that the energy of the bracelet, combined with your focused intention, is drawing your soulmate closer. Have faith in the process and know that your soulmate will come to you in perfect divine timing." },
 ];
 
-type State = 'offer' | 'charging' | 'success' | 'declined';
+type State = 'offer' | 'collecting_shipping' | 'charging' | 'success' | 'declined';
 
 // Matches original .h2 — Merriweather 30px #1b1b1e
 const h2Style: React.CSSProperties = {
@@ -54,29 +55,24 @@ export default function SoulmateUpsellPage() {
   const firstName = formData?.firstName || '';
   const email     = formData?.email     || '';
 
-  const handleAddToCart = async () => {
+  const handleAddToCart = () => setState('collecting_shipping');
+
+  const handleShippingSubmit = async (payload: ShippingFormSubmission) => {
     setState('charging');
     try {
       if (sessionId) {
         const res = await fetch('/api/soulmate/upsell/charge', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ sessionId, email, firstName }),
+          body: JSON.stringify({ sessionId, email, firstName, ...payload }),
         });
         const data = await res.json();
         if (data.success) { navigate('/soulmate/gift2' + (sessionId ? `?session_id=${sessionId}` : '')); return; }
         if (data.fallback && data.url) { window.location.href = data.url; return; }
       }
-      const res = await fetch('/api/soulmate/upsell/checkout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, firstName }),
-      });
-      const data = await res.json();
-      if (data.url) { window.location.href = data.url; }
-      else setState('offer');
+      setState('collecting_shipping');
     } catch {
-      setState('offer');
+      setState('collecting_shipping');
     }
   };
 
@@ -358,28 +354,41 @@ export default function SoulmateUpsellPage() {
             connection today!
           </p>
 
-          {/* CTA Button */}
-          <button
-            className="upsell-btn"
-            onClick={handleAddToCart}
-            disabled={state === 'charging'}
-          >
-            {state === 'charging' ? 'Processing...' : 'Add to Cart'}
-          </button>
+          {state === 'collecting_shipping' || state === 'charging' ? (
+            <div style={{ background: '#fff', padding: 24, borderRadius: 10, boxShadow: '0 2px 7px rgba(0,0,0,0.08)', marginTop: 16 }}>
+              <SoulmateShippingForm
+                productLabel="bracelet"
+                defaultName={firstName}
+                submitLabel="Complete My Order — $47"
+                submitting={state === 'charging'}
+                onSubmit={handleShippingSubmit}
+              />
+            </div>
+          ) : (
+            <>
+              {/* CTA Button */}
+              <button
+                className="upsell-btn"
+                onClick={handleAddToCart}
+              >
+                Add to Cart
+              </button>
 
-          {/* Decline link — matches original text */}
-          <div style={{ textAlign: 'center' }}>
-            <button
-              onClick={handleDecline}
-              style={{ color: '#8f8f8f', textDecoration: 'none', background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, lineHeight: 1.5 }}
-              onMouseEnter={e => (e.currentTarget.style.textDecoration = 'underline')}
-              onMouseLeave={e => (e.currentTarget.style.textDecoration = 'none')}
-            >
-              No, I've to decline your goodwill offer and pass this to the next deserving customer
-              of your community. I understand I'll forfeit this opportunity to buy this bracelet at
-              such a low price ever again.
-            </button>
-          </div>
+              {/* Decline link — matches original text */}
+              <div style={{ textAlign: 'center' }}>
+                <button
+                  onClick={handleDecline}
+                  style={{ color: '#8f8f8f', textDecoration: 'none', background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, lineHeight: 1.5 }}
+                  onMouseEnter={e => (e.currentTarget.style.textDecoration = 'underline')}
+                  onMouseLeave={e => (e.currentTarget.style.textDecoration = 'none')}
+                >
+                  No, I've to decline your goodwill offer and pass this to the next deserving customer
+                  of your community. I understand I'll forfeit this opportunity to buy this bracelet at
+                  such a low price ever again.
+                </button>
+              </div>
+            </>
+          )}
         </div>
       </div>
 
