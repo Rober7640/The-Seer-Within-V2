@@ -50,6 +50,7 @@ export default function SoulmateUpsell2Page() {
 
   const [state, setState] = useState<State>('offer');
   const [existingShipping, setExistingShipping] = useState<ExistingShipping | null>(null);
+  const [shippingLoaded, setShippingLoaded] = useState(false);
 
   const raw = sessionStorage.getItem('soulmate_form');
   const formData = raw ? JSON.parse(raw) : null;
@@ -58,7 +59,7 @@ export default function SoulmateUpsell2Page() {
 
   // Look up saved shipping from upsell 1 (Path A) — if present, skip the form.
   useEffect(() => {
-    if (!email) return;
+    if (!email) { setShippingLoaded(true); return; }
     let cancelled = false;
     (async () => {
       try {
@@ -69,6 +70,8 @@ export default function SoulmateUpsell2Page() {
         }
       } catch {
         // Ignore — user will go through Path B (collect form).
+      } finally {
+        if (!cancelled) setShippingLoaded(true);
       }
     })();
     return () => { cancelled = true; };
@@ -508,7 +511,8 @@ export default function SoulmateUpsell2Page() {
             with you every single day!
           </p>
 
-          {state === 'collecting_shipping' || state === 'charging' ? (
+          {state === 'collecting_shipping' || (state === 'charging' && !existingShipping) ? (
+            // Path B: collecting fresh shipping (or in-flight after form submit)
             <div style={{ background: '#fff', padding: 24, borderRadius: 10, boxShadow: '0 2px 7px rgba(0,0,0,0.08)', marginTop: 16 }}>
               <SoulmateShippingForm
                 productLabel="Love Tuner"
@@ -517,6 +521,12 @@ export default function SoulmateUpsell2Page() {
                 submitting={state === 'charging'}
                 onSubmit={handleShippingSubmit}
               />
+            </div>
+          ) : state === 'charging' && existingShipping ? (
+            // Path A: charging using saved shipping — no form, just a spinner
+            <div style={{ background: '#fff', padding: 30, borderRadius: 10, boxShadow: '0 2px 7px rgba(0,0,0,0.08)', marginTop: 16, textAlign: 'center', fontFamily: 'sans-serif', color: '#414040' }}>
+              <div style={{ fontSize: 18, fontWeight: 600, marginBottom: 8 }}>Processing your order...</div>
+              <div style={{ fontSize: 14, color: '#888' }}>Charging $79 for your Love Tuner</div>
             </div>
           ) : (
             <>
@@ -534,6 +544,7 @@ export default function SoulmateUpsell2Page() {
               <button
                 className="upsell-btn"
                 onClick={handleAddToCart}
+                disabled={!shippingLoaded}
               >
                 Yes! Add the Love Tuner to My Order — $79
               </button>
