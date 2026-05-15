@@ -226,7 +226,7 @@ export function SoulmatePopup({ onClose }: { onClose: () => void }) {
                 placeholder="Enter your email"
                 value={form.email}
                 onChange={e => set('email')(e.target.value)}
-                style={{ borderRadius: 5, fontSize: 16, padding: '8px 10px', border: '1px solid #ccc', width: '100%' }}
+                style={{ color: '#414040', background: '#fff', borderRadius: 5, fontSize: 16, padding: '8px 10px', border: '1px solid #ccc', width: '100%' }}
               />
             </div>
 
