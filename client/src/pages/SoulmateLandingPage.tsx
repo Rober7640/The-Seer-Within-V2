@@ -212,7 +212,7 @@ export function SoulmatePopup({ onClose }: { onClose: () => void }) {
                     placeholder={f.ph}
                     value={form[f.key as keyof FormData]}
                     onChange={e => set(f.key as keyof FormData)(e.target.value)}
-                    style={{ borderRadius: 5, fontSize: 16, padding: '8px 10px', border: '1px solid #ccc', width: '100%' }}
+                    style={{ color: '#414040', background: '#fff', borderRadius: 5, fontSize: 16, padding: '8px 10px', border: '1px solid #ccc', width: '100%' }}
                   />
                 ))}
               </div>
@@ -242,10 +242,10 @@ export function SoulmatePopup({ onClose }: { onClose: () => void }) {
               </button>
             </div>
 
-            <div style={{ textAlign: 'center', marginTop: 10, fontFamily: 'Merriweather, serif' }}>
+            <div style={{ textAlign: 'center', marginTop: 10, fontFamily: 'Merriweather, serif', color: '#414040' }}>
               I will now tap into your energy
             </div>
-            <div style={{ textAlign: 'center', marginTop: 10, fontFamily: 'Merriweather, serif', fontWeight: 700 }}>
+            <div style={{ textAlign: 'center', marginTop: 10, fontFamily: 'Merriweather, serif', fontWeight: 700, color: '#414040' }}>
               🔒 Your info is Secure and I will never spam you
             </div>
           </div>
