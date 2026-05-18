@@ -77,12 +77,13 @@ function getFunnelForPath(path: string): string | null {
 }
 
 function getSoulmateStep(path: string): string {
-  if (path === '/soulmate') return 'landing';
-  if (path === '/soulmate/process') return 'process';
-  if (path === '/soulmate/reading') return 'sales';
-  if (path === '/soulmate/gift') return 'upsell1';
-  if (path === '/soulmate/gift2') return 'upsell2';
-  if (path === '/soulmate/thank-you') return 'thank_you';
+  const clean = (path.split('?')[0].split('#')[0].replace(/\/+$/, '') || '/').toLowerCase();
+  if (clean === '/soulmate') return 'landing';
+  if (clean === '/soulmate/process') return 'process';
+  if (clean === '/soulmate/reading') return 'sales';
+  if (clean === '/soulmate/gift') return 'upsell1';
+  if (clean === '/soulmate/gift2') return 'upsell2';
+  if (clean === '/soulmate/thank-you') return 'thank_you';
   return 'unknown';
 }
 
