@@ -33,6 +33,7 @@ import {
 } from '../lib/evelynFollowupEmailGenerator';
 import { scheduleEvelynVerifiedDrip } from '../lib/evelynVerifiedDripGenerator';
 import logger from '../lib/logger';
+import { posthog } from '../lib/posthog';
 
 // Default free-coin grant when the user has no default persona set or the
 // persona row has no freeCoins override. Per-persona amounts live on
@@ -263,6 +264,9 @@ router.post('/register', authLimiter, async (req: Request, res: Response) => {
       }).catch(() => { /* logged inside */ });
     }
 
+    posthog.identify({ distinctId: user.id, properties: { email: user.email, name: user.firstName, signup_funnel: isLanderSignup ? 'evelyn' : 'standard', $set_once: { first_seen: new Date().toISOString() } } });
+    posthog.capture({ distinctId: user.id, event: 'user_registered', properties: { email: user.email, persona: persona ?? null, source: source ?? null, requires_verification: !isTestEnv } });
+
     res.status(201).json({
       token,
       user: {
@@ -456,6 +460,9 @@ router.post('/magic-register', authLimiter, async (req: Request, res: Response) 
       }).catch(() => { /* already logged inside */ });
     }
 
+    posthog.identify({ distinctId: user.id, properties: { email: user.email, name: user.firstName, signup_funnel: 'aiden', $set_once: { first_seen: new Date().toISOString() } } });
+    posthog.capture({ distinctId: user.id, event: 'user_registered', properties: { email: user.email, persona, requires_verification: !isTestEnv, quiz_topic: quizData?.topic ?? null } });
+
     res.status(201).json({
       token,
       user: {
@@ -616,6 +623,8 @@ router.get('/verify-email/:token', async (req: Request, res: Response) => {
         personaParam = `&persona=${personaRow[0].slug}`;
       }
     }
+    posthog.capture({ distinctId: user.id, event: 'email_verified', properties: { free_coins_granted: freeCoinsGrant, is_lander_user: isLanderUser } });
+
     res.redirect(`${baseUrl}/login?verified=success&token=${jwtToken}${personaParam}`);
   } catch (error) {
     logger.error('Verify email error:', error);
@@ -753,6 +762,7 @@ router.post('/send-magic-login', authLimiter, async (req: Request, res: Response
       }
     }
 
+    posthog.capture({ distinctId: user.id, event: 'magic_link_sent', properties: { persona_slug: personaSlug } });
     res.json({ sent: true });
   } catch (error) {
     logger.error('send-magic-login error:', error);
@@ -894,6 +904,9 @@ router.post('/login', authLimiter, async (req: Request, res: Response) => {
         defaultPersonaAvailable = isPersonaOnline(personaRow[0]);
       }
     }
+
+    posthog.identify({ distinctId: user.id, properties: { email: user.email, name: user.firstName } });
+    posthog.capture({ distinctId: user.id, event: 'user_logged_in', properties: { email: user.email, email_verified: user.emailVerified, default_persona_slug: defaultPersonaSlug } });
 
     res.json({
       token,
@@ -1291,6 +1304,9 @@ router.post('/magic-verify', authLimiter, async (req: Request, res: Response) =>
     const needsPasswordSetup = !!(user.migratedFromConversationId && !user.passwordChangedAt);
 
     const jwtToken = generateToken(user.id, user.email);
+
+    posthog.identify({ distinctId: user.id, properties: { email: user.email, name: user.firstName } });
+    posthog.capture({ distinctId: user.id, event: 'magic_link_used', properties: { persona_slug: result.personaSlug, email_verified_via_magic_link: !user.emailVerified } });
 
     return res.json({
       token: jwtToken,

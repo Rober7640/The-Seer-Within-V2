@@ -16,6 +16,7 @@ import { isPersonaOnline } from '../lib/personaManager';
 import { getModelForOperation } from '../lib/modelConfig';
 import { chatLimiter } from '../lib/rateLimiter';
 import logger from '../lib/logger';
+import { posthog } from '../lib/posthog';
 import { sendSessionTimeoutEmail } from '../lib/sessionTimeoutEmail';
 import { getCountryFromIP } from '../lib/crisisHotlines';
 import { anthropicFailover as anthropic } from '../lib/anthropicWithFailover';
@@ -212,6 +213,8 @@ router.post('/session/start', requireAuth, async (req: Request, res: Response) =
 
     const pricing = await getPersonaPricing(personaId);
 
+    posthog.capture({ distinctId: req.userId!, event: 'chat_session_started', properties: { session_id: result.sessionId, persona_id: personaId, persona_name: result.personaName, is_continuation: result.isContinuation, remaining_coins: result.creditsRemaining } });
+
     res.status(201).json({
       sessionId: result.sessionId,
       personaId,
@@ -297,6 +300,8 @@ router.post('/session/:id/message', requireAuth, chatLimiter, async (req: Reques
       returnedCreditsRemaining: result.creditsRemaining,
       sessionState: sessionDebug.rows[0] || null,
     });
+
+    posthog.capture({ distinctId: req.userId!, event: 'chat_message_sent', properties: { session_id: req.params.id, remaining_coins: result.creditsRemaining, session_active: result.sessionActive, blocked: result.blocked || false } });
 
     res.json({
       message: result.message,
@@ -396,6 +401,8 @@ router.post('/session/:id/end', requireAuth, async (req: Request, res: Response)
     }
 
     const remainingCoins = await getRemainingCoins(req.userId!);
+
+    posthog.capture({ distinctId: req.userId!, event: 'chat_session_ended', properties: { session_id: sessionId, persona_id: session[0].personaId, end_reason: req.body?.reason ?? 'explicit', remaining_coins: remainingCoins } });
 
     res.json({
       sessionStatus: 'ended',
@@ -619,6 +626,7 @@ router.post('/session/:id/feedback', requireAuth, async (req: Request, res: Resp
     });
 
     logger.info('Session feedback submitted', { sessionId, userId, starRating });
+    posthog.capture({ distinctId: userId, event: 'session_feedback_submitted', properties: { session_id: sessionId, persona_id: sessionRows[0].personaId, star_rating: starRating, has_text: !!(feedbackText) } });
     res.json({ success: true });
   } catch (error: any) {
     // Duplicate key → already submitted, treat as success

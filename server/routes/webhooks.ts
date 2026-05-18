@@ -7,6 +7,7 @@ import { db } from '../lib/db';
 import { followUpEmails, userFollowUpPreferences, migrationDripEmails, topupEmails, aidenFollowupEmails, users, emailSuppression, creditPurchases } from '@shared/schema';
 import { and, eq, sql } from 'drizzle-orm';
 import logger from '../lib/logger';
+import { posthog } from '../lib/posthog';
 import * as paypal from '../lib/paypal';
 import { fireV2PurchaseEvent } from '../lib/facebook';
 import { maybeSchedulePostPurchaseDrip } from '../lib/postPurchaseDripTrigger';
@@ -465,6 +466,7 @@ async function autoUnsubscribe(userId: string, reason: string): Promise<void> {
   }
 
   logger.info(`User ${userId} unsubscribed from follow-ups (reason: ${reason})`);
+  posthog.capture({ distinctId: userId, event: 'user_unsubscribed', properties: { reason } });
 
   // Mirror the unsubscribe into the central suppression list. Isolated so a
   // failure here (e.g. migration not yet applied on a new environment)
@@ -783,6 +785,7 @@ router.post('/paypal', async (req: Request, res: Response) => {
 
       fireV2PurchaseEvent(result.purchaseId).catch(() => { /* logged inside */ });
       maybeSchedulePostPurchaseDrip(result.purchaseId).catch(() => { /* logged inside */ });
+      posthog.capture({ distinctId: result.userId, event: 'paypal_webhook_purchase_completed', properties: { purchase_id: result.purchaseId, coins: result.totalCoins, order_id: orderId } });
     } else {
       logger.info('PayPal webhook: order already processed or unknown', {
         orderId,

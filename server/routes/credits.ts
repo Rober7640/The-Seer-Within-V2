@@ -8,6 +8,7 @@ import { getPersonaPricing } from '../lib/personaPricing';
 import { DEFAULT_PRICING } from '../../shared/types';
 import Stripe from 'stripe';
 import logger from '../lib/logger';
+import { posthog } from '../lib/posthog';
 import { fireWithBreaker, stripeBreaker, isCircuitOpenError } from '../lib/circuitBreaker';
 import * as paypal from '../lib/paypal';
 import { fireV2PurchaseEvent } from '../lib/facebook';
@@ -160,6 +161,7 @@ router.post('/checkout-view', requireAuth, async (req: Request, res: Response) =
       personaId: personaId || null,
       source,
     });
+    posthog.capture({ distinctId: req.userId!, event: 'checkout_view_logged', properties: { package_type: packageType, persona_id: personaId ?? null, source } });
     res.json({ ok: true });
   } catch (error) {
     logger.error('Checkout view tracking error:', error);
@@ -283,6 +285,8 @@ router.post('/checkout', requireAuth, async (req: Request, res: Response) => {
     await db.update(creditPurchases)
       .set({ stripeSessionId: session.id, updatedAt: new Date() })
       .where(eq(creditPurchases.id, purchaseId));
+
+    posthog.capture({ distinctId: req.userId!, event: 'checkout_initiated', properties: { payment_method: 'stripe_checkout', package_type: tier!.packageType, coins: tier!.totalCoins, price_usd_cents: tier!.priceUsd, persona_id: personaId ?? null, purchase_id: purchaseId } });
 
     res.json({ url: session.url });
   } catch (error) {
@@ -500,6 +504,8 @@ router.post('/confirm-payment', requireAuth, async (req: Request, res: Response)
     // ENABLE_POST_PURCHASE_DRIP at send time (cron level).
     maybeSchedulePostPurchaseDrip(purchase.id).catch(() => { /* logged inside */ });
 
+    posthog.capture({ distinctId: req.userId!, event: 'credit_purchase_completed', properties: { payment_method: 'stripe_card', purchase_id: purchase.id, package_type: purchase.packageType, coins: (purchase.coinsPurchased ?? 0) + (purchase.bonusCoins ?? 0), price_usd_cents: purchase.priceUsd, persona_id: purchase.personaId ?? null } });
+
     const newBalance = updatedUser[0]?.coinBalance ?? 0;
     res.json({ success: true, newBalance });
   } catch (error) {
@@ -561,6 +567,8 @@ router.post('/create-order', requireAuth, async (req: Request, res: Response) =>
     await db.update(creditPurchases)
       .set({ paypalOrderId: orderId, updatedAt: new Date() })
       .where(eq(creditPurchases.id, purchaseId));
+
+    posthog.capture({ distinctId: req.userId!, event: 'checkout_initiated', properties: { payment_method: 'paypal', package_type: tier!.packageType, coins: tier!.totalCoins, price_usd_cents: tier!.priceUsd, persona_id: personaId ?? null, purchase_id: purchaseId } });
 
     res.json({ orderId });
   } catch (error) {
@@ -663,6 +671,8 @@ router.post('/capture-order', requireAuth, async (req: Request, res: Response) =
     fireV2PurchaseEvent(purchase.id).catch(() => { /* logged inside */ });
     maybeSchedulePostPurchaseDrip(purchase.id).catch(() => { /* logged inside */ });
 
+    posthog.capture({ distinctId: req.userId!, event: 'paypal_purchase_completed', properties: { purchase_id: purchase.id, package_type: purchase.packageType, coins: (purchase.coinsPurchased ?? 0) + (purchase.bonusCoins ?? 0), price_usd_cents: purchase.priceUsd, persona_id: purchase.personaId ?? null } });
+
     // Clean up any other pending purchases for this user (e.g. abandoned Stripe intents)
     await db.delete(creditPurchases)
       .where(and(
@@ -758,6 +768,7 @@ router.post('/confirm-checkout', requireAuth, async (req: Request, res: Response
 
       fireV2PurchaseEvent(purchaseId).catch(() => { /* logged inside */ });
       maybeSchedulePostPurchaseDrip(purchaseId).catch(() => { /* logged inside */ });
+      posthog.capture({ distinctId: req.userId!, event: 'confirm_checkout_completed', properties: { purchase_id: purchaseId, coins: totalCoins, package_type: checkoutSession.metadata?.packageType ?? null, price_usd_cents: checkoutSession.amount_total ?? 0 } });
     } else {
       logger.info('confirm-checkout: purchase already processed (webhook beat us)', { purchaseId });
     }
@@ -870,6 +881,8 @@ router.post('/webhook', async (req: Request, res: Response) => {
 
       fireV2PurchaseEvent(purchaseId).catch(() => { /* logged inside */ });
       maybeSchedulePostPurchaseDrip(purchaseId).catch(() => { /* logged inside */ });
+
+      posthog.capture({ distinctId: userId, event: 'stripe_webhook_purchase_completed', properties: { purchase_id: purchaseId, package_type: session.metadata?.packageType ?? null, coins: totalCoins, price_usd_cents: (session.amount_total ?? 0) } });
     } catch (dbError) {
       logger.error('Webhook DB error:', dbError);
       res.status(500).json({ error: 'Database error' });
