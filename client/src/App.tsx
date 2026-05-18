@@ -7,6 +7,7 @@ import * as Sentry from "@sentry/react";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { trackPageView } from "./lib/facebook";
+import { initPostHog, track as trackPH } from "./lib/posthog";
 import { ChatServiceLayout } from "@/components/ChatServiceLayout";
 import NotFound from "@/pages/not-found";
 import LandingPage from "@/pages/LandingPage";
@@ -70,8 +71,27 @@ function LazyFallback() {
   );
 }
 
+function getFunnelForPath(path: string): string | null {
+  if (path.startsWith('/soulmate')) return 'soulmate';
+  return null;
+}
+
+function getSoulmateStep(path: string): string {
+  if (path === '/soulmate') return 'landing';
+  if (path === '/soulmate/process') return 'process';
+  if (path === '/soulmate/reading') return 'sales';
+  if (path === '/soulmate/gift') return 'upsell1';
+  if (path === '/soulmate/gift2') return 'upsell2';
+  if (path === '/soulmate/thank-you') return 'thank_you';
+  return 'unknown';
+}
+
 function Router() {
   const [location] = useLocation();
+
+  useEffect(() => {
+    initPostHog();
+  }, []);
 
   useEffect(() => {
     // V1 funnel + the two V2 lander surfaces (/aiden, /evelyn) that have
@@ -90,6 +110,20 @@ function Router() {
       location.startsWith('/soulmate');
     if (isTrackedFunnel) {
       trackPageView();
+    }
+
+    // PostHog page tracking — Phase 1 covers soulmate funnel only.
+    const funnel = getFunnelForPath(location);
+    if (funnel === 'soulmate') {
+      const urlParams = new URLSearchParams(window.location.search);
+      trackPH('lander_view', {
+        funnel,
+        step: getSoulmateStep(location),
+        path: location,
+        utm_source: urlParams.get('utm_source') || undefined,
+        utm_campaign: urlParams.get('utm_campaign') || undefined,
+        utm_medium: urlParams.get('utm_medium') || undefined,
+      });
     }
   }, [location]);
 

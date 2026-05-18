@@ -82,6 +82,7 @@ import {
   type ShippingPayload,
   type BillingPayload,
 } from "./lib/soulmateOrders";
+import { posthog } from "./lib/posthog";
 
 // Zod schemas for request validation
 // `funnel` is an optional marker the FB-traffic flow (/fb) sends so we can
@@ -2374,10 +2375,11 @@ export async function registerRoutes(
   // POST /api/soulmate/checkout — create Stripe session for sketch purchase
   app.post("/api/soulmate/checkout", async (req: Request, res: Response) => {
     try {
-      const { email, firstName, priceCents } = req.body as {
+      const { email, firstName, priceCents, posthogDistinctId } = req.body as {
         email: string;
         firstName: string;
         priceCents: number;
+        posthogDistinctId?: string;
       };
 
       const validPrices = [2800, 4200, 5500];
@@ -2393,6 +2395,14 @@ export async function registerRoutes(
       if (!customer) {
         customer = await stripe.customers.create({ email, name: firstName });
       }
+
+      const sharedMetadata: Record<string, string> = {
+        firstName,
+        email,
+        app: "the-seer-within",
+        product: "soulmate_sketch",
+      };
+      if (posthogDistinctId) sharedMetadata.posthogDistinctId = posthogDistinctId;
 
       const session = await stripe.checkout.sessions.create({
         customer: customer.id,
@@ -2414,21 +2424,11 @@ export async function registerRoutes(
         payment_intent_data: {
           description: "Soulmate Sketch Reading",
           setup_future_usage: "off_session",
-          metadata: {
-            firstName,
-            email,
-            app: "the-seer-within",
-            product: "soulmate_sketch",
-          },
+          metadata: sharedMetadata,
         },
         success_url: `${getBaseUrl(req)}/soulmate/gift?session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${getBaseUrl(req)}/soulmate`,
-        metadata: {
-          firstName,
-          email,
-          app: "the-seer-within",
-          product: "soulmate_sketch",
-        },
+        metadata: sharedMetadata,
       });
 
       return res.json({ url: session.url });
@@ -2466,13 +2466,14 @@ export async function registerRoutes(
   // POST /api/soulmate/upsell/charge — 1-click charge $47 for bracelet
   app.post("/api/soulmate/upsell/charge", async (req: Request, res: Response) => {
     try {
-      const { sessionId, email, firstName, shipping, billing, billingSameAsShipping } = req.body as {
+      const { sessionId, email, firstName, shipping, billing, billingSameAsShipping, posthogDistinctId } = req.body as {
         sessionId: string;
         email: string;
         firstName: string;
         shipping?: ShippingPayload;
         billing?: BillingPayload;
         billingSameAsShipping?: boolean;
+        posthogDistinctId?: string;
       };
 
       if (!shipping || !shipping.line1 || !shipping.city || !shipping.state || !shipping.postal || !shipping.country) {
@@ -2551,6 +2552,14 @@ export async function registerRoutes(
         paymentMethodId = paymentIntent.payment_method.id;
       }
 
+      const upsell1Metadata: Record<string, string> = {
+        firstName,
+        email,
+        app: "the-seer-within",
+        product: "soulmate_bracelet",
+      };
+      if (posthogDistinctId) upsell1Metadata.posthogDistinctId = posthogDistinctId;
+
       if (!paymentMethodId) {
         // Fall back to Stripe checkout
         const fallback = await stripe.checkout.sessions.create({
@@ -2570,6 +2579,7 @@ export async function registerRoutes(
           shipping_address_collection: { allowed_countries: ["US", "CA", "GB", "AU", "NZ", "IE", "SG"] },
           success_url: `${getBaseUrl(req)}/soulmate/gift2?session_id=${sessionId}`,
           cancel_url: `${getBaseUrl(req)}/soulmate/gift?session_id=${sessionId}`,
+          metadata: upsell1Metadata,
         });
         return res.json({ success: false, fallback: true, url: fallback.url });
       }
@@ -2583,12 +2593,7 @@ export async function registerRoutes(
         confirm: true,
         description: "Rose Quartz Soulmate Attraction Bracelet",
         shipping: stripeShipping,
-        metadata: {
-          firstName,
-          email,
-          app: "the-seer-within",
-          product: "soulmate_bracelet",
-        },
+        metadata: upsell1Metadata,
       });
 
       await recordSoulmatePurchase({
@@ -2596,6 +2601,20 @@ export async function registerRoutes(
         product: "bracelet",
         paymentIntentId: charged.id,
         amountCents: 4700,
+      });
+
+      posthog.capture({
+        distinctId: posthogDistinctId || email,
+        event: 'purchase_completed',
+        properties: {
+          funnel: 'soulmate',
+          step: 'upsell1',
+          product: 'soulmate_bracelet',
+          payment_method: 'stripe_1click',
+          amount_cents: 4700,
+          payment_intent_id: charged.id,
+          email,
+        },
       });
 
       return res.json({ success: true });
@@ -2608,13 +2627,14 @@ export async function registerRoutes(
   // POST /api/soulmate/upsell2/charge — 1-click charge $79 for Love Tuner
   app.post("/api/soulmate/upsell2/charge", async (req: Request, res: Response) => {
     try {
-      const { sessionId, email, firstName, shipping: bodyShipping, billing, billingSameAsShipping } = req.body as {
+      const { sessionId, email, firstName, shipping: bodyShipping, billing, billingSameAsShipping, posthogDistinctId } = req.body as {
         sessionId: string;
         email: string;
         firstName: string;
         shipping?: ShippingPayload;
         billing?: BillingPayload;
         billingSameAsShipping?: boolean;
+        posthogDistinctId?: string;
       };
 
       // Reuse-or-collect: if client didn't pass shipping, load from DB. Reject if neither.
@@ -2710,6 +2730,14 @@ export async function registerRoutes(
         paymentMethodId = paymentIntent.payment_method.id;
       }
 
+      const upsell2Metadata: Record<string, string> = {
+        firstName,
+        email,
+        app: "the-seer-within",
+        product: "soulmate_love_tuner",
+      };
+      if (posthogDistinctId) upsell2Metadata.posthogDistinctId = posthogDistinctId;
+
       if (!paymentMethodId) {
         const fallback = await stripe.checkout.sessions.create({
           customer: customerId,
@@ -2728,6 +2756,7 @@ export async function registerRoutes(
           shipping_address_collection: { allowed_countries: ["US", "CA", "GB", "AU", "NZ", "IE", "SG"] },
           success_url: `${getBaseUrl(req)}/soulmate/thank-you`,
           cancel_url: `${getBaseUrl(req)}/soulmate/gift2?session_id=${sessionId}`,
+          metadata: upsell2Metadata,
         });
         return res.json({ success: false, fallback: true, url: fallback.url });
       }
@@ -2741,12 +2770,7 @@ export async function registerRoutes(
         confirm: true,
         description: "528 Hz Frequency of Love Tuner Necklace",
         shipping: stripeShipping,
-        metadata: {
-          firstName,
-          email,
-          app: "the-seer-within",
-          product: "soulmate_love_tuner",
-        },
+        metadata: upsell2Metadata,
       });
 
       await recordSoulmatePurchase({
@@ -2754,6 +2778,20 @@ export async function registerRoutes(
         product: "tuner",
         paymentIntentId: charged.id,
         amountCents: 7900,
+      });
+
+      posthog.capture({
+        distinctId: posthogDistinctId || email,
+        event: 'purchase_completed',
+        properties: {
+          funnel: 'soulmate',
+          step: 'upsell2',
+          product: 'soulmate_love_tuner',
+          payment_method: 'stripe_1click',
+          amount_cents: 7900,
+          payment_intent_id: charged.id,
+          email,
+        },
       });
 
       return res.json({ success: true });

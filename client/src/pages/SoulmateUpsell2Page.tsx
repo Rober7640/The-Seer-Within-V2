@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useSearch, useLocation, Link } from 'wouter';
 import { SoulmateShippingForm, type ShippingFormSubmission } from '../components/soulmate/SoulmateShippingForm';
+import { track as trackPH, getDistinctId } from '@/lib/posthog';
 
 type State = 'offer' | 'collecting_shipping' | 'charging' | 'success' | 'declined';
 
@@ -79,12 +80,13 @@ export default function SoulmateUpsell2Page() {
 
   const chargeWithShipping = async (body: ShippingFormSubmission | Record<string, never>) => {
     setState('charging');
+    trackPH('upsell_purchase_initiated', { funnel: 'soulmate', step: 'upsell2', product: 'soulmate_love_tuner' });
     try {
       if (sessionId) {
         const res = await fetch('/api/soulmate/upsell2/charge', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ sessionId, email, firstName, ...body }),
+          body: JSON.stringify({ sessionId, email, firstName, ...body, posthogDistinctId: getDistinctId() }),
         });
         const data = await res.json();
         if (data.success) { navigate('/soulmate/thank-you'); return; }
@@ -97,6 +99,7 @@ export default function SoulmateUpsell2Page() {
   };
 
   const handleAddToCart = () => {
+    trackPH('upsell_accepted', { funnel: 'soulmate', step: 'upsell2', product: 'soulmate_love_tuner', shipping_on_file: !!existingShipping });
     // Path A: shipping already on file → charge immediately (server reuses it)
     if (existingShipping) {
       chargeWithShipping({});
@@ -110,7 +113,10 @@ export default function SoulmateUpsell2Page() {
     chargeWithShipping(payload);
   };
 
-  const handleDecline = () => navigate('/soulmate/thank-you');
+  const handleDecline = () => {
+    trackPH('upsell_declined', { funnel: 'soulmate', step: 'upsell2', product: 'soulmate_love_tuner' });
+    navigate('/soulmate/thank-you');
+  };
 
   return (
     <div style={{ background: '#f5f5f5', fontFamily: 'sans-serif' }} className="min-h-screen">

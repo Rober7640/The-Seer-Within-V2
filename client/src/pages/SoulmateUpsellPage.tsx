@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useSearch, useLocation, Link } from 'wouter';
 import { SoulmateShippingForm, type ShippingFormSubmission } from '../components/soulmate/SoulmateShippingForm';
+import { track as trackPH, getDistinctId } from '@/lib/posthog';
 
 const STEPS = [
   { img: '/soulmate/step1.png', title: 'Set Your Intention',                  body: "Take a moment to reflect on your deepest desire for love and connection. Write this wish or intention on the provided wish paper. Be clear and specific, as this will help focus the energy on manifesting your soulmate." },
@@ -55,16 +56,20 @@ export default function SoulmateUpsellPage() {
   const firstName = formData?.firstName || '';
   const email     = formData?.email     || '';
 
-  const handleAddToCart = () => setState('collecting_shipping');
+  const handleAddToCart = () => {
+    trackPH('upsell_accepted', { funnel: 'soulmate', step: 'upsell1', product: 'soulmate_bracelet' });
+    setState('collecting_shipping');
+  };
 
   const handleShippingSubmit = async (payload: ShippingFormSubmission) => {
     setState('charging');
+    trackPH('upsell_purchase_initiated', { funnel: 'soulmate', step: 'upsell1', product: 'soulmate_bracelet' });
     try {
       if (sessionId) {
         const res = await fetch('/api/soulmate/upsell/charge', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ sessionId, email, firstName, ...payload }),
+          body: JSON.stringify({ sessionId, email, firstName, ...payload, posthogDistinctId: getDistinctId() }),
         });
         const data = await res.json();
         if (data.success) { navigate('/soulmate/gift2' + (sessionId ? `?session_id=${sessionId}` : '')); return; }
@@ -76,7 +81,10 @@ export default function SoulmateUpsellPage() {
     }
   };
 
-  const handleDecline = () => navigate('/soulmate/gift2' + (sessionId ? `?session_id=${sessionId}` : ''));
+  const handleDecline = () => {
+    trackPH('upsell_declined', { funnel: 'soulmate', step: 'upsell1', product: 'soulmate_bracelet' });
+    navigate('/soulmate/gift2' + (sessionId ? `?session_id=${sessionId}` : ''));
+  };
 
   // ── Post-purchase success ──
   if (state === 'success') {

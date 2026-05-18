@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useLocation, Link } from 'wouter';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { track as trackPH, identifyUser } from '@/lib/posthog';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -137,6 +138,14 @@ export function SoulmatePopup({ onClose }: { onClose: () => void }) {
       return;
     }
     sessionStorage.setItem('soulmate_form', JSON.stringify(form));
+    identifyUser(form.email, { funnel: 'soulmate', first_name: form.firstName });
+    trackPH('lead_captured', {
+      funnel: 'soulmate',
+      step: 'landing_form',
+      preference: form.preference,
+      age_range: form.ageRange,
+      ethnicity: form.ethnicity,
+    });
     navigate('/soulmate/process');
   };
 

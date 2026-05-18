@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link } from 'wouter';
+import { track as trackPH, getDistinctId } from '@/lib/posthog';
 
 const PRICES = [
   { cents: 2800, label: '$28', sub: 'Pay what you can' },
@@ -81,11 +82,21 @@ export default function SoulmateSalesPage() {
 
   const handleCheckout = async () => {
     setLoading(true);
+    trackPH('checkout_initiated', {
+      funnel: 'soulmate',
+      product: 'soulmate_sketch',
+      price_cents: selectedPrice,
+    });
     try {
       const res = await fetch('/api/soulmate/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, firstName, priceCents: selectedPrice }),
+        body: JSON.stringify({
+          email,
+          firstName,
+          priceCents: selectedPrice,
+          posthogDistinctId: getDistinctId(),
+        }),
       });
       const data = await res.json();
       if (data.url) window.location.href = data.url;

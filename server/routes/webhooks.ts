@@ -681,6 +681,30 @@ router.post('/stripe', async (req: Request, res: Response) => {
     } else {
       logger.info('Stripe webhook: No trackdeskClickId in metadata, skipping affiliate tracking');
     }
+
+    // PostHog: track soulmate funnel purchases (sketch + upsell fallback checkouts)
+    const SOULMATE_PRODUCTS: Record<string, { step: string; product: string }> = {
+      soulmate_sketch: { step: 'sales', product: 'soulmate_sketch' },
+      soulmate_bracelet: { step: 'upsell1', product: 'soulmate_bracelet' },
+      soulmate_love_tuner: { step: 'upsell2', product: 'soulmate_love_tuner' },
+    };
+    const soulmateInfo = product ? SOULMATE_PRODUCTS[product] : undefined;
+    if (soulmateInfo) {
+      const posthogDistinctId = metadata.posthogDistinctId || email;
+      posthog.capture({
+        distinctId: posthogDistinctId,
+        event: 'purchase_completed',
+        properties: {
+          funnel: 'soulmate',
+          step: soulmateInfo.step,
+          product: soulmateInfo.product,
+          payment_method: 'stripe_checkout',
+          amount_cents: session.amount_total ?? 0,
+          stripe_session_id: session.id,
+          email,
+        },
+      });
+    }
   }
 
   // Always return 200 to acknowledge receipt
