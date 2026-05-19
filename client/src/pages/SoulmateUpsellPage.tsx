@@ -72,7 +72,16 @@ export default function SoulmateUpsellPage() {
           body: JSON.stringify({ sessionId, email, firstName, ...payload, posthogDistinctId: getDistinctId() }),
         });
         const data = await res.json();
-        if (data.success) { navigate('/soulmate/gift2' + (sessionId ? `?session_id=${sessionId}` : '')); return; }
+        if (data.success) {
+          // Mark shipping as collected in THIS sketch session so /gift2 knows
+          // to take Path A (1-click reuse). Without this, /gift2 falls back to
+          // querying the DB by email — which leaks shipping across sessions.
+          if (sessionId) {
+            sessionStorage.setItem('soulmate_upsell1_shipping_session', sessionId);
+          }
+          navigate('/soulmate/gift2' + (sessionId ? `?session_id=${sessionId}` : ''));
+          return;
+        }
         if (data.fallback && data.url) { window.location.href = data.url; return; }
       }
       setState('collecting_shipping');

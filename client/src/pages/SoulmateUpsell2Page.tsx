@@ -58,9 +58,21 @@ export default function SoulmateUpsell2Page() {
   const firstName = formData?.firstName || '';
   const email     = formData?.email     || '';
 
-  // Look up saved shipping from upsell 1 (Path A) — if present, skip the form.
+  // Path A (1-click reuse) only kicks in when the user just collected shipping
+  // by accepting upsell 1 IN THIS sketch session. We confirm by checking a
+  // sessionStorage flag written by SoulmateUpsellPage on charge success — if
+  // the flag's sessionId matches the current URL's sessionId, the DB row for
+  // this email contains shipping that's safe to reuse. Without this gate, any
+  // returning email (or re-test with the same address on file) would silently
+  // skip the form and ship to a stale address.
   useEffect(() => {
     if (!email) { setShippingLoaded(true); return; }
+    const collectedInSession = sessionStorage.getItem('soulmate_upsell1_shipping_session');
+    if (!sessionId || collectedInSession !== sessionId) {
+      // Different session (or upsell 1 was declined) → Path B, fresh form.
+      setShippingLoaded(true);
+      return;
+    }
     let cancelled = false;
     (async () => {
       try {
@@ -76,7 +88,7 @@ export default function SoulmateUpsell2Page() {
       }
     })();
     return () => { cancelled = true; };
-  }, [email]);
+  }, [email, sessionId]);
 
   const chargeWithShipping = async (body: ShippingFormSubmission | Record<string, never>) => {
     setState('charging');
