@@ -91,15 +91,16 @@ export function trackPageView(): void {
 export function trackLead(email: string, firstName?: string): void {
   const eventId = generateEventId();
 
+  // value/currency intentionally omitted: Meta Events Manager flags
+  // value=0 as a data-quality issue, and the spec lists both as optional
+  // for the Lead event since email capture has no realized monetary value.
   if (typeof window !== 'undefined' && window.fbq) {
     window.fbq('track', 'Lead', {
       content_name: 'Email Capture',
-      value: 0,
-      currency: 'USD',
     }, { eventID: eventId });
   }
 
-  sendServerEvent('Lead', eventId, { email, firstName, content_name: 'Email Capture', value: 0, currency: 'USD' });
+  sendServerEvent('Lead', eventId, { email, firstName, content_name: 'Email Capture' });
 }
 
 // `contentName` defaults to 'Energy Clearing Ritual' so V1-funnel callers
