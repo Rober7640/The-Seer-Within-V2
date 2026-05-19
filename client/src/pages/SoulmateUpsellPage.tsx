@@ -83,6 +83,14 @@ export default function SoulmateUpsellPage() {
 
   const handleDecline = () => {
     trackPH('upsell_declined', { funnel: 'soulmate', step: 'upsell1', product: 'soulmate_bracelet' });
+    // AWeber: tag for recovery drip (fire-and-forget)
+    if (email) {
+      fetch('/api/soulmate/upsell-declined', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, product: 'soulmate_bracelet' }),
+      }).catch(() => { /* non-blocking */ });
+    }
     navigate('/soulmate/gift2' + (sessionId ? `?session_id=${sessionId}` : ''));
   };
 

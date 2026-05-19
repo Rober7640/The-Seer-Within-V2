@@ -11,6 +11,7 @@ import { posthog } from '../lib/posthog';
 import * as paypal from '../lib/paypal';
 import { fireV2PurchaseEvent } from '../lib/facebook';
 import { maybeSchedulePostPurchaseDrip } from '../lib/postPurchaseDripTrigger';
+import { addSoulmatePaidSubscriber } from '../lib/aweber';
 
 const router = Router();
 
@@ -711,6 +712,19 @@ router.post('/stripe', async (req: Request, res: Response) => {
           email,
         },
       });
+    }
+
+    // AWeber: add soulmate sketch buyers to the Sketch Buyers list.
+    // Fire-and-forget. Bracelet + Love Tuner are handled inline in routes.ts
+    // after their 1-click charges (not webhook-driven), so this block only
+    // covers the sketch path. No shipping for the sketch (digital deliverable).
+    if (product === 'soulmate_sketch' && email) {
+      addSoulmatePaidSubscriber({
+        email,
+        firstName: metadata.firstName || '',
+        stripeOrderId: session.id,
+        purchaseAmountCents: session.amount_total ?? 0,
+      }).catch((err) => logger.error('AWeber Soulmate Paid error (non-blocking):', err));
     }
   }
 

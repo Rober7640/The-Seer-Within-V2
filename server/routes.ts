@@ -73,6 +73,10 @@ import {
   addPaidSubscriber,
   addUpsellSubscriber,
   addUpsell2Subscriber,
+  addSoulmateLeadSubscriber,
+  addSoulmateUpsell1Subscriber,
+  addSoulmateUpsell2Subscriber,
+  tagSoulmateDeclinedUpsell,
 } from "./lib/aweber";
 import { sendFacebookEvent } from "./lib/facebook";
 import {
@@ -2405,6 +2409,81 @@ export async function registerRoutes(
 
   // ─── Soulmate Sketch Funnel ───────────────────────────────────────────────
 
+  // POST /api/soulmate/lead — capture landing form submit on /soulmate.
+  // Non-blocking: response returns immediately so client can navigate to
+  // /soulmate/process without waiting on AWeber.
+  app.post("/api/soulmate/lead", async (req: Request, res: Response) => {
+    const {
+      email,
+      firstName,
+      lastName,
+      preference,
+      ageRange,
+      ethnicity,
+      birthMonth,
+      birthDay,
+      birthYear,
+      landerPath,
+      utmSource,
+      utmCampaign,
+      utmMedium,
+    } = req.body as {
+      email?: string;
+      firstName?: string;
+      lastName?: string;
+      preference?: string;
+      ageRange?: string;
+      ethnicity?: string;
+      birthMonth?: string;
+      birthDay?: string;
+      birthYear?: string;
+      landerPath?: string;
+      utmSource?: string;
+      utmCampaign?: string;
+      utmMedium?: string;
+    };
+
+    if (!email || !firstName) {
+      return res.status(400).json({ success: false, error: "email and firstName required" });
+    }
+
+    addSoulmateLeadSubscriber({
+      email,
+      firstName,
+      lastName,
+      preference,
+      ageRange,
+      ethnicity,
+      birthMonth,
+      birthDay,
+      birthYear,
+      landerPath,
+      utmSource,
+      utmCampaign,
+      utmMedium,
+    }).catch((err) => logger.error("Soulmate lead AWeber error (non-blocking):", err));
+
+    return res.json({ success: true });
+  });
+
+  // POST /api/soulmate/upsell-declined — tag existing AWeber subscriber so
+  // the drip can send a recovery offer. Fire-and-forget.
+  app.post("/api/soulmate/upsell-declined", async (req: Request, res: Response) => {
+    const { email, product } = req.body as {
+      email?: string;
+      product?: "soulmate_bracelet" | "soulmate_love_tuner";
+    };
+
+    if (!email || (product !== "soulmate_bracelet" && product !== "soulmate_love_tuner")) {
+      return res.status(400).json({ success: false, error: "email and valid product required" });
+    }
+
+    tagSoulmateDeclinedUpsell({ email, declinedProduct: product })
+      .catch((err) => logger.error("Soulmate decline tag error (non-blocking):", err));
+
+    return res.json({ success: true });
+  });
+
   // POST /api/soulmate/checkout — create Stripe session for sketch purchase
   app.post("/api/soulmate/checkout", async (req: Request, res: Response) => {
     try {
@@ -2650,6 +2729,16 @@ export async function registerRoutes(
         },
       });
 
+      // AWeber: shipping is guaranteed valid here (validated above + Stripe
+      // Customer.shipping already updated). Fire-and-forget.
+      addSoulmateUpsell1Subscriber({
+        email,
+        firstName,
+        stripeOrderId: charged.id,
+        purchaseAmountCents: 4700,
+        shipping,
+      }).catch((err) => logger.error("AWeber Soulmate Upsell1 error (non-blocking):", err));
+
       return res.json({ success: true });
     } catch (error) {
       logger.error("Soulmate upsell charge error:", error);
@@ -2826,6 +2915,17 @@ export async function registerRoutes(
           email,
         },
       });
+
+      // AWeber: shipping at this point is either fresh from the form (Path B)
+      // or rehydrated from the soulmate_orders DB row (Path A). Either way the
+      // local `shipping` is the source of truth that was just used to charge.
+      addSoulmateUpsell2Subscriber({
+        email,
+        firstName,
+        stripeOrderId: charged.id,
+        purchaseAmountCents: 7900,
+        shipping,
+      }).catch((err) => logger.error("AWeber Soulmate Upsell2 error (non-blocking):", err));
 
       return res.json({ success: true });
     } catch (error) {

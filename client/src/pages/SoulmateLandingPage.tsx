@@ -146,6 +146,29 @@ export function SoulmatePopup({ onClose }: { onClose: () => void }) {
       age_range: form.ageRange,
       ethnicity: form.ethnicity,
     });
+
+    // AWeber: add to Soulmate Leads list (fire-and-forget — don't block nav)
+    const urlParams = new URLSearchParams(window.location.search);
+    fetch('/api/soulmate/lead', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email: form.email,
+        firstName: form.firstName,
+        lastName: form.lastName,
+        preference: form.preference,
+        ageRange: form.ageRange,
+        ethnicity: form.ethnicity,
+        birthMonth: form.birthMonth,
+        birthDay: form.birthDay,
+        birthYear: form.birthYear,
+        landerPath: window.location.pathname,
+        utmSource: urlParams.get('utm_source') || undefined,
+        utmCampaign: urlParams.get('utm_campaign') || undefined,
+        utmMedium: urlParams.get('utm_medium') || undefined,
+      }),
+    }).catch(() => { /* non-blocking */ });
+
     navigate('/soulmate/process');
   };
 
