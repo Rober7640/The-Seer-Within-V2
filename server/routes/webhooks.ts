@@ -718,11 +718,16 @@ router.post('/stripe', async (req: Request, res: Response) => {
     // Fire-and-forget. Bracelet + Love Tuner are handled inline in routes.ts
     // after their 1-click charges (not webhook-driven), so this block only
     // covers the sketch path. No shipping for the sketch (digital deliverable).
+    // Use the PaymentIntent id (pi_*) for parity with the bracelet/tuner
+    // writes — the Checkout Session id (cs_*) leaks here otherwise.
     if (product === 'soulmate_sketch' && email) {
+      const paymentIntentId = typeof session.payment_intent === 'string'
+        ? session.payment_intent
+        : session.payment_intent?.id;
       addSoulmatePaidSubscriber({
         email,
         firstName: metadata.firstName || '',
-        stripeOrderId: session.id,
+        stripeOrderId: paymentIntentId || session.id,
         purchaseAmountCents: session.amount_total ?? 0,
       }).catch((err) => logger.error('AWeber Soulmate Paid error (non-blocking):', err));
     }
