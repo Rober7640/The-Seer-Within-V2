@@ -837,18 +837,25 @@ export async function registerRoutes(
               const sessionFunnel: FunnelId =
                 session.metadata?.funnel === "v1-fb" ? "v1-fb" : undefined;
 
+              const purchaseTypeTag =
+                purchaseType === "downsell" ? "downsell" : "initial-purchase";
+              const paidTags = [
+                conversation!.bucket || "seer-within",
+                "paid",
+                purchaseTypeTag,
+              ];
+              // Append (not replace) an -fb-suffixed marker for /fb-funnel
+              // buyers so existing AWeber automations matching the unsuffixed
+              // tag keep firing while we gain a separate count for FB traffic.
+              if (isFbFunnel(sessionFunnel)) {
+                paidTags.push(`${purchaseTypeTag}-fb`);
+              }
+
               addPaidSubscriber({
                 email: conversation!.email!,
                 name: conversation!.firstName || undefined,
                 stripeOrderId: paymentIntentId,
-                tags: fbifyAweberTags(
-                  [
-                    conversation!.bucket || "seer-within",
-                    "paid",
-                    purchaseType === "downsell" ? "downsell" : "initial-purchase",
-                  ],
-                  sessionFunnel,
-                ),
+                tags: fbifyAweberTags(paidTags, sessionFunnel),
               })
                 .then((result) => {
                   if (result.success) {
