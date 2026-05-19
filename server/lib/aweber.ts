@@ -405,8 +405,15 @@ async function writeSoulmateSubscriber(opts: {
     const subscriberData: Record<string, unknown> = {
       email: opts.email,
       update_existing: true,
-      custom_fields: opts.customFields,
     };
+    // Only include custom_fields when there's at least one to set. AWeber
+    // treats `custom_fields: {}` with update_existing as "clear all custom
+    // fields" — which silently wipes values set by earlier API calls on the
+    // same subscriber/list. Surfaced when the decline-tag call (no custom
+    // fields) ran ~11s after the sketch purchase populated 3 fields.
+    if (Object.keys(opts.customFields).length > 0) {
+      subscriberData.custom_fields = opts.customFields;
+    }
     if (opts.name) subscriberData.name = opts.name;
     if (opts.tags.length > 0) subscriberData.tags = opts.tags;
 
