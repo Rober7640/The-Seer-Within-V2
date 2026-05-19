@@ -682,22 +682,29 @@ router.post('/stripe', async (req: Request, res: Response) => {
       logger.info('Stripe webhook: No trackdeskClickId in metadata, skipping affiliate tracking');
     }
 
-    // PostHog: track soulmate funnel purchases (sketch + upsell fallback checkouts)
-    const SOULMATE_PRODUCTS: Record<string, { step: string; product: string }> = {
-      soulmate_sketch: { step: 'sales', product: 'soulmate_sketch' },
-      soulmate_bracelet: { step: 'upsell1', product: 'soulmate_bracelet' },
-      soulmate_love_tuner: { step: 'upsell2', product: 'soulmate_love_tuner' },
+    // PostHog: track funnel purchases (Phase 1 soulmate + Phase 2 V1/fb).
+    // Soulmate products fix funnel='soulmate'. V1 products derive funnel from
+    // metadata.funnel ('v1-fb' → 'fb', missing → 'v1').
+    type TrackedProduct = { funnel: 'soulmate' | null; step: string; product: string };
+    const TRACKED_PRODUCTS: Record<string, TrackedProduct> = {
+      soulmate_sketch:        { funnel: 'soulmate', step: 'sales',   product: 'soulmate_sketch' },
+      soulmate_bracelet:      { funnel: 'soulmate', step: 'upsell1', product: 'soulmate_bracelet' },
+      soulmate_love_tuner:    { funnel: 'soulmate', step: 'upsell2', product: 'soulmate_love_tuner' },
+      energy_clearing_ritual: { funnel: null,       step: 'sales',   product: 'energy_clearing_ritual' },
+      protection_ritual:      { funnel: null,       step: 'upsell1', product: 'protection_ritual' },
+      manifestation_bracelet: { funnel: null,       step: 'upsell2', product: 'manifestation_bracelet' },
     };
-    const soulmateInfo = product ? SOULMATE_PRODUCTS[product] : undefined;
-    if (soulmateInfo) {
+    const productInfo = product ? TRACKED_PRODUCTS[product] : undefined;
+    if (productInfo) {
+      const funnelValue = productInfo.funnel ?? (metadata.funnel === 'v1-fb' ? 'fb' : 'v1');
       const posthogDistinctId = metadata.posthogDistinctId || email;
       posthog.capture({
         distinctId: posthogDistinctId,
         event: 'purchase_completed',
         properties: {
-          funnel: 'soulmate',
-          step: soulmateInfo.step,
-          product: soulmateInfo.product,
+          funnel: funnelValue,
+          step: productInfo.step,
+          product: productInfo.product,
           payment_method: 'stripe_checkout',
           amount_cents: session.amount_total ?? 0,
           stripe_session_id: session.id,

@@ -8,6 +8,7 @@ import { QUIZ_QUESTIONS, getEmailAppLink } from "@/lib/aidenQuizData";
 import { trackLead, trackInitiateCheckout } from "@/lib/facebook";
 import TurnstileWidget from "@/components/TurnstileWidget";
 import { CosmicBackground } from "@/components/CosmicBackground";
+import { track as trackPH, identifyUser as identifyPH } from "@/lib/posthog";
 
 const AUTH_TOKEN_KEY = "seer_auth_token";
 
@@ -155,6 +156,7 @@ export default function AidenQuizPage() {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ sessionToken: quizSessionToken, completedQuiz: true }),
           }).catch(() => {});
+          trackPH("quiz_completed", { funnel: "aiden", step: "quiz" });
           setFlowState("transition");
         }
       }, 250);
@@ -229,6 +231,8 @@ export default function AidenQuizPage() {
         // Fire Lead now: account is created via magic-register, email captured.
         // Server has already stamped users.signupFunnel = 'aiden'.
         trackLead(email.trim(), firstName.trim());
+        identifyPH(email.trim(), { funnel: "aiden", first_name: firstName.trim() });
+        trackPH("lead_captured", { funnel: "aiden", step: "gate" });
         setRegisteredEmail(email.trim());
         setRegisteredName(firstName.trim());
         setFlowState("checking_email");
@@ -264,6 +268,12 @@ export default function AidenQuizPage() {
     if (user?.signupFunnel === 'aiden') {
       trackInitiateCheckout(9.99, "USD", "Aiden Rescue");
     }
+    trackPH("checkout_initiated", {
+      funnel: "aiden",
+      step: "rescue",
+      product: "aiden_rescue",
+      price_cents: 999,
+    });
     try {
       const res = await authFetch("/api/credits/checkout", {
         method: "POST",

@@ -37,7 +37,8 @@ import {
   UPSELL2_SHIPPING_CONFIRMED,
   UPSELL2_SOFT_DECLINE,
 } from "@/lib/upsell2Messages";
-import { currentFunnel } from "@/lib/funnel";
+import { currentFunnel, getPostHogFunnel } from "@/lib/funnel";
+import { track as trackPH } from "@/lib/posthog";
 
 export interface Message {
   id: string;
@@ -409,6 +410,12 @@ export function useUpsell2Chat({
     setIsProcessing(true);
     addUserMessage("Yes, I want the Manifestation Bracelet");
 
+    trackPH("upsell_accepted", {
+      funnel: getPostHogFunnel() ?? "v1",
+      step: "upsell2",
+      product: "manifestation_bracelet",
+    });
+
     try {
       const response = await fetch("/api/upsell2/charge", {
         method: "POST",
@@ -482,6 +489,11 @@ export function useUpsell2Chat({
       await processStage("OBJECTION_1");
     } else {
       addUserMessage("No thanks");
+      trackPH("upsell_declined", {
+        funnel: getPostHogFunnel() ?? "v1",
+        step: "upsell2",
+        product: "manifestation_bracelet",
+      });
       await processStage("DECLINED");
     }
   }, [addUserMessage, processStage, objectionCount]);

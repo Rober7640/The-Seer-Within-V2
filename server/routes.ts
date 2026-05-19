@@ -1214,6 +1214,22 @@ export async function registerRoutes(
         // Mark upsell purchased in database
         await markUpsellPurchased(checkoutSessionId, upsellPayment.id, 4700);
 
+        // PostHog: 1-click upsell (webhook only fires for fallback checkout flow,
+        // so we capture here to ensure inline 1-click charges land in the funnel).
+        posthog.capture({
+          distinctId: email || "anonymous",
+          event: "purchase_completed",
+          properties: {
+            funnel: funnel === "v1-fb" ? "fb" : "v1",
+            step: "upsell1",
+            product: "protection_ritual",
+            payment_method: "stripe_1click",
+            amount_cents: 4700,
+            payment_intent_id: upsellPayment.id,
+            email,
+          },
+        });
+
         // Return success immediately to user, then handle AWeber and Stripe update in background
         // This ensures fast response while shipping form submission completes
         const customerEmail = email || session.customer_email;
@@ -1740,6 +1756,23 @@ export async function registerRoutes(
           amount,
           type,
         );
+
+        // PostHog: 1-click upsell2 (mirror of upsell1 — webhook only catches
+        // the fallback checkout path).
+        posthog.capture({
+          distinctId: email || "anonymous",
+          event: "purchase_completed",
+          properties: {
+            funnel: funnel === "v1-fb" ? "fb" : "v1",
+            step: "upsell2",
+            product: "manifestation_bracelet",
+            payment_method: "stripe_1click",
+            amount_cents: amount,
+            amount_variant: type,
+            payment_intent_id: upsell2Payment.id,
+            email,
+          },
+        });
 
         const customerEmail = email || session.customer_email;
 

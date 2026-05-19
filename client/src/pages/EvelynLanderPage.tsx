@@ -19,6 +19,7 @@ import { Button } from "@/components/ui/button";
 import { Sparkles, Send } from "lucide-react";
 import TurnstileWidget from "@/components/TurnstileWidget";
 import { calculateTypingDelay, sleep } from "@/lib/typingAnimation";
+import { track as trackPH } from "@/lib/posthog";
 
 const AUTH_TOKEN_KEY = "seer_auth_token";
 const EVELYN_PERSONA_SLUG = "evelyn-cross";
@@ -295,6 +296,7 @@ export default function EvelynLanderPage() {
   async function handleCta() {
     setPhase("handing_off");
     setErrorMsg(null);
+    trackPH("lander_cta_clicked", { funnel: "evelyn", step: "landing" });
     try {
       const res = await fetch("/api/evelyn-lander/cta", {
         method: "POST",
