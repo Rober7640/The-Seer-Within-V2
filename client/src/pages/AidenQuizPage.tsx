@@ -228,7 +228,7 @@ export default function AidenQuizPage() {
         localStorage.setItem("seer-pending-persona", "aiden-powers");
         // Fire Lead now: account is created via magic-register, email captured.
         // Server has already stamped users.signupFunnel = 'aiden'.
-        trackLead(email.trim(), firstName.trim());
+        trackLead(email.trim(), firstName.trim()).catch(() => { /* non-blocking */ });
         setRegisteredEmail(email.trim());
         setRegisteredName(firstName.trim());
         setFlowState("checking_email");

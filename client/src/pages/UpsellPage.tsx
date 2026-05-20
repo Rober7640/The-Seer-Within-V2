@@ -80,7 +80,7 @@ export default function UpsellPage() {
         const purchaseKey = `${PURCHASE_TRACKED_KEY}_${sid}`;
         if (!sessionStorage.getItem(purchaseKey)) {
           const purchaseAmount = (data.mainPurchaseAmount || 3500) / 100;
-          trackPurchase(purchaseAmount, "USD", data.email);
+          trackPurchase(purchaseAmount, "USD", data.email, "Energy Clearing Ritual", sid ?? undefined);
           trackGAdsPurchase("main", purchaseAmount, sid);
 
           // Trackdesk affiliate conversion tracking - main purchase

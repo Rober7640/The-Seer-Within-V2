@@ -74,7 +74,7 @@ import {
   addUpsellSubscriber,
   addUpsell2Subscriber,
 } from "./lib/aweber";
-import { sendFacebookEvent } from "./lib/facebook";
+import { sendFacebookEvent, fireLeadEvent } from "./lib/facebook";
 
 // Zod schemas for request validation
 // `funnel` is an optional marker the FB-traffic flow (/fb) sends so we can
@@ -583,7 +583,7 @@ export async function registerRoutes(
   // Lead capture endpoint - saves to Supabase and AWeber
   app.post("/api/lead", async (req: Request, res: Response) => {
     try {
-      const { email, firstName, bucket, location, timeOfDay, trackdeskClickId } = req.body;
+      const { email, firstName, bucket, location, timeOfDay, trackdeskClickId, fbp, fbc } = req.body;
       const funnel: FunnelId = req.body?.funnel === "v1-fb" ? "v1-fb" : undefined;
 
       logger.info("Lead captured:", { email, firstName, bucket });
@@ -630,6 +630,30 @@ export async function registerRoutes(
           customerId: email,
         }).catch((err) => {
           logger.warn("Trackdesk lead error (non-blocking):", err);
+        });
+      }
+
+      // Report Lead event to Facebook (server-side, non-blocking). Mirrors
+      // the client-side trackLead() fire — both use the same deterministic
+      // event_id (lead_${sha256(email).slice(0,16)}) so FB dedupes them as
+      // one event. Survives tab-close / adblock cases where /api/fb-event
+      // would otherwise be missed.
+      if (email) {
+        const forwarded = req.headers["x-forwarded-for"];
+        const clientIpAddress =
+          typeof forwarded === "string"
+            ? forwarded.split(",")[0]?.trim()
+            : req.socket.remoteAddress || undefined;
+        fireLeadEvent({
+          email,
+          firstName,
+          funnel,
+          userAgent: req.headers["user-agent"] as string | undefined,
+          clientIpAddress,
+          fbc,
+          fbp,
+        }).catch((err) => {
+          logger.warn("FB Lead event error (non-blocking):", err);
         });
       }
 

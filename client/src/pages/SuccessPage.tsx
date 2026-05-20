@@ -158,9 +158,9 @@ export default function SuccessPage() {
           if (boughtUpsell2 && sessionId) {
             const amount = (data.upsell2Amount || 4700) / 100;
             if (isFbFunnel()) {
-              trackUpsell2Purchase(amount, "USD", data.email, "Manifestation Bracelet");
+              trackUpsell2Purchase(amount, "USD", data.email, "Manifestation Bracelet", sessionId);
             } else {
-              trackUpsellPurchase(amount, "USD", data.email, "Manifestation Bracelet");
+              trackUpsellPurchase(amount, "USD", data.email, "Manifestation Bracelet", sessionId, 'u2');
             }
             trackGAdsPurchase("upsell2", amount, sessionId);
           }

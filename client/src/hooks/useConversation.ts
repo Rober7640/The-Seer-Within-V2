@@ -360,6 +360,12 @@ export function useConversation() {
     // Capture lead
     console.log('Lead captured:', input.trim())
     try {
+      const fbpMatch = typeof document !== 'undefined'
+        ? document.cookie.match(/(?:^|;\s*)_fbp=([^;]*)/)
+        : null;
+      const fbcMatch = typeof document !== 'undefined'
+        ? document.cookie.match(/(?:^|;\s*)_fbc=([^;]*)/)
+        : null;
       const leadRes = await fetch('/api/lead', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -369,6 +375,8 @@ export function useConversation() {
           bucket: currentChat.userData.bucket,
           trackdeskClickId: getTrackdeskClickId(),
           funnel: currentFunnel(),
+          fbp: fbpMatch ? decodeURIComponent(fbpMatch[1]) : undefined,
+          fbc: fbcMatch ? decodeURIComponent(fbcMatch[1]) : undefined,
         }),
       })
 
@@ -384,8 +392,8 @@ export function useConversation() {
         }
       } catch { /* response body parse is best-effort */ }
 
-      // Track Lead event with Facebook
-      trackLead(input.trim(), currentChat.userData.firstName || undefined)
+      // Track Lead event with Facebook (now async — fire-and-forget)
+      trackLead(input.trim(), currentChat.userData.firstName || undefined).catch(() => { /* non-blocking */ })
       trackGAdsLead()
     } catch (e) {
       console.error('Failed to save lead:', e)
