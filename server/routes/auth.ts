@@ -2,7 +2,7 @@ import { Router, Request, Response } from 'express';
 import { z } from 'zod';
 import { randomUUID } from 'crypto';
 import { db } from '../lib/db';
-import { users, personas, chatSessions, userMemory, aidenQuizSessions, evelynLanderSessions } from '@shared/schema';
+import { users, personas, chatSessions, userMemory, aidenQuizSessions, evelynLanderSessions, soulmateLanderSessions } from '@shared/schema';
 import { eq, and, isNull, desc, sql } from 'drizzle-orm';
 import { hashPassword, verifyPassword, generateToken, requireAuth } from '../lib/auth';
 import { verifyMagicLinkToken, generateMagicLinkToken } from '../lib/magicLink';
@@ -43,6 +43,9 @@ const DEFAULT_FREE_COINS = 180;
 // /evelyn lander signups get 5 minutes free instead of the default 3 — soft-launch test
 // vs. competitors (Nebula 10 min, Astro 3 min). Eligibility = isFromEvelynLander() below.
 const EVELYN_LANDER_FREE_COINS = 300;
+// /soulmate lander signups mirror the /evelyn grant exactly (5 min). Same Evelyn
+// persona, same drip enrollment downstream. Eligibility = isFromSoulmateLander() below.
+const SOULMATE_LANDER_FREE_COINS = 300;
 const VERIFICATION_TOKEN_EXPIRY_HOURS = 24;
 
 async function getFreeCoinsForPersona(personaId: string | null | undefined): Promise<number> {
@@ -96,6 +99,23 @@ async function isFromEvelynLander(userId: string, personaId: string | null | und
     const row = await db.select({ id: evelynLanderSessions.id })
       .from(evelynLanderSessions)
       .where(eq(evelynLanderSessions.resolvedUserId, userId))
+      .limit(1);
+    return !!row[0];
+  } catch {
+    return false;
+  }
+}
+
+// True when the user (a) has Evelyn as their default persona AND (b) has a linked
+// soulmate_lander_sessions row. Mirrors isFromEvelynLander; both grant 5 free
+// minutes and both enroll the user in scheduleEvelynVerifiedDrip downstream.
+// Silent-fails to false so a DB hiccup can never block verification itself.
+async function isFromSoulmateLander(userId: string, personaId: string | null | undefined): Promise<boolean> {
+  if (!(await isEvelynUser(personaId))) return false;
+  try {
+    const row = await db.select({ id: soulmateLanderSessions.id })
+      .from(soulmateLanderSessions)
+      .where(eq(soulmateLanderSessions.resolvedUserId, userId))
       .limit(1);
     return !!row[0];
   } catch {
@@ -548,11 +568,17 @@ router.get('/verify-email/:token', async (req: Request, res: Response) => {
     // Intentionally keep verificationToken/Expiry in place so that if an email-scanner
     // prefetches the link, the real user's later click still finds the token and auto-logs
     // in via the "already verified" branch above. Expiry check there prevents stale reuse.
-    // /evelyn lander signups get 5 min free; everyone else gets the persona default (3 min).
-    const isLanderUser = await isFromEvelynLander(user.id, user.defaultPersonaId);
-    const freeCoinsGrant = isLanderUser
-      ? EVELYN_LANDER_FREE_COINS
-      : await getFreeCoinsForPersona(user.defaultPersonaId);
+    // /evelyn and /soulmate lander signups both get 5 min free; everyone else
+    // gets the persona default (3 min). Soulmate is checked first so it takes
+    // precedence if a user somehow has both linkages (rare, would mean they
+    // hit both landers with the same email pre-verify).
+    const isSoulmateLanderUser = await isFromSoulmateLander(user.id, user.defaultPersonaId);
+    const isEvelynLanderUser = !isSoulmateLanderUser && await isFromEvelynLander(user.id, user.defaultPersonaId);
+    const freeCoinsGrant = isSoulmateLanderUser
+      ? SOULMATE_LANDER_FREE_COINS
+      : isEvelynLanderUser
+        ? EVELYN_LANDER_FREE_COINS
+        : await getFreeCoinsForPersona(user.defaultPersonaId);
     await db.update(users)
       .set({
         emailVerified: true,
@@ -585,15 +611,20 @@ router.get('/verify-email/:token', async (req: Request, res: Response) => {
     // time by ENABLE_EVELYN_VERIFIED_DRIP.
     if (await isEvelynUser(user.defaultPersonaId)) {
       const landerBucket = await lookupEvelynBucket(user.id);
-      // lookupEvelynBucket returns null both when no session exists AND when a
-      // session exists with bucket=null. The presence-of-row check below guards
-      // against false positives by also checking resolved_user_id linkage.
-      const linkedSession = await db
+      // Drip eligibility: linked to either the /evelyn or /soulmate lander.
+      // Soulmate users have no bucket (the soulmate form doesn't ask one) so
+      // they enter the drip with bucket=null — the generator handles that.
+      const evelynLinked = await db
         .select({ id: evelynLanderSessions.id })
         .from(evelynLanderSessions)
         .where(eq(evelynLanderSessions.resolvedUserId, user.id))
         .limit(1);
-      if (linkedSession[0]) {
+      const soulmateLinked = evelynLinked[0] ? null : await db
+        .select({ id: soulmateLanderSessions.id })
+        .from(soulmateLanderSessions)
+        .where(eq(soulmateLanderSessions.resolvedUserId, user.id))
+        .limit(1);
+      if (evelynLinked[0] || soulmateLinked?.[0]) {
         scheduleEvelynVerifiedDrip({
           userId: user.id,
           email: user.email,
@@ -623,7 +654,7 @@ router.get('/verify-email/:token', async (req: Request, res: Response) => {
         personaParam = `&persona=${personaRow[0].slug}`;
       }
     }
-    posthog.capture({ distinctId: user.id, event: 'email_verified', properties: { free_coins_granted: freeCoinsGrant, is_lander_user: isLanderUser } });
+    posthog.capture({ distinctId: user.id, event: 'email_verified', properties: { free_coins_granted: freeCoinsGrant, is_evelyn_lander_user: isEvelynLanderUser, is_soulmate_lander_user: isSoulmateLanderUser } });
 
     res.redirect(`${baseUrl}/login?verified=success&token=${jwtToken}${personaParam}`);
   } catch (error) {
@@ -1234,11 +1265,15 @@ router.post('/magic-verify', authLimiter, async (req: Request, res: Response) =>
     let freshCoinBalance = user.coinBalance;
     let freshEmailVerified = user.emailVerified;
     if (!user.emailVerified) {
-      // /evelyn lander signups get 5 min free; everyone else gets the persona default (3 min).
-      const isLanderUser = await isFromEvelynLander(user.id, user.defaultPersonaId);
-      const freeCoinsGrant = isLanderUser
-        ? EVELYN_LANDER_FREE_COINS
-        : await getFreeCoinsForPersona(user.defaultPersonaId);
+      // /evelyn and /soulmate lander signups both get 5 min free; everyone else
+      // gets the persona default. Mirrors the /verify-email grant logic above.
+      const isSoulmateLanderUser = await isFromSoulmateLander(user.id, user.defaultPersonaId);
+      const isEvelynLanderUser = !isSoulmateLanderUser && await isFromEvelynLander(user.id, user.defaultPersonaId);
+      const freeCoinsGrant = isSoulmateLanderUser
+        ? SOULMATE_LANDER_FREE_COINS
+        : isEvelynLanderUser
+          ? EVELYN_LANDER_FREE_COINS
+          : await getFreeCoinsForPersona(user.defaultPersonaId);
       const updated = await db
         .update(users)
         .set({
@@ -1274,15 +1309,20 @@ router.post('/magic-verify', authLimiter, async (req: Request, res: Response) =>
           }).catch(() => { /* logged inside */ });
         }
 
-        // Evelyn equivalent — lander linkage gated.
+        // Evelyn equivalent — lander linkage gated (evelyn OR soulmate).
         if (await isEvelynUser(user.defaultPersonaId)) {
           const landerBucket = await lookupEvelynBucket(user.id);
-          const linkedSession = await db
+          const evelynLinked = await db
             .select({ id: evelynLanderSessions.id })
             .from(evelynLanderSessions)
             .where(eq(evelynLanderSessions.resolvedUserId, user.id))
             .limit(1);
-          if (linkedSession[0]) {
+          const soulmateLinked = evelynLinked[0] ? null : await db
+            .select({ id: soulmateLanderSessions.id })
+            .from(soulmateLanderSessions)
+            .where(eq(soulmateLanderSessions.resolvedUserId, user.id))
+            .limit(1);
+          if (evelynLinked[0] || soulmateLinked?.[0]) {
             scheduleEvelynVerifiedDrip({
               userId: user.id,
               email: user.email,

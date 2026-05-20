@@ -955,6 +955,31 @@ export const insertEvelynLanderSessionSchema = createInsertSchema(evelynLanderSe
 export type EvelynLanderSession = typeof evelynLanderSessions.$inferSelect;
 export type InsertEvelynLanderSession = z.infer<typeof insertEvelynLanderSessionSchema>;
 
+// Soulmate lander sessions: linkage row between a /soulmate landing-form submit
+// and the V2 user we passwordless-create at that moment. Used by isFromSoulmateLander()
+// in auth.ts to decide eligibility for the 5-min (300-coin) onboarding grant and
+// the post-verify Evelyn drip — mirrors the evelynLanderSessions role exactly.
+export const soulmateLanderSessions = pgTable("soulmate_lander_sessions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  email: text("email").notNull(),
+  firstName: text("first_name"),
+  resolvedUserId: varchar("resolved_user_id").references(() => users.id, { onDelete: "set null" }),
+  landerPath: text("lander_path"),
+  utmSource: text("utm_source"),
+  utmCampaign: text("utm_campaign"),
+  utmMedium: text("utm_medium"),
+  ipAddress: text("ip_address"),
+  userAgent: text("user_agent"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_soulmate_lander_user").on(table.resolvedUserId),
+  index("idx_soulmate_lander_email").on(table.email),
+]);
+
+export const insertSoulmateLanderSessionSchema = createInsertSchema(soulmateLanderSessions);
+export type SoulmateLanderSession = typeof soulmateLanderSessions.$inferSelect;
+export type InsertSoulmateLanderSession = z.infer<typeof insertSoulmateLanderSessionSchema>;
+
 // ============================================================
 // A/B Testing Tables (Soulmate Funnel Split Testing)
 // ============================================================

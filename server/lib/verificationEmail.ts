@@ -32,6 +32,7 @@ function escapeHtml(str: string): string {
 // in lockstep so the email never over- or under-promises.
 function getFreeMinutesForSignup(persona?: string, source?: string): number {
   if (source === 'evelyn-lander' && persona === 'evelyn-cross') return 5;
+  if (source === 'soulmate-lander' && persona === 'evelyn-cross') return 5;
   if (persona === 'aiden-powers') return 10;
   return 3;
 }

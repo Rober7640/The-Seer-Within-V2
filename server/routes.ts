@@ -78,6 +78,8 @@ import {
   addSoulmateUpsell2Subscriber,
   tagSoulmateDeclinedUpsell,
 } from "./lib/aweber";
+import { createSoulmateLanderV2Account } from "./lib/soulmateLanderSignup";
+import { extractClientIp, extractUserAgent } from "./lib/fraudDetection";
 import { sendFacebookEvent } from "./lib/facebook";
 import {
   getSoulmateOrderByEmail,
@@ -2462,6 +2464,22 @@ export async function registerRoutes(
       utmCampaign,
       utmMedium,
     }).catch((err) => logger.error("Soulmate lead AWeber error (non-blocking):", err));
+
+    // V2 handoff: create a passwordless Evelyn account so the user can claim
+    // 5 free chat minutes whether or not they purchase the sketch. Existing
+    // accounts get a magic-link instead of a duplicate. Fire-and-forget — must
+    // never block the form-submit response (which the client is awaiting before
+    // navigating to /soulmate/process).
+    createSoulmateLanderV2Account({
+      email,
+      firstName,
+      landerPath,
+      utmSource,
+      utmCampaign,
+      utmMedium,
+      ipAddress: extractClientIp(req),
+      userAgent: extractUserAgent(req),
+    }).catch((err) => logger.error("Soulmate V2 handoff error (non-blocking):", err));
 
     return res.json({ success: true });
   });
