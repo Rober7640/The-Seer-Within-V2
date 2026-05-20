@@ -12,6 +12,7 @@ import * as paypal from '../lib/paypal';
 import { fireV2PurchaseEvent } from '../lib/facebook';
 import { maybeSchedulePostPurchaseDrip } from '../lib/postPurchaseDripTrigger';
 import { addSoulmatePaidSubscriber } from '../lib/aweber';
+import { recordSoulmatePurchase } from '../lib/soulmateOrders';
 
 const router = Router();
 
@@ -730,6 +731,19 @@ router.post('/stripe', async (req: Request, res: Response) => {
         stripeOrderId: paymentIntentId || session.id,
         purchaseAmountCents: session.amount_total ?? 0,
       }).catch((err) => logger.error('AWeber Soulmate Paid error (non-blocking):', err));
+
+      // Persist sketch purchase to soulmate_orders. Bracelet/tuner are written
+      // inline from their 1-click handlers (routes.ts); the sketch path only
+      // fires here, so without this call sketch_pi_id / sketch_cents / sketch_at
+      // never populate even on a successful purchase.
+      if (paymentIntentId) {
+        recordSoulmatePurchase({
+          email,
+          product: 'sketch',
+          paymentIntentId,
+          amountCents: session.amount_total ?? 0,
+        }).catch((err) => logger.error('recordSoulmatePurchase sketch error (non-blocking):', err));
+      }
     }
   }
 
