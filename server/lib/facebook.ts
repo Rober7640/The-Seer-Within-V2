@@ -7,6 +7,12 @@ import { creditPurchases, users } from '@shared/schema';
 const FB_PIXEL_ID = process.env.FB_PIXEL_ID || '446814716830295';
 const FB_ACCESS_TOKEN = process.env.FB_ACCESS_TOKEN;
 const FB_TEST_EVENT_CODE = process.env.FB_TEST_EVENT_CODE;
+// When set, route CAPI through Stape's first-party domain (e.g.
+// https://metrics.theseerwithin.com/data) instead of graph.facebook.com.
+// Stape's Data Client expects a FLAT single-event JSON body (no `data: [...]`
+// wrapper); access_token + test_event_code are configured inside the GTM tag,
+// not in the request. When unset, fall back to direct Meta CAPI.
+const FB_CAPI_ENDPOINT = process.env.FB_CAPI_ENDPOINT;
 
 interface UserData {
   email?: string;
@@ -32,7 +38,9 @@ function hashValue(value: string): string {
 }
 
 export async function sendFacebookEvent(data: EventData): Promise<{ success: boolean; error?: string }> {
-  if (!FB_ACCESS_TOKEN) {
+  // FB_ACCESS_TOKEN is only required for the direct-to-Meta path. When routing
+  // through Stape (FB_CAPI_ENDPOINT set), the access token lives in the GTM tag.
+  if (!FB_CAPI_ENDPOINT && !FB_ACCESS_TOKEN) {
     logger.warn('FB_ACCESS_TOKEN not configured - skipping server-side event');
     return { success: false, error: 'FB_ACCESS_TOKEN not configured' };
   }
@@ -80,17 +88,20 @@ export async function sendFacebookEvent(data: EventData): Promise<{ success: boo
       custom_data: Object.keys(customData).length > 0 ? customData : undefined,
     };
 
-    const response = await fetch(
-      `https://graph.facebook.com/v18.0/${FB_PIXEL_ID}/events?access_token=${FB_ACCESS_TOKEN}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+    const url = FB_CAPI_ENDPOINT
+      ?? `https://graph.facebook.com/v18.0/${FB_PIXEL_ID}/events?access_token=${FB_ACCESS_TOKEN}`;
+    const body = FB_CAPI_ENDPOINT
+      ? JSON.stringify(eventPayload)
+      : JSON.stringify({
           data: [eventPayload],
           ...(FB_TEST_EVENT_CODE ? { test_event_code: FB_TEST_EVENT_CODE } : {}),
-        }),
-      }
-    );
+        });
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body,
+    });
 
     if (!response.ok) {
       const errorText = await response.text();
