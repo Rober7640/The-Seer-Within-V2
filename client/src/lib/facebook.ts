@@ -99,7 +99,11 @@ export function trackPageView(): void {
   sendServerEvent('PageView', eventId);
 }
 
-export async function trackLead(email: string, firstName?: string): Promise<void> {
+export async function trackLead(
+  email: string,
+  firstName?: string,
+  options?: { skipServerRelay?: boolean },
+): Promise<void> {
   const normalized = email.toLowerCase().trim();
   const eventId = `lead_${await shortHashSha256(normalized)}`;
 
@@ -112,7 +116,14 @@ export async function trackLead(email: string, firstName?: string): Promise<void
     }, { eventID: eventId });
   }
 
-  sendServerEvent('Lead', eventId, { email, firstName, content_name: 'Email Capture' });
+  // V1 chat flow passes skipServerRelay=true because /api/lead already fires
+  // the server-side Lead with the same deterministic event_id — avoids the
+  // duplicate "Server / Deduplicated" row in Meta Test Events. V2 callers
+  // (AidenQuizPage, LoginPage) leave the option default so they keep their
+  // existing /api/fb-event server-side relay path.
+  if (!options?.skipServerRelay) {
+    sendServerEvent('Lead', eventId, { email, firstName, content_name: 'Email Capture' });
+  }
 }
 
 // `contentName` defaults to 'Energy Clearing Ritual' so V1-funnel callers

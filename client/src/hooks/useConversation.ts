@@ -392,8 +392,12 @@ export function useConversation() {
         }
       } catch { /* response body parse is best-effort */ }
 
-      // Track Lead event with Facebook (now async — fire-and-forget)
-      trackLead(input.trim(), currentChat.userData.firstName || undefined).catch(() => { /* non-blocking */ })
+      // Track Lead event with Facebook. Pixel-only here — /api/lead above
+      // already fired the server-side Lead with the same deterministic
+      // event_id. skipServerRelay avoids a duplicate "Deduplicated" row in
+      // Meta Events Manager. (V2 trackLead callers don't pass the flag.)
+      trackLead(input.trim(), currentChat.userData.firstName || undefined, { skipServerRelay: true })
+        .catch(() => { /* non-blocking */ })
       trackGAdsLead()
     } catch (e) {
       console.error('Failed to save lead:', e)
