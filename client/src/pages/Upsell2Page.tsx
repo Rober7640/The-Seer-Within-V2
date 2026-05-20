@@ -133,7 +133,7 @@ export default function Upsell2Page() {
 
         // Track Upsell 1 event on /welcome2 load (fires once per session)
         if (data.upsellPurchased) {
-          trackUpsellPurchase(47, "USD", data.email, "Protection Ritual + Lava Stone", sid ?? undefined, 'u1');
+          trackUpsellPurchase(47, "USD", data.email, "Protection Ritual + Lava Stone", sid ?? undefined, 'u1', { skipServerRelay: true });
           trackGAdsPurchase("upsell1", 47, sid);
 
           // Trackdesk affiliate conversion tracking - upsell 1
