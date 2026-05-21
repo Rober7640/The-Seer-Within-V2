@@ -354,6 +354,10 @@ interface SoulmateLeadParams {
   utmSource?: string;
   utmCampaign?: string;
   utmMedium?: string;
+  // Resume-purchase token referenced in AWeber drip CTAs via {!intake_token}.
+  // Server mints + persists in soulmate_lander_sessions; AWeber renders it into
+  // ?t=<token> URLs that hydrate the sales page.
+  intakeToken?: string;
 }
 
 interface SoulmateSketchPaidParams {
@@ -460,6 +464,7 @@ export async function addSoulmateLeadSubscriber(params: SoulmateLeadParams) {
   if (params.utmSource) custom.utm_source = params.utmSource;
   if (params.utmCampaign) custom.utm_campaign = params.utmCampaign;
   if (params.utmMedium) custom.utm_medium = params.utmMedium;
+  if (params.intakeToken) custom.intake_token = params.intakeToken;
 
   return writeSoulmateSubscriber({
     listId: process.env.AWEBER_SOULMATE_LEADS_LIST_ID || '',

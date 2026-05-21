@@ -4,6 +4,7 @@ import { createServer, type Server } from "http";
 import path from "path";
 import express from "express";
 import { z } from "zod";
+import { randomUUID } from "crypto";
 import logger from "./lib/logger";
 
 function getBaseUrl(req: Request): string {
@@ -2449,6 +2450,15 @@ export async function registerRoutes(
       return res.status(400).json({ success: false, error: "email and firstName required" });
     }
 
+    // Mint a single intake-resume token per form submit. AWeber drip emails
+    // embed this in their CTA URLs (?t=<token>) so the cold-link click can
+    // hydrate the sales page without re-asking the user for DOB/preferences.
+    // 30-day expiry comfortably covers Joel's 11-day, 7-email sequence plus
+    // ~19 days of late-clicker grace before the lead is treated as cold.
+    // Revoked on sketch purchase + email unsubscribe.
+    const intakeToken = randomUUID();
+    const intakeTokenExpiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+
     addSoulmateLeadSubscriber({
       email,
       firstName,
@@ -2463,6 +2473,7 @@ export async function registerRoutes(
       utmSource,
       utmCampaign,
       utmMedium,
+      intakeToken,
     }).catch((err) => logger.error("Soulmate lead AWeber error (non-blocking):", err));
 
     // V2 handoff: create a passwordless Evelyn account so the user can claim
@@ -2473,15 +2484,93 @@ export async function registerRoutes(
     createSoulmateLanderV2Account({
       email,
       firstName,
+      lastName,
       landerPath,
       utmSource,
       utmCampaign,
       utmMedium,
       ipAddress: extractClientIp(req),
       userAgent: extractUserAgent(req),
+      birthMonth,
+      birthDay,
+      birthYear,
+      preference,
+      ageRange,
+      ethnicity,
+      intakeToken,
+      intakeTokenExpiresAt,
     }).catch((err) => logger.error("Soulmate V2 handoff error (non-blocking):", err));
 
     return res.json({ success: true });
+  });
+
+  // GET /api/soulmate/intake/:token — resolves an AWeber drip CTA token back
+  // to the original /soulmate form intake so the sales page can hydrate
+  // sessionStorage.soulmate_form without re-asking the user. Returns:
+  //   200 { firstName, email, birthMonth, birthDay, birthYear, preference, ageRange, ethnicity }
+  //        when token valid + not expired + not revoked
+  //   410 { code: 'expired' | 'revoked' | 'not_found' }
+  //        client treats all 3 as "show the re-enter banner on /soulmate"
+  // PII consideration: response contains email + DOB + preference. Treat the
+  // token as a low-stakes bearer credential — leaking it lets a recipient see
+  // those fields. Acceptable risk for lead-nurture; tighten with per-send
+  // tokens later if needed.
+  app.get("/api/soulmate/intake/:token", async (req: Request, res: Response) => {
+    const { soulmateLanderSessions } = await import("@shared/schema");
+    const { db } = await import("./lib/db");
+    const { eq } = await import("drizzle-orm");
+
+    const token = String(req.params.token || "").trim();
+    if (!token) {
+      return res.status(410).json({ code: "not_found" });
+    }
+
+    try {
+      const row = await db
+        .select({
+          email: soulmateLanderSessions.email,
+          firstName: soulmateLanderSessions.firstName,
+          lastName: soulmateLanderSessions.lastName,
+          birthMonth: soulmateLanderSessions.birthMonth,
+          birthDay: soulmateLanderSessions.birthDay,
+          birthYear: soulmateLanderSessions.birthYear,
+          preference: soulmateLanderSessions.preference,
+          ageRange: soulmateLanderSessions.ageRange,
+          ethnicity: soulmateLanderSessions.ethnicity,
+          intakeTokenExpiresAt: soulmateLanderSessions.intakeTokenExpiresAt,
+          intakeTokenRevokedAt: soulmateLanderSessions.intakeTokenRevokedAt,
+        })
+        .from(soulmateLanderSessions)
+        .where(eq(soulmateLanderSessions.intakeToken, token))
+        .limit(1);
+
+      if (!row[0]) {
+        return res.status(410).json({ code: "not_found" });
+      }
+
+      const r = row[0];
+      if (r.intakeTokenRevokedAt) {
+        return res.status(410).json({ code: "revoked" });
+      }
+      if (r.intakeTokenExpiresAt && r.intakeTokenExpiresAt < new Date()) {
+        return res.status(410).json({ code: "expired" });
+      }
+
+      return res.json({
+        email: r.email,
+        firstName: r.firstName,
+        lastName: r.lastName,
+        birthMonth: r.birthMonth,
+        birthDay: r.birthDay,
+        birthYear: r.birthYear,
+        preference: r.preference,
+        ageRange: r.ageRange,
+        ethnicity: r.ethnicity,
+      });
+    } catch (err) {
+      logger.error("Soulmate intake resolver error:", err);
+      return res.status(500).json({ code: "server_error" });
+    }
   });
 
   // POST /api/soulmate/upsell-declined — tag existing AWeber subscriber so

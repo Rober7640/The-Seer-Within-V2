@@ -26,12 +26,25 @@ const VERIFICATION_TOKEN_EXPIRY_HOURS = 24;
 interface CreateArgs {
   email: string;
   firstName: string;
+  lastName?: string;
   landerPath?: string;
   utmSource?: string;
   utmCampaign?: string;
   utmMedium?: string;
   ipAddress?: string | null;
   userAgent?: string | null;
+  // Intake snapshot — captured on /soulmate form submit so the AWeber drip's
+  // CTA URLs (?t=<token>) can hydrate the sales page without re-asking the user.
+  birthMonth?: string;
+  birthDay?: string;
+  birthYear?: string;
+  preference?: string;
+  ageRange?: string;
+  ethnicity?: string;
+  // Token minted by the caller and pushed to AWeber custom_fields in the same
+  // request. Stored here so GET /api/soulmate/intake/:token can resolve it.
+  intakeToken?: string;
+  intakeTokenExpiresAt?: Date;
 }
 
 export async function createSoulmateLanderV2Account(args: CreateArgs): Promise<void> {
@@ -69,6 +82,7 @@ export async function createSoulmateLanderV2Account(args: CreateArgs): Promise<v
       await db.insert(soulmateLanderSessions).values({
         email: emailLc,
         firstName,
+        lastName: args.lastName ?? null,
         resolvedUserId: user.id,
         landerPath: args.landerPath,
         utmSource: args.utmSource,
@@ -76,6 +90,14 @@ export async function createSoulmateLanderV2Account(args: CreateArgs): Promise<v
         utmMedium: args.utmMedium,
         ipAddress: args.ipAddress ?? null,
         userAgent: args.userAgent ?? null,
+        birthMonth: args.birthMonth ?? null,
+        birthDay: args.birthDay ?? null,
+        birthYear: args.birthYear ?? null,
+        preference: args.preference ?? null,
+        ageRange: args.ageRange ?? null,
+        ethnicity: args.ethnicity ?? null,
+        intakeToken: args.intakeToken ?? null,
+        intakeTokenExpiresAt: args.intakeTokenExpiresAt ?? null,
       });
 
       if (user.accountStatus === 'banned') {
@@ -125,6 +147,7 @@ export async function createSoulmateLanderV2Account(args: CreateArgs): Promise<v
     await db.insert(soulmateLanderSessions).values({
       email: emailLc,
       firstName,
+      lastName: args.lastName ?? null,
       resolvedUserId: user.id,
       landerPath: args.landerPath,
       utmSource: args.utmSource,
@@ -132,6 +155,14 @@ export async function createSoulmateLanderV2Account(args: CreateArgs): Promise<v
       utmMedium: args.utmMedium,
       ipAddress: args.ipAddress ?? null,
       userAgent: args.userAgent ?? null,
+      birthMonth: args.birthMonth ?? null,
+      birthDay: args.birthDay ?? null,
+      birthYear: args.birthYear ?? null,
+      preference: args.preference ?? null,
+      ageRange: args.ageRange ?? null,
+      ethnicity: args.ethnicity ?? null,
+      intakeToken: args.intakeToken ?? null,
+      intakeTokenExpiresAt: args.intakeTokenExpiresAt ?? null,
     });
 
     await sendVerificationEmail(user.email, firstName, verificationToken, 'evelyn-cross', 'soulmate-lander');

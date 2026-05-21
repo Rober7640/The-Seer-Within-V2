@@ -963,6 +963,7 @@ export const soulmateLanderSessions = pgTable("soulmate_lander_sessions", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   email: text("email").notNull(),
   firstName: text("first_name"),
+  lastName: text("last_name"),
   resolvedUserId: varchar("resolved_user_id").references(() => users.id, { onDelete: "set null" }),
   landerPath: text("lander_path"),
   utmSource: text("utm_source"),
@@ -970,10 +971,25 @@ export const soulmateLanderSessions = pgTable("soulmate_lander_sessions", {
   utmMedium: text("utm_medium"),
   ipAddress: text("ip_address"),
   userAgent: text("user_agent"),
+  // Intake snapshot — captured at /api/soulmate/lead so the email-CTA hydration
+  // path can rebuild the sales-page sessionStorage shape without re-asking the
+  // user. AWeber custom_fields hold the same data; this is the local-of-record.
+  birthMonth: text("birth_month"),
+  birthDay: text("birth_day"),
+  birthYear: text("birth_year"),
+  preference: text("preference"),
+  ageRange: text("age_range"),
+  ethnicity: text("ethnicity"),
+  // Single token per lead reused across the AWeber drip's CTAs. Resolves via
+  // GET /api/soulmate/intake/:token. Revoked on sketch purchase + unsubscribe.
+  intakeToken: text("intake_token"),
+  intakeTokenExpiresAt: timestamp("intake_token_expires_at"),
+  intakeTokenRevokedAt: timestamp("intake_token_revoked_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 }, (table) => [
   index("idx_soulmate_lander_user").on(table.resolvedUserId),
   index("idx_soulmate_lander_email").on(table.email),
+  uniqueIndex("idx_soulmate_lander_intake_token").on(table.intakeToken),
 ]);
 
 export const insertSoulmateLanderSessionSchema = createInsertSchema(soulmateLanderSessions);

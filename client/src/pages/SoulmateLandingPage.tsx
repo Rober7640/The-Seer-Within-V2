@@ -375,10 +375,84 @@ function CTABtn({ onClick }: { onClick: () => void }) {
 
 export default function SoulmateLandingPage() {
   const [showPopup, setShowPopup] = useState(false);
+  const [hydrationError, setHydrationError] = useState<string | null>(null);
+  const [, navigate] = useLocation();
   const open = () => setShowPopup(true);
+
+  // ?t=<token> hydration: AWeber drip CTAs land users here with a token that
+  // resolves to the original /soulmate form intake. On success, rebuild
+  // sessionStorage in the same shape SoulmatePopup.handleSubmit writes and
+  // forward to /soulmate/process — the rest of the funnel runs identically to
+  // a fresh form submit. On any failure (expired / revoked / not_found),
+  // surface a banner so the user can refill manually.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get('t');
+    if (!token) return;
+
+    let cancelled = false;
+    fetch(`/api/soulmate/intake/${encodeURIComponent(token)}`)
+      .then(async (res) => {
+        if (cancelled) return;
+        if (res.ok) {
+          const data = await res.json();
+          sessionStorage.setItem('soulmate_form', JSON.stringify({
+            preference: data.preference || '',
+            ageRange: data.ageRange || '',
+            ethnicity: data.ethnicity || '',
+            birthMonth: data.birthMonth || '',
+            birthDay: data.birthDay || '',
+            birthYear: data.birthYear || '',
+            firstName: data.firstName || '',
+            middleName: '',
+            lastName: data.lastName || '',
+            email: data.email || '',
+          }));
+          if (data.email) {
+            identifyUser(data.email, { funnel: 'soulmate', first_name: data.firstName });
+          }
+          trackPH('lead_resumed_from_token', { funnel: 'soulmate' });
+          navigate('/soulmate/process');
+          return;
+        }
+        let code = 'expired';
+        try { const j = await res.json(); code = j?.code || code; } catch {}
+        const messages: Record<string, string> = {
+          expired:      'This link has expired. Please re-enter your details below to continue.',
+          revoked:      'This link is no longer active. Please re-enter your details below to continue.',
+          not_found:    "We couldn't find your previous reading. Please re-enter your details below to begin.",
+          server_error: 'Something went wrong restoring your reading. Please re-enter your details below.',
+        };
+        setHydrationError(messages[code] || messages.expired);
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setHydrationError("Couldn't restore your previous reading. Please re-enter your details below.");
+        }
+      });
+
+    return () => { cancelled = true; };
+  }, [navigate]);
 
   return (
     <div style={{ background: '#f5f5f5', fontFamily: 'sans-serif' }} className="min-h-screen">
+      {hydrationError && (
+        <div
+          role="status"
+          style={{
+            background: '#fef3c7',
+            color: '#92400e',
+            padding: '12px 20px',
+            textAlign: 'center',
+            fontFamily: 'Merriweather, serif',
+            fontSize: 14,
+            lineHeight: 1.4,
+            borderBottom: '1px solid #f59e0b',
+          }}
+        >
+          {hydrationError}
+        </div>
+      )}
       {showPopup && <SoulmatePopup onClose={() => setShowPopup(false)} />}
 
       <style>{`

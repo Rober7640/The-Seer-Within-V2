@@ -4,7 +4,7 @@ import { Router, Request, Response } from 'express';
 import { Webhook } from 'svix';
 import Stripe from 'stripe';
 import { db } from '../lib/db';
-import { followUpEmails, userFollowUpPreferences, migrationDripEmails, topupEmails, aidenFollowupEmails, users, emailSuppression, creditPurchases } from '@shared/schema';
+import { followUpEmails, userFollowUpPreferences, migrationDripEmails, topupEmails, aidenFollowupEmails, users, emailSuppression, creditPurchases, soulmateLanderSessions } from '@shared/schema';
 import { and, eq, sql } from 'drizzle-orm';
 import logger from '../lib/logger';
 import { posthog } from '../lib/posthog';
@@ -499,6 +499,26 @@ async function autoUnsubscribe(userId: string, reason: string): Promise<void> {
       error: (suppressionError as Error).message,
     });
   }
+
+  // Revoke any active soulmate intake tokens. Honors the unsub at the link
+  // layer so a leaked CTA URL can't still resolve for somebody who opted out.
+  // Isolated so a failure here can't break the unsubscribe itself.
+  try {
+    await db
+      .update(soulmateLanderSessions)
+      .set({ intakeTokenRevokedAt: new Date() })
+      .where(and(
+        eq(soulmateLanderSessions.resolvedUserId, userId),
+        sql`${soulmateLanderSessions.intakeToken} IS NOT NULL`,
+        sql`${soulmateLanderSessions.intakeTokenRevokedAt} IS NULL`,
+      ));
+  } catch (revokeError) {
+    logger.warn('[suppression] Soulmate intake_token revoke on unsub failed', {
+      userId,
+      reason,
+      error: (revokeError as Error).message,
+    });
+  }
 }
 
 /**
@@ -744,6 +764,20 @@ router.post('/stripe', async (req: Request, res: Response) => {
           amountCents: session.amount_total ?? 0,
         }).catch((err) => logger.error('recordSoulmatePurchase sketch error (non-blocking):', err));
       }
+
+      // Revoke any active intake tokens for this buyer. After purchase, the
+      // lead-nurture CTA links (?t=<token>) should stop resolving — they're
+      // for pre-purchase resumption only. Match by email so we hit all
+      // soulmate_lander_sessions rows for the buyer regardless of whether the
+      // V2 user row is linked. Fire-and-forget — never block the webhook ack.
+      db.update(soulmateLanderSessions)
+        .set({ intakeTokenRevokedAt: new Date() })
+        .where(and(
+          eq(soulmateLanderSessions.email, email.toLowerCase()),
+          sql`${soulmateLanderSessions.intakeToken} IS NOT NULL`,
+          sql`${soulmateLanderSessions.intakeTokenRevokedAt} IS NULL`,
+        ))
+        .catch((err) => logger.error('Soulmate intake_token revoke on purchase error (non-blocking):', err));
     }
   }
 
