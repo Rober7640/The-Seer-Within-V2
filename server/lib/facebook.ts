@@ -207,7 +207,7 @@ export async function fireV2PurchaseEvent(purchaseId: string): Promise<void> {
 
 const FB_PRODUCT_NAMES: Record<string, string> = {
   energy_clearing_ritual: 'Energy Clearing Ritual',
-  protection_ritual: 'Volcanic Stone (aka Black Lava)',
+  protection_ritual: 'Protection Ritual + Volcanic Stone',
   manifestation_bracelet: 'Manifestation Bracelet',
 };
 
