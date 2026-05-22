@@ -9,7 +9,7 @@ import { and, eq, sql } from 'drizzle-orm';
 import logger from '../lib/logger';
 import { posthog } from '../lib/posthog';
 import * as paypal from '../lib/paypal';
-import { fireV2PurchaseEvent } from '../lib/facebook';
+import { fireV2PurchaseEvent, fireStripePurchaseEvent } from '../lib/facebook';
 import { maybeSchedulePostPurchaseDrip } from '../lib/postPurchaseDripTrigger';
 import { addSoulmatePaidSubscriber } from '../lib/aweber';
 import { recordSoulmatePurchase } from '../lib/soulmateOrders';
@@ -778,6 +778,53 @@ router.post('/stripe', async (req: Request, res: Response) => {
           sql`${soulmateLanderSessions.intakeTokenRevokedAt} IS NULL`,
         ))
         .catch((err) => logger.error('Soulmate intake_token revoke on purchase error (non-blocking):', err));
+    }
+
+    // Server-side FB event firing — closes the gap when the browser tab
+    // closes / adblock blocks `/api/fb-event`. Uses deterministic event_id
+    // to dedup with the client-side Pixel fire (see client/src/lib/facebook.ts).
+    if (product && (session.amount_total ?? 0) > 0) {
+      const mainSessionId = metadata.originalSession || session.id;
+      fireStripePurchaseEvent({
+        stripeRefId: session.id,
+        mainSessionId,
+        product,
+        type: metadata.type,
+        funnel: metadata.funnel,
+        amountCents: session.amount_total ?? 0,
+        email: metadata.email || session.customer_email || undefined,
+        firstName: metadata.firstName || undefined,
+      }).catch(() => { /* logged inside */ });
+    }
+  }
+
+  // Handle payment_intent.succeeded — only for 1-click upsells
+  // (main-purchase PIs are owned by a Checkout Session and handled above).
+  if (event.type === 'payment_intent.succeeded') {
+    const pi = event.data.object as Stripe.PaymentIntent;
+    const metadata = pi.metadata || {};
+
+    // Filter: 1-click upsells set metadata.originalSession. Main-purchase PIs
+    // (which fire payment_intent.succeeded as a side-effect of their Checkout
+    // Session completing) do NOT set it.
+    if (!metadata.originalSession) {
+      logger.info(`Stripe webhook: payment_intent.succeeded skipped (no originalSession), pi=${pi.id}`);
+      return res.json({ received: true });
+    }
+
+    logger.info(`Stripe webhook: payment_intent.succeeded — product=${metadata.product}, pi=${pi.id}`);
+
+    if (metadata.product && pi.amount > 0) {
+      fireStripePurchaseEvent({
+        stripeRefId: pi.id,
+        mainSessionId: metadata.originalSession,
+        product: metadata.product,
+        type: metadata.type,
+        funnel: metadata.funnel,
+        amountCents: pi.amount,
+        email: metadata.email,
+        firstName: metadata.firstName,
+      }).catch(() => { /* logged inside */ });
     }
   }
 

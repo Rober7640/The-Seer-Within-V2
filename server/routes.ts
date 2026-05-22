@@ -81,7 +81,7 @@ import {
 } from "./lib/aweber";
 import { createSoulmateLanderV2Account } from "./lib/soulmateLanderSignup";
 import { extractClientIp, extractUserAgent } from "./lib/fraudDetection";
-import { sendFacebookEvent } from "./lib/facebook";
+import { sendFacebookEvent, fireLeadEvent } from "./lib/facebook";
 import {
   getSoulmateOrderByEmail,
   upsertSoulmateOrderShipping,
@@ -599,7 +599,7 @@ export async function registerRoutes(
   // Lead capture endpoint - saves to Supabase and AWeber
   app.post("/api/lead", async (req: Request, res: Response) => {
     try {
-      const { email, firstName, bucket, location, timeOfDay, trackdeskClickId } = req.body;
+      const { email, firstName, bucket, location, timeOfDay, trackdeskClickId, fbp, fbc } = req.body;
       const funnel: FunnelId = req.body?.funnel === "v1-fb" ? "v1-fb" : undefined;
 
       logger.info("Lead captured:", { email, firstName, bucket });
@@ -646,6 +646,30 @@ export async function registerRoutes(
           customerId: email,
         }).catch((err) => {
           logger.warn("Trackdesk lead error (non-blocking):", err);
+        });
+      }
+
+      // Report Lead event to Facebook (server-side, non-blocking). Mirrors
+      // the client-side trackLead() fire — both use the same deterministic
+      // event_id (lead_${sha256(email).slice(0,16)}) so FB dedupes them as
+      // one event. Survives tab-close / adblock cases where /api/fb-event
+      // would otherwise be missed.
+      if (email) {
+        const forwarded = req.headers["x-forwarded-for"];
+        const clientIpAddress =
+          typeof forwarded === "string"
+            ? forwarded.split(",")[0]?.trim()
+            : req.socket.remoteAddress || undefined;
+        fireLeadEvent({
+          email,
+          firstName,
+          funnel,
+          userAgent: req.headers["user-agent"] as string | undefined,
+          clientIpAddress,
+          fbc,
+          fbp,
+        }).catch((err) => {
+          logger.warn("FB Lead event error (non-blocking):", err);
         });
       }
 
@@ -853,18 +877,25 @@ export async function registerRoutes(
               const sessionFunnel: FunnelId =
                 session.metadata?.funnel === "v1-fb" ? "v1-fb" : undefined;
 
+              const purchaseTypeTag =
+                purchaseType === "downsell" ? "downsell" : "initial-purchase";
+              const paidTags = [
+                conversation!.bucket || "seer-within",
+                "paid",
+                purchaseTypeTag,
+              ];
+              // Append (not replace) an -fb-suffixed marker for /fb-funnel
+              // buyers so existing AWeber automations matching the unsuffixed
+              // tag keep firing while we gain a separate count for FB traffic.
+              if (isFbFunnel(sessionFunnel)) {
+                paidTags.push(`${purchaseTypeTag}-fb`);
+              }
+
               addPaidSubscriber({
                 email: conversation!.email!,
                 name: conversation!.firstName || undefined,
                 stripeOrderId: paymentIntentId,
-                tags: fbifyAweberTags(
-                  [
-                    conversation!.bucket || "seer-within",
-                    "paid",
-                    purchaseType === "downsell" ? "downsell" : "initial-purchase",
-                  ],
-                  sessionFunnel,
-                ),
+                tags: fbifyAweberTags(paidTags, sessionFunnel),
               })
                 .then((result) => {
                   if (result.success) {

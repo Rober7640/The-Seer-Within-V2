@@ -44,6 +44,17 @@ function getFbBrowserId(): string | undefined {
   return getCookie('_fbp');
 }
 
+// Deterministic event-ID hash. MUST match the server-side equivalent in
+// server/lib/facebook.ts so Pixel + CAPI dedup cleanly. Web Crypto SHA-256
+// (async); first 16 hex chars only.
+async function shortHashSha256(input: string): Promise<string> {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(input));
+  return Array.from(new Uint8Array(buf))
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('')
+    .slice(0, 16);
+}
+
 export interface FBEventData {
   value?: number;
   currency?: string;
@@ -88,18 +99,31 @@ export function trackPageView(): void {
   sendServerEvent('PageView', eventId);
 }
 
-export function trackLead(email: string, firstName?: string): void {
-  const eventId = generateEventId();
+export async function trackLead(
+  email: string,
+  firstName?: string,
+  options?: { skipServerRelay?: boolean },
+): Promise<void> {
+  const normalized = email.toLowerCase().trim();
+  const eventId = `lead_${await shortHashSha256(normalized)}`;
 
+  // value/currency intentionally omitted: Meta Events Manager flags
+  // value=0 as a data-quality issue, and the spec lists both as optional
+  // for the Lead event since email capture has no realized monetary value.
   if (typeof window !== 'undefined' && window.fbq) {
     window.fbq('track', 'Lead', {
       content_name: 'Email Capture',
-      value: 0,
-      currency: 'USD',
     }, { eventID: eventId });
   }
 
-  sendServerEvent('Lead', eventId, { email, firstName, content_name: 'Email Capture', value: 0, currency: 'USD' });
+  // V1 chat flow passes skipServerRelay=true because /api/lead already fires
+  // the server-side Lead with the same deterministic event_id — avoids the
+  // duplicate "Server / Deduplicated" row in Meta Test Events. V2 callers
+  // (AidenQuizPage, LoginPage) leave the option default so they keep their
+  // existing /api/fb-event server-side relay path.
+  if (!options?.skipServerRelay) {
+    sendServerEvent('Lead', eventId, { email, firstName, content_name: 'Email Capture' });
+  }
 }
 
 // `contentName` defaults to 'Energy Clearing Ritual' so V1-funnel callers
@@ -133,8 +157,15 @@ export function trackPurchase(
   currency: string = 'USD',
   email?: string,
   contentName: string = 'Energy Clearing Ritual',
+  mainSessionId?: string,
+  // V1/V1-FB callers pass skipServerRelay=true because the Stripe webhook's
+  // fireStripePurchaseEvent already fires server-side with the same
+  // deterministic event_id — avoids duplicate "Server / Deduplicated" rows.
+  options?: { skipServerRelay?: boolean },
 ): void {
-  const eventId = generateEventId();
+  const eventId = mainSessionId
+    ? `purchase_${mainSessionId}`
+    : generateEventId();
 
   if (typeof window !== 'undefined' && window.fbq) {
     window.fbq('track', 'Purchase', {
@@ -143,13 +174,15 @@ export function trackPurchase(
       content_name: contentName,
     }, { eventID: eventId });
   }
-  
-  sendServerEvent('Purchase', eventId, {
-    value,
-    currency,
-    email,
-    content_name: contentName,
-  });
+
+  if (!options?.skipServerRelay) {
+    sendServerEvent('Purchase', eventId, {
+      value,
+      currency,
+      email,
+      content_name: contentName,
+    });
+  }
 }
 
 // Custom event fired when a /evelyn lander visitor clicks the "Continue your
@@ -189,7 +222,20 @@ export function trackCompleteRegistration(email?: string, firstName?: string): v
   });
 }
 
-export function trackUpsellPurchase(value: number, currency: string = 'USD', email?: string, contentName: string = 'Manifestation Bracelet'): void {
+export function trackUpsellPurchase(
+  value: number,
+  currency: string = 'USD',
+  email?: string,
+  contentName: string = 'Manifestation Bracelet',
+  mainSessionId?: string,
+  // 'u1' = protection_ritual, 'u2' = manifestation_bracelet (V1 funnel).
+  // Required to disambiguate U1 from U2 within the shared "Upsell" event_name.
+  upsellSlot: 'u1' | 'u2' = 'u2',
+  // V1/V1-FB callers pass skipServerRelay=true because the Stripe webhook's
+  // fireStripePurchaseEvent already fires server-side with the same
+  // deterministic event_id — avoids duplicate "Server / Deduplicated" rows.
+  options?: { skipServerRelay?: boolean },
+): void {
   const dedupKey = `upsell_purchase_tracked_${contentName}_${value}`;
   if (typeof window !== 'undefined' && sessionStorage.getItem(dedupKey)) {
     return;
@@ -198,7 +244,9 @@ export function trackUpsellPurchase(value: number, currency: string = 'USD', ema
     sessionStorage.setItem(dedupKey, 'true');
   }
 
-  const eventId = generateEventId();
+  const eventId = mainSessionId
+    ? `upsell_${upsellSlot}_${mainSessionId}`
+    : generateEventId();
 
   if (typeof window !== 'undefined' && window.fbq) {
     window.fbq('trackCustom', 'Upsell', {
@@ -208,12 +256,14 @@ export function trackUpsellPurchase(value: number, currency: string = 'USD', ema
     }, { eventID: eventId });
   }
 
-  sendServerEvent('Upsell', eventId, {
-    value,
-    currency,
-    email,
-    content_name: contentName,
-  });
+  if (!options?.skipServerRelay) {
+    sendServerEvent('Upsell', eventId, {
+      value,
+      currency,
+      email,
+      content_name: contentName,
+    });
+  }
 }
 
 // Custom "Upsell2" event used by the V1-FB funnel /fb/success page so the
@@ -226,6 +276,11 @@ export function trackUpsell2Purchase(
   currency: string = 'USD',
   email?: string,
   contentName: string = 'Manifestation Bracelet',
+  mainSessionId?: string,
+  // V1/V1-FB callers pass skipServerRelay=true because the Stripe webhook's
+  // fireStripePurchaseEvent already fires server-side with the same
+  // deterministic event_id — avoids duplicate "Server / Deduplicated" rows.
+  options?: { skipServerRelay?: boolean },
 ): void {
   const dedupKey = `upsell2_purchase_tracked_${contentName}_${value}`;
   if (typeof window !== 'undefined' && sessionStorage.getItem(dedupKey)) {
@@ -235,7 +290,9 @@ export function trackUpsell2Purchase(
     sessionStorage.setItem(dedupKey, 'true');
   }
 
-  const eventId = generateEventId();
+  const eventId = mainSessionId
+    ? `upsell2_${mainSessionId}`
+    : generateEventId();
 
   if (typeof window !== 'undefined' && window.fbq) {
     window.fbq('trackCustom', 'Upsell2', {
@@ -245,10 +302,12 @@ export function trackUpsell2Purchase(
     }, { eventID: eventId });
   }
 
-  sendServerEvent('Upsell2', eventId, {
-    value,
-    currency,
-    email,
-    content_name: contentName,
-  });
+  if (!options?.skipServerRelay) {
+    sendServerEvent('Upsell2', eventId, {
+      value,
+      currency,
+      email,
+      content_name: contentName,
+    });
+  }
 }

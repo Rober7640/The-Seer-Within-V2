@@ -90,7 +90,7 @@ export default function LoginPage() {
         // stamped users.signupFunnel='evelyn' for these). Direct /login
         // signups outside the FB-attribution flow stay silent.
         if (sourceParam === 'evelyn-lander') {
-          trackLead(email, firstName);
+          trackLead(email, firstName).catch(() => { /* non-blocking */ });
         }
         if (data.requiresVerification) {
           setShowVerificationSent(true);
