@@ -139,6 +139,12 @@ export function SoulmatePopup({ onClose }: { onClose: () => void }) {
     }
     sessionStorage.setItem('soulmate_form', JSON.stringify(form));
     identifyUser(form.email, { funnel: 'soulmate', first_name: form.firstName });
+    // INVARIANT: this is the single Lead fire-point for the soulmate funnel.
+    // Token-resumers from AWeber drip CTAs (?t=<token>) fire
+    // `lead_resumed_from_token` above and bypass this handler entirely, so
+    // each user counts as a Lead exactly once across their lifetime. When
+    // wiring FB Lead, fire it here (NOT on /soulmate/process mount) to
+    // preserve that invariant.
     trackPH('lead_captured', {
       funnel: 'soulmate',
       step: 'landing_form',
@@ -382,9 +388,12 @@ export default function SoulmateLandingPage() {
   // ?t=<token> hydration: AWeber drip CTAs land users here with a token that
   // resolves to the original /soulmate form intake. On success, rebuild
   // sessionStorage in the same shape SoulmatePopup.handleSubmit writes and
-  // forward to /soulmate/process — the rest of the funnel runs identically to
-  // a fresh form submit. On any failure (expired / revoked / not_found),
-  // surface a banner so the user can refill manually.
+  // jump straight to /soulmate/reading — bypassing /soulmate/process. The
+  // process page is pure animation; skipping it for resumers keeps any Lead
+  // event (currently PostHog lead_captured; later FB Lead) firing exactly
+  // once per user on the original form submit, not on every drip-CTA click.
+  // On any failure (expired / revoked / not_found), surface a banner so the
+  // user can refill manually.
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const token = params.get('t');
@@ -412,7 +421,7 @@ export default function SoulmateLandingPage() {
             identifyUser(data.email, { funnel: 'soulmate', first_name: data.firstName });
           }
           trackPH('lead_resumed_from_token', { funnel: 'soulmate' });
-          navigate('/soulmate/process');
+          navigate('/soulmate/reading');
           return;
         }
         let code = 'expired';

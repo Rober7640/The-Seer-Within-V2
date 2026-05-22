@@ -1,6 +1,14 @@
 import { useEffect, useState } from 'react';
 import { useLocation, Link } from 'wouter';
 
+// This page is pure animation theatre between form submit and the sales page.
+// DO NOT fire Lead / conversion / FB events here — token-resumers from AWeber
+// drip CTAs skip this page entirely (SoulmateLandingPage.tsx routes them
+// directly to /soulmate/reading). Any tracking added here would either
+// double-count fresh leads on every drip-CTA click or under-count resumers.
+// Fire Lead in SoulmatePopup.handleSubmit instead. See the comment block
+// above `lead_captured` in SoulmateLandingPage.tsx for the invariant.
+
 export default function SoulmateProcessPage() {
   const [, navigate] = useLocation();
   const [visible, setVisible] = useState([false, false, false]);
