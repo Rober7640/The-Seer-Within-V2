@@ -254,9 +254,10 @@ export function trackUpsellPurchase(
   email?: string,
   contentName: string = 'Manifestation Bracelet',
   mainSessionId?: string,
-  // 'u1' = protection_ritual, 'u2' = manifestation_bracelet (V1 funnel).
-  // Required to disambiguate U1 from U2 within the shared "Upsell" event_name.
-  upsellSlot: 'u1' | 'u2' = 'u2',
+  // 'u1' = protection_ritual, 'u2' = manifestation_bracelet (V1 funnel),
+  // 'sm' = soulmate_bracelet (soulmate funnel). Required to disambiguate
+  // within the shared "Upsell" event_name across funnels.
+  upsellSlot: 'u1' | 'u2' | 'sm' = 'u2',
   // V1/V1-FB callers pass skipServerRelay=true because the Stripe webhook's
   // fireStripePurchaseEvent already fires server-side with the same
   // deterministic event_id — avoids duplicate "Server / Deduplicated" rows.

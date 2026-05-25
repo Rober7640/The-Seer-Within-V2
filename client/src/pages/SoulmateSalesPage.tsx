@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link } from 'wouter';
 import { track as trackPH, getDistinctId } from '@/lib/posthog';
+import { trackInitiateCheckout } from '@/lib/facebook';
 
 const PRICES = [
   { cents: 2800, label: '$28', sub: 'Pay what you can' },
@@ -87,6 +88,11 @@ export default function SoulmateSalesPage() {
       product: 'soulmate_sketch',
       price_cents: selectedPrice,
     });
+    // FB InitiateCheckout — auto-routes to soulmate pixel via URL.
+    trackInitiateCheckout(selectedPrice / 100, 'USD', 'Soulmate Sketch');
+    // Persist price so /soulmate/gift can populate the Purchase event value
+    // (Stripe success URL only carries session_id, not amount).
+    sessionStorage.setItem('soulmate_sketch_price_cents', String(selectedPrice));
     try {
       const res = await fetch('/api/soulmate/checkout', {
         method: 'POST',

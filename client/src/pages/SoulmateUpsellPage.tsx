@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useSearch, useLocation, Link } from 'wouter';
 import { SoulmateShippingForm, type ShippingFormSubmission } from '../components/soulmate/SoulmateShippingForm';
 import { track as trackPH, getDistinctId } from '@/lib/posthog';
+import { trackPurchase, trackUpsellPurchase } from '@/lib/facebook';
 
 const STEPS = [
   { img: '/soulmate/step1.png', title: 'Set Your Intention',                  body: "Take a moment to reflect on your deepest desire for love and connection. Write this wish or intention on the provided wish paper. Be clear and specific, as this will help focus the energy on manifesting your soulmate." },
@@ -56,6 +57,29 @@ export default function SoulmateUpsellPage() {
   const firstName = formData?.firstName || '';
   const email     = formData?.email     || '';
 
+  // FB Purchase fire — user landed here ONLY because the sketch Stripe Checkout
+  // succeeded (Stripe success URL = /soulmate/gift?session_id=...). Browser
+  // Pixel uses deterministic event_id `purchase_<sessionId>` matching the
+  // server-side webhook fire so the two dedup. skipServerRelay because the
+  // Stripe webhook already fires CAPI Purchase. Auto-routes to soulmate pixel
+  // via shared/fbPixelConfig.ts. Guard: sessionId required, sessionStorage
+  // dedup prevents a duplicate fire on React StrictMode double-mount.
+  useEffect(() => {
+    if (!sessionId) return;
+    const dedupKey = `soulmate_purchase_fired_${sessionId}`;
+    if (sessionStorage.getItem(dedupKey)) return;
+    sessionStorage.setItem(dedupKey, '1');
+    const priceCents = Number(sessionStorage.getItem('soulmate_sketch_price_cents') || '0');
+    trackPurchase(
+      priceCents / 100,
+      'USD',
+      email,
+      'Soulmate Sketch',
+      sessionId,
+      { skipServerRelay: true },
+    );
+  }, [sessionId, email]);
+
   const handleAddToCart = () => {
     trackPH('upsell_accepted', { funnel: 'soulmate', step: 'upsell1', product: 'soulmate_bracelet' });
     setState('collecting_shipping');
@@ -73,6 +97,18 @@ export default function SoulmateUpsellPage() {
         });
         const data = await res.json();
         if (data.success) {
+          // FB Upsell fire — soulmate_bracelet ($47). Uses 'sm' slot so the
+          // event_id `upsell_sm_<sessionId>` matches the server-side webhook
+          // fire. skipServerRelay because the Stripe webhook handles CAPI.
+          trackUpsellPurchase(
+            47,
+            'USD',
+            email,
+            'Soulmate Bracelet',
+            sessionId || undefined,
+            'sm',
+            { skipServerRelay: true },
+          );
           // Mark shipping as collected in THIS sketch session so /gift2 knows
           // to take Path A (1-click reuse). Without this, /gift2 falls back to
           // querying the DB by email — which leaks shipping across sessions.

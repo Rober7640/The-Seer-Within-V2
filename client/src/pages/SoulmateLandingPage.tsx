@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useLocation, Link } from 'wouter';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { track as trackPH, identifyUser } from '@/lib/posthog';
+import { trackLead } from '@/lib/facebook';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -152,6 +153,10 @@ export function SoulmatePopup({ onClose }: { onClose: () => void }) {
       age_range: form.ageRange,
       ethnicity: form.ethnicity,
     });
+    // FB Lead — auto-routes to soulmate pixel via shared/fbPixelConfig.ts
+    // because we're on /soulmate. Browser Pixel + server CAPI fire with the
+    // same deterministic event_id (lead_<sha256(email)[:16]>) so they dedup.
+    trackLead(form.email, form.firstName).catch(() => { /* non-blocking */ });
 
     // AWeber: add to Soulmate Leads list (fire-and-forget — don't block nav)
     const urlParams = new URLSearchParams(window.location.search);

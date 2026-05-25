@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useSearch, useLocation, Link } from 'wouter';
 import { SoulmateShippingForm, type ShippingFormSubmission } from '../components/soulmate/SoulmateShippingForm';
 import { track as trackPH, getDistinctId } from '@/lib/posthog';
+import { trackUpsell2Purchase } from '@/lib/facebook';
 
 type State = 'offer' | 'collecting_shipping' | 'charging' | 'success' | 'declined';
 
@@ -101,7 +102,21 @@ export default function SoulmateUpsell2Page() {
           body: JSON.stringify({ sessionId, email, firstName, ...body, posthogDistinctId: getDistinctId() }),
         });
         const data = await res.json();
-        if (data.success) { navigate('/soulmate/thank-you'); return; }
+        if (data.success) {
+          // FB Upsell2 fire — soulmate_love_tuner ($79). event_id
+          // `upsell2_<sessionId>` matches the server-side webhook fire so the
+          // two dedup. skipServerRelay because the webhook handles CAPI.
+          trackUpsell2Purchase(
+            79,
+            'USD',
+            email,
+            'Soulmate Love Tuner',
+            sessionId || undefined,
+            { skipServerRelay: true },
+          );
+          navigate('/soulmate/thank-you');
+          return;
+        }
         if (data.fallback && data.url) { window.location.href = data.url; return; }
       }
       setState('offer');
