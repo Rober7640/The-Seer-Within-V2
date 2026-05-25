@@ -2807,6 +2807,10 @@ export async function registerRoutes(
         email,
         app: "the-seer-within",
         product: "soulmate_bracelet",
+        // Required by Stripe webhook to (a) recognize this PI as a 1-click upsell
+        // (vs a main-purchase PI side-effect) and (b) construct the FB event_id
+        // `upsell_sm_<sketch_session_id>` matching the browser-side fire.
+        originalSession: sessionId,
       };
       if (posthogDistinctId) upsell1Metadata.posthogDistinctId = posthogDistinctId;
 
@@ -2995,6 +2999,10 @@ export async function registerRoutes(
         email,
         app: "the-seer-within",
         product: "soulmate_love_tuner",
+        // Required by Stripe webhook to (a) recognize this PI as a 1-click upsell
+        // (vs a main-purchase PI side-effect) and (b) construct the FB event_id
+        // `upsell2_<sketch_session_id>` matching the browser-side fire.
+        originalSession: sessionId,
       };
       if (posthogDistinctId) upsell2Metadata.posthogDistinctId = posthogDistinctId;
 
