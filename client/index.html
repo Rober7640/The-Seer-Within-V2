@@ -34,7 +34,9 @@
     </script>
     <!-- End Microsoft Clarity -->
 
-    <!-- Facebook Pixel Code -->
+    <!-- Facebook Pixel loader. Per-funnel pixel init happens in main.tsx
+         using shared/fbPixelConfig.ts so we can route events to the right
+         pixel via fbq('trackSingle', pixelId, ...). -->
     <script>
       !function(f,b,e,v,n,t,s)
       {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
@@ -44,7 +46,6 @@
       t.src=v;s=b.getElementsByTagName(e)[0];
       s.parentNode.insertBefore(t,s)}(window, document,'script',
       'https://connect.facebook.net/en_US/fbevents.js');
-      fbq('init', '446814716830295');
     </script>
     <!-- End Facebook Pixel Code -->
 

@@ -1,9 +1,34 @@
+import { getPixelIdForUrl } from "@shared/fbPixelConfig";
+
 declare global {
   interface Window {
     fbq: (...args: unknown[]) => void;
     clarity: (...args: unknown[]) => void;
     trackdesk: (...args: unknown[]) => void;
   }
+}
+
+// Lazy-init each FB Pixel only when an event is first fired to it. This
+// avoids fbq('init') auto-firing a PageView to every pixel on every page,
+// which would cross-contaminate per-funnel attribution. autoConfig=false
+// suppresses Meta's automatic button-click/form-submit detection so only
+// the events we explicitly fire are tracked.
+const initedPixels = new Set<string>();
+function ensurePixelInited(pixelId: string): void {
+  if (initedPixels.has(pixelId)) return;
+  if (typeof window === "undefined" || !window.fbq) return;
+  window.fbq("set", "autoConfig", "false", pixelId);
+  window.fbq("init", pixelId);
+  initedPixels.add(pixelId);
+}
+
+// Pick the FB Pixel ID that owns the current page's funnel, init'ing it
+// on first use. Used to scope every fbq call to the right pixel.
+function currentPixelId(): string {
+  const path = typeof window !== "undefined" ? window.location.pathname : "/";
+  const pixelId = getPixelIdForUrl(path);
+  ensurePixelInited(pixelId);
+  return pixelId;
 }
 
 /** Read the Trackdesk click-id cookie (set by their JS snippet). */
@@ -91,11 +116,11 @@ async function sendServerEvent(
 
 export function trackPageView(): void {
   const eventId = generateEventId();
-  
+
   if (typeof window !== 'undefined' && window.fbq) {
-    window.fbq('track', 'PageView', {}, { eventID: eventId });
+    window.fbq('trackSingle', currentPixelId(), 'PageView', {}, { eventID: eventId });
   }
-  
+
   sendServerEvent('PageView', eventId);
 }
 
@@ -111,7 +136,7 @@ export async function trackLead(
   // value=0 as a data-quality issue, and the spec lists both as optional
   // for the Lead event since email capture has no realized monetary value.
   if (typeof window !== 'undefined' && window.fbq) {
-    window.fbq('track', 'Lead', {
+    window.fbq('trackSingle', currentPixelId(), 'Lead', {
       content_name: 'Email Capture',
     }, { eventID: eventId });
   }
@@ -138,7 +163,7 @@ export function trackInitiateCheckout(
   const eventId = generateEventId();
 
   if (typeof window !== 'undefined' && window.fbq) {
-    window.fbq('track', 'InitiateCheckout', {
+    window.fbq('trackSingle', currentPixelId(), 'InitiateCheckout', {
       value,
       currency,
       content_name: contentName,
@@ -168,7 +193,7 @@ export function trackPurchase(
     : generateEventId();
 
   if (typeof window !== 'undefined' && window.fbq) {
-    window.fbq('track', 'Purchase', {
+    window.fbq('trackSingle', currentPixelId(), 'Purchase', {
       value,
       currency,
       content_name: contentName,
@@ -193,7 +218,8 @@ export function trackEvelynLanderCTA(segment?: string): void {
 
   if (typeof window !== 'undefined' && window.fbq) {
     window.fbq(
-      'trackCustom',
+      'trackSingleCustom',
+      currentPixelId(),
       'EvelynLanderCTA',
       segment ? { segment } : {},
       { eventID: eventId },
@@ -210,7 +236,7 @@ export function trackCompleteRegistration(email?: string, firstName?: string): v
   const eventId = generateEventId();
 
   if (typeof window !== 'undefined' && window.fbq) {
-    window.fbq('track', 'CompleteRegistration', {
+    window.fbq('trackSingle', currentPixelId(), 'CompleteRegistration', {
       content_name: 'Account Verified',
     }, { eventID: eventId });
   }
@@ -249,7 +275,7 @@ export function trackUpsellPurchase(
     : generateEventId();
 
   if (typeof window !== 'undefined' && window.fbq) {
-    window.fbq('trackCustom', 'Upsell', {
+    window.fbq('trackSingleCustom', currentPixelId(), 'Upsell', {
       value,
       currency,
       content_name: contentName,
@@ -295,7 +321,7 @@ export function trackUpsell2Purchase(
     : generateEventId();
 
   if (typeof window !== 'undefined' && window.fbq) {
-    window.fbq('trackCustom', 'Upsell2', {
+    window.fbq('trackSingleCustom', currentPixelId(), 'Upsell2', {
       value,
       currency,
       content_name: contentName,
