@@ -7,6 +7,7 @@ import { createServer } from "http";
 import { startHeartbeat, recoverActiveSessions, startInactiveSessionCleanup } from "./lib/creditTracking";
 import { initializeCronJobs } from "./lib/cronJobs";
 import logger, { requestIdMiddleware } from "./lib/logger";
+import { posthog } from "./lib/posthog";
 
 // Initialize Sentry for server-side error monitoring
 if (process.env.SENTRY_DSN) {
@@ -66,6 +67,8 @@ app.use(requestIdMiddleware);
       Sentry.captureException(err);
     }
 
+    posthog.captureException(err);
+
     logger.error("Internal Server Error", { error: err.message, stack: err.stack, status });
 
     if (res.headersSent) {
@@ -90,16 +93,17 @@ app.use(requestIdMiddleware);
   // this serves both the API and the client.
   // It is the only port that is not firewalled.
   // Recover active sessions from DB (handles server restarts gracefully)
-  await recoverActiveSessions();
-
-  // Start credit tracking heartbeat (checkpoints active sessions every 30s)
-  startHeartbeat();
-
-  // Start background cleanup for inactive sessions (every 5 min, auto-ends 30+ min idle)
-  startInactiveSessionCleanup();
-
-  // Initialize cron jobs (follow-up emails, monthly resets)
-  initializeCronJobs();
+  try {
+    await recoverActiveSessions();
+    // Start credit tracking heartbeat (checkpoints active sessions every 30s)
+    startHeartbeat();
+    // Start background cleanup for inactive sessions (every 5 min, auto-ends 30+ min idle)
+    startInactiveSessionCleanup();
+    // Initialize cron jobs (follow-up emails, monthly resets)
+    initializeCronJobs();
+  } catch (err) {
+    logger.warn("DB unavailable — skipping session recovery and cron jobs", { error: (err as Error).message });
+  }
 
   const port = parseInt(process.env.PORT || "5000", 10);
   httpServer.listen(port, "0.0.0.0", () => {

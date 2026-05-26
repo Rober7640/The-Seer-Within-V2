@@ -4,12 +4,15 @@ import { Router, Request, Response } from 'express';
 import { Webhook } from 'svix';
 import Stripe from 'stripe';
 import { db } from '../lib/db';
-import { followUpEmails, userFollowUpPreferences, migrationDripEmails, topupEmails, aidenFollowupEmails, users, emailSuppression, creditPurchases } from '@shared/schema';
+import { followUpEmails, userFollowUpPreferences, migrationDripEmails, topupEmails, aidenFollowupEmails, users, emailSuppression, creditPurchases, soulmateLanderSessions } from '@shared/schema';
 import { and, eq, sql } from 'drizzle-orm';
 import logger from '../lib/logger';
+import { posthog } from '../lib/posthog';
 import * as paypal from '../lib/paypal';
 import { fireV2PurchaseEvent, fireStripePurchaseEvent } from '../lib/facebook';
 import { maybeSchedulePostPurchaseDrip } from '../lib/postPurchaseDripTrigger';
+import { addSoulmatePaidSubscriber } from '../lib/aweber';
+import { recordSoulmatePurchase } from '../lib/soulmateOrders';
 
 const router = Router();
 
@@ -465,6 +468,7 @@ async function autoUnsubscribe(userId: string, reason: string): Promise<void> {
   }
 
   logger.info(`User ${userId} unsubscribed from follow-ups (reason: ${reason})`);
+  posthog.capture({ distinctId: userId, event: 'user_unsubscribed', properties: { reason } });
 
   // Mirror the unsubscribe into the central suppression list. Isolated so a
   // failure here (e.g. migration not yet applied on a new environment)
@@ -493,6 +497,26 @@ async function autoUnsubscribe(userId: string, reason: string): Promise<void> {
       userId,
       reason,
       error: (suppressionError as Error).message,
+    });
+  }
+
+  // Revoke any active soulmate intake tokens. Honors the unsub at the link
+  // layer so a leaked CTA URL can't still resolve for somebody who opted out.
+  // Isolated so a failure here can't break the unsubscribe itself.
+  try {
+    await db
+      .update(soulmateLanderSessions)
+      .set({ intakeTokenRevokedAt: new Date() })
+      .where(and(
+        eq(soulmateLanderSessions.resolvedUserId, userId),
+        sql`${soulmateLanderSessions.intakeToken} IS NOT NULL`,
+        sql`${soulmateLanderSessions.intakeTokenRevokedAt} IS NULL`,
+      ));
+  } catch (revokeError) {
+    logger.warn('[suppression] Soulmate intake_token revoke on unsub failed', {
+      userId,
+      reason,
+      error: (revokeError as Error).message,
     });
   }
 }
@@ -680,6 +704,82 @@ router.post('/stripe', async (req: Request, res: Response) => {
       logger.info('Stripe webhook: No trackdeskClickId in metadata, skipping affiliate tracking');
     }
 
+    // PostHog: track funnel purchases (Phase 1 soulmate + Phase 2 V1/fb).
+    // Soulmate products fix funnel='soulmate'. V1 products derive funnel from
+    // metadata.funnel ('v1-fb' → 'fb', missing → 'v1').
+    type TrackedProduct = { funnel: 'soulmate' | null; step: string; product: string };
+    const TRACKED_PRODUCTS: Record<string, TrackedProduct> = {
+      soulmate_sketch:        { funnel: 'soulmate', step: 'sales',   product: 'soulmate_sketch' },
+      soulmate_bracelet:      { funnel: 'soulmate', step: 'upsell1', product: 'soulmate_bracelet' },
+      soulmate_love_tuner:    { funnel: 'soulmate', step: 'upsell2', product: 'soulmate_love_tuner' },
+      energy_clearing_ritual: { funnel: null,       step: 'sales',   product: 'energy_clearing_ritual' },
+      protection_ritual:      { funnel: null,       step: 'upsell1', product: 'protection_ritual' },
+      manifestation_bracelet: { funnel: null,       step: 'upsell2', product: 'manifestation_bracelet' },
+    };
+    const productInfo = product ? TRACKED_PRODUCTS[product] : undefined;
+    if (productInfo) {
+      const funnelValue = productInfo.funnel ?? (metadata.funnel === 'v1-fb' ? 'fb' : 'v1');
+      const posthogDistinctId = metadata.posthogDistinctId || email;
+      posthog.capture({
+        distinctId: posthogDistinctId,
+        event: 'purchase_completed',
+        properties: {
+          funnel: funnelValue,
+          step: productInfo.step,
+          product: productInfo.product,
+          payment_method: 'stripe_checkout',
+          amount_cents: session.amount_total ?? 0,
+          stripe_session_id: session.id,
+          email,
+        },
+      });
+    }
+
+    // AWeber: add soulmate sketch buyers to the Sketch Buyers list.
+    // Fire-and-forget. Bracelet + Love Tuner are handled inline in routes.ts
+    // after their 1-click charges (not webhook-driven), so this block only
+    // covers the sketch path. No shipping for the sketch (digital deliverable).
+    // Use the PaymentIntent id (pi_*) for parity with the bracelet/tuner
+    // writes — the Checkout Session id (cs_*) leaks here otherwise.
+    if (product === 'soulmate_sketch' && email) {
+      const paymentIntentId = typeof session.payment_intent === 'string'
+        ? session.payment_intent
+        : session.payment_intent?.id;
+      addSoulmatePaidSubscriber({
+        email,
+        firstName: metadata.firstName || '',
+        stripeOrderId: paymentIntentId || session.id,
+        purchaseAmountCents: session.amount_total ?? 0,
+      }).catch((err) => logger.error('AWeber Soulmate Paid error (non-blocking):', err));
+
+      // Persist sketch purchase to soulmate_orders. Bracelet/tuner are written
+      // inline from their 1-click handlers (routes.ts); the sketch path only
+      // fires here, so without this call sketch_pi_id / sketch_cents / sketch_at
+      // never populate even on a successful purchase.
+      if (paymentIntentId) {
+        recordSoulmatePurchase({
+          email,
+          product: 'sketch',
+          paymentIntentId,
+          amountCents: session.amount_total ?? 0,
+        }).catch((err) => logger.error('recordSoulmatePurchase sketch error (non-blocking):', err));
+      }
+
+      // Revoke any active intake tokens for this buyer. After purchase, the
+      // lead-nurture CTA links (?t=<token>) should stop resolving — they're
+      // for pre-purchase resumption only. Match by email so we hit all
+      // soulmate_lander_sessions rows for the buyer regardless of whether the
+      // V2 user row is linked. Fire-and-forget — never block the webhook ack.
+      db.update(soulmateLanderSessions)
+        .set({ intakeTokenRevokedAt: new Date() })
+        .where(and(
+          eq(soulmateLanderSessions.email, email.toLowerCase()),
+          sql`${soulmateLanderSessions.intakeToken} IS NOT NULL`,
+          sql`${soulmateLanderSessions.intakeTokenRevokedAt} IS NULL`,
+        ))
+        .catch((err) => logger.error('Soulmate intake_token revoke on purchase error (non-blocking):', err));
+    }
+
     // Server-side FB event firing — closes the gap when the browser tab
     // closes / adblock blocks `/api/fb-event`. Uses deterministic event_id
     // to dedup with the client-side Pixel fire (see client/src/lib/facebook.ts).
@@ -830,6 +930,7 @@ router.post('/paypal', async (req: Request, res: Response) => {
 
       fireV2PurchaseEvent(result.purchaseId).catch(() => { /* logged inside */ });
       maybeSchedulePostPurchaseDrip(result.purchaseId).catch(() => { /* logged inside */ });
+      posthog.capture({ distinctId: result.userId, event: 'paypal_webhook_purchase_completed', properties: { purchase_id: result.purchaseId, coins: result.totalCoins, order_id: orderId } });
     } else {
       logger.info('PayPal webhook: order already processed or unknown', {
         orderId,

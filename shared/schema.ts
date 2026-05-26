@@ -954,3 +954,141 @@ export const evelynLanderSessions = pgTable("evelyn_lander_sessions", {
 export const insertEvelynLanderSessionSchema = createInsertSchema(evelynLanderSessions);
 export type EvelynLanderSession = typeof evelynLanderSessions.$inferSelect;
 export type InsertEvelynLanderSession = z.infer<typeof insertEvelynLanderSessionSchema>;
+
+// Soulmate lander sessions: linkage row between a /soulmate landing-form submit
+// and the V2 user we passwordless-create at that moment. Used by isFromSoulmateLander()
+// in auth.ts to decide eligibility for the 5-min (300-coin) onboarding grant and
+// the post-verify Evelyn drip — mirrors the evelynLanderSessions role exactly.
+export const soulmateLanderSessions = pgTable("soulmate_lander_sessions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  email: text("email").notNull(),
+  firstName: text("first_name"),
+  lastName: text("last_name"),
+  resolvedUserId: varchar("resolved_user_id").references(() => users.id, { onDelete: "set null" }),
+  landerPath: text("lander_path"),
+  utmSource: text("utm_source"),
+  utmCampaign: text("utm_campaign"),
+  utmMedium: text("utm_medium"),
+  ipAddress: text("ip_address"),
+  userAgent: text("user_agent"),
+  // Intake snapshot — captured at /api/soulmate/lead so the email-CTA hydration
+  // path can rebuild the sales-page sessionStorage shape without re-asking the
+  // user. AWeber custom_fields hold the same data; this is the local-of-record.
+  birthMonth: text("birth_month"),
+  birthDay: text("birth_day"),
+  birthYear: text("birth_year"),
+  preference: text("preference"),
+  ageRange: text("age_range"),
+  ethnicity: text("ethnicity"),
+  // Single token per lead reused across the AWeber drip's CTAs. Resolves via
+  // GET /api/soulmate/intake/:token. Revoked on sketch purchase + unsubscribe.
+  intakeToken: text("intake_token"),
+  intakeTokenExpiresAt: timestamp("intake_token_expires_at"),
+  intakeTokenRevokedAt: timestamp("intake_token_revoked_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_soulmate_lander_user").on(table.resolvedUserId),
+  index("idx_soulmate_lander_email").on(table.email),
+  uniqueIndex("idx_soulmate_lander_intake_token").on(table.intakeToken),
+]);
+
+export const insertSoulmateLanderSessionSchema = createInsertSchema(soulmateLanderSessions);
+export type SoulmateLanderSession = typeof soulmateLanderSessions.$inferSelect;
+export type InsertSoulmateLanderSession = z.infer<typeof insertSoulmateLanderSessionSchema>;
+
+// ============================================================
+// A/B Testing Tables (Soulmate Funnel Split Testing)
+// ============================================================
+
+// AB Tests - Defines split tests for pages/elements
+export const abTests = pgTable("ab_tests", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  page: text("page").notNull(), // e.g. "soulmate_landing", "soulmate_reading", "soulmate_gift", "soulmate_gift2"
+  element: text("element").notNull(), // e.g. "headline", "cta_text", "price", "hero_image"
+  name: text("name").notNull(), // human label like "Landing page headline test"
+  variants: text("variants").notNull(), // JSON string of array: [{id: "a", label: "Control", value: "original text"}, ...]
+  trafficSplit: text("traffic_split").notNull().default("50/50"), // e.g. "50/50", "70/30", "33/33/34"
+  status: text("status").notNull().default("draft"), // draft, running, paused, completed
+  winnerVariantId: text("winner_variant_id"), // set when test is completed
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// AB Events - Tracks impressions and conversions per visitor per test
+export const abEvents = pgTable("ab_events", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  testId: varchar("test_id").notNull().references(() => abTests.id, { onDelete: "cascade" }),
+  variantId: text("variant_id").notNull(), // e.g. "a", "b"
+  visitorId: text("visitor_id").notNull(), // cookie-based visitor ID
+  eventType: text("event_type").notNull(), // "impression" or "conversion"
+  page: text("page").notNull(),
+  metadata: text("metadata"), // optional JSON string for extra info like price selected
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_ab_events_test_variant").on(table.testId, table.variantId, table.eventType),
+  index("idx_ab_events_visitor").on(table.visitorId, table.testId),
+]);
+
+export const insertAbTestSchema = createInsertSchema(abTests).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertAbEventSchema = createInsertSchema(abEvents).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type AbTest = typeof abTests.$inferSelect;
+export type InsertAbTest = z.infer<typeof insertAbTestSchema>;
+
+export type AbEvent = typeof abEvents.$inferSelect;
+export type InsertAbEvent = z.infer<typeof insertAbEventSchema>;
+
+// ============================================================
+// Soulmate Sketch Funnel Orders
+// One row per email. Shipping collected once on first physical-product upsell
+// (bracelet or tuner) and reused thereafter.
+// ============================================================
+
+export const soulmateOrders = pgTable("soulmate_orders", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  email: text("email").notNull().unique(),
+  firstName: text("first_name"),
+
+  sketchPiId: text("sketch_pi_id"),
+  sketchCents: integer("sketch_cents"),
+  sketchAt: timestamp("sketch_at"),
+
+  braceletPiId: text("bracelet_pi_id"),
+  braceletCents: integer("bracelet_cents"),
+  braceletAt: timestamp("bracelet_at"),
+
+  tunerPiId: text("tuner_pi_id"),
+  tunerCents: integer("tuner_cents"),
+  tunerAt: timestamp("tuner_at"),
+
+  shippingName: text("shipping_name"),
+  shippingLine1: text("shipping_line1"),
+  shippingLine2: text("shipping_line2"),
+  shippingCity: text("shipping_city"),
+  shippingState: text("shipping_state"),
+  shippingPostal: text("shipping_postal"),
+  shippingCountry: text("shipping_country").default("US"),
+  shippingPhone: text("shipping_phone"),
+
+  billingSameAsShipping: boolean("billing_same_as_shipping").notNull().default(true),
+  billingLine1: text("billing_line1"),
+  billingLine2: text("billing_line2"),
+  billingCity: text("billing_city"),
+  billingState: text("billing_state"),
+  billingPostal: text("billing_postal"),
+  billingCountry: text("billing_country"),
+
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export type SoulmateOrder = typeof soulmateOrders.$inferSelect;
+export type InsertSoulmateOrder = typeof soulmateOrders.$inferInsert;

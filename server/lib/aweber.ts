@@ -334,6 +334,233 @@ export async function addUpsell2Subscriber(params: AddPaidSubscriberParams): Pro
   }
 }
 
+// ─── Soulmate Sketch funnel ──────────────────────────────────────────────────
+// Independent of V1 — uses separate AWeber lists so the soulmate drip doesn't
+// collide with the existing Evelyn-Cross psychic-reading drip. List IDs are
+// env-driven (set on the secondary Railway service). All calls are
+// fire-and-forget — never block the user flow.
+
+interface SoulmateLeadParams {
+  email: string;
+  firstName: string;
+  lastName?: string;
+  preference?: string;
+  ageRange?: string;
+  ethnicity?: string;
+  birthMonth?: string;
+  birthDay?: string;
+  birthYear?: string;
+  landerPath?: string;
+  utmSource?: string;
+  utmCampaign?: string;
+  utmMedium?: string;
+  // Resume-purchase token referenced in AWeber drip CTAs via {!intake_token}.
+  // Server mints + persists in soulmate_lander_sessions; AWeber renders it into
+  // ?t=<token> URLs that hydrate the sales page.
+  intakeToken?: string;
+}
+
+interface SoulmateSketchPaidParams {
+  email: string;
+  firstName: string;
+  stripeOrderId: string;
+  purchaseAmountCents: number;
+}
+
+interface SoulmateUpsellSubscriberParams {
+  email: string;
+  firstName: string;
+  stripeOrderId: string;
+  purchaseAmountCents: number;
+  shipping: ShippingAddress;
+}
+
+interface SoulmateDeclinedParams {
+  email: string;
+  declinedProduct: 'soulmate_bracelet' | 'soulmate_love_tuner';
+}
+
+// Generic soulmate-list write — every soulmate AWeber call goes through here
+// so we have one place to handle auth, retry-on-401, and "already subscribed"
+// edge cases consistently.
+async function writeSoulmateSubscriber(opts: {
+  listId: string;
+  listLabel: string;
+  email: string;
+  name?: string;
+  customFields: Record<string, string>;
+  tags: string[];
+}): Promise<{ success: boolean; error?: string }> {
+  const accountId = process.env.AWEBER_ACCOUNT_ID;
+  if (!accountId) {
+    logger.warn(`AWeber ${opts.listLabel}: account not configured`);
+    return { success: false, error: 'AWeber not configured' };
+  }
+  if (!process.env.AWEBER_ACCESS_TOKEN || !process.env.AWEBER_REFRESH_TOKEN) {
+    logger.warn(`AWeber ${opts.listLabel}: tokens not configured`);
+    return { success: false, error: 'AWeber tokens not configured' };
+  }
+  if (!opts.listId) {
+    logger.warn(`AWeber ${opts.listLabel}: list ID env var not set`);
+    return { success: false, error: 'List ID not configured' };
+  }
+
+  try {
+    const subscriberData: Record<string, unknown> = {
+      email: opts.email,
+      update_existing: true,
+    };
+    // Only include custom_fields when there's at least one to set. AWeber
+    // treats `custom_fields: {}` with update_existing as "clear all custom
+    // fields" — which silently wipes values set by earlier API calls on the
+    // same subscriber/list. Surfaced when the decline-tag call (no custom
+    // fields) ran ~11s after the sketch purchase populated 3 fields.
+    if (Object.keys(opts.customFields).length > 0) {
+      subscriberData.custom_fields = opts.customFields;
+    }
+    if (opts.name) subscriberData.name = opts.name;
+    if (opts.tags.length > 0) subscriberData.tags = opts.tags;
+
+    const response = await makeAWeberRequest(
+      `/accounts/${accountId}/lists/${opts.listId}/subscribers`,
+      { method: 'POST', body: JSON.stringify(subscriberData) },
+    );
+
+    if (response.ok || response.status === 201) {
+      logger.info(`AWeber ${opts.listLabel}: added/updated ${opts.email}`);
+      return { success: true };
+    }
+
+    const errorText = await response.text();
+    logger.error(`AWeber ${opts.listLabel} failed: status=${response.status} body=${errorText}`);
+
+    if (response.status === 400) {
+      try {
+        const errorData = JSON.parse(errorText);
+        if (errorData.error?.message?.includes('already subscribed')) {
+          logger.info(`AWeber ${opts.listLabel}: ${opts.email} already exists`);
+          return { success: true };
+        }
+      } catch {}
+    }
+
+    return { success: false, error: `AWeber API error: ${response.status} - ${errorText}` };
+  } catch (error) {
+    logger.error(`AWeber ${opts.listLabel} error:`, error);
+    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+  }
+}
+
+export async function addSoulmateLeadSubscriber(params: SoulmateLeadParams) {
+  const custom: Record<string, string> = {};
+  if (params.lastName) custom.last_name = params.lastName;
+  if (params.preference) custom.preference = params.preference;
+  if (params.ageRange) custom.age_range = params.ageRange;
+  if (params.ethnicity) custom.ethnicity = params.ethnicity;
+  if (params.birthMonth) custom.birth_month = params.birthMonth;
+  if (params.birthDay) custom.birth_day = params.birthDay;
+  if (params.birthYear) custom.birth_year = params.birthYear;
+  if (params.landerPath) custom.lander_path = params.landerPath;
+  if (params.utmSource) custom.utm_source = params.utmSource;
+  if (params.utmCampaign) custom.utm_campaign = params.utmCampaign;
+  if (params.utmMedium) custom.utm_medium = params.utmMedium;
+  if (params.intakeToken) custom.intake_token = params.intakeToken;
+
+  return writeSoulmateSubscriber({
+    listId: process.env.AWEBER_SOULMATE_LEADS_LIST_ID || '',
+    listLabel: 'Soulmate Leads',
+    email: params.email,
+    name: params.firstName,
+    customFields: custom,
+    tags: ['soulmate-lead'],
+  });
+}
+
+export async function addSoulmatePaidSubscriber(params: SoulmateSketchPaidParams) {
+  return writeSoulmateSubscriber({
+    listId: process.env.AWEBER_SOULMATE_PAID_LIST_ID || '',
+    listLabel: 'Soulmate Sketch Buyers',
+    email: params.email,
+    name: params.firstName,
+    customFields: {
+      stripe_order_id: params.stripeOrderId,
+      purchase_amount_usd: String(params.purchaseAmountCents / 100),
+      product: 'soulmate_sketch',
+    },
+    tags: ['soulmate-sketch-buyer'],
+  });
+}
+
+export async function addSoulmateUpsell1Subscriber(params: SoulmateUpsellSubscriberParams) {
+  const custom: Record<string, string> = {
+    stripe_order_id: params.stripeOrderId,
+    purchase_amount_usd: String(params.purchaseAmountCents / 100),
+    product: 'soulmate_bracelet',
+  };
+  // Shipping is mandatory upstream (charge endpoint rejects without it), so
+  // these are always populated when this function runs. Conditional spread is
+  // defensive only.
+  const s = params.shipping;
+  if (s.name) custom.shipping_name = s.name;
+  if (s.line1) custom.shipping_line1 = s.line1;
+  if (s.line2) custom.shipping_line2 = s.line2;
+  if (s.city) custom.shipping_city = s.city;
+  if (s.state) custom.shipping_state = s.state;
+  if (s.postal) custom.shipping_postal = s.postal;
+  if (s.country) custom.shipping_country = s.country;
+
+  return writeSoulmateSubscriber({
+    listId: process.env.AWEBER_SOULMATE_UPSELL1_LIST_ID || '',
+    listLabel: 'Soulmate Bracelet Buyers',
+    email: params.email,
+    name: params.firstName,
+    customFields: custom,
+    tags: ['soulmate-bracelet-buyer'],
+  });
+}
+
+export async function addSoulmateUpsell2Subscriber(params: SoulmateUpsellSubscriberParams) {
+  const custom: Record<string, string> = {
+    stripe_order_id: params.stripeOrderId,
+    purchase_amount_usd: String(params.purchaseAmountCents / 100),
+    product: 'soulmate_love_tuner',
+  };
+  const s = params.shipping;
+  if (s.name) custom.shipping_name = s.name;
+  if (s.line1) custom.shipping_line1 = s.line1;
+  if (s.line2) custom.shipping_line2 = s.line2;
+  if (s.city) custom.shipping_city = s.city;
+  if (s.state) custom.shipping_state = s.state;
+  if (s.postal) custom.shipping_postal = s.postal;
+  if (s.country) custom.shipping_country = s.country;
+
+  return writeSoulmateSubscriber({
+    listId: process.env.AWEBER_SOULMATE_UPSELL2_LIST_ID || '',
+    listLabel: 'Soulmate Love Tuner Buyers',
+    email: params.email,
+    name: params.firstName,
+    customFields: custom,
+    tags: ['soulmate-love-tuner-buyer'],
+  });
+}
+
+// Tag an existing subscriber on the Sketch Buyers list as having declined an
+// upsell — enables recovery-offer drips segmented by tag. AWeber merges tags
+// with update_existing:true, so this won't overwrite existing tags.
+export async function tagSoulmateDeclinedUpsell(params: SoulmateDeclinedParams) {
+  const tag = params.declinedProduct === 'soulmate_bracelet'
+    ? 'soulmate-declined-bracelet'
+    : 'soulmate-declined-love-tuner';
+
+  return writeSoulmateSubscriber({
+    listId: process.env.AWEBER_SOULMATE_PAID_LIST_ID || '',
+    listLabel: `Soulmate Declined (${params.declinedProduct})`,
+    email: params.email,
+    customFields: {},
+    tags: [tag],
+  });
+}
+
 export async function addPaidSubscriber(params: AddPaidSubscriberParams): Promise<{ success: boolean; error?: string }> {
   const accountId = process.env.AWEBER_ACCOUNT_ID;
   const paidListId = process.env.AWEBER_PAID_LIST_ID || '6936955';

@@ -3,6 +3,10 @@ import * as Sentry from "@sentry/react";
 import App from "./App";
 import "./index.css";
 
+// FB Pixel init is lazy — handled inside client/src/lib/facebook.ts the first
+// time an event is fired to a pixel. This prevents fbq('init') from auto-firing
+// a PageView to every configured pixel regardless of URL.
+
 // Initialize Sentry for client-side error monitoring
 const sentryDsn = import.meta.env.VITE_SENTRY_DSN;
 if (sentryDsn) {

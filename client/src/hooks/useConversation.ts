@@ -17,7 +17,8 @@ import {
   getPriceQuestionResponse
 } from '@/lib/intent'
 import { trackLead, trackInitiateCheckout, getTrackdeskClickId } from '@/lib/facebook'
-import { currentFunnel } from '@/lib/funnel'
+import { currentFunnel, getPostHogFunnel } from '@/lib/funnel'
+import { track as trackPH, identifyUser as identifyPH } from '@/lib/posthog'
 import { trackGAdsLead, trackGAdsCheckout } from '@/lib/gtm'
 
 const STORAGE_KEY = 'seer_conversation'
@@ -399,6 +400,18 @@ export function useConversation() {
       trackLead(input.trim(), currentChat.userData.firstName || undefined, { skipServerRelay: true })
         .catch(() => { /* non-blocking */ })
       trackGAdsLead()
+
+      // PostHog Phase 2: V1/fb lead capture. Identify so server-side
+      // purchase_completed (uses email as distinctId) merges with the
+      // client's anonymous distinctId from earlier lander_view events.
+      {
+        const phFunnel = getPostHogFunnel() ?? 'v1'
+        identifyPH(input.trim(), {
+          funnel: phFunnel,
+          first_name: currentChat.userData.firstName || undefined,
+        })
+        trackPH('lead_captured', { funnel: phFunnel, step: 'chat' })
+      }
     } catch (e) {
       console.error('Failed to save lead:', e)
     }
@@ -1194,7 +1207,15 @@ export function useConversation() {
       const price = type === 'downsell' ? downsellPrice : mainPrice
       trackInitiateCheckout(price, 'USD')
       trackGAdsCheckout(price)
-      
+
+      // PostHog Phase 2: V1/fb checkout initiated
+      trackPH('checkout_initiated', {
+        funnel: getPostHogFunnel() ?? 'v1',
+        step: 'sales',
+        product: type === 'downsell' ? 'energy_clearing_ritual_downsell' : 'energy_clearing_ritual',
+        price_cents: price * 100,
+      })
+
       const response = await fetch('/api/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

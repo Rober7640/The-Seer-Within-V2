@@ -33,7 +33,8 @@ import {
   UPSELL_SHIPPING_CONFIRMED,
 } from "@/lib/upsellMessages";
 import { getTrackdeskClickId } from "@/lib/facebook";
-import { currentFunnel } from "@/lib/funnel";
+import { currentFunnel, getPostHogFunnel } from "@/lib/funnel";
+import { track as trackPH } from "@/lib/posthog";
 
 // ============================================
 // TYPES
@@ -338,6 +339,12 @@ export function useUpsellChat({
     setIsProcessing(true);
     addUserMessage("Yes, protect what we clear");
 
+    trackPH("upsell_accepted", {
+      funnel: getPostHogFunnel() ?? "v1",
+      step: "upsell1",
+      product: "protection_ritual",
+    });
+
     try {
       const response = await fetch("/api/upsell/charge", {
         method: "POST",
@@ -391,6 +398,11 @@ export function useUpsellChat({
   const handleDecline = useCallback(async () => {
     setShowCTA(false);
     addUserMessage("Not right now");
+    trackPH("upsell_declined", {
+      funnel: getPostHogFunnel() ?? "v1",
+      step: "upsell1",
+      product: "protection_ritual",
+    });
     await processStage("DECLINED");
   }, [addUserMessage, processStage]);
 

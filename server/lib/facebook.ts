@@ -209,6 +209,9 @@ const FB_PRODUCT_NAMES: Record<string, string> = {
   energy_clearing_ritual: 'Energy Clearing Ritual',
   protection_ritual: 'Protection Ritual + Volcanic Stone',
   manifestation_bracelet: 'Manifestation Bracelet',
+  soulmate_sketch: 'Soulmate Sketch',
+  soulmate_bracelet: 'Soulmate Bracelet',
+  soulmate_love_tuner: 'Soulmate Love Tuner',
 };
 
 function resolveStripeEventName(
@@ -222,6 +225,12 @@ function resolveStripeEventName(
       return 'Upsell';
     case 'manifestation_bracelet':
       return funnel === 'v1-fb' ? 'Upsell2' : 'Upsell';
+    case 'soulmate_sketch':
+      return 'Purchase';
+    case 'soulmate_bracelet':
+      return 'Upsell';
+    case 'soulmate_love_tuner':
+      return 'Upsell2';
     default:
       return null;
   }
@@ -234,9 +243,12 @@ function makeStripeEventId(
 ): string {
   if (eventName === 'Purchase') return `purchase_${mainSessionId}`;
   if (eventName === 'Upsell2') return `upsell2_${mainSessionId}`;
-  // Upsell — disambiguate U1 (protection_ritual) from U2 (manifestation_bracelet
-  // on V1) since both share event_name.
-  const suffix = product === 'protection_ritual' ? 'u1' : 'u2';
+  // Upsell — disambiguate U1 (protection_ritual), U2 (manifestation_bracelet on
+  // V1), and SM (soulmate_bracelet) since they share event_name.
+  const suffix =
+    product === 'protection_ritual' ? 'u1'
+    : product === 'soulmate_bracelet' ? 'sm'
+    : 'u2';
   return `upsell_${suffix}_${mainSessionId}`;
 }
 
@@ -250,6 +262,12 @@ function eventSourceUrlForStripeEvent(product: string, funnel?: string): string 
       return `${baseUrl}${prefix}/welcome2`;
     case 'manifestation_bracelet':
       return `${baseUrl}${prefix}/success`;
+    case 'soulmate_sketch':
+      return `${baseUrl}/soulmate/gift`;
+    case 'soulmate_bracelet':
+      return `${baseUrl}/soulmate/gift2`;
+    case 'soulmate_love_tuner':
+      return `${baseUrl}/soulmate/thank-you`;
     default:
       return `${baseUrl}${prefix}/`;
   }

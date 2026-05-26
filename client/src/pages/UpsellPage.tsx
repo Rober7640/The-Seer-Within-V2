@@ -63,6 +63,15 @@ export default function UpsellPage() {
 
     setSessionId(sid);
 
+    // Claim the dedup slot synchronously before any async work, so a parallel
+    // re-mount can't fire trackPurchase twice with the same event_id. Mirrors
+    // SoulmateUpsellPage.tsx pattern.
+    const purchaseKey = `${PURCHASE_TRACKED_KEY}_${sid}`;
+    const shouldTrack = !sessionStorage.getItem(purchaseKey);
+    if (shouldTrack) {
+      sessionStorage.setItem(purchaseKey, "true");
+    }
+
     // Fetch user data from database
     async function fetchUserData() {
       try {
@@ -75,10 +84,7 @@ export default function UpsellPage() {
         const data = await response.json();
         setUserData(data);
 
-        // Track Purchase event for initial payment (user arrived at upsell page)
-        // Only fire once per session to avoid duplicates on page refreshes
-        const purchaseKey = `${PURCHASE_TRACKED_KEY}_${sid}`;
-        if (!sessionStorage.getItem(purchaseKey)) {
+        if (shouldTrack) {
           const purchaseAmount = (data.mainPurchaseAmount || 3500) / 100;
           trackPurchase(purchaseAmount, "USD", data.email, "Energy Clearing Ritual", sid ?? undefined, { skipServerRelay: true });
           trackGAdsPurchase("main", purchaseAmount, sid);
@@ -93,8 +99,6 @@ export default function UpsellPage() {
               currencyCode: "USD",
             });
           }
-
-          sessionStorage.setItem(purchaseKey, "true");
         }
 
         // If coming back from declined fallback
@@ -102,6 +106,10 @@ export default function UpsellPage() {
           setError("declined");
         }
       } catch (err) {
+        // Release the dedup slot so a retry on remount can fire.
+        if (shouldTrack) {
+          sessionStorage.removeItem(purchaseKey);
+        }
         setError("Could not load your session");
         console.error(err);
       } finally {

@@ -4,6 +4,7 @@ import { createServer, type Server } from "http";
 import path from "path";
 import express from "express";
 import { z } from "zod";
+import { randomUUID } from "crypto";
 import logger from "./lib/logger";
 
 function getBaseUrl(req: Request): string {
@@ -21,7 +22,7 @@ import crudRouter from "./api/crud";
 import authRouter from "./routes/auth";
 import chatServiceRouter from "./routes/chatService";
 import creditsRouter from "./routes/credits";
-import adminRouter from "./routes/admin/index";
+import adminRouter, { abTestingPublicRouter } from "./routes/admin/index";
 import personasRouter from "./routes/personas";
 import webhooksRouter, { reportTrackdeskConversion } from "./routes/webhooks";
 import unsubscribeRouter from "./routes/unsubscribe";
@@ -73,8 +74,22 @@ import {
   addPaidSubscriber,
   addUpsellSubscriber,
   addUpsell2Subscriber,
+  addSoulmateLeadSubscriber,
+  addSoulmateUpsell1Subscriber,
+  addSoulmateUpsell2Subscriber,
+  tagSoulmateDeclinedUpsell,
 } from "./lib/aweber";
+import { createSoulmateLanderV2Account } from "./lib/soulmateLanderSignup";
+import { extractClientIp, extractUserAgent } from "./lib/fraudDetection";
 import { sendFacebookEvent, fireLeadEvent } from "./lib/facebook";
+import {
+  getSoulmateOrderByEmail,
+  upsertSoulmateOrderShipping,
+  recordSoulmatePurchase,
+  type ShippingPayload,
+  type BillingPayload,
+} from "./lib/soulmateOrders";
+import { posthog } from "./lib/posthog";
 
 // Zod schemas for request validation
 // `funnel` is an optional marker the FB-traffic flow (/fb) sends so we can
@@ -258,6 +273,7 @@ export async function registerRoutes(
   app.use("/api/chat-service", chatServiceRouter);
   app.use("/api/credits", creditsRouter);
   app.use("/api/admin", adminRouter);
+  app.use("/api/ab", abTestingPublicRouter);
   app.use("/api/personas", personasRouter);
   app.use("/api/webhooks", webhooksRouter);
   app.use("/api/user", userStatsRouter);
@@ -1236,6 +1252,22 @@ export async function registerRoutes(
         // Mark upsell purchased in database
         await markUpsellPurchased(checkoutSessionId, upsellPayment.id, 4700);
 
+        // PostHog: 1-click upsell (webhook only fires for fallback checkout flow,
+        // so we capture here to ensure inline 1-click charges land in the funnel).
+        posthog.capture({
+          distinctId: email || "anonymous",
+          event: "purchase_completed",
+          properties: {
+            funnel: funnel === "v1-fb" ? "fb" : "v1",
+            step: "upsell1",
+            product: "protection_ritual",
+            payment_method: "stripe_1click",
+            amount_cents: 4700,
+            payment_intent_id: upsellPayment.id,
+            email,
+          },
+        });
+
         // Return success immediately to user, then handle AWeber and Stripe update in background
         // This ensures fast response while shipping form submission completes
         const customerEmail = email || session.customer_email;
@@ -1762,6 +1794,23 @@ export async function registerRoutes(
           amount,
           type,
         );
+
+        // PostHog: 1-click upsell2 (mirror of upsell1 — webhook only catches
+        // the fallback checkout path).
+        posthog.capture({
+          distinctId: email || "anonymous",
+          event: "purchase_completed",
+          properties: {
+            funnel: funnel === "v1-fb" ? "fb" : "v1",
+            step: "upsell2",
+            product: "manifestation_bracelet",
+            payment_method: "stripe_1click",
+            amount_cents: amount,
+            amount_variant: type,
+            payment_intent_id: upsell2Payment.id,
+            email,
+          },
+        });
 
         const customerEmail = email || session.customer_email;
 
@@ -2389,6 +2438,694 @@ export async function registerRoutes(
     } catch (error) {
       logger.error("FB event error:", error);
       return res.status(500).json({ error: "Failed to send event" });
+    }
+  });
+
+  // ─── Soulmate Sketch Funnel ───────────────────────────────────────────────
+
+  // POST /api/soulmate/lead — capture landing form submit on /soulmate.
+  // Non-blocking: response returns immediately so client can navigate to
+  // /soulmate/process without waiting on AWeber.
+  app.post("/api/soulmate/lead", async (req: Request, res: Response) => {
+    const {
+      email,
+      firstName,
+      lastName,
+      preference,
+      ageRange,
+      ethnicity,
+      birthMonth,
+      birthDay,
+      birthYear,
+      landerPath,
+      utmSource,
+      utmCampaign,
+      utmMedium,
+    } = req.body as {
+      email?: string;
+      firstName?: string;
+      lastName?: string;
+      preference?: string;
+      ageRange?: string;
+      ethnicity?: string;
+      birthMonth?: string;
+      birthDay?: string;
+      birthYear?: string;
+      landerPath?: string;
+      utmSource?: string;
+      utmCampaign?: string;
+      utmMedium?: string;
+    };
+
+    if (!email || !firstName) {
+      return res.status(400).json({ success: false, error: "email and firstName required" });
+    }
+
+    // Mint a single intake-resume token per form submit. AWeber drip emails
+    // embed this in their CTA URLs (?t=<token>) so the cold-link click can
+    // hydrate the sales page without re-asking the user for DOB/preferences.
+    // 30-day expiry comfortably covers Joel's 11-day, 7-email sequence plus
+    // ~19 days of late-clicker grace before the lead is treated as cold.
+    // Revoked on sketch purchase + email unsubscribe.
+    const intakeToken = randomUUID();
+    const intakeTokenExpiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+
+    addSoulmateLeadSubscriber({
+      email,
+      firstName,
+      lastName,
+      preference,
+      ageRange,
+      ethnicity,
+      birthMonth,
+      birthDay,
+      birthYear,
+      landerPath,
+      utmSource,
+      utmCampaign,
+      utmMedium,
+      intakeToken,
+    }).catch((err) => logger.error("Soulmate lead AWeber error (non-blocking):", err));
+
+    // V2 handoff: create a passwordless Evelyn account so the user can claim
+    // 5 free chat minutes whether or not they purchase the sketch. Existing
+    // accounts get a magic-link instead of a duplicate. Fire-and-forget — must
+    // never block the form-submit response (which the client is awaiting before
+    // navigating to /soulmate/process).
+    createSoulmateLanderV2Account({
+      email,
+      firstName,
+      lastName,
+      landerPath,
+      utmSource,
+      utmCampaign,
+      utmMedium,
+      ipAddress: extractClientIp(req),
+      userAgent: extractUserAgent(req),
+      birthMonth,
+      birthDay,
+      birthYear,
+      preference,
+      ageRange,
+      ethnicity,
+      intakeToken,
+      intakeTokenExpiresAt,
+    }).catch((err) => logger.error("Soulmate V2 handoff error (non-blocking):", err));
+
+    return res.json({ success: true });
+  });
+
+  // GET /api/soulmate/intake/:token — resolves an AWeber drip CTA token back
+  // to the original /soulmate form intake so the sales page can hydrate
+  // sessionStorage.soulmate_form without re-asking the user. Returns:
+  //   200 { firstName, email, birthMonth, birthDay, birthYear, preference, ageRange, ethnicity }
+  //        when token valid + not expired + not revoked
+  //   410 { code: 'expired' | 'revoked' | 'not_found' }
+  //        client treats all 3 as "show the re-enter banner on /soulmate"
+  // PII consideration: response contains email + DOB + preference. Treat the
+  // token as a low-stakes bearer credential — leaking it lets a recipient see
+  // those fields. Acceptable risk for lead-nurture; tighten with per-send
+  // tokens later if needed.
+  app.get("/api/soulmate/intake/:token", async (req: Request, res: Response) => {
+    const { soulmateLanderSessions } = await import("@shared/schema");
+    const { db } = await import("./lib/db");
+    const { eq } = await import("drizzle-orm");
+
+    const token = String(req.params.token || "").trim();
+    if (!token) {
+      return res.status(410).json({ code: "not_found" });
+    }
+
+    try {
+      const row = await db
+        .select({
+          email: soulmateLanderSessions.email,
+          firstName: soulmateLanderSessions.firstName,
+          lastName: soulmateLanderSessions.lastName,
+          birthMonth: soulmateLanderSessions.birthMonth,
+          birthDay: soulmateLanderSessions.birthDay,
+          birthYear: soulmateLanderSessions.birthYear,
+          preference: soulmateLanderSessions.preference,
+          ageRange: soulmateLanderSessions.ageRange,
+          ethnicity: soulmateLanderSessions.ethnicity,
+          intakeTokenExpiresAt: soulmateLanderSessions.intakeTokenExpiresAt,
+          intakeTokenRevokedAt: soulmateLanderSessions.intakeTokenRevokedAt,
+        })
+        .from(soulmateLanderSessions)
+        .where(eq(soulmateLanderSessions.intakeToken, token))
+        .limit(1);
+
+      if (!row[0]) {
+        return res.status(410).json({ code: "not_found" });
+      }
+
+      const r = row[0];
+      if (r.intakeTokenRevokedAt) {
+        return res.status(410).json({ code: "revoked" });
+      }
+      if (r.intakeTokenExpiresAt && r.intakeTokenExpiresAt < new Date()) {
+        return res.status(410).json({ code: "expired" });
+      }
+
+      return res.json({
+        email: r.email,
+        firstName: r.firstName,
+        lastName: r.lastName,
+        birthMonth: r.birthMonth,
+        birthDay: r.birthDay,
+        birthYear: r.birthYear,
+        preference: r.preference,
+        ageRange: r.ageRange,
+        ethnicity: r.ethnicity,
+      });
+    } catch (err) {
+      logger.error("Soulmate intake resolver error:", err);
+      return res.status(500).json({ code: "server_error" });
+    }
+  });
+
+  // POST /api/soulmate/upsell-declined — tag existing AWeber subscriber so
+  // the drip can send a recovery offer. Fire-and-forget.
+  app.post("/api/soulmate/upsell-declined", async (req: Request, res: Response) => {
+    const { email, product } = req.body as {
+      email?: string;
+      product?: "soulmate_bracelet" | "soulmate_love_tuner";
+    };
+
+    if (!email || (product !== "soulmate_bracelet" && product !== "soulmate_love_tuner")) {
+      return res.status(400).json({ success: false, error: "email and valid product required" });
+    }
+
+    tagSoulmateDeclinedUpsell({ email, declinedProduct: product })
+      .catch((err) => logger.error("Soulmate decline tag error (non-blocking):", err));
+
+    return res.json({ success: true });
+  });
+
+  // POST /api/soulmate/checkout — create Stripe session for sketch purchase
+  app.post("/api/soulmate/checkout", async (req: Request, res: Response) => {
+    try {
+      const { email, firstName, priceCents, posthogDistinctId } = req.body as {
+        email: string;
+        firstName: string;
+        priceCents: number;
+        posthogDistinctId?: string;
+      };
+
+      const validPrices = [2800, 4200, 5500];
+      const amount = validPrices.includes(Number(priceCents)) ? Number(priceCents) : 4200;
+
+      if (!stripe) {
+        logger.warn("Stripe not configured — returning mock URL");
+        return res.json({ url: `/soulmate/gift` });
+      }
+
+      const customers = await stripe.customers.list({ email, limit: 1 });
+      let customer = customers.data[0];
+      if (!customer) {
+        customer = await stripe.customers.create({ email, name: firstName });
+      }
+
+      const sharedMetadata: Record<string, string> = {
+        firstName,
+        email,
+        app: "the-seer-within",
+        product: "soulmate_sketch",
+      };
+      if (posthogDistinctId) sharedMetadata.posthogDistinctId = posthogDistinctId;
+
+      const session = await stripe.checkout.sessions.create({
+        customer: customer.id,
+        payment_method_types: ["card"],
+        line_items: [
+          {
+            price_data: {
+              currency: "usd",
+              product_data: {
+                name: "Psychic Soulmate Love Sketch & Reading",
+                description: `Complete soulmate sketch for ${firstName} — 24hr delivery`,
+              },
+              unit_amount: amount,
+            },
+            quantity: 1,
+          },
+        ],
+        mode: "payment",
+        payment_intent_data: {
+          description: "Soulmate Sketch Reading",
+          setup_future_usage: "off_session",
+          metadata: sharedMetadata,
+        },
+        success_url: `${getBaseUrl(req)}/soulmate/gift?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${getBaseUrl(req)}/soulmate`,
+        metadata: sharedMetadata,
+      });
+
+      return res.json({ url: session.url });
+    } catch (error) {
+      logger.error("Soulmate checkout error:", error);
+      return res.status(500).json({ error: "Checkout failed" });
+    }
+  });
+
+  // GET /api/soulmate/shipping?email=X — returns saved shipping (or null) for upsell 2 to skip the form
+  app.get("/api/soulmate/shipping", async (req: Request, res: Response) => {
+    const email = String(req.query.email || "").toLowerCase();
+    if (!email) return res.json({ shipping: null });
+    try {
+      const order = await getSoulmateOrderByEmail(email);
+      if (!order || !order.shippingLine1) return res.json({ shipping: null });
+      return res.json({
+        shipping: {
+          name: order.shippingName,
+          line1: order.shippingLine1,
+          line2: order.shippingLine2,
+          city: order.shippingCity,
+          state: order.shippingState,
+          postal: order.shippingPostal,
+          country: order.shippingCountry,
+          phone: order.shippingPhone,
+        },
+      });
+    } catch (error) {
+      logger.error("Soulmate shipping lookup error:", error);
+      return res.json({ shipping: null });
+    }
+  });
+
+  // POST /api/soulmate/upsell/charge — 1-click charge $47 for bracelet
+  app.post("/api/soulmate/upsell/charge", async (req: Request, res: Response) => {
+    try {
+      const { sessionId, email, firstName, shipping, billing, billingSameAsShipping, posthogDistinctId } = req.body as {
+        sessionId: string;
+        email: string;
+        firstName: string;
+        shipping?: ShippingPayload;
+        billing?: BillingPayload;
+        billingSameAsShipping?: boolean;
+        posthogDistinctId?: string;
+      };
+
+      if (!shipping || !shipping.line1 || !shipping.city || !shipping.state || !shipping.postal || !shipping.country) {
+        return res.status(400).json({ success: false, error: "Shipping address required" });
+      }
+
+      // Persist shipping immediately so a Stripe decline still leaves the address on file
+      await upsertSoulmateOrderShipping({
+        email,
+        firstName,
+        shipping,
+        billing,
+        billingSameAsShipping: billingSameAsShipping !== false,
+      });
+
+      if (!stripe) {
+        return res.json({ success: false, fallback: true });
+      }
+
+      const session = await stripe.checkout.sessions.retrieve(sessionId, {
+        expand: ["payment_intent", "payment_intent.payment_method"],
+      });
+
+      if (session.payment_status !== "paid") {
+        return res.json({ success: false, fallback: true, error: "Session not paid" });
+      }
+
+      if (
+        email &&
+        session.customer_email &&
+        session.customer_email.toLowerCase() !== email.toLowerCase()
+      ) {
+        return res.status(403).json({ success: false, error: "Session ownership failed" });
+      }
+
+      if (!session.customer || !session.payment_intent) {
+        return res.json({ success: false, fallback: true });
+      }
+
+      const customerId =
+        typeof session.customer === "string" ? session.customer : session.customer.id;
+
+      const stripeShipping = {
+        name: shipping.name,
+        phone: shipping.phone || undefined,
+        address: {
+          line1: shipping.line1,
+          line2: shipping.line2 || undefined,
+          city: shipping.city,
+          state: shipping.state,
+          postal_code: shipping.postal,
+          country: shipping.country,
+        },
+      };
+
+      // Persist shipping on the Stripe Customer so future PaymentIntents auto-populate
+      try {
+        await stripe.customers.update(customerId, { shipping: stripeShipping });
+      } catch (err) {
+        logger.warn("Stripe customer.shipping update failed (non-blocking):", err);
+      }
+
+      const paymentIntent = session.payment_intent as Stripe.PaymentIntent;
+
+      if (paymentIntent.status !== "succeeded") {
+        return res.json({ success: false, fallback: true });
+      }
+
+      let paymentMethodId: string | null = null;
+      if (typeof paymentIntent.payment_method === "string") {
+        paymentMethodId = paymentIntent.payment_method;
+      } else if (
+        paymentIntent.payment_method &&
+        typeof paymentIntent.payment_method === "object"
+      ) {
+        paymentMethodId = paymentIntent.payment_method.id;
+      }
+
+      const upsell1Metadata: Record<string, string> = {
+        firstName,
+        email,
+        app: "the-seer-within",
+        product: "soulmate_bracelet",
+        // Required by Stripe webhook to (a) recognize this PI as a 1-click upsell
+        // (vs a main-purchase PI side-effect) and (b) construct the FB event_id
+        // `upsell_sm_<sketch_session_id>` matching the browser-side fire.
+        originalSession: sessionId,
+      };
+      if (posthogDistinctId) upsell1Metadata.posthogDistinctId = posthogDistinctId;
+
+      if (!paymentMethodId) {
+        // Fall back to Stripe checkout
+        const fallback = await stripe.checkout.sessions.create({
+          customer: customerId,
+          payment_method_types: ["card"],
+          line_items: [
+            {
+              price_data: {
+                currency: "usd",
+                product_data: { name: "Rose Quartz Soulmate Attraction Bracelet" },
+                unit_amount: 4700,
+              },
+              quantity: 1,
+            },
+          ],
+          mode: "payment",
+          shipping_address_collection: { allowed_countries: ["US", "CA", "GB", "AU", "NZ", "IE", "SG"] },
+          success_url: `${getBaseUrl(req)}/soulmate/gift2?session_id=${sessionId}`,
+          cancel_url: `${getBaseUrl(req)}/soulmate/gift?session_id=${sessionId}`,
+          metadata: upsell1Metadata,
+        });
+        return res.json({ success: false, fallback: true, url: fallback.url });
+      }
+
+      const charged = await stripe.paymentIntents.create({
+        amount: 4700,
+        currency: "usd",
+        customer: customerId,
+        payment_method: paymentMethodId,
+        off_session: true,
+        confirm: true,
+        description: "Rose Quartz Soulmate Attraction Bracelet",
+        shipping: stripeShipping,
+        metadata: upsell1Metadata,
+      });
+
+      await recordSoulmatePurchase({
+        email,
+        product: "bracelet",
+        paymentIntentId: charged.id,
+        amountCents: 4700,
+      });
+
+      posthog.capture({
+        distinctId: posthogDistinctId || email,
+        event: 'purchase_completed',
+        properties: {
+          funnel: 'soulmate',
+          step: 'upsell1',
+          product: 'soulmate_bracelet',
+          payment_method: 'stripe_1click',
+          amount_cents: 4700,
+          payment_intent_id: charged.id,
+          email,
+        },
+      });
+
+      // AWeber: shipping is guaranteed valid here (validated above + Stripe
+      // Customer.shipping already updated). Fire-and-forget.
+      addSoulmateUpsell1Subscriber({
+        email,
+        firstName,
+        stripeOrderId: charged.id,
+        purchaseAmountCents: 4700,
+        shipping,
+      }).catch((err) => logger.error("AWeber Soulmate Upsell1 error (non-blocking):", err));
+
+      return res.json({ success: true });
+    } catch (error) {
+      logger.error("Soulmate upsell charge error:", error);
+      return res.json({ success: false, fallback: true });
+    }
+  });
+
+  // POST /api/soulmate/upsell2/charge — 1-click charge $79 for Love Tuner
+  app.post("/api/soulmate/upsell2/charge", async (req: Request, res: Response) => {
+    try {
+      const { sessionId, email, firstName, shipping: bodyShipping, billing, billingSameAsShipping, posthogDistinctId } = req.body as {
+        sessionId: string;
+        email: string;
+        firstName: string;
+        shipping?: ShippingPayload;
+        billing?: BillingPayload;
+        billingSameAsShipping?: boolean;
+        posthogDistinctId?: string;
+      };
+
+      // Reuse-or-collect: if client didn't pass shipping, load from DB. Reject if neither.
+      let shipping: ShippingPayload | null = bodyShipping || null;
+      if (!shipping) {
+        const existing = await getSoulmateOrderByEmail(email);
+        if (existing && existing.shippingLine1) {
+          shipping = {
+            name: existing.shippingName || firstName,
+            line1: existing.shippingLine1,
+            line2: existing.shippingLine2 || undefined,
+            city: existing.shippingCity || "",
+            state: existing.shippingState || "",
+            postal: existing.shippingPostal || "",
+            country: existing.shippingCountry || "US",
+            phone: existing.shippingPhone || undefined,
+          };
+        }
+      } else {
+        await upsertSoulmateOrderShipping({
+          email,
+          firstName,
+          shipping,
+          billing,
+          billingSameAsShipping: billingSameAsShipping !== false,
+        });
+      }
+
+      if (!shipping || !shipping.line1) {
+        return res.status(400).json({ success: false, error: "Shipping address required" });
+      }
+
+      if (!stripe) {
+        return res.json({ success: false, fallback: true });
+      }
+
+      const session = await stripe.checkout.sessions.retrieve(sessionId, {
+        expand: ["payment_intent", "payment_intent.payment_method"],
+      });
+
+      if (session.payment_status !== "paid") {
+        return res.json({ success: false, fallback: true, error: "Session not paid" });
+      }
+
+      if (
+        email &&
+        session.customer_email &&
+        session.customer_email.toLowerCase() !== email.toLowerCase()
+      ) {
+        return res.status(403).json({ success: false, error: "Session ownership failed" });
+      }
+
+      if (!session.customer || !session.payment_intent) {
+        return res.json({ success: false, fallback: true });
+      }
+
+      const customerId =
+        typeof session.customer === "string" ? session.customer : session.customer.id;
+
+      const stripeShipping = {
+        name: shipping.name,
+        phone: shipping.phone || undefined,
+        address: {
+          line1: shipping.line1,
+          line2: shipping.line2 || undefined,
+          city: shipping.city,
+          state: shipping.state,
+          postal_code: shipping.postal,
+          country: shipping.country,
+        },
+      };
+
+      // Keep Stripe Customer.shipping in sync (no-op if same)
+      try {
+        await stripe.customers.update(customerId, { shipping: stripeShipping });
+      } catch (err) {
+        logger.warn("Stripe customer.shipping update failed (non-blocking):", err);
+      }
+
+      const paymentIntent = session.payment_intent as Stripe.PaymentIntent;
+
+      if (paymentIntent.status !== "succeeded") {
+        return res.json({ success: false, fallback: true });
+      }
+
+      let paymentMethodId: string | null = null;
+      if (typeof paymentIntent.payment_method === "string") {
+        paymentMethodId = paymentIntent.payment_method;
+      } else if (
+        paymentIntent.payment_method &&
+        typeof paymentIntent.payment_method === "object"
+      ) {
+        paymentMethodId = paymentIntent.payment_method.id;
+      }
+
+      const upsell2Metadata: Record<string, string> = {
+        firstName,
+        email,
+        app: "the-seer-within",
+        product: "soulmate_love_tuner",
+        // Required by Stripe webhook to (a) recognize this PI as a 1-click upsell
+        // (vs a main-purchase PI side-effect) and (b) construct the FB event_id
+        // `upsell2_<sketch_session_id>` matching the browser-side fire.
+        originalSession: sessionId,
+      };
+      if (posthogDistinctId) upsell2Metadata.posthogDistinctId = posthogDistinctId;
+
+      if (!paymentMethodId) {
+        const fallback = await stripe.checkout.sessions.create({
+          customer: customerId,
+          payment_method_types: ["card"],
+          line_items: [
+            {
+              price_data: {
+                currency: "usd",
+                product_data: { name: "528 Hz Frequency of Love Tuner Necklace" },
+                unit_amount: 7900,
+              },
+              quantity: 1,
+            },
+          ],
+          mode: "payment",
+          shipping_address_collection: { allowed_countries: ["US", "CA", "GB", "AU", "NZ", "IE", "SG"] },
+          success_url: `${getBaseUrl(req)}/soulmate/thank-you`,
+          cancel_url: `${getBaseUrl(req)}/soulmate/gift2?session_id=${sessionId}`,
+          metadata: upsell2Metadata,
+        });
+        return res.json({ success: false, fallback: true, url: fallback.url });
+      }
+
+      const charged = await stripe.paymentIntents.create({
+        amount: 7900,
+        currency: "usd",
+        customer: customerId,
+        payment_method: paymentMethodId,
+        off_session: true,
+        confirm: true,
+        description: "528 Hz Frequency of Love Tuner Necklace",
+        shipping: stripeShipping,
+        metadata: upsell2Metadata,
+      });
+
+      await recordSoulmatePurchase({
+        email,
+        product: "tuner",
+        paymentIntentId: charged.id,
+        amountCents: 7900,
+      });
+
+      posthog.capture({
+        distinctId: posthogDistinctId || email,
+        event: 'purchase_completed',
+        properties: {
+          funnel: 'soulmate',
+          step: 'upsell2',
+          product: 'soulmate_love_tuner',
+          payment_method: 'stripe_1click',
+          amount_cents: 7900,
+          payment_intent_id: charged.id,
+          email,
+        },
+      });
+
+      // AWeber: shipping at this point is either fresh from the form (Path B)
+      // or rehydrated from the soulmate_orders DB row (Path A). Either way the
+      // local `shipping` is the source of truth that was just used to charge.
+      addSoulmateUpsell2Subscriber({
+        email,
+        firstName,
+        stripeOrderId: charged.id,
+        purchaseAmountCents: 7900,
+        shipping,
+      }).catch((err) => logger.error("AWeber Soulmate Upsell2 error (non-blocking):", err));
+
+      return res.json({ success: true });
+    } catch (error) {
+      logger.error("Soulmate upsell2 charge error:", error);
+      return res.json({ success: false, fallback: true });
+    }
+  });
+
+  // POST /api/soulmate/upsell2/checkout — fallback Stripe checkout for Love Tuner
+  app.post("/api/soulmate/upsell2/checkout", async (req: Request, res: Response) => {
+    try {
+      const { email, firstName } = req.body as { email: string; firstName: string };
+
+      if (!stripe) {
+        return res.json({ url: `/soulmate/thank-you` });
+      }
+
+      const customers = await stripe.customers.list({ email, limit: 1 });
+      let customer = customers.data[0];
+      if (!customer) {
+        customer = await stripe.customers.create({ email, name: firstName });
+      }
+
+      const session = await stripe.checkout.sessions.create({
+        customer: customer.id,
+        payment_method_types: ["card"],
+        line_items: [
+          {
+            price_data: {
+              currency: "usd",
+              product_data: {
+                name: "528 Hz Frequency of Love Tuner Necklace",
+                description: "Mindfulness necklace tuned to 528 Hz — the Love Frequency",
+              },
+              unit_amount: 7900,
+            },
+            quantity: 1,
+          },
+        ],
+        mode: "payment",
+        success_url: `${getBaseUrl(req)}/soulmate/thank-you`,
+        cancel_url: `${getBaseUrl(req)}/soulmate/gift2`,
+        metadata: {
+          firstName,
+          email,
+          app: "the-seer-within",
+          product: "soulmate_love_tuner",
+        },
+      });
+
+      return res.json({ url: session.url });
+    } catch (error) {
+      logger.error("Soulmate upsell2 checkout error:", error);
+      return res.status(500).json({ error: "Checkout failed" });
     }
   });
 
