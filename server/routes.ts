@@ -2838,17 +2838,51 @@ export async function registerRoutes(
         return res.json({ success: false, fallback: true, url: fallback.url });
       }
 
-      const charged = await stripe.paymentIntents.create({
-        amount: 4700,
-        currency: "usd",
-        customer: customerId,
-        payment_method: paymentMethodId,
-        off_session: true,
-        confirm: true,
-        description: "Rose Quartz Soulmate Attraction Bracelet",
-        shipping: stripeShipping,
-        metadata: upsell1Metadata,
-      });
+      let charged: Stripe.PaymentIntent;
+      try {
+        charged = await stripe.paymentIntents.create({
+          amount: 4700,
+          currency: "usd",
+          customer: customerId,
+          payment_method: paymentMethodId,
+          off_session: true,
+          confirm: true,
+          description: "Rose Quartz Soulmate Attraction Bracelet",
+          shipping: stripeShipping,
+          metadata: upsell1Metadata,
+        });
+      } catch (chargeError) {
+        // Off-session charge failed (declined card, India mandate, anti-fraud, etc.).
+        // Fall back to hosted Stripe Checkout with shipping pre-attached so the user
+        // doesn't re-enter the address they just filled in on our form. AWeber +
+        // soulmate_orders writes for this path live in the Stripe webhook
+        // (checkout.session.completed handler in server/routes/webhooks.ts).
+        logger.warn("Soulmate upsell off-session charge failed, creating fallback Checkout:", chargeError);
+        const fallback = await stripe.checkout.sessions.create({
+          customer: customerId,
+          payment_method_types: ["card"],
+          line_items: [
+            {
+              price_data: {
+                currency: "usd",
+                product_data: { name: "Rose Quartz Soulmate Attraction Bracelet" },
+                unit_amount: 4700,
+              },
+              quantity: 1,
+            },
+          ],
+          mode: "payment",
+          billing_address_collection: "auto",
+          payment_intent_data: {
+            shipping: stripeShipping,
+            metadata: upsell1Metadata,
+          },
+          success_url: `${getBaseUrl(req)}/soulmate/gift2?session_id=${sessionId}`,
+          cancel_url: `${getBaseUrl(req)}/soulmate/gift?session_id=${sessionId}`,
+          metadata: upsell1Metadata,
+        });
+        return res.json({ success: false, fallback: true, url: fallback.url });
+      }
 
       await recordSoulmatePurchase({
         email,
@@ -3029,17 +3063,50 @@ export async function registerRoutes(
         return res.json({ success: false, fallback: true, url: fallback.url });
       }
 
-      const charged = await stripe.paymentIntents.create({
-        amount: 7900,
-        currency: "usd",
-        customer: customerId,
-        payment_method: paymentMethodId,
-        off_session: true,
-        confirm: true,
-        description: "528 Hz Frequency of Love Tuner Necklace",
-        shipping: stripeShipping,
-        metadata: upsell2Metadata,
-      });
+      let charged: Stripe.PaymentIntent;
+      try {
+        charged = await stripe.paymentIntents.create({
+          amount: 7900,
+          currency: "usd",
+          customer: customerId,
+          payment_method: paymentMethodId,
+          off_session: true,
+          confirm: true,
+          description: "528 Hz Frequency of Love Tuner Necklace",
+          shipping: stripeShipping,
+          metadata: upsell2Metadata,
+        });
+      } catch (chargeError) {
+        // Off-session charge failed (declined card, India mandate, anti-fraud, etc.).
+        // Fall back to hosted Stripe Checkout with shipping pre-attached. AWeber +
+        // soulmate_orders writes for this path live in the Stripe webhook
+        // (checkout.session.completed handler in server/routes/webhooks.ts).
+        logger.warn("Soulmate upsell2 off-session charge failed, creating fallback Checkout:", chargeError);
+        const fallback = await stripe.checkout.sessions.create({
+          customer: customerId,
+          payment_method_types: ["card"],
+          line_items: [
+            {
+              price_data: {
+                currency: "usd",
+                product_data: { name: "528 Hz Frequency of Love Tuner Necklace" },
+                unit_amount: 7900,
+              },
+              quantity: 1,
+            },
+          ],
+          mode: "payment",
+          billing_address_collection: "auto",
+          payment_intent_data: {
+            shipping: stripeShipping,
+            metadata: upsell2Metadata,
+          },
+          success_url: `${getBaseUrl(req)}/soulmate/thank-you`,
+          cancel_url: `${getBaseUrl(req)}/soulmate/gift2?session_id=${sessionId}`,
+          metadata: upsell2Metadata,
+        });
+        return res.json({ success: false, fallback: true, url: fallback.url });
+      }
 
       await recordSoulmatePurchase({
         email,
