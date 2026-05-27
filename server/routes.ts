@@ -2876,6 +2876,7 @@ export async function registerRoutes(
           payment_intent_data: {
             shipping: stripeShipping,
             metadata: upsell1Metadata,
+            description: "Rose Quartz Soulmate Attraction Bracelet",
           },
           success_url: `${getBaseUrl(req)}/soulmate/gift2?session_id=${sessionId}`,
           cancel_url: `${getBaseUrl(req)}/soulmate/gift?session_id=${sessionId}`,
@@ -3100,6 +3101,7 @@ export async function registerRoutes(
           payment_intent_data: {
             shipping: stripeShipping,
             metadata: upsell2Metadata,
+            description: "528 Hz Frequency of Love Tuner Necklace",
           },
           success_url: `${getBaseUrl(req)}/soulmate/thank-you`,
           cancel_url: `${getBaseUrl(req)}/soulmate/gift2?session_id=${sessionId}`,
