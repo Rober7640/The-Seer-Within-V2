@@ -118,7 +118,17 @@ export default function SoulmateUpsellPage() {
           navigate('/soulmate/gift2' + (sessionId ? `?session_id=${sessionId}` : ''));
           return;
         }
-        if (data.fallback && data.url) { window.location.href = data.url; return; }
+        if (data.fallback && data.url) {
+          // Shipping was persisted to soulmate_orders server-side BEFORE the
+          // failing 1-click charge (routes.ts upsell/charge handler). Set the
+          // Path A flag so /gift2 reuses the on-file address after the user
+          // completes payment on hosted Stripe Checkout and lands on success_url.
+          if (sessionId) {
+            sessionStorage.setItem('soulmate_upsell1_shipping_session', sessionId);
+          }
+          window.location.href = data.url;
+          return;
+        }
       }
       setState('collecting_shipping');
     } catch {
