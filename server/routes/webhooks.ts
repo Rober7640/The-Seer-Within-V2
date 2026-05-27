@@ -11,8 +11,12 @@ import { posthog } from '../lib/posthog';
 import * as paypal from '../lib/paypal';
 import { fireV2PurchaseEvent, fireStripePurchaseEvent } from '../lib/facebook';
 import { maybeSchedulePostPurchaseDrip } from '../lib/postPurchaseDripTrigger';
-import { addSoulmatePaidSubscriber } from '../lib/aweber';
-import { recordSoulmatePurchase } from '../lib/soulmateOrders';
+import {
+  addSoulmatePaidSubscriber,
+  addSoulmateUpsell1Subscriber,
+  addSoulmateUpsell2Subscriber,
+} from '../lib/aweber';
+import { recordSoulmatePurchase, getSoulmateOrderByEmail } from '../lib/soulmateOrders';
 
 const router = Router();
 
@@ -735,12 +739,64 @@ router.post('/stripe', async (req: Request, res: Response) => {
       });
     }
 
+    // AWeber + DB writes for soulmate bracelet/tuner FALLBACK Checkout
+    // sessions. 1-click happy path writes these inline from routes.ts (off-
+    // session PIs do NOT fire checkout.session.completed). This block ONLY
+    // fires when the user fell back to hosted Stripe Checkout after a 1-click
+    // decline. Shipping is rehydrated from soulmate_orders (already persisted
+    // by /api/soulmate/upsell{,2}/charge before the failing PI attempt).
+    if ((product === 'soulmate_bracelet' || product === 'soulmate_love_tuner') && email) {
+      const paymentIntentId = typeof session.payment_intent === 'string'
+        ? session.payment_intent
+        : session.payment_intent?.id;
+      const amountCents = session.amount_total ?? 0;
+
+      if (paymentIntentId) {
+        recordSoulmatePurchase({
+          email,
+          product: product === 'soulmate_bracelet' ? 'bracelet' : 'tuner',
+          paymentIntentId,
+          amountCents,
+        }).catch((err) => logger.error('recordSoulmatePurchase upsell-fallback error (non-blocking):', err));
+      }
+
+      getSoulmateOrderByEmail(email)
+        .then((order) => {
+          if (!order || !order.shippingLine1) {
+            logger.warn(`Soulmate upsell-fallback AWeber skipped: no shipping in DB for ${email}`);
+            return;
+          }
+          const shipping = {
+            name: order.shippingName || metadata.firstName || '',
+            line1: order.shippingLine1,
+            line2: order.shippingLine2 || undefined,
+            city: order.shippingCity || '',
+            state: order.shippingState || '',
+            postal: order.shippingPostal || '',
+            country: order.shippingCountry || 'US',
+            phone: order.shippingPhone || undefined,
+          };
+          const subscriberParams = {
+            email,
+            firstName: metadata.firstName || order.shippingName || '',
+            stripeOrderId: paymentIntentId || session.id,
+            purchaseAmountCents: amountCents,
+            shipping,
+          };
+          const fn = product === 'soulmate_bracelet'
+            ? addSoulmateUpsell1Subscriber
+            : addSoulmateUpsell2Subscriber;
+          return fn(subscriberParams);
+        })
+        .catch((err) => logger.error('AWeber soulmate upsell-fallback error (non-blocking):', err));
+    }
+
     // AWeber: add soulmate sketch buyers to the Sketch Buyers list.
-    // Fire-and-forget. Bracelet + Love Tuner are handled inline in routes.ts
-    // after their 1-click charges (not webhook-driven), so this block only
-    // covers the sketch path. No shipping for the sketch (digital deliverable).
-    // Use the PaymentIntent id (pi_*) for parity with the bracelet/tuner
-    // writes — the Checkout Session id (cs_*) leaks here otherwise.
+    // Fire-and-forget. Bracelet + Love Tuner happy-path 1-click charges write
+    // inline in routes.ts; the block ABOVE this one handles the fallback path
+    // when 1-click declines push the user into hosted Stripe Checkout.
+    // No shipping for the sketch (digital deliverable). Use the PaymentIntent
+    // id (pi_*) for parity with bracelet/tuner writes.
     if (product === 'soulmate_sketch' && email) {
       const paymentIntentId = typeof session.payment_intent === 'string'
         ? session.payment_intent
