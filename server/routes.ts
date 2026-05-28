@@ -617,8 +617,9 @@ export async function registerRoutes(
       });
 
       // V1 price split test — assign a variant on first lead capture, idempotent
-      // on subsequent calls (same email always gets the same price).
-      const assigned = await assignVariantIfMissing(email);
+      // on subsequent calls (same email always gets the same price). Funnel-scoped:
+      // /fb traffic only sees FB variants, other traffic only sees null-funnel ones.
+      const assigned = await assignVariantIfMissing(email, funnel);
 
       // Add to AWeber email list (non-blocking)
       addSubscriberToList({
@@ -926,6 +927,9 @@ export async function registerRoutes(
         personName: conversation.personName,
         stripeCustomerId: conversation.stripeCustomerId,
         mainPurchaseAmount: conversation.mainPurchaseAmount || 3500,
+        // Upsell 1 price for this conversation's variant (price split test).
+        // Falls back to 4700 for pre-test conversations.
+        upsell1PriceCents: conversation.upsell1AmountCents ?? 4700,
       });
     } catch (error) {
       logger.error("Get upsell user data error:", error);
@@ -1020,14 +1024,15 @@ export async function registerRoutes(
             return res.status(400).json({ error: "Session mismatch" });
           }
 
-          // Mark upsell as purchased in DB
+          // Mark upsell as purchased in DB. Record the actual amount Stripe
+          // charged (varies with the price split-test variant), not a constant.
           logger.info(
             `Marking upsell purchased for session ${originalSessionId}, payment ${session.payment_intent}`,
           );
           await markUpsellPurchased(
             originalSessionId,
             session.payment_intent as string,
-            4700,
+            session.amount_total ?? 4700,
           );
           logger.info("markUpsellPurchased completed");
 
@@ -1159,6 +1164,12 @@ export async function registerRoutes(
         ? "Protection Ritual + Volcanic Stone - FB"
         : "Volcanic Stone (aka Black Lava)";
 
+      // Price split test — the Upsell 1 price follows the variant assigned at
+      // lead capture (falls back to 4700 for pre-test conversations or no email).
+      const upsell1Cents = email
+        ? (await getVariantForEmail(email)).upsell1Cents
+        : 4700;
+
       if (!stripe) {
         logger.warn("Stripe not configured - returning fallback");
         return res.json({ success: false, fallback: true });
@@ -1234,7 +1245,7 @@ export async function registerRoutes(
       }
 
       const upsellPayment = await stripe.paymentIntents.create({
-        amount: 4700,
+        amount: upsell1Cents,
         currency: "usd",
         customer: customerId,
         payment_method: paymentMethodId,
@@ -1250,7 +1261,7 @@ export async function registerRoutes(
 
       if (upsellPayment.status === "succeeded") {
         // Mark upsell purchased in database
-        await markUpsellPurchased(checkoutSessionId, upsellPayment.id, 4700);
+        await markUpsellPurchased(checkoutSessionId, upsellPayment.id, upsell1Cents);
 
         // PostHog: 1-click upsell (webhook only fires for fallback checkout flow,
         // so we capture here to ensure inline 1-click charges land in the funnel).
@@ -1262,7 +1273,7 @@ export async function registerRoutes(
             step: "upsell1",
             product: "protection_ritual",
             payment_method: "stripe_1click",
-            amount_cents: 4700,
+            amount_cents: upsell1Cents,
             payment_intent_id: upsellPayment.id,
             email,
           },
@@ -1341,6 +1352,9 @@ export async function registerRoutes(
           ? "Protection Ritual + Volcanic Stone - FB"
           : "Volcanic Stone (aka Black Lava)";
 
+        // Price split test — match the 1-click charge amount for this variant.
+        const upsell1Cents = (await getVariantForEmail(email)).upsell1Cents;
+
         if (!stripe) {
           logger.warn("Stripe not configured - returning mock URL");
           return res.json({
@@ -1359,7 +1373,7 @@ export async function registerRoutes(
                   name: upsell1ProductName,
                   description: "Charged black lava protection talisman",
                 },
-                unit_amount: 4700,
+                unit_amount: upsell1Cents,
               },
               quantity: 1,
             },

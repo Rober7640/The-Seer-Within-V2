@@ -263,7 +263,7 @@ export const UPSELL_DELIVERY = [
 // ============================================
 
 export const UPSELL_OFFER = [
-  "The Protection Ritual is $47, {firstName}.",
+  "The Protection Ritual is {upsellPrice}, {firstName}.",
   "That includes the charged volcanic stone shipped directly to your door.",
   "Most of my serious clients do both rituals together — clearing AND protection. It's the complete work.",
   "Shall I add your protection to tonight's ritual?",
@@ -312,26 +312,37 @@ export const UPSELL_SHIPPING_CONFIRMED = [
 // HELPER FUNCTIONS
 // ============================================
 
+// Format the Upsell 1 price for display. Whole-dollar prices ($47, $37) so
+// rounding is exact. Defaults to $47 (the historical price) when no
+// variant-specific price is available.
+export function formatUpsellPrice(cents?: number | null): string {
+  return cents ? `$${Math.round(cents / 100)}` : '$47'
+}
+
 export function personalizeMessages(
   messages: string[],
   firstName: string,
-  personName?: string
+  personName?: string,
+  upsellPrice?: string
 ): string[] {
   return messages.map((msg) =>
     msg
       .replace(/{firstName}/g, firstName || 'dear')
       .replace(/{personName}/g, personName || 'them')
+      .replace(/{upsellPrice}/g, upsellPrice || '$47')
   )
 }
 
 export function personalizeMessage(
   message: string,
   firstName: string,
-  personName?: string
+  personName?: string,
+  upsellPrice?: string
 ): string {
   return message
     .replace(/{firstName}/g, firstName || 'dear')
     .replace(/{personName}/g, personName || 'them')
+    .replace(/{upsellPrice}/g, upsellPrice || '$47')
 }
 
 // ============================================

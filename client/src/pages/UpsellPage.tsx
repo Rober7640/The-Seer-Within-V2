@@ -19,6 +19,7 @@ interface UserData {
   bucket: Bucket;
   personName: string | null;
   stripeCustomerId?: string | null;
+  upsell1PriceCents?: number;
 }
 
 const PURCHASE_TRACKED_KEY = "seer_purchase_tracked";
@@ -131,6 +132,7 @@ export default function UpsellPage() {
     showShippingForm,
     isProcessing,
     isComplete,
+    upsellPriceLabel,
     handleUserInput,
     handleQuickReply,
     handleAccept,
@@ -324,6 +326,7 @@ export default function UpsellPage() {
               onAccept={handleAccept}
               onDecline={handleDecline}
               isProcessing={isProcessing}
+              priceLabel={upsellPriceLabel}
             />
           </div>
         )}

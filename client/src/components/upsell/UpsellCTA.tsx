@@ -5,9 +5,10 @@ interface UpsellCTAProps {
   onAccept: () => void
   onDecline: () => void
   isProcessing?: boolean
+  priceLabel?: string
 }
 
-export function UpsellCTA({ onAccept, onDecline, isProcessing = false }: UpsellCTAProps) {
+export function UpsellCTA({ onAccept, onDecline, isProcessing = false, priceLabel = '$47' }: UpsellCTAProps) {
   return (
     <div className="p-4 space-y-4" data-testid="container-upsell-cta">
       <p className="text-center text-sm text-muted-foreground italic">
@@ -35,7 +36,7 @@ export function UpsellCTA({ onAccept, onDecline, isProcessing = false }: UpsellC
       </Button>
 
       <div className="text-center">
-        <span className="text-xs text-muted-foreground">$47 includes charged stone + free shipping</span>
+        <span className="text-xs text-muted-foreground">{priceLabel} includes charged stone + free shipping</span>
       </div>
 
       <Button

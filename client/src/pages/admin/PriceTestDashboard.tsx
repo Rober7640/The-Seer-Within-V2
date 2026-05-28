@@ -9,6 +9,8 @@ interface VariantStats {
   variant: string;
   mainPriceDollars: number;
   downsellPriceDollars: number;
+  upsell1PriceDollars: number;
+  funnel: string | null;
   visitorsAssigned: number;
   mainPurchases: number;
   downsellPurchases: number;
@@ -63,6 +65,9 @@ export default function PriceTestDashboard() {
     end: "",
   });
 
+  // Funnel scope — "" = all variants, "v1-fb" = FB price test only.
+  const [funnelFilter, setFunnelFilter] = useState<string>("");
+
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -71,6 +76,7 @@ export default function PriceTestDashboard() {
         const params = new URLSearchParams();
         if (appliedRange.start) params.set("startDate", appliedRange.start);
         if (appliedRange.end) params.set("endDate", appliedRange.end);
+        if (funnelFilter) params.set("funnel", funnelFilter);
         const qs = params.toString();
         const res = await adminFetch(
           `/api/admin/price-test/v1${qs ? `?${qs}` : ""}`,
@@ -93,7 +99,7 @@ export default function PriceTestDashboard() {
     return () => {
       cancelled = true;
     };
-  }, [appliedRange]);
+  }, [appliedRange, funnelFilter]);
 
   const applyDates = () => {
     setError(null);
@@ -145,6 +151,18 @@ export default function PriceTestDashboard() {
             >
               All time
             </button>
+            <div className="flex flex-col">
+              <label className="mb-1 text-xs text-gray-400">Funnel</label>
+              <select
+                value={funnelFilter}
+                onChange={(e) => setFunnelFilter(e.target.value)}
+                style={{ colorScheme: "dark" }}
+                className="rounded border border-gray-700 bg-gray-900 px-3 py-2 text-sm text-white"
+              >
+                <option value="">All funnels</option>
+                <option value="v1-fb">FB (v1-fb)</option>
+              </select>
+            </div>
             <div className="ml-auto text-xs text-gray-500">
               {appliedRange.start || appliedRange.end
                 ? `Showing ${appliedRange.start || "earliest"} → ${appliedRange.end || "today"}`
@@ -186,8 +204,10 @@ export default function PriceTestDashboard() {
                   <thead>
                     <tr className="border-b border-gray-700 text-left text-gray-400">
                       <th className="py-2 pr-4">Variant</th>
+                      <th className="py-2 pr-4">Funnel</th>
                       <th className="py-2 pr-4">Main</th>
                       <th className="py-2 pr-4">Downsell</th>
+                      <th className="py-2 pr-4">Upsell 1</th>
                       <th className="py-2 pr-4">Visitors</th>
                       <th className="py-2 pr-4">Main buys</th>
                       <th className="py-2 pr-4">Downsell buys</th>
@@ -211,8 +231,10 @@ export default function PriceTestDashboard() {
                               <Badge className="ml-2 bg-emerald-600">Leader</Badge>
                             )}
                           </td>
+                          <td className="py-2 pr-4 text-gray-400">{v.funnel ?? "—"}</td>
                           <td className="py-2 pr-4">${v.mainPriceDollars}</td>
                           <td className="py-2 pr-4">${v.downsellPriceDollars}</td>
+                          <td className="py-2 pr-4">${v.upsell1PriceDollars}</td>
                           <td className="py-2 pr-4">{v.visitorsAssigned}</td>
                           <td className="py-2 pr-4">{v.mainPurchases}</td>
                           <td className="py-2 pr-4">{v.downsellPurchases}</td>
