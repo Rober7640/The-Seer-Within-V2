@@ -14,6 +14,8 @@ interface VariantStats {
   variant: string;
   mainPriceDollars: number;
   downsellPriceDollars: number;
+  upsell1PriceDollars: number;
+  funnel: string | null;
   visitorsAssigned: number;
   mainPurchases: number;
   downsellPurchases: number;
@@ -62,6 +64,12 @@ router.get('/v1', async (req: Request, res: Response) => {
     const endDate = endParam ? new Date(endParam) : null;
     if (endDate) endDate.setHours(23, 59, 59, 999); // make end-of-day inclusive
 
+    // Optional funnel scope — e.g. ?funnel=v1-fb restricts the table + pairwise
+    // to FB variants only, so 45_fb vs 35_fb is a clean head-to-head rather than
+    // being mixed with the non-FB baseline. Empty = all variants.
+    const funnelParam =
+      typeof req.query.funnel === 'string' && req.query.funnel ? req.query.funnel : null;
+
     // Build the date-range WHERE fragment cleanly. Drizzle's tagged
     // template doesn't always interpolate conditional empty `sql\`\``
     // fragments correctly, so assemble explicitly.
@@ -106,10 +114,16 @@ router.get('/v1', async (req: Request, res: Response) => {
     };
 
     const activeVariants = await getActiveVariants();
-    const priceLookup = new Map(activeVariants.map((v) => [v.id, v]));
+    const scopedVariants = funnelParam
+      ? activeVariants.filter((v) => (v.funnel ?? null) === funnelParam)
+      : activeVariants;
+    const priceLookup = new Map(scopedVariants.map((v) => [v.id, v]));
+    const allowedIds = new Set(scopedVariants.map((v) => v.id));
 
     const statsByVariant = new Map<string, VariantStats & { sumSqRevenueCents: number }>();
     for (const row of aggregateRowsResult.rows) {
+      // When scoped to a funnel, only count conversations on that funnel's variants.
+      if (funnelParam && !allowedIds.has(row.price_variant)) continue;
       const cfg = priceLookup.get(row.price_variant);
       const visitors = row.visitors_assigned;
       const total = row.main_purchases + row.downsell_purchases;
@@ -117,6 +131,8 @@ router.get('/v1', async (req: Request, res: Response) => {
         variant: row.price_variant,
         mainPriceDollars: cfg ? Math.round(cfg.priceCents / 100) : 0,
         downsellPriceDollars: cfg ? Math.round(cfg.downsellCents / 100) : 0,
+        upsell1PriceDollars: cfg ? Math.round((cfg.upsell1Cents ?? 4700) / 100) : 0,
+        funnel: cfg?.funnel ?? null,
         visitorsAssigned: visitors,
         mainPurchases: row.main_purchases,
         downsellPurchases: row.downsell_purchases,
@@ -131,12 +147,14 @@ router.get('/v1', async (req: Request, res: Response) => {
     }
 
     // Ensure all currently-configured variants appear in the table even with zero data.
-    for (const cfg of activeVariants) {
+    for (const cfg of scopedVariants) {
       if (!statsByVariant.has(cfg.id)) {
         statsByVariant.set(cfg.id, {
           variant: cfg.id,
           mainPriceDollars: Math.round(cfg.priceCents / 100),
           downsellPriceDollars: Math.round(cfg.downsellCents / 100),
+          upsell1PriceDollars: Math.round((cfg.upsell1Cents ?? 4700) / 100),
+          funnel: cfg.funnel ?? null,
           visitorsAssigned: 0,
           mainPurchases: 0,
           downsellPurchases: 0,

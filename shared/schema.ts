@@ -34,6 +34,7 @@ export const conversations = pgTable("conversations", {
   priceVariant: text("price_variant"),
   priceAmountCents: integer("price_amount_cents"),
   downsellAmountCents: integer("downsell_amount_cents"),
+  upsell1AmountCents: integer("upsell1_amount_cents"),
 
   // Upsell 1 tracking (Protection Ritual + Lava Stone)
   upsellOffered: boolean("upsell_offered").default(false),

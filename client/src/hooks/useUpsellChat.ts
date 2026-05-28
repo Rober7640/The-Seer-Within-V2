@@ -31,6 +31,7 @@ import {
   UPSELL_SOFT_DECLINE,
   UPSELL_SUCCESS,
   UPSELL_SHIPPING_CONFIRMED,
+  formatUpsellPrice,
 } from "@/lib/upsellMessages";
 import { getTrackdeskClickId } from "@/lib/facebook";
 import { currentFunnel, getPostHogFunnel } from "@/lib/funnel";
@@ -52,6 +53,9 @@ interface UserData {
   bucket: Bucket;
   personName: string | null;
   stripeCustomerId?: string | null;
+  // Upsell 1 price (cents) for this user's price-test variant. Drives the
+  // displayed price so it matches what /api/upsell/charge bills.
+  upsell1PriceCents?: number;
 }
 
 interface ShippingAddress {
@@ -95,6 +99,8 @@ export function useUpsellChat({
 
   const hasStartedRef = useRef(false);
 
+  const upsellPriceLabel = formatUpsellPrice(userData?.upsell1PriceCents);
+
   // Personalize helper
   const p = useCallback(
     (msgs: string[]) =>
@@ -102,8 +108,9 @@ export function useUpsellChat({
         msgs,
         userData?.firstName || "",
         userData?.personName || undefined,
+        upsellPriceLabel,
       ),
-    [userData],
+    [userData, upsellPriceLabel],
   );
 
   const pMsg = useCallback(
@@ -112,8 +119,9 @@ export function useUpsellChat({
         msg,
         userData?.firstName || "",
         userData?.personName || undefined,
+        upsellPriceLabel,
       ),
-    [userData],
+    [userData, upsellPriceLabel],
   );
 
   // Add bot message with typing
@@ -457,6 +465,7 @@ export function useUpsellChat({
     isProcessing,
     isComplete,
     upsellPaymentId,
+    upsellPriceLabel,
     handleUserInput,
     handleQuickReply,
     handleAccept,

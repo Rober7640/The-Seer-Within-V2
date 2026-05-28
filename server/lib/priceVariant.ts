@@ -15,19 +15,29 @@ export interface PriceVariant {
   priceCents: number;
   downsellCents: number;
   weight: number;
+  // Upsell 1 (Protection Ritual) price for this variant. Optional so older
+  // config rows without it fall back to the historical 4700 at read time.
+  upsell1Cents?: number;
+  // Funnel this variant is scoped to (e.g. 'v1-fb'). Omitted / null = serves
+  // any funnel that has no funnel-specific variant of its own.
+  funnel?: string | null;
 }
 
 export interface AssignedVariant {
   variant: string;
   priceCents: number;
   downsellCents: number;
+  upsell1Cents: number;
 }
+
+const DEFAULT_UPSELL1_CENTS = 4700;
 
 const FALLBACK_VARIANT: PriceVariant = {
   id: '35',
   priceCents: 3500,
   downsellCents: 2500,
   weight: 1,
+  upsell1Cents: DEFAULT_UPSELL1_CENTS,
 };
 
 interface CachedVariants {
@@ -98,11 +108,31 @@ export function resolveVariantById(
 }
 
 /**
+ * Restrict the variant pool to those matching the given funnel.
+ * If any variant is scoped to this exact funnel, only those are eligible
+ * (so FB traffic only sees the *_fb variants, and non-FB traffic only sees
+ * null-funnel variants). If none match, fall back to the full pool so the
+ * feature degrades to current behavior before any funnel-scoped variant is
+ * configured.
+ */
+export function scopeVariantsToFunnel(
+  variants: PriceVariant[],
+  funnel?: string | null,
+): PriceVariant[] {
+  const target = funnel ?? null;
+  const matching = variants.filter((v) => (v.funnel ?? null) === target);
+  return matching.length ? matching : variants;
+}
+
+/**
  * Assign a variant to a conversation if it doesn't already have one.
  * Idempotent: same email always sees the same variant once assigned.
  * Returns null if no conversation row exists for this email yet.
  */
-export async function assignVariantIfMissing(email: string): Promise<AssignedVariant | null> {
+export async function assignVariantIfMissing(
+  email: string,
+  funnel?: string | null,
+): Promise<AssignedVariant | null> {
   try {
     const existing = await db
       .select({
@@ -110,6 +140,7 @@ export async function assignVariantIfMissing(email: string): Promise<AssignedVar
         priceVariant: conversations.priceVariant,
         priceAmountCents: conversations.priceAmountCents,
         downsellAmountCents: conversations.downsellAmountCents,
+        upsell1AmountCents: conversations.upsell1AmountCents,
       })
       .from(conversations)
       .where(eq(conversations.email, email))
@@ -127,11 +158,13 @@ export async function assignVariantIfMissing(email: string): Promise<AssignedVar
         variant: row.priceVariant,
         priceCents: row.priceAmountCents,
         downsellCents: row.downsellAmountCents,
+        upsell1Cents: row.upsell1AmountCents ?? DEFAULT_UPSELL1_CENTS,
       };
     }
 
     const variants = await getActiveVariants();
-    const picked = pickWeighted(variants);
+    const picked = pickWeighted(scopeVariantsToFunnel(variants, funnel));
+    const upsell1Cents = picked.upsell1Cents ?? DEFAULT_UPSELL1_CENTS;
 
     await db
       .update(conversations)
@@ -139,16 +172,18 @@ export async function assignVariantIfMissing(email: string): Promise<AssignedVar
         priceVariant: picked.id,
         priceAmountCents: picked.priceCents,
         downsellAmountCents: picked.downsellCents,
+        upsell1AmountCents: upsell1Cents,
         updatedAt: new Date(),
       })
       .where(eq(conversations.id, row.id));
 
-    logger.info('priceVariant: assigned', { email, variant: picked.id, priceCents: picked.priceCents });
+    logger.info('priceVariant: assigned', { email, variant: picked.id, priceCents: picked.priceCents, funnel: funnel ?? null });
 
     return {
       variant: picked.id,
       priceCents: picked.priceCents,
       downsellCents: picked.downsellCents,
+      upsell1Cents,
     };
   } catch (err) {
     logger.error('priceVariant: assignVariantIfMissing failed', { email, err });
@@ -168,6 +203,7 @@ export async function getVariantForEmail(email: string): Promise<AssignedVariant
         priceVariant: conversations.priceVariant,
         priceAmountCents: conversations.priceAmountCents,
         downsellAmountCents: conversations.downsellAmountCents,
+        upsell1AmountCents: conversations.upsell1AmountCents,
       })
       .from(conversations)
       .where(eq(conversations.email, email))
@@ -180,6 +216,7 @@ export async function getVariantForEmail(email: string): Promise<AssignedVariant
         variant: row.priceVariant,
         priceCents: row.priceAmountCents,
         downsellCents: row.downsellAmountCents,
+        upsell1Cents: row.upsell1AmountCents ?? DEFAULT_UPSELL1_CENTS,
       };
     }
   } catch (err) {
@@ -189,6 +226,7 @@ export async function getVariantForEmail(email: string): Promise<AssignedVariant
     variant: FALLBACK_VARIANT.id,
     priceCents: FALLBACK_VARIANT.priceCents,
     downsellCents: FALLBACK_VARIANT.downsellCents,
+    upsell1Cents: FALLBACK_VARIANT.upsell1Cents ?? DEFAULT_UPSELL1_CENTS,
   };
 }
 
