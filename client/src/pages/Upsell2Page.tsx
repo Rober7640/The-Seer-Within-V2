@@ -131,16 +131,19 @@ export default function Upsell2Page() {
         const data = await response.json();
         setUserData(data);
 
-        // Track Upsell 1 event on /welcome2 load (fires once per session)
+        // Track Upsell 1 event on /welcome2 load (fires once per session).
+        // Use the actual charged amount (varies by price-test variant); fall
+        // back to $47 for pre-test conversations where it isn't recorded.
         if (data.upsellPurchased) {
-          trackUpsellPurchase(47, "USD", data.email, "Protection Ritual + Volcanic Stone", sid ?? undefined, 'u1', { skipServerRelay: true });
-          trackGAdsPurchase("upsell1", 47, sid);
+          const upsell1Dollars = (data.upsellAmountCents ?? 4700) / 100;
+          trackUpsellPurchase(upsell1Dollars, "USD", data.email, "Protection Ritual + Volcanic Stone", sid ?? undefined, 'u1', { skipServerRelay: true });
+          trackGAdsPurchase("upsell1", upsell1Dollars, sid);
 
           // Trackdesk affiliate conversion tracking - upsell 1
           if (typeof window.trackdesk === "function") {
             window.trackdesk("the-seer-within", "conversion", {
               conversionType: "sale",
-              amount: { value: "47" },
+              amount: { value: String(upsell1Dollars) },
               externalId: `${sid}_upsell1`,
               customerId: data.email,
               currencyCode: "USD",
