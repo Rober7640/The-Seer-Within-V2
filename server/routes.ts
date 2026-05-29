@@ -1625,6 +1625,9 @@ export async function registerRoutes(
         concern: conversation.concern || "",
         personName: conversation.personName || "",
         upsellPurchased: conversation.upsellPurchased || false,
+        // Actual amount charged for Upsell 1 (cents), varies by price-test
+        // variant. Null for pre-test conversations → client defaults to $47.
+        upsellAmountCents: conversation.upsellAmount ?? null,
         hasShipping: !!conversation.shippingLine1,
         shipping: conversation.shippingLine1
           ? {
