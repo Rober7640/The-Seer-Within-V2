@@ -10,6 +10,17 @@ function push(event: Record<string, unknown>): void {
   window.dataLayer.push(event);
 }
 
+// Read the Google Ads click id from the `_gcl_aw` cookie (set by the GTM
+// Conversion Linker already loaded in the container). Cookie format is
+// `GCL.<timestamp>.<gclid>`. Returns the gclid portion, or undefined.
+export function getGclid(): string | undefined {
+  if (typeof document === 'undefined') return undefined;
+  const match = document.cookie.match(/(?:^|;\s*)_gcl_aw=([^;]*)/);
+  if (!match) return undefined;
+  const parts = decodeURIComponent(match[1]).split('.');
+  return parts.length >= 3 ? parts.slice(2).join('.') : undefined;
+}
+
 export function trackGAdsLead(): void {
   push({ event: 'lead' });
 }

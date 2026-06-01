@@ -224,7 +224,7 @@ function resolveStripeEventName(
     case 'protection_ritual':
       return 'Upsell';
     case 'manifestation_bracelet':
-      return funnel === 'v1-fb' ? 'Upsell2' : 'Upsell';
+      return funnel === 'v1-fb' || funnel === 'v1-gdn' ? 'Upsell2' : 'Upsell';
     case 'soulmate_sketch':
       return 'Purchase';
     case 'soulmate_bracelet':
@@ -252,9 +252,16 @@ function makeStripeEventId(
   return `upsell_${suffix}_${mainSessionId}`;
 }
 
+// Path prefix for an ad funnel's pages ("/fb", "/gdn", or "" for base V1).
+function funnelPathPrefix(funnel?: string): string {
+  if (funnel === 'v1-fb') return '/fb';
+  if (funnel === 'v1-gdn') return '/gdn';
+  return '';
+}
+
 function eventSourceUrlForStripeEvent(product: string, funnel?: string): string {
   const baseUrl = process.env.BASE_URL || 'http://localhost:5000';
-  const prefix = funnel === 'v1-fb' ? '/fb' : '';
+  const prefix = funnelPathPrefix(funnel);
   switch (product) {
     case 'energy_clearing_ritual':
       return `${baseUrl}${prefix}/welcome1`;
@@ -374,7 +381,7 @@ export async function fireLeadEvent(params: LeadFbEventParams): Promise<void> {
   try {
     if (!params.email) return;
     const baseUrl = process.env.BASE_URL || 'http://localhost:5000';
-    const prefix = params.funnel === 'v1-fb' ? '/fb' : '';
+    const prefix = funnelPathPrefix(params.funnel);
     const eventSourceUrl = `${baseUrl}${prefix}/chat`;
     await sendFacebookEvent({
       eventName: 'Lead',

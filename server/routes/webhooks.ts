@@ -10,6 +10,7 @@ import logger from '../lib/logger';
 import { posthog } from '../lib/posthog';
 import * as paypal from '../lib/paypal';
 import { fireV2PurchaseEvent, fireStripePurchaseEvent } from '../lib/facebook';
+import { fireGoogleAdsConversion, gadsStepForProduct } from '../lib/googleAds';
 import { maybeSchedulePostPurchaseDrip } from '../lib/postPurchaseDripTrigger';
 import {
   addSoulmatePaidSubscriber,
@@ -594,6 +595,43 @@ const stripeClient =
     ? new Stripe(stripeKey)
     : null;
 
+// Durable server-side Google Ads conversion for a paid Stripe product. The
+// gclid lives on the main Checkout Session metadata; upsell PIs reference it
+// via originalSession, so backfill from there when the upsell's own metadata
+// doesn't carry it. orderId = mainSessionId matches the client transaction_id
+// for Count="Every" dedup. Fire-and-forget; never blocks the webhook ack.
+async function fireGAdsForStripe(opts: {
+  product: string;
+  mainSessionId: string;
+  amountCents: number;
+  gclidFromMeta?: string;
+  email?: string;
+}): Promise<void> {
+  const step = gadsStepForProduct(opts.product);
+  if (!step) return;
+
+  let gclid = opts.gclidFromMeta;
+  if (!gclid && stripeClient && opts.mainSessionId) {
+    try {
+      const original = await stripeClient.checkout.sessions.retrieve(opts.mainSessionId);
+      gclid = original.metadata?.gclid || undefined;
+    } catch (err) {
+      logger.warn('fireGAdsForStripe: original session gclid backfill failed', {
+        mainSessionId: opts.mainSessionId,
+        err: String(err),
+      });
+    }
+  }
+
+  await fireGoogleAdsConversion({
+    step,
+    gclid,
+    valueCents: opts.amountCents,
+    orderId: opts.mainSessionId,
+    email: opts.email,
+  });
+}
+
 const TRACKDESK_API_KEY = process.env.TRACKDESK_API_KEY;
 const TRACKDESK_CONVERSION_URL = 'https://the-seer-within.trackdesk.com/tracking/conversion/v1';
 
@@ -708,9 +746,9 @@ router.post('/stripe', async (req: Request, res: Response) => {
       logger.info('Stripe webhook: No trackdeskClickId in metadata, skipping affiliate tracking');
     }
 
-    // PostHog: track funnel purchases (Phase 1 soulmate + Phase 2 V1/fb).
+    // PostHog: track funnel purchases (Phase 1 soulmate + Phase 2 V1/fb/gdn).
     // Soulmate products fix funnel='soulmate'. V1 products derive funnel from
-    // metadata.funnel ('v1-fb' → 'fb', missing → 'v1').
+    // metadata.funnel ('v1-fb' → 'fb', 'v1-gdn' → 'gdn', missing → 'v1').
     type TrackedProduct = { funnel: 'soulmate' | null; step: string; product: string };
     const TRACKED_PRODUCTS: Record<string, TrackedProduct> = {
       soulmate_sketch:        { funnel: 'soulmate', step: 'sales',   product: 'soulmate_sketch' },
@@ -722,7 +760,9 @@ router.post('/stripe', async (req: Request, res: Response) => {
     };
     const productInfo = product ? TRACKED_PRODUCTS[product] : undefined;
     if (productInfo) {
-      const funnelValue = productInfo.funnel ?? (metadata.funnel === 'v1-fb' ? 'fb' : 'v1');
+      const funnelValue =
+        productInfo.funnel ??
+        (metadata.funnel === 'v1-fb' ? 'fb' : metadata.funnel === 'v1-gdn' ? 'gdn' : 'v1');
       const posthogDistinctId = metadata.posthogDistinctId || email;
       posthog.capture({
         distinctId: posthogDistinctId,
@@ -851,6 +891,16 @@ router.post('/stripe', async (req: Request, res: Response) => {
         email: metadata.email || session.customer_email || undefined,
         firstName: metadata.firstName || undefined,
       }).catch(() => { /* logged inside */ });
+
+      // Durable server-side Google Ads conversion (dedups with the client gtag
+      // fire via the order id). Ships dark until SGTM_GADS_ENDPOINT is set.
+      fireGAdsForStripe({
+        product,
+        mainSessionId,
+        amountCents: session.amount_total ?? 0,
+        gclidFromMeta: metadata.gclid,
+        email: metadata.email || session.customer_email || undefined,
+      }).catch(() => { /* logged inside */ });
     }
   }
 
@@ -880,6 +930,16 @@ router.post('/stripe', async (req: Request, res: Response) => {
         amountCents: pi.amount,
         email: metadata.email,
         firstName: metadata.firstName,
+      }).catch(() => { /* logged inside */ });
+
+      // Durable server-side Google Ads conversion for 1-click upsells. gclid
+      // backfills from the original Checkout Session when the PI lacks it.
+      fireGAdsForStripe({
+        product: metadata.product,
+        mainSessionId: metadata.originalSession,
+        amountCents: pi.amount,
+        gclidFromMeta: metadata.gclid,
+        email: metadata.email,
       }).catch(() => { /* logged inside */ });
     }
   }
