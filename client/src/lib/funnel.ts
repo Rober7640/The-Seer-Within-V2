@@ -1,64 +1,51 @@
-// Helpers for the parallel ad-traffic funnels mounted at /fb/* and /gdn/*.
+// Helpers for the parallel V1-style ad funnels mounted at a URL prefix.
 // V1 (email traffic) lives at /, /chat, /welcome1, /welcome2, /success.
-// /fb (Facebook ads) and /gdn (Google Display Network ads) mirror the same
-// components at a path prefix so the ad platforms can segment Lead/IC/Purchase
-// /Upsell by URL and Stripe products carry a per-funnel suffix ("- FB"/"- GDN")
+// V1-FB (/fb), V1-FB2 (/fb2), and V1-GDN (/gdn) mirror the same components at
+// their prefix so each ad platform can segment Lead/IC/Purchase/Upsell by URL
+// and Stripe products carry a per-funnel suffix ("- FB" / "- FB2" / "- GDN")
 // for finance-side attribution.
+//
+// Funnel definitions (prefix, product suffix, PostHog name, etc.) live in
+// shared/funnelConfig.ts so the client + server agree.
 
-export const FB_FUNNEL_PREFIX = "/fb";
-export const FB_FUNNEL_PARAM = "v1-fb";
-export const GDN_FUNNEL_PREFIX = "/gdn";
-export const GDN_FUNNEL_PARAM = "v1-gdn";
-
-export type FunnelParam = "v1-fb" | "v1-gdn";
-
-const MARKETING_FUNNELS: { prefix: string; param: FunnelParam }[] = [
-  { prefix: FB_FUNNEL_PREFIX, param: FB_FUNNEL_PARAM },
-  { prefix: GDN_FUNNEL_PREFIX, param: GDN_FUNNEL_PARAM },
-];
+import { funnelDefForPath, type FunnelParam } from "@shared/funnelConfig";
 
 function currentPath(): string {
   if (typeof window === "undefined") return "";
   return window.location.pathname;
 }
 
-function matchFunnel(pathname?: string): { prefix: string; param: FunnelParam } | null {
-  const p = pathname ?? currentPath();
-  return (
-    MARKETING_FUNNELS.find((f) => p === f.prefix || p.startsWith(`${f.prefix}/`)) ?? null
-  );
-}
-
-// FB-only check — gates Facebook-Pixel-specific behavior (e.g. the "Upsell2"
-// event name) that must NOT fire for the Google (/gdn) funnel.
+// True when the current path belongs to a Facebook-pixel-driven ad funnel
+// (/fb or /fb2). Gates Facebook-Pixel-specific behavior (e.g. the "Upsell2"
+// event name) that must NOT fire for the Google /gdn funnel.
 export function isFbFunnel(pathname?: string): boolean {
-  const p = pathname ?? currentPath();
-  return p === FB_FUNNEL_PREFIX || p.startsWith(`${FB_FUNNEL_PREFIX}/`);
+  const def = funnelDefForPath(pathname ?? currentPath());
+  return def?.param === "v1-fb" || def?.param === "v1-fb2";
 }
 
 // Returns the funnel identifier to send to the backend (or undefined to leave
 // V1 requests byte-identical to today).
 export function currentFunnel(pathname?: string): FunnelParam | undefined {
-  return matchFunnel(pathname)?.param;
+  return funnelDefForPath(pathname ?? currentPath())?.param;
 }
 
-// Prefix a V1 path with the active funnel's prefix (/fb or /gdn) when the user
-// is in an ad funnel, otherwise leave it alone. Use for in-funnel navigation so
-// the user stays inside their own funnel for the entire flow.
+// Prefix a V1 path with the active funnel's prefix when the user is in an ad
+// funnel, otherwise leave it alone. Use for in-funnel navigation so the user
+// stays inside their own funnel for the entire flow.
 export function funnelPath(v1Path: string, pathname?: string): string {
-  const f = matchFunnel(pathname);
-  if (!f) return v1Path;
-  if (v1Path === "/") return f.prefix;
-  return `${f.prefix}${v1Path}`;
+  const def = funnelDefForPath(pathname ?? currentPath());
+  if (!def) return v1Path;
+  if (v1Path === "/") return def.prefix;
+  return `${def.prefix}${v1Path}`;
 }
 
 // ─── PostHog funnel helpers (Option B naming) ──────────────────────────────
 // Same path → funnel decision logic, returns the PostHog `funnel` property
-// value used across Phase 1 (soulmate) and Phase 2 (v1, fb, evelyn, aiden).
-// Kept separate from currentFunnel() because the backend depends on its
-// "v1-fb" | undefined contract for Stripe product suffixing.
+// value used across Phase 1 (soulmate) and Phase 2 (v1, fb, fb2, gdn, evelyn,
+// aiden). Kept separate from currentFunnel() because the backend depends on
+// its "v1-fb" | "v1-fb2" | "v1-gdn" | undefined contract.
 
-export type PostHogFunnel = "soulmate" | "fb" | "gdn" | "v1" | "evelyn" | "aiden";
+export type PostHogFunnel = "soulmate" | "fb" | "fb2" | "gdn" | "v1" | "evelyn" | "aiden";
 
 // Strip query, hash, trailing slash, lowercase. Mirrors the fix in 83fa6a5
 // so URL variants like /evelyn/ or /aiden?utm=x don't drop to "unknown".
@@ -69,8 +56,8 @@ function normalize(path: string): string {
 export function getPostHogFunnel(pathname?: string): PostHogFunnel | null {
   const p = normalize(pathname ?? currentPath());
   if (p === "/soulmate" || p.startsWith("/soulmate/")) return "soulmate";
-  if (p === "/fb" || p.startsWith("/fb/")) return "fb";
-  if (p === "/gdn" || p.startsWith("/gdn/")) return "gdn";
+  const adDef = funnelDefForPath(p);
+  if (adDef) return adDef.posthog as PostHogFunnel;
   if (p === "/evelyn" || p.startsWith("/evelyn/")) return "evelyn";
   if (p === "/aiden" || p.startsWith("/aiden/")) return "aiden";
   if (p === "/" || p === "/chat" || p === "/welcome1" || p === "/welcome2" || p === "/success") {
@@ -101,19 +88,19 @@ export function getPostHogStep(pathname?: string): string {
       if (p === "/success") return "thank_you";
       return "unknown";
     case "fb":
-      if (p === "/fb") return "landing";
-      if (p === "/fb/chat") return "chat";
-      if (p === "/fb/welcome1") return "upsell1";
-      if (p === "/fb/welcome2") return "upsell2";
-      if (p === "/fb/success") return "thank_you";
+    case "fb2":
+    case "gdn": {
+      // Compute the step relative to the funnel's URL prefix so /fb, /fb2 and
+      // /gdn share one mapping (e.g. /fb2/welcome1 → upsell1).
+      const def = funnelDefForPath(p);
+      const sub = def ? p.slice(def.prefix.length) : "";
+      if (sub === "") return "landing";
+      if (sub === "/chat") return "chat";
+      if (sub === "/welcome1") return "upsell1";
+      if (sub === "/welcome2") return "upsell2";
+      if (sub === "/success") return "thank_you";
       return "unknown";
-    case "gdn":
-      if (p === "/gdn") return "landing";
-      if (p === "/gdn/chat") return "chat";
-      if (p === "/gdn/welcome1") return "upsell1";
-      if (p === "/gdn/welcome2") return "upsell2";
-      if (p === "/gdn/success") return "thank_you";
-      return "unknown";
+    }
     case "evelyn":
       return "landing";
     case "aiden":

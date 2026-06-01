@@ -134,6 +134,14 @@ function Router() {
         <Route path="/fb/welcome2" component={Upsell2Page} />
         <Route path="/fb/success" component={SuccessPage} />
 
+        {/* V1-FB2 funnel routes — clone of /fb on its own pixel + "- FB2"
+            Stripe suffix. Same components, new URLs. */}
+        <Route path="/fb2" component={LandingPage} />
+        <Route path="/fb2/chat" component={ChatPage} />
+        <Route path="/fb2/welcome1" component={UpsellPage} />
+        <Route path="/fb2/welcome2" component={Upsell2Page} />
+        <Route path="/fb2/success" component={SuccessPage} />
+
         {/* V1-GDN funnel routes (Google Display Network ad traffic) — same
             components, new URLs so Google Ads can segment by page and Stripe
             products carry the "- GDN" suffix. */}

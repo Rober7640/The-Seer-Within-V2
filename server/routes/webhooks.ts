@@ -11,6 +11,7 @@ import { posthog } from '../lib/posthog';
 import * as paypal from '../lib/paypal';
 import { fireV2PurchaseEvent, fireStripePurchaseEvent } from '../lib/facebook';
 import { fireGoogleAdsConversion, gadsStepForProduct } from '../lib/googleAds';
+import { funnelDefForParam } from '@shared/funnelConfig';
 import { maybeSchedulePostPurchaseDrip } from '../lib/postPurchaseDripTrigger';
 import {
   addSoulmatePaidSubscriber,
@@ -746,9 +747,9 @@ router.post('/stripe', async (req: Request, res: Response) => {
       logger.info('Stripe webhook: No trackdeskClickId in metadata, skipping affiliate tracking');
     }
 
-    // PostHog: track funnel purchases (Phase 1 soulmate + Phase 2 V1/fb/gdn).
+    // PostHog: track funnel purchases (Phase 1 soulmate + Phase 2 V1/fb/fb2/gdn).
     // Soulmate products fix funnel='soulmate'. V1 products derive funnel from
-    // metadata.funnel ('v1-fb' → 'fb', 'v1-gdn' → 'gdn', missing → 'v1').
+    // metadata.funnel via funnelDefForParam (missing → 'v1').
     type TrackedProduct = { funnel: 'soulmate' | null; step: string; product: string };
     const TRACKED_PRODUCTS: Record<string, TrackedProduct> = {
       soulmate_sketch:        { funnel: 'soulmate', step: 'sales',   product: 'soulmate_sketch' },
@@ -760,9 +761,7 @@ router.post('/stripe', async (req: Request, res: Response) => {
     };
     const productInfo = product ? TRACKED_PRODUCTS[product] : undefined;
     if (productInfo) {
-      const funnelValue =
-        productInfo.funnel ??
-        (metadata.funnel === 'v1-fb' ? 'fb' : metadata.funnel === 'v1-gdn' ? 'gdn' : 'v1');
+      const funnelValue = productInfo.funnel ?? (funnelDefForParam(metadata.funnel)?.posthog ?? 'v1');
       const posthogDistinctId = metadata.posthogDistinctId || email;
       posthog.capture({
         distinctId: posthogDistinctId,

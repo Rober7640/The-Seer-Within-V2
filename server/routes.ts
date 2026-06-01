@@ -68,6 +68,7 @@ import {
 } from "./lib/db";
 import { assignVariantIfMissing, getVariantForEmail } from "./lib/priceVariant";
 import { fireGoogleAdsConversion } from "./lib/googleAds";
+import { funnelDefForParam, type FunnelParam } from "@shared/funnelConfig";
 import Stripe from "stripe";
 import type { ChatRequest, CheckoutRequest } from "../shared/types";
 import {
@@ -93,10 +94,10 @@ import {
 import { posthog } from "./lib/posthog";
 
 // Zod schemas for request validation
-// `funnel` is an optional marker the ad-traffic flows (/fb, /gdn) send so we
-// can branch product names, AWeber tags, and success/cancel URLs without
+// `funnel` is an optional marker the ad-traffic flows (/fb, /fb2, /gdn) send so
+// we can branch product names, AWeber tags, and success/cancel URLs without
 // touching the V1 (email-traffic) code path.
-const funnelSchema = z.enum(["v1-fb", "v1-gdn"]).optional();
+const funnelSchema = z.enum(["v1-fb", "v1-fb2", "v1-gdn"]).optional();
 
 const upsellChargeSchema = z.object({
   checkoutSessionId: z.string().min(1),
@@ -156,64 +157,60 @@ const upsell2ReadingSchema = z.object({
   concern: z.string().optional(),
 });
 
-// Ad-traffic funnel helpers — see /fb and /gdn routes on the client.
-// Customer-visible product names get a per-funnel suffix ("- FB" / "- GDN"),
-// AWeber tags get a per-funnel suffix ("-fb" / "-gdn"), and inter-page Stripe
-// redirects stay inside the funnel's path prefix ("/fb" / "/gdn") so each ad
-// platform preserves URL-based event segmentation.
-type FunnelId = "v1-fb" | "v1-gdn" | undefined;
+// Ad-traffic funnel helpers — see /fb, /fb2, /gdn routes on the client. Funnel
+// definitions (prefix, product suffix, AWeber suffix, PostHog name) live in
+// shared/funnelConfig.ts. Customer-visible product names get a per-funnel
+// suffix, AWeber tags get a per-funnel suffix, and inter-page Stripe redirects
+// stay inside the funnel's URL prefix so each ad platform preserves URL-based
+// event segmentation.
+type FunnelId = FunnelParam | undefined;
 
-const FUNNEL_META: Record<"v1-fb" | "v1-gdn", { suffix: string; tagSuffix: string; path: string }> = {
-  "v1-fb": { suffix: " - FB", tagSuffix: "-fb", path: "/fb" },
-  "v1-gdn": { suffix: " - GDN", tagSuffix: "-gdn", path: "/gdn" },
-};
-
-// Parse a raw funnel value (request body / Stripe metadata) into a FunnelId.
+// Coerce an untrusted value (req.body.funnel, Stripe metadata.funnel) into a
+// known funnel param, or undefined for V1 / anything unrecognized.
 function parseFunnel(value: unknown): FunnelId {
-  return value === "v1-fb" || value === "v1-gdn" ? value : undefined;
+  return funnelDefForParam(value)?.param;
 }
 
-// True for any ad-traffic funnel (/fb or /gdn) — used wherever behavior differs
-// from the base V1 (email) funnel regardless of which ad platform.
-function isMarketingFunnel(funnel: FunnelId): funnel is "v1-fb" | "v1-gdn" {
-  return funnel === "v1-fb" || funnel === "v1-gdn";
+// True for any ad-traffic funnel (/fb, /fb2, /gdn). Used wherever server-side
+// behavior differs from base V1 (email) regardless of ad platform — naming is
+// historical (predates /gdn); semantics are "any marketing funnel".
+function isFbFunnel(funnel: FunnelId): boolean {
+  return funnelDefForParam(funnel) !== null;
 }
 
-// Per-funnel product-name suffix (" - FB" / " - GDN"). Named fbSuffix for
-// historical reasons; serves all ad funnels.
+// Per-funnel product-name suffix (" - FB" / " - FB2" / " - GDN").
 function fbSuffix(funnel: FunnelId): string {
-  return isMarketingFunnel(funnel) ? FUNNEL_META[funnel].suffix : "";
+  return funnelDefForParam(funnel)?.productSuffix ?? "";
 }
 
-// Per-funnel AWeber tag suffix ("-fb" / "-gdn").
+// Per-funnel AWeber tag suffix ("-fb" / "-fb2" / "-gdn").
 function fbTagSuffix(funnel: FunnelId): string {
-  return isMarketingFunnel(funnel) ? FUNNEL_META[funnel].tagSuffix : "";
+  return funnelDefForParam(funnel)?.aweberSuffix ?? "";
+}
+
+// PostHog `funnel` property value for a backend funnel param. Defaults to "v1"
+// for base email traffic.
+function fbPosthogName(funnel: FunnelId): string {
+  return funnelDefForParam(funnel)?.posthog ?? "v1";
 }
 
 function funnelPath(v1Path: string, funnel: FunnelId): string {
-  if (!isMarketingFunnel(funnel)) return v1Path;
-  const base = FUNNEL_META[funnel].path;
-  if (v1Path === "/") return base;
-  return `${base}${v1Path}`;
-}
-
-// PostHog `funnel` property value for a given funnel id.
-function posthogFunnelName(funnel: FunnelId): string {
-  if (funnel === "v1-fb") return "fb";
-  if (funnel === "v1-gdn") return "gdn";
-  return "v1";
+  const def = funnelDefForParam(funnel);
+  if (!def) return v1Path;
+  if (v1Path === "/") return def.prefix;
+  return `${def.prefix}${v1Path}`;
 }
 
 // Tag the "seer-within" / "seer-within-upsell" / "seer-within-upsell2" base
 // AWeber tags with the funnel's suffix when the user is in an ad funnel. Other
 // tags (bucket name, "shipping-confirmed", bracelet variant, etc.) are passed
-// through unchanged so the existing segmentation logic still works.
+// through unchanged so existing segmentation still works.
 function fbifyAweberTags(tags: string[], funnel: FunnelId): string[] {
-  if (!isMarketingFunnel(funnel)) return tags;
-  const sfx = FUNNEL_META[funnel].tagSuffix;
+  const suffix = fbTagSuffix(funnel);
+  if (!suffix) return tags;
   return tags.map((t) =>
     t === "seer-within" || t.startsWith("seer-within-")
-      ? `${t}${sfx}`
+      ? `${t}${suffix}`
       : t,
   );
 }
@@ -941,7 +938,7 @@ export async function registerRoutes(
               // Append (not replace) a funnel-suffixed marker for ad-funnel
               // buyers so existing AWeber automations matching the unsuffixed
               // tag keep firing while we gain a separate count per ad funnel.
-              if (isMarketingFunnel(sessionFunnel)) {
+              if (isFbFunnel(sessionFunnel)) {
                 paidTags.push(`${purchaseTypeTag}${fbTagSuffix(sessionFunnel)}`);
               }
 
@@ -1213,7 +1210,7 @@ export async function registerRoutes(
       // Ad funnels use the cleaner PRD-spec name with a per-funnel suffix; V1
       // keeps its historical "Volcanic Stone (aka Black Lava)" label so existing
       // email-traffic receipts stay byte-identical to today.
-      const upsell1ProductName = isMarketingFunnel(funnel)
+      const upsell1ProductName = isFbFunnel(funnel)
         ? `Protection Ritual + Volcanic Stone${fbSuffix(funnel)}`
         : "Volcanic Stone (aka Black Lava)";
 
@@ -1322,7 +1319,7 @@ export async function registerRoutes(
           distinctId: email || "anonymous",
           event: "purchase_completed",
           properties: {
-            funnel: posthogFunnelName(funnel),
+            funnel: fbPosthogName(funnel),
             step: "upsell1",
             product: "protection_ritual",
             payment_method: "stripe_1click",
@@ -1401,7 +1398,7 @@ export async function registerRoutes(
         const { email, firstName, bucket, originalSessionId, funnel } =
           parseResult.data;
         const trackdeskClickId = req.body?.trackdeskClickId as string | undefined;
-        const upsell1ProductName = isMarketingFunnel(funnel)
+        const upsell1ProductName = isFbFunnel(funnel)
           ? `Protection Ritual + Volcanic Stone${fbSuffix(funnel)}`
           : "Volcanic Stone (aka Black Lava)";
 
@@ -1871,7 +1868,7 @@ export async function registerRoutes(
           distinctId: email || "anonymous",
           event: "purchase_completed",
           properties: {
-            funnel: posthogFunnelName(funnel),
+            funnel: fbPosthogName(funnel),
             step: "upsell2",
             product: "manifestation_bracelet",
             payment_method: "stripe_1click",

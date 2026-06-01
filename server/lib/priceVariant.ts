@@ -40,6 +40,19 @@ const FALLBACK_VARIANT: PriceVariant = {
   upsell1Cents: DEFAULT_UPSELL1_CENTS,
 };
 
+// Funnels that run a single FIXED price (no A/B). assignVariantIfMissing stamps
+// these directly instead of drawing from the weighted system_config pool — so
+// the funnel ships with correct pricing without a config row, and never pulls
+// another funnel's variant via the scopeVariantsToFunnel full-pool fallback.
+//
+// NOTE: empty by design. /fb2 used to be fixed-price here, but now runs the
+// same weighted price split test as /fb via funnel-scoped variants
+// ('v1-fb2': 35_fb2 / 45_fb2) in the system_config 'v1_price_variants' pool.
+// Add an entry here only for a NEW funnel that should ship single-price; if you
+// do, make sure NOT to also add matching weighted variants (the fixed entry
+// takes precedence and would silently shadow them).
+const FIXED_FUNNEL_PRICES: Record<string, { id: string; priceCents: number; downsellCents: number; upsell1Cents: number }> = {};
+
 interface CachedVariants {
   variants: PriceVariant[];
   fetchedAt: number;
@@ -162,8 +175,17 @@ export async function assignVariantIfMissing(
       };
     }
 
-    const variants = await getActiveVariants();
-    const picked = pickWeighted(scopeVariantsToFunnel(variants, funnel));
+    const fixed = funnel ? FIXED_FUNNEL_PRICES[funnel] : undefined;
+    const picked: PriceVariant = fixed
+      ? {
+          id: fixed.id,
+          priceCents: fixed.priceCents,
+          downsellCents: fixed.downsellCents,
+          upsell1Cents: fixed.upsell1Cents,
+          weight: 1,
+          funnel,
+        }
+      : pickWeighted(scopeVariantsToFunnel(await getActiveVariants(), funnel));
     const upsell1Cents = picked.upsell1Cents ?? DEFAULT_UPSELL1_CENTS;
 
     await db
