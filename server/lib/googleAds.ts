@@ -21,6 +21,11 @@ import crypto from 'crypto';
 import logger from './logger';
 
 const SGTM_GADS_ENDPOINT = process.env.SGTM_GADS_ENDPOINT;
+// When set, attaches `X-Gtm-Server-Preview: <token>` to every outgoing event so
+// server-fired conversions show up in the sGTM container's Preview pane (the
+// GAds equivalent of FB Events Manager → Test Events). Copy the value from the
+// Preview session's ⋮ menu → "Send requests manually". Unset when done.
+const SGTM_PREVIEW_TOKEN = process.env.SGTM_PREVIEW_TOKEN;
 
 export type GAdsStep =
   | 'lead'
@@ -76,9 +81,12 @@ export async function fireGoogleAdsConversion(params: GAdsConversionParams): Pro
       email_sha256: params.email ? sha256(params.email) : undefined,
     };
 
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    if (SGTM_PREVIEW_TOKEN) headers['X-Gtm-Server-Preview'] = SGTM_PREVIEW_TOKEN;
+
     const res = await fetch(SGTM_GADS_ENDPOINT, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers,
       body: JSON.stringify(payload),
     });
 
