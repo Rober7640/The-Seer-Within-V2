@@ -44,9 +44,14 @@ const FALLBACK_VARIANT: PriceVariant = {
 // these directly instead of drawing from the weighted system_config pool — so
 // the funnel ships with correct pricing without a config row, and never pulls
 // another funnel's variant via the scopeVariantsToFunnel full-pool fallback.
-const FIXED_FUNNEL_PRICES: Record<string, { id: string; priceCents: number; downsellCents: number; upsell1Cents: number }> = {
-  'v1-fb2': { id: '35_fb2', priceCents: 3500, downsellCents: 2500, upsell1Cents: 3700 },
-};
+//
+// NOTE: empty by design. /fb2 used to be fixed-price here, but now runs the
+// same weighted price split test as /fb via funnel-scoped variants
+// ('v1-fb2': 35_fb2 / 45_fb2) in the system_config 'v1_price_variants' pool.
+// Add an entry here only for a NEW funnel that should ship single-price; if you
+// do, make sure NOT to also add matching weighted variants (the fixed entry
+// takes precedence and would silently shadow them).
+const FIXED_FUNNEL_PRICES: Record<string, { id: string; priceCents: number; downsellCents: number; upsell1Cents: number }> = {};
 
 interface CachedVariants {
   variants: PriceVariant[];
