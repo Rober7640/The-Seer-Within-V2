@@ -29,6 +29,15 @@ export const FB_PIXEL_CONFIG: Record<string, FbPixelEntry> = {
       '/soulmate-thank-you',
     ],
   },
+  // /fb2 ad funnel reuses the soulmate pixel (browser-side). Server-side CAPI
+  // routing to this pixel is handled in sGTM by an event_source_url-contains
+  // "/fb2" trigger. /fb (no entry) stays on the default pixel.
+  fb2: {
+    pixelId: '738651185965027',
+    routes: [
+      '/fb2',
+    ],
+  },
 };
 
 export function resolveFunnelFromUrl(urlOrPath: string): string {

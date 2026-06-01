@@ -67,6 +67,7 @@ import {
   saveShipping2Address,
 } from "./lib/db";
 import { assignVariantIfMissing, getVariantForEmail } from "./lib/priceVariant";
+import { funnelDefForParam, type FunnelParam } from "@shared/funnelConfig";
 import Stripe from "stripe";
 import type { ChatRequest, CheckoutRequest } from "../shared/types";
 import {
@@ -92,10 +93,10 @@ import {
 import { posthog } from "./lib/posthog";
 
 // Zod schemas for request validation
-// `funnel` is an optional marker the FB-traffic flow (/fb) sends so we can
-// branch product names, AWeber tags, and success/cancel URLs without touching
-// the V1 (email-traffic) code path.
-const funnelSchema = z.literal("v1-fb").optional();
+// `funnel` is an optional marker the FB-traffic flows (/fb, /fb2) send so we
+// can branch product names, AWeber tags, and success/cancel URLs without
+// touching the V1 (email-traffic) code path.
+const funnelSchema = z.enum(["v1-fb", "v1-fb2"]).optional();
 
 const upsellChargeSchema = z.object({
   checkoutSessionId: z.string().min(1),
@@ -155,40 +156,55 @@ const upsell2ReadingSchema = z.object({
   concern: z.string().optional(),
 });
 
-// V1-FB funnel helpers — see /fb routes on the client and project memory
-// "V1-FB Funnel" decisions doc. Customer-visible product names get a "- FB"
-// suffix, AWeber tags get a "-fb" suffix, and inter-page Stripe redirects
-// stay inside the /fb path so the FB funnel preserves URL-based event
-// segmentation in Meta Events Manager.
-type FunnelId = "v1-fb" | undefined;
+// V1-FB / V1-FB2 funnel helpers — see /fb + /fb2 routes on the client and
+// project memory "V1-FB Funnel" decisions doc. Customer-visible product names
+// get a "- FB"/"- FB2" suffix, AWeber tags get a "-fb"/"-fb2" suffix, and
+// inter-page Stripe redirects stay inside the funnel's URL prefix so Meta
+// Events Manager keeps URL-based event segmentation. Funnel definitions live
+// in shared/funnelConfig.ts.
+type FunnelId = FunnelParam | undefined;
+
+// Coerce an untrusted value (req.body.funnel, Stripe metadata.funnel) into a
+// known funnel param, or undefined for V1 / anything unrecognized.
+function parseFunnel(value: unknown): FunnelId {
+  return funnelDefForParam(value)?.param;
+}
 
 function isFbFunnel(funnel: FunnelId): boolean {
-  return funnel === "v1-fb";
+  return funnelDefForParam(funnel) !== null;
 }
 
 function fbSuffix(funnel: FunnelId): string {
-  return isFbFunnel(funnel) ? " - FB" : "";
+  return funnelDefForParam(funnel)?.productSuffix ?? "";
 }
 
 function fbTagSuffix(funnel: FunnelId): string {
-  return isFbFunnel(funnel) ? "-fb" : "";
+  return funnelDefForParam(funnel)?.aweberSuffix ?? "";
+}
+
+// PostHog `funnel` property value for a backend funnel param ("fb"/"fb2"),
+// defaulting to "v1" for base email traffic.
+function fbPosthogName(funnel: FunnelId): string {
+  return funnelDefForParam(funnel)?.posthog ?? "v1";
 }
 
 function funnelPath(v1Path: string, funnel: FunnelId): string {
-  if (!isFbFunnel(funnel)) return v1Path;
-  if (v1Path === "/") return "/fb";
-  return `/fb${v1Path}`;
+  const def = funnelDefForParam(funnel);
+  if (!def) return v1Path;
+  if (v1Path === "/") return def.prefix;
+  return `${def.prefix}${v1Path}`;
 }
 
 // Tag the "seer-within" / "seer-within-upsell" / "seer-within-upsell2" base
-// AWeber tags with a "-fb" suffix when the user is in the FB funnel. Other
-// tags (bucket name, "shipping-confirmed", bracelet variant, etc.) are passed
-// through unchanged so the existing segmentation logic still works.
+// AWeber tags with the funnel's suffix ("-fb"/"-fb2") when the user is in an
+// FB funnel. Other tags (bucket name, "shipping-confirmed", bracelet variant,
+// etc.) are passed through unchanged so existing segmentation still works.
 function fbifyAweberTags(tags: string[], funnel: FunnelId): string[] {
-  if (!isFbFunnel(funnel)) return tags;
+  const suffix = fbTagSuffix(funnel);
+  if (!suffix) return tags;
   return tags.map((t) =>
     t === "seer-within" || t.startsWith("seer-within-")
-      ? `${t}-fb`
+      ? `${t}${suffix}`
       : t,
   );
 }
@@ -491,7 +507,7 @@ export async function registerRoutes(
         trackdeskClickId,
       } = req.body as CheckoutRequest & { trackdeskClickId?: string };
       const funnel: FunnelId =
-        req.body?.funnel === "v1-fb" ? "v1-fb" : undefined;
+        parseFunnel(req.body?.funnel);
       const productName = `Energy Clearing Ritual${fbSuffix(funnel)}`;
 
       // Mark as purchased in Supabase (optimistic - will be confirmed by webhook in production)
@@ -600,7 +616,7 @@ export async function registerRoutes(
   app.post("/api/lead", async (req: Request, res: Response) => {
     try {
       const { email, firstName, bucket, location, timeOfDay, trackdeskClickId, fbp, fbc } = req.body;
-      const funnel: FunnelId = req.body?.funnel === "v1-fb" ? "v1-fb" : undefined;
+      const funnel: FunnelId = parseFunnel(req.body?.funnel);
 
       logger.info("Lead captured:", { email, firstName, bucket });
 
@@ -876,7 +892,7 @@ export async function registerRoutes(
 
               const purchaseType = session.metadata?.type || "main";
               const sessionFunnel: FunnelId =
-                session.metadata?.funnel === "v1-fb" ? "v1-fb" : undefined;
+                parseFunnel(session.metadata?.funnel);
 
               const purchaseTypeTag =
                 purchaseType === "downsell" ? "downsell" : "initial-purchase";
@@ -1099,7 +1115,7 @@ export async function registerRoutes(
           );
 
           const fallbackFunnel: FunnelId =
-            session.metadata?.funnel === "v1-fb" ? "v1-fb" : undefined;
+            parseFunnel(session.metadata?.funnel);
 
           if (customerEmail) {
             addUpsellSubscriber({
@@ -1161,7 +1177,7 @@ export async function registerRoutes(
       // "Volcanic Stone (aka Black Lava)" label so existing email-traffic
       // receipts stay byte-identical to today.
       const upsell1ProductName = isFbFunnel(funnel)
-        ? "Protection Ritual + Volcanic Stone - FB"
+        ? `Protection Ritual + Volcanic Stone${fbSuffix(funnel)}`
         : "Volcanic Stone (aka Black Lava)";
 
       // Price split test — the Upsell 1 price follows the variant assigned at
@@ -1269,7 +1285,7 @@ export async function registerRoutes(
           distinctId: email || "anonymous",
           event: "purchase_completed",
           properties: {
-            funnel: funnel === "v1-fb" ? "fb" : "v1",
+            funnel: fbPosthogName(funnel),
             step: "upsell1",
             product: "protection_ritual",
             payment_method: "stripe_1click",
@@ -1349,7 +1365,7 @@ export async function registerRoutes(
           parseResult.data;
         const trackdeskClickId = req.body?.trackdeskClickId as string | undefined;
         const upsell1ProductName = isFbFunnel(funnel)
-          ? "Protection Ritual + Volcanic Stone - FB"
+          ? `Protection Ritual + Volcanic Stone${fbSuffix(funnel)}`
           : "Volcanic Stone (aka Black Lava)";
 
         // Price split test — match the 1-click charge amount for this variant.
@@ -1502,7 +1518,7 @@ export async function registerRoutes(
                   const pi = await stripe.paymentIntents.retrieve(
                     conversation.upsellPaymentId,
                   );
-                  if (pi.metadata?.funnel === "v1-fb") shippingFunnel = "v1-fb";
+                  shippingFunnel = parseFunnel(pi.metadata?.funnel);
                 } catch (err) {
                   logger.warn(
                     "Shipping save: could not retrieve upsell PaymentIntent for funnel lookup",
@@ -1818,7 +1834,7 @@ export async function registerRoutes(
           distinctId: email || "anonymous",
           event: "purchase_completed",
           properties: {
-            funnel: funnel === "v1-fb" ? "fb" : "v1",
+            funnel: fbPosthogName(funnel),
             step: "upsell2",
             product: "manifestation_bracelet",
             payment_method: "stripe_1click",
@@ -2117,7 +2133,7 @@ export async function registerRoutes(
                 const pi = await stripe.paymentIntents.retrieve(
                   conversation.upsell2PaymentId,
                 );
-                if (pi.metadata?.funnel === "v1-fb") shipping2Funnel = "v1-fb";
+                shipping2Funnel = parseFunnel(pi.metadata?.funnel);
               } catch (err) {
                 logger.warn(
                   "Upsell2 shipping save: could not retrieve PaymentIntent for funnel lookup",
@@ -2343,7 +2359,7 @@ export async function registerRoutes(
         );
 
         const upsell2FallbackFunnel: FunnelId =
-          session.metadata?.funnel === "v1-fb" ? "v1-fb" : undefined;
+          parseFunnel(session.metadata?.funnel);
 
         if (customerEmail) {
           addUpsell2Subscriber({

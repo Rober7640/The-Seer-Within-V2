@@ -3,6 +3,7 @@ import { and, eq, sql } from 'drizzle-orm';
 import logger from './logger';
 import { db, getConversationByStripeSession } from './db';
 import { creditPurchases, users } from '@shared/schema';
+import { funnelDefForParam } from '@shared/funnelConfig';
 
 const FB_PIXEL_ID = process.env.FB_PIXEL_ID || '446814716830295';
 const FB_ACCESS_TOKEN = process.env.FB_ACCESS_TOKEN;
@@ -224,7 +225,7 @@ function resolveStripeEventName(
     case 'protection_ritual':
       return 'Upsell';
     case 'manifestation_bracelet':
-      return funnel === 'v1-fb' ? 'Upsell2' : 'Upsell';
+      return funnelDefForParam(funnel) ? 'Upsell2' : 'Upsell';
     case 'soulmate_sketch':
       return 'Purchase';
     case 'soulmate_bracelet':
@@ -254,7 +255,7 @@ function makeStripeEventId(
 
 function eventSourceUrlForStripeEvent(product: string, funnel?: string): string {
   const baseUrl = process.env.BASE_URL || 'http://localhost:5000';
-  const prefix = funnel === 'v1-fb' ? '/fb' : '';
+  const prefix = funnelDefForParam(funnel)?.prefix ?? '';
   switch (product) {
     case 'energy_clearing_ritual':
       return `${baseUrl}${prefix}/welcome1`;
@@ -374,7 +375,7 @@ export async function fireLeadEvent(params: LeadFbEventParams): Promise<void> {
   try {
     if (!params.email) return;
     const baseUrl = process.env.BASE_URL || 'http://localhost:5000';
-    const prefix = params.funnel === 'v1-fb' ? '/fb' : '';
+    const prefix = funnelDefForParam(params.funnel)?.prefix ?? '';
     const eventSourceUrl = `${baseUrl}${prefix}/chat`;
     await sendFacebookEvent({
       eventName: 'Lead',
