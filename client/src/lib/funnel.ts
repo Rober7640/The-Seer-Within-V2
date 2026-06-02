@@ -1,8 +1,9 @@
 // Helpers for the parallel V1-style ad funnels mounted at a URL prefix.
 // V1 (email traffic) lives at /, /chat, /welcome1, /welcome2, /success.
-// V1-FB (/fb) and V1-FB2 (/fb2) mirror the same components at their prefix so
-// Facebook Events Manager can segment Lead/IC/Purchase/Upsell by URL and
-// Stripe products carry a "- FB" / "- FB2" suffix for finance-side attribution.
+// V1-FB (/fb), V1-FB2 (/fb2), and V1-GDN (/gdn) mirror the same components at
+// their prefix so each ad platform can segment Lead/IC/Purchase/Upsell by URL
+// and Stripe products carry a per-funnel suffix ("- FB" / "- FB2" / "- GDN")
+// for finance-side attribution.
 //
 // Funnel definitions (prefix, product suffix, PostHog name, etc.) live in
 // shared/funnelConfig.ts so the client + server agree.
@@ -14,9 +15,12 @@ function currentPath(): string {
   return window.location.pathname;
 }
 
-// True when the current path belongs to any FB-style ad funnel (/fb, /fb2).
+// True when the current path belongs to a Facebook-pixel-driven ad funnel
+// (/fb or /fb2). Gates Facebook-Pixel-specific behavior (e.g. the "Upsell2"
+// event name) that must NOT fire for the Google /gdn funnel.
 export function isFbFunnel(pathname?: string): boolean {
-  return funnelDefForPath(pathname ?? currentPath()) !== null;
+  const def = funnelDefForPath(pathname ?? currentPath());
+  return def?.param === "v1-fb" || def?.param === "v1-fb2";
 }
 
 // Returns the funnel identifier to send to the backend (or undefined to leave
@@ -25,9 +29,9 @@ export function currentFunnel(pathname?: string): FunnelParam | undefined {
   return funnelDefForPath(pathname ?? currentPath())?.param;
 }
 
-// Prefix a V1 path with the funnel's prefix when the user is in an FB funnel,
-// otherwise leave it alone. Use for in-funnel navigation so the user stays
-// inside their own funnel for the entire flow.
+// Prefix a V1 path with the active funnel's prefix when the user is in an ad
+// funnel, otherwise leave it alone. Use for in-funnel navigation so the user
+// stays inside their own funnel for the entire flow.
 export function funnelPath(v1Path: string, pathname?: string): string {
   const def = funnelDefForPath(pathname ?? currentPath());
   if (!def) return v1Path;
@@ -37,11 +41,11 @@ export function funnelPath(v1Path: string, pathname?: string): string {
 
 // ─── PostHog funnel helpers (Option B naming) ──────────────────────────────
 // Same path → funnel decision logic, returns the PostHog `funnel` property
-// value used across Phase 1 (soulmate) and Phase 2 (v1, fb, fb2, evelyn, aiden).
-// Kept separate from currentFunnel() because the backend depends on its
-// "v1-fb" | "v1-fb2" | undefined contract for Stripe product suffixing.
+// value used across Phase 1 (soulmate) and Phase 2 (v1, fb, fb2, gdn, evelyn,
+// aiden). Kept separate from currentFunnel() because the backend depends on
+// its "v1-fb" | "v1-fb2" | "v1-gdn" | undefined contract.
 
-export type PostHogFunnel = "soulmate" | "fb" | "fb2" | "v1" | "evelyn" | "aiden";
+export type PostHogFunnel = "soulmate" | "fb" | "fb2" | "gdn" | "v1" | "evelyn" | "aiden";
 
 // Strip query, hash, trailing slash, lowercase. Mirrors the fix in 83fa6a5
 // so URL variants like /evelyn/ or /aiden?utm=x don't drop to "unknown".
@@ -52,8 +56,8 @@ function normalize(path: string): string {
 export function getPostHogFunnel(pathname?: string): PostHogFunnel | null {
   const p = normalize(pathname ?? currentPath());
   if (p === "/soulmate" || p.startsWith("/soulmate/")) return "soulmate";
-  const fbDef = funnelDefForPath(p);
-  if (fbDef) return fbDef.posthog as PostHogFunnel;
+  const adDef = funnelDefForPath(p);
+  if (adDef) return adDef.posthog as PostHogFunnel;
   if (p === "/evelyn" || p.startsWith("/evelyn/")) return "evelyn";
   if (p === "/aiden" || p.startsWith("/aiden/")) return "aiden";
   if (p === "/" || p === "/chat" || p === "/welcome1" || p === "/welcome2" || p === "/success") {
@@ -84,9 +88,10 @@ export function getPostHogStep(pathname?: string): string {
       if (p === "/success") return "thank_you";
       return "unknown";
     case "fb":
-    case "fb2": {
-      // Compute the step relative to the funnel's URL prefix so /fb and /fb2
-      // share one mapping (e.g. /fb2/welcome1 → upsell1).
+    case "fb2":
+    case "gdn": {
+      // Compute the step relative to the funnel's URL prefix so /fb, /fb2 and
+      // /gdn share one mapping (e.g. /fb2/welcome1 → upsell1).
       const def = funnelDefForPath(p);
       const sub = def ? p.slice(def.prefix.length) : "";
       if (sub === "") return "landing";

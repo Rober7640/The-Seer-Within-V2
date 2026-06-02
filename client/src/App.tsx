@@ -91,6 +91,7 @@ function Router() {
       location === '/success' ||
       location === '/upsell-test' ||
       location.startsWith('/fb') ||
+      location.startsWith('/gdn') ||
       location === '/aiden' ||
       location === '/evelyn' ||
       location.startsWith('/soulmate');
@@ -134,12 +135,21 @@ function Router() {
         <Route path="/fb/success" component={SuccessPage} />
 
         {/* V1-FB2 funnel routes — clone of /fb on its own pixel + "- FB2"
-            Stripe suffix + fixed pricing. Same components, new URLs. */}
+            Stripe suffix. Same components, new URLs. */}
         <Route path="/fb2" component={LandingPage} />
         <Route path="/fb2/chat" component={ChatPage} />
         <Route path="/fb2/welcome1" component={UpsellPage} />
         <Route path="/fb2/welcome2" component={Upsell2Page} />
         <Route path="/fb2/success" component={SuccessPage} />
+
+        {/* V1-GDN funnel routes (Google Display Network ad traffic) — same
+            components, new URLs so Google Ads can segment by page and Stripe
+            products carry the "- GDN" suffix. */}
+        <Route path="/gdn" component={LandingPage} />
+        <Route path="/gdn/chat" component={ChatPage} />
+        <Route path="/gdn/welcome1" component={UpsellPage} />
+        <Route path="/gdn/welcome2" component={Upsell2Page} />
+        <Route path="/gdn/success" component={SuccessPage} />
         <Route path="/privacy" component={PrivacyPage} />
         <Route path="/terms" component={TermsPage} />
         <Route path="/refund" component={RefundPage} />

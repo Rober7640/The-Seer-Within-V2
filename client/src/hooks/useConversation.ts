@@ -19,7 +19,7 @@ import {
 import { trackLead, trackInitiateCheckout, getTrackdeskClickId } from '@/lib/facebook'
 import { currentFunnel, getPostHogFunnel } from '@/lib/funnel'
 import { track as trackPH, identifyUser as identifyPH } from '@/lib/posthog'
-import { trackGAdsLead, trackGAdsCheckout } from '@/lib/gtm'
+import { trackGAdsLead, trackGAdsCheckout, getGclid } from '@/lib/gtm'
 
 const STORAGE_KEY = 'seer_conversation'
 const SESSION_EXPIRY_HOURS = 24
@@ -375,6 +375,7 @@ export function useConversation() {
           firstName: currentChat.userData.firstName,
           bucket: currentChat.userData.bucket,
           trackdeskClickId: getTrackdeskClickId(),
+          gclid: getGclid(),
           funnel: currentFunnel(),
           fbp: fbpMatch ? decodeURIComponent(fbpMatch[1]) : undefined,
           fbc: fbcMatch ? decodeURIComponent(fbcMatch[1]) : undefined,
@@ -1225,6 +1226,7 @@ export function useConversation() {
           bucket: chat.userData.bucket,
           type,
           trackdeskClickId: getTrackdeskClickId(),
+          gclid: getGclid(),
           funnel: currentFunnel(),
         }),
       })

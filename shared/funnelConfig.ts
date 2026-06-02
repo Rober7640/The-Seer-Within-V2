@@ -13,7 +13,7 @@
 // these helpers (product naming, AWeber tags, redirects, PostHog) updates
 // automatically.
 
-export type FunnelParam = "v1-fb" | "v1-fb2";
+export type FunnelParam = "v1-fb" | "v1-fb2" | "v1-gdn";
 
 export interface FunnelDef {
   // Value sent to the backend and stored in Stripe metadata.funnel.
@@ -31,6 +31,7 @@ export interface FunnelDef {
 export const FUNNELS: readonly FunnelDef[] = [
   { param: "v1-fb", prefix: "/fb", productSuffix: " - FB", aweberSuffix: "-fb", posthog: "fb" },
   { param: "v1-fb2", prefix: "/fb2", productSuffix: " - FB2", aweberSuffix: "-fb2", posthog: "fb2" },
+  { param: "v1-gdn", prefix: "/gdn", productSuffix: " - GDN", aweberSuffix: "-gdn", posthog: "gdn" },
 ];
 
 // Resolve the funnel that owns a URL path. The trailing-slash check means
@@ -42,8 +43,8 @@ export function funnelDefForPath(path: string): FunnelDef | null {
   return null;
 }
 
-// Resolve a funnel by its backend param ("v1-fb" / "v1-fb2"). Returns null for
-// any other value (undefined, "", base V1 traffic, unknown strings).
+// Resolve a funnel by its backend param ("v1-fb" / "v1-fb2" / "v1-gdn").
+// Returns null for any other value (undefined, "", base V1 traffic, unknowns).
 export function funnelDefForParam(param: unknown): FunnelDef | null {
   return FUNNELS.find((f) => f.param === param) ?? null;
 }
