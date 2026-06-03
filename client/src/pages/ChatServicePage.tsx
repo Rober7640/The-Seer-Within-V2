@@ -127,6 +127,8 @@ export default function ChatServicePage() {
     null,
   );
   const [personasLoading, setPersonasLoading] = useState(true);
+  // Per-persona 6/6 promo balances → drives the sidebar promo badge. {} for non-promo users.
+  const [promoBalances, setPromoBalances] = useState<Record<string, number>>({});
 
   // Session state
   const [session, setSession] = useState<SessionData | null>(null);
@@ -329,6 +331,16 @@ export default function ChatServicePage() {
     authFetch("/api/credits/welcome-eligible")
       .then(res => res.ok ? res.json() : null)
       .then(data => { if (data) setWelcomeEligible(data.eligible); })
+      .catch(() => {});
+  }, [isAuthenticated]);
+
+  // Fetch per-persona 6/6 promo balances for the sidebar promo badge. {} for non-promo
+  // users — so nothing changes for normal traffic. Best-effort.
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    authFetch("/api/chat-service/promo-balances")
+      .then(res => res.ok ? res.json() : null)
+      .then(data => { if (data?.balances) setPromoBalances(data.balances); })
       .catch(() => {});
   }, [isAuthenticated]);
 
@@ -1636,6 +1648,7 @@ export default function ChatServicePage() {
             toast({ title: `${name} is currently busy`, description: "Please try again later.", variant: "destructive" });
           }}
           isNewUser={(user?.coinBalance ?? 0) + (user?.totalCoinsUsed ?? 0) <= 180}
+          promoBalances={promoBalances}
         />
       )}
 

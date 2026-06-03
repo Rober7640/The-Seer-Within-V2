@@ -9,6 +9,8 @@ import {
   endChatSession,
   getRemainingCoins,
 } from '../lib/creditTracking';
+import { getPromoBalancesByPersona } from '../lib/promoWallet';
+import { claimPromoForUser } from '../lib/promoCampaign';
 import { summarizeSession } from '../lib/memoryManager';
 import { getPersonaPricing } from '../lib/personaPricing';
 import { initSession, sendMessage, generateGreeting } from '../lib/chatEngine';
@@ -427,6 +429,38 @@ router.get('/sessions', requireAuth, async (req: Request, res: Response) => {
   } catch (error) {
     logger.error('List sessions error:', error);
     res.status(500).json({ error: 'Failed to list sessions' });
+  }
+});
+
+// POST /api/chat-service/promo-claim
+// Claim the active promo (6/6) for the logged-in user. Called by the /6-6 lander when a
+// user is authenticated (on load or right after sign-up/login). Grants 6 free min per
+// guide IF the user is a non-buyer, the campaign is active, and they haven't claimed yet.
+// Idempotent and buyer-gated server-side — so the promo is ONLY ever obtained via /6-6,
+// and customers never get it even if they reach the page.
+router.post('/promo-claim', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const result = await claimPromoForUser(req.userId!);
+    res.json(result);
+  } catch (error) {
+    logger.error('Promo claim error:', error);
+    // Non-fatal: never break the lander — just report nothing claimed.
+    res.status(500).json({ claimed: false, reason: 'error' });
+  }
+});
+
+// GET /api/chat-service/promo-balances
+// Per-persona promotional coin balances for the logged-in user, keyed by personaId.
+// Powers the "X:XX free with [guide]" badge on the persona cards / 6-6 page.
+// Returns { balances: { [personaId]: coins } } — empty object for users with no promo.
+router.get('/promo-balances', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const balances = await getPromoBalancesByPersona(req.userId!);
+    res.json({ balances });
+  } catch (error) {
+    logger.error('Promo balances error:', error);
+    // Non-fatal: promo display should never break the directory — return empty.
+    res.json({ balances: {} });
   }
 });
 
