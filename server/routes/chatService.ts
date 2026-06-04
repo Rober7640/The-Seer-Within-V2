@@ -10,7 +10,7 @@ import {
   getRemainingCoins,
 } from '../lib/creditTracking';
 import { getPromoBalancesByPersona } from '../lib/promoWallet';
-import { claimPromoForUser } from '../lib/promoCampaign';
+import { claimPromoForUser, hasClaimedActivePromo } from '../lib/promoCampaign';
 import { summarizeSession } from '../lib/memoryManager';
 import { getPersonaPricing } from '../lib/personaPricing';
 import { initSession, sendMessage, generateGreeting } from '../lib/chatEngine';
@@ -452,15 +452,20 @@ router.post('/promo-claim', requireAuth, async (req: Request, res: Response) => 
 // GET /api/chat-service/promo-balances
 // Per-persona promotional coin balances for the logged-in user, keyed by personaId.
 // Powers the "X:XX free with [guide]" badge on the persona cards / 6-6 page.
-// Returns { balances: { [personaId]: coins } } — empty object for users with no promo.
+// Returns { balances: { [personaId]: coins }, hasPromo } — balances is empty once every
+// grant is spent; hasPromo stays true as long as the user ever claimed the promo, so the
+// UI can stop showing them the default "3 minutes FREE" trial label on used-up guides.
 router.get('/promo-balances', requireAuth, async (req: Request, res: Response) => {
   try {
-    const balances = await getPromoBalancesByPersona(req.userId!);
-    res.json({ balances });
+    const [balances, hasPromo] = await Promise.all([
+      getPromoBalancesByPersona(req.userId!),
+      hasClaimedActivePromo(req.userId!),
+    ]);
+    res.json({ balances, hasPromo });
   } catch (error) {
     logger.error('Promo balances error:', error);
     // Non-fatal: promo display should never break the directory — return empty.
-    res.json({ balances: {} });
+    res.json({ balances: {}, hasPromo: false });
   }
 });
 

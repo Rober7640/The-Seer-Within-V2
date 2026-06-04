@@ -581,6 +581,10 @@ export default function PersonasDirectory({ promoMode = false }: { promoMode?: b
   // Per-persona promo balances fetched separately (auth-gated). Kept in its own state
   // and merged below via useMemo so the two async loads can't race / clobber each other.
   const [promoBalances, setPromoBalances] = useState<Record<string, number>>({});
+  // True once the user has claimed the 6/6 promo (even on guides spent to 0). Folded into
+  // showFreeMins below so a promo participant never sees the default "X mins free" trial
+  // text on a used-up guide — it just shows nothing (the badge handles guides still in credit).
+  const [hasPromo, setHasPromo] = useState(false);
   const personas = useMemo(
     () => rawPersonas.map((p) => ({ ...p, promoCoins: promoBalances[p.id] ?? 0 })),
     [rawPersonas, promoBalances],
@@ -662,9 +666,10 @@ export default function PersonasDirectory({ promoMode = false }: { promoMode?: b
         }
         const res = await authFetch("/api/chat-service/promo-balances");
         if (!res.ok) return;
-        const { balances } = await res.json() as { balances: Record<string, number> };
-        if (cancelled || !balances) return;
-        setPromoBalances(balances);
+        const { balances, hasPromo: claimed } = await res.json() as { balances: Record<string, number>; hasPromo?: boolean };
+        if (cancelled) return;
+        if (balances) setPromoBalances(balances);
+        if (typeof claimed === "boolean") setHasPromo(claimed);
       } catch {
         /* promo display is best-effort */
       }
@@ -959,7 +964,7 @@ export default function PersonasDirectory({ promoMode = false }: { promoMode?: b
                       index={i}
                       onViewDetails={() => openDetail(p.slug)}
                     onStartChat={() => handleStartChat(p.slug, p.displayName, p.avatarUrl ?? null)}
-                    showFreeMins={!isReturningUser}
+                    showFreeMins={!isReturningUser && !hasPromo}
                     promoMode={promoMode}                    />
                   ))}
               </div>
@@ -984,7 +989,7 @@ export default function PersonasDirectory({ promoMode = false }: { promoMode?: b
                         index={i}
                         onViewDetails={() => openDetail(p.slug)}
                         onStartChat={() => handleStartChat(p.slug, p.displayName, p.avatarUrl ?? null)}
-                        showFreeMins={!isReturningUser}
+                        showFreeMins={!isReturningUser && !hasPromo}
                     promoMode={promoMode}                      />
                     ))}
                   </div>
@@ -1003,7 +1008,7 @@ export default function PersonasDirectory({ promoMode = false }: { promoMode?: b
                   persona={featuredPersona}
                   onViewDetails={() => openDetail(featuredPersona.slug)}
                   onStartChat={() => handleStartChat(featuredPersona.slug, featuredPersona.displayName, featuredPersona.avatarUrl ?? null)}
-                  showFreeMins={!isReturningUser}
+                  showFreeMins={!isReturningUser && !hasPromo}
                     promoMode={promoMode}                />
               </Section>
             )}
@@ -1023,7 +1028,7 @@ export default function PersonasDirectory({ promoMode = false }: { promoMode?: b
                     index={i}
                     onViewDetails={() => openDetail(p.slug)}
                     onStartChat={() => handleStartChat(p.slug, p.displayName, p.avatarUrl ?? null)}
-                    showFreeMins={!isReturningUser}
+                    showFreeMins={!isReturningUser && !hasPromo}
                     promoMode={promoMode}                  />
                 ))}
               </div>
@@ -1052,7 +1057,7 @@ export default function PersonasDirectory({ promoMode = false }: { promoMode?: b
                         index={i}
                         onViewDetails={() => openDetail(p.slug)}
                         onStartChat={() => handleStartChat(p.slug, p.displayName, p.avatarUrl ?? null)}
-                        showFreeMins={!isReturningUser}
+                        showFreeMins={!isReturningUser && !hasPromo}
                     promoMode={promoMode}                      />
                     ))}
                 </div>
@@ -1074,7 +1079,7 @@ export default function PersonasDirectory({ promoMode = false }: { promoMode?: b
                     index={i}
                     onViewDetails={() => openDetail(p.slug)}
                     onStartChat={() => handleStartChat(p.slug, p.displayName, p.avatarUrl ?? null)}
-                    showFreeMins={!isReturningUser}
+                    showFreeMins={!isReturningUser && !hasPromo}
                     promoMode={promoMode}                  />
                 ))}
               </div>

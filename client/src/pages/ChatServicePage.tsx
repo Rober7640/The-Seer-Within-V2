@@ -129,6 +129,9 @@ export default function ChatServicePage() {
   const [personasLoading, setPersonasLoading] = useState(true);
   // Per-persona 6/6 promo balances → drives the sidebar promo badge. {} for non-promo users.
   const [promoBalances, setPromoBalances] = useState<Record<string, number>>({});
+  // True once the user has claimed the 6/6 promo (even on guides spent to 0). Suppresses the
+  // "3 minutes FREE" trial label for them so a used-up promo guide shows nothing.
+  const [hasPromo, setHasPromo] = useState(false);
 
   // Session state
   const [session, setSession] = useState<SessionData | null>(null);
@@ -335,14 +338,19 @@ export default function ChatServicePage() {
   }, [isAuthenticated]);
 
   // Fetch per-persona 6/6 promo balances for the sidebar promo badge. {} for non-promo
-  // users — so nothing changes for normal traffic. Best-effort.
+  // users — so nothing changes for normal traffic. Best-effort. Re-runs when a session
+  // ends (the `!!session` dep flips) so a used-up guide's badge drops to its real remaining
+  // instead of showing a stale full 6:00 until the next page reload.
   useEffect(() => {
     if (!isAuthenticated) return;
     authFetch("/api/chat-service/promo-balances")
       .then(res => res.ok ? res.json() : null)
-      .then(data => { if (data?.balances) setPromoBalances(data.balances); })
+      .then(data => {
+        if (data?.balances) setPromoBalances(data.balances);
+        if (typeof data?.hasPromo === "boolean") setHasPromo(data.hasPromo);
+      })
       .catch(() => {});
-  }, [isAuthenticated]);
+  }, [isAuthenticated, !!session]);
 
   // Fetch available personas (wait for auth to finish so we have user.defaultPersonaId)
   useEffect(() => {
@@ -1648,6 +1656,7 @@ export default function ChatServicePage() {
             toast({ title: `${name} is currently busy`, description: "Please try again later.", variant: "destructive" });
           }}
           isNewUser={(user?.coinBalance ?? 0) + (user?.totalCoinsUsed ?? 0) <= 180}
+          hasPromo={hasPromo}
           promoBalances={promoBalances}
         />
       )}

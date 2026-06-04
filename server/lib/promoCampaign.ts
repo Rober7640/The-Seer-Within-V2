@@ -34,6 +34,24 @@ export function isCampaignClaimable(campaign: PromoCampaign, now: Date): boolean
   return true;
 }
 
+/**
+ * True if the user has claimed the active promo at all — even on guides where they've
+ * already spent it to 0. Used by the UI to stop showing promo participants the default
+ * "3 minutes FREE" new-user trial label once their promo is used up (they're not a
+ * new-trial user). Independent of remaining balance and expiry.
+ */
+export async function hasClaimedActivePromo(
+  userId: string,
+  campaign: PromoCampaign = ACTIVE_PROMO_CAMPAIGN,
+): Promise<boolean> {
+  const rows = await db
+    .select({ id: promoGrants.id })
+    .from(promoGrants)
+    .where(and(eq(promoGrants.userId, userId), eq(promoGrants.campaignTag, campaign.tag)))
+    .limit(1);
+  return rows.length > 0;
+}
+
 /** True if the user has ever completed a credit purchase (i.e. a "customer"/buyer). */
 export async function isBuyer(userId: string): Promise<boolean> {
   const rows = await db
