@@ -25,12 +25,17 @@ function escapeHtml(str: string): string {
 // Free-minutes grant shown in verification copy. Kept in sync with the actual
 // coin grant in server/routes/auth.ts (DEFAULT_FREE_COINS / EVELYN_LANDER_FREE_COINS
 // / personas.freeCoins). Mirrors the same eligibility branches:
+//   - 6/6 promo signup (source=promo-6-6): 6 min — the campaign's "6 free minutes with
+//     every guide". These are the promo coins already granted on /6-6 (verifying still
+//     adds the usual trial coins on top, so the email never over-promises). Checked first
+//     so a /6-6 signup on any guide (incl. Aiden) shows 6, not the per-persona default.
 //   - /evelyn lander signup (source=evelyn-lander, persona=evelyn-cross): 5 min
 //   - aiden-powers persona: 10 min
 //   - everyone else: 3 min default
 // If the auth.ts grant logic changes, update this helper too — they must stay
 // in lockstep so the email never over- or under-promises.
-function getFreeMinutesForSignup(persona?: string, source?: string): number {
+export function getFreeMinutesForSignup(persona?: string, source?: string): number {
+  if (source === 'promo-6-6') return 6;
   if (source === 'evelyn-lander' && persona === 'evelyn-cross') return 5;
   if (source === 'soulmate-lander' && persona === 'evelyn-cross') return 5;
   if (persona === 'aiden-powers') return 10;

@@ -746,7 +746,13 @@ export default function PersonasDirectory({ promoMode = false }: { promoMode?: b
     setFormLoading(true);
     try {
       if (authIsSignUp) {
-        const data = await register(authEmail, authPassword, authFirstName);
+        // On /6-6, tag the signup source so the verification email says "6 free minutes"
+        // (matching the campaign) instead of the default 3. Non-promo signups stay untagged.
+        const data = await register(
+          authEmail, authPassword, authFirstName,
+          authPersonaSlug || undefined,
+          promoMode ? { source: "promo-6-6" } : undefined,
+        );
         // On the /6-6 promo, grant immediately on signup: register already issued a token
         // (the user is authenticated), so we skip the verification wall and let them stay
         // on /6-6 — the claim fires and they can use the 6 min now. The verification email
