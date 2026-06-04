@@ -607,6 +607,14 @@ export default function PersonasDirectory({ promoMode = false }: { promoMode?: b
   const [authVerificationSent, setAuthVerificationSent] = useState(false);
   const [authResendEmail, setAuthResendEmail] = useState("");
   const [authResendLoading, setAuthResendLoading] = useState(false);
+  // Passwordless accounts: the login endpoint emails a sign-in link and returns a
+  // NO_PASSWORD error. That's a SUCCESS for the user, so we show a green "check your
+  // email" panel instead of leaking the raw error text in red.
+  const [authMagicLinkSent, setAuthMagicLinkSent] = useState(false);
+  // True when the popup was opened by the nav's generic "Sign in" (no guide chosen) — those
+  // users stay on /6-6 after auth. False when opened from a guide card's "Start chat" — those
+  // go straight into that guide's chat once the promo is claimed (#4).
+  const [authStayOnPromo, setAuthStayOnPromo] = useState(false);
 
   // Queued Start Chat click received while auth was still loading (FRICTION-12)
   const [pendingChatSlug, setPendingChatSlug] = useState<{ slug: string; name: string; avatar: string | null } | null>(null);
@@ -642,6 +650,15 @@ export default function PersonasDirectory({ promoMode = false }: { promoMode?: b
         if (promoMode) {
           await authFetch("/api/chat-service/promo-claim", { method: "POST" }).catch(() => {});
           if (cancelled) return;
+          // If the user got here via a passwordless sign-in link after picking a guide,
+          // forward them into that guide's chat now that the promo is claimed (#5b,
+          // same-device). Cross-device clicks have no stored guide → they stay on /6-6.
+          const pendingPersona = localStorage.getItem("seer-6-6-pending-persona");
+          if (pendingPersona) {
+            localStorage.removeItem("seer-6-6-pending-persona");
+            navigate(`/reading?persona=${pendingPersona}`);
+            return;
+          }
         }
         const res = await authFetch("/api/chat-service/promo-balances");
         if (!res.ok) return;
@@ -668,16 +685,18 @@ export default function PersonasDirectory({ promoMode = false }: { promoMode?: b
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authLoading, pendingChatSlug, user]);
 
-  function openAuthModal(slug: string, displayName: string, avatarUrl: string | null, isSignUp = true) {
+  function openAuthModal(slug: string, displayName: string, avatarUrl: string | null, isSignUp = true, stayOnPromo = false) {
     setAuthPersonaSlug(slug);
     setAuthPersonaName(displayName);
     setAuthPersonaAvatar(avatarUrl);
     setAuthIsSignUp(isSignUp);
+    setAuthStayOnPromo(stayOnPromo);
     setAuthEmail("");
     setAuthPassword("");
     setAuthFirstName("");
     setAuthError(null);
     setAuthVerificationSent(false);
+    setAuthMagicLinkSent(false);
     setShowAuthModal(true);
   }
 
@@ -704,8 +723,10 @@ export default function PersonasDirectory({ promoMode = false }: { promoMode?: b
     }
     if (user) {
       navigate(`/reading?persona=${slug}`);
-    } else if (slug === 'aiden-powers') {
-      // Route to the Aiden quiz funnel instead of generic auth modal
+    } else if (slug === 'aiden-powers' && !promoMode) {
+      // Route to the Aiden quiz funnel instead of generic auth modal — but NOT on the
+      // 6/6 promo lander, where every guide (Aiden included) opens the same account
+      // popup so the promo claim can run.
       navigate('/aiden');
     } else {
       openAuthModal(slug, displayName, avatarUrl);
@@ -733,24 +754,43 @@ export default function PersonasDirectory({ promoMode = false }: { promoMode?: b
           return;
         }
       } else {
-        // In promo mode, pass redirect='/6-6' so a passwordless user's emailed sign-in
-        // link brings them back to /6-6 (where the claim fires), not into a chat.
+        // Passwordless accounts get an emailed sign-in link; redirect back to /6-6 so the
+        // claim runs on return. The chosen guide is remembered in the catch below so a
+        // same-device magic-link click lands in that guide's chat (#5b).
         await login(authEmail, authPassword, promoMode ? "/6-6" : undefined);
       }
       setShowAuthModal(false);
-      // On /6-6, STAY on the lander so the claim effect runs (user is now set) and the
-      // badges appear. Everywhere else, continue into the reading as before.
-      if (promoMode) return;
+      if (promoMode) {
+        // Claim now — before we leave /6-6 — because the on-/6-6 claim effect won't run
+        // once we navigate away. Idempotent server-side, so a re-claim is harmless.
+        await authFetch("/api/chat-service/promo-claim", { method: "POST" }).catch(() => {});
+        // Generic nav "Sign in" (no guide chosen) stays on /6-6; a guide-card "Start chat"
+        // sends the user straight into that guide's chat (#4).
+        if (authStayOnPromo) return;
+        navigate(`/reading?persona=${authPersonaSlug}`);
+        return;
+      }
       const target = `/reading?persona=${authPersonaSlug}`;
       navigate(target);
     } catch (err: any) {
       console.error("[PersonasDirectory] auth error:", err);
       const msg = typeof err?.message === "string" ? err.message : "";
-      setAuthError(
-        msg.includes("401")
-          ? "Invalid email or password"
-          : msg || "Something went wrong",
-      );
+      if (msg.includes("NO_PASSWORD")) {
+        // Passwordless account — the server already emailed the sign-in link.
+        setAuthResendEmail(authEmail);
+        setAuthMagicLinkSent(true);
+        // Remember the chosen guide so a same-device magic-link click lands the user in that
+        // guide's chat after returning to /6-6 (#5b). Skipped for the generic nav sign-in.
+        if (promoMode && !authStayOnPromo && authPersonaSlug) {
+          localStorage.setItem("seer-6-6-pending-persona", authPersonaSlug);
+        }
+      } else {
+        setAuthError(
+          msg.includes("401")
+            ? "Invalid email or password"
+            : msg || "Something went wrong",
+        );
+      }
     } finally {
       setFormLoading(false);
     }
@@ -791,7 +831,7 @@ export default function PersonasDirectory({ promoMode = false }: { promoMode?: b
     function handleOpenAuth() {
       if (user) return; // already signed in — nothing to open
       const p = featuredPersona;
-      openAuthModal(p?.slug ?? "", p?.displayName ?? "your guide", p?.avatarUrl ?? null, false);
+      openAuthModal(p?.slug ?? "", p?.displayName ?? "your guide", p?.avatarUrl ?? null, false, true);
     }
     window.addEventListener("seer:open-auth", handleOpenAuth);
     return () => window.removeEventListener("seer:open-auth", handleOpenAuth);
@@ -1103,9 +1143,9 @@ export default function PersonasDirectory({ promoMode = false }: { promoMode?: b
       <Dialog
         open={showAuthModal}
         onOpenChange={(open) => {
-          // Keep modal open while awaiting email verification so the user
-          // doesn't accidentally lose the "Check Your Email" state (FRICTION-9)
-          if (!open && !authVerificationSent) setShowAuthModal(false);
+          // Keep modal open while awaiting email verification or a passwordless
+          // sign-in link so the user doesn't lose the "Check Your Email" state (FRICTION-9)
+          if (!open && !authVerificationSent && !authMagicLinkSent) setShowAuthModal(false);
         }}
       >
         <DialogContent className="max-w-sm bg-[#0c0c24] border-white/[0.06] text-white !rounded-2xl">
@@ -1137,6 +1177,27 @@ export default function PersonasDirectory({ promoMode = false }: { promoMode?: b
                 Back to sign in
               </button>
             </div>
+          ) : authMagicLinkSent ? (
+            /* ── Passwordless sign-in link sent (SUCCESS, not an error) ── */
+            <div className="flex flex-col items-center gap-4 py-2 text-center">
+              <div className="w-12 h-12 rounded-full bg-emerald-500/15 border border-emerald-400/25 flex items-center justify-center">
+                <Mail className="w-6 h-6 text-emerald-300" />
+              </div>
+              <div>
+                <h2 className="font-serif text-xl text-white mb-2">Check Your Email</h2>
+                <p className="text-[14px] text-white/55 leading-relaxed">
+                  We sent a sign-in link to{" "}
+                  <strong className="text-white/80">{authResendEmail}</strong>.
+                  Click it to continue to your free minutes.
+                </p>
+              </div>
+              <button
+                onClick={() => { setAuthMagicLinkSent(false); }}
+                className="text-[13px] text-white/35 hover:text-white/55 transition-colors"
+              >
+                Back to sign in
+              </button>
+            </div>
           ) : (
             <>
               <DialogHeader>
@@ -1162,7 +1223,7 @@ export default function PersonasDirectory({ promoMode = false }: { promoMode?: b
                 <div className="flex items-center gap-2.5 bg-purple-600/15 border border-purple-500/15 rounded-xl px-3.5 py-2.5">
                   <Gift className="w-4 h-4 text-amber-400 shrink-0" />
                   <span className="text-[13px] text-white/75">
-                    You get <strong className="text-white font-semibold">3 FREE minutes</strong> to get started
+                    You get <strong className="text-white font-semibold">{promoMode ? PROMO_OFFER_MINUTES : 3} FREE minutes</strong> to get started
                   </span>
                 </div>
               )}
