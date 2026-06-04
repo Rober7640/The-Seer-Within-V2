@@ -858,8 +858,12 @@ router.post('/login', authLimiter, async (req: Request, res: Response) => {
           // Optional safe internal redirect (e.g. '/6-6') so the sign-in link returns the
           // user to where they started — needed so the 6/6 promo claim fires on /6-6.
           // Restricted to internal paths to prevent open-redirect.
+          // Allow an internal path with an optional ?persona=<slug> so the 6/6 sign-in link
+          // can land on /6-6 (where the promo claims) AND remember which guide the user
+          // picked — so it forwards into that guide's chat even on a different device/browser
+          // where localStorage isn't available. Kept tight to prevent open-redirect.
           const rawRedirect = typeof req.body?.redirect === 'string' ? req.body.redirect : '';
-          const safeRedirect = /^\/[A-Za-z0-9\-_/]*$/.test(rawRedirect) ? rawRedirect : '';
+          const safeRedirect = /^\/[A-Za-z0-9\-_/]*(\?persona=[A-Za-z0-9\-]+)?$/.test(rawRedirect) ? rawRedirect : '';
           const magicUrl = `${process.env.BASE_URL || 'http://localhost:5000'}/magic-auth?t=${magicToken}`
             + (safeRedirect ? `&redirect=${encodeURIComponent(safeRedirect)}` : '');
 

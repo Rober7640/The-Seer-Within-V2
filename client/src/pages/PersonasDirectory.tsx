@@ -655,9 +655,11 @@ export default function PersonasDirectory({ promoMode = false }: { promoMode?: b
           await authFetch("/api/chat-service/promo-claim", { method: "POST" }).catch(() => {});
           if (cancelled) return;
           // If the user got here via a passwordless sign-in link after picking a guide,
-          // forward them into that guide's chat now that the promo is claimed (#5b,
-          // same-device). Cross-device clicks have no stored guide → they stay on /6-6.
-          const pendingPersona = localStorage.getItem("seer-6-6-pending-persona");
+          // forward them into that guide's chat now that the promo is claimed (#5b). The
+          // guide travels in the link as ?persona=<slug> (works on any device); we fall back
+          // to the localStorage hint for same-browser in-page flows.
+          const urlPersona = new URLSearchParams(window.location.search).get("persona");
+          const pendingPersona = urlPersona || localStorage.getItem("seer-6-6-pending-persona");
           if (pendingPersona) {
             localStorage.removeItem("seer-6-6-pending-persona");
             navigate(`/reading?persona=${pendingPersona}`);
@@ -760,9 +762,13 @@ export default function PersonasDirectory({ promoMode = false }: { promoMode?: b
         }
       } else {
         // Passwordless accounts get an emailed sign-in link; redirect back to /6-6 so the
-        // claim runs on return. The chosen guide is remembered in the catch below so a
-        // same-device magic-link click lands in that guide's chat (#5b).
-        await login(authEmail, authPassword, promoMode ? "/6-6" : undefined);
+        // claim runs on return. For a guide-card sign-in, carry ?persona=<slug> in the
+        // redirect so the link forwards into that guide's chat even on a different
+        // device/browser (no localStorage there). The nav's generic sign-in stays on /6-6.
+        const promoRedirect = authStayOnPromo || !authPersonaSlug
+          ? "/6-6"
+          : `/6-6?persona=${authPersonaSlug}`;
+        await login(authEmail, authPassword, promoMode ? promoRedirect : undefined);
       }
       setShowAuthModal(false);
       if (promoMode) {
