@@ -668,11 +668,11 @@ export default function PersonasDirectory({ promoMode = false }: { promoMode?: b
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authLoading, pendingChatSlug, user]);
 
-  function openAuthModal(slug: string, displayName: string, avatarUrl: string | null) {
+  function openAuthModal(slug: string, displayName: string, avatarUrl: string | null, isSignUp = true) {
     setAuthPersonaSlug(slug);
     setAuthPersonaName(displayName);
     setAuthPersonaAvatar(avatarUrl);
-    setAuthIsSignUp(true);
+    setAuthIsSignUp(isSignUp);
     setAuthEmail("");
     setAuthPassword("");
     setAuthFirstName("");
@@ -780,6 +780,22 @@ export default function PersonasDirectory({ promoMode = false }: { promoMode?: b
     () => personas.find((p) => p.isFeatured) || personas.find((p) => p.isDefault) || personas[0] || null,
     [personas],
   );
+
+  // On /6-6, the nav's top-right "Sign in" opens THIS page's auth popup (instead of
+  // navigating away to /login) so the user stays on /6-6 and the promo claim can fire
+  // right after auth. Defaults to login mode (the button says "Sign in"); the modal still
+  // has a "create an account" toggle for brand-new visitors. Guarded to promoMode so the
+  // nav's normal /login link is untouched everywhere else.
+  useEffect(() => {
+    if (!promoMode) return;
+    function handleOpenAuth() {
+      if (user) return; // already signed in — nothing to open
+      const p = featuredPersona;
+      openAuthModal(p?.slug ?? "", p?.displayName ?? "your guide", p?.avatarUrl ?? null, false);
+    }
+    window.addEventListener("seer:open-auth", handleOpenAuth);
+    return () => window.removeEventListener("seer:open-auth", handleOpenAuth);
+  }, [promoMode, user, featuredPersona]);
 
   const categorySections = useMemo(() => {
     const sections: Record<string, PersonaListing[]> = {};

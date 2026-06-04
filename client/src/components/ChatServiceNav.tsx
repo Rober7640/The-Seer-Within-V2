@@ -64,16 +64,31 @@ export function ChatServiceNav({ coinBalanceOverride }: { coinBalanceOverride?: 
                 </span>
               </button>
             </Link>
-            <Link href="/login">
+            {location === "/6-6" ? (
+              // On the 6/6 promo lander, open the in-page auth popup instead of leaving
+              // for /login — keeps the user on /6-6 so the promo claim fires after auth.
+              // (PersonasDirectory listens for this event in promoMode.)
               <Button
                 size="sm"
                 variant="outline"
+                onClick={() => window.dispatchEvent(new CustomEvent("seer:open-auth"))}
                 className="border-white/20 text-white/80 bg-transparent hover:bg-white/5 text-sm gap-1.5"
               >
                 <LogIn className="w-4 h-4" />
                 Sign In
               </Button>
-            </Link>
+            ) : (
+              <Link href="/login">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="border-white/20 text-white/80 bg-transparent hover:bg-white/5 text-sm gap-1.5"
+                >
+                  <LogIn className="w-4 h-4" />
+                  Sign In
+                </Button>
+              </Link>
+            )}
           </div>
         </div>
       </nav>
