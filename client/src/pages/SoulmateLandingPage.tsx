@@ -72,7 +72,7 @@ const FAQ_ITEMS = [
 
 const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 const DAYS   = Array.from({ length: 31 }, (_, i) => String(i + 1));
-const YEARS  = Array.from({ length: 51 }, (_, i) => String(2010 - i));
+const YEARS  = Array.from({ length: 61 }, (_, i) => String(2010 - i));
 
 const ETHNICITIES = [
   { value: 'SA',          label: 'South Asian (e.g., Indian, Pakistani, Sri Lankan)' },
