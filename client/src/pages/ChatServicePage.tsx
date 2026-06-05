@@ -1086,6 +1086,126 @@ export default function ChatServicePage() {
     lastAutoFetchedPersonaId.current = null; // allow auto-fetch to re-trigger for same persona
   }, []);
 
+  // Start a fresh billing session that continues the just-ended reading, carrying the
+  // last 4 real messages as context. Shared by "Continue Reading" (existing balance/promo)
+  // and resumeAfterPurchase (after a top-up). Returns true if a session actually started.
+  const startContinuationSession = useCallback(async (): Promise<boolean> => {
+    if (!selectedPersonaId) return false;
+
+    const realMessages = messages.filter(
+      (m) => m.content && !m.isReadingEndedDivider && !m.isCreditsPurchasedDivider
+    );
+    const last4 = realMessages.slice(-4).map((m) => ({
+      role: m.role,
+      content: m.content,
+    }));
+
+    try {
+      const startRes = await authFetch("/api/chat-service/session/start", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          personaId: selectedPersonaId,
+          continuationMessages: last4,
+        }),
+      });
+
+      if (!startRes.ok) return false;
+
+      const startData = await startRes.json();
+      const newSessionId = startData.sessionId;
+      setSession({
+        id: newSessionId,
+        personaId: startData.personaId,
+        status: "active",
+        startedAt: new Date().toISOString(),
+        durationSeconds: 0,
+        coinsCharged: 0,
+      });
+      setElapsedSeconds(0);
+      setShowRefillBanner(false);
+      setRefillBannerDismissed(false);
+      outOfCreditsFiredRef.current = false;
+      sessionActiveRef.current = true;
+      skipAuthCoinSyncRef.current = true;
+      sessionStartTimeRef.current = Date.now();
+      lastUserMessageAt.current = Date.now();
+      setReadingEnded(false);
+      if (startData.remainingCoins !== undefined) {
+        setCoinBalance(startData.remainingCoins);
+        setInitialCoinBalance(startData.remainingCoins);
+      }
+      if (startData.pricing) {
+        setSessionPricing(startData.pricing);
+      }
+
+      // If the last message was from the user (unanswered due to 402),
+      // auto-send it to the AI so they get a response without retyping
+      const lastReal = realMessages[realMessages.length - 1];
+      if (lastReal && lastReal.role === "user") {
+        setIsTyping(true);
+        try {
+          const msgRes = await authFetch(
+            `/api/chat-service/session/${newSessionId}/message`,
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ content: lastReal.content }),
+            },
+          );
+          if (msgRes.ok) {
+            const msgData = await msgRes.json();
+            setMessages((prev) => [
+              ...prev,
+              {
+                id: msgData.assistantMessageId || `assistant-${Date.now()}`,
+                role: "assistant" as const,
+                content: msgData.message,
+                sentAt: new Date().toISOString(),
+                tarotDraw: msgData.tarotDraw || false,
+                chartData: msgData.chartData ?? undefined,
+              },
+            ]);
+            if (msgData.remainingCoins !== undefined) {
+              setCoinBalance(msgData.remainingCoins);
+            }
+          }
+        } catch (err) {
+          console.error("Failed to auto-send unanswered message:", err);
+        } finally {
+          setIsTyping(false);
+        }
+      }
+
+      return true;
+    } catch (err) {
+      console.error("Failed to start continuation session:", err);
+      return false;
+    }
+  }, [selectedPersonaId, messages]);
+
+  // "Continue Reading" after a reading ended (manual End Reading OR idle timeout): if the
+  // user still has spendable coins for this guide — real balance + this guide's 6/6 promo
+  // pot — resume the chat directly instead of forcing the buy-credits popup. Only when
+  // there's truly nothing left do we open the top-up modal. Fixes promo users being
+  // paywalled while their free minutes are still available.
+  const continueReading = useCallback(async () => {
+    const promoForPersona = promoBalances[selectedPersonaId ?? ""] ?? 0;
+    if (coinBalance + promoForPersona <= 0) {
+      setShowBuyCredits(true);
+      return;
+    }
+
+    const resumed = await startContinuationSession();
+    if (resumed) {
+      // Seamlessly drop the "Reading ended" divider now that we've continued.
+      setMessages((prev) => prev.filter((m) => !m.isReadingEndedDivider));
+    } else {
+      // Couldn't resume (e.g. promo just hit zero server-side) — fall back to top-up.
+      setShowBuyCredits(true);
+    }
+  }, [coinBalance, promoBalances, selectedPersonaId, startContinuationSession]);
+
   // Shared resume logic after a credit purchase (used by BuyCreditsModal & TeaserCreditModal)
   const resumeAfterPurchase = useCallback(async (newBalance: number) => {
     setCoinBalance(newBalance);
@@ -1105,97 +1225,9 @@ export default function ChatServicePage() {
       },
     ]);
 
-    // Auto-start a new session with the last 4 real messages for context
-    if (selectedPersonaId) {
-      const realMessages = messages.filter(
-        (m) => m.content && !m.isReadingEndedDivider && !m.isCreditsPurchasedDivider
-      );
-      const last4 = realMessages.slice(-4).map((m) => ({
-        role: m.role,
-        content: m.content,
-      }));
-
-      try {
-        const startRes = await authFetch("/api/chat-service/session/start", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            personaId: selectedPersonaId,
-            continuationMessages: last4,
-          }),
-        });
-
-        if (startRes.ok) {
-          const startData = await startRes.json();
-          const newSessionId = startData.sessionId;
-          setSession({
-            id: newSessionId,
-            personaId: startData.personaId,
-            status: "active",
-            startedAt: new Date().toISOString(),
-            durationSeconds: 0,
-            coinsCharged: 0,
-          });
-          setElapsedSeconds(0);
-          setShowRefillBanner(false);
-          setRefillBannerDismissed(false);
-          outOfCreditsFiredRef.current = false;
-          sessionActiveRef.current = true;
-          skipAuthCoinSyncRef.current = true;
-          sessionStartTimeRef.current = Date.now();
-          lastUserMessageAt.current = Date.now();
-          setReadingEnded(false);
-          if (startData.remainingCoins !== undefined) {
-            setCoinBalance(startData.remainingCoins);
-            setInitialCoinBalance(startData.remainingCoins);
-          }
-          if (startData.pricing) {
-            setSessionPricing(startData.pricing);
-          }
-
-          // If the last message was from the user (unanswered due to 402),
-          // auto-send it to the AI so they get a response without retyping
-          const lastReal = realMessages[realMessages.length - 1];
-          if (lastReal && lastReal.role === "user") {
-            setIsTyping(true);
-            try {
-              const msgRes = await authFetch(
-                `/api/chat-service/session/${newSessionId}/message`,
-                {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({ content: lastReal.content }),
-                },
-              );
-              if (msgRes.ok) {
-                const msgData = await msgRes.json();
-                setMessages((prev) => [
-                  ...prev,
-                  {
-                    id: msgData.assistantMessageId || `assistant-${Date.now()}`,
-                    role: "assistant" as const,
-                    content: msgData.message,
-                    sentAt: new Date().toISOString(),
-                    tarotDraw: msgData.tarotDraw || false,
-                    chartData: msgData.chartData ?? undefined,
-                  },
-                ]);
-                if (msgData.remainingCoins !== undefined) {
-                  setCoinBalance(msgData.remainingCoins);
-                }
-              }
-            } catch (err) {
-              console.error("Failed to auto-send unanswered message:", err);
-            } finally {
-              setIsTyping(false);
-            }
-          }
-        }
-      } catch (err) {
-        console.error("Failed to auto-start session after credit purchase:", err);
-      }
-    }
-  }, [selectedPersonaId, messages, toast]);
+    // Auto-start a new session continuing the conversation with context
+    await startContinuationSession();
+  }, [startContinuationSession, toast]);
 
   // Switch to a different guide: always fetch greeting immediately without any intermediate screen.
   // If there was an active billing session >= 3 min, show end-reading confirmation first.
@@ -2076,7 +2108,7 @@ export default function ChatServicePage() {
                       {readingEnded && !session && (
                         <div className="flex flex-col gap-2 w-full max-w-xs">
                           <button
-                            onClick={() => setShowBuyCredits(true)}
+                            onClick={continueReading}
                             className="w-full py-3 bg-purple-600 text-white font-semibold rounded-xl hover:bg-purple-700 transition-colors text-sm shadow-sm"
                           >
                             Continue Reading
