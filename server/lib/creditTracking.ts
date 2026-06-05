@@ -2,7 +2,7 @@ import { db, pool } from './db';
 import { users, chatSessions, personas } from '@shared/schema';
 import { eq, sql, and, isNull, lt, or } from 'drizzle-orm';
 import { getPersonaPricing } from './personaPricing';
-import { spendCoins, refundCoins, getPromoBalance } from './promoWallet';
+import { spendCoins, refundCoins, getPromoBalance, reconcilePromoFirst } from './promoWallet';
 import { sendSessionTimeoutEmail } from './sessionTimeoutEmail';
 import { COINS_PER_MINUTE, BILLING_INTERVAL_SECONDS, secondsToCoins } from '@shared/types';
 import logger from './logger';
@@ -362,6 +362,19 @@ export async function endChatSession(sessionId: string): Promise<void> {
       });
     }
 
+    // Promo-first self-heal: if this session charged REAL coins while the persona still
+    // has unspent promo, move that amount back (real → promo). Guarantees promo is spent
+    // before the real balance even if an upstream race billed real early. No-op (and so
+    // zero effect on normal/non-promo billing) when no active promo grant remains.
+    const realChargedThisSession = actualSessionCharged - actualPromoCharged;
+    const movedToPromo = await reconcilePromoFirst(tx, row.user_id, precheck[0].personaId, realChargedThisSession);
+    if (movedToPromo > 0) {
+      actualPromoCharged += movedToPromo;
+      logger.info('endChatSession: promo-first self-heal moved real→promo', {
+        sessionId, userId: row.user_id, movedToPromo, realChargedBefore: realChargedThisSession,
+      });
+    }
+
     logger.info('endChatSession: final billing', {
       sessionId,
       userId: row.user_id,
@@ -571,7 +584,16 @@ export async function cleanupInactiveSessions(): Promise<number> {
           const spend = await spendCoins(tx, lockedRow.user_id, row.persona_id, remainingToDeduct);
 
           const actualSessionCharged = Number(lockedRow.coins_charged) + spend.total;
-          const actualPromoCharged = Number(lockedRow.promo_coins_charged) + spend.fromPromo;
+          let actualPromoCharged = Number(lockedRow.promo_coins_charged) + spend.fromPromo;
+
+          // Promo-first self-heal (same as endChatSession): if real was charged while the
+          // persona still has promo, move it back. No-op for non-promo users.
+          const movedToPromo = await reconcilePromoFirst(tx, lockedRow.user_id, row.persona_id, actualSessionCharged - actualPromoCharged);
+          if (movedToPromo > 0) {
+            actualPromoCharged += movedToPromo;
+            logger.info('cleanup: promo-first self-heal moved real→promo', { sessionId: row.id, userId: lockedRow.user_id, movedToPromo });
+          }
+
           await tx.execute(
             sql`UPDATE chat_sessions SET
                   status = 'ended',
