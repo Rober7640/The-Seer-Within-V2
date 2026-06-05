@@ -252,3 +252,66 @@ export async function refundCoins(
 
   return split;
 }
+
+/**
+ * Self-heal "promo-first" at session finalization.
+ *
+ * If a session ended up charging REAL coins (`realCharged`) while the persona STILL has
+ * unspent promo, this moves that over-charge from the real balance back into the promo
+ * pot: it debits the active promo grant and refunds the same amount to `coin_balance`.
+ * The TOTAL charged for the session is unchanged — this is pure re-bucketing of the
+ * user's own coins so the (June-6-expiring) promo is always consumed before real coins,
+ * even if an upstream race billed real early.
+ *
+ * SCOPED + SAFE: a no-op (`returns 0`) whenever there is no active promo grant with
+ * coins remaining for this persona — i.e. it never touches a normal/non-promo user's
+ * billing. Locks promo_grants then users (same order as spendCoins) to avoid deadlocks.
+ * `total_coins_used` is decremented by the moved amount (it only ever counts real spend),
+ * mirroring how spendCoins increments it for the real portion.
+ *
+ * Returns the number of coins moved real→promo (0 if nothing to do).
+ */
+export async function reconcilePromoFirst(
+  tx: SqlExecutor,
+  userId: string,
+  personaId: string,
+  realCharged: number,
+): Promise<number> {
+  if (!(realCharged > 0)) return 0;
+
+  // Same active-grant selection as spendCoins (sooner-expiring first).
+  const grantRes = await tx.execute(
+    sql`SELECT id, coins_remaining
+        FROM promo_grants
+        WHERE user_id = ${userId}
+          AND persona_id = ${personaId}
+          AND coins_remaining > 0
+          AND expires_at > (NOW() AT TIME ZONE 'UTC')
+        ORDER BY expires_at ASC
+        LIMIT 1
+        FOR UPDATE`
+  );
+  const grant = grantRes.rows[0] as { id: string; coins_remaining: number } | undefined;
+  if (!grant) return 0; // no promo to move into → non-promo billing untouched
+
+  const move = Math.min(realCharged, Math.max(0, Number(grant.coins_remaining)));
+  if (move <= 0) return 0;
+
+  // Debit promo, refund the same amount to the real balance.
+  await tx.execute(
+    sql`UPDATE promo_grants SET
+          coins_remaining = coins_remaining - ${move},
+          coins_spent = coins_spent + ${move},
+          updated_at = (NOW() AT TIME ZONE 'UTC')
+        WHERE id = ${grant.id}`
+  );
+  await tx.execute(
+    sql`UPDATE users SET
+          coin_balance = coin_balance + ${move},
+          total_coins_used = GREATEST(0, total_coins_used - ${move}),
+          updated_at = (NOW() AT TIME ZONE 'UTC')
+        WHERE id = ${userId}`
+  );
+
+  return move;
+}
