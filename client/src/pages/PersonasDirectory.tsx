@@ -894,7 +894,7 @@ export default function PersonasDirectory({ promoMode = false }: { promoMode?: b
           className="animate-mp-fade-up font-serif text-[36px] md:text-[44px] text-white text-center mb-2 tracking-tight leading-[1.1]"
           style={{ animationDelay: "0ms" }}
         >
-          {promoMode ? "Your free minutes are waiting" : "Choose your guide"}
+          {promoMode ? "The 6/6 Portal is now open" : "Choose your guide"}
         </h1>
         <p
           className="animate-mp-fade-up text-center text-[15px] text-white/40 mb-8 italic"
