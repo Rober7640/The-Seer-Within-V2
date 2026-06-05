@@ -15,6 +15,7 @@ import { loadUserContext, summarizeSession } from './memoryManager';
 import { loadQuizIntake, buildQuizPromptSection } from './quizMemory';
 import { loadCrossPersonaMemories, formatTransferContext } from './memoryTransfer';
 import { startChatSession, endChatSession, checkpointSession } from './creditTracking';
+import { getPromoBalance, getSpendableCoins } from './promoWallet';
 import { checkAndLogSafety } from './universalSafety';
 import {
   loadPersonaIntentConfig,
@@ -948,7 +949,10 @@ export async function initSession(config: {
     'SELECT coin_balance FROM users WHERE id = $1', [config.userId]
   );
   const initPoolBalance = Number(initBalRows[0]?.coin_balance ?? 0);
-  const initEffectiveBalance = Math.max(user[0].coinBalance, initPoolBalance);
+  const initRealBalance = Math.max(user[0].coinBalance, initPoolBalance);
+  // Promo coins for THIS persona also grant access, even at zero real balance.
+  const initPromoBalance = await getPromoBalance(config.userId, config.personaId);
+  const initEffectiveBalance = initRealBalance + initPromoBalance;
 
   if (initEffectiveBalance <= 0) throw new Error('OUT_OF_CREDITS');
 
@@ -1060,11 +1064,15 @@ export async function initSession(config: {
   // Re-read balance after startChatSession (which may have ended old sessions and deducted coins)
   const freshUser = await db.select({ coinBalance: users.coinBalance }).from(users).where(eq(users.id, config.userId)).limit(1);
 
+  // In-chat "remaining" = real balance + promo for this persona (session spends promo first),
+  // so a promo user with 0 real coins still sees their free minutes counting down.
+  const initSpendable = await getSpendableCoins(config.userId, config.personaId, freshUser[0]?.coinBalance ?? 0);
+
   return {
     sessionId,
     personaName: personaConfig.displayName,
     greeting,
-    creditsRemaining: freshUser[0]?.coinBalance ?? 0,
+    creditsRemaining: initSpendable,
     isContinuation,
   };
 }
@@ -1130,12 +1138,13 @@ export async function sendMessage(
       .from(users)
       .where(eq(users.id, userId))
       .limit(1);
+    const spendableBlocked = await getSpendableCoins(userId, session[0].personaId, blockedUser[0]?.coinBalance || 0);
 
     return {
       sessionId,
       message: safetyResult.response,
       topic: null,
-      creditsRemaining: blockedUser[0]?.coinBalance || 0,
+      creditsRemaining: spendableBlocked,
       sessionActive: true,
       blocked: true,
       crisisDisclaimer: safetyResult.crisisDisclaimer,
@@ -1198,11 +1207,16 @@ export async function sendMessage(
     });
   }
 
-  if (!user[0] || effectiveBalance <= 0) {
-    // Balance is genuinely 0 across all reads — user is out of credits
+  // Promo coins for THIS persona keep the session alive even when the real balance is 0.
+  // The deduction path (checkpoint/end) spends promo first, so this stays consistent.
+  const promoBalance = await getPromoBalance(userId, session[0].personaId);
+  const playableBalance = effectiveBalance + promoBalance;
+
+  if (!user[0] || playableBalance <= 0) {
+    // Balance is genuinely 0 across all reads AND no promo coins — user is out of credits
     logger.error('OUT_OF_CREDITS_CONFIRMED', {
       sessionId, userId, pid: process.pid,
-      poolBalance, drizzleBalance, retryBalance, effectiveBalance,
+      poolBalance, drizzleBalance, retryBalance, effectiveBalance, promoBalance,
     });
     await endChatSession(sessionId);
     throw new Error('OUT_OF_CREDITS');
@@ -1338,12 +1352,13 @@ export async function sendMessage(
         .from(users)
         .where(eq(users.id, userId))
         .limit(1);
+      const spendableBD = await getSpendableCoins(userId, session[0].personaId, updatedUserBD[0]?.coinBalance || 0);
 
       return {
         sessionId,
         message: responseMessage,
         topic: null,
-        creditsRemaining: updatedUserBD[0]?.coinBalance || 0,
+        creditsRemaining: spendableBD,
         sessionActive: true,
         chartData: responseChartData,
         birthChartJustCalculated,
@@ -1580,12 +1595,13 @@ export async function sendMessage(
       .from(users)
       .where(eq(users.id, userId))
       .limit(1);
+    const spendableFinal = await getSpendableCoins(userId, session[0].personaId, updatedUser[0]?.coinBalance || 0);
 
     return {
       sessionId,
       message: finalMessage,
       topic,
-      creditsRemaining: updatedUser[0]?.coinBalance || 0,
+      creditsRemaining: spendableFinal,
       sessionActive: true,
       tarotDraw,
       chartData,
@@ -1638,11 +1654,12 @@ export async function sendMessage(
       content: fallback,
     }).returning({ id: chatMessages.id });
 
+    const spendableFallback = await getSpendableCoins(userId, session[0].personaId, user[0].coinBalance);
     return {
       sessionId,
       message: fallback,
       topic: null,
-      creditsRemaining: user[0].coinBalance,
+      creditsRemaining: spendableFallback,
       sessionActive: !isAllKeysExhausted,
       userMessageId: insertedUserMsg?.id,
       assistantMessageId: fallbackMsg?.id,
@@ -1675,9 +1692,15 @@ export async function closeSession(
     .where(eq(users.id, userId))
     .limit(1);
 
+  // Include remaining promo for the session's persona so the post-session display matches
+  // what the user can still spend with that guide.
+  const spendableClose = session[0]?.personaId
+    ? await getSpendableCoins(userId, session[0].personaId, user[0]?.coinBalance || 0)
+    : (user[0]?.coinBalance || 0);
+
   return {
     coinsUsed: session[0]?.coinsCharged || 0,
-    creditsRemaining: user[0]?.coinBalance || 0,
+    creditsRemaining: spendableClose,
   };
 }
 

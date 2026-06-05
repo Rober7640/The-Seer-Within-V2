@@ -2,6 +2,7 @@ import { db, pool } from './db';
 import { users, chatSessions, personas } from '@shared/schema';
 import { eq, sql, and, isNull, lt, or } from 'drizzle-orm';
 import { getPersonaPricing } from './personaPricing';
+import { spendCoins, refundCoins, getPromoBalance } from './promoWallet';
 import { sendSessionTimeoutEmail } from './sessionTimeoutEmail';
 import { COINS_PER_MINUTE, BILLING_INTERVAL_SECONDS, secondsToCoins } from '@shared/types';
 import logger from './logger';
@@ -53,13 +54,16 @@ export async function startChatSession(userId: string, personaId: string): Promi
     'SELECT coin_balance FROM users WHERE id = $1', [userId]
   );
   const startPoolBalance = Number(startBalRows[0]?.coin_balance ?? 0);
-  const startEffBalance = Math.max(user[0]?.coinBalance ?? 0, startPoolBalance);
+  const startRealBalance = Math.max(user[0]?.coinBalance ?? 0, startPoolBalance);
+  // Promo coins for THIS persona also let the user in, even with a zero real balance.
+  const startPromoBalance = await getPromoBalance(userId, personaId);
+  const startEffBalance = startRealBalance + startPromoBalance;
 
   if (!user[0] || startEffBalance <= 0) {
     throw new Error('OUT_OF_CREDITS');
   }
 
-  logger.info('startChatSession: starting', { userId, personaId, drizzleBalance: user[0].coinBalance, poolBalance: startPoolBalance });
+  logger.info('startChatSession: starting', { userId, personaId, drizzleBalance: user[0].coinBalance, poolBalance: startPoolBalance, promoBalance: startPromoBalance });
 
   // End ALL active sessions for this user (any persona). This prevents
   // orphaned sessions from accumulating unbounded billing time.
@@ -138,7 +142,7 @@ export async function checkpointSession(sessionId: string): Promise<void> {
     // Compute both total elapsed and idle time so we can cap billing at last_message_at
     // when the user has gone idle beyond the timeout threshold.
     const locked = await tx.execute(
-      sql`SELECT id, user_id, coins_charged,
+      sql`SELECT id, user_id, coins_charged, promo_coins_charged,
                  EXTRACT(EPOCH FROM (NOW() - (started_at AT TIME ZONE 'UTC')))::int as total_elapsed,
                  CASE WHEN last_message_at IS NOT NULL
                       THEN EXTRACT(EPOCH FROM (NOW() - (last_message_at AT TIME ZONE 'UTC')))::int
@@ -153,7 +157,7 @@ export async function checkpointSession(sessionId: string): Promise<void> {
     );
     if (locked.rows.length === 0) return;
     const row = locked.rows[0] as {
-      id: string; user_id: string; coins_charged: number;
+      id: string; user_id: string; coins_charged: number; promo_coins_charged: number;
       total_elapsed: number; idle_seconds: number; active_seconds: number;
     };
 
@@ -183,6 +187,7 @@ export async function checkpointSession(sessionId: string): Promise<void> {
     });
 
     let actualDeduction = 0;
+    let promoDeducted = 0;
     if (coinsToDeductNow > 0) {
       // Safety guard: if a single deduction exceeds MAX_COINS_PER_DEDUCTION, something is
       // wrong (timezone drift, orphan session). Log an anomaly and cap the deduction.
@@ -198,39 +203,29 @@ export async function checkpointSession(sessionId: string): Promise<void> {
         safeDeduction = MAX_COINS_PER_DEDUCTION;
       }
 
-      // Read and lock user balance — FOR UPDATE prevents concurrent deductions
-      const beforeBalance = await tx.execute(
-        sql`SELECT coin_balance FROM users WHERE id = ${row.user_id} FOR UPDATE`
-      );
-      const balanceBefore = Number((beforeBalance.rows[0] as any)?.coin_balance ?? 0);
-
-      // Cap deduction at user's actual balance — never charge more than they have
-      actualDeduction = Math.min(safeDeduction, balanceBefore);
-
-      if (actualDeduction > 0) {
-        await tx.execute(
-          sql`UPDATE users SET
-                coin_balance = coin_balance - ${actualDeduction},
-                total_coins_used = total_coins_used + ${actualDeduction},
-                updated_at = (NOW() AT TIME ZONE 'UTC')
-              WHERE id = ${row.user_id}`
-        );
-      }
+      // Spend promo coins (this persona) FIRST, then the real balance. spendCoins
+      // locks the promo grant and the user row (FOR UPDATE) and never deducts more
+      // than is actually available across both pots.
+      const spend = await spendCoins(tx, row.user_id, precheck[0].personaId, safeDeduction);
+      actualDeduction = spend.total;
+      promoDeducted = spend.fromPromo;
 
       logger.info('checkpointSession: deducted coins', {
         sessionId,
         userId: row.user_id,
-        balanceBefore,
         requested: safeDeduction,
         actualDeduction,
-        cappedByBalance: safeDeduction > balanceBefore,
+        fromPromo: spend.fromPromo,
+        fromReal: spend.fromReal,
+        cappedByBalance: safeDeduction > actualDeduction,
       });
     }
 
     // Track the ACTUAL amount deducted (not the theoretical target) so future
     // checkpoints correctly compute the delta. This prevents over-counting when
-    // deduction was capped by MAX_COINS_PER_DEDUCTION or user balance.
+    // deduction was capped by MAX_COINS_PER_DEDUCTION or available coins.
     const actualTotalCharged = Number(row.coins_charged) + actualDeduction;
+    const actualPromoCharged = Number(row.promo_coins_charged) + promoDeducted;
 
     // Use raw SQL (NOT Drizzle ORM) to bypass potential ORM serialization bugs.
     // Drizzle's .set() was suspected of writing wrong values for integer columns
@@ -239,6 +234,7 @@ export async function checkpointSession(sessionId: string): Promise<void> {
       sql`UPDATE chat_sessions SET
             duration_seconds = ${accumulatedSeconds},
             coins_charged = ${actualTotalCharged},
+            promo_coins_charged = ${actualPromoCharged},
             last_heartbeat_at = (NOW() AT TIME ZONE 'UTC'),
             updated_at = (NOW() AT TIME ZONE 'UTC')
           WHERE id = ${sessionId}`
@@ -303,7 +299,7 @@ export async function endChatSession(sessionId: string): Promise<void> {
     // (col AT TIME ZONE 'UTC') converts timestamp→timestamptz, so
     // NOW() - (col AT TIME ZONE 'UTC') is always timestamptz - timestamptz = correct interval.
     const locked = await tx.execute(
-      sql`SELECT id, user_id, coins_charged,
+      sql`SELECT id, user_id, coins_charged, promo_coins_charged,
                  EXTRACT(EPOCH FROM (NOW() - (started_at AT TIME ZONE 'UTC')))::int as elapsed_seconds,
                  CASE WHEN last_message_at IS NOT NULL
                       THEN EXTRACT(EPOCH FROM (NOW() - (last_message_at AT TIME ZONE 'UTC')))::int
@@ -319,7 +315,7 @@ export async function endChatSession(sessionId: string): Promise<void> {
     const rawRow = locked.rows[0] as Record<string, unknown>;
     logger.info('endChatSession DEBUG: raw row from DB', { sessionId, rawRow: JSON.stringify(rawRow) });
     const row = rawRow as {
-      id: string; user_id: string; coins_charged: number;
+      id: string; user_id: string; coins_charged: number; promo_coins_charged: number;
       elapsed_seconds: number; idle_seconds: number | null; active_seconds: number;
     };
 
@@ -333,55 +329,42 @@ export async function endChatSession(sessionId: string): Promise<void> {
     // Bill in 15-second blocks — consistent with checkpointSession
     const finalCharge = secondsToCoins(billableSeconds, coinsPerMinute);
     const previouslyCharged = Number(row.coins_charged);
-
-    // Read and lock user balance
-    const beforeBalance = await tx.execute(
-      sql`SELECT coin_balance FROM users WHERE id = ${row.user_id} FOR UPDATE`
-    );
-    const balanceBefore = Number((beforeBalance.rows[0] as any)?.coin_balance ?? 0);
+    const previouslyPromoCharged = Number(row.promo_coins_charged);
 
     let actualSessionCharged = previouslyCharged;
+    let actualPromoCharged = previouslyPromoCharged;
     if (finalCharge > previouslyCharged) {
-      // Deduct remaining owed — cap at user's actual balance
+      // Deduct remaining owed — promo coins (this persona) first, then real balance.
       const remainingToDeduct = finalCharge - previouslyCharged;
-      const actualDeduction = Math.min(remainingToDeduct, balanceBefore);
-
-      if (actualDeduction > 0) {
-        await tx.execute(
-          sql`UPDATE users SET
-                coin_balance = coin_balance - ${actualDeduction},
-                total_coins_used = total_coins_used + ${actualDeduction},
-                updated_at = (NOW() AT TIME ZONE 'UTC')
-              WHERE id = ${row.user_id}`
-        );
-      }
-      actualSessionCharged = previouslyCharged + actualDeduction;
+      const spend = await spendCoins(tx, row.user_id, precheck[0].personaId, remainingToDeduct);
+      actualSessionCharged = previouslyCharged + spend.total;
+      actualPromoCharged = previouslyPromoCharged + spend.fromPromo;
 
       logger.info('endChatSession: deducted coins', {
-        sessionId, userId: row.user_id, balanceBefore,
-        requested: remainingToDeduct, actualDeduction,
-        cappedByBalance: remainingToDeduct > balanceBefore,
+        sessionId, userId: row.user_id,
+        requested: remainingToDeduct, actualDeduction: spend.total,
+        fromPromo: spend.fromPromo, fromReal: spend.fromReal,
+        cappedByBalance: remainingToDeduct > spend.total,
       });
     } else if (finalCharge < previouslyCharged) {
-      // Checkpoint over-billed — refund the difference
+      // Checkpoint over-billed — refund the difference, real balance first then promo
+      // (reverse of spend order). realCharged = total charged minus the promo portion.
       const refund = previouslyCharged - finalCharge;
-      await tx.execute(
-        sql`UPDATE users SET
-              coin_balance = coin_balance + ${refund},
-              total_coins_used = GREATEST(0, total_coins_used - ${refund}),
-              updated_at = (NOW() AT TIME ZONE 'UTC')
-            WHERE id = ${row.user_id}`
+      const realCharged = previouslyCharged - previouslyPromoCharged;
+      const split = await refundCoins(
+        tx, row.user_id, precheck[0].personaId, refund, previouslyPromoCharged, realCharged,
       );
       actualSessionCharged = finalCharge;
+      actualPromoCharged = previouslyPromoCharged - split.toPromo;
       logger.info('endChatSession: refunding over-billed coins', {
-        sessionId, refund, previouslyCharged, finalCharge, balanceBefore,
+        sessionId, refund, previouslyCharged, finalCharge,
+        refundToReal: split.toReal, refundToPromo: split.toPromo,
       });
     }
 
     logger.info('endChatSession: final billing', {
       sessionId,
       userId: row.user_id,
-      balanceBefore,
       elapsedSeconds: row.elapsed_seconds,
       idleSeconds,
       activeSeconds: row.active_seconds,
@@ -391,6 +374,7 @@ export async function endChatSession(sessionId: string): Promise<void> {
       finalCharge,
       previouslyCharged,
       actualSessionCharged,
+      actualPromoCharged,
     });
 
     // Use CASE to set ended_at to last_message_at (if idle timed out) or NOW()
@@ -406,6 +390,7 @@ export async function endChatSession(sessionId: string): Promise<void> {
             END,
             duration_seconds = ${billableSeconds},
             coins_charged = ${actualSessionCharged},
+            promo_coins_charged = ${actualPromoCharged},
             last_heartbeat_at = (NOW() AT TIME ZONE 'UTC'),
             updated_at = (NOW() AT TIME ZONE 'UTC')
           WHERE id = ${sessionId}`
@@ -564,7 +549,7 @@ export async function cleanupInactiveSessions(): Promise<number> {
           // Lock the row — prevents a concurrent heartbeat checkpoint from billing at the same time
           // ALL timestamp columns use AT TIME ZONE 'UTC' casts — immune to session timezone
           const locked = await tx.execute(
-            sql`SELECT id, user_id, coins_charged,
+            sql`SELECT id, user_id, coins_charged, promo_coins_charged,
                        CASE WHEN last_message_at IS NOT NULL
                             THEN EXTRACT(EPOCH FROM ((last_message_at AT TIME ZONE 'UTC') - (started_at AT TIME ZONE 'UTC')))::int
                             ELSE 0 END as active_seconds
@@ -574,37 +559,26 @@ export async function cleanupInactiveSessions(): Promise<number> {
           );
           if (locked.rows.length === 0) return; // already ended by another process
 
-          const lockedRow = locked.rows[0] as { id: string; user_id: string; coins_charged: number; active_seconds: number };
+          const lockedRow = locked.rows[0] as { id: string; user_id: string; coins_charged: number; promo_coins_charged: number; active_seconds: number };
 
           const billableSeconds = capBillableSeconds(Math.max(0, lockedRow.active_seconds), row.id);
           const totalMinutes = Math.floor(billableSeconds / 60);
           const totalCoins = totalMinutes * coinsPerMinute;
           const remainingToDeduct = Math.max(0, totalCoins - Number(lockedRow.coins_charged));
 
-          // Read and lock user balance — cap deduction at what they actually have
-          const userBalResult = await tx.execute(
-            sql`SELECT coin_balance FROM users WHERE id = ${lockedRow.user_id} FOR UPDATE`
-          );
-          const userBalance = Number((userBalResult.rows[0] as any)?.coin_balance ?? 0);
-          const actualDeduction = Math.min(remainingToDeduct, userBalance);
+          // Spend promo coins (this persona) first, then real balance — capped at
+          // what's actually available across both pots.
+          const spend = await spendCoins(tx, lockedRow.user_id, row.persona_id, remainingToDeduct);
 
-          if (actualDeduction > 0) {
-            await tx.execute(
-              sql`UPDATE users SET
-                    coin_balance = coin_balance - ${actualDeduction},
-                    total_coins_used = total_coins_used + ${actualDeduction},
-                    updated_at = (NOW() AT TIME ZONE 'UTC')
-                  WHERE id = ${lockedRow.user_id}`
-            );
-          }
-
-          const actualSessionCharged = Number(lockedRow.coins_charged) + actualDeduction;
+          const actualSessionCharged = Number(lockedRow.coins_charged) + spend.total;
+          const actualPromoCharged = Number(lockedRow.promo_coins_charged) + spend.fromPromo;
           await tx.execute(
             sql`UPDATE chat_sessions SET
                   status = 'ended',
                   ended_at = COALESCE(last_message_at, started_at),
                   duration_seconds = ${billableSeconds},
                   coins_charged = ${actualSessionCharged},
+                  promo_coins_charged = ${actualPromoCharged},
                   last_heartbeat_at = (NOW() AT TIME ZONE 'UTC'),
                   updated_at = (NOW() AT TIME ZONE 'UTC')
                 WHERE id = ${row.id}`

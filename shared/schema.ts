@@ -244,6 +244,9 @@ export const chatSessions = pgTable("chat_sessions", {
   endedAt: timestamp("ended_at"),
   durationSeconds: integer("duration_seconds").default(0).notNull(),
   coinsCharged: integer("coins_charged").default(0).notNull(),
+  // Portion of coins_charged that came from a promo grant (rest came from real balance).
+  // Lets endChatSession refund over-billing back to the correct source (real first, then promo).
+  promoCoinsCharged: integer("promo_coins_charged").default(0).notNull(),
   status: text("status").default("active").notNull(), // active, ended, out_of_credits
 
   lastTopic: text("last_topic"),
@@ -519,6 +522,30 @@ export const magicLinkTokens = pgTable("magic_link_tokens", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 }, (table) => [
   index("idx_magic_link_tokens_user").on(table.userId, table.expiresAt),
+]);
+
+// 15b. Promo Grants - per-persona promotional coin wallets (e.g. the 6/6 launch promo).
+// A separate pot the billing path spends BEFORE users.coin_balance, scoped to one
+// persona, that expires after the campaign window. Real balances are never touched.
+// Reusable across campaigns via campaign_tag (one active grant per user+persona+campaign).
+export const promoGrants = pgTable("promo_grants", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  personaId: varchar("persona_id").notNull().references(() => personas.id, { onDelete: "cascade" }),
+  campaignTag: text("campaign_tag").notNull(), // e.g. 'promo-6-6' — groups a campaign's grants
+
+  coinsGranted: integer("coins_granted").notNull(),       // original grant (e.g. 360 = 6 min)
+  coinsRemaining: integer("coins_remaining").notNull(),   // spent down by the billing path
+  coinsSpent: integer("coins_spent").default(0).notNull(),// running total spent (audit)
+
+  expiresAt: timestamp("expires_at").notNull(),           // use-it-or-lose-it window
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => [
+  // Spend lookup: WHERE user_id=? AND persona_id=? AND expires_at>now AND coins_remaining>0
+  index("idx_promo_grants_user_persona").on(table.userId, table.personaId),
+  // No-double-grant safeguard for the one-time seeding script (ON CONFLICT DO NOTHING)
+  uniqueIndex("idx_promo_grants_unique").on(table.userId, table.personaId, table.campaignTag),
 ]);
 
 // 16. Session Feedback - User-submitted ratings after a session

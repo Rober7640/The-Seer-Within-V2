@@ -14,6 +14,7 @@ interface Guide {
   avatarUrl: string | null;
   isActive: boolean;
   isOnline?: boolean;
+  coinsPerMinute?: number;
 }
 
 interface GuideSidebarProps {
@@ -29,6 +30,20 @@ interface GuideSidebarProps {
   onBusyClick?: (displayName: string) => void;
   /** Whether the user is still on their free trial (has not purchased credits) */
   isNewUser: boolean;
+  /** True if the user has claimed the 6/6 promo (even on guides spent to 0). Suppresses the
+   *  default "3 minutes FREE" trial label so used-up promo guides show nothing. */
+  hasPromo?: boolean;
+  /** Per-persona promo coins remaining (6/6 promo). When >0 for a guide, the promo
+   *  "X:XX free" badge replaces the default "3 minutes FREE" trial badge. */
+  promoBalances?: Record<string, number>;
+}
+
+// Format promo coins as remaining minutes:seconds, e.g. 360 @ 60/min → "6:00".
+function formatPromoMins(coins: number, coinsPerMinute: number): string {
+  const totalSeconds = Math.round((coins / (coinsPerMinute || 60)) * 60);
+  const mins = Math.floor(totalSeconds / 60);
+  const secs = totalSeconds % 60;
+  return `${mins}:${String(secs).padStart(2, "0")}`;
 }
 
 const DEFAULT_AVATAR = "/evelyn-avatar-new.png";
@@ -74,13 +89,17 @@ function GuideItem({
   guide,
   showBadge,
   isNewUser,
+  hasPromo,
   isBusy,
+  promoCoins,
   onClick,
 }: {
   guide: Guide;
   showBadge: boolean;
   isNewUser: boolean;
+  hasPromo: boolean;
   isBusy: boolean;
+  promoCoins: number;
   onClick: () => void;
 }) {
   const teaser = getTeaserMessage(guide);
@@ -143,8 +162,21 @@ function GuideItem({
         </div>
       </div>
 
-      {/* "3 min FREE" badge row — only shown to new/trial users for online guides */}
-      {isNewUser && !isBusy && (
+      {/* Promo "X:XX FREE" badge — replaces the trial badge for guides where the user
+          has 6/6 promo coins. Driven by the user's actual remaining promo balance. */}
+      {promoCoins > 0 && !isBusy ? (
+        <div className="px-3 pb-2.5">
+          <div
+            className="w-full text-center py-1 rounded text-[10px] font-bold text-white/90 tracking-wide"
+            style={{ background: "linear-gradient(90deg, #059669 0%, #10b981 100%)" }}
+          >
+            🎁 {formatPromoMins(promoCoins, guide.coinsPerMinute ?? 60)} FREE
+          </div>
+        </div>
+      ) : isNewUser && !hasPromo && !isBusy ? (
+        /* "3 min FREE" trial badge — only for genuine new/trial users. Hidden for 6/6 promo
+           participants (hasPromo) so a used-up promo guide shows nothing, not a free offer
+           they no longer have. */
         <div className="px-3 pb-2.5">
           <div
             className="w-full text-center py-1 rounded text-[10px] font-bold text-white/90 tracking-wide"
@@ -153,7 +185,7 @@ function GuideItem({
             3 minutes FREE
           </div>
         </div>
-      )}
+      ) : null}
 
       {/* Separator */}
       <div className="mx-3 border-b border-white/[0.06]" />
@@ -166,6 +198,8 @@ function SidebarContent({
   selectedPersonaId,
   chattedGuideIds,
   isNewUser,
+  hasPromo,
+  promoBalances,
   onSelect,
   onBusyClick,
 }: {
@@ -173,6 +207,8 @@ function SidebarContent({
   selectedPersonaId: string | null;
   chattedGuideIds: Set<string>;
   isNewUser: boolean;
+  hasPromo: boolean;
+  promoBalances?: Record<string, number>;
   onSelect: (slug: string, teaserFull: string) => void;
   onBusyClick?: (displayName: string) => void;
 }) {
@@ -237,7 +273,9 @@ function SidebarContent({
                 guide={guide}
                 showBadge={!busy && guide.slug === activeBadgeSlug}
                 isNewUser={isNewUser}
+                hasPromo={hasPromo}
                 isBusy={busy}
+                promoCoins={promoBalances?.[guide.id] ?? 0}
                 onClick={() => {
                   if (busy) {
                     onBusyClick?.(guide.displayName);
@@ -263,6 +301,8 @@ export function GuideSidebar({
   onSwitchGuide,
   onBusyClick,
   isNewUser,
+  hasPromo = false,
+  promoBalances,
 }: GuideSidebarProps) {
   const handleSelect = (slug: string, teaserFull: string) => {
     onMobileClose();
@@ -278,6 +318,8 @@ export function GuideSidebar({
           selectedPersonaId={selectedPersonaId}
           chattedGuideIds={chattedGuideIds}
           isNewUser={isNewUser}
+          hasPromo={hasPromo}
+          promoBalances={promoBalances}
           onSelect={handleSelect}
           onBusyClick={onBusyClick}
         />
@@ -297,6 +339,8 @@ export function GuideSidebar({
             selectedPersonaId={selectedPersonaId}
             chattedGuideIds={chattedGuideIds}
             isNewUser={isNewUser}
+            hasPromo={hasPromo}
+            promoBalances={promoBalances}
             onSelect={handleSelect}
             onBusyClick={onBusyClick}
           />

@@ -127,6 +127,11 @@ export default function ChatServicePage() {
     null,
   );
   const [personasLoading, setPersonasLoading] = useState(true);
+  // Per-persona 6/6 promo balances → drives the sidebar promo badge. {} for non-promo users.
+  const [promoBalances, setPromoBalances] = useState<Record<string, number>>({});
+  // True once the user has claimed the 6/6 promo (even on guides spent to 0). Suppresses the
+  // "3 minutes FREE" trial label for them so a used-up promo guide shows nothing.
+  const [hasPromo, setHasPromo] = useState(false);
 
   // Session state
   const [session, setSession] = useState<SessionData | null>(null);
@@ -331,6 +336,21 @@ export default function ChatServicePage() {
       .then(data => { if (data) setWelcomeEligible(data.eligible); })
       .catch(() => {});
   }, [isAuthenticated]);
+
+  // Fetch per-persona 6/6 promo balances for the sidebar promo badge. {} for non-promo
+  // users — so nothing changes for normal traffic. Best-effort. Re-runs when a session
+  // ends (the `!!session` dep flips) so a used-up guide's badge drops to its real remaining
+  // instead of showing a stale full 6:00 until the next page reload.
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    authFetch("/api/chat-service/promo-balances")
+      .then(res => res.ok ? res.json() : null)
+      .then(data => {
+        if (data?.balances) setPromoBalances(data.balances);
+        if (typeof data?.hasPromo === "boolean") setHasPromo(data.hasPromo);
+      })
+      .catch(() => {});
+  }, [isAuthenticated, !!session]);
 
   // Fetch available personas (wait for auth to finish so we have user.defaultPersonaId)
   useEffect(() => {
@@ -1636,6 +1656,8 @@ export default function ChatServicePage() {
             toast({ title: `${name} is currently busy`, description: "Please try again later.", variant: "destructive" });
           }}
           isNewUser={(user?.coinBalance ?? 0) + (user?.totalCoinsUsed ?? 0) <= 180}
+          hasPromo={hasPromo}
+          promoBalances={promoBalances}
         />
       )}
 
@@ -1688,12 +1710,21 @@ export default function ChatServicePage() {
           </div>
           <div className="flex items-center gap-2">
             {/* Timer pill — paused pre-session, live during active session */}
-            {!!preSessionGreeting && !session && coinBalance > 0 && (
-              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/10 text-white/40 text-xs font-medium select-none">
-                <span className="w-1.5 h-1.5 rounded-full bg-white/30" />
-                {coinBalance} <Coins className="w-3.5 h-3.5" />
-              </div>
-            )}
+            {!!preSessionGreeting && !session && (() => {
+              // Paused/disabled (greyed) pill shown the moment the user lands in the chat,
+              // before the first message. 6/6 promo users have 0 real balance until they
+              // spend, so add THIS guide's promo coins here — otherwise they'd see nothing
+              // until the session starts. With promo, they see their 360 / 6:00 right away (#3).
+              const promoForPersona = promoBalances[selectedPersonaId ?? ""] ?? 0;
+              const pausedCoins = coinBalance + promoForPersona;
+              if (pausedCoins <= 0) return null;
+              return (
+                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/10 text-white/40 text-xs font-medium select-none">
+                  <span className="w-1.5 h-1.5 rounded-full bg-white/30" />
+                  {pausedCoins} <Coins className="w-3.5 h-3.5" />
+                </div>
+              );
+            })()}
             {session && (() => {
               const coinsPerMinute = selectedPersona?.coinsPerMinute ?? 60;
               const continuousElapsed = sessionStartTimeRef.current

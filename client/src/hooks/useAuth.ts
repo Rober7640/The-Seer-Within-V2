@@ -120,10 +120,14 @@ export function useAuth() {
   }, [state.user, state.isLoading]);
 
   const login = useCallback(
-    async (email: string, password: string) => {
+    // `redirect` is an optional safe internal path (e.g. '/6-6'). For passwordless
+    // accounts the server emails a sign-in link; this makes that link return the user
+    // to `redirect` so the 6/6 promo claim fires on /6-6.
+    async (email: string, password: string, redirect?: string) => {
       const res = await apiRequest("POST", "/api/auth/login", {
         email,
         password,
+        ...(redirect ? { redirect } : {}),
       });
       const data = await res.json();
       setToken(data.token);

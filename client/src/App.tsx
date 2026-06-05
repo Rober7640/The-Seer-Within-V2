@@ -204,6 +204,13 @@ function Router() {
             <PersonasDirectory />
           </ChatServiceLayout>
         </Route>
+        {/* 6/6 promo landing — same guide directory with a promo headline. Emailed
+            users arrive here auto-logged-in via /magic-auth?t=...&redirect=/6-6 */}
+        <Route path="/6-6">
+          <ChatServiceLayout requiresAuth={false}>
+            <PersonasDirectory promoMode />
+          </ChatServiceLayout>
+        </Route>
         <Route path="/dashboard">
           <ChatServiceLayout maxWidth="3xl" centerContent>
             <Dashboard />

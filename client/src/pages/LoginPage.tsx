@@ -98,7 +98,9 @@ export default function LoginPage() {
           return;
         }
       } else {
-        const data = await login(email, password);
+        // Forward returnTo as the redirect so a passwordless account's emailed sign-in
+        // link returns the user to where they came from (e.g. /6-6, where the promo claims).
+        const data = await login(email, password, returnTo ?? undefined);
         if (!returnTo && !nextParam && !personaParam && data?.user?.defaultPersonaSlug) {
           if (data.user.defaultPersonaAvailable) {
             navigate(`/reading?persona=${data.user.defaultPersonaSlug}`);

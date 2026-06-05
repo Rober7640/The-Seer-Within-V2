@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth, authFetch } from "@/hooks/useAuth";
 import { Link, useLocation } from "wouter";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -91,6 +91,8 @@ interface PersonaListing {
   yearsExperience?: number | null;
   readingsCount?: number | null;
   isOnline?: boolean;
+  /** Promotional coins this user has for this guide (e.g. 6/6 promo). 0/undefined = none. */
+  promoCoins?: number;
 }
 
 /* ================================================================
@@ -149,6 +151,29 @@ function generateYearsExp(name: string): number {
 
 function generateReadings(name: string): number {
   return 200 + (hashName(name) % 4800);
+}
+
+// The 6/6 promo offer size, in minutes — shown as the static "6 mins free" fallback on
+// the /6-6 lander cards (before login / before the user's real grant has loaded).
+const PROMO_OFFER_MINUTES = 6;
+
+// Format promo coins as remaining minutes:seconds for the "free with [guide]" badge.
+// e.g. 360 coins @ 60/min → "6:00", 105 coins @ 60/min → "1:45".
+function formatPromoMins(coins: number, coinsPerMinute: number): string {
+  const totalSeconds = Math.round((coins / (coinsPerMinute || 60)) * 60);
+  const mins = Math.floor(totalSeconds / 60);
+  const secs = totalSeconds % 60;
+  return `${mins}:${String(secs).padStart(2, "0")}`;
+}
+
+// Small "X:XX free" badge shown on a card when the user has promo coins for that guide.
+function PromoBadge({ coins, coinsPerMinute }: { coins: number; coinsPerMinute: number }) {
+  if (!coins || coins <= 0) return null;
+  return (
+    <span className="inline-flex items-center gap-1 text-[11px] px-2 py-[3px] rounded-full bg-emerald-500/15 text-emerald-300 font-bold uppercase tracking-wider border border-emerald-500/25">
+      🎁 {formatPromoMins(coins, coinsPerMinute)} free
+    </span>
+  );
 }
 
 type Status = {
@@ -224,12 +249,14 @@ function PersonaCard({
   onViewDetails,
   onStartChat,
   showFreeMins = false,
+  promoMode = false,
 }: {
   persona: PersonaListing;
   index?: number;
   onViewDetails: () => void;
   onStartChat: () => void;
   showFreeMins?: boolean;
+  promoMode?: boolean;
 }) {
   const rating = useMemo(
     () => persona.overallRating ?? generateRating(persona.displayName),
@@ -316,9 +343,16 @@ function PersonaCard({
             <Coins className="w-3 h-3 text-amber-400/40 shrink-0" />
             <span>
               {persona.coinsPerMinute ?? 60} coins = 1 min
-              {showFreeMins && persona.freeCoins > 0 && ` · ${Math.floor(persona.freeCoins / (persona.coinsPerMinute ?? 60))} mins free`}
+              {showFreeMins && !(persona.promoCoins ?? 0) && (promoMode
+                ? ` · ${PROMO_OFFER_MINUTES} mins free`
+                : (persona.freeCoins > 0 ? ` · ${Math.floor(persona.freeCoins / (persona.coinsPerMinute ?? 60))} mins free` : ``))}
             </span>
           </div>
+          {(persona.promoCoins ?? 0) > 0 && (
+            <div className="pt-0.5">
+              <PromoBadge coins={persona.promoCoins ?? 0} coinsPerMinute={persona.coinsPerMinute ?? 60} />
+            </div>
+          )}
         </div>
 
         {/* ── Description ── */}
@@ -404,11 +438,13 @@ function FeaturedCard({
   onViewDetails,
   onStartChat,
   showFreeMins = false,
+  promoMode = false,
 }: {
   persona: PersonaListing;
   onViewDetails: () => void;
   onStartChat: () => void;
   showFreeMins?: boolean;
+  promoMode?: boolean;
 }) {
   const rating = useMemo(
     () => persona.overallRating ?? generateRating(persona.displayName),
@@ -488,8 +524,13 @@ function FeaturedCard({
             <span className="flex items-center gap-1.5 text-[12px] text-white/35">
               <Coins className="w-3 h-3 text-amber-400/40" />
               {persona.coinsPerMinute ?? 60} coins = 1 min
-              {showFreeMins && persona.freeCoins > 0 && ` · ${Math.floor(persona.freeCoins / (persona.coinsPerMinute ?? 60))} mins free`}
+              {showFreeMins && !(persona.promoCoins ?? 0) && (promoMode
+                ? ` · ${PROMO_OFFER_MINUTES} mins free`
+                : (persona.freeCoins > 0 ? ` · ${Math.floor(persona.freeCoins / (persona.coinsPerMinute ?? 60))} mins free` : ``))}
             </span>
+            {(persona.promoCoins ?? 0) > 0 && (
+              <PromoBadge coins={persona.promoCoins ?? 0} coinsPerMinute={persona.coinsPerMinute ?? 60} />
+            )}
           </div>
 
           {persona.description && (
@@ -532,11 +573,22 @@ function FeaturedCard({
    Main Page
    ================================================================ */
 
-export default function PersonasDirectory() {
+export default function PersonasDirectory({ promoMode = false }: { promoMode?: boolean } = {}) {
   const { user, isLoading: authLoading, login, register } = useAuth();
   const isReturningUser = (user?.totalCoinsUsed ?? 0) > 0;
 
-  const [personas, setPersonas] = useState<PersonaListing[]>([]);
+  const [rawPersonas, setRawPersonas] = useState<PersonaListing[]>([]);
+  // Per-persona promo balances fetched separately (auth-gated). Kept in its own state
+  // and merged below via useMemo so the two async loads can't race / clobber each other.
+  const [promoBalances, setPromoBalances] = useState<Record<string, number>>({});
+  // True once the user has claimed the 6/6 promo (even on guides spent to 0). Folded into
+  // showFreeMins below so a promo participant never sees the default "X mins free" trial
+  // text on a used-up guide — it just shows nothing (the badge handles guides still in credit).
+  const [hasPromo, setHasPromo] = useState(false);
+  const personas = useMemo(
+    () => rawPersonas.map((p) => ({ ...p, promoCoins: promoBalances[p.id] ?? 0 })),
+    [rawPersonas, promoBalances],
+  );
   const [loading, setLoading] = useState(true);
   const [selectedPersona, setSelectedPersona] = useState<PersonaDetail | null>(
     null,
@@ -559,6 +611,14 @@ export default function PersonasDirectory() {
   const [authVerificationSent, setAuthVerificationSent] = useState(false);
   const [authResendEmail, setAuthResendEmail] = useState("");
   const [authResendLoading, setAuthResendLoading] = useState(false);
+  // Passwordless accounts: the login endpoint emails a sign-in link and returns a
+  // NO_PASSWORD error. That's a SUCCESS for the user, so we show a green "check your
+  // email" panel instead of leaking the raw error text in red.
+  const [authMagicLinkSent, setAuthMagicLinkSent] = useState(false);
+  // True when the popup was opened by the nav's generic "Sign in" (no guide chosen) — those
+  // users stay on /6-6 after auth. False when opened from a guide card's "Start chat" — those
+  // go straight into that guide's chat once the promo is claimed (#4).
+  const [authStayOnPromo, setAuthStayOnPromo] = useState(false);
 
   // Queued Start Chat click received while auth was still loading (FRICTION-12)
   const [pendingChatSlug, setPendingChatSlug] = useState<{ slug: string; name: string; avatar: string | null } | null>(null);
@@ -569,7 +629,7 @@ export default function PersonasDirectory() {
         const res = await fetch("/api/personas?pricing=true");
         if (res.ok) {
           const data = await res.json();
-          setPersonas(data);
+          setRawPersonas(data);
         }
       } catch (err) {
         console.error("Failed to fetch personas:", err);
@@ -579,6 +639,45 @@ export default function PersonasDirectory() {
     }
     fetchPersonas();
   }, []);
+
+  // Once logged in, fetch this user's per-persona promo balances (6/6 promo etc.).
+  // Stored separately and merged into `personas` via useMemo, so it can't race the
+  // persona-list load. Re-runs when auth resolves. Non-fatal — failures leave promo at 0.
+  useEffect(() => {
+    if (authLoading || !user) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        // On the /6-6 lander, claiming is what grants the 6 free minutes — and it ONLY
+        // happens here (never on /login or /personas). Fire it before reading balances so
+        // the badges reflect the just-granted coins. Buyer/already-claimed handled server-side.
+        if (promoMode) {
+          await authFetch("/api/chat-service/promo-claim", { method: "POST" }).catch(() => {});
+          if (cancelled) return;
+          // If the user got here via a passwordless sign-in link after picking a guide,
+          // forward them into that guide's chat now that the promo is claimed (#5b). The
+          // guide travels in the link as ?persona=<slug> (works on any device); we fall back
+          // to the localStorage hint for same-browser in-page flows.
+          const urlPersona = new URLSearchParams(window.location.search).get("persona");
+          const pendingPersona = urlPersona || localStorage.getItem("seer-6-6-pending-persona");
+          if (pendingPersona) {
+            localStorage.removeItem("seer-6-6-pending-persona");
+            navigate(`/reading?persona=${pendingPersona}`);
+            return;
+          }
+        }
+        const res = await authFetch("/api/chat-service/promo-balances");
+        if (!res.ok) return;
+        const { balances, hasPromo: claimed } = await res.json() as { balances: Record<string, number>; hasPromo?: boolean };
+        if (cancelled) return;
+        if (balances) setPromoBalances(balances);
+        if (typeof claimed === "boolean") setHasPromo(claimed);
+      } catch {
+        /* promo display is best-effort */
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [authLoading, user, promoMode]);
 
   // Resolve a queued Start Chat once auth finishes loading (FRICTION-12)
   useEffect(() => {
@@ -593,16 +692,18 @@ export default function PersonasDirectory() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authLoading, pendingChatSlug, user]);
 
-  function openAuthModal(slug: string, displayName: string, avatarUrl: string | null) {
+  function openAuthModal(slug: string, displayName: string, avatarUrl: string | null, isSignUp = true, stayOnPromo = false) {
     setAuthPersonaSlug(slug);
     setAuthPersonaName(displayName);
     setAuthPersonaAvatar(avatarUrl);
-    setAuthIsSignUp(true);
+    setAuthIsSignUp(isSignUp);
+    setAuthStayOnPromo(stayOnPromo);
     setAuthEmail("");
     setAuthPassword("");
     setAuthFirstName("");
     setAuthError(null);
     setAuthVerificationSent(false);
+    setAuthMagicLinkSent(false);
     setShowAuthModal(true);
   }
 
@@ -629,8 +730,10 @@ export default function PersonasDirectory() {
     }
     if (user) {
       navigate(`/reading?persona=${slug}`);
-    } else if (slug === 'aiden-powers') {
-      // Route to the Aiden quiz funnel instead of generic auth modal
+    } else if (slug === 'aiden-powers' && !promoMode) {
+      // Route to the Aiden quiz funnel instead of generic auth modal — but NOT on the
+      // 6/6 promo lander, where every guide (Aiden included) opens the same account
+      // popup so the promo claim can run.
       navigate('/aiden');
     } else {
       openAuthModal(slug, displayName, avatarUrl);
@@ -643,8 +746,18 @@ export default function PersonasDirectory() {
     setFormLoading(true);
     try {
       if (authIsSignUp) {
-        const data = await register(authEmail, authPassword, authFirstName);
-        if (data.requiresVerification) {
+        // On /6-6, tag the signup source so the verification email says "6 free minutes"
+        // (matching the campaign) instead of the default 3. Non-promo signups stay untagged.
+        const data = await register(
+          authEmail, authPassword, authFirstName,
+          authPersonaSlug || undefined,
+          promoMode ? { source: "promo-6-6" } : undefined,
+        );
+        // On the /6-6 promo, grant immediately on signup: register already issued a token
+        // (the user is authenticated), so we skip the verification wall and let them stay
+        // on /6-6 — the claim fires and they can use the 6 min now. The verification email
+        // still goes out for later, exactly like the lander signups.
+        if (data.requiresVerification && !promoMode) {
           // Persist slug so it survives the email-verification redirect (FRICTION-3)
           if (authPersonaSlug) {
             localStorage.setItem("seer-pending-persona", authPersonaSlug);
@@ -654,21 +767,47 @@ export default function PersonasDirectory() {
           return;
         }
       } else {
-        await login(authEmail, authPassword);
+        // Passwordless accounts get an emailed sign-in link; redirect back to /6-6 so the
+        // claim runs on return. For a guide-card sign-in, carry ?persona=<slug> in the
+        // redirect so the link forwards into that guide's chat even on a different
+        // device/browser (no localStorage there). The nav's generic sign-in stays on /6-6.
+        const promoRedirect = authStayOnPromo || !authPersonaSlug
+          ? "/6-6"
+          : `/6-6?persona=${authPersonaSlug}`;
+        await login(authEmail, authPassword, promoMode ? promoRedirect : undefined);
       }
-      // Navigate first — closing the modal after navigate can cause React
-      // unmount races that swallow the successful login with a stale error.
-      const target = `/reading?persona=${authPersonaSlug}`;
       setShowAuthModal(false);
+      if (promoMode) {
+        // Claim now — before we leave /6-6 — because the on-/6-6 claim effect won't run
+        // once we navigate away. Idempotent server-side, so a re-claim is harmless.
+        await authFetch("/api/chat-service/promo-claim", { method: "POST" }).catch(() => {});
+        // Generic nav "Sign in" (no guide chosen) stays on /6-6; a guide-card "Start chat"
+        // sends the user straight into that guide's chat (#4).
+        if (authStayOnPromo) return;
+        navigate(`/reading?persona=${authPersonaSlug}`);
+        return;
+      }
+      const target = `/reading?persona=${authPersonaSlug}`;
       navigate(target);
     } catch (err: any) {
       console.error("[PersonasDirectory] auth error:", err);
       const msg = typeof err?.message === "string" ? err.message : "";
-      setAuthError(
-        msg.includes("401")
-          ? "Invalid email or password"
-          : msg || "Something went wrong",
-      );
+      if (msg.includes("NO_PASSWORD")) {
+        // Passwordless account — the server already emailed the sign-in link.
+        setAuthResendEmail(authEmail);
+        setAuthMagicLinkSent(true);
+        // Remember the chosen guide so a same-device magic-link click lands the user in that
+        // guide's chat after returning to /6-6 (#5b). Skipped for the generic nav sign-in.
+        if (promoMode && !authStayOnPromo && authPersonaSlug) {
+          localStorage.setItem("seer-6-6-pending-persona", authPersonaSlug);
+        }
+      } else {
+        setAuthError(
+          msg.includes("401")
+            ? "Invalid email or password"
+            : msg || "Something went wrong",
+        );
+      }
     } finally {
       setFormLoading(false);
     }
@@ -698,6 +837,22 @@ export default function PersonasDirectory() {
     () => personas.find((p) => p.isFeatured) || personas.find((p) => p.isDefault) || personas[0] || null,
     [personas],
   );
+
+  // On /6-6, the nav's top-right "Sign in" opens THIS page's auth popup (instead of
+  // navigating away to /login) so the user stays on /6-6 and the promo claim can fire
+  // right after auth. Defaults to login mode (the button says "Sign in"); the modal still
+  // has a "create an account" toggle for brand-new visitors. Guarded to promoMode so the
+  // nav's normal /login link is untouched everywhere else.
+  useEffect(() => {
+    if (!promoMode) return;
+    function handleOpenAuth() {
+      if (user) return; // already signed in — nothing to open
+      const p = featuredPersona;
+      openAuthModal(p?.slug ?? "", p?.displayName ?? "your guide", p?.avatarUrl ?? null, false, true);
+    }
+    window.addEventListener("seer:open-auth", handleOpenAuth);
+    return () => window.removeEventListener("seer:open-auth", handleOpenAuth);
+  }, [promoMode, user, featuredPersona]);
 
   const categorySections = useMemo(() => {
     const sections: Record<string, PersonaListing[]> = {};
@@ -739,7 +894,7 @@ export default function PersonasDirectory() {
           className="animate-mp-fade-up font-serif text-[36px] md:text-[44px] text-white text-center mb-2 tracking-tight leading-[1.1]"
           style={{ animationDelay: "0ms" }}
         >
-          Choose your guide
+          {promoMode ? "Your free minutes are waiting" : "Choose your guide"}
         </h1>
         <p
           className="animate-mp-fade-up text-center text-[15px] text-white/40 mb-8 italic"
@@ -748,8 +903,27 @@ export default function PersonasDirectory() {
           Some connections are written before you arrive.
         </p>
 
+        {/* ── 6/6 Promo Banner — shown on the /6-6 promo landing for emailed users ── */}
+        {promoMode && (
+          <div
+            className="animate-mp-fade-up flex justify-center mb-10"
+            style={{ animationDelay: "80ms" }}
+          >
+            <div className="inline-flex items-center gap-3 bg-emerald-600/90 rounded-full pl-3 pr-6 py-2.5 shadow-lg shadow-emerald-900/30">
+              <span className="w-8 h-8 rounded-lg bg-amber-400 flex items-center justify-center shrink-0">
+                <Gift className="w-[18px] h-[18px] text-emerald-900" />
+              </span>
+              <span className="text-[14px] text-white/90">
+                You have{" "}
+                <strong className="text-white font-bold">6 FREE minutes</strong>{" "}
+                with <strong className="text-white font-bold">every guide</strong> — tap one to begin
+              </span>
+            </div>
+          </div>
+        )}
+
         {/* ── Promo Banner — new users only (wait for auth to load) ── */}
-        {!authLoading && !isReturningUser && (
+        {!promoMode && !authLoading && !isReturningUser && (
           <div
             className="animate-mp-fade-up flex justify-center mb-10"
             style={{ animationDelay: "80ms" }}
@@ -802,8 +976,8 @@ export default function PersonasDirectory() {
                       index={i}
                       onViewDetails={() => openDetail(p.slug)}
                     onStartChat={() => handleStartChat(p.slug, p.displayName, p.avatarUrl ?? null)}
-                    showFreeMins={!isReturningUser}
-                    />
+                    showFreeMins={!isReturningUser && !hasPromo}
+                    promoMode={promoMode}                    />
                   ))}
               </div>
             </Section>
@@ -827,8 +1001,8 @@ export default function PersonasDirectory() {
                         index={i}
                         onViewDetails={() => openDetail(p.slug)}
                         onStartChat={() => handleStartChat(p.slug, p.displayName, p.avatarUrl ?? null)}
-                        showFreeMins={!isReturningUser}
-                      />
+                        showFreeMins={!isReturningUser && !hasPromo}
+                    promoMode={promoMode}                      />
                     ))}
                   </div>
                 </Section>
@@ -846,8 +1020,8 @@ export default function PersonasDirectory() {
                   persona={featuredPersona}
                   onViewDetails={() => openDetail(featuredPersona.slug)}
                   onStartChat={() => handleStartChat(featuredPersona.slug, featuredPersona.displayName, featuredPersona.avatarUrl ?? null)}
-                  showFreeMins={!isReturningUser}
-                />
+                  showFreeMins={!isReturningUser && !hasPromo}
+                    promoMode={promoMode}                />
               </Section>
             )}
 
@@ -866,8 +1040,8 @@ export default function PersonasDirectory() {
                     index={i}
                     onViewDetails={() => openDetail(p.slug)}
                     onStartChat={() => handleStartChat(p.slug, p.displayName, p.avatarUrl ?? null)}
-                    showFreeMins={!isReturningUser}
-                  />
+                    showFreeMins={!isReturningUser && !hasPromo}
+                    promoMode={promoMode}                  />
                 ))}
               </div>
             </Section>
@@ -895,8 +1069,8 @@ export default function PersonasDirectory() {
                         index={i}
                         onViewDetails={() => openDetail(p.slug)}
                         onStartChat={() => handleStartChat(p.slug, p.displayName, p.avatarUrl ?? null)}
-                        showFreeMins={!isReturningUser}
-                      />
+                        showFreeMins={!isReturningUser && !hasPromo}
+                    promoMode={promoMode}                      />
                     ))}
                 </div>
               </Section>
@@ -917,8 +1091,8 @@ export default function PersonasDirectory() {
                     index={i}
                     onViewDetails={() => openDetail(p.slug)}
                     onStartChat={() => handleStartChat(p.slug, p.displayName, p.avatarUrl ?? null)}
-                    showFreeMins={!isReturningUser}
-                  />
+                    showFreeMins={!isReturningUser && !hasPromo}
+                    promoMode={promoMode}                  />
                 ))}
               </div>
               {!showAll && personas.length > 6 && (
@@ -986,9 +1160,9 @@ export default function PersonasDirectory() {
       <Dialog
         open={showAuthModal}
         onOpenChange={(open) => {
-          // Keep modal open while awaiting email verification so the user
-          // doesn't accidentally lose the "Check Your Email" state (FRICTION-9)
-          if (!open && !authVerificationSent) setShowAuthModal(false);
+          // Keep modal open while awaiting email verification or a passwordless
+          // sign-in link so the user doesn't lose the "Check Your Email" state (FRICTION-9)
+          if (!open && !authVerificationSent && !authMagicLinkSent) setShowAuthModal(false);
         }}
       >
         <DialogContent className="max-w-sm bg-[#0c0c24] border-white/[0.06] text-white !rounded-2xl">
@@ -1020,6 +1194,27 @@ export default function PersonasDirectory() {
                 Back to sign in
               </button>
             </div>
+          ) : authMagicLinkSent ? (
+            /* ── Passwordless sign-in link sent (SUCCESS, not an error) ── */
+            <div className="flex flex-col items-center gap-4 py-2 text-center">
+              <div className="w-12 h-12 rounded-full bg-emerald-500/15 border border-emerald-400/25 flex items-center justify-center">
+                <Mail className="w-6 h-6 text-emerald-300" />
+              </div>
+              <div>
+                <h2 className="font-serif text-xl text-white mb-2">Check Your Email</h2>
+                <p className="text-[14px] text-white/55 leading-relaxed">
+                  We sent a sign-in link to{" "}
+                  <strong className="text-white/80">{authResendEmail}</strong>.
+                  Click it to continue to your free minutes.
+                </p>
+              </div>
+              <button
+                onClick={() => { setAuthMagicLinkSent(false); }}
+                className="text-[13px] text-white/35 hover:text-white/55 transition-colors"
+              >
+                Back to sign in
+              </button>
+            </div>
           ) : (
             <>
               <DialogHeader>
@@ -1045,7 +1240,7 @@ export default function PersonasDirectory() {
                 <div className="flex items-center gap-2.5 bg-purple-600/15 border border-purple-500/15 rounded-xl px-3.5 py-2.5">
                   <Gift className="w-4 h-4 text-amber-400 shrink-0" />
                   <span className="text-[13px] text-white/75">
-                    You get <strong className="text-white font-semibold">3 FREE minutes</strong> to get started
+                    You get <strong className="text-white font-semibold">{promoMode ? PROMO_OFFER_MINUTES : 3} FREE minutes</strong> to get started
                   </span>
                 </div>
               )}
