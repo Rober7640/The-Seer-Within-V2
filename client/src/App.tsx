@@ -1,5 +1,5 @@
 import { useEffect, lazy, Suspense } from "react";
-import { Switch, Route, useLocation } from "wouter";
+import { Switch, Route, useLocation, Redirect } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { PayPalScriptProvider } from "@paypal/react-paypal-js";
@@ -204,12 +204,11 @@ function Router() {
             <PersonasDirectory />
           </ChatServiceLayout>
         </Route>
-        {/* 6/6 promo landing — same guide directory with a promo headline. Emailed
-            users arrive here auto-logged-in via /magic-auth?t=...&redirect=/6-6 */}
+        {/* 6/6 promo ended (campaign expired 2026-06-07). Old links — including the
+            emailed /magic-auth?t=...&redirect=/6-6 auto-login — now land on the normal
+            guide directory. The promo backend stays in place (inert, reusable). */}
         <Route path="/6-6">
-          <ChatServiceLayout requiresAuth={false}>
-            <PersonasDirectory promoMode />
-          </ChatServiceLayout>
+          <Redirect to="/personas" />
         </Route>
         <Route path="/dashboard">
           <ChatServiceLayout maxWidth="3xl" centerContent>
