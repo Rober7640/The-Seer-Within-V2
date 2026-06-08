@@ -38,6 +38,16 @@ export const FB_PIXEL_CONFIG: Record<string, FbPixelEntry> = {
       '/fb2',
     ],
   },
+  // /fb-palm quiz-bridge funnel — reuses the soulmate pixel (same as /fb2),
+  // since the palm ads previously pointed at /fb2. Server-side CAPI routing for
+  // this pixel needs a matching event_source_url-contains "/fb-palm" trigger in
+  // sGTM (ops task, mirrors the "/fb2" trigger).
+  palm: {
+    pixelId: '738651185965027',
+    routes: [
+      '/fb-palm',
+    ],
+  },
 };
 
 export function resolveFunnelFromUrl(urlOrPath: string): string {

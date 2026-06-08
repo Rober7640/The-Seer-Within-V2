@@ -55,10 +55,14 @@ export interface ShippingAddress {
 }
 
 export interface ChatRequest {
-  action: 'reading' | 'reading1' | 'reading2' | 'futureValidation' | 'crisisReveal' | 'crisisCost' | 'crisisUrgency' | 'shadowSummary' | 'valueExplain' | 'crisis' | 'objection'
+  action: 'reading' | 'reading1' | 'reading2' | 'futureValidation' | 'crisisReveal' | 'crisisCost' | 'crisisUrgency' | 'shadowSummary' | 'valueExplain' | 'crisis' | 'objection' | 'palmOpener' | 'palmReflect'
   userData: UserData
   input: string
   objectionCount?: number
+  // Palm "quiz bridge" Version C — the thumb the visitor tapped on the lander,
+  // injected into Evelyn's first turn. Server validates against fixed enums.
+  palmHook?: string
+  palmThumb?: string
 }
 
 export interface ChatResponse {

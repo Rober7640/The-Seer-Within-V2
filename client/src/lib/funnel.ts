@@ -45,7 +45,7 @@ export function funnelPath(v1Path: string, pathname?: string): string {
 // aiden). Kept separate from currentFunnel() because the backend depends on
 // its "v1-fb" | "v1-fb2" | "v1-gdn" | undefined contract.
 
-export type PostHogFunnel = "soulmate" | "fb" | "fb2" | "gdn" | "v1" | "evelyn" | "aiden";
+export type PostHogFunnel = "soulmate" | "fb" | "fb2" | "gdn" | "palm" | "v1" | "evelyn" | "aiden";
 
 // Strip query, hash, trailing slash, lowercase. Mirrors the fix in 83fa6a5
 // so URL variants like /evelyn/ or /aiden?utm=x don't drop to "unknown".
@@ -89,12 +89,15 @@ export function getPostHogStep(pathname?: string): string {
       return "unknown";
     case "fb":
     case "fb2":
-    case "gdn": {
-      // Compute the step relative to the funnel's URL prefix so /fb, /fb2 and
-      // /gdn share one mapping (e.g. /fb2/welcome1 → upsell1).
+    case "gdn":
+    case "palm": {
+      // Compute the step relative to the funnel's URL prefix so /fb, /fb2, /gdn
+      // and /fb-palm share one mapping (e.g. /fb2/welcome1 → upsell1). For palm
+      // the prefix root is the bridge lander → "landing".
       const def = funnelDefForPath(p);
       const sub = def ? p.slice(def.prefix.length) : "";
-      if (sub === "") return "landing";
+      // "" = the funnel landing; "/b" & "/c" = the palm Version-B/C bridge landings.
+      if (sub === "" || sub === "/b" || sub === "/c") return "landing";
       if (sub === "/chat") return "chat";
       if (sub === "/welcome1") return "upsell1";
       if (sub === "/welcome2") return "upsell2";
