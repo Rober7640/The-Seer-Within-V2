@@ -89,6 +89,89 @@ function isRetryableError(err: unknown): boolean {
   return false;
 }
 
+// ---------- Error → triage guidance ----------
+
+// Turns an Anthropic/network error into a short label (for subject + body) plus a
+// plain-English explanation and the SPECIFIC action to take. Keeps alert emails from
+// telling people to "check billing" on a 529 overload (Anthropic-side, self-heals) or
+// on a 401 (key revoked — billing won't fix it). See codes in isRetryableError above.
+interface ErrorGuidance {
+  codeLabel: string;   // e.g. "529 overload", "401 auth", "ECONNRESET network"
+  explanation: string; // what the code means
+  action: string;      // what to actually do about it
+}
+
+function describeError(err: unknown): ErrorGuidance {
+  const anyErr =
+    err && typeof err === 'object'
+      ? (err as { status?: number; code?: string; name?: string })
+      : {};
+  const status = typeof anyErr.status === 'number' ? anyErr.status : undefined;
+
+  if (status === 429) {
+    return {
+      codeLabel: '429 rate/spend limit',
+      explanation:
+        'Anthropic returned 429 — a rate limit or monthly spend cap was hit on this key.',
+      action:
+        "Check this key's usage/rate limits AND spend caps in the Anthropic console " +
+        '(Billing → Limits). This is the one case where billing is the likely cause.',
+    };
+  }
+  if (status === 529) {
+    return {
+      codeLabel: '529 overload',
+      explanation:
+        'Anthropic returned 529 — their API is temporarily overloaded (capacity). This is ' +
+        'NOT a billing, rate-limit, or key problem.',
+      action:
+        'Check https://status.claude.com first. This is Anthropic-side and usually self-heals ' +
+        'within minutes — no key or billing action is normally needed.',
+    };
+  }
+  if (status === 401 || status === 403) {
+    return {
+      codeLabel: `${status} auth`,
+      explanation: `Anthropic returned ${status} — the key is invalid, revoked, or disabled.`,
+      action:
+        'Rotate/replace this key in the environment (Railway env vars). Billing or rate-limit ' +
+        'changes will NOT fix an auth error.',
+    };
+  }
+  if (status !== undefined && status >= 500 && status < 600) {
+    return {
+      codeLabel: `${status} server error`,
+      explanation: `Anthropic returned ${status} — a server-side error on Anthropic's end.`,
+      action:
+        'Check https://status.claude.com. Transient and usually self-heals — no key or billing ' +
+        'action is normally needed.',
+    };
+  }
+
+  // Network-level failures have no HTTP status — surface the code/name instead.
+  const netCode = anyErr.code || anyErr.name;
+  if (netCode) {
+    return {
+      codeLabel: `${netCode} network`,
+      explanation:
+        `A network-level failure (${netCode}) — the request never got an HTTP response from ` +
+        'Anthropic.',
+      action:
+        "Check the host's network/DNS connectivity (Railway). Transient connection issues " +
+        'usually clear on their own.',
+    };
+  }
+
+  return {
+    codeLabel: status !== undefined ? `status ${status}` : 'unknown error',
+    explanation:
+      status !== undefined
+        ? `Anthropic returned status ${status}.`
+        : 'An unrecognized error occurred (no HTTP status or network code).',
+    action: 'Check https://status.claude.com and the Anthropic console.',
+  };
+}
+
 // ---------- Email alerting ----------
 
 const lastAlertAt: Record<string, number> = {};
@@ -194,14 +277,18 @@ async function runWithFailover<T>(
       // If we're rotating AWAY from primary (i.e. primary just failed), alert.
       if (entry.name === 'primary' && keys.length > 1) {
         const nextKey = keys[i + 1]?.name || 'none';
+        const g = describeError(err);
         void sendAlertEmail(
-          `[Seer] Anthropic primary key failed — now using ${nextKey}`,
-          `At ${new Date().toISOString()}, the primary Anthropic key (ANTHROPIC_API_KEY) ` +
-            `returned status ${status ?? 'unknown'}.\n\n` +
+          `[Seer] Anthropic primary key failed (${g.codeLabel}) — now using ${nextKey}`,
+          `At ${new Date().toISOString()}, the primary Anthropic key (ANTHROPIC_API_KEY) failed.\n\n` +
+            `What happened: ${g.explanation}\n\n` +
             `Failover activated — traffic is now served by ${nextKey}. ` +
             `The primary will be re-probed automatically after a 60-second cooldown.\n\n` +
-            `Please check the primary key's billing and rate-limit status in the Anthropic console.`,
-          'failover:primary',
+            `What to do: ${g.action}`,
+          // Code-aware dedupe: repeated same-code failures stay debounced for 30 min, but a
+          // DIFFERENT code (e.g. a 401 key-revoked after an earlier 529 overload) breaks
+          // through immediately so a more serious error isn't masked by an earlier blip.
+          `failover:primary:${g.codeLabel}`,
         );
       }
 
@@ -211,12 +298,17 @@ async function runWithFailover<T>(
 
   // All keys exhausted.
   logger.error('[AnthropicFailover] All keys exhausted', { lastErr });
+  const g = describeError(lastErr);
   void sendAlertEmail(
-    '[Seer] All Anthropic keys are down',
+    `[Seer] All Anthropic keys are down (${g.codeLabel})`,
     `At ${new Date().toISOString()}, every configured Anthropic key failed with a retryable ` +
       `error. Users will see fallback responses until at least one key recovers.\n\n` +
-      `Check Anthropic status page + each key's billing/rate-limits immediately.`,
-    'all_keys_down',
+      `Last error: ${g.explanation}\n\n` +
+      `What to do: ${g.action}\n\n` +
+      `If the keys are failing with different codes, also check https://status.claude.com and ` +
+      `each key in the Anthropic console.`,
+    // Code-aware dedupe (see failover:primary) — a new exhausting code re-alerts.
+    `all_keys_down:${g.codeLabel}`,
   );
   // Always throw a wrapper error so callers can reliably detect total exhaustion.
   // The original SDK error (including `status`) is preserved on `.cause` and mirrored
