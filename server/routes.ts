@@ -70,7 +70,7 @@ import {
 } from "./lib/db";
 import { assignVariantIfMissing, getVariantForEmail } from "./lib/priceVariant";
 import { fireGoogleAdsConversion } from "./lib/googleAds";
-import { funnelDefForParam, type FunnelParam } from "@shared/funnelConfig";
+import { funnelDefForParam, FUNNELS, type FunnelParam } from "@shared/funnelConfig";
 import Stripe from "stripe";
 import type { ChatRequest, CheckoutRequest } from "../shared/types";
 import {
@@ -99,7 +99,12 @@ import { posthog } from "./lib/posthog";
 // `funnel` is an optional marker the ad-traffic flows (/fb, /fb2, /gdn) send so
 // we can branch product names, AWeber tags, and success/cancel URLs without
 // touching the V1 (email-traffic) code path.
-const funnelSchema = z.enum(["v1-fb", "v1-fb2", "v1-gdn"]).optional();
+// Derive the accepted funnel params from FUNNELS so this validation can never
+// drift out of sync with funnelConfig again (the v1-palm 400 bug: a new funnel
+// was added to FUNNELS but this enum was a hardcoded list that missed it).
+const funnelSchema = z
+  .enum(FUNNELS.map((f) => f.param) as [FunnelParam, ...FunnelParam[]])
+  .optional();
 
 const upsellChargeSchema = z.object({
   checkoutSessionId: z.string().min(1),
