@@ -5,6 +5,7 @@ import type { ChatState, Message, Bucket, UserData } from '@/types/chat'
 import { BUCKET_LABELS } from '@/types/chat'
 import { calculateTypingDelay, sleep, generateId } from '@/lib/typing'
 import { getGeoData, getTimeMessage } from '@/lib/geolocation'
+import { parsePalmParams, greetingA, openerB, openerCStart, palmReflectFallback, hookToBucket } from '@/content/palmReads'
 import {
   detectIntent,
   sanitizeInput,
@@ -282,6 +283,38 @@ export function useConversation() {
       addMessage('system', 'Evelyn has joined the chat')
       await sleep(800)
 
+      // Palm "quiz bridge" traffic (/fb-palm): replace the standard intro with a
+      // thumb-aware opener that continues the lander, then hand into the SAME
+      // name-capture step. Gated on hook+thumb → zero impact on other funnels.
+      //   Version A (had the result card) → one brief greeting.
+      //   Version B (no card) → deliver the read as messages here.
+      const palm = parsePalmParams(window.location.search)
+      if (palm) {
+        if (palm.version === 'c') {
+          // Version C — INTERACTIVE. Open with the mark line + one open question
+          // (static, instant), then read HER answer with the LLM in
+          // handlePalmReflect. This is what makes C different from B.
+          await sendBotMessages(openerCStart(palm.hook, palm.thumb))
+          updateState({
+            state: 'PALM_REFLECT',
+            inputEnabled: true,
+            inputPlaceholder: "Share what's on your heart…",
+          })
+          return
+        }
+        if (palm.version === 'b') {
+          await sendBotMessages(openerB(palm.hook, palm.thumb))
+        } else {
+          await sendBotMessage(greetingA(palm.thumb))
+        }
+        updateState({
+          state: 'NAME_CAPTURE',
+          inputEnabled: true,
+          inputPlaceholder: 'Your name...',
+        })
+        return
+      }
+
       await sendBotMessages([
         "Greetings, dear friend, and welcome.",
         "My name is Evelyn Cross.",
@@ -316,6 +349,38 @@ export function useConversation() {
     const capitalized = firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase()
     updateUserData({ firstName: capitalized })
 
+    // Palm "quiz bridge" traffic: the ad hook already told us the topic, so skip
+    // the bucket picker and go straight into the (love) deepening. Mirrors the
+    // non-'someone' path of handleBucketSelect — kept inline to avoid stale
+    // firstName state and a use-before-declaration on handleBucketSelect.
+    const palm = parsePalmParams(window.location.search)
+    if (palm) {
+      const bucket = hookToBucket(palm.hook)
+      updateUserData({ bucket })
+
+      await sendBotMessages([
+        `It's lovely to meet you, ${capitalized}.`,
+        "Everything we discuss stays between us... our secret.",
+      ])
+      await sendBotMessages([
+        `I can feel warmth radiating from your heart, ${capitalized}...`,
+        "But there's a flicker of shadow there too...",
+      ])
+      await sendBotMessages([
+        "Before I look deeper, I need to anchor our connection...",
+        "Sometimes the visions continue after we speak...",
+        "Where should I send them if more is revealed?",
+      ])
+
+      updateState({
+        state: 'EMAIL_CAPTURE',
+        inputEnabled: true,
+        inputPlaceholder: 'Your email...',
+        inputType: 'email',
+      })
+      return
+    }
+
     await sendBotMessages([
       `It's lovely to meet you, ${capitalized}.`,
       "Everything we discuss stays between us... our secret.",
@@ -328,6 +393,51 @@ export function useConversation() {
       showBucketButtons: true,
     })
   }, [sendBotMessages, updateState, updateUserData])
+
+  // === PALM VERSION C — read HER answer to the opener question ===
+  // The LLM reflects what she just shared (woven with the thumb), then we earn
+  // the name → existing love deepening. Her answer becomes userData.concern so
+  // it enriches the later reading/shadow steps. Falls back to the static read
+  // on any failure (incl. no backend) so the funnel never stalls.
+  const handlePalmReflect = useCallback(async (input: string) => {
+    const palm = parsePalmParams(window.location.search)
+    updateUserData({ concern: input })
+
+    let llm: string[] | null = null
+    if (palm) {
+      try {
+        updateState({ isTyping: true })
+        const res = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'palmReflect',
+            palmHook: palm.hook,
+            palmThumb: palm.thumb,
+            userData: chat.userData,
+            input,
+          }),
+        })
+        if (res.ok) {
+          const data = await res.json()
+          if (Array.isArray(data.messages) && data.messages.length) llm = data.messages
+        }
+      } catch {
+        // ignore — fall back below
+      }
+      updateState({ isTyping: false })
+    }
+
+    if (llm) await sendBotMessages(llm)
+    else if (palm) await sendBotMessages(palmReflectFallback(palm.hook, palm.thumb))
+
+    await sendBotMessage("Before we go deeper, tell me… what should I call you, dear?")
+    updateState({
+      state: 'NAME_CAPTURE',
+      inputEnabled: true,
+      inputPlaceholder: 'Your name...',
+    })
+  }, [chat.userData, sendBotMessage, sendBotMessages, updateState, updateUserData])
 
   const handlePersonNameCapture = useCallback(async (input: string) => {
     const personName = input.trim().split(' ')[0]
@@ -1003,6 +1113,9 @@ export function useConversation() {
       case 'NAME_CAPTURE':
         await handleNameCapture(input)
         break
+      case 'PALM_REFLECT':
+        await handlePalmReflect(input)
+        break
       case 'PERSON_NAME_CAPTURE':
         await handlePersonNameCapture(input)
         break
@@ -1041,6 +1154,7 @@ export function useConversation() {
     addMessage,
     updateState,
     handleNameCapture,
+    handlePalmReflect,
     handlePersonNameCapture,
     handleEmailCapture,
     handleDeepening1,

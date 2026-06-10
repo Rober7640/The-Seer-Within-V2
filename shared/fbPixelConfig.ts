@@ -38,6 +38,11 @@ export const FB_PIXEL_CONFIG: Record<string, FbPixelEntry> = {
       '/fb2',
     ],
   },
+  // /fb-palm quiz-bridge funnel intentionally has NO entry here: per the launch
+  // decision it uses the DEFAULT pixel (446814716830295), exactly like /fb. With
+  // no matching route, resolveFunnelFromUrl('/fb-palm') falls through to
+  // 'default', and server-side CAPI routes the same way — so palm needs no
+  // soulmate-pixel sGTM trigger (it mirrors /fb's setup, not /fb2's).
 };
 
 export function resolveFunnelFromUrl(urlOrPath: string): string {

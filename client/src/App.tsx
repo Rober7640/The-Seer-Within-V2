@@ -12,6 +12,7 @@ import { getPostHogFunnel, getPostHogStep } from "./lib/funnel";
 import { ChatServiceLayout } from "@/components/ChatServiceLayout";
 import NotFound from "@/pages/not-found";
 import LandingPage from "@/pages/LandingPage";
+import PalmBridge from "@/pages/PalmBridge";
 import ChatPage from "@/pages/ChatPage";
 import SuccessPage from "@/pages/SuccessPage";
 import UpsellTestPage from "@/pages/UpsellTestPage";
@@ -141,6 +142,17 @@ function Router() {
         <Route path="/fb2/welcome1" component={UpsellPage} />
         <Route path="/fb2/welcome2" component={Upsell2Page} />
         <Route path="/fb2/success" component={SuccessPage} />
+
+        {/* V1-PALM funnel — palm/thumb "quiz bridge" lander. /fb-palm root
+            renders PalmBridge (not LandingPage); chat + upsells reuse the shared
+            V1 components and carry the "- PALM" Stripe suffix. */}
+        <Route path="/fb-palm" component={PalmBridge} />
+        <Route path="/fb-palm/b" component={PalmBridge} />
+        <Route path="/fb-palm/c" component={PalmBridge} />
+        <Route path="/fb-palm/chat" component={ChatPage} />
+        <Route path="/fb-palm/welcome1" component={UpsellPage} />
+        <Route path="/fb-palm/welcome2" component={Upsell2Page} />
+        <Route path="/fb-palm/success" component={SuccessPage} />
 
         {/* V1-GDN funnel routes (Google Display Network ad traffic) — same
             components, new URLs so Google Ads can segment by page and Stripe

@@ -13,7 +13,7 @@
 // these helpers (product naming, AWeber tags, redirects, PostHog) updates
 // automatically.
 
-export type FunnelParam = "v1-fb" | "v1-fb2" | "v1-gdn";
+export type FunnelParam = "v1-fb" | "v1-fb2" | "v1-gdn" | "v1-palm";
 
 export interface FunnelDef {
   // Value sent to the backend and stored in Stripe metadata.funnel.
@@ -32,6 +32,10 @@ export const FUNNELS: readonly FunnelDef[] = [
   { param: "v1-fb", prefix: "/fb", productSuffix: " - FB", aweberSuffix: "-fb", posthog: "fb" },
   { param: "v1-fb2", prefix: "/fb2", productSuffix: " - FB2", aweberSuffix: "-fb2", posthog: "fb2" },
   { param: "v1-gdn", prefix: "/gdn", productSuffix: " - GDN", aweberSuffix: "-gdn", posthog: "gdn" },
+  // Palm "quiz bridge" funnel. /fb-palm root renders the bridge lander (not the
+  // shared LandingPage); chat + upsells reuse the V1 components. The trailing-
+  // slash check in funnelDefForPath keeps "/fb-palm" distinct from "/fb".
+  { param: "v1-palm", prefix: "/fb-palm", productSuffix: " - PALM", aweberSuffix: "-palm", posthog: "palm" },
 ];
 
 // Resolve the funnel that owns a URL path. The trailing-slash check means

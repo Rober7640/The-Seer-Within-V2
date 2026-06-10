@@ -4,6 +4,7 @@ export type ConversationState =
   | 'INIT'
   | 'GREETING'
   | 'NAME_CAPTURE'
+  | 'PALM_REFLECT'        // /fb-palm Version C: awaiting her answer to the opener question
   | 'BUCKET_SELECTION'
   | 'BUCKET_CLARIFICATION'
   | 'PERSON_NAME_CAPTURE'

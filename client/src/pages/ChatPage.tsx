@@ -23,6 +23,9 @@ export default function ChatPage() {
   const searchString = useSearch();
   const [, navigate] = useLocation();
   const scrollRef = useRef<HTMLDivElement>(null);
+  // Stick-to-bottom: true while the user is at/near the bottom. If they scroll
+  // up to read history, we stop yanking them down on new messages.
+  const atBottomRef = useRef(true);
   const inputRef = useRef<HTMLInputElement>(null);
   const redirected = useRef(false);
 
@@ -39,17 +42,50 @@ export default function ChatPage() {
     }
   }, [searchString, navigate]);
 
-  // Auto-scroll to bottom
+  // Track whether the user is near the bottom (so we don't fight them if they
+  // scroll up). Threshold gives a little slack for momentum scrolling.
+  const handleScroll = () => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
+    atBottomRef.current = distanceFromBottom < 80;
+  };
+
+  // Auto-scroll to follow new messages + the typing indicator — but only while
+  // the user is stuck to the bottom. rAF waits for the new bubble to lay out so
+  // scrollHeight is accurate; behavior:'auto' snaps instantly (no smooth-lag as
+  // bubbles stream in).
   useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
+    const el = scrollRef.current;
+    if (!el) return;
+    const id = requestAnimationFrame(() => {
+      // Re-check at scroll time: the user may have scrolled up between this
+      // effect running and the frame firing.
+      if (!atBottomRef.current) return;
+      el.scrollTo({ top: el.scrollHeight, behavior: "auto" });
+    });
+    return () => cancelAnimationFrame(id);
   }, [chat.messages, chat.isTyping]);
 
-  // Focus input when enabled
+  // Re-pin to bottom when the container itself resizes — e.g. the input footer
+  // appearing/disappearing (which shrinks the list) or the mobile keyboard
+  // opening. Without this the last message slips ~one input-bar below the fold.
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el || typeof ResizeObserver === "undefined") return;
+    const ro = new ResizeObserver(() => {
+      if (atBottomRef.current) el.scrollTo({ top: el.scrollHeight, behavior: "auto" });
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  // Focus input when enabled. preventScroll: focusing an input at the bottom
+  // would otherwise scroll it into view (yanking a scrolled-up user down) — let
+  // the guarded auto-scroll effect own scroll position instead.
   useEffect(() => {
     if (chat.inputEnabled && inputRef.current) {
-      inputRef.current.focus();
+      inputRef.current.focus({ preventScroll: true });
     }
   }, [chat.inputEnabled]);
 
@@ -57,6 +93,9 @@ export default function ChatPage() {
     e.preventDefault();
     const input = inputRef.current;
     if (input && input.value.trim()) {
+      // Sending always re-sticks to bottom — she should see her message + reply
+      // even if she'd scrolled up to re-read.
+      atBottomRef.current = true;
       handleSend(input.value);
       input.value = "";
     }
@@ -116,6 +155,7 @@ export default function ChatPage() {
         {/* Chat Area */}
         <div
           ref={scrollRef}
+          onScroll={handleScroll}
           className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50/50 scroll-smooth"
           data-testid="container-chat-messages"
         >
