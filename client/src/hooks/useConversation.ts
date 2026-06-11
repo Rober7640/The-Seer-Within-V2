@@ -18,7 +18,7 @@ import {
   getPriceQuestionResponse
 } from '@/lib/intent'
 import { trackLead, trackInitiateCheckout, getTrackdeskClickId } from '@/lib/facebook'
-import { currentFunnel, getPostHogFunnel } from '@/lib/funnel'
+import { currentFunnel, getPostHogFunnel, skipEmail } from '@/lib/funnel'
 import { track as trackPH, identifyUser as identifyPH } from '@/lib/posthog'
 import { trackGAdsLead, trackGAdsCheckout, getGclid } from '@/lib/gtm'
 
@@ -366,6 +366,21 @@ export function useConversation() {
         `I can feel warmth radiating from your heart, ${capitalized}...`,
         "But there's a flicker of shadow there too...",
       ])
+      // no-optin variant: skip the email anchor, go straight into the reading.
+      if (skipEmail()) {
+        await sendBotMessages([
+          "Let's look deeper together...",
+          "Tell me more about what's on your mind...",
+        ])
+        updateState({
+          state: 'DEEPENING_1',
+          inputEnabled: true,
+          inputPlaceholder: "Share what's in your heart...",
+          inputType: 'text',
+        })
+        return
+      }
+
       await sendBotMessages([
         "Before I look deeper, I need to anchor our connection...",
         "Sometimes the visions continue after we speak...",
@@ -444,6 +459,22 @@ export function useConversation() {
     const personName = input.trim().split(' ')[0]
     const capitalized = personName.charAt(0).toUpperCase() + personName.slice(1).toLowerCase()
     updateUserData({ personName: capitalized })
+
+    // no-optin variant: skip the email anchor, go straight into the reading.
+    if (skipEmail()) {
+      await sendBotMessages([
+        `${capitalized}...`,
+        "The moment you typed that name, I felt something shift.",
+        "Tell me... what's happening between you?",
+      ])
+      updateState({
+        state: 'DEEPENING_1',
+        inputEnabled: true,
+        inputPlaceholder: "Share what's in your heart...",
+        inputType: 'text',
+      })
+      return
+    }
 
     await sendBotMessages([
       `${capitalized}...`,
@@ -1228,6 +1259,18 @@ export function useConversation() {
         state: 'PERSON_NAME_CAPTURE',
         inputEnabled: true,
         inputPlaceholder: "Their first name...",
+      })
+    } else if (skipEmail()) {
+      // no-optin variant: skip the email anchor, go straight into the reading.
+      await sendBotMessages([
+        "Let's look deeper together...",
+        "Tell me more about what's weighing on you...",
+      ])
+      updateState({
+        state: 'DEEPENING_1',
+        inputEnabled: true,
+        inputPlaceholder: "Share what's in your heart...",
+        inputType: 'text',
       })
     } else {
       await sendBotMessages([

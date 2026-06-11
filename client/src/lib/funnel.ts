@@ -29,6 +29,18 @@ export function currentFunnel(pathname?: string): FunnelParam | undefined {
   return funnelDefForPath(pathname ?? currentPath())?.param;
 }
 
+// Email-gate toggle. `?noemail=1` on ANY funnel link skips the in-chat email
+// capture and routes straight into the reading. Orthogonal to the funnel, so
+// it works on every current + future funnel URL with no duplication. `=0`
+// (or absent) keeps today's email-required behavior.
+// MVP: reads the live URL only. (Phase 2 will persist the choice into the
+// session so it survives refresh/welcome-back, and tag it in PostHog.)
+export function skipEmail(search?: string): boolean {
+  if (typeof window === "undefined") return false;
+  const p = new URLSearchParams(search ?? window.location.search);
+  return p.has("noemail") && p.get("noemail") !== "0";
+}
+
 // Prefix a V1 path with the active funnel's prefix when the user is in an ad
 // funnel, otherwise leave it alone. Use for in-funnel navigation so the user
 // stays inside their own funnel for the entire flow.
