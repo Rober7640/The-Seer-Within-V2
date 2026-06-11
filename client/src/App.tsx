@@ -108,6 +108,9 @@ function Router() {
         funnel,
         step: getPostHogStep(location),
         path: location,
+        // Palm multi-sign: tag which ad "sign" was quizzed so the funnel can be
+        // broken down per sign. Defaults to 'thumb' (the sign-less original).
+        sign: funnel === 'palm' ? (urlParams.get('sign') || 'thumb') : undefined,
         utm_source: urlParams.get('utm_source') || undefined,
         utm_campaign: urlParams.get('utm_campaign') || undefined,
         utm_medium: urlParams.get('utm_medium') || undefined,

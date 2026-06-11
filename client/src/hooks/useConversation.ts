@@ -518,11 +518,19 @@ export function useConversation() {
       // client's anonymous distinctId from earlier lander_view events.
       {
         const phFunnel = getPostHogFunnel() ?? 'v1'
+        // Palm multi-sign: which ad "sign" was quizzed (defaults to 'thumb').
+        // Set as a PERSON property at identify so the server-side
+        // purchase_completed (same email distinctId) can be broken down per
+        // sign without touching the payment path.
+        const palmSign = phFunnel === 'palm'
+          ? (parsePalmParams(window.location.search)?.sign ?? 'thumb')
+          : undefined
         identifyPH(input.trim(), {
           funnel: phFunnel,
           first_name: currentChat.userData.firstName || undefined,
+          ...(palmSign ? { palm_sign: palmSign } : {}),
         })
-        trackPH('lead_captured', { funnel: phFunnel, step: 'chat' })
+        trackPH('lead_captured', { funnel: phFunnel, step: 'chat', sign: palmSign })
       }
     } catch (e) {
       console.error('Failed to save lead:', e)
@@ -1325,12 +1333,19 @@ export function useConversation() {
       trackGAdsCheckout(price)
 
       // PostHog Phase 2: V1/fb checkout initiated
-      trackPH('checkout_initiated', {
-        funnel: getPostHogFunnel() ?? 'v1',
-        step: 'sales',
-        product: type === 'downsell' ? 'energy_clearing_ritual_downsell' : 'energy_clearing_ritual',
-        price_cents: price * 100,
-      })
+      {
+        const phFunnel = getPostHogFunnel() ?? 'v1'
+        const palmSign = phFunnel === 'palm'
+          ? (parsePalmParams(window.location.search)?.sign ?? 'thumb')
+          : undefined
+        trackPH('checkout_initiated', {
+          funnel: phFunnel,
+          step: 'sales',
+          product: type === 'downsell' ? 'energy_clearing_ritual_downsell' : 'energy_clearing_ritual',
+          price_cents: price * 100,
+          sign: palmSign,
+        })
+      }
 
       const response = await fetch('/api/checkout', {
         method: 'POST',
