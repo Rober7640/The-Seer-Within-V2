@@ -67,7 +67,7 @@ export function detectIntent(message: string): Intent {
   const lower = message.toLowerCase().trim()
 
   // CRITICAL: Check for self-harm/crisis signals FIRST
-  if (lower.match(/kill (myself|me)|want to die|suicide|end (my|it all)|hurt myself|self.?harm|don'?t want to (live|be alive)|better off dead/)) {
+  if (lower.match(/kill (myself|me)|want to die|suicide|\bend (my life|it all)\b|hurt myself|self.?harm|don'?t want to (live|be alive)|better off dead/)) {
     return 'crisis_safety'
   }
 
