@@ -294,7 +294,7 @@ export function useConversation() {
           // Version C — INTERACTIVE. Open with the mark line + one open question
           // (static, instant), then read HER answer with the LLM in
           // handlePalmReflect. This is what makes C different from B.
-          await sendBotMessages(openerCStart(palm.hook, palm.thumb))
+          await sendBotMessages(openerCStart(palm.sign, palm.hook, palm.thumb))
           updateState({
             state: 'PALM_REFLECT',
             inputEnabled: true,
@@ -303,9 +303,9 @@ export function useConversation() {
           return
         }
         if (palm.version === 'b') {
-          await sendBotMessages(openerB(palm.hook, palm.thumb))
+          await sendBotMessages(openerB(palm.sign, palm.hook, palm.thumb))
         } else {
-          await sendBotMessage(greetingA(palm.thumb))
+          await sendBotMessage(greetingA(palm.sign, palm.thumb))
         }
         updateState({
           state: 'NAME_CAPTURE',
@@ -412,6 +412,7 @@ export function useConversation() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             action: 'palmReflect',
+            palmSign: palm.sign,
             palmHook: palm.hook,
             palmThumb: palm.thumb,
             userData: chat.userData,
@@ -429,7 +430,7 @@ export function useConversation() {
     }
 
     if (llm) await sendBotMessages(llm)
-    else if (palm) await sendBotMessages(palmReflectFallback(palm.hook, palm.thumb))
+    else if (palm) await sendBotMessages(palmReflectFallback(palm.sign, palm.hook, palm.thumb))
 
     await sendBotMessage("Before we go deeper, tell me… what should I call you, dear?")
     updateState({

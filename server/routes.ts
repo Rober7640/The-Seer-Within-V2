@@ -359,7 +359,7 @@ export async function registerRoutes(
   // Chat API - Claude integration
   app.post("/api/chat", async (req: Request, res: Response) => {
     try {
-      const { action, userData, input, objectionCount, palmHook, palmThumb } =
+      const { action, userData, input, objectionCount, palmSign, palmHook, palmThumb } =
         req.body as ChatRequest;
 
       // V1 price split test — enrich userData with the variant prices
@@ -418,22 +418,28 @@ export async function registerRoutes(
           break;
         case "palmOpener": {
           // Validate against fixed enums before injecting into the prompt.
+          // palmSign is optional and defaults to 'thumb' (original behavior).
+          const validSigns = ["thumb", "finger-lock", "finger-shape", "palms", "palm-signs", "thumb-curve", "thumb-curve-alt", "hand-size", "finger-length", "finger-length-alt"];
           const validHooks = ["soulmate-timing", "already-met", "love-again"];
           const validThumbs = ["a", "b", "c"];
-          if (!validHooks.includes(palmHook ?? "") || !validThumbs.includes(palmThumb ?? "")) {
+          const sign = palmSign ?? "thumb";
+          if (!validSigns.includes(sign) || !validHooks.includes(palmHook ?? "") || !validThumbs.includes(palmThumb ?? "")) {
             return res.status(400).json({ error: "Invalid palm params" });
           }
-          result = await generatePalmOpener(userData, palmHook as string, palmThumb as string);
+          result = await generatePalmOpener(userData, sign, palmHook as string, palmThumb as string);
           break;
         }
         case "palmReflect": {
           // Interactive Version C — reads her typed answer (input).
+          // palmSign is optional and defaults to 'thumb' (original behavior).
+          const validSigns = ["thumb", "finger-lock", "finger-shape", "palms", "palm-signs", "thumb-curve", "thumb-curve-alt", "hand-size", "finger-length", "finger-length-alt"];
           const validHooks = ["soulmate-timing", "already-met", "love-again"];
           const validThumbs = ["a", "b", "c"];
-          if (!validHooks.includes(palmHook ?? "") || !validThumbs.includes(palmThumb ?? "")) {
+          const sign = palmSign ?? "thumb";
+          if (!validSigns.includes(sign) || !validHooks.includes(palmHook ?? "") || !validThumbs.includes(palmThumb ?? "")) {
             return res.status(400).json({ error: "Invalid palm params" });
           }
-          result = await generatePalmReflect(userData, palmHook as string, palmThumb as string, input ?? "");
+          result = await generatePalmReflect(userData, sign, palmHook as string, palmThumb as string, input ?? "");
           break;
         }
         case "valueExplain":

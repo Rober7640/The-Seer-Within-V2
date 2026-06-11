@@ -59,8 +59,10 @@ export interface ChatRequest {
   userData: UserData
   input: string
   objectionCount?: number
-  // Palm "quiz bridge" Version C — the thumb the visitor tapped on the lander,
-  // injected into Evelyn's first turn. Server validates against fixed enums.
+  // Palm "quiz bridge" Version C — the sign + option the visitor tapped on the
+  // lander, injected into Evelyn's first turn. Server validates against fixed
+  // enums. palmSign defaults to 'thumb' when absent (original behavior).
+  palmSign?: string
   palmHook?: string
   palmThumb?: string
 }

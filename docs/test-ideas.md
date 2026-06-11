@@ -1437,3 +1437,30 @@ The sections below represent a comprehensive brainstorm of every user-facing tes
 - [ ] User who paid in the funnel and then registers → System 2 is independent, paid minutes not transferred
 - [ ] No error or crash when a funnel email matches a new System 2 registration email
 - [ ] Emails pass basic spam score check (no spam trigger words, proper FROM/Reply-To headers)
+
+---
+
+## C27: Palm "quiz bridge" — multi-sign (`?sign=`)
+
+### Sign routing & backward-compat
+- [ ] `/fb-palm?hook=already-met` (no `sign`) renders the original **thumb** strip + "According to Your Thumb" eyebrow — byte-identical to before
+- [ ] `/fb-palm?hook=already-met&sign=finger-lock` renders the finger-lock strip, "According to How You Lock Your Hands" eyebrow, "Lace your fingers together…" instruction
+- [ ] Unknown `sign` (e.g. `&sign=bogus`) falls back to `thumb`, no crash
+- [ ] 3-option finger-lock shows a 3-up grid; tap targets A/B/C each crop to the correct panel
+
+### Read delivery per version (finger-lock)
+- [ ] Version A (`/fb-palm?...&sign=finger-lock`) → reading beat says "reading your hands…" → result card shows the finger-lock read for (hook × option) → CTA "There's more your hands are telling me…"
+- [ ] Version B (`/fb-palm/b?...&sign=finger-lock`) → 4 bubbles of the finger-lock read + name ask
+- [ ] Version C (`/fb-palm/c?...&sign=finger-lock`) → mark line + open question; on answer, reflect (or static fallback minus the mark line)
+- [ ] Bridge → chat URL carries `&sign=finger-lock` for non-default signs; omits `sign` for thumb
+- [ ] PostHog `palm_bridge_view` / `palm_thumb_select` / `palm_read_continue` all carry `sign`
+
+### Server (Version C reflect)
+- [ ] `POST /api/chat {action:'palmReflect', palmSign:'finger-lock', ...}` validates and injects finger-lock mark/reading vocab
+- [ ] Missing `palmSign` defaults to `thumb` (original behavior); invalid `palmSign` → 400
+- [ ] `PALM_SIGN_VOCAB` (server) matches `SIGNS` (client) mark + reading strings
+
+### Copy integrity (all signs)
+- [ ] No read predicts a date or a name; ends on "let me look closer…"; no exclamation/emoji
+- [ ] love-again reads acknowledge the wound before the "yes" beat
+- [ ] Each read names the mark in sentence 1 (self-contained), never the letter A/B/C

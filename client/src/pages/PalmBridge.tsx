@@ -6,53 +6,33 @@ import { funnelPath } from '../lib/funnel'
 import { track } from '../lib/posthog'
 import {
   DEFAULT_HOOK,
+  DEFAULT_SIGN,
   HEADLINES,
-  INSTRUCTION,
   cardRead,
-  CONTINUE_CTA,
-  PALM_THUMBS,
+  getSign,
   isPalmHook,
+  isPalmSign,
   type PalmHook,
-  type PalmThumb,
+  type PalmOption,
+  type PalmSign,
   type PalmVersion,
 } from '../content/palmReads'
 
-// The /fb-palm "quiz bridge" lander. Continues the FB thumb-reading quiz so the
-// click doesn't drop the user into a cold chat. See fb-palm/docs/PRD-quiz-bridge.md.
-//   pick  → Screen 1: same A/B/C thumbs from the ad, now tappable
-//   reading → Screen 2: 1.5s "reading your thumb" beat (Evelyn appears)
-//   result → Screen 3 (Version A only): the read card + CTA into /fb-palm/chat
+// The /fb-palm "quiz bridge" lander. Continues the FB quiz so the click doesn't
+// drop the user into a cold chat. See fb-palm/docs/PRD-quiz-bridge.md.
+//   pick    → Screen 1: same A/B/C art from the ad, now tappable
+//   reading → Screen 2: 1.5s "reading your {sign}" beat (Evelyn appears)
+//   result  → Screen 3 (Version A only): the read card + CTA into /fb-palm/chat
 //
-// Two versions, split by VWO across two links:
-//   A  (/fb-palm)    → shows the result card, then a brief chat greeting
-//   B  (/fb-palm/b)  → no card; the reading beat hands straight into the chat,
-//                      which delivers the read as messages (carries ?v=b)
+// Two axes (both read from the URL, both default to the original behavior):
+//   sign    — ?sign= which physical tell the ad quizzed (default 'thumb')
+//   version — route /b → B, /c → C, else A
+// Everything below the headline is driven by the sign config in palmReads.ts, so
+// adding a new ad concept needs no change here.
 
 type Phase = 'pick' | 'reading' | 'result'
 
-// Horizontal background-position to crop the 3-up strip (972×460, equal thirds)
-// down to a single thumb. Avoids slicing the asset.
-const THUMB_POS: Record<PalmThumb, string> = { a: '0%', b: '50%', c: '100%' }
-const THUMB_LABEL: Record<PalmThumb, string> = { a: 'A', b: 'B', c: 'C' }
-const STRIP_URL = "url('/palm/thumbs-strip.png')"
-
-function thumbStyle(t: PalmThumb): React.CSSProperties {
-  return {
-    aspectRatio: '324 / 460',
-    backgroundImage: STRIP_URL,
-    backgroundSize: '300% 100%',
-    backgroundPosition: `${THUMB_POS[t]} center`,
-    backgroundRepeat: 'no-repeat',
-  }
-}
-
-function Avatar() {
-  return (
-    <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-white shadow-xl bg-purple-100">
-      <img src="/evelyn-avatar.png" alt="Evelyn Cross" className="w-full h-full object-cover" />
-    </div>
-  )
-}
+const OPTION_LABEL: Record<PalmOption, string> = { a: 'A', b: 'B', c: 'C' }
 
 export default function PalmBridge() {
   const [location, navigate] = useLocation()
@@ -64,17 +44,39 @@ export default function PalmBridge() {
   const params = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '')
   const hookParam = params.get('hook')
   const hook: PalmHook = isPalmHook(hookParam) ? hookParam : DEFAULT_HOOK
+  const signParam = params.get('sign')
+  const sign: PalmSign = isPalmSign(signParam) ? signParam : DEFAULT_SIGN
   const seg = params.get('seg') || undefined
   const utmContent = params.get('utm_content') || undefined
 
-  const [phase, setPhase] = useState<Phase>('pick')
-  const [thumb, setThumb] = useState<PalmThumb | null>(null)
+  const cfg = getSign(sign)
+  const count = cfg.options.length
 
-  // Send the chosen thumb (+ version) into the chat, where the read is delivered.
-  const goToChat = (t: PalmThumb) => {
-    track('palm_read_continue', { hook, thumb: t, version })
+  // Crop the N-up strip down to a single option via background-position.
+  // The strip is `count` equal panels; aspectRatio keeps one panel undistorted.
+  const optionStyle = (opt: PalmOption): React.CSSProperties => {
+    const i = cfg.options.indexOf(opt)
+    const pos = count > 1 ? (i / (count - 1)) * 100 : 0
+    return {
+      aspectRatio: `${cfg.strip.width / count} / ${cfg.strip.height}`,
+      backgroundImage: `url('${cfg.strip.url}')`,
+      backgroundSize: `${count * 100}% 100%`,
+      backgroundPosition: `${pos}% center`,
+      backgroundRepeat: 'no-repeat',
+    }
+  }
+
+  const [phase, setPhase] = useState<Phase>('pick')
+  const [thumb, setThumb] = useState<PalmOption | null>(null)
+
+  // Send the chosen option (+ sign + version) into the chat, where the read is
+  // delivered. `sign` is only appended when it isn't the default, so original
+  // thumb links stay byte-identical.
+  const goToChat = (t: PalmOption) => {
+    track('palm_read_continue', { sign, hook, thumb: t, version })
     const v = version === 'a' ? '' : `&v=${version}`
-    navigate(`${funnelPath('/chat')}?hook=${hook}&thumb=${t}${v}`)
+    const s = sign === DEFAULT_SIGN ? '' : `&sign=${sign}`
+    navigate(`${funnelPath('/chat')}?hook=${hook}&thumb=${t}${s}${v}`)
   }
 
   // Landing on the bridge = a fresh quiz. Drop any prior chat session so the
@@ -88,7 +90,7 @@ export default function PalmBridge() {
 
   // Screen 1 shown
   useEffect(() => {
-    track('palm_bridge_view', { hook, seg, utm_content: utmContent, version })
+    track('palm_bridge_view', { sign, hook, seg, utm_content: utmContent, version })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -103,9 +105,9 @@ export default function PalmBridge() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phase, thumb, version])
 
-  const onPick = (t: PalmThumb) => {
+  const onPick = (t: PalmOption) => {
     setThumb(t)
-    track('palm_thumb_select', { hook, thumb: t, version })
+    track('palm_thumb_select', { sign, hook, thumb: t, version })
     setPhase('reading')
   }
 
@@ -126,11 +128,11 @@ export default function PalmBridge() {
       <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl p-6 md:p-8 max-w-md w-full mx-auto relative z-10 border border-white/20">
         {phase === 'pick' && (
           <>
-            {/* Eyebrow — matches the ad's "According to Your Thumb" framing */}
+            {/* Eyebrow — matches the ad's "According to Your …" framing */}
             <div className="flex items-center justify-center gap-3 mb-3">
               <span className="h-px w-8 bg-purple-300/60" />
               <span className="text-[11px] uppercase tracking-[0.2em] text-purple-500 font-semibold whitespace-nowrap">
-                According to Your Thumb
+                {cfg.eyebrow}
               </span>
               <span className="h-px w-8 bg-purple-300/60" />
             </div>
@@ -138,17 +140,17 @@ export default function PalmBridge() {
             <h2 className="font-serif text-2xl md:text-3xl text-gray-900 text-center mb-2 leading-tight">
               {HEADLINES[hook]}
             </h2>
-            <p className="text-gray-500 text-center text-sm mb-6">{INSTRUCTION}</p>
-            <div className="grid grid-cols-3 gap-2 md:gap-3">
-              {PALM_THUMBS.map((t) => (
+            <p className="text-gray-500 text-center text-sm mb-6">{cfg.instruction}</p>
+            <div className={`grid ${count === 2 ? 'grid-cols-2' : 'grid-cols-3'} gap-2 md:gap-3`}>
+              {cfg.options.map((t) => (
                 <button
                   key={t}
                   onClick={() => onPick(t)}
                   className="group rounded-xl border-2 border-gray-200 hover:border-purple-400 transition-all duration-200 hover:scale-[1.03] active:scale-[0.97] overflow-hidden bg-white"
                   data-testid={`palm-thumb-${t}`}
-                  aria-label={`Thumb ${THUMB_LABEL[t]}`}
+                  aria-label={`Option ${OPTION_LABEL[t]}`}
                 >
-                  <div className="w-full" style={thumbStyle(t)} />
+                  <div className="w-full" style={optionStyle(t)} />
                 </button>
               ))}
             </div>
@@ -164,7 +166,7 @@ export default function PalmBridge() {
         {phase === 'reading' && (
           <div className="flex flex-col items-center py-8 animate-fade-in">
             <Avatar />
-            <p className="text-gray-700 text-center mt-4 mb-3 font-serif text-lg">Evelyn is reading your thumb…</p>
+            <p className="text-gray-700 text-center mt-4 mb-3 font-serif text-lg">Evelyn is reading your {cfg.beatNoun}…</p>
             <div className="flex gap-1.5 mb-3">
               <span className="w-2.5 h-2.5 bg-purple-400 rounded-full animate-bounce [animation-delay:-0.3s]" />
               <span className="w-2.5 h-2.5 bg-purple-400 rounded-full animate-bounce [animation-delay:-0.15s]" />
@@ -179,17 +181,17 @@ export default function PalmBridge() {
             <Avatar />
             <div
               className="mt-4 mb-4 w-24 rounded-lg overflow-hidden border border-gray-200"
-              style={thumbStyle(thumb)}
+              style={optionStyle(thumb)}
             />
             <p className="text-gray-700 text-center text-sm md:text-base leading-relaxed mb-6">
-              {cardRead(hook, thumb)}
+              {cardRead(sign, hook, thumb)}
             </p>
             <button
               onClick={onContinue}
               className="w-full py-4 px-6 rounded-lg bg-gradient-to-r from-purple-600 to-purple-800 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
               data-testid="palm-continue"
             >
-              {CONTINUE_CTA} ▸
+              {cfg.continueCta} ▸
             </button>
           </div>
         )}
@@ -211,6 +213,14 @@ export default function PalmBridge() {
         </div>
         <p>&copy; {new Date().getFullYear()} Cosmo Numerology Pte Ltd. For Entertainment Purposes Only.</p>
       </footer>
+    </div>
+  )
+}
+
+function Avatar() {
+  return (
+    <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-white shadow-xl bg-purple-100">
+      <img src="/evelyn-avatar.png" alt="Evelyn Cross" className="w-full h-full object-cover" />
     </div>
   )
 }
