@@ -31,6 +31,7 @@ import migrateRouter from "./routes/migrate";
 import astrologyRouter from "./routes/astrology";
 import quizRouter from "./routes/quiz";
 import evelynLanderRouter from "./routes/evelynLander";
+import personaLanderRouter from "./routes/personaLander";
 import {
   runHealthCheck,
   runReadinessCheck,
@@ -310,6 +311,8 @@ export async function registerRoutes(
   app.use("/api/astrology", astrologyRouter);
   app.use("/api/quiz", quizRouter);
   app.use("/api/evelyn-lander", evelynLanderRouter);
+  // Generalized lander for the additional personas (Marcus, Luna, Nova, Maren).
+  app.use("/api/persona-lander/:persona", personaLanderRouter);
 
   // Public unsubscribe endpoint for partner emails (CAN-SPAM compliance).
   // Mounted at root so the URL is a clean https://www.theseerwithin.com/unsubscribe?email=...&src=...

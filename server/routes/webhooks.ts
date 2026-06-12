@@ -4,7 +4,7 @@ import { Router, Request, Response } from 'express';
 import { Webhook } from 'svix';
 import Stripe from 'stripe';
 import { db } from '../lib/db';
-import { followUpEmails, userFollowUpPreferences, migrationDripEmails, topupEmails, aidenFollowupEmails, users, emailSuppression, creditPurchases, soulmateLanderSessions } from '@shared/schema';
+import { followUpEmails, userFollowUpPreferences, migrationDripEmails, topupEmails, aidenFollowupEmails, personaFollowupEmails, users, emailSuppression, creditPurchases, soulmateLanderSessions } from '@shared/schema';
 import { and, eq, sql } from 'drizzle-orm';
 import logger from '../lib/logger';
 import { posthog } from '../lib/posthog';
@@ -274,6 +274,55 @@ router.post('/resend', async (req: Request, res: Response) => {
       return res.status(200).json({ received: true });
     }
 
+    // Check generalized persona drip emails (Marcus/Luna/Nova/Maren).
+    const personaRecords = await db
+      .select()
+      .from(personaFollowupEmails)
+      .where(eq(personaFollowupEmails.resendEmailId, emailId))
+      .limit(1);
+
+    const personaRecord = personaRecords[0];
+
+    if (personaRecord) {
+      switch (event.type) {
+        case 'email.opened':
+          if (!personaRecord.openedAt) {
+            await db
+              .update(personaFollowupEmails)
+              .set({ openedAt: new Date(), updatedAt: new Date() })
+              .where(eq(personaFollowupEmails.id, personaRecord.id));
+          }
+          break;
+
+        case 'email.clicked':
+          if (!personaRecord.clickedAt) {
+            await db
+              .update(personaFollowupEmails)
+              .set({ clickedAt: new Date(), updatedAt: new Date() })
+              .where(eq(personaFollowupEmails.id, personaRecord.id));
+          }
+          break;
+
+        case 'email.bounced':
+          await db
+            .update(personaFollowupEmails)
+            .set({ status: 'failed', errorMessage: 'bounced', updatedAt: new Date() })
+            .where(eq(personaFollowupEmails.id, personaRecord.id));
+          await autoUnsubscribe(personaRecord.userId, 'bounced');
+          break;
+
+        case 'email.complained':
+          await db
+            .update(personaFollowupEmails)
+            .set({ status: 'failed', errorMessage: 'spam_complaint', updatedAt: new Date() })
+            .where(eq(personaFollowupEmails.id, personaRecord.id));
+          await autoUnsubscribe(personaRecord.userId, 'spam_complaint');
+          break;
+      }
+
+      return res.status(200).json({ received: true });
+    }
+
     logger.info(`Resend webhook: No matching email record for ${emailId}`);
     return res.status(200).json({ received: true });
   } catch (error) {
@@ -340,6 +389,17 @@ router.get('/unsubscribe', async (req: Request, res: Response) => {
 
       if (aidenRecord[0]) {
         userId = aidenRecord[0].userId;
+      }
+    }
+
+    if (!userId) {
+      const personaRecord = await db
+        .select({ userId: personaFollowupEmails.userId })
+        .from(personaFollowupEmails)
+        .where(eq(personaFollowupEmails.unsubscribeToken, token))
+        .limit(1);
+      if (personaRecord[0]) {
+        userId = personaRecord[0].userId;
       }
     }
 
@@ -418,6 +478,17 @@ router.post('/unsubscribe', async (req: Request, res: Response) => {
 
       if (aidenRecord[0]) {
         userId = aidenRecord[0].userId;
+      }
+    }
+
+    if (!userId) {
+      const personaRecord = await db
+        .select({ userId: personaFollowupEmails.userId })
+        .from(personaFollowupEmails)
+        .where(eq(personaFollowupEmails.unsubscribeToken, token))
+        .limit(1);
+      if (personaRecord[0]) {
+        userId = personaRecord[0].userId;
       }
     }
 
