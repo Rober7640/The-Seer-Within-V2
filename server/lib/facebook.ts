@@ -111,14 +111,33 @@ export async function sendFacebookEvent(data: EventData): Promise<{ success: boo
       body,
     });
 
+    const responseText = await response.text();
+
     if (!response.ok) {
-      const errorText = await response.text();
-      logger.error('Facebook Conversions API error', { error: errorText });
-      return { success: false, error: errorText };
+      // Log the routing target (stape vs direct) + status + body so a Meta/Stape
+      // rejection is visible per-event instead of silently swallowed.
+      logger.error('Facebook Conversions API error', {
+        eventName: data.eventName,
+        eventId: data.eventId,
+        contentCategory: data.contentCategory,
+        via: FB_CAPI_ENDPOINT ? 'stape' : 'direct',
+        status: response.status,
+        body: responseText.slice(0, 600),
+      });
+      return { success: false, error: responseText };
     }
 
-    const result = await response.json();
-    logger.debug('FB Event sent', { eventName: data.eventName, eventId: data.eventId });
+    // Diagnostic: surface Meta/Stape's actual ACK (events_received, fbtrace_id,
+    // messages) at info level so we can confirm each event was accepted — not
+    // just that we POSTed it. Dial back to debug once tracking is verified.
+    logger.info('FB Event sent', {
+      eventName: data.eventName,
+      eventId: data.eventId,
+      contentCategory: data.contentCategory,
+      via: FB_CAPI_ENDPOINT ? 'stape' : 'direct',
+      status: response.status,
+      ack: responseText.slice(0, 600),
+    });
     return { success: true };
   } catch (error) {
     logger.error('Failed to send Facebook event', { error: String(error) });
