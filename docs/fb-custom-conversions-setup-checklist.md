@@ -56,32 +56,40 @@ carries it. So:
 
 ## SCREEN 4 — Fill in "FE Purchases"
 
-In the dialog:
+The dialog is titled **"Create a custom conversion"**. Fill it top to bottom:
 
-- [ ] **Name:** `FE Purchases`
-- [ ] **Description:** (optional) `Front-end ritual purchases only`
-- [ ] **Data source:** select your pixel (e.g. 446814716830295).
-- [ ] **Conversion event:** choose **Purchase** from the dropdown.
-      (NOT "All URL Traffic" — pick the standard Purchase event.)
-- [ ] Under **Rules / Optimize for** you'll see "URL" by default — change the
-      first dropdown from **URL** to **Event Parameters** (or "Custom data").
-- [ ] In the parameter dropdown choose **`content_category`**.
-- [ ] Set the operator to **equals** (`=`).
-- [ ] Type the value: `frontend`
-- [ ] (Leave value/currency settings as default — value flows from the event.)
+- [ ] **Action Source** → leave as **Website**.
+- [ ] **Event** → select **Purchase**. (If your pixel hasn't sent a Purchase yet
+      it won't appear — do a test purchase first; see Screen 2.)
+- [ ] **Rules · Required** — "This custom conversion must meet all of these rules."
+      The rule row has 4 parts, left to right:
+  - [ ] **1st dropdown** → **Event Parameters**. (Default is often **URL** — you
+        MUST change it. The dropdown also lists Referring Domain / Page and
+        Product Info — ignore those.)
+  - [ ] **2nd box (parameter name, free text)** → type exactly `content_category`
+        (lowercase, underscore — a typo matches nothing).
+  - [ ] **3rd dropdown (operator)** → choose **equals** if offered; **contains**
+        also works (our values are exact single words).
+  - [ ] **4th box (value)** → type exactly `frontend`.
+- [ ] **Name** → scroll within the dialog to find it; set to `FE Purchases`.
+- [ ] **Description** (optional) → `Front-end ritual purchases only`.
+- [ ] (Leave value/currency defaults — the $ flows from the event.)
 - [ ] Click **Create**.
 
 You should now see "FE Purchases" in the Custom Conversions list.
+
+> Note: the parameter is a **free-text box**, not a dropdown — Meta won't
+> suggest `content_category`, you type it. It only *validates* against received
+> events, so confirm Screen 2 first.
 
 ---
 
 ## SCREEN 5 — Repeat for "Upsells"
 
 - [ ] Click **Create Custom Conversion** again.
-- [ ] **Name:** `Upsells`
-- [ ] **Data source:** same pixel.
-- [ ] **Conversion event:** **Purchase**.
-- [ ] Rule: **Event Parameters** → **`content_category`** → **equals** → `upsell`
+- [ ] **Action Source** → **Website**; **Event** → **Purchase** (same as above).
+- [ ] Rule: **Event Parameters** → `content_category` → **equals** → `upsell`.
+- [ ] **Name** → `Upsells`.
 - [ ] Click **Create**.
 
 You now have two Custom Conversions: **FE Purchases** and **Upsells**.
