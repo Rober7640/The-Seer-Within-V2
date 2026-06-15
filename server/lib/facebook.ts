@@ -31,6 +31,10 @@ interface EventData {
   value?: number;
   currency?: string;
   contentName?: string;
+  // 'frontend' | 'upsell' | 'downsell' — the classifier Meta Custom
+  // Conversions filter on so FE vs upsell counts stay separable even though
+  // every monetized charge now fires as a standard `Purchase` event.
+  contentCategory?: string;
   userData?: UserData;
 }
 
@@ -78,6 +82,9 @@ export async function sendFacebookEvent(data: EventData): Promise<{ success: boo
     if (data.contentName) {
       customData.content_name = data.contentName;
     }
+    if (data.contentCategory) {
+      customData.content_category = data.contentCategory;
+    }
 
     const eventPayload = {
       event_name: data.eventName,
@@ -104,14 +111,33 @@ export async function sendFacebookEvent(data: EventData): Promise<{ success: boo
       body,
     });
 
+    const responseText = await response.text();
+
     if (!response.ok) {
-      const errorText = await response.text();
-      logger.error('Facebook Conversions API error', { error: errorText });
-      return { success: false, error: errorText };
+      // Log the routing target (stape vs direct) + status + body so a Meta/Stape
+      // rejection is visible per-event instead of silently swallowed.
+      logger.error('Facebook Conversions API error', {
+        eventName: data.eventName,
+        eventId: data.eventId,
+        contentCategory: data.contentCategory,
+        via: FB_CAPI_ENDPOINT ? 'stape' : 'direct',
+        status: response.status,
+        body: responseText.slice(0, 600),
+      });
+      return { success: false, error: responseText };
     }
 
-    const result = await response.json();
-    logger.debug('FB Event sent', { eventName: data.eventName, eventId: data.eventId });
+    // Diagnostic: surface Meta/Stape's actual ACK (events_received, fbtrace_id,
+    // messages) at info level so we can confirm each event was accepted — not
+    // just that we POSTed it. Dial back to debug once tracking is verified.
+    logger.info('FB Event sent', {
+      eventName: data.eventName,
+      eventId: data.eventId,
+      contentCategory: data.contentCategory,
+      via: FB_CAPI_ENDPOINT ? 'stape' : 'direct',
+      status: response.status,
+      ack: responseText.slice(0, 600),
+    });
     return { success: true };
   } catch (error) {
     logger.error('Failed to send Facebook event', { error: String(error) });
@@ -177,6 +203,8 @@ export async function fireV2PurchaseEvent(purchaseId: string): Promise<void> {
       value: (purchase.priceUsd ?? 0) / 100,
       currency: 'USD',
       contentName,
+      // V2 credit topups are the funnel's front-end monetization.
+      contentCategory: 'frontend',
       userData: {
         email: user.email,
         firstName: user.firstName,
@@ -293,15 +321,24 @@ export async function fireStripePurchaseEvent(
   params: StripeFbEventParams,
 ): Promise<void> {
   try {
-    const eventName = resolveStripeEventName(params.product, params.funnel);
-    if (!eventName) {
+    // logicalName drives the event_id ONLY — it stays Purchase/Upsell/Upsell2
+    // so each charge keeps its distinct, dedup-safe id (purchase_*, upsell_u1_*,
+    // upsell2_*). The id scheme is intentionally unchanged.
+    const logicalName = resolveStripeEventName(params.product, params.funnel);
+    if (!logicalName) {
       logger.warn('fireStripePurchaseEvent: unknown product, skipping', {
         product: params.product,
       });
       return;
     }
 
-    const eventId = makeStripeEventId(eventName, params.product, params.mainSessionId);
+    const eventId = makeStripeEventId(logicalName, params.product, params.mainSessionId);
+
+    // Every monetized Stripe charge now fires as a standard `Purchase` so its
+    // value enters Meta's Website Purchase ROAS. The FE/upsell split is
+    // preserved via content_category, surfaced through Custom Conversions.
+    const eventName = 'Purchase';
+    const contentCategory = logicalName === 'Purchase' ? 'frontend' : 'upsell';
 
     // Backfill email/firstName when missing (1-click upsell PIs don't carry
     // them in metadata; pull from the original conversation row).
@@ -329,11 +366,14 @@ export async function fireStripePurchaseEvent(
       value: params.amountCents / 100,
       currency: 'USD',
       contentName,
+      contentCategory,
       userData: { email, firstName },
     });
 
     logger.info('FB Stripe event fired', {
       eventName,
+      logicalName,
+      contentCategory,
       eventId,
       product: params.product,
       funnel: params.funnel ?? 'v1',

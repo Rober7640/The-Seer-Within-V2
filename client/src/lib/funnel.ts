@@ -45,7 +45,17 @@ export function funnelPath(v1Path: string, pathname?: string): string {
 // aiden). Kept separate from currentFunnel() because the backend depends on
 // its "v1-fb" | "v1-fb2" | "v1-gdn" | undefined contract.
 
-export type PostHogFunnel = "soulmate" | "fb" | "fb2" | "gdn" | "palm" | "v1" | "evelyn" | "aiden";
+export type PostHogFunnel =
+  | "soulmate" | "fb" | "fb2" | "gdn" | "palm" | "v1" | "evelyn" | "aiden"
+  | "marcus" | "luna" | "nova" | "maren";
+
+// Generalized persona landers → their PostHog funnel name. One route each.
+const PERSONA_LANDER_FUNNELS: Record<string, PostHogFunnel> = {
+  "/marcus": "marcus",
+  "/luna": "luna",
+  "/nova": "nova",
+  "/maren": "maren",
+};
 
 // Strip query, hash, trailing slash, lowercase. Mirrors the fix in 83fa6a5
 // so URL variants like /evelyn/ or /aiden?utm=x don't drop to "unknown".
@@ -60,6 +70,7 @@ export function getPostHogFunnel(pathname?: string): PostHogFunnel | null {
   if (adDef) return adDef.posthog as PostHogFunnel;
   if (p === "/evelyn" || p.startsWith("/evelyn/")) return "evelyn";
   if (p === "/aiden" || p.startsWith("/aiden/")) return "aiden";
+  if (PERSONA_LANDER_FUNNELS[p]) return PERSONA_LANDER_FUNNELS[p];
   if (p === "/" || p === "/chat" || p === "/welcome1" || p === "/welcome2" || p === "/success") {
     return "v1";
   }
@@ -107,6 +118,11 @@ export function getPostHogStep(pathname?: string): string {
     case "evelyn":
       return "landing";
     case "aiden":
+      return "landing";
+    case "marcus":
+    case "luna":
+    case "nova":
+    case "maren":
       return "landing";
   }
 }

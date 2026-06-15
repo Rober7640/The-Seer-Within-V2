@@ -735,23 +735,116 @@ const PALM_HOOK_PAIN: Record<string, string> = {
   'love-again': "She is asking, after heartbreak, whether she will ever love again.",
 }
 
-const PALM_THUMB_MARK: Record<string, string> = {
-  a: 'a trident, three lines rising to one',
-  b: 'a Y that leans right, reaching outward',
-  c: 'a Y that leans left, curling inward',
+// Per-sign option vocab (mark + reading label). Mirrors the SIGNS registry in
+// client/src/content/palmReads.ts — keep them in sync. `sign` defaults to
+// 'thumb'; the route validates sign/hook/option against these keys before
+// injecting, so lookups never miss.
+const PALM_SIGN_VOCAB: Record<string, { mark: Record<string, string>; reading: Record<string, string> }> = {
+  thumb: {
+    mark: {
+      a: 'a trident, three lines rising to one',
+      b: 'a Y that leans right, reaching outward',
+      c: 'a Y that leans left, curling inward',
+    },
+    reading: {
+      a: 'the gathering heart',
+      b: 'the reaching heart',
+      c: 'the inward heart',
+    },
+  },
+  'finger-lock': {
+    mark: {
+      a: 'your right thumb crossing over the left when your hands lock',
+      b: 'your thumbs locking perfectly even, neither one above the other',
+      c: 'your left thumb crossing over the right when your hands lock',
+    },
+    reading: {
+      a: 'the leading heart',
+      b: 'the mirrored heart',
+      c: 'the guarded heart',
+    },
+  },
+  'finger-shape': {
+    mark: {
+      a: 'a finger that runs straight and even, its sides like two steady lines',
+      b: 'a fingertip that narrows to a soft, tapering point',
+      c: 'a finger that swells and dips at the knuckles, ridged and pronounced',
+    },
+    reading: {
+      a: 'the steady heart',
+      b: 'the dreaming heart',
+      c: 'the discerning heart',
+    },
+  },
+  palms: {
+    mark: {
+      a: 'your two heart lines meeting level when your palms come together, neither rising above the other',
+      b: 'your right heart line sitting higher than the left when your palms meet',
+      c: 'your left heart line sitting higher than the right when your palms meet',
+    },
+    reading: {
+      a: 'the even heart',
+      b: 'the giving heart',
+      c: 'the deep heart',
+    },
+  },
+  'palm-signs': {
+    mark: {
+      a: 'your heart lines reaching across to meet as one unbroken line when you cup your hands',
+      b: 'your heart lines rising toward each other but holding a small space between them',
+    },
+    reading: {
+      a: 'the joined heart',
+      b: 'the rising heart',
+    },
+  },
+  'thumb-curve': {
+    mark: {
+      a: 'a thumb that holds straight and firm, refusing to bend back',
+      b: 'a thumb that arches back, supple and open',
+    },
+    reading: {
+      a: 'the constant heart',
+      b: 'the open heart',
+    },
+  },
+  'hand-size': {
+    mark: {
+      a: 'hands that run large and generous, made to hold and shelter',
+      b: 'hands that run small and quick, made to reach and leap',
+    },
+    reading: {
+      a: 'the sheltering heart',
+      b: 'the daring heart',
+    },
+  },
+  'finger-length': {
+    mark: {
+      a: 'your ring finger standing as tall as your index, or rising past it',
+      b: 'your ring and index fingers standing almost perfectly even',
+      c: 'your index finger standing clearly above your ring',
+    },
+    reading: {
+      a: 'the magnetic heart',
+      b: 'the harmonious heart',
+      c: 'the certain heart',
+    },
+  },
 }
 
-const PALM_THUMB_READING: Record<string, string> = {
-  a: 'the gathering heart',
-  b: 'the reaching heart',
-  c: 'the inward heart',
+// -alt signs reuse their twin's vocab (same concept, alternate art).
+PALM_SIGN_VOCAB['thumb-curve-alt'] = PALM_SIGN_VOCAB['thumb-curve']
+PALM_SIGN_VOCAB['finger-length-alt'] = PALM_SIGN_VOCAB['finger-length']
+
+function palmVocab(sign: string, thumb: string): { mark: string; reading: string } {
+  const v = PALM_SIGN_VOCAB[sign] || PALM_SIGN_VOCAB.thumb
+  return { mark: v.mark[thumb] || '', reading: v.reading[thumb] || '' }
 }
 
-export function buildPalmOpenerPrompt(userData: UserData, hook: string, thumb: string): string {
+export function buildPalmOpenerPrompt(userData: UserData, sign: string, hook: string, thumb: string): string {
   const firstName = userData.firstName || ''
   const hookPain = PALM_HOOK_PAIN[hook] || ''
-  const mark = PALM_THUMB_MARK[thumb] || ''
-  const reading = PALM_THUMB_READING[thumb] || ''
+  const { mark, reading } = palmVocab(sign, thumb)
   const letter = thumb.toUpperCase()
 
   return `
@@ -787,10 +880,9 @@ Each message max 25 words.
 
 // Version C (interactive) — Evelyn reads what she just typed in answer to the
 // opener question, woven with the thumb. This is the real LLM moment.
-export function buildPalmReflectPrompt(userData: UserData, hook: string, thumb: string, answer: string): string {
+export function buildPalmReflectPrompt(userData: UserData, sign: string, hook: string, thumb: string, answer: string): string {
   const hookPain = PALM_HOOK_PAIN[hook] || ''
-  const mark = PALM_THUMB_MARK[thumb] || ''
-  const reading = PALM_THUMB_READING[thumb] || ''
+  const { mark, reading } = palmVocab(sign, thumb)
 
   return `
 ${EVELYN_BASE_PROMPT}

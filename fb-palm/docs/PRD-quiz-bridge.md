@@ -3,7 +3,12 @@
 **Status:** Built — in review
 **Owner:** Media buying
 **Surface:** isolated `/fb-palm` funnel (Facebook palm/thumb ad traffic). `/fb`, `/fb2`, `/gdn`, homepage untouched.
-**Date:** 2026-06-08
+**Date:** 2026-06-08 · **Last updated:** 2026-06-11 (multi-sign)
+
+> **TL;DR for whoever's testing:** open `/fb-palm?hook=<hook>&sign=<sign>` for Version A,
+> add `/b` or `/c` to the path for B/C. `hook ∈ {soulmate-timing, already-met, love-again}`;
+> `sign ∈` the 10 in the **Signs catalog (§6c)**. Omit `sign` = the original thumb quiz.
+> Full clickable matrix + the local-vs-deployed Version-C caveat are in **§6c**.
 
 ---
 
@@ -15,7 +20,14 @@ Our top-3 Facebook creatives (`ad1/2/3`) are **interactive thumb-reading quizzes
 
 ## 2. Solution
 
-A bridge that picks up exactly where the ad left off: same headline, same A/B/C thumbs (now tappable) → a short "reading" beat → the read is delivered → flows into the existing free-reading chat. We test **three ways of delivering the read** (§4).
+A bridge that picks up exactly where the ad left off: same headline, the **same tappable quiz art from the ad** (now tappable) → a short "reading" beat → the read is delivered → flows into the existing free-reading chat. We test **three ways of delivering the read** (§4).
+
+**Two independent axes (see §6b):** the **sign** is *which physical "tell"* the ad quizzed
+(thumb-crease marks, how your fingers lock, fingertip shape, palm-line height…); the **hook**
+is *which love question* it asked. The bridge is **sign-driven** — every sign is a config entry
+in `palmReads.ts`, not new UI — so a new ad creative becomes a new sign + its strip art, and the
+A/B/C version split + the whole chat funnel are reused unchanged. The original thumb quiz is just
+`sign=thumb` (the default).
 
 ## 3. Architecture — isolated funnel, reused chat
 
@@ -109,25 +121,119 @@ Bridge → chat carries the pick + version: `/fb-palm/chat?hook=<hook>&thumb=<a|
 
 | Param | Set by | Values | Purpose |
 |---|---|---|---|
+| `sign` | ad URL | `thumb` (default) · `finger-lock` | which physical "tell" was quizzed → art + instruction + read vocab |
 | `hook` | ad URL | `soulmate-timing` · `already-met` · `love-again` | headline + read column |
-| `thumb` | S1 tap | `a` · `b` · `c` | read row, injected into chat |
+| `thumb` | S1 tap | `a` · `b` · `c` | read row (the tapped option), injected into chat |
 | `v` | route (`/b`,`/c`) | `b` · `c` (absent = A) | which opener the chat uses |
 | `seg`, `utm_content` | ad URL | free / `ad1..3` | reporting/attribution |
 
-`hook → bucket`: all v1 hooks → `love`.
+`hook → bucket`: all v1 hooks → `love`. `sign` defaults to `thumb` when absent, so every original `/fb-palm` link is byte-identical.
+
+## 6b. Signs — multiple ad visuals on one funnel
+
+The original ad quizzed **thumb-crease marks**. New ads quiz other palmistry "tells"
+(how your fingers lock, fingertip shape, palm-line height…). Each is a **sign**: a
+config entry, not new UI. The bridge, chat handoff, and A/B/C split are
+sign-agnostic and read everything from the registry.
+
+- **Registry:** `SIGNS` in `client/src/content/palmReads.ts` — one `SignConfig` per
+  sign: `eyebrow`, `instruction`, `beatNoun` ("reading your {beatNoun}…"),
+  `continueCta`, `chooseMoment`, `strip {url,width,height}`, `options` (A/B[/C]),
+  per-option `mark` + `reading`, and `reads[hook][option]` (the 4-beat build).
+- **Server mirror:** `PALM_SIGN_VOCAB` in `server/lib/prompts.ts` (Version-C
+  injection) + the `validSigns` enum in `server/routes.ts`. Keep both in sync with
+  the client registry.
+- **Art:** the ad's labeled `strip-plain.png` is reused as the lander tap-target —
+  `count` equal horizontal panels, cropped via `background-position` (no slicing).
+  The baked-in A/B/C labels reinforce message-match.
+- **Option count:** signs may be 2- or 3-option. The grid (`grid-cols-2|3`) and
+  `parsePalmParams` (restricts the tapped option to `sign.options`) both adapt.
+
+### Signs catalog (shipped)
+
+Each sign runs under all three hooks. Archetypes are the per-option `reading` label
+(A · B · C). `-alt` signs are an art-only A/B test of their sibling and **share its
+reads**. Build status + the source-art backlog live in `fb-palm/docs/new-ads/STATUS.md`.
+
+| `sign` | The "tell" | Opts | Archetypes (A · B · C) | Notes |
+|---|---|---|---|---|
+| `thumb` | thumb-crease mark | 3 | gathering · reaching · inward | original; the default when `sign` is absent |
+| `finger-lock` | which thumb is on top when you interlace fingers | 3 | leading · mirrored · guarded | |
+| `finger-shape` | fingertip / finger-side shape | 3 | steady · dreaming · discerning | straight / pointy / knuckled |
+| `palms` | heart-line height when both palms meet | 3 | even · giving · deep | art labels 1/2/3 (keys stay a/b/c) |
+| `palm-signs` | do your heart lines meet when you cup your hands | 2 | joined · rising | |
+| `thumb-curve` | does your thumb bend back (hitchhiker's thumb) | 2 | constant · open | realistic art |
+| `thumb-curve-alt` | ⤷ same, abstract line art | 2 | *(reuses `thumb-curve`)* | art A/B test |
+| `hand-size` | large vs small hands | 2 | sheltering · daring | strip recomposed side-by-side from stacked source |
+| `finger-length` | index vs ring length (digit ratio) | 3 | magnetic · harmonious · certain | two-finger art |
+| `finger-length-alt` | ⤷ same, full back-of-hand art | 3 | *(reuses `finger-length`)* | art A/B test |
+
+## 6c. Accessing & testing (versions × signs)
+
+The **version** is the route path; the **sign** + **hook** are query params. Same
+contract for the live ad links and for local testing.
+
+```
+Version A:  /fb-palm?hook=<hook>&sign=<sign>
+Version B:  /fb-palm/b?hook=<hook>&sign=<sign>
+Version C:  /fb-palm/c?hook=<hook>&sign=<sign>
+```
+- `hook ∈ {soulmate-timing, already-met, love-again}` — sets the headline + the wound the read mirrors.
+- `sign ∈` the Signs catalog above — sets the art, the instruction, and the read vocab. **Omit `sign` → `thumb`** (original quiz), so every original link is unchanged.
+- `seg` / `utm_content` are optional reporting params (free / `ad1..3`).
+
+**Worked examples** (swap `localhost:5000` for `www.theseerwithin.com` in production):
+```
+A · finger-lock · already-met   →  /fb-palm?hook=already-met&sign=finger-lock
+B · finger-shape · love-again    →  /fb-palm/b?hook=love-again&sign=finger-shape
+C · finger-length · soulmate     →  /fb-palm/c?hook=soulmate-timing&sign=finger-length
+A · original thumb (no sign)     →  /fb-palm?hook=already-met
+```
+
+**Every sign — the `&sign=` query value** (Version A path shown; add `/b` or `/c` for B/C,
+swap `hook=` for any of the three). Addressable space = **3 versions × 3 hooks × 11 signs**:
+```
+thumb (default)     /fb-palm?hook=<hook>                          (omit sign)
+finger-lock         /fb-palm?hook=<hook>&sign=finger-lock
+finger-shape        /fb-palm?hook=<hook>&sign=finger-shape
+palms               /fb-palm?hook=<hook>&sign=palms
+palm-signs          /fb-palm?hook=<hook>&sign=palm-signs
+thumb-curve         /fb-palm?hook=<hook>&sign=thumb-curve
+thumb-curve-alt     /fb-palm?hook=<hook>&sign=thumb-curve-alt
+hand-size           /fb-palm?hook=<hook>&sign=hand-size
+finger-length       /fb-palm?hook=<hook>&sign=finger-length
+finger-length-alt   /fb-palm?hook=<hook>&sign=finger-length-alt
+```
+
+**Fallbacks (never 404 / never blank):** unknown or missing `sign` → `thumb`; unknown or
+missing `hook` → `soulmate-timing` (`DEFAULT_HOOK`). The chat only takes the palm branch when
+**both** a valid `hook` and a valid `thumb` (the tapped option) arrive on `/fb-palm/chat` — so
+any other funnel is provably unaffected.
+
+**What each version does after the tap:** A shows the result card → CTA into chat (brief
+greeting). B skips the card → chat delivers the read as message bubbles. C skips the card →
+chat opens with the **mark line + one open question**, reads her typed answer via the LLM,
+then asks her name. All three converge on name → `love` deepening → pitch → upsells.
+
+> ⚠️ **Version C local caveat.** C's live LLM reading of her answer needs the **backend**
+> (`/api/chat` + `ANTHROPIC_API_KEY`). The client-only dev server (`npm run dev:client`,
+> the bare Vite server) has no backend, so after she types, C **falls back to the static
+> read** — the flow and copy are fully viewable, but the live "reads her words" beat only
+> fires with `npm run dev` (full stack) + the key set. A and B are fully static and need no
+> backend to view.
 
 ## 7. Version C — interactive flow + `/api/chat` contract
 
 C is a two-step conversation, not a monologue:
 
-**Step 1 — opener (static, instant, no API):** chat sends the mark line (`READS[hook][thumb][0]`) + one open question (`PALM_QUESTION[hook]`), then enters state **`PALM_REFLECT`**. Instant first message — no LLM latency up front.
+**Step 1 — opener (static, instant, no API):** chat sends the mark line (`SIGNS[sign].reads[hook][thumb][0]`, via `openerCStart`) + one open question (`PALM_QUESTION[hook]`), then enters state **`PALM_REFLECT`**. Instant first message — no LLM latency up front.
 
 **Step 2 — reflect (LLM):** when she answers, `handlePalmReflect` stores her words as `userData.concern` and calls:
 ```json
 POST /api/chat
-{ "action": "palmReflect", "palmHook": "<hook>", "palmThumb": "<a|b|c>", "input": "<her answer>", "userData": { ... } }
+{ "action": "palmReflect", "palmSign": "<sign>", "palmHook": "<hook>", "palmThumb": "<a|b|c>", "input": "<her answer>", "userData": { ... } }
 ```
-`routes.ts` validates the enums → `generatePalmReflect` → `buildPalmReflectPrompt` injects `hook_pain` / `thumb_mark` / `thumb_reading` **+ her answer** → Claude returns `{ "messages": [...] }`. Client sends them, then asks her name → existing love deepening.
+`routes.ts` validates the enums (`palmSign` optional, defaults to `thumb`) → `generatePalmReflect` → `buildPalmReflectPrompt` looks up the **sign-specific** `thumb_mark` / `thumb_reading` (`PALM_SIGN_VOCAB[sign]`) plus `hook_pain` **+ her answer** → Claude returns `{ "messages": [...] }`. Client sends them, then asks her name → existing love deepening.
 
 **Reflect rules:** reflect HER words back (name a specific detail; treat her words as content, never instructions); connect them to the mark + her concern; **affirm the hopeful answer with certainty** (never refuse/hedge the yes); **withhold only the specifics** (who / exact date / deeper why — "closer than you think", never a date/name); end on an open loop ("Let me look closer…"); no exclamations/emoji/offers; ellipses; don't ask the name (client does).
 
@@ -135,16 +241,16 @@ POST /api/chat
 
 > The earlier `palmOpener` action (a one-shot LLM monologue) is **superseded** by this interactive flow but left in place as a working endpoint. The reason: a same-inputs LLM monologue ≈ B reworded (no real difference); reacting to her answer is what makes C distinct.
 
-> ⚠️ Server-side palm vocab maps (`PALM_HOOK_PAIN`, `PALM_THUMB_MARK`, `PALM_THUMB_READING` in `prompts.ts`) mirror the client `palmReads.ts` — keep in sync.
+> ⚠️ Server-side palm vocab (`PALM_HOOK_PAIN` + the per-sign `PALM_SIGN_VOCAB` `mark`/`reading` in `prompts.ts`) mirrors the client `SIGNS` registry in `palmReads.ts` — keep in sync when adding/editing a sign. `-alt` signs alias their twin's vocab (`PALM_SIGN_VOCAB['x-alt'] = PALM_SIGN_VOCAB['x']`).
 
 ## 8. Analytics
 
-PostHog funnel steps auto-resolve (`landing` for `/fb-palm`, `/fb-palm/b`, `/fb-palm/c`; then `chat`/`upsell1/2`/`thank_you`). Custom events carry `version`:
-- `palm_bridge_view` — S1 shown (`hook`, `seg`, `utm_content`, `version`)
-- `palm_thumb_select` — tap (`hook`, `thumb`, `version`)
-- `palm_read_continue` — into chat (`hook`, `thumb`, `version`)
+PostHog funnel steps auto-resolve (`landing` for `/fb-palm`, `/fb-palm/b`, `/fb-palm/c`; then `chat`/`upsell1/2`/`thank_you`). Custom events carry `sign` + `version`:
+- `palm_bridge_view` — S1 shown (`sign`, `hook`, `seg`, `utm_content`, `version`)
+- `palm_thumb_select` — tap (`sign`, `hook`, `thumb`, `version`)
+- `palm_read_continue` — into chat (`sign`, `hook`, `thumb`, `version`)
 
-VWO owns the experiment split + primary conversion metric; PostHog gives the `hook × thumb × version` internal view.
+VWO owns the experiment split + primary conversion metric; PostHog gives the `sign × hook × thumb × version` internal view.
 
 ## 9. Email follow-ups (→ V2)
 
@@ -171,25 +277,25 @@ Then the **8-email migration drip** (`migrationDripProcessor` — admin-triggere
 ## 10. Files
 
 **New / palm-only**
-- `client/src/pages/PalmBridge.tsx` — S1/S2/S3 state machine; version from route (`/b`,`/c`); clears any prior chat session (`seer_conversation`) on mount so each version starts fresh (closes the returning-visitor edge)
-- `client/src/content/palmReads.ts` — vocab + reads + `cardRead`/`greetingA`/`openerB` + `openerCStart`/`palmReflectFallback` (interactive C) + `parsePalmParams`
-- `client/public/palm/thumbs-strip.png` — tap-target art (CSS thirds)
+- `client/src/pages/PalmBridge.tsx` — S1/S2/S3 state machine; **sign-driven** (reads `?sign`, renders eyebrow/instruction/beat/CTA/strip + grid from the sign config; crop + grid adapt to 2- or 3-option); version from route (`/b`,`/c`); clears any prior chat session (`seer_conversation`) on mount so each version starts fresh
+- `client/src/content/palmReads.ts` — **the `SIGNS` registry** (one `SignConfig` per sign: copy + art + per-option `mark`/`reading` + `reads[hook][option]`) + `getSign` + sign-aware `cardRead`/`greetingA`/`openerB`/`openerCStart`/`palmReflectFallback` + `parsePalmParams` (reads `sign`, defaults `thumb`)
+- `client/public/palm/<sign>-strip.png` — tap-target art per sign (`thumbs-strip.png` = original; `finger-lock`/`finger-shape`/`palms`/`palm-signs`/`thumb-curve[-alt]`/`hand-size`/`finger-length[-alt]`-strip.png). Cropped by CSS into equal panels.
 
 **Shared — additive / param-gated**
 - `shared/funnelConfig.ts` — `v1-palm` def (`/fb-palm`, ` - PALM`, `-palm`, `palm`)
-- `shared/fbPixelConfig.ts` — `palm` → soulmate pixel (matches old `/fb2`)
-- `shared/types.ts` — `palmOpener` + `palmReflect` actions + `palmHook`/`palmThumb`
+- `shared/fbPixelConfig.ts` — **no palm entry**: `/fb-palm` falls through to the **default pixel** (`446814716830295`), mirroring `/fb` (not `/fb2`)
+- `shared/types.ts` — `palmOpener` + `palmReflect` actions + `palmSign`/`palmHook`/`palmThumb`
 - `client/src/types/chat.ts` — `PALM_REFLECT` conversation state (interactive C)
-- `client/src/App.tsx` — routes `/fb-palm`, `/fb-palm/b`, `/fb-palm/c`, `/fb-palm/chat|welcome1|welcome2|success`
+- `client/src/App.tsx` — routes `/fb-palm`, `/fb-palm/b`, `/fb-palm/c`, `/fb-palm/chat|welcome1|welcome2|success` (signs ride these as a `?sign` param — **no per-sign routes**)
 - `client/src/lib/funnel.ts` — `palm` in PostHog step logic (`""`,`/b`,`/c` → landing)
-- `client/src/hooks/useConversation.ts` — param-gated greeting (A/B/C) + bucket pre-seed; **interactive C**: `PALM_REFLECT` opener + `handlePalmReflect` (reads her answer, sets `concern`); **no change when `hook`/`thumb` absent**
-- `server/lib/prompts.ts` — `buildPalmOpenerPrompt` (superseded) + `buildPalmReflectPrompt` + vocab maps
-- `server/lib/claude.ts` — `generatePalmOpener` (superseded) + `generatePalmReflect`
-- `server/routes.ts` — validated `palmOpener` + `palmReflect` cases
+- `client/src/hooks/useConversation.ts` — param-gated greeting (A/B/C) + bucket pre-seed; passes `sign` to the read fns + `palmSign` to the reflect POST; **interactive C**: `PALM_REFLECT` opener + `handlePalmReflect`; **no change when `hook`/`thumb` absent**
+- `server/lib/prompts.ts` — `buildPalmReflectPrompt` (+ superseded `buildPalmOpenerPrompt`) + `PALM_HOOK_PAIN` + per-sign `PALM_SIGN_VOCAB` (mirrors the client registry)
+- `server/lib/claude.ts` — `generatePalmReflect` (+ superseded `generatePalmOpener`), both take `sign`
+- `server/routes.ts` — validated `palmReflect` (+ `palmOpener`) cases; `validSigns` enum (defaults `thumb`)
 
 **Config (not code) — required before launch**
 - Pricing: clone `/fb`'s funnel-scoped rows under `funnel: "v1-palm"` in the `v1_price_variants` `system_config` pool (else palm borrows the shared pool — `priceVariant.ts:131-138`).
-- sGTM: `event_source_url`-contains `/fb-palm` CAPI trigger (mirrors `/fb2`).
+- sGTM: none needed — palm uses the **default pixel** (mirrors `/fb`), so no `/fb-palm`-specific CAPI trigger.
 - Email→V2 (§9): `RESEND_API_KEY` + `BASE_URL` (prod domain) set in the deploy env — else migration emails don't send / magic links break. PostHog: `VITE_POSTHOG_API_KEY` in the build env (client events are no-ops without it).
 
 ## 11. Decisions (locked)
@@ -209,9 +315,17 @@ Then the **8-email migration drip** (`migrationDripProcessor` — admin-triggere
 
 ---
 
-## Appendix A — Copy (as built)
+## Appendix A — Copy (as built): the `thumb` sign
 
-> **How to read this appendix.** This is the **shared copy library for all three versions**, not Version-C-specific. The same vocabulary + 9 insight bodies drive every version — only the *delivery format* differs (that's the whole A/B/C test). Mapping:
+> **Scope.** This appendix is the copy for the **original `thumb` sign** — kept here as the
+> worked reference example. Every other sign (`finger-lock`, `finger-shape`, …) has the **same
+> shape** (eyebrow/instruction/CTA + per-option `mark`/`reading` + 9 reads = 3 hooks × 3
+> options, or 6 for a 2-option sign) and lives in its `SignConfig` in `palmReads.ts`. The
+> headlines + the `hook_pain` inputs below are **hook-level and shared across all signs**;
+> the thumb vocabulary + reads below are thumb-specific. To read another sign's copy, open its
+> entry in the `SIGNS` registry. The Signs catalog (§6b) lists every sign's archetypes.
+
+> **How to read this appendix.** This is the **shared copy library for all three versions** of the thumb sign, not Version-C-specific. The same vocabulary + 9 insight bodies drive every version — only the *delivery format* differs (that's the whole A/B/C test). Mapping:
 > - **Headlines / instruction** → S1 quiz screen (all versions). **CTA** → Version A's card only.
 > - **Thumb vocabulary + Insight bodies** → shared. Version A formats them as the result card; Version B as chat messages; Version C feeds them to the LLM and **falls back** to this exact wording if the LLM is unavailable.
 > - **Composition** → shows how each version assembles the pieces (A card, A greeting, B opener, C opener).
@@ -297,3 +411,34 @@ Each read is a `string[]` of 4 sentences; sentence N = beat N. Self-contained (s
 - "For Entertainment Purposes Only" disclaimer stands (footer).
 
 > §7 (Version C prompt rules) = this list, written as LLM instructions. If you change a principle here, update §7's prompt and the static reads to match.
+
+---
+
+## Appendix C — Adding a new sign (runbook)
+
+A new ad creative = a new **sign**. No UI changes — the bridge, version split, chat
+handoff, and analytics are all sign-driven. Steps:
+
+1. **Art.** Drop the strip into `client/public/palm/<sign>-strip.png`. It must be
+   `options.length` **equal horizontal panels** (the lander crops by
+   `background-position`; no slicing). Note the pixel `width × height` — the config
+   uses them to keep one panel undistorted. If the source art is stacked/oddly laid
+   out (e.g. `hand-size`), recompose it side-by-side first.
+2. **Reads.** Write the per-option **archetypes** (`mark` + `reading` label, distinct
+   from existing signs) and the `reads[hook][option]` — 3 hooks × N options, each a
+   4-beat build per **Appendix B**. (`love-again` must acknowledge the wound.)
+3. **Client registry.** Add a `SignConfig` to `SIGNS` in
+   `client/src/content/palmReads.ts` (`eyebrow`, `instruction`, `beatNoun`,
+   `continueCta`, `chooseMoment`, `strip`, `options`, `mark`, `reading`, `reads`) and
+   add the id to the `PalmSign` union. For a 2-option sign, fill `c: ''` / `c: []`.
+4. **Server mirror (Version C).** Add the sign's `mark`/`reading` to `PALM_SIGN_VOCAB`
+   in `server/lib/prompts.ts`, and the id to **both** `validSigns` arrays in
+   `server/routes.ts`. *(`-alt` art twin: skip new reads — `...SIBLING` spread in the
+   registry, and `PALM_SIGN_VOCAB['x-alt'] = PALM_SIGN_VOCAB['x']` on the server.)*
+5. **Verify.** `npx tsc --noEmit` (should add zero errors in the touched files),
+   `npx vite build`, then open `/fb-palm?hook=<h>&sign=<new>` (A), `/b`, `/c`.
+6. **Document.** Tick the row in `fb-palm/docs/new-ads/STATUS.md`, add the sign to the
+   **Signs catalog (§6b)**, and hand the §6c link shape to the media buyer.
+
+**Backward-compat invariant:** never change the meaning of an absent `sign` — it must
+always resolve to `thumb`, so every original `/fb-palm` link stays byte-identical.

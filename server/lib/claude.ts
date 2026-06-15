@@ -150,13 +150,13 @@ export async function generateManifestPersonalize(userData: UserData, concern: s
 // Palm "quiz bridge" Version C — LLM-generated opening reading from the tapped
 // thumb. On any failure callClaude returns fallback messages; the client also
 // falls back to the static Version-B opener, so the funnel never breaks.
-export async function generatePalmOpener(userData: UserData, hook: string, thumb: string): Promise<ClaudeResponse> {
-  const prompt = buildPalmOpenerPrompt(userData, hook, thumb)
+export async function generatePalmOpener(userData: UserData, sign: string, hook: string, thumb: string): Promise<ClaudeResponse> {
+  const prompt = buildPalmOpenerPrompt(userData, sign, hook, thumb)
   return callClaude(prompt)
 }
 
 // Version C (interactive) — read her typed answer to the opener question.
-export async function generatePalmReflect(userData: UserData, hook: string, thumb: string, answer: string): Promise<ClaudeResponse> {
-  const prompt = buildPalmReflectPrompt(userData, hook, thumb, answer)
+export async function generatePalmReflect(userData: UserData, sign: string, hook: string, thumb: string, answer: string): Promise<ClaudeResponse> {
+  const prompt = buildPalmReflectPrompt(userData, sign, hook, thumb, answer)
   return callClaude(prompt)
 }

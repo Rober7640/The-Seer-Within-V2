@@ -31,6 +31,7 @@ import migrateRouter from "./routes/migrate";
 import astrologyRouter from "./routes/astrology";
 import quizRouter from "./routes/quiz";
 import evelynLanderRouter from "./routes/evelynLander";
+import personaLanderRouter from "./routes/personaLander";
 import {
   runHealthCheck,
   runReadinessCheck,
@@ -310,6 +311,8 @@ export async function registerRoutes(
   app.use("/api/astrology", astrologyRouter);
   app.use("/api/quiz", quizRouter);
   app.use("/api/evelyn-lander", evelynLanderRouter);
+  // Generalized lander for the additional personas (Marcus, Luna, Nova, Maren).
+  app.use("/api/persona-lander/:persona", personaLanderRouter);
 
   // Public unsubscribe endpoint for partner emails (CAN-SPAM compliance).
   // Mounted at root so the URL is a clean https://www.theseerwithin.com/unsubscribe?email=...&src=...
@@ -359,7 +362,7 @@ export async function registerRoutes(
   // Chat API - Claude integration
   app.post("/api/chat", async (req: Request, res: Response) => {
     try {
-      const { action, userData, input, objectionCount, palmHook, palmThumb } =
+      const { action, userData, input, objectionCount, palmSign, palmHook, palmThumb } =
         req.body as ChatRequest;
 
       // V1 price split test — enrich userData with the variant prices
@@ -418,22 +421,28 @@ export async function registerRoutes(
           break;
         case "palmOpener": {
           // Validate against fixed enums before injecting into the prompt.
+          // palmSign is optional and defaults to 'thumb' (original behavior).
+          const validSigns = ["thumb", "finger-lock", "finger-shape", "palms", "palm-signs", "thumb-curve", "thumb-curve-alt", "hand-size", "finger-length", "finger-length-alt"];
           const validHooks = ["soulmate-timing", "already-met", "love-again"];
           const validThumbs = ["a", "b", "c"];
-          if (!validHooks.includes(palmHook ?? "") || !validThumbs.includes(palmThumb ?? "")) {
+          const sign = palmSign ?? "thumb";
+          if (!validSigns.includes(sign) || !validHooks.includes(palmHook ?? "") || !validThumbs.includes(palmThumb ?? "")) {
             return res.status(400).json({ error: "Invalid palm params" });
           }
-          result = await generatePalmOpener(userData, palmHook as string, palmThumb as string);
+          result = await generatePalmOpener(userData, sign, palmHook as string, palmThumb as string);
           break;
         }
         case "palmReflect": {
           // Interactive Version C — reads her typed answer (input).
+          // palmSign is optional and defaults to 'thumb' (original behavior).
+          const validSigns = ["thumb", "finger-lock", "finger-shape", "palms", "palm-signs", "thumb-curve", "thumb-curve-alt", "hand-size", "finger-length", "finger-length-alt"];
           const validHooks = ["soulmate-timing", "already-met", "love-again"];
           const validThumbs = ["a", "b", "c"];
-          if (!validHooks.includes(palmHook ?? "") || !validThumbs.includes(palmThumb ?? "")) {
+          const sign = palmSign ?? "thumb";
+          if (!validSigns.includes(sign) || !validHooks.includes(palmHook ?? "") || !validThumbs.includes(palmThumb ?? "")) {
             return res.status(400).json({ error: "Invalid palm params" });
           }
-          result = await generatePalmReflect(userData, palmHook as string, palmThumb as string, input ?? "");
+          result = await generatePalmReflect(userData, sign, palmHook as string, palmThumb as string, input ?? "");
           break;
         }
         case "valueExplain":
@@ -1332,6 +1341,11 @@ export async function registerRoutes(
         metadata: {
           product: "protection_ritual",
           originalSession: checkoutSessionId,
+          // Marks this as a genuine 1-click charge so the webhook fires the FB
+          // event from payment_intent.succeeded only. The fallback-Checkout PI
+          // omits this marker, so its event fires from checkout.session.completed
+          // instead — preventing the double-fire.
+          flow: "1click",
           ...(funnel && { funnel }),
         },
       });
@@ -1877,6 +1891,9 @@ export async function registerRoutes(
           product: "manifestation_bracelet",
           type,
           originalSession: checkoutSessionId,
+          // See protection_ritual note: 1-click marker prevents the
+          // fallback-Checkout double-fire of the FB event.
+          flow: "1click",
           ...(funnel && { funnel }),
         },
       });
@@ -2478,6 +2495,7 @@ export async function registerRoutes(
     value: z.number().optional(),
     currency: z.string().optional(),
     content_name: z.string().optional(),
+    content_category: z.string().optional(),
   });
 
   app.post("/api/fb-event", async (req: Request, res: Response) => {
@@ -2503,6 +2521,7 @@ export async function registerRoutes(
         value,
         currency,
         content_name,
+        content_category,
       } = parseResult.data;
 
       const forwarded = req.headers["x-forwarded-for"];
@@ -2518,6 +2537,7 @@ export async function registerRoutes(
         value,
         currency,
         contentName: content_name,
+        contentCategory: content_category,
         userData: {
           email,
           firstName,
@@ -2943,7 +2963,10 @@ export async function registerRoutes(
           confirm: true,
           description: "Rose Quartz Soulmate Attraction Bracelet",
           shipping: stripeShipping,
-          metadata: upsell1Metadata,
+          // flow:"1click" only on the off-session PI — the shared upsell1Metadata
+          // (also used by the fallback Checkout above) stays unmarked so the
+          // webhook fires the FB event once per path, never twice.
+          metadata: { ...upsell1Metadata, flow: "1click" },
         });
       } catch (chargeError) {
         // Off-session charge failed (declined card, India mandate, anti-fraud, etc.).
@@ -3169,7 +3192,9 @@ export async function registerRoutes(
           confirm: true,
           description: "528 Hz Frequency of Love Tuner Necklace",
           shipping: stripeShipping,
-          metadata: upsell2Metadata,
+          // flow:"1click" only on the off-session PI (see bracelet note) so the
+          // shared upsell2Metadata used by the fallback Checkout stays unmarked.
+          metadata: { ...upsell2Metadata, flow: "1click" },
         });
       } catch (chargeError) {
         // Off-session charge failed (declined card, India mandate, anti-fraud, etc.).

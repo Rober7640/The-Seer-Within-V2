@@ -2,7 +2,7 @@ import { Router, Request, Response } from 'express';
 import { z } from 'zod';
 import { randomUUID } from 'crypto';
 import { db } from '../lib/db';
-import { users, personas, chatSessions, userMemory, aidenQuizSessions, evelynLanderSessions, soulmateLanderSessions } from '@shared/schema';
+import { users, personas, chatSessions, userMemory, aidenQuizSessions, evelynLanderSessions, soulmateLanderSessions, personaLanderSessions } from '@shared/schema';
 import { eq, and, isNull, desc, sql } from 'drizzle-orm';
 import { hashPassword, verifyPassword, generateToken, requireAuth } from '../lib/auth';
 import { verifyMagicLinkToken, generateMagicLinkToken } from '../lib/magicLink';
@@ -32,6 +32,7 @@ import {
   lookupEvelynBucket,
 } from '../lib/evelynFollowupEmailGenerator';
 import { scheduleEvelynVerifiedDrip } from '../lib/evelynVerifiedDripGenerator';
+import { schedulePersonaVerifiedDrip, PERSONA_DRIP_SLUGS } from '../lib/personaVerifiedDripGenerator';
 import logger from '../lib/logger';
 import { posthog } from '../lib/posthog';
 
@@ -120,6 +121,49 @@ async function isFromSoulmateLander(userId: string, personaId: string | null | u
     return !!row[0];
   } catch {
     return false;
+  }
+}
+
+// Enroll the user in the generalized 10-email persona drip when they came through
+// one of the new persona landers (Marcus/Luna/Nova/Maren). Eligibility: defaultPersona
+// is a drip-configured persona AND a persona_lander_sessions row links to this user
+// (proving the lander, not a /personas browse). Flag-gated at send time by
+// ENABLE_PERSONA_VERIFIED_DRIP. Silent-fails so verification is never blocked.
+async function maybeSchedulePersonaDrip(user: {
+  id: string;
+  email: string;
+  firstName: string | null;
+  defaultPersonaId: string | null;
+}): Promise<void> {
+  try {
+    if (!user.defaultPersonaId) return;
+    const personaRow = await db.select({ slug: personas.slug })
+      .from(personas)
+      .where(eq(personas.id, user.defaultPersonaId))
+      .limit(1);
+    const slug = personaRow[0]?.slug;
+    if (!slug || !PERSONA_DRIP_SLUGS.includes(slug)) return;
+
+    const landerRow = await db.select({ bucket: personaLanderSessions.bucket })
+      .from(personaLanderSessions)
+      .where(and(
+        eq(personaLanderSessions.resolvedUserId, user.id),
+        eq(personaLanderSessions.personaSlug, slug),
+      ))
+      .orderBy(desc(personaLanderSessions.startedAt))
+      .limit(1);
+    if (!landerRow[0]) return;
+
+    await schedulePersonaVerifiedDrip({
+      userId: user.id,
+      email: user.email,
+      firstName: user.firstName || 'there',
+      personaSlug: slug,
+      bucket: landerRow[0].bucket,
+      baseTime: new Date(),
+    });
+  } catch (err) {
+    logger.warn('Failed to schedule persona drip', { userId: user.id, err: (err as Error)?.message });
   }
 }
 
@@ -231,6 +275,11 @@ router.post('/register', authLimiter, async (req: Request, res: Response) => {
     // Production grants happen at /verify-email; this branch only fires in test env
     // where verification is bypassed and coins are stamped at registration.
     const isLanderSignup = source === 'evelyn-lander' && persona === 'evelyn-cross';
+    // Generalized chat landers (Marcus/Luna/Nova/Maren) all signal via source
+    // 'persona-lander' + the persona slug. They grant the persona's own free coins
+    // (handled at /verify-email via getFreeCoinsForPersona on defaultPersonaId), so
+    // no special coin branch is needed here — only the funnel tag + session linkage.
+    const isPersonaLanderSignup = source === 'persona-lander' && !!persona;
     const testEnvCoinGrant = isLanderSignup ? EVELYN_LANDER_FREE_COINS : DEFAULT_FREE_COINS;
 
     const newUser = await db.insert(users).values({
@@ -246,7 +295,7 @@ router.post('/register', authLimiter, async (req: Request, res: Response) => {
       deviceFingerprint: fingerprint,
       accountFlags: fraudCheck.flagged ? serializeAccountFlags(fraudCheck.flags) : null,
       defaultPersonaId: personaId,
-      signupFunnel: isLanderSignup ? 'evelyn' : null,
+      signupFunnel: isLanderSignup ? 'evelyn' : (isPersonaLanderSignup ? persona! : null),
     }).returning();
 
     const user = newUser[0];
@@ -268,6 +317,17 @@ router.post('/register', authLimiter, async (req: Request, res: Response) => {
         .where(eq(evelynLanderSessions.sessionToken, landerSessionToken))
         .catch((err) => {
           logger.warn('Failed to link evelyn_lander_session to user', { err: err?.message });
+        });
+    }
+
+    // Same linkage for the generalized persona landers (Marcus/Luna/Nova/Maren).
+    // The drip (Phase 2) reads resolved_user_id to enroll verified-not-purchased users.
+    if (landerSessionToken && isPersonaLanderSignup) {
+      db.update(personaLanderSessions)
+        .set({ resolvedUserId: user.id })
+        .where(eq(personaLanderSessions.sessionToken, landerSessionToken))
+        .catch((err) => {
+          logger.warn('Failed to link persona_lander_session to user', { err: err?.message });
         });
     }
 
@@ -634,6 +694,9 @@ router.get('/verify-email/:token', async (req: Request, res: Response) => {
         }).catch(() => { /* logged inside */ });
       }
     }
+
+    // Generalized persona landers (Marcus/Luna/Nova/Maren) — non-blocking.
+    maybeSchedulePersonaDrip(user).catch(() => { /* logged inside */ });
 
     // Generate JWT so the user is auto-logged-in (works even on a different device/browser)
     const jwtToken = generateToken(user.id, user.email);
@@ -1342,6 +1405,9 @@ router.post('/magic-verify', authLimiter, async (req: Request, res: Response) =>
             }).catch(() => { /* logged inside */ });
           }
         }
+
+        // Generalized persona landers (Marcus/Luna/Nova/Maren) — non-blocking.
+        maybeSchedulePersonaDrip(user).catch(() => { /* logged inside */ });
 
         logger.info('Magic-link verified email and granted free coins', {
           userId: user.id,
