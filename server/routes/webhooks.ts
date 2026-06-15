@@ -980,11 +980,13 @@ router.post('/stripe', async (req: Request, res: Response) => {
     const pi = event.data.object as Stripe.PaymentIntent;
     const metadata = pi.metadata || {};
 
-    // Filter: 1-click upsells set metadata.originalSession. Main-purchase PIs
-    // (which fire payment_intent.succeeded as a side-effect of their Checkout
-    // Session completing) do NOT set it.
-    if (!metadata.originalSession) {
-      logger.info(`Stripe webhook: payment_intent.succeeded skipped (no originalSession), pi=${pi.id}`);
+    // Filter: only genuine 1-click upsell charges carry metadata.flow="1click".
+    // This deliberately excludes the side-effect PI of a fallback-Checkout upsell
+    // (which DOES carry originalSession but no flow marker) — that path fires its
+    // FB event from checkout.session.completed instead, so gating on flow here
+    // prevents the double-fire. Main-purchase side-effect PIs carry neither.
+    if (metadata.flow !== "1click") {
+      logger.info(`Stripe webhook: payment_intent.succeeded skipped (not a 1-click upsell), pi=${pi.id}`);
       return res.json({ received: true });
     }
 

@@ -151,10 +151,10 @@ export default function SuccessPage() {
           setHasUpsell(boughtUpsell1);
           setHasUpsell2(boughtUpsell2);
 
-          // Track Upsell 2 event on /success load (fires once per session).
-          // V1-FB funnel (/fb/success) fires the distinct "Upsell2" custom
-          // event so Meta Events Manager separates the two upsell tiers; V1
-          // /success keeps firing "Upsell" for historical continuity.
+          // Track Upsell 2 on /success load (fires once per session). Both
+          // paths now fire a standard `Purchase` (content_category='upsell');
+          // the upsell2_ vs upsell_u2_ event_id still distinguishes the V1-FB
+          // tier from V1 for clean dedup with the server-side webhook fire.
           if (boughtUpsell2 && sessionId) {
             const amount = (data.upsell2Amount || 4700) / 100;
             if (isFbFunnel()) {

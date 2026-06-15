@@ -84,6 +84,7 @@ export interface FBEventData {
   value?: number;
   currency?: string;
   content_name?: string;
+  content_category?: string;
   content_ids?: string[];
   content_type?: string;
   email?: string;
@@ -197,6 +198,7 @@ export function trackPurchase(
       value,
       currency,
       content_name: contentName,
+      content_category: 'frontend',
     }, { eventID: eventId });
   }
 
@@ -206,6 +208,7 @@ export function trackPurchase(
       currency,
       email,
       content_name: contentName,
+      content_category: 'frontend',
     });
   }
 }
@@ -255,8 +258,8 @@ export function trackUpsellPurchase(
   contentName: string = 'Manifestation Bracelet',
   mainSessionId?: string,
   // 'u1' = protection_ritual, 'u2' = manifestation_bracelet (V1 funnel),
-  // 'sm' = soulmate_bracelet (soulmate funnel). Required to disambiguate
-  // within the shared "Upsell" event_name across funnels.
+  // 'sm' = soulmate_bracelet (soulmate funnel). Keeps each upsell's event_id
+  // distinct now that they all fire under the standard `Purchase` event name.
   upsellSlot: 'u1' | 'u2' | 'sm' = 'u2',
   // V1/V1-FB callers pass skipServerRelay=true because the Stripe webhook's
   // fireStripePurchaseEvent already fires server-side with the same
@@ -271,33 +274,37 @@ export function trackUpsellPurchase(
     sessionStorage.setItem(dedupKey, 'true');
   }
 
+  // event_id keeps the upsell_<slot>_<session> scheme so it stays distinct from
+  // the front-end purchase_<session> id (no collision) and dedups cleanly with
+  // the server-side webhook fire. Only the event NAME folds into `Purchase`.
   const eventId = mainSessionId
     ? `upsell_${upsellSlot}_${mainSessionId}`
     : generateEventId();
 
   if (typeof window !== 'undefined' && window.fbq) {
-    window.fbq('trackSingleCustom', currentPixelId(), 'Upsell', {
+    window.fbq('trackSingle', currentPixelId(), 'Purchase', {
       value,
       currency,
       content_name: contentName,
+      content_category: 'upsell',
     }, { eventID: eventId });
   }
 
   if (!options?.skipServerRelay) {
-    sendServerEvent('Upsell', eventId, {
+    sendServerEvent('Purchase', eventId, {
       value,
       currency,
       email,
       content_name: contentName,
+      content_category: 'upsell',
     });
   }
 }
 
-// Custom "Upsell2" event used by the V1-FB funnel /fb/success page so the
-// Manifestation Bracelet purchase shows up as a distinct event line in Meta
-// Events Manager (separate from the Upsell event fired for the Volcanic
-// Stone). V1 (email-traffic) /success continues to fire trackUpsellPurchase
-// → "Upsell" so historical reporting is unaffected.
+// Upsell 2 (Manifestation Bracelet) tracker. Fires a standard `Purchase` so
+// its value enters Website Purchase ROAS; the upsell2_<session> event_id keeps
+// it distinct from the FE purchase and U1, and content_category='upsell' keeps
+// it separable from front-end purchases via Meta Custom Conversions.
 export function trackUpsell2Purchase(
   value: number,
   currency: string = 'USD',
@@ -317,24 +324,29 @@ export function trackUpsell2Purchase(
     sessionStorage.setItem(dedupKey, 'true');
   }
 
+  // event_id keeps the upsell2_<session> scheme so it stays distinct from the
+  // front-end and U1 ids and dedups with the server-side webhook fire. Only the
+  // event NAME folds into `Purchase`; content_category carries the upsell split.
   const eventId = mainSessionId
     ? `upsell2_${mainSessionId}`
     : generateEventId();
 
   if (typeof window !== 'undefined' && window.fbq) {
-    window.fbq('trackSingleCustom', currentPixelId(), 'Upsell2', {
+    window.fbq('trackSingle', currentPixelId(), 'Purchase', {
       value,
       currency,
       content_name: contentName,
+      content_category: 'upsell',
     }, { eventID: eventId });
   }
 
   if (!options?.skipServerRelay) {
-    sendServerEvent('Upsell2', eventId, {
+    sendServerEvent('Purchase', eventId, {
       value,
       currency,
       email,
       content_name: contentName,
+      content_category: 'upsell',
     });
   }
 }
