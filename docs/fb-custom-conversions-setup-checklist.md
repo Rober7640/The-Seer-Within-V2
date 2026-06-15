@@ -96,6 +96,36 @@ You now have two Custom Conversions: **FE Purchases** and **Upsells**.
 
 ---
 
+## SCREEN 5b — Per-pixel: repeat for the soulmate pixel (only if needed)
+
+**Custom Conversions are tied to ONE pixel.** The two you just made live on the
+default pixel (**446814716830295**, used by V1 / fb / fb2 / gdn / **palm** / aiden /
+evelyn). They will NOT count events from the soulmate funnel, which uses its own
+pixel (**738651185965027**).
+
+Two separate concerns — don't conflate them:
+
+- **ROAS correction is AUTOMATIC on every pixel — no setup needed.** Website Purchase
+  ROAS sums all `Purchase` events on a pixel, and soulmate upsells (bracelet, love
+  tuner) now fire as `Purchase` too. So the soulmate pixel's ROAS already includes
+  upsell value with zero extra work.
+- **The FE-vs-upsell split COLUMNS are per-pixel and manual.** To see that split on
+  the soulmate funnel, you must recreate the two Custom Conversions on the soulmate
+  pixel.
+
+**Do you need the soulmate split?**
+- [ ] **Actively running / reading soulmate ad stats** → yes. Repeat Screens 3–5 with
+      **data source = soulmate pixel 738651185965027** (same `content_category` rules:
+      `frontend` → "FE Purchases (Soulmate)", `upsell` → "Upsells (Soulmate)" — name
+      them distinctly so they don't collide with the default-pixel pair).
+- [ ] **Soulmate not an active channel** → skip. The data (`content_category`) is
+      already flowing, so you can add these anytime later with no loss.
+
+> Before trusting soulmate numbers, run the Screen 2 check on the **soulmate pixel**:
+> a soulmate Purchase → expand parameters → confirm `content_category` is present.
+
+---
+
 ## SCREEN 6 — Show them as columns in Ads Manager
 
 - [ ] Go to **Ads Manager** (≡ menu → Ads Manager).
