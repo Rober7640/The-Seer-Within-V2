@@ -650,10 +650,11 @@ export default function ChatServicePage() {
     const personality = selectedPersona.personality ? (() => {
       try { return JSON.parse(selectedPersona.personality!); } catch { return {}; }
     })() : {};
-    // Block until the birth-chart existence check has resolved
+    // Block until the birth-chart existence check has resolved so we know whether
+    // to inject a stored chart. Once resolved, auto-fetch the greeting for every
+    // persona — astrology personas with no chart collect birth data in-chat after
+    // the greeting, so there's no reason to gate them behind the welcome screen.
     if (personality?.requiresBirthData && birthChartExists === null) return;
-    // If chart is missing, show the form — don't fetch a greeting yet
-    if (personality?.requiresBirthData && birthChartExists === false) return;
     lastAutoFetchedPersonaId.current = selectedPersona.id;
     // Only inject chart for astrology personas that have requiresBirthData AND a stored chart.
     // For all other personas, always pass null — never leak chart data across personas.
