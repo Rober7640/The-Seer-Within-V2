@@ -574,15 +574,28 @@ export async function registerRoutes(
       const priceAmount = type === "downsell" ? downsellCents : mainCents;
       const variantId = variantInfo?.variant ?? "35";
 
-      // Create or get existing customer
-      const customers = await stripe.customers.list({ email, limit: 1 });
-      let customer = customers.data[0];
-      if (!customer) {
-        customer = await stripe.customers.create({ email, name: firstName });
+      // Create or get existing customer.
+      // No-email variant (`?noemail=1`): `email` arrives null. We deliberately
+      // skip the lookup — `customers.list({})` with no email returns an
+      // arbitrary recent customer, so the session would otherwise attach to a
+      // stranger. Instead we let Stripe Checkout create a fresh customer and
+      // collect the email on its hosted page (read back at the upsell via
+      // customer_details.email). The card is still saved for 1-click upsells
+      // via setup_future_usage below.
+      const hasEmail = typeof email === "string" && email.trim().length > 0;
+      let customer: Stripe.Customer | undefined;
+      if (hasEmail) {
+        const customers = await stripe.customers.list({ email, limit: 1 });
+        customer = customers.data[0];
+        if (!customer) {
+          customer = await stripe.customers.create({ email, name: firstName });
+        }
       }
 
       const session = await stripe.checkout.sessions.create({
-        customer: customer.id,
+        ...(customer
+          ? { customer: customer.id }
+          : { customer_creation: "always" }),
         payment_method_types: ["card"],
         line_items: [
           {
@@ -604,7 +617,7 @@ export async function registerRoutes(
           metadata: {
             firstName,
             bucket,
-            email,
+            ...(hasEmail && { email }),
             app: "the-seer-within",
             product: "energy_clearing_ritual",
             priceVariant: variantId,
@@ -616,7 +629,7 @@ export async function registerRoutes(
         cancel_url: `${getBaseUrl(req)}${funnelPath("/chat", funnel)}?cancelled=true`,
         metadata: {
           firstName,
-          email,
+          ...(hasEmail && { email }),
           bucket,
           type,
           app: "the-seer-within",
@@ -629,8 +642,10 @@ export async function registerRoutes(
       });
 
       // Save Stripe session ID to database for upsell flow (upsert - creates if not exists)
-      // This MUST complete before we return the URL to prevent race conditions
-      if (email) {
+      // This MUST complete before we return the URL to prevent race conditions.
+      // No-email variant: no customer/email to key on here, so we skip — the
+      // /api/upsell/user-data fallback creates the row from customer_details.email.
+      if (hasEmail && customer) {
         try {
           await updateStripeData(
             email,
@@ -895,8 +910,16 @@ export async function registerRoutes(
 
           // Only proceed if payment was successful
           if (stripeSession.payment_status === "paid") {
+            // customer_details.email is the address Stripe Checkout collects on
+            // its hosted page — the only place a no-email (`?noemail=1`) buyer's
+            // email exists, since the chat never captured it and checkout sent
+            // none. Reading it here lets the upsell recover/personalize instead
+            // of 404-ing. (customer_email/metadata.email stay first for the
+            // normal email flow, where they're already populated.)
             const email =
-              stripeSession.customer_email || stripeSession.metadata?.email;
+              stripeSession.customer_details?.email ||
+              stripeSession.customer_email ||
+              stripeSession.metadata?.email;
             const firstName = stripeSession.metadata?.firstName || "Friend";
             const bucket = stripeSession.metadata?.bucket;
             const customerId =
@@ -1172,6 +1195,7 @@ export async function registerRoutes(
           const upsell1Conversation =
             await getConversationByStripeSession(originalSessionId);
           const customerEmail =
+            session.customer_details?.email ||
             session.customer_email ||
             session.metadata?.email ||
             upsell1Conversation?.email;
@@ -2416,6 +2440,7 @@ export async function registerRoutes(
         const conversation =
           await getConversationByStripeSession(originalSessionId);
         const customerEmail =
+          session.customer_details?.email ||
           session.customer_email ||
           session.metadata?.email ||
           conversation?.email;

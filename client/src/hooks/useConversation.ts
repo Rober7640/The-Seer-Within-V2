@@ -280,6 +280,14 @@ export function useConversation() {
       updateUserData({ location: geo.location, timeOfDay: geo.timeOfDay })
       updateState({ state: 'GREETING' })
 
+      // No-optin A/B: tag the email-gate arm once at session start so chat→
+      // checkout conversion is comparable per arm in PostHog. Calling skipEmail()
+      // here also primes the sticky (tab-scoped) persistence for this visit.
+      trackPH('email_gate_assigned', {
+        funnel: getPostHogFunnel() ?? 'v1',
+        email_gate: skipEmail() ? 'off' : 'on',
+      })
+
       addMessage('system', 'Evelyn has joined the chat')
       await sleep(800)
 
@@ -1373,6 +1381,7 @@ export function useConversation() {
         step: 'sales',
         product: type === 'downsell' ? 'energy_clearing_ritual_downsell' : 'energy_clearing_ritual',
         price_cents: price * 100,
+        email_gate: skipEmail() ? 'off' : 'on',
       })
 
       const response = await fetch('/api/checkout', {
