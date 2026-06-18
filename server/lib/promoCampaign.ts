@@ -1,5 +1,5 @@
-// Promo campaign config + claim logic for the 6/6 launch ("6 free minutes with every
-// guide"). Grant happens ON ARRIVAL at /6-6 (not pre-seeded), gated to non-buyers, once
+// Promo campaign config + claim logic for the 7/7 launch ("7 free minutes with every
+// guide"). Grant happens ON ARRIVAL at /7-7 (not pre-seeded), gated to non-buyers, once
 // per user, expiring at the campaign end. Reusable for future campaigns by editing the
 // ACTIVE_PROMO_CAMPAIGN config (or swapping which campaign is active).
 
@@ -19,12 +19,14 @@ export interface PromoCampaign {
   startsAt: Date | null;
 }
 
-// 6/6 promo: ends end-of-day June 6 2026 in America/New_York (the app's cron timezone).
-// EDT is UTC-4, so midnight June 7 ET = 2026-06-07T04:00:00Z.
+// 7/7 promo: ends end-of-day July 7 2026 in America/New_York (the app's cron timezone).
+// EDT is UTC-4, so midnight July 8 ET = 2026-07-08T04:00:00Z.
+// (Previous 6/6 campaign: tag 'promo-6-6', 360 coins, expiry 2026-06-07T04:00:00Z —
+//  expired, so those grants are ignored by the billing path's `expires_at > NOW()` filter.)
 export const ACTIVE_PROMO_CAMPAIGN: PromoCampaign = {
-  tag: 'promo-6-6',
-  coinsPerPersona: 360,
-  expiresAt: new Date('2026-06-07T04:00:00Z'),
+  tag: 'promo-7-7',
+  coinsPerPersona: 420,   // 420 = 7 min @ 60 coins/min
+  expiresAt: new Date('2026-07-08T04:00:00Z'),
   startsAt: null,
 };
 

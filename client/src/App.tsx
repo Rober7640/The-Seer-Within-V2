@@ -36,6 +36,7 @@ const MagicAuthPage = lazy(() => import("@/pages/MagicAuthPage"));
 const SetPasswordPage = lazy(() => import("@/pages/SetPasswordPage"));
 const AidenQuizPage = lazy(() => import("@/pages/AidenQuizPage"));
 const EvelynLanderPage = lazy(() => import("@/pages/EvelynLanderPage"));
+const PersonaLanderPage = lazy(() => import("@/pages/PersonaLanderPage"));
 
 // Soulmate Sketch funnel pages (lazy loaded)
 const SoulmateLandingPage = lazy(() => import("@/pages/SoulmateLandingPage"));
@@ -60,6 +61,7 @@ const EmailDripMigratedV1 = lazy(() => import("@/pages/admin/EmailDripMigratedV1
 const EmailDripNewV1 = lazy(() => import("@/pages/admin/EmailDripNewV1"));
 const AidenFollowUpsPage = lazy(() => import("@/pages/admin/AidenFollowUpsPage"));
 const EvelynFollowUpsPage = lazy(() => import("@/pages/admin/EvelynFollowUpsPage"));
+const PersonaFollowUpsPage = lazy(() => import("@/pages/admin/PersonaFollowUpsPage"));
 const MarketplacePage = lazy(() => import("@/pages/admin/MarketplacePage"));
 const SettingsPage = lazy(() => import("@/pages/admin/SettingsPage"));
 const PriceTestDashboard = lazy(() => import("@/pages/admin/PriceTestDashboard"));
@@ -95,6 +97,10 @@ function Router() {
       location.startsWith('/gdn') ||
       location === '/aiden' ||
       location === '/evelyn' ||
+      location === '/marcus' ||
+      location === '/luna' ||
+      location === '/nova' ||
+      location === '/maren' ||
       location.startsWith('/soulmate');
     if (isTrackedFunnel) {
       trackPageView();
@@ -108,6 +114,9 @@ function Router() {
         funnel,
         step: getPostHogStep(location),
         path: location,
+        // Palm multi-sign: tag which ad "sign" was quizzed so the funnel can be
+        // broken down per sign. Defaults to 'thumb' (the sign-less original).
+        sign: funnel === 'palm' ? (urlParams.get('sign') || 'thumb') : undefined,
         utm_source: urlParams.get('utm_source') || undefined,
         utm_campaign: urlParams.get('utm_campaign') || undefined,
         utm_medium: urlParams.get('utm_medium') || undefined,
@@ -171,6 +180,12 @@ function Router() {
         <Route path="/aiden" component={AidenQuizPage} />
         <Route path="/evelyn" component={EvelynLanderPage} />
 
+        {/* Generalized chat landers — one component, persona via slug. */}
+        <Route path="/marcus">{() => <PersonaLanderPage personaSlug="marcus-stone" />}</Route>
+        <Route path="/luna">{() => <PersonaLanderPage personaSlug="luna-voss" />}</Route>
+        <Route path="/nova">{() => <PersonaLanderPage personaSlug="nova-sharma" />}</Route>
+        <Route path="/maren">{() => <PersonaLanderPage personaSlug="maren-soleil" />}</Route>
+
         {/* Soulmate Sketch funnel — specific paths BEFORE /soulmate catch-all */}
         <Route path="/soulmate/process" component={SoulmateProcessPage} />
         <Route path="/soulmate/reading" component={SoulmateSalesPage} />
@@ -216,6 +231,14 @@ function Router() {
             <PersonasDirectory />
           </ChatServiceLayout>
         </Route>
+        {/* 7/7 promo landing — same guide directory with a promo headline. Emailed
+            users arrive here auto-logged-in via /magic-auth?t=...&redirect=/7-7, and the
+            claim grants 7 free minutes per guide (promoMode). */}
+        <Route path="/7-7">
+          <ChatServiceLayout requiresAuth={false}>
+            <PersonasDirectory promoMode />
+          </ChatServiceLayout>
+        </Route>
         {/* 6/6 promo ended (campaign expired 2026-06-07). Old links — including the
             emailed /magic-auth?t=...&redirect=/6-6 auto-login — now land on the normal
             guide directory. The promo backend stays in place (inert, reusable). */}
@@ -250,6 +273,7 @@ function Router() {
         <Route path="/admin/email-drip/new-v1" component={EmailDripNewV1} />
         <Route path="/admin/aiden-follow-ups" component={AidenFollowUpsPage} />
         <Route path="/admin/evelyn-follow-ups" component={EvelynFollowUpsPage} />
+        <Route path="/admin/persona-follow-ups" component={PersonaFollowUpsPage} />
         <Route path="/admin/marketplace" component={MarketplacePage} />
         <Route path="/admin/settings" component={SettingsPage} />
         <Route path="/admin/price-test" component={PriceTestDashboard} />

@@ -5,7 +5,7 @@ import { Link } from "wouter";
 import { CheckCircle, Package, Mail, Sparkles, Gem } from "lucide-react";
 import { trackPurchase, trackUpsellPurchase, trackUpsell2Purchase } from "../lib/facebook";
 import { trackGAdsPurchase } from "../lib/gtm";
-import { isFbFunnel } from "../lib/funnel";
+import { currentFunnel } from "../lib/funnel";
 
 interface OrderData {
   firstName: string;
@@ -151,13 +151,17 @@ export default function SuccessPage() {
           setHasUpsell(boughtUpsell1);
           setHasUpsell2(boughtUpsell2);
 
-          // Track Upsell 2 event on /success load (fires once per session).
-          // V1-FB funnel (/fb/success) fires the distinct "Upsell2" custom
-          // event so Meta Events Manager separates the two upsell tiers; V1
-          // /success keeps firing "Upsell" for historical continuity.
+          // Track Upsell 2 on /success load (fires once per session). Both
+          // paths fire a standard `Purchase` (content_category='upsell'). The
+          // event_id MUST match the server's resolveStripeEventName: any
+          // recognized ad funnel (fb/fb2/gdn/palm) → `upsell2_<session>`; bare
+          // V1 → `upsell_u2_<session>`. Gating on currentFunnel() (not
+          // isFbFunnel) keeps palm/gdn in sync with the server webhook fire —
+          // otherwise the browser (upsell_u2_) and server (upsell2_) ids diverge
+          // and Meta double-counts the upsell.
           if (boughtUpsell2 && sessionId) {
             const amount = (data.upsell2Amount || 4700) / 100;
-            if (isFbFunnel()) {
+            if (currentFunnel()) {
               trackUpsell2Purchase(amount, "USD", data.email, "Manifestation Bracelet", sessionId, { skipServerRelay: true });
             } else {
               trackUpsellPurchase(amount, "USD", data.email, "Manifestation Bracelet", sessionId, 'u2', { skipServerRelay: true });

@@ -86,10 +86,11 @@ export default function LoginPage() {
               }
             : undefined,
         );
-        // Fire Lead only for /evelyn lander signups (server-side has now
-        // stamped users.signupFunnel='evelyn' for these). Direct /login
-        // signups outside the FB-attribution flow stay silent.
-        if (sourceParam === 'evelyn-lander') {
+        // Fire Lead for lander signups that carry FB-attributed paid traffic:
+        // /evelyn ('evelyn-lander') and the generalized persona landers
+        // ('persona-lander' → Marcus/Luna/Nova/Maren). Direct /login signups
+        // outside the FB-attribution flow stay silent.
+        if (sourceParam === 'evelyn-lander' || sourceParam === 'persona-lander') {
           trackLead(email, firstName).catch(() => { /* non-blocking */ });
         }
         if (data.requiresVerification) {

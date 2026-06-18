@@ -153,9 +153,9 @@ function generateReadings(name: string): number {
   return 200 + (hashName(name) % 4800);
 }
 
-// The 6/6 promo offer size, in minutes — shown as the static "6 mins free" fallback on
-// the /6-6 lander cards (before login / before the user's real grant has loaded).
-const PROMO_OFFER_MINUTES = 6;
+// The 7/7 promo offer size, in minutes — shown as the static "7 mins free" fallback on
+// the /7-7 lander cards (before login / before the user's real grant has loaded).
+const PROMO_OFFER_MINUTES = 7;
 
 // Format promo coins as remaining minutes:seconds for the "free with [guide]" badge.
 // e.g. 360 coins @ 60/min → "6:00", 105 coins @ 60/min → "1:45".
@@ -616,7 +616,7 @@ export default function PersonasDirectory({ promoMode = false }: { promoMode?: b
   // email" panel instead of leaking the raw error text in red.
   const [authMagicLinkSent, setAuthMagicLinkSent] = useState(false);
   // True when the popup was opened by the nav's generic "Sign in" (no guide chosen) — those
-  // users stay on /6-6 after auth. False when opened from a guide card's "Start chat" — those
+  // users stay on /7-7 after auth. False when opened from a guide card's "Start chat" — those
   // go straight into that guide's chat once the promo is claimed (#4).
   const [authStayOnPromo, setAuthStayOnPromo] = useState(false);
 
@@ -648,7 +648,7 @@ export default function PersonasDirectory({ promoMode = false }: { promoMode?: b
     let cancelled = false;
     (async () => {
       try {
-        // On the /6-6 lander, claiming is what grants the 6 free minutes — and it ONLY
+        // On the /7-7 lander, claiming is what grants the 7 free minutes — and it ONLY
         // happens here (never on /login or /personas). Fire it before reading balances so
         // the badges reflect the just-granted coins. Buyer/already-claimed handled server-side.
         if (promoMode) {
@@ -659,9 +659,9 @@ export default function PersonasDirectory({ promoMode = false }: { promoMode?: b
           // guide travels in the link as ?persona=<slug> (works on any device); we fall back
           // to the localStorage hint for same-browser in-page flows.
           const urlPersona = new URLSearchParams(window.location.search).get("persona");
-          const pendingPersona = urlPersona || localStorage.getItem("seer-6-6-pending-persona");
+          const pendingPersona = urlPersona || localStorage.getItem("seer-7-7-pending-persona");
           if (pendingPersona) {
-            localStorage.removeItem("seer-6-6-pending-persona");
+            localStorage.removeItem("seer-7-7-pending-persona");
             navigate(`/reading?persona=${pendingPersona}`);
             return;
           }
@@ -732,7 +732,7 @@ export default function PersonasDirectory({ promoMode = false }: { promoMode?: b
       navigate(`/reading?persona=${slug}`);
     } else if (slug === 'aiden-powers' && !promoMode) {
       // Route to the Aiden quiz funnel instead of generic auth modal — but NOT on the
-      // 6/6 promo lander, where every guide (Aiden included) opens the same account
+      // 7/7 promo lander, where every guide (Aiden included) opens the same account
       // popup so the promo claim can run.
       navigate('/aiden');
     } else {
@@ -746,16 +746,16 @@ export default function PersonasDirectory({ promoMode = false }: { promoMode?: b
     setFormLoading(true);
     try {
       if (authIsSignUp) {
-        // On /6-6, tag the signup source so the verification email says "6 free minutes"
+        // On /7-7, tag the signup source so the verification email says "7 free minutes"
         // (matching the campaign) instead of the default 3. Non-promo signups stay untagged.
         const data = await register(
           authEmail, authPassword, authFirstName,
           authPersonaSlug || undefined,
-          promoMode ? { source: "promo-6-6" } : undefined,
+          promoMode ? { source: "promo-7-7" } : undefined,
         );
-        // On the /6-6 promo, grant immediately on signup: register already issued a token
+        // On the /7-7 promo, grant immediately on signup: register already issued a token
         // (the user is authenticated), so we skip the verification wall and let them stay
-        // on /6-6 — the claim fires and they can use the 6 min now. The verification email
+        // on /7-7 — the claim fires and they can use the 7 min now. The verification email
         // still goes out for later, exactly like the lander signups.
         if (data.requiresVerification && !promoMode) {
           // Persist slug so it survives the email-verification redirect (FRICTION-3)
@@ -767,21 +767,21 @@ export default function PersonasDirectory({ promoMode = false }: { promoMode?: b
           return;
         }
       } else {
-        // Passwordless accounts get an emailed sign-in link; redirect back to /6-6 so the
+        // Passwordless accounts get an emailed sign-in link; redirect back to /7-7 so the
         // claim runs on return. For a guide-card sign-in, carry ?persona=<slug> in the
         // redirect so the link forwards into that guide's chat even on a different
-        // device/browser (no localStorage there). The nav's generic sign-in stays on /6-6.
+        // device/browser (no localStorage there). The nav's generic sign-in stays on /7-7.
         const promoRedirect = authStayOnPromo || !authPersonaSlug
-          ? "/6-6"
-          : `/6-6?persona=${authPersonaSlug}`;
+          ? "/7-7"
+          : `/7-7?persona=${authPersonaSlug}`;
         await login(authEmail, authPassword, promoMode ? promoRedirect : undefined);
       }
       setShowAuthModal(false);
       if (promoMode) {
-        // Claim now — before we leave /6-6 — because the on-/6-6 claim effect won't run
+        // Claim now — before we leave /7-7 — because the on-/7-7 claim effect won't run
         // once we navigate away. Idempotent server-side, so a re-claim is harmless.
         await authFetch("/api/chat-service/promo-claim", { method: "POST" }).catch(() => {});
-        // Generic nav "Sign in" (no guide chosen) stays on /6-6; a guide-card "Start chat"
+        // Generic nav "Sign in" (no guide chosen) stays on /7-7; a guide-card "Start chat"
         // sends the user straight into that guide's chat (#4).
         if (authStayOnPromo) return;
         navigate(`/reading?persona=${authPersonaSlug}`);
@@ -797,9 +797,9 @@ export default function PersonasDirectory({ promoMode = false }: { promoMode?: b
         setAuthResendEmail(authEmail);
         setAuthMagicLinkSent(true);
         // Remember the chosen guide so a same-device magic-link click lands the user in that
-        // guide's chat after returning to /6-6 (#5b). Skipped for the generic nav sign-in.
+        // guide's chat after returning to /7-7 (#5b). Skipped for the generic nav sign-in.
         if (promoMode && !authStayOnPromo && authPersonaSlug) {
-          localStorage.setItem("seer-6-6-pending-persona", authPersonaSlug);
+          localStorage.setItem("seer-7-7-pending-persona", authPersonaSlug);
         }
       } else {
         setAuthError(
@@ -838,8 +838,8 @@ export default function PersonasDirectory({ promoMode = false }: { promoMode?: b
     [personas],
   );
 
-  // On /6-6, the nav's top-right "Sign in" opens THIS page's auth popup (instead of
-  // navigating away to /login) so the user stays on /6-6 and the promo claim can fire
+  // On /7-7, the nav's top-right "Sign in" opens THIS page's auth popup (instead of
+  // navigating away to /login) so the user stays on /7-7 and the promo claim can fire
   // right after auth. Defaults to login mode (the button says "Sign in"); the modal still
   // has a "create an account" toggle for brand-new visitors. Guarded to promoMode so the
   // nav's normal /login link is untouched everywhere else.
@@ -894,7 +894,7 @@ export default function PersonasDirectory({ promoMode = false }: { promoMode?: b
           className="animate-mp-fade-up font-serif text-[36px] md:text-[44px] text-white text-center mb-2 tracking-tight leading-[1.1]"
           style={{ animationDelay: "0ms" }}
         >
-          {promoMode ? "The 6/6 Portal is now open" : "Choose your guide"}
+          {promoMode ? "The 7/7 Portal is now open" : "Choose your guide"}
         </h1>
         <p
           className="animate-mp-fade-up text-center text-[15px] text-white/40 mb-8 italic"
@@ -903,7 +903,7 @@ export default function PersonasDirectory({ promoMode = false }: { promoMode?: b
           Some connections are written before you arrive.
         </p>
 
-        {/* ── 6/6 Promo Banner — shown on the /6-6 promo landing for emailed users ── */}
+        {/* ── 7/7 Promo Banner — shown on the /7-7 promo landing for emailed users ── */}
         {promoMode && (
           <div
             className="animate-mp-fade-up flex justify-center mb-10"
@@ -915,7 +915,7 @@ export default function PersonasDirectory({ promoMode = false }: { promoMode?: b
               </span>
               <span className="text-[14px] text-white/90">
                 You have{" "}
-                <strong className="text-white font-bold">6 FREE minutes</strong>{" "}
+                <strong className="text-white font-bold">{PROMO_OFFER_MINUTES} FREE minutes</strong>{" "}
                 with <strong className="text-white font-bold">every guide</strong> — tap one to begin
               </span>
             </div>

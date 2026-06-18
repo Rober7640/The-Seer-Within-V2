@@ -163,6 +163,7 @@ export default function PriceTestDashboard() {
                 <option value="v1-fb">FB (v1-fb)</option>
                 <option value="v1-fb2">FB2 (v1-fb2)</option>
                 <option value="v1-gdn">GDN (v1-gdn)</option>
+                <option value="v1-palm">Palm (v1-palm)</option>
               </select>
             </div>
             <div className="ml-auto text-xs text-gray-500">

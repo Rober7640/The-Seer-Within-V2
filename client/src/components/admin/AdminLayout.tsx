@@ -32,6 +32,7 @@ const NAV_ITEMS = [
   ]},
   { path: "/admin/aiden-follow-ups", label: "Aiden Follow-Ups", icon: Mail },
   { path: "/admin/evelyn-follow-ups", label: "Evelyn Follow-Ups", icon: Mail },
+  { path: "/admin/persona-follow-ups", label: "Persona Follow-Ups", icon: Mail },
   { path: "/admin/marketplace", label: "Marketplace", icon: LayoutGrid },
   { path: "/admin/settings", label: "Settings", icon: Settings },
 ];

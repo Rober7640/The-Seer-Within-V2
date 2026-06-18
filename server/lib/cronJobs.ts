@@ -11,6 +11,7 @@ import { processAidenFollowupQueue } from './aidenFollowupEmailGenerator';
 import { processVerifiedDripQueue } from './aidenVerifiedDripGenerator';
 import { processEvelynFollowupQueue } from './evelynFollowupEmailGenerator';
 import { processEvelynVerifiedDripQueue } from './evelynVerifiedDripGenerator';
+import { processPersonaVerifiedDripQueue } from './personaVerifiedDripGenerator';
 import { processEvelynPostPurchaseDripQueue } from './evelynPostPurchaseDripGenerator';
 import { processAidenPostPurchaseDripQueue } from './aidenPostPurchaseDripGenerator';
 import { reconcilePendingPurchases } from './reconciliationProcessor';
@@ -26,6 +27,7 @@ let isAidenFollowupProcessing = false;
 let isAidenVerifiedDripProcessing = false;
 let isEvelynFollowupProcessing = false;
 let isEvelynVerifiedDripProcessing = false;
+let isPersonaVerifiedDripProcessing = false;
 let isEvelynPostPurchaseDripProcessing = false;
 let isAidenPostPurchaseDripProcessing = false;
 let isReconciliationProcessing = false;
@@ -269,6 +271,32 @@ export function initializeCronJobs(): void {
         logger.error('Cron: Evelyn verified-drip processing failed', { error: (error as Error).message });
       } finally {
         isEvelynVerifiedDripProcessing = false;
+      }
+    },
+    { timezone },
+  );
+
+  // Generalized persona verified-not-purchased drip (Marcus/Luna/Nova/Maren) —
+  // every 5 minutes, offset 2 min. One processor drains the shared
+  // persona_followup_emails queue for all of them. 10-email nurture, +1h/+25h/+49h
+  // then 48h apart. No-ops when ENABLE_PERSONA_VERIFIED_DRIP is not 'true'.
+  cron.schedule(
+    '2-59/5 * * * *',
+    async () => {
+      if (isPersonaVerifiedDripProcessing) {
+        logger.info('Cron: Persona verified-drip processing already running, skipping');
+        return;
+      }
+      isPersonaVerifiedDripProcessing = true;
+      try {
+        const stats = await processPersonaVerifiedDripQueue();
+        if (stats.processed > 0) {
+          logger.info('Cron: Persona verified-drip batch complete', stats);
+        }
+      } catch (error) {
+        logger.error('Cron: Persona verified-drip processing failed', { error: (error as Error).message });
+      } finally {
+        isPersonaVerifiedDripProcessing = false;
       }
     },
     { timezone },

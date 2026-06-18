@@ -983,6 +983,97 @@ export const insertEvelynLanderSessionSchema = createInsertSchema(evelynLanderSe
 export type EvelynLanderSession = typeof evelynLanderSessions.$inferSelect;
 export type InsertEvelynLanderSession = z.infer<typeof insertEvelynLanderSessionSchema>;
 
+// Generalized persona lander sessions: ONE shared table for every additional
+// persona's chat lander (Marcus, Luna, Nova, Maren, ...). Same shape as
+// evelyn_lander_sessions, plus a persona_slug discriminator so a single engine +
+// route + admin view can serve all of them. Evelyn/Aiden keep their own tables.
+export const personaLanderSessions = pgTable("persona_lander_sessions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  sessionToken: text("session_token").notNull().unique(),
+
+  // Which persona's lander this visit belongs to (personas.slug).
+  personaSlug: text("persona_slug").notNull(),
+
+  // Resolved segment from URL params + DB lookup
+  // 'v2_active' | 'v2_password' | 'v1_migrated' | 'brand_new' | 'token_magic'
+  resolvedSegment: text("resolved_segment").notNull(),
+  resolvedUserId: varchar("resolved_user_id").references(() => users.id, { onDelete: "set null" }),
+
+  // Inputs (param-derived, sanitised, redacted where needed)
+  emailParamHash: text("email_param_hash"),
+  bucket: text("bucket"),
+  src: text("src"),
+  campaign: text("campaign"),
+  hadToken: boolean("had_token").default(false).notNull(),
+
+  // Funnel progress (chat layer fills these later)
+  turnCount: integer("turn_count").default(0).notNull(),
+  ctaClicked: boolean("cta_clicked").default(false).notNull(),
+  ctaAction: text("cta_action"),
+
+  // Fraud/analytics signals
+  ipAddress: text("ip_address"),
+  userAgent: text("user_agent"),
+
+  startedAt: timestamp("started_at").defaultNow().notNull(),
+  ctaClickedAt: timestamp("cta_clicked_at"),
+}, (table) => [
+  index("idx_persona_lander_user").on(table.resolvedUserId),
+  index("idx_persona_lander_persona").on(table.personaSlug, table.startedAt),
+  index("idx_persona_lander_segment").on(table.resolvedSegment, table.startedAt),
+]);
+
+export const insertPersonaLanderSessionSchema = createInsertSchema(personaLanderSessions);
+export type PersonaLanderSession = typeof personaLanderSessions.$inferSelect;
+export type InsertPersonaLanderSession = z.infer<typeof insertPersonaLanderSessionSchema>;
+
+// Generalized persona follow-up emails: ONE shared table for the verified-not-purchased
+// 10-email nurture drip of every additional persona (Marcus, Luna, Nova, Maren, ...),
+// discriminated by persona_slug. Same shape as evelyn_followup_emails so the admin view
+// and processor stay uniform. Evelyn/Aiden keep their own tables.
+export const personaFollowupEmails = pgTable("persona_followup_emails", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+
+  // Which persona this nurture row belongs to (personas.slug).
+  personaSlug: text("persona_slug").notNull(),
+
+  // Kept for parity with the evelyn/aiden tables + future drip tracks. Today only
+  // 'verified_nopurchase' is produced here.
+  sequenceType: text("sequence_type").default("verified_nopurchase").notNull(),
+
+  sequenceNumber: integer("sequence_number").notNull(), // 1..10
+  scheduledFor: timestamp("scheduled_for").notNull(),
+
+  recipientEmail: text("recipient_email").notNull(),
+  subject: text("subject").notNull(),
+  bodyHtml: text("body_html").notNull(),
+  bodyText: text("body_text").notNull(),
+
+  status: text("status").default("pending").notNull(), // pending, sent, failed, skipped
+  sentAt: timestamp("sent_at"),
+  resendEmailId: text("resend_email_id"),
+
+  attemptCount: integer("attempt_count").default(0).notNull(),
+  errorMessage: text("error_message"),
+
+  openedAt: timestamp("opened_at"),
+  clickedAt: timestamp("clicked_at"),
+
+  unsubscribeToken: text("unsubscribe_token").unique(),
+
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_persona_followup_user_seq").on(table.userId, table.sequenceNumber),
+  index("idx_persona_followup_status_scheduled").on(table.status, table.scheduledFor),
+  index("idx_persona_followup_persona_status_scheduled").on(table.personaSlug, table.status, table.scheduledFor),
+]);
+
+export const insertPersonaFollowupEmailSchema = createInsertSchema(personaFollowupEmails);
+export type PersonaFollowupEmail = typeof personaFollowupEmails.$inferSelect;
+export type InsertPersonaFollowupEmail = z.infer<typeof insertPersonaFollowupEmailSchema>;
+
 // Soulmate lander sessions: linkage row between a /soulmate landing-form submit
 // and the V2 user we passwordless-create at that moment. Used by isFromSoulmateLander()
 // in auth.ts to decide eligibility for the 5-min (300-coin) onboarding grant and
