@@ -32,7 +32,13 @@ function getApiKey(): string | null {
 }
 
 function getFormId(): string | null {
-  return process.env.KIT_FORM_ID || null;
+  const raw = process.env.KIT_FORM_ID;
+  if (!raw) return null;
+  // Tolerate a full form URL being pasted instead of the bare ID
+  // (e.g. https://app.kit.com/forms/designers/9585171/edit) by extracting the
+  // numeric form ID. A bare "9585171" passes through unchanged.
+  const match = raw.match(/\d+/);
+  return match ? match[0] : null;
 }
 
 async function makeKitRequest(
@@ -155,21 +161,23 @@ export async function addLeadToKit(params: AddLeadParams): Promise<{ success: bo
       body: JSON.stringify({ email_address: params.email }),
     });
 
-    if (!formResponse.ok && formResponse.status !== 201) {
+    let formError: string | undefined;
+    if (formResponse.ok || formResponse.status === 201) {
+      logger.info(`Kit: subscribed ${params.email} to form ${formId}`);
+    } else {
       const errorText = await formResponse.text();
       logger.error(`Kit: add ${params.email} to form ${formId} failed: status=${formResponse.status} body=${errorText}`);
-      return { success: false, error: `Kit form subscribe error: ${formResponse.status} - ${errorText}` };
+      formError = `Kit form subscribe error: ${formResponse.status} - ${errorText}`;
     }
 
-    logger.info(`Kit: subscribed ${params.email} to form ${formId}`);
-
-    // 3. Apply funnel tags (best-effort, sequential to keep it simple — at most
-    //    one tag per lead today).
+    // 3. Apply funnel tags regardless of the form result — the funnel tag is the
+    //    primary segmentation signal, so don't let a form-subscribe failure
+    //    block it. Best-effort, sequential (at most one tag per lead today).
     for (const tagName of params.tags ?? []) {
       await applyTag(params.email, tagName);
     }
 
-    return { success: true };
+    return formError ? { success: false, error: formError } : { success: true };
   } catch (error) {
     logger.error('Kit error:', error);
     return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
