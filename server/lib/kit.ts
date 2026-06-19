@@ -25,14 +25,27 @@ interface AddLeadParams {
   // Tag names to apply (e.g. ["fb"]). Resolved to IDs internally; unknown
   // names are logged and skipped, never fatal.
   tags?: string[];
+  // Optional form override. When omitted, falls back to KIT_FORM_ID. Lets the
+  // soulmate funnel point at its own form (KIT_SOULMATE_FORM_ID) for a separate
+  // sequence — or share the default form when unset.
+  formId?: string;
 }
 
 function getApiKey(): string | null {
   return process.env.KIT_API_KEY || null;
 }
 
+// Normalize a form ID: tolerate a full form URL being pasted instead of the
+// bare ID (e.g. https://app.kit.com/forms/designers/9585171/edit) by extracting
+// the numeric form ID. A bare "9585171" passes through unchanged.
+function normalizeFormId(raw: string | undefined | null): string | null {
+  if (!raw) return null;
+  const match = raw.match(/\d+/);
+  return match ? match[0] : null;
+}
+
 function getFormId(): string | null {
-  return process.env.KIT_FORM_ID || null;
+  return normalizeFormId(process.env.KIT_FORM_ID);
 }
 
 async function makeKitRequest(
@@ -120,10 +133,10 @@ async function applyTag(email: string, tagName: string): Promise<void> {
 // when Kit is unconfigured.
 export async function addLeadToKit(params: AddLeadParams): Promise<{ success: boolean; error?: string }> {
   const apiKey = getApiKey();
-  const formId = getFormId();
+  const formId = normalizeFormId(params.formId) ?? getFormId();
 
   if (!apiKey || !formId) {
-    logger.warn('Kit: KIT_API_KEY / KIT_FORM_ID not configured — skipping');
+    logger.warn('Kit: KIT_API_KEY / form ID not configured — skipping');
     return { success: false, error: 'Kit not configured' };
   }
 
@@ -155,21 +168,23 @@ export async function addLeadToKit(params: AddLeadParams): Promise<{ success: bo
       body: JSON.stringify({ email_address: params.email }),
     });
 
-    if (!formResponse.ok && formResponse.status !== 201) {
+    let formError: string | undefined;
+    if (formResponse.ok || formResponse.status === 201) {
+      logger.info(`Kit: subscribed ${params.email} to form ${formId}`);
+    } else {
       const errorText = await formResponse.text();
       logger.error(`Kit: add ${params.email} to form ${formId} failed: status=${formResponse.status} body=${errorText}`);
-      return { success: false, error: `Kit form subscribe error: ${formResponse.status} - ${errorText}` };
+      formError = `Kit form subscribe error: ${formResponse.status} - ${errorText}`;
     }
 
-    logger.info(`Kit: subscribed ${params.email} to form ${formId}`);
-
-    // 3. Apply funnel tags (best-effort, sequential to keep it simple — at most
-    //    one tag per lead today).
+    // 3. Apply funnel tags regardless of the form result — the funnel tag is the
+    //    primary segmentation signal, so don't let a form-subscribe failure
+    //    block it. Best-effort, sequential (at most one tag per lead today).
     for (const tagName of params.tags ?? []) {
       await applyTag(params.email, tagName);
     }
 
-    return { success: true };
+    return formError ? { success: false, error: formError } : { success: true };
   } catch (error) {
     logger.error('Kit error:', error);
     return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
