@@ -84,6 +84,7 @@ import {
   addSoulmateUpsell2Subscriber,
   tagSoulmateDeclinedUpsell,
 } from "./lib/aweber";
+import { addLeadToKit } from "./lib/kit";
 import { createSoulmateLanderV2Account } from "./lib/soulmateLanderSignup";
 import { extractClientIp, extractUserAgent } from "./lib/fraudDetection";
 import { sendFacebookEvent, fireLeadEvent } from "./lib/facebook";
@@ -221,6 +222,13 @@ function fbifyAweberTags(tags: string[], funnel: FunnelId): string[] {
       ? `${t}${suffix}`
       : t,
   );
+}
+
+// Kit funnel tag for a lead: each ad funnel's PostHog value doubles as its Kit
+// tag name ("fb"/"fb2"/"gdn"/"palm"); base V1 (undefined) maps to "v1". These
+// tags must exist in the Kit dashboard for tagging to take effect.
+function kitFunnelTag(funnel: FunnelId): string {
+  return funnelDefForParam(funnel)?.posthog ?? "v1";
 }
 
 // Initialize Stripe only if key is provided
@@ -715,6 +723,25 @@ export async function registerRoutes(
         })
         .catch((err) => {
           logger.warn("AWeber error (non-blocking):", err);
+        });
+
+      // Add to Kit alongside AWeber (non-blocking). Tagged by funnel so Kit's
+      // per-tag subscriber counts answer "how many leads from which funnel".
+      // No-ops cleanly if KIT_API_KEY / KIT_FORM_ID aren't set.
+      addLeadToKit({
+        email,
+        firstName,
+        tags: [kitFunnelTag(funnel)],
+      })
+        .then((result) => {
+          if (result.success) {
+            logger.info(`Kit: Added ${email} to form`);
+          } else {
+            logger.warn(`Kit: Failed to add ${email}:`, result.error);
+          }
+        })
+        .catch((err) => {
+          logger.warn("Kit error (non-blocking):", err);
         });
 
       // Report Lead conversion to Trackdesk (non-blocking)
