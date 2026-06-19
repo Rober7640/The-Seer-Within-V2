@@ -25,20 +25,27 @@ interface AddLeadParams {
   // Tag names to apply (e.g. ["fb"]). Resolved to IDs internally; unknown
   // names are logged and skipped, never fatal.
   tags?: string[];
+  // Optional form override. When omitted, falls back to KIT_FORM_ID. Lets the
+  // soulmate funnel point at its own form (KIT_SOULMATE_FORM_ID) for a separate
+  // sequence — or share the default form when unset.
+  formId?: string;
 }
 
 function getApiKey(): string | null {
   return process.env.KIT_API_KEY || null;
 }
 
-function getFormId(): string | null {
-  const raw = process.env.KIT_FORM_ID;
+// Normalize a form ID: tolerate a full form URL being pasted instead of the
+// bare ID (e.g. https://app.kit.com/forms/designers/9585171/edit) by extracting
+// the numeric form ID. A bare "9585171" passes through unchanged.
+function normalizeFormId(raw: string | undefined | null): string | null {
   if (!raw) return null;
-  // Tolerate a full form URL being pasted instead of the bare ID
-  // (e.g. https://app.kit.com/forms/designers/9585171/edit) by extracting the
-  // numeric form ID. A bare "9585171" passes through unchanged.
   const match = raw.match(/\d+/);
   return match ? match[0] : null;
+}
+
+function getFormId(): string | null {
+  return normalizeFormId(process.env.KIT_FORM_ID);
 }
 
 async function makeKitRequest(
@@ -126,10 +133,10 @@ async function applyTag(email: string, tagName: string): Promise<void> {
 // when Kit is unconfigured.
 export async function addLeadToKit(params: AddLeadParams): Promise<{ success: boolean; error?: string }> {
   const apiKey = getApiKey();
-  const formId = getFormId();
+  const formId = normalizeFormId(params.formId) ?? getFormId();
 
   if (!apiKey || !formId) {
-    logger.warn('Kit: KIT_API_KEY / KIT_FORM_ID not configured — skipping');
+    logger.warn('Kit: KIT_API_KEY / form ID not configured — skipping');
     return { success: false, error: 'Kit not configured' };
   }
 

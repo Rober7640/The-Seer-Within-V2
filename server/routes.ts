@@ -2648,6 +2648,16 @@ export async function registerRoutes(
       intakeToken,
     }).catch((err) => logger.error("Soulmate lead AWeber error (non-blocking):", err));
 
+    // Mirror to Kit alongside AWeber, tagged "soulmate". Uses a dedicated
+    // soulmate form (KIT_SOULMATE_FORM_ID) when set, else falls back to the
+    // default KIT_FORM_ID. Non-blocking; no-ops when Kit is unconfigured.
+    addLeadToKit({
+      email,
+      firstName,
+      tags: ["soulmate"],
+      formId: process.env.KIT_SOULMATE_FORM_ID,
+    }).catch((err) => logger.error("Soulmate lead Kit error (non-blocking):", err));
+
     // V2 handoff: create a passwordless Evelyn account so the user can claim
     // 5 free chat minutes whether or not they purchase the sketch. Existing
     // accounts get a magic-link instead of a duplicate. Fire-and-forget — must
