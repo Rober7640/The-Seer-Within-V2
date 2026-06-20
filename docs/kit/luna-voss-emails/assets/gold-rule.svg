@@ -1,0 +1,15 @@
+<!-- gold-rule.svg — Luna Voss section divider: brass hairline with centered 4-point sparkle node -->
+<svg xmlns="http://www.w3.org/2000/svg" width="120" height="16" viewBox="0 0 120 16" fill="none" role="img" aria-label="Decorative divider">
+  <g stroke="#B6863C" stroke-width="1" stroke-linecap="round">
+    <!-- left hairline -->
+    <line x1="2" y1="8" x2="48" y2="8"/>
+    <!-- right hairline -->
+    <line x1="72" y1="8" x2="118" y2="8"/>
+    <!-- centered 4-point sparkle -->
+    <line x1="60" y1="1" x2="60" y2="15"/>
+    <line x1="53" y1="8" x2="67" y2="8"/>
+    <line x1="55" y1="3" x2="65" y2="13"/>
+    <line x1="65" y1="3" x2="55" y2="13"/>
+  </g>
+  <circle cx="60" cy="8" r="1.4" fill="#B6863C"/>
+</svg>

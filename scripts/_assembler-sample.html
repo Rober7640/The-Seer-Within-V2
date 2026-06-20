@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<!--
+  ========================================================================
+  LUNA VOSS · EMAIL TEMPLATE A — "DAILY SKY" (text-light workhorse)
+  ========================================================================
+  Use for: the everyday "today's sky" pillar. No hero image. Fast to ship.
+  Audience: COLD funnel leads, no account. Every CTA -> /luna pre-login lander.
+
+  EDITABLE TOKENS (search for "EDIT:"):
+    {{SUBJECT}}      -> set in Kit's subject field (not in this file)
+    {{PREHEADER}}    -> inbox preview line (see preheader span below)
+    {{DATE}}         -> kicker date, e.g. "Thu, Jun 18" (assembler fills the real ET weekday)
+    {{BODY}}         -> main reading copy (the "BODY WELL" region)
+    {{CHAT_BLURB}}   -> 1-2 line nudge above the button (CTA block)
+    utm_content=LV-13-> per-send tracking id, baked into the CTA href
+    {firstName}      -> Kit merge: {{ subscriber.first_name | default: "friend" }}
+
+  {{BASE_URL}} PLACEHOLDER = https://theseerwithin.com
+    -> CTA href is fully baked below as the /luna lander + UTM. Edit utm_content
+       per send. If you ever move domains, swap the https://theseerwithin.com
+       portion of the href.
+  ========================================================================
+-->
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <!-- Dark-mode awareness: we still hard-code inline colors everywhere below. -->
+  <meta name="color-scheme" content="light dark">
+  <meta name="supported-color-schemes" content="light dark">
+  <title>Luna Voss · Today's Sky</title>
+
+  <!-- Webfonts: loaded for clients that allow them. NEVER depended on; fallbacks inline. -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600&family=Inter:wght@400;700&display=swap" rel="stylesheet">
+
+  <!--[if mso]>
+  <noscript><xml><o:OfficeDocumentSettings><o:PixelsPerInch>96</o:PixelsPerInch></o:OfficeDocumentSettings></xml></noscript>
+  <![endif]-->
+
+  <style>
+    /* Resets */
+    body,table,td,a{ -webkit-text-size-adjust:100%; -ms-text-size-adjust:100%; }
+    table,td{ mso-table-lspace:0pt; mso-table-rspace:0pt; }
+    img{ -ms-interpolation-mode:bicubic; border:0; outline:none; text-decoration:none; }
+    body{ margin:0; padding:0; width:100%!important; height:100%!important; }
+    a{ text-decoration:none; }
+
+    /* Mobile media query — single consistent breakpoint, used by all 3 templates */
+    @media screen and (max-width:600px){
+      .lv-wrap{ width:100%!important; }
+      .lv-gutter{ padding-left:16px!important; padding-right:16px!important; }
+      .lv-h1{ font-size:26px!important; line-height:32px!important; }
+      .lv-btn-a{ width:100%!important; max-width:340px!important; }
+      .lv-btn-td{ text-align:center!important; }
+    }
+
+    /* Dark-mode hints (Apple Mail / iOS). Inline colors remain the source of truth. */
+    @media (prefers-color-scheme: dark){
+      .lv-canvas{ background:#F1EADD!important; }
+    }
+  </style>
+</head>
+
+<!-- bgcolor + inline style both set for the outer canvas (dark-mode safe) -->
+<body class="lv-canvas" style="margin:0; padding:0; background-color:#F1EADD;" bgcolor="#F1EADD">
+
+  <!-- ============ PREHEADER (hidden inbox-preview text) ============ -->
+  <!-- EDIT: {{PREHEADER}} — keep ~40-90 chars. Trailing &nbsp;&zwnj; pad hides Gmail snippet bleed. -->
+  <div style="display:none; max-height:0; overflow:hidden; mso-hide:all; font-size:1px; line-height:1px; color:#F1EADD; opacity:0;">
+    Waxing Crescent overhead — here's what to do with it.
+    &nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;
+  </div>
+
+  <!-- Outer canvas table -->
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#F1EADD" style="background-color:#F1EADD;">
+    <tr>
+      <td align="center" style="padding:24px 12px;">
+
+        <!-- ============ 600px MAIN WRAP ============ -->
+        <table role="presentation" class="lv-wrap" width="600" cellpadding="0" cellspacing="0" border="0" style="width:600px; max-width:600px; background-color:#FBF7F0;" bgcolor="#FBF7F0">
+
+          <!-- ====================== MASTHEAD ====================== -->
+          <!-- Ink band ~88px, live-text wordmark + tagline. Constellation watermark degrades. -->
+          <tr>
+            <td align="center" bgcolor="#1C2230" background="https://theseerwithin.com/assets/luna/constellation-watermark-600x88.png"
+                style="background-color:#1C2230; background-image:url('https://theseerwithin.com/assets/luna/constellation-watermark-600x88.png'); background-position:center; background-repeat:no-repeat; padding:24px 24px 20px 24px;">
+              <!-- Luna avatar — web-optimized JPEG (150px asset, shown at 72px), round w/ brass ring. Host at {{BASE_URL}}/assets/luna/luna-avatar.jpg (file: assets/luna-avatar.jpg, 8.3KB). alt carries identity if images blocked. -->
+              <img src="https://theseerwithin.com/assets/luna/luna-avatar.jpg" width="72" height="72" alt="Luna Voss, your astrologer" style="display:block; margin:0 auto 12px auto; width:72px; height:72px; border-radius:50%; border:2px solid #B6863C; outline:none;">
+              <!-- LIVE-TEXT wordmark (never an image) -->
+              <div style="margin:0; font-family:'Playfair Display', Georgia, 'Times New Roman', serif; font-size:26px; line-height:30px; font-weight:600; letter-spacing:0.5px; color:#FBF7F0;">
+                LUNA VOSS
+              </div>
+              <!-- Tagline: brass, tracked uppercase -->
+              <div style="margin:6px 0 0 0; font-family:'Inter', -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif; font-size:11px; line-height:14px; font-weight:700; letter-spacing:2.5px; text-transform:uppercase; color:#B6863C;">
+                Your Natal Chart, Decoded.
+              </div>
+            </td>
+          </tr>
+
+          <!-- Brass hairline with center sparkle node (live ✦) -->
+          <tr>
+            <td bgcolor="#FBF7F0" style="background-color:#FBF7F0; padding:0;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td height="1" bgcolor="#B6863C" style="background-color:#B6863C; line-height:1px; font-size:1px;">&nbsp;</td>
+                  <td width="22" align="center" bgcolor="#FBF7F0" style="background-color:#FBF7F0; font-family:'Inter',Helvetica,Arial,sans-serif; font-size:11px; line-height:11px; color:#B6863C; padding:0 4px;">&#10022;</td>
+                  <td height="1" bgcolor="#B6863C" style="background-color:#B6863C; line-height:1px; font-size:1px;">&nbsp;</td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- 28px spacer -->
+          <tr><td height="28" bgcolor="#FBF7F0" style="background-color:#FBF7F0; height:28px; line-height:28px; font-size:1px;">&nbsp;</td></tr>
+
+          <!-- ====================== KICKER ====================== -->
+          <tr>
+            <td class="lv-gutter" align="center" bgcolor="#FBF7F0" style="background-color:#FBF7F0; padding:0 40px;">
+              <!-- Optional 24px brass moon glyph beside kicker (live text, degrades fine) -->
+              <!-- EDIT: {{DATE}} -->
+              <div style="font-family:'Inter', -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif; font-size:11px; line-height:14px; font-weight:700; letter-spacing:2.5px; text-transform:uppercase; color:#B6863C;">
+                <span style="color:#B6863C; font-size:15px; vertical-align:middle;">&#9790;</span>&nbsp; TODAY'S SKY &middot; Thu, Jun 18
+              </div>
+            </td>
+          </tr>
+
+          <!-- 12px spacer -->
+          <tr><td height="12" bgcolor="#FBF7F0" style="background-color:#FBF7F0; height:12px; line-height:12px; font-size:1px;">&nbsp;</td></tr>
+
+          <!-- ====================== H1 ====================== -->
+          <tr>
+            <td class="lv-gutter" align="center" bgcolor="#FBF7F0" style="background-color:#FBF7F0; padding:0 40px;">
+              <!-- EDIT: H1 headline -->
+              <h1 class="lv-h1" style="margin:0; font-family:'Playfair Display', Georgia, 'Times New Roman', serif; font-size:30px; line-height:36px; font-weight:600; color:#1C2230;">
+                Moon square Mars
+              </h1>
+            </td>
+          </tr>
+
+          <!-- 20px spacer -->
+          <tr><td height="20" bgcolor="#FBF7F0" style="background-color:#FBF7F0; height:20px; line-height:20px; font-size:1px;">&nbsp;</td></tr>
+
+          <!-- ====================== BODY WELL ====================== -->
+          <!-- EDIT: {{BODY}} — replace everything between BODY-START / BODY-END.
+               Body = Inter 17/28, ink, left-aligned. Keep paragraphs in <p> tags
+               with inline color/font so they stay correct in dark mode. -->
+          <tr>
+            <td class="lv-gutter" align="left" bgcolor="#FBF7F0" style="background-color:#FBF7F0; padding:0 40px; font-family:'Inter', -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif; font-size:17px; line-height:28px; color:#1C2230;">
+              <!-- BODY-START -->
+              <p style="margin:0 0 18px 0; font-family:'Inter', -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif; font-size:17px; line-height:28px; color:#1C2230;">
+                Hi {firstName} — here's today's sky in one line. Moon (mood, needs, what you actually feel) □ Mars (drive, desire, anger, the push to act) — friction that wants to be used.
+              </p>
+              <p style="margin:0 0 0 0; font-family:'Inter', -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif; font-size:17px; line-height:28px; color:#1C2230;">
+                Energy runs hot/tense — name it instead of reacting to it; the move is the pause before the reaction. The catch is where it lands in your chart — for some it's love, for others money or the conversation they keep rehearsing. That part's personal.
+              </p>
+              <!-- BODY-END -->
+            </td>
+          </tr>
+
+          <!-- 28px spacer -->
+          <tr><td height="28" bgcolor="#FBF7F0" style="background-color:#FBF7F0; height:28px; line-height:28px; font-size:1px;">&nbsp;</td></tr>
+
+          <!-- ====================== GOLD RULE ====================== -->
+          <tr>
+            <td class="lv-gutter" bgcolor="#FBF7F0" style="background-color:#FBF7F0; padding:0 40px;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr><td height="1" bgcolor="#B6863C" style="background-color:#B6863C; line-height:1px; font-size:1px;">&nbsp;</td></tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- ====================================================== -->
+          <!-- ============ CTA BLOCK (conversion unit) ============= -->
+          <!-- IDENTICAL across templates A/B/C. Keep in sync if edited. -->
+          <!-- ====================================================== -->
+          <!-- 24px spacer -->
+          <tr><td height="24" bgcolor="#FBF7F0" style="background-color:#FBF7F0; height:24px; line-height:24px; font-size:1px;">&nbsp;</td></tr>
+
+          <!-- {{CHAT_BLURB}} — Inter 16/26, ink, centered, <=2 lines -->
+          <tr>
+            <td class="lv-gutter" align="center" bgcolor="#FBF7F0" style="background-color:#FBF7F0; padding:0 40px; font-family:'Inter', -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif; font-size:16px; line-height:26px; color:#1C2230;">
+              <!-- EDIT: {{CHAT_BLURB}} -->
+              I can tell you what energy's in the air — this email just did. Where it shows up for you, love, money, work, is a chart question.
+            </td>
+          </tr>
+
+          <!-- 18px spacer -->
+          <tr><td height="18" bgcolor="#FBF7F0" style="background-color:#FBF7F0; height:18px; line-height:18px; font-size:1px;">&nbsp;</td></tr>
+
+          <!-- BULLETPROOF BUTTON -->
+          <tr>
+            <td class="lv-btn-td" align="center" bgcolor="#FBF7F0" style="background-color:#FBF7F0; padding:0 40px;">
+              <!--[if mso]>
+              <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="https://theseerwithin.com/luna?utm_source=kit&amp;utm_medium=email&amp;utm_campaign=luna-daily&amp;utm_content=LV-13" style="height:54px;v-text-anchor:middle;width:300px;" arcsize="15%" stroke="f" fillcolor="#C9963F">
+                <w:anchorlock/>
+                <center style="color:#1C2230;font-family:'Segoe UI',Helvetica,Arial,sans-serif;font-size:16px;font-weight:700;letter-spacing:0.5px;">Which part of my life? &#8594;</center>
+              </v:roundrect>
+              <![endif]-->
+              <!--[if !mso]><!-- -->
+              <!-- EDIT: href utm_content=LV-13  |  EDIT: button label -->
+              <table role="presentation" class="lv-btn-a" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto;">
+                <tr>
+                  <td align="center" bgcolor="#C9963F" style="background-color:#C9963F; border-radius:8px;">
+                    <a href="https://theseerwithin.com/luna?utm_source=kit&amp;utm_medium=email&amp;utm_campaign=luna-daily&amp;utm_content=LV-13"
+                       style="display:inline-block; padding:16px 34px; font-family:'Inter', -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif; font-size:16px; font-weight:700; letter-spacing:0.5px; color:#1C2230; text-decoration:none; border-radius:8px;">
+                      Which part of my life? &#8594;
+                    </a>
+                  </td>
+                </tr>
+              </table>
+              <!--<![endif]-->
+            </td>
+          </tr>
+
+          <!-- 10px spacer -->
+          <tr><td height="10" bgcolor="#FBF7F0" style="background-color:#FBF7F0; height:10px; line-height:10px; font-size:1px;">&nbsp;</td></tr>
+
+          <!-- Friction-reducer line — italic, ink-soft, centered -->
+          <tr>
+            <td class="lv-gutter" align="center" bgcolor="#FBF7F0" style="background-color:#FBF7F0; padding:0 40px;">
+              <!-- EDIT: friction line. Variants (rotate per send):
+                   A) "3 free minutes, no card — just talk to me like you'd text a friend."
+                   B) "First 3 minutes are on me. No card, no catch."
+                   C) "No card needed. Ask me anything for 3 free minutes."
+                   D) "Takes 30 seconds to start. 3 minutes free, no card." -->
+              <span style="font-family:'Inter', -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif; font-style:italic; font-size:14px; line-height:20px; color:#3A4255;">
+                3 free minutes, no card &mdash; just talk to me like you’d text a friend.
+              </span>
+            </td>
+          </tr>
+
+          <!-- 28px spacer -->
+          <tr><td height="28" bgcolor="#FBF7F0" style="background-color:#FBF7F0; height:28px; line-height:28px; font-size:1px;">&nbsp;</td></tr>
+          <!-- ============ /CTA BLOCK ============ -->
+
+          <!-- ====================== P.S. + SIGNOFF ====================== -->
+          <tr>
+            <td class="lv-gutter" align="left" bgcolor="#FBF7F0" style="background-color:#FBF7F0; padding:0 40px;">
+              <!-- EDIT: P.S. line -->
+              <p style="margin:0 0 18px 0; font-family:'Inter', -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif; font-size:15px; line-height:24px; color:#3A4255;">
+                <strong style="color:#1C2230;">P.S.</strong> Which area it actually hits is a 30-second answer once you can see your chart — not a mystery.</p>
+              <!-- Signoff -->
+              <p style="margin:0; font-family:'Playfair Display', Georgia, 'Times New Roman', serif; font-size:18px; line-height:24px; font-weight:600; color:#1C2230;">
+                &mdash; Luna
+              </p>
+            </td>
+          </tr>
+
+          <!-- 32px spacer before footer -->
+          <tr><td height="32" bgcolor="#FBF7F0" style="background-color:#FBF7F0; height:32px; line-height:32px; font-size:1px;">&nbsp;</td></tr>
+
+          <!-- ====================== FOOTER ====================== -->
+          <!-- Brass hairline -->
+          <tr>
+            <td class="lv-gutter" bgcolor="#FBF7F0" style="background-color:#FBF7F0; padding:0 40px;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr><td height="1" bgcolor="#B6863C" style="background-color:#B6863C; line-height:1px; font-size:1px;">&nbsp;</td></tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- 18px spacer -->
+          <tr><td height="18" bgcolor="#FBF7F0" style="background-color:#FBF7F0; height:18px; line-height:18px; font-size:1px;">&nbsp;</td></tr>
+
+          <!-- Natal-wheel line-art stamp (placeholder, ~48px, degrades to nothing visible) -->
+          <tr>
+            <td align="center" bgcolor="#FBF7F0" style="background-color:#FBF7F0; padding:0 40px;">
+              <!-- EDIT: footer stamp image URL -->
+              <img src="https://theseerwithin.com/assets/luna/natal-wheel-stamp-48.png" width="48" height="48" alt="Luna Voss natal-wheel mark" style="display:block; width:48px; height:48px; border:0; outline:none;">
+            </td>
+          </tr>
+
+          <!-- 12px spacer -->
+          <tr><td height="12" bgcolor="#FBF7F0" style="background-color:#FBF7F0; height:12px; line-height:12px; font-size:1px;">&nbsp;</td></tr>
+
+          <tr>
+            <td align="center" bgcolor="#FBF7F0" style="background-color:#FBF7F0; padding:0 40px; font-family:'Inter', -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif; font-size:12px; line-height:18px; color:#3A4255;">
+              <div style="font-family:'Inter', -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif; font-size:12px; line-height:18px; color:#3A4255;">
+                <strong style="color:#1C2230;">Luna Voss &middot; The Seer Within</strong><br>
+                hi@theseerwithin.com &middot; Decoded daily.
+              </div>
+              <div style="margin-top:10px; font-family:'Inter', -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif; font-size:12px; line-height:18px; color:#8A8475;">
+                You're getting this because you joined Luna's list.
+              </div>
+              <div style="margin-top:10px; font-family:'Inter', -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif; font-size:12px; line-height:18px; color:#8A8475;">
+                <!-- Kit merge tags: {{ unsubscribe_url }} and the preferences URL.
+                     EDIT: replace preferences href with your Kit preferences link if different. -->
+                <a href="{{ unsubscribe_url }}" style="color:#8A6326; text-decoration:underline;">Unsubscribe</a>
+                &nbsp;&middot;&nbsp;
+                <a href="{{ preferences_url }}" style="color:#8A6326; text-decoration:underline;">Update preferences</a>
+              </div>
+              <!-- CAN-SPAM physical mailing address (REQUIRED). EDIT: real address. -->
+              <div style="margin-top:10px; font-family:'Inter', -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif; font-size:12px; line-height:18px; color:#8A8475;">
+                The Seer Within, 123 Placeholder St, Suite 100, City, ST 00000, USA
+              </div>
+            </td>
+          </tr>
+
+          <!-- 28px bottom spacer -->
+          <tr><td height="28" bgcolor="#FBF7F0" style="background-color:#FBF7F0; height:28px; line-height:28px; font-size:1px;">&nbsp;</td></tr>
+
+        </table>
+        <!-- ============ /600px MAIN WRAP ============ -->
+
+      </td>
+    </tr>
+  </table>
+
+</body>
+</html>
