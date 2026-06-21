@@ -1,30 +1,30 @@
 <!DOCTYPE html>
 <!--
   ========================================================================
-  LUNA VOSS · EMAIL TEMPLATE C — "CHART WHEEL" (aspect deep-dive)
+  LUNA VOSS · EMAIL TEMPLATE B — "VISUAL FEATURE" (hero image card)
   ========================================================================
-  Use for: a single-aspect teaching pillar. Hero = centered ~340px chart-wheel
-  PNG (transparent bg) + brass uppercase aspect caption. Optional 3-column
-  "reading the wheel" strip uses LIVE Unicode glyphs (no image needed).
+  Use for: a single message-bearing image pillar (sky photo, vibe shot,
+  "almost people" emotional hook). Body is short (2-4 lines).
   Audience: COLD funnel leads, no account. CTA -> /luna pre-login lander.
+
+  Same shell as Template A + a {{VISUAL}} hero card (560px framed image).
 
   EDITABLE TOKENS (search for "EDIT:"):
     {{SUBJECT}}      -> set in Kit's subject field (not in this file)
     {{PREHEADER}}    -> inbox preview line (see preheader span below)
     {{DATE}}         -> kicker date
-    CHART CAPTION    -> brass uppercase aspect label under the wheel
-    {{VISUAL}}       -> chart-wheel image src + alt (CHART WHEEL region)
-    {{BODY}}         -> plain-English decode copy
+    {{VISUAL}}       -> hero image src + alt (HERO CARD region)
+    {{BODY}}         -> 2-4 line reading copy
     {{CHAT_BLURB}}   -> 1-2 line nudge above the button (CTA block)
-    utm_content=LV-01-> per-send tracking id, baked into the CTA href
+    utm_content=2026-06-30&amp;utm_term=LV-02-> per-send tracking id, baked into the CTA href
     {firstName}      -> Kit merge: {{ subscriber.first_name | default: "friend" }}
 
   {{BASE_URL}} PLACEHOLDER = https://theseerwithin.com
     -> CTA href is fully baked below as the /luna lander + UTM.
 
-  NOTE: chart-wheel PNG should be TRANSPARENT bg so it sits on paper #FBF7F0.
-  Give it a meaningful alt; the glyph strip below restates the aspect in text
-  so the email still teaches if the image is blocked.
+  IMAGE NOTE: hero must DEGRADE when images are blocked. We give it a real
+  background-color, a forced text color (so alt text is readable on paper),
+  and a meaningful alt string that carries the message on its own.
   ========================================================================
 -->
 <html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
@@ -34,7 +34,7 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="color-scheme" content="light dark">
   <meta name="supported-color-schemes" content="light dark">
-  <title>Luna Voss · Reading the Wheel</title>
+  <title>Luna Voss · Today's Sky</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -57,9 +57,8 @@
       .lv-h1{ font-size:26px!important; line-height:32px!important; }
       .lv-btn-a{ width:100%!important; max-width:340px!important; }
       .lv-btn-td{ text-align:center!important; }
-      .lv-wheel{ width:100%!important; height:auto!important; max-width:280px!important; }
-      /* 3-col glyph strip stacks on mobile */
-      .lv-col{ display:block!important; width:100%!important; max-width:100%!important; padding:10px 0!important; }
+      .lv-hero{ width:100%!important; height:auto!important; }   /* fluid hero on mobile */
+      .lv-hero-pad{ padding-left:16px!important; padding-right:16px!important; }
     }
 
     @media (prefers-color-scheme: dark){
@@ -73,7 +72,7 @@
   <!-- ============ PREHEADER ============ -->
   <!-- EDIT: {{PREHEADER}} -->
   <div style="display:none; max-height:0; overflow:hidden; mso-hide:all; font-size:1px; line-height:1px; color:#F1EADD; opacity:0;">
-    Sun and Moon in opposition—the tension is real, and it's showing you something.
+    Yesterday's Full Moon is still lit. Here's what that tension means.
     &nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;
   </div>
 
@@ -86,10 +85,10 @@
 
           <!-- ====================== MASTHEAD ====================== -->
           <tr>
-            <td align="center" bgcolor="#1C2230" background="https://theseerwithin.com/assets/luna/constellation-watermark-600x88.png"
-                style="background-color:#1C2230; background-image:url('https://theseerwithin.com/assets/luna/constellation-watermark-600x88.png'); background-position:center; background-repeat:no-repeat; padding:24px 24px 20px 24px;">
+            <td align="center" bgcolor="#1C2230" background="https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/luna/constellation-watermark-600x88.png"
+                style="background-color:#1C2230; background-image:url('https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/luna/constellation-watermark-600x88.png'); background-position:center; background-repeat:no-repeat; padding:24px 24px 20px 24px;">
               <!-- Luna avatar — web-optimized JPEG (150px asset, shown at 72px), round w/ brass ring. Host at {{BASE_URL}}/assets/luna/luna-avatar.jpg (file: assets/luna-avatar.jpg, 8.3KB). alt carries identity if images blocked. -->
-              <img src="https://theseerwithin.com/assets/luna/luna-avatar.jpg" width="72" height="72" alt="Luna Voss, your astrologer" style="display:block; margin:0 auto 12px auto; width:72px; height:72px; border-radius:50%; border:2px solid #B6863C; outline:none;">
+              <img src="https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/luna/luna-avatar.jpg" width="72" height="72" alt="Luna Voss, your astrologer" style="display:block; margin:0 auto 12px auto; width:72px; height:72px; border-radius:50%; border:2px solid #B6863C; outline:none;">
               <div style="margin:0; font-family:'Playfair Display', Georgia, 'Times New Roman', serif; font-size:26px; line-height:30px; font-weight:600; letter-spacing:0.5px; color:#FBF7F0;">
                 LUNA VOSS
               </div>
@@ -123,30 +122,29 @@
             </td>
           </tr>
 
-          <tr><td height="20" bgcolor="#FBF7F0" style="background-color:#FBF7F0; height:20px; line-height:20px; font-size:1px;">&nbsp;</td></tr>
-
-          <!-- ====================== CHART WHEEL HERO ({{VISUAL}}) ====================== -->
-          <!-- ~340px centered, transparent-bg PNG on paper. Meaningful alt. -->
-          <tr>
-            <td align="center" bgcolor="#FBF7F0" style="background-color:#FBF7F0; padding:0 40px;">
-              <!-- EDIT: {{VISUAL}} — swap chart-wheel src + alt. Keep width/height.
-                   Asset: transparent PNG, square, export at 680px for retina, display 340. -->
-              <img class="lv-wheel" src="https://theseerwithin.com/assets/luna/daily/2026-06-30.png"
-                   width="340" height="340" alt="The sky on 2026-06-30: Sun opposition Moon."
-                   style="display:block; width:340px; height:340px; max-width:100%; border:0; outline:none; margin:0 auto; font-family:'Inter',Helvetica,Arial,sans-serif; font-size:13px; line-height:20px; color:#3A4255; text-align:center;">
-            </td>
-          </tr>
-
           <tr><td height="14" bgcolor="#FBF7F0" style="background-color:#FBF7F0; height:14px; line-height:14px; font-size:1px;">&nbsp;</td></tr>
 
-          <!-- ====================== ASPECT CAPTION ====================== -->
-          <!-- Brass uppercase, tracked. Uses live glyph for the aspect symbol. -->
+          <!-- ====================== HERO CARD ({{VISUAL}}) ====================== -->
+          <!-- 560px framed image in a white card with 1px rule border.
+               Explicit width/height. Message-bearing alt. Degrades to alt text
+               on paper bg (forced color so it's readable when blocked). -->
           <tr>
-            <td class="lv-gutter" align="center" bgcolor="#FBF7F0" style="background-color:#FBF7F0; padding:0 40px;">
-              <!-- EDIT: CHART CAPTION — name ONLY the collective aspect (e.g. Mercury square Mars). Do NOT name a house here: which house it falls in is personal/per-reader and belongs in the live chat, never a broadcast. -->
-              <div style="font-family:'Inter', -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif; font-size:11px; line-height:16px; font-weight:700; letter-spacing:2.5px; text-transform:uppercase; color:#8A6326;">
-                SUN ☍ MOON &middot; FULL MOON
-              </div>
+            <td class="lv-hero-pad" align="center" bgcolor="#FBF7F0" style="background-color:#FBF7F0; padding:0 20px;">
+              <!-- white card + 1px brass-light rule border -->
+              <table role="presentation" width="560" class="lv-wrap" cellpadding="0" cellspacing="0" border="0" style="width:560px; max-width:560px; background-color:#FFFFFF; border:1px solid #E4DACB;" bgcolor="#FFFFFF">
+                <tr>
+                  <td align="center" style="padding:8px; background-color:#FFFFFF;" bgcolor="#FFFFFF">
+                    <!-- EDIT: {{VISUAL}} — swap src + alt. Keep width/height for Outlook.
+                         Recommended asset: 544x408 (4:3) or 544x306 (16:9), <=200kb.
+                         alt MUST carry the message in case images are off. -->
+                    <a href="https://theseerwithin.com/luna?utm_source=kit&amp;utm_medium=email&amp;utm_campaign=luna-daily&amp;utm_content=2026-06-30&amp;utm_term=LV-02" style="text-decoration:none;">
+                      <img class="lv-hero" src="https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/luna/hero/2026-06-30.png"
+                           width="544" height="408" alt="Tonight's sky: Sun facing off with Moon — opposition, 7.3° from exact."
+                           style="display:block; width:544px; height:408px; max-width:100%; border:0; outline:none; background-color:#1C2230; color:#FBF7F0; font-family:'Inter',Helvetica,Arial,sans-serif; font-size:14px; line-height:20px; text-align:center;">
+                    </a>
+                  </td>
+                </tr>
+              </table>
             </td>
           </tr>
 
@@ -157,29 +155,28 @@
             <td class="lv-gutter" align="center" bgcolor="#FBF7F0" style="background-color:#FBF7F0; padding:0 40px;">
               <!-- EDIT: H1 headline -->
               <h1 class="lv-h1" style="margin:0; font-family:'Playfair Display', Georgia, 'Times New Roman', serif; font-size:30px; line-height:36px; font-weight:600; color:#1C2230;">
-                When what you want meets what you need
+                When what you want meets what you feel
               </h1>
             </td>
           </tr>
 
           <tr><td height="18" bgcolor="#FBF7F0" style="background-color:#FBF7F0; height:18px; line-height:18px; font-size:1px;">&nbsp;</td></tr>
 
-          <!-- (daily build: 3-col strip omitted; the wheel + caption carry it) -->
-
-          <tr><td height="24" bgcolor="#FBF7F0" style="background-color:#FBF7F0; height:24px; line-height:24px; font-size:1px;">&nbsp;</td></tr>
-
-          <!-- ====================== BODY WELL (plain-English decode) ====================== -->
+          <!-- ====================== BODY WELL (short: 2-4 lines) ====================== -->
           <tr>
-            <td class="lv-gutter" align="left" bgcolor="#FBF7F0" style="background-color:#FBF7F0; padding:0 40px; font-family:'Inter', -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif; font-size:17px; line-height:28px; color:#1C2230;">
-              <!-- BODY-START — EDIT: {{BODY}} -->
+            <td class="lv-gutter" align="center" bgcolor="#FBF7F0" style="background-color:#FBF7F0; padding:0 44px; font-family:'Inter', -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif; font-size:17px; line-height:28px; color:#1C2230;">
+              <!-- BODY-START — EDIT: {{BODY}} (keep it short, 2-4 lines) -->
               <p style="margin:0 0 18px 0; font-family:'Inter', -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif; font-size:17px; line-height:28px; color:#1C2230;">
-                Today's Full Moon lights up a classic standoff: your Sun (what you're here to do, what fires you up) is in direct opposition to your Moon (what actually sustains you, what you need to feel okay). It's not a disaster. It's clarity.
+                The Full Moon peaked yesterday, and the sky is still running hot.
               </p>
               <p style="margin:0 0 18px 0; font-family:'Inter', -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif; font-size:17px; line-height:28px; color:#1C2230;">
-                This energy runs hot. You might feel pulled in two directions at once, or notice a person or situation forcing a choice between two things you thought were compatible. The move isn't to pick a side yet—it's to name the tension first. Pause before you react. That pause is where the real information lives.
+                Right now, the Sun and Moon are in direct opposition—your core identity pulling one way, your actual needs pulling the other. It's not subtle. You'll feel the tug in whichever area of your life holds this dynamic (that's personal to your chart, and worth knowing).
+              </p>
+              <p style="margin:0 0 18px 0; font-family:'Inter', -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif; font-size:17px; line-height:28px; color:#1C2230;">
+                The move: name the tension instead of reacting to it. That pause—between feeling it and acting—is where your real power lives this stretch. The opposition isn't a problem to solve. It's clarity you get to use.
               </p>
               <p style="margin:0 0 0 0; font-family:'Inter', -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif; font-size:17px; line-height:28px; color:#1C2230;">
-                Which area of your life is holding this push-pull? That depends entirely on your chart, and it's the kind of thing a full reading makes obvious.
+                Which part of your life is holding this push-pull? A chart reading shows you exactly where, and what to do with it.
               </p>
               <!-- BODY-END -->
             </td>
@@ -205,7 +202,7 @@
           <tr>
             <td class="lv-gutter" align="center" bgcolor="#FBF7F0" style="background-color:#FBF7F0; padding:0 40px; font-family:'Inter', -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif; font-size:16px; line-height:26px; color:#1C2230;">
               <!-- EDIT: {{CHAT_BLURB}} -->
-              This email can't tell you which house this lands in. Your chart can.
+              This window doesn't stay open — that's the whole point of timing. Your chart decides whether you ride it or sit it out.
             </td>
           </tr>
 
@@ -215,19 +212,19 @@
           <tr>
             <td class="lv-btn-td" align="center" bgcolor="#FBF7F0" style="background-color:#FBF7F0; padding:0 40px;">
               <!--[if mso]>
-              <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="https://theseerwithin.com/luna?utm_source=kit&amp;utm_medium=email&amp;utm_campaign=luna-daily&amp;utm_content=LV-01" style="height:54px;v-text-anchor:middle;width:300px;" arcsize="15%" stroke="f" fillcolor="#C9963F">
+              <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="https://theseerwithin.com/luna?utm_source=kit&amp;utm_medium=email&amp;utm_campaign=luna-daily&amp;utm_content=2026-06-30&amp;utm_term=LV-02" style="height:54px;v-text-anchor:middle;width:300px;" arcsize="15%" stroke="f" fillcolor="#C9963F">
                 <w:anchorlock/>
-                <center style="color:#1C2230;font-family:'Segoe UI',Helvetica,Arial,sans-serif;font-size:16px;font-weight:700;letter-spacing:0.5px;">Show me where it lands, Luna &#8594;</center>
+                <center style="color:#1C2230;font-family:'Segoe UI',Helvetica,Arial,sans-serif;font-size:16px;font-weight:700;letter-spacing:0.5px;">Read my timing &#8594;</center>
               </v:roundrect>
               <![endif]-->
               <!--[if !mso]><!-- -->
-              <!-- EDIT: href utm_content=LV-01  |  EDIT: button label -->
+              <!-- EDIT: href utm_content=2026-06-30&amp;utm_term=LV-02  |  EDIT: button label -->
               <table role="presentation" class="lv-btn-a" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto;">
                 <tr>
                   <td align="center" bgcolor="#C9963F" style="background-color:#C9963F; border-radius:8px;">
-                    <a href="https://theseerwithin.com/luna?utm_source=kit&amp;utm_medium=email&amp;utm_campaign=luna-daily&amp;utm_content=LV-01"
+                    <a href="https://theseerwithin.com/luna?utm_source=kit&amp;utm_medium=email&amp;utm_campaign=luna-daily&amp;utm_content=2026-06-30&amp;utm_term=LV-02"
                        style="display:inline-block; padding:16px 34px; font-family:'Inter', -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif; font-size:16px; font-weight:700; letter-spacing:0.5px; color:#1C2230; text-decoration:none; border-radius:8px;">
-                      Show me where it lands, Luna &#8594;
+                      Read my timing &#8594;
                     </a>
                   </td>
                 </tr>
@@ -259,7 +256,7 @@
             <td class="lv-gutter" align="left" bgcolor="#FBF7F0" style="background-color:#FBF7F0; padding:0 40px;">
               <!-- EDIT: P.S. line -->
               <p style="margin:0 0 18px 0; font-family:'Inter', -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif; font-size:15px; line-height:24px; color:#3A4255;">
-                <strong style="color:#1C2230;">P.S.</strong> The Full Moon is your timing window to see what's actually been building.</p>
+                <strong style="color:#1C2230;">P.S.</strong> The Full Moon's light stays strong for a few days—use it to see clearly before you move.</p>
               <p style="margin:0; font-family:'Playfair Display', Georgia, 'Times New Roman', serif; font-size:18px; line-height:24px; font-weight:600; color:#1C2230;">
                 &mdash; Luna
               </p>
@@ -282,7 +279,7 @@
           <tr>
             <td align="center" bgcolor="#FBF7F0" style="background-color:#FBF7F0; padding:0 40px;">
               <!-- EDIT: footer stamp image URL -->
-              <img src="https://theseerwithin.com/assets/luna/natal-wheel-stamp-48.png" width="48" height="48" alt="Luna Voss natal-wheel mark" style="display:block; width:48px; height:48px; border:0; outline:none;">
+              <img src="https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/luna/natal-wheel-stamp-48.png" width="48" height="48" alt="Luna Voss natal-wheel mark" style="display:block; width:48px; height:48px; border:0; outline:none;">
             </td>
           </tr>
 
@@ -304,7 +301,7 @@
               </div>
               <!-- CAN-SPAM physical mailing address (REQUIRED). EDIT: real address. -->
               <div style="margin-top:10px; font-family:'Inter', -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif; font-size:12px; line-height:18px; color:#8A8475;">
-                The Seer Within, 123 Placeholder St, Suite 100, City, ST 00000, USA
+                The Seer Within, 930 Washington Avenue, Suite 210-109, Miami Beach, FL 33139, USA
               </div>
             </td>
           </tr>

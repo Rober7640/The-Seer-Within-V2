@@ -1,7 +1,7 @@
 /**
- * Luna email assembler — the "typesetter" stage. Fills template A (text-light) or
- * template C (chart-wheel) with generated copy + a picked blurb, producing
- * send-ready HTML.
+ * Luna email assembler — the "typesetter" stage. Fills template A (text-light),
+ * B (visual-feature hero) or C (chart-wheel) with generated copy + a picked blurb,
+ * producing send-ready HTML.
  *
  * It replaces content regions in the committed templates using STABLE ASCII anchors
  * (style fragments, comment markers, the LV-XX / "READ MY CHART LIVE" placeholders),
@@ -20,10 +20,12 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const KIT_DIR = path.resolve(__dirname, '../../docs/kit/luna-voss-emails');
 const TEMPLATES = {
   A: path.join(KIT_DIR, 'luna-email-template-A-daily-sky.html'),
+  B: path.join(KIT_DIR, 'luna-email-template-B-visual-feature.html'),
   C: path.join(KIT_DIR, 'luna-email-template-C-chart-wheel.html'),
 };
+type TemplateId = keyof typeof TEMPLATES;
 
-const PLACEHOLDER_ADDRESS = 'The Seer Within, 123 Placeholder St, Suite 100, City, ST 00000, USA';
+const PLACEHOLDER_ADDRESS = 'The Seer Within, 930 Washington Avenue, Suite 210-109, Miami Beach, FL 33139, USA';
 const PARA_STYLE = "font-family:'Inter', -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif; font-size:17px; line-height:28px; color:#1C2230;";
 
 const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -44,11 +46,12 @@ function region(html: string, re: RegExp, fn: (...g: string[]) => string, label:
 }
 
 export interface WheelMeta { src: string; alt: string; caption: string; }
-export interface AssembleOpts { template?: 'A' | 'C'; address?: string; wheel?: WheelMeta; }
+export interface HeroMeta { src: string; alt: string; }
+export interface AssembleOpts { template?: TemplateId; address?: string; wheel?: WheelMeta; hero?: HeroMeta; }
 
 export interface AssembledEmail {
   date: string;
-  template: 'A' | 'C';
+  template: TemplateId;
   subject: string;       // set in Kit's subject field (not embedded in HTML)
   preheader: string;
   pillar: string;
@@ -64,6 +67,16 @@ function defaultWheel(plan: DayPlan): WheelMeta {
     alt: `The sky on ${plan.date}: ${plan.headline ?? 'the day’s planets and aspects'}.`,
     caption: ap ? `${ap.planet1.toUpperCase()} ${ap.aspectSymbol} ${ap.planet2.toUpperCase()}` : "TODAY'S SKY",
   };
+}
+
+function defaultHero(plan: DayPlan): HeroMeta {
+  const ap = plan.headlineAspect;
+  const alt = ap
+    ? `Tonight's sky: ${ap.planet1} ${ap.aspectType.toLowerCase()} ${ap.planet2}, ${ap.orb.toFixed(1)}° from exact.`
+    : `Tonight's moon: a ${plan.moonPhase.name.toLowerCase()}, ${Math.round(plan.moonPhase.illumination)}% lit.`;
+  // theseerwithin.com path is rewritten to ${ASSET_BASE_URL}/luna/hero/ below when
+  // S3 is configured; the batch normally passes an explicit (already-uploaded) src.
+  return { src: `https://theseerwithin.com/assets/luna/hero/${plan.date}.png`, alt };
 }
 
 export function assembleEmail(copy: LunaEmailCopy, blurb: PickedBlurb, plan: DayPlan, opts: AssembleOpts = {}): AssembledEmail {
@@ -95,7 +108,16 @@ export function assembleEmail(copy: LunaEmailCopy, blurb: PickedBlurb, plan: Day
   if (!html.includes('READ MY CHART LIVE')) throw new Error('[assembler] CTA label anchor not found');
   if (!html.includes('utm_content=LV-XX')) throw new Error('[assembler] CTA utm anchor not found');
   html = html.split('READ MY CHART LIVE').join(esc(blurb.ctaLabel));
-  html = html.split('utm_content=LV-XX').join(`utm_content=${blurb.id}`);
+  // utm_content = the email's identity (its date) for per-email activation/purchase
+  // attribution; utm_term = the blurb/CTA variant for creative testing.
+  html = html.split('utm_content=LV-XX').join(`utm_content=${plan.date}&amp;utm_term=${blurb.id}`);
+
+  // ── Template B extra: the "visual feature" hero image (src + alt) ──
+  if (template === 'B') {
+    const h = opts.hero ?? defaultHero(plan);
+    html = region(html, /(class="lv-hero" src=")[^"]*(")/, (_m, a, c) => `${a}${h.src}${c}`, 'hero-src');
+    html = region(html, /(width="544" height="408" alt=")[^"]*(")/, (_m, a, c) => `${a}${esc(h.alt)}${c}`, 'hero-alt');
+  }
 
   // ── Template C extras: wheel image + caption; drop the now-wrong hardcoded strip ──
   if (template === 'C') {

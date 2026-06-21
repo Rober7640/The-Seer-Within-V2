@@ -40,7 +40,7 @@ Write ONE daily astrology email for a US email list. It is a free content newsle
 Today's material (the COLLECTIVE sky — true for everyone):
 - Pillar: ${plan.pillar}
 - Headline: ${plan.headline ?? 'quiet sky (no tight personal aspect)'}
-- Moon: ${plan.moonPhase.name}, ~${plan.moonPhase.illumination}% lit${plan.timingNote ? `\n- Timing: ${plan.timingNote}` : ''}
+- Moon: ~${plan.moonPhase.illumination}% lit, ${plan.moonPhase.name} phase${plan.phaseExact ? '' : ' (NOT exact today — read the Timing line for when it actually peaks)'}${plan.timingNote ? `\n- Timing: ${plan.timingNote}` : ''}
 Talking points to draw from:
 ${points}
 
@@ -48,6 +48,7 @@ HARD RULES (a QA gate will reject violations):
 - Describe only the COLLECTIVE sky. NEVER name a personal house/placement ("your 4th house", "your Venus") and never assert you know where it lands for them ("which house is holding this"). You may tease only that the specific area is personal and visible in a reading.
 - Speak in tendencies and timing. NEVER promise an outcome ("you will…", "they'll come back").
 - NEVER invent a specific date or duration for a transit, retrograde, or phase (no "retrograde lasts until January", no "exact for 36 hours"). If a duration isn't in the material above, don't state one — keep it loose ("for now", "this stretch", "a few days").
+- TIMING ACCURACY: Only say a moon phase or retrograde station is happening "today"/"tonight" if the Timing line says it is EXACT today. If Timing says it is building/exact tomorrow, was exact yesterday, or is "around now", reflect that exactly ("the Full Moon peaks tomorrow", "yesterday's New Moon", "Mercury is turning retrograde this week") — and do NOT claim the exact event is today. This applies to the subject, H1, and preheader too.
 - Do NOT ask for birth date/time/city. No medical, legal, or financial advice.
 - Plain English, no jargon dump. Warm, direct, a little witty. Short lines, generous white space.
 - Use the literal token {firstName} where a first name would go (it is a merge field).
@@ -79,7 +80,9 @@ export function buildFallbackCopy(plan: DayPlan): LunaEmailCopy {
   return {
     subject: `{firstName}, the sky's got something today (${headline.toLowerCase()})`.slice(0, 120),
     h1: plan.headline ?? 'A quiet sky, but worth a look',
-    preheader: `${plan.moonPhase.name} overhead — here's what to do with it.`,
+    preheader: plan.phaseExact
+      ? `${plan.moonPhase.name} overhead — here's what to do with it.`
+      : `The sky's shifting today — here's what to do with it.`,
     bodyText: `${p1}\n\n${p2}`,
     bodyHtml: `<p>${p1}</p>\n<p>${p2}</p>`,
     ps,

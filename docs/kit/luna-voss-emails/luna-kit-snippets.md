@@ -175,7 +175,7 @@ underline) → CAN-SPAM physical address. All on paper bg.
       </div>
       <!-- CAN-SPAM physical mailing address (REQUIRED). EDIT: real address. -->
       <div style="margin-top:10px; font-family:'Inter', -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif; font-size:12px; line-height:18px; color:#8A8475;">
-        The Seer Within, 123 Placeholder St, Suite 100, City, ST 00000, USA
+        The Seer Within, 930 Washington Avenue, Suite 210-109, Miami Beach, FL 33139, USA
       </div>
     </td>
   </tr>

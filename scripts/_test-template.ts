@@ -1,21 +1,24 @@
-// Build ONE Luna email for a given template (A = text-light daily-sky, C = chart-wheel)
-// and push it to Kit as a draft. Template A needs no sky map; for C, pass an
-// already-uploaded sky-map date (build-luna-batch.ts uploads those).
-//   npx tsx scripts/_test-template.ts A 2026-06-18
+// Build ONE Luna email for a given template (A = text-light, B = visual-feature hero,
+// C = chart-wheel) and push it to Kit as a draft. Template A needs no image; for B/C,
+// pass a date whose image build-luna-batch.ts already uploaded (hero for B, sky map
+// for C).
+//   npx tsx scripts/_test-template.ts B 2026-06-18
 import 'dotenv/config';
 import { writeFileSync } from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { getDailySky } from '../server/lib/astrologyEngine.ts';
 import { buildCalendar } from '../server/lib/dailySkyEditor.ts';
 import { generateLunaDailyEmail } from '../server/lib/lunaContentGenerator.ts';
 import { pickBlurb } from '../server/lib/lunaBlurbs.ts';
-import { assembleEmail } from '../server/lib/lunaEmailAssembler.ts';
+import { heroAlt } from '../server/lib/lunaHeroMap.ts';
+import { assembleEmail, type AssembleOpts } from '../server/lib/lunaEmailAssembler.ts';
 
-const tpl = (process.argv[2] ?? 'A').toUpperCase() as 'A' | 'C';
+const tpl = (process.argv[2] ?? 'A').toUpperCase() as 'A' | 'B' | 'C';
 const date = process.argv[3] ?? '2026-06-18';
 const key = process.env.KIT_API_KEY;
 if (!key) { console.error('❌ KIT_API_KEY not set'); process.exit(1); }
-if (tpl !== 'A' && tpl !== 'C') { console.error('❌ template must be A or C'); process.exit(1); }
+if (tpl !== 'A' && tpl !== 'B' && tpl !== 'C') { console.error('❌ template must be A, B or C'); process.exit(1); }
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const base = process.env.ASSET_BASE_URL?.replace(/\/+$/, '');
@@ -24,12 +27,15 @@ const [plan] = buildCalendar(date, 1);
 const copy = await generateLunaDailyEmail(plan);
 const blurb = pickBlurb(plan.pillar, 0);
 
-// Template C needs a wheel image; point at the already-uploaded S3 sky map.
-const wheel = tpl === 'C'
-  ? { src: `${base}/luna/daily/${date}.png`, alt: `The sky on ${date}.`, caption: "TODAY'S SKY" }
-  : undefined;
+// B/C need an image; point at the already-uploaded S3 asset for that date.
+const imgOpts: AssembleOpts = { template: tpl };
+if (tpl === 'C') {
+  imgOpts.wheel = { src: `${base}/luna/daily/${date}.png`, alt: `The sky on ${date}.`, caption: "TODAY'S SKY" };
+} else if (tpl === 'B') {
+  imgOpts.hero = { src: `${base}/luna/hero/${date}.png`, alt: heroAlt(getDailySky(date), { headlineAspect: plan.headlineAspect }) };
+}
 
-const email = assembleEmail(copy, blurb, plan, { template: tpl, wheel });
+const email = assembleEmail(copy, blurb, plan, imgOpts);
 
 const outFile = path.resolve(__dirname, `../docs/kit/luna-voss-emails/outbox/_${tpl}-test-${date}.html`);
 writeFileSync(outFile, email.html);

@@ -48,6 +48,22 @@ const ASPECT_TONE: Record<string, { label: string; valence: number }> = {
 
 const MAJOR_PHASES = new Set(['New Moon', 'First Quarter', 'Full Moon', 'Last Quarter']);
 
+// Ecliptic Moon–Sun elongation at which each major phase is EXACT.
+const PHASE_TARGET: Record<string, number> = {
+  'New Moon': 0, 'First Quarter': 90, 'Full Moon': 180, 'Last Quarter': 270,
+};
+/** Distance (deg) from the day's elongation to its phase's exact point. */
+function phaseDist(name: string, elong: number): number {
+  if (name === 'New Moon') return Math.min(elong, 360 - elong);   // exact at 0/360
+  const t = PHASE_TARGET[name];
+  return t === undefined ? Infinity : Math.abs(elong - t);
+}
+function addDay(iso: string, n: number): string {
+  const [y, m, d] = iso.split('-').map(Number);
+  const dt = new Date(Date.UTC(y, m - 1, d + n));
+  return `${dt.getUTCFullYear()}-${String(dt.getUTCMonth() + 1).padStart(2, '0')}-${String(dt.getUTCDate()).padStart(2, '0')}`;
+}
+
 /** Relatability score for an aspect as a daily-email headline. Higher = better. */
 export function scoreAspect(a: DailySkyAspect): number {
   const p1 = PERSONAL.has(a.planet1);
@@ -100,6 +116,7 @@ export interface DayPlan {
   headlineAspect: DailySkyAspect | null;
   talkingPoints: string[];
   moonPhase: { name: string; illumination: number };
+  phaseExact: boolean;               // is the labelled major phase EXACT on this date (vs ±1 day)
   retrogrades: string[];
   stations: string[];                 // bodies that changed direction vs the prior day
   timingNote: string | null;         // populated on "Your Timing Window" days
@@ -110,7 +127,9 @@ export function planDay(date: string, prev?: DailySky): DayPlan {
   const sky = getDailySky(date);
   const { headline } = pickHeadline(sky);
 
-  // Retrograde stations = bodies whose direction flipped vs the prior day
+  // Retrograde stations = bodies whose direction flipped vs the prior day. The engine's
+  // flip day can fall a day either side of the canonical station, so the copy must treat
+  // it as "around now / this week", never a hard "today" (see timingNote wording).
   const stations: string[] = [];
   if (prev) {
     const today = sky.retrogrades;
@@ -122,9 +141,29 @@ export function planDay(date: string, prev?: DailySky): DayPlan {
   const isMajorPhase = MAJOR_PHASES.has(sky.moonPhase.name);
   const isTimingDay = stations.length > 0 || isMajorPhase;
 
+  // Is THIS the exact phase day? The phase-name bucket is ~±1 day wide, so compare the
+  // distance-to-exact against the neighbouring days; the exact day is the local minimum.
+  let phaseExact = true;
+  let phaseWhen: 'exact' | 'before' | 'after' = 'exact';
+  if (isMajorPhase) {
+    const here = phaseDist(sky.moonPhase.name, sky.moonPhase.elongation);
+    const dPrev = prev ? phaseDist(sky.moonPhase.name, prev.moonPhase.elongation) : Infinity;
+    const dNext = phaseDist(sky.moonPhase.name, getDailySky(addDay(date, 1)).moonPhase.elongation);
+    phaseExact = here <= dPrev && here <= dNext;
+    if (!phaseExact) phaseWhen = dNext < dPrev ? 'before' : 'after';
+  }
+
   let timingNote: string | null = null;
-  if (stations.length) timingNote = stations.join('; ') + ' today';
-  else if (isMajorPhase) timingNote = `${sky.moonPhase.name} today (~${sky.moonPhase.illumination}% lit)`;
+  if (stations.length) {
+    timingNote = `${stations.join('; ')} — happening around now (the exact turn can fall a day either side; say "this week"/"around now", never a hard "today")`;
+  } else if (isMajorPhase) {
+    const ph = sky.moonPhase.name, lit = sky.moonPhase.illumination;
+    timingNote = phaseWhen === 'exact'
+      ? `${ph} is EXACT today (~${lit}% lit) — fine to say "today/tonight"`
+      : phaseWhen === 'before'
+        ? `${ph} is BUILDING — exact tomorrow, NOT today (Moon ~${lit}% lit now); do not call it "${ph} today"`
+        : `${ph} was EXACT yesterday — today the Moon is just past it (~${lit}% lit); do not call it "${ph} today"`;
+  }
 
   const talkingPoints = headline
     ? aspectTalkingPoints(headline)
@@ -140,6 +179,7 @@ export function planDay(date: string, prev?: DailySky): DayPlan {
     headlineAspect: headline,
     talkingPoints,
     moonPhase: { name: sky.moonPhase.name, illumination: sky.moonPhase.illumination },
+    phaseExact,
     retrogrades: sky.retrogrades,
     stations,
     timingNote,
