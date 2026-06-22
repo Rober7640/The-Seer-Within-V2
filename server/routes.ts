@@ -548,6 +548,11 @@ export async function registerRoutes(
         type = "main",
         trackdeskClickId,
       } = req.body as CheckoutRequest & { trackdeskClickId?: string };
+      // No-optin (`?noemail=1`) variant: identifies a no-email-lander buyer.
+      // Drives an internal Stripe description marker, AWeber `noemail` tags, and
+      // V2 account creation on the purchase webhook. Falsy for every normal
+      // funnel, so this whole feature is a no-op outside the no-optin arm.
+      const noemail = req.body?.noemail === true;
       const funnel: FunnelId =
         parseFunnel(req.body?.funnel);
       // Google Ads click id (from the _gcl_aw cookie). Stored in Stripe
@@ -615,7 +620,11 @@ export async function registerRoutes(
         ],
         mode: "payment",
         payment_intent_data: {
-          description: productName,
+          // Internal-only marker: appended to the PaymentIntent description so a
+          // no-optin order is identifiable in the Stripe Dashboard "Description"
+          // column. NOT the customer-facing line item (`product_data.name` stays
+          // clean), so it never shows on the receipt/checkout page.
+          description: noemail ? `${productName} - No email` : productName,
           setup_future_usage: "off_session",
           metadata: {
             firstName,
@@ -626,6 +635,7 @@ export async function registerRoutes(
             priceVariant: variantId,
             ...(funnel && { funnel }),
             ...(gclid && { gclid }),
+            ...(noemail && { noemail: "1" }),
           },
         },
         success_url: `${getBaseUrl(req)}${funnelPath("/welcome1", funnel)}?session_id={CHECKOUT_SESSION_ID}`,
@@ -641,6 +651,10 @@ export async function registerRoutes(
           ...(funnel && { funnel }),
           ...(trackdeskClickId && { trackdeskClickId }),
           ...(gclid && { gclid }),
+          // Authoritative no-optin flag. The purchase webhook + upsell + paid
+          // paths read this off the session to tag AWeber and create the V2
+          // account. Set once here so the whole funnel inherits it.
+          ...(noemail && { noemail: "1" }),
         },
       });
 
@@ -1000,6 +1014,11 @@ export async function registerRoutes(
               if (isFbFunnel(sessionFunnel)) {
                 paidTags.push(`${purchaseTypeTag}${fbTagSuffix(sessionFunnel)}`);
               }
+              // No-optin buyers get a `noemail` tag so they're identifiable on
+              // the paid list. Read off the session metadata set at checkout.
+              if (session.metadata?.noemail === "1") {
+                paidTags.push("noemail");
+              }
 
               addPaidSubscriber({
                 email: conversation!.email!,
@@ -1216,7 +1235,12 @@ export async function registerRoutes(
               email: customerEmail,
               name: customerName,
               stripeOrderId: session.payment_intent as string,
-              tags: fbifyAweberTags(["seer-within-upsell"], fallbackFunnel),
+              tags: fbifyAweberTags(
+                session.metadata?.noemail === "1"
+                  ? ["seer-within-upsell", "noemail"]
+                  : ["seer-within-upsell"],
+                fallbackFunnel,
+              ),
               shipping: shippingDetails?.address
                 ? {
                     name: shippingDetails.name || "",
@@ -1371,6 +1395,10 @@ export async function registerRoutes(
           // instead — preventing the double-fire.
           flow: "1click",
           ...(funnel && { funnel }),
+          // Inherit the no-optin flag from the main session (internal only —
+          // no description suffix on off-session PIs so it can never reach a
+          // customer receipt).
+          ...(session.metadata?.noemail === "1" && { noemail: "1" }),
         },
       });
 
@@ -1406,7 +1434,12 @@ export async function registerRoutes(
             email: customerEmail,
             name: firstName,
             stripeOrderId: upsellPayment.id,
-            tags: fbifyAweberTags(["seer-within-upsell"], funnel),
+            tags: fbifyAweberTags(
+              session.metadata?.noemail === "1"
+                ? ["seer-within-upsell", "noemail"]
+                : ["seer-within-upsell"],
+              funnel,
+            ),
           })
             .then(() => logger.info("1-click upsell: AWeber subscriber added (without shipping — shipping added on form submit)"))
             .catch((err) => logger.error("1-click upsell: AWeber error:", err));
@@ -1477,6 +1510,17 @@ export async function registerRoutes(
           });
         }
 
+        // Inherit the no-optin flag from the original purchase so a fallback
+        // upsell charge is marked internally + AWeber-tagged like the 1-click
+        // path. Non-fatal lookup — defaults to off for normal funnels.
+        let inheritNoemail = false;
+        try {
+          const orig = await stripe.checkout.sessions.retrieve(originalSessionId);
+          inheritNoemail = orig.metadata?.noemail === "1";
+        } catch (e) {
+          logger.warn("Upsell fallback: noemail lookup failed (non-fatal)", e);
+        }
+
         const session = await stripe.checkout.sessions.create({
           customer_email: email,
           payment_method_types: ["card"],
@@ -1502,6 +1546,7 @@ export async function registerRoutes(
               firstName,
               email,
               ...(funnel && { funnel }),
+              ...(inheritNoemail && { noemail: "1" }),
             },
           },
           shipping_address_collection: {
@@ -1517,6 +1562,7 @@ export async function registerRoutes(
             bucket,
             ...(funnel && { funnel }),
             ...(trackdeskClickId && { trackdeskClickId }),
+            ...(inheritNoemail && { noemail: "1" }),
           },
         });
 
@@ -1919,6 +1965,8 @@ export async function registerRoutes(
           // fallback-Checkout double-fire of the FB event.
           flow: "1click",
           ...(funnel && { funnel }),
+          // Inherit the no-optin flag from the main session (internal only).
+          ...(session.metadata?.noemail === "1" && { noemail: "1" }),
         },
       });
 
@@ -2035,7 +2083,9 @@ export async function registerRoutes(
                 name: firstName,
                 stripeOrderId: upsell2Payment.id,
                 tags: fbifyAweberTags(
-                  ["seer-within-upsell2", `bracelet-${type}`],
+                  session.metadata?.noemail === "1"
+                    ? ["seer-within-upsell2", `bracelet-${type}`, "noemail"]
+                    : ["seer-within-upsell2", `bracelet-${type}`],
                   funnel,
                 ),
                 shipping:
@@ -2138,6 +2188,16 @@ export async function registerRoutes(
             : "Manifestation Bracelet (Standard)";
         const productName = `${baseProductName}${fbSuffix(funnel)}`;
 
+        // Inherit the no-optin flag from the original purchase so a fallback
+        // upsell-2 charge is marked internally like the 1-click path.
+        let inheritNoemail = false;
+        try {
+          const orig = await stripe.checkout.sessions.retrieve(originalSessionId);
+          inheritNoemail = orig.metadata?.noemail === "1";
+        } catch (e) {
+          logger.warn("Upsell2 fallback: noemail lookup failed (non-fatal)", e);
+        }
+
         const session = await stripe.checkout.sessions.create({
           customer_email: email,
           payment_method_types: ["card"],
@@ -2165,6 +2225,7 @@ export async function registerRoutes(
               firstName,
               email,
               ...(funnel && { funnel }),
+              ...(inheritNoemail && { noemail: "1" }),
             },
           },
           shipping_address_collection: {
@@ -2180,6 +2241,7 @@ export async function registerRoutes(
             firstName,
             bucket,
             ...(funnel && { funnel }),
+            ...(inheritNoemail && { noemail: "1" }),
           },
         });
 
@@ -2230,12 +2292,16 @@ export async function registerRoutes(
             conversation.email
           ) {
             let shipping2Funnel: FunnelId = undefined;
+            // Carry the no-optin flag from the upsell-2 charge so a fallback
+            // buyer (whose first AWeber add happens here) still gets tagged.
+            let shipping2Noemail = false;
             if (stripe) {
               try {
                 const pi = await stripe.paymentIntents.retrieve(
                   conversation.upsell2PaymentId,
                 );
                 shipping2Funnel = parseFunnel(pi.metadata?.funnel);
+                shipping2Noemail = pi.metadata?.noemail === "1";
               } catch (err) {
                 logger.warn(
                   "Upsell2 shipping save: could not retrieve PaymentIntent for funnel lookup",
@@ -2253,6 +2319,7 @@ export async function registerRoutes(
                   "seer-within-upsell2",
                   `bracelet-${conversation.upsell2Type || "full"}`,
                   "shipping-confirmed",
+                  ...(shipping2Noemail ? ["noemail"] : []),
                 ],
                 shipping2Funnel,
               ),

@@ -10,6 +10,7 @@ import logger from '../lib/logger';
 import { posthog } from '../lib/posthog';
 import * as paypal from '../lib/paypal';
 import { fireV2PurchaseEvent, fireStripePurchaseEvent } from '../lib/facebook';
+import { migrateAndEmailFunnelUser } from '../lib/funnelMigrationEmail';
 import { fireGoogleAdsConversion, gadsStepForProduct } from '../lib/googleAds';
 import { funnelDefForParam } from '@shared/funnelConfig';
 import { maybeSchedulePostPurchaseDrip } from '../lib/postPurchaseDripTrigger';
@@ -971,6 +972,32 @@ router.post('/stripe', async (req: Request, res: Response) => {
         gclidFromMeta: metadata.gclid,
         email: metadata.email || session.customer_email || undefined,
       }).catch(() => { /* logged inside */ });
+    }
+
+    // No-optin (`?noemail=1`) front-end buyers never hit the normal
+    // /api/save-progress migration (no email was captured in chat), so they'd
+    // otherwise stay out of V2. Create their V2 account here on the first
+    // purchase, using the email Stripe collected on its hosted page. Reuses the
+    // same idempotent migration the normal landers use (account + free coins +
+    // Evelyn drip with a magic-link login). Gated on the no-optin flag AND the
+    // front-end product, so it never fires for normal funnels or for upsells.
+    if (metadata.noemail === '1' && product === 'energy_clearing_ritual') {
+      const noOptinEmail =
+        session.customer_details?.email || session.customer_email || undefined;
+      if (noOptinEmail) {
+        migrateAndEmailFunnelUser({
+          email: noOptinEmail,
+          firstName: metadata.firstName || 'Friend',
+          bucket: metadata.bucket || undefined,
+        }).catch((err) =>
+          logger.error('No-optin V2 migration error (non-blocking):', err),
+        );
+      } else {
+        logger.warn(
+          'No-optin V2 migration skipped: no email on session',
+          { session: session.id },
+        );
+      }
     }
   }
 

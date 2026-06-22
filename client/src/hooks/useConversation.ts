@@ -1410,6 +1410,11 @@ export function useConversation() {
           trackdeskClickId: getTrackdeskClickId(),
           gclid: getGclid(),
           funnel: currentFunnel(),
+          // No-optin variant: tells the server to mark this purchase as a
+          // no-email-lander order (AWeber tag, internal Stripe description,
+          // and V2 account creation on the webhook). Absent/false for every
+          // normal funnel → no behavior change.
+          noemail: skipEmail(),
         }),
       })
       const { url } = await response.json()
