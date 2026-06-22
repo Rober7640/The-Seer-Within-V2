@@ -52,3 +52,21 @@ export function funnelDefForPath(path: string): FunnelDef | null {
 export function funnelDefForParam(param: unknown): FunnelDef | null {
   return FUNNELS.find((f) => f.param === param) ?? null;
 }
+
+// Map a stored conversation price_variant (e.g. "35_palm", "35_palm_u47",
+// "35_fb2", "35") to the owning ad-funnel param, or null for base V1 / unknown.
+// Longer funnel tokens are checked first so "_fb2" is never mis-read as "_fb".
+export function funnelParamFromPriceVariant(
+  priceVariant: string | null | undefined,
+): FunnelParam | null {
+  if (!priceVariant) return null;
+  const v = priceVariant.toLowerCase();
+  const byLongestToken = [...FUNNELS].sort(
+    (a, b) => b.aweberSuffix.length - a.aweberSuffix.length,
+  );
+  for (const f of byLongestToken) {
+    const token = f.aweberSuffix.replace(/^-/, ""); // "palm" | "fb2" | "gdn" | "fb"
+    if (v.includes(`_${token}`)) return f.param;
+  }
+  return null;
+}
