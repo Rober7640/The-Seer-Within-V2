@@ -28,6 +28,7 @@ import { buildFollowUpHtml, buildFollowUpText } from './emailTemplate';
 import { generateMagicLinkToken } from './magicLink';
 import logger from './logger';
 import { fireWithBreaker, resendBreaker, anthropicBreaker } from './circuitBreaker';
+import { buildFunnelTags } from './resendFunnelTags';
 
 const resend = process.env.RESEND_API_KEY
   ? new Resend(process.env.RESEND_API_KEY)
@@ -169,6 +170,7 @@ interface MigrationCandidate {
   deeperResponse: string | null;
   emotionalResponse: string | null;
   location: string | null;
+  priceVariant: string | null;
 }
 
 interface EvelynConfig {
@@ -211,6 +213,7 @@ export async function sendMigrationEmail1(
       deeperResponse: conversations.deeperResponse,
       emotionalResponse: conversations.emotionalResponse,
       location: conversations.location,
+      priceVariant: conversations.priceVariant,
     })
     .from(users)
     .innerJoin(conversations, eq(conversations.id, users.migratedFromConversationId))
@@ -240,6 +243,7 @@ export async function sendMigrationEmail1(
     deeperResponse: c.deeperResponse,
     emotionalResponse: c.emotionalResponse,
     location: c.location,
+    priceVariant: c.priceVariant,
   }));
 
   logger.info('Migration Email 1: candidates found', { total: candidates.length, eligible: eligible.length });
@@ -389,6 +393,7 @@ async function loadCandidate(userId: string): Promise<MigrationCandidate | null>
       deeperResponse: conversations.deeperResponse,
       emotionalResponse: conversations.emotionalResponse,
       location: conversations.location,
+      priceVariant: conversations.priceVariant,
     })
     .from(conversations)
     .where(eq(conversations.id, user[0].conversationId))
@@ -495,6 +500,7 @@ async function sendDripEmail(
           { name: 'type', value: 'migration_drip' },
           { name: 'sequence', value: String(sequenceNumber) },
           { name: 'user_id', value: candidate.userId },
+          ...buildFunnelTags(candidate.priceVariant),
         ],
       }),
     );
