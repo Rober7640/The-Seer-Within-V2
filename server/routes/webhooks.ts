@@ -846,6 +846,9 @@ router.post('/stripe', async (req: Request, res: Response) => {
           amount_cents: session.amount_total ?? 0,
           stripe_session_id: session.id,
           email,
+          // No-optin arm marker so purchases are filterable/comparable in PostHog
+          // (email_gate=off = no-email lander). Derived from the session metadata.
+          email_gate: metadata.noemail === '1' ? 'off' : 'on',
         },
       });
     }

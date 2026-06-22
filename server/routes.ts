@@ -555,7 +555,8 @@ export async function registerRoutes(
         bucket,
         type = "main",
         trackdeskClickId,
-      } = req.body as CheckoutRequest & { trackdeskClickId?: string };
+        posthogDistinctId,
+      } = req.body as CheckoutRequest & { trackdeskClickId?: string; posthogDistinctId?: string };
       // No-optin (`?noemail=1`) variant: identifies a no-email-lander buyer.
       // Drives an internal Stripe description marker, AWeber `noemail` tags, and
       // V2 account creation on the purchase webhook. Falsy for every normal
@@ -658,6 +659,10 @@ export async function registerRoutes(
           priceVariant: variantId,
           ...(funnel && { funnel }),
           ...(trackdeskClickId && { trackdeskClickId }),
+          // Browser PostHog id so the server-side purchase_completed event is
+          // attributed to the SAME visitor as the funnel events (email_gate_*),
+          // enabling a connected conversion funnel incl. the no-optin arm.
+          ...(posthogDistinctId && { posthogDistinctId }),
           ...(gclid && { gclid }),
           // Authoritative no-optin flag. The purchase webhook + upsell + paid
           // paths read this off the session to tag AWeber and create the V2

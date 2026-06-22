@@ -19,7 +19,7 @@ import {
 } from '@/lib/intent'
 import { trackLead, trackInitiateCheckout, getTrackdeskClickId } from '@/lib/facebook'
 import { currentFunnel, getPostHogFunnel, skipEmail } from '@/lib/funnel'
-import { track as trackPH, identifyUser as identifyPH } from '@/lib/posthog'
+import { track as trackPH, identifyUser as identifyPH, getDistinctId } from '@/lib/posthog'
 import { trackGAdsLead, trackGAdsCheckout, getGclid } from '@/lib/gtm'
 
 const STORAGE_KEY = 'seer_conversation'
@@ -1415,6 +1415,9 @@ export function useConversation() {
           // and V2 account creation on the webhook). Absent/false for every
           // normal funnel → no behavior change.
           noemail: skipEmail(),
+          // Browser PostHog id → Stripe metadata so the server-side
+          // purchase_completed event ties back to this visitor (connected funnel).
+          posthogDistinctId: getDistinctId(),
         }),
       })
       const { url } = await response.json()
