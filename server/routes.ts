@@ -1451,6 +1451,9 @@ export async function registerRoutes(
             amount_cents: upsell1Cents,
             payment_intent_id: upsellPayment.id,
             email,
+            // No-optin arm marker so palm no-optin upsells are separable from the
+            // email arm in PostHog (mirrors the FE purchase + client funnel events).
+            email_gate: session.metadata?.noemail === "1" ? "off" : "on",
           },
         });
 
@@ -2024,6 +2027,9 @@ export async function registerRoutes(
             amount_variant: type,
             payment_intent_id: upsell2Payment.id,
             email,
+            // No-optin arm marker so palm no-optin upsells are separable from the
+            // email arm in PostHog (mirrors the FE purchase + client funnel events).
+            email_gate: session.metadata?.noemail === "1" ? "off" : "on",
           },
         });
 
