@@ -84,6 +84,7 @@ import {
   addSoulmateUpsell2Subscriber,
   tagSoulmateDeclinedUpsell,
 } from "./lib/aweber";
+import { addLeadToKit } from "./lib/kit";
 import { createSoulmateLanderV2Account } from "./lib/soulmateLanderSignup";
 import { extractClientIp, extractUserAgent } from "./lib/fraudDetection";
 import { sendFacebookEvent, fireLeadEvent } from "./lib/facebook";
@@ -221,6 +222,13 @@ function fbifyAweberTags(tags: string[], funnel: FunnelId): string[] {
       ? `${t}${suffix}`
       : t,
   );
+}
+
+// Kit funnel tag for a lead: each ad funnel's PostHog value doubles as its Kit
+// tag name ("fb"/"fb2"/"gdn"/"palm"); base V1 (undefined) maps to "v1". These
+// tags must exist in the Kit dashboard for tagging to take effect.
+function kitFunnelTag(funnel: FunnelId): string {
+  return funnelDefForParam(funnel)?.posthog ?? "v1";
 }
 
 // Initialize Stripe only if key is provided
@@ -547,7 +555,13 @@ export async function registerRoutes(
         bucket,
         type = "main",
         trackdeskClickId,
-      } = req.body as CheckoutRequest & { trackdeskClickId?: string };
+        posthogDistinctId,
+      } = req.body as CheckoutRequest & { trackdeskClickId?: string; posthogDistinctId?: string };
+      // No-optin (`?noemail=1`) variant: identifies a no-email-lander buyer.
+      // Drives an internal Stripe description marker, AWeber `noemail` tags, and
+      // V2 account creation on the purchase webhook. Falsy for every normal
+      // funnel, so this whole feature is a no-op outside the no-optin arm.
+      const noemail = req.body?.noemail === true;
       const funnel: FunnelId =
         parseFunnel(req.body?.funnel);
       // Google Ads click id (from the _gcl_aw cookie). Stored in Stripe
@@ -577,15 +591,28 @@ export async function registerRoutes(
       const priceAmount = type === "downsell" ? downsellCents : mainCents;
       const variantId = variantInfo?.variant ?? "35";
 
-      // Create or get existing customer
-      const customers = await stripe.customers.list({ email, limit: 1 });
-      let customer = customers.data[0];
-      if (!customer) {
-        customer = await stripe.customers.create({ email, name: firstName });
+      // Create or get existing customer.
+      // No-email variant (`?noemail=1`): `email` arrives null. We deliberately
+      // skip the lookup — `customers.list({})` with no email returns an
+      // arbitrary recent customer, so the session would otherwise attach to a
+      // stranger. Instead we let Stripe Checkout create a fresh customer and
+      // collect the email on its hosted page (read back at the upsell via
+      // customer_details.email). The card is still saved for 1-click upsells
+      // via setup_future_usage below.
+      const hasEmail = typeof email === "string" && email.trim().length > 0;
+      let customer: Stripe.Customer | undefined;
+      if (hasEmail) {
+        const customers = await stripe.customers.list({ email, limit: 1 });
+        customer = customers.data[0];
+        if (!customer) {
+          customer = await stripe.customers.create({ email, name: firstName });
+        }
       }
 
       const session = await stripe.checkout.sessions.create({
-        customer: customer.id,
+        ...(customer
+          ? { customer: customer.id }
+          : { customer_creation: "always" }),
         payment_method_types: ["card"],
         line_items: [
           {
@@ -602,24 +629,29 @@ export async function registerRoutes(
         ],
         mode: "payment",
         payment_intent_data: {
-          description: productName,
+          // Internal-only marker: appended to the PaymentIntent description so a
+          // no-optin order is identifiable in the Stripe Dashboard "Description"
+          // column. NOT the customer-facing line item (`product_data.name` stays
+          // clean), so it never shows on the receipt/checkout page.
+          description: noemail ? `${productName} - No email` : productName,
           setup_future_usage: "off_session",
           metadata: {
             firstName,
             bucket,
-            email,
+            ...(hasEmail && { email }),
             app: "the-seer-within",
             product: "energy_clearing_ritual",
             priceVariant: variantId,
             ...(funnel && { funnel }),
             ...(gclid && { gclid }),
+            ...(noemail && { noemail: "1" }),
           },
         },
         success_url: `${getBaseUrl(req)}${funnelPath("/welcome1", funnel)}?session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${getBaseUrl(req)}${funnelPath("/chat", funnel)}?cancelled=true`,
         metadata: {
           firstName,
-          email,
+          ...(hasEmail && { email }),
           bucket,
           type,
           app: "the-seer-within",
@@ -627,13 +659,23 @@ export async function registerRoutes(
           priceVariant: variantId,
           ...(funnel && { funnel }),
           ...(trackdeskClickId && { trackdeskClickId }),
+          // Browser PostHog id so the server-side purchase_completed event is
+          // attributed to the SAME visitor as the funnel events (email_gate_*),
+          // enabling a connected conversion funnel incl. the no-optin arm.
+          ...(posthogDistinctId && { posthogDistinctId }),
           ...(gclid && { gclid }),
+          // Authoritative no-optin flag. The purchase webhook + upsell + paid
+          // paths read this off the session to tag AWeber and create the V2
+          // account. Set once here so the whole funnel inherits it.
+          ...(noemail && { noemail: "1" }),
         },
       });
 
       // Save Stripe session ID to database for upsell flow (upsert - creates if not exists)
-      // This MUST complete before we return the URL to prevent race conditions
-      if (email) {
+      // This MUST complete before we return the URL to prevent race conditions.
+      // No-email variant: no customer/email to key on here, so we skip — the
+      // /api/upsell/user-data fallback creates the row from customer_details.email.
+      if (hasEmail && customer) {
         try {
           await updateStripeData(
             email,
@@ -715,6 +757,25 @@ export async function registerRoutes(
         })
         .catch((err) => {
           logger.warn("AWeber error (non-blocking):", err);
+        });
+
+      // Add to Kit alongside AWeber (non-blocking). Tagged by funnel so Kit's
+      // per-tag subscriber counts answer "how many leads from which funnel".
+      // No-ops cleanly if KIT_API_KEY / KIT_FORM_ID aren't set.
+      addLeadToKit({
+        email,
+        firstName,
+        tags: [kitFunnelTag(funnel)],
+      })
+        .then((result) => {
+          if (result.success) {
+            logger.info(`Kit: Added ${email} to form`);
+          } else {
+            logger.warn(`Kit: Failed to add ${email}:`, result.error);
+          }
+        })
+        .catch((err) => {
+          logger.warn("Kit error (non-blocking):", err);
         });
 
       // Report Lead conversion to Trackdesk (non-blocking)
@@ -898,8 +959,16 @@ export async function registerRoutes(
 
           // Only proceed if payment was successful
           if (stripeSession.payment_status === "paid") {
+            // customer_details.email is the address Stripe Checkout collects on
+            // its hosted page — the only place a no-email (`?noemail=1`) buyer's
+            // email exists, since the chat never captured it and checkout sent
+            // none. Reading it here lets the upsell recover/personalize instead
+            // of 404-ing. (customer_email/metadata.email stay first for the
+            // normal email flow, where they're already populated.)
             const email =
-              stripeSession.customer_email || stripeSession.metadata?.email;
+              stripeSession.customer_details?.email ||
+              stripeSession.customer_email ||
+              stripeSession.metadata?.email;
             const firstName = stripeSession.metadata?.firstName || "Friend";
             const bucket = stripeSession.metadata?.bucket;
             const customerId =
@@ -976,6 +1045,11 @@ export async function registerRoutes(
               // tag keep firing while we gain a separate count per ad funnel.
               if (isFbFunnel(sessionFunnel)) {
                 paidTags.push(`${purchaseTypeTag}${fbTagSuffix(sessionFunnel)}`);
+              }
+              // No-optin buyers get a `noemail` tag so they're identifiable on
+              // the paid list. Read off the session metadata set at checkout.
+              if (session.metadata?.noemail === "1") {
+                paidTags.push("noemail");
               }
 
               addPaidSubscriber({
@@ -1175,6 +1249,7 @@ export async function registerRoutes(
           const upsell1Conversation =
             await getConversationByStripeSession(originalSessionId);
           const customerEmail =
+            session.customer_details?.email ||
             session.customer_email ||
             session.metadata?.email ||
             upsell1Conversation?.email;
@@ -1192,7 +1267,12 @@ export async function registerRoutes(
               email: customerEmail,
               name: customerName,
               stripeOrderId: session.payment_intent as string,
-              tags: fbifyAweberTags(["seer-within-upsell"], fallbackFunnel),
+              tags: fbifyAweberTags(
+                session.metadata?.noemail === "1"
+                  ? ["seer-within-upsell", "noemail"]
+                  : ["seer-within-upsell"],
+                fallbackFunnel,
+              ),
               shipping: shippingDetails?.address
                 ? {
                     name: shippingDetails.name || "",
@@ -1347,6 +1427,10 @@ export async function registerRoutes(
           // instead — preventing the double-fire.
           flow: "1click",
           ...(funnel && { funnel }),
+          // Inherit the no-optin flag from the main session (internal only —
+          // no description suffix on off-session PIs so it can never reach a
+          // customer receipt).
+          ...(session.metadata?.noemail === "1" && { noemail: "1" }),
         },
       });
 
@@ -1382,7 +1466,12 @@ export async function registerRoutes(
             email: customerEmail,
             name: firstName,
             stripeOrderId: upsellPayment.id,
-            tags: fbifyAweberTags(["seer-within-upsell"], funnel),
+            tags: fbifyAweberTags(
+              session.metadata?.noemail === "1"
+                ? ["seer-within-upsell", "noemail"]
+                : ["seer-within-upsell"],
+              funnel,
+            ),
           })
             .then(() => logger.info("1-click upsell: AWeber subscriber added (without shipping — shipping added on form submit)"))
             .catch((err) => logger.error("1-click upsell: AWeber error:", err));
@@ -1453,6 +1542,17 @@ export async function registerRoutes(
           });
         }
 
+        // Inherit the no-optin flag from the original purchase so a fallback
+        // upsell charge is marked internally + AWeber-tagged like the 1-click
+        // path. Non-fatal lookup — defaults to off for normal funnels.
+        let inheritNoemail = false;
+        try {
+          const orig = await stripe.checkout.sessions.retrieve(originalSessionId);
+          inheritNoemail = orig.metadata?.noemail === "1";
+        } catch (e) {
+          logger.warn("Upsell fallback: noemail lookup failed (non-fatal)", e);
+        }
+
         const session = await stripe.checkout.sessions.create({
           customer_email: email,
           payment_method_types: ["card"],
@@ -1478,6 +1578,7 @@ export async function registerRoutes(
               firstName,
               email,
               ...(funnel && { funnel }),
+              ...(inheritNoemail && { noemail: "1" }),
             },
           },
           shipping_address_collection: {
@@ -1493,6 +1594,7 @@ export async function registerRoutes(
             bucket,
             ...(funnel && { funnel }),
             ...(trackdeskClickId && { trackdeskClickId }),
+            ...(inheritNoemail && { noemail: "1" }),
           },
         });
 
@@ -1895,6 +1997,8 @@ export async function registerRoutes(
           // fallback-Checkout double-fire of the FB event.
           flow: "1click",
           ...(funnel && { funnel }),
+          // Inherit the no-optin flag from the main session (internal only).
+          ...(session.metadata?.noemail === "1" && { noemail: "1" }),
         },
       });
 
@@ -2011,7 +2115,9 @@ export async function registerRoutes(
                 name: firstName,
                 stripeOrderId: upsell2Payment.id,
                 tags: fbifyAweberTags(
-                  ["seer-within-upsell2", `bracelet-${type}`],
+                  session.metadata?.noemail === "1"
+                    ? ["seer-within-upsell2", `bracelet-${type}`, "noemail"]
+                    : ["seer-within-upsell2", `bracelet-${type}`],
                   funnel,
                 ),
                 shipping:
@@ -2114,6 +2220,16 @@ export async function registerRoutes(
             : "Manifestation Bracelet (Standard)";
         const productName = `${baseProductName}${fbSuffix(funnel)}`;
 
+        // Inherit the no-optin flag from the original purchase so a fallback
+        // upsell-2 charge is marked internally like the 1-click path.
+        let inheritNoemail = false;
+        try {
+          const orig = await stripe.checkout.sessions.retrieve(originalSessionId);
+          inheritNoemail = orig.metadata?.noemail === "1";
+        } catch (e) {
+          logger.warn("Upsell2 fallback: noemail lookup failed (non-fatal)", e);
+        }
+
         const session = await stripe.checkout.sessions.create({
           customer_email: email,
           payment_method_types: ["card"],
@@ -2141,6 +2257,7 @@ export async function registerRoutes(
               firstName,
               email,
               ...(funnel && { funnel }),
+              ...(inheritNoemail && { noemail: "1" }),
             },
           },
           shipping_address_collection: {
@@ -2156,6 +2273,7 @@ export async function registerRoutes(
             firstName,
             bucket,
             ...(funnel && { funnel }),
+            ...(inheritNoemail && { noemail: "1" }),
           },
         });
 
@@ -2206,12 +2324,16 @@ export async function registerRoutes(
             conversation.email
           ) {
             let shipping2Funnel: FunnelId = undefined;
+            // Carry the no-optin flag from the upsell-2 charge so a fallback
+            // buyer (whose first AWeber add happens here) still gets tagged.
+            let shipping2Noemail = false;
             if (stripe) {
               try {
                 const pi = await stripe.paymentIntents.retrieve(
                   conversation.upsell2PaymentId,
                 );
                 shipping2Funnel = parseFunnel(pi.metadata?.funnel);
+                shipping2Noemail = pi.metadata?.noemail === "1";
               } catch (err) {
                 logger.warn(
                   "Upsell2 shipping save: could not retrieve PaymentIntent for funnel lookup",
@@ -2229,6 +2351,7 @@ export async function registerRoutes(
                   "seer-within-upsell2",
                   `bracelet-${conversation.upsell2Type || "full"}`,
                   "shipping-confirmed",
+                  ...(shipping2Noemail ? ["noemail"] : []),
                 ],
                 shipping2Funnel,
               ),
@@ -2427,6 +2550,7 @@ export async function registerRoutes(
         const conversation =
           await getConversationByStripeSession(originalSessionId);
         const customerEmail =
+          session.customer_details?.email ||
           session.customer_email ||
           session.metadata?.email ||
           conversation?.email;
@@ -2620,6 +2744,16 @@ export async function registerRoutes(
       utmMedium,
       intakeToken,
     }).catch((err) => logger.error("Soulmate lead AWeber error (non-blocking):", err));
+
+    // Mirror to Kit alongside AWeber, tagged "soulmate". Uses a dedicated
+    // soulmate form (KIT_SOULMATE_FORM_ID) when set, else falls back to the
+    // default KIT_FORM_ID. Non-blocking; no-ops when Kit is unconfigured.
+    addLeadToKit({
+      email,
+      firstName,
+      tags: ["soulmate"],
+      formId: process.env.KIT_SOULMATE_FORM_ID,
+    }).catch((err) => logger.error("Soulmate lead Kit error (non-blocking):", err));
 
     // V2 handoff: create a passwordless Evelyn account so the user can claim
     // 5 free chat minutes whether or not they purchase the sketch. Existing
