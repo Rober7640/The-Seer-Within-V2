@@ -70,6 +70,14 @@ function isRetryableError(err: unknown): boolean {
   if (!err || typeof err !== 'object') return false;
   const anyErr = err as { status?: number; code?: string; name?: string };
 
+  // Anthropic SDK connection failures (DNS, conn reset, socket timeout) surface as
+  // APIConnectionError / APIConnectionTimeoutError. These carry NO `.status` and their
+  // `.name` is just 'Error', so the status/name/code checks below would all miss them
+  // and the request would wrongly surface as non-retryable (no failover, no alert).
+  // Catch them by type. APIUserAbortError is deliberately NOT a subclass of
+  // APIConnectionError, so an intentionally-aborted request is still not retried.
+  if (err instanceof Anthropic.APIConnectionError) return true;
+
   // Anthropic SDK errors expose `status` for HTTP errors.
   if (typeof anyErr.status === 'number') {
     const s = anyErr.status;
@@ -107,6 +115,20 @@ function describeError(err: unknown): ErrorGuidance {
       ? (err as { status?: number; code?: string; name?: string })
       : {};
   const status = typeof anyErr.status === 'number' ? anyErr.status : undefined;
+
+  // SDK connection failures have no HTTP status — match them by type so they don't
+  // fall through to the generic "unknown error" message at the bottom.
+  if (err instanceof Anthropic.APIConnectionError) {
+    return {
+      codeLabel: 'connection error',
+      explanation:
+        'The request never reached Anthropic — a network/DNS/connection failure or socket ' +
+        'timeout, so no HTTP response was received.',
+      action:
+        "Check the host's outbound network/DNS (Railway) and https://status.claude.com. " +
+        'Usually transient and self-heals; failover has already retried the other keys.',
+    };
+  }
 
   if (status === 429) {
     return {
@@ -176,6 +198,14 @@ function describeError(err: unknown): ErrorGuidance {
 
 const lastAlertAt: Record<string, number> = {};
 
+// Tracks whether we're currently in a total-outage state (every key exhausted).
+// Set when the "all keys down" alert fires; cleared — with a recovery email — on
+// the next successful request by ANY key. The primary-recovery path below relies
+// on `wasLastGood`, which never flips during a total outage (no backup ever served
+// a successful request), so without this flag a momentary all-keys-529 blip would
+// recover silently.
+let allKeysDown = false;
+
 function getRecipients(): string[] {
   const fromEnv = process.env.ANTHROPIC_FAILOVER_ALERT_EMAILS;
   if (fromEnv) {
@@ -238,8 +268,25 @@ async function runWithFailover<T>(
     try {
       const result = await operation(entry.client);
 
-      // Success — clear any stale cooldown and detect primary recovery.
+      // Success — clear any stale cooldown and detect recovery.
       entry.cooldownUntil = 0;
+
+      // Total-outage recovery: if every key had been exhausted, the first key to
+      // respond again — primary OR backup — means service is restored. Fires once
+      // per outage (flag is cleared here). Distinct from the primary-recovery email
+      // below, which only covers a partial failover where a backup kept serving.
+      if (allKeysDown) {
+        allKeysDown = false;
+        logger.info('[AnthropicFailover] Recovered from total outage', { key: entry.name });
+        void sendAlertEmail(
+          '[Seer] Anthropic keys recovered — service restored after total outage',
+          `At ${new Date().toISOString()}, the ${entry.name} Anthropic key responded ` +
+            `successfully again after every configured key had been failing. Normal ` +
+            `operation has resumed and users are no longer seeing fallback responses. ` +
+            `No further action needed.`,
+          'recovery:all_keys',
+        );
+      }
 
       const wasUsingFallback = keys[0].cooldownUntil > 0 || !keys[0].wasLastGood;
       if (entry.name === 'primary' && wasUsingFallback) {
@@ -296,7 +343,10 @@ async function runWithFailover<T>(
     }
   }
 
-  // All keys exhausted.
+  // All keys exhausted. Flag the total-outage state so the next successful request
+  // (by any key) emits a "service restored" recovery email. Set unconditionally —
+  // independent of whether the alert email below is debounced.
+  allKeysDown = true;
   logger.error('[AnthropicFailover] All keys exhausted', { lastErr });
   const g = describeError(lastErr);
   void sendAlertEmail(
