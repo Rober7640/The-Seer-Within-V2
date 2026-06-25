@@ -11,6 +11,9 @@ interface AddSubscriberParams {
   email: string;
   name?: string;
   tags?: string[];
+  // Optional per-lander list override. Falls back to AWEBER_LIST_ID when unset,
+  // so existing callers are unaffected.
+  listId?: string;
 }
 
 interface ShippingAddress {
@@ -118,8 +121,8 @@ async function makeAWeberRequest(
 
 export async function addSubscriberToList(params: AddSubscriberParams): Promise<{ success: boolean; error?: string }> {
   const accountId = process.env.AWEBER_ACCOUNT_ID;
-  const listId = process.env.AWEBER_LIST_ID;
-  
+  const listId = params.listId || process.env.AWEBER_LIST_ID;
+
   if (!accountId || !listId) {
     logger.warn('AWeber account/list not configured');
     return { success: false, error: 'AWeber not configured' };
