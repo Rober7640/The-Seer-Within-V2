@@ -85,6 +85,7 @@ import {
   tagSoulmateDeclinedUpsell,
 } from "./lib/aweber";
 import { addLeadToKit } from "./lib/kit";
+import { addContactToResendAudience } from "./lib/resendAudience";
 import { createSoulmateLanderV2Account } from "./lib/soulmateLanderSignup";
 import { extractClientIp, extractUserAgent } from "./lib/fraudDetection";
 import { sendFacebookEvent, fireLeadEvent } from "./lib/facebook";
@@ -229,6 +230,27 @@ function fbifyAweberTags(tags: string[], funnel: FunnelId): string[] {
 // tags must exist in the Kit dashboard for tagging to take effect.
 function kitFunnelTag(funnel: FunnelId): string {
   return funnelDefForParam(funnel)?.posthog ?? "v1";
+}
+
+// Lander label for list/audience segmentation: "homepage" for base V1 email
+// traffic, else the funnel's URL prefix without the slash ("fb"/"fb2"/"gdn"/
+// "fb-palm"). Soulmate is labelled at its own endpoint.
+function landerLabel(funnel: FunnelId): string {
+  const def = funnelDefForParam(funnel);
+  return def ? def.prefix.slice(1) : "homepage";
+}
+
+// Per-lander AWeber FREE/lead list. Each ad funnel can have its own list via
+// AWEBER_LIST_ID_<FB|FB2|GDN|PALM>; homepage (base V1) and any unset funnel
+// fall back to the shared AWEBER_LIST_ID — so lead capture is byte-identical
+// until the per-lander env vars are configured.
+function aweberLeadListId(funnel: FunnelId): string | undefined {
+  const def = funnelDefForParam(funnel);
+  if (def) {
+    const perLander = process.env[`AWEBER_LIST_ID_${def.posthog.toUpperCase()}`];
+    if (perLander) return perLander;
+  }
+  return process.env.AWEBER_LIST_ID;
 }
 
 // Initialize Stripe only if key is provided
@@ -742,10 +764,12 @@ export async function registerRoutes(
       // /fb traffic only sees FB variants, other traffic only sees null-funnel ones.
       const assigned = await assignVariantIfMissing(email, funnel);
 
-      // Add to AWeber email list (non-blocking)
+      // Add to AWeber email list (non-blocking). Per-lander FREE list when the
+      // funnel's AWEBER_LIST_ID_* env is set, else the shared AWEBER_LIST_ID.
       addSubscriberToList({
         email,
         name: firstName,
+        listId: aweberLeadListId(funnel),
         tags: fbifyAweberTags([bucket || "website", "seer-within"], funnel),
       })
         .then((result) => {
@@ -758,6 +782,18 @@ export async function registerRoutes(
         .catch((err) => {
           logger.warn("AWeber error (non-blocking):", err);
         });
+
+      // Mirror the lead into the Resend audience, tagged by lander for
+      // segmentation/Broadcasts (non-blocking). No-ops cleanly unless
+      // RESEND_API_KEY + RESEND_AUDIENCE_ID are set. Does NOT affect the
+      // transactional drip emails, which keep sending as before.
+      addContactToResendAudience({
+        email,
+        firstName,
+        lander: landerLabel(funnel),
+      }).catch((err) => {
+        logger.warn("Resend audience error (non-blocking):", err);
+      });
 
       // Add to Kit alongside AWeber (non-blocking). Tagged by funnel so Kit's
       // per-tag subscriber counts answer "how many leads from which funnel".
@@ -2760,6 +2796,15 @@ export async function registerRoutes(
       tags: ["soulmate"],
       formId: process.env.KIT_SOULMATE_FORM_ID,
     }).catch((err) => logger.error("Soulmate lead Kit error (non-blocking):", err));
+
+    // Mirror into the Resend audience, tagged lander="soulmate" (non-blocking).
+    // No-ops unless RESEND_API_KEY + RESEND_AUDIENCE_ID are set.
+    addContactToResendAudience({
+      email,
+      firstName,
+      lastName,
+      lander: "soulmate",
+    }).catch((err) => logger.error("Soulmate lead Resend audience error (non-blocking):", err));
 
     // V2 handoff: create a passwordless Evelyn account so the user can claim
     // 5 free chat minutes whether or not they purchase the sketch. Existing
