@@ -17,6 +17,7 @@ import { buildFollowUpHtml, buildFollowUpText } from './emailTemplate';
 import { generateMagicLinkToken } from './magicLink';
 import logger from './logger';
 import { fireWithBreaker, resendBreaker, anthropicBreaker } from './circuitBreaker';
+import { buildFunnelTags } from './resendFunnelTags';
 
 const resend = process.env.RESEND_API_KEY
   ? new Resend(process.env.RESEND_API_KEY)
@@ -106,14 +107,25 @@ export async function migrateAndEmailFunnelUser(
 
     const evelyn = evelynRows[0];
 
-    // Find the conversation ID if not provided
+    // Find the conversation ID if not provided, and read its price_variant so
+    // the migration email can be tagged with the owning ad-funnel (see
+    // buildFunnelTags — flag-gated, additive only).
+    let priceVariant: string | null = null;
     if (!conversationId) {
       const convoRows = await db
-        .select({ id: conversations.id })
+        .select({ id: conversations.id, priceVariant: conversations.priceVariant })
         .from(conversations)
         .where(eq(conversations.email, userData.email))
         .limit(1);
       conversationId = convoRows[0]?.id;
+      priceVariant = convoRows[0]?.priceVariant ?? null;
+    } else {
+      const convoRows = await db
+        .select({ priceVariant: conversations.priceVariant })
+        .from(conversations)
+        .where(eq(conversations.id, conversationId))
+        .limit(1);
+      priceVariant = convoRows[0]?.priceVariant ?? null;
     }
 
     // ─── Step 1: Create V2 user account ────────────────────────
@@ -252,6 +264,7 @@ export async function migrateAndEmailFunnelUser(
           { name: 'type', value: 'funnel_migration' },
           { name: 'sequence', value: '1' },
           { name: 'user_id', value: userId },
+          ...buildFunnelTags(priceVariant),
         ],
       }),
     );

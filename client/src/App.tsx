@@ -8,7 +8,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { trackPageView } from "./lib/facebook";
 import { initPostHog, track as trackPH } from "./lib/posthog";
-import { getPostHogFunnel, getPostHogStep } from "./lib/funnel";
+import { getPostHogFunnel, getPostHogStep, skipEmail } from "./lib/funnel";
 import { ChatServiceLayout } from "@/components/ChatServiceLayout";
 import NotFound from "@/pages/not-found";
 import LandingPage from "@/pages/LandingPage";
@@ -80,6 +80,13 @@ function Router() {
 
   useEffect(() => {
     initPostHog();
+    // No-optin: capture `?noemail` from the ENTRY url the moment the app loads,
+    // before any in-funnel navigation (e.g. the palm bridge → /fb-palm/chat)
+    // rebuilds the query string and drops it. skipEmail() persists the choice
+    // to tab-scoped sessionStorage. This is a strict no-op for any url without
+    // `?noemail` — it only writes when the param is present — so every existing
+    // funnel/lander is unaffected.
+    skipEmail();
   }, []);
 
   useEffect(() => {

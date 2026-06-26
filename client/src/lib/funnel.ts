@@ -29,6 +29,40 @@ export function currentFunnel(pathname?: string): FunnelParam | undefined {
   return funnelDefForPath(pathname ?? currentPath())?.param;
 }
 
+// Email-gate toggle. `?noemail=1` on ANY funnel link skips the in-chat email
+// capture and routes straight into the reading. Orthogonal to the funnel, so
+// it works on every current + future funnel URL with no duplication. `=0`
+// (or absent) keeps today's email-required behavior.
+//
+// Stickiness: the URL param wins and is persisted for the tab so the arm
+// survives a refresh or the welcome-back restore (when the param is no longer
+// on the URL). We use sessionStorage, not localStorage, so the no-email arm is
+// scoped to this tab/visit and can never leak into a later, unrelated visit on
+// the same browser — keeping every other funnel byte-identical for normal
+// traffic.
+const NOEMAIL_KEY = "seer_noemail";
+
+export function skipEmail(search?: string): boolean {
+  if (typeof window === "undefined") return false;
+  const p = new URLSearchParams(search ?? window.location.search);
+  if (p.has("noemail")) {
+    const on = p.get("noemail") !== "0";
+    try {
+      if (on) window.sessionStorage.setItem(NOEMAIL_KEY, "1");
+      else window.sessionStorage.removeItem(NOEMAIL_KEY);
+    } catch {
+      /* sessionStorage unavailable (private mode) — fall back to URL only */
+    }
+    return on;
+  }
+  // Param absent → honor the choice made earlier in this tab session.
+  try {
+    return window.sessionStorage.getItem(NOEMAIL_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
 // Prefix a V1 path with the active funnel's prefix when the user is in an ad
 // funnel, otherwise leave it alone. Use for in-funnel navigation so the user
 // stays inside their own funnel for the entire flow.

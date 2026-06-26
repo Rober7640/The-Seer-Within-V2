@@ -18,8 +18,8 @@ import {
   getPriceQuestionResponse
 } from '@/lib/intent'
 import { trackLead, trackInitiateCheckout, getTrackdeskClickId } from '@/lib/facebook'
-import { currentFunnel, getPostHogFunnel } from '@/lib/funnel'
-import { track as trackPH, identifyUser as identifyPH } from '@/lib/posthog'
+import { currentFunnel, getPostHogFunnel, skipEmail } from '@/lib/funnel'
+import { track as trackPH, identifyUser as identifyPH, getDistinctId } from '@/lib/posthog'
 import { trackGAdsLead, trackGAdsCheckout, getGclid } from '@/lib/gtm'
 
 const STORAGE_KEY = 'seer_conversation'
@@ -280,6 +280,14 @@ export function useConversation() {
       updateUserData({ location: geo.location, timeOfDay: geo.timeOfDay })
       updateState({ state: 'GREETING' })
 
+      // No-optin A/B: tag the email-gate arm once at session start so chat→
+      // checkout conversion is comparable per arm in PostHog. Calling skipEmail()
+      // here also primes the sticky (tab-scoped) persistence for this visit.
+      trackPH('email_gate_assigned', {
+        funnel: getPostHogFunnel() ?? 'v1',
+        email_gate: skipEmail() ? 'off' : 'on',
+      })
+
       addMessage('system', 'Evelyn has joined the chat')
       await sleep(800)
 
@@ -366,6 +374,21 @@ export function useConversation() {
         `I can feel warmth radiating from your heart, ${capitalized}...`,
         "But there's a flicker of shadow there too...",
       ])
+      // no-optin variant: skip the email anchor, go straight into the reading.
+      if (skipEmail()) {
+        await sendBotMessages([
+          "Let's look deeper together...",
+          "Tell me more about what's on your mind...",
+        ])
+        updateState({
+          state: 'DEEPENING_1',
+          inputEnabled: true,
+          inputPlaceholder: "Share what's in your heart...",
+          inputType: 'text',
+        })
+        return
+      }
+
       await sendBotMessages([
         "Before I look deeper, I need to anchor our connection...",
         "Sometimes the visions continue after we speak...",
@@ -444,6 +467,22 @@ export function useConversation() {
     const personName = input.trim().split(' ')[0]
     const capitalized = personName.charAt(0).toUpperCase() + personName.slice(1).toLowerCase()
     updateUserData({ personName: capitalized })
+
+    // no-optin variant: skip the email anchor, go straight into the reading.
+    if (skipEmail()) {
+      await sendBotMessages([
+        `${capitalized}...`,
+        "The moment you typed that name, I felt something shift.",
+        "Tell me... what's happening between you?",
+      ])
+      updateState({
+        state: 'DEEPENING_1',
+        inputEnabled: true,
+        inputPlaceholder: "Share what's in your heart...",
+        inputType: 'text',
+      })
+      return
+    }
 
     await sendBotMessages([
       `${capitalized}...`,
@@ -1237,6 +1276,18 @@ export function useConversation() {
         inputEnabled: true,
         inputPlaceholder: "Their first name...",
       })
+    } else if (skipEmail()) {
+      // no-optin variant: skip the email anchor, go straight into the reading.
+      await sendBotMessages([
+        "Let's look deeper together...",
+        "Tell me more about what's weighing on you...",
+      ])
+      updateState({
+        state: 'DEEPENING_1',
+        inputEnabled: true,
+        inputPlaceholder: "Share what's in your heart...",
+        inputType: 'text',
+      })
     } else {
       await sendBotMessages([
         "Before I look deeper, I need to anchor our connection...",
@@ -1344,6 +1395,7 @@ export function useConversation() {
           product: type === 'downsell' ? 'energy_clearing_ritual_downsell' : 'energy_clearing_ritual',
           price_cents: price * 100,
           sign: palmSign,
+          email_gate: skipEmail() ? 'off' : 'on',
         })
       }
 
@@ -1358,6 +1410,14 @@ export function useConversation() {
           trackdeskClickId: getTrackdeskClickId(),
           gclid: getGclid(),
           funnel: currentFunnel(),
+          // No-optin variant: tells the server to mark this purchase as a
+          // no-email-lander order (AWeber tag, internal Stripe description,
+          // and V2 account creation on the webhook). Absent/false for every
+          // normal funnel → no behavior change.
+          noemail: skipEmail(),
+          // Browser PostHog id → Stripe metadata so the server-side
+          // purchase_completed event ties back to this visitor (connected funnel).
+          posthogDistinctId: getDistinctId(),
         }),
       })
       const { url } = await response.json()
