@@ -24,7 +24,7 @@ import 'dotenv/config';
 import pg from 'pg';
 import { drizzle } from 'drizzle-orm/node-postgres';
 import { and, eq, isNotNull, lt, sql } from 'drizzle-orm';
-import Stripe from 'stripe';
+import { getStripeForRow } from '../server/lib/stripeAccount';
 import { promises as fs } from 'fs';
 import path from 'path';
 import { creditPurchases, users } from '../shared/schema';
@@ -93,7 +93,8 @@ const pool = new pg.Pool({
 const db = drizzle(pool);
 
 // ─── Stripe ───────────────────────────────────────────────────────────────────
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
+// Tag-aware: each row is reconciled against the account that created its IDs via
+// getStripeForRow(row.stripeAccount) (NULL → 'A' for legacy rows).
 
 // ─── PayPal helpers ───────────────────────────────────────────────────────────
 let cachedPayPalToken: { token: string; expiresAt: number } | null = null;
@@ -202,6 +203,7 @@ async function main() {
       priceUsd: creditPurchases.priceUsd,
       paypalOrderId: creditPurchases.paypalOrderId,
       stripePaymentIntentId: creditPurchases.stripePaymentIntentId,
+      stripeAccount: creditPurchases.stripeAccount,
       createdAt: creditPurchases.createdAt,
     })
     .from(creditPurchases)
@@ -260,7 +262,13 @@ async function main() {
           category = 'NOT_CAPTURED';
         }
       } else {
-        const intent = await stripe.paymentIntents.retrieve(externalId);
+        const rowStripe = getStripeForRow(row.stripeAccount);
+        if (!rowStripe) {
+          throw new Error(
+            `Stripe account '${row.stripeAccount ?? 'A'}' not configured for row ${row.id}`,
+          );
+        }
+        const intent = await rowStripe.paymentIntents.retrieve(externalId);
         externalStatus = intent.status;
         if (intent.status === 'succeeded') {
           category = 'CAPTURED';

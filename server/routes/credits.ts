@@ -7,6 +7,7 @@ import { requireAuth } from '../lib/auth';
 import { getPersonaPricing } from '../lib/personaPricing';
 import { DEFAULT_PRICING } from '../../shared/types';
 import Stripe from 'stripe';
+import { getStripe, verifyStripeWebhook, activeStripeAccountTag } from '../lib/stripeAccount';
 import logger from '../lib/logger';
 import { posthog } from '../lib/posthog';
 import { fireWithBreaker, stripeBreaker, isCircuitOpenError } from '../lib/circuitBreaker';
@@ -16,10 +17,8 @@ import { maybeSchedulePostPurchaseDrip } from '../lib/postPurchaseDripTrigger';
 
 const router = Router();
 
-const stripeKey = process.env.STRIPE_SECRET_KEY;
-const stripe = stripeKey && stripeKey !== 'sk_test_placeholder'
-  ? new Stripe(stripeKey)
-  : null;
+// Active-account Stripe client (A primary / B backup) via the central helper.
+const stripe = getStripe();
 
 // Special one-time welcome pack — not part of regular persona pricing
 const WELCOME_TIER = {
@@ -226,6 +225,7 @@ router.post('/checkout', requireAuth, async (req: Request, res: Response) => {
     bonusCoins: tier.bonusCoins,
     priceUsd: tier.priceUsd,
     status: 'pending',
+    stripeAccount: activeStripeAccountTag(),
   }).returning();
 
   const purchaseId = purchase[0].id;
@@ -283,7 +283,7 @@ router.post('/checkout', requireAuth, async (req: Request, res: Response) => {
     );
 
     await db.update(creditPurchases)
-      .set({ stripeSessionId: session.id, updatedAt: new Date() })
+      .set({ stripeSessionId: session.id, stripeAccount: activeStripeAccountTag(), updatedAt: new Date() })
       .where(eq(creditPurchases.id, purchaseId));
 
     posthog.capture({ distinctId: req.userId!, event: 'checkout_initiated', properties: { payment_method: 'stripe_checkout', package_type: tier!.packageType, coins: tier!.totalCoins, price_usd_cents: tier!.priceUsd, persona_id: personaId ?? null, purchase_id: purchaseId } });
@@ -352,6 +352,7 @@ router.post('/create-payment-intent', requireAuth, async (req: Request, res: Res
     bonusCoins: tier.bonusCoins,
     priceUsd: tier.priceUsd,
     status: 'pending',
+    stripeAccount: activeStripeAccountTag(),
   }).returning();
 
   const purchaseId = purchase[0].id;
@@ -392,7 +393,7 @@ router.post('/create-payment-intent', requireAuth, async (req: Request, res: Res
     );
 
     await db.update(creditPurchases)
-      .set({ stripePaymentIntentId: paymentIntent.id, updatedAt: new Date() })
+      .set({ stripePaymentIntentId: paymentIntent.id, stripeAccount: activeStripeAccountTag(), updatedAt: new Date() })
       .where(eq(creditPurchases.id, purchaseId));
 
     res.json({ clientSecret: paymentIntent.client_secret, purchaseId });
@@ -556,6 +557,7 @@ router.post('/create-order', requireAuth, async (req: Request, res: Response) =>
     bonusCoins: tier.bonusCoins,
     priceUsd: tier.priceUsd,
     status: 'pending',
+    stripeAccount: activeStripeAccountTag(),
   }).returning();
 
   const purchaseId = purchase[0].id;
@@ -735,6 +737,7 @@ router.post('/confirm-checkout', requireAuth, async (req: Request, res: Response
       .set({
         status: 'completed',
         stripePaymentIntentId: checkoutSession.payment_intent as string,
+        stripeAccount: activeStripeAccountTag(),
         updatedAt: new Date(),
       })
       .where(and(eq(creditPurchases.id, purchaseId), eq(creditPurchases.status, 'pending')))
@@ -794,28 +797,29 @@ router.post('/webhook', async (req: Request, res: Response) => {
   }
 
   const sig = req.headers['stripe-signature'] as string;
-  const webhookSecret = process.env.STRIPE_CREDITS_WEBHOOK_SECRET;
 
-  if (!webhookSecret) {
-    logger.error('Missing STRIPE_CREDITS_WEBHOOK_SECRET');
-    res.status(500).json({ error: 'Webhook not configured' });
+  const rawBody = (req as any).rawBody as Buffer | undefined;
+  if (!rawBody) {
+    logger.error('Webhook: req.rawBody not available — check express.json verify middleware');
+    res.status(400).json({ error: 'Missing raw body' });
     return;
   }
 
-  let event: Stripe.Event;
-  try {
-    const rawBody = (req as any).rawBody as Buffer | undefined;
-    if (!rawBody) {
-      logger.error('Webhook: req.rawBody not available — check express.json verify middleware');
-      res.status(400).json({ error: 'Missing raw body' });
+  // Verify against both accounts' credits-webhook secrets (A primary / B backup)
+  // so B's events validate the instant we switch and A's in-flight events still
+  // validate during handover.
+  const verified = verifyStripeWebhook(rawBody, sig, 'credits');
+  if (!verified.ok) {
+    if (verified.reason === 'not_configured') {
+      logger.error('Missing STRIPE_CREDITS_WEBHOOK_SECRET');
+      res.status(500).json({ error: 'Webhook not configured' });
       return;
     }
-    event = stripe.webhooks.constructEvent(rawBody, sig, webhookSecret);
-  } catch (err: any) {
-    logger.error('Webhook signature verification failed:', err.message);
+    logger.error('Webhook signature verification failed');
     res.status(400).json({ error: 'Invalid signature' });
     return;
   }
+  const event = verified.event;
 
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object as Stripe.Checkout.Session;
@@ -842,6 +846,9 @@ router.post('/webhook', async (req: Request, res: Response) => {
         .set({
           status: 'completed',
           stripePaymentIntentId: session.payment_intent as string,
+          // Tag with the account whose signing secret validated THIS event — during
+          // a switch handover the live account's late events may still arrive.
+          stripeAccount: verified.account,
           updatedAt: new Date(),
         })
         .where(and(eq(creditPurchases.id, purchaseId), eq(creditPurchases.status, 'pending')))
