@@ -87,6 +87,15 @@ async function getExperiment(key: string): Promise<Experiment | null> {
   }
 }
 
+/**
+ * Drop one experiment from the config cache so the next assign() reads fresh.
+ * Call after any admin write (edit/start/pause/declare-winner) so changes —
+ * including the pause kill-switch — take effect immediately, not after the TTL.
+ */
+export function invalidateExperiment(key: string): void {
+  cache.delete(key);
+}
+
 /** Test seam: clear the in-process experiment cache. */
 export function _resetExperimentCache(): void {
   cache.clear();
@@ -187,11 +196,12 @@ export interface TallyVariantRow {
   revenueUsd: number;
   revPerViewerUsd: number;
   arppuUsd: number;
+  liftPct: number | null; // conversion lift vs the control arm (raw); null for control / no data
 }
 
 export interface TallyResult {
   rows: TallyVariantRow[];
-  // A-vs-B summary (present only when both arms have viewers).
+  // Control-vs-treatment summary (present only when both arms have viewers).
   srm?: { aViewers: number; bViewers: number; bSharePct: number };
   significance?: { z: number; p: number; liftPct: number; significant: boolean };
 }
@@ -212,6 +222,8 @@ export interface TallyOptions {
   startISO: string;            // cohort start = when the test was flipped on (REQUIRED)
   windowDays?: number;         // attribution window after first exposure (default 7)
   personaId?: string | null;   // scope filter on context->>'personaId' (null = all)
+  controlKey?: string;         // control arm key for lift/SRM/significance (default 'A')
+  treatmentKey?: string;       // treatment arm compared against control (default 'B')
 }
 
 /**
@@ -283,10 +295,25 @@ export async function tally(key: string, opts: TallyOptions): Promise<TallyResul
     revenueUsd: Number(r.revenue_usd) || 0,
     revPerViewerUsd: Number(r.rev_per_viewer_usd) || 0,
     arppuUsd: Number(r.arppu_usd) || 0,
+    liftPct: null,
   }));
 
-  const A = rows.find((r) => r.variant === 'A');
-  const B = rows.find((r) => r.variant === 'B');
+  // Control/treatment are the experiment's first two arms (keys default to A/B for
+  // the paywall + back-compat). Per-row lift is each arm's raw conversion vs control,
+  // so the table generalises to renamed arms and >2 arms; significance/SRM below are
+  // the 2-arm control-vs-treatment test.
+  const controlKey = opts.controlKey ?? 'A';
+  const treatmentKey = opts.treatmentKey ?? 'B';
+  const control = rows.find((r) => r.variant === controlKey);
+  const controlRate = control && control.viewers > 0 ? control.buyers / control.viewers : null;
+  for (const r of rows) {
+    if (r.variant === controlKey || controlRate === null || controlRate === 0) continue;
+    const rate = r.viewers > 0 ? r.buyers / r.viewers : 0;
+    r.liftPct = ((rate - controlRate) / controlRate) * 100;
+  }
+
+  const A = control;
+  const B = rows.find((r) => r.variant === treatmentKey);
   const out: TallyResult = { rows };
   if (A && B && A.viewers > 0 && B.viewers > 0) {
     const nA = A.viewers, nB = B.viewers, xA = A.buyers, xB = B.buyers;

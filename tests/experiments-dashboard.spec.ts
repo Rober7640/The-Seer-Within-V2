@@ -17,6 +17,10 @@ const NAME = `E2E Dash Test ${STAMP}`;
 // Second experiment: RUNNING but with NO started_at — the cohort start must
 // fall back to the first logged exposure (review finding #1).
 const KEY2 = `e2e_dash_nostart_${STAMP}`;
+// Phase 3 — created/edited/lifecycled via the write API in the tests themselves.
+const KEY3 = `e2e_p3_${STAMP}`;
+// Renamed arms (control/treatment) — proves stats generalize past literal A/B.
+const KEY4 = `e2e_p3_named_${STAMP}`;
 const ADMIN_EMAIL = `e2e-dash-admin-${STAMP}@test.invalid`;
 const ADMIN_PW = "DashAdmin123!";
 const T0 = new Date("2026-06-20T00:00:00.000Z");
@@ -114,6 +118,29 @@ test.beforeAll(async ({ playwright }) => {
     ),
   );
 
+  // Third experiment — arms named control/treatment (not A/B), running, started at T0.
+  await pool.query(
+    `INSERT INTO experiments (key, name, status, subject_type, variants, scope, conversion, started_at)
+     VALUES ($1, $2, 'running', 'user', $3::jsonb, $4::jsonb, $5::jsonb, $6)`,
+    [
+      KEY4,
+      `E2E Named ${STAMP}`,
+      JSON.stringify([{ key: "control", weight: 50 }, { key: "treatment", weight: 50 }]),
+      JSON.stringify({ personaId: evelynId }),
+      JSON.stringify({ type: "credit_purchase", windowDays: 7 }),
+      T0.toISOString(),
+    ],
+  );
+  await Promise.all(
+    ([[u1, "control"], [u3, "treatment"]] as const).map(([uid, variant]) =>
+      pool.query(
+        `INSERT INTO experiment_exposures (experiment_key, subject_id, variant, surface, context, created_at)
+         VALUES ($1, $2, $3, 'credits_page', $4::jsonb, $5)`,
+        [KEY4, uid, variant, ctx, T0.toISOString()],
+      ),
+    ),
+  );
+
   // Tokens: admin via login, regular user via register.
   const api = await playwright.request.newContext({ baseURL: "http://localhost:5000" });
   const loginRes = await api.post("/api/admin/login", {
@@ -131,8 +158,8 @@ test.beforeAll(async ({ playwright }) => {
 
 test.afterAll(async () => {
   await pool.query(`DELETE FROM credit_purchases WHERE user_id = ANY($1)`, [userIds]);
-  await pool.query(`DELETE FROM experiment_exposures WHERE experiment_key = ANY($1)`, [[KEY, KEY2]]);
-  await pool.query(`DELETE FROM experiments WHERE key = ANY($1)`, [[KEY, KEY2]]);
+  await pool.query(`DELETE FROM experiment_exposures WHERE experiment_key = ANY($1)`, [[KEY, KEY2, KEY3, KEY4]]);
+  await pool.query(`DELETE FROM experiments WHERE key = ANY($1)`, [[KEY, KEY2, KEY3, KEY4]]);
   await pool.query(`DELETE FROM users WHERE id = ANY($1)`, [userIds]);
   // The regular user registered via /api/auth/register isn't in userIds — clean by email.
   await pool.query(`DELETE FROM users WHERE email LIKE $1`, [`e2e-dash-user-${STAMP}@test.invalid`]);
@@ -214,6 +241,156 @@ test("auth gating — no token => 401, regular user => 403", async ({ request })
 
   const asUser = await request.get(`/api/admin/experiments/${KEY}/results`, {
     headers: { Authorization: `Bearer ${userToken}` },
+  });
+  expect(asUser.status()).toBe(403);
+});
+
+// ── Phase 3 — self-serve write paths ─────────────────────────────────────────
+
+const adminHeaders = () => ({ Authorization: `Bearer ${adminToken}` });
+const validBody = {
+  key: KEY3,
+  name: "P3 lifecycle test",
+  subjectType: "user",
+  variants: [
+    { key: "A", weight: 50, payload: {} },
+    { key: "B", weight: 50, payload: { mainCents: 4700 } },
+  ],
+  scope: { personaId: "" }, // filled per-test
+  conversion: { type: "credit_purchase", windowDays: 7 },
+};
+
+test("POST creates a draft; bad input is rejected (400/409)", async ({ request }) => {
+  // Valid create → 201 draft.
+  const ok = await request.post("/api/admin/experiments", {
+    headers: adminHeaders(),
+    data: { ...validBody, scope: null },
+  });
+  expect(ok.status()).toBe(201);
+  expect((await ok.json()).experiment.status).toBe("draft");
+
+  // Duplicate key → 409.
+  const dup = await request.post("/api/admin/experiments", {
+    headers: adminHeaders(),
+    data: { ...validBody, scope: null },
+  });
+  expect(dup.status()).toBe(409);
+
+  // Only one variant → 400.
+  const oneArm = await request.post("/api/admin/experiments", {
+    headers: adminHeaders(),
+    data: { ...validBody, key: `${KEY3}_x`, variants: [{ key: "A", weight: 100 }] },
+  });
+  expect(oneArm.status()).toBe(400);
+
+  // All-zero weights → 400.
+  const zero = await request.post("/api/admin/experiments", {
+    headers: adminHeaders(),
+    data: {
+      ...validBody,
+      key: `${KEY3}_z`,
+      variants: [
+        { key: "A", weight: 0 },
+        { key: "B", weight: 0 },
+      ],
+    },
+  });
+  expect(zero.status()).toBe(400);
+
+  // Bad key slug → 400.
+  const badKey = await request.post("/api/admin/experiments", {
+    headers: adminHeaders(),
+    data: { ...validBody, key: "Not A Slug!" },
+  });
+  expect(badKey.status()).toBe(400);
+});
+
+test("lifecycle: start → pause → declare-winner transitions", async ({ request }) => {
+  // declare-winner on a draft that never ran → 409.
+  const draftWin = await request.post(`/api/admin/experiments/${KEY3}/declare-winner`, {
+    headers: adminHeaders(),
+    data: { variant: "B" },
+  });
+  expect(draftWin.status()).toBe(409);
+
+  // start: draft → running, sets started_at.
+  const started = await request.post(`/api/admin/experiments/${KEY3}/start`, { headers: adminHeaders() });
+  expect(started.status()).toBe(200);
+  const startedExp = (await started.json()).experiment;
+  expect(startedExp.status).toBe("running");
+  expect(startedExp.startedAt).toBeTruthy();
+
+  // ASSIGNMENT FREEZE once started: renaming, re-weighting, or re-scoping a running
+  // test is rejected (would re-bucket enrolled users) — 409.
+  const rename = await request.patch(`/api/admin/experiments/${KEY3}`, {
+    headers: adminHeaders(),
+    data: { variants: [{ key: "A", weight: 50 }, { key: "C", weight: 50 }] },
+  });
+  expect(rename.status()).toBe(409);
+  const reweight = await request.patch(`/api/admin/experiments/${KEY3}`, {
+    headers: adminHeaders(),
+    data: { variants: [{ key: "A", weight: 20 }, { key: "B", weight: 80 }] },
+  });
+  expect(reweight.status()).toBe(409);
+
+  // but name/description ARE editable while running → 200.
+  const rename2 = await request.patch(`/api/admin/experiments/${KEY3}`, {
+    headers: adminHeaders(),
+    data: { name: "P3 lifecycle (renamed)" },
+  });
+  expect(rename2.status()).toBe(200);
+  expect((await rename2.json()).experiment.name).toBe("P3 lifecycle (renamed)");
+
+  // pause: running → paused.
+  const paused = await request.post(`/api/admin/experiments/${KEY3}/pause`, { headers: adminHeaders() });
+  expect(paused.status()).toBe(200);
+  expect((await paused.json()).experiment.status).toBe("paused");
+
+  // declare-winner with an unknown variant → 400.
+  const badWin = await request.post(`/api/admin/experiments/${KEY3}/declare-winner`, {
+    headers: adminHeaders(),
+    data: { variant: "Z" },
+  });
+  expect(badWin.status()).toBe(400);
+
+  // declare-winner B → done + winner set.
+  const win = await request.post(`/api/admin/experiments/${KEY3}/declare-winner`, {
+    headers: adminHeaders(),
+    data: { variant: "B" },
+  });
+  expect(win.status()).toBe(200);
+  const done = (await win.json()).experiment;
+  expect(done.status).toBe("done");
+  expect(done.winnerVariant).toBe("B");
+
+  // a concluded test cannot be restarted → 409.
+  const restart = await request.post(`/api/admin/experiments/${KEY3}/start`, { headers: adminHeaders() });
+  expect(restart.status()).toBe(409);
+});
+
+test("stats generalize past A/B — control/treatment arms get lift + SRM + significance", async ({
+  request,
+}) => {
+  const res = await request.get(`/api/admin/experiments/${KEY4}/results`, {
+    headers: adminHeaders(),
+  });
+  expect(res.ok()).toBeTruthy();
+  const body = await res.json();
+  const byVariant = Object.fromEntries(body.rows.map((r: any) => [r.variant, r]));
+  // control = first arm (lift null); treatment gets a server-computed lift vs control.
+  expect(byVariant.control.liftPct).toBeNull();
+  expect(typeof byVariant.treatment.liftPct).toBe("number");
+  expect(body.srm).toBeTruthy();
+  expect(body.srm.expectedBSharePct).toBe(50);
+  expect(body.significance).toBeTruthy(); // computed despite non-A/B keys
+});
+
+test("write paths are admin-only (401 no token, 403 regular user)", async ({ request }) => {
+  const noAuth = await request.post("/api/admin/experiments", { data: { ...validBody, key: `${KEY3}_na` } });
+  expect(noAuth.status()).toBe(401);
+  const asUser = await request.post("/api/admin/experiments", {
+    headers: { Authorization: `Bearer ${userToken}` },
+    data: { ...validBody, key: `${KEY3}_u` },
   });
   expect(asUser.status()).toBe(403);
 });

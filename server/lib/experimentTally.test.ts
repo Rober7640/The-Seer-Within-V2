@@ -23,7 +23,7 @@ import {
   creditPurchases,
   personas,
 } from '../../shared/schema';
-import { assign, tally, _resetExperimentCache } from './experiments';
+import { assign, tally, _resetExperimentCache, invalidateExperiment } from './experiments';
 
 const STAMP = Date.now();
 const TALLY_KEY = `recon_test_${STAMP}`;
@@ -235,6 +235,22 @@ describe('assign() gating', { skip: !hasDb }, () => {
 
     // No subject id ⇒ null.
     assert.equal(await assign(ASSIGN_KEY, null, { personaId: evelynId }), null);
+  });
+
+  it('invalidateExperiment applies a pause kill-switch immediately (no 30s TTL wait)', async () => {
+    // Precondition: running + enrolling (cache warm with the running row).
+    const before = await assign(ASSIGN_KEY, 'kill-1', { personaId: evelynId });
+    assert.equal(before?.enrolled, true);
+
+    // Flip to paused in the DB and invalidate ONLY this key's cache entry.
+    await db.update(experiments).set({ status: 'paused' }).where(eq(experiments.key, ASSIGN_KEY));
+    invalidateExperiment(ASSIGN_KEY);
+
+    // Next assign reads fresh → control, not enrolled — without the invalidate the
+    // warm 'running' cache would still enrol for up to the TTL.
+    const after = await assign(ASSIGN_KEY, 'kill-1', { personaId: evelynId });
+    assert.equal(after?.variant, 'A');
+    assert.equal(after?.enrolled, false);
   });
 });
 

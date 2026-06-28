@@ -1543,7 +1543,18 @@ Principle: **test the measurement pipeline, not just the UI** — the experiment
 - [ ] Lift shown in the table matches the significance-line lift (single source of truth)
 - [ ] Non-A/B-keyed experiment (e.g. control/treatment) still computes lift vs the first variant
 
-### Phase 3+ (not built yet)
-- [ ] Self-serve create / edit / ramp / pause / declare-winner for config experiments (no dev)
-- [ ] Price test migrated onto the framework charges the right sticky amount per arm
+### Phase 3a — self-serve config experiments (write API + dashboard)
+- [x] POST creates a draft; duplicate key → 409; bad input (≥2 variants, weights, key slug) → 400 *(tests/experiments-dashboard.spec.ts)*
+- [x] Lifecycle: start (draft→running, sets started_at) → pause → declare-winner (→done + winner); restart a done test → 409 *(experiments-dashboard.spec.ts)*
+- [x] Write paths admin-only (401 no token, 403 regular user) *(experiments-dashboard.spec.ts)*
+- [x] `invalidateExperiment` applies a pause kill-switch immediately, no 30s TTL wait *(server/lib/experimentTally.test.ts)*
+- [x] Structural freeze: editing variants/scope/subjectType/conversion of a started test → 409 (only name/description editable) *(experiments-dashboard.spec.ts)*
+- [x] declare-winner on a draft (never ran) → 409; on an already-done test → 409 *(experiments-dashboard.spec.ts)*
+- [x] tally() lift/SRM/significance generalize to control/treatment = first two arms (renamed arms get results) *(experiments-dashboard.spec.ts)*
+- [ ] 3+ arm test: each arm shows its own lift vs control (no shared treatment value)
+- [ ] Concurrent create with the same key: one 201, one 409 (no 500)
+
+### Phase 3b+ (not built yet)
+- [ ] Price test migrated onto the framework charges the right sticky amount per arm (no double-charge / no mid-session flip)
+- [ ] Legacy `conversations` price columns preserved for reporting continuity
 - [ ] Prompt A/B becomes sticky (behaviour change, gated + verified)
