@@ -21,6 +21,8 @@ import {
   twoSidedP,
   invalidateExperiment,
   U1_PRICE_EXPERIMENT_KEY,
+  PERSONA_PROMPT_KEY_PREFIX,
+  isPersonaPromptKey,
 } from '../../lib/experiments';
 
 const router = Router();
@@ -86,6 +88,67 @@ function u1PayloadError(variants: Array<{ key: string; payload?: Record<string, 
     const c = Number((v.payload as { upsell1Cents?: unknown } | undefined)?.upsell1Cents);
     if (!Number.isFinite(c) || c <= 0) {
       return `variant '${v.key}': an upsell1_funnel arm needs a positive upsell1Cents payload`;
+    }
+  }
+  return null;
+}
+
+// A persona_prompt_* experiment drives the live AI system prompt, so it must be
+// scoped to exactly one persona (assign()'s scope check then enrols only that
+// persona's users) and measured by credit_purchase (the chat conversion). Checked
+// against the EFFECTIVE scope/conversion (request body OR the stored row). Returns
+// an error message or null.
+function personaPromptConfigError(
+  scope: { personaId?: string | null } | null | undefined,
+  conversion: { type?: string } | null | undefined,
+): string | null {
+  if (!scope?.personaId) {
+    return `a '${PERSONA_PROMPT_KEY_PREFIX}*' experiment must be scoped to a persona (scope.personaId)`;
+  }
+  const type = conversion?.type ?? 'credit_purchase';
+  if (type !== 'credit_purchase') {
+    return `a '${PERSONA_PROMPT_KEY_PREFIX}*' experiment must use conversion type 'credit_purchase'`;
+  }
+  return null;
+}
+
+/** Read a variant's payload.systemPrompt as a trimmed string ('' if absent/blank). */
+function armPrompt(v: { payload?: Record<string, unknown> } | undefined): string {
+  const sp = (v?.payload as { systemPrompt?: unknown } | undefined)?.systemPrompt;
+  return typeof sp === 'string' ? sp.trim() : '';
+}
+
+// Before STARTING a persona-prompt test: the CONTROL arm (variants[0]) must carry NO
+// systemPrompt (it must render the live base prompt byte-identical — that's the valid
+// A/B baseline), and every TREATMENT arm (variants[1..]) must carry a non-empty one
+// (an empty treatment == control == base, an inert test). Drafts may hold an empty
+// placeholder treatment, authored before start. Returns an error message or null.
+function personaPromptArmsError(
+  variants: Array<{ key: string; payload?: Record<string, unknown> }>,
+): string | null {
+  if (armPrompt(variants[0])) {
+    return `variant '${variants[0].key}': the control arm must use the base prompt — leave payload.systemPrompt empty`;
+  }
+  for (let i = 1; i < variants.length; i++) {
+    if (!armPrompt(variants[i])) {
+      return `variant '${variants[i].key}': a persona-prompt treatment arm needs a non-empty payload.systemPrompt before starting`;
+    }
+  }
+  return null;
+}
+
+// A payload.systemPrompt is only honoured for persona_prompt_* keys (resolvePersonaPrompt
+// + getActivePromptExperimentKey gate on the prefix). Carrying one on any other key would
+// run a silently-inert "prompt test" that changes nothing. Reject at create/edit so the
+// operator renames the key instead. Returns an error message or null.
+function strayPromptPayloadError(
+  key: string,
+  variants: Array<{ key: string; payload?: Record<string, unknown> }> | undefined,
+): string | null {
+  if (isPersonaPromptKey(key) || !variants) return null;
+  for (const v of variants) {
+    if (armPrompt(v)) {
+      return `variant '${v.key}': payload.systemPrompt is only used by '${PERSONA_PROMPT_KEY_PREFIX}*' experiments — rename the key to start with '${PERSONA_PROMPT_KEY_PREFIX}'`;
     }
   }
   return null;
@@ -289,6 +352,17 @@ router.post('/', async (req: Request, res: Response) => {
       if (err) return res.status(400).json({ error: err });
     }
 
+    // persona_prompt_* keys are wired to the live AI path; enforce structural
+    // requirements at create (arm prompts may still be empty placeholders on a
+    // draft — they're required at start).
+    if (isPersonaPromptKey(data.key)) {
+      const err = personaPromptConfigError(data.scope, data.conversion);
+      if (err) return res.status(400).json({ error: err });
+    }
+    // A systemPrompt payload on a non-persona_prompt key would be silently inert.
+    const strayErr = strayPromptPayloadError(data.key, data.variants);
+    if (strayErr) return res.status(400).json({ error: strayErr });
+
     // Uniqueness is enforced by the experiments.key UNIQUE constraint — let the DB
     // be the source of truth (no TOCTOU race) and map its violation to a 409.
     const inserted = await db
@@ -364,6 +438,18 @@ router.patch('/:key', async (req: Request, res: Response) => {
       if (err) return res.status(400).json({ error: err });
     }
 
+    // Re-validate persona-prompt structure against the EFFECTIVE scope/conversion
+    // (only reachable on a draft — started tests freeze scope/conversion above).
+    if (isPersonaPromptKey(key)) {
+      const effScope = data.scope !== undefined ? data.scope : exp.scope;
+      const effConv = data.conversion !== undefined ? data.conversion : exp.conversion;
+      const err = personaPromptConfigError(effScope, effConv);
+      if (err) return res.status(400).json({ error: err });
+    }
+    // A systemPrompt payload on a non-persona_prompt key would be silently inert.
+    const strayErr = strayPromptPayloadError(key, data.variants);
+    if (strayErr) return res.status(400).json({ error: strayErr });
+
     const updated = await db
       .update(experiments)
       .set({
@@ -404,6 +490,35 @@ router.post('/:key/start', async (req: Request, res: Response) => {
         .status(400)
         .json({ error: 'need at least 2 variants with a positive weight before starting' });
     }
+    // persona_prompt_* tests drive the live AI prompt: arms must be authored, and
+    // no two may run concurrently for one persona (the resolver would pick one
+    // arbitrarily). Resuming THIS test from pause is allowed (key <> self). This
+    // pre-check gives a friendly 409; the partial unique index
+    // uq_running_persona_prompt_per_persona is the race-proof backstop (a concurrent
+    // double-start hits a 23505 on the UPDATE below, mapped to 409 in the catch).
+    if (isPersonaPromptKey(key)) {
+      const cfgErr = personaPromptConfigError(exp.scope, exp.conversion);
+      if (cfgErr) return res.status(400).json({ error: cfgErr });
+      const armErr = personaPromptArmsError(variants);
+      if (armErr) return res.status(400).json({ error: armErr });
+      const personaId = exp.scope?.personaId ?? null;
+      if (personaId) {
+        const conflict = await db.execute(sql`
+          SELECT key FROM experiments
+          WHERE left(key, ${PERSONA_PROMPT_KEY_PREFIX.length}) = ${PERSONA_PROMPT_KEY_PREFIX}
+            AND scope->>'personaId' = ${personaId}
+            AND status = 'running'
+            AND key <> ${key}
+          LIMIT 1
+        `);
+        const other = (conflict.rows as Record<string, unknown>[])[0];
+        if (other) {
+          return res.status(409).json({
+            error: `another persona-prompt test is already running for this persona ('${String(other.key)}') — pause it first`,
+          });
+        }
+      }
+    }
     // Set the cohort start once; resuming from pause keeps the original start.
     const startedAt = exp.startedAt ?? new Date();
     const updated = await db
@@ -414,6 +529,14 @@ router.post('/:key/start', async (req: Request, res: Response) => {
     invalidateExperiment(key);
     return res.json({ experiment: updated[0] });
   } catch (error: any) {
+    // Partial unique index (uq_running_persona_prompt_per_persona) tripped by a
+    // concurrent double-start for the same persona — the race-proof version of the
+    // pre-check above.
+    if (error?.code === '23505') {
+      return res.status(409).json({
+        error: 'another persona-prompt test is already running for this persona — pause it first',
+      });
+    }
     logger.error('Start experiment error:', error);
     return res.status(500).json({ error: 'Failed to start experiment' });
   }

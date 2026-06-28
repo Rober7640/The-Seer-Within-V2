@@ -1576,7 +1576,20 @@ Principle: **test the measurement pipeline, not just the UI** — the experiment
 - [ ] Two tests on the same route+element don't silently shadow each other
 - [ ] Public /api/ab endpoints rate-limited / not abusable to bias a test (Phase 5 hardening)
 
+### Phase 4b — prompt A/B made sticky (live AI path)
+- [x] OFF/draft/paused/out-of-scope ⇒ resolvePersonaPrompt returns baseSystemPrompt, not enrolled, no exposure (byte-identical) *(server/lib/personaPrompt.test.ts)*
+- [x] RUNNING ⇒ sticky per user; treatment arm uses payload.systemPrompt, control arm stays on base; both enrolled; ~50/50 *(personaPrompt.test.ts)*
+- [x] An enrolled chat message logs exactly one exposure (idempotent), surface='chat', context.personaId *(personaPrompt.test.ts + live sendMessage verification)*
+- [x] Resolver prefers a running test over a concluded one for the same persona *(personaPrompt.test.ts)*
+- [x] DONE + winner ⇒ the winner's prompt keeps applying (rollout), not enrolled *(personaPrompt.test.ts)*
+- [x] Live sendMessage() applies variant B's prompt to the model (sentinel token echoed) + logs the exposure *(manual verification script, isolated temp persona)*
+- [x] Create guard: persona_prompt_* must be persona-scoped + credit_purchase (400 otherwise) *(tests/experiments-dashboard.spec.ts)*
+- [x] Start guard: an unauthored treatment arm (empty payload.systemPrompt) cannot start (400) *(experiments-dashboard.spec.ts)*
+- [x] Start guard: a second concurrent running prompt test for one persona is blocked (409) *(experiments-dashboard.spec.ts)*
+- [ ] User deletion cascades to exposures (subject_id = user.id) — Phase 5 cleanup item
+- [ ] A nicer prompt-authoring affordance than raw payload JSON in the dashboard — Phase 5 polish
+- [ ] Retire promptManager.ts random selector + /admin/analytics/prompts session counts (superseded) — Phase 5
+
 ### Phase 3b+ (not built yet)
 - [ ] Migrate the V1 MAIN/downsell price test (not just Upsell-1) onto the framework
 - [ ] Legacy `conversations` price columns preserved for reporting continuity
-- [ ] Prompt A/B becomes sticky (behaviour change, gated + verified)

@@ -38,7 +38,16 @@ async function up(pool: pg.Pool) {
       updated_at timestamp NOT NULL DEFAULT now()
     );
   `);
-  console.log('✓ experiments table ready');
+  // Phase 4b — at most ONE running persona_prompt_* test per persona (the chat
+  // resolver assumes a single active prompt test). A partial unique index on the
+  // scoped persona makes this race-proof (the /start pre-check is just a nicer
+  // error). Other experiment types are excluded by the key-prefix predicate.
+  await pool.query(
+    `CREATE UNIQUE INDEX IF NOT EXISTS uq_running_persona_prompt_per_persona
+       ON experiments ((scope->>'personaId'))
+       WHERE status = 'running' AND left(key, 15) = 'persona_prompt_';`,
+  );
+  console.log('✓ experiments table + running-prompt uniqueness index ready');
 
   await pool.query(`
     CREATE TABLE IF NOT EXISTS experiment_exposures (
@@ -153,6 +162,32 @@ async function up(pool: pg.Pool) {
     console.log('✓ seeded DRAFT page-copy experiment (soulmate CTA)');
   } else {
     console.log('• soulmate_landing_cta_2026 experiment already exists — left unchanged');
+  }
+
+  // Phase 4b — sticky per-user system-prompt A/B for Evelyn (live AI path). Draft
+  // = OFF, so the chat engine uses Evelyn's base prompt for everyone. B ships as an
+  // EMPTY placeholder: author the alternate prompt in payload.systemPrompt (the
+  // dashboard variant editor) before starting — the start guard refuses to launch
+  // a test whose treatment arm has no prompt (it would render identical to control).
+  const ppVariants = JSON.stringify([
+    { key: 'A', weight: 50, payload: {} },
+    { key: 'B', weight: 50, payload: { systemPrompt: '' } },
+  ]);
+  const ppScope = JSON.stringify({ personaId: evelynId });
+  const ppConversion = JSON.stringify({ type: 'credit_purchase', windowDays: 7 });
+  const pp = await pool.query(
+    `INSERT INTO experiments (key, name, description, status, subject_type, variants, scope, conversion)
+     VALUES ('persona_prompt_evelyn_2026', 'Evelyn system-prompt A/B',
+       'Sticky per-user system-prompt test for Evelyn. A = current base prompt (control), B = author an alternate in payload.systemPrompt before starting. Conversion = credit_purchase (7d). To start, use Start in /admin/experiments (the start guard validates the arms + single-running-test-per-persona) — do NOT flip status=running by hand, which bypasses those checks.',
+       'draft', 'user', $1::jsonb, $2::jsonb, $3::jsonb)
+     ON CONFLICT (key) DO NOTHING
+     RETURNING id`,
+    [ppVariants, ppScope, ppConversion],
+  );
+  if (pp.rowCount && pp.rowCount > 0) {
+    console.log('✓ seeded DRAFT persona-prompt experiment (Evelyn)');
+  } else {
+    console.log('• persona_prompt_evelyn_2026 experiment already exists — left unchanged');
   }
 }
 

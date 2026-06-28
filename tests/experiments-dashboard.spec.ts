@@ -21,6 +21,14 @@ const KEY2 = `e2e_dash_nostart_${STAMP}`;
 const KEY3 = `e2e_p3_${STAMP}`;
 // Renamed arms (control/treatment) — proves stats generalize past literal A/B.
 const KEY4 = `e2e_p3_named_${STAMP}`;
+// Phase 4b — persona-prompt guard keys. Scoped to a SYNTHETIC persona id (never a
+// real persona, never the live persona_prompt_evelyn_2026 draft) so even a
+// momentarily-running test can't swap any real persona's chat prompt.
+const PP_PERSONA = "00000000-0000-0000-0000-0000000e2e01";
+const KEY_PP1 = `persona_prompt_e2e1_${STAMP}`;
+const KEY_PP2 = `persona_prompt_e2e2_${STAMP}`;
+const KEY_PP3 = `persona_prompt_e2e3_${STAMP}`;
+const KEY_PP_BAD = `persona_prompt_e2ebad_${STAMP}`;
 const ADMIN_EMAIL = `e2e-dash-admin-${STAMP}@test.invalid`;
 const ADMIN_PW = "DashAdmin123!";
 const T0 = new Date("2026-06-20T00:00:00.000Z");
@@ -196,8 +204,9 @@ test.beforeAll(async ({ playwright }) => {
 
 test.afterAll(async () => {
   await pool.query(`DELETE FROM credit_purchases WHERE user_id = ANY($1)`, [userIds]);
-  await pool.query(`DELETE FROM experiment_exposures WHERE experiment_key = ANY($1)`, [[KEY, KEY2, KEY3, KEY4]]);
-  await pool.query(`DELETE FROM experiments WHERE key = ANY($1)`, [[KEY, KEY2, KEY3, KEY4]]);
+  const ppKeys = [KEY_PP1, KEY_PP2, KEY_PP3, KEY_PP_BAD];
+  await pool.query(`DELETE FROM experiment_exposures WHERE experiment_key = ANY($1)`, [[KEY, KEY2, KEY3, KEY4, ...ppKeys]]);
+  await pool.query(`DELETE FROM experiments WHERE key = ANY($1)`, [[KEY, KEY2, KEY3, KEY4, ...ppKeys]]);
   await pool.query(`DELETE FROM users WHERE id = ANY($1)`, [userIds]);
   // The regular user registered via /api/auth/register isn't in userIds — clean by email.
   await pool.query(`DELETE FROM users WHERE email LIKE $1`, [`e2e-dash-user-${STAMP}@test.invalid`]);
@@ -475,6 +484,158 @@ test("upsell1_funnel guards: only u1_price_2026 key, and arms need a valid price
     },
   });
   expect(badPayload.status()).toBe(400);
+});
+
+// ── Phase 4b — persona-prompt (live AI path) guards ──────────────────────────
+
+const ppArms = (bPrompt: string) => [
+  { key: "A", weight: 50, payload: {} },
+  { key: "B", weight: 50, payload: { systemPrompt: bPrompt } },
+];
+
+test("persona_prompt create guards: requires a persona scope + credit_purchase", async ({
+  request,
+}) => {
+  // No scope.personaId → 400 (assign()'s scope check would otherwise enrol every persona).
+  const noScope = await request.post("/api/admin/experiments", {
+    headers: adminHeaders(),
+    data: {
+      key: KEY_PP_BAD,
+      name: "pp no scope",
+      subjectType: "user",
+      variants: ppArms("x"),
+      scope: null,
+      conversion: { type: "credit_purchase", windowDays: 7 },
+    },
+  });
+  expect(noScope.status()).toBe(400);
+
+  // Wrong conversion type → 400 (prompt tests measure by credit_purchase).
+  const wrongConv = await request.post("/api/admin/experiments", {
+    headers: adminHeaders(),
+    data: {
+      key: KEY_PP_BAD,
+      name: "pp wrong conv",
+      subjectType: "user",
+      variants: ppArms("x"),
+      scope: { personaId: PP_PERSONA },
+      conversion: { type: "event", name: "x" },
+    },
+  });
+  expect(wrongConv.status()).toBe(400);
+});
+
+test("persona_prompt start guard: an unauthored treatment arm cannot start", async ({ request }) => {
+  // Draft with an EMPTY placeholder B (the seed pattern) → created fine.
+  const create = await request.post("/api/admin/experiments", {
+    headers: adminHeaders(),
+    data: {
+      key: KEY_PP1,
+      name: "pp arms guard",
+      subjectType: "user",
+      variants: ppArms(""),
+      scope: { personaId: PP_PERSONA },
+      conversion: { type: "credit_purchase", windowDays: 7 },
+    },
+  });
+  expect(create.status()).toBe(201);
+
+  // Starting with an empty treatment prompt would be inert (B == base == control) → 400.
+  const startEmpty = await request.post(`/api/admin/experiments/${KEY_PP1}/start`, {
+    headers: adminHeaders(),
+  });
+  expect(startEmpty.status()).toBe(400);
+
+  // Author B, then it starts.
+  const authored = await request.patch(`/api/admin/experiments/${KEY_PP1}`, {
+    headers: adminHeaders(),
+    data: { variants: ppArms("You are a test variant of the guide.") },
+  });
+  expect(authored.status()).toBe(200);
+  const started = await request.post(`/api/admin/experiments/${KEY_PP1}/start`, {
+    headers: adminHeaders(),
+  });
+  expect(started.status()).toBe(200);
+  expect((await started.json()).experiment.status).toBe("running");
+});
+
+test("persona_prompt start guard: a second concurrent test for one persona is blocked", async ({
+  request,
+}) => {
+  // KEY_PP1 is running for PP_PERSONA (previous test). A second prompt test for the
+  // SAME persona must not start — the resolver would otherwise pick one arbitrarily.
+  const create = await request.post("/api/admin/experiments", {
+    headers: adminHeaders(),
+    data: {
+      key: KEY_PP2,
+      name: "pp second",
+      subjectType: "user",
+      variants: ppArms("a different variant prompt"),
+      scope: { personaId: PP_PERSONA },
+      conversion: { type: "credit_purchase", windowDays: 7 },
+    },
+  });
+  expect(create.status()).toBe(201);
+  const blocked = await request.post(`/api/admin/experiments/${KEY_PP2}/start`, {
+    headers: adminHeaders(),
+  });
+  expect(blocked.status()).toBe(409);
+
+  // Pausing the first frees the persona; the second can then start.
+  expect(
+    (await request.post(`/api/admin/experiments/${KEY_PP1}/pause`, { headers: adminHeaders() })).status(),
+  ).toBe(200);
+  const start2 = await request.post(`/api/admin/experiments/${KEY_PP2}/start`, {
+    headers: adminHeaders(),
+  });
+  expect(start2.status()).toBe(200);
+
+  // Never leave a running prompt test behind (defence-in-depth on top of cleanup).
+  await request.post(`/api/admin/experiments/${KEY_PP2}/pause`, { headers: adminHeaders() });
+});
+
+test("persona_prompt start guard: an authored CONTROL arm is rejected (control must = base)", async ({
+  request,
+}) => {
+  // Control arm (variants[0]) carries a systemPrompt — would silently replace the
+  // base prompt for the control group and invalidate the A/B baseline.
+  const create = await request.post("/api/admin/experiments", {
+    headers: adminHeaders(),
+    data: {
+      key: KEY_PP3,
+      name: "pp control authored",
+      subjectType: "user",
+      variants: [
+        { key: "A", weight: 50, payload: { systemPrompt: "control should not have this" } },
+        { key: "B", weight: 50, payload: { systemPrompt: "treatment prompt" } },
+      ],
+      scope: { personaId: PP_PERSONA },
+      conversion: { type: "credit_purchase", windowDays: 7 },
+    },
+  });
+  expect(create.status()).toBe(201); // arm-content is checked at START, not create
+  const started = await request.post(`/api/admin/experiments/${KEY_PP3}/start`, {
+    headers: adminHeaders(),
+  });
+  expect(started.status()).toBe(400);
+});
+
+test("a systemPrompt payload on a non-persona_prompt key is rejected (would be inert)", async ({
+  request,
+}) => {
+  const stray = await request.post("/api/admin/experiments", {
+    headers: adminHeaders(),
+    data: {
+      ...validBody,
+      key: `${KEY3}_stray`,
+      scope: null,
+      variants: [
+        { key: "A", weight: 50, payload: {} },
+        { key: "B", weight: 50, payload: { systemPrompt: "this only works under a persona_prompt_ key" } },
+      ],
+    },
+  });
+  expect(stray.status()).toBe(400);
 });
 
 test("write paths are admin-only (401 no token, 403 regular user)", async ({ request }) => {

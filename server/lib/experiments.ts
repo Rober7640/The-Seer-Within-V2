@@ -22,12 +22,25 @@ import {
   type Experiment,
   type ExperimentVariant,
 } from '@shared/schema';
-import { eq, sql } from 'drizzle-orm';
+import { eq, sql, desc } from 'drizzle-orm';
 import logger from './logger';
 import type { PaywallVariant } from '@shared/paywall';
 
 // ── Paywall test constants (the one experiment Phase 1 folds in) ──────────────
 export const PAYWALL_EXPERIMENT_KEY = 'paywall_copy_2026';
+
+// ── Persona prompt A/B (Phase 4b) ─────────────────────────────────────────────
+// Every system-prompt experiment shares this key prefix so the chat engine can
+// resolve "the active prompt test for this persona" at request time WITHOUT a
+// hardcoded per-persona key — a fixed key would cap each persona at one test ever
+// (a concluded key can't restart). A new prompt test = a new prefixed key
+// (e.g. 'persona_prompt_evelyn_q3'); the resolver below always picks the current
+// one. The treatment arm carries the full alternate prompt as payload.systemPrompt;
+// the control arm (variants[0]) carries none → falls back to baseSystemPrompt.
+export const PERSONA_PROMPT_KEY_PREFIX = 'persona_prompt_';
+export function isPersonaPromptKey(key: string): boolean {
+  return key.startsWith(PERSONA_PROMPT_KEY_PREFIX);
+}
 
 // ── Pure assignment primitives (no DB — unit-testable in isolation) ───────────
 
@@ -68,6 +81,10 @@ export function pickVariant(bucket: number, variants: ExperimentVariant[]): stri
 
 const CACHE_TTL_MS = 30_000;
 const cache = new Map<string, { value: Experiment | null; at: number }>();
+// Per-persona resolver cache: personaId → the active prompt-experiment key (or
+// null when none). Cleared on every experiment write (a create/start/pause can
+// change which key is active for a persona); see invalidateExperiment().
+const promptKeyCache = new Map<string, { key: string | null; at: number }>();
 
 async function getExperiment(key: string): Promise<Experiment | null> {
   const now = Date.now();
@@ -94,11 +111,63 @@ async function getExperiment(key: string): Promise<Experiment | null> {
  */
 export function invalidateExperiment(key: string): void {
   cache.delete(key);
+  // A write to a persona_prompt_* experiment can change which prompt test is active
+  // for a persona (started/paused), so drop the whole (tiny) per-persona resolver
+  // cache. Writes to other experiments (paywall/u1/page-copy) can't, so skip it.
+  if (isPersonaPromptKey(key)) promptKeyCache.clear();
 }
 
-/** Test seam: clear the in-process experiment cache. */
+/** Test seam: clear the in-process experiment caches. */
 export function _resetExperimentCache(): void {
   cache.clear();
+  promptKeyCache.clear();
+}
+
+/**
+ * Resolve the currently-active prompt experiment KEY for a persona — the RUNNING
+ * `persona_prompt_*` experiment scoped to this persona. Returns null when none
+ * exists, so the chat path skips assign() entirely and uses the base prompt.
+ * Cached ~30s per persona (promptKeyCache); reads fail safe to null.
+ *
+ * RUNNING-ONLY (deliberately no done+winner rollout): unlike a price/copy winner
+ * (which lives only in the experiment), a prompt winner is a full system prompt the
+ * operator bakes back into personas.baseSystemPrompt. So a concluded prompt test
+ * reverts the live prompt to the (editable) base — it never silently overrides the
+ * persona's prompt forever. The start guard forbids two concurrent running prompt
+ * tests per persona, so the running match is unambiguous; ORDER BY started_at is a
+ * belt-and-braces tie-break.
+ */
+export async function getActivePromptExperimentKey(
+  personaId: string | null | undefined,
+): Promise<string | null> {
+  if (!personaId) return null;
+  const now = Date.now();
+  const hit = promptKeyCache.get(personaId);
+  if (hit && now - hit.at < CACHE_TTL_MS) return hit.key;
+  try {
+    const rows = await db
+      .select()
+      .from(experiments)
+      .where(
+        sql`left(${experiments.key}, ${PERSONA_PROMPT_KEY_PREFIX.length}) = ${PERSONA_PROMPT_KEY_PREFIX}
+            AND ${experiments.scope}->>'personaId' = ${personaId}
+            AND ${experiments.status} = 'running'`,
+      )
+      .orderBy(desc(experiments.startedAt))
+      .limit(1);
+    const row = rows[0] ?? null;
+    promptKeyCache.set(personaId, { key: row?.key ?? null, at: now });
+    // Prime getExperiment's row cache too, so the immediately-following assign()
+    // is a cache hit — one DB query on a cold resolve instead of two.
+    if (row) cache.set(row.key, { value: row, at: now });
+    return row?.key ?? null;
+  } catch (err) {
+    logger.error('active prompt experiment lookup failed', {
+      personaId,
+      error: (err as Error).message,
+    });
+    return null; // fail safe to "no experiment" → base prompt
+  }
 }
 
 // ── Assignment ────────────────────────────────────────────────────────────────
@@ -540,6 +609,47 @@ export async function resolveUpsell1Cents(
     if (cents !== null) return { cents, variant: a.variant, enrolled: a.enrolled };
   }
   return { cents: fallbackCents, variant: a?.variant ?? null, enrolled: false };
+}
+
+// ── Persona prompt A/B resolution (Phase 4b — live AI path) ───────────────────
+
+export interface PromptAssignment {
+  systemPrompt: string;         // the prompt to USE (variant override, or base)
+  variant: string | null;       // assigned arm (for the exposure log); null if no test
+  enrolled: boolean;            // running + in scope → caller logs an exposure
+  key: string | null;           // the active experiment key; null if no test
+}
+
+/**
+ * Resolve a user's persona system prompt for THIS persona. When a RUNNING prompt
+ * experiment is active for the persona AND the assigned arm carries a non-empty
+ * `payload.systemPrompt`, that prompt is used; otherwise `baseSystemPrompt`.
+ * (Only running tests resolve — a concluded test reverts to base; see
+ * getActivePromptExperimentKey.)
+ *
+ * SAFETY: with no running prompt experiment, or a draft/paused/concluded/out-of-scope
+ * test, or the control arm (empty payload — enforced by the start guard), this returns
+ * `baseSystemPrompt` and `enrolled:false` — byte-identical to today, no exposure logged.
+ * The control arm of a RUNNING test still returns `enrolled:true` (it's the denominator)
+ * but the base prompt — so control users are counted yet see no behaviour change.
+ */
+export async function resolvePersonaPrompt(
+  userId: string | null | undefined,
+  personaId: string,
+  baseSystemPrompt: string,
+): Promise<PromptAssignment> {
+  const off: PromptAssignment = { systemPrompt: baseSystemPrompt, variant: null, enrolled: false, key: null };
+  if (!userId) return off;
+  const key = await getActivePromptExperimentKey(personaId);
+  if (!key) return off;
+  const a = await assign(key, userId, { personaId });
+  if (!a) return { ...off, key };
+  let systemPrompt = baseSystemPrompt;
+  if (a.applied) {
+    const sp = (a.payload as { systemPrompt?: unknown }).systemPrompt;
+    if (typeof sp === 'string' && sp.trim().length > 0) systemPrompt = sp;
+  }
+  return { systemPrompt, variant: a.variant, enrolled: a.enrolled, key };
 }
 
 // ── Paywall-specific wrappers (keep credits.ts + the test wiring stable) ──────
