@@ -23,7 +23,14 @@ import {
   creditPurchases,
   personas,
 } from '../../shared/schema';
-import { assign, tally, _resetExperimentCache, invalidateExperiment } from './experiments';
+import {
+  assign,
+  tally,
+  _resetExperimentCache,
+  invalidateExperiment,
+  resolveUpsell1Cents,
+  U1_PRICE_EXPERIMENT_KEY,
+} from './experiments';
 
 const STAMP = Date.now();
 const TALLY_KEY = `recon_test_${STAMP}`;
@@ -251,6 +258,93 @@ describe('assign() gating', { skip: !hasDb }, () => {
     const after = await assign(ASSIGN_KEY, 'kill-1', { personaId: evelynId });
     assert.equal(after?.variant, 'A');
     assert.equal(after?.enrolled, false);
+  });
+
+  it('DONE + winner rolls out ONLY to in-scope subjects (scoped winner)', async () => {
+    await db
+      .update(experiments)
+      .set({ status: 'done', winnerVariant: 'B' })
+      .where(eq(experiments.key, ASSIGN_KEY));
+    invalidateExperiment(ASSIGN_KEY);
+    // In scope (Evelyn) → winner B applied to everyone (not enrolled).
+    const inScope = await assign(ASSIGN_KEY, 'x', { personaId: evelynId });
+    assert.equal(inScope?.variant, 'B');
+    assert.equal(inScope?.applied, true);
+    assert.equal(inScope?.enrolled, false);
+    // Out of scope → control 'A', NOT the winner — no leak to other personas.
+    const offScope = await assign(ASSIGN_KEY, 'x', { personaId: OUT_OF_SCOPE_PERSONA });
+    assert.equal(offScope?.variant, 'A');
+    assert.equal(offScope?.applied, false);
+  });
+});
+
+// Phase 3b — Upsell-1 price resolution. Tested against an ISOLATED temp experiment
+// (via resolveUpsell1Cents' key override) so it never flips the live u1_price_2026
+// running on the shared DB. U1_PRICE_EXPERIMENT_KEY is asserted to be the seeded key.
+const U1_TEST_KEY = `u1_test_${STAMP}`;
+describe('resolveUpsell1Cents (U1 price test)', { skip: !hasDb }, () => {
+  before(async () => {
+    await db.insert(experiments).values({
+      key: U1_TEST_KEY,
+      name: 'u1 price (isolated test)',
+      status: 'draft',
+      subjectType: 'email',
+      variants: [
+        { key: 'A', weight: 50, payload: { upsell1Cents: 4700 } },
+        { key: 'B', weight: 50, payload: { upsell1Cents: 3700 } },
+      ],
+      scope: null,
+      conversion: { type: 'upsell1_funnel' },
+    });
+  });
+  after(async () => {
+    await db.delete(experiments).where(eq(experiments.key, U1_TEST_KEY));
+  });
+
+  it('the live experiment key is u1_price_2026', () => {
+    assert.equal(U1_PRICE_EXPERIMENT_KEY, 'u1_price_2026');
+  });
+
+  it('OFF (draft) ⇒ returns the legacy fallback price, not enrolled', async () => {
+    invalidateExperiment(U1_TEST_KEY);
+    const r = await resolveUpsell1Cents('u1-off@test.invalid', 4700, U1_TEST_KEY);
+    assert.equal(r.cents, 4700);
+    assert.equal(r.enrolled, false);
+  });
+
+  it('RUNNING ⇒ sticky per-email price ($47 / $37), ~50/50, matches the arm', async () => {
+    await db.update(experiments).set({ status: 'running' }).where(eq(experiments.key, U1_TEST_KEY));
+    invalidateExperiment(U1_TEST_KEY);
+
+    let b = 0;
+    const N = 400;
+    for (let i = 0; i < N; i++) {
+      const email = `u1-${i}@test.invalid`;
+      const r1 = await resolveUpsell1Cents(email, 4700, U1_TEST_KEY);
+      const r2 = await resolveUpsell1Cents(email, 4700, U1_TEST_KEY);
+      assert.equal(r1.cents, r2.cents, 'sticky per email');
+      assert.equal(r1.enrolled, true);
+      // Charged price always matches the assigned arm's payload (A=$47, B=$37).
+      if (r1.variant === 'B') {
+        assert.equal(r1.cents, 3700);
+        b++;
+      } else {
+        assert.equal(r1.cents, 4700);
+      }
+    }
+    const share = b / N;
+    assert.ok(share > 0.4 && share < 0.6, `B share ${share} not ~50%`);
+  });
+
+  it('DONE + winner ⇒ rolls the winner price out to everyone (not enrolled)', async () => {
+    await db
+      .update(experiments)
+      .set({ status: 'done', winnerVariant: 'B' })
+      .where(eq(experiments.key, U1_TEST_KEY));
+    invalidateExperiment(U1_TEST_KEY);
+    const r = await resolveUpsell1Cents('anyone@test.invalid', 4700, U1_TEST_KEY);
+    assert.equal(r.cents, 3700); // winner B's $37 applied, not the legacy $47
+    assert.equal(r.enrolled, false); // concluded — no new exposures logged
   });
 });
 

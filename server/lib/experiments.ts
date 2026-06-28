@@ -111,7 +111,9 @@ export interface AssignContext {
 export interface Assignment {
   variant: string;                       // the variant to RENDER
   payload: Record<string, unknown>;      // that variant's config payload
-  enrolled: boolean;                      // true only when running + in scope (=> log an exposure)
+  enrolled: boolean;                      // running + in scope (=> log an exposure)
+  applied: boolean;                       // the variant's payload should DRIVE behaviour:
+                                          //   enrolled (running) OR a concluded winner rollout
 }
 
 /**
@@ -147,19 +149,30 @@ export async function assign(
   const variants = Array.isArray(exp.variants) ? exp.variants : [];
   const control = variants[0];
   const controlArm: Assignment | null = control
-    ? { variant: control.key, payload: control.payload ?? {}, enrolled: false }
+    ? { variant: control.key, payload: control.payload ?? {}, enrolled: false, applied: false }
     : null;
 
-  if (exp.status !== 'running') return controlArm;
-  // Scope: a persona-scoped test only enrols the matching persona; everyone else
-  // stays on control (and is not enrolled).
+  // Scope FIRST: an out-of-scope subject NEVER gets the experiment — control,
+  // whether the test is running OR concluded. (This must precede the winner
+  // rollout so a concluded persona-scoped test doesn't leak its winner to other
+  // personas.)
   if (exp.scope?.personaId && context?.personaId !== exp.scope.personaId) return controlArm;
+
+  // Concluded test → roll the declared winner out to the in-scope population:
+  // not enrolled (test is over, no more exposures) but its payload IS applied,
+  // so a declared winner keeps driving behaviour instead of reverting to control.
+  if (exp.status === 'done' && exp.winnerVariant) {
+    const w = variants.find((v) => v.key === exp.winnerVariant) ?? control;
+    return w ? { variant: w.key, payload: w.payload ?? {}, enrolled: false, applied: true } : controlArm;
+  }
+
+  if (exp.status !== 'running') return controlArm;
 
   const bucket = experimentBucket(subjectId, key);
   const variantKey = pickVariant(bucket, variants);
   const chosen = variants.find((v) => v.key === variantKey) ?? control;
   if (!chosen) return null;
-  return { variant: chosen.key, payload: chosen.payload ?? {}, enrolled: true };
+  return { variant: chosen.key, payload: chosen.payload ?? {}, enrolled: true, applied: true };
 }
 
 /**
@@ -287,6 +300,7 @@ export async function tally(key: string, opts: TallyOptions): Promise<TallyResul
     FROM conv GROUP BY variant ORDER BY variant;
   `);
 
+  // Keep this metric byte-exact with the legacy tallyPaywall CLI (SQL round()).
   const rows: TallyVariantRow[] = (result.rows as Record<string, unknown>[]).map((r) => ({
     variant: String(r.variant),
     viewers: Number(r.viewers) || 0,
@@ -298,12 +312,24 @@ export async function tally(key: string, opts: TallyOptions): Promise<TallyResul
     liftPct: null,
   }));
 
-  // Control/treatment are the experiment's first two arms (keys default to A/B for
-  // the paywall + back-compat). Per-row lift is each arm's raw conversion vs control,
-  // so the table generalises to renamed arms and >2 arms; significance/SRM below are
-  // the 2-arm control-vs-treatment test.
-  const controlKey = opts.controlKey ?? 'A';
-  const treatmentKey = opts.treatmentKey ?? 'B';
+  return finalizeStats(rows, opts.controlKey ?? 'A', opts.treatmentKey ?? 'B');
+}
+
+/**
+ * Shared stats pass over per-variant rows (used by every tally variant): fills
+ * each row's `liftPct` (raw conversion vs control) and computes the 2-arm
+ * control-vs-treatment SRM split + two-proportion z-test. Control/treatment are
+ * the first two arms by key, so it generalises to renamed arms and >2 arms.
+ */
+export function finalizeStats(
+  rows: TallyVariantRow[],
+  controlKey = 'A',
+  treatmentKey = 'B',
+  // SRM (randomization balance) denominator. Defaults to each arm's `viewers`,
+  // but for metrics whose `viewers` is a post-randomization subset (e.g. U1's
+  // offer-reached count) pass the FULL assigned population per arm here.
+  srmDenoms?: { control: number; treatment: number },
+): TallyResult {
   const control = rows.find((r) => r.variant === controlKey);
   const controlRate = control && control.viewers > 0 ? control.buyers / control.viewers : null;
   for (const r of rows) {
@@ -315,21 +341,148 @@ export async function tally(key: string, opts: TallyOptions): Promise<TallyResul
   const A = control;
   const B = rows.find((r) => r.variant === treatmentKey);
   const out: TallyResult = { rows };
-  if (A && B && A.viewers > 0 && B.viewers > 0) {
-    const nA = A.viewers, nB = B.viewers, xA = A.buyers, xB = B.buyers;
-    out.srm = { aViewers: nA, bViewers: nB, bSharePct: (nB / (nA + nB)) * 100 };
-    const pA = xA / nA, pB = xB / nB, p = (xA + xB) / (nA + nB);
-    const se = Math.sqrt(p * (1 - p) * (1 / nA + 1 / nB));
-    const z = se > 0 ? (pB - pA) / se : 0;
-    const pv = twoSidedP(z);
-    out.significance = {
-      z,
-      p: pv,
-      liftPct: pA > 0 ? ((pB - pA) / pA) * 100 : 0,
-      significant: pv < 0.05,
-    };
+  if (A && B) {
+    // SRM (randomization balance) is gated on the FULL assigned population per arm
+    // — independent of how many later reached the conversion step.
+    const sA = srmDenoms?.control ?? A.viewers;
+    const sB = srmDenoms?.treatment ?? B.viewers;
+    if (sA > 0 && sB > 0) {
+      out.srm = { aViewers: sA, bViewers: sB, bSharePct: (sB / (sA + sB)) * 100 };
+    }
+    // Significance: two-proportion z-test on the conversion rate (viewers = the
+    // conversion denominator), only once both arms have conversion data.
+    if (A.viewers > 0 && B.viewers > 0) {
+      const nA = A.viewers, nB = B.viewers, xA = A.buyers, xB = B.buyers;
+      const pA = xA / nA, pB = xB / nB, p = (xA + xB) / (nA + nB);
+      const se = Math.sqrt(p * (1 - p) * (1 / nA + 1 / nB));
+      const z = se > 0 ? (pB - pA) / se : 0;
+      const pv = twoSidedP(z);
+      out.significance = {
+        z,
+        p: pv,
+        liftPct: pA > 0 ? ((pB - pA) / pA) * 100 : 0,
+        significant: pv < 0.05,
+      };
+    }
   }
   return out;
+}
+
+/** Build a per-variant row from raw counts (the JS counterpart of tally()'s SQL). */
+function buildVariantRow(
+  variant: string,
+  viewers: number,
+  buyers: number,
+  revenueCents: number,
+): TallyVariantRow {
+  const revenueUsd = revenueCents / 100;
+  return {
+    variant,
+    viewers,
+    buyers,
+    conversionPct: viewers ? +((buyers / viewers) * 100).toFixed(2) : 0,
+    revenueUsd: +revenueUsd.toFixed(2),
+    revPerViewerUsd: viewers ? +(revenueUsd / viewers).toFixed(2) : 0,
+    arppuUsd: buyers ? +(revenueUsd / buyers).toFixed(2) : 0,
+    liftPct: null,
+  };
+}
+
+export interface Upsell1TallyOptions {
+  key: string;                 // experiment key — exposures are scoped to it (no cross-test leak)
+  startISO: string;            // cohort start = when the test started
+  controlKey?: string;
+  treatmentKey?: string;
+}
+
+/**
+ * Results for the Upsell-1 price test. Arm membership is EXPLICIT — read from the
+ * framework's `experiment_exposures` (logged with the assigned variant at lead
+ * capture), NOT inferred from the stored price. This is what makes the metric
+ * valid: legacy / paused / fallback $47 traffic has no exposure row, so it can't
+ * contaminate the control arm, and two experiments never collide (scoped by key).
+ * Conversion comes from the linked conversation: denominator = reached the offer
+ * (`upsell_offered`), buyer = `upsell_purchased`, revenue = `upsell_amount`. SRM
+ * uses the full exposure count per arm (LEFT JOIN), so randomization balance is
+ * measured over everyone assigned, not just those who reached the offer.
+ *
+ * NOTE: one exposure per email (unique key+subject) links to the conversation it
+ * was assigned on. In the rare case an email has multiple conversation rows and
+ * buys the upsell on a different one, attribution follows the linked row.
+ */
+export async function tallyUpsell1(opts: Upsell1TallyOptions): Promise<TallyResult> {
+  const result = await db.execute(sql`
+    SELECT e.variant AS variant,
+           count(*)                                                          AS total,
+           count(*) FILTER (WHERE c.upsell_offered)                          AS viewers,
+           count(*) FILTER (WHERE c.upsell_offered AND c.upsell_purchased)   AS buyers,
+           COALESCE(sum(c.upsell_amount) FILTER (WHERE c.upsell_offered AND c.upsell_purchased), 0) AS revenue_cents
+    FROM experiment_exposures e
+    LEFT JOIN conversations c ON c.id = e.context->>'conversationId'
+    WHERE e.experiment_key = ${opts.key}
+      AND e.created_at >= ${opts.startISO}
+    GROUP BY e.variant;
+  `);
+
+  const byVariant = new Map(
+    (result.rows as Record<string, unknown>[]).map((r) => [String(r.variant), r]),
+  );
+  const controlKey = opts.controlKey ?? 'A';
+  const treatmentKey = opts.treatmentKey ?? 'B';
+  // One row per configured arm (so an arm with no data shows as zeros, in order).
+  const arms = [controlKey, treatmentKey];
+  const seen = new Set(arms);
+  for (const v of Array.from(byVariant.keys())) if (!seen.has(v)) arms.push(v); // include extra observed arms
+  const rows = arms.map((variant) => {
+    const r = byVariant.get(variant);
+    return buildVariantRow(variant, Number(r?.viewers) || 0, Number(r?.buyers) || 0, Number(r?.revenue_cents) || 0);
+  });
+
+  const totalOf = (k: string) => Number(byVariant.get(k)?.total) || 0;
+  return finalizeStats(rows, controlKey, treatmentKey, {
+    control: totalOf(controlKey),
+    treatment: totalOf(treatmentKey),
+  });
+}
+
+// ── V1 Upsell-1 price test (Phase 3b) ────────────────────────────────────────
+export const U1_PRICE_EXPERIMENT_KEY = 'u1_price_2026';
+
+/** Stable, non-PII subject id for an email (sha256 of the normalised address). */
+export function hashEmail(email: string): string {
+  return crypto.createHash('sha256').update(email.trim().toLowerCase()).digest('hex');
+}
+
+/** Read a positive-int price (cents) from a variant payload, or null. */
+function payloadCents(payload: Record<string, unknown> | undefined, field: string): number | null {
+  const n = Number((payload as Record<string, unknown> | undefined)?.[field]);
+  return Number.isFinite(n) && n > 0 ? Math.round(n) : null;
+}
+
+/**
+ * Resolve the Upsell-1 (Protection Ritual) price for an email via the framework.
+ * When the experiment APPLIES (running+enrolled, or a concluded winner rollout)
+ * the assigned arm's `upsell1Cents` payload is used; otherwise `fallbackCents`
+ * (the legacy price) so the test is byte-identical to today while OFF. The result
+ * is written once to conversations.upsell1AmountCents at lead capture, so it is
+ * sticky per email and read by both the display and the charge sites unchanged.
+ * `enrolled` (running only) tells the caller to log the exposure (the denominator).
+ */
+export async function resolveUpsell1Cents(
+  email: string,
+  fallbackCents: number,
+  key: string = U1_PRICE_EXPERIMENT_KEY, // overridable so tests never touch the live experiment
+): Promise<{ cents: number; variant: string | null; enrolled: boolean }> {
+  // Bucket on the NORMALISED email so the sticky arm matches the exposure dedup
+  // (which keys on hashEmail = sha256 of the same normalised address). Otherwise
+  // 'Foo@x.com' and 'foo@x.com' could bucket to different arms / prices.
+  // (The U1 test is global; funnel-scoped assignment is not wired yet.)
+  const a = await assign(key, email.trim().toLowerCase(), { personaId: null });
+  if (a?.applied) {
+    const cents = payloadCents(a.payload, 'upsell1Cents');
+    if (cents !== null) return { cents, variant: a.variant, enrolled: a.enrolled };
+  }
+  return { cents: fallbackCents, variant: a?.variant ?? null, enrolled: false };
 }
 
 // ── Paywall-specific wrappers (keep credits.ts + the test wiring stable) ──────

@@ -1554,7 +1554,19 @@ Principle: **test the measurement pipeline, not just the UI** — the experiment
 - [ ] 3+ arm test: each arm shows its own lift vs control (no shared treatment value)
 - [ ] Concurrent create with the same key: one 201, one 409 (no 500)
 
+### Phase 3b — Upsell-1 ($47 vs $37) price test on the framework
+- [x] OFF/draft ⇒ resolveUpsell1Cents returns the legacy $47, not enrolled (byte-identical; casing-insensitive) *(server/lib/experimentTally.test.ts)*
+- [x] RUNNING ⇒ sticky per (normalized) email, ~50/50, charged price matches the assigned arm *(experimentTally.test.ts)*
+- [x] DONE + winner ⇒ rolls the winner price out to everyone (in-scope only — no leak to other personas) *(experimentTally.test.ts)*
+- [x] U1 results tally from the exposure log ⋈ conversations (offered=denominator, purchased=buyer, upsell_amount=revenue) *(tests/experiments-dashboard.spec.ts)*
+- [ ] Misconfigured arm payload (no positive `upsell1Cents`) is rejected at create/edit (400), never silently charges $47
+- [ ] Creating a second `upsell1_funnel` experiment under a non-`u1_price_2026` key → 400 (would be inert)
+- [ ] Funnel with a custom (non-$47) Upsell-1 price is NOT folded into the test
+- [ ] Exposure is logged only after the price is persisted (no orphan exposure on UPDATE failure)
+- [ ] SRM uses the full assigned population (exposures), not the offer-reached subset
+- [ ] Display price and charged price always equal the stored `upsell1AmountCents` (no shown-$47/charged-$37 mismatch)
+
 ### Phase 3b+ (not built yet)
-- [ ] Price test migrated onto the framework charges the right sticky amount per arm (no double-charge / no mid-session flip)
+- [ ] Migrate the V1 MAIN/downsell price test (not just Upsell-1) onto the framework
 - [ ] Legacy `conversations` price columns preserved for reporting continuity
 - [ ] Prompt A/B becomes sticky (behaviour change, gated + verified)

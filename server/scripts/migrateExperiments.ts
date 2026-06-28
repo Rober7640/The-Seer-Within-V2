@@ -93,6 +93,28 @@ async function up(pool: pg.Pool) {
   } else {
     console.log('• paywall experiment already exists — left unchanged');
   }
+
+  // Phase 3b — Upsell-1 price test ($47 control vs $37 treatment). Draft = OFF,
+  // so the Upsell-1 price stays the legacy $47 until started from the dashboard.
+  const u1Variants = JSON.stringify([
+    { key: 'A', weight: 50, payload: { upsell1Cents: 4700 } },
+    { key: 'B', weight: 50, payload: { upsell1Cents: 3700 } },
+  ]);
+  const u1Conversion = JSON.stringify({ type: 'upsell1_funnel' });
+  const u1 = await pool.query(
+    `INSERT INTO experiments (key, name, description, status, subject_type, variants, scope, conversion)
+     VALUES ('u1_price_2026', 'Upsell-1 price ($47 vs $37)',
+       'Upsell-1 (Protection Ritual) price test. A=$47 (control, today), B=$37. Sticky per email; assigned at lead capture, stored on conversations.upsell1AmountCents. To start, set status=running.',
+       'draft', 'email', $1::jsonb, NULL, $2::jsonb)
+     ON CONFLICT (key) DO NOTHING
+     RETURNING id`,
+    [u1Variants, u1Conversion],
+  );
+  if (u1.rowCount && u1.rowCount > 0) {
+    console.log('✓ seeded DRAFT Upsell-1 price experiment:', { u1Variants });
+  } else {
+    console.log('• u1_price_2026 experiment already exists — left unchanged');
+  }
 }
 
 async function down(pool: pg.Pool) {

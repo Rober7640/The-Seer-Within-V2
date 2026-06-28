@@ -948,7 +948,9 @@ export interface ExperimentScope {
 
 // How a subject's outcome is scored when tallying.
 export interface ExperimentConversion {
-  type: "credit_purchase" | "event";    // join to credit_purchases | experiment_conversions
+  // credit_purchase = join to credit_purchases (V2); upsell1_funnel = V1
+  // conversations Upsell-1 take-rate; event = generic (not measurable yet).
+  type: "credit_purchase" | "upsell1_funnel" | "event";
   windowDays?: number;                  // attribution window after first exposure (default 7)
   name?: string;                        // event name (type='event')
 }

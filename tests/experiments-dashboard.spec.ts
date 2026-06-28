@@ -24,6 +24,10 @@ const KEY4 = `e2e_p3_named_${STAMP}`;
 const ADMIN_EMAIL = `e2e-dash-admin-${STAMP}@test.invalid`;
 const ADMIN_PW = "DashAdmin123!";
 const T0 = new Date("2026-06-20T00:00:00.000Z");
+// Far-future cohort start for the U1 conversations scenario, so the global
+// conversations tally (no key filter) sees ONLY our seeded rows, not real funnel
+// traffic since T0.
+const U1_T0 = new Date("2099-06-20T00:00:00.000Z");
 const dayMs = 86_400_000;
 const iso = (ms: number) => new Date(T0.getTime() + ms).toISOString();
 
@@ -141,6 +145,40 @@ test.beforeAll(async ({ playwright }) => {
     ),
   );
 
+  // Phase 3b — U1 (Upsell-1) price test measures from the EXPOSURE LOG joined to
+  // conversations (arm = exposure.variant, not the stored price). Seed exposures
+  // for the real `u1_price_2026` key, each linked to a conversation:
+  //   A: a0 buyer($47), a1 non-buyer.  B: b2 buyer($37), b3 non-buyer.
+  //   b4 has an exposure but its conversation never reached the offer (excluded).
+  const mkConv = async (i: number, offered: boolean, purchased: boolean, amount: number | null) => {
+    const r = await pool.query(
+      `INSERT INTO conversations (email, first_name, upsell_offered, upsell_purchased, upsell_amount, created_at)
+       VALUES ($1, 'U1', $2, $3, $4, $5) RETURNING id`,
+      [`u1c-${STAMP}-${i}@test.invalid`, offered, purchased, amount, U1_T0.toISOString()],
+    );
+    return r.rows[0].id as string;
+  };
+  const mkExp = (subj: number, variant: string, convId: string) =>
+    pool.query(
+      `INSERT INTO experiment_exposures (experiment_key, subject_id, variant, surface, context, created_at)
+       VALUES ('u1_price_2026', $1, $2, 'upsell1_assigned', $3::jsonb, $4)`,
+      [`u1sub-${STAMP}-${subj}`, variant, JSON.stringify({ conversationId: convId }), U1_T0.toISOString()],
+    );
+  const [a0, a1, b2, b3, b4] = await Promise.all([
+    mkConv(0, true, true, 4700),
+    mkConv(1, true, false, null),
+    mkConv(2, true, true, 3700),
+    mkConv(3, true, false, null),
+    mkConv(4, false, false, null),
+  ]);
+  await Promise.all([
+    mkExp(0, 'A', a0),
+    mkExp(1, 'A', a1),
+    mkExp(2, 'B', b2),
+    mkExp(3, 'B', b3),
+    mkExp(4, 'B', b4),
+  ]);
+
   // Tokens: admin via login, regular user via register.
   const api = await playwright.request.newContext({ baseURL: "http://localhost:5000" });
   const loginRes = await api.post("/api/admin/login", {
@@ -164,6 +202,8 @@ test.afterAll(async () => {
   // The regular user registered via /api/auth/register isn't in userIds — clean by email.
   await pool.query(`DELETE FROM users WHERE email LIKE $1`, [`e2e-dash-user-${STAMP}@test.invalid`]);
   await pool.query(`DELETE FROM admin_users WHERE id = $1`, [adminId]);
+  await pool.query(`DELETE FROM experiment_exposures WHERE subject_id LIKE $1`, [`u1sub-${STAMP}-%`]);
+  await pool.query(`DELETE FROM conversations WHERE email LIKE $1`, [`u1c-${STAMP}-%@test.invalid`]);
   await pool.end();
 });
 
@@ -383,6 +423,58 @@ test("stats generalize past A/B — control/treatment arms get lift + SRM + sign
   expect(body.srm).toBeTruthy();
   expect(body.srm.expectedBSharePct).toBe(50);
   expect(body.significance).toBeTruthy(); // computed despite non-A/B keys
+});
+
+test("U1 price test results tally from the conversations funnel (upsell1_funnel)", async ({
+  request,
+}) => {
+  // Draft experiment + ?start override lets us preview results over seeded data.
+  const res = await request.get(
+    `/api/admin/experiments/u1_price_2026/results?start=${encodeURIComponent(U1_T0.toISOString())}`,
+    { headers: adminHeaders() },
+  );
+  expect(res.ok()).toBeTruthy();
+  const body = await res.json();
+  expect(body.started).toBe(true);
+  const byVariant = Object.fromEntries(body.rows.map((r: any) => [r.variant, r]));
+  // A ($47): u1c-0 buyer, u1c-1 non-buyer.  B ($37): u1c-2 buyer, u1c-3 non-buyer.
+  // u1c-4 (not offered) is excluded from the denominator.
+  expect(byVariant.A).toMatchObject({ viewers: 2, buyers: 1, conversionPct: 50, revenueUsd: 47 });
+  expect(byVariant.B).toMatchObject({ viewers: 2, buyers: 1, conversionPct: 50, revenueUsd: 37 });
+});
+
+test("upsell1_funnel guards: only u1_price_2026 key, and arms need a valid price", async ({
+  request,
+}) => {
+  // A second upsell1_funnel under a different key would be inert → rejected (400).
+  const wrongKey = await request.post("/api/admin/experiments", {
+    headers: adminHeaders(),
+    data: {
+      key: `${KEY3}_u1`,
+      name: "inert u1",
+      subjectType: "email",
+      variants: [
+        { key: "A", weight: 50, payload: { upsell1Cents: 4700 } },
+        { key: "B", weight: 50, payload: { upsell1Cents: 3700 } },
+      ],
+      scope: null,
+      conversion: { type: "upsell1_funnel" },
+    },
+  });
+  expect(wrongKey.status()).toBe(400);
+
+  // Editing the real (draft) u1_price_2026 with an arm missing upsell1Cents → 400,
+  // so a payload typo can't silently charge the legacy $47. (400 ⇒ no mutation.)
+  const badPayload = await request.patch("/api/admin/experiments/u1_price_2026", {
+    headers: adminHeaders(),
+    data: {
+      variants: [
+        { key: "A", weight: 50, payload: { upsell1Cents: 4700 } },
+        { key: "B", weight: 50, payload: {} },
+      ],
+    },
+  });
+  expect(badPayload.status()).toBe(400);
 });
 
 test("write paths are admin-only (401 no token, 403 regular user)", async ({ request }) => {

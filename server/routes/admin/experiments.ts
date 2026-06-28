@@ -14,7 +14,13 @@ import { db } from '../../lib/db';
 import { experiments, experimentExposures, type ExperimentScope, type ExperimentConversion } from '@shared/schema';
 import { desc, eq, sql } from 'drizzle-orm';
 import logger from '../../lib/logger';
-import { tally, twoSidedP, invalidateExperiment } from '../../lib/experiments';
+import {
+  tally,
+  tallyUpsell1,
+  twoSidedP,
+  invalidateExperiment,
+  U1_PRICE_EXPERIMENT_KEY,
+} from '../../lib/experiments';
 
 const router = Router();
 
@@ -40,7 +46,7 @@ const scopeSchema = z
 
 const conversionSchema = z
   .object({
-    type: z.enum(['credit_purchase', 'event']),
+    type: z.enum(['credit_purchase', 'upsell1_funnel', 'event']),
     windowDays: z.number().int().positive().max(365).optional(),
     name: z.string().optional(),
   })
@@ -67,6 +73,22 @@ const editSchema = z.object({
   scope: scopeSchema,
   conversion: conversionSchema,
 });
+
+// An upsell1_funnel test reads each arm's `upsell1Cents` payload to price the
+// Upsell-1 — every arm needs a valid positive price so a typo can't silently
+// charge the legacy $47 and drop that arm's denominator. Returns an error message
+// or null. Checked in the route where the EFFECTIVE conversion type is known
+// (request body OR the stored experiment), so an edit that omits conversion is
+// still validated.
+function u1PayloadError(variants: Array<{ key: string; payload?: Record<string, unknown> }>): string | null {
+  for (const v of variants) {
+    const c = Number((v.payload as { upsell1Cents?: unknown } | undefined)?.upsell1Cents);
+    if (!Number.isFinite(c) || c <= 0) {
+      return `variant '${v.key}': an upsell1_funnel arm needs a positive upsell1Cents payload`;
+    }
+  }
+  return null;
+}
 
 const winnerSchema = z.object({ variant: z.string().min(1) });
 
@@ -188,24 +210,35 @@ router.get('/:key/results', async (req: Request, res: Response) => {
     }
 
     const conversionType = exp.conversion?.type ?? 'credit_purchase';
-    if (conversionType !== 'credit_purchase') {
-      // Event-type conversions land in a later phase; don't silently mis-score.
+    const controlKey = exp.variants?.[0]?.key;
+    const treatmentKey = exp.variants?.[1]?.key;
+
+    let result;
+    if (conversionType === 'credit_purchase') {
+      result = await tally(key, { startISO, windowDays, personaId, controlKey, treatmentKey });
+    } else if (conversionType === 'upsell1_funnel') {
+      // Sourced from the exposure log ⋈ conversations funnel; window/persona don't
+      // apply. Needs ≥2 arms to compare.
+      if (!controlKey || !treatmentKey) {
+        return res.json({
+          experiment: meta,
+          started: true,
+          unsupported: 'experiment needs at least 2 arms to measure',
+          params,
+          rows: [],
+        });
+      }
+      result = await tallyUpsell1({ key, startISO, controlKey, treatmentKey });
+    } else {
+      // e.g. generic 'event' conversions — not measurable yet.
       return res.json({
         experiment: meta,
         started: true,
-        unsupported: `conversion type '${conversionType}' is not measurable yet (Phase 1 supports credit_purchase only)`,
+        unsupported: `conversion type '${conversionType}' is not measurable yet`,
         params,
         rows: [],
       });
     }
-
-    const result = await tally(key, {
-      startISO,
-      windowDays,
-      personaId,
-      controlKey: exp.variants?.[0]?.key,
-      treatmentKey: exp.variants?.[1]?.key,
-    });
     const srm = augmentSrm(result.srm, exp.variants);
     return res.json({
       experiment: meta,
@@ -230,6 +263,19 @@ router.post('/', async (req: Request, res: Response) => {
     const parsed = createSchema.safeParse(req.body);
     if (!parsed.success) return badRequest(res, parsed);
     const data = parsed.data;
+
+    // upsell1_funnel is wired to ONE money key (the Upsell-1 charge path in
+    // priceVariant.ts consults only u1_price_2026); a second one would run inert
+    // (status=running but never pricing or logging). Reject it explicitly.
+    if (data.conversion?.type === 'upsell1_funnel') {
+      if (data.key !== U1_PRICE_EXPERIMENT_KEY) {
+        return res.status(400).json({
+          error: `conversion type 'upsell1_funnel' is only supported for the '${U1_PRICE_EXPERIMENT_KEY}' experiment`,
+        });
+      }
+      const err = u1PayloadError(data.variants);
+      if (err) return res.status(400).json({ error: err });
+    }
 
     // Uniqueness is enforced by the experiments.key UNIQUE constraint — let the DB
     // be the source of truth (no TOCTOU race) and map its violation to a 409.
@@ -295,6 +341,15 @@ router.patch('/:key', async (req: Request, res: Response) => {
           error: `cannot change ${changed.join(', ')} once a test has started — only name/description are editable. Create a new experiment to change these.`,
         });
       }
+    }
+
+    // Validate Upsell-1 arm prices against the EFFECTIVE conversion type (the body's
+    // override or the stored one), so an edit that re-sends variants without
+    // conversion is still checked.
+    const effectiveConvType = data.conversion?.type ?? exp.conversion?.type;
+    if (effectiveConvType === 'upsell1_funnel' && data.variants) {
+      const err = u1PayloadError(data.variants);
+      if (err) return res.status(400).json({ error: err });
     }
 
     const updated = await db

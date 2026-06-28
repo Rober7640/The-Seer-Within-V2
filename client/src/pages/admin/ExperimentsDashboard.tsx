@@ -425,8 +425,9 @@ export default function ExperimentsDashboard() {
                     style={{ colorScheme: "dark" }}
                     className="w-full rounded border border-gray-700 bg-gray-900 px-3 py-2 text-sm text-white disabled:opacity-60"
                   >
-                    <option value="credit_purchase">credit_purchase</option>
-                    <option value="event">event</option>
+                    <option value="credit_purchase">credit_purchase (V2 coin purchase)</option>
+                    <option value="upsell1_funnel">upsell1_funnel (V1 upsell-1)</option>
+                    <option value="event">event (not measurable yet)</option>
                   </select>
                 </Field>
                 <Field label="Attribution window (days)">

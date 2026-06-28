@@ -9,6 +9,7 @@ import { db } from './db';
 import { conversations, systemConfig } from '@shared/schema';
 import { eq, desc } from 'drizzle-orm';
 import logger from './logger';
+import { resolveUpsell1Cents, logExposure, hashEmail, U1_PRICE_EXPERIMENT_KEY } from './experiments';
 
 export interface PriceVariant {
   id: string;
@@ -186,8 +187,26 @@ export async function assignVariantIfMissing(
           funnel,
         }
       : pickWeighted(scopeVariantsToFunnel(await getActiveVariants(), funnel));
-    const upsell1Cents = picked.upsell1Cents ?? DEFAULT_UPSELL1_CENTS;
+    // Upsell-1 price A/B test (framework, Phase 3b). Fold in only where the legacy
+    // Upsell-1 price is the DEFAULT $47 (the control price the test compares $37
+    // against) — a funnel configured at a different custom price keeps it. The
+    // default ships-dark state (FALLBACK_VARIANT, $47) IS testable. When the
+    // experiment applies, the price comes from the assigned arm; assigned ONCE here
+    // (idempotent guard above) and stored on the row, so display + both charge
+    // sites (which read upsell1AmountCents) stay consistent and never flip
+    // mid-funnel. Gated OFF ⇒ legacy $47, no behaviour change.
+    const legacyUpsell1Cents = picked.upsell1Cents ?? DEFAULT_UPSELL1_CENTS;
+    let upsell1Cents = legacyUpsell1Cents;
+    let u1Assignment: { variant: string | null; enrolled: boolean } | null = null;
+    if (legacyUpsell1Cents === DEFAULT_UPSELL1_CENTS) {
+      const u1 = await resolveUpsell1Cents(email, DEFAULT_UPSELL1_CENTS);
+      upsell1Cents = u1.cents;
+      u1Assignment = u1;
+    }
 
+    // Persist the price FIRST (display + charge read upsell1AmountCents), THEN log
+    // the exposure — so an exposure is only ever recorded once the assigned price
+    // is actually stored (no orphan exposure / mispriced-but-counted subject).
     await db
       .update(conversations)
       .set({
@@ -198,6 +217,11 @@ export async function assignVariantIfMissing(
         updatedAt: new Date(),
       })
       .where(eq(conversations.id, row.id));
+    if (u1Assignment?.enrolled && u1Assignment.variant) {
+      await logExposure(U1_PRICE_EXPERIMENT_KEY, hashEmail(email), u1Assignment.variant, 'upsell1_assigned', {
+        conversationId: row.id,
+      });
+    }
 
     logger.info('priceVariant: assigned', { email, variant: picked.id, priceCents: picked.priceCents, funnel: funnel ?? null });
 
