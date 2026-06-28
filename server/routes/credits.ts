@@ -1,13 +1,13 @@
 import { Router, Request, Response } from 'express';
 import { z } from 'zod';
 import { db } from '../lib/db';
-import { users, creditPurchases, personas, checkoutViews, paywallViews } from '@shared/schema';
+import { users, creditPurchases, personas, checkoutViews } from '@shared/schema';
 import { eq, and, ne, desc, sql } from 'drizzle-orm';
 import { requireAuth, verifyToken } from '../lib/auth';
 import { getPersonaPricing } from '../lib/personaPricing';
 import { DEFAULT_PRICING } from '../../shared/types';
 import { applyVariantPresentation } from '@shared/paywall';
-import { resolvePaywallVariant, paywallVariant, PAYWALL_EXPERIMENT_KEY } from '../lib/experiments';
+import { resolvePaywallVariant, assign, logExposure, PAYWALL_EXPERIMENT_KEY } from '../lib/experiments';
 import Stripe from 'stripe';
 import logger from '../lib/logger';
 import { posthog } from '../lib/posthog';
@@ -194,20 +194,23 @@ router.post('/checkout-view', requireAuth, async (req: Request, res: Response) =
       personaId: personaId || null,
       source,
     });
-    // Paywall A/B denominator: one row per surface open, tagged with the
-    // server-authoritative variant. Non-blocking — never fail the UX for it.
+    // Experiment exposure (Problem-4 paywall, folded into the generic framework).
+    // Log ONLY when the subject is enrolled (test running + in scope), so the
+    // first exposure row is their first IN-TEST exposure. While the experiment is
+    // OFF (Phase-1 ship state) nothing is logged. Non-blocking — never fail UX.
     try {
-      const variant = await paywallVariant(req.userId!, personaId ?? null);
-      await db.insert(paywallViews).values({
-        userId: req.userId!,
-        experimentKey: PAYWALL_EXPERIMENT_KEY,
-        variant,
-        surface: source,
-        personaId: personaId || null,
+      const a = await assign(PAYWALL_EXPERIMENT_KEY, req.userId!, {
+        personaId: personaId ?? null,
         isOutOfCredits: !!isOutOfCredits,
       });
+      if (a?.enrolled) {
+        await logExposure(PAYWALL_EXPERIMENT_KEY, req.userId!, a.variant, source, {
+          personaId: personaId ?? null,
+          isOutOfCredits: !!isOutOfCredits,
+        });
+      }
     } catch (e) {
-      logger.error('paywall_views insert failed:', e);
+      logger.error('experiment exposure failed:', e);
     }
     posthog.capture({ distinctId: req.userId!, event: 'checkout_view_logged', properties: { package_type: packageType, persona_id: personaId ?? null, source } });
     res.json({ ok: true });

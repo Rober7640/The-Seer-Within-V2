@@ -1,3 +1,11 @@
+// ⚠️ DEPRECATED — reads the legacy `paywall_views` table, which is NO LONGER
+// WRITTEN. The paywall test was folded into the unified experiment framework
+// (server/lib/experiments.ts); exposures now land in `experiment_exposures`.
+// Use the generic tally instead — it reconciles arm-for-arm with this script:
+//   npx tsx server/scripts/tallyExperiment.ts paywall_copy_2026 <startISO> [personaId] [windowDays]
+// This file is kept only to tally pre-migration `paywall_views` data and will be
+// removed in Phase 5. (Original docs below.)
+//
 // Tally the Problem-4 paywall A/B test (read-only). See findings §3.13–3.15.
 //   npx tsx server/scripts/tallyPaywall.ts <startISO> [personaId] [windowDays]
 //   e.g. npx tsx server/scripts/tallyPaywall.ts 2026-06-30 7f03b55e-9a35-4bb7-ac80-a5dff7228910 7

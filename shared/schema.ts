@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, boolean, integer, timestamp, real, index, uniqueIndex } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, boolean, integer, timestamp, real, jsonb, index, uniqueIndex } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -922,6 +922,83 @@ export const paywallViews = pgTable("paywall_views", {
   index("idx_paywall_views_exp_variant").on(table.experimentKey, table.variant),
 ]);
 export type PaywallView = typeof paywallViews.$inferSelect;
+
+// ============================================================
+// Unified A/B Experiment Framework — Phase 1
+// (PRD: docs/ab-testing-framework-prd.md §3.1). Dedicated tables — NOT
+// system_config JSON — so experiments have real lifecycle/scoping and the
+// dashboard (Phase 2) can query them directly. Generalizes the Problem-4
+// paywall test. `experiment_exposures` supersedes `paywall_views`/`ab_events`.
+// ============================================================
+
+// One variant of an experiment. `weight` is a relative share (need not sum to
+// 100); `payload` is arbitrary JSON the code reads (copy/price/threshold/...).
+export interface ExperimentVariant {
+  key: string;                          // 'A' (control, listed first) | 'B' | ...
+  weight: number;                       // relative share; <=0 = never assigned
+  payload?: Record<string, unknown>;    // values config-tests read; {} for structural tests
+}
+
+// Optional enrolment filter. null/absent field = no filter on that axis.
+export interface ExperimentScope {
+  personaId?: string | null;            // only enrol this persona (Phase-1 paywall = Evelyn)
+  route?: string;
+  [k: string]: unknown;
+}
+
+// How a subject's outcome is scored when tallying.
+export interface ExperimentConversion {
+  type: "credit_purchase" | "event";    // join to credit_purchases | experiment_conversions
+  windowDays?: number;                  // attribution window after first exposure (default 7)
+  name?: string;                        // event name (type='event')
+}
+
+// experiments — one row per test (the registry the dashboard manages).
+export const experiments = pgTable("experiments", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  key: text("key").notNull().unique(),                         // 'paywall_copy_2026', ...
+  name: text("name").notNull(),
+  description: text("description"),
+  status: text("status").notNull().default("draft"),           // 'draft' | 'running' | 'paused' | 'done'
+  subjectType: text("subject_type").notNull().default("user"), // 'user' | 'visitor' | 'email'
+  variants: jsonb("variants").$type<ExperimentVariant[]>().notNull(),
+  scope: jsonb("scope").$type<ExperimentScope | null>(),       // null = global
+  conversion: jsonb("conversion").$type<ExperimentConversion | null>(),
+  startedAt: timestamp("started_at"),
+  endedAt: timestamp("ended_at"),
+  winnerVariant: text("winner_variant"),
+  createdBy: varchar("created_by").references(() => adminUsers.id),
+  updatedBy: varchar("updated_by").references(() => adminUsers.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+export type Experiment = typeof experiments.$inferSelect;
+
+// experiment_exposures — one row per FIRST exposure per subject (the denominator).
+// unique(experiment_key, subject_id) makes logging idempotent: later opens are
+// no-ops, so exposures are only ever logged while a test is RUNNING (the first
+// in-test exposure). `context` must stay PII-free (ids/flags only — emails are
+// hashed before becoming a subject_id).
+//
+// subject_id is intentionally plain text with NO FK: it is polymorphic across
+// subjectType (user.id | visitor cookie | hashed email), so it can't reference
+// users.id the way paywall_views did. Trade-off: deleting a user does NOT cascade
+// here, so user-deletion should also delete matching exposures (subject_id =
+// user.id) — a follow-up for when exposures go live (the test ships OFF, so none
+// are written yet). Orphaned UUID exposures carry no PII.
+export const experimentExposures = pgTable("experiment_exposures", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  experimentKey: text("experiment_key").notNull(),
+  subjectId: text("subject_id").notNull(),            // user.id | visitor cookie | hashed email
+  variant: text("variant").notNull(),
+  surface: text("surface").notNull(),                 // 'buy_credits_modal' | 'credits_page' | ...
+  context: jsonb("context").$type<Record<string, unknown> | null>(), // { personaId, isOutOfCredits, ... }
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  uniqueIndex("uq_experiment_exposures_key_subject").on(table.experimentKey, table.subjectId),
+  index("idx_experiment_exposures_key_variant").on(table.experimentKey, table.variant),
+]);
+export type ExperimentExposure = typeof experimentExposures.$inferSelect;
 
 // Aiden Quiz Sessions - Analytics + abuse audit for the /aiden quiz funnel
 export const aidenQuizSessions = pgTable("aiden_quiz_sessions", {

@@ -1,8 +1,12 @@
 import { test, expect } from "@playwright/test";
 
-// Problem-4 paywall A/B integration. Variant A = current UI (experiment off /
-// default). Variant B = redesign, forced here via the non-prod `?paywallVariant=B`
-// QA override. See docs/posthog-evelyn-purchase-findings.md §3.14–3.15.
+// Problem-4 paywall A/B integration, now folded onto the generic experiment
+// framework (server/lib/experiments.ts: assign()/logExposure()/tally()). The
+// `paywall_copy_2026` experiment ships as status='draft', so the generic
+// assign() returns control for everyone → /api/credits/pricing reports
+// variant 'A' and the store renders byte-identically (proven below). Variant B
+// = redesign, forced here via the non-prod `?paywallVariant=B` QA override.
+// See docs/ab-testing-framework-prd.md §7 (Phase 1) + posthog-evelyn-purchase-findings §3.14–3.15.
 
 const TOKEN_KEY = "seer_auth_token";
 let token = "";
@@ -28,6 +32,20 @@ test.beforeEach(async ({ context }) => {
     ([k, t]) => localStorage.setItem(k as string, t as string),
     [TOKEN_KEY, token],
   );
+});
+
+test("experiment OFF ⇒ generic assign() reports variant A from /api/credits/pricing", async ({ playwright }) => {
+  // No override → the real assign() path decides. paywall_copy_2026 is draft, so
+  // every authed user resolves to control 'A' (live behaviour unchanged).
+  const api = await playwright.request.newContext({ baseURL: "http://localhost:5000" });
+  const res = await api.get(`/api/credits/pricing?personaId=${evelynId}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  expect(res.ok()).toBeTruthy();
+  const body = await res.json();
+  expect(body.experimentKey).toBe("paywall_copy_2026");
+  expect(body.variant).toBe("A");
+  await api.dispose();
 });
 
 test("variant A renders the current store unchanged", async ({ page }) => {
