@@ -170,6 +170,23 @@ GET    /api/admin/experiments/:key/results live tally + guardrails + SRM + signi
 
 This is the whole win: the paywall rebuild took a full session; the *next* structural test is ~the component + one line.
 
+### Worked example — "quiz vs chat box" lander test (a structural test)
+
+Varies the lander *mechanic* (Aiden-style tap-quiz vs. Evelyn-style open chat box), not a value — so it is **②, not a config change.** What it takes:
+
+**Dev, once (in the IDE):**
+1. Make both mechanics renderable on one lander. *Mostly already exists* — `AidenQuizPage` (tap-quiz) and `EvelynLanderPage` / `PersonaLanderPage` (open box). This is the "port Aiden's quiz onto `/evelyn`" item (findings §3.8), so it's "expose both", not "build from scratch".
+2. One branch: `assign('evelyn_lander_mechanic', visitorId).variant === 'quiz' ? <Quiz/> : <ChatBox/>`.
+3. Register the experiment once (key, variant keys, `subjectType:'visitor'`, scope = the lander route).
+
+**Then you operate it from the dashboard** — split, ramp, pause, results. No dev to run it.
+
+**Two things that make lander tests harder than the price test:**
+- **Subject = anonymous visitor cookie**, not `user.id` (landers are pre-login) → needs the **visitor assignment path** (Phase 4). The price + paywall tests had clean logged-in identities.
+- **Attributing the purchase** back to the variant needs the visitor→user **identity stitch** (the §1 gap in the findings doc). Cleanest first cut: make **signup/registration** the primary metric (clean, pre-stitch); treat purchase as secondary once stitching exists.
+
+So quiz-vs-chatbox lands in **Phase 4** (it depends on the visitor path + the structural-test registration pattern), not Phase 3.
+
 ---
 
 ## 5. Migration plan (fold the 4 systems in; retire dupes)
@@ -185,26 +202,71 @@ Retire `ab_events` + per-system toggles once migrated; keep one framework.
 
 ---
 
-## 6. Open decisions (need sign-off before building)
+## 6. Decisions (locked 2026-06-28 — Phase 0 done)
 
-1. **Dedicated `experiments` tables vs `system_config` JSON** — recommend dedicated (structured lifecycle). Confirm.
-2. **Make prompt A/B sticky?** It's currently per-call. Sticky is more correct but changes behavior — opt in?
-3. **Stats model** — fixed-horizon (pre-register N, no peeking) for v1; sequential testing later? Recommend fixed-horizon.
-4. **How aggressive on migration** — fold all four now, or build the framework + move only the paywall first and migrate the rest opportunistically? Recommend: framework + paywall + revive the dormant generic one; price/prompt later.
-5. **Anonymous (visitor) tests** — do we need lander/funnel tests on day one, or is logged-in (user) enough for v1? Affects whether we wire the cookie path immediately.
+1. **Storage:** ✅ **Dedicated `experiments` + `experiment_exposures` tables** (not `system_config` JSON) — structured lifecycle, clean to query, real dashboard on top.
+2. **Prompt A/B stickiness:** deferred to **Phase 4** (it's a behavior change; handle it when migrating prompts, behind a flag + verification).
+3. **Stats model:** **fixed-horizon** (pre-register N, no peeking) for v1; sequential testing is a later option.
+4. **Migration order:** **incremental** — shared core + paywall first (Phase 1), price test self-serve (Phase 3), prompt + page-copy (Phase 4). Not all at once.
+5. **Visitor/anonymous tests:** design `subjectType` in from the start (`user | visitor | email`), but **wire the user/email paths first**; the **visitor cookie path lands in Phase 4** (it's what quiz-vs-chatbox lander tests need — see §4 worked example).
 
 ---
 
-## 7. Phased delivery + rough sizing
+## 7. Phased delivery — each phase ends with an AUDIT + E2E GATE
 
-- **Phase 1 — Core framework** (`experiments` + `experiment_exposures` tables, `assign()`/`logExposure()`/`tally()`, fold paywall in). _Medium._
-- **Phase 2 — Admin dashboard** (CRUD + start/pause/ramp + live results/guardrails/SRM/significance; config-payload editing). _Medium–large (the dashboard is most of the UI work)._
-- **Phase 3 — Migrate** price + prompt + revive generic page tests; retire duplicates. _Medium, incremental._
+We build in small phases. **No phase starts until the previous one passes its gate and you sign off.** Each phase is independently shippable and leaves the app in a safe, working state (live behaviour unchanged until a test is deliberately enabled).
 
-## 8. Acceptance criteria
-- A non-developer can create, start, ramp, pause, and declare a winner on a **config** test entirely in `/admin/experiments`, with no deploy.
-- A developer can add a **structural** test by writing only the variant component + one registration, reusing assignment/logging/measurement.
+### The phase gate (uniform — applies after every phase)
+
+A phase is **done** only when all four pass:
+
+1. **Audit (correctness + safety)** — `/code-review` clean on the phase diff; TypeScript clean (no new errors vs. baseline); the phase's specific **audit checklist** (below) all checked; no regression to existing flows.
+2. **E2E (automated)** — the phase's tests added to `tests/` and **passing**; the existing suite still green; covers both the happy path and the safety property (e.g. "control unchanged", "kill-switch reverts").
+3. **Manual verification** — a real run/screenshot of the phase's headline behaviour (the `/run` or `verify` flow), attached to the phase notes.
+4. **Sign-off** — you review the audit + E2E results and approve before the next phase begins.
+
+> Safety rule across all phases: every experiment ships **disabled**; an enabled test never alters the control arm; a kill-switch reverts everyone to control instantly. The paywall integration already follows this — every phase inherits it.
+
+---
+
+### Phase 0 — Lock decisions _(no code)_ ✅ DONE
+Decisions locked in §6 (dedicated tables · fixed-horizon stats · incremental migration · visitor path in Phase 4). **Next up: Phase 1.**
+
+### Phase 1 — Core framework, paywall folded in _(no new UI)_
+Build `experiments` + `experiment_exposures` tables (+ idempotent migration), `assign()` / `logExposure()` / `tally()`, and re-point the existing paywall test onto the generic `assign()`.
+- **Audit checklist:** assignment deterministic + sticky over 1000 calls · experiment OFF ⇒ everyone `'A'` · variant A **byte-identical** · migration additive + reversible · no PII in exposures · config cache invalidation works.
+- **E2E:** extend `tests/paywall-experiment.spec.ts` to prove A/B still render via the generic `assign()`; assert generic `tally()` == current `tallyPaywall.ts` on seeded data; existing credits/checkout specs still green.
+- **Exit:** paywall test runs on the new framework, still OFF, **zero behaviour change**. _Medium._
+
+### Phase 2 — Read-only dashboard _(visibility first)_
+`/admin/experiments`: list experiments + per-experiment results (conversion, rev/subject, ARPPU, SRM, significance) — **DB-sourced**, admin-auth, **no write paths yet** (cannot change anything live).
+- **Audit checklist:** dashboard numbers match a hand-computed tally on seeded data · admin-only (non-admin blocked) · purely read-only · no PostHog dependency.
+- **E2E:** seed a known experiment's exposures + purchases → dashboard shows the exact expected per-arm conversion/revenue; non-admin is rejected.
+- **Exit:** you can watch the paywall (and price, read-only) tests live in one place. _Medium._
+
+### Phase 3 — Self-serve **price/config** tests _(your live use case — U1 $37/$47)_
+Create / edit / ramp / pause / declare-winner for **config** experiments from the UI (variant payloads + weights), with a config-write API + cache invalidation. **Migrate the V1 price test** (main / downsell / U1 / U2) onto it so your $37-vs-$47 becomes fully dashboard-managed.
+- **Audit checklist (highest stakes — touches live pricing/revenue):** a price change applies to the correct arm and **only** that arm · sticky assignment unchanged · **no double-charge / no mid-session price flip** · kill-switch reverts to control instantly · invalid/zero price rejected · legacy `conversations` price columns preserved for reporting continuity.
+- **E2E (Stripe/PayPal sandbox):** create a price test in the UI → two visitors get different **sticky** prices → each checkout charges the right amount → `tally()` attributes correctly → ramp-to-0 / declare-winner behaves.
+- **Exit:** you create, run, and decide a **price test end-to-end from the dashboard — no dev, no DB editing.** _Medium–large._
+
+### Phase 4 — Remaining migrations + structural-test path
+Fold prompt A/B (make it **sticky** — gated behaviour change, per §6) and revive the dormant page-copy framework (fix the `/ab-tests`↔`/ab-testing` route bug, wire `useABTest` into real surfaces). Document the one-time pattern for a **structural** test (variant component + single registration).
+- **Audit checklist:** each migrated system behaves identically (or intentionally better) · no orphaned assignments · prompt-stickiness change verified in isolation behind a flag.
+- **E2E:** one per migrated system.
+- **Exit:** all four legacy systems run on the one framework. _Medium, incremental._
+
+### Phase 5 — Hardening + retire duplicates
+SRM alerting, refund-rate guardrail, pre-registered-N gating in the UI; then **delete** the superseded `ab_events` table, `/admin/price-test`, and the old `/admin/ab-testing` once nothing depends on them.
+- **Audit + full regression E2E.**
+- **Exit:** exactly **one** A/B framework remains. _Medium._
+
+> **Order note:** Phase 1 folds the paywall first because it's already isolated + OFF (safest first migration). Your **live price test lands in Phase 3** — if you'd rather get price-testing self-serve sooner, we can swap Phase 3 ahead of the paywall-specific polish, but Phase 1 (the shared core) must come first regardless.
+
+## 8. Definition of done (whole project)
+- A non-developer creates, starts, ramps, pauses, and declares a winner on a **config/price** test entirely in `/admin/experiments` — no deploy, no DB editing.
+- A developer adds a **structural** test by writing only the variant component + one registration; assignment/logging/measurement are reused.
 - Assignment is sticky per subject, config-gated, scope-aware, with a non-prod QA override.
-- Results are **DB-sourced**, show conversion + revenue/subject + ARPPU + guardrails + SRM + significance, and gate the verdict on a pre-registered N.
-- The paywall test runs unchanged on the new framework; `tallyPaywall.ts` output matches the generic `tally()`.
-- At most **one** A/B framework remains after migration.
+- Results are **DB-sourced** (conversion + revenue/subject + ARPPU + SRM + significance) and gate the verdict on a pre-registered N.
+- The paywall + price tests both run on the framework; the generic `tally()` reconciles with `tallyPaywall.ts` / `/admin/price-test`.
+- **Every phase passed its audit + E2E gate with sign-off**, and at most **one** A/B framework remains.
