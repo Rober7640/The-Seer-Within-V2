@@ -29,6 +29,8 @@ import {
 import NatalChartWheel, { type NatalChartData } from "@/components/NatalChartWheel";
 import VedicChartDiamond, { type VedicChartData } from "@/components/VedicChartDiamond";
 import BuyCreditsModal from "@/components/BuyCreditsModal";
+import { paywallCopy } from "@/components/paywall/paywallCopy";
+import type { PaywallVariant } from "@shared/paywall";
 import TeaserCreditModal from "@/components/TeaserCreditModal";
 import CrisisDisclaimer from "@/components/CrisisDisclaimer";
 import SessionFeedbackModal from "@/components/SessionFeedbackModal";
@@ -476,6 +478,28 @@ export default function ChatServicePage() {
 
   // Derived: current persona object — must be declared before any effect that uses it
   const selectedPersona = personas.find((p) => p.id === selectedPersonaId);
+
+  // Paywall A/B — resolve the assigned variant + per-persona tiers for the refill
+  // modal (Problem 4). Fetched on persona load so the modal opens in the right
+  // variant with no flash. Defaults to 'A' (current UI) until/unless resolved.
+  const [paywallVariant, setPaywallVariant] = useState<PaywallVariant>("A");
+  const [paywallTiers, setPaywallTiers] = useState<PricingTier[] | undefined>(undefined);
+  useEffect(() => {
+    if (!selectedPersonaId) return;
+    let cancelled = false;
+    // Non-prod QA override (§3.14.F): force a variant via the page URL.
+    const qaVariant = new URLSearchParams(window.location.search).get("paywallVariant");
+    const qa = qaVariant ? `&paywallVariant=${qaVariant}` : "";
+    authFetch(`/api/credits/pricing?personaId=${selectedPersonaId}${qa}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (cancelled || !data) return;
+        setPaywallVariant(data.variant === "B" ? "B" : "A");
+        if (Array.isArray(data.tiers) && data.tiers.length > 0) setPaywallTiers(data.tiers);
+      })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [selectedPersonaId]);
 
   // Sync refs for volatile values used inside the credit timer (Fix 4)
   useEffect(() => { coinBalanceRef.current = coinBalance; }, [coinBalance]);
@@ -1805,7 +1829,13 @@ export default function ChatServicePage() {
           <div className="bg-gradient-to-r from-amber-500 to-orange-500 px-4 py-2.5 flex items-center justify-between gap-2 shrink-0 animate-slide-down">
             <div className="flex items-center gap-2 text-white text-sm font-medium">
               <Coins className="w-4 h-4 shrink-0" />
-              <span>{coinBalance > freeTrialCoins ? "You're running low on credits" : "Your free trial is ending soon!"}</span>
+              <span>
+                {paywallVariant === "B"
+                  ? (coinBalance <= freeTrialCoins
+                      ? paywallCopy("B").banner.freeTrial
+                      : paywallCopy("B").banner.lowBalance(selectedPersona?.displayName || "your guide"))
+                  : (coinBalance > freeTrialCoins ? "You're running low on credits" : "Your free trial is ending soon!")}
+              </span>
             </div>
             <div className="flex items-center gap-2">
               <button
@@ -1815,7 +1845,7 @@ export default function ChatServicePage() {
                 }}
                 className="px-3 py-1 bg-white text-amber-700 text-xs font-bold rounded-full hover:bg-amber-50 transition-colors shadow-sm"
               >
-                Refill
+                {paywallVariant === "B" ? paywallCopy("B").banner.cta : "Refill"}
               </button>
               <button
                 onClick={() => {
@@ -2379,6 +2409,9 @@ export default function ChatServicePage() {
         personaId={selectedPersonaId}
         personaName={selectedPersona?.displayName}
         isOutOfCredits={coinBalance <= 0}
+        variant={paywallVariant}
+        pricingTiers={paywallTiers}
+        avatarUrl={selectedPersona?.avatarUrl ?? undefined}
         onSuccess={async (newBalance) => {
           oocPaymentSucceededRef.current = true;
           // Auto-close the refill modal so billing resumes immediately

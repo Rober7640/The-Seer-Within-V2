@@ -38,6 +38,10 @@ const AidenQuizPage = lazy(() => import("@/pages/AidenQuizPage"));
 const EvelynLanderPage = lazy(() => import("@/pages/EvelynLanderPage"));
 const PersonaLanderPage = lazy(() => import("@/pages/PersonaLanderPage"));
 
+// DEV-only paywall design preview (Problem 4). Gated below by import.meta.env.DEV
+// so it is excluded from the production bundle.
+const PaywallPreviewPage = lazy(() => import("@/pages/PaywallPreviewPage"));
+
 // Soulmate Sketch funnel pages (lazy loaded)
 const SoulmateLandingPage = lazy(() => import("@/pages/SoulmateLandingPage"));
 const SoulmateProcessPage = lazy(() => import("@/pages/SoulmateProcessPage"));
@@ -134,6 +138,11 @@ function Router() {
   return (
     <Suspense fallback={<LazyFallback />}>
       <Switch>
+        {/* DEV-only paywall design preview (Problem 4) — never in prod build */}
+        {import.meta.env.DEV && (
+          <Route path="/paywall-preview" component={PaywallPreviewPage} />
+        )}
+
         {/* Existing funnel routes (V1 — email traffic) */}
         <Route path="/" component={LandingPage} />
         <Route path="/chat" component={ChatPage} />

@@ -905,6 +905,24 @@ export const checkoutViews = pgTable("checkout_views", {
   index("idx_checkout_views_created").on(table.createdAt),
 ]);
 
+// Paywall A/B views — denominator for the Problem-4 paywall experiment.
+// One row per paywall surface open, tagged with the assigned variant.
+// See docs/posthog-evelyn-purchase-findings.md §3.14.
+export const paywallViews = pgTable("paywall_views", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  experimentKey: text("experiment_key").notNull().default("paywall_copy_2026"),
+  variant: text("variant").notNull(),                 // 'A' | 'B'
+  surface: text("surface").notNull(),                 // 'buy_credits_modal' | 'credits_page' | 'payment_modal' | ...
+  personaId: varchar("persona_id").references(() => personas.id, { onDelete: "set null" }),
+  isOutOfCredits: boolean("is_out_of_credits").default(false).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_paywall_views_user_created").on(table.userId, table.createdAt),
+  index("idx_paywall_views_exp_variant").on(table.experimentKey, table.variant),
+]);
+export type PaywallView = typeof paywallViews.$inferSelect;
+
 // Aiden Quiz Sessions - Analytics + abuse audit for the /aiden quiz funnel
 export const aidenQuizSessions = pgTable("aiden_quiz_sessions", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),

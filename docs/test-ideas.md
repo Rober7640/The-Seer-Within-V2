@@ -1464,3 +1464,55 @@ The sections below represent a comprehensive brainstorm of every user-facing tes
 - [ ] No read predicts a date or a name; ends on "let me look closer…"; no exclamation/emoji
 - [ ] love-again reads acknowledge the wound before the "yes" beat
 - [ ] Each read names the mark in sentence 1 (self-contained), never the letter A/B/C
+
+---
+
+## Paywall Copy A/B Test
+
+Spec: `docs/posthog-evelyn-purchase-findings.md` §3.12–3.15 · copy in `docs/evelyn-paywall-copy-rewrite.md`.
+Principle: **test the measurement pipeline, not just the UI** — the experiment's value is a trustworthy conversion number, and PostHog under-fires purchases (~34%), so the DB is the source of truth.
+
+> ✅ **Implemented `tests/paywall-experiment.spec.ts`** (4 tests, passing): variant A renders the current store; variant B renders the redesigned minutes-led store; B payment sheet opens with the single-guarantee trust block (and no "non-refundable"); dev preview hero renders with MOST CHOSEN. Uses the non-prod `?paywallVariant=B` override + a registered test user. **Still to automate:** Layer 1 (assignment unit), Layer 3 (stickiness), Layer 4 (logging rows), Layer 5 (measurement query — most important), Layer 6 (sandbox money path), and the in-chat `BuyCreditsModal` B path via a live chat session.
+
+### Layer 1 — Assignment (unit)
+- [ ] `paywallVariant(userId)` is deterministic — same `user.id` returns the same variant across 1000 calls
+- [ ] Distribution over many random ids is ~50/50 at `percentB=50` (within tolerance)
+- [ ] `percentB=0` (or `enabled:false`) → every user resolves to `'A'`
+- [ ] Same helper gives the same result when called from `/api/credits/pricing` and `/api/credits/checkout-view`
+
+### Layer 2 — Variant rendering (Playwright)
+- [ ] Forced variant A → in-chat modal shows "Your Credits Have Run Out", "Buy Coins", and the "non-refundable" line
+- [x] Forced variant B → `/credits` shows redesigned minutes-led store + "Keep going" + guarantee *(tests/paywall-experiment.spec.ts)*; in-chat `BuyCreditsModal` B still to automate (verified via `/paywall-preview`)
+- [ ] In B, "non-refundable" appears on NO surface (modal, store footer, payment modal)
+- [ ] The single guarantee line ("30-day money-back guarantee on unused coins — no questions asked") is identical on modal + store + payment modal
+- [ ] In B, the `1,800 / $49.99` "MOST CHOSEN" tile is pre-selected and the CTA price mirrors it (NOT the $99.99 whale)
+- [ ] In A, the current default ($99.99 whale) is still pre-selected (control unchanged)
+- [ ] B applies to the hardcoded `FALLBACK_TIERS` path too (when server pricing tiers are absent)
+
+### Layer 3 — Stickiness (Playwright)
+- [ ] Same user, reload + re-open the paywall 3× → same variant every time
+- [ ] Variant survives navigating store ↔ in-chat modal ↔ payment modal within a session
+
+### Layer 4 — Logging (integration)
+- [ ] Opening the modal writes exactly ONE `paywall_views` row (no duplicate on re-render)
+- [ ] Row has correct `{user_id, variant, surface, persona_id, is_out_of_credits, experiment_key}`
+- [ ] `is_out_of_credits` is true when opened at zero balance, false on the low-balance ("Get More Coins") path
+- [ ] Kill-switch off (`enabled:false`) → no `variant='B'` assignments and no experiment rows attributing B
+
+### Layer 5 — Measurement (data test — most important)
+- [ ] Seed known views + completed purchases across both arms; the §3.13 analysis query returns the hand-calculated conversion per variant
+- [ ] Attribution window respected — a purchase 8 days after first view is NOT counted; 6 days IS
+- [ ] First-view dedup respected — a user with 3 views counts once, under their FIRST in-test variant
+- [ ] Pending/abandoned purchases are excluded (only `status='completed'` counts)
+- [ ] Revenue-per-viewer and tier-mix guardrail queries return correct values on seeded data
+
+### Layer 6 — Money path (Playwright + Stripe/PayPal sandbox)
+- [ ] Bucketed user (A) → pick tier → pay (test card) → `credit_purchases` completed → coins granted → reading resumes
+- [ ] Bucketed user (B) → same end-to-end path succeeds (copy change does not break checkout)
+- [ ] PayPal sandbox path completes under both variants
+
+### Layer 7 — Pre-launch QA / guardrails
+- [ ] Sample-ratio check: observed A/B split ≈ configured `percentB` (no assignment bias)
+- [ ] Guardrail readout available: conversion, revenue/viewer, ARPPU/tier-mix, refund-rate per variant
+- [x] `?paywallVariant=A|B` override works in non-prod *(tests/paywall-experiment.spec.ts)*; INERT-in-prod guard in place (`allowOverride: NODE_ENV !== 'production'`) — prod-inertness still to assert
+- [ ] Existing checkout/credits Playwright tests still pass under both variants (no regression)

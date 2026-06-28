@@ -7,8 +7,10 @@ import { Coins, Check, Sparkles, Info } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
 import PaymentModal from "@/components/PaymentModal";
+import CreditsStoreView from "@/components/paywall/CreditsStoreView";
 import type { PricingTier, PersonaPricing } from "../../../shared/types";
 import { COINS_PER_MINUTE } from "../../../shared/types";
+import type { PaywallVariant } from "@shared/paywall";
 
 interface PurchaseHistory {
   id: string;
@@ -39,6 +41,10 @@ export default function CreditsPage() {
   const [purchasesLoading, setPurchasesLoading] = useState(true);
   const [personaInfo, setPersonaInfo] = useState<PersonaInfo | null>(null);
   const [selectedTier, setSelectedTier] = useState<PricingTier | null>(null);
+  const [variant, setVariant] = useState<PaywallVariant>("A");
+  // Persona name/avatar for the variant-B store only — kept separate from
+  // personaInfo so the variant-A page stays exactly as today.
+  const [storePersona, setStorePersona] = useState<{ displayName: string; avatarUrl: string | null } | null>(null);
 
   const urlParams = new URLSearchParams(window.location.search);
   const personaId = urlParams.get("personaId");
@@ -76,9 +82,13 @@ export default function CreditsPage() {
 
     async function fetchData() {
       try {
-        const pricingUrl = personaId
-          ? `/api/credits/pricing?personaId=${personaId}`
-          : "/api/credits/pricing";
+        const pricingParams = new URLSearchParams();
+        if (personaId) pricingParams.set("personaId", personaId);
+        // Non-prod QA override (§3.14.F): force a variant via the page URL.
+        const qaVariant = new URLSearchParams(window.location.search).get("paywallVariant");
+        if (qaVariant) pricingParams.set("paywallVariant", qaVariant);
+        const qs = pricingParams.toString();
+        const pricingUrl = `/api/credits/pricing${qs ? `?${qs}` : ""}`;
         const pricingRes = await authFetch(pricingUrl);
         if (pricingRes.ok) {
           const data: PersonaPricing & { persona?: PersonaInfo } =
@@ -87,8 +97,10 @@ export default function CreditsPage() {
             setTiers(data.tiers);
           }
           if (data.persona) {
-            setPersonaInfo(data.persona);
+            // Variant A keeps its current persona-less layout; B uses storePersona.
+            setStorePersona(data.persona);
           }
+          setVariant((data as { variant?: string }).variant === "B" ? "B" : "A");
         }
       } catch (err) {
         console.error("Failed to fetch pricing:", err);
@@ -141,6 +153,17 @@ export default function CreditsPage() {
 
   return (
     <div className="space-y-6">
+      {variant === "B" ? (
+        <CreditsStoreView
+          personaName={storePersona?.displayName || "your guide"}
+          avatarUrl={storePersona?.avatarUrl || undefined}
+          coinBalance={coinBalance}
+          tiers={tiers}
+          onSelectTier={(t) => setSelectedTier(t)}
+          variant="B"
+        />
+      ) : (
+      <>
       {/* Persona context banner */}
       {personaInfo && (
         <div className="flex items-center gap-3 mb-4 bg-white/10 backdrop-blur-md rounded-xl p-3 border border-white/10">
@@ -261,6 +284,8 @@ export default function CreditsPage() {
           </div>
         ))}
       </div>
+      </>
+      )}
 
       {/* Purchase History */}
       <h2 className="font-serif text-xl text-white mb-4 mt-8">
@@ -323,15 +348,19 @@ export default function CreditsPage() {
         </CardContent>
       </Card>
 
-      {/* Footer */}
-      <div className="text-center mt-8 text-white/40 text-xs space-y-1">
-        <p>Secure payments powered by PayPal & Stripe</p>
-        <p>30-day goodwill refund on unused credits</p>
-      </div>
+      {/* Footer (variant A — B has its own trust block in CreditsStoreView) */}
+      {variant !== "B" && (
+        <div className="text-center mt-8 text-white/40 text-xs space-y-1">
+          <p>Secure payments powered by PayPal & Stripe</p>
+          <p>30-day goodwill refund on unused credits</p>
+        </div>
+      )}
 
       <PaymentModal
         tier={selectedTier}
         personaId={personaId}
+        personaName={storePersona?.displayName}
+        variant={variant}
         isOpen={!!selectedTier}
         onClose={() => setSelectedTier(null)}
         onSuccess={handleSuccess}

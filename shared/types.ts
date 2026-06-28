@@ -141,6 +141,7 @@ export interface PricingTier {
   priceUsd: number       // in cents, e.g. 2499 = $24.99
   label: string          // display label, e.g. "525 coins"
   badge?: string         // optional badge, e.g. "BEST VALUE"
+  recommended?: boolean  // the mid "MOST CHOSEN" default tile (paywall variant B)
 }
 
 export interface PersonaPricing {
