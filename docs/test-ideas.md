@@ -1566,6 +1566,16 @@ Principle: **test the measurement pipeline, not just the UI** — the experiment
 - [ ] SRM uses the full assigned population (exposures), not the offer-reached subset
 - [ ] Display price and charged price always equal the stored `upsell1AmountCents` (no shown-$47/charged-$37 mismatch)
 
+### Phase 4a — page-copy A/B + visitor-cookie path
+- [x] /api/ab/assign is sticky per visitor (ab_vid), returns the arm's copy, logs exactly one exposure *(tests/page-copy-experiment.spec.ts)*
+- [x] /api/ab/convert is idempotent per (experiment, visitor) and only counts assigned visitors *(page-copy-experiment.spec.ts)*
+- [x] event results tally from exposures ⋈ deduped conversions *(page-copy-experiment.spec.ts)*
+- [x] OFF/draft ⇒ /assign returns {} ⇒ lander shows default copy (byte-identical) *(page-copy-experiment.spec.ts)*
+- [ ] DONE + winner ⇒ /assign serves the winner's copy to all visitors (winner rollout)
+- [ ] /convert never trusts a client-supplied revenue value (always count-only)
+- [ ] Two tests on the same route+element don't silently shadow each other
+- [ ] Public /api/ab endpoints rate-limited / not abusable to bias a test (Phase 5 hardening)
+
 ### Phase 3b+ (not built yet)
 - [ ] Migrate the V1 MAIN/downsell price test (not just Upsell-1) onto the framework
 - [ ] Legacy `conversations` price columns preserved for reporting continuity

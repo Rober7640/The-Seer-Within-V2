@@ -3,6 +3,7 @@ import { useLocation, Link } from 'wouter';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { track as trackPH, identifyUser } from '@/lib/posthog';
 import { trackLead } from '@/lib/facebook';
+import { useABTest, trackABConversion } from '@/hooks/useABTest';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -374,10 +375,10 @@ function TestimonialSlider() {
 
 // ─── CTA Button ───────────────────────────────────────────────────────────────
 
-function CTABtn({ onClick }: { onClick: () => void }) {
+function CTABtn({ onClick, label }: { onClick: () => void; label?: string }) {
   return (
     <button onClick={onClick} className="lp-btn">
-      Yes, I want my Soulmate Drawing
+      {label ?? 'Yes, I want my Soulmate Drawing'}
     </button>
   );
 }
@@ -388,7 +389,14 @@ export default function SoulmateLandingPage() {
   const [showPopup, setShowPopup] = useState(false);
   const [hydrationError, setHydrationError] = useState<string | null>(null);
   const [, navigate] = useLocation();
-  const open = () => setShowPopup(true);
+  // Page-copy A/B (unified framework, visitor-cookie). The default is the current
+  // copy, so with no running test the lander is byte-identical. Conversion = the
+  // CTA click (idempotent server-side per visitor).
+  const ctaLabel = useABTest('soulmate_landing', 'cta', 'Yes, I want my Soulmate Drawing');
+  const open = () => {
+    setShowPopup(true);
+    trackABConversion('soulmate_landing');
+  };
 
   // ?t=<token> hydration: AWeber drip CTAs land users here with a token that
   // resolves to the original /soulmate form intake. On success, rebuild
@@ -532,7 +540,7 @@ export default function SoulmateLandingPage() {
           {/* Testimonial slider */}
           <TestimonialSlider />
 
-          <CTABtn onClick={open} />
+          <CTABtn onClick={open} label={ctaLabel} />
         </div>
       </div>
 
@@ -586,7 +594,7 @@ export default function SoulmateLandingPage() {
           </div>
 
           <div style={{ marginTop: 20 }}>
-            <CTABtn onClick={open} />
+            <CTABtn onClick={open} label={ctaLabel} />
           </div>
         </div>
       </div>
@@ -643,7 +651,7 @@ export default function SoulmateLandingPage() {
             ))}
           </ul>
 
-          <CTABtn onClick={open} />
+          <CTABtn onClick={open} label={ctaLabel} />
         </div>
       </div>
 

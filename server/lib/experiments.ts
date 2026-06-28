@@ -388,6 +388,28 @@ function buildVariantRow(
   };
 }
 
+/**
+ * Shape raw `{ variant, viewers, buyers, revenue_cents, ... }` query rows into
+ * ordered per-arm TallyVariantRows (control + treatment first, then any extra
+ * observed arms; missing arms render as zeros). Returns the byVariant map too so
+ * callers can read other aggregates (e.g. a separate `total` for SRM).
+ */
+function assembleRows(
+  queryRows: Record<string, unknown>[],
+  controlKey: string,
+  treatmentKey: string,
+): { rows: TallyVariantRow[]; byVariant: Map<string, Record<string, unknown>> } {
+  const byVariant = new Map(queryRows.map((r) => [String(r.variant), r]));
+  const arms = [controlKey, treatmentKey];
+  const seen = new Set(arms);
+  for (const v of Array.from(byVariant.keys())) if (!seen.has(v)) arms.push(v);
+  const rows = arms.map((variant) => {
+    const r = byVariant.get(variant);
+    return buildVariantRow(variant, Number(r?.viewers) || 0, Number(r?.buyers) || 0, Number(r?.revenue_cents) || 0);
+  });
+  return { rows, byVariant };
+}
+
 export interface Upsell1TallyOptions {
   key: string;                 // experiment key — exposures are scoped to it (no cross-test leak)
   startISO: string;            // cohort start = when the test started
@@ -424,25 +446,60 @@ export async function tallyUpsell1(opts: Upsell1TallyOptions): Promise<TallyResu
     GROUP BY e.variant;
   `);
 
-  const byVariant = new Map(
-    (result.rows as Record<string, unknown>[]).map((r) => [String(r.variant), r]),
-  );
   const controlKey = opts.controlKey ?? 'A';
   const treatmentKey = opts.treatmentKey ?? 'B';
-  // One row per configured arm (so an arm with no data shows as zeros, in order).
-  const arms = [controlKey, treatmentKey];
-  const seen = new Set(arms);
-  for (const v of Array.from(byVariant.keys())) if (!seen.has(v)) arms.push(v); // include extra observed arms
-  const rows = arms.map((variant) => {
-    const r = byVariant.get(variant);
-    return buildVariantRow(variant, Number(r?.viewers) || 0, Number(r?.buyers) || 0, Number(r?.revenue_cents) || 0);
-  });
-
+  const { rows, byVariant } = assembleRows(
+    result.rows as Record<string, unknown>[],
+    controlKey,
+    treatmentKey,
+  );
+  // SRM uses TOTAL exposures per arm (full assigned population), not viewers
+  // (offer-reached subset).
   const totalOf = (k: string) => Number(byVariant.get(k)?.total) || 0;
   return finalizeStats(rows, controlKey, treatmentKey, {
     control: totalOf(controlKey),
     treatment: totalOf(treatmentKey),
   });
+}
+
+export interface EventTallyOptions {
+  key: string;
+  startISO: string;
+  controlKey?: string;
+  treatmentKey?: string;
+}
+
+/**
+ * Results for an 'event' conversion test (Phase 4 — e.g. visitor page-copy lander
+ * tests). Denominator = exposures per arm; a subject "converted" if they have any
+ * `experiment_conversions` row for this key; revenue = sum of conversion `value`
+ * (0 for count-only events). Subject ids are framework-native (visitor cookie /
+ * user id), so this needs no schema-specific join.
+ */
+export async function tallyEvent(opts: EventTallyOptions): Promise<TallyResult> {
+  const result = await db.execute(sql`
+    SELECT e.variant AS variant,
+           count(*)                                           AS viewers,
+           count(*) FILTER (WHERE c.subject_id IS NOT NULL)   AS buyers,
+           COALESCE(sum(c.total_value) FILTER (WHERE c.subject_id IS NOT NULL), 0) AS revenue_cents
+    FROM experiment_exposures e
+    LEFT JOIN (
+      SELECT subject_id, sum(value) AS total_value
+      FROM experiment_conversions
+      WHERE experiment_key = ${opts.key}
+      GROUP BY subject_id
+    ) c ON c.subject_id = e.subject_id
+    WHERE e.experiment_key = ${opts.key}
+      AND e.created_at >= ${opts.startISO}
+    GROUP BY e.variant;
+  `);
+
+  const controlKey = opts.controlKey ?? 'A';
+  const treatmentKey = opts.treatmentKey ?? 'B';
+  // viewers = all exposures per arm (event tests have no offer-reached subset), so
+  // finalizeStats' default SRM denominator (viewers) is already the full population.
+  const { rows } = assembleRows(result.rows as Record<string, unknown>[], controlKey, treatmentKey);
+  return finalizeStats(rows, controlKey, treatmentKey);
 }
 
 // ── V1 Upsell-1 price test (Phase 3b) ────────────────────────────────────────

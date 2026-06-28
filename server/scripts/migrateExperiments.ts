@@ -59,6 +59,22 @@ async function up(pool: pg.Pool) {
   );
   console.log('✓ experiment_exposures table + indexes ready');
 
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS experiment_conversions (
+      id varchar PRIMARY KEY DEFAULT gen_random_uuid(),
+      experiment_key text NOT NULL,
+      subject_id text NOT NULL,
+      variant text NOT NULL,
+      event text,
+      value integer NOT NULL DEFAULT 0,
+      created_at timestamp NOT NULL DEFAULT now()
+    );
+  `);
+  await pool.query(
+    `CREATE INDEX IF NOT EXISTS idx_experiment_conversions_key_subject ON experiment_conversions (experiment_key, subject_id);`,
+  );
+  console.log('✓ experiment_conversions table + index ready');
+
   // Seed the paywall test as a DRAFT experiment (Evelyn-scoped), mirroring the
   // existing disabled system_config.paywall_copy_experiment row.
   const evelyn = await pool.query(`SELECT id FROM personas WHERE slug = 'evelyn-cross' LIMIT 1`);
@@ -115,13 +131,37 @@ async function up(pool: pg.Pool) {
   } else {
     console.log('• u1_price_2026 experiment already exists — left unchanged');
   }
+
+  // Phase 4a — a visitor page-copy test on the /soulmate lander CTA (event metric).
+  // Draft = OFF, so useABTest returns the lander's default copy (control 'A').
+  const cpVariants = JSON.stringify([
+    { key: 'A', weight: 50, payload: { value: 'Yes, I want my Soulmate Drawing' } },
+    { key: 'B', weight: 50, payload: { value: 'Reveal My Soulmate Now' } },
+  ]);
+  const cpScope = JSON.stringify({ route: 'soulmate_landing', element: 'cta' });
+  const cpConversion = JSON.stringify({ type: 'event', name: 'lander_cta' });
+  const cp = await pool.query(
+    `INSERT INTO experiments (key, name, description, status, subject_type, variants, scope, conversion)
+     VALUES ('soulmate_landing_cta_2026', 'Soulmate lander CTA copy',
+       'Visitor page-copy test on the /soulmate CTA button. A = current copy. Conversion = CTA click. To start, set status=running.',
+       'draft', 'visitor', $1::jsonb, $2::jsonb, $3::jsonb)
+     ON CONFLICT (key) DO NOTHING
+     RETURNING id`,
+    [cpVariants, cpScope, cpConversion],
+  );
+  if (cp.rowCount && cp.rowCount > 0) {
+    console.log('✓ seeded DRAFT page-copy experiment (soulmate CTA)');
+  } else {
+    console.log('• soulmate_landing_cta_2026 experiment already exists — left unchanged');
+  }
 }
 
 async function down(pool: pg.Pool) {
   // Experiment-only tables: dropping them removes no other data.
+  await pool.query(`DROP TABLE IF EXISTS experiment_conversions;`);
   await pool.query(`DROP TABLE IF EXISTS experiment_exposures;`);
   await pool.query(`DROP TABLE IF EXISTS experiments;`);
-  console.log('✓ dropped experiment_exposures + experiments (rollback)');
+  console.log('✓ dropped experiment_conversions + experiment_exposures + experiments (rollback)');
 }
 
 async function main() {

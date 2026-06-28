@@ -17,6 +17,7 @@ import logger from '../../lib/logger';
 import {
   tally,
   tallyUpsell1,
+  tallyEvent,
   twoSidedP,
   invalidateExperiment,
   U1_PRICE_EXPERIMENT_KEY,
@@ -229,8 +230,19 @@ router.get('/:key/results', async (req: Request, res: Response) => {
         });
       }
       result = await tallyUpsell1({ key, startISO, controlKey, treatmentKey });
+    } else if (conversionType === 'event') {
+      // Generic event conversions (e.g. visitor page-copy lander tests).
+      if (!controlKey || !treatmentKey) {
+        return res.json({
+          experiment: meta,
+          started: true,
+          unsupported: 'experiment needs at least 2 arms to measure',
+          params,
+          rows: [],
+        });
+      }
+      result = await tallyEvent({ key, startISO, controlKey, treatmentKey });
     } else {
-      // e.g. generic 'event' conversions — not measurable yet.
       return res.json({
         experiment: meta,
         started: true,

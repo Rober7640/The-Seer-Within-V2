@@ -942,7 +942,8 @@ export interface ExperimentVariant {
 // Optional enrolment filter. null/absent field = no filter on that axis.
 export interface ExperimentScope {
   personaId?: string | null;            // only enrol this persona (Phase-1 paywall = Evelyn)
-  route?: string;
+  route?: string;                       // page/surface for visitor page-copy tests (e.g. 'soulmate_landing')
+  element?: string;                     // which element the variant copy targets (e.g. 'headline')
   [k: string]: unknown;
 }
 
@@ -1001,6 +1002,23 @@ export const experimentExposures = pgTable("experiment_exposures", {
   index("idx_experiment_exposures_key_variant").on(table.experimentKey, table.variant),
 ]);
 export type ExperimentExposure = typeof experimentExposures.$inferSelect;
+
+// experiment_conversions — generic outcome log for non-purchase ('event') tests
+// (e.g. visitor page-copy lander conversions). Purchase tests join credit_purchases
+// /conversations instead; this is the denominator-agnostic numerator for event
+// metrics. value is optional (cents) for revenue-bearing events; 0 = a plain count.
+export const experimentConversions = pgTable("experiment_conversions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  experimentKey: text("experiment_key").notNull(),
+  subjectId: text("subject_id").notNull(),            // same subject id space as exposures
+  variant: text("variant").notNull(),                 // the arm the subject was exposed to
+  event: text("event"),                               // optional event name
+  value: integer("value").default(0).notNull(),       // optional revenue in cents (0 = count-only)
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_experiment_conversions_key_subject").on(table.experimentKey, table.subjectId),
+]);
+export type ExperimentConversionRow = typeof experimentConversions.$inferSelect;
 
 // Aiden Quiz Sessions - Analytics + abuse audit for the /aiden quiz funnel
 export const aidenQuizSessions = pgTable("aiden_quiz_sessions", {
