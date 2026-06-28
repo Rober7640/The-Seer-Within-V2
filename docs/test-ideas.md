@@ -1516,3 +1516,34 @@ Principle: **test the measurement pipeline, not just the UI** — the experiment
 - [ ] Guardrail readout available: conversion, revenue/viewer, ARPPU/tier-mix, refund-rate per variant
 - [x] `?paywallVariant=A|B` override works in non-prod *(tests/paywall-experiment.spec.ts)*; INERT-in-prod guard in place (`allowOverride: NODE_ENV !== 'production'`) — prod-inertness still to assert
 - [ ] Existing checkout/credits Playwright tests still pass under both variants (no regression)
+
+---
+
+## Unified A/B Experiment Framework (PRD: docs/ab-testing-framework-prd.md)
+
+### Phase 1 — core (assign / logExposure / tally)
+- [x] `experimentBucket` deterministic + sticky over 1000 ids, range 0..99, byte-identical to the old paywall formula *(server/lib/experiments.test.ts)*
+- [x] `pickVariant` walks weights in order (control first), honours uneven weights, covers >2 arms, never assigns a zero-weight arm *(experiments.test.ts)*
+- [x] OFF (status≠running) ⇒ everyone gets control 'A', not enrolled; RUNNING ⇒ sticky ~50/50, scope-aware *(server/lib/experimentTally.test.ts)*
+- [x] Generic `tally()` reconciles arm-for-arm with the legacy `tallyPaywall.ts` SQL on seeded data (window, dedup, persona scope) *(experimentTally.test.ts)*
+- [ ] DB-read error in `getExperiment` fails safe to control (returns null ⇒ 'A')
+- [ ] `logExposure` is idempotent — second open for same (key, subject) is a no-op (unique constraint)
+- [ ] User-deletion should also remove their `experiment_exposures` (polymorphic subject_id, no FK) — follow-up when exposures go live
+
+### Phase 2 — read-only admin dashboard (`/admin/experiments`)
+- [x] `GET /api/admin/experiments` lists the registry (admin) *(tests/experiments-dashboard.spec.ts)*
+- [x] `GET /:key/results` returns exact per-arm conversion + revenue on seeded exposures+purchases *(experiments-dashboard.spec.ts)*
+- [x] `?windowDays` override changes the attribution window *(experiments-dashboard.spec.ts)*
+- [x] Auth gating — no token ⇒ 401, regular-user token ⇒ 403 *(experiments-dashboard.spec.ts)*
+- [x] Page renders the seeded experiment + DB-sourced results for a logged-in admin *(experiments-dashboard.spec.ts)*
+- [ ] A running experiment with NO `started_at` still reports started + a cohort (start = first exposure), not "not started"
+- [ ] Invalid `?start` returns 400 (not an opaque 500)
+- [ ] SRM panel flags a real sample-ratio mismatch (e.g. observed 70/30 vs configured 50/50 ⇒ `ok:false`)
+- [ ] Re-clicking the already-selected experiment row does not blank the results panel
+- [ ] Lift shown in the table matches the significance-line lift (single source of truth)
+- [ ] Non-A/B-keyed experiment (e.g. control/treatment) still computes lift vs the first variant
+
+### Phase 3+ (not built yet)
+- [ ] Self-serve create / edit / ramp / pause / declare-winner for config experiments (no dev)
+- [ ] Price test migrated onto the framework charges the right sticky amount per arm
+- [ ] Prompt A/B becomes sticky (behaviour change, gated + verified)

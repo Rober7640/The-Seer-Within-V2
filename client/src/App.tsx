@@ -70,6 +70,7 @@ const MarketplacePage = lazy(() => import("@/pages/admin/MarketplacePage"));
 const SettingsPage = lazy(() => import("@/pages/admin/SettingsPage"));
 const PriceTestDashboard = lazy(() => import("@/pages/admin/PriceTestDashboard"));
 const ABTestingDashboard = lazy(() => import("@/pages/admin/ABTestingDashboard"));
+const ExperimentsDashboard = lazy(() => import("@/pages/admin/ExperimentsDashboard"));
 
 function LazyFallback() {
   return (
@@ -294,6 +295,7 @@ function Router() {
         <Route path="/admin/settings" component={SettingsPage} />
         <Route path="/admin/price-test" component={PriceTestDashboard} />
         <Route path="/admin/ab-testing" component={ABTestingDashboard} />
+        <Route path="/admin/experiments" component={ExperimentsDashboard} />
 
         <Route component={NotFound} />
       </Switch>
