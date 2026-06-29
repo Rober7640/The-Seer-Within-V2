@@ -942,6 +942,7 @@ export interface ExperimentVariant {
 // Optional enrolment filter. null/absent field = no filter on that axis.
 export interface ExperimentScope {
   personaId?: string | null;            // only enrol this persona (Phase-1 paywall = Evelyn)
+  funnel?: string | null;               // only enrol this V1 funnel (e.g. 'v1-fb') — V1 price tests
   route?: string;                       // page/surface for visitor page-copy tests (e.g. 'soulmate_landing')
   element?: string;                     // which element the variant copy targets (e.g. 'headline')
   [k: string]: unknown;
@@ -950,8 +951,9 @@ export interface ExperimentScope {
 // How a subject's outcome is scored when tallying.
 export interface ExperimentConversion {
   // credit_purchase = join to credit_purchases (V2); upsell1_funnel = V1
-  // conversations Upsell-1 take-rate; event = generic (not measurable yet).
-  type: "credit_purchase" | "upsell1_funnel" | "event";
+  // conversations Upsell-1 take-rate; v1_main_funnel = V1 main/downsell purchase;
+  // event = generic visitor conversion.
+  type: "credit_purchase" | "upsell1_funnel" | "v1_main_funnel" | "event";
   windowDays?: number;                  // attribution window after first exposure (default 7)
   name?: string;                        // event name (type='event')
 }

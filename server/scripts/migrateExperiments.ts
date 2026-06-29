@@ -216,6 +216,32 @@ async function up(pool: pg.Pool) {
   } else {
     console.log('• evelyn_lander_mechanic experiment already exists — left unchanged');
   }
+
+  // Phase 3b-rest — V1 MAIN/downsell price test on the framework. Draft = OFF, so the
+  // legacy system_config.v1_price_variants splits keep running byte-identical. It folds
+  // into priceVariant.assignVariantIfMissing as a GATED OVERRIDE over pickWeighted.
+  // scope is null here: SET scope.funnel (e.g. 'v1-fb') in the dashboard before
+  // starting — the start guard refuses a v1_main_funnel test with no funnel (it would
+  // override every funnel's price). A=$35/$25 (control), B=$45/$32.
+  const vmVariants = JSON.stringify([
+    { key: 'A', weight: 50, payload: { mainCents: 3500, downsellCents: 2500 } },
+    { key: 'B', weight: 50, payload: { mainCents: 4500, downsellCents: 3200 } },
+  ]);
+  const vmConversion = JSON.stringify({ type: 'v1_main_funnel' });
+  const vm = await pool.query(
+    `INSERT INTO experiments (key, name, description, status, subject_type, variants, scope, conversion)
+     VALUES ('v1_main_price_2026', 'V1 main price ($35/$25 vs $45/$32)',
+       'V1 main+downsell price test. A=$35/$25 (control), B=$45/$32. Sticky per email; folded into priceVariant.assignVariantIfMissing as a gated override over the legacy system_config split. SET scope.funnel (e.g. v1-fb) before starting — it overrides that ONE funnel only. To start, set status=running.',
+       'draft', 'email', $1::jsonb, NULL, $2::jsonb)
+     ON CONFLICT (key) DO NOTHING
+     RETURNING id`,
+    [vmVariants, vmConversion],
+  );
+  if (vm.rowCount && vm.rowCount > 0) {
+    console.log('✓ seeded DRAFT V1 main price experiment');
+  } else {
+    console.log('• v1_main_price_2026 experiment already exists — left unchanged');
+  }
 }
 
 async function down(pool: pg.Pool) {

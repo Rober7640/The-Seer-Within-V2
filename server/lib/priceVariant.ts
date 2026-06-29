@@ -9,7 +9,14 @@ import { db } from './db';
 import { conversations, systemConfig } from '@shared/schema';
 import { eq, desc } from 'drizzle-orm';
 import logger from './logger';
-import { resolveUpsell1Cents, logExposure, hashEmail, U1_PRICE_EXPERIMENT_KEY } from './experiments';
+import {
+  resolveUpsell1Cents,
+  resolveV1Price,
+  logExposure,
+  hashEmail,
+  U1_PRICE_EXPERIMENT_KEY,
+  V1_MAIN_EXPERIMENT_KEY,
+} from './experiments';
 
 export interface PriceVariant {
   id: string;
@@ -167,7 +174,11 @@ export async function assignVariantIfMissing(
     }
 
     const row = existing[0];
-    if (row.priceVariant && row.priceAmountCents && row.downsellAmountCents) {
+    // Idempotency / stickiness: once a variant id is stored, return the stored price
+    // and never re-roll. Use `!= null` (not truthiness) on the amounts so a stored 0
+    // still counts as "assigned" — otherwise a 0/NULL downsell would skip this guard
+    // and pickWeighted (Math.random) could flip the customer's main price mid-funnel.
+    if (row.priceVariant && row.priceAmountCents != null && row.downsellAmountCents != null) {
       return {
         variant: row.priceVariant,
         priceCents: row.priceAmountCents,
@@ -204,31 +215,54 @@ export async function assignVariantIfMissing(
       u1Assignment = u1;
     }
 
-    // Persist the price FIRST (display + charge read upsell1AmountCents), THEN log
-    // the exposure — so an exposure is only ever recorded once the assigned price
-    // is actually stored (no orphan exposure / mispriced-but-counted subject).
+    // V1 MAIN/downsell price A/B test (framework, Phase 3b-rest). A GATED OVERRIDE
+    // over the legacy system_config pickWeighted result: when the funnel-scoped
+    // experiment applies, the main/downsell price comes from the assigned arm;
+    // otherwise the picked legacy price (so OFF ⇒ byte-identical, every live
+    // system_config split keeps running).
+    //
+    // priceVariant DELIBERATELY stays the system_config id (not the framework arm):
+    // (a) measurement is exposure-based — tallyV1Main reads the arm from the exposure
+    // row, never the stored price; (b) priceVariant is also consumed as a clean
+    // funnel/price email tag (migrationDripProcessor / resendFunnelTags), which an
+    // encoded framework value would pollute. The only reader that sees the resulting
+    // id↔price decoupling is the legacy /admin/price-test readout, which is superseded
+    // by this framework and removed in Phase 5 — an accepted, temporary tradeoff.
+    const v1 = await resolveV1Price(email, picked.priceCents, picked.downsellCents, funnel);
+    const mainCents = v1.mainCents;
+    const downsellCents = v1.downsellCents;
+
+    // Persist the price FIRST (display + charge read these columns), THEN log the
+    // exposure — so an exposure is only ever recorded once the assigned price is
+    // actually stored (no orphan exposure / mispriced-but-counted subject).
     await db
       .update(conversations)
       .set({
         priceVariant: picked.id,
-        priceAmountCents: picked.priceCents,
-        downsellAmountCents: picked.downsellCents,
+        priceAmountCents: mainCents,
+        downsellAmountCents: downsellCents,
         upsell1AmountCents: upsell1Cents,
         updatedAt: new Date(),
       })
       .where(eq(conversations.id, row.id));
+    const subjectId = hashEmail(email);
     if (u1Assignment?.enrolled && u1Assignment.variant) {
-      await logExposure(U1_PRICE_EXPERIMENT_KEY, hashEmail(email), u1Assignment.variant, 'upsell1_assigned', {
+      await logExposure(U1_PRICE_EXPERIMENT_KEY, subjectId, u1Assignment.variant, 'upsell1_assigned', {
+        conversationId: row.id,
+      });
+    }
+    if (v1.enrolled && v1.variant) {
+      await logExposure(V1_MAIN_EXPERIMENT_KEY, subjectId, v1.variant, 'v1_main_assigned', {
         conversationId: row.id,
       });
     }
 
-    logger.info('priceVariant: assigned', { email, variant: picked.id, priceCents: picked.priceCents, funnel: funnel ?? null });
+    logger.info('priceVariant: assigned', { email, variant: picked.id, priceCents: mainCents, funnel: funnel ?? null });
 
     return {
       variant: picked.id,
-      priceCents: picked.priceCents,
-      downsellCents: picked.downsellCents,
+      priceCents: mainCents,
+      downsellCents: downsellCents,
       upsell1Cents,
     };
   } catch (err) {

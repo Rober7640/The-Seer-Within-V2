@@ -1602,6 +1602,19 @@ Principle: **test the measurement pipeline, not just the UI** — the experiment
 - [ ] Quiz uses params.bucket (same as chatbox) — taps are engagement/analytics only (quiz_completed event)
 - [ ] Visitor→user purchase attribution (secondary metric) needs the identity stitch — deferred
 
-### Phase 3b+ (not built yet)
-- [ ] Migrate the V1 MAIN/downsell price test (not just Upsell-1) onto the framework
-- [ ] Legacy `conversations` price columns preserved for reporting continuity
+### Phase 3b-rest — V1 MAIN/downsell price migration
+- [x] OFF/draft ⇒ resolveV1Price returns the legacy fallback (pickWeighted) price, not enrolled — money path byte-identical *(server/lib/experimentTally.test.ts + live assignVariantIfMissing verification)*
+- [x] RUNNING ⇒ sticky per email, ~50/50, main+downsell match the assigned arm *(experimentTally.test.ts)*
+- [x] Funnel scope: a funnel-scoped test only enrols that funnel; out-of-funnel (and no-funnel) traffic keeps the fallback *(experimentTally.test.ts)*
+- [x] DONE + winner ⇒ rolls the winner prices out, still funnel-scoped (applied, not enrolled) *(experimentTally.test.ts)*
+- [x] tallyV1Main: buyer = purchased AND upsell_offered (confirmed); purchased-but-not-offered (abandoned) is excluded; revenue = main_purchase_amount *(tests/experiments-dashboard.spec.ts)*
+- [x] Guards: v1_main_funnel only on the live key (400); arms need positive mainCents + downsellCents (400); start requires scope.funnel (400) *(experiments-dashboard.spec.ts)*
+- [x] Start guard keyed on the live KEY (not conversion.type) — can't be bypassed by editing conversion.type then starting unscoped; live key can't drop v1_main_funnel; a non-live key can't become v1_main_funnel via edit *(experiments-dashboard.spec.ts)*
+- [x] Idempotency: a second lead for the same email returns the SAME sticky price, never re-rolls (uses `!= null`, so a stored 0/NULL amount still counts as assigned) *(live verification)*
+- [x] scope.funnel is typed as a string (a non-string can't silently start an inert test) *(zod schema)*
+- [ ] Charge + display always read the stored priceAmountCents/downsellAmountCents (override never flips a price mid-funnel) — covered structurally (fold-in writes once at lead capture, idempotent guard); add an explicit charge-site E2E
+- [ ] priceVariant stays the system_config id when the framework overrides (id↔price decoupling) — accepted tradeoff: measurement is exposure-based, priceVariant stays a clean email tag, only /admin/price-test is affected (deleted in Phase 5)
+- [ ] Multi-conversation-per-email attribution: a buyer on a later (price-less) conversation row is dropped by tallyV1Main — matches the U1 known edge (deferred)
+- [ ] Swallowed v1_main exposure (rare, non-blocking log) ⇒ priced-but-not-counted; roughly symmetric across arms — matches the U1 pattern (deferred)
+- [ ] DRY: tallyV1Main/resolveV1Price/v1MainPayloadError mirror the U1 counterparts — a shared tally/resolver/validator helper is a deferred consolidation
+- [ ] Migrate the V1 default (null-funnel) traffic — needs a "default funnel only" scope distinct from global (deferred)

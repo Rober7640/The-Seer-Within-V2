@@ -174,6 +174,7 @@ export async function getActivePromptExperimentKey(
 
 export interface AssignContext {
   personaId?: string | null;
+  funnel?: string | null;
   [k: string]: unknown;
 }
 
@@ -224,8 +225,12 @@ export async function assign(
   // Scope FIRST: an out-of-scope subject NEVER gets the experiment — control,
   // whether the test is running OR concluded. (This must precede the winner
   // rollout so a concluded persona-scoped test doesn't leak its winner to other
-  // personas.)
+  // personas / other funnels.)
   if (exp.scope?.personaId && context?.personaId !== exp.scope.personaId) return controlArm;
+  // Funnel scope (V1 price tests): a funnel-scoped test only enrols that funnel's
+  // traffic, so migrating one funnel onto the framework never touches another
+  // funnel's live system_config split. Absent scope.funnel = no funnel filter.
+  if (exp.scope?.funnel && context?.funnel !== exp.scope.funnel) return controlArm;
 
   // Concluded test → roll the declared winner out to the in-scope population:
   // not enrolled (test is over, no more exposures) but its payload IS applied,
@@ -609,6 +614,91 @@ export async function resolveUpsell1Cents(
     if (cents !== null) return { cents, variant: a.variant, enrolled: a.enrolled };
   }
   return { cents: fallbackCents, variant: a?.variant ?? null, enrolled: false };
+}
+
+// ── V1 MAIN/downsell price test (Phase 3b-rest) ──────────────────────────────
+export const V1_MAIN_EXPERIMENT_KEY = 'v1_main_price_2026';
+
+/**
+ * Resolve the V1 MAIN + downsell price for an email via the framework, as a GATED
+ * OVERRIDE over the legacy system_config `pickWeighted` result (`fallback*`). When
+ * the experiment APPLIES (running+enrolled, or a concluded winner rollout) the
+ * assigned arm's `mainCents`/`downsellCents` payload is used; otherwise the
+ * fallback — so while the experiment is OFF (draft) the live system_config splits
+ * run byte-identical and untouched. Funnel-scoped via `assign`'s scope.funnel, so
+ * migrating one funnel never overrides another's price. The result is written once
+ * to conversations.priceAmountCents/downsellAmountCents at lead capture (sticky per
+ * email; the charge + display sites read those columns unchanged). `enrolled`
+ * (running only) tells the caller to log the exposure (the denominator); both
+ * arm prices must be present or it falls back (a typo can't half-apply a price).
+ */
+export async function resolveV1Price(
+  email: string,
+  fallbackMainCents: number,
+  fallbackDownsellCents: number,
+  funnel?: string | null,
+  key: string = V1_MAIN_EXPERIMENT_KEY, // overridable so tests never touch the live experiment
+): Promise<{ mainCents: number; downsellCents: number; variant: string | null; enrolled: boolean; applied: boolean }> {
+  // Bucket on the NORMALISED email (matches the exposure dedup on hashEmail).
+  const a = await assign(key, email.trim().toLowerCase(), { funnel: funnel ?? null });
+  if (a?.applied) {
+    const main = payloadCents(a.payload, 'mainCents');
+    const downsell = payloadCents(a.payload, 'downsellCents');
+    if (main !== null && downsell !== null) {
+      return { mainCents: main, downsellCents: downsell, variant: a.variant, enrolled: a.enrolled, applied: true };
+    }
+  }
+  return {
+    mainCents: fallbackMainCents,
+    downsellCents: fallbackDownsellCents,
+    variant: a?.variant ?? null,
+    enrolled: false,
+    applied: false,
+  };
+}
+
+export interface V1MainTallyOptions {
+  key: string;
+  startISO: string;
+  controlKey?: string;
+  treatmentKey?: string;
+}
+
+/**
+ * Results for the V1 MAIN/downsell price test. Arm membership is EXPLICIT — read
+ * from `experiment_exposures` (the assigned arm logged at lead capture), NOT from
+ * the stored price. Conversion comes from the linked conversation, using the SAME
+ * confirmed-purchase signal as the legacy /admin/price-test: a buyer is
+ * `purchased = true AND upsell_offered = true` (purchased alone is set optimistically
+ * at checkout; upsell_offered only flips after Stripe confirms payment), and revenue
+ * = mainPurchaseAmount on confirmed buyers. Denominator = ALL exposures (everyone
+ * assigned a price is a "viewer"), so the default SRM denominator (viewers) is the
+ * full assigned population.
+ *
+ * KNOWN EDGES (same shape as tallyUpsell1, roughly symmetric across arms so they
+ * don't bias the comparison): (a) attribution follows the conversation the exposure
+ * was logged on (the lead-capture row) — if an email buys on a later, separate
+ * conversation row, that purchase isn't attributed here; (b) a subject whose
+ * exposure insert was swallowed (logExposure never throws/retries) is priced but
+ * missing from both viewers and revenue.
+ */
+export async function tallyV1Main(opts: V1MainTallyOptions): Promise<TallyResult> {
+  const result = await db.execute(sql`
+    SELECT e.variant AS variant,
+           count(*)                                                                   AS viewers,
+           count(*) FILTER (WHERE c.purchased AND c.upsell_offered)                   AS buyers,
+           COALESCE(sum(c.main_purchase_amount) FILTER (WHERE c.purchased AND c.upsell_offered), 0) AS revenue_cents
+    FROM experiment_exposures e
+    LEFT JOIN conversations c ON c.id = e.context->>'conversationId'
+    WHERE e.experiment_key = ${opts.key}
+      AND e.created_at >= ${opts.startISO}
+    GROUP BY e.variant;
+  `);
+
+  const controlKey = opts.controlKey ?? 'A';
+  const treatmentKey = opts.treatmentKey ?? 'B';
+  const { rows } = assembleRows(result.rows as Record<string, unknown>[], controlKey, treatmentKey);
+  return finalizeStats(rows, controlKey, treatmentKey);
 }
 
 // ── Persona prompt A/B resolution (Phase 4b — live AI path) ───────────────────

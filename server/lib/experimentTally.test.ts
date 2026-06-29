@@ -29,7 +29,9 @@ import {
   _resetExperimentCache,
   invalidateExperiment,
   resolveUpsell1Cents,
+  resolveV1Price,
   U1_PRICE_EXPERIMENT_KEY,
+  V1_MAIN_EXPERIMENT_KEY,
 } from './experiments';
 
 const STAMP = Date.now();
@@ -345,6 +347,100 @@ describe('resolveUpsell1Cents (U1 price test)', { skip: !hasDb }, () => {
     const r = await resolveUpsell1Cents('anyone@test.invalid', 4700, U1_TEST_KEY);
     assert.equal(r.cents, 3700); // winner B's $37 applied, not the legacy $47
     assert.equal(r.enrolled, false); // concluded — no new exposures logged
+  });
+});
+
+// Phase 3b-rest — V1 MAIN/downsell price resolution. Isolated temp experiment via
+// resolveV1Price's key override so it never touches the live v1_main_price_2026.
+// Funnel-scoped, so it also exercises the new scope.funnel enrolment filter.
+// Fallback prices 9900/8800 are distinct from every arm price so "fell back to the
+// legacy price" is unambiguous.
+const VM_TEST_KEY = `vm_test_${STAMP}`;
+const VM_FUNNEL = `vm-funnel-${STAMP}`;
+describe('resolveV1Price (V1 main/downsell price test)', { skip: !hasDb }, () => {
+  before(async () => {
+    await db.insert(experiments).values({
+      key: VM_TEST_KEY,
+      name: 'v1 main (isolated test)',
+      status: 'draft',
+      subjectType: 'email',
+      variants: [
+        { key: 'A', weight: 50, payload: { mainCents: 3500, downsellCents: 2500 } },
+        { key: 'B', weight: 50, payload: { mainCents: 4500, downsellCents: 3200 } },
+      ],
+      scope: { funnel: VM_FUNNEL },
+      conversion: { type: 'v1_main_funnel' },
+    });
+  });
+  after(async () => {
+    await db.delete(experiments).where(eq(experiments.key, VM_TEST_KEY));
+  });
+
+  it('the live experiment key is v1_main_price_2026', () => {
+    assert.equal(V1_MAIN_EXPERIMENT_KEY, 'v1_main_price_2026');
+  });
+
+  it('OFF (draft) ⇒ returns the legacy fallback prices, not enrolled', async () => {
+    invalidateExperiment(VM_TEST_KEY);
+    const r = await resolveV1Price('vm-off@test.invalid', 9900, 8800, VM_FUNNEL, VM_TEST_KEY);
+    assert.equal(r.mainCents, 9900);
+    assert.equal(r.downsellCents, 8800);
+    assert.equal(r.enrolled, false);
+    assert.equal(r.applied, false);
+  });
+
+  it('RUNNING ⇒ sticky per email, ~50/50, prices match the arm; out-of-funnel falls back', async () => {
+    await db.update(experiments).set({ status: 'running' }).where(eq(experiments.key, VM_TEST_KEY));
+    invalidateExperiment(VM_TEST_KEY);
+
+    let b = 0;
+    const N = 400;
+    for (let i = 0; i < N; i++) {
+      const email = `vm-${i}@test.invalid`;
+      const r1 = await resolveV1Price(email, 9900, 8800, VM_FUNNEL, VM_TEST_KEY);
+      const r2 = await resolveV1Price(email, 9900, 8800, VM_FUNNEL, VM_TEST_KEY);
+      assert.equal(r1.mainCents, r2.mainCents, 'sticky per email');
+      assert.equal(r1.enrolled, true);
+      if (r1.variant === 'B') {
+        assert.equal(r1.mainCents, 4500);
+        assert.equal(r1.downsellCents, 3200);
+        b++;
+      } else {
+        assert.equal(r1.mainCents, 3500);
+        assert.equal(r1.downsellCents, 2500);
+      }
+    }
+    const share = b / N;
+    assert.ok(share > 0.4 && share < 0.6, `B share ${share} not ~50%`);
+
+    // Out-of-funnel traffic is NOT enrolled and keeps the legacy fallback price —
+    // proves the funnel scope filter (so migrating one funnel never touches another).
+    const off = await resolveV1Price('vm-other@test.invalid', 9900, 8800, 'a-different-funnel', VM_TEST_KEY);
+    assert.equal(off.mainCents, 9900);
+    assert.equal(off.enrolled, false);
+    assert.equal(off.applied, false);
+
+    // No funnel context ⇒ also out of scope.
+    const noFunnel = await resolveV1Price('vm-nofunnel@test.invalid', 9900, 8800, null, VM_TEST_KEY);
+    assert.equal(noFunnel.mainCents, 9900);
+    assert.equal(noFunnel.enrolled, false);
+  });
+
+  it('DONE + winner ⇒ rolls the winner prices out to the funnel (applied, not enrolled)', async () => {
+    await db
+      .update(experiments)
+      .set({ status: 'done', winnerVariant: 'B' })
+      .where(eq(experiments.key, VM_TEST_KEY));
+    invalidateExperiment(VM_TEST_KEY);
+    const r = await resolveV1Price('vm-anyone@test.invalid', 9900, 8800, VM_FUNNEL, VM_TEST_KEY);
+    assert.equal(r.mainCents, 4500); // winner B's $45 applied, not the legacy fallback
+    assert.equal(r.downsellCents, 3200);
+    assert.equal(r.applied, true);
+    assert.equal(r.enrolled, false); // concluded — no new exposures logged
+    // Winner rollout stays funnel-scoped — out-of-funnel keeps the fallback.
+    const off = await resolveV1Price('vm-off2@test.invalid', 9900, 8800, 'other', VM_TEST_KEY);
+    assert.equal(off.mainCents, 9900);
+    assert.equal(off.applied, false);
   });
 });
 

@@ -18,9 +18,11 @@ import {
   tally,
   tallyUpsell1,
   tallyEvent,
+  tallyV1Main,
   twoSidedP,
   invalidateExperiment,
   U1_PRICE_EXPERIMENT_KEY,
+  V1_MAIN_EXPERIMENT_KEY,
   PERSONA_PROMPT_KEY_PREFIX,
   isPersonaPromptKey,
 } from '../../lib/experiments';
@@ -42,14 +44,18 @@ const variantsSchema = z
   .refine((vs) => vs.some((v) => v.weight > 0), 'at least one variant must have weight > 0');
 
 const scopeSchema = z
-  .object({ personaId: z.string().nullable().optional(), route: z.string().optional() })
+  .object({
+    personaId: z.string().nullable().optional(),
+    funnel: z.string().optional(), // typed so a non-string funnel can't silently start an inert test
+    route: z.string().optional(),
+  })
   .passthrough()
   .nullable()
   .optional();
 
 const conversionSchema = z
   .object({
-    type: z.enum(['credit_purchase', 'upsell1_funnel', 'event']),
+    type: z.enum(['credit_purchase', 'upsell1_funnel', 'v1_main_funnel', 'event']),
     windowDays: z.number().int().positive().max(365).optional(),
     name: z.string().optional(),
   })
@@ -89,6 +95,22 @@ function u1PayloadError(variants: Array<{ key: string; payload?: Record<string, 
     if (!Number.isFinite(c) || c <= 0) {
       return `variant '${v.key}': an upsell1_funnel arm needs a positive upsell1Cents payload`;
     }
+  }
+  return null;
+}
+
+// A v1_main_funnel arm reads BOTH mainCents and downsellCents to price the V1 main
+// + downsell — both must be valid positive ints so a typo can't half-apply a price
+// (resolveV1Price falls back to the legacy price unless BOTH are present).
+function v1MainPayloadError(
+  variants: Array<{ key: string; payload?: Record<string, unknown> }>,
+): string | null {
+  for (const v of variants) {
+    const p = v.payload as { mainCents?: unknown; downsellCents?: unknown } | undefined;
+    const m = Number(p?.mainCents);
+    const d = Number(p?.downsellCents);
+    if (!Number.isFinite(m) || m <= 0) return `variant '${v.key}': a v1_main_funnel arm needs a positive mainCents payload`;
+    if (!Number.isFinite(d) || d <= 0) return `variant '${v.key}': a v1_main_funnel arm needs a positive downsellCents payload`;
   }
   return null;
 }
@@ -293,6 +315,19 @@ router.get('/:key/results', async (req: Request, res: Response) => {
         });
       }
       result = await tallyUpsell1({ key, startISO, controlKey, treatmentKey });
+    } else if (conversionType === 'v1_main_funnel') {
+      // Sourced from the exposure log ⋈ conversations (confirmed main/downsell
+      // purchase). Needs ≥2 arms to compare.
+      if (!controlKey || !treatmentKey) {
+        return res.json({
+          experiment: meta,
+          started: true,
+          unsupported: 'experiment needs at least 2 arms to measure',
+          params,
+          rows: [],
+        });
+      }
+      result = await tallyV1Main({ key, startISO, controlKey, treatmentKey });
     } else if (conversionType === 'event') {
       // Generic event conversions (e.g. visitor page-copy lander tests).
       if (!controlKey || !treatmentKey) {
@@ -349,6 +384,15 @@ router.post('/', async (req: Request, res: Response) => {
         });
       }
       const err = u1PayloadError(data.variants);
+      if (err) return res.status(400).json({ error: err });
+    }
+    if (data.conversion?.type === 'v1_main_funnel') {
+      if (data.key !== V1_MAIN_EXPERIMENT_KEY) {
+        return res.status(400).json({
+          error: `conversion type 'v1_main_funnel' is only supported for the '${V1_MAIN_EXPERIMENT_KEY}' experiment`,
+        });
+      }
+      const err = v1MainPayloadError(data.variants);
       if (err) return res.status(400).json({ error: err });
     }
 
@@ -437,6 +481,24 @@ router.patch('/:key', async (req: Request, res: Response) => {
       const err = u1PayloadError(data.variants);
       if (err) return res.status(400).json({ error: err });
     }
+    if (effectiveConvType === 'v1_main_funnel' && data.variants) {
+      const err = v1MainPayloadError(data.variants);
+      if (err) return res.status(400).json({ error: err });
+    }
+    // v1_main_funnel ↔ the live key, enforced BOTH directions (resolveV1Price only
+    // consults V1_MAIN_EXPERIMENT_KEY): another key can't become a v1_main test (it'd
+    // be inert), and the live key can't drop v1_main_funnel (it'd mis-measure + dodge
+    // the funnel-scope start guard).
+    if (effectiveConvType === 'v1_main_funnel' && key !== V1_MAIN_EXPERIMENT_KEY) {
+      return res.status(400).json({
+        error: `conversion type 'v1_main_funnel' is only supported for the '${V1_MAIN_EXPERIMENT_KEY}' experiment`,
+      });
+    }
+    if (key === V1_MAIN_EXPERIMENT_KEY && effectiveConvType && effectiveConvType !== 'v1_main_funnel') {
+      return res.status(400).json({
+        error: `the '${V1_MAIN_EXPERIMENT_KEY}' experiment must keep conversion type 'v1_main_funnel'`,
+      });
+    }
 
     // Re-validate persona-prompt structure against the EFFECTIVE scope/conversion
     // (only reachable on a draft — started tests freeze scope/conversion above).
@@ -489,6 +551,16 @@ router.post('/:key/start', async (req: Request, res: Response) => {
       return res
         .status(400)
         .json({ error: 'need at least 2 variants with a positive weight before starting' });
+    }
+    // The live v1_main key OVERRIDES the V1 main price (resolveV1Price consults this
+    // exact key). Require scope.funnel so it only overrides ONE funnel — without it
+    // the override would hit every funnel and clobber all the live system_config
+    // splits at once. Keyed on the KEY (not conversion.type) so it can't be bypassed
+    // by editing the draft's conversion type away from v1_main_funnel before /start.
+    if (key === V1_MAIN_EXPERIMENT_KEY && !exp.scope?.funnel) {
+      return res.status(400).json({
+        error: 'the V1 main price test must set scope.funnel before starting (it overrides that one funnel only)',
+      });
     }
     // persona_prompt_* tests drive the live AI prompt: arms must be authored, and
     // no two may run concurrently for one persona (the resolver would pick one

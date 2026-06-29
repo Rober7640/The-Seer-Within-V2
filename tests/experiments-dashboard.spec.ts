@@ -25,6 +25,11 @@ const KEY4 = `e2e_p3_named_${STAMP}`;
 // real persona, never the live persona_prompt_evelyn_2026 draft) so even a
 // momentarily-running test can't swap any real persona's chat prompt.
 const PP_PERSONA = "00000000-0000-0000-0000-0000000e2e01";
+// Phase 3b-rest — V1 main price tally scenario (a test key; the live
+// v1_main_price_2026 is only touched by non-mutating 400-guard checks).
+const V1M_KEY = `e2e_v1m_${STAMP}`;
+const V1M_FUNNEL = `e2e-v1m-funnel-${STAMP}`;
+const V1M_EDIT_KEY = `e2e_v1medit_${STAMP}`;
 const KEY_PP1 = `persona_prompt_e2e1_${STAMP}`;
 const KEY_PP2 = `persona_prompt_e2e2_${STAMP}`;
 const KEY_PP3 = `persona_prompt_e2e3_${STAMP}`;
@@ -187,6 +192,56 @@ test.beforeAll(async ({ playwright }) => {
     mkExp(4, 'B', b4),
   ]);
 
+  // Phase 3b-rest — V1 MAIN price test measured from the EXPOSURE LOG ⋈ conversations.
+  // Buyer signal = purchased AND upsell_offered (confirmed payment), revenue =
+  // main_purchase_amount. A test key + synthetic funnel (running but inert — no live
+  // code consults this key). Scenario:
+  //   A: a0 buyer($35), a1 non-buyer, a4 purchased-but-NOT-offered (abandoned → viewer, not buyer)
+  //   B: b2 buyer($45), b3 non-buyer
+  await pool.query(
+    `INSERT INTO experiments (key, name, status, subject_type, variants, scope, conversion, started_at)
+     VALUES ($1, $2, 'running', 'email', $3::jsonb, $4::jsonb, $5::jsonb, $6)`,
+    [
+      V1M_KEY,
+      `V1 main ${V1M_KEY}`,
+      JSON.stringify([
+        { key: "A", weight: 50, payload: { mainCents: 3500, downsellCents: 2500 } },
+        { key: "B", weight: 50, payload: { mainCents: 4500, downsellCents: 3200 } },
+      ]),
+      JSON.stringify({ funnel: V1M_FUNNEL }),
+      JSON.stringify({ type: "v1_main_funnel" }),
+      U1_T0.toISOString(),
+    ],
+  );
+  const mkConvV1 = async (i: number, purchased: boolean, offered: boolean, amount: number | null) => {
+    const r = await pool.query(
+      `INSERT INTO conversations (email, first_name, purchased, upsell_offered, purchase_type, main_purchase_amount, created_at)
+       VALUES ($1, 'V1M', $2, $3, 'main', $4, $5) RETURNING id`,
+      [`v1mc-${STAMP}-${i}@test.invalid`, purchased, offered, amount, U1_T0.toISOString()],
+    );
+    return r.rows[0].id as string;
+  };
+  const mkExpV1 = (subj: number, variant: string, convId: string) =>
+    pool.query(
+      `INSERT INTO experiment_exposures (experiment_key, subject_id, variant, surface, context, created_at)
+       VALUES ($1, $2, $3, 'v1_main_assigned', $4::jsonb, $5)`,
+      [V1M_KEY, `v1msub-${STAMP}-${subj}`, variant, JSON.stringify({ conversationId: convId }), U1_T0.toISOString()],
+    );
+  const [va0, va1, va4, vb2, vb3] = await Promise.all([
+    mkConvV1(0, true, true, 3500),
+    mkConvV1(1, false, false, null),
+    mkConvV1(4, true, false, 3500), // purchased but NOT offered → not a confirmed buyer
+    mkConvV1(2, true, true, 4500),
+    mkConvV1(3, false, false, null),
+  ]);
+  await Promise.all([
+    mkExpV1(0, "A", va0),
+    mkExpV1(1, "A", va1),
+    mkExpV1(4, "A", va4),
+    mkExpV1(2, "B", vb2),
+    mkExpV1(3, "B", vb3),
+  ]);
+
   // Tokens: admin via login, regular user via register.
   const api = await playwright.request.newContext({ baseURL: "http://localhost:5000" });
   const loginRes = await api.post("/api/admin/login", {
@@ -205,14 +260,16 @@ test.beforeAll(async ({ playwright }) => {
 test.afterAll(async () => {
   await pool.query(`DELETE FROM credit_purchases WHERE user_id = ANY($1)`, [userIds]);
   const ppKeys = [KEY_PP1, KEY_PP2, KEY_PP3, KEY_PP_BAD];
-  await pool.query(`DELETE FROM experiment_exposures WHERE experiment_key = ANY($1)`, [[KEY, KEY2, KEY3, KEY4, ...ppKeys]]);
-  await pool.query(`DELETE FROM experiments WHERE key = ANY($1)`, [[KEY, KEY2, KEY3, KEY4, ...ppKeys]]);
+  await pool.query(`DELETE FROM experiment_exposures WHERE experiment_key = ANY($1)`, [[KEY, KEY2, KEY3, KEY4, V1M_KEY, V1M_EDIT_KEY, ...ppKeys]]);
+  await pool.query(`DELETE FROM experiments WHERE key = ANY($1)`, [[KEY, KEY2, KEY3, KEY4, V1M_KEY, V1M_EDIT_KEY, ...ppKeys]]);
   await pool.query(`DELETE FROM users WHERE id = ANY($1)`, [userIds]);
   // The regular user registered via /api/auth/register isn't in userIds — clean by email.
   await pool.query(`DELETE FROM users WHERE email LIKE $1`, [`e2e-dash-user-${STAMP}@test.invalid`]);
   await pool.query(`DELETE FROM admin_users WHERE id = $1`, [adminId]);
   await pool.query(`DELETE FROM experiment_exposures WHERE subject_id LIKE $1`, [`u1sub-${STAMP}-%`]);
+  await pool.query(`DELETE FROM experiment_exposures WHERE subject_id LIKE $1`, [`v1msub-${STAMP}-%`]);
   await pool.query(`DELETE FROM conversations WHERE email LIKE $1`, [`u1c-${STAMP}-%@test.invalid`]);
+  await pool.query(`DELETE FROM conversations WHERE email LIKE $1`, [`v1mc-${STAMP}-%@test.invalid`]);
   await pool.end();
 });
 
@@ -484,6 +541,94 @@ test("upsell1_funnel guards: only u1_price_2026 key, and arms need a valid price
     },
   });
   expect(badPayload.status()).toBe(400);
+});
+
+// ── Phase 3b-rest — V1 main price test ───────────────────────────────────────
+
+test("V1 main price results tally from the conversations funnel (v1_main_funnel)", async ({
+  request,
+}) => {
+  const res = await request.get(
+    `/api/admin/experiments/${V1M_KEY}/results?start=${encodeURIComponent(U1_T0.toISOString())}`,
+    { headers: adminHeaders() },
+  );
+  expect(res.ok()).toBeTruthy();
+  const body = await res.json();
+  expect(body.started).toBe(true);
+  const byVariant = Object.fromEntries(body.rows.map((r: any) => [r.variant, r]));
+  // A: 3 assigned (a0 buyer, a1 non-buyer, a4 purchased-but-not-offered=excluded), 1 buyer, $35.
+  // B: 2 assigned, 1 buyer, $45.
+  expect(byVariant.A).toMatchObject({ viewers: 3, buyers: 1, revenueUsd: 35 });
+  expect(byVariant.B).toMatchObject({ viewers: 2, buyers: 1, revenueUsd: 45 });
+});
+
+test("v1_main_funnel guards: only the live key, valid arm prices, scope.funnel to start", async ({
+  request,
+}) => {
+  // A v1_main_funnel under a different key would be inert → rejected (400).
+  const wrongKey = await request.post("/api/admin/experiments", {
+    headers: adminHeaders(),
+    data: {
+      key: `${KEY3}_v1m`,
+      name: "inert v1m",
+      subjectType: "email",
+      variants: [
+        { key: "A", weight: 50, payload: { mainCents: 3500, downsellCents: 2500 } },
+        { key: "B", weight: 50, payload: { mainCents: 4500, downsellCents: 3200 } },
+      ],
+      scope: { funnel: "v1-fb" },
+      conversion: { type: "v1_main_funnel" },
+    },
+  });
+  expect(wrongKey.status()).toBe(400);
+
+  // Editing the live (draft) v1_main_price_2026 with an arm missing downsellCents → 400
+  // (a half-price typo can't be saved). 400 ⇒ no mutation.
+  const badPayload = await request.patch("/api/admin/experiments/v1_main_price_2026", {
+    headers: adminHeaders(),
+    data: {
+      variants: [
+        { key: "A", weight: 50, payload: { mainCents: 3500, downsellCents: 2500 } },
+        { key: "B", weight: 50, payload: { mainCents: 4500 } },
+      ],
+    },
+  });
+  expect(badPayload.status()).toBe(400);
+
+  // Starting the live v1_main_price_2026 with no scope.funnel → 400 (it would override
+  // every funnel's price). The guard returns BEFORE the status update, so the live
+  // seed stays draft (non-mutating check).
+  const startNoFunnel = await request.post("/api/admin/experiments/v1_main_price_2026/start", {
+    headers: adminHeaders(),
+  });
+  expect(startNoFunnel.status()).toBe(400);
+
+  // The live key can't drop v1_main_funnel — closes the bypass where an operator
+  // changes conversion.type then starts unscoped (the start guard is keyed on the key).
+  const dropType = await request.patch("/api/admin/experiments/v1_main_price_2026", {
+    headers: adminHeaders(),
+    data: { conversion: { type: "event", name: "x" } },
+  });
+  expect(dropType.status()).toBe(400);
+
+  // A non-live key can't BECOME v1_main_funnel via edit (it would be inert —
+  // resolveV1Price only consults the live key). Create as credit_purchase, then PATCH.
+  const create = await request.post("/api/admin/experiments", {
+    headers: adminHeaders(),
+    data: { ...validBody, key: V1M_EDIT_KEY, scope: null, conversion: { type: "credit_purchase" } },
+  });
+  expect(create.status()).toBe(201);
+  const becomeV1m = await request.patch(`/api/admin/experiments/${V1M_EDIT_KEY}`, {
+    headers: adminHeaders(),
+    data: {
+      conversion: { type: "v1_main_funnel" },
+      variants: [
+        { key: "A", weight: 50, payload: { mainCents: 3500, downsellCents: 2500 } },
+        { key: "B", weight: 50, payload: { mainCents: 4500, downsellCents: 3200 } },
+      ],
+    },
+  });
+  expect(becomeV1m.status()).toBe(400);
 });
 
 // ── Phase 4b — persona-prompt (live AI path) guards ──────────────────────────
