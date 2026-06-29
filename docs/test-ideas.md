@@ -1590,6 +1590,18 @@ Principle: **test the measurement pipeline, not just the UI** — the experiment
 - [ ] A nicer prompt-authoring affordance than raw payload JSON in the dashboard — Phase 5 polish
 - [ ] Retire promptManager.ts random selector + /admin/analytics/prompts session counts (superseded) — Phase 5
 
+### Phase 4c — quiz-vs-chatbox structural test (Evelyn lander)
+- [x] structural visitor test: /api/ab/assign returns the variant KEY (chatbox/quiz) with no copy value, sticky *(tests/page-copy-experiment.spec.ts)*
+- [x] OFF: evelyn_lander_mechanic draft ⇒ /assign returns {} ⇒ lander renders default 'chatbox' (byte-identical) *(page-copy-experiment.spec.ts)*
+- [x] useABVariant returns the assigned key, defaults + times out to the control when no test/slow *(hook; covered via the assign path)*
+- [ ] EvelynLanderPage: both arms fire /start (lander session) and finish through the SAME handleCta — quiz signup gets the 5-min grant + drip + segment-aware routing identically — add a render/E2E test
+- [ ] Non-prod ?mechanic=quiz override previews the quiz arm without enrolling (dev only)
+- [ ] trackABConversion('evelyn_lander') fires once per evelyn-lander signup (both arms, via handleCta→LoginPage)
+- [ ] useABVariant: first settle wins (timeout vs late fetch) — no flash/double-render; a logged-in user never flashes either arm (gate waits for phase)
+- [ ] Quiz auto-advance timers are cleared on unmount (no onComplete after browser-back)
+- [ ] Quiz uses params.bucket (same as chatbox) — taps are engagement/analytics only (quiz_completed event)
+- [ ] Visitor→user purchase attribution (secondary metric) needs the identity stitch — deferred
+
 ### Phase 3b+ (not built yet)
 - [ ] Migrate the V1 MAIN/downsell price test (not just Upsell-1) onto the framework
 - [ ] Legacy `conversations` price columns preserved for reporting continuity

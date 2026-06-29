@@ -20,6 +20,16 @@ import { Sparkles, Send } from "lucide-react";
 import TurnstileWidget from "@/components/TurnstileWidget";
 import { calculateTypingDelay, sleep } from "@/lib/typingAnimation";
 import { track as trackPH } from "@/lib/posthog";
+import { useABVariant } from "@/hooks/useABTest";
+import EvelynQuizMechanic from "@/pages/evelyn-lander/EvelynQuizMechanic";
+
+// Phase 4c structural A/B: which lander MECHANIC a visitor sees. Control =
+// 'chatbox' (the open 2-turn chat below); treatment = 'quiz' (a 3-tap quiz that
+// hands off to the SAME signup). Registered as the visitor experiment
+// 'evelyn_lander_mechanic' (scope.route='evelyn_lander', element='mechanic').
+// OFF/draft ⇒ /assign returns no arm ⇒ default 'chatbox' ⇒ byte-identical.
+const AB_PAGE = "evelyn_lander";
+const AB_ELEMENT = "mechanic";
 
 const AUTH_TOKEN_KEY = "seer_auth_token";
 const EVELYN_PERSONA_SLUG = "evelyn-cross";
@@ -65,6 +75,7 @@ interface LanderParams {
   src: string | null;
   campaign: string | null;
   name: string | null;
+  mechanic: string | null; // non-prod preview override (?mechanic=quiz|chatbox)
 }
 
 function readParams(): LanderParams {
@@ -78,6 +89,7 @@ function readParams(): LanderParams {
     src: sp.get("src"),
     campaign: sp.get("campaign"),
     name: sp.get("name"),
+    mechanic: sp.get("mechanic"),
   };
 }
 
@@ -139,6 +151,26 @@ export default function EvelynLanderPage() {
   const sessionToken = getSessionToken();
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
+  // Resolve the lander MECHANIC (Phase 4c structural A/B). A non-prod
+  // `?mechanic=quiz|chatbox` override lets us preview either arm without enrolling.
+  // The 'quiz' arm only changes the ENGAGEMENT surface; BOTH arms run the same
+  // /start (creates the lander session) and finish through the same handleCta
+  // (segment-aware routing + session linkage + the signup conversion), so signup,
+  // the 5-min grant, and the drip are identical and the A/B isolates the mechanic.
+  const overrideMechanic =
+    import.meta.env.DEV && (params.mechanic === "quiz" || params.mechanic === "chatbox")
+      ? params.mechanic
+      : null;
+  const ab = useABVariant(AB_PAGE, AB_ELEMENT, "chatbox");
+  const mechanic = overrideMechanic ?? ab.variant;
+  const mechanicReady = overrideMechanic != null || ab.ready;
+
+  function goToExistingLogin() {
+    clearSession();
+    const emailQp = params.email ? `?email=${encodeURIComponent(params.email)}` : "";
+    navigate(`/login${emailQp}`);
+  }
+
   // Auto-scroll to newest message when the thread grows.
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -153,7 +185,10 @@ export default function EvelynLanderPage() {
     }
   }, [authLoading, user, navigate]);
 
-  // Resolve segment + opener via /start.
+  // Resolve segment + opener via /start. Fires on mount for BOTH arms (parallel
+  // with /assign, not serialized behind it) so the lander session exists for the
+  // shared handleCta and there's no added latency while the experiment is OFF.
+  // The quiz arm ignores the opener; it just needs the session.
   useEffect(() => {
     if (authLoading || user) return;
 
@@ -358,13 +393,24 @@ export default function EvelynLanderPage() {
     }
   }
 
-  if (authLoading || phase === "loading") {
+  // One gate for BOTH arms: wait for auth, the mechanic assignment, AND /start
+  // (so the lander session exists before the quiz can hand off via handleCta).
+  // A logged-in user stays here (phase never leaves 'loading' — /start early-returns)
+  // until the redirect effect fires, so neither arm flashes for logged-in users.
+  if (authLoading || !mechanicReady || phase === "loading") {
     return (
       <div className="min-h-screen relative flex items-center justify-center">
         <CosmicBackground />
         <div className="w-8 h-8 border-2 border-purple-300 border-t-transparent rounded-full animate-spin relative z-10" />
       </div>
     );
+  }
+
+  // Treatment arm: the tap-quiz mechanic. It completes through the SAME handleCta
+  // as the chatbox (segment-aware routing + session linkage + conversion). Any
+  // unknown/renamed variant key falls through to the control chatbox below.
+  if (mechanic === "quiz") {
+    return <EvelynQuizMechanic onComplete={handleCta} onAlreadyHaveAccount={goToExistingLogin} />;
   }
 
   const ctaLabel = ctaLabelFor(segment);
@@ -461,13 +507,7 @@ export default function EvelynLanderPage() {
 
           <div className="text-center">
             <button
-              onClick={() => {
-                clearSession();
-                const emailQp = params.email
-                  ? `?email=${encodeURIComponent(params.email)}`
-                  : "";
-                navigate(`/login${emailQp}`);
-              }}
+              onClick={goToExistingLogin}
               className="text-xs text-purple-700 hover:underline"
             >
               I already have an account

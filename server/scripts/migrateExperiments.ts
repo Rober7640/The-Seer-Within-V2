@@ -189,6 +189,33 @@ async function up(pool: pg.Pool) {
   } else {
     console.log('• persona_prompt_evelyn_2026 experiment already exists — left unchanged');
   }
+
+  // Phase 4c — STRUCTURAL test on the /evelyn lander: which MECHANIC the visitor
+  // sees. control 'chatbox' = the open 2-turn chat (today); 'quiz' = a 3-tap quiz
+  // that hands off to the same signup. Visitor-cookie subject; primary metric =
+  // signup (clean, pre-stitch). Draft = OFF ⇒ useABVariant returns the default
+  // 'chatbox' ⇒ lander byte-identical. element='mechanic' is REQUIRED (the public
+  // /api/ab/assign skips visitor tests with no scope.element).
+  const lmVariants = JSON.stringify([
+    { key: 'chatbox', weight: 50, payload: {} },
+    { key: 'quiz', weight: 50, payload: {} },
+  ]);
+  const lmScope = JSON.stringify({ route: 'evelyn_lander', element: 'mechanic' });
+  const lmConversion = JSON.stringify({ type: 'event', name: 'signup' });
+  const lm = await pool.query(
+    `INSERT INTO experiments (key, name, description, status, subject_type, variants, scope, conversion)
+     VALUES ('evelyn_lander_mechanic', 'Evelyn lander mechanic (chatbox vs quiz)',
+       'Structural A/B on /evelyn: control chatbox (open chat) vs quiz (3-tap). Primary metric = signup. Visitor-cookie subject. To start, set status=running.',
+       'draft', 'visitor', $1::jsonb, $2::jsonb, $3::jsonb)
+     ON CONFLICT (key) DO NOTHING
+     RETURNING id`,
+    [lmVariants, lmScope, lmConversion],
+  );
+  if (lm.rowCount && lm.rowCount > 0) {
+    console.log('✓ seeded DRAFT lander-mechanic experiment (Evelyn quiz vs chatbox)');
+  } else {
+    console.log('• evelyn_lander_mechanic experiment already exists — left unchanged');
+  }
 }
 
 async function down(pool: pg.Pool) {

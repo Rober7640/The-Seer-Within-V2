@@ -12,6 +12,8 @@ const STAMP = Date.now();
 const KEY = `cp_test_${STAMP}`;
 const ROUTE = `cp_route_${STAMP}`;
 const KEY_M = `cp_results_${STAMP}`; // directly-seeded scenario for the tally test
+const KEY_S = `cp_struct_${STAMP}`;  // Phase 4c structural test (empty payloads)
+const ROUTE_S = `cp_struct_route_${STAMP}`;
 const T0 = new Date("2099-06-20T00:00:00.000Z");
 const ADMIN_EMAIL = `cp-admin-${STAMP}@test.invalid`;
 const ADMIN_PW = "CpAdmin123!";
@@ -39,6 +41,25 @@ test.beforeAll(async ({ playwright }) => {
     );
   await mkExp(KEY, ROUTE);
   await mkExp(KEY_M, `${ROUTE}_m`);
+
+  // Phase 4c — a STRUCTURAL visitor test: arms carry EMPTY payloads (the variant
+  // KEY drives the branch, not a copy value). element='mechanic'. Models the live
+  // evelyn_lander_mechanic (chatbox vs quiz).
+  await pool.query(
+    `INSERT INTO experiments (key, name, status, subject_type, variants, scope, conversion, started_at)
+     VALUES ($1, $2, 'running', 'visitor', $3::jsonb, $4::jsonb, $5::jsonb, $6)`,
+    [
+      KEY_S,
+      `structural ${KEY_S}`,
+      JSON.stringify([
+        { key: "chatbox", weight: 50, payload: {} },
+        { key: "quiz", weight: 50, payload: {} },
+      ]),
+      JSON.stringify({ route: ROUTE_S, element: "mechanic" }),
+      JSON.stringify({ type: "event", name: "signup" }),
+      T0.toISOString(),
+    ],
+  );
 
   // Directly-seeded measurement scenario for KEY_M: A 2 exposed/1 converted,
   // B 2 exposed/2 converted.
@@ -73,9 +94,9 @@ test.beforeAll(async ({ playwright }) => {
 });
 
 test.afterAll(async () => {
-  await pool.query(`DELETE FROM experiment_conversions WHERE experiment_key = ANY($1)`, [[KEY, KEY_M]]);
-  await pool.query(`DELETE FROM experiment_exposures WHERE experiment_key = ANY($1)`, [[KEY, KEY_M]]);
-  await pool.query(`DELETE FROM experiments WHERE key = ANY($1)`, [[KEY, KEY_M]]);
+  await pool.query(`DELETE FROM experiment_conversions WHERE experiment_key = ANY($1)`, [[KEY, KEY_M, KEY_S]]);
+  await pool.query(`DELETE FROM experiment_exposures WHERE experiment_key = ANY($1)`, [[KEY, KEY_M, KEY_S]]);
+  await pool.query(`DELETE FROM experiments WHERE key = ANY($1)`, [[KEY, KEY_M, KEY_S]]);
   await pool.query(`DELETE FROM admin_users WHERE id = $1`, [adminId]);
   await pool.end();
 });
@@ -141,6 +162,22 @@ test("event results tally from exposures ⋈ conversions (admin)", async ({ requ
   expect(byVariant.B).toMatchObject({ viewers: 2, buyers: 2, conversionPct: 100 });
 });
 
+test("structural test: /assign returns the variant KEY with no copy value (sticky)", async ({
+  request,
+}) => {
+  const get = (vid: string) =>
+    request.get(`/api/ab/assign?page=${ROUTE_S}`, { headers: { Cookie: `ab_vid=${vid}` } });
+
+  const a1 = (await (await get("struct-1")).json()).assignments.mechanic;
+  // The variant KEY is what a structural branch reads (useABVariant); empty payload
+  // ⇒ no copy value.
+  expect(["chatbox", "quiz"]).toContain(a1.variantId);
+  expect(a1.value ?? null).toBeNull();
+  // Sticky per visitor.
+  const a2 = (await (await get("struct-1")).json()).assignments.mechanic;
+  expect(a2.variantId).toBe(a1.variantId);
+});
+
 test("OFF: a draft visitor test yields no assignment (lander keeps default copy)", async ({ request }) => {
   // The seeded soulmate_landing_cta_2026 ships draft → /assign returns nothing.
   const res = await request.get(`/api/ab/assign?page=soulmate_landing`, {
@@ -148,6 +185,14 @@ test("OFF: a draft visitor test yields no assignment (lander keeps default copy)
   });
   expect(res.ok()).toBeTruthy();
   expect((await res.json()).assignments).toEqual({});
+
+  // Same for the live Phase-4c seed evelyn_lander_mechanic (draft) → the lander
+  // renders the default 'chatbox' mechanic (byte-identical).
+  const ev = await request.get(`/api/ab/assign?page=evelyn_lander`, {
+    headers: { Cookie: `ab_vid=off-check-evelyn` },
+  });
+  expect(ev.ok()).toBeTruthy();
+  expect((await ev.json()).assignments).toEqual({});
 });
 
 test("DONE + winner: /assign serves the winner's copy to every visitor", async ({ request }) => {
