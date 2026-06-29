@@ -3,7 +3,7 @@
 
 import { db } from './db';
 import { personaPrompts, personas } from '@shared/schema';
-import { eq, and, desc, sql, count } from 'drizzle-orm';
+import { eq, and, desc, sql } from 'drizzle-orm';
 import logger from './logger';
 
 // Prompt types supported by the system
@@ -202,74 +202,6 @@ export async function activatePrompt(promptId: string): Promise<void> {
 }
 
 // ============================================
-// GET ACTIVE PROMPTS FOR PERSONA
-// ============================================
-
-export async function getActivePrompts(
-  personaId: string,
-  promptType?: string,
-): Promise<PromptDetail[]> {
-  let conditions = and(
-    eq(personaPrompts.personaId, personaId),
-    eq(personaPrompts.isActive, true),
-  );
-
-  if (promptType) {
-    conditions = and(conditions, eq(personaPrompts.promptType, promptType));
-  }
-
-  const prompts = await db
-    .select()
-    .from(personaPrompts)
-    .where(conditions)
-    .orderBy(personaPrompts.promptType, desc(personaPrompts.version));
-
-  return prompts.map(formatPromptDetail);
-}
-
-// ============================================
-// SELECT PROMPT FOR SESSION (A/B test logic)
-// ============================================
-
-export async function selectPromptForSession(
-  personaId: string,
-  promptType: string,
-): Promise<PromptDetail | null> {
-  const activePrompts = await db
-    .select()
-    .from(personaPrompts)
-    .where(
-      and(
-        eq(personaPrompts.personaId, personaId),
-        eq(personaPrompts.promptType, promptType),
-        eq(personaPrompts.isActive, true),
-      ),
-    );
-
-  if (activePrompts.length === 0) return null;
-
-  // Single active prompt -- return directly
-  if (activePrompts.length === 1) {
-    return formatPromptDetail(activePrompts[0]);
-  }
-
-  // A/B test: select based on trafficPercent (weighted random)
-  const totalTraffic = activePrompts.reduce((sum, p) => sum + p.trafficPercent, 0);
-  const roll = Math.random() * totalTraffic;
-
-  let cumulative = 0;
-  for (const prompt of activePrompts) {
-    cumulative += prompt.trafficPercent;
-    if (roll <= cumulative) {
-      return formatPromptDetail(prompt);
-    }
-  }
-
-  // Fallback to first
-  return formatPromptDetail(activePrompts[0]);
-}
-
-// ============================================
 // LIST ALL PROMPTS FOR PERSONA
 // ============================================
 
@@ -297,58 +229,6 @@ export async function listPromptsForPersona(
     .orderBy(personaPrompts.promptType, desc(personaPrompts.version));
 
   return prompts.map(formatPromptDetail);
-}
-
-// ============================================
-// GET PROMPT PERFORMANCE (A/B test comparison)
-// ============================================
-
-export interface PromptPerformance {
-  promptId: string;
-  promptType: string;
-  version: number;
-  variantLabel: string | null;
-  trafficPercent: number;
-  isActive: boolean;
-  // Session-based metrics (computed from chatSessions.promptVariantId)
-  sessionCount: number;
-}
-
-export async function getPromptPerformance(
-  personaId: string,
-  promptType: string,
-): Promise<PromptPerformance[]> {
-  const prompts = await db
-    .select()
-    .from(personaPrompts)
-    .where(
-      and(
-        eq(personaPrompts.personaId, personaId),
-        eq(personaPrompts.promptType, promptType),
-      ),
-    )
-    .orderBy(desc(personaPrompts.version));
-
-  // For each prompt variant, count sessions that used it
-  const results: PromptPerformance[] = [];
-  for (const p of prompts) {
-    const sessionCount = await db
-      .select({ count: count() })
-      .from(chatSessions)
-      .where(eq(chatSessions.promptVariantId, p.id));
-
-    results.push({
-      promptId: p.id,
-      promptType: p.promptType,
-      version: p.version,
-      variantLabel: p.variantLabel,
-      trafficPercent: p.trafficPercent,
-      isActive: p.isActive,
-      sessionCount: sessionCount[0]?.count || 0,
-    });
-  }
-
-  return results;
 }
 
 // ============================================
@@ -382,74 +262,6 @@ export async function testPrompt(
   rendered = rendered.replace(/\[NAME\]/g, sampleData.personName || 'Alex');
 
   return rendered;
-}
-
-// ============================================
-// BUILD FULL PROMPT FOR CHAT SESSION
-// Combines base system prompt + bucket prompt + action prompt
-// ============================================
-
-export async function buildPersonaPrompt(
-  personaId: string,
-  options: {
-    promptType: string;
-    bucket?: string;
-    memoryContext?: string;
-    userData: {
-      firstName: string;
-      bucket?: string;
-      concern?: string;
-      personName?: string;
-      subBucket?: string;
-      desires?: string;
-      timeOfDay?: string;
-    };
-  },
-): Promise<{ promptContent: string; promptVariantId: string | null } | null> {
-  // Get the persona's base system prompt
-  const persona = await db
-    .select()
-    .from(personas)
-    .where(eq(personas.id, personaId))
-    .limit(1);
-
-  if (!persona[0]) return null;
-
-  let fullPrompt = persona[0].baseSystemPrompt;
-
-  // Get bucket-specific prompt if applicable
-  if (options.bucket) {
-    const bucketPrompt = await selectPromptForSession(personaId, `bucket_${options.bucket}`);
-    if (bucketPrompt) {
-      fullPrompt += '\n\n' + bucketPrompt.promptContent;
-    }
-  }
-
-  // Add memory context
-  if (options.memoryContext) {
-    fullPrompt += '\n\n## Previous Conversation Memory\n' + options.memoryContext;
-  }
-
-  // Get the action-specific prompt
-  const actionPrompt = await selectPromptForSession(personaId, options.promptType);
-  let promptVariantId: string | null = null;
-  if (actionPrompt) {
-    fullPrompt += '\n\n' + actionPrompt.promptContent;
-    promptVariantId = actionPrompt.id;
-  }
-
-  // Replace template variables
-  const { userData } = options;
-  fullPrompt = fullPrompt.replace(/\$\{firstName\}/g, userData.firstName || 'Friend');
-  fullPrompt = fullPrompt.replace(/\$\{bucket\}/g, userData.bucket || 'general');
-  fullPrompt = fullPrompt.replace(/\$\{concern\}/g, userData.concern || '');
-  fullPrompt = fullPrompt.replace(/\$\{personName\}/g, userData.personName || '');
-  fullPrompt = fullPrompt.replace(/\$\{subBucket\}/g, userData.subBucket || '');
-  fullPrompt = fullPrompt.replace(/\$\{desires\}/g, userData.desires || '');
-  fullPrompt = fullPrompt.replace(/\$\{timeOfDay\}/g, userData.timeOfDay || 'today');
-  fullPrompt = fullPrompt.replace(/\[NAME\]/g, userData.personName || '');
-
-  return { promptContent: fullPrompt, promptVariantId };
 }
 
 // ============================================

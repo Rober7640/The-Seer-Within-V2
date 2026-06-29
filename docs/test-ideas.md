@@ -1613,8 +1613,18 @@ Principle: **test the measurement pipeline, not just the UI** — the experiment
 - [x] Idempotency: a second lead for the same email returns the SAME sticky price, never re-rolls (uses `!= null`, so a stored 0/NULL amount still counts as assigned) *(live verification)*
 - [x] scope.funnel is typed as a string (a non-string can't silently start an inert test) *(zod schema)*
 - [ ] Charge + display always read the stored priceAmountCents/downsellAmountCents (override never flips a price mid-funnel) — covered structurally (fold-in writes once at lead capture, idempotent guard); add an explicit charge-site E2E
-- [ ] priceVariant stays the system_config id when the framework overrides (id↔price decoupling) — accepted tradeoff: measurement is exposure-based, priceVariant stays a clean email tag, only /admin/price-test is affected (deleted in Phase 5)
+- [ ] priceVariant stays the system_config id when the framework overrides (id↔price decoupling) — accepted tradeoff: measurement is exposure-based, priceVariant stays a clean email tag; /admin/price-test (kept) reads the legacy split correctly until this test is started for a funnel
 - [ ] Multi-conversation-per-email attribution: a buyer on a later (price-less) conversation row is dropped by tallyV1Main — matches the U1 known edge (deferred)
 - [ ] Swallowed v1_main exposure (rare, non-blocking log) ⇒ priced-but-not-counted; roughly symmetric across arms — matches the U1 pattern (deferred)
 - [ ] DRY: tallyV1Main/resolveV1Price/v1MainPayloadError mirror the U1 counterparts — a shared tally/resolver/validator helper is a deferred consolidation
 - [ ] Migrate the V1 default (null-funnel) traffic — needs a "default funnel only" scope distinct from global (deferred)
+
+### Phase 5 — retire the legacy duplicates (consolidation done)
+- [x] Deleted ab_tests/ab_events tables (+ schema/types) and the legacy abTesting admin CRUD — KEPT the framework-backed public /api/ab/assign+/convert router *(tsc + framework specs 32/32)*
+- [x] Deleted ABTestingDashboard client page + its App.tsx route *(app boots; /admin/experiments renders)*
+- [~] KEPT /admin/price-test (priceTest.ts + PriceTestDashboard) — it's the only readout for the STILL-LIVE system_config V1 main-price split (framework v1_main_price_2026 is draft); delete it once that test is migrated to the framework (review finding)
+- [x] Removed the dead promptManager random selector (selectPromptForSession/buildPersonaPrompt/getActivePrompts) + the session-count views (getPromptPerformance, /admin/analytics/prompts, /prompts/:id/performance) — KEPT the live prompt editor fns + /admin/prompts
+- [x] migrations/018_drop_legacy_ab.sql applied (tables were empty); _down.sql recreates them *(rollback path)*
+- [x] No dangling references to any deleted symbol/table/route; tsc 46 (2 dead-code errors removed, 0 new) *(grep + tsc)*
+- [ ] Exactly ONE A/B framework remains — exit criterion met
+- [ ] (Optional follow-ups, not blockers) SRM alerting, refund-rate guardrail, pre-registered-N gating in the dashboard UI; drop the write-dead chat_sessions.promptVariantId column; rate-limit the public /api/ab endpoints

@@ -28,6 +28,10 @@ const MIGRATION_FILES = [
   "008_password_reset",
   "009_coins_system",
   "011_persona_availability",
+  // NOTE: 012–017 were applied via drizzle-kit push / by hand and were never
+  // registered here (pre-existing gap). 018 is registered so its rollback is
+  // runnable via the tool; it is idempotent (DROP/CREATE ... IF [NOT] EXISTS).
+  "018_drop_legacy_ab",
 ];
 
 async function getPool(): Promise<pg.Pool> {

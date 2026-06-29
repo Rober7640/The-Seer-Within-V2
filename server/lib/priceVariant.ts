@@ -226,8 +226,9 @@ export async function assignVariantIfMissing(
     // row, never the stored price; (b) priceVariant is also consumed as a clean
     // funnel/price email tag (migrationDripProcessor / resendFunnelTags), which an
     // encoded framework value would pollute. The only reader that sees the resulting
-    // id↔price decoupling is the legacy /admin/price-test readout, which is superseded
-    // by this framework and removed in Phase 5 — an accepted, temporary tradeoff.
+    // id↔price decoupling is the /admin/price-test readout, and only once this
+    // framework test is started for a funnel (until then the legacy split is what's
+    // live and /admin/price-test reads it correctly) — an accepted, temporary tradeoff.
     const v1 = await resolveV1Price(email, picked.priceCents, picked.downsellCents, funnel);
     const mainCents = v1.mainCents;
     const downsellCents = v1.downsellCents;

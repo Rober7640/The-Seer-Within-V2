@@ -68,8 +68,10 @@ const EvelynFollowUpsPage = lazy(() => import("@/pages/admin/EvelynFollowUpsPage
 const PersonaFollowUpsPage = lazy(() => import("@/pages/admin/PersonaFollowUpsPage"));
 const MarketplacePage = lazy(() => import("@/pages/admin/MarketplacePage"));
 const SettingsPage = lazy(() => import("@/pages/admin/SettingsPage"));
+// Kept until the live V1 main-price split (system_config.v1_price_variants) is
+// migrated onto the experiments framework — it's the only readout for that
+// still-live test (the framework's v1_main_price_2026 ships draft/OFF).
 const PriceTestDashboard = lazy(() => import("@/pages/admin/PriceTestDashboard"));
-const ABTestingDashboard = lazy(() => import("@/pages/admin/ABTestingDashboard"));
 const ExperimentsDashboard = lazy(() => import("@/pages/admin/ExperimentsDashboard"));
 
 function LazyFallback() {
@@ -294,7 +296,6 @@ function Router() {
         <Route path="/admin/marketplace" component={MarketplacePage} />
         <Route path="/admin/settings" component={SettingsPage} />
         <Route path="/admin/price-test" component={PriceTestDashboard} />
-        <Route path="/admin/ab-testing" component={ABTestingDashboard} />
         <Route path="/admin/experiments" component={ExperimentsDashboard} />
 
         <Route component={NotFound} />
