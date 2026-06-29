@@ -30,6 +30,7 @@ const PP_PERSONA = "00000000-0000-0000-0000-0000000e2e01";
 const V1M_KEY = `e2e_v1m_${STAMP}`;
 const V1M_FUNNEL = `e2e-v1m-funnel-${STAMP}`;
 const V1M_EDIT_KEY = `e2e_v1medit_${STAMP}`;
+const KEY_N = `e2e_ngate_${STAMP}`; // pre-registered-N gate
 const KEY_PP1 = `persona_prompt_e2e1_${STAMP}`;
 const KEY_PP2 = `persona_prompt_e2e2_${STAMP}`;
 const KEY_PP3 = `persona_prompt_e2e3_${STAMP}`;
@@ -260,8 +261,8 @@ test.beforeAll(async ({ playwright }) => {
 test.afterAll(async () => {
   await pool.query(`DELETE FROM credit_purchases WHERE user_id = ANY($1)`, [userIds]);
   const ppKeys = [KEY_PP1, KEY_PP2, KEY_PP3, KEY_PP_BAD];
-  await pool.query(`DELETE FROM experiment_exposures WHERE experiment_key = ANY($1)`, [[KEY, KEY2, KEY3, KEY4, V1M_KEY, V1M_EDIT_KEY, ...ppKeys]]);
-  await pool.query(`DELETE FROM experiments WHERE key = ANY($1)`, [[KEY, KEY2, KEY3, KEY4, V1M_KEY, V1M_EDIT_KEY, ...ppKeys]]);
+  await pool.query(`DELETE FROM experiment_exposures WHERE experiment_key = ANY($1)`, [[KEY, KEY2, KEY3, KEY4, V1M_KEY, V1M_EDIT_KEY, KEY_N, ...ppKeys]]);
+  await pool.query(`DELETE FROM experiments WHERE key = ANY($1)`, [[KEY, KEY2, KEY3, KEY4, V1M_KEY, V1M_EDIT_KEY, KEY_N, ...ppKeys]]);
   await pool.query(`DELETE FROM users WHERE id = ANY($1)`, [userIds]);
   // The regular user registered via /api/auth/register isn't in userIds — clean by email.
   await pool.query(`DELETE FROM users WHERE email LIKE $1`, [`e2e-dash-user-${STAMP}@test.invalid`]);
@@ -472,6 +473,54 @@ test("lifecycle: start → pause → declare-winner transitions", async ({ reque
   // a concluded test cannot be restarted → 409.
   const restart = await request.post(`/api/admin/experiments/${KEY3}/start`, { headers: adminHeaders() });
   expect(restart.status()).toBe(409);
+});
+
+test("pre-registered-N gate blocks declare-winner until N reached (force overrides)", async ({
+  request,
+}) => {
+  // Create + start a test with a high per-arm target and zero exposures.
+  const create = await request.post("/api/admin/experiments", {
+    headers: adminHeaders(),
+    data: {
+      ...validBody,
+      key: KEY_N,
+      scope: null,
+      conversion: { type: "credit_purchase", windowDays: 7, targetN: 10 },
+    },
+  });
+  expect(create.status()).toBe(201);
+  expect((await request.post(`/api/admin/experiments/${KEY_N}/start`, { headers: adminHeaders() })).status()).toBe(200);
+
+  // Results expose progress (not reached — 0 exposures < 10).
+  const res = await request.get(`/api/admin/experiments/${KEY_N}/results`, { headers: adminHeaders() });
+  const body = await res.json();
+  expect(body.progress).toMatchObject({ targetN: 10, reached: false });
+
+  // Push arm A past N but leave arm B at 0 — the gate must STILL be locked (a
+  // zero-exposure arm counts as 0, not "excluded"). Proves the smallest-arm rule.
+  await pool.query(
+    `INSERT INTO experiment_exposures (experiment_key, subject_id, variant, surface, context)
+     SELECT $1, 'ngate-a-' || g, 'A', 'x', '{}'::jsonb FROM generate_series(1, 15) g`,
+    [KEY_N],
+  );
+  const stillGated = await request.get(`/api/admin/experiments/${KEY_N}/results`, { headers: adminHeaders() });
+  expect((await stillGated.json()).progress).toMatchObject({ minExposures: 0, reached: false });
+
+  // declare-winner is gated → 409 (B still at 0).
+  const gated = await request.post(`/api/admin/experiments/${KEY_N}/declare-winner`, {
+    headers: adminHeaders(),
+    data: { variant: "B" },
+  });
+  expect(gated.status()).toBe(409);
+  expect((await gated.json()).error).toContain("pre-registered N");
+
+  // force:true overrides the gate → concludes.
+  const forced = await request.post(`/api/admin/experiments/${KEY_N}/declare-winner`, {
+    headers: adminHeaders(),
+    data: { variant: "B", force: true },
+  });
+  expect(forced.status()).toBe(200);
+  expect((await forced.json()).experiment.status).toBe("done");
 });
 
 test("stats generalize past A/B — control/treatment arms get lift + SRM + significance", async ({

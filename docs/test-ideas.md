@@ -1627,4 +1627,16 @@ Principle: **test the measurement pipeline, not just the UI** — the experiment
 - [x] migrations/018_drop_legacy_ab.sql applied (tables were empty); _down.sql recreates them *(rollback path)*
 - [x] No dangling references to any deleted symbol/table/route; tsc 46 (2 dead-code errors removed, 0 new) *(grep + tsc)*
 - [ ] Exactly ONE A/B framework remains — exit criterion met
-- [ ] (Optional follow-ups, not blockers) SRM alerting, refund-rate guardrail, pre-registered-N gating in the dashboard UI; drop the write-dead chat_sessions.promptVariantId column; rate-limit the public /api/ab endpoints
+
+### Phase 5 hardening — pre-registered-N gating + SRM alerting
+- [x] conversion.targetN (per-arm pre-registered N); results route returns progress {targetN, minExposures, reached} from exposure counts *(tests/experiments-dashboard.spec.ts)*
+- [x] declare-winner is gated server-side until every arm reaches N (409); force:true overrides; pause remains the no-override emergency kill *(experiments-dashboard.spec.ts)*
+- [x] Dashboard: progress bar + verdict hidden until N + declare-winner disabled until N + prominent SRM mismatch banner *(manual screenshot self-audit)*
+- [x] targetN absent ⇒ no gate (results.progress undefined); the standing "fixed-horizon, no early stopping" caution shows for EVERY experiment *(conditional render)*
+- [x] Zero-exposure arm counts as 0 (min over positive-weight arms, missing=0) — an arm past N can't unlock the gate while another arm is at 0 *(experiments-dashboard.spec.ts)*
+- [x] targetN parsed with Number (not parseInt) so "1e7" isn't truncated to 1; rejected if not a whole number ≥ 0 *(client validation)*
+- [x] Results-progress + declare-winner gate share one canonical cohort start (startedAt ?? first exposure) + targetNOf/gateArmKeys helpers, so the displayed lock state always matches the 409 *(shared helpers)*
+- [x] force:true below N is logged (auditable bypass of the fixed-horizon gate)
+- [ ] N-arm SRM: augmentSrm chi-square covers only the control vs treatment (first two) arms — a 3rd-arm mismatch isn't flagged (pre-existing 2-arm SRM; full N-arm SRM is a follow-up)
+- [ ] Per-arm-N semantics: a small positive-weight arm governs the gate (strict "every arm reaches N") — set targetN to what the smallest expected arm needs (by design)
+- [ ] (Remaining optional follow-ups) refund-rate guardrail (needs a Stripe-refund webhook + refunded column — no data source today); fold the N exposure-count into the tally query (one scan); drop the write-dead chat_sessions.promptVariantId column; rate-limit the public /api/ab endpoints

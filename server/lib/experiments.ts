@@ -616,6 +616,34 @@ export async function resolveUpsell1Cents(
   return { cents: fallbackCents, variant: a?.variant ?? null, enrolled: false };
 }
 
+/**
+ * Smallest per-arm exposure count across the given arms, for pre-registered-N
+ * gating (fixed-horizon, no peeking — "every arm has reached N", so the smallest
+ * arm governs). Exposures are the universal enrolment unit (unlike `viewers`, an
+ * offer-reached subset for the funnel tallies).
+ *
+ * `armKeys` MUST be the arms the gate is measured over — pass the positive-weight
+ * arms (a weight-0 arm is never assigned, so it would lock the gate forever). An
+ * arm with NO exposure rows counts as 0 (a GROUP BY alone would omit it and let the
+ * gate unlock with an arm at zero data). Empty armKeys ⇒ 0 (stays locked).
+ */
+export async function minArmExposures(
+  key: string,
+  startISO: string,
+  armKeys: string[],
+): Promise<number> {
+  if (!armKeys.length) return 0;
+  const res = await db.execute(sql`
+    SELECT variant, count(*) AS n
+    FROM experiment_exposures
+    WHERE experiment_key = ${key} AND created_at >= ${startISO}
+    GROUP BY variant;
+  `);
+  const byArm: Record<string, number> = {};
+  for (const r of res.rows as Record<string, unknown>[]) byArm[String(r.variant)] = Number(r.n) || 0;
+  return Math.min(...armKeys.map((k) => byArm[k] ?? 0));
+}
+
 // ── V1 MAIN/downsell price test (Phase 3b-rest) ──────────────────────────────
 export const V1_MAIN_EXPERIMENT_KEY = 'v1_main_price_2026';
 

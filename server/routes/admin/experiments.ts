@@ -20,6 +20,7 @@ import {
   tallyEvent,
   tallyV1Main,
   twoSidedP,
+  minArmExposures,
   invalidateExperiment,
   U1_PRICE_EXPERIMENT_KEY,
   V1_MAIN_EXPERIMENT_KEY,
@@ -58,6 +59,7 @@ const conversionSchema = z
     type: z.enum(['credit_purchase', 'upsell1_funnel', 'v1_main_funnel', 'event']),
     windowDays: z.number().int().positive().max(365).optional(),
     name: z.string().optional(),
+    targetN: z.number().int().nonnegative().max(10_000_000).optional(), // pre-registered per-arm N
   })
   .nullable()
   .optional();
@@ -176,7 +178,12 @@ function strayPromptPayloadError(
   return null;
 }
 
-const winnerSchema = z.object({ variant: z.string().min(1) });
+const winnerSchema = z.object({
+  variant: z.string().min(1),
+  // Explicit override of the pre-registered-N gate (early stop). Default false —
+  // the gate enforces fixed-horizon "no peeking"; pausing is the emergency kill.
+  force: z.boolean().optional(),
+});
 
 function badRequest(res: Response, parsed: z.SafeParseError<unknown>) {
   return res.status(400).json({
@@ -190,6 +197,36 @@ function parsePositiveInt(v: unknown): number | null {
   if (typeof v !== 'string' || v === '') return null;
   const n = parseInt(v, 10);
   return Number.isFinite(n) && n > 0 ? n : null;
+}
+
+// ── Pre-registered-N gate (fixed-horizon, no peeking) — shared by the results
+// route (progress display) and the declare-winner gate (server enforcement), so
+// the two NEVER disagree. ──────────────────────────────────────────────────────
+
+/** Pre-registered per-arm N from the experiment's conversion config; null = no gate. */
+function targetNOf(exp: { conversion?: ExperimentConversion | null }): number | null {
+  const t = exp.conversion?.targetN;
+  return typeof t === 'number' && t > 0 ? t : null;
+}
+
+/** Positive-weight arm keys — the arms the gate is measured over. A weight-0 arm is
+ *  never assigned, so it must NOT lock the gate; an enrolled arm still at 0 exposures
+ *  MUST keep it locked (minArmExposures treats a missing arm as 0). */
+function gateArmKeys(variants: Array<{ key: string; weight: number }> | null | undefined): string[] {
+  return (variants ?? []).filter((v) => v.weight > 0).map((v) => v.key);
+}
+
+/** Canonical cohort start: when the test was flipped on (startedAt), else the first
+ *  logged exposure. Independent of the ?start/?windowDays tally overrides, so the
+ *  results-route progress and the declare-winner gate measure the SAME cohort. */
+async function cohortStartISO(exp: { key: string; startedAt: Date | null }): Promise<string | null> {
+  if (exp.startedAt) return exp.startedAt.toISOString();
+  const rows = await db
+    .select({ first: sql<string | null>`min(${experimentExposures.createdAt})` })
+    .from(experimentExposures)
+    .where(eq(experimentExposures.experimentKey, exp.key));
+  const first = rows[0]?.first;
+  return first ? new Date(first).toISOString() : null;
 }
 
 // Augment tally()'s observed split with an SRM (sample-ratio mismatch) check
@@ -350,6 +387,20 @@ router.get('/:key/results', async (req: Request, res: Response) => {
       });
     }
     const srm = augmentSrm(result.srm, exp.variants);
+
+    // Pre-registered-N gating (fixed-horizon, no peeking): progress toward the
+    // pre-registered per-arm exposure target, measured over the CANONICAL cohort
+    // start (not the ?start tally override) and the positive-weight arms — so this
+    // display always matches the server-side declare-winner gate. `reached` once
+    // every such arm has ≥ targetN exposures (the smallest governs).
+    const targetN = targetNOf(exp);
+    let progress: { targetN: number; minExposures: number; reached: boolean } | undefined;
+    if (targetN) {
+      const gateStart = await cohortStartISO(exp);
+      const minCount = gateStart ? await minArmExposures(key, gateStart, gateArmKeys(exp.variants)) : 0;
+      progress = { targetN, minExposures: minCount, reached: minCount >= targetN };
+    }
+
     return res.json({
       experiment: meta,
       started: true,
@@ -357,6 +408,7 @@ router.get('/:key/results', async (req: Request, res: Response) => {
       rows: result.rows,
       srm,
       significance: result.significance,
+      progress,
     });
   } catch (error: any) {
     logger.error('Experiment results error:', error);
@@ -660,6 +712,29 @@ router.post('/:key/declare-winner', async (req: Request, res: Response) => {
       return res
         .status(400)
         .json({ error: `variant '${parsed.data.variant}' is not one of this experiment's arms` });
+    }
+    // Pre-registered-N gate (fixed-horizon, no peeking): block concluding until every
+    // positive-weight arm has reached the pre-registered per-arm target, measured
+    // over the canonical cohort start (same helpers as the results-route progress, so
+    // the lock state the dashboard shows always matches this 409). `force:true` is the
+    // explicit early-stop override (needed because the conversion config — incl.
+    // targetN — is frozen once started; pausing remains the no-override emergency kill).
+    const targetN = targetNOf(exp);
+    if (targetN) {
+      const gateStart = await cohortStartISO(exp);
+      const minCount = gateStart ? await minArmExposures(key, gateStart, gateArmKeys(exp.variants)) : 0;
+      if (!parsed.data.force) {
+        if (minCount < targetN) {
+          return res.status(409).json({
+            error: `pre-registered N not reached (smallest arm ${minCount}/${targetN}) — keep running (no peeking), pause to stop, or pass force:true to override`,
+          });
+        }
+      } else if (minCount < targetN) {
+        // Auditable record that the fixed-horizon gate was deliberately bypassed.
+        logger.warn('declare-winner FORCED below pre-registered N', {
+          key, winner: parsed.data.variant, minCount, targetN, adminId: req.adminId,
+        });
+      }
     }
     const updated = await db
       .update(experiments)

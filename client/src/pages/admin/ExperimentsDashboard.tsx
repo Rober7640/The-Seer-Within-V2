@@ -28,7 +28,7 @@ interface ExperimentRow {
   subjectType: string;
   variants: Variant[];
   scope: { personaId?: string | null } | null;
-  conversion: { type?: string; windowDays?: number } | null;
+  conversion: { type?: string; windowDays?: number; targetN?: number } | null;
   startedAt: string | null;
   endedAt: string | null;
   winnerVariant: string | null;
@@ -68,6 +68,8 @@ interface ResultsResponse {
     ok?: boolean;
   };
   significance?: { z: number; p: number; liftPct: number; significant: boolean };
+  // Pre-registered-N gate progress (present only when conversion.targetN is set).
+  progress?: { targetN: number; minExposures: number; reached: boolean };
 }
 
 const STATUS_STYLES: Record<string, string> = {
@@ -127,6 +129,7 @@ interface ExpForm {
   personaId: string;
   conversionType: string;
   windowDays: string;
+  targetN: string;
 }
 
 const BLANK_FORM: ExpForm = {
@@ -141,6 +144,7 @@ const BLANK_FORM: ExpForm = {
   personaId: "",
   conversionType: "credit_purchase",
   windowDays: "7",
+  targetN: "",
 };
 
 function toForm(exp: ExperimentRow): ExpForm {
@@ -157,6 +161,7 @@ function toForm(exp: ExperimentRow): ExpForm {
     personaId: exp.scope?.personaId ?? "",
     conversionType: exp.conversion?.type ?? "credit_purchase",
     windowDays: exp.conversion?.windowDays ? String(exp.conversion.windowDays) : "7",
+    targetN: exp.conversion?.targetN ? String(exp.conversion.targetN) : "",
   };
 }
 
@@ -177,6 +182,15 @@ function formToBody(form: ExpForm, includeKey: boolean) {
     }
     return { key: v.key.trim(), weight, payload };
   });
+  // Use Number (not parseInt) so a scientific-notation entry like "1e7" isn't
+  // silently truncated to 1 — which would gut the no-peeking gate. Validate integer.
+  let targetN: number | undefined;
+  const tn = form.targetN.trim();
+  if (tn) {
+    const n = Number(tn);
+    if (!Number.isInteger(n) || n < 0) throw new Error("Pre-registered N must be a whole number ≥ 0");
+    targetN = n;
+  }
   const body: Record<string, unknown> = {
     name: form.name.trim(),
     description: form.description.trim() || undefined,
@@ -186,6 +200,7 @@ function formToBody(form: ExpForm, includeKey: boolean) {
     conversion: {
       type: form.conversionType,
       windowDays: form.windowDays ? parseInt(form.windowDays, 10) : undefined,
+      targetN,
     },
   };
   if (includeKey) body.key = form.key.trim();
@@ -265,6 +280,11 @@ export default function ExperimentsDashboard() {
     row.liftPct === null || row.liftPct === undefined
       ? "—"
       : `${row.liftPct >= 0 ? "+" : ""}${row.liftPct.toFixed(1)}%`;
+
+  // Pre-registered-N gate: when a target is set and not yet reached, hide the
+  // verdict and disable declare-winner (fixed-horizon, no peeking).
+  const progress = results?.progress;
+  const nGated = !!progress && !progress.reached;
 
   // ── Write actions ────────────────────────────────────────────────────────────
 
@@ -437,6 +457,17 @@ export default function ExperimentsDashboard() {
                     value={form.windowDays}
                     disabled={structuralLocked}
                     onChange={(e) => setForm({ ...form, windowDays: e.target.value })}
+                    className="w-full rounded border border-gray-700 bg-gray-900 px-3 py-2 text-sm text-white disabled:opacity-60"
+                  />
+                </Field>
+                <Field label="Pre-registered N per arm (optional)">
+                  <input
+                    type="number"
+                    min={0}
+                    value={form.targetN}
+                    disabled={structuralLocked}
+                    onChange={(e) => setForm({ ...form, targetN: e.target.value })}
+                    placeholder="no peeking gate"
                     className="w-full rounded border border-gray-700 bg-gray-900 px-3 py-2 text-sm text-white disabled:opacity-60"
                   />
                 </Field>
@@ -697,6 +728,44 @@ export default function ExperimentsDashboard() {
                         {results.params.personaId ? ` · persona ${results.params.personaId}` : ""}
                       </div>
 
+                      {/* SRM alert banner — sample-ratio mismatch invalidates results. */}
+                      {results.srm?.ok === false && (
+                        <div className="rounded border border-red-700 bg-red-950/40 p-3 text-sm text-red-200">
+                          ⚠ <strong>Sample-ratio mismatch</strong> — the observed split is off from the
+                          configured weights, so randomization is suspect and these results may be
+                          invalid. Investigate assignment before trusting any verdict.
+                        </div>
+                      )}
+
+                      {/* Pre-registered-N progress (fixed-horizon, no peeking). */}
+                      {progress && (
+                        <div
+                          className={`rounded border p-3 text-xs ${
+                            progress.reached
+                              ? "border-emerald-800 bg-emerald-950/20 text-emerald-200"
+                              : "border-gray-700 bg-gray-900/50 text-gray-300"
+                          }`}
+                        >
+                          <div className="mb-1 flex items-center justify-between">
+                            <span>
+                              Pre-registered N: smallest arm {progress.minExposures.toLocaleString()} /{" "}
+                              {progress.targetN.toLocaleString()} exposures
+                            </span>
+                            <span>
+                              {progress.reached ? "N reached — verdict unlocked" : "collecting — no peeking"}
+                            </span>
+                          </div>
+                          <div className="h-1.5 w-full overflow-hidden rounded bg-gray-800">
+                            <div
+                              className={`h-full ${progress.reached ? "bg-emerald-500" : "bg-purple-500"}`}
+                              style={{
+                                width: `${Math.min(100, (progress.minExposures / progress.targetN) * 100).toFixed(1)}%`,
+                              }}
+                            />
+                          </div>
+                        </div>
+                      )}
+
                       <table className="w-full text-sm">
                         <thead>
                           <tr className="border-b border-gray-700 text-left text-gray-400">
@@ -753,7 +822,12 @@ export default function ExperimentsDashboard() {
                                 : ""}
                           </div>
                         )}
-                        {results.significance ? (
+                        {nGated ? (
+                          <div className="text-gray-500">
+                            Verdict hidden until the pre-registered N is reached — fixed-horizon, no
+                            early peeking.
+                          </div>
+                        ) : results.significance ? (
                           <div className="flex items-center gap-2">
                             {results.significance.significant && (
                               <CheckCircle2 className="h-4 w-4 text-emerald-500" />
@@ -774,7 +848,11 @@ export default function ExperimentsDashboard() {
                             significance.
                           </div>
                         )}
-                        <div className="text-gray-600">Pre-register N before peeking — no early stopping.</div>
+                        {/* Standing caution for EVERY experiment (gated or not). */}
+                        <div className="text-gray-600">
+                          Fixed-horizon: pre-register N and don&apos;t stop early on a transient
+                          verdict.
+                        </div>
                       </div>
 
                       {/* Declare winner (running/paused, no winner yet) */}
@@ -797,12 +875,17 @@ export default function ExperimentsDashboard() {
                               ))}
                             </select>
                             <button
-                              disabled={!winnerPick}
+                              disabled={!winnerPick || nGated}
                               onClick={() => declareWinner(selectedKey, winnerPick)}
                               className="rounded border border-amber-700 px-3 py-1 text-sm text-amber-200 hover:bg-amber-950/40 disabled:opacity-50"
                             >
                               Declare winner
                             </button>
+                            {nGated && (
+                              <span className="text-[11px] text-gray-500">
+                                locked until N ({progress!.minExposures}/{progress!.targetN})
+                              </span>
+                            )}
                           </div>
                         )}
                     </>

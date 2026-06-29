@@ -956,6 +956,9 @@ export interface ExperimentConversion {
   type: "credit_purchase" | "upsell1_funnel" | "v1_main_funnel" | "event";
   windowDays?: number;                  // attribution window after first exposure (default 7)
   name?: string;                        // event name (type='event')
+  targetN?: number;                     // pre-registered per-arm exposure target (fixed-horizon,
+                                        // no peeking): the verdict + declare-winner are gated until
+                                        // every arm reaches it. 0/absent = no gate.
 }
 
 // experiments — one row per test (the registry the dashboard manages).
