@@ -6,8 +6,12 @@ import {
   DialogContent,
 } from "@/components/ui/dialog";
 import type { PricingTier } from "@shared/types";
+import type { PaywallVariant } from "@shared/paywall";
+import { defaultTier } from "@shared/paywall";
 import PayPalCreditButton from "@/components/PayPalCreditButton";
 import StripeCardForm from "@/components/StripeCardForm";
+import PaywallCard from "@/components/paywall/PaywallCard";
+import PaymentModal from "@/components/PaymentModal";
 
 interface BuyCreditsModalProps {
   open: boolean;
@@ -17,6 +21,8 @@ interface BuyCreditsModalProps {
   isOutOfCredits?: boolean;
   pricingTiers?: PricingTier[];
   onSuccess?: (newBalance: number) => void;
+  variant?: PaywallVariant;
+  avatarUrl?: string;
 }
 
 const FALLBACK_TIERS: PricingTier[] = [
@@ -34,19 +40,31 @@ export default function BuyCreditsModal({
   isOutOfCredits = false,
   pricingTiers,
   onSuccess,
+  variant = "A",
+  avatarUrl,
 }: BuyCreditsModalProps) {
   const { refreshUser } = useAuth();
   const tiers = pricingTiers && pricingTiers.length > 0 ? pricingTiers : FALLBACK_TIERS;
   const [selectedPackage, setSelectedPackage] = useState<string>(
-    () => tiers.findLast((t) => t.badge)?.packageType ?? tiers[0]?.packageType ?? "popular",
+    () => defaultTier(tiers, variant)?.packageType ?? tiers[0]?.packageType ?? "popular",
   );
+  // Variant B opens the payment sheet for the chosen tier as a second step.
+  const [payTier, setPayTier] = useState<PricingTier | null>(null);
+
+  // Re-default the selection when the assigned variant changes (A → B uses the
+  // recommended mid tile, not the "last badged" whale).
+  useEffect(() => {
+    setSelectedPackage(defaultTier(tiers, variant)?.packageType ?? tiers[0]?.packageType ?? "popular");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [variant]);
+
   // Log checkout view when modal opens
   useEffect(() => {
     if (open) {
       authFetch("/api/credits/checkout-view", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ packageType: selectedPackage, personaId, source: "buy_credits_modal" }),
+        body: JSON.stringify({ packageType: selectedPackage, personaId, source: "buy_credits_modal", isOutOfCredits }),
       }).catch(() => {});
       // Tag session for Microsoft Clarity filtering
       if (window.clarity) {
@@ -63,6 +81,43 @@ export default function BuyCreditsModal({
   };
 
   const formatPrice = (cents: number) => `$${(cents / 100).toFixed(2)}`;
+
+  // Variant B — redesigned in-chat paywall (PaywallCard → payment sheet).
+  if (variant === "B") {
+    return (
+      <>
+        <Dialog open={open} onOpenChange={onOpenChange}>
+          <DialogContent className="sm:max-w-md p-0 bg-transparent border-0 shadow-none [&>button:last-child]:hidden">
+            <PaywallCard
+              personaName={personaName || "your guide"}
+              avatarUrl={avatarUrl}
+              tiers={tiers}
+              selectedPackage={selectedPackage}
+              onSelect={setSelectedPackage}
+              isOutOfCredits={isOutOfCredits}
+              onCheckout={() =>
+                setPayTier(tiers.find((t) => t.packageType === selectedPackage) ?? null)
+              }
+              onClose={() => onOpenChange(false)}
+              variant="B"
+            />
+          </DialogContent>
+        </Dialog>
+        <PaymentModal
+          tier={payTier}
+          personaId={personaId}
+          personaName={personaName}
+          isOpen={!!payTier}
+          onClose={() => setPayTier(null)}
+          onSuccess={(newBalance) => {
+            setPayTier(null);
+            handleSuccess(newBalance);
+          }}
+          variant="B"
+        />
+      </>
+    );
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

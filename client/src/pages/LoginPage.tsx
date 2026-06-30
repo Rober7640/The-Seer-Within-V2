@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Sparkles, LogIn, UserPlus, Mail } from "lucide-react";
 import { trackLead } from "@/lib/facebook";
+import { trackABConversion } from "@/hooks/useABTest";
 // Open-redirect protection: `next` may only point at /reading (with optional
 // query/hash). Anything else is silently dropped so we never bounce a user
 // off-platform after auth.
@@ -92,6 +93,12 @@ export default function LoginPage() {
         // outside the FB-attribution flow stay silent.
         if (sourceParam === 'evelyn-lander' || sourceParam === 'persona-lander') {
           trackLead(email, firstName).catch(() => { /* non-blocking */ });
+        }
+        // Phase 4c: signup is the primary metric for the /evelyn mechanic A/B
+        // (chatbox vs quiz). Both arms converge here, so one convert call counts
+        // both — matched to the visitor's lander exposure by the ab_vid cookie.
+        if (sourceParam === 'evelyn-lander') {
+          trackABConversion('evelyn_lander');
         }
         if (data.requiresVerification) {
           setShowVerificationSent(true);

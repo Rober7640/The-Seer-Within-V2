@@ -710,6 +710,158 @@ export async function calculateTransits(natalChart: NatalChart): Promise<Transit
 }
 
 // ============================================================
+// Daily Sky — the collective transit picture for a single date.
+// No birth chart needed: the geocentric sky at a moment is the same data
+// a natal chart is built from, so this reuses the exact position/aspect
+// helpers used by calculateNatalChart. Powers the daily content emails
+// (docs/kit/). Purely additive — does not touch the natal/transit code.
+// ============================================================
+
+export interface DailySkyPlacement {
+  name: string;
+  sign: string;
+  signSymbol: string;
+  degree: number;    // 0–29 within sign
+  minutes: number;   // 0–59 arc-minutes
+  longitude: number; // ecliptic longitude 0–360
+  retrograde: boolean;
+}
+
+export interface DailySkyAspect {
+  planet1: string;
+  planet2: string;
+  aspectType: string;   // Conjunction, Sextile, Square, Trine, Opposition
+  aspectSymbol: string;
+  orb: number;          // degrees from exact
+}
+
+export interface DailySkyMoonPhase {
+  name: string;          // New Moon, Waxing Crescent, First Quarter, ...
+  elongation: number;    // Moon–Sun angle, 0–360°
+  illumination: number;  // 0–100 %
+}
+
+export interface DailySky {
+  date: string;          // YYYY-MM-DD (US Eastern calendar date)
+  zone: string;          // 'EDT' | 'EST' — the US Eastern offset applied
+  hourET: number;        // local Eastern hour of the snapshot (default 12 = noon ET)
+  hourUTC: number;       // resolved UTC hour actually computed
+  placements: DailySkyPlacement[];   // Sun … Pluto + North Node
+  aspects: DailySkyAspect[];         // collective transit-to-transit aspects
+  retrogrades: string[];             // names of bodies currently retrograde
+  moonPhase: DailySkyMoonPhase;
+}
+
+function moonPhaseName(elong: number): string {
+  if (elong < 11 || elong >= 349) return 'New Moon';
+  if (elong < 79)  return 'Waxing Crescent';
+  if (elong < 101) return 'First Quarter';
+  if (elong < 169) return 'Waxing Gibbous';
+  if (elong < 191) return 'Full Moon';
+  if (elong < 259) return 'Waning Gibbous';
+  if (elong < 281) return 'Last Quarter';
+  return 'Waning Crescent';
+}
+
+// US Eastern observes EDT (UTC−4) from the 2nd Sunday of March to the 1st Sunday
+// of November, and EST (UTC−5) otherwise. Returns the hours to ADD to local ET to
+// get UTC (4 for EDT, 5 for EST). Deterministic from the date itself (not "now").
+function easternUtcOffset(year: number, month: number, day: number): number {
+  if (month < 3 || month > 11) return 5;            // Dec, Jan, Feb → EST
+  if (month > 3 && month < 11) return 4;            // Apr … Oct → EDT
+  const dow = (y: number, m: number, d: number) => new Date(Date.UTC(y, m - 1, d)).getUTCDay(); // 0 = Sun
+  if (month === 3) {                                 // EDT from the 2nd Sunday of March
+    const firstSunday = 1 + ((7 - dow(year, 3, 1)) % 7);
+    return day >= firstSunday + 7 ? 4 : 5;
+  }
+  const firstSunday = 1 + ((7 - dow(year, 11, 1)) % 7); // November: EST from the 1st Sunday
+  return day < firstSunday ? 4 : 5;
+}
+
+/**
+ * Compute the collective sky for a given date, at noon US Eastern by default
+ * (DST-aware) — a representative midpoint for a "today's sky" snapshot sent to a
+ * US/ET list. Pass a different local-ET hour as the 2nd arg to override.
+ *
+ * Accuracy (validated 2026-06-18 vs published ephemeris): Sun, Moon, Mercury,
+ * Venus, Mars, Jupiter, Saturn land within ~0.1°; Uranus/Neptune/Pluto drift
+ * ~0.5–0.9° (immaterial for prose copy); retrograde detection is correct.
+ * See docs/kit/luna-voss-daily-emails-prd.md §11.
+ */
+export function getDailySky(date: string, hourET: number = 12): DailySky {
+  const [year, month, day] = date.split('-').map(Number);
+  const zoneOffset = easternUtcOffset(year, month, day);  // 4 (EDT) or 5 (EST)
+  const zone = zoneOffset === 4 ? 'EDT' : 'EST';
+  const hourUTC = hourET + zoneOffset;                     // noon ET → 16:00 (EDT) / 17:00 (EST) UTC
+  const jd = toJulianDay(year, month, day, hourUTC);
+  const T  = (jd - 2451545.0) / 36525;
+
+  // Sun / Earth / Moon / Node at the snapshot moment
+  const sun          = sunPosition(jd);
+  const earthLon     = norm360(sun.longitude + 180);
+  const earthR       = sun.radius;
+  const moonLon      = moonLongitude(jd);
+  const northNodeLon = northNodeLongitude(jd);
+
+  // One day later — used to detect retrograde (apparent backwards) motion
+  const jd1       = jd + 1;
+  const T1        = (jd1 - 2451545.0) / 36525;
+  const sun1      = sunPosition(jd1);
+  const earthLon1 = norm360(sun1.longitude + 180);
+  const earthR1   = sun1.radius;
+
+  const planetNames = ['Mercury', 'Venus', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune', 'Pluto'];
+  const bodyLons: Array<{ name: string; longitude: number; retrograde: boolean }> = [
+    { name: 'Sun',  longitude: sun.longitude, retrograde: false },
+    { name: 'Moon', longitude: moonLon,       retrograde: false },
+  ];
+  for (const name of planetNames) {
+    const h0   = planetHeliocentric(name, T);
+    const lon0 = helioToGeoLon(h0.lon, h0.lat, h0.r, earthLon, earthR);
+    const h1   = planetHeliocentric(name, T1);
+    const lon1 = helioToGeoLon(h1.lon, h1.lat, h1.r, earthLon1, earthR1);
+    bodyLons.push({ name, longitude: lon0, retrograde: norm360(lon1 - lon0) > 180 });
+  }
+  // North Node: included in placements; not retrograde and excluded from aspects (matches calculateNatalChart)
+  bodyLons.push({ name: 'North Node', longitude: northNodeLon, retrograde: false });
+
+  const placements: DailySkyPlacement[] = bodyLons.map(p => {
+    const s = signFromLon(p.longitude);
+    return {
+      name:       p.name,
+      sign:       s.sign,
+      signSymbol: s.signSymbol,
+      degree:     s.degree,
+      minutes:    s.minutes,
+      longitude:  p.longitude,
+      retrograde: p.retrograde,
+    };
+  });
+
+  // Collective transit-to-transit aspects (planets only; nodes excluded, as in the natal calc)
+  const aspectLons = bodyLons.filter(p => p.name !== 'North Node');
+  const aspects: DailySkyAspect[] = findAspects(aspectLons).map(a => ({
+    planet1:      a.planet1,
+    planet2:      a.planet2,
+    aspectType:   a.aspectType,
+    aspectSymbol: a.aspectSymbol,
+    orb:          a.orb,
+  }));
+
+  const retrogrades = placements.filter(p => p.retrograde).map(p => p.name);
+
+  const elong = norm360(moonLon - sun.longitude);
+  const moonPhase: DailySkyMoonPhase = {
+    name:         moonPhaseName(elong),
+    elongation:   Math.round(elong * 10) / 10,
+    illumination: Math.round((1 - Math.cos(toRad(elong))) / 2 * 100),
+  };
+
+  const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+  return { date: dateStr, zone, hourET, hourUTC, placements, aspects, retrogrades, moonPhase };
+}
+
+// ============================================================
 // Format chart as a prompt-ready text block for Claude
 // ============================================================
 

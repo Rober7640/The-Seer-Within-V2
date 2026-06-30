@@ -15,12 +15,14 @@ import {
   LayoutGrid,
   Send,
   DollarSign,
+  FlaskConical,
 } from "lucide-react";
 
 const NAV_ITEMS = [
   { path: "/admin/personas", label: "Personas", icon: Bot },
   { path: "/admin/prompts", label: "Prompts", icon: FileText },
   { path: "/admin/analytics", label: "Analytics", icon: BarChart3 },
+  { path: "/admin/experiments", label: "Experiments", icon: FlaskConical },
   { path: "/admin/price-test", label: "FE Price Test (v1)", icon: DollarSign },
   { path: "/admin/users", label: "Users", icon: Users },
   { path: "/admin/safety", label: "Safety", icon: Shield },

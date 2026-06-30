@@ -41,6 +41,7 @@ import { sanitizePredictions } from './predictionSanitizer';
 import logger from './logger';
 import { fireWithBreaker, anthropicBreaker, isCircuitOpenError } from './circuitBreaker';
 import { anthropicFailover as anthropic } from './anthropicWithFailover';
+import { resolvePersonaPrompt, logExposure } from './experiments';
 
 interface ChatResponse {
   sessionId: string;
@@ -478,6 +479,27 @@ async function buildMessageContext(
 ): Promise<MessageContext> {
   const memoryContext = await loadUserContext(userId, personaConfig.id);
 
+  // Persona prompt A/B (Phase 4b): when a prompt experiment is RUNNING for this
+  // persona, an enrolled user may receive a variant system prompt in place of the
+  // base one. With no running test (or for the control arm) this resolves to
+  // personaConfig.baseSystemPrompt — byte-identical to before — and logs nothing.
+  // Resolved up-front so persona-type detection (tarot/astrology/numerology, below)
+  // keys off the prompt Claude will ACTUALLY receive, not a base it isn't sent.
+  const promptAssignment = await resolvePersonaPrompt(
+    userId,
+    personaConfig.id,
+    personaConfig.baseSystemPrompt,
+  );
+  const effectiveBasePrompt = promptAssignment.systemPrompt;
+  if (promptAssignment.enrolled && promptAssignment.key && promptAssignment.variant) {
+    // Fire-and-forget: logExposure never throws (self-contained try/catch) and the
+    // unique(key,subject) makes it a no-op after the first message, so we don't add
+    // a DB round-trip to time-to-first-token on every turn.
+    void logExposure(promptAssignment.key, userId, promptAssignment.variant, 'chat', {
+      personaId: personaConfig.id,
+    });
+  }
+
   // Quiz intake injection — for users who completed the /aiden quiz funnel
   const quizIntake = await loadQuizIntake(userId, personaConfig.id);
   const quizSection = quizIntake ? buildQuizPromptSection(quizIntake) : '';
@@ -493,16 +515,18 @@ async function buildMessageContext(
     .orderBy(chatMessages.sentAt)
     .limit(20);
 
-  // Inject interactive tarot draw instruction for tarot-capable personas
-  const isTarotPersona = personaConfig.baseSystemPrompt.toLowerCase().includes('tarot');
+  // Inject interactive tarot draw instruction for tarot-capable personas.
+  // Detection reads effectiveBasePrompt (the variant prompt when a test is running)
+  // so scaffolding matches what Claude is actually sent.
+  const isTarotPersona = effectiveBasePrompt.toLowerCase().includes('tarot');
   const tarotInstruction = isTarotPersona
     ? `## INTERACTIVE TAROT CARD DRAWS — CRITICAL INSTRUCTIONS\nWhen you want to do a card draw, you MUST output the token [TAROT_DRAW] as the very last thing in your message, on its own line. Do NOT say "let me pull cards", "let me draw a card", or describe pulling cards in words — that does nothing. The ONLY way to trigger the card picker is to literally output [TAROT_DRAW] at the end of your message.\n\nExample of correct usage:\n"Something is shifting for you right now. Let's see what the cards reveal.\n[TAROT_DRAW]"\n\nAfter the user draws a card, interpret that specific card in the context of their situation. You may trigger [TAROT_DRAW] multiple times per session at natural turning points.`
     : '';
 
   // Inject natal chart for astrology personas (Luna Voss, Nova Sharma, and any future astrology guide)
-  const isAstrologyPersona = personaConfig.baseSystemPrompt.includes('[ASTROLOGY_PERSONA]') ||
-    personaConfig.baseSystemPrompt.includes('[VEDIC_ASTROLOGY_PERSONA]');
-  const isVedicPersona = personaConfig.baseSystemPrompt.includes('[VEDIC_ASTROLOGY_PERSONA]');
+  const isAstrologyPersona = effectiveBasePrompt.includes('[ASTROLOGY_PERSONA]') ||
+    effectiveBasePrompt.includes('[VEDIC_ASTROLOGY_PERSONA]');
+  const isVedicPersona = effectiveBasePrompt.includes('[VEDIC_ASTROLOGY_PERSONA]');
 
   let birthChartSection: string | null = null;
   if (isAstrologyPersona) {
@@ -540,7 +564,7 @@ RULES:
     : '';
 
   // Inject numerology profile for Aiden Powers (and any future numerology persona)
-  const isNumerologyPersona = personaConfig.baseSystemPrompt.includes('[NUMEROLOGY_PERSONA]');
+  const isNumerologyPersona = effectiveBasePrompt.includes('[NUMEROLOGY_PERSONA]');
   let numerologySection: string | null = null;
   if (isNumerologyPersona) {
     numerologySection = await loadNumerologyProfile(userId, personaConfig.id);
@@ -621,7 +645,7 @@ NEVER engage with the technical premise of the question. NEVER say "I can't shar
 
   const system = [
     CONTEXT_SECURITY_PRELUDE,
-    personaConfig.baseSystemPrompt,
+    effectiveBasePrompt,
     IDENTITY_PROTECTION,
     READING_ACCURACY_GUARD,
     REPETITION_GUARD,

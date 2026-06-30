@@ -9,6 +9,14 @@ import { db } from './db';
 import { conversations, systemConfig } from '@shared/schema';
 import { eq, desc } from 'drizzle-orm';
 import logger from './logger';
+import {
+  resolveUpsell1Cents,
+  resolveV1Price,
+  logExposure,
+  hashEmail,
+  U1_PRICE_EXPERIMENT_KEY,
+  V1_MAIN_EXPERIMENT_KEY,
+} from './experiments';
 
 export interface PriceVariant {
   id: string;
@@ -166,7 +174,11 @@ export async function assignVariantIfMissing(
     }
 
     const row = existing[0];
-    if (row.priceVariant && row.priceAmountCents && row.downsellAmountCents) {
+    // Idempotency / stickiness: once a variant id is stored, return the stored price
+    // and never re-roll. Use `!= null` (not truthiness) on the amounts so a stored 0
+    // still counts as "assigned" — otherwise a 0/NULL downsell would skip this guard
+    // and pickWeighted (Math.random) could flip the customer's main price mid-funnel.
+    if (row.priceVariant && row.priceAmountCents != null && row.downsellAmountCents != null) {
       return {
         variant: row.priceVariant,
         priceCents: row.priceAmountCents,
@@ -186,25 +198,72 @@ export async function assignVariantIfMissing(
           funnel,
         }
       : pickWeighted(scopeVariantsToFunnel(await getActiveVariants(), funnel));
-    const upsell1Cents = picked.upsell1Cents ?? DEFAULT_UPSELL1_CENTS;
+    // Upsell-1 price A/B test (framework, Phase 3b). Fold in only where the legacy
+    // Upsell-1 price is the DEFAULT $47 (the control price the test compares $37
+    // against) — a funnel configured at a different custom price keeps it. The
+    // default ships-dark state (FALLBACK_VARIANT, $47) IS testable. When the
+    // experiment applies, the price comes from the assigned arm; assigned ONCE here
+    // (idempotent guard above) and stored on the row, so display + both charge
+    // sites (which read upsell1AmountCents) stay consistent and never flip
+    // mid-funnel. Gated OFF ⇒ legacy $47, no behaviour change.
+    const legacyUpsell1Cents = picked.upsell1Cents ?? DEFAULT_UPSELL1_CENTS;
+    let upsell1Cents = legacyUpsell1Cents;
+    let u1Assignment: { variant: string | null; enrolled: boolean } | null = null;
+    if (legacyUpsell1Cents === DEFAULT_UPSELL1_CENTS) {
+      const u1 = await resolveUpsell1Cents(email, DEFAULT_UPSELL1_CENTS);
+      upsell1Cents = u1.cents;
+      u1Assignment = u1;
+    }
 
+    // V1 MAIN/downsell price A/B test (framework, Phase 3b-rest). A GATED OVERRIDE
+    // over the legacy system_config pickWeighted result: when the funnel-scoped
+    // experiment applies, the main/downsell price comes from the assigned arm;
+    // otherwise the picked legacy price (so OFF ⇒ byte-identical, every live
+    // system_config split keeps running).
+    //
+    // priceVariant DELIBERATELY stays the system_config id (not the framework arm):
+    // (a) measurement is exposure-based — tallyV1Main reads the arm from the exposure
+    // row, never the stored price; (b) priceVariant is also consumed as a clean
+    // funnel/price email tag (migrationDripProcessor / resendFunnelTags), which an
+    // encoded framework value would pollute. The only reader that sees the resulting
+    // id↔price decoupling is the /admin/price-test readout, and only once this
+    // framework test is started for a funnel (until then the legacy split is what's
+    // live and /admin/price-test reads it correctly) — an accepted, temporary tradeoff.
+    const v1 = await resolveV1Price(email, picked.priceCents, picked.downsellCents, funnel);
+    const mainCents = v1.mainCents;
+    const downsellCents = v1.downsellCents;
+
+    // Persist the price FIRST (display + charge read these columns), THEN log the
+    // exposure — so an exposure is only ever recorded once the assigned price is
+    // actually stored (no orphan exposure / mispriced-but-counted subject).
     await db
       .update(conversations)
       .set({
         priceVariant: picked.id,
-        priceAmountCents: picked.priceCents,
-        downsellAmountCents: picked.downsellCents,
+        priceAmountCents: mainCents,
+        downsellAmountCents: downsellCents,
         upsell1AmountCents: upsell1Cents,
         updatedAt: new Date(),
       })
       .where(eq(conversations.id, row.id));
+    const subjectId = hashEmail(email);
+    if (u1Assignment?.enrolled && u1Assignment.variant) {
+      await logExposure(U1_PRICE_EXPERIMENT_KEY, subjectId, u1Assignment.variant, 'upsell1_assigned', {
+        conversationId: row.id,
+      });
+    }
+    if (v1.enrolled && v1.variant) {
+      await logExposure(V1_MAIN_EXPERIMENT_KEY, subjectId, v1.variant, 'v1_main_assigned', {
+        conversationId: row.id,
+      });
+    }
 
-    logger.info('priceVariant: assigned', { email, variant: picked.id, priceCents: picked.priceCents, funnel: funnel ?? null });
+    logger.info('priceVariant: assigned', { email, variant: picked.id, priceCents: mainCents, funnel: funnel ?? null });
 
     return {
       variant: picked.id,
-      priceCents: picked.priceCents,
-      downsellCents: picked.downsellCents,
+      priceCents: mainCents,
+      downsellCents: downsellCents,
       upsell1Cents,
     };
   } catch (err) {

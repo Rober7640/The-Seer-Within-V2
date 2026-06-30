@@ -3,9 +3,11 @@ import { z } from 'zod';
 import { db } from '../lib/db';
 import { users, creditPurchases, personas, checkoutViews } from '@shared/schema';
 import { eq, and, ne, desc, sql } from 'drizzle-orm';
-import { requireAuth } from '../lib/auth';
+import { requireAuth, verifyToken } from '../lib/auth';
 import { getPersonaPricing } from '../lib/personaPricing';
 import { DEFAULT_PRICING } from '../../shared/types';
+import { applyVariantPresentation } from '@shared/paywall';
+import { resolvePaywallVariant, assign, logExposure, PAYWALL_EXPERIMENT_KEY } from '../lib/experiments';
 import Stripe from 'stripe';
 import logger from '../lib/logger';
 import { posthog } from '../lib/posthog';
@@ -115,16 +117,47 @@ router.get('/welcome-eligible', requireAuth, async (req: Request, res: Response)
 });
 
 // GET /api/credits/pricing?personaId=xxx
+// Public route. Returns pricing PLUS the paywall A/B `variant` for this user.
+// Variant B re-badges tiers (MOST CHOSEN / BEST VALUE + `recommended`); variant
+// A returns tiers untouched, so the current UI is byte-identical.
 router.get('/pricing', async (req: Request, res: Response) => {
   try {
     const personaId = req.query.personaId as string | undefined;
+    const pricing = personaId ? await getPersonaPricing(personaId) : DEFAULT_PRICING;
 
+    // Optional auth: the route is public, but decode the bearer token when present
+    // so the experiment assignment is sticky per user.id.
+    const authHeader = req.headers.authorization;
+    const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null;
+    const userId = token ? verifyToken(token)?.userId ?? null : null;
+
+    const variant = await resolvePaywallVariant({
+      userId,
+      personaId: personaId ?? null,
+      override: (req.query.paywallVariant as string) ?? null,
+      allowOverride: process.env.NODE_ENV !== 'production',
+    });
+
+    // Persona display info (name + avatar) for the redesigned store/modal.
+    let persona: { id: string; displayName: string; avatarUrl: string | null; tagline: string | null; freeCoins: number } | undefined;
     if (personaId) {
-      const pricing = await getPersonaPricing(personaId);
-      res.json(pricing);
-    } else {
-      res.json(DEFAULT_PRICING);
+      const rows = await db.select({
+        id: personas.id,
+        displayName: personas.displayName,
+        avatarUrl: personas.avatarUrl,
+        tagline: personas.tagline,
+        freeCoins: personas.freeCoins,
+      }).from(personas).where(eq(personas.id, personaId)).limit(1);
+      persona = rows[0];
     }
+
+    res.json({
+      ...pricing,
+      tiers: applyVariantPresentation(pricing.tiers, variant),
+      persona,
+      variant,
+      experimentKey: PAYWALL_EXPERIMENT_KEY,
+    });
   } catch (error) {
     logger.error('Get pricing error:', error);
     res.status(500).json({ error: 'Failed to get pricing' });
@@ -150,7 +183,7 @@ router.get('/purchases', requireAuth, async (req: Request, res: Response) => {
 // POST /api/credits/checkout-view - Log when user opens a payment modal (for conversion tracking)
 router.post('/checkout-view', requireAuth, async (req: Request, res: Response) => {
   try {
-    const { packageType, personaId, source } = req.body;
+    const { packageType, personaId, source, isOutOfCredits } = req.body;
     if (!packageType || !source) {
       res.status(400).json({ error: 'packageType and source are required' });
       return;
@@ -161,6 +194,24 @@ router.post('/checkout-view', requireAuth, async (req: Request, res: Response) =
       personaId: personaId || null,
       source,
     });
+    // Experiment exposure (Problem-4 paywall, folded into the generic framework).
+    // Log ONLY when the subject is enrolled (test running + in scope), so the
+    // first exposure row is their first IN-TEST exposure. While the experiment is
+    // OFF (Phase-1 ship state) nothing is logged. Non-blocking — never fail UX.
+    try {
+      const a = await assign(PAYWALL_EXPERIMENT_KEY, req.userId!, {
+        personaId: personaId ?? null,
+        isOutOfCredits: !!isOutOfCredits,
+      });
+      if (a?.enrolled) {
+        await logExposure(PAYWALL_EXPERIMENT_KEY, req.userId!, a.variant, source, {
+          personaId: personaId ?? null,
+          isOutOfCredits: !!isOutOfCredits,
+        });
+      }
+    } catch (e) {
+      logger.error('experiment exposure failed:', e);
+    }
     posthog.capture({ distinctId: req.userId!, event: 'checkout_view_logged', properties: { package_type: packageType, persona_id: personaId ?? null, source } });
     res.json({ ok: true });
   } catch (error) {

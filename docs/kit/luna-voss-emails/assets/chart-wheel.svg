@@ -1,0 +1,53 @@
+<!-- chart-wheel.svg — Luna Voss natal chart wheel hero (Template C static / fallback for GIF 3 "chart wheel assembling") -->
+<svg xmlns="http://www.w3.org/2000/svg" width="340" height="340" viewBox="0 0 340 340" fill="none" role="img" aria-label="Natal chart wheel line-art">
+  <g stroke="#B6863C" stroke-width="1.25" fill="none" stroke-linecap="round">
+    <!-- outer ring -->
+    <circle cx="170" cy="170" r="160"/>
+    <!-- zodiac glyph ring -->
+    <circle cx="170" cy="170" r="138"/>
+    <!-- inner house ring -->
+    <circle cx="170" cy="170" r="96"/>
+    <!-- inner core circle -->
+    <circle cx="170" cy="170" r="40"/>
+
+    <!-- 12 house spokes (every 30deg) from inner core to outer ring -->
+    <line x1="170" y1="10"  x2="170" y2="330"/>             <!-- 0 / 180 -->
+    <line x1="48.5" y1="48.5" x2="291.5" y2="291.5"/>       <!-- 45 / 225 -->
+    <line x1="10" y1="170" x2="330" y2="170"/>              <!-- 90 / 270 -->
+    <line x1="48.5" y1="291.5" x2="291.5" y2="48.5"/>       <!-- 135 / 315 -->
+    <line x1="90" y1="22" x2="250" y2="318"/>               <!-- 30 / 210 -->
+    <line x1="22" y1="90" x2="318" y2="250"/>               <!-- 60 / 240 -->
+    <line x1="22" y1="250" x2="318" y2="90"/>               <!-- 120 / 300 -->
+    <line x1="90" y1="318" x2="250" y2="22"/>               <!-- 150 / 330 -->
+  </g>
+
+  <!-- zodiac glyphs around the ring (radius ~117 from center) -->
+  <g fill="#B6863C" font-family="Georgia, 'Times New Roman', serif" font-size="16" text-anchor="middle" dominant-baseline="central">
+    <text x="170" y="53">&#9800;</text>   <!-- Aries top -->
+    <text x="228" y="69">&#9801;</text>   <!-- Taurus -->
+    <text x="271" y="112">&#9802;</text>  <!-- Gemini -->
+    <text x="287" y="170">&#9803;</text>  <!-- Cancer right -->
+    <text x="271" y="228">&#9804;</text>  <!-- Leo -->
+    <text x="228" y="271">&#9805;</text>  <!-- Virgo -->
+    <text x="170" y="287">&#9806;</text>  <!-- Libra bottom -->
+    <text x="112" y="271">&#9807;</text>  <!-- Scorpio -->
+    <text x="69" y="228">&#9808;</text>   <!-- Sagittarius -->
+    <text x="53" y="170">&#9809;</text>   <!-- Capricorn left -->
+    <text x="69" y="112">&#9810;</text>   <!-- Aquarius -->
+    <text x="112" y="69">&#9811;</text>   <!-- Pisces -->
+  </g>
+
+  <!-- planet markers (dots) on the inner house ring rim, radius 96 -->
+  <g fill="#8A6326" stroke="none">
+    <circle cx="170" cy="74"  r="4"/>     <!-- 90deg up -->
+    <circle cx="253.1" cy="122" r="3.5"/> <!-- 30deg -->
+    <circle cx="244" cy="218" r="3.5"/>   <!-- -45ish -->
+    <circle cx="170" cy="266" r="4"/>     <!-- down -->
+    <circle cx="96.9" cy="218" r="3"/>    <!-- lower left -->
+    <circle cx="86" cy="122" r="3.5"/>    <!-- upper left -->
+    <circle cx="220" cy="86" r="3"/>      <!-- upper right small -->
+  </g>
+
+  <!-- center node -->
+  <circle cx="170" cy="170" r="3" fill="#B6863C"/>
+</svg>

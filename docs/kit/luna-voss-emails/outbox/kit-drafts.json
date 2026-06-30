@@ -1,0 +1,542 @@
+{
+  "2026-06-20": {
+    "id": 24646934,
+    "template": "C",
+    "subject": "{{ subscriber.first_name | default: \"friend\" }}, your words have teeth today (Mercury–Mars)",
+    "url": "https://app.kit.com/campaigns/24646934/draft"
+  },
+  "2026-06-21": {
+    "id": 24646935,
+    "template": "B",
+    "subject": "{{ subscriber.first_name | default: \"friend\" }}, tension is information (First Quarter)",
+    "url": "https://app.kit.com/campaigns/24646935/draft"
+  },
+  "2026-06-22": {
+    "id": 24646936,
+    "template": "B",
+    "subject": "{{ subscriber.first_name | default: \"friend\" }}, small moves land bigger today (Moon past First Quarter)",
+    "url": "https://app.kit.com/campaigns/24646936/draft"
+  },
+  "2026-06-23": {
+    "id": 24646937,
+    "template": "C",
+    "subject": "{{ subscriber.first_name | default: \"friend\" }}, your head and heart aren't talking (yet)",
+    "url": "https://app.kit.com/campaigns/24646937/draft"
+  },
+  "2026-06-24": {
+    "id": 24646938,
+    "template": "A",
+    "subject": "{{ subscriber.first_name | default: \"friend\" }}, the sky is cooperating (Sun trine Moon)",
+    "url": "https://app.kit.com/campaigns/24646938/draft"
+  },
+  "2026-06-25": {
+    "id": 24646939,
+    "template": "C",
+    "subject": "{{ subscriber.first_name | default: \"friend\" }}, tension between what you want and what you feel (Moon □ Venus)",
+    "url": "https://app.kit.com/campaigns/24646939/draft"
+  },
+  "2026-06-26": {
+    "id": 24646940,
+    "template": "C",
+    "subject": "{{ subscriber.first_name | default: \"friend\" }}, tension you can name (Moon vs Mars)",
+    "url": "https://app.kit.com/campaigns/24646940/draft"
+  },
+  "2026-06-27": {
+    "id": 24646941,
+    "template": "C",
+    "subject": "{{ subscriber.first_name | default: \"friend\" }}, the moon wants to say yes (tonight especially)",
+    "url": "https://app.kit.com/campaigns/24646941/draft"
+  },
+  "2026-06-28": {
+    "id": 24646942,
+    "template": "C",
+    "subject": "{{ subscriber.first_name | default: \"friend\" }}, the Moon likes Venus today (98% lit)",
+    "url": "https://app.kit.com/campaigns/24646942/draft"
+  },
+  "2026-06-29": {
+    "id": 24646943,
+    "template": "B",
+    "subject": "{{ subscriber.first_name | default: \"friend\" }}, the pause before the reaction (Mercury's turning point)",
+    "url": "https://app.kit.com/campaigns/24646943/draft"
+  },
+  "2026-06-30": {
+    "id": 24646944,
+    "template": "B",
+    "subject": "{{ subscriber.first_name | default: \"friend\" }}, the Full Moon push-pull (tension you can name)",
+    "url": "https://app.kit.com/campaigns/24646944/draft"
+  },
+  "2026-07-01": {
+    "id": 24646945,
+    "template": "C",
+    "subject": "{{ subscriber.first_name | default: \"friend\" }}, your head & heart aren't synced (yet)",
+    "url": "https://app.kit.com/campaigns/24646945/draft"
+  },
+  "2026-07-02": {
+    "id": 24646946,
+    "template": "C",
+    "subject": "{{ subscriber.first_name | default: \"friend\" }}, intensity is the point (Moon-Pluto today)",
+    "url": "https://app.kit.com/campaigns/24646946/draft"
+  },
+  "2026-07-03": {
+    "id": 24646947,
+    "template": "C",
+    "subject": "{{ subscriber.first_name | default: \"friend\" }}, mood vs. desire (they're not aligned)",
+    "url": "https://app.kit.com/campaigns/24646947/draft"
+  },
+  "2026-07-04": {
+    "id": 24646948,
+    "template": "A",
+    "subject": "{{ subscriber.first_name | default: \"friend\" }}, tension wants your attention (Moon □ Mars)",
+    "url": "https://app.kit.com/campaigns/24646948/draft"
+  },
+  "2026-07-05": {
+    "id": 24646949,
+    "template": "C",
+    "subject": "{{ subscriber.first_name | default: \"friend\" }}, the Sun and Moon are in sync (use it)",
+    "url": "https://app.kit.com/campaigns/24646949/draft"
+  },
+  "2026-07-06": {
+    "id": 24646950,
+    "template": "C",
+    "subject": "{{ subscriber.first_name | default: \"friend\" }}, Neptune is turning inward (Moon meets the blur)",
+    "url": "https://app.kit.com/campaigns/24646950/draft"
+  },
+  "2026-07-07": {
+    "id": 24646951,
+    "template": "B",
+    "subject": "{{ subscriber.first_name | default: \"friend\" }}, tension wants your attention (Sun-Moon square)",
+    "url": "https://app.kit.com/campaigns/24646951/draft"
+  },
+  "2026-07-08": {
+    "id": 24646952,
+    "template": "B",
+    "subject": "{{ subscriber.first_name | default: \"friend\" }}, small moves land harder (Moon + Venus flow)",
+    "url": "https://app.kit.com/campaigns/24646952/draft"
+  },
+  "2026-07-09": {
+    "id": 24646953,
+    "template": "A",
+    "subject": "{{ subscriber.first_name | default: \"friend\" }}, your thoughts have power today (Sun meets Mercury)",
+    "url": "https://app.kit.com/campaigns/24646953/draft"
+  },
+  "2026-07-10": {
+    "id": 24646954,
+    "template": "C",
+    "subject": "{{ subscriber.first_name | default: \"friend\" }}, tension between what you want and what you feel",
+    "url": "https://app.kit.com/campaigns/24646954/draft"
+  },
+  "2026-07-11": {
+    "id": 24646955,
+    "template": "C",
+    "subject": "{{ subscriber.first_name | default: \"friend\" }}, the Moon wants action (and it's loud)",
+    "url": "https://app.kit.com/campaigns/24646955/draft"
+  },
+  "2026-07-12": {
+    "id": 24646956,
+    "template": "C",
+    "subject": "{{ subscriber.first_name | default: \"friend\" }}, your mind and presence are amplified (today)",
+    "url": "https://app.kit.com/campaigns/24646956/draft"
+  },
+  "2026-07-13": {
+    "id": 24646957,
+    "template": "B",
+    "subject": "{{ subscriber.first_name | default: \"friend\" }}, your words have power right now (Sun-Mercury)",
+    "url": "https://app.kit.com/campaigns/24646957/draft"
+  },
+  "2026-07-14": {
+    "id": 24646958,
+    "template": "B",
+    "subject": "{{ subscriber.first_name | default: \"friend\" }}, your reset button is live (New Moon today)",
+    "url": "https://app.kit.com/campaigns/24646958/draft"
+  },
+  "2026-07-15": {
+    "id": 24646959,
+    "template": "C",
+    "subject": "{{ subscriber.first_name | default: \"friend\" }}, small moves land big (Moon ⚹ Mars)",
+    "url": "https://app.kit.com/campaigns/24646959/draft"
+  },
+  "2026-07-16": {
+    "id": 24646960,
+    "template": "C",
+    "subject": "{{ subscriber.first_name | default: \"friend\" }}, your mind and essence are aligned (today)",
+    "url": "https://app.kit.com/campaigns/24646960/draft"
+  },
+  "2026-07-17": {
+    "id": 24646961,
+    "template": "C",
+    "subject": "{{ subscriber.first_name | default: \"friend\" }}, Moon meets Venus (amplified wants)",
+    "url": "https://app.kit.com/campaigns/24646961/draft"
+  },
+  "2026-07-18": {
+    "id": 24646963,
+    "template": "C",
+    "subject": "{{ subscriber.first_name | default: \"friend\" }}, alignment favors small moves (Sun ⚹ Moon)",
+    "url": "https://app.kit.com/campaigns/24646963/draft"
+  },
+  "2026-07-19": {
+    "id": 24646964,
+    "template": "A",
+    "subject": "{{ subscriber.first_name | default: \"friend\" }}, the blur is breaking (Moon vs Neptune)",
+    "url": "https://app.kit.com/campaigns/24646964/draft"
+  },
+  "2026-07-20": {
+    "id": 24646994,
+    "template": "B",
+    "subject": "{{ subscriber.first_name | default: \"friend\" }}, your mind and feelings are at odds (watch the pause)",
+    "url": "https://app.kit.com/campaigns/24646994/draft"
+  },
+  "2026-07-21": {
+    "id": 24646995,
+    "template": "B",
+    "subject": "{{ subscriber.first_name | default: \"friend\" }}, tension is information (use it)",
+    "url": "https://app.kit.com/campaigns/24646995/draft"
+  },
+  "2026-07-22": {
+    "id": 24646996,
+    "template": "C",
+    "subject": "{{ subscriber.first_name | default: \"friend\" }}, the Moon wants to say yes (today)",
+    "url": "https://app.kit.com/campaigns/24646996/draft"
+  },
+  "2026-07-23": {
+    "id": 24646997,
+    "template": "C",
+    "subject": "{{ subscriber.first_name | default: \"friend\" }}, Mercury turns—and the sky backs you (chart-specific)",
+    "url": "https://app.kit.com/campaigns/24646997/draft"
+  },
+  "2026-07-24": {
+    "id": 24646998,
+    "template": "A",
+    "subject": "{{ subscriber.first_name | default: \"friend\" }}, the plot thickens (Moon vs. Uranus)",
+    "url": "https://app.kit.com/campaigns/24646998/draft"
+  },
+  "2026-07-25": {
+    "id": 24646999,
+    "template": "C",
+    "subject": "{{ subscriber.first_name | default: \"friend\" }}, Moon vs. Mars (tension you can name)",
+    "url": "https://app.kit.com/campaigns/24646999/draft"
+  },
+  "2026-07-26": {
+    "id": 24647000,
+    "template": "C",
+    "subject": "{{ subscriber.first_name | default: \"friend\" }}, the pause before the snap (Moon-Neptune friction)",
+    "url": "https://app.kit.com/campaigns/24647000/draft"
+  },
+  "2026-07-27": {
+    "id": 24647001,
+    "template": "C",
+    "subject": "{{ subscriber.first_name | default: \"friend\" }}, your head and heart are at odds (Moon ☍ Mercury)",
+    "url": "https://app.kit.com/campaigns/24647001/draft"
+  },
+  "2026-07-28": {
+    "id": 24647002,
+    "template": "B",
+    "subject": "{{ subscriber.first_name | default: \"friend\" }}, the tension before clarity (Moon opposition Mercury)",
+    "url": "https://app.kit.com/campaigns/24647002/draft"
+  },
+  "2026-07-29": {
+    "id": 24647003,
+    "template": "B",
+    "subject": "{{ subscriber.first_name | default: \"friend\" }}, the push-pull is live (Full Moon today)",
+    "url": "https://app.kit.com/campaigns/24647003/draft"
+  },
+  "2026-07-30": {
+    "id": 24647004,
+    "template": "C",
+    "subject": "{{ subscriber.first_name | default: \"friend\" }}, small moves land hard (Moon △ Mars)",
+    "url": "https://app.kit.com/campaigns/24647004/draft"
+  },
+  "2026-07-31": {
+    "id": 24647005,
+    "template": "C",
+    "subject": "{{ subscriber.first_name | default: \"friend\" }}, tension wants your attention (Venus square Mars)",
+    "url": "https://app.kit.com/campaigns/24647005/draft"
+  },
+  "2026-08-01": {
+    "id": 24647007,
+    "template": "C",
+    "subject": "{{ subscriber.first_name | default: \"friend\" }}, tension before the move (Venus square Mars)",
+    "url": "https://app.kit.com/campaigns/24647007/draft"
+  },
+  "2026-08-02": {
+    "id": 24647008,
+    "template": "C",
+    "subject": "{{ subscriber.first_name | default: \"friend\" }}, what you want vs. what you feel (Moon ☍ Venus)",
+    "url": "https://app.kit.com/campaigns/24647008/draft"
+  },
+  "2026-08-03": {
+    "id": 24647009,
+    "template": "A",
+    "subject": "{{ subscriber.first_name | default: \"friend\" }}, the mood aligns (Sun trine Moon today)",
+    "url": "https://app.kit.com/campaigns/24647009/draft"
+  },
+  "2026-08-04": {
+    "id": 24647010,
+    "template": "C",
+    "subject": "{{ subscriber.first_name | default: \"friend\" }}, mood and words aren't aligned (square energy)",
+    "url": "https://app.kit.com/campaigns/24647010/draft"
+  },
+  "2026-08-05": {
+    "id": 24647011,
+    "template": "B",
+    "subject": "{{ subscriber.first_name | default: \"friend\" }}, tension wants your attention (Moon square Jupiter)",
+    "url": "https://app.kit.com/campaigns/24647011/draft"
+  },
+  "2026-08-06": {
+    "id": 24647012,
+    "template": "B",
+    "subject": "{{ subscriber.first_name | default: \"friend\" }}, the Moon is listening (sextile Mercury)",
+    "url": "https://app.kit.com/campaigns/24647012/draft"
+  },
+  "2026-08-07": {
+    "id": 24647013,
+    "template": "C",
+    "subject": "{{ subscriber.first_name | default: \"friend\" }}, the Moon wants to shake things up (in one area)",
+    "url": "https://app.kit.com/campaigns/24647013/draft"
+  },
+  "2026-08-08": {
+    "id": 24647014,
+    "template": "A",
+    "subject": "{{ subscriber.first_name | default: \"friend\" }}, mood meets muscle (Moon-Mars today)",
+    "url": "https://app.kit.com/campaigns/24647014/draft"
+  },
+  "2026-08-09": {
+    "id": 24647015,
+    "template": "C",
+    "subject": "{{ subscriber.first_name | default: \"friend\" }}, tension between what you want and what you feel",
+    "url": "https://app.kit.com/campaigns/24647015/draft"
+  },
+  "2026-08-10": {
+    "id": 24647016,
+    "template": "C",
+    "subject": "{{ subscriber.first_name | default: \"friend\" }}, Moon-Saturn friction (the pause before the snap)",
+    "url": "https://app.kit.com/campaigns/24647016/draft"
+  },
+  "2026-08-11": {
+    "id": 24647017,
+    "template": "C",
+    "subject": "{{ subscriber.first_name | default: \"friend\" }}, your mind and heart are talking (listen)",
+    "url": "https://app.kit.com/campaigns/24647017/draft"
+  },
+  "2026-08-12": {
+    "id": 24647018,
+    "template": "B",
+    "subject": "{{ subscriber.first_name | default: \"friend\" }}, New Moon amplifies one area (today)",
+    "url": "https://app.kit.com/campaigns/24647018/draft"
+  },
+  "2026-08-13": {
+    "id": 24647019,
+    "template": "A",
+    "subject": "{{ subscriber.first_name | default: \"friend\" }}, small moves land harder today (Moon ⚹ Mars)",
+    "url": "https://app.kit.com/campaigns/24647019/draft"
+  },
+  "2026-08-14": {
+    "id": 24647020,
+    "template": "C",
+    "subject": "{{ subscriber.first_name | default: \"friend\" }}, words land softer today (Mercury–Venus)",
+    "url": "https://app.kit.com/campaigns/24647020/draft"
+  },
+  "2026-08-15": {
+    "id": 24647021,
+    "template": "C",
+    "subject": "{{ subscriber.first_name | default: \"friend\" }}, tension wants your attention (Moon □ Mars)",
+    "url": "https://app.kit.com/campaigns/24647021/draft"
+  },
+  "2026-08-16": {
+    "id": 24647022,
+    "template": "C",
+    "subject": "{{ subscriber.first_name | default: \"friend\" }}, the mood wants what the heart wants (today)",
+    "url": "https://app.kit.com/campaigns/24647022/draft"
+  },
+  "2026-08-17": {
+    "id": 24647023,
+    "template": "C",
+    "subject": "{{ subscriber.first_name | default: \"friend\" }}, small moves land hard (Sun ⚹ Moon)",
+    "url": "https://app.kit.com/campaigns/24647023/draft"
+  },
+  "2026-08-18": {
+    "id": 24647024,
+    "template": "A",
+    "subject": "{{ subscriber.first_name | default: \"friend\" }}, tension wants your attention (Moon □ Jupiter)",
+    "url": "https://app.kit.com/campaigns/24647024/draft"
+  },
+  "2026-08-19": {
+    "id": 24647025,
+    "template": "B",
+    "subject": "{{ subscriber.first_name | default: \"friend\" }}, the pause before you react (Moon square Mercury)",
+    "url": "https://app.kit.com/campaigns/24647025/draft"
+  },
+  "2026-08-20": {
+    "id": 24647026,
+    "template": "B",
+    "subject": "{{ subscriber.first_name | default: \"friend\" }}, tension is information (use it)",
+    "url": "https://app.kit.com/campaigns/24647026/draft"
+  },
+  "2026-08-21": {
+    "id": 24647027,
+    "template": "C",
+    "subject": "{{ subscriber.first_name | default: \"friend\" }}, the mood likes what it sees (Moon ⚹ Venus)",
+    "url": "https://app.kit.com/campaigns/24647027/draft"
+  },
+  "2026-08-22": {
+    "id": 24647028,
+    "template": "C",
+    "subject": "{{ subscriber.first_name | default: \"friend\" }}, the Moon agrees with you (today)",
+    "url": "https://app.kit.com/campaigns/24647028/draft"
+  },
+  "2026-08-23": {
+    "id": 24647030,
+    "template": "A",
+    "subject": "{{ subscriber.first_name | default: \"friend\" }}, the push-pull is real (Moon ☍ Mars)",
+    "url": "https://app.kit.com/campaigns/24647030/draft"
+  },
+  "2026-08-24": {
+    "id": 24647031,
+    "template": "C",
+    "subject": "{{ subscriber.first_name | default: \"friend\" }}, tension between want and feel (Moon ⊟ Venus)",
+    "url": "https://app.kit.com/campaigns/24647031/draft"
+  },
+  "2026-08-25": {
+    "id": 24647032,
+    "template": "C",
+    "subject": "{{ subscriber.first_name | default: \"friend\" }}, intensity is the point (Moon-Pluto today)",
+    "url": "https://app.kit.com/campaigns/24647032/draft"
+  },
+  "2026-08-26": {
+    "id": 24647033,
+    "template": "C",
+    "subject": "{{ subscriber.first_name | default: \"friend\" }}, the moon likes you today (98% lit)",
+    "url": "https://app.kit.com/campaigns/24647033/draft"
+  },
+  "2026-08-27": {
+    "id": 24647035,
+    "template": "B",
+    "subject": "{{ subscriber.first_name | default: \"friend\" }}, the tension before the clarity (tomorrow peaks)",
+    "url": "https://app.kit.com/campaigns/24647035/draft"
+  },
+  "2026-08-28": {
+    "id": 24647036,
+    "template": "B",
+    "subject": "{{ subscriber.first_name | default: \"friend\" }}, the Full Moon wants action (and it's easier today)",
+    "url": "https://app.kit.com/campaigns/24647036/draft"
+  },
+  "2026-08-29": {
+    "id": 24647037,
+    "template": "C",
+    "subject": "{{ subscriber.first_name | default: \"friend\" }}, your mind and light are merged today",
+    "url": "https://app.kit.com/campaigns/24647037/draft"
+  },
+  "2026-08-30": {
+    "id": 24647038,
+    "template": "C",
+    "subject": "{{ subscriber.first_name | default: \"friend\" }}, tension that wants direction (Moon square Mars)",
+    "url": "https://app.kit.com/campaigns/24647038/draft"
+  },
+  "2026-08-31": {
+    "id": 24647039,
+    "template": "C",
+    "subject": "{{ subscriber.first_name | default: \"friend\" }}, Moon vs. Venus (the tension is real)",
+    "url": "https://app.kit.com/campaigns/24647039/draft"
+  },
+  "2026-09-01": {
+    "id": 24647040,
+    "template": "C",
+    "subject": "{{ subscriber.first_name | default: \"friend\" }}, the mood is tense (Moon square Pluto)",
+    "url": "https://app.kit.com/campaigns/24647040/draft"
+  },
+  "2026-09-02": {
+    "id": 24647041,
+    "template": "A",
+    "subject": "{{ subscriber.first_name | default: \"friend\" }}, your thoughts land cleaner today (Moon △ Mercury)",
+    "url": "https://app.kit.com/campaigns/24647041/draft"
+  },
+  "2026-09-03": {
+    "id": 24647042,
+    "template": "B",
+    "subject": "{{ subscriber.first_name | default: \"friend\" }}, small moves, big leverage (Moon trine Pluto)",
+    "url": "https://app.kit.com/campaigns/24647042/draft"
+  },
+  "2026-09-04": {
+    "id": 24647043,
+    "template": "B",
+    "subject": "{{ subscriber.first_name | default: \"friend\" }}, think before you react (Moon square Mercury)",
+    "url": "https://app.kit.com/campaigns/24647043/draft"
+  },
+  "2026-09-05": {
+    "id": 24647045,
+    "template": "C",
+    "subject": "{{ subscriber.first_name | default: \"friend\" }}, the blur is real (Moon square Neptune)",
+    "url": "https://app.kit.com/campaigns/24647045/draft"
+  },
+  "2026-09-06": {
+    "id": 24647046,
+    "template": "C",
+    "subject": "{{ subscriber.first_name | default: \"friend\" }}, mood meets muscle (Moon–Mars today)",
+    "url": "https://app.kit.com/campaigns/24647046/draft"
+  },
+  "2026-09-07": {
+    "id": 24647047,
+    "template": "A",
+    "subject": "{{ subscriber.first_name | default: \"friend\" }}, tension between want and feeling (Moon □ Venus)",
+    "url": "https://app.kit.com/campaigns/24647047/draft"
+  },
+  "2026-09-08": {
+    "id": 24647048,
+    "template": "C",
+    "subject": "{{ subscriber.first_name | default: \"friend\" }}, luck is looking for focus (Moon meets Jupiter)",
+    "url": "https://app.kit.com/campaigns/24647048/draft"
+  },
+  "2026-09-09": {
+    "id": 24647050,
+    "template": "C",
+    "subject": "{{ subscriber.first_name | default: \"friend\" }}, the Moon likes Venus today (small moves, big effect)",
+    "url": "https://app.kit.com/campaigns/24647050/draft"
+  },
+  "2026-09-10": {
+    "id": 24647051,
+    "template": "B",
+    "subject": "{{ subscriber.first_name | default: \"friend\" }}, new moon energy (concentrated and ready)",
+    "url": "https://app.kit.com/campaigns/24647051/draft"
+  },
+  "2026-09-11": {
+    "id": 24647052,
+    "template": "B",
+    "subject": "{{ subscriber.first_name | default: \"friend\" }}, your words are amplified (Mercury meets the Moon)",
+    "url": "https://app.kit.com/campaigns/24647052/draft"
+  },
+  "2026-09-12": {
+    "id": 24647053,
+    "template": "A",
+    "subject": "{{ subscriber.first_name | default: \"friend\" }}, your mind and heart are speaking the same language (listen)",
+    "url": "https://app.kit.com/campaigns/24647053/draft"
+  },
+  "2026-09-13": {
+    "id": 24647054,
+    "template": "C",
+    "subject": "{{ subscriber.first_name | default: \"friend\" }}, tension that wants direction (Moon square Mars)",
+    "url": "https://app.kit.com/campaigns/24647054/draft"
+  },
+  "2026-09-14": {
+    "id": 24647055,
+    "template": "C",
+    "subject": "{{ subscriber.first_name | default: \"friend\" }}, mood meets money (Moon-Venus today)",
+    "url": "https://app.kit.com/campaigns/24647055/draft"
+  },
+  "2026-09-15": {
+    "id": 24647056,
+    "template": "C",
+    "subject": "{{ subscriber.first_name | default: \"friend\" }}, Moon square Jupiter (the hot take)",
+    "url": "https://app.kit.com/campaigns/24647056/draft"
+  },
+  "2026-09-16": {
+    "id": 24647057,
+    "template": "C",
+    "subject": "{{ subscriber.first_name | default: \"friend\" }}, small moves land harder today (Moon △ Mars)",
+    "url": "https://app.kit.com/campaigns/24647057/draft"
+  },
+  "2026-09-17": {
+    "id": 24647058,
+    "template": "A",
+    "subject": "{{ subscriber.first_name | default: \"friend\" }}, your thoughts land clean today (Moon ⚹ Mercury)",
+    "url": "https://app.kit.com/campaigns/24647058/draft"
+  }
+}

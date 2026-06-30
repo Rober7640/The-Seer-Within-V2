@@ -9,7 +9,6 @@ import {
   chatMessages,
   creditPurchases,
   personas,
-  personaPrompts,
   checkoutViews,
 } from '@shared/schema';
 import { eq, and, sql, desc, count, gte, lte } from 'drizzle-orm';
@@ -368,97 +367,8 @@ router.get('/users', async (req: Request, res: Response) => {
   }
 });
 
-// ============================================
-// GET /api/admin/analytics/prompts - A/B test performance data
-// ============================================
-
-router.get('/prompts', async (req: Request, res: Response) => {
-  try {
-    // Get all prompts that are part of A/B tests (have variantLabel set)
-    const abTestPrompts = await db
-      .select({
-        id: personaPrompts.id,
-        personaId: personaPrompts.personaId,
-        personaName: personas.displayName,
-        promptType: personaPrompts.promptType,
-        version: personaPrompts.version,
-        variantLabel: personaPrompts.variantLabel,
-        trafficPercent: personaPrompts.trafficPercent,
-        isActive: personaPrompts.isActive,
-      })
-      .from(personaPrompts)
-      .leftJoin(personas, eq(personaPrompts.personaId, personas.id))
-      .where(sql`${personaPrompts.variantLabel} IS NOT NULL`)
-      .orderBy(
-        personaPrompts.personaId,
-        personaPrompts.promptType,
-        personaPrompts.variantLabel,
-      );
-
-    // For each variant, count sessions that used it via promptVariantId
-    const grouped: Record<string, {
-      personaId: string;
-      personaName: string;
-      promptType: string;
-      variants: Array<{
-        id: string;
-        variantLabel: string;
-        version: number;
-        trafficPercent: number;
-        sessionCount: number;
-        isActive: boolean;
-      }>;
-    }> = {};
-
-    for (const prompt of abTestPrompts) {
-      const key = `${prompt.personaId}:${prompt.promptType}`;
-      if (!grouped[key]) {
-        grouped[key] = {
-          personaId: prompt.personaId,
-          personaName: prompt.personaName || 'Unknown',
-          promptType: prompt.promptType,
-          variants: [],
-        };
-      }
-
-      // Count sessions that used this prompt variant
-      const sessionCount = await db
-        .select({ count: count() })
-        .from(chatSessions)
-        .where(eq(chatSessions.promptVariantId, prompt.id));
-
-      grouped[key].variants.push({
-        id: prompt.id,
-        variantLabel: prompt.variantLabel || '',
-        version: prompt.version,
-        trafficPercent: prompt.trafficPercent,
-        sessionCount: sessionCount[0]?.count || 0,
-        isActive: prompt.isActive,
-      });
-    }
-
-    // Overall prompt stats
-    const overallStats = await db
-      .select({
-        totalPrompts: count(),
-        activePrompts: sql<number>`SUM(CASE WHEN ${personaPrompts.isActive} THEN 1 ELSE 0 END)`,
-      })
-      .from(personaPrompts);
-
-    return res.json({
-      prompts: {
-        abTests: Object.values(grouped),
-        overall: {
-          totalPrompts: overallStats[0]?.totalPrompts || 0,
-          activePrompts: Number(overallStats[0]?.activePrompts || 0),
-        },
-      },
-    });
-  } catch (error: any) {
-    logger.error('Analytics prompts error:', error);
-    return res.status(500).json({ error: 'Failed to get prompt analytics' });
-  }
-});
+// (The /api/admin/analytics/prompts session-count A/B view was retired in Phase 5 —
+// prompt A/B now runs on the experiments framework, measured in /admin/experiments.)
 
 // ============================================
 // GET /api/admin/analytics/buckets - Popular reading topics by persona

@@ -1464,3 +1464,179 @@ The sections below represent a comprehensive brainstorm of every user-facing tes
 - [ ] No read predicts a date or a name; ends on "let me look closer…"; no exclamation/emoji
 - [ ] love-again reads acknowledge the wound before the "yes" beat
 - [ ] Each read names the mark in sentence 1 (self-contained), never the letter A/B/C
+
+---
+
+## Paywall Copy A/B Test
+
+Spec: `docs/posthog-evelyn-purchase-findings.md` §3.12–3.15 · copy in `docs/evelyn-paywall-copy-rewrite.md`.
+Principle: **test the measurement pipeline, not just the UI** — the experiment's value is a trustworthy conversion number, and PostHog under-fires purchases (~34%), so the DB is the source of truth.
+
+> ✅ **Implemented `tests/paywall-experiment.spec.ts`** (4 tests, passing): variant A renders the current store; variant B renders the redesigned minutes-led store; B payment sheet opens with the single-guarantee trust block (and no "non-refundable"); dev preview hero renders with MOST CHOSEN. Uses the non-prod `?paywallVariant=B` override + a registered test user. **Still to automate:** Layer 1 (assignment unit), Layer 3 (stickiness), Layer 4 (logging rows), Layer 5 (measurement query — most important), Layer 6 (sandbox money path), and the in-chat `BuyCreditsModal` B path via a live chat session.
+
+### Layer 1 — Assignment (unit)
+- [ ] `paywallVariant(userId)` is deterministic — same `user.id` returns the same variant across 1000 calls
+- [ ] Distribution over many random ids is ~50/50 at `percentB=50` (within tolerance)
+- [ ] `percentB=0` (or `enabled:false`) → every user resolves to `'A'`
+- [ ] Same helper gives the same result when called from `/api/credits/pricing` and `/api/credits/checkout-view`
+
+### Layer 2 — Variant rendering (Playwright)
+- [ ] Forced variant A → in-chat modal shows "Your Credits Have Run Out", "Buy Coins", and the "non-refundable" line
+- [x] Forced variant B → `/credits` shows redesigned minutes-led store + "Keep going" + guarantee *(tests/paywall-experiment.spec.ts)*; in-chat `BuyCreditsModal` B still to automate (verified via `/paywall-preview`)
+- [ ] In B, "non-refundable" appears on NO surface (modal, store footer, payment modal)
+- [ ] The single guarantee line ("30-day money-back guarantee on unused coins — no questions asked") is identical on modal + store + payment modal
+- [ ] In B, the `1,800 / $49.99` "MOST CHOSEN" tile is pre-selected and the CTA price mirrors it (NOT the $99.99 whale)
+- [ ] In A, the current default ($99.99 whale) is still pre-selected (control unchanged)
+- [ ] B applies to the hardcoded `FALLBACK_TIERS` path too (when server pricing tiers are absent)
+
+### Layer 3 — Stickiness (Playwright)
+- [ ] Same user, reload + re-open the paywall 3× → same variant every time
+- [ ] Variant survives navigating store ↔ in-chat modal ↔ payment modal within a session
+
+### Layer 4 — Logging (integration)
+- [ ] Opening the modal writes exactly ONE `paywall_views` row (no duplicate on re-render)
+- [ ] Row has correct `{user_id, variant, surface, persona_id, is_out_of_credits, experiment_key}`
+- [ ] `is_out_of_credits` is true when opened at zero balance, false on the low-balance ("Get More Coins") path
+- [ ] Kill-switch off (`enabled:false`) → no `variant='B'` assignments and no experiment rows attributing B
+
+### Layer 5 — Measurement (data test — most important)
+- [ ] Seed known views + completed purchases across both arms; the §3.13 analysis query returns the hand-calculated conversion per variant
+- [ ] Attribution window respected — a purchase 8 days after first view is NOT counted; 6 days IS
+- [ ] First-view dedup respected — a user with 3 views counts once, under their FIRST in-test variant
+- [ ] Pending/abandoned purchases are excluded (only `status='completed'` counts)
+- [ ] Revenue-per-viewer and tier-mix guardrail queries return correct values on seeded data
+
+### Layer 6 — Money path (Playwright + Stripe/PayPal sandbox)
+- [ ] Bucketed user (A) → pick tier → pay (test card) → `credit_purchases` completed → coins granted → reading resumes
+- [ ] Bucketed user (B) → same end-to-end path succeeds (copy change does not break checkout)
+- [ ] PayPal sandbox path completes under both variants
+
+### Layer 7 — Pre-launch QA / guardrails
+- [ ] Sample-ratio check: observed A/B split ≈ configured `percentB` (no assignment bias)
+- [ ] Guardrail readout available: conversion, revenue/viewer, ARPPU/tier-mix, refund-rate per variant
+- [x] `?paywallVariant=A|B` override works in non-prod *(tests/paywall-experiment.spec.ts)*; INERT-in-prod guard in place (`allowOverride: NODE_ENV !== 'production'`) — prod-inertness still to assert
+- [ ] Existing checkout/credits Playwright tests still pass under both variants (no regression)
+
+---
+
+## Unified A/B Experiment Framework (PRD: docs/ab-testing-framework-prd.md)
+
+### Phase 1 — core (assign / logExposure / tally)
+- [x] `experimentBucket` deterministic + sticky over 1000 ids, range 0..99, byte-identical to the old paywall formula *(server/lib/experiments.test.ts)*
+- [x] `pickVariant` walks weights in order (control first), honours uneven weights, covers >2 arms, never assigns a zero-weight arm *(experiments.test.ts)*
+- [x] OFF (status≠running) ⇒ everyone gets control 'A', not enrolled; RUNNING ⇒ sticky ~50/50, scope-aware *(server/lib/experimentTally.test.ts)*
+- [x] Generic `tally()` reconciles arm-for-arm with the legacy `tallyPaywall.ts` SQL on seeded data (window, dedup, persona scope) *(experimentTally.test.ts)*
+- [ ] DB-read error in `getExperiment` fails safe to control (returns null ⇒ 'A')
+- [ ] `logExposure` is idempotent — second open for same (key, subject) is a no-op (unique constraint)
+- [ ] User-deletion should also remove their `experiment_exposures` (polymorphic subject_id, no FK) — follow-up when exposures go live
+
+### Phase 2 — read-only admin dashboard (`/admin/experiments`)
+- [x] `GET /api/admin/experiments` lists the registry (admin) *(tests/experiments-dashboard.spec.ts)*
+- [x] `GET /:key/results` returns exact per-arm conversion + revenue on seeded exposures+purchases *(experiments-dashboard.spec.ts)*
+- [x] `?windowDays` override changes the attribution window *(experiments-dashboard.spec.ts)*
+- [x] Auth gating — no token ⇒ 401, regular-user token ⇒ 403 *(experiments-dashboard.spec.ts)*
+- [x] Page renders the seeded experiment + DB-sourced results for a logged-in admin *(experiments-dashboard.spec.ts)*
+- [ ] A running experiment with NO `started_at` still reports started + a cohort (start = first exposure), not "not started"
+- [ ] Invalid `?start` returns 400 (not an opaque 500)
+- [ ] SRM panel flags a real sample-ratio mismatch (e.g. observed 70/30 vs configured 50/50 ⇒ `ok:false`)
+- [ ] Re-clicking the already-selected experiment row does not blank the results panel
+- [ ] Lift shown in the table matches the significance-line lift (single source of truth)
+- [ ] Non-A/B-keyed experiment (e.g. control/treatment) still computes lift vs the first variant
+
+### Phase 3a — self-serve config experiments (write API + dashboard)
+- [x] POST creates a draft; duplicate key → 409; bad input (≥2 variants, weights, key slug) → 400 *(tests/experiments-dashboard.spec.ts)*
+- [x] Lifecycle: start (draft→running, sets started_at) → pause → declare-winner (→done + winner); restart a done test → 409 *(experiments-dashboard.spec.ts)*
+- [x] Write paths admin-only (401 no token, 403 regular user) *(experiments-dashboard.spec.ts)*
+- [x] `invalidateExperiment` applies a pause kill-switch immediately, no 30s TTL wait *(server/lib/experimentTally.test.ts)*
+- [x] Structural freeze: editing variants/scope/subjectType/conversion of a started test → 409 (only name/description editable) *(experiments-dashboard.spec.ts)*
+- [x] declare-winner on a draft (never ran) → 409; on an already-done test → 409 *(experiments-dashboard.spec.ts)*
+- [x] tally() lift/SRM/significance generalize to control/treatment = first two arms (renamed arms get results) *(experiments-dashboard.spec.ts)*
+- [ ] 3+ arm test: each arm shows its own lift vs control (no shared treatment value)
+- [ ] Concurrent create with the same key: one 201, one 409 (no 500)
+
+### Phase 3b — Upsell-1 ($47 vs $37) price test on the framework
+- [x] OFF/draft ⇒ resolveUpsell1Cents returns the legacy $47, not enrolled (byte-identical; casing-insensitive) *(server/lib/experimentTally.test.ts)*
+- [x] RUNNING ⇒ sticky per (normalized) email, ~50/50, charged price matches the assigned arm *(experimentTally.test.ts)*
+- [x] DONE + winner ⇒ rolls the winner price out to everyone (in-scope only — no leak to other personas) *(experimentTally.test.ts)*
+- [x] U1 results tally from the exposure log ⋈ conversations (offered=denominator, purchased=buyer, upsell_amount=revenue) *(tests/experiments-dashboard.spec.ts)*
+- [ ] Misconfigured arm payload (no positive `upsell1Cents`) is rejected at create/edit (400), never silently charges $47
+- [ ] Creating a second `upsell1_funnel` experiment under a non-`u1_price_2026` key → 400 (would be inert)
+- [ ] Funnel with a custom (non-$47) Upsell-1 price is NOT folded into the test
+- [ ] Exposure is logged only after the price is persisted (no orphan exposure on UPDATE failure)
+- [ ] SRM uses the full assigned population (exposures), not the offer-reached subset
+- [ ] Display price and charged price always equal the stored `upsell1AmountCents` (no shown-$47/charged-$37 mismatch)
+
+### Phase 4a — page-copy A/B + visitor-cookie path
+- [x] /api/ab/assign is sticky per visitor (ab_vid), returns the arm's copy, logs exactly one exposure *(tests/page-copy-experiment.spec.ts)*
+- [x] /api/ab/convert is idempotent per (experiment, visitor) and only counts assigned visitors *(page-copy-experiment.spec.ts)*
+- [x] event results tally from exposures ⋈ deduped conversions *(page-copy-experiment.spec.ts)*
+- [x] OFF/draft ⇒ /assign returns {} ⇒ lander shows default copy (byte-identical) *(page-copy-experiment.spec.ts)*
+- [ ] DONE + winner ⇒ /assign serves the winner's copy to all visitors (winner rollout)
+- [ ] /convert never trusts a client-supplied revenue value (always count-only)
+- [ ] Two tests on the same route+element don't silently shadow each other
+- [ ] Public /api/ab endpoints rate-limited / not abusable to bias a test (Phase 5 hardening)
+
+### Phase 4b — prompt A/B made sticky (live AI path)
+- [x] OFF/draft/paused/out-of-scope ⇒ resolvePersonaPrompt returns baseSystemPrompt, not enrolled, no exposure (byte-identical) *(server/lib/personaPrompt.test.ts)*
+- [x] RUNNING ⇒ sticky per user; treatment arm uses payload.systemPrompt, control arm stays on base; both enrolled; ~50/50 *(personaPrompt.test.ts)*
+- [x] An enrolled chat message logs exactly one exposure (idempotent), surface='chat', context.personaId *(personaPrompt.test.ts + live sendMessage verification)*
+- [x] Resolver prefers a running test over a concluded one for the same persona *(personaPrompt.test.ts)*
+- [x] DONE + winner ⇒ the winner's prompt keeps applying (rollout), not enrolled *(personaPrompt.test.ts)*
+- [x] Live sendMessage() applies variant B's prompt to the model (sentinel token echoed) + logs the exposure *(manual verification script, isolated temp persona)*
+- [x] Create guard: persona_prompt_* must be persona-scoped + credit_purchase (400 otherwise) *(tests/experiments-dashboard.spec.ts)*
+- [x] Start guard: an unauthored treatment arm (empty payload.systemPrompt) cannot start (400) *(experiments-dashboard.spec.ts)*
+- [x] Start guard: a second concurrent running prompt test for one persona is blocked (409) *(experiments-dashboard.spec.ts)*
+- [ ] User deletion cascades to exposures (subject_id = user.id) — Phase 5 cleanup item
+- [ ] A nicer prompt-authoring affordance than raw payload JSON in the dashboard — Phase 5 polish
+- [ ] Retire promptManager.ts random selector + /admin/analytics/prompts session counts (superseded) — Phase 5
+
+### Phase 4c — quiz-vs-chatbox structural test (Evelyn lander)
+- [x] structural visitor test: /api/ab/assign returns the variant KEY (chatbox/quiz) with no copy value, sticky *(tests/page-copy-experiment.spec.ts)*
+- [x] OFF: evelyn_lander_mechanic draft ⇒ /assign returns {} ⇒ lander renders default 'chatbox' (byte-identical) *(page-copy-experiment.spec.ts)*
+- [x] useABVariant returns the assigned key, defaults + times out to the control when no test/slow *(hook; covered via the assign path)*
+- [ ] EvelynLanderPage: both arms fire /start (lander session) and finish through the SAME handleCta — quiz signup gets the 5-min grant + drip + segment-aware routing identically — add a render/E2E test
+- [ ] Non-prod ?mechanic=quiz override previews the quiz arm without enrolling (dev only)
+- [ ] trackABConversion('evelyn_lander') fires once per evelyn-lander signup (both arms, via handleCta→LoginPage)
+- [ ] useABVariant: first settle wins (timeout vs late fetch) — no flash/double-render; a logged-in user never flashes either arm (gate waits for phase)
+- [ ] Quiz auto-advance timers are cleared on unmount (no onComplete after browser-back)
+- [ ] Quiz uses params.bucket (same as chatbox) — taps are engagement/analytics only (quiz_completed event)
+- [ ] Visitor→user purchase attribution (secondary metric) needs the identity stitch — deferred
+
+### Phase 3b-rest — V1 MAIN/downsell price migration
+- [x] OFF/draft ⇒ resolveV1Price returns the legacy fallback (pickWeighted) price, not enrolled — money path byte-identical *(server/lib/experimentTally.test.ts + live assignVariantIfMissing verification)*
+- [x] RUNNING ⇒ sticky per email, ~50/50, main+downsell match the assigned arm *(experimentTally.test.ts)*
+- [x] Funnel scope: a funnel-scoped test only enrols that funnel; out-of-funnel (and no-funnel) traffic keeps the fallback *(experimentTally.test.ts)*
+- [x] DONE + winner ⇒ rolls the winner prices out, still funnel-scoped (applied, not enrolled) *(experimentTally.test.ts)*
+- [x] tallyV1Main: buyer = purchased AND upsell_offered (confirmed); purchased-but-not-offered (abandoned) is excluded; revenue = main_purchase_amount *(tests/experiments-dashboard.spec.ts)*
+- [x] Guards: v1_main_funnel only on the live key (400); arms need positive mainCents + downsellCents (400); start requires scope.funnel (400) *(experiments-dashboard.spec.ts)*
+- [x] Start guard keyed on the live KEY (not conversion.type) — can't be bypassed by editing conversion.type then starting unscoped; live key can't drop v1_main_funnel; a non-live key can't become v1_main_funnel via edit *(experiments-dashboard.spec.ts)*
+- [x] Idempotency: a second lead for the same email returns the SAME sticky price, never re-rolls (uses `!= null`, so a stored 0/NULL amount still counts as assigned) *(live verification)*
+- [x] scope.funnel is typed as a string (a non-string can't silently start an inert test) *(zod schema)*
+- [ ] Charge + display always read the stored priceAmountCents/downsellAmountCents (override never flips a price mid-funnel) — covered structurally (fold-in writes once at lead capture, idempotent guard); add an explicit charge-site E2E
+- [ ] priceVariant stays the system_config id when the framework overrides (id↔price decoupling) — accepted tradeoff: measurement is exposure-based, priceVariant stays a clean email tag; /admin/price-test (kept) reads the legacy split correctly until this test is started for a funnel
+- [ ] Multi-conversation-per-email attribution: a buyer on a later (price-less) conversation row is dropped by tallyV1Main — matches the U1 known edge (deferred)
+- [ ] Swallowed v1_main exposure (rare, non-blocking log) ⇒ priced-but-not-counted; roughly symmetric across arms — matches the U1 pattern (deferred)
+- [ ] DRY: tallyV1Main/resolveV1Price/v1MainPayloadError mirror the U1 counterparts — a shared tally/resolver/validator helper is a deferred consolidation
+- [ ] Migrate the V1 default (null-funnel) traffic — needs a "default funnel only" scope distinct from global (deferred)
+
+### Phase 5 — retire the legacy duplicates (consolidation done)
+- [x] Deleted ab_tests/ab_events tables (+ schema/types) and the legacy abTesting admin CRUD — KEPT the framework-backed public /api/ab/assign+/convert router *(tsc + framework specs 32/32)*
+- [x] Deleted ABTestingDashboard client page + its App.tsx route *(app boots; /admin/experiments renders)*
+- [~] KEPT /admin/price-test (priceTest.ts + PriceTestDashboard) — it's the only readout for the STILL-LIVE system_config V1 main-price split (framework v1_main_price_2026 is draft); delete it once that test is migrated to the framework (review finding)
+- [x] Removed the dead promptManager random selector (selectPromptForSession/buildPersonaPrompt/getActivePrompts) + the session-count views (getPromptPerformance, /admin/analytics/prompts, /prompts/:id/performance) — KEPT the live prompt editor fns + /admin/prompts
+- [x] migrations/018_drop_legacy_ab.sql applied (tables were empty); _down.sql recreates them *(rollback path)*
+- [x] No dangling references to any deleted symbol/table/route; tsc 46 (2 dead-code errors removed, 0 new) *(grep + tsc)*
+- [ ] Exactly ONE A/B framework remains — exit criterion met
+
+### Phase 5 hardening — pre-registered-N gating + SRM alerting
+- [x] conversion.targetN (per-arm pre-registered N); results route returns progress {targetN, minExposures, reached} from exposure counts *(tests/experiments-dashboard.spec.ts)*
+- [x] declare-winner is gated server-side until every arm reaches N (409); force:true overrides; pause remains the no-override emergency kill *(experiments-dashboard.spec.ts)*
+- [x] Dashboard: progress bar + verdict hidden until N + declare-winner disabled until N + prominent SRM mismatch banner *(manual screenshot self-audit)*
+- [x] targetN absent ⇒ no gate (results.progress undefined); the standing "fixed-horizon, no early stopping" caution shows for EVERY experiment *(conditional render)*
+- [x] Zero-exposure arm counts as 0 (min over positive-weight arms, missing=0) — an arm past N can't unlock the gate while another arm is at 0 *(experiments-dashboard.spec.ts)*
+- [x] targetN parsed with Number (not parseInt) so "1e7" isn't truncated to 1; rejected if not a whole number ≥ 0 *(client validation)*
+- [x] Results-progress + declare-winner gate share one canonical cohort start (startedAt ?? first exposure) + targetNOf/gateArmKeys helpers, so the displayed lock state always matches the 409 *(shared helpers)*
+- [x] force:true below N is logged (auditable bypass of the fixed-horizon gate)
+- [ ] N-arm SRM: augmentSrm chi-square covers only the control vs treatment (first two) arms — a 3rd-arm mismatch isn't flagged (pre-existing 2-arm SRM; full N-arm SRM is a follow-up)
+- [ ] Per-arm-N semantics: a small positive-weight arm governs the gate (strict "every arm reaches N") — set targetN to what the smallest expected arm needs (by design)
+- [ ] (Remaining optional follow-ups) refund-rate guardrail (needs a Stripe-refund webhook + refunded column — no data source today); fold the N exposure-count into the tally query (one scan); drop the write-dead chat_sessions.promptVariantId column; rate-limit the public /api/ab endpoints
