@@ -73,6 +73,7 @@ import { assignVariantIfMissing, getVariantForEmail } from "./lib/priceVariant";
 import { fireGoogleAdsConversion } from "./lib/googleAds";
 import { funnelDefForParam, FUNNELS, type FunnelParam } from "@shared/funnelConfig";
 import Stripe from "stripe";
+import { getStripe } from "./lib/stripeAccount";
 import type { ChatRequest, CheckoutRequest } from "../shared/types";
 import {
   addSubscriberToList,
@@ -253,12 +254,9 @@ function aweberLeadListId(funnel: FunnelId): string | undefined {
   return process.env.AWEBER_LIST_ID;
 }
 
-// Initialize Stripe only if key is provided
-const stripeKey = process.env.STRIPE_SECRET_KEY;
-const stripe =
-  stripeKey && stripeKey !== "sk_test_placeholder"
-    ? new Stripe(stripeKey)
-    : null;
+// Stripe client for the active account (A primary / B backup). Resolved at boot
+// from ACTIVE_STRIPE_ACCOUNT via the central helper; null when unconfigured.
+const stripe = getStripe();
 
 export async function registerRoutes(
   httpServer: Server,

@@ -5,7 +5,7 @@
 // Race-safe with the regular webhook flow via `WHERE status='pending'` guard.
 // Feature-flagged via ENABLE_RECONCILIATION_CRON.
 
-import Stripe from 'stripe';
+import { getStripe, getStripeForRow } from './stripeAccount';
 import { and, eq, gt, lt, sql } from 'drizzle-orm';
 import { db } from './db';
 import { creditPurchases, users } from '@shared/schema';
@@ -18,9 +18,10 @@ const ROW_LIMIT = 50;
 const RATE_LIMIT_MS = 200;
 const MAX_CONSECUTIVE_ERRORS = 5;
 
-const stripeKey = process.env.STRIPE_SECRET_KEY;
-const stripe =
-  stripeKey && stripeKey !== 'sk_test_placeholder' ? new Stripe(stripeKey) : null;
+// Tag-aware: each pending row is reconciled against the Stripe account that
+// created its IDs (getStripeForRow(row.stripeAccount)), so post-switch we look
+// up old Account-A payments on A and new Account-B payments on B. Stripe object
+// IDs only resolve against their creating account.
 
 export type ReconcileStats = {
   checked: number;
@@ -47,7 +48,7 @@ export async function reconcilePendingPurchases(): Promise<ReconcileStats> {
     bailedOut: false,
   };
 
-  if (!stripe && !process.env.PAYPAL_CLIENT_ID) {
+  if (!getStripe() && !process.env.PAYPAL_CLIENT_ID) {
     logger.warn('Reconciliation: no payment providers configured, skipping run');
     return stats;
   }
@@ -64,6 +65,7 @@ export async function reconcilePendingPurchases(): Promise<ReconcileStats> {
       priceUsd: creditPurchases.priceUsd,
       paypalOrderId: creditPurchases.paypalOrderId,
       stripePaymentIntentId: creditPurchases.stripePaymentIntentId,
+      stripeAccount: creditPurchases.stripeAccount,
     })
     .from(creditPurchases)
     .where(
@@ -99,8 +101,17 @@ export async function reconcilePendingPurchases(): Promise<ReconcileStats> {
         } else {
           stats.notCaptured++;
         }
-      } else if (isStripe && stripe) {
-        const intent = await stripe.paymentIntents.retrieve(row.stripePaymentIntentId!);
+      } else if (isStripe) {
+        // Use the account that created this PI (NULL tag → 'A' for legacy rows).
+        const rowStripe = getStripeForRow(row.stripeAccount);
+        if (!rowStripe) {
+          logger.warn('Reconciliation: Stripe account not configured for row, skipping', {
+            rowId: row.id,
+            stripeAccount: row.stripeAccount ?? 'A',
+          });
+          continue;
+        }
+        const intent = await rowStripe.paymentIntents.retrieve(row.stripePaymentIntentId!);
         if (intent.status === 'succeeded') {
           isCaptured = true;
           captureId = intent.latest_charge as string | undefined;

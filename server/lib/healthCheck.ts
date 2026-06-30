@@ -4,6 +4,7 @@ import { users, chatSessions, creditPurchases, safetyViolations } from '@shared/
 import { eq, count, sum, gte } from 'drizzle-orm';
 import * as os from 'os';
 import { getCircuitBreakerMetrics } from './circuitBreaker';
+import { getActiveStripeSecretKey } from './stripeAccount';
 
 export interface DependencyStatus {
   status: 'healthy' | 'degraded' | 'unhealthy';
@@ -68,7 +69,7 @@ async function checkDatabase(): Promise<DependencyStatus> {
 
 async function checkStripe(): Promise<DependencyStatus> {
   const start = Date.now();
-  const key = process.env.STRIPE_SECRET_KEY;
+  const key = getActiveStripeSecretKey();
 
   if (!key || key === 'sk_test_placeholder') {
     return {

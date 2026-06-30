@@ -28,6 +28,11 @@ export const conversations = pgTable("conversations", {
   stripeSessionId: text("stripe_session_id"),
   stripeCustomerId: text("stripe_customer_id"),
   stripePaymentMethodId: text("stripe_payment_method_id"),
+  // Which Stripe account created the IDs on this row ('A' primary / 'B' backup).
+  // NULL = legacy rows predating the backup-account work → treat as 'A'. Stripe
+  // object IDs only resolve against their creating account, so refunds/disputes/
+  // reconciliation must use getStripeFor(this).
+  stripeAccount: text("stripe_account"),
   mainPurchaseAmount: integer("main_purchase_amount"),
 
   // V1 price split test (variant assigned at lead capture, drives all price displays + Stripe charge)
@@ -343,6 +348,9 @@ export const creditPurchases = pgTable("credit_purchases", {
 
   stripeSessionId: text("stripe_session_id"),
   stripePaymentIntentId: text("stripe_payment_intent_id"),
+  // Which Stripe account created these IDs ('A' primary / 'B' backup). NULL =
+  // legacy rows → treat as 'A'. See getStripeFor() for tag-aware lookups.
+  stripeAccount: text("stripe_account"),
   paypalOrderId: varchar('paypal_order_id', { length: 64 }),
   paypalCaptureId: varchar('paypal_capture_id', { length: 64 }),
   status: text("status").default("pending").notNull(),

@@ -5,15 +5,13 @@
 import { db } from './db';
 import { personas, personaPrompts, chatSessions, users, systemConfig } from '@shared/schema';
 import { eq, and, sql, desc, gte } from 'drizzle-orm';
-import Stripe from 'stripe';
+import { getStripe } from './stripeAccount';
 import { getPersonaPricing } from './personaPricing';
 import type { PricingTier } from '../../shared/types';
 import logger from './logger';
 
-const stripeKey = process.env.STRIPE_SECRET_KEY;
-const stripe = stripeKey && stripeKey !== 'sk_test_placeholder'
-  ? new Stripe(stripeKey)
-  : null;
+// Active-account Stripe client (A primary / B backup) via the central helper.
+const stripe = getStripe();
 
 const PLATFORM_SHARE = 0.30;
 const CONSULTANT_SHARE = 0.70;

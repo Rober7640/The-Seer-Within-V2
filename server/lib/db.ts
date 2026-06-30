@@ -3,6 +3,7 @@ import pg from "pg";
 import { conversations, type Conversation, type InsertConversation } from "@shared/schema";
 import { eq, desc } from "drizzle-orm";
 import logger from "./logger";
+import { activeStripeAccountTag } from "./stripeAccount";
 
 // Override pg's default timestamp parsers to ALWAYS treat as UTC.
 // OID 1114 = timestamp without time zone
@@ -200,6 +201,7 @@ export async function updateStripeData(
           stripeSessionId: stripeData.stripeSessionId,
           stripeCustomerId: stripeData.stripeCustomerId,
           stripePaymentMethodId: stripeData.stripePaymentMethodId,
+          stripeAccount: activeStripeAccountTag(),
           mainPurchaseAmount: stripeData.mainPurchaseAmount,
           updatedAt: new Date(),
         })
@@ -214,6 +216,7 @@ export async function updateStripeData(
           stripeSessionId: stripeData.stripeSessionId,
           stripeCustomerId: stripeData.stripeCustomerId,
           stripePaymentMethodId: stripeData.stripePaymentMethodId,
+          stripeAccount: activeStripeAccountTag(),
           mainPurchaseAmount: stripeData.mainPurchaseAmount,
         });
       logger.info(`Created new conversation for ${email} with Stripe session`);
@@ -264,6 +267,9 @@ export async function markUpsellPurchased(
         upsellPurchased: true,
         upsellPaymentId,
         upsellAmount,
+        // Upsell PI is created on the active account; in normal flow this matches
+        // the row's existing tag (same account as the main purchase).
+        stripeAccount: activeStripeAccountTag(),
         updatedAt: new Date(),
       })
       .where(eq(conversations.stripeSessionId, sessionId));
@@ -340,6 +346,7 @@ export async function markUpsell2Purchased(
         upsell2PaymentId,
         upsell2Amount,
         upsell2Type,
+        stripeAccount: activeStripeAccountTag(),
         updatedAt: new Date(),
       })
       .where(eq(conversations.stripeSessionId, sessionId));
