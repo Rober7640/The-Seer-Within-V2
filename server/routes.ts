@@ -86,6 +86,7 @@ import {
   tagSoulmateDeclinedUpsell,
 } from "./lib/aweber";
 import { addLeadToKit } from "./lib/kit";
+import { resolveLunaTyHandoff } from "./lib/lunaThankyouGift";
 import { addContactToResendAudience } from "./lib/resendAudience";
 import { createSoulmateLanderV2Account } from "./lib/soulmateLanderSignup";
 import { extractClientIp, extractUserAgent } from "./lib/fraudDetection";
@@ -1159,6 +1160,34 @@ export async function registerRoutes(
     } catch (error) {
       logger.error("Get order details error:", error);
       return res.status(500).json({ error: "Failed to get order details" });
+    }
+  });
+
+  // Luna thank-you offer handoff. The /success page calls this with its Stripe
+  // session_id; we resolve the buyer's email server-side from the purchase (never
+  // trusting a client-supplied email), then tell the page how to enter the Luna
+  // lander: 'login' with a magic token for buyers who already have a V2 account
+  // (the migrated majority — lands them logged-in, no register/"already exists"),
+  // or 'signup' for buyers not yet migrated (their brand-new lander flow grants at
+  // verify). The 1,800-coin gift itself is granted by claimLunaTyGift on arrival.
+  app.post("/api/luna-ty/handoff", async (req: Request, res: Response) => {
+    try {
+      const sessionId = req.body?.sessionId;
+      if (!sessionId || typeof sessionId !== "string") {
+        return res.status(400).json({ error: "Missing sessionId" });
+      }
+      const conversation = await getConversationByStripeSession(sessionId);
+      if (!conversation || !conversation.email) {
+        return res.status(404).json({ error: "Order not found" });
+      }
+      const handoff = await resolveLunaTyHandoff(
+        conversation.email,
+        conversation.firstName ?? null,
+      );
+      return res.json(handoff);
+    } catch (error) {
+      logger.error("Luna TY handoff error:", error);
+      return res.status(500).json({ error: "Failed to build Luna handoff" });
     }
   });
 

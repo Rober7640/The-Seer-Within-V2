@@ -7,6 +7,12 @@ import { trackPurchase, trackUpsellPurchase, trackUpsell2Purchase } from "../lib
 import { trackGAdsPurchase } from "../lib/gtm";
 import { currentFunnel } from "../lib/funnel";
 
+// Functional tag is campaign=v1-ty-luna (the server keys the 1,800-coin grant off it);
+// utm_* are analytics-only. Module-scoped so the effect can reference it without
+// re-triggering.
+const LUNA_UTM =
+  "campaign=v1-ty-luna&utm_source=v1_ty&utm_medium=thankyou&utm_campaign=luna_50";
+
 interface OrderData {
   firstName: string;
   email: string;
@@ -22,6 +28,10 @@ export default function SuccessPage() {
   const [orderData, setOrderData] = useState<OrderData | null>(null);
   const [hasUpsell, setHasUpsell] = useState(false);
   const [hasUpsell2, setHasUpsell2] = useState(false);
+  // Luna thank-you CTA target. Defaults to the plain campaign link (which drives the
+  // brand-new signup flow); upgraded after the handoff call to a magic-login link for
+  // buyers who already have a V2 account, or a prefilled-signup link otherwise.
+  const [lunaHref, setLunaHref] = useState(`/luna?${LUNA_UTM}`);
 
   useEffect(() => {
     const params = new URLSearchParams(searchString);
@@ -172,6 +182,32 @@ export default function SuccessPage() {
       } catch (err) {
         console.error("Failed to fetch order data:", err);
       }
+
+      // Resolve how this buyer should enter the Luna offer. Existing V2 accounts (the
+      // migrated majority) get a magic-login link so they skip the "email already exists"
+      // wall; not-yet-migrated buyers get a prefilled signup. Falls back to the default
+      // campaign link on any error, which still works (drives the normal signup flow).
+      try {
+        const hres = await fetch("/api/luna-ty/handoff", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ sessionId }),
+        });
+        if (hres.ok) {
+          const h = await hres.json();
+          if (h.mode === "login" && h.token) {
+            setLunaHref(`/luna?token=${encodeURIComponent(h.token)}&${LUNA_UTM}`);
+          } else if (h.mode === "signup") {
+            const q = new URLSearchParams();
+            if (h.email) q.set("email", h.email);
+            if (h.firstName) q.set("name", h.firstName);
+            const extra = q.toString();
+            setLunaHref(`/luna?${LUNA_UTM}${extra ? `&${extra}` : ""}`);
+          }
+        }
+      } catch (err) {
+        console.error("Luna handoff failed (using default link):", err);
+      }
     }
 
     loadOrderData();
@@ -313,7 +349,7 @@ export default function SuccessPage() {
             </div>
 
             <a
-              href="/luna?campaign=v1-ty-luna&utm_source=v1_ty&utm_medium=thankyou&utm_campaign=luna_50"
+              href={lunaHref}
               data-testid="link-luna-offer"
               className="block w-full text-center bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-400 hover:to-indigo-400 text-white font-medium py-3 px-4 rounded-lg transition-colors"
             >
