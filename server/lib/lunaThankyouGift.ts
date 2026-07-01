@@ -123,9 +123,14 @@ export async function claimLunaTyGift(userId: string): Promise<number> {
 
     if (inserted.length === 0) return 0; // already claimed
 
+    // Bring the welcome balance UP TO exactly LUNA_TY_FREE_COINS (1,800) rather than
+    // stacking the gift on top of the generic 180-coin free-minutes default that a
+    // V1→V2-migrated buyer is already seeded with (see funnelMigration*.ts) — otherwise
+    // the total reads 1,980. GREATEST tops a fresh/near-empty account up to 1,800 and is a
+    // no-op for anyone already above it (e.g. they'd bought coins), so we never remove any.
     await db
       .update(users)
-      .set({ coinBalance: sql`coin_balance + ${LUNA_TY_FREE_COINS}`, updatedAt: new Date() })
+      .set({ coinBalance: sql`GREATEST(coin_balance, ${LUNA_TY_FREE_COINS})`, updatedAt: new Date() })
       .where(eq(users.id, userId));
 
     logger.info('Luna TY gift granted', { userId, coins: LUNA_TY_FREE_COINS });
