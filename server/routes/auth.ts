@@ -47,6 +47,10 @@ const EVELYN_LANDER_FREE_COINS = 300;
 // /soulmate lander signups mirror the /evelyn grant exactly (5 min). Same Evelyn
 // persona, same drip enrollment downstream. Eligibility = isFromSoulmateLander() below.
 const SOULMATE_LANDER_FREE_COINS = 300;
+// V1 thank-you page (/success on every funnel) → Luna lander CTA tagged
+// `?campaign=v1-ty-luna`. Those buyers get 30 minutes free (1,800 coins) instead of
+// Luna's default 3 min. Eligibility = isFromLunaThankyouOffer() below.
+const LUNA_TY_FREE_COINS = 1800;
 const VERIFICATION_TOKEN_EXPIRY_HOURS = 24;
 
 async function getFreeCoinsForPersona(personaId: string | null | undefined): Promise<number> {
@@ -117,6 +121,30 @@ async function isFromSoulmateLander(userId: string, personaId: string | null | u
     const row = await db.select({ id: soulmateLanderSessions.id })
       .from(soulmateLanderSessions)
       .where(eq(soulmateLanderSessions.resolvedUserId, userId))
+      .limit(1);
+    return !!row[0];
+  } catch {
+    return false;
+  }
+}
+
+// The V1 thank-you page (/success on every funnel) hands buyers a CTA to Luna's
+// lander tagged `?campaign=v1-ty-luna`. That tag is captured into
+// persona_lander_sessions.campaign at /start and the row is linked to the user at
+// register. Here we detect it so those buyers get 30 free minutes (1,800 coins)
+// instead of Luna's default 3. Scoped to the luna-voss slug so the tag can't be
+// replayed onto another persona's lander. Silent-fails to false so a DB hiccup
+// can never block verification itself.
+const LUNA_TY_CAMPAIGN = 'v1-ty-luna';
+async function isFromLunaThankyouOffer(userId: string): Promise<boolean> {
+  try {
+    const row = await db.select({ id: personaLanderSessions.id })
+      .from(personaLanderSessions)
+      .where(and(
+        eq(personaLanderSessions.resolvedUserId, userId),
+        eq(personaLanderSessions.personaSlug, 'luna-voss'),
+        eq(personaLanderSessions.campaign, LUNA_TY_CAMPAIGN),
+      ))
       .limit(1);
     return !!row[0];
   } catch {
@@ -628,17 +656,21 @@ router.get('/verify-email/:token', async (req: Request, res: Response) => {
     // Intentionally keep verificationToken/Expiry in place so that if an email-scanner
     // prefetches the link, the real user's later click still finds the token and auto-logs
     // in via the "already verified" branch above. Expiry check there prevents stale reuse.
-    // /evelyn and /soulmate lander signups both get 5 min free; everyone else
-    // gets the persona default (3 min). Soulmate is checked first so it takes
-    // precedence if a user somehow has both linkages (rare, would mean they
-    // hit both landers with the same email pre-verify).
-    const isSoulmateLanderUser = await isFromSoulmateLander(user.id, user.defaultPersonaId);
-    const isEvelynLanderUser = !isSoulmateLanderUser && await isFromEvelynLander(user.id, user.defaultPersonaId);
-    const freeCoinsGrant = isSoulmateLanderUser
-      ? SOULMATE_LANDER_FREE_COINS
-      : isEvelynLanderUser
-        ? EVELYN_LANDER_FREE_COINS
-        : await getFreeCoinsForPersona(user.defaultPersonaId);
+    // Luna $50/30-min thank-you offer wins first (1,800 coins). Then /evelyn and
+    // /soulmate lander signups both get 5 min free; everyone else gets the persona
+    // default (3 min). Soulmate is checked before Evelyn so it takes precedence if a
+    // user somehow has both linkages (rare, would mean they hit both landers with the
+    // same email pre-verify).
+    const isLunaTyOffer = await isFromLunaThankyouOffer(user.id);
+    const isSoulmateLanderUser = !isLunaTyOffer && await isFromSoulmateLander(user.id, user.defaultPersonaId);
+    const isEvelynLanderUser = !isLunaTyOffer && !isSoulmateLanderUser && await isFromEvelynLander(user.id, user.defaultPersonaId);
+    const freeCoinsGrant = isLunaTyOffer
+      ? LUNA_TY_FREE_COINS
+      : isSoulmateLanderUser
+        ? SOULMATE_LANDER_FREE_COINS
+        : isEvelynLanderUser
+          ? EVELYN_LANDER_FREE_COINS
+          : await getFreeCoinsForPersona(user.defaultPersonaId);
     await db.update(users)
       .set({
         emailVerified: true,
@@ -1338,15 +1370,19 @@ router.post('/magic-verify', authLimiter, async (req: Request, res: Response) =>
     let freshCoinBalance = user.coinBalance;
     let freshEmailVerified = user.emailVerified;
     if (!user.emailVerified) {
-      // /evelyn and /soulmate lander signups both get 5 min free; everyone else
-      // gets the persona default. Mirrors the /verify-email grant logic above.
-      const isSoulmateLanderUser = await isFromSoulmateLander(user.id, user.defaultPersonaId);
-      const isEvelynLanderUser = !isSoulmateLanderUser && await isFromEvelynLander(user.id, user.defaultPersonaId);
-      const freeCoinsGrant = isSoulmateLanderUser
-        ? SOULMATE_LANDER_FREE_COINS
-        : isEvelynLanderUser
-          ? EVELYN_LANDER_FREE_COINS
-          : await getFreeCoinsForPersona(user.defaultPersonaId);
+      // Luna $50/30-min thank-you offer wins first (1,800 coins); then /evelyn and
+      // /soulmate landers (5 min); everyone else the persona default. Mirrors the
+      // /verify-email grant logic above.
+      const isLunaTyOffer = await isFromLunaThankyouOffer(user.id);
+      const isSoulmateLanderUser = !isLunaTyOffer && await isFromSoulmateLander(user.id, user.defaultPersonaId);
+      const isEvelynLanderUser = !isLunaTyOffer && !isSoulmateLanderUser && await isFromEvelynLander(user.id, user.defaultPersonaId);
+      const freeCoinsGrant = isLunaTyOffer
+        ? LUNA_TY_FREE_COINS
+        : isSoulmateLanderUser
+          ? SOULMATE_LANDER_FREE_COINS
+          : isEvelynLanderUser
+            ? EVELYN_LANDER_FREE_COINS
+            : await getFreeCoinsForPersona(user.defaultPersonaId);
       const updated = await db
         .update(users)
         .set({
