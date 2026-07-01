@@ -398,6 +398,11 @@ const magicRegisterSchema = z.object({
   firstName: z.string().min(1, 'First name is required'),
   confirmed18Plus: z.boolean().refine(v => v === true, 'Must confirm you are 18 or older'),
   persona: z.string().optional().default('aiden-powers'),
+  // Lander context (Evelyn quiz + future personas). `source`='evelyn-lander' opts the
+  // signup into Evelyn's funnel tag + drip + lander-session linkage, mirroring /register.
+  source: z.string().optional(),
+  bucket: z.string().optional(),
+  landerSessionToken: z.string().min(8).max(128).optional(),
   quizSessionToken: z.string().optional(),
   quizData: z.object({
     topic: z.string(),
@@ -417,7 +422,13 @@ router.post('/magic-register', authLimiter, async (req: Request, res: Response) 
       return;
     }
 
-    const { email, firstName, persona, quizSessionToken, quizData, turnstileToken } = parseResult.data;
+    const { email, firstName, persona, source, bucket, landerSessionToken, quizSessionToken, quizData, turnstileToken } = parseResult.data;
+
+    // Evelyn /evelyn-lander quiz signup: gets the 'evelyn' funnel tag, 5-min grant,
+    // lander-session linkage, and the Evelyn drips — parity with the /register path.
+    const isEvelynLanderSignup = source === 'evelyn-lander' && persona === 'evelyn-cross';
+    // Funnel tag stamped on the user + emitted to PostHog. Aiden path unchanged.
+    const signupFunnelTag = persona === 'aiden-powers' ? 'aiden' : (isEvelynLanderSignup ? 'evelyn' : null);
 
     // Layer 3: Verify Cloudflare Turnstile token (invisible CAPTCHA)
     const turnstileValid = await verifyTurnstileToken(turnstileToken || '', extractClientIp(req));
@@ -507,7 +518,7 @@ router.post('/magic-register', authLimiter, async (req: Request, res: Response) 
       firstName,
       confirmed18Plus: true,
       confirmed18PlusAt: new Date(),
-      coinBalance: isTestEnv ? DEFAULT_FREE_COINS : 0,
+      coinBalance: isTestEnv ? (isEvelynLanderSignup ? EVELYN_LANDER_FREE_COINS : DEFAULT_FREE_COINS) : 0,
       emailVerified: isTestEnv,
       verificationToken: isTestEnv ? null : verificationToken,
       verificationTokenExpiry: isTestEnv ? null : sql`NOW() + INTERVAL '${sql.raw(String(VERIFICATION_TOKEN_EXPIRY_HOURS))} hours'`,
@@ -516,7 +527,7 @@ router.post('/magic-register', authLimiter, async (req: Request, res: Response) 
       deviceFingerprint: fingerprint,
       accountFlags: fraudCheck.flagged ? serializeAccountFlags(fraudCheck.flags) : null,
       defaultPersonaId: personaId,
-      signupFunnel: persona === 'aiden-powers' ? 'aiden' : null,
+      signupFunnel: signupFunnelTag,
     }).returning();
 
     const user = newUser[0];
@@ -531,7 +542,9 @@ router.post('/magic-register', authLimiter, async (req: Request, res: Response) 
         summary: `User's quiz intake: Topic: ${quizData.topic}, Feeling: ${quizData.feeling}, Desired outcome: ${quizData.outcome}`,
         fullContext: JSON.stringify(quizData),
         importance: 9,
-        category: quizData.topic === 'love_relationships' ? 'love' : quizData.topic === 'career_money' ? 'money' : 'general',
+        // Accept both Aiden ('love_relationships'/'career_money') and Evelyn
+        // ('love'/'money'/'purpose'/'someone') topic vocabularies.
+        category: /love|relationship/.test(quizData.topic) ? 'love' : /money|career/.test(quizData.topic) ? 'money' : 'general',
       });
     }
 
@@ -548,9 +561,22 @@ router.post('/magic-register', authLimiter, async (req: Request, res: Response) 
         .where(eq(aidenQuizSessions.sessionToken, quizSessionToken));
     }
 
-    // Send verification email only in non-test environments
+    // Evelyn /evelyn-lander quiz signup: link the lander session row so the
+    // post-verification /verified drip (keyed on resolved_user_id) fires, exactly
+    // like the /register path. Non-blocking — must not fail registration.
+    if (isEvelynLanderSignup && landerSessionToken) {
+      db.update(evelynLanderSessions)
+        .set({ resolvedUserId: user.id })
+        .where(eq(evelynLanderSessions.sessionToken, landerSessionToken))
+        .catch((err) => {
+          logger.warn('Failed to link evelyn_lander_session to user (magic-register)', { err: err?.message });
+        });
+    }
+
+    // Send verification email only in non-test environments. `source` drives the
+    // free-minutes figure shown in the email (5 for the Evelyn lander).
     if (!isTestEnv) {
-      sendVerificationEmail(user.email, user.firstName, verificationToken, persona).catch((err) => {
+      sendVerificationEmail(user.email, user.firstName, verificationToken, persona, source).catch((err) => {
         logger.error('Failed to send verification email:', err);
       });
     }
@@ -568,8 +594,20 @@ router.post('/magic-register', authLimiter, async (req: Request, res: Response) 
       }).catch(() => { /* already logged inside */ });
     }
 
-    posthog.identify({ distinctId: user.id, properties: { email: user.email, name: user.firstName, signup_funnel: 'aiden', $set_once: { first_seen: new Date().toISOString() } } });
-    posthog.capture({ distinctId: user.id, event: 'user_registered', properties: { email: user.email, persona, requires_verification: !isTestEnv, quiz_topic: quizData?.topic ?? null } });
+    // Schedule Evelyn unverified-track drip (+10m/+24h/+48h). Evelyn lander only,
+    // non-test env. Flag-gated at send time by ENABLE_EVELYN_FOLLOWUPS. Mirrors /register.
+    if (!isTestEnv && isEvelynLanderSignup) {
+      scheduleEvelynFollowups({
+        userId: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        bucket: bucket ?? null,
+        baseTime: user.createdAt ?? new Date(),
+      }).catch(() => { /* logged inside */ });
+    }
+
+    posthog.identify({ distinctId: user.id, properties: { email: user.email, name: user.firstName, signup_funnel: signupFunnelTag ?? 'standard', $set_once: { first_seen: new Date().toISOString() } } });
+    posthog.capture({ distinctId: user.id, event: 'user_registered', properties: { email: user.email, persona, source: source ?? null, requires_verification: !isTestEnv, quiz_topic: quizData?.topic ?? null } });
 
     res.status(201).json({
       token,
@@ -683,6 +721,14 @@ router.get('/verify-email/:token', async (req: Request, res: Response) => {
     skipAidenFollowupsForUser(user.id, 'user_verified').catch(() => { /* logged inside */ });
     // Same for the Evelyn unverified-track drip.
     skipEvelynFollowupsForUser(user.id, 'user_verified').catch(() => { /* logged inside */ });
+
+    // Stamp the verification step on the quiz-session funnel row (persona-generic —
+    // covers Aiden + Evelyn quiz sessions) so DB-side funnel stats include verified,
+    // matching PostHog for DB↔PostHog reconciliation. No-op for non-quiz users.
+    db.update(aidenQuizSessions)
+      .set({ completedVerification: true, verifiedAt: new Date(), updatedAt: new Date() })
+      .where(eq(aidenQuizSessions.userId, user.id))
+      .catch((err) => logger.warn('Failed to stamp quiz-session verification', { err: err?.message }));
 
     // Schedule the post-verification "verified, not purchased" nurture drip for Aiden users.
     // Non-blocking + flag-gated inside the processor (ENABLE_AIDEN_VERIFIED_DRIP).
@@ -1403,6 +1449,13 @@ router.post('/magic-verify', authLimiter, async (req: Request, res: Response) =>
         skipAidenFollowupsForUser(user.id, 'user_verified').catch(() => { /* logged inside */ });
         // Same for the Evelyn unverified-track drip.
         skipEvelynFollowupsForUser(user.id, 'user_verified').catch(() => { /* logged inside */ });
+
+        // Stamp the verification step on the quiz-session funnel row (persona-generic).
+        // Keeps DB funnel stats aligned with PostHog when a user verifies via magic-link.
+        db.update(aidenQuizSessions)
+          .set({ completedVerification: true, verifiedAt: new Date(), updatedAt: new Date() })
+          .where(eq(aidenQuizSessions.userId, user.id))
+          .catch((err) => logger.warn('Failed to stamp quiz-session verification (magic-link)', { err: err?.message }));
 
         // Schedule the post-verification "verified, not purchased" drip. Users who
         // verify via a magic-link CTA (e.g. the +10m/+24h/+48h follow-up email click)

@@ -20,16 +20,13 @@ import { Sparkles, Send } from "lucide-react";
 import TurnstileWidget from "@/components/TurnstileWidget";
 import { calculateTypingDelay, sleep } from "@/lib/typingAnimation";
 import { track as trackPH } from "@/lib/posthog";
-import { useABVariant } from "@/hooks/useABTest";
 import EvelynQuizMechanic from "@/pages/evelyn-lander/EvelynQuizMechanic";
 
-// Phase 4c structural A/B: which lander MECHANIC a visitor sees. Control =
-// 'chatbox' (the open 2-turn chat below); treatment = 'quiz' (a 3-tap quiz that
-// hands off to the SAME signup). Registered as the visitor experiment
-// 'evelyn_lander_mechanic' (scope.route='evelyn_lander', element='mechanic').
-// OFF/draft ⇒ /assign returns no arm ⇒ default 'chatbox' ⇒ byte-identical.
-const AB_PAGE = "evelyn_lander";
-const AB_ELEMENT = "mechanic";
+// The lander MECHANIC. Originally a Phase 4c structural A/B (control 'chatbox' =
+// the open 2-turn chat below; treatment 'quiz' = a 3-tap quiz), but the tap-quiz
+// has now FULLY REPLACED the chatbox on /evelyn (boss decision 2026-06-30), so
+// every visitor gets 'quiz' and the experiment is no longer consulted. The
+// chatbox remains only as a non-prod `?mechanic=chatbox` preview fallback.
 
 const AUTH_TOKEN_KEY = "seer_auth_token";
 const EVELYN_PERSONA_SLUG = "evelyn-cross";
@@ -151,19 +148,23 @@ export default function EvelynLanderPage() {
   const sessionToken = getSessionToken();
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
-  // Resolve the lander MECHANIC (Phase 4c structural A/B). A non-prod
-  // `?mechanic=quiz|chatbox` override lets us preview either arm without enrolling.
-  // The 'quiz' arm only changes the ENGAGEMENT surface; BOTH arms run the same
-  // /start (creates the lander session) and finish through the same handleCta
-  // (segment-aware routing + session linkage + the signup conversion), so signup,
-  // the 5-min grant, and the drip are identical and the A/B isolates the mechanic.
+  // Resolve the lander MECHANIC. The tap-quiz has fully REPLACED the open chatbox
+  // on /evelyn (boss decision 2026-06-30 — direct replace, NOT a 50/50 split), so
+  // every real visitor gets `quiz`; the `evelyn_lander/mechanic` experiment is no
+  // longer consulted. The chatbox code remains as a fallback surface reachable via
+  // the non-prod `?mechanic=chatbox` override. The 'quiz' surface only changes the
+  // ENGAGEMENT layer; BOTH mechanics run the same /start (creates the lander
+  // session) and finish through the same handleCta (segment-aware routing + session
+  // linkage + the signup conversion), so signup, the 5-min grant, and the drip are
+  // identical regardless of mechanic.
   const overrideMechanic =
     import.meta.env.DEV && (params.mechanic === "quiz" || params.mechanic === "chatbox")
       ? params.mechanic
       : null;
-  const ab = useABVariant(AB_PAGE, AB_ELEMENT, "chatbox");
-  const mechanic = overrideMechanic ?? ab.variant;
-  const mechanicReady = overrideMechanic != null || ab.ready;
+  const mechanic = overrideMechanic ?? "quiz";
+  // Quiz is hard-pinned, so we no longer block the first paint on the experiment
+  // assignment. A DEV override is likewise immediately ready.
+  const mechanicReady = true;
 
   function goToExistingLogin() {
     clearSession();
@@ -406,11 +407,24 @@ export default function EvelynLanderPage() {
     );
   }
 
-  // Treatment arm: the tap-quiz mechanic. It completes through the SAME handleCta
-  // as the chatbox (segment-aware routing + session linkage + conversion). Any
-  // unknown/renamed variant key falls through to the control chatbox below.
+  // The tap-quiz mechanic (the live /evelyn surface). Brand-new visitors sign up
+  // INLINE on the quiz (name+email → magic-register) and see a "check your email"
+  // screen; returning/known visitors skip that and hand off through the SAME
+  // handleCta (segment-aware magic-login / login redirect). `isReturningUser` is
+  // true for any resolved non-brand-new segment. A still-unresolved segment (null)
+  // is treated as brand-new so a new visitor is never blocked from signing up.
   if (mechanic === "quiz") {
-    return <EvelynQuizMechanic onComplete={handleCta} onAlreadyHaveAccount={goToExistingLogin} />;
+    return (
+      <EvelynQuizMechanic
+        onComplete={handleCta}
+        onAlreadyHaveAccount={goToExistingLogin}
+        isReturningUser={segment != null && segment !== "brand_new"}
+        landerSessionToken={sessionToken}
+        bucket={params.bucket}
+        prefillEmail={params.email}
+        readingDest={READING_DEST}
+      />
+    );
   }
 
   const ctaLabel = ctaLabelFor(segment);
