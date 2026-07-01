@@ -609,14 +609,6 @@ router.get('/verify-email/:token', async (req: Request, res: Response) => {
       return;
     }
 
-    // DIAGNOSTIC (temporary): trace which client hits the verification link and which
-    // branch/redirect it gets, to pin down the iOS Gmail in-app-browser "stuck on
-    // login" case. Pure logging — no behaviour change. Remove once diagnosed.
-    const diagUa = req.get('user-agent') || '';
-    const diagIp = extractClientIp(req);
-    const diagTokenPrefix = String(token).slice(0, 8);
-    logger.info('[verify-email:diag] hit', { tokenPrefix: diagTokenPrefix, ua: diagUa, ip: diagIp, queryPersona: (req.query.persona as string) ?? null });
-
     const result = await db.select()
       .from(users)
       .where(eq(users.verificationToken, token))
@@ -626,7 +618,6 @@ router.get('/verify-email/:token', async (req: Request, res: Response) => {
     if (!user) {
       // Token was already used (cleared after first verification) or never existed.
       // Redirect to login with a friendly message instead of raw JSON error.
-      logger.info('[verify-email:diag] branch=not_found → /login?verified=already (NO token)', { tokenPrefix: diagTokenPrefix, ua: diagUa });
       const baseUrl = process.env.BASE_URL || 'http://localhost:5000';
       res.redirect(`${baseUrl}/login?verified=already`);
       return;
@@ -641,7 +632,6 @@ router.get('/verify-email/:token', async (req: Request, res: Response) => {
       // If the original verification-token window has lapsed, don't auto-login via
       // a stale link — just show the "already verified" message on the login page.
       if (user.verificationTokenExpiry && user.verificationTokenExpiry < new Date()) {
-        logger.info('[verify-email:diag] branch=already_verified_LAPSED → /login?verified=already (NO token)', { userId: user.id, ua: diagUa });
         res.redirect(`${baseUrl}/login?verified=already`);
         return;
       }
@@ -663,14 +653,12 @@ router.get('/verify-email/:token', async (req: Request, res: Response) => {
           personaParam = `&persona=${personaRow[0].slug}`;
         }
       }
-      logger.info('[verify-email:diag] branch=already_verified → /login?verified=already WITH token', { userId: user.id, persona: personaParam || null, ua: diagUa });
       res.redirect(`${baseUrl}/login?verified=already&token=${jwtToken}${personaParam}`);
       return;
     }
 
     // Check token expiry
     if (user.verificationTokenExpiry && user.verificationTokenExpiry < new Date()) {
-      logger.info('[verify-email:diag] branch=expired (410)', { userId: user.id, ua: diagUa });
       res.status(410).json({ error: 'Verification link has expired. Please request a new one.' });
       return;
     }
@@ -789,7 +777,6 @@ router.get('/verify-email/:token', async (req: Request, res: Response) => {
     }
     posthog.capture({ distinctId: user.id, event: 'email_verified', properties: { free_coins_granted: freeCoinsGrant, is_evelyn_lander_user: isEvelynLanderUser, is_soulmate_lander_user: isSoulmateLanderUser } });
 
-    logger.info('[verify-email:diag] branch=success → /login?verified=success WITH token', { userId: user.id, persona: personaParam || null, coins: freeCoinsGrant, ua: diagUa });
     res.redirect(`${baseUrl}/login?verified=success&token=${jwtToken}${personaParam}`);
   } catch (error) {
     logger.error('Verify email error:', error);
