@@ -7,6 +7,8 @@ import { COINS_PER_MINUTE } from "../../../shared/types";
 import type { PricingTier } from "../../../shared/types";
 import StripeCardForm from "@/components/StripeCardForm";
 import { trackInitiateCheckout } from "@/lib/facebook";
+import PaymentSheetView from "@/components/paywall/PaymentSheetView";
+import type { PaywallVariant } from "@shared/paywall";
 
 interface Props {
   tier: PricingTier | null;
@@ -14,6 +16,8 @@ interface Props {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: (newBalance: number) => void;
+  variant?: PaywallVariant;
+  personaName?: string;
 }
 
 export default function PaymentModal({
@@ -22,6 +26,8 @@ export default function PaymentModal({
   isOpen,
   onClose,
   onSuccess,
+  variant = "A",
+  personaName,
 }: Props) {
   const [method, setMethod] = useState<"paypal" | "card">("paypal");
   const [paypalError, setPaypalError] = useState<string | null>(null);
@@ -42,6 +48,91 @@ export default function PaymentModal({
 
   const price = `$${(tier.priceUsd / 100).toFixed(2)}`;
   const minutes = Math.floor(tier.totalCoins / COINS_PER_MINUTE);
+
+  // The real payment actions — shared by both arms. Variant B slots these into
+  // PaymentSheetView; variant A renders them inline (below).
+  const paypalEl = (
+    <div>
+      <PayPalButtons
+        fundingSource={FUNDING.PAYPAL}
+        style={{
+          layout: "vertical",
+          color: "gold",
+          shape: "rect",
+          label: "buynow",
+          tagline: false,
+          height: 45,
+        }}
+        createOrder={async () => {
+          setPaypalError(null);
+          if (user?.signupFunnel === 'aiden' || user?.signupFunnel === 'evelyn') {
+            trackInitiateCheckout(tier.priceUsd / 100, "USD", "V2 Credits — PayPal");
+          }
+          const res = await authFetch("/api/credits/create-order", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              packageType: tier.packageType,
+              ...(personaId ? { personaId } : {}),
+            }),
+          });
+          if (!res.ok) throw new Error("Failed to create order");
+          const data = await res.json();
+          return data.orderId;
+        }}
+        onApprove={async (data) => {
+          const res = await authFetch("/api/credits/capture-order", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ orderId: data.orderID }),
+          });
+          if (!res.ok) {
+            setPaypalError("Payment capture failed. Please try again.");
+            return;
+          }
+          const result = await res.json();
+          onSuccess(result.newBalance);
+          onClose();
+        }}
+        onError={() =>
+          setPaypalError("PayPal encountered an error. Please try again.")
+        }
+      />
+      {paypalError && (
+        <p className="text-red-500 text-xs mt-2 text-center">{paypalError}</p>
+      )}
+    </div>
+  );
+
+  const cardEl = (
+    <StripeCardForm
+      packageType={tier.packageType}
+      personaId={personaId}
+      amount={tier.priceUsd}
+      priceLabel={price}
+      onSuccess={(newBalance) => {
+        onSuccess(newBalance);
+        onClose();
+      }}
+    />
+  );
+
+  // Variant B — redesigned payment sheet (single refund line, encryption/no-sub trust).
+  if (variant === "B") {
+    return (
+      <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+        <DialogContent className="max-w-sm w-full p-0 bg-transparent border-0 shadow-none max-h-[90vh] overflow-y-auto [&>button:last-child]:hidden">
+          <PaymentSheetView
+            tier={tier}
+            personaName={personaName ?? "your guide"}
+            paypalSlot={paypalEl}
+            cardSlot={cardEl}
+            variant="B"
+          />
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
@@ -97,75 +188,7 @@ export default function PaymentModal({
           </div>
 
           {/* Payment action */}
-          {method === "paypal" ? (
-            <div>
-              <PayPalButtons
-                fundingSource={FUNDING.PAYPAL}
-                style={{
-                  layout: "vertical",
-                  color: "gold",
-                  shape: "rect",
-                  label: "buynow",
-                  tagline: false,
-                  height: 45,
-                }}
-                createOrder={async () => {
-                  setPaypalError(null);
-                  // Fire InitiateCheckout for /aiden + /evelyn funnel users only.
-                  // Unconditional per attempt — no first-time gate.
-                  if (user?.signupFunnel === 'aiden' || user?.signupFunnel === 'evelyn') {
-                    trackInitiateCheckout(
-                      tier.priceUsd / 100,
-                      "USD",
-                      "V2 Credits — PayPal",
-                    );
-                  }
-                  const res = await authFetch("/api/credits/create-order", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                      packageType: tier.packageType,
-                      ...(personaId ? { personaId } : {}),
-                    }),
-                  });
-                  if (!res.ok) throw new Error("Failed to create order");
-                  const data = await res.json();
-                  return data.orderId;
-                }}
-                onApprove={async (data) => {
-                  const res = await authFetch("/api/credits/capture-order", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ orderId: data.orderID }),
-                  });
-                  if (!res.ok) {
-                    setPaypalError("Payment capture failed. Please try again.");
-                    return;
-                  }
-                  const result = await res.json();
-                  onSuccess(result.newBalance);
-                  onClose();
-                }}
-                onError={() =>
-                  setPaypalError("PayPal encountered an error. Please try again.")
-                }
-              />
-              {paypalError && (
-                <p className="text-red-500 text-xs mt-2 text-center">{paypalError}</p>
-              )}
-            </div>
-          ) : (
-            <StripeCardForm
-              packageType={tier.packageType}
-              personaId={personaId}
-              amount={tier.priceUsd}
-              priceLabel={price}
-              onSuccess={(newBalance) => {
-                onSuccess(newBalance);
-                onClose();
-              }}
-            />
-          )}
+          {method === "paypal" ? paypalEl : cardEl}
 
           {/* Trust signals */}
           <div className="mt-4 text-center space-y-2">

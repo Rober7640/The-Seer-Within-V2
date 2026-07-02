@@ -23,7 +23,8 @@ import evelynFollowUpRoutes from './evelynFollowUps';
 import personaFollowUpRoutes from './personaFollowUps';
 import postPurchaseDripTestRoutes from './postPurchaseDripTest';
 import priceTestRoutes from './priceTest';
-import abTestingRoutes, { publicRouter as abTestingPublicRouter } from './abTesting';
+import { publicRouter as abTestingPublicRouter } from './abTesting';
+import experimentsRoutes from './experiments';
 import logger from '../../lib/logger';
 
 const router = Router();
@@ -195,8 +196,10 @@ router.use('/aiden-follow-ups', aidenFollowUpRoutes);
 router.use('/evelyn-follow-ups', evelynFollowUpRoutes);
 router.use('/persona-follow-ups', personaFollowUpRoutes);
 router.use('/post-purchase-drip', postPurchaseDripTestRoutes);
+// Kept until the live system_config V1 main-price split is migrated to the
+// experiments framework (its only readout; framework v1_main_price_2026 is draft).
 router.use('/price-test', priceTestRoutes);
-router.use('/ab-testing', abTestingRoutes);
+router.use('/experiments', experimentsRoutes);
 
 export { abTestingPublicRouter };
 export default router;

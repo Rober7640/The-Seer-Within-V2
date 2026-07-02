@@ -3,10 +3,13 @@ import { z } from 'zod';
 import { db } from '../lib/db';
 import { users, creditPurchases, personas, checkoutViews } from '@shared/schema';
 import { eq, and, ne, desc, sql } from 'drizzle-orm';
-import { requireAuth } from '../lib/auth';
+import { requireAuth, verifyToken } from '../lib/auth';
 import { getPersonaPricing } from '../lib/personaPricing';
 import { DEFAULT_PRICING } from '../../shared/types';
+import { applyVariantPresentation } from '@shared/paywall';
+import { resolvePaywallVariant, assign, logExposure, PAYWALL_EXPERIMENT_KEY } from '../lib/experiments';
 import Stripe from 'stripe';
+import { getStripe, verifyStripeWebhook, activeStripeAccountTag } from '../lib/stripeAccount';
 import logger from '../lib/logger';
 import { posthog } from '../lib/posthog';
 import { fireWithBreaker, stripeBreaker, isCircuitOpenError } from '../lib/circuitBreaker';
@@ -16,10 +19,8 @@ import { maybeSchedulePostPurchaseDrip } from '../lib/postPurchaseDripTrigger';
 
 const router = Router();
 
-const stripeKey = process.env.STRIPE_SECRET_KEY;
-const stripe = stripeKey && stripeKey !== 'sk_test_placeholder'
-  ? new Stripe(stripeKey)
-  : null;
+// Active-account Stripe client (A primary / B backup) via the central helper.
+const stripe = getStripe();
 
 // Special one-time welcome pack — not part of regular persona pricing
 const WELCOME_TIER = {
@@ -115,16 +116,47 @@ router.get('/welcome-eligible', requireAuth, async (req: Request, res: Response)
 });
 
 // GET /api/credits/pricing?personaId=xxx
+// Public route. Returns pricing PLUS the paywall A/B `variant` for this user.
+// Variant B re-badges tiers (MOST CHOSEN / BEST VALUE + `recommended`); variant
+// A returns tiers untouched, so the current UI is byte-identical.
 router.get('/pricing', async (req: Request, res: Response) => {
   try {
     const personaId = req.query.personaId as string | undefined;
+    const pricing = personaId ? await getPersonaPricing(personaId) : DEFAULT_PRICING;
 
+    // Optional auth: the route is public, but decode the bearer token when present
+    // so the experiment assignment is sticky per user.id.
+    const authHeader = req.headers.authorization;
+    const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null;
+    const userId = token ? verifyToken(token)?.userId ?? null : null;
+
+    const variant = await resolvePaywallVariant({
+      userId,
+      personaId: personaId ?? null,
+      override: (req.query.paywallVariant as string) ?? null,
+      allowOverride: process.env.NODE_ENV !== 'production',
+    });
+
+    // Persona display info (name + avatar) for the redesigned store/modal.
+    let persona: { id: string; displayName: string; avatarUrl: string | null; tagline: string | null; freeCoins: number } | undefined;
     if (personaId) {
-      const pricing = await getPersonaPricing(personaId);
-      res.json(pricing);
-    } else {
-      res.json(DEFAULT_PRICING);
+      const rows = await db.select({
+        id: personas.id,
+        displayName: personas.displayName,
+        avatarUrl: personas.avatarUrl,
+        tagline: personas.tagline,
+        freeCoins: personas.freeCoins,
+      }).from(personas).where(eq(personas.id, personaId)).limit(1);
+      persona = rows[0];
     }
+
+    res.json({
+      ...pricing,
+      tiers: applyVariantPresentation(pricing.tiers, variant),
+      persona,
+      variant,
+      experimentKey: PAYWALL_EXPERIMENT_KEY,
+    });
   } catch (error) {
     logger.error('Get pricing error:', error);
     res.status(500).json({ error: 'Failed to get pricing' });
@@ -150,7 +182,7 @@ router.get('/purchases', requireAuth, async (req: Request, res: Response) => {
 // POST /api/credits/checkout-view - Log when user opens a payment modal (for conversion tracking)
 router.post('/checkout-view', requireAuth, async (req: Request, res: Response) => {
   try {
-    const { packageType, personaId, source } = req.body;
+    const { packageType, personaId, source, isOutOfCredits } = req.body;
     if (!packageType || !source) {
       res.status(400).json({ error: 'packageType and source are required' });
       return;
@@ -161,6 +193,24 @@ router.post('/checkout-view', requireAuth, async (req: Request, res: Response) =
       personaId: personaId || null,
       source,
     });
+    // Experiment exposure (Problem-4 paywall, folded into the generic framework).
+    // Log ONLY when the subject is enrolled (test running + in scope), so the
+    // first exposure row is their first IN-TEST exposure. While the experiment is
+    // OFF (Phase-1 ship state) nothing is logged. Non-blocking — never fail UX.
+    try {
+      const a = await assign(PAYWALL_EXPERIMENT_KEY, req.userId!, {
+        personaId: personaId ?? null,
+        isOutOfCredits: !!isOutOfCredits,
+      });
+      if (a?.enrolled) {
+        await logExposure(PAYWALL_EXPERIMENT_KEY, req.userId!, a.variant, source, {
+          personaId: personaId ?? null,
+          isOutOfCredits: !!isOutOfCredits,
+        });
+      }
+    } catch (e) {
+      logger.error('experiment exposure failed:', e);
+    }
     posthog.capture({ distinctId: req.userId!, event: 'checkout_view_logged', properties: { package_type: packageType, persona_id: personaId ?? null, source } });
     res.json({ ok: true });
   } catch (error) {
@@ -226,6 +276,7 @@ router.post('/checkout', requireAuth, async (req: Request, res: Response) => {
     bonusCoins: tier.bonusCoins,
     priceUsd: tier.priceUsd,
     status: 'pending',
+    stripeAccount: activeStripeAccountTag(),
   }).returning();
 
   const purchaseId = purchase[0].id;
@@ -283,7 +334,7 @@ router.post('/checkout', requireAuth, async (req: Request, res: Response) => {
     );
 
     await db.update(creditPurchases)
-      .set({ stripeSessionId: session.id, updatedAt: new Date() })
+      .set({ stripeSessionId: session.id, stripeAccount: activeStripeAccountTag(), updatedAt: new Date() })
       .where(eq(creditPurchases.id, purchaseId));
 
     posthog.capture({ distinctId: req.userId!, event: 'checkout_initiated', properties: { payment_method: 'stripe_checkout', package_type: tier!.packageType, coins: tier!.totalCoins, price_usd_cents: tier!.priceUsd, persona_id: personaId ?? null, purchase_id: purchaseId } });
@@ -352,6 +403,7 @@ router.post('/create-payment-intent', requireAuth, async (req: Request, res: Res
     bonusCoins: tier.bonusCoins,
     priceUsd: tier.priceUsd,
     status: 'pending',
+    stripeAccount: activeStripeAccountTag(),
   }).returning();
 
   const purchaseId = purchase[0].id;
@@ -392,7 +444,7 @@ router.post('/create-payment-intent', requireAuth, async (req: Request, res: Res
     );
 
     await db.update(creditPurchases)
-      .set({ stripePaymentIntentId: paymentIntent.id, updatedAt: new Date() })
+      .set({ stripePaymentIntentId: paymentIntent.id, stripeAccount: activeStripeAccountTag(), updatedAt: new Date() })
       .where(eq(creditPurchases.id, purchaseId));
 
     res.json({ clientSecret: paymentIntent.client_secret, purchaseId });
@@ -556,6 +608,7 @@ router.post('/create-order', requireAuth, async (req: Request, res: Response) =>
     bonusCoins: tier.bonusCoins,
     priceUsd: tier.priceUsd,
     status: 'pending',
+    stripeAccount: activeStripeAccountTag(),
   }).returning();
 
   const purchaseId = purchase[0].id;
@@ -735,6 +788,7 @@ router.post('/confirm-checkout', requireAuth, async (req: Request, res: Response
       .set({
         status: 'completed',
         stripePaymentIntentId: checkoutSession.payment_intent as string,
+        stripeAccount: activeStripeAccountTag(),
         updatedAt: new Date(),
       })
       .where(and(eq(creditPurchases.id, purchaseId), eq(creditPurchases.status, 'pending')))
@@ -794,28 +848,29 @@ router.post('/webhook', async (req: Request, res: Response) => {
   }
 
   const sig = req.headers['stripe-signature'] as string;
-  const webhookSecret = process.env.STRIPE_CREDITS_WEBHOOK_SECRET;
 
-  if (!webhookSecret) {
-    logger.error('Missing STRIPE_CREDITS_WEBHOOK_SECRET');
-    res.status(500).json({ error: 'Webhook not configured' });
+  const rawBody = (req as any).rawBody as Buffer | undefined;
+  if (!rawBody) {
+    logger.error('Webhook: req.rawBody not available — check express.json verify middleware');
+    res.status(400).json({ error: 'Missing raw body' });
     return;
   }
 
-  let event: Stripe.Event;
-  try {
-    const rawBody = (req as any).rawBody as Buffer | undefined;
-    if (!rawBody) {
-      logger.error('Webhook: req.rawBody not available — check express.json verify middleware');
-      res.status(400).json({ error: 'Missing raw body' });
+  // Verify against both accounts' credits-webhook secrets (A primary / B backup)
+  // so B's events validate the instant we switch and A's in-flight events still
+  // validate during handover.
+  const verified = verifyStripeWebhook(rawBody, sig, 'credits');
+  if (!verified.ok) {
+    if (verified.reason === 'not_configured') {
+      logger.error('Missing STRIPE_CREDITS_WEBHOOK_SECRET');
+      res.status(500).json({ error: 'Webhook not configured' });
       return;
     }
-    event = stripe.webhooks.constructEvent(rawBody, sig, webhookSecret);
-  } catch (err: any) {
-    logger.error('Webhook signature verification failed:', err.message);
+    logger.error('Webhook signature verification failed');
     res.status(400).json({ error: 'Invalid signature' });
     return;
   }
+  const event = verified.event;
 
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object as Stripe.Checkout.Session;
@@ -842,6 +897,9 @@ router.post('/webhook', async (req: Request, res: Response) => {
         .set({
           status: 'completed',
           stripePaymentIntentId: session.payment_intent as string,
+          // Tag with the account whose signing secret validated THIS event — during
+          // a switch handover the live account's late events may still arrive.
+          stripeAccount: verified.account,
           updatedAt: new Date(),
         })
         .where(and(eq(creditPurchases.id, purchaseId), eq(creditPurchases.status, 'pending')))

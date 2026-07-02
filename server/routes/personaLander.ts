@@ -26,6 +26,7 @@ import { landerLimiter, landerTurnLimiter } from '../lib/rateLimiter';
 import { checkAndLogSafety } from '../lib/universalSafety';
 import { verifyTurnstileToken } from '../lib/turnstile';
 import { selectStaticOpener, generateTurnReply } from '../lib/personaLanderEngine';
+import { claimLunaTyGift } from '../lib/lunaThankyouGift';
 import {
   getPersonaLanderConfig,
   type Bucket,
@@ -285,6 +286,10 @@ router.post('/cta', async (req: Request, res: Response) => {
         if (user && user.accountStatus === 'active') {
           jwt = generateToken(user.id, user.email);
           action = 'magic_login';
+          // Luna $50/30-min thank-you gift: an existing buyer arriving via the magic-login
+          // token from /success claims their 1,800 coins here (once, idempotent). No-op for
+          // any other magic-login user. Non-blocking on the handoff.
+          await claimLunaTyGift(user.id);
         } else {
           action = 'login_with_email';
         }

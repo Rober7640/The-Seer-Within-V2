@@ -64,6 +64,54 @@ export function useABTest(page: string, element: string, defaultValue: string): 
 }
 
 /**
+ * STRUCTURAL-test primitive: returns the assigned VARIANT KEY (not a copy value)
+ * for a page+element so a component can branch on which UI/flow to render —
+ * `useABVariant("evelyn_lander", "mechanic", "chatbox") === "quiz" ? <Quiz/> : <Chat/>`.
+ *
+ * Returns `{ variant, ready }`. `ready` is false until /assign resolves, so a
+ * caller can hold rendering to avoid a flash between mechanics. When no test is
+ * running (or on error/timeout) it resolves to `{ variant: defaultVariant, ready:true }`,
+ * so the page is byte-identical to having no test. A timeout bounds the wait so a
+ * slow/broken /assign can't hang the page (falls back to the default).
+ */
+export function useABVariant(
+  page: string,
+  element: string,
+  defaultVariant: string,
+  timeoutMs = 3000,
+): { variant: string; ready: boolean } {
+  const [state, setState] = useState<{ variant: string; ready: boolean }>({
+    variant: defaultVariant,
+    ready: false,
+  });
+
+  useEffect(() => {
+    let done = false; // first settle wins — a late fetch after the timeout (or vice
+    //                   versa) must NOT flip the variant a second time (a flash, or
+    //                   re-rendering the wrong mechanic after one already showed).
+    const settle = (variant: string) => {
+      if (done) return;
+      done = true;
+      clearTimeout(timer);
+      setState({ variant, ready: true });
+    };
+    const timer = setTimeout(() => settle(defaultVariant), timeoutMs);
+
+    fetchAssignments(page).then((assignments) => {
+      const assignment = assignments[element];
+      settle(assignment?.variantId ? assignment.variantId : defaultVariant);
+    });
+
+    return () => {
+      done = true;
+      clearTimeout(timer);
+    };
+  }, [page, element, defaultVariant, timeoutMs]);
+
+  return state;
+}
+
+/**
  * Call this when the visitor performs the desired conversion action on a page.
  * Sends a POST to /api/ab/convert with the page identifier.
  */

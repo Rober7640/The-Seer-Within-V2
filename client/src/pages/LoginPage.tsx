@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Sparkles, LogIn, UserPlus, Mail } from "lucide-react";
 import { trackLead } from "@/lib/facebook";
+import { trackABConversion } from "@/hooks/useABTest";
 // Open-redirect protection: `next` may only point at /reading (with optional
 // query/hash). Anything else is silently dropped so we never bounce a user
 // off-platform after auth.
@@ -41,27 +42,42 @@ export default function LoginPage() {
   const [resendEmail, setResendEmail] = useState("");
   const [magicLinkSent, setMagicLinkSent] = useState(false);
 
-  // Check for verification callback in URL params — auto-login if token present
+  // Auto-login after an email-verification click. The server lands the user here as
+  // /login?verified=success|already[&token=<JWT>][&persona=<slug>]. We forward a
+  // just-verified user straight into their reading whenever we have a token —
+  // either from the URL (cross-device) or already stored on this device
+  // (same-device signup, or an earlier click that stored it). Two robustness points
+  // vs the old version, which could leave the user on this login window until they
+  // clicked the email link a second time:
+  //   1. Fall back to a stored token when the URL token is missing/stripped
+  //      (some email in-app browsers drop query params on the first open).
+  //   2. Use a FULL page load (not a client-side navigate) so /reading boots with
+  //      the token read fresh from localStorage — avoids a stale-auth race that
+  //      could bounce a just-verified user back to this window.
+  // Guarded on `verified`, so normal login/signup and every lander funnel are
+  // untouched (they never carry that param).
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const verified = params.get("verified");
-    const urlToken = params.get("token");
+    if (verified !== "success" && verified !== "already") return;
 
-    if ((verified === "success" || verified === "already") && urlToken) {
-      // Store the JWT and redirect — works even on a different device/browser
-      localStorage.setItem("seer_auth_token", urlToken);
-      // Preserve persona from verification redirect (BUG-3: cross-device persona context)
-      const persona = params.get("persona");
-      const personaQuery = persona ? `?persona=${persona}` : "";
-      // Clean the URL to avoid token leaking in browser history
+    const urlToken = params.get("token");
+    if (urlToken) localStorage.setItem("seer_auth_token", urlToken);
+
+    const persona = params.get("persona");
+    const personaQuery = persona ? `?persona=${persona}` : "";
+
+    if (localStorage.getItem("seer_auth_token")) {
+      // Clean the token out of browser history, then hard-navigate for a clean
+      // auth boot on /reading.
       window.history.replaceState({}, "", "/login?verified=" + verified);
-      navigate(`/reading${personaQuery}`);
+      window.location.assign(`/reading${personaQuery}`);
       return;
     }
 
-    if (verified === "success" || verified === "already") {
-      setVerificationSuccess(true);
-    }
+    // Verified but no credentials available at all (e.g. link opened cold on a
+    // second device with no token) — fall back to the sign-in window.
+    setVerificationSuccess(true);
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -92,6 +108,12 @@ export default function LoginPage() {
         // outside the FB-attribution flow stay silent.
         if (sourceParam === 'evelyn-lander' || sourceParam === 'persona-lander') {
           trackLead(email, firstName).catch(() => { /* non-blocking */ });
+        }
+        // Phase 4c: signup is the primary metric for the /evelyn mechanic A/B
+        // (chatbox vs quiz). Both arms converge here, so one convert call counts
+        // both — matched to the visitor's lander exposure by the ab_vid cookie.
+        if (sourceParam === 'evelyn-lander') {
+          trackABConversion('evelyn_lander');
         }
         if (data.requiresVerification) {
           setShowVerificationSent(true);

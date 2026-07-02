@@ -9,7 +9,6 @@ import {
   updatePrompt,
   activatePrompt,
   listPromptsForPersona,
-  getPromptPerformance,
   testPrompt,
 } from '../../lib/promptManager';
 import { getPersonaById } from '../../lib/personaManager';
@@ -182,39 +181,6 @@ router.post('/prompts/:promptId/activate', async (req: Request, res: Response) =
     }
 
     return res.status(500).json({ error: error.message || 'Failed to activate prompt' });
-  }
-});
-
-// ============================================
-// GET /api/admin/prompts/:promptId/performance - A/B test results
-// ============================================
-
-router.get('/prompts/:promptId/performance', async (req: Request, res: Response) => {
-  try {
-    const promptId = req.params.promptId as string;
-
-    const prompt = await db
-      .select()
-      .from(personaPrompts)
-      .where(eq(personaPrompts.id, promptId))
-      .limit(1);
-
-    if (!prompt[0]) {
-      return res.status(404).json({ error: 'Prompt not found' });
-    }
-
-    const performance = await getPromptPerformance(
-      prompt[0].personaId,
-      prompt[0].promptType,
-    );
-
-    return res.json({
-      promptType: prompt[0].promptType,
-      variants: performance,
-    });
-  } catch (error: any) {
-    logger.error('Prompt performance error:', error);
-    return res.status(500).json({ error: 'Failed to get performance data' });
   }
 });
 

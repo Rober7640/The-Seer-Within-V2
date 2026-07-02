@@ -1,0 +1,40 @@
+<!-- moon-phases.svg — Luna Voss moon-phase row (static fallback for GIF 2 "slow moon-phase loop"; pick the circle matching the current real phase) -->
+<svg xmlns="http://www.w3.org/2000/svg" width="480" height="160" viewBox="0 0 480 160" fill="none" role="img" aria-label="Moon phases from new to full to new">
+  <defs>
+    <!-- right-side crescent/gibbous fills via clip -->
+    <clipPath id="lvHalf"><rect x="30" y="0" width="30" height="60"/></clipPath>
+  </defs>
+
+  <!-- 8 phases evenly spaced; each moon outline r=24, brass stroke, partial brass fills -->
+  <g stroke="#B6863C" stroke-width="1.25" fill="none">
+    <!-- 1. New moon: outline only -->
+    <circle cx="30" cy="80" r="24"/>
+
+    <!-- 2. Waxing crescent: thin lit sliver on right -->
+    <circle cx="90" cy="80" r="24"/>
+    <path d="M90 56 A24 24 0 0 1 90 104 A12 24 0 0 0 90 56 Z" fill="#B6863C"/>
+
+    <!-- 3. First quarter: right half lit -->
+    <circle cx="150" cy="80" r="24"/>
+    <path d="M150 56 A24 24 0 0 1 150 104 Z" fill="#B6863C"/>
+
+    <!-- 4. Waxing gibbous: most lit, dark sliver on left -->
+    <circle cx="210" cy="80" r="24"/>
+    <path d="M210 56 A24 24 0 0 1 210 104 A12 24 0 0 1 210 56 Z" fill="#B6863C"/>
+
+    <!-- 5. Full moon: fully lit -->
+    <circle cx="270" cy="80" r="24" fill="#B6863C"/>
+
+    <!-- 6. Waning gibbous: most lit, dark sliver on right -->
+    <circle cx="330" cy="80" r="24"/>
+    <path d="M330 56 A24 24 0 0 0 330 104 A12 24 0 0 0 330 56 Z" fill="#B6863C"/>
+
+    <!-- 7. Last quarter: left half lit -->
+    <circle cx="390" cy="80" r="24"/>
+    <path d="M390 56 A24 24 0 0 0 390 104 Z" fill="#B6863C"/>
+
+    <!-- 8. Waning crescent: thin lit sliver on left -->
+    <circle cx="450" cy="80" r="24"/>
+    <path d="M450 56 A24 24 0 0 0 450 104 A12 24 0 0 1 450 56 Z" fill="#B6863C"/>
+  </g>
+</svg>

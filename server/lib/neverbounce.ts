@@ -82,6 +82,34 @@ function suggestEmailCorrection(email: string): string | undefined {
 }
 
 /**
+ * Fail-open result that STILL catches known common typos offline.
+ *
+ * Used on every path where NeverBounce can't return a verdict — no API key, an
+ * API error (e.g. insufficient credit balance), or a network failure. For an
+ * email whose domain is an obvious misspelling in COMMON_DOMAIN_TYPOS we return
+ * invalid + a suggestedCorrection so the UI can show "did you mean …?"; for
+ * every other email we preserve the original fail-open behavior (valid: true)
+ * so real users are never blocked when the service is unavailable. This does not
+ * change the healthy NeverBounce path at all — it only hardens the gaps.
+ */
+function offlineTypoFallback(
+  email: string,
+  result: EmailValidationResult['result'],
+  reason: string,
+): EmailValidationResult {
+  const suggestion = suggestEmailCorrection(email);
+  if (suggestion) {
+    return {
+      valid: false,
+      result: 'invalid',
+      suggestedCorrection: suggestion,
+      reason: `Offline typo match (${reason})`,
+    };
+  }
+  return { valid: true, result, reason };
+}
+
+/**
  * Validate an email address using NeverBounce.
  * Returns valid: true if email is safe to send to.
  * If NEVERBOUNCE_API_KEY is not configured, skips validation (returns valid: true).
@@ -91,7 +119,7 @@ export async function validateEmail(email: string): Promise<EmailValidationResul
 
   if (!apiKey) {
     logger.warn('[NeverBounce] NEVERBOUNCE_API_KEY not configured — skipping validation');
-    return { valid: true, result: 'skipped' };
+    return offlineTypoFallback(email, 'skipped', 'no API key');
   }
 
   try {
@@ -109,8 +137,11 @@ export async function validateEmail(email: string): Promise<EmailValidationResul
 
     if (data.status !== 'success') {
       logger.warn('[NeverBounce] API returned error', { status: data.status, message: data.message });
-      // Fail open — don't block legitimate users if NeverBounce is down or misconfigured
-      return { valid: true, result: 'unknown', reason: 'API error, skipped' };
+      // Fail open so a NeverBounce outage or exhausted credit balance never
+      // blocks real buyers — but still catch KNOWN typos offline so an obvious
+      // misspelling (e.g. gmial.com) gets a "did you mean" instead of a silent
+      // accept + undeliverable verification email.
+      return offlineTypoFallback(email, 'unknown', `API error: ${data.status}`);
     }
 
     const result = data.result || 'unknown';
@@ -144,7 +175,7 @@ export async function validateEmail(email: string): Promise<EmailValidationResul
     };
   } catch (error) {
     logger.error('[NeverBounce] Validation request failed', error);
-    // Fail open
-    return { valid: true, result: 'unknown', reason: 'Request failed, skipped' };
+    // Fail open, but still catch known offline typos.
+    return offlineTypoFallback(email, 'unknown', 'request failed');
   }
 }

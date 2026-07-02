@@ -20,6 +20,13 @@ import { Sparkles, Send } from "lucide-react";
 import TurnstileWidget from "@/components/TurnstileWidget";
 import { calculateTypingDelay, sleep } from "@/lib/typingAnimation";
 import { track as trackPH } from "@/lib/posthog";
+import EvelynQuizMechanic from "@/pages/evelyn-lander/EvelynQuizMechanic";
+
+// The lander MECHANIC. Originally a Phase 4c structural A/B (control 'chatbox' =
+// the open 2-turn chat below; treatment 'quiz' = a 3-tap quiz), but the tap-quiz
+// has now FULLY REPLACED the chatbox on /evelyn (boss decision 2026-06-30), so
+// every visitor gets 'quiz' and the experiment is no longer consulted. The
+// chatbox remains only as a non-prod `?mechanic=chatbox` preview fallback.
 
 const AUTH_TOKEN_KEY = "seer_auth_token";
 const EVELYN_PERSONA_SLUG = "evelyn-cross";
@@ -65,6 +72,7 @@ interface LanderParams {
   src: string | null;
   campaign: string | null;
   name: string | null;
+  mechanic: string | null; // non-prod preview override (?mechanic=quiz|chatbox)
 }
 
 function readParams(): LanderParams {
@@ -78,6 +86,7 @@ function readParams(): LanderParams {
     src: sp.get("src"),
     campaign: sp.get("campaign"),
     name: sp.get("name"),
+    mechanic: sp.get("mechanic"),
   };
 }
 
@@ -139,6 +148,30 @@ export default function EvelynLanderPage() {
   const sessionToken = getSessionToken();
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
+  // Resolve the lander MECHANIC. The tap-quiz has fully REPLACED the open chatbox
+  // on /evelyn (boss decision 2026-06-30 — direct replace, NOT a 50/50 split), so
+  // every real visitor gets `quiz`; the `evelyn_lander/mechanic` experiment is no
+  // longer consulted. The chatbox code remains as a fallback surface reachable via
+  // the non-prod `?mechanic=chatbox` override. The 'quiz' surface only changes the
+  // ENGAGEMENT layer; BOTH mechanics run the same /start (creates the lander
+  // session) and finish through the same handleCta (segment-aware routing + session
+  // linkage + the signup conversion), so signup, the 5-min grant, and the drip are
+  // identical regardless of mechanic.
+  const overrideMechanic =
+    import.meta.env.DEV && (params.mechanic === "quiz" || params.mechanic === "chatbox")
+      ? params.mechanic
+      : null;
+  const mechanic = overrideMechanic ?? "quiz";
+  // Quiz is hard-pinned, so we no longer block the first paint on the experiment
+  // assignment. A DEV override is likewise immediately ready.
+  const mechanicReady = true;
+
+  function goToExistingLogin() {
+    clearSession();
+    const emailQp = params.email ? `?email=${encodeURIComponent(params.email)}` : "";
+    navigate(`/login${emailQp}`);
+  }
+
   // Auto-scroll to newest message when the thread grows.
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -153,7 +186,10 @@ export default function EvelynLanderPage() {
     }
   }, [authLoading, user, navigate]);
 
-  // Resolve segment + opener via /start.
+  // Resolve segment + opener via /start. Fires on mount for BOTH arms (parallel
+  // with /assign, not serialized behind it) so the lander session exists for the
+  // shared handleCta and there's no added latency while the experiment is OFF.
+  // The quiz arm ignores the opener; it just needs the session.
   useEffect(() => {
     if (authLoading || user) return;
 
@@ -358,12 +394,36 @@ export default function EvelynLanderPage() {
     }
   }
 
-  if (authLoading || phase === "loading") {
+  // One gate for BOTH arms: wait for auth, the mechanic assignment, AND /start
+  // (so the lander session exists before the quiz can hand off via handleCta).
+  // A logged-in user stays here (phase never leaves 'loading' — /start early-returns)
+  // until the redirect effect fires, so neither arm flashes for logged-in users.
+  if (authLoading || !mechanicReady || phase === "loading") {
     return (
       <div className="min-h-screen relative flex items-center justify-center">
         <CosmicBackground />
         <div className="w-8 h-8 border-2 border-purple-300 border-t-transparent rounded-full animate-spin relative z-10" />
       </div>
+    );
+  }
+
+  // The tap-quiz mechanic (the live /evelyn surface). Brand-new visitors sign up
+  // INLINE on the quiz (name+email → magic-register) and see a "check your email"
+  // screen; returning/known visitors skip that and hand off through the SAME
+  // handleCta (segment-aware magic-login / login redirect). `isReturningUser` is
+  // true for any resolved non-brand-new segment. A still-unresolved segment (null)
+  // is treated as brand-new so a new visitor is never blocked from signing up.
+  if (mechanic === "quiz") {
+    return (
+      <EvelynQuizMechanic
+        onComplete={handleCta}
+        onAlreadyHaveAccount={goToExistingLogin}
+        isReturningUser={segment != null && segment !== "brand_new"}
+        landerSessionToken={sessionToken}
+        bucket={params.bucket}
+        prefillEmail={params.email}
+        readingDest={READING_DEST}
+      />
     );
   }
 
@@ -461,13 +521,7 @@ export default function EvelynLanderPage() {
 
           <div className="text-center">
             <button
-              onClick={() => {
-                clearSession();
-                const emailQp = params.email
-                  ? `?email=${encodeURIComponent(params.email)}`
-                  : "";
-                navigate(`/login${emailQp}`);
-              }}
+              onClick={goToExistingLogin}
               className="text-xs text-purple-700 hover:underline"
             >
               I already have an account

@@ -3,6 +3,7 @@
 import { Router, Request, Response } from 'express';
 import { Webhook } from 'svix';
 import Stripe from 'stripe';
+import { getStripe, verifyStripeWebhook } from '../lib/stripeAccount';
 import { db } from '../lib/db';
 import { followUpEmails, userFollowUpPreferences, migrationDripEmails, topupEmails, aidenFollowupEmails, personaFollowupEmails, users, emailSuppression, creditPurchases, soulmateLanderSessions } from '@shared/schema';
 import { and, eq, sql } from 'drizzle-orm';
@@ -662,11 +663,8 @@ function escapeHtml(str: string): string {
 // STRIPE WEBHOOK — server-side conversion tracking
 // ============================================
 
-const stripeKey = process.env.STRIPE_SECRET_KEY;
-const stripeClient =
-  stripeKey && stripeKey !== 'sk_test_placeholder'
-    ? new Stripe(stripeKey)
-    : null;
+// Active-account Stripe client (A primary / B backup) via the central helper.
+const stripeClient = getStripe();
 
 // Durable server-side Google Ads conversion for a paid Stripe product. The
 // gclid lives on the main Checkout Session metadata; upsell PIs reference it
@@ -772,22 +770,21 @@ router.post('/stripe', async (req: Request, res: Response) => {
   }
 
   const sig = req.headers['stripe-signature'] as string;
-  const webhookSecret = process.env.STRIPE_TRACKDESK_WEBHOOK_SECRET;
 
-  if (!webhookSecret) {
-    logger.error('Stripe webhook: STRIPE_TRACKDESK_WEBHOOK_SECRET not set');
-    return res.status(500).json({ error: 'Webhook secret not configured' });
-  }
-
-  let event: Stripe.Event;
-
-  try {
-    const rawBody = (req as any).rawBody;
-    event = stripeClient.webhooks.constructEvent(rawBody, sig, webhookSecret);
-  } catch (err: any) {
-    logger.error('Stripe webhook signature verification failed:', err.message);
+  // Verify against both accounts' trackdesk-webhook secrets (A primary / B backup)
+  // so B's events validate the instant we switch and A's in-flight events still
+  // validate during handover.
+  const rawBody = (req as any).rawBody;
+  const verified = verifyStripeWebhook(rawBody, sig, 'trackdesk');
+  if (!verified.ok) {
+    if (verified.reason === 'not_configured') {
+      logger.error('Stripe webhook: STRIPE_TRACKDESK_WEBHOOK_SECRET not set');
+      return res.status(500).json({ error: 'Webhook secret not configured' });
+    }
+    logger.error('Stripe webhook signature verification failed');
     return res.status(400).json({ error: 'Invalid signature' });
   }
+  const event = verified.event;
 
   // Handle checkout.session.completed
   if (event.type === 'checkout.session.completed') {

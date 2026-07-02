@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, boolean, integer, timestamp, real, index, uniqueIndex } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, boolean, integer, timestamp, real, jsonb, index, uniqueIndex } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -28,6 +28,11 @@ export const conversations = pgTable("conversations", {
   stripeSessionId: text("stripe_session_id"),
   stripeCustomerId: text("stripe_customer_id"),
   stripePaymentMethodId: text("stripe_payment_method_id"),
+  // Which Stripe account created the IDs on this row ('A' primary / 'B' backup).
+  // NULL = legacy rows predating the backup-account work → treat as 'A'. Stripe
+  // object IDs only resolve against their creating account, so refunds/disputes/
+  // reconciliation must use getStripeFor(this).
+  stripeAccount: text("stripe_account"),
   mainPurchaseAmount: integer("main_purchase_amount"),
 
   // V1 price split test (variant assigned at lead capture, drives all price displays + Stripe charge)
@@ -343,6 +348,9 @@ export const creditPurchases = pgTable("credit_purchases", {
 
   stripeSessionId: text("stripe_session_id"),
   stripePaymentIntentId: text("stripe_payment_intent_id"),
+  // Which Stripe account created these IDs ('A' primary / 'B' backup). NULL =
+  // legacy rows → treat as 'A'. See getStripeFor() for tag-aware lookups.
+  stripeAccount: text("stripe_account"),
   paypalOrderId: varchar('paypal_order_id', { length: 64 }),
   paypalCaptureId: varchar('paypal_capture_id', { length: 64 }),
   status: text("status").default("pending").notNull(),
@@ -905,6 +913,126 @@ export const checkoutViews = pgTable("checkout_views", {
   index("idx_checkout_views_created").on(table.createdAt),
 ]);
 
+// Paywall A/B views — denominator for the Problem-4 paywall experiment.
+// One row per paywall surface open, tagged with the assigned variant.
+// See docs/posthog-evelyn-purchase-findings.md §3.14.
+export const paywallViews = pgTable("paywall_views", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  experimentKey: text("experiment_key").notNull().default("paywall_copy_2026"),
+  variant: text("variant").notNull(),                 // 'A' | 'B'
+  surface: text("surface").notNull(),                 // 'buy_credits_modal' | 'credits_page' | 'payment_modal' | ...
+  personaId: varchar("persona_id").references(() => personas.id, { onDelete: "set null" }),
+  isOutOfCredits: boolean("is_out_of_credits").default(false).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_paywall_views_user_created").on(table.userId, table.createdAt),
+  index("idx_paywall_views_exp_variant").on(table.experimentKey, table.variant),
+]);
+export type PaywallView = typeof paywallViews.$inferSelect;
+
+// ============================================================
+// Unified A/B Experiment Framework — Phase 1
+// (PRD: docs/ab-testing-framework-prd.md §3.1). Dedicated tables — NOT
+// system_config JSON — so experiments have real lifecycle/scoping and the
+// dashboard (Phase 2) can query them directly. Generalizes the Problem-4
+// paywall test. `experiment_exposures` supersedes `paywall_views`/`ab_events`.
+// ============================================================
+
+// One variant of an experiment. `weight` is a relative share (need not sum to
+// 100); `payload` is arbitrary JSON the code reads (copy/price/threshold/...).
+export interface ExperimentVariant {
+  key: string;                          // 'A' (control, listed first) | 'B' | ...
+  weight: number;                       // relative share; <=0 = never assigned
+  payload?: Record<string, unknown>;    // values config-tests read; {} for structural tests
+}
+
+// Optional enrolment filter. null/absent field = no filter on that axis.
+export interface ExperimentScope {
+  personaId?: string | null;            // only enrol this persona (Phase-1 paywall = Evelyn)
+  funnel?: string | null;               // only enrol this V1 funnel (e.g. 'v1-fb') — V1 price tests
+  route?: string;                       // page/surface for visitor page-copy tests (e.g. 'soulmate_landing')
+  element?: string;                     // which element the variant copy targets (e.g. 'headline')
+  [k: string]: unknown;
+}
+
+// How a subject's outcome is scored when tallying.
+export interface ExperimentConversion {
+  // credit_purchase = join to credit_purchases (V2); upsell1_funnel = V1
+  // conversations Upsell-1 take-rate; v1_main_funnel = V1 main/downsell purchase;
+  // event = generic visitor conversion.
+  type: "credit_purchase" | "upsell1_funnel" | "v1_main_funnel" | "event";
+  windowDays?: number;                  // attribution window after first exposure (default 7)
+  name?: string;                        // event name (type='event')
+  targetN?: number;                     // pre-registered per-arm exposure target (fixed-horizon,
+                                        // no peeking): the verdict + declare-winner are gated until
+                                        // every arm reaches it. 0/absent = no gate.
+}
+
+// experiments — one row per test (the registry the dashboard manages).
+export const experiments = pgTable("experiments", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  key: text("key").notNull().unique(),                         // 'paywall_copy_2026', ...
+  name: text("name").notNull(),
+  description: text("description"),
+  status: text("status").notNull().default("draft"),           // 'draft' | 'running' | 'paused' | 'done'
+  subjectType: text("subject_type").notNull().default("user"), // 'user' | 'visitor' | 'email'
+  variants: jsonb("variants").$type<ExperimentVariant[]>().notNull(),
+  scope: jsonb("scope").$type<ExperimentScope | null>(),       // null = global
+  conversion: jsonb("conversion").$type<ExperimentConversion | null>(),
+  startedAt: timestamp("started_at"),
+  endedAt: timestamp("ended_at"),
+  winnerVariant: text("winner_variant"),
+  createdBy: varchar("created_by").references(() => adminUsers.id),
+  updatedBy: varchar("updated_by").references(() => adminUsers.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+export type Experiment = typeof experiments.$inferSelect;
+
+// experiment_exposures — one row per FIRST exposure per subject (the denominator).
+// unique(experiment_key, subject_id) makes logging idempotent: later opens are
+// no-ops, so exposures are only ever logged while a test is RUNNING (the first
+// in-test exposure). `context` must stay PII-free (ids/flags only — emails are
+// hashed before becoming a subject_id).
+//
+// subject_id is intentionally plain text with NO FK: it is polymorphic across
+// subjectType (user.id | visitor cookie | hashed email), so it can't reference
+// users.id the way paywall_views did. Trade-off: deleting a user does NOT cascade
+// here, so user-deletion should also delete matching exposures (subject_id =
+// user.id) — a follow-up for when exposures go live (the test ships OFF, so none
+// are written yet). Orphaned UUID exposures carry no PII.
+export const experimentExposures = pgTable("experiment_exposures", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  experimentKey: text("experiment_key").notNull(),
+  subjectId: text("subject_id").notNull(),            // user.id | visitor cookie | hashed email
+  variant: text("variant").notNull(),
+  surface: text("surface").notNull(),                 // 'buy_credits_modal' | 'credits_page' | ...
+  context: jsonb("context").$type<Record<string, unknown> | null>(), // { personaId, isOutOfCredits, ... }
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  uniqueIndex("uq_experiment_exposures_key_subject").on(table.experimentKey, table.subjectId),
+  index("idx_experiment_exposures_key_variant").on(table.experimentKey, table.variant),
+]);
+export type ExperimentExposure = typeof experimentExposures.$inferSelect;
+
+// experiment_conversions — generic outcome log for non-purchase ('event') tests
+// (e.g. visitor page-copy lander conversions). Purchase tests join credit_purchases
+// /conversations instead; this is the denominator-agnostic numerator for event
+// metrics. value is optional (cents) for revenue-bearing events; 0 = a plain count.
+export const experimentConversions = pgTable("experiment_conversions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  experimentKey: text("experiment_key").notNull(),
+  subjectId: text("subject_id").notNull(),            // same subject id space as exposures
+  variant: text("variant").notNull(),                 // the arm the subject was exposed to
+  event: text("event"),                               // optional event name
+  value: integer("value").default(0).notNull(),       // optional revenue in cents (0 = count-only)
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_experiment_conversions_key_subject").on(table.experimentKey, table.subjectId),
+]);
+export type ExperimentConversionRow = typeof experimentConversions.$inferSelect;
+
 // Aiden Quiz Sessions - Analytics + abuse audit for the /aiden quiz funnel
 export const aidenQuizSessions = pgTable("aiden_quiz_sessions", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -1115,55 +1243,9 @@ export const insertSoulmateLanderSessionSchema = createInsertSchema(soulmateLand
 export type SoulmateLanderSession = typeof soulmateLanderSessions.$inferSelect;
 export type InsertSoulmateLanderSession = z.infer<typeof insertSoulmateLanderSessionSchema>;
 
-// ============================================================
-// A/B Testing Tables (Soulmate Funnel Split Testing)
-// ============================================================
-
-// AB Tests - Defines split tests for pages/elements
-export const abTests = pgTable("ab_tests", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  page: text("page").notNull(), // e.g. "soulmate_landing", "soulmate_reading", "soulmate_gift", "soulmate_gift2"
-  element: text("element").notNull(), // e.g. "headline", "cta_text", "price", "hero_image"
-  name: text("name").notNull(), // human label like "Landing page headline test"
-  variants: text("variants").notNull(), // JSON string of array: [{id: "a", label: "Control", value: "original text"}, ...]
-  trafficSplit: text("traffic_split").notNull().default("50/50"), // e.g. "50/50", "70/30", "33/33/34"
-  status: text("status").notNull().default("draft"), // draft, running, paused, completed
-  winnerVariantId: text("winner_variant_id"), // set when test is completed
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
-
-// AB Events - Tracks impressions and conversions per visitor per test
-export const abEvents = pgTable("ab_events", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  testId: varchar("test_id").notNull().references(() => abTests.id, { onDelete: "cascade" }),
-  variantId: text("variant_id").notNull(), // e.g. "a", "b"
-  visitorId: text("visitor_id").notNull(), // cookie-based visitor ID
-  eventType: text("event_type").notNull(), // "impression" or "conversion"
-  page: text("page").notNull(),
-  metadata: text("metadata"), // optional JSON string for extra info like price selected
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-}, (table) => [
-  index("idx_ab_events_test_variant").on(table.testId, table.variantId, table.eventType),
-  index("idx_ab_events_visitor").on(table.visitorId, table.testId),
-]);
-
-export const insertAbTestSchema = createInsertSchema(abTests).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-});
-
-export const insertAbEventSchema = createInsertSchema(abEvents).omit({
-  id: true,
-  createdAt: true,
-});
-
-export type AbTest = typeof abTests.$inferSelect;
-export type InsertAbTest = z.infer<typeof insertAbTestSchema>;
-
-export type AbEvent = typeof abEvents.$inferSelect;
-export type InsertAbEvent = z.infer<typeof insertAbEventSchema>;
+// The legacy ab_tests / ab_events split-testing tables were retired in Phase 5 —
+// all A/B tests now run on the unified `experiments` / `experiment_exposures` /
+// `experiment_conversions` tables above. (Dropped via migrations/018_drop_legacy_ab.sql.)
 
 // ============================================================
 // Soulmate Sketch Funnel Orders

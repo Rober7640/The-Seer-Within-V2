@@ -1,0 +1,33 @@
+<!-- constellation.svg — Luna Voss signature constellation motif (static fallback for GIF 1 "constellation drawing itself"; frame 1 = this completed shape) -->
+<svg xmlns="http://www.w3.org/2000/svg" width="560" height="360" viewBox="0 0 560 360" fill="none" role="img" aria-label="Abstract connected-star constellation">
+  <!-- connecting brass lines (drawn first so dots sit on top) -->
+  <g stroke="#B6863C" stroke-width="1.25" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <polyline points="74,96 168,52 252,140 360,84 458,150 502,256 392,292 286,236 188,288 96,232 74,96"/>
+    <line x1="252" y1="140" x2="286" y2="236"/>
+    <line x1="360" y1="84" x2="392" y2="292"/>
+    <line x1="188" y1="288" x2="96" y2="232"/>
+  </g>
+
+  <!-- star nodes -->
+  <g fill="#B6863C" stroke="none">
+    <circle cx="74"  cy="96"  r="5"/>
+    <circle cx="168" cy="52"  r="4"/>
+    <circle cx="252" cy="140" r="5.5"/>
+    <circle cx="360" cy="84"  r="4.5"/>
+    <circle cx="458" cy="150" r="4"/>
+    <circle cx="502" cy="256" r="5"/>
+    <circle cx="392" cy="292" r="4.5"/>
+    <circle cx="286" cy="236" r="5"/>
+    <circle cx="188" cy="288" r="4"/>
+    <circle cx="96"  cy="232" r="4.5"/>
+  </g>
+
+  <!-- a brighter halo on two anchor stars -->
+  <g stroke="#B6863C" stroke-width="1" fill="none" opacity="0.5">
+    <circle cx="252" cy="140" r="10"/>
+    <circle cx="502" cy="256" r="9"/>
+  </g>
+
+  <!-- small 4-point sparkle accent -->
+  <path d="M430 60 l0 -14 M430 60 l0 14 M430 60 l-14 0 M430 60 l14 0" stroke="#8A6326" stroke-width="1.25" stroke-linecap="round"/>
+</svg>
