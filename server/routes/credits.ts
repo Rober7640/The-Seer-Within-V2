@@ -130,11 +130,19 @@ router.get('/pricing', async (req: Request, res: Response) => {
     const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null;
     const userId = token ? verifyToken(token)?.userId ?? null : null;
 
+    // The `?paywallVariant=A|B` QA override is honoured in non-production, OR when
+    // ALLOW_PAYWALL_QA_OVERRIDE=true is explicitly set — so QA can preview either
+    // variant on the (production-build) Railway dev service WITHOUT starting the
+    // experiment (it stays draft; nobody is enrolled; the shared-DB experiment row
+    // is untouched). Production never sets this flag, so the override stays off
+    // there and live users are still split only by the real experiment.
+    const allowPaywallOverride =
+      process.env.NODE_ENV !== 'production' || process.env.ALLOW_PAYWALL_QA_OVERRIDE === 'true';
     const variant = await resolvePaywallVariant({
       userId,
       personaId: personaId ?? null,
       override: (req.query.paywallVariant as string) ?? null,
-      allowOverride: process.env.NODE_ENV !== 'production',
+      allowOverride: allowPaywallOverride,
     });
 
     // Persona display info (name + avatar) for the redesigned store/modal.
