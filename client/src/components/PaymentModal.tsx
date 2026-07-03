@@ -9,6 +9,7 @@ import StripeCardForm from "@/components/StripeCardForm";
 import { trackInitiateCheckout } from "@/lib/facebook";
 import PaymentSheetView from "@/components/paywall/PaymentSheetView";
 import type { PaywallVariant } from "@shared/paywall";
+import { PAYMENT_DIALOG_MOBILE_SHEET } from "@/lib/paymentDialog";
 
 interface Props {
   tier: PricingTier | null;
@@ -121,7 +122,7 @@ export default function PaymentModal({
   if (variant === "B") {
     return (
       <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-        <DialogContent className="max-w-sm w-full p-0 bg-transparent border-0 shadow-none max-h-[90vh] overflow-y-auto [&>button:last-child]:hidden">
+        <DialogContent className={`max-w-sm w-full p-0 bg-transparent border-0 shadow-none max-h-[90vh] overflow-y-auto [&>button:last-child]:hidden ${PAYMENT_DIALOG_MOBILE_SHEET}`}>
           <PaymentSheetView
             tier={tier}
             personaName={personaName ?? "your guide"}
@@ -136,7 +137,7 @@ export default function PaymentModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="bg-white text-gray-900 max-w-sm w-full p-0 rounded-2xl overflow-hidden border-0 shadow-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className={`bg-white text-gray-900 max-w-sm w-full p-0 rounded-2xl overflow-hidden border-0 shadow-2xl max-h-[90vh] overflow-y-auto ${PAYMENT_DIALOG_MOBILE_SHEET}`}>
         {/* Order details */}
         <div className="px-5 pt-5 pb-4">
           <h3 className="font-semibold text-gray-800 text-sm mb-3">Order details:</h3>
