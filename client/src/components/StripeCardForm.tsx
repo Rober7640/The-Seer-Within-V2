@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import { Elements, PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js";
 import { stripePromise } from "@/lib/stripe";
 import { authFetch, useAuth } from "@/hooks/useAuth";
@@ -36,53 +36,6 @@ function StripeCardFormInner({
   const [isProcessing, setIsProcessing] = useState(false);
   const { user } = useAuth();
   const icFiredRef = useRef(false);
-
-  // ── iOS blank-card diagnostics + resilience ────────────────────────────────
-  // On iPhone (WebKit) the Stripe card <iframe> can mount at zero height and stay
-  // blank. `ready` lets us show a loading placeholder (never a pure-blank box) and
-  // surface a load error as text. `?paydebug=1` shows a live timeline + the actual
-  // iframe height so we can see WHY it's blank without a Mac/Web-Inspector.
-  const [ready, setReady] = useState(false);
-  const [dbg, setDbg] = useState<string[]>([]);
-  const formRef = useRef<HTMLFormElement>(null);
-  // Auto-enable on the dev deployment (hostname contains "development") so the
-  // panel always shows there without a query param; ?paydebug=1 forces it anywhere.
-  const showDebug =
-    typeof window !== "undefined" &&
-    (new URLSearchParams(window.location.search).get("paydebug") === "1" ||
-      /development/.test(window.location.hostname));
-  const log = (m: string) => {
-    // eslint-disable-next-line no-console
-    console.log("[paydebug]", m);
-    if (showDebug) setDbg((d) => [...d.slice(-18), `${new Date().toISOString().slice(11, 19)} ${m}`]);
-  };
-
-  useEffect(() => {
-    const pk = (import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || "").slice(0, 8);
-    log(`ua=${navigator.userAgent}`);
-    log(`pk=${pk || "(EMPTY!)"} stripe=${!!stripe} elements=${!!elements}`);
-    const onErr = (e: ErrorEvent) => log(`window.onerror: ${e.message}`);
-    const onRej = (e: PromiseRejectionEvent) => log(`unhandledrejection: ${String(e.reason)}`);
-    window.addEventListener("error", onErr);
-    window.addEventListener("unhandledrejection", onRej);
-    // Sample the Stripe iframe height over time to confirm it stays rendered
-    // (the __stripeJSBridgeFrame display:none bug collapsed it 341px→0px on iOS).
-    const timers = [200, 700, 1500, 3000, 5000].map((ms) =>
-      setTimeout(() => {
-        const ifrs = Array.from(formRef.current?.querySelectorAll("iframe") ?? []);
-        const info = ifrs
-          .map((f) => `${(f as HTMLIFrameElement).offsetHeight}px${/stripe/.test((f as HTMLIFrameElement).src) ? "*" : ""}`)
-          .join(",");
-        log(`t+${ms}ms iframes=${ifrs.length}[${info}] ready=${ready}`);
-      }, ms),
-    );
-    return () => {
-      window.removeEventListener("error", onErr);
-      window.removeEventListener("unhandledrejection", onRej);
-      timers.forEach(clearTimeout);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [stripe, elements]);
 
   // Fire InitiateCheckout on first keystroke in the card field (engagement-
   // moment IC). Mount-scoped: once per StripeCardForm instance. Switching
@@ -187,35 +140,16 @@ function StripeCardFormInner({
   };
 
   return (
-    <form onSubmit={handleSubmit} ref={formRef}>
-      <div className="relative bg-white rounded-lg p-3 mb-3 min-h-[180px] [&_iframe]:!min-h-[40px]">
-        {!ready && (
-          <div className="absolute inset-0 flex items-center justify-center text-gray-400 text-xs pointer-events-none">
-            <span className="w-4 h-4 mr-2 border-2 border-gray-300 border-t-transparent rounded-full animate-spin" />
-            Loading secure card form…
-          </div>
-        )}
+    <form onSubmit={handleSubmit}>
+      <div className="bg-white rounded-lg p-3 mb-3">
         <PaymentElement
           options={{ layout: "tabs" }}
           onChange={handlePaymentElementChange}
-          onLoaderStart={() => log("PaymentElement loaderstart")}
-          onReady={() => {
-            setReady(true);
-            const ifr = formRef.current?.querySelector("iframe");
-            log(`PaymentElement ready iframeH=${ifr ? (ifr as HTMLIFrameElement).offsetHeight : "?"}`);
-          }}
-          onLoadError={(e: any) => {
-            const msg = e?.error?.message || e?.error?.type || "Card form failed to load";
-            log(`PaymentElement loaderror: ${msg}`);
-            setError(msg);
-          }}
+          onLoadError={(e: any) =>
+            setError(e?.error?.message || "The card form failed to load. Please try again or use PayPal.")
+          }
         />
       </div>
-      {showDebug && (
-        <pre className="mb-2 max-h-40 overflow-auto rounded bg-black/80 p-2 text-[10px] leading-tight text-green-300 whitespace-pre-wrap break-all">
-          {dbg.join("\n") || "(no debug output yet)"}
-        </pre>
-      )}
       {error && (
         <p className="text-red-500 text-xs mb-2 text-center">{error}</p>
       )}
