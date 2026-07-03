@@ -145,6 +145,9 @@ function StripeCardFormInner({
         <PaymentElement
           options={{ layout: "tabs" }}
           onChange={handlePaymentElementChange}
+          onLoadError={(e: any) =>
+            setError(e?.error?.message || "The card form failed to load. Please try again or use PayPal.")
+          }
         />
       </div>
       {error && (

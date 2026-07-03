@@ -7,7 +7,7 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import crypto from 'crypto';
 
-import { experimentBucket, pickVariant, twoSidedP, PAYWALL_EXPERIMENT_KEY } from './experiments';
+import { experimentBucket, pickVariant, twoSidedP, shouldForceRunning, PAYWALL_EXPERIMENT_KEY } from './experiments';
 import type { ExperimentVariant } from '../../shared/schema';
 
 const ref = (id: string, key: string) =>
@@ -96,6 +96,30 @@ describe('pickVariant', () => {
       { key: 'B', weight: 0 },
     ];
     for (let b = 0; b < 100; b++) assert.equal(pickVariant(b, v), 'A');
+  });
+});
+
+describe('shouldForceRunning (dev/QA force-running gate)', () => {
+  const KEY = PAYWALL_EXPERIMENT_KEY;
+
+  it('is INERT by default — unset/empty env never forces anything', () => {
+    assert.equal(shouldForceRunning(KEY, 'draft', undefined), false);
+    assert.equal(shouldForceRunning(KEY, 'draft', ''), false);
+    assert.equal(shouldForceRunning(KEY, 'draft', '   '), false);
+  });
+
+  it('forces ONLY a listed key, and ONLY when status is draft', () => {
+    assert.equal(shouldForceRunning(KEY, 'draft', KEY), true);
+    // Listed among several keys (whitespace tolerated).
+    assert.equal(shouldForceRunning(KEY, 'draft', ` other , ${KEY} `), true);
+    // Unlisted key → never forced.
+    assert.equal(shouldForceRunning('some_other_key', 'draft', KEY), false);
+  });
+
+  it('only upgrades draft → running (never touches paused/done/running)', () => {
+    for (const status of ['paused', 'done', 'running']) {
+      assert.equal(shouldForceRunning(KEY, status, KEY), false, `status=${status} must not be forced`);
+    }
   });
 });
 

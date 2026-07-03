@@ -143,12 +143,15 @@
   scrollbar-width: none;
 }
 
-/* Hide Stripe promotional badge that overlaps the send button. */
+/* Hide the Stripe promotional badge/link that overlaps the send button.
+   NOTE: do NOT `display:none` Stripe's functional iframes (__privateStripeFrame /
+   __stripeJSBridgeFrame). iOS Safari SUSPENDS JS inside display:none iframes, so
+   hiding the JS bridge frame breaks Stripe's height-sync ON iOS ONLY — the card
+   PaymentElement renders, then collapses to 0px height (blank fields). Those
+   frames are invisible helpers anyway; only the badge link below needs hiding. */
 a[href*="stripe.com"],
 a[href*="stripe.com"] > img,
-div[class*="StripeElement"] ~ a,
-iframe[name^="__privateStripeFrame"],
-iframe[name^="__stripeJSBridgeFrame"] {
+div[class*="StripeElement"] ~ a {
   display: none !important;
 }
 

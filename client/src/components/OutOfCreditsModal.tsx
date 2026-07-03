@@ -5,6 +5,7 @@ import { Coins } from "lucide-react";
 import type { PricingTier } from "@shared/types";
 import PayPalCreditButton from "@/components/PayPalCreditButton";
 import StripeCardForm from "@/components/StripeCardForm";
+import { PAYMENT_DIALOG_MOBILE_SHEET } from "@/lib/paymentDialog";
 
 interface OutOfCreditsModalProps {
   open: boolean;
@@ -168,7 +169,7 @@ export default function OutOfCreditsModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-sm p-0 bg-transparent border-0 shadow-none [&>button]:hidden">
+      <DialogContent className={`sm:max-w-sm p-0 bg-transparent border-0 shadow-none [&>button]:hidden ${PAYMENT_DIALOG_MOBILE_SHEET}`}>
         <div className="relative rounded-2xl overflow-hidden shadow-2xl">
           {/* Background */}
           <div className="absolute inset-0 bg-gradient-to-b from-[#1a1640] via-[#1e1c50] to-[#1a2060]" />

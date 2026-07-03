@@ -12,6 +12,7 @@ import PayPalCreditButton from "@/components/PayPalCreditButton";
 import StripeCardForm from "@/components/StripeCardForm";
 import PaywallCard from "@/components/paywall/PaywallCard";
 import PaymentModal from "@/components/PaymentModal";
+import { PAYMENT_DIALOG_MOBILE_SHEET } from "@/lib/paymentDialog";
 
 interface BuyCreditsModalProps {
   open: boolean;
@@ -87,7 +88,7 @@ export default function BuyCreditsModal({
     return (
       <>
         <Dialog open={open} onOpenChange={onOpenChange}>
-          <DialogContent className="sm:max-w-md p-0 bg-transparent border-0 shadow-none [&>button:last-child]:hidden">
+          <DialogContent className={`sm:max-w-md p-0 bg-transparent border-0 shadow-none [&>button:last-child]:hidden ${PAYMENT_DIALOG_MOBILE_SHEET}`}>
             <PaywallCard
               personaName={personaName || "your guide"}
               avatarUrl={avatarUrl}
