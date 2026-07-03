@@ -65,12 +65,10 @@ function StripeCardFormInner({
     const onRej = (e: PromiseRejectionEvent) => log(`unhandledrejection: ${String(e.reason)}`);
     window.addEventListener("error", onErr);
     window.addEventListener("unhandledrejection", onRej);
-    // Height-collapse nudge: Stripe sizes its iframe from a postMessage that iOS can
-    // drop when the element mounts inside an animating/transformed modal. Fire a few
-    // resize events so Stripe re-measures, and log all iframes' heights.
+    // Sample the Stripe iframe height over time to confirm it stays rendered
+    // (the __stripeJSBridgeFrame display:none bug collapsed it 341px→0px on iOS).
     const timers = [200, 700, 1500, 3000, 5000].map((ms) =>
       setTimeout(() => {
-        window.dispatchEvent(new Event("resize"));
         const ifrs = Array.from(formRef.current?.querySelectorAll("iframe") ?? []);
         const info = ifrs
           .map((f) => `${(f as HTMLIFrameElement).offsetHeight}px${/stripe/.test((f as HTMLIFrameElement).src) ? "*" : ""}`)
