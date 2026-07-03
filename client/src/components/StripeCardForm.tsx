@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Elements, PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js";
 import { stripePromise } from "@/lib/stripe";
 import { authFetch, useAuth } from "@/hooks/useAuth";
@@ -36,6 +36,48 @@ function StripeCardFormInner({
   const [isProcessing, setIsProcessing] = useState(false);
   const { user } = useAuth();
   const icFiredRef = useRef(false);
+
+  // ── iOS blank-card diagnostics + resilience ────────────────────────────────
+  // On iPhone (WebKit) the Stripe card <iframe> can mount at zero height and stay
+  // blank. `ready` lets us show a loading placeholder (never a pure-blank box) and
+  // surface a load error as text. `?paydebug=1` shows a live timeline + the actual
+  // iframe height so we can see WHY it's blank without a Mac/Web-Inspector.
+  const [ready, setReady] = useState(false);
+  const [dbg, setDbg] = useState<string[]>([]);
+  const formRef = useRef<HTMLFormElement>(null);
+  const showDebug =
+    typeof window !== "undefined" &&
+    new URLSearchParams(window.location.search).get("paydebug") === "1";
+  const log = (m: string) => {
+    // eslint-disable-next-line no-console
+    console.log("[paydebug]", m);
+    if (showDebug) setDbg((d) => [...d.slice(-14), `${new Date().toISOString().slice(11, 19)} ${m}`]);
+  };
+
+  useEffect(() => {
+    log(`mount ua=${navigator.userAgent}`);
+    log(`stripe=${!!stripe} elements=${!!elements}`);
+    const onErr = (e: ErrorEvent) => log(`window.onerror: ${e.message}`);
+    const onRej = (e: PromiseRejectionEvent) => log(`unhandledrejection: ${String(e.reason)}`);
+    window.addEventListener("error", onErr);
+    window.addEventListener("unhandledrejection", onRej);
+    // Height-collapse nudge: Stripe sizes its iframe from a postMessage that iOS can
+    // drop when the element mounts inside an animating/transformed modal. Fire a few
+    // resize events so Stripe re-measures, and log the measured iframe height.
+    const timers = [200, 700, 1500, 3000].map((ms) =>
+      setTimeout(() => {
+        window.dispatchEvent(new Event("resize"));
+        const ifr = formRef.current?.querySelector("iframe");
+        log(`t+${ms}ms iframeH=${ifr ? (ifr as HTMLIFrameElement).offsetHeight : "no-iframe"}`);
+      }, ms),
+    );
+    return () => {
+      window.removeEventListener("error", onErr);
+      window.removeEventListener("unhandledrejection", onRej);
+      timers.forEach(clearTimeout);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [stripe, elements]);
 
   // Fire InitiateCheckout on first keystroke in the card field (engagement-
   // moment IC). Mount-scoped: once per StripeCardForm instance. Switching
@@ -140,13 +182,35 @@ function StripeCardFormInner({
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <div className="bg-white rounded-lg p-3 mb-3">
+    <form onSubmit={handleSubmit} ref={formRef}>
+      <div className="relative bg-white rounded-lg p-3 mb-3 min-h-[180px] [&_iframe]:!min-h-[40px]">
+        {!ready && (
+          <div className="absolute inset-0 flex items-center justify-center text-gray-400 text-xs pointer-events-none">
+            <span className="w-4 h-4 mr-2 border-2 border-gray-300 border-t-transparent rounded-full animate-spin" />
+            Loading secure card form…
+          </div>
+        )}
         <PaymentElement
           options={{ layout: "tabs" }}
           onChange={handlePaymentElementChange}
+          onLoaderStart={() => log("PaymentElement loaderstart")}
+          onReady={() => {
+            setReady(true);
+            const ifr = formRef.current?.querySelector("iframe");
+            log(`PaymentElement ready iframeH=${ifr ? (ifr as HTMLIFrameElement).offsetHeight : "?"}`);
+          }}
+          onLoadError={(e: any) => {
+            const msg = e?.error?.message || e?.error?.type || "Card form failed to load";
+            log(`PaymentElement loaderror: ${msg}`);
+            setError(msg);
+          }}
         />
       </div>
+      {showDebug && (
+        <pre className="mb-2 max-h-40 overflow-auto rounded bg-black/80 p-2 text-[10px] leading-tight text-green-300 whitespace-pre-wrap break-all">
+          {dbg.join("\n") || "(no debug output yet)"}
+        </pre>
+      )}
       {error && (
         <p className="text-red-500 text-xs mb-2 text-center">{error}</p>
       )}
