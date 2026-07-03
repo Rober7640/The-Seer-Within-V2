@@ -1,13 +1,13 @@
 import { Router, Request, Response } from 'express';
 import { z } from 'zod';
 import { db } from '../lib/db';
-import { users, creditPurchases, personas, checkoutViews } from '@shared/schema';
+import { users, creditPurchases, personas, checkoutViews, chatSessions } from '@shared/schema';
 import { eq, and, ne, desc, sql } from 'drizzle-orm';
 import { requireAuth, verifyToken } from '../lib/auth';
 import { getPersonaPricing } from '../lib/personaPricing';
 import { DEFAULT_PRICING } from '../../shared/types';
 import { applyVariantPresentation } from '@shared/paywall';
-import { resolvePaywallVariant, assign, logExposure, PAYWALL_EXPERIMENT_KEY } from '../lib/experiments';
+import { resolvePaywallVariant, assign, logExposure, paywallScopePersonaId, PAYWALL_EXPERIMENT_KEY } from '../lib/experiments';
 import Stripe from 'stripe';
 import { getStripe, verifyStripeWebhook, activeStripeAccountTag } from '../lib/stripeAccount';
 import logger from '../lib/logger';
@@ -115,10 +115,47 @@ router.get('/welcome-eligible', requireAuth, async (req: Request, res: Response)
   }
 });
 
+/**
+ * Which persona to resolve the paywall EXPERIMENT against when the request has no
+ * explicit personaId (e.g. the universal /credits nav tab, which links to a bare
+ * `/credits`). Order: the explicit param → the user's most-recently-used persona
+ * → the paywall test's own scoped persona. This lets an enrolled user see THEIR
+ * real variant on the shared credits page no matter how they got there, WITHOUT
+ * enrolling out-of-scope users: assign()'s scope check still gates who's actually
+ * in the test, so a non-Evelyn user resolves to their own persona and correctly
+ * falls to control 'A'. Never throws — a lookup error falls through to the scope
+ * persona (or null), i.e. today's behaviour.
+ */
+async function resolveExperimentPersonaId(
+  userId: string | null,
+  personaIdParam: string | null,
+): Promise<string | null> {
+  if (personaIdParam) return personaIdParam;
+  if (userId) {
+    try {
+      const rows = await db
+        .select({ personaId: chatSessions.personaId })
+        .from(chatSessions)
+        .where(eq(chatSessions.userId, userId))
+        .orderBy(desc(chatSessions.updatedAt))
+        .limit(1);
+      if (rows[0]?.personaId) return rows[0].personaId;
+    } catch (e) {
+      logger.error('resolveExperimentPersonaId: latest-session lookup failed', e);
+    }
+  }
+  return paywallScopePersonaId();
+}
+
 // GET /api/credits/pricing?personaId=xxx
 // Public route. Returns pricing PLUS the paywall A/B `variant` for this user.
 // Variant B re-badges tiers (MOST CHOSEN / BEST VALUE + `recommended`); variant
 // A returns tiers untouched, so the current UI is byte-identical.
+//
+// When no personaId is supplied (the universal /credits tab), the VARIANT and the
+// display persona fall back to the user's current persona (see
+// resolveExperimentPersonaId) so an enrolled user still gets their real arm here;
+// the priced tiers themselves are unchanged (bare request → DEFAULT_PRICING).
 router.get('/pricing', async (req: Request, res: Response) => {
   try {
     const personaId = req.query.personaId as string | undefined;
@@ -138,23 +175,31 @@ router.get('/pricing', async (req: Request, res: Response) => {
     // there and live users are still split only by the real experiment.
     const allowPaywallOverride =
       process.env.NODE_ENV !== 'production' || process.env.ALLOW_PAYWALL_QA_OVERRIDE === 'true';
+    // Resolve the persona the experiment is scored against: the explicit param, else
+    // the user's current persona, else the test's scoped persona — so a bare
+    // /credits (nav tab) still yields the user's real arm. Priced tiers stay based
+    // on the ORIGINAL param (bare → DEFAULT_PRICING), so no price changes.
+    const experimentPersonaId = await resolveExperimentPersonaId(userId, personaId ?? null);
     const variant = await resolvePaywallVariant({
       userId,
-      personaId: personaId ?? null,
+      personaId: experimentPersonaId,
       override: (req.query.paywallVariant as string) ?? null,
       allowOverride: allowPaywallOverride,
     });
 
-    // Persona display info (name + avatar) for the redesigned store/modal.
+    // Persona display info (name + avatar) for the redesigned store/modal. Use the
+    // explicit param, else the resolved experiment persona, so the variant-B store
+    // still renders a name/avatar on the bare /credits tab.
+    const displayPersonaId = personaId ?? experimentPersonaId;
     let persona: { id: string; displayName: string; avatarUrl: string | null; tagline: string | null; freeCoins: number } | undefined;
-    if (personaId) {
+    if (displayPersonaId) {
       const rows = await db.select({
         id: personas.id,
         displayName: personas.displayName,
         avatarUrl: personas.avatarUrl,
         tagline: personas.tagline,
         freeCoins: personas.freeCoins,
-      }).from(personas).where(eq(personas.id, personaId)).limit(1);
+      }).from(personas).where(eq(personas.id, displayPersonaId)).limit(1);
       persona = rows[0];
     }
 
@@ -205,14 +250,19 @@ router.post('/checkout-view', requireAuth, async (req: Request, res: Response) =
     // Log ONLY when the subject is enrolled (test running + in scope), so the
     // first exposure row is their first IN-TEST exposure. While the experiment is
     // OFF (Phase-1 ship state) nothing is logged. Non-blocking — never fail UX.
+    // Resolve the persona the SAME way /pricing does, so a modal opened from the
+    // bare /credits tab (no personaId) still logs the exposure for an in-scope
+    // user — and stays gated to in-scope users (assign()'s scope check), so
+    // out-of-scope personas never get enrolled here.
     try {
+      const experimentPersonaId = await resolveExperimentPersonaId(req.userId!, personaId ?? null);
       const a = await assign(PAYWALL_EXPERIMENT_KEY, req.userId!, {
-        personaId: personaId ?? null,
+        personaId: experimentPersonaId,
         isOutOfCredits: !!isOutOfCredits,
       });
       if (a?.enrolled) {
         await logExposure(PAYWALL_EXPERIMENT_KEY, req.userId!, a.variant, source, {
-          personaId: personaId ?? null,
+          personaId: experimentPersonaId,
           isOutOfCredits: !!isOutOfCredits,
         });
       }

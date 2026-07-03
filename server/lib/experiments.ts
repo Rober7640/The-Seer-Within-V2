@@ -821,6 +821,18 @@ export async function paywallVariant(
 }
 
 /**
+ * The persona the paywall test is scoped to (its `scope.personaId`), or null if
+ * unscoped/unknown. Cached ~30s via getExperiment. Used to resolve the paywall
+ * variant on shared surfaces that carry no persona in the request (e.g. the
+ * universal /credits nav tab) — a sensible fallback so an enrolled user still
+ * sees THEIR arm there, without hardcoding a persona at the call site.
+ */
+export async function paywallScopePersonaId(): Promise<string | null> {
+  const exp = await getExperiment(PAYWALL_EXPERIMENT_KEY);
+  return (exp?.scope as { personaId?: string } | null | undefined)?.personaId ?? null;
+}
+
+/**
  * Variant for a request, honouring a `?paywallVariant=A|B` QA override in
  * non-production only (so devs/QA can force a variant; inert for real prod users).
  */
