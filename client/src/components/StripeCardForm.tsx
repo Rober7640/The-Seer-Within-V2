@@ -45,30 +45,37 @@ function StripeCardFormInner({
   const [ready, setReady] = useState(false);
   const [dbg, setDbg] = useState<string[]>([]);
   const formRef = useRef<HTMLFormElement>(null);
+  // Auto-enable on the dev deployment (hostname contains "development") so the
+  // panel always shows there without a query param; ?paydebug=1 forces it anywhere.
   const showDebug =
     typeof window !== "undefined" &&
-    new URLSearchParams(window.location.search).get("paydebug") === "1";
+    (new URLSearchParams(window.location.search).get("paydebug") === "1" ||
+      /development/.test(window.location.hostname));
   const log = (m: string) => {
     // eslint-disable-next-line no-console
     console.log("[paydebug]", m);
-    if (showDebug) setDbg((d) => [...d.slice(-14), `${new Date().toISOString().slice(11, 19)} ${m}`]);
+    if (showDebug) setDbg((d) => [...d.slice(-18), `${new Date().toISOString().slice(11, 19)} ${m}`]);
   };
 
   useEffect(() => {
-    log(`mount ua=${navigator.userAgent}`);
-    log(`stripe=${!!stripe} elements=${!!elements}`);
+    const pk = (import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || "").slice(0, 8);
+    log(`ua=${navigator.userAgent}`);
+    log(`pk=${pk || "(EMPTY!)"} stripe=${!!stripe} elements=${!!elements}`);
     const onErr = (e: ErrorEvent) => log(`window.onerror: ${e.message}`);
     const onRej = (e: PromiseRejectionEvent) => log(`unhandledrejection: ${String(e.reason)}`);
     window.addEventListener("error", onErr);
     window.addEventListener("unhandledrejection", onRej);
     // Height-collapse nudge: Stripe sizes its iframe from a postMessage that iOS can
     // drop when the element mounts inside an animating/transformed modal. Fire a few
-    // resize events so Stripe re-measures, and log the measured iframe height.
-    const timers = [200, 700, 1500, 3000].map((ms) =>
+    // resize events so Stripe re-measures, and log all iframes' heights.
+    const timers = [200, 700, 1500, 3000, 5000].map((ms) =>
       setTimeout(() => {
         window.dispatchEvent(new Event("resize"));
-        const ifr = formRef.current?.querySelector("iframe");
-        log(`t+${ms}ms iframeH=${ifr ? (ifr as HTMLIFrameElement).offsetHeight : "no-iframe"}`);
+        const ifrs = Array.from(formRef.current?.querySelectorAll("iframe") ?? []);
+        const info = ifrs
+          .map((f) => `${(f as HTMLIFrameElement).offsetHeight}px${/stripe/.test((f as HTMLIFrameElement).src) ? "*" : ""}`)
+          .join(",");
+        log(`t+${ms}ms iframes=${ifrs.length}[${info}] ready=${ready}`);
       }, ms),
     );
     return () => {
