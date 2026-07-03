@@ -170,6 +170,40 @@ export async function getActivePromptExperimentKey(
   }
 }
 
+// ── DEV/QA force-running gate (shared-DB dev verification) ────────────────────
+
+/**
+ * DEV/QA ONLY. Decide whether a still-`draft` experiment should behave as if it
+ * were `running` — WITHOUT flipping its shared-DB status column — because the
+ * deployment has been explicitly opted in via the `EXPERIMENT_FORCE_RUNNING`
+ * env var (a comma-separated allowlist of experiment keys).
+ *
+ * WHY: dev/staging shares production's database, so there is exactly one status
+ * column per experiment. Flipping it to `running` to verify a not-yet-launched
+ * test would enrol PRODUCTION users too. This gate instead lets ONLY the service
+ * that sets the env var (the dev Railway service — separate env vars from prod)
+ * exercise the REAL assignment path (sticky bucketing + exposure logging) for a
+ * listed draft test, while the row stays `draft`. Production never sets the var,
+ * so `assign()` keeps returning the control arm there — byte-identical, no
+ * exposures. Mirrors the existing `ALLOW_PAYWALL_QA_OVERRIDE` isolation model.
+ *
+ * Pure + inert by construction: only ever upgrades draft→running, and only for
+ * keys explicitly listed. Unset/empty env, a non-draft status, or an unlisted
+ * key ⇒ false (no effect at all). NEVER set EXPERIMENT_FORCE_RUNNING on prod.
+ */
+export function shouldForceRunning(
+  key: string,
+  status: string,
+  rawEnv: string | undefined,
+): boolean {
+  if (status !== 'draft' || !rawEnv) return false;
+  return rawEnv
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean)
+    .includes(key);
+}
+
 // ── Assignment ────────────────────────────────────────────────────────────────
 
 export interface AssignContext {
@@ -240,7 +274,12 @@ export async function assign(
     return w ? { variant: w.key, payload: w.payload ?? {}, enrolled: false, applied: true } : controlArm;
   }
 
-  if (exp.status !== 'running') return controlArm;
+  // Normally only a `running` test enrols anyone; everything else → control.
+  // EXCEPTION (dev/QA only): a listed draft key is force-run for verification on
+  // a shared-DB dev deployment — see shouldForceRunning(). Prod never sets the
+  // env var, so this is false there and behaviour is unchanged.
+  const forcedRunning = shouldForceRunning(key, exp.status, process.env.EXPERIMENT_FORCE_RUNNING);
+  if (exp.status !== 'running' && !forcedRunning) return controlArm;
 
   const bucket = experimentBucket(subjectId, key);
   const variantKey = pickVariant(bucket, variants);
