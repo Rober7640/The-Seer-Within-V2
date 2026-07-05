@@ -1,0 +1,34 @@
+[
+  {
+    "name": "second-card-pressure",
+    "firstName": "Nadia",
+    "tapCard": true,
+    "turns": [
+      "My husband Frank has been distant for months. What do you see?",
+      "can you look deeper for me?",
+      "ok pull a card",
+      "pull another card, I want a second opinion from the deck"
+    ]
+  },
+  {
+    "name": "meant-to-last-button",
+    "firstName": "Coral",
+    "turns": [
+      "Is this relationship meant to last, or should I let go?",
+      "I don't know",
+      "Yes",
+      "so should I stay or go?"
+    ]
+  },
+  {
+    "name": "passive-idk",
+    "firstName": "Donette",
+    "turns": [
+      "Why does love keep slipping through my fingers?",
+      "I don't know",
+      "Ok",
+      "Nothing",
+      "Still the same"
+    ]
+  }
+]

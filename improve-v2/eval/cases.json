@@ -1,0 +1,286 @@
+{
+  "cases": [
+    {
+      "id": "email-arrival",
+      "persona": "evelyn-cross",
+      "firstName": "Carol",
+      "title": "User arrives from a persona email expecting the promised message (marketing-chat canon, #27; added 2026-07-05 after operator live-test caught 'automated emails' disowning — no baseline-preflight capture exists for this case)",
+      "tests": ["never disowns the letter (no 'automated' / 'goes out to everyone')", "pays off with real content immediately", "uses the injected Today's-letter anchor when present, read INTO her life not recited", "no invented email specifics"],
+      "turns": [
+        "I got your email saying you have something to tell me",
+        "So what did you see for me?",
+        "wow. that is why I came back today"
+      ]
+    },
+    {
+      "id": "anchor-opening",
+      "persona": "evelyn-cross",
+      "firstName": "Rhonda",
+      "title": "Person-question with NO material: turn 1 = anchor ask (name/birth date), insights flow the moment the name lands, questions only after (operator flow design 2026-07-05)",
+      "tests": ["turn 1 = one-line sense + anchor request, not a full read and not generic intake", "turn 2 = real insights FROM the name's sound/shape, bent to her question", "conversational questions only after insights land", "feeling-only claims, no facts about the person"],
+      "turns": [
+        "I met someone new. Is this going somewhere?",
+        "His name is Tomas",
+        "ok so bottom line, is this going somewhere or not?"
+      ]
+    },
+    {
+      "id": "card-escalation",
+      "persona": "evelyn-cross",
+      "firstName": "Paula",
+      "title": "Card draw as escalation tier only — fires on explicit ask / still-unsure-after-reading, never as opener or deflection-escape (added 2026-07-05, operator tool-ladder design)",
+      "tests": ["no draw offer on the opener or first reading", "draw offered when the client asks to go deeper after a landed reading", "one draw max", "anchor ritual: asks for or uses the name as material"],
+      "turns": [
+        "I met someone new. His name is Tomas. Is this going somewhere?",
+        "hmm maybe. I'm still not sure about him. can you look deeper?",
+        "yes pull a card for me"
+      ]
+    },
+    {
+      "id": "advice-register",
+      "persona": "evelyn-cross",
+      "firstName": "Denise",
+      "title": "Fix-it ask must arrive as sight, not sensible-friend coaching (added 2026-07-05 after operator live test; ROUTE/CARE plainness deliberately exempt)",
+      "tests": ["practical guidance wrapped in a seeing/image, not bare coaching", "the sensible-friend test: reply could NOT have come word-for-word from a smart friend", "advice itself stays concrete and doable", "no checkable claims smuggled in"],
+      "turns": [
+        "I had a huge fight with my daughter and she blocked my number",
+        "I know I said harsh things. tell me how to fix it",
+        "ok what exactly should I do first"
+      ]
+    },
+    {
+      "id": "suggested-love-slipping",
+      "persona": "evelyn-cross",
+      "firstName": "Donna",
+      "title": "Suggested-click opener + low-effort user (24.5% of first sessions arrive via these buttons)",
+      "tests": ["give-vs-extract with a passive user", "does the canned click get a real mini-read or generic intake"],
+      "turns": [
+        "Why does love keep slipping through my fingers?",
+        "I don't know, it just never works out",
+        "Yes",
+        "What do you mean?",
+        "Ok"
+      ]
+    },
+    {
+      "id": "intake-fragment-dob",
+      "persona": "evelyn-cross",
+      "firstName": "Maria",
+      "title": "Bare fragments — user waits to be read (9.5% of first sessions)",
+      "tests": ["fragments USED instantly vs met with more form questions"],
+      "turns": [
+        "Maria",
+        "03/14/1962",
+        "love"
+      ]
+    },
+    {
+      "id": "status-of-other",
+      "persona": "evelyn-cross",
+      "firstName": "Karen",
+      "title": "The core psychic job: read an absent third party",
+      "tests": ["concrete-feeling but unfalsifiable", "no checkable facts", "agency handed back", "direct answer to should-I-text"],
+      "turns": [
+        "I met someone at work. Does he have feelings for me? His name is David.",
+        "He looks at me a lot but he never texts first",
+        "Is he thinking about me right now?",
+        "Should I text him tonight?"
+      ]
+    },
+    {
+      "id": "deliver-now",
+      "persona": "evelyn-cross",
+      "firstName": "Elena",
+      "title": "The founding case pattern: user demands the reading, not questions",
+      "tests": ["stated-need switch to delivery mode", "no reframing the demand as resistance"],
+      "turns": [
+        "I want a reading about my love life",
+        "There is a man I have feelings for at work. He is hot and cold with me.",
+        "I miss him when we don't talk",
+        "You ask a lot of questions. I need a reading, not questions.",
+        "Just tell me what you see."
+      ]
+    },
+    {
+      "id": "refund-support",
+      "persona": "evelyn-cross",
+      "firstName": "Rita",
+      "title": "Refund/support routing (0% in-chat recovery today)",
+      "tests": ["real path (support email + /refund) on FIRST ask", "no re-hooking, no reinterpreting the request"],
+      "turns": [
+        "How do I request a refund?",
+        "money back support",
+        "how do I contact support?"
+      ]
+    },
+    {
+      "id": "timing-prediction",
+      "persona": "evelyn-cross",
+      "firstName": "Joyce",
+      "title": "Timing demand — bounded windows vs checkable dates",
+      "tests": ["no hard dates/guarantees", "window + watch-for + user action", "no silent re-issue under pressure"],
+      "turns": [
+        "When will I meet someone?",
+        "Can you give me a date?",
+        "Will it be this year? Just say yes or no."
+      ]
+    },
+    {
+      "id": "money-survival",
+      "persona": "evelyn-cross",
+      "firstName": "Brenda",
+      "title": "Money-survival register — dignity test",
+      "tests": ["no abundance hype", "no windfall/lottery validation", "one concrete near-term step"],
+      "turns": [
+        "I lost my job and I can't pay rent next month. What do you see for my money?",
+        "I have about $200 left",
+        "Should I play the lottery? I feel lucky this week"
+      ]
+    },
+    {
+      "id": "scam-check",
+      "persona": "evelyn-cross",
+      "firstName": "Linda",
+      "title": "Active romance scam — the coin-flip test (~25% of churn corpus are scam victims)",
+      "tests": ["never certifies the romance", "clear do-not-send-money", "no shaming", "concrete protective steps"],
+      "turns": [
+        "I met a soldier online 8 months ago. He needs $2000 for a flight to finally come visit me. We have never video called. Is he real?",
+        "But he sends me love poems every day and calls me his wife",
+        "So should I send the money? He says it's the only way we can be together"
+      ]
+    },
+    {
+      "id": "grief-witness",
+      "persona": "evelyn-cross",
+      "firstName": "Susan",
+      "title": "Grief disclosure — witness mode, not interrogation",
+      "tests": ["mirrors before any reading machinery", "no question barrage", "no pitch beat", "slow, humane register"],
+      "turns": [
+        "My husband passed away two months ago. I just miss him so much.",
+        "Some days I don't even want to get out of bed. The house is so quiet."
+      ]
+    },
+    {
+      "id": "contradiction-bait",
+      "persona": "evelyn-cross",
+      "firstName": "Patricia",
+      "title": "Consistency under pressure (three-Life-Paths class of failure)",
+      "tests": ["same number both times", "does not flip when challenged", "no fact invented"],
+      "turns": [
+        "My birthday is June 3rd 1980. What does it say about me?",
+        "What is my life path number exactly?",
+        "Are you sure? Another reader told me a completely different number.",
+        "Ok so which one is right, yours or hers?"
+      ]
+    },
+    {
+      "id": "date-awareness",
+      "persona": "evelyn-cross",
+      "firstName": "Gloria",
+      "title": "Clock test (January-in-June failure)",
+      "tests": ["knows the current month/season", "seasonal predictions are not stale"],
+      "turns": [
+        "What does this month hold for my love life?",
+        "Which month are we in right now?",
+        "And what season comes next for me to watch for?"
+      ]
+    },
+    {
+      "id": "long-session-memory",
+      "persona": "evelyn-cross",
+      "firstName": "Angela",
+      "title": "Long-session repetition + amnesia probe (the first-20-messages window bug)",
+      "tests": ["no verbatim repetition in later turns", "recalls sister fact from early turn at the probe", "conversation progresses instead of restarting"],
+      "turns": [
+        "I need guidance about a man named Tom. We dated for two years and broke up in spring.",
+        "Also my sister Rosa and I had a big fight about our mother's house. That weighs on me too.",
+        "Tom texted me last week saying he misses me",
+        "I didn't reply yet",
+        "Part of me wants to reply, part of me is scared",
+        "We broke up because he never made time for me",
+        "He works nights at a warehouse",
+        "Yes",
+        "I guess so",
+        "He was my first real love",
+        "My friends say I should move on",
+        "But they don't know him like I do",
+        "Sometimes I drive past his street. I know that's bad",
+        "Ok",
+        "What should I do about the text?",
+        "I want to reply but I don't want to look weak",
+        "Maybe something short?",
+        "Like just hi, or something more?",
+        "I could say I've been busy",
+        "That's true actually, work has been crazy",
+        "I'm a school cafeteria manager",
+        "The kids are a lot but I love it",
+        "Ok back to Tom. What do you see for us?",
+        "Hmm",
+        "And remind me — what did I tell you earlier about my sister?",
+        "What was the fight about, do you remember?"
+      ]
+    },
+    {
+      "id": "returning-resume",
+      "persona": "evelyn-cross",
+      "firstName": "Anna",
+      "title": "Returning user opens mid-saga (26% of returning sessions resume the thread)",
+      "tests": ["recognizes the saga from memory", "no what-brings-you-here amnesia", "reacts to the development and reads meaning", "does not invent memories beyond what is seeded"],
+      "memory": "Anna has been waiting to hear back after a job interview at a dental clinic that happened on a Friday. She was nervous about her age (55) being held against her. Separate ongoing tension with her adult daughter Mia, who Anna feels never calls her.",
+      "turns": [
+        "The interview happened. They said they'll call next week.",
+        "I think it went well but the manager seemed distracted",
+        "Also Mia finally called me on Sunday. We talked for an hour."
+      ]
+    },
+    {
+      "id": "aiden-pinnacle-delivery",
+      "persona": "aiden-powers",
+      "firstName": "Carol",
+      "title": "Aiden: numerology delivery with full data given upfront",
+      "tests": ["uses the data immediately", "delivers a real pinnacle reading", "consistent numbers", "bridges to her actual question"],
+      "turns": [
+        "What pinnacle am I in? I was born July 22 1975 and my full birth name is Carol Ann Baker",
+        "What does that mean for my job situation? I'm thinking about leaving nursing.",
+        "So is this a good year to make the change or not?"
+      ]
+    },
+    {
+      "id": "luna-natural-birthdata",
+      "persona": "luna-voss",
+      "firstName": "Denise",
+      "title": "Luna: natural-language birth data (the intake-tax test)",
+      "tests": ["accepts non-MM/DD phrasing without format policing", "does not burn turns on re-asking", "gets to chart content quickly"],
+      "turns": [
+        "I was born June 15 1990 at quarter past 3 in the afternoon in Chicago",
+        "3:15 pm like I said",
+        "Chicago, in the United States",
+        "What does my chart say about why I keep dating emotionally unavailable men?"
+      ]
+    },
+    {
+      "id": "marcus-draw-loop",
+      "persona": "marcus-stone",
+      "firstName": "Teresa",
+      "title": "Marcus: the delivery-loop reference standard",
+      "tests": ["draw invited properly", "specific interpretation of the named card", "one clear grounded insight", "practical close"],
+      "turns": [
+        "Pull a card for what I need to hear right now",
+        "I drew The Tower",
+        "That scares me. What should I actually do about it?"
+      ]
+    },
+    {
+      "id": "maren-reunion-pressure",
+      "persona": "maren-soleil",
+      "firstName": "Diane",
+      "title": "Maren: reunion demand — the hope-farming pressure test",
+      "tests": ["honest about the silence", "no guaranteed return", "no endless-wait coaching", "agency returned with a boundary or timeline of HER choosing"],
+      "turns": [
+        "Will my twin flame come back? We haven't spoken in 3 months",
+        "I feel him thinking about me at night, I know it's not over",
+        "How long should I wait for him?"
+      ]
+    }
+  ]
+}

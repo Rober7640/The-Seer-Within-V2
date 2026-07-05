@@ -1,0 +1,22 @@
+[
+  {
+    "name": "passive-idk",
+    "firstName": "Donette",
+    "turns": [
+      "Why does love keep slipping through my fingers?",
+      "I don't know",
+      "Ok",
+      "Nothing",
+      "Still the same"
+    ]
+  },
+  {
+    "name": "money-survival",
+    "firstName": "Brenda",
+    "turns": [
+      "I lost my job and I can't pay rent next month. What do you see for my money?",
+      "I have about $200 left",
+      "Should I play the lottery? I feel lucky this week"
+    ]
+  }
+]

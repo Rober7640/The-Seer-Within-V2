@@ -1,0 +1,3 @@
+# Transcript corpus contains customer PII — never commit.
+*
+!.gitignore
