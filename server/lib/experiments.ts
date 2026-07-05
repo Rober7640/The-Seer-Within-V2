@@ -145,15 +145,27 @@ export async function getActivePromptExperimentKey(
   const hit = promptKeyCache.get(personaId);
   if (hit && now - hit.at < CACHE_TTL_MS) return hit.key;
   try {
+    // DEV/QA ONLY (see shouldForceRunning): a draft prompt experiment listed in
+    // EXPERIMENT_FORCE_RUNNING is resolvable in THIS process, so the eval harness
+    // / dev deployment can exercise a treatment prompt while the shared-DB row
+    // stays draft (production never sets the var → running-only, unchanged).
+    const forcedKeys = (process.env.EXPERIMENT_FORCE_RUNNING ?? '')
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean);
+    const statusMatch = forcedKeys.length
+      ? sql`(${experiments.status} = 'running'
+             OR (${experiments.status} = 'draft' AND ${experiments.key} IN (${sql.join(forcedKeys.map((k) => sql`${k}`), sql`, `)})))`
+      : sql`${experiments.status} = 'running'`;
     const rows = await db
       .select()
       .from(experiments)
       .where(
         sql`left(${experiments.key}, ${PERSONA_PROMPT_KEY_PREFIX.length}) = ${PERSONA_PROMPT_KEY_PREFIX}
             AND ${experiments.scope}->>'personaId' = ${personaId}
-            AND ${experiments.status} = 'running'`,
+            AND ${statusMatch}`,
       )
-      .orderBy(desc(experiments.startedAt))
+      .orderBy(sql`(${experiments.status} = 'running') desc`, desc(experiments.startedAt))
       .limit(1);
     const row = rows[0] ?? null;
     promptKeyCache.set(personaId, { key: row?.key ?? null, at: now });
