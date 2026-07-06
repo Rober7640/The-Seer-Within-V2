@@ -1653,3 +1653,4 @@ Context: V1→V2 migrated leads have a real (unknown) password hash, so on `/7-7
 - [ ] Guide-card sign-in carries `?persona=<slug>` into the redirect (`/7-7?persona=luna`) so the link forwards into that guide cross-device; nav generic sign-in stays on `/7-7`
 - [ ] Rate-limiting: repeated failed attempts don't blast unlimited emails (authLimiter on `send-magic-login`)
 - [ ] End-to-end: click the emailed link → `/magic-auth?t=…&redirect=/7-7` → lands on `/7-7` authed → promo claim grants 420 coins × active persona
+- [ ] SetPasswordPage (migrated user first magic-link login): success screen shows "7 free minutes" when `post_password_redirect` starts with `/7-7`, else "3 free minutes"; "Start Your Reading" routes to that redirect (/7-7 → claim fires)
