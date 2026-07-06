@@ -71,6 +71,11 @@ export interface UserData {
   // V1 price split test — assigned at lead capture, drives pitch + button + tracking values
   priceDollars?: number
   downsellDollars?: number
+  // V1 prompt A/B (v1_clearing_theme_palm_2026) — assigned arm for this session,
+  // set once from /api/ab/assign (or the ?clearing= preview override). Carried on
+  // userData so the server prompt builders + client pitch branch on the same arm.
+  // Undefined ⇒ control (byte-identical). See improve-v1/09.
+  promptVariant?: 'control' | 'woven'
 }
 
 export interface ShippingAddress {

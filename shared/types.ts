@@ -42,6 +42,12 @@ export interface UserData {
   // drives pitch copy + button labels + Stripe charge + tracking values.
   priceDollars?: number
   downsellDollars?: number
+  // V1 prompt A/B (v1_clearing_theme_palm_2026) — the assigned arm for this
+  // session ('control' | 'woven'). Set once client-side from /api/ab/assign
+  // (or the ?clearing= preview override) and carried on userData so both the
+  // server prompt builders and the client pitch branch on the same arm.
+  // Absent/undefined ⇒ control (byte-identical to today).
+  promptVariant?: 'control' | 'woven'
 }
 
 export interface ShippingAddress {

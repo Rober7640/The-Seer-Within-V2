@@ -1,0 +1,57 @@
+================================================================================================
+FULL 5-PHASE A/B — same input & model (claude-sonnet-4-5-20250929), 2 trials/arm. Only the closing-question block differs.
+================================================================================================
+
+################################################################################################
+# PHASE: reading1   (user said: "I'm 34 and all my friends are married with kids. I feel like I already missed my one chance at real love.")
+################################################################################################
+  --- CURRENT (canned) ---
+    Q1: What happened that made you believe you'd already missed your chance?
+    Q2: When did you start believing your time had passed?
+  --- IMPROVED (specificity-forced) ---
+    Q1: Who was it that made you believe you'd already used up your chance at love?
+    Q2: When you watch your friends with their families, what feeling rises first — longing, or something sharper?
+
+################################################################################################
+# PHASE: reading2   (user said: "Yes... I've been on so many dates but nothing ever becomes something real.")
+################################################################################################
+  --- CURRENT (canned) ---
+    Q1: Paint me a picture, Sarah... what would real love actually feel like for you?
+    Q2: If this pattern could finally break... what would real love actually feel like for you?
+  --- IMPROVED (specificity-forced) ---
+    Q1: When you're sitting across from someone new, what are you actually hoping they'll see in you?
+    Q2: When you're on these dates that go nowhere... what are you actually hoping they'll see in you?
+
+################################################################################################
+# PHASE: futureValidation   (user said: "A partner who truly sees me. Building a home and a family together.")
+################################################################################################
+  --- CURRENT (canned) ---
+    Q1: How would that feel in your body, Sarah? That sense of being fully seen and building something real — where would you feel it?
+    Q2: How would that feel, Sarah? Not just the having it—but waking up knowing you're finally, deeply seen and chosen?
+  --- IMPROVED (specificity-forced) ---
+    Q1: When you picture that partner who truly sees you — what does being seen actually feel like to you?
+    Q2: When you imagine him truly seeing you — what part of yourself are you most hoping he'll understand?
+
+################################################################################################
+# PHASE: crisisReveal   (user said: "It would feel like I could finally breathe. Like I'm not broken after all.")
+################################################################################################
+  --- CURRENT (canned) ---
+    Q1: Tell me... has anyone else in your family struggled to find lasting love? Where did this pattern begin?
+    Q2: Tell me... has anyone in your family carried this same loneliness? Your mother? Grandmother?
+  --- IMPROVED (specificity-forced) ---
+    Q1: You said you feel broken... when did you first decide that about yourself? What made you believe it?
+    Q2: You said it would feel like breathing again... what made you stop breathing in the first place? What moment taught you to hold back?
+
+################################################################################################
+# PHASE: crisisCost   (user said: "I don't know... maybe when my last relationship ended three years ago.")
+################################################################################################
+  --- CURRENT (canned) ---
+    Q1: If you could finally release this block today, would you?
+    Q2: If you could finally let go of that old story today, would you be willing to try?
+  --- IMPROVED (specificity-forced) ---
+    Q1: If you could stop watching from the sidelines and finally let yourself be seen — would you choose that today?
+    Q2: If you could stop measuring your worth by other people's timelines, would you let yourself be seen again?
+
+================================================================================================
+Compare the closing questions per phase: CURRENT parrots the canned line; IMPROVED anchors on her words.
+================================================================================================

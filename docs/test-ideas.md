@@ -1654,3 +1654,35 @@ Context: V1→V2 migrated leads have a real (unknown) password hash, so on `/7-7
 - [ ] Rate-limiting: repeated failed attempts don't blast unlimited emails (authLimiter on `send-magic-login`)
 - [ ] End-to-end: click the emailed link → `/magic-auth?t=…&redirect=/7-7` → lands on `/7-7` authed → promo claim grants 420 coins × active persona
 - [ ] SetPasswordPage (migrated user first magic-link login): success screen shows "7 free minutes" when `post_password_redirect` starts with `/7-7`, else "3 free minutes"; "Start Your Reading" routes to that redirect (/7-7 → claim fires)
+### improve-v2 Sprint 0.5 — context window + prompt-experiment eval access (2026-07-04)
+- [x] Session history window = first 10 + most recent 30 messages, chronological, with omission note in the gap; last-20-only and first-20-only both rejected *(server/lib/chatEngine.contextWindow.test.ts, failing-then-green)*
+- [ ] Omission note appears only when messages are actually cut (≤40-message session ⇒ no note)
+- [ ] [RUNTIME_CONTEXT] token: replaced with date+meter when present in the resolved prompt; a prompt WITHOUT the token is byte-identical (no extra DB queries)
+- [ ] getActivePromptExperimentKey resolves a draft persona_prompt_* key ONLY when force-listed in EXPERIMENT_FORCE_RUNNING (unit test alongside personaPrompt.test.ts); unset env ⇒ running-only unchanged
+- [ ] eval-chat/eval-replay --experiment: eval user re-rolled onto requested variant; exposure rows cleaned up after the run (no pollution of live tallies)
+- [x] Current user message appears exactly ONCE in the model context — the just-saved row is excluded from the head/tail window and only the explicit append remains (rung-2 catch: model saw it twice → "you said it twice" readings) *(server/lib/chatEngine.contextWindow.test.ts, failing-then-green)*
+- [ ] Window + exclusion under early-session sizes: ≤10-message session with excludeMessageId still returns every OTHER message exactly once (head/tail overlap dedup + exclusion compose)
+- [ ] Character rules injected via buildIntentContext are variant-aware: a variant-B enrolled user must NOT receive variant-A's "Keep response under N words" / forbidden-phrases lines (pre-A/B wiring, found at rung 2)
+- [ ] Markdown stripping applies on the plain (non-chart) reply path too — no `**bold**` reaching the chat UI (rung-2 cosmetic finding: `**9**` in a numerology reply)
+- [ ] /admin/prompts shows the legacy warning banner ("nothing here reaches live chat"); editing+activating a prompt there does NOT change the next chat reply's system prompt (guards the dead persona_prompts path staying dead)
+- [ ] recoverActiveSessions only force-closes sessions with a STALE heartbeat (e.g. last_heartbeat_at > 2 min old) — found 2026-07-04, hit 3× by 2026-07-05 (one real user mid-chat + two eval runs killed at boot). NOTE this also means EVERY PROD DEPLOY severs all live chat sessions → promote to Sprint 1 (billing/session change class)
+- [ ] Drip/follow-up generators exclude `%@eval.internal` users (eval users are emailVerified=true → currently drip-eligible on prod; sends would bounce on a fake domain)
+- [ ] Email-canon injection: `system_config.email_canon` entry for the persona (≤48h old) appears as "Today's letter" in a `[RUNTIME_CONTEXT]` prompt; a stale (>48h) or missing entry injects nothing; prompts without the token are byte-identical (no extra query effects)
+- [ ] Email-arrival behavior (frozen case `email-arrival`): persona never says "automated"/"goes out to everyone", never fake-confirms unknown email content, delivers a real read on turn 1 (anchor-themed when canon present)
+- [ ] Email pipeline writes `email_canon` at broadcast-scheduling time (evelyn-tarot / evelyn-daily / aweber tooling) — canon date matches the send date, one entry per persona slug
+- [ ] Capability scaffolding (tarot picker / astrology chart / numerology profile) keys off the AUTHORED prompt only — the word "tarot" (or a persona token) inside runtime-injected content (email canon, date/meter) must NOT enable the tool (found 2026-07-05: canon essence "The daily tarot letter…" silently gave Evelyn variant-B Marcus's card picker; fixed via authoredPrompt detection)
+- [ ] Eval runners annotate `_(offered an interactive card draw — [TAROT_DRAW])_` when sendMessage returns tarotDraw=true (the engine strips the token from text, so transcripts were blind to draw offers before)
+- [ ] Verdict replies end on the THREAD (frozen case `anchor-opening`): verdict → do → watch-for → named second topic + ripening condition, thread last, no question after it; one thread per session; thread picked up by name on return
+- [ ] Anchor-first flow (`anchor-opening`): person-question without material → turn 1 = one-line sense + name/birthdate ask; material present in opener → read immediately, never ask for what was given
+- [ ] Name-method consistency: the same name yields a compatible reading across sessions (same open/close/beat qualities); name reads are feeling-only, never facts about the person
+- [ ] Card ladder gates (`card-escalation`): no draw offer on opener/first reading; draw fires on go-deeper/explicit ask; framing text always above the picker token (no empty bubble); one draw per session; letter-day card retrieved never re-drawn
+- [ ] [CARD_DRAW_TOOL] token personas get the neutral draw instruction; "tarot"-substring personas (Marcus) keep the full cadence block — neither leaks to personas with neither marker
+- [ ] UI capture harness (`scripts/ui-capture.ts`) runs green: no DEAD AIR (nothing rendered), no EMPTY BUBBLE, no reply >120s, card tap yields an interpretation — the classes of defect invisible to the sendMessage-level evals
+
+### fb-palm hook pipeline — 3 new thumb-only landers wired (2026-07-06)
+- [ ] `/fb-palm?hook=is-he-true|sense-lying|heart-safe` renders its own headline over the thumb strip on all three version routes (`/`, `/b`, `/c`); an unknown hook still falls back to soulmate-timing
+- [ ] Version A click-through: S3 card delivers the new hook's 4-beat read per option (a/b/c); the 3 original hooks' cards stay byte-identical
+- [ ] Thumb-only gating on the bridge: `?hook=heart-safe&sign=finger-lock` (any non-thumb sign) falls back WHOLESALE to DEFAULT_HOOK — headline and read always tell the same story, never mixed
+- [ ] Chat handoff gating: parsePalmParams returns null for a new-hook × non-thumb combo (no palm divergence → generic funnel); a valid thumb combo yields openerB/openerCStart built from the new reads
+- [ ] Version C: opener = mark line + the new hook's palm question; palmOpener/palmReflect accept the 3 new hooks (routes validHooks) — a hook in client PALM_HOOKS but missing from the server enums = Version-C 400 (keep in sync)
+- [ ] Version C LLM guardrail (PALM_HOOK_YES): deception hooks affirm HER intuition, never "he is lying/cheating"; heart-safe never promises "he will commit" nor pronounces "he won't"

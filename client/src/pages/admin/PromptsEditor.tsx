@@ -293,6 +293,13 @@ export default function PromptsEditor() {
 
   return (
     <AdminLayout title="Prompts Editor">
+      <div className="mb-6 rounded-lg border border-amber-600/60 bg-amber-950/40 px-4 py-3 text-sm text-amber-200">
+        <strong>Legacy page — nothing saved or activated here reaches live chat.</strong>{" "}
+        The chat engine serves each persona&apos;s prompt from the Persona Editor
+        (Personas → edit → System Prompt); prompt A/B tests run in the Experiments
+        dashboard. This page only edits the old <code>persona_prompts</code> version
+        archive.
+      </div>
       <div className="flex items-center gap-4 mb-6">
         <div className="w-64">
           <Select
