@@ -10,7 +10,7 @@ import {
   experimentExposures,
   experimentConversions,
 } from '@shared/schema';
-import { eq, and, or, sql, isNotNull } from 'drizzle-orm';
+import { eq, and, or, sql, isNotNull, inArray } from 'drizzle-orm';
 import { assign, logExposure } from '../../lib/experiments';
 import logger from '../../lib/logger';
 import crypto from 'crypto';
@@ -47,7 +47,7 @@ export const publicRouter = Router();
 // declared winner (so the winning variant keeps rolling out via assign()'s winner
 // path). scope.route must match the page.
 async function runningVisitorTests(page: string) {
-  return db
+  const rows = await db
     .select()
     .from(experiments)
     .where(
@@ -60,6 +60,37 @@ async function runningVisitorTests(page: string) {
         ),
       ),
     );
+
+  // DEV/QA isolation: also surface DRAFT visitor tests on this page that are
+  // force-run for THIS service via EXPERIMENT_FORCE_RUNNING, so their real
+  // assignment path (assign() force-enrols a listed draft key — see
+  // shouldForceRunning()) can be verified WITHOUT flipping the shared-DB status to
+  // 'running' (which would enrol prod too). Prod never sets the env var ⇒ this
+  // block is a no-op there (the query only runs when the var is non-empty, and it
+  // only ever ADDS draft rows whose key was explicitly listed). Mirrors the
+  // status-gate exception already honoured inside assign().
+  const forced = (process.env.EXPERIMENT_FORCE_RUNNING || '')
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
+  if (forced.length > 0) {
+    const already = new Set(rows.map((r) => r.key));
+    const draftForced = await db
+      .select()
+      .from(experiments)
+      .where(
+        and(
+          eq(experiments.subjectType, 'visitor'),
+          sql`${experiments.scope}->>'route' = ${page}`,
+          eq(experiments.status, 'draft'),
+          inArray(experiments.key, forced),
+        ),
+      );
+    for (const r of draftForced) {
+      if (!already.has(r.key)) rows.push(r);
+    }
+  }
+  return rows;
 }
 
 // GET /api/ab/assign?page= — sticky variant copy for this visitor on the page.
