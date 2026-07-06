@@ -22,7 +22,15 @@
 
 import type { Bucket } from '@/types/chat'
 
-export type PalmHook = 'soulmate-timing' | 'already-met' | 'love-again'
+export type PalmHook =
+  | 'soulmate-timing'
+  | 'already-met'
+  | 'love-again'
+  // New-wave test hooks — thumb-only for now (ledger `target_signs`): reads
+  // exist only on THUMB; other signs fall back to DEFAULT_HOOK.
+  | 'is-he-true'
+  | 'sense-lying'
+  | 'heart-safe'
 export type PalmThumb = 'a' | 'b' | 'c' // the option the visitor tapped (A/B/C)
 export type PalmOption = PalmThumb // alias — signs other than 'thumb' still pick A/B/C
 export type PalmVersion = 'a' | 'b' | 'c'
@@ -38,7 +46,14 @@ export type PalmSign =
   | 'finger-length'
   | 'finger-length-alt'
 
-export const PALM_HOOKS: PalmHook[] = ['soulmate-timing', 'already-met', 'love-again']
+export const PALM_HOOKS: PalmHook[] = [
+  'soulmate-timing',
+  'already-met',
+  'love-again',
+  'is-he-true',
+  'sense-lying',
+  'heart-safe',
+]
 
 // Shown when /fb-palm is hit without a recognized ?hook= / ?sign= (bare visit).
 export const DEFAULT_HOOK: PalmHook = 'soulmate-timing'
@@ -50,6 +65,9 @@ export const HEADLINES: Record<PalmHook, string> = {
   'already-met': 'Have you already met your soulmate?',
   'love-again': 'Will I love again?',
   'soulmate-timing': 'When is my soulmate coming?',
+  'is-he-true': 'Am I being lied to?',
+  'sense-lying': 'Why do I feel like he’s lying to me?',
+  'heart-safe': 'Is he ever going to commit?',
 }
 
 // Version C opener question, per hook (sign-agnostic — it's about her heart, not
@@ -58,6 +76,9 @@ const PALM_QUESTION: Record<PalmHook, string> = {
   'already-met': "Before I look closer, tell me… is there already someone your mind keeps returning to?",
   'love-again': "Before I look closer, tell me… what's been weighing on your heart since it happened?",
   'soulmate-timing': "Before I look closer, tell me… what's making the waiting feel so heavy right now?",
+  'is-he-true': "Before I look closer, tell me… what is it about him your gut keeps snagging on?",
+  'sense-lying': "Before I look closer, tell me… when did the feeling first creep in?",
+  'heart-safe': "Before I look closer, tell me… what has he promised that you're still waiting to see?",
 }
 
 // ── Sign registry ────────────────────────────────────────────────────────────
@@ -85,8 +106,11 @@ export interface SignConfig {
   // LLM injection; the reads name the mark themselves in sentence 1.
   mark: Record<PalmOption, string>
   reading: Record<PalmOption, string>
-  // reads[hook][option] = the 4-sentence build.
-  reads: Record<PalmHook, Record<PalmOption, string[]>>
+  // reads[hook][option] = the 4-sentence build. Partial on the hook axis: a
+  // hook may target a subset of signs (ledger `target_signs`); a combo without
+  // reads falls back to DEFAULT_HOOK on the bridge and to the generic funnel
+  // in the chat (parsePalmParams returns null).
+  reads: Partial<Record<PalmHook, Record<PalmOption, string[]>>>
 }
 
 const THUMB: SignConfig = {
@@ -169,6 +193,70 @@ const THUMB: SignConfig = {
         "You've waited so long you've started to wonder if you imagined the promise at all.",
         "You didn't — the timing has only been waiting for you to turn outward. Yes, they're coming, closer than you think.",
         "Let me look closer at what's been keeping you apart…",
+      ],
+    },
+    // Decode-him deception pair (thumb-only test). Beat 3 affirms HER intuition
+    // as real information — never a verdict on him (empowerment, not paranoia).
+    'is-he-true': {
+      a: [
+        "A trident — three lines drawing to one point. The gathering heart.",
+        "You're asking if you're being lied to — and I can feel you've carried that question longer than you've let on.",
+        "A heart that gathers like yours misses nothing, dear; the unease you keep waving off is real information, worth listening to — not the overthinking you've blamed it on.",
+        "Let me look closer at what it's actually picking up…",
+      ],
+      b: [
+        "A Y that leans right — your line reaches outward. The reaching heart.",
+        "You give your trust before it's earned, and lately some quiet part of you has been drawing it back.",
+        "A reaching heart feels the exact moment the warmth stops meeting it, dear — that hesitation is information, not insecurity, and it's earned the right to be looked at.",
+        "Let me look closer at what made your heart start holding back…",
+      ],
+      c: [
+        "A Y that leans left — your line curls inward. The inward heart.",
+        "Some part of you already senses the answer you came to ask me — you've just kept it even from yourself.",
+        "A heart this guarded reads what's true long before the mind will say it, dear; the quiet you've felt isn't nothing — it's your own knowing, waiting to be heard.",
+        "Let me look closer at what you've been carrying alone…",
+      ],
+    },
+    'sense-lying': {
+      a: [
+        "A trident — three lines drawing to one point. The gathering heart.",
+        "You already feel it, dear — that's not the question. You're asking why the feeling won't leave you alone.",
+        "Here's why: a heart that gathers like yours reads the small shifts long before the mind will name them. The feeling isn't you imagining things — it's you noticing what's there to notice.",
+        "Let me look closer at what it's been gathering…",
+      ],
+      b: [
+        "A Y that leans right — your line reaches outward. The reaching heart.",
+        "You feel it and you're asking why — when nothing's been said, nothing proven.",
+        "Because a reaching heart feels the warmth change before the words do, dear. The feeling came before the proof because your heart reaches ahead — it registers the shift first. That's not insecurity; that's an instrument working.",
+        "Let me look closer at what it reached for and found cooler than before…",
+      ],
+      c: [
+        "A Y that leans left — your line curls inward. The inward heart.",
+        "You feel it quietly, and you're asking why you can't talk yourself out of it.",
+        "Because a heart this guarded doesn't sound an alarm over nothing, dear — it's slow to feel and slow to suspect, so the fact that you feel anything at all is worth taking seriously, not arguing away.",
+        "Let me look closer at what finally got past your guard…",
+      ],
+    },
+    // Wave-1 lead (thumb-only test). Self-bridged: the hand reads HER wanting
+    // and her knowing — never a forecast of his choice.
+    'heart-safe': {
+      a: [
+        "A trident — three lines drawing to one point. The gathering heart.",
+        "You're asking if he's ever going to commit — you've heard the words, but you're still waiting to feel the weight behind them.",
+        "A heart that gathers like yours doesn't ask that question lightly, dear — it asks when it already senses the answer forming; your wanting more was never too much, it's your heart reading the distance exactly right.",
+        "Let me look closer at what the answer has been waiting on…",
+      ],
+      b: [
+        "A Y that leans right — your line reaches outward. The reaching heart.",
+        "You reach first, you give first — and you're asking how long a heart is meant to keep reaching before it's met.",
+        "A reaching heart isn't foolish for going first, dear — but it knows, sooner than the mind will admit, when it's carrying the whole distance; that tiredness isn't you giving up on love, it's your heart asking for the truth it's owed.",
+        "Let me look closer at what your reaching has actually been met with…",
+      ],
+      c: [
+        "A Y that leans left — your line curls inward. The inward heart.",
+        "You've been carrying this question quietly, dear — asking it to yourself long before you brought it to me.",
+        "A heart this guarded doesn't hope recklessly; if it's still holding on, something real is holding it — and if it's begun asking whether he'll ever choose you fully, that asking is its own kind of knowing.",
+        "Let me look closer at what your heart already suspects…",
       ],
     },
   },
@@ -807,6 +895,9 @@ export function parsePalmParams(
   const sign: PalmSign = isPalmSign(signParam) ? signParam : DEFAULT_SIGN
   // The tapped option must be one this sign actually offers.
   if (!SIGNS[sign].options.includes(thumb)) return null
+  // The hook must carry reads for this sign (thumb-only hooks); otherwise treat
+  // it like an unknown hook — no palm divergence.
+  if (!SIGNS[sign].reads[hook]) return null
 
   const vParam = p.get('v')
   const version: PalmVersion = vParam === 'b' ? 'b' : vParam === 'c' ? 'c' : 'a'
@@ -815,9 +906,16 @@ export function parsePalmParams(
 
 // ── Composed copy ───────────────────────────────────────────────────────────
 
+// Reads for a hook×sign combo. Callers run behind parsePalmParams (which
+// rejects combos without reads), so the DEFAULT_HOOK fallback never fires in
+// practice — it exists to keep the lookup total for TypeScript.
+function readsFor(sign: PalmSign, hook: PalmHook): Record<PalmOption, string[]> {
+  return SIGNS[sign].reads[hook] ?? SIGNS[sign].reads[DEFAULT_HOOK]!
+}
+
 // Version A — the static S3 result card: the 4-sentence build as one paragraph.
 export function cardRead(sign: PalmSign, hook: PalmHook, thumb: PalmOption): string {
-  return SIGNS[sign].reads[hook][thumb].join(' ')
+  return readsFor(sign, hook)[thumb].join(' ')
 }
 
 // Version A — brief chat greeting AFTER the card (don't re-deliver the read;
@@ -831,7 +929,7 @@ export function greetingA(sign: PalmSign, thumb: PalmOption): string {
 // one bubble per sentence, then ask the name → existing love deepening.
 export function openerB(sign: PalmSign, hook: PalmHook, thumb: PalmOption): string[] {
   return [
-    ...SIGNS[sign].reads[hook][thumb],
+    ...readsFor(sign, hook)[thumb],
     "Before I follow this thread any further, I need to know who I'm speaking with… what's your first name, dear?",
   ]
 }
@@ -839,11 +937,11 @@ export function openerB(sign: PalmSign, hook: PalmHook, thumb: PalmOption): stri
 // Version C opener (static, instant): the mark line (sentence 1) + the open
 // question. Then the LLM reads HER answer.
 export function openerCStart(sign: PalmSign, hook: PalmHook, thumb: PalmOption): string[] {
-  return [SIGNS[sign].reads[hook][thumb][0], PALM_QUESTION[hook]]
+  return [readsFor(sign, hook)[thumb][0], PALM_QUESTION[hook]]
 }
 
 // Version C fallback (if the reflect LLM call fails): the rest of the static
 // build minus the mark line already shown (mirror → yes beat → open loop).
 export function palmReflectFallback(sign: PalmSign, hook: PalmHook, thumb: PalmOption): string[] {
-  return SIGNS[sign].reads[hook][thumb].slice(1)
+  return readsFor(sign, hook)[thumb].slice(1)
 }

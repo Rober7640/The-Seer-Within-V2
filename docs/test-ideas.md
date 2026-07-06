@@ -1665,3 +1665,11 @@ Principle: **test the measurement pipeline, not just the UI** — the experiment
 - [ ] Card ladder gates (`card-escalation`): no draw offer on opener/first reading; draw fires on go-deeper/explicit ask; framing text always above the picker token (no empty bubble); one draw per session; letter-day card retrieved never re-drawn
 - [ ] [CARD_DRAW_TOOL] token personas get the neutral draw instruction; "tarot"-substring personas (Marcus) keep the full cadence block — neither leaks to personas with neither marker
 - [ ] UI capture harness (`scripts/ui-capture.ts`) runs green: no DEAD AIR (nothing rendered), no EMPTY BUBBLE, no reply >120s, card tap yields an interpretation — the classes of defect invisible to the sendMessage-level evals
+
+### fb-palm hook pipeline — 3 new thumb-only landers wired (2026-07-06)
+- [ ] `/fb-palm?hook=is-he-true|sense-lying|heart-safe` renders its own headline over the thumb strip on all three version routes (`/`, `/b`, `/c`); an unknown hook still falls back to soulmate-timing
+- [ ] Version A click-through: S3 card delivers the new hook's 4-beat read per option (a/b/c); the 3 original hooks' cards stay byte-identical
+- [ ] Thumb-only gating on the bridge: `?hook=heart-safe&sign=finger-lock` (any non-thumb sign) falls back WHOLESALE to DEFAULT_HOOK — headline and read always tell the same story, never mixed
+- [ ] Chat handoff gating: parsePalmParams returns null for a new-hook × non-thumb combo (no palm divergence → generic funnel); a valid thumb combo yields openerB/openerCStart built from the new reads
+- [ ] Version C: opener = mark line + the new hook's palm question; palmOpener/palmReflect accept the 3 new hooks (routes validHooks) — a hook in client PALM_HOOKS but missing from the server enums = Version-C 400 (keep in sync)
+- [ ] Version C LLM guardrail (PALM_HOOK_YES): deception hooks affirm HER intuition, never "he is lying/cheating"; heart-safe never promises "he will commit" nor pronounces "he won't"
