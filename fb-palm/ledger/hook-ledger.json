@@ -1,0 +1,51 @@
+{
+  "meta": {
+    "purpose": "Single source of truth for fb-palm HOOKS (love questions) x SIGNS (palm tells) x VERSIONS. Absorbs fb-palm/docs/new-ads/STATUS.md (sign build-status) and drives the hook-pipeline (fb-palm/docs/hook-pipeline.md).",
+    "coverage": "full-matrix: every non-killed hook targets all unique-read signs (alt signs inherit their sibling's reads).",
+    "images": "manual (Canva/Figma). The renderer emits an image-brief per hook x sign; designer links are logged in `creatives`.",
+    "invariants": [
+      "absent `sign` MUST resolve to `thumb` (every original /fb-palm link stays byte-identical)",
+      "client SIGNS registry (palmReads.ts) and server vocab (PALM_SIGN_VOCAB / PALM_HOOK_PAIN, routes enums) stay in sync",
+      "no code changes until a draft passes the human review gate (status: review -> wired)"
+    ],
+    "version_routes": { "a": "/fb-palm", "b": "/fb-palm/b", "c": "/fb-palm/c" },
+    "prod_base": "https://www.theseerwithin.com"
+  },
+
+  "versions": ["a", "b", "c"],
+
+  "signs": [
+    { "id": "thumb",             "tell": "thumb-crease mark",                 "options": ["a","b","c"], "archetypes": ["gathering","reaching","inward"],     "strip": "thumbs-strip.png",            "w": 972,  "h": 460, "altOf": null,            "status": "live" },
+    { "id": "finger-lock",       "tell": "which thumb is on top interlaced",  "options": ["a","b","c"], "archetypes": ["leading","mirrored","guarded"],     "strip": "finger-lock-strip.png",       "w": 1041, "h": 587, "altOf": null,            "status": "live" },
+    { "id": "finger-shape",      "tell": "fingertip shape",                   "options": ["a","b","c"], "archetypes": ["steady","dreaming","discerning"],   "strip": "finger-shape-strip.png",      "w": 959,  "h": 725, "altOf": null,            "status": "live" },
+    { "id": "palms",             "tell": "heart-line height when palms meet", "options": ["a","b","c"], "archetypes": ["even","giving","deep"],              "strip": "palms-strip.png",             "w": 1080, "h": 551, "altOf": null,            "status": "live" },
+    { "id": "palm-signs",        "tell": "do heart lines meet when cupped",   "options": ["a","b"],     "archetypes": ["joined","rising"],                  "strip": "palm-signs-strip.png",        "w": 800,  "h": 493, "altOf": null,            "status": "live" },
+    { "id": "thumb-curve",       "tell": "does the thumb bend back",          "options": ["a","b"],     "archetypes": ["constant","open"],                  "strip": "thumb-curve-strip.png",       "w": 946,  "h": 580, "altOf": null,            "status": "live" },
+    { "id": "thumb-curve-alt",   "tell": "thumb bend (abstract art)",         "options": ["a","b"],     "archetypes": ["constant","open"],                  "strip": "thumb-curve-alt-strip.png",   "w": 1080, "h": 519, "altOf": "thumb-curve",   "status": "live" },
+    { "id": "hand-size",         "tell": "large vs small hands",              "options": ["a","b"],     "archetypes": ["sheltering","daring"],              "strip": "hand-size-strip.png",         "w": 2160, "h": 406, "altOf": null,            "status": "live" },
+    { "id": "finger-length",     "tell": "index vs ring length",              "options": ["a","b","c"], "archetypes": ["magnetic","harmonious","certain"],  "strip": "finger-length-strip.png",     "w": 919,  "h": 474, "altOf": null,            "status": "live" },
+    { "id": "finger-length-alt", "tell": "digit ratio (full hand art)",       "options": ["a","b","c"], "archetypes": ["magnetic","harmonious","certain"],  "strip": "finger-length-alt-strip.png", "w": 969,  "h": 653, "altOf": "finger-length", "status": "live" },
+    { "id": "cards",             "tell": "pull the card that calls you — reads HIM", "options": ["a","b","c"], "archetypes": ["Sun/in-the-light","Moon/veiled","Tower/shifting"], "strip": "card-strip.png", "w": null, "h": null, "altOf": null, "reads": "him", "status": "to-build", "spec": "fb-palm/docs/decode-him-card-funnel.md" }
+  ],
+
+  "hooks": [
+    { "id": "soulmate-timing", "question": "When is my soulmate coming?",        "headline": "When is my soulmate coming?",          "frame": "self",         "source": "original", "status": "live",  "target_signs": "all", "reads_status": "live", "copy": {}, "perf": {} },
+    { "id": "already-met",     "question": "Have you already met your soulmate?", "headline": "Have you already met your soulmate?",  "frame": "self",         "source": "original", "status": "live",  "target_signs": "all", "reads_status": "live", "copy": {}, "perf": {} },
+    { "id": "love-again",      "question": "Will I love again?",                  "headline": "Will I love again?",                   "frame": "self",         "source": "original", "status": "live",  "target_signs": "all", "reads_status": "live", "copy": {}, "perf": {} },
+
+    { "id": "why-him",     "question": "Why did he ghost me / closure?", "headline": "Why can't you let him go?", "frame": "self-bridged", "wave": 1, "source": "mining:LOST_LOVE-ghost+closure+miss", "mining_conv": "~21% (1.1-1.2x), ~216 buyers", "status": "draft", "target_signs": "all", "reads_status": "todo", "copy": {}, "perf": {} },
+    { "id": "done-alone",  "question": "Will I be alone / loneliness", "headline": "Are you done being alone?", "frame": "self", "wave": 1, "source": "mining:SEEKING_LOVE-lonely", "mining_conv": "16.8% (1.14x), 269 buyers — biggest single pool", "status": "draft", "target_signs": "all", "reads_status": "todo", "copy": {}, "perf": {} },
+    { "id": "heart-safe",  "question": "Will we make it / will he commit?", "headline": "Is he ever going to commit?", "frame": "self-bridged", "wave": 1, "source": "mining:RELATIONSHIP_TROUBLE", "mining_conv": "~23% (1.3x), ~142 buyers — best efficiency", "status": "wired", "target_signs": "all", "reads_status": "wired", "drafted_signs": ["thumb"], "draft": "fb-palm/ledger/drafts/heart-safe.draft.md", "copy": {}, "perf": {} },
+    { "id": "tired-waiting", "question": "Tired of waiting for love?", "headline": "Tired of waiting for love?", "frame": "self", "wave": 1, "source": "mining:SEEKING_LOVE-painreframe", "mining_conv": "17.2% (1.17x) vs 6-11% curiosity framing", "status": "draft", "target_signs": "all", "reads_status": "todo", "copy": {}, "perf": {} },
+    { "id": "is-he-true",  "question": "Is he being honest with you?", "headline": "Am I being lied to?", "frame": "self-bridged-I", "wave": 2, "source": "mining:BETRAYAL+TRUST_TRUTH", "mining_conv": "~18% within-love / 31-44% confounded", "status": "wired",  "target_signs": "all", "reads_status": "wired", "drafted_signs": ["thumb"], "draft": "fb-palm/ledger/drafts/is-he-true.draft.md", "copy": {}, "perf": {} },
+    { "id": "sense-lying", "question": "Is he being honest? (why-I-feel variant)", "headline": "Why do I feel like he's lying to me?", "frame": "self-bridged-I", "wave": 2, "ab_pair": "is-he-true", "source": "BETRAYAL+TRUST_TRUTH (A/B variant)", "status": "wired", "target_signs": "all", "reads_status": "wired", "drafted_signs": ["thumb"], "draft": "fb-palm/ledger/drafts/sense-lying.draft.md", "copy": {}, "perf": {} },
+    { "id": "door-open",   "question": "Will he come back?",           "headline": "Is it really over?", "frame": "self-bridged", "wave": 2, "source": "mining:LOST_LOVE+REUNION", "mining_conv": "~18% (1.0x), ~170 buyers (volume play)", "status": "draft", "target_signs": "all", "reads_status": "todo", "copy": {}, "perf": {} },
+    { "id": "right-one",   "question": "Is he the one / am I settling?", "headline": "Is he really the one — or are you settling?", "frame": "self-bridged", "wave": 2, "source": "mining:RELATIONSHIP_TROUBLE+THEIR_FEELINGS", "mining_conv": "16-29%, ~140 buyers", "status": "draft", "target_signs": "all", "reads_status": "todo", "copy": {}, "perf": {} },
+    { "id": "cards-honest",   "question": "Is he being honest?",   "headline": "Is he being honest with you?",       "frame": "decode-him-card", "wave": "card-1", "source": "TRUST_TRUTH",     "mining_conv": "26.6%, $12.45 EV (best ROAS)", "status": "draft", "target_signs": ["cards"], "reads_status": "todo", "copy": {}, "perf": {} },
+    { "id": "cards-return",   "question": "Will he come back?",    "headline": "Will he come back?",                 "frame": "decode-him-card", "wave": "card-1", "source": "REUNION",        "mining_conv": "24.2%, $11.46 EV", "status": "draft", "target_signs": ["cards"], "reads_status": "todo", "copy": {}, "perf": {} },
+    { "id": "cards-feels",    "question": "How does he feel?",     "headline": "How does he really feel about you?", "frame": "decode-him-card", "wave": "card-1", "source": "THEIR_FEELINGS",  "mining_conv": "22.8%, $10.70 EV", "status": "draft", "target_signs": ["cards"], "reads_status": "todo", "copy": {}, "perf": {} },
+    { "id": "cards-cheating", "question": "Is he cheating?",       "headline": "Is he cheating on you?",             "frame": "decode-him-card", "wave": "card-1", "source": "BETRAYAL",       "mining_conv": "17.3%, $7.80 EV (CTR wildcard)", "status": "draft", "target_signs": ["cards"], "reads_status": "todo", "copy": {}, "perf": {} }
+  ],
+
+  "creatives": []
+}

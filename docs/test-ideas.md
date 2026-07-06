@@ -1654,3 +1654,10 @@ Context: V1→V2 migrated leads have a real (unknown) password hash, so on `/7-7
 - [ ] Rate-limiting: repeated failed attempts don't blast unlimited emails (authLimiter on `send-magic-login`)
 - [ ] End-to-end: click the emailed link → `/magic-auth?t=…&redirect=/7-7` → lands on `/7-7` authed → promo claim grants 420 coins × active persona
 - [ ] SetPasswordPage (migrated user first magic-link login): success screen shows "7 free minutes" when `post_password_redirect` starts with `/7-7`, else "3 free minutes"; "Start Your Reading" routes to that redirect (/7-7 → claim fires)
+### fb-palm hook pipeline — 3 new thumb-only landers wired (2026-07-06)
+- [ ] `/fb-palm?hook=is-he-true|sense-lying|heart-safe` renders its own headline over the thumb strip on all three version routes (`/`, `/b`, `/c`); an unknown hook still falls back to soulmate-timing
+- [ ] Version A click-through: S3 card delivers the new hook's 4-beat read per option (a/b/c); the 3 original hooks' cards stay byte-identical
+- [ ] Thumb-only gating on the bridge: `?hook=heart-safe&sign=finger-lock` (any non-thumb sign) falls back WHOLESALE to DEFAULT_HOOK — headline and read always tell the same story, never mixed
+- [ ] Chat handoff gating: parsePalmParams returns null for a new-hook × non-thumb combo (no palm divergence → generic funnel); a valid thumb combo yields openerB/openerCStart built from the new reads
+- [ ] Version C: opener = mark line + the new hook's palm question; palmOpener/palmReflect accept the 3 new hooks (routes validHooks) — a hook in client PALM_HOOKS but missing from the server enums = Version-C 400 (keep in sync)
+- [ ] Version C LLM guardrail (PALM_HOOK_YES): deception hooks affirm HER intuition, never "he is lying/cheating"; heart-safe never promises "he will commit" nor pronounces "he won't"
