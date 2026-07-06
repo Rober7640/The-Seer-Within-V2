@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect } from "react";
 import * as Sentry from "@sentry/react";
 import { apiRequest } from "@/lib/queryClient";
+import { identifyUser } from "@/lib/posthog";
 
 interface AuthUser {
   id: string;
@@ -79,6 +80,15 @@ export function useAuth() {
 
       if (res.ok) {
         const data = await res.json();
+        // PostHog identity stitching (task 1.5): identify by the SAME user.id the
+        // server keys its events on, so anonymous browser events merge with the
+        // server-side events (closes the client↔server attribution gap). This runs
+        // after the /api/auth/me await — by which point App's initPostHog() has run —
+        // and identifyUser is idempotent + a no-op until PostHog is initialised.
+        identifyUser(data.id, {
+          email: data.email,
+          signup_funnel: data.signupFunnel ?? undefined,
+        });
         const newState = {
           user: data,
           isLoading: false,
