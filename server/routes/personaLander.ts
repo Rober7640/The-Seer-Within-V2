@@ -80,7 +80,10 @@ const ctaSchema = z.object({
 const turnSchema = z.object({
   sessionToken: z.string().min(8).max(128),
   userMessage: z.string().min(1).max(2000),
-  turnstileToken: z.string().max(2048).optional(),
+  // No length cap: real Cloudflare Turnstile tokens can exceed 2048 chars, and a
+  // .max(2048) here rejected valid tokens as "Invalid payload" (breaking the
+  // lander's first message). Matches the uncapped magic-register schema (auth.ts).
+  turnstileToken: z.string().optional(),
   history: z
     .array(
       z.object({
