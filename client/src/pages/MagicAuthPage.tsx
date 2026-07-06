@@ -45,7 +45,7 @@ export default function MagicAuthPage() {
           // Store intended destination so SetPasswordPage can redirect after
           const redirectTo = params.get("redirect");
           const postTarget = redirectTo || (data.personaSlug
-            ? `/chat/${data.personaSlug}`
+            ? `/reading?persona=${data.personaSlug}`
             : "/reading");
           sessionStorage.setItem("post_password_redirect", postTarget);
           navigate("/set-password", { replace: true });
@@ -55,7 +55,7 @@ export default function MagicAuthPage() {
         // Check for an explicit redirect destination (e.g. /credits from top-up emails)
         const redirectTo = params.get("redirect");
         const target = redirectTo || (data.personaSlug
-          ? `/chat/${data.personaSlug}`
+          ? `/reading?persona=${data.personaSlug}`
           : "/reading");
 
         navigate(target, { replace: true });
