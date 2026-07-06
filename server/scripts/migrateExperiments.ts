@@ -242,6 +242,36 @@ async function up(pool: pg.Pool) {
   } else {
     console.log('• v1_main_price_2026 experiment already exists — left unchanged');
   }
+
+  // V1 PROMPT A/B — clearing-theme rewrite (control vs woven), fb-palm ONLY.
+  // STRUCTURAL/prompt test: the arm KEY drives prompt+copy branches in
+  // prompts.ts (buildShadowSummaryPrompt / buildValueExplainPrompt) and the
+  // client pitch (useConversation.handlePermission). Visitor-cookie subject;
+  // scope.route='v1_chat_palm' — only fb-palm chat calls /api/ab/assign for that
+  // page, so it is naturally funnel-scoped without a scope.funnel. element is
+  // REQUIRED. Draft = OFF ⇒ /api/ab/assign returns no arm ⇒ promptVariant stays
+  // undefined ⇒ control ⇒ byte-identical. Primary metric = purchase (fired
+  // client-side from /welcome1, same session so ab_vid is present).
+  const clrVariants = JSON.stringify([
+    { key: 'control', weight: 50, payload: {} },
+    { key: 'woven', weight: 50, payload: {} },
+  ]);
+  const clrScope = JSON.stringify({ route: 'v1_chat_palm', element: 'clearing' });
+  const clrConversion = JSON.stringify({ type: 'event', name: 'purchase' });
+  const clr = await pool.query(
+    `INSERT INTO experiments (key, name, description, status, subject_type, variants, scope, conversion)
+     VALUES ('v1_clearing_theme_palm_2026', 'V1 clearing-theme prompt (control vs woven) — fb-palm',
+       'V1 prompt A/B on fb-palm. control = today''s flow; woven = the clearing theme threaded through shadowSummary + valueExplain + the pitch (see improve-v1/08,09). Visitor-cookie subject; scope.route=v1_chat_palm (fb-palm only). The arm key drives the prompt/copy branch (no payload). Primary metric = purchase (fired from /welcome1). Preview without enrolling: /fb-palm/c?hook=soulmate-timing&thumb=a&clearing=woven. To start, set status=running.',
+       'draft', 'visitor', $1::jsonb, $2::jsonb, $3::jsonb)
+     ON CONFLICT (key) DO NOTHING
+     RETURNING id`,
+    [clrVariants, clrScope, clrConversion],
+  );
+  if (clr.rowCount && clr.rowCount > 0) {
+    console.log('✓ seeded DRAFT V1 clearing-theme prompt experiment (fb-palm)');
+  } else {
+    console.log('• v1_clearing_theme_palm_2026 experiment already exists — left unchanged');
+  }
 }
 
 async function down(pool: pg.Pool) {
