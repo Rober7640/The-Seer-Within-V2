@@ -7,7 +7,7 @@ import * as Sentry from "@sentry/react";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { trackPageView } from "./lib/facebook";
-import { initPostHog, track as trackPH } from "./lib/posthog";
+import { initPostHog, track as trackPH, registerUTMs } from "./lib/posthog";
 import { getPostHogFunnel, getPostHogStep, skipEmail } from "./lib/funnel";
 import { ChatServiceLayout } from "@/components/ChatServiceLayout";
 import NotFound from "@/pages/not-found";
@@ -87,6 +87,10 @@ function Router() {
 
   useEffect(() => {
     initPostHog();
+    // Capture UTM params from the ENTRY url as PostHog super-properties so every
+    // event this session carries the traffic source (task 1.6). Runs after
+    // initPostHog() so PostHog is ready; no-op when there are no utm_* params.
+    registerUTMs();
     // No-optin: capture `?noemail` from the ENTRY url the moment the app loads,
     // before any in-funnel navigation (e.g. the palm bridge → /fb-palm/chat)
     // rebuilds the query string and drops it. skipEmail() persists the choice
@@ -97,9 +101,16 @@ function Router() {
   }, []);
 
   useEffect(() => {
+    // PostHog $pageview on EVERY route change — including the V2 chat routes
+    // (/login, /reading, /credits, /personas) that previously fired nothing —
+    // so the full journey is attributed. UTM super-props (registered on mount)
+    // auto-attach. Runs after the mount effect's initPostHog(); track() is a no-op
+    // until PostHog is initialised. (task 1.6)
+    trackPH('$pageview', { path: location });
+
     // V1 funnel + the two V2 lander surfaces (/aiden, /evelyn) that have
     // FB-attributed paid traffic. Other V2 routes (/login, /reading,
-    // /credits, /personas) intentionally stay quiet.
+    // /credits, /personas) intentionally stay quiet for the FB PageView pixel.
     const isTrackedFunnel =
       location === '/' ||
       location === '/chat' ||
