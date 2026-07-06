@@ -18,6 +18,13 @@ export default function SetPasswordPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  // Capture the post-password destination once on mount (handleContinue clears it).
+  // A /7-7 destination means the user arrived through the 7/7 promo lander, so the
+  // success screen advertises the promo's "7 free minutes" instead of the default
+  // 3-minute migration trial. Any other flow keeps the 3-minute copy.
+  const [postRedirect] = useState(() => sessionStorage.getItem("post_password_redirect") || "");
+  const isPromo7 = postRedirect.startsWith("/7-7");
+  const freeMinutes = isPromo7 ? 7 : 3;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -70,10 +77,9 @@ export default function SetPasswordPage() {
   };
 
   const handleContinue = () => {
-    // Check if there's a stored redirect from the magic link
-    const redirect = sessionStorage.getItem("post_password_redirect");
+    // Use the destination captured on mount (7/7 promo lands on /7-7 so the claim fires).
     sessionStorage.removeItem("post_password_redirect");
-    navigate(redirect || "/reading", { replace: true });
+    navigate(postRedirect || "/reading", { replace: true });
   };
 
   // Success screen
@@ -96,7 +102,7 @@ export default function SetPasswordPage() {
               Your password has been saved. You can now sign in anytime with your email and password.
             </p>
             <p className="text-sm text-gray-600">
-              You have <strong>3 free minutes</strong> waiting for you. Let's begin your reading.
+              You have <strong>{freeMinutes} free minutes</strong> waiting for you. Let's begin your reading.
             </p>
             <div className="pt-2">
               <Button

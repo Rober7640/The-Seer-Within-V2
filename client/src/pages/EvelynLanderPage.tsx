@@ -20,13 +20,16 @@ import { Sparkles, Send } from "lucide-react";
 import TurnstileWidget from "@/components/TurnstileWidget";
 import { calculateTypingDelay, sleep } from "@/lib/typingAnimation";
 import { track as trackPH } from "@/lib/posthog";
+import { useABVariant } from "@/hooks/useABTest";
 import EvelynQuizMechanic from "@/pages/evelyn-lander/EvelynQuizMechanic";
 
-// The lander MECHANIC. Originally a Phase 4c structural A/B (control 'chatbox' =
-// the open 2-turn chat below; treatment 'quiz' = a 3-tap quiz), but the tap-quiz
-// has now FULLY REPLACED the chatbox on /evelyn (boss decision 2026-06-30), so
-// every visitor gets 'quiz' and the experiment is no longer consulted. The
-// chatbox remains only as a non-prod `?mechanic=chatbox` preview fallback.
+// The lander MECHANIC is a Phase 4c structural A/B (`evelyn_lander_mechanic`):
+// control 'chatbox' = the open 2-turn chat below; treatment 'quiz' = the 3-tap
+// quiz. The quiz shipped as the sole surface first (boss decision 2026-06-30);
+// the experiment is now re-wired so that when it is Started, visitors split 50/50
+// chatbox vs quiz. While it is OFF the lander defaults to 'quiz' (unchanged prod
+// behaviour). The chatbox is also reachable via a non-prod `?mechanic=chatbox`
+// override for QA.
 
 const AUTH_TOKEN_KEY = "seer_auth_token";
 const EVELYN_PERSONA_SLUG = "evelyn-cross";
@@ -148,23 +151,26 @@ export default function EvelynLanderPage() {
   const sessionToken = getSessionToken();
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
-  // Resolve the lander MECHANIC. The tap-quiz has fully REPLACED the open chatbox
-  // on /evelyn (boss decision 2026-06-30 — direct replace, NOT a 50/50 split), so
-  // every real visitor gets `quiz`; the `evelyn_lander/mechanic` experiment is no
-  // longer consulted. The chatbox code remains as a fallback surface reachable via
-  // the non-prod `?mechanic=chatbox` override. The 'quiz' surface only changes the
-  // ENGAGEMENT layer; BOTH mechanics run the same /start (creates the lander
-  // session) and finish through the same handleCta (segment-aware routing + session
-  // linkage + the signup conversion), so signup, the 5-min grant, and the drip are
-  // identical regardless of mechanic.
+  // Resolve the lander MECHANIC via the `evelyn_lander_mechanic` structural A/B
+  // (visitor-scoped, scope.route='evelyn_lander', element='mechanic'): control
+  // 'chatbox' = the open 2-turn chat below; treatment 'quiz' = the 3-tap quiz.
+  // While the experiment is OFF (draft/paused) /assign omits it and useABVariant
+  // falls back to the 'quiz' default, so prod stays 100% quiz — byte-identical to
+  // the previous hard-pin. When an admin Starts the test, visitors split 50/50
+  // sticky by the ab_vid cookie. The mechanic only changes the ENGAGEMENT layer;
+  // BOTH arms run the same /start (creates the lander session) and finish through
+  // the same handleCta (segment-aware routing + session linkage), so the 5-min
+  // grant and the drip are identical regardless of mechanic. A non-prod
+  // `?mechanic=quiz|chatbox` override wins for manual QA.
   const overrideMechanic =
     import.meta.env.DEV && (params.mechanic === "quiz" || params.mechanic === "chatbox")
       ? params.mechanic
       : null;
-  const mechanic = overrideMechanic ?? "quiz";
-  // Quiz is hard-pinned, so we no longer block the first paint on the experiment
-  // assignment. A DEV override is likewise immediately ready.
-  const mechanicReady = true;
+  const assignment = useABVariant("evelyn_lander", "mechanic", "quiz");
+  const mechanic = overrideMechanic ?? assignment.variant;
+  // Hold first paint until the assignment resolves so we never flash the default
+  // mechanic and then swap. A DEV override is immediately ready.
+  const mechanicReady = overrideMechanic != null ? true : assignment.ready;
 
   function goToExistingLogin() {
     clearSession();

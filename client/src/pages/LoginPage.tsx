@@ -109,9 +109,12 @@ export default function LoginPage() {
         if (sourceParam === 'evelyn-lander' || sourceParam === 'persona-lander') {
           trackLead(email, firstName).catch(() => { /* non-blocking */ });
         }
-        // Phase 4c: signup is the primary metric for the /evelyn mechanic A/B
-        // (chatbox vs quiz). Both arms converge here, so one convert call counts
-        // both — matched to the visitor's lander exposure by the ab_vid cookie.
+        // Phase 4c: signup is the primary metric for the evelyn_lander_mechanic
+        // A/B. This fires for the CHATBOX arm, whose brand-new signup routes
+        // through /login (source=evelyn-lander). The QUIZ arm registers inline via
+        // magic-register and fires its own trackABConversion there. Both are
+        // matched to the visitor's lander exposure by the ab_vid cookie, and the
+        // convert endpoint is idempotent (one conversion per visitor per test).
         if (sourceParam === 'evelyn-lander') {
           trackABConversion('evelyn_lander');
         }

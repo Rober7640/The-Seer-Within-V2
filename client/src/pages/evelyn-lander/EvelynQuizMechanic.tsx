@@ -27,6 +27,7 @@ import TurnstileWidget from "@/components/TurnstileWidget";
 import { track as trackPH, identifyUser as identifyPH } from "@/lib/posthog";
 import { trackLead } from "@/lib/facebook";
 import { authFetch } from "@/hooks/useAuth";
+import { trackABConversion } from "@/hooks/useABTest";
 import { getEmailAppLink } from "@/lib/aidenQuizData";
 import { EVELYN_QUIZ, type QuizOption } from "@/lib/evelynQuizData";
 
@@ -249,6 +250,12 @@ export default function EvelynQuizMechanic({
         trackLead(email.trim(), firstName.trim()).catch(() => {});
         identifyPH(email.trim(), { funnel: "evelyn", first_name: firstName.trim() });
         trackPH("lead_captured", { funnel: "evelyn", step: "gate" });
+        // Phase 4c: signup is the primary metric for the evelyn_lander_mechanic
+        // A/B. The chatbox arm fires this from LoginPage on register; the quiz arm
+        // registers inline here, so fire the equivalent conversion so both arms are
+        // measured at the same funnel stage. No-op unless this visitor was enrolled
+        // (has an exposure); the convert endpoint is idempotent per visitor.
+        trackABConversion("evelyn_lander");
         setRegisteredEmail(email.trim());
         setRegisteredName(firstName.trim());
         setPhase("checking_email");

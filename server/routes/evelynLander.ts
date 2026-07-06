@@ -328,7 +328,10 @@ const turnSchema = z.object({
   userMessage: z.string().min(1).max(2000),
   // Cloudflare Turnstile token. Required server-side only on the first user
   // message (turnCount === 0); the widget caches a single fresh token per send.
-  turnstileToken: z.string().max(2048).optional(),
+  // No length cap: real Cloudflare Turnstile tokens can exceed 2048 chars, and a
+  // .max(2048) here rejected valid tokens as "Invalid payload" (breaking the
+  // chatbox first message). Matches the uncapped magic-register schema (auth.ts).
+  turnstileToken: z.string().optional(),
   // Full conversation so far, including the static opener as the first
   // assistant message. Server uses this verbatim to seed Haiku — server-side
   // turnCount in the DB is the authoritative cap, so a tampered client
