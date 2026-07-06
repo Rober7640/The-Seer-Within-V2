@@ -744,6 +744,13 @@ export default function PersonasDirectory({ promoMode = false }: { promoMode?: b
     e.preventDefault();
     setAuthError(null);
     setFormLoading(true);
+    // Where a /7-7 magic sign-in link should return the user so the promo claim fires.
+    // Carry ?persona=<slug> for a guide-card sign-in so it works cross-device; the nav's
+    // generic sign-in stays on /7-7. Used by both the login call and the catch-block
+    // magic-link fallback below.
+    const promoRedirect = authStayOnPromo || !authPersonaSlug
+      ? "/7-7"
+      : `/7-7?persona=${authPersonaSlug}`;
     try {
       if (authIsSignUp) {
         // On /7-7, tag the signup source so the verification email says "7 free minutes"
@@ -768,12 +775,7 @@ export default function PersonasDirectory({ promoMode = false }: { promoMode?: b
         }
       } else {
         // Passwordless accounts get an emailed sign-in link; redirect back to /7-7 so the
-        // claim runs on return. For a guide-card sign-in, carry ?persona=<slug> in the
-        // redirect so the link forwards into that guide's chat even on a different
-        // device/browser (no localStorage there). The nav's generic sign-in stays on /7-7.
-        const promoRedirect = authStayOnPromo || !authPersonaSlug
-          ? "/7-7"
-          : `/7-7?persona=${authPersonaSlug}`;
+        // claim runs on return (promoRedirect computed at the top of this function).
         await login(authEmail, authPassword, promoMode ? promoRedirect : undefined);
       }
       setShowAuthModal(false);
@@ -799,6 +801,27 @@ export default function PersonasDirectory({ promoMode = false }: { promoMode?: b
         // Remember the chosen guide so a same-device magic-link click lands the user in that
         // guide's chat after returning to /7-7 (#5b). Skipped for the generic nav sign-in.
         if (promoMode && !authStayOnPromo && authPersonaSlug) {
+          localStorage.setItem("seer-7-7-pending-persona", authPersonaSlug);
+        }
+      } else if (promoMode && (msg.includes("409") || msg.includes("401"))) {
+        // On /7-7, an existing account blocks signup (409) and — if it holds a password the
+        // user doesn't know (e.g. a V1→V2 migrated lead) — blocks sign-in (401), which would
+        // dead-end warm promo traffic. Instead, email a one-click magic link that returns to
+        // /7-7 so the claim fires, and show the same green "Check Your Email" panel. The
+        // send-magic-login endpoint is enumeration-safe (only emails when the account exists)
+        // and rate-limited (authLimiter), so calling it on any 409/401 here is safe.
+        try {
+          await fetch("/api/auth/send-magic-login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email: authEmail, redirect: promoRedirect }),
+          });
+        } catch {
+          /* best-effort — the panel still tells them to check their inbox */
+        }
+        setAuthResendEmail(authEmail);
+        setAuthMagicLinkSent(true);
+        if (!authStayOnPromo && authPersonaSlug) {
           localStorage.setItem("seer-7-7-pending-persona", authPersonaSlug);
         }
       } else {

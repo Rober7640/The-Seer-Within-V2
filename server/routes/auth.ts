@@ -897,7 +897,22 @@ router.post('/send-magic-login', authLimiter, async (req: Request, res: Response
 
     if (personaId) {
       const magicToken = await generateMagicLinkToken(user.id, personaId, personaSlug);
-      const magicUrl = `${process.env.BASE_URL || 'http://localhost:5000'}/magic-auth?t=${magicToken}`;
+      // Optional safe internal redirect (e.g. '/7-7') so the sign-in link returns the user
+      // to the promo lander where the claim fires. Restricted to internal paths with an
+      // optional ?persona=<slug> to prevent open-redirect — same rule as /login.
+      const rawRedirect = typeof req.body?.redirect === 'string' ? req.body.redirect : '';
+      const safeRedirect = /^\/[A-Za-z0-9\-_/]*(\?persona=[A-Za-z0-9\-]+)?$/.test(rawRedirect) ? rawRedirect : '';
+      const magicUrl = `${process.env.BASE_URL || 'http://localhost:5000'}/magic-auth?t=${magicToken}`
+        + (safeRedirect ? `&redirect=${encodeURIComponent(safeRedirect)}` : '');
+
+      // Promo sign-in links (e.g. the 7/7 lander) get promo-flavoured copy so the email
+      // matches why the user is here — to claim their free minutes.
+      const isPromo = safeRedirect.startsWith('/7-7');
+      const subject = isPromo ? 'Your link to claim your free minutes' : 'Your sign-in link';
+      const bodyLine = isPromo
+        ? 'Click the button below to log in and claim your free minutes:'
+        : 'Click the button below to sign in to your reading:';
+      const ctaLabel = isPromo ? 'Claim My Free Minutes' : 'Sign In to My Reading';
 
       const { Resend } = await import('resend');
       const resendClient = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
@@ -905,10 +920,10 @@ router.post('/send-magic-login', authLimiter, async (req: Request, res: Response
         await resendClient.emails.send({
           from: `The Seer Within <${process.env.FOLLOW_UP_FROM_EMAIL || 'noreply@theseerwithin.com'}>`,
           to: user.email,
-          subject: 'Your sign-in link',
-          html: `<p>Hi ${user.firstName || 'there'},</p><p>Click the button below to sign in to your reading:</p><p style="margin:24px 0"><a href="${magicUrl}" style="background:#6d28d9;color:#fff;padding:12px 32px;border-radius:8px;text-decoration:none;font-weight:600">Sign In to My Reading</a></p><p style="color:#888;font-size:13px">This link expires in 30 days.</p>`,
+          subject,
+          html: `<p>Hi ${user.firstName || 'there'},</p><p>${bodyLine}</p><p style="margin:24px 0"><a href="${magicUrl}" style="background:#6d28d9;color:#fff;padding:12px 32px;border-radius:8px;text-decoration:none;font-weight:600">${ctaLabel}</a></p><p style="color:#888;font-size:13px">This link expires in 30 days.</p>`,
         });
-        logger.info('Magic sign-in link sent via send-magic-login', { email: user.email, personaSlug });
+        logger.info('Magic sign-in link sent via send-magic-login', { email: user.email, personaSlug, promo: isPromo });
       } else {
         logger.warn('Resend not configured, magic link URL:', magicUrl);
       }

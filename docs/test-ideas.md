@@ -1640,3 +1640,16 @@ Principle: **test the measurement pipeline, not just the UI** — the experiment
 - [ ] N-arm SRM: augmentSrm chi-square covers only the control vs treatment (first two) arms — a 3rd-arm mismatch isn't flagged (pre-existing 2-arm SRM; full N-arm SRM is a follow-up)
 - [ ] Per-arm-N semantics: a small positive-weight arm governs the gate (strict "every arm reaches N") — set targetN to what the smallest expected arm needs (by design)
 - [ ] (Remaining optional follow-ups) refund-rate guardrail (needs a Stripe-refund webhook + refunded column — no data source today); fold the N exposure-count into the tally query (one scan); drop the write-dead chat_sessions.promptVariantId column; rate-limit the public /api/ab endpoints
+
+### 7/7 promo — migrated-user magic-link rescue on the lander
+Context: V1→V2 migrated leads have a real (unknown) password hash, so on `/7-7` they can't sign up (409) or sign in (401). We now auto-email them a one-click magic link (`redirect=/7-7`) and show the green "Check Your Email" panel so they can still claim.
+- [ ] `send-magic-login` with `redirect=/7-7` appends `&redirect=%2F7-7` to the magic URL and uses promo copy (subject/CTA "…claim your free minutes") *(verified manually 2026-07-06; add spec)*
+- [ ] `send-magic-login` strips open-redirects (`//evil.com`, `https://`, `javascript:`, multi-param) — magic URL has no `&redirect=` *(regex-verified; add spec)*
+- [ ] `send-magic-login` for a non-existent email returns `{sent:true}` and sends nothing (no account enumeration)
+- [ ] `send-magic-login` without `redirect` keeps the original non-promo copy (backward compatible)
+- [ ] `/7-7` signup with an existing email (409) → green "Check Your Email" panel + magic link sent (not a red error)
+- [ ] `/7-7` sign-in with a migrated user + wrong password (401) → green panel + magic link sent
+- [ ] The rescue is scoped to promoMode only: the same 409/401 on `/login` or `/personas` still shows the normal error (no magic link)
+- [ ] Guide-card sign-in carries `?persona=<slug>` into the redirect (`/7-7?persona=luna`) so the link forwards into that guide cross-device; nav generic sign-in stays on `/7-7`
+- [ ] Rate-limiting: repeated failed attempts don't blast unlimited emails (authLimiter on `send-magic-login`)
+- [ ] End-to-end: click the emailed link → `/magic-auth?t=…&redirect=/7-7` → lands on `/7-7` authed → promo claim grants 420 coins × active persona
