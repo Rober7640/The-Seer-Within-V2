@@ -5,7 +5,8 @@ import { test, expect, type Page } from "@playwright/test";
 // EvelynLanderPage now resolves its mechanic from useABVariant("evelyn_lander",
 // "mechanic", "quiz") instead of a hard-pin. This spec proves the two structural
 // branches BOTH render correctly and independently:
-//   - default (no experiment running) → 'quiz' fallback
+//   - default → whichever arm the experiment assigns (quiz while dormant; quiz OR
+//     chatbox once evelyn_lander_mechanic is running — sticky per visitor)
 //   - ?mechanic=quiz    → the tap-quiz  (EvelynQuizMechanic)
 //   - ?mechanic=chatbox → the open 2-turn chatbox (inline in EvelynLanderPage)
 //
@@ -45,10 +46,23 @@ async function expectChatbox(page: Page) {
   await expect(page.getByRole("button", { name: QUIZ_CTA })).toHaveCount(0);
 }
 
-test("default /evelyn (no experiment running) renders the quiz", async ({ page }) => {
+test("default /evelyn renders its assigned mechanic (quiz or chatbox) + fires /assign", async ({ page }) => {
+  // The default arm is experiment-driven: `quiz` while evelyn_lander_mechanic is
+  // dormant, or quiz/chatbox (sticky per visitor) once it's running. Assert exactly
+  // one mechanic renders and that the re-wired bundle actually consulted /assign.
   const pageErrors = trackPageErrors(page);
+  const assignReq = page.waitForRequest(
+    (r) => r.url().includes("/api/ab/assign") && r.url().includes("page=evelyn_lander"),
+    { timeout: 20000 },
+  );
   await page.goto("/evelyn", { waitUntil: "domcontentloaded" });
-  await expectQuiz(page);
+  const quiz = page.getByRole("button", { name: QUIZ_CTA });
+  const chatbox = page.getByPlaceholder(CHATBOX_PLACEHOLDER);
+  await expect(quiz.or(chatbox).first()).toBeVisible({ timeout: 20000 });
+  const quizShown = await quiz.isVisible();
+  const chatboxShown = await chatbox.isVisible();
+  expect(quizShown !== chatboxShown, "exactly one mechanic renders").toBe(true);
+  await assignReq;
   expect(pageErrors, "no uncaught page errors").toEqual([]);
 });
 
