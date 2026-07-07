@@ -142,7 +142,7 @@ export default function Upsell2Page() {
           // Trackdesk affiliate conversion tracking - upsell 1
           if (typeof window.trackdesk === "function") {
             window.trackdesk("the-seer-within", "conversion", {
-              conversionType: "sale",
+              conversionType: "upsell1",
               amount: { value: String(upsell1Dollars) },
               externalId: `${sid}_upsell1`,
               customerId: data.email,

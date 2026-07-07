@@ -81,7 +81,7 @@ export function funnelPath(v1Path: string, pathname?: string): string {
 
 export type PostHogFunnel =
   | "soulmate" | "fb" | "fb2" | "gdn" | "palm" | "v1" | "evelyn" | "aiden"
-  | "marcus" | "luna" | "nova" | "maren";
+  | "marcus" | "luna" | "nova" | "maren" | "seven-seven";
 
 // Generalized persona landers → their PostHog funnel name. One route each.
 const PERSONA_LANDER_FUNNELS: Record<string, PostHogFunnel> = {
@@ -104,6 +104,10 @@ export function getPostHogFunnel(pathname?: string): PostHogFunnel | null {
   if (adDef) return adDef.posthog as PostHogFunnel;
   if (p === "/evelyn" || p.startsWith("/evelyn/")) return "evelyn";
   if (p === "/aiden" || p.startsWith("/aiden/")) return "aiden";
+  // 7/7 promo lander (email traffic, e.g. AWeber blast with utm_source=aweber).
+  // Registering it here is all that's needed for App.tsx to fire `lander_view`
+  // with the URL's utm_source/campaign/medium attached.
+  if (p === "/7-7") return "seven-seven";
   if (PERSONA_LANDER_FUNNELS[p]) return PERSONA_LANDER_FUNNELS[p];
   if (p === "/" || p === "/chat" || p === "/welcome1" || p === "/welcome2" || p === "/success") {
     return "v1";
@@ -157,6 +161,8 @@ export function getPostHogStep(pathname?: string): string {
     case "luna":
     case "nova":
     case "maren":
+      return "landing";
+    case "seven-seven":
       return "landing";
   }
 }
