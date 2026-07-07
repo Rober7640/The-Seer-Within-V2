@@ -42,10 +42,13 @@ export default function PalmBridge() {
   const version: PalmVersion = path.endsWith('/b') ? 'b' : path.endsWith('/c') ? 'c' : 'a'
 
   const params = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '')
-  const hookParam = params.get('hook')
-  const hook: PalmHook = isPalmHook(hookParam) ? hookParam : DEFAULT_HOOK
   const signParam = params.get('sign')
   const sign: PalmSign = isPalmSign(signParam) ? signParam : DEFAULT_SIGN
+  const hookParam = params.get('hook')
+  const hookRaw: PalmHook = isPalmHook(hookParam) ? hookParam : DEFAULT_HOOK
+  // A hook without reads for this sign (thumb-only hooks) falls back wholesale,
+  // so the headline and the read always tell the same story.
+  const hook: PalmHook = getSign(sign).reads[hookRaw] ? hookRaw : DEFAULT_HOOK
   const seg = params.get('seg') || undefined
   const utmContent = params.get('utm_content') || undefined
 
