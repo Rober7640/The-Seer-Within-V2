@@ -39,6 +39,21 @@ import {
 } from "@/lib/upsell2Messages";
 import { currentFunnel, getPostHogFunnel } from "@/lib/funnel";
 import { track as trackPH } from "@/lib/posthog";
+import { getTrackdeskClickId } from "@/lib/facebook";
+
+// Fire the Trackdesk upsell-2 affiliate conversion from the browser. Backup to
+// the server-side fire in /api/upsell2/charge — same externalId so Trackdesk
+// dedups the pair down to one conversion.
+function fireTrackdeskUpsell2(sessionId: string, dollars: number, email?: string) {
+  if (typeof window.trackdesk !== "function") return;
+  window.trackdesk("the-seer-within", "conversion", {
+    conversionType: "upsell2",
+    amount: { value: String(dollars) },
+    externalId: `${sessionId}_upsell2`,
+    customerId: email,
+    currencyCode: "USD",
+  });
+}
 
 export interface Message {
   id: string;
@@ -426,6 +441,7 @@ export function useUpsell2Chat({
           firstName: userData.firstName,
           type: "full",
           funnel: currentFunnel(),
+          trackdeskClickId: getTrackdeskClickId(),
         }),
       });
 
@@ -433,6 +449,7 @@ export function useUpsell2Chat({
 
       if (result.success) {
         setUpsell2Bought(true);
+        fireTrackdeskUpsell2(sessionId, 47, userData.email);
         if (isPathA && userData.hasShipping) {
           await sendBotMessages(p(UPSELL2_SUCCESS_HAS_SHIPPING));
           setIsProcessing(false);
@@ -456,6 +473,7 @@ export function useUpsell2Chat({
             originalSessionId: sessionId,
             type: "full",
             funnel: currentFunnel(),
+            trackdeskClickId: getTrackdeskClickId(),
           }),
         });
 
@@ -515,6 +533,7 @@ export function useUpsell2Chat({
           firstName: userData.firstName,
           type: "downsell",
           funnel: currentFunnel(),
+          trackdeskClickId: getTrackdeskClickId(),
         }),
       });
 
@@ -522,6 +541,7 @@ export function useUpsell2Chat({
 
       if (result.success) {
         setUpsell2Bought(true);
+        fireTrackdeskUpsell2(sessionId, 30, userData.email);
         if (isPathA && userData.hasShipping) {
           await sendBotMessages(p(UPSELL2_SUCCESS_HAS_SHIPPING));
           setIsProcessing(false);
@@ -545,6 +565,7 @@ export function useUpsell2Chat({
             originalSessionId: sessionId,
             type: "downsell",
             funnel: currentFunnel(),
+            trackdeskClickId: getTrackdeskClickId(),
           }),
         });
 

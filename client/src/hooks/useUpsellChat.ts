@@ -362,6 +362,7 @@ export function useUpsellChat({
           email: userData.email,
           firstName: userData.firstName,
           funnel: currentFunnel(),
+          trackdeskClickId: getTrackdeskClickId(),
         }),
       });
 
