@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { useAuth, authFetch } from "@/hooks/useAuth";
+import { track as trackPH } from "@/lib/posthog";
 import { Link, useLocation } from "wouter";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -28,6 +29,36 @@ import {
   Mail,
   Coins,
 } from "lucide-react";
+
+/* ================================================================
+   7/7 promo claim + conversion tracking
+   ================================================================ */
+
+// Claim the 7/7 promo for the logged-in user and fire the PostHog `promo_claimed`
+// conversion — but ONLY on a fresh grant. The claim endpoint is idempotent and re-runs
+// on every /7-7 load/refresh, returning { claimed:true, alreadyHad:true } on re-claims;
+// gating on alreadyHad===false is what keeps the conversion count from inflating.
+// `source` records which path claimed ("on_page" = returning logged-in visit,
+// "signup" = right after account create / sign-in). Non-fatal — never breaks the lander.
+async function claimPromoAndTrack(source: "on_page" | "signup"): Promise<void> {
+  try {
+    const res = await authFetch("/api/chat-service/promo-claim", { method: "POST" });
+    if (!res.ok) return;
+    const result = (await res.json()) as
+      | { claimed: true; alreadyHad: boolean; grantedPersonas: number }
+      | { claimed: false; reason: string };
+    if (result.claimed && result.alreadyHad === false) {
+      trackPH("promo_claimed", {
+        funnel: "seven-seven",
+        step: "landing",
+        source,
+        granted_personas: result.grantedPersonas,
+      });
+    }
+  } catch {
+    /* claim/tracking is best-effort — the promo grant itself is server-authoritative */
+  }
+}
 
 /* ================================================================
    Types
@@ -652,7 +683,7 @@ export default function PersonasDirectory({ promoMode = false }: { promoMode?: b
         // happens here (never on /login or /personas). Fire it before reading balances so
         // the badges reflect the just-granted coins. Buyer/already-claimed handled server-side.
         if (promoMode) {
-          await authFetch("/api/chat-service/promo-claim", { method: "POST" }).catch(() => {});
+          await claimPromoAndTrack("on_page");
           if (cancelled) return;
           // If the user got here via a passwordless sign-in link after picking a guide,
           // forward them into that guide's chat now that the promo is claimed (#5b). The
@@ -782,7 +813,7 @@ export default function PersonasDirectory({ promoMode = false }: { promoMode?: b
       if (promoMode) {
         // Claim now — before we leave /7-7 — because the on-/7-7 claim effect won't run
         // once we navigate away. Idempotent server-side, so a re-claim is harmless.
-        await authFetch("/api/chat-service/promo-claim", { method: "POST" }).catch(() => {});
+        await claimPromoAndTrack("signup");
         // Generic nav "Sign in" (no guide chosen) stays on /7-7; a guide-card "Start chat"
         // sends the user straight into that guide's chat (#4).
         if (authStayOnPromo) return;
