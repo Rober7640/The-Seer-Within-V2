@@ -712,7 +712,7 @@ const TRACKDESK_CONVERSION_URL = 'https://the-seer-within.trackdesk.com/tracking
  */
 export async function reportTrackdeskConversion(params: {
   clickId: string;
-  conversionType: 'sale' | 'lead';
+  conversionType: 'sale' | 'lead' | 'upsell1' | 'upsell2';
   externalId: string;
   customerId: string;
   amount?: number;
@@ -800,14 +800,25 @@ router.post('/stripe', async (req: Request, res: Response) => {
     if (trackdeskClickId) {
       const amountTotal = (session.amount_total || 0) / 100; // cents to dollars
 
-      // Determine externalId based on product type
-      const externalId = product === 'protection_ritual'
-        ? `${metadata.originalSession || session.id}_upsell1`
-        : session.id;
+      // Map the Stripe product to its Trackdesk conversion type + externalId.
+      // Upsells report under their own types (upsell1/upsell2) so they no longer
+      // share the main-purchase "sale" bucket; the main purchase stays "sale".
+      // externalId is suffixed per-upsell and keyed to the original session so
+      // it dedups against the client-side / 1-click-charge fire for the same order.
+      const base = metadata.originalSession || session.id;
+      let conversionType: 'sale' | 'upsell1' | 'upsell2' = 'sale';
+      let externalId = session.id;
+      if (product === 'protection_ritual') {
+        conversionType = 'upsell1';
+        externalId = `${base}_upsell1`;
+      } else if (product === 'manifestation_bracelet') {
+        conversionType = 'upsell2';
+        externalId = `${base}_upsell2`;
+      }
 
       reportTrackdeskConversion({
         clickId: trackdeskClickId,
-        conversionType: 'sale',
+        conversionType,
         amount: amountTotal,
         externalId,
         customerId: email,
