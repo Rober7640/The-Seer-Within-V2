@@ -329,7 +329,7 @@ router.post('/register', authLimiter, async (req: Request, res: Response) => {
 
     // Send verification email only in non-test environments
     if (!isTestEnv) {
-      sendVerificationEmail(user.email, user.firstName, verificationToken, persona, source).catch((err) => {
+      sendVerificationEmail(user.email, user.firstName, verificationToken, persona, source, FREE_MINS_AT_REGISTRATION && isLanderSignup).catch((err) => {
         logger.error('Failed to send verification email:', err);
       });
     }
@@ -589,7 +589,7 @@ router.post('/magic-register', authLimiter, async (req: Request, res: Response) 
     // Send verification email only in non-test environments. `source` drives the
     // free-minutes figure shown in the email (5 for the Evelyn lander).
     if (!isTestEnv) {
-      sendVerificationEmail(user.email, user.firstName, verificationToken, persona, source).catch((err) => {
+      sendVerificationEmail(user.email, user.firstName, verificationToken, persona, source, FREE_MINS_AT_REGISTRATION && isEvelynLanderSignup).catch((err) => {
         logger.error('Failed to send verification email:', err);
       });
     }
@@ -890,7 +890,11 @@ router.post('/resend-verification', authLimiter, async (req: Request, res: Respo
       personaSlug = personaRow[0]?.slug;
     }
 
-    await sendVerificationEmail(user.email, user.firstName, verificationToken, personaSlug, sourceFromBody);
+    // If the welcome minutes were already granted (at registration, Task 1.1), the
+    // resent email says "your minutes are waiting — verify to keep access" rather than
+    // "verify to receive them". Uses the actual grant marker, so it's accurate regardless
+    // of the flag's current state.
+    await sendVerificationEmail(user.email, user.firstName, verificationToken, personaSlug, sourceFromBody, user.welcomeCoinsGrantedAt != null);
 
     res.json({ success: true, message: 'If an unverified account exists, a verification email has been sent.' });
   } catch (error) {
