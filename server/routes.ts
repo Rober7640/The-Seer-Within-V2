@@ -116,6 +116,7 @@ const upsellChargeSchema = z.object({
   email: z.string().email().optional(),
   firstName: z.string().optional(),
   funnel: funnelSchema,
+  trackdeskClickId: z.string().nullable().optional(),
 });
 
 const upsellFallbackSchema = z.object({
@@ -147,6 +148,7 @@ const upsell2ChargeSchema = z.object({
   firstName: z.string().optional(),
   type: z.enum(["full", "downsell"]),
   funnel: funnelSchema,
+  trackdeskClickId: z.string().nullable().optional(),
 });
 
 const upsell2FallbackSchema = z.object({
@@ -1385,7 +1387,7 @@ export async function registerRoutes(
         });
       }
 
-      const { checkoutSessionId, email, firstName, funnel } = parseResult.data;
+      const { checkoutSessionId, email, firstName, funnel, trackdeskClickId } = parseResult.data;
       // Ad funnels use the cleaner PRD-spec name with a per-funnel suffix; V1
       // keeps its historical "Volcanic Stone (aka Black Lava)" label so existing
       // email-traffic receipts stay byte-identical to today.
@@ -1500,6 +1502,20 @@ export async function registerRoutes(
       if (upsellPayment.status === "succeeded") {
         // Mark upsell purchased in database
         await markUpsellPurchased(checkoutSessionId, upsellPayment.id, upsell1Cents);
+
+        // Trackdesk affiliate conversion — 1-click upsell 1 (server-side, reliable).
+        // 1-click charges are PaymentIntents and never hit the checkout.session
+        // .completed webhook, so we report here. Same externalId as the client
+        // fire (Upsell2Page) so Trackdesk dedups the pair down to one conversion.
+        if (trackdeskClickId) {
+          reportTrackdeskConversion({
+            clickId: trackdeskClickId,
+            conversionType: "upsell1",
+            amount: upsell1Cents / 100,
+            externalId: `${checkoutSessionId}_upsell1`,
+            customerId: email || "",
+          }).catch((err) => logger.warn("Trackdesk upsell1 error (non-blocking):", err));
+        }
 
         // PostHog: 1-click upsell (webhook only fires for fallback checkout flow,
         // so we capture here to ensure inline 1-click charges land in the funnel).
@@ -1657,6 +1673,7 @@ export async function registerRoutes(
             product: "protection_ritual",
             originalSession: originalSessionId,
             firstName,
+            ...(email && { email }),
             bucket,
             ...(funnel && { funnel }),
             ...(trackdeskClickId && { trackdeskClickId }),
@@ -1957,7 +1974,7 @@ export async function registerRoutes(
         });
       }
 
-      const { checkoutSessionId, email, firstName, type, funnel } =
+      const { checkoutSessionId, email, firstName, type, funnel, trackdeskClickId } =
         parseResult.data;
       const amount = type === "full" ? 4700 : 3000;
 
@@ -2075,6 +2092,19 @@ export async function registerRoutes(
           amount,
           type,
         );
+
+        // Trackdesk affiliate conversion — 1-click upsell 2 (server-side, reliable).
+        // Same rationale as upsell 1: 1-click PaymentIntents never hit the
+        // checkout.session.completed webhook. Same externalId as the client fire.
+        if (trackdeskClickId) {
+          reportTrackdeskConversion({
+            clickId: trackdeskClickId,
+            conversionType: "upsell2",
+            amount: amount / 100,
+            externalId: `${checkoutSessionId}_upsell2`,
+            customerId: email || "",
+          }).catch((err) => logger.warn("Trackdesk upsell2 error (non-blocking):", err));
+        }
 
         // PostHog: 1-click upsell2 (mirror of upsell1 — webhook only catches
         // the fallback checkout path).
@@ -2274,6 +2304,7 @@ export async function registerRoutes(
 
         const { email, firstName, bucket, originalSessionId, type, funnel } =
           parseResult.data;
+        const trackdeskClickId = req.body?.trackdeskClickId as string | undefined;
         const amount = type === "full" ? 4700 : 3000;
 
         if (!stripe) {
@@ -2340,8 +2371,10 @@ export async function registerRoutes(
             type,
             originalSession: originalSessionId,
             firstName,
+            ...(email && { email }),
             bucket,
             ...(funnel && { funnel }),
+            ...(trackdeskClickId && { trackdeskClickId }),
             ...(inheritNoemail && { noemail: "1" }),
           },
         });
