@@ -110,8 +110,8 @@ export default function RefundPage() {
             <ol className="list-decimal list-inside space-y-2 ml-4">
               <li>
                 Email us at{' '}
-                <a href="mailto:support@cosmonumerology.com" className="text-purple-300 hover:text-white underline">
-                  support@cosmonumerology.com
+                <a href="mailto:hi@theseerwithin.com" className="text-purple-300 hover:text-white underline">
+                  hi@theseerwithin.com
                 </a>{' '}
                 with the subject line "Refund Request"
               </li>
@@ -179,8 +179,8 @@ export default function RefundPage() {
               <p>Singapore</p>
               <p className="mt-2">
                 Email:{' '}
-                <a href="mailto:support@cosmonumerology.com" className="text-purple-300 hover:text-white underline">
-                  support@cosmonumerology.com
+                <a href="mailto:hi@theseerwithin.com" className="text-purple-300 hover:text-white underline">
+                  hi@theseerwithin.com
                 </a>
               </p>
             </div>
