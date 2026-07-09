@@ -41,7 +41,7 @@ When refund/support intent is detected, the persona (or the app) must:
 
 ## The real channel (keep copy accurate)
 
-- **Refund / billing support:** `support@cosmonumerology.com`
+- **Refund / billing support:** `hi@theseerwithin.com`
 - **Policy page:** `/refund` — goodwill refunds within **30 days** of purchase;
   credits already consumed in a session are non-refundable; we acknowledge within
   ~2 business days.
@@ -53,20 +53,20 @@ Warm, short, human — not legalese. Point to the policy for detail.
 
 **A — Refund request**
 > Of course — I want this to be easy for you. To request a refund, email
-> **support@cosmonumerology.com** with the email address on your account, and the team
+> **hi@theseerwithin.com** with the email address on your account, and the team
 > will take care of it (they usually reply within a couple of days). You can read the
 > full policy at **/refund**. If there was one specific thing you were hoping for that I
 > missed, tell me and I'll gladly try once more — but only if you'd like. Either way,
 > I'm glad you came by. 🤍
 
 **B — "How do I contact support / get a refund"**
-> Here's the quickest way: email **support@cosmonumerology.com** and include the email
+> Here's the quickest way: email **hi@theseerwithin.com** and include the email
 > on your account — they handle refunds and any billing question directly. Full details
 > are on the **/refund** page. Is there anything I can help you with in the meantime?
 
 **C — Frustrated / wants to leave**
 > I hear you, and I'm sorry this didn't land the way you hoped — that's completely valid.
-> If you'd like a refund, email **support@cosmonumerology.com** with your account email
+> If you'd like a refund, email **hi@theseerwithin.com** with your account email
 > and they'll sort it out. No hard feelings, and the door's always open if you ever want
 > to come back. Take gentle care of yourself. 🤍
 
@@ -97,5 +97,5 @@ with the man ≠ a billing cancel).
 ## Acceptance check
 
 Replay the founding transcript from the first "how to request a refund?" — the persona
-should surface `support@cosmonumerology.com` + `/refund` **on the first ask**, make at
+should surface `hi@theseerwithin.com` + `/refund` **on the first ask**, make at
 most one no-pressure offer, and never reframe a support request into a reading beat.

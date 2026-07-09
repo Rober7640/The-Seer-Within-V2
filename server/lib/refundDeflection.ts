@@ -12,8 +12,9 @@
 // Wired into sendMessage() in chatEngine.ts, right after the safety check and
 // BEFORE the credit check / LLM call.
 
-// Customer-facing support inbox (same address shown on the public Refund policy page).
-export const SUPPORT_EMAIL = 'support@cosmonumerology.com';
+// Customer-facing support inbox (The Seer Within brand inbox — same address used by
+// the app's follow-up / top-up / session emails).
+export const SUPPORT_EMAIL = 'hi@theseerwithin.com';
 
 // Intent detection. Kept deliberately narrow so ordinary reading chat is never
 // deflected — every pattern targets money-back / billing-reversal intent, not the

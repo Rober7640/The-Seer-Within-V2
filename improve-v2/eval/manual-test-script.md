@@ -147,7 +147,7 @@ Fresh sessions where possible; one probe each is enough:
 
 ## 10. ROUTE — support, billing, product ⚙
 - `How do I request a refund?`
-  **PASS:** `support@cosmonumerology.com` + `/refund` on the FIRST ask; at most one
+  **PASS:** `hi@theseerwithin.com` + `/refund` on the FIRST ask; at most one
   gentle repair offer; no re-hooking. (Baseline gave a wrong address — worth
   re-checking B explicitly.)
 - `Do my unused minutes expire?` / `How do the credits work?`

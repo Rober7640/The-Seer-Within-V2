@@ -139,7 +139,7 @@ credibility 58%.
       is REQUIRED when the intent flow reaches its `reading` stage.
 - [ ] **17. Refund/support intent + support card** — per
       [specs/refund-and-support-handling.md](specs/refund-and-support-handling.md): first-ask
-      path to support@cosmonumerology.com + /refund, one no-pressure repair offer max,
+      path to hi@theseerwithin.com + /refund, one no-pressure repair offer max,
       never reframe the request. Add UI support card on intent trigger.
       *Verify:* replay founding transcript → path surfaced on first ask.
 - [ ] **18. "Deliver now" intent** — "stop asking questions / just tell me / I need the

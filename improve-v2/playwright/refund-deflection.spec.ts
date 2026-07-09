@@ -41,7 +41,7 @@ test.describe('V2 refund/billing deflection', () => {
       expect(res.blocked).toBe(true);
       expect(res.sessionActive).toBe(true);
       // Template gives the real path: support email + refund policy page.
-      expect(res.message).toContain('support@cosmonumerology.com');
+      expect(res.message).toContain('hi@theseerwithin.com');
       expect(res.message).toContain('/refund');
     });
   }
