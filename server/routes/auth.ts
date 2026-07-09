@@ -498,9 +498,12 @@ router.post('/magic-register', authLimiter, async (req: Request, res: Response) 
     // Check for fraud patterns before creating account
     const fraudCheck = await checkRegistrationFraud(clientIp, fingerprint);
 
-    // Layer 2: Block registration if too many accounts from same IP
-    if (fraudCheck.flagged && fraudCheck.flags.includes('ip_flagged')) {
-      logger.warn(`[Abuse Prevention] Registration blocked — IP rate limit exceeded`, { ip: clientIp, recentAccounts: fraudCheck.recentAccountsFromIp });
+    // Layer 2: Only HARD-block on extreme, script-like volume from one IP. Ordinary
+    // shared IPs (mobile carrier CGNAT, offices, households, cafés) are flagged-for-review
+    // below — not blocked — so real buyers get in. Turnstile + disposable/NeverBounce email
+    // checks + required email verification remain the primary anti-abuse gates.
+    if (fraudCheck.hardBlocked) {
+      logger.warn(`[Abuse Prevention] Registration blocked — extreme IP volume`, { ip: clientIp, recentAccounts: fraudCheck.recentAccountsFromIp });
       res.status(429).json({
         error: 'Too many accounts created from this location. Please try again tomorrow.',
         code: 'IP_RATE_LIMIT',
