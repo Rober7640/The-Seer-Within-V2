@@ -145,6 +145,7 @@ async function runCase(
 async function main() {
   const label = arg('label') ?? 'unlabeled';
   const onlyCase = arg('case');
+  const onlyPersona = arg('persona'); // filter to one persona's cases (e.g. evelyn-cross)
   const dry = process.argv.includes('--dry');
 
   // --experiment <key> [--variant B]: run cases against a prompt-experiment arm.
@@ -160,8 +161,9 @@ async function main() {
   }
 
   const { cases } = JSON.parse(readFileSync(path.join(EVAL_DIR, 'cases.json'), 'utf8')) as { cases: EvalCase[] };
-  const selected = onlyCase ? cases.filter(c => c.id === onlyCase) : cases;
-  if (!selected.length) { console.error(`No case matches "${onlyCase}"`); process.exit(1); }
+  let selected = onlyCase ? cases.filter(c => c.id === onlyCase) : cases;
+  if (onlyPersona) selected = selected.filter(c => c.persona === onlyPersona);
+  if (!selected.length) { console.error(`No case matches ${onlyCase ? `"${onlyCase}"` : ''}${onlyPersona ? ` persona="${onlyPersona}"` : ''}`); process.exit(1); }
 
   console.log(`Eval run "${label}" — ${selected.length} case(s), ${selected.reduce((a, c) => a + c.turns.length, 0)} total turns`);
   if (dry) { selected.forEach(c => console.log(`  ${c.id} (${c.persona}, ${c.turns.length} turns)`)); process.exit(0); }

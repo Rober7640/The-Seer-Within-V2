@@ -18,6 +18,7 @@ import { loadCrossPersonaMemories, formatTransferContext } from './memoryTransfe
 import { startChatSession, endChatSession, checkpointSession } from './creditTracking';
 import { getPromoBalance, getSpendableCoins } from './promoWallet';
 import { checkAndLogSafety } from './universalSafety';
+import { isRefundRequest, REFUND_TEMPLATE } from './refundDeflection';
 import {
   loadPersonaIntentConfig,
   detectIntent,
@@ -1298,6 +1299,43 @@ export async function sendMessage(
 
   // Soft crisis note (passive ideation detected — conversation continues but note is prepended)
   const softCrisisNote = safetyResult.softCrisisNote ?? null;
+
+  // ── Step 1b: Refund / billing deflection (after safety, before credit + LLM) ──
+  //   A refund/chargeback/cancel request is NOT routed to the persona. We answer
+  //   with a fixed support template so billing is handled consistently by the
+  //   support inbox — and we short-circuit here so the client is not charged coins
+  //   for the exchange. Placed after the crisis check so a crisis message that also
+  //   mentions "refund" still gets the crisis response first.
+  if (isRefundRequest(userMessage)) {
+    await db.insert(chatMessages).values({
+      sessionId,
+      userId,
+      role: 'user',
+      content: userMessage,
+    });
+    await db.insert(chatMessages).values({
+      sessionId,
+      userId,
+      role: 'assistant',
+      content: REFUND_TEMPLATE,
+    });
+
+    const refundUser = await db
+      .select({ coinBalance: users.coinBalance })
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1);
+    const spendableRefund = await getSpendableCoins(userId, session[0].personaId, refundUser[0]?.coinBalance || 0);
+
+    return {
+      sessionId,
+      message: REFUND_TEMPLATE,
+      topic: null,
+      creditsRemaining: spendableRefund,
+      sessionActive: true,
+      blocked: true,
+    };
+  }
 
   // ── Step 2: Credit check (after safety, so crisis messages always get a response) ──
   // IMPORTANT: pgbouncer transaction pooling can return stale reads when connections
