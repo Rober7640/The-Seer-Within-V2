@@ -8,15 +8,35 @@ import { Request } from 'express';
 import logger from './logger';
 
 // Thresholds
-const MAX_ACCOUNTS_PER_IP_24H = parseInt(process.env.MAX_ACCOUNTS_PER_IP_24H || '3', 10);
+//
+// Registration is gated by stronger, earlier layers (Cloudflare Turnstile, disposable-email
+// blocklist, NeverBounce deliverability, and required email verification before any coins are
+// granted). The IP check below is a coarse backstop, NOT the primary defense — so it is tuned
+// to avoid blocking real buyers, who routinely share an IP via mobile carrier CGNAT, offices,
+// households, and cafés (Facebook traffic is mostly mobile).
+//
+// - FLAG threshold: generous. Reaching it only stamps the account for admin review; it never
+//   blocks registration. Real users on a busy shared IP still get in.
+const MAX_ACCOUNTS_PER_IP_24H = parseInt(process.env.MAX_ACCOUNTS_PER_IP_24H || '10', 10);
+// - HARD-BLOCK threshold: set well above any realistic shared-IP level, so only extreme,
+//   script-like volume from a single IP is refused. This is the only IP condition that blocks.
+const HARD_BLOCK_ACCOUNTS_PER_IP_24H = parseInt(process.env.HARD_BLOCK_ACCOUNTS_PER_IP_24H || '25', 10);
+// - FINGERPRINT threshold: a matching device fingerprint means the same physical browser
+//   (not affected by shared/CGNAT IPs), so it's a much stronger abuse signal — kept tight.
+//   It flags for review; it does not block.
+const MAX_ACCOUNTS_PER_FINGERPRINT_24H = parseInt(process.env.MAX_ACCOUNTS_PER_FINGERPRINT_24H || '3', 10);
 
-export type FraudFlag = 'ip_flagged' | 'manual_review' | 'fingerprint_flagged' | 'cleared';
+export type FraudFlag = 'ip_flagged' | 'ip_hard_blocked' | 'manual_review' | 'fingerprint_flagged' | 'cleared';
 
 export interface FraudCheckResult {
+  /** True when the account should be stamped for review (does NOT imply blocking). */
   flagged: boolean;
+  /** True only on extreme IP volume — the caller should refuse registration. */
+  hardBlocked: boolean;
   flags: FraudFlag[];
   details: string;
   recentAccountsFromIp: number;
+  recentAccountsFromFingerprint: number;
 }
 
 /**
@@ -56,15 +76,20 @@ export async function checkRegistrationFraud(ip: string, fingerprint: string | n
   if (isLocalIp(ip)) {
     return {
       flagged: false,
+      hardBlocked: false,
       flags: [],
       details: 'Local IP - skipped fraud checks',
       recentAccountsFromIp: 0,
+      recentAccountsFromFingerprint: 0,
     };
   }
 
   const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
 
-  // Check accounts from same IP in last 24 hours
+  let hardBlocked = false;
+
+  // Check accounts from same IP in last 24 hours.
+  // Extreme volume -> hard block; merely-high volume -> flag for review (still allowed in).
   const ipCountResult = await db
     .select({ count: count() })
     .from(users)
@@ -77,12 +102,18 @@ export async function checkRegistrationFraud(ip: string, fingerprint: string | n
 
   const recentAccountsFromIp = ipCountResult[0]?.count || 0;
 
-  if (recentAccountsFromIp >= MAX_ACCOUNTS_PER_IP_24H) {
+  if (recentAccountsFromIp >= HARD_BLOCK_ACCOUNTS_PER_IP_24H) {
+    flags.push('ip_hard_blocked');
+    hardBlocked = true;
+    details.push(`${recentAccountsFromIp} accounts from same IP in 24h (hard-block threshold: ${HARD_BLOCK_ACCOUNTS_PER_IP_24H})`);
+  } else if (recentAccountsFromIp >= MAX_ACCOUNTS_PER_IP_24H) {
     flags.push('ip_flagged');
-    details.push(`${recentAccountsFromIp} accounts from same IP in 24h (threshold: ${MAX_ACCOUNTS_PER_IP_24H})`);
+    details.push(`${recentAccountsFromIp} accounts from same IP in 24h (flag threshold: ${MAX_ACCOUNTS_PER_IP_24H})`);
   }
 
-  // Check accounts with same device fingerprint (if provided)
+  // Check accounts with same device fingerprint (if provided). Same fingerprint = same
+  // physical browser, a stronger signal than a shared IP — flags for review, never blocks.
+  let recentAccountsFromFingerprint = 0;
   if (fingerprint) {
     const fpCountResult = await db
       .select({ count: count() })
@@ -94,25 +125,27 @@ export async function checkRegistrationFraud(ip: string, fingerprint: string | n
         ),
       );
 
-    const recentAccountsFromFingerprint = fpCountResult[0]?.count || 0;
+    recentAccountsFromFingerprint = fpCountResult[0]?.count || 0;
 
-    if (recentAccountsFromFingerprint >= MAX_ACCOUNTS_PER_IP_24H) {
+    if (recentAccountsFromFingerprint >= MAX_ACCOUNTS_PER_FINGERPRINT_24H) {
       flags.push('fingerprint_flagged');
-      details.push(`${recentAccountsFromFingerprint} accounts with same fingerprint in 24h`);
+      details.push(`${recentAccountsFromFingerprint} accounts with same fingerprint in 24h (threshold: ${MAX_ACCOUNTS_PER_FINGERPRINT_24H})`);
     }
   }
 
   const flagged = flags.length > 0;
 
   if (flagged) {
-    logger.warn(`[Fraud Detection] Registration flagged from IP ${ip}: ${details.join('; ')}`);
+    logger.warn(`[Fraud Detection] Registration ${hardBlocked ? 'HARD-BLOCKED' : 'flagged'} from IP ${ip}: ${details.join('; ')}`);
   }
 
   return {
     flagged,
+    hardBlocked,
     flags,
     details: details.join('; ') || 'No issues detected',
     recentAccountsFromIp,
+    recentAccountsFromFingerprint,
   };
 }
 
