@@ -42,9 +42,15 @@ export function getFreeMinutesForSignup(persona?: string, source?: string): numb
   return 3;
 }
 
-function buildVerificationHtml(firstName: string, verifyUrl: string, freeMinutes: number): string {
+function buildVerificationHtml(firstName: string, verifyUrl: string, freeMinutes: number, minutesAlreadyGranted: boolean): string {
   const safeName = escapeHtml(firstName);
   const safeUrl = escapeHtml(verifyUrl);
+  // When the free minutes were granted at registration (Task 1.1), don't tell the
+  // user they must verify to "receive" them — they already have them. Verification
+  // then only secures the account. Otherwise keep the original grant-on-verify copy.
+  const introHtml = minutesAlreadyGranted
+    ? `Welcome to The Seer Within. Your <strong>${freeMinutes} free minutes</strong> of spiritual guidance are already waiting in your account. Verify your email to keep access and secure your account.`
+    : `Welcome to The Seer Within. To complete your registration and receive your <strong>${freeMinutes} free minutes</strong> of spiritual guidance, please verify your email address.`;
 
   return `<!DOCTYPE html>
 <html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
@@ -127,7 +133,7 @@ function buildVerificationHtml(firstName: string, verifyUrl: string, freeMinutes
               style="padding:28px 44px 32px;font-size:16px;line-height:1.8;color:#4a4a5a;
                      font-family:Georgia,'Times New Roman',serif;">
             <p style="margin:0 0 16px;color:#1a1a2e;">Dear ${safeName},</p>
-            <p style="margin:0 0 16px;">Welcome to The Seer Within. To complete your registration and receive your <strong>${freeMinutes} free minutes</strong> of spiritual guidance, please verify your email address.</p>
+            <p style="margin:0 0 16px;">${introHtml}</p>
             <p style="margin:0 0 16px;">This link will expire in 24 hours.</p>
           </td>
         </tr>
@@ -184,13 +190,16 @@ function buildVerificationHtml(firstName: string, verifyUrl: string, freeMinutes
 </html>`;
 }
 
-function buildVerificationText(firstName: string, verifyUrl: string, freeMinutes: number): string {
+function buildVerificationText(firstName: string, verifyUrl: string, freeMinutes: number, minutesAlreadyGranted: boolean): string {
+  const intro = minutesAlreadyGranted
+    ? `Welcome to The Seer Within. Your ${freeMinutes} free minutes of spiritual guidance are already waiting in your account. Verify your email to keep access and secure your account by visiting:`
+    : `Welcome to The Seer Within. To complete your registration and receive your ${freeMinutes} free minutes of spiritual guidance, please verify your email address by visiting:`;
   return `The Seer Within
 ================
 
 Dear ${firstName},
 
-Welcome to The Seer Within. To complete your registration and receive your ${freeMinutes} free minutes of spiritual guidance, please verify your email address by visiting:
+${intro}
 
 ${verifyUrl}
 
@@ -205,13 +214,17 @@ export async function sendVerificationEmail(
   token: string,
   persona?: string,
   source?: string,
+  // Task 1.1 — true when the free minutes were already granted at registration
+  // (Evelyn lander + ENABLE_FREE_MINS_AT_REGISTRATION). Switches the copy from
+  // "verify to receive your minutes" to "your minutes are waiting — verify to keep access".
+  minutesAlreadyGranted: boolean = false,
 ): Promise<{ success: boolean; error?: string }> {
   const personaQuery = persona ? `?persona=${encodeURIComponent(persona)}` : '';
   const verifyUrl = `${BASE_URL}/verify-email/${token}${personaQuery}`;
   const freeMinutes = getFreeMinutesForSignup(persona, source);
 
-  const html = buildVerificationHtml(firstName, verifyUrl, freeMinutes);
-  const text = buildVerificationText(firstName, verifyUrl, freeMinutes);
+  const html = buildVerificationHtml(firstName, verifyUrl, freeMinutes, minutesAlreadyGranted);
+  const text = buildVerificationText(firstName, verifyUrl, freeMinutes, minutesAlreadyGranted);
 
   if (!resend) {
     logger.warn(`[Email Verification] Resend not configured. Verification URL for ${email}: ${verifyUrl}`);

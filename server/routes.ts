@@ -116,7 +116,7 @@ const upsellChargeSchema = z.object({
   email: z.string().email().optional(),
   firstName: z.string().optional(),
   funnel: funnelSchema,
-  trackdeskClickId: z.string().optional(),
+  trackdeskClickId: z.string().nullable().optional(),
 });
 
 const upsellFallbackSchema = z.object({
@@ -148,7 +148,7 @@ const upsell2ChargeSchema = z.object({
   firstName: z.string().optional(),
   type: z.enum(["full", "downsell"]),
   funnel: funnelSchema,
-  trackdeskClickId: z.string().optional(),
+  trackdeskClickId: z.string().nullable().optional(),
 });
 
 const upsell2FallbackSchema = z.object({
@@ -1673,6 +1673,7 @@ export async function registerRoutes(
             product: "protection_ritual",
             originalSession: originalSessionId,
             firstName,
+            ...(email && { email }),
             bucket,
             ...(funnel && { funnel }),
             ...(trackdeskClickId && { trackdeskClickId }),
@@ -2370,6 +2371,7 @@ export async function registerRoutes(
             type,
             originalSession: originalSessionId,
             firstName,
+            ...(email && { email }),
             bucket,
             ...(funnel && { funnel }),
             ...(trackdeskClickId && { trackdeskClickId }),

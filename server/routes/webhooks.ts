@@ -5,7 +5,7 @@ import { Webhook } from 'svix';
 import Stripe from 'stripe';
 import { getStripe, verifyStripeWebhook } from '../lib/stripeAccount';
 import { db } from '../lib/db';
-import { followUpEmails, userFollowUpPreferences, migrationDripEmails, topupEmails, aidenFollowupEmails, personaFollowupEmails, users, emailSuppression, creditPurchases, soulmateLanderSessions } from '@shared/schema';
+import { followUpEmails, userFollowUpPreferences, migrationDripEmails, topupEmails, aidenFollowupEmails, personaFollowupEmails, evelynFollowupEmails, users, emailSuppression, creditPurchases, soulmateLanderSessions } from '@shared/schema';
 import { and, eq, sql } from 'drizzle-orm';
 import logger from '../lib/logger';
 import { posthog } from '../lib/posthog';
@@ -319,6 +319,58 @@ router.post('/resend', async (req: Request, res: Response) => {
             .set({ status: 'failed', errorMessage: 'spam_complaint', updatedAt: new Date() })
             .where(eq(personaFollowupEmails.id, personaRecord.id));
           await autoUnsubscribe(personaRecord.userId, 'spam_complaint');
+          break;
+      }
+
+      return res.status(200).json({ received: true });
+    }
+
+    // Check Evelyn lander follow-up / unverified-drip emails (Evelyn's #1 drip).
+    // Mirrors the persona/aiden handlers: record opens/clicks idempotently, and
+    // treat bounce/complaint as a hard failure + auto-unsubscribe. Without this,
+    // evelynFollowupEmails recorded 0 opens/clicks.
+    const evelynRecords = await db
+      .select()
+      .from(evelynFollowupEmails)
+      .where(eq(evelynFollowupEmails.resendEmailId, emailId))
+      .limit(1);
+
+    const evelynRecord = evelynRecords[0];
+
+    if (evelynRecord) {
+      switch (event.type) {
+        case 'email.opened':
+          if (!evelynRecord.openedAt) {
+            await db
+              .update(evelynFollowupEmails)
+              .set({ openedAt: new Date(), updatedAt: new Date() })
+              .where(eq(evelynFollowupEmails.id, evelynRecord.id));
+          }
+          break;
+
+        case 'email.clicked':
+          if (!evelynRecord.clickedAt) {
+            await db
+              .update(evelynFollowupEmails)
+              .set({ clickedAt: new Date(), updatedAt: new Date() })
+              .where(eq(evelynFollowupEmails.id, evelynRecord.id));
+          }
+          break;
+
+        case 'email.bounced':
+          await db
+            .update(evelynFollowupEmails)
+            .set({ status: 'failed', errorMessage: 'bounced', updatedAt: new Date() })
+            .where(eq(evelynFollowupEmails.id, evelynRecord.id));
+          await autoUnsubscribe(evelynRecord.userId, 'bounced');
+          break;
+
+        case 'email.complained':
+          await db
+            .update(evelynFollowupEmails)
+            .set({ status: 'failed', errorMessage: 'spam_complaint', updatedAt: new Date() })
+            .where(eq(evelynFollowupEmails.id, evelynRecord.id));
+          await autoUnsubscribe(evelynRecord.userId, 'spam_complaint');
           break;
       }
 
