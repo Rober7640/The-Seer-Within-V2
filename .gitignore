@@ -49,3 +49,5 @@ evelyn-avatar.png
 
 # Reference files
 attached/
+# Playwright UI-capture screenshots (transcripts are committed; images are not)
+improve-v2/eval/ui-runs/*/shots/

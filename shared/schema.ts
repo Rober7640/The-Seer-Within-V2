@@ -198,6 +198,11 @@ export const users = pgTable("users", {
   // Coin balance (60 coins = 1 minute)
   coinBalance: integer("coin_balance").default(0).notNull(),
   totalCoinsUsed: integer("total_coins_used").default(0).notNull(),
+  // Welcome free-coin grant marker — stamped once when the sign-up welcome grant is
+  // applied (at registration when ENABLE_FREE_MINS_AT_REGISTRATION is on for the funnel,
+  // otherwise at /verify-email). Idempotency guard so the grant fires exactly once even
+  // if the reg-time flag is toggled between a user's registration and verification.
+  welcomeCoinsGrantedAt: timestamp("welcome_coins_granted_at"),
 
   // Multi-persona
   defaultPersonaId: varchar("default_persona_id").references(() => personas.id, { onDelete: "set null" }),

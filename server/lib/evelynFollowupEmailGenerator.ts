@@ -38,6 +38,13 @@ const resend = process.env.RESEND_API_KEY
 const BASE_URL = process.env.BASE_URL || 'http://localhost:5000';
 const EVELYN_SLUG = 'evelyn-cross';
 
+// Task 1.1 — when free minutes are granted at REGISTRATION (Evelyn lander), the
+// "verify to open the door / unlock your minutes" framing in this unverified drip is
+// no longer true: the user already has their minutes and can chat via the magic link
+// in the CTA. Flip the copy to "your minutes are waiting" when the flag is on. Off by
+// default → the drip keeps its original verify-to-unlock wording.
+const MINUTES_AT_REGISTRATION = process.env.ENABLE_FREE_MINS_AT_REGISTRATION === 'true';
+
 // Delays from signup time (user.createdAt for lander signups).
 const DELAY_MS: Record<1 | 2 | 3, number> = {
   1: 10 * 60 * 1000,
@@ -100,13 +107,23 @@ function buildEmailContent(
   const fn = safeFirstName(firstName);
   const phrase = escapeHtml(bucketPhrase);
 
+  // Task 1.1 reframe (flag-gated) — the two lines that told the user they must verify
+  // to unlock/open their minutes. When minutes are granted at registration, they're
+  // already available; the drip's job becomes re-engagement, not gating.
+  const seq1Line = MINUTES_AT_REGISTRATION
+    ? `Your minutes are already here, waiting — one tap and we pick the reading up right where it caught.`
+    : `I can't open the door fully until you confirm your email. One click is all the cards need.`;
+  const seq2Line = MINUTES_AT_REGISTRATION
+    ? `I held a small piece back when we first spoke — something I'd rather you hear from me than wonder about. Your minutes are still here, untouched. One tap and we can finish what we started.`
+    : `I held a small piece back when we first spoke — something I'd rather you hear from me than wonder about. The verification link is still good. One tap and we can finish what we started.`;
+
   if (seq === 1) {
     return {
       subject: `Your space is still here, ${fn}`,
       bodyHtml: [
         `<p>${fn},</p>`,
         `<p>The thread we started a moment ago — I felt it pull tight when you stepped away. There's more sitting here for you than fits one conversation.</p>`,
-        `<p>I can't open the door fully until you confirm your email. One click is all the cards need.</p>`,
+        `<p>${seq1Line}</p>`,
         `<p>— Evelyn</p>`,
         `<p style="margin-top:28px;font-style:italic;color:#6a6275;">If this wasn't you, simply leave it. The space will keep until it's right.</p>`,
       ].join('\n'),
@@ -115,7 +132,7 @@ function buildEmailContent(
         '',
         `The thread we started a moment ago — I felt it pull tight when you stepped away. There's more sitting here for you than fits one conversation.`,
         '',
-        `I can't open the door fully until you confirm your email. One click is all the cards need.`,
+        seq1Line,
         '',
         `— Evelyn`,
         '',
@@ -130,7 +147,7 @@ function buildEmailContent(
       bodyHtml: [
         `<p>${fn},</p>`,
         `<p>I don't usually return to a thread once it's been left — but yours surfaced again last night, around ${phrase}. The energy hasn't gone quiet.</p>`,
-        `<p>I held a small piece back when we first spoke — something I'd rather you hear from me than wonder about. The verification link is still good. One tap and we can finish what we started.</p>`,
+        `<p>${seq2Line}</p>`,
         `<p>— Evelyn</p>`,
         `<p style="margin-top:28px;font-style:italic;color:#6a6275;">No reply needed. Whatever finds you, finds you.</p>`,
       ].join('\n'),
@@ -139,7 +156,7 @@ function buildEmailContent(
         '',
         `I don't usually return to a thread once it's been left — but yours surfaced again last night, around ${bucketPhrase}. The energy hasn't gone quiet.`,
         '',
-        `I held a small piece back when we first spoke — something I'd rather you hear from me than wonder about. The verification link is still good. One tap and we can finish what we started.`,
+        seq2Line,
         '',
         `— Evelyn`,
         '',

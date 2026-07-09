@@ -350,7 +350,83 @@ export function useConversation() {
     startGreeting()
   }, [chat.state, addMessage, sendBotMessage, sendBotMessages, updateState, updateUserData])
 
+  // === V1 PROMPT A/B (v1_clearing_theme_palm_2026) ===
+  // Resolve the assigned arm ONCE and stash it on userData, so BOTH the server
+  // prompt builders (shadowSummary / valueExplain) and the client pitch branch on
+  // the same arm. Scoped to fb-palm (only this funnel requests the page). When the
+  // experiment is draft/OFF, /api/ab/assign returns no arm ⇒ promptVariant stays
+  // undefined ⇒ 'control' ⇒ byte-identical to today. Preview: ?clearing=woven or
+  // ?clearing=control forces the arm for a live self-test WITHOUT enrolling.
+  const promptVariantResolved = useRef(false)
+  useEffect(() => {
+    if (promptVariantResolved.current) return
+    promptVariantResolved.current = true
+
+    const search = window.location.search
+    const override = new URLSearchParams(search).get('clearing')
+    if (override === 'woven' || override === 'control') {
+      updateUserData({ promptVariant: override })
+      return
+    }
+
+    // Only fb-palm traffic is in scope for this test.
+    if (!parsePalmParams(search)) return
+
+    fetch('/api/ab/assign?page=v1_chat_palm')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (data?.assignments?.clearing?.variantId === 'woven') {
+          updateUserData({ promptVariant: 'woven' })
+        }
+        // any other result ⇒ leave undefined ⇒ control
+      })
+      .catch(() => { /* non-blocking — default to control */ })
+  }, [updateUserData])
+
   // === STATE HANDLERS ===
+
+  // reading1 generation — shared by the normal DEEPENING_1 turn and the woven
+  // palm shortcut (which skips the redundant "tell me more" re-ask because the
+  // concern was already captured at PALM_REFLECT). Body is identical to the
+  // original inline DEEPENING_1 logic, so the control/standard path is unchanged.
+  const runReading1 = useCallback(
+    async (concern: string, currentChat: ChatState) => {
+      updateUserData({ concern })
+      updateState({ inputEnabled: false })
+
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'reading1',
+          userData: { ...currentChat.userData, concern },
+          input: concern,
+        }),
+      })
+      const { messages, needsClarification, subBucket } = await response.json()
+
+      if (subBucket) {
+        updateUserData({ subBucket })
+      }
+
+      await sendBotMessages(messages)
+
+      if (needsClarification) {
+        updateState({
+          state: 'BUCKET_CLARIFICATION',
+          inputEnabled: false,
+          showBucketButtons: true,
+        })
+      } else {
+        updateState({
+          state: 'DEEPENING_2',
+          inputEnabled: true,
+          inputPlaceholder: 'Take your time...',
+        })
+      }
+    },
+    [sendBotMessages, updateState, updateUserData],
+  )
 
   const handleNameCapture = useCallback(async (input: string) => {
     const firstName = input.trim().split(' ')[0]
@@ -575,6 +651,21 @@ export function useConversation() {
       console.error('Failed to save lead:', e)
     }
 
+    // Woven arm (v1_clearing_theme_palm_2026) — redundant-loop removal. In the
+    // palm Version-C flow she ALREADY opened up at PALM_REFLECT (stored on
+    // userData.concern), so DON'T re-ask "tell me more about what's on your mind".
+    // Acknowledge what she shared and go straight into the first reading. The
+    // guard (woven + a concern already captured) only holds for palm C, so control
+    // and every other funnel keep the normal DEEPENING_1 re-ask below.
+    if (currentChat.userData.promptVariant === 'woven' && currentChat.userData.concern) {
+      await sendBotMessages([
+        `Thank you, ${currentChat.userData.firstName}. The link is complete.`,
+        "I've held everything you shared, dear... now let me look deeper.",
+      ])
+      await runReading1(currentChat.userData.concern, currentChat)
+      return
+    }
+
     await sendBotMessages([
       `Thank you, ${currentChat.userData.firstName}. The link is complete.`,
       "Now, tell me more about what's on your mind...",
@@ -587,7 +678,7 @@ export function useConversation() {
       inputPlaceholder: "Share what's in your heart...",
       inputType: 'text',
     })
-  }, [sendBotMessage, sendBotMessages, updateState, updateUserData])
+  }, [sendBotMessage, sendBotMessages, updateState, updateUserData, runReading1])
 
   // === EXPANDED FLOW HANDLERS ===
 
@@ -634,43 +725,8 @@ export function useConversation() {
     }
 
     const sanitized = sanitizeInput(input)
-    updateUserData({ concern: sanitized })
-    updateState({ inputEnabled: false })
-
-    // Call Claude API for READING_1
-    const response = await fetch('/api/chat', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        action: 'reading1',
-        userData: { ...currentChat.userData, concern: sanitized },
-        input: sanitized,
-      }),
-    })
-    const { messages, needsClarification, subBucket } = await response.json()
-
-    // Store detected sub-bucket for use in later prompts
-    if (subBucket) {
-      updateUserData({ subBucket })
-    }
-
-    await sendBotMessages(messages)
-
-    if (needsClarification) {
-      updateState({
-        state: 'BUCKET_CLARIFICATION',
-        inputEnabled: false,
-        showBucketButtons: true,
-      })
-    } else {
-      // Reading ends with follow-up question - wait for DEEPENING_2 response
-      updateState({
-        state: 'DEEPENING_2',
-        inputEnabled: true,
-        inputPlaceholder: 'Take your time...',
-      })
-    }
-  }, [sendBotMessages, updateState, updateUserData])
+    await runReading1(sanitized, currentChat)
+  }, [sendBotMessages, updateState, runReading1])
 
   // DEEPENING_2: Follow-up response - leads to READING_2
   const handleDeepening2 = useCallback(async (input: string, currentChat: ChatState) => {
@@ -1330,8 +1386,17 @@ export function useConversation() {
     const shadowResult = await shadowResponse.json()
     await sendBotMessages(shadowResult.messages)
 
-    // Step 3: Explain the ritual with SENSORY SPECIFICITY
-    await sendBotMessages([
+    // Step 3: Explain the ritual with SENSORY SPECIFICITY.
+    // V1 prompt A/B ('woven' arm, v1_clearing_theme_palm_2026): NAME the Energy
+    // Clearing Ritual up front — un-orphans the canonical clearing framing so the
+    // trilogy's Act 1 lands. Control ⇒ today's copy, byte-identical.
+    const woven = chat.userData.promptVariant === 'woven'
+    await sendBotMessages(woven ? [
+      `What you need, ${firstName}, is an Energy Clearing Ritual — I'll focus entirely on removing the shadow that's been blocking your path.`,
+      `Tonight, I'll enter a deep meditative state and focus entirely on your energy field, ${firstName}.`,
+      "I'll trace the roots of this block, sever its hold, and seal the clearing so it can't return.",
+      "It takes 2-3 hours of concentrated work. It drains me... but for those who are ready, it's worth it.",
+    ] : [
       `Tonight, I'll enter a deep meditative state and focus entirely on your energy field, ${firstName}.`,
       "I'll trace the roots of this block, sever its hold, and seal the clearing so it can't return.",
       "It takes 2-3 hours of concentrated work. It drains me... but for those who are ready, it's worth it.",

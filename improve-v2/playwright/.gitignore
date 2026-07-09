@@ -1,0 +1,4 @@
+# Generated Playwright artifacts — keep specs/config/README, ignore outputs
+results/
+report/
+test-results/

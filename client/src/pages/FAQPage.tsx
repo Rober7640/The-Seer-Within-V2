@@ -138,8 +138,8 @@ const faqSections: FAQSection[] = [
             Yes. Stripe sends an automatic payment receipt to the email address on your account
             immediately after a successful purchase. If you did not receive one, check your spam
             folder or contact us at{' '}
-            <a href="mailto:support@cosmonumerology.com" className="text-purple-300 hover:text-white underline">
-              support@cosmonumerology.com
+            <a href="mailto:hi@theseerwithin.com" className="text-purple-300 hover:text-white underline">
+              hi@theseerwithin.com
             </a>
             .
           </p>
@@ -155,8 +155,8 @@ const faqSections: FAQSection[] = [
               <li>Wait 5 minutes and refresh the page.</li>
               <li>Log out and log back in to refresh your session.</li>
               <li>If credits still haven't appeared after 30 minutes, email us at{' '}
-                <a href="mailto:support@cosmonumerology.com" className="text-purple-300 hover:text-white underline">
-                  support@cosmonumerology.com
+                <a href="mailto:hi@theseerwithin.com" className="text-purple-300 hover:text-white underline">
+                  hi@theseerwithin.com
                 </a>{' '}
                 with your purchase receipt and we will investigate promptly.</li>
             </ol>
@@ -201,8 +201,8 @@ const faqSections: FAQSection[] = [
         answer: (
           <p>
             Email us straight away at{' '}
-            <a href="mailto:support@cosmonumerology.com" className="text-purple-300 hover:text-white underline">
-              support@cosmonumerology.com
+            <a href="mailto:hi@theseerwithin.com" className="text-purple-300 hover:text-white underline">
+              hi@theseerwithin.com
             </a>{' '}
             with your account email and the transaction details from your bank statement. We will
             investigate with Stripe and resolve any billing errors promptly.
@@ -219,8 +219,8 @@ const faqSections: FAQSection[] = [
         answer: (
           <p>
             To request account deletion, email us at{' '}
-            <a href="mailto:support@cosmonumerology.com" className="text-purple-300 hover:text-white underline">
-              support@cosmonumerology.com
+            <a href="mailto:hi@theseerwithin.com" className="text-purple-300 hover:text-white underline">
+              hi@theseerwithin.com
             </a>{' '}
             from the email address associated with your account. We will process your request
             and delete or anonymise your account data within 90 days, subject to retaining
@@ -252,8 +252,8 @@ const faqSections: FAQSection[] = [
           <p>
             Under the Personal Data Protection Act 2012 (Singapore), you have the right to access
             the personal data we hold about you. Email your request to{' '}
-            <a href="mailto:support@cosmonumerology.com" className="text-purple-300 hover:text-white underline">
-              support@cosmonumerology.com
+            <a href="mailto:hi@theseerwithin.com" className="text-purple-300 hover:text-white underline">
+              hi@theseerwithin.com
             </a>
             . We will verify your identity and respond within 30 days.
           </p>
@@ -265,8 +265,8 @@ const faqSections: FAQSection[] = [
           <p>
             You can update your name and email address from your account settings once logged in.
             For any other corrections, email us at{' '}
-            <a href="mailto:support@cosmonumerology.com" className="text-purple-300 hover:text-white underline">
-              support@cosmonumerology.com
+            <a href="mailto:hi@theseerwithin.com" className="text-purple-300 hover:text-white underline">
+              hi@theseerwithin.com
             </a>{' '}
             and we will make the correction as soon as practicable.
           </p>
@@ -278,8 +278,8 @@ const faqSections: FAQSection[] = [
           <p>
             Click the "Unsubscribe" link at the bottom of any marketing email from us. You can also
             email{' '}
-            <a href="mailto:support@cosmonumerology.com" className="text-purple-300 hover:text-white underline">
-              support@cosmonumerology.com
+            <a href="mailto:hi@theseerwithin.com" className="text-purple-300 hover:text-white underline">
+              hi@theseerwithin.com
             </a>{' '}
             to be removed from our list. Note: unsubscribing from marketing emails does not stop
             transactional emails such as purchase receipts and credit expiry notices.
@@ -344,8 +344,8 @@ export default function FAQPage() {
         </h1>
         <p className="text-purple-300 mb-8">
           Can't find what you're looking for? Email us at{' '}
-          <a href="mailto:support@cosmonumerology.com" className="hover:text-white underline">
-            support@cosmonumerology.com
+          <a href="mailto:hi@theseerwithin.com" className="hover:text-white underline">
+            hi@theseerwithin.com
           </a>
         </p>
 

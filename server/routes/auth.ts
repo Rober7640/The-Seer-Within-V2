@@ -50,6 +50,12 @@ const EVELYN_LANDER_FREE_COINS = 300;
 const SOULMATE_LANDER_FREE_COINS = 300;
 const VERIFICATION_TOKEN_EXPIRY_HOURS = 24;
 
+// Task 1.1 — grant the welcome free-coins at REGISTRATION instead of at /verify-email
+// (41% never verify → 0 minutes → never try the product). Rolled out Evelyn-lander
+// FIRST per boss sign-off (2026-07-08). Off by default → live behaviour unchanged
+// (coins still granted at verify for everyone). Toggle via Railway env, no redeploy.
+const FREE_MINS_AT_REGISTRATION = process.env.ENABLE_FREE_MINS_AT_REGISTRATION === 'true';
+
 async function getFreeCoinsForPersona(personaId: string | null | undefined): Promise<number> {
   if (!personaId) return DEFAULT_FREE_COINS;
   const row = await db.select({ freeCoins: personas.freeCoins })
@@ -57,6 +63,24 @@ async function getFreeCoinsForPersona(personaId: string | null | undefined): Pro
     .where(eq(personas.id, personaId))
     .limit(1);
   return row[0]?.freeCoins ?? DEFAULT_FREE_COINS;
+}
+
+// Idempotent welcome-coin grant. Adds `amount` to the user's balance and stamps
+// welcome_coins_granted_at, but ONLY if it has not been granted before (guard column
+// IS NULL). Race-safe and toggle-safe: even if the reg-time flag flips between a
+// user's registration and their later verification, the grant fires exactly once.
+// Returns true if it granted, false if it was already granted (no-op).
+async function grantWelcomeCoins(userId: string, amount: number): Promise<boolean> {
+  if (amount <= 0) return false;
+  const res = await db.update(users)
+    .set({
+      coinBalance: sql`coin_balance + ${amount}`,
+      welcomeCoinsGrantedAt: new Date(),
+      updatedAt: new Date(),
+    })
+    .where(and(eq(users.id, userId), isNull(users.welcomeCoinsGrantedAt)))
+    .returning({ id: users.id });
+  return res.length > 0;
 }
 
 // Used by the verification endpoints to decide whether to enroll the user into
@@ -288,6 +312,7 @@ router.post('/register', authLimiter, async (req: Request, res: Response) => {
       passwordHash,
       firstName,
       coinBalance: isTestEnv ? testEnvCoinGrant : 0,
+      welcomeCoinsGrantedAt: isTestEnv ? new Date() : null,
       emailVerified: isTestEnv,
       verificationToken: isTestEnv ? null : verificationToken,
       verificationTokenExpiry: isTestEnv ? null : sql`NOW() + INTERVAL '${sql.raw(String(VERIFICATION_TOKEN_EXPIRY_HOURS))} hours'`,
@@ -304,7 +329,7 @@ router.post('/register', authLimiter, async (req: Request, res: Response) => {
 
     // Send verification email only in non-test environments
     if (!isTestEnv) {
-      sendVerificationEmail(user.email, user.firstName, verificationToken, persona, source).catch((err) => {
+      sendVerificationEmail(user.email, user.firstName, verificationToken, persona, source, FREE_MINS_AT_REGISTRATION && isLanderSignup).catch((err) => {
         logger.error('Failed to send verification email:', err);
       });
     }
@@ -345,8 +370,22 @@ router.post('/register', authLimiter, async (req: Request, res: Response) => {
       }).catch(() => { /* logged inside */ });
     }
 
+    // Task 1.1 — grant welcome free-coins now (Evelyn lander first, flag-gated).
+    // Idempotent; /verify-email skips the grant when this already ran. Non-blocking —
+    // must not fail registration. Only fires for the Evelyn-lander signup while the flag is on.
+    let regGrantedCoins = 0;
+    if (!isTestEnv && FREE_MINS_AT_REGISTRATION && isLanderSignup) {
+      try {
+        if (await grantWelcomeCoins(user.id, EVELYN_LANDER_FREE_COINS)) {
+          regGrantedCoins = EVELYN_LANDER_FREE_COINS;
+        }
+      } catch (err) {
+        logger.error('Failed to grant welcome coins at registration', { err: (err as Error).message, userId: user.id });
+      }
+    }
+
     posthog.identify({ distinctId: user.id, properties: { email: user.email, name: user.firstName, signup_funnel: isLanderSignup ? 'evelyn' : 'standard', $set_once: { first_seen: new Date().toISOString() } } });
-    posthog.capture({ distinctId: user.id, event: 'user_registered', properties: { email: user.email, persona: persona ?? null, source: source ?? null, requires_verification: !isTestEnv } });
+    posthog.capture({ distinctId: user.id, event: 'user_registered', properties: { email: user.email, persona: persona ?? null, source: source ?? null, requires_verification: !isTestEnv, welcome_coins_at_registration: regGrantedCoins } });
 
     res.status(201).json({
       token,
@@ -354,7 +393,7 @@ router.post('/register', authLimiter, async (req: Request, res: Response) => {
         id: user.id,
         email: user.email,
         firstName: user.firstName,
-        coinBalance: user.coinBalance,
+        coinBalance: user.coinBalance + regGrantedCoins,
         emailVerified: user.emailVerified,
       },
       requiresVerification: !isTestEnv,
@@ -459,9 +498,12 @@ router.post('/magic-register', authLimiter, async (req: Request, res: Response) 
     // Check for fraud patterns before creating account
     const fraudCheck = await checkRegistrationFraud(clientIp, fingerprint);
 
-    // Layer 2: Block registration if too many accounts from same IP
-    if (fraudCheck.flagged && fraudCheck.flags.includes('ip_flagged')) {
-      logger.warn(`[Abuse Prevention] Registration blocked — IP rate limit exceeded`, { ip: clientIp, recentAccounts: fraudCheck.recentAccountsFromIp });
+    // Layer 2: Only HARD-block on extreme, script-like volume from one IP. Ordinary
+    // shared IPs (mobile carrier CGNAT, offices, households, cafés) are flagged-for-review
+    // below — not blocked — so real buyers get in. Turnstile + disposable/NeverBounce email
+    // checks + required email verification remain the primary anti-abuse gates.
+    if (fraudCheck.hardBlocked) {
+      logger.warn(`[Abuse Prevention] Registration blocked — extreme IP volume`, { ip: clientIp, recentAccounts: fraudCheck.recentAccountsFromIp });
       res.status(429).json({
         error: 'Too many accounts created from this location. Please try again tomorrow.',
         code: 'IP_RATE_LIMIT',
@@ -492,6 +534,7 @@ router.post('/magic-register', authLimiter, async (req: Request, res: Response) 
       confirmed18Plus: true,
       confirmed18PlusAt: new Date(),
       coinBalance: isTestEnv ? (isEvelynLanderSignup ? EVELYN_LANDER_FREE_COINS : DEFAULT_FREE_COINS) : 0,
+      welcomeCoinsGrantedAt: isTestEnv ? new Date() : null,
       emailVerified: isTestEnv,
       verificationToken: isTestEnv ? null : verificationToken,
       verificationTokenExpiry: isTestEnv ? null : sql`NOW() + INTERVAL '${sql.raw(String(VERIFICATION_TOKEN_EXPIRY_HOURS))} hours'`,
@@ -549,7 +592,7 @@ router.post('/magic-register', authLimiter, async (req: Request, res: Response) 
     // Send verification email only in non-test environments. `source` drives the
     // free-minutes figure shown in the email (5 for the Evelyn lander).
     if (!isTestEnv) {
-      sendVerificationEmail(user.email, user.firstName, verificationToken, persona, source).catch((err) => {
+      sendVerificationEmail(user.email, user.firstName, verificationToken, persona, source, FREE_MINS_AT_REGISTRATION && isEvelynLanderSignup).catch((err) => {
         logger.error('Failed to send verification email:', err);
       });
     }
@@ -579,8 +622,21 @@ router.post('/magic-register', authLimiter, async (req: Request, res: Response) 
       }).catch(() => { /* logged inside */ });
     }
 
+    // Task 1.1 — grant welcome free-coins now (Evelyn lander first, flag-gated).
+    // Idempotent; /verify-email skips the grant when this already ran. Non-blocking.
+    let regGrantedCoins = 0;
+    if (!isTestEnv && FREE_MINS_AT_REGISTRATION && isEvelynLanderSignup) {
+      try {
+        if (await grantWelcomeCoins(user.id, EVELYN_LANDER_FREE_COINS)) {
+          regGrantedCoins = EVELYN_LANDER_FREE_COINS;
+        }
+      } catch (err) {
+        logger.error('Failed to grant welcome coins at registration (magic-register)', { err: (err as Error).message, userId: user.id });
+      }
+    }
+
     posthog.identify({ distinctId: user.id, properties: { email: user.email, name: user.firstName, signup_funnel: signupFunnelTag ?? 'standard', $set_once: { first_seen: new Date().toISOString() } } });
-    posthog.capture({ distinctId: user.id, event: 'user_registered', properties: { email: user.email, persona, source: source ?? null, requires_verification: !isTestEnv, quiz_topic: quizData?.topic ?? null } });
+    posthog.capture({ distinctId: user.id, event: 'user_registered', properties: { email: user.email, persona, source: source ?? null, requires_verification: !isTestEnv, quiz_topic: quizData?.topic ?? null, welcome_coins_at_registration: regGrantedCoins } });
 
     res.status(201).json({
       token,
@@ -588,7 +644,7 @@ router.post('/magic-register', authLimiter, async (req: Request, res: Response) 
         id: user.id,
         email: user.email,
         firstName: user.firstName,
-        coinBalance: user.coinBalance,
+        coinBalance: user.coinBalance + regGrantedCoins,
         emailVerified: user.emailVerified,
       },
       requiresVerification: !isTestEnv,
@@ -686,10 +742,14 @@ router.get('/verify-email/:token', async (req: Request, res: Response) => {
     await db.update(users)
       .set({
         emailVerified: true,
-        coinBalance: sql`coin_balance + ${freeCoinsGrant}`,
         updatedAt: new Date(),
       })
       .where(and(eq(users.id, user.id), eq(users.emailVerified, false)));
+    // Grant the welcome free-coins here UNLESS they were already granted at registration
+    // (Task 1.1). grantWelcomeCoins is idempotent via welcome_coins_granted_at, so when the
+    // reg-time grant already ran (Evelyn lander, flag on) this is a no-op and there is no
+    // double-grant; otherwise this is where the grant happens (today's behaviour for everyone).
+    const grantedAtVerify = await grantWelcomeCoins(user.id, freeCoinsGrant);
 
     // Luna thank-you gift: grant the 1,800 coins once (idempotent via promo_grants).
     // Additive to whatever balance the account already holds. Non-fatal on error.
@@ -775,7 +835,7 @@ router.get('/verify-email/:token', async (req: Request, res: Response) => {
         personaParam = `&persona=${personaRow[0].slug}`;
       }
     }
-    posthog.capture({ distinctId: user.id, event: 'email_verified', properties: { free_coins_granted: freeCoinsGrant, is_evelyn_lander_user: isEvelynLanderUser, is_soulmate_lander_user: isSoulmateLanderUser } });
+    posthog.capture({ distinctId: user.id, event: 'email_verified', properties: { free_coins_granted: grantedAtVerify ? freeCoinsGrant : 0, granted_at_registration: !grantedAtVerify, is_evelyn_lander_user: isEvelynLanderUser, is_soulmate_lander_user: isSoulmateLanderUser } });
 
     res.redirect(`${baseUrl}/login?verified=success&token=${jwtToken}${personaParam}`);
   } catch (error) {
@@ -833,7 +893,11 @@ router.post('/resend-verification', authLimiter, async (req: Request, res: Respo
       personaSlug = personaRow[0]?.slug;
     }
 
-    await sendVerificationEmail(user.email, user.firstName, verificationToken, personaSlug, sourceFromBody);
+    // If the welcome minutes were already granted (at registration, Task 1.1), the
+    // resent email says "your minutes are waiting — verify to keep access" rather than
+    // "verify to receive them". Uses the actual grant marker, so it's accurate regardless
+    // of the flag's current state.
+    await sendVerificationEmail(user.email, user.firstName, verificationToken, personaSlug, sourceFromBody, user.welcomeCoinsGrantedAt != null);
 
     res.json({ success: true, message: 'If an unverified account exists, a verification email has been sent.' });
   } catch (error) {

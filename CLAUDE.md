@@ -117,7 +117,7 @@ Preferred communication style: Simple, everyday language.
 | `/admin/personas` | Manage spiritual advisor personas |
 | `/admin/personas/new` | Create new persona |
 | `/admin/personas/:id` | Edit existing persona |
-| `/admin/prompts` | Manage system prompts and A/B tests |
+| `/admin/prompts` | ⚠ LEGACY — edits the old `persona_prompts` archive only; does NOT affect live chat. Live prompts: `/admin/personas` (persona editor). Prompt A/B tests: `/admin/experiments` |
 | `/admin/users` | View and manage user accounts |
 | `/admin/users/:id` | User detail and credit history |
 | `/admin/analytics` | Platform metrics and insights |
@@ -257,8 +257,8 @@ The chat implements a state machine with phases:
 
 **Features:**
 - Secure admin authentication separate from user accounts
-- **Personas Management** - Create, edit, and configure spiritual advisors
-- **Prompts Editor** - Manage system prompts with A/B testing variants
+- **Personas Management** - Create, edit, and configure spiritual advisors — **this is where live system prompts are edited** (`personas.base_system_prompt`, what the chat engine actually serves)
+- **Prompts Editor** - ⚠ LEGACY: edits the old `persona_prompts` version archive only; nothing here reaches live chat (its runtime selector was removed in the A/B consolidation). Prompt A/B tests live in `/admin/experiments`
 - **Users Management** - View user accounts, credit balances, and usage
 - **Analytics Dashboard** - Track platform metrics and performance
 

@@ -79,7 +79,12 @@ export default function PalmBridge() {
     track('palm_read_continue', { sign, hook, thumb: t, version })
     const v = version === 'a' ? '' : `&v=${version}`
     const s = sign === DEFAULT_SIGN ? '' : `&sign=${sign}`
-    navigate(`${funnelPath('/chat')}?hook=${hook}&thumb=${t}${s}${v}`)
+    // Preserve the ?clearing= preview override (dev/QA self-test of the prompt
+    // A/B) across the bridge→chat navigation. Real enrollment resolves via the
+    // ab_vid cookie (survives navigation) and is unaffected by this.
+    const clr = new URLSearchParams(window.location.search).get('clearing')
+    const c = clr === 'woven' || clr === 'control' ? `&clearing=${clr}` : ''
+    navigate(`${funnelPath('/chat')}?hook=${hook}&thumb=${t}${s}${v}${c}`)
   }
 
   // Landing on the bridge = a fresh quiz. Drop any prior chat session so the

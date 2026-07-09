@@ -672,6 +672,9 @@ Each message max 25 words. Urgent but not pushy. Confident but caring.
 
 export function buildShadowSummaryPrompt(userData: UserData): string {
   const bucketPrompt = userData.bucket ? BUCKET_PROMPTS[userData.bucket] : ''
+  // V1 prompt A/B — 'woven' arm threads the CLEARING theme (see 08/09). Control
+  // path is byte-identical to today.
+  const woven = userData.promptVariant === 'woven'
 
   return `
 ${EVELYN_BASE_PROMPT}
@@ -711,7 +714,9 @@ IMPORTANT:
 - Be SPECIFIC to their sub-bucket and situation
 - Reference their exact concern and vision
 - Make them feel like you understand WHY they've been struggling
-- Do NOT mention price, ritual, or offer yet - just the diagnosis
+- ${woven
+    ? 'Do NOT mention price or the offer yet. But END message 3 by signalling this block CAN be cleared — you have lifted blocks like this before — so relief is within reach. Do NOT name a price.'
+    : 'Do NOT mention price, ritual, or offer yet - just the diagnosis'}
 
 Response format:
 {"messages": ["msg1", "msg2", "msg3"]}
@@ -952,6 +957,8 @@ export function buildValueExplainPrompt(userData: UserData): string {
     latenight: "in these sacred hours",
   }
   const timePhrase = userData.timeOfDay ? timeRef[userData.timeOfDay] : "today"
+  // V1 prompt A/B — 'woven' arm keeps the CLEARING theme alive in the close.
+  const woven = userData.promptVariant === 'woven'
 
   return `
 ${EVELYN_BASE_PROMPT}
@@ -978,6 +985,7 @@ Generate 2 messages ONLY:
      - "I see you at 50, ${userData.firstName}... passport in hand, that weight of bills finally lifted."
      - "I see the connection between you restored... the distance melting away."
    - Make it feel REAL and IMMINENT
+   ${woven ? '- CLEARING THREAD: frame this vision as what opens up ONCE THE CLEARING IS DONE — e.g. "Once this is cleared, I see you…" — so their future is explicitly on the far side of the clearing.' : ''}
 
 2. End with a CROSSROADS question (not a statement):
    - "This is your crossroads, dear. Will you step toward that freedom?"

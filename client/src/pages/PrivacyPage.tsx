@@ -45,8 +45,8 @@ export default function PrivacyPage() {
               <p>Singapore</p>
               <p className="mt-2">
                 Data Protection Enquiries:{' '}
-                <a href="mailto:support@cosmonumerology.com" className="text-purple-300 hover:text-white underline">
-                  support@cosmonumerology.com
+                <a href="mailto:hi@theseerwithin.com" className="text-purple-300 hover:text-white underline">
+                  hi@theseerwithin.com
                 </a>
               </p>
             </div>
@@ -233,8 +233,8 @@ export default function PrivacyPage() {
             </div>
             <p className="mt-4">
               To exercise any of these rights, please email us at{' '}
-              <a href="mailto:support@cosmonumerology.com" className="text-purple-300 hover:text-white underline">
-                support@cosmonumerology.com
+              <a href="mailto:hi@theseerwithin.com" className="text-purple-300 hover:text-white underline">
+                hi@theseerwithin.com
               </a>
               . We will respond to verifiable requests within 30 days. We may need to verify your identity
               before processing your request.
@@ -274,8 +274,8 @@ export default function PrivacyPage() {
               providing your email during checkout or by signing up to our mailing list). You may
               unsubscribe at any time by clicking the "unsubscribe" link in any marketing email or
               by emailing us at{' '}
-              <a href="mailto:support@cosmonumerology.com" className="text-purple-300 hover:text-white underline">
-                support@cosmonumerology.com
+              <a href="mailto:hi@theseerwithin.com" className="text-purple-300 hover:text-white underline">
+                hi@theseerwithin.com
               </a>
               . Transactional emails (such as receipts and account notifications) are not subject
               to marketing opt-out.
@@ -319,8 +319,8 @@ export default function PrivacyPage() {
               <p>Singapore</p>
               <p className="mt-2">
                 Email:{' '}
-                <a href="mailto:support@cosmonumerology.com" className="text-purple-300 hover:text-white underline">
-                  support@cosmonumerology.com
+                <a href="mailto:hi@theseerwithin.com" className="text-purple-300 hover:text-white underline">
+                  hi@theseerwithin.com
                 </a>
               </p>
             </div>

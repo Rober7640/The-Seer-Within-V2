@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import type { Bucket } from "@shared/types";
 import lavaStoneImage from "../assets/images/lava-stone.jpg";
 import { funnelPath } from "../lib/funnel";
+import { trackABConversion } from "../hooks/useABTest";
 
 interface UserData {
   firstName: string;
@@ -89,6 +90,13 @@ export default function UpsellPage() {
           const purchaseAmount = (data.mainPurchaseAmount || 3500) / 100;
           trackPurchase(purchaseAmount, "USD", data.email, "Energy Clearing Ritual", sid ?? undefined, { skipServerRelay: true });
           trackGAdsPurchase("main", purchaseAmount, sid);
+
+          // V1 prompt A/B (v1_clearing_theme_palm_2026) — primary metric =
+          // purchase_completed. Same-session, so the ab_vid cookie is present;
+          // /api/ab/convert self-gates (no-op unless this visitor was enrolled in a
+          // running test scoped to this page), so firing it here is safe for ALL
+          // funnels. Inside the dedup guard ⇒ counts once per purchase.
+          trackABConversion("v1_chat_palm");
 
           // Trackdesk affiliate conversion tracking - main purchase
           if (typeof window.trackdesk === "function") {

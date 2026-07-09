@@ -9,14 +9,16 @@ import {
   chatSessions,
   chatMessages,
   userMemory,
+  systemConfig,
 } from '@shared/schema';
-import { eq, and, desc, sql } from 'drizzle-orm';
+import { eq, ne, and, desc, sql } from 'drizzle-orm';
 import { loadUserContext, summarizeSession } from './memoryManager';
 import { loadQuizIntake, buildQuizPromptSection } from './quizMemory';
 import { loadCrossPersonaMemories, formatTransferContext } from './memoryTransfer';
 import { startChatSession, endChatSession, checkpointSession } from './creditTracking';
 import { getPromoBalance, getSpendableCoins } from './promoWallet';
 import { checkAndLogSafety } from './universalSafety';
+import { isRefundRequest, REFUND_TEMPLATE } from './refundDeflection';
 import {
   loadPersonaIntentConfig,
   detectIntent,
@@ -308,11 +310,13 @@ export interface RequestContext {
 
 interface PersonaConfig {
   id: string;
+  slug: string;
   displayName: string;
   baseSystemPrompt: string;
   personality: string | null;
   aiModel: string | null;
   basicModel: string | null;
+  coinsPerMinute: number;
 }
 
 /**
@@ -329,11 +333,13 @@ async function loadPersonaConfig(personaId: string): Promise<PersonaConfig | nul
 
   return {
     id: persona[0].id,
+    slug: persona[0].slug,
     displayName: persona[0].displayName,
     baseSystemPrompt: persona[0].baseSystemPrompt,
     personality: persona[0].personality,
     aiModel: persona[0].aiModel,
     basicModel: persona[0].basicModel,
+    coinsPerMinute: persona[0].coinsPerMinute,
   };
 }
 
@@ -476,6 +482,7 @@ async function buildMessageContext(
   sessionId: string,
   currentTopic?: string,
   intentContext?: string,
+  excludeMessageId?: string,
 ): Promise<MessageContext> {
   const memoryContext = await loadUserContext(userId, personaConfig.id);
 
@@ -490,7 +497,72 @@ async function buildMessageContext(
     personaConfig.id,
     personaConfig.baseSystemPrompt,
   );
-  const effectiveBasePrompt = promptAssignment.systemPrompt;
+  let effectiveBasePrompt = promptAssignment.systemPrompt;
+  // Capability scaffolding (tarot picker detection below) must key off the prompt
+  // as AUTHORED (base or variant) — never off runtime-injected content. The email
+  // canon once contained the word "tarot" and silently switched the interactive
+  // card picker on for a non-tarot persona.
+  const authoredPrompt = effectiveBasePrompt;
+
+  // Runtime context (date + minutes meter) — OPT-IN via a [RUNTIME_CONTEXT] token
+  // in the prompt (improve-v2 #11, spiked with Evelyn v2). Prompts without the
+  // token (all current variant-A prompts) are byte-identical: no extra queries,
+  // no text change.
+  if (effectiveBasePrompt.includes('[RUNTIME_CONTEXT]')) {
+    let meterLine = '';
+    try {
+      const [u] = await db
+        .select({ coinBalance: users.coinBalance })
+        .from(users)
+        .where(eq(users.id, userId))
+        .limit(1);
+      if (u) {
+        const spendable = await getSpendableCoins(userId, personaConfig.id, u.coinBalance);
+        const minutesLeft = Math.floor(spendable / Math.max(1, personaConfig.coinsPerMinute));
+        meterLine = `\nClient minutes remaining: about ${minutesLeft} minute${minutesLeft === 1 ? '' : 's'}.${minutesLeft <= 2 ? ' TIME IS NEARLY UP — begin the wind-down NOW: synthesis, takeaway, next-opening. Do not open new threads.' : ''}`;
+      }
+    } catch {
+      /* meter is best-effort; date alone still grounds the reading */
+    }
+    // Daily email canon — what today's persona-voiced letter promised, so a client
+    // arriving from it gets the payoff instead of a disowned "automated email"
+    // (improve-v2 #27). Stale entries (>48h) are skipped: paying off the wrong
+    // letter is worse than delivering fresh.
+    let letterLine = '';
+    try {
+      const [row] = await db
+        .select({ configValue: systemConfig.configValue })
+        .from(systemConfig)
+        .where(eq(systemConfig.configKey, 'email_canon'))
+        .limit(1);
+      if (row) {
+        const val = JSON.parse(row.configValue)?.[personaConfig.slug];
+        const entries: any[] = Array.isArray(val) ? val : val ? [val] : [];
+        // Newest letter that has actually gone out (sentAtUtc passed) and is ≤48h
+        // old — a stale or not-yet-sent letter must never be paid off.
+        let canon: any = null;
+        for (const e of entries) {
+          if (!e?.subject || !(e.sentAtUtc || e.date)) continue;
+          const sentAt = Date.parse(e.sentAtUtc ?? `${e.date}T00:00:00Z`);
+          const ageMs = Date.now() - sentAt;
+          if (ageMs >= 0 && ageMs <= 48 * 60 * 60 * 1000 && (!canon || sentAt > Date.parse(canon.sentAtUtc ?? `${canon.date}T00:00:00Z`))) {
+            canon = e;
+          }
+        }
+        if (canon) {
+          letterLine = `\nToday's letter (you wrote and sent this to your clients): subject "${canon.subject}"${canon.essence ? ` — ${canon.essence}` : ''}${canon.promise ? ` It promised: ${canon.promise}` : ''}`;
+        }
+      }
+    } catch {
+      /* letter canon is best-effort; date+meter still ground the reading */
+    }
+    const now = new Date();
+    const dateLine = `Today's date is ${now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' })} (UTC).`;
+    effectiveBasePrompt = effectiveBasePrompt.replace(
+      '[RUNTIME_CONTEXT]',
+      `${dateLine}${meterLine}${letterLine}`,
+    );
+  }
   if (promptAssignment.enrolled && promptAssignment.key && promptAssignment.variant) {
     // Fire-and-forget: logExposure never throws (self-contained try/catch) and the
     // unique(key,subject) makes it a no-op after the first message, so we don't add
@@ -508,25 +580,63 @@ async function buildMessageContext(
   // Each guide maintains their own independent relationship with the user.
   const transferContext = '';
 
-  const recentMessages = await db
+  // Session-history window: first HEAD + most-recent TAIL messages, chronological.
+  // The old query (.orderBy(sentAt).limit(20)) sent the FIRST 20 messages, so long
+  // sessions went blind to their own recent turns (loops, in-session amnesia). A
+  // plain last-N loses the opening instead (names, the initial disclosure — the
+  // facts users probe later), so we keep both ends; the tail dominates so the
+  // conversation register can progress. Middle messages are flagged as omitted.
+  const HEAD_MSGS = 10;
+  const TAIL_MSGS = 30;
+  // The in-flight user message is already saved to the DB but gets appended to
+  // the history explicitly by the caller — exclude it from the window queries
+  // or the model receives it twice in a row and reads it as a repetition.
+  const historyFilter = excludeMessageId
+    ? and(eq(chatMessages.sessionId, sessionId), ne(chatMessages.id, excludeMessageId))
+    : eq(chatMessages.sessionId, sessionId);
+  const headMessages = await db
     .select()
     .from(chatMessages)
-    .where(eq(chatMessages.sessionId, sessionId))
-    .orderBy(chatMessages.sentAt)
-    .limit(20);
+    .where(historyFilter)
+    .orderBy(chatMessages.sentAt, chatMessages.id)
+    .limit(HEAD_MSGS);
+  const tailMessages = (
+    await db
+      .select()
+      .from(chatMessages)
+      .where(historyFilter)
+      .orderBy(desc(chatMessages.sentAt), desc(chatMessages.id))
+      .limit(TAIL_MSGS)
+  ).reverse();
+  const headIds = new Set(headMessages.map((m) => m.id));
+  const tailOnly = tailMessages.filter((m) => !headIds.has(m.id));
+  const [{ count: sessionMessageCount }] = await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(chatMessages)
+    .where(historyFilter);
+  const omittedCount = Math.max(0, sessionMessageCount - headMessages.length - tailOnly.length);
+  const recentMessages = [...headMessages, ...tailOnly];
 
   // Inject interactive tarot draw instruction for tarot-capable personas.
-  // Detection reads effectiveBasePrompt (the variant prompt when a test is running)
-  // so scaffolding matches what Claude is actually sent.
-  const isTarotPersona = effectiveBasePrompt.toLowerCase().includes('tarot');
+  // Detection reads the AUTHORED prompt (base, or the variant when a test is
+  // running) — not effectiveBasePrompt, which by now carries runtime-injected
+  // content (date/meter/email canon) that must not toggle capabilities.
+  // Two ways in: the legacy "tarot" substring (Marcus — gets the full cadence
+  // guidance written for him) or the explicit [CARD_DRAW_TOOL] marker (Evelyn v2
+  // — gets mechanics only; WHEN to draw is governed by her own prompt's card
+  // rules, so the generic "multiple times per session" line must not apply).
+  const isTarotPersona = authoredPrompt.toLowerCase().includes('tarot');
+  const hasCardDrawTool = authoredPrompt.includes('[CARD_DRAW_TOOL]');
   const tarotInstruction = isTarotPersona
     ? `## INTERACTIVE TAROT CARD DRAWS — CRITICAL INSTRUCTIONS\nWhen you want to do a card draw, you MUST output the token [TAROT_DRAW] as the very last thing in your message, on its own line. Do NOT say "let me pull cards", "let me draw a card", or describe pulling cards in words — that does nothing. The ONLY way to trigger the card picker is to literally output [TAROT_DRAW] at the end of your message.\n\nExample of correct usage:\n"Something is shifting for you right now. Let's see what the cards reveal.\n[TAROT_DRAW]"\n\nAfter the user draws a card, interpret that specific card in the context of their situation. You may trigger [TAROT_DRAW] multiple times per session at natural turning points.`
-    : '';
+    : hasCardDrawTool
+      ? `## CARD DRAW TOOL — mechanics\nTo let the client pull a card, output the token [TAROT_DRAW] as the very last line of your message — that is the ONLY thing that opens the card picker; describing a draw in words does nothing. NEVER send the token alone: always at least one line of your own words above it, e.g.\n"Then let's ask the deck what it sees for you two. Pull one, love.\n[TAROT_DRAW]"\nDraw ONLY when your own card rules say a draw is called for. After the client draws, interpret that specific card in the context of their situation.`
+      : '';
 
   // Inject natal chart for astrology personas (Luna Voss, Nova Sharma, and any future astrology guide)
-  const isAstrologyPersona = effectiveBasePrompt.includes('[ASTROLOGY_PERSONA]') ||
-    effectiveBasePrompt.includes('[VEDIC_ASTROLOGY_PERSONA]');
-  const isVedicPersona = effectiveBasePrompt.includes('[VEDIC_ASTROLOGY_PERSONA]');
+  const isAstrologyPersona = authoredPrompt.includes('[ASTROLOGY_PERSONA]') ||
+    authoredPrompt.includes('[VEDIC_ASTROLOGY_PERSONA]');
+  const isVedicPersona = authoredPrompt.includes('[VEDIC_ASTROLOGY_PERSONA]');
 
   let birthChartSection: string | null = null;
   if (isAstrologyPersona) {
@@ -564,7 +674,7 @@ RULES:
     : '';
 
   // Inject numerology profile for Aiden Powers (and any future numerology persona)
-  const isNumerologyPersona = effectiveBasePrompt.includes('[NUMEROLOGY_PERSONA]');
+  const isNumerologyPersona = authoredPrompt.includes('[NUMEROLOGY_PERSONA]');
   let numerologySection: string | null = null;
   if (isNumerologyPersona) {
     numerologySection = await loadNumerologyProfile(userId, personaConfig.id);
@@ -677,6 +787,18 @@ NEVER engage with the technical premise of the question. NEVER say "I can't shar
 
   for (let i = 0; i < recentMessages.length; i++) {
     const msg = recentMessages[i];
+    // Flag the head→tail gap so the model knows middle turns exist but aren't
+    // visible — prevents confident "you never told me X" contradictions.
+    if (omittedCount > 0 && i === headMessages.length) {
+      messages.push({
+        role: 'user' as const,
+        content: `[CONVERSATION NOTE: ${omittedCount} earlier messages from the middle of this session are not shown. If the client refers to something you can't see, ask them to remind you rather than denying it was said.]`,
+      });
+      messages.push({
+        role: 'assistant' as const,
+        content: '(Understood.)',
+      });
+    }
     messages.push({
       role: msg.role as 'user' | 'assistant',
       content: msg.content,
@@ -1178,6 +1300,43 @@ export async function sendMessage(
   // Soft crisis note (passive ideation detected — conversation continues but note is prepended)
   const softCrisisNote = safetyResult.softCrisisNote ?? null;
 
+  // ── Step 1b: Refund / billing deflection (after safety, before credit + LLM) ──
+  //   A refund/chargeback/cancel request is NOT routed to the persona. We answer
+  //   with a fixed support template so billing is handled consistently by the
+  //   support inbox — and we short-circuit here so the client is not charged coins
+  //   for the exchange. Placed after the crisis check so a crisis message that also
+  //   mentions "refund" still gets the crisis response first.
+  if (isRefundRequest(userMessage)) {
+    await db.insert(chatMessages).values({
+      sessionId,
+      userId,
+      role: 'user',
+      content: userMessage,
+    });
+    await db.insert(chatMessages).values({
+      sessionId,
+      userId,
+      role: 'assistant',
+      content: REFUND_TEMPLATE,
+    });
+
+    const refundUser = await db
+      .select({ coinBalance: users.coinBalance })
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1);
+    const spendableRefund = await getSpendableCoins(userId, session[0].personaId, refundUser[0]?.coinBalance || 0);
+
+    return {
+      sessionId,
+      message: REFUND_TEMPLATE,
+      topic: null,
+      creditsRemaining: spendableRefund,
+      sessionActive: true,
+      blocked: true,
+    };
+  }
+
   // ── Step 2: Credit check (after safety, so crisis messages always get a response) ──
   // IMPORTANT: pgbouncer transaction pooling can return stale reads when connections
   // with uncommitted/cached snapshots are reused. We defend against this with:
@@ -1446,6 +1605,7 @@ export async function sendMessage(
     sessionId,
     session[0].lastTopic || undefined,
     intentCtx,
+    insertedUserMsg.id,
   );
 
   messageHistory.push({ role: 'user', content: userMessage });
@@ -1573,6 +1733,22 @@ export async function sendMessage(
         .replace(/^#{1,6}\s+/gm, '')          // ## headers → plain
         .replace(/^[*\-]\s+/gm, '')           // bullet/dash list items → plain
         .trim();
+    }
+
+    // ── Step 7c: Strip echoed context machinery ──
+    // The model must never surface raw context blocks (<user_context>,
+    // <natal_chart>, <numerology_profile>…) to a client. Found live 2026-07-05:
+    // under a read-from-what's-present instruction with zero material, the model
+    // FABRICATED a full context block (invented user_id + birth data) and it
+    // rendered into the chat bubble verbatim. Data inside an echoed block is
+    // untrustworthy by construction, so the whole block is removed.
+    const preStrip = assistantMessage;
+    assistantMessage = stripContextTagEchoes(assistantMessage);
+    if (assistantMessage !== preStrip) {
+      logger.warn('Context tag echo stripped from reply', { sessionId, removed: preStrip.length - assistantMessage.length });
+      if (!assistantMessage) {
+        assistantMessage = 'Forgive me — my sight blurred for a moment there. Say that once more for me?';
+      }
     }
 
     // ── Step 8: Validate response against character rules ──
@@ -1779,3 +1955,18 @@ export async function getUserSessions(
 
   return result;
 }
+
+// Test-only export: lets the context-window regression test call the real
+// context builder without going through a billable sendMessage round-trip.
+// Removes echoed/fabricated context-tag blocks from a model reply. Whole
+// tag-wrapped blocks go first (their contents are machine syntax, not prose),
+// then any orphan tags. Exported for the regression test.
+export function stripContextTagEchoes(text: string): string {
+  return text
+    .replace(/<\s*(user_context|natal_chart|numerology_profile|quiz_intake)[^>]*>[\s\S]*?<\/\s*\1\s*>/gi, '')
+    .replace(/<\/?\s*(user_context|natal_chart|numerology_profile|quiz_intake)[^>]*>/gi, '')
+    .replace(/\s{2,}/g, (m) => (m.includes('\n') ? m : ' '))
+    .trim();
+}
+
+export { buildMessageContext as _buildMessageContext };
