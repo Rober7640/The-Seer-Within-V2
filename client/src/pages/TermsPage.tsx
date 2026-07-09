@@ -294,8 +294,8 @@ export default function TermsPage() {
               <p>Singapore</p>
               <p className="mt-2">
                 Email:{' '}
-                <a href="mailto:support@cosmonumerology.com" className="text-purple-300 hover:text-white underline">
-                  support@cosmonumerology.com
+                <a href="mailto:hi@theseerwithin.com" className="text-purple-300 hover:text-white underline">
+                  hi@theseerwithin.com
                 </a>
               </p>
             </div>
