@@ -1,186 +1,56 @@
 ---
 name: persona-audit
-description: One-command persona-quality regression audit. Runs the frozen eval cases and the real-conversation replay through the LIVE chat engine, then the Playwright UI capture through the real browser, scores every transcript against the EVAL.md rubric, compares to the frozen baseline, and writes a SHIP / DO-NOT-SHIP before/after report. Use BEFORE shipping any persona prompt or chat-engine change to catch regressions before customers (or the A/B numbers) do. Trigger phrases include "run the persona audit", "audit <persona> against baseline", "persona audit labeled <x>", "eval + playwright audit before I ship".
+description: "Daily production buyer/transcript audit for the V2 chat service — pull every completed purchase in a window (default 24h) plus the full chat transcripts around each one from the PRODUCTION DB (read-only + canary), analyze what preceded/followed each purchase against the persona rubric, detect billing anomalies, and write a PII-safe findings report. Use when asked to: run the daily audit, pull the latest buyer transcripts, audit purchases in the last N hours, check what preceded purchases, find leaks and gaps in live chats. Findings feed the prompt-iteration loop (eval + playwright). First proven run: improve-v2/prompt-b-buyer-audit-12h-2026-07-10.md."
 ---
 
-# Skill: Persona Audit — pre-ship regression gate
+# Persona Audit — daily buyer-transcript pull & diagnosis
 
-## Purpose
+The engine is two plain TypeScript scripts; this skill orchestrates **pull → analyze → read → report** and defines the rubric. It reads production, so the safety contract below is non-negotiable.
 
-Catch persona/chat regressions **before they ship**, instead of waiting weeks for A/B
-numbers or a churn spike. This is the one-command operator version of the harnesses in
-`improve-v2/eval/` — it runs them in the right order, scores the output against the frozen
-rubric, diffs against the baseline, and produces a single verdict + report.
+## Safety contract (hard rules)
+1. **Read-only, always.** `scripts/pull-buyer-transcripts.ts` runs a startup **canary write inside `BEGIN TRANSACTION READ ONLY`** — it must be rejected with SQLSTATE 25006 or the script aborts. Every data query runs in an explicit READ ONLY transaction. Never "fix" the canary; if it fails, stop and report.
+2. **Prod DB required.** The script refuses `localhost` DATABASE_URL. If `.env` points local, ask the user to switch it (see memory: local .env is dev seed data).
+3. **PII containment.** Raw transcripts go ONLY under `improve-v2/transcripts/` (gitignored, `*` rule). Committed reports use buyer initials/tags (`01-GH`) and single-letter third-party names. Never commit emails, full names, or raw transcript files. Exclude `%@eval.internal` (the pull does this) and flag—don't hide—any team-looking buyer emails.
+4. **No writes to prod, ever** — this skill diagnoses; fixes ship through the normal dev→review→deploy path.
 
-It runs **eval tests first, then Playwright** — deliberately:
+## Inputs
+- **Window**: default `--hours 24` for the daily run; or `--from/--to` ISO for custom windows. Baselines for comparison already exist under `improve-v2/transcripts/monitor/` (`preflip-baseline-48h`, `purchases-12h`).
 
-1. **Eval (fast, headless)** — drives the REAL engine (`initSession → sendMessage`) so
-   prompt/logic regressions surface in seconds. Two tracks: frozen synthetic cases and
-   real-customer replay.
-2. **Playwright (slower, real browser)** — catches what the engine tests *cannot*: dead
-   air, blank bubbles, the tarot card picker. (It has caught a held-breath hang and an
-   empty-bubble bug that were invisible to the eval tracks.)
+## Steps
+1. **Pull.**
+   ```bash
+   npx tsx scripts/pull-buyer-transcripts.ts --hours 24 --out improve-v2/transcripts/monitor/daily-YYYY-MM-DD
+   ```
+   Deterministic outputs in that dir: `00-run-meta.json` (canary result, experiment/flip state, counts), `01-purchases.json`, `02-sessions.json`, `03-exposures.json`, `INDEX.md`, and `buyers/<NN-XX>/buyer.md` + `session-<id8>.md` full transcripts. Confirm in `00-run-meta.json`: canary `rejected (SQLSTATE 25006)`, and note the experiment `started_at` (prompt-flip time) — sessions started before it ran the old prompt.
+2. **Mechanical stats.**
+   ```bash
+   npx tsx scripts/analyze-buyer-pull.ts improve-v2/transcripts/monitor/daily-YYYY-MM-DD "label"
+   ```
+   Prints: purchase context (during / buy-to-continue ≤15m/≤60m / cold / long-gap), reading-before-cut %, cut-on-question %, ask-only-turn %, resume-≤15m %, and **billing health** (overbilled sessions where `coins ≥ duration+60`, zombies, idle-tail billing). Compare against the frozen baselines and the previous daily runs.
+3. **Read the transcripts — all buyers, not a sample.** (Cohorts are small; 10–20 buyers/day.) Classify per purchase using the rubric below; metadata heuristics (ends-on-`?`, word counts) are leads, not verdicts — the transcript decides.
+4. **Report.** Write `improve-v2/daily/YYYY-MM-DD-buyer-audit.md` (committed, PII-safe) with exactly these sections — template: `improve-v2/prompt-b-buyer-audit-12h-2026-07-10.md`:
+   1. Headline + before/after stat table (vs baseline + prior day)
+   2. Per-buyer table (package, buy-to-continue?, reading-before-cut?, buyer type, prompt version, notes)
+   3. Sharpest verbatim quotes (short, initials only)
+   4. **Leaks & gaps ranked by money at risk**, each tagged 🔴/🟠/🟡 and CODE / PROMPT / RUNTIME / ROLLOUT / SYSTEM
+   5. Answers to the standing questions (reading-before-cut? buy-to-continue still converting?)
+   6. Repro commands
+5. **Hand off to the fix loop.** For each PROMPT finding, add a reproducing case to `improve-v2/eval/cases.json` (method: `improve-v2/eval/EVAL.md`); for CODE findings, name the exact session ids + the field contradiction (e.g. `coins_charged` vs `duration_seconds`). Prompt changes are then iterated and scored via the eval suite, plus a small Playwright smoke (`improve-v2/playwright/`) for data-level bugs evals can't see. Do not make the changes inside this skill's run unless the user asks.
 
-This skill only **reads and runs** the existing scripts and writes eval output + a report.
-It changes **no product code**.
+## Analysis rubric (per purchase)
+- **Purchase context**: bought DURING a live session / buy-to-continue (session ended ≤15m / ≤60m before) / delayed return (>60m) / cold start (no session in 48h — usually a daily-letter return at balance 0; note it).
+- **Cutoff shape**: did the pre-purchase session end on an open question (cliffhanger) or after a delivered verdict? Did the money (balance) or the clock end it? Was there a wind-down, or a silent hard-zero death?
+- **Reading delivered?** Did a full reading (anchor → block → opening, ≥~100 words, declarative) land **before** the cut? A greeting or pure questions ≠ reading.
+- **Buyer type**: companion-seeker (questions feel like care; long arcs; buys to stay in the room) vs answer-seeker (wants the verdict; pays despite questions; churns if starved) vs support-seeker (billing/product issue — should never be monetized into a reading).
+- **Cadence**: give-then-ask (verdict first, ≤1 question, statement after a question-turn) vs ask-only turns. Count consecutive question-endings.
+- **Honesty (TRUE READ / FEELING LAYER)**: any invented checkable facts (absent person's actions: read/saw/checked/knows), comforting-yes on reunion questions, predictions with dates/deadlines, contradicting client-given facts, memory misattributions ("old note that doesn't belong to your story").
+- **CARE**: crisis/abuse/scam/money-survival handling — plain language, no mystifying, no sales beat; note false-positive triggers and whether recovery was graceful.
+- **Cross-system**: mentions of V1 products (main reading, Protection Ritual/stone, Manifestation Bracelet, energy-clearing PDF) or other surfaces (7-min promo chat, landers) — does the persona disown or mishandle them?
+- **Billing forensics** (trust the DB ledger, not logs): `coins_charged` vs `duration_seconds` vs `last_message_at` (close-out drain / idle-tail); parallel sessions billing the same minutes (content-duplicate messages prove it); zombie session bursts; packs drained to exactly 0 far faster than wall-clock. These are dispute precursors (marihayes shape) — always list exact session ids.
+- **Exposure check**: buyer has the expected `experiment_exposures` variant row; sessions started pre-flip ran the old prompt — split findings accordingly.
 
----
-
-## Trigger Phrases
-
-- "run the persona audit"
-- "persona audit" / "run persona-audit"
-- "audit <persona> against baseline" (e.g. "audit Marcus against baseline")
-- "run the persona audit labeled <label>"
-- "eval and playwright audit before I ship"
-- "check the personas didn't break"
-- "did my prompt change break anything"
-
----
-
-## Fixed Parameters
-
-| Parameter | Value / default |
-|---|---|
-| `label` | Required. A short kebab-case run label describing the change under test (e.g. `after-window-fix`, `evelyn-b3`). If the user didn't give one, ask for a one-line description and derive it. **Never** use `baseline-preflight` or `replay-baseline` as a run label — those are the frozen "before" records. |
-| `persona` | Optional filter. If the user named a persona, restrict Track 1 with `--case`/persona-matching cases and Track 2 with `--pick persona:<slug>`. Default: all personas. |
-| `track1_baseline` | `baseline-preflight` (the frozen synthetic "before" in `improve-v2/eval/runs/baseline-preflight/`). |
-| `track2_baseline` | The FIXED session-id set + metrics in `improve-v2/eval/BEFORE-replay-baseline.md`. Re-run the after-set against those exact ids for like-for-like. |
-| `run_ui_track` | `true` if a dev server is reachable on `:5000`; otherwise skip with a clear note (see Step 3). |
-| `report_file` | `improve-v2/eval/reports/<label>.md` |
-| `rubric` | The 12-check rubric in `improve-v2/eval/EVAL.md` (§Scoring rubric) + each case's own `tests[]` array. |
-| `scope` | READ/RUN only. Never edits product code, never edits a frozen case, never commits replay (PII) transcripts. |
-
----
-
-## Execution Steps
-
-### Step 0 — Preflight
-
-1. Confirm you're at the repo root (`package.json`, `scripts/eval-chat.ts` present).
-2. Read `improve-v2/eval/EVAL.md` in full — it is the source of truth for the rubric,
-   the run protocol, and the caveats. Do not proceed from memory.
-3. Resolve the `label` (see Fixed Parameters). Confirm the label back to the user.
-4. Confirm the baseline exists: `improve-v2/eval/runs/baseline-preflight/_summary.md`
-   and `improve-v2/eval/BEFORE-replay-baseline.md`. If a baseline is **missing**, tell
-   the user this run will become the baseline (capture-only, no before/after diff) and
-   proceed with the appropriate baseline label instead.
-5. `npx tsx scripts/eval-chat.ts --dry` to list the current cases so you know what's in scope.
-
-### Step 1 — Track 1: frozen eval cases (fast gate)
-
-- Run: `npx tsx scripts/eval-chat.ts --label <label>` (add `--case <id>` when a single
-  persona/case was requested).
-- This drives the live engine with throwaway `eval-*@eval.internal` users.
-- Read `improve-v2/eval/runs/<label>/_summary.md`, then read **every** transcript
-  `improve-v2/eval/runs/<label>/<case-id>.md`. Note the `checks:` line in each — those
-  are the case's own pass conditions.
-
-### Step 2 — Track 2: real-conversation replay
-
-- For an after-run, read `improve-v2/eval/BEFORE-replay-baseline.md` and extract the
-  FIXED session-id set, then run:
-  `npx tsx scripts/eval-replay.ts --label <label> --sessions <id1,id2,…>`
-  (like-for-like with the baseline; do NOT use `--pick` for an after-run).
-- If capturing a fresh baseline, `--pick` is acceptable — note which set was used.
-- Output is **PII (real customer content)** → `improve-v2/transcripts/replays/<label>/`
-  (gitignored). Read it to score, but **never commit it** and never quote raw customer
-  content in the report — use redacted excerpts / metrics only.
-
-### Step 3 — Track 3: Playwright UI capture (real browser)
-
-- Check whether a dev server is reachable on `:5000` (e.g. a quick request to
-  `http://localhost:5000`). The UI harness force-lists the Evelyn prompt experiment on
-  itself, so it needs the server up.
-- If reachable: `npx tsx scripts/ui-capture.ts --label <label>`
-  (optionally `--scenarios <path.json>` for custom flows). Read
-  `improve-v2/eval/ui-runs/<label>/transcript.md` and inspect `shots/*.png` for:
-  blank/empty bubbles, dead air / long waits, broken or missing card picker, and any
-  tool-UI state that never rendered.
-- If NOT reachable: skip this track and record in the report that the UI track was
-  **not run** (and how to run it: start the dev server on :5000, then
-  `npx tsx scripts/ui-capture.ts --label <label>`). Do not silently omit it — a skipped
-  track must be visible in the verdict.
-
-### Step 4 — Score against the rubric
-
-For every Track-1 and Track-2 transcript, score each rubric check **0/1** using both the
-global rubric (EVAL.md §Scoring rubric) and the case's own `tests[]`. Because model output
-varies with temperature, **if a single check flips vs baseline, re-run that one case**
-(`--case <id>`) to confirm before calling it a regression (EVAL.md §Caveats).
-
-### Step 5 — Compare to baseline (the regression gate)
-
-- For each case, put the baseline score next to this run's score. A check that went
-  **1 → 0 is a regression**; **0 → 1 is a fix**.
-- Weight **early replay turns highest** — late replay turns drift out of context under a
-  changed system (EVAL.md §Replay-drift caveat), so a late-turn mismatch is often not a
-  real regression.
-- Roll up: total checks passed / total, per-persona pass rate, and the list of confirmed
-  regressions (case + which check + transcript path).
-
-### Step 6 — Write the report
-
-Write `improve-v2/eval/reports/<label>.md`:
-
-```markdown
-# Persona Audit — <label>
-**Date:** <YYYY-MM-DD>   **Baseline:** baseline-preflight + BEFORE-replay-baseline
-**Tracks run:** frozen ✓ · replay ✓ · UI ✓/skipped
-
-## Verdict: SHIP ✅ / DO NOT SHIP ❌ / SHIP WITH CAVEATS ⚠
-<one-paragraph reason>
-
-## Summary
-- Frozen cases: X/Y checks passed (was Z/Y at baseline)
-- Regressions (1→0): N   |   Fixes (0→1): M
-- UI issues: <blank bubbles / dead air / card picker / none>
-
-## Regressions (must-read)
-| Case | Check that broke | Baseline | Now | Transcript |
-|---|---|---|---|---|
-| ... | ... | 1 | 0 | runs/<label>/<case>.md |
-
-## Per-case rubric (before → after)
-<table: case × rubric-check, baseline vs this run>
-
-## Replay track (redacted)
-<metrics + redacted excerpts only — NO raw customer content>
-
-## UI track
-<findings from ui-runs/<label>/transcript.md + notable screenshots, or "not run — server down">
-
-## Appendix
-- Cases run, session ids used for replay, commands executed.
-```
-
-Commit the report + the synthetic Track-1 run (`runs/<label>/`) — they are PII-free and
-diffable. Do **not** commit the replay directory.
-
-### Step 7 — Summarize to the user
-
-Output: the **verdict** (SHIP / DO NOT SHIP), the count of regressions and fixes, the top
-1–3 regressions with their transcript paths, any UI issues (or that the UI track was
-skipped and why), and the report path. If there are regressions, ask: "Want me to dig into
-any of these transcripts?" Never auto-fix — this skill is a gate, not a fixer.
-
----
-
-## Notes for the Agent
-
-1. **Order is the point.** Eval tracks first (cheap, catch logic/prompt breaks), Playwright
-   second (catches UI-only breakage). Don't reorder.
-2. **Read EVAL.md every run** — the rubric and the fixed replay session-ids are the source
-   of truth; they change as cases are added.
-3. **Never edit a frozen case** (`improve-v2/eval/cases.json`) or overwrite a baseline
-   label. Add cases; use new run labels.
-4. **Replay is PII.** Score from it, but keep it gitignored, never commit it, and only put
-   redacted metrics/excerpts in the report.
-5. **Temperature variance is real.** Re-run any single flipped check once before declaring
-   a regression. Score by rubric, not string-diff.
-6. **A skipped track is a finding.** If the UI track didn't run (server down), the verdict
-   must say so — an unrun track is not a pass.
-7. **Eval users pollute KPIs.** They're real DB rows (`*@eval.internal`); remind the user
-   they're excluded from analytics with `email NOT LIKE '%@eval.internal'`.
-8. **This is a gate, not a fixer.** Report and stop. Offer to investigate transcripts or
-   implement fixes only after delivering the verdict.
+## Known context (don't rediscover)
+- Experiment `persona_prompt_evelyn_2026` is A=0/B=100 (a rollout, not a test) — flip 2026-07-09 09:13 UTC. Weights are frozen (409 on edit); keep status `running` (done/winner reverts Evelyn to base prompt).
+- Billing = 1 coin/second in 15s ticks, capped at balance. Packs: welcome $2.99, popular $19.99/540, best_value $29.99/900, premium $49.99/1800, whale $99.99. `admin_adjustment` $0 rows are support credits, not purchases (analyzer excludes them).
+- Session-churn replays write duplicate message rows into new session rows — dedupe before counting anything.
+- Timestamps are naive-UTC in the DB; both scripts already handle this. Don't add `::timestamptz` casts.
