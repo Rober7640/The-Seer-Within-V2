@@ -2,6 +2,7 @@
 // EXPANDED VERSION with sub-buckets, specific cold reads, and offer explanation
 
 import type { Bucket, UserData } from '../../shared/types'
+import { isSlidingCloseVariant } from '../../shared/types'
 
 // ============================================
 // BASE EVELYN PROMPT
@@ -1015,6 +1016,13 @@ ${userData.personName ? `Reference ${userData.personName} in the vision.` : ''}
 export function buildObjectionPrompt(userData: UserData, objection: string, count: number): string {
   const mainPrice = userData.priceDollars ?? 35
   const downsellPrice = userData.downsellDollars ?? 25
+  // Sliding-scale close ('55-35*' variants): the lower price is the SAME
+  // clearing at a grace offering Evelyn already named in the pitch — never a
+  // lesser written-reading product. The price line + downsell hint must match.
+  const sliding = isSlidingCloseVariant(userData.priceVariantId)
+  const priceLine = sliding
+    ? `- Current offer: the full offering is $${mainPrice}. The seeker was ALSO told they may offer $${downsellPrice} instead if money is a strain — the SAME clearing, not a lesser product. Never call the $${downsellPrice} a downgrade or "written reading". If you mention a price, use these EXACT numbers — never invent or guess a different amount.`
+    : `- Current offer price: $${mainPrice} (downsell available at $${downsellPrice}). If you mention a price, use these EXACT numbers — never invent or guess a different amount.`
   return `
 ${EVELYN_BASE_PROMPT}
 
@@ -1025,7 +1033,7 @@ ${EVELYN_BASE_PROMPT}
 - Their concern: ${userData.concern}
 - Their vision: ${userData.desires}
 - Objection #${count}: "${objection}"
-- Current offer price: $${mainPrice} (downsell available at $${downsellPrice}). If you mention a price, use these EXACT numbers — never invent or guess a different amount.
+${priceLine}
 
 ## Task
 Handle this objection with empathy. Never argue, never beg, stay warm.
@@ -1070,7 +1078,9 @@ Response format:
 
 Each message max 25 words.
 ${count >= 2 ? 'This is objection #' + count + '. Add subtle urgency - the window is closing.' : ''}
-${count >= 3 ? 'Consider offering the downsell: "Perhaps the full clearing isn\'t what you need right now..."' : ''}
+${count >= 3 ? (sliding
+    ? `Consider gently reminding them the door is still open: they may offer $${downsellPrice} instead — the same clearing, every step of it.`
+    : 'Consider offering the downsell: "Perhaps the full clearing isn\'t what you need right now..."') : ''}
 `
 }
 
