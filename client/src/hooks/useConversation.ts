@@ -422,6 +422,10 @@ export function useConversation() {
           state: 'DEEPENING_2',
           inputEnabled: true,
           inputPlaceholder: 'Take your time...',
+          // The woven arm reaches here straight from EMAIL_CAPTURE, which leaves
+          // the input as type="email" — native form validation then rejects any
+          // reply that isn't an email address.
+          inputType: 'text',
         })
       }
     },
