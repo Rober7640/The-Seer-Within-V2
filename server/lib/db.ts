@@ -158,6 +158,24 @@ export async function getConversationByEmail(email: string): Promise<Conversatio
   }
 }
 
+// Lookup by the conversation's own random UUID. Used by the emailed recovery
+// link: the id is unguessable, so unlike a lookup keyed on email it can't be
+// used to enumerate other people's readings.
+export async function getConversationById(id: string): Promise<Conversation | null> {
+  try {
+    const result = await db
+      .select()
+      .from(conversations)
+      .where(eq(conversations.id, id))
+      .limit(1);
+
+    return result[0] || null;
+  } catch (error) {
+    logger.error("Database fetch error:", error);
+    return null;
+  }
+}
+
 export async function markPurchased(email: string, purchaseType: "main" | "downsell"): Promise<void> {
   try {
     await db
