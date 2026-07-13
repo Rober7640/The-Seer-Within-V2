@@ -686,7 +686,12 @@ const HAND_SIZE: SignConfig = {
   beatNoun: 'hands',
   continueCta: "There's more your hands are telling me — begin your free reading",
   chooseMoment: 'the moment your hands answered',
-  strip: { url: '/palm/hand-size-strip.png', width: 2160, height: 406 },
+  // Re-cropped 2026-07-13: the original 2160x406 strip carried ~180px of dead
+  // white margin on each side of every panel, so the panel aspect was 2.66 and
+  // the grid cell rendered short and letterboxed — the hands looked tiny next to
+  // the other signs. Cropping to the art (identical box on BOTH halves, so the
+  // big-vs-small size difference is preserved) gives a 1.83 panel aspect.
+  strip: { url: '/palm/hand-size-strip.png', width: 1490, height: 406 },
   options: ['a', 'b'],
   mark: {
     a: 'hands that run large and generous, made to hold and shelter',
