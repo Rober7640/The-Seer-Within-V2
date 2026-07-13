@@ -21,6 +21,7 @@ import { trackLead, trackInitiateCheckout, getTrackdeskClickId } from '@/lib/fac
 import { currentFunnel, getPostHogFunnel, skipEmail } from '@/lib/funnel'
 import { track as trackPH, identifyUser as identifyPH, getDistinctId } from '@/lib/posthog'
 import { trackGAdsLead, trackGAdsCheckout, getGclid } from '@/lib/gtm'
+import { isSlidingCloseVariant } from '@shared/types'
 
 const STORAGE_KEY = 'seer_conversation'
 const SESSION_EXPIRY_HOURS = 24
@@ -110,8 +111,22 @@ export function useConversation() {
   const savedSession = useRef<StoredSession | null>(null)
   const [isRestored, setIsRestored] = useState(false)
 
-  // Initialize from saved session if available
+  // Emailed recovery link: /chat?resume=<conversation id>. The reading lives on
+  // the server, so we can rebuild it on a device that never held the localStorage
+  // session (or held one that has since expired). Until the fetch settles we hold
+  // the greeting back, otherwise she'd be asked her name again mid-restore.
+  const resumeId = useRef<string | null>(
+    typeof window !== 'undefined'
+      ? new URLSearchParams(window.location.search).get('resume')
+      : null,
+  )
+  const [resumeSettled, setResumeSettled] = useState(false)
+
+  // Initialize from saved session if available. A resume link wins over
+  // localStorage — the server copy is the authoritative one.
   const [chat, setChat] = useState<ChatState>(() => {
+    if (resumeId.current) return createInitialState()
+
     const session = loadSession()
     if (session && session.state.userData.firstName) {
       savedSession.current = session
@@ -206,6 +221,50 @@ export function useConversation() {
     }
   }, [chat.state, chat.userData, chat.messages])
 
+  // === RESUME FROM AN EMAILED RECOVERY LINK ===
+
+  useEffect(() => {
+    const id = resumeId.current
+    if (!id) return
+
+    let cancelled = false
+
+    async function loadFromServer() {
+      try {
+        const res = await fetch(`/api/conversation/resume/${id}`)
+        if (!res.ok) return // expired / already bought / bad link → normal greeting
+
+        const data = await res.json()
+        if (cancelled || !data?.conversationState) return
+
+        const base = createInitialState()
+        const restored: ChatState = {
+          ...base,
+          state: data.conversationState,
+          messages: data.messages ?? [],
+          userData: { ...base.userData, ...data.userData },
+          inputEnabled: true,
+          inputType: 'text',
+        }
+
+        // Hand it to the welcome-back sequence, which greets her by name and
+        // re-opens the input wherever she stopped.
+        isRestoring.current = true
+        savedSession.current = { state: restored, timestamp: Date.now() }
+        setChat(restored)
+      } catch {
+        // Network failure → fall through to the normal greeting.
+      } finally {
+        if (!cancelled) setResumeSettled(true)
+      }
+    }
+
+    loadFromServer()
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
   // === WELCOME BACK SEQUENCE (for restored sessions) ===
 
   useEffect(() => {
@@ -266,13 +325,16 @@ export function useConversation() {
     }
 
     showWelcomeBack()
-  }, [isRestored, addMessage, sendBotMessage, sendBotMessages, updateState])
+  }, [isRestored, resumeSettled, addMessage, sendBotMessage, sendBotMessages, updateState])
 
   // === GREETING SEQUENCE (for new sessions) ===
 
   useEffect(() => {
     // Skip if we have a saved session or already started
     if (savedSession.current || chat.state !== 'INIT' || hasStarted.current) return
+    // A resume link is still loading — greeting her now would re-ask her name
+    // and then get overwritten by the restored session.
+    if (resumeId.current && !resumeSettled) return
     hasStarted.current = true
 
     async function startGreeting() {
@@ -348,7 +410,7 @@ export function useConversation() {
     }
 
     startGreeting()
-  }, [chat.state, addMessage, sendBotMessage, sendBotMessages, updateState, updateUserData])
+  }, [chat.state, resumeSettled, addMessage, sendBotMessage, sendBotMessages, updateState, updateUserData])
 
   // === V1 PROMPT A/B (v1_clearing_theme_palm_2026) ===
   // Resolve the assigned arm ONCE and stash it on userData, so BOTH the server
@@ -381,6 +443,19 @@ export function useConversation() {
         // any other result ⇒ leave undefined ⇒ control
       })
       .catch(() => { /* non-blocking — default to control */ })
+  }, [updateUserData])
+
+  // === SLIDING-SCALE CLOSE PREVIEW (?close=55) ===
+  // Forces the 55-35 pitch copy + CTAs for a live self-test WITHOUT enrolling.
+  // COPY-ONLY: the server still charges whatever variant is stored on the
+  // conversation row, so never complete a checkout from a preview session.
+  const closePreviewResolved = useRef(false)
+  useEffect(() => {
+    if (closePreviewResolved.current) return
+    closePreviewResolved.current = true
+    if (new URLSearchParams(window.location.search).get('close') === '55') {
+      updateUserData({ priceVariantId: '55-35', priceDollars: 55, downsellDollars: 35 })
+    }
   }, [updateUserData])
 
   // === STATE HANDLERS ===
@@ -422,6 +497,10 @@ export function useConversation() {
           state: 'DEEPENING_2',
           inputEnabled: true,
           inputPlaceholder: 'Take your time...',
+          // The woven arm reaches here straight from EMAIL_CAPTURE, which leaves
+          // the input as type="email" — native form validation then rejects any
+          // reply that isn't an email address.
+          inputType: 'text',
         })
       }
     },
@@ -610,12 +689,16 @@ export function useConversation() {
 
       // V1 price split test — server returns the variant assigned to this email.
       // Capture into chat state so pitch copy + buttons + FB Pixel use it.
+      // Skipped under the ?close=55 preview override so the forced sliding-scale
+      // copy isn't clobbered by the real assigned variant mid-session.
       try {
         const leadData = await leadRes.json()
-        if (leadData?.priceDollars && leadData?.downsellDollars) {
+        const previewingClose = new URLSearchParams(window.location.search).get('close') === '55'
+        if (!previewingClose && leadData?.priceDollars && leadData?.downsellDollars) {
           updateUserData({
             priceDollars: leadData.priceDollars,
             downsellDollars: leadData.downsellDollars,
+            priceVariantId: leadData.priceVariant ?? undefined,
           })
         }
       } catch { /* response body parse is best-effort */ }
@@ -1163,9 +1246,18 @@ export function useConversation() {
     const newCount = currentChat.userData.objectionCount + 1
     updateUserData({ objectionCount: newCount })
 
-    // After 3 objections, offer downsell
+    // After 3 objections, offer downsell.
+    // Sliding-scale close: the fallback is NOT a lesser product — it's the same
+    // clearing at the $35 grace offering she was already told about. Classic
+    // variants keep the written-reading downsell byte-identical.
     if (newCount >= 3) {
-      await sendBotMessages([
+      const slidingDown = isSlidingCloseVariant(currentChat.userData.priceVariantId)
+      const graceDollars = currentChat.userData.downsellDollars ?? 25
+      await sendBotMessages(slidingDown ? [
+        `I sense hesitation, ${currentChat.userData.firstName}... and I won't push you.`,
+        "But remember what I told you — money never closes this door. Not with me.",
+        `Let $${graceDollars} be your offering. The clearing is the same, every step of it.`,
+      ] : [
         `I sense hesitation, ${currentChat.userData.firstName}... and I won't push you.`,
         "Perhaps the full clearing isn't what you need right now.",
         "Let me offer you this instead...",
@@ -1409,8 +1501,24 @@ export function useConversation() {
     ])
 
     // Step 5: Price + guarantee + SOCIAL PROOF
+    // Sliding-scale close ('55-35*' variants) — THE HONEST OFFERING (Lourdes
+    // architecture): honesty preface → fact-price → what it carries →
+    // guarantee → proof → grace doctrine → the causal bridge (the $35 exists
+    // BECAUSE money must never be in the way) → equality + unity. Classic
+    // variants keep today's copy byte-identical.
     const pitchPrice = chat.userData.priceDollars ?? 35
-    await sendBotMessages([
+    const downsellDollars = chat.userData.downsellDollars ?? 25
+    const slidingClose = isSlidingCloseVariant(chat.userData.priceVariantId)
+    await sendBotMessages(slidingClose ? [
+      `Before I begin, ${firstName}, let me be honest with you about how this works.`,
+      `The full offering for this work is $${pitchPrice}.`,
+      "That carries the whole of it — the hours in ritual tonight, the tracing and sealing, and every page of your reading after. Nothing rushed, nothing skipped.",
+      "It comes with my 30-day guarantee. If you feel nothing has shifted, every penny returned.",
+      `I've done this work for hundreds of seekers, ${firstName}. Most feel a shift within the first week.`,
+      "But I need you to hear this, dear... I never want money to stand between you and your clearing.",
+      `That is exactly why there is a second offering — $${downsellDollars}, for when the full amount would strain you.`,
+      "Choose what's honest for you. The clearing is the same either way — every step, every hour. We do this together. ✨",
+    ] : [
       `The sacred offering is $${pitchPrice} — a declaration to the universe that you're ready for this change.`,
       "It comes with my 30-day guarantee. If you feel nothing has shifted, every penny returned.",
       `I've done this work for hundreds of seekers, ${firstName}. Most feel a shift within the first week.`,
