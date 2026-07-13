@@ -59,6 +59,7 @@ import {
 import {
   saveConversation,
   getConversationByEmail,
+  getConversationById,
   markPurchased,
   updateStripeData,
   getConversationByStripeSession,
@@ -110,6 +111,9 @@ import { posthog } from "./lib/posthog";
 const funnelSchema = z
   .enum(FUNNELS.map((f) => f.param) as [FunnelParam, ...FunnelParam[]])
   .optional();
+
+// How long an emailed /chat?resume=<id> recovery link stays valid.
+const RESUME_LINK_EXPIRY_DAYS = 30;
 
 const upsellChargeSchema = z.object({
   checkoutSessionId: z.string().min(1),
@@ -965,6 +969,67 @@ export async function registerRoutes(
     } catch (error) {
       logger.error("Get conversation error:", error);
       return res.status(500).json({ error: "Failed to get conversation" });
+    }
+  });
+
+  // Resume a V1 funnel conversation from an emailed recovery link.
+  //
+  // Keyed on the conversation's own random UUID rather than the email, so the
+  // link can't be used to enumerate other readers (see /api/conversation/:email).
+  // Returns everything the client needs to rebuild the session, INCLUDING the
+  // assigned price variant — a resumed reader must keep the price they were
+  // originally assigned, otherwise the pitch renders the stale default while
+  // Stripe charges the real variant.
+  app.get("/api/conversation/resume/:id", async (req: Request, res: Response) => {
+    try {
+      const id = String(req.params.id);
+      if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)) {
+        return res.status(400).json({ error: "Bad link" });
+      }
+
+      const conversation = await getConversationById(id);
+      if (!conversation || !conversation.conversationState) {
+        return res.status(404).json({ error: "Not found" });
+      }
+
+      // Already bought — nothing to resume; don't drop them back into a pitch.
+      if (conversation.purchased) {
+        return res.status(410).json({ error: "Already purchased" });
+      }
+
+      const ageDays =
+        (Date.now() - new Date(conversation.createdAt).getTime()) / 86_400_000;
+      if (ageDays > RESUME_LINK_EXPIRY_DAYS) {
+        return res.status(410).json({ error: "Link expired" });
+      }
+
+      return res.json({
+        userData: {
+          firstName: conversation.firstName,
+          email: conversation.email,
+          bucket: conversation.bucket,
+          subBucket: conversation.subBucket,
+          personName: conversation.personName,
+          concern: conversation.concern,
+          desires: conversation.vision,
+          location: conversation.location,
+          timeOfDay: conversation.timeOfDay,
+          objectionCount: conversation.objectionCount || 0,
+          // Keep them locked to the price they were assigned at lead capture.
+          priceVariantId: conversation.priceVariant ?? undefined,
+          priceDollars: conversation.priceAmountCents
+            ? conversation.priceAmountCents / 100
+            : undefined,
+          downsellDollars: conversation.downsellAmountCents
+            ? conversation.downsellAmountCents / 100
+            : undefined,
+        },
+        conversationState: conversation.conversationState,
+        messages: conversation.messages ? JSON.parse(conversation.messages) : [],
+      });
+    } catch (error) {
+      logger.error("Resume conversation error:", error);
+      return res.status(500).json({ error: "Failed to resume conversation" });
     }
   });
 

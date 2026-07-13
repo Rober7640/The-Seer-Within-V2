@@ -111,8 +111,22 @@ export function useConversation() {
   const savedSession = useRef<StoredSession | null>(null)
   const [isRestored, setIsRestored] = useState(false)
 
-  // Initialize from saved session if available
+  // Emailed recovery link: /chat?resume=<conversation id>. The reading lives on
+  // the server, so we can rebuild it on a device that never held the localStorage
+  // session (or held one that has since expired). Until the fetch settles we hold
+  // the greeting back, otherwise she'd be asked her name again mid-restore.
+  const resumeId = useRef<string | null>(
+    typeof window !== 'undefined'
+      ? new URLSearchParams(window.location.search).get('resume')
+      : null,
+  )
+  const [resumeSettled, setResumeSettled] = useState(false)
+
+  // Initialize from saved session if available. A resume link wins over
+  // localStorage — the server copy is the authoritative one.
   const [chat, setChat] = useState<ChatState>(() => {
+    if (resumeId.current) return createInitialState()
+
     const session = loadSession()
     if (session && session.state.userData.firstName) {
       savedSession.current = session
@@ -207,6 +221,50 @@ export function useConversation() {
     }
   }, [chat.state, chat.userData, chat.messages])
 
+  // === RESUME FROM AN EMAILED RECOVERY LINK ===
+
+  useEffect(() => {
+    const id = resumeId.current
+    if (!id) return
+
+    let cancelled = false
+
+    async function loadFromServer() {
+      try {
+        const res = await fetch(`/api/conversation/resume/${id}`)
+        if (!res.ok) return // expired / already bought / bad link → normal greeting
+
+        const data = await res.json()
+        if (cancelled || !data?.conversationState) return
+
+        const base = createInitialState()
+        const restored: ChatState = {
+          ...base,
+          state: data.conversationState,
+          messages: data.messages ?? [],
+          userData: { ...base.userData, ...data.userData },
+          inputEnabled: true,
+          inputType: 'text',
+        }
+
+        // Hand it to the welcome-back sequence, which greets her by name and
+        // re-opens the input wherever she stopped.
+        isRestoring.current = true
+        savedSession.current = { state: restored, timestamp: Date.now() }
+        setChat(restored)
+      } catch {
+        // Network failure → fall through to the normal greeting.
+      } finally {
+        if (!cancelled) setResumeSettled(true)
+      }
+    }
+
+    loadFromServer()
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
   // === WELCOME BACK SEQUENCE (for restored sessions) ===
 
   useEffect(() => {
@@ -267,13 +325,16 @@ export function useConversation() {
     }
 
     showWelcomeBack()
-  }, [isRestored, addMessage, sendBotMessage, sendBotMessages, updateState])
+  }, [isRestored, resumeSettled, addMessage, sendBotMessage, sendBotMessages, updateState])
 
   // === GREETING SEQUENCE (for new sessions) ===
 
   useEffect(() => {
     // Skip if we have a saved session or already started
     if (savedSession.current || chat.state !== 'INIT' || hasStarted.current) return
+    // A resume link is still loading — greeting her now would re-ask her name
+    // and then get overwritten by the restored session.
+    if (resumeId.current && !resumeSettled) return
     hasStarted.current = true
 
     async function startGreeting() {
@@ -349,7 +410,7 @@ export function useConversation() {
     }
 
     startGreeting()
-  }, [chat.state, addMessage, sendBotMessage, sendBotMessages, updateState, updateUserData])
+  }, [chat.state, resumeSettled, addMessage, sendBotMessage, sendBotMessages, updateState, updateUserData])
 
   // === V1 PROMPT A/B (v1_clearing_theme_palm_2026) ===
   // Resolve the assigned arm ONCE and stash it on userData, so BOTH the server
