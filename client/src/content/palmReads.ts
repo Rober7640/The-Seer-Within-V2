@@ -686,12 +686,19 @@ const HAND_SIZE: SignConfig = {
   beatNoun: 'hands',
   continueCta: "There's more your hands are telling me — begin your free reading",
   chooseMoment: 'the moment your hands answered',
-  // Re-cropped 2026-07-13: the original 2160x406 strip carried ~180px of dead
-  // white margin on each side of every panel, so the panel aspect was 2.66 and
-  // the grid cell rendered short and letterboxed — the hands looked tiny next to
-  // the other signs. Cropping to the art (identical box on BOTH halves, so the
-  // big-vs-small size difference is preserved) gives a 1.83 panel aspect.
-  strip: { url: '/palm/hand-size-strip.png', width: 1490, height: 406 },
+  // Reworked 2026-07-13. The original 2160x406 strip carried ~180px of dead white
+  // margin either side of every panel, so the panel aspect was 2.66 — the tile
+  // rendered as a short letterbox and the hands looked tiny next to the other
+  // signs. Two steps: (1) crop away the dead margin (identical box on BOTH halves,
+  // so the big-vs-small size difference this sign depends on is preserved), then
+  // (2) pad the art back out vertically to a SQUARE 745x745 panel so the tile
+  // matches the other signs' proportions.
+  // The art itself is landscape (forearm + open palm) and the measuring hand
+  // overlaps the baked "Big hands"/"Small hands" label horizontally, so a square
+  // crop would have to erase that label — and without it the two options look
+  // near-identical. Hence padding, not cropping: the hands stay their current
+  // size, but nothing is lost and the tile is square.
+  strip: { url: '/palm/hand-size-strip.png', width: 1490, height: 745 },
   options: ['a', 'b'],
   mark: {
     a: 'hands that run large and generous, made to hold and shelter',
