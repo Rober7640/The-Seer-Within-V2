@@ -1,11 +1,22 @@
 import { createRoot } from "react-dom/client";
 import * as Sentry from "@sentry/react";
 import App from "./App";
+import { initPostHog, registerUTMs } from "./lib/posthog";
 import "./index.css";
 
 // FB Pixel init is lazy — handled inside client/src/lib/facebook.ts the first
 // time an event is fired to a pixel. This prevents fbq('init') from auto-firing
 // a PageView to every configured pixel regardless of URL.
+
+// PostHog must be initialised BEFORE React renders. React flushes effects
+// child-first, so a page component's mount effect (e.g. PalmBridge's
+// palm_bridge_view) runs before App's own mount effect — meaning any event
+// fired on mount was dropped by track()'s `if (!initialized) return` guard.
+// Registering the UTM super-properties here too means those same mount-time
+// events carry their traffic source. Both calls are idempotent, so App's
+// existing mount effect stays a harmless no-op.
+initPostHog();
+registerUTMs();
 
 // Initialize Sentry for client-side error monitoring
 const sentryDsn = import.meta.env.VITE_SENTRY_DSN;
