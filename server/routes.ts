@@ -403,10 +403,13 @@ export async function registerRoutes(
       // V1 price split test — enrich userData with the variant prices
       // server-side so prompts that quote price (objection handling,
       // upsell context) always use the variant the user actually saw.
+      // The variant ID rides along so close-style branches (sliding-scale
+      // '55-35*' vs classic) stay server-authoritative too.
       if (userData?.email) {
         const variant = await getVariantForEmail(userData.email);
         userData.priceDollars = Math.round(variant.priceCents / 100);
         userData.downsellDollars = Math.round(variant.downsellCents / 100);
+        userData.priceVariantId = variant.variant;
       }
 
       // Universal safety check — same protections as V2 chat service

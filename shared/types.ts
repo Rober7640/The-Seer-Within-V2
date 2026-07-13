@@ -42,12 +42,27 @@ export interface UserData {
   // drives pitch copy + button labels + Stripe charge + tracking values.
   priceDollars?: number
   downsellDollars?: number
+  // The assigned price-variant id (e.g. '35', '45_fb', '55-35'). Carried on
+  // userData so the client pitch AND the server prompt builders can branch on
+  // the variant's close style, not just its numbers.
+  priceVariantId?: string
   // V1 prompt A/B (v1_clearing_theme_palm_2026) — the assigned arm for this
   // session ('control' | 'woven'). Set once client-side from /api/ab/assign
   // (or the ?clearing= preview override) and carried on userData so both the
   // server prompt builders and the client pitch branch on the same arm.
   // Absent/undefined ⇒ control (byte-identical to today).
   promptVariant?: 'control' | 'woven'
+}
+
+// Sliding-scale close ("$55 anchor / $35 grace") — price variants whose id
+// starts with this prefix pitch the FULL offering at priceCents ($55) and tell
+// the seeker they may offer downsellCents ($35) instead if money is a strain.
+// Same product, same ritual, same post-purchase path — ONLY the offering
+// differs. Funnel-scoped ids compose naturally ('55-35', '55-35_fb', …).
+export const SLIDING_CLOSE_VARIANT_PREFIX = '55-35'
+
+export function isSlidingCloseVariant(id?: string | null): boolean {
+  return !!id && id.startsWith(SLIDING_CLOSE_VARIANT_PREFIX)
 }
 
 export interface ShippingAddress {

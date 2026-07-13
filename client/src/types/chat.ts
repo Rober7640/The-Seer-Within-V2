@@ -71,6 +71,10 @@ export interface UserData {
   // V1 price split test — assigned at lead capture, drives pitch + button + tracking values
   priceDollars?: number
   downsellDollars?: number
+  // The assigned price-variant id (e.g. '35', '45_fb', '55-35'). A '55-35*' id
+  // switches the close to the sliding-scale pitch ($55 full offering, $35
+  // welcome if money is a strain — same clearing). Absent ⇒ classic close.
+  priceVariantId?: string
   // V1 prompt A/B (v1_clearing_theme_palm_2026) — assigned arm for this session,
   // set once from /api/ab/assign (or the ?clearing= preview override). Carried on
   // userData so the server prompt builders + client pitch branch on the same arm.

@@ -4,9 +4,11 @@ import { CosmicBackground } from "../components/CosmicBackground";
 import { QuickReplyButtons } from "../components/QuickReplyButtons";
 import { PermissionButton } from "../components/PermissionButton";
 import { PurchaseCTA } from "../components/PurchaseCTA";
+import { ClearingChoiceCard } from "../components/ClearingChoiceCard";
 import { DownsellCTA } from "../components/DownsellCTA";
 import { BackgroundMusic } from "../components/BackgroundMusic";
 import { useConversation } from "../hooks/useConversation";
+import { isSlidingCloseVariant } from "@shared/types";
 import { Volume2, Send, Sparkles } from "lucide-react";
 import { Link } from "wouter";
 import { funnelPath } from "../lib/funnel";
@@ -227,19 +229,36 @@ export default function ChatPage() {
             <PermissionButton onClick={handlePermission} />
           )}
 
-          {/* Purchase CTA */}
-          {chat.showPurchaseCTA && (
-            <PurchaseCTA
-              onClick={() => handlePurchase("main")}
-              priceDollars={chat.userData.priceDollars ?? 35}
-            />
-          )}
+          {/* Purchase CTA. Sliding-scale close ('55-35*' variants) swaps the
+              single button for the two-tier choice card ($35 grace offering +
+              $55 full offering — the grace charge rides the normal downsell
+              checkout: same product + upsell path server-side). Classic
+              variants keep today's PurchaseCTA byte-identical. */}
+          {chat.showPurchaseCTA &&
+            (isSlidingCloseVariant(chat.userData.priceVariantId) ? (
+              <ClearingChoiceCard
+                onFullOffering={() => handlePurchase("main")}
+                onGraceOffering={() => handlePurchase("downsell")}
+                fullDollars={chat.userData.priceDollars ?? 55}
+                graceDollars={chat.userData.downsellDollars ?? 35}
+              />
+            ) : (
+              <PurchaseCTA
+                onClick={() => handlePurchase("main")}
+                priceDollars={chat.userData.priceDollars ?? 35}
+              />
+            ))}
 
           {/* Downsell CTA */}
           {chat.showDownsellCTA && (
             <DownsellCTA
               onClick={() => handlePurchase("downsell")}
               priceDollars={chat.userData.downsellDollars ?? 25}
+              label={
+                isSlidingCloseVariant(chat.userData.priceVariantId)
+                  ? `Begin My Energy Clearing - $${chat.userData.downsellDollars ?? 35}`
+                  : undefined
+              }
             />
           )}
 
