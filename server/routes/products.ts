@@ -1,6 +1,7 @@
 import { Router, type Request, type Response } from 'express';
 import { getStripe } from '../lib/stripeAccount';
 import { getBraceletBySlug } from '@shared/braceletProducts';
+import { recordBraceletOrder, getBraceletOrderBySession } from '../lib/braceletOrders';
 import logger from '../lib/logger';
 
 // Stripe Checkout for the Facebook-compliance product pages (/products/:slug).
@@ -86,7 +87,10 @@ router.post('/checkout', async (req: Request, res: Response) => {
         allowed_countries: [...SHIPPING_COUNTRIES],
       },
       phone_number_collection: { enabled: true },
-      success_url: `${baseUrl(req)}/products/${product.slug}?purchase=success&session_id={CHECKOUT_SESSION_ID}`,
+      // A real thank-you page. The first cut sent the buyer back to the product page with
+      // ?purchase=success, which the page ignored — so they'd pay $99, land on a page that
+      // looked untouched, and reasonably assume it had failed.
+      success_url: `${baseUrl(req)}/order/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${baseUrl(req)}/products/${product.slug}?purchase=cancelled`,
       metadata: {
         app: 'the-seer-within',
@@ -124,5 +128,69 @@ router.post('/checkout', async (req: Request, res: Response) => {
     return res.status(500).json({ error: 'Checkout could not be started. Please try again.' });
   }
 });
+
+/**
+ * Order lookup for the thank-you page.
+ *
+ * The webhook is authoritative — it writes the row and sends the emails. But the buyer's
+ * redirect frequently beats the webhook, so if the row isn't there yet we retrieve the
+ * session from Stripe and record it ourselves. The write is an idempotent upsert keyed on
+ * stripe_session_id, so whichever path lands first, there is exactly one row and one email.
+ *
+ * We verify `payment_status` against Stripe rather than trusting the URL — a session id in
+ * a query string proves nothing.
+ */
+router.get('/order/:sessionId', async (req: Request, res: Response) => {
+  try {
+    const sessionId = String(req.params.sessionId || '');
+    if (!sessionId.startsWith('cs_')) {
+      return res.status(400).json({ error: 'Invalid session.' });
+    }
+
+    const existing = await getBraceletOrderBySession(sessionId);
+    if (existing) {
+      return res.json({ order: publicOrder(existing) });
+    }
+
+    const stripe = getStripe();
+    if (!stripe) return res.status(503).json({ error: 'Unavailable.' });
+
+    const session = await stripe.checkout.sessions.retrieve(sessionId);
+    if (session.payment_status !== 'paid') {
+      return res.status(402).json({ error: 'This order has not been paid.' });
+    }
+    if (!session.metadata?.product?.startsWith('bracelet_')) {
+      return res.status(404).json({ error: 'Order not found.' });
+    }
+
+    const recorded = await recordBraceletOrder(session);
+    if (!recorded) return res.status(404).json({ error: 'Order not found.' });
+
+    const row = await getBraceletOrderBySession(sessionId);
+    return res.json({ order: row ? publicOrder(row) : null });
+  } catch (err) {
+    logger.error('products/order lookup failed:', err);
+    return res.status(500).json({ error: 'Could not load your order.' });
+  }
+});
+
+/** Only what the thank-you page needs. No payment ids, no internal columns. */
+function publicOrder(row: Awaited<ReturnType<typeof getBraceletOrderBySession>>) {
+  if (!row) return null;
+  return {
+    reference: row.stripeSessionId.slice(-8).toUpperCase(),
+    productSlug: row.productSlug,
+    productName: row.productName,
+    quantity: row.quantity,
+    amountCents: row.amountCents,
+    email: row.email,
+    customerName: row.customerName,
+    shipping: [
+      row.shippingName, row.shippingLine1, row.shippingLine2,
+      row.shippingCity, row.shippingState, row.shippingPostal, row.shippingCountry,
+    ].filter(Boolean).join(', ') || null,
+    status: row.status,
+  };
+}
 
 export default router;

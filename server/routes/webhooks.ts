@@ -12,6 +12,7 @@ import { posthog } from '../lib/posthog';
 import * as paypal from '../lib/paypal';
 import { fireV2PurchaseEvent, fireStripePurchaseEvent } from '../lib/facebook';
 import { buildPurchaseEvent } from '../lib/purchaseAnalytics';
+import { recordBraceletOrder } from '../lib/braceletOrders';
 import { migrateAndEmailFunnelUser } from '../lib/funnelMigrationEmail';
 import { fireGoogleAdsConversion, gadsStepForProduct } from '../lib/googleAds';
 import { maybeSchedulePostPurchaseDrip } from '../lib/postPurchaseDripTrigger';
@@ -992,9 +993,25 @@ router.post('/stripe', async (req: Request, res: Response) => {
         .catch((err) => logger.error('Soulmate intake_token revoke on purchase error (non-blocking):', err));
     }
 
+    // Facebook-compliance storefront (/products/:slug). Physical goods, so somebody has
+    // to be able to see what to ship and to whom. Recorded HERE and not on the thank-you
+    // page because a buyer can pay and close the tab before the redirect lands — which is
+    // exactly the pay-and-close-tab hole the funnel already has with addPaidSubscriber.
+    //
+    // Strictly name-gated on `bracelet_*`, so it can never fire for a funnel product.
+    // Idempotent (stripe_session_id is UNIQUE, the write is an upsert), because Stripe
+    // retries this event and the thank-you page reads the same session.
+    if (product?.startsWith('bracelet_')) {
+      await recordBraceletOrder(session).catch((err) =>
+        logger.error('recordBraceletOrder failed (non-blocking):', err),
+      );
+    }
+
     // Server-side FB event firing — closes the gap when the browser tab
     // closes / adblock blocks `/api/fb-event`. Uses deterministic event_id
     // to dedup with the client-side Pixel fire (see client/src/lib/facebook.ts).
+    // NOTE: bracelet_* products fall through here harmlessly — resolveStripeEventName()
+    // returns null for them and the call logs "unknown product, skipping".
     if (product && (session.amount_total ?? 0) > 0) {
       const mainSessionId = metadata.originalSession || session.id;
       fireStripePurchaseEvent({
