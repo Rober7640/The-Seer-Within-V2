@@ -752,8 +752,12 @@ export async function registerRoutes(
       const funnel: FunnelId = parseFunnel(req.body?.funnel);
       const gclid =
         typeof req.body?.gclid === "string" ? req.body.gclid.slice(0, 200) : undefined;
+      // fb-palm ad sign (thumb / hand-size / finger-shape / …). Only used to scope
+      // the price variant pool; normalized + validated in priceVariant.normalizeSign.
+      const palmSign =
+        typeof req.body?.sign === "string" ? req.body.sign.slice(0, 40) : undefined;
 
-      logger.info("Lead captured:", { email, firstName, bucket });
+      logger.info("Lead captured:", { email, firstName, bucket, funnel, sign: palmSign ?? null });
 
       // Server-side fallback if frontend didn't resolve location
       const resolvedLocation = location || await resolveLocationFromIP(req);
@@ -770,7 +774,13 @@ export async function registerRoutes(
       // V1 price split test — assign a variant on first lead capture, idempotent
       // on subsequent calls (same email always gets the same price). Funnel-scoped:
       // /fb traffic only sees FB variants, other traffic only sees null-funnel ones.
-      const assigned = await assignVariantIfMissing(email, funnel);
+      //
+      // `sign` additionally scopes fb-palm variants that declare `signs` — that's
+      // what keeps the $55/$35 sliding close on the THUMB ads only (Joel, 7/14:
+      // "the test should go on to thumb"). Untrusted, so it's just normalized here;
+      // it can only ever move a palm visitor between two legitimate configured arms,
+      // and an unrecognized value simply falls through to the unscoped control.
+      const assigned = await assignVariantIfMissing(email, funnel, palmSign);
 
       // Add to AWeber email list (non-blocking). Per-lander FREE list when the
       // funnel's AWEBER_LIST_ID_* env is set, else the shared AWEBER_LIST_ID.
