@@ -1686,3 +1686,16 @@ Context: V1→V2 migrated leads have a real (unknown) password hash, so on `/7-7
 - [ ] Chat handoff gating: parsePalmParams returns null for a new-hook × non-thumb combo (no palm divergence → generic funnel); a valid thumb combo yields openerB/openerCStart built from the new reads
 - [ ] Version C: opener = mark line + the new hook's palm question; palmOpener/palmReflect accept the 3 new hooks (routes validHooks) — a hook in client PALM_HOOKS but missing from the server enums = Version-C 400 (keep in sync)
 - [ ] Version C LLM guardrail (PALM_HOOK_YES): deception hooks affirm HER intuition, never "he is lying/cheating"; heart-safe never promises "he will commit" nor pronounces "he won't"
+
+### V1 sliding-scale close — $55 anchor / $35 grace ('55-35*' price variants) (2026-07-13)
+- [ ] Classic variants stay byte-identical: with priceVariantId '35'/'45_fb'/absent, the Step-5 pitch, 3-objection downsell script ("A written reading - no ritual"), DownsellCTA label, and objection prompt price line all match pre-change copy exactly
+- [ ] Sliding pitch (priceVariantId '55-35'): Step 5 delivers 5 messages — $55 anchor with labor justification, guarantee, social proof, "never turned a seeker away", "$35 instead… the clearing is the same"
+- [ ] Sliding PITCH state shows BOTH CTAs: primary "Begin My Energy Clearing - $55" + quieter grace link "Money is tight — begin my clearing for $35" (data-testid button-grace-offering); grace link absent for classic variants
+- [ ] Grace link fires handlePurchase('downsell') → /api/checkout type=downsell charges downsellCents (3500), product name "Energy Clearing Ritual", success_url → /welcome1 (upsell path identical to a main purchase)
+- [ ] Sliding 3-objection script replaces written-reading copy with the $35 grace reminder; DOWNSELL state button reads "Begin My Energy Clearing - $35" (not "Get Your Written Reading")
+- [ ] buildObjectionPrompt sliding branch: price line says SAME clearing / never call $35 a downgrade or "written reading"; count>=3 hint is the grace reminder; classic branch string unchanged
+- [ ] /api/chat server-authoritatively overwrites userData.priceVariantId (and prices) from getVariantForEmail — a spoofed/stale client value cannot flip the LLM close style
+- [ ] ?close=55 preview forces sliding copy + CTAs without enrolling; lead-capture price stash is skipped under preview (no mid-session clobber); checkout still charges the stored variant
+- [ ] Funnel-scoped id '55-35_fb' matches isSlidingCloseVariant (prefix match); plain '55' (hypothetical hard-price arm) does NOT
+- [ ] Welcome-back re-pitch for a sliding-variant session restores the grace link (priceVariantId survives localStorage round-trip)
+- [ ] InitiateCheckout / checkout_initiated tracking values: $55 on main CTA, $35 on grace link (price_cents 5500/3500)

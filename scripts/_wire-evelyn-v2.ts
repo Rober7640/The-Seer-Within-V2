@@ -1,15 +1,18 @@
 /**
- * TEMP (Sprint 0.5) — wire the Evelyn v2 prompt into the persona_prompt_evelyn_2026
- * experiment's variant B payload. Reads the fenced ```prompt block from
- * improve-v2/specs/evelyn-v2-prompt-B1.md (the reviewed source of truth) and
- * updates ONLY variants[B].payload.systemPrompt. The experiment row stays
- * status='draft' (off — production keeps the base prompt, byte-identical);
- * the eval harness exercises it via --experiment + EXPERIMENT_FORCE_RUNNING.
+ * Wire an Evelyn v2 prompt spec into the persona_prompt_evelyn_2026 experiment's
+ * variant B payload. Reads the fenced ```prompt block from the spec file (default
+ * improve-v2/specs/evelyn-v2-prompt-B5.md, override with --spec) and updates ONLY
+ * variants[B].payload.systemPrompt. Requires the experiment row to be
+ * status='draft' (refuses to edit a live test's payload — protects the prod
+ * rollout); the eval harness exercises a draft via --experiment +
+ * EXPERIMENT_FORCE_RUNNING.
  *
- *   npx tsx scripts/_wire-evelyn-v2.ts            # show current state + write
+ *   npx tsx scripts/_wire-evelyn-v2.ts            # write default spec into variant B
  *   npx tsx scripts/_wire-evelyn-v2.ts --dry      # show what would be written
+ *   npx tsx scripts/_wire-evelyn-v2.ts --spec improve-v2/specs/evelyn-v2-prompt-B6.md
  *
- * Delete this script when the spike concludes (repo convention for _ scripts).
+ * Kept beyond the Sprint-0.5 spike: this is the wire step of the persona-iterate
+ * skill (change → eval → playwright loop).
  */
 import 'dotenv/config';
 import { readFileSync } from 'fs';
@@ -21,13 +24,17 @@ import { eq } from 'drizzle-orm';
 
 const KEY = 'persona_prompt_evelyn_2026';
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const SPEC = path.join(ROOT, 'improve-v2/specs/evelyn-v2-prompt-B5.md');
+const specIdx = process.argv.indexOf('--spec');
+const SPEC =
+  specIdx > -1 && process.argv[specIdx + 1]
+    ? path.resolve(ROOT, process.argv[specIdx + 1])
+    : path.join(ROOT, 'improve-v2/specs/evelyn-v2-prompt-B5.md');
 
 async function main() {
   const dry = process.argv.includes('--dry');
 
   const md = readFileSync(SPEC, 'utf8');
-  const m = md.match(/```prompt\n([\s\S]*?)\n```/);
+  const m = md.match(/```prompt\r?\n([\s\S]*?)\r?\n```/);
   if (!m) throw new Error(`no \`\`\`prompt block found in ${SPEC}`);
   const prompt = m[1].trim();
 

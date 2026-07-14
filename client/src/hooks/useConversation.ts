@@ -21,6 +21,7 @@ import { trackLead, trackInitiateCheckout, getTrackdeskClickId } from '@/lib/fac
 import { currentFunnel, getPostHogFunnel, skipEmail } from '@/lib/funnel'
 import { track as trackPH, identifyUser as identifyPH, getDistinctId } from '@/lib/posthog'
 import { trackGAdsLead, trackGAdsCheckout, getGclid } from '@/lib/gtm'
+import { isSlidingCloseVariant } from '@shared/types'
 
 const STORAGE_KEY = 'seer_conversation'
 const SESSION_EXPIRY_HOURS = 24
@@ -444,6 +445,19 @@ export function useConversation() {
       .catch(() => { /* non-blocking — default to control */ })
   }, [updateUserData])
 
+  // === SLIDING-SCALE CLOSE PREVIEW (?close=55) ===
+  // Forces the 55-35 pitch copy + CTAs for a live self-test WITHOUT enrolling.
+  // COPY-ONLY: the server still charges whatever variant is stored on the
+  // conversation row, so never complete a checkout from a preview session.
+  const closePreviewResolved = useRef(false)
+  useEffect(() => {
+    if (closePreviewResolved.current) return
+    closePreviewResolved.current = true
+    if (new URLSearchParams(window.location.search).get('close') === '55') {
+      updateUserData({ priceVariantId: '55-35', priceDollars: 55, downsellDollars: 35 })
+    }
+  }, [updateUserData])
+
   // === STATE HANDLERS ===
 
   // reading1 generation — shared by the normal DEEPENING_1 turn and the woven
@@ -658,6 +672,18 @@ export function useConversation() {
       const fbcMatch = typeof document !== 'undefined'
         ? document.cookie.match(/(?:^|;\s*)_fbc=([^;]*)/)
         : null;
+
+      // Which fb-palm ad "sign" this visitor came through (thumb / hand-size /
+      // finger-shape / …). Sent to /api/lead so the server can scope the price
+      // pool: the $55/$35 sliding close runs on the THUMB ads ONLY (Joel, 7/14 —
+      // "the test should go on to thumb"). Defaults to 'thumb' because the bridge
+      // deliberately omits `&sign=` for its default sign, so a palm visitor with no
+      // sign param IS thumb. Also reused for the PostHog identify below.
+      const phFunnel = getPostHogFunnel() ?? 'v1'
+      const palmSign = phFunnel === 'palm'
+        ? (parsePalmParams(window.location.search)?.sign ?? 'thumb')
+        : undefined
+
       const leadRes = await fetch('/api/lead', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -668,6 +694,7 @@ export function useConversation() {
           trackdeskClickId: getTrackdeskClickId(),
           gclid: getGclid(),
           funnel: currentFunnel(),
+          sign: palmSign,
           fbp: fbpMatch ? decodeURIComponent(fbpMatch[1]) : undefined,
           fbc: fbcMatch ? decodeURIComponent(fbcMatch[1]) : undefined,
         }),
@@ -675,12 +702,16 @@ export function useConversation() {
 
       // V1 price split test — server returns the variant assigned to this email.
       // Capture into chat state so pitch copy + buttons + FB Pixel use it.
+      // Skipped under the ?close=55 preview override so the forced sliding-scale
+      // copy isn't clobbered by the real assigned variant mid-session.
       try {
         const leadData = await leadRes.json()
-        if (leadData?.priceDollars && leadData?.downsellDollars) {
+        const previewingClose = new URLSearchParams(window.location.search).get('close') === '55'
+        if (!previewingClose && leadData?.priceDollars && leadData?.downsellDollars) {
           updateUserData({
             priceDollars: leadData.priceDollars,
             downsellDollars: leadData.downsellDollars,
+            priceVariantId: leadData.priceVariant ?? undefined,
           })
         }
       } catch { /* response body parse is best-effort */ }
@@ -697,14 +728,10 @@ export function useConversation() {
       // purchase_completed (uses email as distinctId) merges with the
       // client's anonymous distinctId from earlier lander_view events.
       {
-        const phFunnel = getPostHogFunnel() ?? 'v1'
-        // Palm multi-sign: which ad "sign" was quizzed (defaults to 'thumb').
-        // Set as a PERSON property at identify so the server-side
+        // phFunnel / palmSign are resolved above (shared with the /api/lead body).
+        // palmSign is set as a PERSON property at identify so the server-side
         // purchase_completed (same email distinctId) can be broken down per
         // sign without touching the payment path.
-        const palmSign = phFunnel === 'palm'
-          ? (parsePalmParams(window.location.search)?.sign ?? 'thumb')
-          : undefined
         identifyPH(input.trim(), {
           funnel: phFunnel,
           first_name: currentChat.userData.firstName || undefined,
@@ -1228,9 +1255,18 @@ export function useConversation() {
     const newCount = currentChat.userData.objectionCount + 1
     updateUserData({ objectionCount: newCount })
 
-    // After 3 objections, offer downsell
+    // After 3 objections, offer downsell.
+    // Sliding-scale close: the fallback is NOT a lesser product — it's the same
+    // clearing at the $35 grace offering she was already told about. Classic
+    // variants keep the written-reading downsell byte-identical.
     if (newCount >= 3) {
-      await sendBotMessages([
+      const slidingDown = isSlidingCloseVariant(currentChat.userData.priceVariantId)
+      const graceDollars = currentChat.userData.downsellDollars ?? 25
+      await sendBotMessages(slidingDown ? [
+        `I sense hesitation, ${currentChat.userData.firstName}... and I won't push you.`,
+        "But remember what I told you — money never closes this door. Not with me.",
+        `Let $${graceDollars} be your offering. The clearing is the same, every step of it.`,
+      ] : [
         `I sense hesitation, ${currentChat.userData.firstName}... and I won't push you.`,
         "Perhaps the full clearing isn't what you need right now.",
         "Let me offer you this instead...",
@@ -1474,8 +1510,24 @@ export function useConversation() {
     ])
 
     // Step 5: Price + guarantee + SOCIAL PROOF
+    // Sliding-scale close ('55-35*' variants) — THE HONEST OFFERING (Lourdes
+    // architecture): honesty preface → fact-price → what it carries →
+    // guarantee → proof → grace doctrine → the causal bridge (the $35 exists
+    // BECAUSE money must never be in the way) → equality + unity. Classic
+    // variants keep today's copy byte-identical.
     const pitchPrice = chat.userData.priceDollars ?? 35
-    await sendBotMessages([
+    const downsellDollars = chat.userData.downsellDollars ?? 25
+    const slidingClose = isSlidingCloseVariant(chat.userData.priceVariantId)
+    await sendBotMessages(slidingClose ? [
+      `Before I begin, ${firstName}, let me be honest with you about how this works.`,
+      `The full offering for this work is $${pitchPrice}.`,
+      "That carries the whole of it — the hours in ritual tonight, the tracing and sealing, and every page of your reading after. Nothing rushed, nothing skipped.",
+      "It comes with my 30-day guarantee. If you feel nothing has shifted, every penny returned.",
+      `I've done this work for hundreds of seekers, ${firstName}. Most feel a shift within the first week.`,
+      "But I need you to hear this, dear... I never want money to stand between you and your clearing.",
+      `That is exactly why there is a second offering — $${downsellDollars}, for when the full amount would strain you.`,
+      "Choose what's honest for you. The clearing is the same either way — every step, every hour. We do this together. ✨",
+    ] : [
       `The sacred offering is $${pitchPrice} — a declaration to the universe that you're ready for this change.`,
       "It comes with my 30-day guarantee. If you feel nothing has shifted, every penny returned.",
       `I've done this work for hundreds of seekers, ${firstName}. Most feel a shift within the first week.`,

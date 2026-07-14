@@ -26,13 +26,16 @@ same scripts** and compare outputs side by side.
    `evelyn-variant-b`, …).
 3. Compare: read the same case across runs; score with the rubric below.
 
-## The one-command way: `/persona-audit`
+## The one-command way: two skills (the daily loop)
 
-For an operator-triggered audit, invoke the **`persona-audit`** skill instead of
-running the scripts by hand. It runs both tracks (frozen + fresh-from-DB), scores
-every transcript against the rubric below, and writes a before/after report to
-`eval/reports/<label>.md`. Say e.g. "run the persona audit labeled after-window-fix"
-or "audit Marcus against baseline." The manual scripts below are what it calls.
+- **`/persona-audit`** — pulls every completed purchase in a window from the
+  production DB (read-only + canary) with full transcripts, finds leaks/gaps, and
+  writes a PII-safe report to `improve-v2/daily/`. This is where findings COME FROM.
+- **`/persona-iterate`** — turns those findings into new frozen cases here, applies
+  a minimal prompt delta locally, runs this harness before/after (better or not),
+  runs the Playwright data-smoke, and writes a verdict report to
+  `eval/reports/<label>.md` with a ship handoff. The manual scripts below are what
+  it calls.
 
 ## Scoring rubric (per case, 0/1 each unless noted)
 

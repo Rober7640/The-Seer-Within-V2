@@ -1,9 +1,26 @@
-// V1 funnel price split test — variant assignment + lookup.
+// V1 funnel price split test — variant assignment + lookup (the STATEFUL half:
+// config source, cache, assignment, persistence). The pure shape/parse/scoping
+// logic lives in ./priceVariantPool and is unit tested offline.
 //
 // Variants and weights live in system_config under key 'v1_price_variants'.
 // If the config is missing (or every weight is zero), behavior reverts to the
 // historical $35 / $25 default — so this module ships dark and is "turned on"
 // by inserting/editing the config row.
+//
+// ── Testing a config flip before it is live (V1_PRICE_VARIANTS_JSON) ─────────
+// Dev and production SHARE ONE DATABASE. There is no staging DB. So editing the
+// system_config row to start a price test is INSTANTLY live to real traffic
+// (~620 fb-palm conversations/day) and can never be rehearsed first — which is
+// how a corrupted key silently killed the root $45 test for two weeks.
+//
+// V1_PRICE_VARIANTS_JSON fixes that: when set, it REPLACES the DB pool for this
+// process only. Set it on the Railway DEV service (and/or locally) to serve the
+// exact pool you intend to ship while production's system_config row — and
+// therefore production traffic — stays completely untouched. Verify on dev, THEN
+// deploy the code, THEN run the SQL.
+//
+// ⚠ It must never be set on the production service. It is logged loudly at every
+// pool refresh and surfaced as `variantsSource: 'env'` on /api/admin/price-test.
 
 import { db } from './db';
 import { conversations, systemConfig } from '@shared/schema';
@@ -17,19 +34,30 @@ import {
   U1_PRICE_EXPERIMENT_KEY,
   V1_MAIN_EXPERIMENT_KEY,
 } from './experiments';
+import {
+  DEFAULT_UPSELL1_CENTS,
+  FALLBACK_VARIANT,
+  normalizeSign,
+  parseVariantPool,
+  pickWeighted,
+  resolveVariantById,
+  scopeVariantsToFunnel,
+  scopeVariantsToSign,
+  selectVariant,
+  type PriceVariant,
+} from './priceVariantPool';
 
-export interface PriceVariant {
-  id: string;
-  priceCents: number;
-  downsellCents: number;
-  weight: number;
-  // Upsell 1 (Protection Ritual) price for this variant. Optional so older
-  // config rows without it fall back to the historical 4700 at read time.
-  upsell1Cents?: number;
-  // Funnel this variant is scoped to (e.g. 'v1-fb'). Omitted / null = serves
-  // any funnel that has no funnel-specific variant of its own.
-  funnel?: string | null;
-}
+// Re-exported so existing importers keep working and the pure helpers stay
+// reachable from one place.
+export {
+  pickWeighted,
+  resolveVariantById,
+  scopeVariantsToFunnel,
+  scopeVariantsToSign,
+  selectVariant,
+  normalizeSign,
+  type PriceVariant,
+};
 
 export interface AssignedVariant {
   variant: string;
@@ -38,15 +66,16 @@ export interface AssignedVariant {
   upsell1Cents: number;
 }
 
-const DEFAULT_UPSELL1_CENTS = 4700;
+const ENV_OVERRIDE_KEY = 'V1_PRICE_VARIANTS_JSON';
 
-const FALLBACK_VARIANT: PriceVariant = {
-  id: '35',
-  priceCents: 3500,
-  downsellCents: 2500,
-  weight: 1,
-  upsell1Cents: DEFAULT_UPSELL1_CENTS,
-};
+export type VariantsSource = 'env' | 'db' | 'fallback';
+let lastSource: VariantsSource = 'db';
+
+/** Which pool the process is currently serving. Surfaced on the admin dashboard
+ *  so "is the dev override accidentally on?" is answerable at a glance. */
+export function getVariantsSource(): VariantsSource {
+  return lastSource;
+}
 
 // Funnels that run a single FIXED price (no A/B). assignVariantIfMissing stamps
 // these directly instead of drawing from the weighted system_config pool — so
@@ -69,7 +98,53 @@ interface CachedVariants {
 let cache: CachedVariants | null = null;
 const CACHE_TTL_MS = 60_000;
 
-async function fetchVariantsFromDb(): Promise<PriceVariant[]> {
+// Parse a raw pool and LOG everything the validator rejected. A silently dropped
+// variant is how the root $45 test died — never swallow these.
+function usablePool(raw: string, source: 'env' | 'db'): PriceVariant[] {
+  const { variants, dropped, unknownKeys } = parseVariantPool(raw);
+
+  for (const d of dropped) {
+    logger.error('priceVariant: DROPPED invalid variant — it will not be served', {
+      source,
+      variant: d.id,
+      reason: d.reason,
+    });
+  }
+  for (const u of unknownKeys) {
+    logger.warn('priceVariant: unknown key in variant config (typo? a mistyped price key nulls out that price)', {
+      source,
+      variant: u.id,
+      key: u.key,
+    });
+  }
+
+  if (variants.length === 0) return [FALLBACK_VARIANT];
+  if (variants.every((v) => v.weight === 0)) return [FALLBACK_VARIANT];
+  return variants;
+}
+
+async function fetchVariants(): Promise<PriceVariant[]> {
+  // Dev/staging override — see the header. Replaces the shared-DB pool for this
+  // process only, so a config flip can be rehearsed without touching production.
+  const override = process.env[ENV_OVERRIDE_KEY]?.trim();
+  if (override) {
+    try {
+      const variants = usablePool(override, 'env');
+      lastSource = 'env';
+      logger.warn(
+        `priceVariant: ⚠ pool is OVERRIDDEN by ${ENV_OVERRIDE_KEY} — the system_config row is being IGNORED. This must only ever be set on dev/local.`,
+        { variants: variants.map((v) => `${v.funnel ?? 'root'}:${v.id}=w${v.weight}${v.signs?.length ? `[${v.signs.join(',')}]` : ''}`) },
+      );
+      return variants;
+    } catch (err) {
+      // A malformed override must NOT silently fall back to the shared prod pool —
+      // the whole point is that dev serves exactly what you think it serves.
+      lastSource = 'fallback';
+      logger.error(`priceVariant: ${ENV_OVERRIDE_KEY} is set but unparseable — serving the $35/$25 fallback, NOT the DB pool`, { err });
+      return [FALLBACK_VARIANT];
+    }
+  }
+
   try {
     const rows = await db
       .select()
@@ -78,18 +153,16 @@ async function fetchVariantsFromDb(): Promise<PriceVariant[]> {
       .limit(1);
 
     const raw = rows[0]?.configValue;
-    if (!raw) return [FALLBACK_VARIANT];
+    if (!raw) {
+      lastSource = 'fallback';
+      return [FALLBACK_VARIANT];
+    }
 
-    const parsed = JSON.parse(raw);
-    const variants: PriceVariant[] = Array.isArray(parsed?.variants) ? parsed.variants : [];
-    const usable = variants.filter(
-      (v) => typeof v.id === 'string' && v.priceCents > 0 && v.weight >= 0
-    );
-
-    if (usable.length === 0) return [FALLBACK_VARIANT];
-    if (usable.every((v) => v.weight === 0)) return [FALLBACK_VARIANT];
-    return usable;
+    const variants = usablePool(raw, 'db');
+    lastSource = 'db';
+    return variants;
   } catch (err) {
+    lastSource = 'fallback';
     logger.error('priceVariant: failed to read v1_price_variants config', { err });
     return [FALLBACK_VARIANT];
   }
@@ -99,7 +172,7 @@ export async function getActiveVariants(): Promise<PriceVariant[]> {
   if (cache && Date.now() - cache.fetchedAt < CACHE_TTL_MS) {
     return cache.variants;
   }
-  const variants = await fetchVariantsFromDb();
+  const variants = await fetchVariants();
   cache = { variants, fetchedAt: Date.now() };
   return variants;
 }
@@ -108,51 +181,21 @@ export function invalidatePriceVariantCache(): void {
   cache = null;
 }
 
-export function pickWeighted(variants: PriceVariant[]): PriceVariant {
-  const totalWeight = variants.reduce((sum, v) => sum + Math.max(0, v.weight), 0);
-  if (totalWeight <= 0) return variants[0] ?? FALLBACK_VARIANT;
-
-  let roll = Math.random() * totalWeight;
-  for (const v of variants) {
-    roll -= Math.max(0, v.weight);
-    if (roll <= 0) return v;
-  }
-  return variants[variants.length - 1];
-}
-
-export function resolveVariantById(
-  variants: PriceVariant[],
-  id: string | null | undefined
-): PriceVariant | null {
-  if (!id) return null;
-  return variants.find((v) => v.id === id) ?? null;
-}
-
-/**
- * Restrict the variant pool to those matching the given funnel.
- * If any variant is scoped to this exact funnel, only those are eligible
- * (so FB traffic only sees the *_fb variants, and non-FB traffic only sees
- * null-funnel variants). If none match, fall back to the full pool so the
- * feature degrades to current behavior before any funnel-scoped variant is
- * configured.
- */
-export function scopeVariantsToFunnel(
-  variants: PriceVariant[],
-  funnel?: string | null,
-): PriceVariant[] {
-  const target = funnel ?? null;
-  const matching = variants.filter((v) => (v.funnel ?? null) === target);
-  return matching.length ? matching : variants;
-}
-
 /**
  * Assign a variant to a conversation if it doesn't already have one.
  * Idempotent: same email always sees the same variant once assigned.
  * Returns null if no conversation row exists for this email yet.
+ *
+ * `sign` is the fb-palm ad sign (thumb / hand-size / finger-shape / …). It only
+ * narrows the pool for variants that declare `signs` — today that is the sliding
+ * close (`55-35_palm`, thumb-only). Every other funnel and every unscoped variant
+ * behaves exactly as before. Palm traffic that sends no sign is treated as thumb
+ * (see normalizeSign).
  */
 export async function assignVariantIfMissing(
   email: string,
   funnel?: string | null,
+  sign?: string | null,
 ): Promise<AssignedVariant | null> {
   try {
     const existing = await db
@@ -197,7 +240,10 @@ export async function assignVariantIfMissing(
           weight: 1,
           funnel,
         }
-      : pickWeighted(scopeVariantsToFunnel(await getActiveVariants(), funnel));
+      // Partition by funnel, then filter by palm sign, then draw. `sign` only ever
+      // narrows the pool for variants that declare `signs` (today: the thumb-only
+      // sliding close) — every other funnel/variant draws exactly as before.
+      : selectVariant(await getActiveVariants(), funnel, sign);
     // Upsell-1 price A/B test (framework, Phase 3b). Fold in only where the legacy
     // Upsell-1 price is the DEFAULT $47 (the control price the test compares $37
     // against) — a funnel configured at a different custom price keeps it. The
@@ -258,7 +304,17 @@ export async function assignVariantIfMissing(
       });
     }
 
-    logger.info('priceVariant: assigned', { email, variant: picked.id, priceCents: mainCents, funnel: funnel ?? null });
+    // `sign` is logged so the thumb-only scoping is verifiable straight from the
+    // logs the moment the config flips — grep for variant=55-35_palm and every hit
+    // must carry sign=thumb. Any other sign on that variant = contamination.
+    logger.info('priceVariant: assigned', {
+      email,
+      variant: picked.id,
+      priceCents: mainCents,
+      downsellCents,
+      funnel: funnel ?? null,
+      sign: normalizeSign(funnel, sign),
+    });
 
     return {
       variant: picked.id,
