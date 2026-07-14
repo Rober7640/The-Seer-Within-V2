@@ -46,6 +46,44 @@ violation. Ours is a live button that opens Stripe Checkout on our site.
   Cosmo Numerology Pte Ltd · 45B Temple St, Singapore S058590 ·
   hi@theseerwithin.com · +65 8022 8149
 
+## 🔒 RULE: bracelet buyers are NEVER upsold
+
+Lewis, 2026-07-14: *"we dont want to offer them any upsell once they purchase any of those 3
+products from that new lander."*
+
+This holds today, and it is **enforced by a test** (`server/lib/braceletIsolation.test.ts`, in
+`npm run test:price`). Audit of every side effect in the Stripe `checkout.session.completed`
+handler for a `bracelet_*` product:
+
+| Side effect | Gate | Fires? |
+|---|---|---|
+| `reportTrackdeskConversion` | needs `trackdeskClickId` — never set on bracelet sessions | No |
+| `buildPurchaseEvent` → `posthog.capture` | returns `null` for unknown product | No |
+| soulmate AWeber / orders / token-revoke | `product === 'soulmate_sketch'` | No |
+| `fireStripePurchaseEvent` (Meta CAPI) | `resolveStripeEventName` → `null` → skip | No |
+| `fireGoogleAdsConversion` | `gadsStepForProduct` → `null` → early return | No |
+| `migrateAndEmailFunnelUser` | `noemail==='1' && product==='energy_clearing_ritual'` | No |
+| `maybeSchedulePostPurchaseDrip` | PayPal branch only, keyed on `credit_purchases` | No |
+| `addPaidSubscriber` (AWeber paid list) | only caller is `/api/upsell/user-data` | No |
+| `recordBraceletOrder` | `product.startsWith('bracelet_')` | **Yes** (ours) |
+
+Plus: `success_url` goes to **`/order/success`**, never `/welcome1`. A bracelet buyer gets
+**one** email — their order confirmation. No upsell, no drip, no AWeber, no account.
+
+🔴 **The tripwire:** if anyone adds a `bracelet_*` key to `TRACKED_PRODUCTS` or the Google Ads
+`PRODUCT_TO_STEP` map, that isolation breaks and storefront buyers start being treated as funnel
+buyers. The test fails loudly if they do. **Do not "fix" it by editing the test.**
+
+## ✅ The "Begin a Reading" CTA — no separate chat routes needed
+
+Verified end-to-end: `/home` → "Begin a Reading" → lands on **`/`** (the real, unmodified root
+lander) → its CTA → **`/chat`** → Evelyn greets and the normal funnel runs (clearing ritual,
+upsells, everything).
+
+It is a plain `<a href="/">`. The storefront **reuses the existing funnel wholesale** — nothing is
+duplicated and there is no second chat flow to maintain. Confirmed the storefront header/footer do
+**not** leak onto `/` or any funnel lander.
+
 ## 🔴 Still open — the one that can waste the whole build
 
 1. **Which URL did Facebook actually flag?** Our ads run to `/fb-palm/c`, `/evelyn`, `/gdn` —
