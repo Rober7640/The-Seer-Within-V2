@@ -55,6 +55,18 @@ export default function PalmBridge() {
   const cfg = getSign(sign)
   const count = cfg.options.length
 
+  // Option grid. Default = one column per option (2-up or 3-up side-by-side), which is
+  // what every sign but hand-size wants. A sign with landscape panel art sets
+  // `columns: 1` to stack top-down instead, so each tile gets the full card width
+  // (~310px on a phone) rather than being crushed into ~150px. Written as whole literal
+  // class names so Tailwind's scanner actually emits them.
+  const columns = cfg.columns ?? (count === 2 ? 2 : 3)
+  const GRID_COLS: Record<number, string> = {
+    1: 'grid-cols-1',
+    2: 'grid-cols-2',
+    3: 'grid-cols-3',
+  }
+
   // Crop the N-up strip down to a single option via background-position.
   // The strip is `count` equal panels; aspectRatio keeps one panel undistorted.
   const optionStyle = (opt: PalmOption): React.CSSProperties => {
@@ -149,7 +161,7 @@ export default function PalmBridge() {
               {HEADLINES[hook]}
             </h2>
             <p className="text-gray-500 text-center text-sm mb-6">{cfg.instruction}</p>
-            <div className={`grid ${count === 2 ? 'grid-cols-2' : 'grid-cols-3'} gap-2 md:gap-3`}>
+            <div className={`grid ${GRID_COLS[columns]} gap-2 md:gap-3`}>
               {cfg.options.map((t) => (
                 <button
                   key={t}

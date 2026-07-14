@@ -101,6 +101,14 @@ export interface SignConfig {
   // Tap-target art: a horizontal strip of `options.length` equal panels.
   strip: { url: string; width: number; height: number }
   options: PalmOption[] // which letters this sign offers (A/B[/C])
+  // How many GRID columns the options are laid out in. Omitted = one column per
+  // option (the historical behaviour: 2 options side-by-side, 3 side-by-side).
+  //
+  // Set this to 1 to stack the options TOP-DOWN, which lets each tile span the full
+  // card width. That is the right call when the panel art is landscape: a side-by-side
+  // tile is ~150px wide on a phone, so a wide image gets crushed. Stacked, it is ~310px.
+  // Only `hand-size` needs it today — see the note on HAND_SIZE.
+  columns?: 1 | 2 | 3
   // Per-option archetype vocab. mark = the concrete tell named in sentence 1;
   // reading = the heart label. Both feed the Version-A greeting + the Version-C
   // LLM injection; the reads name the mark themselves in sentence 1.
@@ -686,20 +694,29 @@ const HAND_SIZE: SignConfig = {
   beatNoun: 'hands',
   continueCta: "There's more your hands are telling me — begin your free reading",
   chooseMoment: 'the moment your hands answered',
-  // Reworked 2026-07-13. The original 2160x406 strip carried ~180px of dead white
-  // margin either side of every panel, so the panel aspect was 2.66 — the tile
-  // rendered as a short letterbox and the hands looked tiny next to the other
-  // signs. Two steps: (1) crop away the dead margin (identical box on BOTH halves,
-  // so the big-vs-small size difference this sign depends on is preserved), then
-  // (2) pad the art back out vertically to a SQUARE 745x745 panel so the tile
-  // matches the other signs' proportions.
-  // The art itself is landscape (forearm + open palm) and the measuring hand
-  // overlaps the baked "Big hands"/"Small hands" label horizontally, so a square
-  // crop would have to erase that label — and without it the two options look
-  // near-identical. Hence padding, not cropping: the hands stay their current
-  // size, but nothing is lost and the tile is square.
-  strip: { url: '/palm/hand-size-strip.png', width: 1490, height: 745 },
+  // Reworked 2026-07-14 (Joel, call): "the image is a bit still too small… if we can't
+  // do left, right, maybe we can do top down so that we can make that image a bit
+  // bigger, because this image is more of a horizontal image rather than a vertical
+  // image." He is right, and it measures: the art is 1.8:1 landscape (forearm + open
+  // palm), so the previous SQUARE 745x745 panel was ~47% empty white and the hands
+  // rendered tiny in a ~150px side-by-side tile.
+  //
+  // The square panel existed to protect the labels: the measuring hand overlaps the
+  // baked-in "Big hands"/"Small hands" text horizontally, so a tight SQUARE crop would
+  // have had to erase it — and WITHOUT those labels the two options look near-identical,
+  // which destroys the only thing this image is here to show. Padding was the lesser evil.
+  //
+  // `columns: 1` dissolves that trade. Stacked top-down, each tile spans the full card
+  // (~310px on a phone instead of ~150px), so the panel can be cropped back to its
+  // natural landscape shape: labels kept, dead margin gone, hands roughly 2x bigger.
+  // Re-crop is reproducible — scripts/palm-handsize-recrop.py (identical box on BOTH
+  // halves; different boxes would kill the big-vs-small size difference).
+  //
+  // Joel's constraint on any future change here: "we just need to make sure that a
+  // person can see what's considered big, what's considered small." Keep the labels.
+  strip: { url: '/palm/hand-size-strip.png', width: 1490, height: 412 },
   options: ['a', 'b'],
+  columns: 1,
   mark: {
     a: 'hands that run large and generous, made to hold and shelter',
     b: 'hands that run small and quick, made to reach and leap',
