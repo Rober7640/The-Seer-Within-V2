@@ -31,6 +31,7 @@ import migrateRouter from "./routes/migrate";
 import astrologyRouter from "./routes/astrology";
 import quizRouter from "./routes/quiz";
 import evelynLanderRouter from "./routes/evelynLander";
+import productsRouter from "./routes/products";
 import personaLanderRouter from "./routes/personaLander";
 import {
   runHealthCheck,
@@ -348,6 +349,10 @@ export async function registerRoutes(
   app.use("/api/evelyn-lander", evelynLanderRouter);
   // Generalized lander for the additional personas (Marcus, Luna, Nova, Maren).
   app.use("/api/persona-lander/:persona", personaLanderRouter);
+  // Stripe Checkout for the Facebook-compliance product pages (/products/:slug).
+  // Isolated from the funnels: it uses NEW `bracelet_*` product names, which every
+  // branch of the Stripe webhook skips as unknown. See server/routes/products.ts.
+  app.use("/api/products", productsRouter);
 
   // Public unsubscribe endpoint for partner emails (CAN-SPAM compliance).
   // Mounted at root so the URL is a clean https://www.theseerwithin.com/unsubscribe?email=...&src=...
