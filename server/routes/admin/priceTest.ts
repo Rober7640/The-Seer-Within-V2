@@ -6,7 +6,7 @@ import { db } from '../../lib/db';
 import { conversations } from '@shared/schema';
 import { sql, and, gte, lte, isNotNull } from 'drizzle-orm';
 import logger from '../../lib/logger';
-import { getActiveVariants } from '../../lib/priceVariant';
+import { getActiveVariants, getVariantsSource } from '../../lib/priceVariant';
 
 const router = Router();
 
@@ -260,6 +260,11 @@ router.get('/v1', async (req: Request, res: Response) => {
     }
 
     return res.json({
+      // Where this process is drawing its variant pool from. 'db' = the shared
+      // system_config row (what production MUST always show). 'env' = the
+      // V1_PRICE_VARIANTS_JSON dev override is active and the DB row is being
+      // ignored — correct on dev/local, a red flag anywhere else.
+      variantsSource: getVariantsSource(),
       summary: {
         leadingVariant: leader?.variant ?? null,
         recommendation,

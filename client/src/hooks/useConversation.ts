@@ -672,6 +672,18 @@ export function useConversation() {
       const fbcMatch = typeof document !== 'undefined'
         ? document.cookie.match(/(?:^|;\s*)_fbc=([^;]*)/)
         : null;
+
+      // Which fb-palm ad "sign" this visitor came through (thumb / hand-size /
+      // finger-shape / …). Sent to /api/lead so the server can scope the price
+      // pool: the $55/$35 sliding close runs on the THUMB ads ONLY (Joel, 7/14 —
+      // "the test should go on to thumb"). Defaults to 'thumb' because the bridge
+      // deliberately omits `&sign=` for its default sign, so a palm visitor with no
+      // sign param IS thumb. Also reused for the PostHog identify below.
+      const phFunnel = getPostHogFunnel() ?? 'v1'
+      const palmSign = phFunnel === 'palm'
+        ? (parsePalmParams(window.location.search)?.sign ?? 'thumb')
+        : undefined
+
       const leadRes = await fetch('/api/lead', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -682,6 +694,7 @@ export function useConversation() {
           trackdeskClickId: getTrackdeskClickId(),
           gclid: getGclid(),
           funnel: currentFunnel(),
+          sign: palmSign,
           fbp: fbpMatch ? decodeURIComponent(fbpMatch[1]) : undefined,
           fbc: fbcMatch ? decodeURIComponent(fbcMatch[1]) : undefined,
         }),
@@ -715,14 +728,10 @@ export function useConversation() {
       // purchase_completed (uses email as distinctId) merges with the
       // client's anonymous distinctId from earlier lander_view events.
       {
-        const phFunnel = getPostHogFunnel() ?? 'v1'
-        // Palm multi-sign: which ad "sign" was quizzed (defaults to 'thumb').
-        // Set as a PERSON property at identify so the server-side
+        // phFunnel / palmSign are resolved above (shared with the /api/lead body).
+        // palmSign is set as a PERSON property at identify so the server-side
         // purchase_completed (same email distinctId) can be broken down per
         // sign without touching the payment path.
-        const palmSign = phFunnel === 'palm'
-          ? (parsePalmParams(window.location.search)?.sign ?? 'thumb')
-          : undefined
         identifyPH(input.trim(), {
           funnel: phFunnel,
           first_name: currentChat.userData.firstName || undefined,

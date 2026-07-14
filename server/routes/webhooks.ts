@@ -11,9 +11,9 @@ import logger from '../lib/logger';
 import { posthog } from '../lib/posthog';
 import * as paypal from '../lib/paypal';
 import { fireV2PurchaseEvent, fireStripePurchaseEvent } from '../lib/facebook';
+import { buildPurchaseEvent } from '../lib/purchaseAnalytics';
 import { migrateAndEmailFunnelUser } from '../lib/funnelMigrationEmail';
 import { fireGoogleAdsConversion, gadsStepForProduct } from '../lib/googleAds';
-import { funnelDefForParam } from '@shared/funnelConfig';
 import { maybeSchedulePostPurchaseDrip } from '../lib/postPurchaseDripTrigger';
 import {
   addSoulmatePaidSubscriber,
@@ -880,37 +880,19 @@ router.post('/stripe', async (req: Request, res: Response) => {
     }
 
     // PostHog: track funnel purchases (Phase 1 soulmate + Phase 2 V1/fb/fb2/gdn).
-    // Soulmate products fix funnel='soulmate'. V1 products derive funnel from
-    // metadata.funnel via funnelDefForParam (missing → 'v1').
-    type TrackedProduct = { funnel: 'soulmate' | null; step: string; product: string };
-    const TRACKED_PRODUCTS: Record<string, TrackedProduct> = {
-      soulmate_sketch:        { funnel: 'soulmate', step: 'sales',   product: 'soulmate_sketch' },
-      soulmate_bracelet:      { funnel: 'soulmate', step: 'upsell1', product: 'soulmate_bracelet' },
-      soulmate_love_tuner:    { funnel: 'soulmate', step: 'upsell2', product: 'soulmate_love_tuner' },
-      energy_clearing_ritual: { funnel: null,       step: 'sales',   product: 'energy_clearing_ritual' },
-      protection_ritual:      { funnel: null,       step: 'upsell1', product: 'protection_ritual' },
-      manifestation_bracelet: { funnel: null,       step: 'upsell2', product: 'manifestation_bracelet' },
-    };
-    const productInfo = product ? TRACKED_PRODUCTS[product] : undefined;
-    if (productInfo) {
-      const funnelValue = productInfo.funnel ?? (funnelDefForParam(metadata.funnel)?.posthog ?? 'v1');
-      const posthogDistinctId = metadata.posthogDistinctId || email;
-      posthog.capture({
-        distinctId: posthogDistinctId,
-        event: 'purchase_completed',
-        properties: {
-          funnel: funnelValue,
-          step: productInfo.step,
-          product: productInfo.product,
-          payment_method: 'stripe_checkout',
-          amount_cents: session.amount_total ?? 0,
-          stripe_session_id: session.id,
-          email,
-          // No-optin arm marker so purchases are filterable/comparable in PostHog
-          // (email_gate=off = no-email lander). Derived from the session metadata.
-          email_gate: metadata.noemail === '1' ? 'off' : 'on',
-        },
-      });
+    // Shape lives in lib/purchaseAnalytics so it can be unit tested — this one event
+    // serves six products across three funnel families, and now also carries
+    // price_variant + purchase_type so the sliding close's $35 grace is
+    // distinguishable from a $35 control main (both are amount_cents 3500).
+    const purchaseEvent = buildPurchaseEvent({
+      product,
+      metadata,
+      amountCents: session.amount_total ?? 0,
+      stripeSessionId: session.id,
+      email,
+    });
+    if (purchaseEvent) {
+      posthog.capture(purchaseEvent);
     }
 
     // AWeber + DB writes for soulmate bracelet/tuner FALLBACK Checkout
