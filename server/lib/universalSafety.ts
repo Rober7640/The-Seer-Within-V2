@@ -119,6 +119,11 @@ const SOFT_CRISIS_PATTERNS: RegExp[] = [
   /\bdon'?t\s+care\s+if\s+i\s+(?:live\s+or\s+die|make\s+it)\b/i,
   /\bno\s+reason\s+to\s+keep\s+(?:going|living|trying)\b/i,
   /\bi\s+(?:just\s+)?give\s+up\s+on\s+(?:life|everything|living)\b/i,
+  // Fatalistic death statements without explicit intent (2026-07-14 audit miss:
+  // "No I will be dead sooner if I keep this up" received no resources at all)
+  /\bi(?:[’']ll|\s+will)\s+(?:probably\s+|just\s+|soon\s+)?(?:be|end\s+up)\s+dead\b/i,
+  /\bi\s+(?:won[’']?t|will\s+not)\s+be\s+(?:here|around|alive)\s+(?:much\s+longer|for\s+(?:much\s+)?long(?:er)?)\b/i,
+  /\bi(?:[’']d|\s+would)\s+rather\s+(?:be\s+dead|die|not\s+(?:be\s+here|exist|wake\s+up))\b/i,
   // Depression / emotional distress (not suicidal but needs care)
   /\bi(?:'m|\s+am)\s+(?:so|really|very|deeply|severely)\s+depressed\b/i,
   /\bi(?:'ve|\s+have)\s+been\s+(?:really|so|very)?\s*depressed\b/i,
@@ -165,6 +170,48 @@ const CRISIS_PATTERNS: RegExp[] = [
   /\bme\s+matar\b/i,
   /\bsuicídio\b/i,
 ];
+
+// Denial context for crisis matches. Hard-firing the 988 template on "I'm NOT going
+// to hurt myself" reads as not listening (2026-07-14 audit: it fired twice on a user
+// explicitly denying intent, and he paid for both turns). A denied match downgrades
+// to the soft note — resources stay visible, the persona's reply still goes through.
+// The tail must sit IMMEDIATELY before the matched phrase, so "she said no. I want
+// to kill myself" still hard-fires.
+const CRISIS_DENIAL_TAIL = new RegExp(
+  '(?:' +
+    "\\b(?:not|never)\\s+(?:going\\s+to\\s+|gonna\\s+|about\\s+to\\s+|trying\\s+to\\s+|planning\\s+(?:on\\s+|to\\s+)?)?" +
+    "|\\b(?:won[’']?t|wouldn[’']?t|would\\s+never|ain[’']?t)\\s+(?:ever\\s+)?" +
+    "|\\b(?:don[’']?t|do\\s+not|doesn[’']?t)\\s+want\\s+to\\s+" +
+    "|\\bno\\s+(?:plans?|intentions?|desire|thoughts?)\\s+(?:to|of)\\s+" +
+  ')$',
+  'i',
+);
+
+function isDeniedCrisisMatch(text: string, matchIndex: number): boolean {
+  return CRISIS_DENIAL_TAIL.test(text.slice(Math.max(0, matchIndex - 48), matchIndex));
+}
+
+/**
+ * Scan for crisis phrases with denial awareness.
+ * 'hard'   — at least one non-denied crisis phrase → full crisis response.
+ * 'denied' — crisis phrases found, but every one sits in a denial context → soft note.
+ * 'none'   — no crisis phrase at all.
+ */
+function scanCrisis(text: string): 'hard' | 'denied' | 'none' {
+  let denied = false;
+  for (const pattern of CRISIS_PATTERNS) {
+    let offset = 0;
+    while (offset < text.length) {
+      const m = pattern.exec(text.slice(offset));
+      if (!m) break;
+      const abs = offset + m.index;
+      if (!isDeniedCrisisMatch(text, abs)) return 'hard';
+      denied = true;
+      offset = abs + Math.max(1, m[0].length);
+    }
+  }
+  return denied ? 'denied' : 'none';
+}
 
 // Inappropriate/sexual content
 const INAPPROPRIATE_PATTERNS: RegExp[] = [
@@ -399,16 +446,26 @@ export function checkUniversalSafety(message: string): SafetyCheckResult {
 
   const trimmed = message.trim();
 
-  // 1. Crisis detection - FIRST and most strict
-  for (const pattern of CRISIS_PATTERNS) {
-    if (pattern.test(trimmed)) {
-      return {
-        safe: false,
-        violationType: 'crisis',
-        response: SAFETY_RESPONSES.crisis,
-        confidence: 0.95,
-      };
-    }
+  // 1. Crisis detection - FIRST and most strict. A crisis phrase inside an explicit
+  //    denial ("I'm NOT going to hurt myself") downgrades to the soft note instead of
+  //    the hard template (2026-07-14 audit false-positive fix).
+  const crisisScan = scanCrisis(trimmed);
+  if (crisisScan === 'hard') {
+    return {
+      safe: false,
+      violationType: 'crisis',
+      response: SAFETY_RESPONSES.crisis,
+      confidence: 0.95,
+    };
+  }
+  if (crisisScan === 'denied') {
+    return {
+      safe: true,
+      violationType: 'crisis',
+      response: null,
+      confidence: 0.6,
+      softCrisisNote: SOFT_CRISIS_NOTE,
+    };
   }
 
   // 1b. Soft crisis detection — passive ideation. Message is still delivered but

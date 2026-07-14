@@ -31,6 +31,32 @@ function capBillableSeconds(seconds: number, sessionId: string): number {
   return seconds;
 }
 
+// Ledger invariant: a session may never be charged more coins than its recorded
+// duration can justify (+ one billing block of rounding). The 72h audit (2026-07-14)
+// found 11 rows violating this — "1-second session, 1,455 coins" — every one was
+// dead-air billing whose correction rewrote duration down without refunding. The
+// refund paths below are what keep this from firing; if it ever does, a refund
+// path was skipped and the row is chargeback evidence.
+function assertBillingInvariant(
+  sessionId: string,
+  durationSeconds: number,
+  coinsCharged: number,
+  coinsPerMinute: number,
+  site: string,
+): void {
+  const maxAllowed = secondsToCoins(durationSeconds + BILLING_INTERVAL_SECONDS, coinsPerMinute);
+  if (coinsCharged > maxAllowed) {
+    logger.error('BILLING_INVARIANT_VIOLATION: coins charged exceed recorded duration', {
+      sessionId,
+      site,
+      durationSeconds,
+      coinsCharged,
+      maxAllowed,
+      coinsPerMinute,
+    });
+  }
+}
+
 /**
  * Get an active session from the database.
  */
@@ -219,6 +245,29 @@ export async function checkpointSession(sessionId: string): Promise<void> {
         fromReal: spend.fromReal,
         cappedByBalance: safeDeduction > actualDeduction,
       });
+    } else if (newTotalCharged < Number(row.coins_charged)) {
+      // The billable basis shrank: the idle guard tripped and re-based billing from
+      // wall-clock to last_message_at. Until 2026-07-14 this branch only rewrote
+      // duration_seconds down and KEPT the coins — the "1-second session, 1,455
+      // coins" rows in the 72h audit. Refund the dead-air difference instead,
+      // real balance first then promo (mirror of endChatSession's refund path).
+      const refund = Number(row.coins_charged) - newTotalCharged;
+      const previousPromoCharged = Number(row.promo_coins_charged);
+      const realCharged = Number(row.coins_charged) - previousPromoCharged;
+      const split = await refundCoins(
+        tx, row.user_id, precheck[0].personaId, refund, previousPromoCharged, realCharged,
+      );
+      actualDeduction = -(split.toReal + split.toPromo);
+      promoDeducted = -split.toPromo;
+      logger.info('checkpointSession: refunded dead-air over-billing', {
+        sessionId,
+        userId: row.user_id,
+        refund,
+        refundToReal: split.toReal,
+        refundToPromo: split.toPromo,
+        previouslyCharged: Number(row.coins_charged),
+        rebasedCharge: newTotalCharged,
+      });
     }
 
     // Track the ACTUAL amount deducted (not the theoretical target) so future
@@ -226,6 +275,8 @@ export async function checkpointSession(sessionId: string): Promise<void> {
     // deduction was capped by MAX_COINS_PER_DEDUCTION or available coins.
     const actualTotalCharged = Number(row.coins_charged) + actualDeduction;
     const actualPromoCharged = Number(row.promo_coins_charged) + promoDeducted;
+
+    assertBillingInvariant(sessionId, accumulatedSeconds, actualTotalCharged, coinsPerMinute, 'checkpointSession');
 
     // Use raw SQL (NOT Drizzle ORM) to bypass potential ORM serialization bugs.
     // Drizzle's .set() was suspected of writing wrong values for integer columns
@@ -374,6 +425,8 @@ export async function endChatSession(sessionId: string): Promise<void> {
         sessionId, userId: row.user_id, movedToPromo, realChargedBefore: realChargedThisSession,
       });
     }
+
+    assertBillingInvariant(sessionId, billableSeconds, actualSessionCharged, coinsPerMinute, 'endChatSession');
 
     logger.info('endChatSession: final billing', {
       sessionId,
@@ -575,16 +628,42 @@ export async function cleanupInactiveSessions(): Promise<number> {
           const lockedRow = locked.rows[0] as { id: string; user_id: string; coins_charged: number; promo_coins_charged: number; active_seconds: number };
 
           const billableSeconds = capBillableSeconds(Math.max(0, lockedRow.active_seconds), row.id);
-          const totalMinutes = Math.floor(billableSeconds / 60);
-          const totalCoins = totalMinutes * coinsPerMinute;
-          const remainingToDeduct = Math.max(0, totalCoins - Number(lockedRow.coins_charged));
+          // Bill in 15-second blocks — the same basis as checkpointSession/endChatSession.
+          // (The old floor-to-whole-minutes basis disagreed with what checkpoints had
+          // already charged, which would make the refund below claw back coins that
+          // were legitimately billed.)
+          const totalCoins = secondsToCoins(billableSeconds, coinsPerMinute);
+          const previouslyCharged = Number(lockedRow.coins_charged);
+          const previouslyPromoCharged = Number(lockedRow.promo_coins_charged);
 
-          // Spend promo coins (this persona) first, then real balance — capped at
-          // what's actually available across both pots.
-          const spend = await spendCoins(tx, lockedRow.user_id, row.persona_id, remainingToDeduct);
-
-          const actualSessionCharged = Number(lockedRow.coins_charged) + spend.total;
-          let actualPromoCharged = Number(lockedRow.promo_coins_charged) + spend.fromPromo;
+          let actualSessionCharged = previouslyCharged;
+          let actualPromoCharged = previouslyPromoCharged;
+          if (totalCoins > previouslyCharged) {
+            // Spend promo coins (this persona) first, then real balance — capped at
+            // what's actually available across both pots.
+            const spend = await spendCoins(tx, lockedRow.user_id, row.persona_id, totalCoins - previouslyCharged);
+            actualSessionCharged = previouslyCharged + spend.total;
+            actualPromoCharged = previouslyPromoCharged + spend.fromPromo;
+          } else if (totalCoins < previouslyCharged) {
+            // Checkpoints billed wall-clock past the user's last message before the
+            // idle guard tripped — dead air. Refund it instead of only rewriting
+            // duration_seconds down (2026-07-14 audit fix), real balance first then
+            // promo, exactly like endChatSession.
+            const refund = previouslyCharged - totalCoins;
+            const split = await refundCoins(
+              tx, lockedRow.user_id, row.persona_id, refund,
+              previouslyPromoCharged, previouslyCharged - previouslyPromoCharged,
+            );
+            actualSessionCharged = totalCoins;
+            actualPromoCharged = previouslyPromoCharged - split.toPromo;
+            logger.info('cleanup: refunded dead-air over-billing', {
+              sessionId: row.id,
+              userId: lockedRow.user_id,
+              refund,
+              refundToReal: split.toReal,
+              refundToPromo: split.toPromo,
+            });
+          }
 
           // Promo-first self-heal (same as endChatSession): if real was charged while the
           // persona still has promo, move it back. No-op for non-promo users.
@@ -593,6 +672,8 @@ export async function cleanupInactiveSessions(): Promise<number> {
             actualPromoCharged += movedToPromo;
             logger.info('cleanup: promo-first self-heal moved real→promo', { sessionId: row.id, userId: lockedRow.user_id, movedToPromo });
           }
+
+          assertBillingInvariant(row.id, billableSeconds, actualSessionCharged, coinsPerMinute, 'cleanupInactiveSessions');
 
           await tx.execute(
             sql`UPDATE chat_sessions SET
