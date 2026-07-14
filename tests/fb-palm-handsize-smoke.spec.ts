@@ -60,14 +60,27 @@ test.describe("fb-palm · hand-size", () => {
       expect(a, "option A rendered").toBeTruthy();
       expect(b, "option B rendered").toBeTruthy();
 
-      // The panel is 745x745, so the tile must be SQUARE (this is the regression
-      // guard for the strip dims in palmReads.ts — a wrong width/height there
-      // silently letterboxes the tile again).
+      // Reworked 2026-07-14: the options now STACK top-down (columns: 1) and the panel
+      // is landscape 745x412, not square. Both facts are load-bearing and guarded here.
+      //
+      // 1. Panel aspect — the regression guard on the strip dims in palmReads.ts. A wrong
+      //    width/height there silently distorts the art. 745/412 => h/w ~0.55.
       const ratio = a!.height / a!.width;
       console.log(`\n  [${hook}] tile ${Math.round(a!.width)}x${Math.round(a!.height)} (h/w ${ratio.toFixed(2)})`);
-      expect(ratio, "tile is square (h/w ~1.0)").toBeGreaterThan(0.93);
-      expect(ratio, "tile is square (h/w ~1.0)").toBeLessThan(1.07);
+      expect(ratio, "tile is landscape (h/w ~0.55)").toBeGreaterThan(0.50);
+      expect(ratio, "tile is landscape (h/w ~0.55)").toBeLessThan(0.62);
       expect(Math.round(b!.height), "both tiles same height").toBe(Math.round(a!.height));
+
+      // 2. STACKED, not side-by-side. This is the whole point of the change (Joel: "maybe
+      //    we can do top down so that we can make that image a bit bigger"). If someone
+      //    drops `columns: 1` from palmReads, the tiles silently go back to ~150px wide
+      //    and the hands shrink again — the aspect check above would NOT catch that.
+      expect(Math.round(b!.y), "option B sits BELOW option A (stacked)").toBeGreaterThan(Math.round(a!.y + a!.height - 1));
+      expect(Math.round(b!.x), "both tiles share the same left edge (one column)").toBe(Math.round(a!.x));
+
+      // 3. The stack must actually buy us size. Side-by-side on a 390px viewport gives
+      //    ~150px; full-width gives ~290px+. Assert we are on the right side of that.
+      expect(a!.width, "stacked tile is full-width (~2x the old side-by-side tile)").toBeGreaterThan(240);
 
       // ---- Meta: browser pixel + server CAPI ---------------------------------
       console.log("   FB Pixel :", fbPixel.map((f) => `${f.ev}(${f.id})`).join(", ") || "(none)");
