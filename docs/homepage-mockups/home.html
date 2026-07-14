@@ -1,0 +1,313 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Seer Within — Spiritual Readings & Wish Bracelets</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,600&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  /* Palette lifted from the LIVE root lander (www.theseerwithin.com/):
+       page  = navy starfield  rgb(15,23,41)
+       card  = near-white      rgb(248,250,252)   <- the dominant surface
+       CTA   = purple          #7C3AED            <- NOT gold
+       gold  = #D4AF35                            <- wordmark only
+     Headings Playfair Display, body Inter. Same fonts as the lander. */
+  :root{
+    --navy:#0F1729; --navy-2:#16203A; --navy-3:#1E2A4A;
+    --card:#F8FAFC; --card-2:#FFFFFF;
+    --ink:#0F172A; --ink-2:#334155; --muted:#64748B; --hair:#E2E8F0;
+    --purple:#7C3AED; --purple-2:#9333EA; --purple-soft:rgba(124,58,237,.1);
+    --gold:#D4AF35;
+    --shadow:0 24px 60px -28px rgba(2,6,23,.55);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{background:var(--navy)}
+  body{
+    font-family:Inter,system-ui,sans-serif; color:var(--ink); line-height:1.65;
+    -webkit-font-smoothing:antialiased;
+    /* NOT background-attachment:fixed — that only paints the viewport, so a long page
+       turns white below the fold and the footer text vanishes. Let it span the document. */
+    background:linear-gradient(180deg,#0B1020 0%,var(--navy) 38%,#1B2A4A 100%);
+    background-repeat:no-repeat; background-size:100% 100%;
+  }
+  /* starfield, same feel as the lander */
+  body::before{
+    content:""; position:fixed; inset:0; pointer-events:none; z-index:0;
+    background:
+      radial-gradient(1.2px 1.2px at 8% 14%, rgba(255,255,255,.7), transparent 60%),
+      radial-gradient(1px 1px at 22% 42%, rgba(255,255,255,.45), transparent 60%),
+      radial-gradient(1px 1px at 74% 10%, rgba(255,255,255,.5), transparent 60%),
+      radial-gradient(1.3px 1.3px at 88% 34%, rgba(255,255,255,.4), transparent 60%),
+      radial-gradient(1px 1px at 62% 66%, rgba(255,255,255,.35), transparent 60%),
+      radial-gradient(1px 1px at 34% 84%, rgba(255,255,255,.3), transparent 60%),
+      radial-gradient(1.2px 1.2px at 94% 74%, rgba(255,255,255,.35), transparent 60%);
+  }
+  .wrap{max-width:1120px;margin:0 auto;padding:0 22px;position:relative;z-index:1}
+
+  /* ---------- FB REQ 1: header — Home · About Us · Catalog · Contact ---------- */
+  header.site{position:sticky;top:0;z-index:60;background:rgba(15,23,41,.78);backdrop-filter:blur(14px);
+    border-bottom:1px solid rgba(255,255,255,.07)}
+  .nav{display:flex;align-items:center;justify-content:space-between;height:72px}
+  .brand{display:flex;align-items:center;gap:9px;text-decoration:none}
+  .brand .spark{color:var(--purple-2);font-size:19px;filter:drop-shadow(0 0 6px rgba(147,51,234,.6))}
+  .brand .name{font-family:'Playfair Display',serif;font-size:23px;color:var(--gold);letter-spacing:.2px}
+  .nav ul{display:flex;gap:32px;list-style:none;align-items:center}
+  .nav a.link{color:#CBD5E1;text-decoration:none;font-size:13px;font-weight:600;letter-spacing:.09em;
+    text-transform:uppercase;position:relative;padding:6px 0}
+  .nav a.link::after{content:"";position:absolute;left:0;bottom:0;height:2px;width:0;background:var(--purple-2);transition:width .28s ease}
+  .nav a.link:hover{color:#fff} .nav a.link:hover::after{width:100%}
+  .btn{display:inline-block;text-decoration:none;font-weight:700;border:0;cursor:pointer;
+    transition:transform .18s ease, box-shadow .18s ease}
+  .btn-purple{background:linear-gradient(135deg,var(--purple-2),var(--purple));color:#fff;
+    box-shadow:0 12px 30px -12px rgba(124,58,237,.85)}
+  .btn-purple:hover{transform:translateY(-2px);box-shadow:0 18px 40px -14px rgba(124,58,237,.95)}
+  .nav .cta{padding:11px 20px;border-radius:999px;font-size:13px}
+
+  /* ---------- hero (white card, like the lander) ---------- */
+  .hero{padding:74px 0 20px;text-align:center}
+  .hero .card{
+    background:var(--card); border-radius:26px; padding:56px 44px 50px; box-shadow:var(--shadow);
+    max-width:820px; margin:0 auto;
+  }
+  .eyebrow{font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:var(--muted);
+    display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:20px}
+  .eyebrow::before,.eyebrow::after{content:"";height:1px;width:40px;background:var(--hair)}
+  h1{font-family:'Playfair Display',serif;font-weight:600;line-height:1.1;
+    font-size:clamp(34px,4.6vw,52px);color:var(--ink)}
+  h1 em{font-style:italic;color:var(--purple)}
+  .hero p{max-width:560px;margin:20px auto 0;color:var(--muted);font-size:17px;font-weight:400}
+  .hero-actions{display:flex;gap:12px;justify-content:center;margin-top:32px;flex-wrap:wrap}
+  .btn-lg{padding:16px 32px;border-radius:14px;font-size:15px}
+  .btn-outline{border:1.5px solid var(--hair);color:var(--ink-2);background:#fff;border-radius:14px;
+    padding:16px 32px;font-size:15px;text-decoration:none;font-weight:600}
+  .btn-outline:hover{border-color:var(--purple);color:var(--purple)}
+  .trustline{display:flex;gap:28px;justify-content:center;margin-top:28px;color:var(--muted);
+    font-size:11px;letter-spacing:.1em;text-transform:uppercase;font-weight:600;flex-wrap:wrap}
+
+  /* ---------- FB REQ 4: 3 products, clickable, own page ---------- */
+  section{padding:76px 0}
+  .sec-head{text-align:center;margin-bottom:42px}
+  .sec-head h2{font-family:'Playfair Display',serif;font-size:clamp(28px,3.4vw,38px);font-weight:600;color:#fff}
+  .sec-head p{color:#94A3B8;margin-top:10px}
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
+  .card-p{
+    background:var(--card-2);border-radius:20px;overflow:hidden;text-decoration:none;color:inherit;
+    display:flex;flex-direction:column;box-shadow:var(--shadow);
+    transition:transform .3s cubic-bezier(.2,.7,.3,1), box-shadow .3s ease;
+  }
+  .card-p:hover{transform:translateY(-7px);box-shadow:0 34px 70px -26px rgba(2,6,23,.7)}
+  .shot{position:relative;aspect-ratio:1/1;background:#fff;overflow:hidden}
+  .shot img{width:100%;height:100%;object-fit:cover;transition:transform .55s ease}
+  .card-p:hover .shot img{transform:scale(1.06)}
+  .badge{position:absolute;top:13px;left:13px;background:var(--purple);color:#fff;font-size:11px;
+    font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:6px 11px;border-radius:999px}
+  .card-p .body{padding:22px 22px 24px;display:flex;flex-direction:column;flex:1}
+  .card-p h3{font-family:'Playfair Display',serif;font-size:21px;font-weight:600;color:var(--ink)}
+  .tag{font-size:10.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--purple);
+    font-weight:700;margin-top:7px}
+  .desc{color:var(--muted);font-size:14px;margin-top:11px;flex:1}
+  .price-row{display:flex;align-items:baseline;gap:9px;margin-top:16px}
+  .price{font-family:'Playfair Display',serif;font-size:26px;color:var(--ink);font-weight:600}
+  .was{color:#94A3B8;text-decoration:line-through;font-size:15px}
+  .view{margin-top:14px;font-size:13px;font-weight:700;color:var(--purple)}
+  .view span{display:inline-block;transition:margin-left .2s ease}
+  .card-p:hover .view span{margin-left:6px}
+
+  /* ---------- about + contact (white card) ---------- */
+  .panelcard{background:var(--card);border-radius:26px;padding:48px 44px;box-shadow:var(--shadow)}
+  .split{display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:start}
+  .split h2{font-family:'Playfair Display',serif;font-size:31px;font-weight:600;margin-bottom:16px;color:var(--ink)}
+  .split p{color:var(--muted);margin-bottom:13px}
+  .contact-list{list-style:none;margin-top:4px}
+  .contact-list li{display:flex;gap:16px;padding:13px 0;border-bottom:1px solid var(--hair);font-size:15px}
+  .contact-list li:last-child{border-bottom:0}
+  .contact-list .k{color:var(--purple);min-width:82px;font-size:11px;letter-spacing:.12em;
+    text-transform:uppercase;font-weight:700;padding-top:4px}
+  .contact-list a{color:var(--ink);text-decoration:none;border-bottom:1px solid var(--hair)}
+  .contact-list a:hover{color:var(--purple);border-color:var(--purple)}
+
+  /* ---------- FB REQ 2 + 3: footer, full info ---------- */
+  footer.site{border-top:1px solid rgba(255,255,255,.08);padding:58px 0 30px;margin-top:34px;position:relative;z-index:1}
+  .fgrid{display:grid;grid-template-columns:1.7fr 1fr 1fr 1.4fr;gap:38px}
+  footer h4{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);margin-bottom:15px;font-weight:700}
+  footer ul{list-style:none} footer li{margin-bottom:9px}
+  footer a{color:#94A3B8;text-decoration:none;font-size:14px}
+  footer a:hover{color:#fff}
+  footer .blurb{color:#94A3B8;font-size:14px;margin-top:13px;max-width:290px}
+  .addr{color:#94A3B8;font-size:14px;font-style:normal;line-height:1.85}
+  .addr strong{color:#E2E8F0;font-weight:600}
+  .addr a{color:#C4B5FD}
+  .legal{margin-top:44px;padding-top:22px;border-top:1px solid rgba(255,255,255,.08);
+    display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;color:#94A3B8;font-size:13px}
+  .legal a{margin-left:18px}
+
+  @media(max-width:900px){
+    .grid{grid-template-columns:1fr}
+    .split{grid-template-columns:1fr;gap:38px}
+    .fgrid{grid-template-columns:1fr 1fr;gap:28px}
+    .nav ul{display:none}
+    .hero .card,.panelcard{padding:36px 24px}
+  }
+</style>
+</head>
+<body>
+
+<!-- ===== HEADER — FB req #1 ===== -->
+<header class="site">
+  <div class="wrap nav">
+    <a class="brand" href="#top"><span class="spark">✧</span><span class="name">The Seer Within</span></a>
+    <nav><ul>
+      <li><a class="link" href="#top">Home</a></li>
+      <li><a class="link" href="#about">About Us</a></li>
+      <li><a class="link" href="#catalog">Catalog</a></li>
+      <li><a class="link" href="#contact">Contact</a></li>
+    </ul></nav>
+    <a class="btn btn-purple cta" href="/">Begin a Reading</a>
+  </div>
+</header>
+
+<main id="top">
+
+  <!-- ===== HERO ===== -->
+  <div class="wrap hero">
+    <div class="card">
+      <div class="eyebrow">Readings &amp; Ritual Objects</div>
+      <h1>Guidance for the questions<br>you <em>can't stop asking</em></h1>
+      <p>Personal spiritual readings, and hand-assembled wish bracelets made with genuine stone —
+         each sent with a certificate of authenticity and a wish paper of your own.</p>
+      <div class="hero-actions">
+        <a class="btn btn-purple btn-lg" href="/">Begin a Reading</a>
+        <a class="btn-outline" href="#catalog">Browse the Catalog</a>
+      </div>
+      <div class="trustline">
+        <span>🔒 100% Private &amp; Confidential</span>
+        <span>✧ Trusted by 2,400+ Clients</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== CATALOG — FB req #4 ===== -->
+  <section id="catalog">
+    <div class="wrap">
+      <div class="sec-head">
+        <h2>The Wish Bracelet Collection</h2>
+        <p>Genuine stone. 8&nbsp;mm beads. Sent with a certificate of authenticity.</p>
+      </div>
+      <div class="grid">
+
+        <a class="card-p" href="/products/black-lava-wish-bracelet">
+          <div class="shot"><span class="badge">Save $100</span><img src="img/lava-1.jpg" alt="Black Lava Wish Bracelet"></div>
+          <div class="body">
+            <h3>Black Lava Wish Bracelet</h3>
+            <div class="tag">Manifesting · Grounding · Calming</div>
+            <p class="desc">Genuine black lava stone born of volcanic eruption, set with a gold-plated wish capsule.</p>
+            <div class="price-row"><span class="price">$99.00</span><span class="was">$199.00</span></div>
+            <div class="view">View product <span>→</span></div>
+          </div>
+        </a>
+
+        <a class="card-p" href="/products/8-crystal-wealth-bracelet">
+          <div class="shot"><span class="badge">Save $100</span><img src="img/wealth-1.png" alt="8-Crystal Wealth Bracelet"></div>
+          <div class="body">
+            <h3>8-Crystal Wealth Bracelet</h3>
+            <div class="tag">Wealth · Manifesting · Abundance</div>
+            <p class="desc">Eight genuine crystals — Aventurine, Amethyst, Tiger Eye, Citrine, Pyrite and more.</p>
+            <div class="price-row"><span class="price">$99.00</span><span class="was">$199.00</span></div>
+            <div class="view">View product <span>→</span></div>
+          </div>
+        </a>
+
+        <a class="card-p" href="/products/rose-quartz-wish-bracelet">
+          <div class="shot"><span class="badge">Save $100</span><img src="img/rose-3.jpg" alt="Rose Quartz Wish Bracelet"></div>
+          <div class="body">
+            <h3>Rose Quartz Wish Bracelet</h3>
+            <div class="tag">Love · Self-Care · Heart-Healing</div>
+            <p class="desc">Genuine rose quartz, the stone of Aphrodite — for love given, and love returned.</p>
+            <div class="price-row"><span class="price">$99.00</span><span class="was">$199.00</span></div>
+            <div class="view">View product <span>→</span></div>
+          </div>
+        </a>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== ABOUT + CONTACT ===== -->
+  <section id="about" style="padding-top:10px">
+    <div class="wrap">
+      <div class="panelcard split">
+        <div>
+          <h2>About Us</h2>
+          <p>The Seer Within is an online spiritual reading service and small-batch jewellery studio,
+             operated by Cosmo Numerology Pte Ltd in Singapore.</p>
+          <p>We pair one-to-one intuitive readings with ritual objects made from genuine stone —
+             assembled by hand, never mass-produced. Every bracelet ships with a certificate of
+             authenticity, a wish paper and care instructions, in recyclable packaging.</p>
+          <p>Readings are for guidance and entertainment. We make no medical, legal or financial claims.</p>
+        </div>
+        <div id="contact">
+          <h2>Contact</h2>
+          <ul class="contact-list">
+            <li><span class="k">Email</span><a href="mailto:hi@theseerwithin.com">hi@theseerwithin.com</a></li>
+            <li><span class="k">Phone</span><a href="tel:+6580228149">+65 8022 8149</a></li>
+            <li><span class="k">Address</span><span>Cosmo Numerology Pte Ltd<br>45B Temple St<br>Singapore S058590</span></li>
+            <li><span class="k">Website</span><a href="https://www.theseerwithin.com">www.theseerwithin.com</a></li>
+            <li><span class="k">Hours</span><span>Support answered within 24 hours, 7 days a week</span></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- ===== FOOTER — FB req #2 (website, email, FULL address, telephone) + #3 (real email) ===== -->
+<footer class="site">
+  <div class="wrap">
+    <div class="fgrid">
+      <div>
+        <a class="brand" href="#top"><span class="spark">✧</span><span class="name">The Seer Within</span></a>
+        <p class="blurb">Spiritual readings and hand-assembled wish bracelets.
+           For guidance and entertainment purposes only.</p>
+      </div>
+      <div>
+        <h4>Shop</h4>
+        <ul>
+          <li><a href="/products/black-lava-wish-bracelet">Black Lava Wish Bracelet</a></li>
+          <li><a href="/products/8-crystal-wealth-bracelet">8-Crystal Wealth Bracelet</a></li>
+          <li><a href="/products/rose-quartz-wish-bracelet">Rose Quartz Wish Bracelet</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Company</h4>
+        <ul>
+          <li><a href="#about">About Us</a></li>
+          <li><a href="#contact">Contact</a></li>
+          <li><a href="/privacy">Privacy Policy</a></li>
+          <li><a href="/terms">Terms of Service</a></li>
+          <li><a href="/refund">Refund Policy</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Get in touch</h4>
+        <address class="addr">
+          <strong>Cosmo Numerology Pte Ltd</strong><br>
+          45B Temple St<br>
+          Singapore S058590<br><br>
+          <a href="mailto:hi@theseerwithin.com">hi@theseerwithin.com</a><br>
+          <a href="tel:+6580228149">+65 8022 8149</a><br>
+          <a href="https://www.theseerwithin.com">www.theseerwithin.com</a>
+        </address>
+      </div>
+    </div>
+    <div class="legal">
+      <span>© 2026 Cosmo Numerology Pte Ltd. · For Entertainment Purposes Only.</span>
+      <span><a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="/refund">Refunds</a></span>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

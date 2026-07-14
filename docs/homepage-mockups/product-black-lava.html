@@ -1,0 +1,295 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Black Lava Wish Bracelet — The Seer Within</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  /* Same palette as the live root lander: navy starfield page, near-white card surface,
+     PURPLE primary action, gold wordmark only.
+     Layout mirrors the wishamiracle product page Joel screenshotted as [Image #2]:
+     gallery + thumbnails LEFT; title, price, quantity, BUY RIGHT; Description /
+     Shipping / Returns tabs below. The ONE deliberate difference: their button says
+     "Sold out" — that IS the Facebook violation. Ours is ACTIVE (FB req #5). */
+  :root{
+    --navy:#0F1729; --card:#F8FAFC; --card-2:#FFFFFF;
+    --ink:#0F172A; --ink-2:#334155; --muted:#64748B; --hair:#E2E8F0;
+    --purple:#7C3AED; --purple-2:#9333EA;
+    --gold:#D4AF35; --green:#16A34A;
+    --shadow:0 24px 60px -28px rgba(2,6,23,.55);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{background:var(--navy)}
+  /* NOT background-attachment:fixed — it only paints the viewport, so a long page turns
+     white below the fold and the footer text vanishes. Let the gradient span the document. */
+  body{font-family:Inter,system-ui,sans-serif;color:var(--ink);line-height:1.65;-webkit-font-smoothing:antialiased;
+    background:linear-gradient(180deg,#0B1020 0%,var(--navy) 45%,#1B2A4A 100%);
+    background-repeat:no-repeat;background-size:100% 100%}
+  body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+    background:
+      radial-gradient(1.2px 1.2px at 10% 16%, rgba(255,255,255,.6), transparent 60%),
+      radial-gradient(1px 1px at 80% 12%, rgba(255,255,255,.45), transparent 60%),
+      radial-gradient(1px 1px at 30% 78%, rgba(255,255,255,.35), transparent 60%),
+      radial-gradient(1.3px 1.3px at 92% 62%, rgba(255,255,255,.4), transparent 60%)}
+  .wrap{max-width:1120px;margin:0 auto;padding:0 22px;position:relative;z-index:1}
+
+  header.site{position:sticky;top:0;z-index:60;background:rgba(15,23,41,.78);backdrop-filter:blur(14px);
+    border-bottom:1px solid rgba(255,255,255,.07)}
+  .nav{display:flex;align-items:center;justify-content:space-between;height:72px}
+  .brand{display:flex;align-items:center;gap:9px;text-decoration:none}
+  .brand .spark{color:var(--purple-2);font-size:19px;filter:drop-shadow(0 0 6px rgba(147,51,234,.6))}
+  .brand .name{font-family:'Playfair Display',serif;font-size:23px;color:var(--gold)}
+  .nav ul{display:flex;gap:32px;list-style:none}
+  .nav a.link{color:#CBD5E1;text-decoration:none;font-size:13px;font-weight:600;letter-spacing:.09em;text-transform:uppercase}
+  .nav a.link:hover{color:#fff}
+  .cta{background:linear-gradient(135deg,var(--purple-2),var(--purple));color:#fff;padding:11px 20px;
+    border-radius:999px;font-size:13px;font-weight:700;text-decoration:none;
+    box-shadow:0 12px 30px -12px rgba(124,58,237,.85)}
+
+  .crumbs{padding:24px 0 14px;font-size:13px;color:#94A3B8}
+  .crumbs a{color:#94A3B8;text-decoration:none}
+  .crumbs a:hover{color:#fff}
+
+  /* the whole product block sits on ONE white card, like the lander */
+  .sheet{background:var(--card);border-radius:26px;box-shadow:var(--shadow);padding:40px;margin-bottom:60px}
+  .product{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:start}
+
+  /* ----- gallery (LEFT) ----- */
+  .main{background:var(--card-2);border-radius:18px;overflow:hidden;aspect-ratio:1/1;
+    border:1px solid var(--hair);position:relative}
+  .main img{width:100%;height:100%;object-fit:cover;display:block}
+  .counter{position:absolute;bottom:13px;right:13px;background:rgba(15,23,41,.8);color:#fff;
+    font-size:12px;padding:5px 11px;border-radius:999px;font-weight:600}
+  .thumbs{display:grid;grid-template-columns:repeat(3,1fr);gap:11px;margin-top:11px}
+  .thumbs button{background:var(--card-2);border:2px solid var(--hair);border-radius:12px;overflow:hidden;
+    aspect-ratio:1/1;cursor:pointer;padding:0;transition:border-color .2s ease,transform .2s ease}
+  .thumbs button:hover{transform:translateY(-2px)}
+  .thumbs button[aria-current="true"]{border-color:var(--purple)}
+  .thumbs img{width:100%;height:100%;object-fit:cover;display:block}
+
+  /* ----- buy box (RIGHT) ----- */
+  .kicker{font-size:10.5px;letter-spacing:.15em;text-transform:uppercase;color:var(--purple);
+    font-weight:700;margin-bottom:12px}
+  h1{font-family:'Playfair Display',serif;font-size:clamp(28px,3.4vw,40px);font-weight:600;line-height:1.15;color:var(--ink)}
+
+  .prices{display:flex;align-items:baseline;gap:13px;margin:22px 0 5px;flex-wrap:wrap}
+  .now{font-family:'Playfair Display',serif;font-size:40px;color:var(--ink);font-weight:600}
+  .was{color:#94A3B8;text-decoration:line-through;font-size:19px}
+  .save{background:var(--purple);color:#fff;font-size:12px;font-weight:700;padding:5px 11px;border-radius:999px}
+  .tax{color:var(--muted);font-size:13px}
+
+  .qty-row{display:flex;gap:14px;align-items:center;margin:26px 0 18px;flex-wrap:wrap}
+  .qty{display:flex;align-items:center;border:1.5px solid var(--hair);border-radius:12px;overflow:hidden;background:#fff}
+  .qty button{background:none;border:0;color:var(--ink-2);font-size:18px;width:44px;height:50px;cursor:pointer}
+  .qty button:hover{color:var(--purple)}
+  .qty input{width:50px;height:50px;text-align:center;background:none;border:0;color:var(--ink);
+    font-size:16px;font-weight:700;-moz-appearance:textfield}
+  .qty input::-webkit-outer-spin-button,.qty input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+  .stock{font-size:13.5px;color:var(--green);font-weight:600;display:flex;align-items:center;gap:7px}
+  .stock::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--green);
+    box-shadow:0 0 0 3px rgba(22,163,74,.16)}
+
+  /* FB req #5 — ACTIVE buy button, price shown on it */
+  .buy{display:block;width:100%;text-align:center;border:0;cursor:pointer;
+    background:linear-gradient(135deg,var(--purple-2),var(--purple));color:#fff;
+    font-size:16.5px;font-weight:700;padding:19px 24px;border-radius:14px;
+    box-shadow:0 16px 40px -16px rgba(124,58,237,.9);
+    transition:transform .18s ease, box-shadow .18s ease}
+  .buy:hover{transform:translateY(-2px);box-shadow:0 22px 48px -18px rgba(124,58,237,1)}
+  .buy:active{transform:translateY(0)}
+  .buy-note{text-align:center;color:var(--muted);font-size:12.5px;margin-top:11px}
+
+  .trust{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:24px}
+  .trust div{border:1px solid var(--hair);background:#fff;border-radius:12px;padding:14px 10px;
+    text-align:center;font-size:11.5px;color:var(--muted)}
+  .trust b{display:block;color:var(--ink);font-size:13px;margin-bottom:3px;font-weight:700}
+
+  /* ----- tabs ----- */
+  .tabs{border-top:1px solid var(--hair);margin-top:44px;padding-top:34px}
+  .tablist{display:flex;gap:34px;border-bottom:1px solid var(--hair);margin-bottom:30px}
+  .tablist button{background:none;border:0;color:var(--muted);font-size:12.5px;font-weight:700;
+    letter-spacing:.13em;text-transform:uppercase;padding:0 0 15px;cursor:pointer;position:relative}
+  .tablist button[aria-selected="true"]{color:var(--purple)}
+  .tablist button[aria-selected="true"]::after{content:"";position:absolute;left:0;right:0;bottom:-1px;
+    height:2px;background:var(--purple)}
+  .panel{display:none;max-width:780px;color:var(--muted)}
+  .panel[data-open]{display:block;animation:fade .35s ease}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  .panel h3{font-family:'Playfair Display',serif;color:var(--ink);font-size:20px;font-weight:600;margin:22px 0 9px}
+  .panel h3:first-child{margin-top:0}
+  .panel p{margin-bottom:13px}
+  .panel ul{margin:0 0 15px 20px} .panel li{margin-bottom:6px}
+  .panel strong{color:var(--ink)}
+  .spec{display:grid;grid-template-columns:140px 1fr;gap:9px 20px;margin-top:6px}
+  .spec dt{color:var(--purple);font-size:11px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;padding-top:4px}
+  .spec dd{color:var(--ink-2)}
+  .panel a{color:var(--purple)}
+
+  footer.site{border-top:1px solid rgba(255,255,255,.08);padding:34px 0;position:relative;z-index:1}
+  .legal{display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;color:#94A3B8;font-size:13px}
+  .legal a{color:#94A3B8;text-decoration:none;margin-left:16px}
+  .legal .hl{color:#C4B5FD;text-decoration:none;margin:0}
+
+  @media(max-width:900px){
+    .product{grid-template-columns:1fr;gap:32px}
+    .nav ul{display:none} .trust{grid-template-columns:1fr} .sheet{padding:24px}
+  }
+</style>
+</head>
+<body>
+
+<header class="site">
+  <div class="wrap nav">
+    <a class="brand" href="home.html"><span class="spark">✧</span><span class="name">The Seer Within</span></a>
+    <nav><ul>
+      <li><a class="link" href="home.html">Home</a></li>
+      <li><a class="link" href="home.html#about">About Us</a></li>
+      <li><a class="link" href="home.html#catalog">Catalog</a></li>
+      <li><a class="link" href="home.html#contact">Contact</a></li>
+    </ul></nav>
+    <a class="cta" href="/">Begin a Reading</a>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="crumbs"><a href="home.html">Home</a> / <a href="home.html#catalog">Catalog</a> / Black Lava Wish Bracelet</div>
+
+  <div class="sheet">
+    <div class="product">
+
+      <!-- gallery LEFT -->
+      <div class="gallery">
+        <div class="main">
+          <img id="hero" src="img/lava-1.jpg" alt="Black Lava Wish Bracelet">
+          <span class="counter" id="count">1 / 3</span>
+        </div>
+        <div class="thumbs">
+          <button aria-current="true" onclick="pick(0,this)"><img src="img/lava-1.jpg" alt="View 1"></button>
+          <button onclick="pick(1,this)"><img src="img/lava-2.jpg" alt="View 2"></button>
+          <button onclick="pick(2,this)"><img src="img/lava-3.jpg" alt="View 3"></button>
+        </div>
+      </div>
+
+      <!-- buy box RIGHT -->
+      <div class="buybox">
+        <div class="kicker">Manifesting · Grounding · Calming</div>
+        <h1>Black Lava Wish Bracelet</h1>
+
+        <div class="prices">
+          <span class="now">$99.00</span>
+          <span class="was">$199.00</span>
+          <span class="save">Save $100</span>
+        </div>
+        <div class="tax">Taxes included. Shipping calculated at checkout.</div>
+
+        <div class="qty-row">
+          <div class="qty">
+            <button onclick="step(-1)" aria-label="Decrease">−</button>
+            <input id="qty" type="number" value="1" min="1" max="10" aria-label="Quantity">
+            <button onclick="step(1)" aria-label="Increase">+</button>
+          </div>
+          <div class="stock">In stock — ships within 7 business days</div>
+        </div>
+
+        <button class="buy" onclick="alert('MOCKUP — would open a Stripe Checkout session on our own site.\n\nThe server prices this from shared/braceletProducts.ts.\nThe client never sends a price.')">
+          Buy Now — $99.00
+        </button>
+        <div class="buy-note">Secure checkout · 60-day returns · Certificate of authenticity included</div>
+
+        <div class="trust">
+          <div><b>Genuine stone</b>8&nbsp;mm beads</div>
+          <div><b>60-day returns</b>No questions</div>
+          <div><b>Tracked</b>Emailed in 3–5 days</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- tabs -->
+    <div class="tabs">
+      <div class="tablist" role="tablist">
+        <button role="tab" aria-selected="true"  onclick="tab('d',this)">Description</button>
+        <button role="tab" aria-selected="false" onclick="tab('s',this)">Shipping</button>
+        <button role="tab" aria-selected="false" onclick="tab('r',this)">Returns</button>
+      </div>
+
+      <div class="panel" id="d" data-open>
+        <p>Black lava stone is born of volcanic eruption — raw, assertive energy tempered by practical
+           restraint. Worn as a wish bracelet, it is said to ground the wearer while the wish is carried.</p>
+        <h3>Said to help with</h3>
+        <ul>
+          <li>Dissipating anger</li>
+          <li>Promoting positive behavioural change</li>
+          <li>Providing intense energy</li>
+          <li>Easing stress and anxiety</li>
+          <li>Keeping calm in busy environments</li>
+        </ul>
+        <h3>Specifications</h3>
+        <dl class="spec">
+          <dt>Gender</dt><dd>Unisex</dd>
+          <dt>Bead size</dt><dd>8&nbsp;mm</dd>
+          <dt>Material</dt><dd>Genuine black lava stone, with a gold-plated stainless steel wish capsule (hexagonal etching)</dd>
+          <dt>Band</dt><dd>7.5&nbsp;inch quality-tested elastic</dd>
+          <dt>In the box</dt><dd>Eco-box, certificate of authenticity, wish-paper envelope, care instructions</dd>
+        </dl>
+      </div>
+
+      <div class="panel" id="s">
+        <h3>Shipping</h3>
+        <p>Orders ship within <strong>7 business days</strong>. A tracking email follows within
+           3–5 business days of dispatch.</p>
+        <ul>
+          <li><strong>United States</strong> — typically 1–2 weeks from dispatch</li>
+          <li><strong>International</strong> — may take 21 days or more, depending on customs</li>
+        </ul>
+        <p>Shipping is calculated at checkout. We ship in recyclable packaging.</p>
+      </div>
+
+      <div class="panel" id="r">
+        <h3>Returns</h3>
+        <p>Returns accepted within <strong>60 days</strong> of delivery.</p>
+        <ul>
+          <li>Refunds to PayPal: 1–2 business days</li>
+          <li>Refunds to credit card: 5–10 business days</li>
+        </ul>
+        <p>To start a return, email <a href="mailto:hi@theseerwithin.com">hi@theseerwithin.com</a>
+           or call <a href="tel:+6580228149">+65 8022 8149</a>.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer class="site">
+  <div class="wrap legal">
+    <span>
+      © 2026 Cosmo Numerology Pte Ltd · 45B Temple St, Singapore S058590 ·
+      <a class="hl" href="mailto:hi@theseerwithin.com">hi@theseerwithin.com</a> ·
+      <a class="hl" href="tel:+6580228149">+65 8022 8149</a>
+    </span>
+    <span><a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="/refund">Refunds</a></span>
+  </div>
+</footer>
+
+<script>
+  const imgs = ['img/lava-1.jpg','img/lava-2.jpg','img/lava-3.jpg'];
+  function pick(i, el){
+    document.getElementById('hero').src = imgs[i];
+    document.getElementById('count').textContent = (i+1) + ' / ' + imgs.length;
+    document.querySelectorAll('.thumbs button').forEach(b => b.setAttribute('aria-current','false'));
+    el.setAttribute('aria-current','true');
+  }
+  function step(d){
+    const q = document.getElementById('qty');
+    q.value = Math.min(10, Math.max(1, (+q.value || 1) + d));
+  }
+  function tab(id, el){
+    document.querySelectorAll('.panel').forEach(p => p.removeAttribute('data-open'));
+    document.getElementById(id).setAttribute('data-open','');
+    document.querySelectorAll('.tablist button').forEach(b => b.setAttribute('aria-selected','false'));
+    el.setAttribute('aria-selected','true');
+  }
+</script>
+</body>
+</html>

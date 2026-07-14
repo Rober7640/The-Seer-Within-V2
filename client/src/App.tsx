@@ -19,6 +19,8 @@ import UpsellTestPage from "@/pages/UpsellTestPage";
 import UpsellPage from "@/pages/UpsellPage";
 import Upsell2Page from "@/pages/Upsell2Page";
 import PrivacyPage from "@/pages/PrivacyPage";
+import HomePage from "@/pages/HomePage";
+import ProductPage from "@/pages/ProductPage";
 import TermsPage from "@/pages/TermsPage";
 import RefundPage from "@/pages/RefundPage";
 import FAQPage from "@/pages/FAQPage";
@@ -205,6 +207,13 @@ function Router() {
         <Route path="/terms" component={TermsPage} />
         <Route path="/refund" component={RefundPage} />
         <Route path="/faq" component={FAQPage} />
+
+        {/* Facebook-compliance storefront. ADDITIVE — a separate page at a separate URL;
+            the root lander at "/" is deliberately untouched (Lewis, 2026-07-14).
+            Note these are NOT in the `isTrackedFunnel` allowlist above, so they fire no
+            Meta PageView — they are not paid-traffic surfaces. */}
+        <Route path="/home" component={HomePage} />
+        <Route path="/products/:slug" component={ProductPage} />
 
         {/* Persona-specific landers (no layout wrapper) */}
         <Route path="/aiden" component={AidenQuizPage} />
