@@ -2,6 +2,14 @@ import { useEffect } from "react";
 import { Link } from "wouter";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
+// The hero reuses the ROOT LANDER's own components, not lookalikes — so the Evelyn card on
+// the storefront and the card on "/" can never drift apart. This is what Joel's own mockup
+// did (image (11).png, 2026-07-14): he embedded the real lander card into the homepage.
+// CTAButton is disabled for 3s until the status reads "Online", then links to funnelPath('/chat').
+// On /home that resolves to plain "/chat" (no funnel prefix matches), i.e. the root funnel.
+import { StatusIndicator } from "@/components/StatusIndicator";
+import { CTAButton } from "@/components/CTAButton";
+import { TrustBadges } from "@/components/TrustBadges";
 import { BRACELET_PRODUCTS, BUSINESS } from "@shared/braceletProducts";
 
 // The Facebook-compliance homepage. Served at /home — a NEW, SEPARATE route.
@@ -19,6 +27,8 @@ import { BRACELET_PRODUCTS, BUSINESS } from "@shared/braceletProducts";
 // surfaces, PURPLE primary buttons, gold wordmark only.
 
 const dollars = (cents: number) => `$${(cents / 100).toFixed(2)}`;
+/** Whole dollars, no trailing .00 — "Save $100", not "Save $100.00". */
+const wholeDollars = (cents: number) => `$${Math.round(cents / 100)}`;
 
 export default function HomePage() {
   // The global index.html title is "…Psychic Chat", which reads oddly on a storefront a
@@ -32,45 +42,54 @@ export default function HomePage() {
       <SiteHeader />
 
       <main>
-        {/* ---------- hero: a white card on the starfield, exactly like the lander ---------- */}
-        <div className="mx-auto max-w-[1120px] px-5 pt-16 pb-5">
-          <div className="mx-auto max-w-[820px] rounded-3xl bg-slate-50 px-6 py-12 text-center shadow-[0_24px_60px_-28px_rgba(2,6,23,0.55)] md:px-11 md:py-14">
-            <div className="mb-5 flex items-center justify-center gap-3.5 text-[11px] uppercase tracking-[0.24em] text-slate-500">
-              <span className="h-px w-10 bg-slate-200" />
-              Readings &amp; Ritual Objects
-              <span className="h-px w-10 bg-slate-200" />
+        {/* ---------- hero: the REAL Evelyn lander card, embedded (matches Joel's mockup) ---------- */}
+        <div className="flex flex-col items-center px-5 pt-14 pb-6">
+          {/* Big centred wordmark above the card, as on the root lander */}
+          <div className="mb-16 flex items-center gap-3">
+            <span className="text-3xl text-purple-400 drop-shadow-[0_0_10px_rgba(167,139,250,0.7)]">✧</span>
+            <h1 className="font-serif text-3xl text-[#D4AF35] drop-shadow-md md:text-4xl">
+              The Seer Within
+            </h1>
+          </div>
+
+          {/* Card markup deliberately mirrors LandingPage.tsx line-for-line. */}
+          <div className="relative z-10 mx-auto w-full max-w-md rounded-2xl border border-white/20 bg-white/95 p-6 shadow-2xl backdrop-blur-sm md:p-8">
+            {/* Evelyn — the avatar overlaps the top edge of the card */}
+            <div className="-mt-16 mb-6 flex justify-center">
+              <div className="h-28 w-28 overflow-hidden rounded-full border-4 border-white bg-purple-100 shadow-xl">
+                <img
+                  src="/evelyn-avatar.png"
+                  alt="Evelyn Cross"
+                  className="h-full w-full object-cover"
+                  data-testid="img-avatar-home"
+                />
+              </div>
             </div>
 
-            <h1 className="font-serif text-[34px] font-semibold leading-[1.1] text-slate-900 md:text-[52px]">
-              Guidance for the questions
-              <br />
-              you <em className="italic text-violet-600">can&apos;t stop asking</em>
-            </h1>
+            {/* "Evelyn Cross is ● Online" */}
+            <div className="mx-auto mb-6 inline-block w-full rounded-full border border-gray-100 bg-gray-50 px-4 py-2 text-center shadow-inner">
+              <StatusIndicator />
+            </div>
 
-            <p className="mx-auto mt-5 max-w-[560px] text-[17px] text-slate-500">
-              Personal spiritual readings, and hand-assembled wish bracelets made with genuine
-              stone — each sent with a certificate of authenticity and a wish paper of your own.
+            <div className="mx-auto my-6 h-0.5 w-16 bg-gray-200" />
+
+            <h2 className="mb-4 text-center font-serif text-2xl leading-tight text-gray-900 md:text-3xl">
+              Something Is Holding You Back — I Can See It
+            </h2>
+
+            <p className="mb-8 text-center text-sm leading-relaxed text-gray-600 md:text-base">
+              Evelyn has detected a disturbance in your energy field. A free reading will reveal
+              what&apos;s standing in your way.
             </p>
 
-            <div className="mt-8 flex flex-wrap justify-center gap-3">
-              <a
-                href="/"
-                className="rounded-xl bg-gradient-to-br from-purple-600 to-violet-600 px-8 py-4 text-[15px] font-bold text-white shadow-[0_12px_30px_-12px_rgba(124,58,237,0.85)] transition-transform hover:-translate-y-0.5"
-              >
-                Begin a Reading
-              </a>
-              <a
-                href="#catalog"
-                className="rounded-xl border-[1.5px] border-slate-200 bg-white px-8 py-4 text-[15px] font-semibold text-slate-700 transition-colors hover:border-violet-600 hover:text-violet-600"
-              >
-                Browse the Catalog
-              </a>
-            </div>
+            {/* Goes straight into the reading — funnelPath('/chat') resolves to /chat here. */}
+            <CTAButton label="Yes Evelyn, Show Me What's Blocking My Path!" />
 
-            <div className="mt-7 flex flex-wrap justify-center gap-7 text-[11px] font-semibold uppercase tracking-[0.1em] text-slate-500">
-              <span>🔒 100% Private &amp; Confidential</span>
-              <span>✧ Trusted by 2,400+ Clients</span>
-            </div>
+            <p className="mt-4 text-center text-xs italic text-gray-400">
+              Evelyn can only hold a limited number of connections each day. Your spot is open now.
+            </p>
+
+            <TrustBadges label="Trusted By 2,400+ Clients" />
           </div>
         </div>
 
@@ -96,7 +115,7 @@ export default function HomePage() {
                 >
                   <div className="relative aspect-square overflow-hidden bg-white">
                     <span className="absolute left-3.5 top-3.5 z-10 rounded-full bg-violet-600 px-2.5 py-1.5 text-[11px] font-bold uppercase tracking-wide text-white">
-                      Save {dollars(p.compareAtCents - p.priceCents)}
+                      Save {wholeDollars(p.compareAtCents - p.priceCents)}
                     </span>
                     <img
                       src={p.images[0]}

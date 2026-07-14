@@ -17,6 +17,8 @@ import { getBraceletBySlug, BUSINESS, FULFILMENT } from "@shared/braceletProduct
 // for one cent.
 
 const dollars = (cents: number) => `$${(cents / 100).toFixed(2)}`;
+/** Whole dollars, no trailing .00 — "Save $100", not "Save $100.00". */
+const wholeDollars = (cents: number) => `$${Math.round(cents / 100)}`;
 
 type Tab = "description" | "shipping" | "returns";
 
@@ -140,7 +142,7 @@ export default function ProductPage() {
                 </span>
                 <span className="text-[19px] text-slate-400 line-through">{dollars(product.compareAtCents)}</span>
                 <span className="rounded-full bg-violet-600 px-2.5 py-1 text-xs font-bold text-white">
-                  Save {dollars(product.compareAtCents - product.priceCents)}
+                  Save {wholeDollars(product.compareAtCents - product.priceCents)}
                 </span>
               </div>
               <div className="mt-1 text-[13px] text-slate-500">
