@@ -107,6 +107,44 @@ interface SessionData {
   coinsCharged: number;
 }
 
+// Live-session persistence (2026-07-14 churn fix): the session used to live only
+// in React state, so a reload or a phone lock wiped it and the next message
+// silently forked a brand-new session (57 of 128 sessions in the 72h audit were
+// these phantom re-opens). Store enough to rejoin; restore validates against the
+// server before trusting it. Cleared whenever the session ends.
+const LIVE_SESSION_KEY = "seer-live-session-v1";
+// Must not exceed the server's idle window (personas.session_timeout_minutes = 2):
+// past it the session is dead or about to be, so restoring would just bounce.
+const LIVE_SESSION_MAX_IDLE_MS = 2 * 60 * 1000;
+
+interface StoredLiveSession {
+  id: string;
+  personaId: string;
+  startedAt: number;   // ms epoch
+  lastActiveAt: number; // ms epoch
+}
+
+function readStoredLiveSession(): StoredLiveSession | null {
+  try {
+    const raw = localStorage.getItem(LIVE_SESSION_KEY);
+    if (!raw) return null;
+    const s = JSON.parse(raw);
+    return s && typeof s.id === "string" && typeof s.personaId === "string" ? s : null;
+  } catch {
+    return null;
+  }
+}
+
+function touchStoredLiveSession() {
+  try {
+    const raw = localStorage.getItem(LIVE_SESSION_KEY);
+    if (!raw) return;
+    const s = JSON.parse(raw);
+    s.lastActiveAt = Date.now();
+    localStorage.setItem(LIVE_SESSION_KEY, JSON.stringify(s));
+  } catch {}
+}
+
 interface MemoryContext {
   hasPriorMemory: boolean;
   lastTopic?: string;
@@ -137,6 +175,13 @@ export default function ChatServicePage() {
 
   // Session state
   const [session, setSession] = useState<SessionData | null>(null);
+  // A fresh stored session found at mount — restored (after server validation)
+  // instead of letting the next message fork a new one. Read synchronously so
+  // the greeting auto-fetch can wait for the verdict.
+  const [pendingRestore, setPendingRestore] = useState<StoredLiveSession | null>(() => {
+    const s = readStoredLiveSession();
+    return s && Date.now() - s.lastActiveAt < LIVE_SESSION_MAX_IDLE_MS ? s : null;
+  });
   const [messages, setMessages] = useState<ChatMessageData[]>([]);
   const [memoryContext, setMemoryContext] = useState<MemoryContext | null>(null);
   const [isTyping, setIsTyping] = useState(false);
@@ -666,10 +711,100 @@ export default function ChatServicePage() {
     setCrisisDisclaimer(null);
   }, [selectedPersonaId]);
 
+  // Rejoin a still-live session after a reload / phone-lock instead of forking a
+  // new one (2026-07-14 churn fix). Validates with the server first: the session
+  // must still be 'active' (the tab-close beacon or cleanup may have ended it),
+  // then restores the visible conversation from /session/:id/messages.
+  useEffect(() => {
+    if (!pendingRestore || session || authLoading || !isAuthenticated || !selectedPersonaId) return;
+    if (pendingRestore.personaId !== selectedPersonaId) {
+      setPendingRestore(null);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      try {
+        const listRes = await authFetch("/api/chat-service/sessions");
+        if (!listRes.ok) throw new Error(`sessions ${listRes.status}`);
+        const { sessions } = await listRes.json();
+        const live = (sessions ?? []).find(
+          (s: { id: string; status: string }) => s.id === pendingRestore.id && s.status === "active",
+        );
+        if (!live) throw new Error("session no longer active");
+
+        const msgRes = await authFetch(`/api/chat-service/session/${pendingRestore.id}/messages`);
+        if (!msgRes.ok) throw new Error(`messages ${msgRes.status}`);
+        const { messages: rows } = await msgRes.json();
+        if (cancelled) return;
+
+        setMessages(
+          (rows ?? []).map((m: { id: string; role: "user" | "assistant"; content: string; sentAt?: string }) => ({
+            id: m.id,
+            role: m.role,
+            content: m.content,
+            sentAt: m.sentAt ?? new Date().toISOString(),
+          })),
+        );
+        setSession({
+          id: pendingRestore.id,
+          personaId: pendingRestore.personaId,
+          status: "active",
+          startedAt: new Date(pendingRestore.startedAt).toISOString(),
+          durationSeconds: 0,
+          coinsCharged: 0,
+        });
+        sessionActiveRef.current = true;
+        outOfCreditsFiredRef.current = false;
+        // Time base for banner math restarts now against the CURRENT balance;
+        // the visible elapsed counter keeps the session's true age.
+        sessionStartTimeRef.current = Date.now();
+        setElapsedSeconds(Math.max(0, Math.floor((Date.now() - pendingRestore.startedAt) / 1000)));
+        lastUserMessageAt.current = Date.now();
+        setCoinBalance(user?.coinBalance ?? 0);
+        setInitialCoinBalance(user?.coinBalance ?? 0);
+        lastAutoFetchedPersonaId.current = pendingRestore.personaId; // no greeting re-fetch into a live reading
+      } catch {
+        try {
+          localStorage.removeItem(LIVE_SESSION_KEY);
+        } catch {}
+      } finally {
+        if (!cancelled) setPendingRestore(null);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pendingRestore, session, authLoading, isAuthenticated, selectedPersonaId]);
+
+  // Persist the live session across reloads; clear the moment it ends. The
+  // else-branch skips while a restore is pending so it can't erase the very
+  // record the restore is about to use.
+  useEffect(() => {
+    if (session?.id) {
+      try {
+        localStorage.setItem(
+          LIVE_SESSION_KEY,
+          JSON.stringify({
+            id: session.id,
+            personaId: session.personaId,
+            startedAt: Date.parse(session.startedAt) || Date.now(),
+            lastActiveAt: Date.now(),
+          } satisfies StoredLiveSession),
+        );
+      } catch {}
+    } else if (!pendingRestore) {
+      try {
+        localStorage.removeItem(LIVE_SESSION_KEY);
+      } catch {}
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session?.id, pendingRestore]);
+
   // Auto-fetch greeting on initial load or when persona changes (only when no active session).
   // For astrology personas we wait for the birth-chart check to resolve before fetching.
   useEffect(() => {
-    if (!selectedPersona || personasLoading || session || isStarting || preSessionGreeting || switchingToPersonaSlug) return;
+    if (!selectedPersona || personasLoading || session || isStarting || preSessionGreeting || switchingToPersonaSlug || pendingRestore) return;
     if (lastAutoFetchedPersonaId.current === selectedPersona.id) return;
     const personality = selectedPersona.personality ? (() => {
       try { return JSON.parse(selectedPersona.personality!); } catch { return {}; }
@@ -688,7 +823,7 @@ export default function ChatServicePage() {
     }
     fetchGreeting(undefined, false, chartToInject);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedPersona?.id, personasLoading, birthChartExists, storedChartData]);
+  }, [selectedPersona?.id, personasLoading, birthChartExists, storedChartData, pendingRestore]);
 
   // Fetch teaser message when persona changes (for low-credit users)
   // Placed AFTER selectedPersona declaration to avoid temporal dead zone
@@ -1364,6 +1499,7 @@ export default function ChatServicePage() {
       // regardless of idleWarning state (avoids stale closure bug where
       // idleWarning reads false even when the banner is showing)
       lastUserMessageAt.current = Date.now();
+      touchStoredLiveSession();
       setIdleWarning(false);
       setIdleCountdown(60);
       if (idleCountdownRef.current) { clearInterval(idleCountdownRef.current); idleCountdownRef.current = null; }

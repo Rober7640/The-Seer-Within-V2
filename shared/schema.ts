@@ -294,6 +294,11 @@ export const chatMessages = pgTable("chat_messages", {
   inputTokens: integer("input_tokens").default(0),
   outputTokens: integer("output_tokens").default(0),
 
+  // TRUE for rows copied from a prior session by "Continue Reading" so the model
+  // has context — NOT words spoken in this session. Exclude from transcript
+  // analytics, message counts, and memory extraction (2026-07-14 churn fix).
+  isContextCopy: boolean("is_context_copy").default(false).notNull(),
+
   sentAt: timestamp("sent_at").defaultNow().notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 }, (table) => [
