@@ -1316,3 +1316,65 @@ export const soulmateOrders = pgTable("soulmate_orders", {
 
 export type SoulmateOrder = typeof soulmateOrders.$inferSelect;
 export type InsertSoulmateOrder = typeof soulmateOrders.$inferInsert;
+
+// ============================================================
+// Bracelet Orders — the Facebook-compliance storefront (/products/:slug)
+//
+// A NEW, STANDALONE table. Nothing else references it and it references nothing.
+// Facebook required an ACTIVE buy button with a price, so these are REAL orders for
+// REAL physical goods — somebody has to be able to see what to ship, to whom.
+//
+// One row per Stripe Checkout session. `stripeSessionId` is UNIQUE so the webhook can
+// upsert idempotently: Stripe retries checkout.session.completed, and the buyer may also
+// land on the thank-you page, which reads the same session. Neither may create a duplicate.
+//
+// ⚠️ Create it with migrations/2026-07-14-bracelet-orders.sql (a plain CREATE TABLE IF NOT
+// EXISTS). Do NOT `npm run db:push` — dev and prod share ONE database, and push diffs the
+// WHOLE schema, so any unrelated drift would be applied to production at the same time.
+// ============================================================
+
+export const braceletOrders = pgTable("bracelet_orders", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+
+  // Stripe is the source of truth for money. UNIQUE => idempotent upsert.
+  stripeSessionId: text("stripe_session_id").notNull().unique(),
+  stripePaymentIntentId: text("stripe_payment_intent_id"),
+
+  // What they bought.
+  productSlug: text("product_slug").notNull(),
+  productName: text("product_name").notNull(),
+  quantity: integer("quantity").notNull().default(1),
+  amountCents: integer("amount_cents").notNull(),
+  currency: text("currency").notNull().default("usd"),
+
+  // Who they are.
+  email: text("email"),
+  customerName: text("customer_name"),
+  phone: text("phone"),
+
+  // Where it ships.
+  shippingName: text("shipping_name"),
+  shippingLine1: text("shipping_line1"),
+  shippingLine2: text("shipping_line2"),
+  shippingCity: text("shipping_city"),
+  shippingState: text("shipping_state"),
+  shippingPostal: text("shipping_postal"),
+  shippingCountry: text("shipping_country"),
+
+  // Fulfilment state — an operator flips this once the parcel is posted.
+  status: text("status").notNull().default("paid"), // paid | shipped | refunded | cancelled
+  shippedAt: timestamp("shipped_at"),
+  trackingNumber: text("tracking_number"),
+
+  // Did the buyer + operator confirmation emails go out?
+  confirmationEmailSentAt: timestamp("confirmation_email_sent_at"),
+
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_bracelet_orders_status").on(table.status, table.createdAt),
+  index("idx_bracelet_orders_email").on(table.email),
+]);
+
+export type BraceletOrder = typeof braceletOrders.$inferSelect;
+export type InsertBraceletOrder = typeof braceletOrders.$inferInsert;

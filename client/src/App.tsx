@@ -21,6 +21,7 @@ import Upsell2Page from "@/pages/Upsell2Page";
 import PrivacyPage from "@/pages/PrivacyPage";
 import HomePage from "@/pages/HomePage";
 import ProductPage from "@/pages/ProductPage";
+import OrderSuccessPage from "@/pages/OrderSuccessPage";
 import TermsPage from "@/pages/TermsPage";
 import RefundPage from "@/pages/RefundPage";
 import FAQPage from "@/pages/FAQPage";
@@ -128,7 +129,14 @@ function Router() {
       location === '/luna' ||
       location === '/nova' ||
       location === '/maren' ||
-      location.startsWith('/soulmate');
+      location.startsWith('/soulmate') ||
+      // Facebook-compliance storefront — PAGEVIEW ONLY (Lewis, 2026-07-14). Meta sees the
+      // traffic, so these visitors are retargetable. It does NOT see the bracelet sales:
+      // resolveStripeEventName() returns null for `bracelet_*`, so no Purchase event fires
+      // and storefront revenue can never be mistaken for funnel revenue.
+      location === '/home' ||
+      location.startsWith('/products/') ||
+      location === '/order/success';
     if (isTrackedFunnel) {
       trackPageView();
     }
@@ -208,12 +216,11 @@ function Router() {
         <Route path="/refund" component={RefundPage} />
         <Route path="/faq" component={FAQPage} />
 
-        {/* Facebook-compliance storefront. ADDITIVE — a separate page at a separate URL;
-            the root lander at "/" is deliberately untouched (Lewis, 2026-07-14).
-            Note these are NOT in the `isTrackedFunnel` allowlist above, so they fire no
-            Meta PageView — they are not paid-traffic surfaces. */}
+        {/* Facebook-compliance storefront. ADDITIVE — separate pages at separate URLs;
+            the root lander at "/" is deliberately untouched (Lewis, 2026-07-14). */}
         <Route path="/home" component={HomePage} />
         <Route path="/products/:slug" component={ProductPage} />
+        <Route path="/order/success" component={OrderSuccessPage} />
 
         {/* Persona-specific landers (no layout wrapper) */}
         <Route path="/aiden" component={AidenQuizPage} />
