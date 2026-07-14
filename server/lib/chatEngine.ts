@@ -1105,6 +1105,47 @@ export async function initSession(config: {
   const personaConfig = await loadPersonaConfig(config.personaId);
   if (!personaConfig) throw new Error('PERSONA_NOT_FOUND');
 
+  // Reattach (2026-07-14 churn fix): if the user already has a live session with
+  // THIS persona still inside its billable-idle window, resume it instead of
+  // forking a new row. A reload/phone-unlock wipes the client's session state,
+  // and the next message used to open a brand-new session while force-closing
+  // the old one — 57 of 128 sessions in the 72h audit were these phantom
+  // re-opens (one buyer: 13 sessions in 64 minutes), each with its own fresh
+  // billable idle window and duplicated context rows. Past the idle window we
+  // deliberately recreate: reattaching there would re-bill the idle gap, since
+  // an active session bills wall-clock. Continuations skip this — their prior
+  // session was explicitly ended. See improve-v2/specs/2026-07-14-session-churn-diagnosis.md.
+  if (!config.continuationMessages?.length) {
+    const reattach = await db.execute(
+      sql`SELECT cs.id
+          FROM chat_sessions cs
+          JOIN personas p ON p.id = cs.persona_id
+          WHERE cs.user_id = ${config.userId}
+            AND cs.persona_id = ${config.personaId}
+            AND cs.status = 'active' AND cs.ended_at IS NULL
+            AND EXTRACT(EPOCH FROM (NOW() - (COALESCE(cs.last_message_at, cs.started_at) AT TIME ZONE 'UTC')))
+                <= p.session_timeout_minutes * 60
+          ORDER BY cs.started_at DESC
+          LIMIT 1`
+    );
+    if (reattach.rows.length > 0) {
+      const existingSessionId = (reattach.rows[0] as { id: string }).id;
+      const spendable = await getSpendableCoins(config.userId, config.personaId, initRealBalance);
+      logger.info('initSession: reattached to live session instead of forking', {
+        userId: config.userId,
+        personaId: config.personaId,
+        sessionId: existingSessionId,
+      });
+      return {
+        sessionId: existingSessionId,
+        personaName: personaConfig.displayName,
+        greeting: '',
+        creditsRemaining: spendable,
+        isContinuation: true,
+      };
+    }
+  }
+
   const sessionId = await startChatSession(config.userId, config.personaId);
 
   // Initialize conversation state for intent tracking
@@ -1117,13 +1158,16 @@ export async function initSession(config: {
   const isContinuation = !!(config.continuationMessages && config.continuationMessages.length > 0);
 
   if (isContinuation) {
-    // Carry over prior messages into the new session so Claude has context
+    // Carry over prior messages into the new session so Claude has context.
+    // Marked is_context_copy so analytics/memory never mistake them for words
+    // actually spoken in THIS session (they duplicate rows from the prior one).
     for (const msg of config.continuationMessages!) {
       await db.insert(chatMessages).values({
         sessionId,
         userId: config.userId,
         role: msg.role,
         content: msg.content,
+        isContextCopy: true,
       });
     }
 

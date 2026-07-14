@@ -1,7 +1,16 @@
 # Session churn diagnosis — why 57 of 128 sessions re-opened within 5 minutes
 
 2026-07-14 · Step 5 of the dead-air plan · from `improve-v2/daily/2026-07-14-buyer-audit-72h.md` §4.6
-**Diagnosis only — no code changed.**
+
+**STATUS UPDATE (later 2026-07-14): fix directions 1–3 below are IMPLEMENTED (local,
+not pushed).** Server: `initSession` reattaches to a live same-persona session inside
+its idle window instead of forking (chatEngine.ts); "Continue Reading" context copies
+are flagged `is_context_copy` (schema + `migrations/2026-07-14-chat-message-context-copy.sql`
+— additive, safe pre-deploy, run once on the shared DB). Client: the live session
+persists in localStorage and a reload/phone-unlock rejoins it (validated against the
+server) with the conversation restored on screen. Tested:
+`improve-v2/playwright/session-churn.spec.ts` — 4 specs incl. a real-browser reload;
+full suite 26/26.
 
 ## The mechanism (three doors into a new session, one shared amplifier)
 
