@@ -94,6 +94,11 @@ async function main() {
     try { relay.push(JSON.parse(route.request().postData() || '{}')); } catch { /* ignore */ }
     return route.fulfill({ status: 200, contentType: 'application/json', body: '{}' });
   });
+  // Mock /api/checkout: a CTA click fires InitiateCheckout (synchronously, before this call)
+  // but handlePurchase only navigates when the response carries a `url` — return none, so the
+  // page stays put and no Stripe session is created.
+  await ctx.route('**/api/checkout', (route) =>
+    route.fulfill({ status: 200, contentType: 'application/json', body: '{}' }));
 
   const page = await ctx.newPage();
   await page.goto(`${BASE}/chat?close=55`, { waitUntil: 'domcontentloaded' });
@@ -110,18 +115,19 @@ async function main() {
   // ── drive to the email-capture step (detected by the input placeholder)
   const input = page.locator('[data-testid="input-chat-message"]');
   const queue = [...ANSWERS];
-  let fallbackI = 0, emailSubmitted = false;
-  for (let step = 0; step < 24 && !emailSubmitted; step++) {
+  let fallbackI = 0, emailSubmitted = false, reachedPitch = false;
+  for (let step = 0; step < 34 && !reachedPitch; step++) {
     const state = await waitForTurnEnd(page);
-    if (state === 'timeout' || state === 'pitch') break;
+    if (state === 'timeout') break;
+    if (state === 'pitch') { reachedPitch = true; break; }
     if (state === 'bucket') { await page.getByRole('button', { name: /Love & Relationships/i }).click(); continue; }
     if (state === 'perm') { await page.getByRole('button', { name: /Yes, please help me Evelyn/i }).click(); continue; }
     const ph = (await input.getAttribute('placeholder')) || '';
-    if (/e-?mail/i.test(ph)) { await input.fill(EMAIL); await input.press('Enter'); emailSubmitted = true; }
+    if (/e-?mail/i.test(ph) && !emailSubmitted) { await input.fill(EMAIL); await input.press('Enter'); emailSubmitted = true; }
     else { await input.fill(queue.length ? queue.shift() : FALLBACKS[fallbackI++ % FALLBACKS.length]); await input.press('Enter'); }
   }
   check('Reached + submitted the email-capture step', emailSubmitted);
-  await page.waitForTimeout(1800); // let trackLead fire
+  await page.waitForTimeout(1500); // let trackLead settle
 
   // ── Lead: deterministic dedup id; and it must NOT double-relay client-side (V1 skipServerRelay)
   const lead = (await pixelEvents(page)).find((e) => e.event === 'Lead');
@@ -131,6 +137,23 @@ async function main() {
   check('Lead NOT double-relayed client-side (skipServerRelay; server /api/lead owns CAPI)',
     !relay.find((e) => e.eventName === 'Lead'));
 
+  // ── InitiateCheckout: click a checkout CTA (checkout is mocked → no Stripe, no navigation)
+  check('Reached the pitch to test InitiateCheckout', reachedPitch);
+  if (reachedPitch) {
+    const full = page.locator('[data-testid="button-full-offering"]');
+    const cta = (await full.isVisible().catch(() => false))
+      ? full
+      : page.getByRole('button', { name: /Begin My Energy Clearing/i }).first();
+    await cta.click().catch(() => {});
+    await page.waitForTimeout(1500);
+    const ic = (await pixelEvents(page)).find((e) => e.event === 'InitiateCheckout');
+    const icRelay = relay.find((e) => e.eventName === 'InitiateCheckout');
+    check('InitiateCheckout pixel fired on CTA click', ic);
+    check('InitiateCheckout CAPI relay (/api/fb-event) fired', icRelay);
+    check('InitiateCheckout pixel↔CAPI event_id MATCHES (dedup)',
+      ic && icRelay && ic.eventID === icRelay.eventId, `pixel=${ic?.eventID} relay=${icRelay?.eventId}`);
+  }
+
   check('🔒 No Meta request escaped (all blocked)', true, `${metaBlocked} blocked`);
 
   await ctx.close();
@@ -138,7 +161,7 @@ async function main() {
 
   const passed = checks.filter((c) => c.pass).length, failed = checks.length - passed;
   const report =
-    `# v1-funnel-audit (pixels) — Lead + PageView dedup\n\n` +
+    `# v1-funnel-audit (pixels) — PageView + Lead + InitiateCheckout dedup\n\n` +
     `Base: ${BASE} · ${passed}/${checks.length} passed${failed ? ` · 🔴 ${failed} FAILED` : ' · ✅ ALL PASS'} · ${metaBlocked} Meta requests blocked\n\n` +
     checks.map((c) => `- ${c.pass ? '✅' : '🔴'} ${c.name}${c.detail ? `  — ${c.detail}` : ''}`).join('\n') + '\n';
   writeFileSync(`${OUT_DIR}/report.md`, report);
