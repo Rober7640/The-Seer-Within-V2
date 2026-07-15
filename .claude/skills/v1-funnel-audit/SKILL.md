@@ -73,6 +73,9 @@ captured locally.
   key), and is **not** double-relayed client-side (V1 `skipServerRelay`; the server `/api/lead` owns CAPI)
 - **InitiateCheckout** fires on the checkout CTA click as a pixel **and** a CAPI relay sharing **one
   `event_id`** (`/api/checkout` is mocked so nothing hits Stripe and the page doesn't navigate)
+- **Purchase** fires on the success page with the **deterministic** id `purchase_<session>`, not double-
+  relayed client-side (the Stripe webhook owns CAPI). Tested by mocking the `/api/upsell/user-data` READ
+  and loading `/welcome1?session_id=<synthetic>` — **no real checkout or payment**.
 
 ## Output
 
@@ -85,8 +88,8 @@ captured locally.
 
 First green run 2026-07-15 (sliding arm): **11/11 checks passed**, dead air clean, 0 empty bubbles.
 Screenshots confirmed the $55/$35 card and the $35 downsell fork.
-Pixel audit 2026-07-15: **12/12 passed** — PageView, Lead, and InitiateCheckout all fired with matching
-pixel↔CAPI event_ids (Lead id matched the independently-computed `lead_<sha256(email)>`); nothing reached Meta.
+Pixel audit 2026-07-15: **15/15 passed** — PageView, Lead, InitiateCheckout, and Purchase all fired with
+matching pixel↔CAPI event_ids (Lead id matched the independently-computed `lead_<sha256(email)>`); nothing reached Meta.
 
 ## Not yet covered (see the V1-audit backlog / task list)
 
@@ -95,8 +98,8 @@ pixel↔CAPI event_ids (Lead id matched the independently-computed `lead_<sha256
   **email-lock** regression.
 - **Price-variant charge correctness** (quote AND the amount sent to Stripe match the assigned variant —
   the "45-corruption" class) — needs a real enrolled session, not the `?close=55` copy preview.
-- FB pixel/CAPI **fire** assertions: ✅ **PageView + Lead + InitiateCheckout done** (`audit-pixels.mjs`);
-  `Purchase` (success page, after a completed TEST checkout) fire + dedup still TODO.
+- FB pixel/CAPI **fire** assertions: ✅ **DONE** — PageView + Lead + InitiateCheckout + Purchase all
+  assert pixel↔CAPI dedup (`audit-pixels.mjs`, 15/15).
 - Reuse for these: `playwright.sliding-close.config.ts`, `playwright.fb-palm-*.config.ts`,
   `tests/helpers/palm-tracking.ts`. Add cases to `docs/test-ideas.md`.
 

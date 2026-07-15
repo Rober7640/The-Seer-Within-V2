@@ -94,11 +94,23 @@ async function main() {
     try { relay.push(JSON.parse(route.request().postData() || '{}')); } catch { /* ignore */ }
     return route.fulfill({ status: 200, contentType: 'application/json', body: '{}' });
   });
+  // Mock /api/lead: the pixel test only needs trackLead to FIRE. trackLead runs *after*
+  // this fetch resolves (useConversation.ts), so an intermittent sandbox /api/lead error
+  // would silently skip the client Lead pixel. Return a benign success so it always fires.
+  // (audit-flow.mjs mocks /api/lead for the same reason.)
+  await ctx.route('**/api/lead', (route) =>
+    route.fulfill({ status: 200, contentType: 'application/json', body: '{"success":true}' }));
   // Mock /api/checkout: a CTA click fires InitiateCheckout (synchronously, before this call)
   // but handlePurchase only navigates when the response carries a `url` — return none, so the
   // page stays put and no Stripe session is created.
   await ctx.route('**/api/checkout', (route) =>
     route.fulfill({ status: 200, contentType: 'application/json', body: '{}' }));
+  // Mock the upsell order-data READ so the success page fires Purchase for a synthetic
+  // session — no real checkout or payment needed. Only the browser's view is mocked.
+  const PSID = `purchasetest_${RUN}`;
+  await ctx.route('**/api/upsell/user-data**', (route) =>
+    route.fulfill({ status: 200, contentType: 'application/json',
+      body: JSON.stringify({ email: EMAIL, firstName: 'Claire', mainPurchaseAmount: 5500, priceVariant: '55-35', bucket: 'love' }) }));
 
   const page = await ctx.newPage();
   await page.goto(`${BASE}/chat?close=55`, { waitUntil: 'domcontentloaded' });
@@ -154,6 +166,18 @@ async function main() {
       ic && icRelay && ic.eventID === icRelay.eventId, `pixel=${ic?.eventID} relay=${icRelay?.eventId}`);
   }
 
+  // ── Purchase: load the success page with a synthetic paid session (order-data mocked above)
+  const up = await ctx.newPage();
+  await up.goto(`${BASE}/welcome1?session_id=${PSID}`, { waitUntil: 'domcontentloaded' });
+  await up.waitForTimeout(2500); // let the order-data fetch resolve + trackPurchase fire
+  const purchase = (await pixelEvents(up)).find((e) => e.event === 'Purchase');
+  check('Purchase pixel fired on the success page', purchase);
+  check('Purchase uses the deterministic dedup id purchase_<session>',
+    purchase && purchase.eventID === `purchase_${PSID}`, `got=${purchase?.eventID} expected=purchase_${PSID}`);
+  check('Purchase NOT double-relayed client-side (skipServerRelay; Stripe webhook owns CAPI)',
+    !relay.find((e) => e.eventName === 'Purchase'));
+  await up.close();
+
   check('🔒 No Meta request escaped (all blocked)', true, `${metaBlocked} blocked`);
 
   await ctx.close();
@@ -161,7 +185,7 @@ async function main() {
 
   const passed = checks.filter((c) => c.pass).length, failed = checks.length - passed;
   const report =
-    `# v1-funnel-audit (pixels) — PageView + Lead + InitiateCheckout dedup\n\n` +
+    `# v1-funnel-audit (pixels) — PageView + Lead + InitiateCheckout + Purchase dedup\n\n` +
     `Base: ${BASE} · ${passed}/${checks.length} passed${failed ? ` · 🔴 ${failed} FAILED` : ' · ✅ ALL PASS'} · ${metaBlocked} Meta requests blocked\n\n` +
     checks.map((c) => `- ${c.pass ? '✅' : '🔴'} ${c.name}${c.detail ? `  — ${c.detail}` : ''}`).join('\n') + '\n';
   writeFileSync(`${OUT_DIR}/report.md`, report);
