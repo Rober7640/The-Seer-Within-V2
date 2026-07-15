@@ -83,11 +83,21 @@ router.get('/v1', async (req: Request, res: Response) => {
     //
     // IMPORTANT: `purchased = true` is set *optimistically* at /api/checkout
     // (the moment the user clicks the button, BEFORE Stripe confirms payment).
-    // The reliable "payment actually completed" signal is `upsell_offered = true`,
-    // which only flips after /welcome1 verifies `stripeSession.payment_status === "paid"`.
-    // We require BOTH to count a purchase, so abandoned-cart visitors are not
-    // counted as buyers in this dashboard.
-    const confirmedPurchase = sql`${conversations.purchased} = true AND ${conversations.upsellOffered} = true`;
+    //
+    // The legacy paid signal was `upsell_offered = true`, which only flips after
+    // /welcome1 verifies `stripeSession.payment_status === "paid"`. But that needs
+    // the buyer's BROWSER to reach /welcome1 — a buyer who pays then closes the tab
+    // never trips it, so this dashboard under-counted the main line by ~30% vs
+    // Stripe (17 shown vs 26 real on 2026-07-14 thumb).
+    //
+    // `main_paid_at` (stamped server-side by the checkout.session.completed webhook,
+    // see db.markMainPaid) is the reliable, browser-independent signal. We count a
+    // sale as confirmed when EITHER main_paid_at is present OR the legacy pair fired.
+    // The OR keeps historical rows (main_paid_at IS NULL) counted exactly as before —
+    // so numbers do NOT move until the webhook stamps new rows / a backfill runs —
+    // while abandoned carts (purchased only, never paid) are still excluded.
+    // Parenthesised because it composes into `FILTER (WHERE ... AND purchase_type = ...)`.
+    const confirmedPurchase = sql`(${conversations.mainPaidAt} IS NOT NULL OR (${conversations.purchased} = true AND ${conversations.upsellOffered} = true))`;
 
     const aggregateRows = await db
       .select({

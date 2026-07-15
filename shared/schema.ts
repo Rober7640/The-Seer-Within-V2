@@ -35,6 +35,16 @@ export const conversations = pgTable("conversations", {
   stripeAccount: text("stripe_account"),
   mainPurchaseAmount: integer("main_purchase_amount"),
 
+  // Server-side "front-end payment actually completed" signal, stamped by the
+  // Stripe checkout.session.completed webhook (browser-independent). The legacy
+  // paid signal used by the price-test dashboard — purchased && upsell_offered —
+  // UNDER-counts, because upsell_offered only flips when the buyer's browser
+  // reaches /welcome1; a buyer who pays then closes the tab is real revenue that
+  // never gets flagged and is indistinguishable from an abandoned cart. Nullable:
+  // null on historical rows (dashboard falls back to the legacy signal) until a
+  // one-time Stripe backfill stamps them.
+  mainPaidAt: timestamp("main_paid_at"),
+
   // V1 price split test (variant assigned at lead capture, drives all price displays + Stripe charge)
   priceVariant: text("price_variant"),
   priceAmountCents: integer("price_amount_cents"),
