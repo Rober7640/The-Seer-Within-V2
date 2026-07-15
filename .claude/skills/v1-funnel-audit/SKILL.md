@@ -42,9 +42,10 @@ node scripts/make-sandbox-env.mjs
 # 3. Boot the app against it (leave running)
 DOTENV_CONFIG_PATH=.env.sandbox npx tsx server/index.ts
 
-# 4. Run the audit (in another shell)
+# 4. Run the audits (in another shell)
 node .claude/skills/v1-funnel-audit/scripts/audit-flow.mjs            # sliding $55/$35 close
 node .claude/skills/v1-funnel-audit/scripts/audit-flow.mjs control    # classic $35 close
+node .claude/skills/v1-funnel-audit/scripts/audit-pixels.mjs         # FB pixel/CAPI fire + dedup
 ```
 
 Exit code **0** = all checks passed; **1** = one or more checks failed; **2** = driver error / unsafe target.
@@ -61,6 +62,16 @@ Exit code **0** = all checks passed; **1** = one or more checks failed; **2** = 
 
 The `control` arm asserts the classic checkout CTA renders and the sliding choice card does **not**.
 
+## What it asserts (pixels — `audit-pixels.mjs`)
+
+Hermetic: blocks `connect.facebook.net` so Meta's `fbevents.js` never loads and every `fbq(...)` call
+stays readable in `window.fbq.queue` — **nothing reaches Meta**. The client's `/api/fb-event` relay is
+captured locally.
+
+- **PageView** fires on load as a pixel **and** a CAPI relay, sharing **one `event_id`** (dedup pair)
+- **Lead** fires on email capture with the **deterministic** id `lead_<sha256(email)>` (the shared dedup
+  key), and is **not** double-relayed client-side (V1 `skipServerRelay`; the server `/api/lead` owns CAPI)
+
 ## Output
 
 `audit-runs/v1-funnel-audit/<arm>/`:
@@ -70,8 +81,10 @@ The `control` arm asserts the classic checkout CTA renders and the sliding choic
 
 ## Proven
 
-First green run 2026-07-15 (sliding arm): **11/11 checks passed**, dead air clean, 0 empty bubbles,
-1 pixel request blocked. Screenshots confirmed the $55/$35 card and the $35 downsell fork.
+First green run 2026-07-15 (sliding arm): **11/11 checks passed**, dead air clean, 0 empty bubbles.
+Screenshots confirmed the $55/$35 card and the $35 downsell fork.
+Pixel audit 2026-07-15: **8/8 passed** — PageView pixel↔CAPI ids identical; Lead id matched the
+independently-computed `lead_<sha256(email)>`; nothing reached Meta.
 
 ## Not yet covered (see the V1-audit backlog / task list)
 
@@ -80,7 +93,8 @@ First green run 2026-07-15 (sliding arm): **11/11 checks passed**, dead air clea
   **email-lock** regression.
 - **Price-variant charge correctness** (quote AND the amount sent to Stripe match the assigned variant —
   the "45-corruption" class) — needs a real enrolled session, not the `?close=55` copy preview.
-- FB pixel/CAPI **fire** assertions at `Lead` / `InitiateCheckout` / `Purchase` + eventID dedup.
+- FB pixel/CAPI **fire** assertions: ✅ **PageView + Lead done** (`audit-pixels.mjs`);
+  `InitiateCheckout` (CTA click) / `Purchase` (success page) fire + dedup still TODO.
 - Reuse for these: `playwright.sliding-close.config.ts`, `playwright.fb-palm-*.config.ts`,
   `tests/helpers/palm-tracking.ts`. Add cases to `docs/test-ideas.md`.
 
