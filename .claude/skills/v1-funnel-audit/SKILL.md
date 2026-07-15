@@ -46,6 +46,7 @@ DOTENV_CONFIG_PATH=.env.sandbox npx tsx server/index.ts
 node .claude/skills/v1-funnel-audit/scripts/audit-flow.mjs            # sliding $55/$35 close
 node .claude/skills/v1-funnel-audit/scripts/audit-flow.mjs control    # classic $35 close
 node .claude/skills/v1-funnel-audit/scripts/audit-pixels.mjs         # FB pixel/CAPI fire + dedup
+node .claude/skills/v1-funnel-audit/scripts/audit-palm.mjs           # fb-palm regressions
 ```
 
 Exit code **0** = all checks passed; **1** = one or more checks failed; **2** = driver error / unsafe target.
@@ -77,6 +78,17 @@ captured locally.
   relayed client-side (the Stripe webhook owns CAPI). Tested by mocking the `/api/upsell/user-data` READ
   and loading `/welcome1?session_id=<synthetic>` — **no real checkout or payment**.
 
+## fb-palm regressions (`audit-palm.mjs`)
+
+- **GUARD — email-lock** (pass/fail): on the palm woven flow, the input must revert to `type="text"`
+  after the email step, or the send button (a real form submit) is blocked by native email validation and
+  the user can only ever type an email. Proof: `improve-v1/evidence/email-lock/repro.mjs`. Currently ✅
+  (green regression guard).
+- **DIAGNOSTIC — identity-persist** (informational, does NOT fail the run): does the palm identity survive
+  past `palmReflect` into reading1/reading2/crisis? A **known-open derail** — the fix in
+  `improve-v1/04-fb-palm-derail-PROVEN.md §3` was designed but never shipped, so it reports 🔴 today and
+  flips ✅ automatically once the fix lands. (Reuses Joel's `/api/chat` replay.)
+
 ## Output
 
 `audit-runs/v1-funnel-audit/<arm>/`:
@@ -90,12 +102,14 @@ First green run 2026-07-15 (sliding arm): **11/11 checks passed**, dead air clea
 Screenshots confirmed the $55/$35 card and the $35 downsell fork.
 Pixel audit 2026-07-15: **15/15 passed** — PageView, Lead, InitiateCheckout, and Purchase all fired with
 matching pixel↔CAPI event_ids (Lead id matched the independently-computed `lead_<sha256(email)>`); nothing reached Meta.
+Palm audit 2026-07-15: email-lock guard **4/4 passed** (input reverts email→text); identity-persist
+diagnostic correctly flagged the known-open derail (`palmReflect` has palm tokens, reading1/2/crisis have none).
 
 ## Not yet covered (see the V1-audit backlog / task list)
 
 - Other funnels: root plain, fb, fb2, fb-palm (thumb / hand-size / finger-shape / decode-him), gdn.
-- fb-palm **identity-persist-past-opener** (`improve-v1/04-fb-palm-derail-PROVEN.md`) and the
-  **email-lock** regression.
+- fb-palm regressions: ✅ **DONE** (`audit-palm.mjs`) — email-lock is a green guard; identity-persist
+  is a diagnostic surfacing the known-open derail (flips green when the §3 fix ships).
 - **Price-variant charge correctness** (quote AND the amount sent to Stripe match the assigned variant —
   the "45-corruption" class) — needs a real enrolled session, not the `?close=55` copy preview.
 - FB pixel/CAPI **fire** assertions: ✅ **DONE** — PageView + Lead + InitiateCheckout + Purchase all
