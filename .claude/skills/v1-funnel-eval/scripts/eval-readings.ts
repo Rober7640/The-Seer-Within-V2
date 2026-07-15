@@ -16,6 +16,8 @@ import { writeFileSync, mkdirSync } from 'node:fs';
 import {
   buildReading2Prompt,
   buildCrisisRevealPrompt,
+  buildValueExplainPrompt,
+  buildObjectionPrompt,
 } from '../../../../server/lib/prompts';
 import type { UserData } from '../../../../shared/types';
 
@@ -38,9 +40,9 @@ interface EvalCase {
   phase: string;
   input: string;
   prompt: string;
-  currentBlock: string;
-  improvedBlock: string;
   rubric: string[];
+  currentBlock?: string;   // present ⇒ before/after A/B; absent ⇒ baseline-only scoring
+  improvedBlock?: string;
 }
 
 const DEEPER = "Yes... I've been on so many dates but nothing ever becomes something real.";
@@ -82,6 +84,30 @@ const CASES: EvalCase[] = [
       'The source question ties to the specific block just named and the user\'s own words, not a generic ancestry/family template.',
       'It avoids the scripted lines: "has anyone in your family struggled with this same pattern", "where did this first take root".',
       'It reflects feelings/patterns only — it does NOT fabricate concrete biographical facts the user never gave.',
+    ],
+  },
+  {
+    id: 'pitch',
+    phase: 'The close / offer (valueExplain)',
+    input: '(the pitch, after the crisis reveal)',
+    prompt: buildValueExplainPrompt(ud),
+    rubric: [
+      'Names the offering clearly (the clearing ritual + the personalized reading + the guarantee).',
+      "Ties the offer to THIS seeker's specific block/desire — not a generic, interchangeable sales pitch.",
+      "Stays in Evelyn's warm, high-trust voice — invitational, not pushy/aggressive/manipulative.",
+      'Does not fabricate concrete biographical facts (names, dates, jobs, places) the seeker never gave.',
+    ],
+  },
+  {
+    id: 'objection',
+    phase: 'Objection handling — "too expensive" (1st)',
+    input: "That's a lot of money for me right now",
+    prompt: buildObjectionPrompt(ud, "That's a lot of money for me right now", 1),
+    rubric: [
+      'Acknowledges the money concern with genuine empathy — never shames or guilt-trips.',
+      'Reframes around value / the cost of staying stuck, not high-pressure or fear-only tactics.',
+      "Stays in Evelyn's gentle voice and does not turn salesy or aggressive.",
+      'Does not fabricate facts the seeker never gave, and does not misquote a price.',
     ],
   },
 ];
@@ -145,30 +171,39 @@ async function main() {
   console.log(`\nv1-funnel-eval — ${cases.length} case(s), ${TRIALS} trial(s)/arm, model ${GEN_MODEL}\n`);
 
   const rows: string[] = [];
-  let improvedWins = 0;
+  let improvedWins = 0, beforeAfter = 0;
   for (const c of cases) {
-    if (!c.prompt.includes(c.currentBlock)) {
-      console.log(`🔴 ${c.id}: current block not found verbatim (prompt text drifted) — skipping.`);
-      rows.push(`| ${c.id} | — | — | ⚠️ prompt drift |`);
-      continue;
-    }
-    const improvedPrompt = c.prompt.replace(c.currentBlock, c.improvedBlock);
     const cur = await scoreArm(c, c.prompt);
-    const imp = await scoreArm(c, improvedPrompt);
-    const better = imp.quality > cur.quality + 0.25;
-    if (better) improvedWins++;
-    const verdict = better ? '✅ IMPROVED better' : imp.quality < cur.quality - 0.25 ? '🔴 IMPROVED worse' : '➖ no clear diff';
-    console.log(`${c.id} (${c.phase})`);
-    console.log(`  current : quality ${cur.quality}/5 · rubric ${cur.pass}/${cur.total}`);
-    console.log(`  improved: quality ${imp.quality}/5 · rubric ${imp.pass}/${imp.total}   → ${verdict}\n`);
-    rows.push(`| ${c.id} | ${cur.quality}/5 (${cur.pass}/${cur.total}) | ${imp.quality}/5 (${imp.pass}/${imp.total}) | ${verdict} |`);
+    if (c.currentBlock && c.improvedBlock) {
+      // before/after A/B on a candidate prompt change
+      if (!c.prompt.includes(c.currentBlock)) {
+        console.log(`🔴 ${c.id}: current block not found verbatim (prompt drifted) — candidate skipped.`);
+        rows.push(`| ${c.id} | ${cur.quality}/5 (${cur.pass}/${cur.total}) | — | ⚠️ prompt drift |`);
+        continue;
+      }
+      beforeAfter++;
+      const imp = await scoreArm(c, c.prompt.replace(c.currentBlock, c.improvedBlock));
+      const better = imp.quality > cur.quality + 0.25;
+      if (better) improvedWins++;
+      const verdict = better ? '✅ IMPROVED better' : imp.quality < cur.quality - 0.25 ? '🔴 IMPROVED worse' : '➖ no clear diff';
+      console.log(`${c.id} (${c.phase})`);
+      console.log(`  current : quality ${cur.quality}/5 · rubric ${cur.pass}/${cur.total}`);
+      console.log(`  improved: quality ${imp.quality}/5 · rubric ${imp.pass}/${imp.total}   → ${verdict}\n`);
+      rows.push(`| ${c.id} | ${cur.quality}/5 (${cur.pass}/${cur.total}) | ${imp.quality}/5 (${imp.pass}/${imp.total}) | ${verdict} |`);
+    } else {
+      // baseline-only: score the LIVE prompt against the rubric (ready for a candidate later)
+      console.log(`${c.id} (${c.phase})`);
+      console.log(`  baseline: quality ${cur.quality}/5 · rubric ${cur.pass}/${cur.total}\n`);
+      rows.push(`| ${c.id} | ${cur.quality}/5 (${cur.pass}/${cur.total}) | (baseline) | — |`);
+    }
   }
 
   const report =
-    `# v1-funnel-eval — reading quality (before/after)\n\n` +
+    `# v1-funnel-eval — reading quality\n\n` +
     `Model ${GEN_MODEL} · ${TRIALS} trial(s)/arm · judged by ${JUDGE_MODEL}\n\n` +
     `| case | current | improved | verdict |\n|---|---|---|---|\n${rows.join('\n')}\n\n` +
-    `Improved won ${improvedWins}/${cases.length} case(s). Quality = LLM-judged 0-5; rubric = criteria passed.\n` +
+    `Improved won ${improvedWins}/${beforeAfter} before/after case(s); the rest are baseline scores. ` +
+    `Quality = LLM-judged 0-5; rubric = criteria passed.\n` +
     `Never ships to prod — this scores a candidate prompt change; a human applies the winner.\n`;
   writeFileSync(`${OUT_DIR}/report.md`, report);
   console.log(report);
