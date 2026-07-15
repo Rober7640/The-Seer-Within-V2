@@ -4,7 +4,7 @@ import { Router, Request, Response } from 'express';
 import { Webhook } from 'svix';
 import Stripe from 'stripe';
 import { getStripe, verifyStripeWebhook } from '../lib/stripeAccount';
-import { db } from '../lib/db';
+import { db, markMainPaid } from '../lib/db';
 import { followUpEmails, userFollowUpPreferences, migrationDripEmails, topupEmails, aidenFollowupEmails, personaFollowupEmails, evelynFollowupEmails, users, emailSuppression, creditPurchases, soulmateLanderSessions } from '@shared/schema';
 import { and, eq, sql } from 'drizzle-orm';
 import logger from '../lib/logger';
@@ -990,6 +990,20 @@ router.post('/stripe', async (req: Request, res: Response) => {
           sql`${soulmateLanderSessions.intakeTokenRevokedAt} IS NULL`,
         ))
         .catch((err) => logger.error('Soulmate intake_token revoke on purchase error (non-blocking):', err));
+    }
+
+    // Reliable, browser-independent "front-end payment completed" signal for the
+    // /admin/price-test dashboard. checkout.session.completed fires server-side on
+    // every paid front-end sale, so stamping here catches buyers who paid but
+    // never loaded /welcome1 — the ~30% the legacy `upsell_offered` signal misses.
+    // Gated STRICTLY to the front-end product so it can never fire for an upsell
+    // (protection_ritual / manifestation_bracelet) or any other funnel product.
+    // Non-blocking + idempotent (no-op if the row isn't matched or already stamped);
+    // matches on session.id, which /api/checkout saved on the row before payment.
+    if (product === 'energy_clearing_ritual') {
+      markMainPaid(session.id).catch((err) =>
+        logger.error('markMainPaid failed (non-blocking):', err),
+      );
     }
 
     // Server-side FB event firing — closes the gap when the browser tab
