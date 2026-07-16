@@ -223,11 +223,13 @@ async function main() {
   }
   await page.waitForTimeout(1500);
   await snap('downsell-fork');
-  const graceCtaAfter = await page.getByRole('button', { name: /Begin My Energy Clearing.*\$?35|I need a little grace/i }).first().isVisible().catch(() => false);
-  const anyCtaAfter = await page.getByRole('button', { name: /Begin My Energy Clearing/i }).first().isVisible().catch(() => false);
+  // The downsell CTA is labelled differently per arm: sliding overrides it to
+  // "Begin My Energy Clearing - $35" (the grace charge), classic keeps the default
+  // "Get Your Written Reading - $25". Match either so the check is arm-correct.
+  const downsellCtaAfter = await page.getByRole('button', { name: /Begin My Energy Clearing|Get Your Written Reading|I need a little grace/i }).first().isVisible().catch(() => false);
   check('Survived 3 money objections without a stuck input', objOk);
-  check('After 3 objections the $35 grace/downsell CTA is offered', graceCtaAfter || anyCtaAfter,
-    (graceCtaAfter || anyCtaAfter) ? '' : 'no checkout CTA after the objection run');
+  check(`After 3 objections the ${ARM === 'sliding' ? '$35 grace' : '$25 written-reading'} downsell CTA is offered`, downsellCtaAfter,
+    downsellCtaAfter ? '' : 'no downsell CTA after the objection run');
 
   // ── Audits
   await sampler.stop();
