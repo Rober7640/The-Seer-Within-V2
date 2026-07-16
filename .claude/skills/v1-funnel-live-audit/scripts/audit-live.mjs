@@ -101,13 +101,19 @@ async function main() {
   const W = daysArg ? `created_at > now() - interval '${Number(daysArg)} days'` : 'TRUE';
   out(`Window: ${daysArg ? `last ${daysArg} days` : 'all time'}\n`);
 
+  // "paid" = a CONFIRMED front-end sale, matching the /admin/price-test dashboard.
+  // NOT the raw `purchased` flag: that is set optimistically at checkout-CLICK (before
+  // payment), so it counts abandoned Stripe sessions as sales. A real sale is either
+  // webhook-stamped (main_paid_at) or reached the post-payment upsell page (upsell_offered).
+  const PAID = '(main_paid_at IS NOT NULL OR (purchased AND upsell_offered))';
+
   // ── A. Overview ─────────────────────────────────────────────────────────────
   const { rows: [ov] } = await client.query(`
     SELECT count(*)::int total,
-           count(*) FILTER (WHERE purchased OR main_paid_at IS NOT NULL)::int paid,
+           count(*) FILTER (WHERE ${PAID})::int paid,
            count(*) FILTER (WHERE concern IS NOT NULL)::int engaged,
-           count(*) FILTER (WHERE conversation_state = 'PITCH' OR purchased OR main_paid_at IS NOT NULL)::int reached_pitch,
-           COALESCE(SUM(main_purchase_amount) FILTER (WHERE purchased OR main_paid_at IS NOT NULL), 0)::bigint revenue_cents,
+           count(*) FILTER (WHERE conversation_state = 'PITCH' OR ${PAID})::int reached_pitch,
+           COALESCE(SUM(main_purchase_amount) FILTER (WHERE ${PAID}), 0)::bigint revenue_cents,
            min(created_at) first_at, max(created_at) last_at
     FROM conversations WHERE ${W}`);
   out(`## A. Overview`);
@@ -118,8 +124,8 @@ async function main() {
   const { rows: [f] } = await client.query(`
     SELECT count(*)::int leads,
            count(*) FILTER (WHERE concern IS NOT NULL)::int engaged,
-           count(*) FILTER (WHERE conversation_state = 'PITCH' OR purchased OR main_paid_at IS NOT NULL)::int pitched,
-           count(*) FILTER (WHERE purchased OR main_paid_at IS NOT NULL)::int paid,
+           count(*) FILTER (WHERE conversation_state = 'PITCH' OR ${PAID})::int pitched,
+           count(*) FILTER (WHERE ${PAID})::int paid,
            count(*) FILTER (WHERE upsell_offered)::int u1_offered,
            count(*) FILTER (WHERE upsell_purchased)::int u1_paid,
            count(*) FILTER (WHERE upsell2_purchased)::int u2_paid
@@ -136,27 +142,35 @@ async function main() {
   const { rows: states } = await client.query(`
     SELECT COALESCE(conversation_state, '(no saved progress)') state, count(*)::int n
     FROM conversations
-    WHERE ${W} AND NOT (purchased OR main_paid_at IS NOT NULL)
+    WHERE ${W} AND NOT (${PAID})
     GROUP BY 1 ORDER BY 2 DESC LIMIT 8`);
   out(`  non-buyers stopped at:`);
   for (const s of states) out(`    ${s.state.padEnd(24)} ${String(s.n).padStart(6)}`);
   out('');
 
-  // ── C. Payment reconciliation gap (the migration-019 class, in the wild) ─────
+  // ── C. Sales confirmation spread (optimistic click vs webhook-confirmed) ─────
+  // `purchased` is set at checkout-CLICK, before payment — so on its own it overcounts
+  // sales by the abandon rate. This shows the spread honestly; true reconciliation is Stripe.
   const { rows: [rec] } = await client.query(`
-    SELECT count(*) FILTER (WHERE purchased AND main_paid_at IS NULL)::int browser_only,
-           count(*) FILTER (WHERE (NOT purchased) AND main_paid_at IS NOT NULL)::int webhook_only
+    SELECT count(*) FILTER (WHERE purchased)::int optimistic,
+           count(*) FILTER (WHERE ${PAID})::int confirmed_sale,
+           count(*) FILTER (WHERE main_paid_at IS NOT NULL)::int webhook_stamped,
+           count(*) FILTER (WHERE purchased AND NOT (${PAID}))::int clicked_unconfirmed
     FROM conversations WHERE ${W}`);
-  out(`## C. Payment reconciliation`);
-  out(`- purchased=true but main_paid_at NULL (browser-confirmed, webhook not stamped): ${rec.browser_only}`);
-  out(`- main_paid_at set but purchased=false (webhook-confirmed, browser missed): ${rec.webhook_only}`);
-  if (rec.webhook_only > 0) flag('⚠️', `${rec.webhook_only} rows are paid per the webhook but not flagged purchased — the dashboard/UI may under-count these.`);
+  out(`## C. Sales confirmation (\`purchased\` = checkout-CLICK, set before payment)`);
+  out(`- optimistic 'purchased' (clicked checkout):                 ${rec.optimistic}`);
+  out(`- confirmed sale (main_paid_at OR purchased+upsell_offered): ${rec.confirmed_sale}`);
+  out(`- webhook-stamped main_paid_at:                              ${rec.webhook_stamped}`);
+  out(`- clicked but NOT confirmed (likely abandoned at Stripe — NOT a bug): ${rec.clicked_unconfirmed}`);
+  if (rec.confirmed_sale > 0 && rec.webhook_stamped === 0)
+    flag('🔴', `${rec.confirmed_sale} confirmed sales but ZERO main_paid_at stamped — the checkout.session.completed webhook may not be firing.`);
+  out(`  ⓘ true payment reconciliation needs the Stripe cross-check (SKILL.md optional phase), not this DB alone.`);
   out('');
 
   // ── D. Abandoned carts ──────────────────────────────────────────────────────
   const { rows: [ab] } = await client.query(`
     SELECT count(*) FILTER (WHERE stripe_session_id IS NOT NULL)::int with_session,
-           count(*) FILTER (WHERE stripe_session_id IS NOT NULL AND NOT (purchased OR main_paid_at IS NOT NULL))::int abandoned
+           count(*) FILTER (WHERE stripe_session_id IS NOT NULL AND NOT (${PAID}))::int abandoned
     FROM conversations WHERE ${W}`);
   out(`## D. Abandoned carts (checkout session created, never completed)`);
   out(`- ${ab.abandoned} abandoned of ${ab.with_session} with a checkout session (${pct(ab.abandoned, ab.with_session)})`);
@@ -166,17 +180,17 @@ async function main() {
   // ── E. Price-variant charge correctness in the wild (the 45-corruption class) ─
   const { rows: variants } = await client.query(`
     SELECT COALESCE(price_variant, '(none)') v, count(*)::int n,
-           count(*) FILTER (WHERE purchased OR main_paid_at IS NOT NULL)::int buyers,
-           count(*) FILTER (WHERE (purchased OR main_paid_at IS NOT NULL) AND price_amount_cents IS NULL)::int null_main,
-           count(*) FILTER (WHERE (purchased OR main_paid_at IS NOT NULL) AND downsell_amount_cents IS NULL)::int null_grace,
+           count(*) FILTER (WHERE ${PAID})::int buyers,
+           count(*) FILTER (WHERE (${PAID}) AND price_amount_cents IS NULL)::int null_main,
+           count(*) FILTER (WHERE (${PAID}) AND downsell_amount_cents IS NULL)::int null_grace,
            count(DISTINCT price_amount_cents) FILTER (WHERE price_amount_cents IS NOT NULL)::int distinct_main,
            min(price_amount_cents) min_main, max(price_amount_cents) max_main
     FROM conversations WHERE ${W} GROUP BY 1 HAVING count(*) > 0 ORDER BY 2 DESC LIMIT 20`);
   out(`## E. Price-variant integrity (corruption / drift among assigned rows)`);
   for (const v of variants) {
     out(`- ${v.v.padEnd(14)} n=${String(v.n).padStart(5)} buyers=${String(v.buyers).padStart(4)} main=${money(v.min_main)}${v.min_main !== v.max_main ? `..${money(v.max_main)}` : ''}${v.null_grace ? `  🔴 null_grace=${v.null_grace}` : ''}${v.null_main ? `  🔴 null_main=${v.null_main}` : ''}`);
-    if (v.null_grace > 0) flag('🔴', `${v.v}: ${v.null_grace} paid row(s) with NULL downsell/grace cents — the "45-corruption" class (a corrupted config key breaks the grace charge).`);
-    if (v.null_main > 0) flag('🔴', `${v.v}: ${v.null_main} paid row(s) with NULL main price cents.`);
+    if (v.null_grace > 0) flag(v.v.startsWith('(') ? '⚠️' : '🔴', `${v.v}: ${v.null_grace} confirmed sale(s) with NULL grace cents — the "45-corruption" class (breaks the grace charge) if on an ACTIVE arm; a '(none)' variant is likely a no-optin/manual order (verify).`);
+    if (v.null_main > 0) flag(v.v.startsWith('(') ? '⚠️' : '🔴', `${v.v}: ${v.null_main} confirmed sale(s) with NULL main price cents — verify.`);
     if (v.distinct_main > 1) flag('⚠️', `${v.v}: ${v.distinct_main} different main prices in one arm (${money(v.min_main)}..${money(v.max_main)}) — the pool likely changed mid-flight.`);
   }
   out('');

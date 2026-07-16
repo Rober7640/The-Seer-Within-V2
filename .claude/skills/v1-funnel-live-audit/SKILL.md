@@ -68,9 +68,16 @@ Ends with a **prioritized issues list** (🔴 high / ⚠️ worth-a-look). Exits
 
 ## Proven
 
-Verified 2026-07-16 against the local `:5433` sandbox: canary fired (`rejected SQLSTATE 25006 ✔`), all
-seven sections executed, report written, no false 🔴 on clean data. The live read-only run is
-confirmation-gated and has not been run without explicit go-ahead.
+Verified 2026-07-16 against the local `:5433` sandbox (canary `25006 ✔`, all seven sections run), then run
+**read-only against the live shared DB (2-day window)** with explicit confirmation — canary fired, host
+redacted, zero writes.
+
+⚠️ **"paid" is a CONFIRMED sale, not the raw `purchased` flag.** `purchased` is set at checkout-CLICK
+(before payment), so it overcounts sales by the abandon rate (the first live run inflated "paid" ~2.5×).
+`PAID = main_paid_at IS NOT NULL OR (purchased AND upsell_offered)` — the same definition the
+`/admin/price-test` dashboard uses. Even so, this is a DB-side proxy: **true payment reconciliation
+requires the Stripe cross-check** (the optional phase below). Section C prints the optimistic-vs-confirmed
+spread so the gap is visible, never hidden.
 
 ## Optional next phase (not yet built)
 
