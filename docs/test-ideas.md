@@ -1699,3 +1699,17 @@ Context: V1→V2 migrated leads have a real (unknown) password hash, so on `/7-7
 - [ ] Funnel-scoped id '55-35_fb' matches isSlidingCloseVariant (prefix match); plain '55' (hypothetical hard-price arm) does NOT
 - [ ] Welcome-back re-pitch for a sliding-variant session restores the grace link (priceVariantId survives localStorage round-trip)
 - [ ] InitiateCheckout / checkout_initiated tracking values: $55 on main CTA, $35 on grace link (price_cents 5500/3500)
+
+### V1 funnel audit skill — flow / pixels / palm / charge / funnels (`.claude/skills/v1-funnel-audit`, 2026-07-16)
+Covered = shipped in the skill (`[x]`); open = still a gap (`[ ]`). Runs LOCAL-ONLY against the muted `.env.sandbox`.
+- [x] Flow (sliding arm): reaches the pitch in budget; two-tier choice card renders $55 full + $35 grace; both CTAs present; Evelyn voices $55/$35; survives 3 objections → $35 downsell CTA; no dead-air ≥25s; no empty bubbles; Meta blocked *(audit-flow.mjs, 11/11)*
+- [x] Flow (control arm): classic checkout CTA renders; sliding choice card is ABSENT *(audit-flow.mjs control)*
+- [x] Pixel/CAPI dedup: PageView + InitiateCheckout fire as pixel AND CAPI relay sharing one event_id; Lead uses deterministic `lead_<sha256(email)>` and is not double-relayed; Purchase uses `purchase_<session>` and is not double-relayed; nothing reaches Meta *(audit-pixels.mjs, 15/15)*
+- [x] Palm email-lock GUARD: input reverts type=email→text after the email step so a normal sentence sends (not blocked by native validation) *(audit-palm.mjs, 4/4)*
+- [x] **Charge correctness**: for root/fb/fb2/gdn/palm-thumb the Stripe TEST main AND downsell charge == the price the lead was quoted, and `stripe.metadata.priceVariant` == the assigned variant — both A/B arms exercised per funnel, incl. $55 full + $35 grace on thumb *(audit-charge.mjs, 21/21)*
+- [x] **Thumb-only scoping guard**: a batch of `sign=hand-size` seekers NEVER draw `55-35_palm`; every charge stays on the $35 control (assertion form of "every 55-35_palm carries sign=thumb") *(audit-charge.mjs)*
+- [x] **Per-funnel entry + client threading**: each entry URL (`/chat`, `/fb/chat`, `/fb2/chat`, `/gdn/chat`, `/fb-palm/chat?…` thumb + hand-size) boots the chat, reaches the email step, and the client threads the correct `funnel` (root→none) and palm `sign` to /api/lead — zero LLM calls *(audit-funnels.mjs, 26/26)*
+- [ ] DIAGNOSTIC (not a pass/fail): fb-palm identity persists past `palmReflect` into reading1/2/crisis — **known-open derail**, flips green when `improve-v1/04-fb-palm-derail-PROVEN.md §3` ships *(audit-palm.mjs diagnostic)*
+- [ ] Deep LLM flow-walk per non-root funnel (fb/fb2/gdn) — currently entry+charge cover the deltas since they share the root chat engine
+- [ ] `/welcome1` → `/welcome2` → `/success` upsell chats (separate state machines incl. `useUpsell2Chat.ts`, 2-objection threshold) — ZERO coverage today
+- [ ] Palm finger-shape / decode-him (a hook, not a sign) browser entries — charge audit covers their pricing via the API; a browser entry smoke would extend audit-funnels

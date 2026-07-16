@@ -47,7 +47,14 @@ node .claude/skills/v1-funnel-audit/scripts/audit-flow.mjs            # sliding 
 node .claude/skills/v1-funnel-audit/scripts/audit-flow.mjs control    # classic $35 close
 node .claude/skills/v1-funnel-audit/scripts/audit-pixels.mjs         # FB pixel/CAPI fire + dedup
 node .claude/skills/v1-funnel-audit/scripts/audit-palm.mjs           # fb-palm regressions
+node .claude/skills/v1-funnel-audit/scripts/audit-charge.mjs         # price-variant charge correctness (Stripe TEST)
+node .claude/skills/v1-funnel-audit/scripts/audit-funnels.mjs        # per-funnel entry + client funnel/sign threading
 ```
+
+> **`audit-charge.mjs` needs the Stripe TEST key.** It reads `STRIPE_SECRET_KEY` from
+> `.env.sandbox` and refuses to run unless it is an `sk_test_` key. Creating a Checkout Session
+> charges nothing (payment happens only if a human completes the hosted page), so these are
+> throwaway test-mode objects touching no real card. The other scripts need no Stripe access.
 
 Exit code **0** = all checks passed; **1** = one or more checks failed; **2** = driver error / unsafe target.
 
@@ -89,6 +96,45 @@ captured locally.
   `improve-v1/04-fb-palm-derail-PROVEN.md §3` was designed but never shipped, so it reports 🔴 today and
   flips ✅ automatically once the fix lands. (Reuses Joel's `/api/chat` replay.)
 
+## Price-variant charge correctness (`audit-charge.mjs`)
+
+The one guard the `?close=55` copy-preview and the `priceVariantPool.test.ts` unit test can NOT give
+you: it closes the whole **assignment → charge** loop through the real endpoints. For each funnel it
+enrolls a fresh seeker via `POST /api/lead` (which assigns the price variant on the row), then runs
+`POST /api/checkout` for **both** the main and the downsell, retrieves the resulting **Stripe TEST**
+Checkout Session, and asserts the amount Stripe will actually charge equals the price the seeker was
+quoted. That is exactly the invariant the "45-corruption" broke — a mistyped config key nulled the row,
+so `getVariantForEmail` (what checkout reads) silently fell back to $35/$25 while the funnel still
+showed $45, dead for two weeks and invisible to every existing test because none followed a real lead
+through to the Stripe amount.
+
+- For **root · fb · fb2 · gdn · palm/thumb**: every seeker's Stripe **main** and **downsell** charge ==
+  the price the lead was quoted, and `stripe.metadata.priceVariant` == the assigned variant. Sampling
+  several seekers per funnel naturally exercises both A/B arms (e.g. $35 and $45), each checked against
+  its own assignment — so the pass does not depend on which arm was drawn.
+- **THUMB-ONLY scoping guard** (hard check): across a batch of `sign=hand-size` seekers, **none** may draw
+  the thumb-only `55-35_palm` and every charge must stay at the control price. This is the assertion form
+  of the live-log TODO "every `55-35_palm` must carry `sign=thumb`".
+- The `55-35_palm` **$55 full + $35 grace** charges are verified end-to-end against Stripe here — coverage
+  the sliding-close feature's own tests never had.
+
+## Per-funnel entry + client threading (`audit-funnels.mjs`)
+
+`audit-charge` proves the *server* prices each funnel correctly by POSTing the funnel id directly. This
+proves the *other* half: that **entering** a funnel through its real URL makes the **client** derive and
+thread the right funnel (and, for palm, the right sign) — the path→funnel mapping in
+`client/src/lib/funnel.ts` (`currentFunnel`) that every downstream price/attribution decision depends on.
+A wrong prefix match (the `/fb2`-vs-`/fb` trailing-slash class of bug) would misprice a whole funnel and
+no server-side test would ever see it.
+
+It is deliberately **cheap** — it drives only the scripted pre-LLM steps (greeting → name → bucket →
+email). The first `/api/chat` (`reading1`) fires one step later at `DEEPENING_1`, so this run makes
+**zero Anthropic calls**. For each funnel entry (`/chat`, `/fb/chat`, `/fb2/chat`, `/gdn/chat`,
+`/fb-palm/chat?…` for thumb + hand-size) it captures the exact body the client POSTs to `/api/lead` and
+asserts: the chat UI booted, the email step fired `/api/lead`, `body.funnel` == the expected id (root →
+none), `body.sign` == the expected palm sign, and no Meta request escaped. `/api/lead` is captured then
+fulfilled locally — no enrollment, no DB write.
+
 ## Output
 
 `audit-runs/v1-funnel-audit/<arm>/`:
@@ -98,23 +144,43 @@ captured locally.
 
 ## Proven
 
-First green run 2026-07-15 (sliding arm): **11/11 checks passed**, dead air clean, 0 empty bubbles.
-Screenshots confirmed the $55/$35 card and the $35 downsell fork.
-Pixel audit 2026-07-15: **15/15 passed** — PageView, Lead, InitiateCheckout, and Purchase all fired with
-matching pixel↔CAPI event_ids (Lead id matched the independently-computed `lead_<sha256(email)>`); nothing reached Meta.
-Palm audit 2026-07-15: email-lock guard **4/4 passed** (input reverts email→text); identity-persist
-diagnostic correctly flagged the known-open derail (`palmReflect` has palm tokens, reading1/2/crisis have none).
+- **Flow** 2026-07-15 (sliding arm): **11/11 passed**, dead air clean, 0 empty bubbles; screenshots
+  confirmed the $55/$35 card and the $35 downsell fork.
+- **Pixels** 2026-07-15: **15/15 passed** — PageView, Lead, InitiateCheckout, Purchase all fired with
+  matching pixel↔CAPI event_ids (Lead id matched the independent `lead_<sha256(email)>`); nothing reached Meta.
+- **Palm** 2026-07-16: email-lock guard **4/4 passed** (input reverts email→text); identity-persist
+  diagnostic still flags the known-open derail (`palmReflect` has `gathering, mark, three lines`;
+  reading1/2/crisis have NONE — see the relay note below).
+- **Charge** 2026-07-16: **21/21 passed** — across root · fb · fb2 · gdn · palm/thumb every Stripe TEST
+  main + downsell charge equalled the quoted price and matched `metadata.priceVariant` (both A/B arms drawn
+  per funnel, incl. $55 full + $35 grace on thumb); the thumb-only scoping guard held (8/8 hand-size
+  seekers stayed on the $35 control, 0 drew `55-35_palm`).
+- **Funnels** 2026-07-16: **26/26 passed** — every entry URL booted the chat, reached the email step, and
+  the client threaded the correct funnel (root→none, /fb→v1-fb, /fb2→v1-fb2, /gdn→v1-gdn, palm→v1-palm) and
+  sign (thumb, hand-size); zero Anthropic calls.
 
-## Not yet covered (see the V1-audit backlog / task list)
+> ⚠️ **Sandbox setup note (2026-07-16):** the local :5433 DB needed migration `019_main_paid_at.sql`
+> (`ALTER TABLE conversations ADD COLUMN IF NOT EXISTS main_paid_at timestamp;`) applied once — `schema.ts`
+> now references that column, so without it `saveConversation` fails and `/api/lead` assigns no variant.
+> Apply any newer migrations to the sandbox DB the same way if `/api/lead` starts returning a null variant.
 
-- Other funnels: root plain, fb, fb2, fb-palm (thumb / hand-size / finger-shape / decode-him), gdn.
-- fb-palm regressions: ✅ **DONE** (`audit-palm.mjs`) — email-lock is a green guard; identity-persist
-  is a diagnostic surfacing the known-open derail (flips green when the §3 fix ships).
-- **Price-variant charge correctness** (quote AND the amount sent to Stripe match the assigned variant —
-  the "45-corruption" class) — needs a real enrolled session, not the `?close=55` copy preview.
-- FB pixel/CAPI **fire** assertions: ✅ **DONE** — PageView + Lead + InitiateCheckout + Purchase all
-  assert pixel↔CAPI dedup (`audit-pixels.mjs`, 15/15).
-- Reuse for these: `playwright.sliding-close.config.ts`, `playwright.fb-palm-*.config.ts`,
-  `tests/helpers/palm-tracking.ts`. Add cases to `docs/test-ideas.md`.
+## 🔴 Relay to the team (not a skill bug — a live product finding)
+
+The **fb-palm derail is still OPEN as of 2026-07-16**: the palm identity (`gathering, mark, three lines`)
+survives `palmReflect` but is absent from reading1/reading2/crisis. The fix is designed in
+`improve-v1/04-fb-palm-derail-PROVEN.md §3` but was never shipped (`server/lib/prompts.ts` has zero `palm*`
+refs). Small, high-leverage, on the top-traffic funnel. `audit-palm.mjs`'s diagnostic flips ✅ the moment
+the §3 fix lands.
+
+## Coverage status
+
+- Root deep flow (sliding + control) — ✅ `audit-flow.mjs`
+- FB pixel/CAPI fire + dedup (PageView/Lead/IC/Purchase) — ✅ `audit-pixels.mjs`
+- fb-palm regressions (email-lock guard + derail diagnostic) — ✅ `audit-palm.mjs`
+- Price-variant charge correctness + thumb-only scoping (root/fb/fb2/gdn/palm) — ✅ `audit-charge.mjs`
+- Per-funnel entry + client funnel/sign threading (root/fb/fb2/gdn/palm signs) — ✅ `audit-funnels.mjs`
+- Still open: a deep LLM flow-walk per non-root funnel (fb/fb2/gdn share the root chat engine, so entry +
+  charge cover the meaningful deltas; palm's woven flow is covered by `audit-palm`). `/welcome1`→`/welcome2`
+  →`/success` upsell chats remain uncovered (separate state machines; `useUpsell2Chat.ts`). Add to `docs/test-ideas.md`.
 
 Sibling skill: **`v1-funnel-eval`** (LLM reading-quality scoring, mirrors V2 `persona-iterate`).
