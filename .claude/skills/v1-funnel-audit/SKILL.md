@@ -49,12 +49,13 @@ node .claude/skills/v1-funnel-audit/scripts/audit-pixels.mjs         # FB pixel/
 node .claude/skills/v1-funnel-audit/scripts/audit-palm.mjs           # fb-palm regressions
 node .claude/skills/v1-funnel-audit/scripts/audit-charge.mjs         # price-variant charge correctness (Stripe TEST)
 node .claude/skills/v1-funnel-audit/scripts/audit-funnels.mjs        # per-funnel entry + client funnel/sign threading
+node .claude/skills/v1-funnel-audit/scripts/audit-upsells.mjs        # /welcome1 → /welcome2 → /success upsell chats (Stripe TEST)
 ```
 
-> **`audit-charge.mjs` needs the Stripe TEST key.** It reads `STRIPE_SECRET_KEY` from
-> `.env.sandbox` and refuses to run unless it is an `sk_test_` key. Creating a Checkout Session
-> charges nothing (payment happens only if a human completes the hosted page), so these are
-> throwaway test-mode objects touching no real card. The other scripts need no Stripe access.
+> **`audit-charge.mjs` and `audit-upsells.mjs` need the Stripe TEST key.** They read
+> `STRIPE_SECRET_KEY` from `.env.sandbox` and refuse to run unless it is an `sk_test_` key. Creating a
+> Checkout Session charges nothing (payment happens only if a human completes the hosted page), so these
+> are throwaway test-mode objects touching no real card. The other scripts need no Stripe access.
 
 Exit code **0** = all checks passed; **1** = one or more checks failed; **2** = driver error / unsafe target.
 
@@ -135,6 +136,29 @@ asserts: the chat UI booted, the email step fired `/api/lead`, `body.funnel` == 
 none), `body.sign` == the expected palm sign, and no Meta request escaped. `/api/lead` is captured then
 fulfilled locally — no enrollment, no DB write.
 
+## Upsell chats (`audit-upsells.mjs`) — `/welcome1` → `/welcome2` → `/success`
+
+The last uncovered V1 surface: the post-purchase upsell chats, each a separate state machine
+(`useUpsellChat` / `useUpsell2Chat`) with server-owned 1-click off-session pricing, a Path-A/Path-B split,
+and a $30 downsell. Two complementary layers:
+
+- **PART 1 — charge correctness (Stripe TEST).** The real 1-click charge reuses the buyer's saved card
+  (`off_session`), which the sandbox has no way to stand up — so the audit asserts the **same server-owned
+  price through the FALLBACK Checkout** (the path the client takes whenever 1-click can't run): it creates
+  the fallback session for real, retrieves it from Stripe TEST, and asserts the amount == the price the
+  buyer was **quoted**. Upsell-1 is proven end-to-end (lead → checkout → `/api/upsell/user-data` quote →
+  fallback charge) across root/fb/palm (both U1 price arms drawn: $47 and $37); Upsell-2 is the
+  server-hardcoded **$47 full / $30 downsell**. Every endpoint is sent a **bogus client `amount`** and the
+  audit proves it is ignored (Zod strips it — pricing is fully server-authoritative, like `/api/checkout`).
+- **PART 2–3 — flow health (browser).** Drives the real U1 and U2 chats and asserts: the offer renders at
+  the right price ($47), both CTAs work, **U2's 1st decline → $30 downsell** (2nd decline → declined), the
+  1-click charge POST carries **no client amount** (U2 with `type=downsell`), **Path A** (bought U1) skips
+  the shipping form while **Path B** collects it, and each stage hands off to the next page
+  (`/welcome1`→`/welcome2`→`/success`). The charge endpoints and the U2 `/api/upsell2/reading` LLM call are
+  **mocked** (charge is proven authoritatively in PART 1; mocking the reading keeps the run free of
+  Anthropic calls). Meta is blocked. The scripted typing delays (1–5 s/msg) are fast-forwarded by clamping
+  `setTimeout` in the browser — the question gates still gate (they wait on a click, not a timer).
+
 ## Output
 
 `audit-runs/v1-funnel-audit/<arm>/`:
@@ -158,6 +182,11 @@ fulfilled locally — no enrollment, no DB write.
 - **Funnels** 2026-07-16: **26/26 passed** — every entry URL booted the chat, reached the email step, and
   the client threaded the correct funnel (root→none, /fb→v1-fb, /fb2→v1-fb2, /gdn→v1-gdn, palm→v1-palm) and
   sign (thumb, hand-size); zero Anthropic calls.
+- **Upsells** 2026-07-16: **35/35 passed** — U1 fallback charge == the quoted upsell-1 price across
+  root/fb/palm (both arms: $47 and $37), U2 $47 full / $30 downsell; every endpoint ignored a bogus client
+  `amount`. Browser: U1 + U2 chats driven end-to-end — offer $47, U2 1st-decline → $30 downsell (2nd →
+  declined), 1-click charge carries no client amount, Path A skips shipping / Path B collects it, and each
+  page hands off to the next (`/welcome1`→`/welcome2`→`/success`). Screenshots confirmed the offers + downsell.
 
 > ⚠️ **Sandbox setup note (2026-07-16):** the local :5433 DB needed migration `019_main_paid_at.sql`
 > (`ALTER TABLE conversations ADD COLUMN IF NOT EXISTS main_paid_at timestamp;`) applied once — `schema.ts`
@@ -179,8 +208,10 @@ the §3 fix lands.
 - fb-palm regressions (email-lock guard + derail diagnostic) — ✅ `audit-palm.mjs`
 - Price-variant charge correctness + thumb-only scoping (root/fb/fb2/gdn/palm) — ✅ `audit-charge.mjs`
 - Per-funnel entry + client funnel/sign threading (root/fb/fb2/gdn/palm signs) — ✅ `audit-funnels.mjs`
+- Upsell chats `/welcome1`→`/welcome2`→`/success` (charge correctness + U1/U2 flow, Path A/B, $30 downsell) — ✅ `audit-upsells.mjs`
 - Still open: a deep LLM flow-walk per non-root funnel (fb/fb2/gdn share the root chat engine, so entry +
-  charge cover the meaningful deltas; palm's woven flow is covered by `audit-palm`). `/welcome1`→`/welcome2`
-  →`/success` upsell chats remain uncovered (separate state machines; `useUpsell2Chat.ts`). Add to `docs/test-ideas.md`.
+  charge cover the meaningful deltas; palm's woven flow is covered by `audit-palm`). The `/success` page's
+  own order-summary + Luna cross-sell handoff is only touched incidentally (the upsell audit asserts the
+  hand-off *to* `/success`, not its contents).
 
 Sibling skill: **`v1-funnel-eval`** (LLM reading-quality scoring, mirrors V2 `persona-iterate`).
