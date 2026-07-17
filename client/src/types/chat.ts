@@ -80,6 +80,12 @@ export interface UserData {
   // userData so the server prompt builders + client pitch branch on the same arm.
   // Undefined ⇒ control (byte-identical). See improve-v1/09.
   promptVariant?: 'control' | 'woven'
+  // fb-palm identity carry (derail fix — improve-v1/04-fb-palm-derail-PROVEN.md).
+  // Set at palm name-capture from the tapped sign/option; honored by the shared
+  // reading/crisis prompt builders. ONLY palm traffic sets these — every other
+  // funnel leaves them undefined, so those prompts stay byte-identical.
+  palmReading?: string
+  palmMark?: string
 }
 
 export interface ShippingAddress {
