@@ -469,16 +469,32 @@ export function useConversation() {
       updateUserData({ concern })
       updateState({ inputEnabled: false })
 
-      const response = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'reading1',
-          userData: { ...currentChat.userData, concern },
-          input: concern,
-        }),
-      })
-      const { messages, needsClarification, subBucket } = await response.json()
+      let messages: string[] = []
+      let needsClarification = false
+      let subBucket: string | undefined
+      try {
+        const response = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'reading1',
+            userData: { ...currentChat.userData, concern },
+            input: concern,
+          }),
+        })
+        if (!response.ok) throw new Error(`reading1 HTTP ${response.status}`)
+        const data = await response.json()
+        messages = Array.isArray(data?.messages) ? data.messages : []
+        needsClarification = !!data?.needsClarification
+        subBucket = data?.subBucket
+      } catch (e) {
+        // Never freeze the seeker mid-reading: recover to DEEPENING_1 so their next
+        // message retries this beat instead of a dead input (freeze class, 2026-07-17).
+        console.error('reading1 failed — recovering:', e)
+        await sendBotMessages(["Forgive me, dear — the connection wavered for a breath. Tell me once more what's weighing on you?"])
+        updateState({ state: 'DEEPENING_1', inputEnabled: true, inputPlaceholder: "Share what's in your heart...", inputType: 'text' })
+        return
+      }
 
       if (subBucket) {
         updateUserData({ subBucket })
@@ -874,16 +890,28 @@ export function useConversation() {
     updateState({ inputEnabled: false })
 
     // Call Claude API for READING_2
-    const response = await fetch('/api/chat', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        action: 'reading2',
-        userData: { ...currentChat.userData, deeperResponse: sanitized },
-        input: sanitized,
-      }),
-    })
-    const { messages } = await response.json()
+    let messages: string[] = []
+    try {
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'reading2',
+          userData: { ...currentChat.userData, deeperResponse: sanitized },
+          input: sanitized,
+        }),
+      })
+      if (!response.ok) throw new Error(`reading2 HTTP ${response.status}`)
+      const data = await response.json()
+      messages = Array.isArray(data?.messages) ? data.messages : []
+    } catch (e) {
+      // Never freeze mid-reading: re-enable input in place so the next message
+      // retries this beat (freeze class, 2026-07-17).
+      console.error('reading2 failed — recovering:', e)
+      await sendBotMessages(["Forgive me, dear — the connection wavered for a breath. Say that once more?"])
+      updateState({ inputEnabled: true })
+      return
+    }
     await sendBotMessages(messages)
 
     // Reading ends with future pacing question
@@ -940,16 +968,28 @@ export function useConversation() {
     updateState({ inputEnabled: false })
 
     // Call Claude API for future validation
-    const response = await fetch('/api/chat', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        action: 'futureValidation',
-        userData: { ...currentChat.userData, desires: sanitized },
-        input: sanitized,
-      }),
-    })
-    const { messages } = await response.json()
+    let messages: string[] = []
+    try {
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'futureValidation',
+          userData: { ...currentChat.userData, desires: sanitized },
+          input: sanitized,
+        }),
+      })
+      if (!response.ok) throw new Error(`futureValidation HTTP ${response.status}`)
+      const data = await response.json()
+      messages = Array.isArray(data?.messages) ? data.messages : []
+    } catch (e) {
+      // Never freeze mid-reading: re-enable input in place so the next message
+      // retries this beat (freeze class, 2026-07-17).
+      console.error('futureValidation failed — recovering:', e)
+      await sendBotMessages(["Forgive me, dear — the connection wavered for a breath. Tell me again?"])
+      updateState({ inputEnabled: true })
+      return
+    }
     await sendBotMessages(messages)
 
     // Validation ends with emotional question
@@ -1012,16 +1052,28 @@ export function useConversation() {
     updateState({ inputEnabled: false })
 
     // Call Claude API for crisis reveal
-    const response = await fetch('/api/chat', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        action: 'crisisReveal',
-        userData: { ...currentChat.userData, emotionalResponse: sanitized },
-        input: sanitized,
-      }),
-    })
-    const { messages } = await response.json()
+    let messages: string[] = []
+    try {
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'crisisReveal',
+          userData: { ...currentChat.userData, emotionalResponse: sanitized },
+          input: sanitized,
+        }),
+      })
+      if (!response.ok) throw new Error(`crisisReveal HTTP ${response.status}`)
+      const data = await response.json()
+      messages = Array.isArray(data?.messages) ? data.messages : []
+    } catch (e) {
+      // Never freeze mid-reading: re-enable input in place so the next message
+      // retries this beat (freeze class, 2026-07-17).
+      console.error('crisisReveal failed — recovering:', e)
+      await sendBotMessages(["Forgive me, dear — the connection wavered for a breath. Tell me again?"])
+      updateState({ inputEnabled: true })
+      return
+    }
     await sendBotMessages(messages)
 
     // Crisis reveal ends with question about source
@@ -1482,18 +1534,28 @@ export function useConversation() {
       "Now that you've opened this door, I can see it more clearly...",
     ])
 
-    // Step 2: Call Claude API to summarize the SPECIFIC shadow we detected
-    const shadowResponse = await fetch('/api/chat', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        action: 'shadowSummary',
-        userData: chat.userData,
-        input: '',
-      }),
-    })
-    const shadowResult = await shadowResponse.json()
-    await sendBotMessages(shadowResult.messages)
+    // Step 2: Call Claude API to summarize the SPECIFIC shadow we detected.
+    // Best-effort: a transient failure here must not trap the seeker before the
+    // offer — skip the personalized shadow line and continue to the pitch + CTA.
+    try {
+      const shadowResponse = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'shadowSummary',
+          userData: chat.userData,
+          input: '',
+        }),
+      })
+      if (shadowResponse.ok) {
+        const shadowResult = await shadowResponse.json()
+        if (Array.isArray(shadowResult?.messages) && shadowResult.messages.length) {
+          await sendBotMessages(shadowResult.messages)
+        }
+      }
+    } catch (e) {
+      console.error('shadowSummary failed — continuing to the offer:', e)
+    }
 
     // Step 3: Explain the ritual with SENSORY SPECIFICITY.
     // V1 prompt A/B ('woven' arm, v1_clearing_theme_palm_2026): NAME the Energy
@@ -1541,19 +1603,31 @@ export function useConversation() {
       `I've done this work for hundreds of seekers, ${firstName}. Most feel a shift within the first week.`,
     ])
 
-    // Step 6: Call Claude API for personalized mystical close (references their specific vision)
-    const closeResponse = await fetch('/api/chat', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        action: 'valueExplain',
-        userData: chat.userData,
-        input: '',
-      }),
-    })
-    const closeResult = await closeResponse.json()
-    await sendBotMessages(closeResult.messages)
+    // Step 6: Call Claude API for personalized mystical close (references their
+    // specific vision). Best-effort: if this call stalls or errors we STILL run the
+    // updateState below, so a transient hiccup can never trap a ready buyer at the
+    // close with no way to pay (freeze reproduced live 2026-07-17, sliding arm).
+    try {
+      const closeResponse = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'valueExplain',
+          userData: chat.userData,
+          input: '',
+        }),
+      })
+      if (closeResponse.ok) {
+        const closeResult = await closeResponse.json()
+        if (Array.isArray(closeResult?.messages) && closeResult.messages.length) {
+          await sendBotMessages(closeResult.messages)
+        }
+      }
+    } catch (e) {
+      console.error('valueExplain close failed — showing the purchase CTA anyway:', e)
+    }
 
+    // Always reached — even if the calls above failed — so the pay buttons render.
     updateState({
       state: 'PITCH',
       showPurchaseCTA: true,
