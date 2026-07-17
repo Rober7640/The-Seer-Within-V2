@@ -155,6 +155,75 @@ function testCrisisDetection() {
 }
 
 // ============================================================
+// Crisis denials + fatalistic phrasings (2026-07-14 audit fixes)
+// ============================================================
+
+function assertSoftCrisis(result: SafetyCheckResult, testName: string) {
+  assert(result.safe === true, `${testName} -> should stay safe (soft)`);
+  assert(result.violationType === 'crisis', `${testName} -> violationType should be 'crisis'`);
+  assert(!!result.softCrisisNote, `${testName} -> should carry the soft crisis note`);
+  assert(result.response === null, `${testName} -> hard response should be null`);
+}
+
+function testCrisisDenialsAndFatalism() {
+  console.log('\n--- Crisis Denials & Fatalistic Phrasings (2026-07-14 audit) ---');
+
+  // Explicit denials -> soft note, NOT the hard 988 template. The audit's false
+  // positive: the template fired on a user shouting that he was NOT going to hurt
+  // himself, replaced the reading he had paid for, and then fired again on replay.
+  const deniedMessages = [
+    "I'm not going to hurt myself, I'M TELLING U NO, I KNOW WHAT I'M DOING",
+    'I am not gonna hurt myself ok',
+    'I would never kill myself',
+    "don't worry, I won't kill myself",
+    "I'm not suicidal, stop sending me that number",
+    'I have no plans to hurt myself',
+    "I don't want to kill myself, but the thoughts keep coming",
+  ];
+  for (const msg of deniedMessages) {
+    assertSoftCrisis(checkUniversalSafety(msg), `Denied crisis (soft): "${msg}"`);
+  }
+
+  // A negation word earlier in the message must NOT defuse a real statement of intent.
+  const stillHardMessages = [
+    'she said no. I want to kill myself',
+    'no one cares. I want to end it all',
+    "I'm not okay, I want to kill myself",
+    'they never listen, I want to hurt myself',
+  ];
+  for (const msg of stillHardMessages) {
+    const result = checkUniversalSafety(msg);
+    assertUnsafe(result, 'crisis', `Denial word elsewhere, still hard: "${msg}"`);
+    assert(
+      result.response!.includes('988'),
+      `Still-hard crisis response for "${msg}" includes 988 hotline`,
+    );
+  }
+
+  // Fatalistic death statements without explicit intent -> soft note. The audit's
+  // miss: "No I will be dead sooner if I keep this up" got no resources at all.
+  const fatalisticMessages = [
+    'No I will be dead sooner if I keep this up',
+    "at this rate I'll be dead soon",
+    "I'd rather be dead",
+    'honestly I would rather die than face him',
+    "I won't be here much longer",
+  ];
+  for (const msg of fatalisticMessages) {
+    assertSoftCrisis(checkUniversalSafety(msg), `Fatalistic (soft): "${msg}"`);
+  }
+
+  // Everyday hyperbole must stay clean — no note, no template.
+  const hyperboleMessages = [
+    'my feet are killing me after that shift',
+    'I nearly died laughing at that',
+  ];
+  for (const msg of hyperboleMessages) {
+    assertSafe(checkUniversalSafety(msg), `Hyperbole stays clean: "${msg}"`);
+  }
+}
+
+// ============================================================
 // Inappropriate content tests
 // ============================================================
 
@@ -597,6 +666,7 @@ function testMinorDetection() {
 console.log('=== Universal Safety Module - Unit Tests ===');
 
 testCrisisDetection();
+testCrisisDenialsAndFatalism();
 testNonEnglish();
 testInappropriateContent();
 testPromptInjection();

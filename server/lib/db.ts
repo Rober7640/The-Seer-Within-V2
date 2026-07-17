@@ -1,7 +1,7 @@
 import { drizzle } from "drizzle-orm/node-postgres";
 import pg from "pg";
 import { conversations, type Conversation, type InsertConversation } from "@shared/schema";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, and, isNull } from "drizzle-orm";
 import logger from "./logger";
 import { activeStripeAccountTag } from "./stripeAccount";
 
@@ -270,6 +270,32 @@ export async function markUpsellOffered(sessionId: string): Promise<void> {
       .where(eq(conversations.stripeSessionId, sessionId));
   } catch (error) {
     logger.error("Database upsell offered update error:", error);
+  }
+}
+
+// Stamp the browser-independent "front-end payment actually completed" signal
+// from the Stripe checkout.session.completed webhook. Matched by the checkout
+// session id that /api/checkout saved on the row (updateStripeData) BEFORE
+// payment, so it lands even when the buyer never loads /welcome1 (the case the
+// legacy upsell_offered signal misses). Idempotent: the `main_paid_at IS NULL`
+// guard makes Stripe's webhook retries no-ops. Reporting-only — nothing in the
+// funnel / checkout / pricing / variant-assignment reads this column.
+export async function markMainPaid(sessionId: string): Promise<void> {
+  try {
+    await db
+      .update(conversations)
+      .set({
+        mainPaidAt: new Date(),
+        updatedAt: new Date(),
+      })
+      .where(
+        and(
+          eq(conversations.stripeSessionId, sessionId),
+          isNull(conversations.mainPaidAt),
+        ),
+      );
+  } catch (error) {
+    logger.error("Database markMainPaid update error:", error);
   }
 }
 
