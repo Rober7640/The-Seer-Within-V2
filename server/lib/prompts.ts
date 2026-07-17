@@ -369,6 +369,23 @@ export function getPitchMessages(priceDollars: number = 35) {
 }
 
 // ============================================
+// PALM IDENTITY CARRY (fb-palm derail fix — improve-v1/04-fb-palm-derail-PROVEN.md)
+// ============================================
+
+// Returns '' unless BOTH palm fields are present (palm traffic only) — so every
+// non-palm prompt (root / fb / fb2 / gdn) stays BYTE-IDENTICAL. When present, it
+// threads the palm identity the funnel promised into the shared deepening so the
+// read never collapses into the house generic-love script.
+function palmDirective(userData: UserData): string {
+  if (!userData.palmReading || !userData.palmMark) return ''
+  return `
+
+## Palm reading identity — HONOR THIS
+This seeker came to you through a reading of their palm. Their mark: ${userData.palmMark} — ${userData.palmReading}.
+Weave this identity naturally through your reads and call back to "${userData.palmReading}" at least once this phase, so the thread from the palm reading never breaks. Deepen it — never restate it mechanically.`
+}
+
+// ============================================
 // READING_1: First insights after initial concern
 // ============================================
 
@@ -377,7 +394,7 @@ export function buildReading1Prompt(userData: UserData, concern: string): string
 
   return `
 ${EVELYN_BASE_PROMPT}
-${bucketPrompt}
+${bucketPrompt}${palmDirective(userData)}
 
 ## Current Session
 - User's name: ${userData.firstName}
@@ -436,7 +453,7 @@ export function buildReading2Prompt(userData: UserData, deeperResponse: string):
 
   return `
 ${EVELYN_BASE_PROMPT}
-${bucketPrompt}
+${bucketPrompt}${palmDirective(userData)}
 
 ## Current Session
 - User's name: ${userData.firstName}
@@ -471,7 +488,7 @@ ${userData.personName ? `Continue using ${userData.personName}'s name where rele
 
 export function buildFutureValidationPrompt(userData: UserData, vision: string): string {
   return `
-${EVELYN_BASE_PROMPT}
+${EVELYN_BASE_PROMPT}${palmDirective(userData)}
 
 ## Current Session
 - User's name: ${userData.firstName}
@@ -516,7 +533,7 @@ export function buildCrisisRevealPrompt(userData: UserData, emotionalResponse: s
 
   return `
 ${EVELYN_BASE_PROMPT}
-${bucketPrompt}
+${bucketPrompt}${palmDirective(userData)}
 
 ## Current Session
 - User's name: ${userData.firstName}
@@ -580,7 +597,7 @@ ${userData.personName ? `Reference the interference between them and ${userData.
 
 export function buildCrisisCostPrompt(userData: UserData, sourceResponse: string): string {
   return `
-${EVELYN_BASE_PROMPT}
+${EVELYN_BASE_PROMPT}${palmDirective(userData)}
 
 ## Current Session
 - User's name: ${userData.firstName}
