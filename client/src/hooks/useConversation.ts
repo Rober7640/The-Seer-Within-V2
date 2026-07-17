@@ -5,7 +5,7 @@ import type { ChatState, Message, Bucket, UserData } from '@/types/chat'
 import { BUCKET_LABELS } from '@/types/chat'
 import { calculateTypingDelay, sleep, generateId } from '@/lib/typing'
 import { getGeoData, getTimeMessage } from '@/lib/geolocation'
-import { parsePalmParams, greetingA, openerB, openerCStart, palmReflectFallback, hookToBucket } from '@/content/palmReads'
+import { parsePalmParams, greetingA, openerB, openerCStart, palmReflectFallback, hookToBucket, SIGNS } from '@/content/palmReads'
 import {
   detectIntent,
   sanitizeInput,
@@ -519,7 +519,15 @@ export function useConversation() {
     const palm = parsePalmParams(window.location.search)
     if (palm) {
       const bucket = hookToBucket(palm.hook)
-      updateUserData({ bucket })
+      // fb-palm derail fix (improve-v1/04-fb-palm-derail-PROVEN.md): carry the palm
+      // identity into userData so the shared reading/crisis builders honor it instead
+      // of dropping to the generic love script. Palm-only ⇒ no impact on other funnels.
+      const palmCfg = SIGNS[palm.sign]
+      updateUserData({
+        bucket,
+        palmReading: palmCfg.reading[palm.thumb],
+        palmMark: palmCfg.mark[palm.thumb],
+      })
 
       await sendBotMessages([
         `It's lovely to meet you, ${capitalized}.`,

@@ -14,6 +14,7 @@ import 'dotenv/config';
 import Anthropic from '@anthropic-ai/sdk';
 import { writeFileSync, mkdirSync } from 'node:fs';
 import {
+  buildReading1Prompt,
   buildReading2Prompt,
   buildCrisisRevealPrompt,
   buildValueExplainPrompt,
@@ -35,6 +36,13 @@ const ud: UserData = {
   concern: "I'm 34 and all my friends are married with kids. I feel like I already missed my one chance at real love.",
 } as UserData;
 
+// Same seeker, but carrying the palm identity the derail fix persists into userData.
+const palmUd: UserData = {
+  ...ud,
+  palmReading: 'the gathering heart',
+  palmMark: 'a trident, three lines rising to one',
+} as UserData;
+
 interface EvalCase {
   id: string;
   phase: string;
@@ -43,6 +51,8 @@ interface EvalCase {
   rubric: string[];
   currentBlock?: string;   // present ⇒ before/after A/B; absent ⇒ baseline-only scoring
   improvedBlock?: string;
+  improvedPrompt?: string; // alternative to block-swap: a full candidate prompt (e.g. a
+                           // different userData) — used when the change is data-driven, not text.
 }
 
 const DEEPER = "Yes... I've been on so many dates but nothing ever becomes something real.";
@@ -110,6 +120,18 @@ const CASES: EvalCase[] = [
       'Does not fabricate facts the seeker never gave, and does not misquote a price.',
     ],
   },
+  {
+    id: 'palm-identity',
+    phase: 'Reading 1 — fb-palm derail fix (identity carry)',
+    input: ud.concern!,
+    prompt: buildReading1Prompt(ud, ud.concern!),             // pre-fix: identity NOT carried → generic love read
+    improvedPrompt: buildReading1Prompt(palmUd, ud.concern!), // post-fix: palm identity carried into the builder
+    rubric: [
+      'The reading calls back to the seeker\'s palm identity — their archetype/mark ("the gathering heart", a trident / three lines rising to one) — not just generic love language.',
+      'It ties the read to that specific palm image, so it could NOT be swapped verbatim onto a non-palm visitor.',
+      'It reflects feelings/patterns only — it does NOT invent dated biographical facts (names, dates, jobs) the seeker never gave.',
+    ],
+  },
 ];
 
 async function generate(prompt: string): Promise<string[]> {
@@ -174,15 +196,21 @@ async function main() {
   let improvedWins = 0, beforeAfter = 0;
   for (const c of cases) {
     const cur = await scoreArm(c, c.prompt);
-    if (c.currentBlock && c.improvedBlock) {
-      // before/after A/B on a candidate prompt change
-      if (!c.prompt.includes(c.currentBlock)) {
-        console.log(`🔴 ${c.id}: current block not found verbatim (prompt drifted) — candidate skipped.`);
-        rows.push(`| ${c.id} | ${cur.quality}/5 (${cur.pass}/${cur.total}) | — | ⚠️ prompt drift |`);
-        continue;
+    if (c.improvedPrompt || (c.currentBlock && c.improvedBlock)) {
+      // before/after A/B — either a full candidate prompt (improvedPrompt) or a text block-swap
+      let improvedPromptStr: string;
+      if (c.improvedPrompt) {
+        improvedPromptStr = c.improvedPrompt;
+      } else {
+        if (!c.prompt.includes(c.currentBlock!)) {
+          console.log(`🔴 ${c.id}: current block not found verbatim (prompt drifted) — candidate skipped.`);
+          rows.push(`| ${c.id} | ${cur.quality}/5 (${cur.pass}/${cur.total}) | — | ⚠️ prompt drift |`);
+          continue;
+        }
+        improvedPromptStr = c.prompt.replace(c.currentBlock!, c.improvedBlock!);
       }
       beforeAfter++;
-      const imp = await scoreArm(c, c.prompt.replace(c.currentBlock, c.improvedBlock));
+      const imp = await scoreArm(c, improvedPromptStr);
       const better = imp.quality > cur.quality + 0.25;
       if (better) improvedWins++;
       const verdict = better ? '✅ IMPROVED better' : imp.quality < cur.quality - 0.25 ? '🔴 IMPROVED worse' : '➖ no clear diff';

@@ -114,7 +114,12 @@ async function derailDiagnostic() {
   try {
     const firstName = 'Sarah';
     const concern = "I'm 34 and every friend I have is married with kids. I keep feeling like I already missed my one chance and I'm going to end up alone.";
-    const userData = { firstName, bucket: 'love', concern };
+    // Post-fix contract (04-fb-palm-derail-PROVEN.md §3): the client now persists the palm
+    // identity into userData at name-capture and re-sends it on every /api/chat call. Send it
+    // here so the diagnostic tests whether the SERVER builders honor it through the deepening.
+    // (thumb / option a → "the gathering heart" / "a trident, three lines rising to one".)
+    const userData = { firstName, bucket: 'love', concern,
+      palmReading: 'the gathering heart', palmMark: 'a trident, three lines rising to one' };
     const reflect = await chat({ action: 'palmReflect', palmSign: 'thumb', palmHook: 'soulmate-timing', palmThumb: 'a', input: concern, userData });
     const reading1 = await chat({ action: 'reading1', userData, input: concern });
     if (reading1.subBucket) userData.subBucket = reading1.subBucket;

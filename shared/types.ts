@@ -52,6 +52,14 @@ export interface UserData {
   // server prompt builders and the client pitch branch on the same arm.
   // Absent/undefined ⇒ control (byte-identical to today).
   promptVariant?: 'control' | 'woven'
+  // fb-palm identity carry (fix for the derail in improve-v1/04-fb-palm-derail-PROVEN.md).
+  // Persisted client-side at palm name-capture from the tapped sign/option, then honored
+  // by the shared reading/crisis prompt builders. ONLY set for palm traffic — every other
+  // funnel leaves these undefined, so the builders' palm block is skipped and their prompts
+  // stay byte-identical. palmReading = the archetype (e.g. "the gathering heart"); palmMark =
+  // the physical tell (e.g. "a trident, three lines rising to one").
+  palmReading?: string
+  palmMark?: string
 }
 
 // Sliding-scale close ("$55 anchor / $35 grace") — price variants whose id
