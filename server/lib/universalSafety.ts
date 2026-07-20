@@ -214,16 +214,38 @@ function scanCrisis(text: string): 'hard' | 'denied' | 'none' {
 }
 
 // Inappropriate/sexual content
+//
+// Every pattern here must be DIRECTED \u2014 the user propositioning the persona or
+// demanding sexual content from her. Merely *mentioning* a sexual subject is not
+// a violation: clients disclose sexual histories, partners' porn addictions and
+// assault as part of a reading, and those must reach the persona so she can hold
+// them with care.
+//
+// 2026-07-20 audit: a bare keyword list (`horny|cum|blowjob|handjob|masturbat\w*|porn`)
+// with no targeting requirement terminated a $99.99 buyer's session because she
+// described a Gustav Klimt painting she had sent to a man. She never returned.
+// The same bare list silently blocked disclosures like "his porn addiction is
+// destroying our marriage". Keep every entry below scoped to a second-person
+// target or an imperative aimed at the persona.
 const INAPPROPRIATE_PATTERNS: RegExp[] = [
   /\bhave\s+sex\s+with\s+(?:you|me|us)\b/i,
   /\b(?:sex|naked|nude)\s+(?:you|me|us)\b/i,
   /\byou[\u2019']?re\s+(?:so\s+)?(?:hot|sexy)\b/i,
-  /\b(?:horny|cum|blowjob|handjob|masturbat\w*|porn)\b/i,
   /\bsexual\s+(?:fantasy|favou?r|pleasure)\b/i,
   /\bsend\s+(?:me\s+)?(?:nudes|pics)\b/i,
   /\bstrip\s+for\s+me\b/i,
   /\bwhat\s+are\s+you\s+wearing\b/i,
   /\bfuck\s+(?:me|us)\b/i,
+  // Bare sexual terms \u2014 only when aimed at the persona, never when described.
+  // First-person arousal stated *in session* is still a proposition opener;
+  // "his porn addiction" or "a painting of a woman masturbating" is not.
+  /\bi(?:[\u2019']m|\s+am)\s+(?:so\s+|really\s+|super\s+)?horny\b/i,
+  /\b(?:are|r)\s+(?:you|u)\s+(?:so\s+|feeling\s+)?horny\b/i,
+  /\b(?:do|did|does|have|has)\s+(?:you|u)\s+(?:ever\s+)?(?:masturbat\w*|watch\s+porn)\b/i,
+  /\b(?:horny|masturbat\w*|cum(?:ming|min)?)\s+(?:with|for|to|over|thinking\s+(?:of|about))\s+(?:you|u|me|us)\b/i,
+  /\b(?:you|u)\s+make\s+me\s+(?:horny|wet|hard|cum)\b/i,
+  /\b(?:give|send|want)\s+(?:me\s+)?(?:a\s+)?(?:blowjob|handjob)\b/i,
+  /\blet[\u2019']?s\s+(?:watch\s+porn|masturbat\w*|cum)\b/i,
 ];
 
 // Prompt injection attempts
