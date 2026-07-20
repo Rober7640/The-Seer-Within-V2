@@ -246,6 +246,23 @@ const INAPPROPRIATE_PATTERNS: RegExp[] = [
   /\b(?:you|u)\s+make\s+me\s+(?:horny|wet|hard|cum)\b/i,
   /\b(?:give|send|want)\s+(?:me\s+)?(?:a\s+)?(?:blowjob|handjob)\b/i,
   /\blet[\u2019']?s\s+(?:watch\s+porn|masturbat\w*|cum)\b/i,
+  // Stating current arousal in session \u2014 same class as "I am so horny".
+  /\bi(?:[\u2019']m|\s+am)\s+(?:currently\s+)?masturbating\b/i,
+  // "send me porn" \u2014 anchored to imperative position ONLY. Matching it anywhere
+  // would block the far more likely disclosure ("he keeps trying to send me porn").
+  /(?:^|[.!?]\s*)(?:send|show)\s+me\s+(?:some\s+)?porn\b/i,
+  /\b(?:can|will|would|could)\s+(?:you|u)\s+(?:send|show)\s+me\s+(?:some\s+)?porn\b/i,
+  // "watch porn with you/me" \u2014 "...with him/her" stays a disclosure and passes.
+  /\bwatch\s+porn\s+with\s+(?:you|u|me)\b/i,
+  // cum, directed at the persona as spectacle or permission
+  /\b(?:wanna|want\s+to|can\s+i|let\s+me)\s+(?:see\s+me\s+|watch\s+me\s+)?cum\b/i,
+  /\b(?:see|watch)\s+me\s+cum\b/i,
+  // Reversed word order: "thinking about you while masturbating"
+  /\b(?:think\w*|fantasiz\w*|dream\w*)\s+(?:about|of)\s+(?:you|u)\b[^.!?]{0,40}\b(?:masturbat\w*|cum(?:ming)?|horny|touch\w*\s+myself)\b/i,
+  /\b(?:masturbat\w*|cum(?:ming)?|touch\w*\s+myself)\b[^.!?]{0,40}\b(?:think\w*|fantasiz\w*)\s+(?:about|of)\s+(?:you|u)\b/i,
+  // Pre-existing holes in the same class (never covered by the old keyword list)
+  /\btalk\s+dirty\s+to\s+me\b/i,
+  /\bdescribe\s+(?:your|ur)\s+(?:body|breasts|boobs|tits)\b/i,
 ];
 
 // Prompt injection attempts
