@@ -36,7 +36,10 @@ import {
   geocodeCity,
   calculateNatalChart,
   calculateTransits,
+  calculateForwardTransits,
   formatChartForPrompt,
+  formatForwardTransitsForPrompt,
+  type NatalChart,
 } from './astrologyEngine';
 import { calculateNumerologyProfile, formatNumerologyProfileForPrompt } from './numerologyEngine';
 import { sanitizePredictions } from './predictionSanitizer';
@@ -73,6 +76,7 @@ interface BirthDataCollectionState {
   cityAttempts: number;
   collectedDate?: string; // YYYY-MM-DD (converted from user input)
   collectedTime?: string; // HH:MM 24hr (converted from user input)
+  collectedCity?: string; // birth city (as given; geocoded at chart time)
 }
 
 const birthDataStates = new Map<string, BirthDataCollectionState>();
@@ -88,21 +92,51 @@ function checkRequiresBirthData(personaConfig: PersonaConfig): boolean {
   }
 }
 
-/**
- * Validate a birth date in MM/DD/YYYY format.
- * Returns YYYY-MM-DD on success, null on failure.
- */
-function parseBirthDate(input: string): string | null {
-  const trimmed = input.trim();
-  const m = trimmed.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
-  if (!m) return null;
-  const month = parseInt(m[1], 10);
-  const day   = parseInt(m[2], 10);
-  const year  = parseInt(m[3], 10);
+const MONTH_NAMES: Record<string, number> = {
+  jan: 1, feb: 2, mar: 3, apr: 4, may: 5, jun: 6,
+  jul: 7, aug: 8, sep: 9, sept: 9, oct: 10, nov: 11, dec: 12,
+};
+
+function buildDate(year: number, month: number, day: number): string | null {
   if (month < 1 || month > 12) return null;
   if (day < 1 || day > 31) return null;
   if (year < 1900 || year > new Date().getFullYear()) return null;
-  return `${m[3]}-${m[1].padStart(2, '0')}-${m[2].padStart(2, '0')}`;
+  return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+}
+
+const MONTH_RE = '(jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:t|tember)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)';
+function monthNum(name: string): number {
+  return MONTH_NAMES[name.slice(0, name.startsWith('sept') ? 4 : 3)];
+}
+
+/**
+ * Extract a birth date from free text — numeric (MM/DD/YYYY, YYYY-MM-DD) OR natural
+ * language ("June 15 1990", "15 June 1990", "born June 15th, 1990 in Chicago").
+ * Scans ANYWHERE in the message (not anchored) so a date embedded in a sentence —
+ * the normal case — is caught instead of being re-asked for. Returns YYYY-MM-DD or
+ * null. This is what removes the intake-tax where the persona keeps re-asking.
+ */
+function parseBirthDate(input: string): string | null {
+  // Normalize: lowercase, strip ordinal suffixes, commas → spaces
+  const norm = input.toLowerCase().replace(/(\d+)(st|nd|rd|th)\b/g, '$1').replace(/,/g, ' ');
+
+  // ISO YYYY-MM-DD anywhere
+  let m = norm.match(/\b(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})\b/);
+  if (m) { const d = buildDate(+m[1], +m[2], +m[3]); if (d) return d; }
+
+  // Numeric M/D/YYYY anywhere (US convention — month first)
+  m = norm.match(/\b(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})\b/);
+  if (m) { const d = buildDate(+m[3], +m[1], +m[2]); if (d) return d; }
+
+  // "Month Day Year" anywhere — e.g. june 15 1990
+  m = norm.match(new RegExp(`\\b${MONTH_RE}\\s+(\\d{1,2})\\s+(\\d{4})\\b`));
+  if (m) { const d = buildDate(+m[3], monthNum(m[1]), +m[2]); if (d) return d; }
+
+  // "Day Month Year" anywhere — e.g. 15 june 1990
+  m = norm.match(new RegExp(`\\b(\\d{1,2})\\s+${MONTH_RE}\\s+(\\d{4})\\b`));
+  if (m) { const d = buildDate(+m[3], monthNum(m[2]), +m[1]); if (d) return d; }
+
+  return null;
 }
 
 /**
@@ -111,29 +145,65 @@ function parseBirthDate(input: string): string | null {
  * Returns HH:MM (24hr) on success, null on failure.
  */
 function parseBirthTime(input: string): string | null {
-  const trimmed = input.trim().toLowerCase();
-  if (/unknown|don.?t know|not sure|unsure|no idea|can.?t remember|noon/i.test(trimmed)) {
+  const t = input.trim().toLowerCase();
+  if (/\b(unknown|don.?t know|not sure|unsure|no idea|can.?t remember)\b|noon/.test(t)) {
     return '12:00';
   }
-  // H:MM AM/PM or HH:MM AM/PM
-  const ampm = trimmed.match(/^(\d{1,2}):(\d{2})\s*(am|pm)$/i);
-  if (ampm) {
-    let hr  = parseInt(ampm[1], 10);
-    const min = parseInt(ampm[2], 10);
+  // H:MM am/pm anywhere — e.g. "at 3:15pm in Chicago"
+  let m = t.match(/\b(\d{1,2}):(\d{2})\s*([ap])\.?m\.?\b/);
+  if (m) {
+    let hr = parseInt(m[1], 10); const min = parseInt(m[2], 10);
     if (min > 59) return null;
-    if (ampm[3].toLowerCase() === 'pm' && hr < 12) hr += 12;
-    if (ampm[3].toLowerCase() === 'am' && hr === 12) hr = 0;
+    if (m[3] === 'p' && hr < 12) hr += 12;
+    if (m[3] === 'a' && hr === 12) hr = 0;
     if (hr > 23) return null;
     return `${String(hr).padStart(2, '0')}:${String(min).padStart(2, '0')}`;
   }
-  // HH:MM (24hr)
-  const hhmm = trimmed.match(/^(\d{1,2}):(\d{2})$/);
-  if (hhmm) {
-    const hr  = parseInt(hhmm[1], 10);
-    const min = parseInt(hhmm[2], 10);
+  // Hour-only am/pm anywhere — e.g. "9am", "3 pm"
+  m = t.match(/\b(\d{1,2})\s*([ap])\.?m\.?\b/);
+  if (m) {
+    let hr = parseInt(m[1], 10);
+    if (m[2] === 'p' && hr < 12) hr += 12;
+    if (m[2] === 'a' && hr === 12) hr = 0;
+    if (hr > 23) return null;
+    return `${String(hr).padStart(2, '0')}:00`;
+  }
+  // Bare HH:MM (24hr) — only when the message is essentially just a time
+  m = t.match(/^(\d{1,2}):(\d{2})$/);
+  if (m) {
+    const hr = parseInt(m[1], 10); const min = parseInt(m[2], 10);
     if (hr > 23 || min > 59) return null;
     return `${String(hr).padStart(2, '0')}:${String(min).padStart(2, '0')}`;
   }
+  return null;
+}
+
+/**
+ * Best-effort birth-city extraction from a message that also carried a date/time
+ * ("...at 3:15pm in Chicago", "Dec 2 1988, 9am, Denver Colorado"). Returns null when
+ * nothing place-like is found (the caller then asks for the city). Geocoding validates
+ * downstream, so a wrong guess simply falls back to asking.
+ */
+function extractBirthCity(input: string): string | null {
+  // Explicit "in <City>" at the end wins. The greedy `.*` binds to the LAST "in",
+  // so "...quarter past 3 in the afternoon in Chicago" yields "Chicago", not the filler.
+  let m = input.match(/^.*\bin\s+([A-Za-z][A-Za-z .'\-]*(?:,\s*[A-Za-z][A-Za-z .'\-]*){0,2})\s*$/);
+  if (m) {
+    const c = m[1].trim().replace(/\s+/g, ' ').replace(/^(the|a)\s+/i, '');
+    if (c.length >= 2 && !/\b(afternoon|morning|evening|night|noon|today|yesterday)\b/i.test(c)) return c;
+  }
+  // Otherwise strip date/time/filler and take the trailing place-like segment.
+  const rest = input
+    .replace(/\b\d{4}[\/\-]\d{1,2}[\/\-]\d{1,2}\b/g, ' ')
+    .replace(/\b\d{1,2}[\/\-]\d{1,2}[\/\-]\d{4}\b/g, ' ')
+    .replace(new RegExp(`\\b${MONTH_RE}\\s+\\d{1,2}\\s+\\d{4}\\b`, 'gi'), ' ')
+    .replace(new RegExp(`\\b\\d{1,2}\\s+${MONTH_RE}\\s+\\d{4}\\b`, 'gi'), ' ')
+    .replace(/\b\d{1,2}:\d{2}\s*[ap]\.?m\.?\b/gi, ' ')
+    .replace(/\b\d{1,2}\s*[ap]\.?m\.?\b/gi, ' ')
+    .replace(/\b(born|at|on|in|the|afternoon|morning|evening|night|quarter|past|half|and)\b/gi, ' ');
+  const segs = rest.split(/[,;]/).map(s => s.trim()).filter(Boolean);
+  const last = segs[segs.length - 1];
+  if (last && /^[A-Za-z][A-Za-z .'\-]*$/.test(last) && last.length >= 2) return last.replace(/\s+/g, ' ');
   return null;
 }
 
@@ -218,8 +288,8 @@ async function generateBirthDataMessage(params: {
   let instruction: string;
   if (step === 'date') {
     instruction = attempts === 0
-      ? `Briefly acknowledge what they just shared and then tell them you need their birth details to read their chart. Ask for their date of birth and tell them the format: MM/DD/YYYY — e.g. 06/15/1990. 2-3 sentences.`
-      : `The user gave "${badInput}" as their birth date but it wasn't the right format. Gently point this out and ask again. Remind them: MM/DD/YYYY — e.g. 06/15/1990. 1-2 sentences.`;
+      ? `Briefly acknowledge what they just shared, then tell them you need their date of birth to read their chart. Ask for it naturally — any everyday way is fine (e.g. "June 15 1990" or "6/15/1990"). Do NOT dictate a rigid format. 2-3 sentences.`
+      : `You couldn't quite read "${badInput}" as a birth date. Warmly ask them to say it again with the month, day, and year — any natural phrasing works, like "June 15 1990". Do NOT demand a rigid MM/DD/YYYY format. 1-2 sentences.`;
   } else if (step === 'time') {
     const dateCtx = collectedDate ? ` (birth date: ${collectedDate})` : '';
     instruction = attempts === 0
@@ -251,8 +321,8 @@ Return JSON: {"message": "your response"}`;
     // Scripted fallbacks
     if (step === 'date') {
       return attempts === 0
-        ? `To pull your chart, I'll need a few details. First — your date of birth. Please use the format MM/DD/YYYY, like 06/15/1990.`
-        : `That didn't match the format I need. Can you give me your birth date as MM/DD/YYYY? For example: 06/15/1990.`;
+        ? `To pull your chart, I'll need a few details. First — what's your date of birth? Any natural way is fine, like "June 15 1990."`
+        : `I didn't quite catch the date — could you give me the month, day, and year? However you'd like to say it, like "June 15 1990."`;
     } else if (step === 'time') {
       return attempts === 0
         ? `Good. What time were you born? Use HH:MM AM/PM — like 2:30 PM. If you're not sure, just say "unknown" and I'll use noon.`
@@ -396,6 +466,34 @@ async function loadBirthChartRaw(userId: string, personaId: string): Promise<{ t
     if (parsed?.text) return { text: parsed.text, raw: parsed.raw ?? null };
   } catch { /* legacy plain text — no raw data */ }
   return { text: fc, raw: null };
+}
+
+/**
+ * Load a natal chart with FRESHLY recomputed transits + a forward transit timeline.
+ *
+ * The stored chart text carries a transit snapshot frozen at chart-creation, which
+ * goes stale. For a persona that makes present- and future-tense sky statements, that
+ * is a correctness bug. When we have the raw natal chart, we recompute current transits
+ * and the forward timeline at request time and return a fresh chart section. Falls back
+ * to the stored text (legacy charts without `raw`) so nothing breaks.
+ */
+async function loadFreshBirthChart(userId: string, personaId: string): Promise<string | null> {
+  const stored = await loadBirthChartRaw(userId, personaId);
+  if (!stored) return null;
+  if (!stored.raw) return stored.text; // legacy chart — no raw natal data to recompute from
+  try {
+    const natal = stored.raw as NatalChart;
+    const transits = await calculateTransits(natal);
+    const forward  = calculateForwardTransits(natal);
+    const fwdBlock = formatForwardTransitsForPrompt(forward);
+    const chartText = formatChartForPrompt(natal, transits);
+    return fwdBlock ? `${chartText}\n\n${fwdBlock}` : chartText;
+  } catch (error) {
+    logger.warn('Fresh transit recompute failed — using stored chart', {
+      error: (error as Error).message, userId, personaId,
+    });
+    return stored.text;
+  }
 }
 
 /**
@@ -654,7 +752,9 @@ async function buildMessageContext(
         birthChartSection  = formatVedicChartForPrompt(vedicChart);
       }
     } else {
-      birthChartSection = await loadBirthChart(userId, personaConfig.id);
+      // Non-Vedic astrology (Luna): fresh transits + forward timeline, not the
+      // frozen snapshot. Falls back to stored text for legacy charts.
+      birthChartSection = await loadFreshBirthChart(userId, personaConfig.id);
     }
   }
 
@@ -1483,90 +1583,82 @@ export async function sendMessage(
       let responseChartData: any = undefined;
       let birthChartJustCalculated = false;
 
-      if (collState.step === 'date') {
-        const parsed = parseBirthDate(userMessage);
-        if (parsed) {
-          collState.collectedDate = parsed;
-          collState.step = 'time';
-          birthDataStates.set(sessionId, collState);
-          responseMessage = await generateBirthDataMessage({
-            step: 'time', personaName: personaConfig.displayName,
-            firstName, attempts: 0, collectedDate: parsed,
-          });
-        } else {
-          collState.dateAttempts++;
-          if (collState.dateAttempts >= 3) {
-            // Reset and let them try again from scratch
-            collState.dateAttempts = 0;
-            birthDataStates.set(sessionId, collState);
-            responseMessage = `I need that in MM/DD/YYYY format — for example, 06/15/1990. Give it another try and we'll get your chart pulled up.`;
-          } else {
-            birthDataStates.set(sessionId, collState);
-            responseMessage = await generateBirthDataMessage({
+      // Greedily capture every birth-data fragment present in THIS message so we
+      // never re-ask for what they already gave (B12: "use fragments the instant
+      // they arrive"). Date/time extract from anywhere; the city is taken from the
+      // whole message on the explicit city step, or pulled inline when the same
+      // message also carried a date/time (a "June 15 1990 at 3pm in Chicago" dump).
+      let gotDateNow = false, gotTimeNow = false;
+      if (!collState.collectedDate) {
+        const d = parseBirthDate(userMessage);
+        if (d) { collState.collectedDate = d; gotDateNow = true; }
+      }
+      if (!collState.collectedTime) {
+        const t = parseBirthTime(userMessage);
+        if (t) { collState.collectedTime = t; gotTimeNow = true; }
+      }
+      if (!collState.collectedCity) {
+        if (collState.step === 'city') {
+          const c = userMessage.trim();
+          if (c.length >= 2) collState.collectedCity = c;
+        } else if (gotDateNow || gotTimeNow) {
+          // Only pull a city inline from a genuine birth-data dump (this same message
+          // carried a date/time) — never from a later free-text question.
+          const c = extractBirthCity(userMessage);
+          if (c) collState.collectedCity = c;
+        }
+      }
+      // Birth time is optional — after a couple of asks, default to noon and move on.
+      if (!collState.collectedTime && collState.timeAttempts >= 2) collState.collectedTime = '12:00';
+
+      // Route to the first MISSING piece, or compute the chart once we have all three.
+      if (!collState.collectedDate) {
+        collState.step = 'date';
+        collState.dateAttempts++;
+        birthDataStates.set(sessionId, collState);
+        responseMessage = collState.dateAttempts >= 4
+          ? `I want to get your chart right, so let's take the date on its own — just the month, day, and year, however feels natural (like "June 15 1990"). What is it?`
+          : await generateBirthDataMessage({
               step: 'date', personaName: personaConfig.displayName,
-              firstName, attempts: collState.dateAttempts, badInput: userMessage.trim(),
+              firstName, attempts: collState.dateAttempts - 1, badInput: userMessage.trim(),
             });
-          }
-        }
-      } else if (collState.step === 'time') {
-        const parsed = parseBirthTime(userMessage);
-        if (parsed) {
-          collState.collectedTime = parsed;
-          collState.step = 'city';
-          birthDataStates.set(sessionId, collState);
-          responseMessage = await generateBirthDataMessage({
-            step: 'city', personaName: personaConfig.displayName,
-            firstName, attempts: 0,
-          });
-        } else {
-          collState.timeAttempts++;
-          if (collState.timeAttempts >= 3) {
-            // Default to noon and move on
-            collState.collectedTime = '12:00';
-            collState.step = 'city';
-            birthDataStates.set(sessionId, collState);
-            responseMessage = `No problem — I'll use noon as your birth time. Last thing I need: what city and country were you born in?`;
-          } else {
-            birthDataStates.set(sessionId, collState);
-            responseMessage = await generateBirthDataMessage({
-              step: 'time', personaName: personaConfig.displayName,
-              firstName, attempts: collState.timeAttempts, badInput: userMessage.trim(),
-            });
-          }
-        }
+      } else if (!collState.collectedTime) {
+        collState.step = 'time';
+        collState.timeAttempts++;
+        birthDataStates.set(sessionId, collState);
+        responseMessage = await generateBirthDataMessage({
+          step: 'time', personaName: personaConfig.displayName,
+          firstName, attempts: collState.timeAttempts - 1, collectedDate: collState.collectedDate,
+        });
+      } else if (!collState.collectedCity) {
+        collState.step = 'city';
+        birthDataStates.set(sessionId, collState);
+        responseMessage = await generateBirthDataMessage({
+          step: 'city', personaName: personaConfig.displayName,
+          firstName, attempts: collState.cityAttempts,
+        });
       } else {
-        // step === 'city'
-        const city = userMessage.trim();
-        if (city.length < 2) {
-          responseMessage = `I need a city name to map your chart — somewhere like "Chicago" or "London, UK". Where were you born?`;
+        // All three present — compute the chart.
+        const result = await calculateAndStoreBirthChart(
+          userId, session[0].personaId,
+          collState.collectedDate, collState.collectedTime, collState.collectedCity,
+        );
+        if ('error' in result) {
+          // Bad city — drop it and re-ask (don't lose the date/time already captured).
+          collState.collectedCity = undefined;
+          collState.step = 'city';
+          collState.cityAttempts++;
+          birthDataStates.set(sessionId, collState);
+          responseMessage = collState.cityAttempts >= 3
+            ? `I'm having trouble locating that city. Try adding the country — for example "Paris, France" or "Mexico City, Mexico".`
+            : result.error;
         } else {
-          const result = await calculateAndStoreBirthChart(
-            userId, session[0].personaId,
-            collState.collectedDate!, collState.collectedTime!, city,
+          birthDataStates.delete(sessionId);
+          responseChartData = result.chartData;
+          birthChartJustCalculated = true;
+          responseMessage = await generateChartReadyMessage(
+            personaConfig.displayName, firstName, result.chartData,
           );
-          if ('error' in result) {
-            collState.cityAttempts++;
-            if (collState.cityAttempts >= 3) {
-              // Give up on city validation, reset attempts so they can try again
-              collState.cityAttempts = 0;
-              birthDataStates.set(sessionId, collState);
-              responseMessage = `I'm having trouble locating that city. Try adding the country — for example "Paris, France" or "Mexico City, Mexico".`;
-            } else {
-              birthDataStates.set(sessionId, collState);
-              responseMessage = await generateBirthDataMessage({
-                step: 'city', personaName: personaConfig.displayName,
-                firstName, attempts: collState.cityAttempts, badInput: city,
-              });
-            }
-          } else {
-            // Chart calculated — collection complete
-            birthDataStates.delete(sessionId);
-            responseChartData = result.chartData;
-            birthChartJustCalculated = true;
-            responseMessage = await generateChartReadyMessage(
-              personaConfig.displayName, firstName, result.chartData,
-            );
-          }
         }
       }
 

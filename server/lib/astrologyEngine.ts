@@ -710,6 +710,171 @@ export async function calculateTransits(natalChart: NatalChart): Promise<Transit
 }
 
 // ============================================================
+// Forward transit timeline — REAL dated sky events (Luna's honesty backbone)
+//
+// Computes, for the slow bodies only, the upcoming sign-ingress, house-ingress
+// (equal house from the natal Ascendant), and retrograde/direct station dates
+// over a forward horizon. Restricted to slow movers (Jupiter … Pluto + Node)
+// where the engine's ±0.5–3° accuracy makes a ≤~1-day date error immaterial.
+// This is the ONLY source of dated transit statements the astrology persona may
+// use — everything here is computed, never invented.
+// ============================================================
+
+// Slow bodies only. Fast planets (Mercury/Venus/Mars/Sun/Moon) are deliberately
+// excluded: their ingress dates would need finer precision than the elements give.
+const FORWARD_BODIES = ['Jupiter', 'Saturn', 'Uranus', 'Neptune', 'Pluto', 'North Node'] as const;
+
+// The orbital-elements ephemeris is ±0.5–3° accurate. For STATIONS (velocity
+// zero-crossings) and fast movers this yields ±1–6 day dates — fine. But for the
+// slowest planets (Uranus/Neptune/Pluto ~0.02–0.04°/day), a 1° error near a sign
+// boundary becomes 2–3 WEEKS of date error — unacceptable for a feature whose whole
+// job is honest dates. So the outer planets' rare, famous sign ingresses come from a
+// curated, source-verified table instead of computation; stations + Jupiter stay
+// computed. See the sources in the accompanying commit / spec.
+const CURATED_INGRESS_BODIES = new Set(['Saturn', 'Uranus', 'Neptune', 'Pluto']);
+
+// North Node is too slow to date its sign ingress by computation (±weeks) and is
+// not curated here — its ingress dates are omitted from the timeline (Luna speaks of
+// the nodal axis by sign, without a precise day).
+const SIGN_INGRESS_SUPPRESSED = new Set(['North Node']);
+
+// Authoritative outer-planet sign ingresses for the current era (incl. the
+// retrograde re-entries — a planet crosses a boundary up to 3 times). Verified
+// against Cafe Astrology, Moon Omens, CHANI, drstandley degree calendars, 2025-2026.
+// NOTE: extend with Saturn→Taurus (~2028) and later crossings before those windows arrive.
+interface CuratedIngress { date: string; planet: string; sign: string }
+const OUTER_SIGN_INGRESSES: CuratedIngress[] = [
+  // Pluto → Aquarius (from Capricorn)
+  { date: '2023-03-23', planet: 'Pluto',   sign: 'Aquarius'  },
+  { date: '2023-06-11', planet: 'Pluto',   sign: 'Capricorn' },
+  { date: '2024-01-21', planet: 'Pluto',   sign: 'Aquarius'  },
+  { date: '2024-09-01', planet: 'Pluto',   sign: 'Capricorn' },
+  { date: '2024-11-19', planet: 'Pluto',   sign: 'Aquarius'  }, // final until ~2043
+  // Saturn → Aries (from Pisces)
+  { date: '2025-05-24', planet: 'Saturn',  sign: 'Aries'  },
+  { date: '2025-09-01', planet: 'Saturn',  sign: 'Pisces' },
+  { date: '2026-02-14', planet: 'Saturn',  sign: 'Aries'  }, // continuous until ~Apr 2028
+  // Neptune → Aries (from Pisces)
+  { date: '2025-03-30', planet: 'Neptune', sign: 'Aries'  },
+  { date: '2025-10-22', planet: 'Neptune', sign: 'Pisces' },
+  { date: '2026-01-26', planet: 'Neptune', sign: 'Aries'  }, // final until ~2038
+  // Uranus → Gemini (from Taurus)
+  { date: '2025-07-07', planet: 'Uranus',  sign: 'Gemini' },
+  { date: '2025-11-08', planet: 'Uranus',  sign: 'Taurus' },
+  { date: '2026-04-26', planet: 'Uranus',  sign: 'Gemini' }, // final run into Gemini
+];
+
+export interface ForwardTransitEvent {
+  date: string;                                              // YYYY-MM-DD (UTC)
+  planet: string;
+  kind: 'sign-ingress' | 'house-ingress' | 'retrograde' | 'direct';
+  detail: string;                                           // human phrase
+  sign?: string;
+  house?: number;
+}
+
+/** Geocentric ecliptic longitude of a body at a given Julian Day. */
+export function geoLongitude(name: string, jd: number): number {
+  if (name === 'North Node') return northNodeLongitude(jd);
+  const T   = (jd - 2451545.0) / 36525;
+  const sun = sunPosition(jd);
+  const h   = planetHeliocentric(name, T);
+  return helioToGeoLon(h.lon, h.lat, h.r, norm360(sun.longitude + 180), sun.radius);
+}
+
+/**
+ * Upcoming dated sky events for the slow bodies over `horizonDays` (default 365),
+ * sampled daily at noon UTC. Sign/house transitions are recorded on the day the
+ * new sign/house is first entered; stations on the day the direction flips.
+ * Returned sorted by date.
+ */
+export function calculateForwardTransits(
+  natalChart: NatalChart,
+  horizonDays = 365,
+  startDate: Date = new Date(),
+): ForwardTransitEvent[] {
+  const ascLon = natalChart.ascendant.longitude;
+  const events: ForwardTransitEvent[] = [];
+  const startMidnightUTC = Date.UTC(
+    startDate.getUTCFullYear(), startDate.getUTCMonth(), startDate.getUTCDate(),
+  );
+
+  for (const body of FORWARD_BODIES) {
+    let prevLon: number | null = null;
+    let prevSignIdx: number | null = null;
+    let prevHouse: number | null = null;
+    let prevRetro: boolean | null = null;
+
+    for (let d = 0; d <= horizonDays; d++) {
+      const date = new Date(startMidnightUTC + d * 86400_000);
+      const jd = toJulianDay(
+        date.getUTCFullYear(), date.getUTCMonth() + 1, date.getUTCDate(), 12,
+      );
+      const lon = geoLongitude(body, jd);
+      const signIdx = Math.floor(norm360(lon) / 30);
+      const house = houseOf(lon, ascLon);
+      const dateStr = date.toISOString().slice(0, 10);
+
+      if (prevLon !== null) {
+        const retro = norm360(lon - prevLon) > 180;   // daily motion backwards
+
+        // Sign ingress: computed only for fast-enough bodies (Jupiter). Outer
+        // planets come from the curated table; Node is suppressed.
+        const signComputable = !CURATED_INGRESS_BODIES.has(body) && !SIGN_INGRESS_SUPPRESSED.has(body);
+        if (signComputable && prevSignIdx !== null && signIdx !== prevSignIdx) {
+          const s = signFromLon(lon);
+          events.push({ date: dateStr, planet: body, kind: 'sign-ingress',
+            sign: s.sign, detail: `${body} enters ${s.sign}` });
+        }
+        // House ingress: only Jupiter is fast enough to date a cusp crossing honestly.
+        if (body === 'Jupiter' && prevHouse !== null && house !== prevHouse) {
+          events.push({ date: dateStr, planet: body, kind: 'house-ingress',
+            house, detail: `${body} enters your ${ordinal(house)} house` });
+        }
+        // Stations are velocity zero-crossings — accurate for all slow bodies.
+        if (prevRetro !== null && retro !== prevRetro) {
+          events.push({ date: dateStr, planet: body,
+            kind: retro ? 'retrograde' : 'direct',
+            detail: `${body} stations ${retro ? 'retrograde' : 'direct'}` });
+        }
+        prevRetro = retro;
+      }
+
+      prevLon = lon;
+      prevSignIdx = signIdx;
+      prevHouse = house;
+    }
+  }
+
+  // Curated outer-planet sign ingresses that fall inside the horizon window.
+  const startISO = new Date(startMidnightUTC).toISOString().slice(0, 10);
+  const endISO = new Date(startMidnightUTC + horizonDays * 86400_000).toISOString().slice(0, 10);
+  for (const ci of OUTER_SIGN_INGRESSES) {
+    if (ci.date >= startISO && ci.date <= endISO) {
+      events.push({ date: ci.date, planet: ci.planet, kind: 'sign-ingress',
+        sign: ci.sign, detail: `${ci.planet} enters ${ci.sign}` });
+    }
+  }
+
+  return events.sort((a, b) => a.date.localeCompare(b.date));
+}
+
+function ordinal(n: number): string {
+  const s = ['th', 'st', 'nd', 'rd'];
+  const v = n % 100;
+  return n + (s[(v - 20) % 10] || s[v] || s[0]);
+}
+
+/** Render the forward timeline as a prompt block (empty string if no events). */
+export function formatForwardTransitsForPrompt(events: ForwardTransitEvent[]): string {
+  if (!events.length) return '';
+  const lines = events.map(e => `  ${e.date} — ${e.detail}`).join('\n');
+  return `FORWARD TRANSIT TIMELINE (computed — real dates for the next 12 months)
+These are the ONLY dates you may cite for any transit or timing statement. Never invent or estimate a date that is not in this list.
+${lines}`;
+}
+
+// ============================================================
 // Daily Sky — the collective transit picture for a single date.
 // No birth chart needed: the geocentric sky at a moment is the same data
 // a natal chart is built from, so this reuses the exact position/aspect

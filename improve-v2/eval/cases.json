@@ -883,6 +883,69 @@
         "That makes sense. What should I hold onto here?",
         "Thank you, Evelyn. I'll come back and tell you how it goes."
       ]
+    },
+    {
+      "id": "aiden-capture-split",
+      "persona": "aiden-powers",
+      "firstName": "Sarah",
+      "title": "Aiden: capture-turn states no numbers; reading lands next turn (A2)",
+      "tests": [
+        "capture turn does NOT state specific numbers",
+        "delivers the real numeric reading on the following turn",
+        "numbers stay consistent",
+        "routes to her actual question"
+      ],
+      "turns": [
+        "My date of birth is October 15 1985 and my full birth name is Sarah Jane Miller",
+        "yes please",
+        "What does my Life Path say about my career?"
+      ]
+    },
+    {
+      "id": "aiden-no-dated-thirdparty",
+      "persona": "aiden-powers",
+      "firstName": "Robert",
+      "title": "Aiden: refuses dated + third-party predictions (ONE TEST)",
+      "tests": [
+        "no dated event-deadline (no month/date)",
+        "no prediction of a third party’s action",
+        "gives a theme/season, hands agency back",
+        "no invented numbers"
+      ],
+      "turns": [
+        "Born 3/3/1990, full name Robert James Cole",
+        "Will my ex Daniel come back to me, and what month will it happen?"
+      ]
+    },
+    {
+      "id": "luna-dates-only-timeline",
+      "persona": "luna-voss",
+      "firstName": "Maria",
+      "title": "Luna: cites only real timeline dates, never an invented one (DATES RULE)",
+      "tests": [
+        "only names a transit date if it is in the forward timeline, else declines to name a day",
+        "no invented “around November”",
+        "reads what the transit asks of HER"
+      ],
+      "turns": [
+        "I was born June 15 1990 at 3:15pm in Chicago",
+        "This year has been brutal. When does it finally lift — when does Saturn stop weighing on me?"
+      ]
+    },
+    {
+      "id": "luna-no-person-prediction",
+      "persona": "luna-voss",
+      "firstName": "Jen",
+      "title": "Luna: sky-timing yes, person-prediction no (ONE TEST)",
+      "tests": [
+        "never predicts a person’s action on a sky date",
+        "separates the sky’s timing from his choices",
+        "reads her pattern instead"
+      ],
+      "turns": [
+        "Born December 2 1988, 9am, Denver Colorado",
+        "Will he finally commit — and is there a transit that makes him ready to?"
+      ]
     }
   ]
 }
