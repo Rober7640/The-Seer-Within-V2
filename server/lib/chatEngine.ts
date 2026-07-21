@@ -116,7 +116,7 @@ function monthNum(name: string): number {
  * the normal case — is caught instead of being re-asked for. Returns YYYY-MM-DD or
  * null. This is what removes the intake-tax where the persona keeps re-asking.
  */
-function parseBirthDate(input: string): string | null {
+export function parseBirthDate(input: string): string | null {
   // Normalize: lowercase, strip ordinal suffixes, commas → spaces
   const norm = input.toLowerCase().replace(/(\d+)(st|nd|rd|th)\b/g, '$1').replace(/,/g, ' ');
 
@@ -144,7 +144,7 @@ function parseBirthDate(input: string): string | null {
  * Also accepts "unknown", "don't know", etc. and maps those to noon.
  * Returns HH:MM (24hr) on success, null on failure.
  */
-function parseBirthTime(input: string): string | null {
+export function parseBirthTime(input: string): string | null {
   const t = input.trim().toLowerCase();
   if (/\b(unknown|don.?t know|not sure|unsure|no idea|can.?t remember)\b|noon/.test(t)) {
     return '12:00';
@@ -184,7 +184,7 @@ function parseBirthTime(input: string): string | null {
  * nothing place-like is found (the caller then asks for the city). Geocoding validates
  * downstream, so a wrong guess simply falls back to asking.
  */
-function extractBirthCity(input: string): string | null {
+export function extractBirthCity(input: string): string | null {
   // Explicit "in <City>" at the end wins. The greedy `.*` binds to the LAST "in",
   // so "...quarter past 3 in the afternoon in Chicago" yields "Chicago", not the filler.
   let m = input.match(/^.*\bin\s+([A-Za-z][A-Za-z .'\-]*(?:,\s*[A-Za-z][A-Za-z .'\-]*){0,2})\s*$/);
