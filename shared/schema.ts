@@ -971,6 +971,9 @@ export interface ExperimentVariant {
 export interface ExperimentScope {
   personaId?: string | null;            // only enrol this persona (Phase-1 paywall = Evelyn)
   funnel?: string | null;               // only enrol this V1 funnel (e.g. 'v1-fb') — V1 price tests
+  sign?: string | null;                 // only enrol this fb-palm sign (e.g. 'thumb-angle') — narrows
+                                        // a funnel-scoped price test to ONE lander, so a per-lander
+                                        // price test never touches the rest of v1-palm's traffic
   route?: string;                       // page/surface for visitor page-copy tests (e.g. 'soulmate_landing')
   element?: string;                     // which element the variant copy targets (e.g. 'headline')
   [k: string]: unknown;

@@ -27,7 +27,7 @@ interface ExperimentRow {
   status: string;
   subjectType: string;
   variants: Variant[];
-  scope: { personaId?: string | null } | null;
+  scope: { personaId?: string | null; funnel?: string | null; sign?: string | null } | null;
   conversion: { type?: string; windowDays?: number; targetN?: number } | null;
   startedAt: string | null;
   endedAt: string | null;
@@ -127,6 +127,12 @@ interface ExpForm {
   subjectType: string;
   variants: VariantForm[];
   personaId: string;
+  // Funnel/sign scope for V1 price tests. These MUST round-trip through the form:
+  // before they did, an edit rebuilt scope from personaId alone and silently wiped
+  // scope.funnel / scope.sign — turning a one-lander price test into one that
+  // applies to every visitor on the funnel.
+  funnel: string;
+  sign: string;
   conversionType: string;
   windowDays: string;
   targetN: string;
@@ -142,6 +148,8 @@ const BLANK_FORM: ExpForm = {
     { key: "B", weight: "50", payloadJson: "{}" },
   ],
   personaId: "",
+  funnel: "",
+  sign: "",
   conversionType: "credit_purchase",
   windowDays: "7",
   targetN: "",
@@ -159,6 +167,8 @@ function toForm(exp: ExperimentRow): ExpForm {
       payloadJson: JSON.stringify(v.payload ?? {}, null, 0),
     })),
     personaId: exp.scope?.personaId ?? "",
+    funnel: (exp.scope?.funnel as string | undefined) ?? "",
+    sign: (exp.scope?.sign as string | undefined) ?? "",
     conversionType: exp.conversion?.type ?? "credit_purchase",
     windowDays: exp.conversion?.windowDays ? String(exp.conversion.windowDays) : "7",
     targetN: exp.conversion?.targetN ? String(exp.conversion.targetN) : "",
@@ -196,7 +206,15 @@ function formToBody(form: ExpForm, includeKey: boolean) {
     description: form.description.trim() || undefined,
     subjectType: form.subjectType,
     variants,
-    scope: form.personaId.trim() ? { personaId: form.personaId.trim() } : null,
+    // Preserve EVERY scope key the form knows about. Rebuilding scope from
+    // personaId alone silently dropped funnel/sign on edit (see ExpForm).
+    scope: (() => {
+      const s: Record<string, string> = {};
+      if (form.personaId.trim()) s.personaId = form.personaId.trim();
+      if (form.funnel.trim()) s.funnel = form.funnel.trim();
+      if (form.sign.trim()) s.sign = form.sign.trim();
+      return Object.keys(s).length ? s : null;
+    })(),
     conversion: {
       type: form.conversionType,
       windowDays: form.windowDays ? parseInt(form.windowDays, 10) : undefined,
@@ -434,6 +452,24 @@ export default function ExperimentsDashboard() {
                     disabled={structuralLocked}
                     onChange={(e) => setForm({ ...form, personaId: e.target.value })}
                     placeholder="(all personas)"
+                    className="w-full rounded border border-gray-700 bg-gray-900 px-3 py-2 text-sm text-white disabled:opacity-60"
+                  />
+                </Field>
+                <Field label="Scope — V1 funnel (optional)">
+                  <input
+                    value={form.funnel}
+                    disabled={structuralLocked}
+                    onChange={(e) => setForm({ ...form, funnel: e.target.value })}
+                    placeholder="(all funnels) — e.g. v1-palm"
+                    className="w-full rounded border border-gray-700 bg-gray-900 px-3 py-2 text-sm text-white disabled:opacity-60"
+                  />
+                </Field>
+                <Field label="Scope — fb-palm sign (optional)">
+                  <input
+                    value={form.sign}
+                    disabled={structuralLocked}
+                    onChange={(e) => setForm({ ...form, sign: e.target.value })}
+                    placeholder="(all signs) — e.g. thumb-angle"
                     className="w-full rounded border border-gray-700 bg-gray-900 px-3 py-2 text-sm text-white disabled:opacity-60"
                   />
                 </Field>

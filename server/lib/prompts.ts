@@ -870,6 +870,17 @@ const PALM_SIGN_VOCAB: Record<string, { mark: Record<string, string>; reading: R
       c: 'the certain heart',
     },
   },
+  // 2-option — no `c` key (mirrors the client, which keeps a '' placeholder).
+  'thumb-angle': {
+    mark: {
+      a: 'a life line that runs true with the line of your thumb, the two in agreement',
+      b: 'a life line that pulls away from your thumb, each going its own way',
+    },
+    reading: {
+      a: 'the true heart',
+      b: 'the seeking heart',
+    },
+  },
 }
 
 // -alt signs reuse their twin's vocab (same concept, alternate art).
