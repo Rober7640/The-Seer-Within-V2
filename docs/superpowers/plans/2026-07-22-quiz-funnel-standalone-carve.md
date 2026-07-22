@@ -974,6 +974,18 @@ cd "$DST" && git add -A && git commit -q -m "carve: final orphan/dep/token audit
 
 ---
 
+### Task 10b: Funnel skills + audit tooling port (added by operator decision 2026-07-22)
+
+**Files:**
+- Create: `scripts/audit/audit-charge.mjs`, `audit-upsells.mjs`, `audit-palm.mjs`, `audit-flow.mjs` (ported from `$SRC/.claude/skills/v1-funnel-audit/scripts/`, paths adapted `/chat|/welcome1|/welcome2|/success` → `/fb-palm/...`, invocation comments updated to the npm entries)
+- Create: `scripts/audit/make-sandbox-env.mjs` (small standalone version: builds `.env.sandbox` from `.env` — copies STRIPE_SECRET_KEY only if `sk_test_`, writes LOCAL_BASE_URL, refuses sk_live)
+- Create: `.claude/skills/v1-funnel-audit/` (SKILL.md adapted: standalone paths, `npm run audit:*` commands, references to source-repo-only files removed), `.claude/skills/fb-palm-add-sign/` (copied; every referenced path verified to exist in the standalone), `.claude/skills/v1-funnel-eval/` (copied; scripts' 4-deep relative imports work unchanged at the same depth; source-repo-only references trimmed; palm-flow-transcript already lives at `scripts/` — the skill copy references that)
+- Modify: `package.json` (add `audit:env`, `audit:charge`, `audit:upsells`, `audit:palm`, `audit:flow` scripts), `README.md` (Audit suite subsection + a line that `.claude/skills/` ships for Claude Code users)
+
+**Verification:** boot the dev server with the Task 9 `.env`, regenerate `.env.sandbox` via `npm run audit:env`, then `npm run audit:charge` and `npm run audit:upsells` and `npm run audit:palm` must ALL PASS from their new homes. `npm run check` stays at zero errors; no secrets inside any committed file (`grep -rn "sk_test_\|sk-ant-\|postgresql://" scripts .claude README.md` → zero hits). Commit: `carve: port funnel audit suite + skills (operator-approved scope add)`.
+
+---
+
 ### Task 11: Push to cywei99/quiz-funnel-standalone
 
 **Interfaces:**
