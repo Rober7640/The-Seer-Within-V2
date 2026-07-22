@@ -30,6 +30,13 @@
   (client/src/pages/UpsellPage.tsx:92, client/src/pages/Upsell2Page.tsx:140 —
   `storage.ts`'s two die in Task 6's trim) is eliminated in Task 10 with COMPILE-ONLY
   annotations, so the FINAL repo is fully `npm run check`-clean.
+- **Unit-test baseline (amended after Task 4):** the pristine copy carries 2
+  PRE-EXISTING unit-test failures (one in `universalSafety.test.ts`, one
+  priceVariantPool fixture), verified present before any carve edit (git-stash
+  comparison). Wherever Tasks 6–9 gate on unit suites "passing", the gate is
+  **no NEW failures** vs that baseline. Task 10 investigates the two: fix ONLY if
+  the failure is a stale test expectation (test-only change); never alter runtime
+  code to green a test.
 
 ---
 
