@@ -48,6 +48,7 @@ const scopeSchema = z
   .object({
     personaId: z.string().nullable().optional(),
     funnel: z.string().optional(), // typed so a non-string funnel can't silently start an inert test
+    sign: z.string().optional(),   // same reason: a non-string sign would scope the test to nothing
     route: z.string().optional(),
   })
   .passthrough()
