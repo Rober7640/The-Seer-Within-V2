@@ -20,15 +20,24 @@ Evelyn content ships as the working example; no content restructuring in this pa
 | Lander families | fb-palm quiz bridge ONLY (no base `/` lander, no /fb //fb2 /gdn pages, no soulmate) |
 | Deliverable | Standalone runnable repo, end-to-end |
 | Templating | Port as-is — zero behavior changes; niche swap = edit registries later |
-| Peripherals | Keep all three, env-gated: ad attribution (FB Pixel+CAPI, Google Ads, PostHog), lead list-adds (AWeber/Kit/Resend), follow-up email engine + cron |
+| Peripherals | Keep, env-gated: ad attribution (FB Pixel+CAPI, Google Ads, PostHog) + lead list-adds (AWeber/Kit/Resend). **Corrected 2026-07-22:** the "follow-up email engine + cron" opted for earlier turned out to be V2-only — all 13 cron jobs (incl. the Evelyn-named generators, which serve the V2 `/evelyn` lander) and the reconciliation sweep (V2 `credit_purchases`) belong to V2. V1's email marketing is external AWeber automations triggered by the kept tag calls, so the cron scheduler ships nothing and is cut entirely |
+| Woven prompt A/B | **Control-only** (operator decision 2026-07-22): experiments framework NOT ported. The client's `/api/ab/assign` fetch already degrades gracefully to control; the `?clearing=woven` URL override remains for QA/self-test; `priceVariant.ts`'s `logExposure` shadow-writes are stripped |
+| New repo | `cywei99/quiz-funnel-standalone` (private, created + pushed via gh CLI) |
 | Always ships | Safety filtering (`universalSafety`) + crisis hotlines |
 | Extraction method | **Subtractive carve**: clone repo → delete V2/other funnels → let TypeScript name orphans → prune → verify |
 | Git history | Fresh history, one initial commit; this repo remains the archaeological record |
 
 ## Verified facts (grounding)
 
-- V1 chat does **not** use the experiments framework. `server/lib/prompts.ts` imports
-  only `shared/types`; prompt building is self-contained.
+- **Corrected:** V1 palm chat DOES touch the experiments framework in two places:
+  (1) `useConversation.ts:437` fetches `/api/ab/assign?page=v1_chat_palm` to resolve
+  the live 'clearing' (woven context-class) prompt A/B — with a graceful fallback to
+  control when the endpoint is absent, plus a `?clearing=woven|control` URL override;
+  (2) `priceVariant.ts:302` shadow-logs price-test exposures via `logExposure`.
+  Decision: the standalone ships **control-only** — no framework; the client fetch is
+  left untouched (fails → control), the `logExposure` call sites are stripped.
+  `prompts.ts` itself branches only on `userData.promptVariant` (server-validated,
+  client-supplied) — those branches survive unchanged, so `?clearing=woven` still works.
 - Prices come from the legacy `system_config` split via `server/lib/priceVariant.ts`
   (`conversations` + `systemConfig` tables), including the 55-35 sliding-close variants.
 - Known-core V1 tables: `conversations`, `system_config`, `bracelet_orders`.
@@ -76,6 +85,10 @@ price-variant token parsing) byte-identical.
 - **Supporting code kept untouched:** `useConversation.ts`, `lib/funnel.ts`,
   `content/palmReads.ts`, `types/chat.ts`, UI components they import,
   `client/public/palm/` art strips, and any other static assets the kept pages reference.
+- **`SuccessPage.tsx` carve:** the Luna thank-you cross-sell block is removed — the
+  `LUNA_UTM` constant, `lunaHref` state, the `/api/luna-ty/handoff` fetch, and the
+  Luna offer card (`data-testid="link-luna-offer"`). It is the V1→V2 bridge, cut by scope.
+- **`App.tsx`** also drops the `PayPalScriptProvider` wrapper (PayPal is V2-only).
 - **Removed client code:** everything only reachable from deleted pages. Discovery is
   mechanical — delete the routes, then remove files until `tsc` + `vite build` are clean
   and a final import-graph audit shows no orphans.
@@ -90,15 +103,20 @@ price-variant token parsing) byte-identical.
   personas, userStats, migrate, astrology, quiz, evelynLander, products, personaLander,
   crud), the soulmate endpoints, the luna-ty handoff, and the V1→V2 funnel-migration calls.
 - **`server/routes/webhooks.ts`:** carved internally per Verified facts above.
-- **`server/lib/cronJobs.ts`:** keeps only V1 jobs — follow-up emails
-  (`evelynFollowupEmailGenerator`), session-timeout emails, Stripe payment-reconciliation
-  sweep. V2 jobs (monthly resets, persona drips, luna/aiden generators) deleted.
+- **`server/lib/cronJobs.ts`: deleted entirely** (corrected — every job is V2; see
+  Decision log). `server/index.ts` drops `initializeCronJobs` and the
+  `creditTracking` session-recovery/heartbeat calls (V2), keeping the rest of boot.
+- **PayPal: removed everywhere** — client `PayPalScriptProvider` (all client PayPal
+  usage is V2: credits/products/paywall), the `/paypal` webhook handler, and
+  `server/lib/paypal.ts`. V1 checkout + upsells are Stripe-only.
+- **`server/lib/priceVariant.ts`:** the `logExposure` shadow-write call sites are
+  stripped (experiments framework not ported); assignment/pricing logic byte-identical.
 - **`server/lib/` survivors** are discovered mechanically (delete mounts → TypeScript
   names every orphan). Expected core: claude/anthropic failover + model config +
   circuit breaker, `prompts.ts`, `universalSafety`, `crisisHotlines`, `priceVariant` +
   `priceVariantPool`, `stripeAccount`, `braceletOrders`, `aweber`, `kit`,
-  `resendAudience`, `facebook`, `googleAds`, `posthog`, `fraudDetection`, `logger`,
-  `db`, `storage`, `healthCheck`, email template/senders used by the follow-up engine.
+  `resendAudience`, `resendFunnelTags`, `facebook`, `googleAds`, `posthog`,
+  `fraudDetection`, `predictionSanitizer`, `logger`, `db`, `storage`, `healthCheck`.
 - **`server/index.ts`:** unchanged boot flow; `initializeCronJobs` now registers only
   the surviving V1 jobs.
 
@@ -113,9 +131,11 @@ price-variant token parsing) byte-identical.
 - **`.env.example` rewritten** to the true required set:
   `DATABASE_URL`, `ANTHROPIC_API_KEY`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`,
   plus optional gated keys (`AWEBER_*`, `KIT_*`, `RESEND_*`, `FB_PIXEL_ID`,
-  `FB_ACCESS_TOKEN`, Google Ads, `POSTHOG_*`, NeverBounce/Turnstile if their call
-  sites survive, S3 if referenced by surviving code). `JWT_SECRET` dropped if nothing
-  surviving reads it (expected — it belongs to V2 auth); verified during the carve.
+  `FB_ACCESS_TOKEN`, `FB_TEST_EVENT_CODE`, `SGTM_GADS_ENDPOINT`/`SGTM_PREVIEW_TOKEN`,
+  `POSTHOG_API_KEY`/`VITE_POSTHOG_API_KEY`, `SENTRY_DSN`, Stripe dual-account/trackdesk
+  extras). NeverBounce/Turnstile confirmed V2-only — cut. `JWT_SECRET` and
+  `VITE_PAYPAL_CLIENT_ID` dropped. Final list is generated mechanically by sweeping
+  surviving code for `process.env.*` / `import.meta.env.*`.
 - **npm scripts / build unchanged:** vite + esbuild, `db:push`, `dev`, `start`.
   `package.json` dependencies pruned to what the survivors import.
 
@@ -135,8 +155,8 @@ price-variant token parsing) byte-identical.
    (`fb-palm/docs/`, e.g. the PRD).
 7. Trim `tests/` + Playwright configs to the surviving suites; fix references.
 8. Run full verification (below); final import-graph audit for dead code.
-9. **Hand-off to the new project:** push the carved repo to a fresh **private GitHub
-   remote** and clone/import from there (Replit: "Import from GitHub"). If a file
+9. **Hand-off to the new project:** push the carved repo to **`cywei99/quiz-funnel-standalone`**
+   (private, `gh repo create`) and clone/import from there (Replit: "Import from GitHub"). If a file
    transfer is required instead, produce it with `git archive --format=zip` from the
    carved repo — tracked files only, so `.env` secrets and `node_modules` can never
    ride along. Never zip the original working directory (1.2 GB, contains live keys).
@@ -151,7 +171,10 @@ price-variant token parsing) byte-identical.
 4. Full-funnel flow pass in the style of the v1-funnel-audit skill, against a local
    sandbox with muted pixels and Stripe test mode: quiz tap (each of A/B/C once) →
    chat reading → checkout → upsell 1 → upsell 2 incl. shipping → success.
-5. Cron jobs boot without error against the fresh DB (follow-up/reconciliation dry pass).
+5. Headless chat-flow verification: `scripts/palm-flow-transcript.ts` (ported from the
+   v1-funnel-eval skill) replays greeting → palm reflect → deepening → crisis → pitch →
+   objection with the REAL prompt builders + live Anthropic call, printing the transcript.
+   (No crons ship — boot must show zero schedulers and no `node-cron` references remain.)
 6. Fresh-clone test: on a clean checkout with only `.env` populated, README steps
    (install → db:push → seed → dev) produce a working funnel.
 
@@ -161,8 +184,10 @@ All of V2 (accounts, credits, personas, chat service, admin UI, experiments fram
 magic links, marketplace, promo wallet, migration bridge), base `/` lander,
 /fb //fb2 /gdn lander routes, soulmate funnel (pages + endpoints + tables),
 evelyn-lander email funnel, luna/aiden daily-email programs, astrology/numerology
-engines, persona lander/drip systems, `improve-v1/`, `improve-v2/`, `audit-runs/`,
-analysis docs, project skills.
+engines, persona lander/drip systems, the entire cron scheduler + all drip/follow-up
+generators, PayPal (client + server + webhook), NeverBounce/Turnstile, the Resend
+email-event webhook + unsubscribe pages, FAQ page, `improve-v1/`, `improve-v2/`,
+`audit-runs/`, analysis docs, project skills.
 
 ## 8. Risks & mitigations
 
