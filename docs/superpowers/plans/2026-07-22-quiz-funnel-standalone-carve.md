@@ -19,6 +19,17 @@
 - Keep routes/paths byte-identical (`/fb-palm/*`), keep `shared/funnelConfig.ts` and `shared/fbPixelConfig.ts` unchanged (inert entries are fine).
 - Commit in `$DST` after every green task. Commit messages: `carve: <what>`.
 - All `npm` commands run in `$DST` unless stated otherwise.
+- **TSC gate (amended after Task 1):** the source repo has 44 PRE-EXISTING tsc errors
+  (`npm run check` was never enforced there; prod builds via vite/esbuild without
+  typechecking). Inventory: `$SRC/.superpowers/sdd/tsc-baseline.txt` (by-file:
+  `tsc-baseline-by-file.txt`). Wherever this plan says `npm run check` must pass or
+  be clean in Tasks 2–8, the gate is: **no NEW errors** —
+  `cd "$DST" && npx tsc 2>&1 | grep "error TS" | sort > /tmp/tsc-now.txt && comm -13 "$SRC/.superpowers/sdd/tsc-baseline.txt" /tmp/tsc-now.txt`
+  must print NOTHING — and the total count only shrinks as error-bearing V2 files are
+  deleted. 40/44 baseline errors live in files this carve deletes; the residue
+  (client/src/pages/UpsellPage.tsx:92, client/src/pages/Upsell2Page.tsx:140 —
+  `storage.ts`'s two die in Task 6's trim) is eliminated in Task 10 with COMPILE-ONLY
+  annotations, so the FINAL repo is fully `npm run check`-clean.
 
 ---
 
@@ -73,7 +84,11 @@ Expected: exactly 1 commit.
 ```bash
 cd "$DST" && npm install 2>&1 | tail -3 && npm run check 2>&1 | tail -5
 ```
-Expected: install succeeds; `npm run check` (tsc) passes — the pristine copy must typecheck BEFORE carving starts (baseline). If it fails here, the copy is broken — fix the copy, don't carve yet.
+Expected: install succeeds. ~~`npm run check` passes~~ **AMENDED (executed 2026-07-22):**
+the source itself carries 44 pre-existing tsc errors, so the baseline step is: record
+the full error inventory to `$SRC/.superpowers/sdd/tsc-baseline.txt` and confirm the
+copy's error set matches the source's (it does — same tree, filtered dirs are outside
+the tsconfig include). The Global Constraints TSC gate governs all later tasks.
 
 ---
 
@@ -925,6 +940,18 @@ Zero hits → `rm -rf attached_assets` and delete the `"@assets"` alias line fro
 cd "$DST" && grep -rin "soulmate\|marcus\|luna\|aiden\|nova\|maren\|/admin\|magic-link\|creditPurchases\|paywall\|experiments" client/src server shared --include="*.ts" --include="*.tsx" | grep -v "palmReads\|prompts.ts\|node_modules" | head -20
 ```
 Review every hit: comments referencing history are acceptable; live code paths are bugs. (`palmReads`/`prompts` are excluded — 'soulmate-timing' is a hook name there, legitimate.)
+
+- [ ] **Step 3b: Eliminate the residual pre-existing tsc errors (compile-only)**
+
+The baseline residue in KEPT files (expected: `client/src/pages/UpsellPage.tsx:92`,
+`client/src/pages/Upsell2Page.tsx:140` — `string | null` into a `string` parameter).
+Fix with compile-only changes that CANNOT alter runtime behavior (non-null assertion
+`!` or `?? ""` only if provably equivalent — prefer `!` since the call sites already
+assume non-null). After this step `npm run check` must be FULLY clean (zero errors):
+
+```bash
+cd "$DST" && npm run check && echo TSC-FULLY-CLEAN
+```
 
 - [ ] **Step 4: depcheck round 2 + final green**
 
