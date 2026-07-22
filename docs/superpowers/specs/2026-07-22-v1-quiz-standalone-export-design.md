@@ -135,6 +135,11 @@ price-variant token parsing) byte-identical.
    (`fb-palm/docs/`, e.g. the PRD).
 7. Trim `tests/` + Playwright configs to the surviving suites; fix references.
 8. Run full verification (below); final import-graph audit for dead code.
+9. **Hand-off to the new project:** push the carved repo to a fresh **private GitHub
+   remote** and clone/import from there (Replit: "Import from GitHub"). If a file
+   transfer is required instead, produce it with `git archive --format=zip` from the
+   carved repo — tracked files only, so `.env` secrets and `node_modules` can never
+   ride along. Never zip the original working directory (1.2 GB, contains live keys).
 
 ## 6. Verification — definition of done
 
