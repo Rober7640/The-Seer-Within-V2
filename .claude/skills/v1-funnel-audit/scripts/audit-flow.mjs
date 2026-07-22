@@ -179,7 +179,12 @@ async function main() {
     });
   }
 
-  await page.goto(`${BASE}/chat?noemail=1${ARM === 'sliding' ? '&close=55' : ''}`, { waitUntil: 'domcontentloaded' });
+  // ENTRY_PATH lets a caller start the SAME walk from another V1 entry — e.g. an
+  // fb-palm sign's chat handoff — instead of the default /chat. Path only (the
+  // localhost guard above still owns the origin). Defaults to today's behaviour.
+  const entryPath = process.env.ENTRY_PATH
+    || `/chat?noemail=1${ARM === 'sliding' ? '&close=55' : ''}`;
+  await page.goto(`${BASE}${entryPath}`, { waitUntil: 'domcontentloaded' });
 
   const sampler = startSampler(page);
   let shotN = 0;
