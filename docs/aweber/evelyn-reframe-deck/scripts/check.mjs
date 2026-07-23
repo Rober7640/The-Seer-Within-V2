@@ -1,4 +1,4 @@
-// Throwaway prototype of the reframe-deck mechanical self-check (scratchpad only).
+// The reframe-deck mechanical pre-send gate (the evelyn-reframe skill's engine).
 // DRAFT-STAGE bars from PLAYBOOK.md (countable only; judgment bars = human review).
 // Corrected after test-run 1: CTA slug lives in FRONTMATTER + a bold "→ label" in the
 // body (the full tagged URL is assembled later by render.mjs). Length window matches

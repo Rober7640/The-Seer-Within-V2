@@ -1,8 +1,8 @@
 # Reframe Deck — pipeline scripts
 
-Prototype tooling that generates, checks, renders, and schedules reframe-deck emails to the
-Evelyn AWeber list. Built for **cycle 1** (Jul 23–31 2026); these are the seed of a future
-`.claude/skills/evelyn-reframe/`. Node ≥ 18 (uses global `fetch`). No deps.
+The reframe-deck pipeline — checks, renders, and schedules reframe-deck emails to the
+Evelyn AWeber list. This is the engine the **`evelyn-reframe` skill** (`.claude/skills/evelyn-reframe/`)
+orchestrates; first proven on **cycle 1** (Jul 23–31 2026). Node ≥ 18 (uses global `fetch`). No deps.
 
 ## The pipeline
 
