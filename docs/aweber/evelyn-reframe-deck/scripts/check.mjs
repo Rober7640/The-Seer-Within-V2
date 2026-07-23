@@ -18,6 +18,11 @@ function analyze(path) {
   const slug     = (front.match(/campaign=([a-z0-9-]+)/) || [])[1] || null;
   const bodyCTA  = /\*\*→/.test(body);                    // bold "→ label" CTA line
   const underline = /<u>/i.test(body) || /__[^_]+__/.test(body);
+  // Subject byte length: AWeber's hard limit is 120 bytes (tag included). This is the
+  // EARLIEST gate for it — render only warns and schedule stops mid-batch (after the
+  // human "go"), so catch it here, before anything goes live.
+  const subject  = (front.match(/\*\*Subject:\*\*\s*`([^`]+)`/) || [])[1] || '';
+  const subjBytes = Buffer.byteLength(subject, 'utf8');
 
   const text = body
     .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
@@ -26,7 +31,7 @@ function analyze(path) {
     .replace(/[>#*`_→↳]/g, ' ');
   const words = (text.match(/\b[\w']+\b/g) || []).length;
 
-  return { dear, reframe, emdash, slug, bodyCTA, underline, words };
+  return { dear, reframe, emdash, slug, bodyCTA, underline, words, subjBytes };
 }
 
 const files = process.argv.slice(2);
@@ -40,11 +45,12 @@ for (const f of files) {
     'CTA slug+label': !!a.slug && a.bodyCTA,
     'no underline':  !a.underline,
     'words 280-420': a.words >= 280 && a.words <= 420,
+    'subject 1-120B': a.subjBytes >= 1 && a.subjBytes <= 120,
   };
   const pass = Object.values(checks).every(Boolean);
   if (!pass) anyFail = true;
   const name = f.split('/').pop().padEnd(38);
-  console.log(`${pass ? 'PASS' : 'FAIL'}  ${name} dear=${a.dear} reframe=${a.reframe} emdash=${a.emdash} words=${a.words} slug=${a.slug || 'none'} cta=${a.bodyCTA?'y':'n'} ul=${a.underline?'y':'n'}`);
+  console.log(`${pass ? 'PASS' : 'FAIL'}  ${name} dear=${a.dear} reframe=${a.reframe} emdash=${a.emdash} words=${a.words} subj=${a.subjBytes}B slug=${a.slug || 'none'} cta=${a.bodyCTA?'y':'n'} ul=${a.underline?'y':'n'}`);
   for (const [k, v] of Object.entries(checks)) if (!v) console.log(`        ✗ ${k}`);
 }
 process.exit(anyFail ? 1 : 0);
