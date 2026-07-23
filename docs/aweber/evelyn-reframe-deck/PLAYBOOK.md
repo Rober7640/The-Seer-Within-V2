@@ -106,11 +106,11 @@ Data note: blunt/curiosity + urgency out-opens gentle/literary on this list; the
 Formatting exists to make the read easier **and** to spotlight the deck's logic. Two box styles, tied to content — not decoration:
 
 - **Quote box** (`.q`): reserved for an **incoming letter set apart** (Format 01) or a single spoken line worth isolating. Soft plum, left rule, italic. **Most formats don't use one** — they carry the reframed/quoted words in **inline italics** (see the gold sends 02–07). Don't add a box just to have one.
-- **Reframe pull-quote** (`.rf`): the reframe itself — the one turn. Plum left rule, faint wash, slightly larger. This is the visual centerpiece; a scanner's eye should land on it.
-- **Bold**: the reframe label (**↳ THE REFRAME.**) and the CTA button are always bold (structural). Beyond those, bold **one** pivot beat (*"He isn't."*), occasionally a second. Nowhere else — never on ordinary key terms.
+- **Reframe pull-quote** (`.rf`): the reframe itself — the one turn. Plum left rule, faint wash, slightly larger. This is the visual centerpiece; a scanner's eye should land on it. In the source it's tagged `> **↳ THE REFRAME.** …` so the tooling and the pre-send check can find it — but that tag is an **authoring marker only. The renderer strips it, so subscribers see just the turn**, set apart by the box (no literal "THE REFRAME" label in the sent email).
+- **Bold**: the CTA button is always bold (structural). Beyond that, bold **one** pivot beat (*"He isn't."*), occasionally a second. Nowhere else — never on ordinary key terms. (The `↳ THE REFRAME.` source tag is stripped at render, so it isn't a visible bold element in the send.)
 - **Italics**: the phrase being turned, quoted words, gentle emphasis.
 - **No underline in the body.** In email it reads as a broken link. Carry emphasis with the above.
-- **Length:** ~400–500 words **of body** (hook line through the sign-off; subject and preheader aren't counted). Long enough to earn the turn, short enough to read on a phone before the bus comes.
+- **Length:** ~300–380 words **of body** (hook line through the sign-off; subject and preheader aren't counted). The gold sends run ~290–360 — tight is the point. Long enough to earn the turn, short enough to read on a phone before the bus comes.
 
 (The rendered look is the canonical AWeber design — see Canonical assets. The scratchpad `build-deck.mjs` renders the deck to an HTML mockup.)
 
@@ -157,7 +157,7 @@ An email ships only if **every** box is true:
 - [ ] **Substance**: a real mechanism + why the obvious advice fails (or the hidden cost it exacts) + one do-today practice. Passes the strip-the-CTA test.
 - [ ] **Voice**: "dear" ~2–3× (never more than ~4 — it cloys), ≤2 body em-dashes (the "— Evelyn" sign-off doesn't count), no AI tells, reads well aloud.
 - [ ] **Gender-neutral reader**; cast varied (and the rotation includes a male POV).
-- [ ] **Formatting**: reframe in a pull-quote; quoted/reframed words in **inline italics** (a quote box only where the format uses one — e.g. 01's letter); bold limited to the reframe label, the CTA, and ~1 pivot; no body underline; ~400–500 words of body.
+- [ ] **Formatting**: reframe in a pull-quote (the `↳ THE REFRAME.` source tag is stripped from the send); quoted/reframed words in **inline italics** (a quote box only where the format uses one — e.g. 01's letter); bold limited to the CTA and ~1 pivot; no body underline; ~300–380 words of body.
 - [ ] **Subject** teases the turn (name-first), preheader in Evelyn's voice.
 - [ ] **One tagged CTA**, benefit-worded; guardrails intact (no names/dates, no fake scarcity, claims true).
 - [ ] **At scheduling time** (a process step, not a property of the draft): rotation honored — format not repeated within ~2 weeks, conversion beats not stacked, state + cast-gender balance kept (incl. a male POV in the rotation) — and the send **logged in `STATE.md`**.
