@@ -17,7 +17,7 @@
 //     (This block is the one thing the original printer lacked.)
 //   • /api/chat LLM turns are REAL (needs ANTHROPIC_API_KEY, kept in .env.sandbox).
 import { chromium } from '@playwright/test';
-import { writeFileSync, mkdirSync } from 'node:fs';
+import { writeFileSync, mkdirSync, rmSync } from 'node:fs';
 
 const BASE = process.env.LOCAL_BASE_URL || 'http://localhost:5000';
 const ARM = process.argv[2] === 'control' ? 'control' : 'sliding';
@@ -141,6 +141,14 @@ async function main() {
   if (!/^https?:\/\/(localhost|127\.0\.0\.1)(:|\/|$)/.test(BASE)) {
     console.error(`🔴 REFUSING to run against "${BASE}". Point LOCAL_BASE_URL at a localhost sandbox (see SKILL.md).`);
     process.exit(2);
+  }
+  // Start each run from an empty shot dir so a shorter walk (e.g. the palm funnel
+  // skips the bucket step) can never leave a PREVIOUS run's screenshots stranded,
+  // looking current. The report.md holds the findings; stale shots are worse than
+  // none. Guard keeps this recursive delete inside the throwaway output tree no
+  // matter how SHOT_DIR is later refactored — it must never reach the repo root.
+  if (SHOT_DIR.startsWith('audit-runs/')) {
+    rmSync(SHOT_DIR, { recursive: true, force: true });
   }
   mkdirSync(SHOT_DIR, { recursive: true });
   console.log(`\nv1-funnel-audit — arm=${ARM}  base=${BASE}\n`);
