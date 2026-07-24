@@ -34,17 +34,29 @@ interface ClaudeResponse {
 
 async function callClaude(prompt: string): Promise<ClaudeResponse> {
   try {
+    // V1-only model override via env var (per-Railway-service → isolates dev from prod AND
+    // V1 from V2, and is instantly reversible by removing it). UNSET → the shared conversation
+    // model, byte-identical to previous behavior. Set to 'claude-sonnet-5' on dev/local to test
+    // the migration; V2 (chatEngine.ts) is unaffected — it never reads this.
+    const model = process.env.V1_CONVERSATION_MODEL?.trim() || getModelForOperation('conversation')
     const response = await fireWithBreaker(anthropicBreaker, () =>
       anthropic.messages.create({
-        model: getModelForOperation('conversation'),
+        model,
         max_tokens: 1000,
         messages: [{ role: 'user', content: prompt }],
+        // Sonnet 5 runs adaptive thinking ON when `thinking` is omitted; a leading thinking
+        // block would make the JSON extraction below miss the text, and every V1 reply would
+        // fall back to canned messages. Disable thinking on Sonnet 5. Older models (e.g. 4.5)
+        // omit the field = current no-thinking behavior, unchanged.
+        ...(model === 'claude-sonnet-5' ? { thinking: { type: 'disabled' as const } } : {}),
       }),
     )
 
-    const text = response.content[0].type === 'text'
-      ? response.content[0].text
-      : ''
+    // Take the FIRST TEXT block (not content[0]) — defensive so any leading non-text block
+    // (a thinking block, etc.) can never silently blank the reply. With thinking disabled this
+    // is content[0] anyway, so behavior is unchanged for the current model.
+    const textBlock = response.content.find((b) => b.type === 'text')
+    const text = textBlock && textBlock.type === 'text' ? textBlock.text : ''
 
     // Extract JSON from response
     const jsonMatch = text.match(/\{[\s\S]*\}/)
