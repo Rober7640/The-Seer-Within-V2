@@ -25,6 +25,7 @@ docs/aweber/evelyn-reframe-deck/sends/*/_build/
 .cursor/
 .agent/
 .agents/
+.superpowers/
 
 # Runtime directories
 logs/
