@@ -3,10 +3,13 @@
 //
 //   npm run test:price
 //
-// The load-bearing property under test is the one the business asked for on the
-// 2026-07-14 call: the $55/$35 sliding close runs on the fb-palm THUMB ads and
-// NOWHERE ELSE. Every other palm sign (hand-size, finger-shape, decode-him …)
-// must stay 100% on the $35 control until Ruby confirms that lander converts.
+// The load-bearing property under test is the one the business asked for
+// (operator decision, 2026-07-26): the commitment-gate variant (35_palm_gate)
+// runs on EVERY fb-palm sign — including thumb-angle, which is mid-way through
+// its own separate price test via a different system — at a 70/30 split
+// against the control (35_palm_u47). This supersedes the original 2026-07-14
+// rule (the $55/$35 sliding close, thumb-ONLY), which is now retired: parked
+// at weight 0 in the pool, never drawn on any sign.
 
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
