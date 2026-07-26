@@ -1,7 +1,7 @@
 // server/lib/emailReadingBriefs.test.ts
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { getEmailReadingBrief } from './emailReadingBriefs';
+import { getEmailReadingBrief, hasBriefsForPersona } from './emailReadingBriefs';
 
 describe('getEmailReadingBrief', () => {
   it('returns the brief for a known campaign slug', () => {
@@ -26,5 +26,15 @@ describe('getEmailReadingBrief', () => {
     assert.ok(b, 'expected a brief for reframe-05-peace');
     assert.equal(b.personaSlug, 'evelyn-cross');
     assert.match(b.readingRecap, /peace|wall|space/i);
+  });
+});
+
+describe('hasBriefsForPersona', () => {
+  it('is true for a persona with registered briefs', () => {
+    assert.equal(hasBriefsForPersona('evelyn-cross'), true);
+  });
+
+  it('is false for a persona with no registered briefs', () => {
+    assert.equal(hasBriefsForPersona('marcus-stone'), false);
   });
 });
