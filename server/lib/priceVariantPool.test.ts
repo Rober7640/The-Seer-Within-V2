@@ -32,7 +32,7 @@ import {
 // The drift test below proves the two are the same pool.
 const ROOT = join(import.meta.dirname, '..', '..');
 const GO_LIVE_POOL = readFileSync(join(ROOT, 'improve-v1', 'go-live-pool.json'), 'utf8');
-const GO_LIVE_SQL = readFileSync(join(ROOT, 'improve-v1', 'go-live-55-35-config.sql'), 'utf8');
+const GO_LIVE_SQL = readFileSync(join(ROOT, 'improve-v1', 'go-live-palm-gate-config.sql'), 'utf8');
 
 // Pull the JSON literal out of `SET config_value = '{…}',`
 function poolFromSql(sql: string): string {
@@ -54,9 +54,10 @@ const OTHER_SIGNS = [
   'thumb-curve-alt',
   'finger-length',
   'finger-length-alt',
-  // thumb-angle runs its own $55/$35 test through the EXPERIMENT FRAMEWORK
-  // (v1_main_price_2026, sign-scoped), never through this legacy pool — so it
-  // must stay 100% control here, exactly like every other non-thumb sign.
+  // thumb-angle runs its own concurrent $55/$35 test through the EXPERIMENT
+  // FRAMEWORK (v1_main_price_2026, sign-scoped). It is DELIBERATELY included in
+  // the commitment-gate 70/30 below anyway (operator call, 2026-07-26) — the
+  // overlap with its own price test is accepted, not avoided.
   'thumb-angle',
 ];
 
@@ -85,17 +86,16 @@ describe('the shipping artifacts (go-live-pool.json ↔ go-live-55-35-config.sql
     const { variants, dropped, unknownKeys } = parseVariantPool(GO_LIVE_POOL);
     assert.equal(dropped.length, 0, `unexpected drops: ${JSON.stringify(dropped)}`);
     assert.equal(unknownKeys.length, 0, `unexpected keys: ${JSON.stringify(unknownKeys)}`);
-    assert.equal(variants.length, 14);
+    assert.equal(variants.length, 15);
   });
 
-  it('the sliding arm is thumb-scoped, $55 main, $35 grace', () => {
+  it('the sliding close (55-35_palm) is PARKED at weight 0 — retired by the commitment-gate test, not deleted', () => {
     const sliding = pool().find((v) => v.id === '55-35_palm')!;
-    assert.deepEqual(sliding.signs, ['thumb'], 'the sliding close must be scoped to thumb ONLY');
+    assert.deepEqual(sliding.signs, ['thumb'], 'its historical thumb-only scoping stays on the row for the record');
     assert.equal(sliding.funnel, 'v1-palm');
-    assert.equal(sliding.weight, 1);
+    assert.equal(sliding.weight, 0, '55-35_palm must never be drawn again — parked, not deleted (matches how 45/59/55-35 are handled at the root)');
     assert.equal(sliding.priceCents, 5500);
-    assert.equal(sliding.downsellCents, 3500); // the GRACE charge — must be $35, not the legacy $25
-    assert.equal(sliding.upsell1Cents, 4700); // U1 held equal on both arms
+    assert.equal(sliding.downsellCents, 3500);
   });
 
   it('root is NOT in the test, and its control is honest', () => {
@@ -105,13 +105,23 @@ describe('the shipping artifacts (go-live-pool.json ↔ go-live-55-35-config.sql
     assert.equal(vs.find((v) => v.id === '45')!.weight, 0, 'the corrupted root 45 arm must be parked');
   });
 
-  it('the control arm is untouched at $35/$25/$47', () => {
+  it('the control arm keeps its $35/$25/$47 economics, now at weight 70', () => {
     const control = pool().find((v) => v.id === '35_palm_u47')!;
-    assert.equal(control.weight, 1);
+    assert.equal(control.weight, 70);
     assert.equal(control.priceCents, 3500);
     assert.equal(control.downsellCents, 2500);
     assert.equal(control.upsell1Cents, 4700);
     assert.ok(!control.signs?.length, 'the control must be unscoped so it serves EVERY sign');
+  });
+
+  it('the new commitment-gate arm (35_palm_gate) mirrors the control economics at weight 30, every sign', () => {
+    const gate = pool().find((v) => v.id === '35_palm_gate')!;
+    assert.equal(gate.funnel, 'v1-palm');
+    assert.equal(gate.weight, 30);
+    assert.equal(gate.priceCents, 3500);
+    assert.equal(gate.downsellCents, 2500);
+    assert.equal(gate.upsell1Cents, 4700);
+    assert.ok(!gate.signs?.length, 'the gate must be unscoped so it serves EVERY sign, not just thumb');
   });
 });
 
@@ -288,38 +298,33 @@ describe('scopeVariantsToSign', () => {
   });
 });
 
-describe('the sliding close is THUMB-ONLY (the business requirement)', () => {
-  it('thumb gets a clean 50/50 between the control and the sliding close', () => {
+describe('the commitment gate runs on EVERY fb-palm sign, 70/30 (supersedes the retired thumb-only sliding close)', () => {
+  it('thumb gets a 70/30 between control and the commitment gate', () => {
     const t = draws('v1-palm', 'thumb');
-    assert.deepEqual(Object.keys(t).sort(), ['35_palm_u47', '55-35_palm']);
-    const share = t['55-35_palm'] / 4000;
-    assert.ok(share > 0.45 && share < 0.55, `expected ~50% sliding, got ${(share * 100).toFixed(1)}%`);
+    assert.deepEqual(Object.keys(t).sort(), ['35_palm_gate', '35_palm_u47']);
+    const share = t['35_palm_gate'] / 4000;
+    assert.ok(share > 0.25 && share < 0.35, `expected ~30% gated, got ${(share * 100).toFixed(1)}%`);
   });
 
-  it('palm traffic with NO sign param is thumb → also in the 50/50 (the thumb ad URLs omit &sign=)', () => {
+  it('palm traffic with NO sign param is thumb → also in the 70/30 (the thumb ad URLs omit &sign=)', () => {
     const t = draws('v1-palm', null);
-    assert.deepEqual(Object.keys(t).sort(), ['35_palm_u47', '55-35_palm']);
+    assert.deepEqual(Object.keys(t).sort(), ['35_palm_gate', '35_palm_u47']);
   });
 
   for (const sign of OTHER_SIGNS) {
-    it(`sign="${sign}" NEVER sees the sliding close — 100% control`, () => {
+    it(`sign="${sign}" ALSO gets the 70/30 — the gate is unscoped, unlike the old thumb-only sliding close`, () => {
       const t = draws('v1-palm', sign);
-      assert.equal(t['55-35_palm'], undefined, `${sign} was assigned the sliding close`);
-      assert.equal(t['35_palm_u47'], 4000);
+      assert.deepEqual(Object.keys(t).sort(), ['35_palm_gate', '35_palm_u47']);
+      const share = t['35_palm_gate'] / 4000;
+      assert.ok(share > 0.25 && share < 0.35, `${sign}: expected ~30% gated, got ${(share * 100).toFixed(1)}%`);
     });
   }
 
-  it('an unknown / spoofed sign falls through to the control, never to the $55 arm', () => {
-    for (const sign of ['', 'THUMBS', 'thumb2', '../thumb', 'nonsense']) {
+  it('the retired 55-35_palm is never drawn on any sign, including thumb', () => {
+    for (const sign of ['thumb', ...OTHER_SIGNS, null]) {
       const t = draws('v1-palm', sign, 500);
-      if (sign === '') continue; // '' normalizes to thumb — covered above
-      assert.equal(t['55-35_palm'], undefined, `spoofed sign "${sign}" reached the $55 arm`);
+      assert.equal(t['55-35_palm'], undefined, `${sign ?? '(none)'} drew the retired sliding close`);
     }
-  });
-
-  it('is case/whitespace insensitive on the real thumb value', () => {
-    const t = draws('v1-palm', ' Thumb ');
-    assert.ok(t['55-35_palm'] > 0, 'a whitespace/case variant of thumb was excluded from its own test');
   });
 });
 
@@ -341,36 +346,50 @@ describe('no collateral damage to other funnels', () => {
 
   it('funnel scoping is still a hard partition — palm never draws a root/fb variant', () => {
     const palmIds = new Set([...Object.keys(draws('v1-palm', 'thumb')), ...Object.keys(draws('v1-palm', 'hand-size'))]);
-    for (const id of palmIds) assert.ok(id.endsWith('_palm') || id.endsWith('_palm_u47'), `palm drew ${id}`);
+    for (const id of palmIds) {
+      assert.ok(
+        id.endsWith('_palm') || id.endsWith('_palm_u47') || id.endsWith('_palm_gate'),
+        `palm drew ${id}`,
+      );
+    }
   });
 });
 
-describe('extending the test to a new sign is a CONFIG change, not a code change', () => {
-  it('appending "hand-size" to signs immediately puts hand-size into the 50/50', () => {
-    // This is exactly what we do once Ruby confirms the hand-size lander converts.
+describe('extending a sign-scoped variant is a CONFIG change, not a code change', () => {
+  it('appending "hand-size" to signs immediately puts hand-size into that variant\'s split', () => {
+    // Illustrates the general mechanism using the (now-parked) 55-35_palm as the
+    // example subject, restoring a positive weight locally so the mechanism is
+    // demonstrated independent of its real weight:0 parked state in the live pool.
     const extended = pool().map((v) =>
-      v.id === '55-35_palm' ? { ...v, signs: ['thumb', 'hand-size'] } : v,
+      v.id === '55-35_palm' ? { ...v, weight: 1, signs: ['thumb', 'hand-size'] } : v,
     );
     const tally: Record<string, number> = {};
     for (let i = 0; i < 2000; i++) {
       const v = selectVariant(extended, 'v1-palm', 'hand-size');
       tally[v.id] = (tally[v.id] ?? 0) + 1;
     }
-    assert.deepEqual(Object.keys(tally).sort(), ['35_palm_u47', '55-35_palm']);
-    const share = tally['55-35_palm'] / 2000;
-    assert.ok(share > 0.44 && share < 0.56, `expected ~50%, got ${(share * 100).toFixed(1)}%`);
+    // hand-size now draws from THREE live arms: control (70), the commitment
+    // gate (30, unscoped, already live everywhere), and the re-enabled sliding
+    // close (1, freshly scoped to hand-size for this test).
+    assert.deepEqual(Object.keys(tally).sort(), ['35_palm_gate', '35_palm_u47', '55-35_palm']);
 
-    // …and finger-shape is STILL excluded until it too is added.
-    const fs = selectVariant(extended, 'v1-palm', 'finger-shape');
-    assert.equal(fs.id, '35_palm_u47');
+    // …and finger-shape is STILL excluded from the sliding close (only control + gate).
+    const fsTally: Record<string, number> = {};
+    for (let i = 0; i < 500; i++) {
+      const v = selectVariant(extended, 'v1-palm', 'finger-shape');
+      fsTally[v.id] = (fsTally[v.id] ?? 0) + 1;
+    }
+    assert.deepEqual(Object.keys(fsTally).sort(), ['35_palm_gate', '35_palm_u47']);
   });
 });
 
 describe('rollback', () => {
-  it('setting the sliding weight to 0 reverts thumb to 100% control', () => {
-    const rolledBack = pool().map((v) => (v.id === '55-35_palm' ? { ...v, weight: 0 } : v));
-    for (let i = 0; i < 500; i++) {
-      assert.equal(selectVariant(rolledBack, 'v1-palm', 'thumb').id, '35_palm_u47');
+  it('setting the commitment-gate weight to 0 reverts every sign to 100% control', () => {
+    const rolledBack = pool().map((v) => (v.id === '35_palm_gate' ? { ...v, weight: 0 } : v));
+    for (const sign of ['thumb', ...OTHER_SIGNS, null]) {
+      for (let i = 0; i < 100; i++) {
+        assert.equal(selectVariant(rolledBack, 'v1-palm', sign).id, '35_palm_u47');
+      }
     }
   });
 });
