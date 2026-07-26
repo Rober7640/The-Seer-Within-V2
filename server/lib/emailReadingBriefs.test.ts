@@ -20,4 +20,11 @@ describe('getEmailReadingBrief', () => {
   it('returns null for an empty campaign', () => {
     assert.equal(getEmailReadingBrief(''), null);
   });
+
+  it('has a brief for the peace campaign under test', () => {
+    const b = getEmailReadingBrief('reframe-05-peace');
+    assert.ok(b, 'expected a brief for reframe-05-peace');
+    assert.equal(b.personaSlug, 'evelyn-cross');
+    assert.match(b.readingRecap, /peace|wall|space/i);
+  });
 });

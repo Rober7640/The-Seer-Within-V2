@@ -38,7 +38,31 @@ const BRIEFS: EmailReadingBrief[] = [
     continueSeed:
       "You came — good. I've been holding that line of yours, the one you say twice. Tell me what it is, and I'll tell you what it's guarding.",
   },
+  {
+    campaign: 'reframe-05-peace',
+    personaSlug: 'evelyn-cross',
+    label: 'Protecting my peace',
+    readingRecap:
+      "You wrote to them about the phrase \"protecting my peace\" — how it can be a real boundary, or a wall wearing gentler words. You gave them the test: a boundary is aimed at the one person who hurt them; a wall is aimed at anyone who might get close enough to, keeping everyone out and calling the empty room serenity.",
+    openLoop:
+      "You gave them a truer sentence to test their peace against — \"I'm keeping everyone at a distance so nothing can reach me\" — and told them if it landed, not to sit with that alone.",
+    continueSeed:
+      "You came to find out what you're really guarding — good. So tell me honestly: this peace of yours, is it still a door someone could knock on, or has it become the wall?",
+  },
 ];
+
+// TEA-LEAF TEMPLATE (activate when the email ships — set its ?campaign= slug to match):
+// {
+//   campaign: 'tealeaf-<topic>',
+//   personaSlug: 'evelyn-cross',
+//   label: 'The tea leaves',
+//   readingRecap:
+//     "In your letter you read their leaves symbol by symbol: <bird taking flight = he's pulling away>, " +
+//     "<withering tree = the connection thinning>, then the turn — <bridge = a way back>, <lighthouse = support near>, " +
+//     "<butterfly = change is possible>. Transcribe the ACTUAL symbols the email used.",
+//   openLoop: "You offered them the FULL reading — the part the letter held back.",
+//   continueSeed: "You came for the rest of it. Let me finish reading those leaves for you — start with the one that's been sitting with you.",
+// },
 
 export function getEmailReadingBrief(campaign: string): EmailReadingBrief | null {
   if (!campaign) return null;
