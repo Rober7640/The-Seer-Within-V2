@@ -14,7 +14,7 @@ import {
 import { eq, ne, and, desc, sql } from 'drizzle-orm';
 import { loadUserContext, summarizeSession } from './memoryManager';
 import { loadQuizIntake, buildQuizPromptSection } from './quizMemory';
-import { loadArrivalReading, buildArrivalReadingSection, ARRIVAL_READING_FRESH_MSG_LIMIT } from './arrivalReading';
+import { loadArrivalReading, buildArrivalReadingSection, buildArrivalGreetingInstruction, ARRIVAL_READING_FRESH_MSG_LIMIT } from './arrivalReading';
 import { loadCrossPersonaMemories, formatTransferContext } from './memoryTransfer';
 import { startChatSession, endChatSession, checkpointSession } from './creditTracking';
 import { getPromoBalance, getSpendableCoins } from './promoWallet';
@@ -950,6 +950,9 @@ export async function generateGreeting(config: {
   const memoryContext = await loadUserContext(config.userId, config.personaId);
   const isReturning = memoryContext.length > 0;
 
+  // Email arrival: did they land here from one of this persona's emails (≤24h)?
+  const arrivalReading = await loadArrivalReading(config.userId, config.personaId);
+
   // For astrology personas: load birth chart to personalize the greeting
   const isAstrologyPersona = personaConfig.baseSystemPrompt.includes('[ASTROLOGY_PERSONA]') ||
     personaConfig.baseSystemPrompt.includes('[VEDIC_ASTROLOGY_PERSONA]');
@@ -1090,6 +1093,12 @@ Return JSON: {"message": "your greeting"}`;
     greetingPrompt = `${personaVoice}
 
 Generate a warm, personal opening message for ${user[0].firstName} — a new client. Welcome them and ask what brings them here today or what they're hoping to understand about their life. Keep it to 1-2 sentences. Do NOT mention birth data, charts, or ask for any information yet — just make them feel welcome and invite them to share.
+
+Return JSON: {"message": "your greeting"}`;
+  } else if (arrivalReading) {
+    greetingPrompt = `${personaVoice}
+
+${buildArrivalGreetingInstruction(arrivalReading, user[0].firstName)}
 
 Return JSON: {"message": "your greeting"}`;
   } else if (user[0].migratedFromConversationId && memoryContext) {
