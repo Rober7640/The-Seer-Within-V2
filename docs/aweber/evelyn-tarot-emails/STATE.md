@@ -1,5 +1,7 @@
 # Evelyn Tarot — STATE
 
+> **RETIRED 2026-07-26.** The tarot series is retired; email→chat continuity now runs per-campaign (server/lib/emailReadingBriefs.ts + arrivalReading.ts). `sync-email-canon.ts` is guarded off — do not re-run.
+
 Rolling state for the `/evelyn-tarot` skill. Update after every email. The deck reads as a journey: each email's **tomorrow-hook** names the next card, so the order matters.
 
 **⚠ After scheduling or re-scheduling any batch, run `npx tsx scripts/sync-email-canon.ts`** — it parses this table + the email preheaders into `system_config.email_canon`, which the V2 chat engine injects so Evelyn can pay off "your email said you have something to tell me" with the actual card (improve-v2 #27). Rows not marked SENT/SCHEDULED are skipped automatically.

@@ -54,6 +54,15 @@ function preheader(file: string): string {
 
 async function main() {
   const dry = process.argv.includes('--dry');
+  if (!process.argv.includes('--force-retired')) {
+    console.error(
+      'sync-email-canon is RETIRED: the tarot program is retired and email→chat\n' +
+      'continuity now runs per-campaign via server/lib/emailReadingBriefs.ts +\n' +
+      'arrivalReading.ts. Re-running this would overwrite Evelyn\'s canon with stale\n' +
+      'tarot letters. Pass --force-retired only if you deliberately need the old path.',
+    );
+    process.exit(1);
+  }
   const state = readFileSync(STATE, 'utf8');
 
   type Entry = { date: string; sentAtUtc: string; card: string; subject: string; essence: string; promise: string };
