@@ -53,8 +53,10 @@ const CASES = [
   { funnel: 'v1-fb2',   sign: undefined, label: 'fb2',           n: 3 },
   { funnel: 'v1-gdn',   sign: undefined, label: 'gdn',           n: 3 },
   { funnel: 'v1-palm',  sign: 'thumb',    label: 'palm/thumb',    n: 4 },
-  // The thumb-only scoping guard needs a batch to be convincing: with 55-35_palm at
-  // weight 1 for thumb, a leak onto hand-size would show up fast across 8 draws.
+  // The thumb-only scoping guard needs a batch to be convincing: 55-35_palm is now
+  // RETIRED (parked at weight 0 — superseded by the 35_palm_gate commitment-gate
+  // test), so this guard is currently a no-op, but if it were ever re-weighted to
+  // 1 for thumb again, a leak onto hand-size would show up fast across 8 draws.
   { funnel: 'v1-palm',  sign: 'hand-size', label: 'palm/hand-size', n: 8, scopingGuard: true },
 ];
 

@@ -13,8 +13,8 @@ interface CommitmentGateCardProps {
 
 const COMMITMENTS = [
   'I understand belief is required for this to work',
-  "I won't tell anyone else about this reading — it weakens it",
-  "I understand once this is done, there's no undoing it",
+  "I'm ready to receive this tonight",
+  "I'll read it with an open heart",
 ] as const
 
 export function CommitmentGateCard({ firstName, onConfirm, priceDollars = 35 }: CommitmentGateCardProps) {
@@ -46,7 +46,7 @@ export function CommitmentGateCard({ firstName, onConfirm, priceDollars = 35 }: 
                 type="checkbox"
                 checked={checked[index]}
                 onChange={() => toggle(index)}
-                className="mt-0.5 h-4 w-4 shrink-0 rounded border-amber-300 text-amber-600 focus:ring-amber-500"
+                className="mt-0.5 h-4 w-4 shrink-0 accent-amber-600"
               />
               <span>{label}</span>
             </label>
@@ -60,7 +60,7 @@ export function CommitmentGateCard({ firstName, onConfirm, priceDollars = 35 }: 
               data-testid="button-commitment-confirm"
               className="w-full py-4 px-6 rounded-lg bg-gradient-to-r from-amber-500 to-orange-600 text-white font-bold text-lg shadow-lg hover:shadow-xl transition-all duration-300 animate-pulse hover:animate-none"
             >
-              Get My Reading — ${priceDollars}
+              Begin My Energy Clearing - ${priceDollars}
             </button>
           ) : (
             <p className="text-center text-[11px] italic text-gray-400 py-2">
