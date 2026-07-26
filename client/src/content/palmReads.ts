@@ -45,6 +45,7 @@ export type PalmSign =
   | 'hand-size'
   | 'finger-length'
   | 'finger-length-alt'
+  | 'thumb-angle'
 
 export const PALM_HOOKS: PalmHook[] = [
   'soulmate-timing',
@@ -874,6 +875,79 @@ const FINGER_LENGTH_ALT: SignConfig = {
   strip: { url: '/palm/finger-length-alt-strip.png', width: 969, height: 653 },
 }
 
+// thumb-angle — does the life line's arc run true with the line of the thumb.
+//   A = aligned, the two agree   → the true heart    (recognises its own)
+//   B = not aligned, each its own way → the seeking heart (travels wide, still looking)
+// 2-option. Archetypes deliberately avoid the existing labels: "open"=thumb-curve,
+// "guarded/inward"=finger-lock/thumb, "harmonious"=finger-length.
+const THUMB_ANGLE: SignConfig = {
+  id: 'thumb-angle',
+  eyebrow: "According to Your Life Line's Arc",
+  instruction: 'Open your hand and look at the curve around your thumb — tap the one that matches yours.',
+  beatNoun: 'life line',
+  continueCta: "There's more your life line is telling me — begin your free reading",
+  chooseMoment: 'the moment your hand opened',
+  strip: { url: '/palm/thumb-angle-strip.png', width: 1357, height: 1027 },
+  options: ['a', 'b'],
+  mark: {
+    a: 'a life line that runs true with the line of your thumb, the two in agreement',
+    b: 'a life line that pulls away from your thumb, each going its own way',
+    c: '',
+  },
+  reading: {
+    a: 'the true heart',
+    b: 'the seeking heart',
+    c: '',
+  },
+  reads: {
+    'already-met': {
+      a: [
+        'Your life line runs true with the line of your thumb, the two in agreement — the true heart.',
+        "You're wondering if they've already come into your life, and whether you'd know them if they had.",
+        'You would — a heart this true recognises its own; it has already met the one it agrees with, and something in you has known for a while. Yes, you\'ve met them.',
+        'Let me look closer at when you first knew…',
+      ],
+      b: [
+        'Your life line pulls away from your thumb, each going its own way — the seeking heart.',
+        "You're wondering if they've already crossed your path while you were busy looking further out.",
+        'They have — a seeking heart travels wide, and it walked right past what it was looking for; yes, you\'ve met them, closer than the distance you were searching.',
+        'Let me look closer at who you overlooked…',
+      ],
+      c: [],
+    },
+    'love-again': {
+      a: [
+        'Your life line runs true with the line of your thumb, the two in agreement — the true heart.',
+        "You're asking if love comes again, after you gave yourself so completely to someone who didn't match you.",
+        "It does — a true heart doesn't lose its aim; it simply waits for someone who runs the same direction. So yes, dear, you will love again.",
+        "Let me look closer at who's already turning toward you…",
+      ],
+      b: [
+        'Your life line pulls away from your thumb, each going its own way — the seeking heart.',
+        "You're asking if love comes again, when the last one left you convinced you're better off on your own path.",
+        "You're not — a seeking heart isn't running from love, it's still looking for the one worth stopping for. So yes, you'll love again.",
+        "Let me look closer at what's still keeping you moving…",
+      ],
+      c: [],
+    },
+    'soulmate-timing': {
+      a: [
+        'Your life line runs true with the line of your thumb, the two in agreement — the true heart.',
+        "You've been so sure of what you want that the waiting has started to feel like a punishment for it.",
+        "It isn't — a true heart is never wasted, and yours has nearly finished the wait. Yes, they're coming, and sooner than the waiting let you believe.",
+        "Let me look closer at what's been holding the timing…",
+      ],
+      b: [
+        'Your life line pulls away from your thumb, each going its own way — the seeking heart.',
+        "You've gone your own way so long that you've wondered whether you left it too late.",
+        "You haven't — a seeking heart finds them at exactly the moment it stops searching, and that moment is close. Yes, they're coming.",
+        "Let me look closer at what's been holding the timing…",
+      ],
+      c: [],
+    },
+  },
+}
+
 export const SIGNS: Record<PalmSign, SignConfig> = {
   thumb: THUMB,
   'finger-lock': FINGER_LOCK,
@@ -885,6 +959,7 @@ export const SIGNS: Record<PalmSign, SignConfig> = {
   'hand-size': HAND_SIZE,
   'finger-length': FINGER_LENGTH,
   'finger-length-alt': FINGER_LENGTH_ALT,
+  'thumb-angle': THUMB_ANGLE,
 }
 
 export function getSign(sign: PalmSign): SignConfig {

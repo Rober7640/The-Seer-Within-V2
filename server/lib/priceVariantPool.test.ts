@@ -54,6 +54,10 @@ const OTHER_SIGNS = [
   'thumb-curve-alt',
   'finger-length',
   'finger-length-alt',
+  // thumb-angle runs its own $55/$35 test through the EXPERIMENT FRAMEWORK
+  // (v1_main_price_2026, sign-scoped), never through this legacy pool — so it
+  // must stay 100% control here, exactly like every other non-thumb sign.
+  'thumb-angle',
 ];
 
 // Draw many times so a "never assigned" claim is not a fluke of one roll.

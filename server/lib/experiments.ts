@@ -221,6 +221,7 @@ export function shouldForceRunning(
 export interface AssignContext {
   personaId?: string | null;
   funnel?: string | null;
+  sign?: string | null;
   [k: string]: unknown;
 }
 
@@ -277,6 +278,11 @@ export async function assign(
   // traffic, so migrating one funnel onto the framework never touches another
   // funnel's live system_config split. Absent scope.funnel = no funnel filter.
   if (exp.scope?.funnel && context?.funnel !== exp.scope.funnel) return controlArm;
+  // Sign scope (per-LANDER V1 price tests): narrows a funnel-scoped test to ONE
+  // fb-palm sign, so a price test on a single new lander never enrols the rest of
+  // v1-palm — and in particular never disturbs the live thumb-only system_config
+  // 70/30. Absent scope.sign = no sign filter (existing funnel-wide tests unchanged).
+  if (exp.scope?.sign && context?.sign !== exp.scope.sign) return controlArm;
 
   // Concluded test → roll the declared winner out to the in-scope population:
   // not enrolled (test is over, no more exposures) but its payload IS applied,
@@ -717,9 +723,10 @@ export async function resolveV1Price(
   fallbackDownsellCents: number,
   funnel?: string | null,
   key: string = V1_MAIN_EXPERIMENT_KEY, // overridable so tests never touch the live experiment
+  sign?: string | null,                 // fb-palm sign, for per-LANDER scoping (scope.sign)
 ): Promise<{ mainCents: number; downsellCents: number; variant: string | null; enrolled: boolean; applied: boolean }> {
   // Bucket on the NORMALISED email (matches the exposure dedup on hashEmail).
-  const a = await assign(key, email.trim().toLowerCase(), { funnel: funnel ?? null });
+  const a = await assign(key, email.trim().toLowerCase(), { funnel: funnel ?? null, sign: sign ?? null });
   if (a?.applied) {
     const main = payloadCents(a.payload, 'mainCents');
     const downsell = payloadCents(a.payload, 'downsellCents');
