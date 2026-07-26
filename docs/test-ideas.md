@@ -1717,3 +1717,12 @@ Covered = shipped in the skill (`[x]`); open = still a gap (`[ ]`). Runs LOCAL-O
 - [ ] `/success` page contents — order summary (`/api/order/details`) + Luna cross-sell handoff; the upsell audit asserts the hand-off TO `/success`, not what it renders
 - [ ] The REAL 1-click off-session charge path (not the fallback) — needs a Stripe TEST customer with a saved card + a completed original checkout; the audit proves the same server price via the fallback instead
 - [ ] Palm finger-shape / decode-him (a hook, not a sign) browser entries — charge audit covers their pricing via the API; a browser entry smoke would extend audit-funnels
+
+### fb-palm commitment gate — 3-checkbox pre-purchase ask ('35_palm_gate' variant, retires '55-35_palm') (2026-07-26)
+- [ ] `CommitmentGateCard` renders (in place of `PurchaseCTA`) only when `chat.userData.priceVariantId === '35_palm_gate'`; every other variant (incl. the retired `55-35_palm`) renders the classic `PurchaseCTA`/`ClearingChoiceCard` path unchanged
+- [ ] With 0, 1, or 2 of the 3 commitment checkboxes checked, no purchase button is present in the DOM (or, if present, is not clickable) — only the "Check all three to continue" placeholder shows
+- [ ] Checking all 3 checkboxes reveals the confirm button (`button-commitment-confirm`) and it is clickable/enabled
+- [ ] Unchecking any one of the 3 after all were checked hides the confirm button again (no stale enabled state)
+- [ ] Clicking the confirm button after all 3 are checked calls `handlePurchase("main")` and routes through the exact same `/api/checkout` call (same `type=main`, same funnel tag, same price) as the control variant's `PurchaseCTA` — the gate changes only the UI in front of the purchase, never the checkout itself
+- [ ] `35_palm_gate` carries the same $35 main / $25 downsell economics as `35_palm_u47` — price shown and charged is identical between the two arms
+- [ ] Commitment checkbox copy shows "I understand belief is required for this to work", "I'm ready to receive this tonight", "I'll read it with an open heart" (no secrecy or irreversibility framing that would contradict the card's own 30-Day Guarantee footer)

@@ -30,8 +30,8 @@ import {
 
 // These tests run against the REAL shipping artifacts, not a copy of them — so they
 // cannot pass while the thing we actually deploy says something different.
-//   go-live-pool.json          → loaded into V1_PRICE_VARIANTS_JSON on dev/local
-//   go-live-55-35-config.sql   → run against production's system_config row
+//   go-live-pool.json             → loaded into V1_PRICE_VARIANTS_JSON on dev/local
+//   go-live-palm-gate-config.sql  → run against production's system_config row
 // The drift test below proves the two are the same pool.
 const ROOT = join(import.meta.dirname, '..', '..');
 const GO_LIVE_POOL = readFileSync(join(ROOT, 'improve-v1', 'go-live-pool.json'), 'utf8');

@@ -59,13 +59,21 @@ The gate occupies the same slot in the "Interactive Elements" region that `Purch
 
 ### Copy (illustrative draft, in Evelyn's existing "ritual" voice — the deliverable is already named `energy_clearing_ritual` in the codebase)
 
+> **Revised per final review (2026-07-26):** the original draft's checkboxes 2 and 3
+> ("I won't tell anyone else about this reading — it weakens it" / "I understand
+> once this is done, there's no undoing it") asked for secrecy and irreversibility,
+> which directly contradicted the card's own `🔒 30-Day Guarantee` footer — the
+> product IS refundable, and a secrecy ask is a bad look in a refund dispute.
+> Replaced with affirmations that carry the same "yes, I'm ready" commitment
+> function without the contradiction.
+
 > *"[FirstName], before I prepare this for you — I need to know you're truly ready."*
 >
 > - [ ] I understand belief is required for this to work
-> - [ ] I won't tell anyone else about this reading — it weakens it
-> - [ ] I understand once this is done, there's no undoing it
+> - [ ] I'm ready to receive this tonight
+> - [ ] I'll read it with an open heart
 >
-> *(button appears once all 3 are checked)* → **Get My Reading — $35**
+> *(button appears once all 3 are checked)* → **Begin My Energy Clearing - $35**
 
 Exact copy is expected to be refined during implementation/review — the structural requirement is 3 checkboxes + a header line addressing the visitor by name, gating a single confirm action.
 
