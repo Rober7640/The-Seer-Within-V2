@@ -4,8 +4,8 @@
 // the persona CONTINUES the specific reading the email delivered.
 import { db } from './db';
 import { and, eq, desc, gte, isNotNull } from 'drizzle-orm';
-import { evelynLanderSessions, personaLanderSessions, personas } from '@shared/schema';
-import { getEmailReadingBrief, type EmailReadingBrief } from './emailReadingBriefs';
+import { evelynLanderSessions, personaLanderSessions } from '@shared/schema';
+import { getEmailReadingBrief, hasBriefsForPersona, type EmailReadingBrief } from './emailReadingBriefs';
 
 /** Evelyn's arrival campaign lives in evelyn_lander_sessions (Evelyn-only table). */
 const EVELYN_SLUG = 'evelyn-cross';
@@ -57,23 +57,21 @@ export async function resolveArrivalCampaign(
 /**
  * The reading brief for this user+persona if they just arrived from a known
  * campaign email, else null. Guards that the brief belongs to this persona.
+ * Short-circuits before any query for personas (Marcus, Luna, …) that have no
+ * briefs registered at all — this runs on every early in-session message and
+ * every greeting, so skipping the lander lookup entirely matters.
  */
 export async function loadArrivalReading(
   userId: string,
-  personaId: string,
+  personaSlug: string,
 ): Promise<EmailReadingBrief | null> {
-  const [p] = await db
-    .select({ slug: personas.slug })
-    .from(personas)
-    .where(eq(personas.id, personaId))
-    .limit(1);
-  if (!p?.slug) return null;
+  if (!hasBriefsForPersona(personaSlug)) return null;
 
-  const campaign = await resolveArrivalCampaign(userId, p.slug);
+  const campaign = await resolveArrivalCampaign(userId, personaSlug);
   if (!campaign) return null;
 
   const brief = getEmailReadingBrief(campaign);
-  if (!brief || brief.personaSlug !== p.slug) return null;
+  if (!brief || brief.personaSlug !== personaSlug) return null;
   return brief;
 }
 

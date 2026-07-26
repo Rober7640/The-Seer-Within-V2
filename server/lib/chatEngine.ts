@@ -720,7 +720,7 @@ async function buildMessageContext(
   // emails AND the session is still young, hand over the actual reading you sent
   // so you continue it instead of starting cold (per-campaign, #27).
   const arrivalBrief = sessionMessageCount <= ARRIVAL_READING_FRESH_MSG_LIMIT
-    ? await loadArrivalReading(userId, personaConfig.id)
+    ? await loadArrivalReading(userId, personaConfig.slug)
     : null;
   const arrivalSection = arrivalBrief ? buildArrivalReadingSection(arrivalBrief) : '';
 
@@ -951,7 +951,7 @@ export async function generateGreeting(config: {
   const isReturning = memoryContext.length > 0;
 
   // Email arrival: did they land here from one of this persona's emails (≤24h)?
-  const arrivalReading = await loadArrivalReading(config.userId, config.personaId);
+  const arrivalReading = await loadArrivalReading(config.userId, personaConfig.slug);
 
   // For astrology personas: load birth chart to personalize the greeting
   const isAstrologyPersona = personaConfig.baseSystemPrompt.includes('[ASTROLOGY_PERSONA]') ||
