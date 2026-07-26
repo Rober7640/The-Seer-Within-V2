@@ -49,7 +49,7 @@ describe('arrival reading is injected into a fresh Evelyn session', { skip: !HAS
   it('places the <arrival_reading> block with the email specifics into the system prompt', async (t) => {
     if (!evelyn) return t.skip('evelyn-cross persona not seeded');
     const { system } = await _buildMessageContext(
-      { id: evelyn.id, displayName: evelyn.displayName, baseSystemPrompt: evelyn.baseSystemPrompt, personality: null, aiModel: null, basicModel: null, coinsPerMinute: evelyn.coinsPerMinute },
+      { id: evelyn.id, slug: 'evelyn-cross', displayName: evelyn.displayName, baseSystemPrompt: evelyn.baseSystemPrompt, personality: null, aiModel: null, basicModel: null, coinsPerMinute: evelyn.coinsPerMinute },
       userId,
       sessionId,
     );
