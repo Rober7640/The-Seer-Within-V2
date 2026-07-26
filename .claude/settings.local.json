@@ -68,7 +68,13 @@
       "Bash(echo \"EXITCODE=$?\")",
       "PowerShell(Get-Content \"D:\\\\Joel-Project\\\\the-seer-within-v3\\\\.env\" | Select-String -Pattern \"DATABASE_URL|PORT|NODE_ENV\" | ForEach-Object { $_.Line.Substring\\(0, [Math]::Min\\(60, $_.Line.Length\\)\\) })",
       "Bash(npx playwright *)",
-      "Bash(MSYS_NO_PATHCONV=1 taskkill /F /FI \"IMAGENAME eq node.exe\")"
+      "Bash(MSYS_NO_PATHCONV=1 taskkill /F /FI \"IMAGENAME eq node.exe\")",
+      "Bash(git mv *)",
+      "Bash(mv finger-length-ratio-01 *)",
+      "Bash(git status *)",
+      "Bash(node aweber-ops.mjs list sent)",
+      "Bash(grep -rniE '\\(you \\(have|only|still|ve got\\)|running \\(low|out\\)|minutes? \\(left|remaining\\)|out of \\(credit|coin\\)|purchase|buy\\).{0,40}\\(minute|credit|coin\\)|\\(minute|credit|coin\\).{0,20}\\(left|remaining|ran out|run out\\)' server --include=\"*.ts\")",
+      "Bash(grep -iE 'prompt|you |system|`|\"')"
     ]
   }
 }

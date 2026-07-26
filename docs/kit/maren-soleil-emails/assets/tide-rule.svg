@@ -1,0 +1,13 @@
+<!-- tide-rule.svg — Maren Soleil section divider: gold hairline that becomes a gentle two-crest tide at center, with a small gold node. Replaces Luna's straight rule + 4-point sparkle. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="120" height="16" viewBox="0 0 120 16" fill="none" role="img" aria-label="Decorative tide divider">
+  <g stroke="#C9A24B" stroke-width="1" fill="none" stroke-linecap="round">
+    <!-- left flat hairline -->
+    <path d="M2 8 L44 8"/>
+    <!-- center tide wave (two gentle crests) -->
+    <path d="M44 8 C50 2 56 2 60 8 C64 14 70 14 76 8"/>
+    <!-- right flat hairline -->
+    <path d="M76 8 L118 8"/>
+  </g>
+  <!-- center node -->
+  <circle cx="60" cy="8" r="1.4" fill="#C9A24B"/>
+</svg>
