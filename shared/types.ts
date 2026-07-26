@@ -73,6 +73,16 @@ export function isSlidingCloseVariant(id?: string | null): boolean {
   return !!id && id.startsWith(SLIDING_CLOSE_VARIANT_PREFIX)
 }
 
+// fb-palm commitment-gate A/B test — replaces PurchaseCTA with a 3-checkbox
+// commitment gate for this EXACT variant id only. Not a prefix like the
+// sliding close above, because there is only ever one gated variant, not a
+// family of them.
+export const COMMITMENT_GATE_VARIANT_ID = '35_palm_gate'
+
+export function isCommitmentGateVariant(id?: string | null): boolean {
+  return id === COMMITMENT_GATE_VARIANT_ID
+}
+
 export interface ShippingAddress {
   name: string
   line1: string
