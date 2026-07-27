@@ -14,6 +14,7 @@
     "seed:intents": "tsx server/scripts/seed.ts",
     "migrate": "tsx server/lib/migration.ts",
     "migrate:experiments": "tsx server/scripts/migrateExperiments.ts",
+    "verify:wallet": "tsx scripts/verify-wallet-rates.ts",
     "test:e2e": "tsx server/lib/e2eTest.ts",
     "test:experiments": "tsx --test server/lib/experiments.test.ts server/lib/experimentTally.test.ts server/lib/personaPrompt.test.ts",
     "test:price": "tsx --test server/lib/priceVariantPool.test.ts server/lib/purchaseAnalytics.test.ts server/lib/braceletIsolation.test.ts server/lib/perMinutePricing.test.ts server/lib/minutesMeter.test.ts",
