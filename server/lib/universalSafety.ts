@@ -214,16 +214,55 @@ function scanCrisis(text: string): 'hard' | 'denied' | 'none' {
 }
 
 // Inappropriate/sexual content
+//
+// Every pattern here must be DIRECTED \u2014 the user propositioning the persona or
+// demanding sexual content from her. Merely *mentioning* a sexual subject is not
+// a violation: clients disclose sexual histories, partners' porn addictions and
+// assault as part of a reading, and those must reach the persona so she can hold
+// them with care.
+//
+// 2026-07-20 audit: a bare keyword list (`horny|cum|blowjob|handjob|masturbat\w*|porn`)
+// with no targeting requirement terminated a $99.99 buyer's session because she
+// described a Gustav Klimt painting she had sent to a man. She never returned.
+// The same bare list silently blocked disclosures like "his porn addiction is
+// destroying our marriage". Keep every entry below scoped to a second-person
+// target or an imperative aimed at the persona.
 const INAPPROPRIATE_PATTERNS: RegExp[] = [
   /\bhave\s+sex\s+with\s+(?:you|me|us)\b/i,
   /\b(?:sex|naked|nude)\s+(?:you|me|us)\b/i,
   /\byou[\u2019']?re\s+(?:so\s+)?(?:hot|sexy)\b/i,
-  /\b(?:horny|cum|blowjob|handjob|masturbat\w*|porn)\b/i,
   /\bsexual\s+(?:fantasy|favou?r|pleasure)\b/i,
   /\bsend\s+(?:me\s+)?(?:nudes|pics)\b/i,
   /\bstrip\s+for\s+me\b/i,
   /\bwhat\s+are\s+you\s+wearing\b/i,
   /\bfuck\s+(?:me|us)\b/i,
+  // Bare sexual terms \u2014 only when aimed at the persona, never when described.
+  // First-person arousal stated *in session* is still a proposition opener;
+  // "his porn addiction" or "a painting of a woman masturbating" is not.
+  /\bi(?:[\u2019']m|\s+am)\s+(?:so\s+|really\s+|super\s+)?horny\b/i,
+  /\b(?:are|r)\s+(?:you|u)\s+(?:so\s+|feeling\s+)?horny\b/i,
+  /\b(?:do|did|does|have|has)\s+(?:you|u)\s+(?:ever\s+)?(?:masturbat\w*|watch\s+porn)\b/i,
+  /\b(?:horny|masturbat\w*|cum(?:ming|min)?)\s+(?:with|for|to|over|thinking\s+(?:of|about))\s+(?:you|u|me|us)\b/i,
+  /\b(?:you|u)\s+make\s+me\s+(?:horny|wet|hard|cum)\b/i,
+  /\b(?:give|send|want)\s+(?:me\s+)?(?:a\s+)?(?:blowjob|handjob)\b/i,
+  /\blet[\u2019']?s\s+(?:watch\s+porn|masturbat\w*|cum)\b/i,
+  // Stating current arousal in session \u2014 same class as "I am so horny".
+  /\bi(?:[\u2019']m|\s+am)\s+(?:currently\s+)?masturbating\b/i,
+  // "send me porn" \u2014 anchored to imperative position ONLY. Matching it anywhere
+  // would block the far more likely disclosure ("he keeps trying to send me porn").
+  /(?:^|[.!?]\s*)(?:send|show)\s+me\s+(?:some\s+)?porn\b/i,
+  /\b(?:can|will|would|could)\s+(?:you|u)\s+(?:send|show)\s+me\s+(?:some\s+)?porn\b/i,
+  // "watch porn with you/me" \u2014 "...with him/her" stays a disclosure and passes.
+  /\bwatch\s+porn\s+with\s+(?:you|u|me)\b/i,
+  // cum, directed at the persona as spectacle or permission
+  /\b(?:wanna|want\s+to|can\s+i|let\s+me)\s+(?:see\s+me\s+|watch\s+me\s+)?cum\b/i,
+  /\b(?:see|watch)\s+me\s+cum\b/i,
+  // Reversed word order: "thinking about you while masturbating"
+  /\b(?:think\w*|fantasiz\w*|dream\w*)\s+(?:about|of)\s+(?:you|u)\b[^.!?]{0,40}\b(?:masturbat\w*|cum(?:ming)?|horny|touch\w*\s+myself)\b/i,
+  /\b(?:masturbat\w*|cum(?:ming)?|touch\w*\s+myself)\b[^.!?]{0,40}\b(?:think\w*|fantasiz\w*)\s+(?:about|of)\s+(?:you|u)\b/i,
+  // Pre-existing holes in the same class (never covered by the old keyword list)
+  /\btalk\s+dirty\s+to\s+me\b/i,
+  /\bdescribe\s+(?:your|ur)\s+(?:body|breasts|boobs|tits)\b/i,
 ];
 
 // Prompt injection attempts

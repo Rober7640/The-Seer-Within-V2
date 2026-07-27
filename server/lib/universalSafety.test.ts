@@ -248,6 +248,32 @@ function testInappropriateContent() {
     assertUnsafe(result, 'inappropriate', `Inappropriate: "${msg}"`);
   }
 
+  // Directed propositions must still be caught even though the bare keyword
+  // list was removed (2026-07-20 audit).
+  const directedMessages = [
+    'are you horny',
+    'do you masturbate',
+    'I am cumming thinking of you',
+    'you make me horny',
+    'give me a blowjob',
+    "let's watch porn",
+    // Gap-closing round 2 (2026-07-20): directed solicitations the first pass missed.
+    'send me porn',
+    'can you send me some porn',
+    'I want to watch porn with you',
+    'can I cum',
+    'wanna see me cum',
+    'I am masturbating right now',
+    'I was thinking about you while masturbating',
+    'talk dirty to me',
+    'describe your body',
+  ];
+
+  for (const msg of directedMessages) {
+    const result = checkUniversalSafety(msg);
+    assertUnsafe(result, 'inappropriate', `Directed proposition: "${msg}"`);
+  }
+
   // Should NOT flag
   const safeMessages = [
     'I want guidance about my love life',
@@ -255,6 +281,17 @@ function testInappropriateContent() {
     'My relationship is dying',
     'I feel naked without my crystals',
     'How do I attract romantic energy?',
+    // 2026-07-20 audit: a bare keyword match ended a $99.99 buyer's session for
+    // describing a painting. Sexual subjects that are DESCRIBED, not directed at
+    // the persona, must reach her — clients disclose these as part of a reading.
+    'Today, I sent just a picture of Gustav Klimt, of a woman masturbating. No text.',
+    "My husband's porn addiction is destroying our marriage. What do you see?",
+    'He wanted a blowjob and I said no, and he went cold on me for days.',
+    'I have not masturbated since he left. Is that normal?',
+    // The gap-closing patterns must not swallow these disclosures.
+    'He keeps trying to send me porn and I have asked him to stop',
+    'My husband makes me watch porn with him and I hate it',
+    'She looks like a porn star and I feel invisible next to her',
   ];
 
   for (const msg of safeMessages) {

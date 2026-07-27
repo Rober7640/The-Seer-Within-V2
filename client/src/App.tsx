@@ -168,7 +168,14 @@ function Router() {
         )}
 
         {/* Existing funnel routes (V1 — email traffic) */}
-        <Route path="/" component={LandingPage} />
+        {/* ⚠️ TEMPORARY (FB-approval swap, 2026-07-23): the root "/" serves the
+            FB-compliance HomePage (storefront) instead of the original LandingPage,
+            so Facebook's reviewer lands on the compliant page at the domain root.
+            The funnel is UNTOUCHED — HomePage's CTA still routes into /chat, and the
+            ad funnels (/fb, /fb2, /gdn, /fb-palm) keep LandingPage below.
+            TO REVERT after approval: change this one line back to `component={LandingPage}`.
+            (Supersedes the "does NOT replace root" note in HomePage.tsx's header.) */}
+        <Route path="/" component={HomePage} />
         <Route path="/chat" component={ChatPage} />
         <Route path="/welcome1" component={UpsellPage} />
         <Route path="/welcome2" component={Upsell2Page} />

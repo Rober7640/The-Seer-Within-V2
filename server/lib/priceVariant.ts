@@ -275,7 +275,18 @@ export async function assignVariantIfMissing(
     // id↔price decoupling is the /admin/price-test readout, and only once this
     // framework test is started for a funnel (until then the legacy split is what's
     // live and /admin/price-test reads it correctly) — an accepted, temporary tradeoff.
-    const v1 = await resolveV1Price(email, picked.priceCents, picked.downsellCents, funnel);
+    // `sign` is passed so a price experiment can be scoped to ONE fb-palm lander
+    // (scope.sign) instead of the whole funnel — that is how a new lander runs its
+    // own $55/$35 test without touching the live thumb-only system_config 70/30.
+    // Normalised (absent sign on v1-palm ⇒ 'thumb') so it matches the pool + the log line.
+    const v1 = await resolveV1Price(
+      email,
+      picked.priceCents,
+      picked.downsellCents,
+      funnel,
+      V1_MAIN_EXPERIMENT_KEY,
+      normalizeSign(funnel, sign),
+    );
     const mainCents = v1.mainCents;
     const downsellCents = v1.downsellCents;
 

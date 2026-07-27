@@ -8,12 +8,14 @@ Canonical pending-work tracker, reconciled from the PRD
 
 **19 code/product tasks pending + 1 external.** Update the checkboxes as items complete.
 
-> ⚠️ **Obsolete — do NOT action:** Mike's Task A said to run `migrate:experiments` on prod
-> and Start the `evelyn_lander_mechanic` (chatbox-vs-quiz) 50/50 test. That is **superseded** —
-> the quiz **directly replaced** the chatbox (hard-pinned in `EvelynLanderPage.tsx`), so the
-> `evelyn_lander_mechanic` experiment is **dead code** and starting it does nothing. Only the
-> quiz-question review survives (task 2.2). Mike's "prod migrations still needed" note is also
-> resolved (applied when the paywall A/B went live on prod).
+> ✅ **Update 2026-07-06 — RE-WIRED & LIVE-CAPABLE (supersedes the old "dead code" note):**
+> The earlier note here said the `evelyn_lander_mechanic` (chatbox-vs-quiz) test was **dead code**
+> because the quiz had hard-replaced the chatbox. That has been **reversed.** `EvelynLanderPage.tsx`
+> now reads the experiment via `useABVariant` (`ccf7336`), the chatbox arm's Turnstile bug was
+> fixed (`ee4da59`), and it was deployed to Production **dormant** (2026-07-06). **Starting the
+> experiment now genuinely splits traffic 50/50 chatbox-vs-quiz** (sticky per visitor, reversible
+> via Pause); QA exposure rows were cleaned so it begins at zero. Task 2.2 (quiz-question review)
+> still stands. Mike's "prod migrations still needed" note remains resolved. See the Done list.
 
 > **North star:** close the revenue disconnect — ~$9k/day FB spend vs $400–1k/day backend.
 > Root causes: (1) landing page, (2) paywall/payment, (3) V2 AI purchase-effectiveness.
@@ -32,6 +34,13 @@ Canonical pending-work tracker, reconciled from the PRD
 - **A/B dashboard** live on prod
 - **Stripe backup account** (V1)
 - Production deploy `f5630fd` + test-data cleanup
+
+### 2026-07-06
+- **`evelyn_lander_mechanic` chatbox-vs-quiz A/B — RE-WIRED & deployed.** `EvelynLanderPage.tsx` reads the experiment via `useABVariant` (default `quiz` while draft → prod behaviour unchanged) + quiz-arm conversion tracking fixed (`ccf7336`); render-parity spec (`91cc7da`); QA'd on dev via `EXPERIMENT_FORCE_RUNNING`; deployed to Production **dormant**; 39 QA exposure/conversion rows cleaned. Ready to Start — **supersedes the old "dead code" note above.**
+- **Chatbox first-message Turnstile bug fixed (`ee4da59`).** Removed the `z.string().max(2048)` cap on `turnstileToken` in the lander `/turn` schemas — real Cloudflare tokens exceed 2048 and were rejected as "Invalid payload," breaking the chatbox first message. Also fixes the live persona chat landers.
+- **`EXPERIMENT_FORCE_RUNNING` extended to visitor `/api/ab/assign` tests (`fbae664`)** — dev-QA isolation for structural lander experiments; inert on prod.
+- **Mike's `/7-7` promo fixes:** magic sign-in link on the 409/401 auth wall (`41fd430`) + "7 free minutes" on the set-password screen (`e4e5d37`).
+- **Production deploy 2026-07-06** (`development` → `Production`, clean merge; the A/B + all the above shipped dormant/additive).
 
 ---
 

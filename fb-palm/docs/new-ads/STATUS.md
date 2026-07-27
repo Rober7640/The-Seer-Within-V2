@@ -46,6 +46,7 @@ For each sign:
 | 8 | `_pdc-finger-length-01` | `finger-length` | 3 (ring tall / even / index tall) | ✅ **BUILT** | Index-vs-ring digit ratio. Archetypes: A magnetic · B harmonious · C certain. Strip 919×474, clean thirds (audited). |
 | 9 | `_pdc-finger-length-02` | `finger-length-alt` | 3 | ✅ **BUILT** | Full back-of-hand art variant of #8 — **reuses finger-length's reads**. Strip 969×653, clean thirds (audited). |
 | 10 | `_pdc-hand-size-02` | — | 2 | ⛔ Parked | Split-panel line-art variant of #7 (`hand-size` already built). |
+| 11 | `thumb-angle-01` | `thumb-angle` | 2 (aligned / not aligned) | ✅ **BUILT** | Does the life line's arc run true with the line of the thumb. **A = aligned · B = not aligned** (per Rio, 7/21 — supersedes the earlier "open-handed / close-held" wide-vs-narrow read). Archetypes: A the true heart · B the seeking heart. Strip 1357×1027, clean halves. ⚠ Runs its own $55/$35 test through the **experiment framework** (`v1_main_price_2026`, `scope.sign`), NOT the legacy system_config pool — it is in `OTHER_SIGNS`, so it can never draw the thumb-only 70/30. |
 
 **Legend:** ✅ built & wired · ⬜ pending (art is good, just needs config + copy) · ⛔ parked.
 

@@ -35,6 +35,16 @@ export const conversations = pgTable("conversations", {
   stripeAccount: text("stripe_account"),
   mainPurchaseAmount: integer("main_purchase_amount"),
 
+  // Server-side "front-end payment actually completed" signal, stamped by the
+  // Stripe checkout.session.completed webhook (browser-independent). The legacy
+  // paid signal used by the price-test dashboard — purchased && upsell_offered —
+  // UNDER-counts, because upsell_offered only flips when the buyer's browser
+  // reaches /welcome1; a buyer who pays then closes the tab is real revenue that
+  // never gets flagged and is indistinguishable from an abandoned cart. Nullable:
+  // null on historical rows (dashboard falls back to the legacy signal) until a
+  // one-time Stripe backfill stamps them.
+  mainPaidAt: timestamp("main_paid_at"),
+
   // V1 price split test (variant assigned at lead capture, drives all price displays + Stripe charge)
   priceVariant: text("price_variant"),
   priceAmountCents: integer("price_amount_cents"),
@@ -964,6 +974,9 @@ export interface ExperimentVariant {
 export interface ExperimentScope {
   personaId?: string | null;            // only enrol this persona (Phase-1 paywall = Evelyn)
   funnel?: string | null;               // only enrol this V1 funnel (e.g. 'v1-fb') — V1 price tests
+  sign?: string | null;                 // only enrol this fb-palm sign (e.g. 'thumb-angle') — narrows
+                                        // a funnel-scoped price test to ONE lander, so a per-lander
+                                        // price test never touches the rest of v1-palm's traffic
   route?: string;                       // page/surface for visitor page-copy tests (e.g. 'soulmate_landing')
   element?: string;                     // which element the variant copy targets (e.g. 'headline')
   [k: string]: unknown;
