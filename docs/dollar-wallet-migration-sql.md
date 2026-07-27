@@ -173,10 +173,14 @@ COMMIT;
 
 ---
 
-## §D. Set the premium per-guide rates (only if shipping divergent pricing)
+## §D. Premium per-guide rates — ⛔ SKIP FOR THIS LAUNCH
 
-§C leaves every guide at the flat $2.99. Run this **only** if you are shipping
-Luna $3.50 / Marcus $4.25.
+> **Joel decided 2026-07-27 (final): flat $2.99/min for every guide.** §C already produces
+> exactly that, so **run nothing in this section.** It is kept only for the future, if a
+> premium rate is ever introduced.
+
+§C leaves every guide at the flat $2.99. Run the statements below **only** if you later decide
+to charge different rates per guide.
 
 `free_coins` must be reset alongside the rate, otherwise the guide silently stops giving a
 3:00 free trial (897¢ at $4.25/min is 2:07, not 3:00). The admin editor does **not** do this
@@ -228,7 +232,7 @@ Then, from the repo (this reads the same things and exits non-zero on failure, s
 the release):
 
 ```
-npm run verify:wallet -- --expect luna-voss=350,marcus-stone=425
+npm run verify:wallet          # flat launch: no --expect needed, 299 is the default
 ```
 
 ---

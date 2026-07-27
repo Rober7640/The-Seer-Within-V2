@@ -75,11 +75,12 @@ the *revenue-leak* row, never the *customer-robbed* row.
       the **:5432 session pooler**, not :6543 (see memory: 6543 is broken).
 - [ ] Confirm the **current** per-guide rates on prod (`SELECT slug, coins_per_minute FROM personas`).
       On a virgin prod every active guide reads 60.
-      **DECISION 2026-07-27: shipping DIVERGENT rates — Luna $3.50 (350), Marcus $4.25 (425),
-      everyone else $2.99 (299).** The migration itself only produces the flat 299; the premium
-      rates are a separate statement afterwards (§D of the SQL companion). Whenever a rate is set,
-      that guide's `free_coins` must be reset to `3 × rate` or it silently stops giving a 3:00
-      free trial — the admin editor changes the rate only.
+      **DECISION (Joel, 2026-07-27, FINAL): FLAT $2.99/min for every guide.** This supersedes the
+      earlier same-day plan to launch Luna at $3.50 and Marcus at $4.25 — those were set on dev
+      only, to prove the admin rate field works. Flat is what the migration produces on its own,
+      so **§D of the SQL companion is SKIPPED entirely** and there is nothing extra to run.
+      If a premium rate is ever set later, that guide's `free_coins` must be reset to `3 × rate`
+      or it silently stops giving a 3:00 free trial — the admin editor changes the rate only.
 - [ ] Line up a DB backup / snapshot plan (§4) and a named low-traffic window.
 - [ ] **All copy-paste SQL — backup, migration, premium rates, verification, rollback — is in
       `docs/dollar-wallet-migration-sql.md`.** The backup/rollback round-trip in that file was
@@ -171,12 +172,18 @@ mis-grants.
   Historical `chat_sessions.coins_charged` and `credit_purchases` rows stay in old second-coins;
   new rows are in cents. Any report that SUMs those columns across the cutover date is comparing
   two units — segment by date, or convert, when reading them.
-- **Per-persona divergent $/min is SHIPPING (decision 2026-07-27, supersedes "deferred").**
-  Luna $3.50, Marcus $4.25, the rest $2.99. Tested end-to-end: a real Stripe test purchase against
-  Luna credits the exact dollars paid (the wallet is shared — a pack costs the same for everyone,
-  only the time it buys differs), and the money-path Playwright suite asserts each guide renders
-  its own rate. Whenever any rate changes, reset that guide's `free_coins` to `3 × rate` — the
-  admin editor does not, which is how Marcus ended up offering 2:07 free instead of 3:00.
+- **Launching FLAT $2.99/min for every guide (Joel, 2026-07-27, final).** No code change was
+  needed for this — the rate is data (`personas.coins_per_minute`), and 299 is already the code
+  and schema default. Flat is the simplest configuration, not extra work.
+  The engine *is* per-guide capable and it was proven end-to-end while divergent rates were set
+  on dev: a real Stripe test purchase against Luna at $3.50 credited the exact dollars paid (a
+  pack costs the same for everyone — only the time it buys differs), and the money-path Playwright
+  suite asserted each guide rendered its own rate. So turning on per-guide pricing later is a
+  data change, not a project.
+  ⚠️ One consequence of launching flat: the "each guide at its OWN rate" Playwright test cannot
+  currently *detect* a global-rate bug, because every guide's own rate happens to be identical.
+  It is still correct and starts protecting the moment any rate diverges — but do not read it as
+  live cover for per-guide pricing while everything is 299.
 - **🔴 Never run `npm run seed` from a build older than `8947624`.** It contains
   `UPDATE personas SET coins_per_minute = 60` with **no WHERE clause**, wiping every guide's rate.
   Post-migration that reads as **$0.60/min** with a ~15-minute free trial and nothing alarms. This
