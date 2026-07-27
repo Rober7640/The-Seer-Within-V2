@@ -48,24 +48,39 @@ test("experiment OFF ⇒ generic assign() reports variant A from /api/credits/pr
   await api.dispose();
 });
 
-test("variant A renders the current store unchanged", async ({ page }) => {
-  await page.goto(`/credits?personaId=${evelynId}`);
-  await expect(page.getByText("Choose Your Package")).toBeVisible();
-  await expect(page.getByRole("button", { name: "Buy Coins" }).first()).toBeVisible();
-  await expect(page.getByText(/How much time would you like/)).toHaveCount(0);
-  await expect(page.getByRole("button", { name: /Keep going/ })).toHaveCount(0);
-});
+// 2026-07-17 retired the A/B *layout* split: the Keen-style minutes-led store is now
+// the single layout and the components ignore `variant` for structure (the experiment
+// infrastructure is left intact for copy tests). The two tests that used to assert
+// "A = old coin grid / B = new store" therefore no longer describe the product —
+// they're replaced by the invariant that matters now: whichever arm you land in, you
+// get the same minutes-led store and never see the word "coins".
+for (const [label, query] of [
+  ["control", ""],
+  ["variant B", "&paywallVariant=B"],
+] as const) {
+  test(`${label} renders the minutes-led store`, async ({ page }) => {
+    await page.goto(`/credits?personaId=${evelynId}${query}`);
 
-test("variant B renders the redesigned, minutes-led store", async ({ page }) => {
-  await page.goto(`/credits?personaId=${evelynId}&paywallVariant=B`);
-  await expect(page.getByText(/How much time would you like/)).toBeVisible();
-  await expect(page.getByText(/minutes left/)).toBeVisible();
-  await expect(page.getByRole("button", { name: /Keep going/ }).first()).toBeVisible();
-  await expect(page.getByText(/money-back guarantee on unused coins/)).toBeVisible();
-  // No old coin-store language in B.
-  await expect(page.getByText("Buy Coins")).toHaveCount(0);
-  await expect(page.getByText("Choose Your Package")).toHaveCount(0);
-});
+    await expect(page.getByText(/How much time would you like/)).toBeVisible();
+    await expect(page.getByRole("button", { name: /Keep going/ }).first()).toBeVisible();
+    await expect(page.getByText(/money-back guarantee on unused minutes/)).toBeVisible();
+
+    // The retired coin grid must not come back.
+    await expect(page.getByText("Buy Coins")).toHaveCount(0);
+    await expect(page.getByText("Choose Your Package")).toHaveCount(0);
+  });
+
+  test(`${label} shows the balance as a clock and never says "coins"`, async ({ page }) => {
+    await page.goto(`/credits?personaId=${evelynId}${query}`);
+    await expect(page.getByText(/How much time would you like/)).toBeVisible();
+
+    // The free trial, as the m:ss clock used everywhere.
+    await expect(page.getByText("3:00", { exact: false }).first()).toBeVisible();
+
+    const body = await page.evaluate(() => document.body.innerText);
+    expect(body).not.toMatch(/\bcoins?\b/i);
+  });
+}
 
 test("variant B payment sheet opens with the fixed trust block", async ({ page }) => {
   await page.goto(`/credits?personaId=${evelynId}&paywallVariant=B`);

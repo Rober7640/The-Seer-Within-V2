@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useLocation, Link } from "wouter";
 import { useAuth, authFetch } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
+import { coinsToClock, COINS_PER_MINUTE } from "@shared/types";
 import {
   Download,
   User,
@@ -202,7 +203,8 @@ export default function Dashboard() {
       year: "numeric",
     });
 
-  const coinsToMinutes = (coins: number) => Math.floor(coins / 60);
+  // m:ss clock, consistent with the credit badge and the reading-page timer.
+  const coinsToClockLabel = (coins: number) => coinsToClock(coins);
 
   if (authLoading || statsLoading) {
     return (
@@ -218,8 +220,8 @@ export default function Dashboard() {
   if (!stats) return null;
 
   const { user: userInfo, recentSessions, purchaseHistory, savedMessages } = stats;
-  const minutesRemaining = coinsToMinutes(userInfo.coinBalance);
-  const isLowOnTime = minutesRemaining < 3;
+  const clockRemaining = coinsToClockLabel(userInfo.coinBalance);
+  const isLowOnTime = userInfo.coinBalance < 3 * COINS_PER_MINUTE; // under 3 minutes
 
   // Index saved messages by sessionId for quick lookup
   const savedBySession = new Map<string, SavedMessageInfo[]>();
@@ -262,9 +264,9 @@ export default function Dashboard() {
         <div className="flex items-center justify-between">
           <span className={`flex items-center gap-2 text-sm ${isLowOnTime ? "text-amber-300" : "text-white/60"}`}>
             <Sparkles className={`w-3.5 h-3.5 ${isLowOnTime ? "text-amber-400" : "text-purple-400"}`} />
-            {minutesRemaining === 0
+            {userInfo.coinBalance <= 0
               ? "No time remaining"
-              : `${minutesRemaining} minute${minutesRemaining !== 1 ? "s" : ""} remaining`}
+              : `${clockRemaining} remaining`}
           </span>
           <Link href="/credits">
             <button className="flex items-center gap-1 text-xs text-purple-300/70 hover:text-purple-200 transition-colors">

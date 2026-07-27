@@ -24,11 +24,17 @@ export interface TierView {
   perMinuteLabel: string; // "$1.67/m"
 }
 
-export function toTierView(tier: PricingTier): TierView {
-  const minutes = Math.floor(tier.totalCoins / COINS_PER_MINUTE);
-  const bonusMinutes = Math.floor(tier.bonusCoins / COINS_PER_MINUTE);
+export function toTierView(tier: PricingTier, coinsPerMinute: number = COINS_PER_MINUTE): TierView {
+  // Minutes and the "$X/m" label are derived at the GUIDE'S rate (cents/min), not a
+  // global constant — so a guide priced at $9.99/min shows ~1:00 · $9.99/m for the
+  // same $10 pack that shows ~3:20 · $2.99/m on Evelyn. Minutes floored to 1 decimal
+  // so we never overstate the time; the per-minute price uses the EXACT minutes so a
+  // $10 / 3.34-min pack reads "$2.99/m" rather than the $3.33 a whole-minute count gives.
+  const exactMinutes = tier.totalCoins / coinsPerMinute;
+  const minutes = Math.floor(exactMinutes * 10) / 10;
+  const bonusMinutes = Math.floor((tier.bonusCoins / coinsPerMinute) * 10) / 10;
   const dollars = tier.priceUsd / 100;
-  const pricePerMinute = minutes > 0 ? dollars / minutes : dollars;
+  const pricePerMinute = exactMinutes > 0 ? dollars / exactMinutes : dollars;
   return {
     tier,
     minutes,
@@ -39,9 +45,9 @@ export function toTierView(tier: PricingTier): TierView {
   };
 }
 
-/** Lowest per-minute rate across the tiers, e.g. "$1.33". */
-export function lowestPerMinuteLabel(tiers: PricingTier[]): string {
-  const rates = tiers.map((t) => toTierView(t).pricePerMinute).filter((r) => r > 0);
+/** Lowest per-minute rate across the tiers at a guide's rate, e.g. "$1.33". */
+export function lowestPerMinuteLabel(tiers: PricingTier[], coinsPerMinute: number = COINS_PER_MINUTE): string {
+  const rates = tiers.map((t) => toTierView(t, coinsPerMinute).pricePerMinute).filter((r) => r > 0);
   const min = rates.length ? Math.min(...rates) : 0;
   return `$${min.toFixed(2)}`;
 }
@@ -52,7 +58,7 @@ export interface PaywallCopy {
     headerLow: (persona: string) => string;
     subhead: (persona: string) => string;
     ladder: (lowest: string) => string;
-    commit: (minutes: number, coins: number) => string;
+    commit: (minutes: number) => string;
     cta: (persona: string, price: string) => string;
     railHint: string;
     decline: string;
@@ -65,7 +71,7 @@ export interface PaywallCopy {
   store: {
     title: (persona: string) => string;
     balanceLabel: string;
-    balanceValue: (minutes: number, coins: number) => string;
+    balanceValue: (minutes: number) => string;
     idleNote: string;
     valueHeader: string;
     valueBody: (lowest: string) => string;
@@ -86,7 +92,7 @@ const B: PaywallCopy = {
     subhead: (p) =>
       `You & ${p} were mid-thread — add a few minutes and pick up right where you left off.`,
     ladder: (lowest) => `As low as ${lowest}/min on bigger packs.`,
-    commit: (minutes, coins) => `Adding ${minutes} min · ${coins.toLocaleString()} coins`,
+    commit: (minutes) => `Adding ${minutes} min`,
     cta: (p, price) => `Keep going with ${p} · ${price}`,
     railHint: "PayPal · Card",
     decline: "Not now — keep my place saved.",
@@ -99,17 +105,16 @@ const B: PaywallCopy = {
   store: {
     title: (p) => `Your time with ${p}`,
     balanceLabel: "Your balance",
-    balanceValue: (minutes, coins) =>
-      `${minutes} minutes left · ${coins.toLocaleString()} coins`,
+    balanceValue: (minutes) => `${minutes} minutes left`,
     idleNote: "Idle time is free — you only spend in a live reading.",
-    valueHeader: "You get more minutes than you pay for",
+    valueHeader: "Simple per-minute pricing",
     valueBody: (lowest) =>
-      `Every package adds free bonus minutes, and the bigger the pack, the less each minute costs — as low as ${lowest}.`,
+      `One flat rate — ${lowest} a minute. You only spend during a live reading; idle time is free.`,
     sectionHeader: (p) => `How much time would you like with ${p}?`,
     tierCta: "Keep going",
-    rateLine: "60 coins = 1 minute with any guide.",
+    rateLine: "One flat rate per minute — no subscription, no auto-renew.",
   },
-  refundLine: "30-day money-back guarantee on unused coins — no questions asked.",
+  refundLine: "30-day money-back guarantee on unused minutes — no questions asked.",
   trustLine: "Encrypted by PayPal & Stripe — we never see your card details.",
   noSubscription: "One-time — no subscription, no auto-renew.",
   ratingLine: "4.8 / 5 from thousands seeking clarity",
@@ -117,30 +122,30 @@ const B: PaywallCopy = {
 
 const A: PaywallCopy = {
   modal: {
-    headerOutOfCredits: "Your Credits Have Run Out",
-    headerLow: () => "Get More Coins",
-    subhead: (p) => `Add more coins to continue your journey with ${p}`,
+    headerOutOfCredits: "Your Time Has Run Out",
+    headerLow: () => "Get More Minutes",
+    subhead: (p) => `Add more minutes to continue your journey with ${p}`,
     ladder: () => "",
-    commit: (_m, coins) => `${coins.toLocaleString()} coins`,
-    cta: () => "Buy Coins",
+    commit: (minutes) => `${minutes} min`,
+    cta: () => "Add Minutes",
     railHint: "",
     decline: "",
   },
   banner: {
-    lowBalance: () => "You're running low on credits",
+    lowBalance: () => "You're running low on time",
     freeTrial: "Your free trial is ending soon!",
     cta: "Refill",
   },
   store: {
-    title: () => "Buy Credits",
+    title: () => "Add Minutes",
     balanceLabel: "Current Balance",
-    balanceValue: (_m, coins) => `${coins.toLocaleString()} coins`,
+    balanceValue: (minutes) => `${minutes} minutes left`,
     idleNote: "",
     valueHeader: "You don't have to figure things out alone",
-    valueBody: () => "Get bonus coins on every package",
+    valueBody: () => "Simple per-minute pricing",
     sectionHeader: () => "Choose Your Package",
-    tierCta: "Buy Coins",
-    rateLine: "60 coins = 1 minute · same rate for all guides",
+    tierCta: "Add Minutes",
+    rateLine: "Same rate for all guides · no subscription",
   },
   refundLine: "One-time payment is non-refundable.",
   trustLine: "Guaranteed secure payments",

@@ -36,18 +36,22 @@ import { scheduleEvelynVerifiedDrip } from '../lib/evelynVerifiedDripGenerator';
 import { schedulePersonaVerifiedDrip, PERSONA_DRIP_SLUGS } from '../lib/personaVerifiedDripGenerator';
 import logger from '../lib/logger';
 import { posthog } from '../lib/posthog';
+import { minutesToCoins } from '@shared/types';
 
 // Default free-coin grant when the user has no default persona set or the
-// persona row has no freeCoins override. Per-persona amounts live on
-// `personas.freeCoins` and are read at verification time so policy changes
-// (e.g. Aiden's 10-minute onboarding) flow through without touching this file.
-const DEFAULT_FREE_COINS = 180;
+// persona row has no freeCoins override. A coin is a cent (dollar wallet), so the
+// grant is minutes × the default rate — 3:00 at $2.99/min = 897¢. Per-persona
+// amounts live on `personas.freeCoins` (stored in cents) and are read at
+// verification time so policy changes flow through without touching this file.
+// NOTE: freeCoins is a fixed cent amount; if a persona's $/min is changed, reset
+// its freeCoins to keep the free trial at 3:00 (minutesToCoins(3, thatRate)).
+const DEFAULT_FREE_COINS = minutesToCoins(3); // 897¢ = 3:00 at the default rate
 // /evelyn lander signups get 5 minutes free instead of the default 3 — soft-launch test
 // vs. competitors (Nebula 10 min, Astro 3 min). Eligibility = isFromEvelynLander() below.
-const EVELYN_LANDER_FREE_COINS = 300;
+const EVELYN_LANDER_FREE_COINS = minutesToCoins(5); // 1495¢ = 5:00 at the default rate
 // /soulmate lander signups mirror the /evelyn grant exactly (5 min). Same Evelyn
 // persona, same drip enrollment downstream. Eligibility = isFromSoulmateLander() below.
-const SOULMATE_LANDER_FREE_COINS = 300;
+const SOULMATE_LANDER_FREE_COINS = minutesToCoins(5); // 1495¢ = 5:00 at the default rate
 const VERIFICATION_TOKEN_EXPIRY_HOURS = 24;
 
 // Task 1.1 — grant the welcome free-coins at REGISTRATION instead of at /verify-email

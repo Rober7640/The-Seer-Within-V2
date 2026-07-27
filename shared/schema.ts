@@ -110,9 +110,11 @@ export const personas = pgTable("personas", {
   sortOrder: integer("sort_order").default(0).notNull(),
   accuracyRank: integer("accuracy_rank"),  // null = unranked; 1 = top of "Voted Most Accurate"
 
-  // Per-persona pricing (fully admin-editable)
-  freeCoins: integer("free_coins").default(180).notNull(),
-  coinsPerMinute: integer("coins_per_minute").default(60).notNull(),
+  // Per-persona pricing (fully admin-editable). Dollar-wallet model (2026-07-23):
+  // a coin is a CENT. free_coins = free minutes × rate (897¢ = 3:00 @ $2.99/min);
+  // coins_per_minute = CENTS per minute = $/min × 100 (299 = $2.99/min).
+  freeCoins: integer("free_coins").default(897).notNull(),
+  coinsPerMinute: integer("coins_per_minute").default(299).notNull(),
   customPricing: text("custom_pricing"), // JSON array: PricingTier[]
 
   // Session timeout (configurable per advisor, default 30 minutes)
@@ -195,7 +197,8 @@ export const users = pgTable("users", {
   verificationToken: text("verification_token"),
   verificationTokenExpiry: timestamp("verification_token_expiry"),
 
-  // Coin balance (60 coins = 1 minute)
+  // Wallet balance in CENTS (a coin is a cent; dollar-wallet model 2026-07-23).
+  // Minutes are derived per-guide: cents ÷ that guide's coins_per_minute(cents/min).
   coinBalance: integer("coin_balance").default(0).notNull(),
   totalCoinsUsed: integer("total_coins_used").default(0).notNull(),
   // Welcome free-coin grant marker — stamped once when the sign-up welcome grant is

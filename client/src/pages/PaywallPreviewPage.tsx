@@ -22,7 +22,7 @@ import {
   type PaywallVariant,
 } from "@/components/paywall/paywallCopy";
 import type { PricingTier } from "@shared/types";
-import { DEFAULT_PRICING } from "@shared/types";
+import { DEFAULT_PRICING, COINS_PER_MINUTE } from "@shared/types";
 
 interface PersonaListItem {
   slug: string;
@@ -34,6 +34,7 @@ interface LoadedPersona {
   displayName: string;
   avatarUrl: string | null;
   tiers: (PricingTier & { recommended?: boolean })[];
+  coinsPerMinute: number;
 }
 
 // Visual stand-ins for the real PayPal SDK button + Stripe card form (preview only).
@@ -76,6 +77,7 @@ const FALLBACK: LoadedPersona = {
   displayName: "Evelyn Cross",
   avatarUrl: "/evelyn-avatar.png",
   tiers: applyBVariantBadges(DEFAULT_PRICING.tiers),
+  coinsPerMinute: COINS_PER_MINUTE,
 };
 
 export default function PaywallPreviewPage() {
@@ -116,6 +118,7 @@ export default function PaywallPreviewPage() {
           displayName: p.displayName ?? "Guide",
           avatarUrl: p.avatarUrl ?? "/evelyn-avatar.png",
           tiers: applyBVariantBadges(rawTiers),
+          coinsPerMinute: p.coinsPerMinute ?? COINS_PER_MINUTE,
         });
       })
       .catch(() => setPersona(FALLBACK));
@@ -185,6 +188,7 @@ export default function PaywallPreviewPage() {
                 onCheckout={() => {}}
                 onClose={() => {}}
                 variant={variant}
+                coinsPerMinute={persona.coinsPerMinute}
               />
             </div>
           </section>
@@ -201,6 +205,7 @@ export default function PaywallPreviewPage() {
               onSelectTier={() => {}}
               showRating
               variant={variant}
+              coinsPerMinute={persona.coinsPerMinute}
             />
           </section>
         )}
@@ -215,6 +220,7 @@ export default function PaywallPreviewPage() {
                 paypalSlot={<MockPayPal />}
                 cardSlot={<MockCard priceLabel={paymentPriceLabel} />}
                 variant={variant}
+                coinsPerMinute={persona.coinsPerMinute}
               />
             </div>
           </section>

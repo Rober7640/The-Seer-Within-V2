@@ -24,10 +24,13 @@ import { sql } from 'drizzle-orm';
 import { db } from './db';
 import { users, personas, personaLanderSessions, promoGrants, conversations } from '@shared/schema';
 import { generateMagicLinkToken } from './magicLink';
+import { minutesToCoins } from '@shared/types';
 import logger from './logger';
 
 export const LUNA_TY_CAMPAIGN = 'v1-ty-luna';
-export const LUNA_TY_FREE_COINS = 1800; // 30 minutes
+// 30 minutes. Dollar-wallet: a coin is a cent, so 30:00 at the default rate = 8970¢
+// (was 1800 coins/30min @ 60/min). Tops the global balance up to this via GREATEST.
+export const LUNA_TY_FREE_COINS = minutesToCoins(30); // 8970¢ = 30:00 at the default rate
 const LUNA_SLUG = 'luna-voss';
 // The gift is a global balance with no wall-clock expiry (Joel's decision). promo_grants
 // .expires_at is NOT NULL, so we stamp a far-future sentinel; combined with

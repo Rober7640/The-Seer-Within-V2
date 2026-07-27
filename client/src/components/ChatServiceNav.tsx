@@ -18,7 +18,7 @@ import {
 import {
   Sparkles,
   Users,
-  Coins,
+  Clock,
   LayoutDashboard,
   LogOut,
   Menu,
@@ -31,7 +31,7 @@ import { useState } from "react";
 const NAV_ITEMS = [
   { path: "/personas", label: "Browse Guides", shortLabel: "Guides", icon: Users },
   { path: "/reading", label: "My Reading", shortLabel: "Reading", icon: Sparkles },
-  { path: "/credits", label: "Credits", shortLabel: "Credits", icon: Coins },
+  { path: "/credits", label: "Minutes", shortLabel: "Minutes", icon: Clock },
   { path: "/dashboard", label: "Dashboard", shortLabel: "Dashboard", icon: LayoutDashboard },
 ];
 

@@ -17,7 +17,6 @@ import {
 import {
   Send,
   Sparkles,
-  Coins,
   Brain,
   Menu,
   HelpCircle,
@@ -35,7 +34,7 @@ import TeaserCreditModal from "@/components/TeaserCreditModal";
 import CrisisDisclaimer from "@/components/CrisisDisclaimer";
 import SessionFeedbackModal from "@/components/SessionFeedbackModal";
 // import DebugOverlay from "@/components/DebugOverlay";
-import { COINS_PER_MINUTE, BILLING_INTERVAL_SECONDS, secondsToCoins, type PricingTier } from "@shared/types";
+import { COINS_PER_MINUTE, BILLING_INTERVAL_SECONDS, secondsToCoins, coinsToClock, secondsToClock, type PricingTier } from "@shared/types";
 
 // Status indicator type
 type Status = 'busy-slow' | 'busy-fast' | 'connecting' | 'online';
@@ -272,7 +271,7 @@ export default function ChatServicePage() {
   const endSessionRef = useRef<() => void>(() => {});
   const freeTrialCoinsRef = useRef(freeTrialCoins);
   const refillBannerDismissedRef = useRef(refillBannerDismissed);
-  const coinsPerMinuteRef = useRef(60);
+  const coinsPerMinuteRef = useRef(COINS_PER_MINUTE);
   // Tracks the last persona ID that triggered an auto-fetch, to prevent double-fetching
   const lastAutoFetchedPersonaId = useRef<string | null>(null);
   // Continuous session start timestamp for debug overlay (never resets mid-session)
@@ -552,7 +551,7 @@ export default function ChatServicePage() {
   useEffect(() => { freeTrialCoinsRef.current = freeTrialCoins; }, [freeTrialCoins]);
   useEffect(() => { refillBannerDismissedRef.current = refillBannerDismissed; }, [refillBannerDismissed]);
   useEffect(() => { sessionIdRef.current = session?.id ?? null; }, [session]);
-  useEffect(() => { coinsPerMinuteRef.current = selectedPersona?.coinsPerMinute ?? 60; }, [selectedPersona?.coinsPerMinute]);
+  useEffect(() => { coinsPerMinuteRef.current = selectedPersona?.coinsPerMinute ?? COINS_PER_MINUTE; }, [selectedPersona?.coinsPerMinute]);
   useEffect(() => { showBuyCreditsRef.current = showBuyCredits; }, [showBuyCredits]);
 
   // Credit countdown timer — display only.
@@ -666,7 +665,7 @@ export default function ChatServicePage() {
             if (idleCountdownRef.current) { clearInterval(idleCountdownRef.current); idleCountdownRef.current = null; }
             setIdleWarning(false);
             endSession('idle');
-            toast({ title: "Session paused", description: "Your session was paused to protect your credits." });
+            toast({ title: "Session paused", description: "Your session was paused to protect your remaining time." });
           }
         }, 1000);
       }
@@ -1208,13 +1207,16 @@ export default function ChatServicePage() {
     setShowRefillBanner(false);
     setReadingEnded(true);
 
-    // Receipt toast — shows what was actually billed (server uses Math.round per minute)
-    const coinsBilled = secondsToCoins(elapsed, selectedPersona?.coinsPerMinute ?? COINS_PER_MINUTE);
+    // Receipt toast — shows the time actually billed (server bills per 15s block)
+    const billingRate = selectedPersona?.coinsPerMinute ?? COINS_PER_MINUTE;
+    const coinsBilled = secondsToCoins(elapsed, billingRate);
+    // m:ss, consistent with the timer and every other time display in the app.
+    const clockBilled = coinsToClock(coinsBilled, billingRate);
     toast({
-      title: coinsBilled === 0 ? "Reading ended" : `Reading ended · ${coinsBilled} coins billed`,
+      title: coinsBilled === 0 ? "Reading ended" : `Reading ended · ${clockBilled} billed`,
       description: coinsBilled === 0
-        ? `No coins were charged (under ${BILLING_INTERVAL_SECONDS} seconds)`
-        : `${coinsBilled} coins deducted from your balance`,
+        ? `No time was charged (under ${BILLING_INTERVAL_SECONDS} seconds)`
+        : `${clockBilled} deducted from your balance`,
     });
 
     // Insert "Reading Ended" divider into chat history
@@ -1370,7 +1372,7 @@ export default function ChatServicePage() {
   const resumeAfterPurchase = useCallback(async (newBalance: number) => {
     setCoinBalance(newBalance);
 
-    toast({ title: "Credits purchased!", description: "Your reading will continue now." });
+    toast({ title: "Minutes added!", description: "Your reading will continue now." });
 
     // Remove any reading-ended dividers (so old "Continue Reading" buttons don't linger)
     // and insert "Credits Purchased" divider
@@ -1911,24 +1913,35 @@ export default function ChatServicePage() {
               const promoForPersona = promoBalances[selectedPersonaId ?? ""] ?? 0;
               const pausedCoins = coinBalance + promoForPersona;
               if (pausedCoins <= 0) return null;
+              const pausedCpm = selectedPersona?.coinsPerMinute ?? COINS_PER_MINUTE;
+              // m:ss clock — same format as the live meter and the rest of the app.
+              const pausedSec = Math.max(0, Math.round((pausedCoins / pausedCpm) * 60));
+              const pausedClock = `${Math.floor(pausedSec / 60)}:${(pausedSec % 60).toString().padStart(2, "0")}`;
               return (
-                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/10 text-white/40 text-xs font-medium select-none">
+                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/10 text-white/40 text-xs font-medium select-none tabular-nums">
                   <span className="w-1.5 h-1.5 rounded-full bg-white/30" />
-                  {pausedCoins} <Coins className="w-3.5 h-3.5" />
+                  <Clock className="w-3.5 h-3.5" /> {pausedClock}
                 </div>
               );
             })()}
             {session && (() => {
-              const coinsPerMinute = selectedPersona?.coinsPerMinute ?? 60;
+              const coinsPerMinute = selectedPersona?.coinsPerMinute ?? COINS_PER_MINUTE;
               const continuousElapsed = sessionStartTimeRef.current
                 ? Math.floor((Date.now() - sessionStartTimeRef.current) / 1000)
                 : 0;
-              const coinsUsed = secondsToCoins(continuousElapsed, coinsPerMinute);
-              const remainingCoins = Math.max(0, initialCoinBalance - coinsUsed);
+              // Live m:ss countdown — recomputed every second (the setElapsedSeconds
+              // interval re-renders this) so it ticks 3:21 → 3:20 → 3:19 like a real
+              // timer. Display-only; the actual charge is still billed per 15s block.
+              // Scale first (see coinsToClock): dividing first drops a second on
+              // exact values, which is what made this meter and the header balance
+              // disagree by 1s on the $50 pack.
+              const initialSec = Math.floor((initialCoinBalance * 60) / coinsPerMinute);
+              const remainingSec = Math.max(0, initialSec - continuousElapsed);
+              const remainingClock = secondsToClock(remainingSec);
               return (
-                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300 text-xs font-medium select-none">
+                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300 text-xs font-medium select-none tabular-nums">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                  {remainingCoins} <Coins className="w-3.5 h-3.5" />
+                  <Clock className="w-3.5 h-3.5" /> {remainingClock}
                 </div>
               );
             })()}
@@ -1964,13 +1977,13 @@ export default function ChatServicePage() {
         {session && showRefillBanner && !refillBannerDismissed && (
           <div className="bg-gradient-to-r from-amber-500 to-orange-500 px-4 py-2.5 flex items-center justify-between gap-2 shrink-0 animate-slide-down">
             <div className="flex items-center gap-2 text-white text-sm font-medium">
-              <Coins className="w-4 h-4 shrink-0" />
+              <Clock className="w-4 h-4 shrink-0" />
               <span>
                 {paywallVariant === "B"
                   ? (coinBalance <= freeTrialCoins
                       ? paywallCopy("B").banner.freeTrial
                       : paywallCopy("B").banner.lowBalance(selectedPersona?.displayName || "your guide"))
-                  : (coinBalance > freeTrialCoins ? "You're running low on credits" : "Your free trial is ending soon!")}
+                  : (coinBalance > freeTrialCoins ? "You're running low on time" : "Your free trial is ending soon!")}
               </span>
             </div>
             <div className="flex items-center gap-2">
@@ -2002,7 +2015,7 @@ export default function ChatServicePage() {
         {session && idleWarning && (
           <div className="bg-gradient-to-r from-red-500 to-rose-600 px-4 py-2.5 flex items-center justify-between gap-2 shrink-0">
             <div className="flex items-center gap-2 text-white text-sm font-medium">
-              <Coins className="w-4 h-4 shrink-0" />
+              <Clock className="w-4 h-4 shrink-0" />
               <span>Are you still there? Pausing in {idleCountdown}s — idle time is free.</span>
             </div>
             <button
@@ -2304,7 +2317,7 @@ export default function ChatServicePage() {
                     <div key={msg.id} className="flex items-center gap-3 w-full py-3 animate-fade-in">
                       <div className="flex-1 h-px bg-gradient-to-r from-transparent via-emerald-400/40 to-transparent" />
                       <span className="text-xs text-emerald-400 whitespace-nowrap font-medium">
-                        Credits purchased · reading continues
+                        Minutes added · reading continues
                       </span>
                       <div className="flex-1 h-px bg-gradient-to-r from-transparent via-emerald-400/40 to-transparent" />
                     </div>
@@ -2485,7 +2498,7 @@ export default function ChatServicePage() {
                 }
                 className="hover:text-emerald-400 transition-colors"
               >
-                Get More Coins
+                Get More Minutes
               </Link>
             </div>
           </div>
@@ -2545,8 +2558,8 @@ export default function ChatServicePage() {
         personaId={selectedPersonaId}
         personaName={selectedPersona?.displayName}
         isOutOfCredits={coinBalance <= 0}
-        variant={paywallVariant}
         pricingTiers={paywallTiers}
+        coinsPerMinute={selectedPersona?.coinsPerMinute ?? COINS_PER_MINUTE}
         avatarUrl={selectedPersona?.avatarUrl ?? undefined}
         onSuccess={async (newBalance) => {
           oocPaymentSucceededRef.current = true;
@@ -2587,7 +2600,7 @@ export default function ChatServicePage() {
             },
           ]);
 
-          toast({ title: "Credits purchased!", description: "Your reading continues." });
+          toast({ title: "Minutes added!", description: "Your reading continues." });
           oocPaymentSucceededRef.current = false;
         }}
       />

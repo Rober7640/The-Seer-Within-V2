@@ -99,39 +99,39 @@ export default function TermsPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-white mb-3">5. Reading Credits</h2>
+            <h2 className="text-xl font-semibold text-white mb-3">5. Reading Minutes</h2>
             <p className="mb-3">
-              Access to AI guide sessions is provided through a prepaid credit system denominated in reading
-              minutes ("Credits"). Credits are consumed at a per-minute rate determined by the guide you
+              Access to AI guide sessions is provided on a prepaid basis, measured in reading
+              minutes ("Minutes"). Minutes are consumed at a per-minute rate determined by the guide you
               select, as displayed at the time of purchase.
             </p>
             <ul className="list-disc list-inside space-y-2 ml-4">
-              <li>Credits must be purchased in advance through our payment gateway (Stripe).</li>
-              <li>New registered users receive 3 complimentary welcome Credits upon account creation.
-                  Welcome Credits are provided as a goodwill gesture and carry no cash value.</li>
-              <li>Credits are personal, non-transferable, and may not be gifted, sold, or assigned to another account.</li>
-              <li>The Company reserves the right to adjust Credit pricing at any time. Price changes apply
-                  to future purchases only and do not affect Credits already purchased.</li>
+              <li>Minutes must be purchased in advance through our payment gateway (Stripe).</li>
+              <li>New registered users receive 3 complimentary welcome minutes upon account creation.
+                  Welcome minutes are provided as a goodwill gesture and carry no cash value.</li>
+              <li>Minutes are personal, non-transferable, and may not be gifted, sold, or assigned to another account.</li>
+              <li>The Company reserves the right to adjust minute pricing at any time. Price changes apply
+                  to future purchases only and do not affect minutes already purchased.</li>
             </ul>
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-white mb-3">6. Credit Expiry</h2>
+            <h2 className="text-xl font-semibold text-white mb-3">6. Minutes Expiry</h2>
             <p className="mb-3">
-              <strong>Purchased Credits expire six (6) months from the date of purchase.</strong> Each
-              Credit purchase carries its own independent expiry date based on when that specific purchase
+              <strong>Purchased minutes expire six (6) months from the date of purchase.</strong> Each
+              minute purchase carries its own independent expiry date based on when that specific purchase
               was made.
             </p>
             <ul className="list-disc list-inside space-y-2 ml-4">
-              <li>Expired Credits are automatically forfeited and cannot be reactivated, extended, or refunded.</li>
-              <li>Credits do not roll over upon expiry.</li>
+              <li>Expired minutes are automatically forfeited and cannot be reactivated, extended, or refunded.</li>
+              <li>Minutes do not roll over upon expiry.</li>
               <li>We will endeavour (on a best-efforts basis) to send you a reminder notification approximately
-                  14 days before your Credits expire. Failure to receive such a reminder does not affect the
-                  expiry of your Credits.</li>
-              <li>Complimentary welcome Credits expire 6 months after account creation.</li>
+                  14 days before your minutes expire. Failure to receive such a reminder does not affect the
+                  expiry of your minutes.</li>
+              <li>Complimentary welcome minutes expire 6 months after account creation.</li>
             </ul>
             <p className="mt-3">
-              It is your responsibility to use Credits before their expiry date.
+              It is your responsibility to use minutes before their expiry date.
             </p>
           </section>
 
@@ -159,8 +159,8 @@ export default function TermsPage() {
                 <span className="text-purple-300 hover:text-white underline cursor-pointer">Refund Policy</span>
               </Link>
               , which forms part of these Terms of Service. In summary, we offer goodwill refunds on
-              unused purchased Credits within 30 days of purchase, subject to the conditions described
-              in that policy. Credits consumed in sessions are non-refundable. Complimentary Credits
+              unused purchased minutes within 30 days of purchase, subject to the conditions described
+              in that policy. Minutes consumed in sessions are non-refundable. Complimentary minutes
               carry no cash value and are not eligible for refund.
             </p>
           </section>
@@ -170,7 +170,7 @@ export default function TermsPage() {
             <p className="mb-3">You agree not to:</p>
             <ul className="list-disc list-inside space-y-2 ml-4">
               <li>Use our services for any unlawful purpose or in violation of any applicable law;</li>
-              <li>Attempt to circumvent the Credit system or gain unauthorised access to sessions;</li>
+              <li>Attempt to circumvent the minutes system or gain unauthorised access to sessions;</li>
               <li>Harass, abuse, or transmit threatening content through our platform;</li>
               <li>Attempt to gain unauthorised access to our systems, data, or other user accounts;</li>
               <li>Use automated bots or scripts to interact with our services without our written permission;</li>

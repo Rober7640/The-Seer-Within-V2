@@ -5,6 +5,7 @@
 import { db } from './db';
 import { personas, personaPrompts, chatSessions, chatMessages, creditPurchases } from '@shared/schema';
 import { eq, and, sql, desc, count } from 'drizzle-orm';
+import { CENTS_PER_MINUTE_DEFAULT } from '@shared/types';
 import logger from './logger';
 
 // Types for persona configuration stored in JSON columns
@@ -219,7 +220,7 @@ export async function createPersona(input: CreatePersonaInput): Promise<string> 
       personality: input.personality ? JSON.stringify(input.personality) : null,
       categories: input.categories ? JSON.stringify(input.categories) : null,
       freeCoins: input.freeCoins ?? 180,
-      coinsPerMinute: input.coinsPerMinute ?? 60,
+      coinsPerMinute: input.coinsPerMinute ?? CENTS_PER_MINUTE_DEFAULT,
       customPricing: input.customPricing ? JSON.stringify(input.customPricing) : null,
       isActive: false,   // Always start inactive
       isDefault: input.isDefault || false,

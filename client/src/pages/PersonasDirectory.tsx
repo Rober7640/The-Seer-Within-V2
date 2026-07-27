@@ -4,6 +4,7 @@ import { track as trackPH } from "@/lib/posthog";
 import { Link, useLocation } from "wouter";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { COINS_PER_MINUTE, coinsToClock } from "@shared/types";
 import {
   Dialog,
   DialogContent,
@@ -27,7 +28,6 @@ import {
   LogIn,
   UserPlus,
   Mail,
-  Coins,
 } from "lucide-react";
 
 /* ================================================================
@@ -188,13 +188,21 @@ function generateReadings(name: string): number {
 // the /7-7 lander cards (before login / before the user's real grant has loaded).
 const PROMO_OFFER_MINUTES = 7;
 
-// Format promo coins as remaining minutes:seconds for the "free with [guide]" badge.
-// e.g. 360 coins @ 60/min → "6:00", 105 coins @ 60/min → "1:45".
+// Format promo coins as a m:ss clock for the "free with [guide]" badge.
+// e.g. 360 coins @ 60/min → "6:00", 105 coins @ 60/min → "1:45" — the one time
+// format used everywhere so it matches the reading-page timer.
 function formatPromoMins(coins: number, coinsPerMinute: number): string {
-  const totalSeconds = Math.round((coins / (coinsPerMinute || 60)) * 60);
+  const totalSeconds = Math.max(0, Math.floor((coins / (coinsPerMinute || COINS_PER_MINUTE)) * 60));
   const mins = Math.floor(totalSeconds / 60);
   const secs = totalSeconds % 60;
   return `${mins}:${String(secs).padStart(2, "0")}`;
+}
+
+// Per-minute dollar price shown on a guide's card. A coin is a cent, so the
+// guide's cents/min rate ÷ 100 is its $/min. Falls back to the platform default
+// when a persona carries no explicit rate.
+function perMinuteLabel(persona?: { coinsPerMinute?: number }): string {
+  return `$${((persona?.coinsPerMinute ?? COINS_PER_MINUTE) / 100).toFixed(2)}/min`;
 }
 
 // Small "X:XX free" badge shown on a card when the user has promo coins for that guide.
@@ -371,17 +379,17 @@ function PersonaCard({
             <span>{readings.toLocaleString()} readings</span>
           </div>
           <div className="flex items-center gap-2 text-[12px] text-white/35">
-            <Coins className="w-3 h-3 text-amber-400/40 shrink-0" />
+            <Clock className="w-3 h-3 text-amber-400/40 shrink-0" />
             <span>
-              {persona.coinsPerMinute ?? 60} coins = 1 min
+              {perMinuteLabel(persona)}
               {showFreeMins && !(persona.promoCoins ?? 0) && (promoMode
-                ? ` · ${PROMO_OFFER_MINUTES} mins free`
-                : (persona.freeCoins > 0 ? ` · ${Math.floor(persona.freeCoins / (persona.coinsPerMinute ?? 60))} mins free` : ``))}
+                ? ` · ${PROMO_OFFER_MINUTES}:00 free`
+                : (persona.freeCoins > 0 ? ` · ${coinsToClock(persona.freeCoins, persona.coinsPerMinute ?? COINS_PER_MINUTE)} free` : ``))}
             </span>
           </div>
           {(persona.promoCoins ?? 0) > 0 && (
             <div className="pt-0.5">
-              <PromoBadge coins={persona.promoCoins ?? 0} coinsPerMinute={persona.coinsPerMinute ?? 60} />
+              <PromoBadge coins={persona.promoCoins ?? 0} coinsPerMinute={persona.coinsPerMinute ?? COINS_PER_MINUTE} />
             </div>
           )}
         </div>
@@ -553,14 +561,14 @@ function FeaturedCard({
               {readings.toLocaleString()} readings
             </span>
             <span className="flex items-center gap-1.5 text-[12px] text-white/35">
-              <Coins className="w-3 h-3 text-amber-400/40" />
-              {persona.coinsPerMinute ?? 60} coins = 1 min
+              <Clock className="w-3 h-3 text-amber-400/40" />
+              {perMinuteLabel(persona)}
               {showFreeMins && !(persona.promoCoins ?? 0) && (promoMode
-                ? ` · ${PROMO_OFFER_MINUTES} mins free`
-                : (persona.freeCoins > 0 ? ` · ${Math.floor(persona.freeCoins / (persona.coinsPerMinute ?? 60))} mins free` : ``))}
+                ? ` · ${PROMO_OFFER_MINUTES}:00 free`
+                : (persona.freeCoins > 0 ? ` · ${coinsToClock(persona.freeCoins, persona.coinsPerMinute ?? COINS_PER_MINUTE)} free` : ``))}
             </span>
             {(persona.promoCoins ?? 0) > 0 && (
-              <PromoBadge coins={persona.promoCoins ?? 0} coinsPerMinute={persona.coinsPerMinute ?? 60} />
+              <PromoBadge coins={persona.promoCoins ?? 0} coinsPerMinute={persona.coinsPerMinute ?? COINS_PER_MINUTE} />
             )}
           </div>
 
@@ -969,7 +977,7 @@ export default function PersonasDirectory({ promoMode = false }: { promoMode?: b
               </span>
               <span className="text-[14px] text-white/90">
                 You have{" "}
-                <strong className="text-white font-bold">{PROMO_OFFER_MINUTES} FREE minutes</strong>{" "}
+                <strong className="text-white font-bold">{PROMO_OFFER_MINUTES}:00 FREE</strong>{" "}
                 with <strong className="text-white font-bold">every guide</strong> — tap one to begin
               </span>
             </div>
@@ -1480,8 +1488,8 @@ export default function PersonasDirectory({ promoMode = false }: { promoMode?: b
                     </span>
                   )}
                   <span className="flex items-center gap-2">
-                    <Coins className="w-4 h-4 text-amber-400/50" />
-                    From {selectedPersona.coinsPerMinute ?? 60} coins / min
+                    <Clock className="w-4 h-4 text-amber-400/50" />
+                    {perMinuteLabel(selectedPersona)}
                   </span>
                 </div>
 
@@ -1599,7 +1607,7 @@ export default function PersonasDirectory({ promoMode = false }: { promoMode?: b
                   <span>
                     {isReturningUser
                       ? `${selectedPersona.displayName} is ready to receive you`
-                      : `${selectedPersona.pricing.freeCoins} free coins to get started`}
+                      : `${coinsToClock(selectedPersona.pricing.freeCoins, selectedPersona.coinsPerMinute ?? COINS_PER_MINUTE)} of free reading time to get started`}
                   </span>
                 </div>
 

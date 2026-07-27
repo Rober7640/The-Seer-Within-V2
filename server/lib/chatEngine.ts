@@ -44,6 +44,7 @@ import logger from './logger';
 import { fireWithBreaker, anthropicBreaker, isCircuitOpenError } from './circuitBreaker';
 import { anthropicFailover as anthropic } from './anthropicWithFailover';
 import { resolvePersonaPrompt, logExposure } from './experiments';
+import { buildMinutesMeterLine } from './minutesMeter';
 
 interface ChatResponse {
   sessionId: string;
@@ -518,8 +519,7 @@ async function buildMessageContext(
         .limit(1);
       if (u) {
         const spendable = await getSpendableCoins(userId, personaConfig.id, u.coinBalance);
-        const minutesLeft = Math.floor(spendable / Math.max(1, personaConfig.coinsPerMinute));
-        meterLine = `\nClient minutes remaining: about ${minutesLeft} minute${minutesLeft === 1 ? '' : 's'}.${minutesLeft <= 2 ? ' TIME IS NEARLY UP — begin the wind-down NOW: synthesis, takeaway, next-opening. Do not open new threads.' : ''}`;
+        meterLine = buildMinutesMeterLine(spendable, personaConfig.coinsPerMinute);
       }
     } catch {
       /* meter is best-effort; date alone still grounds the reading */

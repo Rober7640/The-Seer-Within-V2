@@ -3,6 +3,7 @@ import { db } from '../lib/db';
 import { personas, personaPrompts, adminUsers, systemConfig } from '@shared/schema';
 import { hashPassword } from '../lib/auth';
 import { eq } from 'drizzle-orm';
+import { CENTS_PER_MINUTE_DEFAULT, minutesToCoins } from '@shared/types';
 import { seedEvelynIntentConfig, seedMarcusIntentConfig, seedNovaIntentConfig, seedMarenIntentConfig, seedAidenIntentConfig } from '../lib/seedIntentConfigs';
 
 async function seedDatabase() {
@@ -29,9 +30,27 @@ async function seedDatabase() {
       console.log('   ℹ️  Admin already exists');
     }
 
-    // 1b. Standardize all personas to 60 coins/min
-    await db.update(personas).set({ coinsPerMinute: 60 });
-    console.log('   ✅ All personas standardized to 60 coins/min');
+    // 1b. Dollar-wallet migration (2026-07-23): a coin is now a CENT, so the
+    // per-minute rate is cents/min. Convert the LEGACY 60 coins/min default to the
+    // $2.99/min default (299¢). The WHERE guard makes this idempotent AND leaves
+    // any deliberately-set non-default rate alone — so an admin-set premium rate is
+    // never clobbered on a re-seed (this replaces the old force-reset-to-60).
+    await db.update(personas)
+      .set({ coinsPerMinute: CENTS_PER_MINUTE_DEFAULT })
+      .where(eq(personas.coinsPerMinute, 60));
+    // Convert the legacy default free grant (180 coins = 3:00 @ 60/min) to cents
+    // (897¢ = 3:00 @ 299/min). Same idempotent guard; non-default grants (e.g. a
+    // 10-minute onboarding) are handled by scripts/migrate-coins-to-cents.ts.
+    await db.update(personas)
+      .set({ freeCoins: minutesToCoins(3) })
+      .where(eq(personas.freeCoins, 180));
+    console.log('   ✅ Legacy personas converted to the $2.99/min dollar-wallet default');
+
+    // 1c. Clear per-persona custom pricing so every guide inherits the flat
+    // $2.99/min DEFAULT_PRICING packs. Per-persona differential $/min is set on
+    // personas.coins_per_minute (cents/min) via the admin editor, not here.
+    await db.update(personas).set({ customPricing: null });
+    console.log('   ✅ All personas set to flat default per-minute pricing');
 
     // 2. Create Evelyn Cross persona
     console.log('\n2️⃣  Creating Evelyn Cross persona...');
