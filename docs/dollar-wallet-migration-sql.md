@@ -1,8 +1,14 @@
 # Dollar-Wallet Migration — copy-paste SQL
 
 Companion to `docs/dollar-wallet-go-live-runbook.md`. Every statement here is meant to be
-pasted into a prod SQL console **in order**. Column names verified against the live schema
-2026-07-27.
+pasted into a prod SQL console **in order**.
+
+> **Schema verified against PRODUCTION 2026-07-27.** Every column referenced below exists on
+> prod, and prod's coin-bearing columns are identical to local — 13 columns across 7 tables,
+> all `integer`. There is no live balance column the migration skips.
+> `users.welcome_coins_granted_at` matches a `%coin%` search but is a `timestamp` (it records
+> *when* the welcome grant was given) and must never be multiplied — §C correctly touches only
+> `coin_balance` and `total_coins_used`.
 
 > **Connection:** prod `DATABASE_URL` must use the **:5432 session pooler**, not `:6543`.
 > Port 6543 throws intermittent `42P01 relation does not exist` under load — it would abort
@@ -34,6 +40,49 @@ FROM promo_grants WHERE coins_remaining > 0;
 
 -- Current per-guide rates. On a virgin prod every active guide should read 60.
 SELECT slug, coins_per_minute, free_coins, is_active FROM personas ORDER BY slug;
+```
+
+### A1. Integer-overflow headroom — MUST pass before §C
+
+Every coin column is `integer` (max 2,147,483,647) and §C multiplies by ~4.98. Any row above
+**431,000,000** overflows and aborts the whole transaction. Realistically impossible, but a
+single bad test row would kill the migration mid-cutover, so check rather than assume:
+
+```sql
+SELECT
+  (SELECT COALESCE(max(coin_balance),0)     FROM users)        AS max_user_balance,
+  (SELECT COALESCE(max(total_coins_used),0) FROM users)        AS max_user_used,
+  (SELECT COALESCE(max(coins_granted),0)    FROM promo_grants) AS max_promo_granted,
+  431000000 AS overflow_threshold;
+```
+
+All three must be well under the threshold.
+
+### A2. The `ON CONFLICT` target must actually exist — MUST pass before §C
+
+§C ends with `INSERT ... ON CONFLICT (config_key)`. That requires a UNIQUE index or constraint
+on `system_config.config_key`. If prod lacks one, the statement raises
+`there is no unique or exclusion constraint matching the ON CONFLICT specification`, and because
+§C is one transaction **the entire migration rolls back** — after appearing to work.
+
+```sql
+SELECT indexname, indexdef FROM pg_indexes
+WHERE tablename = 'system_config' AND indexdef ILIKE '%UNIQUE%';
+```
+
+Expect an index on `(config_key)`. If none exists, either add one first:
+
+```sql
+CREATE UNIQUE INDEX IF NOT EXISTS system_config_config_key_key
+  ON system_config (config_key);
+```
+
+…or replace step 4 of §C with a plain conditional insert:
+
+```sql
+DELETE FROM system_config WHERE config_key = 'wallet_unit';
+INSERT INTO system_config (config_key, config_value, config_type)
+  VALUES ('wallet_unit', 'cents', 'text');
 ```
 
 ---
