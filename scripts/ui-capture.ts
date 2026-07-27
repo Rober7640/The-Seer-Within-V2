@@ -32,7 +32,7 @@ import { hashPassword } from '../server/lib/auth';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const BASE = 'http://localhost:5000';
-const EVELYN_ID = '7f03b55e-9a35-4bb7-ac80-a5dff7228910';
+const EVELYN_ID = process.env.EVELYN_ID || '7353002e-866c-4c3d-9161-e110526f59f1';
 const PASSWORD = 'PwUiTest2026!';
 const TURN_TIMEOUT_MS = 120_000;
 const SLOW_REPLY_MS = 45_000;
