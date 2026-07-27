@@ -132,6 +132,10 @@ export default function CreditsStoreView({
               return (
                 <div
                   key={g.id}
+                  // Stable hook for the per-guide grid assertions: the card's text
+                  // shape ("Name$X.XX/min0:00min") is ambiguous with its own inner
+                  // wrapper and with the grid container, so tests can't scope by text.
+                  data-testid={`guide-card-${g.id}`}
                   className={`rounded-2xl border p-3.5 transition-colors ${
                     g.isCurrent ? "border-purple-400/40 bg-purple-400/[0.07]" : "border-white/10 bg-white/[0.03]"
                   }`}

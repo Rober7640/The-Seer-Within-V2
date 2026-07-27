@@ -141,10 +141,14 @@ test.describe('System 2 — Credit System Edge Cases (C3)', () => {
     await loginAs(page, user);
     await page.goto('/credits');
 
-    // Zero reads as a clock, not "0 coins".
+    // Zero reads as a clock in the per-guide grid, never as "0 coins".
     await expect(page.getByText('0:00', { exact: false }).first()).toBeVisible({ timeout: 15000 });
-    // …and the store is there to top up from.
-    await expect(page.getByText(/Simple per-minute pricing/i)).toBeVisible();
+    // …and the store is there to top up from. The pre-2026-07-27 store led with a
+    // "Simple per-minute pricing" heading; the neutral dollar wallet leads with
+    // "Add to your balance" and an explicit $0.00, because one shared balance has
+    // no single time value once guides charge different rates.
+    await expect(page.getByRole('heading', { name: /Add to your balance/i })).toBeVisible();
+    await expect(page.getByText('$0.00', { exact: false }).first()).toBeVisible();
   });
 
   test('C3e: the clock in the header matches the API balance to the second', async ({ request, page }) => {

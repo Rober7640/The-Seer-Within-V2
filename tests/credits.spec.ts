@@ -1,22 +1,35 @@
 import { test, expect, type Page } from '@playwright/test';
 import {
   DEFAULT_PRICING,
-  PRICE_PER_MINUTE_USD,
   COINS_PER_MINUTE,
+  FREE_TRIAL_MINUTES,
   coinsToClock,
+  minutesToCoins,
 } from '../shared/types';
 
-// Per-minute pricing (2026-07-16 coin→minute change). The customer sees MINUTES and
-// DOLLARS only — never "coins" — and every time value is an m:ss clock.
+// The dollar wallet (2026-07-23) + the neutral-wallet store redesign (2026-07-27).
 //
-// Expected pack values are derived from DEFAULT_PRICING rather than typed as literals
-// on purpose: this file's job is to prove the PAGE renders what the source of truth
-// says. The money math itself is pinned separately in
-// server/lib/perMinutePricing.test.ts, so a bad rate can't slip through both.
+// The customer sees DOLLARS for the balance and packs, and MINUTES only where a
+// specific guide is named — because a coin is now a CENT and the wallet is SHARED,
+// so one balance has no single time value once guides charge different rates.
+// The word "coin" is internal and must never reach the page.
 //
-// These tests replaced an older set that asserted the pre-2026-07 model
-// ("15 Minutes"/"$15", "30 Minutes"/"$25", "Buy Coins"). Those packages no longer
-// exist — pricing is a flat $2.99/min with $10/$20/$30/$50 packs.
+// Expected values are derived from DEFAULT_PRICING and from each guide's OWN
+// coins_per_minute (read live off the API) rather than typed as literals: this
+// file's job is to prove the PAGE renders what the source of truth says. The money
+// math itself is pinned in server/lib/perMinutePricing.test.ts, so a bad rate can't
+// slip through both.
+//
+// REWRITTEN 2026-07-27. The previous version asserted the pre-redesign store —
+// a "Simple per-minute pricing" heading, the balance as an m:ss clock, a per-pack
+// "$2.99/m" label, an inline "= m:ss" preview under the custom field, and a flat
+// rate for every guide. None of those exist now: the heading is "Add to your
+// balance", the balance is dollars, the rate is shown per guide in the grid, packs
+// preview by TAP (the button buys), and guides may legitimately differ in price.
+// Those 9 tests failed for purely cosmetic reasons, which is worse than useless —
+// a real pricing break would have hidden among them.
+
+type GuideRate = { id: string; slug: string; name: string; coinsPerMinute: number };
 
 /** Register a FRESH user and land logged-in. */
 async function registerFreshUser(page: Page, label: string): Promise<string> {
@@ -33,89 +46,152 @@ async function registerFreshUser(page: Page, label: string): Promise<string> {
 
   // The suite's webServer runs with DISABLE_RATE_LIMIT=true, which auto-verifies the
   // address and grants the free minutes, so registration lands straight in the app.
+  // NOTE: if a plain `npm run dev` is already on :5000, Playwright reuses it via
+  // reuseExistingServer and this wait times out at the verification gate.
   await page.waitForURL(url => !url.pathname.startsWith('/login'), { timeout: 20000 });
   return email;
 }
 
-test.describe('Per-minute credits store', () => {
-  test('shows the flat per-minute rate', async ({ page }) => {
-    await registerFreshUser(page, 'rate');
-    await page.goto('/credits');
+/** The store is up once the neutral wallet title has rendered. */
+async function storeReady(page: Page) {
+  await expect(page.getByRole('heading', { name: /Add to your balance/i }))
+    .toBeVisible({ timeout: 15000 });
+}
 
-    await expect(page.getByText(/Simple per-minute pricing/i)).toBeVisible({ timeout: 15000 });
-    await expect(
-      page.getByText(new RegExp(`One flat rate.*\\$${PRICE_PER_MINUTE_USD}\\s*a minute`, 'i')),
-    ).toBeVisible();
+/** Live per-guide rates — the grid must reflect these, whatever they are. */
+async function guideRates(page: Page): Promise<GuideRate[]> {
+  const res = await page.request.get('/api/personas');
+  const body = await res.json();
+  const list = Array.isArray(body) ? body : (body.personas ?? []);
+  return list.map((p: any) => ({
+    id: p.id,
+    slug: p.slug,
+    name: p.displayName ?? p.name,
+    coinsPerMinute: p.coinsPerMinute ?? COINS_PER_MINUTE,
+  }));
+}
+
+/**
+ * Authenticated API call. Auth is a JWT the client keeps in localStorage and sends
+ * as a Bearer header — NOT a cookie — so page.request is anonymous by default and
+ * every authed endpoint silently returns a body without the field under test.
+ */
+async function authedGet(page: Page, path: string) {
+  const token = await page.evaluate(() => localStorage.getItem('seer_auth_token') ?? '');
+  expect(token, 'expected a JWT in localStorage after registering').not.toBe('');
+  const res = await page.request.get(path, { headers: { Authorization: `Bearer ${token}` } });
+  return res.json();
+}
+
+/** The free grant a brand-new account receives, in cents. */
+const FREE_GRANT_COINS = DEFAULT_PRICING.freeCoins; // minutesToCoins(3) = 897
+
+test.describe('Dollar-wallet credits store', () => {
+  test('presents the wallet in dollars, not as a per-guide clock', async ({ page }) => {
+    await registerFreshUser(page, 'wallet');
+    await page.goto('/credits');
+    await storeReady(page);
+
+    // The balance is a DOLLAR figure. It deliberately is NOT an m:ss clock: one
+    // shared wallet buys different amounts of time from different guides, so a
+    // single clock would contradict the per-guide grid right below it.
+    const dollars = `$${(FREE_GRANT_COINS / 100).toFixed(2)}`;
+    // exact — otherwise this also matches the "Add to your balance" heading.
+    await expect(page.getByText('Your balance', { exact: true })).toBeVisible();
+    await expect(page.getByText(dollars, { exact: false }).first()).toBeVisible();
+    await expect(page.getByText(/Works with every guide/i)).toBeVisible();
+    await expect(page.getByRole('heading', { name: /One simple wallet/i })).toBeVisible();
   });
 
-  test('renders every pack with the right price and the right amount of time', async ({ page }) => {
+  test('a new account is granted exactly the free trial', async ({ page }) => {
+    await registerFreshUser(page, 'freetrial');
+
+    const { coinBalance } = await authedGet(page, '/api/credits/balance');
+    expect(coinBalance, 'signup grant must equal the free-trial constant').toBe(FREE_GRANT_COINS);
+
+    // …and that grant is sized to buy FREE_TRIAL_MINUTES at the DEFAULT rate.
+    expect(FREE_GRANT_COINS).toBe(minutesToCoins(FREE_TRIAL_MINUTES));
+  });
+
+  test('lists every pack at its dollar price', async ({ page }) => {
     await registerFreshUser(page, 'packs');
     await page.goto('/credits');
-    await expect(page.getByText(/Simple per-minute pricing/i)).toBeVisible({ timeout: 15000 });
+    await storeReady(page);
 
     for (const tier of DEFAULT_PRICING.tiers) {
-      const dollars = (tier.priceUsd / 100).toFixed(2);
-      const clock = coinsToClock(tier.totalCoins);
-
+      const dollars = `$${(tier.priceUsd / 100).toFixed(2)}`;
       await expect(
-        page.getByText(`$${dollars}`, { exact: false }).first(),
-        `pack $${dollars} should be listed`,
+        page.getByText(dollars, { exact: false }).first(),
+        `pack ${dollars} should be listed`,
       ).toBeVisible();
+    }
 
-      await expect(
-        page.getByText(clock, { exact: false }).first(),
-        `pack $${dollars} should advertise ${clock} of time`,
-      ).toBeVisible();
+    // Packs grant exactly the dollars paid — the dollar-wallet invariant. A pack
+    // that granted a bonus would silently break the advertised per-minute rate.
+    for (const tier of DEFAULT_PRICING.tiers) {
+      expect(tier.totalCoins, `${tier.packageType} must grant its price in cents`).toBe(tier.priceUsd);
     }
   });
 
-  test('quotes the same per-minute rate on every pack — no bulk discount', async ({ page }) => {
-    await registerFreshUser(page, 'norate-discount');
+  test('shows each guide at its OWN rate, with the time that rate buys', async ({ page }) => {
+    await registerFreshUser(page, 'perguide');
     await page.goto('/credits');
-    await expect(page.getByText(/Simple per-minute pricing/i)).toBeVisible({ timeout: 15000 });
+    await storeReady(page);
 
-    const rateLabels = await page.getByText(/\$\d+\.\d{2}\/m\b/).allTextContents();
-    expect(rateLabels.length, 'each pack should quote its per-minute rate').toBeGreaterThanOrEqual(
-      DEFAULT_PRICING.tiers.length,
-    );
-    for (const label of rateLabels) {
-      expect(label).toContain(`$${PRICE_PER_MINUTE_USD.toFixed(2)}/m`);
+    const guides = await guideRates(page);
+    expect(guides.length, 'need at least one active guide to render the grid').toBeGreaterThan(0);
+
+    await expect(page.getByRole('heading', { name: /What your balance buys/i })).toBeVisible();
+
+    for (const g of guides) {
+      const rateLabel = `$${(g.coinsPerMinute / 100).toFixed(2)}/min`;
+      const expectedTime = coinsToClock(FREE_GRANT_COINS, g.coinsPerMinute);
+
+      // Scope to this guide's card so a $2.99 guide can't satisfy the assertion
+      // for a $3.50 one — the exact bug a flat-rate test would miss.
+      const card = page.getByTestId(`guide-card-${g.id}`);
+      await expect(card, `${g.slug} card should quote ${rateLabel}`).toContainText(rateLabel);
+      await expect(card, `${g.slug} should show ${expectedTime} for a ${FREE_GRANT_COINS}¢ wallet`)
+        .toContainText(expectedTime);
     }
   });
 
-  test('shows the balance as an m:ss clock, not a coin count', async ({ page }) => {
-    await registerFreshUser(page, 'balance');
+  test('tapping a pack previews the projected balance for every guide', async ({ page }) => {
+    await registerFreshUser(page, 'preview');
     await page.goto('/credits');
+    await storeReady(page);
 
-    // A new account gets the free trial.
-    const freeClock = coinsToClock(DEFAULT_PRICING.freeCoins);
-    await expect(page.getByText(freeClock, { exact: false }).first()).toBeVisible({ timeout: 15000 });
+    const guides = await guideRates(page);
+    const tier = DEFAULT_PRICING.tiers.find(t => t.priceUsd === 2000)!;
+    const dollars = `$${(tier.priceUsd / 100).toFixed(2)}`;
+
+    // Only the pack TILES carry aria-pressed; the nested "buy" button does not.
+    // Tapping the tile must preview, never purchase.
+    await page.locator('[role="button"][aria-pressed]').filter({ hasText: dollars }).first().click();
+
+    const projected = FREE_GRANT_COINS + tier.totalCoins;
+    await expect(
+      page.getByRole('heading', { name: new RegExp(`What \\$${(projected / 100).toFixed(2)} would buy`, 'i') }),
+    ).toBeVisible();
+    await expect(page.getByText(`${dollars} preview`, { exact: false })).toBeVisible();
+
+    // Every guide re-projects at its own rate, and the delta is that guide's own
+    // gain — this is the assertion that would catch a rate applied to the wrong guide.
+    for (const g of guides) {
+      const added = coinsToClock(tier.totalCoins, g.coinsPerMinute);
+      const card = page.getByTestId(`guide-card-${g.id}`);
+      await expect(card, `${g.slug} should project +${added}`).toContainText(`+${added}`);
+    }
   });
 
   test('never says "coin" anywhere on the store', async ({ page }) => {
     await registerFreshUser(page, 'nocoins');
     await page.goto('/credits');
-    await expect(page.getByText(/Simple per-minute pricing/i)).toBeVisible({ timeout: 15000 });
+    await storeReady(page);
 
     const body = await page.evaluate(() => document.body.innerText);
-    expect(body, 'the coin ledger is internal — customers see minutes').not.toMatch(/\bcoins?\b/i);
-  });
-
-  test('previews the time a custom amount buys', async ({ page }) => {
-    await registerFreshUser(page, 'custom');
-    await page.goto('/credits');
-    await expect(page.getByText(/choose your own amount/i)).toBeVisible({ timeout: 15000 });
-
-    const custom = page.getByPlaceholder(/custom amount/i);
-    await custom.fill('20');
-
-    // $20 buys the same time as the $20 pack — the custom field and the packs are
-    // driven by the same rate, so they must never disagree. Match the "= m:ss"
-    // preview specifically: the bare clock would also match the $20 pack tile and
-    // pass without the preview ever updating.
-    const twentyPack = DEFAULT_PRICING.tiers.find(t => t.priceUsd === 2000)!;
-    const expected = coinsToClock(twentyPack.totalCoins);
-    await expect(page.getByText(new RegExp(`=\\s*${expected.replace(':', ':')}`))).toBeVisible();
+    expect(body, 'the coin ledger is internal — customers see dollars and minutes')
+      .not.toMatch(/\bcoins?\b/i);
   });
 
   test('refuses a custom amount below the cheapest pack', async ({ page }) => {
@@ -140,26 +216,39 @@ test.describe('Per-minute credits store', () => {
     await expect(page.getByText(/No purchases yet/i)).toBeVisible();
   });
 
-  test('serves the same flat pricing for every persona', async ({ page }) => {
+  test('serves each guide its own per-minute rate, and packs priced in plain dollars', async ({ page }) => {
     await registerFreshUser(page, 'per-persona');
 
-    // Every guide is currently at the flat $2.99/min default. The engine now supports
-    // per-persona $/min (dollar wallet), so the per-minute rate is DERIVED from each
-    // response's own coinsPerMinute (cents/min) — the test would still pass if a guide
-    // diverged, because the pack dollars scale with the rate.
-    const rates: string[][] = [];
-    for (const slug of ['evelyn-cross', 'marcus-stone']) {
-      const res = await page.request.get(`/api/credits/pricing?personaId=${slug}`);
-      // An unknown/slug id falls back to defaults; either way the rate must be flat today.
+    // REWRITTEN: this test used to assert "the same flat pricing for every persona"
+    // and passed a SLUG where the API expects an id — so it silently fell back to
+    // defaults and asserted nothing. Per-guide pricing is now a shipped feature
+    // (Luna $3.50, Marcus $4.25), so the real contract is: each guide reports its
+    // own rate, while pack DOLLARS stay identical because the wallet is shared.
+    const guides = await guideRates(page);
+    const idRes = await page.request.get('/api/personas');
+    const idBody = await idRes.json();
+    const idList = Array.isArray(idBody) ? idBody : (idBody.personas ?? []);
+
+    let packDollars: string | null = null;
+
+    for (const p of idList) {
+      const res = await page.request.get(`/api/credits/pricing?personaId=${p.id}`);
       const body = await res.json();
       const cpm = body.coinsPerMinute ?? COINS_PER_MINUTE;
       const tiers = body.tiers ?? body.pricing?.tiers ?? [];
-      rates.push(tiers.map((t: { totalCoins: number; priceUsd: number }) =>
-        (t.priceUsd / 100 / (t.totalCoins / cpm)).toFixed(2)));
-    }
-    for (const perPersona of rates) {
-      for (const rate of perPersona) {
-        expect(rate).toBe(PRICE_PER_MINUTE_USD.toFixed(2));
+
+      const expectedRate = guides.find(g => g.slug === p.slug)?.coinsPerMinute ?? COINS_PER_MINUTE;
+      expect(cpm, `${p.slug} should serve its own rate`).toBe(expectedRate);
+
+      // A pack costs the same dollars for everyone — only the time it buys differs.
+      const dollars = tiers.map((t: { priceUsd: number }) => t.priceUsd).join(',');
+      if (packDollars === null) packDollars = dollars;
+      expect(dollars, 'pack dollar prices must not vary by guide').toBe(packDollars);
+
+      // Effective $/min implied by each pack must equal that guide's own rate.
+      for (const t of tiers as Array<{ totalCoins: number; priceUsd: number }>) {
+        const implied = (t.priceUsd / 100) / (t.totalCoins / cpm);
+        expect(implied.toFixed(2), `${p.slug} pack should imply its own rate`).toBe((cpm / 100).toFixed(2));
       }
     }
   });
