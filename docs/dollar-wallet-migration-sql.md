@@ -122,11 +122,28 @@ Those three counts must match the live table counts. If any is 0, **stop**.
 
 ## §C. The migration (one transaction)
 
-Identical to what `npx tsx scripts/migrate-coins-to-cents.ts --apply` executes. Run either the
-script or this SQL — **not both** (the second is a no-op anyway, guarded by `wallet_unit`).
+Equivalent to what `npx tsx scripts/migrate-coins-to-cents.ts --apply` executes. Run either the
+script or this SQL — **not both.**
+
+> **⚠️ Step 0 is not optional.** The `users` and `promo_grants` updates have no natural guard
+> (unlike `personas`, which is protected by `WHERE coins_per_minute = 60`). Running this block
+> twice multiplies every balance twice: a 3:00 wallet becomes **14:57** — verified, not
+> theoretical. The TypeScript script refuses to re-run; raw SQL pasted into a console has no
+> such protection, so step 0 adds it. It aborts the whole transaction if the migration already
+> ran, leaving the data untouched.
 
 ```sql
 BEGIN;
+
+-- 0. IDEMPOTENCY GUARD — abort loudly if this has already been applied.
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM system_config
+             WHERE config_key = 'wallet_unit' AND config_value = 'cents') THEN
+    RAISE EXCEPTION
+      'ALREADY MIGRATED: system_config.wallet_unit is already ''cents''. Aborting so balances are not converted twice.';
+  END IF;
+END $$;
 
 -- 1. Wallets: preserve MINUTES (N coins @60/min → same minutes @299¢/min)
 UPDATE users SET
