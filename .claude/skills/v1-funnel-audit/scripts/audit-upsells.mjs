@@ -267,6 +267,48 @@ async function upsell1Flow(browser) {
   }
 }
 
+// ── PART 2b: the upsell pages on a FUNNEL-PREFIXED route ─────────────────────
+// PART 2 walks root /welcome1. Every ad funnel also mounts the SAME UpsellPage at
+// its own prefix (/fb-palm/welcome1, /fb-tarot/welcome1, …), and a funnel whose
+// route was mis-registered would fail there while root stayed green — the offer
+// would 404-to-shell and the buyer would never be able to accept.
+//
+// Kept deliberately light (offer renders at the right price → accept → shipping
+// form) because everything below that is the shared component already proven above.
+async function upsell1FunnelRoute(browser, { prefix, label, expectCents }) {
+  const SID = `u1${label}_${RUN}`;
+  const userData = {
+    firstName: 'Claire', email: `u1-${label}-${RUN}@example.com`, bucket: 'love', personName: '',
+    stripeCustomerId: 'cus_test', mainPurchaseAmount: 3500, upsell1PriceCents: expectCents,
+  };
+  const ctx = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  await blockMeta(ctx);
+  await speedUpTyping(ctx);
+  await ctx.route('**/api/upsell/user-data**', (r) =>
+    r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(userData) }));
+  await ctx.route('**/api/fb-event', (r) => r.fulfill({ status: 200, contentType: 'application/json', body: '{}' }));
+  await ctx.route('**/api/upsell/charge', (r) =>
+    r.fulfill({ status: 200, contentType: 'application/json', body: '{"success":true,"paymentIntentId":"pi_test"}' }));
+  await ctx.route('**/api/shipping/save', (r) =>
+    r.fulfill({ status: 200, contentType: 'application/json', body: '{"success":true}' }));
+
+  const page = await ctx.newPage();
+  await page.goto(`${BASE}${prefix}/welcome1?session_id=${SID}`, { waitUntil: 'domcontentloaded' });
+  const reached = await advance(page, () => visible(page, '[data-testid="button-upsell-accept"]'));
+  check(`[U1 ${label} route] offer reached at ${prefix}/welcome1`, reached,
+    reached ? '' : `never got the CTA — is the route registered? url=${page.url()}`);
+
+  if (reached) {
+    const body = await bodyText(page);
+    check(`[U1 ${label} route] offer shows ${money(expectCents)}`,
+      body.includes(`$${(expectCents / 100).toFixed(0)}`), `expected ${money(expectCents)} in the offer copy`);
+    await page.locator('[data-testid="button-upsell-accept"]').click().catch(() => {});
+    const shipShown = await advance(page, () => visible(page, '[data-testid="button-shipping-submit"]'), { timeoutMs: 20000 });
+    check(`[U1 ${label} route] accept → shipping form appears`, shipShown);
+  }
+  await ctx.close();
+}
+
 // ── PART 3: Upsell 2 browser flow ─────────────────────────────────────────────
 async function upsell2Flow(browser) {
   const SID = `u2flow_${RUN}`;
@@ -382,6 +424,8 @@ async function main() {
   const browser = await chromium.launch();
   console.log('  PART 2 — Upsell 1 chat flow…');
   await upsell1Flow(browser);
+  console.log('  PART 2b — Upsell 1 on a funnel-prefixed route…');
+  await upsell1FunnelRoute(browser, { prefix: '/fb-tarot', label: 'tarot', expectCents: 4700 });
   console.log('  PART 3 — Upsell 2 chat flow…');
   await upsell2Flow(browser);
   await browser.close();
