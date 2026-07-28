@@ -56,6 +56,7 @@ import {
   generateManifestPersonalize,
   generatePalmOpener,
   generatePalmReflect,
+  generateTarotReflect,
 } from "./lib/claude";
 import {
   saveConversation,
@@ -402,7 +403,7 @@ export async function registerRoutes(
   // Chat API - Claude integration
   app.post("/api/chat", async (req: Request, res: Response) => {
     try {
-      const { action, userData, input, objectionCount, palmSign, palmHook, palmThumb } =
+      const { action, userData, input, objectionCount, palmSign, palmHook, palmThumb, tarotDeck, tarotHook, tarotCard } =
         req.body as ChatRequest;
 
       // V1 price split test — enrich userData with the variant prices
@@ -486,6 +487,21 @@ export async function registerRoutes(
             return res.status(400).json({ error: "Invalid palm params" });
           }
           result = await generatePalmReflect(userData, sign, palmHook as string, palmThumb as string, input ?? "");
+          break;
+        }
+        case "tarotReflect": {
+          // Interactive Version C for the /fb-tarot "decode-him card" bridge —
+          // reads her typed answer (input), woven with the card she drew. Validate
+          // against fixed enums; tarotDeck defaults to 'decode-him'. Keep these
+          // rosters in sync with client/src/content/tarotReads.ts (fb-tarot-add-card).
+          const validDecks = ["decode-him", "arcana-mfh", "arcana-eef", "return-mhf"];
+          const validHooks = ["cards-honest", "cards-return", "cards-feels", "cards-cheating", "cards-love-again", "cards-soulmate"];
+          const validCards = ["a", "b", "c"];
+          const deck = tarotDeck ?? "decode-him";
+          if (!validDecks.includes(deck) || !validHooks.includes(tarotHook ?? "") || !validCards.includes(tarotCard ?? "")) {
+            return res.status(400).json({ error: "Invalid tarot params" });
+          }
+          result = await generateTarotReflect(userData, deck, tarotHook as string, tarotCard as string, input ?? "");
           break;
         }
         case "valueExplain":

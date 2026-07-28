@@ -1,0 +1,26 @@
+# return-mhf — hook cards-return ("Will he come back?"), tapped card b (the Magician/the Hanged Man/the Fool)
+# she typed: "He pulled away three months ago and went quiet, and I still don't know if he's coming back."
+
+[1] Mmm… the Hanged Man, the card of the pause and a new angle. I felt it the moment your hand reached for it. The connection only opens once I know who I'm speaking with, though… what's your first name, dear?
+
+[2] Sarah
+
+[3] It's lovely to meet you, Sarah.
+
+[4] Everything we discuss stays between us... our secret.
+
+[5] I can feel warmth radiating from your heart, Sarah...
+
+[6] But there's a flicker of shadow there too...
+
+[7] Let's look deeper together...
+
+[8] Tell me more about what's on your mind...
+
+[9] He pulled away three months ago and went quiet, and I still don't know if he's coming back.
+
+[10] Three months... Sarah, that's long enough to doubt everything you felt.
+
+[11] That ending wasn't clean, was it? There are threads still attached.
+
+[12] You've replayed that last conversation a hundred times.

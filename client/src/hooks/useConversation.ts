@@ -7,6 +7,14 @@ import { calculateTypingDelay, sleep, generateId } from '@/lib/typing'
 import { getGeoData, getTimeMessage } from '@/lib/geolocation'
 import { parsePalmParams, greetingA, openerB, openerCStart, palmReflectFallback, hookToBucket, SIGNS } from '@/content/palmReads'
 import {
+  parseTarotParams,
+  greetingA as tarotGreetingA,
+  openerB as tarotOpenerB,
+  openerCStart as tarotOpenerCStart,
+  tarotReflectFallback,
+  hookToBucket as tarotHookToBucket,
+} from '@/content/tarotReads'
+import {
   detectIntent,
   sanitizeInput,
   getAIDeflectionResponse,
@@ -385,6 +393,35 @@ export function useConversation() {
         return
       }
 
+      // Tarot "decode-him card" bridge traffic (/fb-tarot): same shape as the palm
+      // opener, but the card reveal instead of the thumb read. Gated on hook+card →
+      // zero impact on other funnels (parseTarotParams returns null everywhere else).
+      const tarot = parseTarotParams(window.location.search)
+      if (tarot) {
+        if (tarot.version === 'c') {
+          // Version C — INTERACTIVE. Open with the card line + one open question,
+          // then read HER answer with the LLM in handleTarotReflect.
+          await sendBotMessages(tarotOpenerCStart(tarot.deck, tarot.hook, tarot.card))
+          updateState({
+            state: 'TAROT_REFLECT',
+            inputEnabled: true,
+            inputPlaceholder: "Share what's on your heart…",
+          })
+          return
+        }
+        if (tarot.version === 'b') {
+          await sendBotMessages(tarotOpenerB(tarot.deck, tarot.hook, tarot.card))
+        } else {
+          await sendBotMessage(tarotGreetingA(tarot.deck, tarot.card))
+        }
+        updateState({
+          state: 'NAME_CAPTURE',
+          inputEnabled: true,
+          inputPlaceholder: 'Your name...',
+        })
+        return
+      }
+
       await sendBotMessages([
         "Greetings, dear friend, and welcome.",
         "My name is Evelyn Cross.",
@@ -583,6 +620,52 @@ export function useConversation() {
       return
     }
 
+    // Tarot "decode-him card" bridge traffic: same skip-the-bucket-picker shape as
+    // palm (love inferred from the hook), but the card identity already lives in the
+    // opener, so the deeper flow stays the GENERIC engine — no palm-style identity
+    // is written to userData. Tarot-only ⇒ no impact on other funnels.
+    const tarot = parseTarotParams(window.location.search)
+    if (tarot) {
+      updateUserData({ bucket: tarotHookToBucket(tarot.hook) })
+
+      await sendBotMessages([
+        `It's lovely to meet you, ${capitalized}.`,
+        "Everything we discuss stays between us... our secret.",
+      ])
+      await sendBotMessages([
+        `I can feel warmth radiating from your heart, ${capitalized}...`,
+        "But there's a flicker of shadow there too...",
+      ])
+      // no-optin variant: skip the email anchor, go straight into the reading.
+      if (skipEmail()) {
+        await sendBotMessages([
+          "Let's look deeper together...",
+          "Tell me more about what's on your mind...",
+        ])
+        updateState({
+          state: 'DEEPENING_1',
+          inputEnabled: true,
+          inputPlaceholder: "Share what's in your heart...",
+          inputType: 'text',
+        })
+        return
+      }
+
+      await sendBotMessages([
+        "Before I look deeper, I need to anchor our connection...",
+        "Sometimes the visions continue after we speak...",
+        "Where should I send them if more is revealed?",
+      ])
+
+      updateState({
+        state: 'EMAIL_CAPTURE',
+        inputEnabled: true,
+        inputPlaceholder: 'Your email...',
+        inputType: 'email',
+      })
+      return
+    }
+
     await sendBotMessages([
       `It's lovely to meet you, ${capitalized}.`,
       "Everything we discuss stays between us... our secret.",
@@ -633,6 +716,51 @@ export function useConversation() {
 
     if (llm) await sendBotMessages(llm)
     else if (palm) await sendBotMessages(palmReflectFallback(palm.sign, palm.hook, palm.thumb))
+
+    await sendBotMessage("Before we go deeper, tell me… what should I call you, dear?")
+    updateState({
+      state: 'NAME_CAPTURE',
+      inputEnabled: true,
+      inputPlaceholder: 'Your name...',
+    })
+  }, [chat.userData, sendBotMessage, sendBotMessages, updateState, updateUserData])
+
+  // === TAROT VERSION C — read HER answer to the opener question ===
+  // Parallel to handlePalmReflect: the LLM reflects what she just shared (woven
+  // with the drawn card, reading HIM as a tendency-never-verdict), then earns the
+  // name → existing love deepening. Falls back to the static reveal on any failure.
+  const handleTarotReflect = useCallback(async (input: string) => {
+    const tarot = parseTarotParams(window.location.search)
+    updateUserData({ concern: input })
+
+    let llm: string[] | null = null
+    if (tarot) {
+      try {
+        updateState({ isTyping: true })
+        const res = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'tarotReflect',
+            tarotDeck: tarot.deck,
+            tarotHook: tarot.hook,
+            tarotCard: tarot.card,
+            userData: chat.userData,
+            input,
+          }),
+        })
+        if (res.ok) {
+          const data = await res.json()
+          if (Array.isArray(data.messages) && data.messages.length) llm = data.messages
+        }
+      } catch {
+        // ignore — fall back below
+      }
+      updateState({ isTyping: false })
+    }
+
+    if (llm) await sendBotMessages(llm)
+    else if (tarot) await sendBotMessages(tarotReflectFallback(tarot.deck, tarot.hook, tarot.card))
 
     await sendBotMessage("Before we go deeper, tell me… what should I call you, dear?")
     updateState({
@@ -1386,6 +1514,9 @@ export function useConversation() {
       case 'PALM_REFLECT':
         await handlePalmReflect(input)
         break
+      case 'TAROT_REFLECT':
+        await handleTarotReflect(input)
+        break
       case 'PERSON_NAME_CAPTURE':
         await handlePersonNameCapture(input)
         break
@@ -1425,6 +1556,7 @@ export function useConversation() {
     updateState,
     handleNameCapture,
     handlePalmReflect,
+    handleTarotReflect,
     handlePersonNameCapture,
     handleEmailCapture,
     handleDeepening1,

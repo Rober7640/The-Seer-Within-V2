@@ -93,7 +93,14 @@ export function getVariantsSource(): VariantsSource {
 // Add an entry here only for a NEW funnel that should ship single-price; if you
 // do, make sure NOT to also add matching weighted variants (the fixed entry
 // takes precedence and would silently shadow them).
-const FIXED_FUNNEL_PRICES: Record<string, { id: string; priceCents: number; downsellCents: number; upsell1Cents: number }> = {};
+const FIXED_FUNNEL_PRICES: Record<string, { id: string; priceCents: number; downsellCents: number; upsell1Cents: number }> = {
+  // Tarot "decode-him card" funnel launches at a flat single price (no A/B split,
+  // like thumb-angle at launch). The '35_tarot' id carries the '-tarot' token so
+  // funnelParamFromPriceVariant attributes it back to v1-tarot. To start a price
+  // test later, add funnel-scoped weighted variants to the system_config pool and
+  // REMOVE this entry (a fixed entry shadows any matching weighted variants).
+  'v1-tarot': { id: '35_tarot', priceCents: 3500, downsellCents: 2500, upsell1Cents: 4700 },
+};
 
 interface CachedVariants {
   variants: PriceVariant[];

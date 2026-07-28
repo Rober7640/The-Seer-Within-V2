@@ -91,7 +91,7 @@ export interface ShippingAddress {
 }
 
 export interface ChatRequest {
-  action: 'reading' | 'reading1' | 'reading2' | 'futureValidation' | 'crisisReveal' | 'crisisCost' | 'crisisUrgency' | 'shadowSummary' | 'valueExplain' | 'crisis' | 'objection' | 'palmOpener' | 'palmReflect'
+  action: 'reading' | 'reading1' | 'reading2' | 'futureValidation' | 'crisisReveal' | 'crisisCost' | 'crisisUrgency' | 'shadowSummary' | 'valueExplain' | 'crisis' | 'objection' | 'palmOpener' | 'palmReflect' | 'tarotReflect'
   userData: UserData
   input: string
   objectionCount?: number
@@ -101,6 +101,11 @@ export interface ChatRequest {
   palmSign?: string
   palmHook?: string
   palmThumb?: string
+  // Tarot "decode-him card" bridge Version C — the deck + card + hook the visitor
+  // tapped. Server validates against fixed enums before injecting.
+  tarotDeck?: string
+  tarotHook?: string
+  tarotCard?: string
 }
 
 export interface ChatResponse {

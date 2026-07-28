@@ -13,6 +13,7 @@ import { ChatServiceLayout } from "@/components/ChatServiceLayout";
 import NotFound from "@/pages/not-found";
 import LandingPage from "@/pages/LandingPage";
 import PalmBridge from "@/pages/PalmBridge";
+import TarotBridge from "@/pages/TarotBridge";
 import ChatPage from "@/pages/ChatPage";
 import SuccessPage from "@/pages/SuccessPage";
 import UpsellTestPage from "@/pages/UpsellTestPage";
@@ -149,9 +150,15 @@ function Router() {
         funnel,
         step: getPostHogStep(location),
         path: location,
-        // Palm multi-sign: tag which ad "sign" was quizzed so the funnel can be
-        // broken down per sign. Defaults to 'thumb' (the sign-less original).
-        sign: funnel === 'palm' ? (urlParams.get('sign') || 'thumb') : undefined,
+        // Palm multi-sign / tarot multi-deck: tag which ad concept was quizzed so
+        // the funnel can be broken down per sign (palm) / deck (tarot). Reuses the
+        // same `sign` breakdown key. Defaults to the seeded concept.
+        sign:
+          funnel === 'palm'
+            ? (urlParams.get('sign') || 'thumb')
+            : funnel === 'tarot'
+            ? (urlParams.get('deck') || 'decode-him')
+            : undefined,
         utm_source: urlParams.get('utm_source') || undefined,
         utm_campaign: urlParams.get('utm_campaign') || undefined,
         utm_medium: urlParams.get('utm_medium') || undefined,
@@ -208,6 +215,18 @@ function Router() {
         <Route path="/fb-palm/welcome1" component={UpsellPage} />
         <Route path="/fb-palm/welcome2" component={Upsell2Page} />
         <Route path="/fb-palm/success" component={SuccessPage} />
+
+        {/* V1-TAROT funnel — "decode-him card" quiz-bridge lander. A SEPARATE
+            funnel/route (not a palm sign): /fb-tarot root renders TarotBridge;
+            chat + upsells reuse the shared V1 components and carry the "- TAROT"
+            Stripe suffix. Version A/B/C split mirrors /fb-palm. */}
+        <Route path="/fb-tarot" component={TarotBridge} />
+        <Route path="/fb-tarot/b" component={TarotBridge} />
+        <Route path="/fb-tarot/c" component={TarotBridge} />
+        <Route path="/fb-tarot/chat" component={ChatPage} />
+        <Route path="/fb-tarot/welcome1" component={UpsellPage} />
+        <Route path="/fb-tarot/welcome2" component={Upsell2Page} />
+        <Route path="/fb-tarot/success" component={SuccessPage} />
 
         {/* V1-GDN funnel routes (Google Display Network ad traffic) — same
             components, new URLs so Google Ads can segment by page and Stripe
