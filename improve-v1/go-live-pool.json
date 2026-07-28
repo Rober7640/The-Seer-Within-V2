@@ -10,7 +10,8 @@
   {"id":"35_gdn","funnel":"v1-gdn","weight":1,"priceCents":3500,"downsellCents":2500,"upsell1Cents":3700},
   {"id":"45_gdn","funnel":"v1-gdn","weight":1,"priceCents":4500,"downsellCents":3200,"upsell1Cents":4700},
   {"id":"35_palm","funnel":"v1-palm","weight":0,"priceCents":3500,"downsellCents":2500,"upsell1Cents":3700},
-  {"id":"35_palm_u47","funnel":"v1-palm","weight":1,"priceCents":3500,"downsellCents":2500,"upsell1Cents":4700},
+  {"id":"35_palm_u47","funnel":"v1-palm","weight":70,"priceCents":3500,"downsellCents":2500,"upsell1Cents":4700},
   {"id":"45_palm","funnel":"v1-palm","weight":0,"priceCents":4500,"downsellCents":3200,"upsell1Cents":4700},
-  {"id":"55-35_palm","funnel":"v1-palm","weight":1,"priceCents":5500,"downsellCents":3500,"upsell1Cents":4700,"signs":["thumb"]}
+  {"id":"55-35_palm","funnel":"v1-palm","weight":0,"priceCents":5500,"downsellCents":3500,"upsell1Cents":4700,"signs":["thumb"]},
+  {"id":"35_palm_gate","funnel":"v1-palm","weight":30,"priceCents":3500,"downsellCents":2500,"upsell1Cents":4700}
 ]}

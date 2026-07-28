@@ -27,6 +27,7 @@ import { parsePalmParams } from "../client/src/content/palmReads";
 
 const SIGN = "thumb-angle";
 const CONTROL = "35_palm_u47";
+const GATE = "35_palm_gate";
 const SLIDING = "55-35_palm";
 
 // The client pixel id is hardcoded in index.html, so .env.sandbox cannot mute it.
@@ -277,11 +278,17 @@ test.describe(`fb-palm · ${SIGN}`, () => {
     }
   });
 
-  test("thumb-angle is 100% control ($35/$25) — it never sees the $55 sliding close", async ({ request }) => {
-    // The sliding close is scoped `signs:["thumb"]`. thumb-angle runs its OWN
-    // $55/$35 test through the experiment framework instead, so on the legacy
-    // pool it must be pure control. This is the integration counterpart to
-    // server/lib/priceVariantPool.test.ts.
+  test("thumb-angle only ever draws a live palm variant (control or gate) — never the retired $55 sliding arm", async ({ request }) => {
+    // thumb-angle is DELIBERATELY included in the commitment-gate's 70/30 split
+    // (operator decision, 2026-07-26) — it can legitimately draw either the
+    // unscoped control (35_palm_u47) or the gate variant (35_palm_gate). It also
+    // runs its OWN separate $55/$35 test through the experiment framework, but
+    // that is orthogonal to this pool. The one invariant that must always hold
+    // is that the RETIRED $55 sliding close (scoped `signs:["thumb"]`, parked at
+    // weight 0) never gets drawn on any sign. With only 12 draws we do NOT assert
+    // both live ids MUST appear — that would itself flake ~1.4% of the time if
+    // the 30%-weighted gate simply never comes up in 12 tries. This is the
+    // integration counterpart to server/lib/priceVariantPool.test.ts.
     const seen: Record<string, number> = {};
     const run = `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
 
@@ -303,8 +310,10 @@ test.describe(`fb-palm · ${SIGN}`, () => {
     }
 
     console.log(`  [price] ${JSON.stringify(seen)}`);
-    expect(seen[SLIDING], `🔴 CONTAMINATION: ${SIGN} drew the $55 sliding arm`).toBeUndefined();
-    expect(Object.keys(seen)).toEqual([CONTROL]);
+    expect(seen[SLIDING], `🔴 CONTAMINATION: ${SIGN} drew the retired $55 sliding arm`).toBeUndefined();
+    for (const id of Object.keys(seen)) {
+      expect([CONTROL, GATE], `${SIGN} drew unexpected variant ${id}`).toContain(id);
+    }
   });
 
   // ── Tracking wiring ────────────────────────────────────────────────────────

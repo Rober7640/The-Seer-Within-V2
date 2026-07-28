@@ -1,5 +1,15 @@
 import { test, expect, type APIRequestContext } from "@playwright/test";
 
+// ⚠ RETIRED 2026-07-26. The `55-35_palm` sliding-close variant this whole spec
+// tests was parked at weight 0 in the live pool and superseded by the
+// `35_palm_gate` commitment-gate A/B test (70/30 against the unscoped
+// control, across every fb-palm sign — see
+// docs/superpowers/specs/2026-07-26-fb-palm-commitment-gate-design.md). The
+// suite below is `.skip`'d rather than deleted so it stays available as a
+// historical/re-activatable reference; it is NOT rewritten to cover the new
+// behavior — that is already covered by server/lib/priceVariantPool.test.ts
+// and the fixed tests/fb-palm-thumb-angle-smoke.spec.ts.
+//
 // The $55/$35 sliding close runs on the fb-palm THUMB ads and NOWHERE ELSE.
 //
 //   Joel, 2026-07-14 call: "we should never put new tests onto a new lander… the one
@@ -78,7 +88,7 @@ async function tally(
 
 test.describe.configure({ mode: "serial" });
 
-test.describe("sliding close ($55/$35) — thumb-only", () => {
+test.describe.skip("sliding close ($55/$35) — thumb-only", () => {
   test.beforeAll(async ({ playwright }, testInfo) => {
     const base = String(testInfo.project.use.baseURL ?? "");
     // Hard stop: this test creates real leads. It must never run against the shared
