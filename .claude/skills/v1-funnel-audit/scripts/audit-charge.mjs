@@ -56,6 +56,13 @@ const CASES = [
   // The thumb-only scoping guard needs a batch to be convincing: with 55-35_palm at
   // weight 1 for thumb, a leak onto hand-size would show up fast across 8 draws.
   { funnel: 'v1-palm',  sign: 'hand-size', label: 'palm/hand-size', n: 8, scopingGuard: true },
+  // Tarot ships a FIXED price (FIXED_FUNNEL_PRICES['v1-tarot']), not a weighted pool,
+  // so it is deterministic like root: every seeker must get 35_tarot at $35/$25. This
+  // is the only end-to-end proof of the tarot MONEY path — the lander and chat are
+  // covered by tests/fb-tarot-*.spec.ts, but nothing else exercises checkout.
+  { funnel: 'v1-tarot', sign: undefined, label: 'tarot',           n: 3,
+    expectDeterministic: { variant: '35_tarot', main: 3500, downsell: 2500 },
+    expectProductSuffix: ' - TAROT' },
 ];
 
 async function postJson(path, body) {
@@ -110,6 +117,10 @@ async function chargedAmount(stripe, email, funnel, type) {
     amount: session.amount_total,
     unit: session.line_items?.data?.[0]?.amount_total ?? session.amount_total,
     metaVariant: session.metadata?.priceVariant ?? null,
+    // The customer-facing line-item name. Carries the funnel's productSuffix
+    // (" - PALM", " - TAROT", …) — the token Mike's n8n/PDF fulfilment filters on,
+    // so a missing suffix silently misroutes an order.
+    productName: session.line_items?.data?.[0]?.description ?? null,
   };
 }
 
@@ -132,6 +143,7 @@ async function main() {
     const mismatches = [];       // charge != quote
     const metaMismatches = [];   // stripe metadata variant != assigned
     const leakedToScoped = [];   // scoping guard: non-thumb sign drew 55-35_palm
+    const productNameMismatches = []; // stripe line item missing the funnel's productSuffix
     let checkedMain = 0, checkedDown = 0;
 
     for (let i = 0; i < c.n; i++) {
@@ -158,6 +170,19 @@ async function main() {
         mismatches.push(`${c.label}#${i} DOWNSELL quote=${money(assigned.downsellCents)} charged=${money(down.amount)} (variant ${assigned.variant})`);
       }
 
+      // The funnel's productSuffix must reach the Stripe line item. It is what
+      // identifies the order downstream (fulfilment filters on this token), so a
+      // funnel whose suffix silently went missing would look fine in every other
+      // check here — same price, same variant — and still misroute the order.
+      if (c.expectProductSuffix) {
+        for (const [kind, s] of [['MAIN', main], ['DOWNSELL', down]]) {
+          if (!String(s.productName ?? '').includes(c.expectProductSuffix)) {
+            productNameMismatches.push(
+              `${c.label}#${i} ${kind} product name "${s.productName}" is missing "${c.expectProductSuffix}"`);
+          }
+        }
+      }
+
       if (c.expectDeterministic) {
         const d = c.expectDeterministic;
         check(`[${c.label}] deterministic pool → variant ${d.variant} @ ${money(d.main)}/${money(d.downsell)}`,
@@ -178,6 +203,12 @@ async function main() {
       mismatches.filter((m) => /DOWNSELL/.test(m)).join(' · ') || `variants: ${distStr}`);
     check(`[${c.label}] Stripe metadata.priceVariant == assigned variant`,
       metaMismatches.length === 0, metaMismatches.join(' · ') || `variants: ${distStr}`);
+
+    if (c.expectProductSuffix) {
+      check(`[${c.label}] Stripe line item carries "${c.expectProductSuffix}" (fulfilment routes on it)`,
+        productNameMismatches.length === 0,
+        productNameMismatches.join(' · ') || `all ${checkedMain + checkedDown} sessions named correctly`);
+    }
 
     if (c.scopingGuard) {
       check(`[${c.label}] THUMB-ONLY scoping: non-thumb sign NEVER draws 55-35_palm (${c.n} draws)`,
