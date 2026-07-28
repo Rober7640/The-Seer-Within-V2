@@ -993,20 +993,6 @@ router.post('/stripe', async (req: Request, res: Response) => {
         .catch((err) => logger.error('Soulmate intake_token revoke on purchase error (non-blocking):', err));
     }
 
-    // Reliable, browser-independent "front-end payment completed" signal for the
-    // /admin/price-test dashboard. checkout.session.completed fires server-side on
-    // every paid front-end sale, so stamping here catches buyers who paid but
-    // never loaded /welcome1 — the ~30% the legacy `upsell_offered` signal misses.
-    // Gated STRICTLY to the front-end product so it can never fire for an upsell
-    // (protection_ritual / manifestation_bracelet) or any other funnel product.
-    // Non-blocking + idempotent (no-op if the row isn't matched or already stamped);
-    // matches on session.id, which /api/checkout saved on the row before payment.
-    if (product === 'energy_clearing_ritual') {
-      markMainPaid(session.id).catch((err) =>
-        logger.error('markMainPaid failed (non-blocking):', err),
-      );
-    }
-
     // Facebook-compliance storefront (/products/:slug). Physical goods, so somebody has
     // to be able to see what to ship and to whom. Recorded HERE and not on the thank-you
     // page because a buyer can pay and close the tab before the redirect lands — which is
@@ -1018,6 +1004,20 @@ router.post('/stripe', async (req: Request, res: Response) => {
     if (product?.startsWith('bracelet_')) {
       await recordBraceletOrder(session).catch((err) =>
         logger.error('recordBraceletOrder failed (non-blocking):', err),
+      );
+    }
+
+    // Reliable, browser-independent "front-end payment completed" signal for the
+    // /admin/price-test dashboard. checkout.session.completed fires server-side on
+    // every paid front-end sale, so stamping here catches buyers who paid but
+    // never loaded /welcome1 — the ~30% the legacy `upsell_offered` signal misses.
+    // Gated STRICTLY to the front-end product so it can never fire for an upsell
+    // (protection_ritual / manifestation_bracelet) or any other funnel product.
+    // Non-blocking + idempotent (no-op if the row isn't matched or already stamped);
+    // matches on session.id, which /api/checkout saved on the row before payment.
+    if (product === 'energy_clearing_ritual') {
+      markMainPaid(session.id).catch((err) =>
+        logger.error('markMainPaid failed (non-blocking):', err),
       );
     }
 

@@ -5,10 +5,11 @@ import { QuickReplyButtons } from "../components/QuickReplyButtons";
 import { PermissionButton } from "../components/PermissionButton";
 import { PurchaseCTA } from "../components/PurchaseCTA";
 import { ClearingChoiceCard } from "../components/ClearingChoiceCard";
+import { CommitmentGateCard } from "../components/CommitmentGateCard";
 import { DownsellCTA } from "../components/DownsellCTA";
 import { BackgroundMusic } from "../components/BackgroundMusic";
 import { useConversation } from "../hooks/useConversation";
-import { isSlidingCloseVariant } from "@shared/types";
+import { isSlidingCloseVariant, isCommitmentGateVariant } from "@shared/types";
 import { Volume2, Send, Sparkles } from "lucide-react";
 import { Link } from "wouter";
 import { funnelPath } from "../lib/funnel";
@@ -232,8 +233,11 @@ export default function ChatPage() {
           {/* Purchase CTA. Sliding-scale close ('55-35*' variants) swaps the
               single button for the two-tier choice card ($35 grace offering +
               $55 full offering — the grace charge rides the normal downsell
-              checkout: same product + upsell path server-side). Classic
-              variants keep today's PurchaseCTA byte-identical. */}
+              checkout: same product + upsell path server-side). The fb-palm
+              commitment-gate variant (35_palm_gate) swaps it for a 3-checkbox
+              gate instead — same handlePurchase("main") call, gated behind all
+              3 boxes being checked. Classic variants keep today's PurchaseCTA
+              byte-identical. */}
           {chat.showPurchaseCTA &&
             (isSlidingCloseVariant(chat.userData.priceVariantId) ? (
               <ClearingChoiceCard
@@ -241,6 +245,12 @@ export default function ChatPage() {
                 onGraceOffering={() => handlePurchase("downsell")}
                 fullDollars={chat.userData.priceDollars ?? 55}
                 graceDollars={chat.userData.downsellDollars ?? 35}
+              />
+            ) : isCommitmentGateVariant(chat.userData.priceVariantId) ? (
+              <CommitmentGateCard
+                firstName={chat.userData.firstName}
+                onConfirm={() => handlePurchase("main")}
+                priceDollars={chat.userData.priceDollars ?? 35}
               />
             ) : (
               <PurchaseCTA

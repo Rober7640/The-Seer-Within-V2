@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { COINS_PER_MINUTE } from "@shared/types";
 import {
   Sheet,
   SheetContent,
@@ -38,9 +39,10 @@ interface GuideSidebarProps {
   promoBalances?: Record<string, number>;
 }
 
-// Format promo coins as remaining minutes:seconds, e.g. 360 @ 60/min → "6:00".
+// Format promo coins as a m:ss clock, e.g. 360 @ 60/min → "6:00" — the one time
+// format used everywhere so promo time matches the reading-page timer.
 function formatPromoMins(coins: number, coinsPerMinute: number): string {
-  const totalSeconds = Math.round((coins / (coinsPerMinute || 60)) * 60);
+  const totalSeconds = Math.max(0, Math.floor((coins / (coinsPerMinute || COINS_PER_MINUTE)) * 60));
   const mins = Math.floor(totalSeconds / 60);
   const secs = totalSeconds % 60;
   return `${mins}:${String(secs).padStart(2, "0")}`;
@@ -170,7 +172,7 @@ function GuideItem({
             className="w-full text-center py-1 rounded text-[10px] font-bold text-white/90 tracking-wide"
             style={{ background: "linear-gradient(90deg, #059669 0%, #10b981 100%)" }}
           >
-            🎁 {formatPromoMins(promoCoins, guide.coinsPerMinute ?? 60)} FREE
+            🎁 {formatPromoMins(promoCoins, guide.coinsPerMinute ?? COINS_PER_MINUTE)} FREE
           </div>
         </div>
       ) : isNewUser && !hasPromo && !isBusy ? (
@@ -182,7 +184,7 @@ function GuideItem({
             className="w-full text-center py-1 rounded text-[10px] font-bold text-white/90 tracking-wide"
             style={{ background: "linear-gradient(90deg, #4f46e5 0%, #7c3aed 100%)" }}
           >
-            3 minutes FREE
+            3:00 FREE
           </div>
         </div>
       ) : null}

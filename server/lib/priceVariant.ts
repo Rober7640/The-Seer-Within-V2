@@ -187,10 +187,14 @@ export function invalidatePriceVariantCache(): void {
  * Returns null if no conversation row exists for this email yet.
  *
  * `sign` is the fb-palm ad sign (thumb / hand-size / finger-shape / …). It only
- * narrows the pool for variants that declare `signs` — today that is the sliding
- * close (`55-35_palm`, thumb-only). Every other funnel and every unscoped variant
- * behaves exactly as before. Palm traffic that sends no sign is treated as thumb
- * (see normalizeSign).
+ * narrows the pool for variants that declare `signs`. The sliding close
+ * (`55-35_palm`, thumb-only) used to be that variant; it is now RETIRED and
+ * parked at weight 0. The current live palm test, `35_palm_gate`, is
+ * unscoped (no `signs` key) and runs across every sign, so `sign` currently has
+ * no variant left to narrow against on this funnel — it is kept for the next
+ * sign-scoped variant that declares `signs`. Every other funnel and every
+ * unscoped variant behaves exactly as before. Palm traffic that sends no sign
+ * is treated as thumb (see normalizeSign).
  */
 export async function assignVariantIfMissing(
   email: string,
@@ -241,8 +245,11 @@ export async function assignVariantIfMissing(
           funnel,
         }
       // Partition by funnel, then filter by palm sign, then draw. `sign` only ever
-      // narrows the pool for variants that declare `signs` (today: the thumb-only
-      // sliding close) — every other funnel/variant draws exactly as before.
+      // narrows the pool for variants that declare `signs`. The thumb-only sliding
+      // close that used to rely on this is now retired (parked at weight 0); the
+      // current palm test (`35_palm_gate`) is unscoped and runs on every sign, so
+      // this scoping is presently a no-op on v1-palm — every other funnel/variant
+      // draws exactly as before.
       : selectVariant(await getActiveVariants(), funnel, sign);
     // Upsell-1 price A/B test (framework, Phase 3b). Fold in only where the legacy
     // Upsell-1 price is the DEFAULT $47 (the control price the test compares $37
@@ -315,9 +322,12 @@ export async function assignVariantIfMissing(
       });
     }
 
-    // `sign` is logged so the thumb-only scoping is verifiable straight from the
-    // logs the moment the config flips — grep for variant=55-35_palm and every hit
-    // must carry sign=thumb. Any other sign on that variant = contamination.
+    // `sign` is logged so any future sign-scoped variant's scoping is verifiable
+    // straight from the logs the moment a config flips. The thumb-only sliding
+    // close (`55-35_palm`) this comment used to describe is now retired (parked
+    // at weight 0, no longer drawn). The current live palm test, `35_palm_gate`,
+    // is unscoped and expected across every sign — there is no sign-specific grep
+    // invariant to check for it.
     logger.info('priceVariant: assigned', {
       email,
       variant: picked.id,

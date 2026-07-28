@@ -1699,3 +1699,30 @@ Context: V1→V2 migrated leads have a real (unknown) password hash, so on `/7-7
 - [ ] Funnel-scoped id '55-35_fb' matches isSlidingCloseVariant (prefix match); plain '55' (hypothetical hard-price arm) does NOT
 - [ ] Welcome-back re-pitch for a sliding-variant session restores the grace link (priceVariantId survives localStorage round-trip)
 - [ ] InitiateCheckout / checkout_initiated tracking values: $55 on main CTA, $35 on grace link (price_cents 5500/3500)
+
+### V1 funnel audit skill — flow / pixels / palm / charge / funnels (`.claude/skills/v1-funnel-audit`, 2026-07-16)
+Covered = shipped in the skill (`[x]`); open = still a gap (`[ ]`). Runs LOCAL-ONLY against the muted `.env.sandbox`.
+- [x] Flow (sliding arm): reaches the pitch in budget; two-tier choice card renders $55 full + $35 grace; both CTAs present; Evelyn voices $55/$35; survives 3 objections → $35 downsell CTA; no dead-air ≥25s; no empty bubbles; Meta blocked *(audit-flow.mjs, 11/11)*
+- [x] Flow (control arm): classic checkout CTA renders; sliding choice card is ABSENT *(audit-flow.mjs control)*
+- [x] Pixel/CAPI dedup: PageView + InitiateCheckout fire as pixel AND CAPI relay sharing one event_id; Lead uses deterministic `lead_<sha256(email)>` and is not double-relayed; Purchase uses `purchase_<session>` and is not double-relayed; nothing reaches Meta *(audit-pixels.mjs, 15/15)*
+- [x] Palm email-lock GUARD: input reverts type=email→text after the email step so a normal sentence sends (not blocked by native validation) *(audit-palm.mjs, 4/4)*
+- [x] **Charge correctness**: for root/fb/fb2/gdn/palm-thumb the Stripe TEST main AND downsell charge == the price the lead was quoted, and `stripe.metadata.priceVariant` == the assigned variant — both A/B arms exercised per funnel, incl. $55 full + $35 grace on thumb *(audit-charge.mjs, 21/21)*
+- [x] **Thumb-only scoping guard**: a batch of `sign=hand-size` seekers NEVER draw `55-35_palm`; every charge stays on the $35 control (assertion form of "every 55-35_palm carries sign=thumb") *(audit-charge.mjs)*
+- [x] **Per-funnel entry + client threading**: each entry URL (`/chat`, `/fb/chat`, `/fb2/chat`, `/gdn/chat`, `/fb-palm/chat?…` thumb + hand-size) boots the chat, reaches the email step, and the client threads the correct `funnel` (root→none) and palm `sign` to /api/lead — zero LLM calls *(audit-funnels.mjs, 26/26)*
+- [ ] DIAGNOSTIC (not a pass/fail): fb-palm identity persists past `palmReflect` into reading1/2/crisis — **known-open derail**, flips green when `improve-v1/04-fb-palm-derail-PROVEN.md §3` ships *(audit-palm.mjs diagnostic)*
+- [ ] Deep LLM flow-walk per non-root funnel (fb/fb2/gdn) — currently entry+charge cover the deltas since they share the root chat engine
+- [x] **Upsell charge correctness**: U1 fallback Checkout amount == the `/api/upsell/user-data` quoted `upsell1PriceCents` (proven root/fb/palm, both $47 and $37 arms); U2 fallback == server $47 full / $30 downsell; every endpoint IGNORES a client-supplied `amount` (Zod strips it — server-owned) *(audit-upsells.mjs PART 1, Stripe TEST)*
+- [x] **Upsell 1 chat flow**: `/welcome1` offer renders $47, both CTAs present, decline → hands off to `/welcome2`, accept → 1-click charge posted with NO client amount → shipping form → `/welcome2` *(audit-upsells.mjs PART 2)*
+- [x] **Upsell 2 chat flow**: `/welcome2` offer $47 → 1st decline → **$30 downsell** (2nd decline → DECLINED); downsell accept posts charge `type=downsell` with no client amount; **Path A** (bought U1) skips the shipping form, **Path B** collects it; completion hands off to `/success` *(audit-upsells.mjs PART 3)*
+- [ ] `/success` page contents — order summary (`/api/order/details`) + Luna cross-sell handoff; the upsell audit asserts the hand-off TO `/success`, not what it renders
+- [ ] The REAL 1-click off-session charge path (not the fallback) — needs a Stripe TEST customer with a saved card + a completed original checkout; the audit proves the same server price via the fallback instead
+- [ ] Palm finger-shape / decode-him (a hook, not a sign) browser entries — charge audit covers their pricing via the API; a browser entry smoke would extend audit-funnels
+
+### fb-palm commitment gate — 3-checkbox pre-purchase ask ('35_palm_gate' variant, retires '55-35_palm') (2026-07-26)
+- [ ] `CommitmentGateCard` renders (in place of `PurchaseCTA`) only when `chat.userData.priceVariantId === '35_palm_gate'`; every other variant (incl. the retired `55-35_palm`) renders the classic `PurchaseCTA`/`ClearingChoiceCard` path unchanged
+- [ ] With 0, 1, or 2 of the 3 commitment checkboxes checked, no purchase button is present in the DOM (or, if present, is not clickable) — only the "Check all three to continue" placeholder shows
+- [ ] Checking all 3 checkboxes reveals the confirm button (`button-commitment-confirm`) and it is clickable/enabled
+- [ ] Unchecking any one of the 3 after all were checked hides the confirm button again (no stale enabled state)
+- [ ] Clicking the confirm button after all 3 are checked calls `handlePurchase("main")` and routes through the exact same `/api/checkout` call (same `type=main`, same funnel tag, same price) as the control variant's `PurchaseCTA` — the gate changes only the UI in front of the purchase, never the checkout itself
+- [ ] `35_palm_gate` carries the same $35 main / $25 downsell economics as `35_palm_u47` — price shown and charged is identical between the two arms
+- [ ] Commitment checkbox copy shows "I understand belief is required for this to work", "I'm ready to receive this tonight", "I'll read it with an open heart" (no secrecy or irreversibility framing that would contradict the card's own 30-Day Guarantee footer)

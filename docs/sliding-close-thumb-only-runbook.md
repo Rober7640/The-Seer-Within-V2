@@ -1,5 +1,8 @@
 # Sliding close ($55 / $35) — thumb-only 50/50: test path & go-live
 
+**⚠ RETIRED 2026-07-26** — `55-35_palm` is parked at weight 0, superseded by the
+`35_palm_gate` commitment-gate A/B test. Kept as a historical record only.
+
 **Decision (Joel, 2026-07-14 call):** the sliding close runs **50/50** against the current
 close, on the **fb-palm THUMB ads only**.
 

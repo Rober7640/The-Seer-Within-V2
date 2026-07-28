@@ -6,11 +6,12 @@
 import { db } from './db';
 import { personas, creditPurchases, promoGrants } from '@shared/schema';
 import { eq, and, sql } from 'drizzle-orm';
+import { minutesToCoins } from '@shared/types';
 import logger from './logger';
 
 export interface PromoCampaign {
   tag: string;
-  coinsPerPersona: number;   // 360 = 6 min @ 60 coins/min
+  coinsPerPersona: number;   // wallet cents granted per persona (dollar-wallet: minutes × rate)
   /** Hard expiry for granted coins AND the claim window. Past this, claims are refused
    *  and any granted coins are ignored by the billing path (expires_at filter). */
   expiresAt: Date;
@@ -25,7 +26,7 @@ export interface PromoCampaign {
 //  expired, so those grants are ignored by the billing path's `expires_at > NOW()` filter.)
 export const ACTIVE_PROMO_CAMPAIGN: PromoCampaign = {
   tag: 'promo-7-7',
-  coinsPerPersona: 420,   // 420 = 7 min @ 60 coins/min
+  coinsPerPersona: minutesToCoins(7),   // 7:00 = 2093¢ at the default rate (was 420 coins @ 60/min)
   expiresAt: new Date('2026-07-08T04:00:00Z'),
   startsAt: null,
 };

@@ -8,8 +8,7 @@
 
 import { useState, type ReactNode } from "react";
 import { Shield, Lock, CreditCard } from "lucide-react";
-import type { PricingTier } from "@shared/types";
-import { COINS_PER_MINUTE } from "@shared/types";
+import { coinsToClock, COINS_PER_MINUTE, type PricingTier } from "@shared/types";
 import { paywallCopy, toTierView, type PaywallVariant } from "./paywallCopy";
 
 interface PaymentSheetViewProps {
@@ -18,6 +17,8 @@ interface PaymentSheetViewProps {
   paypalSlot: ReactNode;
   cardSlot: ReactNode;
   variant?: PaywallVariant;
+  /** The guide's cents-per-minute rate; drives all coins→time / per-minute math. */
+  coinsPerMinute?: number;
 }
 
 export default function PaymentSheetView({
@@ -26,12 +27,12 @@ export default function PaymentSheetView({
   paypalSlot,
   cardSlot,
   variant = "B",
+  coinsPerMinute = COINS_PER_MINUTE,
 }: PaymentSheetViewProps) {
   const copy = paywallCopy(variant);
   const [method, setMethod] = useState<"paypal" | "card">("paypal");
-  const v = toTierView(tier);
+  const v = toTierView(tier, coinsPerMinute);
   const firstName = personaName.split(" ")[0] || personaName;
-  const minutes = Math.floor(tier.totalCoins / COINS_PER_MINUTE);
 
   return (
     <div className="w-full overflow-hidden rounded-2xl bg-white text-gray-900 shadow-2xl">
@@ -43,13 +44,13 @@ export default function PaymentSheetView({
         <div className="flex items-start justify-between">
           <div>
             <p className="text-sm text-gray-700">
-              {minutes} minutes
+              {coinsToClock(tier.totalCoins, coinsPerMinute)} of reading time
               {v.bonusMinutes > 0 && (
                 <span className="ml-1 text-emerald-600">(incl. {v.bonusMinutes} free)</span>
               )}
             </p>
             <p className="mt-0.5 text-xs text-gray-400">
-              {tier.totalCoins.toLocaleString()} coins · {v.perMinuteLabel}
+              {v.perMinuteLabel}
             </p>
           </div>
           <p className="text-sm font-semibold text-gray-900">{v.priceLabel}</p>

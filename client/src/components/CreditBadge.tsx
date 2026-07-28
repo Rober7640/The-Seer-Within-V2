@@ -1,6 +1,5 @@
-import { Coins } from "lucide-react";
+import { Wallet } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { COINS_PER_MINUTE } from "../../../shared/types";
 
 interface CreditBadgeProps {
   coins: number;
@@ -17,9 +16,12 @@ export function CreditBadge({
   onClick,
   className,
 }: CreditBadgeProps) {
+  // Dollar-wallet: a coin is a cent. This badge is guide-agnostic (it sits in the
+  // top nav), so it shows the true MONEY balance — the same $ with every guide —
+  // rather than a minutes figure that would only be right for one guide's rate.
   const getColorClass = () => {
-    if (coins > 300) return "text-green-400 border-green-400/30 bg-green-400/10";
-    if (coins > 120) return "text-amber-400 border-amber-400/30 bg-amber-400/10";
+    if (coins > 500) return "text-green-400 border-green-400/30 bg-green-400/10"; // > $5
+    if (coins > 150) return "text-amber-400 border-amber-400/30 bg-amber-400/10"; // > $1.50
     return "text-red-400 border-red-400/30 bg-red-400/10";
   };
 
@@ -45,12 +47,13 @@ export function CreditBadge({
     }
   };
 
-  const approxMinutes = Math.floor(coins / COINS_PER_MINUTE);
+  // The wallet balance in dollars (a coin is a cent).
+  const dollars = `$${(coins / 100).toFixed(2)}`;
 
   return (
     <div
       className={cn(
-        "inline-flex items-center rounded-lg border font-medium transition-colors",
+        "inline-flex items-center rounded-lg border font-medium tabular-nums transition-colors",
         getColorClass(),
         getSizeClasses(),
         onClick && "cursor-pointer hover:brightness-110",
@@ -59,14 +62,10 @@ export function CreditBadge({
       onClick={onClick}
       role={onClick ? "button" : undefined}
       tabIndex={onClick ? 0 : undefined}
-      title={`${coins} coins (~${approxMinutes} min)`}
+      title={`${dollars} balance · works with every guide`}
     >
-      <Coins className={getIconSize()} />
-      {showLabel ? (
-        <span>{coins} coins</span>
-      ) : (
-        <span>{coins}</span>
-      )}
+      <Wallet className={getIconSize()} />
+      <span>{dollars}</span>
     </div>
   );
 }

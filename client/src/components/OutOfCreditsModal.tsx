@@ -1,8 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useAuth, authFetch } from "@/hooks/useAuth";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { Coins } from "lucide-react";
-import type { PricingTier } from "@shared/types";
+import { COINS_PER_MINUTE, type PricingTier } from "@shared/types";
 import PayPalCreditButton from "@/components/PayPalCreditButton";
 import StripeCardForm from "@/components/StripeCardForm";
 import { PAYMENT_DIALOG_MOBILE_SHEET } from "@/lib/paymentDialog";
@@ -19,10 +18,10 @@ interface OutOfCreditsModalProps {
 }
 
 const FALLBACK_TIERS: PricingTier[] = [
-  { packageType: "popular", coins: 360, bonusCoins: 180, totalCoins: 540, priceUsd: 1999, label: "540 coins" },
-  { packageType: "best_value", coins: 540, bonusCoins: 360, totalCoins: 900, priceUsd: 2999, label: "900 coins" },
-  { packageType: "premium", coins: 1000, bonusCoins: 800, totalCoins: 1800, priceUsd: 4999, label: "1800 coins", badge: "MOST POPULAR" },
-  { packageType: "whale", coins: 2000, bonusCoins: 2500, totalCoins: 4500, priceUsd: 9999, label: "4500 coins", badge: "BEST DEAL" },
+  { packageType: "popular", coins: 201, bonusCoins: 0, totalCoins: 201, priceUsd: 1000, label: "$10" },
+  { packageType: "best_value", coins: 401, bonusCoins: 0, totalCoins: 401, priceUsd: 2000, label: "$20" },
+  { packageType: "premium", coins: 602, bonusCoins: 0, totalCoins: 602, priceUsd: 3000, label: "$30", badge: "MOST POPULAR" },
+  { packageType: "whale", coins: 1003, bonusCoins: 0, totalCoins: 1003, priceUsd: 5000, label: "$50" },
 ];
 
 // Circular countdown SVG ring
@@ -164,8 +163,11 @@ export default function OutOfCreditsModal({
 
   const formatPrice = (cents: number) => `$${(cents / 100).toFixed(2)}`;
 
-  const salePrice = featuredTier ? formatPrice(featuredTier.priceUsd) : "$9.99";
-  const coinsAmount = featuredTier ? featuredTier.totalCoins : 180;
+  const salePrice = featuredTier ? formatPrice(featuredTier.priceUsd) : "$10.00";
+  // Floored to 1 decimal so we never overstate the minutes a top-up buys.
+  const featuredMinutes = featuredTier
+    ? Math.floor((featuredTier.totalCoins / COINS_PER_MINUTE) * 10) / 10
+    : 3;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -188,8 +190,8 @@ export default function OutOfCreditsModal({
                 <span className="text-[13px] text-white/55">
                   Top up
                 </span>
-                <span className="text-[13px] font-semibold text-white/50 ml-1 inline-flex items-center gap-1">
-                  {coinsAmount} <Coins className="w-3.5 h-3.5 text-amber-400" /> for{" "}
+                <span className="text-[13px] font-semibold text-white/50 ml-1">
+                  {featuredMinutes} min for{" "}
                 </span>
                 <span className="text-[13px] font-bold text-teal-300">
                   {salePrice}

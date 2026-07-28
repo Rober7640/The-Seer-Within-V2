@@ -13,6 +13,8 @@ interface StripeCardFormProps {
   onSuccess: (newBalance: number) => void;
   onClick?: () => void;
   onCancel?: () => void;
+  /** Cents charged for a custom top-up — required when packageType === 'custom'. */
+  customAmountUsd?: number;
 }
 
 function StripeCardFormInner({
@@ -22,6 +24,7 @@ function StripeCardFormInner({
   priceLabel,
   onSuccess,
   onCancel,
+  customAmountUsd,
 }: {
   packageType: string;
   personaId?: string | null;
@@ -29,6 +32,7 @@ function StripeCardFormInner({
   priceLabel: string;
   onSuccess: (newBalance: number) => void;
   onCancel?: () => void;
+  customAmountUsd?: number;
 }) {
   const stripe = useStripe();
   const elements = useElements();
@@ -76,6 +80,7 @@ function StripeCardFormInner({
         body: JSON.stringify({
           packageType,
           ...(personaId ? { personaId } : {}),
+          ...(packageType === "custom" && typeof customAmountUsd === "number" ? { customAmountUsd } : {}),
         }),
       });
 
@@ -182,6 +187,7 @@ export default function StripeCardForm({
   onSuccess,
   onClick,
   onCancel,
+  customAmountUsd,
 }: StripeCardFormProps) {
   return (
     <Elements
@@ -205,6 +211,7 @@ export default function StripeCardForm({
         priceLabel={priceLabel}
         onSuccess={onSuccess}
         onCancel={onCancel}
+        customAmountUsd={customAmountUsd}
       />
     </Elements>
   );

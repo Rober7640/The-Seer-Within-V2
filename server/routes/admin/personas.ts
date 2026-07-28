@@ -87,7 +87,7 @@ const createPersonaSchema = z.object({
   personality: z.record(z.unknown()).optional(),
   categories: z.array(z.string()).optional(),
   customPricing: z.union([z.array(z.unknown()), z.record(z.unknown())]).nullable().optional(),
-  coinsPerMinute: z.number().int().min(1).max(1000).optional(),
+  coinsPerMinute: z.number().int().min(1).max(2000).optional(), // cents/min = $/min × 100; max = $20.00/min
   isDefault: z.boolean().optional(),
   sortOrder: z.number().int().optional(),
   yearsExperience: z.number().int().min(0).max(100).nullable().optional(),
@@ -105,7 +105,7 @@ const updatePersonaSchema = z.object({
   personality: z.record(z.unknown()).optional(),
   categories: z.array(z.string()).optional(),
   customPricing: z.union([z.array(z.unknown()), z.record(z.unknown())]).nullable().optional(),
-  coinsPerMinute: z.number().int().min(1).max(1000).optional(),
+  coinsPerMinute: z.number().int().min(1).max(2000).optional(), // cents/min = $/min × 100; max = $20.00/min
   isDefault: z.boolean().optional(),
   isFeatured: z.boolean().optional(),
   sortOrder: z.number().int().optional(),

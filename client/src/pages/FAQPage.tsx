@@ -47,49 +47,49 @@ function FAQAccordion({ items }: { items: FAQItem[] }) {
 
 const faqSections: FAQSection[] = [
   {
-    title: 'Reading Credits',
+    title: 'Reading Minutes',
     items: [
       {
-        question: 'What are reading credits?',
+        question: 'What are reading minutes?',
         answer: (
           <p>
-            Reading credits are prepaid minutes that you use to access AI guide sessions on The Seer Within.
+            Reading minutes are prepaid time you use to access AI guide sessions on The Seer Within.
             Each spiritual guide charges a per-minute rate (shown on the guide's profile before you start a session).
-            Credits are deducted in real time as you chat.
+            Minutes are deducted in real time as you chat.
           </p>
         ),
       },
       {
-        question: 'How do I get credits?',
+        question: 'How do I get minutes?',
         answer: (
           <>
-            <p>You can get credits in two ways:</p>
+            <p>You can get minutes in two ways:</p>
             <ul className="list-disc list-inside mt-2 space-y-1 ml-2">
-              <li><strong>Free welcome credits:</strong> Every new account receives 3 free minutes automatically when you register.</li>
-              <li><strong>Purchase credits:</strong> You can buy additional credit packages at any time from the Credits page after logging in.</li>
+              <li><strong>Free welcome minutes:</strong> Every new account receives 3 free minutes automatically when you register.</li>
+              <li><strong>Purchase minutes:</strong> You can buy additional minute packages at any time from the Minutes page after logging in.</li>
             </ul>
           </>
         ),
       },
       {
-        question: 'When do my credits expire?',
+        question: 'When do my minutes expire?',
         answer: (
           <p>
-            Purchased credits expire <strong>6 months from the date of each purchase</strong>. Each
-            purchase has its own independent expiry date. Free welcome credits expire 6 months after
+            Purchased minutes expire <strong>6 months from the date of each purchase</strong>. Each
+            purchase has its own independent expiry date. Free welcome minutes expire 6 months after
             your account is created. We will do our best to send you a reminder email about 14 days
-            before expiry, but it is your responsibility to use credits before they lapse.
+            before expiry, but it is your responsibility to use minutes before they lapse.
           </p>
         ),
       },
       {
-        question: 'My credits expired — can I get a refund?',
+        question: 'My minutes expired — can I get a refund?',
         answer: (
           <p>
-            Unfortunately, expired credits are forfeited and are not eligible for a refund or
+            Unfortunately, expired minutes are forfeited and are not eligible for a refund or
             reactivation. Our goodwill refund window is 30 days from the date of purchase, which
-            is well before the 6-month expiry. If your credits are approaching expiry, use them
-            or request a refund on unused credits within the 30-day window. See our{' '}
+            is well before the 6-month expiry. If your minutes are approaching expiry, use them
+            or request a refund on unused minutes within the 30-day window. See our{' '}
             <Link href="/refund">
               <span className="text-purple-300 hover:text-white underline cursor-pointer">Refund Policy</span>
             </Link>{' '}
@@ -98,20 +98,20 @@ const faqSections: FAQSection[] = [
         ),
       },
       {
-        question: 'Can I share or transfer my credits to another account?',
+        question: 'Can I share or transfer my minutes to another account?',
         answer: (
           <p>
-            No. Credits are personal and non-transferable. They are linked to your account and
+            No. Minutes are personal and non-transferable. They are linked to your account and
             cannot be gifted, sold, or moved to another user's account.
           </p>
         ),
       },
       {
-        question: 'Do credits roll over when I buy more?',
+        question: 'Do minutes roll over when I buy more?',
         answer: (
           <p>
-            Yes — your existing unused credits remain in your balance when you purchase additional
-            credits. Each purchase creates its own 6-month expiry window, so credits from older
+            Yes — your existing unused minutes remain in your balance when you purchase additional
+            minutes. Each purchase creates its own 6-month expiry window, so minutes from older
             purchases will expire first.
           </p>
         ),
@@ -146,7 +146,7 @@ const faqSections: FAQSection[] = [
         ),
       },
       {
-        question: 'I was charged but my credits haven\'t appeared. What do I do?',
+        question: 'I was charged but my minutes haven\'t appeared. What do I do?',
         answer: (
           <>
             <p>This is rare but can happen if there is a brief delay between payment confirmation and our
@@ -154,7 +154,7 @@ const faqSections: FAQSection[] = [
             <ol className="list-decimal list-inside mt-2 space-y-1 ml-2">
               <li>Wait 5 minutes and refresh the page.</li>
               <li>Log out and log back in to refresh your session.</li>
-              <li>If credits still haven't appeared after 30 minutes, email us at{' '}
+              <li>If minutes still haven't appeared after 30 minutes, email us at{' '}
                 <a href="mailto:hi@theseerwithin.com" className="text-purple-300 hover:text-white underline">
                   hi@theseerwithin.com
                 </a>{' '}
@@ -164,19 +164,19 @@ const faqSections: FAQSection[] = [
         ),
       },
       {
-        question: 'Can I get a refund on unused credits?',
+        question: 'Can I get a refund on unused minutes?',
         answer: (
           <>
             <p>
-              Yes — we offer a goodwill refund on unused purchased credits, subject to these conditions:
+              Yes — we offer a goodwill refund on unused purchased minutes, subject to these conditions:
             </p>
             <ul className="list-disc list-inside mt-2 space-y-1 ml-2">
               <li>The request must be made within <strong>30 days</strong> of the purchase date.</li>
-              <li>Only credits that have <strong>not been used</strong> in any session are eligible.</li>
-              <li>If some credits were used, only the unused portion may be refunded on a pro-rata basis.</li>
+              <li>Only minutes that have <strong>not been used</strong> in any session are eligible.</li>
+              <li>If some minutes were used, only the unused portion may be refunded on a pro-rata basis.</li>
             </ul>
             <p className="mt-2">
-              Free welcome credits have no cash value and are not refundable. Full details are in our{' '}
+              Free welcome minutes have no cash value and are not refundable. Full details are in our{' '}
               <Link href="/refund">
                 <span className="text-purple-300 hover:text-white underline cursor-pointer">Refund Policy</span>
               </Link>
@@ -225,7 +225,7 @@ const faqSections: FAQSection[] = [
             from the email address associated with your account. We will process your request
             and delete or anonymise your account data within 90 days, subject to retaining
             transaction records for 7 years as required by Singapore accounting laws. Any
-            remaining unused credits will be forfeited upon deletion and are not eligible for
+            remaining unused minutes will be forfeited upon deletion and are not eligible for
             a cash refund unless a valid refund request is submitted before deletion.
           </p>
         ),
@@ -239,7 +239,7 @@ const faqSections: FAQSection[] = [
               <li>Account data: name, email address, and a hashed password.</li>
               <li>Session data: your chat messages and session history.</li>
               <li>Memory summaries: brief notes our system generates to personalise future sessions.</li>
-              <li>Transaction records: credit purchase history and amounts.</li>
+              <li>Transaction records: minute purchase history and amounts.</li>
               <li>Technical data: IP address, browser type, and device information.</li>
             </ul>
             <p className="mt-2">See our <Link href="/privacy"><span className="text-purple-300 hover:text-white underline cursor-pointer">Privacy Policy</span></Link> for the full picture.</p>
@@ -282,7 +282,7 @@ const faqSections: FAQSection[] = [
               hi@theseerwithin.com
             </a>{' '}
             to be removed from our list. Note: unsubscribing from marketing emails does not stop
-            transactional emails such as purchase receipts and credit expiry notices.
+            transactional emails such as purchase receipts and minutes expiry notices.
           </p>
         ),
       },
