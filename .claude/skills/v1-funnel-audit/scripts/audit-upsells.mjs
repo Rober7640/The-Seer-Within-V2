@@ -64,10 +64,21 @@ function sessionIdFromUrl(url) {
   return (url.match(/cs_test_[A-Za-z0-9]+/) || [])[0] || null;
 }
 async function sessionAmount(stripe, url) {
+  return (await sessionDetail(stripe, url)).amount;
+}
+
+// Amount PLUS the customer-facing line-item name. The name carries the funnel's
+// productSuffix (" - PALM", " - TAROT", …), which is the token fulfilment routes
+// on — a funnel that lost its suffix would still charge the right amount, so the
+// price checks alone would never catch it.
+async function sessionDetail(stripe, url) {
   const id = sessionIdFromUrl(url);
   if (!id) throw new Error(`no cs_test_ id in url ${url.slice(0, 60)}`);
-  const s = await stripe.checkout.sessions.retrieve(id);
-  return s.amount_total;
+  const s = await stripe.checkout.sessions.retrieve(id, { expand: ['line_items'] });
+  return {
+    amount: s.amount_total,
+    productName: s.line_items?.data?.[0]?.description ?? null,
+  };
 }
 
 // ── PART 1: server-owned upsell charge correctness (via the fallback Checkout) ────
@@ -80,6 +91,9 @@ async function chargeCorrectness(stripe) {
     { funnel: 'v1-fb', label: 'fb' },
     { funnel: 'v1-fb', label: 'fb' },
     { funnel: 'v1-palm', label: 'palm', sign: 'thumb' },
+    // Tarot ships a FIXED price (FIXED_FUNNEL_PRICES['v1-tarot']), so its U1 must be
+    // exactly $47 — and its line item must carry " - TAROT" or fulfilment misroutes.
+    { funnel: 'v1-tarot', label: 'tarot', expectCents: 4700, expectSuffix: ' - TAROT' },
   ];
   for (let i = 0; i < U1_CASES.length; i++) {
     const c = U1_CASES[i];
@@ -101,28 +115,51 @@ async function chargeCorrectness(stripe) {
     const fbBody = { email, firstName: 'Claire', bucket: 'love', originalSessionId: sessionId, amount: 999 };
     if (c.funnel) fbBody.funnel = c.funnel;
     const fb = await postJson('/api/upsell/fallback-checkout', fbBody);
-    const charge = await sessionAmount(stripe, fb.url || '');
+    const { amount: charge, productName } = await sessionDetail(stripe, fb.url || '');
 
     check(`[U1 ${c.label}] fallback charge == the quoted upsell-1 price`, charge === quote,
       `quoted(user-data)=${money(quote)} charged(stripe)=${money(charge)}`);
     check(`[U1 ${c.label}] server ignored the client-supplied amount (sent 999¢)`, charge !== 999 && charge >= 3000,
       `charged=${money(charge)} (a legit configured upsell-1 price, not $9.99)`);
+    // Fixed-price funnels pin the exact figure — a weighted funnel can't, since its
+    // U1 price legitimately varies by arm.
+    if (c.expectCents) {
+      check(`[U1 ${c.label}] upsell-1 is exactly ${money(c.expectCents)}`, charge === c.expectCents,
+        `expected=${money(c.expectCents)} charged=${money(charge)}`);
+    }
+    if (c.expectSuffix) {
+      check(`[U1 ${c.label}] line item carries "${c.expectSuffix}" (fulfilment routes on it)`,
+        String(productName ?? '').includes(c.expectSuffix),
+        `product name = "${productName}"`);
+    }
   }
 
-  // U2 price is server-hardcoded (type full=4700 / downsell=3000), funnel-independent.
-  const email2 = `u2-${RUN}@example.com`;
-  await postJson('/api/lead', { email: email2, firstName: 'Claire', bucket: 'love', funnel: 'v1-fb' });
-  const coBody2 = { email: email2, firstName: 'Claire', bucket: 'love', type: 'main', funnel: 'v1-fb' };
-  const co2 = await postJson('/api/checkout', coBody2);
-  const origSession = sessionIdFromUrl(co2.url || '');
-  for (const [type, expect] of [['full', 4700], ['downsell', 3000]]) {
-    const fb = await postJson('/api/upsell2/fallback-checkout', {
-      email: email2, firstName: 'Claire', bucket: 'love', originalSessionId: origSession, funnel: 'v1-fb', type, amount: 111,
-    });
-    const charge = await sessionAmount(stripe, fb.url || '');
-    check(`[U2 ${type}] fallback charge == server price ${money(expect)}`, charge === expect,
-      `expected=${money(expect)} charged(stripe)=${money(charge)}`);
-    check(`[U2 ${type}] server ignored the client-supplied amount (sent 111¢)`, charge !== 111 && charge === expect);
+  // U2 price is server-hardcoded (type full=4700 / downsell=3000), funnel-independent
+  // — but the PRODUCT NAME is not, so each funnel is walked to prove its suffix lands.
+  const U2_CASES = [
+    { funnel: 'v1-fb', label: 'fb' },
+    { funnel: 'v1-tarot', label: 'tarot', expectSuffix: ' - TAROT' },
+  ];
+  for (const u2 of U2_CASES) {
+    const email2 = `u2-${u2.label}-${RUN}@example.com`;
+    await postJson('/api/lead', { email: email2, firstName: 'Claire', bucket: 'love', funnel: u2.funnel });
+    const coBody2 = { email: email2, firstName: 'Claire', bucket: 'love', type: 'main', funnel: u2.funnel };
+    const co2 = await postJson('/api/checkout', coBody2);
+    const origSession = sessionIdFromUrl(co2.url || '');
+    for (const [type, expect] of [['full', 4700], ['downsell', 3000]]) {
+      const fb = await postJson('/api/upsell2/fallback-checkout', {
+        email: email2, firstName: 'Claire', bucket: 'love', originalSessionId: origSession, funnel: u2.funnel, type, amount: 111,
+      });
+      const { amount: charge, productName } = await sessionDetail(stripe, fb.url || '');
+      check(`[U2 ${u2.label} ${type}] fallback charge == server price ${money(expect)}`, charge === expect,
+        `expected=${money(expect)} charged(stripe)=${money(charge)}`);
+      check(`[U2 ${u2.label} ${type}] server ignored the client-supplied amount (sent 111¢)`,
+        charge !== 111 && charge === expect);
+      if (u2.expectSuffix) {
+        check(`[U2 ${u2.label} ${type}] line item carries "${u2.expectSuffix}"`,
+          String(productName ?? '').includes(u2.expectSuffix), `product name = "${productName}"`);
+      }
+    }
   }
 }
 
