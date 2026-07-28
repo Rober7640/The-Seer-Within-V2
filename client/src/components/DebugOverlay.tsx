@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Bug, ChevronDown, ChevronUp } from "lucide-react";
+import { COINS_PER_MINUTE } from "@shared/types";
 
 interface DebugOverlayProps {
   // Session
@@ -53,7 +54,7 @@ export default function DebugOverlay({
   // Continuous timer from session start (never resets mid-session)
   const continuousSeconds = sessionStartTime ? Math.floor((now - sessionStartTime) / 1000) : 0;
 
-  const coinsPerMinute = selectedPersona?.coinsPerMinute ?? 60;
+  const coinsPerMinute = selectedPersona?.coinsPerMinute ?? COINS_PER_MINUTE;
   const coinsUsedContinuous = Math.floor(continuousSeconds / 60) * coinsPerMinute;
   const remainingCoins = Math.max(0, initialCoinBalance - coinsUsedContinuous);
   const cMins = Math.floor(continuousSeconds / 60);

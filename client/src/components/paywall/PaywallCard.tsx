@@ -7,7 +7,7 @@
 // /paywall-preview design route, so it takes everything via props.
 
 import { Check, Shield } from "lucide-react";
-import type { PricingTier } from "@shared/types";
+import { COINS_PER_MINUTE, type PricingTier } from "@shared/types";
 import {
   paywallCopy,
   toTierView,
@@ -28,6 +28,8 @@ interface PaywallCardProps {
   onDecline?: () => void;
   onClose?: () => void;
   variant?: PaywallVariant;
+  /** The guide's cents-per-minute rate; drives all minutes / per-minute math. */
+  coinsPerMinute?: number;
 }
 
 export default function PaywallCard({
@@ -42,10 +44,11 @@ export default function PaywallCard({
   onDecline,
   onClose,
   variant = "B",
+  coinsPerMinute = COINS_PER_MINUTE,
 }: PaywallCardProps) {
   const copy = paywallCopy(variant);
   const selected = tiers.find((t) => t.packageType === selectedPackage) ?? tiers[0];
-  const selectedView = selected ? toTierView(selected) : null;
+  const selectedView = selected ? toTierView(selected, coinsPerMinute) : null;
   const firstName = personaName.split(" ")[0] || personaName;
 
   return (
@@ -93,7 +96,7 @@ export default function PaywallCard({
         {/* Tiles 2×2 */}
         <div className="mb-3 grid grid-cols-2 gap-x-2.5 gap-y-3.5 sm:gap-x-3">
           {tiers.map((tier) => {
-            const v = toTierView(tier);
+            const v = toTierView(tier, coinsPerMinute);
             const isSelected = selectedPackage === tier.packageType;
             return (
               <button
@@ -141,13 +144,13 @@ export default function PaywallCard({
 
         {/* Value ladder — one line */}
         <p className="mb-2.5 text-center text-[12px] leading-snug text-white/50">
-          {copy.modal.ladder(lowestPerMinuteLabel(tiers))}
+          {copy.modal.ladder(lowestPerMinuteLabel(tiers, coinsPerMinute))}
         </p>
 
         {/* Selection summary */}
         {selectedView && (
           <p className="mb-2 text-center text-[12px] font-medium text-amber-200/80">
-            {copy.modal.commit(selectedView.minutes, selected.totalCoins)}
+            {copy.modal.commit(selectedView.minutes)}
           </p>
         )}
 

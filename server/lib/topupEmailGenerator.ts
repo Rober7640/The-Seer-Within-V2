@@ -27,8 +27,14 @@ import { eq, and, sql, desc, lt, lte, gte, or, count } from 'drizzle-orm';
 import { randomUUID } from 'crypto';
 import { buildFollowUpHtml, buildFollowUpText } from './emailTemplate';
 import { generateMagicLinkToken } from './magicLink';
+import { COINS_PER_MINUTE } from '@shared/types';
 import logger from './logger';
 import { fireWithBreaker, resendBreaker, anthropicBreaker } from './circuitBreaker';
+
+// "Nearly empty" wallet threshold for the low-balance nurture segments. A coin is
+// a cent, so this is ~30 seconds of reading at the default rate (was a literal 30
+// coins = 30s @ 60/min). Global balance, so the default rate is the right reference.
+const LOW_BALANCE_CENTS = Math.round(COINS_PER_MINUTE / 2); // ~150¢ ≈ 30s
 
 const resend = process.env.RESEND_API_KEY
   ? new Resend(process.env.RESEND_API_KEY)
@@ -314,7 +320,7 @@ async function findCandidates(): Promise<TopupCandidate[]> {
     }
 
     // --- Segment 3: loyal_refill ---
-    if (!segment && user.coinBalance > 0 && user.coinBalance <= 30) {
+    if (!segment && user.coinBalance > 0 && user.coinBalance <= LOW_BALANCE_CENTS) {
       const lastEnded = await lastSessionEndedAt(user.id);
       if (lastEnded && lastEnded <= sixHoursAgo && (await hasPurchase(user.id))) {
         segment = 'loyal_refill';
@@ -324,7 +330,7 @@ async function findCandidates(): Promise<TopupCandidate[]> {
     // --- Segment 4: dormant_low_balance ---
     if (
       !segment &&
-      user.coinBalance <= 30 &&
+      user.coinBalance <= LOW_BALANCE_CENTS &&
       (!user.lastLoginAt || user.lastLoginAt < threeDaysAgo)
     ) {
       segment = 'dormant_low_balance';

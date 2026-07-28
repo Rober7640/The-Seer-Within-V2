@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { useAuth, authFetch } from "@/hooks/useAuth";
 import { X } from "lucide-react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { coinsToClock, WELCOME_PACK_COINS } from "@shared/types";
 import PayPalCreditButton from "@/components/PayPalCreditButton";
 import StripeCardForm from "@/components/StripeCardForm";
 
@@ -58,10 +59,10 @@ export default function TeaserCreditModal({
           <div className="px-6 pt-8 pb-6 max-h-[85vh] overflow-y-auto">
             {/* Title */}
             <h2 className="text-white text-xl font-bold text-center mb-2">
-              Refill credits to see the answer
+              Add minutes to see the answer
             </h2>
             <p className="text-white/60 text-sm text-center mb-6 leading-relaxed">
-              Your reading is paused. Refill credits to pick up where you left off.
+              Your reading is paused. Add minutes to pick up where you left off.
             </p>
 
             {/* Offer card */}
@@ -79,7 +80,7 @@ export default function TeaserCreditModal({
               <div className="flex items-center justify-between mt-2">
                 <div>
                   <p className="text-white font-bold text-base">Welcome pack</p>
-                  <p className="text-white/80 text-sm mt-0.5">160 credits</p>
+                  <p className="text-white/80 text-sm mt-0.5">{coinsToClock(WELCOME_PACK_COINS)} of reading time</p>
                 </div>
                 <div className="text-right">
                   <p className="text-white/40 text-sm line-through">$19.99</p>

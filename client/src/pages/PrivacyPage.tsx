@@ -66,13 +66,13 @@ export default function PrivacyPage() {
             <h3 className="text-base font-semibold text-purple-200 mb-2">Session and Reading Data</h3>
             <ul className="list-disc list-inside space-y-1 ml-4 mb-4">
               <li>Messages you send during AI guide sessions, including personal information you choose to share</li>
-              <li>Session timestamps, duration, and credit usage</li>
+              <li>Session timestamps, duration, and minute usage</li>
               <li>Memory summaries our system generates to personalise future sessions (you may request deletion of these)</li>
             </ul>
 
             <h3 className="text-base font-semibold text-purple-200 mb-2">Transaction Data</h3>
             <ul className="list-disc list-inside space-y-1 ml-4 mb-4">
-              <li>Credit purchase history and amounts</li>
+              <li>Minute purchase history and amounts</li>
               <li>Payment status and Stripe transaction identifiers (we do not store full card numbers)</li>
               <li>Shipping address (for physical product purchases only)</li>
             </ul>
@@ -101,8 +101,8 @@ export default function PrivacyPage() {
             <ul className="list-disc list-inside space-y-2 ml-4">
               <li><strong>Providing our services</strong> — registering your account, enabling AI guide sessions, and processing payments.</li>
               <li><strong>Personalising your experience</strong> — using session memory to provide contextually relevant readings in future sessions.</li>
-              <li><strong>Processing transactions</strong> — managing Credits, purchases, and refunds.</li>
-              <li><strong>Communications</strong> — sending transactional emails (receipts, credit expiry reminders, account notices) and, where you have consented, promotional emails.</li>
+              <li><strong>Processing transactions</strong> — managing minutes, purchases, and refunds.</li>
+              <li><strong>Communications</strong> — sending transactional emails (receipts, minutes expiry reminders, account notices) and, where you have consented, promotional emails.</li>
               <li><strong>Safety and security</strong> — detecting and preventing fraud, abuse, and unauthorised account access.</li>
               <li><strong>Service improvement</strong> — analysing aggregated usage patterns to improve our platform.</li>
               <li><strong>Legal compliance</strong> — complying with applicable Singapore laws and responding to lawful requests from authorities.</li>
@@ -128,7 +128,7 @@ export default function PrivacyPage() {
               <div className="bg-purple-900/40 rounded-lg p-3 border border-purple-800">
                 <p className="font-semibold text-white">Stripe, Inc. (USA / EU)</p>
                 <p className="text-sm mt-1">
-                  Processes payment card data for Credit purchases. We do not store your full card
+                  Processes payment card data for minute purchases. We do not store your full card
                   details — these are handled exclusively by Stripe in compliance with PCI-DSS.
                 </p>
               </div>

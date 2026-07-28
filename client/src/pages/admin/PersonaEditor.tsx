@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Save, ArrowLeft, Trash2, Eye, Plus, X, Upload, ImageIcon, Star } from "lucide-react";
+import { CENTS_PER_MINUTE_DEFAULT } from "@shared/types";
 
 interface Review {
   id: string;
@@ -92,7 +93,7 @@ const EMPTY_FORM: PersonaFormData = {
   isDefault: false,
   sortOrder: 0,
   customPricing: "",
-  coinsPerMinute: 60,
+  coinsPerMinute: CENTS_PER_MINUTE_DEFAULT,
   yearsExperience: null,
   readingsCount: null,
 };
@@ -284,7 +285,7 @@ export default function PersonaEditor() {
             sortOrder: data.sortOrder ?? 0,
             // Always store the normalised object shape so save() sends a valid object
             customPricing: pricingRaw ? JSON.stringify(normalizedPricing) : "",
-            coinsPerMinute: data.coinsPerMinute ?? 60,
+            coinsPerMinute: data.coinsPerMinute ?? CENTS_PER_MINUTE_DEFAULT,
             yearsExperience: data.yearsExperience ?? null,
             readingsCount: data.readingsCount ?? null,
           });
@@ -1311,21 +1312,32 @@ export default function PersonaEditor() {
                 </div>
                 <div>
                   <label className="text-xs text-gray-400 mb-1 block">
-                    Rate (coins / min)
+                    Price ($ / minute)
                   </label>
-                  <input
-                    type="number"
-                    min={1}
-                    max={1000}
-                    value={form.coinsPerMinute}
-                    onChange={(e) => {
-                      const v = parseInt(e.target.value);
-                      updateField("coinsPerMinute", isNaN(v) ? 60 : Math.max(1, v));
-                    }}
-                    className="w-full bg-gray-800 text-white rounded-lg px-3 py-2 text-sm border border-gray-700 focus:border-purple-500 focus:outline-none"
-                    placeholder="60"
-                  />
-                  <p className="text-xs text-gray-600 mt-1">Coins charged per minute of session. Shown on guide profile. Default: 60.</p>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-400 pointer-events-none">$</span>
+                    <input
+                      type="number"
+                      min={0.5}
+                      max={20}
+                      step={0.01}
+                      // Stored in cents (a coin is a cent): 299 ⇄ $2.99. The admin types
+                      // dollars; we persist round(dollars × 100) as coinsPerMinute(cents/min).
+                      value={(form.coinsPerMinute / 100).toString()}
+                      onChange={(e) => {
+                        const dollars = parseFloat(e.target.value);
+                        updateField(
+                          "coinsPerMinute",
+                          isNaN(dollars) ? CENTS_PER_MINUTE_DEFAULT : Math.max(1, Math.round(dollars * 100)),
+                        );
+                      }}
+                      className="w-full bg-gray-800 text-white rounded-lg pl-7 pr-3 py-2 text-sm border border-gray-700 focus:border-purple-500 focus:outline-none"
+                      placeholder="2.99"
+                    />
+                  </div>
+                  <p className="text-xs text-gray-600 mt-1">
+                    Dollars charged per minute of live reading — flows through the whole funnel (packs, paywall, in-chat meter, billing). Default: $2.99. Reset free trial time if you change this.
+                  </p>
                 </div>
               </CardContent>
             </Card>

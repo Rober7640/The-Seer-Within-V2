@@ -36,6 +36,21 @@ const ud: UserData = {
   concern: "I'm 34 and all my friends are married with kids. I feel like I already missed my one chance at real love.",
 } as UserData;
 
+// Same seeker, but carrying the VISION she gave at FUTURE_VALIDATION.
+//
+// ⚠ Why this fixture exists: buildValueExplainPrompt's whole job is to paint the
+// seeker's vision back to them ("Their vision was: \"${userData.desires}\""), but the
+// shared `ud` fixture has no `desires`. The pitch case was therefore rendering
+// `Their vision was: "undefined"` and asking the model to make "undefined" vivid —
+// which is most of why it scored 0.5/5, and is a HARNESS bug, not a prompt defect.
+// Kept as a separate fixture (like palmUd) so the other cases' scores stay comparable
+// with previous runs.
+const pitchUd: UserData = {
+  ...ud,
+  desires:
+    "I want to stop feeling like I'm auditioning on every date — to just be easy with someone who already knows me.",
+} as UserData;
+
 // Same seeker, but carrying the palm identity the derail fix persists into userData.
 const palmUd: UserData = {
   ...ud,
@@ -57,6 +72,60 @@ interface EvalCase {
 
 const DEEPER = "Yes... I've been on so many dates but nothing ever becomes something real.";
 const FEEL = "It would feel like I could finally breathe. Like I'm not broken after all.";
+
+/**
+ * Apply block swaps to a prompt and HARD FAIL if any didn't land.
+ *
+ * The block-swap path in main() guards `prompt.includes(currentBlock)` and skips the
+ * candidate on drift. `improvedPrompt` has no such guard — a stale block would silently
+ * evaluate the UNCHANGED prompt against itself and report "no clear diff", which reads
+ * like a real negative result. This makes that failure loud instead.
+ */
+function swapAll(prompt: string, swaps: Array<[string, string]>): string {
+  let out = prompt;
+  for (const [from, to] of swaps) {
+    if (!out.includes(from)) {
+      throw new Error(
+        `v1-funnel-eval: candidate block not found verbatim — prompts.ts drifted.\n` +
+        `Expected block:\n---\n${from}\n---\nUpdate the case in eval-readings.ts.`,
+      );
+    }
+    out = out.replace(from, to);
+  }
+  return out;
+}
+
+// ── pitch candidate: the two block swaps ─────────────────────────────────────
+const PITCH_VISION_CURRENT =
+`1. Paint their SPECIFIC vision vividly - use their exact words:
+   - Their vision was: "${pitchUd.desires}"
+   - "I see you [specific detail from their vision]... [add sensory detail]..."
+   - Examples:
+     - "I see you at 50, ${ud.firstName}... passport in hand, that weight of bills finally lifted."
+     - "I see the connection between you restored... the distance melting away."
+   - Make it feel REAL and IMMINENT`;
+
+const PITCH_VISION_IMPROVED =
+`1. Paint their SPECIFIC vision vividly, in THEIR OWN words:
+   - Their vision was: "${pitchUd.desires}"
+   - Echo the concrete phrase THEY used, then add ONE sensory detail that belongs to that scene.
+   - Do NOT open with the stock frame "I see you…" — find a fresher way in.
+   - Do NOT borrow another seeker's imagery (travel, passports, bills, a restored distance). Their vision is about ${ud.bucket}, in the words they actually said.
+   - No invented biography: no ages, dates, jobs, places, or named people they never gave.
+   - Make it feel REAL and IMMINENT`;
+
+const PITCH_CROSSROADS_CURRENT =
+`2. End with a CROSSROADS question (not a statement):
+   - "This is your crossroads, dear. Will you step toward that freedom?"
+   - "The path is before you, ${ud.firstName}. Will you walk it?"
+   - "Your future self is waiting. Will you meet them?"
+   - Must END with a question that invites action`;
+
+const PITCH_CROSSROADS_IMPROVED =
+`2. End with a CROSSROADS question (not a statement), built from THEIR OWN vision words ("${pitchUd.desires}") — say the specific thing they said they want back to them, then ask them to step toward THAT.
+   - It must be a question only THIS seeker could be asked. If it could be pasted onto a different seeker unchanged, it has FAILED.
+   - BANNED (they read as a script): "this is your crossroads", "will you step toward that freedom", "the path is before you", "will you walk it", "your future self is waiting", "will you meet them".
+   - Must END with a question that invites action`;
 
 const CASES: EvalCase[] = [
   {
@@ -99,14 +168,38 @@ const CASES: EvalCase[] = [
   {
     id: 'pitch',
     phase: 'The close / offer (valueExplain)',
-    input: '(the pitch, after the crisis reveal)',
-    prompt: buildValueExplainPrompt(ud),
+    // The judge is told "the seeker just said X" — at this beat that is their VISION.
+    input: pitchUd.desires!,
+    prompt: buildValueExplainPrompt(pitchUd),
+    // ⚠ RUBRIC CORRECTED 2026-07-20. The original criterion 1 was
+    //   "Names the offering clearly (the clearing ritual + the personalized reading + the guarantee)"
+    // which this prompt can NEVER satisfy — it is explicitly instructed
+    //   "Do NOT repeat offer details, price, or guarantee" (prompts.ts:1015),
+    // because the offer/price/guarantee are delivered by DETERMINISTIC canned copy
+    // (getOfferExplanation / getPitchMessages), not by the LLM. The old rubric scored
+    // this prompt for a job that belongs to a different component, guaranteeing a fail.
+    // "Improving" the prompt to satisfy it would have made the live funnel WORSE by
+    // making the close repeat the price it had just quoted.
+    // These criteria score what valueExplain is actually FOR: paint THEIR vision, then
+    // ask an earned crossroads question.
     rubric: [
-      'Names the offering clearly (the clearing ritual + the personalized reading + the guarantee).',
-      "Ties the offer to THIS seeker's specific block/desire — not a generic, interchangeable sales pitch.",
-      "Stays in Evelyn's warm, high-trust voice — invitational, not pushy/aggressive/manipulative.",
-      'Does not fabricate concrete biographical facts (names, dates, jobs, places) the seeker never gave.',
+      'The vision message reuses the seeker\'s OWN vision words concretely — not a generic "I see you…" template.',
+      "The closing question anchors on THIS seeker's stated desire; it could not be pasted onto a different seeker unchanged.",
+      'It avoids the scripted crossroads lines: "this is your crossroads", "the path is before you", "your future self is waiting", "will you walk it", "will you meet them".',
+      "Stays in Evelyn's warm, invitational voice — never pushy, aggressive, or manipulative.",
+      'Correctly does NOT restate the price or the guarantee (delivered separately), and invents no biographical facts the seeker never gave.',
     ],
+    // CANDIDATE — BOTH messages. The close is a canned template twice over:
+    //   msg 1 opens on the stock frame "I see you…" and offers two worked examples that
+    //         are OFF-BUCKET for this seeker (travel/bills = money, restored distance =
+    //         someone), inviting the model to borrow another seeker's imagery; and
+    //   msg 2 is the crossroads question with three verbatim script lines.
+    // Banning the script and forcing an anchor on the seeker's own words is exactly what
+    // took reading-specificity 1.5→3 and crisis-framing 1→4. Applied to both here.
+    improvedPrompt: swapAll(buildValueExplainPrompt(pitchUd), [
+      [PITCH_VISION_CURRENT, PITCH_VISION_IMPROVED],
+      [PITCH_CROSSROADS_CURRENT, PITCH_CROSSROADS_IMPROVED],
+    ]),
   },
   {
     id: 'objection',

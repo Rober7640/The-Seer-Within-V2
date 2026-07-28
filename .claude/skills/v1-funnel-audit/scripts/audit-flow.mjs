@@ -17,7 +17,7 @@
 //     (This block is the one thing the original printer lacked.)
 //   • /api/chat LLM turns are REAL (needs ANTHROPIC_API_KEY, kept in .env.sandbox).
 import { chromium } from '@playwright/test';
-import { writeFileSync, mkdirSync } from 'node:fs';
+import { writeFileSync, mkdirSync, rmSync } from 'node:fs';
 
 const BASE = process.env.LOCAL_BASE_URL || 'http://localhost:5000';
 const ARM = process.argv[2] === 'control' ? 'control' : 'sliding';
@@ -142,6 +142,14 @@ async function main() {
     console.error(`🔴 REFUSING to run against "${BASE}". Point LOCAL_BASE_URL at a localhost sandbox (see SKILL.md).`);
     process.exit(2);
   }
+  // Start each run from an empty shot dir so a shorter walk (e.g. the palm funnel
+  // skips the bucket step) can never leave a PREVIOUS run's screenshots stranded,
+  // looking current. The report.md holds the findings; stale shots are worse than
+  // none. Guard keeps this recursive delete inside the throwaway output tree no
+  // matter how SHOT_DIR is later refactored — it must never reach the repo root.
+  if (SHOT_DIR.startsWith('audit-runs/')) {
+    rmSync(SHOT_DIR, { recursive: true, force: true });
+  }
   mkdirSync(SHOT_DIR, { recursive: true });
   console.log(`\nv1-funnel-audit — arm=${ARM}  base=${BASE}\n`);
 
@@ -156,7 +164,35 @@ async function main() {
   await ctx.route('**/api/fb-event', (r) => r.fulfill({ status: 200, contentType: 'application/json', body: '{}' }));
 
   const page = await ctx.newPage();
-  await page.goto(`${BASE}/chat?noemail=1${ARM === 'sliding' ? '&close=55' : ''}`, { waitUntil: 'domcontentloaded' });
+
+  // ── TIMING=1 diagnosis (opt-in; a normal run is byte-identical without it) ──
+  // Dead air is measured from the DOM only — it says a gap happened, not what the
+  // server was doing. This records every /api/chat call keyed by its `action`, so a
+  // flagged gap can be mapped to the endpoint that actually stalled.
+  const chatTimings = [];
+  if (process.env.TIMING === '1') {
+    const inflight = new Map();
+    page.on('request', (r) => {
+      if (!r.url().includes('/api/chat')) return;
+      let action = '?';
+      try { action = JSON.parse(r.postData() || '{}').action ?? '?'; } catch { /* non-JSON */ }
+      inflight.set(r, { action, start: Date.now() });
+    });
+    page.on('response', async (res) => {
+      const req = res.request();
+      const rec = inflight.get(req);
+      if (!rec) return;
+      inflight.delete(req);
+      chatTimings.push({ action: rec.action, ms: Date.now() - rec.start, status: res.status() });
+    });
+  }
+
+  // ENTRY_PATH lets a caller start the SAME walk from another V1 entry — e.g. an
+  // fb-palm sign's chat handoff — instead of the default /chat. Path only (the
+  // localhost guard above still owns the origin). Defaults to today's behaviour.
+  const entryPath = process.env.ENTRY_PATH
+    || `/chat?noemail=1${ARM === 'sliding' ? '&close=55' : ''}`;
+  await page.goto(`${BASE}${entryPath}`, { waitUntil: 'domcontentloaded' });
 
   const sampler = startSampler(page);
   let shotN = 0;
@@ -241,6 +277,25 @@ async function main() {
     flagged.length ? flagged.map((g) => `${g.seconds}s after bubble ${g.afterBubble}`).join('; ') : '');
   check('No empty chat bubbles', emptyBubbles === 0, emptyBubbles ? `${emptyBubbles} empty` : '');
   check('🔒 No real Meta pixel/CAPI request escaped (all blocked)', true, `${pixelBlocked} facebook.com request(s) aborted`);
+
+  if (process.env.TIMING === '1') {
+    console.log(`\n══ /api/chat SERVER TIMING (TIMING=1) ══`);
+    console.log(`   #   action                         status   duration`);
+    chatTimings.forEach((t, i) => {
+      const slow = t.ms >= 25000 ? '  🔴 ≥25s' : t.ms >= 8000 ? '  ⚠' : '';
+      console.log(`   ${String(i + 1).padStart(2)}  ${String(t.action).padEnd(30)} ${String(t.status).padStart(3)}   ${(t.ms / 1000).toFixed(1).padStart(6)}s${slow}`);
+    });
+    const byAction = {};
+    for (const t of chatTimings) (byAction[t.action] ??= []).push(t.ms);
+    console.log(`\n   slowest actions (total time across calls):`);
+    Object.entries(byAction)
+      .map(([a, ms]) => ({ a, total: ms.reduce((s, x) => s + x, 0), n: ms.length, max: Math.max(...ms) }))
+      .sort((x, y) => y.total - x.total)
+      .forEach((r) => console.log(`     ${r.a.padEnd(30)} n=${r.n}  total=${(r.total / 1000).toFixed(1)}s  worst=${(r.max / 1000).toFixed(1)}s`));
+    console.log(`\n   dead-air gaps flagged: ${flagged.length ? flagged.map((g) => `${g.seconds}s after bubble ${g.afterBubble}`).join('; ') : 'none'}`);
+    const total = chatTimings.reduce((s, t) => s + t.ms, 0);
+    console.log(`   total /api/chat time: ${(total / 1000).toFixed(1)}s across ${chatTimings.length} calls\n`);
+  }
 
   // stitched full-conversation shot
   await page.evaluate(() => {
