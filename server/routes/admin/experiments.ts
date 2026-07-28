@@ -19,6 +19,8 @@ import {
   tallyUpsell1,
   tallyEvent,
   tallyV1Main,
+  tallyV1MainBySign,
+  type TallyBySignRow,
   twoSidedP,
   minArmExposures,
   invalidateExperiment,
@@ -358,6 +360,7 @@ router.get('/:key/results', async (req: Request, res: Response) => {
     const treatmentKey = exp.variants?.[1]?.key;
 
     let result;
+    let bySign: TallyBySignRow[] | undefined;
     if (conversionType === 'credit_purchase') {
       result = await tally(key, { startISO, windowDays, personaId, controlKey, treatmentKey });
     } else if (conversionType === 'upsell1_funnel') {
@@ -386,6 +389,13 @@ router.get('/:key/results', async (req: Request, res: Response) => {
         });
       }
       result = await tallyV1Main({ key, startISO, controlKey, treatmentKey });
+      // Per-fb-palm-sign split of the SAME numbers. Diagnostic only — see
+      // tallyV1MainBySign. Empty for any test whose exposures carry no sign, so
+      // non-palm v1_main tests are unaffected and the block is simply omitted.
+      const signRows = await tallyV1MainBySign({ key, startISO, controlKey, treatmentKey });
+      if (signRows.length > 1 || (signRows.length === 1 && signRows[0].sign !== '(unrecorded)')) {
+        bySign = signRows;
+      }
     } else if (conversionType === 'event') {
       // Generic event conversions (e.g. visitor page-copy lander tests).
       if (!controlKey || !treatmentKey) {
@@ -427,6 +437,7 @@ router.get('/:key/results', async (req: Request, res: Response) => {
       started: true,
       params,
       rows: result.rows,
+      bySign,
       srm,
       significance: result.significance,
       progress,
