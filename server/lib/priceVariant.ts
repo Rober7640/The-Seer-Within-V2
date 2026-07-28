@@ -243,11 +243,21 @@ export async function assignVariantIfMissing(
     // client uses to pick a component. It never touches priceCents /
     // downsellCents / upsell1Cents, so a returning visitor's stored price is
     // returned below completely unchanged.
-    const palmGate = await resolvePalmGate(email, funnel, normalizeSign(funnel, sign));
+    const gateSign = normalizeSign(funnel, sign);
+    const palmGate = await resolvePalmGate(email, funnel, gateSign);
     if (palmGate.enrolled && palmGate.variant) {
       // conversationId is what tallyV1Main joins on to find the purchase.
+      //
+      // `sign` is captured here because it is the ONLY chance to: the test runs
+      // across every fb-palm sign, `conversations` has no sign column, and an
+      // exposure row is written exactly once per subject (unique(key, subject_id)),
+      // so a sign not recorded now can never be back-filled. Without it the whole
+      // test is readable only as one pooled number and "did the gate work better on
+      // hand-size than on thumb?" becomes permanently unanswerable.
+      // PII-free: an ad-sign slug, already normalised + length-capped.
       await logExposure(PALM_GATE_EXPERIMENT_KEY, hashEmail(email), palmGate.variant, 'palm_gate_assigned', {
         conversationId: row.id,
+        sign: gateSign,
       });
     }
 
