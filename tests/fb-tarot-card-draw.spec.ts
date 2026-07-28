@@ -133,6 +133,39 @@ test("the chat hand-off carries the DRAWN card, not the tapped panel", async ({ 
   expect(checked.size, "did not observe all three cards").toBe(3);
 });
 
+// ── The CLEAN ad URL (no ?deck=) ────────────────────────────────────────────
+// Ad links follow the fb-palm convention and omit the default concept:
+//   /fb-tarot/c?hook=cards-honest      (not …&deck=return-mhf)
+// So a bare URL must serve the LIVE deck. This regressed once already: the default
+// was the seeded 'decode-him', whose strip art is byte-identical to
+// client/public/palm/thumbs-strip.png — a clean tarot URL rendered PALM THUMBS.
+for (const hook of ["cards-return", "cards-honest", "cards-feels"] as const) {
+  test(`clean URL (no deck param) serves the live deck — ${hook}`, async ({ page }) => {
+    await blockMeta(page);
+    const strips: string[] = [];
+    page.on("response", (r) => {
+      if (/\/tarot\/.+\.png/.test(r.url())) strips.push(r.url());
+    });
+
+    await page.goto(`/fb-tarot?hook=${hook}`, { waitUntil: "domcontentloaded" });
+    await page.waitForTimeout(1200);
+
+    // It must be the real card deck, not the palm-strip placeholder.
+    const used = strips.join(" ");
+    expect(used, `clean URL loaded no tarot art (saw: ${used})`).toContain("return-mhf");
+    expect(used, "clean URL is serving the decode-him PLACEHOLDER (a palm strip)").not.toContain(
+      "decode-him",
+    );
+
+    // …and it must still reveal a real card from THIS deck.
+    await page.getByTestId(`tarot-card-${MIDDLE}`).click();
+    await expect(page.getByTestId("tarot-continue")).toBeVisible({ timeout: 20_000 });
+    const body = await page.locator("p").filter({ hasText: NAMES }).first().innerText();
+    const named = Object.keys(CARD_INDEX).find((c) => body.includes(c));
+    expect(named, `clean URL revealed no known card: ${body.slice(0, 80)}`).toBeTruthy();
+  });
+}
+
 // The three hooks the ads run. Each must swap the headline on the SAME deck.
 for (const [hook, headline] of [
   ["cards-return", "Will he come back?"],

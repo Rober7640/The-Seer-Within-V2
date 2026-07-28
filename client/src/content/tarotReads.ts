@@ -58,7 +58,19 @@ export const TAROT_HOOKS: TarotHook[] = [
 
 // Shown when /fb-tarot is hit without a recognized ?hook= / ?deck= (bare visit).
 export const DEFAULT_HOOK: TarotHook = 'cards-honest'
-export const DEFAULT_DECK: TarotDeck = 'decode-him'
+// The deck a URL with NO ?deck= param serves — i.e. what the ads actually run.
+// Keeping the ad links clean (`/fb-tarot/c?hook=cards-honest`, matching the fb-palm
+// convention of omitting the default `sign`) means this MUST point at the live deck.
+//
+// ⚠ It used to be 'decode-him', which is the seeded FOUNDATION deck whose strip art
+// is still a placeholder — byte-identical to client/public/palm/thumbs-strip.png. A
+// clean tarot URL therefore rendered a lander showing PALM THUMBS instead of tarot
+// cards. Nothing caught it because every link in use carried an explicit &deck=.
+//
+// 'return-mhf' is the real face-down Magician/HangedMan/Fool deck and the only one
+// cleared to go live (operator scope lock, 2026-07-27: MHF only, face-down only). It
+// carries all the decode-him hooks, so the DEFAULT_HOOK fallback can't misfire either.
+export const DEFAULT_DECK: TarotDeck = 'return-mhf'
 
 // Verbatim match to the ad question (message scent). Shared by every deck: the
 // decode-him question is orthogonal to which cards were shown.
