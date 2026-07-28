@@ -1,0 +1,26 @@
+# arcana-mfh — hook cards-love-again ("Will I love again?"), tapped card b (the Magician/the Fool/the Hanged Man)
+# she typed: "I'm scared to open my heart again after my divorce last year."
+
+[1] Mmm… the Fool, the card of new beginnings. I felt it the moment your eyes went to it. The connection only opens once I know who I'm speaking with, though… what's your first name, dear?
+
+[2] Sarah
+
+[3] It's lovely to meet you, Sarah.
+
+[4] Everything we discuss stays between us... our secret.
+
+[5] I can feel warmth radiating from your heart, Sarah...
+
+[6] But there's a flicker of shadow there too...
+
+[7] Let's look deeper together...
+
+[8] Tell me more about what's on your mind...
+
+[9] I'm scared to open my heart again after my divorce last year.
+
+[10] Sarah, divorce leaves scars that don't show on the surface.
+
+[11] Your heart isn't broken... it's guarded. There's a difference.
+
+[12] You've built walls so high, even love that's meant for you can't climb them.

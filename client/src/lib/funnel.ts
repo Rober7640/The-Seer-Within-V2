@@ -80,7 +80,7 @@ export function funnelPath(v1Path: string, pathname?: string): string {
 // its "v1-fb" | "v1-fb2" | "v1-gdn" | undefined contract.
 
 export type PostHogFunnel =
-  | "soulmate" | "fb" | "fb2" | "gdn" | "palm" | "v1" | "evelyn" | "aiden"
+  | "soulmate" | "fb" | "fb2" | "gdn" | "palm" | "tarot" | "v1" | "evelyn" | "aiden"
   | "marcus" | "luna" | "nova" | "maren" | "seven-seven";
 
 // Generalized persona landers → their PostHog funnel name. One route each.
@@ -139,13 +139,14 @@ export function getPostHogStep(pathname?: string): string {
     case "fb":
     case "fb2":
     case "gdn":
-    case "palm": {
-      // Compute the step relative to the funnel's URL prefix so /fb, /fb2, /gdn
-      // and /fb-palm share one mapping (e.g. /fb2/welcome1 → upsell1). For palm
-      // the prefix root is the bridge lander → "landing".
+    case "palm":
+    case "tarot": {
+      // Compute the step relative to the funnel's URL prefix so /fb, /fb2, /gdn,
+      // /fb-palm and /fb-tarot share one mapping (e.g. /fb2/welcome1 → upsell1).
+      // For the palm + tarot bridges the prefix root is the bridge lander → "landing".
       const def = funnelDefForPath(p);
       const sub = def ? p.slice(def.prefix.length) : "";
-      // "" = the funnel landing; "/b" & "/c" = the palm Version-B/C bridge landings.
+      // "" = the funnel landing; "/b" & "/c" = the bridge Version-B/C landings.
       if (sub === "" || sub === "/b" || sub === "/c") return "landing";
       if (sub === "/chat") return "chat";
       if (sub === "/welcome1") return "upsell1";
