@@ -731,13 +731,18 @@ export function useConversation() {
       try {
         const leadData = await leadRes.json()
         const previewingClose = new URLSearchParams(window.location.search).get('close') === '55'
+        const patch: Partial<UserData> = {}
         if (!previewingClose && leadData?.priceDollars && leadData?.downsellDollars) {
-          updateUserData({
-            priceDollars: leadData.priceDollars,
-            downsellDollars: leadData.downsellDollars,
-            priceVariantId: leadData.priceVariant ?? undefined,
-          })
+          patch.priceDollars = leadData.priceDollars
+          patch.downsellDollars = leadData.downsellDollars
+          patch.priceVariantId = leadData.priceVariant ?? undefined
         }
+        // Commitment-gate arm rides the SAME response but is independent of the
+        // price payload — it comes from the experiment framework, not the pool, so
+        // it must still be captured for a returning visitor whose price came off
+        // their stored row. Only ever set to true; absent ⇒ plain PurchaseCTA.
+        if (leadData?.commitmentGate === true) patch.commitmentGate = true
+        if (Object.keys(patch).length > 0) updateUserData(patch)
       } catch { /* response body parse is best-effort */ }
 
       // Track Lead event with Facebook. Pixel-only here — /api/lead above

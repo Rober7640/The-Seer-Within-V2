@@ -885,6 +885,10 @@ export async function registerRoutes(
         priceVariant: assigned?.variant ?? null,
         priceDollars: assigned ? Math.round(assigned.priceCents / 100) : null,
         downsellDollars: assigned ? Math.round(assigned.downsellCents / 100) : null,
+        // fb-palm commitment-gate arm (UI only). Comes from the experiment
+        // framework, NOT the price variant — false unless that test is running
+        // and this lead bucketed into the gated arm.
+        commitmentGate: assigned?.commitmentGate === true,
       });
     } catch (error) {
       logger.error("Lead capture error:", error);

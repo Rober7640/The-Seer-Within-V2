@@ -787,6 +787,57 @@ export async function tallyV1Main(opts: V1MainTallyOptions): Promise<TallyResult
   return finalizeStats(rows, controlKey, treatmentKey);
 }
 
+// ── fb-palm COMMITMENT GATE (UI-only A/B) ────────────────────────────────────
+// The 3-checkbox commitment card that replaces the purchase button on the gated
+// arm. Measured with `v1_main_funnel` (same tally as the V1 main price test:
+// exposure log ⋈ conversations, confirmed main/downsell purchase + revenue), so
+// it reports in /admin/experiments next to every other test — arms, lift, SRM,
+// p-value and the targetN no-peeking gate.
+//
+// WHY THIS IS AN EXPERIMENT AND NOT A PRICE-POOL ARM (2026-07-28):
+// a pool arm can only ever be drawn for an email that has NO stored variant yet
+// (assignVariantIfMissing returns early once one is stored). On live fb-palm,
+// returning visitors are 23% of sessions but 57% of main buys and convert 4.4x
+// better (14.5% vs 3.3%) — and they ALL keep the incumbent control's variant id.
+// A pool-based gate arm therefore compares "new visitors only" against "new
+// visitors + every repeat buyer", which makes the gate look ~2x worse than
+// neutral before it has shown a single checkbox. Bucketing on a hash of the
+// email under a NEW experiment key re-splits the whole population, repeat
+// visitors included, so both arms are drawn from the same mix.
+//
+// Assigning a returning visitor is safe here precisely because this test is
+// UI-only: it never re-prices anyone. The price still comes from their stored
+// conversations row, untouched.
+export const PALM_GATE_EXPERIMENT_KEY = 'v1_palm_commitment_gate_2026';
+
+/**
+ * Should this lead see the commitment gate?
+ *
+ * Bucketed on the NORMALISED email (matches the exposure dedup on hashEmail).
+ * `gate` is true only when the assigned arm's payload says so AND the arm is
+ * `applied` — so a draft/paused/out-of-scope test yields the plain purchase
+ * button for everyone, and deploying the code changes nothing until the
+ * experiment is started. `enrolled` (running + in scope) tells the caller to log
+ * the exposure — the denominator.
+ *
+ * No email (the fb-palm `?noemail=1` arm) ⇒ no subject ⇒ control, never enrolled.
+ */
+export async function resolvePalmGate(
+  email: string | null | undefined,
+  funnel?: string | null,
+  sign?: string | null,
+  key: string = PALM_GATE_EXPERIMENT_KEY, // overridable so tests never touch the live experiment
+): Promise<{ gate: boolean; variant: string | null; enrolled: boolean }> {
+  const subject = typeof email === 'string' ? email.trim().toLowerCase() : null;
+  const a = await assign(key, subject, { funnel: funnel ?? null, sign: sign ?? null });
+  if (!a) return { gate: false, variant: null, enrolled: false };
+  return {
+    gate: a.applied && a.payload?.gate === true,
+    variant: a.variant,
+    enrolled: a.enrolled,
+  };
+}
+
 // ── Persona prompt A/B resolution (Phase 4b — live AI path) ───────────────────
 
 export interface PromptAssignment {

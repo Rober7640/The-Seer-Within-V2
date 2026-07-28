@@ -9,7 +9,7 @@ import { CommitmentGateCard } from "../components/CommitmentGateCard";
 import { DownsellCTA } from "../components/DownsellCTA";
 import { BackgroundMusic } from "../components/BackgroundMusic";
 import { useConversation } from "../hooks/useConversation";
-import { isSlidingCloseVariant, isCommitmentGateVariant } from "@shared/types";
+import { isSlidingCloseVariant } from "@shared/types";
 import { Volume2, Send, Sparkles } from "lucide-react";
 import { Link } from "wouter";
 import { funnelPath } from "../lib/funnel";
@@ -246,7 +246,7 @@ export default function ChatPage() {
                 fullDollars={chat.userData.priceDollars ?? 55}
                 graceDollars={chat.userData.downsellDollars ?? 35}
               />
-            ) : isCommitmentGateVariant(chat.userData.priceVariantId) ? (
+            ) : chat.userData.commitmentGate === true ? (
               <CommitmentGateCard
                 firstName={chat.userData.firstName}
                 onConfirm={() => handlePurchase("main")}

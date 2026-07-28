@@ -86,6 +86,15 @@ export interface UserData {
   // funnel leaves them undefined, so those prompts stay byte-identical.
   palmReading?: string
   palmMark?: string
+  // fb-palm COMMITMENT GATE (v1_palm_commitment_gate_2026) — true when this lead
+  // bucketed into the gated arm, so the close renders the 3-checkbox commitment
+  // card instead of the plain purchase button. Assigned by the EXPERIMENT
+  // framework at lead capture, deliberately NOT by the price-variant pool: a pool
+  // arm is only drawn for emails with no stored variant, which would have excluded
+  // every returning visitor (23% of palm sessions but 57% of its main buys) from
+  // the treatment while leaving them all in control. UI only — never a price.
+  // Undefined/false ⇒ today's PurchaseCTA, byte-identical.
+  commitmentGate?: boolean
 }
 
 export interface ShippingAddress {
