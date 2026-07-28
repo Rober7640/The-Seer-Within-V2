@@ -243,6 +243,45 @@ async function up(pool: pg.Pool) {
     console.log('• v1_main_price_2026 experiment already exists — left unchanged');
   }
 
+  // fb-palm COMMITMENT GATE — the 3-checkbox commitment card that replaces the
+  // purchase button on arm B. UI ONLY: both arms keep the visitor's existing
+  // price, so this is a straight conversion-rate read, not a price test (that is
+  // why the arms carry no cents payload — only v1_main_price_2026's arms do).
+  //
+  // scope.funnel is PRE-SET to 'v1-palm' (unlike the price test above, whose
+  // funnel is a live choice) because this test is defined as "every fb-palm
+  // lander" — Joel, 2026-07-27: "I say in all FB-palm pages". No scope.sign, so it
+  // runs on thumb, thumb-angle, hand-size, finger-shape and every other sign.
+  //
+  // Draft = OFF: assign() returns the control arm for everyone and never logs an
+  // exposure, so shipping this code shows the gate to NOBODY. Starting it is a
+  // separate, reversible decision made in /admin/experiments.
+  //
+  // targetN = 1200 exposures PER ARM before the verdict unhides. Live fb-palm runs
+  // ~1720 new + ~519 returning sessions per 6 days, so the 70/30 split reaches
+  // that on the treatment arm in roughly 2-3 weeks — deliberately pre-registered
+  // so nobody calls the test at n=40 the way the sliding close was read.
+  const gateVariants = JSON.stringify([
+    { key: 'A', weight: 70, payload: {} },
+    { key: 'B', weight: 30, payload: { gate: true } },
+  ]);
+  const gateScope = JSON.stringify({ funnel: 'v1-palm' });
+  const gateConversion = JSON.stringify({ type: 'v1_main_funnel', targetN: 1200 });
+  const gate = await pool.query(
+    `INSERT INTO experiments (key, name, description, status, subject_type, variants, scope, conversion)
+     VALUES ('v1_palm_commitment_gate_2026', 'fb-palm commitment gate (3 checkboxes before the buy button)',
+       'UI-only A/B on EVERY fb-palm lander. A=control, today''s purchase button (70%). B=commitment gate (30%): three checkboxes render in place of the button and the button does not exist in the DOM until all three are ticked — no fallback, no timeout, that is the point of the test. Identical price on both arms, so this is a pure conversion-rate read. Subject = email hash, so returning visitors are re-split across BOTH arms (a price-pool arm could never draw them, which would have inflated the control with 57% of all palm buyers). Measured on confirmed main/downsell purchase + revenue. To start, set status=running.',
+       'draft', 'email', $1::jsonb, $2::jsonb, $3::jsonb)
+     ON CONFLICT (key) DO NOTHING
+     RETURNING id`,
+    [gateVariants, gateScope, gateConversion],
+  );
+  if (gate.rowCount && gate.rowCount > 0) {
+    console.log('✓ seeded DRAFT fb-palm commitment gate experiment (70/30, every sign)');
+  } else {
+    console.log('• v1_palm_commitment_gate_2026 experiment already exists — left unchanged');
+  }
+
   // V1 PROMPT A/B — clearing-theme rewrite (control vs woven), fb-palm ONLY.
   // STRUCTURAL/prompt test: the arm KEY drives prompt+copy branches in
   // prompts.ts (buildShadowSummaryPrompt / buildValueExplainPrompt) and the

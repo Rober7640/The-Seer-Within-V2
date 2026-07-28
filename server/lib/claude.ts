@@ -22,6 +22,7 @@ import {
   buildManifestPersonalizePrompt,
   buildPalmOpenerPrompt,
   buildPalmReflectPrompt,
+  buildTarotReflectPrompt,
 } from './prompts'
 
 interface ClaudeResponse {
@@ -170,5 +171,14 @@ export async function generatePalmOpener(userData: UserData, sign: string, hook:
 // Version C (interactive) — read her typed answer to the opener question.
 export async function generatePalmReflect(userData: UserData, sign: string, hook: string, thumb: string, answer: string): Promise<ClaudeResponse> {
   const prompt = buildPalmReflectPrompt(userData, sign, hook, thumb, answer)
+  return callClaude(prompt)
+}
+
+// Tarot "decode-him card" bridge (/fb-tarot) Version C — read her typed answer,
+// woven with the card she drew (reads HIM as a tendency). Same fallback safety as
+// palm: callClaude returns fallback messages, and the client falls back to the
+// static reveal, so the funnel never breaks.
+export async function generateTarotReflect(userData: UserData, deck: string, hook: string, card: string, answer: string): Promise<ClaudeResponse> {
+  const prompt = buildTarotReflectPrompt(userData, deck, hook, card, answer)
   return callClaude(prompt)
 }

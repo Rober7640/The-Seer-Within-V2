@@ -19,11 +19,14 @@ import {
   tallyUpsell1,
   tallyEvent,
   tallyV1Main,
+  tallyV1MainBySign,
+  type TallyBySignRow,
   twoSidedP,
   minArmExposures,
   invalidateExperiment,
   U1_PRICE_EXPERIMENT_KEY,
   V1_MAIN_EXPERIMENT_KEY,
+  PALM_GATE_EXPERIMENT_KEY,
   PERSONA_PROMPT_KEY_PREFIX,
   isPersonaPromptKey,
 } from '../../lib/experiments';
@@ -100,6 +103,25 @@ function u1PayloadError(variants: Array<{ key: string; payload?: Record<string, 
     }
   }
   return null;
+}
+
+// Keys legitimately measured by `v1_main_funnel` (exposure log ⋈ conversations,
+// confirmed main/downsell purchase + revenue).
+//
+// The original rule was "this conversion type belongs to V1_MAIN_EXPERIMENT_KEY
+// and nothing else", because resolveV1Price only consults that key, so any other
+// key carrying it would be INERT — assigned but never applied. That reasoning is
+// about applying a PRICE. The commitment gate has its own resolver
+// (resolvePalmGate) and its own exposure logging, so it is not inert; it just
+// happens to be scored by the same funnel outcome. Both keys still have to keep
+// this conversion type (enforced below) and set scope.funnel before starting.
+const V1_MAIN_FUNNEL_KEYS: readonly string[] = [V1_MAIN_EXPERIMENT_KEY, PALM_GATE_EXPERIMENT_KEY];
+
+// Only the PRICE test's arms carry a price payload. The commitment gate is a
+// UI-only test measured by the same funnel outcome, so its arms carry no cents —
+// requiring them would force a fake price onto a test that never applies one.
+function needsV1MainPricePayload(key: string): boolean {
+  return key === V1_MAIN_EXPERIMENT_KEY;
 }
 
 // A v1_main_funnel arm reads BOTH mainCents and downsellCents to price the V1 main
@@ -338,6 +360,7 @@ router.get('/:key/results', async (req: Request, res: Response) => {
     const treatmentKey = exp.variants?.[1]?.key;
 
     let result;
+    let bySign: TallyBySignRow[] | undefined;
     if (conversionType === 'credit_purchase') {
       result = await tally(key, { startISO, windowDays, personaId, controlKey, treatmentKey });
     } else if (conversionType === 'upsell1_funnel') {
@@ -366,6 +389,13 @@ router.get('/:key/results', async (req: Request, res: Response) => {
         });
       }
       result = await tallyV1Main({ key, startISO, controlKey, treatmentKey });
+      // Per-fb-palm-sign split of the SAME numbers. Diagnostic only — see
+      // tallyV1MainBySign. Empty for any test whose exposures carry no sign, so
+      // non-palm v1_main tests are unaffected and the block is simply omitted.
+      const signRows = await tallyV1MainBySign({ key, startISO, controlKey, treatmentKey });
+      if (signRows.length > 1 || (signRows.length === 1 && signRows[0].sign !== '(unrecorded)')) {
+        bySign = signRows;
+      }
     } else if (conversionType === 'event') {
       // Generic event conversions (e.g. visitor page-copy lander tests).
       if (!controlKey || !treatmentKey) {
@@ -407,6 +437,7 @@ router.get('/:key/results', async (req: Request, res: Response) => {
       started: true,
       params,
       rows: result.rows,
+      bySign,
       srm,
       significance: result.significance,
       progress,
@@ -440,13 +471,15 @@ router.post('/', async (req: Request, res: Response) => {
       if (err) return res.status(400).json({ error: err });
     }
     if (data.conversion?.type === 'v1_main_funnel') {
-      if (data.key !== V1_MAIN_EXPERIMENT_KEY) {
+      if (!V1_MAIN_FUNNEL_KEYS.includes(data.key)) {
         return res.status(400).json({
-          error: `conversion type 'v1_main_funnel' is only supported for the '${V1_MAIN_EXPERIMENT_KEY}' experiment`,
+          error: `conversion type 'v1_main_funnel' is only supported for: ${V1_MAIN_FUNNEL_KEYS.join(', ')}`,
         });
       }
-      const err = v1MainPayloadError(data.variants);
-      if (err) return res.status(400).json({ error: err });
+      if (needsV1MainPricePayload(data.key)) {
+        const err = v1MainPayloadError(data.variants);
+        if (err) return res.status(400).json({ error: err });
+      }
     }
 
     // persona_prompt_* keys are wired to the live AI path; enforce structural
@@ -534,22 +567,22 @@ router.patch('/:key', async (req: Request, res: Response) => {
       const err = u1PayloadError(data.variants);
       if (err) return res.status(400).json({ error: err });
     }
-    if (effectiveConvType === 'v1_main_funnel' && data.variants) {
+    if (effectiveConvType === 'v1_main_funnel' && data.variants && needsV1MainPricePayload(key)) {
       const err = v1MainPayloadError(data.variants);
       if (err) return res.status(400).json({ error: err });
     }
-    // v1_main_funnel ↔ the live key, enforced BOTH directions (resolveV1Price only
-    // consults V1_MAIN_EXPERIMENT_KEY): another key can't become a v1_main test (it'd
-    // be inert), and the live key can't drop v1_main_funnel (it'd mis-measure + dodge
-    // the funnel-scope start guard).
-    if (effectiveConvType === 'v1_main_funnel' && key !== V1_MAIN_EXPERIMENT_KEY) {
+    // v1_main_funnel ↔ its owning keys, enforced BOTH directions: an arbitrary key
+    // can't become a v1_main test (nothing would resolve it, so it'd be inert), and
+    // neither owning key can drop v1_main_funnel (it'd mis-measure + dodge the
+    // funnel-scope start guard).
+    if (effectiveConvType === 'v1_main_funnel' && !V1_MAIN_FUNNEL_KEYS.includes(key)) {
       return res.status(400).json({
-        error: `conversion type 'v1_main_funnel' is only supported for the '${V1_MAIN_EXPERIMENT_KEY}' experiment`,
+        error: `conversion type 'v1_main_funnel' is only supported for: ${V1_MAIN_FUNNEL_KEYS.join(', ')}`,
       });
     }
-    if (key === V1_MAIN_EXPERIMENT_KEY && effectiveConvType && effectiveConvType !== 'v1_main_funnel') {
+    if (V1_MAIN_FUNNEL_KEYS.includes(key) && effectiveConvType && effectiveConvType !== 'v1_main_funnel') {
       return res.status(400).json({
-        error: `the '${V1_MAIN_EXPERIMENT_KEY}' experiment must keep conversion type 'v1_main_funnel'`,
+        error: `the '${key}' experiment must keep conversion type 'v1_main_funnel'`,
       });
     }
 
@@ -605,14 +638,16 @@ router.post('/:key/start', async (req: Request, res: Response) => {
         .status(400)
         .json({ error: 'need at least 2 variants with a positive weight before starting' });
     }
-    // The live v1_main key OVERRIDES the V1 main price (resolveV1Price consults this
-    // exact key). Require scope.funnel so it only overrides ONE funnel — without it
-    // the override would hit every funnel and clobber all the live system_config
-    // splits at once. Keyed on the KEY (not conversion.type) so it can't be bypassed
-    // by editing the draft's conversion type away from v1_main_funnel before /start.
-    if (key === V1_MAIN_EXPERIMENT_KEY && !exp.scope?.funnel) {
+    // Both v1_main_funnel keys drive live V1 funnel behaviour for whatever traffic
+    // they enrol — the price key OVERRIDES the main price (resolveV1Price), the palm
+    // gate REPLACES the purchase button (resolvePalmGate). Require scope.funnel so
+    // each only touches ONE funnel; without it the price override would clobber every
+    // live system_config split at once, and the gate would hit every V1 lander rather
+    // than fb-palm. Keyed on the KEY (not conversion.type) so it can't be bypassed by
+    // editing the draft's conversion type away from v1_main_funnel before /start.
+    if (V1_MAIN_FUNNEL_KEYS.includes(key) && !exp.scope?.funnel) {
       return res.status(400).json({
-        error: 'the V1 main price test must set scope.funnel before starting (it overrides that one funnel only)',
+        error: `the '${key}' test must set scope.funnel before starting (it applies to that one funnel only)`,
       });
     }
     // persona_prompt_* tests drive the live AI prompt: arms must be authored, and

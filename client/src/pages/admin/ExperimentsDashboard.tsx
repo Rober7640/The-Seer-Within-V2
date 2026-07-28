@@ -59,6 +59,13 @@ interface ResultsResponse {
   unsupported?: string;
   params: { startISO: string | null; windowDays: number; personaId: string | null };
   rows: TallyVariantRow[];
+  // Per-fb-palm-sign split of the SAME rows (present only when the exposures
+  // carry a sign). DIAGNOSTIC ONLY — the pooled `rows` above decide the test.
+  bySign?: Array<{
+    sign: string;
+    rows: TallyVariantRow[];
+    significance?: { z: number; p: number; liftPct: number; significant: boolean };
+  }>;
   srm?: {
     aViewers: number;
     bViewers: number;
@@ -890,6 +897,61 @@ export default function ExperimentsDashboard() {
                           verdict.
                         </div>
                       </div>
+
+                      {/* Per-fb-palm-sign breakdown — DIAGNOSTIC ONLY. */}
+                      {results.bySign && results.bySign.length > 0 && (
+                        <div className="space-y-2 border-t border-gray-800 pt-3">
+                          <div className="flex items-baseline gap-2">
+                            <span className="text-sm font-semibold text-gray-200">
+                              By fb-palm lander
+                            </span>
+                            <span className="text-xs text-amber-300">diagnostic only</span>
+                          </div>
+                          <p className="text-xs text-gray-500">
+                            The same numbers split by ad sign. Decide the test on the pooled table
+                            above — with this many landers, the best-looking one will show a large
+                            lift by chance alone, and each lander is only a fraction of the
+                            pre-registered N.
+                          </p>
+                          <table className="w-full text-sm">
+                            <thead>
+                              <tr className="border-b border-gray-700 text-left text-gray-400">
+                                <th className="py-2 pr-4">Lander</th>
+                                <th className="py-2 pr-4">Arm</th>
+                                <th className="py-2 pr-4">Exposed</th>
+                                <th className="py-2 pr-4">Buyers</th>
+                                <th className="py-2 pr-4">Conv %</th>
+                                <th className="py-2 pr-4">Lift vs {controlKey}</th>
+                                <th className="py-2 pr-4">$ / user</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {results.bySign.map((g) =>
+                                g.rows.map((r, i) => (
+                                  <tr
+                                    key={`${g.sign}-${r.variant}`}
+                                    className={
+                                      i === g.rows.length - 1
+                                        ? "border-b border-gray-700"
+                                        : "border-b border-gray-800/50"
+                                    }
+                                  >
+                                    <td className="py-2 pr-4 font-mono text-xs text-gray-300">
+                                      {i === 0 ? g.sign : ""}
+                                    </td>
+                                    <td className="py-2 pr-4 font-semibold">{r.variant}</td>
+                                    <td className="py-2 pr-4">{r.viewers}</td>
+                                    <td className="py-2 pr-4">{r.buyers}</td>
+                                    <td className="py-2 pr-4">{r.conversionPct}%</td>
+                                    <td className="py-2 pr-4">{liftOf(r)}</td>
+                                    <td className="py-2 pr-4">${r.revPerViewerUsd.toFixed(2)}</td>
+                                  </tr>
+                                )),
+                              )}
+                            </tbody>
+                          </table>
+                        </div>
+                      )}
 
                       {/* Declare winner (running/paused, no winner yet) */}
                       {(results.experiment.status === "running" ||

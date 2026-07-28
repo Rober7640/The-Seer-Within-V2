@@ -73,15 +73,12 @@ export function isSlidingCloseVariant(id?: string | null): boolean {
   return !!id && id.startsWith(SLIDING_CLOSE_VARIANT_PREFIX)
 }
 
-// fb-palm commitment-gate A/B test — replaces PurchaseCTA with a 3-checkbox
-// commitment gate for this EXACT variant id only. Not a prefix like the
-// sliding close above, because there is only ever one gated variant, not a
-// family of them.
-export const COMMITMENT_GATE_VARIANT_ID = '35_palm_gate'
-
-export function isCommitmentGateVariant(id?: string | null): boolean {
-  return id === COMMITMENT_GATE_VARIANT_ID
-}
+// NOTE: the fb-palm commitment gate is deliberately NOT a price-variant id.
+// It is assigned by the experiment framework (`v1_palm_commitment_gate_2026`)
+// and arrives as `UserData.commitmentGate`. A pool variant would only ever be
+// drawn for an email with no stored variant, which would have excluded every
+// returning visitor from the treatment while leaving them all in the control —
+// see server/lib/experiments.ts (PALM_GATE_EXPERIMENT_KEY) for the numbers.
 
 export interface ShippingAddress {
   name: string
@@ -94,7 +91,7 @@ export interface ShippingAddress {
 }
 
 export interface ChatRequest {
-  action: 'reading' | 'reading1' | 'reading2' | 'futureValidation' | 'crisisReveal' | 'crisisCost' | 'crisisUrgency' | 'shadowSummary' | 'valueExplain' | 'crisis' | 'objection' | 'palmOpener' | 'palmReflect'
+  action: 'reading' | 'reading1' | 'reading2' | 'futureValidation' | 'crisisReveal' | 'crisisCost' | 'crisisUrgency' | 'shadowSummary' | 'valueExplain' | 'crisis' | 'objection' | 'palmOpener' | 'palmReflect' | 'tarotReflect'
   userData: UserData
   input: string
   objectionCount?: number
@@ -104,6 +101,11 @@ export interface ChatRequest {
   palmSign?: string
   palmHook?: string
   palmThumb?: string
+  // Tarot "decode-him card" bridge Version C — the deck + card + hook the visitor
+  // tapped. Server validates against fixed enums before injecting.
+  tarotDeck?: string
+  tarotHook?: string
+  tarotCard?: string
 }
 
 export interface ChatResponse {

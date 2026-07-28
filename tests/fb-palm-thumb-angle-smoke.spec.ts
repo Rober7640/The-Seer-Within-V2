@@ -27,7 +27,7 @@ import { parsePalmParams } from "../client/src/content/palmReads";
 
 const SIGN = "thumb-angle";
 const CONTROL = "35_palm_u47";
-const GATE = "35_palm_gate";
+
 const SLIDING = "55-35_palm";
 
 // The client pixel id is hardcoded in index.html, so .env.sandbox cannot mute it.
@@ -278,17 +278,21 @@ test.describe(`fb-palm · ${SIGN}`, () => {
     }
   });
 
-  test("thumb-angle only ever draws a live palm variant (control or gate) — never the retired $55 sliding arm", async ({ request }) => {
-    // thumb-angle is DELIBERATELY included in the commitment-gate's 70/30 split
-    // (operator decision, 2026-07-26) — it can legitimately draw either the
-    // unscoped control (35_palm_u47) or the gate variant (35_palm_gate). It also
-    // runs its OWN separate $55/$35 test through the experiment framework, but
-    // that is orthogonal to this pool. The one invariant that must always hold
-    // is that the RETIRED $55 sliding close (scoped `signs:["thumb"]`, parked at
-    // weight 0) never gets drawn on any sign. With only 12 draws we do NOT assert
-    // both live ids MUST appear — that would itself flake ~1.4% of the time if
-    // the 30%-weighted gate simply never comes up in 12 tries. This is the
-    // integration counterpart to server/lib/priceVariantPool.test.ts.
+  test("thumb-angle draws ONLY the $35 control — never the retired $55 sliding arm", async ({ request }) => {
+    // Once the sliding close is retired (parked at weight 0), the palm pool has a
+    // single drawing arm and every sign — thumb-angle included — is 100% control.
+    //
+    // The commitment gate does NOT appear here and must not: it is the
+    // `v1_palm_commitment_gate_2026` EXPERIMENT, not a price variant, so it never
+    // changes `priceVariant` or the price. It rides on the same /api/lead response
+    // as a separate `commitmentGate` boolean, asserted below.
+    //
+    // (An earlier draft of this test allowed a `35_palm_gate` pool id here. That
+    // design was dropped because a pool arm can only be drawn for an email with no
+    // stored variant, which would have excluded every returning visitor from the
+    // treatment while leaving them all in the control.)
+    //
+    // This is the integration counterpart to server/lib/priceVariantPool.test.ts.
     const seen: Record<string, number> = {};
     const run = `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
 
@@ -307,12 +311,15 @@ test.describe(`fb-palm · ${SIGN}`, () => {
       seen[r.priceVariant ?? "(none)"] = (seen[r.priceVariant ?? "(none)"] ?? 0) + 1;
       expect(r.priceDollars, "main stays $35").toBe(35);
       expect(r.downsellDollars, "downsell stays $25").toBe(25);
+      // The gate flag is always present and always a boolean, whatever arm the
+      // experiment gave: a missing field would silently mean "no gate" forever.
+      expect(typeof r.commitmentGate, "/api/lead must always return commitmentGate").toBe("boolean");
     }
 
     console.log(`  [price] ${JSON.stringify(seen)}`);
     expect(seen[SLIDING], `🔴 CONTAMINATION: ${SIGN} drew the retired $55 sliding arm`).toBeUndefined();
     for (const id of Object.keys(seen)) {
-      expect([CONTROL, GATE], `${SIGN} drew unexpected variant ${id}`).toContain(id);
+      expect([CONTROL], `${SIGN} drew unexpected variant ${id}`).toContain(id);
     }
   });
 

@@ -1,0 +1,28 @@
+# arcana-eef — hook cards-soulmate ("When is my soulmate coming?"), tapped card b (the Emperor/the Empress/the Fool)
+# she typed: "I keep meeting the wrong people and I'm scared my person is never going to show up."
+
+[1] Mmm… the Empress, the card of warmth and abundance. I felt it the moment your eyes went to it. The connection only opens once I know who I'm speaking with, though… what's your first name, dear?
+
+[2] Sarah
+
+[3] It's lovely to meet you, Sarah.
+
+[4] Everything we discuss stays between us... our secret.
+
+[5] I can feel warmth radiating from your heart, Sarah...
+
+[6] But there's a flicker of shadow there too...
+
+[7] Let's look deeper together...
+
+[8] Tell me more about what's on your mind...
+
+[9] I keep meeting the wrong people and I'm scared my person is never going to show up.
+
+[10] Sarah, I hear you. Meeting the wrong people over and over... it wears on the soul.
+
+[11] Your heart has walls, dear. Built for protection, not isolation.
+
+[12] You've almost given up... but something brought you here today.
+
+[13] The love you seek is seeking you... but something blocks the path.

@@ -1,21 +1,29 @@
 import { test, expect, type Page } from "@playwright/test";
 
-// Browser coverage for the fb-palm COMMITMENT GATE (`35_palm_gate`) — the 3-checkbox
-// ask that replaces the purchase button until all three are ticked.
+// Browser coverage for the fb-palm COMMITMENT GATE — the 3-checkbox ask that
+// replaces the purchase button until all three are ticked.
 //
 // This is the automated form of the 8 unchecked items Joel added to
 // docs/test-ideas.md ("fb-palm commitment gate — 3-checkbox pre-purchase ask").
 // The component shipped with ZERO automated coverage: this repo has no
 // jsdom/React-Testing-Library setup, so a browser spec is the only way to assert
-// the gate's mechanics. Written to need NO product-code changes.
+// the gate's mechanics.
 //
 // ── How it forces the arm ─────────────────────────────────────────────────────
-// `/api/lead` is the only thing that tells the client which price variant it
-// drew (`useConversation.ts:738` reads `leadData.priceVariant`). The spec
-// intercepts that response and hands back the arm under test — so it never has
-// to touch the live variant pool, and the same walk can drive BOTH arms and
-// compare them. `/api/chat` is stubbed too, which keeps the run deterministic
-// and free of Anthropic calls.
+// `/api/lead` is what tells the client whether it drew the gate: the server
+// resolves the `v1_palm_commitment_gate_2026` experiment and returns
+// `commitmentGate: true|false`, which useConversation stores on
+// `userData.commitmentGate`. The spec intercepts that response and hands back the
+// arm under test — so it never touches the live experiment, and the same walk can
+// drive BOTH arms and compare them. `/api/chat` is stubbed too, which keeps the
+// run deterministic and free of Anthropic calls.
+//
+// ⚠ The arm is NOT a price variant. It was built as one (`35_palm_gate`) and was
+//   deliberately moved onto the experiment framework: a price-pool arm can only be
+//   drawn for an email with no stored variant, so every returning visitor would
+//   have stayed in the control — 23% of live palm sessions but 57% of its main
+//   buys. Both arms below therefore carry the SAME priceVariant, exactly as
+//   production now does; only `commitmentGate` differs.
 //
 // 🔒 SAFETY: localhost only (hard-refused otherwise), Meta blocked at the network
 //    layer, and `/api/checkout` is intercepted — no Stripe session is ever created
@@ -26,8 +34,11 @@ import { test, expect, type Page } from "@playwright/test";
 //   DOTENV_CONFIG_PATH=.env.sandbox npx tsx server/index.ts
 //   npx playwright test --config=playwright.fb-palm-gate.config.ts
 
-const GATE = "35_palm_gate";
-const CONTROL = "35_palm_u47";
+// Both arms of the experiment. The price variant is identical on both — it is the
+// live palm control in each case — because this is a UI test, not a price test.
+const GATE = true;
+const CONTROL = false;
+const PALM_VARIANT = "35_palm_u47";
 const ENTRY = "/fb-palm/chat?hook=already-met&thumb=a";
 
 // The exact copy the final review settled on. The original draft asked for secrecy
@@ -41,18 +52,25 @@ const COMMITMENTS = [
 
 type Captured = { checkout: Array<Record<string, unknown>>; metaBlocked: number };
 
-async function harness(page: Page, variant: string): Promise<Captured> {
+async function harness(page: Page, commitmentGate: boolean): Promise<Captured> {
   const captured: Captured = { checkout: [], metaBlocked: 0 };
 
   await page.route("**://*.facebook.com/**", (r) => { captured.metaBlocked += 1; return r.abort(); });
   await page.route("**://connect.facebook.net/**", (r) => { captured.metaBlocked += 1; return r.abort(); });
 
-  // The arm under test. Same shape the real endpoint returns (routes.ts).
+  // The arm under test. Same shape the real endpoint returns (routes.ts) — note
+  // priceVariant is the SAME on both arms; only `commitmentGate` moves.
   await page.route("**/api/lead", (r) =>
     r.fulfill({
       status: 200,
       contentType: "application/json",
-      body: JSON.stringify({ success: true, priceVariant: variant, priceDollars: 35, downsellDollars: 25 }),
+      body: JSON.stringify({
+        success: true,
+        priceVariant: PALM_VARIANT,
+        priceDollars: 35,
+        downsellDollars: 25,
+        commitmentGate,
+      }),
     }),
   );
 
@@ -152,7 +170,7 @@ async function driveToPitch(page: Page): Promise<boolean> {
   return false;
 }
 
-test.describe("fb-palm commitment gate (35_palm_gate)", () => {
+test.describe("fb-palm commitment gate (v1_palm_commitment_gate_2026)", () => {
   test.beforeAll(({}, testInfo) => {
     const base = String(testInfo.project.use.baseURL ?? "");
     if (!/^https?:\/\/(localhost|127\.0\.0\.1)(:|\/|$)/.test(base)) {
@@ -258,8 +276,9 @@ test.describe("fb-palm commitment gate (35_palm_gate)", () => {
     await expect(page.locator('[data-testid="button-commitment-confirm"]')).toHaveCount(0);
   });
 
-  // If priceVariantId were lost on reload, a GATE visitor would silently be shown
-  // the control CTA — they'd still be counted in the gate arm, quietly poisoning
+  // If userData.commitmentGate were lost on reload, a GATE visitor would silently
+  // be shown the control CTA — their exposure is already logged in the gate arm, so
+  // they'd keep counting as gated while never seeing a checkbox, quietly poisoning
   // the experiment. It rides in the session persisted to localStorage.
   test("gated arm: the gate survives a page reload", async ({ page }) => {
     await harness(page, GATE);
@@ -276,8 +295,8 @@ test.describe("fb-palm commitment gate (35_palm_gate)", () => {
       "after reload the visitor was shown the UNGATED control CTA — the gate arm leaked into control").toBe(true);
   });
 
-  // "All FB-palm pages" (Joel, 2026-07-27) — the variant is unscoped, so the gate
-  // must appear on every sign, not just thumb.
+  // "All FB-palm pages" (Joel, 2026-07-27) — the experiment's scope is the whole
+  // v1-palm funnel with no scope.sign, so the gate must appear on every sign.
   for (const sign of ["hand-size", "finger-shape"]) {
     test(`gated arm: the gate also renders on sign=${sign}`, async ({ page }) => {
       await harness(page, GATE);

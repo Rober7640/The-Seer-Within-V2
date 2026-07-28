@@ -787,6 +787,108 @@ export async function tallyV1Main(opts: V1MainTallyOptions): Promise<TallyResult
   return finalizeStats(rows, controlKey, treatmentKey);
 }
 
+export interface TallyBySignRow {
+  sign: string;
+  rows: TallyVariantRow[];
+  significance?: TallyResult['significance'];
+}
+
+/**
+ * The SAME v1_main_funnel tally as tallyV1Main, split by the fb-palm ad sign
+ * recorded on each exposure (`context->>'sign'`).
+ *
+ * ⚠ DIAGNOSTIC ONLY — the pooled tallyV1Main row is what decides the test.
+ * A test running across ~11 signs will always throw up one sign with a large
+ * apparent lift by chance alone (the multiple-comparisons trap), and each
+ * per-sign arm is a fraction of the pre-registered targetN. This exists to
+ * answer "did the gate behave differently on hand-size than on thumb?", not to
+ * pick a winner from the best-looking lander.
+ *
+ * Identical join and identical buyer definition to tallyV1Main, so the per-sign
+ * rows always sum to the pooled row — if they ever disagree, one of the two
+ * queries has drifted.
+ *
+ * Signs come from the exposure context, so this is empty for experiments whose
+ * exposures carry no sign (every non-palm test). The caller omits the block then.
+ */
+export async function tallyV1MainBySign(opts: V1MainTallyOptions): Promise<TallyBySignRow[]> {
+  const result = await db.execute(sql`
+    SELECT COALESCE(e.context->>'sign', '(unrecorded)')                          AS sign,
+           e.variant                                                             AS variant,
+           count(*)                                                              AS viewers,
+           count(*) FILTER (WHERE c.purchased AND c.upsell_offered)              AS buyers,
+           COALESCE(sum(c.main_purchase_amount) FILTER (WHERE c.purchased AND c.upsell_offered), 0) AS revenue_cents
+    FROM experiment_exposures e
+    LEFT JOIN conversations c ON c.id = e.context->>'conversationId'
+    WHERE e.experiment_key = ${opts.key}
+      AND e.created_at >= ${opts.startISO}
+    GROUP BY 1, 2;
+  `);
+
+  const controlKey = opts.controlKey ?? 'A';
+  const treatmentKey = opts.treatmentKey ?? 'B';
+  const all = result.rows as Record<string, unknown>[];
+
+  const signs = Array.from(new Set(all.map((r) => String(r.sign)))).sort();
+  return signs.map((sign) => {
+    const forSign = all.filter((r) => String(r.sign) === sign);
+    const { rows } = assembleRows(forSign, controlKey, treatmentKey);
+    const stats = finalizeStats(rows, controlKey, treatmentKey);
+    return { sign, rows: stats.rows, significance: stats.significance };
+  });
+}
+
+// ── fb-palm COMMITMENT GATE (UI-only A/B) ────────────────────────────────────
+// The 3-checkbox commitment card that replaces the purchase button on the gated
+// arm. Measured with `v1_main_funnel` (same tally as the V1 main price test:
+// exposure log ⋈ conversations, confirmed main/downsell purchase + revenue), so
+// it reports in /admin/experiments next to every other test — arms, lift, SRM,
+// p-value and the targetN no-peeking gate.
+//
+// WHY THIS IS AN EXPERIMENT AND NOT A PRICE-POOL ARM (2026-07-28):
+// a pool arm can only ever be drawn for an email that has NO stored variant yet
+// (assignVariantIfMissing returns early once one is stored). On live fb-palm,
+// returning visitors are 23% of sessions but 57% of main buys and convert 4.4x
+// better (14.5% vs 3.3%) — and they ALL keep the incumbent control's variant id.
+// A pool-based gate arm therefore compares "new visitors only" against "new
+// visitors + every repeat buyer", which makes the gate look ~2x worse than
+// neutral before it has shown a single checkbox. Bucketing on a hash of the
+// email under a NEW experiment key re-splits the whole population, repeat
+// visitors included, so both arms are drawn from the same mix.
+//
+// Assigning a returning visitor is safe here precisely because this test is
+// UI-only: it never re-prices anyone. The price still comes from their stored
+// conversations row, untouched.
+export const PALM_GATE_EXPERIMENT_KEY = 'v1_palm_commitment_gate_2026';
+
+/**
+ * Should this lead see the commitment gate?
+ *
+ * Bucketed on the NORMALISED email (matches the exposure dedup on hashEmail).
+ * `gate` is true only when the assigned arm's payload says so AND the arm is
+ * `applied` — so a draft/paused/out-of-scope test yields the plain purchase
+ * button for everyone, and deploying the code changes nothing until the
+ * experiment is started. `enrolled` (running + in scope) tells the caller to log
+ * the exposure — the denominator.
+ *
+ * No email (the fb-palm `?noemail=1` arm) ⇒ no subject ⇒ control, never enrolled.
+ */
+export async function resolvePalmGate(
+  email: string | null | undefined,
+  funnel?: string | null,
+  sign?: string | null,
+  key: string = PALM_GATE_EXPERIMENT_KEY, // overridable so tests never touch the live experiment
+): Promise<{ gate: boolean; variant: string | null; enrolled: boolean }> {
+  const subject = typeof email === 'string' ? email.trim().toLowerCase() : null;
+  const a = await assign(key, subject, { funnel: funnel ?? null, sign: sign ?? null });
+  if (!a) return { gate: false, variant: null, enrolled: false };
+  return {
+    gate: a.applied && a.payload?.gate === true,
+    variant: a.variant,
+    enrolled: a.enrolled,
+  };
+}
+
 // ── Persona prompt A/B resolution (Phase 4b — live AI path) ───────────────────
 
 export interface PromptAssignment {

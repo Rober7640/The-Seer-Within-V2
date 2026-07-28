@@ -5,6 +5,7 @@ export type ConversationState =
   | 'GREETING'
   | 'NAME_CAPTURE'
   | 'PALM_REFLECT'        // /fb-palm Version C: awaiting her answer to the opener question
+  | 'TAROT_REFLECT'       // /fb-tarot Version C: awaiting her answer to the opener question
   | 'BUCKET_SELECTION'
   | 'BUCKET_CLARIFICATION'
   | 'PERSON_NAME_CAPTURE'
@@ -51,6 +52,19 @@ export interface Message {
   id: string
   type: MessageType
   content: string
+  // Optional artwork rendered ABOVE this message's text, inside the same bubble.
+  // Used by the /fb-tarot Version B/C chat opener so she actually SEES the card she
+  // drew — Version A shows it on the lander, but B and C hand straight to chat and
+  // would otherwise only ever tell her in words. Shape comes from
+  // tarotReads.cardArtFor(), which owns the N-up strip cropping maths.
+  // Absent on every other message, so all other funnels render byte-identical.
+  cardArt?: {
+    url: string
+    sizePct: number
+    posPct: number
+    aspect: number
+    alt: string
+  }
 }
 
 export interface UserData {
@@ -86,6 +100,15 @@ export interface UserData {
   // funnel leaves them undefined, so those prompts stay byte-identical.
   palmReading?: string
   palmMark?: string
+  // fb-palm COMMITMENT GATE (v1_palm_commitment_gate_2026) — true when this lead
+  // bucketed into the gated arm, so the close renders the 3-checkbox commitment
+  // card instead of the plain purchase button. Assigned by the EXPERIMENT
+  // framework at lead capture, deliberately NOT by the price-variant pool: a pool
+  // arm is only drawn for emails with no stored variant, which would have excluded
+  // every returning visitor (23% of palm sessions but 57% of its main buys) from
+  // the treatment while leaving them all in control. UI only — never a price.
+  // Undefined/false ⇒ today's PurchaseCTA, byte-identical.
+  commitmentGate?: boolean
 }
 
 export interface ShippingAddress {

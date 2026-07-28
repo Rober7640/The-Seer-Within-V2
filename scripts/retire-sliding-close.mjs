@@ -1,41 +1,49 @@
-// Go live with the fb-palm COMMITMENT GATE — retire the $55/$35 sliding close and
-// start the 3-checkbox test at 70/30 across EVERY palm sign.
+// Retire the $55/$35 sliding close on fb-palm — park `55-35_palm` at weight 0 so
+// every palm visitor draws the $35 control, and nobody is shown $55 any more.
 //
-// This is the safe alternative to hand-running improve-v1/go-live-palm-gate-config.sql.
-// That file retypes the ENTIRE pool row as one literal blob — the exact pattern that
-// once introduced `"down  sellCents"` and silently killed the root $45 test for two
-// weeks, invisible to every test because the key simply vanished. Built on the same
-// guarantees as scripts/apply-90-10.mjs:
+// ── WHY THIS IS NOW A ONE-FIELD CHANGE ───────────────────────────────────────
+// An earlier draft of this script ALSO appended a `35_palm_gate` price-pool arm
+// at weight 30, because the commitment gate was originally built as a price
+// variant. It isn't any more: the gate is an EXPERIMENT
+// (`v1_palm_commitment_gate_2026`, server/lib/experiments.ts) assigned on a hash
+// of the email, and started from /admin/experiments.
 //
+// The reason is measurement, not tidiness. A pool arm can only ever be drawn for
+// an email with NO stored variant (assignVariantIfMissing returns early once one
+// exists), so every returning visitor would have kept the incumbent control id.
+// On live fb-palm those returning visitors are 23% of sessions but 57% of main
+// buys, converting 4.4x better (14.5% vs 3.3%) — a pool-based gate would have
+// been measured against a control inflated with all of them, and would have
+// looked roughly 2x worse than neutral before showing a single checkbox.
+//
+// So the pool change and the test are now fully independent:
+//   THIS script        → retires $55. Nothing else. Reversible in 60s.
+//   /admin/experiments → starts/stops the gate test. Reversible instantly.
+//
+// ── SAFETY (unchanged, modelled on scripts/apply-90-10.mjs) ──────────────────
 //  1. DRY RUN BY DEFAULT. Prints the planned diff and writes nothing. Only
-//     `APPLY_PALM_GATE=1 … --live` writes.
-//
+//     `RETIRE_SLIDING_CLOSE=1 … --live` writes.
 //  2. SNAPSHOT FIRST — the current config_value is written to
-//     improve-v1/ROLLBACK-config-before-palm-gate-<date>.json before anything else.
-//     Abort if the file can't be written.
-//
-//  3. TARGETED jsonb EDIT, not a retyped blob. Only the two `weight` fields change,
-//     and the new arm is APPENDED. Every existing price key is carried across by
-//     Postgres, untouched and untypeable.
-//
-//  4. VERIFY INSIDE THE TRANSACTION, COMMIT ONLY IF CLEAN. After the UPDATE we re-read
-//     the row and assert that EXACTLY the intended changes happened — the two weights,
-//     one appended variant, and NOTHING else (no dropped variant, no altered price, no
-//     mangled key). Any discrepancy ⇒ ROLLBACK.
-//
-//  5. updated_at = now() so the analysis window is anchorable. This ENDS the sliding
-//     window and OPENS the gate window — never read across the boundary.
-//
+//     improve-v1/ROLLBACK-config-before-retire-sliding-<date>.json. Abort if it
+//     can't be written.
+//  3. TARGETED jsonb EDIT, not a retyped blob. Only ONE `weight` field changes.
+//     Every existing price key is carried across by Postgres, untouched and
+//     untypeable. (Hand-retyping the whole row is what once introduced
+//     `"down  sellCents"` and silently killed the root $45 test for two weeks.)
+//  4. VERIFY INSIDE THE TRANSACTION, COMMIT ONLY IF CLEAN. After the UPDATE we
+//     re-read and assert that EXACTLY one weight moved and NOTHING else did —
+//     no dropped variant, no altered price, no mangled key. Any discrepancy ⇒
+//     ROLLBACK.
+//  5. updated_at = now() so the analysis window is anchorable. This ENDS the
+//     sliding-close window — never read across the boundary.
 //  6. Session pooler (:5432) forced. The :6543 transaction pooler serves an empty
 //     search_path and 42P01s on every table (2026-07-10 prod outage).
 //
 // Usage:
-//   node scripts/apply-palm-gate.mjs                          # dry run, reads only
-//   APPLY_PALM_GATE=1 node scripts/apply-palm-gate.mjs --live # writes
+//   node scripts/retire-sliding-close.mjs                              # dry run
+//   RETIRE_SLIDING_CLOSE=1 node scripts/retire-sliding-close.mjs --live
 //
-// ROLLBACK: set 35_palm_gate weight → 0 (new traffic reverts within the 60s config
-// cache; already-assigned visitors keep what they were shown, by design), or restore
-// the snapshot file wholesale.
+// ROLLBACK: set `55-35_palm` weight back to 1, or restore the snapshot file.
 import 'dotenv/config';
 import pg from 'pg';
 import fs from 'node:fs';
@@ -44,25 +52,15 @@ const LIVE = process.argv.includes('--live');
 const KEY = 'v1_price_variants';
 const CONTROL = '35_palm_u47';
 const SLIDING = '55-35_palm';
-const GATE = '35_palm_gate';
 
 // What we expect to FIND (guards against running twice, or against a pool someone
 // else already changed) and what we SET.
-const EXPECT_BEFORE = { control: 9, sliding: 1 };   // the live 90/10 as of 2026-07-22
-const TO = { control: 70, sliding: 0, gate: 30 };
+const EXPECT_BEFORE = { control: 9, sliding: 1 }; // the live 90/10 as of 2026-07-22
+const TO = { sliding: 0 };
 
-const GATE_ROW = {
-  id: GATE,
-  funnel: 'v1-palm',
-  weight: TO.gate,
-  priceCents: 3500,      // identical economics to the control — this is a UI test,
-  downsellCents: 2500,   // NOT a price test. Any drift here silently makes it one.
-  upsell1Cents: 4700,
-};
-
-if (LIVE && process.env.APPLY_PALM_GATE !== '1') {
+if (LIVE && process.env.RETIRE_SLIDING_CLOSE !== '1') {
   console.error(`\n🔴 REFUSING to write without explicit confirmation.`);
-  console.error(`   To apply:  APPLY_PALM_GATE=1 node scripts/apply-palm-gate.mjs --live\n`);
+  console.error(`   To apply:  RETIRE_SLIDING_CLOSE=1 node scripts/retire-sliding-close.mjs --live\n`);
   process.exit(2);
 }
 
@@ -94,7 +92,8 @@ const ctlBefore = find(beforeVariants, CONTROL);
 const sliBefore = find(beforeVariants, SLIDING);
 if (!ctlBefore) problems.push(`'${CONTROL}' is missing from the pool`);
 if (!sliBefore) problems.push(`'${SLIDING}' is missing from the pool`);
-if (find(beforeVariants, GATE)) problems.push(`'${GATE}' is ALREADY in the pool — has this been run before?`);
+if (sliBefore && Number(sliBefore.weight) === 0)
+  problems.push(`'${SLIDING}' is ALREADY at weight 0 — the sliding close is already retired`);
 if (ctlBefore && Number(ctlBefore.weight) !== EXPECT_BEFORE.control)
   problems.push(`'${CONTROL}' weight is ${ctlBefore.weight}, expected ${EXPECT_BEFORE.control} — the pool changed since this was written`);
 if (sliBefore && Number(sliBefore.weight) !== EXPECT_BEFORE.sliding)
@@ -114,22 +113,23 @@ if (problems.length) {
 }
 
 console.log(`\n  PLANNED CHANGE:`);
-console.log(`    ${CONTROL}.weight : ${EXPECT_BEFORE.control} → ${TO.control}`);
 console.log(`    ${SLIDING}.weight : ${EXPECT_BEFORE.sliding} → ${TO.sliding}   (sliding close RETIRED, parked not deleted)`);
-console.log(`    ${GATE}           : APPEND w=${TO.gate}, $35/$25/$47, unscoped (every sign)`);
-console.log(`\n    ⇒ every palm sign: ${TO.control}% control / ${TO.gate}% commitment gate, SAME price on both arms`);
+console.log(`    ${CONTROL}.weight : ${EXPECT_BEFORE.control} → ${EXPECT_BEFORE.control}   (unchanged — now the only drawing palm arm)`);
+console.log(`\n    ⇒ every palm sign: 100% $35/$25 control`);
 console.log(`    ⇒ nobody sees $55 any more`);
+console.log(`\n    The commitment-gate test is NOT affected by this script — it is the`);
+console.log(`    'v1_palm_commitment_gate_2026' experiment, started from /admin/experiments.`);
 
 if (!LIVE) {
   console.log(`\n  ✅ DRY RUN complete — nothing was written.`);
-  console.log(`     To apply:  APPLY_PALM_GATE=1 node scripts/apply-palm-gate.mjs --live\n`);
+  console.log(`     To apply:  RETIRE_SLIDING_CLOSE=1 node scripts/retire-sliding-close.mjs --live\n`);
   await pool.end();
   process.exit(0);
 }
 
 // ── 2. Snapshot BEFORE anything else ────────────────────────────────────────
 const stamp = row.updated_at.slice(0, 10);
-const SNAPSHOT = `improve-v1/ROLLBACK-config-before-palm-gate-${stamp}.json`;
+const SNAPSHOT = `improve-v1/ROLLBACK-config-before-retire-sliding-${stamp}.json`;
 try {
   fs.writeFileSync(SNAPSHOT, JSON.stringify(before), 'utf8');
   console.log(`\n  📸 snapshot written: ${SNAPSHOT}`);
@@ -150,7 +150,6 @@ try {
                        jsonb_agg(
                          CASE v->>'id'
                            WHEN $2 THEN jsonb_set(v, '{weight}', to_jsonb($3::int))
-                           WHEN $4 THEN jsonb_set(v, '{weight}', to_jsonb($5::int))
                            ELSE v
                          END ORDER BY ord)
                        || '[]'::jsonb)
@@ -158,36 +157,24 @@ try {
             )::text,
             updated_at = now()
       WHERE config_key = $1`,
-    [KEY, CONTROL, TO.control, SLIDING, TO.sliding],
-  );
-  // Append the new arm separately so it can never disturb the existing rows.
-  await client.query(
-    `UPDATE system_config
-        SET config_value = jsonb_set(config_value::jsonb, '{variants}',
-              (config_value::jsonb->'variants') || $2::jsonb)::text
-      WHERE config_key = $1`,
-    [KEY, JSON.stringify([GATE_ROW])],
+    [KEY, SLIDING, TO.sliding],
   );
 
   const { rows: [after] } = await client.query(`SELECT config_value FROM system_config WHERE config_key=$1`, [KEY]);
   const av = (typeof after.config_value === 'string' ? JSON.parse(after.config_value) : after.config_value).variants ?? [];
 
   const bad = [];
-  if (av.length !== beforeVariants.length + 1) bad.push(`variant count ${beforeVariants.length} → ${av.length}, expected +1`);
-  if (Number(find(av, CONTROL)?.weight) !== TO.control) bad.push(`${CONTROL}.weight is ${find(av, CONTROL)?.weight}`);
+  if (av.length !== beforeVariants.length) bad.push(`variant count ${beforeVariants.length} → ${av.length}, expected unchanged`);
   if (Number(find(av, SLIDING)?.weight) !== TO.sliding) bad.push(`${SLIDING}.weight is ${find(av, SLIDING)?.weight}`);
-  const g = find(av, GATE);
-  if (!g) bad.push(`${GATE} was not appended`);
-  else for (const [k, want] of Object.entries(GATE_ROW))
-    if (JSON.stringify(g[k]) !== JSON.stringify(want)) bad.push(`${GATE}.${k} is ${JSON.stringify(g[k])}, expected ${JSON.stringify(want)}`);
+  if (Number(find(av, CONTROL)?.weight) !== EXPECT_BEFORE.control) bad.push(`${CONTROL}.weight moved to ${find(av, CONTROL)?.weight}`);
 
   // Nothing else may have moved — every pre-existing variant must be byte-identical
-  // apart from the two intended weights.
+  // apart from the ONE intended weight.
   for (const b of beforeVariants) {
     const a = find(av, b.id);
     if (!a) { bad.push(`variant '${b.id}' DISAPPEARED`); continue; }
     const bb = { ...b }, aa = { ...a };
-    if (b.id === CONTROL || b.id === SLIDING) { delete bb.weight; delete aa.weight; }
+    if (b.id === SLIDING) { delete bb.weight; delete aa.weight; }
     if (JSON.stringify(bb) !== JSON.stringify(aa)) bad.push(`variant '${b.id}' changed beyond its weight`);
   }
 
@@ -202,9 +189,9 @@ try {
     console.log(`\n  ✅ COMMITTED. Palm arms AFTER:`);
     for (const v of av.filter((v) => v.funnel === 'v1-palm'))
       console.log(`    ${String(v.id).padEnd(14)} w=${String(v.weight).padEnd(3)} $${v.priceCents / 100}/$${v.downsellCents / 100}${v.signs ? `  signs=${JSON.stringify(v.signs)}` : ''}`);
-    console.log(`\n  Next: within ~60s (config cache) new palm traffic splits ${TO.control}/${TO.gate}.`);
-    console.log(`  VERIFY: npx tsx scripts/price-test-correctness-check.mjs`);
-    console.log(`  ROLLBACK: set '${GATE}' weight → 0, or restore ${SNAPSHOT}\n`);
+    console.log(`\n  Next: within ~60s (config cache) all palm traffic is 100% $35/$25 control.`);
+    console.log(`  VERIFY:   npx tsx scripts/price-test-correctness-check.mjs`);
+    console.log(`  ROLLBACK: set '${SLIDING}' weight → 1, or restore ${SNAPSHOT}\n`);
   }
 } catch (e) {
   await client.query('ROLLBACK').catch(() => {});
