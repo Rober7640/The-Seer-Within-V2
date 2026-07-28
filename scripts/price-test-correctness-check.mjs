@@ -14,10 +14,18 @@
 //   • a control row whose price drifted off $35/$25
 //
 // ⚠ WHICH ARM IS "THE TEST" IS READ FROM THE LIVE POOL, NOT HARDCODED. It was
-//   '55-35_palm' (the $55/$35 sliding close, thumb-scoped) and becomes '35_palm_gate'
-//   (the 3-checkbox commitment gate, every sign) when that flip is run. Both the
-//   expected prices and the expected split come from the pool, so retiring one test
-//   and starting another cannot turn this script into a false alarm.
+//   '55-35_palm' (the $55/$35 sliding close, thumb-scoped). Both the expected prices
+//   and the expected split come from the pool, so retiring one PRICE test and
+//   starting another cannot turn this script into a false alarm.
+//
+// ⚠ THIS SCRIPT ONLY SEES POOL-BASED PRICE TESTS. Once the sliding close is retired
+//   (scripts/retire-sliding-close.mjs) the palm pool has a single drawing arm, and
+//   this script correctly reports "nothing to check" and exits 0. That is NOT a
+//   problem: the commitment gate that replaced it is an EXPERIMENT
+//   ('v1_palm_commitment_gate_2026'), not a pool arm, because a pool arm can never
+//   be drawn for an email that already has a stored variant — which would have
+//   excluded every returning visitor from the treatment. Check that test in
+//   /admin/experiments, not here.
 //
 // It CANNOT check a variant's `sign` scoping — there is no sign column on
 // conversations. That check must come from the Railway prod logs
@@ -42,12 +50,11 @@ const isLocal = /@(localhost|127\.0\.0\.1)\b/.test(url);
 const pool = new pg.Pool({ connectionString: url, ...(isLocal ? {} : { ssl: { rejectUnauthorized: false } }) });
 
 // The palm TEST arm is whatever currently has weight > 0 alongside the control —
-// it is NOT hardcoded. It was '55-35_palm' (the $55/$35 sliding close) and is now
-// '35_palm_gate' (the 3-checkbox commitment gate). Deriving it from the live pool
-// means retiring one test and starting another does not turn this script into a
-// false alarm: with the sliding close parked at weight 0, a hardcoded check would
-// report "ZERO sliding assignments — the arm is not drawing" forever, which reads
-// as a broken pool and invites a panicked rollback of a perfectly healthy test.
+// it is NOT hardcoded. It was '55-35_palm' (the $55/$35 sliding close). Deriving it
+// from the live pool means retiring one test does not turn this script into a false
+// alarm: with the sliding close parked at weight 0, a hardcoded check would report
+// "ZERO sliding assignments — the arm is not drawing" forever, which reads as a
+// broken pool and invites a panicked rollback of a perfectly healthy funnel.
 const CONTROL = '35_palm_u47';
 // Expected prices are read from the pool itself (below) so they can never drift
 // from what is actually configured.

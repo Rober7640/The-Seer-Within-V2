@@ -77,3 +77,4 @@ logs.*.json
 # Pre-migration DB snapshots (dollar-wallet cutover). Carry live wallet balances
 # keyed by user id; the full-table dumps also carry persona prompts. Never commit.
 DB_Backup/
+server-sandbox.log

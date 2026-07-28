@@ -29,10 +29,12 @@ import logger from './logger';
 import {
   resolveUpsell1Cents,
   resolveV1Price,
+  resolvePalmGate,
   logExposure,
   hashEmail,
   U1_PRICE_EXPERIMENT_KEY,
   V1_MAIN_EXPERIMENT_KEY,
+  PALM_GATE_EXPERIMENT_KEY,
 } from './experiments';
 import {
   DEFAULT_UPSELL1_CENTS,
@@ -64,6 +66,9 @@ export interface AssignedVariant {
   priceCents: number;
   downsellCents: number;
   upsell1Cents: number;
+  // fb-palm commitment-gate arm (UI only — never affects price). Absent on the
+  // read-only getVariantForEmail path, which is a pure price lookup.
+  commitmentGate?: boolean;
 }
 
 const ENV_OVERRIDE_KEY = 'V1_PRICE_VARIANTS_JSON';
@@ -221,6 +226,41 @@ export async function assignVariantIfMissing(
     }
 
     const row = existing[0];
+
+    // fb-palm COMMITMENT GATE — resolved here, DELIBERATELY ABOVE the price
+    // idempotency guard, so it is assigned for EVERY lead including returning
+    // visitors who already carry a stored price variant.
+    //
+    // This placement is the whole point of the test being an experiment rather
+    // than a price-pool arm: a pool arm can only be drawn when no variant is
+    // stored yet, so every repeat visitor would keep the incumbent control id.
+    // On live fb-palm those repeat visitors are 23% of sessions but 57% of main
+    // buys (14.5% vs 3.3% CR), so a pool-based gate would be measured against a
+    // control inflated with all of them. Bucketing on the email hash re-splits
+    // the entire population instead.
+    //
+    // Safe above the guard because the gate is UI-ONLY: it returns a boolean the
+    // client uses to pick a component. It never touches priceCents /
+    // downsellCents / upsell1Cents, so a returning visitor's stored price is
+    // returned below completely unchanged.
+    const gateSign = normalizeSign(funnel, sign);
+    const palmGate = await resolvePalmGate(email, funnel, gateSign);
+    if (palmGate.enrolled && palmGate.variant) {
+      // conversationId is what tallyV1Main joins on to find the purchase.
+      //
+      // `sign` is captured here because it is the ONLY chance to: the test runs
+      // across every fb-palm sign, `conversations` has no sign column, and an
+      // exposure row is written exactly once per subject (unique(key, subject_id)),
+      // so a sign not recorded now can never be back-filled. Without it the whole
+      // test is readable only as one pooled number and "did the gate work better on
+      // hand-size than on thumb?" becomes permanently unanswerable.
+      // PII-free: an ad-sign slug, already normalised + length-capped.
+      await logExposure(PALM_GATE_EXPERIMENT_KEY, hashEmail(email), palmGate.variant, 'palm_gate_assigned', {
+        conversationId: row.id,
+        sign: gateSign,
+      });
+    }
+
     // Idempotency / stickiness: once a variant id is stored, return the stored price
     // and never re-roll. Use `!= null` (not truthiness) on the amounts so a stored 0
     // still counts as "assigned" — otherwise a 0/NULL downsell would skip this guard
@@ -231,6 +271,7 @@ export async function assignVariantIfMissing(
         priceCents: row.priceAmountCents,
         downsellCents: row.downsellAmountCents,
         upsell1Cents: row.upsell1AmountCents ?? DEFAULT_UPSELL1_CENTS,
+        commitmentGate: palmGate.gate,
       };
     }
 
@@ -342,6 +383,7 @@ export async function assignVariantIfMissing(
       priceCents: mainCents,
       downsellCents: downsellCents,
       upsell1Cents,
+      commitmentGate: palmGate.gate,
     };
   } catch (err) {
     logger.error('priceVariant: assignVariantIfMissing failed', { email, err });
