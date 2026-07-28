@@ -72,3 +72,7 @@ logs.*.json
 
 # Throwaway one-off debug scripts at the repo root (_arm.mjs, _prodcheck.mjs, …)
 /_*.mjs
+
+# Pre-migration DB snapshots (dollar-wallet cutover). Carry live wallet balances
+# keyed by user id; the full-table dumps also carry persona prompts. Never commit.
+DB_Backup/
