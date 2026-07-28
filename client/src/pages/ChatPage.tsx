@@ -197,6 +197,27 @@ export default function ChatPage() {
                       : "bg-white text-gray-800 border border-gray-100 rounded-bl-none"
                   }`}
                 >
+                  {/* Drawn-card artwork (fb-tarot Version B/C opener only). The
+                      strips are N-up sheets, so one card is shown by cropping via
+                      background-position — the numbers come from
+                      tarotReads.cardArtFor(), the same helper the lander reveal
+                      uses, so chat and lander can never show different cards for
+                      the same draw. */}
+                  {msg.cardArt && (
+                    <div
+                      data-testid={`message-card-art-${msg.id}`}
+                      role="img"
+                      aria-label={msg.cardArt.alt}
+                      className="w-28 md:w-32 mb-3 rounded-lg overflow-hidden border border-gray-200 shadow-sm"
+                      style={{
+                        aspectRatio: `${msg.cardArt.aspect}`,
+                        backgroundImage: `url('${msg.cardArt.url}')`,
+                        backgroundSize: `${msg.cardArt.sizePct}% 100%`,
+                        backgroundPosition: `${msg.cardArt.posPct}% center`,
+                        backgroundRepeat: "no-repeat",
+                      }}
+                    />
+                  )}
                   {msg.content}
                 </div>
               </div>

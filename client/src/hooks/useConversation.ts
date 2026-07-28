@@ -12,6 +12,7 @@ import {
   openerB as tarotOpenerB,
   openerCStart as tarotOpenerCStart,
   tarotReflectFallback,
+  cardArtFor as tarotCardArtFor,
   hookToBucket as tarotHookToBucket,
 } from '@/content/tarotReads'
 import {
@@ -148,26 +149,37 @@ export function useConversation() {
 
   // === HELPER FUNCTIONS ===
 
-  const addMessage = useCallback((type: Message['type'], content: string) => {
-    setChat(prev => ({
-      ...prev,
-      messages: [...prev.messages, { id: generateId(), type, content }],
-    }))
-  }, [])
+  const addMessage = useCallback(
+    (type: Message['type'], content: string, cardArt?: Message['cardArt']) => {
+      setChat(prev => ({
+        ...prev,
+        messages: [...prev.messages, { id: generateId(), type, content, ...(cardArt ? { cardArt } : {}) }],
+      }))
+    },
+    [],
+  )
 
-  const sendBotMessage = useCallback(async (content: string) => {
-    setChat(prev => ({ ...prev, isTyping: true }))
-    await sleep(calculateTypingDelay(content))
-    setChat(prev => ({ ...prev, isTyping: false }))
-    addMessage('bot', content)
-    await sleep(400)
-  }, [addMessage])
+  const sendBotMessage = useCallback(
+    async (content: string, cardArt?: Message['cardArt']) => {
+      setChat(prev => ({ ...prev, isTyping: true }))
+      await sleep(calculateTypingDelay(content))
+      setChat(prev => ({ ...prev, isTyping: false }))
+      addMessage('bot', content, cardArt)
+      await sleep(400)
+    },
+    [addMessage],
+  )
 
-  const sendBotMessages = useCallback(async (messages: string[]) => {
-    for (const msg of messages) {
-      await sendBotMessage(msg)
-    }
-  }, [sendBotMessage])
+  // `cardArt` (when given) rides on the FIRST message only — the tarot opener's
+  // card line. Later lines are plain text so the artwork isn't repeated.
+  const sendBotMessages = useCallback(
+    async (messages: string[], cardArt?: Message['cardArt']) => {
+      for (let i = 0; i < messages.length; i++) {
+        await sendBotMessage(messages[i], i === 0 ? cardArt : undefined)
+      }
+    },
+    [sendBotMessage],
+  )
 
   const updateState = useCallback((updates: Partial<ChatState>) => {
     setChat(prev => ({ ...prev, ...updates }))
@@ -398,10 +410,15 @@ export function useConversation() {
       // zero impact on other funnels (parseTarotParams returns null everywhere else).
       const tarot = parseTarotParams(window.location.search)
       if (tarot) {
+        // Versions B and C hand straight to chat with no lander reveal, so without
+        // this she'd be TOLD which card she drew but never SEE it — and the card art
+        // is the whole appeal of a tarot draw. Attach it to the opener's first line.
+        // (Version A already shows the card on the lander, so it isn't repeated here.)
+        const art = tarotCardArtFor(tarot.deck, tarot.card)
         if (tarot.version === 'c') {
           // Version C — INTERACTIVE. Open with the card line + one open question,
           // then read HER answer with the LLM in handleTarotReflect.
-          await sendBotMessages(tarotOpenerCStart(tarot.deck, tarot.hook, tarot.card))
+          await sendBotMessages(tarotOpenerCStart(tarot.deck, tarot.hook, tarot.card), art)
           updateState({
             state: 'TAROT_REFLECT',
             inputEnabled: true,
@@ -410,7 +427,7 @@ export function useConversation() {
           return
         }
         if (tarot.version === 'b') {
-          await sendBotMessages(tarotOpenerB(tarot.deck, tarot.hook, tarot.card))
+          await sendBotMessages(tarotOpenerB(tarot.deck, tarot.hook, tarot.card), art)
         } else {
           await sendBotMessage(tarotGreetingA(tarot.deck, tarot.card))
         }

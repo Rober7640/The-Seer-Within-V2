@@ -8,6 +8,7 @@ import {
   DEFAULT_HOOK,
   DEFAULT_DECK,
   HEADLINES,
+  cardArtFor,
   cardReveal,
   getDeck,
   isTarotHook,
@@ -90,7 +91,19 @@ export default function TarotBridge() {
   // Tap targets use the ad's strip (backs for a face-down deck); the reveal uses the
   // faces strip when the deck supplies one, so a turned face-down card shows its face.
   const optionStyle = (opt: TarotOption) => stripStyle(opt, cfg.strip)
-  const revealStyle = (opt: TarotOption) => stripStyle(opt, cfg.revealStrip ?? cfg.strip)
+  // The REVEAL uses the shared helper — the same one ChatPage renders the Version
+  // B/C opener art from — so the lander and the chat can never crop to different
+  // cards for the same draw.
+  const revealStyle = (opt: TarotOption): React.CSSProperties => {
+    const a = cardArtFor(deck, opt)
+    return {
+      aspectRatio: `${a.aspect}`,
+      backgroundImage: `url('${a.url}')`,
+      backgroundSize: `${a.sizePct}% 100%`,
+      backgroundPosition: `${a.posPct}% center`,
+      backgroundRepeat: 'no-repeat',
+    }
+  }
 
   const [phase, setPhase] = useState<Phase>('pick')
   const [card, setCard] = useState<TarotOption | null>(null)

@@ -738,6 +738,36 @@ export function greetingA(deck: TarotDeck, card: TarotOption): string {
 
 // Version B (and Version C fallback) — the 4-sentence reveal as a chat sequence,
 // one bubble per sentence, then ask the name → existing love deepening.
+// ── The drawn card's artwork ─────────────────────────────────────────────────
+// The strips are N-up sheets, so showing ONE card means cropping via
+// background-position. This is the single source of that maths: TarotBridge uses
+// it for the Version-A reveal and ChatPage uses it for the B/C chat opener, so the
+// two can never drift and show different cards for the same draw.
+//
+// Prefers `revealStrip` (the real card FACES) over `strip` (which on a face-down
+// deck is the identical backs — useless as a reveal).
+export interface TarotCardArt {
+  url: string
+  sizePct: number // background-size width %  (count * 100)
+  posPct: number // background-position X %
+  aspect: number // one panel's width/height, so the box never distorts the art
+  alt: string
+}
+
+export function cardArtFor(deck: TarotDeck, card: TarotOption): TarotCardArt {
+  const cfg = DECKS[deck] ?? DECKS[DEFAULT_DECK]
+  const strip = cfg.revealStrip ?? cfg.strip
+  const count = cfg.options.length
+  const i = Math.max(0, cfg.options.indexOf(card))
+  return {
+    url: strip.url,
+    sizePct: count * 100,
+    posPct: count > 1 ? (i / (count - 1)) * 100 : 0,
+    aspect: strip.width / count / strip.height,
+    alt: cfg.mark[card] || 'the card you drew',
+  }
+}
+
 export function openerB(deck: TarotDeck, hook: TarotHook, card: TarotOption): string[] {
   return [
     ...readsFor(deck, hook)[card],

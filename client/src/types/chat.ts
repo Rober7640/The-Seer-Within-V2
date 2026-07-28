@@ -52,6 +52,19 @@ export interface Message {
   id: string
   type: MessageType
   content: string
+  // Optional artwork rendered ABOVE this message's text, inside the same bubble.
+  // Used by the /fb-tarot Version B/C chat opener so she actually SEES the card she
+  // drew — Version A shows it on the lander, but B and C hand straight to chat and
+  // would otherwise only ever tell her in words. Shape comes from
+  // tarotReads.cardArtFor(), which owns the N-up strip cropping maths.
+  // Absent on every other message, so all other funnels render byte-identical.
+  cardArt?: {
+    url: string
+    sizePct: number
+    posPct: number
+    aspect: number
+    alt: string
+  }
 }
 
 export interface UserData {

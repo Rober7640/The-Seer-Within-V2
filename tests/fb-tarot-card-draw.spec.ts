@@ -206,3 +206,59 @@ for (const [hook, card, must] of [
     expect(text, "never a flat verdict").not.toMatch(/\bhe is (lying|cheating|faithful|honest)\b/i);
   });
 }
+
+// ── The card ART in the chat opener (Versions B and C) ──────────────────────
+// A and the lander show her the card. B and C hand straight to chat, so without
+// artwork in the opener she is TOLD which card she drew but never SEES it — and
+// the card image is the whole appeal of a tarot draw.
+//
+// The crop must match the DRAWN card: both the lander reveal and this bubble read
+// from tarotReads.cardArtFor(), so a mismatch here means that helper drifted.
+for (const version of ["b", "c"] as const) {
+  test(`chat opener shows the drawn card's artwork — version ${version}`, async ({ page }) => {
+    await blockMeta(page);
+    const checked = new Set<string>();
+
+    for (let i = 0; i < 40 && checked.size < 3; i++) {
+      await page.goto(`/fb-tarot/${version}?hook=cards-honest`, { waitUntil: "domcontentloaded" });
+      await page.getByTestId(`tarot-card-${MIDDLE}`).click();
+      await page.waitForURL(/\/fb-tarot\/chat\?/, { timeout: 20_000 });
+
+      // The opener's first bubble carries the art.
+      const art = page.locator('[data-testid^="message-card-art-"]').first();
+      await expect(art, "no card artwork in the chat opener").toBeVisible({ timeout: 30_000 });
+
+      const named = await page
+        .locator('[data-testid^="message-bot-"]')
+        .filter({ hasText: NAMES })
+        .first()
+        .innerText()
+        .then((t) => Object.keys(CARD_INDEX).find((c) => t.includes(c))!);
+      if (checked.has(named)) continue;
+      checked.add(named);
+
+      const pos = await art.evaluate((el) => getComputedStyle(el).backgroundPositionX);
+      expect(pos, `${named}: chat artwork crops to the wrong card`).toBe(
+        EXPECT_POS[CARD_INDEX[named]],
+      );
+      // It must be the FACES sheet, not the identical backs.
+      const img = await art.evaluate((el) => getComputedStyle(el).backgroundImage);
+      expect(img, "chat artwork is showing the card BACKS").toContain("faces");
+      console.log(`  v${version} · ${named.padEnd(11)} img=${pos} ✅`);
+    }
+    expect(checked.size, "did not observe all three cards").toBe(3);
+  });
+}
+
+// Only ONE bubble carries art — the artwork must not repeat down the opener.
+test("the card artwork appears exactly once in the opener", async ({ page }) => {
+  await blockMeta(page);
+  await page.goto(`/fb-tarot/b?hook=cards-honest`, { waitUntil: "domcontentloaded" });
+  await page.getByTestId(`tarot-card-${MIDDLE}`).click();
+  await page.waitForURL(/\/fb-tarot\/chat\?/, { timeout: 20_000 });
+  await expect(page.locator('[data-testid^="message-card-art-"]').first()).toBeVisible({
+    timeout: 30_000,
+  });
+  await page.waitForTimeout(6000); // let the rest of the opener land
+  await expect(page.locator('[data-testid^="message-card-art-"]')).toHaveCount(1);
+});
