@@ -29,6 +29,7 @@ import {
 import { trackLead, trackInitiateCheckout, getTrackdeskClickId } from '@/lib/facebook'
 import { currentFunnel, getPostHogFunnel, skipEmail } from '@/lib/funnel'
 import { track as trackPH, identifyUser as identifyPH, getDistinctId } from '@/lib/posthog'
+import { tarotEventProps } from '@/lib/tarotAttribution'
 import { trackGAdsLead, trackGAdsCheckout, getGclid } from '@/lib/gtm'
 import { isSlidingCloseVariant } from '@shared/types'
 
@@ -852,6 +853,11 @@ export function useConversation() {
       const palmSign = phFunnel === 'palm'
         ? (parsePalmParams(window.location.search)?.sign ?? 'thumb')
         : undefined
+      // /fb-tarot: which deck/hook/card she came through. Gated on the funnel because
+      // the attribution is tab-scoped and would otherwise tag a later palm lead.
+      // ANALYTICS ONLY — deliberately NOT sent to /api/lead below: `sign` there feeds
+      // the palm price pool, and tarot pricing is a fixed variant (35_tarot).
+      const tarot = phFunnel === 'tarot' ? tarotEventProps() : undefined
 
       const leadRes = await fetch('/api/lead', {
         method: 'POST',
@@ -910,8 +916,26 @@ export function useConversation() {
           funnel: phFunnel,
           first_name: currentChat.userData.firstName || undefined,
           ...(palmSign ? { palm_sign: palmSign } : {}),
+          // Tarot mirror of palm_sign. The SERVER-side purchase_completed events (main
+          // $35/$25 plus all four upsell emitters) key off the email distinctId and
+          // have no tarot params available, so PERSON properties are what make tarot
+          // revenue breakable-down per deck / per facing without ever touching the
+          // payment path or Stripe metadata.
+          ...(tarot
+            ? {
+                tarot_deck: tarot.deck,
+                tarot_facing: tarot.facing,
+                tarot_hook: tarot.hook,
+                tarot_card: tarot.card,
+              }
+            : {}),
         })
-        trackPH('lead_captured', { funnel: phFunnel, step: 'chat', sign: palmSign })
+        trackPH('lead_captured', {
+          funnel: phFunnel,
+          step: 'chat',
+          sign: palmSign ?? tarot?.deck,
+          ...(tarot ?? {}),
+        })
       }
     } catch (e) {
       console.error('Failed to save lead:', e)
@@ -1807,12 +1831,14 @@ export function useConversation() {
         const palmSign = phFunnel === 'palm'
           ? (parsePalmParams(window.location.search)?.sign ?? 'thumb')
           : undefined
+        const tarot = phFunnel === 'tarot' ? tarotEventProps() : undefined
         trackPH('checkout_initiated', {
           funnel: phFunnel,
           step: 'sales',
           product: type === 'downsell' ? 'energy_clearing_ritual_downsell' : 'energy_clearing_ritual',
           price_cents: price * 100,
-          sign: palmSign,
+          sign: palmSign ?? tarot?.deck,
+          ...(tarot ?? {}),
           email_gate: skipEmail() ? 'off' : 'on',
         })
       }
