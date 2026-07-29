@@ -322,7 +322,7 @@ const ARCANA_MFH: CardSetConfig = {
       b: [
         "You chose the Fool, dear — the card of the open, unguarded hand.",
         "That's not random; you reached for the card that matches something you feel in how he moves through this.",
-        "The Fool doesn't mean he's deceiving you — it can mean he's careless with the truth more than cruel with it; either way, your read that he isn't being fully deliberate is worth trusting.",
+        "The Fool doesn't point to deception — it points to a man who hasn't sat down and thought it through; what's unsaid here may be unexamined rather than hidden, and your sense that you're not getting the whole picture is still accurate.",
         "Let me look closer at what he's leaving unsaid…",
       ],
       c: [
@@ -348,7 +348,7 @@ const ARCANA_MFH: CardSetConfig = {
       c: [
         "You chose the Hanged Man, dear — the card of the pause before movement.",
         "You reached for the card that matches the in-between you've been living in.",
-        "The Hanged Man doesn't mean the door is shut — it means he's suspended, still deciding from a new angle; this waiting is often the pause right before a return.",
+        "The Hanged Man doesn't promise a return — it says this is unresolved rather than finished, and the part of you that refuses to call it over is reading the situation accurately.",
         "Let me look closer at what he's reconsidering…",
       ],
     },
