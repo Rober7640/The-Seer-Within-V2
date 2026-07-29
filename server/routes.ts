@@ -466,8 +466,8 @@ export async function registerRoutes(
         case "palmOpener": {
           // Validate against fixed enums before injecting into the prompt.
           // palmSign is optional and defaults to 'thumb' (original behavior).
-          const validSigns = ["thumb", "finger-lock", "finger-shape", "palms", "palm-signs", "thumb-curve", "thumb-curve-alt", "hand-size", "finger-length", "finger-length-alt", "thumb-angle"];
-          const validHooks = ["soulmate-timing", "already-met", "love-again", "is-he-true", "sense-lying", "heart-safe"];
+          const validSigns = ["thumb", "finger-lock", "finger-shape", "palms", "palm-signs", "thumb-curve", "thumb-curve-alt", "hand-size", "finger-length", "finger-length-alt", "thumb-angle", "heart-line"];
+          const validHooks = ["soulmate-timing", "already-met", "love-again", "is-he-true", "sense-lying", "heart-safe", "right-person", "love-taking-long", "wrong-person", "relationship-right"];
           const validThumbs = ["a", "b", "c"];
           const sign = palmSign ?? "thumb";
           if (!validSigns.includes(sign) || !validHooks.includes(palmHook ?? "") || !validThumbs.includes(palmThumb ?? "")) {
@@ -479,8 +479,8 @@ export async function registerRoutes(
         case "palmReflect": {
           // Interactive Version C — reads her typed answer (input).
           // palmSign is optional and defaults to 'thumb' (original behavior).
-          const validSigns = ["thumb", "finger-lock", "finger-shape", "palms", "palm-signs", "thumb-curve", "thumb-curve-alt", "hand-size", "finger-length", "finger-length-alt", "thumb-angle"];
-          const validHooks = ["soulmate-timing", "already-met", "love-again", "is-he-true", "sense-lying", "heart-safe"];
+          const validSigns = ["thumb", "finger-lock", "finger-shape", "palms", "palm-signs", "thumb-curve", "thumb-curve-alt", "hand-size", "finger-length", "finger-length-alt", "thumb-angle", "heart-line"];
+          const validHooks = ["soulmate-timing", "already-met", "love-again", "is-he-true", "sense-lying", "heart-safe", "right-person", "love-taking-long", "wrong-person", "relationship-right"];
           const validThumbs = ["a", "b", "c"];
           const sign = palmSign ?? "thumb";
           if (!validSigns.includes(sign) || !validHooks.includes(palmHook ?? "") || !validThumbs.includes(palmThumb ?? "")) {

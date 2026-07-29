@@ -67,6 +67,8 @@ const OTHER_SIGNS = [
   // live experiments table on 2026-07-28: that experiment is status='draft' with
   // started_at NULL — it has never run. There is no overlap.
   'thumb-angle',
+  // heart-line — photographed creative for the same tell as palm-signs.
+  'heart-line',
 ];
 
 // Draw many times so a "never assigned" claim is not a fluke of one roll.
