@@ -9,6 +9,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { trackPageView } from "./lib/facebook";
 import { initPostHog, track as trackPH, registerUTMs } from "./lib/posthog";
 import { getPostHogFunnel, getPostHogStep, skipEmail } from "./lib/funnel";
+import { syncTarotAttribution } from "./lib/tarotAttribution";
 import { ChatServiceLayout } from "@/components/ChatServiceLayout";
 import NotFound from "@/pages/not-found";
 import LandingPage from "@/pages/LandingPage";
@@ -146,19 +147,34 @@ function Router() {
     const funnel = getPostHogFunnel(location);
     if (funnel) {
       const urlParams = new URLSearchParams(window.location.search);
+      // /fb-tarot: resolve the deck/hook/card ONCE per route and remember it for the
+      // tab. Must run before lander_view so the very first event already carries the
+      // right deck, and so the upsell steps — which Stripe redirects to with no query
+      // string at all — can still be attributed. See lib/tarotAttribution.ts.
+      const tarot =
+        funnel === 'tarot'
+          ? syncTarotAttribution(location, window.location.search)
+          : undefined;
       trackPH('lander_view', {
         funnel,
         step: getPostHogStep(location),
         path: location,
         // Palm multi-sign / tarot multi-deck: tag which ad concept was quizzed so
         // the funnel can be broken down per sign (palm) / deck (tarot). Reuses the
-        // same `sign` breakdown key. Defaults to the seeded concept.
+        // same `sign` breakdown key so existing insights keep working.
+        //
+        // Tarot used to read `?deck=` with a hardcoded 'decode-him' fallback. The ad
+        // URLs are CLEAN (no &deck=), so that fallback fired on every visitor and
+        // labelled them with a deck they never saw — and one whose placeholder art is
+        // byte-identical to the palm thumbs strip. It now comes from the resolver,
+        // which validates against the registry and defaults to DEFAULT_DECK.
         sign:
           funnel === 'palm'
             ? (urlParams.get('sign') || 'thumb')
-            : funnel === 'tarot'
-            ? (urlParams.get('deck') || 'decode-him')
-            : undefined,
+            : tarot?.deck,
+        // deck / facing / hook / version / card / panel. `facing` is registry-driven,
+        // so a face-up deck splits face-up vs face-down with no change here.
+        ...(tarot ?? {}),
         utm_source: urlParams.get('utm_source') || undefined,
         utm_campaign: urlParams.get('utm_campaign') || undefined,
         utm_medium: urlParams.get('utm_medium') || undefined,
