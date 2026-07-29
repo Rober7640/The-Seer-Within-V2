@@ -31,6 +31,18 @@ export type PalmHook =
   | 'is-he-true'
   | 'sense-lying'
   | 'heart-safe'
+  // Heart-line wave — two headline variants of the SAME waiting wound as
+  // soulmate-timing (the ad headline differs; the pain does not), so they carry
+  // that hook's reads verbatim. Reads exist only on HEART_LINE for now.
+  | 'right-person'
+  | 'love-taking-long'
+  // Heart-line wave, NEW wounds — these two ask something soulmate-timing does
+  // not, so each carries its own reads, hook_pain and (mandatory) PALM_HOOK_YES.
+  // The YES entries are not optional: DEFAULT_HOOK_YES is "her real one is still
+  // out there", which delivered to someone doubting the relationship she is IN
+  // reads as a nudge to leave. See fb-palm/ledger/drafts/*.draft.md.
+  | 'wrong-person'
+  | 'relationship-right'
 export type PalmThumb = 'a' | 'b' | 'c' // the option the visitor tapped (A/B/C)
 export type PalmOption = PalmThumb // alias — signs other than 'thumb' still pick A/B/C
 export type PalmVersion = 'a' | 'b' | 'c'
@@ -46,6 +58,7 @@ export type PalmSign =
   | 'finger-length'
   | 'finger-length-alt'
   | 'thumb-angle'
+  | 'heart-line'
 
 export const PALM_HOOKS: PalmHook[] = [
   'soulmate-timing',
@@ -54,6 +67,10 @@ export const PALM_HOOKS: PalmHook[] = [
   'is-he-true',
   'sense-lying',
   'heart-safe',
+  'right-person',
+  'love-taking-long',
+  'wrong-person',
+  'relationship-right',
 ]
 
 // Shown when /fb-palm is hit without a recognized ?hook= / ?sign= (bare visit).
@@ -69,6 +86,10 @@ export const HEADLINES: Record<PalmHook, string> = {
   'is-he-true': 'Am I being lied to?',
   'sense-lying': 'Why do I feel like he’s lying to me?',
   'heart-safe': 'Is he ever going to commit?',
+  'right-person': 'Still waiting for the RIGHT Person?',
+  'love-taking-long': 'Why is love taking so long?',
+  'wrong-person': 'Why do I keep falling for the wrong person?',
+  'relationship-right': 'Not Sure This Relationship is Right?',
 }
 
 // Version C opener question, per hook (sign-agnostic — it's about her heart, not
@@ -80,6 +101,11 @@ const PALM_QUESTION: Record<PalmHook, string> = {
   'is-he-true': "Before I look closer, tell me… what is it about him your gut keeps snagging on?",
   'sense-lying': "Before I look closer, tell me… when did the feeling first creep in?",
   'heart-safe': "Before I look closer, tell me… what has he promised that you're still waiting to see?",
+  // Same wound as soulmate-timing → same question, verbatim.
+  'right-person': "Before I look closer, tell me… what's making the waiting feel so heavy right now?",
+  'love-taking-long': "Before I look closer, tell me… what's making the waiting feel so heavy right now?",
+  'wrong-person': "Before I look closer, tell me… what keeps repeating that you're tired of living through?",
+  'relationship-right': "Before I look closer, tell me… what is it about this one your heart keeps circling back to?",
 }
 
 // ── Sign registry ────────────────────────────────────────────────────────────
@@ -604,6 +630,89 @@ const PALM_SIGNS: SignConfig = {
   },
 }
 
+// heart-line — the SAME tell as `palm-signs` (where your heart lines meet when
+// you cup your hands), shot as a real photograph instead of an illustration, so
+// the two creatives can be tested head-to-head with identical copy. Everything
+// but the strip and the option mapping is inherited, which is the point: the
+// only variable under test is the art.
+//
+// ⚠ Unlike the other -alt signs this one canNOT ride a plain `...PALM_SIGNS`
+// spread, because the photo's panels are REVERSED. In the illustration, A is the
+// pair whose lines meet as one unbroken line; in the photo that pair is B, and A
+// is the pair that meets with a step between them (confirmed 2026-07-29). Every
+// per-option record is therefore swapped a↔b. Swapping programmatically instead
+// of retyping the copy keeps the two signs from drifting apart if PALM_SIGNS'
+// reads are ever edited — the mark is the first sentence of every read, so drift
+// here would have Evelyn describe the opposite of the panel the visitor tapped.
+function swapAB<T>(byOption: Record<PalmOption, T>): Record<PalmOption, T> {
+  return { a: byOption.b, b: byOption.a, c: byOption.c }
+}
+
+const HEART_LINE_READS = Object.fromEntries(
+  Object.entries(PALM_SIGNS.reads).map(([hook, byOption]) => [
+    hook,
+    swapAB(byOption as Record<PalmOption, string[]>),
+  ]),
+) as SignConfig['reads']
+
+const HEART_LINE: SignConfig = {
+  ...PALM_SIGNS,
+  id: 'heart-line',
+  // 800x493 is deliberately IDENTICAL to palm-signs-strip.png: this sign exists
+  // to A/B the photo against the illustration, so matching dimensions keeps the
+  // art the only variable. Source was 1000x616 with a pointless alpha channel at
+  // 751 KB; flattened + 128-colour palette lands at 63 KB, in line with the rest
+  // of client/public/palm.
+  strip: { url: '/palm/heart-line-strip.png', width: 800, height: 493 },
+  mark: swapAB(PALM_SIGNS.mark),
+  reading: swapAB(PALM_SIGNS.reading),
+  reads: {
+    ...HEART_LINE_READS,
+    // Headline-only variants of the same waiting wound, so they carry
+    // soulmate-timing's reads verbatim. Listed explicitly rather than leaning on
+    // the DEFAULT_HOOK fallback because parsePalmParams rejects a hook with no
+    // reads entry for the sign — which would silently drop the visitor out of
+    // the palm handoff and into the generic funnel.
+    'right-person': HEART_LINE_READS['soulmate-timing']!,
+    'love-taking-long': HEART_LINE_READS['soulmate-timing']!,
+    // The two new wounds. Unlike everything above, these are NOT derived from
+    // PALM_SIGNS — they are original copy (approved 2026-07-29, drafts in
+    // fb-palm/ledger/drafts/), so they are written directly in THIS sign's
+    // orientation: a = the rising heart, b = the joined heart. Do not run them
+    // through swapAB.
+    'wrong-person': {
+      a: [
+        "Your heart lines rise toward each other but hold a small space between them — the rising heart.",
+        "You're asking why it keeps being the wrong one — and underneath that, whether the fault is somewhere in you.",
+        "It isn't, dear — a rising heart reaches before it has been shown where to land, and that small space is the part of you that always knew, long before the ending came; the pattern isn't your flaw, it's your knowing arriving ahead of your choosing.",
+        "Let me look closer at what that space has been trying to tell you…",
+      ],
+      b: [
+        "Your heart lines reach across and meet as one unbroken line when you cup your hands — the joined heart.",
+        "You're asking why the wrong ones keep finding you, when you give so completely each time.",
+        "Because a joined heart gives whole from the very first day, dear — it doesn't hold part of itself back to test them; that isn't a fault to be fixed, it's the very thing the right one will recognize, and your heart has never once read love wrongly, only early.",
+        "Let me look closer at what has been arriving too early…",
+      ],
+      c: [],
+    },
+    'relationship-right': {
+      a: [
+        "Your heart lines rise toward each other but hold a small space between them — the rising heart.",
+        "You're asking whether this one is right — and the question has been sitting quietly with you a good while before you said it out loud.",
+        "A rising heart doesn't doubt without cause, dear; that small space is where your certainty is meant to sit, and the fact that you can still feel it empty is your heart doing precisely what it was built to do — the clarity you came for is closer than the doubting has let you believe.",
+        "Let me look closer at what that space is asking for…",
+      ],
+      b: [
+        "Your heart lines reach across and meet as one unbroken line when you cup your hands — the joined heart.",
+        "You're asking whether this is the one — and you've wondered whether the asking itself means you already know.",
+        "It doesn't, dear — a joined heart commits fully and questions honestly, both at once; a heart that gives this completely is owed certainty rather than hope, and yours is nearer to that certainty than the wondering has let you feel.",
+        "Let me look closer at what your heart is still waiting to be shown…",
+      ],
+      c: [],
+    },
+  },
+}
+
 // thumb-curve — does your thumb bend back. (2-option)
 //   A = holds straight and firm → the constant heart  (loyal, waited, doesn't waver)
 //   B = arches back, supple      → the open heart      (gives freely, adapts, draws love in)
@@ -960,6 +1069,7 @@ export const SIGNS: Record<PalmSign, SignConfig> = {
   'finger-length': FINGER_LENGTH,
   'finger-length-alt': FINGER_LENGTH_ALT,
   'thumb-angle': THUMB_ANGLE,
+  'heart-line': HEART_LINE,
 }
 
 export function getSign(sign: PalmSign): SignConfig {
