@@ -35,10 +35,12 @@
 import {
   DEFAULT_DECK,
   DEFAULT_HOOK,
+  angleForHook,
   getDeck,
   isTarotCard,
   isTarotDeck,
   isTarotHook,
+  type TarotAngle,
   type TarotDeck,
   type TarotHook,
   type TarotOption,
@@ -55,6 +57,14 @@ export interface TarotEventProps {
   facing: 'down' | 'up'
   /** Which decode-him question the ad asked, e.g. 'cards-return'. */
   hook: TarotHook
+  /**
+   * The hook's ad ANGLE — 'decode-him' | 'trust' | 'self-frame'. Derived from the hook
+   * registry, so a new hook is categorised automatically. Lets the two decode-him
+   * families be compared as GROUPS in PostHog (one `angle = trust` filter rather than
+   * listing every trust hook), which is what breaks down the original angles vs the
+   * trust angles.
+   */
+  angle: TarotAngle
   /** Lander variant: 'a' = reveal card, 'b'/'c' = straight to chat. */
   version: TarotVersion
   /** The card she DREW — drives the reveal, the read and the chat handoff. */
@@ -121,6 +131,9 @@ function toProps(a: StoredAttribution): TarotEventProps {
     // Registry-driven, so a new face-up deck needs no change here.
     facing: getDeck(a.deck).facing,
     hook: a.hook,
+    // Registry-driven like `facing`: a new hook is categorised by the arrays in
+    // tarotReads.ts, so nothing here changes when one is added.
+    angle: angleForHook(a.hook),
     version: a.version,
     ...(a.card ? { card: a.card } : {}),
     ...(a.panel ? { panel: a.panel } : {}),

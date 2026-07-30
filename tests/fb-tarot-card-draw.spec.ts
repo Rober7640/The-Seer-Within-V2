@@ -286,6 +286,12 @@ for (const [deck, hook, panel, must] of [
   [FACE_UP_DECK, "cards-feels", "c", "real but suspended"],
   // arcana-eef — the ported fix. Panels: a = Emperor, b = Empress, c = Fool.
   ["arcana-eef", "cards-honest", "c", "unexamined rather than hidden"],
+  // The 3 trust hooks, ported card-for-card from the face-down deck (2026-07-30). Same
+  // card + same question = same read, so these assert the shared wording is present on
+  // the face-up side too. Panels here: a = Magician, b = Fool, c = Hanged Man.
+  [FACE_UP_DECK, "cards-who-he-is", "a", "a version he built on purpose"],
+  [FACE_UP_DECK, "cards-real-person", "c", "always one obstacle short of meeting you"],
+  [FACE_UP_DECK, "cards-misled", "b", "let a convenient impression stand"],
 ] as const) {
   test(`face-up signed-off copy — ${deck} / ${hook} / panel ${panel}`, async ({ page }) => {
     await blockMeta(page);

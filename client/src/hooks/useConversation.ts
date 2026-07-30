@@ -926,6 +926,11 @@ export function useConversation() {
                 tarot_deck: tarot.deck,
                 tarot_facing: tarot.facing,
                 tarot_hook: tarot.hook,
+                // The hook's ad angle ('decode-him' | 'trust' | 'self-frame'). Mirrors
+                // tarot_hook: the server-side purchase_completed has no tarot params, so
+                // this is what makes revenue breakable-down by angle GROUP rather than
+                // by listing every hook.
+                tarot_angle: tarot.angle,
                 tarot_card: tarot.card,
               }
             : {}),

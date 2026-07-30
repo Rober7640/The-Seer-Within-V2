@@ -84,6 +84,44 @@ const DECKS: FlowDeck[] = [
     cardPattern: /the (Magician|Fool|Hanged Man)/,
     situation: "He is warm with me one week and completely closed off the next, and I can't tell what I actually mean to him.",
   },
+  // ── FACE-UP trust hooks (2026-07-30) ─────────────────────────────────────────
+  // The same 3 trust headlines on the face-up deck. Reads are ported card-for-card
+  // from return-mhf, so the assertion here is the FACE-UP framing: "You chose", the
+  // exact card (face-up is deterministic), and that the hand-off still does not 400.
+  // A different panel each, so the 3 runs cover all 3 cards.
+  {
+    deck: 'arcana-mfh',
+    hook: 'cards-who-he-is',
+    headline: 'Is he really who he says he is?',
+    slug: 'arcana-mfh-cards-who-he-is',
+    card: 'a',
+    expectCard: 'the Magician',
+    cardNames: ['the Magician', 'the Fool', 'the Hanged Man'],
+    cardPattern: /the (Magician|Fool|Hanged Man)/,
+    situation: "Every time I think I know him, something turns up that does not fit the man he showed me.",
+  },
+  {
+    deck: 'arcana-mfh',
+    hook: 'cards-real-person',
+    headline: 'Is he the real person, or just a picture?',
+    slug: 'arcana-mfh-cards-real-person',
+    card: 'c',
+    expectCard: 'the Hanged Man',
+    cardNames: ['the Magician', 'the Fool', 'the Hanged Man'],
+    cardPattern: /the (Magician|Fool|Hanged Man)/,
+    situation: "There is always a reason he cannot meet me, and I have started to wonder if he is even real.",
+  },
+  {
+    deck: 'arcana-mfh',
+    hook: 'cards-misled',
+    headline: 'Am I being misled?',
+    slug: 'arcana-mfh-cards-misled',
+    card: 'b',
+    expectCard: 'the Fool',
+    cardNames: ['the Magician', 'the Fool', 'the Hanged Man'],
+    cardPattern: /the (Magician|Fool|Hanged Man)/,
+    situation: "What he says and what I actually see keep pulling apart, and I no longer trust my own read on it.",
+  },
   // ─────────────────────────────────────────────────────────────────────────────
   {
     deck: 'arcana-eef',

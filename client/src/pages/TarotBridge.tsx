@@ -9,6 +9,7 @@ import {
   DEFAULT_HOOK,
   DEFAULT_DECK,
   HEADLINES,
+  angleForHook,
   cardArtFor,
   cardReveal,
   getDeck,
@@ -154,7 +155,7 @@ export default function TarotBridge() {
 
   // Screen 1 shown
   useEffect(() => {
-    track('tarot_bridge_view', { deck, facing: cfg.facing, hook, seg, utm_content: utmContent, version })
+    track('tarot_bridge_view', { deck, facing: cfg.facing, hook, angle: angleForHook(hook), seg, utm_content: utmContent, version })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -176,7 +177,7 @@ export default function TarotBridge() {
     // `card` = what she DREW (drives the reveal, the read and the chat handoff).
     // `panel` = which position she TAPPED. Recorded separately so the tap-position
     // bias is measurable in its own right — on a face-down deck the two differ.
-    track('tarot_card_select', { deck, facing: cfg.facing, hook, card: drawn, panel: p, version })
+    track('tarot_card_select', { deck, facing: cfg.facing, hook, angle: angleForHook(hook), card: drawn, panel: p, version })
     // Carry the draw to every downstream event (lead → checkout → both upsells).
     // The upsell steps have no query string at all, so this is the only way the
     // per-card breakdown survives past the chat.

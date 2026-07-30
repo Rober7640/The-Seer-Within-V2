@@ -42,6 +42,27 @@ const LIVE_ADS = [
   { hook: 'cards-misled', url: '/fb-tarot/c?hook=cards-misled' },
 ]
 
+// The ad ANGLE each hook rolls up to, so the two decode-him families can be compared as
+// GROUPS in PostHog (one `angle = trust` filter instead of listing every trust hook).
+// Derived from the registry in tarotReads.ts — if a new hook is ever left out of both
+// TRUST_HOOKS and SELF_FRAME_HOOKS it silently reports 'decode-him', so these assert the
+// mapping explicitly rather than trusting the default.
+//
+// ⚠ `deck` matters here. The angle follows the EFFECTIVE hook, not the URL: a hook with
+// no reads on the resolved deck falls back to DEFAULT_HOOK (syncTarotAttribution:165) so
+// the analytics hook is the one whose copy she was actually shown. `return-mhf` (the
+// default deck) carries no self-frame reads, so cards-love-again on a clean URL correctly
+// reports decode-him — it has to be tested on a deck that actually has it.
+const ANGLES: Array<{ hook: string; angle: string; deck?: string }> = [
+  { hook: 'cards-honest', angle: 'decode-him' },
+  { hook: 'cards-return', angle: 'decode-him' },
+  { hook: 'cards-feels', angle: 'decode-him' },
+  { hook: 'cards-who-he-is', angle: 'trust' },
+  { hook: 'cards-real-person', angle: 'trust' },
+  { hook: 'cards-misled', angle: 'trust' },
+  { hook: 'cards-love-again', angle: 'self-frame', deck: 'arcana-mfh' },
+]
+
 interface Captured { event: string; props: Record<string, any> }
 
 // Where the recorder is spliced in. Two earlier approaches do NOT work here and are
@@ -207,4 +228,40 @@ test.describe('face-down tarot ad links → PostHog', () => {
     expect(lander.props.deck).toBe('arcana-mfh')
     expect(lander.props.facing, 'registry-driven, not hardcoded').toBe('up')
   })
+
+  // The 3 trust headlines also run on the FACE-UP deck. Same hook, same headline, and
+  // `facing` is what separates the two ad sets — so this is the assertion that the
+  // face-up trust links are attributed distinctly from the face-down ones.
+  for (const hook of ['cards-who-he-is', 'cards-real-person', 'cards-misled']) {
+    test(`face-up trust link ${hook} reports deck=arcana-mfh facing=up`, async ({ page }) => {
+      await arm(page)
+      await page.goto(`/fb-tarot/c?hook=${hook}&deck=arcana-mfh`, { waitUntil: 'domcontentloaded' })
+      await page.waitForTimeout(2500)
+
+      const lander = last(await events(page), 'lander_view')!
+      console.log(`  ${hook}: deck=${lander.props.deck} facing=${lander.props.facing} angle=${lander.props.angle}`)
+      expect(lander.props.deck).toBe('arcana-mfh')
+      expect(lander.props.facing).toBe('up')
+      expect(lander.props.hook, 'the hook survived on the face-up deck').toBe(hook)
+      expect(lander.props.angle).toBe('trust')
+    })
+  }
+
+  // The angle GROUPING — one filter value per family instead of listing every hook.
+  for (const { hook, angle, deck } of ANGLES) {
+    test(`${hook} rolls up to angle=${angle}`, async ({ page }) => {
+      await arm(page)
+      const url = `/fb-tarot/c?hook=${hook}${deck ? `&deck=${deck}` : ''}`
+      await page.goto(url, { waitUntil: 'domcontentloaded' })
+      await page.waitForTimeout(2500)
+
+      const lander = last(await events(page), 'lander_view')!
+      const bridge = last(await events(page), 'tarot_bridge_view')!
+      console.log(`  ${hook} -> angle=${lander.props.angle}`)
+      expect(lander.props.angle, `${hook} must roll up to ${angle}`).toBe(angle)
+      // lander_view and tarot_bridge_view must not disagree, the way they once did
+      // about the deck.
+      expect(bridge.props.angle, 'bridge_view agrees on the angle').toBe(angle)
+    })
+  }
 })

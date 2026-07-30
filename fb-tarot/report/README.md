@@ -129,6 +129,36 @@ order their panels differently), normalising only the intended "you chose" / "yo
 
 ---
 
+## Trust hooks on BOTH facings + the `angle` grouping (2026-07-30)
+
+Three trust/authenticity headlines, running on the face-down **and** face-up decks:
+
+| Headline | Hook | Face-down URL | Face-up URL |
+|---|---|---|---|
+| Is he really who he says he is? | `cards-who-he-is` | `?hook=cards-who-he-is` | `?hook=cards-who-he-is&deck=arcana-mfh` |
+| Is he the real person, or just a picture? | `cards-real-person` | `?hook=cards-real-person` | `?hook=cards-real-person&deck=arcana-mfh` |
+| Am I being misled? | `cards-misled` | `?hook=cards-misled` | `?hook=cards-misled&deck=arcana-mfh` |
+
+> 🔴 The face-down links need **no** `&deck=` (`return-mhf` is `DEFAULT_DECK`). The face-up links
+> **must** carry it — strip it and a face-up ad lands on face-DOWN backs.
+
+Face-down reads are bespoke; face-up reads are **ported card-for-card** (same three cards, so the
+same question on the same card gives the same read — only `You turned` → `You chose` and the panel
+letters differ). Remapped by CARD not panel, verified 9/9 identical.
+
+Screenshots: `screenshots/return-mhf-cards-{who-he-is,real-person,misled}/` (face-down) and
+`screenshots/arcana-mfh-cards-{who-he-is,real-person,misled}/` (face-up).
+Full sign-off report: [`trust-hooks-report.html`](trust-hooks-report.html) (face-down section).
+
+**The `angle` property** rolls hooks up into families so they can be compared as groups —
+`decode-him` · `trust` · `self-frame` — on every tarot PostHog event, plus a `tarot_angle` person
+property for the server-side `purchase_completed`. In PostHog that is one `angle = trust` filter
+instead of listing three hook values. ⚠️ The angle follows the **effective** hook: a hook with no
+reads on the resolved deck falls back to `DEFAULT_HOOK`, so `?hook=cards-love-again` on a clean URL
+correctly reports `decode-him` (`return-mhf` has no self-frame reads).
+
+---
+
 ## Landers built so far
 
 | Deck | Cards | Facing | Ad hook | All hooks? | Status |

@@ -1,0 +1,26 @@
+# arcana-mfh — hook cards-misled ("Am I being misled?"), tapped card b (the Magician/the Fool/the Hanged Man)
+# she typed: "What he says and what I actually see keep pulling apart, and I no longer trust my own read on it."
+
+[1] Mmm… the Fool, the card of new beginnings. I felt it the moment your eyes went to it. The connection only opens once I know who I'm speaking with, though… what's your first name, dear?
+
+[2] Sarah
+
+[3] It's lovely to meet you, Sarah.
+
+[4] Everything we discuss stays between us... our secret.
+
+[5] I can feel warmth radiating from your heart, Sarah...
+
+[6] But there's a flicker of shadow there too...
+
+[7] Let's look deeper together...
+
+[8] Tell me more about what's on your mind...
+
+[9] What he says and what I actually see keep pulling apart, and I no longer trust my own read on it.
+
+[10] Sarah, when words and actions split apart like that... your intuition is screaming at you.
+
+[11] You've been second-guessing yourself, haven't you? Questioning what you see clearly.
+
+[12] There's something he's holding back. Your gut knows it, even when your heart resists.
