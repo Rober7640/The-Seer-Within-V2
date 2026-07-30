@@ -166,11 +166,15 @@ for (const hook of ["cards-return", "cards-honest", "cards-feels"] as const) {
   });
 }
 
-// The three hooks the ads run. Each must swap the headline on the SAME deck.
+// The hooks the ads run. Each must swap the headline on the SAME deck.
 for (const [hook, headline] of [
   ["cards-return", "Will he come back?"],
   ["cards-honest", "Is he being honest with you?"],
   ["cards-feels", "How does he really feel about you?"],
+  // Trust/authenticity hooks added 2026-07-30.
+  ["cards-who-he-is", "Is he really who he says he is?"],
+  ["cards-real-person", "Is he the real person, or just a picture?"],
+  ["cards-misled", "Am I being misled?"],
 ] as const) {
   test(`hook ${hook} renders its own headline`, async ({ page }) => {
     await blockMeta(page);
@@ -202,6 +206,103 @@ for (const [hook, card, must] of [
     expect(text, `never drew ${card}`).toBeTruthy();
     expect(text).toContain(must);
     // Guardrails that must hold for every read on this funnel.
+    expect(text, "no exclamation marks").not.toMatch(/!/);
+    expect(text, "never a flat verdict").not.toMatch(/\bhe is (lying|cheating|faithful|honest)\b/i);
+  });
+}
+
+/**
+ * Does `text` make a FLAT (un-negated) claim matching `re`?
+ *
+ * A naive `.not.toMatch(/he is fictional/)` fires on the CORRECT copy, because these
+ * reads deliberately phrase the guardrail as a negation ("The Magician does not tell
+ * me he is fictional — it tells me…"). So find each match and reject it only when no
+ * negation precedes it in the same clause. Returns the offending phrase, or null.
+ */
+function flatClaim(text: string, re: RegExp): string | null {
+  const rx = new RegExp(re.source, re.flags.replace("g", "") + "g");
+  for (const m of text.matchAll(rx)) {
+    const before = text.slice(Math.max(0, m.index - 70), m.index);
+    // Negation in the same clause (no . ; or — between it and the claim) ⇒ fine.
+    if (/\b(not|never|n't|nor)\b[^.;—]*$/i.test(before)) continue;
+    return m[0];
+  }
+  return null;
+}
+
+// `cards-real-person` ("Is he the real person, or just a picture?") draws women who
+// suspect a fake profile or a romance scam. The 2026-07-10 buyer audit caught Evelyn
+// reframing textbook scam markers as a genuine bond, so on THIS hook REASSURANCE is
+// the failure mode — not the safe default. All three reads must back her caution
+// without ever pronouncing him fake (which would be a verdict).
+test("cards-real-person never reassures her the man is genuine", async ({ page }) => {
+  await blockMeta(page);
+  const texts: Record<string, string> = {};
+  // Face-down: the draw is shuffled, so loop until all three cards have been seen.
+  for (let i = 0; i < 60 && Object.keys(texts).length < 3; i++) {
+    const named = await draw(page, FACE_DOWN_DECK, "cards-real-person", MIDDLE);
+    if (!texts[named]) {
+      texts[named] = await page.locator("p").filter({ hasText: NAMES }).first().innerText();
+    }
+  }
+  expect(Object.keys(texts).sort(), "all 3 cards drawn").toEqual(["Fool", "Hanged Man", "Magician"]);
+
+  for (const [card, text] of Object.entries(texts)) {
+    // Never vouch for him / never reassure her the bond is genuine.
+    expect(
+      flatClaim(text, /\b(he (is|really is) (real|genuine|honest|who he says)|the bond is (real|genuine)|you can trust him|his feelings are real)\b/i),
+      `${card}: reassures her about him`,
+    ).toBeNull();
+    // …but also never a flat verdict that he IS fake — that is still a verdict.
+    expect(
+      flatClaim(text, /\bhe is (fake|a catfish|catfishing|lying|an invention|fictional|a scammer)\b/i),
+      `${card}: pronounces him fake`,
+    ).toBeNull();
+    // And it must actually back her — the whole point of the hook.
+    expect(text, `${card}: does not affirm her read`).toMatch(
+      /\b(information|your caution|asking me for|wisdom)\b/i,
+    );
+    // Same funnel-wide guardrails.
+    expect(text, `${card}: exclamation mark`).not.toMatch(/!/);
+  }
+});
+
+// The 2026-07-28 sign-off is on the WORDING, not on one deck — the FACE-UP decks
+// serve the same decode-him reads. These lock the signed-off lines in on the face-up
+// side too, and are deterministic (no shuffle on face-up, so panel IS the card).
+//
+// Why this block exists: `arcana-eef`'s Fool read carried the REJECTED accusation
+// "someone careless with the truth more than cruel with it" until 2026-07-30, and
+// nothing tested it, so the fix could have been silently walked back.
+for (const [deck, hook, panel, must] of [
+  // arcana-mfh — the ad-cleared face-up deck, on the 3 signed-off headlines.
+  // Panels: a = Magician, b = Fool, c = Hanged Man.
+  [FACE_UP_DECK, "cards-honest", "b", "unexamined rather than hidden"],
+  [FACE_UP_DECK, "cards-return", "c", "unresolved rather than finished"],
+  // The Fool's conditional softening. This is the line that predicted a return
+  // ("what comes back often comes back") until 2026-07-30 — the face-down deck was
+  // given this phrasing at the sign-off and the face-up deck was not.
+  [FACE_UP_DECK, "cards-return", "b", "if something does come of this"],
+  [FACE_UP_DECK, "cards-feels", "c", "real but suspended"],
+  // arcana-eef — the ported fix. Panels: a = Emperor, b = Empress, c = Fool.
+  ["arcana-eef", "cards-honest", "c", "unexamined rather than hidden"],
+] as const) {
+  test(`face-up signed-off copy — ${deck} / ${hook} / panel ${panel}`, async ({ page }) => {
+    await blockMeta(page);
+    await page.goto(`/fb-tarot?deck=${deck}&hook=${hook}`, { waitUntil: "domcontentloaded" });
+    await page.getByTestId(`tarot-card-${panel}`).click();
+    await expect(page.getByTestId("tarot-continue")).toBeVisible({ timeout: 20_000 });
+    // Face-up reveals open with "You chose …" (face-down says "You turned …").
+    const text = await page.locator("p").filter({ hasText: /You chose/ }).first().innerText();
+    expect(text, `face-up reveal had no read: ${text.slice(0, 80)}`).toBeTruthy();
+    expect(text).toContain(must);
+    // The rejected accusation must never come back, on any deck or hook.
+    expect(text, "rejected 'careless with the truth' line is back").not.toContain(
+      "careless with the truth",
+    );
+    // Nor may any read presuppose that he returns.
+    expect(text, "read predicts a return").not.toContain("what comes back often comes back");
+    // Same guardrails as the face-down reads.
     expect(text, "no exclamation marks").not.toMatch(/!/);
     expect(text, "never a flat verdict").not.toMatch(/\bhe is (lying|cheating|faithful|honest)\b/i);
   });

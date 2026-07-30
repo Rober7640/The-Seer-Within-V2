@@ -24,11 +24,22 @@
 
 import { test, expect, type Page } from '@playwright/test'
 
-// The three links the media buyer is running for the face-down decode-him launch.
+// The links the media buyer is running for the face-down decode-him launch.
+//
+// ⚠ Every new hook MUST be added here. `syncTarotAttribution` validates the hook TWICE
+// (tarotAttribution.ts:160-165): once against TAROT_HOOKS via isTarotHook(), then again
+// against `getDeck(deck).reads[hook]`. Fail EITHER gate and it silently falls back to
+// DEFAULT_HOOK — so PostHog would report every visitor on the new ad as `cards-honest`,
+// the same class of silent mislabel as the 2026-07-29 `decode-him` deck bug. The
+// `lander_view.hook === ad.hook` assertion below is what catches it.
 const LIVE_ADS = [
   { hook: 'cards-return', url: '/fb-tarot/c?hook=cards-return' },
   { hook: 'cards-honest', url: '/fb-tarot/c?hook=cards-honest' },
   { hook: 'cards-feels', url: '/fb-tarot/c?hook=cards-feels' },
+  // Trust/authenticity hooks added 2026-07-30.
+  { hook: 'cards-who-he-is', url: '/fb-tarot/c?hook=cards-who-he-is' },
+  { hook: 'cards-real-person', url: '/fb-tarot/c?hook=cards-real-person' },
+  { hook: 'cards-misled', url: '/fb-tarot/c?hook=cards-misled' },
 ]
 
 interface Captured { event: string; props: Record<string, any> }

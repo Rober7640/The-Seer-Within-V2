@@ -86,6 +86,49 @@ the Major Arcana pool (Magician · Hanged Man · Fool). Carries all 4 decode-him
 
 ---
 
+## FACE-UP on the three signed-off headlines — `arcana-mfh` (2026-07-30)
+
+**Full report: [`arcana-mfh-faceup-report.html`](arcana-mfh-faceup-report.html)** (+ `.pdf`).
+
+The face-up deck answering the same three questions the signed-off face-down deck answers.
+**Nothing was built for this** — the deck already existed and was live. The headline is keyed by
+`hook`, not by deck (`TAROT_HEADLINES`, `client/src/content/tarotReads.ts`), so a face-up lander on
+`?hook=cards-honest` renders the *identical* headline string the face-down deck did. This run proves
+that, and it surfaced two copy lines that needed fixing.
+
+**Try it** — same three cards, one URL parameter apart:
+- `/fb-tarot/c?hook=cards-honest&deck=arcana-mfh` — "Is he being honest with you?"
+- `/fb-tarot/c?hook=cards-return&deck=arcana-mfh` — "Will he come back?"
+- `/fb-tarot/c?hook=cards-feels&deck=arcana-mfh` — "How does he really feel about you?"
+
+> 🔴 `&deck=` is **load-bearing**. Strip it from a face-up ad URL and the visitor lands on the
+> face-**down** deck's card backs.
+
+| Hook | Panel tapped → card | Screenshots |
+|---|---|---|
+| `cards-honest` | a → the Magician | [`screenshots/arcana-mfh-cards-honest/`](screenshots/arcana-mfh-cards-honest/) |
+| `cards-return` | b → the Fool | [`screenshots/arcana-mfh-cards-return/`](screenshots/arcana-mfh-cards-return/) |
+| `cards-feels` | c → the Hanged Man | [`screenshots/arcana-mfh-cards-feels/`](screenshots/arcana-mfh-cards-feels/) |
+
+A different panel per hook, so the three runs cover all three cards as well as all three headlines.
+Face-up is deterministic (the shuffle is gated on `facing`), so each asserts its exact card.
+
+**Copy parity vs the signed-off face-down deck** — compared per *card*, not per panel (the decks
+order their panels differently), normalising only the intended "you chose" / "you turned" difference:
+**6 of 9 verbatim identical, 3 cosmetic, 0 compliance gaps.**
+
+**Two copy fixes this run found** (both now pinned by tests in `tests/fb-tarot-card-draw.spec.ts`):
+
+1. **A line that predicted a return** — `arcana-mfh` / `cards-return` / the Fool. The 7/28 sign-off
+   rewrote this beat to be conditional; the face-down deck got the new wording and the face-up deck
+   never did. Was *"what comes back often comes back as a new beginning"* → now the signed-off
+   *"if something does come of this, it begins fresh…"*.
+2. **A rejected accusation still live** — `arcana-eef` / `cards-honest` / the Fool. Was
+   *"someone careless with the truth more than cruel with it"* → now the approved
+   *"what's unsaid here may be unexamined rather than hidden"*.
+
+---
+
 ## Landers built so far
 
 | Deck | Cards | Facing | Ad hook | All hooks? | Status |
@@ -100,6 +143,24 @@ the Major Arcana pool (Magician · Hanged Man · Fool). Carries all 4 decode-him
 
 ## Regenerate these screenshots
 ```bash
-# against a muted sandbox (or dev) on :5000 — read-only (?noemail=1), Meta blocked
+# 1 — isolated sandbox: local Postgres on :5433, every outbound credential emptied
+node scripts/make-sandbox-env.mjs
+DOTENV_CONFIG_PATH=.env.sandbox npx tsx server/index.ts
+
+# 2a — the FACE-UP 3-headline report (arcana-mfh × honest/return/feels)
+npx playwright test --config=playwright.fb-tarot-faceup.config.ts
+
+# 2b — every deck in the spec (also re-runs the sections above)
 npx playwright test tests/fb-tarot-flow.spec.ts
+
+# 3 — the fast no-LLM guards: shuffle, reveal integrity, hand-off, signed-off copy
+npx playwright test --config=playwright.fb-tarot-draw.config.ts
 ```
+
+⚠ Do **not** run these via the default `playwright.config.ts` — its `webServer` block starts
+`npm run dev`, which loads the real `.env` (**live** Stripe key + the **shared production**
+database). The configs above deliberately have no `webServer`, so you start the sandbox yourself.
+
+> A deck that appears more than once in `fb-tarot-flow.spec.ts` (same cards, different `?hook=`)
+> must set `slug` on its entry, or each run overwrites the previous one's screenshots and this
+> README renders the wrong hook's shots.

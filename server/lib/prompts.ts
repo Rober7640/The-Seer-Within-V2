@@ -1039,6 +1039,10 @@ const TAROT_HOOK_CONTEXT: Record<string, string> = {
   'cards-return': "After he pulled away, she is asking whether he will come back — carrying something that still feels unfinished.",
   'cards-feels': "She is unsure how the man she cares about truly feels about her, because he keeps some of it just out of reach.",
   'cards-cheating': "She fears the man she's with may be unfaithful, and is asking whether the unease she feels is real or paranoia.",
+  // Trust/authenticity hooks — the wound is who he IS, not what he has done.
+  'cards-who-he-is': "She is unsure whether the man she knows is the real one or a version he presents, and keeps catching glimpses of someone different underneath.",
+  'cards-real-person': "She has only ever known this man through an image or a screen, and is asking whether there is a real person on the other side of it.",
+  'cards-misled': "She suspects the account she has been given does not match what she has seen herself, and has started doubting her own perception because of it.",
   // Self-frame hooks — about HER future, not a specific man.
   'cards-love-again': "After heartbreak, she is asking whether she will ever love again — worn down, but the hope is still there.",
   'cards-soulmate': "She is asking WHEN her soulmate will finally arrive — tired of waiting, but still believing the right person is out there for her.",
@@ -1052,6 +1056,15 @@ const TAROT_HOOK_TENDENCY: Record<string, string> = {
   'cards-return': 'that what she still feels between them is real and the situation is not as closed as it looks. NEVER promise he will return and NEVER pronounce that he will not — affirm HER read and her worth',
   'cards-feels': 'that the warmth or the uncertainty she has sensed is real information about his feelings. NEVER hand down a flat verdict on his heart; read the card as a tendency and affirm HER knowing',
   'cards-cheating': 'that the unease she feels is real information about her situation, not paranoia to apologize for. NEVER say he is cheating or that he is faithful as fact; affirm HER instrument and read the card as a tendency',
+  // Trust/authenticity hooks. Same tendency-never-verdict rule, but the thing being
+  // affirmed is HER PERCEPTION of him rather than her read on his conduct.
+  'cards-who-he-is': 'that the gap she senses between the man he presents and the man underneath is real information. NEVER state he is pretending or that he is genuine as fact; read the card as a tendency and affirm HER instrument',
+  // ⚠ This hook draws women who suspect a fake profile or a romance scam. The
+  // 2026-07-10 buyer audit caught Evelyn reframing textbook scam markers as a genuine
+  // bond — so reassurance is the failure mode here, not the safe option. Back her
+  // caution; never vouch for him; still never pronounce him fake (that is a verdict).
+  'cards-real-person': 'that her inability to reach him in the real world is real information, and that her caution is wisdom rather than cynicism. NEVER reassure her the bond is genuine, NEVER vouch for him, and NEVER state as fact that he is fake — affirm HER caution and her right to ask for reality before more of her heart or her money goes in',
+  'cards-misled': 'that the mismatch between what she has been told and what she has observed is real information, and that the confusion is not a flaw in her judgment. NEVER state he is deceiving her and NEVER tell her she is imagining it; affirm HER perception and her right to trust her own eyes',
   // Self-frame — affirm HER future love, not a verdict on any man.
   'cards-love-again': 'that love is finding its way back to her — affirm HER heart and her capacity to love again, read the card as a hopeful sign for her own future; never tie it to one specific person and never a date',
   'cards-soulmate': 'that her soulmate is genuinely on the way and nearer than the waiting has let her believe — affirm HER heart and that the love she is holding out for is real and coming, read the card as a hopeful sign of arrival; answer the "when" only as a leaning (soon, close, sooner than the fear admits), NEVER tie it to one specific named person and NEVER give a date or timeframe',
