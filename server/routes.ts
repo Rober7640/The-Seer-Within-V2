@@ -95,7 +95,7 @@ import {
 import { fireGoogleAdsConversion } from "./lib/googleAds";
 import { funnelDefForParam, FUNNELS, type FunnelParam } from "@shared/funnelConfig";
 import Stripe from "stripe";
-import { getStripe } from "./lib/stripeAccount";
+import { getStripe, getStripeForRow } from "./lib/stripeAccount";
 import type { ChatRequest, CheckoutRequest } from "../shared/types";
 import {
   addSubscriberToList,
@@ -135,6 +135,71 @@ const funnelSchema = z
 
 // How long an emailed /chat?resume=<id> recovery link stays valid.
 const RESUME_LINK_EXPIRY_DAYS = 30;
+
+// Did this V1 conversation ACTUALLY get paid for?
+//
+// `conversations.purchased` cannot answer that. /api/checkout flips it the moment
+// the buy button is clicked — before Stripe has taken a cent — and nothing ever
+// flips it back (see the markPurchased call in the checkout handler, comment and
+// all: "optimistic - will be confirmed by webhook"). Over a recent 30-day window
+// 1,813 rows claimed purchased=true while only 229 payments were webhook-confirmed.
+// So trusting that flag alone locks ~1,100 people who reached for their card and
+// stopped OUT of their own reading — precisely the group an emailed recovery link
+// exists to bring back.
+//
+// Instead: consult only signals that cannot exist unless money moved, then ask
+// Stripe directly. Affordable here because this runs once per emailed-link click,
+// not as a bulk job.
+async function conversationWasPaid(conversation: {
+  mainPaidAt?: Date | null;
+  upsellPurchased?: boolean | null;
+  upsell2Purchased?: boolean | null;
+  upsellOffered?: boolean | null;
+  stripeSessionId?: string | null;
+  stripeAccount?: string | null;
+}): Promise<boolean> {
+  // 1. Stamped by the checkout.session.completed webhook — server-side and
+  //    browser-independent, so it catches buyers who paid then closed the tab.
+  //    The strongest signal available.
+  if (conversation.mainPaidAt) return true;
+
+  // 2. Bought an upsell, which is only reachable after paying for the front-end
+  //    offer. Implies the main purchase even when its own signal is missing.
+  if (conversation.upsellPurchased || conversation.upsell2Purchased) return true;
+
+  // 3. Reached /welcome1. Normally only happens via Stripe's post-payment
+  //    redirect, but markUpsellOffered fires there WITHOUT re-verifying against
+  //    Stripe — so this stays a heuristic, and step 4 is what makes the verdict
+  //    trustworthy rather than merely probable.
+  if (conversation.upsellOffered) return true;
+
+  // 4. Nothing trustworthy on the row — ask Stripe about the saved session.
+  //    Via getStripeForRow, because Stripe object ids only resolve against the
+  //    account that created them (A primary / B backup).
+  if (conversation.stripeSessionId) {
+    const client = getStripeForRow(conversation.stripeAccount);
+    if (client) {
+      try {
+        const session = await client.checkout.sessions.retrieve(
+          conversation.stripeSessionId,
+        );
+        if (session.payment_status === "paid") return true;
+      } catch (err) {
+        // Stripe unreachable, or the session no longer resolves. Fall through to
+        // "not paid" so she still gets her reading back. The only person that can
+        // misjudge is someone who paid, whose webhook never landed, who never
+        // loaded /welcome1, at the moment Stripe is erroring — and the AWeber
+        // paid-list exclusion keeps her out of the send independently.
+        logger.warn(
+          "Resume paid-check: Stripe lookup failed, treating as unpaid:",
+          err,
+        );
+      }
+    }
+  }
+
+  return false;
+}
 
 const upsellChargeSchema = z.object({
   checkoutSessionId: z.string().min(1),
@@ -1353,8 +1418,11 @@ export async function registerRoutes(
         return res.status(404).json({ error: "Not found" });
       }
 
-      // Already bought — nothing to resume; don't drop them back into a pitch.
-      if (conversation.purchased) {
+      // Already bought — nothing to resume; never drop a paying customer back
+      // into a pitch. Deliberately NOT `conversation.purchased`, which is set
+      // optimistically at checkout-start and stays true for people who never
+      // paid — see conversationWasPaid for why and what it checks instead.
+      if (await conversationWasPaid(conversation)) {
         return res.status(410).json({ error: "Already purchased" });
       }
 
