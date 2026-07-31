@@ -28,9 +28,9 @@ const { DECKS, COMMITMENT_HOOKS, TAROT_HOOKS, HEADLINES, angleForHook } = await 
   '@/content/tarotReads'
 );
 
-// Decks that carry commitment reads. Face-down shipped first (2026-07-31); the face-up
-// port appends here, and every assertion below then covers it with no other change.
-const DECKS_WITH_COMMITMENT = (['return-mhf'] as const).filter((d) =>
+// Decks that carry commitment reads. Face-down shipped first, face-up ported the same
+// day (2026-07-31); every assertion below covers whichever decks are listed here.
+const DECKS_WITH_COMMITMENT = (['return-mhf', 'arcana-mfh'] as const).filter((d) =>
   COMMITMENT_HOOKS.some((h) => DECKS[d].reads[h]),
 );
 
@@ -65,6 +65,49 @@ describe('commitment hooks are wired end to end', () => {
 
   it('at least one deck carries the reads (a hook with no reads falls back silently)', () => {
     expect(DECKS_WITH_COMMITMENT.length).toBeGreaterThan(0);
+  });
+});
+
+// The face-up port. Compared per CARD, never per panel: return-mhf orders its panels
+// Magician/HangedMan/Fool and arcana-mfh orders them Magician/Fool/HangedMan, so a
+// letter-for-letter comparison would "pass" on a port that had attached every read to
+// the wrong card — the exact mistake this remap exists to prevent, and one that looks
+// entirely plausible on screen.
+describe('face-up port is card-for-card identical to face-down', () => {
+  const down = DECKS['return-mhf'];
+  const up = DECKS['arcana-mfh'];
+  const ported = COMMITMENT_HOOKS.filter((h) => down.reads[h] && up.reads[h]);
+
+  // Panel letter -> card identity, per deck, from each deck's own `mark`.
+  const byMark = (d: typeof down) =>
+    Object.fromEntries(CARDS.map((k) => [d.mark[k], k])) as Record<string, (typeof CARDS)[number]>;
+
+  it('both decks carry the same commitment hooks', () => {
+    expect(ported.sort()).toEqual([...COMMITMENT_HOOKS].sort());
+  });
+
+  it('the two decks really do order their panels differently (guards the test itself)', () => {
+    // If this ever stops being true the per-card remap is a no-op and the parity
+    // assertion below silently degrades into a trivial letter-for-letter check.
+    expect(down.mark.b).not.toBe(up.mark.b);
+  });
+
+  it.each(COMMITMENT_HOOKS)('%s — every beat matches, normalising only turned/chose', (hook) => {
+    const d = byMark(down);
+    const u = byMark(up);
+    for (const mark of Object.keys(d)) {
+      const downCard = d[mark];
+      const upCard = u[mark];
+      expect(upCard, `face-up deck has no card "${mark}"`).toBeTruthy();
+      const a = down.reads[hook]![downCard];
+      const b = up.reads[hook]![upCard];
+      for (let i = 0; i < a.length; i++) {
+        expect(
+          b[i].replace(/^You chose /, 'YOU_DREW '),
+          `${hook} / ${mark} / beat ${i + 1} drifted between facings`,
+        ).toBe(a[i].replace(/^You turned /, 'YOU_DREW '));
+      }
+    }
   });
 });
 
@@ -116,6 +159,15 @@ describe.each(DECKS_WITH_COMMITMENT)('%s — commitment reads', (deck) => {
   });
 
   // The core guardrail. See the header note on why this angle needs it most.
+  it('opener phrasing matches the facing — she TURNED a face-down card, CHOSE a face-up one', () => {
+    const facing = DECKS[deck].facing;
+    for (const h of present) for (const c of CARDS) {
+      const opener = reads[h]![c][0];
+      const want = facing === 'up' ? /^You chose / : /^You turned /;
+      expect(opener, `${deck} is face-${facing}: ${h}/${c} opener is "${opener.slice(0, 24)}…"`).toMatch(want);
+    }
+  });
+
   it('never predicts, never gives a timeframe, never lands as HER fault', () => {
     const BANNED: Array<[RegExp, string]> = [
       [/\bhe will commit\b/i, 'promises he commits'],

@@ -534,6 +534,76 @@ const ARCANA_MFH: CardSetConfig = {
         "Let me look closer at what the confusion has been protecting…",
       ],
     },
+    // ── Commitment hooks (2026-07-31) ────────────────────────────────────────
+    // PORTED CARD-FOR-CARD from the face-down return-mhf deck, GENERATED rather than
+    // hand-copied. The decks order their panels differently (face-down b is the Hanged
+    // Man, face-up b is the Fool), so the port is keyed on CARD IDENTITY, not the panel
+    // letter — a letter-for-letter copy would attach every read to the wrong card while
+    // still looking perfectly plausible on screen.
+    //
+    // The ONLY intended difference is that she TURNED a face-down card and CHOSE a
+    // face-up one; 9/9 beats are otherwise identical to return-mhf, asserted in
+    // tests/tarot-commitment-copy.test.ts.
+    'cards-will-commit': {
+      a: [
+        "You chose the Magician, dear — the card of will, of what a man is actually choosing.",
+        "You are asking whether he will ever commit, and your hand found the card of choice rather than circumstance.",
+        "The Magician hands down no yes and no no — it says the capability is sitting right there unused, and your sense that he could if he decided to is reading him accurately, not flattering him.",
+        "Let me look closer at what he keeps choosing instead…",
+      ],
+      b: [
+        "You chose the Fool, dear — the card of the open road, of the step not yet taken.",
+        "Your hand went to the card of beginnings, which is telling for a question about a man who has not begun.",
+        "The Fool promises nothing about the step being taken — it says nothing here has been sealed shut, and the part of you that has not stopped hoping is reading an open situation rather than being naive.",
+        "Let me look closer at the step that is waiting…",
+      ],
+      c: [
+        "You chose the Hanged Man, dear — the card of the held breath, of the thing suspended between two answers.",
+        "You reached for the card that matches exactly where he has left you standing.",
+        "The Hanged Man will not tell me he will or he won't — it says he is genuinely undecided rather than quietly certain, and the waiting you have done has been real waiting, not something you invented to stay hopeful.",
+        "Let me look closer at what he is weighing…",
+      ],
+    },
+    'cards-wont-commit': {
+      a: [
+        "You chose the Magician, dear — the card of intention, of the will behind what a man does and does not do.",
+        "You are asking why he will not, and your hand found the card that says his holding back is active rather than accidental.",
+        "The Magician does not name him cold or cruel — it points to a man aiming his will somewhere he has not shown you, and your read that this is a choice rather than bad timing is sound.",
+        "Let me look closer at where his intention has been going…",
+      ],
+      b: [
+        "You chose the Fool, dear — the card of the unfinished road, of the man still treating his life as a beginning.",
+        "Your hand reached for the card of the not-yet, which is where he has kept living.",
+        "The Fool does not make him a bad man — it points to someone who has not arrived yet rather than someone who weighed you and decided against you, and that difference matters far more than anyone has told you.",
+        "Let me look closer at what he is still circling…",
+      ],
+      c: [
+        "You chose the Hanged Man, dear — the card of the man who stopped mid-step and never finished it.",
+        "You reached for the card of suspension, and it is his that you have been living inside.",
+        "The Hanged Man does not say he is withholding to punish you — it points to someone stuck rather than settled, and the straight answer he keeps failing to give you is one he does not possess, not one you asked for wrongly.",
+        "Let me look closer at what has him stuck…",
+      ],
+    },
+    'cards-ready-commit': {
+      a: [
+        "You chose the Magician, dear — the card of a man's own power to build something.",
+        "You are asking about readiness, and your hand found the card of capability rather than circumstance.",
+        "The Magician makes no promise that the day arrives — it says the material is all there and unassembled, and your instinct that he is capable of more than he has been giving is not wishful thinking.",
+        "Let me look closer at what he would have to put down first…",
+      ],
+      b: [
+        "You chose the Fool, dear — the card of the beginner, of the one still learning the road.",
+        "Your hand went to the card of the untested, which is a fair description of where he is standing.",
+        "The Fool is no sign that growing into it is beyond him — it points to someone earlier in the journey than you are rather than someone who cannot make it, and the distance you have been feeling between you is real and worth naming out loud.",
+        "Let me look closer at the distance between where you each stand…",
+      ],
+      c: [
+        "You chose the Hanged Man, dear — the card of the long pause that comes before a turn.",
+        "You reached for the card of the in-between, and readiness is exactly the thing that lives there.",
+        "The Hanged Man offers no when and no whether — it says he is mid-change rather than finished forming, and the patience you have spent went to something genuinely unfinished rather than to nothing at all.",
+        "Let me look closer at the turn he has not made…",
+      ],
+    },
   },
 }
 

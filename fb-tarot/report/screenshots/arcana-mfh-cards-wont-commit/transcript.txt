@@ -1,0 +1,26 @@
+# arcana-mfh — hook cards-wont-commit ("Why won't he commit to me?"), tapped card b (the Magician/the Fool/the Hanged Man)
+# she typed: "Every time I bring up the future he changes the subject, and I have started to feel like I am asking for too much."
+
+[1] Mmm… the Fool, the card of new beginnings. I felt it the moment your eyes went to it. The connection only opens once I know who I'm speaking with, though… what's your first name, dear?
+
+[2] Sarah
+
+[3] It's lovely to meet you, Sarah.
+
+[4] Everything we discuss stays between us... our secret.
+
+[5] I can feel warmth radiating from your heart, Sarah...
+
+[6] But there's a flicker of shadow there too...
+
+[7] Let's look deeper together...
+
+[8] Tell me more about what's on your mind...
+
+[9] Every time I bring up the future he changes the subject, and I have started to feel like I am asking for too much.
+
+[10] Sarah, when someone keeps dodging the future... they're telling you something without words.
+
+[11] You're not asking for too much. You're asking for clarity he isn't ready to give.
+
+[12] There's a fear in him... commitment feels like losing something he's not prepared to surrender.

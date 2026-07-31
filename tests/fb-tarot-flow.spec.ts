@@ -210,6 +210,47 @@ const DECKS: FlowDeck[] = [
     cardPattern: /the (Magician|Hanged Man|Fool)/,
     situation: "He says he is not in a place for anything serious yet, and I keep waiting for that to change.",
   },
+  // ── COMMITMENT hooks on the FACE-UP deck (2026-07-31) ───────────────────────
+  // The same three headlines on arcana-mfh. Face-up is deterministic (the shuffle is
+  // gated on `facing`), so each asserts its exact card via expectCard — and a
+  // different panel per hook covers all three cards.
+  //
+  // ⚠ arcana-mfh orders its panels Magician / Fool / Hanged Man, NOT the face-down
+  // deck's Magician / Hanged Man / Fool. Panel b here is the FOOL. Copying the
+  // face-down entries' panel letters would assert the wrong card.
+  {
+    deck: 'arcana-mfh',
+    hook: 'cards-will-commit',
+    headline: 'Will he ever commit?',
+    slug: 'arcana-mfh-cards-will-commit',
+    card: 'a',
+    expectCard: 'the Magician',
+    cardNames: ['the Magician', 'the Fool', 'the Hanged Man'],
+    cardPattern: /the (Magician|Fool|Hanged Man)/,
+    situation: "We have been together two years and he still will not talk about living together or anything after that.",
+  },
+  {
+    deck: 'arcana-mfh',
+    hook: 'cards-wont-commit',
+    headline: "Why won't he commit to me?",
+    slug: 'arcana-mfh-cards-wont-commit',
+    card: 'b',
+    expectCard: 'the Fool',
+    cardNames: ['the Magician', 'the Fool', 'the Hanged Man'],
+    cardPattern: /the (Magician|Fool|Hanged Man)/,
+    situation: "Every time I bring up the future he changes the subject, and I have started to feel like I am asking for too much.",
+  },
+  {
+    deck: 'arcana-mfh',
+    hook: 'cards-ready-commit',
+    headline: 'Is he ever going to be ready for real commitment?',
+    slug: 'arcana-mfh-cards-ready-commit',
+    card: 'c',
+    expectCard: 'the Hanged Man',
+    cardNames: ['the Magician', 'the Fool', 'the Hanged Man'],
+    cardPattern: /the (Magician|Fool|Hanged Man)/,
+    situation: "He says he is not in a place for anything serious yet, and I keep waiting for that to change.",
+  },
   // ─────────────────────────────────────────────────────────────────────────────
   {
     deck: 'arcana-eef',
