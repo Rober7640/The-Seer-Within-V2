@@ -55,7 +55,8 @@ export type TarotCard = 'a' | 'b' | 'c' // the option the visitor tapped (A/B/C)
 export type TarotOption = TarotCard
 export type TarotVersion = 'a' | 'b' | 'c'
 // Deck ids the skill can add. 'decode-him' = seeded face-down Sun/Moon/Tower;
-// 'arcana-mfh' = face-up Magician/Fool/Hanged Man; 'arcana-eef' = face-up
+// 'arcana-mfh' = face-up Magician/HangedMan/Fool (art re-ordered 2026-07-31);
+// 'arcana-eef' = face-up
 // Emperor/Empress/Fool; 'return-mhf' = face-down Magician/Hanged Man/Fool, the
 // "Will he come back?" ad (all from Rio's card art).
 export type TarotDeck = 'decode-him' | 'arcana-mfh' | 'arcana-eef' | 'return-mhf'
@@ -312,7 +313,10 @@ const DECODE_HIM: CardSetConfig = {
   },
 }
 
-// Rio's first real card art — FACE-UP Magician / Fool / Hanged Man. One deck that
+// Rio's first real card art — FACE-UP. Panels re-ordered 2026-07-31 (operator) from
+// Magician|Fool|HangedMan to Magician|HangedMan|Fool; the strip PNG and the b/c
+// entries below were swapped TOGETHER so each reading stayed bound to its own card.
+// The pre-swap art is kept at arcana-mfh-strip.ORIGINAL-mfh-order.png. One deck that
 // carries BOTH the self-frame `cards-love-again` hook (the ad Rio built) AND the 4
 // decode-him hooks, so the same 3 cards switch copy by `?hook=` (the palm model).
 // DRAFT reads (4-beat) — pending operator sign-off.
@@ -328,13 +332,13 @@ const ARCANA_MFH: CardSetConfig = {
   options: ['a', 'b', 'c'],
   mark: {
     a: 'the Magician, the card of will and intention',
-    b: 'the Fool, the card of new beginnings',
-    c: 'the Hanged Man, the card of the pause and a new angle',
+    b: 'the Hanged Man, the card of the pause and a new angle',
+    c: 'the Fool, the card of new beginnings',
   },
   reading: {
     a: 'will and intention',
-    b: 'a new beginning',
-    c: 'a suspended, turning moment',
+    b: 'a suspended, turning moment',
+    c: 'a new beginning',
   },
   reads: {
     // Self-frame — reads HER future, affirm the hopeful yes (like palm love-again).
@@ -346,16 +350,16 @@ const ARCANA_MFH: CardSetConfig = {
         "Let me look closer at what's ready to be made…",
       ],
       b: [
-        "You chose the Fool, dear — the card of new beginnings, of the leap before the ground appears.",
-        "You're asking if your heart can start over, after what it cost you last time.",
-        "The Fool doesn't mean starting from nothing — it means a fresh beginning is already stepping toward you; yes, you will love again, sooner than the fear admits.",
-        "Let me look closer at the beginning that's forming…",
-      ],
-      c: [
         "You chose the Hanged Man, dear — the card of the pause, of seeing love from a new angle.",
         "You're afraid the waiting means it's never coming.",
         "The Hanged Man doesn't mean stuck — it means this pause is doing quiet work, turning you toward a love that arrives differently than the last; it is coming.",
         "Let me look closer at what the waiting is preparing…",
+      ],
+      c: [
+        "You chose the Fool, dear — the card of new beginnings, of the leap before the ground appears.",
+        "You're asking if your heart can start over, after what it cost you last time.",
+        "The Fool doesn't mean starting from nothing — it means a fresh beginning is already stepping toward you; yes, you will love again, sooner than the fear admits.",
+        "Let me look closer at the beginning that's forming…",
       ],
     },
     // Self-frame — when her soulmate arrives. Affirm the hopeful yes; answer the
@@ -368,16 +372,16 @@ const ARCANA_MFH: CardSetConfig = {
         "Let me look closer at what you're ready to make…",
       ],
       b: [
-        "You chose the Fool, dear — the card of the leap, of the beginning already stepping toward you.",
-        "You're asking when they'll arrive, and your hand reached for the card of the unexpected meeting.",
-        "The Fool doesn't mark a day — it leans toward a soulmate who arrives suddenly and sooner than the fear admits; a fresh chapter is opening for you.",
-        "Let me look closer at the beginning that's forming…",
-      ],
-      c: [
         "You chose the Hanged Man, dear — the card of the pause that's doing quiet work.",
         "You're afraid the waiting means they're never coming.",
         "The Hanged Man doesn't mean stuck — it means this pause is preparing you, turning you toward a soulmate who arrives right as the waiting finishes its work; the delay is not a denial.",
         "Let me look closer at what the waiting is readying you for…",
+      ],
+      c: [
+        "You chose the Fool, dear — the card of the leap, of the beginning already stepping toward you.",
+        "You're asking when they'll arrive, and your hand reached for the card of the unexpected meeting.",
+        "The Fool doesn't mark a day — it leans toward a soulmate who arrives suddenly and sooner than the fear admits; a fresh chapter is opening for you.",
+        "Let me look closer at the beginning that's forming…",
       ],
     },
     // Decode-him — reads HIM as a TENDENCY, never a verdict; affirm HER intuition.
@@ -389,16 +393,16 @@ const ARCANA_MFH: CardSetConfig = {
         "Let me look closer at what's behind the performance…",
       ],
       b: [
-        "You chose the Fool, dear — the card of the open, unguarded hand.",
-        "That's not random; you reached for the card that matches something you feel in how he moves through this.",
-        "The Fool doesn't point to deception — it points to a man who hasn't sat down and thought it through; what's unsaid here may be unexamined rather than hidden, and your sense that you're not getting the whole picture is still accurate.",
-        "Let me look closer at what he's leaving unsaid…",
-      ],
-      c: [
         "You chose the Hanged Man, dear — the card of what's suspended, held just out of view.",
         "You reached for the card that matches the feeling you can't quite settle.",
         "The Hanged Man doesn't mean he's lying — it means something between you is on pause, unresolved, and the sense that the full truth hasn't turned to face you yet is accurate.",
         "Let me look closer at what's waiting to come into view…",
+      ],
+      c: [
+        "You chose the Fool, dear — the card of the open, unguarded hand.",
+        "That's not random; you reached for the card that matches something you feel in how he moves through this.",
+        "The Fool doesn't point to deception — it points to a man who hasn't sat down and thought it through; what's unsaid here may be unexamined rather than hidden, and your sense that you're not getting the whole picture is still accurate.",
+        "Let me look closer at what he's leaving unsaid…",
       ],
     },
     'cards-return': {
@@ -409,6 +413,12 @@ const ARCANA_MFH: CardSetConfig = {
         "Let me look closer at what's holding his hand back…",
       ],
       b: [
+        "You chose the Hanged Man, dear — the card of the pause before movement.",
+        "You reached for the card that matches the in-between you've been living in.",
+        "The Hanged Man doesn't promise a return — it says this is unresolved rather than finished, and the part of you that refuses to call it over is reading the situation accurately.",
+        "Let me look closer at what he's reconsidering…",
+      ],
+      c: [
         // 2026-07-30: brought in line with the 2026-07-28 sign-off (return-mhf:596-598).
         // The previous beat 3 read 'what comes back often comes back as a new beginning',
         // which presupposes a return. The signed-off wording is conditional — it never
@@ -417,12 +427,6 @@ const ARCANA_MFH: CardSetConfig = {
         "Your hand went to the one card that refuses to call this finished.",
         "The Fool doesn't mean he's gone for good — it points to a road still open rather than a door closed; if something does come of this, it begins fresh rather than picking up where it broke.",
         "Let me look closer at the turn that's forming…",
-      ],
-      c: [
-        "You chose the Hanged Man, dear — the card of the pause before movement.",
-        "You reached for the card that matches the in-between you've been living in.",
-        "The Hanged Man doesn't promise a return — it says this is unresolved rather than finished, and the part of you that refuses to call it over is reading the situation accurately.",
-        "Let me look closer at what he's reconsidering…",
       ],
     },
     'cards-feels': {
@@ -433,16 +437,16 @@ const ARCANA_MFH: CardSetConfig = {
         "Let me look closer at what he hasn't found the words for…",
       ],
       b: [
-        "You chose the Fool, dear — the card of open, uncomplicated feeling.",
-        "That's not random; you reached for the card that matches how fresh this still feels.",
-        "The Fool doesn't mean he's careless with you — it leans toward feelings that are genuine and in the moment; what he feels is real, even if he hasn't thought through where it leads.",
-        "Let me look closer at where his heart is actually pointing…",
-      ],
-      c: [
         "You chose the Hanged Man, dear — the card of feeling held in suspension.",
         "You reached for the card that matches the mixed signals you've been reading.",
         "The Hanged Man doesn't mean he feels nothing — it leans toward feelings that are real but suspended, caught between what he wants and what he's ready for; the pull you sense is genuine.",
         "Let me look closer at what he's holding back, and why…",
+      ],
+      c: [
+        "You chose the Fool, dear — the card of open, uncomplicated feeling.",
+        "That's not random; you reached for the card that matches how fresh this still feels.",
+        "The Fool doesn't mean he's careless with you — it leans toward feelings that are genuine and in the moment; what he feels is real, even if he hasn't thought through where it leads.",
+        "Let me look closer at where his heart is actually pointing…",
       ],
     },
     'cards-cheating': {
@@ -453,23 +457,24 @@ const ARCANA_MFH: CardSetConfig = {
         "Let me look closer at the one shadow the polish doesn't cover…",
       ],
       b: [
-        "You chose the Fool, dear — the card of impulse and the unguarded moment.",
-        "Your hand reached for the card that matches the restlessness you've been feeling from him.",
-        "The Fool is not proof of unfaithfulness — it leans toward impulsiveness and living in the moment; watch that tendency, but what your intuition is flagging deserves a closer, honest look, not a spiral.",
-        "Let me look closer at what the restlessness is really about…",
-      ],
-      c: [
         "You chose the Hanged Man, dear — the card of what's suspended and unclear.",
         "You reached for the card that matches the limbo you can't quite name.",
         "The Hanged Man is not a confession — it means something between you is on hold and not what it seems from your angle; the feeling that something's paused and off is real, and it deserves clarity, not self-blame.",
         "Let me look closer at what's actually suspended between you…",
       ],
+      c: [
+        "You chose the Fool, dear — the card of impulse and the unguarded moment.",
+        "Your hand reached for the card that matches the restlessness you've been feeling from him.",
+        "The Fool is not proof of unfaithfulness — it leans toward impulsiveness and living in the moment; watch that tendency, but what your intuition is flagging deserves a closer, honest look, not a spiral.",
+        "Let me look closer at what the restlessness is really about…",
+      ],
     },
     // ── Trust/authenticity hooks (2026-07-30) ────────────────────────────────
     // PORTED CARD-FOR-CARD from the face-down return-mhf deck: same three cards, so
-    // the same question on the same card gives the same read. Panel letters differ
-    // between the decks (return-mhf b=Hanged Man/c=Fool; here b=Fool/c=Hanged Man), so
-    // these were remapped by CARD, and the reveal verb is face-up "You chose".
+    // the same question on the same card gives the same read. The port was remapped by
+    // CARD, never by panel letter — at the time the decks ordered their panels
+    // differently. The 2026-07-31 art re-order has since aligned them, but the reads
+    // stayed bound to their cards through that swap. Reveal verb is face-up "You chose".
     // 'Is he really who he says he is?' — the man he presents vs the man underneath.
     'cards-who-he-is': {
       a: [
@@ -479,16 +484,16 @@ const ARCANA_MFH: CardSetConfig = {
         "Let me look closer at the man he keeps out of the introduction…",
       ],
       b: [
-        "You chose the Fool, dear — the card of the man who is still becoming.",
-        "That is not random; you reached for the card that matches how unsettled he seems, even to himself.",
-        "The Fool doesn't accuse him of pretending — it leans toward a man who has not finished deciding who he is, so the person you met and the one in front of you now genuinely differ; the inconsistency you keep noticing is real, and it is not your imagination.",
-        "Let me look closer at which of him is the one that stays…",
-      ],
-      c: [
         "You chose the Hanged Man, dear — the card of the single angle, of what you can only see from one side.",
         "You reached for the card that matches how partial he still feels to you, even now.",
         "The Hanged Man doesn't say he is someone else — it says you have only ever been shown one side of him, and the reason you cannot get a clean read is that you have never been given the whole.",
         "Let me look closer at the part of him you were never introduced to…",
+      ],
+      c: [
+        "You chose the Fool, dear — the card of the man who is still becoming.",
+        "That is not random; you reached for the card that matches how unsettled he seems, even to himself.",
+        "The Fool doesn't accuse him of pretending — it leans toward a man who has not finished deciding who he is, so the person you met and the one in front of you now genuinely differ; the inconsistency you keep noticing is real, and it is not your imagination.",
+        "Let me look closer at which of him is the one that stays…",
       ],
     },
     // 'Is he the real person, or just a picture?' — she has only ever had an image.
@@ -504,16 +509,16 @@ const ARCANA_MFH: CardSetConfig = {
         "Let me look closer at how much of him exists off the screen…",
       ],
       b: [
-        "You chose the Fool, dear — the card of the beginning that has not yet touched the ground.",
-        "That is not random; you reached for the card of something still weightless, still untested by real life.",
-        "The Fool does not brand him a stranger — it says what you have so far is a beginning that has never had to survive an ordinary afternoon together, and until it does, what you are holding is a promise rather than a person; your caution here is wisdom, not cynicism.",
-        "Let me look closer at what it would take to bring this into daylight…",
-      ],
-      c: [
         "You chose the Hanged Man, dear — the card of the thing that hangs, that never quite lands.",
         "You reached for the card that matches the waiting you have been doing for him to become real.",
         "The Hanged Man does not declare him an invention — it marks someone who stays permanently almost-here, always one obstacle short of meeting you, and that pattern is the answer you have been asking me for; a man who wants to be known finds a way to be reached.",
         "Let me look closer at what always seems to come up right before he arrives…",
+      ],
+      c: [
+        "You chose the Fool, dear — the card of the beginning that has not yet touched the ground.",
+        "That is not random; you reached for the card of something still weightless, still untested by real life.",
+        "The Fool does not brand him a stranger — it says what you have so far is a beginning that has never had to survive an ordinary afternoon together, and until it does, what you are holding is a promise rather than a person; your caution here is wisdom, not cynicism.",
+        "Let me look closer at what it would take to bring this into daylight…",
       ],
     },
     // 'Am I being misled?' — restore trust in HER OWN perception; she arrives self-doubting.
@@ -525,16 +530,16 @@ const ARCANA_MFH: CardSetConfig = {
         "Let me look closer at the detail that never quite fits…",
       ],
       b: [
-        "You chose the Fool, dear — the card of what gets left uncorrected.",
-        "That is not random; you reached for the card of the easy answer, the one that was simpler to leave standing than to fix.",
-        "The Fool does not mean he set out to mislead you — it points to someone who let a convenient impression stand rather than correct it, which lands on you the same way in the end; what you are sensing is a real absence of straightening-out, not you being suspicious for no reason.",
-        "Let me look closer at what he has never bothered to correct…",
-      ],
-      c: [
         "You chose the Hanged Man, dear — the card of the view that is deliberately kept unclear.",
         "You reached for the card that matches the dizziness of never being able to settle what is true.",
         "The Hanged Man is not proof that you are being played — it says you have been kept at a distance from the whole of it, and the confusion you have been blaming on yourself is a symptom of that distance, not a flaw in your judgment.",
         "Let me look closer at what the confusion has been protecting…",
+      ],
+      c: [
+        "You chose the Fool, dear — the card of what gets left uncorrected.",
+        "That is not random; you reached for the card of the easy answer, the one that was simpler to leave standing than to fix.",
+        "The Fool does not mean he set out to mislead you — it points to someone who let a convenient impression stand rather than correct it, which lands on you the same way in the end; what you are sensing is a real absence of straightening-out, not you being suspicious for no reason.",
+        "Let me look closer at what he has never bothered to correct…",
       ],
     },
     // ── Commitment hooks (2026-07-31) ────────────────────────────────────────
@@ -555,16 +560,16 @@ const ARCANA_MFH: CardSetConfig = {
         "Let me look closer at what he keeps choosing instead…",
       ],
       b: [
-        "You chose the Fool, dear — the card of the open road, of the step not yet taken.",
-        "Your hand went to the card of beginnings, which is telling for a question about a man who has not begun.",
-        "The Fool promises nothing about the step being taken — it says nothing here has been sealed shut, and the part of you that has not stopped hoping is reading an open situation rather than being naive.",
-        "Let me look closer at the step that is waiting…",
-      ],
-      c: [
         "You chose the Hanged Man, dear — the card of the held breath, of the thing suspended between two answers.",
         "You reached for the card that matches exactly where he has left you standing.",
         "The Hanged Man will not tell me he will or he won't — it says he is genuinely undecided rather than quietly certain, and the waiting you have done has been real waiting, not something you invented to stay hopeful.",
         "Let me look closer at what he is weighing…",
+      ],
+      c: [
+        "You chose the Fool, dear — the card of the open road, of the step not yet taken.",
+        "Your hand went to the card of beginnings, which is telling for a question about a man who has not begun.",
+        "The Fool promises nothing about the step being taken — it says nothing here has been sealed shut, and the part of you that has not stopped hoping is reading an open situation rather than being naive.",
+        "Let me look closer at the step that is waiting…",
       ],
     },
     'cards-wont-commit': {
@@ -575,16 +580,16 @@ const ARCANA_MFH: CardSetConfig = {
         "Let me look closer at where his intention has been going…",
       ],
       b: [
-        "You chose the Fool, dear — the card of the unfinished road, of the man still treating his life as a beginning.",
-        "Your hand reached for the card of the not-yet, which is where he has kept living.",
-        "The Fool does not make him a bad man — it points to someone who has not arrived yet rather than someone who weighed you and decided against you, and that difference matters far more than anyone has told you.",
-        "Let me look closer at what he is still circling…",
-      ],
-      c: [
         "You chose the Hanged Man, dear — the card of the man who stopped mid-step and never finished it.",
         "You reached for the card of suspension, and it is his that you have been living inside.",
         "The Hanged Man does not say he is withholding to punish you — it points to someone stuck rather than settled, and the straight answer he keeps failing to give you is one he does not possess, not one you asked for wrongly.",
         "Let me look closer at what has him stuck…",
+      ],
+      c: [
+        "You chose the Fool, dear — the card of the unfinished road, of the man still treating his life as a beginning.",
+        "Your hand reached for the card of the not-yet, which is where he has kept living.",
+        "The Fool does not make him a bad man — it points to someone who has not arrived yet rather than someone who weighed you and decided against you, and that difference matters far more than anyone has told you.",
+        "Let me look closer at what he is still circling…",
       ],
     },
     'cards-ready-commit': {
@@ -595,16 +600,16 @@ const ARCANA_MFH: CardSetConfig = {
         "Let me look closer at what he would have to put down first…",
       ],
       b: [
-        "You chose the Fool, dear — the card of the beginner, of the one still learning the road.",
-        "Your hand went to the card of the untested, which is a fair description of where he is standing.",
-        "The Fool is no sign that growing into it is beyond him — it points to someone earlier in the journey than you are rather than someone who cannot make it, and the distance you have been feeling between you is real and worth naming out loud.",
-        "Let me look closer at the distance between where you each stand…",
-      ],
-      c: [
         "You chose the Hanged Man, dear — the card of the long pause that comes before a turn.",
         "You reached for the card of the in-between, and readiness is exactly the thing that lives there.",
         "The Hanged Man offers no when and no whether — it says he is mid-change rather than finished forming, and the patience you have spent went to something genuinely unfinished rather than to nothing at all.",
         "Let me look closer at the turn he has not made…",
+      ],
+      c: [
+        "You chose the Fool, dear — the card of the beginner, of the one still learning the road.",
+        "Your hand went to the card of the untested, which is a fair description of where he is standing.",
+        "The Fool is no sign that growing into it is beyond him — it points to someone earlier in the journey than you are rather than someone who cannot make it, and the distance you have been feeling between you is real and worth naming out loud.",
+        "Let me look closer at the distance between where you each stand…",
       ],
     },
   },

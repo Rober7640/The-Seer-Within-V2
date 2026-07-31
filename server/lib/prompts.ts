@@ -1108,16 +1108,21 @@ const TAROT_CARD_VOCAB: Record<string, { mark: Record<string, string>; reading: 
       c: "what's shifting",
     },
   },
+  // Panel order changed 2026-07-31 (operator): the strip art was re-ordered from
+  // Magician|Fool|HangedMan to Magician|HangedMan|Fool, so b and c swapped here to
+  // keep each reading bound to its own card. MUST mirror ARCANA_MFH in
+  // client/src/content/tarotReads.ts — this roster is hand-maintained, and drift
+  // makes the Version-C chat opener name a card the visitor did not choose.
   'arcana-mfh': {
     mark: {
       a: 'the Magician, the card of will and intention',
-      b: 'the Fool, the card of new beginnings',
-      c: 'the Hanged Man, the card of the pause and a new angle',
+      b: 'the Hanged Man, the card of the pause and a new angle',
+      c: 'the Fool, the card of new beginnings',
     },
     reading: {
       a: 'will and intention',
-      b: 'a new beginning',
-      c: 'a suspended, turning moment',
+      b: 'a suspended, turning moment',
+      c: 'a new beginning',
     },
   },
   'arcana-eef': {

@@ -48,7 +48,8 @@ const DECKS: FlowDeck[] = [
   // is keyed by HOOK not by deck, so these render the identical headline strings —
   // that identity is what `headline` below asserts.
   //
-  // A different panel is tapped per hook (a=Magician, b=Fool, c=Hanged Man) so the
+  // A different panel is tapped per hook (a=Magician, b=Hanged Man, c=Fool — the art
+  // was re-ordered 2026-07-31) so the
   // three runs cover all three cards as well as all three headlines. Face-up is
   // deterministic, so each asserts its exact card via `expectCard`.
   {
@@ -68,7 +69,7 @@ const DECKS: FlowDeck[] = [
     headline: 'Will he come back?',
     slug: 'arcana-mfh-cards-return',
     card: 'b',
-    expectCard: 'the Fool',
+    expectCard: 'the Hanged Man',
     cardNames: ['the Magician', 'the Fool', 'the Hanged Man'],
     cardPattern: /the (Magician|Fool|Hanged Man)/,
     situation: "He ended it six weeks ago and has gone completely silent, and I don't know if he is ever coming back.",
@@ -79,7 +80,7 @@ const DECKS: FlowDeck[] = [
     headline: 'How does he really feel about you?',
     slug: 'arcana-mfh-cards-feels',
     card: 'c',
-    expectCard: 'the Hanged Man',
+    expectCard: 'the Fool',
     cardNames: ['the Magician', 'the Fool', 'the Hanged Man'],
     cardPattern: /the (Magician|Fool|Hanged Man)/,
     situation: "He is warm with me one week and completely closed off the next, and I can't tell what I actually mean to him.",
@@ -106,7 +107,7 @@ const DECKS: FlowDeck[] = [
     headline: 'Is he the real person, or just a picture?',
     slug: 'arcana-mfh-cards-real-person',
     card: 'c',
-    expectCard: 'the Hanged Man',
+    expectCard: 'the Fool',
     cardNames: ['the Magician', 'the Fool', 'the Hanged Man'],
     cardPattern: /the (Magician|Fool|Hanged Man)/,
     situation: "There is always a reason he cannot meet me, and I have started to wonder if he is even real.",
@@ -117,7 +118,7 @@ const DECKS: FlowDeck[] = [
     headline: 'Am I being misled?',
     slug: 'arcana-mfh-cards-misled',
     card: 'b',
-    expectCard: 'the Fool',
+    expectCard: 'the Hanged Man',
     cardNames: ['the Magician', 'the Fool', 'the Hanged Man'],
     cardPattern: /the (Magician|Fool|Hanged Man)/,
     situation: "What he says and what I actually see keep pulling apart, and I no longer trust my own read on it.",
@@ -215,9 +216,10 @@ const DECKS: FlowDeck[] = [
   // gated on `facing`), so each asserts its exact card via expectCard — and a
   // different panel per hook covers all three cards.
   //
-  // ⚠ arcana-mfh orders its panels Magician / Fool / Hanged Man, NOT the face-down
-  // deck's Magician / Hanged Man / Fool. Panel b here is the FOOL. Copying the
-  // face-down entries' panel letters would assert the wrong card.
+  // ⚠ Panel order is per-deck and must never be assumed. Since the 2026-07-31 art
+  // re-order arcana-mfh happens to match return-mhf (Magician / Hanged Man / Fool),
+  // but that is a coincidence, not a rule — arcana-eef orders its own cards
+  // differently again. Always read the order off the deck's `mark`.
   {
     deck: 'arcana-mfh',
     hook: 'cards-will-commit',
@@ -235,7 +237,7 @@ const DECKS: FlowDeck[] = [
     headline: "Why won't he commit to me?",
     slug: 'arcana-mfh-cards-wont-commit',
     card: 'b',
-    expectCard: 'the Fool',
+    expectCard: 'the Hanged Man',
     cardNames: ['the Magician', 'the Fool', 'the Hanged Man'],
     cardPattern: /the (Magician|Fool|Hanged Man)/,
     situation: "Every time I bring up the future he changes the subject, and I have started to feel like I am asking for too much.",
@@ -246,7 +248,7 @@ const DECKS: FlowDeck[] = [
     headline: 'Is he ever going to be ready for real commitment?',
     slug: 'arcana-mfh-cards-ready-commit',
     card: 'c',
-    expectCard: 'the Hanged Man',
+    expectCard: 'the Fool',
     cardNames: ['the Magician', 'the Fool', 'the Hanged Man'],
     cardPattern: /the (Magician|Fool|Hanged Man)/,
     situation: "He says he is not in a place for anything serious yet, and I keep waiting for that to change.",

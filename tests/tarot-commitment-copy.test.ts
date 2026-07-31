@@ -92,11 +92,14 @@ describe('commitment hooks are wired end to end', () => {
   });
 });
 
-// The face-up port. Compared per CARD, never per panel: return-mhf orders its panels
-// Magician/HangedMan/Fool and arcana-mfh orders them Magician/Fool/HangedMan, so a
-// letter-for-letter comparison would "pass" on a port that had attached every read to
-// the wrong card — the exact mistake this remap exists to prevent, and one that looks
-// entirely plausible on screen.
+// The face-up port. Compared per CARD, never per panel.
+//
+// When this was written the decks ordered their panels differently (face-down b was the
+// Hanged Man, face-up b was the Fool), so a letter-for-letter comparison would have
+// "passed" on a port that had attached every read to the wrong card. The 2026-07-31 art
+// re-order happens to have aligned them, but the comparison stays keyed on card identity
+// regardless — the alignment is a coincidence of the current art, not a guarantee, and
+// arcana-eef already orders its own cards differently.
 describe('face-up port is card-for-card identical to face-down', () => {
   const down = DECKS['return-mhf'];
   const up = DECKS['arcana-mfh'];
@@ -110,10 +113,22 @@ describe('face-up port is card-for-card identical to face-down', () => {
     expect(ported.sort()).toEqual([...COMMITMENT_HOOKS].sort());
   });
 
-  it('the two decks really do order their panels differently (guards the test itself)', () => {
-    // If this ever stops being true the per-card remap is a no-op and the parity
-    // assertion below silently degrades into a trivial letter-for-letter check.
-    expect(down.mark.b).not.toBe(up.mark.b);
+  // Guards the parity test below from becoming meaningless. It used to assert the two
+  // decks ordered their panels DIFFERENTLY (face-down b was the Hanged Man, face-up b
+  // was the Fool), which is what made a per-card remap necessary rather than decorative.
+  //
+  // On 2026-07-31 the operator re-ordered the face-up strip art to
+  // Magician|HangedMan|Fool, so the two decks now happen to agree panel-for-panel and
+  // that assertion was inverted overnight. The precondition that actually matters is
+  // not the ORDER — it is that both decks offer the SAME THREE CARDS, which is the only
+  // reason a card-for-card comparison is possible at all. That holds whichever order
+  // the art ships in, so this version cannot be flipped by a future re-order.
+  it('both decks offer the same three cards (what makes a per-card comparison possible)', () => {
+    const cards = (d: typeof down) => CARDS.map((k) => d.mark[k]).sort();
+    expect(cards(up)).toEqual(cards(down));
+    // And the panel mapping is derived from `mark`, never assumed from the letter —
+    // so the parity test stays correct whether the orders agree or not.
+    expect(new Set(cards(down)).size, 'a deck must not list the same card twice').toBe(3);
   });
 
   it.each(COMMITMENT_HOOKS)('%s — every beat matches, normalising only turned/chose', (hook) => {

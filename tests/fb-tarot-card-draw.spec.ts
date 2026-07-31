@@ -353,22 +353,22 @@ test("cards-real-person never reassures her the man is genuine", async ({ page }
 // nothing tested it, so the fix could have been silently walked back.
 for (const [deck, hook, panel, must] of [
   // arcana-mfh — the ad-cleared face-up deck, on the 3 signed-off headlines.
-  // Panels: a = Magician, b = Fool, c = Hanged Man.
-  [FACE_UP_DECK, "cards-honest", "b", "unexamined rather than hidden"],
-  [FACE_UP_DECK, "cards-return", "c", "unresolved rather than finished"],
+  // Panels: a = Magician, b = Hanged Man, c = Fool (art re-ordered 2026-07-31).
+  [FACE_UP_DECK, "cards-honest", "c", "unexamined rather than hidden"],
+  [FACE_UP_DECK, "cards-return", "b", "unresolved rather than finished"],
   // The Fool's conditional softening. This is the line that predicted a return
   // ("what comes back often comes back") until 2026-07-30 — the face-down deck was
   // given this phrasing at the sign-off and the face-up deck was not.
-  [FACE_UP_DECK, "cards-return", "b", "if something does come of this"],
-  [FACE_UP_DECK, "cards-feels", "c", "real but suspended"],
+  [FACE_UP_DECK, "cards-return", "c", "if something does come of this"],
+  [FACE_UP_DECK, "cards-feels", "b", "real but suspended"],
   // arcana-eef — the ported fix. Panels: a = Emperor, b = Empress, c = Fool.
   ["arcana-eef", "cards-honest", "c", "unexamined rather than hidden"],
   // The 3 trust hooks, ported card-for-card from the face-down deck (2026-07-30). Same
   // card + same question = same read, so these assert the shared wording is present on
-  // the face-up side too. Panels here: a = Magician, b = Fool, c = Hanged Man.
+  // the face-up side too. Panels here: a = Magician, b = Hanged Man, c = Fool.
   [FACE_UP_DECK, "cards-who-he-is", "a", "a version he built on purpose"],
-  [FACE_UP_DECK, "cards-real-person", "c", "always one obstacle short of meeting you"],
-  [FACE_UP_DECK, "cards-misled", "b", "let a convenient impression stand"],
+  [FACE_UP_DECK, "cards-real-person", "b", "always one obstacle short of meeting you"],
+  [FACE_UP_DECK, "cards-misled", "c", "let a convenient impression stand"],
 ] as const) {
   test(`face-up signed-off copy — ${deck} / ${hook} / panel ${panel}`, async ({ page }) => {
     await blockMeta(page);

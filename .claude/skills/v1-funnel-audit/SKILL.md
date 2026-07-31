@@ -131,10 +131,22 @@ no server-side test would ever see it.
 It is deliberately **cheap** — it drives only the scripted pre-LLM steps (greeting → name → bucket →
 email). The first `/api/chat` (`reading1`) fires one step later at `DEEPENING_1`, so this run makes
 **zero Anthropic calls**. For each funnel entry (`/chat`, `/fb/chat`, `/fb2/chat`, `/gdn/chat`,
-`/fb-palm/chat?…` for thumb + hand-size) it captures the exact body the client POSTs to `/api/lead` and
-asserts: the chat UI booted, the email step fired `/api/lead`, `body.funnel` == the expected id (root →
-none), `body.sign` == the expected palm sign, and no Meta request escaped. `/api/lead` is captured then
-fulfilled locally — no enrollment, no DB write.
+`/fb-palm/chat?…` for thumb + hand-size, and `/fb-tarot/chat?…` for face-down + face-up + commitment) it
+captures the exact body the client POSTs to `/api/lead` and asserts: the chat UI booted, the email step
+fired `/api/lead`, `body.funnel` == the expected id (root → none), `body.sign` == the expected palm sign,
+and no Meta request escaped. `/api/lead` is captured then fulfilled locally — no enrollment, no DB write.
+
+**/fb-tarot (added 2026-07-31).** Tarot sends no `sign` (`normalizeSign` is palm-only), so its lander
+identity rides on four `tarot*` fields instead — `tarotDeck` / `tarotFacing` / `tarotHook` / `tarotAngle`
+— each asserted individually so a failure names the one that drifted. These are what the commitment
+gate's **per-lander reporting** is built on, and they are a **one-shot capture**: the exposure row is
+`unique(experiment_key, subject_id)`, written once at email capture, and `conversations` has no
+deck/hook column to recover from — so a break here makes every affected visitor permanently
+unattributable. The three entries deliberately cover the CLEAN face-down URL (no `&deck=`, which must
+resolve to `DEFAULT_DECK`), the face-up URL (where `&deck=` is load-bearing — drop it and a face-up ad
+serves face-DOWN backs), and the newest angle (guarding `angleForHook`: a hook left out of
+`COMMITMENT_HOOKS` silently reports `decode-him`). Each also asserts tarot sends **no** `sign`, since
+that field feeds the palm price-variant pool.
 
 ## Upsell chats (`audit-upsells.mjs`) — `/welcome1` → `/welcome2` → `/success`
 
@@ -179,9 +191,11 @@ and a $30 downsell. Two complementary layers:
   main + downsell charge equalled the quoted price and matched `metadata.priceVariant` (both A/B arms drawn
   per funnel, incl. $55 full + $35 grace on thumb); the thumb-only scoping guard held (8/8 hand-size
   seekers stayed on the $35 control, 0 drew `55-35_palm`).
-- **Funnels** 2026-07-16: **26/26 passed** — every entry URL booted the chat, reached the email step, and
-  the client threaded the correct funnel (root→none, /fb→v1-fb, /fb2→v1-fb2, /gdn→v1-gdn, palm→v1-palm) and
-  sign (thumb, hand-size); zero Anthropic calls.
+- **Funnels** 2026-07-31: **53/53 passed** (was 26/26 on 2026-07-16, before /fb-tarot was added) — every
+  entry URL booted the chat, reached the email step, and the client threaded the correct funnel
+  (root→none, /fb→v1-fb, /fb2→v1-fb2, /gdn→v1-gdn, palm→v1-palm, tarot→v1-tarot), the correct palm sign
+  (thumb, hand-size), and the correct tarot lander identity (deck/facing/hook/angle across face-down,
+  face-up and commitment); zero Anthropic calls.
 - **Upsells** 2026-07-16: **35/35 passed** — U1 fallback charge == the quoted upsell-1 price across
   root/fb/palm (both arms: $47 and $37), U2 $47 full / $30 downsell; every endpoint ignored a bogus client
   `amount`. Browser: U1 + U2 chats driven end-to-end — offer $47, U2 1st-decline → $30 downsell (2nd →
@@ -207,7 +221,7 @@ the §3 fix lands.
 - FB pixel/CAPI fire + dedup (PageView/Lead/IC/Purchase) — ✅ `audit-pixels.mjs`
 - fb-palm regressions (email-lock guard + derail diagnostic) — ✅ `audit-palm.mjs`
 - Price-variant charge correctness + thumb-only scoping (root/fb/fb2/gdn/palm) — ✅ `audit-charge.mjs`
-- Per-funnel entry + client funnel/sign threading (root/fb/fb2/gdn/palm signs) — ✅ `audit-funnels.mjs`
+- Per-funnel entry + client funnel/sign/tarot-lander threading (root/fb/fb2/gdn/palm signs/tarot decks+angles) — ✅ `audit-funnels.mjs`
 - Upsell chats `/welcome1`→`/welcome2`→`/success` (charge correctness + U1/U2 flow, Path A/B, $30 downsell) — ✅ `audit-upsells.mjs`
 - Still open: a deep LLM flow-walk per non-root funnel (fb/fb2/gdn share the root chat engine, so entry +
   charge cover the meaningful deltas; palm's woven flow is covered by `audit-palm`). The `/success` page's
