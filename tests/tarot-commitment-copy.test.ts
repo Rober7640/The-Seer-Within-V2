@@ -24,7 +24,7 @@
 //     produce, and it is exactly what an unguarded LLM reaches for.
 import { describe, expect, it } from 'vitest';
 
-const { DECKS, COMMITMENT_HOOKS, TAROT_HOOKS, HEADLINES, angleForHook } = await import(
+const { DECKS, COMMITMENT_HOOKS, TAROT_HOOKS, HEADLINES, angleForHook, openerCStart } = await import(
   '@/content/tarotReads'
 );
 
@@ -65,6 +65,30 @@ describe('commitment hooks are wired end to end', () => {
 
   it('at least one deck carries the reads (a hook with no reads falls back silently)', () => {
     expect(DECKS_WITH_COMMITMENT.length).toBeGreaterThan(0);
+  });
+
+  // The Version C opener question — the FIRST thing Evelyn asks, and the moment a
+  // visitor decides whether she is worth answering. TAROT_QUESTION is not exported,
+  // so these go through openerCStart (which returns [card line, question]).
+  it('the opener question echoes its headline and reads cleanly', () => {
+    const q = (h: (typeof COMMITMENT_HOOKS)[number]) => openerCStart('return-mhf', h, 'a')[1];
+
+    // 2026-07-31: was a bare "what would ready actually look like", which the operator
+    // read as a typo for "really". The headline's word is still echoed (message scent)
+    // but as "being ready" so it cannot scan as a misspelling.
+    expect(q('cards-ready-commit')).toBe(
+      'Before I look closer, tell me… what would being ready actually look like, coming from him?',
+    );
+    expect(q('cards-ready-commit'), 'the bare-noun phrasing came back').not.toMatch(
+      /what would ready actually/,
+    );
+
+    for (const h of COMMITMENT_HOOKS) {
+      expect(q(h), `${h} opener must invite HER account, not demand proof`).toMatch(
+        /^Before I look closer, tell me… /,
+      );
+      expect(q(h), `${h} opener must be a question`).toMatch(/\?$/);
+    }
   });
 });
 

@@ -155,7 +155,10 @@ const TAROT_QUESTION: Record<TarotHook, string> = {
   'cards-misled': "Before I look closer, tell me… what have you been told that your own eyes keep arguing with?",
   'cards-will-commit': "Before I look closer, tell me… what has he said about the future that you've been holding on to?",
   'cards-wont-commit': "Before I look closer, tell me… when did you first notice you were the only one building toward something?",
-  'cards-ready-commit': "Before I look closer, tell me… what would ready actually look like, coming from him?",
+  // "being ready", not a bare "ready": the headline's word is echoed deliberately
+  // (message scent), but as a bare noun it reads as a typo for "really" — it caught
+  // the operator who commissioned the headline, on the FIRST question Evelyn asks.
+  'cards-ready-commit': "Before I look closer, tell me… what would being ready actually look like, coming from him?",
   'cards-love-again': "Before I look closer, tell me… what has been weighing on your heart since it happened?",
   'cards-soulmate': "Before I look closer, tell me… what is the love you're still holding out for — the one you haven't given up on?",
 }
