@@ -777,6 +777,23 @@ export async function registerRoutes(
       // the price variant pool; normalized + validated in priceVariant.normalizeSign.
       const palmSign =
         typeof req.body?.sign === "string" ? req.body.sign.slice(0, 40) : undefined;
+      // /fb-tarot lander identity (deck + hook, plus the facing/angle the client
+      // already derived from the registry). Recorded on the commitment-gate exposure
+      // so the tarot landers break down the way the palm signs do. Deliberately NOT
+      // `sign`: that feeds the palm price pool. Untrusted input, so each is just
+      // normalized + length-capped here — they are labels for a diagnostic table and
+      // never select a price, so an unrecognized value can only mislabel its own row.
+      const str40 = (v: unknown) =>
+        typeof v === "string" && v.trim() ? v.trim().slice(0, 40) : undefined;
+      const tarotLander =
+        funnel === "v1-tarot"
+          ? {
+              deck: str40(req.body?.tarotDeck),
+              hook: str40(req.body?.tarotHook),
+              facing: str40(req.body?.tarotFacing),
+              angle: str40(req.body?.tarotAngle),
+            }
+          : undefined;
 
       logger.info("Lead captured:", { email, firstName, bucket, funnel, sign: palmSign ?? null });
 
@@ -801,7 +818,7 @@ export async function registerRoutes(
       // "the test should go on to thumb"). Untrusted, so it's just normalized here;
       // it can only ever move a palm visitor between two legitimate configured arms,
       // and an unrecognized value simply falls through to the unscoped control.
-      const assigned = await assignVariantIfMissing(email, funnel, palmSign);
+      const assigned = await assignVariantIfMissing(email, funnel, palmSign, tarotLander);
 
       // Add to AWeber email list (non-blocking). Per-lander FREE list when the
       // funnel's AWEBER_LIST_ID_* env is set, else the shared AWEBER_LIST_ID.

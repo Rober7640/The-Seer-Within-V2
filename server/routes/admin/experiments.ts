@@ -20,7 +20,9 @@ import {
   tallyEvent,
   tallyV1Main,
   tallyV1MainBySign,
+  tallyV1MainByTarotLander,
   type TallyBySignRow,
+  type TallyByTarotLanderRow,
   twoSidedP,
   minArmExposures,
   invalidateExperiment,
@@ -364,6 +366,7 @@ router.get('/:key/results', async (req: Request, res: Response) => {
 
     let result;
     let bySign: TallyBySignRow[] | undefined;
+    let byTarotLander: TallyByTarotLanderRow[] | undefined;
     if (conversionType === 'credit_purchase') {
       result = await tally(key, { startISO, windowDays, personaId, controlKey, treatmentKey });
     } else if (conversionType === 'upsell1_funnel') {
@@ -398,6 +401,13 @@ router.get('/:key/results', async (req: Request, res: Response) => {
       const signRows = await tallyV1MainBySign({ key, startISO, controlKey, treatmentKey });
       if (signRows.length > 1 || (signRows.length === 1 && signRows[0].sign !== '(unrecorded)')) {
         bySign = signRows;
+      }
+      // Per-/fb-tarot-lander split of the same numbers (facing x angle). Empty for
+      // every test whose exposures carry no facing, so palm-only and non-V1 tests are
+      // unaffected and the block is simply omitted.
+      const tarotRows = await tallyV1MainByTarotLander({ key, startISO, controlKey, treatmentKey });
+      if (tarotRows.length > 0) {
+        byTarotLander = tarotRows;
       }
     } else if (conversionType === 'event') {
       // Generic event conversions (e.g. visitor page-copy lander tests).
@@ -441,6 +451,7 @@ router.get('/:key/results', async (req: Request, res: Response) => {
       params,
       rows: result.rows,
       bySign,
+      byTarotLander,
       srm,
       significance: result.significance,
       progress,

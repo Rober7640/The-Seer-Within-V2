@@ -824,6 +824,19 @@ export interface TallyBySignRow {
 }
 
 /**
+ * One /fb-tarot lander's slice of the same tally — the tarot counterpart of
+ * TallyBySignRow. A "lander" here is FACING × ANGLE (Face-Up × trust, …), which is
+ * how the four live tarot landers are actually run and talked about; `deck`/`hook`
+ * are recorded on the exposure too, so a finer drill-down stays possible later.
+ */
+export interface TallyByTarotLanderRow {
+  facing: string;   // 'up' | 'down'
+  angle: string;    // 'decode-him' | 'trust' | 'self-frame'
+  rows: TallyVariantRow[];
+  significance?: TallyResult['significance'];
+}
+
+/**
  * The SAME v1_main_funnel tally as tallyV1Main, split by the fb-palm ad sign
  * recorded on each exposure (`context->>'sign'`).
  *
@@ -852,6 +865,20 @@ export async function tallyV1MainBySign(opts: V1MainTallyOptions): Promise<Tally
     LEFT JOIN conversations c ON c.id = e.context->>'conversationId'
     WHERE e.experiment_key = ${opts.key}
       AND e.created_at >= ${opts.startISO}
+      -- Exclude /fb-tarot exposures. normalizeSign returns null off fb-palm, so once
+      -- the gate was extended to tarot (2026-07-31) every tarot row would otherwise
+      -- pile into this table's (unrecorded) bucket and read as unattributed PALM
+      -- traffic. Tarot has its own breakdown: tallyV1MainByTarotLander. Keyed on
+      -- facing (tarot-only, always written together with deck/hook) rather than on
+      -- funnel, because palm rows predating the funnel capture have no funnel either.
+      -- NB: no backticks in here - this is inside a JS template literal.
+      -- Deliberately the ONLY tarot exclusion here. Adding a second one (e.g. also
+      -- dropping funnel='v1-tarot') would let a tarot row with no facing fall out of
+      -- BOTH tables, so they'd stop summing to the pooled row — and that invariant is
+      -- how anyone checks this dashboard is telling the truth. With just this test the
+      -- two tables partition the pooled total exactly, and any such row surfaces
+      -- honestly as (unrecorded) rather than vanishing.
+      AND e.context->>'facing' IS NULL
     GROUP BY 1, 2;
   `);
 
@@ -865,6 +892,53 @@ export async function tallyV1MainBySign(opts: V1MainTallyOptions): Promise<Tally
     const { rows } = assembleRows(forSign, controlKey, treatmentKey);
     const stats = finalizeStats(rows, controlKey, treatmentKey);
     return { sign, rows: stats.rows, significance: stats.significance };
+  });
+}
+
+/**
+ * The SAME v1_main_funnel tally as tallyV1Main, split by /fb-tarot LANDER —
+ * facing × angle, e.g. Face-Up × trust. The tarot counterpart of tallyV1MainBySign:
+ * palm identifies a lander by ad `sign`, tarot by which deck facing and question
+ * angle the ad ran.
+ *
+ * ⚠ DIAGNOSTIC ONLY, exactly as per-sign is — the pooled tallyV1Main row decides the
+ * test. With four landers the best-looking one shows a large lift by chance, and each
+ * is only a fraction of the pre-registered N.
+ *
+ * Returns [] for any test whose exposures carry no facing (i.e. every non-tarot
+ * test), so the caller simply omits the block.
+ */
+export async function tallyV1MainByTarotLander(
+  opts: V1MainTallyOptions,
+): Promise<TallyByTarotLanderRow[]> {
+  const result = await db.execute(sql`
+    SELECT e.context->>'facing'                                                  AS facing,
+           e.context->>'angle'                                                   AS angle,
+           e.variant                                                             AS variant,
+           count(*)                                                              AS viewers,
+           count(*) FILTER (WHERE c.purchased AND c.upsell_offered)              AS buyers,
+           COALESCE(sum(c.main_purchase_amount) FILTER (WHERE c.purchased AND c.upsell_offered), 0) AS revenue_cents
+    FROM experiment_exposures e
+    LEFT JOIN conversations c ON c.id = e.context->>'conversationId'
+    WHERE e.experiment_key = ${opts.key}
+      AND e.created_at >= ${opts.startISO}
+      AND e.context->>'facing' IS NOT NULL
+    GROUP BY 1, 2, 3;
+  `);
+
+  const controlKey = opts.controlKey ?? 'A';
+  const treatmentKey = opts.treatmentKey ?? 'B';
+  const all = result.rows as Record<string, unknown>[];
+
+  const landers = Array.from(
+    new Set(all.map((r) => `${String(r.facing)}|${String(r.angle)}`)),
+  ).sort();
+  return landers.map((lander) => {
+    const [facing, angle] = lander.split('|');
+    const forLander = all.filter((r) => `${String(r.facing)}|${String(r.angle)}` === lander);
+    const { rows } = assembleRows(forLander, controlKey, treatmentKey);
+    const stats = finalizeStats(rows, controlKey, treatmentKey);
+    return { facing, angle, rows: stats.rows, significance: stats.significance };
   });
 }
 

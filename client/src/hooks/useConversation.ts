@@ -855,8 +855,13 @@ export function useConversation() {
         : undefined
       // /fb-tarot: which deck/hook/card she came through. Gated on the funnel because
       // the attribution is tab-scoped and would otherwise tag a later palm lead.
-      // ANALYTICS ONLY — deliberately NOT sent to /api/lead below: `sign` there feeds
-      // the palm price pool, and tarot pricing is a fixed variant (35_tarot).
+      //
+      // 🔴 NEVER send these as `sign` on /api/lead — that field feeds the palm price
+      // pool, and tarot pricing is a fixed variant (35_tarot). They go as their own
+      // `tarot*` fields instead (2026-07-31), so the commitment-gate exposure can be
+      // broken down per tarot lander the way palm's is broken down per sign. The
+      // exposure row is written ONCE per subject and `conversations` has no deck/hook
+      // column, so anything not sent here can never be recovered.
       const tarot = phFunnel === 'tarot' ? tarotEventProps() : undefined
 
       const leadRes = await fetch('/api/lead', {
@@ -870,6 +875,20 @@ export function useConversation() {
           gclid: getGclid(),
           funnel: currentFunnel(),
           sign: palmSign,
+          // Tarot lander identity for the commitment-gate exposure breakdown.
+          // `facing`/`angle` are sent already-derived (registry-driven, see
+          // tarotAttribution.toProps) rather than re-derived server-side: it keeps
+          // the server free of a 4th tarot roster to drift out of sync, and it
+          // records the grouping AS IT WAS at exposure time, so recategorising a
+          // hook later can't retroactively rewrite past rows.
+          ...(tarot
+            ? {
+                tarotDeck: tarot.deck,
+                tarotHook: tarot.hook,
+                tarotFacing: tarot.facing,
+                tarotAngle: tarot.angle,
+              }
+            : {}),
           fbp: fbpMatch ? decodeURIComponent(fbpMatch[1]) : undefined,
           fbc: fbcMatch ? decodeURIComponent(fbcMatch[1]) : undefined,
         }),
