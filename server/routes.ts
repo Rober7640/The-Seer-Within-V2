@@ -495,7 +495,7 @@ export async function registerRoutes(
           // against fixed enums; tarotDeck defaults to 'decode-him'. Keep these
           // rosters in sync with client/src/content/tarotReads.ts (fb-tarot-add-card).
           const validDecks = ["decode-him", "arcana-mfh", "arcana-eef", "return-mhf"];
-          const validHooks = ["cards-honest", "cards-return", "cards-feels", "cards-cheating", "cards-who-he-is", "cards-real-person", "cards-misled", "cards-love-again", "cards-soulmate"];
+          const validHooks = ["cards-honest", "cards-return", "cards-feels", "cards-cheating", "cards-who-he-is", "cards-real-person", "cards-misled", "cards-will-commit", "cards-wont-commit", "cards-ready-commit", "cards-love-again", "cards-soulmate"];
           const validCards = ["a", "b", "c"];
           const deck = tarotDeck ?? "decode-him";
           if (!validDecks.includes(deck) || !validHooks.includes(tarotHook ?? "") || !validCards.includes(tarotCard ?? "")) {

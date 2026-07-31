@@ -40,6 +40,14 @@ export type TarotHook =
   | 'cards-who-he-is' // Is he really who he says he is?
   | 'cards-real-person' // Is he the real person, or just a picture?
   | 'cards-misled' // Am I being misled?
+  // Commitment hooks (2026-07-31). Decode-him in FORM — read as a tendency, never a
+  // verdict — but the wound is the FUTURE he won't name rather than his conduct or his
+  // identity. These invite prediction far more than the other angles do ("will he",
+  // "is he ever going to"), so the reads deliberately answer about where HE stands
+  // rather than what happens next, and never carry a timeframe.
+  | 'cards-will-commit' // Will he ever commit?
+  | 'cards-wont-commit' // Why won't he commit to me?
+  | 'cards-ready-commit' // Is he ever going to be ready for real commitment?
   // Self-frame hooks (read HER, affirm the hopeful yes — like the palm love hooks).
   | 'cards-love-again' // Will I love again?
   | 'cards-soulmate' // When is my soulmate coming?
@@ -60,6 +68,17 @@ export const SELF_FRAME_HOOKS: TarotHook[] = ['cards-love-again', 'cards-soulmat
 // a tendency — but the wound is who he IS rather than what he has done.
 export const TRUST_HOOKS: TarotHook[] = ['cards-who-he-is', 'cards-real-person', 'cards-misled']
 
+// The commitment hooks (2026-07-31). Their own angle rather than folding into
+// decode-him, so they can be filtered and compared as a GROUP — in PostHog and in the
+// gate's per-lander table, which groups by facing x angle. Without this array they
+// would silently fall through to 'decode-him' (see angleForHook) and be invisible as
+// a family, which is the whole reason the angle property exists.
+export const COMMITMENT_HOOKS: TarotHook[] = [
+  'cards-will-commit',
+  'cards-wont-commit',
+  'cards-ready-commit',
+]
+
 // The ad ANGLE a hook belongs to. Carried on every tarot PostHog event (see
 // lib/tarotAttribution.ts) so the two decode-him families can be compared as GROUPS
 // without listing each hook: one `angle = trust` filter instead of three hook values,
@@ -67,11 +86,12 @@ export const TRUST_HOOKS: TarotHook[] = ['cards-who-he-is', 'cards-real-person',
 //
 // Derived here rather than hardcoded at the call sites, so a new hook is categorised
 // the moment it is added to one of the arrays above.
-export type TarotAngle = 'decode-him' | 'trust' | 'self-frame'
+export type TarotAngle = 'decode-him' | 'trust' | 'commitment' | 'self-frame'
 
 export function angleForHook(hook: TarotHook): TarotAngle {
   if (SELF_FRAME_HOOKS.includes(hook)) return 'self-frame'
   if (TRUST_HOOKS.includes(hook)) return 'trust'
+  if (COMMITMENT_HOOKS.includes(hook)) return 'commitment'
   return 'decode-him'
 }
 
@@ -83,6 +103,9 @@ export const TAROT_HOOKS: TarotHook[] = [
   'cards-who-he-is',
   'cards-real-person',
   'cards-misled',
+  'cards-will-commit',
+  'cards-wont-commit',
+  'cards-ready-commit',
   'cards-love-again',
   'cards-soulmate',
 ]
@@ -113,6 +136,9 @@ export const HEADLINES: Record<TarotHook, string> = {
   'cards-who-he-is': 'Is he really who he says he is?',
   'cards-real-person': 'Is he the real person, or just a picture?',
   'cards-misled': 'Am I being misled?',
+  'cards-will-commit': 'Will he ever commit?',
+  'cards-wont-commit': "Why won't he commit to me?",
+  'cards-ready-commit': 'Is he ever going to be ready for real commitment?',
   'cards-love-again': 'Will I love again?',
   'cards-soulmate': 'When is my soulmate coming?',
 }
@@ -127,6 +153,9 @@ const TAROT_QUESTION: Record<TarotHook, string> = {
   'cards-who-he-is': "Before I look closer, tell me… when did you first catch a glimpse of someone different behind the man he shows you?",
   'cards-real-person': "Before I look closer, tell me… what is the one thing about him you have never been able to reach?",
   'cards-misled': "Before I look closer, tell me… what have you been told that your own eyes keep arguing with?",
+  'cards-will-commit': "Before I look closer, tell me… what has he said about the future that you've been holding on to?",
+  'cards-wont-commit': "Before I look closer, tell me… when did you first notice you were the only one building toward something?",
+  'cards-ready-commit': "Before I look closer, tell me… what would ready actually look like, coming from him?",
   'cards-love-again': "Before I look closer, tell me… what has been weighing on your heart since it happened?",
   'cards-soulmate': "Before I look closer, tell me… what is the love you're still holding out for — the one you haven't given up on?",
 }
@@ -847,6 +876,76 @@ const RETURN_MHF: CardSetConfig = {
         "That is not random; you reached for the card of the easy answer, the one that was simpler to leave standing than to fix.",
         "The Fool does not mean he set out to mislead you — it points to someone who let a convenient impression stand rather than correct it, which lands on you the same way in the end; what you are sensing is a real absence of straightening-out, not you being suspicious for no reason.",
         "Let me look closer at what he has never bothered to correct…",
+      ],
+    },
+    // ── Commitment hooks (2026-07-31) ────────────────────────────────────────
+    // The riskiest angle to write. "Will he ever…" is a direct request for a
+    // PREDICTION, and the pull is to answer it — which would be the verdict the
+    // whole funnel forbids. So every beat-3 here answers WHERE HE STANDS, never
+    // what happens next, and carries no timeframe. Bespoke wording: nothing is
+    // recycled from the decode-him or trust hooks (verified mechanically — no
+    // shared 6-word run in beat 3).
+    'cards-will-commit': {
+      a: [
+        "You turned the Magician, dear — the card of will, of what a man is actually choosing.",
+        "You are asking whether he will ever commit, and your hand found the card of choice rather than circumstance.",
+        "The Magician hands down no yes and no no — it says the capability is sitting right there unused, and your sense that he could if he decided to is reading him accurately, not flattering him.",
+        "Let me look closer at what he keeps choosing instead…",
+      ],
+      b: [
+        "You turned the Hanged Man, dear — the card of the held breath, of the thing suspended between two answers.",
+        "You reached for the card that matches exactly where he has left you standing.",
+        "The Hanged Man will not tell me he will or he won't — it says he is genuinely undecided rather than quietly certain, and the waiting you have done has been real waiting, not something you invented to stay hopeful.",
+        "Let me look closer at what he is weighing…",
+      ],
+      c: [
+        "You turned the Fool, dear — the card of the open road, of the step not yet taken.",
+        "Your hand went to the card of beginnings, which is telling for a question about a man who has not begun.",
+        "The Fool promises nothing about the step being taken — it says nothing here has been sealed shut, and the part of you that has not stopped hoping is reading an open situation rather than being naive.",
+        "Let me look closer at the step that is waiting…",
+      ],
+    },
+    // ⚠ This hook PRESUPPOSES his refusal. Two failure modes, not one: pronouncing
+    // on his character, and letting the answer land as her fault. The reads route
+    // the "why" to where HE is stuck and never to anything she did or is.
+    'cards-wont-commit': {
+      a: [
+        "You turned the Magician, dear — the card of intention, of the will behind what a man does and does not do.",
+        "You are asking why he will not, and your hand found the card that says his holding back is active rather than accidental.",
+        "The Magician does not name him cold or cruel — it points to a man aiming his will somewhere he has not shown you, and your read that this is a choice rather than bad timing is sound.",
+        "Let me look closer at where his intention has been going…",
+      ],
+      b: [
+        "You turned the Hanged Man, dear — the card of the man who stopped mid-step and never finished it.",
+        "You reached for the card of suspension, and it is his that you have been living inside.",
+        "The Hanged Man does not say he is withholding to punish you — it points to someone stuck rather than settled, and the straight answer he keeps failing to give you is one he does not possess, not one you asked for wrongly.",
+        "Let me look closer at what has him stuck…",
+      ],
+      c: [
+        "You turned the Fool, dear — the card of the unfinished road, of the man still treating his life as a beginning.",
+        "Your hand reached for the card of the not-yet, which is where he has kept living.",
+        "The Fool does not make him a bad man — it points to someone who has not arrived yet rather than someone who weighed you and decided against you, and that difference matters far more than anyone has told you.",
+        "Let me look closer at what he is still circling…",
+      ],
+    },
+    'cards-ready-commit': {
+      a: [
+        "You turned the Magician, dear — the card of a man's own power to build something.",
+        "You are asking about readiness, and your hand found the card of capability rather than circumstance.",
+        "The Magician makes no promise that the day arrives — it says the material is all there and unassembled, and your instinct that he is capable of more than he has been giving is not wishful thinking.",
+        "Let me look closer at what he would have to put down first…",
+      ],
+      b: [
+        "You turned the Hanged Man, dear — the card of the long pause that comes before a turn.",
+        "You reached for the card of the in-between, and readiness is exactly the thing that lives there.",
+        "The Hanged Man offers no when and no whether — it says he is mid-change rather than finished forming, and the patience you have spent went to something genuinely unfinished rather than to nothing at all.",
+        "Let me look closer at the turn he has not made…",
+      ],
+      c: [
+        "You turned the Fool, dear — the card of the beginner, of the one still learning the road.",
+        "Your hand went to the card of the untested, which is a fair description of where he is standing.",
+        "The Fool is no sign that growing into it is beyond him — it points to someone earlier in the journey than you are rather than someone who cannot make it, and the distance you have been feeling between you is real and worth naming out loud.",
+        "Let me look closer at the distance between where you each stand…",
       ],
     },
   },

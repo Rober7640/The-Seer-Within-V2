@@ -175,6 +175,41 @@ const DECKS: FlowDeck[] = [
     cardPattern: /the (Magician|Hanged Man|Fool)/,
     situation: "He tells me one thing and then I find out something completely different, and I am starting to feel crazy.",
   },
+  // ── COMMITMENT hooks on the live face-down deck (2026-07-31) ─────────────────
+  // A different panel each (a/b/c) so the three runs cover all three cards as well
+  // as all three headlines. Face-DOWN shuffles, so the card cannot be asserted —
+  // `cardPattern` checks it named one of the three, which is the correct assertion
+  // for this facing (see expectCard, face-up only).
+  {
+    deck: 'return-mhf',
+    hook: 'cards-will-commit',
+    headline: 'Will he ever commit?',
+    slug: 'return-mhf-cards-will-commit',
+    card: 'a',
+    cardNames: ['the Magician', 'the Hanged Man', 'the Fool'],
+    cardPattern: /the (Magician|Hanged Man|Fool)/,
+    situation: "We have been together two years and he still will not talk about living together or anything after that.",
+  },
+  {
+    deck: 'return-mhf',
+    hook: 'cards-wont-commit',
+    headline: "Why won't he commit to me?",
+    slug: 'return-mhf-cards-wont-commit',
+    card: 'b',
+    cardNames: ['the Magician', 'the Hanged Man', 'the Fool'],
+    cardPattern: /the (Magician|Hanged Man|Fool)/,
+    situation: "Every time I bring up the future he changes the subject, and I have started to feel like I am asking for too much.",
+  },
+  {
+    deck: 'return-mhf',
+    hook: 'cards-ready-commit',
+    headline: 'Is he ever going to be ready for real commitment?',
+    slug: 'return-mhf-cards-ready-commit',
+    card: 'c',
+    cardNames: ['the Magician', 'the Hanged Man', 'the Fool'],
+    cardPattern: /the (Magician|Hanged Man|Fool)/,
+    situation: "He says he is not in a place for anything serious yet, and I keep waiting for that to change.",
+  },
   // ─────────────────────────────────────────────────────────────────────────────
   {
     deck: 'arcana-eef',

@@ -175,6 +175,10 @@ for (const [hook, headline] of [
   ["cards-who-he-is", "Is he really who he says he is?"],
   ["cards-real-person", "Is he the real person, or just a picture?"],
   ["cards-misled", "Am I being misled?"],
+  // Commitment hooks added 2026-07-31 (face-down first).
+  ["cards-will-commit", "Will he ever commit?"],
+  ["cards-wont-commit", "Why won't he commit to me?"],
+  ["cards-ready-commit", "Is he ever going to be ready for real commitment?"],
 ] as const) {
   test(`hook ${hook} renders its own headline`, async ({ page }) => {
     await blockMeta(page);
