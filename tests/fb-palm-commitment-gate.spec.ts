@@ -306,6 +306,40 @@ test.describe("fb-palm commitment gate (v1_palm_commitment_gate_2026)", () => {
     });
   }
 
+  // /fb-tarot — the gate was extended past fb-palm on 2026-07-31 (Joel: "extend the
+  // commitment gate test to the Tarot funnel as well"), so scope.funnel went from the
+  // string 'v1-palm' to ['v1-palm','v1-tarot'] on the SAME experiment key.
+  //
+  // What this asserts is the CLIENT half: /fb-tarot/chat renders the same ChatPage,
+  // and the gate card is keyed purely off userData.commitmentGate with no funnel
+  // condition — so a tarot visitor in arm B sees the identical gate. The arm is
+  // stubbed here (as on every test in this file), so the SERVER half — that a
+  // v1-tarot lead actually enrols, and that /fb, /fb2, /gdn and the base funnel do
+  // NOT — is covered by matchesFunnelScope's unit tests in server/lib/experiments.test.ts.
+  //
+  // Prices are the same $35/$25 on tarot (FIXED_FUNNEL_PRICES['v1-tarot']); only the
+  // variant ID differs, and the UI never renders it.
+  test("gated arm: the gate also renders on the /fb-tarot funnel", async ({ page }) => {
+    await harness(page, GATE);
+    await page.goto("/fb-tarot/chat?hook=cards-honest&card=a");
+    expect(await driveToPitch(page), "never reached the pitch on /fb-tarot").toBe(true);
+    await expect(page.locator('[data-testid="commitment-gate-card"]')).toBeVisible();
+    // Same three commitments as palm — the card is shared, not re-authored per funnel.
+    for (const line of COMMITMENTS) {
+      await expect(page.getByText(line, { exact: false })).toBeVisible();
+    }
+  });
+
+  test("control arm on /fb-tarot is untouched: plain CTA, no gate", async ({ page }) => {
+    await harness(page, CONTROL);
+    await page.goto("/fb-tarot/chat?hook=cards-honest&card=a");
+    expect(await driveToPitch(page)).toBe(true);
+    await expect(page.locator('[data-testid="commitment-gate-card"]')).toHaveCount(0);
+    await expect(
+      page.getByRole("button", { name: /Begin My Energy Clearing/i }).first(),
+    ).toBeVisible();
+  });
+
   test("control arm is untouched: plain CTA, no gate", async ({ page }) => {
     const cap = await harness(page, CONTROL);
     await page.goto(ENTRY);

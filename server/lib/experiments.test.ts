@@ -7,7 +7,7 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import crypto from 'crypto';
 
-import { experimentBucket, pickVariant, twoSidedP, shouldForceRunning, PAYWALL_EXPERIMENT_KEY } from './experiments';
+import { experimentBucket, pickVariant, twoSidedP, shouldForceRunning, matchesFunnelScope, PAYWALL_EXPERIMENT_KEY } from './experiments';
 import type { ExperimentVariant } from '../../shared/schema';
 
 const ref = (id: string, key: string) =>
@@ -120,6 +120,68 @@ describe('shouldForceRunning (dev/QA force-running gate)', () => {
     for (const status of ['paused', 'done', 'running']) {
       assert.equal(shouldForceRunning(KEY, status, KEY), false, `status=${status} must not be forced`);
     }
+  });
+});
+
+describe('matchesFunnelScope (funnel enrolment filter)', () => {
+  // Every V1 funnel, so "does this leak?" is asked against the real roster rather
+  // than a token other-funnel. Mirrors shared/funnelConfig.ts.
+  const V1_FUNNELS = ['v1-fb', 'v1-fb2', 'v1-gdn', 'v1-palm', 'v1-tarot'];
+
+  it('no scope → enrols every funnel (a global test is unfiltered)', () => {
+    for (const f of [...V1_FUNNELS, null, undefined]) {
+      assert.equal(matchesFunnelScope(null, f), true);
+      assert.equal(matchesFunnelScope(undefined, f), true);
+    }
+  });
+
+  it('a STRING scope still enrols exactly that one funnel (unchanged behaviour)', () => {
+    assert.equal(matchesFunnelScope('v1-palm', 'v1-palm'), true);
+    for (const f of V1_FUNNELS.filter((f) => f !== 'v1-palm')) {
+      assert.equal(matchesFunnelScope('v1-palm', f), false, `${f} must not enrol`);
+    }
+    // A funnel-scoped test never enrols traffic that carries no funnel at all
+    // (the base Evelyn funnel `/` passes null).
+    assert.equal(matchesFunnelScope('v1-palm', null), false);
+    assert.equal(matchesFunnelScope('v1-palm', undefined), false);
+  });
+
+  it('an ARRAY scope enrols every listed funnel and NOTHING else', () => {
+    // The live shape after the commitment gate was extended to /fb-tarot.
+    const scope = ['v1-palm', 'v1-tarot'];
+    assert.equal(matchesFunnelScope(scope, 'v1-palm'), true);
+    assert.equal(matchesFunnelScope(scope, 'v1-tarot'), true);
+    for (const f of ['v1-fb', 'v1-fb2', 'v1-gdn']) {
+      assert.equal(matchesFunnelScope(scope, f), false, `${f} must not leak into the gate test`);
+    }
+    assert.equal(matchesFunnelScope(scope, null), false);
+    assert.equal(matchesFunnelScope(scope, undefined), false);
+  });
+
+  it('a single-entry array behaves exactly like the bare string', () => {
+    for (const f of [...V1_FUNNELS, null, undefined]) {
+      assert.equal(
+        matchesFunnelScope(['v1-palm'], f),
+        matchesFunnelScope('v1-palm', f),
+        `['v1-palm'] and 'v1-palm' must agree for funnel=${f}`,
+      );
+    }
+  });
+
+  it('an empty / all-junk array is treated as NO filter, never as "no traffic"', () => {
+    // [] is truthy, so the old `if (scope.funnel && ...)` check would have skipped the
+    // filter anyway; this pins that a config mistake can never silently scope a running
+    // test to zero traffic. /start rejects it outright — see admin/experiments.ts.
+    for (const bad of [[], ['', '  '.trim()], [null, undefined, 42] as unknown as string[]]) {
+      assert.equal(matchesFunnelScope(bad, 'v1-palm'), true);
+      assert.equal(matchesFunnelScope(bad, 'v1-tarot'), true);
+    }
+  });
+
+  it('ignores junk entries but still honours the real ones alongside them', () => {
+    const scope = [null, 'v1-tarot', 42, ''] as unknown as string[];
+    assert.equal(matchesFunnelScope(scope, 'v1-tarot'), true);
+    assert.equal(matchesFunnelScope(scope, 'v1-palm'), false);
   });
 });
 

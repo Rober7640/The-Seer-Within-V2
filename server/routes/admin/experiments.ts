@@ -50,7 +50,10 @@ const variantsSchema = z
 const scopeSchema = z
   .object({
     personaId: z.string().nullable().optional(),
-    funnel: z.string().optional(), // typed so a non-string funnel can't silently start an inert test
+    // Typed so a non-string funnel can't silently start an inert test. An ARRAY enrols
+    // several funnels in one pooled test (fb-palm commitment gate + /fb-tarot, 7/31);
+    // `.min(1)` because [] would scope the test to no traffic at all.
+    funnel: z.union([z.string(), z.array(z.string().min(1)).min(1)]).optional(),
     sign: z.string().optional(),   // same reason: a non-string sign would scope the test to nothing
     route: z.string().optional(),
   })
@@ -645,9 +648,17 @@ router.post('/:key/start', async (req: Request, res: Response) => {
     // live system_config split at once, and the gate would hit every V1 lander rather
     // than fb-palm. Keyed on the KEY (not conversion.type) so it can't be bypassed by
     // editing the draft's conversion type away from v1_main_funnel before /start.
-    if (V1_MAIN_FUNNEL_KEYS.includes(key) && !exp.scope?.funnel) {
+    // An ARRAY is accepted (a test run across several named funnels) but an EMPTY one is
+    // not: it is truthy, so a bare `!scope.funnel` would wave through a test scoped to no
+    // traffic at all. Reachable only via a direct DB write — the zod schema rejects [] —
+    // which is exactly how these rows get edited once started (assignment freeze below).
+    const scopedFunnels = exp.scope?.funnel;
+    const hasFunnelScope = Array.isArray(scopedFunnels)
+      ? scopedFunnels.some((f) => typeof f === 'string' && f.length > 0)
+      : typeof scopedFunnels === 'string' && scopedFunnels.length > 0;
+    if (V1_MAIN_FUNNEL_KEYS.includes(key) && !hasFunnelScope) {
       return res.status(400).json({
-        error: `the '${key}' test must set scope.funnel before starting (it applies to that one funnel only)`,
+        error: `the '${key}' test must set scope.funnel before starting (it applies to those funnels only)`,
       });
     }
     // persona_prompt_* tests drive the live AI prompt: arms must be authored, and

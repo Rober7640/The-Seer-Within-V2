@@ -234,6 +234,36 @@ export interface Assignment {
 }
 
 /**
+ * Does this subject's funnel fall inside the experiment's funnel scope?
+ *
+ * `scope.funnel` is either ONE funnel (`'v1-palm'`) or a LIST (`['v1-palm','v1-tarot']`)
+ * for a test deliberately run across several funnels — the fb-palm commitment gate was
+ * extended to /fb-tarot this way (2026-07-31), one pooled test rather than a second key.
+ * Absent/null/empty scope = no funnel filter at all (a global test enrols everyone).
+ *
+ * ⚠ An EMPTY array means "no funnels", which would make a test silently inert. That is
+ * almost certainly a config mistake rather than an intent, so it is treated as "no
+ * filter" here and rejected outright by the /start guard (admin/experiments.ts) — the
+ * same reasoning as typing `funnel` so a non-string can't scope a test to nothing.
+ *
+ * Exported for unit tests: assign() itself needs a DB, this is the pure part.
+ */
+export function matchesFunnelScope(
+  scopeFunnel: string | string[] | null | undefined,
+  contextFunnel: string | null | undefined,
+): boolean {
+  if (!scopeFunnel) return true;
+  if (Array.isArray(scopeFunnel)) {
+    // Non-string entries can't match a funnel param, so they'd scope the test to
+    // nothing — drop them rather than let one typo'd entry look like a real filter.
+    const funnels = scopeFunnel.filter((f): f is string => typeof f === 'string' && f.length > 0);
+    if (funnels.length === 0) return true;
+    return typeof contextFunnel === 'string' && funnels.includes(contextFunnel);
+  }
+  return contextFunnel === scopeFunnel;
+}
+
+/**
  * Authoritative variant for (experiment, subject) — sticky, config-gated,
  * scope-aware. Returns:
  *   - null                              if the experiment/subject is unknown
@@ -274,10 +304,10 @@ export async function assign(
   // rollout so a concluded persona-scoped test doesn't leak its winner to other
   // personas / other funnels.)
   if (exp.scope?.personaId && context?.personaId !== exp.scope.personaId) return controlArm;
-  // Funnel scope (V1 price tests): a funnel-scoped test only enrols that funnel's
-  // traffic, so migrating one funnel onto the framework never touches another
-  // funnel's live system_config split. Absent scope.funnel = no funnel filter.
-  if (exp.scope?.funnel && context?.funnel !== exp.scope.funnel) return controlArm;
+  // Funnel scope (V1 price/UI tests): a funnel-scoped test only enrols those
+  // funnels' traffic, so migrating one funnel onto the framework never touches
+  // another funnel's live system_config split. Absent scope.funnel = no filter.
+  if (!matchesFunnelScope(exp.scope?.funnel, context?.funnel)) return controlArm;
   // Sign scope (per-LANDER V1 price tests): narrows a funnel-scoped test to ONE
   // fb-palm sign, so a price test on a single new lander never enrols the rest of
   // v1-palm — and in particular never disturbs the live thumb-only system_config

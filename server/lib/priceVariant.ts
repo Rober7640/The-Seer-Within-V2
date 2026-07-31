@@ -262,9 +262,18 @@ export async function assignVariantIfMissing(
       // test is readable only as one pooled number and "did the gate work better on
       // hand-size than on thumb?" becomes permanently unanswerable.
       // PII-free: an ad-sign slug, already normalised + length-capped.
+      //
+      // `funnel` is captured for the same reason, and became load-bearing when the
+      // gate was extended past fb-palm to /fb-tarot (2026-07-31) as ONE pooled test.
+      // The pooled A-vs-B number stays the decision metric, but without this the
+      // palm-vs-tarot split is unrecoverable — `normalizeSign` returns null off palm,
+      // so tarot rows carry no sign and would be indistinguishable from a palm row
+      // whose sign failed to resolve. Same one-shot constraint as `sign`: exposures
+      // are unique(key, subject_id), so what isn't written now can never be added.
       await logExposure(PALM_GATE_EXPERIMENT_KEY, hashEmail(email), palmGate.variant, 'palm_gate_assigned', {
         conversationId: row.id,
         sign: gateSign,
+        funnel: funnel ?? null,
       });
     }
 
