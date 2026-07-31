@@ -31,6 +31,15 @@ export type TarotHook =
   | 'cards-return' // Will he come back?
   | 'cards-feels' // How does he really feel about you?
   | 'cards-cheating' // Is he cheating on you?
+  // Trust/authenticity hooks (2026-07-30). Still decode-him, but the wound is who he
+  // IS rather than what he's done: the man he presents vs the man underneath, whether
+  // there's a real person behind an image, and whether the account she's been given
+  // matches what she has seen herself. Reads are bespoke — deliberately no shared
+  // vocabulary with cards-honest, so a visitor never gets a reveal that answers a
+  // different question than the headline she clicked.
+  | 'cards-who-he-is' // Is he really who he says he is?
+  | 'cards-real-person' // Is he the real person, or just a picture?
+  | 'cards-misled' // Am I being misled?
   // Self-frame hooks (read HER, affirm the hopeful yes — like the palm love hooks).
   | 'cards-love-again' // Will I love again?
   | 'cards-soulmate' // When is my soulmate coming?
@@ -47,11 +56,33 @@ export type TarotDeck = 'decode-him' | 'arcana-mfh' | 'arcana-eef' | 'return-mhf
 // HIM as a tendency). The server reflect prompt branches on this too.
 export const SELF_FRAME_HOOKS: TarotHook[] = ['cards-love-again', 'cards-soulmate']
 
+// The trust/authenticity hooks (2026-07-30). Still decode-him in FORM — they read him as
+// a tendency — but the wound is who he IS rather than what he has done.
+export const TRUST_HOOKS: TarotHook[] = ['cards-who-he-is', 'cards-real-person', 'cards-misled']
+
+// The ad ANGLE a hook belongs to. Carried on every tarot PostHog event (see
+// lib/tarotAttribution.ts) so the two decode-him families can be compared as GROUPS
+// without listing each hook: one `angle = trust` filter instead of three hook values,
+// and a clean breakdown of the original angles vs the trust angles.
+//
+// Derived here rather than hardcoded at the call sites, so a new hook is categorised
+// the moment it is added to one of the arrays above.
+export type TarotAngle = 'decode-him' | 'trust' | 'self-frame'
+
+export function angleForHook(hook: TarotHook): TarotAngle {
+  if (SELF_FRAME_HOOKS.includes(hook)) return 'self-frame'
+  if (TRUST_HOOKS.includes(hook)) return 'trust'
+  return 'decode-him'
+}
+
 export const TAROT_HOOKS: TarotHook[] = [
   'cards-honest',
   'cards-return',
   'cards-feels',
   'cards-cheating',
+  'cards-who-he-is',
+  'cards-real-person',
+  'cards-misled',
   'cards-love-again',
   'cards-soulmate',
 ]
@@ -79,6 +110,9 @@ export const HEADLINES: Record<TarotHook, string> = {
   'cards-return': 'Will he come back?',
   'cards-feels': 'How does he really feel about you?',
   'cards-cheating': 'Is he cheating on you?',
+  'cards-who-he-is': 'Is he really who he says he is?',
+  'cards-real-person': 'Is he the real person, or just a picture?',
+  'cards-misled': 'Am I being misled?',
   'cards-love-again': 'Will I love again?',
   'cards-soulmate': 'When is my soulmate coming?',
 }
@@ -90,6 +124,9 @@ const TAROT_QUESTION: Record<TarotHook, string> = {
   'cards-return': "Before I look closer, tell me… what was left unfinished when he pulled away?",
   'cards-feels': "Before I look closer, tell me… what does he do that makes you unsure of how he feels?",
   'cards-cheating': "Before I look closer, tell me… when did the feeling that something's off first creep in?",
+  'cards-who-he-is': "Before I look closer, tell me… when did you first catch a glimpse of someone different behind the man he shows you?",
+  'cards-real-person': "Before I look closer, tell me… what is the one thing about him you have never been able to reach?",
+  'cards-misled': "Before I look closer, tell me… what have you been told that your own eyes keep arguing with?",
   'cards-love-again': "Before I look closer, tell me… what has been weighing on your heart since it happened?",
   'cards-soulmate': "Before I look closer, tell me… what is the love you're still holding out for — the one you haven't given up on?",
 }
@@ -322,7 +359,7 @@ const ARCANA_MFH: CardSetConfig = {
       b: [
         "You chose the Fool, dear — the card of the open, unguarded hand.",
         "That's not random; you reached for the card that matches something you feel in how he moves through this.",
-        "The Fool doesn't mean he's deceiving you — it can mean he's careless with the truth more than cruel with it; either way, your read that he isn't being fully deliberate is worth trusting.",
+        "The Fool doesn't point to deception — it points to a man who hasn't sat down and thought it through; what's unsaid here may be unexamined rather than hidden, and your sense that you're not getting the whole picture is still accurate.",
         "Let me look closer at what he's leaving unsaid…",
       ],
       c: [
@@ -340,15 +377,19 @@ const ARCANA_MFH: CardSetConfig = {
         "Let me look closer at what's holding his hand back…",
       ],
       b: [
-        "You chose the Fool, dear — the card of the unexpected turn, the new chapter.",
-        "You're asking if he'll return, carrying something that still feels unfinished.",
-        "The Fool doesn't mean he's gone for good — it leans toward a fresh, unexpected turn; what comes back often comes back as a new beginning, not the old shape.",
+        // 2026-07-30: brought in line with the 2026-07-28 sign-off (return-mhf:596-598).
+        // The previous beat 3 read 'what comes back often comes back as a new beginning',
+        // which presupposes a return. The signed-off wording is conditional — it never
+        // predicts that he comes back.
+        "You chose the Fool, dear — the card of the unwritten chapter, the road still open.",
+        "Your hand went to the one card that refuses to call this finished.",
+        "The Fool doesn't mean he's gone for good — it points to a road still open rather than a door closed; if something does come of this, it begins fresh rather than picking up where it broke.",
         "Let me look closer at the turn that's forming…",
       ],
       c: [
         "You chose the Hanged Man, dear — the card of the pause before movement.",
         "You reached for the card that matches the in-between you've been living in.",
-        "The Hanged Man doesn't mean the door is shut — it means he's suspended, still deciding from a new angle; this waiting is often the pause right before a return.",
+        "The Hanged Man doesn't promise a return — it says this is unresolved rather than finished, and the part of you that refuses to call it over is reading the situation accurately.",
         "Let me look closer at what he's reconsidering…",
       ],
     },
@@ -390,6 +431,78 @@ const ARCANA_MFH: CardSetConfig = {
         "You reached for the card that matches the limbo you can't quite name.",
         "The Hanged Man is not a confession — it means something between you is on hold and not what it seems from your angle; the feeling that something's paused and off is real, and it deserves clarity, not self-blame.",
         "Let me look closer at what's actually suspended between you…",
+      ],
+    },
+    // ── Trust/authenticity hooks (2026-07-30) ────────────────────────────────
+    // PORTED CARD-FOR-CARD from the face-down return-mhf deck: same three cards, so
+    // the same question on the same card gives the same read. Panel letters differ
+    // between the decks (return-mhf b=Hanged Man/c=Fool; here b=Fool/c=Hanged Man), so
+    // these were remapped by CARD, and the reveal verb is face-up "You chose".
+    // 'Is he really who he says he is?' — the man he presents vs the man underneath.
+    'cards-who-he-is': {
+      a: [
+        "You chose the Magician, dear — the card of the man who authors himself.",
+        "Your hand went to the card of someone who decides what the world gets to see, and I don't think that was chance.",
+        "The Magician doesn't make him a fraud — it says the man he introduces you to is a version he built on purpose, and your sense that there is a second one living underneath it is worth taking seriously.",
+        "Let me look closer at the man he keeps out of the introduction…",
+      ],
+      b: [
+        "You chose the Fool, dear — the card of the man who is still becoming.",
+        "That is not random; you reached for the card that matches how unsettled he seems, even to himself.",
+        "The Fool doesn't accuse him of pretending — it leans toward a man who has not finished deciding who he is, so the person you met and the one in front of you now genuinely differ; the inconsistency you keep noticing is real, and it is not your imagination.",
+        "Let me look closer at which of him is the one that stays…",
+      ],
+      c: [
+        "You chose the Hanged Man, dear — the card of the single angle, of what you can only see from one side.",
+        "You reached for the card that matches how partial he still feels to you, even now.",
+        "The Hanged Man doesn't say he is someone else — it says you have only ever been shown one side of him, and the reason you cannot get a clean read is that you have never been given the whole.",
+        "Let me look closer at the part of him you were never introduced to…",
+      ],
+    },
+    // 'Is he the real person, or just a picture?' — she has only ever had an image.
+    //
+    // ⚠ Catfish/romance-scam audience. Reads BACK HER CAUTION and never vouch for him —
+    // reassurance is the failure mode here (2026-07-10 buyer audit). Never pronounce him
+    // fake either; that is a verdict. Ported verbatim from return-mhf.
+    'cards-real-person': {
+      a: [
+        "You chose the Magician, dear — the card of the made thing, of the image that someone assembled.",
+        "Your hand went to the card of construction, and that tells me you have already sensed how much of him arrives pre-arranged.",
+        "The Magician does not tell me he is fictional — it tells me that what you have been given is an image, and an image can be built by anyone; the fact that you cannot get past it to a person is information, not impatience on your part.",
+        "Let me look closer at how much of him exists off the screen…",
+      ],
+      b: [
+        "You chose the Fool, dear — the card of the beginning that has not yet touched the ground.",
+        "That is not random; you reached for the card of something still weightless, still untested by real life.",
+        "The Fool does not brand him a stranger — it says what you have so far is a beginning that has never had to survive an ordinary afternoon together, and until it does, what you are holding is a promise rather than a person; your caution here is wisdom, not cynicism.",
+        "Let me look closer at what it would take to bring this into daylight…",
+      ],
+      c: [
+        "You chose the Hanged Man, dear — the card of the thing that hangs, that never quite lands.",
+        "You reached for the card that matches the waiting you have been doing for him to become real.",
+        "The Hanged Man does not declare him an invention — it marks someone who stays permanently almost-here, always one obstacle short of meeting you, and that pattern is the answer you have been asking me for; a man who wants to be known finds a way to be reached.",
+        "Let me look closer at what always seems to come up right before he arrives…",
+      ],
+    },
+    // 'Am I being misled?' — restore trust in HER OWN perception; she arrives self-doubting.
+    'cards-misled': {
+      a: [
+        "You chose the Magician, dear — the card of the hand that shapes the story.",
+        "You reached for the card of direction, and women do not reach for that card when the account they have been given adds up.",
+        "The Magician does not hand down a verdict that you are being deceived — it says the version of events you keep being offered has been shaped for you, and the small places where it does not match what you saw with your own eyes are exactly where your attention belongs.",
+        "Let me look closer at the detail that never quite fits…",
+      ],
+      b: [
+        "You chose the Fool, dear — the card of what gets left uncorrected.",
+        "That is not random; you reached for the card of the easy answer, the one that was simpler to leave standing than to fix.",
+        "The Fool does not mean he set out to mislead you — it points to someone who let a convenient impression stand rather than correct it, which lands on you the same way in the end; what you are sensing is a real absence of straightening-out, not you being suspicious for no reason.",
+        "Let me look closer at what he has never bothered to correct…",
+      ],
+      c: [
+        "You chose the Hanged Man, dear — the card of the view that is deliberately kept unclear.",
+        "You reached for the card that matches the dizziness of never being able to settle what is true.",
+        "The Hanged Man is not proof that you are being played — it says you have been kept at a distance from the whole of it, and the confusion you have been blaming on yourself is a symptom of that distance, not a flaw in your judgment.",
+        "Let me look closer at what the confusion has been protecting…",
       ],
     },
   },
@@ -435,8 +548,8 @@ const ARCANA_EEF: CardSetConfig = {
       ],
       c: [
         "You chose the Fool, dear — the card of the open, unguarded hand.",
-        "You reached for the card that matches something you sense in how carelessly he moves through this.",
-        "The Fool doesn't mean he's deceiving you — it leans toward someone careless with the truth more than cruel with it; your read that he isn't being fully deliberate is worth trusting.",
+        "You reached for the card that matches something you feel in how he moves through this.",
+        "The Fool doesn't point to deception — it points to a man who hasn't sat down and thought it through; what's unsaid here may be unexamined rather than hidden, and your sense that you're not getting the whole picture is still accurate.",
         "Let me look closer at what he's leaving unsaid…",
       ],
     },
@@ -657,6 +770,83 @@ const RETURN_MHF: CardSetConfig = {
         "Your hand reached for the card that matches the restlessness you've been feeling from him.",
         "The Fool is not proof of unfaithfulness — it leans toward impulsiveness and living in the moment; watch that tendency, but what your intuition is flagging deserves a closer, honest look, not a spiral.",
         "Let me look closer at what the restlessness is really about…",
+      ],
+    },
+    // ── Trust/authenticity hooks (2026-07-30) ────────────────────────────────
+    // DRAFT reads pending operator sign-off. Written bespoke per hook: the wound
+    // here is who he IS, not what he's done, so none of the cards-honest /
+    // cards-return / cards-feels vocabulary is reused. A woman who clicks "Is he
+    // the real person, or just a picture?" must get a reveal about THAT, not a
+    // repurposed honesty read.
+    //
+    // 'Is he really who he says he is?' — the man he presents vs the man underneath.
+    'cards-who-he-is': {
+      a: [
+        "You turned the Magician, dear — the card of the man who authors himself.",
+        "Your hand went to the card of someone who decides what the world gets to see, and I don't think that was chance.",
+        "The Magician doesn't make him a fraud — it says the man he introduces you to is a version he built on purpose, and your sense that there is a second one living underneath it is worth taking seriously.",
+        "Let me look closer at the man he keeps out of the introduction…",
+      ],
+      b: [
+        "You turned the Hanged Man, dear — the card of the single angle, of what you can only see from one side.",
+        "You reached for the card that matches how partial he still feels to you, even now.",
+        "The Hanged Man doesn't say he is someone else — it says you have only ever been shown one side of him, and the reason you cannot get a clean read is that you have never been given the whole.",
+        "Let me look closer at the part of him you were never introduced to…",
+      ],
+      c: [
+        "You turned the Fool, dear — the card of the man who is still becoming.",
+        "That is not random; you reached for the card that matches how unsettled he seems, even to himself.",
+        "The Fool doesn't accuse him of pretending — it leans toward a man who has not finished deciding who he is, so the person you met and the one in front of you now genuinely differ; the inconsistency you keep noticing is real, and it is not your imagination.",
+        "Let me look closer at which of him is the one that stays…",
+      ],
+    },
+    // 'Is he the real person, or just a picture?' — she has only ever had an image.
+    //
+    // ⚠ This hook selects for women who suspect a fake profile or a romance scam. The
+    // 2026-07-10 buyer audit found Evelyn reframing textbook scam markers as a genuine
+    // bond (rubric check-10 FAIL, escalated). So these reads AFFIRM HER CAUTION and
+    // never vouch for him — while still never stating as fact that he is fake, which
+    // would be a verdict. See TAROT_HOOK_TENDENCY in server/lib/prompts.ts.
+    'cards-real-person': {
+      a: [
+        "You turned the Magician, dear — the card of the made thing, of the image that someone assembled.",
+        "Your hand went to the card of construction, and that tells me you have already sensed how much of him arrives pre-arranged.",
+        "The Magician does not tell me he is fictional — it tells me that what you have been given is an image, and an image can be built by anyone; the fact that you cannot get past it to a person is information, not impatience on your part.",
+        "Let me look closer at how much of him exists off the screen…",
+      ],
+      b: [
+        "You turned the Hanged Man, dear — the card of the thing that hangs, that never quite lands.",
+        "You reached for the card that matches the waiting you have been doing for him to become real.",
+        "The Hanged Man does not declare him an invention — it marks someone who stays permanently almost-here, always one obstacle short of meeting you, and that pattern is the answer you have been asking me for; a man who wants to be known finds a way to be reached.",
+        "Let me look closer at what always seems to come up right before he arrives…",
+      ],
+      c: [
+        "You turned the Fool, dear — the card of the beginning that has not yet touched the ground.",
+        "That is not random; you reached for the card of something still weightless, still untested by real life.",
+        "The Fool does not brand him a stranger — it says what you have so far is a beginning that has never had to survive an ordinary afternoon together, and until it does, what you are holding is a promise rather than a person; your caution here is wisdom, not cynicism.",
+        "Let me look closer at what it would take to bring this into daylight…",
+      ],
+    },
+    // 'Am I being misled?' — the account she's been given vs what she has seen. The
+    // win is restoring trust in HER OWN perception; she arrives already self-doubting.
+    'cards-misled': {
+      a: [
+        "You turned the Magician, dear — the card of the hand that shapes the story.",
+        "You reached for the card of direction, and women do not reach for that card when the account they have been given adds up.",
+        "The Magician does not hand down a verdict that you are being deceived — it says the version of events you keep being offered has been shaped for you, and the small places where it does not match what you saw with your own eyes are exactly where your attention belongs.",
+        "Let me look closer at the detail that never quite fits…",
+      ],
+      b: [
+        "You turned the Hanged Man, dear — the card of the view that is deliberately kept unclear.",
+        "You reached for the card that matches the dizziness of never being able to settle what is true.",
+        "The Hanged Man is not proof that you are being played — it says you have been kept at a distance from the whole of it, and the confusion you have been blaming on yourself is a symptom of that distance, not a flaw in your judgment.",
+        "Let me look closer at what the confusion has been protecting…",
+      ],
+      c: [
+        "You turned the Fool, dear — the card of what gets left uncorrected.",
+        "That is not random; you reached for the card of the easy answer, the one that was simpler to leave standing than to fix.",
+        "The Fool does not mean he set out to mislead you — it points to someone who let a convenient impression stand rather than correct it, which lands on you the same way in the end; what you are sensing is a real absence of straightening-out, not you being suspicious for no reason.",
+        "Let me look closer at what he has never bothered to correct…",
       ],
     },
   },

@@ -466,8 +466,8 @@ export async function registerRoutes(
         case "palmOpener": {
           // Validate against fixed enums before injecting into the prompt.
           // palmSign is optional and defaults to 'thumb' (original behavior).
-          const validSigns = ["thumb", "finger-lock", "finger-shape", "palms", "palm-signs", "thumb-curve", "thumb-curve-alt", "hand-size", "finger-length", "finger-length-alt", "thumb-angle"];
-          const validHooks = ["soulmate-timing", "already-met", "love-again", "is-he-true", "sense-lying", "heart-safe"];
+          const validSigns = ["thumb", "finger-lock", "finger-shape", "palms", "palm-signs", "thumb-curve", "thumb-curve-alt", "hand-size", "finger-length", "finger-length-alt", "thumb-angle", "heart-line"];
+          const validHooks = ["soulmate-timing", "already-met", "love-again", "is-he-true", "sense-lying", "heart-safe", "right-person", "love-taking-long", "wrong-person", "relationship-right"];
           const validThumbs = ["a", "b", "c"];
           const sign = palmSign ?? "thumb";
           if (!validSigns.includes(sign) || !validHooks.includes(palmHook ?? "") || !validThumbs.includes(palmThumb ?? "")) {
@@ -479,8 +479,8 @@ export async function registerRoutes(
         case "palmReflect": {
           // Interactive Version C — reads her typed answer (input).
           // palmSign is optional and defaults to 'thumb' (original behavior).
-          const validSigns = ["thumb", "finger-lock", "finger-shape", "palms", "palm-signs", "thumb-curve", "thumb-curve-alt", "hand-size", "finger-length", "finger-length-alt", "thumb-angle"];
-          const validHooks = ["soulmate-timing", "already-met", "love-again", "is-he-true", "sense-lying", "heart-safe"];
+          const validSigns = ["thumb", "finger-lock", "finger-shape", "palms", "palm-signs", "thumb-curve", "thumb-curve-alt", "hand-size", "finger-length", "finger-length-alt", "thumb-angle", "heart-line"];
+          const validHooks = ["soulmate-timing", "already-met", "love-again", "is-he-true", "sense-lying", "heart-safe", "right-person", "love-taking-long", "wrong-person", "relationship-right"];
           const validThumbs = ["a", "b", "c"];
           const sign = palmSign ?? "thumb";
           if (!validSigns.includes(sign) || !validHooks.includes(palmHook ?? "") || !validThumbs.includes(palmThumb ?? "")) {
@@ -495,7 +495,7 @@ export async function registerRoutes(
           // against fixed enums; tarotDeck defaults to 'decode-him'. Keep these
           // rosters in sync with client/src/content/tarotReads.ts (fb-tarot-add-card).
           const validDecks = ["decode-him", "arcana-mfh", "arcana-eef", "return-mhf"];
-          const validHooks = ["cards-honest", "cards-return", "cards-feels", "cards-cheating", "cards-love-again", "cards-soulmate"];
+          const validHooks = ["cards-honest", "cards-return", "cards-feels", "cards-cheating", "cards-who-he-is", "cards-real-person", "cards-misled", "cards-love-again", "cards-soulmate"];
           const validCards = ["a", "b", "c"];
           const deck = tarotDeck ?? "decode-him";
           if (!validDecks.includes(deck) || !validHooks.includes(tarotHook ?? "") || !validCards.includes(tarotCard ?? "")) {

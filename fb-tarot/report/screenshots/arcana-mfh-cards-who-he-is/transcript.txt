@@ -1,0 +1,26 @@
+# arcana-mfh — hook cards-who-he-is ("Is he really who he says he is?"), tapped card a (the Magician/the Fool/the Hanged Man)
+# she typed: "Every time I think I know him, something turns up that does not fit the man he showed me."
+
+[1] Mmm… the Magician, the card of will and intention. I felt it the moment your eyes went to it. The connection only opens once I know who I'm speaking with, though… what's your first name, dear?
+
+[2] Sarah
+
+[3] It's lovely to meet you, Sarah.
+
+[4] Everything we discuss stays between us... our secret.
+
+[5] I can feel warmth radiating from your heart, Sarah...
+
+[6] But there's a flicker of shadow there too...
+
+[7] Let's look deeper together...
+
+[8] Tell me more about what's on your mind...
+
+[9] Every time I think I know him, something turns up that does not fit the man he showed me.
+
+[10] Sarah, those contradictions you're noticing... they're not accidents.
+
+[11] Your intuition has been whispering for a while now, hasn't it?
+
+[12] There are pieces of him he's kept hidden. Deliberately.
