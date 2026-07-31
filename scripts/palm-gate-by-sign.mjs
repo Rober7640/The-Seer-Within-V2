@@ -92,7 +92,22 @@ const PAID = `(c.main_paid_at IS NOT NULL OR (c.purchased AND c.upsell_offered))
 const PAID_DASH = `(c.purchased AND c.upsell_offered)`;
 
 const { rows } = await pool.query(`
-  SELECT COALESCE(e.context->>'sign', '(unrecorded)')                              AS sign,
+  SELECT CASE
+           -- /fb-tarot rows carry no sign (normalizeSign is palm-only), so without this
+           -- every tarot lander would collapse into '(unrecorded)' and read as
+           -- unattributed PALM traffic. Labelled by facing/angle, the same four landers
+           -- the dashboard's "By fb-tarot lander" table shows.
+           WHEN e.context->>'facing' IS NOT NULL THEN
+             'T:' || (CASE e.context->>'facing' WHEN 'up' THEN 'FaceUp' WHEN 'down' THEN 'FaceDown'
+                                                ELSE e.context->>'facing' END)
+                  || '/' || COALESCE(e.context->>'angle', '?')
+           -- Any other sign-less row is labelled with the funnel it DID carry, so the
+           -- catch-all bucket can never silently masquerade as fb-palm.
+           ELSE COALESCE(e.context->>'sign',
+                  CASE WHEN e.context->>'funnel' IS NOT NULL
+                       THEN '(unrecorded: ' || (e.context->>'funnel') || ')'
+                       ELSE '(unrecorded)' END)
+         END                                                                       AS sign,
          e.variant                                                                 AS variant,
          count(*)::int                                                             AS leads,
          count(*) FILTER (WHERE ${PAID} AND c.purchase_type='main')::int           AS main_buys,
@@ -131,7 +146,7 @@ const zTest = (a, b, key) => {
 function armLine(label, arm, r) {
   const overall = r.main_buys + r.ds_buys;
   const mainLine = r.main_list_c + r.ds_list_c; // Joel: main line only, upsells excluded
-  return `  ${label.padEnd(18)} ${arm.padEnd(3)} ${String(r.leads).padStart(6)} ` +
+  return `  ${label.padEnd(22)} ${arm.padEnd(3)} ${String(r.leads).padStart(6)} ` +
          `${String(r.main_buys).padStart(5)} ${pctS(r.main_buys, r.leads).padStart(8)} ` +
          `${String(overall).padStart(6)} ${pctS(overall, r.leads).padStart(8)} ` +
          `${$(mainLine).padStart(10)} ${$(r.leads ? mainLine / r.leads : 0).padStart(9)}`;
@@ -143,8 +158,8 @@ console.log(`\n  🔴 DENOMINATOR = LEADS (email captured), NOT visitors. An arm
 console.log(`     email capture, so a visitor who never enters an email belongs to no arm and`);
 console.log(`     cannot be counted here. Per-arm "visitor CR" does not exist. See --visitors`);
 console.log(`     for true Joel-format numbers at the LANDER level (both arms combined).\n`);
-console.log(`  ${'sign'.padEnd(18)} ${'arm'.padEnd(3)} ${'leads'.padStart(6)} ${'main'.padStart(5)} ${'MainCR'.padStart(8)} ${'ovr'.padStart(6)} ${'OvrCR'.padStart(8)} ${'$ main-line'.padStart(10)} ${'$/lead'.padStart(9)}`);
-console.log(`  ${'-'.repeat(84)}`);
+console.log(`  ${'lander'.padEnd(22)} ${'arm'.padEnd(3)} ${'leads'.padStart(6)} ${'main'.padStart(5)} ${'MainCR'.padStart(8)} ${'ovr'.padStart(6)} ${'OvrCR'.padStart(8)} ${'$ main-line'.padStart(10)} ${'$/lead'.padStart(9)}`);
+console.log(`  ${'-'.repeat(88)}`);
 
 const totals = { [CONTROL]: blank(), [TREATMENT]: blank() };
 const hidden = [];
@@ -163,26 +178,26 @@ for (const [sign, arms] of [...bySign.entries()].sort()) {
   const zMain = zTest(a, b, 'main_buys');
   const liftMain = a.main_buys && a.leads && b.leads
     ? ((b.main_buys / b.leads) / (a.main_buys / a.leads) - 1) * 100 : null;
-  console.log(`  ${''.padEnd(18)} →   gate Main-CR lift ${liftMain === null ? '—' : `${liftMain >= 0 ? '+' : ''}${liftMain.toFixed(1)}%`}` +
+  console.log(`  ${''.padEnd(22)} →   gate Main-CR lift ${liftMain === null ? '—' : `${liftMain >= 0 ? '+' : ''}${liftMain.toFixed(1)}%`}` +
               `${zMain === null ? '' : `  z=${zMain.toFixed(2)}`}   · observed split B=${((b.leads / (a.leads + b.leads)) * 100 || 0).toFixed(1)}% (target 30%)`);
 
   if (VISITORS[sign]) {
     const v = VISITORS[sign];
     const mb = a.main_buys + b.main_buys, ob = mb + a.ds_buys + b.ds_buys;
     const ml = a.main_list_c + b.main_list_c + a.ds_list_c + b.ds_list_c;
-    console.log(`  ${''.padEnd(18)} ══  JOEL FORMAT · lander total, both arms · visitors=${v} (PostHog)`);
-    console.log(`  ${''.padEnd(18)}     Main CR ${mb}÷${v} = ${pctS(mb, v)}  ·  Overall CR ${ob}÷${v} = ${pctS(ob, v)}  ·  $/visitor ${$(ml / v)}`);
+    console.log(`  ${''.padEnd(22)} ══  JOEL FORMAT · lander total, both arms · visitors=${v} (PostHog)`);
+    console.log(`  ${''.padEnd(22)}     Main CR ${mb}÷${v} = ${pctS(mb, v)}  ·  Overall CR ${ob}÷${v} = ${pctS(ob, v)}  ·  $/visitor ${$(ml / v)}`);
   }
   console.log('');
 }
 
-console.log(`  ${'-'.repeat(84)}`);
-console.log(armLine('ALL SIGNS (pooled)', CONTROL, totals[CONTROL]));
+console.log(`  ${'-'.repeat(88)}`);
+console.log(armLine('ALL LANDERS (pooled)', CONTROL, totals[CONTROL]));
 console.log(armLine('', TREATMENT, totals[TREATMENT]));
 const zAll = zTest(totals[CONTROL], totals[TREATMENT], 'main_buys');
 const liftAll = totals[CONTROL].main_buys && totals[CONTROL].leads && totals[TREATMENT].leads
   ? ((totals[TREATMENT].main_buys / totals[TREATMENT].leads) / (totals[CONTROL].main_buys / totals[CONTROL].leads) - 1) * 100 : null;
-console.log(`  ${''.padEnd(18)} →   gate Main-CR lift ${liftAll === null ? '—' : `${liftAll >= 0 ? '+' : ''}${liftAll.toFixed(1)}%`}` +
+console.log(`  ${''.padEnd(22)} →   gate Main-CR lift ${liftAll === null ? '—' : `${liftAll >= 0 ? '+' : ''}${liftAll.toFixed(1)}%`}` +
             `${zAll === null ? '' : `  z=${zAll.toFixed(2)}`}   ⟵ THIS is the decision number`);
 
 if (hidden.length) console.log(`\n  (hidden, under --min ${MIN}: ${hidden.join(', ')})`);

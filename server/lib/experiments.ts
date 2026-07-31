@@ -856,7 +856,14 @@ export interface TallyByTarotLanderRow {
  */
 export async function tallyV1MainBySign(opts: V1MainTallyOptions): Promise<TallyBySignRow[]> {
   const result = await db.execute(sql`
-    SELECT COALESCE(e.context->>'sign', '(unrecorded)')                          AS sign,
+    -- A row with no sign is labelled with the funnel it DID carry, so the catch-all
+    -- bucket can never read as unattributed fb-palm traffic when it isn't. (Normal
+    -- palm traffic always has one: normalizeSign defaults palm to 'thumb'.)
+    SELECT COALESCE(
+             e.context->>'sign',
+             CASE WHEN e.context->>'funnel' IS NOT NULL
+                  THEN '(unrecorded: ' || (e.context->>'funnel') || ')'
+                  ELSE '(unrecorded)' END)                                       AS sign,
            e.variant                                                             AS variant,
            count(*)                                                              AS viewers,
            count(*) FILTER (WHERE c.purchased AND c.upsell_offered)              AS buyers,
