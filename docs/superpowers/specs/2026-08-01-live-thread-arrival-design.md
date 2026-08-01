@@ -229,6 +229,47 @@ This response is generated the same way Evelyn's chat-side arrival-reading injec
 - **Magic-link / verification link extension** — both link types need to carry enough reference (lander session token, or the campaign + stashed reply directly) so that clicking through attaches the reply to the resulting session before the real chat renders.
 - **Differentiated free-minute grant** — the grant logic needs a path for "activated via engaged Live Thread disclosure" to award the higher (10 min, TBD) amount, distinct from whatever the baseline signup grant is elsewhere.
 
+### Flow diagram
+
+```mermaid
+flowchart TD
+  subgraph PIPE["Daily email-build pipeline — per persona, once per send"]
+    A1["Write / generate today's<br/>email content"] --> A2["Mint short code<br/>e.g. f8k2m1"]
+    A2 --> A3["Write one row to email_link_codes<br/>(persona, campaign, continueSeed,<br/>openLoop, readingRecap)"]
+    A3 --> A4["Bake /e/f8k2m1<br/>into email CTA"]
+    A4 --> A5["Send via AWeber / Kit"]
+  end
+
+  A5 --> B1["Reader clicks /e/f8k2m1"]
+  B1 --> B2{"Code resolves<br/>and has content?"}
+  B2 -- no --> B3["Generic in-character<br/>opener (fallback)"]
+  B2 -- yes --> B4["Resolve persona,<br/>campaign, continueSeed"]
+  B4 --> B5["Write lander session<br/>(durable, server-side)"]
+  B3 --> B5
+  B5 --> B6["302 redirect to /persona"]
+  B6 --> C1["FRAME 1 — LiveThreadLander renders<br/>continueSeed as opening bubble"]
+  C1 --> C2["Reader types a reply"]
+  C2 --> C3["Reply stored on<br/>lander session"]
+  C3 --> C4["Reader submits email"]
+
+  C4 --> D1{"Email matches an<br/>existing account?"}
+  D1 -- yes --> D2["Generate magic link<br/>+ lander-session ref"]
+  D1 -- no --> D3["Create pending account +<br/>verification link +<br/>activation-incentive flag"]
+  D2 --> D4["FRAME 2 — in-thread confirmation<br/>'I know you — check your email'"]
+  D3 --> D5["FRAME 2b/2c — activation-incentive<br/>ask + in-thread confirmation"]
+
+  D4 --> E1["Reader clicks magic link"]
+  D5 --> E2["Reader clicks verification link"]
+  E1 --> E3["Server authenticates"]
+  E2 --> E3
+  E3 --> E4["Look up stashed reply<br/>via lander-session token"]
+  E4 --> E5["Attach reply to the now-<br/>authenticated session"]
+  E5 --> E6["Redirect into real chat /reading"]
+  E6 --> F1["FRAME 3 — reply appears as first<br/>message; arrivalReading/generateGreeting<br/>responds to it directly"]
+```
+
+Everything in the pipeline subgraph happens once per send, ahead of time — not per visitor. Everything below it follows one reader's actual path, forking on whether their code still resolves, and again on whether their submitted email already has an account.
+
 ### Data flow
 1. Reader clicks email → hits `/e/{code}` → server resolves the code in one lookup (`personaSlug`, `campaign`, and the content fields together), writes them into a fresh lander session, and redirects to `/{persona}` → `LiveThreadLander` renders Frame 1 with the resolved `continueSeed`.
 2. Reader types a reply → client posts it to the existing lander-session endpoint, which stores the reply text against the session row already tracking `campaign`.
