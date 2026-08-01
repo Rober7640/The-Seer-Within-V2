@@ -1,0 +1,241 @@
+# The Live Thread — A New Arrival Mechanic for Email-to-Lander Traffic
+
+**Date:** 2026-08-01
+**Status:** Design approved by operator, pending implementation plan
+
+## Background
+
+A 10-agent audit (2026-08-01) found that Aiden, Evelyn, and Luna's daily emails each sell a specific, half-finished story (Aiden's "444"/Pinnacle Period, Evelyn's "the sentence you keep repeating," Luna's daily transit) and earn the click — but the lander the reader arrives at throws that story away: Aiden's lander doesn't parse the campaign param at all, Evelyn's captures it but never renders anything different because of it, and Luna shares a fully generic template with three other personas. Operator's read, after a first pass proposing incremental fixes to the existing 3-question quiz: **the quiz itself is just one possible concept, and it's the wrong one** — the goal is new structural concepts for the arrival mechanic, not a punch-list of timer/copy tweaks to the current one.
+
+This spec covers the arrival mechanic only — what a reader sees between clicking an email and hitting the signup ask. Email verification and account creation mechanics are explicitly not being re-architected here (see Scope), though their surrounding presentation changes as a direct consequence of this design.
+
+## Goal
+
+Replace the quiz mechanic on the Aiden, Evelyn, and Luna landers with a single shared concept — **the Live Thread** — that:
+1. Continues the specific email/campaign hook that earned the click, instead of resetting to a generic intro.
+2. Looks and behaves like the real chat product from the first second, so there's no jarring switch between "marketing page" and "product."
+3. Never loses what the reader typed, even across the signup/verification step.
+4. Keeps *deliberate* friction at account creation (per operator: free credits shouldn't be handed to someone who won't complete even one more step) while removing *accidental* friction (artificial timers, dead air, generic "sign up" framing).
+
+## Scope
+
+**In scope:**
+- The arrival experience on `/aiden`, `/evelyn`, `/luna` — replacing the quiz mechanics (`AidenQuizPage.tsx`'s quiz flow, `EvelynQuizMechanic.tsx`, `PersonaLanderPage.tsx`'s bucket-opener flow for Luna specifically).
+- Campaign-aware content: extending the existing `emailReadingBriefs.ts` / `arrivalReading.ts` pattern (built for Evelyn's chat-side continuity) so Aiden and Luna get an equivalent per-campaign brief registry, and so all three personas' briefs reach the *lander*, not just the chat engine.
+- The account-detection branch at the point the reader submits their email (existing account → magic link; no account → activation-incentive signup), and the in-thread confirmation messaging for both branches.
+- Preserving the reader's typed reply across the signup/verification gap and seeding the real first chat message with it.
+- Trivial friction removal that falls directly out of this redesign: no artificial per-question auto-advance delay, no forced "transition" wait screen, immediate resend availability (no 30s/60s hidden-button timer).
+
+**Out of scope (explicitly not part of this design):**
+- Marcus, Nova, Maren's shared `PersonaLanderPage.tsx` — no active email program drives traffic to them today per the audit; de-genericizing that shared component is a separate, later effort.
+- Structurally removing or restructuring email verification itself (the "collapse the double-verification hop" bigger bet from the prior audit). Verification stays required for new accounts — this design changes its framing and the UI around it, not whether it happens.
+- Live/AI-generated payoff content for anonymous, pre-signup visitors. All arrival-mechanic content is pre-written per campaign (same authoring pattern as `emailReadingBriefs.ts`), so there is no LLM cost for a visitor who never converts.
+- Any pay-to-enter or entry-pricing experiment. Per the prior audit's recommendation, that's held until continuity/friction fixes are shipped and measured.
+- The exact free-minutes number. This spec uses **10 minutes** as the working number for the activation-incentive path; the operator may revise before implementation.
+
+## The concept: Live Thread
+
+Instead of a quiz, a bio card, or a form, the lander renders as a chat transcript already in progress, visually identical to the real chat product. The persona's first bubble continues the specific hook from the email/campaign the reader clicked. The reader's reply goes in as a normal chat message, not a form field. Signup happens as a brief inline interruption inside that same thread, not a page swap — and once past it, the reader lands in the real chat with their reply already there and the persona responding to it directly.
+
+Two other concepts were considered and set aside for now:
+- **The Continuation Page** — a static page with the campaign's open loop as a headline and a single text box. Cheaper to build (reuses the brief data with a plain page instead of chat-styled UI) but doesn't remove the jarring page-to-product switch. Worth revisiting as a fast fallback if the Live Thread's build cost proves too high for a first slice.
+- **Instant Mini-Reveal Card** — a one-tap, no-typing reveal (numerology flourish / card flip / chart wheel) delivering a free templated "verdict" before any signup ask, Keen-competitor style. Removes typing friction entirely but loses the "half-typed disclosure, skin in the game" effect the winning email format depends on.
+
+## Wireframes
+
+All frames below use Aiden's `?campaign=aiden-blueprint-04-tell` ("444") send as the concrete example. Same structure applies to Evelyn and Luna, reskinned with persona voice/visuals.
+
+### Frame 1 — Arrival (0 seconds after click, before any signup ask)
+
+```
+┌─────────────────────────────────────┐
+│  ← Aiden Powers           🔒 secure  │
+├─────────────────────────────────────┤
+│                                       │
+│  ┌───────────────────────────────┐   │
+│  │ 🔮 Aiden                       │   │
+│  │                                │   │
+│  │ You picked up. Good.           │   │
+│  │ I've been holding that 444     │   │
+│  │ since your email came in.      │   │
+│  │                                │   │
+│  │ Tell me — what number's been   │   │
+│  │ calling you? I'll tell you     │   │
+│  │ what it's actually saying.     │   │
+│  └───────────────────────────────┘   │
+│                          10:41 AM    │
+│                                       │
+│         (nothing else on screen —    │
+│          no quiz, no bio card,       │
+│          no star rating, no wait)    │
+│                                       │
+├─────────────────────────────────────┤
+│  ┌───────────────────────────────┐   │
+│  │ Type your reply...           │▶│   │  ← real chat compose bar, not a form
+│  └───────────────────────────────┘   │
+└─────────────────────────────────────┘
+```
+
+The persona's opening bubble is sourced from that campaign's brief (`readingRecap`/`continueSeed` — the same fields `emailReadingBriefs.ts` already defines for Evelyn). If no brief exists for a given campaign/persona (e.g. direct traffic, no `?campaign=`, or a campaign not yet authored), fall back to a generic-but-still-in-character opener — never to the old quiz.
+
+### Frame 2 — Reader replies, hits send; existing account detected
+
+```
+┌─────────────────────────────────────┐
+│  ← Aiden Powers           🔒 secure  │
+├─────────────────────────────────────┤
+│  ┌───────────────────────────────┐   │
+│  │ 🔮 Aiden: Tell me — what       │   │
+│  │ number's been calling you? ... │   │
+│  └───────────────────────────────┘   │
+│                    ┌───────────────┐ │
+│                    │444. Every day.│ │  ← their reply, rendered as a real
+│                    └───────────────┘ │     sent chat bubble, not form input
+│  ┌───────────────────────────────┐   │
+│  │ 🔮 Aiden                       │   │
+│  │ I know you — good. Check your  │   │
+│  │ email for a one-tap link back  │   │
+│  │ to right here.                 │   │
+│  └───────────────────────────────┘   │
+├─────────────────────────────────────┤
+│  ✉️  Sent to you@example.com          │
+│      Resend available now            │
+└─────────────────────────────────────┘
+```
+
+### Frame 2b — No account found (activation-incentive framing)
+
+```
+┌─────────────────────────────────────┐
+│  ← Aiden Powers           🔒 secure  │
+├─────────────────────────────────────┤
+│  ┌───────────────────────────────┐   │
+│  │ 🔮 Aiden: Tell me — what       │   │
+│  │ number's been calling you? ... │   │
+│  └───────────────────────────────┘   │
+│                    ┌───────────────┐ │
+│                    │444. Every day.│ │
+│                    └───────────────┘ │
+├─────────────────────────────────────┤
+│  Activate your account to unlock     │
+│  this — you'll get 10 free minutes   │
+│  with Aiden to keep going.            │
+│                                       │
+│  [ your@email.com              ]     │
+│  [ Activate & claim 10 free min → ]  │
+│                                       │
+│  We'll email you a one-click link.   │
+│  No password needed.                 │
+└─────────────────────────────────────┘
+```
+
+### Frame 2c — Right after they submit their email (still inside the thread)
+
+```
+┌─────────────────────────────────────┐
+│  ← Aiden Powers           🔒 secure  │
+├─────────────────────────────────────┤
+│  ┌───────────────────────────────┐   │
+│  │ 🔮 Aiden: Tell me — what       │   │
+│  │ number's been calling you? ... │   │
+│  └───────────────────────────────┘   │
+│                    ┌───────────────┐ │
+│                    │444. Every day.│ │
+│                    └───────────────┘ │
+│  ┌───────────────────────────────┐   │
+│  │ 🔮 Aiden                       │   │
+│  │ Good — I've got it saved.      │   │
+│  │ Check your email: one tap and  │   │
+│  │ your 10 free minutes go live,  │   │
+│  │ and I'll tell you what 444's   │   │
+│  │ really saying.                 │   │
+│  └───────────────────────────────┘   │
+│                          10:42 AM    │
+├─────────────────────────────────────┤
+│  ✉️  Sent to you@example.com          │
+│      Resend available now            │
+└─────────────────────────────────────┘
+```
+
+The reward/confirmation is a message from the persona, in the thread, not a system banner — it stays part of the scrollable conversation history the reader can revisit while checking their inbox, rather than copy that disappears once submitted.
+
+### Frame 3 — Post-auth (magic link or verification click), same thread continues
+
+```
+┌─────────────────────────────────────┐
+│  ← Aiden Powers           ● online   │
+├─────────────────────────────────────┤
+│  ┌───────────────────────────────┐   │
+│  │ 🔮 Aiden: Tell me — what       │   │
+│  │ number's been calling you? ... │   │
+│  └───────────────────────────────┘   │
+│                    ┌───────────────┐ │
+│                    │444. Every day.│ │
+│                    └───────────────┘ │
+│  ┌───────────────────────────────┐   │
+│  │ 🔮 Aiden                       │   │
+│  │ Every day — that's not         │   │
+│  │ coincidence. That's a Pinnacle │   │
+│  │ Period doing exactly what it   │   │
+│  │ does right before it turns...  │   │
+│  └───────────────────────────────┘   │
+├─────────────────────────────────────┤
+│  ┌───────────────────────────────┐   │
+│  │ Type your reply...           │▶│   │
+│  └───────────────────────────────┘   │
+└─────────────────────────────────────┘
+```
+
+This response is generated the same way Evelyn's chat-side arrival-reading injection already works today (`generateGreeting`/`buildMessageContext` in `chatEngine.ts`, reading from `arrivalReading.ts`) — the only change is that the reader's reply now exists *before* this message generates, so the response can react to what they actually said instead of opening cold.
+
+## Decisions from design discussion
+
+- **Shared framework, reskinned per persona** — one Live Thread component/pattern, not three bespoke builds. Persona voice/visuals come from the same kind of per-persona config that already differentiates system prompts today (`personaLanderConfig.ts`).
+- **Campaign-aware, not just persona-aware** — the opening bubble reacts to the specific email/campaign, not just which persona sent it. Requires extending the brief-registry pattern to Aiden and Luna (today only Evelyn has one).
+- **Pre-written payoff content, zero live-AI cost pre-signup** — every persona bubble a visitor can see before authenticating is authored per campaign ahead of time, same effort as writing the email itself.
+- **Existing account → magic link, not re-registration.** Detected by email lookup at submit time. Reuses the magic-link mechanism that already works cleanly for Path B (registered-user re-engagement) elsewhere in the app.
+- **No account → intentional friction stays, reframed as reward-claim.** Verification is not removed. The ask is framed as "activate & claim N free minutes" rather than "sign up," on the reasoning that someone unwilling to complete one more step to claim a named reward was never a real prospect. Free-minute grant is provisionally **higher (10 min, exact number TBD)** for readers who engaged via a real typed disclosure through this flow, versus whatever the baseline grant is for a cold signup elsewhere (e.g. directly via `/login`).
+- **Reply survives the gap.** Whatever the reader typed before hitting the signup/magic-link branch is stashed against the session and reappears as the seed of the real first chat message — never re-asked, never lost.
+- **Confirmation lives in the thread, not a banner.** Both the magic-link case and the activation-incentive case post their confirmation as a persona-voiced chat bubble, not a system-style status message, so it's still visible if the reader scrolls back while waiting.
+- **No artificial resend delay.** Resend is available immediately, rather than the current pattern of hiding it for 30-60 seconds.
+
+## Architecture
+
+### Components
+- **`LiveThreadLander`** (new, shared) — one React component rendering the chat-styled transcript, reused across `/aiden`, `/evelyn`, `/luna`, replacing `AidenQuizPage`'s quiz flow, `EvelynQuizMechanic`, and Luna's bucket-opener flow in `PersonaLanderPage.tsx`. Takes persona voice/theme from `personaLanderConfig.ts`-style config.
+- **Per-persona brief registries** — extend `emailReadingBriefs.ts`'s pattern to Aiden and Luna (new files or a generalized registry keyed by `personaSlug` + `campaign`), each entry providing an opening bubble (`continueSeed`), a recap, and enough context for the post-auth response to continue coherently.
+- **Anonymous reply persistence** — reuse the existing `*_lander_sessions` tables (already storing `campaign` per visit) to also store the reader's typed reply text before any account exists, keyed to the lander session token already generated today.
+- **Account-detection endpoint** — a lightweight check at email-submit time: does this email match an existing verified account? Branches to (a) magic-link generation or (b) new-account creation + verification-with-incentive email.
+- **Magic-link / verification link extension** — both link types need to carry enough reference (lander session token, or the campaign + stashed reply directly) so that clicking through attaches the reply to the resulting session before the real chat renders.
+- **Differentiated free-minute grant** — the grant logic needs a path for "activated via engaged Live Thread disclosure" to award the higher (10 min, TBD) amount, distinct from whatever the baseline signup grant is elsewhere.
+
+### Data flow
+1. Reader clicks email → lands on `/{persona}?campaign=X` → server resolves the brief for `(personaSlug, campaign)` → `LiveThreadLander` renders Frame 1 with that brief's opening bubble.
+2. Reader types a reply → client posts it to the existing lander-session endpoint, which stores the reply text against the session row already tracking `campaign`.
+3. Reader submits email:
+   - **Match found** → generate a magic link carrying the lander session token → send → render Frame 2 (in-thread confirmation) → resend available immediately.
+   - **No match** → create a pending account, generate a verification link carrying the same session token + the "TBD-minutes activation grant" flag → send → render Frame 2b→2c (activation-incentive ask, then in-thread confirmation) → resend available immediately.
+4. Reader clicks the link (magic link or verification) → server verifies/authenticates → looks up the stashed reply via the session token → attaches it to the now-authenticated session → redirects into the real chat.
+5. Chat renders Frame 3: the stashed reply appears as the first user message, and the existing arrival-reading injection (already built for Evelyn) generates the persona's response to it directly, rather than a cold greeting.
+
+## Error handling / edge cases
+
+- **In-app email clients stripping query params on the verification/magic-link redirect** — a known existing issue (flagged in the prior audit for `LoginPage.tsx`). Since this design's entire value proposition depends on the reply surviving to the other side, this needs explicit handling (server-side session lookup that doesn't solely depend on a client-carried param) and a test, not just a copy fix.
+- **No brief exists for the campaign/persona** (cold traffic, unauthored campaign, direct visit with no `?campaign=`) — fall back to a generic in-character opener, never to the old quiz UI.
+- **Email-exists check as an enumeration signal** — checking whether an email matches an account before deciding magic-link-vs-registration is a mild account-enumeration exposure. Acceptable for a consumer app of this kind, but worth a conscious sign-off rather than an unexamined default.
+- **Reader never returns to click either link** — no special handling proposed here; this is the intentional friction the operator wants preserved as a quality filter.
+
+## Testing
+
+- Brief resolution: correct opening bubble/recap returned per `(personaSlug, campaign)`, generic fallback when absent.
+- Reply persistence: typed reply survives from anonymous lander session through to the first authenticated chat message, for both the magic-link and activation-incentive branches.
+- Account-detection branch: existing accounts route to magic link; new emails route to activation-incentive signup.
+- Resend: available immediately in both branches, no artificial delay.
+- Regression coverage for the known query-param-stripping issue on the verification/magic-link redirect.
+- Existing `arrivalReading.ts`/`generateGreeting` coverage (already in place for Evelyn) extended to confirm it fires correctly with a reply now present at first render, for all three personas.
+
+## Open questions for implementation planning
+
+- Exact free-minute number for the activation-incentive path (10 is a placeholder).
+- Whether the account-detection check needs rate-limiting/abuse protection given it's a new unauthenticated endpoint.
+- Full list of campaigns needing authored briefs for Aiden and Luna before this can ship for those two personas (Evelyn already has 9; Aiden/Luna need equivalent authoring).
