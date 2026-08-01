@@ -30,15 +30,41 @@ interface MintEmailLinkCodeInput {
 /** Postgres unique_violation error code (primary key or unique constraint). */
 const PG_UNIQUE_VIOLATION = '23505';
 
+/** Name Postgres gives the email_link_codes primary key (its default naming
+ * convention for a single-column PK: `<table>_pkey`). Verified against the
+ * real local schema (`\d email_link_codes`), not guessed. */
+const CODE_PK_CONSTRAINT = 'email_link_codes_pkey';
+
 function generateCode(): string {
   // 5 random bytes -> 7-char URL-safe string (base64url, no padding).
   return randomBytes(5).toString('base64url');
 }
 
-export async function mintEmailLinkCode(input: MintEmailLinkCodeInput): Promise<string> {
+/**
+ * True only when `err` is a unique_violation against THIS table's primary
+ * key — i.e. a genuine random-code collision that's safe to retry. A unique
+ * violation on any other constraint (or any other kind of error) must not be
+ * swallowed by a silent retry loop.
+ *
+ * Exported (not just inlined in the catch block) so the decision itself can
+ * be unit-tested against a fabricated error shape, independent of whether
+ * the live schema currently has a second unique constraint to provoke one.
+ */
+export function isCodeCollision(err: unknown): boolean {
+  const e = err as { code?: unknown; constraint?: unknown } | null | undefined;
+  return e?.code === PG_UNIQUE_VIOLATION && e?.constraint === CODE_PK_CONSTRAINT;
+}
+
+export async function mintEmailLinkCode(
+  input: MintEmailLinkCodeInput,
+  // Injectable purely so tests can force a specific code sequence (e.g. a
+  // pre-occupied code followed by a fresh one) to observe a real retry.
+  // Production callers never pass this — it defaults to the real generator.
+  codeGenerator: () => string = generateCode,
+): Promise<string> {
   const MAX_ATTEMPTS = 5;
   for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
-    const code = generateCode();
+    const code = codeGenerator();
     try {
       await db.insert(emailLinkCodes).values({
         code,
@@ -49,15 +75,8 @@ export async function mintEmailLinkCode(input: MintEmailLinkCodeInput): Promise<
         openLoop: input.openLoop ?? null,
       });
       return code;
-    } catch (err: any) {
-      // Only retry on a collision against THIS code's primary key — a unique
-      // violation on some other constraint (or any other error) must not be
-      // swallowed by a silent retry loop.
-      const isCodeCollision =
-        err?.code === PG_UNIQUE_VIOLATION &&
-        typeof err?.constraint === 'string' &&
-        err.constraint.includes('email_link_codes_pkey');
-      if (isCodeCollision) continue;
+    } catch (err) {
+      if (isCodeCollision(err)) continue;
       throw err;
     }
   }
