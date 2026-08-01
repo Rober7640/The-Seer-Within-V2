@@ -973,7 +973,10 @@ export interface ExperimentVariant {
 // Optional enrolment filter. null/absent field = no filter on that axis.
 export interface ExperimentScope {
   personaId?: string | null;            // only enrol this persona (Phase-1 paywall = Evelyn)
-  funnel?: string | null;               // only enrol this V1 funnel (e.g. 'v1-fb') — V1 price tests
+  funnel?: string | string[] | null;    // only enrol these V1 funnel(s) (e.g. 'v1-fb', or
+                                        // ['v1-palm','v1-tarot']) — V1 price/UI tests. A bare
+                                        // string is one funnel; an array enrols any funnel in it,
+                                        // for a UI test deliberately run across several funnels
   sign?: string | null;                 // only enrol this fb-palm sign (e.g. 'thumb-angle') — narrows
                                         // a funnel-scoped price test to ONE lander, so a per-lander
                                         // price test never touches the rest of v1-palm's traffic

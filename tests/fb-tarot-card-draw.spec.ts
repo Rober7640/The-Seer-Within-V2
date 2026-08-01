@@ -175,6 +175,10 @@ for (const [hook, headline] of [
   ["cards-who-he-is", "Is he really who he says he is?"],
   ["cards-real-person", "Is he the real person, or just a picture?"],
   ["cards-misled", "Am I being misled?"],
+  // Commitment hooks added 2026-07-31 (face-down first).
+  ["cards-will-commit", "Will he ever commit?"],
+  ["cards-wont-commit", "Why won't he commit to me?"],
+  ["cards-ready-commit", "Is he ever going to be ready for real commitment?"],
 ] as const) {
   test(`hook ${hook} renders its own headline`, async ({ page }) => {
     await blockMeta(page);
@@ -208,6 +212,79 @@ for (const [hook, card, must] of [
     // Guardrails that must hold for every read on this funnel.
     expect(text, "no exclamation marks").not.toMatch(/!/);
     expect(text, "never a flat verdict").not.toMatch(/\bhe is (lying|cheating|faithful|honest)\b/i);
+  });
+}
+
+// COMMITMENT hooks (2026-07-31) — headline↔reading pairing, all 9 combos.
+//
+// The flow spec only ever exercises ONE card per hook, because a face-down deck
+// shuffles: its three runs drew the Magician twice and the Hanged Man once, so six of
+// the nine reads had never rendered in a browser. A read is served by deck+hook+card,
+// and a hook with no read for a deck falls back WHOLESALE to DEFAULT_HOOK
+// (TarotBridge.tsx) — the right headline above the WRONG question's reading, with no
+// error anywhere. So every card under every commitment hook gets asserted.
+//
+// ⚠ ONE test per hook, collecting all three cards — NOT one test per combo. Nine
+// separate tests each hunting a specific 1-in-3 shuffle meant ~40 sequential page
+// loads apiece and blew the 300s per-test timeout. Collecting as they come is the
+// coupon-collector problem: ~5.5 draws on average for all three, not 3x40.
+const COMMITMENT_READS = [
+  {
+    hook: "cards-will-commit",
+    headline: "Will he ever commit?",
+    perCard: {
+      Magician: "asking whether he will ever commit",
+      "Hanged Man": "between two answers",
+      Fool: "a man who has not begun",
+    },
+  },
+  {
+    hook: "cards-wont-commit",
+    headline: "Why won't he commit to me?",
+    perCard: {
+      Magician: "asking why he will not",
+      "Hanged Man": "stopped mid-step",
+      Fool: "still treating his life as a beginning",
+    },
+  },
+  {
+    hook: "cards-ready-commit",
+    headline: "Is he ever going to be ready for real commitment?",
+    perCard: {
+      Magician: "asking about readiness",
+      "Hanged Man": "readiness is exactly the thing that lives there",
+      Fool: "still learning the road",
+    },
+  },
+] as const;
+
+for (const { hook, perCard } of COMMITMENT_READS) {
+  test(`commitment readings match the headline — ${hook} (all 3 cards)`, async ({ page }) => {
+    await blockMeta(page);
+    const seen = new Map<string, string>();
+    const wanted = Object.keys(perCard);
+    for (let i = 0; i < 30 && seen.size < wanted.length; i++) {
+      const named = await draw(page, FACE_DOWN_DECK, hook, MIDDLE);
+      if (!named || seen.has(named)) continue;
+      // ⚠ Do NOT read the headline here. The reveal screen has no <h2>, so innerText()
+      // auto-waits the full default timeout before rejecting — 30s burned per card,
+      // which is what blew the 300s budget on the first version of this test. The
+      // headline is asserted on the LANDER by the `renders its own headline` tests
+      // above; together with the reading assertion below (same ?hook= URL drives both)
+      // that is what proves the headline↔reading pairing.
+      seen.set(named, await page.locator("p").filter({ hasText: NAMES }).first().innerText());
+    }
+    expect([...seen.keys()].sort(), `only drew ${[...seen.keys()].join(", ")} in 30 attempts`)
+      .toEqual([...wanted].sort());
+
+    for (const [card, must] of Object.entries(perCard)) {
+      const text = seen.get(card)!;
+      // Belongs to THIS hook, not to whatever DEFAULT_HOOK would have served.
+      expect(text, `${hook}/${card} is not this hook's reading`).toContain(must);
+      expect(text, "no exclamation marks").not.toMatch(/!/);
+      expect(text, "never a flat verdict").not.toMatch(/he (is|will) (lying|cheating|commit|never commit)/i);
+      expect(text, "no timeframe").not.toMatch(/(soon|within (a|the|\d)|in (a few|the next) (day|week|month|year))/i);
+    }
   });
 }
 
@@ -276,22 +353,22 @@ test("cards-real-person never reassures her the man is genuine", async ({ page }
 // nothing tested it, so the fix could have been silently walked back.
 for (const [deck, hook, panel, must] of [
   // arcana-mfh — the ad-cleared face-up deck, on the 3 signed-off headlines.
-  // Panels: a = Magician, b = Fool, c = Hanged Man.
-  [FACE_UP_DECK, "cards-honest", "b", "unexamined rather than hidden"],
-  [FACE_UP_DECK, "cards-return", "c", "unresolved rather than finished"],
+  // Panels: a = Magician, b = Hanged Man, c = Fool (art re-ordered 2026-07-31).
+  [FACE_UP_DECK, "cards-honest", "c", "unexamined rather than hidden"],
+  [FACE_UP_DECK, "cards-return", "b", "unresolved rather than finished"],
   // The Fool's conditional softening. This is the line that predicted a return
   // ("what comes back often comes back") until 2026-07-30 — the face-down deck was
   // given this phrasing at the sign-off and the face-up deck was not.
-  [FACE_UP_DECK, "cards-return", "b", "if something does come of this"],
-  [FACE_UP_DECK, "cards-feels", "c", "real but suspended"],
+  [FACE_UP_DECK, "cards-return", "c", "if something does come of this"],
+  [FACE_UP_DECK, "cards-feels", "b", "real but suspended"],
   // arcana-eef — the ported fix. Panels: a = Emperor, b = Empress, c = Fool.
   ["arcana-eef", "cards-honest", "c", "unexamined rather than hidden"],
   // The 3 trust hooks, ported card-for-card from the face-down deck (2026-07-30). Same
   // card + same question = same read, so these assert the shared wording is present on
-  // the face-up side too. Panels here: a = Magician, b = Fool, c = Hanged Man.
+  // the face-up side too. Panels here: a = Magician, b = Hanged Man, c = Fool.
   [FACE_UP_DECK, "cards-who-he-is", "a", "a version he built on purpose"],
-  [FACE_UP_DECK, "cards-real-person", "c", "always one obstacle short of meeting you"],
-  [FACE_UP_DECK, "cards-misled", "b", "let a convenient impression stand"],
+  [FACE_UP_DECK, "cards-real-person", "b", "always one obstacle short of meeting you"],
+  [FACE_UP_DECK, "cards-misled", "c", "let a convenient impression stand"],
 ] as const) {
   test(`face-up signed-off copy — ${deck} / ${hook} / panel ${panel}`, async ({ page }) => {
     await blockMeta(page);

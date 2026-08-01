@@ -1,0 +1,26 @@
+# return-mhf — hook cards-ready-commit ("Is he ever going to be ready for real commitment?"), tapped card c (the Magician/the Hanged Man/the Fool)
+# she typed: "He says he is not in a place for anything serious yet, and I keep waiting for that to change."
+
+[1] Mmm… the Magician, the card of will and intention. I felt it the moment your hand reached for it. The connection only opens once I know who I'm speaking with, though… what's your first name, dear?
+
+[2] Sarah
+
+[3] It's lovely to meet you, Sarah.
+
+[4] Everything we discuss stays between us... our secret.
+
+[5] I can feel warmth radiating from your heart, Sarah...
+
+[6] But there's a flicker of shadow there too...
+
+[7] Let's look deeper together...
+
+[8] Tell me more about what's on your mind...
+
+[9] He says he is not in a place for anything serious yet, and I keep waiting for that to change.
+
+[10] Sarah, you're waiting for him to choose you... but part of you already knows his answer.
+
+[11] He's told you the truth. The question is whether you're hearing it.
+
+[12] You've been giving more than you receive, hoping your patience will change his heart.

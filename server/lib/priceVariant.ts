@@ -71,6 +71,22 @@ export interface AssignedVariant {
   commitmentGate?: boolean;
 }
 
+/**
+ * Which /fb-tarot lander a visitor arrived through — the tarot counterpart of the
+ * fb-palm `sign`. A LABEL ONLY: it is recorded on the commitment-gate exposure and
+ * never participates in variant selection (tarot pricing is the fixed 35_tarot).
+ *
+ * `facing` and `angle` arrive already derived from the client registry
+ * (tarotAttribution.toProps) rather than being recomputed here — the server has no
+ * tarot deck/hook registry and adding a 4th one would be one more roster to drift.
+ */
+export interface TarotLanderContext {
+  deck?: string;    // 'return-mhf' (face-down) | 'arcana-mfh' (face-up)
+  hook?: string;    // 'cards-return' | 'cards-who-he-is' | …
+  facing?: string;  // 'down' | 'up'
+  angle?: string;   // 'decode-him' | 'trust' | 'self-frame'
+}
+
 const ENV_OVERRIDE_KEY = 'V1_PRICE_VARIANTS_JSON';
 
 export type VariantsSource = 'env' | 'db' | 'fallback';
@@ -207,11 +223,17 @@ export function invalidatePriceVariantCache(): void {
  * sign-scoped variant that declares `signs`. Every other funnel and every
  * unscoped variant behaves exactly as before. Palm traffic that sends no sign
  * is treated as thumb (see normalizeSign).
+ *
+ * `tarotLander` is the /fb-tarot equivalent of `sign` — which lander she came
+ * through — recorded on the commitment-gate exposure so tarot breaks down per
+ * lander the way palm breaks down per sign. It NEVER touches pricing (tarot is a
+ * fixed variant, 35_tarot); it is a label only.
  */
 export async function assignVariantIfMissing(
   email: string,
   funnel?: string | null,
   sign?: string | null,
+  tarotLander?: TarotLanderContext | null,
 ): Promise<AssignedVariant | null> {
   try {
     const existing = await db
@@ -262,9 +284,28 @@ export async function assignVariantIfMissing(
       // test is readable only as one pooled number and "did the gate work better on
       // hand-size than on thumb?" becomes permanently unanswerable.
       // PII-free: an ad-sign slug, already normalised + length-capped.
+      //
+      // `funnel` is captured for the same reason, and became load-bearing when the
+      // gate was extended past fb-palm to /fb-tarot (2026-07-31) as ONE pooled test.
+      // The pooled A-vs-B number stays the decision metric, but without this the
+      // palm-vs-tarot split is unrecoverable — `normalizeSign` returns null off palm,
+      // so tarot rows carry no sign and would be indistinguishable from a palm row
+      // whose sign failed to resolve. Same one-shot constraint as `sign`: exposures
+      // are unique(key, subject_id), so what isn't written now can never be added.
+      //
+      // The tarot lander (deck/hook + the facing/angle the client derived) is the
+      // /fb-tarot counterpart of `sign`, and is subject to the SAME one-shot rule:
+      // recorded now or never. `facing`+`angle` are what the per-lander table groups
+      // on — Face-Up/Face-Down × decode-him/trust, the four landers actually running
+      // — while deck+hook keep a finer drill-down available later.
       await logExposure(PALM_GATE_EXPERIMENT_KEY, hashEmail(email), palmGate.variant, 'palm_gate_assigned', {
         conversationId: row.id,
         sign: gateSign,
+        funnel: funnel ?? null,
+        ...(tarotLander?.deck ? { deck: tarotLander.deck } : {}),
+        ...(tarotLander?.hook ? { hook: tarotLander.hook } : {}),
+        ...(tarotLander?.facing ? { facing: tarotLander.facing } : {}),
+        ...(tarotLander?.angle ? { angle: tarotLander.angle } : {}),
       });
     }
 

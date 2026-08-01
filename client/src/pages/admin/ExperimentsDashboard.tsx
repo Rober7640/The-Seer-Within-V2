@@ -66,6 +66,15 @@ interface ResultsResponse {
     rows: TallyVariantRow[];
     significance?: { z: number; p: number; liftPct: number; significant: boolean };
   }>;
+  // Per-/fb-tarot-lander split of the SAME rows — facing x angle, the four landers
+  // actually running. Present only when the exposures carry a facing, so a palm-only
+  // test omits it entirely. DIAGNOSTIC ONLY, exactly as bySign is.
+  byTarotLander?: Array<{
+    facing: string;
+    angle: string;
+    rows: TallyVariantRow[];
+    significance?: { z: number; p: number; liftPct: number; significant: boolean };
+  }>;
   srm?: {
     aViewers: number;
     bViewers: number;
@@ -305,6 +314,23 @@ export default function ExperimentsDashboard() {
     row.liftPct === null || row.liftPct === undefined
       ? "—"
       : `${row.liftPct >= 0 ? "+" : ""}${row.liftPct.toFixed(1)}%`;
+
+  // /fb-tarot lander label, in the words the landers are actually briefed and
+  // reported in ("Face Up — Trust / Honesty"), not the raw slugs. Falls through to
+  // the raw values for anything unrecognised, so a newly added angle still shows up
+  // as a row rather than silently rendering blank.
+  const tarotLanderLabel = (facing: string, angle: string): string => {
+    const f = facing === "up" ? "Face Up" : facing === "down" ? "Face Down" : facing;
+    const a =
+      angle === "decode-him"
+        ? "Decode Him"
+        : angle === "trust"
+          ? "Trust / Honesty"
+          : angle === "self-frame"
+            ? "Self-Frame"
+            : angle;
+    return `${f} — ${a}`;
+  };
 
   // Pre-registered-N gate: when a target is set and not yet reached, hide the
   // verdict and disable declare-winner (fixed-horizon, no peeking).
@@ -938,6 +964,61 @@ export default function ExperimentsDashboard() {
                                   >
                                     <td className="py-2 pr-4 font-mono text-xs text-gray-300">
                                       {i === 0 ? g.sign : ""}
+                                    </td>
+                                    <td className="py-2 pr-4 font-semibold">{r.variant}</td>
+                                    <td className="py-2 pr-4">{r.viewers}</td>
+                                    <td className="py-2 pr-4">{r.buyers}</td>
+                                    <td className="py-2 pr-4">{r.conversionPct}%</td>
+                                    <td className="py-2 pr-4">{liftOf(r)}</td>
+                                    <td className="py-2 pr-4">${r.revPerViewerUsd.toFixed(2)}</td>
+                                  </tr>
+                                )),
+                              )}
+                            </tbody>
+                          </table>
+                        </div>
+                      )}
+
+                      {/* Per-/fb-tarot-lander breakdown — DIAGNOSTIC ONLY. */}
+                      {results.byTarotLander && results.byTarotLander.length > 0 && (
+                        <div className="space-y-2 border-t border-gray-800 pt-3">
+                          <div className="flex items-baseline gap-2">
+                            <span className="text-sm font-semibold text-gray-200">
+                              By fb-tarot lander
+                            </span>
+                            <span className="text-xs text-amber-300">diagnostic only</span>
+                          </div>
+                          <p className="text-xs text-gray-500">
+                            The same numbers split by tarot lander — card facing × ad angle. Decide
+                            the test on the pooled table above; each lander is only a fraction of
+                            the pre-registered N, and the best-looking one will show a large lift
+                            by chance alone.
+                          </p>
+                          <table className="w-full text-sm">
+                            <thead>
+                              <tr className="border-b border-gray-700 text-left text-gray-400">
+                                <th className="py-2 pr-4">Lander</th>
+                                <th className="py-2 pr-4">Arm</th>
+                                <th className="py-2 pr-4">Exposed</th>
+                                <th className="py-2 pr-4">Buyers</th>
+                                <th className="py-2 pr-4">Conv %</th>
+                                <th className="py-2 pr-4">Lift vs {controlKey}</th>
+                                <th className="py-2 pr-4">$ / user</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {results.byTarotLander.map((g) =>
+                                g.rows.map((r, i) => (
+                                  <tr
+                                    key={`${g.facing}-${g.angle}-${r.variant}`}
+                                    className={
+                                      i === g.rows.length - 1
+                                        ? "border-b border-gray-700"
+                                        : "border-b border-gray-800/50"
+                                    }
+                                  >
+                                    <td className="py-2 pr-4 text-xs text-gray-300">
+                                      {i === 0 ? tarotLanderLabel(g.facing, g.angle) : ""}
                                     </td>
                                     <td className="py-2 pr-4 font-semibold">{r.variant}</td>
                                     <td className="py-2 pr-4">{r.viewers}</td>

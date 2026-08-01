@@ -1,0 +1,26 @@
+# return-mhf — hook cards-wont-commit ("Why won't he commit to me?"), tapped card b (the Magician/the Hanged Man/the Fool)
+# she typed: "Every time I bring up the future he changes the subject, and I have started to feel like I am asking for too much."
+
+[1] Mmm… the Hanged Man, the card of the pause and a new angle. I felt it the moment your hand reached for it. The connection only opens once I know who I'm speaking with, though… what's your first name, dear?
+
+[2] Sarah
+
+[3] It's lovely to meet you, Sarah.
+
+[4] Everything we discuss stays between us... our secret.
+
+[5] I can feel warmth radiating from your heart, Sarah...
+
+[6] But there's a flicker of shadow there too...
+
+[7] Let's look deeper together...
+
+[8] Tell me more about what's on your mind...
+
+[9] Every time I bring up the future he changes the subject, and I have started to feel like I am asking for too much.
+
+[10] Sarah, when someone avoids the future... they're protecting something. Either themselves or you.
+
+[11] You're not asking for too much. You're asking for clarity he's not ready to give.
+
+[12] The love is there... but so is his fear. I can feel both tangled together.

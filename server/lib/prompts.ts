@@ -1043,6 +1043,10 @@ const TAROT_HOOK_CONTEXT: Record<string, string> = {
   'cards-who-he-is': "She is unsure whether the man she knows is the real one or a version he presents, and keeps catching glimpses of someone different underneath.",
   'cards-real-person': "She has only ever known this man through an image or a screen, and is asking whether there is a real person on the other side of it.",
   'cards-misled': "She suspects the account she has been given does not match what she has seen herself, and has started doubting her own perception because of it.",
+  // Commitment hooks — the wound is the FUTURE he will not name.
+  'cards-will-commit': "She has been with, or waiting on, a man who has not committed, and is asking whether he ever will.",
+  'cards-wont-commit': "She has already concluded he will not commit and wants to understand why — and has usually started turning that question on herself.",
+  'cards-ready-commit': "She is asking whether the man she cares about will ever be ready for real commitment, having watched him stall at the same point more than once.",
   // Self-frame hooks — about HER future, not a specific man.
   'cards-love-again': "After heartbreak, she is asking whether she will ever love again — worn down, but the hope is still there.",
   'cards-soulmate': "She is asking WHEN her soulmate will finally arrive — tired of waiting, but still believing the right person is out there for her.",
@@ -1065,6 +1069,17 @@ const TAROT_HOOK_TENDENCY: Record<string, string> = {
   // caution; never vouch for him; still never pronounce him fake (that is a verdict).
   'cards-real-person': 'that her inability to reach him in the real world is real information, and that her caution is wisdom rather than cynicism. NEVER reassure her the bond is genuine, NEVER vouch for him, and NEVER state as fact that he is fake — affirm HER caution and her right to ask for reality before more of her heart or her money goes in',
   'cards-misled': 'that the mismatch between what she has been told and what she has observed is real information, and that the confusion is not a flaw in her judgment. NEVER state he is deceiving her and NEVER tell her she is imagining it; affirm HER perception and her right to trust her own eyes',
+  // Commitment hooks. These ask for a PREDICTION outright ("will he ever…"), which is
+  // the exact thing the funnel forbids, so the no-verdict rule has to be stated in BOTH
+  // directions plus a no-timeframe rule — otherwise "he will, give it time" reads as a
+  // promise and "he never will" reads as a pronouncement on a man she loves.
+  'cards-will-commit': 'that what she has sensed about both his capability and his hesitation is real information. NEVER promise he will commit, NEVER pronounce that he never will, and NEVER give a date or timeframe — read the card as where HE currently stands, and affirm HER right to want a decision rather than treating the wanting as pressure',
+  // ⚠ This hook PRESUPPOSES his refusal, which opens a second failure mode the others
+  // do not have: the answer sliding into HER fault. Nothing about her being too much,
+  // too available, too eager, or not enough — that is the one reading that would do
+  // real harm here.
+  'cards-wont-commit': 'that her read on the situation is sound and the exhaustion she feels is earned. NEVER supply a verdict on his character, and NEVER let the answer land as her fault — nothing suggesting she was too much, too available, or not enough. Route the "why" to where HE is stuck, and affirm HER worth and her right to ask for more',
+  'cards-ready-commit': 'that the gap she senses between what she is ready for and where he is standing is real information. NEVER promise he will become ready, NEVER pronounce that he cannot, and NEVER give a date or timeframe — affirm HER readiness as legitimate rather than impatience',
   // Self-frame — affirm HER future love, not a verdict on any man.
   'cards-love-again': 'that love is finding its way back to her — affirm HER heart and her capacity to love again, read the card as a hopeful sign for her own future; never tie it to one specific person and never a date',
   'cards-soulmate': 'that her soulmate is genuinely on the way and nearer than the waiting has let her believe — affirm HER heart and that the love she is holding out for is real and coming, read the card as a hopeful sign of arrival; answer the "when" only as a leaning (soon, close, sooner than the fear admits), NEVER tie it to one specific named person and NEVER give a date or timeframe',
@@ -1093,16 +1108,21 @@ const TAROT_CARD_VOCAB: Record<string, { mark: Record<string, string>; reading: 
       c: "what's shifting",
     },
   },
+  // Panel order changed 2026-07-31 (operator): the strip art was re-ordered from
+  // Magician|Fool|HangedMan to Magician|HangedMan|Fool, so b and c swapped here to
+  // keep each reading bound to its own card. MUST mirror ARCANA_MFH in
+  // client/src/content/tarotReads.ts — this roster is hand-maintained, and drift
+  // makes the Version-C chat opener name a card the visitor did not choose.
   'arcana-mfh': {
     mark: {
       a: 'the Magician, the card of will and intention',
-      b: 'the Fool, the card of new beginnings',
-      c: 'the Hanged Man, the card of the pause and a new angle',
+      b: 'the Hanged Man, the card of the pause and a new angle',
+      c: 'the Fool, the card of new beginnings',
     },
     reading: {
       a: 'will and intention',
-      b: 'a new beginning',
-      c: 'a suspended, turning moment',
+      b: 'a suspended, turning moment',
+      c: 'a new beginning',
     },
   },
   'arcana-eef': {
