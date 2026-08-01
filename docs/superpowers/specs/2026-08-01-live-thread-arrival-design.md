@@ -22,6 +22,7 @@ Replace the quiz mechanic on the Aiden, Evelyn, and Luna landers with a single s
 **In scope:**
 - The arrival experience on `/aiden`, `/evelyn`, `/luna` — replacing the quiz mechanics (`AidenQuizPage.tsx`'s quiz flow, `EvelynQuizMechanic.tsx`, `PersonaLanderPage.tsx`'s bucket-opener flow for Luna specifically).
 - Campaign-aware content: extending the existing `emailReadingBriefs.ts` / `arrivalReading.ts` pattern (built for Evelyn's chat-side continuity) so Aiden and Luna get an equivalent per-campaign brief registry, and so all three personas' briefs reach the *lander*, not just the chat engine.
+- An owned short-link redirector for carrying campaign context from email to lander reliably (replacing the `?campaign=` query param for all three personas — see Architecture).
 - The account-detection branch at the point the reader submits their email (existing account → magic link; no account → activation-incentive signup), and the in-thread confirmation messaging for both branches.
 - Preserving the reader's typed reply across the signup/verification gap and seeding the real first chat message with it.
 - Trivial friction removal that falls directly out of this redesign: no artificial per-question auto-advance delay, no forced "transition" wait screen, immediate resend availability (no 30s/60s hidden-button timer).
@@ -43,7 +44,7 @@ Two other concepts were considered and set aside for now:
 
 ## Wireframes
 
-All frames below use Aiden's `?campaign=aiden-blueprint-04-tell` ("444") send as the concrete example. Same structure applies to Evelyn and Luna, reskinned with persona voice/visuals.
+All frames below use Aiden's "444" send (`aiden-blueprint-04-tell` campaign, reached via a short-link code like `/e/f8k2m1` rather than a query param — see Architecture) as the concrete example. Same structure applies to Evelyn and Luna, reskinned with persona voice/visuals.
 
 ### Frame 1 — Arrival (0 seconds after click, before any signup ask)
 
@@ -198,11 +199,13 @@ This response is generated the same way Evelyn's chat-side arrival-reading injec
 - **Reply survives the gap.** Whatever the reader typed before hitting the signup/magic-link branch is stashed against the session and reappears as the seed of the real first chat message — never re-asked, never lost.
 - **Confirmation lives in the thread, not a banner.** Both the magic-link case and the activation-incentive case post their confirmation as a persona-voiced chat bubble, not a system-style status message, so it's still visible if the reader scrolls back while waiting.
 - **No artificial resend delay.** Resend is available immediately, rather than the current pattern of hiding it for 30-60 seconds.
+- **Campaign context travels via an owned short-link redirector, not a query param.** `?campaign=` (and Kit's equivalent UTM-adjacent params) are unreliable in practice: Apple's Link Tracking Protection and similar tools strip recognized tracking-style query parameters, the ESP's own click-tracking wrapper adds another hop that can mangle a long descriptive URL, and the app itself has a confirmed existing bug where in-app email-client redirects drop query params. A short opaque path-based code (`/e/f8k2m1`), resolved server-side and turned into a durable session before React ever renders, sidesteps the stripping heuristics (which target query strings, not path segments) and removes dependence on the original param surviving multiple hops. This applies to **campaign context only** — the `email` merge-tag hint stays exactly as scoped below (a prefill, never trusted for identity), since carrying it through the same mechanism would require minting a unique code per recipient at send time, a materially bigger integration with the ESP's send pipeline for a field that only saves one input step.
 
 ## Architecture
 
 ### Components
 - **`LiveThreadLander`** (new, shared) — one React component rendering the chat-styled transcript, reused across `/aiden`, `/evelyn`, `/luna`, replacing `AidenQuizPage`'s quiz flow, `EvelynQuizMechanic`, and Luna's bucket-opener flow in `PersonaLanderPage.tsx`. Takes persona voice/theme from `personaLanderConfig.ts`-style config.
+- **Short-link redirector** (new) — a `GET /e/:code` route plus a small mapping table (`code → personaSlug, campaign, createdAt`). Codes are minted once per send at email-authoring time (folded into whatever pipeline renders that day's HTML, e.g. the `render-aweber.mjs`-style scripts) and used as the CTA link for all three personas, replacing `?campaign=` entirely. On hit, the route resolves the code, writes `campaign` into the lander session immediately, and 302s into `/{persona}` with a durable session already established.
 - **Per-persona brief registries** — extend `emailReadingBriefs.ts`'s pattern to Aiden and Luna (new files or a generalized registry keyed by `personaSlug` + `campaign`), each entry providing an opening bubble (`continueSeed`), a recap, and enough context for the post-auth response to continue coherently.
 - **Anonymous reply persistence** — reuse the existing `*_lander_sessions` tables (already storing `campaign` per visit) to also store the reader's typed reply text before any account exists, keyed to the lander session token already generated today.
 - **Account-detection endpoint** — a lightweight check at email-submit time: does this email match an existing verified account? Branches to (a) magic-link generation or (b) new-account creation + verification-with-incentive email.
@@ -210,7 +213,7 @@ This response is generated the same way Evelyn's chat-side arrival-reading injec
 - **Differentiated free-minute grant** — the grant logic needs a path for "activated via engaged Live Thread disclosure" to award the higher (10 min, TBD) amount, distinct from whatever the baseline signup grant is elsewhere.
 
 ### Data flow
-1. Reader clicks email → lands on `/{persona}?campaign=X` → server resolves the brief for `(personaSlug, campaign)` → `LiveThreadLander` renders Frame 1 with that brief's opening bubble.
+1. Reader clicks email → hits `/e/{code}` → server resolves the code to `(personaSlug, campaign)`, writes it into a fresh lander session, and redirects to `/{persona}` → server resolves the brief for `(personaSlug, campaign)` → `LiveThreadLander` renders Frame 1 with that brief's opening bubble.
 2. Reader types a reply → client posts it to the existing lander-session endpoint, which stores the reply text against the session row already tracking `campaign`.
 3. Reader submits email:
    - **Match found** → generate a magic link carrying the lander session token → send → render Frame 2 (in-thread confirmation) → resend available immediately.
@@ -221,7 +224,8 @@ This response is generated the same way Evelyn's chat-side arrival-reading injec
 ## Error handling / edge cases
 
 - **In-app email clients stripping query params on the verification/magic-link redirect** — a known existing issue (flagged in the prior audit for `LoginPage.tsx`). Since this design's entire value proposition depends on the reply surviving to the other side, this needs explicit handling (server-side session lookup that doesn't solely depend on a client-carried param) and a test, not just a copy fix.
-- **No brief exists for the campaign/persona** (cold traffic, unauthored campaign, direct visit with no `?campaign=`) — fall back to a generic in-character opener, never to the old quiz UI.
+- **The short-link code itself fails to arrive or resolve** (link forwarded, code typo'd/truncated, code expired or never existed — e.g. a test/preview send) — fall back to the generic in-character opener below, exactly as if no campaign had been provided. The redirector reduces how often context is lost; it doesn't guarantee it never is, so this path must be a well-designed fallback, not an error state.
+- **No brief exists for the campaign/persona** (cold traffic, unauthored campaign, resolved code with no matching brief yet) — fall back to a generic in-character opener, never to the old quiz UI.
 - **Email-exists check as an enumeration signal** — checking whether an email matches an account before deciding magic-link-vs-registration is a mild account-enumeration exposure. Acceptable for a consumer app of this kind, but worth a conscious sign-off rather than an unexamined default.
 - **Reader never returns to click either link** — no special handling proposed here; this is the intentional friction the operator wants preserved as a quality filter.
 
@@ -239,3 +243,5 @@ This response is generated the same way Evelyn's chat-side arrival-reading injec
 - Exact free-minute number for the activation-incentive path (10 is a placeholder).
 - Whether the account-detection check needs rate-limiting/abuse protection given it's a new unauthenticated endpoint.
 - Full list of campaigns needing authored briefs for Aiden and Luna before this can ship for those two personas (Evelyn already has 9; Aiden/Luna need equivalent authoring).
+- Whether AWeber/Kit can be configured to not additionally wrap the `/e/:code` link in their own click-tracking redirect, or whether that wrapper is unavoidable and simply becomes an extra (lower-risk, since it's now wrapping a short opaque link) hop.
+- Code lifetime/expiry policy for `/e/:code` entries, and how code-minting gets folded into each persona's existing email-build pipeline (Luna's in particular currently has no equivalent step at all).
