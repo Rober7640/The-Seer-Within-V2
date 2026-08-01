@@ -213,9 +213,15 @@ export default function EvelynLanderPage() {
     let cancelled = false;
     (async () => {
       try {
+        // Send the stored JWT if there is one, so /start can resolve an
+        // already-signed-in reader to `v2_active` instead of `brand_new`.
+        const storedToken = localStorage.getItem(AUTH_TOKEN_KEY);
         const res = await fetch("/api/evelyn-lander/start", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            ...(storedToken ? { Authorization: `Bearer ${storedToken}` } : {}),
+          },
           body: JSON.stringify({
             sessionToken,
             email: params.email ?? undefined,

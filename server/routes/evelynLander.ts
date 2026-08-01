@@ -1,7 +1,10 @@
 // Evelyn Lander backend — segment resolution, anonymous chat, auth handoff.
 //
 //   POST /api/evelyn-lander/start  → resolve segment, insert session row,
-//                                    return Evelyn's static opener
+//                                    return Evelyn's static opener. Reads an
+//                                    optional `Authorization: Bearer <jwt>`:
+//                                    a verified, active account resolves to
+//                                    'v2_active' and skips the param branches.
 //   POST /api/evelyn-lander/turn   → run safety + Haiku for one chat turn,
 //                                    enforce 2-user-message hard cap
 //   POST /api/evelyn-lander/cta    → handoff (mint JWT only for token-magic path)
@@ -18,7 +21,7 @@ import { db } from '../lib/db';
 import { evelynLanderSessions, users } from '@shared/schema';
 import { extractClientIp, extractUserAgent } from '../lib/fraudDetection';
 import { verifyMagicLinkToken } from '../lib/magicLink';
-import { generateToken } from '../lib/auth';
+import { generateToken, verifyToken } from '../lib/auth';
 import { landerLimiter, landerTurnLimiter } from '../lib/rateLimiter';
 import { checkAndLogSafety } from '../lib/universalSafety';
 import { verifyTurnstileToken } from '../lib/turnstile';
@@ -81,10 +84,47 @@ interface ResolvedSegment {
 }
 
 async function resolveSegment(input: {
+  authHeader?: string;
   email?: string;
   token?: string;
   fallbackName?: string;
 }): Promise<ResolvedSegment> {
+  // An already-signed-in reader outranks every URL param: they don't need the
+  // lander's login/register handoff at all, they need their reading. Checked
+  // first so a stale `?email=` or expired `?t=` in the email link can't
+  // downgrade them. verifyToken() returns null (never throws) for malformed,
+  // expired, or forged tokens, so any bad header falls through to the
+  // param-driven branches below exactly as if it were absent.
+  if (input.authHeader?.startsWith('Bearer ')) {
+    const payload = verifyToken(input.authHeader.slice(7));
+    if (payload?.userId) {
+      const authedRows = await db
+        .select({
+          id: users.id,
+          firstName: users.firstName,
+          emailVerified: users.emailVerified,
+          accountStatus: users.accountStatus,
+        })
+        .from(users)
+        .where(eq(users.id, payload.userId))
+        .limit(1);
+      const authed = authedRows[0];
+      // emailVerified is required: an unverified account is deliberately NOT
+      // treated as active (locked decision — it still needs the verify flow).
+      // accountStatus is free text ('active' | 'suspended' | 'banned' |
+      // 'flagged_for_review'); only 'active' skips the lander, matching the
+      // email branch below.
+      if (authed && authed.emailVerified && authed.accountStatus === 'active') {
+        return {
+          segment: 'v2_active',
+          resolvedUserId: authed.id,
+          firstName: authed.firstName ?? input.fallbackName ?? null,
+          isReturning: true,
+        };
+      }
+    }
+  }
+
   // Token wins per PRD §9 ("Token wins. Email param ignored.")
   if (input.token) {
     const result = await verifyMagicLinkToken(input.token);
@@ -181,6 +221,7 @@ async function resolveAndInsert(
   data: z.infer<typeof startSchema>,
 ) {
   const resolved = await resolveSegment({
+    authHeader: req.headers.authorization,
     email: data.email,
     token: data.token,
     fallbackName: data.name,
