@@ -11,6 +11,7 @@ import { db, pool } from '../lib/db';
 import { emailLinkCodes } from '@shared/schema';
 import { emailLinkRedirectRouter } from './emailLinkRedirect';
 import { mintEmailLinkCode } from '../lib/emailLinkCodes';
+import { posthog } from '../lib/posthog';
 
 const HAS_DB = Boolean(process.env.DATABASE_URL);
 
@@ -71,5 +72,20 @@ describe('GET /e/:code', { skip: !HAS_DB }, () => {
     const res = await request(app).get('/e/abc%00def');
     assert.equal(res.status, 302);
     assert.equal(res.headers.location, '/personas');
+  });
+
+  // A DB error must still reach monitoring (Sentry/PostHog), not just the
+  // logger, so an infrastructure failure pages someone instead of silently
+  // degrading every reader to /personas. `posthog` is a real singleton
+  // object (a no-op client in this test env, since POSTHOG_API_KEY isn't
+  // set) so spying on its own `captureException` method is a real assertion
+  // on production code, not a fabricated mock of unrelated internals.
+  it('reports a resolution error to posthog before redirecting', async (t) => {
+    const spy = t.mock.method(posthog, 'captureException', () => {});
+    const res = await request(app).get('/e/abc%00def');
+    assert.equal(res.status, 302);
+    assert.equal(res.headers.location, '/personas');
+    assert.equal(spy.mock.callCount(), 1);
+    assert.match(spy.mock.calls[0].arguments[0].message, /invalid byte sequence/);
   });
 });

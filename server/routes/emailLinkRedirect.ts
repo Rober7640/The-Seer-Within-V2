@@ -8,7 +8,9 @@
 // Task 13 is what will eventually generate /e/<code> URLs in real emails.
 
 import { Router } from 'express';
+import * as Sentry from '@sentry/node';
 import { resolveEmailLinkCode } from '../lib/emailLinkCodes';
+import { posthog } from '../lib/posthog';
 import logger from '../lib/logger';
 
 // Only Evelyn is wired for this rollout slice; Aiden/Luna are added here
@@ -27,7 +29,15 @@ emailLinkRedirectRouter.get('/e/:code', async (req, res) => {
     // resolveEmailLinkCode can reject on a real DB error, not just resolve
     // null. A reader must never see an unhandled rejection / crashed
     // request for a stale or malformed link -- fall back the same way an
-    // unresolvable code does.
+    // unresolvable code does. But an infrastructure failure here still
+    // needs to page someone: forward it to the same monitoring path the
+    // global error handler uses (server/index.ts) so it doesn't just
+    // disappear into application logs while every reader silently bounces
+    // to /personas.
+    if (process.env.SENTRY_DSN) {
+      Sentry.captureException(error);
+    }
+    posthog.captureException(error);
     logger.error('email-link-redirect: resolveEmailLinkCode failed', {
       error: error?.message,
     });
