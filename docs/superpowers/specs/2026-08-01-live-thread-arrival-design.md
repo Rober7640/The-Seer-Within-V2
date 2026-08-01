@@ -51,6 +51,67 @@ Two other concepts were considered and set aside for now:
 
 All frames below use Aiden's "444" send (`aiden-blueprint-04-tell` campaign, reached via a short-link code like `/e/f8k2m1` rather than a query param — see Architecture) as the concrete example. Same structure applies to Evelyn and Luna, reskinned with persona voice/visuals.
 
+Frames 1 through 3 below cover the anonymous path (tiers 2 and 3 — not yet logged in). Tier 1 — already authenticated and verified — never sees any of them; it's a separate, shorter branch shown first.
+
+### Frame 0a — Already logged in, no existing chat with this persona (tier 1, sub-case: new chat)
+
+```
+┌─────────────────────────────────────┐
+│  ← Aiden Powers           ● online   │
+├─────────────────────────────────────┤
+│                                       │
+│  ┌───────────────────────────────┐   │
+│  │ 🔮 Aiden                       │   │
+│  │                                │   │
+│  │ You're back — good. That 444   │   │
+│  │ from this morning's email is   │   │
+│  │ still sitting with me.         │   │
+│  │                                │   │
+│  │ Tell me — what number's been   │   │
+│  │ calling you? I'll tell you     │   │
+│  │ what it's actually saying.     │   │
+│  └───────────────────────────────┘   │
+│                          10:41 AM    │
+│                                       │
+│    (no lander, no quiz, no wait —    │
+│     one click from the email landed  │
+│     directly here, in the real chat) │
+│                                       │
+├─────────────────────────────────────┤
+│  ┌───────────────────────────────┐   │
+│  │ Type your reply...           │▶│   │
+│  └───────────────────────────────┘   │
+└─────────────────────────────────────┘
+```
+
+This is the entire tier-1 experience for a reader who's never chatted with this persona before — one click, straight into `/chat/{personaSlug}`, no lander sequence at all. The opener is a real, freshly generated message (`generateGreeting`, with the arrival-reading context injected) — the same mechanism that already produces a persona's very first message today, just now campaign-aware. Unlike Frame 1's `continueSeed`, this is generated live, not a static pre-written string, since there's no pre-auth cost constraint once someone is already an authenticated user.
+
+### Frame 0b — Already logged in, chat with this persona already exists (tier 1, sub-case: returning chat)
+
+```
+┌─────────────────────────────────────┐
+│  ← Aiden Powers           ● online   │
+├─────────────────────────────────────┤
+│  ┌───────────────────────────────┐   │
+│  │ 🔮 Aiden                       │   │
+│  │ (their last conversation,      │   │
+│  │  scrolled to where they        │   │
+│  │  left off — unchanged)         │   │
+│  └───────────────────────────────┘   │
+│                                       │
+│         (no new message appears —    │
+│          the assistant doesn't       │
+│          speak unprompted)           │
+│                                       │
+├─────────────────────────────────────┤
+│  ┌───────────────────────────────┐   │
+│  │ Type your reply...           │▶│   │
+│  └───────────────────────────────┘   │
+└─────────────────────────────────────┘
+```
+
+No proactive message is injected here — the reader just lands in their existing thread with Aiden exactly as they left it. The campaign context isn't wasted, though: it's held and applied to whatever Aiden says next, the moment the reader actually sends a message, via the normal reply path (`buildMessageContext`). This is the one tier-1 sub-case where the campaign hook doesn't visibly "greet" the reader — it's there, just quiet until they speak.
+
 ### Frame 1 — Arrival (0 seconds after click, before any signup ask)
 
 ```
@@ -231,7 +292,7 @@ Sequencing, precisely: at the moment authentication completes, the persona's ope
 - **Reply survives the gap.** Whatever the reader typed before hitting the signup/magic-link branch is stashed against the session and reappears as the seed of the real first chat message — never re-asked, never lost.
 - **Confirmation lives in the thread, not a banner.** Both the magic-link case and the activation-incentive case post their confirmation as a persona-voiced chat bubble, not a system-style status message, so it's still visible if the reader scrolls back while waiting.
 - **No artificial resend delay.** Resend is available immediately, rather than the current pattern of hiding it for 30-60 seconds.
-- **Three tiers at arrival, not two — an already-authenticated (and verified) reader skips the lander entirely.** Accounts aren't persona-specific (one account, many personas via the credit system), so "already logged in" applies regardless of which persona's email was clicked. (1) Already authenticated + verified in this browser → resolve the code, inject the arrival-reading context into the existing session, and redirect straight into `/chat/{personaSlug}` — no lander, no reply-then-gate step, zero extra clicks (better than the magic-link path, since there's no round-trip at all). The clicked persona always wins over whatever persona the account was last active with. (2) Not authenticated, email matches an existing verified account → today's Frame 2 (magic link) path. (3) Not authenticated, no account exists (or matches an unverified one) → today's Frame 2b/2c path. The check happens both at the short-link redirector AND on direct visits to `/aiden`/`/evelyn`/`/luna`, before deciding whether to write an anonymous lander session at all.
+- **Three tiers at arrival, not two — an already-authenticated (and verified) reader skips the lander entirely.** Accounts aren't persona-specific (one account, many personas via the credit system), so "already logged in" applies regardless of which persona's email was clicked. (1) Already authenticated + verified in this browser → resolve the code, redirect straight into `/chat/{personaSlug}` — no lander, no reply-then-gate step, zero extra clicks (better than the magic-link path, since there's no round-trip at all). The clicked persona always wins over whatever persona the account was last active with. This tier splits into two sub-cases (see Frame 0 wireframes): if no chat exists yet with that persona, a fresh greeting fires immediately, generated via `generateGreeting` with the arrival-reading context injected — same mechanism as an ordinary first-time greeting, just campaign-aware. If a chat with that persona already exists, the reader lands in it as-is with no proactive message; the AI doesn't speak unprompted mid-conversation, so the arrival-reading context is simply made available for whenever they next reply. (2) Not authenticated, email matches an existing verified account → today's Frame 2 (magic link) path. (3) Not authenticated, no account exists (or matches an unverified one) → today's Frame 2b/2c path. The check happens both at the short-link redirector AND on direct visits to `/aiden`/`/evelyn`/`/luna`, before deciding whether to write an anonymous lander session at all.
 - **The auth check is read-only for an authenticated visitor — it never durably mutates state via a bare `GET`.** Campaign context is injected transiently at the point the next assistant response generates, not written back to a persisted "current campaign" field on the account. This keeps `GET /e/:code` safe against prefetching, link-preview bots, and security scanners for authenticated sessions. (For anonymous visitors, a lander-session row IS created on `GET` — accepted as inexpensive, self-limiting, and not worth blocking pre-launch, since it carries no account or content until a reply/email is actually submitted.)
 - **An unresolvable code (no campaign, no persona — not even a fallback target) routes to `/personas`,** the existing persona directory, rather than guessing a lander to redirect to. A code that resolves to a persona but not yet to content still falls back to that persona's generic in-character opener.
 - **Lander content is a byproduct of each day's email pipeline, not a second authoring task.** At a daily send cadence (Luna sends every day), requiring a human to separately write lander copy for every campaign in addition to the email itself doesn't scale. Instead, whatever already builds that day's email (Evelyn's `render-aweber.mjs`-style pipeline, Luna's transit-driven generation, Aiden's equivalent once built) is extended to also emit the lander's opening bubble in the same pass — usually by reusing a line that's already being written for the email's own CTA/open-loop (see Architecture), not composing new copy.
@@ -255,7 +316,7 @@ Sequencing, precisely: at the moment authentication completes, the persona's ope
     createdAt
   ```
   A code+row is immutable once its email has actually sent — a pre-send rerun may overwrite the same draft row, but a post-send correction mints a NEW code (the original keeps resolving to what was actually mailed out, since it may already be sitting in inboxes). On hit, the route first checks for a valid existing auth session (see below). If none: resolves the code in one lookup, snapshots the FULL row (persona, campaign, and all three content fields — not just `continueSeed`) into a fresh lander session, and 302s into `/{persona}` with that session already established via a first-party cookie — no second registry to keep in sync, and nothing else needs to re-look-up the row later.
-- **Auth check (new)** — gates both `GET /e/:code` and direct visits to `/aiden`, `/evelyn`, `/luna`. Reads a first-party, server-set, HttpOnly/Secure/SameSite=Lax session cookie (the same model the app's login flow already establishes — not a client-held JWT, which a bare `GET` can't observe). Eligible states: authenticated AND email-verified only — an authenticated-but-unverified session does not qualify (see Decisions) and falls through to the normal anonymous/verify-resume path. When it qualifies: resolve the code's full content row (same single lookup as above, not a second campaign-only lookup), inject it into the existing session using the same mechanism `arrivalReading.ts` already uses (transiently, at next-response-generation time — never written back as a persisted "current campaign" field, so the check stays safe against prefetching/bots), and redirect straight into `/chat/{personaSlug}` — the CLICKED persona, overriding whatever persona the account was last active with. If the code doesn't resolve for an authenticated visitor: redirect into `/chat/{personaSlug}` (last-active persona) with a neutral, non-campaign greeting rather than erroring. If the code doesn't resolve to even a persona: redirect to `/personas`.
+- **Auth check (new)** — gates both `GET /e/:code` and direct visits to `/aiden`, `/evelyn`, `/luna`. Reads a first-party, server-set, HttpOnly/Secure/SameSite=Lax session cookie (the same model the app's login flow already establishes — not a client-held JWT, which a bare `GET` can't observe). Eligible states: authenticated AND email-verified only — an authenticated-but-unverified session does not qualify (see Decisions) and falls through to the normal anonymous/verify-resume path. When it qualifies: resolve the code's full content row (same single lookup as above, not a second campaign-only lookup) and redirect straight into `/chat/{personaSlug}` — the CLICKED persona, overriding whatever persona the account was last active with. What happens next depends on whether a chat with that persona already exists: **no existing chat** → a new one is created and `generateGreeting` fires immediately with the arrival-reading context injected (a real, visible message appears — this is the same "first message ever" mechanism already used today, just now campaign-aware); **existing chat** → it opens as-is, no message is injected proactively (the assistant doesn't speak unprompted mid-conversation), and the context is simply available for the reply-generation path (`buildMessageContext`) the next time the reader sends something. Context is never written back as a persisted "current campaign" field on the account either way, so the check stays safe against prefetching/bots. If the code doesn't resolve for an authenticated visitor: redirect into `/chat/{personaSlug}` (last-active persona) with a neutral, non-campaign greeting/continuation rather than erroring. If the code doesn't resolve to even a persona: redirect to `/personas`.
 - **Pipeline integration for content authoring** — each persona's existing daily email-build process is extended to emit a full row (all three content fields, not just `continueSeed`) in `email_link_codes` (and mint its code) as part of the same run that produces that day's email, not as a separate authoring step:
   - **Evelyn**: extend the reframe-deck's `render-aweber.mjs`-style pipeline to lift `continueSeed`/`openLoop`/`readingRecap` from the send's own written content (already covering this ground for the email) and write them to the table alongside the rendered HTML.
   - **Luna**: extend the transit-driven daily generation so the same underlying transit data that produces the email's hook also produces the lander's opener and recap fields — one generation pass, multiple outputs.
@@ -283,7 +344,9 @@ flowchart TD
   BAUTH -- yes --> G1["Resolve full content row<br/>(same single lookup)"]
   G1 --> G2["Inject arrival-reading context<br/>transiently into the session<br/>(not persisted)"]
   G2 --> G3["Redirect to /chat/personaSlug<br/>(clicked persona wins)"]
-  G3 --> G4["FRAME-3-EQUIVALENT — reply path<br/>continues the campaign hook<br/>(buildMessageContext, not<br/>generateGreeting)"]
+  G3 --> GEXIST{"Chat with this persona<br/>already exists?"}
+  GEXIST -- no --> G4["FRAME 0a — new chat created,<br/>generateGreeting fires immediately<br/>with arrival-reading context<br/>(real message appears, no reply<br/>pre-exists to respond to)"]
+  GEXIST -- yes --> G5["FRAME 0b — existing thread opens<br/>as-is, no proactive message;<br/>context available for whenever<br/>the reader next replies"]
 
   BAUTH -- no --> B2{"Code resolves<br/>and has content?"}
   B2 -- no persona at all --> BNONE["Redirect to /personas"]
