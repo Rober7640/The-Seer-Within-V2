@@ -30,7 +30,8 @@
     "test:vitest:ui": "vitest --ui",
     "luna:batch": "tsx scripts/build-luna-batch.ts",
     "luna:calendar": "tsx scripts/transit-calendar.ts",
-    "luna:sky": "tsx scripts/daily-sky.ts"
+    "luna:sky": "tsx scripts/daily-sky.ts",
+    "test:local": "tsx --env-file=.env.test --test"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.71.2",
