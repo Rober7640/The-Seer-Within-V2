@@ -24,6 +24,7 @@ Replace the quiz mechanic on the Aiden, Evelyn, and Luna landers with a single s
 - Campaign-aware content: replacing Evelyn's existing `emailReadingBriefs.ts` / `arrivalReading.ts` pattern with the single short-link-code registry described in Architecture, and extending that same pipeline integration to Aiden and Luna, so all three personas' content reaches the *lander*, not just the chat engine.
 - An owned short-link redirector for carrying campaign context from email to lander reliably, resolving directly to the lander's content in one lookup (replacing the `?campaign=` query param for all three personas — see Architecture).
 - The account-detection branch at the point the reader submits their email (existing account → magic link; no account → activation-incentive signup), and the in-thread confirmation messaging for both branches.
+- An auth check at arrival, before any of the above: a reader already authenticated in that browser skips the lander entirely (see "Decisions" and Architecture).
 - Preserving the reader's typed reply across the signup/verification gap and seeding the real first chat message with it.
 - Trivial friction removal that falls directly out of this redesign: no artificial per-question auto-advance delay, no forced "transition" wait screen, immediate resend availability (no 30s/60s hidden-button timer).
 
@@ -199,6 +200,7 @@ This response is generated the same way Evelyn's chat-side arrival-reading injec
 - **Reply survives the gap.** Whatever the reader typed before hitting the signup/magic-link branch is stashed against the session and reappears as the seed of the real first chat message — never re-asked, never lost.
 - **Confirmation lives in the thread, not a banner.** Both the magic-link case and the activation-incentive case post their confirmation as a persona-voiced chat bubble, not a system-style status message, so it's still visible if the reader scrolls back while waiting.
 - **No artificial resend delay.** Resend is available immediately, rather than the current pattern of hiding it for 30-60 seconds.
+- **Three tiers at arrival, not two — an already-authenticated reader skips the lander entirely.** Accounts aren't persona-specific (one account, many personas via the credit system), so "already logged in" applies regardless of which persona's email was clicked. (1) Already authenticated in this browser → resolve the code, inject the arrival-reading context into the existing session, and redirect straight into the real chat — no lander, no reply-then-gate step, zero extra clicks (better than the magic-link path, since there's no round-trip at all). (2) Not authenticated, email matches an existing account → today's Frame 2 (magic link) path. (3) Not authenticated, no account exists → today's Frame 2b/2c (activation-incentive) path. The check happens at the short-link redirector, before it decides whether to write an anonymous lander session at all.
 - **Lander content is a byproduct of each day's email pipeline, not a second authoring task.** At a daily send cadence (Luna sends every day), requiring a human to separately write lander copy for every campaign in addition to the email itself doesn't scale. Instead, whatever already builds that day's email (Evelyn's `render-aweber.mjs`-style pipeline, Luna's transit-driven generation, Aiden's equivalent once built) is extended to also emit the lander's opening bubble in the same pass — usually by reusing a line that's already being written for the email's own CTA/open-loop (see Architecture), not composing new copy.
 - **One registry, not two.** The short-link code maps directly to the full lander content (`continueSeed`/`openLoop`/`readingRecap`), not just to a campaign label that then requires a second lookup into a separate brief file. `campaign` survives only as a human-readable label on that same row, for reporting continuity.
 - **Campaign context travels via an owned short-link redirector, not a query param.** `?campaign=` (and Kit's equivalent UTM-adjacent params) are unreliable in practice: Apple's Link Tracking Protection and similar tools strip recognized tracking-style query parameters, the ESP's own click-tracking wrapper adds another hop that can mangle a long descriptive URL, and the app itself has a confirmed existing bug where in-app email-client redirects drop query params. A short opaque path-based code (`/e/f8k2m1`), resolved server-side and turned into a durable session before React ever renders, sidesteps the stripping heuristics (which target query strings, not path segments) and removes dependence on the original param surviving multiple hops. This applies to **campaign context only** — the `email` merge-tag hint stays exactly as scoped below (a prefill, never trusted for identity), since carrying it through the same mechanism would require minting a unique code per recipient at send time, a materially bigger integration with the ESP's send pipeline for a field that only saves one input step.
@@ -218,7 +220,8 @@ This response is generated the same way Evelyn's chat-side arrival-reading injec
     continueSeed:  "You picked up. Good. I've been holding that 444..."
     createdAt / expiresAt
   ```
-  On hit, the route resolves the code in one lookup, writes `campaign` + the content fields into a fresh lander session, and 302s into `/{persona}` with a durable session already established — no second registry to keep in sync.
+  On hit, the route first checks for a valid existing auth session (see below). If none, it resolves the code in one lookup, writes `campaign` + the content fields into a fresh lander session, and 302s into `/{persona}` with a durable session already established — no second registry to keep in sync.
+- **Auth check at the redirector (new)** — before writing any anonymous lander session, `GET /e/:code` checks the request for a valid existing auth cookie/JWT. If present and valid: skip the lander path entirely, resolve the code's campaign, inject it into the existing session using the same mechanism `arrivalReading.ts` already uses, and redirect straight into `/reading` (or `/chat/{persona}`). No new session-establishment logic needed — this is the existing authenticated-user arrival-reading path, just reached from a broadcast-style link instead of only a personalized nurture magic-link.
 - **Pipeline integration for content authoring** — each persona's existing daily email-build process is extended to emit a row in `email_link_codes` (and mint its code) as part of the same run that produces that day's email, not as a separate authoring step:
   - **Evelyn**: extend the reframe-deck's `render-aweber.mjs`-style pipeline to lift `continueSeed` from the send's own CTA/open-loop line (already written for the email) and write it to the table alongside the rendered HTML.
   - **Luna**: extend the transit-driven daily generation so the same underlying transit data that produces the email's hook also produces the lander's opener — one generation pass, two outputs.
@@ -241,7 +244,12 @@ flowchart TD
   end
 
   A5 --> B1["Reader clicks /e/f8k2m1"]
-  B1 --> B2{"Code resolves<br/>and has content?"}
+  B1 --> BAUTH{"Already authenticated<br/>in this browser?"}
+  BAUTH -- yes --> G1["Inject arrival-reading context<br/>into the existing session"]
+  G1 --> G2["Redirect straight into<br/>/reading or /chat/persona"]
+  G2 --> G3["Persona's greeting continues<br/>the campaign hook<br/>(existing generateGreeting/<br/>arrivalReading path)"]
+
+  BAUTH -- no --> B2{"Code resolves<br/>and has content?"}
   B2 -- no --> B3["Generic in-character<br/>opener (fallback)"]
   B2 -- yes --> B4["Resolve persona,<br/>campaign, continueSeed"]
   B4 --> B5["Write lander session<br/>(durable, server-side)"]
@@ -268,10 +276,11 @@ flowchart TD
   E6 --> F1["FRAME 3 — reply appears as first<br/>message; arrivalReading/generateGreeting<br/>responds to it directly"]
 ```
 
-Everything in the pipeline subgraph happens once per send, ahead of time — not per visitor. Everything below it follows one reader's actual path, forking on whether their code still resolves, and again on whether their submitted email already has an account.
+Everything in the pipeline subgraph happens once per send, ahead of time — not per visitor. Everything below it follows one reader's actual path, forking three times: whether they're already authenticated, whether their code still resolves, and whether their submitted email already has an account.
 
 ### Data flow
-1. Reader clicks email → hits `/e/{code}` → server resolves the code in one lookup (`personaSlug`, `campaign`, and the content fields together), writes them into a fresh lander session, and redirects to `/{persona}` → `LiveThreadLander` renders Frame 1 with the resolved `continueSeed`.
+0. Reader clicks email → hits `/e/{code}` → server checks for a valid existing auth session **first**. If found: resolve the code's campaign, inject it via the existing `arrivalReading.ts` mechanism, and redirect straight into `/reading`/`/chat/{persona}` — done, no lander, no reply-then-gate step.
+1. Otherwise: server resolves the code in one lookup (`personaSlug`, `campaign`, and the content fields together), writes them into a fresh lander session, and redirects to `/{persona}` → `LiveThreadLander` renders Frame 1 with the resolved `continueSeed`.
 2. Reader types a reply → client posts it to the existing lander-session endpoint, which stores the reply text against the session row already tracking `campaign`.
 3. Reader submits email:
    - **Match found** → generate a magic link carrying the lander session token → send → render Frame 2 (in-thread confirmation) → resend available immediately.
@@ -292,6 +301,7 @@ Everything in the pipeline subgraph happens once per send, ahead of time — not
 - Code resolution: correct opening bubble/recap returned for a given code, generic fallback when the code is missing/unresolvable/uncontented.
 - Pipeline integration: each persona's email-build run correctly writes a paired `email_link_codes` row (and mints a working code) alongside the rendered email, for at least one real send per persona before launch.
 - Reply persistence: typed reply survives from anonymous lander session through to the first authenticated chat message, for both the magic-link and activation-incentive branches.
+- Already-authenticated skip path: a reader with a valid session hitting `/e/:code` never sees the lander and lands directly in `/reading`/`/chat/{persona}` with the campaign's arrival-reading context applied.
 - Account-detection branch: existing accounts route to magic link; new emails route to activation-incentive signup.
 - Resend: available immediately in both branches, no artificial delay.
 - Regression coverage for the known query-param-stripping issue on the verification/magic-link redirect.
