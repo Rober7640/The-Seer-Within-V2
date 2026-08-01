@@ -1118,6 +1118,7 @@ export const evelynLanderSessions = pgTable("evelyn_lander_sessions", {
   bucket: text("bucket"),
   src: text("src"),
   campaign: text("campaign"),
+  pendingReply: text("pending_reply"),
   hadToken: boolean("had_token").default(false).notNull(),
 
   // Funnel progress (chat layer fills these later)
@@ -1139,6 +1140,25 @@ export const evelynLanderSessions = pgTable("evelyn_lander_sessions", {
 export const insertEvelynLanderSessionSchema = createInsertSchema(evelynLanderSessions);
 export type EvelynLanderSession = typeof evelynLanderSessions.$inferSelect;
 export type InsertEvelynLanderSession = z.infer<typeof insertEvelynLanderSessionSchema>;
+
+// Email link codes: the content snapshot behind an opaque short link (/e/:code)
+// sent in a marketing email, so the lander can continue the specific reading
+// the reader clicked from rather than greeting them as a stranger.
+export const emailLinkCodes = pgTable("email_link_codes", {
+  code: varchar("code").primaryKey(),
+  personaSlug: text("persona_slug").notNull(),
+  campaign: text("campaign").notNull(),
+  readingRecap: text("reading_recap"),
+  openLoop: text("open_loop"),
+  continueSeed: text("continue_seed").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_email_link_codes_campaign").on(table.campaign),
+]);
+
+export const insertEmailLinkCodeSchema = createInsertSchema(emailLinkCodes);
+export type EmailLinkCode = typeof emailLinkCodes.$inferSelect;
+export type InsertEmailLinkCode = z.infer<typeof insertEmailLinkCodeSchema>;
 
 // Generalized persona lander sessions: ONE shared table for every additional
 // persona's chat lander (Marcus, Luna, Nova, Maren, ...). Same shape as
