@@ -975,6 +975,28 @@ This spends the exact free grant Tasks 8+9 exist to give them. No way was found 
 - If the last message is a `user` row with no assistant reply, auto-trigger the reply path instead of fetching a greeting.
 - **Also owns the opener bubble**, a second gap the implementer found: spec §252 calls for the persona's `continueSeed` opener to be inserted ahead of the reply, and no task in the original 13 resolved `continueSeed` into a chat message.
 
+### Task 14 REVISED (2026-08-02, second escalation): free pre-session response
+
+**The Task 14 above is SUPERSEDED.** Its premise — "on `/reading` boot, fetch the active session and restore it" — is false against the post-Task-10 code, and the implementer escalated rather than build it.
+
+**Why:** `initSession` (where Task 10's replay lives) has exactly one call site, `POST /api/chat-service/session/start` (`server/routes/chatService.ts:188`), and the client calls it from only two places, both of which require the reader to type first (`ChatServicePage.tsx:1513`, `:1266`). **So at `/reading` boot for an email arrival there is no chat session at all.** "Restore the active session" is a no-op for the exact case it exists to serve.
+
+Consequence today: the reader arrives, sees a generic greeting, types something, and only *then* does Evelyn's answer account for their parked reply. They never see their own words. The continuity promise is half-delivered.
+
+`GET /api/chat-service/sessions` does exist (`server/routes/chatService.ts:419`) but returns all statuses unfiltered, keyed by `personaId` not slug, with no persona timeout — three guards the original text didn't mention.
+
+**Operator chose Option B.** Build:
+
+- A **new free endpoint**, in the shape `/greeting` already establishes (unbilled Anthropic call, no session created), returning `{ greeting, reply, response }` for a reader with an eligible parked reply.
+- The client renders all three as **pre-session** messages on boot. The session is still created only when the reader types, so **billing is unchanged**.
+- Cost: one extra model call per arrival, unbilled — the same cost model `/greeting` already accepts for every visitor.
+- **Care required:** `replayPendingReply` must not later duplicate the reply into the DB. Either the free endpoint claims it, or the replay learns to carry the response.
+- **Whichever way that is resolved, the read must apply the same predicates `replayPendingReply` uses** — 30-day window from `started_at`, `pending_reply_consumed_at IS NULL`, `pending_reply_violation_type IS NULL` (`liveThreadReplay.ts:128-130`). Otherwise the client shows a reply the server will refuse to replay, and the thread the reader sees stops matching the thread Evelyn is reading.
+
+**Rejected:** starting the session at boot (delivers the spec exactly, but restarts the billing clock at page load — ~10-15% of the grant on a 60-90s read, a smaller version of the bug Task 10 was redesigned to remove); and showing the parked reply without a response (smallest and safest, screen and DB agree by construction, but Evelyn doesn't speak first).
+
+**Also still open:** the opener bubble. The implementer's finding is that the generic greeting does **not** satisfy spec §252 — the parked reply reads as a non-sequitur under an unrelated opener. Fixing it needs the campaign's `continueSeed` used as `priorGreeting` at replay time, which is server work gated on Task 15's source-of-truth ruling. Not in Task 14's scope.
+
 ### Task 15 (new, 2026-08-02): carry `continueSeed` through to the lander
 
 **Found by Task 12's implementer, confirmed by the controller.** The feature's premise is that the lander opens by continuing the specific email the reader clicked. That continuation line is authored per-campaign and stored in `email_link_codes.continue_seed` (Task 2). But end to end it never reaches a reader:
