@@ -183,13 +183,81 @@ export default function EvelynLanderPage() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages.length, sending]);
 
-  // PRD §3 critical rule: logged-in V2 user skips the lander entirely.
+  // Resolve segment + opener via /start. Shared by both the anonymous chat
+  // flow and the already-logged-in redirect below, so the lander session gets
+  // written (and, for a logged-in caller, the server's JWT branch resolves
+  // `v2_active`) before anyone leaves this page. `isCancelled` lets a caller's
+  // effect suppress the state updates if it unmounted/re-ran mid-flight; it
+  // defaults to "never cancelled" for callers that don't need that guard.
+  async function postStart(isCancelled: () => boolean = () => false): Promise<void> {
+    try {
+      // Send the stored JWT if there is one, so /start can resolve an
+      // already-signed-in reader to `v2_active` instead of `brand_new`.
+      const storedToken = localStorage.getItem(AUTH_TOKEN_KEY);
+      const res = await fetch("/api/evelyn-lander/start", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(storedToken ? { Authorization: `Bearer ${storedToken}` } : {}),
+        },
+        body: JSON.stringify({
+          sessionToken,
+          email: params.email ?? undefined,
+          token: params.token ?? undefined,
+          bucket: params.bucket ?? undefined,
+          src: params.src ?? undefined,
+          campaign: params.campaign ?? undefined,
+          name: params.name ?? undefined,
+        }),
+      });
+      if (!res.ok) throw new Error(`start failed: ${res.status}`);
+      const data: StartResponse = await res.json();
+      if (isCancelled()) return;
+      setSegment(data.segment);
+      setFirstName(data.firstName);
+      const initial: ChatMessage[] = [{ role: "assistant", content: data.opener }];
+      setMessages(initial);
+      saveHistory(initial);
+      setPhase("chat");
+    } catch {
+      if (isCancelled()) return;
+      // PRD §9: param-validation / start failures fall through gracefully.
+      setSegment("brand_new");
+      setFirstName(params.name ?? null);
+      const fallback: ChatMessage[] = [
+        {
+          role: "assistant",
+          content:
+            "I'm Evelyn. I read for love, money, and purpose. Tell me what's on your mind today and I'll see what comes through.",
+        },
+      ];
+      setMessages(fallback);
+      saveHistory(fallback);
+      setPhase("chat");
+    }
+  }
+
+  // PRD §3 critical rule: logged-in V2 user skips the lander entirely. We now
+  // await /start first (with the caller's JWT attached) so the visit still
+  // gets recorded — and the server can resolve `v2_active` — before we send
+  // them on to /reading. /start swallows its own failures (see postStart's
+  // catch above) and always resolves, so a network error or 500 here can
+  // never strand a logged-in reader on the lander.
   useEffect(() => {
     if (authLoading) return;
-    if (user) {
-      clearSession();
-      navigate(READING_DEST, { replace: true });
-    }
+    if (!user) return;
+
+    let cancelled = false;
+    (async () => {
+      await postStart(() => cancelled);
+      if (!cancelled) {
+        clearSession();
+        navigate(READING_DEST, { replace: true });
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, [authLoading, user, navigate]);
 
   // Resolve segment + opener via /start. Fires on mount for BOTH arms (parallel
@@ -211,53 +279,7 @@ export default function EvelynLanderPage() {
     }
 
     let cancelled = false;
-    (async () => {
-      try {
-        // Send the stored JWT if there is one, so /start can resolve an
-        // already-signed-in reader to `v2_active` instead of `brand_new`.
-        const storedToken = localStorage.getItem(AUTH_TOKEN_KEY);
-        const res = await fetch("/api/evelyn-lander/start", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            ...(storedToken ? { Authorization: `Bearer ${storedToken}` } : {}),
-          },
-          body: JSON.stringify({
-            sessionToken,
-            email: params.email ?? undefined,
-            token: params.token ?? undefined,
-            bucket: params.bucket ?? undefined,
-            src: params.src ?? undefined,
-            campaign: params.campaign ?? undefined,
-            name: params.name ?? undefined,
-          }),
-        });
-        if (!res.ok) throw new Error(`start failed: ${res.status}`);
-        const data: StartResponse = await res.json();
-        if (cancelled) return;
-        setSegment(data.segment);
-        setFirstName(data.firstName);
-        const initial: ChatMessage[] = [{ role: "assistant", content: data.opener }];
-        setMessages(initial);
-        saveHistory(initial);
-        setPhase("chat");
-      } catch {
-        if (cancelled) return;
-        // PRD §9: param-validation / start failures fall through gracefully.
-        setSegment("brand_new");
-        setFirstName(params.name ?? null);
-        const fallback: ChatMessage[] = [
-          {
-            role: "assistant",
-            content:
-              "I'm Evelyn. I read for love, money, and purpose. Tell me what's on your mind today and I'll see what comes through.",
-          },
-        ];
-        setMessages(fallback);
-        saveHistory(fallback);
-        setPhase("chat");
-      }
-    })();
+    postStart(() => cancelled);
     return () => {
       cancelled = true;
     };
