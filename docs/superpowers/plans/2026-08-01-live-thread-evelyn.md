@@ -975,6 +975,20 @@ This spends the exact free grant Tasks 8+9 exist to give them. No way was found 
 - If the last message is a `user` row with no assistant reply, auto-trigger the reply path instead of fetching a greeting.
 - **Also owns the opener bubble**, a second gap the implementer found: spec §252 calls for the persona's `continueSeed` opener to be inserted ahead of the reply, and no task in the original 13 resolved `continueSeed` into a chat message.
 
+### Task 15 (new, 2026-08-02): carry `continueSeed` through to the lander
+
+**Found by Task 12's implementer, confirmed by the controller.** The feature's premise is that the lander opens by continuing the specific email the reader clicked. That continuation line is authored per-campaign and stored in `email_link_codes.continue_seed` (Task 2). But end to end it never reaches a reader:
+
+- `GET /e/:code` (Task 3) resolves the row, keeps only `campaign`, and **discards the seed** — `server/routes/emailLinkRedirect.ts` builds `?campaign=…` and nothing else.
+- `/start` then returns `selectStaticOpener({...})` (`server/routes/evelynLander.ts:279`) — Evelyn's generic opener, not the campaign's line.
+- `LiveThreadLander` renders whatever `opener` it is handed (Task 12 passes it per the plan).
+
+So every reader sees the same opening line regardless of which email they clicked, and the authored seed is written by the pipeline and read by nothing. **No task in the plan owned carrying it across** — the gap sits between Task 3 and Task 12, and each did exactly what its brief said.
+
+**Scope:** make `/start` return the campaign's authored `continueSeed` when the `campaign` parameter resolves to an `email_link_codes` row, falling back to the existing static opener when it does not. Roughly Task 6-sized: one endpoint change, tests, review.
+
+**Note before implementing:** `continueSeed` also exists in a hardcoded registry, `server/lib/emailReadingBriefs.ts`, which `arrivalReading.ts:107` already uses to shape the *chat* prompt. Decide which is the source of truth for the lander rather than wiring a second consumer to a duplicate.
+
 ### Rejected alternatives
 
 - **Inject as a `user_memory` row** (the `quiz_intake` shape at `auth.ts:578-590`): cheapest, no billing, and uniquely reaches the *first greeting* via `loadUserContext` — but it is not a real `chat_messages` row, so the reader never sees their own bubble. Rejected: the feature's promise is visible continuity.
