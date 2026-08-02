@@ -36,6 +36,10 @@ import evelynLanderRouter from './evelynLander';
 
 const HAS_DB = Boolean(process.env.DATABASE_URL);
 
+// Mirrors server/lib/auth.ts:10 so hand-rolled tokens are signed with whatever
+// secret verifyToken() will actually check against.
+const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-change-in-prod';
+
 // Mounted exactly as production mounts it (server/routes.ts:351).
 const app = createTestApp('/api/evelyn-lander', evelynLanderRouter);
 
@@ -96,13 +100,30 @@ describe('POST /api/evelyn-lander/start — already-authenticated caller', { ski
 
   // Beyond the brief. The auth branch reads an attacker-controlled header, so
   // every way it can be wrong must degrade to "no header" rather than 500.
-  it('falls through instead of erroring on a malformed or forged Authorization header', async () => {
+  //
+  // The `forged` and `expired` payloads name a REAL verified+active user, so the
+  // ONLY thing standing between them and a v2_active skip is verifyToken()
+  // rejecting the credential. If they named a nonexistent user they'd fall
+  // through even with signature/expiry checking broken, and prove nothing.
+  it('falls through instead of erroring on a malformed, forged or expired Authorization header', async () => {
+    const victim = await createTestUser({ emailVerified: true });
+    const claims = { userId: victim.id, email: victim.email };
+
     const cases: Record<string, string> = {
       garbage: 'Bearer not-a-jwt',
       empty: 'Bearer ',
       wrongScheme: 'Basic YWJjOmRlZg==',
-      forged: `Bearer ${jwt.sign({ userId: 'x', email: 'x@example.com' }, 'not-the-real-secret')}`,
+      forged: `Bearer ${jwt.sign(claims, 'not-the-real-secret')}`,
+      expired: `Bearer ${jwt.sign(claims, JWT_SECRET, { expiresIn: '-1s' })}`,
     };
+
+    // Guard the guard: the same claims, correctly signed and unexpired, MUST
+    // reach v2_active — otherwise the assertions below would pass vacuously.
+    const control = await request(app)
+      .post('/api/evelyn-lander/start')
+      .set('Authorization', `Bearer ${generateToken(victim.id, victim.email)}`)
+      .send({ sessionToken: landerSessionToken('bad-control') });
+    assert.equal(control.body.segment, 'v2_active');
 
     for (const [label, header] of Object.entries(cases)) {
       const res = await request(app)
@@ -130,7 +151,8 @@ describe('POST /api/evelyn-lander/start — already-authenticated caller', { ski
   });
 
   // Beyond the brief. resolveSegment already refuses non-'active' accounts on the
-  // email path (evelynLander.ts:122); the JWT path must not become a way around it.
+  // email path (`if (user.accountStatus !== 'active')` in the email branch); the
+  // JWT path must not become a way around it.
   it('does NOT resolve to v2_active for a verified but suspended or banned account', async () => {
     for (const accountStatus of ['suspended', 'banned', 'flagged_for_review']) {
       const user = await createTestUser({ emailVerified: true, accountStatus });

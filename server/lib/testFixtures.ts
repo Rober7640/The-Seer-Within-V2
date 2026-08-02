@@ -7,8 +7,15 @@
  * the exact id / token that was handed out. See server/lib/testGuards.ts for
  * why that matters (this repo's single DATABASE_URL points at production).
  *
+ * Note on assertLocalDb() placement: ES import hoisting runs `./db` before any
+ * statement in the importing module, so the guard does NOT execute before the
+ * Pool is constructed — it executes before the first QUERY, which is what
+ * actually matters (server/lib/db.ts:16 builds the Pool lazily and issues
+ * nothing at load). If you later import a module that queries at load time,
+ * that ordering no longer protects you.
+ *
  * Usage:
- *   assertLocalDb();                       // FIRST, at module scope
+ *   assertLocalDb();                       // at module scope, above the first test
  *   const app = createTestApp('/api/evelyn-lander', evelynLanderRouter);
  *   const user = await createTestUser({ emailVerified: true });
  *   after(async () => { await cleanupTestFixtures(); await pool.end(); });
@@ -34,10 +41,37 @@ function stamp(): string {
 /**
  * An Express app with the same body parsing production applies (server/index.ts:44-53),
  * with `router` mounted at the same path `server/routes.ts` mounts it.
- * The Stripe `verify` hook and request-id middleware are deliberately omitted —
- * neither affects routing or body shape.
+ *
+ * Deliberately omitted from production's stack, none of which affects routing or
+ * body shape for the routes tested so far:
+ *   - `express.json({ verify })`'s rawBody hook (server/index.ts:44-51) — Stripe only.
+ *   - `express.text({ type: 'text/plain' })` (server/index.ts:53) — no route here
+ *     accepts text/plain.
+ *   - `requestIdMiddleware` (server/index.ts:56).
+ *   - `app.set('trust proxy', 1)` (server/index.ts:36). NOTE for a future task:
+ *     without it, `extractClientIp(req)` resolves to the socket address rather
+ *     than the first X-Forwarded-For hop. POST /start persists that value
+ *     (evelyn_lander_sessions.ip_address), so a test asserting IP-derived
+ *     behaviour would see a different value than production — add
+ *     `app.set('trust proxy', 1)` to the app under test in that case.
  */
 export function createTestApp(mountPath: string, router: Router): Express {
+  // Routers under test carry the real rate limiters, which disable themselves
+  // ONLY via rateLimiter.ts:3 (`NODE_ENV === 'test' || DISABLE_RATE_LIMIT === 'true'`).
+  // landerLimiter is 5 requests/hour/IP in production mode, and a single suite
+  // easily exceeds that from one IP — so without this, tests would fail with 429s
+  // that look like route bugs. NODE_ENV comes from .env.test, which is git-ignored
+  // and machine-specific, so fail loudly rather than mysteriously on a fresh clone.
+  if (process.env.NODE_ENV !== 'test' && process.env.DISABLE_RATE_LIMIT !== 'true') {
+    throw new Error(
+      'createTestApp() requires rate limiting to be disabled, or suites will 429.\n' +
+        `Got NODE_ENV=${process.env.NODE_ENV ?? '(unset)'}, DISABLE_RATE_LIMIT=${process.env.DISABLE_RATE_LIMIT ?? '(unset)'}.\n` +
+        'Run route tests with: npm run test:local <file>\n' +
+        'and make sure your git-ignored .env.test sets NODE_ENV=test ' +
+        '(copy the shape documented in server/lib/testGuards.ts).',
+    );
+  }
+
   const app = express();
   app.use(express.json());
   app.use(express.urlencoded({ extended: false }));
