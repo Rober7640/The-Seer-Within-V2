@@ -14,6 +14,11 @@ import {
   VERIFICATION_TOKEN_EXPIRY_HOURS,
 } from '../lib/verificationEmail';
 import { sendPasswordResetEmail } from '../lib/passwordResetEmail';
+import {
+  LIVE_THREAD_FREE_MINUTES,
+  sessionHasLiveThreadReply,
+  userHasLiveThreadReply,
+} from '../lib/liveThreadEngagement';
 import { isDisposableEmail } from '../lib/disposableEmailDomains';
 import { verifyTurnstileToken } from '../lib/turnstile';
 import { validateEmail } from '../lib/neverbounce';
@@ -56,6 +61,12 @@ const EVELYN_LANDER_FREE_COINS = minutesToCoins(5); // 1495¢ = 5:00 at the defa
 // /soulmate lander signups mirror the /evelyn grant exactly (5 min). Same Evelyn
 // persona, same drip enrollment downstream. Eligibility = isFromSoulmateLander() below.
 const SOULMATE_LANDER_FREE_COINS = minutesToCoins(5); // 1495¢ = 5:00 at the default rate
+// "The Live Thread": an /evelyn lander reader who actually TYPED a reply before
+// signing up earns 10 minutes instead of 5. Eligibility = userHasLiveThreadReply()
+// on top of isFromEvelynLander() — see the note below that function. The minute count is imported, not
+// re-declared, because getFreeMinutesForSignup() quotes the same constant — which is
+// what stops the quote and the grant from drifting apart (verificationEmail.ts:52).
+const LIVE_THREAD_FREE_COINS = minutesToCoins(LIVE_THREAD_FREE_MINUTES); // 2990¢ = 10:00
 // VERIFICATION_TOKEN_EXPIRY_HOURS now lives in ../lib/verificationEmail (imported
 // above) — same value (24), one definition, so shortening the window can't miss a
 // call site. Still used by /register and /magic-register below.
@@ -141,6 +152,18 @@ async function isFromEvelynLander(userId: string, personaId: string | null | und
     return false;
   }
 }
+
+// "The Live Thread" tier is expressed at its two grant sites as
+//   isEvelynLanderUser && await userHasLiveThreadReply(userId)
+// rather than as its own predicate here. Written that way, it is visibly a STRICT
+// SUBSET of isFromEvelynLander(): the same persona check and the same linked-row
+// requirement are carried by the left operand, and the right operand only adds
+// "…and one of those rows has a pending_reply". That containment is what makes the
+// grant chains below safe to read — a user can never be Live-Thread-eligible without
+// also being lander-eligible, so the 10 can only ever displace the 5, never the 3 or
+// the soulmate/Luna branches. A standalone predicate would have had to re-run
+// isEvelynUser() to be safe on its own, which is a second query for a condition the
+// caller has already established.
 
 // True when the user (a) has Evelyn as their default persona AND (b) has a linked
 // soulmate_lander_sessions row. Mirrors isFromEvelynLander; both grant 5 free
@@ -315,7 +338,19 @@ router.post('/register', authLimiter, async (req: Request, res: Response) => {
     // (handled at /verify-email via getFreeCoinsForPersona on defaultPersonaId), so
     // no special coin branch is needed here — only the funnel tag + session linkage.
     const isPersonaLanderSignup = source === 'persona-lander' && !!persona;
-    const testEnvCoinGrant = isLanderSignup ? EVELYN_LANDER_FREE_COINS : DEFAULT_FREE_COINS;
+
+    // "The Live Thread": did this reader type a reply into the lander before signing
+    // up? Looked up by session token because the row's resolved_user_id is not written
+    // until below (and fire-and-forget at that) — the account does not exist yet here.
+    // Gated on isLanderSignup, the exact same (source, persona) pair that
+    // getFreeMinutesForSignup() requires before it will quote the larger number, so the
+    // quote below and the grant chain at verification agree by construction.
+    const engagedViaLiveThread =
+      isLanderSignup && landerSessionToken
+        ? await sessionHasLiveThreadReply(landerSessionToken)
+        : false;
+    const landerCoinGrant = engagedViaLiveThread ? LIVE_THREAD_FREE_COINS : EVELYN_LANDER_FREE_COINS;
+    const testEnvCoinGrant = isLanderSignup ? landerCoinGrant : DEFAULT_FREE_COINS;
 
     const newUser = await db.insert(users).values({
       email: email.toLowerCase(),
@@ -339,7 +374,7 @@ router.post('/register', authLimiter, async (req: Request, res: Response) => {
 
     // Send verification email only in non-test environments
     if (!isTestEnv) {
-      sendVerificationEmail(user.email, user.firstName, verificationToken, persona, source, FREE_MINS_AT_REGISTRATION && isLanderSignup).catch((err) => {
+      sendVerificationEmail(user.email, user.firstName, verificationToken, persona, source, FREE_MINS_AT_REGISTRATION && isLanderSignup, engagedViaLiveThread).catch((err) => {
         logger.error('Failed to send verification email:', err);
       });
     }
@@ -386,8 +421,8 @@ router.post('/register', authLimiter, async (req: Request, res: Response) => {
     let regGrantedCoins = 0;
     if (!isTestEnv && FREE_MINS_AT_REGISTRATION && isLanderSignup) {
       try {
-        if (await grantWelcomeCoins(user.id, EVELYN_LANDER_FREE_COINS)) {
-          regGrantedCoins = EVELYN_LANDER_FREE_COINS;
+        if (await grantWelcomeCoins(user.id, landerCoinGrant)) {
+          regGrantedCoins = landerCoinGrant;
         }
       } catch (err) {
         logger.error('Failed to grant welcome coins at registration', { err: (err as Error).message, userId: user.id });
@@ -395,7 +430,7 @@ router.post('/register', authLimiter, async (req: Request, res: Response) => {
     }
 
     posthog.identify({ distinctId: user.id, properties: { email: user.email, name: user.firstName, signup_funnel: isLanderSignup ? 'evelyn' : 'standard', $set_once: { first_seen: new Date().toISOString() } } });
-    posthog.capture({ distinctId: user.id, event: 'user_registered', properties: { email: user.email, persona: persona ?? null, source: source ?? null, requires_verification: !isTestEnv, welcome_coins_at_registration: regGrantedCoins } });
+    posthog.capture({ distinctId: user.id, event: 'user_registered', properties: { email: user.email, persona: persona ?? null, source: source ?? null, requires_verification: !isTestEnv, welcome_coins_at_registration: regGrantedCoins, engaged_via_live_thread: engagedViaLiveThread } });
 
     res.status(201).json({
       token,
@@ -527,6 +562,16 @@ router.post('/magic-register', authLimiter, async (req: Request, res: Response) 
     // Generate email verification token
     const verificationToken = randomUUID();
 
+    // "The Live Thread" — identical derivation to /register above. Both registration
+    // paths reach the SAME verify-email / magic-verify grant chain, so both have to
+    // quote the same number; leaving this one out would mean a magic-register signup
+    // received 10 minutes after being promised 5.
+    const engagedViaLiveThread =
+      isEvelynLanderSignup && landerSessionToken
+        ? await sessionHasLiveThreadReply(landerSessionToken)
+        : false;
+    const evelynLanderCoinGrant = engagedViaLiveThread ? LIVE_THREAD_FREE_COINS : EVELYN_LANDER_FREE_COINS;
+
     // Look up persona ID up-front so we can stamp defaultPersonaId on the user.
     // Without defaultPersonaId set, a resent verification link (which may lack
     // ?persona=...) would land the user on generic /login instead of the Aiden chat,
@@ -543,7 +588,7 @@ router.post('/magic-register', authLimiter, async (req: Request, res: Response) 
       firstName,
       confirmed18Plus: true,
       confirmed18PlusAt: new Date(),
-      coinBalance: isTestEnv ? (isEvelynLanderSignup ? EVELYN_LANDER_FREE_COINS : DEFAULT_FREE_COINS) : 0,
+      coinBalance: isTestEnv ? (isEvelynLanderSignup ? evelynLanderCoinGrant : DEFAULT_FREE_COINS) : 0,
       welcomeCoinsGrantedAt: isTestEnv ? new Date() : null,
       emailVerified: isTestEnv,
       verificationToken: isTestEnv ? null : verificationToken,
@@ -602,7 +647,7 @@ router.post('/magic-register', authLimiter, async (req: Request, res: Response) 
     // Send verification email only in non-test environments. `source` drives the
     // free-minutes figure shown in the email (5 for the Evelyn lander).
     if (!isTestEnv) {
-      sendVerificationEmail(user.email, user.firstName, verificationToken, persona, source, FREE_MINS_AT_REGISTRATION && isEvelynLanderSignup).catch((err) => {
+      sendVerificationEmail(user.email, user.firstName, verificationToken, persona, source, FREE_MINS_AT_REGISTRATION && isEvelynLanderSignup, engagedViaLiveThread).catch((err) => {
         logger.error('Failed to send verification email:', err);
       });
     }
@@ -637,8 +682,8 @@ router.post('/magic-register', authLimiter, async (req: Request, res: Response) 
     let regGrantedCoins = 0;
     if (!isTestEnv && FREE_MINS_AT_REGISTRATION && isEvelynLanderSignup) {
       try {
-        if (await grantWelcomeCoins(user.id, EVELYN_LANDER_FREE_COINS)) {
-          regGrantedCoins = EVELYN_LANDER_FREE_COINS;
+        if (await grantWelcomeCoins(user.id, evelynLanderCoinGrant)) {
+          regGrantedCoins = evelynLanderCoinGrant;
         }
       } catch (err) {
         logger.error('Failed to grant welcome coins at registration (magic-register)', { err: (err as Error).message, userId: user.id });
@@ -646,7 +691,7 @@ router.post('/magic-register', authLimiter, async (req: Request, res: Response) 
     }
 
     posthog.identify({ distinctId: user.id, properties: { email: user.email, name: user.firstName, signup_funnel: signupFunnelTag ?? 'standard', $set_once: { first_seen: new Date().toISOString() } } });
-    posthog.capture({ distinctId: user.id, event: 'user_registered', properties: { email: user.email, persona, source: source ?? null, requires_verification: !isTestEnv, quiz_topic: quizData?.topic ?? null, welcome_coins_at_registration: regGrantedCoins } });
+    posthog.capture({ distinctId: user.id, event: 'user_registered', properties: { email: user.email, persona, source: source ?? null, requires_verification: !isTestEnv, quiz_topic: quizData?.topic ?? null, welcome_coins_at_registration: regGrantedCoins, engaged_via_live_thread: engagedViaLiveThread } });
 
     res.status(201).json({
       token,
@@ -739,16 +784,24 @@ router.get('/verify-email/:token', async (req: Request, res: Response) => {
     // the same email pre-verify). The Luna $50/30-min thank-you gift is granted SEPARATELY
     // and additively by claimLunaTyGift() below (once, guarded), so a Luna-TY signup skips
     // the persona default here to avoid stacking a second small welcome grant on top.
+    // The Live Thread tier sits immediately ahead of the plain Evelyn-lander tier and
+    // nowhere else, because the Live Thread condition is a strict subset of
+    // isFromEvelynLander(): it can only ever upgrade a 5 to a 10. Placing it ahead of
+    // the Luna or soulmate branches would change what an existing dual-linked user
+    // receives, which is not what this rollout is for.
     const isLunaTyOffer = await isFromLunaThankyouOffer(user.id);
     const isSoulmateLanderUser = !isLunaTyOffer && await isFromSoulmateLander(user.id, user.defaultPersonaId);
     const isEvelynLanderUser = !isLunaTyOffer && !isSoulmateLanderUser && await isFromEvelynLander(user.id, user.defaultPersonaId);
+    const isLiveThreadUser = isEvelynLanderUser && await userHasLiveThreadReply(user.id);
     const freeCoinsGrant = isLunaTyOffer
       ? 0
       : isSoulmateLanderUser
         ? SOULMATE_LANDER_FREE_COINS
-        : isEvelynLanderUser
-          ? EVELYN_LANDER_FREE_COINS
-          : await getFreeCoinsForPersona(user.defaultPersonaId);
+        : isLiveThreadUser
+          ? LIVE_THREAD_FREE_COINS
+          : isEvelynLanderUser
+            ? EVELYN_LANDER_FREE_COINS
+            : await getFreeCoinsForPersona(user.defaultPersonaId);
     await db.update(users)
       .set({
         emailVerified: true,
@@ -845,7 +898,7 @@ router.get('/verify-email/:token', async (req: Request, res: Response) => {
         personaParam = `&persona=${personaRow[0].slug}`;
       }
     }
-    posthog.capture({ distinctId: user.id, event: 'email_verified', properties: { free_coins_granted: grantedAtVerify ? freeCoinsGrant : 0, granted_at_registration: !grantedAtVerify, is_evelyn_lander_user: isEvelynLanderUser, is_soulmate_lander_user: isSoulmateLanderUser } });
+    posthog.capture({ distinctId: user.id, event: 'email_verified', properties: { free_coins_granted: grantedAtVerify ? freeCoinsGrant : 0, granted_at_registration: !grantedAtVerify, is_evelyn_lander_user: isEvelynLanderUser, is_soulmate_lander_user: isSoulmateLanderUser, is_live_thread_user: isLiveThreadUser } });
 
     res.redirect(`${baseUrl}/login?verified=success&token=${jwtToken}${personaParam}`);
   } catch (error) {
@@ -1470,13 +1523,17 @@ router.post('/magic-verify', authLimiter, async (req: Request, res: Response) =>
       const isLunaTyOffer = await isFromLunaThankyouOffer(user.id);
       const isSoulmateLanderUser = !isLunaTyOffer && await isFromSoulmateLander(user.id, user.defaultPersonaId);
       const isEvelynLanderUser = !isLunaTyOffer && !isSoulmateLanderUser && await isFromEvelynLander(user.id, user.defaultPersonaId);
+      // Same Live Thread tier, same position in the chain, as /verify-email above.
+      const isLiveThreadUser = isEvelynLanderUser && await userHasLiveThreadReply(user.id);
       const freeCoinsGrant = isLunaTyOffer
         ? 0
         : isSoulmateLanderUser
           ? SOULMATE_LANDER_FREE_COINS
-          : isEvelynLanderUser
-            ? EVELYN_LANDER_FREE_COINS
-            : await getFreeCoinsForPersona(user.defaultPersonaId);
+          : isLiveThreadUser
+            ? LIVE_THREAD_FREE_COINS
+            : isEvelynLanderUser
+              ? EVELYN_LANDER_FREE_COINS
+              : await getFreeCoinsForPersona(user.defaultPersonaId);
       const updated = await db
         .update(users)
         .set({

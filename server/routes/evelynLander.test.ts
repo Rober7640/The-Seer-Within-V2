@@ -28,6 +28,7 @@ import { evelynLanderSessions, magicLinkTokens, personas, safetyViolations, user
 import { generateToken } from '../lib/auth';
 import { verifyMagicLinkToken } from '../lib/magicLink';
 import { checkUniversalSafety } from '../lib/universalSafety';
+import { LIVE_THREAD_FREE_MINUTES } from '../lib/liveThreadEngagement';
 import logger from '../lib/logger';
 import {
   createTestApp,
@@ -814,6 +815,54 @@ describe('POST /api/evelyn-lander/check-email', { skip: !HAS_DB }, () => {
         .where(eq(evelynLanderSessions.sessionToken, sessionToken))
         .limit(1);
       assert.equal(row.resolvedUserId, user.id);
+    });
+
+    // The Live Thread tier. Once linked, a session carrying a pendingReply makes
+    // isFromEvelynLiveThread() (auth.ts) true at verify time, which selects
+    // LIVE_THREAD_FREE_COINS over EVELYN_LANDER_FREE_COINS — so quoting 5 here would
+    // under-promise against a grant this route itself just enabled.
+    it('quotes the Live Thread amount when the linked session carries a pendingReply', async () => {
+      const user = await createTestUser({
+        emailVerified: false,
+        defaultPersonaId: await evelynPersonaId(),
+      });
+      const sessionToken = await startSession('quote-livethread');
+      const reply = await request(app)
+        .post('/api/evelyn-lander/reply')
+        .send({ sessionToken, reply: '444. Every day.' });
+      assert.equal(reply.body.ok, true, 'precondition: the reply was parked');
+
+      const capture = captureReissueLogs();
+      try {
+        await request(app).post(CHECK_EMAIL).send({ email: user.email, sessionToken });
+      } finally {
+        capture.restore();
+      }
+
+      assert.equal(capture.entries.length, 1);
+      assert.equal(capture.entries[0].landerLinked, true);
+      assert.equal(capture.entries[0].engagedViaLiveThread, true);
+      assert.equal(capture.entries[0].freeMinutesQuoted, LIVE_THREAD_FREE_MINUTES);
+    });
+
+    // The control for the test above: same route, same linkage, no typed reply.
+    it('quotes 5 for a linked reader who typed nothing into the thread', async () => {
+      const user = await createTestUser({
+        emailVerified: false,
+        defaultPersonaId: await evelynPersonaId(),
+      });
+      const sessionToken = await startSession('quote-livethread-silent');
+
+      const capture = captureReissueLogs();
+      try {
+        await request(app).post(CHECK_EMAIL).send({ email: user.email, sessionToken });
+      } finally {
+        capture.restore();
+      }
+
+      assert.equal(capture.entries.length, 1);
+      assert.equal(capture.entries[0].engagedViaLiveThread, false);
+      assert.equal(capture.entries[0].freeMinutesQuoted, 5);
     });
 
     it('quotes 3 when no session links them, so the grant stays the persona default', async () => {

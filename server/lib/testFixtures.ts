@@ -101,6 +101,17 @@ export async function createTestUser(overrides: Partial<NewUser> = {}): Promise<
 }
 
 /**
+ * Registers a `users.id` for cleanup. Use when the ROUTE creates the account
+ * (POST /api/auth/register, /magic-register) rather than createTestUser() —
+ * the response body's `user.id` is the handle. Same contract as
+ * trackLanderSession(): exact-by-id, never a pattern delete.
+ */
+export function trackUserId(userId: string): string {
+  createdUserIds.push(userId);
+  return userId;
+}
+
+/**
  * Registers a lander sessionToken for cleanup. Use when the ROUTE creates the
  * row (POST /start) rather than the fixture.
  */

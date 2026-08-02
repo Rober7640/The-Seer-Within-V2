@@ -29,6 +29,7 @@ import { evelynLanderSessions, personas, users } from '@shared/schema';
 import { extractClientIp, extractUserAgent } from '../lib/fraudDetection';
 import { generateMagicLinkToken, verifyMagicLinkToken } from '../lib/magicLink';
 import { escapeHtml, reissueVerificationEmail } from '../lib/verificationEmail';
+import { userHasLiveThreadReply } from '../lib/liveThreadEngagement';
 import { generateToken, verifyToken } from '../lib/auth';
 import { accountDetectionLimiter, landerLimiter, landerTurnLimiter } from '../lib/rateLimiter';
 import { checkAndLogSafety } from '../lib/universalSafety';
@@ -892,16 +893,26 @@ router.post('/check-email', accountDetectionLimiter, async (req: Request, res: R
     // drip — so the copy has to quote 5 too, or it contradicts the write it just
     // caused. Evaluated AFTER the link, and by row existence rather than rows-updated:
     // see hasEvelynLanderLink() for why that distinction decides the answer.
+    //
+    // The Live Thread tier is the same argument one level up. Once linked, a session
+    // carrying a pending_reply satisfies auth.ts's Live Thread condition at verify time
+    // (isEvelynLanderUser && userHasLiveThreadReply — the same call made here), which
+    // selects LIVE_THREAD_FREE_COINS over EVELYN_LANDER_FREE_COINS — so the copy
+    // has to quote 10 rather than 5 in exactly that case. Evaluated only when
+    // landerLinked, mirroring the grant chain's own containment (the Live Thread tier
+    // sits inside the Evelyn-lander tier, never beside it).
     const landerLinked = await hasEvelynLanderLink(existing.id);
+    const engagedViaLiveThread = landerLinked && (await userHasLiveThreadReply(existing.id));
     const { freeMinutesQuoted } = await reissueVerificationEmail(
       existing,
-      landerLinked ? { source: 'evelyn-lander' } : {},
+      landerLinked ? { source: 'evelyn-lander', engagedViaLiveThread } : {},
     );
     // Logged because a minutes mismatch is otherwise invisible until a reader
     // complains: this records what the copy promised and why.
     logger.info('evelyn-lander check-email: verification reissued', {
       userId: existing.id,
       landerLinked,
+      engagedViaLiveThread,
       freeMinutesQuoted,
     });
     return res.json({ outcome: 'unverified_match' });
