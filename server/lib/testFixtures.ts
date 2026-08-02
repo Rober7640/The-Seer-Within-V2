@@ -24,14 +24,23 @@
 import express, { type Express, type Router } from 'express';
 import { eq, inArray } from 'drizzle-orm';
 import { db } from './db';
-import { users, evelynLanderSessions, magicLinkTokens, personas, safetyViolations } from '@shared/schema';
+import {
+  users,
+  evelynLanderSessions,
+  soulmateLanderSessions,
+  magicLinkTokens,
+  personas,
+  safetyViolations,
+} from '@shared/schema';
 import { generateMagicLinkToken } from './magicLink';
+import { assertNoOutboundCalls } from './testGuards';
 
 type NewUser = typeof users.$inferInsert;
 type User = typeof users.$inferSelect;
 
 const createdUserIds: string[] = [];
 const createdLanderSessionTokens: string[] = [];
+const createdSoulmateSessionIds: string[] = [];
 const createdMagicLinkTokens: string[] = [];
 const createdSafetyViolationMessages: string[] = [];
 
@@ -59,6 +68,15 @@ function stamp(): string {
  *     `app.set('trust proxy', 1)` to the app under test in that case.
  */
 export function createTestApp(mountPath: string, router: Router): Express {
+  // Every route test funnels through here, so this is the one place that can
+  // guarantee no suite mails, tracks or validates against a live third party.
+  // Calling it per-file did not work: a file that forgot the call would still
+  // PASS while making real outbound requests, because the assertions never look
+  // at the "not configured" log line. See server/lib/testGuards.ts for the keys
+  // and why .env alone is not safe (it holds the production values).
+  assertNoOutboundCalls();
+
+
   // Routers under test carry the real rate limiters, which disable themselves
   // ONLY via rateLimiter.ts:3 (`NODE_ENV === 'test' || DISABLE_RATE_LIMIT === 'true'`).
   // landerLimiter is 5 requests/hour/IP in production mode, and a single suite
@@ -123,6 +141,23 @@ export function trackLanderSession(sessionToken: string): string {
 /** A unique, already-tracked lander sessionToken (8-128 chars per the /start schema). */
 export function landerSessionToken(label: string): string {
   return trackLanderSession(`test-${label}-${stamp()}`);
+}
+
+/**
+ * Inserts a `soulmate_lander_sessions` row linked to `userId` — the state a real
+ * /soulmate signup leaves behind (soulmateLanderSignup.ts:145-149).
+ *
+ * Tracked BY ID and deleted explicitly, because unlike evelyn_lander_sessions this
+ * table's resolvedUserId FK is `onDelete: "set null"`, not cascade — deleting the
+ * user would orphan the row rather than remove it.
+ */
+export async function createSoulmateLanderSession(userId: string): Promise<string> {
+  const [row] = await db
+    .insert(soulmateLanderSessions)
+    .values({ email: `fixture-soulmate-${stamp()}@eval.internal`, resolvedUserId: userId })
+    .returning({ id: soulmateLanderSessions.id });
+  createdSoulmateSessionIds.push(row.id);
+  return row.id;
 }
 
 /**
@@ -192,6 +227,12 @@ export async function cleanupTestFixtures(): Promise<void> {
       .delete(evelynLanderSessions)
       .where(inArray(evelynLanderSessions.sessionToken, createdLanderSessionTokens));
     createdLanderSessionTokens.length = 0;
+  }
+  if (createdSoulmateSessionIds.length > 0) {
+    await db
+      .delete(soulmateLanderSessions)
+      .where(inArray(soulmateLanderSessions.id, createdSoulmateSessionIds));
+    createdSoulmateSessionIds.length = 0;
   }
   if (createdSafetyViolationMessages.length > 0) {
     await db

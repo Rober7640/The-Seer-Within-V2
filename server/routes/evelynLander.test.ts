@@ -36,6 +36,7 @@ import {
   createMagicLinkToken,
   landerSessionToken,
   trackSafetyViolation,
+  createSoulmateLanderSession,
   cleanupTestFixtures,
 } from '../lib/testFixtures';
 import evelynLanderRouter from './evelynLander';
@@ -843,6 +844,41 @@ describe('POST /api/evelyn-lander/check-email', { skip: !HAS_DB }, () => {
       assert.equal(capture.entries[0].landerLinked, true);
       assert.equal(capture.entries[0].engagedViaLiveThread, true);
       assert.equal(capture.entries[0].freeMinutesQuoted, LIVE_THREAD_FREE_MINUTES);
+    });
+
+    // PRECEDENCE. The grant chain evaluates isSoulmateLanderUser BEFORE the Evelyn
+    // tiers (auth.ts), and a /soulmate signup is created unverified with
+    // defaultPersonaId=evelyn-cross plus a linked soulmate row
+    // (soulmateLanderSignup.ts:129-149). Such a reader can then click an Evelyn Live
+    // Thread email, type a reply, and enter the same address here — satisfying both
+    // Evelyn conditions while the grant still resolves to the soulmate tier. Quoting
+    // the Live Thread amount here would promise 10 against a grant of 5.
+    it('quotes 5, not the Live Thread amount, for a soulmate signup who typed into the thread', async () => {
+      const user = await createTestUser({
+        emailVerified: false,
+        defaultPersonaId: await evelynPersonaId(),
+      });
+      await createSoulmateLanderSession(user.id);
+      const sessionToken = await startSession('quote-soulmate-precedence');
+      const reply = await request(app)
+        .post('/api/evelyn-lander/reply')
+        .send({ sessionToken, reply: '444. Every day.' });
+      assert.equal(reply.body.ok, true, 'precondition: the reply was parked');
+
+      const capture = captureReissueLogs();
+      try {
+        await request(app).post(CHECK_EMAIL).send({ email: user.email, sessionToken });
+      } finally {
+        capture.restore();
+      }
+
+      assert.equal(capture.entries.length, 1);
+      assert.equal(
+        capture.entries[0].engagedViaLiveThread,
+        false,
+        'the soulmate tier wins, so the Live Thread quote must not apply',
+      );
+      assert.equal(capture.entries[0].freeMinutesQuoted, 5);
     });
 
     // The control for the test above: same route, same linkage, no typed reply.

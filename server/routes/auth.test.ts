@@ -137,6 +137,13 @@ async function unverifiedUserWithToken(overrides: Record<string, unknown> = {}) 
 // The QUOTE half of the lockstep.
 // ---------------------------------------------------------------------------
 describe('getFreeMinutesForSignup — the number the verification email quotes', () => {
+  // Pins the operator's decision. Every other assertion in this file compares
+  // against LIVE_THREAD_FREE_MINUTES, so without this line the whole suite is
+  // tautological — retuning the constant to 4 or 20 would keep it all green.
+  it('grants 10 minutes, the operator-confirmed amount', () => {
+    assert.equal(LIVE_THREAD_FREE_MINUTES, 10, 'operator-confirmed grant');
+  });
+
   it('quotes the Live Thread amount for an engaged Evelyn-lander signup', () => {
     assert.equal(
       getFreeMinutesForSignup('evelyn-cross', 'evelyn-lander', true),

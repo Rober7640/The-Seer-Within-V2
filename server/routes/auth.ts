@@ -6,7 +6,9 @@ import { users, personas, chatSessions, userMemory, aidenQuizSessions, evelynLan
 import { eq, and, isNull, desc, sql } from 'drizzle-orm';
 import { hashPassword, verifyPassword, generateToken, requireAuth } from '../lib/auth';
 import { verifyMagicLinkToken, generateMagicLinkToken } from '../lib/magicLink';
-import { isFromLunaThankyouOffer, claimLunaTyGift } from '../lib/lunaThankyouGift';
+// isFromLunaThankyouOffer is no longer called here — resolveWelcomeGrantTier() owns
+// that check now, and reports it back as the 'luna-thankyou' tier.
+import { claimLunaTyGift } from '../lib/lunaThankyouGift';
 import { authLimiter, passwordResetLimiter } from '../lib/rateLimiter';
 import {
   sendVerificationEmail,
@@ -17,8 +19,12 @@ import { sendPasswordResetEmail } from '../lib/passwordResetEmail';
 import {
   LIVE_THREAD_FREE_MINUTES,
   sessionHasLiveThreadReply,
-  userHasLiveThreadReply,
 } from '../lib/liveThreadEngagement';
+import {
+  isEvelynUser,
+  resolveWelcomeGrantTier,
+  type WelcomeGrantTier,
+} from '../lib/welcomeGrantTier';
 import { isDisposableEmail } from '../lib/disposableEmailDomains';
 import { verifyTurnstileToken } from '../lib/turnstile';
 import { validateEmail } from '../lib/neverbounce';
@@ -120,65 +126,29 @@ async function isAidenUser(personaId: string | null | undefined): Promise<boolea
   }
 }
 
-// Used by verification endpoints to decide whether to enroll the user into the
-// Evelyn "verified, not purchased" drip. Silent-fails to false so a DB hiccup
-// can never block verification itself.
-async function isEvelynUser(personaId: string | null | undefined): Promise<boolean> {
-  if (!personaId) return false;
-  try {
-    const row = await db.select({ slug: personas.slug })
-      .from(personas)
-      .where(eq(personas.id, personaId))
-      .limit(1);
-    return row[0]?.slug === 'evelyn-cross';
-  } catch {
-    return false;
-  }
-}
+// isEvelynUser() (still used below for drip enrolment), the Evelyn/soulmate lander
+// link checks, and the tier precedence that orders them now live in
+// ../lib/welcomeGrantTier. They were private to this file, which is exactly why the
+// quote site in evelynLander.ts had to re-derive the tier itself — and drifted.
+// server/lib/welcomeGrantTier.ts carries the precedence contract; both the grant
+// sites below and that quote site now read the same answer from it.
 
-// True when the user (a) has Evelyn as their default persona AND (b) has a linked
-// evelyn_lander_sessions row via resolved_user_id. Mirrors the eligibility check
-// already used at /verify-email + /magic-verify for the verified-not-purchased drip,
-// so the 5-min grant and the drip enrollment stay in lockstep. Silent-fails to false.
-async function isFromEvelynLander(userId: string, personaId: string | null | undefined): Promise<boolean> {
-  if (!(await isEvelynUser(personaId))) return false;
-  try {
-    const row = await db.select({ id: evelynLanderSessions.id })
-      .from(evelynLanderSessions)
-      .where(eq(evelynLanderSessions.resolvedUserId, userId))
-      .limit(1);
-    return !!row[0];
-  } catch {
-    return false;
-  }
-}
-
-// "The Live Thread" tier is expressed at its two grant sites as
-//   isEvelynLanderUser && await userHasLiveThreadReply(userId)
-// rather than as its own predicate here. Written that way, it is visibly a STRICT
-// SUBSET of isFromEvelynLander(): the same persona check and the same linked-row
-// requirement are carried by the left operand, and the right operand only adds
-// "…and one of those rows has a pending_reply". That containment is what makes the
-// grant chains below safe to read — a user can never be Live-Thread-eligible without
-// also being lander-eligible, so the 10 can only ever displace the 5, never the 3 or
-// the soulmate/Luna branches. A standalone predicate would have had to re-run
-// isEvelynUser() to be safe on its own, which is a second query for a condition the
-// caller has already established.
-
-// True when the user (a) has Evelyn as their default persona AND (b) has a linked
-// soulmate_lander_sessions row. Mirrors isFromEvelynLander; both grant 5 free
-// minutes and both enroll the user in scheduleEvelynVerifiedDrip downstream.
-// Silent-fails to false so a DB hiccup can never block verification itself.
-async function isFromSoulmateLander(userId: string, personaId: string | null | undefined): Promise<boolean> {
-  if (!(await isEvelynUser(personaId))) return false;
-  try {
-    const row = await db.select({ id: soulmateLanderSessions.id })
-      .from(soulmateLanderSessions)
-      .where(eq(soulmateLanderSessions.resolvedUserId, userId))
-      .limit(1);
-    return !!row[0];
-  } catch {
-    return false;
+/**
+ * Coins for a resolved welcome-grant tier. The tier decision itself is NOT made here —
+ * that is resolveWelcomeGrantTier()'s single responsibility. This only maps the answer
+ * onto this file's coin constants, plus the one tier whose amount lives in the DB.
+ */
+async function coinsForWelcomeTier(
+  tier: WelcomeGrantTier,
+  defaultPersonaId: string | null | undefined,
+): Promise<number> {
+  switch (tier) {
+    // Granted separately and additively by claimLunaTyGift(), so no welcome grant here.
+    case 'luna-thankyou': return 0;
+    case 'soulmate-lander': return SOULMATE_LANDER_FREE_COINS;
+    case 'live-thread': return LIVE_THREAD_FREE_COINS;
+    case 'evelyn-lander': return EVELYN_LANDER_FREE_COINS;
+    case 'persona-default': return getFreeCoinsForPersona(defaultPersonaId);
   }
 }
 
@@ -784,24 +754,16 @@ router.get('/verify-email/:token', async (req: Request, res: Response) => {
     // the same email pre-verify). The Luna $50/30-min thank-you gift is granted SEPARATELY
     // and additively by claimLunaTyGift() below (once, guarded), so a Luna-TY signup skips
     // the persona default here to avoid stacking a second small welcome grant on top.
-    // The Live Thread tier sits immediately ahead of the plain Evelyn-lander tier and
-    // nowhere else, because the Live Thread condition is a strict subset of
-    // isFromEvelynLander(): it can only ever upgrade a 5 to a 10. Placing it ahead of
-    // the Luna or soulmate branches would change what an existing dual-linked user
-    // receives, which is not what this rollout is for.
-    const isLunaTyOffer = await isFromLunaThankyouOffer(user.id);
-    const isSoulmateLanderUser = !isLunaTyOffer && await isFromSoulmateLander(user.id, user.defaultPersonaId);
-    const isEvelynLanderUser = !isLunaTyOffer && !isSoulmateLanderUser && await isFromEvelynLander(user.id, user.defaultPersonaId);
-    const isLiveThreadUser = isEvelynLanderUser && await userHasLiveThreadReply(user.id);
-    const freeCoinsGrant = isLunaTyOffer
-      ? 0
-      : isSoulmateLanderUser
-        ? SOULMATE_LANDER_FREE_COINS
-        : isLiveThreadUser
-          ? LIVE_THREAD_FREE_COINS
-          : isEvelynLanderUser
-            ? EVELYN_LANDER_FREE_COINS
-            : await getFreeCoinsForPersona(user.defaultPersonaId);
+    // ONE ordered chain, shared with /magic-verify below and with the quote site in
+    // evelynLander.ts. See server/lib/welcomeGrantTier.ts for the precedence contract.
+    const welcomeTier = await resolveWelcomeGrantTier(user.id, user.defaultPersonaId);
+    const isLunaTyOffer = welcomeTier === 'luna-thankyou';
+    const isSoulmateLanderUser = welcomeTier === 'soulmate-lander';
+    const isLiveThreadUser = welcomeTier === 'live-thread';
+    // The Live Thread tier is a refinement of the Evelyn-lander tier, so a Live Thread
+    // reader is still an Evelyn-lander user for the drip + analytics below.
+    const isEvelynLanderUser = isLiveThreadUser || welcomeTier === 'evelyn-lander';
+    const freeCoinsGrant = await coinsForWelcomeTier(welcomeTier, user.defaultPersonaId);
     await db.update(users)
       .set({
         emailVerified: true,
@@ -1513,27 +1475,28 @@ router.post('/magic-verify', authLimiter, async (req: Request, res: Response) =>
     // If the magic-link arrives for a still-unverified user (e.g. Aiden follow-up CTA),
     // this click both verifies the email and grants the same free coins as the normal
     // /verify-email path. The WHERE guard prevents double-grant on concurrent clicks.
+    //
+    // ⚠ FLAG-ROLLOUT CHECKLIST — ENABLE_FREE_MINS_AT_REGISTRATION.
+    // This grant is guarded ONLY by `emailVerified = false`. It does NOT go through
+    // grantWelcomeCoins(), which guards on `welcome_coins_granted_at IS NULL` and stamps
+    // it — so unlike /verify-email, this path cannot tell that a registration-time grant
+    // already happened, and it neither reads nor writes that marker. Today the flag is
+    // OFF, so nothing grants at registration and there is no double-grant. If the flag is
+    // ever switched on, an Evelyn-lander user who registers (granted once) and then
+    // arrives here still unverified is granted a SECOND time. Pre-existing, but the Live
+    // Thread tier raises the doubled amount from 5 to 10 minutes. Route this grant
+    // through grantWelcomeCoins() before enabling the flag. Deliberately not
+    // restructured here — that is a change to the grant's transactional shape, not to
+    // this task's tier logic.
     let freshCoinBalance = user.coinBalance;
     let freshEmailVerified = user.emailVerified;
     if (!user.emailVerified) {
-      // /soulmate and /evelyn landers get 5 min free; everyone else the persona default.
       // The Luna $50/30-min thank-you gift is granted separately + additively by
-      // claimLunaTyGift() below (once, guarded), so a Luna-TY signup skips the persona
-      // default here. Mirrors the /verify-email grant logic above.
-      const isLunaTyOffer = await isFromLunaThankyouOffer(user.id);
-      const isSoulmateLanderUser = !isLunaTyOffer && await isFromSoulmateLander(user.id, user.defaultPersonaId);
-      const isEvelynLanderUser = !isLunaTyOffer && !isSoulmateLanderUser && await isFromEvelynLander(user.id, user.defaultPersonaId);
-      // Same Live Thread tier, same position in the chain, as /verify-email above.
-      const isLiveThreadUser = isEvelynLanderUser && await userHasLiveThreadReply(user.id);
-      const freeCoinsGrant = isLunaTyOffer
-        ? 0
-        : isSoulmateLanderUser
-          ? SOULMATE_LANDER_FREE_COINS
-          : isLiveThreadUser
-            ? LIVE_THREAD_FREE_COINS
-            : isEvelynLanderUser
-              ? EVELYN_LANDER_FREE_COINS
-              : await getFreeCoinsForPersona(user.defaultPersonaId);
+      // claimLunaTyGift() below (once, guarded), so a Luna-TY signup takes the 0 tier
+      // here. Same shared chain as /verify-email above.
+      const welcomeTier = await resolveWelcomeGrantTier(user.id, user.defaultPersonaId);
+      const isLunaTyOffer = welcomeTier === 'luna-thankyou';
+      const freeCoinsGrant = await coinsForWelcomeTier(welcomeTier, user.defaultPersonaId);
       const updated = await db
         .update(users)
         .set({

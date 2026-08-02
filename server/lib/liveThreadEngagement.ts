@@ -7,6 +7,16 @@
 // POST /api/evelyn-lander/reply and never cleared by anything (grep pending_reply
 // — /reply is its only writer, and it only ever writes a non-null value).
 //
+// ⚠ CONSTRAINT FOR TASK 10 (and anything else that CONSUMES pending_reply).
+// `pending_reply IS NOT NULL` is not just a queue marker — it is the durable evidence
+// that decides a MONEY tier. It is read at verification time, which can be days after
+// it was written, and again on every /api/evelyn-lander/check-email resend. If Task 10
+// replays the parked reply into the first chat message and then NULLs the column, this
+// signal disappears underneath both readers: a reader who verifies (or asks for another
+// verification email) after the replay silently drops from 10 minutes to 5, with no
+// error anywhere. If you need a consumed/unconsumed distinction, add a separate
+// `pending_reply_consumed_at` timestamp and leave the text in place — do not clear it.
+//
 // WHY THIS IS RECOMPUTED RATHER THAN PERSISTED AT REGISTRATION.
 // The 5-minute lander grant it refines is already derived at grant time from DB
 // state, not from a flag stamped on the user: isFromEvelynLander() (auth.ts) asks

@@ -29,7 +29,7 @@ import { evelynLanderSessions, personas, users } from '@shared/schema';
 import { extractClientIp, extractUserAgent } from '../lib/fraudDetection';
 import { generateMagicLinkToken, verifyMagicLinkToken } from '../lib/magicLink';
 import { escapeHtml, reissueVerificationEmail } from '../lib/verificationEmail';
-import { userHasLiveThreadReply } from '../lib/liveThreadEngagement';
+import { resolveWelcomeGrantTier } from '../lib/welcomeGrantTier';
 import { generateToken, verifyToken } from '../lib/auth';
 import { accountDetectionLimiter, landerLimiter, landerTurnLimiter } from '../lib/rateLimiter';
 import { checkAndLogSafety } from '../lib/universalSafety';
@@ -894,15 +894,21 @@ router.post('/check-email', accountDetectionLimiter, async (req: Request, res: R
     // caused. Evaluated AFTER the link, and by row existence rather than rows-updated:
     // see hasEvelynLanderLink() for why that distinction decides the answer.
     //
-    // The Live Thread tier is the same argument one level up. Once linked, a session
-    // carrying a pending_reply satisfies auth.ts's Live Thread condition at verify time
-    // (isEvelynLanderUser && userHasLiveThreadReply — the same call made here), which
-    // selects LIVE_THREAD_FREE_COINS over EVELYN_LANDER_FREE_COINS — so the copy
-    // has to quote 10 rather than 5 in exactly that case. Evaluated only when
-    // landerLinked, mirroring the grant chain's own containment (the Live Thread tier
-    // sits inside the Evelyn-lander tier, never beside it).
+    // The Live Thread tier is the same argument one level up — but it must NOT be
+    // re-derived here as "linked && has a pending_reply". That is what the grant chain
+    // asks LAST, not first. It evaluates the soulmate tier BEFORE either Evelyn tier,
+    // and a /soulmate signup is created unverified with defaultPersonaId=evelyn-cross
+    // and a linked soulmate row (soulmateLanderSignup.ts:129-149) — so such a reader can
+    // satisfy both Evelyn conditions here while the grant still resolves to soulmate's
+    // 5 minutes. Quoting 10 there would promise a grant that never arrives.
+    //
+    // So the tier comes from the SAME resolver the grant sites read
+    // (server/lib/welcomeGrantTier.ts), which owns the precedence. `landerLinked` still
+    // drives `source`, unchanged, so the soulmate and Luna paths keep quoting exactly
+    // what they quoted before the Live Thread tier existed.
     const landerLinked = await hasEvelynLanderLink(existing.id);
-    const engagedViaLiveThread = landerLinked && (await userHasLiveThreadReply(existing.id));
+    const welcomeTier = await resolveWelcomeGrantTier(existing.id, existing.defaultPersonaId);
+    const engagedViaLiveThread = welcomeTier === 'live-thread';
     const { freeMinutesQuoted } = await reissueVerificationEmail(
       existing,
       landerLinked ? { source: 'evelyn-lander', engagedViaLiveThread } : {},
@@ -912,6 +918,7 @@ router.post('/check-email', accountDetectionLimiter, async (req: Request, res: R
     logger.info('evelyn-lander check-email: verification reissued', {
       userId: existing.id,
       landerLinked,
+      welcomeTier,
       engagedViaLiveThread,
       freeMinutesQuoted,
     });
