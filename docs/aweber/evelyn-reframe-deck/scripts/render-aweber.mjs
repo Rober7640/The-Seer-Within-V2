@@ -40,6 +40,11 @@ const schedule = fs.existsSync(path.join(SRC, 'schedule.json'))
 // This deck is Evelyn's. A future persona deck gets its own renderer (or a flag).
 const PERSONA_SLUG = 'evelyn-cross';
 
+// Must stay in sync with the z.enum in server/routes/evelynLander.ts's
+// startSchema. Anything outside this set fails that schema, and /start's
+// error path drops the ENTIRE payload rather than just the bad field.
+const VALID_BUCKETS = ['love', 'money', 'purpose', 'specific'];
+
 const BANNER = "https://hostedimages-cdn.aweber-static.com/NDQyNzMw/optimized/8bf6df906cab4e11b58e484fe450705a.png";
 const esc = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 const inlineHtml = (s) => esc(s).replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>').replace(/\*([^*]+)\*/g, '<em>$1</em>');
@@ -62,23 +67,51 @@ function parse(file) {
   const i = raw.indexOf('\n---\n');
   const front = raw.slice(0, i), body = raw.slice(i + 5).trim();
   const name = path.basename(file);
-  // Frontmatter values are SINGLE-LINE. A wrapped value would silently
-  // truncate at the newline and land half a sentence in a production row, so
-  // any continuation line (one that isn't blank and doesn't start a new
-  // `- **Field:**`) is called out rather than quietly eaten.
-  const pick = (re, label) => {
+  // Frontmatter values are SINGLE-LINE. A wrapped value silently truncates at
+  // the newline, so any continuation line (one that isn't blank and doesn't
+  // start a new `- **Field:**`) is flagged rather than quietly eaten.
+  //
+  // `fatal` distinguishes a blemish from a breakage. A truncated Reading Recap
+  // or Open Loop is bad copy in a row nobody reads directly; a truncated
+  // Continue Seed is Evelyn's turn-0 opener — the first thing a reader sees —
+  // shipping as half a sentence. That one stops the render.
+  const pick = (re, label, fatal = false) => {
     const m = front.match(re);
     if (!m) return '';
     if (label) {
       const rest = front.slice(m.index + m[0].length);
       const next = rest.split('\n')[1];
       if (next !== undefined && next.trim() !== '' && !/^\s*-\s*\*\*/.test(next) && !/^---/.test(next.trim())) {
+        if (fatal) {
+          console.error(`ERROR: ${name}: **${label}:** wraps onto the next line.`);
+          console.error(`  Only the first line would be stored, so the reader's opening bubble would be`);
+          console.error(`  half a sentence. Put it on one line.`);
+          console.error(`      dropped: ${next.trim().slice(0, 60)}…`);
+          process.exit(1);
+        }
         console.error(`  ⚠ ${name}: **${label}:** looks wrapped onto the next line — only the first line is used.`);
         console.error(`      dropped: ${next.trim().slice(0, 60)}…`);
       }
     }
     return m[1]?.trim() || '';
   };
+  // Lander context that used to ride in the legacy link's query string and
+  // now rides on the minted row (the /e/ redirector rebuilds the query string
+  // from it). `bucket` is load-bearing AND validated: the lander parses it
+  // with a z.enum, and on ANY parse failure /start discards the WHOLE payload
+  // — campaign, email, name and bucket together. So one stray value here
+  // wouldn't degrade a send, it would void it, while every other signal
+  // (rendered HTML, `created /e/…`, short-links.json, preflight) still looks
+  // perfect. The legacy link hardcoded `love`; making it authorable means
+  // checking it here.
+  const bucket = pick(/\*\*Bucket:\*\*\s*(.+)/) || 'love';
+  if (!VALID_BUCKETS.includes(bucket)) {
+    console.error(`ERROR: ${name}: **Bucket:** is "${bucket}", which the lander cannot parse.`);
+    console.error(`  Valid values (server/routes/evelynLander.ts): ${VALID_BUCKETS.join(', ')}`);
+    console.error('  A value outside that set makes /start reject the entire payload, so the reader');
+    console.error('  gets no continuity, no email prefill and no attribution — silently.');
+    process.exit(1);
+  }
   return {
     file: name,
     num: (front.match(/^#\s*(\d+)/m) || [])[1] || '',
@@ -88,21 +121,19 @@ function parse(file) {
     ctaLabel: pick(/\*\*CTA:\*\*\s*(.+?)\s*→/) || 'Come talk to me',
     // Live Thread continuity content, snapshotted into email_link_codes at
     // render time. continueSeed is the trigger: no seed => no code, no DB.
-    continueSeed: pick(/\*\*Continue Seed:\*\*\s*(.+)/, 'Continue Seed'),
+    continueSeed: pick(/\*\*Continue Seed:\*\*\s*(.+)/, 'Continue Seed', true),
     openLoop: pick(/\*\*Open Loop:\*\*\s*(.+)/, 'Open Loop'),
     readingRecap: pick(/\*\*Reading Recap:\*\*\s*(.+)/, 'Reading Recap'),
-    // Lander context that used to ride in the legacy link's query string and
-    // now rides on the minted row (the /e/ redirector rebuilds the query
-    // string from it). `bucket` is load-bearing: it selects Drip 1's
-    // bucket-specific phrase. This deck is love-weighted, hence the default.
-    bucket: pick(/\*\*Bucket:\*\*\s*(.+)/) || 'love',
+    bucket,
     body,
   };
 }
 
 // Hosts where minting is unremarkable. Anything else is a real, shared
 // database and needs the operator to say so out loud (--mint-production).
-const LOCAL_DB_HOSTS = ['localhost', '127.0.0.1', '::1'];
+// NB `[::1]` keeps its brackets: `new URL('postgresql://u@[::1]/db').hostname`
+// returns "[::1]", not "::1".
+const LOCAL_DB_HOSTS = ['localhost', '127.0.0.1', '[::1]'];
 const MINT_PRODUCTION_FLAG = '--mint-production';
 
 /** Resolve — and gate — the database this run will write to.
@@ -216,23 +247,65 @@ const fullHtml = (m) => `<!DOCTYPE html>
 const files = fs.readdirSync(SRC).filter(f => /^\d\d-.*\.md$/.test(f)).sort();
 const sends = files.map(f => parse(path.join(SRC, f)));
 
-// A campaign slug is the identity a code is keyed on, so two drafts sharing
-// one would cross-wire: the second overwrites the first's row, both emails
-// ship the same code, and one email's reader gets the other's continuation.
-// check.mjs only gates that a slug EXISTS, so this is the first place the
-// collision could be caught — before phase 1 touches the database.
+// A campaign slug is the identity a code is keyed on, and that key is GLOBAL
+// and permanent — `upsertEmailLinkCodeForCampaign` matches on
+// (persona, campaign) across all time, not within a directory. So the slug has
+// to be unique across every cycle, not just this one:
+//
+//   - within this cycle: both sends share one code, and one email's reader
+//     gets the other's continuation.
+//   - ACROSS cycles: rendering cycle-2 with a slug cycle-1 already used
+//     UPDATES the live row. A reader still holding the older, already-sent
+//     email clicks it and gets the new cycle's seed and recap. The only signal
+//     would be `updated /e/<code>` — indistinguishable from the routine
+//     "I edited this draft" case that update-in-place exists to serve.
+//
+// Draft numbering restarts every cycle and the names rhyme by design
+// (`reframe-01-…`), so this collision is a matter of time rather than bad luck.
+// check.mjs only gates that a slug EXISTS, so this is the first place either
+// case can be caught — and it happens before phase 1 touches the database.
+function slugOwners(dir) {
+  return fs.readdirSync(dir)
+    .filter(f => /^\d\d-.*\.md$/.test(f))
+    .map((f) => {
+      const front = fs.readFileSync(path.join(dir, f), 'utf8').split('\n---\n')[0];
+      return { slug: (front.match(/campaign=([a-z0-9-]+)/) || [])[1], where: `${path.basename(dir)}/${f}` };
+    })
+    .filter(e => e.slug);
+}
+
+function slugCollision(slug, a, b, scope) {
+  console.error(`ERROR: campaign slug "${slug}" is used ${scope}:`);
+  console.error(`      ${a}`);
+  console.error(`      ${b}`);
+  console.error('  Codes are keyed on (persona, campaign) globally and permanently, so these two');
+  console.error("  sends would share one /e/ code — a reader of one email would get the other");
+  console.error("  email's continuation, including one that has already been sent. Give this send");
+  console.error('  its own `campaign=` slug in its **CTA:** frontmatter line.');
+  process.exit(1);
+}
+
 const bySlug = new Map();
 for (const m of sends) {
-  if (bySlug.has(m.slug)) {
-    console.error(`ERROR: duplicate campaign slug "${m.slug}" in this cycle:`);
-    console.error(`      ${bySlug.get(m.slug).file}`);
-    console.error(`      ${m.file}`);
-    console.error('  Two sends sharing a slug would share one /e/ code, so a reader of one');
-    console.error("  email would get the other email's continuation. Give each send its own");
-    console.error('  `campaign=` slug in its **CTA:** frontmatter line.');
-    process.exit(1);
+  const where = `${path.basename(SRC)}/${m.file}`;
+  if (bySlug.has(m.slug)) slugCollision(m.slug, bySlug.get(m.slug), where, 'twice in this cycle');
+  bySlug.set(m.slug, where);
+}
+
+// Sibling cycles, read straight off disk — the cycle directories are committed,
+// so they are the authoritative record of which slugs are already spoken for.
+// Only compared against THIS cycle (never sibling-to-sibling), so a pre-existing
+// collision between two other cycles can't block an unrelated render. Only done
+// when SRC really is a cycle under sends/, so pointing the renderer at emails/
+// (the gold fixtures) doesn't start comparing against formats/.
+if (path.basename(path.dirname(SRC)) === 'sends') {
+  const sendsRoot = path.dirname(SRC);
+  for (const entry of fs.readdirSync(sendsRoot, { withFileTypes: true })) {
+    if (!entry.isDirectory() || path.join(sendsRoot, entry.name) === SRC) continue;
+    for (const { slug, where } of slugOwners(path.join(sendsRoot, entry.name))) {
+      if (bySlug.has(slug)) slugCollision(slug, bySlug.get(slug), where, 'by another cycle');
+    }
   }
-  bySlug.set(m.slug, m);
 }
 
 // Phase 1 — resolve every CTA URL BEFORE writing anything. Minting can fail
@@ -248,9 +321,12 @@ const missingSeed = sends.filter(m => !m.continueSeed);
 // a send to the legacy link, would be sitting in the middle of it. With it, a
 // deviation in either direction is a hard failure and the ⚠ block means
 // "as declared".
+// Accepts either a bare array (["04"]) or { note?, sends: ["04"] } — JSON has
+// nowhere to put a comment, and these files want one.
 const MANIFEST = path.join(SRC, 'short-links.json');
 if (fs.existsSync(MANIFEST)) {
-  const declared = new Set(JSON.parse(fs.readFileSync(MANIFEST, 'utf8')).map(String));
+  const manifest = JSON.parse(fs.readFileSync(MANIFEST, 'utf8'));
+  const declared = new Set((Array.isArray(manifest) ? manifest : manifest.sends).map(String));
   const actual = new Set(needCodes.map(m => m.num));
   const missing = [...declared].filter(n => !actual.has(n)).sort();
   const unexpected = [...actual].filter(n => !declared.has(n)).sort();

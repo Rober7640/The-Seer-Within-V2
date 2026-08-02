@@ -65,16 +65,38 @@ draft (.md)  →  check.mjs  →  render-aweber.mjs  →  aweber-ops.mjs schedul
    already-scheduled broadcast never moves under you.
 
    **`short-links.json`** (optional, per cycle) declares which draft numbers must be
-   short-linked, e.g. `["04"]`. With it present the renderer hard-fails on any deviation —
-   a declared send that lost its seed to a typo, or an undeclared send that has one.
-   Without it you get a `⚠` block listing every legacy draft, which fires on almost every
-   run and stops being read. Two drafts sharing a `campaign=` slug is always a hard error:
-   they would share one code, so one email's reader would get the other's continuation.
+   short-linked — `["04"]`, or `{ "note": "…", "sends": ["04"] }` when the file needs a
+   comment. With it present the renderer hard-fails on any deviation — a declared send that
+   lost its seed to a typo, or an undeclared send that has one. Without it you get a `⚠`
+   block listing every legacy draft, which fires on almost every run and stops being read.
+
+   **Campaign slugs must be globally unique, not just unique within a cycle.** The code is
+   keyed on `(persona, campaign)` for all time, so reusing an earlier cycle's slug would
+   *repoint that cycle's live row* — a reader still holding the older, already-sent email
+   would click it and get the new cycle's continuation. Draft numbers restart each cycle
+   and the names rhyme (`reframe-01-…`), so the renderer reads every sibling directory
+   under `sends/` and hard-fails on a collision, naming both files.
+
+   **Hard parse errors** (render stops, nothing written): a `**Bucket:**` outside
+   `love` / `money` / `purpose` / `specific` — the lander parses it with a `z.enum` and
+   discards the *entire* payload on failure, so a bad value voids the send rather than
+   degrading it; and a `**Continue Seed:**` wrapped onto a second line, which would put
+   half a sentence in the reader's opening bubble. A wrapped `**Open Loop:**` or
+   `**Reading Recap:**` only warns.
 
 4. **Schedule** — create each broadcast as a draft, then schedule it. **Live + human-gated:**
    only run after a human has reviewed the rendered emails. If the cycle has any
-   short-linked send, re-render with `--mint-production` first (step 3) — `schedule`
-   pre-flights the whole `index.json` and refuses a build whose codes only exist locally.
+   short-linked send, re-render with `--mint-production` first (step 3).
+
+   `schedule` pre-flights the whole `index.json` **once, before the first broadcast is
+   created**: schedule times, subject bytes, `minted_into`, and then — for every short link
+   — a live `GET https://www.theseerwithin.com/e/<code>`, requiring a `302` to `/evelyn?`.
+   That last check is the only one that proves the thing that actually matters: not that
+   the render script *says* it wrote to a Supabase box, but that the live site can resolve
+   the link. It catches an unapplied migration 020, an undeployed `/e/` route, and a
+   non-production Supabase project alike. All the requests go out concurrently (~one
+   round-trip for a whole cycle), and it **blocks on a failed check** — including a network
+   error, because an unverifiable link is not a verified one.
    ```
    node aweber-ops.mjs list                       # what's queued now
    node aweber-ops.mjs cancel <id> <id> ...        # unschedule old → draft (recoverable)

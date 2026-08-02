@@ -46,14 +46,19 @@ function draft(opts: {
   continueSeed?: string;
   openLoop?: string;
   readingRecap?: string;
+  bucket?: string;
+  /** Extra continuation line after the Open Loop, to fake a wrapped value. */
+  openLoopWrapTail?: string;
   /** Extra continuation line after the Continue Seed, to fake a wrapped value. */
   seedWrapTail?: string;
 }) {
   const continuity = [
     opts.readingRecap ? `- **Reading Recap:** ${opts.readingRecap}` : null,
     opts.openLoop ? `- **Open Loop:** ${opts.openLoop}` : null,
+    opts.openLoopWrapTail ?? null,
     opts.continueSeed ? `- **Continue Seed:** ${opts.continueSeed}` : null,
     opts.seedWrapTail ?? null,
+    opts.bucket ? `- **Bucket:** ${opts.bucket}` : null,
   ].filter(Boolean).join('\n');
 
   return `# ${opts.num} · Fixture
@@ -306,6 +311,19 @@ describe('render-aweber.mjs → /e/:code minting', () => {
       assert.match(run.stderr, /case-sensitive/);
     });
 
+    it('accepts the { note, sends } form as well as a bare array', () => {
+      // JSON has nowhere to put a comment, and these files want one — cycle-1's
+      // manifest has to say "historical, do not re-render".
+      const dir = makeSendsDir(SEED_V1);
+      fs.writeFileSync(
+        path.join(dir, 'short-links.json'),
+        JSON.stringify({ note: 'why this cycle looks like this', sends: ['01'] }),
+      );
+      const run = render(dir);
+      assert.equal(run.status, 0, run.stderr);
+      assert.match(run.stderr, /✓ short links as declared in short-links\.json: #01/);
+    });
+
     it('hard-fails when an undeclared send has a Continue Seed', () => {
       const dir = makeSendsDir(SEED_V1, []); // declares nothing, but 01 has a seed
       const run = render(dir);
@@ -323,27 +341,117 @@ describe('render-aweber.mjs → /e/:code minting', () => {
     fs.writeFileSync(path.join(dir, '02-b.md'), draft({ num: '02', slug: BARE_SLUG }));
     const run = render(dir);
     assert.equal(run.status, 1);
-    assert.match(run.stderr, /duplicate campaign slug/);
+    assert.match(run.stderr, /is used twice in this cycle/);
     assert.ok(run.stderr.includes('01-a.md') && run.stderr.includes('02-b.md'), run.stderr);
   });
 
-  it('warns when a frontmatter value wraps onto the next line', async () => {
-    // pick() is single-line, so a wrapped seed would silently truncate into a
-    // production row. It must not do that quietly.
+  // The upsert key is (persona, campaign) globally and permanently, but draft
+  // numbering restarts every cycle and the names rhyme by design. Reusing an
+  // earlier cycle's slug REPOINTS that cycle's live row, so a reader still
+  // holding the older, already-sent email gets the new cycle's continuation —
+  // and the only signal would be `updated`, identical to an ordinary edit.
+  it('refuses a slug already used by a sibling cycle under sends/', () => {
+    const sendsRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'reframe-sends-'));
+    tempDirs.push(sendsRoot);
+    // Layout must be <root>/sends/<cycle>, since the sibling scan only runs
+    // when the parent directory is literally named `sends`.
+    const sends = path.join(sendsRoot, 'sends');
+    const older = path.join(sends, 'cycle-older');
+    const newer = path.join(sends, 'cycle-newer');
+    fs.mkdirSync(older, { recursive: true });
+    fs.mkdirSync(newer, { recursive: true });
+    fs.writeFileSync(path.join(older, '01-first.md'), draft({ num: '01', slug: BARE_SLUG }));
+    fs.writeFileSync(path.join(newer, '01-reused.md'), draft({ num: '01', slug: BARE_SLUG }));
+
+    const run = render(newer);
+    assert.equal(run.status, 1);
+    assert.match(run.stderr, /is used by another cycle/);
+    assert.ok(
+      run.stderr.includes('cycle-older/01-first.md') && run.stderr.includes('cycle-newer/01-reused.md'),
+      run.stderr,
+    );
+  });
+
+  it('does not compare sibling cycles against each other', () => {
+    // A pre-existing collision between two OTHER cycles must not block an
+    // unrelated render.
+    const sendsRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'reframe-sends-'));
+    tempDirs.push(sendsRoot);
+    const sends = path.join(sendsRoot, 'sends');
+    for (const c of ['cycle-a', 'cycle-b', 'cycle-mine']) fs.mkdirSync(path.join(sends, c), { recursive: true });
+    fs.writeFileSync(path.join(sends, 'cycle-a', '01-x.md'), draft({ num: '01', slug: BARE_SLUG }));
+    fs.writeFileSync(path.join(sends, 'cycle-b', '01-y.md'), draft({ num: '01', slug: BARE_SLUG }));
+    fs.writeFileSync(path.join(sends, 'cycle-mine', '01-z.md'), draft({ num: '01', slug: SEEDED_SLUG + '-mine' }));
+
+    const run = render(path.join(sends, 'cycle-mine'));
+    assert.equal(run.status, 0, run.stderr);
+  });
+
+  // pick() is single-line, so a wrapped value silently truncates into a
+  // production row. Severity differs by field: a truncated Open Loop is bad
+  // copy nobody reads directly; a truncated Continue Seed is the reader's
+  // opening bubble arriving as half a sentence.
+  it('warns, but continues, when a non-critical frontmatter value wraps', async () => {
+    const dir = newTempDir();
+    fs.writeFileSync(
+      path.join(dir, '01-seeded.md'),
+      draft({
+        num: '01', slug: SEEDED_SLUG, continueSeed: SEED_V1,
+        openLoop: OPEN_LOOP, openLoopWrapTail: '  and this half is lost.',
+      }),
+    );
+    const run = render(dir);
+    assert.equal(run.status, 0, run.stderr);
+    assert.match(run.stderr, /\*\*Open Loop:\*\* looks wrapped onto the next line/);
+    assert.match(run.stderr, /and this half is lost/);
+
+    // And it really is truncated — the warning is telling the truth.
+    const code = readIndex(dir).find((e) => e.slug === SEEDED_SLUG)!.code!;
+    const rows = await db.select().from(emailLinkCodes).where(inArray(emailLinkCodes.code, [code]));
+    assert.equal(rows[0].openLoop, OPEN_LOOP);
+  });
+
+  it('hard-stops when the Continue Seed wraps — that one is the opening bubble', () => {
     const dir = newTempDir();
     fs.writeFileSync(
       path.join(dir, '01-seeded.md'),
       draft({ num: '01', slug: SEEDED_SLUG, continueSeed: SEED_V1, seedWrapTail: '  and this half is lost.' }),
     );
     const run = render(dir);
-    assert.equal(run.status, 0, run.stderr);
-    assert.match(run.stderr, /\*\*Continue Seed:\*\* looks wrapped onto the next line/);
-    assert.match(run.stderr, /and this half is lost/);
+    assert.equal(run.status, 1);
+    assert.match(run.stderr, /\*\*Continue Seed:\*\* wraps onto the next line/);
+    assert.ok(!fs.existsSync(path.join(dir, '_build')), 'wrote output despite a fatal parse error');
+  });
 
-    // And it really is truncated — the warning is telling the truth.
-    const code = readIndex(dir).find((e) => e.slug === SEEDED_SLUG)!.code!;
-    const rows = await db.select().from(emailLinkCodes).where(inArray(emailLinkCodes.code, [code]));
-    assert.equal(rows[0].continueSeed, SEED_V1);
+  // The lander parses bucket with a z.enum, and /start discards the WHOLE
+  // payload on any parse failure — so a bad value here doesn't degrade a send,
+  // it voids it, while every other signal still looks healthy.
+  describe('**Bucket:** validation', () => {
+    it('refuses a value the lander cannot parse, naming the valid four', () => {
+      const dir = newTempDir();
+      fs.writeFileSync(
+        path.join(dir, '01-seeded.md'),
+        draft({ num: '01', slug: SEEDED_SLUG, continueSeed: SEED_V1, bucket: 'Money' }),
+      );
+      const run = render(dir);
+      assert.equal(run.status, 1);
+      assert.match(run.stderr, /\*\*Bucket:\*\* is "Money", which the lander cannot parse/);
+      assert.match(run.stderr, /love, money, purpose, specific/);
+      assert.ok(!fs.existsSync(path.join(dir, '_build')));
+    });
+
+    it('accepts a valid non-default bucket and stores it', async () => {
+      const dir = newTempDir();
+      fs.writeFileSync(
+        path.join(dir, '01-seeded.md'),
+        draft({ num: '01', slug: SEEDED_SLUG, continueSeed: SEED_V1, bucket: 'money' }),
+      );
+      const run = render(dir);
+      assert.equal(run.status, 0, run.stderr);
+      const code = readIndex(dir).find((e) => e.slug === SEEDED_SLUG)!.code!;
+      const rows = await db.select().from(emailLinkCodes).where(inArray(emailLinkCodes.code, [code]));
+      assert.equal(rows[0].bucket, 'money');
+    });
   });
 
   it('needs no database at all when no draft has a Continue Seed', () => {
