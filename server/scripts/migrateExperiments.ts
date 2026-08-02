@@ -196,25 +196,57 @@ async function up(pool: pg.Pool) {
   // signup (clean, pre-stitch). Draft = OFF ⇒ useABVariant returns the default
   // 'chatbox' ⇒ lander byte-identical. element='mechanic' is REQUIRED (the public
   // /api/ab/assign skips visitor tests with no scope.element).
+  //
+  // Third arm 'live_thread' (Live Thread plan, Task 12) ships DARK at weight 0.
+  // A zero-weight arm is never assigned by pickVariant (server/lib/experiments.ts:
+  // 67-77 — it sums only positive weights and a bucket of at most 99 can never
+  // reach the running total), so the arm exists to be configured but reaches no
+  // visitor until an operator raises its weight in /admin/experiments. It is
+  // listed LAST deliberately: pickVariant walks weights in listed order, so
+  // appending a zero-weight arm leaves every existing bucket→arm mapping
+  // untouched.
   const lmVariants = JSON.stringify([
     { key: 'chatbox', weight: 50, payload: {} },
     { key: 'quiz', weight: 50, payload: {} },
+    { key: 'live_thread', weight: 0, payload: {} },
   ]);
   const lmScope = JSON.stringify({ route: 'evelyn_lander', element: 'mechanic' });
   const lmConversion = JSON.stringify({ type: 'event', name: 'signup' });
   const lm = await pool.query(
     `INSERT INTO experiments (key, name, description, status, subject_type, variants, scope, conversion)
-     VALUES ('evelyn_lander_mechanic', 'Evelyn lander mechanic (chatbox vs quiz)',
-       'Structural A/B on /evelyn: control chatbox (open chat) vs quiz (3-tap). Primary metric = signup. Visitor-cookie subject. To start, set status=running.',
+     VALUES ('evelyn_lander_mechanic', 'Evelyn lander mechanic (chatbox vs quiz vs live thread)',
+       'Structural A/B on /evelyn: control chatbox (open chat) vs quiz (3-tap) vs live_thread (email arrival thread, seeded at weight 0 = dark). Primary metric = signup. Visitor-cookie subject. To start, set status=running; to expose live_thread, give it a positive weight in the variant editor first.',
        'draft', 'visitor', $1::jsonb, $2::jsonb, $3::jsonb)
      ON CONFLICT (key) DO NOTHING
      RETURNING id`,
     [lmVariants, lmScope, lmConversion],
   );
   if (lm.rowCount && lm.rowCount > 0) {
-    console.log('✓ seeded DRAFT lander-mechanic experiment (Evelyn quiz vs chatbox)');
+    console.log('✓ seeded DRAFT lander-mechanic experiment (Evelyn quiz vs chatbox vs live_thread)');
   } else {
-    console.log('• evelyn_lander_mechanic experiment already exists — left unchanged');
+    // The row predates the Live Thread arm on every environment that has run this
+    // script before, and ON CONFLICT DO NOTHING above will never update it — so
+    // the arm has to be back-filled explicitly or `live_thread` would exist only
+    // in code and be un-selectable in /admin/experiments forever.
+    //
+    // Safe to run against a RUNNING test: appending a weight-0 arm at the end of
+    // the list changes neither the positive-weight total nor the order the
+    // buckets are walked in, so no already-assigned visitor moves arms. Guarded
+    // by a containment check so re-runs are idempotent and an operator's own
+    // weight change is never stomped back to 0.
+    const lmBackfill = await pool.query(
+      `UPDATE experiments
+          SET variants = variants || '[{"key":"live_thread","weight":0,"payload":{}}]'::jsonb,
+              updated_at = now()
+        WHERE key = 'evelyn_lander_mechanic'
+          AND jsonb_typeof(variants) = 'array'
+          AND NOT (variants @> '[{"key":"live_thread"}]'::jsonb)`,
+    );
+    if (lmBackfill.rowCount && lmBackfill.rowCount > 0) {
+      console.log('✓ evelyn_lander_mechanic existed — appended DARK live_thread arm (weight 0)');
+    } else {
+      console.log('• evelyn_lander_mechanic experiment already exists — left unchanged');
+    }
   }
 
   // Phase 3b-rest — V1 MAIN/downsell price test on the framework. Draft = OFF, so the

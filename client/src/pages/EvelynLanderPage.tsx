@@ -26,14 +26,22 @@ import { createTimeoutSignal } from "@/lib/timeoutSignal";
 import { track as trackPH } from "@/lib/posthog";
 import { useABVariant } from "@/hooks/useABTest";
 import EvelynQuizMechanic from "@/pages/evelyn-lander/EvelynQuizMechanic";
+import LiveThreadLander, { type LiveThreadOutcome } from "@/components/LiveThreadLander";
 
 // The lander MECHANIC is a Phase 4c structural A/B (`evelyn_lander_mechanic`):
-// control 'chatbox' = the open 2-turn chat below; treatment 'quiz' = the 3-tap
-// quiz. The quiz shipped as the sole surface first (boss decision 2026-06-30);
-// the experiment is now re-wired so that when it is Started, visitors split 50/50
-// chatbox vs quiz. While it is OFF the lander defaults to 'quiz' (unchanged prod
-// behaviour). The chatbox is also reachable via a non-prod `?mechanic=chatbox`
-// override for QA.
+// control 'chatbox' = the open 2-turn chat below; 'quiz' = the 3-tap quiz;
+// 'live_thread' = the Live Thread arrival surface (Task 12). The quiz shipped as
+// the sole surface first (boss decision 2026-06-30); the experiment is now
+// re-wired so that when it is Started, visitors split by the arms' weights.
+// While it is OFF the lander defaults to 'quiz' (unchanged prod behaviour).
+//
+// 'live_thread' ships DARK: its seeded arm carries weight 0, and pickVariant
+// (server/lib/experiments.ts:67-77) never assigns a zero-weight arm, so this
+// code path is unreachable in production until an operator raises that weight in
+// /admin/experiments. See the Task 12 report for the exact turn-on steps.
+//
+// The two non-default arms are also reachable via a non-prod
+// `?mechanic=chatbox|live_thread` override for QA.
 
 const AUTH_TOKEN_KEY = "seer_auth_token";
 const EVELYN_PERSONA_SLUG = "evelyn-cross";
@@ -69,6 +77,13 @@ const MAX_USER_TURNS = 2;
 //   deliberately.
 const START_TIMEOUT_MS = 10_000;
 const REDIRECT_START_TIMEOUT_MS = 4_000;
+// Live Thread `no_match` only: how long the reader gets to read Frame 2b's
+// "Good — I've got it saved" confirmation before we carry them into
+// registration. Without a beat the bubble that tells them their reply survived
+// would render and vanish in the same frame — that reassurance IS the feature.
+// Roughly matches the quiz arm's own 1200ms post-completion beat
+// (EvelynQuizMechanic.tsx:196).
+const NO_MATCH_HANDOFF_DELAY_MS = 1600;
 
 type Segment = "v2_active" | "v2_password" | "v1_migrated" | "brand_new" | "token_magic";
 
@@ -107,7 +122,7 @@ interface LanderParams {
   src: string | null;
   campaign: string | null;
   name: string | null;
-  mechanic: string | null; // non-prod preview override (?mechanic=quiz|chatbox)
+  mechanic: string | null; // non-prod preview override (?mechanic=quiz|chatbox|live_thread)
 }
 
 function readParams(): LanderParams {
@@ -182,20 +197,37 @@ export default function EvelynLanderPage() {
   const params = readParams();
   const sessionToken = getSessionToken();
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  // Live Thread `no_match` handoff timer. Held in a ref and cleared on unmount so
+  // a reader who taps "Sign in instead" (or navigates any other way) inside the
+  // beat can't have a queued navigate() yank them back out of where they went —
+  // wouter's navigate is a global location write and fires happily after unmount.
+  // Same defence EvelynQuizMechanic.tsx:110-118 uses for its own transition timers.
+  const noMatchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(
+    () => () => {
+      if (noMatchTimerRef.current) clearTimeout(noMatchTimerRef.current);
+    },
+    [],
+  );
 
   // Resolve the lander MECHANIC via the `evelyn_lander_mechanic` structural A/B
   // (visitor-scoped, scope.route='evelyn_lander', element='mechanic'): control
-  // 'chatbox' = the open 2-turn chat below; treatment 'quiz' = the 3-tap quiz.
+  // 'chatbox' = the open 2-turn chat below; 'quiz' = the 3-tap quiz;
+  // 'live_thread' = the Live Thread arrival surface, seeded at weight 0 (dark).
   // While the experiment is OFF (draft/paused) /assign omits it and useABVariant
   // falls back to the 'quiz' default, so prod stays 100% quiz — byte-identical to
-  // the previous hard-pin. When an admin Starts the test, visitors split 50/50
-  // sticky by the ab_vid cookie. The mechanic only changes the ENGAGEMENT layer;
-  // BOTH arms run the same /start (creates the lander session) and finish through
-  // the same handleCta (segment-aware routing + session linkage), so the 5-min
-  // grant and the drip are identical regardless of mechanic. A non-prod
-  // `?mechanic=quiz|chatbox` override wins for manual QA.
+  // the previous hard-pin. When an admin Starts the test, visitors split by the
+  // arms' weights, sticky by the ab_vid cookie. The mechanic only changes the
+  // ENGAGEMENT layer; ALL arms run the same /start (creates the lander session)
+  // and hand off to the same destinations (segment-aware routing + session
+  // linkage), so the free-minute grant and the drip are identical regardless of
+  // mechanic. A non-prod `?mechanic=quiz|chatbox|live_thread` override wins for
+  // manual QA — the only way to see the dark arm before it is weighted up.
   const overrideMechanic =
-    import.meta.env.DEV && (params.mechanic === "quiz" || params.mechanic === "chatbox")
+    import.meta.env.DEV &&
+    (params.mechanic === "quiz" ||
+      params.mechanic === "chatbox" ||
+      params.mechanic === "live_thread")
       ? params.mechanic
       : null;
   const assignment = useABVariant("evelyn_lander", "mechanic", "quiz");
@@ -208,6 +240,36 @@ export default function EvelynLanderPage() {
     clearSession();
     const emailQp = params.email ? `?email=${encodeURIComponent(params.email)}` : "";
     navigate(`/login${emailQp}`);
+  }
+
+  // The ONE registration destination for this lander, shared by every arm that
+  // sends a brand-new reader into signup: handleCta's `register` branch (chatbox
+  // + quiz-for-returning-users) and the Live Thread arm's `no_match` outcome.
+  // Factored out rather than duplicated because every query param here is
+  // load-bearing and silently breaks something different if it drifts:
+  //
+  //   persona            — the verification email URL embeds ?persona=evelyn-cross;
+  //                        without it post-verification lands on /reading with no
+  //                        persona and bounces to /personas instead of Evelyn.
+  //   source             — /api/auth/register links the lander session row to the
+  //                        new user AND schedules the Evelyn unverified drip;
+  //                        LoginPage also gates trackLead + trackABConversion
+  //                        (the experiment's primary metric) on this exact value.
+  //   landerSessionToken — carries the PARKED REPLY and the Live Thread grant
+  //                        eligibility through registration. Omit it and the
+  //                        reader's words are orphaned and they get the small
+  //                        grant instead of the Live Thread one.
+  //   bucket             — Drip 1's static content uses the bucket-specific phrase.
+  //
+  // `email` is a parameter, not `params.email`, because the two callers know it
+  // from different places: handleCta only ever has the link's merge-tag hint,
+  // while the Live Thread arm has the address the reader actually typed and had
+  // resolved server-side — which is the one that must reach the signup form.
+  function buildRegisterDest(email: string | null): string {
+    const emailQp = email ? `&email=${encodeURIComponent(email)}` : "";
+    const sourceQp = `&source=evelyn-lander&landerSessionToken=${encodeURIComponent(sessionToken)}`;
+    const bucketQp = params.bucket ? `&bucket=${encodeURIComponent(params.bucket)}` : "";
+    return `/login?mode=signup${emailQp}&persona=${EVELYN_PERSONA_SLUG}${sourceQp}${bucketQp}`;
   }
 
   // Auto-scroll to newest message when the thread grows.
@@ -501,23 +563,12 @@ export default function EvelynLanderPage() {
           navigate(`/login?${emailQp.slice(1)}${nextQp}`, { replace: true });
           return;
         case "register": {
-          // Persona context must travel through the register flow so the
-          // verification email URL embeds ?persona=evelyn-cross. Without it,
-          // post-verification the user lands on /reading with no persona and
-          // gets bounced to /personas instead of Evelyn's chat.
-          //
-          // We also pass `source=evelyn-lander` + `landerSessionToken` so the
-          // /api/auth/register handler can (a) link the lander session row to
-          // the new user and (b) schedule the Evelyn unverified-track drip.
-          // `bucket` is forwarded too so Drip 1's static content can use the
-          // bucket-specific phrase.
-          const sourceQp = `&source=evelyn-lander&landerSessionToken=${encodeURIComponent(sessionToken)}`;
-          const bucketQp = params.bucket ? `&bucket=${encodeURIComponent(params.bucket)}` : "";
+          // Destination (and the reason each param is required) lives in
+          // buildRegisterDest — shared with the Live Thread arm's `no_match`
+          // handoff so the two can never drift apart.
+          const dest = buildRegisterDest(params.email);
           clearSession();
-          navigate(
-            `/login?mode=signup${emailQp}&persona=${EVELYN_PERSONA_SLUG}${sourceQp}${bucketQp}`,
-            { replace: true },
-          );
+          navigate(dest, { replace: true });
           return;
         }
         case "already_logged_in":
@@ -529,6 +580,51 @@ export default function EvelynLanderPage() {
       setPhase("chat");
       setErrorMsg("Something went wrong. Please try again.");
     }
+  }
+
+  // The Live Thread arm's single hand-off point. LiveThreadLander calls this once
+  // /check-email has resolved (the reply is already parked server-side by then, so
+  // nothing here can cost the reader their words).
+  //
+  // ANALYTICS. This arm has exactly one observable moment from the page — the
+  // component exposes no callback for the earlier reply-send step — so the quiz
+  // arm's `quiz_started` / `quiz_answer` / `quiz_completed` progression has no
+  // one-to-one equivalent to emit here. What IS equivalent is the hand-off: the
+  // moment the reader taps the arm's primary button and is routed onward. That is
+  // exactly what `lander_cta_clicked` means in the other two arms (handleCta above
+  // fires it for chatbox, and for a returning quiz visitor), so this arm fires the
+  // SAME event with the SAME funnel/step payload rather than a parallel vocabulary,
+  // plus `mechanic` + `outcome` to tell the arms and the three branches apart.
+  //
+  // The experiment's PRIMARY metric needs nothing extra here: exposure is logged by
+  // /api/ab/assign when the arm is resolved, and the signup conversion fires from
+  // LoginPage.tsx:118-120 on `source=evelyn-lander` — the same path the chatbox arm
+  // converts through, which the no_match branch below routes into.
+  function handleLiveThreadOutcome(outcome: LiveThreadOutcome, submittedEmail: string) {
+    trackPH("lander_cta_clicked", {
+      funnel: "evelyn",
+      step: "landing",
+      mechanic: "live_thread",
+      outcome,
+    });
+
+    // verified_match / unverified_match are genuinely self-contained: the reader
+    // has an account, a link is on its way to the inbox we just named, and the
+    // component's own footer offers Resend + "Sign in instead". Navigating them
+    // anywhere would interrupt a flow that is already complete.
+    if (outcome !== "no_match") return;
+
+    // no_match is the majority of a cold email list, and the component's terminal
+    // state for it is a static line with no button and no link — so this is the
+    // one outcome where NOT navigating strands the reader. Same destination the
+    // chatbox arm's `register` branch builds, via the shared helper, so the
+    // persona / source / landerSessionToken / bucket params (and the parked reply
+    // + Live Thread grant they carry) cannot drift between the two arms.
+    const dest = buildRegisterDest(submittedEmail);
+    noMatchTimerRef.current = setTimeout(() => {
+      clearSession();
+      navigate(dest, { replace: true });
+    }, NO_MATCH_HANDOFF_DELAY_MS);
   }
 
   // One gate for BOTH arms: wait for auth, the mechanic assignment, AND /start
@@ -565,6 +661,39 @@ export default function EvelynLanderPage() {
         bucket={params.bucket}
         prefillEmail={params.email}
         readingDest={READING_DEST}
+      />
+    );
+  }
+
+  // The Live Thread arrival surface (spec: docs/superpowers/specs/
+  // 2026-08-01-live-thread-arrival-design.md). An EARLY RETURN, exactly like the
+  // quiz arm above and for the same reason: LiveThreadLander renders its own
+  // min-h-screen wrapper, its own <CosmicBackground/> and its own <Card>, so
+  // inlining it inside the chatbox layout below would stack two backgrounds and
+  // nest one card inside another.
+  //
+  // continueSeed: the opener /start resolved for this visitor. NOTE — this is the
+  // segment-aware STATIC opener (evelynLanderEngine.selectStaticOpener), not the
+  // per-campaign `continueSeed` written in emailReadingBriefs.ts / minted into
+  // email_link_codes: no endpoint returns that value to the client today, so
+  // there is nothing better to pass. See the Task 12 report — until that gap is
+  // closed this arm continues the reader's EMAIL only in tone, not in specifics.
+  // Reading it off `messages` rather than a second piece of state keeps one
+  // source of truth across all three postStart paths (success, network-failure
+  // fallback, and history restored from sessionStorage after a refresh). Empty
+  // never reaches the component as a blank bubble — it falls back to its own
+  // in-character FALLBACK_SEED.
+  if (mechanic === "live_thread") {
+    return (
+      <LiveThreadLander
+        continueSeed={messages.find((m) => m.role === "assistant")?.content ?? ""}
+        sessionToken={sessionToken}
+        onOutcome={handleLiveThreadOutcome}
+        // The same merge-tag hint the quiz arm above is handed — saves a typing
+        // step on the most conversion-critical field in the flow. Never trusted
+        // for identity; /check-email still resolves the account from what the
+        // reader actually submits.
+        prefillEmail={params.email}
       />
     );
   }
