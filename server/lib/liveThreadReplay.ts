@@ -156,6 +156,14 @@ export async function replayPendingReply(config: {
           LIMIT 1
         )
           AND pending_reply_consumed_at IS NULL
+          -- Both predicates are repeated OUT HERE deliberately. Under READ COMMITTED,
+          -- an UPDATE that blocks on a concurrent write re-evaluates only this outer
+          -- WHERE against the new row version (EvalPlanQual) — the subselect above is
+          -- NOT re-run. Re-checking consumed-at alone is not enough: the same reader
+          -- can POST a second, FLAGGED reply to /reply inside this row-lock window,
+          -- and RETURNING would then hand back the new flagged text, putting into the
+          -- chat exactly what the subselect's filter exists to keep out.
+          AND pending_reply_violation_type IS NULL
         RETURNING pending_reply
       `);
 
