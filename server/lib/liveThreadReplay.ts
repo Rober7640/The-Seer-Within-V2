@@ -24,13 +24,21 @@
 // session reads [assistant greeting][reader's parked reply] — the reply is the
 // last message, which is what makes the next response answer it.
 //
+// AND THE ANSWER, WHEN THERE IS ONE (Task 14). Before any session exists, the
+// reader's first /reading load shows them [greeting][their reply][the persona's
+// answer], generated free by liveThreadPreview.ts and stored on
+// pending_reply_response. When the session finally starts, this module inserts BOTH
+// rows, so the session reads exactly what the reader has been looking at. Insert the
+// reply without the answer and the model would not know it had already replied — it
+// would answer the same disclosure twice, and the reader would watch it happen.
+//
 // ⚠ pending_reply IS NEVER CLEARED. That column is also the durable evidence
 // behind the 10-minute welcome grant, re-derived at verification time and on every
 // /check-email resend (liveThreadEngagement.ts's header spells this out). Consumption
 // is recorded in the SEPARATE pending_reply_consumed_at marker instead; nulling the
 // text would silently drop those readers back to 5 minutes with no error anywhere.
 
-import { and, eq, gte, isNotNull, isNull, sql } from 'drizzle-orm';
+import { and, desc, eq, gte, isNotNull, isNull, sql } from 'drizzle-orm';
 import { db } from './db';
 import { chatMessages, evelynLanderSessions } from '@shared/schema';
 import { MAGIC_LINK_EXPIRY_DAYS } from './magicLink';
@@ -74,6 +82,67 @@ const EVELYN_SLUG = 'evelyn-cross';
  */
 export const LIVE_THREAD_REPLAY_WINDOW_DAYS = MAGIC_LINK_EXPIRY_DAYS;
 
+/** A parked reply that is still eligible to be shown and replayed. */
+export interface EligibleParkedReply {
+  /** evelyn_lander_sessions.id — the row to write a generated answer back to. */
+  landerSessionId: string;
+  /** What the reader typed into the lander before they had an account. */
+  reply: string;
+  /** The persona's pre-session answer, once generated. Null until then. */
+  response: string | null;
+}
+
+/**
+ * THE ONE DEFINITION of "this reader has a parked reply we may act on".
+ *
+ * Both consumers read through here: this module's own pre-check, and
+ * liveThreadPreview.ts, which shows the reply back to the reader before any session
+ * exists. They MUST agree. If the preview showed a reply the replay later refuses —
+ * a flagged one, an already-consumed one, one outside the window — the reader would
+ * see words in their thread that the persona never receives, and in the flagged case
+ * we would be echoing back text the safety gate deliberately withheld (crisis and
+ * non-English replies both land here). One function, so the two cannot drift.
+ *
+ * The claim statement in replayPendingReply() repeats these predicates in raw SQL and
+ * cannot call this — it has to be a single atomic UPDATE, and its outer WHERE has to
+ * be re-evaluable under EvalPlanQual. That mirror is deliberate and commented at the
+ * call site; keep the two in step.
+ */
+export async function findEligibleParkedReply(config: {
+  userId: string;
+  personaSlug: string;
+}): Promise<EligibleParkedReply | null> {
+  if (config.personaSlug !== EVELYN_SLUG) return null;
+
+  const cutoff = new Date(Date.now() - LIVE_THREAD_REPLAY_WINDOW_DAYS * 24 * 3_600_000);
+
+  const [row] = await db
+    .select({
+      id: evelynLanderSessions.id,
+      pendingReply: evelynLanderSessions.pendingReply,
+      pendingReplyResponse: evelynLanderSessions.pendingReplyResponse,
+    })
+    .from(evelynLanderSessions)
+    .where(and(
+      eq(evelynLanderSessions.resolvedUserId, config.userId),
+      isNotNull(evelynLanderSessions.pendingReply),
+      isNull(evelynLanderSessions.pendingReplyConsumedAt),
+      isNull(evelynLanderSessions.pendingReplyViolationType),
+      gte(evelynLanderSessions.startedAt, cutoff),
+    ))
+    // Newest first — the same ordering the claim uses, so the row the reader is shown
+    // is the row that will later be replayed.
+    .orderBy(desc(evelynLanderSessions.startedAt))
+    .limit(1);
+
+  if (!row?.pendingReply) return null;
+  return {
+    landerSessionId: row.id,
+    reply: row.pendingReply,
+    response: row.pendingReplyResponse ?? null,
+  };
+}
+
 /**
  * Claim this user's newest unconsumed parked reply and insert it as a real user
  * message in `sessionId`. Returns the replayed text, or null when there is nothing
@@ -114,24 +183,14 @@ export async function replayPendingReply(config: {
   try {
     const cutoff = new Date(Date.now() - LIVE_THREAD_REPLAY_WINDOW_DAYS * 24 * 3_600_000);
 
-    // Cheap pre-check on the idx_evelyn_lander_user index. The overwhelming majority
-    // of Evelyn session starts belong to readers with no lander row at all, and they
-    // should not pay a BEGIN/UPDATE/COMMIT round trip to learn that. Purely an
-    // optimisation: it does not decide anything. A false positive (the row is claimed
-    // by someone else between this and the transaction) just means the claim below
-    // matches nothing, which is already a supported outcome.
-    const candidate = await db
-      .select({ id: evelynLanderSessions.id })
-      .from(evelynLanderSessions)
-      .where(and(
-        eq(evelynLanderSessions.resolvedUserId, config.userId),
-        isNotNull(evelynLanderSessions.pendingReply),
-        isNull(evelynLanderSessions.pendingReplyConsumedAt),
-        isNull(evelynLanderSessions.pendingReplyViolationType),
-        gte(evelynLanderSessions.startedAt, cutoff),
-      ))
-      .limit(1);
-    if (!candidate[0]) return null;
+    // Cheap pre-check through the ONE shared eligibility definition. The overwhelming
+    // majority of Evelyn session starts belong to readers with no lander row at all,
+    // and they should not pay a BEGIN/UPDATE/COMMIT round trip to learn that. Purely
+    // an optimisation: it does not decide anything. A false positive (the row is
+    // claimed by someone else between this and the transaction) just means the claim
+    // below matches nothing, which is already a supported outcome.
+    const candidate = await findEligibleParkedReply(config);
+    if (!candidate) return null;
 
     // Claim and insert in ONE transaction: if the message insert fails, the claim
     // rolls back with it. A reply must never end up marked consumed but unspoken —
@@ -164,18 +223,45 @@ export async function replayPendingReply(config: {
           -- and RETURNING would then hand back the new flagged text, putting into the
           -- chat exactly what the subselect's filter exists to keep out.
           AND pending_reply_violation_type IS NULL
-        RETURNING pending_reply
+        RETURNING pending_reply, pending_reply_response
       `);
 
-      const text = (claimed.rows[0] as { pending_reply: string } | undefined)?.pending_reply;
+      const claimedRow = claimed.rows[0] as
+        | { pending_reply: string; pending_reply_response: string | null }
+        | undefined;
+      const text = claimedRow?.pending_reply;
       if (!text) return null;
 
+      // sent_at is set from clock_timestamp(), NOT the column's DEFAULT now().
+      // now() is the TRANSACTION timestamp, so these two inserts would receive the
+      // identical value and the reply/answer pair would have no defined order — the
+      // history window sorts on (sent_at, id) and the tie would break on a random
+      // uuid, i.e. the answer could be fed to the model above the question it
+      // answers. clock_timestamp() advances within the transaction, and is still
+      // strictly later than the greeting row committed just before us.
       await tx.insert(chatMessages).values({
         sessionId: config.sessionId,
         userId: config.userId,
         role: 'user',
         content: text,
+        sentAt: sql`clock_timestamp()`,
       });
+
+      // The answer the reader was ALREADY shown, pre-session, by
+      // liveThreadPreview.ts. It goes in with the reply so the thread in the
+      // database is the thread on their screen; without it the persona's next turn
+      // would not know she had answered, and would answer the same words twice.
+      // Null when they never opened /reading, or when generation failed — then this
+      // is exactly the pre-023 behaviour, the reply alone.
+      if (claimedRow?.pending_reply_response) {
+        await tx.insert(chatMessages).values({
+          sessionId: config.sessionId,
+          userId: config.userId,
+          role: 'assistant',
+          content: claimedRow.pending_reply_response,
+          sentAt: sql`clock_timestamp()`,
+        });
+      }
       return text;
     });
 

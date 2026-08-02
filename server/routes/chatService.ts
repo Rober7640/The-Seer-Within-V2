@@ -14,6 +14,7 @@ import { claimPromoForUser, hasClaimedActivePromo } from '../lib/promoCampaign';
 import { summarizeSession } from '../lib/memoryManager';
 import { getPersonaPricing } from '../lib/personaPricing';
 import { initSession, sendMessage, generateGreeting } from '../lib/chatEngine';
+import { resolveLiveThreadPreview } from '../lib/liveThreadPreview';
 import { isPersonaOnline } from '../lib/personaManager';
 import { getModelForOperation } from '../lib/modelConfig';
 import { chatLimiter } from '../lib/rateLimiter';
@@ -29,12 +30,17 @@ const router = Router();
 // refresh or tab switch. Key: `${userId}:${personaId}`. TTL: 30 minutes.
 const greetingCache = new Map<string, { greeting: string; personaName: string; expiresAt: number }>();
 const GREETING_CACHE_TTL_MS = 30 * 60 * 1000;
+// .unref() so this sweep is not, by itself, a reason for the process to stay alive.
+// In production nothing changes — the HTTP listener holds the event loop open. But a
+// test file that imports this router (liveThreadPreview.test.ts does, to exercise the
+// real route) would otherwise hang forever after its last assertion, with a live timer
+// and no output. A cache-eviction timer should never be what keeps a process running.
 setInterval(() => {
   const now = Date.now();
   greetingCache.forEach((val, key) => {
     if (val.expiresAt <= now) greetingCache.delete(key);
   });
-}, 10 * 60 * 1000);
+}, 10 * 60 * 1000).unref();
 
 const startSessionSchema = z.object({
   personaId: z.string().min(1, 'Persona ID is required'),
@@ -111,6 +117,39 @@ router.get('/greeting/:personaSlug', requireAuth, async (req: Request, res: Resp
     }
     logger.error('Generate greeting error:', error);
     res.status(500).json({ error: 'Failed to generate greeting' });
+  }
+});
+
+// GET /api/chat-service/live-thread/:personaSlug
+// "The Live Thread": what this reader typed into the persona's lander BEFORE they had
+// an account, plus the persona's answer to it — so their first /reading load shows the
+// thread continuing instead of a stranger being greeted.
+//
+// FREE, exactly like /greeting above: no session is created, no coins move, no
+// chat_messages row is written. That is the entire point — creating a session here
+// would start the wall-clock meter at page load and eat the free grant this feature
+// exists to hand them (measurements in server/lib/liveThreadReplay.ts's header).
+// Billing still starts at the reader's first typed message.
+//
+// AUTHENTICATION. This returns a reader's own words back to them, so it follows
+// /greeting exactly: requireAuth, and the identity comes from req.userId (set from the
+// verified JWT) and NOTHING else. There is no user id, email or lander token in the
+// path, query or body, so there is no parameter to tamper with — the lookup is
+// `resolved_user_id = <the caller>`, and one reader cannot address another's row.
+//
+// Returns { liveThread: null } for everyone with nothing parked — every persona but
+// Evelyn, and almost every Evelyn reader — and on ANY failure, so a bad day here
+// degrades to today's behaviour (greeting only) rather than blocking a reading.
+router.get('/live-thread/:personaSlug', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const preview = await resolveLiveThreadPreview({
+      userId: req.userId!,
+      personaSlug: req.params.personaSlug as string,
+    });
+    res.json({ liveThread: preview });
+  } catch (error) {
+    logger.warn('Live thread preview error:', error);
+    res.json({ liveThread: null });
   }
 });
 

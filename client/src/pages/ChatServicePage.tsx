@@ -3,6 +3,7 @@ import { useSearch, useLocation, useRoute, Link } from "wouter";
 import { useAuth, authFetch } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
 import { calculateTypingDelay, sleep } from "@/lib/typingAnimation";
+import { createTimeoutSignal } from "@/lib/timeoutSignal";
 import { PreReadingWelcome } from "@/components/PreReadingWelcome";
 import { GuideSidebar } from "@/components/GuideSidebar";
 import TarotCardDraw from "@/components/TarotCardDraw";
@@ -142,6 +143,46 @@ function touchStoredLiveSession() {
     s.lastActiveAt = Date.now();
     localStorage.setItem(LIVE_SESSION_KEY, JSON.stringify(s));
   } catch {}
+}
+
+// "The Live Thread" (Task 14): what this reader typed into the persona's lander
+// BEFORE they had an account, plus the persona's answer to it. Both are rendered as
+// PRE-SESSION bubbles — no session is created and nothing is billed until the reader
+// types, which is the property the whole design was chosen for. When they do type,
+// POST /session/start replays both into the database (server/lib/liveThreadReplay.ts),
+// so the thread on screen and the thread the model reads stay the same thread.
+interface LiveThreadPreview {
+  reply: string;
+  response: string | null;
+}
+
+/**
+ * Free, read-only lookup. Resolves to null for every persona and every reader with
+ * nothing parked — i.e. for all normal traffic — and on any error, timeout or
+ * malformed body, so a failure here can only ever mean "show today's greeting".
+ *
+ * Timeout via createTimeoutSignal, never AbortSignal.timeout directly: this funnel's
+ * paid traffic includes stale Android WebView, where calling it throws synchronously
+ * before fetch is issued (see client/src/lib/timeoutSignal.ts).
+ */
+async function fetchLiveThread(slug: string): Promise<LiveThreadPreview | null> {
+  const { signal, cleanup } = createTimeoutSignal(10000);
+  try {
+    const res = await authFetch(`/api/chat-service/live-thread/${slug}`, { signal });
+    if (!res.ok) return null;
+    const data = await res.json();
+    const lt = data?.liveThread;
+    if (!lt || typeof lt.reply !== "string" || !lt.reply.trim()) return null;
+    return {
+      reply: lt.reply,
+      response:
+        typeof lt.response === "string" && lt.response.trim() ? lt.response : null,
+    };
+  } catch {
+    return null;
+  } finally {
+    cleanup();
+  }
 }
 
 interface MemoryContext {
@@ -915,6 +956,47 @@ export default function ChatServicePage() {
       setMessages(prev => [...prev, msg]);
     };
 
+    // Live Thread: fired in PARALLEL with the greeting so it can never delay the first
+    // bubble. Skipped for the teaser path (a deliberate different entry point, which
+    // returns before the greeting call) and for appendMode (nothing is being opened).
+    const liveThreadPromise: Promise<LiveThreadPreview | null> =
+      teaserContent || appendMode ? Promise.resolve(null) : fetchLiveThread(slug);
+
+    // Appended UNDER the greeting, so the thread reads [greeting][their words][answer]
+    // — the same order server/lib/liveThreadReplay.ts writes to the database when the
+    // session eventually starts. Resolves to a no-op for everyone without a parked
+    // reply, which is all normal traffic.
+    const appendLiveThread = async () => {
+      let lt: LiveThreadPreview | null = null;
+      try {
+        lt = await liveThreadPromise;
+      } catch {
+        lt = null;
+      }
+      if (!lt || isStale()) return;
+      addMsg({
+        id: `live-thread-reply-${Date.now()}`,
+        role: "user",
+        content: lt.reply,
+        sentAt: new Date().toISOString(),
+      });
+      // No answer (generation failed server-side): the reader still sees their own
+      // words in the thread, and the persona answers them on her next turn.
+      if (!lt.response) return;
+      await sleep(400);
+      if (isStale()) return;
+      setIsTyping(true);
+      await sleep(calculateTypingDelay(lt.response));
+      setIsTyping(false);
+      if (isStale()) return;
+      addMsg({
+        id: `live-thread-response-${Date.now()}`,
+        role: "assistant",
+        content: lt.response,
+        sentAt: new Date().toISOString(),
+      });
+    };
+
     // If the user clicked through from a sidebar teaser, deliver that message directly
     // without an API round-trip — the guide "says" exactly what was previewed.
     if (teaserContent) {
@@ -1044,6 +1126,8 @@ export default function ChatServicePage() {
           setPersonaStatus('online');
           setPersonaStatusText('Online');
         }, 800);
+
+        await appendLiveThread();
       } else if (res.status === 402) {
         setReadingEnded(true);
         setShowBuyCredits(true);
@@ -1067,6 +1151,8 @@ export default function ChatServicePage() {
           setPersonaStatus('online');
           setPersonaStatusText('Online');
         }, 800);
+
+        await appendLiveThread();
       }
     } catch (err) {
       console.error("Failed to fetch greeting:", err);
@@ -1085,6 +1171,8 @@ export default function ChatServicePage() {
       setIsTyping(false);
       setPersonaStatus('online');
       setPersonaStatusText('Online');
+
+      await appendLiveThread();
     } finally {
       setIsStarting(false);
       setIsTyping(false);
@@ -2325,7 +2413,10 @@ export default function ChatServicePage() {
                 }
 
                 // A "real" DB message ID is a UUID — not a temp- or assistant- prefixed local ID
-                const isRealId = !msg.id.startsWith('temp-') && !msg.id.startsWith('assistant-') && !msg.id.startsWith('reveal-') && !msg.id.startsWith('reading-ended-') && !msg.id.startsWith('credits-purchased-');
+                // 'live-thread-' covers the two PRE-SESSION bubbles (the reader's parked
+                // reply and its answer). They are shown before any session exists, so no
+                // chat_messages row exists to bookmark yet — offering Save would 404.
+                const isRealId = !msg.id.startsWith('temp-') && !msg.id.startsWith('assistant-') && !msg.id.startsWith('reveal-') && !msg.id.startsWith('reading-ended-') && !msg.id.startsWith('credits-purchased-') && !msg.id.startsWith('live-thread-');
                 const isSaved = savedMessageIds.has(msg.id);
 
                 return (

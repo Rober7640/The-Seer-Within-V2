@@ -491,10 +491,20 @@ router.post('/reply', landerTurnLimiter, async (req: Request, res: Response) => 
     // agree by construction rather than by two lists that happen to match today.
     // Written unconditionally, including the null: /reply is an UPDATE a reader can
     // repeat, so a clean reply replacing a flagged one must clear the old verdict.
+    //
+    // pending_reply_response is cleared for the same reason and it matters just as
+    // much: it holds the persona's answer to the PREVIOUS text (Task 14 —
+    // liveThreadPreview.ts). Leave it and a reader who rewrites their reply is shown,
+    // and later replayed, an answer to words they deliberately replaced. Nulling it
+    // makes the next /reading load regenerate against what they actually said.
     const violationType = !safety.safe && safety.response ? safety.violationType : null;
     const result = await db
       .update(evelynLanderSessions)
-      .set({ pendingReply: reply, pendingReplyViolationType: violationType })
+      .set({
+        pendingReply: reply,
+        pendingReplyViolationType: violationType,
+        pendingReplyResponse: null,
+      })
       .where(eq(evelynLanderSessions.sessionToken, sessionToken))
       .returning({ id: evelynLanderSessions.id });
 

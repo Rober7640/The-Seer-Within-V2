@@ -1133,6 +1133,14 @@ export const evelynLanderSessions = pgTable("evelyn_lander_sessions", {
   // The text is still stored and the reader is still let through — that is the
   // operator's Task 6 ruling and this does not touch it.
   pendingReplyViolationType: text("pending_reply_violation_type"),
+  // The persona's answer to pending_reply, generated ONCE before any billing session
+  // exists (GET /api/chat-service/live-thread/:personaSlug — free, like /greeting) and
+  // shown to the reader on their first /reading load. Persisted rather than kept in the
+  // browser so replayPendingReply() can insert it alongside the reply when the session
+  // finally starts: otherwise the screen would show an answer the database has never
+  // seen, and the persona would answer the same disclosure a second time. Also makes a
+  // reload free — a stored answer is returned as-is, never regenerated. See migration 023.
+  pendingReplyResponse: text("pending_reply_response"),
   hadToken: boolean("had_token").default(false).notNull(),
 
   // Funnel progress (chat layer fills these later)

@@ -1,0 +1,30 @@
+-- Migration 023: The Live Thread — pending_reply_response.
+-- Purpose: hold the persona's answer to the reader's parked reply, generated ONCE
+--   by GET /api/chat-service/live-thread/:personaSlug (free, no chat session, no
+--   billing) and carried into the real chat later by server/lib/liveThreadReplay.ts.
+--
+-- WHY THE ANSWER IS PERSISTED RATHER THAN JUST RETURNED.
+--   The reader sees [greeting][their parked reply][answer] on their first /reading
+--   load, BEFORE any billing session exists — that is the whole point of the design
+--   (a session would start the wall-clock meter; see 021's note and
+--   liveThreadReplay.ts's header). The session is created only when they type. If the
+--   answer lived only in the browser, the database would then hold
+--   [greeting][reply][their new message] while the screen showed four bubbles, and the
+--   persona would generate her next turn without knowing she had already answered —
+--   so she would answer the same disclosure twice. Storing it here lets the replay
+--   insert BOTH rows, so the thread on screen and the thread the model reads are the
+--   same thread.
+--
+--   It also makes the reader's first load idempotent: a reload, a persona switch and
+--   back, or a second device re-reads this column instead of paying for another
+--   generation, and sees the same words it saw the first time.
+--
+-- NULL means "not generated yet" — either the reader has not opened /reading, or the
+--   model call failed (in which case the reader is shown [greeting][their reply] with
+--   no answer, and the replay inserts just the reply, exactly as it did before 023).
+--
+-- Additive only: one new nullable column, no rewrite of existing rows. Every reply
+--   parked before this migration reads as NULL, which is the correct pre-023
+--   behaviour.
+
+ALTER TABLE evelyn_lander_sessions ADD COLUMN IF NOT EXISTS pending_reply_response text;

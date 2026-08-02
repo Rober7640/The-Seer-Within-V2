@@ -84,7 +84,13 @@ async function readerWithCoins(personaSlug = 'evelyn-cross') {
  */
 async function makeLanderSession(
   label: string,
-  opts: { resolvedUserId?: string; pendingReply?: string; daysAgo?: number } = {},
+  opts: {
+    resolvedUserId?: string;
+    pendingReply?: string;
+    /** The pre-session answer liveThreadPreview.ts would have stored (Task 14). */
+    response?: string;
+    daysAgo?: number;
+  } = {},
 ): Promise<string> {
   const sessionToken = landerSessionToken(label);
   const startedAt = new Date(Date.now() - (opts.daysAgo ?? 0) * 24 * 3_600_000);
@@ -93,6 +99,7 @@ async function makeLanderSession(
     resolvedSegment: 'brand_new',
     resolvedUserId: opts.resolvedUserId ?? null,
     pendingReply: opts.pendingReply ?? null,
+    pendingReplyResponse: opts.response ?? null,
     campaign: 'replay-test-campaign',
     startedAt,
   });
@@ -358,6 +365,96 @@ describe('replayPendingReply', { skip: !HAS_DB }, () => {
 });
 
 // ---------------------------------------------------------------------------
+// Task 14. Before this session existed the reader was shown [greeting][their
+// reply][an answer], generated free and with no billing by liveThreadPreview.ts. All
+// three have to land in the session, in that order — otherwise the model does not
+// know it has already replied and answers the same disclosure a second time, while
+// the reader watches it happen.
+// ---------------------------------------------------------------------------
+describe('initSession — carrying the pre-session answer', { skip: !HAS_DB }, () => {
+  const ANSWER = 'Every day is not coincidence. What changed around you when it started?';
+
+  it('replays the reply AND the answer the reader was already shown, in order', async () => {
+    const user = await readerWithCoins();
+    await makeLanderSession('replay-with-answer', {
+      resolvedUserId: user.id,
+      pendingReply: REPLY,
+      response: ANSWER,
+    });
+
+    const result = await initSession({
+      userId: user.id,
+      personaId: user.defaultPersonaId!,
+      priorGreeting: GREETING,
+    });
+
+    assert.deepEqual(await messagesIn(result.sessionId), [
+      { role: 'assistant', content: GREETING },
+      { role: 'user', content: REPLY },
+      { role: 'assistant', content: ANSWER },
+    ]);
+  });
+
+  // The ordering above is not free, and it would fail SILENTLY. sent_at DEFAULTs to
+  // now(), which is the TRANSACTION timestamp — both of these inserts share one
+  // transaction, so both would receive the identical value and their order would break
+  // on a random uuid. Roughly half the time the answer would be handed to the model
+  // above the question it answers. clock_timestamp() is what makes it deterministic.
+  //
+  // Read at microsecond precision through raw SQL on purpose: a JS Date rounds to the
+  // millisecond, and these two rows are microseconds apart — asserting on Date.getTime()
+  // would fail against CORRECT data and prove nothing about what Postgres compares.
+  it('gives the reply and the answer distinct, increasing timestamps', async () => {
+    const user = await readerWithCoins();
+    await makeLanderSession('replay-answer-order', {
+      resolvedUserId: user.id,
+      pendingReply: REPLY,
+      response: ANSWER,
+    });
+
+    const result = await initSession({
+      userId: user.id,
+      personaId: user.defaultPersonaId!,
+      priorGreeting: GREETING,
+    });
+
+    const { rows } = await pool.query<{ role: string; ts: string }>(
+      `select role, to_char(sent_at, 'YYYY-MM-DD HH24:MI:SS.US') as ts
+       from chat_messages where session_id = $1 order by sent_at, id`,
+      [result.sessionId],
+    );
+
+    assert.deepEqual(rows.map((r) => r.role), ['assistant', 'user', 'assistant']);
+    assert.ok(rows[0]!.ts < rows[1]!.ts, 'the reply must land after the greeting');
+    assert.ok(
+      rows[1]!.ts < rows[2]!.ts,
+      `the answer must be strictly after the reply, not tied with it (${rows[1]!.ts} vs ${rows[2]!.ts})`,
+    );
+  });
+
+  // The reader never opened /reading, or generation failed. Pre-Task-14 behaviour has
+  // to survive untouched: the reply alone, and the persona answers it on her next turn.
+  it('replays the reply alone when no answer was ever generated', async () => {
+    const user = await readerWithCoins();
+    await makeLanderSession('replay-no-answer', {
+      resolvedUserId: user.id,
+      pendingReply: REPLY,
+    });
+
+    const result = await initSession({
+      userId: user.id,
+      personaId: user.defaultPersonaId!,
+      priorGreeting: GREETING,
+    });
+
+    assert.deepEqual(await messagesIn(result.sessionId), [
+      { role: 'assistant', content: GREETING },
+      { role: 'user', content: REPLY },
+    ]);
+  });
+});
+
+// ---------------------------------------------------------------------------
 // The gap between the two paths. POST /reply deliberately STORES a non-crisis
 // violation (operator ruling, Task 6 — blocking the rest was destroying benign
 // readers' replies, a Spanish-language one being the case that forced it). But
@@ -487,6 +584,37 @@ describe('a reply the chat path would have blocked is never replayed', { skip: !
       { role: 'assistant', content: GREETING },
       { role: 'user', content: REPLY },
     ]);
+  });
+
+  // Same repeatability, one column over (Task 14). pending_reply_response holds the
+  // persona's answer to the PREVIOUS text. Leave it behind and a reader who rewrites
+  // their reply is shown — and later replayed — an answer to words they deliberately
+  // replaced, which reads as the guide answering someone else.
+  //
+  // Asserted on the column rather than through resolveLiveThreadPreview(), because a
+  // row with a reply and no stored answer is exactly the state that triggers a live
+  // model call. This is the invariant that makes that regeneration correct.
+  it('clears a stale pre-session answer when the reader rewrites their reply', async () => {
+    const user = await readerWithCoins();
+    const { sessionToken } = await parkViaRoute('replay-answer-stale', 'the first thing', user.id);
+    await db
+      .update(evelynLanderSessions)
+      .set({ pendingReplyResponse: 'an answer to the first thing' })
+      .where(eq(evelynLanderSessions.sessionToken, sessionToken));
+
+    await request(landerApp).post('/api/evelyn-lander/reply').send({ sessionToken, reply: REPLY });
+
+    const [row] = await db
+      .select({
+        pendingReply: evelynLanderSessions.pendingReply,
+        response: evelynLanderSessions.pendingReplyResponse,
+      })
+      .from(evelynLanderSessions)
+      .where(eq(evelynLanderSessions.sessionToken, sessionToken))
+      .limit(1);
+
+    assert.equal(row!.pendingReply, REPLY);
+    assert.equal(row!.response, null, 'the answer to the replaced words must not survive');
   });
 });
 

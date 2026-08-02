@@ -140,16 +140,33 @@ describe('evelyn_lander_sessions parked-reply replay columns (migrations 021, 02
     assert.equal(rows[0].is_nullable, 'YES');
   });
 
-  // Both must stay nullable and default-less: a NOT NULL or a default would make
-  // every pre-existing parked reply look consumed (021) or flagged (022).
-  it('leaves both columns without a default, so existing rows read as untouched', async () => {
+  // Task 14's column. Same drift risk again, and the same silence: both
+  // resolveLiveThreadPreview() and replayPendingReply() swallow their errors, so an
+  // unmigrated column means the reader simply never sees their own words back — in
+  // production, with nothing in the logs to say why.
+  it('has pending_reply_response as a nullable text column', async () => {
+    const { rows } = await pool.query(
+      `select data_type, is_nullable
+       from information_schema.columns
+       where table_name = 'evelyn_lander_sessions'
+         and column_name = 'pending_reply_response'`
+    );
+    assert.equal(rows.length, 1, 'migration 023 must be applied to this database');
+    assert.equal(rows[0].data_type, 'text');
+    assert.equal(rows[0].is_nullable, 'YES');
+  });
+
+  // All three must stay nullable and default-less: a NOT NULL or a default would make
+  // every pre-existing parked reply look consumed (021), flagged (022), or already
+  // answered (023 — which would suppress generation forever and replay an empty turn).
+  it('leaves all three columns without a default, so existing rows read as untouched', async () => {
     const { rows } = await pool.query(
       `select column_name, column_default
        from information_schema.columns
        where table_name = 'evelyn_lander_sessions'
-         and column_name in ('pending_reply_consumed_at', 'pending_reply_violation_type')`
+         and column_name in ('pending_reply_consumed_at', 'pending_reply_violation_type', 'pending_reply_response')`
     );
-    assert.equal(rows.length, 2);
+    assert.equal(rows.length, 3);
     for (const row of rows) {
       assert.equal(row.column_default, null, `${row.column_name} must have no default`);
     }
