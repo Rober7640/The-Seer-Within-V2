@@ -19,6 +19,10 @@ import { Button } from "@/components/ui/button";
 import { Sparkles, Send } from "lucide-react";
 import TurnstileWidget from "@/components/TurnstileWidget";
 import { calculateTypingDelay, sleep } from "@/lib/typingAnimation";
+// Moved out of this file into a shared lib so LiveThreadLander (Task 11) can
+// reuse the SAME helper — importing it back out of this page would create a
+// cycle, since this page renders that component. Implementation unchanged.
+import { createTimeoutSignal } from "@/lib/timeoutSignal";
 import { track as trackPH } from "@/lib/posthog";
 import { useABVariant } from "@/hooks/useABTest";
 import EvelynQuizMechanic from "@/pages/evelyn-lander/EvelynQuizMechanic";
@@ -132,29 +136,6 @@ function getSessionToken(): string {
 function clearSession() {
   sessionStorage.removeItem(SESSION_KEY);
   sessionStorage.removeItem(HISTORY_KEY);
-}
-
-// AbortSignal.timeout() landed in Chrome 103 / Firefox 100 / Safari 15.4 —
-// but crypto.randomUUID() above (getSessionToken) already requires Safari
-// 15.4, so Safari lacking one already lacks the other; no NEW Safari
-// regression from using it. The real gap is Chrome 92–102 / Firefox 95–99:
-// the page renders fine there (crypto.randomUUID is fine), but
-// AbortSignal.timeout is still missing — including stale Android System
-// WebView inside the Facebook in-app browser, which is this page's actual
-// paid traffic. Calling AbortSignal.timeout() directly in that band throws
-// a synchronous TypeError before fetch is ever issued, landing in postStart's
-// catch and silently killing the request. Feature-detect and fall back to a
-// manual AbortController + setTimeout so those browsers still get REAL
-// timeout coverage (not just "no crash") — graceful degradation to "no
-// timeout at all" would resurrect the original stall bug specifically for
-// the highest-risk slice of traffic.
-function createTimeoutSignal(ms: number): { signal: AbortSignal; cleanup: () => void } {
-  if (typeof AbortSignal.timeout === "function") {
-    return { signal: AbortSignal.timeout(ms), cleanup: () => {} };
-  }
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), ms);
-  return { signal: controller.signal, cleanup: () => clearTimeout(timeoutId) };
 }
 
 function loadHistory(): ChatMessage[] {
