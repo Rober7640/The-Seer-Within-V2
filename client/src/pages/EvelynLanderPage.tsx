@@ -37,6 +37,19 @@ const READING_DEST = `/reading?persona=${EVELYN_PERSONA_SLUG}`;
 const SESSION_KEY = "evelyn_lander_token";
 const HISTORY_KEY = "evelyn_lander_history";
 const MAX_USER_TURNS = 2;
+// Bounds how long a caller can be stuck waiting on /start (e.g. a stalled
+// mobile connection) before we give up and fall through to the catch block.
+// 10s: long enough to ride out a slow/cold mobile network + server round
+// trip without false-triggering on ordinary latency (server's own outbound
+// timeouts elsewhere in this codebase use 5s for third-party calls; this is
+// a client→our-API call over a possibly poor connection, so it gets more
+// slack), short enough that a reader who clicked a paid campaign link isn't
+// parked on a spinner for what feels like forever. When it fires, the
+// already-logged-in redirect still completes (postStart's catch handles the
+// abort like any other failure) — the cost is just that this particular
+// visit isn't recorded server-side and the segment falls through to
+// `brand_new` bookkeeping for the anonymous path.
+const START_TIMEOUT_MS = 10_000;
 
 type Segment = "v2_active" | "v2_password" | "v1_migrated" | "brand_new" | "token_magic";
 
@@ -186,10 +199,30 @@ export default function EvelynLanderPage() {
   // Resolve segment + opener via /start. Shared by both the anonymous chat
   // flow and the already-logged-in redirect below, so the lander session gets
   // written (and, for a logged-in caller, the server's JWT branch resolves
-  // `v2_active`) before anyone leaves this page. `isCancelled` lets a caller's
-  // effect suppress the state updates if it unmounted/re-ran mid-flight; it
-  // defaults to "never cancelled" for callers that don't need that guard.
-  async function postStart(isCancelled: () => boolean = () => false): Promise<void> {
+  // `v2_active`) before anyone leaves this page.
+  //
+  // `isCancelled` lets a caller's effect suppress the state updates if it
+  // unmounted/re-ran mid-flight; it defaults to "never cancelled" for callers
+  // that don't need that guard.
+  //
+  // `applyState` lets a caller skip the UI-facing state writes (segment/
+  // firstName/messages/phase) entirely while still making the request and
+  // getting the same error handling. The already-logged-in redirect passes
+  // `false`: it only needs the POST to land (session recorded, JWT resolved
+  // server-side) and is about to navigate away, so there's nothing to render
+  // and no reason to ever flip `phase` away from "loading" on that path. This
+  // is what keeps the render gate below (`phase === "loading"`) *structurally*
+  // true for a logged-in visitor, not just true-by-timing.
+  //
+  // The fetch carries a hard timeout (`START_TIMEOUT_MS`) so a stalled
+  // connection can't leave a caller awaiting this forever — see requirement
+  // 3 in the task brief ("network error, 500, timeout"). A timeout surfaces
+  // as an AbortError, which the existing catch block treats like any other
+  // failure: it never rethrows, so `await postStart(...)` always resolves.
+  async function postStart(
+    isCancelled: () => boolean = () => false,
+    applyState = true,
+  ): Promise<void> {
     try {
       // Send the stored JWT if there is one, so /start can resolve an
       // already-signed-in reader to `v2_active` instead of `brand_new`.
@@ -209,10 +242,11 @@ export default function EvelynLanderPage() {
           campaign: params.campaign ?? undefined,
           name: params.name ?? undefined,
         }),
+        signal: AbortSignal.timeout(START_TIMEOUT_MS),
       });
       if (!res.ok) throw new Error(`start failed: ${res.status}`);
       const data: StartResponse = await res.json();
-      if (isCancelled()) return;
+      if (isCancelled() || !applyState) return;
       setSegment(data.segment);
       setFirstName(data.firstName);
       const initial: ChatMessage[] = [{ role: "assistant", content: data.opener }];
@@ -220,8 +254,9 @@ export default function EvelynLanderPage() {
       saveHistory(initial);
       setPhase("chat");
     } catch {
-      if (isCancelled()) return;
-      // PRD §9: param-validation / start failures fall through gracefully.
+      if (isCancelled() || !applyState) return;
+      // PRD §9: param-validation / start failures (including a timed-out
+      // request) fall through gracefully.
       setSegment("brand_new");
       setFirstName(params.name ?? null);
       const fallback: ChatMessage[] = [
@@ -238,18 +273,37 @@ export default function EvelynLanderPage() {
   }
 
   // PRD §3 critical rule: logged-in V2 user skips the lander entirely. We now
-  // await /start first (with the caller's JWT attached) so the visit still
-  // gets recorded — and the server can resolve `v2_active` — before we send
-  // them on to /reading. /start swallows its own failures (see postStart's
-  // catch above) and always resolves, so a network error or 500 here can
-  // never strand a logged-in reader on the lander.
+  // await /start first (with the caller's JWT attached, applyState=false so
+  // it never touches render state) so the visit still gets recorded — and
+  // the server can resolve `v2_active` — before we send them on to /reading.
+  // postStart swallows its own failures internally (see its catch block) and
+  // is now bounded by START_TIMEOUT_MS, so it always settles: a network
+  // error, a 500, or a stalled connection can never strand a logged-in
+  // reader on the lander waiting on this await.
+  //
+  // This effect closes over `postStart` (a fresh function identity every
+  // render) without listing it as a dependency. That's deliberate, not an
+  // oversight: exhaustive-deps' own suggested fix — adding `postStart` — would
+  // make this effect re-run on every unrelated re-render while it's in
+  // flight (new identity each time), firing a fresh /start POST each time.
+  // authLoading/user are what actually gate this effect's meaning; they each
+  // settle once per mount (see useAuth.ts:68-111), so listing only those
+  // (plus the stable `navigate` from wouter) is correct.
+  //
+  // Note: `user`'s identity can in principle change again after that initial
+  // settle via useAuth's cross-instance AUTH_SYNC_EVENT listener
+  // (useAuth.ts:114-121), which would re-run this effect. On /evelyn today
+  // nothing else mounts a second useAuth() instance to broadcast that event,
+  // so it can't fire in practice — and if it ever did, it'd be benign: the
+  // repeat /start insert is idempotent server-side, and the stale run's
+  // navigate is already gated by `cancelled`.
   useEffect(() => {
     if (authLoading) return;
     if (!user) return;
 
     let cancelled = false;
     (async () => {
-      await postStart(() => cancelled);
+      await postStart(() => cancelled, false);
       if (!cancelled) {
         clearSession();
         navigate(READING_DEST, { replace: true });
@@ -258,6 +312,7 @@ export default function EvelynLanderPage() {
     return () => {
       cancelled = true;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authLoading, user, navigate]);
 
   // Resolve segment + opener via /start. Fires on mount for BOTH arms (parallel
@@ -430,8 +485,13 @@ export default function EvelynLanderPage() {
 
   // One gate for BOTH arms: wait for auth, the mechanic assignment, AND /start
   // (so the lander session exists before the quiz can hand off via handleCta).
-  // A logged-in user stays here (phase never leaves 'loading' — /start early-returns)
-  // until the redirect effect fires, so neither arm flashes for logged-in users.
+  // A logged-in user stays here (phase never leaves 'loading') until the
+  // redirect effect fires: it calls postStart with applyState=false, which
+  // structurally skips every setSegment/setFirstName/setMessages/setPhase
+  // call on that path (see postStart's own comment above) rather than relying
+  // on scheduler/microtask ordering to avoid a flash. So neither arm ever
+  // renders for a logged-in user — this component either shows the spinner
+  // or is in the middle of unmounting via navigate().
   if (authLoading || !mechanicReady || phase === "loading") {
     return (
       <div className="min-h-screen relative flex items-center justify-center">
