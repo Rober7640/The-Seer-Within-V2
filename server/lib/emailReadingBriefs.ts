@@ -10,6 +10,14 @@
 // This registry is the ONLY place email specifics live for the chat engine. Keep
 // each recap to what the email ACTUALLY said — the engine is instructed never to
 // invent beyond it.
+//
+// OVERLAP WITH email_link_codes: a send migrated to a `/e/<code>` short link
+// carries the same three fields (readingRecap / openLoop / continueSeed) in its
+// own draft frontmatter, snapshotted into the `email_link_codes` row at render
+// time. That row — not this registry — is what the short link resolves. This
+// registry still serves every send on the legacy `?campaign=` link. When a
+// campaign exists in both, they should say the same thing; the draft frontmatter
+// is the authoring source, so copy from it, not the other way round.
 
 export interface EmailReadingBrief {
   /** Matches the ?campaign= slug, e.g. 'reframe-04-serious'. */

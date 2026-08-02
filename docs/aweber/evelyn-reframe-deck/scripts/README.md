@@ -4,6 +4,11 @@ The reframe-deck pipeline — checks, renders, and schedules reframe-deck emails
 Evelyn AWeber list. This is the engine the **`evelyn-reframe` skill** (`.claude/skills/evelyn-reframe/`)
 orchestrates; first proven on **cycle 1** (Jul 23–31 2026). Node ≥ 18 (uses global `fetch`). No deps.
 
+> **`render-aweber.mjs` runs under `tsx`, not plain `node`.** It imports a TypeScript
+> module (`server/lib/emailLinkCodes.ts`) to mint `/e/<code>` short links, and node's
+> ESM loader cannot resolve a `.ts` import. `check.mjs` and `aweber-ops.mjs` are
+> unchanged — still plain `node`.
+
 ## The pipeline
 
 ```
@@ -28,9 +33,28 @@ draft (.md)  →  check.mjs  →  render-aweber.mjs  →  aweber-ops.mjs schedul
    hosted banner, `140 Broadway` footer, no hero image) + `body_text` + subject. Warns if a
    subject exceeds **120 bytes** (AWeber's hard limit — the `{{ subscriber.first_name |
    capitalize }}` tag counts ≈40 bytes, so keep the rest ≤ ~80).
+
+   **This step writes to a database.** Any draft with a `**Continue Seed:**` in its
+   frontmatter gets an opaque `/e/<code>` short link instead of the legacy `?campaign=`
+   URL, and `<code>` is a row in `email_link_codes` carrying the continuation content the
+   lander reads. So a **real send must be rendered against production**, or the link will
+   404 into `/personas` for every reader.
    ```
-   node render-aweber.mjs ../sends/cycle-1        # writes ../sends/cycle-1/_build/
+   # dry / local — codes land in the local Postgres, links won't resolve on the live site
+   npx tsx --env-file=../../../../.env.test render-aweber.mjs ../sends/cycle-1
+
+   # REAL SEND — codes land in production Supabase. This is the one an operator runs.
+   npx tsx --env-file=../../../../.env      render-aweber.mjs ../sends/cycle-1
    ```
+   Both write `../sends/cycle-1/_build/`. The script prints the database it is about to
+   mint into (`⚑ minting /e/ codes into database "…" @ host`) — **read that line** before
+   handing the build to `aweber-ops.mjs schedule`. With `DATABASE_URL` unset it exits 1
+   rather than guessing a database; drafts with no `**Continue Seed:**` keep the legacy
+   `?campaign=` link and need no database at all.
+
+   Re-running is safe: codes are keyed on the campaign slug, so a re-render reuses the
+   existing code (and refreshes its content if the draft changed) rather than minting a
+   new one — the URL inside an already-scheduled broadcast never moves under you.
 
 4. **Schedule** — create each broadcast as a draft, then schedule it. **Live + human-gated:**
    only run after a human has reviewed the rendered emails.
@@ -61,6 +85,11 @@ draft (.md)  →  check.mjs  →  render-aweber.mjs  →  aweber-ops.mjs schedul
 - `check.mjs` — mechanical pre-send check (dear 2–4, one reframe, ≤2 em-dash, tagged CTA slug,
   no underline, ~280–420 words). Takes draft paths as args; exit 1 on any fail.
 - `render-aweber.mjs` — drafts → AWeber `body_html`/`body_text`/subject + `index.json`.
+  **Run under `tsx`; mints `/e/<code>` rows into `DATABASE_URL`.** `index.json` records
+  `link_kind` (`short`/`legacy`), `code`, and the final `cta_url` per send.
+- `render-aweber.test.ts` — smoke test for the minting behaviour. DB-touching, so:
+  `npm run test:local docs/aweber/evelyn-reframe-deck/scripts/render-aweber.test.ts`
+  (from the repo root).
 - `aweber-ops.mjs` — `list` / `cancel` / `schedule` against the live list.
 - `../sends/cycle-1/` — the 9 cycle-1 drafts + `schedule.json` (source of truth for what shipped).
 

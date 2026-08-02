@@ -7,7 +7,7 @@
  * guessable `?campaign=` param. See shared/schema.ts `emailLinkCodes`.
  */
 import { randomBytes } from 'crypto';
-import { eq } from 'drizzle-orm';
+import { and, asc, eq } from 'drizzle-orm';
 import { db } from './db';
 import { emailLinkCodes } from '@shared/schema';
 
@@ -19,12 +19,20 @@ export interface ResolvedEmailLink {
   continueSeed: string;
 }
 
-interface MintEmailLinkCodeInput {
+export interface MintEmailLinkCodeInput {
   personaSlug: string;
   campaign: string;
   continueSeed: string;
   readingRecap?: string;
   openLoop?: string;
+}
+
+export interface UpsertEmailLinkCodeResult {
+  code: string;
+  /** 'created' = a new code was minted; 'reused' = an existing code already
+   * carried exactly this content; 'updated' = the existing code was kept but
+   * its content was refreshed from the newly authored values. */
+  action: 'created' | 'reused' | 'updated';
 }
 
 /** Postgres unique_violation error code (primary key or unique constraint). */
@@ -81,6 +89,74 @@ export async function mintEmailLinkCode(
     }
   }
   throw new Error(`Failed to mint a unique email link code after ${MAX_ATTEMPTS} attempts`);
+}
+
+/**
+ * Campaign-idempotent mint, for the email-rendering pipeline
+ * (docs/aweber/evelyn-reframe-deck/scripts/render-aweber.mjs).
+ *
+ * Minting is a side effect with no undo, and the code it returns goes into the
+ * body of an email that may already be scheduled to send. Re-rendering a cycle
+ * is routine (subject tweak, copy fix, a re-run to inspect the HTML), so a
+ * plain `mintEmailLinkCode` per render would mint a fresh row every time —
+ * orphaning the old rows and, worse, silently changing the URL inside an email
+ * an operator has already queued.
+ *
+ * So the code is keyed on (personaSlug, campaign), which is the pipeline's own
+ * stable identity for a send:
+ *   - no row yet          -> mint one ('created')
+ *   - row, same content   -> hand the same code back ('reused')
+ *   - row, new content    -> keep the code, refresh the content ('updated')
+ *
+ * Updating in place rather than minting anew is the point: the reader's link
+ * stays valid while the continuation content stays in sync with what the email
+ * actually says. The schema has an index on `campaign` but no unique
+ * constraint, so uniqueness here is by convention rather than enforcement — if
+ * duplicates ever exist, the OLDEST row wins (ties broken by code), because
+ * that is the one most likely to be sitting in an already-scheduled email.
+ *
+ * Not concurrency-safe by design: two simultaneous renders of the same
+ * campaign could both see "no row" and both mint. This is a hand-run authoring
+ * tool with a single operator, and a later run converges back on the oldest
+ * row, so a lock or a unique constraint would be cost without a matching risk.
+ */
+export async function upsertEmailLinkCodeForCampaign(
+  input: MintEmailLinkCodeInput,
+): Promise<UpsertEmailLinkCodeResult> {
+  const existing = await db
+    .select()
+    .from(emailLinkCodes)
+    .where(
+      and(
+        eq(emailLinkCodes.personaSlug, input.personaSlug),
+        eq(emailLinkCodes.campaign, input.campaign),
+      ),
+    )
+    .orderBy(asc(emailLinkCodes.createdAt), asc(emailLinkCodes.code))
+    .limit(1);
+
+  if (existing.length === 0) {
+    return { code: await mintEmailLinkCode(input), action: 'created' };
+  }
+
+  const row = existing[0];
+  const readingRecap = input.readingRecap ?? null;
+  const openLoop = input.openLoop ?? null;
+
+  if (
+    row.continueSeed === input.continueSeed &&
+    row.readingRecap === readingRecap &&
+    row.openLoop === openLoop
+  ) {
+    return { code: row.code, action: 'reused' };
+  }
+
+  await db
+    .update(emailLinkCodes)
+    .set({ continueSeed: input.continueSeed, readingRecap, openLoop })
+    .where(eq(emailLinkCodes.code, row.code));
+
+  return { code: row.code, action: 'updated' };
 }
 
 export async function resolveEmailLinkCode(code: string): Promise<ResolvedEmailLink | null> {

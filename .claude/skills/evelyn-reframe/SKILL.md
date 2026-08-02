@@ -13,7 +13,7 @@ Operator front-door for Evelyn Cross's **reframe deck** daily-email program. The
 - `formats/NN-*.md` — the 7 format specs. `emails/NN-*.md` — the 7 gold emails (the quality bar + the check fixtures).
 - `STATE.md` — the rolling sends log + rotation balance + no-repeat lists.
 
-**Pipeline scripts** (run from `docs/aweber/evelyn-reframe-deck/scripts/`, Node ≥18, need `.env`): `check.mjs`, `render-aweber.mjs`, `aweber-ops.mjs`.
+**Pipeline scripts** (run from `docs/aweber/evelyn-reframe-deck/scripts/`, Node ≥18, need `.env`): `check.mjs`, `render-aweber.mjs`, `aweber-ops.mjs`. `check.mjs` and `aweber-ops.mjs` run under plain `node`; **`render-aweber.mjs` must run under `tsx`** (it imports a TypeScript module to mint `/e/<code>` links) and **writes to the database named by `DATABASE_URL`** — see step 5.
 
 ## Inputs
 - **start date** (the first send's day; sends go one/day at 10:30 UTC = 6:30pm SGT) and **count** (how many emails). Ask if not given.
@@ -70,11 +70,20 @@ Review the cycle against the PLAYBOOK bars a counter can't see — spawn a revie
 
 Any blocker → fix → re-run steps 3–4 on that draft.
 
-### 5. Render
+### 5. Render — **this step writes to the database**
 ```
-node render-aweber.mjs ../sends/<cycle>
+npx tsx --env-file=../../../../.env render-aweber.mjs ../sends/<cycle>
 ```
 Writes `../sends/<cycle>/_build/` (`NN-<slug>.html`, `.txt`, `index.json`) in the canonical white/Helvetica AWeber design (`↳ THE REFRAME.` marker stripped). Subject length is already enforced by the step-3 mechanical gate; `render-aweber.mjs` only **re-warns** on a `>120 B` subject (a `⚠` on stderr) and still **exits 0** — it does not block. So treat any such `⚠` as a hard blocker: it means a draft slipped the gate. Shorten the subject (`{{ … }}` tag ≈40 B → keep the rest ≤~80 B) and re-run **both** check and render before proceeding.
+
+**Why `--env-file=.env` (production):** a draft carrying a `**Continue Seed:**` frontmatter line gets an opaque short link `https://www.theseerwithin.com/e/<code>?email={!email}` instead of the legacy `?campaign=` URL. `<code>` is a row in `email_link_codes` holding the authored continuation content the `/evelyn` lander reads, so it must exist in the database serving the live site. Render against anything else and every reader of that send lands on `/personas`. Substitute `--env-file=../../../../.env.test` only for a local dry run you will not schedule.
+
+Check the `⚑ minting /e/ codes into database "…" @ host` line the script prints — it names the target. With `DATABASE_URL` unset the script exits 1 instead of guessing. Drafts with **no** `**Continue Seed:**` keep the legacy `?campaign=` link, need no database, and are called out by name on stderr. Re-running is safe: codes are keyed on the campaign slug, so a re-render reuses the existing code (`reused`) or refreshes its content in place (`updated`) — the URL inside an already-scheduled broadcast never changes.
+
+**Writing the continuity frontmatter:** for a send you want on the Live Thread path, add three lines to the draft's frontmatter block (each one line, no wrapping):
+- `- **Reading Recap:**` — 2–5 sentences: the exact reading this email delivered.
+- `- **Open Loop:**` — the personal question the email left open.
+- `- **Continue Seed:**` — Evelyn's turn-0 opener that picks the thread back up. **This one is the trigger** — omit it and the send stays on the legacy link.
 
 ### 6. Human gate → schedule + log
 Present the **review packet** and STOP:

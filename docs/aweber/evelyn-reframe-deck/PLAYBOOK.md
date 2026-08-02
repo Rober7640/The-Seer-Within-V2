@@ -123,9 +123,15 @@ Formatting exists to make the read easier **and** to spotlight the deck's logic.
 - **One strong CTA** for most formats — a single plum button, benefit-worded, mirroring what they'd get ("*Ask me your real question*", "*Show me what I'm really doing*"). Not "Click here."
 - **Conversion beats (~2×/week)** are the formats where the reframe *is* the pitch (01, 05) — the CTA is the natural next step of the insight, never a bolted-on sell.
 - **Interactive formats (04, 07)** close with "tell me yours" — but the CTA still **drives to the chat lander** (`/evelyn`), same as every other format. "Reply-style" is the *tone* (name your line/sign and Evelyn answers you there), not a literal email reply. The interactive framing just makes the click feel like a conversation instead of a pitch.
-- **Every link is tagged:**
-  `https://www.theseerwithin.com/evelyn?email={!email}&bucket=love&src=aweber&campaign=<slug>&utm_source=aweber&utm_medium=email&utm_campaign=<slug>`
-  `{!email}` is AWeber's personalization tag (leave literal). `<slug>` = the send's short id (e.g. `reframe-02-parable`). This warms the landing (recognizes the subscriber) and makes every send attributable.
+- **Every link is tagged.** Two forms, both assembled by `scripts/render-aweber.mjs` — never hand-write one:
+  - **Short link** (drafts with a `**Continue Seed:**` in frontmatter):
+    `https://www.theseerwithin.com/e/<code>?email={!email}`
+    `<code>` is minted at render time and stands for the send's campaign *plus* the authored continuation content, so `/evelyn` can pick that exact reading back up. The campaign travels as a **path** segment because query params get stripped by link-privacy proxies and mangled by ESP click wrappers.
+  - **Legacy link** (drafts without one):
+    `https://www.theseerwithin.com/evelyn?email={!email}&bucket=love&src=aweber&campaign=<slug>&utm_source=aweber&utm_medium=email&utm_campaign=<slug>`
+    `<slug>` = the send's short id (e.g. `reframe-02-parable`).
+
+  `{!email}` is AWeber's personalization tag (leave literal) in both forms — it warms the landing by recognizing the subscriber. Note that the short link carries **only** the campaign and the email hint: `bucket` / `src` / `utm_*` do not survive the `/e/` redirect, so a short-link send is attributable by campaign but not by UTM.
 
 ---
 
