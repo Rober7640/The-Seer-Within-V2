@@ -184,17 +184,31 @@ for (const m of missingSeed) m.ctaUrl = legacyCtaUrl(m.slug);
 if (needCodes.length) {
   requireDatabaseTarget();
   for (const m of needCodes) {
-    const { code, action } = await upsertEmailLinkCodeForCampaign({
-      personaSlug: PERSONA_SLUG,
-      campaign: m.slug,
-      continueSeed: m.continueSeed,
-      openLoop: m.openLoop || undefined,
-      readingRecap: m.readingRecap || undefined,
-    });
-    m.code = code;
-    m.codeAction = action;
-    m.ctaUrl = shortCtaUrl(code);
-    console.error(`      ${action.padEnd(7)} /e/${code}  ${m.slug}`);
+    let result;
+    try {
+      result = await upsertEmailLinkCodeForCampaign({
+        personaSlug: PERSONA_SLUG,
+        campaign: m.slug,
+        continueSeed: m.continueSeed,
+        openLoop: m.openLoop || undefined,
+        readingRecap: m.readingRecap || undefined,
+      });
+    } catch (err) {
+      // Codes minted before this point stay in the database. That's harmless:
+      // minting is campaign-idempotent, so a re-run picks them back up.
+      console.error(`\nERROR: minting a /e/ code for ${m.file} (${m.slug}) failed.`);
+      if (err?.code === '42P01') {
+        console.error('  The email_link_codes table does not exist in this database.');
+        console.error('  Apply migrations/020_email_link_codes.sql there first.');
+      }
+      console.error(`  ${err?.message ?? err}`);
+      await pool.end();
+      process.exit(1);
+    }
+    m.code = result.code;
+    m.codeAction = result.action;
+    m.ctaUrl = shortCtaUrl(result.code);
+    console.error(`      ${result.action.padEnd(7)} /e/${result.code}  ${m.slug}`);
   }
 }
 await pool.end();

@@ -217,6 +217,19 @@ describe('render-aweber.mjs → /e/:code minting', () => {
     assert.ok(!fs.existsSync(path.join(fresh, '_build')), 'aborted run still created _build/');
   });
 
+  it('names the missing migration when email_link_codes does not exist in the target DB', () => {
+    // The state production is in today: migration 020 written but unapplied.
+    // Same local server and credentials, but the `postgres` maintenance
+    // database — which exists on any PG install and has none of our tables.
+    const target = new URL(process.env.DATABASE_URL!);
+    target.pathname = '/postgres';
+    const env = { ...process.env, DATABASE_URL: target.toString() };
+    const run = render(sendsDir, env);
+    assert.equal(run.status, 1);
+    assert.ok(run.stderr.includes('email_link_codes table does not exist'), run.stderr);
+    assert.ok(run.stderr.includes('020_email_link_codes.sql'), run.stderr);
+  });
+
   it('needs no database at all when no draft has a Continue Seed', () => {
     const bareOnly = fs.mkdtempSync(path.join(os.tmpdir(), 'reframe-render-test-'));
     tempDirs.push(bareOnly);
