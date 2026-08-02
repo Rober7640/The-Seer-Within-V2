@@ -1735,3 +1735,16 @@ Covered = shipped in the skill (`[x]`); open = still a gap (`[ ]`). Runs LOCAL-O
 - [ ] Clicking the confirm button after all 3 are checked calls `handlePurchase("main")` and routes through the exact same `/api/checkout` call (same `type=main`, same funnel tag, same price) as the control variant's `PurchaseCTA` — the gate changes only the UI in front of the purchase, never the checkout itself
 - [ ] `35_palm_gate` carries the same $35 main / $25 downsell economics as `35_palm_u47` — price shown and charged is identical between the two arms
 - [ ] Commitment checkbox copy shows "I understand belief is required for this to work", "I'm ready to receive this tonight", "I'll read it with an open heart" (no secrecy or irreversibility framing that would contradict the card's own 30-Day Guarantee footer)
+
+---
+
+## Live Thread (Evelyn) — email → lander → chat continuity (2026-08-02)
+
+New spec file `tests/live-thread-evelyn.spec.ts`, following `fb-palm-commitment-gate.spec.ts`'s house style: a `harness(page)` helper stubbing network calls for determinism, `data-testid` locators, and a `beforeAll` localhost-only safety gate. Source: the plan's "Playwright Coverage" section (`docs/superpowers/plans/2026-08-01-live-thread-evelyn.md`).
+
+### Frames and outcomes
+- [ ] **Anonymous happy path (no account):** navigate to `/e/<test-code>` (seeded via a test-only mint call in `beforeAll`) with the `live_thread` arm forced on → assert Frame 1 shows the seeded `continueSeed` text → type a reply, assert it renders as a sent bubble → submit a new email → assert Frame 2b copy appears → assert (via a stubbed `/check-email` response) the correct outcome-specific confirmation renders
+- [ ] **Existing verified account:** same flow, but stub `/check-email` to return `verified_match` → assert Frame 2's "I know you" copy renders, not Frame 2b's
+- [ ] **Already-logged-in reader:** set an auth token in `localStorage` before navigating to `/e/<test-code>` → assert the lander UI never paints (no Frame 1 visible) and the page ends on `/reading` — this is the harness's hardest case to get deterministic, since it depends on Task 5's await-before-redirect fix; use `expect.poll` on the final URL rather than a fixed `waitForTimeout`
+- [ ] **Unresolvable code:** navigate to `/e/does-not-exist` → assert redirect to `/personas`
+- [ ] **Reply survives a real signup round-trip (the one true end-to-end test, network-real for the auth parts):** type a reply, submit a brand-new email, extract the verification link from a stubbed/captured email send, visit it, assert the reply appears as the first message when `/reading` loads

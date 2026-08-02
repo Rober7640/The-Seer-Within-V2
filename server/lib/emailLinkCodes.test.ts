@@ -11,36 +11,13 @@ import { mintEmailLinkCode, resolveEmailLinkCode, isCodeCollision } from './emai
 
 const HAS_DB = Boolean(process.env.DATABASE_URL);
 
-// Pure-logic coverage for the retry predicate — no DB involved, so it runs
-// even without a database and isn't gated behind HAS_DB. This covers branch
-// (b) (a non-PK unique_violation must NOT be retried) exhaustively, including
-// shapes Postgres would never actually produce.
-//
-// (When this was written the `code` PK was the table's only unique
-// constraint, so branch (b) had no real-world instance. It does now:
-// uq_email_link_codes_persona_campaign. The DB-backed test
-// 'refuses a second code for a (persona, campaign) pair' exercises branch (b)
-// against a genuine Postgres error; these synthetic cases stay because they
-// cover the decision logic exhaustively and cost nothing.)
-describe('isCodeCollision', () => {
-  it('is true for a unique_violation against the code primary key', () => {
-    assert.equal(isCodeCollision({ code: '23505', constraint: 'email_link_codes_pkey' }), true);
-  });
-
-  it('is false for a unique_violation against a different constraint', () => {
-    assert.equal(isCodeCollision({ code: '23505', constraint: 'some_other_constraint' }), false);
-  });
-
-  it('is false for a non-unique_violation error, even on the code constraint', () => {
-    assert.equal(isCodeCollision({ code: '23502', constraint: 'email_link_codes_pkey' }), false);
-  });
-
-  it('is false for an error with no code or constraint at all', () => {
-    assert.equal(isCodeCollision(new Error('boom')), false);
-    assert.equal(isCodeCollision(null), false);
-    assert.equal(isCodeCollision(undefined), false);
-  });
-});
+// The pure-logic cases for isCodeCollision NOW LIVE IN emailLinkCodes.pure.test.ts.
+// They were here, outside the { skip: !HAS_DB } describe below, specifically so
+// they would run without a database — but assertLocalDb() above throws before any
+// of that is reached, so in practice they needed one anyway. Moving them to a file
+// with no guard is what finally makes that intent true. The DB-backed cases,
+// including the one that exercises the same predicate against a REAL Postgres
+// unique_violation, stay below.
 
 const mintedCodes: string[] = [];
 

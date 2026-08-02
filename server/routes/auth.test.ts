@@ -11,12 +11,14 @@
 // touches, which is money: what a reader is QUOTED in the verification email
 // versus what they actually RECEIVE in coins.
 //
-// Why both halves are in one file. verificationEmail.ts:52 warns that the quote
+// Where the other half is. verificationEmail.ts:52 warns that the quote
 // (getFreeMinutesForSignup) and the grant (auth.ts's coin constants) must move in
-// lockstep, and a previous task shipped a bug of exactly that kind. Asserting
-// `getFreeMinutesForSignup(...) === 10` in a separate unit-test file would prove
-// nothing about what lands in a wallet, so the quote assertions sit directly
-// beside the route tests that measure the balance.
+// lockstep, and a previous task shipped a bug of exactly that kind. This file is
+// the GRANT half — what lands in a wallet. The QUOTE half is
+// server/lib/verificationEmail.freeMinutes.test.ts; the two were one file until
+// the whole-branch review pointed out that assertLocalDb() below made eight
+// pure-function cases un-runnable without a Postgres. Read them together and
+// change them together. `npm run test:live-thread` runs both.
 //
 // WHICH BRANCH EACH SUITE MEASURES — this matters, and is easy to get wrong:
 //   POST /register        under NODE_ENV=test takes auth.ts's `isTestEnv` branch:
@@ -45,7 +47,6 @@ import { eq } from 'drizzle-orm';
 import { db, pool } from '../lib/db';
 import { evelynLanderSessions, personas, users } from '@shared/schema';
 import { minutesToCoins } from '@shared/types';
-import { getFreeMinutesForSignup } from '../lib/verificationEmail';
 import { LIVE_THREAD_FREE_MINUTES } from '../lib/liveThreadEngagement';
 import logger from '../lib/logger';
 import {
@@ -134,54 +135,22 @@ async function unverifiedUserWithToken(overrides: Record<string, unknown> = {}) 
 }
 
 // ---------------------------------------------------------------------------
-// The QUOTE half of the lockstep.
+// The QUOTE half of the lockstep LIVES IN A SIBLING FILE — read them together.
+//
+//   server/lib/verificationEmail.freeMinutes.test.ts
+//
+// Eight pure-function cases pinning what getFreeMinutesForSignup() quotes,
+// including that LIVE_THREAD_FREE_MINUTES is 10 (without which every assertion
+// BELOW is tautological — they all compare against the constant, so retuning it
+// to 4 would keep this whole file green). They were written here on purpose, to
+// sit beside the grant they must stay in lockstep with. They were moved out
+// because assertLocalDb() at the top of this file made them unreachable without a
+// local Postgres, and a pure-logic case that needs a database is a case nobody
+// runs. `npm run test:pure` runs them in a fresh clone.
+//
+// CHANGING EITHER SIDE MEANS CHANGING BOTH, IN THE SAME COMMIT. That was already
+// verificationEmail.ts's rule; the split does not relax it.
 // ---------------------------------------------------------------------------
-describe('getFreeMinutesForSignup — the number the verification email quotes', () => {
-  // Pins the operator's decision. Every other assertion in this file compares
-  // against LIVE_THREAD_FREE_MINUTES, so without this line the whole suite is
-  // tautological — retuning the constant to 4 or 20 would keep it all green.
-  it('grants 10 minutes, the operator-confirmed amount', () => {
-    assert.equal(LIVE_THREAD_FREE_MINUTES, 10, 'operator-confirmed grant');
-  });
-
-  it('quotes the Live Thread amount for an engaged Evelyn-lander signup', () => {
-    assert.equal(
-      getFreeMinutesForSignup('evelyn-cross', 'evelyn-lander', true),
-      LIVE_THREAD_FREE_MINUTES,
-    );
-  });
-
-  it('quotes the plain lander amount when the reader typed nothing', () => {
-    assert.equal(getFreeMinutesForSignup('evelyn-cross', 'evelyn-lander', false), LANDER_MINUTES);
-  });
-
-  it('defaults engagedViaLiveThread to false when omitted (backward compatible)', () => {
-    assert.equal(getFreeMinutesForSignup('evelyn-cross', 'evelyn-lander'), LANDER_MINUTES);
-  });
-
-  // The ordering trap. The engagement flag must NOT sit ahead of the existing
-  // branches: no grant site anywhere awards the Live Thread amount to a 7/7 promo
-  // signup, a soulmate signup, or a non-Evelyn persona, so quoting it there would
-  // be a promise nothing keeps. The flag only refines the one branch whose grant
-  // it actually changes.
-  it('does not preempt the 7/7 promo quote', () => {
-    assert.equal(getFreeMinutesForSignup('evelyn-cross', 'promo-7-7', true), 7);
-  });
-
-  it('does not preempt the soulmate-lander quote', () => {
-    assert.equal(getFreeMinutesForSignup('evelyn-cross', 'soulmate-lander', true), LANDER_MINUTES);
-  });
-
-  it('does not raise the quote for a persona the grant chain never treats as Live Thread', () => {
-    assert.equal(getFreeMinutesForSignup('marcus-stone', undefined, true), DEFAULT_MINUTES);
-  });
-
-  // The persona half of the condition. A source alone is not enough — the grant
-  // chain also requires isEvelynUser(defaultPersonaId).
-  it('does not raise the quote for an evelyn-lander source on a different persona', () => {
-    assert.equal(getFreeMinutesForSignup('marcus-stone', 'evelyn-lander', true), DEFAULT_MINUTES);
-  });
-});
 
 // ---------------------------------------------------------------------------
 // Registration. Under NODE_ENV=test this is the isTestEnv branch (see header).
