@@ -41,6 +41,19 @@ interface Props {
   continueSeed: string;
   sessionToken: string;
   onOutcome: (outcome: LiveThreadOutcome, email: string) => void;
+  /**
+   * Best-effort email hint from the link's `?email={!email}` merge tag, used to
+   * prefill the Frame 1.5 field (spec §Decisions, "read by the redirector to
+   * prefill the Frame 1.5 email field and nothing else"). NEVER trusted for
+   * identity — the reader still submits it and /check-email still resolves the
+   * account from what's actually submitted; this only saves a typing step on
+   * the most conversion-critical field in the flow.
+   *
+   * Type and `?? ""` handling deliberately match the sibling arm's identical
+   * prop (EvelynQuizMechanic.tsx:74, :85), which is already fed
+   * `params.email` (string | null) by EvelynLanderPage.tsx:566.
+   */
+  prefillEmail?: string | null;
 }
 
 // Both budgets bound a client -> our-API round trip over a possibly poor mobile
@@ -123,14 +136,22 @@ function confirmationCopy(outcome: LiveThreadOutcome, email: string): string {
   }
 }
 
-export default function LiveThreadLander({ continueSeed, sessionToken, onOutcome }: Props) {
+export default function LiveThreadLander({
+  continueSeed,
+  sessionToken,
+  onOutcome,
+  prefillEmail,
+}: Props) {
   const seed = continueSeed.trim() || FALLBACK_SEED;
 
   const [messages, setMessages] = useState<Bubble[]>([{ role: "assistant", content: seed }]);
   const [stage, setStage] = useState<"reply" | "email" | "done">("reply");
 
   const [replyDraft, setReplyDraft] = useState("");
-  const [emailDraft, setEmailDraft] = useState("");
+  // Seeded once from the merge-tag hint. Not synced to later prop changes on
+  // purpose: this is the reader's own editable field from first render onward,
+  // and re-seeding it would clobber a correction they had already typed.
+  const [emailDraft, setEmailDraft] = useState(prefillEmail ?? "");
   const [submittedEmail, setSubmittedEmail] = useState<string | null>(null);
   const [outcome, setOutcome] = useState<LiveThreadOutcome | null>(null);
 
@@ -193,12 +214,21 @@ export default function LiveThreadLander({ continueSeed, sessionToken, onOutcome
         // visibly still in their hands and one tap from being retried.
         restoreDraft(priorMessages, text);
         if (res.status === 429) {
-          setErrorMsg("That's a lot at once. Give it a minute, then send it again.");
+          // landerTurnLimiter is 30 per HOUR (rateLimiter.ts), not per minute.
+          // "Give it a minute" would send them straight into a second 429; the
+          // copy has to name the window it's actually gated by.
+          setErrorMsg("That's a lot at once. Give it an hour, then send it again.");
         } else if (res.status === 404) {
           // The lander session row doesn't exist (its only INSERT lives in
           // /start, which must have failed). Retrying this exact call would
-          // 404 forever, so point at the one action that can fix it.
-          setErrorMsg("This page lost its place. Refresh and send it again — your words are still here.");
+          // 404 forever, so point at the one action that can fix it — but a
+          // refresh DISCARDS replyDraft (React state, no sessionStorage
+          // backing) and the reply was never stored server-side on a 404, so
+          // we must tell them to copy it first rather than reassure them it's
+          // safe. Steering someone toward a refresh while implying their words
+          // survive it would break the one promise this whole feature exists
+          // to keep.
+          setErrorMsg("This page lost its place. Copy what you wrote, refresh, and send it again.");
         } else {
           setErrorMsg("Something interrupted the connection. Try sending it again.");
         }
@@ -284,9 +314,14 @@ export default function LiveThreadLander({ continueSeed, sessionToken, onOutcome
 
       if (!res.ok) {
         if (res.status === 429) {
+          // accountDetectionLimiter is 10 per HOUR in production
+          // (rateLimiter.ts:90-107) — the tightest limiter in this flow, and
+          // the one carrier-NAT mobile traffic realistically shares an IP into.
+          // "A few minutes" would be a straight-up wrong instruction that sends
+          // them into a second 429, so the copy names the real window.
           return {
             ok: false,
-            message: "That's as many tries as we can take right now. Give it a few minutes and try again.",
+            message: "That's as many tries as we can take from here right now. Give it an hour and try again.",
           };
         }
         if (res.status === 400) {
@@ -419,7 +454,25 @@ export default function LiveThreadLander({ continueSeed, sessionToken, onOutcome
             />
           )}
 
-          {errorMsg && <p className="text-sm text-red-600 text-center">{errorMsg}</p>}
+          {/* Live region for every failure in this flow — errors are surfaced
+              here and nowhere else, so without it a screen-reader user who taps
+              Send and gets a 429 hears nothing change at all.
+              - "polite", not "assertive": it must not cut off the bubble that
+                may still be being read out.
+              - role="status" pairs with aria-live for AT that honours only one.
+              - The element is rendered UNCONDITIONALLY so the live region is
+                registered at mount, before any text is injected; a region
+                created and populated in the same DOM insertion is not reliably
+                announced. `empty:hidden` toggles only `display`, so the node
+                stays permanently in the DOM while costing zero layout (an
+                always-present empty <p> would otherwise take a space-y gap). */}
+          <p
+            className="text-sm text-red-600 text-center empty:hidden"
+            role="status"
+            aria-live="polite"
+          >
+            {errorMsg}
+          </p>
 
           {/* Frame 1 — compose bar */}
           {stage === "reply" && (
@@ -520,7 +573,15 @@ export default function LiveThreadLander({ continueSeed, sessionToken, onOutcome
                       Sign in instead
                     </Link>
                   </div>
-                  {resendMsg && <p className="text-xs text-gray-500">{resendMsg}</p>}
+                  {/* Same always-rendered live-region treatment as errorMsg
+                      above: the resend result is otherwise a silent change. */}
+                  <p
+                    className="text-xs text-gray-500 empty:hidden"
+                    role="status"
+                    aria-live="polite"
+                  >
+                    {resendMsg}
+                  </p>
                 </>
               )}
             </div>
