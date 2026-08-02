@@ -1,7 +1,17 @@
+// Run with: npm run test:local server/lib/arrivalReading.test.ts
+//
+// `dotenv/config` below loads .env — which points DATABASE_URL at PRODUCTION
+// Supabase — so assertLocalDb() runs before ./db builds a pool and refuses
+// anything that is not a local Postgres. This file INSERTs users and lander
+// sessions; without the guard, `tsx --test` on it wrote to production.
 import 'dotenv/config';
 import { describe, it, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { eq } from 'drizzle-orm';
+import { assertLocalDb } from './testGuards';
+
+assertLocalDb();
+
 import { db, pool } from './db';
 import { users, evelynLanderSessions } from '../../shared/schema';
 import {
