@@ -19,6 +19,7 @@
 import { Router, Request, Response } from 'express';
 import { z } from 'zod';
 import { createHash } from 'crypto';
+import { isIP } from 'node:net';
 import { eq, sql } from 'drizzle-orm';
 import { db } from '../lib/db';
 import { evelynLanderSessions, users } from '@shared/schema';
@@ -399,6 +400,17 @@ router.post('/cta', async (req: Request, res: Response) => {
 // out, possibly before they have any account, so the reply is run through the
 // same checkAndLogSafety() gate /turn uses on userMessage — see the report for
 // the full reasoning on storage-on-flag and the response shape.
+//
+// Round 3 fix: the operator ruled on CRISIS/SELF-HARM screening specifically,
+// not the full 7-type violation taxonomy checkAndLogSafety() covers (crisis,
+// inappropriate, prompt_injection, harassment, gibberish, non_english, minor —
+// server/lib/universalSafety.ts:15-22). Only `violationType === 'crisis'` skips
+// the store below; every other violation type still gets written to
+// pendingReply and lets the reader through. See the report for why: /turn can
+// safely block a non-crisis message because it stores nothing and the reader
+// can just retype, but /reply blocking a non-crisis message would destroy the
+// one artifact this whole feature exists to preserve, for a class of content
+// that isn't a safety emergency.
 router.post('/reply', landerTurnLimiter, async (req: Request, res: Response) => {
   try {
     const parsed = replySchema.safeParse(req.body);
@@ -418,7 +430,17 @@ router.post('/reply', landerTurnLimiter, async (req: Request, res: Response) => 
     }
 
     const ipAddress = extractClientIp(req);
-    const countryCode = await getCountryFromIP(ipAddress);
+    // getCountryFromIP() makes an outbound HTTP call and keys an unbounded,
+    // module-level cache (server/lib/crisisHotlines.ts) on this string. This
+    // route is unauthenticated, and extractClientIp() trusts X-Forwarded-For
+    // verbatim with no validation (server/lib/fraudDetection.ts) — so without
+    // this check, an attacker could spray arbitrary header values to grow that
+    // shared cache without bound and generate outbound traffic to a third
+    // party. Only resolve country for syntactically valid IPs; anything else
+    // (including the 'unknown' fallback) skips the lookup — countryCode stays
+    // null, which getHotlineForCountry() already treats as "use the US
+    // default," so this doesn't change behavior for any real caller.
+    const countryCode = isIP(ipAddress) ? await getCountryFromIP(ipAddress) : null;
     const safety = await checkAndLogSafety(reply, {
       userId: row.resolvedUserId ?? undefined,
       ipAddress,
@@ -426,14 +448,15 @@ router.post('/reply', landerTurnLimiter, async (req: Request, res: Response) => 
       countryCode,
     });
 
-    if (!safety.safe && safety.response) {
-      // Hard crisis: mirrors /turn's precedent exactly — the flagged text does
-      // NOT proceed into the normal downstream flow (there, no generateTurnReply
+    if (safety.violationType === 'crisis' && !safety.safe && safety.response) {
+      // Hard crisis ONLY: mirrors /turn's precedent — the flagged text does NOT
+      // proceed into the normal downstream flow (there, no generateTurnReply
       // call; here, no pendingReply write, so Task 10 never replays it as a
-      // cheerful first chat message). checkAndLogSafety() has already logged the
-      // raw text to safetyViolations (flagged for review), so it isn't silently
-      // lost — it's redirected to the safety review path instead of the
-      // conversational one.
+      // cheerful first chat message). checkAndLogSafety() has already fired a
+      // (fire-and-forget) write to safetyViolations, flagged for review — this
+      // response doesn't wait on or guarantee that write landed, so treat it as
+      // best-effort capture for the review queue, not a hard persistence
+      // guarantee, when reasoning about "is the content really preserved."
       return res.json({
         ok: false,
         blocked: 'safety',
@@ -442,11 +465,13 @@ router.post('/reply', landerTurnLimiter, async (req: Request, res: Response) => 
       });
     }
 
-    // Safe, or soft-crisis-but-safe. Mirrors /turn again: a soft signal (safe:
-    // true, softCrisisNote set) doesn't block /turn's normal flow either — it
-    // silently proceeds to generateTurnReply. There's no assistant reply for
-    // this route to prepend a note to, so the soft case is handled identically
-    // to an ordinary safe reply: store it.
+    // Safe, soft-crisis-but-safe, OR any non-crisis violation (inappropriate,
+    // prompt_injection, harassment, gibberish, non_english, minor). All of
+    // these proceed to the normal store: /turn treats a soft crisis signal the
+    // same way (silently continues to generateTurnReply), and a non-crisis
+    // violation is a content-moderation signal, not a safety emergency — it's
+    // already logged via checkAndLogSafety() for review, and losing the
+    // reader's only artifact over it would be a worse outcome than storing it.
     const result = await db
       .update(evelynLanderSessions)
       .set({ pendingReply: reply })

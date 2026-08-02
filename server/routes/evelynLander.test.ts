@@ -24,13 +24,15 @@ assertLocalDb();
 
 import { eq } from 'drizzle-orm';
 import { db, pool } from '../lib/db';
-import { evelynLanderSessions } from '@shared/schema';
+import { evelynLanderSessions, safetyViolations } from '@shared/schema';
 import { generateToken } from '../lib/auth';
+import { checkUniversalSafety } from '../lib/universalSafety';
 import {
   createTestApp,
   createTestUser,
   createMagicLinkToken,
   landerSessionToken,
+  trackSafetyViolation,
   cleanupTestFixtures,
 } from '../lib/testFixtures';
 import evelynLanderRouter from './evelynLander';
@@ -354,7 +356,7 @@ describe('POST /api/evelyn-lander/reply', { skip: !HAS_DB }, () => {
     assert.equal(res.status, 400);
   });
 
-  // Round 2: crisis/safety screening. Strings are pulled verbatim from
+  // Round 2/3: crisis/safety screening. Strings are pulled verbatim from
   // server/lib/universalSafety.test.ts's own fixtures so these tests stay aligned
   // with the real detector rather than drifting from an invented phrase.
   describe('safety screening', () => {
@@ -363,9 +365,33 @@ describe('POST /api/evelyn-lander/reply', { skip: !HAS_DB }, () => {
     // From universalSafety.test.ts's `deniedMessages` (soft crisis: safe=true,
     // violationType='crisis', softCrisisNote set).
     const SOFT_CRISIS_TEXT = 'I would never kill myself';
+    // From universalSafety.test.ts's `nonEnglishMessages` (non-crisis violation:
+    // safe=false, violationType='non_english'). Represents the six non-crisis
+    // ViolationTypes (inappropriate, prompt_injection, harassment, gibberish,
+    // non_english, minor) that must NOT block storage — only 'crisis' does.
+    const NON_ENGLISH_TEXT = 'estoy muy triste hoy';
+
+    // checkAndLogSafety() logs a violation as fire-and-forget (universalSafety.ts's
+    // own "don't await to keep response fast" comment) — the row may not exist the
+    // instant the HTTP response returns. Poll briefly so the assertion is real
+    // rather than either flaky or skipped.
+    async function waitForSafetyViolation(userMessage: string, timeoutMs = 1000) {
+      const deadline = Date.now() + timeoutMs;
+      for (;;) {
+        const [row] = await db
+          .select()
+          .from(safetyViolations)
+          .where(eq(safetyViolations.userMessage, userMessage))
+          .limit(1);
+        if (row) return row;
+        if (Date.now() >= deadline) return undefined;
+        await new Promise((resolve) => setTimeout(resolve, 25));
+      }
+    }
 
     it('flags a hard-crisis reply with the hotline response and does NOT store it', async () => {
       const sessionToken = landerSessionToken('reply-crisis-hard');
+      trackSafetyViolation(HARD_CRISIS_TEXT);
       await request(app).post('/api/evelyn-lander/start').send({ sessionToken, campaign: 'reply-test-campaign' });
 
       const res = await request(app)
@@ -385,9 +411,32 @@ describe('POST /api/evelyn-lander/reply', { skip: !HAS_DB }, () => {
       // opener). Reading the row back, not just trusting the response body.
       const [row] = await db.select().from(evelynLanderSessions).where(eq(evelynLanderSessions.sessionToken, sessionToken));
       assert.equal(row.pendingReply, null);
+
+      // Minor fix: assert the safetyViolations row actually exists rather than
+      // just asserting it in a comment (the write is fire-and-forget with a
+      // swallowing catch, so this is the only way to know it really landed).
+      const violation = await waitForSafetyViolation(HARD_CRISIS_TEXT);
+      assert.ok(violation, 'expected a safetyViolations row for the flagged text');
+      assert.equal(violation!.violationType, 'crisis');
+      assert.equal(violation!.flaggedForReview, true);
     });
 
     it('lets a soft-crisis reply through exactly like an ordinary safe reply', async () => {
+      // Control, matching universalSafety.test.ts's own assertSoftCrisis() guard:
+      // proves SOFT_CRISIS_TEXT really is classified safe:true/violationType:'crisis'
+      // right now, independent of this route's response shape (which deliberately
+      // doesn't surface that classification — see report). Without this, the test
+      // below would still pass if the detector's classification of this exact
+      // string ever drifted (e.g. to a hard crisis, or to no violation at all).
+      const classification = checkUniversalSafety(SOFT_CRISIS_TEXT);
+      assert.equal(classification.safe, true, 'fixture must still classify as soft (safe)');
+      assert.equal(classification.violationType, 'crisis', 'fixture must still be a crisis-type soft note');
+
+      // checkAndLogSafety() logs soft-crisis detections too (universalSafety.ts's
+      // "Log soft crisis detections" block), so this test leaks a safetyViolations
+      // row exactly like the hard-crisis and non-crisis tests without this.
+      trackSafetyViolation(SOFT_CRISIS_TEXT);
+
       const sessionToken = landerSessionToken('reply-crisis-soft');
       await request(app).post('/api/evelyn-lander/start').send({ sessionToken, campaign: 'reply-test-campaign' });
 
@@ -406,7 +455,40 @@ describe('POST /api/evelyn-lander/reply', { skip: !HAS_DB }, () => {
       assert.equal(row.pendingReply, SOFT_CRISIS_TEXT);
     });
 
-    // Non-vacuity guard for the two tests above: proves the normal path is
+    // Critical-fix regression test: a non-crisis violation (non_english here,
+    // standing in for the other five non-crisis ViolationTypes) must NOT block
+    // storage. Round 2 accidentally gated on the generic `!safety.safe &&
+    // safety.response`, which fires for all 7 violation types — this reply would
+    // have been silently dropped (pendingReply stayed null, ok:false, no hotline
+    // in the response) under that bug. This is the test that would have caught it.
+    it('stores a non-crisis violation (non_english) and lets the reader through', async () => {
+      const classification = checkUniversalSafety(NON_ENGLISH_TEXT);
+      assert.equal(classification.safe, false, 'fixture must still classify as an unsafe (blocked) message');
+      assert.equal(classification.violationType, 'non_english', 'fixture must still be non_english, not crisis');
+
+      const sessionToken = landerSessionToken('reply-crisis-nonenglish');
+      trackSafetyViolation(NON_ENGLISH_TEXT);
+      await request(app).post('/api/evelyn-lander/start').send({ sessionToken, campaign: 'reply-test-campaign' });
+
+      const res = await request(app)
+        .post('/api/evelyn-lander/reply')
+        .send({ sessionToken, reply: NON_ENGLISH_TEXT });
+
+      assert.equal(res.status, 200);
+      assert.equal(res.body.ok, true);
+      assert.equal(res.body.blocked, undefined);
+
+      const [row] = await db.select().from(evelynLanderSessions).where(eq(evelynLanderSessions.sessionToken, sessionToken));
+      assert.equal(row.pendingReply, NON_ENGLISH_TEXT);
+
+      // The violation is still logged for review — non-crisis screening isn't
+      // bypassed, only the storage block is.
+      const violation = await waitForSafetyViolation(NON_ENGLISH_TEXT);
+      assert.ok(violation, 'expected a safetyViolations row for the non-crisis violation');
+      assert.equal(violation!.violationType, 'non_english');
+    });
+
+    // Non-vacuity guard for the tests above: proves the normal path is
     // unaffected by the new safety check — same 200/ok:true/stored-value
     // behavior as this describe block's very first test, run again after the
     // safety gate was added.

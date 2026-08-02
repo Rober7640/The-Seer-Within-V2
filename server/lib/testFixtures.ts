@@ -24,7 +24,7 @@
 import express, { type Express, type Router } from 'express';
 import { eq, inArray } from 'drizzle-orm';
 import { db } from './db';
-import { users, evelynLanderSessions, magicLinkTokens, personas } from '@shared/schema';
+import { users, evelynLanderSessions, magicLinkTokens, personas, safetyViolations } from '@shared/schema';
 import { generateMagicLinkToken } from './magicLink';
 
 type NewUser = typeof users.$inferInsert;
@@ -33,6 +33,7 @@ type User = typeof users.$inferSelect;
 const createdUserIds: string[] = [];
 const createdLanderSessionTokens: string[] = [];
 const createdMagicLinkTokens: string[] = [];
+const createdSafetyViolationMessages: string[] = [];
 
 /** Monotonic within a process; keeps generated emails/tokens unique. */
 let seq = 0;
@@ -114,6 +115,19 @@ export function landerSessionToken(label: string): string {
 }
 
 /**
+ * Registers a `safetyViolations.userMessage` value for cleanup. checkAndLogSafety()
+ * (server/lib/universalSafety.ts) writes violations as a fire-and-forget side effect
+ * of a route call — there's no id or FK back to the row that triggered it (the table's
+ * own sessionId column FKs to chat_sessions, not any lander session table), so the
+ * exact literal text sent is the only precise handle. Pass the SAME string the route
+ * was sent; cleanupTestFixtures() deletes any row with that exact userMessage.
+ */
+export function trackSafetyViolation(userMessage: string): string {
+  createdSafetyViolationMessages.push(userMessage);
+  return userMessage;
+}
+
+/**
  * Mints a REAL magic-link token for `userId` via the production
  * generateMagicLinkToken(), and registers it for cleanup. Resolves the persona
  * FK by slug rather than hard-coding a uuid, since persona ids differ per
@@ -158,6 +172,12 @@ export async function cleanupTestFixtures(): Promise<void> {
       .delete(evelynLanderSessions)
       .where(inArray(evelynLanderSessions.sessionToken, createdLanderSessionTokens));
     createdLanderSessionTokens.length = 0;
+  }
+  if (createdSafetyViolationMessages.length > 0) {
+    await db
+      .delete(safetyViolations)
+      .where(inArray(safetyViolations.userMessage, createdSafetyViolationMessages));
+    createdSafetyViolationMessages.length = 0;
   }
   if (createdUserIds.length > 0) {
     await db.delete(users).where(inArray(users.id, createdUserIds));
