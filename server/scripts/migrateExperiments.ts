@@ -9,10 +9,26 @@
 // draft ⇒ assign() returns the control arm for everyone, so live UI is
 // unchanged. To START: set the row's status='running' (ramp via variant weights).
 //
-// Additive + reversible: only CREATE ... IF NOT EXISTS / INSERT ... ON CONFLICT
-// DO NOTHING here (safe to run repeatedly); --rollback DROPs ONLY these two
-// experiment-only tables and touches nothing else (users, credit_purchases,
-// system_config, paywall_views are all left intact).
+// Additive + reversible, and safe to run repeatedly: CREATE ... IF NOT EXISTS /
+// INSERT ... ON CONFLICT DO NOTHING throughout, with ONE exception you should
+// know about before running this against production —
+//
+//   ⚠ evelyn_lander_mechanic carries a guarded UPDATE (see its block below) that
+//     appends the DARK `live_thread` arm to a row that already exists, because
+//     ON CONFLICT DO NOTHING can never update one. It writes `variants` (plus
+//     name/description) DIRECTLY, which deliberately bypasses the admin API's
+//     assignment freeze (server/routes/admin/experiments.ts:555-572 — variants
+//     are frozen for any non-draft experiment).
+//
+//     Why that is safe: the appended arm has WEIGHT 0 and is listed LAST.
+//     pickVariant (server/lib/experiments.ts:67-77) sums only positive weights
+//     and walks them in listed order, so the total and the walk are unchanged and
+//     a zero-weight arm can never be returned. Verified over all 100 buckets: 0
+//     visitors move arms, 0 visitors are assigned live_thread. It is idempotent
+//     (containment-guarded) and cannot stomp a weight an operator has raised.
+//
+// --rollback DROPs ONLY the experiment-only tables and touches nothing else
+// (users, credit_purchases, system_config, paywall_views are all left intact).
 
 import 'dotenv/config';
 import pg from 'pg';
@@ -212,14 +228,18 @@ async function up(pool: pg.Pool) {
   ]);
   const lmScope = JSON.stringify({ route: 'evelyn_lander', element: 'mechanic' });
   const lmConversion = JSON.stringify({ type: 'event', name: 'signup' });
+  // Shared by the INSERT and the back-fill below so a pre-existing row does not
+  // keep describing a two-arm test that no longer matches its own variants.
+  const lmName = 'Evelyn lander mechanic (chatbox vs quiz vs live thread)';
+  const lmDescription =
+    'Structural A/B on /evelyn: control chatbox (open chat) vs quiz (3-tap) vs live_thread (email arrival thread, seeded at weight 0 = DARK — it reaches nobody). Primary metric = signup. Visitor-cookie subject. NOTE: variants are FROZEN once status leaves draft, so live_thread can only be weighted up via the variant editor while this is a draft — otherwise see the Task 12 report for the two supported options.';
   const lm = await pool.query(
     `INSERT INTO experiments (key, name, description, status, subject_type, variants, scope, conversion)
-     VALUES ('evelyn_lander_mechanic', 'Evelyn lander mechanic (chatbox vs quiz vs live thread)',
-       'Structural A/B on /evelyn: control chatbox (open chat) vs quiz (3-tap) vs live_thread (email arrival thread, seeded at weight 0 = dark). Primary metric = signup. Visitor-cookie subject. To start, set status=running; to expose live_thread, give it a positive weight in the variant editor first.',
+     VALUES ('evelyn_lander_mechanic', $4, $5,
        'draft', 'visitor', $1::jsonb, $2::jsonb, $3::jsonb)
      ON CONFLICT (key) DO NOTHING
      RETURNING id`,
-    [lmVariants, lmScope, lmConversion],
+    [lmVariants, lmScope, lmConversion, lmName, lmDescription],
   );
   if (lm.rowCount && lm.rowCount > 0) {
     console.log('✓ seeded DRAFT lander-mechanic experiment (Evelyn quiz vs chatbox vs live_thread)');
@@ -229,18 +249,27 @@ async function up(pool: pg.Pool) {
     // the arm has to be back-filled explicitly or `live_thread` would exist only
     // in code and be un-selectable in /admin/experiments forever.
     //
-    // Safe to run against a RUNNING test: appending a weight-0 arm at the end of
-    // the list changes neither the positive-weight total nor the order the
-    // buckets are walked in, so no already-assigned visitor moves arms. Guarded
-    // by a containment check so re-runs are idempotent and an operator's own
-    // weight change is never stomped back to 0.
+    // Safe to run against a RUNNING or PAUSED test: appending a weight-0 arm at
+    // the end of the list changes neither the positive-weight total nor the order
+    // the buckets are walked in, so no already-assigned visitor moves arms.
+    // Guarded by a containment check so re-runs are idempotent and an operator's
+    // own weight change is never stomped back to 0.
+    //
+    // name/description are updated alongside because they are what an operator
+    // reads in /admin/experiments: leaving them saying "chatbox vs quiz" on a row
+    // that now has three arms is how someone weights up an arm they don't know is
+    // there. Both stay editable under the assignment freeze, so this is the one
+    // part of the write the admin API would also have allowed.
     const lmBackfill = await pool.query(
       `UPDATE experiments
           SET variants = variants || '[{"key":"live_thread","weight":0,"payload":{}}]'::jsonb,
+              name = $1,
+              description = $2,
               updated_at = now()
         WHERE key = 'evelyn_lander_mechanic'
           AND jsonb_typeof(variants) = 'array'
           AND NOT (variants @> '[{"key":"live_thread"}]'::jsonb)`,
+      [lmName, lmDescription],
     );
     if (lmBackfill.rowCount && lmBackfill.rowCount > 0) {
       console.log('✓ evelyn_lander_mechanic existed — appended DARK live_thread arm (weight 0)');

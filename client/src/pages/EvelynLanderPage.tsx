@@ -531,7 +531,12 @@ export default function EvelynLanderPage() {
   async function handleCta() {
     setPhase("handing_off");
     setErrorMsg(null);
-    trackPH("lander_cta_clicked", { funnel: "evelyn", step: "landing" });
+    // `mechanic` is additive and carries no behaviour: without it the chatbox and
+    // quiz arms emit byte-identical events and are indistinguishable in PostHog,
+    // which makes the arm-vs-arm read this experiment exists for impossible from
+    // the event stream alone. handleCta serves BOTH of those arms, so this is the
+    // resolved variant, not a literal.
+    trackPH("lander_cta_clicked", { funnel: "evelyn", step: "landing", mechanic });
     try {
       const res = await fetch("/api/evelyn-lander/cta", {
         method: "POST",
@@ -589,30 +594,51 @@ export default function EvelynLanderPage() {
   // ANALYTICS. This arm has exactly one observable moment from the page — the
   // component exposes no callback for the earlier reply-send step — so the quiz
   // arm's `quiz_started` / `quiz_answer` / `quiz_completed` progression has no
-  // one-to-one equivalent to emit here. What IS equivalent is the hand-off: the
-  // moment the reader taps the arm's primary button and is routed onward. That is
-  // exactly what `lander_cta_clicked` means in the other two arms (handleCta above
-  // fires it for chatbox, and for a returning quiz visitor), so this arm fires the
-  // SAME event with the SAME funnel/step payload rather than a parallel vocabulary,
-  // plus `mechanic` + `outcome` to tell the arms and the three branches apart.
+  // one-to-one equivalent to emit here.
   //
-  // The experiment's PRIMARY metric needs nothing extra here: exposure is logged by
+  // `lander_cta_clicked` is emitted on ONE PRECISE MEANING across every arm, so
+  // the arms are comparable by ACTION rather than by segment: "the lander routed
+  // this reader onward to another destination". Check it against each arm:
+  //   chatbox            → handleCta always routes onward           → fires
+  //   quiz, returning    → handleCta routes onward                  → fires
+  //   quiz, brand-new    → registers INLINE, never routes onward    → fires
+  //                        `lead_captured` instead (EvelynQuizMechanic.tsx:252)
+  //   live_thread no_match → routes onward into signup below        → fires
+  //   live_thread verified/unverified → hands off through the reader's INBOX and
+  //                        stays on this page                       → does NOT fire
+  // Firing it on all three outcomes (as the first cut of this handler did) would
+  // silently compare a population that navigated against one that didn't.
+  //
+  // The two inbox outcomes still need to be countable — they are this arm's
+  // returning-reader path — so they get a DISTINCT name rather than an overloaded
+  // one. `lander_link_handoff` is new vocabulary on purpose: no existing event in
+  // this codebase means "handed off via an emailed link without navigating".
+  //
+  // The experiment's PRIMARY metric needs nothing here: exposure is logged by
   // /api/ab/assign when the arm is resolved, and the signup conversion fires from
-  // LoginPage.tsx:118-120 on `source=evelyn-lander` — the same path the chatbox arm
+  // LoginPage.tsx:112-120 on `source=evelyn-lander` — the same path the chatbox arm
   // converts through, which the no_match branch below routes into.
   function handleLiveThreadOutcome(outcome: LiveThreadOutcome, submittedEmail: string) {
+    // verified_match / unverified_match are genuinely self-contained: the reader
+    // has an account, a link is on its way to the inbox we just named, and the
+    // component's own footer offers Resend + "Sign in instead". Navigating them
+    // anywhere would interrupt a flow that is already complete.
+    if (outcome !== "no_match") {
+      trackPH("lander_link_handoff", {
+        funnel: "evelyn",
+        step: "landing",
+        mechanic: "live_thread",
+        outcome,
+      });
+      return;
+    }
+
     trackPH("lander_cta_clicked", {
       funnel: "evelyn",
       step: "landing",
       mechanic: "live_thread",
       outcome,
     });
-
-    // verified_match / unverified_match are genuinely self-contained: the reader
-    // has an account, a link is on its way to the inbox we just named, and the
-    // component's own footer offers Resend + "Sign in instead". Navigating them
-    // anywhere would interrupt a flow that is already complete.
-    if (outcome !== "no_match") return;
 
     // no_match is the majority of a cold email list, and the component's terminal
     // state for it is a static line with no button and no link — so this is the
@@ -621,6 +647,12 @@ export default function EvelynLanderPage() {
     // persona / source / landerSessionToken / bucket params (and the parked reply
     // + Live Thread grant they carry) cannot drift between the two arms.
     const dest = buildRegisterDest(submittedEmail);
+    // Clear any timer already armed before overwriting the ref. A second
+    // onOutcome is unreachable through LiveThreadLander today (handleResend
+    // deliberately never re-fires it), but that guarantee lives in ANOTHER
+    // component's internals — without this line a change over there turns into a
+    // leaked timer and a double navigate over here.
+    if (noMatchTimerRef.current) clearTimeout(noMatchTimerRef.current);
     noMatchTimerRef.current = setTimeout(() => {
       clearSession();
       navigate(dest, { replace: true });
