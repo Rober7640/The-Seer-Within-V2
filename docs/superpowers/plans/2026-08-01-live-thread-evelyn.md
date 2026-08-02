@@ -1245,9 +1245,22 @@ to include a `live_thread` arm, and confirm via whatever admin/experiments mecha
     continueSeed={opener}
     sessionToken={sessionToken}
     onOutcome={(outcome, submittedEmail) => {
-      // route to the appropriate confirmation state; no additional
-      // navigation needed here since LiveThreadLander already renders
-      // its own Frame 2/2b confirmation copy
+      // ⚠ CORRECTED 2026-08-02 (Task 11 review). The original comment here read
+      // "no additional navigation needed since LiveThreadLander already renders
+      // its own confirmation copy". That is TRUE for verified_match and
+      // unverified_match — and FALSE for no_match, which is the majority of a
+      // cold email list.
+      //
+      // On no_match the component's terminal state renders a static line
+      // ("We'll email you a one-click link") with no button and no link, so a
+      // brand-new reader is STRANDED. Task 12 MUST navigate for that outcome.
+      //
+      // Destination: reuse the one handleCta's register branch already builds
+      // (EvelynLanderPage.tsx:503-521) —
+      //   /login?mode=signup&email=<submittedEmail>&persona=evelyn-cross
+      //     &source=evelyn-lander&landerSessionToken=<sessionToken>
+      // Passing landerSessionToken is what carries the parked reply and the
+      // Live Thread grant eligibility through registration.
     }}
   />
 )}
