@@ -7,15 +7,20 @@
 // POST /api/evelyn-lander/reply and never cleared by anything (grep pending_reply
 // — /reply is its only writer, and it only ever writes a non-null value).
 //
-// ⚠ CONSTRAINT FOR TASK 10 (and anything else that CONSUMES pending_reply).
+// ⚠ CONSTRAINT FOR ANYTHING THAT CONSUMES pending_reply.
 // `pending_reply IS NOT NULL` is not just a queue marker — it is the durable evidence
 // that decides a MONEY tier. It is read at verification time, which can be days after
-// it was written, and again on every /api/evelyn-lander/check-email resend. If Task 10
-// replays the parked reply into the first chat message and then NULLs the column, this
-// signal disappears underneath both readers: a reader who verifies (or asks for another
-// verification email) after the replay silently drops from 10 minutes to 5, with no
-// error anywhere. If you need a consumed/unconsumed distinction, add a separate
-// `pending_reply_consumed_at` timestamp and leave the text in place — do not clear it.
+// it was written, and again on every /api/evelyn-lander/check-email resend. A consumer
+// that replays the parked reply and then NULLs the column makes this signal disappear
+// underneath both readers: a reader who verifies (or asks for another verification
+// email) after the replay silently drops from 10 minutes to 5, with no error anywhere.
+// Record consumption in a SEPARATE marker and leave the text in place — do not clear it.
+//
+// The one consumer today does exactly that: server/lib/liveThreadReplay.ts replays the
+// reply into the reader's first chat session and stamps pending_reply_consumed_at,
+// never touching pending_reply. Both helpers below deliberately ignore that marker —
+// a reply that has already been spoken is still evidence the reader typed one, and the
+// grant must not change depending on whether they have opened the chat yet.
 //
 // WHY THIS IS RECOMPUTED RATHER THAN PERSISTED AT REGISTRATION.
 // The 5-minute lander grant it refines is already derived at grant time from DB

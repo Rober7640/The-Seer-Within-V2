@@ -17,6 +17,7 @@ import { loadQuizIntake, buildQuizPromptSection } from './quizMemory';
 import { loadArrivalReading, buildArrivalReadingSection, buildArrivalGreetingInstruction, ARRIVAL_READING_FRESH_MSG_LIMIT } from './arrivalReading';
 import { loadCrossPersonaMemories, formatTransferContext } from './memoryTransfer';
 import { startChatSession, endChatSession, checkpointSession } from './creditTracking';
+import { replayPendingReply } from './liveThreadReplay';
 import { getPromoBalance, getSpendableCoins } from './promoWallet';
 import { checkAndLogSafety } from './universalSafety';
 import { isRefundRequest, REFUND_TEMPLATE } from './refundDeflection';
@@ -1367,6 +1368,25 @@ export async function initSession(config: {
       userId: config.userId,
       role: 'assistant',
       content: greeting,
+    });
+  }
+
+  // "The Live Thread": if this reader typed something into the Evelyn lander before
+  // they had an account, those words become the session's first real user message
+  // here — AFTER the greeting above, so the thread reads [greeting][their reply] and
+  // the next response answers them instead of restarting the conversation.
+  //
+  // This is the lazy half of Task 10. It deliberately does NOT happen at
+  // verification time: a session created then would bill wall-clock from the click
+  // rather than from the reader's arrival (see liveThreadReplay.ts's header for the
+  // measurements). Doing it here means the billing clock and the replay share the
+  // same instant. Non-fatal by construction — replayPendingReply() silent-fails to
+  // null, so nothing about it can stop a chat from opening.
+  if (!isContinuation) {
+    await replayPendingReply({
+      userId: config.userId,
+      personaSlug: personaConfig.slug,
+      sessionId,
     });
   }
 

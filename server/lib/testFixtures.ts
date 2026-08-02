@@ -31,6 +31,8 @@ import {
   magicLinkTokens,
   personas,
   safetyViolations,
+  chatSessions,
+  chatMessages,
 } from '@shared/schema';
 import { generateMagicLinkToken } from './magicLink';
 import { assertNoOutboundCalls } from './testGuards';
@@ -43,6 +45,7 @@ const createdLanderSessionTokens: string[] = [];
 const createdSoulmateSessionIds: string[] = [];
 const createdMagicLinkTokens: string[] = [];
 const createdSafetyViolationMessages: string[] = [];
+const createdChatSessionUserIds: string[] = [];
 
 /** Monotonic within a process; keeps generated emails/tokens unique. */
 let seq = 0;
@@ -200,10 +203,37 @@ export async function createMagicLinkToken(
 }
 
 /**
+ * Registers a user whose CHAT rows (chat_sessions + their chat_messages) a test
+ * causes to exist — e.g. by calling initSession(), which creates the session itself
+ * and hands back only its id.
+ *
+ * Keyed by user rather than by session id because the session is not the only row
+ * created: startChatSession() may also force-close (and therefore touch) other
+ * sessions belonging to the same user, and chatEngine writes messages under the
+ * user id too. Both tables cascade from `users`, so a test that also tracks the
+ * user is already safe — this exists so cleanup does not silently DEPEND on that
+ * cascade, and so the registry stays the single source of truth for what was
+ * created. Still exact-by-id (these users are ours), never a pattern delete.
+ *
+ * conversation_states rows (written by initConversationState) are not listed
+ * separately: they cascade from chat_sessions, which this deletes explicitly.
+ */
+export function trackChatRowsForUser(userId: string): string {
+  createdChatSessionUserIds.push(userId);
+  return userId;
+}
+
+/**
  * Deletes exactly the rows this module handed out, children first.
  * Idempotent — safe to call from more than one `after()` hook.
  */
 export async function cleanupTestFixtures(): Promise<void> {
+  if (createdChatSessionUserIds.length > 0) {
+    // Messages first: chat_messages FKs both chat_sessions and users.
+    await db.delete(chatMessages).where(inArray(chatMessages.userId, createdChatSessionUserIds));
+    await db.delete(chatSessions).where(inArray(chatSessions.userId, createdChatSessionUserIds));
+    createdChatSessionUserIds.length = 0;
+  }
   if (createdMagicLinkTokens.length > 0) {
     // Also cascades from users, but delete explicitly so the registry stays the
     // single source of truth for what this module created.

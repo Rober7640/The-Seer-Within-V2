@@ -1119,6 +1119,12 @@ export const evelynLanderSessions = pgTable("evelyn_lander_sessions", {
   src: text("src"),
   campaign: text("campaign"),
   pendingReply: text("pending_reply"),
+  // When the parked reply was replayed into a real chat session. A SEPARATE marker
+  // rather than nulling pending_reply: that text is also the durable evidence for
+  // the 10-minute Live Thread welcome grant, which is re-derived at verification
+  // time and on every /check-email resend — clearing it would silently drop those
+  // readers back to 5 minutes. See server/lib/liveThreadEngagement.ts's header.
+  pendingReplyConsumedAt: timestamp("pending_reply_consumed_at"),
   hadToken: boolean("had_token").default(false).notNull(),
 
   // Funnel progress (chat layer fills these later)
