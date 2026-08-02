@@ -24,8 +24,9 @@ assertLocalDb();
 
 import { eq } from 'drizzle-orm';
 import { db, pool } from '../lib/db';
-import { evelynLanderSessions, safetyViolations } from '@shared/schema';
+import { evelynLanderSessions, magicLinkTokens, personas, safetyViolations, users } from '@shared/schema';
 import { generateToken } from '../lib/auth';
+import { verifyMagicLinkToken } from '../lib/magicLink';
 import { checkUniversalSafety } from '../lib/universalSafety';
 import {
   createTestApp,
@@ -506,5 +507,139 @@ describe('POST /api/evelyn-lander/reply', { skip: !HAS_DB }, () => {
       const [row] = await db.select().from(evelynLanderSessions).where(eq(evelynLanderSessions.sessionToken, sessionToken));
       assert.equal(row.pendingReply, '444. Every day.');
     });
+  });
+});
+
+// Account detection at the email ask (Frame 1.5). Three outcomes, deliberately
+// enumerable — the plan accepts account enumeration here and mitigates it with
+// accountDetectionLimiter, so these tests assert the DISTINCT outcomes on purpose.
+//
+// No mail can leave the machine: .env.test sets RESEND_API_KEY empty, so both
+// senders this route reaches take their "not configured" branch and log the URL
+// instead (verificationEmail.ts:229, and the same guard inline in the route).
+describe('POST /api/evelyn-lander/check-email', { skip: !HAS_DB }, () => {
+  const CHECK_EMAIL = '/api/evelyn-lander/check-email';
+
+  function magicLinksFor(userId: string) {
+    return db.select().from(magicLinkTokens).where(eq(magicLinkTokens.userId, userId));
+  }
+
+  it('returns verified_match for an existing verified account', async () => {
+    const user = await createTestUser({ emailVerified: true });
+
+    const res = await request(app).post(CHECK_EMAIL).send({ email: user.email });
+
+    assert.equal(res.status, 200);
+    assert.equal(res.body.outcome, 'verified_match');
+  });
+
+  // The outcome string alone proves nothing about the reader getting back in.
+  // The brief's snippet passed `existing.defaultPersonaId ?? ''` as the personaId,
+  // which cannot work: magic_link_tokens.persona_id is NOT NULL and FKs to personas
+  // (schema.ts:549), and MagicAuthPage sends the reader to `/reading?persona=<slug>`
+  // off the token's own personaSlug. So the token has to carry the REAL Evelyn row.
+  it('mints a live, Evelyn-scoped magic link for the verified account', async () => {
+    const user = await createTestUser({ emailVerified: true });
+    const [evelyn] = await db
+      .select({ id: personas.id })
+      .from(personas)
+      .where(eq(personas.slug, 'evelyn-cross'))
+      .limit(1);
+    assert.ok(evelyn, "local DB must be seeded with 'evelyn-cross' (npm run seed)");
+
+    await request(app).post(CHECK_EMAIL).send({ email: user.email });
+
+    const links = await magicLinksFor(user.id);
+    assert.equal(links.length, 1, 'exactly one magic link should be minted');
+    assert.equal(links[0].personaSlug, 'evelyn-cross');
+    assert.equal(links[0].personaId, evelyn!.id);
+
+    // End-to-end: the token the reader receives must actually authenticate them
+    // through the same verifier /magic-auth calls, at the Evelyn destination.
+    const verified = await verifyMagicLinkToken(links[0].token);
+    assert.equal(verified?.userId, user.id);
+    assert.equal(verified?.personaSlug, 'evelyn-cross');
+  });
+
+  it('returns unverified_match for an existing unverified account', async () => {
+    const user = await createTestUser({ emailVerified: false });
+
+    const res = await request(app).post(CHECK_EMAIL).send({ email: user.email });
+
+    assert.equal(res.status, 200);
+    assert.equal(res.body.outcome, 'unverified_match');
+  });
+
+  // Beyond the brief. "Resend verification" has to mean a token the reader can
+  // actually click — a stale/expired one left on the row would make the outcome
+  // string a lie. Mirrors auth.ts's /resend-verification (auth.ts:877-886).
+  it('issues a fresh, unexpired verification token and no magic link for the unverified account', async () => {
+    const user = await createTestUser({ emailVerified: false, verificationToken: 'stale-token' });
+
+    await request(app).post(CHECK_EMAIL).send({ email: user.email });
+
+    const [row] = await db.select().from(users).where(eq(users.id, user.id)).limit(1);
+    assert.ok(row.verificationToken, 'a verification token should be set');
+    assert.notEqual(row.verificationToken, 'stale-token', 'the stale token should be replaced');
+    assert.ok(row.verificationTokenExpiry, 'the token needs an expiry');
+    assert.ok(row.verificationTokenExpiry! > new Date(), 'the reissued token must not be already expired');
+
+    // An unverified account must NOT get the magic-link path — that would sign
+    // them in without ever verifying (spec §Decisions, 2026-08-01).
+    assert.equal((await magicLinksFor(user.id)).length, 0);
+  });
+
+  it('returns no_match for an unknown email', async () => {
+    const res = await request(app)
+      .post(CHECK_EMAIL)
+      .send({ email: `nobody-${Date.now()}-${process.pid}@eval.internal` });
+
+    assert.equal(res.status, 200);
+    assert.equal(res.body.outcome, 'no_match');
+  });
+
+  // Beyond the brief. The single most damaging way this route can be wrong: if the
+  // lookup doesn't normalize the way registration does (`email.toLowerCase()`,
+  // auth.ts:315), a real account reports no_match and the reader is sent down a
+  // signup path that then collides with the unique-email constraint.
+  it('matches an existing account regardless of the case the reader typed', async () => {
+    const user = await createTestUser({ emailVerified: true });
+
+    const res = await request(app).post(CHECK_EMAIL).send({ email: user.email.toUpperCase() });
+
+    assert.equal(res.status, 200);
+    assert.equal(res.body.outcome, 'verified_match', 'uppercase input must resolve to the same account');
+  });
+
+  it('rejects a malformed email with 400', async () => {
+    const res = await request(app).post(CHECK_EMAIL).send({ email: 'not-an-email' });
+    assert.equal(res.status, 400);
+  });
+
+  it('rejects a missing email with 400', async () => {
+    const res = await request(app).post(CHECK_EMAIL).send({});
+    assert.equal(res.status, 400);
+  });
+
+  // Beyond the brief. verifyMagicLinkToken() refuses any non-'active' account
+  // (magicLink.ts:78), so minting and mailing a link to one would send a
+  // guaranteed-dead link. soulmateLanderSignup.ts:103-106 already skips the send
+  // for that case; this does the same, widened from 'banned' to "not active" to
+  // match the verifier's own gate. The outcome is unchanged so the route never
+  // becomes an account-status oracle.
+  it('mints no magic link for a verified but non-active account', async () => {
+    for (const accountStatus of ['banned', 'suspended', 'flagged_for_review']) {
+      const user = await createTestUser({ emailVerified: true, accountStatus });
+
+      const res = await request(app).post(CHECK_EMAIL).send({ email: user.email });
+
+      assert.equal(res.status, 200, `${accountStatus} should not error`);
+      assert.equal(res.body.outcome, 'verified_match', `${accountStatus} outcome should be unchanged`);
+      assert.equal(
+        (await magicLinksFor(user.id)).length,
+        0,
+        `${accountStatus} must not receive a magic link`,
+      );
+    }
   });
 });

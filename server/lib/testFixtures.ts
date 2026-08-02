@@ -167,6 +167,15 @@ export async function cleanupTestFixtures(): Promise<void> {
       .where(inArray(magicLinkTokens.token, createdMagicLinkTokens));
     createdMagicLinkTokens.length = 0;
   }
+  if (createdUserIds.length > 0) {
+    // Magic-link tokens minted by a ROUTE rather than by createMagicLinkToken()
+    // — POST /api/evelyn-lander/check-email mints one for a verified account and
+    // never hands the raw token back, so the owning user id is the only handle a
+    // test has. Still exact-by-id (these users are ours), never a pattern delete.
+    // Redundant with the users cascade below, but keeps this module the single
+    // source of truth for the rows it caused to exist.
+    await db.delete(magicLinkTokens).where(inArray(magicLinkTokens.userId, createdUserIds));
+  }
   if (createdLanderSessionTokens.length > 0) {
     await db
       .delete(evelynLanderSessions)

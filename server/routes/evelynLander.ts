@@ -11,6 +11,9 @@
 //   POST /api/evelyn-lander/cta    → handoff (mint JWT only for token-magic path)
 //   POST /api/evelyn-lander/reply  → park a reader-typed reply on the session row
 //                                    before they have an account
+//   POST /api/evelyn-lander/check-email
+//                                  → account detection at the email ask; three
+//                                    outcomes (verified / unverified / none)
 //
 // Security note: JWTs are ONLY issued when a server-validated magic-link token is
 // present. Email-param-only segments redirect to /login, which is the existing
@@ -18,15 +21,16 @@
 
 import { Router, Request, Response } from 'express';
 import { z } from 'zod';
-import { createHash } from 'crypto';
+import { createHash, randomUUID } from 'crypto';
 import { isIP } from 'node:net';
 import { eq, sql } from 'drizzle-orm';
 import { db } from '../lib/db';
-import { evelynLanderSessions, users } from '@shared/schema';
+import { evelynLanderSessions, personas, users } from '@shared/schema';
 import { extractClientIp, extractUserAgent } from '../lib/fraudDetection';
-import { verifyMagicLinkToken } from '../lib/magicLink';
+import { generateMagicLinkToken, verifyMagicLinkToken } from '../lib/magicLink';
+import { sendVerificationEmail } from '../lib/verificationEmail';
 import { generateToken, verifyToken } from '../lib/auth';
-import { landerLimiter, landerTurnLimiter } from '../lib/rateLimiter';
+import { accountDetectionLimiter, landerLimiter, landerTurnLimiter } from '../lib/rateLimiter';
 import { checkAndLogSafety } from '../lib/universalSafety';
 import { getCountryFromIP } from '../lib/crisisHotlines';
 import { verifyTurnstileToken } from '../lib/turnstile';
@@ -622,6 +626,208 @@ router.post('/turn', landerTurnLimiter, async (req: Request, res: Response) => {
   } catch (error: any) {
     logger.error('evelyn-lander turn error', { error: error?.message });
     res.status(500).json({ error: 'Failed to generate reply' });
+  }
+});
+
+// ---------- POST /check-email ----------
+// Account detection at the moment the reader hands over their email (spec
+// "Frame 1.5"). Exactly three outcomes drive three different in-thread
+// confirmation bubbles on the client:
+//
+//   verified_match   → an existing, already-verified account. Mail a magic link
+//                      so one tap brings them straight back into the reading.
+//   unverified_match → an existing account that never verified. Resend/resume
+//                      THAT account's verification — never a second account, and
+//                      never a magic link (which would sign them in without ever
+//                      verifying; spec §Decisions).
+//   no_match         → nobody here. The client proceeds to the normal signup.
+//
+// ACCOUNT ENUMERATION IS ACCEPTED HERE, NOT A BUG. Unlike
+// /api/auth/resend-verification and /api/auth/send-magic-login — which both
+// return a deliberately uniform "if an account exists..." response — this route
+// tells the caller which of the three cases it is, because the whole feature is
+// showing the reader the right next step in the thread. That was decided
+// explicitly; do not "fix" it by collapsing the outcomes. The agreed mitigation
+// is accountDetectionLimiter (10/hr/IP — see rateLimiter.ts), which also bounds
+// how much mail a caller can aim at an address they don't own.
+//
+// Repeat submissions of the same address DO re-send every time, matching both
+// sibling auth routes (neither debounces per-address either). See the task
+// report for the reasoning: a reader who lost the first mail needs the second,
+// and a per-address cooldown is state this route doesn't have — the per-IP
+// ceiling is the bound that actually applies.
+const checkEmailSchema = z.object({
+  // .max(254) matches /start's email field (RFC 5321 address limit).
+  email: z.string().email().max(254),
+});
+
+const EVELYN_SLUG = 'evelyn-cross';
+// Mirrors auth.ts:55 / soulmateLanderSignup.ts:24 — both keep their own copy.
+const VERIFICATION_TOKEN_EXPIRY_HOURS = 24;
+
+/**
+ * Mail an existing VERIFIED account a magic link back into the Evelyn thread.
+ *
+ * Deliberately scoped to Evelyn by slug rather than the user's defaultPersonaId:
+ * the token's personaSlug is what MagicAuthPage turns into
+ * `/reading?persona=<slug>`, and this reader clicked an Evelyn email, so anything
+ * else would land them in the wrong guide's chat. (This whole rollout is Evelyn-only.)
+ *
+ * Follows the same shape as the closest existing precedent — the /soulmate
+ * lander's existing-account branch (soulmateLanderSignup.ts:103-123) — including
+ * its RESEND_API_KEY guard, which is what makes this a no-op under test.
+ */
+async function sendLiveThreadMagicLink(user: {
+  id: string;
+  email: string;
+  firstName: string;
+  accountStatus: string;
+}): Promise<void> {
+  // verifyMagicLinkToken() refuses any non-'active' account (magicLink.ts:78), so
+  // minting one here would mail a link that is guaranteed to fail on click.
+  // Precedent: soulmateLanderSignup.ts:103-106 skips the send for banned accounts;
+  // widened to "not active" to match the verifier's own gate. The OUTCOME is
+  // unchanged, so this never becomes an account-status oracle.
+  if (user.accountStatus !== 'active') {
+    logger.info('evelyn-lander check-email: skipping magic link for non-active account', {
+      userId: user.id,
+      accountStatus: user.accountStatus,
+    });
+    return;
+  }
+
+  const personaRows = await db
+    .select({ id: personas.id })
+    .from(personas)
+    .where(eq(personas.slug, EVELYN_SLUG))
+    .limit(1);
+  const evelynId = personaRows[0]?.id;
+  if (!evelynId) {
+    logger.error('evelyn-lander check-email: evelyn-cross persona not found — no magic link sent');
+    return;
+  }
+
+  const magicToken = await generateMagicLinkToken(user.id, evelynId, EVELYN_SLUG);
+  // No &redirect= — MagicAuthPage already defaults to /reading?persona=<personaSlug>
+  // off the token itself, which is exactly where the thread continues.
+  const magicUrl = `${process.env.BASE_URL || 'http://localhost:5000'}/magic-auth?t=${magicToken}`;
+
+  const { Resend } = await import('resend');
+  const resendClient = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
+  if (!resendClient) {
+    logger.warn('evelyn-lander check-email: Resend not configured — magic URL:', magicUrl);
+    return;
+  }
+
+  await resendClient.emails.send({
+    from: `The Seer Within <${process.env.FOLLOW_UP_FROM_EMAIL || 'noreply@theseerwithin.com'}>`,
+    to: user.email,
+    subject: 'Your reading with Evelyn is open',
+    html:
+      `<p>Hi ${user.firstName || 'there'},</p>` +
+      `<p>You left something with Evelyn — click below to pick it back up where you left off:</p>` +
+      `<p style="margin:24px 0"><a href="${magicUrl}" style="background:#6d28d9;color:#fff;padding:12px 32px;border-radius:8px;text-decoration:none;font-weight:600">Open My Reading</a></p>` +
+      `<p style="color:#888;font-size:13px">This link expires in 30 days.</p>`,
+  });
+  logger.info('evelyn-lander check-email: magic link sent', { userId: user.id });
+}
+
+/**
+ * Reissue an existing UNVERIFIED account's verification email.
+ *
+ * Mirrors POST /api/auth/resend-verification (auth.ts:877-904) step for step,
+ * rather than extracting that handler into a shared function: auth.ts has no test
+ * file at all today, so refactoring a live authentication route with no regression
+ * net is a worse trade than ~15 duplicated lines. Keep the two in step.
+ *
+ * Note what is NOT passed: `source`. Passing 'evelyn-lander' would make the email
+ * promise 5 free minutes, but the actual grant is decided server-side at verify
+ * time by isFromEvelynLander() (auth.ts:126), which requires an
+ * evelyn_lander_sessions row already resolved to this user — an anonymous reader
+ * at this point in the thread has none. Staying silent keeps the copy honest;
+ * the persona still comes from the user's own defaultPersonaId exactly as the
+ * existing resend route does.
+ */
+async function resendLanderVerification(user: {
+  id: string;
+  email: string;
+  firstName: string;
+  defaultPersonaId: string | null;
+  welcomeCoinsGrantedAt: Date | null;
+}): Promise<void> {
+  const verificationToken = randomUUID();
+
+  await db
+    .update(users)
+    .set({
+      verificationToken,
+      verificationTokenExpiry: sql`NOW() + INTERVAL '${sql.raw(String(VERIFICATION_TOKEN_EXPIRY_HOURS))} hours'`,
+      updatedAt: sql`NOW()`,
+    })
+    .where(eq(users.id, user.id));
+
+  let personaSlug: string | undefined;
+  if (user.defaultPersonaId) {
+    const personaRow = await db
+      .select({ slug: personas.slug })
+      .from(personas)
+      .where(eq(personas.id, user.defaultPersonaId))
+      .limit(1);
+    personaSlug = personaRow[0]?.slug;
+  }
+
+  await sendVerificationEmail(
+    user.email,
+    user.firstName,
+    verificationToken,
+    personaSlug,
+    undefined,
+    user.welcomeCoinsGrantedAt != null,
+  );
+}
+
+router.post('/check-email', accountDetectionLimiter, async (req: Request, res: Response) => {
+  try {
+    const parsed = checkEmailSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ error: 'Invalid email' });
+    }
+
+    // Same normalisation resolveSegment() uses above, which is the same
+    // `.toLowerCase()` registration stores by (auth.ts:315). A mismatch here would
+    // report no_match for an account that genuinely exists and push the reader into
+    // a signup that then collides with the unique-email constraint.
+    const email = parsed.data.email.trim().toLowerCase();
+
+    const userRows = await db
+      .select({
+        id: users.id,
+        email: users.email,
+        firstName: users.firstName,
+        emailVerified: users.emailVerified,
+        accountStatus: users.accountStatus,
+        defaultPersonaId: users.defaultPersonaId,
+        welcomeCoinsGrantedAt: users.welcomeCoinsGrantedAt,
+      })
+      .from(users)
+      .where(eq(users.email, email))
+      .limit(1);
+    const existing = userRows[0];
+
+    if (!existing) {
+      return res.json({ outcome: 'no_match' });
+    }
+
+    if (existing.emailVerified) {
+      await sendLiveThreadMagicLink(existing);
+      return res.json({ outcome: 'verified_match' });
+    }
+
+    await resendLanderVerification(existing);
+    return res.json({ outcome: 'unverified_match' });
+  } catch (error: any) {
+    logger.error('evelyn-lander check-email error', { error: error?.message });
+    res.status(500).json({ error: 'Failed to check email' });
   }
 });
 
