@@ -30,9 +30,9 @@
 // is recorded in the SEPARATE pending_reply_consumed_at marker instead; nulling the
 // text would silently drop those readers back to 5 minutes with no error anywhere.
 
-import { sql } from 'drizzle-orm';
+import { and, eq, gte, isNotNull, isNull, sql } from 'drizzle-orm';
 import { db } from './db';
-import { chatMessages } from '@shared/schema';
+import { chatMessages, evelynLanderSessions } from '@shared/schema';
 import { MAGIC_LINK_EXPIRY_DAYS } from './magicLink';
 import logger from './logger';
 
@@ -55,8 +55,17 @@ const EVELYN_SLUG = 'evelyn-cross';
  *   - a new account that misses its 24h verification token can request a resend,
  *     which mints a fresh 24h token days later (VERIFICATION_TOKEN_EXPIRY_HOURS).
  * So the window is pinned to the longest-lived link this flow hands out, imported
- * rather than re-declared. Past it, no link that could carry the reader here still
- * works, so a surviving reply can only belong to some other visit.
+ * rather than re-declared.
+ *
+ * IT IS NOT A COMPLETE BOUND, and shouldn't be read as one. Verification resends
+ * have no upper limit, so a reader who requests one on day 40 still arrives with a
+ * working link and still has their reply silently dropped — the same failure 24h was
+ * rejected for, at a much rarer point on the curve. This is a deliberate trade, not
+ * an oversight: the alternative is no window at all, and dropping is the safe
+ * direction (the reader gets a normal reading; nothing is corrupted, and the text
+ * stays in the row). If day-40 resends turn out to matter, the fix is to measure the
+ * window from the LATER of started_at and the /check-email linkage — i.e. from the
+ * reader's most recent proof of intent — rather than to lengthen this constant.
  *
  * The cost of the longer window is bounded and small: a reply is replayed at most
  * ONCE (pending_reply_consumed_at), so the worst case is one reader seeing a line
@@ -76,6 +85,21 @@ export const LIVE_THREAD_REPLAY_WINDOW_DAYS = MAGIC_LINK_EXPIRY_DAYS;
  * committed new version, matches nothing, and returns zero rows. So a second replay
  * is a no-op without any application-level locking.
  *
+ * SAFETY. A reply POST /reply flagged as unsafe is never selected — the filter is a
+ * predicate on the claim, not a check afterwards, so a withheld reply is not claimed,
+ * not consumed, and needs no rollback. See the pending_reply_violation_type note in
+ * the body. Withheld replies stay eligible forever, which is intentional: the verdict
+ * can be corrected in place (or the rule relaxed) and the reader's words are still
+ * there to replay.
+ *
+ * CONVERSATION STATE. The replayed message deliberately does NOT run detectIntent /
+ * updateConversationState, unlike a message sent through sendMessage(). So turnCount,
+ * bucket and engagement do not count it. That is the intended reading of what this
+ * row is — words carried in from before the session existed, not a turn taken inside
+ * it — and it is inert in practice: the reader's next real turn recomputes all of it
+ * with the full history, including this message, in context. Documented because it is
+ * a divergence from the normal path, not because it needs fixing.
+ *
  * Silent-fails to null, mirroring every other lander lookup in this feature: a DB
  * hiccup must never stop a reader from starting their chat. The reply stays
  * unconsumed and is replayed on their next session start.
@@ -90,6 +114,25 @@ export async function replayPendingReply(config: {
   try {
     const cutoff = new Date(Date.now() - LIVE_THREAD_REPLAY_WINDOW_DAYS * 24 * 3_600_000);
 
+    // Cheap pre-check on the idx_evelyn_lander_user index. The overwhelming majority
+    // of Evelyn session starts belong to readers with no lander row at all, and they
+    // should not pay a BEGIN/UPDATE/COMMIT round trip to learn that. Purely an
+    // optimisation: it does not decide anything. A false positive (the row is claimed
+    // by someone else between this and the transaction) just means the claim below
+    // matches nothing, which is already a supported outcome.
+    const candidate = await db
+      .select({ id: evelynLanderSessions.id })
+      .from(evelynLanderSessions)
+      .where(and(
+        eq(evelynLanderSessions.resolvedUserId, config.userId),
+        isNotNull(evelynLanderSessions.pendingReply),
+        isNull(evelynLanderSessions.pendingReplyConsumedAt),
+        isNull(evelynLanderSessions.pendingReplyViolationType),
+        gte(evelynLanderSessions.startedAt, cutoff),
+      ))
+      .limit(1);
+    if (!candidate[0]) return null;
+
     // Claim and insert in ONE transaction: if the message insert fails, the claim
     // rolls back with it. A reply must never end up marked consumed but unspoken —
     // that is the one failure mode that loses the reader's words for good.
@@ -102,6 +145,12 @@ export async function replayPendingReply(config: {
           WHERE resolved_user_id = ${config.userId}
             AND pending_reply IS NOT NULL
             AND pending_reply_consumed_at IS NULL
+            -- The safety filter, as a predicate rather than a post-check: text the
+            -- normal chat path would have intercepted (chatEngine.ts's step-1 gate
+            -- stores it, answers with a canned response, and generates nothing) must
+            -- not reach the model by being replayed as the last message instead.
+            -- POST /reply records that verdict at park time; see migration 022.
+            AND pending_reply_violation_type IS NULL
             AND started_at >= ${cutoff}
           ORDER BY started_at DESC
           LIMIT 1

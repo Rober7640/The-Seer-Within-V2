@@ -477,9 +477,24 @@ router.post('/reply', landerTurnLimiter, async (req: Request, res: Response) => 
     // violation is a content-moderation signal, not a safety emergency — it's
     // already logged via checkAndLogSafety() for review, and losing the
     // reader's only artifact over it would be a worse outcome than storing it.
+    //
+    // The verdict is stored ALONGSIDE the text. Storing it does not change what
+    // happens here — the reply is written and the reader is let through either way,
+    // exactly as the operator ruled — it changes what happens LATER: the replay
+    // (server/lib/liveThreadReplay.ts) withholds a flagged reply from the model,
+    // because the normal chat path would have intercepted those same words with a
+    // canned response instead of generating against them (chatEngine.ts's step-1
+    // safety gate). Without this, typing a jailbreak into the lander would reach the
+    // model when typing it in chat would not.
+    //
+    // The condition mirrors that gate exactly (`!safe && response`) so the two paths
+    // agree by construction rather than by two lists that happen to match today.
+    // Written unconditionally, including the null: /reply is an UPDATE a reader can
+    // repeat, so a clean reply replacing a flagged one must clear the old verdict.
+    const violationType = !safety.safe && safety.response ? safety.violationType : null;
     const result = await db
       .update(evelynLanderSessions)
-      .set({ pendingReply: reply })
+      .set({ pendingReply: reply, pendingReplyViolationType: violationType })
       .where(eq(evelynLanderSessions.sessionToken, sessionToken))
       .returning({ id: evelynLanderSessions.id });
 

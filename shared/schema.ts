@@ -1125,6 +1125,14 @@ export const evelynLanderSessions = pgTable("evelyn_lander_sessions", {
   // time and on every /check-email resend — clearing it would silently drop those
   // readers back to 5 minutes. See server/lib/liveThreadEngagement.ts's header.
   pendingReplyConsumedAt: timestamp("pending_reply_consumed_at"),
+  // The safety verdict POST /reply reached on pending_reply, at the moment it was
+  // written and with that request's context. NULL means the text passed. A non-null
+  // violation type means the normal chat path would have intercepted these words
+  // with a canned response instead of generating against them (chatEngine.ts's
+  // step-1 safety gate), so the replay must not smuggle them into the model later.
+  // The text is still stored and the reader is still let through — that is the
+  // operator's Task 6 ruling and this does not touch it.
+  pendingReplyViolationType: text("pending_reply_violation_type"),
   hadToken: boolean("had_token").default(false).notNull(),
 
   // Funnel progress (chat layer fills these later)

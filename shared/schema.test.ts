@@ -84,3 +84,49 @@ describe('evelyn_lander_sessions.pending_reply column', () => {
     assert.equal(rows[0].is_nullable, 'YES');
   });
 });
+
+// Task 10's two columns. Same reason as pending_reply above, and it bites harder
+// here: replayPendingReply() silent-fails to null on any error, so if either column
+// were in schema.ts but never migrated, nothing would break loudly — the feature
+// would simply never replay anything, in production, quietly. This is the test that
+// catches that drift.
+describe('evelyn_lander_sessions parked-reply replay columns (migrations 021, 022)', () => {
+  it('has pending_reply_consumed_at as a nullable timestamp', async () => {
+    const { rows } = await pool.query(
+      `select data_type, is_nullable
+       from information_schema.columns
+       where table_name = 'evelyn_lander_sessions'
+         and column_name = 'pending_reply_consumed_at'`
+    );
+    assert.equal(rows.length, 1, 'migration 021 must be applied to this database');
+    assert.equal(rows[0].data_type, 'timestamp without time zone');
+    assert.equal(rows[0].is_nullable, 'YES');
+  });
+
+  it('has pending_reply_violation_type as a nullable text column', async () => {
+    const { rows } = await pool.query(
+      `select data_type, is_nullable
+       from information_schema.columns
+       where table_name = 'evelyn_lander_sessions'
+         and column_name = 'pending_reply_violation_type'`
+    );
+    assert.equal(rows.length, 1, 'migration 022 must be applied to this database');
+    assert.equal(rows[0].data_type, 'text');
+    assert.equal(rows[0].is_nullable, 'YES');
+  });
+
+  // Both must stay nullable and default-less: a NOT NULL or a default would make
+  // every pre-existing parked reply look consumed (021) or flagged (022).
+  it('leaves both columns without a default, so existing rows read as untouched', async () => {
+    const { rows } = await pool.query(
+      `select column_name, column_default
+       from information_schema.columns
+       where table_name = 'evelyn_lander_sessions'
+         and column_name in ('pending_reply_consumed_at', 'pending_reply_violation_type')`
+    );
+    assert.equal(rows.length, 2);
+    for (const row of rows) {
+      assert.equal(row.column_default, null, `${row.column_name} must have no default`);
+    }
+  });
+});
