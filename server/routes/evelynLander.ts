@@ -9,6 +9,8 @@
 //   POST /api/evelyn-lander/turn   → run safety + Haiku for one chat turn,
 //                                    enforce 2-user-message hard cap
 //   POST /api/evelyn-lander/cta    → handoff (mint JWT only for token-magic path)
+//   POST /api/evelyn-lander/reply  → park a reader-typed reply on the session row
+//                                    before they have an account
 //
 // Security note: JWTs are ONLY issued when a server-validated magic-link token is
 // present. Email-param-only segments redirect to /login, which is the existing
@@ -66,6 +68,15 @@ const ctaSchema = z.object({
   sessionToken: z.string().min(8).max(128),
   // Frontend re-passes the magic token so we can re-validate at handoff time.
   token: z.string().min(16).max(128).optional(),
+});
+
+const replySchema = z.object({
+  sessionToken: z.string().min(8).max(128),
+  // Matches turnSchema's userMessage cap — reader-typed free text, later rendered
+  // as a chat message. No sanitisation here: it's stored/rendered exactly like
+  // /turn's userMessage, so the same downstream layer (React's default escaping)
+  // is responsible; duplicating it here would just be the wrong layer.
+  reply: z.string().min(1).max(2000),
 });
 
 // ---------- Helpers ----------
@@ -363,6 +374,46 @@ router.post('/cta', async (req: Request, res: Response) => {
   } catch (error: any) {
     logger.error('evelyn-lander cta error', { error: error?.message });
     res.status(500).json({ error: 'Failed to resolve handoff' });
+  }
+});
+
+// ---------- POST /reply ----------
+// Parks a reader-typed reply on their session row before they have an account
+// (PRD "Live Thread" flow). Task 10 reads pendingReply back and turns it into
+// the first real chat message once the account is verified.
+//
+// Rate limit: landerTurnLimiter, not landerLimiter. landerLimiter (5/hr/IP)
+// bounds NEW session creation (/start); this route never creates a session, it
+// writes free text onto an existing one, same category of action as /turn's
+// userMessage write. landerTurnLimiter (30/hr prod, 200/hr dev) matches that.
+//
+// Overwrite semantics: writes pendingReply unconditionally, so a second call
+// replaces the first. This is intentional, not an oversight — a reader who
+// edits their typed reply before submitting must have the latest version win;
+// rejecting the second call would strand their edit, and appending would
+// produce a garbled first chat message (the plan's intent is exactly one
+// reply per lander session, not a transcript).
+router.post('/reply', landerTurnLimiter, async (req: Request, res: Response) => {
+  try {
+    const parsed = replySchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ error: 'Invalid payload' });
+    }
+
+    const result = await db
+      .update(evelynLanderSessions)
+      .set({ pendingReply: parsed.data.reply })
+      .where(eq(evelynLanderSessions.sessionToken, parsed.data.sessionToken))
+      .returning({ id: evelynLanderSessions.id });
+
+    if (result.length === 0) {
+      return res.status(404).json({ error: 'Session not found' });
+    }
+
+    res.json({ ok: true });
+  } catch (error: any) {
+    logger.error('evelyn-lander reply error', { error: error?.message });
+    res.status(500).json({ error: 'Failed to store reply' });
   }
 });
 

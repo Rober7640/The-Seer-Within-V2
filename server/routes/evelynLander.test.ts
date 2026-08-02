@@ -299,3 +299,58 @@ describe('POST /api/evelyn-lander/start — magic token vs. JWT precedence', { s
     assert.equal(row.hadToken, true);
   });
 });
+
+describe('POST /api/evelyn-lander/reply', { skip: !HAS_DB }, () => {
+  it('stores the reply text against the session row', async () => {
+    const sessionToken = landerSessionToken('reply');
+    await request(app).post('/api/evelyn-lander/start').send({ sessionToken, campaign: 'reply-test-campaign' });
+
+    const res = await request(app)
+      .post('/api/evelyn-lander/reply')
+      .send({ sessionToken, reply: '444. Every day.' });
+
+    assert.equal(res.status, 200);
+
+    const [row] = await db.select().from(evelynLanderSessions).where(eq(evelynLanderSessions.sessionToken, sessionToken));
+    assert.equal(row.pendingReply, '444. Every day.');
+  });
+
+  it('404s for an unknown sessionToken', async () => {
+    const res = await request(app).post('/api/evelyn-lander/reply').send({ sessionToken: 'does-not-exist', reply: 'x' });
+    assert.equal(res.status, 404);
+  });
+
+  it('rejects an empty reply', async () => {
+    const sessionToken = landerSessionToken('reply-empty');
+    await request(app).post('/api/evelyn-lander/start').send({ sessionToken, campaign: 'reply-test-campaign' });
+    const res = await request(app).post('/api/evelyn-lander/reply').send({ sessionToken, reply: '' });
+    assert.equal(res.status, 400);
+  });
+
+  // Beyond the brief. The brief's implementation writes pendingReply unconditionally
+  // on every call — this is deliberate (see report §"reason about" point 3): a
+  // reader may edit their typed reply before submitting, and the second call must
+  // win, not be rejected or concatenated onto the first.
+  it('overwrites a previously stored reply with the latest call', async () => {
+    const sessionToken = landerSessionToken('reply-overwrite');
+    await request(app).post('/api/evelyn-lander/start').send({ sessionToken, campaign: 'reply-test-campaign' });
+
+    await request(app).post('/api/evelyn-lander/reply').send({ sessionToken, reply: 'first draft' });
+    const res = await request(app).post('/api/evelyn-lander/reply').send({ sessionToken, reply: 'final version' });
+
+    assert.equal(res.status, 200);
+    const [row] = await db.select().from(evelynLanderSessions).where(eq(evelynLanderSessions.sessionToken, sessionToken));
+    assert.equal(row.pendingReply, 'final version');
+  });
+
+  // Beyond the brief. reply is capped at 2000 chars (matches turnSchema's userMessage
+  // cap) — proves the boundary is enforced, not just documented in the schema.
+  it('rejects a reply over 2000 chars', async () => {
+    const sessionToken = landerSessionToken('reply-toolong');
+    await request(app).post('/api/evelyn-lander/start').send({ sessionToken, campaign: 'reply-test-campaign' });
+    const res = await request(app)
+      .post('/api/evelyn-lander/reply')
+      .send({ sessionToken, reply: 'x'.repeat(2001) });
+    assert.equal(res.status, 400);
+  });
+});
