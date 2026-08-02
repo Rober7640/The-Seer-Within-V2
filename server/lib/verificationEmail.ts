@@ -2,6 +2,10 @@
 // Sends a magic link that verifies the email and grants free credits.
 
 import { Resend } from 'resend';
+import { randomUUID } from 'crypto';
+import { eq, sql } from 'drizzle-orm';
+import { db } from './db';
+import { users, personas } from '@shared/schema';
 import logger from './logger';
 import { fireWithBreaker, resendBreaker } from './circuitBreaker';
 
@@ -13,7 +17,18 @@ const FROM_EMAIL = process.env.FOLLOW_UP_FROM_EMAIL || 'noreply@theseerwithin.co
 const FROM_NAME = process.env.FOLLOW_UP_FROM_NAME || 'The Seer Within';
 const BASE_URL = process.env.BASE_URL || 'http://localhost:5000';
 
-function escapeHtml(str: string): string {
+// How long a freshly-minted verification token stays clickable. Security-relevant:
+// shortening this window must take effect everywhere at once, so this is the single
+// definition — auth.ts and soulmateLanderSignup.ts import it rather than keeping
+// their own copies (they each had one before, which is exactly the drift risk).
+export const VERIFICATION_TOKEN_EXPIRY_HOURS = 24;
+
+/**
+ * Minimal HTML entity escape for values interpolated into email bodies. Exported
+ * so other senders that interpolate user-controlled fields (names) can reuse it
+ * rather than each shipping an unescaped template.
+ */
+export function escapeHtml(str: string): string {
   return str
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
@@ -256,4 +271,64 @@ export async function sendVerificationEmail(
     logger.error(`[Email Verification] Failed to send to ${email}:`, error);
     return { success: false, error: error?.message || 'Failed to send verification email' };
   }
+}
+
+/** The subset of a `users` row reissueVerificationEmail() needs. A full row satisfies it. */
+export interface ReissueVerificationUser {
+  id: string;
+  email: string;
+  firstName: string;
+  defaultPersonaId: string | null;
+  welcomeCoinsGrantedAt: Date | null;
+}
+
+/**
+ * Reissue an existing UNVERIFIED account's verification email: mint a fresh token,
+ * stamp it (and its expiry) on the user row, resolve the persona context, and send.
+ *
+ * Extracted verbatim from POST /api/auth/resend-verification (auth.ts:877-904) so
+ * VERIFICATION_TOKEN_EXPIRY_HOURS and the NOW() + INTERVAL expression have exactly
+ * one definition. Callers: that route, and the Evelyn lander's /check-email
+ * unverified_match branch.
+ *
+ * The caller decides nothing about the token — only the two optional overrides:
+ *   personaSlug — takes priority over the user's defaultPersonaId. Preserves persona
+ *                 context on the resent link; without it the verify-email redirect
+ *                 loses the persona query and lands the user on /login instead of
+ *                 the persona-specific chat.
+ *   source      — funnel tag; only affects the free-minutes number the copy quotes
+ *                 (getFreeMinutesForSignup above). Omit it unless the caller knows
+ *                 the reader is genuinely eligible for that funnel's grant, or the
+ *                 email will over-promise.
+ */
+export async function reissueVerificationEmail(
+  user: ReissueVerificationUser,
+  opts: { personaSlug?: string; source?: string } = {},
+): Promise<void> {
+  // Generate new token
+  const verificationToken = randomUUID();
+
+  await db.update(users)
+    .set({
+      verificationToken,
+      verificationTokenExpiry: sql`NOW() + INTERVAL '${sql.raw(String(VERIFICATION_TOKEN_EXPIRY_HOURS))} hours'`,
+      updatedAt: sql`NOW()`,
+    })
+    .where(eq(users.id, user.id));
+
+  // Priority: explicit override > user's defaultPersonaId.
+  let personaSlug: string | undefined = opts.personaSlug;
+  if (!personaSlug && user.defaultPersonaId) {
+    const personaRow = await db.select({ slug: personas.slug })
+      .from(personas)
+      .where(eq(personas.id, user.defaultPersonaId))
+      .limit(1);
+    personaSlug = personaRow[0]?.slug;
+  }
+
+  // If the welcome minutes were already granted (at registration, Task 1.1), the
+  // resent email says "your minutes are waiting — verify to keep access" rather than
+  // "verify to receive them". Uses the actual grant marker, so it's accurate regardless
+  // of the flag's current state.
+  await sendVerificationEmail(user.email, user.firstName, verificationToken, personaSlug, opts.source, user.welcomeCoinsGrantedAt != null);
 }

@@ -21,14 +21,14 @@
 
 import { Router, Request, Response } from 'express';
 import { z } from 'zod';
-import { createHash, randomUUID } from 'crypto';
+import { createHash } from 'crypto';
 import { isIP } from 'node:net';
-import { eq, sql } from 'drizzle-orm';
+import { and, eq, isNull, sql } from 'drizzle-orm';
 import { db } from '../lib/db';
 import { evelynLanderSessions, personas, users } from '@shared/schema';
 import { extractClientIp, extractUserAgent } from '../lib/fraudDetection';
 import { generateMagicLinkToken, verifyMagicLinkToken } from '../lib/magicLink';
-import { sendVerificationEmail } from '../lib/verificationEmail';
+import { escapeHtml, reissueVerificationEmail } from '../lib/verificationEmail';
 import { generateToken, verifyToken } from '../lib/auth';
 import { accountDetectionLimiter, landerLimiter, landerTurnLimiter } from '../lib/rateLimiter';
 import { checkAndLogSafety } from '../lib/universalSafety';
@@ -642,6 +642,10 @@ router.post('/turn', landerTurnLimiter, async (req: Request, res: Response) => {
 //                      verifying; spec §Decisions).
 //   no_match         → nobody here. The client proceeds to the normal signup.
 //
+// On either match it also stamps the account onto the reader's lander session row
+// (optional `sessionToken`), which is how the post-auth routes later find the
+// pendingReply parked while they were anonymous — see linkSessionToUser below.
+//
 // ACCOUNT ENUMERATION IS ACCEPTED HERE, NOT A BUG. Unlike
 // /api/auth/resend-verification and /api/auth/send-magic-login — which both
 // return a deliberately uniform "if an account exists..." response — this route
@@ -659,11 +663,15 @@ router.post('/turn', landerTurnLimiter, async (req: Request, res: Response) => {
 const checkEmailSchema = z.object({
   // .max(254) matches /start's email field (RFC 5321 address limit).
   email: z.string().email().max(254),
+  // Optional, and deliberately so: the reader's lander session, used to stamp
+  // resolvedUserId once the email identifies them (see linkSessionToUser). A caller
+  // that omits it still gets a normal outcome, so this is not a breaking change to
+  // the contract Task 11 builds against. Bounds match every other sessionToken
+  // field in this file.
+  sessionToken: z.string().min(8).max(128).optional(),
 });
 
 const EVELYN_SLUG = 'evelyn-cross';
-// Mirrors auth.ts:55 / soulmateLanderSignup.ts:24 — both keep their own copy.
-const VERIFICATION_TOKEN_EXPIRY_HOURS = 24;
 
 /**
  * Mail an existing VERIFIED account a magic link back into the Evelyn thread.
@@ -719,71 +727,71 @@ async function sendLiveThreadMagicLink(user: {
     return;
   }
 
-  await resendClient.emails.send({
-    from: `The Seer Within <${process.env.FOLLOW_UP_FROM_EMAIL || 'noreply@theseerwithin.com'}>`,
-    to: user.email,
-    subject: 'Your reading with Evelyn is open',
-    html:
-      `<p>Hi ${user.firstName || 'there'},</p>` +
-      `<p>You left something with Evelyn — click below to pick it back up where you left off:</p>` +
-      `<p style="margin:24px 0"><a href="${magicUrl}" style="background:#6d28d9;color:#fff;padding:12px 32px;border-radius:8px;text-decoration:none;font-weight:600">Open My Reading</a></p>` +
-      `<p style="color:#888;font-size:13px">This link expires in 30 days.</p>`,
-  });
-  logger.info('evelyn-lander check-email: magic link sent', { userId: user.id });
+  // firstName is user-supplied and goes into an HTML body, so it is escaped —
+  // matching the sibling verification mail (verificationEmail.ts:50 escapes it) and
+  // deliberately NOT matching the two magic-link senders that interpolate it raw
+  // (soulmateLanderSignup.ts:118, auth.ts:992). Of the two precedents this follows
+  // the safer one rather than adding a third unescaped site.
+  const safeName = escapeHtml(user.firstName || 'there');
+
+  // A Resend outage must not turn a successful detection into an error screen. The
+  // unverified branch already cannot fail this way — sendVerificationEmail() catches
+  // internally and returns { success: false } — so without this catch the two
+  // branches behave asymmetrically: a returning verified reader would get a 500 (and
+  // no confirmation bubble) for a transient third-party blip, while an unverified one
+  // sees success. The magic-link row is already committed above and stays valid for
+  // 30 days, so the outcome we return is still true; only the delivery is in doubt,
+  // and the client already offers a resend.
+  try {
+    await resendClient.emails.send({
+      from: `The Seer Within <${process.env.FOLLOW_UP_FROM_EMAIL || 'noreply@theseerwithin.com'}>`,
+      to: user.email,
+      subject: 'Your reading with Evelyn is open',
+      html:
+        `<p>Hi ${safeName},</p>` +
+        `<p>You left something with Evelyn — click below to pick it back up where you left off:</p>` +
+        `<p style="margin:24px 0"><a href="${magicUrl}" style="background:#6d28d9;color:#fff;padding:12px 32px;border-radius:8px;text-decoration:none;font-weight:600">Open My Reading</a></p>` +
+        `<p style="color:#888;font-size:13px">This link expires in 30 days.</p>`,
+    });
+    logger.info('evelyn-lander check-email: magic link sent', { userId: user.id });
+  } catch (error: any) {
+    logger.error('evelyn-lander check-email: magic link send failed', {
+      userId: user.id,
+      error: error?.message,
+    });
+  }
 }
 
 /**
- * Reissue an existing UNVERIFIED account's verification email.
+ * Stamps the matched account onto the reader's lander session row, so the
+ * verify-email / magic-verify handlers can find the `pendingReply` they parked
+ * while still anonymous (Task 10). `resolvedUserId` and its index already exist
+ * (schema.ts:1114, :1136) and /start already writes them for the segments it can
+ * resolve — this is the same write, at the moment the email finally identifies them.
  *
- * Mirrors POST /api/auth/resend-verification (auth.ts:877-904) step for step,
- * rather than extracting that handler into a shared function: auth.ts has no test
- * file at all today, so refactoring a live authentication route with no regression
- * net is a worse trade than ~15 duplicated lines. Keep the two in step.
- *
- * Note what is NOT passed: `source`. Passing 'evelyn-lander' would make the email
- * promise 5 free minutes, but the actual grant is decided server-side at verify
- * time by isFromEvelynLander() (auth.ts:126), which requires an
- * evelyn_lander_sessions row already resolved to this user — an anonymous reader
- * at this point in the thread has none. Staying silent keeps the copy honest;
- * the persona still comes from the user's own defaultPersonaId exactly as the
- * existing resend route does.
+ * `sessionToken` is OPTIONAL on the request, so a caller that omits it still gets a
+ * normal outcome; this is best-effort linkage, never a reason to fail the response.
+ * The `resolvedUserId IS NULL` guard means an identity /start already established
+ * (a live magic token, or a JWT) is never clobbered by a different email typed into
+ * the box afterwards.
  */
-async function resendLanderVerification(user: {
-  id: string;
-  email: string;
-  firstName: string;
-  defaultPersonaId: string | null;
-  welcomeCoinsGrantedAt: Date | null;
-}): Promise<void> {
-  const verificationToken = randomUUID();
-
-  await db
-    .update(users)
-    .set({
-      verificationToken,
-      verificationTokenExpiry: sql`NOW() + INTERVAL '${sql.raw(String(VERIFICATION_TOKEN_EXPIRY_HOURS))} hours'`,
-      updatedAt: sql`NOW()`,
-    })
-    .where(eq(users.id, user.id));
-
-  let personaSlug: string | undefined;
-  if (user.defaultPersonaId) {
-    const personaRow = await db
-      .select({ slug: personas.slug })
-      .from(personas)
-      .where(eq(personas.id, user.defaultPersonaId))
-      .limit(1);
-    personaSlug = personaRow[0]?.slug;
+async function linkSessionToUser(sessionToken: string | undefined, userId: string): Promise<void> {
+  if (!sessionToken) return;
+  try {
+    await db
+      .update(evelynLanderSessions)
+      .set({ resolvedUserId: userId })
+      .where(
+        and(
+          eq(evelynLanderSessions.sessionToken, sessionToken),
+          isNull(evelynLanderSessions.resolvedUserId),
+        ),
+      );
+  } catch (error: any) {
+    logger.warn('evelyn-lander check-email: failed to link session to user', {
+      error: error?.message,
+    });
   }
-
-  await sendVerificationEmail(
-    user.email,
-    user.firstName,
-    verificationToken,
-    personaSlug,
-    undefined,
-    user.welcomeCoinsGrantedAt != null,
-  );
 }
 
 router.post('/check-email', accountDetectionLimiter, async (req: Request, res: Response) => {
@@ -818,12 +826,25 @@ router.post('/check-email', accountDetectionLimiter, async (req: Request, res: R
       return res.json({ outcome: 'no_match' });
     }
 
+    // Any match — verified or not — is the moment this reader stops being
+    // anonymous, so link the session either way. Both post-auth routes
+    // (verify-email and magic-verify) need it to find their pendingReply.
+    await linkSessionToUser(parsed.data.sessionToken, existing.id);
+
     if (existing.emailVerified) {
       await sendLiveThreadMagicLink(existing);
       return res.json({ outcome: 'verified_match' });
     }
 
-    await resendLanderVerification(existing);
+    // Shared with POST /api/auth/resend-verification, so the 24-hour expiry has a
+    // single definition. `source` is deliberately omitted: passing 'evelyn-lander'
+    // would make the copy promise 5 free minutes, but the grant is decided at verify
+    // time by isFromEvelynLander() (auth.ts:126), which needs an
+    // evelyn_lander_sessions row already resolved to this user. linkSessionToUser()
+    // above only just created that link, and only when a sessionToken was supplied —
+    // too conditional to promise a number on. The persona still falls back to the
+    // user's own defaultPersonaId inside the shared function.
+    await reissueVerificationEmail(existing);
     return res.json({ outcome: 'unverified_match' });
   } catch (error: any) {
     logger.error('evelyn-lander check-email error', { error: error?.message });

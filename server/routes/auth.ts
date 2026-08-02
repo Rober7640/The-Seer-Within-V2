@@ -8,7 +8,11 @@ import { hashPassword, verifyPassword, generateToken, requireAuth } from '../lib
 import { verifyMagicLinkToken, generateMagicLinkToken } from '../lib/magicLink';
 import { isFromLunaThankyouOffer, claimLunaTyGift } from '../lib/lunaThankyouGift';
 import { authLimiter, passwordResetLimiter } from '../lib/rateLimiter';
-import { sendVerificationEmail } from '../lib/verificationEmail';
+import {
+  sendVerificationEmail,
+  reissueVerificationEmail,
+  VERIFICATION_TOKEN_EXPIRY_HOURS,
+} from '../lib/verificationEmail';
 import { sendPasswordResetEmail } from '../lib/passwordResetEmail';
 import { isDisposableEmail } from '../lib/disposableEmailDomains';
 import { verifyTurnstileToken } from '../lib/turnstile';
@@ -52,7 +56,9 @@ const EVELYN_LANDER_FREE_COINS = minutesToCoins(5); // 1495¢ = 5:00 at the defa
 // /soulmate lander signups mirror the /evelyn grant exactly (5 min). Same Evelyn
 // persona, same drip enrollment downstream. Eligibility = isFromSoulmateLander() below.
 const SOULMATE_LANDER_FREE_COINS = minutesToCoins(5); // 1495¢ = 5:00 at the default rate
-const VERIFICATION_TOKEN_EXPIRY_HOURS = 24;
+// VERIFICATION_TOKEN_EXPIRY_HOURS now lives in ../lib/verificationEmail (imported
+// above) — same value (24), one definition, so shortening the window can't miss a
+// call site. Still used by /register and /magic-register below.
 
 // Task 1.1 — grant the welcome free-coins at REGISTRATION instead of at /verify-email
 // (41% never verify → 0 minutes → never try the product). Rolled out Evelyn-lander
@@ -874,34 +880,12 @@ router.post('/resend-verification', authLimiter, async (req: Request, res: Respo
       return;
     }
 
-    // Generate new token
-    const verificationToken = randomUUID();
-
-    await db.update(users)
-      .set({
-        verificationToken,
-        verificationTokenExpiry: sql`NOW() + INTERVAL '${sql.raw(String(VERIFICATION_TOKEN_EXPIRY_HOURS))} hours'`,
-        updatedAt: sql`NOW()`,
-      })
-      .where(eq(users.id, user.id));
-
-    // Preserve persona context on the resent link. Without this the verify-email
-    // redirect loses the persona query and lands the user on /login instead of
-    // the persona-specific chat. Priority: explicit body > user's defaultPersonaId.
-    let personaSlug: string | undefined = personaFromBody;
-    if (!personaSlug && user.defaultPersonaId) {
-      const personaRow = await db.select({ slug: personas.slug })
-        .from(personas)
-        .where(eq(personas.id, user.defaultPersonaId))
-        .limit(1);
-      personaSlug = personaRow[0]?.slug;
-    }
-
-    // If the welcome minutes were already granted (at registration, Task 1.1), the
-    // resent email says "your minutes are waiting — verify to keep access" rather than
-    // "verify to receive them". Uses the actual grant marker, so it's accurate regardless
-    // of the flag's current state.
-    await sendVerificationEmail(user.email, user.firstName, verificationToken, personaSlug, sourceFromBody, user.welcomeCoinsGrantedAt != null);
+    // Mint the fresh token, stamp it on the row, resolve persona context, send.
+    // Extracted verbatim to verificationEmail.ts so the 24-hour expiry constant and
+    // its NOW() + INTERVAL expression have a single definition (they were previously
+    // copied into every caller). `persona` from the body still takes priority over
+    // the user's defaultPersonaId, and `source` is still forwarded unchanged.
+    await reissueVerificationEmail(user, { personaSlug: personaFromBody, source: sourceFromBody });
 
     res.json({ success: true, message: 'If an unverified account exists, a verification email has been sent.' });
   } catch (error) {

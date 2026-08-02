@@ -621,6 +621,102 @@ describe('POST /api/evelyn-lander/check-email', { skip: !HAS_DB }, () => {
     assert.equal(res.status, 400);
   });
 
+  // Session linkage. This is what lets Task 10 find the pendingReply the reader
+  // parked while anonymous: verify-email / magic-verify only know a userId, and
+  // evelyn_lander_sessions.resolved_user_id is the join. /start already writes it for
+  // the segments it can resolve; for an anonymous reader it stays NULL until the
+  // email identifies them, which is here.
+  describe('lander session linkage', () => {
+    async function startSession(label: string): Promise<string> {
+      const sessionToken = landerSessionToken(label);
+      await request(app)
+        .post('/api/evelyn-lander/start')
+        .send({ sessionToken, campaign: 'check-email-test-campaign' });
+      return sessionToken;
+    }
+
+    function sessionRow(sessionToken: string) {
+      return db
+        .select()
+        .from(evelynLanderSessions)
+        .where(eq(evelynLanderSessions.sessionToken, sessionToken))
+        .limit(1);
+    }
+
+    it('stamps resolvedUserId on the session for a verified_match', async () => {
+      const user = await createTestUser({ emailVerified: true });
+      const sessionToken = await startSession('check-verified');
+
+      // Control: an anonymous /start leaves it NULL, so the assertion below is
+      // measuring this route's write and not something /start already did.
+      const [before] = await sessionRow(sessionToken);
+      assert.equal(before.resolvedUserId, null);
+
+      const res = await request(app).post(CHECK_EMAIL).send({ email: user.email, sessionToken });
+      assert.equal(res.body.outcome, 'verified_match');
+
+      const [after] = await sessionRow(sessionToken);
+      assert.equal(after.resolvedUserId, user.id);
+    });
+
+    it('stamps resolvedUserId on the session for an unverified_match', async () => {
+      const user = await createTestUser({ emailVerified: false });
+      const sessionToken = await startSession('check-unverified');
+
+      const res = await request(app).post(CHECK_EMAIL).send({ email: user.email, sessionToken });
+      assert.equal(res.body.outcome, 'unverified_match');
+
+      const [after] = await sessionRow(sessionToken);
+      assert.equal(after.resolvedUserId, user.id);
+    });
+
+    // The `resolvedUserId IS NULL` guard. /start may already have established an
+    // identity from a live magic token or a JWT; a different email typed into the box
+    // afterwards must not overwrite it, or the reply would be attached to the wrong
+    // account.
+    it('does not clobber a resolvedUserId /start already established', async () => {
+      const authed = await createTestUser({ emailVerified: true, firstName: 'Authed' });
+      const other = await createTestUser({ emailVerified: true, firstName: 'Other' });
+
+      const sessionToken = landerSessionToken('check-noclobber');
+      const start = await request(app)
+        .post('/api/evelyn-lander/start')
+        .set('Authorization', `Bearer ${generateToken(authed.id, authed.email)}`)
+        .send({ sessionToken });
+      assert.equal(start.body.segment, 'v2_active', 'precondition: /start resolved the JWT');
+
+      await request(app).post(CHECK_EMAIL).send({ email: other.email, sessionToken });
+
+      const [after] = await sessionRow(sessionToken);
+      assert.equal(after.resolvedUserId, authed.id, 'the established identity must win');
+      assert.notEqual(after.resolvedUserId, other.id);
+    });
+
+    // sessionToken is optional — Task 11's component posts only { email } today, and
+    // that must keep working.
+    it('still returns a normal outcome when no sessionToken is supplied', async () => {
+      const user = await createTestUser({ emailVerified: true });
+
+      const res = await request(app).post(CHECK_EMAIL).send({ email: user.email });
+
+      assert.equal(res.status, 200);
+      assert.equal(res.body.outcome, 'verified_match');
+    });
+
+    // A stale/unknown sessionToken (session row expired or never created) must not
+    // fail the request — the linkage is best-effort.
+    it('still returns a normal outcome for an unknown sessionToken', async () => {
+      const user = await createTestUser({ emailVerified: true });
+
+      const res = await request(app)
+        .post(CHECK_EMAIL)
+        .send({ email: user.email, sessionToken: landerSessionToken('check-nonexistent') });
+
+      assert.equal(res.status, 200);
+      assert.equal(res.body.outcome, 'verified_match');
+    });
+  });
+
   // Beyond the brief. verifyMagicLinkToken() refuses any non-'active' account
   // (magicLink.ts:78), so minting and mailing a link to one would send a
   // guaranteed-dead link. soulmateLanderSignup.ts:103-106 already skips the send
