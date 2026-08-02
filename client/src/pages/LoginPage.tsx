@@ -40,6 +40,20 @@ export default function LoginPage() {
   const [verificationSuccess, setVerificationSuccess] = useState(false);
   const [resendLoading, setResendLoading] = useState(false);
   const [resendEmail, setResendEmail] = useState("");
+  // The free-minutes figure to print on the "check your email" screen, as resolved
+  // BY THE SERVER at registration and returned on the /register response.
+  //
+  // This used to be `sourceParam === "evelyn-lander" ? "5" : "3"` — a third,
+  // independent copy of a number that server/lib/welcomeGrantTier.ts and
+  // getFreeMinutesForSignup() exist to define exactly once. It had already drifted:
+  // a Live Thread reader (one who typed a reply into /evelyn before signing up)
+  // is granted, and quoted in the verification email, TEN minutes — but this screen,
+  // which their eyes are on while that email is in flight, said five.
+  //
+  // null means "the server didn't tell us" (an older cached bundle, or a shape
+  // change). The copy below then drops the number entirely rather than inventing
+  // one, because a missing figure is recoverable and a wrong figure is not.
+  const [freeMinutes, setFreeMinutes] = useState<number | null>(null);
   const [magicLinkSent, setMagicLinkSent] = useState(false);
 
   // Auto-login after an email-verification click. The server lands the user here as
@@ -121,6 +135,7 @@ export default function LoginPage() {
         if (data.requiresVerification) {
           setShowVerificationSent(true);
           setResendEmail(email);
+          setFreeMinutes(typeof data.freeMinutes === "number" ? data.freeMinutes : null);
           return;
         }
       } else {
@@ -203,7 +218,7 @@ export default function LoginPage() {
             <p className="text-sm text-gray-600">
               We sent a verification link to <strong>{resendEmail}</strong>.
               Please check your email and click the link to activate your account
-              and receive your {sourceParam === "evelyn-lander" ? "5" : "3"} free minutes.
+              and receive your {freeMinutes !== null ? `${freeMinutes} ` : ""}free minutes.
             </p>
             <p className="text-xs text-gray-400">
               The link expires in 24 hours.

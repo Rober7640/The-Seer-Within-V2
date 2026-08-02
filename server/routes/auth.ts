@@ -13,6 +13,7 @@ import { authLimiter, passwordResetLimiter } from '../lib/rateLimiter';
 import {
   sendVerificationEmail,
   reissueVerificationEmail,
+  getFreeMinutesForSignup,
   VERIFICATION_TOKEN_EXPIRY_HOURS,
 } from '../lib/verificationEmail';
 import { sendPasswordResetEmail } from '../lib/passwordResetEmail';
@@ -412,6 +413,17 @@ router.post('/register', authLimiter, async (req: Request, res: Response) => {
         emailVerified: user.emailVerified,
       },
       requiresVerification: !isTestEnv,
+      // The free-minutes figure the client's "check your email" screen prints.
+      // Returned rather than re-derived on the client because there were THREE
+      // surfaces quoting this number — the grant chain, the verification email,
+      // and LoginPage — and the third had already drifted: it hardcoded 5 for
+      // every evelyn-lander signup, while a Live Thread reader is quoted 10 in
+      // the very email that screen is telling them to go and open.
+      // getFreeMinutesForSignup() is where that decision is written exactly once
+      // (see its header), and `engagedViaLiveThread` is the same server-derived
+      // flag sendVerificationEmail() above was handed — so the screen and the
+      // email cannot disagree, by construction rather than by discipline.
+      freeMinutes: getFreeMinutesForSignup(persona, source, engagedViaLiveThread),
     });
   } catch (error) {
     logger.error('Register error:', error);
