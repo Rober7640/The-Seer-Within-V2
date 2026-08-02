@@ -33,6 +33,7 @@ import {
   safetyViolations,
   chatSessions,
   chatMessages,
+  emailLinkCodes,
 } from '@shared/schema';
 import { generateMagicLinkToken } from './magicLink';
 import { assertNoOutboundCalls } from './testGuards';
@@ -46,6 +47,7 @@ const createdSoulmateSessionIds: string[] = [];
 const createdMagicLinkTokens: string[] = [];
 const createdSafetyViolationMessages: string[] = [];
 const createdChatSessionUserIds: string[] = [];
+const createdEmailLinkCodes: string[] = [];
 
 /** Monotonic within a process; keeps generated emails/tokens unique. */
 let seq = 0;
@@ -203,6 +205,34 @@ export async function createMagicLinkToken(
 }
 
 /**
+ * Inserts an `email_link_codes` row — the per-send content snapshot the email
+ * rendering pipeline mints (server/lib/emailLinkCodes.ts) and the lander reads
+ * back by campaign to open with that email's authored continuation line.
+ *
+ * `campaign` must be unique per persona in the database
+ * (`uq_email_link_codes_persona_campaign`), so callers should stamp theirs;
+ * `code` is generated here and is the cleanup handle.
+ *
+ * Deleted explicitly by code — this table has no FK to `users`, so nothing
+ * cascades it away.
+ */
+export async function createEmailLinkCode(input: {
+  campaign: string;
+  continueSeed: string;
+  personaSlug?: string;
+}): Promise<string> {
+  const code = `fx-${stamp()}`.slice(0, 24);
+  await db.insert(emailLinkCodes).values({
+    code,
+    personaSlug: input.personaSlug ?? 'evelyn-cross',
+    campaign: input.campaign,
+    continueSeed: input.continueSeed,
+  });
+  createdEmailLinkCodes.push(code);
+  return code;
+}
+
+/**
  * Registers a user whose CHAT rows (chat_sessions + their chat_messages) a test
  * causes to exist — e.g. by calling initSession(), which creates the session itself
  * and hands back only its id.
@@ -268,6 +298,10 @@ export async function cleanupTestFixtures(): Promise<void> {
       .delete(safetyViolations)
       .where(inArray(safetyViolations.userMessage, createdSafetyViolationMessages));
     createdSafetyViolationMessages.length = 0;
+  }
+  if (createdEmailLinkCodes.length > 0) {
+    await db.delete(emailLinkCodes).where(inArray(emailLinkCodes.code, createdEmailLinkCodes));
+    createdEmailLinkCodes.length = 0;
   }
   if (createdUserIds.length > 0) {
     await db.delete(users).where(inArray(users.id, createdUserIds));

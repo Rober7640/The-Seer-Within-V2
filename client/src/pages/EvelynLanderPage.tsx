@@ -704,12 +704,14 @@ export default function EvelynLanderPage() {
   // inlining it inside the chatbox layout below would stack two backgrounds and
   // nest one card inside another.
   //
-  // continueSeed: the opener /start resolved for this visitor. NOTE — this is the
-  // segment-aware STATIC opener (evelynLanderEngine.selectStaticOpener), not the
-  // per-campaign `continueSeed` written in emailReadingBriefs.ts / minted into
-  // email_link_codes: no endpoint returns that value to the client today, so
-  // there is nothing better to pass. See the Task 12 report — until that gap is
-  // closed this arm continues the reader's EMAIL only in tone, not in specifics.
+  // continueSeed: the opener /start resolved for this visitor. Since Task 15 that
+  // IS the per-campaign authored `continueSeed` whenever `?campaign=` resolves to
+  // an email_link_codes row (server/routes/evelynLander.ts resolveCampaignOpener) —
+  // so an arrival from a short-linked email continues that letter in its own
+  // words. Every other visit still gets the segment-aware static opener
+  // (evelynLanderEngine.selectStaticOpener), which continues the EMAIL only in
+  // tone, not in specifics. Nothing to do here either way: this reads whatever
+  // /start returned.
   // Reading it off `messages` rather than a second piece of state keeps one
   // source of truth across all three postStart paths (success, network-failure
   // fallback, and history restored from sessionStorage after a refresh). Empty

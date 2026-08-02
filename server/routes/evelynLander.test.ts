@@ -30,9 +30,11 @@ import { verifyMagicLinkToken } from '../lib/magicLink';
 import { checkUniversalSafety } from '../lib/universalSafety';
 import { LIVE_THREAD_FREE_MINUTES } from '../lib/liveThreadEngagement';
 import logger from '../lib/logger';
+import { selectStaticOpener } from '../lib/evelynLanderEngine';
 import {
   createTestApp,
   createTestUser,
+  createEmailLinkCode,
   createMagicLinkToken,
   landerSessionToken,
   trackSafetyViolation,
@@ -989,5 +991,153 @@ describe('POST /api/evelyn-lander/check-email', { skip: !HAS_DB }, () => {
         `${accountStatus} must not receive a magic link`,
       );
     }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Task 15: the campaign's authored continuation line reaches the opener.
+//
+// The whole email→chat feature's premise is that the lander opens by continuing
+// the SPECIFIC email the reader clicked. That line is authored per-send in the
+// draft's `**Continue Seed:**` frontmatter and snapshotted into
+// `email_link_codes.continue_seed` by the rendering pipeline. /e/:code turns the
+// row into `?campaign=<slug>`, the client forwards it here — and until now
+// /start threw it away and returned the generic static opener to everyone.
+//
+// SOURCE OF TRUTH: the `email_link_codes` row, NOT the hardcoded
+// `emailReadingBriefs.ts` registry that the chat engine reads. See
+// resolveCampaignContinueSeed() in server/lib/emailLinkCodes.ts for the full
+// reasoning; the short version is that the row is what the operator authors and
+// what the reader's own link was built from.
+//
+// The comparisons below are made against selectStaticOpener() itself rather than
+// against copied copy, so a future rewording of Evelyn's generic lines can't turn
+// these into false passes (or false failures).
+describe('POST /api/evelyn-lander/start — campaign continueSeed opener', { skip: !HAS_DB }, () => {
+  const START = '/api/evelyn-lander/start';
+  const brandNewOpener = selectStaticOpener({ firstName: null, bucket: null, isReturning: false });
+
+  function campaignSlug(label: string): string {
+    return `t15-${label}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  }
+
+  it("opens with the campaign's authored seed when the campaign resolves", async () => {
+    const campaign = campaignSlug('resolves');
+    const seed =
+      "You came to tell me about your fence — good. Tell me what it is you keep painting the same color.";
+    await createEmailLinkCode({ campaign, continueSeed: seed });
+
+    const sessionToken = landerSessionToken('t15-resolves');
+    const res = await request(app).post(START).send({ sessionToken, campaign });
+
+    assert.equal(res.status, 200);
+    assert.equal(res.body.opener, seed);
+    assert.notEqual(res.body.opener, brandNewOpener);
+
+    // Everything else about /start is unchanged — the campaign is still recorded
+    // on the session row, which is what arrivalReading.ts later reads.
+    const [row] = await db
+      .select()
+      .from(evelynLanderSessions)
+      .where(eq(evelynLanderSessions.sessionToken, sessionToken))
+      .limit(1);
+    assert.equal(row.campaign, campaign);
+    assert.equal(res.body.segment, 'brand_new');
+  });
+
+  // The trade-off this task accepts, made explicit: for a reader whose email
+  // param identifies an existing account, the authored line REPLACES the
+  // segment-aware "Welcome back, <name>" opener. That is the intent — the seed
+  // continues the specific letter they just read, which is more specific than a
+  // name — but it is a real behavioural change, so it is pinned by a test rather
+  // than left as an accident.
+  it("prefers the authored seed over the returning reader's segment opener", async () => {
+    const campaign = campaignSlug('returning');
+    const seed = 'You came to name your loop — good. Tell me the sentence.';
+    await createEmailLinkCode({ campaign, continueSeed: seed });
+    const user = await createTestUser({ firstName: 'Nadia', passwordHash: 'x' });
+
+    const sessionToken = landerSessionToken('t15-returning');
+    const res = await request(app).post(START).send({ sessionToken, campaign, email: user.email });
+
+    assert.equal(res.status, 200);
+    assert.equal(res.body.segment, 'v2_password');
+    assert.equal(res.body.isReturning, true);
+    assert.equal(res.body.firstName, 'Nadia');
+    assert.equal(res.body.opener, seed);
+    assert.notEqual(
+      res.body.opener,
+      selectStaticOpener({ firstName: 'Nadia', bucket: null, isReturning: true }),
+    );
+  });
+
+  it('falls back to the static opener for a campaign with no minted row', async () => {
+    const sessionToken = landerSessionToken('t15-unknown');
+    const res = await request(app)
+      .post(START)
+      .send({ sessionToken, campaign: campaignSlug('never-minted') });
+
+    assert.equal(res.status, 200);
+    assert.equal(res.body.opener, brandNewOpener);
+  });
+
+  it('falls back to the static opener when no campaign is supplied at all', async () => {
+    const sessionToken = landerSessionToken('t15-nocampaign');
+    const res = await request(app).post(START).send({ sessionToken, bucket: 'love' });
+
+    assert.equal(res.status, 200);
+    assert.equal(
+      res.body.opener,
+      selectStaticOpener({ firstName: null, bucket: 'love', isReturning: false }),
+    );
+  });
+
+  // `campaign` is a reader-supplied query param: anyone can type any slug. The
+  // content it can reach is operator-authored marketing copy that already went
+  // out to a whole list, so there is nothing private to leak — but it must never
+  // cross personas, or a reader could put Luna's authored line in Evelyn's mouth
+  // by guessing a slug. The lookup is keyed on (persona, campaign) for exactly
+  // this reason.
+  it("does not serve another persona's authored seed for the same campaign slug", async () => {
+    const campaign = campaignSlug('cross-persona');
+    await createEmailLinkCode({
+      campaign,
+      continueSeed: "Luna here — the sky moved for you this week, and I want to show you where.",
+      personaSlug: 'luna-voss',
+    });
+
+    const sessionToken = landerSessionToken('t15-crosspersona');
+    const res = await request(app).post(START).send({ sessionToken, campaign });
+
+    assert.equal(res.status, 200);
+    assert.equal(res.body.opener, brandNewOpener);
+  });
+
+  // Beyond the brief, both of these — but both are ways the authored value can
+  // make the lander WORSE than the fallback it replaced, so each gets a test.
+  it('falls back when the authored seed is blank', async () => {
+    const campaign = campaignSlug('blank');
+    await createEmailLinkCode({ campaign, continueSeed: '   \n  ' });
+
+    const sessionToken = landerSessionToken('t15-blank');
+    const res = await request(app).post(START).send({ sessionToken, campaign });
+
+    assert.equal(res.status, 200);
+    assert.equal(res.body.opener, brandNewOpener);
+  });
+
+  // POST /turn validates every history entry at .max(2000) (turnSchema in
+  // evelynLander.ts) and the chatbox arm replays the opener back as history[0].
+  // An over-long seed would therefore 400 the reader's FIRST message — a worse
+  // outcome than a generic opener — so it is refused here instead.
+  it('falls back when the authored seed exceeds what POST /turn accepts as history', async () => {
+    const campaign = campaignSlug('toolong');
+    await createEmailLinkCode({ campaign, continueSeed: 'x'.repeat(2001) });
+
+    const sessionToken = landerSessionToken('t15-toolong');
+    const res = await request(app).post(START).send({ sessionToken, campaign });
+
+    assert.equal(res.status, 200);
+    assert.equal(res.body.opener, brandNewOpener);
   });
 });

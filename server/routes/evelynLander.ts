@@ -1,7 +1,10 @@
 // Evelyn Lander backend — segment resolution, anonymous chat, auth handoff.
 //
 //   POST /api/evelyn-lander/start  → resolve segment, insert session row,
-//                                    return Evelyn's static opener. Reads an
+//                                    return an opener: the campaign's AUTHORED
+//                                    continuation line when `campaign` resolves
+//                                    to an email_link_codes row, else Evelyn's
+//                                    static opener. Reads an
 //                                    optional `Authorization: Bearer <jwt>`:
 //                                    a verified, active account resolves to
 //                                    'v2_active'. Precedence is
@@ -35,6 +38,7 @@ import { accountDetectionLimiter, landerLimiter, landerTurnLimiter } from '../li
 import { checkAndLogSafety } from '../lib/universalSafety';
 import { getCountryFromIP } from '../lib/crisisHotlines';
 import { verifyTurnstileToken } from '../lib/turnstile';
+import { resolveCampaignContinueSeed } from '../lib/emailLinkCodes';
 import {
   selectStaticOpener,
   generateTurnReply,
@@ -45,6 +49,17 @@ import logger from '../lib/logger';
 
 // Hard cap on user messages allowed in the lander chat (PRD §6.3 — turn 5 = CTA).
 const MAX_USER_MESSAGES = 2;
+
+// The longest authored seed /start will serve as the opener. Not a style rule:
+// turnSchema below caps every `history` entry at 2000 chars, and the chatbox arm
+// replays the opener back as history[0] on the reader's first message
+// (EvelynLanderPage.tsx). A longer seed would 400 that message — strictly worse
+// for the reader than the generic opener — so an over-long one is declined here.
+const MAX_OPENER_CHARS = 2000;
+
+// This whole rollout is Evelyn-only. Used by /check-email's magic link and by
+// the campaign-opener lookup in /start, which must stay persona-scoped.
+const EVELYN_SLUG = 'evelyn-cross';
 
 const router = Router();
 
@@ -242,6 +257,45 @@ router.post('/start', landerLimiter, async (req: Request, res: Response) => {
   }
 });
 
+/**
+ * The authored opener for `campaign`, or null to use the static one.
+ *
+ * `campaign` is READER-SUPPLIED — it arrives in the query string and anyone can
+ * type any slug. Two consequences, both handled here:
+ *
+ *   - Nothing private is reachable. An email_link_codes row holds one send's
+ *     marketing copy, snapshotted at render time and already mailed to a whole
+ *     list; there is no per-recipient data in it. So a reader guessing a slug of
+ *     a send they never received gets a slightly-odd opening line, not a leak.
+ *   - It must not cross personas. The lookup is keyed on (EVELYN_SLUG, campaign),
+ *     the pair the table's unique index is built on, so a guessed Luna or Aiden
+ *     slug can never put that persona's authored line in Evelyn's mouth.
+ *
+ * Never throws: a DB blip here must degrade to the static opener, not 500 a
+ * reader's arrival on the one page this whole feature funnels into.
+ */
+async function resolveCampaignOpener(campaign: string | undefined): Promise<string | null> {
+  if (!campaign) return null;
+  try {
+    const seed = await resolveCampaignContinueSeed(EVELYN_SLUG, campaign);
+    if (!seed) return null;
+    if (seed.length > MAX_OPENER_CHARS) {
+      logger.warn('evelyn-lander: authored continueSeed too long for the opener, using static', {
+        campaign,
+        length: seed.length,
+      });
+      return null;
+    }
+    return seed;
+  } catch (error: any) {
+    logger.error('evelyn-lander: continueSeed lookup failed, using static opener', {
+      campaign,
+      error: error?.message,
+    });
+    return null;
+  }
+}
+
 async function resolveAndInsert(
   req: Request,
   res: Response,
@@ -275,12 +329,34 @@ async function resolveAndInsert(
     }
   }
 
-  // Static opener (no Haiku call here — PRD §9 prefetcher protection).
-  const opener = selectStaticOpener({
-    firstName: resolved.firstName,
-    bucket: (data.bucket as Bucket | undefined) ?? null,
-    isReturning: resolved.isReturning,
-  });
+  // The opener. Two sources, in order:
+  //
+  //   1. The campaign's AUTHORED continuation line, when `?campaign=` resolves to
+  //      an email_link_codes row for Evelyn. This is the point of the whole
+  //      email→chat feature: the lander opens by continuing the specific letter
+  //      the reader just clicked, in the words the operator wrote for that send.
+  //   2. Otherwise the segment-aware static opener, exactly as before.
+  //
+  // Still no Haiku call either way (PRD §9 prefetcher protection) — this is a
+  // single indexed row read, not a generation.
+  //
+  // WHAT THIS CHANGES FOR EXISTING READERS: `campaign` reaches BOTH lander arms.
+  // The quiz arm discards the opener, but the chatbox arm renders it and replays
+  // it into /turn as history[0], so a resolving campaign visibly changes the live
+  // chatbox — including replacing the "Welcome back, <name>" line a returning
+  // reader would otherwise get. That is intended (the seed continues the letter
+  // they actually read, which is more specific than their name), and it only
+  // engages for campaigns that have a minted row: every organic visit, every
+  // legacy `?campaign=` email, and every unknown slug degrade to case 2 exactly
+  // as today.
+  const campaignOpener = await resolveCampaignOpener(data.campaign);
+  const opener =
+    campaignOpener ??
+    selectStaticOpener({
+      firstName: resolved.firstName,
+      bucket: (data.bucket as Bucket | undefined) ?? null,
+      isReturning: resolved.isReturning,
+    });
 
   res.json({
     segment: resolved.segment,
@@ -696,8 +772,6 @@ const checkEmailSchema = z.object({
   // field in this file.
   sessionToken: z.string().min(8).max(128).optional(),
 });
-
-const EVELYN_SLUG = 'evelyn-cross';
 
 /**
  * Mail an existing VERIFIED account a magic link back into the Evelyn thread.

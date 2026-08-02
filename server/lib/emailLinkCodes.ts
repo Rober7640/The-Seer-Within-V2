@@ -172,6 +172,50 @@ export async function upsertEmailLinkCodeForCampaign(
   return { code: row.code, action: 'updated' };
 }
 
+/**
+ * The authored continuation line for a (persona, campaign), or null.
+ *
+ * SOURCE OF TRUTH. `continueSeed` also exists in the hardcoded registry
+ * `server/lib/emailReadingBriefs.ts`, which the chat engine reads
+ * (arrivalReading.ts). This table wins for anything lander-facing, for three
+ * reasons:
+ *   1. It is what the operator actually authors. The seed is written in the
+ *      email draft's `**Continue Seed:**` frontmatter and snapshotted here by
+ *      the rendering pipeline (render-aweber.mjs); the registry is a
+ *      hand-maintained copy of that same text — its own header already says
+ *      "the draft frontmatter is the authoring source, so copy from it, not
+ *      the other way round."
+ *   2. It is a per-send SNAPSHOT taken at render time, so it still says what
+ *      the email in the reader's inbox said even after the draft moves on.
+ *   3. The `?campaign=` a short-link reader arrives with was itself written by
+ *      /e/:code off THIS row (emailLinkRedirect.ts), so reading the row back is
+ *      re-reading the same record rather than consulting a second copy of it.
+ *
+ * Keyed on (personaSlug, campaign) — the pair `uq_email_link_codes_persona_campaign`
+ * makes unique — and NOT on campaign alone: `campaign` arrives as a
+ * reader-supplied query param, and a bare campaign lookup would happily put
+ * another persona's authored line in this persona's mouth.
+ *
+ * Returns null for a campaign with no row, and for a row whose seed is blank —
+ * callers fall back to their own generic opener, so an empty string must not be
+ * mistaken for "resolved".
+ */
+export async function resolveCampaignContinueSeed(
+  personaSlug: string,
+  campaign: string,
+): Promise<string | null> {
+  if (!campaign) return null;
+  const rows = await db
+    .select({ continueSeed: emailLinkCodes.continueSeed })
+    .from(emailLinkCodes)
+    .where(
+      and(eq(emailLinkCodes.personaSlug, personaSlug), eq(emailLinkCodes.campaign, campaign)),
+    )
+    .limit(1);
+  const seed = rows[0]?.continueSeed?.trim();
+  return seed ? seed : null;
+}
+
 export async function resolveEmailLinkCode(code: string): Promise<ResolvedEmailLink | null> {
   const rows = await db.select().from(emailLinkCodes).where(eq(emailLinkCodes.code, code)).limit(1);
   if (rows.length === 0) return null;
