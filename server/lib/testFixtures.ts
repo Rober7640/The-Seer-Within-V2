@@ -76,7 +76,6 @@ export function createTestApp(mountPath: string, router: Router): Express {
   // and why .env alone is not safe (it holds the production values).
   assertNoOutboundCalls();
 
-
   // Routers under test carry the real rate limiters, which disable themselves
   // ONLY via rateLimiter.ts:3 (`NODE_ENV === 'test' || DISABLE_RATE_LIMIT === 'true'`).
   // landerLimiter is 5 requests/hour/IP in production mode, and a single suite

@@ -2,9 +2,10 @@ import { describe, it, after } from 'node:test';
 import assert from 'node:assert/strict';
 import express from 'express';
 import request from 'supertest';
-import { assertLocalDb } from '../lib/testGuards';
+import { assertLocalDb, assertNoOutboundCalls } from '../lib/testGuards';
 
 assertLocalDb();
+assertNoOutboundCalls();
 
 import { inArray } from 'drizzle-orm';
 import { db, pool } from '../lib/db';

@@ -36,7 +36,7 @@
 // Every lookup silent-fails to false, so a DB hiccup degrades a reader to a LOWER tier
 // rather than blocking verification. Under-granting is the safe direction to be wrong in.
 
-import { and, eq } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import { db } from './db';
 import { evelynLanderSessions, personas, soulmateLanderSessions } from '@shared/schema';
 import { isFromLunaThankyouOffer } from './lunaThankyouGift';

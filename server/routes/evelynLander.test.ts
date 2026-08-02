@@ -819,7 +819,8 @@ describe('POST /api/evelyn-lander/check-email', { skip: !HAS_DB }, () => {
     });
 
     // The Live Thread tier. Once linked, a session carrying a pendingReply makes
-    // isFromEvelynLiveThread() (auth.ts) true at verify time, which selects
+    // userHasLiveThreadReply() (liveThreadEngagement.ts), read via
+    // resolveWelcomeGrantTier(), true at verify time, which selects
     // LIVE_THREAD_FREE_COINS over EVELYN_LANDER_FREE_COINS — so quoting 5 here would
     // under-promise against a grant this route itself just enabled.
     it('quotes the Live Thread amount when the linked session carries a pendingReply', async () => {
