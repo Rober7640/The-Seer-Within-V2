@@ -14,7 +14,7 @@
 // already tears down everything those helpers handed out and closes the pool —
 // do not add a second `pool.end()`, it would kill any suite that runs after it.
 
-import { describe, it, after } from 'node:test';
+import { describe, it, after, mock } from 'node:test';
 import assert from 'node:assert/strict';
 import request from 'supertest';
 import jwt from 'jsonwebtoken';
@@ -28,6 +28,7 @@ import { evelynLanderSessions, magicLinkTokens, personas, safetyViolations, user
 import { generateToken } from '../lib/auth';
 import { verifyMagicLinkToken } from '../lib/magicLink';
 import { checkUniversalSafety } from '../lib/universalSafety';
+import logger from '../lib/logger';
 import {
   createTestApp,
   createTestUser,
@@ -714,6 +715,171 @@ describe('POST /api/evelyn-lander/check-email', { skip: !HAS_DB }, () => {
 
       assert.equal(res.status, 200);
       assert.equal(res.body.outcome, 'verified_match');
+    });
+
+    // no_match must not link anything — there is no user to link to. Correct today
+    // only because of the early return before linkSessionToUser(), which nothing
+    // else pins.
+    it('leaves resolvedUserId NULL for a no_match even when a sessionToken is sent', async () => {
+      const sessionToken = await startSession('check-nomatch');
+
+      const res = await request(app)
+        .post(CHECK_EMAIL)
+        .send({ email: `nobody-${Date.now()}-${process.pid}@eval.internal`, sessionToken });
+
+      assert.equal(res.body.outcome, 'no_match');
+
+      const [after] = await sessionRow(sessionToken);
+      assert.equal(after.resolvedUserId, null);
+    });
+
+    // resolveSegment() deliberately refuses to resolve non-active accounts
+    // (evelynLander.ts:188-195), and linking one here would hand a banned reader the
+    // 5-minute lander grant and a nurture-drip enrolment at verify time. The outcome
+    // string must stay identical so the route isn't an account-status oracle.
+    it('does not link the session for a non-active account, without changing the outcome', async () => {
+      for (const accountStatus of ['banned', 'suspended', 'flagged_for_review']) {
+        const user = await createTestUser({ emailVerified: true, accountStatus });
+        const sessionToken = await startSession(`check-inactive-${accountStatus}`);
+
+        const res = await request(app).post(CHECK_EMAIL).send({ email: user.email, sessionToken });
+
+        assert.equal(res.body.outcome, 'verified_match', `${accountStatus} outcome must be unchanged`);
+        const [after] = await sessionRow(sessionToken);
+        assert.equal(after.resolvedUserId, null, `${accountStatus} must not be linked`);
+      }
+    });
+  });
+
+  // The free-minutes quote must match the grant the reader will actually receive.
+  // Writing resolved_user_id is NOT inert: isFromEvelynLander() (auth.ts:132-143)
+  // returns true on the mere existence of a linked row, which selects
+  // EVELYN_LANDER_FREE_COINS (5 min) over the persona default (3) and gates
+  // scheduleEvelynVerifiedDrip. So passing `source` is a claim about a grant this
+  // route itself just caused, and getting it backwards is the mismatch
+  // verificationEmail.ts:50-51 warns about.
+  //
+  // Observed via the route's own log line, which carries the number
+  // reissueVerificationEmail() resolved through the real getFreeMinutesForSignup()
+  // — i.e. the number the email body actually printed, not a re-derivation.
+  describe('free-minutes quote matches the grant', () => {
+    function captureReissueLogs(): { entries: any[]; restore: () => void } {
+      const entries: any[] = [];
+      const spy = mock.method(logger, 'info', (message: any, meta?: any) => {
+        if (message === 'evelyn-lander check-email: verification reissued') entries.push(meta);
+      });
+      return { entries, restore: () => spy.mock.restore() };
+    }
+
+    async function evelynPersonaId(): Promise<string> {
+      const [row] = await db
+        .select({ id: personas.id })
+        .from(personas)
+        .where(eq(personas.slug, 'evelyn-cross'))
+        .limit(1);
+      assert.ok(row, "local DB must be seeded with 'evelyn-cross' (npm run seed)");
+      return row!.id;
+    }
+
+    async function startSession(label: string): Promise<string> {
+      const sessionToken = landerSessionToken(label);
+      await request(app)
+        .post('/api/evelyn-lander/start')
+        .send({ sessionToken, campaign: 'check-email-test-campaign' });
+      return sessionToken;
+    }
+
+    it('quotes 5 when the session link makes them an Evelyn-lander signup', async () => {
+      const user = await createTestUser({
+        emailVerified: false,
+        defaultPersonaId: await evelynPersonaId(),
+      });
+      const sessionToken = await startSession('quote-linked');
+
+      const capture = captureReissueLogs();
+      try {
+        await request(app).post(CHECK_EMAIL).send({ email: user.email, sessionToken });
+      } finally {
+        capture.restore();
+      }
+
+      assert.equal(capture.entries.length, 1);
+      assert.equal(capture.entries[0].landerLinked, true);
+      assert.equal(capture.entries[0].freeMinutesQuoted, 5);
+
+      // The other half of the lockstep: the row isFromEvelynLander() will find.
+      const [row] = await db
+        .select()
+        .from(evelynLanderSessions)
+        .where(eq(evelynLanderSessions.sessionToken, sessionToken))
+        .limit(1);
+      assert.equal(row.resolvedUserId, user.id);
+    });
+
+    it('quotes 3 when no session links them, so the grant stays the persona default', async () => {
+      const user = await createTestUser({
+        emailVerified: false,
+        defaultPersonaId: await evelynPersonaId(),
+      });
+
+      const capture = captureReissueLogs();
+      try {
+        // No sessionToken at all — nothing to link, so isFromEvelynLander() is false.
+        await request(app).post(CHECK_EMAIL).send({ email: user.email });
+      } finally {
+        capture.restore();
+      }
+
+      assert.equal(capture.entries.length, 1);
+      assert.equal(capture.entries[0].landerLinked, false);
+      assert.equal(capture.entries[0].freeMinutesQuoted, 3);
+    });
+
+    // THE TRAP. On a second submission the UPDATE matches zero rows, because
+    // resolved_user_id is already set to this same user — but the row still EXISTS,
+    // so isFromEvelynLander() is still true and the grant is still 5. Keying the
+    // decision off "did the update write anything" would quote 3 here while granting
+    // 5, which is the mismatch pointing the worse way.
+    it('still quotes 5 on a repeat submission whose link write is a no-op', async () => {
+      const user = await createTestUser({
+        emailVerified: false,
+        defaultPersonaId: await evelynPersonaId(),
+      });
+      const sessionToken = await startSession('quote-relink');
+
+      // First call establishes the link.
+      await request(app).post(CHECK_EMAIL).send({ email: user.email, sessionToken });
+
+      const capture = captureReissueLogs();
+      try {
+        await request(app).post(CHECK_EMAIL).send({ email: user.email, sessionToken });
+      } finally {
+        capture.restore();
+      }
+
+      assert.equal(capture.entries.length, 1);
+      assert.equal(capture.entries[0].landerLinked, true, 'existence, not rows-updated, decides');
+      assert.equal(capture.entries[0].freeMinutesQuoted, 5);
+    });
+
+    // The persona half of getFreeMinutesForSignup's condition. A linked row is not
+    // enough: isEvelynUser(defaultPersonaId) must also hold, and with no default
+    // persona both sides fall to 3 — proving the two conditions really do move
+    // together rather than the quote depending on the link alone.
+    it('quotes 3 for a linked reader whose default persona is not Evelyn', async () => {
+      const user = await createTestUser({ emailVerified: false, defaultPersonaId: null });
+      const sessionToken = await startSession('quote-nonevelyn');
+
+      const capture = captureReissueLogs();
+      try {
+        await request(app).post(CHECK_EMAIL).send({ email: user.email, sessionToken });
+      } finally {
+        capture.restore();
+      }
+
+      assert.equal(capture.entries.length, 1);
+      assert.equal(capture.entries[0].landerLinked, true, 'the link itself is written');
+      assert.equal(capture.entries[0].freeMinutesQuoted, 3, 'but the persona half fails, so 3');
     });
   });
 

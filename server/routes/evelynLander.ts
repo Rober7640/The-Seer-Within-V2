@@ -775,6 +775,42 @@ async function sendLiveThreadMagicLink(user: {
  * (a live magic token, or a JWT) is never clobbered by a different email typed into
  * the box afterwards.
  */
+/**
+ * Whether the verification grant will treat this reader as an Evelyn-lander signup.
+ *
+ * Deliberately the SAME existence check isFromEvelynLander() runs (auth.ts:132-143):
+ * any evelyn_lander_sessions row whose resolved_user_id is this user. Two consequences
+ * that are easy to get backwards, so they're spelled out:
+ *
+ *   - It asks whether a row EXISTS, not whether linkSessionToUser() just wrote one.
+ *     When the session was already linked to this same user the UPDATE matches zero
+ *     rows, but the row is still there and the grant still fires — keying off the
+ *     update's row count would quote 3 while granting 5.
+ *   - Any row counts, not only this visit's. A reader with an older linked session
+ *     is already eligible even if no sessionToken was supplied this time.
+ *
+ * The persona half of the condition needs no handling here: reissueVerificationEmail()
+ * resolves personaSlug from defaultPersonaId, and getFreeMinutesForSignup() only
+ * returns 5 when that slug is 'evelyn-cross' (verificationEmail.ts:52-58) — precisely
+ * when isEvelynUser() would be true. The two sides move together by construction.
+ *
+ * Silent-fails to false, mirroring isFromEvelynLander(): if the lookup errors, the
+ * grant may still fire while the copy quotes 3. Under-promising is the safe direction.
+ */
+async function hasEvelynLanderLink(userId: string): Promise<boolean> {
+  try {
+    const rows = await db
+      .select({ id: evelynLanderSessions.id })
+      .from(evelynLanderSessions)
+      .where(eq(evelynLanderSessions.resolvedUserId, userId))
+      .limit(1);
+    return rows.length > 0;
+  } catch (error: any) {
+    logger.warn('evelyn-lander check-email: lander-link lookup failed', { error: error?.message });
+    return false;
+  }
+}
+
 async function linkSessionToUser(sessionToken: string | undefined, userId: string): Promise<void> {
   if (!sessionToken) return;
   try {
@@ -826,10 +862,20 @@ router.post('/check-email', accountDetectionLimiter, async (req: Request, res: R
       return res.json({ outcome: 'no_match' });
     }
 
-    // Any match — verified or not — is the moment this reader stops being
-    // anonymous, so link the session either way. Both post-auth routes
-    // (verify-email and magic-verify) need it to find their pendingReply.
-    await linkSessionToUser(parsed.data.sessionToken, existing.id);
+    // Any match — verified or not — is the moment this reader stops being anonymous,
+    // so link the session either way. Both post-auth routes (verify-email and
+    // magic-verify) need it to find their pendingReply.
+    //
+    // Gated on accountStatus for the same reason resolveSegment() returns
+    // resolvedUserId: null for non-active accounts (:188-195 — "treat as brand-new
+    // opener... but DO record the lookup"), and matching sendLiveThreadMagicLink()'s
+    // own gate below: a banned/suspended reader has no way back in, so writing a link
+    // that grants them lander minutes and enrols them in a nurture drip would be
+    // wrong. The OUTCOME is unchanged either way, so this stays invisible to the
+    // caller and the route never becomes an account-status oracle.
+    if (existing.accountStatus === 'active') {
+      await linkSessionToUser(parsed.data.sessionToken, existing.id);
+    }
 
     if (existing.emailVerified) {
       await sendLiveThreadMagicLink(existing);
@@ -837,14 +883,27 @@ router.post('/check-email', accountDetectionLimiter, async (req: Request, res: R
     }
 
     // Shared with POST /api/auth/resend-verification, so the 24-hour expiry has a
-    // single definition. `source` is deliberately omitted: passing 'evelyn-lander'
-    // would make the copy promise 5 free minutes, but the grant is decided at verify
-    // time by isFromEvelynLander() (auth.ts:126), which needs an
-    // evelyn_lander_sessions row already resolved to this user. linkSessionToUser()
-    // above only just created that link, and only when a sessionToken was supplied —
-    // too conditional to promise a number on. The persona still falls back to the
-    // user's own defaultPersonaId inside the shared function.
-    await reissueVerificationEmail(existing);
+    // single definition.
+    //
+    // `source` is passed exactly when the reader will genuinely receive the
+    // Evelyn-lander grant. The link written just above is what makes
+    // isFromEvelynLander() true at verify time, selecting EVELYN_LANDER_FREE_COINS
+    // (5 min) over the persona default (3) and enrolling them in the Evelyn verified
+    // drip — so the copy has to quote 5 too, or it contradicts the write it just
+    // caused. Evaluated AFTER the link, and by row existence rather than rows-updated:
+    // see hasEvelynLanderLink() for why that distinction decides the answer.
+    const landerLinked = await hasEvelynLanderLink(existing.id);
+    const { freeMinutesQuoted } = await reissueVerificationEmail(
+      existing,
+      landerLinked ? { source: 'evelyn-lander' } : {},
+    );
+    // Logged because a minutes mismatch is otherwise invisible until a reader
+    // complains: this records what the copy promised and why.
+    logger.info('evelyn-lander check-email: verification reissued', {
+      userId: existing.id,
+      landerLinked,
+      freeMinutesQuoted,
+    });
     return res.json({ outcome: 'unverified_match' });
   } catch (error: any) {
     logger.error('evelyn-lander check-email error', { error: error?.message });

@@ -304,7 +304,7 @@ export interface ReissueVerificationUser {
 export async function reissueVerificationEmail(
   user: ReissueVerificationUser,
   opts: { personaSlug?: string; source?: string } = {},
-): Promise<void> {
+): Promise<{ personaSlug?: string; freeMinutesQuoted: number }> {
   // Generate new token
   const verificationToken = randomUUID();
 
@@ -331,4 +331,9 @@ export async function reissueVerificationEmail(
   // "verify to receive them". Uses the actual grant marker, so it's accurate regardless
   // of the flag's current state.
   await sendVerificationEmail(user.email, user.firstName, verificationToken, personaSlug, opts.source, user.welcomeCoinsGrantedAt != null);
+
+  // Report back the number the copy actually quoted (same inputs sendVerificationEmail
+  // resolves it from). Callers that decide `source` conditionally need this to log —
+  // and to assert — that the quote matches the grant the reader will really receive.
+  return { personaSlug, freeMinutesQuoted: getFreeMinutesForSignup(personaSlug, opts.source) };
 }
