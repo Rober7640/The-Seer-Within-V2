@@ -56,7 +56,30 @@ emailLinkRedirectRouter.get('/e/:code', async (req, res) => {
     return;
   }
 
+  // Rebuild the query string the legacy `?campaign=` email link used to carry.
+  // These are SYNTHESIZED from the resolved row, never forwarded from the
+  // incoming request: the whole reason the campaign travels as a path segment
+  // is that query params get stripped by link-privacy proxies and mangled by
+  // ESP click wrappers, so anything we forwarded would be exactly as fragile
+  // as what the short link replaced.
+  //
+  // `bucket` is load-bearing, not analytics — it selects Drip 1's
+  // bucket-specific phrase (server/lib/evelynVerifiedDripGenerator.ts
+  // BUCKET_PHRASES) via the signup destination EvelynLanderPage builds, and it
+  // is recorded on the lander session. Drop it and every short-link signup
+  // silently gets the generic fallback line.
   const params = new URLSearchParams({ campaign: resolved.campaign });
+  if (resolved.bucket) params.set('bucket', resolved.bucket);
+  if (resolved.src) {
+    params.set('src', resolved.src);
+    params.set('utm_source', resolved.src);
+  }
+  // utm_medium is a constant for this route by construction: /e/:code only
+  // ever appears inside an email body. utm_campaign mirrors the campaign, as
+  // the legacy link did.
+  params.set('utm_medium', 'email');
+  params.set('utm_campaign', resolved.campaign);
+
   const email = req.query.email;
   if (typeof email === 'string' && email.length > 0) {
     params.set('email', email);

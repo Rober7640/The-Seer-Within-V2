@@ -33,11 +33,48 @@ async function cancel(ids) {
   console.log(`cancelled ${ids.length} -> draft.`);
 }
 
-async function schedule(buildDir) {
-  const index = JSON.parse(fs.readFileSync(path.join(buildDir, 'index.json'), 'utf8'));
+// A short-linked send's /e/<code> only resolves if the code was minted into
+// the database the live site reads. Production is Supabase; anything else
+// (localhost, a staging pooler) means every reader who clicks bounces to
+// /personas — and nothing else in this pipeline would notice, because the
+// rendered HTML looks perfect either way. This is the last point at which
+// that is recoverable, so it is checked here and it is not overridable.
+const PRODUCTION_DB_HOST = /\.supabase\.(com|co)$/;
+
+/** Pre-flight the WHOLE index before creating anything. Scheduling is not
+ *  atomic — a mid-batch abort leaves the earlier sends live — so every check
+ *  that can be made without calling AWeber is made here first. */
+function preflight(index) {
   for (const e of index) {
     if (!e.scheduled_for) { console.error(`STOP: #${e.num} has no scheduled_for.`); process.exit(1); }
     if (e.subject_bytes > 120) { console.error(`STOP: #${e.num} subject ${e.subject_bytes}b > 120.`); process.exit(1); }
+    if (e.link_kind !== 'short') continue;
+
+    if (!e.minted_into) {
+      console.error(`STOP: #${e.num} (${e.slug}) is short-linked but its index.json has no minted_into.`);
+      console.error('  It was built by an older render. Re-render it so the mint target is recorded.');
+      process.exit(1);
+    }
+    const host = String(e.minted_into).split('@').pop();
+    if (!PRODUCTION_DB_HOST.test(host)) {
+      console.error(`STOP: #${e.num} (${e.slug}) was minted into ${e.minted_into}, not production.`);
+      console.error(`  Its link is https://www.theseerwithin.com/e/${e.code} — that code does not`);
+      console.error('  exist in the production database, so every reader who clicks would land on');
+      console.error('  /personas. Re-render against production before scheduling:');
+      console.error('    npx tsx --env-file=../../../../.env render-aweber.mjs <sendsDir> --mint-production');
+      process.exit(1);
+    }
+  }
+  const short = index.filter(e => e.link_kind === 'short');
+  if (short.length) {
+    console.log(`preflight: ${short.length} short-linked send(s), all minted into ${short[0].minted_into}.`);
+  }
+}
+
+async function schedule(buildDir) {
+  const index = JSON.parse(fs.readFileSync(path.join(buildDir, 'index.json'), 'utf8'));
+  preflight(index);
+  for (const e of index) {
     const c = await api('POST', `${BASE}/broadcasts`, { form: {
       subject: e.subject,
       body_html: fs.readFileSync(path.join(buildDir, e.html_file), 'utf8'),

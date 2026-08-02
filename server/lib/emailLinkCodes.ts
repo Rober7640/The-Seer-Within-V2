@@ -17,6 +17,10 @@ export interface ResolvedEmailLink {
   readingRecap: string | null;
   openLoop: string | null;
   continueSeed: string;
+  /** Lander context the legacy `?bucket=&src=` query string carried; the
+   *  redirector rebuilds the query string from these. See shared/schema.ts. */
+  bucket: string | null;
+  src: string | null;
 }
 
 export interface MintEmailLinkCodeInput {
@@ -25,6 +29,8 @@ export interface MintEmailLinkCodeInput {
   continueSeed: string;
   readingRecap?: string;
   openLoop?: string;
+  bucket?: string;
+  src?: string;
 }
 
 export interface UpsertEmailLinkCodeResult {
@@ -81,6 +87,8 @@ export async function mintEmailLinkCode(
         continueSeed: input.continueSeed,
         readingRecap: input.readingRecap ?? null,
         openLoop: input.openLoop ?? null,
+        bucket: input.bucket ?? null,
+        src: input.src ?? null,
       });
       return code;
     } catch (err) {
@@ -110,15 +118,16 @@ export async function mintEmailLinkCode(
  *
  * Updating in place rather than minting anew is the point: the reader's link
  * stays valid while the continuation content stays in sync with what the email
- * actually says. The schema has an index on `campaign` but no unique
- * constraint, so uniqueness here is by convention rather than enforcement — if
- * duplicates ever exist, the OLDEST row wins (ties broken by code), because
- * that is the one most likely to be sitting in an already-scheduled email.
+ * actually says.
  *
- * Not concurrency-safe by design: two simultaneous renders of the same
- * campaign could both see "no row" and both mint. This is a hand-run authoring
- * tool with a single operator, and a later run converges back on the oldest
- * row, so a lock or a unique constraint would be cost without a matching risk.
+ * The read-then-write below is not atomic, but it doesn't have to be: the
+ * `uq_email_link_codes_persona_campaign` unique index enforces the invariant
+ * this function assumes. If two renders race, the loser's INSERT fails with a
+ * unique_violation on THAT index, which `isCodeCollision` deliberately does not
+ * treat as a retryable code collision — so it surfaces as an error instead of
+ * quietly producing a second code for the same campaign. Duplicates are
+ * therefore impossible rather than merely unlikely; the `orderBy` is a
+ * belt-and-braces determinism guard, not a duplicate-resolution strategy.
  */
 export async function upsertEmailLinkCodeForCampaign(
   input: MintEmailLinkCodeInput,
@@ -142,18 +151,22 @@ export async function upsertEmailLinkCodeForCampaign(
   const row = existing[0];
   const readingRecap = input.readingRecap ?? null;
   const openLoop = input.openLoop ?? null;
+  const bucket = input.bucket ?? null;
+  const src = input.src ?? null;
 
   if (
     row.continueSeed === input.continueSeed &&
     row.readingRecap === readingRecap &&
-    row.openLoop === openLoop
+    row.openLoop === openLoop &&
+    row.bucket === bucket &&
+    row.src === src
   ) {
     return { code: row.code, action: 'reused' };
   }
 
   await db
     .update(emailLinkCodes)
-    .set({ continueSeed: input.continueSeed, readingRecap, openLoop })
+    .set({ continueSeed: input.continueSeed, readingRecap, openLoop, bucket, src })
     .where(eq(emailLinkCodes.code, row.code));
 
   return { code: row.code, action: 'updated' };
@@ -168,6 +181,8 @@ export async function resolveEmailLinkCode(code: string): Promise<ResolvedEmailL
     campaign: row.campaign,
     readingRecap: row.readingRecap,
     openLoop: row.openLoop,
+    bucket: row.bucket,
+    src: row.src,
     continueSeed: row.continueSeed,
   };
 }

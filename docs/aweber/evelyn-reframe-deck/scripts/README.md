@@ -34,30 +34,47 @@ draft (.md)  →  check.mjs  →  render-aweber.mjs  →  aweber-ops.mjs schedul
    subject exceeds **120 bytes** (AWeber's hard limit — the `{{ subscriber.first_name |
    capitalize }}` tag counts ≈40 bytes, so keep the rest ≤ ~80).
 
-   **This step writes to a database.** Any draft with a `**Continue Seed:**` in its
+   **This step can write to a database.** Any draft with a `**Continue Seed:**` in its
    frontmatter gets an opaque `/e/<code>` short link instead of the legacy `?campaign=`
    URL, and `<code>` is a row in `email_link_codes` carrying the continuation content the
-   lander reads. So a **real send must be rendered against production**, or the link will
-   404 into `/personas` for every reader.
+   lander reads. The code only resolves in the database it was minted into, so a **real
+   send has to be minted into production** — otherwise every reader who clicks bounces to
+   `/personas`, and the rendered HTML looks perfect either way.
    ```
-   # dry / local — codes land in the local Postgres, links won't resolve on the live site
+   # DEFAULT — local. Use this for every render during authoring and review.
    npx tsx --env-file=../../../../.env.test render-aweber.mjs ../sends/cycle-1
 
-   # REAL SEND — codes land in production Supabase. This is the one an operator runs.
-   npx tsx --env-file=../../../../.env      render-aweber.mjs ../sends/cycle-1
+   # PRODUCTION — only after the human "go", immediately before scheduling.
+   npx tsx --env-file=../../../../.env render-aweber.mjs ../sends/cycle-1 --mint-production
    ```
-   Both write `../sends/cycle-1/_build/`. The script prints the database it is about to
-   mint into (`⚑ minting /e/ codes into database "…" @ host`) — **read that line** before
-   handing the build to `aweber-ops.mjs schedule`. With `DATABASE_URL` unset it exits 1
-   rather than guessing a database; drafts with no `**Continue Seed:**` keep the legacy
-   `?campaign=` link and need no database at all.
+   Both write `../sends/cycle-1/_build/`. Guardrails, in the order they fire:
+   - `DATABASE_URL` unset → exit 1. The script will not fall through to pg's defaults.
+   - non-local `DATABASE_URL` without `--mint-production` → exit 1. Both directions of the
+     mistake have to be deliberate.
+   - the target is printed: `⚑ minting /e/ codes into database "…" @ host`.
+   - the target is recorded per send in `index.json` as `minted_into`, and
+     `aweber-ops.mjs schedule` **refuses** any short-linked send not minted into
+     production. That is the backstop for the one failure mode with no other signal.
 
-   Re-running is safe: codes are keyed on the campaign slug, so a re-render reuses the
-   existing code (and refreshes its content if the draft changed) rather than minting a
-   new one — the URL inside an already-scheduled broadcast never moves under you.
+   Drafts with no `**Continue Seed:**` keep the legacy `?campaign=` link and need no
+   database at all.
+
+   Re-running is safe: codes are keyed on `(persona, campaign)` — enforced by a unique
+   index, not just convention — so a re-render reuses the existing code (and refreshes its
+   content if the draft changed) rather than minting a new one. The URL inside an
+   already-scheduled broadcast never moves under you.
+
+   **`short-links.json`** (optional, per cycle) declares which draft numbers must be
+   short-linked, e.g. `["04"]`. With it present the renderer hard-fails on any deviation —
+   a declared send that lost its seed to a typo, or an undeclared send that has one.
+   Without it you get a `⚠` block listing every legacy draft, which fires on almost every
+   run and stops being read. Two drafts sharing a `campaign=` slug is always a hard error:
+   they would share one code, so one email's reader would get the other's continuation.
 
 4. **Schedule** — create each broadcast as a draft, then schedule it. **Live + human-gated:**
-   only run after a human has reviewed the rendered emails.
+   only run after a human has reviewed the rendered emails. If the cycle has any
+   short-linked send, re-render with `--mint-production` first (step 3) — `schedule`
+   pre-flights the whole `index.json` and refuses a build whose codes only exist locally.
    ```
    node aweber-ops.mjs list                       # what's queued now
    node aweber-ops.mjs cancel <id> <id> ...        # unschedule old → draft (recoverable)
@@ -86,11 +103,14 @@ draft (.md)  →  check.mjs  →  render-aweber.mjs  →  aweber-ops.mjs schedul
   no underline, ~280–420 words). Takes draft paths as args; exit 1 on any fail.
 - `render-aweber.mjs` — drafts → AWeber `body_html`/`body_text`/subject + `index.json`.
   **Run under `tsx`; mints `/e/<code>` rows into `DATABASE_URL`.** `index.json` records
-  `link_kind` (`short`/`legacy`), `code`, and the final `cta_url` per send.
+  `link_kind` (`short`/`legacy`), `code`, `cta_url` and `minted_into` per send.
 - `render-aweber.test.ts` — smoke test for the minting behaviour. DB-touching, so:
   `npm run test:local docs/aweber/evelyn-reframe-deck/scripts/render-aweber.test.ts`
   (from the repo root).
-- `aweber-ops.mjs` — `list` / `cancel` / `schedule` against the live list.
-- `../sends/cycle-1/` — the 9 cycle-1 drafts + `schedule.json` (source of truth for what shipped).
+- `aweber-ops.mjs` — `list` / `cancel` / `schedule` against the live list. `schedule`
+  pre-flights the whole index (schedule times, subject bytes, and `minted_into` for every
+  short link) before creating a single broadcast.
+- `../sends/cycle-1/` — the 9 cycle-1 drafts + `schedule.json` + `short-links.json`
+  (source of truth for what shipped).
 
 `_build/` render output is disposable (regenerate any time) and gitignored.

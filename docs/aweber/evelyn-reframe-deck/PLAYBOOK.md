@@ -131,7 +131,7 @@ Formatting exists to make the read easier **and** to spotlight the deck's logic.
     `https://www.theseerwithin.com/evelyn?email={!email}&bucket=love&src=aweber&campaign=<slug>&utm_source=aweber&utm_medium=email&utm_campaign=<slug>`
     `<slug>` = the send's short id (e.g. `reframe-02-parable`).
 
-  `{!email}` is AWeber's personalization tag (leave literal) in both forms — it warms the landing by recognizing the subscriber. Note that the short link carries **only** the campaign and the email hint: `bucket` / `src` / `utm_*` do not survive the `/e/` redirect, so a short-link send is attributable by campaign but not by UTM.
+  `{!email}` is AWeber's personalization tag (leave literal) in both forms — it warms the landing by recognizing the subscriber. The short link looks like it drops `bucket` / `src` / `utm_*`, but it doesn't: those are stored on the minted row and rebuilt server-side by `/e/:code`, so the lander receives the same query string either way. `bucket` matters beyond reporting — it selects Drip 1's bucket-specific phrase — which is why it rides on the row rather than being left to a query param a privacy proxy can strip.
 
 ---
 

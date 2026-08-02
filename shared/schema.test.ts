@@ -26,7 +26,7 @@ describe('email_link_codes table', () => {
     );
     const byName = Object.fromEntries(rows.map((r) => [r.column_name, r]));
 
-    assert.equal(rows.length, 7, `expected 7 columns, found ${rows.length}: ${rows.map((r) => r.column_name).join(', ')}`);
+    assert.equal(rows.length, 9, `expected 9 columns, found ${rows.length}: ${rows.map((r) => r.column_name).join(', ')}`);
 
     assert.equal(byName.code?.data_type, 'character varying');
     assert.equal(byName.code?.is_nullable, 'NO');
@@ -45,6 +45,16 @@ describe('email_link_codes table', () => {
 
     assert.equal(byName.continue_seed?.data_type, 'text');
     assert.equal(byName.continue_seed?.is_nullable, 'NO');
+
+    // Task 13: the lander context the legacy `?bucket=&src=` query string used
+    // to carry. /e/:code rebuilds the query string from these, so if they were
+    // in schema.ts but never migrated, every short-link reader would silently
+    // get generic Drip 1 copy instead of the bucket-specific phrase.
+    assert.equal(byName.bucket?.data_type, 'text');
+    assert.equal(byName.bucket?.is_nullable, 'YES');
+
+    assert.equal(byName.src?.data_type, 'text');
+    assert.equal(byName.src?.is_nullable, 'YES');
 
     assert.equal(byName.created_at?.data_type, 'timestamp without time zone');
     assert.equal(byName.created_at?.is_nullable, 'NO');
@@ -69,6 +79,21 @@ describe('email_link_codes table', () => {
        where tablename = 'email_link_codes' and indexname = 'idx_email_link_codes_campaign'`
     );
     assert.equal(rows.length, 1);
+  });
+
+  // Task 13: upsertEmailLinkCodeForCampaign is read-then-write on
+  // (persona_slug, campaign) so a re-render reuses the code already inside a
+  // scheduled broadcast. Without this index that is an assumption; with it,
+  // a duplicate is impossible. Assert it's actually UNIQUE, not just present.
+  it('has a UNIQUE index on (persona_slug, campaign)', async () => {
+    const { rows } = await pool.query(
+      `select indexdef from pg_indexes
+       where tablename = 'email_link_codes'
+         and indexname = 'uq_email_link_codes_persona_campaign'`
+    );
+    assert.equal(rows.length, 1, 'migration 020 must be applied to this database');
+    assert.match(rows[0].indexdef, /CREATE UNIQUE INDEX/);
+    assert.match(rows[0].indexdef, /\(persona_slug, campaign\)/);
   });
 });
 

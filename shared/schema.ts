@@ -1165,9 +1165,22 @@ export const emailLinkCodes = pgTable("email_link_codes", {
   readingRecap: text("reading_recap"),
   openLoop: text("open_loop"),
   continueSeed: text("continue_seed").notNull(),
+  // Lander context the legacy `?bucket=&src=` query string used to carry. The
+  // short link has no room for it (and query params get stripped in transit),
+  // so it rides on the row and /e/:code rebuilds the query string from here.
+  // bucket is functionally load-bearing, not analytics: it selects Drip 1's
+  // bucket-specific phrase (evelynVerifiedDripGenerator BUCKET_PHRASES).
+  bucket: text("bucket"),
+  src: text("src"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 }, (table) => [
   index("idx_email_link_codes_campaign").on(table.campaign),
+  // One live code per (persona, campaign). The email-rendering pipeline
+  // (render-aweber.mjs) is read-then-write on this pair so a re-render reuses
+  // the code already sitting in a scheduled broadcast; this makes that
+  // invariant something the database enforces rather than something the
+  // pipeline merely assumes.
+  uniqueIndex("uq_email_link_codes_persona_campaign").on(table.personaSlug, table.campaign),
 ]);
 
 export const insertEmailLinkCodeSchema = createInsertSchema(emailLinkCodes);

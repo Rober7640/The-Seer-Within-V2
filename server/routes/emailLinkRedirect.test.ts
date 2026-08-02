@@ -57,6 +57,46 @@ describe('GET /e/:code', { skip: !HAS_DB }, () => {
     assert.match(res.headers.location, /email=reader%40example\.com/);
   });
 
+  // The short link's query string is rebuilt SERVER-SIDE from the row, not
+  // forwarded from the request -- forwarding would be as strippable as the
+  // legacy `?campaign=` link this replaced. `bucket` is the load-bearing one:
+  // EvelynLanderPage appends it to the signup destination, and
+  // evelynVerifiedDripGenerator selects Drip 1's bucket-specific phrase from
+  // it, falling back to generic copy when it's absent.
+  it('synthesizes bucket/src/utm params from the resolved row', async () => {
+    const campaign = 'redirect-test-bucket-' + Date.now();
+    const code = await mint({
+      personaSlug: 'evelyn-cross',
+      campaign,
+      continueSeed: 'seed',
+      bucket: 'love',
+      src: 'aweber',
+    });
+    const res = await request(app).get(`/e/${code}`);
+    assert.equal(res.status, 302);
+    const q = new URLSearchParams(res.headers.location.split('?')[1]);
+    assert.equal(q.get('campaign'), campaign);
+    assert.equal(q.get('bucket'), 'love');
+    assert.equal(q.get('src'), 'aweber');
+    assert.equal(q.get('utm_source'), 'aweber');
+    assert.equal(q.get('utm_medium'), 'email');
+    assert.equal(q.get('utm_campaign'), campaign);
+  });
+
+  it('omits bucket/src entirely when the row carries neither', async () => {
+    const code = await mint({
+      personaSlug: 'evelyn-cross',
+      campaign: 'redirect-test-nobucket-' + Date.now(),
+      continueSeed: 'seed',
+    });
+    const res = await request(app).get(`/e/${code}`);
+    const q = new URLSearchParams(res.headers.location.split('?')[1]);
+    assert.equal(q.has('bucket'), false, 'must not emit an empty bucket param');
+    assert.equal(q.has('src'), false);
+    assert.equal(q.has('utm_source'), false);
+    assert.equal(q.get('utm_medium'), 'email');
+  });
+
   it('redirects to /personas for an unresolvable code', async () => {
     const res = await request(app).get('/e/does-not-exist-xyz');
     assert.equal(res.status, 302);

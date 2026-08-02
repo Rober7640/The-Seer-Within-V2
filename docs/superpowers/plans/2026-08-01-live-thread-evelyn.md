@@ -1336,8 +1336,18 @@ Change `ctaUrl(slug)` to build `https://www.theseerwithin.com/e/${code}?email={!
 
 - [ ] **Step 3: Manual verification**
 
-Run: `node docs/aweber/evelyn-reframe-deck/scripts/render-aweber.mjs docs/aweber/evelyn-reframe-deck/sends/cycle-1`
+The script imports a `.ts` module, so it runs under `tsx`, not plain `node`. From
+`docs/aweber/evelyn-reframe-deck/scripts/`:
+
+```bash
+npx tsx --env-file=../../../../.env.test render-aweber.mjs ../sends/cycle-1
+```
+
 Expected: rendered HTML's CTA link points to `/e/<code>`; querying `email_link_codes` shows a matching row with the correct `continueSeed`/`openLoop`/`readingRecap`.
+
+**Never render against production during development.** A real send is minted with
+`--env-file=../../../../.env … --mint-production`, only after the human "go" — see
+`docs/aweber/evelyn-reframe-deck/scripts/README.md`.
 
 - [ ] **Step 4: Commit**
 
