@@ -932,7 +932,58 @@ git commit -m "feat(live-thread): differentiated free-minute grant for engaged d
 
 ---
 
-### Task 10: Attach `pendingReply` as a real `chat_messages` row on verification/magic-link success
+## ⚠ PLAN REVISION — 2026-08-02: Task 10 redesigned, Task 14 added
+
+**Status:** Task 10 as originally written (below, retained for history) is **SUPERSEDED**. Do not implement it. Implement "Task 10 (revised)" and "Task 14" in this section instead.
+
+### Why
+
+Task 10's implementer escalated `NEEDS_CONTEXT` rather than build the original design, and measured two defects against the real code on a local Postgres. Both were confirmed and the operator chose the full fix.
+
+**1. Creating the chat session at verification time bills the reader for time they were not present.**
+
+`startChatSession` (`server/lib/creditTracking.ts:80`) sets `started_at = NOW()` and the service meters wall-clock minutes from that instant. The original design creates the session inside the verify-email / magic-verify handlers — i.e. at the moment the reader *clicks the link*, not when they start talking. Measured cost of the click→type gap:
+
+| Gap | Credits burned | Share of the 2990¢ Live Thread grant |
+|---|---|---|
+| 60s | 299¢ | 10% |
+| 240s | 897¢ | 30% — trips `BILLING_ANOMALY` |
+| returns inside the 30-min reattach window | 2990¢ | 100% — drained to zero before Evelyn speaks |
+
+This spends the exact free grant Tasks 8+9 exist to give them. No way was found to pre-create a session without starting that clock.
+
+**2. A server-only change cannot deliver Frame 3 at all.**
+
+`pendingRestore` is seeded *only* from `localStorage[LIVE_SESSION_KEY]` (`client/src/pages/ChatServicePage.tsx:180`). A reader arriving from an email has no such key, so the server-session restore at `:717` never runs and the auto-greeting at `:805` fires instead. The reader would see a generic greeting, never see their own bubble, and have to retype. **No task in the original 13 owned this client work.**
+
+### Task 10 (revised): replay the parked reply lazily, at real session start
+
+**Files:** `server/lib/chatEngine.ts` (+ its test file). **The auth routes are NOT touched** — this supersedes the original task's `auth.ts` edits entirely, which also dissolves the "already-verified early-return branch at `auth.ts:710-739` needs the replay too" gap the implementer flagged.
+
+- Replay inside `initSession` (`chatEngine.ts:1190`), after `startChatSession` and after the greeting insert, so DB order is `[assistant greeting][parked reply]`.
+- `started_at` is then set when the reader actually starts. Billing bug gone; no `OUT_OF_CREDITS` risk; no force-closing a live session.
+- Locate the lander session by `evelynLanderSessions.resolvedUserId` (the linkage Task 7 added at `/check-email`), newest row with a non-null `pendingReply`.
+- **Do NOT null `pendingReply`** — the 10-minute grant depends on it surviving (`server/lib/liveThreadEngagement.ts` header). Mark consumption with a separate `pending_reply_consumed_at` column.
+- Needs a **freshness window** so a parked reply cannot resurface in a session started weeks later. `ARRIVAL_READING_WINDOW_HOURS = 24` (`arrivalReading.ts:14`) is the existing precedent, but note the tension: verification tokens expire in 24h while magic links live 30 days, so a 24h window silently drops the reply for a returning reader who clicks on day 3. Implementer to choose and justify.
+- `/magic-register` does **not** need the replay — it mails a token that lands on `/verify-email`.
+
+### Task 14 (new): client-side Frame 3 restore
+
+**Files:** `client/src/pages/ChatServicePage.tsx` (+ Playwright coverage). Its own task, its own review.
+
+- On `/reading` boot with no `LIVE_SESSION_KEY`, ask `GET /api/chat-service/sessions` for an active session and restore its messages, so an email arrival sees the thread.
+- If the last message is a `user` row with no assistant reply, auto-trigger the reply path instead of fetching a greeting.
+- **Also owns the opener bubble**, a second gap the implementer found: spec §252 calls for the persona's `continueSeed` opener to be inserted ahead of the reply, and no task in the original 13 resolved `continueSeed` into a chat message.
+
+### Rejected alternatives
+
+- **Inject as a `user_memory` row** (the `quiz_intake` shape at `auth.ts:578-590`): cheapest, no billing, and uniquely reaches the *first greeting* via `loadUserContext` — but it is not a real `chat_messages` row, so the reader never sees their own bubble. Rejected: the feature's promise is visible continuity.
+- **Lazy replay alone, without Task 14:** fixes billing but the reply only reaches Evelyn on the reader's first typed message, so the continuity is never visible. Rejected as a half-delivery.
+- **The original design:** rejected on the measured billing cost above.
+
+---
+
+### Task 10 (SUPERSEDED — retained for history, do not implement): Attach `pendingReply` as a real `chat_messages` row on verification/magic-link success
 
 **Files:**
 - Modify: `server/routes/auth.ts` — `GET /api/auth/verify-email/:token` handler (L663-849) and `POST /api/auth/magic-verify` handler (L1441+)
