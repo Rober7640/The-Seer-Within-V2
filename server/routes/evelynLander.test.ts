@@ -353,4 +353,76 @@ describe('POST /api/evelyn-lander/reply', { skip: !HAS_DB }, () => {
       .send({ sessionToken, reply: 'x'.repeat(2001) });
     assert.equal(res.status, 400);
   });
+
+  // Round 2: crisis/safety screening. Strings are pulled verbatim from
+  // server/lib/universalSafety.test.ts's own fixtures so these tests stay aligned
+  // with the real detector rather than drifting from an invented phrase.
+  describe('safety screening', () => {
+    // From universalSafety.test.ts's `crisisMessages` (hard crisis: safe=false).
+    const HARD_CRISIS_TEXT = 'I want to kill myself';
+    // From universalSafety.test.ts's `deniedMessages` (soft crisis: safe=true,
+    // violationType='crisis', softCrisisNote set).
+    const SOFT_CRISIS_TEXT = 'I would never kill myself';
+
+    it('flags a hard-crisis reply with the hotline response and does NOT store it', async () => {
+      const sessionToken = landerSessionToken('reply-crisis-hard');
+      await request(app).post('/api/evelyn-lander/start').send({ sessionToken, campaign: 'reply-test-campaign' });
+
+      const res = await request(app)
+        .post('/api/evelyn-lander/reply')
+        .send({ sessionToken, reply: HARD_CRISIS_TEXT });
+
+      // Still a 200 — mirrors /turn's shape (blocked is a body field, not a
+      // status code) — but ok:false + blocked:'safety' tells the client not to
+      // advance to the email ask.
+      assert.equal(res.status, 200);
+      assert.equal(res.body.ok, false);
+      assert.equal(res.body.blocked, 'safety');
+      assert.ok(res.body.reply.includes('988'), 'hard-crisis response should include the 988 hotline');
+
+      // The point of this test: the flagged text must NOT become the reader's
+      // pendingReply (Task 10 would otherwise replay it as a cheerful chat
+      // opener). Reading the row back, not just trusting the response body.
+      const [row] = await db.select().from(evelynLanderSessions).where(eq(evelynLanderSessions.sessionToken, sessionToken));
+      assert.equal(row.pendingReply, null);
+    });
+
+    it('lets a soft-crisis reply through exactly like an ordinary safe reply', async () => {
+      const sessionToken = landerSessionToken('reply-crisis-soft');
+      await request(app).post('/api/evelyn-lander/start').send({ sessionToken, campaign: 'reply-test-campaign' });
+
+      const res = await request(app)
+        .post('/api/evelyn-lander/reply')
+        .send({ sessionToken, reply: SOFT_CRISIS_TEXT });
+
+      // Mirrors /turn: safe:true + softCrisisNote doesn't block the normal flow.
+      assert.equal(res.status, 200);
+      assert.equal(res.body.ok, true);
+      assert.equal(res.body.blocked, undefined);
+
+      // Proves it isn't just accepted at the HTTP layer — it's actually stored,
+      // same as the ordinary safe path.
+      const [row] = await db.select().from(evelynLanderSessions).where(eq(evelynLanderSessions.sessionToken, sessionToken));
+      assert.equal(row.pendingReply, SOFT_CRISIS_TEXT);
+    });
+
+    // Non-vacuity guard for the two tests above: proves the normal path is
+    // unaffected by the new safety check — same 200/ok:true/stored-value
+    // behavior as this describe block's very first test, run again after the
+    // safety gate was added.
+    it('leaves an ordinary safe reply completely unaffected', async () => {
+      const sessionToken = landerSessionToken('reply-crisis-safe-control');
+      await request(app).post('/api/evelyn-lander/start').send({ sessionToken, campaign: 'reply-test-campaign' });
+
+      const res = await request(app)
+        .post('/api/evelyn-lander/reply')
+        .send({ sessionToken, reply: '444. Every day.' });
+
+      assert.equal(res.status, 200);
+      assert.equal(res.body.ok, true);
+
+      const [row] = await db.select().from(evelynLanderSessions).where(eq(evelynLanderSessions.sessionToken, sessionToken));
+      assert.equal(row.pendingReply, '444. Every day.');
+    });
+  });
 });
