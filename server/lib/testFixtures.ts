@@ -221,7 +221,11 @@ export async function createEmailLinkCode(input: {
   continueSeed: string;
   personaSlug?: string;
 }): Promise<string> {
-  const code = `fx-${stamp()}`.slice(0, 24);
+  // NOT truncated. `code` is an unbounded varchar, and stamp()'s uniqueness lives
+  // in its trailing sequence counter — clipping the string to a "realistic" 7-char
+  // code length would collapse two calls made in the same millisecond onto the same
+  // primary key and throw on the second insert.
+  const code = `fx-${stamp()}`;
   await db.insert(emailLinkCodes).values({
     code,
     personaSlug: input.personaSlug ?? 'evelyn-cross',
