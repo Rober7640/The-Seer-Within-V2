@@ -34,7 +34,13 @@ import { generateMagicLinkToken, verifyMagicLinkToken } from '../lib/magicLink';
 import { escapeHtml, reissueVerificationEmail } from '../lib/verificationEmail';
 import { resolveWelcomeGrantTier } from '../lib/welcomeGrantTier';
 import { generateToken, verifyToken } from '../lib/auth';
-import { accountDetectionLimiter, landerLimiter, landerTurnLimiter } from '../lib/rateLimiter';
+import {
+  accountDetectionLimiter,
+  landerAuthedStartLimiter,
+  landerLimiter,
+  landerTurnLimiter,
+} from '../lib/rateLimiter';
+import type { NextFunction } from 'express';
 import { checkAndLogSafety } from '../lib/universalSafety';
 import { getCountryFromIP } from '../lib/crisisHotlines';
 import { verifyTurnstileToken } from '../lib/turnstile';
@@ -235,7 +241,44 @@ async function resolveSegment(input: {
 // ---------- POST /start ----------
 // Validates URL params, resolves segment, inserts a session row, returns
 // segment + display info (firstName, isReturning) for the lander UI.
-router.post('/start', landerLimiter, async (req: Request, res: Response) => {
+/**
+ * Chooses which rate limiter /start runs under, by whether the caller is signed in.
+ *
+ * A signed-in visitor to /evelyn is redirected to /reading, but the page POSTs
+ * /start FIRST so the visit is attributed before they leave (that await is the
+ * whole point of the redirect change — without it the campaign is never recorded
+ * for returning readers). Those requests were landing in landerLimiter's
+ * 5/hr/**IP** budget, which is sized for new anonymous sessions. Behind a
+ * carrier-NAT or an office IP that lets a few logged-in visits starve genuinely
+ * anonymous readers on the same address, whose /start then 429s, whose client
+ * falls back to an opener with no server session row, and whose /cta and /turn
+ * subsequently 404 — the exact failure the redirect change was audited against.
+ *
+ * The alternative (drop the await) would fix the budget by removing the
+ * attribution, i.e. by undoing the feature. This keeps it and moves the
+ * authenticated case onto a per-USER key instead, so shared IPs stop coupling the
+ * two populations while every caller stays bounded.
+ *
+ * The JWT is VERIFIED here (verifyToken is synchronous, so this can run as a
+ * middleware) — an unsigned or expired token falls through to the anonymous
+ * limiter rather than buying a private budget. It is deliberately NOT checked
+ * against the users table: that would be an async DB read on the hot path, and a
+ * signature we minted is already proof this is one identifiable account and not an
+ * anonymous crowd, which is all the key needs to be. /start's own segment
+ * resolution still does the real account check.
+ */
+function landerStartLimiter(req: Request, res: Response, next: NextFunction) {
+  const header = req.headers.authorization;
+  const bearer = header?.startsWith('Bearer ') ? header.slice(7) : null;
+  const payload = bearer ? verifyToken(bearer) : null;
+  if (payload?.userId) {
+    (req as any).landerAuthedUserId = payload.userId;
+    return landerAuthedStartLimiter(req, res, next);
+  }
+  return landerLimiter(req, res, next);
+}
+
+router.post('/start', landerStartLimiter, async (req: Request, res: Response) => {
   try {
     const parsed = startSchema.safeParse(req.body);
     if (!parsed.success) {
@@ -297,9 +340,10 @@ router.post('/start', landerLimiter, async (req: Request, res: Response) => {
  *     before scheduling (render-aweber.mjs mints; aweber-ops.mjs schedules the
  *     build afterwards) — so between those two steps a guessed slug can surface
  *     the opening line of an email that has not been sent to anyone. The real
- *     mitigation is landerLimiter on this route: 5 requests/hr/IP in production
- *     (rateLimiter.ts), which makes slug-guessing an unattractive way to read an
- *     unsent draft's single opening sentence. DO NOT relax that limiter on the
+ *     mitigation is the rate limit on this route: 5 requests/hr/IP anonymously in
+ *     production, or 30/hr/user id for a signed-in caller (landerStartLimiter
+ *     below, rateLimiter.ts), which makes slug-guessing an unattractive way to read
+ *     an unsent draft's single opening sentence. DO NOT relax that limiter on the
  *     belief that this content was already published — it may not have been.
  *   - It must not cross personas. The lookup is keyed on (EVELYN_SLUG, campaign),
  *     the pair the table's unique index is built on, so a guessed Luna or Aiden
@@ -416,8 +460,15 @@ router.post('/cta', async (req: Request, res: Response) => {
     }
     const { sessionToken, token } = parsed.data;
 
+    // EXPLICIT projection, not `.select()`. Drizzle expands a bare select into the
+    // full column list taken from the TABLE DEFINITION, so the moment schema.ts grows
+    // a column this handler would name it in SQL — and against a database that has not
+    // yet had the matching migration applied, Postgres answers 42703 (undefined_column),
+    // the catch below turns that into a 500, and the CTA (the handoff for BOTH live
+    // arms) breaks for everyone. Naming only the columns actually read keeps this route
+    // independent of columns added for other features. Read here: resolvedSegment.
     const rows = await db
-      .select()
+      .select({ resolvedSegment: evelynLanderSessions.resolvedSegment })
       .from(evelynLanderSessions)
       .where(eq(evelynLanderSessions.sessionToken, sessionToken))
       .limit(1);
@@ -534,8 +585,12 @@ router.post('/reply', landerTurnLimiter, async (req: Request, res: Response) => 
     }
     const { sessionToken, reply } = parsed.data;
 
+    // EXPLICIT projection — see the note on /cta's select for why a bare `.select()`
+    // is a live-outage hazard on this table. Read here: resolvedUserId (the safety
+    // log's user attribution). The write below targets the row by sessionToken, so
+    // nothing else off the row is needed.
     const rows = await db
-      .select()
+      .select({ resolvedUserId: evelynLanderSessions.resolvedUserId })
       .from(evelynLanderSessions)
       .where(eq(evelynLanderSessions.sessionToken, sessionToken))
       .limit(1);
@@ -676,8 +731,17 @@ router.post('/turn', landerTurnLimiter, async (req: Request, res: Response) => {
     }
     const { sessionToken, userMessage, turnstileToken, history } = parsed.data;
 
+    // EXPLICIT projection — see the note on /cta's select for why a bare `.select()`
+    // is a live-outage hazard on this table, and this is the hottest route on the
+    // lander (every chatbox message). Read here: turnCount (hard cap + Turnstile
+    // gate), resolvedUserId (safety attribution + first-name lookup), bucket (the
+    // model prompt's topic).
     const rows = await db
-      .select()
+      .select({
+        turnCount: evelynLanderSessions.turnCount,
+        resolvedUserId: evelynLanderSessions.resolvedUserId,
+        bucket: evelynLanderSessions.bucket,
+      })
       .from(evelynLanderSessions)
       .where(eq(evelynLanderSessions.sessionToken, sessionToken))
       .limit(1);
