@@ -4,7 +4,8 @@
 //                                    return Evelyn's static opener. Reads an
 //                                    optional `Authorization: Bearer <jwt>`:
 //                                    a verified, active account resolves to
-//                                    'v2_active' and skips the param branches.
+//                                    'v2_active'. Precedence is
+//                                    magic token > JWT > email param.
 //   POST /api/evelyn-lander/turn   → run safety + Haiku for one chat turn,
 //                                    enforce 2-user-message hard cap
 //   POST /api/evelyn-lander/cta    → handoff (mint JWT only for token-magic path)
@@ -89,12 +90,39 @@ async function resolveSegment(input: {
   token?: string;
   fallbackName?: string;
 }): Promise<ResolvedSegment> {
-  // An already-signed-in reader outranks every URL param: they don't need the
-  // lander's login/register handoff at all, they need their reading. Checked
-  // first so a stale `?email=` or expired `?t=` in the email link can't
-  // downgrade them. verifyToken() returns null (never throws) for malformed,
-  // expired, or forged tokens, so any bad header falls through to the
-  // param-driven branches below exactly as if it were absent.
+  // Token wins per PRD §9 ("Token wins. Email param ignored.") — and it also
+  // outranks a JWT already in localStorage (operator decision 2026-08-02).
+  // Rationale: if a reader signed in as account A clicks a magic link minted for
+  // account B, they clicked THAT link seconds ago, so it is the fresher and more
+  // deliberate statement of who they mean to be — and a magic link that silently
+  // did nothing would look broken. When both point at the same account the
+  // outcome is identical either way.
+  if (input.token) {
+    const result = await verifyMagicLinkToken(input.token);
+    if (result) {
+      const userRows = await db
+        .select({ firstName: users.firstName })
+        .from(users)
+        .where(eq(users.id, result.userId))
+        .limit(1);
+      return {
+        segment: 'token_magic',
+        resolvedUserId: result.userId,
+        firstName: userRows[0]?.firstName ?? input.fallbackName ?? null,
+        isReturning: true,
+      };
+    }
+    // Token invalid/expired — silently fall through. Note this is a fall-through
+    // and NOT a return: an authenticated reader whose link has gone stale must
+    // still reach the auth branch below rather than being stranded on brand_new.
+  }
+
+  // An already-signed-in reader outranks the `?email=` param (which is just an
+  // unauthenticated hint) but NOT a live magic token, handled above. They don't
+  // need the lander's login/register handoff at all, they need their reading.
+  // verifyToken() returns null (never throws) for malformed, expired, or forged
+  // tokens, so any bad header falls through to the param-driven branches below
+  // exactly as if it were absent.
   if (input.authHeader?.startsWith('Bearer ')) {
     const payload = verifyToken(input.authHeader.slice(7));
     if (payload?.userId) {
@@ -123,25 +151,6 @@ async function resolveSegment(input: {
         };
       }
     }
-  }
-
-  // Token wins per PRD §9 ("Token wins. Email param ignored.")
-  if (input.token) {
-    const result = await verifyMagicLinkToken(input.token);
-    if (result) {
-      const userRows = await db
-        .select({ firstName: users.firstName })
-        .from(users)
-        .where(eq(users.id, result.userId))
-        .limit(1);
-      return {
-        segment: 'token_magic',
-        resolvedUserId: result.userId,
-        firstName: userRows[0]?.firstName ?? input.fallbackName ?? null,
-        isReturning: true,
-      };
-    }
-    // Token invalid/expired — silently fall through to email/brand-new path.
   }
 
   if (input.email) {

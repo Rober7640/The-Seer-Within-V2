@@ -29,6 +29,7 @@ import { generateToken } from '../lib/auth';
 import {
   createTestApp,
   createTestUser,
+  createMagicLinkToken,
   landerSessionToken,
   cleanupTestFixtures,
 } from '../lib/testFixtures';
@@ -168,8 +169,9 @@ describe('POST /api/evelyn-lander/start — already-authenticated caller', { ski
     }
   });
 
-  // Beyond the brief. The first test's name claims the JWT branch runs BEFORE the
-  // email/token branches; this is what actually proves it.
+  // Beyond the brief. The first test's name claims the JWT branch runs before the
+  // email branch; this is what actually proves it. (Precedence is
+  // magic token > JWT > email param — the magic-token half is covered below.)
   it('lets the JWT win over an email param that would resolve to another segment', async () => {
     const authed = await createTestUser({ emailVerified: true, firstName: 'Authed' });
     const other = await createTestUser({ passwordHash: 'x', firstName: 'Other' });
@@ -191,5 +193,109 @@ describe('POST /api/evelyn-lander/start — already-authenticated caller', { ski
       .where(eq(evelynLanderSessions.sessionToken, sessionToken))
       .limit(1);
     assert.equal(row.resolvedUserId, authed.id);
+  });
+});
+
+// Precedence between a live magic link and a JWT already in localStorage.
+// Operator decision 2026-08-02: the MAGIC LINK wins. A reader who clicks a link
+// minted for account B is making a fresher, more deliberate statement about who
+// they mean to be than a JWT for account A left over in their browser — and a
+// magic link that silently did nothing would look broken.
+describe('POST /api/evelyn-lander/start — magic token vs. JWT precedence', { skip: !HAS_DB }, () => {
+  it('lets a valid magic link for another account beat the JWT in the browser', async () => {
+    const a = await createTestUser({ emailVerified: true, firstName: 'Ayla' });
+    const b = await createTestUser({ emailVerified: true, firstName: 'Bruno' });
+    const jwtForA = generateToken(a.id, a.email);
+
+    // Control: A's JWT alone genuinely CAN win. Without this the main assertion
+    // below would also pass if the JWT branch were broken outright.
+    const control = await request(app)
+      .post('/api/evelyn-lander/start')
+      .set('Authorization', `Bearer ${jwtForA}`)
+      .send({ sessionToken: landerSessionToken('prec-control') });
+    assert.equal(control.body.segment, 'v2_active');
+    assert.equal(control.body.firstName, 'Ayla');
+
+    // JWT for A + live magic link for B → B wins.
+    const sessionToken = landerSessionToken('prec-mismatch');
+    const res = await request(app)
+      .post('/api/evelyn-lander/start')
+      .set('Authorization', `Bearer ${jwtForA}`)
+      .send({ sessionToken, token: await createMagicLinkToken(b.id) });
+
+    assert.equal(res.status, 200);
+    assert.equal(res.body.segment, 'token_magic');
+    assert.equal(res.body.firstName, 'Bruno');
+
+    // The persisted row is what /cta reads to mint the JWT, so the identity
+    // swap has to be real there, not just in the response.
+    const [row] = await db
+      .select()
+      .from(evelynLanderSessions)
+      .where(eq(evelynLanderSessions.sessionToken, sessionToken))
+      .limit(1);
+    assert.equal(row.resolvedSegment, 'token_magic');
+    assert.equal(row.resolvedUserId, b.id);
+    assert.notEqual(row.resolvedUserId, a.id);
+  });
+
+  it('resolves to a single, coherent result when the magic link and the JWT agree', async () => {
+    const user = await createTestUser({ emailVerified: true, firstName: 'Same' });
+    const sessionToken = landerSessionToken('prec-same');
+
+    const res = await request(app)
+      .post('/api/evelyn-lander/start')
+      .set('Authorization', `Bearer ${generateToken(user.id, user.email)}`)
+      .send({ sessionToken, token: await createMagicLinkToken(user.id) });
+
+    assert.equal(res.status, 200);
+    assert.equal(res.body.segment, 'token_magic');
+    assert.equal(res.body.isReturning, true);
+
+    // Exactly one session row — proves the two branches don't both handle the
+    // request (the token branch returns, so the auth branch never runs).
+    const rows = await db
+      .select()
+      .from(evelynLanderSessions)
+      .where(eq(evelynLanderSessions.sessionToken, sessionToken));
+    assert.equal(rows.length, 1);
+    assert.equal(rows[0].resolvedUserId, user.id);
+  });
+
+  // The regression risk in reordering: the token branch must FALL THROUGH on a
+  // bad token, not return, or an authenticated reader with a stale link would be
+  // stranded on brand_new.
+  it('still gives an authenticated reader the skip when the magic token is invalid', async () => {
+    const user = await createTestUser({ emailVerified: true, firstName: 'Stale' });
+    // Well-formed for the zod schema (min 16 / max 128) but not in the DB, so
+    // verifyMagicLinkToken() returns null — same shape as expired or revoked.
+    const deadToken = 'deadbeef'.repeat(8);
+
+    // Control: the dead token on its own resolves to brand_new. This is what
+    // makes the main assertion non-vacuous — it proves v2_active below comes
+    // from the JWT and not from the token somehow succeeding.
+    const control = await request(app)
+      .post('/api/evelyn-lander/start')
+      .send({ sessionToken: landerSessionToken('dead-control'), token: deadToken });
+    assert.equal(control.body.segment, 'brand_new');
+
+    const sessionToken = landerSessionToken('dead-plus-jwt');
+    const res = await request(app)
+      .post('/api/evelyn-lander/start')
+      .set('Authorization', `Bearer ${generateToken(user.id, user.email)}`)
+      .send({ sessionToken, token: deadToken });
+
+    assert.equal(res.status, 200);
+    assert.equal(res.body.segment, 'v2_active');
+    assert.equal(res.body.firstName, 'Stale');
+
+    const [row] = await db
+      .select()
+      .from(evelynLanderSessions)
+      .where(eq(evelynLanderSessions.sessionToken, sessionToken))
+      .limit(1);
+    assert.equal(row.resolvedUserId, user.id);
+    // hadToken records that a token WAS supplied, even though it didn't resolve.
+    assert.equal(row.hadToken, true);
   });
 });

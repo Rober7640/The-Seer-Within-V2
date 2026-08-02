@@ -22,15 +22,17 @@
  */
 
 import express, { type Express, type Router } from 'express';
-import { inArray } from 'drizzle-orm';
+import { eq, inArray } from 'drizzle-orm';
 import { db } from './db';
-import { users, evelynLanderSessions } from '@shared/schema';
+import { users, evelynLanderSessions, magicLinkTokens, personas } from '@shared/schema';
+import { generateMagicLinkToken } from './magicLink';
 
 type NewUser = typeof users.$inferInsert;
 type User = typeof users.$inferSelect;
 
 const createdUserIds: string[] = [];
 const createdLanderSessionTokens: string[] = [];
+const createdMagicLinkTokens: string[] = [];
 
 /** Monotonic within a process; keeps generated emails/tokens unique. */
 let seq = 0;
@@ -112,10 +114,45 @@ export function landerSessionToken(label: string): string {
 }
 
 /**
+ * Mints a REAL magic-link token for `userId` via the production
+ * generateMagicLinkToken(), and registers it for cleanup. Resolves the persona
+ * FK by slug rather than hard-coding a uuid, since persona ids differ per
+ * database. Requires that persona to be seeded (`npm run seed`).
+ */
+export async function createMagicLinkToken(
+  userId: string,
+  personaSlug = 'evelyn-cross',
+): Promise<string> {
+  const [persona] = await db
+    .select({ id: personas.id })
+    .from(personas)
+    .where(eq(personas.slug, personaSlug))
+    .limit(1);
+  if (!persona) {
+    throw new Error(
+      `createMagicLinkToken: persona '${personaSlug}' is not seeded in this database. ` +
+        'Run `npm run seed` against your local Postgres.',
+    );
+  }
+
+  const token = await generateMagicLinkToken(userId, persona.id, personaSlug);
+  createdMagicLinkTokens.push(token);
+  return token;
+}
+
+/**
  * Deletes exactly the rows this module handed out, children first.
  * Idempotent — safe to call from more than one `after()` hook.
  */
 export async function cleanupTestFixtures(): Promise<void> {
+  if (createdMagicLinkTokens.length > 0) {
+    // Also cascades from users, but delete explicitly so the registry stays the
+    // single source of truth for what this module created.
+    await db
+      .delete(magicLinkTokens)
+      .where(inArray(magicLinkTokens.token, createdMagicLinkTokens));
+    createdMagicLinkTokens.length = 0;
+  }
   if (createdLanderSessionTokens.length > 0) {
     await db
       .delete(evelynLanderSessions)
