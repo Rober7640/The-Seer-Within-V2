@@ -305,6 +305,13 @@ export default function ChatServicePage() {
   const lastUserMessageAt = useRef<number | null>(null);
   // Stores a queued question from the instructions screen to auto-send once greeting appears
   const pendingQuestionAfterGreeting = useRef<string | null>(null);
+  // True once the reader has sent anything in the currently-open thread. Read by the
+  // Live Thread append (below), which resolves asynchronously and must not splice the
+  // reader's parked exchange in BELOW a message they typed while it was still in
+  // flight — on screen that would read [greeting][their new message][their old
+  // reply][answer], while the database holds the opposite order. A ref, not state:
+  // the append closes over render-time values and would see a stale `false`.
+  const hasSentInThisThreadRef = useRef(false);
 
   // Refs for volatile values used inside the credit timer (Fix 4: stabilize timer deps)
   const coinBalanceRef = useRef(coinBalance);
@@ -950,6 +957,8 @@ export default function ChatServicePage() {
     if (!appendMode) {
       setMessages([]);
       setPreSessionGreeting(null);
+      // A fresh thread is being opened — nothing has been said in it yet.
+      hasSentInThisThreadRef.current = false;
     }
 
     const addMsg = (msg: ChatMessageData) => {
@@ -973,7 +982,11 @@ export default function ChatServicePage() {
       } catch {
         lt = null;
       }
-      if (!lt || isStale()) return;
+      // isStale() covers a persona switch; hasSentInThisThreadRef covers the reader
+      // typing while this was in flight. In that second case the session has already
+      // been created and the server has already replayed the pair into it, so
+      // appending here would duplicate them on screen AND in the wrong order.
+      if (!lt || isStale() || hasSentInThisThreadRef.current) return;
       addMsg({
         id: `live-thread-reply-${Date.now()}`,
         role: "user",
@@ -984,11 +997,11 @@ export default function ChatServicePage() {
       // words in the thread, and the persona answers them on her next turn.
       if (!lt.response) return;
       await sleep(400);
-      if (isStale()) return;
+      if (isStale() || hasSentInThisThreadRef.current) return;
       setIsTyping(true);
       await sleep(calculateTypingDelay(lt.response));
       setIsTyping(false);
-      if (isStale()) return;
+      if (isStale() || hasSentInThisThreadRef.current) return;
       addMsg({
         id: `live-thread-response-${Date.now()}`,
         role: "assistant",
@@ -1554,6 +1567,11 @@ export default function ChatServicePage() {
       if (isSending || !content.trim()) return;
       // Must have either an active session or a pre-session greeting to send into
       if (!session && !preSessionGreeting) return;
+
+      // Set BEFORE the optimistic append, so an in-flight Live Thread append can see
+      // that the reader has spoken and stand down rather than splicing their parked
+      // exchange in underneath this message.
+      hasSentInThisThreadRef.current = true;
 
       const userMessage: ChatMessageData = {
         id: `temp-${Date.now()}`,
