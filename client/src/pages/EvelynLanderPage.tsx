@@ -38,18 +38,33 @@ const SESSION_KEY = "evelyn_lander_token";
 const HISTORY_KEY = "evelyn_lander_history";
 const MAX_USER_TURNS = 2;
 // Bounds how long a caller can be stuck waiting on /start (e.g. a stalled
-// mobile connection) before we give up and fall through to the catch block.
-// 10s: long enough to ride out a slow/cold mobile network + server round
-// trip without false-triggering on ordinary latency (server's own outbound
-// timeouts elsewhere in this codebase use 5s for third-party calls; this is
-// a client→our-API call over a possibly poor connection, so it gets more
-// slack), short enough that a reader who clicked a paid campaign link isn't
-// parked on a spinner for what feels like forever. When it fires, the
-// already-logged-in redirect still completes (postStart's catch handles the
-// abort like any other failure) — the cost is just that this particular
-// visit isn't recorded server-side and the segment falls through to
-// `brand_new` bookkeeping for the anonymous path.
+// mobile connection) before we give up and fall through to the catch block,
+// which never rethrows — the caller always gets control back within this
+// budget. Two different budgets for two different costs of waiting:
+//
+// - Anonymous chat flow (`START_TIMEOUT_MS`, 10s): worth waiting longer for,
+//   because timing out here doesn't just lose attribution — /start is the
+//   ONLY call that creates the lander session row server-side. If it never
+//   completes, no row exists, and the chat that renders anyway (postStart's
+//   catch falls back to a client-only placeholder opener) is a dead end:
+//   the later /turn and /cta calls 404 against a session that was never
+//   created (server/routes/evelynLander.ts — session lookup in both
+//   handlers). 10s rides out a slow/cold mobile network + server round trip
+//   without false-triggering on ordinary latency (server's own outbound
+//   timeouts elsewhere in this codebase use 5s for third-party calls; this
+//   is a client→our-API call over a possibly poor connection, so it gets
+//   more slack).
+// - Already-logged-in redirect (`REDIRECT_START_TIMEOUT_MS`, 4s, operator
+//   ruling): the reader sees nothing while this runs — no chat, no risk of
+//   a dead-end session — and pre-Task-5 this redirect was instant. Waiting
+//   here buys ONLY attribution for that one visit; if it times out, the
+//   catch's `applyState=false` path already returns having written no
+//   state, and the effect proceeds straight to navigate() same as any other
+//   failure. A long stall reads as a broken page and the bounce it risks
+//   costs more than one unrecorded visit, so this budget is kept short
+//   deliberately.
 const START_TIMEOUT_MS = 10_000;
+const REDIRECT_START_TIMEOUT_MS = 4_000;
 
 type Segment = "v2_active" | "v2_password" | "v1_migrated" | "brand_new" | "token_magic";
 
@@ -117,6 +132,29 @@ function getSessionToken(): string {
 function clearSession() {
   sessionStorage.removeItem(SESSION_KEY);
   sessionStorage.removeItem(HISTORY_KEY);
+}
+
+// AbortSignal.timeout() landed in Chrome 103 / Firefox 100 / Safari 15.4 —
+// but crypto.randomUUID() above (getSessionToken) already requires Safari
+// 15.4, so Safari lacking one already lacks the other; no NEW Safari
+// regression from using it. The real gap is Chrome 92–102 / Firefox 95–99:
+// the page renders fine there (crypto.randomUUID is fine), but
+// AbortSignal.timeout is still missing — including stale Android System
+// WebView inside the Facebook in-app browser, which is this page's actual
+// paid traffic. Calling AbortSignal.timeout() directly in that band throws
+// a synchronous TypeError before fetch is ever issued, landing in postStart's
+// catch and silently killing the request. Feature-detect and fall back to a
+// manual AbortController + setTimeout so those browsers still get REAL
+// timeout coverage (not just "no crash") — graceful degradation to "no
+// timeout at all" would resurrect the original stall bug specifically for
+// the highest-risk slice of traffic.
+function createTimeoutSignal(ms: number): { signal: AbortSignal; cleanup: () => void } {
+  if (typeof AbortSignal.timeout === "function") {
+    return { signal: AbortSignal.timeout(ms), cleanup: () => {} };
+  }
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), ms);
+  return { signal: controller.signal, cleanup: () => clearTimeout(timeoutId) };
 }
 
 function loadHistory(): ChatMessage[] {
@@ -214,15 +252,26 @@ export default function EvelynLanderPage() {
   // is what keeps the render gate below (`phase === "loading"`) *structurally*
   // true for a logged-in visitor, not just true-by-timing.
   //
-  // The fetch carries a hard timeout (`START_TIMEOUT_MS`) so a stalled
-  // connection can't leave a caller awaiting this forever — see requirement
-  // 3 in the task brief ("network error, 500, timeout"). A timeout surfaces
-  // as an AbortError, which the existing catch block treats like any other
-  // failure: it never rethrows, so `await postStart(...)` always resolves.
-  async function postStart(
-    isCancelled: () => boolean = () => false,
+  // `timeoutMs` bounds how long the fetch can hang (via createTimeoutSignal,
+  // see its comment for the browser-support story) so a stalled connection
+  // can't leave a caller awaiting this forever — see requirement 3 in the
+  // task brief ("network error, 500, timeout"). Two callers, two budgets:
+  // START_TIMEOUT_MS (anonymous) vs. REDIRECT_START_TIMEOUT_MS (logged-in
+  // redirect) — see the comment on those constants for why they differ. A
+  // timeout surfaces as a TimeoutError DOMException on modern browsers, or
+  // an AbortError on the older-browser fallback path; both land in the
+  // existing catch block and are treated like any other failure — it never
+  // rethrows, so `await postStart(...)` always resolves.
+  async function postStart({
+    isCancelled = () => false,
     applyState = true,
-  ): Promise<void> {
+    timeoutMs = START_TIMEOUT_MS,
+  }: {
+    isCancelled?: () => boolean;
+    applyState?: boolean;
+    timeoutMs?: number;
+  } = {}): Promise<void> {
+    const { signal, cleanup } = createTimeoutSignal(timeoutMs);
     try {
       // Send the stored JWT if there is one, so /start can resolve an
       // already-signed-in reader to `v2_active` instead of `brand_new`.
@@ -242,7 +291,7 @@ export default function EvelynLanderPage() {
           campaign: params.campaign ?? undefined,
           name: params.name ?? undefined,
         }),
-        signal: AbortSignal.timeout(START_TIMEOUT_MS),
+        signal,
       });
       if (!res.ok) throw new Error(`start failed: ${res.status}`);
       const data: StartResponse = await res.json();
@@ -253,10 +302,20 @@ export default function EvelynLanderPage() {
       setMessages(initial);
       saveHistory(initial);
       setPhase("chat");
-    } catch {
+    } catch (err) {
+      // Breadcrumb so a silent failure here (including the older-browser
+      // signal-construction TypeError this used to swallow without a trace)
+      // is findable in production instead of invisible. Matches this
+      // codebase's existing swallow-but-log convention for recoverable
+      // client-side fetch failures (see e.g. useConversation.ts, useUpsellChat.ts).
+      console.error("[EvelynLanderPage] postStart failed:", err);
       if (isCancelled() || !applyState) return;
-      // PRD §9: param-validation / start failures (including a timed-out
-      // request) fall through gracefully.
+      // No lander session row was created on this failure (that INSERT lives
+      // entirely inside the /start handler — see server/routes/evelynLander.ts).
+      // The chat below is a client-only placeholder standing in for a session
+      // that doesn't exist server-side: the later /turn and /cta calls will
+      // 404 against it (session lookups in the same file) unless a retry or
+      // page refresh gets a real /start call through first.
       setSegment("brand_new");
       setFirstName(params.name ?? null);
       const fallback: ChatMessage[] = [
@@ -269,6 +328,8 @@ export default function EvelynLanderPage() {
       setMessages(fallback);
       saveHistory(fallback);
       setPhase("chat");
+    } finally {
+      cleanup();
     }
   }
 
@@ -277,9 +338,11 @@ export default function EvelynLanderPage() {
   // it never touches render state) so the visit still gets recorded — and
   // the server can resolve `v2_active` — before we send them on to /reading.
   // postStart swallows its own failures internally (see its catch block) and
-  // is now bounded by START_TIMEOUT_MS, so it always settles: a network
-  // error, a 500, or a stalled connection can never strand a logged-in
-  // reader on the lander waiting on this await.
+  // is bounded by REDIRECT_START_TIMEOUT_MS (short — see that constant's
+  // comment for why this path uses a different budget than the anonymous
+  // flow), so it always settles: a network error, a 500, or a stalled
+  // connection can never strand a logged-in reader on the lander waiting on
+  // this await.
   //
   // This effect closes over `postStart` (a fresh function identity every
   // render) without listing it as a dependency. That's deliberate, not an
@@ -303,7 +366,11 @@ export default function EvelynLanderPage() {
 
     let cancelled = false;
     (async () => {
-      await postStart(() => cancelled, false);
+      await postStart({
+        isCancelled: () => cancelled,
+        applyState: false,
+        timeoutMs: REDIRECT_START_TIMEOUT_MS,
+      });
       if (!cancelled) {
         clearSession();
         navigate(READING_DEST, { replace: true });
@@ -334,7 +401,7 @@ export default function EvelynLanderPage() {
     }
 
     let cancelled = false;
-    postStart(() => cancelled);
+    postStart({ isCancelled: () => cancelled }); // applyState/timeoutMs use their defaults (true / START_TIMEOUT_MS)
     return () => {
       cancelled = true;
     };
