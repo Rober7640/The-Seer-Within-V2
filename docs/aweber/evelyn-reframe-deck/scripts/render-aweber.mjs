@@ -321,11 +321,40 @@ const missingSeed = sends.filter(m => !m.continueSeed);
 // a send to the legacy link, would be sitting in the middle of it. With it, a
 // deviation in either direction is a hard failure and the ⚠ block means
 // "as declared".
-// Accepts either a bare array (["04"]) or { note?, sends: ["04"] } — JSON has
-// nowhere to put a comment, and these files want one.
+// Accepts either a bare array (["04"]) or { note?, historical?, sends: ["04"] }
+// — JSON has nowhere to put a comment, and these files want one.
 const MANIFEST = path.join(SRC, 'short-links.json');
 if (fs.existsSync(MANIFEST)) {
   const manifest = JSON.parse(fs.readFileSync(MANIFEST, 'utf8'));
+
+  // `"historical": true` — this cycle has ALREADY SENT. Minting for it is not a
+  // no-op and not merely wasteful: /start now serves email_link_codes.continue_seed
+  // as the lander's opener (server/routes/evelynLander.ts), and it cannot tell a
+  // legacy `?campaign=` arrival from an /e/:code one. Cycle 1's #04 went out on
+  // Jul 25 to ~59k inboxes on the LEGACY link; the moment a row exists for that
+  // campaign, every one of those readers who clicks it retroactively gets the
+  // authored seed as their opening line instead of Evelyn's static one — a live
+  // copy change to mail that shipped a week ago, triggered by a routine re-render
+  // nobody thought of as a deployment.
+  //
+  // This was a prose `note` in the manifest. A note is not a gate: re-rendering a
+  // cycle to inspect its HTML or fix a typo is normal, and the note only helps
+  // someone who reads it first. So it fails here, loudly, at authoring time —
+  // alongside the slug-collision and bucket gates above, and for the same reason.
+  const historical = !Array.isArray(manifest) && manifest.historical === true;
+  if (historical && needCodes.length > 0) {
+    console.error(`ERROR: this cycle is marked "historical": true — it has already sent.`);
+    for (const m of needCodes) console.error(`      ${m.file}  (${m.slug})`);
+    console.error('  Minting a code for an already-sent campaign RETROACTIVELY changes what the');
+    console.error('  lander says to readers still clicking the mail in their inbox: /start serves');
+    console.error("  the row's Continue Seed as the opening line, and cannot tell an old legacy");
+    console.error('  link from a new /e/ one. Those emails are in inboxes and cannot be recalled.');
+    console.error('  To render this cycle for INSPECTION, copy it elsewhere or drop the');
+    console.error('  **Continue Seed:** lines — either way it renders on the legacy link, as sent.');
+    console.error(`  ${MANIFEST}`);
+    process.exit(1);
+  }
+
   const declared = new Set((Array.isArray(manifest) ? manifest : manifest.sends).map(String));
   const actual = new Set(needCodes.map(m => m.num));
   const missing = [...declared].filter(n => !actual.has(n)).sort();

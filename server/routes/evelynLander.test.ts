@@ -1071,6 +1071,51 @@ describe('POST /api/evelyn-lander/start — campaign continueSeed opener', { ski
     );
   });
 
+  // The FULL cost of the ruling above, on the reader who pays the most for it.
+  //
+  // The v2_password case is the mildest: that segment's CTA sub-copy still says
+  // "Welcome back, {firstName}" (EvelynLanderPage.subCopyFor), so the name
+  // survives elsewhere on the page. token_magic's sub-copy is "One tap. We've got
+  // you signed in." — no name anywhere — so a magic-link arrival, the highest-
+  // intent returning reader this whole feature funnels, loses their first name
+  // from the chatbox arm entirely. The bucket-aware returning opener goes with it.
+  //
+  // And this is not a corner: /e/:code rebuilds BOTH `bucket` and `campaign` into
+  // the same query string (emailLinkRedirect.ts), so a returning reader on a short
+  // link hits exactly this combination every time. Exercised here with a real
+  // magic token and bucket=love, which is what that reader actually sends.
+  //
+  // OPERATOR RULING (2026-08-02): the campaign line wins, the name is dropped.
+  // Pinned here so the trade is explicit rather than implicit — if it is ever
+  // revisited, this test is the thing that has to change on purpose.
+  it('drops the first name for a token_magic reader, who has no name anywhere else', async () => {
+    const campaign = campaignSlug('tokenmagic');
+    const seed = 'You came to tell me about your lamp — good. Tell me which one went dark.';
+    await createEmailLinkCode({ campaign, continueSeed: seed });
+    const user = await createTestUser({ emailVerified: true, firstName: 'Mira' });
+    const token = await createMagicLinkToken(user.id);
+
+    const sessionToken = landerSessionToken('t15-tokenmagic');
+    const res = await request(app)
+      .post(START)
+      .send({ sessionToken, campaign, token, bucket: 'love' });
+
+    assert.equal(res.status, 200);
+    assert.equal(res.body.segment, 'token_magic');
+    assert.equal(res.body.isReturning, true);
+    // The name is still RESOLVED and returned — the loss is that the opener no
+    // longer uses it, and for this segment nothing else on the page does either.
+    assert.equal(res.body.firstName, 'Mira');
+    assert.equal(res.body.opener, seed);
+    assert.doesNotMatch(res.body.opener, /Mira/);
+    // Both halves of what the static opener would have given this reader are gone:
+    // the name AND the bucket-aware "the thread we left around love" line.
+    assert.notEqual(
+      res.body.opener,
+      selectStaticOpener({ firstName: 'Mira', bucket: 'love', isReturning: true }),
+    );
+  });
+
   it('falls back to the static opener for a campaign with no minted row', async () => {
     const sessionToken = landerSessionToken('t15-unknown');
     const res = await request(app)

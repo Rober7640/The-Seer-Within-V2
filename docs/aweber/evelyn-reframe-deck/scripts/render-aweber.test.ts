@@ -324,6 +324,41 @@ describe('render-aweber.mjs → /e/:code minting', () => {
       assert.match(run.stderr, /✓ short links as declared in short-links\.json: #01/);
     });
 
+    // `"historical": true` guards a cycle that has already sent. This is not
+    // hygiene: /start serves email_link_codes.continue_seed as the lander's
+    // opener and cannot tell a legacy `?campaign=` arrival from an /e/:code one,
+    // so minting for an already-mailed campaign silently rewrites the opening
+    // line for readers still clicking mail in their inbox. Cycle 1's #04 is
+    // exactly that case (~59k inboxes, legacy link, sent Jul 25), and it was
+    // protected only by a prose `note` — which a re-render-to-inspect ignores.
+    it('refuses to mint for a cycle marked historical', () => {
+      const dir = makeSendsDir(SEED_V1);
+      fs.writeFileSync(
+        path.join(dir, 'short-links.json'),
+        JSON.stringify({ note: 'already sent, do not re-render', historical: true, sends: ['01'] }),
+      );
+      const run = render(dir);
+      assert.equal(run.status, 1);
+      assert.match(run.stderr, /marked "historical": true — it has already sent/);
+      assert.match(run.stderr, /RETROACTIVELY changes what the/);
+      // The offending draft is named, so the operator knows which seed to drop.
+      assert.match(run.stderr, /01-seeded\.md/);
+    });
+
+    // The flag bounds exactly one thing — minting — so a historical cycle whose
+    // drafts are all on the legacy link still renders. That is the escape hatch
+    // the error message points at, so it has to actually work.
+    it('still renders a historical cycle when nothing would be minted', () => {
+      const dir = makeSendsDir(undefined); // no Continue Seed on either draft
+      fs.writeFileSync(
+        path.join(dir, 'short-links.json'),
+        JSON.stringify({ historical: true, sends: [] }),
+      );
+      const run = render(dir);
+      assert.equal(run.status, 0, run.stderr);
+      assert.equal(readIndex(dir).every((e) => e.link_kind === 'legacy'), true);
+    });
+
     it('hard-fails when an undeclared send has a Continue Seed', () => {
       const dir = makeSendsDir(SEED_V1, []); // declares nothing, but 01 has a seed
       const run = render(dir);

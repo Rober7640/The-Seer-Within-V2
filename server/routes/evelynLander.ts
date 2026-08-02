@@ -50,12 +50,16 @@ import logger from '../lib/logger';
 // Hard cap on user messages allowed in the lander chat (PRD §6.3 — turn 5 = CTA).
 const MAX_USER_MESSAGES = 2;
 
-// The longest authored seed /start will serve as the opener. Not a style rule:
-// turnSchema below caps every `history` entry at 2000 chars, and the chatbox arm
-// replays the opener back as history[0] on the reader's first message
-// (EvelynLanderPage.tsx). A longer seed would 400 that message — strictly worse
-// for the reader than the generic opener — so an over-long one is declined here.
-const MAX_OPENER_CHARS = 2000;
+// Longest single chat message this router will accept or emit.
+//
+// ONE constant, used in two places that MUST agree: turnSchema's `history` entry
+// cap below, and the ceiling /start puts on an authored campaign opener. The
+// chatbox arm replays the opener back as history[0] on the reader's first message
+// (EvelynLanderPage.tsx), so a seed longer than the history cap would 400 that
+// message — strictly worse for the reader than the generic opener, and invisible
+// until someone authored a long one. Written twice, that agreement is a comment;
+// written once, it is a fact. Do not re-inline either use.
+const MAX_MESSAGE_CHARS = 2000;
 
 // This whole rollout is Evelyn-only. Used by /check-email's magic link and by
 // the campaign-opener lookup in /start, which must stay persona-scoped.
@@ -237,6 +241,28 @@ router.post('/start', landerLimiter, async (req: Request, res: Response) => {
     if (!parsed.success) {
       // PRD §4: param validation failures fall through to defaults silently.
       // We log + treat as a bare /evelyn hit rather than 400'ing the user.
+      //
+      // ⚠ THIS PATH DISCARDS THE WHOLE PAYLOAD, NOT JUST THE BAD FIELD. It
+      // re-enters with `{ sessionToken }` only, so `campaign`, `bucket`, `src`,
+      // `email` and `token` are all dropped and the session row is written with
+      // campaign NULL. That is pre-existing and deliberate, but it now costs more
+      // than it used to, and the trigger is realistic rather than theoretical:
+      // the `name` regex in startSchema rejects digits and periods, so a failed
+      // AWeber merge tag, or a reader legitimately called "Jr.", invalidates the
+      // payload and takes the campaign with it.
+      //
+      // What it costs today: that reader gets the generic static opener instead
+      // of the campaign's authored line, and their session row carries no
+      // campaign — so arrivalReading.ts also finds nothing later.
+      //
+      // WHAT IT WILL COST THE OPENER BUBBLE (read this before building it): the
+      // plan in the Task 15 report resolves the reader's greeting from
+      // evelynLanderSessions.campaign on the row findEligibleParkedReply()
+      // selects. This path writes that column NULL, so the opener bubble silently
+      // degrades to the generic greeting for exactly these readers, with no
+      // signal beyond the warn below. If that matters, the fix is to validate the
+      // params individually here rather than all-or-nothing — not to work around
+      // it downstream.
       logger.warn('evelyn-lander: invalid start payload, falling through', {
         issues: parsed.error.issues.map((i) => i.path.join('.')),
       });
@@ -261,12 +287,20 @@ router.post('/start', landerLimiter, async (req: Request, res: Response) => {
  * The authored opener for `campaign`, or null to use the static one.
  *
  * `campaign` is READER-SUPPLIED — it arrives in the query string and anyone can
- * type any slug. Two consequences, both handled here:
+ * type any slug. Three consequences, all handled here:
  *
- *   - Nothing private is reachable. An email_link_codes row holds one send's
- *     marketing copy, snapshotted at render time and already mailed to a whole
- *     list; there is no per-recipient data in it. So a reader guessing a slug of
- *     a send they never received gets a slightly-odd opening line, not a leak.
+ *   - No per-recipient data is reachable. An email_link_codes row holds one
+ *     send's authored marketing copy; there is no email, user id or token in the
+ *     table at all. So the worst case is reading copy, never reading anyone.
+ *   - But that copy is NOT necessarily public yet, and an earlier version of this
+ *     comment wrongly said it was. Rows are minted at RENDER time, which happens
+ *     before scheduling (render-aweber.mjs mints; aweber-ops.mjs schedules the
+ *     build afterwards) — so between those two steps a guessed slug can surface
+ *     the opening line of an email that has not been sent to anyone. The real
+ *     mitigation is landerLimiter on this route: 5 requests/hr/IP in production
+ *     (rateLimiter.ts), which makes slug-guessing an unattractive way to read an
+ *     unsent draft's single opening sentence. DO NOT relax that limiter on the
+ *     belief that this content was already published — it may not have been.
  *   - It must not cross personas. The lookup is keyed on (EVELYN_SLUG, campaign),
  *     the pair the table's unique index is built on, so a guessed Luna or Aiden
  *     slug can never put that persona's authored line in Evelyn's mouth.
@@ -279,7 +313,7 @@ async function resolveCampaignOpener(campaign: string | undefined): Promise<stri
   try {
     const seed = await resolveCampaignContinueSeed(EVELYN_SLUG, campaign);
     if (!seed) return null;
-    if (seed.length > MAX_OPENER_CHARS) {
+    if (seed.length > MAX_MESSAGE_CHARS) {
       logger.warn('evelyn-lander: authored continueSeed too long for the opener, using static', {
         campaign,
         length: seed.length,
@@ -613,15 +647,20 @@ const turnSchema = z.object({
   // .max(2048) here rejected valid tokens as "Invalid payload" (breaking the
   // chatbox first message). Matches the uncapped magic-register schema (auth.ts).
   turnstileToken: z.string().optional(),
-  // Full conversation so far, including the static opener as the first
-  // assistant message. Server uses this verbatim to seed Haiku — server-side
-  // turnCount in the DB is the authoritative cap, so a tampered client
-  // history can't extend the chat.
+  // Full conversation so far, including the opener as the first assistant
+  // message. Server uses this verbatim to seed Haiku — server-side turnCount in
+  // the DB is the authoritative cap, so a tampered client history can't extend
+  // the chat.
+  //
+  // The entry cap is MAX_MESSAGE_CHARS, not a literal: /start refuses to serve an
+  // authored campaign opener longer than this precisely because the client
+  // replays that opener back through here. Raising one without the other would
+  // re-open the 400 that pairing exists to prevent.
   history: z
     .array(
       z.object({
         role: z.enum(['user', 'assistant']),
-        content: z.string().max(2000),
+        content: z.string().max(MAX_MESSAGE_CHARS),
       }),
     )
     .max(10)
