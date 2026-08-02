@@ -29,10 +29,16 @@
 
 import { describe, it, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { assertLocalDb, assertNoOutboundCalls } from './testGuards';
+import { assertLocalDb, assertNoModelCalls, assertNoOutboundCalls } from './testGuards';
 
 assertLocalDb();
 assertNoOutboundCalls();
+// The hard guard, added after review: assertNoOutboundCalls() above does NOT cover
+// ANTHROPIC_API_KEY, so on its own it reads like protection this file does not have.
+// With the keys blanked, a stray path onto the generation branch throws 'no API keys
+// configured' instead of quietly billing a real account — the failure is loud, and the
+// no-model-call property stops depending on the author's path analysis being right.
+assertNoModelCalls();
 
 import request from 'supertest';
 import { eq } from 'drizzle-orm';

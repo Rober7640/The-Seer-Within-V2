@@ -975,6 +975,23 @@ export default function ChatServicePage() {
     // — the same order server/lib/liveThreadReplay.ts writes to the database when the
     // session eventually starts. Resolves to a no-op for everyone without a parked
     // reply, which is all normal traffic.
+    //
+    // ⚠ RUN DETACHED, NEVER AWAITED. Awaiting it held fetchGreeting's `finally` open,
+    // and with it `isStarting`, for the whole round trip — while the composer and the
+    // suggested-question bubbles were ALREADY visible (setPreSessionGreeting fires
+    // first). A bubble tapped in that window takes the `if (isStarting)` branch and
+    // parks the question in pendingQuestionAfterGreeting, whose only flush point is an
+    // effect keyed on [preSessionGreeting] that has already fired — so the tap did
+    // nothing, permanently, on EVERY persona. Rare when /greeting is a live model call,
+    // repeatable within its 30-minute cache, where the greeting returns instantly and
+    // this round trip does not. Holding isStarting open also let the deferred `finally`
+    // kill the typing indicator seconds after sendMessage set it.
+    //
+    // Detaching is the fix rather than just moving setIsStarting(false) earlier,
+    // because the append is genuinely not part of opening the thread: fetchGreeting is
+    // "the greeting has arrived and the reader may speak", and this is additive
+    // decoration that lands later. isStale() and hasSentInThisThreadRef already make it
+    // safe to complete after fetchGreeting has returned — that is what they are for.
     const appendLiveThread = async () => {
       let lt: LiveThreadPreview | null = null;
       try {
@@ -1000,14 +1017,22 @@ export default function ChatServicePage() {
       if (isStale() || hasSentInThisThreadRef.current) return;
       setIsTyping(true);
       await sleep(calculateTypingDelay(lt.response));
-      setIsTyping(false);
+      // Guards BEFORE clearing the indicator, not after. Once the reader has spoken (or
+      // switched persona) someone else owns isTyping — sendMessage sets it for their
+      // first real answer — and clearing it here would blank their typing dots.
       if (isStale() || hasSentInThisThreadRef.current) return;
+      setIsTyping(false);
       addMsg({
         id: `live-thread-response-${Date.now()}`,
         role: "assistant",
         content: lt.response,
         sentAt: new Date().toISOString(),
       });
+    };
+
+    /** Detached start. Swallows its own rejection so it can never surface unhandled. */
+    const startLiveThreadAppend = () => {
+      void appendLiveThread().catch(() => {});
     };
 
     // If the user clicked through from a sidebar teaser, deliver that message directly
@@ -1140,7 +1165,7 @@ export default function ChatServicePage() {
           setPersonaStatusText('Online');
         }, 800);
 
-        await appendLiveThread();
+        startLiveThreadAppend();
       } else if (res.status === 402) {
         setReadingEnded(true);
         setShowBuyCredits(true);
@@ -1165,7 +1190,7 @@ export default function ChatServicePage() {
           setPersonaStatusText('Online');
         }, 800);
 
-        await appendLiveThread();
+        startLiveThreadAppend();
       }
     } catch (err) {
       console.error("Failed to fetch greeting:", err);
@@ -1185,7 +1210,7 @@ export default function ChatServicePage() {
       setPersonaStatus('online');
       setPersonaStatusText('Online');
 
-      await appendLiveThread();
+      startLiveThreadAppend();
     } finally {
       setIsStarting(false);
       setIsTyping(false);

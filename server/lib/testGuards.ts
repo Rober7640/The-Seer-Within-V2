@@ -55,6 +55,50 @@ export function assertNoOutboundCalls(): void {
   }
 }
 
+/**
+ * Anthropic keys. DELIBERATELY SEPARATE from the list above, and opt-in per file.
+ *
+ * The four keys in MUST_BE_BLANK_UNDER_TEST are all "blank means no-op" — the library
+ * quietly does nothing and the code under test still runs. Anthropic is not like that:
+ * blank it and anthropicWithFailover throws 'no API keys configured' the moment
+ * anything reaches the model. That is exactly the loud failure a test which must not
+ * spend money wants, and exactly the wrong behaviour for a test whose subject happens
+ * to call generateGreeting() incidentally. Folding it into assertNoOutboundCalls()
+ * would impose it on every route test in the repo, so it gets its own guard.
+ *
+ * Backups are listed too: failover walks the whole list (anthropicWithFailover.ts:40-52),
+ * so leaving a backup populated would still bill a real account.
+ */
+const ANTHROPIC_KEYS = [
+  'ANTHROPIC_API_KEY',
+  'ANTHROPIC_API_KEY_BACKUP_1',
+  'ANTHROPIC_API_KEY_BACKUP_2',
+] as const;
+
+/**
+ * Throws unless every Anthropic key is blank. Call at module scope in any test whose
+ * subject can reach the model — above all one testing a module whose JOB is to call it.
+ *
+ * WHY THIS EXISTS. .env holds LIVE keys and .env.test only overrides what it names, so
+ * a test that wanders onto a generation path bills a real account, silently, on every
+ * run. assertNoOutboundCalls() reads like protection against that and is not: it does
+ * not mention Anthropic. Without this guard the property rests entirely on the author
+ * having reasoned correctly about which branch each case takes — which is a fine
+ * argument and a bad safety net.
+ *
+ * Blank the three keys in your git-ignored .env.test to satisfy it.
+ */
+export function assertNoModelCalls(): void {
+  const populated = ANTHROPIC_KEYS.filter((key) => !!process.env[key]);
+  if (populated.length > 0) {
+    throw new Error(
+      `Refusing to run: ${populated.join(', ')} ${populated.length === 1 ? 'is' : 'are'} set, ` +
+        'so a stray code path in this test could make a REAL, billed Anthropic request.\n' +
+        'Add them (blank) to your git-ignored .env.test, and run: npm run test:local <file>',
+    );
+  }
+}
+
 /** True when DATABASE_URL is set and points at a local Postgres. */
 export function isLocalDb(): boolean {
   const url = process.env.DATABASE_URL;
