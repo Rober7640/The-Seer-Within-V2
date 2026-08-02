@@ -5,10 +5,18 @@
 // the right exposure, ignores a concluded test for the same persona (running-only;
 // no winner rollout for prompts), and reverts to base when a test concludes.
 //
-//   npx tsx --test server/lib/personaPrompt.test.ts
+//   npm run test:experiments        (or: npm run test:local server/lib/personaPrompt.test.ts)
 //
 // Requires DATABASE_URL (skips otherwise). Run the migration first so the
 // experiment tables exist: npx tsx server/scripts/migrateExperiments.ts
+//
+// assertLocalDb() at module scope, and it is not decoration: `dotenv/config`
+// below loads .env, whose DATABASE_URL is PRODUCTION Supabase, and this file
+// INSERTs experiment rows. The isolation note further down (synthetic persona
+// ids, unique keys, full cleanup) bounds the BLAST RADIUS of writing to the
+// live database — it never stopped the writes from going there. The header
+// used to recommend a bare `tsx --test`, and `npm run test:experiments` carried
+// no --env-file; both now go through .env.test.
 //
 // Isolation: all experiments use unique `persona_prompt_*` keys + SYNTHETIC
 // persona ids (never a real persona, never the live persona_prompt_evelyn_2026
@@ -19,6 +27,9 @@ import 'dotenv/config'; // must load DATABASE_URL before ./db builds the pool
 import { describe, it, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { and, eq, inArray } from 'drizzle-orm';
+import { assertLocalDb } from './testGuards';
+
+assertLocalDb();
 
 import { db, pool } from './db';
 import { experiments, experimentExposures } from '../../shared/schema';

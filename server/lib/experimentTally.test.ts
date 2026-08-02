@@ -4,15 +4,25 @@
 // running, sticky + ~50/50 + scope-aware. Seeds an isolated test experiment
 // key + temp users and cleans everything up afterwards.
 //
-//   npx tsx --test server/lib/experimentTally.test.ts
+//   npm run test:experiments        (or: npm run test:local server/lib/experimentTally.test.ts)
 //
 // Requires DATABASE_URL (skips otherwise). Run the migration first so the
 // experiment tables exist: npx tsx server/scripts/migrateExperiments.ts
+//
+// assertLocalDb() at module scope, and it is not decoration: `dotenv/config`
+// below loads .env, whose DATABASE_URL is PRODUCTION Supabase, and this file
+// INSERTs users, experiments, exposures, paywall views and credit purchases.
+// The header used to recommend a bare `tsx --test`, and `npm run test:experiments`
+// carried no --env-file, so both of those seeded and deleted rows in the live
+// database. Both now go through .env.test.
 
 import 'dotenv/config'; // must load DATABASE_URL before ./db builds the pool
 import { describe, it, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { eq, inArray, sql } from 'drizzle-orm';
+import { assertLocalDb } from './testGuards';
+
+assertLocalDb();
 
 import { db, pool } from './db';
 import {
