@@ -321,15 +321,17 @@ export default function ExperimentsDashboard() {
   // as a row rather than silently rendering blank.
   const tarotLanderLabel = (facing: string, angle: string): string => {
     const f = facing === "up" ? "Face Up" : facing === "down" ? "Face Down" : facing;
-    const a =
-      angle === "decode-him"
-        ? "Decode Him"
-        : angle === "trust"
-          ? "Trust / Honesty"
-          : angle === "self-frame"
-            ? "Self-Frame"
-            : angle;
-    return `${f} — ${a}`;
+    // Keyed off the raw angle slug; anything unmapped falls through to the slug itself
+    // so a newly added angle is still a visible row. `commitment` was previously
+    // unmapped and rendered lowercase next to title-cased siblings.
+    const ANGLE_LABELS: Record<string, string> = {
+      "decode-him": "Decode Him",
+      trust: "Trust / Honesty",
+      commitment: "Commitment",
+      honesty: "Honesty / Lying",
+      "self-frame": "Self-Frame",
+    };
+    return `${f} — ${ANGLE_LABELS[angle] ?? angle}`;
   };
 
   // Pre-registered-N gate: when a target is set and not yet reached, hide the

@@ -48,6 +48,21 @@ export type TarotHook =
   | 'cards-will-commit' // Will he ever commit?
   | 'cards-wont-commit' // Why won't he commit to me?
   | 'cards-ready-commit' // Is he ever going to be ready for real commitment?
+  // Honesty/lying hooks (2026-08-03). Decode-him in FORM — tendency, never verdict —
+  // but the wound is a SPECIFIC UNTRUTH rather than his character, his identity or his
+  // future. Deliberately their OWN angle rather than folded into `trust`, so the family
+  // can be compared as a group (operator call, 2026-08-03).
+  //
+  // ⚠ These sit closest to two hooks already live, so the reads are written bespoke and
+  // guarded by tests/tarot-honesty-copy.test.ts: 'cards-honest' ("Is he being honest
+  // with you?") reads his PRACTICE of presenting, and 'cards-misled' ("Am I being
+  // misled?") reads the shaped ACCOUNT she has been handed. These three read,
+  // respectively, a claim she was given, whether the telling is the whole of it, and
+  // whether she has been deliberately played. Existing hooks are untouched — the
+  // operator's standing rule is that a new headline never replaces an old lander.
+  | 'cards-lied-to' // Am I being lied to?
+  | 'cards-truth' // Is he telling me the truth?
+  | 'cards-deceived' // Am I being deceived?
   // Self-frame hooks (read HER, affirm the hopeful yes — like the palm love hooks).
   | 'cards-love-again' // Will I love again?
   | 'cards-soulmate' // When is my soulmate coming?
@@ -80,6 +95,13 @@ export const COMMITMENT_HOOKS: TarotHook[] = [
   'cards-ready-commit',
 ]
 
+// The honesty/lying hooks (2026-08-03). Their OWN angle rather than folding into
+// `trust` — operator call: a new headline family gets its own reportable group, and
+// the existing trust landers are left exactly as they are. Without this array they
+// would silently fall through to 'decode-him' (see angleForHook) and disappear as a
+// family in PostHog and in the gate's per-lander table.
+export const HONESTY_HOOKS: TarotHook[] = ['cards-lied-to', 'cards-truth', 'cards-deceived']
+
 // The ad ANGLE a hook belongs to. Carried on every tarot PostHog event (see
 // lib/tarotAttribution.ts) so the two decode-him families can be compared as GROUPS
 // without listing each hook: one `angle = trust` filter instead of three hook values,
@@ -87,12 +109,13 @@ export const COMMITMENT_HOOKS: TarotHook[] = [
 //
 // Derived here rather than hardcoded at the call sites, so a new hook is categorised
 // the moment it is added to one of the arrays above.
-export type TarotAngle = 'decode-him' | 'trust' | 'commitment' | 'self-frame'
+export type TarotAngle = 'decode-him' | 'trust' | 'commitment' | 'honesty' | 'self-frame'
 
 export function angleForHook(hook: TarotHook): TarotAngle {
   if (SELF_FRAME_HOOKS.includes(hook)) return 'self-frame'
   if (TRUST_HOOKS.includes(hook)) return 'trust'
   if (COMMITMENT_HOOKS.includes(hook)) return 'commitment'
+  if (HONESTY_HOOKS.includes(hook)) return 'honesty'
   return 'decode-him'
 }
 
@@ -107,6 +130,9 @@ export const TAROT_HOOKS: TarotHook[] = [
   'cards-will-commit',
   'cards-wont-commit',
   'cards-ready-commit',
+  'cards-lied-to',
+  'cards-truth',
+  'cards-deceived',
   'cards-love-again',
   'cards-soulmate',
 ]
@@ -140,6 +166,9 @@ export const HEADLINES: Record<TarotHook, string> = {
   'cards-will-commit': 'Will he ever commit?',
   'cards-wont-commit': "Why won't he commit to me?",
   'cards-ready-commit': 'Is he ever going to be ready for real commitment?',
+  'cards-lied-to': 'Am I being lied to?',
+  'cards-truth': 'Is he telling me the truth?',
+  'cards-deceived': 'Am I being deceived?',
   'cards-love-again': 'Will I love again?',
   'cards-soulmate': 'When is my soulmate coming?',
 }
@@ -160,6 +189,11 @@ const TAROT_QUESTION: Record<TarotHook, string> = {
   // (message scent), but as a bare noun it reads as a typo for "really" — it caught
   // the operator who commissioned the headline, on the FIRST question Evelyn asks.
   'cards-ready-commit': "Before I look closer, tell me… what would being ready actually look like, coming from him?",
+  // Honesty/lying (2026-08-03). Each asks for HER account of a specific moment — never
+  // for evidence, and never in a way that presumes his guilt before the cards are read.
+  'cards-lied-to': "Before I look closer, tell me… what has he told you that you have never quite been able to believe?",
+  'cards-truth': "Before I look closer, tell me… what is the one thing you would want a straight answer to, if he gave you one?",
+  'cards-deceived': "Before I look closer, tell me… when did you first feel that something here was not what you had been told?",
   'cards-love-again': "Before I look closer, tell me… what has been weighing on your heart since it happened?",
   'cards-soulmate': "Before I look closer, tell me… what is the love you're still holding out for — the one you haven't given up on?",
 }
@@ -954,6 +988,83 @@ const RETURN_MHF: CardSetConfig = {
         "That is not random; you reached for the card of the easy answer, the one that was simpler to leave standing than to fix.",
         "The Fool does not mean he set out to mislead you — it points to someone who let a convenient impression stand rather than correct it, which lands on you the same way in the end; what you are sensing is a real absence of straightening-out, not you being suspicious for no reason.",
         "Let me look closer at what he has never bothered to correct…",
+      ],
+    },
+    // ── Honesty/lying hooks (2026-08-03) ─────────────────────────────────────
+    // Face-down only, by operator scope (2026-08-03) — NOT ported to arcana-mfh.
+    // Written bespoke: the two nearest live hooks are 'cards-honest' (his practice of
+    // presenting) and 'cards-misled' (the shaped account), and a woman who clicks "Am I
+    // being lied to?" must not receive either of those reads wearing a new headline.
+    // The three wounds are kept deliberately distinct — a CLAIM she was given, whether
+    // the telling is the WHOLE of it, and whether she has been deliberately PLAYED.
+    //
+    // 'Am I being lied to?' — a specific untruth she suspects she has been handed.
+    'cards-lied-to': {
+      a: [
+        "You turned the Magician, dear — the card of skill in the telling, of the account delivered without a stumble.",
+        "Your hand went to the card of the smooth answer, and I do not think that was chance.",
+        "The Magician hands down no verdict that you have been lied to — it says the telling has been handled well enough that you cannot fault it anywhere, and the fact that a flawless account is the very thing unsettling you means your ear is working, not that you are hunting for trouble.",
+        "Let me look closer at the answer that arrived too easily…",
+      ],
+      b: [
+        "You turned the Hanged Man, dear — the card of the question left hanging in the air.",
+        "You reached for the card that matches how often you have asked and come away still holding the question.",
+        "The Hanged Man does not convict him of a lie — it marks a man who lets a question stay open rather than close it, and the doubt you have been treating as your own suspicion is really the weight of something never answered.",
+        "Let me look closer at the question he keeps stepping around…",
+      ],
+      c: [
+        "You turned the Fool, dear — the card of the word given lightly, before its cost was weighed.",
+        "That is not random; you reached for the card of the quick assurance, the one offered faster than it was thought about.",
+        "The Fool does not name him a liar — it points to a man whose word outruns his intention, so what he told you may have been meant when he said it and untrue by the morning; the gap you keep landing in is real, and you are not wrong to have stopped trusting the telling.",
+        "Let me look closer at the distance between what he says and what he does…",
+      ],
+    },
+    // 'Is he telling me the truth?' — not "is he lying" but "is this the WHOLE of it".
+    'cards-truth': {
+      a: [
+        "You turned the Magician, dear — the card of the account that has been edited before it reaches you.",
+        "Your hand went to the card of selection, and women reach for that card when they can feel the shape of something left out.",
+        "The Magician stops short of calling him false — it says you are being handed a chosen portion rather than the whole, and a truth with pieces removed still leaves you exactly where you are standing now, unable to make it add up.",
+        "Let me look closer at the part that never made it into the telling…",
+      ],
+      b: [
+        "You turned the Hanged Man, dear — the card of what is true from where he stands and not from where you do.",
+        "You reached for the card that matches how his version and your own can both seem right and still never meet.",
+        "The Hanged Man does not rule that he is deceiving you — it says he may be giving you a truth built entirely from his own vantage, which is why it never quite covers what you have actually lived; that mismatch is not you failing to understand him.",
+        "Let me look closer at what the view from your side has been telling you…",
+      ],
+      c: [
+        "You turned the Fool, dear — the card of the man who has not yet asked himself the question you are asking him.",
+        "That is not random; you reached for the card of the unexamined answer, given long before it was ever worked out.",
+        "The Fool does not find him false — it points to someone who cannot hand you the truth of it because he has not sat still long enough to know it himself, and an answer given that lightly is not something you should be asked to build on.",
+        "Let me look closer at what he has never stopped to work out…",
+      ],
+    },
+    // 'Am I being deceived?' — the heaviest of the three.
+    //
+    // ⚠ This hook selects for women who have begun to feel FOOLISH, so the failure mode
+    // is any reading that lands the fault on her openness — the same shape of harm the
+    // 'cards-wont-commit' guard exists to prevent. Beat 3 on card c answers it head-on.
+    // Never state as fact that she has been deceived (a verdict on him) and never
+    // reassure her that she has not been (the 'cards-real-person' failure, 2026-07-10).
+    'cards-deceived': {
+      a: [
+        "You turned the Magician, dear — the card of the practised hand, of someone who knows the effect he is having.",
+        "Your hand went to the card of deliberate effect, and that tells me you have already stopped believing all of this is accident.",
+        "The Magician does not pronounce you deceived — it says what has been happening around you has had a hand in it rather than being a run of bad luck, and noticing that took clear sight, not a suspicious mind.",
+        "Let me look closer at what has been arranged around you…",
+      ],
+      b: [
+        "You turned the Hanged Man, dear — the card of the moment everything turns over and reads differently.",
+        "You reached for the card of the second look, and no woman reaches for that card unless something has already begun re-reading itself.",
+        "The Hanged Man makes no ruling that you have been played — it marks the point where the same events start making a different kind of sense, and if things have been quietly rearranging themselves in your mind lately, that is your judgment working rather than deserting you.",
+        "Let me look closer at what looks different now that it has turned…",
+      ],
+      c: [
+        "You turned the Fool, dear — the card of the open hand, of trust given freely.",
+        "Your hand went to the card of the one who came in without guarding herself, and I want you to hear how I mean that.",
+        "The Fool passes no judgment on you and hands down no verdict on him — it names the openness you brought to this, and openness is not the same thing as being foolish; if something was done with that trust, it belongs to the hand that took it and never to you for having offered it.",
+        "Let me look closer at what your trust was actually met with…",
       ],
     },
     // ── Commitment hooks (2026-07-31) ────────────────────────────────────────

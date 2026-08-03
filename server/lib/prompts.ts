@@ -1047,6 +1047,10 @@ const TAROT_HOOK_CONTEXT: Record<string, string> = {
   'cards-will-commit': "She has been with, or waiting on, a man who has not committed, and is asking whether he ever will.",
   'cards-wont-commit': "She has already concluded he will not commit and wants to understand why — and has usually started turning that question on herself.",
   'cards-ready-commit': "She is asking whether the man she cares about will ever be ready for real commitment, having watched him stall at the same point more than once.",
+  // Honesty/lying hooks — the wound is a SPECIFIC UNTRUTH, not his character or future.
+  'cards-lied-to': "She believes she has been told something untrue by the man she is involved with, and is trying to work out whether to trust her own read of it.",
+  'cards-truth': "She is asking whether what he tells her is the whole of it, and keeps finding that his account never quite covers what she has actually lived.",
+  'cards-deceived': "She has begun to fear she was deliberately deceived, and is carrying shame for not having seen it sooner.",
   // Self-frame hooks — about HER future, not a specific man.
   'cards-love-again': "After heartbreak, she is asking whether she will ever love again — worn down, but the hope is still there.",
   'cards-soulmate': "She is asking WHEN her soulmate will finally arrive — tired of waiting, but still believing the right person is out there for her.",
@@ -1080,6 +1084,15 @@ const TAROT_HOOK_TENDENCY: Record<string, string> = {
   // real harm here.
   'cards-wont-commit': 'that her read on the situation is sound and the exhaustion she feels is earned. NEVER supply a verdict on his character, and NEVER let the answer land as her fault — nothing suggesting she was too much, too available, or not enough. Route the "why" to where HE is stuck, and affirm HER worth and her right to ask for more',
   'cards-ready-commit': 'that the gap she senses between what she is ready for and where he is standing is real information. NEVER promise he will become ready, NEVER pronounce that he cannot, and NEVER give a date or timeframe — affirm HER readiness as legitimate rather than impatience',
+  // Honesty/lying hooks (2026-08-03). These name an untruth outright, so the no-verdict
+  // rule must be stated in BOTH directions on every one: "yes, he lied" is an accusation
+  // of a real man, and "no, he is telling the truth" is a reassurance the funnel has no
+  // standing to give — and reassurance is the documented failure mode on this angle.
+  'cards-lied-to': 'that her ear for when something does not ring true is a real instrument. NEVER state he is lying and NEVER state he is truthful as fact; read the card as a tendency and affirm HER perception rather than ruling on his account',
+  'cards-truth': 'that the sense of an account which never quite covers what she has lived is real information. NEVER declare he is telling the truth and NEVER declare he is lying as fact; read the card as a tendency and affirm HER right to ask for the whole of it rather than a chosen portion',
+  // ⚠ Same shape of harm as cards-wont-commit, from the other direction: a woman asking
+  // this has usually started blaming her own trust. Nothing may land as her naivety.
+  'cards-deceived': 'that her growing sense of having been deliberately misled is real information, and that the openness she brought to this was never the fault. NEVER state as fact that she has been deceived, NEVER reassure her that she has not been, and NEVER let any part of the answer land as her own naivety or gullibility — affirm HER judgment and her dignity, and place any wrong squarely with whoever acted on her trust',
   // Self-frame — affirm HER future love, not a verdict on any man.
   'cards-love-again': 'that love is finding its way back to her — affirm HER heart and her capacity to love again, read the card as a hopeful sign for her own future; never tie it to one specific person and never a date',
   'cards-soulmate': 'that her soulmate is genuinely on the way and nearer than the waiting has let her believe — affirm HER heart and that the love she is holding out for is real and coming, read the card as a hopeful sign of arrival; answer the "when" only as a leaning (soon, close, sooner than the fear admits), NEVER tie it to one specific named person and NEVER give a date or timeframe',
