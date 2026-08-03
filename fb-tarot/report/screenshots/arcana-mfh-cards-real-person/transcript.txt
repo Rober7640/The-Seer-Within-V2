@@ -1,0 +1,26 @@
+# arcana-mfh — hook cards-real-person ("Is he the real person, or just a picture?"), tapped card c (the Magician/the Fool/the Hanged Man)
+# she typed: "There is always a reason he cannot meet me, and I have started to wonder if he is even real."
+
+[1] Mmm… the Hanged Man, the card of the pause and a new angle. I felt it the moment your eyes went to it. The connection only opens once I know who I'm speaking with, though… what's your first name, dear?
+
+[2] Sarah
+
+[3] It's lovely to meet you, Sarah.
+
+[4] Everything we discuss stays between us... our secret.
+
+[5] I can feel warmth radiating from your heart, Sarah...
+
+[6] But there's a flicker of shadow there too...
+
+[7] Let's look deeper together...
+
+[8] Tell me more about what's on your mind...
+
+[9] There is always a reason he cannot meet me, and I have started to wonder if he is even real.
+
+[10] Sarah, I hear you... always a reason he cannot meet. That pattern speaks volumes.
+
+[11] Your intuition has been whispering, hasn't it? And it's usually right.
+
+[12] When someone exists only in words, never presence... the ground beneath you disappears.

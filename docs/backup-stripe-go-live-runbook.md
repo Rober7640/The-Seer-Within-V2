@@ -20,6 +20,62 @@ stays dormant until a human flips one switch.
 
 **Detection is automatic. The switch is manual, by design.**
 
+> **Stripe Connect / `marketplace.ts`:** the account switch was wired through
+> `server/lib/marketplace.ts` too. **Before go-live, confirm whether Stripe Connect
+> is actually live in this project.** If Connect is **not** in use, this is a no-op —
+> ignore it. If it **is** live, an account switch has Connect implications (connected
+> accounts, application fees, payouts) that are **not** covered by this runbook and
+> must be validated separately.
+
+> **Where things run (deploy + env):** the app deploys on **Railway**. Environment
+> variables are set in the **Railway dashboard** (service → Variables), **not** in a
+> committed `.env`. A "redeploy" = Railway redeploys on push to the deployed branch,
+> or trigger one manually from the Railway dashboard. Every "set env var" / "redeploy"
+> step below happens there.
+
+---
+
+## Part 0 — Ship the dormant code (safe; no switch happens)
+
+**This is the precautionary rollout you do first — it changes nothing for customers.**
+You can do this *before Account B even exists.* While `ACTIVE_STRIPE_ACCOUNT` is unset
+or `A`, the code charges on Account A exactly as today and simply stamps every new
+payment row with `stripe_account = 'A'`. Account B keys are never touched until a human
+deliberately flips the switch (Part C). No switch is triggered by deploying.
+
+> ⚠️ **Development and production share ONE database.** So the migration is a **single,
+> one-time step** — and because the **development** deploy writes to that same shared
+> (production) database, the column must exist **before the development deploy**, not just
+> before production. There is no isolated dev DB to test against first. (The `db:push` run
+> on 2026-06-26 was a **localhost** DB — it does **not** cover the shared Supabase DB.)
+
+1. [ ] **Confirm whether the shared DB already has the column** (a prior deploy may have
+       added it). Read-only check:
+   ```sql
+   SELECT table_name, column_name FROM information_schema.columns
+   WHERE column_name = 'stripe_account'
+     AND table_name IN ('conversations', 'credit_purchases');
+   ```
+   Two rows → already migrated, skip to step 3. Zero rows → run step 2 first.
+2. [ ] **Run the schema migration ONCE on the shared database, before the new code serves
+       traffic anywhere (i.e. before the development deploy):**
+   ```
+   npm run db:push
+   ```
+   ⚠️ **Ordering is the only thing that can bite you:** every payment write now includes
+   the `stripe_account` column unconditionally, so if the code goes live before the column
+   exists, the first purchase write fails and payments don't record. Migrate first, then
+   deploy. (See the db:push review caution in A3.)
+3. [ ] **Deploy the code.**
+4. [ ] Leave `ACTIVE_STRIPE_ACCOUNT` **unset or `A`**. You do **not** need any `_B` vars,
+       and you do **not** need Account B to exist yet. (The `_B` vars are harmless if set
+       early — they stay dormant.)
+5. [ ] **Smoke-check** (see Part B's first item): one V1 checkout + one V2 coin purchase
+       still complete, and the new rows show `stripe_account = 'A'`.
+
+Once this is deployed and verified, the backup *capability* is live but **off**. Parts A–C
+below are only needed the day you actually want to build and switch to Account B.
+
 ---
 
 ## Part A — One-time prep (do this while everything is calm)
@@ -72,17 +128,34 @@ STRIPE_CREDITS_WEBHOOK_SECRET_B=whsec_…
 STRIPE_ALERT_EMAIL_TO=ops@…           # comma-separated
 STRIPE_ALERT_WEBHOOK_URL=https://…    # Slack/generic incoming webhook
 ```
+> ⚠️ **Email alerts also require `RESEND_API_KEY`** (already set for the drip emails)
+> — the alarm sends via Resend, *from* `FOLLOW_UP_FROM_EMAIL`. If `RESEND_API_KEY` is
+> not set, the email path **silently no-ops even when `STRIPE_ALERT_EMAIL_TO` is set**
+> (you'd still get the `[STRIPE-ACCOUNT-ALARM]` ERROR log and the Slack webhook, just
+> no email). The Slack/`STRIPE_ALERT_WEBHOOK_URL` path has no such dependency.
 
 ### A3. Apply the schema migration
 Two additive, nullable columns (`conversations.stripe_account`, `credit_purchases.stripe_account`).
 `NULL` = legacy rows → treated as Account A, so **no backfill is needed**.
 
-- [x] **Local dev DB** — done 2026-06-26.
-- [ ] **Production DB** — run **before** deploying the code that writes these columns:
+> This is the same migration called out in **Part 0**. **Development and production share
+> ONE database**, so run it **once** on that shared DB, **before the first deploy of this
+> code (the development deploy)** — since dev writes to the same database prod uses.
+
+- [x] **Localhost DB** (Joel's machine / repo `.env`) — done 2026-06-26. Does **not** cover the shared DB.
+- [ ] **Shared dev+prod (Supabase) DB** — confirm via the read-only check in Part 0, then if
+      missing run **before** deploying the code that writes these columns:
   ```
   npm run db:push
   ```
   Expect an additive `ALTER TABLE … ADD COLUMN stripe_account text` on both tables. Safe, no data loss.
+  > ⚠️ **Review the drizzle prompt before confirming.** `drizzle-kit push` is
+  > interactive and compares the whole schema — it can surface **unrelated** drift and
+  > offer to drop/alter other columns or tables. **Accept only the two
+  > `stripe_account` ADD COLUMN changes; reject/abort anything else** (a stray
+  > drop/rename on the prod DB is data loss). If the prompt shows more than those two
+  > additions, stop and investigate before proceeding. No rollback is needed for this
+  > migration itself — the columns are additive and nullable.
 
 ---
 
@@ -90,6 +163,12 @@ Two additive, nullable columns (`conversations.stripe_account`, `credit_purchase
 
 The code is dormant, but Stripe failures are silent. **Do not call it production-safe on
 review alone** — run these against a dev/test Stripe setup:
+
+> ⚠️ **Shared-DB caveat:** the development environment writes to the **same database as
+> production**. So these test purchases (incl. the `'B'`-tagged switch dry-run rows) land
+> in the **live** DB. Use small/test amounts, and be aware any rows you create are real
+> rows. Set `ACTIVE_STRIPE_ACCOUNT=B` only on the **development** Railway service so prod
+> traffic is unaffected.
 
 - [ ] **Account A still works (regression):** with `ACTIVE_STRIPE_ACCOUNT=A`, complete a
       V1 funnel checkout and a V2 coin purchase. Confirm coins/credits granted and rows

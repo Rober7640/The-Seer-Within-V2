@@ -21,6 +21,10 @@
 //   • the email step was reached and /api/lead fired (the scripted flow works)
 //   • body.funnel  == the expected funnel id  (root → none; /fb → v1-fb; …)
 //   • body.sign    == the expected palm sign  (palm entries only)
+//   • body.tarot*  == the expected lander identity (tarot entries only) — deck,
+//     facing, hook and angle, which the commitment gate's per-lander reporting is
+//     built on and which can only ever be captured once per visitor
+//   • tarot sends NO sign (that field feeds the palm price-variant pool)
 //   • no Meta request escaped (safety)
 //
 // SAFE: LOCAL-ONLY guard; Meta blocked; /api/lead is CAPTURED then fulfilled
@@ -42,6 +46,43 @@ const FUNNELS = [
   { label: 'gdn',            path: '/gdn/chat',                                        expectFunnel: 'v1-gdn',  expectSign: undefined },
   { label: 'palm/thumb',     path: '/fb-palm/chat?hook=already-met&thumb=a',           expectFunnel: 'v1-palm', expectSign: 'thumb' },
   { label: 'palm/hand-size', path: '/fb-palm/chat?hook=already-met&thumb=a&sign=hand-size', expectFunnel: 'v1-palm', expectSign: 'hand-size' },
+
+  // ── /fb-tarot (added 2026-07-31) ────────────────────────────────────────────
+  // Tarot sends NO `sign` — normalizeSign is palm-only and returns null off it — so
+  // `expectSign` stays undefined and `expectTarot` carries the lander identity instead.
+  //
+  // Those tarot* fields are what the commitment gate's per-lander reporting is built
+  // on, and they are a ONE-SHOT capture: the exposure row is unique(key, subject_id),
+  // written once at email capture, and `conversations` has no deck/hook column to
+  // recover from. If this thread ever breaks, every affected visitor is permanently
+  // unattributable — so it is asserted here rather than trusted.
+  //
+  // Entering straight at the chat URL is equivalent to arriving from the bridge:
+  // App.tsx runs syncTarotAttribution on the tarot funnel and it reads deck/hook from
+  // the query string off-bridge too, which is exactly the URL TarotBridge.goToChat builds.
+  {
+    label: 'tarot/face-down',
+    // CLEAN URL — no &deck=, as the live face-down ads run. Must resolve to the
+    // DEFAULT deck, not to a stored or placeholder one.
+    path: '/fb-tarot/chat?hook=cards-return&card=a&v=c',
+    expectFunnel: 'v1-tarot', expectSign: undefined,
+    expectTarot: { tarotDeck: 'return-mhf', tarotFacing: 'down', tarotHook: 'cards-return', tarotAngle: 'decode-him' },
+  },
+  {
+    label: 'tarot/face-up',
+    // &deck= is LOAD-BEARING here: drop it and a face-up ad serves face-DOWN backs.
+    path: '/fb-tarot/chat?hook=cards-honest&card=a&deck=arcana-mfh&v=c',
+    expectFunnel: 'v1-tarot', expectSign: undefined,
+    expectTarot: { tarotDeck: 'arcana-mfh', tarotFacing: 'up', tarotHook: 'cards-honest', tarotAngle: 'decode-him' },
+  },
+  {
+    label: 'tarot/commitment',
+    // The newest angle. Guards angleForHook: a hook left out of COMMITMENT_HOOKS
+    // silently reports 'decode-him' and vanishes as a reportable family.
+    path: '/fb-tarot/chat?hook=cards-will-commit&card=a&v=c',
+    expectFunnel: 'v1-tarot', expectSign: undefined,
+    expectTarot: { tarotDeck: 'return-mhf', tarotFacing: 'down', tarotHook: 'cards-will-commit', tarotAngle: 'commitment' },
+  },
 ];
 
 const checks = [];
@@ -124,6 +165,20 @@ async function auditOne(browser, f) {
   if (f.expectSign !== undefined) {
     check(`[${f.label}] client threaded sign = ${f.expectSign}`,
       capturedSign === f.expectSign, `client sent sign=${JSON.stringify(capturedSign)}`);
+  }
+  // /fb-tarot lander identity. Asserted field by field so a failure names the one
+  // that drifted rather than just "the tarot object is wrong".
+  if (f.expectTarot) {
+    for (const [key, want] of Object.entries(f.expectTarot)) {
+      const got = leadBody ? leadBody[key] : undefined;
+      check(`[${f.label}] client threaded ${key} = ${want}`,
+        got === want, `client sent ${key}=${JSON.stringify(got)}`);
+    }
+    // Tarot must NEVER send `sign`: that field feeds the palm price-variant pool
+    // (selectVariant → scopeVariantsToSign), so a tarot value leaking into it could
+    // move a tarot visitor onto a palm-scoped arm.
+    check(`[${f.label}] tarot sends NO sign (that field feeds the palm price pool)`,
+      capturedSign === undefined, `client sent sign=${JSON.stringify(capturedSign)}`);
   }
   check(`[${f.label}] 🔒 no Meta request escaped`, true, `${metaBlocked} blocked`);
 

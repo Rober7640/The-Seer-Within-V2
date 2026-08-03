@@ -1,0 +1,15 @@
+<!-- cord-stamp.svg — Maren Soleil footer stamp: a tiny roundel of the cord (two nodes joined by a thread, in a thin gold ring). Replaces Luna's natal-wheel stamp. ~48px, degrades to nothing visible. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48" fill="none" role="img" aria-label="Maren Soleil cord mark">
+  <g stroke="#C9A24B" stroke-width="1.25" fill="none" stroke-linecap="round">
+    <!-- outer ring -->
+    <circle cx="24" cy="24" r="22"/>
+    <!-- connecting thread between the two nodes -->
+    <path d="M15 26 C21 32 27 30 33 22"/>
+  </g>
+  <!-- two soul nodes + a midpoint spark -->
+  <g fill="#C9A24B" stroke="none">
+    <circle cx="15" cy="26" r="2.6"/>
+    <circle cx="33" cy="22" r="2.6"/>
+    <circle cx="24" cy="26.5" r="1"/>
+  </g>
+</svg>

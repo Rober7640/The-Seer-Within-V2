@@ -2,8 +2,13 @@
 // Sends a magic link that verifies the email and grants free credits.
 
 import { Resend } from 'resend';
+import { randomUUID } from 'crypto';
+import { eq, sql } from 'drizzle-orm';
+import { db } from './db';
+import { users, personas } from '@shared/schema';
 import logger from './logger';
 import { fireWithBreaker, resendBreaker } from './circuitBreaker';
+import { LIVE_THREAD_FREE_MINUTES } from './liveThreadEngagement';
 
 const resend = process.env.RESEND_API_KEY
   ? new Resend(process.env.RESEND_API_KEY)
@@ -13,7 +18,18 @@ const FROM_EMAIL = process.env.FOLLOW_UP_FROM_EMAIL || 'noreply@theseerwithin.co
 const FROM_NAME = process.env.FOLLOW_UP_FROM_NAME || 'The Seer Within';
 const BASE_URL = process.env.BASE_URL || 'http://localhost:5000';
 
-function escapeHtml(str: string): string {
+// How long a freshly-minted verification token stays clickable. Security-relevant:
+// shortening this window must take effect everywhere at once, so this is the single
+// definition — auth.ts and soulmateLanderSignup.ts import it rather than keeping
+// their own copies (they each had one before, which is exactly the drift risk).
+export const VERIFICATION_TOKEN_EXPIRY_HOURS = 24;
+
+/**
+ * Minimal HTML entity escape for values interpolated into email bodies. Exported
+ * so other senders that interpolate user-controlled fields (names) can reuse it
+ * rather than each shipping an unescaped template.
+ */
+export function escapeHtml(str: string): string {
   return str
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
@@ -24,19 +40,36 @@ function escapeHtml(str: string): string {
 
 // Free-minutes grant shown in verification copy. Kept in sync with the actual
 // coin grant in server/routes/auth.ts (DEFAULT_FREE_COINS / EVELYN_LANDER_FREE_COINS
-// / personas.freeCoins). Mirrors the same eligibility branches:
+// / LIVE_THREAD_FREE_COINS / personas.freeCoins). Mirrors the same eligibility branches:
 //   - 7/7 promo signup (source=promo-7-7): 7 min — the campaign's "7 free minutes with
 //     every guide". These are the promo coins already granted on /7-7 (verifying still
 //     adds the usual trial coins on top, so the email never over-promises). Checked first
 //     so a /7-7 signup on any guide (incl. Aiden) shows 7, not the per-persona default.
-//   - /evelyn lander signup (source=evelyn-lander, persona=evelyn-cross): 5 min
+//   - /evelyn lander signup (source=evelyn-lander, persona=evelyn-cross): 5 min,
+//     or LIVE_THREAD_FREE_MINUTES when the reader engaged with the Live Thread
+//     (see engagedViaLiveThread below)
 //   - aiden-powers persona: 10 min
 //   - everyone else: 3 min default
 // If the auth.ts grant logic changes, update this helper too — they must stay
 // in lockstep so the email never over- or under-promises.
-export function getFreeMinutesForSignup(persona?: string, source?: string): number {
+//
+// `engagedViaLiveThread` deliberately REFINES the evelyn-lander branch rather than
+// preceding every branch. It is not a global override: it is only ever true for an
+// Evelyn-lander signup, and the Evelyn-lander branch is the only one whose grant it
+// changes (auth.ts's grant chain resolves LIVE_THREAD_FREE_COINS only when
+// isEvelynUser() also holds). Hoisting it above `promo-7-7` would quote 10 to a 7/7
+// signup that will still receive 7 — the exact over-promise this helper exists to
+// prevent. Callers must derive it server-side (liveThreadEngagement.ts); it must
+// never be taken from a request body, or anyone could ask for the larger number.
+export function getFreeMinutesForSignup(
+  persona?: string,
+  source?: string,
+  engagedViaLiveThread: boolean = false,
+): number {
   if (source === 'promo-7-7') return 7;
-  if (source === 'evelyn-lander' && persona === 'evelyn-cross') return 5;
+  if (source === 'evelyn-lander' && persona === 'evelyn-cross') {
+    return engagedViaLiveThread ? LIVE_THREAD_FREE_MINUTES : 5;
+  }
   if (source === 'soulmate-lander' && persona === 'evelyn-cross') return 5;
   if (persona === 'aiden-powers') return 10;
   return 3;
@@ -218,10 +251,14 @@ export async function sendVerificationEmail(
   // (Evelyn lander + ENABLE_FREE_MINS_AT_REGISTRATION). Switches the copy from
   // "verify to receive your minutes" to "your minutes are waiting — verify to keep access".
   minutesAlreadyGranted: boolean = false,
+  // True when the reader typed into the Live Thread before signing up, which earns
+  // them the larger grant. Derived server-side by the caller (liveThreadEngagement.ts)
+  // — never read off a request body.
+  engagedViaLiveThread: boolean = false,
 ): Promise<{ success: boolean; error?: string }> {
   const personaQuery = persona ? `?persona=${encodeURIComponent(persona)}` : '';
   const verifyUrl = `${BASE_URL}/verify-email/${token}${personaQuery}`;
-  const freeMinutes = getFreeMinutesForSignup(persona, source);
+  const freeMinutes = getFreeMinutesForSignup(persona, source, engagedViaLiveThread);
 
   const html = buildVerificationHtml(firstName, verifyUrl, freeMinutes, minutesAlreadyGranted);
   const text = buildVerificationText(firstName, verifyUrl, freeMinutes, minutesAlreadyGranted);
@@ -256,4 +293,90 @@ export async function sendVerificationEmail(
     logger.error(`[Email Verification] Failed to send to ${email}:`, error);
     return { success: false, error: error?.message || 'Failed to send verification email' };
   }
+}
+
+/** The subset of a `users` row reissueVerificationEmail() needs. A full row satisfies it. */
+export interface ReissueVerificationUser {
+  id: string;
+  email: string;
+  firstName: string;
+  defaultPersonaId: string | null;
+  welcomeCoinsGrantedAt: Date | null;
+}
+
+/**
+ * Reissue an existing UNVERIFIED account's verification email: mint a fresh token,
+ * stamp it (and its expiry) on the user row, resolve the persona context, and send.
+ *
+ * Extracted verbatim from POST /api/auth/resend-verification (auth.ts:877-904) so
+ * VERIFICATION_TOKEN_EXPIRY_HOURS and the NOW() + INTERVAL expression have exactly
+ * one definition. Callers: that route, and the Evelyn lander's /check-email
+ * unverified_match branch.
+ *
+ * The caller decides nothing about the token — only the two optional overrides:
+ *   personaSlug — takes priority over the user's defaultPersonaId. Preserves persona
+ *                 context on the resent link; without it the verify-email redirect
+ *                 loses the persona query and lands the user on /login instead of
+ *                 the persona-specific chat.
+ *   source      — funnel tag; only affects the free-minutes number the copy quotes
+ *                 (getFreeMinutesForSignup above). Omit it unless the caller knows
+ *                 the reader is genuinely eligible for that funnel's grant, or the
+ *                 email will over-promise.
+ *   engagedViaLiveThread
+ *               — same contract as `source`, one tier up: only pass it when the
+ *                 caller has established server-side (liveThreadEngagement.ts) that
+ *                 this reader will genuinely receive the Live Thread grant. It has
+ *                 no effect without source='evelyn-lander' and an Evelyn persona,
+ *                 mirroring the grant chain.
+ */
+export async function reissueVerificationEmail(
+  user: ReissueVerificationUser,
+  opts: { personaSlug?: string; source?: string; engagedViaLiveThread?: boolean } = {},
+): Promise<{ personaSlug?: string; freeMinutesQuoted: number }> {
+  // Generate new token
+  const verificationToken = randomUUID();
+
+  await db.update(users)
+    .set({
+      verificationToken,
+      verificationTokenExpiry: sql`NOW() + INTERVAL '${sql.raw(String(VERIFICATION_TOKEN_EXPIRY_HOURS))} hours'`,
+      updatedAt: sql`NOW()`,
+    })
+    .where(eq(users.id, user.id));
+
+  // Priority: explicit override > user's defaultPersonaId.
+  let personaSlug: string | undefined = opts.personaSlug;
+  if (!personaSlug && user.defaultPersonaId) {
+    const personaRow = await db.select({ slug: personas.slug })
+      .from(personas)
+      .where(eq(personas.id, user.defaultPersonaId))
+      .limit(1);
+    personaSlug = personaRow[0]?.slug;
+  }
+
+  // If the welcome minutes were already granted (at registration, Task 1.1), the
+  // resent email says "your minutes are waiting — verify to keep access" rather than
+  // "verify to receive them". Uses the actual grant marker, so it's accurate regardless
+  // of the flag's current state.
+  await sendVerificationEmail(
+    user.email,
+    user.firstName,
+    verificationToken,
+    personaSlug,
+    opts.source,
+    user.welcomeCoinsGrantedAt != null,
+    opts.engagedViaLiveThread ?? false,
+  );
+
+  // Report back the number the copy actually quoted (same inputs sendVerificationEmail
+  // resolves it from). Callers that decide `source` conditionally need this to log —
+  // and to assert — that the quote matches the grant the reader will really receive.
+  return {
+    personaSlug,
+    freeMinutesQuoted: getFreeMinutesForSignup(
+      personaSlug,
+      opts.source,
+      opts.engagedViaLiveThread ?? false,
+    ),
+  };
 }

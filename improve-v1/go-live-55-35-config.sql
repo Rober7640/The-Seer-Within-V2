@@ -1,3 +1,11 @@
+-- ⚠⚠⚠ SUPERSEDED 2026-07-26 — DO NOT RUN THIS FILE ⚠⚠⚠
+-- This migration is RETIRED. Running it now would silently revert the live
+-- pool: it deletes the 35_palm_gate commitment-gate variant and restores
+-- 55-35_palm to weight 1. The current migration is:
+--     improve-v1/go-live-palm-gate-config.sql
+-- This file is kept only as a historical record of the sliding-close go-live.
+--
+
 -- Sliding-scale close ($55 anchor / $35 grace) GO-LIVE — fb-palm THUMB ads, 50/50.
 --
 -- ⚠ SUPERSEDES the original 3d9a812 version of this file, which put the test on the

@@ -29,10 +29,12 @@ import logger from './logger';
 import {
   resolveUpsell1Cents,
   resolveV1Price,
+  resolvePalmGate,
   logExposure,
   hashEmail,
   U1_PRICE_EXPERIMENT_KEY,
   V1_MAIN_EXPERIMENT_KEY,
+  PALM_GATE_EXPERIMENT_KEY,
 } from './experiments';
 import {
   DEFAULT_UPSELL1_CENTS,
@@ -64,6 +66,25 @@ export interface AssignedVariant {
   priceCents: number;
   downsellCents: number;
   upsell1Cents: number;
+  // fb-palm commitment-gate arm (UI only — never affects price). Absent on the
+  // read-only getVariantForEmail path, which is a pure price lookup.
+  commitmentGate?: boolean;
+}
+
+/**
+ * Which /fb-tarot lander a visitor arrived through — the tarot counterpart of the
+ * fb-palm `sign`. A LABEL ONLY: it is recorded on the commitment-gate exposure and
+ * never participates in variant selection (tarot pricing is the fixed 35_tarot).
+ *
+ * `facing` and `angle` arrive already derived from the client registry
+ * (tarotAttribution.toProps) rather than being recomputed here — the server has no
+ * tarot deck/hook registry and adding a 4th one would be one more roster to drift.
+ */
+export interface TarotLanderContext {
+  deck?: string;    // 'return-mhf' (face-down) | 'arcana-mfh' (face-up)
+  hook?: string;    // 'cards-return' | 'cards-who-he-is' | …
+  facing?: string;  // 'down' | 'up'
+  angle?: string;   // 'decode-him' | 'trust' | 'self-frame'
 }
 
 const ENV_OVERRIDE_KEY = 'V1_PRICE_VARIANTS_JSON';
@@ -88,7 +109,14 @@ export function getVariantsSource(): VariantsSource {
 // Add an entry here only for a NEW funnel that should ship single-price; if you
 // do, make sure NOT to also add matching weighted variants (the fixed entry
 // takes precedence and would silently shadow them).
-const FIXED_FUNNEL_PRICES: Record<string, { id: string; priceCents: number; downsellCents: number; upsell1Cents: number }> = {};
+const FIXED_FUNNEL_PRICES: Record<string, { id: string; priceCents: number; downsellCents: number; upsell1Cents: number }> = {
+  // Tarot "decode-him card" funnel launches at a flat single price (no A/B split,
+  // like thumb-angle at launch). The '35_tarot' id carries the '-tarot' token so
+  // funnelParamFromPriceVariant attributes it back to v1-tarot. To start a price
+  // test later, add funnel-scoped weighted variants to the system_config pool and
+  // REMOVE this entry (a fixed entry shadows any matching weighted variants).
+  'v1-tarot': { id: '35_tarot', priceCents: 3500, downsellCents: 2500, upsell1Cents: 4700 },
+};
 
 interface CachedVariants {
   variants: PriceVariant[];
@@ -187,15 +215,25 @@ export function invalidatePriceVariantCache(): void {
  * Returns null if no conversation row exists for this email yet.
  *
  * `sign` is the fb-palm ad sign (thumb / hand-size / finger-shape / …). It only
- * narrows the pool for variants that declare `signs` — today that is the sliding
- * close (`55-35_palm`, thumb-only). Every other funnel and every unscoped variant
- * behaves exactly as before. Palm traffic that sends no sign is treated as thumb
- * (see normalizeSign).
+ * narrows the pool for variants that declare `signs`. The sliding close
+ * (`55-35_palm`, thumb-only) used to be that variant; it is now RETIRED and
+ * parked at weight 0. The current live palm test, `35_palm_gate`, is
+ * unscoped (no `signs` key) and runs across every sign, so `sign` currently has
+ * no variant left to narrow against on this funnel — it is kept for the next
+ * sign-scoped variant that declares `signs`. Every other funnel and every
+ * unscoped variant behaves exactly as before. Palm traffic that sends no sign
+ * is treated as thumb (see normalizeSign).
+ *
+ * `tarotLander` is the /fb-tarot equivalent of `sign` — which lander she came
+ * through — recorded on the commitment-gate exposure so tarot breaks down per
+ * lander the way palm breaks down per sign. It NEVER touches pricing (tarot is a
+ * fixed variant, 35_tarot); it is a label only.
  */
 export async function assignVariantIfMissing(
   email: string,
   funnel?: string | null,
   sign?: string | null,
+  tarotLander?: TarotLanderContext | null,
 ): Promise<AssignedVariant | null> {
   try {
     const existing = await db
@@ -217,6 +255,60 @@ export async function assignVariantIfMissing(
     }
 
     const row = existing[0];
+
+    // fb-palm COMMITMENT GATE — resolved here, DELIBERATELY ABOVE the price
+    // idempotency guard, so it is assigned for EVERY lead including returning
+    // visitors who already carry a stored price variant.
+    //
+    // This placement is the whole point of the test being an experiment rather
+    // than a price-pool arm: a pool arm can only be drawn when no variant is
+    // stored yet, so every repeat visitor would keep the incumbent control id.
+    // On live fb-palm those repeat visitors are 23% of sessions but 57% of main
+    // buys (14.5% vs 3.3% CR), so a pool-based gate would be measured against a
+    // control inflated with all of them. Bucketing on the email hash re-splits
+    // the entire population instead.
+    //
+    // Safe above the guard because the gate is UI-ONLY: it returns a boolean the
+    // client uses to pick a component. It never touches priceCents /
+    // downsellCents / upsell1Cents, so a returning visitor's stored price is
+    // returned below completely unchanged.
+    const gateSign = normalizeSign(funnel, sign);
+    const palmGate = await resolvePalmGate(email, funnel, gateSign);
+    if (palmGate.enrolled && palmGate.variant) {
+      // conversationId is what tallyV1Main joins on to find the purchase.
+      //
+      // `sign` is captured here because it is the ONLY chance to: the test runs
+      // across every fb-palm sign, `conversations` has no sign column, and an
+      // exposure row is written exactly once per subject (unique(key, subject_id)),
+      // so a sign not recorded now can never be back-filled. Without it the whole
+      // test is readable only as one pooled number and "did the gate work better on
+      // hand-size than on thumb?" becomes permanently unanswerable.
+      // PII-free: an ad-sign slug, already normalised + length-capped.
+      //
+      // `funnel` is captured for the same reason, and became load-bearing when the
+      // gate was extended past fb-palm to /fb-tarot (2026-07-31) as ONE pooled test.
+      // The pooled A-vs-B number stays the decision metric, but without this the
+      // palm-vs-tarot split is unrecoverable — `normalizeSign` returns null off palm,
+      // so tarot rows carry no sign and would be indistinguishable from a palm row
+      // whose sign failed to resolve. Same one-shot constraint as `sign`: exposures
+      // are unique(key, subject_id), so what isn't written now can never be added.
+      //
+      // The tarot lander (deck/hook + the facing/angle the client derived) is the
+      // /fb-tarot counterpart of `sign`, and is subject to the SAME one-shot rule:
+      // recorded now or never. `facing`+`angle` are what the per-lander table groups
+      // on — Face-Up/Face-Down × decode-him/trust, the four landers actually running
+      // — while deck+hook keep a finer drill-down available later.
+      await logExposure(PALM_GATE_EXPERIMENT_KEY, hashEmail(email), palmGate.variant, 'palm_gate_assigned', {
+        conversationId: row.id,
+        sign: gateSign,
+        funnel: funnel ?? null,
+        ...(tarotLander?.deck ? { deck: tarotLander.deck } : {}),
+        ...(tarotLander?.hook ? { hook: tarotLander.hook } : {}),
+        ...(tarotLander?.facing ? { facing: tarotLander.facing } : {}),
+        ...(tarotLander?.angle ? { angle: tarotLander.angle } : {}),
+      });
+    }
+
     // Idempotency / stickiness: once a variant id is stored, return the stored price
     // and never re-roll. Use `!= null` (not truthiness) on the amounts so a stored 0
     // still counts as "assigned" — otherwise a 0/NULL downsell would skip this guard
@@ -227,6 +319,7 @@ export async function assignVariantIfMissing(
         priceCents: row.priceAmountCents,
         downsellCents: row.downsellAmountCents,
         upsell1Cents: row.upsell1AmountCents ?? DEFAULT_UPSELL1_CENTS,
+        commitmentGate: palmGate.gate,
       };
     }
 
@@ -241,8 +334,11 @@ export async function assignVariantIfMissing(
           funnel,
         }
       // Partition by funnel, then filter by palm sign, then draw. `sign` only ever
-      // narrows the pool for variants that declare `signs` (today: the thumb-only
-      // sliding close) — every other funnel/variant draws exactly as before.
+      // narrows the pool for variants that declare `signs`. The thumb-only sliding
+      // close that used to rely on this is now retired (parked at weight 0); the
+      // current palm test (`35_palm_gate`) is unscoped and runs on every sign, so
+      // this scoping is presently a no-op on v1-palm — every other funnel/variant
+      // draws exactly as before.
       : selectVariant(await getActiveVariants(), funnel, sign);
     // Upsell-1 price A/B test (framework, Phase 3b). Fold in only where the legacy
     // Upsell-1 price is the DEFAULT $47 (the control price the test compares $37
@@ -275,7 +371,18 @@ export async function assignVariantIfMissing(
     // id↔price decoupling is the /admin/price-test readout, and only once this
     // framework test is started for a funnel (until then the legacy split is what's
     // live and /admin/price-test reads it correctly) — an accepted, temporary tradeoff.
-    const v1 = await resolveV1Price(email, picked.priceCents, picked.downsellCents, funnel);
+    // `sign` is passed so a price experiment can be scoped to ONE fb-palm lander
+    // (scope.sign) instead of the whole funnel — that is how a new lander runs its
+    // own $55/$35 test without touching the live thumb-only system_config 70/30.
+    // Normalised (absent sign on v1-palm ⇒ 'thumb') so it matches the pool + the log line.
+    const v1 = await resolveV1Price(
+      email,
+      picked.priceCents,
+      picked.downsellCents,
+      funnel,
+      V1_MAIN_EXPERIMENT_KEY,
+      normalizeSign(funnel, sign),
+    );
     const mainCents = v1.mainCents;
     const downsellCents = v1.downsellCents;
 
@@ -304,9 +411,12 @@ export async function assignVariantIfMissing(
       });
     }
 
-    // `sign` is logged so the thumb-only scoping is verifiable straight from the
-    // logs the moment the config flips — grep for variant=55-35_palm and every hit
-    // must carry sign=thumb. Any other sign on that variant = contamination.
+    // `sign` is logged so any future sign-scoped variant's scoping is verifiable
+    // straight from the logs the moment a config flips. The thumb-only sliding
+    // close (`55-35_palm`) this comment used to describe is now retired (parked
+    // at weight 0, no longer drawn). The current live palm test, `35_palm_gate`,
+    // is unscoped and expected across every sign — there is no sign-specific grep
+    // invariant to check for it.
     logger.info('priceVariant: assigned', {
       email,
       variant: picked.id,
@@ -321,6 +431,7 @@ export async function assignVariantIfMissing(
       priceCents: mainCents,
       downsellCents: downsellCents,
       upsell1Cents,
+      commitmentGate: palmGate.gate,
     };
   } catch (err) {
     logger.error('priceVariant: assignVariantIfMissing failed', { email, err });

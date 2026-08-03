@@ -13,7 +13,7 @@ Operator front-door for Evelyn Cross's **reframe deck** daily-email program. The
 - `formats/NN-*.md` — the 7 format specs. `emails/NN-*.md` — the 7 gold emails (the quality bar + the check fixtures).
 - `STATE.md` — the rolling sends log + rotation balance + no-repeat lists.
 
-**Pipeline scripts** (run from `docs/aweber/evelyn-reframe-deck/scripts/`, Node ≥18, need `.env`): `check.mjs`, `render-aweber.mjs`, `aweber-ops.mjs`.
+**Pipeline scripts** (run from `docs/aweber/evelyn-reframe-deck/scripts/`, Node ≥18, need `.env`): `check.mjs`, `render-aweber.mjs`, `aweber-ops.mjs`. `check.mjs` and `aweber-ops.mjs` run under plain `node`; **`render-aweber.mjs` must run under `tsx`** (it imports a TypeScript module to mint `/e/<code>` links) and **writes to the database named by `DATABASE_URL`** — see step 5.
 
 ## Inputs
 - **start date** (the first send's day; sends go one/day at 10:30 UTC = 6:30pm SGT) and **count** (how many emails). Ask if not given.
@@ -70,25 +70,47 @@ Review the cycle against the PLAYBOOK bars a counter can't see — spawn a revie
 
 Any blocker → fix → re-run steps 3–4 on that draft.
 
-### 5. Render
+### 5. Render — **local only, always**
 ```
-node render-aweber.mjs ../sends/<cycle>
+npx tsx --env-file=../../../../.env.test render-aweber.mjs ../sends/<cycle>
 ```
 Writes `../sends/<cycle>/_build/` (`NN-<slug>.html`, `.txt`, `index.json`) in the canonical white/Helvetica AWeber design (`↳ THE REFRAME.` marker stripped). Subject length is already enforced by the step-3 mechanical gate; `render-aweber.mjs` only **re-warns** on a `>120 B` subject (a `⚠` on stderr) and still **exits 0** — it does not block. So treat any such `⚠` as a hard blocker: it means a draft slipped the gate. Shorten the subject (`{{ … }}` tag ≈40 B → keep the rest ≤~80 B) and re-run **both** check and render before proceeding.
 
-### 6. Human gate → schedule + log
+**Never render against production in this step.** Rendering used to be a pure local file operation; it now also mints `/e/<code>` rows for any draft carrying a `**Continue Seed:**`, and those rows are a production write. This step runs mid-cycle, before the human gate, so it stays pointed at the local database. Producing the codes that go live is step 6a, **after** the human says go. The script enforces this too: it refuses any non-local `DATABASE_URL` unless `--mint-production` is passed.
+
+Read the `⚑ minting /e/ codes into database "…" @ host` line it prints — that names the target. With `DATABASE_URL` unset it exits 1 rather than guessing. Re-running is safe: codes are keyed on the campaign slug, so a re-render `reused`s the existing code or `updated`s its content in place — the URL inside an already-scheduled broadcast never changes.
+
+**Writing the continuity frontmatter:** for a send you want on the Live Thread path, add three lines to the draft's frontmatter block (each one line, **no wrapping** — a wrapped value truncates at the newline, and the renderer will warn if it spots one):
+- `- **Reading Recap:**` — 2–5 sentences: the exact reading this email delivered.
+- `- **Open Loop:**` — the personal question the email left open.
+- `- **Continue Seed:**` — Evelyn's turn-0 opener that picks the thread back up. **This one is the trigger** — omit it and the send stays on the legacy `?campaign=` link. Wrapping this one onto a second line is a hard render error (it would ship as half a sentence); wrapping the other two only warns.
+- Optional `- **Bucket:**` — defaults to `love` for this deck. Must be exactly one of `love` / `money` / `purpose` / `specific`; anything else is a hard render error, because the lander discards the *whole* payload on a parse failure and the send would silently lose continuity, prefill and attribution together. It selects Drip 1's bucket-specific phrase, so change it only for a send that genuinely isn't love-weighted.
+
+**Campaign slugs are globally unique, forever.** Codes are keyed on `(persona, campaign)` across all cycles, so never reuse a slug an earlier cycle used — it would repoint that cycle's live row and give a reader of the older, already-sent email the new cycle's continuation. Draft numbers restart each cycle, so include something cycle-distinct in the slug. The renderer checks every sibling directory under `sends/` and hard-fails on a collision.
+
+**Declare the short-linked sends.** Write `../sends/<cycle>/short-links.json` = the draft numbers that must be short-linked, e.g. `["04", "07"]` (or `{ "note": "…", "sends": [...] }` if the file needs a comment). The renderer then hard-fails on any deviation in either direction, instead of burying a mistyped `**Continue Seed:**` label inside a warning block that fires on most sends anyway. Confirm the `✓ short links as declared` line before moving on.
+
+### 6. Human gate → mint for production → schedule + log
 Present the **review packet** and STOP:
 - the rendered emails (open the `_build/*.html`),
 - the slate table, and
 - the `STATE.md` diff you are about to write.
 
 **Do not schedule without an explicit in-turn "go" from the operator.** On "go":
+
+0. **Re-render against production, but only if this cycle has short links** (`✓ short links as declared` listed any send in step 5). Skip this entirely for an all-legacy cycle — it needs no database at all.
+   ```
+   npx tsx --env-file=../../../../.env render-aweber.mjs ../sends/<cycle> --mint-production
+   ```
+   This is the production write, and `--mint-production` is required — the script refuses a non-local database without it. Confirm the `⚑ minting … @ …pooler.supabase.com` line names production, and that each short-linked send reports `created`/`reused`/`updated`. Skipping this step stops the pipeline rather than sending a broken link: `aweber-ops.mjs schedule` pre-flights `minted_into` **and** fetches each `/e/<code>` from the live site, requiring a `302` to `/evelyn?`. That live check also means an unapplied migration 020 or an undeployed `/e/` route surfaces here, before anything is created — and it blocks on a failed or unreachable check rather than passing.
+
 1. `node aweber-ops.mjs schedule ../sends/<cycle>/_build` — **LIVE**: validates + creates + schedules one entry at a time, aborting on the first bad one (subject >120 B, missing `scheduled_for`, or an API failure) and verifying each reaches `status=scheduled`. **This is not atomic — a mid-batch abort leaves the already-scheduled earlier sends LIVE.** That's why the subject gate must be clean before "go". If an abort happens, run `node aweber-ops.mjs list` to see what went live, then `node aweber-ops.mjs cancel <id> …` to pull those back to draft. After a clean run, `node aweber-ops.mjs list` confirms the full schedule.
 2. Log the cycle in `STATE.md`: append the sends-table rows (send#, date, fmt, type, reframe, cast, state, slug, AWeber id) and extend every no-repeat list (reframes, hooks, cards, euphemisms, maxims).
 3. Commit the drafts + `STATE.md` (never `_build/`, which is gitignored).
 
 ## Rules
 - **`aweber-ops schedule` is the only irreversible action — it fires only after an explicit human "go."** Default to stopping at the review packet.
+- **Rendering is local. The only production write before scheduling is step 6a's `--mint-production` re-render, and it also fires only after "go."** Never pass `--env-file=.env` (or `--mint-production`) during step 5.
 - **Never schedule a draft that failed either gate.** Both `check.mjs` (mechanical) and the judgment QA must be clean.
 - **Commit `STATE.md` only after a successful schedule** — a planned-but-unsent cycle leaves no rows.
 - **Rollback:** `node aweber-ops.mjs cancel <id> <id> …` reverts scheduled → draft (recoverable, not deleted).

@@ -26,8 +26,8 @@ export default function RefundPage() {
             <h2 className="text-xl font-semibold text-white mb-3">1. Our Commitment</h2>
             <p>
               At The Seer Within, operated by Cosmo Numerology Pte Ltd, we want you to feel confident
-              in every purchase. While digital reading credits are consumed immediately upon use, we
-              recognise that circumstances change — and we extend a goodwill refund on unused Credits
+              in every purchase. While digital reading minutes are consumed immediately upon use, we
+              recognise that circumstances change — and we extend a goodwill refund on unused minutes
               under the conditions set out in this Policy.
             </p>
             <p className="mt-3">
@@ -40,26 +40,26 @@ export default function RefundPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-white mb-3">2. Reading Credits — Goodwill Refund</h2>
+            <h2 className="text-xl font-semibold text-white mb-3">2. Reading Minutes — Goodwill Refund</h2>
             <div className="bg-purple-900/60 border border-purple-500 rounded-lg p-4 mb-4">
-              <p className="font-semibold text-white mb-1">Summary: 30-day goodwill refund on unused purchased Credits.</p>
+              <p className="font-semibold text-white mb-1">Summary: 30-day goodwill refund on unused purchased minutes.</p>
             </div>
-            <p className="mb-3">We will consider a refund request for purchased reading Credits where:</p>
+            <p className="mb-3">We will consider a refund request for purchased reading minutes where:</p>
             <ul className="list-disc list-inside space-y-2 ml-4 mb-4">
               <li>The request is made within <strong>30 calendar days</strong> of the original purchase date; and</li>
-              <li>The Credits from that purchase have <strong>not been used</strong> in any guide session.</li>
+              <li>The minutes from that purchase have <strong>not been used</strong> in any guide session.</li>
             </ul>
             <p className="mb-3">
-              Where a purchase has been partially used (i.e. some Credits from that purchase were
+              Where a purchase has been partially used (i.e. some minutes from that purchase were
               consumed in sessions), only the unused portion is eligible for a goodwill refund.
               The refund amount will be calculated on a pro-rata basis against the original purchase price.
             </p>
-            <p className="mb-3">The following Credits are <strong>not</strong> eligible for refund:</p>
+            <p className="mb-3">The following minutes are <strong>not</strong> eligible for refund:</p>
             <ul className="list-disc list-inside space-y-2 ml-4">
-              <li>Credits that have been consumed (used) in any guide session, even partially;</li>
-              <li>Complimentary welcome Credits (free Credits granted at registration have no cash value);</li>
-              <li>Credits purchased more than 30 days before the refund request;</li>
-              <li>Credits that have already expired.</li>
+              <li>Minutes that have been consumed (used) in any guide session, even partially;</li>
+              <li>Complimentary welcome minutes (free minutes granted at registration have no cash value);</li>
+              <li>Minutes purchased more than 30 days before the refund request;</li>
+              <li>Minutes that have already expired.</li>
             </ul>
             <p className="mt-4 text-purple-200 text-sm">
               This goodwill refund is provided at our sole discretion. It does not affect, and is in
@@ -68,17 +68,17 @@ export default function RefundPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-semibold text-white mb-3">3. Credit Expiry — No Refund After Expiry</h2>
+            <h2 className="text-xl font-semibold text-white mb-3">3. Minutes Expiry — No Refund After Expiry</h2>
             <p className="mb-3">
-              As set out in our Terms of Service, purchased Credits expire <strong>6 months from the
-              date of purchase</strong>. Credits that have expired are forfeited and are not eligible
+              As set out in our Terms of Service, purchased minutes expire <strong>6 months from the
+              date of purchase</strong>. Minutes that have expired are forfeited and are not eligible
               for any refund, extension, or reactivation.
             </p>
             <p>
               We will endeavour (on a best-efforts basis) to send you a reminder email approximately
-              14 days before your Credits expire. However, it remains your responsibility to use
-              Credits before they expire. A missed reminder notification does not entitle you to a
-              refund or extension of expired Credits.
+              14 days before your minutes expire. However, it remains your responsibility to use
+              minutes before they expire. A missed reminder notification does not entitle you to a
+              refund or extension of expired minutes.
             </p>
           </section>
 
@@ -150,7 +150,7 @@ export default function RefundPage() {
               <li>Suspected abuse of our refund policy (e.g. a pattern of purchasing and immediately requesting refunds);</li>
               <li>Fraudulent, deceptive, or bad-faith claims;</li>
               <li>Requests made outside the applicable timeframes set out in this Policy;</li>
-              <li>Credits that have been used in sessions, regardless of satisfaction with the reading.</li>
+              <li>Minutes that have been used in sessions, regardless of satisfaction with the reading.</li>
             </ul>
             <p className="mt-3">
               If we decline your request, we will explain the reason. You may contact us to discuss

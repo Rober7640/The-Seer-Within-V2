@@ -1,0 +1,9 @@
+<!-- current-watermark.svg — Maren Soleil masthead watermark, BAKED on ember (#5E2A2C). Render -> current-watermark-600x88.png for the masthead background-image. Atmosphere only; must degrade to flat ember when images are blocked (the band's bgcolor is the floor). -->
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="88" viewBox="0 0 600 88" fill="none" role="img" aria-label="">
+  <rect x="0" y="0" width="600" height="88" fill="#5E2A2C"/>
+  <g stroke="#C9A24B" stroke-width="1.25" fill="none" stroke-linecap="round" opacity="0.10">
+    <path d="M-20 28 C120 16 240 40 380 28 C500 18 600 40 640 28"/>
+    <path d="M-20 48 C140 38 260 60 400 48 C520 40 600 58 640 48"/>
+    <path d="M-20 66 C110 58 250 76 390 66 C510 60 600 74 640 66"/>
+  </g>
+</svg>

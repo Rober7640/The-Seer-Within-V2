@@ -3,6 +3,7 @@ import { useLocation, useSearch, Link } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Sparkles, CheckCircle, AlertCircle, LogIn } from "lucide-react";
+import { coinsToClock } from "@shared/types";
 
 type MigrationState =
   | "checking"
@@ -125,7 +126,7 @@ export default function WelcomeChatPage() {
             <CardContent className="space-y-4">
               <div className="bg-purple-50 rounded-lg p-4 text-center">
                 <p className="text-sm text-purple-700 font-medium">
-                  Your bonus includes 900+ coins of personal guidance
+                  Your bonus includes 15+ minutes of personal guidance
                 </p>
                 <p className="text-xs text-purple-500 mt-1">
                   An account will be created and credentials sent to {email}
@@ -160,7 +161,7 @@ export default function WelcomeChatPage() {
             <CardContent className="text-center">
               <div className="w-8 h-8 border-2 border-purple-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
               <p className="text-sm text-gray-500">
-                Setting up your personal guidance account with bonus coins...
+                Setting up your personal guidance account with bonus minutes...
               </p>
             </CardContent>
           </>
@@ -179,7 +180,7 @@ export default function WelcomeChatPage() {
             <CardContent className="space-y-4 text-center">
               <div className="bg-green-50 rounded-lg p-4">
                 <p className="text-sm text-green-700 font-medium">
-                  Account created with {coinBalance} bonus coins!
+                  Account created with {coinsToClock(coinBalance)} of bonus reading time!
                 </p>
                 <p className="text-xs text-green-600 mt-1">
                   Login credentials sent to {email}

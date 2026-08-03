@@ -7,6 +7,15 @@ import { calculateTypingDelay, sleep, generateId } from '@/lib/typing'
 import { getGeoData, getTimeMessage } from '@/lib/geolocation'
 import { parsePalmParams, greetingA, openerB, openerCStart, palmReflectFallback, hookToBucket, SIGNS } from '@/content/palmReads'
 import {
+  parseTarotParams,
+  greetingA as tarotGreetingA,
+  openerB as tarotOpenerB,
+  openerCStart as tarotOpenerCStart,
+  tarotReflectFallback,
+  cardArtFor as tarotCardArtFor,
+  hookToBucket as tarotHookToBucket,
+} from '@/content/tarotReads'
+import {
   detectIntent,
   sanitizeInput,
   getAIDeflectionResponse,
@@ -20,6 +29,7 @@ import {
 import { trackLead, trackInitiateCheckout, getTrackdeskClickId } from '@/lib/facebook'
 import { currentFunnel, getPostHogFunnel, skipEmail } from '@/lib/funnel'
 import { track as trackPH, identifyUser as identifyPH, getDistinctId } from '@/lib/posthog'
+import { tarotEventProps } from '@/lib/tarotAttribution'
 import { trackGAdsLead, trackGAdsCheckout, getGclid } from '@/lib/gtm'
 import { isSlidingCloseVariant } from '@shared/types'
 
@@ -140,26 +150,37 @@ export function useConversation() {
 
   // === HELPER FUNCTIONS ===
 
-  const addMessage = useCallback((type: Message['type'], content: string) => {
-    setChat(prev => ({
-      ...prev,
-      messages: [...prev.messages, { id: generateId(), type, content }],
-    }))
-  }, [])
+  const addMessage = useCallback(
+    (type: Message['type'], content: string, cardArt?: Message['cardArt']) => {
+      setChat(prev => ({
+        ...prev,
+        messages: [...prev.messages, { id: generateId(), type, content, ...(cardArt ? { cardArt } : {}) }],
+      }))
+    },
+    [],
+  )
 
-  const sendBotMessage = useCallback(async (content: string) => {
-    setChat(prev => ({ ...prev, isTyping: true }))
-    await sleep(calculateTypingDelay(content))
-    setChat(prev => ({ ...prev, isTyping: false }))
-    addMessage('bot', content)
-    await sleep(400)
-  }, [addMessage])
+  const sendBotMessage = useCallback(
+    async (content: string, cardArt?: Message['cardArt']) => {
+      setChat(prev => ({ ...prev, isTyping: true }))
+      await sleep(calculateTypingDelay(content))
+      setChat(prev => ({ ...prev, isTyping: false }))
+      addMessage('bot', content, cardArt)
+      await sleep(400)
+    },
+    [addMessage],
+  )
 
-  const sendBotMessages = useCallback(async (messages: string[]) => {
-    for (const msg of messages) {
-      await sendBotMessage(msg)
-    }
-  }, [sendBotMessage])
+  // `cardArt` (when given) rides on the FIRST message only — the tarot opener's
+  // card line. Later lines are plain text so the artwork isn't repeated.
+  const sendBotMessages = useCallback(
+    async (messages: string[], cardArt?: Message['cardArt']) => {
+      for (let i = 0; i < messages.length; i++) {
+        await sendBotMessage(messages[i], i === 0 ? cardArt : undefined)
+      }
+    },
+    [sendBotMessage],
+  )
 
   const updateState = useCallback((updates: Partial<ChatState>) => {
     setChat(prev => ({ ...prev, ...updates }))
@@ -385,6 +406,40 @@ export function useConversation() {
         return
       }
 
+      // Tarot "decode-him card" bridge traffic (/fb-tarot): same shape as the palm
+      // opener, but the card reveal instead of the thumb read. Gated on hook+card →
+      // zero impact on other funnels (parseTarotParams returns null everywhere else).
+      const tarot = parseTarotParams(window.location.search)
+      if (tarot) {
+        // Versions B and C hand straight to chat with no lander reveal, so without
+        // this she'd be TOLD which card she drew but never SEE it — and the card art
+        // is the whole appeal of a tarot draw. Attach it to the opener's first line.
+        // (Version A already shows the card on the lander, so it isn't repeated here.)
+        const art = tarotCardArtFor(tarot.deck, tarot.card)
+        if (tarot.version === 'c') {
+          // Version C — INTERACTIVE. Open with the card line + one open question,
+          // then read HER answer with the LLM in handleTarotReflect.
+          await sendBotMessages(tarotOpenerCStart(tarot.deck, tarot.hook, tarot.card), art)
+          updateState({
+            state: 'TAROT_REFLECT',
+            inputEnabled: true,
+            inputPlaceholder: "Share what's on your heart…",
+          })
+          return
+        }
+        if (tarot.version === 'b') {
+          await sendBotMessages(tarotOpenerB(tarot.deck, tarot.hook, tarot.card), art)
+        } else {
+          await sendBotMessage(tarotGreetingA(tarot.deck, tarot.card))
+        }
+        updateState({
+          state: 'NAME_CAPTURE',
+          inputEnabled: true,
+          inputPlaceholder: 'Your name...',
+        })
+        return
+      }
+
       await sendBotMessages([
         "Greetings, dear friend, and welcome.",
         "My name is Evelyn Cross.",
@@ -583,6 +638,52 @@ export function useConversation() {
       return
     }
 
+    // Tarot "decode-him card" bridge traffic: same skip-the-bucket-picker shape as
+    // palm (love inferred from the hook), but the card identity already lives in the
+    // opener, so the deeper flow stays the GENERIC engine — no palm-style identity
+    // is written to userData. Tarot-only ⇒ no impact on other funnels.
+    const tarot = parseTarotParams(window.location.search)
+    if (tarot) {
+      updateUserData({ bucket: tarotHookToBucket(tarot.hook) })
+
+      await sendBotMessages([
+        `It's lovely to meet you, ${capitalized}.`,
+        "Everything we discuss stays between us... our secret.",
+      ])
+      await sendBotMessages([
+        `I can feel warmth radiating from your heart, ${capitalized}...`,
+        "But there's a flicker of shadow there too...",
+      ])
+      // no-optin variant: skip the email anchor, go straight into the reading.
+      if (skipEmail()) {
+        await sendBotMessages([
+          "Let's look deeper together...",
+          "Tell me more about what's on your mind...",
+        ])
+        updateState({
+          state: 'DEEPENING_1',
+          inputEnabled: true,
+          inputPlaceholder: "Share what's in your heart...",
+          inputType: 'text',
+        })
+        return
+      }
+
+      await sendBotMessages([
+        "Before I look deeper, I need to anchor our connection...",
+        "Sometimes the visions continue after we speak...",
+        "Where should I send them if more is revealed?",
+      ])
+
+      updateState({
+        state: 'EMAIL_CAPTURE',
+        inputEnabled: true,
+        inputPlaceholder: 'Your email...',
+        inputType: 'email',
+      })
+      return
+    }
+
     await sendBotMessages([
       `It's lovely to meet you, ${capitalized}.`,
       "Everything we discuss stays between us... our secret.",
@@ -633,6 +734,51 @@ export function useConversation() {
 
     if (llm) await sendBotMessages(llm)
     else if (palm) await sendBotMessages(palmReflectFallback(palm.sign, palm.hook, palm.thumb))
+
+    await sendBotMessage("Before we go deeper, tell me… what should I call you, dear?")
+    updateState({
+      state: 'NAME_CAPTURE',
+      inputEnabled: true,
+      inputPlaceholder: 'Your name...',
+    })
+  }, [chat.userData, sendBotMessage, sendBotMessages, updateState, updateUserData])
+
+  // === TAROT VERSION C — read HER answer to the opener question ===
+  // Parallel to handlePalmReflect: the LLM reflects what she just shared (woven
+  // with the drawn card, reading HIM as a tendency-never-verdict), then earns the
+  // name → existing love deepening. Falls back to the static reveal on any failure.
+  const handleTarotReflect = useCallback(async (input: string) => {
+    const tarot = parseTarotParams(window.location.search)
+    updateUserData({ concern: input })
+
+    let llm: string[] | null = null
+    if (tarot) {
+      try {
+        updateState({ isTyping: true })
+        const res = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'tarotReflect',
+            tarotDeck: tarot.deck,
+            tarotHook: tarot.hook,
+            tarotCard: tarot.card,
+            userData: chat.userData,
+            input,
+          }),
+        })
+        if (res.ok) {
+          const data = await res.json()
+          if (Array.isArray(data.messages) && data.messages.length) llm = data.messages
+        }
+      } catch {
+        // ignore — fall back below
+      }
+      updateState({ isTyping: false })
+    }
+
+    if (llm) await sendBotMessages(llm)
+    else if (tarot) await sendBotMessages(tarotReflectFallback(tarot.deck, tarot.hook, tarot.card))
 
     await sendBotMessage("Before we go deeper, tell me… what should I call you, dear?")
     updateState({
@@ -707,6 +853,16 @@ export function useConversation() {
       const palmSign = phFunnel === 'palm'
         ? (parsePalmParams(window.location.search)?.sign ?? 'thumb')
         : undefined
+      // /fb-tarot: which deck/hook/card she came through. Gated on the funnel because
+      // the attribution is tab-scoped and would otherwise tag a later palm lead.
+      //
+      // 🔴 NEVER send these as `sign` on /api/lead — that field feeds the palm price
+      // pool, and tarot pricing is a fixed variant (35_tarot). They go as their own
+      // `tarot*` fields instead (2026-07-31), so the commitment-gate exposure can be
+      // broken down per tarot lander the way palm's is broken down per sign. The
+      // exposure row is written ONCE per subject and `conversations` has no deck/hook
+      // column, so anything not sent here can never be recovered.
+      const tarot = phFunnel === 'tarot' ? tarotEventProps() : undefined
 
       const leadRes = await fetch('/api/lead', {
         method: 'POST',
@@ -719,6 +875,20 @@ export function useConversation() {
           gclid: getGclid(),
           funnel: currentFunnel(),
           sign: palmSign,
+          // Tarot lander identity for the commitment-gate exposure breakdown.
+          // `facing`/`angle` are sent already-derived (registry-driven, see
+          // tarotAttribution.toProps) rather than re-derived server-side: it keeps
+          // the server free of a 4th tarot roster to drift out of sync, and it
+          // records the grouping AS IT WAS at exposure time, so recategorising a
+          // hook later can't retroactively rewrite past rows.
+          ...(tarot
+            ? {
+                tarotDeck: tarot.deck,
+                tarotHook: tarot.hook,
+                tarotFacing: tarot.facing,
+                tarotAngle: tarot.angle,
+              }
+            : {}),
           fbp: fbpMatch ? decodeURIComponent(fbpMatch[1]) : undefined,
           fbc: fbcMatch ? decodeURIComponent(fbcMatch[1]) : undefined,
         }),
@@ -731,13 +901,18 @@ export function useConversation() {
       try {
         const leadData = await leadRes.json()
         const previewingClose = new URLSearchParams(window.location.search).get('close') === '55'
+        const patch: Partial<UserData> = {}
         if (!previewingClose && leadData?.priceDollars && leadData?.downsellDollars) {
-          updateUserData({
-            priceDollars: leadData.priceDollars,
-            downsellDollars: leadData.downsellDollars,
-            priceVariantId: leadData.priceVariant ?? undefined,
-          })
+          patch.priceDollars = leadData.priceDollars
+          patch.downsellDollars = leadData.downsellDollars
+          patch.priceVariantId = leadData.priceVariant ?? undefined
         }
+        // Commitment-gate arm rides the SAME response but is independent of the
+        // price payload — it comes from the experiment framework, not the pool, so
+        // it must still be captured for a returning visitor whose price came off
+        // their stored row. Only ever set to true; absent ⇒ plain PurchaseCTA.
+        if (leadData?.commitmentGate === true) patch.commitmentGate = true
+        if (Object.keys(patch).length > 0) updateUserData(patch)
       } catch { /* response body parse is best-effort */ }
 
       // Track Lead event with Facebook. Pixel-only here — /api/lead above
@@ -760,8 +935,31 @@ export function useConversation() {
           funnel: phFunnel,
           first_name: currentChat.userData.firstName || undefined,
           ...(palmSign ? { palm_sign: palmSign } : {}),
+          // Tarot mirror of palm_sign. The SERVER-side purchase_completed events (main
+          // $35/$25 plus all four upsell emitters) key off the email distinctId and
+          // have no tarot params available, so PERSON properties are what make tarot
+          // revenue breakable-down per deck / per facing without ever touching the
+          // payment path or Stripe metadata.
+          ...(tarot
+            ? {
+                tarot_deck: tarot.deck,
+                tarot_facing: tarot.facing,
+                tarot_hook: tarot.hook,
+                // The hook's ad angle ('decode-him' | 'trust' | 'self-frame'). Mirrors
+                // tarot_hook: the server-side purchase_completed has no tarot params, so
+                // this is what makes revenue breakable-down by angle GROUP rather than
+                // by listing every hook.
+                tarot_angle: tarot.angle,
+                tarot_card: tarot.card,
+              }
+            : {}),
         })
-        trackPH('lead_captured', { funnel: phFunnel, step: 'chat', sign: palmSign })
+        trackPH('lead_captured', {
+          funnel: phFunnel,
+          step: 'chat',
+          sign: palmSign ?? tarot?.deck,
+          ...(tarot ?? {}),
+        })
       }
     } catch (e) {
       console.error('Failed to save lead:', e)
@@ -1381,6 +1579,9 @@ export function useConversation() {
       case 'PALM_REFLECT':
         await handlePalmReflect(input)
         break
+      case 'TAROT_REFLECT':
+        await handleTarotReflect(input)
+        break
       case 'PERSON_NAME_CAPTURE':
         await handlePersonNameCapture(input)
         break
@@ -1420,6 +1621,7 @@ export function useConversation() {
     updateState,
     handleNameCapture,
     handlePalmReflect,
+    handleTarotReflect,
     handlePersonNameCapture,
     handleEmailCapture,
     handleDeepening1,
@@ -1653,12 +1855,14 @@ export function useConversation() {
         const palmSign = phFunnel === 'palm'
           ? (parsePalmParams(window.location.search)?.sign ?? 'thumb')
           : undefined
+        const tarot = phFunnel === 'tarot' ? tarotEventProps() : undefined
         trackPH('checkout_initiated', {
           funnel: phFunnel,
           step: 'sales',
           product: type === 'downsell' ? 'energy_clearing_ritual_downsell' : 'energy_clearing_ritual',
           price_cents: price * 100,
-          sign: palmSign,
+          sign: palmSign ?? tarot?.deck,
+          ...(tarot ?? {}),
           email_gate: skipEmail() ? 'off' : 'on',
         })
       }

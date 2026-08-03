@@ -9,10 +9,12 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { trackPageView } from "./lib/facebook";
 import { initPostHog, track as trackPH, registerUTMs } from "./lib/posthog";
 import { getPostHogFunnel, getPostHogStep, skipEmail } from "./lib/funnel";
+import { syncTarotAttribution } from "./lib/tarotAttribution";
 import { ChatServiceLayout } from "@/components/ChatServiceLayout";
 import NotFound from "@/pages/not-found";
 import LandingPage from "@/pages/LandingPage";
 import PalmBridge from "@/pages/PalmBridge";
+import TarotBridge from "@/pages/TarotBridge";
 import ChatPage from "@/pages/ChatPage";
 import SuccessPage from "@/pages/SuccessPage";
 import UpsellTestPage from "@/pages/UpsellTestPage";
@@ -145,13 +147,34 @@ function Router() {
     const funnel = getPostHogFunnel(location);
     if (funnel) {
       const urlParams = new URLSearchParams(window.location.search);
+      // /fb-tarot: resolve the deck/hook/card ONCE per route and remember it for the
+      // tab. Must run before lander_view so the very first event already carries the
+      // right deck, and so the upsell steps — which Stripe redirects to with no query
+      // string at all — can still be attributed. See lib/tarotAttribution.ts.
+      const tarot =
+        funnel === 'tarot'
+          ? syncTarotAttribution(location, window.location.search)
+          : undefined;
       trackPH('lander_view', {
         funnel,
         step: getPostHogStep(location),
         path: location,
-        // Palm multi-sign: tag which ad "sign" was quizzed so the funnel can be
-        // broken down per sign. Defaults to 'thumb' (the sign-less original).
-        sign: funnel === 'palm' ? (urlParams.get('sign') || 'thumb') : undefined,
+        // Palm multi-sign / tarot multi-deck: tag which ad concept was quizzed so
+        // the funnel can be broken down per sign (palm) / deck (tarot). Reuses the
+        // same `sign` breakdown key so existing insights keep working.
+        //
+        // Tarot used to read `?deck=` with a hardcoded 'decode-him' fallback. The ad
+        // URLs are CLEAN (no &deck=), so that fallback fired on every visitor and
+        // labelled them with a deck they never saw — and one whose placeholder art is
+        // byte-identical to the palm thumbs strip. It now comes from the resolver,
+        // which validates against the registry and defaults to DEFAULT_DECK.
+        sign:
+          funnel === 'palm'
+            ? (urlParams.get('sign') || 'thumb')
+            : tarot?.deck,
+        // deck / facing / hook / version / card / panel. `facing` is registry-driven,
+        // so a face-up deck splits face-up vs face-down with no change here.
+        ...(tarot ?? {}),
         utm_source: urlParams.get('utm_source') || undefined,
         utm_campaign: urlParams.get('utm_campaign') || undefined,
         utm_medium: urlParams.get('utm_medium') || undefined,
@@ -168,6 +191,12 @@ function Router() {
         )}
 
         {/* Existing funnel routes (V1 — email traffic) */}
+        {/* The root "/" serves the original Evelyn LandingPage. Between 2026-07-23
+            and 2026-07-27 it temporarily served the FB-compliance HomePage
+            (storefront) so Facebook's reviewer landed on the compliant page at the
+            domain root; that swap is now REVERTED (agency approval, Joel 2026-07-27).
+            The storefront itself is unchanged and still reachable at /home below.
+            TO RE-SWAP: change this one line back to `component={HomePage}`. */}
         <Route path="/" component={LandingPage} />
         <Route path="/chat" component={ChatPage} />
         <Route path="/welcome1" component={UpsellPage} />
@@ -202,6 +231,18 @@ function Router() {
         <Route path="/fb-palm/welcome1" component={UpsellPage} />
         <Route path="/fb-palm/welcome2" component={Upsell2Page} />
         <Route path="/fb-palm/success" component={SuccessPage} />
+
+        {/* V1-TAROT funnel — "decode-him card" quiz-bridge lander. A SEPARATE
+            funnel/route (not a palm sign): /fb-tarot root renders TarotBridge;
+            chat + upsells reuse the shared V1 components and carry the "- TAROT"
+            Stripe suffix. Version A/B/C split mirrors /fb-palm. */}
+        <Route path="/fb-tarot" component={TarotBridge} />
+        <Route path="/fb-tarot/b" component={TarotBridge} />
+        <Route path="/fb-tarot/c" component={TarotBridge} />
+        <Route path="/fb-tarot/chat" component={ChatPage} />
+        <Route path="/fb-tarot/welcome1" component={UpsellPage} />
+        <Route path="/fb-tarot/welcome2" component={Upsell2Page} />
+        <Route path="/fb-tarot/success" component={SuccessPage} />
 
         {/* V1-GDN funnel routes (Google Display Network ad traffic) — same
             components, new URLs so Google Ads can segment by page and Stripe

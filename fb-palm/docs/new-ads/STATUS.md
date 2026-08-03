@@ -15,7 +15,11 @@ B: https://www.theseerwithin.com/fb-palm/b?hook=<hook>&sign=<sign>&...
 C: https://www.theseerwithin.com/fb-palm/c?hook=<hook>&sign=<sign>&...
 ```
 `hook ∈ { soulmate-timing · already-met · love-again }`. Omitting `sign` = the
-original `thumb` sign (unchanged).
+original `thumb` sign (unchanged). Some signs also carry their own scoped hooks
+(ledger `target_signs`) — e.g. `heart-line` adds `right-person` ·
+`love-taking-long`. A hook only works on a sign that has `reads` for it;
+`parsePalmParams` returns null otherwise and the visitor silently drops into the
+generic funnel, so never hand out a hook×sign combo the registry doesn't cover.
 
 ---
 
@@ -46,6 +50,8 @@ For each sign:
 | 8 | `_pdc-finger-length-01` | `finger-length` | 3 (ring tall / even / index tall) | ✅ **BUILT** | Index-vs-ring digit ratio. Archetypes: A magnetic · B harmonious · C certain. Strip 919×474, clean thirds (audited). |
 | 9 | `_pdc-finger-length-02` | `finger-length-alt` | 3 | ✅ **BUILT** | Full back-of-hand art variant of #8 — **reuses finger-length's reads**. Strip 969×653, clean thirds (audited). |
 | 10 | `_pdc-hand-size-02` | — | 2 | ⛔ Parked | Split-panel line-art variant of #7 (`hand-size` already built). |
+| 11 | `thumb-angle-01` | `thumb-angle` | 2 (aligned / not aligned) | ✅ **BUILT** | Does the life line's arc run true with the line of the thumb. **A = aligned · B = not aligned** (per Rio, 7/21 — supersedes the earlier "open-handed / close-held" wide-vs-narrow read). Archetypes: A the true heart · B the seeking heart. Strip 1357×1027, clean halves. ⚠ Runs its own $55/$35 test through the **experiment framework** (`v1_main_price_2026`, `scope.sign`), NOT the legacy system_config pool — it is in `OTHER_SIGNS`, so it can never draw the thumb-only 70/30. |
+| 12 | `palm-signs-03/heart-line.png` | `heart-line` | 2 (A / B) | ✅ **BUILT** | **Photo variant of #4** — the same tell (where your heart lines meet when you cup your hands), shot as a real photograph instead of the illustration, so the two creatives test head-to-head with identical copy. Strip 800×493, clean halves — dimensions matched to #4 on purpose so the art test isn't confounded by the two creatives rendering at different sizes. **Optimize the source before copying it in:** the supplied `heart-line.png` was 751 KB at 1000×616 with a pointless alpha channel; flattening to white + a 128-colour palette (sharp) gives 63 KB, in line with the rest of `client/public/palm`. ⚠ **The panels are REVERSED vs #4**: here **B** = lines meeting as one unbroken line (*the joined heart*) and **A** = meeting with a step between them (*the rising heart*). The config therefore swaps a↔b programmatically off `PALM_SIGNS` instead of using the usual `...SPREAD`, and `PALM_SIGN_VOCAB['heart-line']` is a full entry rather than an alias. Carries **four** scoped hooks: `right-person` · `love-taking-long` (headline-only variants of the soulmate-timing wound — reads inherited verbatim) and `wrong-person` · `relationship-right` (new wounds — **own** reads, written in this sign's orientation, so never run them through `swapAB`). The latter two each carry a load-bearing `PALM_HOOK_YES` entry; without it they fall through to `DEFAULT_HOOK_YES` ("her real one is still out there"), which for `relationship-right` reads as a nudge to leave. |
 
 **Legend:** ✅ built & wired · ⬜ pending (art is good, just needs config + copy) · ⛔ parked.
 

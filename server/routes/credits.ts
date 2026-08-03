@@ -5,7 +5,7 @@ import { users, creditPurchases, personas, checkoutViews, chatSessions } from '@
 import { eq, and, ne, desc, sql } from 'drizzle-orm';
 import { requireAuth, verifyToken } from '../lib/auth';
 import { getPersonaPricing } from '../lib/personaPricing';
-import { DEFAULT_PRICING } from '../../shared/types';
+import { DEFAULT_PRICING, CUSTOM_TOPUP_MAX_USD, CUSTOM_PACKAGE_TYPE, WELCOME_PACK_COINS, WELCOME_PACK_PRICE_CENTS, usdCentsToCoins, coinsToClock, minutesToCoins, COINS_PER_MINUTE, type PricingTier } from '../../shared/types';
 import { applyVariantPresentation } from '@shared/paywall';
 import { resolvePaywallVariant, assign, logExposure, paywallScopePersonaId, PAYWALL_EXPERIMENT_KEY } from '../lib/experiments';
 import Stripe from 'stripe';
@@ -25,11 +25,11 @@ const stripe = getStripe();
 // Special one-time welcome pack — not part of regular persona pricing
 const WELCOME_TIER = {
   packageType: 'welcome',
-  coins: 160,
+  coins: WELCOME_PACK_COINS,
   bonusCoins: 0,
-  totalCoins: 160,
-  priceUsd: 299,   // $2.99
-  label: '160 coins',
+  totalCoins: WELCOME_PACK_COINS,
+  priceUsd: WELCOME_PACK_PRICE_CENTS,
+  label: coinsToClock(WELCOME_PACK_COINS),
 };
 
 // Aiden-only rescue hatch shown on the /aiden check-your-email screen after 60s.
@@ -39,11 +39,11 @@ const WELCOME_TIER = {
 // regular in-chat starter top-ups that use packageType 'starter'.
 const AIDEN_RESCUE_TIER = {
   packageType: 'aiden_rescue',
-  coins: 180,
+  coins: minutesToCoins(3),        // 3:00 of wallet at the default rate = 897¢ (was 180 coins/3min)
   bonusCoins: 0,
-  totalCoins: 180,
-  priceUsd: 999,   // $9.99
-  label: '180 coins',
+  totalCoins: minutesToCoins(3),
+  priceUsd: 999,                   // $9.99 → effective $3.33/min (unchanged; Joel's call)
+  label: coinsToClock(minutesToCoins(3)),  // "3:00"
 };
 
 /** Resolve tier: handle special code-level packageTypes or look up from persona pricing */
@@ -53,10 +53,59 @@ function resolveTier(packageType: string, pricing: { tiers: Array<{ packageType:
   return pricing.tiers.find(t => t.packageType === packageType);
 }
 
+/**
+ * Build a synthetic tier for a CUSTOM top-up amount (in cents). Coins are
+ * computed server-side from the flat per-minute rate (never trusting the
+ * client), and the amount is validated against the floor (the persona's
+ * cheapest pack) and the platform cap. Returns { error } if out of bounds.
+ */
+function resolveCustomTier(
+  amountCents: number,
+  pricing: { tiers: Array<{ priceUsd: number }> },
+): PricingTier | { error: string } {
+  if (!Number.isFinite(amountCents) || !Number.isInteger(amountCents)) {
+    return { error: 'Invalid custom amount' };
+  }
+  const floor = pricing.tiers.length ? Math.min(...pricing.tiers.map(t => t.priceUsd)) : 1000;
+  const cap = CUSTOM_TOPUP_MAX_USD * 100;
+  if (amountCents < floor) return { error: `Minimum top-up is $${Math.round(floor / 100)}` };
+  if (amountCents > cap) return { error: `Maximum top-up is $${CUSTOM_TOPUP_MAX_USD}` };
+  const coins = usdCentsToCoins(amountCents);
+  return {
+    packageType: CUSTOM_PACKAGE_TYPE,
+    coins,
+    bonusCoins: 0,
+    totalCoins: coins,
+    priceUsd: amountCents,
+    label: `$${(amountCents / 100).toFixed(2)}`,
+  };
+}
+
+/**
+ * Resolve whatever the client asked to buy — a named package OR a custom dollar
+ * amount — into a concrete tier. One place so all three payment entry points
+ * (Checkout, PaymentIntent, PayPal order) treat custom identically.
+ */
+function resolveRequestedTier(
+  packageType: string,
+  customAmountUsd: number | undefined,
+  pricing: { tiers: Array<{ packageType: string; coins: number; bonusCoins: number; totalCoins: number; priceUsd: number; label: string }> },
+): { tier?: any; error?: string } {
+  if (packageType === CUSTOM_PACKAGE_TYPE) {
+    if (typeof customAmountUsd !== 'number') return { error: 'Custom amount is required' };
+    const result = resolveCustomTier(customAmountUsd, pricing);
+    if ('error' in result) return { error: result.error };
+    return { tier: result };
+  }
+  const tier = resolveTier(packageType, pricing);
+  return tier ? { tier } : { error: 'Invalid package type' };
+}
+
 const checkoutSchema = z.object({
   packageType: z.string().min(1),
   personaId: z.string().min(1).optional(),
   successPath: z.string().optional(), // Optional override for post-checkout redirect (e.g. /chat/aiden-powers)
+  customAmountUsd: z.number().int().positive().optional(), // cents, required when packageType === 'custom'
 });
 
 function getBaseUrl(req: Request): string {
@@ -191,7 +240,7 @@ router.get('/pricing', async (req: Request, res: Response) => {
     // explicit param, else the resolved experiment persona, so the variant-B store
     // still renders a name/avatar on the bare /credits tab.
     const displayPersonaId = personaId ?? experimentPersonaId;
-    let persona: { id: string; displayName: string; avatarUrl: string | null; tagline: string | null; freeCoins: number } | undefined;
+    let persona: { id: string; displayName: string; avatarUrl: string | null; tagline: string | null; freeCoins: number; coinsPerMinute: number } | undefined;
     if (displayPersonaId) {
       const rows = await db.select({
         id: personas.id,
@@ -199,12 +248,18 @@ router.get('/pricing', async (req: Request, res: Response) => {
         avatarUrl: personas.avatarUrl,
         tagline: personas.tagline,
         freeCoins: personas.freeCoins,
+        coinsPerMinute: personas.coinsPerMinute,
       }).from(personas).where(eq(personas.id, displayPersonaId)).limit(1);
       persona = rows[0];
     }
 
     res.json({
       ...pricing,
+      // The guide's $/min in wallet units (cents/min). The client derives pack
+      // minutes and the "$X/min" label from THIS, so a per-persona rate shows the
+      // right time + price at the point of sale. Falls back to the default rate for
+      // a bare /credits request (no persona in context).
+      coinsPerMinute: persona?.coinsPerMinute ?? COINS_PER_MINUTE,
       tiers: applyVariantPresentation(pricing.tiers, variant),
       persona,
       variant,
@@ -288,24 +343,27 @@ router.post('/checkout', requireAuth, async (req: Request, res: Response) => {
     return;
   }
 
-  const { packageType, personaId, successPath } = parseResult.data;
+  const { packageType, personaId, successPath, customAmountUsd } = parseResult.data;
 
   let pricing, tier, personaName: string, userResult;
+  let personaRate: number = COINS_PER_MINUTE; // cents/min for the checkout time label
   try {
     pricing = personaId ? await getPersonaPricing(personaId) : DEFAULT_PRICING;
-    tier = resolveTier(packageType, pricing);
-    if (!tier) {
-      res.status(400).json({ error: 'Invalid package type' });
+    const resolved = resolveRequestedTier(packageType, customAmountUsd, pricing);
+    if (resolved.error) {
+      res.status(400).json({ error: resolved.error });
       return;
     }
+    tier = resolved.tier;
 
     personaName = 'Chat';
     if (personaId) {
-      const personaResult = await db.select({ displayName: personas.displayName })
+      const personaResult = await db.select({ displayName: personas.displayName, coinsPerMinute: personas.coinsPerMinute })
         .from(personas)
         .where(eq(personas.id, personaId))
         .limit(1);
       personaName = personaResult[0]?.displayName || 'Chat';
+      if (personaResult[0]?.coinsPerMinute) personaRate = personaResult[0].coinsPerMinute;
     }
 
     userResult = await db.select({ email: users.email, firstName: users.firstName })
@@ -357,7 +415,9 @@ router.post('/checkout', requireAuth, async (req: Request, res: Response) => {
   }
 
   try {
-    const bonusLabel = tier.bonusCoins > 0 ? ` (+${tier.bonusCoins} bonus)` : '';
+    // Customer-facing product name/description (shown on Stripe's checkout page
+    // and the email receipt) — actual m:ss time, never the internal unit.
+    const timeLabel = coinsToClock(tier!.totalCoins, personaRate);
     const session = await fireWithBreaker(stripeBreaker, () =>
       stripe!.checkout.sessions.create({
         customer_email: userResult[0].email,
@@ -366,8 +426,8 @@ router.post('/checkout', requireAuth, async (req: Request, res: Response) => {
           price_data: {
             currency: 'usd',
             product_data: {
-              name: `${personaName} - ${tier!.coins} Coins${bonusLabel}`,
-              description: `${tier!.totalCoins} coins for consultation with ${personaName}`,
+              name: `${personaName} — ${timeLabel} of reading time`,
+              description: `${timeLabel} of reading time with ${personaName}`,
             },
             unit_amount: tier!.priceUsd,
           },
@@ -421,6 +481,7 @@ router.post('/checkout', requireAuth, async (req: Request, res: Response) => {
 const paymentIntentSchema = z.object({
   packageType: z.string().min(1),
   personaId: z.string().min(1).optional(),
+  customAmountUsd: z.number().int().positive().optional(), // cents, required when packageType === 'custom'
 });
 
 router.post('/create-payment-intent', requireAuth, async (req: Request, res: Response) => {
@@ -430,17 +491,18 @@ router.post('/create-payment-intent', requireAuth, async (req: Request, res: Res
     return;
   }
 
-  const { packageType, personaId } = parseResult.data;
+  const { packageType, personaId, customAmountUsd } = parseResult.data;
 
   let tier;
   let userEmail: string | undefined;
   try {
     const pricing = personaId ? await getPersonaPricing(personaId) : DEFAULT_PRICING;
-    tier = resolveTier(packageType, pricing);
-    if (!tier) {
-      res.status(400).json({ error: 'Invalid package type' });
+    const resolved = resolveRequestedTier(packageType, customAmountUsd, pricing);
+    if (resolved.error) {
+      res.status(400).json({ error: resolved.error });
       return;
     }
+    tier = resolved.tier;
 
     const userResult = await db.select({ email: users.email })
       .from(users)
@@ -628,6 +690,7 @@ router.post('/confirm-payment', requireAuth, async (req: Request, res: Response)
 const createOrderSchema = z.object({
   packageType: z.string().min(1),
   personaId: z.string().min(1).optional(),
+  customAmountUsd: z.number().int().positive().optional(), // cents, required when packageType === 'custom'
 });
 
 router.post('/create-order', requireAuth, async (req: Request, res: Response) => {
@@ -639,16 +702,17 @@ router.post('/create-order', requireAuth, async (req: Request, res: Response) =>
     return;
   }
 
-  const { packageType, personaId } = parseResult.data;
+  const { packageType, personaId, customAmountUsd } = parseResult.data;
 
   let tier;
   try {
     const pricing = personaId ? await getPersonaPricing(personaId) : DEFAULT_PRICING;
-    tier = resolveTier(packageType, pricing);
-    if (!tier) {
-      res.status(400).json({ error: 'Invalid package type' });
+    const resolved = resolveRequestedTier(packageType, customAmountUsd, pricing);
+    if (resolved.error) {
+      res.status(400).json({ error: resolved.error });
       return;
     }
+    tier = resolved.tier;
   } catch (error) {
     logger.error('PayPal create-order setup error:', error);
     res.status(500).json({ error: 'Failed to create PayPal order' });

@@ -120,9 +120,11 @@ export const personas = pgTable("personas", {
   sortOrder: integer("sort_order").default(0).notNull(),
   accuracyRank: integer("accuracy_rank"),  // null = unranked; 1 = top of "Voted Most Accurate"
 
-  // Per-persona pricing (fully admin-editable)
-  freeCoins: integer("free_coins").default(180).notNull(),
-  coinsPerMinute: integer("coins_per_minute").default(60).notNull(),
+  // Per-persona pricing (fully admin-editable). Dollar-wallet model (2026-07-23):
+  // a coin is a CENT. free_coins = free minutes × rate (897¢ = 3:00 @ $2.99/min);
+  // coins_per_minute = CENTS per minute = $/min × 100 (299 = $2.99/min).
+  freeCoins: integer("free_coins").default(897).notNull(),
+  coinsPerMinute: integer("coins_per_minute").default(299).notNull(),
   customPricing: text("custom_pricing"), // JSON array: PricingTier[]
 
   // Session timeout (configurable per advisor, default 30 minutes)
@@ -205,7 +207,8 @@ export const users = pgTable("users", {
   verificationToken: text("verification_token"),
   verificationTokenExpiry: timestamp("verification_token_expiry"),
 
-  // Coin balance (60 coins = 1 minute)
+  // Wallet balance in CENTS (a coin is a cent; dollar-wallet model 2026-07-23).
+  // Minutes are derived per-guide: cents ÷ that guide's coins_per_minute(cents/min).
   coinBalance: integer("coin_balance").default(0).notNull(),
   totalCoinsUsed: integer("total_coins_used").default(0).notNull(),
   // Welcome free-coin grant marker — stamped once when the sign-up welcome grant is
@@ -970,7 +973,13 @@ export interface ExperimentVariant {
 // Optional enrolment filter. null/absent field = no filter on that axis.
 export interface ExperimentScope {
   personaId?: string | null;            // only enrol this persona (Phase-1 paywall = Evelyn)
-  funnel?: string | null;               // only enrol this V1 funnel (e.g. 'v1-fb') — V1 price tests
+  funnel?: string | string[] | null;    // only enrol these V1 funnel(s) (e.g. 'v1-fb', or
+                                        // ['v1-palm','v1-tarot']) — V1 price/UI tests. A bare
+                                        // string is one funnel; an array enrols any funnel in it,
+                                        // for a UI test deliberately run across several funnels
+  sign?: string | null;                 // only enrol this fb-palm sign (e.g. 'thumb-angle') — narrows
+                                        // a funnel-scoped price test to ONE lander, so a per-lander
+                                        // price test never touches the rest of v1-palm's traffic
   route?: string;                       // page/surface for visitor page-copy tests (e.g. 'soulmate_landing')
   element?: string;                     // which element the variant copy targets (e.g. 'headline')
   [k: string]: unknown;
@@ -1109,6 +1118,29 @@ export const evelynLanderSessions = pgTable("evelyn_lander_sessions", {
   bucket: text("bucket"),
   src: text("src"),
   campaign: text("campaign"),
+  pendingReply: text("pending_reply"),
+  // When the parked reply was replayed into a real chat session. A SEPARATE marker
+  // rather than nulling pending_reply: that text is also the durable evidence for
+  // the 10-minute Live Thread welcome grant, which is re-derived at verification
+  // time and on every /check-email resend — clearing it would silently drop those
+  // readers back to 5 minutes. See server/lib/liveThreadEngagement.ts's header.
+  pendingReplyConsumedAt: timestamp("pending_reply_consumed_at"),
+  // The safety verdict POST /reply reached on pending_reply, at the moment it was
+  // written and with that request's context. NULL means the text passed. A non-null
+  // violation type means the normal chat path would have intercepted these words
+  // with a canned response instead of generating against them (chatEngine.ts's
+  // step-1 safety gate), so the replay must not smuggle them into the model later.
+  // The text is still stored and the reader is still let through — that is the
+  // operator's Task 6 ruling and this does not touch it.
+  pendingReplyViolationType: text("pending_reply_violation_type"),
+  // The persona's answer to pending_reply, generated ONCE before any billing session
+  // exists (GET /api/chat-service/live-thread/:personaSlug — free, like /greeting) and
+  // shown to the reader on their first /reading load. Persisted rather than kept in the
+  // browser so replayPendingReply() can insert it alongside the reply when the session
+  // finally starts: otherwise the screen would show an answer the database has never
+  // seen, and the persona would answer the same disclosure a second time. Also makes a
+  // reload free — a stored answer is returned as-is, never regenerated. See migration 023.
+  pendingReplyResponse: text("pending_reply_response"),
   hadToken: boolean("had_token").default(false).notNull(),
 
   // Funnel progress (chat layer fills these later)
@@ -1130,6 +1162,38 @@ export const evelynLanderSessions = pgTable("evelyn_lander_sessions", {
 export const insertEvelynLanderSessionSchema = createInsertSchema(evelynLanderSessions);
 export type EvelynLanderSession = typeof evelynLanderSessions.$inferSelect;
 export type InsertEvelynLanderSession = z.infer<typeof insertEvelynLanderSessionSchema>;
+
+// Email link codes: the content snapshot behind an opaque short link (/e/:code)
+// sent in a marketing email, so the lander can continue the specific reading
+// the reader clicked from rather than greeting them as a stranger.
+export const emailLinkCodes = pgTable("email_link_codes", {
+  code: varchar("code").primaryKey(),
+  personaSlug: text("persona_slug").notNull(),
+  campaign: text("campaign").notNull(),
+  readingRecap: text("reading_recap"),
+  openLoop: text("open_loop"),
+  continueSeed: text("continue_seed").notNull(),
+  // Lander context the legacy `?bucket=&src=` query string used to carry. The
+  // short link has no room for it (and query params get stripped in transit),
+  // so it rides on the row and /e/:code rebuilds the query string from here.
+  // bucket is functionally load-bearing, not analytics: it selects Drip 1's
+  // bucket-specific phrase (evelynVerifiedDripGenerator BUCKET_PHRASES).
+  bucket: text("bucket"),
+  src: text("src"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_email_link_codes_campaign").on(table.campaign),
+  // One live code per (persona, campaign). The email-rendering pipeline
+  // (render-aweber.mjs) is read-then-write on this pair so a re-render reuses
+  // the code already sitting in a scheduled broadcast; this makes that
+  // invariant something the database enforces rather than something the
+  // pipeline merely assumes.
+  uniqueIndex("uq_email_link_codes_persona_campaign").on(table.personaSlug, table.campaign),
+]);
+
+export const insertEmailLinkCodeSchema = createInsertSchema(emailLinkCodes);
+export type EmailLinkCode = typeof emailLinkCodes.$inferSelect;
+export type InsertEmailLinkCode = z.infer<typeof insertEmailLinkCodeSchema>;
 
 // Generalized persona lander sessions: ONE shared table for every additional
 // persona's chat lander (Marcus, Luna, Nova, Maren, ...). Same shape as

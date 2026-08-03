@@ -1,0 +1,22 @@
+# return-mhf — hook cards-misled ("Am I being misled?"), tapped card b (the Magician/the Hanged Man/the Fool)
+# she typed: "He tells me one thing and then I find out something completely different, and I am starting to feel crazy."
+
+[1] Mmm… the Fool, the card of new beginnings. I felt it the moment your hand reached for it. The connection only opens once I know who I'm speaking with, though… what's your first name, dear?
+
+[2] Sarah
+
+[3] It's lovely to meet you, Sarah.
+
+[4] Everything we discuss stays between us... our secret.
+
+[5] I can feel warmth radiating from your heart, Sarah...
+
+[6] But there's a flicker of shadow there too...
+
+[7] Let's look deeper together...
+
+[8] Tell me more about what's on your mind...
+
+[9] He tells me one thing and then I find out something completely different, and I am starting to feel crazy.
+
+[10] Sarah, that feeling of being crazy... it's not madness. It's your intuition screaming at you.

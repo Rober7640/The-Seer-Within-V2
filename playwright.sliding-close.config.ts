@@ -1,5 +1,10 @@
 import { defineConfig } from "@playwright/test";
 
+// ⚠ RETIRED 2026-07-26, alongside tests/sliding-close-thumb-only.spec.ts (the
+// spec this config runs is now `.skip`'d): the `55-35_palm` variant it tests
+// was parked at weight 0 and superseded by the `35_palm_gate` commitment-gate
+// A/B test. See docs/superpowers/specs/2026-07-26-fb-palm-commitment-gate-design.md.
+//
 // Integration proof that the $55/$35 sliding close is assigned to the fb-palm THUMB
 // ads and to nothing else. Drives the real /api/lead endpoint.
 //

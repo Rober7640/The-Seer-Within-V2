@@ -64,10 +64,21 @@ function sessionIdFromUrl(url) {
   return (url.match(/cs_test_[A-Za-z0-9]+/) || [])[0] || null;
 }
 async function sessionAmount(stripe, url) {
+  return (await sessionDetail(stripe, url)).amount;
+}
+
+// Amount PLUS the customer-facing line-item name. The name carries the funnel's
+// productSuffix (" - PALM", " - TAROT", …), which is the token fulfilment routes
+// on — a funnel that lost its suffix would still charge the right amount, so the
+// price checks alone would never catch it.
+async function sessionDetail(stripe, url) {
   const id = sessionIdFromUrl(url);
   if (!id) throw new Error(`no cs_test_ id in url ${url.slice(0, 60)}`);
-  const s = await stripe.checkout.sessions.retrieve(id);
-  return s.amount_total;
+  const s = await stripe.checkout.sessions.retrieve(id, { expand: ['line_items'] });
+  return {
+    amount: s.amount_total,
+    productName: s.line_items?.data?.[0]?.description ?? null,
+  };
 }
 
 // ── PART 1: server-owned upsell charge correctness (via the fallback Checkout) ────
@@ -80,6 +91,9 @@ async function chargeCorrectness(stripe) {
     { funnel: 'v1-fb', label: 'fb' },
     { funnel: 'v1-fb', label: 'fb' },
     { funnel: 'v1-palm', label: 'palm', sign: 'thumb' },
+    // Tarot ships a FIXED price (FIXED_FUNNEL_PRICES['v1-tarot']), so its U1 must be
+    // exactly $47 — and its line item must carry " - TAROT" or fulfilment misroutes.
+    { funnel: 'v1-tarot', label: 'tarot', expectCents: 4700, expectSuffix: ' - TAROT' },
   ];
   for (let i = 0; i < U1_CASES.length; i++) {
     const c = U1_CASES[i];
@@ -101,28 +115,51 @@ async function chargeCorrectness(stripe) {
     const fbBody = { email, firstName: 'Claire', bucket: 'love', originalSessionId: sessionId, amount: 999 };
     if (c.funnel) fbBody.funnel = c.funnel;
     const fb = await postJson('/api/upsell/fallback-checkout', fbBody);
-    const charge = await sessionAmount(stripe, fb.url || '');
+    const { amount: charge, productName } = await sessionDetail(stripe, fb.url || '');
 
     check(`[U1 ${c.label}] fallback charge == the quoted upsell-1 price`, charge === quote,
       `quoted(user-data)=${money(quote)} charged(stripe)=${money(charge)}`);
     check(`[U1 ${c.label}] server ignored the client-supplied amount (sent 999¢)`, charge !== 999 && charge >= 3000,
       `charged=${money(charge)} (a legit configured upsell-1 price, not $9.99)`);
+    // Fixed-price funnels pin the exact figure — a weighted funnel can't, since its
+    // U1 price legitimately varies by arm.
+    if (c.expectCents) {
+      check(`[U1 ${c.label}] upsell-1 is exactly ${money(c.expectCents)}`, charge === c.expectCents,
+        `expected=${money(c.expectCents)} charged=${money(charge)}`);
+    }
+    if (c.expectSuffix) {
+      check(`[U1 ${c.label}] line item carries "${c.expectSuffix}" (fulfilment routes on it)`,
+        String(productName ?? '').includes(c.expectSuffix),
+        `product name = "${productName}"`);
+    }
   }
 
-  // U2 price is server-hardcoded (type full=4700 / downsell=3000), funnel-independent.
-  const email2 = `u2-${RUN}@example.com`;
-  await postJson('/api/lead', { email: email2, firstName: 'Claire', bucket: 'love', funnel: 'v1-fb' });
-  const coBody2 = { email: email2, firstName: 'Claire', bucket: 'love', type: 'main', funnel: 'v1-fb' };
-  const co2 = await postJson('/api/checkout', coBody2);
-  const origSession = sessionIdFromUrl(co2.url || '');
-  for (const [type, expect] of [['full', 4700], ['downsell', 3000]]) {
-    const fb = await postJson('/api/upsell2/fallback-checkout', {
-      email: email2, firstName: 'Claire', bucket: 'love', originalSessionId: origSession, funnel: 'v1-fb', type, amount: 111,
-    });
-    const charge = await sessionAmount(stripe, fb.url || '');
-    check(`[U2 ${type}] fallback charge == server price ${money(expect)}`, charge === expect,
-      `expected=${money(expect)} charged(stripe)=${money(charge)}`);
-    check(`[U2 ${type}] server ignored the client-supplied amount (sent 111¢)`, charge !== 111 && charge === expect);
+  // U2 price is server-hardcoded (type full=4700 / downsell=3000), funnel-independent
+  // — but the PRODUCT NAME is not, so each funnel is walked to prove its suffix lands.
+  const U2_CASES = [
+    { funnel: 'v1-fb', label: 'fb' },
+    { funnel: 'v1-tarot', label: 'tarot', expectSuffix: ' - TAROT' },
+  ];
+  for (const u2 of U2_CASES) {
+    const email2 = `u2-${u2.label}-${RUN}@example.com`;
+    await postJson('/api/lead', { email: email2, firstName: 'Claire', bucket: 'love', funnel: u2.funnel });
+    const coBody2 = { email: email2, firstName: 'Claire', bucket: 'love', type: 'main', funnel: u2.funnel };
+    const co2 = await postJson('/api/checkout', coBody2);
+    const origSession = sessionIdFromUrl(co2.url || '');
+    for (const [type, expect] of [['full', 4700], ['downsell', 3000]]) {
+      const fb = await postJson('/api/upsell2/fallback-checkout', {
+        email: email2, firstName: 'Claire', bucket: 'love', originalSessionId: origSession, funnel: u2.funnel, type, amount: 111,
+      });
+      const { amount: charge, productName } = await sessionDetail(stripe, fb.url || '');
+      check(`[U2 ${u2.label} ${type}] fallback charge == server price ${money(expect)}`, charge === expect,
+        `expected=${money(expect)} charged(stripe)=${money(charge)}`);
+      check(`[U2 ${u2.label} ${type}] server ignored the client-supplied amount (sent 111¢)`,
+        charge !== 111 && charge === expect);
+      if (u2.expectSuffix) {
+        check(`[U2 ${u2.label} ${type}] line item carries "${u2.expectSuffix}"`,
+          String(productName ?? '').includes(u2.expectSuffix), `product name = "${productName}"`);
+      }
+    }
   }
 }
 
@@ -228,6 +265,48 @@ async function upsell1Flow(browser) {
     }
     await ctx.close();
   }
+}
+
+// ── PART 2b: the upsell pages on a FUNNEL-PREFIXED route ─────────────────────
+// PART 2 walks root /welcome1. Every ad funnel also mounts the SAME UpsellPage at
+// its own prefix (/fb-palm/welcome1, /fb-tarot/welcome1, …), and a funnel whose
+// route was mis-registered would fail there while root stayed green — the offer
+// would 404-to-shell and the buyer would never be able to accept.
+//
+// Kept deliberately light (offer renders at the right price → accept → shipping
+// form) because everything below that is the shared component already proven above.
+async function upsell1FunnelRoute(browser, { prefix, label, expectCents }) {
+  const SID = `u1${label}_${RUN}`;
+  const userData = {
+    firstName: 'Claire', email: `u1-${label}-${RUN}@example.com`, bucket: 'love', personName: '',
+    stripeCustomerId: 'cus_test', mainPurchaseAmount: 3500, upsell1PriceCents: expectCents,
+  };
+  const ctx = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  await blockMeta(ctx);
+  await speedUpTyping(ctx);
+  await ctx.route('**/api/upsell/user-data**', (r) =>
+    r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(userData) }));
+  await ctx.route('**/api/fb-event', (r) => r.fulfill({ status: 200, contentType: 'application/json', body: '{}' }));
+  await ctx.route('**/api/upsell/charge', (r) =>
+    r.fulfill({ status: 200, contentType: 'application/json', body: '{"success":true,"paymentIntentId":"pi_test"}' }));
+  await ctx.route('**/api/shipping/save', (r) =>
+    r.fulfill({ status: 200, contentType: 'application/json', body: '{"success":true}' }));
+
+  const page = await ctx.newPage();
+  await page.goto(`${BASE}${prefix}/welcome1?session_id=${SID}`, { waitUntil: 'domcontentloaded' });
+  const reached = await advance(page, () => visible(page, '[data-testid="button-upsell-accept"]'));
+  check(`[U1 ${label} route] offer reached at ${prefix}/welcome1`, reached,
+    reached ? '' : `never got the CTA — is the route registered? url=${page.url()}`);
+
+  if (reached) {
+    const body = await bodyText(page);
+    check(`[U1 ${label} route] offer shows ${money(expectCents)}`,
+      body.includes(`$${(expectCents / 100).toFixed(0)}`), `expected ${money(expectCents)} in the offer copy`);
+    await page.locator('[data-testid="button-upsell-accept"]').click().catch(() => {});
+    const shipShown = await advance(page, () => visible(page, '[data-testid="button-shipping-submit"]'), { timeoutMs: 20000 });
+    check(`[U1 ${label} route] accept → shipping form appears`, shipShown);
+  }
+  await ctx.close();
 }
 
 // ── PART 3: Upsell 2 browser flow ─────────────────────────────────────────────
@@ -345,6 +424,8 @@ async function main() {
   const browser = await chromium.launch();
   console.log('  PART 2 — Upsell 1 chat flow…');
   await upsell1Flow(browser);
+  console.log('  PART 2b — Upsell 1 on a funnel-prefixed route…');
+  await upsell1FunnelRoute(browser, { prefix: '/fb-tarot', label: 'tarot', expectCents: 4700 });
   console.log('  PART 3 — Upsell 2 chat flow…');
   await upsell2Flow(browser);
   await browser.close();

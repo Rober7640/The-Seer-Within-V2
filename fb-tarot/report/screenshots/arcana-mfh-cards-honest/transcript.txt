@@ -1,0 +1,26 @@
+# arcana-mfh — hook cards-honest ("Is he being honest with you?"), tapped card a (the Magician/the Fool/the Hanged Man)
+# she typed: "He says everything is fine but his story keeps changing, and I can't shake the feeling something is off."
+
+[1] Mmm… the Magician, the card of will and intention. I felt it the moment your eyes went to it. The connection only opens once I know who I'm speaking with, though… what's your first name, dear?
+
+[2] Sarah
+
+[3] It's lovely to meet you, Sarah.
+
+[4] Everything we discuss stays between us... our secret.
+
+[5] I can feel warmth radiating from your heart, Sarah...
+
+[6] But there's a flicker of shadow there too...
+
+[7] Let's look deeper together...
+
+[8] Tell me more about what's on your mind...
+
+[9] He says everything is fine but his story keeps changing, and I can't shake the feeling something is off.
+
+[10] Sarah, when stories shift like sand... your intuition is already showing you the truth.
+
+[11] You've been watching patterns. Small inconsistencies that others might miss.
+
+[12] Your gut has been screaming while your heart begs for reassurance.

@@ -1,0 +1,8 @@
+<!-- current-tide.svg — Maren Soleil masthead "current/tide" watermark source. Three long, lazy gold currents at very low opacity. BAKE this over the ember band (#5E2A2C) and export to assets/maren/current-watermark-600x88.png (600x88). MUST degrade to flat ember when images are blocked. Atmosphere, never load-bearing. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="88" viewBox="0 0 600 88" fill="none" role="img" aria-label="">
+  <g stroke="#C9A24B" stroke-width="1.25" fill="none" stroke-linecap="round" opacity="0.10">
+    <path d="M-20 28 C120 16 240 40 380 28 C500 18 600 40 640 28"/>
+    <path d="M-20 48 C140 38 260 60 400 48 C520 40 600 58 640 48"/>
+    <path d="M-20 66 C110 58 250 76 390 66 C510 60 600 74 640 66"/>
+  </g>
+</svg>

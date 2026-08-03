@@ -1,0 +1,22 @@
+-- Migration 022: The Live Thread — pending_reply_violation_type.
+-- Purpose: record the safety verdict POST /api/evelyn-lander/reply reached on a
+--   parked reply, so the replay (server/lib/liveThreadReplay.ts) can withhold text
+--   the normal chat path would have intercepted rather than generated against.
+--
+-- Why the verdict is STORED rather than recomputed at replay time: it is made once,
+--   at the moment the reader submitted, with that request's IP / user-agent /
+--   country. initSession() has no request context, so a second evaluation would run
+--   with a null country, would write a duplicate row to safety_violations for a
+--   single real event, and could reach a different answer than the one the reader
+--   was actually given. A replay should replay a decision, not re-adjudicate it.
+--
+-- NULL means the text passed. A non-null value is the violation type
+--   (prompt_injection, harassment, minor, inappropriate, gibberish, non_english).
+--   Hard crisis never reaches this column — /reply refuses to store it at all.
+--
+-- Additive only: one new nullable column, no rewrite of existing rows. Rows parked
+--   before this migration read as NULL, i.e. "passed". That is the pre-existing
+--   behaviour for replies already parked, and the only alternative — withholding
+--   every historical reply — would punish the readers this feature exists for.
+
+ALTER TABLE evelyn_lander_sessions ADD COLUMN IF NOT EXISTS pending_reply_violation_type text;

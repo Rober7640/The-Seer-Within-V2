@@ -3,6 +3,7 @@ import { useSearch, useLocation, useRoute, Link } from "wouter";
 import { useAuth, authFetch } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
 import { calculateTypingDelay, sleep } from "@/lib/typingAnimation";
+import { createTimeoutSignal } from "@/lib/timeoutSignal";
 import { PreReadingWelcome } from "@/components/PreReadingWelcome";
 import { GuideSidebar } from "@/components/GuideSidebar";
 import TarotCardDraw from "@/components/TarotCardDraw";
@@ -17,7 +18,6 @@ import {
 import {
   Send,
   Sparkles,
-  Coins,
   Brain,
   Menu,
   HelpCircle,
@@ -35,7 +35,7 @@ import TeaserCreditModal from "@/components/TeaserCreditModal";
 import CrisisDisclaimer from "@/components/CrisisDisclaimer";
 import SessionFeedbackModal from "@/components/SessionFeedbackModal";
 // import DebugOverlay from "@/components/DebugOverlay";
-import { COINS_PER_MINUTE, BILLING_INTERVAL_SECONDS, secondsToCoins, type PricingTier } from "@shared/types";
+import { COINS_PER_MINUTE, BILLING_INTERVAL_SECONDS, secondsToCoins, coinsToClock, secondsToClock, type PricingTier } from "@shared/types";
 
 // Status indicator type
 type Status = 'busy-slow' | 'busy-fast' | 'connecting' | 'online';
@@ -143,6 +143,46 @@ function touchStoredLiveSession() {
     s.lastActiveAt = Date.now();
     localStorage.setItem(LIVE_SESSION_KEY, JSON.stringify(s));
   } catch {}
+}
+
+// "The Live Thread" (Task 14): what this reader typed into the persona's lander
+// BEFORE they had an account, plus the persona's answer to it. Both are rendered as
+// PRE-SESSION bubbles — no session is created and nothing is billed until the reader
+// types, which is the property the whole design was chosen for. When they do type,
+// POST /session/start replays both into the database (server/lib/liveThreadReplay.ts),
+// so the thread on screen and the thread the model reads stay the same thread.
+interface LiveThreadPreview {
+  reply: string;
+  response: string | null;
+}
+
+/**
+ * Free, read-only lookup. Resolves to null for every persona and every reader with
+ * nothing parked — i.e. for all normal traffic — and on any error, timeout or
+ * malformed body, so a failure here can only ever mean "show today's greeting".
+ *
+ * Timeout via createTimeoutSignal, never AbortSignal.timeout directly: this funnel's
+ * paid traffic includes stale Android WebView, where calling it throws synchronously
+ * before fetch is issued (see client/src/lib/timeoutSignal.ts).
+ */
+async function fetchLiveThread(slug: string): Promise<LiveThreadPreview | null> {
+  const { signal, cleanup } = createTimeoutSignal(10000);
+  try {
+    const res = await authFetch(`/api/chat-service/live-thread/${slug}`, { signal });
+    if (!res.ok) return null;
+    const data = await res.json();
+    const lt = data?.liveThread;
+    if (!lt || typeof lt.reply !== "string" || !lt.reply.trim()) return null;
+    return {
+      reply: lt.reply,
+      response:
+        typeof lt.response === "string" && lt.response.trim() ? lt.response : null,
+    };
+  } catch {
+    return null;
+  } finally {
+    cleanup();
+  }
 }
 
 interface MemoryContext {
@@ -265,6 +305,13 @@ export default function ChatServicePage() {
   const lastUserMessageAt = useRef<number | null>(null);
   // Stores a queued question from the instructions screen to auto-send once greeting appears
   const pendingQuestionAfterGreeting = useRef<string | null>(null);
+  // True once the reader has sent anything in the currently-open thread. Read by the
+  // Live Thread append (below), which resolves asynchronously and must not splice the
+  // reader's parked exchange in BELOW a message they typed while it was still in
+  // flight — on screen that would read [greeting][their new message][their old
+  // reply][answer], while the database holds the opposite order. A ref, not state:
+  // the append closes over render-time values and would see a stale `false`.
+  const hasSentInThisThreadRef = useRef(false);
 
   // Refs for volatile values used inside the credit timer (Fix 4: stabilize timer deps)
   const coinBalanceRef = useRef(coinBalance);
@@ -272,7 +319,7 @@ export default function ChatServicePage() {
   const endSessionRef = useRef<() => void>(() => {});
   const freeTrialCoinsRef = useRef(freeTrialCoins);
   const refillBannerDismissedRef = useRef(refillBannerDismissed);
-  const coinsPerMinuteRef = useRef(60);
+  const coinsPerMinuteRef = useRef(COINS_PER_MINUTE);
   // Tracks the last persona ID that triggered an auto-fetch, to prevent double-fetching
   const lastAutoFetchedPersonaId = useRef<string | null>(null);
   // Continuous session start timestamp for debug overlay (never resets mid-session)
@@ -552,7 +599,7 @@ export default function ChatServicePage() {
   useEffect(() => { freeTrialCoinsRef.current = freeTrialCoins; }, [freeTrialCoins]);
   useEffect(() => { refillBannerDismissedRef.current = refillBannerDismissed; }, [refillBannerDismissed]);
   useEffect(() => { sessionIdRef.current = session?.id ?? null; }, [session]);
-  useEffect(() => { coinsPerMinuteRef.current = selectedPersona?.coinsPerMinute ?? 60; }, [selectedPersona?.coinsPerMinute]);
+  useEffect(() => { coinsPerMinuteRef.current = selectedPersona?.coinsPerMinute ?? COINS_PER_MINUTE; }, [selectedPersona?.coinsPerMinute]);
   useEffect(() => { showBuyCreditsRef.current = showBuyCredits; }, [showBuyCredits]);
 
   // Credit countdown timer — display only.
@@ -666,7 +713,7 @@ export default function ChatServicePage() {
             if (idleCountdownRef.current) { clearInterval(idleCountdownRef.current); idleCountdownRef.current = null; }
             setIdleWarning(false);
             endSession('idle');
-            toast({ title: "Session paused", description: "Your session was paused to protect your credits." });
+            toast({ title: "Session paused", description: "Your session was paused to protect your remaining time." });
           }
         }, 1000);
       }
@@ -910,10 +957,82 @@ export default function ChatServicePage() {
     if (!appendMode) {
       setMessages([]);
       setPreSessionGreeting(null);
+      // A fresh thread is being opened — nothing has been said in it yet.
+      hasSentInThisThreadRef.current = false;
     }
 
     const addMsg = (msg: ChatMessageData) => {
       setMessages(prev => [...prev, msg]);
+    };
+
+    // Live Thread: fired in PARALLEL with the greeting so it can never delay the first
+    // bubble. Skipped for the teaser path (a deliberate different entry point, which
+    // returns before the greeting call) and for appendMode (nothing is being opened).
+    const liveThreadPromise: Promise<LiveThreadPreview | null> =
+      teaserContent || appendMode ? Promise.resolve(null) : fetchLiveThread(slug);
+
+    // Appended UNDER the greeting, so the thread reads [greeting][their words][answer]
+    // — the same order server/lib/liveThreadReplay.ts writes to the database when the
+    // session eventually starts. Resolves to a no-op for everyone without a parked
+    // reply, which is all normal traffic.
+    //
+    // ⚠ RUN DETACHED, NEVER AWAITED. Awaiting it held fetchGreeting's `finally` open,
+    // and with it `isStarting`, for the whole round trip — while the composer and the
+    // suggested-question bubbles were ALREADY visible (setPreSessionGreeting fires
+    // first). A bubble tapped in that window takes the `if (isStarting)` branch and
+    // parks the question in pendingQuestionAfterGreeting, whose only flush point is an
+    // effect keyed on [preSessionGreeting] that has already fired — so the tap did
+    // nothing, permanently, on EVERY persona. Rare when /greeting is a live model call,
+    // repeatable within its 30-minute cache, where the greeting returns instantly and
+    // this round trip does not. Holding isStarting open also let the deferred `finally`
+    // kill the typing indicator seconds after sendMessage set it.
+    //
+    // Detaching is the fix rather than just moving setIsStarting(false) earlier,
+    // because the append is genuinely not part of opening the thread: fetchGreeting is
+    // "the greeting has arrived and the reader may speak", and this is additive
+    // decoration that lands later. isStale() and hasSentInThisThreadRef already make it
+    // safe to complete after fetchGreeting has returned — that is what they are for.
+    const appendLiveThread = async () => {
+      let lt: LiveThreadPreview | null = null;
+      try {
+        lt = await liveThreadPromise;
+      } catch {
+        lt = null;
+      }
+      // isStale() covers a persona switch; hasSentInThisThreadRef covers the reader
+      // typing while this was in flight. In that second case the session has already
+      // been created and the server has already replayed the pair into it, so
+      // appending here would duplicate them on screen AND in the wrong order.
+      if (!lt || isStale() || hasSentInThisThreadRef.current) return;
+      addMsg({
+        id: `live-thread-reply-${Date.now()}`,
+        role: "user",
+        content: lt.reply,
+        sentAt: new Date().toISOString(),
+      });
+      // No answer (generation failed server-side): the reader still sees their own
+      // words in the thread, and the persona answers them on her next turn.
+      if (!lt.response) return;
+      await sleep(400);
+      if (isStale() || hasSentInThisThreadRef.current) return;
+      setIsTyping(true);
+      await sleep(calculateTypingDelay(lt.response));
+      // Guards BEFORE clearing the indicator, not after. Once the reader has spoken (or
+      // switched persona) someone else owns isTyping — sendMessage sets it for their
+      // first real answer — and clearing it here would blank their typing dots.
+      if (isStale() || hasSentInThisThreadRef.current) return;
+      setIsTyping(false);
+      addMsg({
+        id: `live-thread-response-${Date.now()}`,
+        role: "assistant",
+        content: lt.response,
+        sentAt: new Date().toISOString(),
+      });
+    };
+
+    /** Detached start. Swallows its own rejection so it can never surface unhandled. */
+    const startLiveThreadAppend = () => {
+      void appendLiveThread().catch(() => {});
     };
 
     // If the user clicked through from a sidebar teaser, deliver that message directly
@@ -1045,6 +1164,8 @@ export default function ChatServicePage() {
           setPersonaStatus('online');
           setPersonaStatusText('Online');
         }, 800);
+
+        startLiveThreadAppend();
       } else if (res.status === 402) {
         setReadingEnded(true);
         setShowBuyCredits(true);
@@ -1068,6 +1189,8 @@ export default function ChatServicePage() {
           setPersonaStatus('online');
           setPersonaStatusText('Online');
         }, 800);
+
+        startLiveThreadAppend();
       }
     } catch (err) {
       console.error("Failed to fetch greeting:", err);
@@ -1086,6 +1209,8 @@ export default function ChatServicePage() {
       setIsTyping(false);
       setPersonaStatus('online');
       setPersonaStatusText('Online');
+
+      startLiveThreadAppend();
     } finally {
       setIsStarting(false);
       setIsTyping(false);
@@ -1208,13 +1333,16 @@ export default function ChatServicePage() {
     setShowRefillBanner(false);
     setReadingEnded(true);
 
-    // Receipt toast — shows what was actually billed (server uses Math.round per minute)
-    const coinsBilled = secondsToCoins(elapsed, selectedPersona?.coinsPerMinute ?? COINS_PER_MINUTE);
+    // Receipt toast — shows the time actually billed (server bills per 15s block)
+    const billingRate = selectedPersona?.coinsPerMinute ?? COINS_PER_MINUTE;
+    const coinsBilled = secondsToCoins(elapsed, billingRate);
+    // m:ss, consistent with the timer and every other time display in the app.
+    const clockBilled = coinsToClock(coinsBilled, billingRate);
     toast({
-      title: coinsBilled === 0 ? "Reading ended" : `Reading ended · ${coinsBilled} coins billed`,
+      title: coinsBilled === 0 ? "Reading ended" : `Reading ended · ${clockBilled} billed`,
       description: coinsBilled === 0
-        ? `No coins were charged (under ${BILLING_INTERVAL_SECONDS} seconds)`
-        : `${coinsBilled} coins deducted from your balance`,
+        ? `No time was charged (under ${BILLING_INTERVAL_SECONDS} seconds)`
+        : `${clockBilled} deducted from your balance`,
     });
 
     // Insert "Reading Ended" divider into chat history
@@ -1370,7 +1498,7 @@ export default function ChatServicePage() {
   const resumeAfterPurchase = useCallback(async (newBalance: number) => {
     setCoinBalance(newBalance);
 
-    toast({ title: "Credits purchased!", description: "Your reading will continue now." });
+    toast({ title: "Minutes added!", description: "Your reading will continue now." });
 
     // Remove any reading-ended dividers (so old "Continue Reading" buttons don't linger)
     // and insert "Credits Purchased" divider
@@ -1464,6 +1592,11 @@ export default function ChatServicePage() {
       if (isSending || !content.trim()) return;
       // Must have either an active session or a pre-session greeting to send into
       if (!session && !preSessionGreeting) return;
+
+      // Set BEFORE the optimistic append, so an in-flight Live Thread append can see
+      // that the reader has spoken and stand down rather than splicing their parked
+      // exchange in underneath this message.
+      hasSentInThisThreadRef.current = true;
 
       const userMessage: ChatMessageData = {
         id: `temp-${Date.now()}`,
@@ -1911,24 +2044,35 @@ export default function ChatServicePage() {
               const promoForPersona = promoBalances[selectedPersonaId ?? ""] ?? 0;
               const pausedCoins = coinBalance + promoForPersona;
               if (pausedCoins <= 0) return null;
+              const pausedCpm = selectedPersona?.coinsPerMinute ?? COINS_PER_MINUTE;
+              // m:ss clock — same format as the live meter and the rest of the app.
+              const pausedSec = Math.max(0, Math.round((pausedCoins / pausedCpm) * 60));
+              const pausedClock = `${Math.floor(pausedSec / 60)}:${(pausedSec % 60).toString().padStart(2, "0")}`;
               return (
-                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/10 text-white/40 text-xs font-medium select-none">
+                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/10 text-white/40 text-xs font-medium select-none tabular-nums">
                   <span className="w-1.5 h-1.5 rounded-full bg-white/30" />
-                  {pausedCoins} <Coins className="w-3.5 h-3.5" />
+                  <Clock className="w-3.5 h-3.5" /> {pausedClock}
                 </div>
               );
             })()}
             {session && (() => {
-              const coinsPerMinute = selectedPersona?.coinsPerMinute ?? 60;
+              const coinsPerMinute = selectedPersona?.coinsPerMinute ?? COINS_PER_MINUTE;
               const continuousElapsed = sessionStartTimeRef.current
                 ? Math.floor((Date.now() - sessionStartTimeRef.current) / 1000)
                 : 0;
-              const coinsUsed = secondsToCoins(continuousElapsed, coinsPerMinute);
-              const remainingCoins = Math.max(0, initialCoinBalance - coinsUsed);
+              // Live m:ss countdown — recomputed every second (the setElapsedSeconds
+              // interval re-renders this) so it ticks 3:21 → 3:20 → 3:19 like a real
+              // timer. Display-only; the actual charge is still billed per 15s block.
+              // Scale first (see coinsToClock): dividing first drops a second on
+              // exact values, which is what made this meter and the header balance
+              // disagree by 1s on the $50 pack.
+              const initialSec = Math.floor((initialCoinBalance * 60) / coinsPerMinute);
+              const remainingSec = Math.max(0, initialSec - continuousElapsed);
+              const remainingClock = secondsToClock(remainingSec);
               return (
-                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300 text-xs font-medium select-none">
+                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300 text-xs font-medium select-none tabular-nums">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                  {remainingCoins} <Coins className="w-3.5 h-3.5" />
+                  <Clock className="w-3.5 h-3.5" /> {remainingClock}
                 </div>
               );
             })()}
@@ -1964,13 +2108,13 @@ export default function ChatServicePage() {
         {session && showRefillBanner && !refillBannerDismissed && (
           <div className="bg-gradient-to-r from-amber-500 to-orange-500 px-4 py-2.5 flex items-center justify-between gap-2 shrink-0 animate-slide-down">
             <div className="flex items-center gap-2 text-white text-sm font-medium">
-              <Coins className="w-4 h-4 shrink-0" />
+              <Clock className="w-4 h-4 shrink-0" />
               <span>
                 {paywallVariant === "B"
                   ? (coinBalance <= freeTrialCoins
                       ? paywallCopy("B").banner.freeTrial
                       : paywallCopy("B").banner.lowBalance(selectedPersona?.displayName || "your guide"))
-                  : (coinBalance > freeTrialCoins ? "You're running low on credits" : "Your free trial is ending soon!")}
+                  : (coinBalance > freeTrialCoins ? "You're running low on time" : "Your free trial is ending soon!")}
               </span>
             </div>
             <div className="flex items-center gap-2">
@@ -2002,7 +2146,7 @@ export default function ChatServicePage() {
         {session && idleWarning && (
           <div className="bg-gradient-to-r from-red-500 to-rose-600 px-4 py-2.5 flex items-center justify-between gap-2 shrink-0">
             <div className="flex items-center gap-2 text-white text-sm font-medium">
-              <Coins className="w-4 h-4 shrink-0" />
+              <Clock className="w-4 h-4 shrink-0" />
               <span>Are you still there? Pausing in {idleCountdown}s — idle time is free.</span>
             </div>
             <button
@@ -2304,7 +2448,7 @@ export default function ChatServicePage() {
                     <div key={msg.id} className="flex items-center gap-3 w-full py-3 animate-fade-in">
                       <div className="flex-1 h-px bg-gradient-to-r from-transparent via-emerald-400/40 to-transparent" />
                       <span className="text-xs text-emerald-400 whitespace-nowrap font-medium">
-                        Credits purchased · reading continues
+                        Minutes added · reading continues
                       </span>
                       <div className="flex-1 h-px bg-gradient-to-r from-transparent via-emerald-400/40 to-transparent" />
                     </div>
@@ -2312,7 +2456,10 @@ export default function ChatServicePage() {
                 }
 
                 // A "real" DB message ID is a UUID — not a temp- or assistant- prefixed local ID
-                const isRealId = !msg.id.startsWith('temp-') && !msg.id.startsWith('assistant-') && !msg.id.startsWith('reveal-') && !msg.id.startsWith('reading-ended-') && !msg.id.startsWith('credits-purchased-');
+                // 'live-thread-' covers the two PRE-SESSION bubbles (the reader's parked
+                // reply and its answer). They are shown before any session exists, so no
+                // chat_messages row exists to bookmark yet — offering Save would 404.
+                const isRealId = !msg.id.startsWith('temp-') && !msg.id.startsWith('assistant-') && !msg.id.startsWith('reveal-') && !msg.id.startsWith('reading-ended-') && !msg.id.startsWith('credits-purchased-') && !msg.id.startsWith('live-thread-');
                 const isSaved = savedMessageIds.has(msg.id);
 
                 return (
@@ -2485,7 +2632,7 @@ export default function ChatServicePage() {
                 }
                 className="hover:text-emerald-400 transition-colors"
               >
-                Get More Coins
+                Get More Minutes
               </Link>
             </div>
           </div>
@@ -2545,8 +2692,8 @@ export default function ChatServicePage() {
         personaId={selectedPersonaId}
         personaName={selectedPersona?.displayName}
         isOutOfCredits={coinBalance <= 0}
-        variant={paywallVariant}
         pricingTiers={paywallTiers}
+        coinsPerMinute={selectedPersona?.coinsPerMinute ?? COINS_PER_MINUTE}
         avatarUrl={selectedPersona?.avatarUrl ?? undefined}
         onSuccess={async (newBalance) => {
           oocPaymentSucceededRef.current = true;
@@ -2587,7 +2734,7 @@ export default function ChatServicePage() {
             },
           ]);
 
-          toast({ title: "Credits purchased!", description: "Your reading continues." });
+          toast({ title: "Minutes added!", description: "Your reading continues." });
           oocPaymentSucceededRef.current = false;
         }}
       />

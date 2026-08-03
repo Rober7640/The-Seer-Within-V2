@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<!--
+  ========================================================================
+  MAREN SOLEIL · EMAIL TEMPLATE A — "THE CORD TODAY" (text-light workhorse)
+  ========================================================================
+  Use for: the everyday felt-truth reflection. No hero image. Fast to ship.
+  Audience: COLD funnel leads, no account. Every CTA -> /maren pre-login lander.
+
+  EDITABLE TOKENS (search for "EDIT:"):
+    {{SUBJECT}}      -> set in Kit's subject field (not in this file)
+    {{PREHEADER}}    -> inbox preview line (see preheader span below)
+    {{DATE}}         -> kicker date, e.g. "Fri, Jun 26"
+    {{BODY}}         -> main reading copy (the "BODY WELL" region)
+    {{CHAT_BLURB}}   -> 1-2 line nudge above the button (CTA block)
+    utm_content=MS-XX-> per-send tracking id, baked into the CTA href
+    {firstName}      -> Kit merge: {{ subscriber.first_name | default: "friend" }}
+
+  {{BASE_URL}} PLACEHOLDER = https://theseerwithin.com
+    -> CTA href is fully baked below as the /maren lander + UTM. Edit utm_content
+       per send. If you ever move domains, swap the https://theseerwithin.com
+       portion of the href.
+
+  ACCURACY (love empath): felt-truths only — never predictions or promised
+  outcomes ("they will come back"). No cards/tools. Never claim a personal fact
+  about the reader or the other person, and never claim you already did a reading
+  for THIS reader. Speak in tendencies; the live reading happens in the chat.
+  ========================================================================
+-->
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <!-- Dark-mode awareness: we still hard-code inline colors everywhere below. -->
+  <meta name="color-scheme" content="light dark">
+  <meta name="supported-color-schemes" content="light dark">
+  <title>Maren Soleil · The Cord Today</title>
+
+  <!-- Webfonts: loaded for clients that allow them. NEVER depended on; fallbacks inline. -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600&family=Inter:wght@400;700&display=swap" rel="stylesheet">
+
+  <!--[if mso]>
+  <noscript><xml><o:OfficeDocumentSettings><o:PixelsPerInch>96</o:PixelsPerInch></o:OfficeDocumentSettings></xml></noscript>
+  <![endif]-->
+
+  <style>
+    /* Resets */
+    body,table,td,a{ -webkit-text-size-adjust:100%; -ms-text-size-adjust:100%; }
+    table,td{ mso-table-lspace:0pt; mso-table-rspace:0pt; }
+    img{ -ms-interpolation-mode:bicubic; border:0; outline:none; text-decoration:none; }
+    body{ margin:0; padding:0; width:100%!important; height:100%!important; }
+    a{ text-decoration:none; }
+
+    /* Mobile media query — single consistent breakpoint, used by all 3 templates */
+    @media screen and (max-width:600px){
+      .ms-wrap{ width:100%!important; }
+      .ms-gutter{ padding-left:16px!important; padding-right:16px!important; }
+      .ms-h1{ font-size:26px!important; line-height:32px!important; }
+      .ms-btn-a{ width:100%!important; max-width:340px!important; }
+      .ms-btn-td{ text-align:center!important; }
+    }
+
+    /* Dark-mode hints (Apple Mail / iOS). Inline colors remain the source of truth. */
+    @media (prefers-color-scheme: dark){
+      .ms-canvas{ background:#EADBD1!important; }
+    }
+  </style>
+</head>
+
+<!-- bgcolor + inline style both set for the outer canvas (dark-mode safe) -->
+<body class="ms-canvas" style="margin:0; padding:0; background-color:#F1E4DC;" bgcolor="#F1E4DC">
+
+  <!-- ============ PREHEADER (hidden inbox-preview text) ============ -->
+  <!-- EDIT: {{PREHEADER}} — keep ~40-90 chars. Trailing &nbsp;&zwnj; pad hides Gmail snippet bleed. -->
+  <div style="display:none; max-height:0; overflow:hidden; mso-hide:all; font-size:1px; line-height:1px; color:#F1E4DC; opacity:0;">
+    Your friends are being kind about this. I'm not going to be.
+    &nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;
+  </div>
+
+  <!-- Outer canvas table -->
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#F1E4DC" style="background-color:#F1E4DC;">
+    <tr>
+      <td align="center" style="padding:24px 12px;">
+
+        <!-- ============ 600px MAIN WRAP ============ -->
+        <table role="presentation" class="ms-wrap" width="600" cellpadding="0" cellspacing="0" border="0" style="width:600px; max-width:600px; background-color:#FBF5EF;" bgcolor="#FBF5EF">
+
+          <!-- ====================== MASTHEAD ====================== -->
+          <!-- Ember band ~88px, live-text wordmark + tagline. Current/tide watermark degrades. -->
+          <tr>
+            <td align="center" bgcolor="#5E2A2C" background="https://theseerwithin.com/assets/maren/current-watermark-600x88.png"
+                style="background-color:#5E2A2C; background-image:url('https://theseerwithin.com/assets/maren/current-watermark-600x88.png'); background-position:center; background-repeat:no-repeat; padding:24px 24px 20px 24px;">
+              <!-- Maren avatar — web-optimized JPEG (150px asset, shown at 72px), round w/ gold ring. Host at {{BASE_URL}}/assets/maren/maren-avatar.jpg (file: assets/maren-avatar.jpg, 8.2KB). alt carries identity if images blocked. -->
+              <img src="https://theseerwithin.com/assets/maren/maren-avatar.jpg" width="72" height="72" alt="Maren Soleil, your twin-flame oracle" style="display:block; margin:0 auto 12px auto; width:72px; height:72px; border-radius:50%; border:2px solid #C9A24B; outline:none;">
+              <!-- LIVE-TEXT wordmark (never an image) -->
+              <div style="margin:0; font-family:'Playfair Display', Georgia, 'Times New Roman', serif; font-size:26px; line-height:30px; font-weight:600; letter-spacing:0.5px; color:#FBF5EF;">
+                MAREN SOLEIL
+              </div>
+              <!-- Tagline: gold, tracked uppercase -->
+              <div style="margin:6px 0 0 0; font-family:'Inter', -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif; font-size:11px; line-height:14px; font-weight:700; letter-spacing:2.5px; text-transform:uppercase; color:#C9A24B;">
+                Twin Flame Oracle &middot; Love Empath
+              </div>
+            </td>
+          </tr>
+
+          <!-- Gold hairline with center tide node (live ≈) -->
+          <tr>
+            <td bgcolor="#FBF5EF" style="background-color:#FBF5EF; padding:0;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td height="1" bgcolor="#C9A24B" style="background-color:#C9A24B; line-height:1px; font-size:1px;">&nbsp;</td>
+                  <td width="26" align="center" bgcolor="#FBF5EF" style="background-color:#FBF5EF; font-family:'Inter',Helvetica,Arial,sans-serif; font-size:13px; line-height:13px; color:#C9A24B; padding:0 4px;">&#8776;</td>
+                  <td height="1" bgcolor="#C9A24B" style="background-color:#C9A24B; line-height:1px; font-size:1px;">&nbsp;</td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- 28px spacer -->
+          <tr><td height="28" bgcolor="#FBF5EF" style="background-color:#FBF5EF; height:28px; line-height:28px; font-size:1px;">&nbsp;</td></tr>
+
+          <!-- ====================== KICKER ====================== -->
+          <tr>
+            <td class="ms-gutter" align="center" bgcolor="#FBF5EF" style="background-color:#FBF5EF; padding:0 40px;">
+              <!-- EDIT: kicker label + {{DATE}}. Pillar label, e.g. THE CORD TODAY / THE QUESTION / REUNION & TIMING -->
+              <div style="font-family:'Inter', -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif; font-size:11px; line-height:14px; font-weight:700; letter-spacing:2.5px; text-transform:uppercase; color:#C9A24B;">
+                THE QUESTION YOU'RE AFRAID TO ASK &middot; Fri, Jun 26
+              </div>
+            </td>
+          </tr>
+
+          <!-- 12px spacer -->
+          <tr><td height="12" bgcolor="#FBF5EF" style="background-color:#FBF5EF; height:12px; line-height:12px; font-size:1px;">&nbsp;</td></tr>
+
+          <!-- ====================== H1 ====================== -->
+          <tr>
+            <td class="ms-gutter" align="center" bgcolor="#FBF5EF" style="background-color:#FBF5EF; padding:0 40px;">
+              <!-- EDIT: H1 headline -->
+              <h1 class="ms-h1" style="margin:0; font-family:'Playfair Display', Georgia, 'Times New Roman', serif; font-size:30px; line-height:36px; font-weight:600; color:#2A2024;">
+                You're not imagining it. You're stalling.
+              </h1>
+            </td>
+          </tr>
+
+          <!-- 20px spacer -->
+          <tr><td height="20" bgcolor="#FBF5EF" style="background-color:#FBF5EF; height:20px; line-height:20px; font-size:1px;">&nbsp;</td></tr>
+
+          <!-- ====================== BODY WELL ====================== -->
+          <!-- EDIT: {{BODY}} — replace everything between BODY-START / BODY-END.
+               Body = Inter 17/28, ink, left-aligned. Keep paragraphs in <p> tags
+               with inline color/font so they stay correct in dark mode. -->
+          <tr>
+            <td class="ms-gutter" align="left" bgcolor="#FBF5EF" style="background-color:#FBF5EF; padding:0 40px; font-family:'Inter', -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif; font-size:17px; line-height:28px; color:#2A2024;">
+              <!-- BODY-START -->
+              <p style="margin:0 0 18px 0; font-family:'Inter', -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif; font-size:17px; line-height:28px; color:#2A2024;">
+                You ask it on a loop, {firstName} &mdash; <em style="color:#2A2024;">am I making this up? am I the only one who feels it?</em>
+              </p>
+              <p style="margin:0 0 18px 0; font-family:'Inter', -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif; font-size:17px; line-height:28px; color:#2A2024;">
+                Here's the honest answer your friends won't give you, because they love you and the truth is uncomfortable: no. In seventeen years of reading the cord between people, I have never once met someone who invented a connection out of nothing. You can <em style="color:#2A2024;">misread</em> a cord. You cannot invent one from thin air.
+              </p>
+              <p style="margin:0 0 18px 0; font-family:'Inter', -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif; font-size:17px; line-height:28px; color:#2A2024;">
+                So drop that question. It's the safe one &mdash; the one you ask so you don't have to ask the real one: what are you going to do now that you know it's real?
+              </p>
+              <p style="margin:0 0 0 0; font-family:'Inter', -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif; font-size:17px; line-height:28px; color:#2A2024;">
+                That's the question you keep deleting. I won't tell you what you want to hear. I'll tell you what I feel in the cord &mdash; including the part you've been hoping no one would say out loud.
+              </p>
+              <!-- BODY-END -->
+            </td>
+          </tr>
+
+          <!-- 28px spacer -->
+          <tr><td height="28" bgcolor="#FBF5EF" style="background-color:#FBF5EF; height:28px; line-height:28px; font-size:1px;">&nbsp;</td></tr>
+
+          <!-- ====================== GOLD RULE ====================== -->
+          <tr>
+            <td class="ms-gutter" bgcolor="#FBF5EF" style="background-color:#FBF5EF; padding:0 40px;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr><td height="1" bgcolor="#C9A24B" style="background-color:#C9A24B; line-height:1px; font-size:1px;">&nbsp;</td></tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- ====================================================== -->
+          <!-- ============ CTA BLOCK (conversion unit) ============= -->
+          <!-- IDENTICAL across templates A/B/C. Keep in sync if edited. -->
+          <!-- ====================================================== -->
+          <!-- 24px spacer -->
+          <tr><td height="24" bgcolor="#FBF5EF" style="background-color:#FBF5EF; height:24px; line-height:24px; font-size:1px;">&nbsp;</td></tr>
+
+          <!-- {{CHAT_BLURB}} — Inter 16/26, ink, centered, <=2 lines -->
+          <tr>
+            <td class="ms-gutter" align="center" bgcolor="#FBF5EF" style="background-color:#FBF5EF; padding:0 40px; font-family:'Inter', -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif; font-size:16px; line-height:26px; color:#2A2024;">
+              <!-- EDIT: {{CHAT_BLURB}} -->
+              Open the chat and say it the way it actually lives in your head &mdash; &ldquo;is this real, or is it just me?&rdquo; I'll feel into the cord and tell you straight, even the part that stings.
+            </td>
+          </tr>
+
+          <!-- 18px spacer -->
+          <tr><td height="18" bgcolor="#FBF5EF" style="background-color:#FBF5EF; height:18px; line-height:18px; font-size:1px;">&nbsp;</td></tr>
+
+          <!-- BULLETPROOF BUTTON (ivory text on terracotta "flame") -->
+          <tr>
+            <td class="ms-btn-td" align="center" bgcolor="#FBF5EF" style="background-color:#FBF5EF; padding:0 40px;">
+              <!--[if mso]>
+              <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="https://theseerwithin.com/maren?utm_source=kit&amp;utm_medium=email&amp;utm_campaign=maren-daily&amp;utm_content=MS-XX" style="height:54px;v-text-anchor:middle;width:320px;" arcsize="15%" stroke="f" fillcolor="#9C4A3C">
+                <w:anchorlock/>
+                <center style="color:#FBF5EF;font-family:'Segoe UI',Helvetica,Arial,sans-serif;font-size:16px;font-weight:700;letter-spacing:0.5px;">I'LL TELL YOU STRAIGHT &#8594;</center>
+              </v:roundrect>
+              <![endif]-->
+              <!--[if !mso]><!-- -->
+              <!-- EDIT: href utm_content=MS-XX  |  EDIT: button label -->
+              <table role="presentation" class="ms-btn-a" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto;">
+                <tr>
+                  <td align="center" bgcolor="#9C4A3C" style="background-color:#9C4A3C; border-radius:8px;">
+                    <a href="https://theseerwithin.com/maren?utm_source=kit&amp;utm_medium=email&amp;utm_campaign=maren-daily&amp;utm_content=MS-XX"
+                       style="display:inline-block; padding:16px 34px; font-family:'Inter', -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif; font-size:16px; font-weight:700; letter-spacing:0.5px; color:#FBF5EF; text-decoration:none; border-radius:8px;">
+                      I'LL TELL YOU STRAIGHT &#8594;
+                    </a>
+                  </td>
+                </tr>
+              </table>
+              <!--<![endif]-->
+            </td>
+          </tr>
+
+          <!-- 10px spacer -->
+          <tr><td height="10" bgcolor="#FBF5EF" style="background-color:#FBF5EF; height:10px; line-height:10px; font-size:1px;">&nbsp;</td></tr>
+
+          <!-- Friction-reducer line — italic, soft text, centered -->
+          <tr>
+            <td class="ms-gutter" align="center" bgcolor="#FBF5EF" style="background-color:#FBF5EF; padding:0 40px;">
+              <!-- EDIT: friction line. Variants (rotate per send):
+                   A) "Your first 3 minutes are free. No card, no catch — just talk to me like you'd text a friend."
+                   B) "No card needed, no long story required. Say 'hi' and we'll feel into it together. Three minutes on me."
+                   C) "3 free minutes, nothing to cancel. Come as you are — mid-feeling, unsure."
+                   D) "No card. No script. No birthday. Just 3 free minutes and the connection on your mind." -->
+              <span style="font-family:'Inter', -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif; font-style:italic; font-size:14px; line-height:20px; color:#6B5550;">
+                Your first 3 minutes are free. No card, no catch &mdash; just talk to me like you'd text a friend.
+              </span>
+            </td>
+          </tr>
+
+          <!-- 28px spacer -->
+          <tr><td height="28" bgcolor="#FBF5EF" style="background-color:#FBF5EF; height:28px; line-height:28px; font-size:1px;">&nbsp;</td></tr>
+          <!-- ============ /CTA BLOCK ============ -->
+
+          <!-- ====================== P.S. + SIGNOFF ====================== -->
+          <tr>
+            <td class="ms-gutter" align="left" bgcolor="#FBF5EF" style="background-color:#FBF5EF; padding:0 40px;">
+              <!-- EDIT: P.S. line -->
+              <p style="margin:0 0 18px 0; font-family:'Inter', -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif; font-size:15px; line-height:24px; color:#6B5550;">
+                <strong style="color:#2A2024;">P.S.</strong> You almost asked me just now, didn't you? You've been almost-asking for weeks. Almost is its own answer &mdash; and it's not the one you want.
+              </p>
+              <!-- Signoff -->
+              <p style="margin:0; font-family:'Playfair Display', Georgia, 'Times New Roman', serif; font-size:18px; line-height:24px; font-weight:600; color:#2A2024;">
+                &mdash; Maren
+              </p>
+            </td>
+          </tr>
+
+          <!-- 32px spacer before footer -->
+          <tr><td height="32" bgcolor="#FBF5EF" style="background-color:#FBF5EF; height:32px; line-height:32px; font-size:1px;">&nbsp;</td></tr>
+
+          <!-- ====================== FOOTER ====================== -->
+          <!-- Gold hairline -->
+          <tr>
+            <td class="ms-gutter" bgcolor="#FBF5EF" style="background-color:#FBF5EF; padding:0 40px;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr><td height="1" bgcolor="#C9A24B" style="background-color:#C9A24B; line-height:1px; font-size:1px;">&nbsp;</td></tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- 18px spacer -->
+          <tr><td height="18" bgcolor="#FBF5EF" style="background-color:#FBF5EF; height:18px; line-height:18px; font-size:1px;">&nbsp;</td></tr>
+
+          <!-- "Cord" line-art stamp (placeholder, ~48px, degrades to nothing visible) -->
+          <tr>
+            <td align="center" bgcolor="#FBF5EF" style="background-color:#FBF5EF; padding:0 40px;">
+              <!-- EDIT: footer stamp image URL -->
+              <img src="https://theseerwithin.com/assets/maren/cord-stamp-48.png" width="48" height="48" alt="Maren Soleil cord mark" style="display:block; width:48px; height:48px; border:0; outline:none;">
+            </td>
+          </tr>
+
+          <!-- 12px spacer -->
+          <tr><td height="12" bgcolor="#FBF5EF" style="background-color:#FBF5EF; height:12px; line-height:12px; font-size:1px;">&nbsp;</td></tr>
+
+          <tr>
+            <td align="center" bgcolor="#FBF5EF" style="background-color:#FBF5EF; padding:0 40px; font-family:'Inter', -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif; font-size:12px; line-height:18px; color:#6B5550;">
+              <div style="font-family:'Inter', -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif; font-size:12px; line-height:18px; color:#6B5550;">
+                <strong style="color:#2A2024;">Maren Soleil &middot; The Seer Within</strong><br>
+                hi@theseerwithin.com &middot; Felt, daily.
+              </div>
+              <div style="margin-top:10px; font-family:'Inter', -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif; font-size:12px; line-height:18px; color:#9A8B82;">
+                You're getting this because you joined Maren's list.
+              </div>
+              <div style="margin-top:10px; font-family:'Inter', -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif; font-size:12px; line-height:18px; color:#9A8B82;">
+                <!-- Kit merge tags: {{ unsubscribe_url }} and the preferences URL.
+                     EDIT: replace preferences href with your Kit preferences link if different. -->
+                <a href="{{ unsubscribe_url }}" style="color:#8A3D34; text-decoration:underline;">Unsubscribe</a>
+                &nbsp;&middot;&nbsp;
+                <a href="{{ preferences_url }}" style="color:#8A3D34; text-decoration:underline;">Update preferences</a>
+              </div>
+              <!-- CAN-SPAM physical mailing address (REQUIRED). EDIT: real address. -->
+              <div style="margin-top:10px; font-family:'Inter', -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif; font-size:12px; line-height:18px; color:#9A8B82;">
+                The Seer Within, 930 Washington Avenue, Suite 210-109, Miami Beach, FL 33139, USA
+              </div>
+            </td>
+          </tr>
+
+          <!-- 28px bottom spacer -->
+          <tr><td height="28" bgcolor="#FBF5EF" style="background-color:#FBF5EF; height:28px; line-height:28px; font-size:1px;">&nbsp;</td></tr>
+
+        </table>
+        <!-- ============ /600px MAIN WRAP ============ -->
+
+      </td>
+    </tr>
+  </table>
+
+</body>
+</html>

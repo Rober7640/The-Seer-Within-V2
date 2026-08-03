@@ -3,7 +3,7 @@ import { PayPalButtons, FUNDING } from "@paypal/react-paypal-js";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { authFetch, useAuth } from "@/hooks/useAuth";
 import { Shield, CreditCard } from "lucide-react";
-import { COINS_PER_MINUTE } from "../../../shared/types";
+import { coinsToClock, COINS_PER_MINUTE } from "../../../shared/types";
 import type { PricingTier } from "../../../shared/types";
 import StripeCardForm from "@/components/StripeCardForm";
 import { trackInitiateCheckout } from "@/lib/facebook";
@@ -19,6 +19,8 @@ interface Props {
   onSuccess: (newBalance: number) => void;
   variant?: PaywallVariant;
   personaName?: string;
+  /** The guide's cents-per-minute rate; drives the coins→time display. */
+  coinsPerMinute?: number;
 }
 
 export default function PaymentModal({
@@ -29,6 +31,7 @@ export default function PaymentModal({
   onSuccess,
   variant = "A",
   personaName,
+  coinsPerMinute = COINS_PER_MINUTE,
 }: Props) {
   const [method, setMethod] = useState<"paypal" | "card">("paypal");
   const [paypalError, setPaypalError] = useState<string | null>(null);
@@ -48,7 +51,7 @@ export default function PaymentModal({
   if (!tier) return null;
 
   const price = `$${(tier.priceUsd / 100).toFixed(2)}`;
-  const minutes = Math.floor(tier.totalCoins / COINS_PER_MINUTE);
+  const clock = coinsToClock(tier.totalCoins, coinsPerMinute);
 
   // The real payment actions — shared by both arms. Variant B slots these into
   // PaymentSheetView; variant A renders them inline (below).
@@ -75,6 +78,7 @@ export default function PaymentModal({
             body: JSON.stringify({
               packageType: tier.packageType,
               ...(personaId ? { personaId } : {}),
+              ...(tier.packageType === "custom" ? { customAmountUsd: tier.priceUsd } : {}),
             }),
           });
           if (!res.ok) throw new Error("Failed to create order");
@@ -111,6 +115,7 @@ export default function PaymentModal({
       personaId={personaId}
       amount={tier.priceUsd}
       priceLabel={price}
+      customAmountUsd={tier.packageType === "custom" ? tier.priceUsd : undefined}
       onSuccess={(newBalance) => {
         onSuccess(newBalance);
         onClose();
@@ -129,6 +134,7 @@ export default function PaymentModal({
             paypalSlot={paypalEl}
             cardSlot={cardEl}
             variant="B"
+            coinsPerMinute={coinsPerMinute}
           />
         </DialogContent>
       </Dialog>
@@ -145,7 +151,7 @@ export default function PaymentModal({
             <div>
               <p className="text-sm text-gray-700">Package</p>
               <p className="text-xs text-gray-400 mt-0.5">
-                {tier.totalCoins} coins (~{minutes} min)
+                {clock} of reading time
               </p>
             </div>
             <p className="text-sm font-medium text-gray-900">{price}</p>

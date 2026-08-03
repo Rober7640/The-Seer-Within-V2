@@ -12,12 +12,16 @@ const DEFAULT_INACTIVE_THRESHOLD_MS = DEFAULT_TIMEOUT_MINUTES * 60 * 1000;
 
 // Safety cap: never bill more than 30 minutes per session regardless of elapsed time.
 // If elapsed_seconds exceeds this, something is wrong (timezone drift, orphan, clock skew).
-// At 60 coins/min, 30 min = 1800 coins — prevents draining large balances in one shot.
+// This is a TIME cap (rate-independent); the coin equivalent is derived at the
+// session's rate via secondsToCoins(MAX_BILLABLE_SECONDS, coinsPerMinute) — so the
+// guard scales instead of clamping a premium guide's legitimate charge down to 1800.
 const MAX_BILLABLE_SECONDS = 30 * 60; // 30 minutes
 
 // Per-checkpoint deduction guard: never deduct more than 3 minutes' worth in a single
 // checkpoint/heartbeat cycle (heartbeat runs every 30s, so even 2 min is generous).
-const MAX_COINS_PER_DEDUCTION = 3 * 60; // 180 coins
+// Expressed in TIME so the coin (=cent) cap scales with the session's rate — a
+// hardcoded coin cap silently under-bills any guide priced above the default rate.
+const MAX_DEDUCTION_SECONDS = 3 * 60; // 3 minutes
 
 function capBillableSeconds(seconds: number, sessionId: string): number {
   if (seconds > MAX_BILLABLE_SECONDS) {
@@ -134,7 +138,7 @@ export async function startChatSession(userId: string, personaId: string): Promi
   const session = await db.execute(
     sql`INSERT INTO chat_sessions (user_id, persona_id, status, pricing_applied, last_heartbeat_at, duration_seconds, coins_charged, started_at, created_at)
         VALUES (${userId}, ${personaId}, 'active',
-                ${JSON.stringify({ ...pricing, coinsPerMinute: personaRow[0]?.coinsPerMinute ?? 60 })},
+                ${JSON.stringify({ ...pricing, coinsPerMinute: personaRow[0]?.coinsPerMinute ?? COINS_PER_MINUTE })},
                 (NOW() AT TIME ZONE 'UTC'), 0, 0,
                 (NOW() AT TIME ZONE 'UTC'), (NOW() AT TIME ZONE 'UTC'))
         RETURNING id`
@@ -215,18 +219,20 @@ export async function checkpointSession(sessionId: string): Promise<void> {
     let actualDeduction = 0;
     let promoDeducted = 0;
     if (coinsToDeductNow > 0) {
-      // Safety guard: if a single deduction exceeds MAX_COINS_PER_DEDUCTION, something is
-      // wrong (timezone drift, orphan session). Log an anomaly and cap the deduction.
+      // Safety guard: if a single deduction exceeds the per-cycle cap (3 minutes'
+      // worth at THIS session's rate), something is wrong (timezone drift, orphan
+      // session). Log an anomaly and cap the deduction.
+      const maxDeductionThisCycle = secondsToCoins(MAX_DEDUCTION_SECONDS, coinsPerMinute);
       let safeDeduction = coinsToDeductNow;
-      if (coinsToDeductNow > MAX_COINS_PER_DEDUCTION) {
+      if (coinsToDeductNow > maxDeductionThisCycle) {
         logger.error('BILLING_ANOMALY: checkpoint deduction exceeds per-cycle cap', {
           sessionId,
           requestedDeduction: coinsToDeductNow,
-          cappedTo: MAX_COINS_PER_DEDUCTION,
+          cappedTo: maxDeductionThisCycle,
           rawElapsed: row.total_elapsed,
           previouslyCharged: Number(row.coins_charged),
         });
-        safeDeduction = MAX_COINS_PER_DEDUCTION;
+        safeDeduction = maxDeductionThisCycle;
       }
 
       // Spend promo coins (this persona) FIRST, then the real balance. spendCoins
@@ -308,7 +314,7 @@ export async function checkpointSession(sessionId: string): Promise<void> {
     sql`SELECT coins_charged, duration_seconds FROM chat_sessions WHERE id = ${sessionId}`
   );
   const pc = postCommit.rows[0] as { coins_charged: number; duration_seconds: number } | undefined;
-  const maxBillableCoins = secondsToCoins(MAX_BILLABLE_SECONDS);
+  const maxBillableCoins = secondsToCoins(MAX_BILLABLE_SECONDS, coinsPerMinute);
   if (pc && (pc.coins_charged > maxBillableCoins || pc.duration_seconds > MAX_BILLABLE_SECONDS)) {
     logger.error('BILLING_CORRUPTION_DETECTED: post-commit values exceed safety cap', {
       sessionId,

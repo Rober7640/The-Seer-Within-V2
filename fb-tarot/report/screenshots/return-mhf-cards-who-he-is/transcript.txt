@@ -1,0 +1,26 @@
+# return-mhf — hook cards-who-he-is ("Is he really who he says he is?"), tapped card b (the Magician/the Hanged Man/the Fool)
+# she typed: "The more I learn about him the less the pieces line up, and I don't know which version of him is the real one."
+
+[1] Mmm… the Hanged Man, the card of the pause and a new angle. I felt it the moment your hand reached for it. The connection only opens once I know who I'm speaking with, though… what's your first name, dear?
+
+[2] Sarah
+
+[3] It's lovely to meet you, Sarah.
+
+[4] Everything we discuss stays between us... our secret.
+
+[5] I can feel warmth radiating from your heart, Sarah...
+
+[6] But there's a flicker of shadow there too...
+
+[7] Let's look deeper together...
+
+[8] Tell me more about what's on your mind...
+
+[9] The more I learn about him the less the pieces line up, and I don't know which version of him is the real one.
+
+[10] Sarah, inconsistency is a language all its own... and you're fluent in it now.
+
+[11] Your intuition has been whispering... and it's usually right.
+
+[12] There's something you haven't been told. The truth is closer to the surface than he realizes.

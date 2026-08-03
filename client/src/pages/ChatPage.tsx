@@ -5,6 +5,7 @@ import { QuickReplyButtons } from "../components/QuickReplyButtons";
 import { PermissionButton } from "../components/PermissionButton";
 import { PurchaseCTA } from "../components/PurchaseCTA";
 import { ClearingChoiceCard } from "../components/ClearingChoiceCard";
+import { CommitmentGateCard } from "../components/CommitmentGateCard";
 import { DownsellCTA } from "../components/DownsellCTA";
 import { BackgroundMusic } from "../components/BackgroundMusic";
 import { useConversation } from "../hooks/useConversation";
@@ -196,6 +197,27 @@ export default function ChatPage() {
                       : "bg-white text-gray-800 border border-gray-100 rounded-bl-none"
                   }`}
                 >
+                  {/* Drawn-card artwork (fb-tarot Version B/C opener only). The
+                      strips are N-up sheets, so one card is shown by cropping via
+                      background-position — the numbers come from
+                      tarotReads.cardArtFor(), the same helper the lander reveal
+                      uses, so chat and lander can never show different cards for
+                      the same draw. */}
+                  {msg.cardArt && (
+                    <div
+                      data-testid={`message-card-art-${msg.id}`}
+                      role="img"
+                      aria-label={msg.cardArt.alt}
+                      className="w-28 md:w-32 mb-3 rounded-lg overflow-hidden border border-gray-200 shadow-sm"
+                      style={{
+                        aspectRatio: `${msg.cardArt.aspect}`,
+                        backgroundImage: `url('${msg.cardArt.url}')`,
+                        backgroundSize: `${msg.cardArt.sizePct}% 100%`,
+                        backgroundPosition: `${msg.cardArt.posPct}% center`,
+                        backgroundRepeat: "no-repeat",
+                      }}
+                    />
+                  )}
                   {msg.content}
                 </div>
               </div>
@@ -232,8 +254,11 @@ export default function ChatPage() {
           {/* Purchase CTA. Sliding-scale close ('55-35*' variants) swaps the
               single button for the two-tier choice card ($35 grace offering +
               $55 full offering — the grace charge rides the normal downsell
-              checkout: same product + upsell path server-side). Classic
-              variants keep today's PurchaseCTA byte-identical. */}
+              checkout: same product + upsell path server-side). The fb-palm
+              commitment-gate variant (35_palm_gate) swaps it for a 3-checkbox
+              gate instead — same handlePurchase("main") call, gated behind all
+              3 boxes being checked. Classic variants keep today's PurchaseCTA
+              byte-identical. */}
           {chat.showPurchaseCTA &&
             (isSlidingCloseVariant(chat.userData.priceVariantId) ? (
               <ClearingChoiceCard
@@ -241,6 +266,12 @@ export default function ChatPage() {
                 onGraceOffering={() => handlePurchase("downsell")}
                 fullDollars={chat.userData.priceDollars ?? 55}
                 graceDollars={chat.userData.downsellDollars ?? 35}
+              />
+            ) : chat.userData.commitmentGate === true ? (
+              <CommitmentGateCard
+                firstName={chat.userData.firstName}
+                onConfirm={() => handlePurchase("main")}
+                priceDollars={chat.userData.priceDollars ?? 35}
               />
             ) : (
               <PurchaseCTA

@@ -1,0 +1,13 @@
+<!-- candle-flame.svg — Maren Soleil "warmth/flame" accent: one calm, symmetrical candle flame (static fallback for the "candle breathing" GIF — frame 1 = this steady flame). Gold line-art. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="40" height="64" viewBox="0 0 40 64" fill="none" role="img" aria-label="A single steady candle flame">
+  <g stroke="#C9A24B" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <!-- outer flame teardrop -->
+    <path d="M20 6 C29 20 30 34 20 46 C10 34 11 20 20 6 Z" stroke-width="1.25"/>
+    <!-- inner flame -->
+    <path d="M20 18 C25 26 25 34 20 42 C15 34 15 26 20 18 Z" stroke-width="1"/>
+    <!-- wick stub -->
+    <path d="M20 48 L20 54" stroke-width="1"/>
+  </g>
+  <!-- wick base node -->
+  <circle cx="20" cy="48" r="1" fill="#C9A24B"/>
+</svg>

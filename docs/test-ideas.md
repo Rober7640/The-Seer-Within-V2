@@ -1700,6 +1700,15 @@ Context: V1→V2 migrated leads have a real (unknown) password hash, so on `/7-7
 - [ ] Welcome-back re-pitch for a sliding-variant session restores the grace link (priceVariantId survives localStorage round-trip)
 - [ ] InitiateCheckout / checkout_initiated tracking values: $55 on main CTA, $35 on grace link (price_cents 5500/3500)
 
+### fb-palm commitment gate — 3-checkbox pre-purchase ask ('35_palm_gate' variant, retires '55-35_palm') (2026-07-26)
+- [ ] `CommitmentGateCard` renders (in place of `PurchaseCTA`) only when `chat.userData.priceVariantId === '35_palm_gate'`; every other variant (incl. the retired `55-35_palm`) renders the classic `PurchaseCTA`/`ClearingChoiceCard` path unchanged
+- [ ] With 0, 1, or 2 of the 3 commitment checkboxes checked, no purchase button is present in the DOM (or, if present, is not clickable) — only the "Check all three to continue" placeholder shows
+- [ ] Checking all 3 checkboxes reveals the confirm button (`button-commitment-confirm`) and it is clickable/enabled
+- [ ] Unchecking any one of the 3 after all were checked hides the confirm button again (no stale enabled state)
+- [ ] Clicking the confirm button after all 3 are checked calls `handlePurchase("main")` and routes through the exact same `/api/checkout` call (same `type=main`, same funnel tag, same price) as the control variant's `PurchaseCTA` — the gate changes only the UI in front of the purchase, never the checkout itself
+- [ ] `35_palm_gate` carries the same $35 main / $25 downsell economics as `35_palm_u47` — price shown and charged is identical between the two arms
+- [ ] Commitment checkbox copy shows "I understand belief is required for this to work", "I'm ready to receive this tonight", "I'll read it with an open heart" (no secrecy or irreversibility framing that would contradict the card's own 30-Day Guarantee footer)
+
 ### V1 funnel audit skill — flow / pixels / palm / charge / funnels (`.claude/skills/v1-funnel-audit`, 2026-07-16)
 Covered = shipped in the skill (`[x]`); open = still a gap (`[ ]`). Runs LOCAL-ONLY against the muted `.env.sandbox`.
 - [x] Flow (sliding arm): reaches the pitch in budget; two-tier choice card renders $55 full + $35 grace; both CTAs present; Evelyn voices $55/$35; survives 3 objections → $35 downsell CTA; no dead-air ≥25s; no empty bubbles; Meta blocked *(audit-flow.mjs, 11/11)*
@@ -1717,3 +1726,25 @@ Covered = shipped in the skill (`[x]`); open = still a gap (`[ ]`). Runs LOCAL-O
 - [ ] `/success` page contents — order summary (`/api/order/details`) + Luna cross-sell handoff; the upsell audit asserts the hand-off TO `/success`, not what it renders
 - [ ] The REAL 1-click off-session charge path (not the fallback) — needs a Stripe TEST customer with a saved card + a completed original checkout; the audit proves the same server price via the fallback instead
 - [ ] Palm finger-shape / decode-him (a hook, not a sign) browser entries — charge audit covers their pricing via the API; a browser entry smoke would extend audit-funnels
+
+### fb-palm commitment gate — 3-checkbox pre-purchase ask ('35_palm_gate' variant, retires '55-35_palm') (2026-07-26)
+- [ ] `CommitmentGateCard` renders (in place of `PurchaseCTA`) only when `chat.userData.priceVariantId === '35_palm_gate'`; every other variant (incl. the retired `55-35_palm`) renders the classic `PurchaseCTA`/`ClearingChoiceCard` path unchanged
+- [ ] With 0, 1, or 2 of the 3 commitment checkboxes checked, no purchase button is present in the DOM (or, if present, is not clickable) — only the "Check all three to continue" placeholder shows
+- [ ] Checking all 3 checkboxes reveals the confirm button (`button-commitment-confirm`) and it is clickable/enabled
+- [ ] Unchecking any one of the 3 after all were checked hides the confirm button again (no stale enabled state)
+- [ ] Clicking the confirm button after all 3 are checked calls `handlePurchase("main")` and routes through the exact same `/api/checkout` call (same `type=main`, same funnel tag, same price) as the control variant's `PurchaseCTA` — the gate changes only the UI in front of the purchase, never the checkout itself
+- [ ] `35_palm_gate` carries the same $35 main / $25 downsell economics as `35_palm_u47` — price shown and charged is identical between the two arms
+- [ ] Commitment checkbox copy shows "I understand belief is required for this to work", "I'm ready to receive this tonight", "I'll read it with an open heart" (no secrecy or irreversibility framing that would contradict the card's own 30-Day Guarantee footer)
+
+---
+
+## Live Thread (Evelyn) — email → lander → chat continuity (2026-08-02)
+
+New spec file `tests/live-thread-evelyn.spec.ts`, following `fb-palm-commitment-gate.spec.ts`'s house style: a `harness(page)` helper stubbing network calls for determinism, `data-testid` locators, and a `beforeAll` localhost-only safety gate. Source: the plan's "Playwright Coverage" section (`docs/superpowers/plans/2026-08-01-live-thread-evelyn.md`).
+
+### Frames and outcomes
+- [ ] **Anonymous happy path (no account):** navigate to `/e/<test-code>` (seeded via a test-only mint call in `beforeAll`) with the `live_thread` arm forced on → assert Frame 1 shows the seeded `continueSeed` text → type a reply, assert it renders as a sent bubble → submit a new email → assert Frame 2b copy appears → assert (via a stubbed `/check-email` response) the correct outcome-specific confirmation renders
+- [ ] **Existing verified account:** same flow, but stub `/check-email` to return `verified_match` → assert Frame 2's "I know you" copy renders, not Frame 2b's
+- [ ] **Already-logged-in reader:** set an auth token in `localStorage` before navigating to `/e/<test-code>` → assert the lander UI never paints (no Frame 1 visible) and the page ends on `/reading` — this is the harness's hardest case to get deterministic, since it depends on Task 5's await-before-redirect fix; use `expect.poll` on the final URL rather than a fixed `waitForTimeout`
+- [ ] **Unresolvable code:** navigate to `/e/does-not-exist` → assert redirect to `/personas`
+- [ ] **Reply survives a real signup round-trip (the one true end-to-end test, network-real for the auth parts):** type a reply, submit a brand-new email, extract the verification link from a stubbed/captured email send, visit it, assert the reply appears as the first message when `/reading` loads

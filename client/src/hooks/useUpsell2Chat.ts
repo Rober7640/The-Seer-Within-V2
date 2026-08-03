@@ -39,6 +39,7 @@ import {
 } from "@/lib/upsell2Messages";
 import { currentFunnel, getPostHogFunnel } from "@/lib/funnel";
 import { track as trackPH } from "@/lib/posthog";
+import { tarotEventProps } from "@/lib/tarotAttribution";
 import { getTrackdeskClickId } from "@/lib/facebook";
 
 // Fire the Trackdesk upsell-2 affiliate conversion from the browser. Backup to
@@ -425,10 +426,19 @@ export function useUpsell2Chat({
     setIsProcessing(true);
     addUserMessage("Yes, I want the Manifestation Bracelet");
 
+    // Tab-scoped tarot attribution, gated on the funnel so a palm/fb upsell in the
+    // same tab can never pick up tarot properties. No-op for every other funnel.
+    const tarot = getPostHogFunnel() === "tarot" ? tarotEventProps() : undefined;
+
     trackPH("upsell_accepted", {
       funnel: getPostHogFunnel() ?? "v1",
       step: "upsell2",
       product: "manifestation_bracelet",
+      // U2 has two prices ($47 full / $30 downsell) that were previously
+      // indistinguishable on this event. The downsell accept fired nothing at all.
+      price_tier: "full",
+      sign: tarot?.deck,
+      ...(tarot ?? {}),
     });
 
     try {
@@ -461,6 +471,18 @@ export function useUpsell2Chat({
           setStage("SHIPPING");
         }
       } else if (result.fallback) {
+        // 1-click off-session charge declined → hosted Stripe checkout. See the
+        // matching event in useUpsellChat: this is where a payment failure becomes
+        // distinguishable from an abandoned page.
+        trackPH("upsell_fallback_redirect", {
+          funnel: getPostHogFunnel() ?? "v1",
+          step: "upsell2",
+          product: "manifestation_bracelet",
+          price_tier: "full",
+          sign: tarot?.deck,
+          ...(tarot ?? {}),
+        });
+
         await sendBotMessage("Let me set up a secure payment page for you...");
 
         const fallbackResponse = await fetch("/api/upsell2/fallback-checkout", {
@@ -507,10 +529,14 @@ export function useUpsell2Chat({
       await processStage("OBJECTION_1");
     } else {
       addUserMessage("No thanks");
+      const tarot = getPostHogFunnel() === "tarot" ? tarotEventProps() : undefined;
       trackPH("upsell_declined", {
         funnel: getPostHogFunnel() ?? "v1",
         step: "upsell2",
         product: "manifestation_bracelet",
+        price_tier: "full",
+        sign: tarot?.deck,
+        ...(tarot ?? {}),
       });
       await processStage("DECLINED");
     }
@@ -522,6 +548,19 @@ export function useUpsell2Chat({
     setShowDownsellCTA(false);
     setIsProcessing(true);
     addUserMessage("Yes, send me the bracelet for $30");
+
+    // The $30 downsell accept previously fired NOTHING — the buyer vanished from the
+    // client funnel and only reappeared on the server-side purchase_completed, so the
+    // full-vs-downsell take-rate was not measurable before the charge.
+    const tarot = getPostHogFunnel() === "tarot" ? tarotEventProps() : undefined;
+    trackPH("upsell_accepted", {
+      funnel: getPostHogFunnel() ?? "v1",
+      step: "upsell2",
+      product: "manifestation_bracelet",
+      price_tier: "downsell",
+      sign: tarot?.deck,
+      ...(tarot ?? {}),
+    });
 
     try {
       const response = await fetch("/api/upsell2/charge", {
@@ -553,6 +592,15 @@ export function useUpsell2Chat({
           setStage("SHIPPING");
         }
       } else if (result.fallback) {
+        trackPH("upsell_fallback_redirect", {
+          funnel: getPostHogFunnel() ?? "v1",
+          step: "upsell2",
+          product: "manifestation_bracelet",
+          price_tier: "downsell",
+          sign: tarot?.deck,
+          ...(tarot ?? {}),
+        });
+
         await sendBotMessage("Let me set up a secure payment page for you...");
 
         const fallbackResponse = await fetch("/api/upsell2/fallback-checkout", {
@@ -594,6 +642,17 @@ export function useUpsell2Chat({
   const handleDownsellDecline = useCallback(async () => {
     setShowDownsellCTA(false);
     addUserMessage("No thanks");
+    // Final refusal of the funnel's last offer — the terminal node. Also previously
+    // untracked, so the funnel just ended with no event.
+    const tarot = getPostHogFunnel() === "tarot" ? tarotEventProps() : undefined;
+    trackPH("upsell_declined", {
+      funnel: getPostHogFunnel() ?? "v1",
+      step: "upsell2",
+      product: "manifestation_bracelet",
+      price_tier: "downsell",
+      sign: tarot?.deck,
+      ...(tarot ?? {}),
+    });
     await processStage("DECLINED");
   }, [addUserMessage, processStage]);
 

@@ -27,7 +27,7 @@ interface ExperimentRow {
   status: string;
   subjectType: string;
   variants: Variant[];
-  scope: { personaId?: string | null } | null;
+  scope: { personaId?: string | null; funnel?: string | null; sign?: string | null } | null;
   conversion: { type?: string; windowDays?: number; targetN?: number } | null;
   startedAt: string | null;
   endedAt: string | null;
@@ -59,6 +59,22 @@ interface ResultsResponse {
   unsupported?: string;
   params: { startISO: string | null; windowDays: number; personaId: string | null };
   rows: TallyVariantRow[];
+  // Per-fb-palm-sign split of the SAME rows (present only when the exposures
+  // carry a sign). DIAGNOSTIC ONLY — the pooled `rows` above decide the test.
+  bySign?: Array<{
+    sign: string;
+    rows: TallyVariantRow[];
+    significance?: { z: number; p: number; liftPct: number; significant: boolean };
+  }>;
+  // Per-/fb-tarot-lander split of the SAME rows — facing x angle, the four landers
+  // actually running. Present only when the exposures carry a facing, so a palm-only
+  // test omits it entirely. DIAGNOSTIC ONLY, exactly as bySign is.
+  byTarotLander?: Array<{
+    facing: string;
+    angle: string;
+    rows: TallyVariantRow[];
+    significance?: { z: number; p: number; liftPct: number; significant: boolean };
+  }>;
   srm?: {
     aViewers: number;
     bViewers: number;
@@ -127,6 +143,12 @@ interface ExpForm {
   subjectType: string;
   variants: VariantForm[];
   personaId: string;
+  // Funnel/sign scope for V1 price tests. These MUST round-trip through the form:
+  // before they did, an edit rebuilt scope from personaId alone and silently wiped
+  // scope.funnel / scope.sign — turning a one-lander price test into one that
+  // applies to every visitor on the funnel.
+  funnel: string;
+  sign: string;
   conversionType: string;
   windowDays: string;
   targetN: string;
@@ -142,6 +164,8 @@ const BLANK_FORM: ExpForm = {
     { key: "B", weight: "50", payloadJson: "{}" },
   ],
   personaId: "",
+  funnel: "",
+  sign: "",
   conversionType: "credit_purchase",
   windowDays: "7",
   targetN: "",
@@ -159,6 +183,8 @@ function toForm(exp: ExperimentRow): ExpForm {
       payloadJson: JSON.stringify(v.payload ?? {}, null, 0),
     })),
     personaId: exp.scope?.personaId ?? "",
+    funnel: (exp.scope?.funnel as string | undefined) ?? "",
+    sign: (exp.scope?.sign as string | undefined) ?? "",
     conversionType: exp.conversion?.type ?? "credit_purchase",
     windowDays: exp.conversion?.windowDays ? String(exp.conversion.windowDays) : "7",
     targetN: exp.conversion?.targetN ? String(exp.conversion.targetN) : "",
@@ -196,7 +222,15 @@ function formToBody(form: ExpForm, includeKey: boolean) {
     description: form.description.trim() || undefined,
     subjectType: form.subjectType,
     variants,
-    scope: form.personaId.trim() ? { personaId: form.personaId.trim() } : null,
+    // Preserve EVERY scope key the form knows about. Rebuilding scope from
+    // personaId alone silently dropped funnel/sign on edit (see ExpForm).
+    scope: (() => {
+      const s: Record<string, string> = {};
+      if (form.personaId.trim()) s.personaId = form.personaId.trim();
+      if (form.funnel.trim()) s.funnel = form.funnel.trim();
+      if (form.sign.trim()) s.sign = form.sign.trim();
+      return Object.keys(s).length ? s : null;
+    })(),
     conversion: {
       type: form.conversionType,
       windowDays: form.windowDays ? parseInt(form.windowDays, 10) : undefined,
@@ -280,6 +314,23 @@ export default function ExperimentsDashboard() {
     row.liftPct === null || row.liftPct === undefined
       ? "—"
       : `${row.liftPct >= 0 ? "+" : ""}${row.liftPct.toFixed(1)}%`;
+
+  // /fb-tarot lander label, in the words the landers are actually briefed and
+  // reported in ("Face Up — Trust / Honesty"), not the raw slugs. Falls through to
+  // the raw values for anything unrecognised, so a newly added angle still shows up
+  // as a row rather than silently rendering blank.
+  const tarotLanderLabel = (facing: string, angle: string): string => {
+    const f = facing === "up" ? "Face Up" : facing === "down" ? "Face Down" : facing;
+    const a =
+      angle === "decode-him"
+        ? "Decode Him"
+        : angle === "trust"
+          ? "Trust / Honesty"
+          : angle === "self-frame"
+            ? "Self-Frame"
+            : angle;
+    return `${f} — ${a}`;
+  };
 
   // Pre-registered-N gate: when a target is set and not yet reached, hide the
   // verdict and disable declare-winner (fixed-horizon, no peeking).
@@ -434,6 +485,24 @@ export default function ExperimentsDashboard() {
                     disabled={structuralLocked}
                     onChange={(e) => setForm({ ...form, personaId: e.target.value })}
                     placeholder="(all personas)"
+                    className="w-full rounded border border-gray-700 bg-gray-900 px-3 py-2 text-sm text-white disabled:opacity-60"
+                  />
+                </Field>
+                <Field label="Scope — V1 funnel (optional)">
+                  <input
+                    value={form.funnel}
+                    disabled={structuralLocked}
+                    onChange={(e) => setForm({ ...form, funnel: e.target.value })}
+                    placeholder="(all funnels) — e.g. v1-palm"
+                    className="w-full rounded border border-gray-700 bg-gray-900 px-3 py-2 text-sm text-white disabled:opacity-60"
+                  />
+                </Field>
+                <Field label="Scope — fb-palm sign (optional)">
+                  <input
+                    value={form.sign}
+                    disabled={structuralLocked}
+                    onChange={(e) => setForm({ ...form, sign: e.target.value })}
+                    placeholder="(all signs) — e.g. thumb-angle"
                     className="w-full rounded border border-gray-700 bg-gray-900 px-3 py-2 text-sm text-white disabled:opacity-60"
                   />
                 </Field>
@@ -854,6 +923,116 @@ export default function ExperimentsDashboard() {
                           verdict.
                         </div>
                       </div>
+
+                      {/* Per-fb-palm-sign breakdown — DIAGNOSTIC ONLY. */}
+                      {results.bySign && results.bySign.length > 0 && (
+                        <div className="space-y-2 border-t border-gray-800 pt-3">
+                          <div className="flex items-baseline gap-2">
+                            <span className="text-sm font-semibold text-gray-200">
+                              By fb-palm lander
+                            </span>
+                            <span className="text-xs text-amber-300">diagnostic only</span>
+                          </div>
+                          <p className="text-xs text-gray-500">
+                            The same numbers split by ad sign. Decide the test on the pooled table
+                            above — with this many landers, the best-looking one will show a large
+                            lift by chance alone, and each lander is only a fraction of the
+                            pre-registered N.
+                          </p>
+                          <table className="w-full text-sm">
+                            <thead>
+                              <tr className="border-b border-gray-700 text-left text-gray-400">
+                                <th className="py-2 pr-4">Lander</th>
+                                <th className="py-2 pr-4">Arm</th>
+                                <th className="py-2 pr-4">Exposed</th>
+                                <th className="py-2 pr-4">Buyers</th>
+                                <th className="py-2 pr-4">Conv %</th>
+                                <th className="py-2 pr-4">Lift vs {controlKey}</th>
+                                <th className="py-2 pr-4">$ / user</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {results.bySign.map((g) =>
+                                g.rows.map((r, i) => (
+                                  <tr
+                                    key={`${g.sign}-${r.variant}`}
+                                    className={
+                                      i === g.rows.length - 1
+                                        ? "border-b border-gray-700"
+                                        : "border-b border-gray-800/50"
+                                    }
+                                  >
+                                    <td className="py-2 pr-4 font-mono text-xs text-gray-300">
+                                      {i === 0 ? g.sign : ""}
+                                    </td>
+                                    <td className="py-2 pr-4 font-semibold">{r.variant}</td>
+                                    <td className="py-2 pr-4">{r.viewers}</td>
+                                    <td className="py-2 pr-4">{r.buyers}</td>
+                                    <td className="py-2 pr-4">{r.conversionPct}%</td>
+                                    <td className="py-2 pr-4">{liftOf(r)}</td>
+                                    <td className="py-2 pr-4">${r.revPerViewerUsd.toFixed(2)}</td>
+                                  </tr>
+                                )),
+                              )}
+                            </tbody>
+                          </table>
+                        </div>
+                      )}
+
+                      {/* Per-/fb-tarot-lander breakdown — DIAGNOSTIC ONLY. */}
+                      {results.byTarotLander && results.byTarotLander.length > 0 && (
+                        <div className="space-y-2 border-t border-gray-800 pt-3">
+                          <div className="flex items-baseline gap-2">
+                            <span className="text-sm font-semibold text-gray-200">
+                              By fb-tarot lander
+                            </span>
+                            <span className="text-xs text-amber-300">diagnostic only</span>
+                          </div>
+                          <p className="text-xs text-gray-500">
+                            The same numbers split by tarot lander — card facing × ad angle. Decide
+                            the test on the pooled table above; each lander is only a fraction of
+                            the pre-registered N, and the best-looking one will show a large lift
+                            by chance alone.
+                          </p>
+                          <table className="w-full text-sm">
+                            <thead>
+                              <tr className="border-b border-gray-700 text-left text-gray-400">
+                                <th className="py-2 pr-4">Lander</th>
+                                <th className="py-2 pr-4">Arm</th>
+                                <th className="py-2 pr-4">Exposed</th>
+                                <th className="py-2 pr-4">Buyers</th>
+                                <th className="py-2 pr-4">Conv %</th>
+                                <th className="py-2 pr-4">Lift vs {controlKey}</th>
+                                <th className="py-2 pr-4">$ / user</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {results.byTarotLander.map((g) =>
+                                g.rows.map((r, i) => (
+                                  <tr
+                                    key={`${g.facing}-${g.angle}-${r.variant}`}
+                                    className={
+                                      i === g.rows.length - 1
+                                        ? "border-b border-gray-700"
+                                        : "border-b border-gray-800/50"
+                                    }
+                                  >
+                                    <td className="py-2 pr-4 text-xs text-gray-300">
+                                      {i === 0 ? tarotLanderLabel(g.facing, g.angle) : ""}
+                                    </td>
+                                    <td className="py-2 pr-4 font-semibold">{r.variant}</td>
+                                    <td className="py-2 pr-4">{r.viewers}</td>
+                                    <td className="py-2 pr-4">{r.buyers}</td>
+                                    <td className="py-2 pr-4">{r.conversionPct}%</td>
+                                    <td className="py-2 pr-4">{liftOf(r)}</td>
+                                    <td className="py-2 pr-4">${r.revPerViewerUsd.toFixed(2)}</td>
+                                  </tr>
+                                )),
+                              )}
+                            </tbody>
+                          </table>
+                        </div>
+                      )}
 
                       {/* Declare winner (running/paused, no winner yet) */}
                       {(results.experiment.status === "running" ||

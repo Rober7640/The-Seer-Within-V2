@@ -1,0 +1,51 @@
+<!-- hero-two-flames.svg — Maren Soleil Template B hero (Twin Flame vs. Karmic): two candle flames leaning gently toward each other but NOT merging (felt-truth, not a promised reunion). Gold line-art on ember. Render -> hero-two-flames-544x408.png. A photographic JPEG can replace this later. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="544" height="408" viewBox="0 0 544 408" fill="none" role="img" aria-label="Two candle flames burning side by side against a dark sky, leaning gently toward each other but distinct">
+  <!-- ember background -->
+  <rect x="0" y="0" width="544" height="408" fill="#5E2A2C"/>
+
+  <!-- faint warm halos behind each flame (candlelight glow) -->
+  <g stroke="#C9A24B" stroke-width="1" fill="none">
+    <circle cx="214" cy="232" r="60" opacity="0.10"/>
+    <circle cx="330" cy="222" r="64" opacity="0.10"/>
+    <circle cx="214" cy="232" r="38" opacity="0.16"/>
+    <circle cx="330" cy="222" r="40" opacity="0.16"/>
+  </g>
+
+  <!-- left flame (leans slightly right, toward its pair) -->
+  <g stroke="#C9A24B" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M210 176 C236 214 240 250 216 292 C190 256 188 214 210 176 Z" stroke-width="2"/>
+    <path d="M212 212 C224 234 224 256 214 280 C202 258 200 234 212 212 Z" stroke-width="1.4"/>
+  </g>
+  <!-- left candle + wick -->
+  <g stroke="#C9A24B" fill="none" stroke-linecap="round">
+    <path d="M214 292 L214 300" stroke-width="1.4"/>
+    <path d="M196 300 L232 300 L230 360 L198 360 Z" stroke-width="1.6"/>
+    <path d="M196 300 C204 295 224 295 232 300" stroke-width="1.2" opacity="0.7"/>
+  </g>
+
+  <!-- right flame (leans slightly left, toward its pair; a touch taller) -->
+  <g stroke="#C9A24B" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M334 162 C310 202 308 240 330 284 C356 246 360 202 334 162 Z" stroke-width="2"/>
+    <path d="M332 200 C322 224 322 248 330 272 C342 250 344 224 332 200 Z" stroke-width="1.4"/>
+  </g>
+  <!-- right candle + wick -->
+  <g stroke="#C9A24B" fill="none" stroke-linecap="round">
+    <path d="M330 284 L330 300" stroke-width="1.4"/>
+    <path d="M312 300 L348 300 L346 360 L314 360 Z" stroke-width="1.6"/>
+    <path d="M312 300 C320 295 340 295 348 300" stroke-width="1.2" opacity="0.7"/>
+  </g>
+
+  <!-- a few drifting sparks between/above the flames -->
+  <g fill="#C9A24B" stroke="none">
+    <circle cx="272" cy="150" r="1.6" opacity="0.8"/>
+    <circle cx="258" cy="196" r="1.3" opacity="0.6"/>
+    <circle cx="290" cy="180" r="1.3" opacity="0.6"/>
+    <circle cx="276" cy="118" r="1.2" opacity="0.45"/>
+  </g>
+
+  <!-- faint tide / current lines along the base (the "water" half of water-and-flame) -->
+  <g stroke="#C9A24B" stroke-width="1.25" fill="none" stroke-linecap="round" opacity="0.16">
+    <path d="M40 384 C160 376 230 392 300 384 C380 375 460 392 504 384"/>
+    <path d="M40 396 C150 389 240 402 320 396 C400 390 470 400 504 396"/>
+  </g>
+</svg>

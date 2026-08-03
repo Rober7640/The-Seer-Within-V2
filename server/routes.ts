@@ -26,6 +26,7 @@ import adminRouter, { abTestingPublicRouter } from "./routes/admin/index";
 import personasRouter from "./routes/personas";
 import webhooksRouter, { reportTrackdeskConversion } from "./routes/webhooks";
 import unsubscribeRouter from "./routes/unsubscribe";
+import { emailLinkRedirectRouter } from "./routes/emailLinkRedirect";
 import userStatsRouter from "./routes/userStats";
 import migrateRouter from "./routes/migrate";
 import astrologyRouter from "./routes/astrology";
@@ -56,6 +57,7 @@ import {
   generateManifestPersonalize,
   generatePalmOpener,
   generatePalmReflect,
+  generateTarotReflect,
 } from "./lib/claude";
 import {
   saveConversation,
@@ -359,6 +361,10 @@ export async function registerRoutes(
   // Kept separate from /api/webhooks/unsubscribe (token-based, for our own emails).
   app.use("/", unsubscribeRouter);
 
+  // Short-link redirector for marketing emails (Live Thread). Mounted at
+  // root so the URL is a clean https://www.theseerwithin.com/e/<code>.
+  app.use(emailLinkRedirectRouter);
+
   // Diagnostic endpoint to test Stripe session retrieval
   // Usage: GET /api/upsell/test-session/cs_xxx (replace cs_xxx with actual Stripe session ID)
   app.get(
@@ -402,7 +408,7 @@ export async function registerRoutes(
   // Chat API - Claude integration
   app.post("/api/chat", async (req: Request, res: Response) => {
     try {
-      const { action, userData, input, objectionCount, palmSign, palmHook, palmThumb } =
+      const { action, userData, input, objectionCount, palmSign, palmHook, palmThumb, tarotDeck, tarotHook, tarotCard } =
         req.body as ChatRequest;
 
       // V1 price split test — enrich userData with the variant prices
@@ -465,8 +471,8 @@ export async function registerRoutes(
         case "palmOpener": {
           // Validate against fixed enums before injecting into the prompt.
           // palmSign is optional and defaults to 'thumb' (original behavior).
-          const validSigns = ["thumb", "finger-lock", "finger-shape", "palms", "palm-signs", "thumb-curve", "thumb-curve-alt", "hand-size", "finger-length", "finger-length-alt"];
-          const validHooks = ["soulmate-timing", "already-met", "love-again", "is-he-true", "sense-lying", "heart-safe"];
+          const validSigns = ["thumb", "finger-lock", "finger-shape", "palms", "palm-signs", "thumb-curve", "thumb-curve-alt", "hand-size", "finger-length", "finger-length-alt", "thumb-angle", "heart-line"];
+          const validHooks = ["soulmate-timing", "already-met", "love-again", "is-he-true", "sense-lying", "heart-safe", "right-person", "love-taking-long", "wrong-person", "relationship-right"];
           const validThumbs = ["a", "b", "c"];
           const sign = palmSign ?? "thumb";
           if (!validSigns.includes(sign) || !validHooks.includes(palmHook ?? "") || !validThumbs.includes(palmThumb ?? "")) {
@@ -478,14 +484,29 @@ export async function registerRoutes(
         case "palmReflect": {
           // Interactive Version C — reads her typed answer (input).
           // palmSign is optional and defaults to 'thumb' (original behavior).
-          const validSigns = ["thumb", "finger-lock", "finger-shape", "palms", "palm-signs", "thumb-curve", "thumb-curve-alt", "hand-size", "finger-length", "finger-length-alt"];
-          const validHooks = ["soulmate-timing", "already-met", "love-again", "is-he-true", "sense-lying", "heart-safe"];
+          const validSigns = ["thumb", "finger-lock", "finger-shape", "palms", "palm-signs", "thumb-curve", "thumb-curve-alt", "hand-size", "finger-length", "finger-length-alt", "thumb-angle", "heart-line"];
+          const validHooks = ["soulmate-timing", "already-met", "love-again", "is-he-true", "sense-lying", "heart-safe", "right-person", "love-taking-long", "wrong-person", "relationship-right"];
           const validThumbs = ["a", "b", "c"];
           const sign = palmSign ?? "thumb";
           if (!validSigns.includes(sign) || !validHooks.includes(palmHook ?? "") || !validThumbs.includes(palmThumb ?? "")) {
             return res.status(400).json({ error: "Invalid palm params" });
           }
           result = await generatePalmReflect(userData, sign, palmHook as string, palmThumb as string, input ?? "");
+          break;
+        }
+        case "tarotReflect": {
+          // Interactive Version C for the /fb-tarot "decode-him card" bridge —
+          // reads her typed answer (input), woven with the card she drew. Validate
+          // against fixed enums; tarotDeck defaults to 'decode-him'. Keep these
+          // rosters in sync with client/src/content/tarotReads.ts (fb-tarot-add-card).
+          const validDecks = ["decode-him", "arcana-mfh", "arcana-eef", "return-mhf"];
+          const validHooks = ["cards-honest", "cards-return", "cards-feels", "cards-cheating", "cards-who-he-is", "cards-real-person", "cards-misled", "cards-will-commit", "cards-wont-commit", "cards-ready-commit", "cards-love-again", "cards-soulmate"];
+          const validCards = ["a", "b", "c"];
+          const deck = tarotDeck ?? "decode-him";
+          if (!validDecks.includes(deck) || !validHooks.includes(tarotHook ?? "") || !validCards.includes(tarotCard ?? "")) {
+            return res.status(400).json({ error: "Invalid tarot params" });
+          }
+          result = await generateTarotReflect(userData, deck, tarotHook as string, tarotCard as string, input ?? "");
           break;
         }
         case "valueExplain":
@@ -761,6 +782,23 @@ export async function registerRoutes(
       // the price variant pool; normalized + validated in priceVariant.normalizeSign.
       const palmSign =
         typeof req.body?.sign === "string" ? req.body.sign.slice(0, 40) : undefined;
+      // /fb-tarot lander identity (deck + hook, plus the facing/angle the client
+      // already derived from the registry). Recorded on the commitment-gate exposure
+      // so the tarot landers break down the way the palm signs do. Deliberately NOT
+      // `sign`: that feeds the palm price pool. Untrusted input, so each is just
+      // normalized + length-capped here — they are labels for a diagnostic table and
+      // never select a price, so an unrecognized value can only mislabel its own row.
+      const str40 = (v: unknown) =>
+        typeof v === "string" && v.trim() ? v.trim().slice(0, 40) : undefined;
+      const tarotLander =
+        funnel === "v1-tarot"
+          ? {
+              deck: str40(req.body?.tarotDeck),
+              hook: str40(req.body?.tarotHook),
+              facing: str40(req.body?.tarotFacing),
+              angle: str40(req.body?.tarotAngle),
+            }
+          : undefined;
 
       logger.info("Lead captured:", { email, firstName, bucket, funnel, sign: palmSign ?? null });
 
@@ -785,7 +823,7 @@ export async function registerRoutes(
       // "the test should go on to thumb"). Untrusted, so it's just normalized here;
       // it can only ever move a palm visitor between two legitimate configured arms,
       // and an unrecognized value simply falls through to the unscoped control.
-      const assigned = await assignVariantIfMissing(email, funnel, palmSign);
+      const assigned = await assignVariantIfMissing(email, funnel, palmSign, tarotLander);
 
       // Add to AWeber email list (non-blocking). Per-lander FREE list when the
       // funnel's AWEBER_LIST_ID_* env is set, else the shared AWEBER_LIST_ID.
@@ -885,6 +923,10 @@ export async function registerRoutes(
         priceVariant: assigned?.variant ?? null,
         priceDollars: assigned ? Math.round(assigned.priceCents / 100) : null,
         downsellDollars: assigned ? Math.round(assigned.downsellCents / 100) : null,
+        // fb-palm commitment-gate arm (UI only). Comes from the experiment
+        // framework, NOT the price variant — false unless that test is running
+        // and this lead bucketed into the gated arm.
+        commitmentGate: assigned?.commitmentGate === true,
       });
     } catch (error) {
       logger.error("Lead capture error:", error);

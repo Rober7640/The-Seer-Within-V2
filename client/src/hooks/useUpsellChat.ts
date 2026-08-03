@@ -36,6 +36,7 @@ import {
 import { getTrackdeskClickId } from "@/lib/facebook";
 import { currentFunnel, getPostHogFunnel } from "@/lib/funnel";
 import { track as trackPH } from "@/lib/posthog";
+import { tarotEventProps } from "@/lib/tarotAttribution";
 
 // ============================================
 // TYPES
@@ -347,10 +348,16 @@ export function useUpsellChat({
     setIsProcessing(true);
     addUserMessage("Yes, protect what we clear");
 
+    // Tab-scoped tarot attribution, gated on the funnel so a palm/fb upsell in the
+    // same tab can never pick up tarot properties. No-op for every other funnel.
+    const tarot = getPostHogFunnel() === "tarot" ? tarotEventProps() : undefined;
+
     trackPH("upsell_accepted", {
       funnel: getPostHogFunnel() ?? "v1",
       step: "upsell1",
       product: "protection_ritual",
+      sign: tarot?.deck,
+      ...(tarot ?? {}),
     });
 
     try {
@@ -375,6 +382,19 @@ export function useUpsellChat({
         setShowShippingForm(true);
         setStage("SHIPPING");
       } else if (result.fallback) {
+        // The 1-click OFF-SESSION charge on the saved card was declined (Indian cards
+        // reject off-session PIs outright), so she is bounced to a hosted Stripe
+        // checkout. Previously invisible in PostHog: `upsell_accepted` fired and then
+        // either a purchase appeared or it didn't, with no way to tell a payment
+        // failure apart from an abandoned page. This is the drop-off point.
+        trackPH("upsell_fallback_redirect", {
+          funnel: getPostHogFunnel() ?? "v1",
+          step: "upsell1",
+          product: "protection_ritual",
+          sign: tarot?.deck,
+          ...(tarot ?? {}),
+        });
+
         await sendBotMessage("Let me set up a secure payment page for you...");
 
         const fallbackResponse = await fetch("/api/upsell/fallback-checkout", {
@@ -407,10 +427,13 @@ export function useUpsellChat({
   const handleDecline = useCallback(async () => {
     setShowCTA(false);
     addUserMessage("Not right now");
+    const tarot = getPostHogFunnel() === "tarot" ? tarotEventProps() : undefined;
     trackPH("upsell_declined", {
       funnel: getPostHogFunnel() ?? "v1",
       step: "upsell1",
       product: "protection_ritual",
+      sign: tarot?.deck,
+      ...(tarot ?? {}),
     });
     await processStage("DECLINED");
   }, [addUserMessage, processStage]);

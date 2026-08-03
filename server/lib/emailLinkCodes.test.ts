@@ -1,0 +1,178 @@
+import { describe, it, after } from 'node:test';
+import assert from 'node:assert/strict';
+import { inArray } from 'drizzle-orm';
+import { assertLocalDb } from './testGuards';
+
+assertLocalDb();
+
+import { db, pool } from './db';
+import { emailLinkCodes } from '@shared/schema';
+import { mintEmailLinkCode, resolveEmailLinkCode, isCodeCollision } from './emailLinkCodes';
+
+const HAS_DB = Boolean(process.env.DATABASE_URL);
+
+// The pure-logic cases for isCodeCollision NOW LIVE IN emailLinkCodes.pure.test.ts.
+// They were here, outside the { skip: !HAS_DB } describe below, specifically so
+// they would run without a database — but assertLocalDb() above throws before any
+// of that is reached, so in practice they needed one anyway. Moving them to a file
+// with no guard is what finally makes that intent true. The DB-backed cases,
+// including the one that exercises the same predicate against a REAL Postgres
+// unique_violation, stay below.
+
+const mintedCodes: string[] = [];
+
+async function mint(...args: Parameters<typeof mintEmailLinkCode>) {
+  const code = await mintEmailLinkCode(...args);
+  mintedCodes.push(code);
+  return code;
+}
+
+// assertLocalDb() above already throws when DATABASE_URL is unset, so by the
+// time this describe block's `skip` is evaluated, HAS_DB is always true —
+// the { skip: !HAS_DB } gate can only ever evaluate to `skip: false` here.
+// Both conventions (assertLocalDb() at module scope AND the brief's
+// { skip: !HAS_DB } gate) were explicitly requested, so both are kept; this
+// comment just makes the redundancy legible instead of looking accidental.
+describe('emailLinkCodes', { skip: !HAS_DB }, () => {
+  after(async () => {
+    if (mintedCodes.length > 0) {
+      await db.delete(emailLinkCodes).where(inArray(emailLinkCodes.code, mintedCodes));
+    }
+    await pool.end();
+  });
+
+  it('mints a code and resolves it back to the same content', async () => {
+    const code = await mint({
+      personaSlug: 'evelyn-cross',
+      campaign: 'test-campaign-' + Date.now(),
+      continueSeed: 'You came back — good.',
+      openLoop: 'What is the thing you keep circling?',
+      readingRecap: 'You wrote in about a repeated pattern.',
+    });
+    assert.ok(code.length > 0);
+
+    const resolved = await resolveEmailLinkCode(code);
+    assert.ok(resolved);
+    assert.equal(resolved.personaSlug, 'evelyn-cross');
+    assert.equal(resolved.continueSeed, 'You came back — good.');
+    assert.equal(resolved.openLoop, 'What is the thing you keep circling?');
+  });
+
+  it('returns null for an unknown code', async () => {
+    const resolved = await resolveEmailLinkCode('does-not-exist-12345');
+    assert.equal(resolved, null);
+  });
+
+  it('allows readingRecap and openLoop to be omitted', async () => {
+    const code = await mint({
+      personaSlug: 'evelyn-cross',
+      campaign: 'test-campaign-minimal-' + Date.now(),
+      continueSeed: 'Just the seed.',
+    });
+    const resolved = await resolveEmailLinkCode(code);
+    assert.ok(resolved);
+    assert.equal(resolved.readingRecap, null);
+    assert.equal(resolved.openLoop, null);
+    assert.equal(resolved.bucket, null);
+    assert.equal(resolved.src, null);
+  });
+
+  // bucket/src are the lander context the legacy `?bucket=&src=` query string
+  // used to carry. They ride on the row because /e/:code has nowhere else to
+  // put them, and the redirector rebuilds the query string from them.
+  it('round-trips the bucket and src lander context', async () => {
+    const code = await mint({
+      personaSlug: 'evelyn-cross',
+      campaign: 'test-campaign-bucket-' + Date.now(),
+      continueSeed: 'Just the seed.',
+      bucket: 'love',
+      src: 'aweber',
+    });
+    const resolved = await resolveEmailLinkCode(code);
+    assert.ok(resolved);
+    assert.equal(resolved.bucket, 'love');
+    assert.equal(resolved.src, 'aweber');
+  });
+
+  // Branch (a): a genuine PK collision must be retried, not surfaced as an
+  // error. We force this deterministically (rather than hoping two random
+  // codes collide) by pre-occupying a known code, then injecting a
+  // codeGenerator that hands back that occupied code on the first call and a
+  // fresh one on the second — so a retry is directly observable instead of
+  // inferred from the absence of a thrown error.
+  it('retries past a genuine primary-key collision and mints the next code', async () => {
+    const stamp = Date.now();
+    const occupiedCode = `collide-${stamp}`;
+    const freshCode = `fresh-${stamp}`;
+
+    await db.insert(emailLinkCodes).values({
+      code: occupiedCode,
+      personaSlug: 'evelyn-cross',
+      // A DIFFERENT campaign from the one minted below: the only constraint
+      // this row may collide on is the code primary key. Sharing the campaign
+      // would trip uq_email_link_codes_persona_campaign instead, which is a
+      // different (deliberately non-retryable) violation and would stop this
+      // from testing branch (a) at all.
+      campaign: 'test-collision-occupant-' + stamp,
+      continueSeed: 'the pre-existing row that causes the collision',
+    });
+    mintedCodes.push(occupiedCode); // cleanup covers the pre-inserted row too
+
+    let calls = 0;
+    const sequence = [occupiedCode, freshCode];
+    const codeGenerator = () => {
+      const next = sequence[calls];
+      calls += 1;
+      return next;
+    };
+
+    const code = await mint(
+      {
+        personaSlug: 'evelyn-cross',
+        campaign: 'test-collision-' + stamp,
+        continueSeed: 'the row that had to retry',
+      },
+      codeGenerator,
+    );
+
+    assert.equal(calls, 2, 'codeGenerator should be called exactly twice: the collision, then the retry');
+    assert.equal(code, freshCode);
+    assert.notEqual(code, occupiedCode);
+
+    const retried = await resolveEmailLinkCode(code);
+    assert.ok(retried);
+    assert.equal(retried.continueSeed, 'the row that had to retry');
+
+    // The pre-existing row must be untouched by the collision + retry.
+    const original = await resolveEmailLinkCode(occupiedCode);
+    assert.ok(original);
+    assert.equal(original.continueSeed, 'the pre-existing row that causes the collision');
+  });
+
+  // The mirror of the test above, and the invariant
+  // upsertEmailLinkCodeForCampaign's read-then-write rests on: a SECOND code
+  // for a (persona, campaign) pair must be impossible, not merely unlikely.
+  // If this ever silently retried instead of throwing, two codes could exist
+  // for one campaign and a re-render could hand back the wrong one — putting a
+  // URL in an email that points at stale continuation content.
+  it('refuses a second code for a (persona, campaign) pair rather than retrying', async () => {
+    const campaign = 'test-unique-' + Date.now();
+    const first = await mint({ personaSlug: 'evelyn-cross', campaign, continueSeed: 'first' });
+    assert.ok(first);
+
+    await assert.rejects(
+      () => mint({ personaSlug: 'evelyn-cross', campaign, continueSeed: 'second' }),
+      (err: any) => {
+        assert.equal(err.code, '23505');
+        assert.equal(err.constraint, 'uq_email_link_codes_persona_campaign');
+        // Not treated as a retryable code collision — that check is PK-only.
+        assert.equal(isCodeCollision(err), false);
+        return true;
+      },
+    );
+
+    // Same campaign under a different persona is fine — the pair is the key.
+    const other = await mint({ personaSlug: 'marcus-stone', campaign, continueSeed: 'other persona' });
+    assert.notEqual(other, first);
+  });
+});

@@ -1,0 +1,23 @@
+<!-- the-cord.svg — Maren Soleil signature motif: two souls joined by one luminous cord (Template C hero; static fallback for the "cord forming" GIF — frame 1 = this completed cord). Bright/warm at the left node, dimmer at the right. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="480" height="180" viewBox="0 0 480 180" fill="none" role="img" aria-label="A single luminous cord stretched between two souls, bright at one end">
+  <!-- faint second thread (the "current" / breath) drawn first, sits under the main cord -->
+  <path d="M96 104 C182 154 302 132 384 84" stroke="#C9A24B" stroke-width="1" fill="none" stroke-linecap="round" opacity="0.4"/>
+
+  <!-- main cord -->
+  <path d="M96 100 C180 150 300 128 384 80" stroke="#C9A24B" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+
+  <!-- tiny gold sparks riding along the cord -->
+  <g fill="#C9A24B" stroke="none" opacity="0.75">
+    <circle cx="190" cy="129" r="1.3"/>
+    <circle cx="270" cy="123" r="1.3"/>
+    <circle cx="332" cy="103" r="1.3"/>
+  </g>
+
+  <!-- left node: the warm, bright end -->
+  <circle cx="96" cy="100" r="11" stroke="#C9A24B" stroke-width="1" fill="none" opacity="0.55"/>
+  <circle cx="96" cy="100" r="5" fill="#C9A24B"/>
+
+  <!-- right node: the dimmer end -->
+  <circle cx="384" cy="80" r="10" stroke="#C9A24B" stroke-width="1" fill="none" opacity="0.3"/>
+  <circle cx="384" cy="80" r="5" fill="#C9A24B" opacity="0.6"/>
+</svg>

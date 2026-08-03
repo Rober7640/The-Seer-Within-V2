@@ -13,7 +13,7 @@
 // these helpers (product naming, AWeber tags, redirects, PostHog) updates
 // automatically.
 
-export type FunnelParam = "v1-fb" | "v1-fb2" | "v1-gdn" | "v1-palm";
+export type FunnelParam = "v1-fb" | "v1-fb2" | "v1-gdn" | "v1-palm" | "v1-tarot";
 
 export interface FunnelDef {
   // Value sent to the backend and stored in Stripe metadata.funnel.
@@ -36,6 +36,12 @@ export const FUNNELS: readonly FunnelDef[] = [
   // shared LandingPage); chat + upsells reuse the V1 components. The trailing-
   // slash check in funnelDefForPath keeps "/fb-palm" distinct from "/fb".
   { param: "v1-palm", prefix: "/fb-palm", productSuffix: " - PALM", aweberSuffix: "-palm", posthog: "palm" },
+  // Tarot "decode-him card" quiz-bridge funnel — a SEPARATE route/funnel that
+  // reuses the shared chat + upsell engine (only the bridge lander + opening
+  // reading are tarot-specific). /fb-tarot root renders TarotBridge; chat +
+  // upsells reuse the V1 components and carry the "- TAROT" Stripe suffix.
+  // "/fb-tarot" is distinct from "/fb" via the trailing-slash check.
+  { param: "v1-tarot", prefix: "/fb-tarot", productSuffix: " - TAROT", aweberSuffix: "-tarot", posthog: "tarot" },
 ];
 
 // Resolve the funnel that owns a URL path. The trailing-slash check means

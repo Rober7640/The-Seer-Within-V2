@@ -256,7 +256,7 @@ export function PreReadingWelcome({
             className="w-full py-4 rounded-xl text-base font-bold bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white shadow-lg shadow-amber-500/25 transition-all active:scale-[0.98] flex items-center justify-center gap-2"
           >
             <ShoppingCart className="w-4 h-4" />
-            Get Coins
+            Get Minutes
           </button>
         ) : (
           <div className="flex items-center justify-center gap-3 py-4">

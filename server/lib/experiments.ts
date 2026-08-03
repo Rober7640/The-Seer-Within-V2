@@ -221,6 +221,7 @@ export function shouldForceRunning(
 export interface AssignContext {
   personaId?: string | null;
   funnel?: string | null;
+  sign?: string | null;
   [k: string]: unknown;
 }
 
@@ -230,6 +231,36 @@ export interface Assignment {
   enrolled: boolean;                      // running + in scope (=> log an exposure)
   applied: boolean;                       // the variant's payload should DRIVE behaviour:
                                           //   enrolled (running) OR a concluded winner rollout
+}
+
+/**
+ * Does this subject's funnel fall inside the experiment's funnel scope?
+ *
+ * `scope.funnel` is either ONE funnel (`'v1-palm'`) or a LIST (`['v1-palm','v1-tarot']`)
+ * for a test deliberately run across several funnels — the fb-palm commitment gate was
+ * extended to /fb-tarot this way (2026-07-31), one pooled test rather than a second key.
+ * Absent/null/empty scope = no funnel filter at all (a global test enrols everyone).
+ *
+ * ⚠ An EMPTY array means "no funnels", which would make a test silently inert. That is
+ * almost certainly a config mistake rather than an intent, so it is treated as "no
+ * filter" here and rejected outright by the /start guard (admin/experiments.ts) — the
+ * same reasoning as typing `funnel` so a non-string can't scope a test to nothing.
+ *
+ * Exported for unit tests: assign() itself needs a DB, this is the pure part.
+ */
+export function matchesFunnelScope(
+  scopeFunnel: string | string[] | null | undefined,
+  contextFunnel: string | null | undefined,
+): boolean {
+  if (!scopeFunnel) return true;
+  if (Array.isArray(scopeFunnel)) {
+    // Non-string entries can't match a funnel param, so they'd scope the test to
+    // nothing — drop them rather than let one typo'd entry look like a real filter.
+    const funnels = scopeFunnel.filter((f): f is string => typeof f === 'string' && f.length > 0);
+    if (funnels.length === 0) return true;
+    return typeof contextFunnel === 'string' && funnels.includes(contextFunnel);
+  }
+  return contextFunnel === scopeFunnel;
 }
 
 /**
@@ -273,10 +304,15 @@ export async function assign(
   // rollout so a concluded persona-scoped test doesn't leak its winner to other
   // personas / other funnels.)
   if (exp.scope?.personaId && context?.personaId !== exp.scope.personaId) return controlArm;
-  // Funnel scope (V1 price tests): a funnel-scoped test only enrols that funnel's
-  // traffic, so migrating one funnel onto the framework never touches another
-  // funnel's live system_config split. Absent scope.funnel = no funnel filter.
-  if (exp.scope?.funnel && context?.funnel !== exp.scope.funnel) return controlArm;
+  // Funnel scope (V1 price/UI tests): a funnel-scoped test only enrols those
+  // funnels' traffic, so migrating one funnel onto the framework never touches
+  // another funnel's live system_config split. Absent scope.funnel = no filter.
+  if (!matchesFunnelScope(exp.scope?.funnel, context?.funnel)) return controlArm;
+  // Sign scope (per-LANDER V1 price tests): narrows a funnel-scoped test to ONE
+  // fb-palm sign, so a price test on a single new lander never enrols the rest of
+  // v1-palm — and in particular never disturbs the live thumb-only system_config
+  // 70/30. Absent scope.sign = no sign filter (existing funnel-wide tests unchanged).
+  if (exp.scope?.sign && context?.sign !== exp.scope.sign) return controlArm;
 
   // Concluded test → roll the declared winner out to the in-scope population:
   // not enrolled (test is over, no more exposures) but its payload IS applied,
@@ -717,9 +753,10 @@ export async function resolveV1Price(
   fallbackDownsellCents: number,
   funnel?: string | null,
   key: string = V1_MAIN_EXPERIMENT_KEY, // overridable so tests never touch the live experiment
+  sign?: string | null,                 // fb-palm sign, for per-LANDER scoping (scope.sign)
 ): Promise<{ mainCents: number; downsellCents: number; variant: string | null; enrolled: boolean; applied: boolean }> {
   // Bucket on the NORMALISED email (matches the exposure dedup on hashEmail).
-  const a = await assign(key, email.trim().toLowerCase(), { funnel: funnel ?? null });
+  const a = await assign(key, email.trim().toLowerCase(), { funnel: funnel ?? null, sign: sign ?? null });
   if (a?.applied) {
     const main = payloadCents(a.payload, 'mainCents');
     const downsell = payloadCents(a.payload, 'downsellCents');
@@ -778,6 +815,189 @@ export async function tallyV1Main(opts: V1MainTallyOptions): Promise<TallyResult
   const treatmentKey = opts.treatmentKey ?? 'B';
   const { rows } = assembleRows(result.rows as Record<string, unknown>[], controlKey, treatmentKey);
   return finalizeStats(rows, controlKey, treatmentKey);
+}
+
+export interface TallyBySignRow {
+  sign: string;
+  rows: TallyVariantRow[];
+  significance?: TallyResult['significance'];
+}
+
+/**
+ * One /fb-tarot lander's slice of the same tally — the tarot counterpart of
+ * TallyBySignRow. A "lander" here is FACING × ANGLE (Face-Up × trust, …), which is
+ * how the four live tarot landers are actually run and talked about; `deck`/`hook`
+ * are recorded on the exposure too, so a finer drill-down stays possible later.
+ */
+export interface TallyByTarotLanderRow {
+  facing: string;   // 'up' | 'down'
+  angle: string;    // 'decode-him' | 'trust' | 'self-frame'
+  rows: TallyVariantRow[];
+  significance?: TallyResult['significance'];
+}
+
+/**
+ * The SAME v1_main_funnel tally as tallyV1Main, split by the fb-palm ad sign
+ * recorded on each exposure (`context->>'sign'`).
+ *
+ * ⚠ DIAGNOSTIC ONLY — the pooled tallyV1Main row is what decides the test.
+ * A test running across ~11 signs will always throw up one sign with a large
+ * apparent lift by chance alone (the multiple-comparisons trap), and each
+ * per-sign arm is a fraction of the pre-registered targetN. This exists to
+ * answer "did the gate behave differently on hand-size than on thumb?", not to
+ * pick a winner from the best-looking lander.
+ *
+ * Identical join and identical buyer definition to tallyV1Main, so the per-sign
+ * rows always sum to the pooled row — if they ever disagree, one of the two
+ * queries has drifted.
+ *
+ * Signs come from the exposure context, so this is empty for experiments whose
+ * exposures carry no sign (every non-palm test). The caller omits the block then.
+ */
+export async function tallyV1MainBySign(opts: V1MainTallyOptions): Promise<TallyBySignRow[]> {
+  const result = await db.execute(sql`
+    -- A row with no sign is labelled with the funnel it DID carry, so the catch-all
+    -- bucket can never read as unattributed fb-palm traffic when it isn't. (Normal
+    -- palm traffic always has one: normalizeSign defaults palm to 'thumb'.)
+    SELECT COALESCE(
+             e.context->>'sign',
+             CASE WHEN e.context->>'funnel' IS NOT NULL
+                  THEN '(unrecorded: ' || (e.context->>'funnel') || ')'
+                  ELSE '(unrecorded)' END)                                       AS sign,
+           e.variant                                                             AS variant,
+           count(*)                                                              AS viewers,
+           count(*) FILTER (WHERE c.purchased AND c.upsell_offered)              AS buyers,
+           COALESCE(sum(c.main_purchase_amount) FILTER (WHERE c.purchased AND c.upsell_offered), 0) AS revenue_cents
+    FROM experiment_exposures e
+    LEFT JOIN conversations c ON c.id = e.context->>'conversationId'
+    WHERE e.experiment_key = ${opts.key}
+      AND e.created_at >= ${opts.startISO}
+      -- Exclude /fb-tarot exposures. normalizeSign returns null off fb-palm, so once
+      -- the gate was extended to tarot (2026-07-31) every tarot row would otherwise
+      -- pile into this table's (unrecorded) bucket and read as unattributed PALM
+      -- traffic. Tarot has its own breakdown: tallyV1MainByTarotLander. Keyed on
+      -- facing (tarot-only, always written together with deck/hook) rather than on
+      -- funnel, because palm rows predating the funnel capture have no funnel either.
+      -- NB: no backticks in here - this is inside a JS template literal.
+      -- Deliberately the ONLY tarot exclusion here. Adding a second one (e.g. also
+      -- dropping funnel='v1-tarot') would let a tarot row with no facing fall out of
+      -- BOTH tables, so they'd stop summing to the pooled row — and that invariant is
+      -- how anyone checks this dashboard is telling the truth. With just this test the
+      -- two tables partition the pooled total exactly, and any such row surfaces
+      -- honestly as (unrecorded) rather than vanishing.
+      AND e.context->>'facing' IS NULL
+    GROUP BY 1, 2;
+  `);
+
+  const controlKey = opts.controlKey ?? 'A';
+  const treatmentKey = opts.treatmentKey ?? 'B';
+  const all = result.rows as Record<string, unknown>[];
+
+  const signs = Array.from(new Set(all.map((r) => String(r.sign)))).sort();
+  return signs.map((sign) => {
+    const forSign = all.filter((r) => String(r.sign) === sign);
+    const { rows } = assembleRows(forSign, controlKey, treatmentKey);
+    const stats = finalizeStats(rows, controlKey, treatmentKey);
+    return { sign, rows: stats.rows, significance: stats.significance };
+  });
+}
+
+/**
+ * The SAME v1_main_funnel tally as tallyV1Main, split by /fb-tarot LANDER —
+ * facing × angle, e.g. Face-Up × trust. The tarot counterpart of tallyV1MainBySign:
+ * palm identifies a lander by ad `sign`, tarot by which deck facing and question
+ * angle the ad ran.
+ *
+ * ⚠ DIAGNOSTIC ONLY, exactly as per-sign is — the pooled tallyV1Main row decides the
+ * test. With four landers the best-looking one shows a large lift by chance, and each
+ * is only a fraction of the pre-registered N.
+ *
+ * Returns [] for any test whose exposures carry no facing (i.e. every non-tarot
+ * test), so the caller simply omits the block.
+ */
+export async function tallyV1MainByTarotLander(
+  opts: V1MainTallyOptions,
+): Promise<TallyByTarotLanderRow[]> {
+  const result = await db.execute(sql`
+    SELECT e.context->>'facing'                                                  AS facing,
+           e.context->>'angle'                                                   AS angle,
+           e.variant                                                             AS variant,
+           count(*)                                                              AS viewers,
+           count(*) FILTER (WHERE c.purchased AND c.upsell_offered)              AS buyers,
+           COALESCE(sum(c.main_purchase_amount) FILTER (WHERE c.purchased AND c.upsell_offered), 0) AS revenue_cents
+    FROM experiment_exposures e
+    LEFT JOIN conversations c ON c.id = e.context->>'conversationId'
+    WHERE e.experiment_key = ${opts.key}
+      AND e.created_at >= ${opts.startISO}
+      AND e.context->>'facing' IS NOT NULL
+    GROUP BY 1, 2, 3;
+  `);
+
+  const controlKey = opts.controlKey ?? 'A';
+  const treatmentKey = opts.treatmentKey ?? 'B';
+  const all = result.rows as Record<string, unknown>[];
+
+  const landers = Array.from(
+    new Set(all.map((r) => `${String(r.facing)}|${String(r.angle)}`)),
+  ).sort();
+  return landers.map((lander) => {
+    const [facing, angle] = lander.split('|');
+    const forLander = all.filter((r) => `${String(r.facing)}|${String(r.angle)}` === lander);
+    const { rows } = assembleRows(forLander, controlKey, treatmentKey);
+    const stats = finalizeStats(rows, controlKey, treatmentKey);
+    return { facing, angle, rows: stats.rows, significance: stats.significance };
+  });
+}
+
+// ── fb-palm COMMITMENT GATE (UI-only A/B) ────────────────────────────────────
+// The 3-checkbox commitment card that replaces the purchase button on the gated
+// arm. Measured with `v1_main_funnel` (same tally as the V1 main price test:
+// exposure log ⋈ conversations, confirmed main/downsell purchase + revenue), so
+// it reports in /admin/experiments next to every other test — arms, lift, SRM,
+// p-value and the targetN no-peeking gate.
+//
+// WHY THIS IS AN EXPERIMENT AND NOT A PRICE-POOL ARM (2026-07-28):
+// a pool arm can only ever be drawn for an email that has NO stored variant yet
+// (assignVariantIfMissing returns early once one is stored). On live fb-palm,
+// returning visitors are 23% of sessions but 57% of main buys and convert 4.4x
+// better (14.5% vs 3.3%) — and they ALL keep the incumbent control's variant id.
+// A pool-based gate arm therefore compares "new visitors only" against "new
+// visitors + every repeat buyer", which makes the gate look ~2x worse than
+// neutral before it has shown a single checkbox. Bucketing on a hash of the
+// email under a NEW experiment key re-splits the whole population, repeat
+// visitors included, so both arms are drawn from the same mix.
+//
+// Assigning a returning visitor is safe here precisely because this test is
+// UI-only: it never re-prices anyone. The price still comes from their stored
+// conversations row, untouched.
+export const PALM_GATE_EXPERIMENT_KEY = 'v1_palm_commitment_gate_2026';
+
+/**
+ * Should this lead see the commitment gate?
+ *
+ * Bucketed on the NORMALISED email (matches the exposure dedup on hashEmail).
+ * `gate` is true only when the assigned arm's payload says so AND the arm is
+ * `applied` — so a draft/paused/out-of-scope test yields the plain purchase
+ * button for everyone, and deploying the code changes nothing until the
+ * experiment is started. `enrolled` (running + in scope) tells the caller to log
+ * the exposure — the denominator.
+ *
+ * No email (the fb-palm `?noemail=1` arm) ⇒ no subject ⇒ control, never enrolled.
+ */
+export async function resolvePalmGate(
+  email: string | null | undefined,
+  funnel?: string | null,
+  sign?: string | null,
+  key: string = PALM_GATE_EXPERIMENT_KEY, // overridable so tests never touch the live experiment
+): Promise<{ gate: boolean; variant: string | null; enrolled: boolean }> {
+  const subject = typeof email === 'string' ? email.trim().toLowerCase() : null;
+  const a = await assign(key, subject, { funnel: funnel ?? null, sign: sign ?? null });
+  if (!a) return { gate: false, variant: null, enrolled: false };
+  return {
+    gate: a.applied && a.payload?.gate === true,
+    variant: a.variant,
+    enrolled: a.enrolled,
+  };
 }
 
 // ── Persona prompt A/B resolution (Phase 4b — live AI path) ───────────────────

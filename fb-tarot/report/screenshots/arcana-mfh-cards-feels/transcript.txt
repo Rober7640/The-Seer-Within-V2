@@ -1,0 +1,26 @@
+# arcana-mfh — hook cards-feels ("How does he really feel about you?"), tapped card c (the Magician/the Fool/the Hanged Man)
+# she typed: "He is warm with me one week and completely closed off the next, and I can't tell what I actually mean to him."
+
+[1] Mmm… the Hanged Man, the card of the pause and a new angle. I felt it the moment your eyes went to it. The connection only opens once I know who I'm speaking with, though… what's your first name, dear?
+
+[2] Sarah
+
+[3] It's lovely to meet you, Sarah.
+
+[4] Everything we discuss stays between us... our secret.
+
+[5] I can feel warmth radiating from your heart, Sarah...
+
+[6] But there's a flicker of shadow there too...
+
+[7] Let's look deeper together...
+
+[8] Tell me more about what's on your mind...
+
+[9] He is warm with me one week and completely closed off the next, and I can't tell what I actually mean to him.
+
+[10] Sarah, that push and pull... it's exhausting, isn't it?
+
+[11] He's battling something within himself. His warmth is real, but so is his fear.
+
+[12] You're both carrying words that haven't been spoken. The silence is creating distance.

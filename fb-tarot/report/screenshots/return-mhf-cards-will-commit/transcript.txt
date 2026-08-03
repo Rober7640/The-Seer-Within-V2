@@ -1,0 +1,26 @@
+# return-mhf — hook cards-will-commit ("Will he ever commit?"), tapped card a (the Magician/the Hanged Man/the Fool)
+# she typed: "We have been together two years and he still will not talk about living together or anything after that."
+
+[1] Mmm… the Magician, the card of will and intention. I felt it the moment your hand reached for it. The connection only opens once I know who I'm speaking with, though… what's your first name, dear?
+
+[2] Sarah
+
+[3] It's lovely to meet you, Sarah.
+
+[4] Everything we discuss stays between us... our secret.
+
+[5] I can feel warmth radiating from your heart, Sarah...
+
+[6] But there's a flicker of shadow there too...
+
+[7] Let's look deeper together...
+
+[8] Tell me more about what's on your mind...
+
+[9] We have been together two years and he still will not talk about living together or anything after that.
+
+[10] Two years... and he won't discuss a future. That uncertainty weighs on you every day, doesn't it?
+
+[11] You've been giving more than you receive. The imbalance is exhausting.
+
+[12] Part of you wonders if you should stay... but leaving feels impossible.

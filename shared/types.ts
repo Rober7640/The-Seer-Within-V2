@@ -73,6 +73,13 @@ export function isSlidingCloseVariant(id?: string | null): boolean {
   return !!id && id.startsWith(SLIDING_CLOSE_VARIANT_PREFIX)
 }
 
+// NOTE: the fb-palm commitment gate is deliberately NOT a price-variant id.
+// It is assigned by the experiment framework (`v1_palm_commitment_gate_2026`)
+// and arrives as `UserData.commitmentGate`. A pool variant would only ever be
+// drawn for an email with no stored variant, which would have excluded every
+// returning visitor from the treatment while leaving them all in the control —
+// see server/lib/experiments.ts (PALM_GATE_EXPERIMENT_KEY) for the numbers.
+
 export interface ShippingAddress {
   name: string
   line1: string
@@ -84,7 +91,7 @@ export interface ShippingAddress {
 }
 
 export interface ChatRequest {
-  action: 'reading' | 'reading1' | 'reading2' | 'futureValidation' | 'crisisReveal' | 'crisisCost' | 'crisisUrgency' | 'shadowSummary' | 'valueExplain' | 'crisis' | 'objection' | 'palmOpener' | 'palmReflect'
+  action: 'reading' | 'reading1' | 'reading2' | 'futureValidation' | 'crisisReveal' | 'crisisCost' | 'crisisUrgency' | 'shadowSummary' | 'valueExplain' | 'crisis' | 'objection' | 'palmOpener' | 'palmReflect' | 'tarotReflect'
   userData: UserData
   input: string
   objectionCount?: number
@@ -94,6 +101,11 @@ export interface ChatRequest {
   palmSign?: string
   palmHook?: string
   palmThumb?: string
+  // Tarot "decode-him card" bridge Version C — the deck + card + hook the visitor
+  // tapped. Server validates against fixed enums before injecting.
+  tarotDeck?: string
+  tarotHook?: string
+  tarotCard?: string
 }
 
 export interface ChatResponse {
@@ -142,23 +154,45 @@ export interface ShippingSaveRequest {
   address: ShippingAddress
 }
 
-// Coin system: 60 coins = 1 minute of chat, billed in 15-second blocks
-export const COINS_PER_MINUTE = 60;
+// ─── Wallet unit: a "coin" is ONE CENT ────────────────────────────────────────
+// Dollar-wallet model (2026-07-23). `users.coin_balance` holds CENTS — a real
+// dollar balance worth the same amount with every guide. Each persona's
+// `personas.coins_per_minute` holds CENTS PER MINUTE ( = $/min × 100 ), so the
+// time a balance buys is computed PER-GUIDE at display: seconds = cents ÷ (rate/60).
+// Nothing customer-facing shows "coins" — the funnel shows dollars + minutes.
+//
+// The billing engine keeps the parameter name "coinsPerMinute" for continuity; it
+// now carries cents/min. The reference (default) rate is $2.99/min = 299.
+export const PRICE_PER_MINUTE_USD = 2.99;
+export const CENTS_PER_MINUTE_DEFAULT = Math.round(PRICE_PER_MINUTE_USD * 100); // 299
+export const COINS_PER_MINUTE = CENTS_PER_MINUTE_DEFAULT; // 299 (cents/min at the default rate)
 export const BILLING_INTERVAL_SECONDS = 15;
-export const COINS_PER_INTERVAL = COINS_PER_MINUTE / (60 / BILLING_INTERVAL_SECONDS); // 15 coins per 15s block
+export const BLOCKS_PER_MINUTE = 60 / BILLING_INTERVAL_SECONDS; // 4 blocks per minute
+export const FREE_TRIAL_MINUTES = 3;
 
-export function coinsToMinutes(coins: number): number {
-  return Math.floor(coins / COINS_PER_MINUTE);
+/** Whole minutes a balance represents at a given rate (floored). Prefer
+ *  coinsToClock for anything user-facing; this stays for analytics/math. */
+export function coinsToMinutes(coins: number, coinsPerMinute: number = COINS_PER_MINUTE): number {
+  return Math.floor(coins / coinsPerMinute);
 }
 
-export function minutesToCoins(minutes: number): number {
-  return minutes * COINS_PER_MINUTE;
+/** Wallet cents for a number of minutes at a given rate (default rate if omitted).
+ *  Used for fixed grants (free trial, promo, welcome) so "N minutes" is exact. */
+export function minutesToCoins(minutes: number, coinsPerMinute: number = COINS_PER_MINUTE): number {
+  return Math.round(minutes * coinsPerMinute);
 }
 
-/** Calculate coins charged for a given number of elapsed seconds */
+/**
+ * Cents charged for a number of elapsed seconds at a given cents/min rate.
+ * Bills only COMPLETED 15-second blocks and FLOORS the total, so it can never
+ * charge more than the elapsed time justifies — exact at whole-minute boundaries
+ * (60s @ 299 → 299), customer-favourable on partial blocks. At the legacy 60/min
+ * rate it still yields 15 per block, so any pre-existing 60-based call site is
+ * unchanged.
+ */
 export function secondsToCoins(seconds: number, coinsPerMinute: number = COINS_PER_MINUTE): number {
-  const coinsPerInterval = coinsPerMinute / (60 / BILLING_INTERVAL_SECONDS);
-  return Math.floor(seconds / BILLING_INTERVAL_SECONDS) * coinsPerInterval;
+  const blocks = Math.floor(seconds / BILLING_INTERVAL_SECONDS);
+  return Math.floor((blocks * coinsPerMinute) / BLOCKS_PER_MINUTE);
 }
 
 // Per-persona pricing types
@@ -178,13 +212,79 @@ export interface PersonaPricing {
   tiers: PricingTier[]
 }
 
-// Default global pricing (used when persona has no custom pricing)
+// Default global pricing (used when a persona has no custom pricing).
+//
+// DOLLAR WALLET (2026-07-23): a coin is a cent, so a pack grants exactly the
+// dollars paid — totalCoins === priceUsd (both cents). The customer only ever
+// sees dollars + minutes; minutes are derived per-guide at that guide's $/min.
+// To change the platform rate, change personas.coins_per_minute (cents/min); the
+// packs — pure dollar amounts — do not change.
 export const DEFAULT_PRICING: PersonaPricing = {
-  freeCoins: 180,
+  freeCoins: minutesToCoins(FREE_TRIAL_MINUTES), // 3 free minutes at the default rate = 897¢
   tiers: [
-    { packageType: 'popular',    coins: 360,  bonusCoins: 180,  totalCoins: 540,  priceUsd: 1999, label: '540 coins' },
-    { packageType: 'best_value', coins: 540,  bonusCoins: 360,  totalCoins: 900,  priceUsd: 2999, label: '900 coins' },
-    { packageType: 'premium',    coins: 1000, bonusCoins: 800,  totalCoins: 1800, priceUsd: 4999, label: '1800 coins', badge: 'MOST POPULAR' },
-    { packageType: 'whale',      coins: 2000, bonusCoins: 2500, totalCoins: 4500, priceUsd: 9999, label: '4500 coins', badge: 'BEST DEAL' },
+    { packageType: 'popular',    coins: 1000, bonusCoins: 0, totalCoins: 1000, priceUsd: 1000, label: '$10' },
+    { packageType: 'best_value', coins: 2000, bonusCoins: 0, totalCoins: 2000, priceUsd: 2000, label: '$20' },
+    { packageType: 'premium',    coins: 3000, bonusCoins: 0, totalCoins: 3000, priceUsd: 3000, label: '$30', badge: 'MOST POPULAR' },
+    { packageType: 'whale',      coins: 5000, bonusCoins: 0, totalCoins: 5000, priceUsd: 5000, label: '$50' },
   ],
+}
+
+// ONE-TIME WELCOME PACK — a deliberate loss-leader, NOT the flat rate: pay $2.99
+// and receive ~2:40 of reading (≈$7.98 of wallet at the default rate). Defined by
+// the TIME it grants so it survives the coin→cent switch, and lives here rather
+// than as a literal in both the server tier table and the client modal, which is
+// how the two could silently drift.
+export const WELCOME_PACK_SECONDS = 160; // 2:40
+export const WELCOME_PACK_COINS = Math.ceil((WELCOME_PACK_SECONDS / 60) * CENTS_PER_MINUTE_DEFAULT); // 798¢ ≈ 2:40
+export const WELCOME_PACK_PRICE_CENTS = 299;
+
+// CUSTOM TOP-UP (the "Custom Amount" field in the paywall):
+// The customer types any dollar amount and receives exactly that many dollars of
+// wallet (a coin is a cent). The floor is enforced against the persona's cheapest
+// pack at the call site; MAX is the absolute platform cap (fraud / fat-finger guard).
+export const CUSTOM_TOPUP_MAX_USD = 200;
+export const CUSTOM_PACKAGE_TYPE = 'custom';
+
+/**
+ * Wallet cents bought for a whole-dollar USD amount. In the dollar wallet a coin
+ * IS a cent, so this is just dollars → cents. SINGLE SOURCE OF TRUTH for the
+ * custom top-up so the "= X min" preview and the granted balance always agree.
+ */
+export function usdToCoins(dollars: number): number {
+  return Math.round(dollars * 100);
+}
+
+/** Same, for a cents amount (Stripe / PayPal charge in cents) — identity, since a
+ *  coin is a cent. Kept as a named function so call sites still read intently. */
+export function usdCentsToCoins(cents: number): number {
+  return Math.round(cents);
+}
+
+/** Minutes a balance represents at a given rate, floored to 1 decimal so we never
+ *  overstate the time bought (897¢ @ 299 → "3.0 min"). Defaults to the reference
+ *  rate; pass the guide's rate for a per-guide figure. */
+export function coinsToMinutesDisplay(coins: number, coinsPerMinute: number = COINS_PER_MINUTE): number {
+  return Math.floor((coins / coinsPerMinute) * 10) / 10;
+}
+
+/** A balance as a m:ss clock at a given rate, e.g. 897¢ @ 299 → "3:00". This is
+ *  the ONE time format the customer sees everywhere (balances, packs, the live
+ *  meter), so a value never switches between "3.0 min" and "3:00". Pass the
+ *  guide's rate; floors to the whole second so it never overstates the time. */
+export function coinsToClock(coins: number, coinsPerMinute: number = COINS_PER_MINUTE): string {
+  // Multiply BEFORE dividing so exact-whole values don't lose a second to floating
+  // point (e.g. (n / cpm) * 60). Scaling first keeps the arithmetic exact, and the
+  // floor still guarantees we never overstate the time.
+  return secondsToClock(Math.floor((coins * 60) / coinsPerMinute));
+}
+
+/** A number of SECONDS as the same m:ss clock. The live in-chat countdown works in
+ *  seconds rather than coins, and used to format itself inline — two implementations
+ *  of one format, which is how the header and the meter ended up a second apart on
+ *  the $50 pack. Both now come through here. */
+export function secondsToClock(totalSeconds: number): string {
+  const safe = Math.max(0, Math.floor(totalSeconds));
+  const m = Math.floor(safe / 60);
+  const s = safe % 60;
+  return `${m}:${String(s).padStart(2, "0")}`;
 }

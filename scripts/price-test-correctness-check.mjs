@@ -7,14 +7,29 @@
 // reports the ratio as INFORMATIONAL ONLY and never fails on it.
 //
 // What it DOES fail on (each is deterministic — one bad row is a real bug):
-//   • a 55-35_palm row whose main != $55 or grace != $35, or a NULL grace
-//     (NULL grace = corrupted config key ⇒ the $35 grace CHARGE is broken)
+//   • a test-arm row whose main/grace != the prices configured for it, or a NULL grace
+//     (NULL grace = corrupted config key ⇒ the grace CHARGE is broken)
 //   • any assignment on the root '55-35' arm (root is deliberately OUT of the test)
-//   • the sliding arm drawing ZERO times after enough thumb leads to rule out chance
+//   • the test arm drawing ZERO times after enough leads to rule out chance
 //   • a control row whose price drifted off $35/$25
 //
-// It CANNOT check `sign=thumb` — there is no sign column on conversations. That one
-// check must come from the Railway prod logs (`priceVariant: assigned`).
+// ⚠ WHICH ARM IS "THE TEST" IS READ FROM THE LIVE POOL, NOT HARDCODED. It was
+//   '55-35_palm' (the $55/$35 sliding close, thumb-scoped). Both the expected prices
+//   and the expected split come from the pool, so retiring one PRICE test and
+//   starting another cannot turn this script into a false alarm.
+//
+// ⚠ THIS SCRIPT ONLY SEES POOL-BASED PRICE TESTS. Once the sliding close is retired
+//   (scripts/retire-sliding-close.mjs) the palm pool has a single drawing arm, and
+//   this script correctly reports "nothing to check" and exits 0. That is NOT a
+//   problem: the commitment gate that replaced it is an EXPERIMENT
+//   ('v1_palm_commitment_gate_2026'), not a pool arm, because a pool arm can never
+//   be drawn for an email that already has a stored variant — which would have
+//   excluded every returning visitor from the treatment. Check that test in
+//   /admin/experiments, not here.
+//
+// It CANNOT check a variant's `sign` scoping — there is no sign column on
+// conversations. That check must come from the Railway prod logs
+// (`priceVariant: assigned`), and it only matters for a variant that declares `signs`.
 //
 // ⚠ The window is anchored to system_config.updated_at — the moment the pool was flipped —
 //   NOT to "the last N hours". Counting leads from BEFORE the flip sweeps in control-only
@@ -29,14 +44,21 @@ import fs from 'node:fs';
 
 const env = fs.readFileSync('.env', 'utf8');
 const url = [...env.matchAll(/^DATABASE_URL=(.+)$/gm)].pop()[1].trim().replace(/^["']|["']$/g, '');
-const pool = new pg.Pool({ connectionString: url, ssl: { rejectUnauthorized: false } });
+// SSL for the hosted DB; local sandbox Postgres (127.0.0.1:5433) doesn't speak it,
+// and refusing to connect there made this script impossible to rehearse offline.
+const isLocal = /@(localhost|127\.0\.0\.1)\b/.test(url);
+const pool = new pg.Pool({ connectionString: url, ...(isLocal ? {} : { ssl: { rejectUnauthorized: false } }) });
 
-const SLIDING = '55-35_palm';
+// The palm TEST arm is whatever currently has weight > 0 alongside the control —
+// it is NOT hardcoded. It was '55-35_palm' (the $55/$35 sliding close). Deriving it
+// from the live pool means retiring one test does not turn this script into a false
+// alarm: with the sliding close parked at weight 0, a hardcoded check would report
+// "ZERO sliding assignments — the arm is not drawing" forever, which reads as a
+// broken pool and invites a panicked rollback of a perfectly healthy funnel.
 const CONTROL = '35_palm_u47';
-const EXPECT = {
-  [SLIDING]: { main: 5500, grace: 3500 },
-  [CONTROL]: { main: 3500, grace: 2500 },
-};
+// Expected prices are read from the pool itself (below) so they can never drift
+// from what is actually configured.
+const EXPECT = {};
 
 const fail = [];
 const warn = [];
@@ -55,10 +77,29 @@ const { rows: [cfg] } = await pool.query(
           (EXTRACT(EPOCH FROM (now() - updated_at)) / 60)::int      AS mins_ago
    FROM system_config WHERE config_key = 'v1_price_variants'`,
 );
-if (!cfg.config_value.includes(SLIDING)) {
-  console.log(`\n  ⚠️  '${SLIDING}' is NOT in the live pool — the test is OFF (rolled back?). Nothing to check.\n`);
+// ── Work out which palm test is actually live, from the pool itself ──────────
+const poolCfg = typeof cfg.config_value === 'string' ? JSON.parse(cfg.config_value) : cfg.config_value;
+const palmLive = (poolCfg.variants ?? []).filter((v) => v.funnel === 'v1-palm' && Number(v.weight) > 0);
+const control = palmLive.find((v) => v.id === CONTROL);
+const testArm = palmLive.find((v) => v.id !== CONTROL);
+
+if (!testArm) {
+  console.log(`\n  ⚠️  No palm TEST arm has weight > 0 — only the control (${CONTROL}) is drawing.`);
+  console.log(`      No experiment is running on v1-palm, so there is nothing to check.\n`);
   await pool.end();
   process.exit(0);
+}
+
+const SLIDING = testArm.id;                  // the arm under test, whatever it is
+const WEIGHTS = { ctl: Number(control?.weight ?? 0), test: Number(testArm.weight) };
+const EXPECT_SHARE = (WEIGHTS.test / (WEIGHTS.ctl + WEIGHTS.test)) * 100;
+for (const v of palmLive) EXPECT[v.id] = { main: v.priceCents, grace: v.downsellCents };
+
+console.log(`\n  live palm test: ${CONTROL} (w${WEIGHTS.ctl}) vs ${SLIDING} (w${WEIGHTS.test})` +
+            `  → expect ~${EXPECT_SHARE.toFixed(0)}% on ${SLIDING}`);
+if (EXPECT[SLIDING].main === EXPECT[CONTROL]?.main) {
+  console.log(`  ⓘ  Both arms carry the SAME price ($${EXPECT[SLIDING].main / 100}) — this is a UI/copy test,`);
+  console.log(`     not a price test. The price checks below still apply to both arms.`);
 }
 
 const { rows } = await pool.query(
@@ -106,36 +147,49 @@ const { rows: [root] } = await pool.query(
 );
 if (root.n > 0) fail.push(`🔴 root '55-35' was assigned to ${root.n} visitor(s) — root is supposed to be OUT of the test (weight 0)`);
 
-// The arm must actually be drawing. Zero sliding after 40 thumb-eligible leads is ~1-in-a-trillion
-// under a true 50/50 — that is a broken pool, not bad luck.
+// The arm must actually be drawing. Zero draws after enough leads to rule out chance
+// is a broken pool, not bad luck. The threshold scales with the configured weight:
+// a 30%-weighted arm needs more leads than a 50% one before silence is damning.
+// (p(zero) < 1e-6 ⇒ n > ln(1e-6) / ln(1 - share).)
 const sliding = by[SLIDING]?.n ?? 0;
-if (total >= 40 && sliding === 0) fail.push(`🔴 ${total} palm leads and ZERO sliding assignments — the arm is not drawing. Check the pool.`);
+const share = EXPECT_SHARE / 100;
+const silenceThreshold = Math.ceil(Math.log(1e-6) / Math.log(1 - share));
+if (total >= silenceThreshold && sliding === 0) {
+  fail.push(`🔴 ${total} palm leads and ZERO '${SLIDING}' assignments (expected ~${EXPECT_SHARE.toFixed(0)}%) — the arm is not drawing. Check the pool.`);
+}
 
 // ── Ratio: INFORMATIONAL ONLY. Never a failure. ──────────────────────────────
 if (total > 0) {
-  const share = (sliding / total) * 100;
-  console.log(`\n   split: ${share.toFixed(0)}% sliding / ${(100 - share).toFixed(0)}% control  (n=${total})`);
+  const observed = (sliding / total) * 100;
+  const lo = Math.max(0, EXPECT_SHARE - 10), hi = Math.min(100, EXPECT_SHARE + 10);
+  console.log(`\n   split: ${observed.toFixed(0)}% ${SLIDING} / ${(100 - observed).toFixed(0)}% control  (n=${total}, configured ${EXPECT_SHARE.toFixed(0)}%)`);
   if (total < 100) {
-    console.log(`   ⓘ  n=${total} is TOO SMALL to judge the 50/50. A healthy 50/50 at this n can look`);
-    console.log(`      like 30/70 purely by chance. Do NOT roll back on the ratio. Re-check at n≥100.`);
-  } else if (share < 40 || share > 60) {
-    warn.push(`split is ${share.toFixed(0)}% at n=${total} — outside 40-60%. Worth a look, but still not proof of a bug.`);
+    console.log(`   ⓘ  n=${total} is TOO SMALL to judge the split. A healthy ${EXPECT_SHARE.toFixed(0)}% at this n can`);
+    console.log(`      swing wildly by chance. Do NOT roll back on the ratio. Re-check at n≥100.`);
+  } else if (observed < lo || observed > hi) {
+    warn.push(`split is ${observed.toFixed(0)}% at n=${total} — outside ${lo.toFixed(0)}-${hi.toFixed(0)}%. Worth a look, but still not proof of a bug.`);
   } else {
-    console.log(`   ✅ n≥100 and the split sits in 40-60% — consistent with a working 50/50.`);
+    console.log(`   ✅ n≥100 and the split sits within ±10pts of the configured ${EXPECT_SHARE.toFixed(0)}%.`);
   }
 }
 
 console.log('');
 for (const w of warn) console.log(`   ⚠️  ${w}`);
 if (fail.length) {
-  console.log(`\n   ROLLBACK: set '55-35_palm' weight → 0 in system_config.v1_price_variants (60s cache).`);
-  console.log(`   Previous config: improve-v1/ROLLBACK-config-before-golive.json\n`);
+  console.log(`\n   ROLLBACK: set '${SLIDING}' weight → 0 in system_config.v1_price_variants (60s cache).`);
+  console.log(`   Restore the snapshot taken by the go-live script: improve-v1/ROLLBACK-config-before-*.json\n`);
   for (const f of fail) console.log(`   ${f}`);
   console.log('');
   process.exitCode = 1;
 } else {
   console.log(`   ✅ CORRECTNESS: PASS — prices, grace, and scoping are all sound.`);
-  console.log(`   ⓘ  Still unverifiable from the DB: that every 55-35_palm visitor came from sign=thumb.`);
-  console.log(`      There is no sign column — check the Railway logs for 'priceVariant: assigned'.\n`);
+  if (testArm.signs?.length) {
+    console.log(`   ⓘ  Still unverifiable from the DB: that every '${SLIDING}' visitor came from`);
+    console.log(`      sign=${testArm.signs.join('/')}. No sign column — check the Railway logs`);
+    console.log(`      for 'priceVariant: assigned'.\n`);
+  } else {
+    console.log(`   ⓘ  '${SLIDING}' is unscoped (no 'signs' key) — it is EXPECTED on every palm sign,`);
+    console.log(`      so there is no sign-scoping invariant to verify for it.\n`);
+  }
 }
 await pool.end();

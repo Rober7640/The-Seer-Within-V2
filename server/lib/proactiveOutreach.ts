@@ -5,6 +5,7 @@
 import { db } from './db';
 import { users, userMemory, chatSessions, personas, personaPrompts, systemConfig } from '@shared/schema';
 import { eq, and, desc, sql } from 'drizzle-orm';
+import { COINS_PER_MINUTE } from '@shared/types';
 import { anthropicFailover as anthropic } from './anthropicWithFailover';
 import logger from './logger';
 import { fireWithBreaker, anthropicBreaker } from './circuitBreaker';
@@ -98,7 +99,9 @@ export async function findOutreachCandidates(): Promise<OutreachCandidate[]> {
       reason = 'inactive_30_days';
     } else if (lastSessionDate < sevenDaysAgo) {
       reason = 'inactive_7_days';
-    } else if (user.coinBalance <= 60 && user.coinBalance > 0) {
+    } else if (user.coinBalance <= COINS_PER_MINUTE && user.coinBalance > 0) {
+      // ≤ 1 minute of wallet left (at the default rate) — a coin is a cent, so this
+      // is ≤ $2.99. Global balance, so the default rate is the right reference.
       reason = 'low_credits';
     } else if (lastSessionDate > sevenDaysAgo && recentMemories.length > 0) {
       reason = 'session_followup';
