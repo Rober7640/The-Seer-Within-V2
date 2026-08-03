@@ -18,6 +18,18 @@ import { Client } from 'pg';
 import 'dotenv/config';
 import { freshEvelynSession, say, apiEndSession } from './helpers';
 
+/**
+ * Independent re-implementation of shared/types.ts secondsToCoins(), on purpose:
+ * importing the real one would let a bug in it cancel out, and this test would pass
+ * while production stayed broken. Keep in step with COINS_PER_MINUTE /
+ * BILLING_INTERVAL_SECONDS if the wallet rate ever changes again.
+ */
+const RATE = 299; // cents per minute at the default rate
+const BLOCK = 15; // BILLING_INTERVAL_SECONDS
+function secondsToCoins(seconds: number, rate = RATE): number {
+  return Math.floor((Math.floor(seconds / BLOCK) * rate) / 4);
+}
+
 async function withDb<T>(fn: (c: Client) => Promise<T>): Promise<T> {
   const url = process.env.DATABASE_URL || '';
   if (!url.includes('localhost')) throw new Error('billing spec refuses a non-localhost DATABASE_URL');
@@ -37,15 +49,25 @@ test.describe('Dead-air billing: refund on correction', () => {
 
     // Simulate the audit shape: session ran 10 min wall-clock, customer's last
     // message was 3 min ago (active = 420s), and checkpoints had wall-clock
-    // billed 600 coins before the idle guard could trip.
+    // billed the full 10 minutes before the idle guard could trip.
+    //
+    // ⚠️ These figures are in COINS and MUST follow the wallet rate. They were
+    // written pre-2026-07-28 when a coin was 1 second (60 coins/min), so the old
+    // literals were 600/420/180 — numerically identical to the seconds. At the
+    // dollar-wallet rate (299¢/min) that scenario no longer over-bills at all, so
+    // the refund branch was never reached and this test silently stopped guarding
+    // anything from 07-28 until it was rescaled on 2026-08-03.
+    const WALL_CLOCK_CHARGE = secondsToCoins(600);  // 10 min billed by checkpoints = 2990
+    const ACTIVE_CHARGE = secondsToCoins(420);      // re-based to last message = 2093
+    const DEAD_AIR_REFUND = WALL_CLOCK_CHARGE - ACTIVE_CHARGE; // 897 = 3:00 of dead air
     await withDb((c) =>
       c.query(
         `UPDATE chat_sessions SET
            started_at      = (NOW() AT TIME ZONE 'UTC') - interval '10 minutes',
            last_message_at = (NOW() AT TIME ZONE 'UTC') - interval '3 minutes',
-           coins_charged   = 600
+           coins_charged   = $2
          WHERE id = $1`,
-        [s.sessionId],
+        [s.sessionId, WALL_CLOCK_CHARGE],
       ),
     );
     const balBefore = await withDb(async (c) =>
@@ -67,11 +89,11 @@ test.describe('Dead-air billing: refund on correction', () => {
     );
 
     expect(row.status).toBe('ended');
-    // Billed only up to the last message (420s → 420 coins at 60/min), not the 10-min wall clock.
+    // Billed only up to the last message (420s), not the 10-min wall clock.
     expect(Number(row.duration_seconds)).toBe(420);
-    expect(Number(row.coins_charged)).toBe(420);
-    // The 180 dead-air coins came BACK.
-    expect(balAfter - balBefore).toBe(180);
+    expect(Number(row.coins_charged)).toBe(ACTIVE_CHARGE);
+    // The dead-air coins came BACK — this is the assertion the whole test exists for.
+    expect(balAfter - balBefore).toBe(DEAD_AIR_REFUND);
   });
 
   test('a normal short session ends cleanly and never violates the ledger invariant', async ({ page }) => {
