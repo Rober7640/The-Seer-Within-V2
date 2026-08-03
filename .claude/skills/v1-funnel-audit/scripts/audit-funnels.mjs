@@ -83,6 +83,16 @@ const FUNNELS = [
     expectFunnel: 'v1-tarot', expectSign: undefined,
     expectTarot: { tarotDeck: 'return-mhf', tarotFacing: 'down', tarotHook: 'cards-will-commit', tarotAngle: 'commitment' },
   },
+  {
+    label: 'tarot/honesty',
+    // Added 2026-08-03 with the honesty/lying headlines. Same guard as commitment: a
+    // hook left out of HONESTY_HOOKS silently reports 'decode-him'. Worth its own row
+    // because this angle's nearest neighbours (cards-honest = decode-him, cards-misled
+    // = trust) are BOTH different angles, so a mis-wire here is easy to miss by eye.
+    path: '/fb-tarot/chat?hook=cards-deceived&card=a&v=c',
+    expectFunnel: 'v1-tarot', expectSign: undefined,
+    expectTarot: { tarotDeck: 'return-mhf', tarotFacing: 'down', tarotHook: 'cards-deceived', tarotAngle: 'honesty' },
+  },
 ];
 
 const checks = [];
