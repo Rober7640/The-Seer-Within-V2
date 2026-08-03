@@ -14,20 +14,21 @@ and [00b-BUILD-BEs.md](./00b-BUILD-BEs.md) (why).
 | ❓ | Decision needed before it can be built |
 | ⛔ | Blocked on a go/no-go |
 
-**Asset classes** (same five for every offer, so IDs are predictable)
-`E` email · `C` checkout · `P` product · `T` post-purchase · `O` ops
+**Asset classes** (same six for every offer, so IDs are predictable)
+`E` email · `C` checkout · `P` product · `T` post-purchase · `U` upsell · `O` ops
 
 ---
 
 ## Shape of the work
 
-| Offer | ✏️ recast | 🔨 from scratch | ⚙️ code | Total |
-|---|---|---|---|---|
-| 02 Twin Flame | 8 | 7 | 6 | 21 |
-| 03 Judgement Day | 1 | 9 | 5 | 15 |
-| 04 Tea Reading | 1 | 12 | 6 | 19 |
-| 05 Hex Her | 1 | 11 | 5 | 17 |
-| **Shared** | — | 3 | 18 | 21 |
+| Offer | ✏️ recast | 🔨 from scratch | ⚙️ code | ❓/✅ | Total |
+|---|---|---|---|---|---|
+| 02 Twin Flame | 12 | 6 | 5 | 2 | **25** |
+| 03 Judgement Day | 4 | 9 | 6 | 1 | **20** |
+| 04 Tea Reading | 4 | 12 | 4 | 1 | **21** |
+| 05 Hex Her | 4 | 11 | 4 | 1 | **20** |
+| **Shared** | — | 3 | 26 | — | **29** |
+| | | | | | **115** |
 
 02 is the cheap one and the only one whose product exists. Everything after it is mostly
 writing, not coding.
@@ -39,7 +40,7 @@ writing, not coding.
 | ID | Asset | Status | Notes |
 |---|---|---|---|
 | S1 | Offer registry `server/lib/backendOffers/config.ts` | ⚙️ | price model, copy keys, bump, gate, SLA per offer |
-| S2 | Booking page component `client/src/pages/backend-offers/BookingPage.tsx` | ⚙️ | config-driven, one page not four. Clone `SoulmateSalesPage.tsx` |
+| S2 | Booking page component `client/src/pages/backend-offers/BookingPage.tsx` | ⚙️ | config-driven, one page not four. **Treatment B — plain direct-response** (decided; see render) |
 | S3 | Subscriber identification on click | ⚙️ | reuse Soulmate hydration (`shared/schema.ts:1305-1310`). No raw email in URLs |
 | S4 | `be_orders` table + webhook handler | ⚙️ | mirror `soulmate_orders` |
 | S5a | Checkout mode: fixed + bump | ⚙️ | 02 |
@@ -59,6 +60,14 @@ writing, not coding.
 | S17 | Reply triage view — read intake, draft, human approves before send | ⚙️ |
 | S18 | Auto-submitted filter — never respond to bounces / OOO / auto-replies (loop risk) | ⚙️ |
 | S19 | **Third-party PII policy** — buyers will send names + accusations about people who never consented. Retention, access, deletion | 🔨 | |
+| S20 | Upsell chat engine — config-driven; clone `useUpsellChat.ts` / `useUpsell2Chat.ts` | ⚙️ | ~48 of ~60 messages reuse verbatim |
+| S21 | **Upsell allocation + suppression** — never offer an object they already own | ⚙️ | owns nothing → stone → bracelet; owns both → straight to thank-you |
+| S22 | Shipping collection + physical fulfilment | ⚙️ | reuse `bracelet_orders`, `server/lib/braceletOrders.ts` |
+| S23 | **`getReadingBody(offer, buyer)` seam** — MVP returns a static template + `%FIRSTNAME%`; later posts to an n8n webhook. Build the seam in Phase 1 or pay for it twice | ⚙️ | the one bit of Phase-2 thinking worth doing now |
+| S24 | `be_orders.reading_body` column — store what was actually sent | ⚙️ | re-sends identical; support can see it |
+| S25 | *(Phase 2)* n8n workflow: query Supabase by email → prompt → Claude → return body | ⚙️ | greenfield, no n8n in repo today |
+| S26 | *(Phase 2)* Read-only Supabase role scoped to the personalisation columns | ⚙️ | not the app connection string |
+| S27 | *(Phase 2)* Fallback + data-quality gate — thin `concern` → static | ⚙️ | a paid product must never fail to arrive |
 
 **Decided:** inbound runs on **Resend**, not Gmail — already installed (`resend@^6.9.2`), already
 sending as `evelyn@theseerwithin.com`, and its catch-all covers any address on a domain whose MX
@@ -91,7 +100,7 @@ we point. Subdomain `reply.theseerwithin.com` so the root domain's mail is untou
 ### P — Product
 | ID | Asset | Status |
 |---|---|---|
-| 02-P1 | The 12-card Zodiac Spread copy (`02:501-786`) | ✏️ |
+| 02-P1 | The 12-card Zodiac Spread copy (`02:501-786`) — **static for MVP**, same 12 cards every buyer | ✏️ |
 | 02-P2 | 12 Major Arcana card images | 🔨 |
 | 02-P3 | Free personal horoscope (`02:787-815`) — no birth data needed | ✏️ |
 | 02-P4 | Product delivery email HTML | 🔨 |
@@ -103,6 +112,13 @@ we point. Subdomain `reply.theseerwithin.com` so the root domain's mail is untou
 | 02-T1 | Thank-you page copy | ✏️ |
 | 02-T2 | Thank-you route | ⚙️ |
 | 02-T3 | Confirmation email + donkey parable | ✏️ |
+
+### U — Upsell  *(adapt V1's proven copy; middle sections reuse verbatim)*
+| ID | Asset | Status |
+|---|---|---|
+| 02-U1a | U1 opening beats — rewrite CONFIRMATION/GAP/RISK off the **Tower card's warning** rather than "your Energy Clearing Ritual" | ✏️ |
+| 02-U1b | U1 bucket block (love / money / purpose / someone) | ✏️ |
+| 02-U2a | U2 PATH_A / PATH_B opens — "the reading told you what's coming; it doesn't call it toward you" | ✏️ |
 
 ### O — Ops
 | ID | Asset | Status |
@@ -133,7 +149,7 @@ we point. Subdomain `reply.theseerwithin.com` so the root domain's mail is untou
 ### P — Product
 | ID | Asset | Status |
 |---|---|---|
-| 03-P1 | **The delivered hex — does not exist.** Only template is 02's structured reading | 🔨 |
+| 03-P1 | **The delivered hex — does not exist.** Only template is 02's structured reading. Write once, static | 🔨 |
 | 03-P4 | Delivery email HTML | 🔨 |
 | 03-P5 | SLA: 2–5 days (stated) | ✅ |
 | 03-P6 | Intake handling — P.S. asks them to reply with the target's name + what they did. Uses S15/S16 | 🔨 |
@@ -144,6 +160,13 @@ we point. Subdomain `reply.theseerwithin.com` so the root domain's mail is untou
 |---|---|---|
 | 03-T1 | Thank-you page | 🔨 |
 | 03-T3 | Confirmation email | 🔨 |
+
+### U — Upsell  *(U1 is the strongest fit in the deck)*
+| ID | Asset | Status |
+|---|---|---|
+| 03-U1a | U1 opening beats — **karmic backlash**: strike at an enemy and their energy strikes back | ✏️ |
+| 03-U1b | U1 bucket block | ✏️ |
+| 03-U2a | U2 opens — weak fit here; consider skipping U2 after 03 | ✏️ |
 
 ### O — Ops
 | ID | Asset | Status |
@@ -178,7 +201,7 @@ we point. Subdomain `reply.theseerwithin.com` so the root domain's mail is untou
 ### P — Product
 | ID | Asset | Status |
 |---|---|---|
-| 04-P1 | **The full tea reading — does not exist.** Letter gives 7 symbols free; define what paid adds | 🔨 |
+| 04-P1 | **The full tea reading — does not exist.** Letter gives 7 symbols free; define what paid adds. Write once, static | 🔨 |
 | 04-P4 | Delivery email HTML | 🔨 |
 | 04-P5 | **SLA — none stated anywhere. Pick one** | ❓ |
 
@@ -187,6 +210,13 @@ we point. Subdomain `reply.theseerwithin.com` so the root domain's mail is untou
 |---|---|---|
 | 04-T1 | Thank-you page | 🔨 |
 | 04-T3 | Confirmation email | 🔨 |
+
+### U — Upsell  *(U2 is the strong one here)*
+| ID | Asset | Status |
+|---|---|---|
+| 04-U1a | U1 opening beats — weak fit; consider skipping U1 after 04 | ✏️ |
+| 04-U2a | U2 opens — **the reading tells you what to say; the bracelet draws him back** | ✏️ |
+| 04-U2b | U2 stone-selection tie-in to the tea symbols (bridge / lighthouse / butterfly) | ✏️ |
 
 ### O — Ops
 | ID | Asset | Status |
@@ -217,7 +247,7 @@ we point. Subdomain `reply.theseerwithin.com` so the root domain's mail is untou
 ### P — Product
 | ID | Asset | Status |
 |---|---|---|
-| 05-P1 | **The delivered hex — does not exist** | 🔨 |
+| 05-P1 | **The delivered hex — does not exist.** Write once, static | 🔨 |
 | 05-P4 | Delivery email HTML | 🔨 |
 | 05-P5 | SLA: 14 hours (stated) | ✅ |
 | 05-P6 | Intake handling — reply with details of the other woman. Uses S15/S16 | 🔨 |
@@ -228,6 +258,13 @@ we point. Subdomain `reply.theseerwithin.com` so the root domain's mail is untou
 |---|---|---|
 | 05-T1 | Thank-you page | 🔨 |
 | 05-T3 | Confirmation email | 🔨 |
+
+### U — Upsell
+| ID | Asset | Status |
+|---|---|---|
+| 05-U1a | U1 opening beats — protection while the rival is being removed | ✏️ |
+| 05-U1b | U1 bucket block | ✏️ |
+| 05-U2a | U2 opens — **she's gone; now call him toward you** | ✏️ |
 
 ### O — Ops
 | ID | Asset | Status |
@@ -245,6 +282,7 @@ we point. Subdomain `reply.theseerwithin.com` so the root domain's mail is untou
 | 04-P5 | What SLA for the tea reading? |
 | 02-C4 | What *is* the karma-cleanse bump deliverable? |
 | ⛔ | Hex go/no-go — gates all of 03 and 05 |
+| S21 | Shared upsell pool with suppression, or mint 8 offer-specific SKUs? (rec: shared pool) |
 
 ## Suggested first slice
 

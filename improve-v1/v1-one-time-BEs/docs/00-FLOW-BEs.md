@@ -77,8 +77,9 @@ Working document. Source material in this folder:
 │         PERSONAL HOROSCOPE bundled in the same email          │
 │      → tag bought_tft                                         │
 │    NB the email's 3 cards are the free teaser; the paid       │
-│    product is 12 NEW cards. Source copy is static — same      │
-│    12 cards for every buyer, only %FIRSTNAME% varies.         │
+│    product is 12 NEW cards. STATIC for MVP — same 12 cards    │
+│    for every buyer, only %FIRSTNAME% varies. Personalised     │
+│    n8n generator comes later, behind getReadingBody().        │
 └───────────────────────────────────────────────────────────────┘
 ```
 
@@ -451,6 +452,62 @@ sender address (which breaks when they reply from a different address than they 
 ⚠ Never auto-respond: bounces and out-of-office hit this address too, and auto-replying to them
 creates loops. And buyers will send names and accusations about third parties who never
 consented — retention policy before the first one lands, not after.
+
+## Diagram I — the post-purchase upsell path (ported from V1)
+
+The source has no upsells — it monetises through *sequence*. This layer is V1's own playbook,
+laid on top. Stripe's `success_url` goes to the upsell chat, not straight to thank-you, exactly
+as V1 does with `/welcome1` → `/welcome2`.
+
+```
+   Stripe paid
+        │
+        ▼
+ ┌─────────────────────────┐   what do they already own?
+ │  UPSELL ALLOCATOR       │──────────────┬──────────────┬─────────────┐
+ └─────────────────────────┘              │              │             │
+        owns neither                 owns stone     owns bracelet   owns both
+              │                           │              │             │
+              ▼                           ▼              ▼             ▼
+      ┌───────────────┐            ┌───────────┐  ┌───────────┐   ┌──────────┐
+      │ U1 PROTECTION │            │    U2     │  │    U1     │   │ skip to  │
+      │ $47 + charged │            │ only      │  │ only      │   │ thank-you│
+      │ lava stone    │            └───────────┘  └───────────┘   └──────────┘
+      └───┬───────┬───┘
+     accept     decline
+          │         │
+          ▼         ▼
+   shipping    SOFT_DECLINE
+     form           │
+          └────┬────┘
+               ▼
+      ┌─────────────────────┐
+      │ U2 MANIFESTATION    │  Path A (bought U1) / Path B (declined)
+      │ $47 → $30 downsell  │
+      │ + 8-stone bracelet  │
+      └───┬───────────┬─────┘
+     accept        decline
+          └─────┬────┘
+                ▼
+          THANK-YOU PAGE ──► confirmation email ──► the product
+```
+
+**The three-beat logic that makes it port cleanly:**
+
+```
+  the backend offer  →  REMOVES / REVEALS something   (past)
+  U1                 →  PROTECTS the result           (present)
+  U2                 →  ATTRACTS what comes next      (future)
+```
+
+⚠ **You can only sell the stone once.** The allocator exists because a buyer who takes both
+after 02 has nothing left to be offered after 03. Alternative — minting a themed protect-object
+and attract-object per offer — means eight physical SKUs, a bigger operation than the deck
+itself. See `00b-BUILD-BEs.md` §4.
+
+Fit is uneven and the allocator should respect it: **U1 is strongest after 03** (strike at an
+enemy, their energy strikes back) and **U2 is strongest after 04** (the reading says what to
+text; the bracelet draws him back).
 
 ## Wireframe 1 — the email (offer 02; this *is* the product)
 
