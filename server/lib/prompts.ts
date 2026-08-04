@@ -1051,6 +1051,12 @@ const TAROT_HOOK_CONTEXT: Record<string, string> = {
   'cards-lied-to': "She believes she has been told something untrue by the man she is involved with, and is trying to work out whether to trust her own read of it.",
   'cards-truth': "She is asking whether what he tells her is the whole of it, and keeps finding that his account never quite covers what she has actually lived.",
   'cards-deceived': "She has begun to fear she was deliberately deceived, and is carrying shame for not having seen it sooner.",
+  // Reunion/return hooks — the man has ALREADY GONE. Distinct from cards-return above,
+  // which asks the same question from a shorter distance; these three read what a return
+  // would require, what the waiting has cost her, and the unanswered either-or itself.
+  'cards-come-back': "He has gone quiet or pulled away without anything being settled, and she is asking whether he will come back — watching for a sign when what she is owed is a decision.",
+  'cards-ever-back': "She has been waiting a long time for a man who left, and is asking whether he will ever come back to her — worn down by the waiting and quietly afraid it was all wasted.",
+  'cards-moved-on': "She cannot tell whether he is coming back or has already moved on, and is being made to hold both possibilities open at once with nothing settled either way.",
   // Self-frame hooks — about HER future, not a specific man.
   'cards-love-again': "After heartbreak, she is asking whether she will ever love again — worn down, but the hope is still there.",
   'cards-soulmate': "She is asking WHEN her soulmate will finally arrive — tired of waiting, but still believing the right person is out there for her.",
@@ -1093,6 +1099,18 @@ const TAROT_HOOK_TENDENCY: Record<string, string> = {
   // ⚠ Same shape of harm as cards-wont-commit, from the other direction: a woman asking
   // this has usually started blaming her own trust. Nothing may land as her naivety.
   'cards-deceived': 'that her growing sense of having been deliberately misled is real information, and that the openness she brought to this was never the fault. NEVER state as fact that she has been deceived, NEVER reassure her that she has not been, and NEVER let any part of the answer land as her own naivety or gullibility — affirm HER judgment and her dignity, and place any wrong squarely with whoever acted on her trust',
+  // Reunion/return hooks (2026-08-04). The single most prediction-baiting angle on the
+  // funnel — every one of these headlines is literally a request for a forecast. So the
+  // no-verdict rule is stated in BOTH directions plus no-timeframe on all three, and on
+  // 'cards-moved-on' the binary itself must be refused rather than answered.
+  'cards-come-back': 'that what is unfinished between them is genuinely unfinished, and that she is owed a decision rather than a sign. NEVER promise he will come back, NEVER pronounce that he will not, and NEVER give a date or timeframe — read the card as where things currently STAND, and affirm HER right to a straight answer rather than treating her waiting as clinging',
+  // ⚠ Same shape of harm as cards-wont-commit and cards-deceived, from a third side: a
+  // woman asking "will he EVER" has usually begun to blame herself for having waited.
+  'cards-ever-back': 'that the time and constancy she has spent were real and were never the wasted part. NEVER promise a return, NEVER declare it finished, and NEVER give a date or timeframe — and never let any part of the answer land as her having been foolish to wait. Affirm HER steadiness and her dignity, and stay honest that anything opening again would begin as something new rather than resume what broke',
+  // ⚠ The headline hands over a binary. Answering EITHER half fails: "he is coming back"
+  // is a promise the funnel cannot keep, and "he has moved on" is a pronouncement on a
+  // real man delivered to a woman already braced for it. Refuse the either-or.
+  'cards-moved-on': 'that the not-knowing is the real weight she is carrying, and that it is his unfinished business sitting in her lap rather than her own indecision. NEVER pick a side of the binary — never state he is coming back and never state he has moved on — and NEVER give a date or timeframe. Read the card as the state of the QUESTION rather than its answer, and affirm HER right to be told outright instead of having to deduce it from silence',
   // Self-frame — affirm HER future love, not a verdict on any man.
   'cards-love-again': 'that love is finding its way back to her — affirm HER heart and her capacity to love again, read the card as a hopeful sign for her own future; never tie it to one specific person and never a date',
   'cards-soulmate': 'that her soulmate is genuinely on the way and nearer than the waiting has let her believe — affirm HER heart and that the love she is holding out for is real and coming, read the card as a hopeful sign of arrival; answer the "when" only as a leaning (soon, close, sooner than the fear admits), NEVER tie it to one specific named person and NEVER give a date or timeframe',
