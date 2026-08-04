@@ -92,17 +92,50 @@ app.use(requestIdMiddleware);
   // Other ports are firewalled. Default to 5000 if not specified.
   // this serves both the API and the client.
   // It is the only port that is not firewalled.
-  // Recover active sessions from DB (handles server restarts gracefully)
-  try {
-    await recoverActiveSessions();
-    // Start credit tracking heartbeat (checkpoints active sessions every 30s)
-    startHeartbeat();
-    // Start background cleanup for inactive sessions (every 5 min, auto-ends 30+ min idle)
-    startInactiveSessionCleanup();
-    // Initialize cron jobs (follow-up emails, monthly resets)
-    initializeCronJobs();
-  } catch (err) {
-    logger.warn("DB unavailable — skipping session recovery and cron jobs", { error: (err as Error).message });
+  // ---------------------------------------------------------------------------
+  // BACKGROUND JOBS — must run in EXACTLY ONE deployment per database.
+  //
+  // These four jobs are timers, not routes: they act on whatever they find in the
+  // database, with no idea which environment created it. `startHeartbeat` selects
+  // `WHERE status='active'` and nothing else. So a second deployment sharing the
+  // same DATABASE_URL bills the first one's live customers even with zero traffic
+  // of its own — which is exactly what happened on 2026-08-04, when Development
+  // and Production shared one database and two meters drained real wallets.
+  // See docs/root-cause-1800-wallet-drain-2026-08-04.md.
+  //
+  // Set RUN_BACKGROUND_JOBS=false on every non-primary deployment (development,
+  // staging, preview environments). Default is ON so that Production can never go
+  // dark by omission — an unset variable must never stop billing.
+  // ---------------------------------------------------------------------------
+  const backgroundJobsDisabled = /^(0|false|no|off)$/i.test(
+    (process.env.RUN_BACKGROUND_JOBS ?? "").trim(),
+  );
+  const deploymentLabel =
+    process.env.RAILWAY_ENVIRONMENT_NAME || process.env.RAILWAY_ENVIRONMENT || "unknown";
+
+  if (backgroundJobsDisabled) {
+    logger.warn(
+      "Background jobs DISABLED for this deployment (RUN_BACKGROUND_JOBS=false) — " +
+      "no billing heartbeat, no session cleanup, no cron. This must be true of every " +
+      "deployment except the one that owns the database.",
+      { deployment: deploymentLabel },
+    );
+  } else {
+    logger.info("Background jobs ENABLED — this deployment owns billing for its database", {
+      deployment: deploymentLabel,
+    });
+    // Recover active sessions from DB (handles server restarts gracefully)
+    try {
+      await recoverActiveSessions();
+      // Start credit tracking heartbeat (checkpoints active sessions every 30s)
+      startHeartbeat();
+      // Start background cleanup for inactive sessions (every 5 min, auto-ends 30+ min idle)
+      startInactiveSessionCleanup();
+      // Initialize cron jobs (follow-up emails, monthly resets)
+      initializeCronJobs();
+    } catch (err) {
+      logger.warn("DB unavailable — skipping session recovery and cron jobs", { error: (err as Error).message });
+    }
   }
 
   const port = parseInt(process.env.PORT || "5000", 10);
