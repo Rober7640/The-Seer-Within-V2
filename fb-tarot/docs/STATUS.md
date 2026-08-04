@@ -95,6 +95,7 @@ Every tarot PostHog event carries `angle`. Six families as of 2026-08-04:
 | `commitment` | will-commit · wont-commit · ready-commit | 2026-07-31 |
 | `honesty` | lied-to · truth · deceived | 2026-08-03 |
 | `reunion` | come-back · ever-back · moved-on | 2026-08-04 |
+| `healing` | cant-stop · on-my-mind · who-hurt-me | 2026-08-04 |
 | `self-frame` | love-again · soulmate | seeded |
 
 Derived by `angleForHook()` from the per-family arrays, so a new hook categorises itself.
@@ -206,6 +207,49 @@ phrasing is now blanket-banned on every deck and hook. So:
 - `cards-ever-back` selects for women who have waited a long time and started blaming
   themselves for it — nothing may land as her having been foolish to wait.
 
+## Healing / moving-on hooks — 3 face-down landers (2026-08-04)
+
+Own `healing` angle. Topic: *"Can't stop thinking about him."* Face-down `return-mhf` only,
+Version C, clean URLs, no new art.
+
+| Headline | Hook | URL |
+|---|---|---|
+| Why can't I stop thinking about him? | `cards-cant-stop` | `/fb-tarot/c?hook=cards-cant-stop` |
+| Why is he always on my mind? | `cards-on-my-mind` | `/fb-tarot/c?hook=cards-on-my-mind` |
+| Why do I still think about someone who hurt me? | `cards-who-hurt-me` | `/fb-tarot/c?hook=cards-who-hurt-me` |
+
+### ⭐⭐ The first angle aimed at HER OWN MIND — and why it is still not `self-frame`
+
+Every earlier family reads the man. These read her thinking. The tempting move is to file
+them under `self-frame`, and it would be **wrong**: `SELF_FRAME_TAROT_HOOKS`
+(`server/lib/prompts.ts`) *drops* the "reads HIM / never a verdict on him" guardrails,
+because those hooks concern no specific man. Here a real man is in the picture — on
+`cards-who-hurt-me` she has already named him as someone who hurt her. So the angle moves
+**who is affirmed**, never **whether he may be judged**. Pinned by a test.
+
+The three lenses are kept apart deliberately, because the nearest live neighbour is the
+`reunion` family shipped the same morning (especially `cards-ever-back`, the long wait):
+reunion reads the **waiting** and what it cost her; healing reads the **thinking** and why
+it persists — why the mind returns (`cant-stop`), how much room he still occupies
+(`on-my-mind`), and the shame of returning to an injury (`who-hurt-me`).
+
+### 🔴 THREE failure modes on this angle, not two
+
+Guarded by `tests/tarot-healing-copy.test.ts` (18 tests, clause-level negation-aware):
+
+1. **Directives.** "You need to let him go", "it's time to move on" — advice about how she
+   should live her life, not a reading. Not ours to give.
+2. **Promises.** *"He's thinking of you too"* is the reunion angle's forbidden promise in a
+   softer coat, and it is the single most tempting sentence on this angle.
+3. **Pathologising.** "Obsessed", "stuck", "unhealthy", "you can't let go". A woman still
+   thinking about someone months later is not a diagnosis — this angle sits closer to grief
+   than anything else on the funnel.
+
+⚠️ **`cards-who-hurt-me` pulls two ways at once**, and both are banned in the same beat:
+minimising the hurt she has already named (*"maybe he didn't mean it"*) abandons her, while
+pronouncing on him (*"he is cruel"*) is the verdict the funnel forbids. Its opener also
+never asks what he did — she should not have to recount the injury to be taken seriously.
+
 ## Concepts
 
 | # | Deck id | Facing | Cards (A/B/C) | Options | Status | Notes |
@@ -240,7 +284,10 @@ phrasing is now blanket-banned on every deck and hook. So:
 | `cards-come-back` *(reunion)* | Will he come back? | ⬜ DRAFT (2026-08-04) — ⚠️ SAME headline as `cards-return`, run as a copy test against it |
 | `cards-ever-back` *(reunion)* | Will he ever come back to me? | ⬜ DRAFT (2026-08-04) — ⚠️ nothing may land as her having been foolish to wait |
 | `cards-moved-on` *(reunion)* | Is he coming back, or has he moved on? | ⬜ DRAFT (2026-08-04) — ⚠️ the read REFUSES the binary |
-| `cards-love-again` *(self-frame)* | Will I love again? | ⬜ draft |
+| `cards-cant-stop` *(healing)* | Why can't I stop thinking about him? | ⬜ DRAFT (2026-08-04) |
+| `cards-on-my-mind` *(healing)* | Why is he always on my mind? | ⬜ DRAFT (2026-08-04) |
+| `cards-who-hurt-me` *(healing)* | Why do I still think about someone who hurt me? | ⬜ DRAFT (2026-08-04) — ⚠️ heaviest hook on the funnel; never minimise, never convict, never blame her |
+| `cards-love-again` *(self-frame)* | Will I love again? | ⬜ draft — 🔴 **no reads on either FACE-DOWN deck**, so a clean URL silently falls back to `cards-honest`/`decode-him`. Only works with an explicit `&deck=arcana-mfh` |
 | `cards-soulmate` *(self-frame)* | When is my soulmate coming? | ⬜ draft (2026-07-27, from `ZN_Tarot_Rio 8.png` = arcana-eef cards; reads on arcana-eef + arcana-mfh; answers "when" as a leaning, never a date) |
 
 ## Pending (Boss's starting scope — face-up named cards)

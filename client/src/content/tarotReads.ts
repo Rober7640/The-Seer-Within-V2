@@ -82,6 +82,24 @@ export type TarotHook =
   | 'cards-come-back' // Will he come back?
   | 'cards-ever-back' // Will he ever come back to me?
   | 'cards-moved-on' // Is he coming back, or has he moved on?
+  // Healing/moving-on hooks (2026-08-04). The FIRST angle whose subject is HER OWN MIND
+  // rather than the man — she is not asking what he will do, she is asking why she cannot
+  // stop thinking about him.
+  //
+  // ⚠ Deliberately NOT added to SELF_FRAME_HOOKS. Self-frame drops the "reads HIM / never
+  // a verdict on him" guardrails (SELF_FRAME_TAROT_HOOKS, server/lib/prompts.ts) because
+  // those hooks concern no specific man. Here a real man IS in the picture — on
+  // 'cards-who-hurt-me' she has already named him as someone who hurt her — so the
+  // no-verdict-on-him rule must stay ON while the AFFIRMATION points at her.
+  //
+  // 🔴 Nearest live neighbour is the reunion family, shipped the same day, and
+  // 'cards-ever-back' in particular (the long wait, the place kept open). These three
+  // must read the THINKING itself, not the waiting: why the mind returns (cant-stop),
+  // how much room he still occupies (on-my-mind), and the shame of returning to an
+  // injury (who-hurt-me).
+  | 'cards-cant-stop' // Why can't I stop thinking about him?
+  | 'cards-on-my-mind' // Why is he always on my mind?
+  | 'cards-who-hurt-me' // Why do I still think about someone who hurt me?
   // Self-frame hooks (read HER, affirm the hopeful yes — like the palm love hooks).
   | 'cards-love-again' // Will I love again?
   | 'cards-soulmate' // When is my soulmate coming?
@@ -133,6 +151,15 @@ export const HONESTY_HOOKS: TarotHook[] = ['cards-lied-to', 'cards-truth', 'card
 // angle-level one. Pinned by tests/tarot-reunion-copy.test.ts.
 export const REUNION_HOOKS: TarotHook[] = ['cards-come-back', 'cards-ever-back', 'cards-moved-on']
 
+// The healing/moving-on hooks (2026-08-04). Their OWN angle: the subject is her own mind,
+// not his conduct, his identity, his future or his return — so folding them into any
+// existing family would make the group unreadable in reporting.
+//
+// 🔴 These are NOT self-frame. See the note on the TarotHook union: a real man is in the
+// picture, so the no-verdict-on-him guardrails stay on. The angle only changes WHO gets
+// affirmed, never whether he gets judged.
+export const HEALING_HOOKS: TarotHook[] = ['cards-cant-stop', 'cards-on-my-mind', 'cards-who-hurt-me']
+
 // The ad ANGLE a hook belongs to. Carried on every tarot PostHog event (see
 // lib/tarotAttribution.ts) so the two decode-him families can be compared as GROUPS
 // without listing each hook: one `angle = trust` filter instead of three hook values,
@@ -146,6 +173,7 @@ export type TarotAngle =
   | 'commitment'
   | 'honesty'
   | 'reunion'
+  | 'healing'
   | 'self-frame'
 
 export function angleForHook(hook: TarotHook): TarotAngle {
@@ -154,6 +182,7 @@ export function angleForHook(hook: TarotHook): TarotAngle {
   if (COMMITMENT_HOOKS.includes(hook)) return 'commitment'
   if (HONESTY_HOOKS.includes(hook)) return 'honesty'
   if (REUNION_HOOKS.includes(hook)) return 'reunion'
+  if (HEALING_HOOKS.includes(hook)) return 'healing'
   return 'decode-him'
 }
 
@@ -174,6 +203,9 @@ export const TAROT_HOOKS: TarotHook[] = [
   'cards-come-back',
   'cards-ever-back',
   'cards-moved-on',
+  'cards-cant-stop',
+  'cards-on-my-mind',
+  'cards-who-hurt-me',
   'cards-love-again',
   'cards-soulmate',
 ]
@@ -216,6 +248,9 @@ export const HEADLINES: Record<TarotHook, string> = {
   'cards-come-back': 'Will he come back?',
   'cards-ever-back': 'Will he ever come back to me?',
   'cards-moved-on': 'Is he coming back, or has he moved on?',
+  'cards-cant-stop': "Why can't I stop thinking about him?",
+  'cards-on-my-mind': 'Why is he always on my mind?',
+  'cards-who-hurt-me': 'Why do I still think about someone who hurt me?',
   'cards-love-again': 'Will I love again?',
   'cards-soulmate': 'When is my soulmate coming?',
 }
@@ -251,6 +286,14 @@ const TAROT_QUESTION: Record<TarotHook, string> = {
   // Mirrors the headline's either-or straight back to her — and the reads then decline
   // to pick a side of it.
   'cards-moved-on': "Before I look closer, tell me… what makes you feel he has moved on, and what makes you feel he hasn't?",
+  // Healing/moving-on (2026-08-04). Each asks about the SHAPE of her thinking — never
+  // for a justification of it, and never in a way that treats the thinking as a problem
+  // she has to explain away.
+  'cards-cant-stop': "Before I look closer, tell me… when does he come to mind — one particular moment of the day, or all of them?",
+  'cards-on-my-mind': "Before I look closer, tell me… what is the smallest, most ordinary thing that brings him straight back?",
+  // ⚠ Asks for the unexplained part, NOT for what he did. She should never have to
+  // recount the injury to be taken seriously.
+  'cards-who-hurt-me': "Before I look closer, tell me… what is the part of it you have never been able to make sense of?",
   'cards-love-again': "Before I look closer, tell me… what has been weighing on your heart since it happened?",
   'cards-soulmate': "Before I look closer, tell me… what is the love you're still holding out for — the one you haven't given up on?",
 }
@@ -1281,6 +1324,94 @@ const RETURN_MHF: CardSetConfig = {
         "That is not random; you reached for the card of what has not yet hardened into anything.",
         "The Fool declines to take a side of your question — it points to a thing still unfixed rather than one already settled behind your back, and the not-knowing you have been carrying as your own indecision was never yours; it is his, and it has been sitting in your lap.",
         "Let me look closer at whose uncertainty you have been carrying…",
+      ],
+    },
+    // ── Healing/moving-on hooks (2026-08-04) ─────────────────────────────────
+    // Face-down only, by operator scope — NOT ported to arcana-mfh.
+    //
+    // The first family whose subject is HER MIND. The nearest live neighbour is the
+    // reunion angle shipped the same morning — especially 'cards-ever-back', which also
+    // speaks to a long attachment. The separation held here: reunion reads the WAITING
+    // and what it cost her; these read the THINKING itself and why it persists.
+    //
+    // 🔴 Compliance runs in THREE directions on this angle, not two:
+    //   1. never instruct her to move on, let go, forgive or forget — that is a directive
+    //      about how she should live, not a reading;
+    //   2. never claim he is thinking of her too, and never promise a return — the
+    //      reunion angle's promise failure, wearing a softer face;
+    //   3. never pathologise the thinking (obsession, "stuck", "unhealthy") and never let
+    //      it land as her weakness. A woman still thinking about someone is not a
+    //      diagnosis, and this angle sits closer to grief than any other.
+    // On 'cards-who-hurt-me' a fourth applies: never minimise or explain away the hurt
+    // she has already named, while still passing no verdict on him as a person.
+    //
+    // 'Why can't I stop thinking about him?' — the thought is unfinished business.
+    'cards-cant-stop': {
+      a: [
+        "You turned the Magician, dear — the card of the mind that keeps working at a thing until it comes out whole.",
+        "Your hand went to the card of the unfinished problem, and for this question that is telling.",
+        "The Magician passes no judgment on you for any of it — it says your mind has been set to a problem it was never handed the pieces to finish, and a mind that keeps returning to an unsolved thing is doing its work rather than failing you.",
+        "Let me look closer at the piece you were never given…",
+      ],
+      b: [
+        "You turned the Hanged Man, dear — the card of the thought that will not be set down.",
+        "You reached for the card of what stays held mid-air, and it is your own thinking that has been hanging there.",
+        "The Hanged Man does not call this a failure to move on — it marks something that was never concluded, and what was never concluded cannot be put down simply by deciding to put it down; that is the shape of the thing itself and not a weakness in you.",
+        "Let me look closer at what was never allowed to finish…",
+      ],
+      c: [
+        "You turned the Fool, dear — the card of the story that was never given its last page.",
+        "That is not random; you reached for the card of the tale that stops mid-sentence.",
+        "The Fool hands you no instruction to forget him — it points to something closed by a person walking out of it rather than by an ending, and a mind will go on turning the last page it was given until somebody hands it a better one.",
+        "Let me look closer at the ending you were owed…",
+      ],
+    },
+    // 'Why is he always on my mind?' — not effort, but the SIZE of the room he still has.
+    'cards-on-my-mind': {
+      a: [
+        "You turned the Magician, dear — the card of what a person deliberately builds room for.",
+        "Your hand found the card of the thing that was made on purpose, and that matters more here than you might expect.",
+        "The Magician makes no ruling about him at all — it says you built something real and gave it genuine room, and the reason he turns up everywhere is that the room is still standing; leaving it standing is not a mistake you have made.",
+        "Let me look closer at what you actually built here…",
+      ],
+      b: [
+        "You turned the Hanged Man, dear — the card of the space that stays held open.",
+        "You reached for the card of what is kept in reserve, and it is a great deal of you that has been kept there.",
+        "The Hanged Man will not weigh your feeling against how much he earned it — it says a space that size was made by someone capable of that much, and what that measures is the scale of you rather than the worth of him.",
+        "Let me look closer at how much of you is still being held there…",
+      ],
+      c: [
+        "You turned the Fool, dear — the card of the door nobody ever shut behind him.",
+        "Your hand went to the card of the thing left ajar, which is a fair description of where this has sat.",
+        "The Fool offers no verdict on whether he thinks of you — it points to something left open rather than closed, and a mind treats an open door as a live thing; that is why he arrives unbidden in the middle of perfectly ordinary days.",
+        "Let me look closer at what has been coming through that door…",
+      ],
+    },
+    // 'Why do I still think about someone who hurt me?' — the SHAME. The heaviest hook
+    // on the funnel: she has already decided the thinking is a fault in her.
+    //
+    // ⚠ Two failure modes at once, pulling opposite ways. Minimising what she has named
+    // ("perhaps he did not mean it") abandons her; pronouncing on him ("he is a cruel
+    // man") is the verdict the funnel forbids. Take HER account as given, place no
+    // judgment on him as a person, and never let the answer land on her.
+    'cards-who-hurt-me': {
+      a: [
+        "You turned the Magician, dear — the card of the mind at work on an injury it cannot yet explain.",
+        "Your hand went to the card of the unsolved thing, and I want you to hear what that means before you decide anything about yourself.",
+        "The Magician does not hand you a reason to be ashamed — it says a mind goes back to an injury in order to understand it and never because it wants more of it, so what you have been reading as still wanting him is far more likely a woman still trying to make sense of what was done to her.",
+        "Let me look closer at what your mind has been trying to solve…",
+      ],
+      b: [
+        "You turned the Hanged Man, dear — the card of the thing examined from every angle except the one that would explain it.",
+        "You reached for the card of the view that never resolves, and that is exactly where this has left you.",
+        "The Hanged Man passes no judgment on him and none on you — it marks something you have turned over from every side without ever being handed the piece that would make it make sense, and no amount of thinking gets you to peace with an account that was never completed.",
+        "Let me look closer at the piece that has been kept from you…",
+      ],
+      c: [
+        "You turned the Fool, dear — the card of the woman you were before any of this had happened to you.",
+        "That is not random; you reached for the card of the self who walked in ahead of all this knowledge.",
+        "The Fool asks nothing of you — not to forgive it, not to forget it, not to be finished with it — it points back to the woman who walked in without knowing what it would cost, and she was not naive for that; going back to her in your mind is a different act entirely from wanting him.",
+        "Let me look closer at what she deserved to be told…",
       ],
     },
   },
