@@ -1,0 +1,4 @@
+{
+  "note": "ALL-LEGACY CYCLE. The /e/:code redirector (server/routes/emailLinkRedirect.ts) is NOT merged to origin/Production and a live probe of https://www.theseerwithin.com/e/<code> falls through to the SPA instead of 302-ing to /evelyn. So no send in cycle 2 carries a **Continue Seed:** and every CTA ships on the legacy ?campaign= link. Nothing here touches the production database. Revisit once the Live Thread work is deployed.",
+  "sends": []
+}
