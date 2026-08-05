@@ -1054,6 +1054,22 @@ export async function resolveV1Bump(
   key: string = V1_BUMP_EXPERIMENT_KEY, // overridable so tests never touch the live experiment
 ): Promise<{ bump: boolean; variant: string | null; enrolled: boolean }> {
   const subject = typeof email === 'string' ? email.trim().toLowerCase() : null;
+
+  // ── QA OVERRIDE (tester-only live test) ──────────────────────────────────────
+  // Emails listed in V1_BUMP_QA_EMAILS see + can buy the bump on ANY environment,
+  // even while the experiment is `draft` — so a real end-to-end LIVE test (live
+  // Stripe + the live n8n fulfilment) can run WITHOUT starting the experiment, i.e.
+  // every real buyer stays control/dark. `enrolled: false` keeps these QA purchases
+  // OUT of the experiment_exposures tally (priceVariant.ts only logs when enrolled).
+  // UNSET/empty var ⇒ no override, byte-identical to before — the prod-safe default.
+  const qaEmails = (process.env.V1_BUMP_QA_EMAILS ?? '')
+    .split(',')
+    .map((s) => s.trim().toLowerCase())
+    .filter(Boolean);
+  if (subject && qaEmails.includes(subject)) {
+    return { bump: true, variant: 'B', enrolled: false };
+  }
+
   const a = await assign(key, subject, { funnel: funnel ?? null, sign: sign ?? null });
   if (!a) return { bump: false, variant: null, enrolled: false };
   return {
