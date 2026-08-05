@@ -6,10 +6,12 @@ import { PermissionButton } from "../components/PermissionButton";
 import { PurchaseCTA } from "../components/PurchaseCTA";
 import { ClearingChoiceCard } from "../components/ClearingChoiceCard";
 import { CommitmentGateCard } from "../components/CommitmentGateCard";
+import { BumpOfferCard } from "../components/BumpOfferCard";
 import { DownsellCTA } from "../components/DownsellCTA";
 import { BackgroundMusic } from "../components/BackgroundMusic";
 import { useConversation } from "../hooks/useConversation";
 import { isSlidingCloseVariant } from "@shared/types";
+import { pairedBumpBucket } from "@shared/orderBump";
 import { Volume2, Send, Sparkles } from "lucide-react";
 import { Link } from "wouter";
 import { funnelPath } from "../lib/funnel";
@@ -20,7 +22,8 @@ export default function ChatPage() {
     handleSend,
     handleBucketSelect,
     handlePermission,
-    handlePurchase,
+    startPurchase,
+    answerBump,
   } = useConversation();
 
   const searchString = useSearch();
@@ -256,34 +259,53 @@ export default function ChatPage() {
               $55 full offering — the grace charge rides the normal downsell
               checkout: same product + upsell path server-side). The fb-palm
               commitment-gate variant (35_palm_gate) swaps it for a 3-checkbox
-              gate instead — same handlePurchase("main") call, gated behind all
+              gate instead — same startPurchase("main") call, gated behind all
               3 boxes being checked. Classic variants keep today's PurchaseCTA
-              byte-identical. */}
+              byte-identical.
+
+              All three route through startPurchase, which plays the order-bump
+              turn first for leads in that arm and is a straight pass-through to
+              handlePurchase for everyone else. */}
           {chat.showPurchaseCTA &&
             (isSlidingCloseVariant(chat.userData.priceVariantId) ? (
               <ClearingChoiceCard
-                onFullOffering={() => handlePurchase("main")}
-                onGraceOffering={() => handlePurchase("downsell")}
+                onFullOffering={() => startPurchase("main")}
+                onGraceOffering={() => startPurchase("downsell")}
                 fullDollars={chat.userData.priceDollars ?? 55}
                 graceDollars={chat.userData.downsellDollars ?? 35}
               />
             ) : chat.userData.commitmentGate === true ? (
               <CommitmentGateCard
                 firstName={chat.userData.firstName}
-                onConfirm={() => handlePurchase("main")}
+                onConfirm={() => startPurchase("main")}
                 priceDollars={chat.userData.priceDollars ?? 35}
               />
             ) : (
               <PurchaseCTA
-                onClick={() => handlePurchase("main")}
+                onClick={() => startPurchase("main")}
                 priceDollars={chat.userData.priceDollars ?? 35}
               />
             ))}
 
+          {/* Order-bump offer. Renders in place of the CTA above (which
+              startPurchase has already hidden), so the gate's confirm click
+              lands here rather than going straight to Stripe. Outside the bump
+              arm startPurchase is a pass-through and this never appears. */}
+          {chat.showBumpOffer && (
+            <BumpOfferCard
+              paired={
+                chat.userData.bumpBucket ?? pairedBumpBucket(chat.userData.bucket)
+              }
+              onAccept={() => answerBump(true)}
+              onDecline={() => answerBump(false)}
+              mainDollars={chat.userData.priceDollars ?? 35}
+            />
+          )}
+
           {/* Downsell CTA */}
           {chat.showDownsellCTA && (
             <DownsellCTA
-              onClick={() => handlePurchase("downsell")}
+              onClick={() => startPurchase("downsell")}
               priceDollars={chat.userData.downsellDollars ?? 25}
               label={
                 isSlidingCloseVariant(chat.userData.priceVariantId)

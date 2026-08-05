@@ -20,7 +20,9 @@ import {
   addSoulmatePaidSubscriber,
   addSoulmateUpsell1Subscriber,
   addSoulmateUpsell2Subscriber,
+  addBumpPaidSubscriber,
 } from '../lib/aweber';
+import { funnelDefForParam } from '@shared/funnelConfig';
 import { recordSoulmatePurchase, getSoulmateOrderByEmail } from '../lib/soulmateOrders';
 
 const router = Router();
@@ -1019,6 +1021,61 @@ router.post('/stripe', async (req: Request, res: Response) => {
       markMainPaid(session.id).catch((err) =>
         logger.error('markMainPaid failed (non-blocking):', err),
       );
+    }
+
+    // ── ORDER-BUMP paid list (theseerwithin_money_ob_paid, 6969209) ──────────
+    //
+    // WHY HERE AND NOT ON THE THANK-YOU PAGE: the normal paid list is written from
+    // /api/upsell/user-data, which only runs if the buyer's browser reaches
+    // /welcome1 — so a buyer who pays and closes the tab is never added. That hole
+    // is real and documented (braceletOrders.ts). We are not repeating it for the
+    // bump: checkout.session.completed fires server-side on every paid order and
+    // Stripe retries it, so this is the authoritative signal.
+    //
+    // Gated on `bumpProduct` EXISTING in the session metadata — the key is absent
+    // on every non-bump order (see /api/checkout), so this can never fire for a
+    // plain main purchase, an upsell, or another funnel's product. Also requires
+    // the front-end product, so it stays scoped to the V1 funnels.
+    //
+    // Idempotent: Stripe retries this event, and addBumpPaidSubscriber upserts
+    // (update_existing) and treats "already subscribed" as success. Non-blocking —
+    // an AWeber outage must never fail the webhook ack and trigger more retries.
+    if (product === 'energy_clearing_ritual' && metadata.bumpProduct) {
+      // Resolve the buyer's address properly rather than reusing the `email`
+      // binding above, which falls back to metadata.firstName and can therefore
+      // hold a NAME. Same precedence the no-optin branch below uses.
+      const bumpEmail =
+        session.customer_details?.email || session.customer_email || metadata.email;
+      if (bumpEmail) {
+        // Funnel-suffixed marker ("-palm" / "-tarot") so this list can be counted
+        // per funnel, matching how the main paid list is tagged. Unknown/base
+        // funnel ⇒ no suffix, exactly as elsewhere.
+        const bumpFunnelSuffix = funnelDefForParam(metadata.funnel)?.aweberSuffix ?? '';
+        const bumpTags = [
+          'order-bump',
+          'paid',
+          // The topic she was ALREADY reading on. `bumpBucket` (the second,
+          // paired topic) is carried in Stripe metadata for Mike's fulfilment;
+          // this tag keeps the list segmentable the way the others are.
+          metadata.bucket || 'seer-within',
+          `initial-purchase${bumpFunnelSuffix}`,
+        ];
+        addBumpPaidSubscriber({
+          email: bumpEmail,
+          name: metadata.firstName || undefined,
+          // 🔴 The CHECKOUT SESSION id (cs_…), not the PaymentIntent — this is the
+          // id Mike's n8n sees as `body.data.object.id`, so it is what joins the
+          // two systems. The main paid list deliberately keeps storing pi_….
+          stripeOrderId: session.id,
+          tags: bumpTags,
+        }).catch((err) =>
+          logger.error('AWeber bump paid list error (non-blocking):', err),
+        );
+      } else {
+        logger.warn(
+          `Order bump: no email on session ${session.id}, skipped bump paid list`,
+        );
+      }
     }
 
     // Server-side FB event firing — closes the gap when the browser tab

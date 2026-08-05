@@ -787,7 +787,16 @@ export interface V1MainTallyOptions {
  * confirmed-purchase signal as the legacy /admin/price-test: a buyer is
  * `purchased = true AND upsell_offered = true` (purchased alone is set optimistically
  * at checkout; upsell_offered only flips after Stripe confirms payment), and revenue
- * = mainPurchaseAmount on confirmed buyers. Denominator = ALL exposures (everyone
+ * = mainPurchaseAmount + bumpAmountCents on confirmed buyers.
+ *
+ * WHY THE BUMP IS ADDED BACK HERE: mainPurchaseAmount deliberately stays "the main
+ * offer alone" so the price test and /admin/price-test keep summing a clean $35/$45
+ * — the order bump rides the SAME checkout session, so folding it in there would
+ * inflate every one of those numbers. The bump is real revenue the arm earned,
+ * though, so the experiment tally adds it explicitly. This is a NO-OP for every test
+ * that predates the bump (bump_amount_cents is NULL on those rows → COALESCE 0), so
+ * the price test and gate results are byte-identical to before this line changed.
+ * Denominator = ALL exposures (everyone
  * assigned a price is a "viewer"), so the default SRM denominator (viewers) is the
  * full assigned population.
  *
@@ -803,7 +812,7 @@ export async function tallyV1Main(opts: V1MainTallyOptions): Promise<TallyResult
     SELECT e.variant AS variant,
            count(*)                                                                   AS viewers,
            count(*) FILTER (WHERE c.purchased AND c.upsell_offered)                   AS buyers,
-           COALESCE(sum(c.main_purchase_amount) FILTER (WHERE c.purchased AND c.upsell_offered), 0) AS revenue_cents
+           COALESCE(sum(c.main_purchase_amount + COALESCE(c.bump_amount_cents, 0)) FILTER (WHERE c.purchased AND c.upsell_offered), 0) AS revenue_cents
     FROM experiment_exposures e
     LEFT JOIN conversations c ON c.id = e.context->>'conversationId'
     WHERE e.experiment_key = ${opts.key}
@@ -867,7 +876,7 @@ export async function tallyV1MainBySign(opts: V1MainTallyOptions): Promise<Tally
            e.variant                                                             AS variant,
            count(*)                                                              AS viewers,
            count(*) FILTER (WHERE c.purchased AND c.upsell_offered)              AS buyers,
-           COALESCE(sum(c.main_purchase_amount) FILTER (WHERE c.purchased AND c.upsell_offered), 0) AS revenue_cents
+           COALESCE(sum(c.main_purchase_amount + COALESCE(c.bump_amount_cents, 0)) FILTER (WHERE c.purchased AND c.upsell_offered), 0) AS revenue_cents
     FROM experiment_exposures e
     LEFT JOIN conversations c ON c.id = e.context->>'conversationId'
     WHERE e.experiment_key = ${opts.key}
@@ -924,7 +933,7 @@ export async function tallyV1MainByTarotLander(
            e.variant                                                             AS variant,
            count(*)                                                              AS viewers,
            count(*) FILTER (WHERE c.purchased AND c.upsell_offered)              AS buyers,
-           COALESCE(sum(c.main_purchase_amount) FILTER (WHERE c.purchased AND c.upsell_offered), 0) AS revenue_cents
+           COALESCE(sum(c.main_purchase_amount + COALESCE(c.bump_amount_cents, 0)) FILTER (WHERE c.purchased AND c.upsell_offered), 0) AS revenue_cents
     FROM experiment_exposures e
     LEFT JOIN conversations c ON c.id = e.context->>'conversationId'
     WHERE e.experiment_key = ${opts.key}
@@ -995,6 +1004,60 @@ export async function resolvePalmGate(
   if (!a) return { gate: false, variant: null, enrolled: false };
   return {
     gate: a.applied && a.payload?.gate === true,
+    variant: a.variant,
+    enrolled: a.enrolled,
+  };
+}
+
+// ── V1 ORDER BUMP ("double reading") — UI-only A/B ───────────────────────────
+// One extra chat turn wedged between the buy CTA and the Stripe redirect,
+// offering a second reading on a paired topic for $12.77. Measured with
+// `v1_main_funnel` (the same tally as the price test and the commitment gate),
+// so it reports in /admin/experiments with arms, lift, SRM, p-value and the
+// targetN no-peeking gate — plus the per-palm-sign and per-tarot-lander
+// breakdowns, which come free from the exposure context (see priceVariant.ts).
+//
+// POOLED ACROSS FUNNELS, exactly like the commitment gate: scope.funnel is the
+// ARRAY ['v1-palm','v1-tarot'], one test rather than a key per funnel. The
+// pooled A-vs-B row is the decision metric; the per-lander tables are
+// diagnostic only (multiple-comparisons trap — see tallyV1MainBySign).
+//
+// WHY AN EXPERIMENT AND NOT A PRICE-POOL ARM: same reasoning as the gate — a
+// pool arm is only ever drawn for an email with no stored variant, so every
+// returning visitor (23% of palm sessions but 57% of main buys) would keep the
+// incumbent control id and the bump arm would be measured against a control
+// inflated with all of them. Bucketing on the email hash re-splits the whole
+// population instead.
+//
+// Assigning a returning visitor is safe because this test never re-prices the
+// MAIN offer — it only decides whether an EXTRA line item is offered. Their
+// stored main price is returned untouched.
+export const V1_BUMP_EXPERIMENT_KEY = 'v1_order_bump_2026';
+
+/**
+ * Should this lead be OFFERED the order bump?
+ *
+ * Bucketed on the NORMALISED email (matches the exposure dedup on hashEmail).
+ * `bump` is true only when the assigned arm's payload says so AND the arm is
+ * `applied` — so a draft/paused/out-of-scope test yields today's behaviour for
+ * everyone (straight from CTA to Stripe, no extra turn), and deploying the code
+ * changes nothing until the experiment is started. `enrolled` (running + in
+ * scope) tells the caller to log the exposure — the denominator.
+ *
+ * No email (the `?noemail=1` arm) ⇒ no subject ⇒ control, never enrolled. That
+ * arm also can't be charged a bump: /api/checkout re-resolves this server-side.
+ */
+export async function resolveV1Bump(
+  email: string | null | undefined,
+  funnel?: string | null,
+  sign?: string | null,
+  key: string = V1_BUMP_EXPERIMENT_KEY, // overridable so tests never touch the live experiment
+): Promise<{ bump: boolean; variant: string | null; enrolled: boolean }> {
+  const subject = typeof email === 'string' ? email.trim().toLowerCase() : null;
+  const a = await assign(key, subject, { funnel: funnel ?? null, sign: sign ?? null });
+  if (!a) return { bump: false, variant: null, enrolled: false };
+  return {
+    bump: a.applied && a.payload?.bump === true,
     variant: a.variant,
     enrolled: a.enrolled,
   };
