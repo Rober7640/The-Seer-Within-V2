@@ -198,6 +198,18 @@ export async function updateStripeData(
     stripeCustomerId: string;
     stripePaymentMethodId?: string;
     mainPurchaseAmount?: number;
+    // V1 order bump. Every field is optional and drizzle omits `undefined` keys
+    // from both the UPDATE and the INSERT, so the callers that don't pass them
+    // (the Stripe-fallback path in particular) leave any existing bump data
+    // untouched rather than blanking it.
+    //
+    // 🔴 mainPurchaseAmount stays the MAIN offer alone even on a bump order —
+    // the price test and /admin/price-test both read it as main-offer revenue.
+    // The bump total lives here instead.
+    bumpOffered?: boolean;
+    bumpPurchased?: boolean;
+    bumpBucket?: string;
+    bumpAmountCents?: number;
   },
   userData?: {
     firstName?: string;
@@ -221,6 +233,10 @@ export async function updateStripeData(
           stripePaymentMethodId: stripeData.stripePaymentMethodId,
           stripeAccount: activeStripeAccountTag(),
           mainPurchaseAmount: stripeData.mainPurchaseAmount,
+          bumpOffered: stripeData.bumpOffered,
+          bumpPurchased: stripeData.bumpPurchased,
+          bumpBucket: stripeData.bumpBucket,
+          bumpAmountCents: stripeData.bumpAmountCents,
           updatedAt: new Date(),
         })
         .where(eq(conversations.id, existing[0].id));
@@ -236,6 +252,10 @@ export async function updateStripeData(
           stripePaymentMethodId: stripeData.stripePaymentMethodId,
           stripeAccount: activeStripeAccountTag(),
           mainPurchaseAmount: stripeData.mainPurchaseAmount,
+          bumpOffered: stripeData.bumpOffered,
+          bumpPurchased: stripeData.bumpPurchased,
+          bumpBucket: stripeData.bumpBucket,
+          bumpAmountCents: stripeData.bumpAmountCents,
         });
       logger.info(`Created new conversation for ${email} with Stripe session`);
     }

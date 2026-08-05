@@ -29,6 +29,7 @@ import {
   U1_PRICE_EXPERIMENT_KEY,
   V1_MAIN_EXPERIMENT_KEY,
   PALM_GATE_EXPERIMENT_KEY,
+  V1_BUMP_EXPERIMENT_KEY,
   PERSONA_PROMPT_KEY_PREFIX,
   isPersonaPromptKey,
 } from '../../lib/experiments';
@@ -120,11 +121,23 @@ function u1PayloadError(variants: Array<{ key: string; payload?: Record<string, 
 // (resolvePalmGate) and its own exposure logging, so it is not inert; it just
 // happens to be scored by the same funnel outcome. Both keys still have to keep
 // this conversion type (enforced below) and set scope.funnel before starting.
-const V1_MAIN_FUNNEL_KEYS: readonly string[] = [V1_MAIN_EXPERIMENT_KEY, PALM_GATE_EXPERIMENT_KEY];
+//
+// The ORDER BUMP joins on the same terms: its own resolver (resolveV1Bump) and its
+// own exposure logging, scored by the same funnel outcome — with the bump's line
+// item added back into revenue by tallyV1Main, since mainPurchaseAmount stays the
+// main offer alone. Like the gate it carries no price payload (see below).
+const V1_MAIN_FUNNEL_KEYS: readonly string[] = [
+  V1_MAIN_EXPERIMENT_KEY,
+  PALM_GATE_EXPERIMENT_KEY,
+  V1_BUMP_EXPERIMENT_KEY,
+];
 
-// Only the PRICE test's arms carry a price payload. The commitment gate is a
-// UI-only test measured by the same funnel outcome, so its arms carry no cents —
-// requiring them would force a fake price onto a test that never applies one.
+// Only the PRICE test's arms carry a price payload. The commitment gate and the
+// order bump are UI-only tests measured by the same funnel outcome, so their arms
+// carry no cents — requiring them would force a fake price onto a test that never
+// applies one. (The bump's $12.77 is a fixed constant, V1_BUMP_CENTS, not an arm
+// payload: both arms charge the same main price, they differ only in whether the
+// extra line item is offered at all.)
 function needsV1MainPricePayload(key: string): boolean {
   return key === V1_MAIN_EXPERIMENT_KEY;
 }
@@ -652,12 +665,13 @@ router.post('/:key/start', async (req: Request, res: Response) => {
         .status(400)
         .json({ error: 'need at least 2 variants with a positive weight before starting' });
     }
-    // Both v1_main_funnel keys drive live V1 funnel behaviour for whatever traffic
-    // they enrol — the price key OVERRIDES the main price (resolveV1Price), the palm
-    // gate REPLACES the purchase button (resolvePalmGate). Require scope.funnel so
-    // each only touches ONE funnel; without it the price override would clobber every
-    // live system_config split at once, and the gate would hit every V1 lander rather
-    // than fb-palm. Keyed on the KEY (not conversion.type) so it can't be bypassed by
+    // Every v1_main_funnel key drives live V1 funnel behaviour for whatever traffic
+    // it enrols — the price key OVERRIDES the main price (resolveV1Price), the palm
+    // gate REPLACES the purchase button (resolvePalmGate), the order bump ADDS a
+    // second line item to the checkout (resolveV1Bump). Require scope.funnel so each
+    // only touches the funnels it names; without it the price override would clobber
+    // every live system_config split at once, and the gate/bump would hit every V1
+    // lander rather than the intended ones. Keyed on the KEY (not conversion.type) so it can't be bypassed by
     // editing the draft's conversion type away from v1_main_funnel before /start.
     // An ARRAY is accepted (a test run across several named funnels) but an EMPTY one is
     // not: it is truthy, so a bare `!scope.funnel` would wave through a test scoped to no

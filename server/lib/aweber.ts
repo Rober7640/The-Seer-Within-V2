@@ -628,3 +628,113 @@ export async function addPaidSubscriber(params: AddPaidSubscriberParams): Promis
     return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
   }
 }
+
+interface AddBumpSubscriberParams {
+  email: string;
+  name?: string;
+  /** The Stripe CHECKOUT SESSION id (`cs_…`), not the PaymentIntent. See below. */
+  stripeOrderId: string;
+  tags?: string[];
+}
+
+/**
+ * ORDER-BUMP paid list (`theseerwithin_money_ob_paid`, 6969209).
+ *
+ * Written IN ADDITION to the normal paid list, never instead of it: an order-bump
+ * buyer bought the main offer too (both are line items on one session), so she
+ * belongs on both. The two lists are separate AWeber subscriber records, so this
+ * write cannot touch her entry on the main paid list.
+ *
+ * 🔴 WHY THE SESSION ID AND NOT THE PAYMENT INTENT: the main paid list stores the
+ * `pi_…` id. This list stores `cs_…` because that is what Mike's n8n flow sees —
+ * his filter reads `body.data.object.*` where data.object IS the checkout session,
+ * so `cs_…` is the id that can be joined against his side. Requested by Lewis
+ * 2026-08-04. Do not "fix" this to match the other list.
+ *
+ * 🔴 NEVER send an empty `custom_fields` object here. AWeber treats
+ * `custom_fields: {}` together with `update_existing` as "clear all custom fields",
+ * so a bump buyer who is written twice (Stripe retries this webhook) would have her
+ * `stripe_order_id` WIPED by the second call. The field is always populated below,
+ * and `stripeOrderId` is required by the type so it cannot silently go missing.
+ *
+ * Idempotent by construction: `update_existing: true` upserts, and AWeber's
+ * "already subscribed" 400 is treated as success — both matter because Stripe
+ * retries `checkout.session.completed`.
+ */
+export async function addBumpPaidSubscriber(
+  params: AddBumpSubscriberParams,
+): Promise<{ success: boolean; error?: string }> {
+  const accountId = process.env.AWEBER_ACCOUNT_ID;
+  const bumpListId = process.env.AWEBER_BUMP_PAID_LIST_ID || '6969209';
+
+  if (!accountId) {
+    logger.warn('AWeber account not configured');
+    return { success: false, error: 'AWeber not configured' };
+  }
+
+  if (!process.env.AWEBER_ACCESS_TOKEN || !process.env.AWEBER_REFRESH_TOKEN) {
+    logger.warn('AWeber tokens not configured');
+    return { success: false, error: 'AWeber tokens not configured' };
+  }
+
+  // Guard the one thing that would silently corrupt the list. Better to skip the
+  // write and log loudly than to upsert a row whose custom field gets cleared.
+  if (!params.stripeOrderId) {
+    logger.error('AWeber bump list: refusing to write without a stripe_order_id', {
+      email: params.email,
+    });
+    return { success: false, error: 'missing stripeOrderId' };
+  }
+
+  try {
+    const subscriberData: Record<string, unknown> = {
+      email: params.email,
+      update_existing: true,
+      custom_fields: {
+        stripe_order_id: params.stripeOrderId,
+      },
+    };
+
+    if (params.name) {
+      subscriberData.name = params.name;
+    }
+
+    if (params.tags && params.tags.length > 0) {
+      subscriberData.tags = params.tags;
+    }
+
+    const response = await makeAWeberRequest(
+      `/accounts/${accountId}/lists/${bumpListId}/subscribers`,
+      {
+        method: 'POST',
+        body: JSON.stringify(subscriberData),
+      }
+    );
+
+    if (response.ok || response.status === 201) {
+      logger.info(
+        `AWeber Bump Paid List: Added ${params.email} with order ${params.stripeOrderId}`,
+      );
+      return { success: true };
+    }
+
+    const errorText = await response.text();
+    logger.error(`AWeber bump list add subscriber failed: status=${response.status} body=${errorText}`);
+
+    if (response.status === 400) {
+      try {
+        const errorData = JSON.parse(errorText);
+        if (errorData.error?.message?.includes('already subscribed')) {
+          logger.info(`AWeber Bump Paid List: Subscriber ${params.email} already exists`);
+          return { success: true };
+        }
+      } catch {}
+    }
+
+    return { success: false, error: `AWeber API error: ${response.status} - ${errorText}` };
+
+  } catch (error) {
+    logger.error('AWeber bump list error:', error);
+    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+  }
+}

@@ -21,6 +21,8 @@ interface UserData {
   personName: string | null;
   stripeCustomerId?: string | null;
   upsell1PriceCents?: number;
+  // Order-bump amount in cents; 0/absent on every non-bump order.
+  bumpAmountCents?: number;
 }
 
 const PURCHASE_TRACKED_KEY = "seer_purchase_tracked";
@@ -88,8 +90,16 @@ export default function UpsellPage() {
 
         if (shouldTrack) {
           const purchaseAmount = (data.mainPurchaseAmount || 3500) / 100;
-          trackPurchase(purchaseAmount, "USD", data.email, "Energy Clearing Ritual", sid ?? undefined, { skipServerRelay: true });
-          trackGAdsPurchase("main", purchaseAmount, sid);
+          // Ad platforms get the TRUE order total (main + order bump). The
+          // server-side CAPI fire already reports Stripe's amount_total, and both
+          // sides share one deterministic event_id — so if this stayed on the
+          // main-only amount, the same deduped Purchase event would carry $35
+          // from the browser and $47.77 from the server, and which one survived
+          // would be down to whichever arrived first. Identical to purchaseAmount
+          // whenever there is no bump.
+          const orderTotal = purchaseAmount + (data.bumpAmountCents || 0) / 100;
+          trackPurchase(orderTotal, "USD", data.email, "Energy Clearing Ritual", sid ?? undefined, { skipServerRelay: true });
+          trackGAdsPurchase("main", orderTotal, sid);
 
           // V1 prompt A/B (v1_clearing_theme_palm_2026) — primary metric =
           // purchase_completed. Same-session, so the ab_vid cookie is present;
@@ -98,7 +108,13 @@ export default function UpsellPage() {
           // funnels. Inside the dedup guard ⇒ counts once per purchase.
           trackABConversion("v1_chat_palm");
 
-          // Trackdesk affiliate conversion tracking - main purchase
+          // Trackdesk affiliate conversion tracking - main purchase.
+          //
+          // ⚠ DELIBERATELY still the MAIN amount, not orderTotal: this figure
+          // drives affiliate commission, so including the order bump would change
+          // what partners are paid. That is a commercial decision, not a tracking
+          // one — left unchanged pending Lewis/Joel. Ad platforms above correctly
+          // use the full order total.
           if (typeof window.trackdesk === "function") {
             window.trackdesk("the-seer-within", "conversion", {
               conversionType: "sale",

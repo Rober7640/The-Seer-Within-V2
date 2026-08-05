@@ -51,6 +51,24 @@ export const conversations = pgTable("conversations", {
   downsellAmountCents: integer("downsell_amount_cents"),
   upsell1AmountCents: integer("upsell1_amount_cents"),
 
+  // V1 ORDER BUMP ("double reading") — the extra chat turn between the buy CTA
+  // and the Stripe redirect. Rides the SAME checkout session as the main offer
+  // (one PaymentIntent, two line items), so it has no session/payment id of its
+  // own — stripeSessionId above covers both lines.
+  //
+  // 🔴 bumpAmountCents is deliberately SEPARATE from mainPurchaseAmount, which
+  // keeps meaning "the main offer alone" ($35). Folding the bump into it would
+  // silently inflate the V1 price test and /admin/price-test, which both sum
+  // main_purchase_amount as main-offer revenue. The experiment tally adds this
+  // column back explicitly — see tallyV1Main in server/lib/experiments.ts.
+  //
+  // All four are nullable / default-false, so every existing row reads exactly
+  // as it does today (no bump offered, no bump bought, no bump revenue).
+  bumpOffered: boolean("bump_offered").default(false),
+  bumpPurchased: boolean("bump_purchased").default(false),
+  bumpBucket: text("bump_bucket"),
+  bumpAmountCents: integer("bump_amount_cents"),
+
   // Upsell 1 tracking (Protection Ritual + Lava Stone)
   upsellOffered: boolean("upsell_offered").default(false),
   upsellPurchased: boolean("upsell_purchased").default(false),
