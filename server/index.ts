@@ -5,6 +5,7 @@ import { registerRoutes } from "./routes";
 import { serveStatic } from "./static";
 import { createServer } from "http";
 import { startHeartbeat, recoverActiveSessions, startInactiveSessionCleanup } from "./lib/creditTracking";
+import { shouldRunBackgroundJobs } from "./lib/backgroundJobsGate";
 import { initializeCronJobs } from "./lib/cronJobs";
 import logger, { requestIdMiddleware } from "./lib/logger";
 import { posthog } from "./lib/posthog";
@@ -103,26 +104,28 @@ app.use(requestIdMiddleware);
   // and Production shared one database and two meters drained real wallets.
   // See docs/root-cause-1800-wallet-drain-2026-08-04.md.
   //
-  // Set RUN_BACKGROUND_JOBS=false on every non-primary deployment (development,
-  // staging, preview environments). Default is ON so that Production can never go
-  // dark by omission — an unset variable must never stop billing.
+  // Gating is by IDENTITY, not a hand-set flag: jobs run only where Railway's
+  // auto-injected environment name says "production", with RUN_BACKGROUND_JOBS
+  // as an explicit two-way override (true = local dev on your OWN database,
+  // false = kill switch anywhere). A laptop has no Railway identity, so it is
+  // safe by default — the August drain came through exactly such a machine.
+  // Decision logic + matrix: server/lib/backgroundJobsGate.ts.
   // ---------------------------------------------------------------------------
-  const backgroundJobsDisabled = /^(0|false|no|off)$/i.test(
-    (process.env.RUN_BACKGROUND_JOBS ?? "").trim(),
-  );
+  const jobsDecision = shouldRunBackgroundJobs();
   const deploymentLabel =
     process.env.RAILWAY_ENVIRONMENT_NAME || process.env.RAILWAY_ENVIRONMENT || "unknown";
 
-  if (backgroundJobsDisabled) {
+  if (!jobsDecision.run) {
     logger.warn(
-      "Background jobs DISABLED for this deployment (RUN_BACKGROUND_JOBS=false) — " +
-      "no billing heartbeat, no session cleanup, no cron. This must be true of every " +
-      "deployment except the one that owns the database.",
-      { deployment: deploymentLabel },
+      "Background jobs DISABLED for this deployment — no billing heartbeat, no " +
+      "session cleanup, no cron. This must be true of every deployment except " +
+      "the one that owns the database.",
+      { deployment: deploymentLabel, reason: jobsDecision.reason },
     );
   } else {
     logger.info("Background jobs ENABLED — this deployment owns billing for its database", {
       deployment: deploymentLabel,
+      reason: jobsDecision.reason,
     });
     // Recover active sessions from DB (handles server restarts gracefully)
     try {
