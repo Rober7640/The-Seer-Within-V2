@@ -32,7 +32,7 @@ import { track as trackPH, identifyUser as identifyPH, getDistinctId } from '@/l
 import { tarotEventProps } from '@/lib/tarotAttribution'
 import { trackGAdsLead, trackGAdsCheckout, getGclid } from '@/lib/gtm'
 import { isSlidingCloseVariant } from '@shared/types'
-import { bumpOfferCopy, pairedBumpBucket, V1_BUMP_CENTS } from '@shared/orderBump'
+import { pairedBumpBucket, V1_BUMP_CENTS } from '@shared/orderBump'
 
 const STORAGE_KEY = 'seer_conversation'
 const SESSION_EXPIRY_HOURS = 24
@@ -1966,7 +1966,9 @@ export function useConversation() {
       price_cents: V1_BUMP_CENTS,
     })
 
-    await sendBotMessage(bumpOfferCopy(paired))
+    // The offer copy now renders INSIDE BumpOfferCard, so we no longer send it as
+    // a separate chat bubble — showing both would print the same line twice. Just
+    // reveal the card.
     updateState({ showBumpOffer: true })
   }, [chat.userData, handlePurchase, sendBotMessage, updateState, updateUserData])
 

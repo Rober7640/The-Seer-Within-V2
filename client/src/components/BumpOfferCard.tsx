@@ -1,7 +1,7 @@
 import {
   BUMP_ACCEPT_LABEL,
   BUMP_DECLINE_LABEL,
-  BUMP_TOPIC_LABELS,
+  bumpOfferCopy,
   V1_BUMP_PRICE_LABEL,
   type BumpBucket,
 } from '@shared/orderBump'
@@ -32,17 +32,21 @@ export function BumpOfferCard({
   onDecline,
   mainDollars = 35,
 }: BumpOfferCardProps) {
-  const topic = BUMP_TOPIC_LABELS[paired]
   const total = (mainDollars + 12.77).toFixed(2)
 
   return (
     <div className="p-4 animate-cta-appear" data-testid="bump-offer-card">
       <div className="rounded-2xl border border-amber-200/80 bg-gradient-to-b from-amber-50/90 via-white to-white shadow-md overflow-hidden">
-        <div className="pt-4 pb-3 px-5 text-center">
+        <div className="pt-4 pb-2 px-5 text-center">
           <div className="text-amber-500/90 text-xs tracking-[0.3em]">✦</div>
-          <h3 className="font-serif italic text-gray-800 text-base mt-1">
-            Add your {topic} path reading?
-          </h3>
+          {/* Evelyn's full offer line lives IN the card (matches the approved
+              mockup), so the persuasive copy sits at the decision point instead
+              of scrolling up into the chat log. Same string the bubble used
+              (bumpOfferCopy) — the duplicate sendBotMessage bubble was removed
+              from useConversation so it is not shown twice. */}
+          <p className="font-serif italic text-gray-800 text-base mt-2 leading-relaxed">
+            {bumpOfferCopy(paired)}
+          </p>
         </div>
 
         <div className="px-5 pb-4">
