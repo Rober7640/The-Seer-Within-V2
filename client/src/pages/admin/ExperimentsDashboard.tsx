@@ -975,31 +975,72 @@ export default function ExperimentsDashboard() {
                               </tr>
                             </thead>
                             <tbody>
-                              {results.bumpTakeRate.map((b) => (
-                                <tr key={`bump-${b.variant}`} className="border-b border-gray-800/50">
-                                  <td className="py-2 pr-4 font-semibold">{b.variant}</td>
-                                  <td className="py-2 pr-4">{b.offered}</td>
-                                  <td className="py-2 pr-4">{b.saidYes}</td>
-                                  <td className="py-2 pr-4 text-gray-400">
-                                    {b.offered > 0
-                                      ? `${((100 * b.saidYes) / b.offered).toFixed(1)}%`
-                                      : "—"}
-                                  </td>
-                                  <td className="py-2 pr-4">{b.offeredAndPaid}</td>
-                                  <td className="py-2 pr-4 font-semibold text-emerald-300">
-                                    {b.paidWithBump}
-                                  </td>
-                                  <td className="py-2 pr-4 font-semibold text-emerald-300">
-                                    {b.offeredAndPaid > 0
-                                      ? `${((100 * b.paidWithBump) / b.offeredAndPaid).toFixed(1)}%`
-                                      : "—"}
-                                  </td>
-                                  <td className="py-2 pr-4">${b.bumpRevenueUsd.toFixed(2)}</td>
-                                </tr>
-                              ))}
+                              {results.bumpTakeRate.map((b) => {
+                                // An arm that was never offered the bump is the CONTROL. Its row
+                                // of zeros is the headline evidence that no control buyer was
+                                // shown or charged the offer — but bare zeros read as missing
+                                // data, so the row says what it is rather than leaving anyone
+                                // (or their boss) to guess.
+                                const isControl = b.offered === 0;
+                                return (
+                                  <tr
+                                    key={`bump-${b.variant}`}
+                                    className="border-b border-gray-800/50"
+                                  >
+                                    <td className="py-2 pr-4 font-semibold">
+                                      {b.variant}
+                                      {isControl && (
+                                        <span className="ml-2 rounded border border-gray-700 px-1.5 py-0.5 text-[10px] font-normal text-gray-400">
+                                          control · never offered
+                                        </span>
+                                      )}
+                                    </td>
+                                    <td className="py-2 pr-4">{b.offered}</td>
+                                    <td className="py-2 pr-4">{b.saidYes}</td>
+                                    <td className="py-2 pr-4 text-gray-400">
+                                      {b.offered > 0
+                                        ? `${((100 * b.saidYes) / b.offered).toFixed(1)}%`
+                                        : "n/a"}
+                                    </td>
+                                    <td className="py-2 pr-4">{b.offeredAndPaid}</td>
+                                    <td
+                                      className={
+                                        isControl
+                                          ? "py-2 pr-4"
+                                          : "py-2 pr-4 font-semibold text-emerald-300"
+                                      }
+                                    >
+                                      {b.paidWithBump}
+                                    </td>
+                                    <td
+                                      className={
+                                        isControl
+                                          ? "py-2 pr-4 text-gray-400"
+                                          : "py-2 pr-4 font-semibold text-emerald-300"
+                                      }
+                                    >
+                                      {b.offeredAndPaid > 0
+                                        ? `${((100 * b.paidWithBump) / b.offeredAndPaid).toFixed(1)}%`
+                                        : "n/a"}
+                                    </td>
+                                    <td className="py-2 pr-4">${b.bumpRevenueUsd.toFixed(2)}</td>
+                                  </tr>
+                                );
+                              })}
                             </tbody>
                           </table>
                           <div className="space-y-1 text-xs text-gray-500">
+                            {/* FIRST, because a row of zeros reads as broken data at a glance
+                                and this is the line that stops that misreading. */}
+                            <div className="text-gray-300">
+                              <span className="font-semibold">
+                                A control arm reading all zeros is correct, not missing data.
+                              </span>{" "}
+                              The control is never shown the offer, so it can never accept or be
+                              charged for one. Those zeros are the evidence the split is clean — a
+                              control arm showing anything above zero would mean the bump had leaked
+                              into it and the comparison was contaminated.
+                            </div>
                             <div>
                               <span className="text-gray-400">Take rate</span> is the one to quote —
                               paid with the bump ÷ buyers who were offered it.{" "}
@@ -1012,10 +1053,6 @@ export default function ExperimentsDashboard() {
                               anyone who saw the offer and left the page entirely is missing from the
                               denominator — take rate therefore reads slightly high. Those visitors
                               do count in the pooled table above, which is what decides the test.
-                            </div>
-                            <div>
-                              A control arm reading all zeros is correct — it is never offered a
-                              bump, and that is the evidence no control buyer was charged one.
                             </div>
                           </div>
                         </div>
