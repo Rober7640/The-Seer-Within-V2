@@ -86,9 +86,21 @@ verified 9/9 identical. This matches how `cards-honest` already behaves across t
 
 ### 🔑 The `angle` property — comparing hook FAMILIES
 
-Every tarot PostHog event now carries `angle`: **`decode-him`** (honest/return/feels/cheating) ·
-**`trust`** (who-he-is/real-person/misled) · **`self-frame`** (love-again/soulmate). Derived by
-`angleForHook()` from `TRUST_HOOKS` / `SELF_FRAME_HOOKS`, so a new hook categorises itself.
+Every tarot PostHog event carries `angle`. Six families as of 2026-08-04:
+
+| `angle` | Hooks | Added |
+|---|---|---|
+| `decode-him` | honest · return · feels · cheating | seeded |
+| `trust` | who-he-is · real-person · misled | 2026-07-30 |
+| `commitment` | will-commit · wont-commit · ready-commit | 2026-07-31 |
+| `honesty` | lied-to · truth · deceived | 2026-08-03 |
+| `reunion` | come-back · ever-back · moved-on | 2026-08-04 |
+| `healing` | cant-stop · on-my-mind · who-hurt-me | 2026-08-04 |
+| `self-frame` | love-again · soulmate | seeded |
+
+Derived by `angleForHook()` from the per-family arrays, so a new hook categorises itself.
+🔴 Miss the array and the hook silently reports `decode-him` and disappears as a family in
+PostHog **and** in the gate's per-lander table.
 
 In PostHog this means **one `angle = trust` filter instead of listing three hook values**, and a
 clean breakdown of the original angles vs the trust angles. Person property `tarot_angle` mirrors
@@ -112,6 +124,131 @@ genuine"*, which checks all 3 cards and is negation-aware (the reads legitimatel
 
 **This does not fix the underlying persona behaviour** — it only shapes this hook's opening
 read and reflect prompt. The audit finding itself is still open.
+
+## Commitment hooks — 3 face-down + 3 face-up landers (2026-07-31)
+
+Own `commitment` angle. The wound is the FUTURE he won't name. These invite prediction
+outright ("will he ever…"), so every beat 3 answers where HE stands rather than what
+happens next, and none carries a timeframe.
+
+| Headline | Hook |
+|---|---|
+| Will he ever commit? | `cards-will-commit` |
+| Why won't he commit to me? | `cards-wont-commit` |
+| Is he ever going to be ready for real commitment? | `cards-ready-commit` |
+
+⚠️ `cards-wont-commit` PRESUPPOSES his refusal, which opens a second failure mode the
+others don't have: the answer sliding into HER fault. Nothing about her being too much,
+too available or not enough.
+
+## Honesty/lying hooks — 3 face-down landers (2026-08-03)
+
+Own `honesty` angle (operator call — deliberately not folded into `trust`). Face-down
+`return-mhf` only, clean URLs, no new art. ✅ **LIVE ON PROD 2026-08-03** (`366b89d`).
+
+| Headline | Hook | URL |
+|---|---|---|
+| Am I being lied to? | `cards-lied-to` | `/fb-tarot/c?hook=cards-lied-to` |
+| Is he telling me the truth? | `cards-truth` | `/fb-tarot/c?hook=cards-truth` |
+| Am I being deceived? | `cards-deceived` | `/fb-tarot/c?hook=cards-deceived` |
+
+🔴 The no-verdict rule runs BOTH ways here: "he lied" accuses a real man, and "he is
+telling the truth" is a reassurance the funnel can't give — and reassurance is the
+*documented* failure mode (2026-07-10 audit). Guarded by `tests/tarot-honesty-copy.test.ts`,
+which is **clause-level negation-aware** — nearly every correct read contains the banned
+phrase inside a negation, so a naive substring ban would fail the copy it protects.
+
+🔴 The commitment gate is concluded, so it logs **no exposures** ⇒ these landers never
+appear in the "By fb-tarot lander" table. Measure in PostHog via `angle=honesty`.
+
+## Reunion/return hooks — 3 face-down landers (2026-08-04)
+
+Own `reunion` angle. The man has ALREADY GONE; the question is whether he comes back.
+Face-down `return-mhf` only, Version C, clean URLs, no new art.
+
+| Headline | Hook | URL |
+|---|---|---|
+| Will he come back? | `cards-come-back` | `/fb-tarot/c?hook=cards-come-back` |
+| Will he ever come back to me? | `cards-ever-back` | `/fb-tarot/c?hook=cards-ever-back` |
+| Is he coming back, or has he moved on? | `cards-moved-on` | `/fb-tarot/c?hook=cards-moved-on` |
+
+### ⭐⭐ `cards-come-back` deliberately shares a headline with the LIVE `cards-return`
+
+Operator decision 2026-08-04. "Will he come back?" already runs as `cards-return` on two
+live ad URLs, and **both stay exactly as they are** — same copy, same signed-off reads,
+still in the `decode-him` angle:
+
+```
+https://www.theseerwithin.com/fb-tarot/c?hook=cards-return                  ← untouched
+https://www.theseerwithin.com/fb-tarot/c?hook=cards-return&deck=arcana-mfh  ← untouched
+```
+
+`HEADLINES` is keyed by HOOK, so two hooks may legally carry identical copy. The
+consequence is that `cards-come-back` and `cards-return` render an **identical page** —
+same headline, same deck, same card backs. The READS are the only variable, which makes
+this a copy test rather than a duplicate, and makes "the reads genuinely differ" a
+correctness property. Pinned by `tests/tarot-reunion-copy.test.ts`, which asserts 0 shared
+6-word runs in beat 3 against `cards-return` specifically, and pins `cards-return`'s three
+signed-off beat 3s verbatim so a neighbouring edit can't quietly rewrite the live lander.
+
+🔴 **`cards-return` is NOT in `REUNION_HOOKS`**, so an `angle = reunion` filter EXCLUDES the
+original lander. Comparing the two "Will he come back?" pages must be a **hook-level**
+breakdown, never an angle-level one.
+
+### 🔴 The most prediction-baiting angle on the funnel
+
+Every headline is literally a request for a forecast. `cards-return`'s Fool read once
+predicted a return outright ("what comes back often comes back") until 2026-07-30; that
+phrasing is now blanket-banned on every deck and hook. So:
+
+- never promise a return, never pronounce him gone, never a timeframe;
+- `cards-moved-on` hands over a binary — the read **refuses** it rather than picking a side,
+  because one half is a promise and the other is a pronouncement;
+- `cards-ever-back` selects for women who have waited a long time and started blaming
+  themselves for it — nothing may land as her having been foolish to wait.
+
+## Healing / moving-on hooks — 3 face-down landers (2026-08-04)
+
+Own `healing` angle. Topic: *"Can't stop thinking about him."* Face-down `return-mhf` only,
+Version C, clean URLs, no new art.
+
+| Headline | Hook | URL |
+|---|---|---|
+| Why can't I stop thinking about him? | `cards-cant-stop` | `/fb-tarot/c?hook=cards-cant-stop` |
+| Why is he always on my mind? | `cards-on-my-mind` | `/fb-tarot/c?hook=cards-on-my-mind` |
+| Why do I still think about someone who hurt me? | `cards-who-hurt-me` | `/fb-tarot/c?hook=cards-who-hurt-me` |
+
+### ⭐⭐ The first angle aimed at HER OWN MIND — and why it is still not `self-frame`
+
+Every earlier family reads the man. These read her thinking. The tempting move is to file
+them under `self-frame`, and it would be **wrong**: `SELF_FRAME_TAROT_HOOKS`
+(`server/lib/prompts.ts`) *drops* the "reads HIM / never a verdict on him" guardrails,
+because those hooks concern no specific man. Here a real man is in the picture — on
+`cards-who-hurt-me` she has already named him as someone who hurt her. So the angle moves
+**who is affirmed**, never **whether he may be judged**. Pinned by a test.
+
+The three lenses are kept apart deliberately, because the nearest live neighbour is the
+`reunion` family shipped the same morning (especially `cards-ever-back`, the long wait):
+reunion reads the **waiting** and what it cost her; healing reads the **thinking** and why
+it persists — why the mind returns (`cant-stop`), how much room he still occupies
+(`on-my-mind`), and the shame of returning to an injury (`who-hurt-me`).
+
+### 🔴 THREE failure modes on this angle, not two
+
+Guarded by `tests/tarot-healing-copy.test.ts` (18 tests, clause-level negation-aware):
+
+1. **Directives.** "You need to let him go", "it's time to move on" — advice about how she
+   should live her life, not a reading. Not ours to give.
+2. **Promises.** *"He's thinking of you too"* is the reunion angle's forbidden promise in a
+   softer coat, and it is the single most tempting sentence on this angle.
+3. **Pathologising.** "Obsessed", "stuck", "unhealthy", "you can't let go". A woman still
+   thinking about someone months later is not a diagnosis — this angle sits closer to grief
+   than anything else on the funnel.
+
+⚠️ **`cards-who-hurt-me` pulls two ways at once**, and both are banned in the same beat:
+minimising the hurt she has already named (*"maybe he didn't mean it"*) abandons her, while
+pronouncing on him (*"he is cruel"*) is the verdict the funnel forbids. Its opener also
+never asks what he did — she should not have to recount the injury to be taken seriously.
 
 ## Concepts
 
@@ -138,7 +275,19 @@ read and reflect prompt. The audit finding itself is still open.
 | `cards-who-he-is` | Is he really who he says he is? | ⬜ DRAFT (2026-07-30) — bespoke reads on `return-mhf`, awaiting sign-off |
 | `cards-real-person` | Is he the real person, or just a picture? | ⬜ DRAFT (2026-07-30) — ⚠️ catfish/romance-scam audience, see below |
 | `cards-misled` | Am I being misled? | ⬜ DRAFT (2026-07-30) — bespoke reads on `return-mhf`, awaiting sign-off |
-| `cards-love-again` *(self-frame)* | Will I love again? | ⬜ draft |
+| `cards-will-commit` *(commitment)* | Will he ever commit? | ⬜ DRAFT (2026-07-31) — bespoke reads on `return-mhf` + `arcana-mfh` |
+| `cards-wont-commit` *(commitment)* | Why won't he commit to me? | ⬜ DRAFT (2026-07-31) — ⚠️ presupposes his refusal; her-fault is the failure mode |
+| `cards-ready-commit` *(commitment)* | Is he ever going to be ready for real commitment? | ⬜ DRAFT (2026-07-31) |
+| `cards-lied-to` *(honesty)* | Am I being lied to? | ⬜ DRAFT (2026-08-03) — LIVE on prod, awaiting sign-off |
+| `cards-truth` *(honesty)* | Is he telling me the truth? | ⬜ DRAFT (2026-08-03) — LIVE on prod, awaiting sign-off |
+| `cards-deceived` *(honesty)* | Am I being deceived? | ⬜ DRAFT (2026-08-03) — ⚠️ she arrives already blaming her own trust |
+| `cards-come-back` *(reunion)* | Will he come back? | ⬜ DRAFT (2026-08-04) — ⚠️ SAME headline as `cards-return`, run as a copy test against it |
+| `cards-ever-back` *(reunion)* | Will he ever come back to me? | ⬜ DRAFT (2026-08-04) — ⚠️ nothing may land as her having been foolish to wait |
+| `cards-moved-on` *(reunion)* | Is he coming back, or has he moved on? | ⬜ DRAFT (2026-08-04) — ⚠️ the read REFUSES the binary |
+| `cards-cant-stop` *(healing)* | Why can't I stop thinking about him? | ⬜ DRAFT (2026-08-04) |
+| `cards-on-my-mind` *(healing)* | Why is he always on my mind? | ⬜ DRAFT (2026-08-04) |
+| `cards-who-hurt-me` *(healing)* | Why do I still think about someone who hurt me? | ⬜ DRAFT (2026-08-04) — ⚠️ heaviest hook on the funnel; never minimise, never convict, never blame her |
+| `cards-love-again` *(self-frame)* | Will I love again? | ⬜ draft — 🔴 **no reads on either FACE-DOWN deck**, so a clean URL silently falls back to `cards-honest`/`decode-him`. Only works with an explicit `&deck=arcana-mfh` |
 | `cards-soulmate` *(self-frame)* | When is my soulmate coming? | ⬜ draft (2026-07-27, from `ZN_Tarot_Rio 8.png` = arcana-eef cards; reads on arcana-eef + arcana-mfh; answers "when" as a leaning, never a date) |
 
 ## Pending (Boss's starting scope — face-up named cards)

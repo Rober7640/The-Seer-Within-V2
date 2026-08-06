@@ -32,6 +32,7 @@ import { track as trackPH, identifyUser as identifyPH, getDistinctId } from '@/l
 import { tarotEventProps } from '@/lib/tarotAttribution'
 import { trackGAdsLead, trackGAdsCheckout, getGclid } from '@/lib/gtm'
 import { isSlidingCloseVariant } from '@shared/types'
+import { pairedBumpBucket, V1_BUMP_CENTS } from '@shared/orderBump'
 
 const STORAGE_KEY = 'seer_conversation'
 const SESSION_EXPIRY_HOURS = 24
@@ -106,6 +107,7 @@ function createInitialState(): ChatState {
     showPermissionButton: false,
     showPurchaseCTA: false,
     showDownsellCTA: false,
+    showBumpOffer: false,
     // Upsell state
     showUpsellCTA: false,
     showShippingForm: false,
@@ -317,6 +319,10 @@ export function useConversation() {
         updateState({
           state: 'PITCH',
           showPurchaseCTA: true,
+          // A session saved mid-bump-offer would otherwise restore with BOTH the
+          // offer card and the purchase CTA live. Re-offering the CTA is the
+          // right resume point: tapping it replays the bump turn from the top.
+          showBumpOffer: false,
           inputEnabled: true,
           inputPlaceholder: 'Or type a message...',
         })
@@ -331,6 +337,9 @@ export function useConversation() {
         ])
         updateState({
           showPurchaseCTA: true,
+          // Same reason as the GRACEFUL_EXIT branch above — never restore with
+          // two live purchase actions on screen.
+          showBumpOffer: false,
           inputEnabled: true,
         })
       } else {
@@ -853,6 +862,14 @@ export function useConversation() {
       const palmSign = phFunnel === 'palm'
         ? (parsePalmParams(window.location.search)?.sign ?? 'thumb')
         : undefined
+      // Which palm ad HOOK she came through. Recorded on the order-bump exposure
+      // so that test breaks down per hook as well as per sign (one sign runs
+      // several hooks). Already validated by parsePalmParams — an unrecognised
+      // hook yields undefined rather than a junk label. Unlike `sign` there is no
+      // sensible default: a palm visitor with no valid hook simply has none.
+      const palmHook = phFunnel === 'palm'
+        ? parsePalmParams(window.location.search)?.hook
+        : undefined
       // /fb-tarot: which deck/hook/card she came through. Gated on the funnel because
       // the attribution is tab-scoped and would otherwise tag a later palm lead.
       //
@@ -875,6 +892,7 @@ export function useConversation() {
           gclid: getGclid(),
           funnel: currentFunnel(),
           sign: palmSign,
+          hook: palmHook,
           // Tarot lander identity for the commitment-gate exposure breakdown.
           // `facing`/`angle` are sent already-derived (registry-driven, see
           // tarotAttribution.toProps) rather than re-derived server-side: it keeps
@@ -912,6 +930,10 @@ export function useConversation() {
         // it must still be captured for a returning visitor whose price came off
         // their stored row. Only ever set to true; absent ⇒ plain PurchaseCTA.
         if (leadData?.commitmentGate === true) patch.commitmentGate = true
+        // Order-bump arm — same deal as the gate: framework-assigned, independent
+        // of the price payload, and only ever set to true. Absent ⇒ the buy CTA
+        // goes straight to Stripe exactly as it does today.
+        if (leadData?.orderBump === true) patch.orderBump = true
         if (Object.keys(patch).length > 0) updateUserData(patch)
       } catch { /* response body parse is best-effort */ }
 
@@ -1840,7 +1862,15 @@ export function useConversation() {
 
   // === PURCHASE HANDLER ===
 
-  const handlePurchase = useCallback(async (type: 'main' | 'downsell' = 'main') => {
+  // V1 ORDER BUMP. `bump` carries what the extra turn resolved to, and is simply
+  // absent for every checkout that didn't go through it (the whole downsell path,
+  // and every lead outside the bump arm) — so those requests are byte-identical to
+  // what they send today. The server re-resolves the arm regardless and ignores
+  // `bumpAccepted` from anyone not actually in it.
+  const handlePurchase = useCallback(async (
+    type: 'main' | 'downsell' = 'main',
+    bump?: { offered: boolean; accepted: boolean; bucket: Bucket },
+  ) => {
     try {
       // Track InitiateCheckout event with Facebook (variant-aware)
       const mainPrice = chat.userData.priceDollars ?? 35
@@ -1886,6 +1916,20 @@ export function useConversation() {
           // Browser PostHog id → Stripe metadata so the server-side
           // purchase_completed event ties back to this visitor (connected funnel).
           posthogDistinctId: getDistinctId(),
+          // fb-palm sign, so the server can re-resolve the bump arm exactly as it
+          // was resolved at lead capture even under a future sign-scoped test.
+          ...(getPostHogFunnel() === 'palm'
+            ? { sign: parsePalmParams(window.location.search)?.sign ?? 'thumb' }
+            : {}),
+          // Order bump. `bumpOffered` is sent even on a decline — it's the
+          // take-rate denominator. The server treats both as a REQUEST only.
+          ...(bump
+            ? {
+                bumpOffered: bump.offered,
+                bumpAccepted: bump.accepted,
+                bumpBucket: bump.bucket,
+              }
+            : {}),
         }),
       })
       const { url } = await response.json()
@@ -1894,6 +1938,53 @@ export function useConversation() {
       console.error('Checkout error:', error)
     }
   }, [chat.userData])
+
+  // === ORDER BUMP: the extra turn between the buy CTA and Stripe ===
+
+  // Every purchase CTA routes through here instead of calling handlePurchase
+  // directly. Outside the bump arm it is a pass-through, so the plain / sliding /
+  // commitment-gate closes behave exactly as they do today.
+  //
+  // MAIN ONLY: the $25/$35 downsell is already the cheaper branch and never
+  // carries a bump, so it goes straight through.
+  const startPurchase = useCallback(async (type: 'main' | 'downsell' = 'main') => {
+    if (type !== 'main' || chat.userData.orderBump !== true) {
+      await handlePurchase(type)
+      return
+    }
+
+    const paired = pairedBumpBucket(chat.userData.bucket)
+    updateUserData({ bumpBucket: paired })
+    // Hide the CTA before the offer renders: one live action at a time, so a
+    // double-tap can't open two checkout sessions.
+    updateState({ showPurchaseCTA: false, showDownsellCTA: false })
+
+    trackPH('bump_offered', {
+      funnel: getPostHogFunnel() ?? 'v1',
+      step: 'sales',
+      bump_bucket: paired,
+      price_cents: V1_BUMP_CENTS,
+    })
+
+    // The offer copy now renders INSIDE BumpOfferCard, so we no longer send it as
+    // a separate chat bubble — showing both would print the same line twice. Just
+    // reveal the card.
+    updateState({ showBumpOffer: true })
+  }, [chat.userData, handlePurchase, sendBotMessage, updateState, updateUserData])
+
+  const answerBump = useCallback(async (accepted: boolean) => {
+    const paired = chat.userData.bumpBucket ?? pairedBumpBucket(chat.userData.bucket)
+    updateState({ showBumpOffer: false })
+
+    trackPH(accepted ? 'bump_accepted' : 'bump_declined', {
+      funnel: getPostHogFunnel() ?? 'v1',
+      step: 'sales',
+      bump_bucket: paired,
+      price_cents: V1_BUMP_CENTS,
+    })
+
+    await handlePurchase('main', { offered: true, accepted, bucket: paired })
+  }, [chat.userData, handlePurchase, updateState])
 
   // === START FRESH (clear session and restart) ===
 
@@ -1910,6 +2001,11 @@ export function useConversation() {
     handleBucketSelect,
     handlePermission,
     handlePurchase,
+    // Order bump: CTAs call startPurchase (a pass-through outside the arm);
+    // answerBump resolves the offer turn. handlePurchase stays exported for the
+    // upsell hook and any caller that must skip the bump entirely.
+    startPurchase,
+    answerBump,
     startFresh,
     // Exposed for upsell hook
     sendBotMessages,

@@ -373,11 +373,24 @@ export interface TallyVariantRow {
   liftPct: number | null; // conversion lift vs the control arm (raw); null for control / no data
 }
 
+// What the OLD buyer definition would have counted, and why each row was dropped.
+// Surfaced so a corrected number is auditable rather than a silent change — on the
+// order-bump cohort (2026-08-06) this was 11 of arm A's 31 and 8 of arm B's 30.
+export interface TallyExclusionRow {
+  variant: string;
+  legacyBuyers: number;        // count under `purchased AND upsell_offered`
+  paidBeforeExposure: number;  // paid, but BEFORE they were exposed → not this test's doing
+  noPaidStamp: number;         // never confirmed paid: abandoned cart, or a purchase
+                               // predating markMainPaid (2026-07-15) — either way not in-test
+}
+
 export interface TallyResult {
   rows: TallyVariantRow[];
   // Control-vs-treatment summary (present only when both arms have viewers).
   srm?: { aViewers: number; bViewers: number; bSharePct: number };
   significance?: { z: number; p: number; liftPct: number; significant: boolean };
+  // Present on v1_main_funnel tallies only.
+  excluded?: TallyExclusionRow[];
 }
 
 /** Standard-normal two-sided p-value (Abramowitz–Stegun erf approximation). */
@@ -773,6 +786,33 @@ export async function resolveV1Price(
   };
 }
 
+// ── Did this exposed subject buy DURING the test? ────────────────────────────
+//
+// 🔴 THE BUG THIS REPLACES (found 2026-08-06, verified against Stripe). The old
+// definition was `c.purchased AND c.upsell_offered` with NO constraint tying the
+// purchase to the test — the only date filter is on the EXPOSURE. `conversations`
+// is keyed by EMAIL and reused forever, and BOTH those flags persist from a prior
+// purchase, so any returning visitor who had ever bought was counted as a
+// conversion the moment they were exposed again, without buying anything. On the
+// order-bump cohort that inflated arm A by 35% and arm B by 27%: 15 phantoms (one
+// paid in FEBRUARY) plus 4 abandoned carts, all confirmed against the Stripe API.
+// It reversed the result — the test read as "B converts worse" when B was level.
+//
+// `main_paid_at` is the only per-purchase, browser-independent payment timestamp
+// we have (stamped by the checkout.session.completed webhook — db.markMainPaid).
+// Requiring it to fall at or after the exposure excludes both failure modes at
+// once: an older purchase is dated before, an abandoned cart is never dated.
+//
+// ⚠ DEPENDS on markMainPaid re-stamping on each new purchase. Its
+// `main_paid_at IS NULL` idempotency guard was removed the same day for exactly
+// this reason — with it, a repeat buyer kept their FIRST purchase's date forever
+// and every later sale would read as pre-exposure. Do not reinstate it.
+const V1_IN_TEST_PURCHASE = sql`c.main_paid_at IS NOT NULL AND c.main_paid_at >= e.created_at`;
+
+// The superseded definition — kept ONLY to report what the change dropped and why
+// (TallyExclusionRow). Never use it to compute a statistic.
+const V1_LEGACY_PURCHASE = sql`c.purchased AND c.upsell_offered`;
+
 export interface V1MainTallyOptions {
   key: string;
   startISO: string;
@@ -783,11 +823,18 @@ export interface V1MainTallyOptions {
 /**
  * Results for the V1 MAIN/downsell price test. Arm membership is EXPLICIT — read
  * from `experiment_exposures` (the assigned arm logged at lead capture), NOT from
- * the stored price. Conversion comes from the linked conversation, using the SAME
- * confirmed-purchase signal as the legacy /admin/price-test: a buyer is
- * `purchased = true AND upsell_offered = true` (purchased alone is set optimistically
- * at checkout; upsell_offered only flips after Stripe confirms payment), and revenue
- * = mainPurchaseAmount on confirmed buyers. Denominator = ALL exposures (everyone
+ * the stored price. A buyer is a subject whose linked conversation was PAID AT OR
+ * AFTER their exposure (V1_IN_TEST_PURCHASE), and revenue = mainPurchaseAmount +
+ * bumpAmountCents on those buyers.
+ *
+ * WHY THE BUMP IS ADDED BACK HERE: mainPurchaseAmount deliberately stays "the main
+ * offer alone" so the price test and /admin/price-test keep summing a clean $35/$45
+ * — the order bump rides the SAME checkout session, so folding it in there would
+ * inflate every one of those numbers. The bump is real revenue the arm earned,
+ * though, so the experiment tally adds it explicitly. This is a NO-OP for every test
+ * that predates the bump (bump_amount_cents is NULL on those rows → COALESCE 0), so
+ * the price test and gate results are byte-identical to before this line changed.
+ * Denominator = ALL exposures (everyone
  * assigned a price is a "viewer"), so the default SRM denominator (viewers) is the
  * full assigned population.
  *
@@ -796,14 +843,26 @@ export interface V1MainTallyOptions {
  * was logged on (the lead-capture row) — if an email buys on a later, separate
  * conversation row, that purchase isn't attributed here; (b) a subject whose
  * exposure insert was swallowed (logExposure never throws/retries) is priced but
- * missing from both viewers and revenue.
+ * missing from both viewers and revenue; (c) a genuine buyer whose
+ * checkout.session.completed webhook never landed has no main_paid_at and is
+ * therefore NOT counted — under-counting real revenue. That is a webhook bug to
+ * fix at source (3 of arm A's 20 real buyers on 2026-08-06), deliberately not
+ * papered over here: `excluded.noPaidStamp` surfaces it instead of hiding it.
  */
 export async function tallyV1Main(opts: V1MainTallyOptions): Promise<TallyResult> {
   const result = await db.execute(sql`
     SELECT e.variant AS variant,
            count(*)                                                                   AS viewers,
-           count(*) FILTER (WHERE c.purchased AND c.upsell_offered)                   AS buyers,
-           COALESCE(sum(c.main_purchase_amount) FILTER (WHERE c.purchased AND c.upsell_offered), 0) AS revenue_cents
+           count(*) FILTER (WHERE ${V1_IN_TEST_PURCHASE})                             AS buyers,
+           COALESCE(sum(c.main_purchase_amount + COALESCE(c.bump_amount_cents, 0)) FILTER (WHERE ${V1_IN_TEST_PURCHASE}), 0) AS revenue_cents,
+           -- Audit trail for the definition change (see TallyExclusionRow). Not used
+           -- in any statistic — it exists so a corrected number can be reconciled
+           -- against the old one instead of appearing to move on its own.
+           count(*) FILTER (WHERE ${V1_LEGACY_PURCHASE})                              AS legacy_buyers,
+           count(*) FILTER (WHERE ${V1_LEGACY_PURCHASE}
+                                  AND c.main_paid_at IS NOT NULL
+                                  AND c.main_paid_at < e.created_at)                  AS excl_paid_before,
+           count(*) FILTER (WHERE ${V1_LEGACY_PURCHASE} AND c.main_paid_at IS NULL)    AS excl_no_stamp
     FROM experiment_exposures e
     LEFT JOIN conversations c ON c.id = e.context->>'conversationId'
     WHERE e.experiment_key = ${opts.key}
@@ -813,8 +872,19 @@ export async function tallyV1Main(opts: V1MainTallyOptions): Promise<TallyResult
 
   const controlKey = opts.controlKey ?? 'A';
   const treatmentKey = opts.treatmentKey ?? 'B';
-  const { rows } = assembleRows(result.rows as Record<string, unknown>[], controlKey, treatmentKey);
-  return finalizeStats(rows, controlKey, treatmentKey);
+  const { rows, byVariant } = assembleRows(
+    result.rows as Record<string, unknown>[], controlKey, treatmentKey);
+  const stats = finalizeStats(rows, controlKey, treatmentKey);
+  stats.excluded = rows.map((r) => {
+    const q = byVariant.get(r.variant);
+    return {
+      variant: r.variant,
+      legacyBuyers: Number(q?.legacy_buyers) || 0,
+      paidBeforeExposure: Number(q?.excl_paid_before) || 0,
+      noPaidStamp: Number(q?.excl_no_stamp) || 0,
+    };
+  });
+  return stats;
 }
 
 export interface TallyBySignRow {
@@ -866,8 +936,8 @@ export async function tallyV1MainBySign(opts: V1MainTallyOptions): Promise<Tally
                   ELSE '(unrecorded)' END)                                       AS sign,
            e.variant                                                             AS variant,
            count(*)                                                              AS viewers,
-           count(*) FILTER (WHERE c.purchased AND c.upsell_offered)              AS buyers,
-           COALESCE(sum(c.main_purchase_amount) FILTER (WHERE c.purchased AND c.upsell_offered), 0) AS revenue_cents
+           count(*) FILTER (WHERE ${V1_IN_TEST_PURCHASE})                        AS buyers,
+           COALESCE(sum(c.main_purchase_amount + COALESCE(c.bump_amount_cents, 0)) FILTER (WHERE ${V1_IN_TEST_PURCHASE}), 0) AS revenue_cents
     FROM experiment_exposures e
     LEFT JOIN conversations c ON c.id = e.context->>'conversationId'
     WHERE e.experiment_key = ${opts.key}
@@ -923,8 +993,8 @@ export async function tallyV1MainByTarotLander(
            e.context->>'angle'                                                   AS angle,
            e.variant                                                             AS variant,
            count(*)                                                              AS viewers,
-           count(*) FILTER (WHERE c.purchased AND c.upsell_offered)              AS buyers,
-           COALESCE(sum(c.main_purchase_amount) FILTER (WHERE c.purchased AND c.upsell_offered), 0) AS revenue_cents
+           count(*) FILTER (WHERE ${V1_IN_TEST_PURCHASE})                        AS buyers,
+           COALESCE(sum(c.main_purchase_amount + COALESCE(c.bump_amount_cents, 0)) FILTER (WHERE ${V1_IN_TEST_PURCHASE}), 0) AS revenue_cents
     FROM experiment_exposures e
     LEFT JOIN conversations c ON c.id = e.context->>'conversationId'
     WHERE e.experiment_key = ${opts.key}
@@ -947,6 +1017,67 @@ export async function tallyV1MainByTarotLander(
     const stats = finalizeStats(rows, controlKey, treatmentKey);
     return { facing, angle, rows: stats.rows, significance: stats.significance };
   });
+}
+
+export interface BumpTakeRateRow {
+  variant: string;
+  offered: number;         // saw the offer AND reached checkout (the denominator)
+  saidYes: number;         // clicked [Yes, double it] — intent, NOT money
+  offeredAndPaid: number;  // of those offered, who went on to actually pay
+  paidWithBump: number;    // paid AND the bump was on the order — this is the money
+  bumpRevenueUsd: number;
+}
+
+/**
+ * Order-bump take rate per arm — "of the buyers who saw the $12.77 offer, how many
+ * bought it?". The question the pooled A/B table cannot answer, because there a
+ * bump order and a plain order are both just one buyer.
+ *
+ * TWO RATES, deliberately, because bump_offered/bump_purchased are written when the
+ * Stripe SESSION is created (routes.ts ~862) — BEFORE payment:
+ *   saidYes / offered              = INTENT. Includes carts that were never paid.
+ *   paidWithBump / offeredAndPaid  = MONEY. The one to quote.
+ * Reporting only intent would have counted an abandoned $57.77 cart as bump revenue
+ * on 2026-08-06; reporting only money hides how many accept then drop at Stripe.
+ *
+ * `paid` reuses V1_IN_TEST_PURCHASE so this can never drift from the headline table.
+ *
+ * ⚠ DENOMINATOR: `offered` is only written once she reaches /api/checkout, so a
+ * visitor who saw the offer turn and abandoned the page entirely is NOT in it —
+ * take rate therefore reads slightly HIGH. Those visitors DO count in the pooled
+ * table, which is what decides the test. The UI states this.
+ *
+ * Returns [] when no arm has ever been offered a bump, so every non-bump experiment
+ * simply omits the block.
+ */
+export async function tallyV1BumpTakeRate(opts: V1MainTallyOptions): Promise<BumpTakeRateRow[]> {
+  const result = await db.execute(sql`
+    SELECT e.variant                                                             AS variant,
+           count(*) FILTER (WHERE c.bump_offered)                                AS offered,
+           count(*) FILTER (WHERE c.bump_purchased)                              AS said_yes,
+           count(*) FILTER (WHERE c.bump_offered AND ${V1_IN_TEST_PURCHASE})     AS offered_and_paid,
+           count(*) FILTER (WHERE c.bump_purchased AND ${V1_IN_TEST_PURCHASE})   AS paid_with_bump,
+           COALESCE(sum(c.bump_amount_cents)
+                    FILTER (WHERE c.bump_purchased AND ${V1_IN_TEST_PURCHASE}), 0) AS bump_revenue_cents
+    FROM experiment_exposures e
+    JOIN conversations c ON c.id = e.context->>'conversationId'
+    WHERE e.experiment_key = ${opts.key}
+      AND e.created_at >= ${opts.startISO}
+    GROUP BY e.variant;
+  `);
+
+  const rows = (result.rows as Record<string, unknown>[]).map((r) => ({
+    variant: String(r.variant),
+    offered: Number(r.offered) || 0,
+    saidYes: Number(r.said_yes) || 0,
+    offeredAndPaid: Number(r.offered_and_paid) || 0,
+    paidWithBump: Number(r.paid_with_bump) || 0,
+    bumpRevenueUsd: (Number(r.bump_revenue_cents) || 0) / 100,
+  }));
+  // Control arms legitimately read all-zero (they are never offered), which is worth
+  // SHOWING — it evidences that no control buyer was charged a bump. But if NO arm
+  // was ever offered one, this isn't a bump test and the block should not appear.
+  return rows.some((r) => r.offered > 0) ? rows.sort((a, b) => a.variant.localeCompare(b.variant)) : [];
 }
 
 // ── fb-palm COMMITMENT GATE (UI-only A/B) ────────────────────────────────────
@@ -995,6 +1126,76 @@ export async function resolvePalmGate(
   if (!a) return { gate: false, variant: null, enrolled: false };
   return {
     gate: a.applied && a.payload?.gate === true,
+    variant: a.variant,
+    enrolled: a.enrolled,
+  };
+}
+
+// ── V1 ORDER BUMP ("double reading") — UI-only A/B ───────────────────────────
+// One extra chat turn wedged between the buy CTA and the Stripe redirect,
+// offering a second reading on a paired topic for $12.77. Measured with
+// `v1_main_funnel` (the same tally as the price test and the commitment gate),
+// so it reports in /admin/experiments with arms, lift, SRM, p-value and the
+// targetN no-peeking gate — plus the per-palm-sign and per-tarot-lander
+// breakdowns, which come free from the exposure context (see priceVariant.ts).
+//
+// POOLED ACROSS FUNNELS, exactly like the commitment gate: scope.funnel is the
+// ARRAY ['v1-palm','v1-tarot'], one test rather than a key per funnel. The
+// pooled A-vs-B row is the decision metric; the per-lander tables are
+// diagnostic only (multiple-comparisons trap — see tallyV1MainBySign).
+//
+// WHY AN EXPERIMENT AND NOT A PRICE-POOL ARM: same reasoning as the gate — a
+// pool arm is only ever drawn for an email with no stored variant, so every
+// returning visitor (23% of palm sessions but 57% of main buys) would keep the
+// incumbent control id and the bump arm would be measured against a control
+// inflated with all of them. Bucketing on the email hash re-splits the whole
+// population instead.
+//
+// Assigning a returning visitor is safe because this test never re-prices the
+// MAIN offer — it only decides whether an EXTRA line item is offered. Their
+// stored main price is returned untouched.
+export const V1_BUMP_EXPERIMENT_KEY = 'v1_order_bump_2026';
+
+/**
+ * Should this lead be OFFERED the order bump?
+ *
+ * Bucketed on the NORMALISED email (matches the exposure dedup on hashEmail).
+ * `bump` is true only when the assigned arm's payload says so AND the arm is
+ * `applied` — so a draft/paused/out-of-scope test yields today's behaviour for
+ * everyone (straight from CTA to Stripe, no extra turn), and deploying the code
+ * changes nothing until the experiment is started. `enrolled` (running + in
+ * scope) tells the caller to log the exposure — the denominator.
+ *
+ * No email (the `?noemail=1` arm) ⇒ no subject ⇒ control, never enrolled. That
+ * arm also can't be charged a bump: /api/checkout re-resolves this server-side.
+ */
+export async function resolveV1Bump(
+  email: string | null | undefined,
+  funnel?: string | null,
+  sign?: string | null,
+  key: string = V1_BUMP_EXPERIMENT_KEY, // overridable so tests never touch the live experiment
+): Promise<{ bump: boolean; variant: string | null; enrolled: boolean }> {
+  const subject = typeof email === 'string' ? email.trim().toLowerCase() : null;
+
+  // ── QA OVERRIDE (tester-only live test) ──────────────────────────────────────
+  // Emails listed in V1_BUMP_QA_EMAILS see + can buy the bump on ANY environment,
+  // even while the experiment is `draft` — so a real end-to-end LIVE test (live
+  // Stripe + the live n8n fulfilment) can run WITHOUT starting the experiment, i.e.
+  // every real buyer stays control/dark. `enrolled: false` keeps these QA purchases
+  // OUT of the experiment_exposures tally (priceVariant.ts only logs when enrolled).
+  // UNSET/empty var ⇒ no override, byte-identical to before — the prod-safe default.
+  const qaEmails = (process.env.V1_BUMP_QA_EMAILS ?? '')
+    .split(',')
+    .map((s) => s.trim().toLowerCase())
+    .filter(Boolean);
+  if (subject && qaEmails.includes(subject)) {
+    return { bump: true, variant: 'B', enrolled: false };
+  }
+
+  const a = await assign(key, subject, { funnel: funnel ?? null, sign: sign ?? null });
+  if (!a) return { bump: false, variant: null, enrolled: false };
+  return {
+    bump: a.applied && a.payload?.bump === true,
     variant: a.variant,
     enrolled: a.enrolled,
   };

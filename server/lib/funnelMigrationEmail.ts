@@ -18,13 +18,17 @@ import { generateMagicLinkToken } from './magicLink';
 import logger from './logger';
 import { fireWithBreaker, resendBreaker, anthropicBreaker } from './circuitBreaker';
 import { buildFunnelTags } from './resendFunnelTags';
+import { minutesToCoins } from '@shared/types';
 
 const resend = process.env.RESEND_API_KEY
   ? new Resend(process.env.RESEND_API_KEY)
   : null;
 
 const BASE_URL = process.env.BASE_URL || 'http://localhost:5000';
-const FREE_COINS = 180; // 3 minutes
+// 3 minutes. Dollar-wallet: a coin is a cent, so 3:00 at the default rate = 897¢
+// (was 180 coins/3min @ 60/min — missed at the 2026-07-28 flip, which handed every
+// migrated V1 customer 36 seconds instead of 3 minutes until 2026-08-03).
+const FREE_COINS = minutesToCoins(3);
 const EVELYN_SLUG = 'evelyn-cross';
 
 // States that qualify for Tier 1 migration (DEEPENING_2 and beyond)

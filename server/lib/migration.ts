@@ -7,6 +7,7 @@ import { desc, isNotNull } from 'drizzle-orm';
 import { hashPassword } from './auth';
 import crypto from 'crypto';
 import logger from './logger';
+import { minutesToCoins } from '@shared/types';
 
 interface MigrationResult {
   totalProcessed: number;
@@ -50,9 +51,11 @@ export async function migrateConversationsToUsers(): Promise<MigrationResult> {
       const tempPassword = crypto.randomBytes(12).toString('base64url').slice(0, 16);
       const passwordHash = await hashPassword(tempPassword);
 
-      // Bonus coins: paying customers get 600 (10 min), leads get 300 (5 min)
-      const bonusCoins = conv.purchased ? 600 : 300;
-      const totalCoins = 180 + bonusCoins; // 180 base (3 min) + bonus
+      // Bonus coins: paying customers get 10 min, leads get 5 min. Expressed in
+      // MINUTES so the amounts follow the wallet rate — the old literals (600/300/180)
+      // were those same minutes at the pre-2026-07-28 rate of 60 coins/min.
+      const bonusCoins = conv.purchased ? minutesToCoins(10) : minutesToCoins(5);
+      const totalCoins = minutesToCoins(3) + bonusCoins; // 3 min base + bonus
 
       // Create user account
       const newUser = await db

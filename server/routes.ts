@@ -74,6 +74,17 @@ import {
   saveShipping2Address,
 } from "./lib/db";
 import { assignVariantIfMissing, getVariantForEmail } from "./lib/priceVariant";
+import { resolveV1Bump } from "./lib/experiments";
+import {
+  V1_BUMP_CENTS,
+  V1_BUMP_PRODUCT_KEY,
+  bumpLineDescription,
+  bumpProductName,
+  paymentIntentDescription,
+  isBumpBucket,
+  pairedBumpBucket,
+  type BumpBucket,
+} from "@shared/orderBump";
 import { fireGoogleAdsConversion } from "./lib/googleAds";
 import { funnelDefForParam, FUNNELS, type FunnelParam } from "@shared/funnelConfig";
 import Stripe from "stripe";
@@ -500,7 +511,7 @@ export async function registerRoutes(
           // against fixed enums; tarotDeck defaults to 'decode-him'. Keep these
           // rosters in sync with client/src/content/tarotReads.ts (fb-tarot-add-card).
           const validDecks = ["decode-him", "arcana-mfh", "arcana-eef", "return-mhf"];
-          const validHooks = ["cards-honest", "cards-return", "cards-feels", "cards-cheating", "cards-who-he-is", "cards-real-person", "cards-misled", "cards-will-commit", "cards-wont-commit", "cards-ready-commit", "cards-love-again", "cards-soulmate"];
+          const validHooks = ["cards-honest", "cards-return", "cards-feels", "cards-cheating", "cards-who-he-is", "cards-real-person", "cards-misled", "cards-will-commit", "cards-wont-commit", "cards-ready-commit", "cards-lied-to", "cards-truth", "cards-deceived", "cards-come-back", "cards-ever-back", "cards-moved-on", "cards-cant-stop", "cards-on-my-mind", "cards-who-hurt-me", "cards-pulling-away", "cards-gone-cold", "cards-losing-interest", "cards-love-again", "cards-soulmate"];
           const validCards = ["a", "b", "c"];
           const deck = tarotDeck ?? "decode-him";
           if (!validDecks.includes(deck) || !validHooks.includes(tarotHook ?? "") || !validCards.includes(tarotCard ?? "")) {
@@ -627,6 +638,67 @@ export async function registerRoutes(
         typeof req.body?.gclid === "string" ? req.body.gclid.slice(0, 200) : undefined;
       const productName = `Energy Clearing Ritual${fbSuffix(funnel)}`;
 
+      // ── V1 ORDER BUMP ("double reading") ──────────────────────────────────
+      // The client asks for the bump; the SERVER decides. `bumpAccepted` is only
+      // honoured when this email actually bucketed into the bump arm of a RUNNING
+      // experiment, so a tampered or stale client can never add a charge — and
+      // while the experiment is draft/paused this resolves false for everyone and
+      // the whole block below is inert (no second line item, no extra metadata).
+      //
+      // MAIN ONLY, never the downsell: the bump is an upsell on the full offer,
+      // and the $25/$35 downsell is already the "cheaper" branch.
+      const bumpRequested = req.body?.bumpAccepted === true;
+      // Did the client actually PLAY the offer turn? Tracked separately from
+      // `bumpAccepted` so the take-rate denominator is "was offered", not "was in
+      // the arm" — an arm-B lead who abandons before the pitch never saw it.
+      const bumpShown = req.body?.bumpOffered === true;
+      // fb-palm sign, forwarded so the arm resolves identically to lead capture
+      // even if a future edit scopes this test to one sign (scope.sign). Today the
+      // test is funnel-scoped only, so this is belt-and-braces.
+      const bumpSign =
+        typeof req.body?.sign === "string" ? req.body.sign.slice(0, 40) : undefined;
+      // Resolved for every main checkout with an email — one 30s-cached config read
+      // — so `offered` is recorded even when she declines. Sticky per email, so it
+      // returns the same arm she was assigned at lead capture.
+      const bumpArm =
+        type === "main" && typeof email === "string" && email.trim()
+          ? await resolveV1Bump(email, funnel, bumpSign)
+          : { bump: false, variant: null, enrolled: false };
+      // BOTH sides must agree: the server says she's in the bump arm AND the client
+      // says she accepted. Either alone charges nothing.
+      const bumpApplied = bumpArm.bump === true && bumpRequested;
+      const bumpWasOffered = bumpArm.bump === true && (bumpShown || bumpRequested);
+      // Which second topic she was offered. Validated against the closed bucket
+      // enum — it reaches Stripe metadata and Mike's n8n flow, so an arbitrary
+      // client string must never flow through. An invalid/absent value falls back
+      // to the shared pairing table, which is what the client rendered from
+      // anyway, so the charge always matches the offer she accepted.
+      const bumpBucket = bumpApplied
+        ? isBumpBucket(req.body?.bumpBucket)
+          ? req.body.bumpBucket
+          : pairedBumpBucket(bucket)
+        : undefined;
+
+      // 🔴 `product` STAYS `energy_clearing_ritual` — NEVER renamed or suffixed.
+      // Mike's n8n filter EXACT-matches it ({{ $json.body.data.object.metadata
+      // .product }} = energy_clearing_ritual), and it is exact-matched in 5 more
+      // places internally (webhooks.ts, purchaseAnalytics.ts, facebook.ts x3,
+      // googleAds.ts). Renaming it for bump orders would make his condition
+      // evaluate false and a bump buyer would receive NO reading at all — not
+      // even the base one she paid for — while also dropping her from FB CAPI and
+      // Google Ads conversions. The bump is ADDITIVE metadata instead: Mike's
+      // existing condition keeps passing and he branches on `bumpProduct`.
+      //
+      // Keys are ABSENT (not empty-string) on a normal order, which is what makes
+      // "does bumpProduct exist" a clean test on his side.
+      const bumpMetadata = bumpApplied
+        ? {
+            bumpProduct: V1_BUMP_PRODUCT_KEY,
+            bumpBucket: bumpBucket as string,
+            bumpAmount: String(V1_BUMP_CENTS),
+          }
+        : {};
+
       // Mark as purchased in Supabase (optimistic - will be confirmed by webhook in production)
       if (email) {
         await markPurchased(email, type as "main" | "downsell");
@@ -682,14 +754,53 @@ export async function registerRoutes(
             },
             quantity: 1,
           },
+          // Order bump as a SECOND line item on the same session — one
+          // PaymentIntent, one checkout.session.completed webhook, amount_total =
+          // main + bump. Mike asked for one webhook rather than two transactions
+          // (2026-08-03) because the n8n flow is far simpler to build against it.
+          // Itemised on the hosted checkout page, so she sees both lines and the
+          // combined total before paying. Absent entirely when no bump.
+          ...(bumpApplied
+            ? [
+                {
+                  price_data: {
+                    currency: "usd",
+                    product_data: {
+                      // Carries the SAME funnel suffix as the main line above
+                      // (" - PALM" / " - TAROT"), from the same fbSuffix() call,
+                      // so a bump order is attributable to its funnel and the two
+                      // line items can never disagree about which funnel it was.
+                      name: bumpProductName(fbSuffix(funnel)),
+                      // Names the topic she is actually buying ("Money path"), so
+                      // the extra line is self-explanatory on the checkout page
+                      // and the receipt. bumpBucket is already validated against
+                      // the closed enum above, so this can't render junk.
+                      description: bumpLineDescription(bumpBucket as BumpBucket),
+                    },
+                    unit_amount: V1_BUMP_CENTS,
+                  },
+                  quantity: 1,
+                },
+              ]
+            : []),
         ],
         mode: "payment",
         payment_intent_data: {
-          // Internal-only marker: appended to the PaymentIntent description so a
-          // no-optin order is identifiable in the Stripe Dashboard "Description"
-          // column. NOT the customer-facing line item (`product_data.name` stays
-          // clean), so it never shows on the receipt/checkout page.
-          description: noemail ? `${productName} - No email` : productName,
+          // Internal-only markers: appended to the PaymentIntent description so a
+          // no-optin order — and now an ORDER-BUMP order — is identifiable in the
+          // Stripe Dashboard "Description" column at a glance. Without the bump
+          // marker a two-product order is indistinguishable from a normal one in
+          // the payments list except by its amount.
+          //
+          // NOT the customer-facing line item (`product_data.name` stays clean),
+          // so neither marker ever shows on the receipt or the checkout page.
+          //
+          // Both markers are EMPTY on a normal order, so this string is
+          // byte-identical to what it has always been for non-bump traffic.
+          description: paymentIntentDescription(productName, {
+            bump: bumpApplied,
+            noemail,
+          }),
           setup_future_usage: "off_session",
           metadata: {
             firstName,
@@ -701,6 +812,7 @@ export async function registerRoutes(
             ...(funnel && { funnel }),
             ...(gclid && { gclid }),
             ...(noemail && { noemail: "1" }),
+            ...bumpMetadata,
           },
         },
         success_url: `${getBaseUrl(req)}${funnelPath("/welcome1", funnel)}?session_id={CHECKOUT_SESSION_ID}`,
@@ -724,6 +836,12 @@ export async function registerRoutes(
           // paths read this off the session to tag AWeber and create the V2
           // account. Set once here so the whole funnel inherits it.
           ...(noemail && { noemail: "1" }),
+          // 🔴 THE LOAD-BEARING COPY. Mike's n8n filter reads
+          // `body.data.object.metadata.*`, where data.object is the checkout
+          // SESSION — so the bump keys must be in THIS block or he never sees
+          // them. (They're mirrored onto the PaymentIntent above for parity, but
+          // that copy is not what his flow reads.)
+          ...bumpMetadata,
         },
       });
 
@@ -738,7 +856,23 @@ export async function registerRoutes(
             {
               stripeSessionId: session.id,
               stripeCustomerId: customer.id,
+              // MAIN OFFER ONLY — deliberately excludes the bump even on a bump
+              // order, so the price test and /admin/price-test keep reading a
+              // clean main-offer figure. The bump is recorded beside it.
               mainPurchaseAmount: priceAmount,
+              // Only written on a main checkout for a lead in the bump arm; every
+              // other order passes `undefined` here and drizzle omits the columns,
+              // so nothing existing is touched. `bumpOffered` counts the offer
+              // whether or not she took it — that's the take-rate denominator.
+              ...(bumpWasOffered
+                ? {
+                    bumpOffered: true,
+                    bumpPurchased: bumpApplied,
+                    ...(bumpApplied
+                      ? { bumpBucket, bumpAmountCents: V1_BUMP_CENTS }
+                      : {}),
+                  }
+                : {}),
             },
             {
               firstName,
@@ -782,6 +916,18 @@ export async function registerRoutes(
       // the price variant pool; normalized + validated in priceVariant.normalizeSign.
       const palmSign =
         typeof req.body?.sign === "string" ? req.body.sign.slice(0, 40) : undefined;
+      // fb-palm ad hook (soulmate-timing / already-met / love-again / …). Recorded
+      // on the ORDER-BUMP exposure only, so that test breaks down per hook the way
+      // it breaks down per sign — one sign carries several hooks, and the exposure
+      // row is written once per subject with no back-fill. Gated on the funnel for
+      // the same reason `tarotLander` is: the param is tab-scoped and would
+      // otherwise mislabel a later non-palm lead. Deliberately NOT fed into pricing
+      // or assignment — a label only, so length-capping is validation enough (a
+      // 3rd hook roster on the server is exactly the drift this codebase avoids).
+      const palmHook =
+        funnel === "v1-palm" && typeof req.body?.hook === "string"
+          ? req.body.hook.trim().slice(0, 40) || undefined
+          : undefined;
       // /fb-tarot lander identity (deck + hook, plus the facing/angle the client
       // already derived from the registry). Recorded on the commitment-gate exposure
       // so the tarot landers break down the way the palm signs do. Deliberately NOT
@@ -823,7 +969,7 @@ export async function registerRoutes(
       // "the test should go on to thumb"). Untrusted, so it's just normalized here;
       // it can only ever move a palm visitor between two legitimate configured arms,
       // and an unrecognized value simply falls through to the unscoped control.
-      const assigned = await assignVariantIfMissing(email, funnel, palmSign, tarotLander);
+      const assigned = await assignVariantIfMissing(email, funnel, palmSign, tarotLander, palmHook);
 
       // Add to AWeber email list (non-blocking). Per-lander FREE list when the
       // funnel's AWEBER_LIST_ID_* env is set, else the shared AWEBER_LIST_ID.
@@ -927,6 +1073,13 @@ export async function registerRoutes(
         // framework, NOT the price variant — false unless that test is running
         // and this lead bucketed into the gated arm.
         commitmentGate: assigned?.commitmentGate === true,
+        // Order-bump arm (UI only). Same story as commitmentGate: it comes from
+        // the experiment framework, so it's false unless that test is running and
+        // this lead bucketed into the bump arm. The client uses it purely to
+        // decide whether to show the extra turn — /api/checkout re-resolves it
+        // server-side before adding the line item, so a tampered client can never
+        // charge itself a bump.
+        orderBump: assigned?.orderBump === true,
       });
     } catch (error) {
       logger.error("Lead capture error:", error);
@@ -1249,6 +1402,12 @@ export async function registerRoutes(
         personName: conversation.personName,
         stripeCustomerId: conversation.stripeCustomerId,
         mainPurchaseAmount: conversation.mainPurchaseAmount || 3500,
+        // Order-bump amount, so the client's Purchase pixel can report the TRUE
+        // order total. mainPurchaseAmount is deliberately the main offer alone,
+        // but the server-side CAPI fire uses Stripe's amount_total (main + bump)
+        // — without this the two sides of the SAME deduped Purchase event would
+        // disagree ($35 vs $47.77) on every bump order. 0 when there was no bump.
+        bumpAmountCents: conversation.bumpAmountCents ?? 0,
         // Upsell 1 price for this conversation's variant (price split test).
         // Falls back to 4700 for pre-test conversations.
         upsell1PriceCents: conversation.upsell1AmountCents ?? 4700,

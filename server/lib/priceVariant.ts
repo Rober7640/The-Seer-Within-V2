@@ -30,11 +30,13 @@ import {
   resolveUpsell1Cents,
   resolveV1Price,
   resolvePalmGate,
+  resolveV1Bump,
   logExposure,
   hashEmail,
   U1_PRICE_EXPERIMENT_KEY,
   V1_MAIN_EXPERIMENT_KEY,
   PALM_GATE_EXPERIMENT_KEY,
+  V1_BUMP_EXPERIMENT_KEY,
 } from './experiments';
 import {
   DEFAULT_UPSELL1_CENTS,
@@ -69,6 +71,12 @@ export interface AssignedVariant {
   // fb-palm commitment-gate arm (UI only — never affects price). Absent on the
   // read-only getVariantForEmail path, which is a pure price lookup.
   commitmentGate?: boolean;
+  // Order-bump arm — whether this lead is OFFERED the "double reading" turn
+  // between the CTA and the Stripe redirect. Like commitmentGate this is UI only
+  // and never affects the MAIN price; the bump is a SEPARATE line item, and
+  // /api/checkout re-resolves this server-side before charging (a stale client
+  // can never add one). Absent on the read-only getVariantForEmail path.
+  orderBump?: boolean;
 }
 
 /**
@@ -234,6 +242,11 @@ export async function assignVariantIfMissing(
   funnel?: string | null,
   sign?: string | null,
   tarotLander?: TarotLanderContext | null,
+  // Which fb-palm ad HOOK she came through (soulmate-timing / already-met / …).
+  // Appended last so every existing call site keeps working untouched. A pure
+  // LABEL — recorded on the order-bump exposure so palm breaks down per hook the
+  // way tarot already does, and it never participates in pricing or assignment.
+  palmHook?: string | null,
 ): Promise<AssignedVariant | null> {
   try {
     const existing = await db
@@ -309,6 +322,43 @@ export async function assignVariantIfMissing(
       });
     }
 
+    // V1 ORDER BUMP — resolved here for exactly the same reason as the gate above,
+    // and deliberately ABOVE the price idempotency guard so returning visitors are
+    // re-split into both arms instead of all landing in control. UI-only in the
+    // same sense: it decides whether an EXTRA line item is offered and never
+    // touches priceCents / downsellCents / upsell1Cents, so the stored main price
+    // of a returning visitor is returned below completely unchanged.
+    const bump = await resolveV1Bump(email, funnel, gateSign);
+    if (bump.enrolled && bump.variant) {
+      // 🔴 ONE-SHOT WRITE. experiment_exposures is unique(experiment_key, subject_id),
+      // so every label here is recorded now or never — there is no back-fill. That
+      // is why the whole lander identity goes in on the first exposure even though
+      // only the pooled A-vs-B row decides the test.
+      //
+      // `hook` is the ONE field this test records that the commitment gate did not
+      // (the gate captured a hook for tarot only). The bump runs pooled across
+      // fb-palm AND fb-tarot, and on palm a single sign carries several ad hooks —
+      // soulmate-timing, already-met, love-again … — so without this, "did the bump
+      // do better on soulmate-timing than on the other hooks?" would be permanently
+      // unanswerable, exactly as the per-sign split would have been without `sign`.
+      await logExposure(V1_BUMP_EXPERIMENT_KEY, hashEmail(email), bump.variant, 'bump_assigned', {
+        conversationId: row.id,
+        sign: gateSign,
+        funnel: funnel ?? null,
+        // Palm hook. Normalised + length-capped by the caller; a label only, so an
+        // unrecognised value can mislabel its own row and nothing else.
+        ...(palmHook ? { hook: palmHook } : {}),
+        // Tarot lander identity. `hook` here deliberately shares the key with the
+        // palm hook above — the two funnels never both supply one (palmHook is
+        // undefined off v1-palm, tarotLander is undefined off v1-tarot), and the
+        // per-lander tables group on facing/angle, not hook.
+        ...(tarotLander?.deck ? { deck: tarotLander.deck } : {}),
+        ...(tarotLander?.hook ? { hook: tarotLander.hook } : {}),
+        ...(tarotLander?.facing ? { facing: tarotLander.facing } : {}),
+        ...(tarotLander?.angle ? { angle: tarotLander.angle } : {}),
+      });
+    }
+
     // Idempotency / stickiness: once a variant id is stored, return the stored price
     // and never re-roll. Use `!= null` (not truthiness) on the amounts so a stored 0
     // still counts as "assigned" — otherwise a 0/NULL downsell would skip this guard
@@ -320,6 +370,7 @@ export async function assignVariantIfMissing(
         downsellCents: row.downsellAmountCents,
         upsell1Cents: row.upsell1AmountCents ?? DEFAULT_UPSELL1_CENTS,
         commitmentGate: palmGate.gate,
+        orderBump: bump.bump,
       };
     }
 
@@ -432,6 +483,7 @@ export async function assignVariantIfMissing(
       downsellCents: downsellCents,
       upsell1Cents,
       commitmentGate: palmGate.gate,
+      orderBump: bump.bump,
     };
   } catch (err) {
     logger.error('priceVariant: assignVariantIfMissing failed', { email, err });

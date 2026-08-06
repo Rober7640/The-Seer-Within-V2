@@ -109,6 +109,19 @@ export interface UserData {
   // the treatment while leaving them all in control. UI only — never a price.
   // Undefined/false ⇒ today's PurchaseCTA, byte-identical.
   commitmentGate?: boolean
+  // V1 ORDER BUMP (v1_order_bump_2026) — true when this lead bucketed into the
+  // bump arm, so tapping the buy CTA plays one extra chat turn offering a second
+  // reading on a paired topic for $12.77 before the Stripe redirect. Assigned by
+  // the EXPERIMENT framework at lead capture for the same reason the gate is, and
+  // pooled across fb-palm AND fb-tarot. UI only — it never changes the MAIN price;
+  // the bump is a separate line item on the same checkout session, and the server
+  // re-resolves this arm before charging. Undefined/false ⇒ CTA goes straight to
+  // Stripe, byte-identical to today.
+  orderBump?: boolean
+  // Which paired topic the bump offered (love→money, money→love, …). Set when the
+  // offer is shown so the accept handler and /api/checkout agree on the second
+  // reading's topic without re-deriving it.
+  bumpBucket?: Bucket
 }
 
 export interface ShippingAddress {
@@ -133,6 +146,11 @@ export interface ChatState {
   showPermissionButton: boolean
   showPurchaseCTA: boolean
   showDownsellCTA: boolean
+  // V1 order bump — true while the "double reading" quick replies are on screen.
+  // Mutually exclusive with showPurchaseCTA by construction: tapping buy hides
+  // the CTA and shows this, so there is only ever one live action and no way to
+  // open two checkout sessions. Always false when the test isn't running.
+  showBumpOffer: boolean
   // Upsell state
   showUpsellCTA: boolean
   showShippingForm: boolean

@@ -1047,6 +1047,28 @@ const TAROT_HOOK_CONTEXT: Record<string, string> = {
   'cards-will-commit': "She has been with, or waiting on, a man who has not committed, and is asking whether he ever will.",
   'cards-wont-commit': "She has already concluded he will not commit and wants to understand why — and has usually started turning that question on herself.",
   'cards-ready-commit': "She is asking whether the man she cares about will ever be ready for real commitment, having watched him stall at the same point more than once.",
+  // Honesty/lying hooks — the wound is a SPECIFIC UNTRUTH, not his character or future.
+  'cards-lied-to': "She believes she has been told something untrue by the man she is involved with, and is trying to work out whether to trust her own read of it.",
+  'cards-truth': "She is asking whether what he tells her is the whole of it, and keeps finding that his account never quite covers what she has actually lived.",
+  'cards-deceived': "She has begun to fear she was deliberately deceived, and is carrying shame for not having seen it sooner.",
+  // Reunion/return hooks — the man has ALREADY GONE. Distinct from cards-return above,
+  // which asks the same question from a shorter distance; these three read what a return
+  // would require, what the waiting has cost her, and the unanswered either-or itself.
+  'cards-come-back': "He has gone quiet or pulled away without anything being settled, and she is asking whether he will come back — watching for a sign when what she is owed is a decision.",
+  'cards-ever-back': "She has been waiting a long time for a man who left, and is asking whether he will ever come back to her — worn down by the waiting and quietly afraid it was all wasted.",
+  'cards-moved-on': "She cannot tell whether he is coming back or has already moved on, and is being made to hold both possibilities open at once with nothing settled either way.",
+  // Healing/moving-on hooks — the subject is HER OWN MIND, not his conduct or his future.
+  // She is not asking what he will do; she is asking why she cannot stop thinking about him.
+  'cards-cant-stop': "She cannot stop thinking about a man and is asking why — half afraid that the thinking itself means something is wrong with her.",
+  'cards-on-my-mind': "A man occupies her thoughts constantly without her choosing it, and she wants to understand why he still takes up so much room.",
+  'cards-who-hurt-me': "She still thinks about a man who hurt her and is ashamed of it, reading it as a failure in herself rather than as her mind working on an injury it was never allowed to understand.",
+  // Pulling-away hooks — the ONLY family about a man who is STILL THERE. Not gone, not
+  // withholding a future, not caught out: present, reachable, and cooler than he was. The
+  // wound is the CHANGE rather than an absence, and she has almost always already decided
+  // the cause was something she did.
+  'cards-pulling-away': "A man still in her life has begun putting distance between them with nothing said about it, and she is asking why — usually having already concluded it must be something she did.",
+  'cards-gone-cold': "The warmth she used to feel from him has gone without anything being said or ended, and she is trying to understand how the same man can be present and unreachable at once.",
+  'cards-losing-interest': "She cannot tell whether he is losing interest or dealing with something of his own, and has been left to work out which from his behaviour rather than being told either way.",
   // Self-frame hooks — about HER future, not a specific man.
   'cards-love-again': "After heartbreak, she is asking whether she will ever love again — worn down, but the hope is still there.",
   'cards-soulmate': "She is asking WHEN her soulmate will finally arrive — tired of waiting, but still believing the right person is out there for her.",
@@ -1080,6 +1102,58 @@ const TAROT_HOOK_TENDENCY: Record<string, string> = {
   // real harm here.
   'cards-wont-commit': 'that her read on the situation is sound and the exhaustion she feels is earned. NEVER supply a verdict on his character, and NEVER let the answer land as her fault — nothing suggesting she was too much, too available, or not enough. Route the "why" to where HE is stuck, and affirm HER worth and her right to ask for more',
   'cards-ready-commit': 'that the gap she senses between what she is ready for and where he is standing is real information. NEVER promise he will become ready, NEVER pronounce that he cannot, and NEVER give a date or timeframe — affirm HER readiness as legitimate rather than impatience',
+  // Honesty/lying hooks (2026-08-03). These name an untruth outright, so the no-verdict
+  // rule must be stated in BOTH directions on every one: "yes, he lied" is an accusation
+  // of a real man, and "no, he is telling the truth" is a reassurance the funnel has no
+  // standing to give — and reassurance is the documented failure mode on this angle.
+  'cards-lied-to': 'that her ear for when something does not ring true is a real instrument. NEVER state he is lying and NEVER state he is truthful as fact; read the card as a tendency and affirm HER perception rather than ruling on his account',
+  'cards-truth': 'that the sense of an account which never quite covers what she has lived is real information. NEVER declare he is telling the truth and NEVER declare he is lying as fact; read the card as a tendency and affirm HER right to ask for the whole of it rather than a chosen portion',
+  // ⚠ Same shape of harm as cards-wont-commit, from the other direction: a woman asking
+  // this has usually started blaming her own trust. Nothing may land as her naivety.
+  'cards-deceived': 'that her growing sense of having been deliberately misled is real information, and that the openness she brought to this was never the fault. NEVER state as fact that she has been deceived, NEVER reassure her that she has not been, and NEVER let any part of the answer land as her own naivety or gullibility — affirm HER judgment and her dignity, and place any wrong squarely with whoever acted on her trust',
+  // Reunion/return hooks (2026-08-04). The single most prediction-baiting angle on the
+  // funnel — every one of these headlines is literally a request for a forecast. So the
+  // no-verdict rule is stated in BOTH directions plus no-timeframe on all three, and on
+  // 'cards-moved-on' the binary itself must be refused rather than answered.
+  'cards-come-back': 'that what is unfinished between them is genuinely unfinished, and that she is owed a decision rather than a sign. NEVER promise he will come back, NEVER pronounce that he will not, and NEVER give a date or timeframe — read the card as where things currently STAND, and affirm HER right to a straight answer rather than treating her waiting as clinging',
+  // ⚠ Same shape of harm as cards-wont-commit and cards-deceived, from a third side: a
+  // woman asking "will he EVER" has usually begun to blame herself for having waited.
+  'cards-ever-back': 'that the time and constancy she has spent were real and were never the wasted part. NEVER promise a return, NEVER declare it finished, and NEVER give a date or timeframe — and never let any part of the answer land as her having been foolish to wait. Affirm HER steadiness and her dignity, and stay honest that anything opening again would begin as something new rather than resume what broke',
+  // ⚠ The headline hands over a binary. Answering EITHER half fails: "he is coming back"
+  // is a promise the funnel cannot keep, and "he has moved on" is a pronouncement on a
+  // real man delivered to a woman already braced for it. Refuse the either-or.
+  'cards-moved-on': 'that the not-knowing is the real weight she is carrying, and that it is his unfinished business sitting in her lap rather than her own indecision. NEVER pick a side of the binary — never state he is coming back and never state he has moved on — and NEVER give a date or timeframe. Read the card as the state of the QUESTION rather than its answer, and affirm HER right to be told outright instead of having to deduce it from silence',
+  // Healing/moving-on hooks (2026-08-04). The first family aimed at HER OWN MIND. Note
+  // these are deliberately NOT in SELF_FRAME_TAROT_HOOKS — a real man is in the picture,
+  // so the no-verdict-on-him guardrails stay ON; the angle changes only who is AFFIRMED.
+  //
+  // Three failure modes, not two. Beyond the usual no-verdict rule: (1) any instruction
+  // about how she should live — move on, let go, forgive, forget — is a directive, not a
+  // reading; (2) "he is thinking of you too" is the reunion angle's promise in a softer
+  // coat; (3) pathologising the thinking is the harm unique to this angle.
+  'cards-cant-stop': 'that her mind returning to this marks something unfinished rather than a fault in her. NEVER tell her to move on, let go or release him — that is a directive about her life, not a reading. NEVER claim he is thinking of her too and NEVER promise a return. NEVER pathologise the thinking — no obsession, no "stuck", no "unhealthy" — and NEVER give a timeframe for when it should pass. Read the card as WHY the thought persists, and affirm HER mind as working rather than failing her',
+  'cards-on-my-mind': 'that the size of the place he still occupies measures what SHE gave, not what he was worth. NEVER instruct her to let go or move on, NEVER claim he is thinking of her, NEVER promise a return, and NEVER give a timeframe. Read the card as the scale of what she built, affirm HER capacity and her right to have that space back — and never suggest she was wrong to have made it',
+  // ⚠ The heaviest hook on the funnel. She has ALREADY concluded the thinking is her
+  // failing, and she has named him as someone who hurt her. Two opposite pulls: minimising
+  // what she named abandons her, and pronouncing on him is the forbidden verdict.
+  'cards-who-hurt-me': 'that a mind goes back to an injury in order to understand it, never because she wants more of it. NEVER let any part of the answer land as her weakness, naivety, foolishness or obsession. NEVER minimise, excuse or explain away the hurt she has already named — and equally NEVER pronounce on him as a person. NEVER tell her to forgive, forget, move on or let go, and NEVER give a timeframe. Affirm HER dignity and the legitimacy of still wanting the explanation she was never given',
+  // Pulling-away hooks (2026-08-05). Two failure modes on top of the usual no-verdict
+  // rule, and both are what the rest of the internet answers this question with, so they
+  // leak in easily: (1) STRATEGY — give him space, pull back, match his energy, stop
+  // texting — which is coaching on how to manage a man rather than a reading; and
+  // (2) EXCUSING him — 'he is just stressed', 'men need space' — an excuse being a verdict
+  // in a kinder coat. Self-blame is the third, as on cards-wont-commit: she arrives having
+  // already decided the cause was her.
+  'cards-pulling-away':
+    'that the distance she has been measuring is real information and not something she invented. NEVER state he is losing interest, leaving or done, and NEVER reassure her that he is not. NEVER let any part of the answer land as her fault — nothing about her being too much, too available, too eager or not enough. NEVER hand her a tactic: no giving him space, no pulling back, no matching his energy, no advice about texting — that is strategy, not a reading. Read the card as where the distance is coming FROM, and affirm HER right to be told rather than left to measure it herself',
+  'cards-gone-cold':
+    'that the warmth she felt was real and that its absence now is real too — she is imagining neither. NEVER pronounce that his feelings are gone and NEVER promise they will return, NEVER give a date or timeframe, and NEVER excuse the coldness on his behalf (stress, work, "men need space") — an excuse is a verdict wearing a kinder face. NEVER supply a tactic for warming him back up. Read the card as the CONTRAST she has actually lived through, and affirm HER perception and her right to have the change acknowledged rather than denied',
+  // ⚠ The headline hands over a binary, exactly like cards-moved-on. Answering EITHER half
+  // fails: "he is losing interest" is a pronouncement on a real man delivered to a woman
+  // already braced for it, and "he is just going through something" is the excuse. Refuse
+  // the either-or and read the state of the question instead.
+  'cards-losing-interest':
+    'that being left to deduce the answer is itself the weight she has been carrying, and that it is his to say rather than hers to work out. NEVER pick a side of the binary — never state he is losing interest and never state he is only going through something — and NEVER give a date or timeframe. NEVER let the answer land as her overthinking or reading too much into it, and NEVER supply a tactic. Read the card as the STATE of the question rather than its answer, and affirm HER right to be told outright instead of having to read it off his behaviour',
   // Self-frame — affirm HER future love, not a verdict on any man.
   'cards-love-again': 'that love is finding its way back to her — affirm HER heart and her capacity to love again, read the card as a hopeful sign for her own future; never tie it to one specific person and never a date',
   'cards-soulmate': 'that her soulmate is genuinely on the way and nearer than the waiting has let her believe — affirm HER heart and that the love she is holding out for is real and coming, read the card as a hopeful sign of arrival; answer the "when" only as a leaning (soon, close, sooner than the fear admits), NEVER tie it to one specific named person and NEVER give a date or timeframe',

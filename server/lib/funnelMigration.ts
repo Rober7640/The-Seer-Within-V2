@@ -9,6 +9,7 @@ import { randomBytes } from 'crypto';
 import { Resend } from 'resend';
 import logger from './logger';
 import { fireWithBreaker, resendBreaker } from './circuitBreaker';
+import { minutesToCoins } from '@shared/types';
 
 const resend = process.env.RESEND_API_KEY
   ? new Resend(process.env.RESEND_API_KEY)
@@ -125,10 +126,13 @@ export async function migrateFunnelCustomer(email: string): Promise<MigrationRes
   const tempPassword = randomBytes(12).toString('base64url').slice(0, 16);
   const passwordHash = await hashPassword(tempPassword);
 
-  // Calculate bonus credits based on purchase tier
-  let bonusCoins = 900; // Base bonus for any purchase (15 min × 60 coins/min)
-  if (conv.upsellPurchased) bonusCoins += 300;
-  if (conv.upsell2Purchased) bonusCoins += 600;
+  // Calculate bonus credits based on purchase tier. Expressed in MINUTES so the
+  // coin amounts follow the wallet rate — the literals here (900/300/600) were
+  // 15/5/10 minutes at the pre-2026-07-28 rate of 60 coins/min and were missed at
+  // the flip, so a full-stack buyer got 1,800 coins = 6 minutes instead of 30.
+  let bonusCoins = minutesToCoins(15); // base bonus for any purchase (was 900 @ 60/min)
+  if (conv.upsellPurchased) bonusCoins += minutesToCoins(5);   // was 300 @ 60/min
+  if (conv.upsell2Purchased) bonusCoins += minutesToCoins(10); // was 600 @ 60/min
   const totalCredits = bonusCoins;
 
   try {
