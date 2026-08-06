@@ -21,8 +21,10 @@ import {
   tallyV1Main,
   tallyV1MainBySign,
   tallyV1MainByTarotLander,
+  tallyV1BumpTakeRate,
   type TallyBySignRow,
   type TallyByTarotLanderRow,
+  type BumpTakeRateRow,
   twoSidedP,
   minArmExposures,
   invalidateExperiment,
@@ -380,6 +382,7 @@ router.get('/:key/results', async (req: Request, res: Response) => {
     let result;
     let bySign: TallyBySignRow[] | undefined;
     let byTarotLander: TallyByTarotLanderRow[] | undefined;
+    let bumpTakeRate: BumpTakeRateRow[] | undefined;
     if (conversionType === 'credit_purchase') {
       result = await tally(key, { startISO, windowDays, personaId, controlKey, treatmentKey });
     } else if (conversionType === 'upsell1_funnel') {
@@ -421,6 +424,14 @@ router.get('/:key/results', async (req: Request, res: Response) => {
       const tarotRows = await tallyV1MainByTarotLander({ key, startISO, controlKey, treatmentKey });
       if (tarotRows.length > 0) {
         byTarotLander = tarotRows;
+      }
+      // Order-bump take rate. Returns [] unless some arm was actually offered a
+      // bump, so every other v1_main test omits the block entirely. This is the
+      // number the pooled table structurally cannot show — there a bump order and
+      // a plain order are both just "one buyer".
+      const takeRows = await tallyV1BumpTakeRate({ key, startISO, controlKey, treatmentKey });
+      if (takeRows.length > 0) {
+        bumpTakeRate = takeRows;
       }
     } else if (conversionType === 'event') {
       // Generic event conversions (e.g. visitor page-copy lander tests).
@@ -465,6 +476,8 @@ router.get('/:key/results', async (req: Request, res: Response) => {
       rows: result.rows,
       bySign,
       byTarotLander,
+      bumpTakeRate,
+      excluded: result.excluded,
       srm,
       significance: result.significance,
       progress,

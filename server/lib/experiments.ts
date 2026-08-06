@@ -1019,6 +1019,67 @@ export async function tallyV1MainByTarotLander(
   });
 }
 
+export interface BumpTakeRateRow {
+  variant: string;
+  offered: number;         // saw the offer AND reached checkout (the denominator)
+  saidYes: number;         // clicked [Yes, double it] — intent, NOT money
+  offeredAndPaid: number;  // of those offered, who went on to actually pay
+  paidWithBump: number;    // paid AND the bump was on the order — this is the money
+  bumpRevenueUsd: number;
+}
+
+/**
+ * Order-bump take rate per arm — "of the buyers who saw the $12.77 offer, how many
+ * bought it?". The question the pooled A/B table cannot answer, because there a
+ * bump order and a plain order are both just one buyer.
+ *
+ * TWO RATES, deliberately, because bump_offered/bump_purchased are written when the
+ * Stripe SESSION is created (routes.ts ~862) — BEFORE payment:
+ *   saidYes / offered              = INTENT. Includes carts that were never paid.
+ *   paidWithBump / offeredAndPaid  = MONEY. The one to quote.
+ * Reporting only intent would have counted an abandoned $57.77 cart as bump revenue
+ * on 2026-08-06; reporting only money hides how many accept then drop at Stripe.
+ *
+ * `paid` reuses V1_IN_TEST_PURCHASE so this can never drift from the headline table.
+ *
+ * ⚠ DENOMINATOR: `offered` is only written once she reaches /api/checkout, so a
+ * visitor who saw the offer turn and abandoned the page entirely is NOT in it —
+ * take rate therefore reads slightly HIGH. Those visitors DO count in the pooled
+ * table, which is what decides the test. The UI states this.
+ *
+ * Returns [] when no arm has ever been offered a bump, so every non-bump experiment
+ * simply omits the block.
+ */
+export async function tallyV1BumpTakeRate(opts: V1MainTallyOptions): Promise<BumpTakeRateRow[]> {
+  const result = await db.execute(sql`
+    SELECT e.variant                                                             AS variant,
+           count(*) FILTER (WHERE c.bump_offered)                                AS offered,
+           count(*) FILTER (WHERE c.bump_purchased)                              AS said_yes,
+           count(*) FILTER (WHERE c.bump_offered AND ${V1_IN_TEST_PURCHASE})     AS offered_and_paid,
+           count(*) FILTER (WHERE c.bump_purchased AND ${V1_IN_TEST_PURCHASE})   AS paid_with_bump,
+           COALESCE(sum(c.bump_amount_cents)
+                    FILTER (WHERE c.bump_purchased AND ${V1_IN_TEST_PURCHASE}), 0) AS bump_revenue_cents
+    FROM experiment_exposures e
+    JOIN conversations c ON c.id = e.context->>'conversationId'
+    WHERE e.experiment_key = ${opts.key}
+      AND e.created_at >= ${opts.startISO}
+    GROUP BY e.variant;
+  `);
+
+  const rows = (result.rows as Record<string, unknown>[]).map((r) => ({
+    variant: String(r.variant),
+    offered: Number(r.offered) || 0,
+    saidYes: Number(r.said_yes) || 0,
+    offeredAndPaid: Number(r.offered_and_paid) || 0,
+    paidWithBump: Number(r.paid_with_bump) || 0,
+    bumpRevenueUsd: (Number(r.bump_revenue_cents) || 0) / 100,
+  }));
+  // Control arms legitimately read all-zero (they are never offered), which is worth
+  // SHOWING — it evidences that no control buyer was charged a bump. But if NO arm
+  // was ever offered one, this isn't a bump test and the block should not appear.
+  return rows.some((r) => r.offered > 0) ? rows.sort((a, b) => a.variant.localeCompare(b.variant)) : [];
+}
+
 // ── fb-palm COMMITMENT GATE (UI-only A/B) ────────────────────────────────────
 // The 3-checkbox commitment card that replaces the purchase button on the gated
 // arm. Measured with `v1_main_funnel` (same tally as the V1 main price test:
