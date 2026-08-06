@@ -40,9 +40,14 @@ export const CHAT_BUMP = {
   // ⚠ Kept short on purpose. Centred serif italic is the hardest setting to read
   // in the whole flow, and our panel is max-w-lg — narrower than the live card
   // this is modelled on — so the same copy wraps to more lines here.
+  // ⚠ "the working that lifts it", not "want me to clear it". 02-C4 is an
+  // INSTRUCTIONAL — she performs the ritual, Evelyn supplies it. Copy that
+  // promises Evelyn does the clearing and then delivers a DIY working is a
+  // refund driver, and the source's own bump says so plainly: "a simple and
+  // clear instructional you can start tonight."
   body:
-    "Before I lay your twelve… I'm also feeling something heavy sitting over your luck. Old karma, " +
-    'not yours by choice. Want me to clear it first? Just $12.77 more.',
+    'Before I lay your twelve… there is old karma sitting over your luck, and it will dull whatever ' +
+    'they show you. Want the working that lifts it? Just $12.77, and you can start tonight.',
   priceLine: '+ $12.77',
   totalLine: '$47.77 total',
   accept: 'Yes, clear it first',
@@ -205,4 +210,26 @@ export const CHAT_GATE = {
   ],
 
   lockedHint: 'Check all three to continue',
+} as const;
+
+// Resume copy. Both paths land in the SAME place — the gate, button live, bump
+// not shown — because V1's rule is that a restored session must never carry two
+// live purchase actions (useConversation.ts:322-327, 340-343). Tapping the
+// button replays the bump turn from the top.
+//
+// ⛔ The checkboxes come back UNTICKED on every path. Position is restored,
+// consent is not: re-ticking costs seconds, and restoring an agreement she did
+// not re-give hollows out the device and is the wrong side of a chargeback.
+export const CHAT_RESUME = {
+  // Plain refresh, or she navigated away and came back. Short — she has not
+  // done anything that needs acknowledging.
+  refreshed: ['You came back.', "I've kept your place, dear. Nothing is lost."],
+
+  // Returned from Stripe without paying — cancelled, or the browser back button.
+  // She has committed twice by this point, so this is the most valuable person
+  // in the flow to not fumble. No guilt, no re-selling: just the door held open.
+  cancelled: [
+    'You came back.',
+    "I've been holding it for you. The offer still stands, and I have not started yet.",
+  ],
 } as const;
