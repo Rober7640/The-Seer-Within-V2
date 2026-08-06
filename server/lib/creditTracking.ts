@@ -263,6 +263,11 @@ export async function checkpointSession(sessionId: string): Promise<void> {
       const split = await refundCoins(
         tx, row.user_id, precheck[0].personaId, refund, previousPromoCharged, realCharged,
       );
+      // The receipt is about to go DOWN on a still-active session. That shape is what the
+      // receipt-guard trigger exists to reject, so declare that the coins are going back in
+      // this same transaction. SET LOCAL dies with the transaction, so it cannot authorise
+      // anything else. See improve-v2/receipt-guard-2026-08-05.sql.
+      await tx.execute(sql`SET LOCAL app.receipt_refund = 'on'`);
       actualDeduction = -(split.toReal + split.toPromo);
       promoDeducted = -split.toPromo;
       logger.info('checkpointSession: refunded dead-air over-billing', {
@@ -351,6 +356,9 @@ export async function checkpointSession(sessionId: string): Promise<void> {
           tx, row.user_id, precheck[0].personaId, erased, promoCharged, charged - promoCharged,
         );
         promoCharged -= split.toPromo;
+        // Same declaration as the dead-air path: the capped write below lowers the receipt
+        // while the session is still active, and the erased coins have just been refunded.
+        await tx.execute(sql`SET LOCAL app.receipt_refund = 'on'`);
         logger.info('BILLING_CORRUPTION_REFUNDED: returned the coins the cap erased', {
           sessionId,
           userId: row.user_id,
