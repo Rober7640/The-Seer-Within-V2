@@ -329,6 +329,8 @@ export default function ExperimentsDashboard() {
       trust: "Trust / Honesty",
       commitment: "Commitment",
       honesty: "Honesty / Lying",
+      reunion: "Reunion / Return",
+      healing: "Healing / Moving On",
       "self-frame": "Self-Frame",
     };
     return `${f} — ${ANGLE_LABELS[angle] ?? angle}`;

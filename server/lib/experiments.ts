@@ -373,11 +373,24 @@ export interface TallyVariantRow {
   liftPct: number | null; // conversion lift vs the control arm (raw); null for control / no data
 }
 
+// What the OLD buyer definition would have counted, and why each row was dropped.
+// Surfaced so a corrected number is auditable rather than a silent change — on the
+// order-bump cohort (2026-08-06) this was 11 of arm A's 31 and 8 of arm B's 30.
+export interface TallyExclusionRow {
+  variant: string;
+  legacyBuyers: number;        // count under `purchased AND upsell_offered`
+  paidBeforeExposure: number;  // paid, but BEFORE they were exposed → not this test's doing
+  noPaidStamp: number;         // never confirmed paid: abandoned cart, or a purchase
+                               // predating markMainPaid (2026-07-15) — either way not in-test
+}
+
 export interface TallyResult {
   rows: TallyVariantRow[];
   // Control-vs-treatment summary (present only when both arms have viewers).
   srm?: { aViewers: number; bViewers: number; bSharePct: number };
   significance?: { z: number; p: number; liftPct: number; significant: boolean };
+  // Present on v1_main_funnel tallies only.
+  excluded?: TallyExclusionRow[];
 }
 
 /** Standard-normal two-sided p-value (Abramowitz–Stegun erf approximation). */
@@ -773,6 +786,33 @@ export async function resolveV1Price(
   };
 }
 
+// ── Did this exposed subject buy DURING the test? ────────────────────────────
+//
+// 🔴 THE BUG THIS REPLACES (found 2026-08-06, verified against Stripe). The old
+// definition was `c.purchased AND c.upsell_offered` with NO constraint tying the
+// purchase to the test — the only date filter is on the EXPOSURE. `conversations`
+// is keyed by EMAIL and reused forever, and BOTH those flags persist from a prior
+// purchase, so any returning visitor who had ever bought was counted as a
+// conversion the moment they were exposed again, without buying anything. On the
+// order-bump cohort that inflated arm A by 35% and arm B by 27%: 15 phantoms (one
+// paid in FEBRUARY) plus 4 abandoned carts, all confirmed against the Stripe API.
+// It reversed the result — the test read as "B converts worse" when B was level.
+//
+// `main_paid_at` is the only per-purchase, browser-independent payment timestamp
+// we have (stamped by the checkout.session.completed webhook — db.markMainPaid).
+// Requiring it to fall at or after the exposure excludes both failure modes at
+// once: an older purchase is dated before, an abandoned cart is never dated.
+//
+// ⚠ DEPENDS on markMainPaid re-stamping on each new purchase. Its
+// `main_paid_at IS NULL` idempotency guard was removed the same day for exactly
+// this reason — with it, a repeat buyer kept their FIRST purchase's date forever
+// and every later sale would read as pre-exposure. Do not reinstate it.
+const V1_IN_TEST_PURCHASE = sql`c.main_paid_at IS NOT NULL AND c.main_paid_at >= e.created_at`;
+
+// The superseded definition — kept ONLY to report what the change dropped and why
+// (TallyExclusionRow). Never use it to compute a statistic.
+const V1_LEGACY_PURCHASE = sql`c.purchased AND c.upsell_offered`;
+
 export interface V1MainTallyOptions {
   key: string;
   startISO: string;
@@ -783,11 +823,9 @@ export interface V1MainTallyOptions {
 /**
  * Results for the V1 MAIN/downsell price test. Arm membership is EXPLICIT — read
  * from `experiment_exposures` (the assigned arm logged at lead capture), NOT from
- * the stored price. Conversion comes from the linked conversation, using the SAME
- * confirmed-purchase signal as the legacy /admin/price-test: a buyer is
- * `purchased = true AND upsell_offered = true` (purchased alone is set optimistically
- * at checkout; upsell_offered only flips after Stripe confirms payment), and revenue
- * = mainPurchaseAmount + bumpAmountCents on confirmed buyers.
+ * the stored price. A buyer is a subject whose linked conversation was PAID AT OR
+ * AFTER their exposure (V1_IN_TEST_PURCHASE), and revenue = mainPurchaseAmount +
+ * bumpAmountCents on those buyers.
  *
  * WHY THE BUMP IS ADDED BACK HERE: mainPurchaseAmount deliberately stays "the main
  * offer alone" so the price test and /admin/price-test keep summing a clean $35/$45
@@ -805,14 +843,26 @@ export interface V1MainTallyOptions {
  * was logged on (the lead-capture row) — if an email buys on a later, separate
  * conversation row, that purchase isn't attributed here; (b) a subject whose
  * exposure insert was swallowed (logExposure never throws/retries) is priced but
- * missing from both viewers and revenue.
+ * missing from both viewers and revenue; (c) a genuine buyer whose
+ * checkout.session.completed webhook never landed has no main_paid_at and is
+ * therefore NOT counted — under-counting real revenue. That is a webhook bug to
+ * fix at source (3 of arm A's 20 real buyers on 2026-08-06), deliberately not
+ * papered over here: `excluded.noPaidStamp` surfaces it instead of hiding it.
  */
 export async function tallyV1Main(opts: V1MainTallyOptions): Promise<TallyResult> {
   const result = await db.execute(sql`
     SELECT e.variant AS variant,
            count(*)                                                                   AS viewers,
-           count(*) FILTER (WHERE c.purchased AND c.upsell_offered)                   AS buyers,
-           COALESCE(sum(c.main_purchase_amount + COALESCE(c.bump_amount_cents, 0)) FILTER (WHERE c.purchased AND c.upsell_offered), 0) AS revenue_cents
+           count(*) FILTER (WHERE ${V1_IN_TEST_PURCHASE})                             AS buyers,
+           COALESCE(sum(c.main_purchase_amount + COALESCE(c.bump_amount_cents, 0)) FILTER (WHERE ${V1_IN_TEST_PURCHASE}), 0) AS revenue_cents,
+           -- Audit trail for the definition change (see TallyExclusionRow). Not used
+           -- in any statistic — it exists so a corrected number can be reconciled
+           -- against the old one instead of appearing to move on its own.
+           count(*) FILTER (WHERE ${V1_LEGACY_PURCHASE})                              AS legacy_buyers,
+           count(*) FILTER (WHERE ${V1_LEGACY_PURCHASE}
+                                  AND c.main_paid_at IS NOT NULL
+                                  AND c.main_paid_at < e.created_at)                  AS excl_paid_before,
+           count(*) FILTER (WHERE ${V1_LEGACY_PURCHASE} AND c.main_paid_at IS NULL)    AS excl_no_stamp
     FROM experiment_exposures e
     LEFT JOIN conversations c ON c.id = e.context->>'conversationId'
     WHERE e.experiment_key = ${opts.key}
@@ -822,8 +872,19 @@ export async function tallyV1Main(opts: V1MainTallyOptions): Promise<TallyResult
 
   const controlKey = opts.controlKey ?? 'A';
   const treatmentKey = opts.treatmentKey ?? 'B';
-  const { rows } = assembleRows(result.rows as Record<string, unknown>[], controlKey, treatmentKey);
-  return finalizeStats(rows, controlKey, treatmentKey);
+  const { rows, byVariant } = assembleRows(
+    result.rows as Record<string, unknown>[], controlKey, treatmentKey);
+  const stats = finalizeStats(rows, controlKey, treatmentKey);
+  stats.excluded = rows.map((r) => {
+    const q = byVariant.get(r.variant);
+    return {
+      variant: r.variant,
+      legacyBuyers: Number(q?.legacy_buyers) || 0,
+      paidBeforeExposure: Number(q?.excl_paid_before) || 0,
+      noPaidStamp: Number(q?.excl_no_stamp) || 0,
+    };
+  });
+  return stats;
 }
 
 export interface TallyBySignRow {
@@ -875,8 +936,8 @@ export async function tallyV1MainBySign(opts: V1MainTallyOptions): Promise<Tally
                   ELSE '(unrecorded)' END)                                       AS sign,
            e.variant                                                             AS variant,
            count(*)                                                              AS viewers,
-           count(*) FILTER (WHERE c.purchased AND c.upsell_offered)              AS buyers,
-           COALESCE(sum(c.main_purchase_amount + COALESCE(c.bump_amount_cents, 0)) FILTER (WHERE c.purchased AND c.upsell_offered), 0) AS revenue_cents
+           count(*) FILTER (WHERE ${V1_IN_TEST_PURCHASE})                        AS buyers,
+           COALESCE(sum(c.main_purchase_amount + COALESCE(c.bump_amount_cents, 0)) FILTER (WHERE ${V1_IN_TEST_PURCHASE}), 0) AS revenue_cents
     FROM experiment_exposures e
     LEFT JOIN conversations c ON c.id = e.context->>'conversationId'
     WHERE e.experiment_key = ${opts.key}
@@ -932,8 +993,8 @@ export async function tallyV1MainByTarotLander(
            e.context->>'angle'                                                   AS angle,
            e.variant                                                             AS variant,
            count(*)                                                              AS viewers,
-           count(*) FILTER (WHERE c.purchased AND c.upsell_offered)              AS buyers,
-           COALESCE(sum(c.main_purchase_amount + COALESCE(c.bump_amount_cents, 0)) FILTER (WHERE c.purchased AND c.upsell_offered), 0) AS revenue_cents
+           count(*) FILTER (WHERE ${V1_IN_TEST_PURCHASE})                        AS buyers,
+           COALESCE(sum(c.main_purchase_amount + COALESCE(c.bump_amount_cents, 0)) FILTER (WHERE ${V1_IN_TEST_PURCHASE}), 0) AS revenue_cents
     FROM experiment_exposures e
     LEFT JOIN conversations c ON c.id = e.context->>'conversationId'
     WHERE e.experiment_key = ${opts.key}
