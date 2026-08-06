@@ -1062,6 +1062,13 @@ const TAROT_HOOK_CONTEXT: Record<string, string> = {
   'cards-cant-stop': "She cannot stop thinking about a man and is asking why — half afraid that the thinking itself means something is wrong with her.",
   'cards-on-my-mind': "A man occupies her thoughts constantly without her choosing it, and she wants to understand why he still takes up so much room.",
   'cards-who-hurt-me': "She still thinks about a man who hurt her and is ashamed of it, reading it as a failure in herself rather than as her mind working on an injury it was never allowed to understand.",
+  // Pulling-away hooks — the ONLY family about a man who is STILL THERE. Not gone, not
+  // withholding a future, not caught out: present, reachable, and cooler than he was. The
+  // wound is the CHANGE rather than an absence, and she has almost always already decided
+  // the cause was something she did.
+  'cards-pulling-away': "A man still in her life has begun putting distance between them with nothing said about it, and she is asking why — usually having already concluded it must be something she did.",
+  'cards-gone-cold': "The warmth she used to feel from him has gone without anything being said or ended, and she is trying to understand how the same man can be present and unreachable at once.",
+  'cards-losing-interest': "She cannot tell whether he is losing interest or dealing with something of his own, and has been left to work out which from his behaviour rather than being told either way.",
   // Self-frame hooks — about HER future, not a specific man.
   'cards-love-again': "After heartbreak, she is asking whether she will ever love again — worn down, but the hope is still there.",
   'cards-soulmate': "She is asking WHEN her soulmate will finally arrive — tired of waiting, but still believing the right person is out there for her.",
@@ -1130,6 +1137,23 @@ const TAROT_HOOK_TENDENCY: Record<string, string> = {
   // failing, and she has named him as someone who hurt her. Two opposite pulls: minimising
   // what she named abandons her, and pronouncing on him is the forbidden verdict.
   'cards-who-hurt-me': 'that a mind goes back to an injury in order to understand it, never because she wants more of it. NEVER let any part of the answer land as her weakness, naivety, foolishness or obsession. NEVER minimise, excuse or explain away the hurt she has already named — and equally NEVER pronounce on him as a person. NEVER tell her to forgive, forget, move on or let go, and NEVER give a timeframe. Affirm HER dignity and the legitimacy of still wanting the explanation she was never given',
+  // Pulling-away hooks (2026-08-05). Two failure modes on top of the usual no-verdict
+  // rule, and both are what the rest of the internet answers this question with, so they
+  // leak in easily: (1) STRATEGY — give him space, pull back, match his energy, stop
+  // texting — which is coaching on how to manage a man rather than a reading; and
+  // (2) EXCUSING him — 'he is just stressed', 'men need space' — an excuse being a verdict
+  // in a kinder coat. Self-blame is the third, as on cards-wont-commit: she arrives having
+  // already decided the cause was her.
+  'cards-pulling-away':
+    'that the distance she has been measuring is real information and not something she invented. NEVER state he is losing interest, leaving or done, and NEVER reassure her that he is not. NEVER let any part of the answer land as her fault — nothing about her being too much, too available, too eager or not enough. NEVER hand her a tactic: no giving him space, no pulling back, no matching his energy, no advice about texting — that is strategy, not a reading. Read the card as where the distance is coming FROM, and affirm HER right to be told rather than left to measure it herself',
+  'cards-gone-cold':
+    'that the warmth she felt was real and that its absence now is real too — she is imagining neither. NEVER pronounce that his feelings are gone and NEVER promise they will return, NEVER give a date or timeframe, and NEVER excuse the coldness on his behalf (stress, work, "men need space") — an excuse is a verdict wearing a kinder face. NEVER supply a tactic for warming him back up. Read the card as the CONTRAST she has actually lived through, and affirm HER perception and her right to have the change acknowledged rather than denied',
+  // ⚠ The headline hands over a binary, exactly like cards-moved-on. Answering EITHER half
+  // fails: "he is losing interest" is a pronouncement on a real man delivered to a woman
+  // already braced for it, and "he is just going through something" is the excuse. Refuse
+  // the either-or and read the state of the question instead.
+  'cards-losing-interest':
+    'that being left to deduce the answer is itself the weight she has been carrying, and that it is his to say rather than hers to work out. NEVER pick a side of the binary — never state he is losing interest and never state he is only going through something — and NEVER give a date or timeframe. NEVER let the answer land as her overthinking or reading too much into it, and NEVER supply a tactic. Read the card as the STATE of the question rather than its answer, and affirm HER right to be told outright instead of having to read it off his behaviour',
   // Self-frame — affirm HER future love, not a verdict on any man.
   'cards-love-again': 'that love is finding its way back to her — affirm HER heart and her capacity to love again, read the card as a hopeful sign for her own future; never tie it to one specific person and never a date',
   'cards-soulmate': 'that her soulmate is genuinely on the way and nearer than the waiting has let her believe — affirm HER heart and that the love she is holding out for is real and coming, read the card as a hopeful sign of arrival; answer the "when" only as a leaning (soon, close, sooner than the fear admits), NEVER tie it to one specific named person and NEVER give a date or timeframe',
