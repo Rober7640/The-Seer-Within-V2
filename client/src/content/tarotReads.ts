@@ -100,6 +100,29 @@ export type TarotHook =
   | 'cards-cant-stop' // Why can't I stop thinking about him?
   | 'cards-on-my-mind' // Why is he always on my mind?
   | 'cards-who-hurt-me' // Why do I still think about someone who hurt me?
+  // Pulling-away hooks (2026-08-05). Decode-him in FORM — tendency, never verdict — and
+  // the ONLY family about a man who is STILL THERE. Every other angle reads a man who has
+  // gone (reunion), who will not name a future (commitment), who has told her something
+  // untrue (honesty/trust), or who lives now only in her head (healing). Here he is
+  // present and reachable and something has cooled, which is a different wound: not an
+  // absence, a CHANGE IN TEMPERATURE. She has not lost him. She has lost what she had.
+  //
+  // 🔴 Nearest live neighbours are 'cards-feels' (also about his feelings, but static —
+  // how he feels, not how he has CHANGED) and 'cards-return', whose Version-C opener
+  // literally says "when he pulled away". The line is time: cards-return reads a man
+  // already gone and asks whether he comes back; these read the going itself, while it
+  // is still happening and nothing has been said.
+  //
+  // ⚠ Two failure modes on top of the usual no-verdict rule, and both are near-universal
+  // answers to this question elsewhere on the internet, so they leak in easily:
+  //   1. STRATEGY. "Give him space", "pull back and he'll chase", "stop texting". That is
+  //      coaching on how to manage a man, not a reading — and it is manipulation advice.
+  //   2. EXCUSING HIM. "He's just stressed", "men need space". An excuse is a verdict
+  //      wearing a kinder face, and on 'cards-losing-interest' it is literally one half
+  //      of the binary the read has to refuse.
+  | 'cards-pulling-away' // Why is he pulling away from me?
+  | 'cards-gone-cold' // Why has he gone cold on me?
+  | 'cards-losing-interest' // Is he losing interest, or just going through something?
   // Self-frame hooks (read HER, affirm the hopeful yes — like the palm love hooks).
   | 'cards-love-again' // Will I love again?
   | 'cards-soulmate' // When is my soulmate coming?
@@ -160,6 +183,18 @@ export const REUNION_HOOKS: TarotHook[] = ['cards-come-back', 'cards-ever-back',
 // affirmed, never whether he gets judged.
 export const HEALING_HOOKS: TarotHook[] = ['cards-cant-stop', 'cards-on-my-mind', 'cards-who-hurt-me']
 
+// The pulling-away hooks (2026-08-05). Their OWN angle rather than folding into the
+// existing `commitment` family — operator call 2026-08-05: the commitment landers ran a
+// DIFFERENT topic (the future he will not name), and merging a new topic into a live
+// family would retroactively mix two questions inside one set of numbers. Without this
+// array they would fall through to 'decode-him' (see angleForHook) and disappear as a
+// family in PostHog and in the gate's per-lander table.
+export const PULLING_AWAY_HOOKS: TarotHook[] = [
+  'cards-pulling-away',
+  'cards-gone-cold',
+  'cards-losing-interest',
+]
+
 // The ad ANGLE a hook belongs to. Carried on every tarot PostHog event (see
 // lib/tarotAttribution.ts) so the two decode-him families can be compared as GROUPS
 // without listing each hook: one `angle = trust` filter instead of three hook values,
@@ -174,6 +209,7 @@ export type TarotAngle =
   | 'honesty'
   | 'reunion'
   | 'healing'
+  | 'pulling-away'
   | 'self-frame'
 
 export function angleForHook(hook: TarotHook): TarotAngle {
@@ -183,6 +219,7 @@ export function angleForHook(hook: TarotHook): TarotAngle {
   if (HONESTY_HOOKS.includes(hook)) return 'honesty'
   if (REUNION_HOOKS.includes(hook)) return 'reunion'
   if (HEALING_HOOKS.includes(hook)) return 'healing'
+  if (PULLING_AWAY_HOOKS.includes(hook)) return 'pulling-away'
   return 'decode-him'
 }
 
@@ -206,6 +243,9 @@ export const TAROT_HOOKS: TarotHook[] = [
   'cards-cant-stop',
   'cards-on-my-mind',
   'cards-who-hurt-me',
+  'cards-pulling-away',
+  'cards-gone-cold',
+  'cards-losing-interest',
   'cards-love-again',
   'cards-soulmate',
 ]
@@ -251,6 +291,9 @@ export const HEADLINES: Record<TarotHook, string> = {
   'cards-cant-stop': "Why can't I stop thinking about him?",
   'cards-on-my-mind': 'Why is he always on my mind?',
   'cards-who-hurt-me': 'Why do I still think about someone who hurt me?',
+  'cards-pulling-away': 'Why is he pulling away from me?',
+  'cards-gone-cold': 'Why has he gone cold on me?',
+  'cards-losing-interest': 'Is he losing interest, or just going through something?',
   'cards-love-again': 'Will I love again?',
   'cards-soulmate': 'When is my soulmate coming?',
 }
@@ -294,6 +337,19 @@ const TAROT_QUESTION: Record<TarotHook, string> = {
   // ⚠ Asks for the unexplained part, NOT for what he did. She should never have to
   // recount the injury to be taken seriously.
   'cards-who-hurt-me': "Before I look closer, tell me… what is the part of it you have never been able to make sense of?",
+  // Pulling-away (2026-08-05). Each asks about the CHANGE she has watched happen — never
+  // for what she might have done to cause it, which is the assumption she already arrives
+  // carrying, and never for evidence she has to justify herself with.
+  'cards-pulling-away': "Before I look closer, tell me… when did you first feel the distance start to open between you?",
+  // Asks her to describe the warmth. Answering it requires her to say out loud that it
+  // was real — which is the thing this hook has to affirm, and it comes from her mouth
+  // rather than from a claim Evelyn makes about a man she has never met.
+  'cards-gone-cold': "Before I look closer, tell me… what was he like back when you could still feel the warmth?",
+  // Hands the headline's either-or back to her — deliberately NOT phrased like
+  // 'cards-moved-on', whose opener does the same job in its own words. The weight here
+  // sits on the second half: what keeps her from being sure is the material the read is
+  // actually about.
+  'cards-losing-interest': "Before I look closer, tell me… if you had to say tonight which of the two it is, which would you pick — and what keeps you from being sure?",
   'cards-love-again': "Before I look closer, tell me… what has been weighing on your heart since it happened?",
   'cards-soulmate': "Before I look closer, tell me… what is the love you're still holding out for — the one you haven't given up on?",
 }
@@ -1412,6 +1468,92 @@ const RETURN_MHF: CardSetConfig = {
         "That is not random; you reached for the card of the self who walked in ahead of all this knowledge.",
         "The Fool asks nothing of you — not to forgive it, not to forget it, not to be finished with it — it points back to the woman who walked in without knowing what it would cost, and she was not naive for that; going back to her in your mind is a different act entirely from wanting him.",
         "Let me look closer at what she deserved to be told…",
+      ],
+    },
+    // ── Pulling-away hooks (2026-08-05) ──────────────────────────────────────
+    // The only family on the funnel about a man who is STILL HERE. Not gone (reunion),
+    // not withholding a future (commitment), not caught in an untruth (honesty) — present,
+    // reachable, and cooler than he was. The wound is the CHANGE, so every read is written
+    // about the drop in temperature rather than about him as a person.
+    //
+    // Beyond the standing tendency-never-verdict rule, three things are banned outright in
+    // this block and pinned by tests/tarot-pulling-away-copy.test.ts:
+    //   1. STRATEGY. No giving him space, no pulling back, no matching his energy, no
+    //      advice about texting. That is coaching on how to handle a man, not a reading,
+    //      and it is the answer the rest of the internet gives this exact question.
+    //   2. SELF-BLAME. She arrives having already decided it was something she did. Nothing
+    //      may land as her being too much, too available, too eager or not enough — the
+    //      same harm the cards-wont-commit and cards-deceived reads are written against.
+    //   3. EXCUSING HIM. 'He is just stressed', 'men need space'. An excuse is a verdict
+    //      wearing a kinder face, and on cards-losing-interest it is one half of the very
+    //      binary the read has to refuse.
+    //
+    // 'Why is he pulling away from me?' — the WIDENING GAP. Where the distance comes from,
+    // and why no amount of working at it on her side has resolved it.
+    'cards-pulling-away': {
+      a: [
+        "You turned the Magician, dear — the card of the thing being decided somewhere you cannot see it.",
+        "Your hand went to the card of the choice made off-stage, and for a question like yours that is worth sitting with.",
+        "The Magician names nothing of what he has settled on, nor whether he has settled anything at all — it says the pulling back you have been measuring is real and not a thing you invented, and that whatever sits behind it is being worked out somewhere you were never given a way in. That is why turning it over on your own has produced no answer; the missing piece was never on your side of it.",
+        "Let me look closer at what is being decided out of your sight…",
+      ],
+      b: [
+        "You turned the Hanged Man, dear — the card of what is still standing but no longer moving.",
+        "You reached for the card of the thing that stalled without ending, which is a fair description of where you have been left.",
+        "The Hanged Man rules on neither of you — it marks a thing that stopped moving rather than a thing that stopped, and from where you are standing those two feel identical while meaning entirely different things. What you are living inside is the not-moving, and being kept there without a word of explanation is a weight of its own, quite apart from whatever the reason turns out to be.",
+        "Let me look closer at where the movement went out of this…",
+      ],
+      c: [
+        "You turned the Fool, dear — the card of the road that quietly changed direction.",
+        "That is not random; your hand found the card of the turn taken without ever being announced.",
+        "The Fool offers no forecast about where any of this lands — it points to something that changed course rather than something that broke, and a change of course made in silence leaves the other person to notice it alone. You noticed. Having to be the one who notices, with nothing said to you directly, is a real part of what this has been costing you.",
+        "Let me look closer at when the direction changed…",
+      ],
+    },
+    // 'Why has he gone cold on me?' — the CONTRAST. The warmth existed; that is the thing
+    // to affirm, and affirming it convicts him of nothing.
+    'cards-gone-cold': {
+      a: [
+        "You turned the Magician, dear — the card of what took real intention to make in the first place.",
+        "Your hand found the card of the deliberate thing, and that matters here more than it may sound.",
+        "The Magician makes no ruling on where he has gone since — it says what you had was not an accident and not a misreading on your part, because warmth of that kind never arrives by drift; it takes a person genuinely turning toward you to make it. Whatever has changed since cannot reach back and un-make the fact that it was real while you had it.",
+        "Let me look closer at what it was he was actually building…",
+      ],
+      b: [
+        "You turned the Hanged Man, dear — the card of the same man in the same place, gone strangely unfamiliar.",
+        "You reached for the card of what is exactly where you left it and no longer feels like it, which is the confusion you have been carrying.",
+        "The Hanged Man refuses to say his heart has closed, and refuses just as flatly to say it has not — it marks a suspension rather than a ruling, and what it says about you is that you are not imagining a drop in temperature you could once feel plainly. Being expected to carry on as normal toward someone who has cooled, with nothing acknowledged, is draining in a way that has nothing to do with you being too sensitive.",
+        "Let me look closer at where the warmth went…",
+      ],
+      c: [
+        "You turned the Fool, dear — the card of the beginning still visible underneath what this has become.",
+        "That is not random; you reached for the card that remembers how this started, and that is the very thing you keep measuring today against.",
+        "The Fool lays no charge at his door for the cooling and none at yours for having felt it — it points back at something that genuinely began, and a beginning that real does not simply evaporate of its own accord without something happening to it. You are not holding today up against a version you invented; you are holding it up against one you actually lived.",
+        "Let me look closer at the beginning you have been measuring against…",
+      ],
+    },
+    // 'Is he losing interest, or just going through something?' — the EITHER-OR. Like
+    // cards-moved-on, answering either half fails: one is a pronouncement on a real man
+    // delivered to a woman already braced for it, the other is the excuse. The finding is
+    // that she was left to deduce it at all.
+    'cards-losing-interest': {
+      a: [
+        "You turned the Magician, dear — the card of the answer one person already holds while the other is left guessing at it.",
+        "Your hand went to the card of the thing already known on one side of this, and for a question shaped like yours that is telling.",
+        "The Magician will not choose between your two possibilities and neither will I, because whichever one is true he is the one holding it while you are the one asked to work it out from the outside. That is the finding. A question this size gets answered by being told, and having to read it off his behaviour instead is a job you have been doing on his behalf.",
+        "Let me look closer at what is being kept on his side of this…",
+      ],
+      b: [
+        "You turned the Hanged Man, dear — the card of the decision you are being made to hold for somebody else.",
+        "You reached for the card of the weight handed sideways, and it has landed squarely in your lap.",
+        "The Hanged Man declines your either-or completely, and that refusal is the reading rather than a dodge — both halves of it cost you the same thing while nobody tells you which you are paying for. Those two possibilities would ask completely different things of you, and you have been given no way to know which one you are living in. That is not you overthinking; it is a question that was never answered anywhere you could hear it.",
+        "Let me look closer at what you have been left holding…",
+      ],
+      c: [
+        "You turned the Fool, dear — the card of the page you were handed with half its words missing.",
+        "That is not random; your hand went to the card of the account that arrives incomplete.",
+        "The Fool refuses to be pushed into calling this one thing or the other — what it shows me is a situation you have been asked to interpret without being given enough to interpret it with. Wherever this is genuinely heading, you were owed the words for it, and going without them has been doing its own damage regardless of which explanation turns out to be true.",
+        "Let me look closer at the words you were never given…",
       ],
     },
   },
