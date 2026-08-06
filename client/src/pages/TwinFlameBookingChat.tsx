@@ -4,6 +4,7 @@ import {
   CHAT_SCRIPT,
   CHAT_GATE,
   CHAT_BUMP,
+  CHAT_RESUME,
   CHECKOUT,
   TWIN_FLAME_PRICE_CENTS,
   TWIN_FLAME_BUMP_CENTS,
@@ -34,10 +35,38 @@ import {
 
 const EVELYN_LINE_DELAY_MS = 550
 
+// Survives a refresh, a navigate-away, and the Stripe round-trip. sessionStorage
+// not localStorage: this should not outlive the tab. A week-old "you came back"
+// to someone who has since bought is worse than a clean greeting.
+// ⚠ Only the POSITION is stored. Never the ticked boxes — see CHAT_RESUME.
+const RESUME_KEY = 'tft_booking_position'
+
+const GATE_INDEX = CHAT_SCRIPT.findIndex((b) => b.kind === 'gate')
+
 interface ChatMessage {
   id: string
   text?: string
   image?: { src: string; alt: string }
+}
+
+type EntryMode = 'fresh' | 'refreshed' | 'cancelled'
+
+// Which of the three ways she got here. `?cancelled` is Stripe's cancel_url and
+// the browser back button; a stored position with no flag is a refresh.
+// ⚠ A buyer who already paid must never reach this screen — the real build
+// resolves that server-side and redirects to the thank-you page. There is no
+// server in the preview, so it cannot be represented here.
+function resolveEntry(search: string): EntryMode {
+  const cancelled = new URLSearchParams(search).has('cancelled')
+  let stored = false
+  try {
+    stored = sessionStorage.getItem(RESUME_KEY) !== null
+  } catch {
+    // Private mode / storage disabled → treat as a fresh arrival. Replaying the
+    // greeting is a far better failure than a blank screen.
+  }
+  if (cancelled) return 'cancelled'
+  return stored ? 'refreshed' : 'fresh'
 }
 
 function centsToDollars(cents: number): string {
@@ -45,9 +74,24 @@ function centsToDollars(cents: number): string {
 }
 
 export default function TwinFlameBookingChat() {
-  const [messages, setMessages] = useState<ChatMessage[]>([])
-  const [beatIndex, setBeatIndex] = useState(0)
-  const [showGate, setShowGate] = useState(false)
+  // Resolved once, on the first render, so a re-render can't change how she
+  // arrived halfway through the flow.
+  const entry = useRef<EntryMode>(resolveEntry(window.location.search)).current
+  const isResume = entry !== 'fresh'
+
+  // A resumed session opens AT THE GATE with the welcome-back lines already on
+  // screen — the greeting is not replayed, and the bump is not restored even if
+  // that is where she was when she left.
+  const [messages, setMessages] = useState<ChatMessage[]>(() =>
+    isResume
+      ? CHAT_RESUME[entry === 'cancelled' ? 'cancelled' : 'refreshed'].map((text, i) => ({
+          id: `r${i}`,
+          text,
+        }))
+      : [],
+  )
+  const [beatIndex, setBeatIndex] = useState(isResume ? GATE_INDEX : 0)
+  const [showGate, setShowGate] = useState(isResume)
   const [gateConfirmed, setGateConfirmed] = useState(false)
   const [showBump, setShowBump] = useState(false)
   const [checked, setChecked] = useState<boolean[]>(() => CHAT_GATE.statements.map(() => false))
@@ -97,6 +141,17 @@ export default function TwinFlameBookingChat() {
 
   const toggle = (index: number) =>
     setChecked((prev) => prev.map((v, i) => (i === index ? !v : v)))
+
+  // Mark her position the moment the gate is shown, so a refresh from anywhere
+  // downstream resumes rather than restarts.
+  useEffect(() => {
+    if (!showGate) return
+    try {
+      sessionStorage.setItem(RESUME_KEY, 'gate')
+    } catch {
+      // Storage unavailable → she gets the greeting again on refresh. Acceptable.
+    }
+  }, [showGate])
 
   // She has committed. The gate stays on screen as her record of what she
   // agreed to; Evelyn picks the conversation back up and the bump follows.
@@ -232,45 +287,52 @@ export default function TwinFlameBookingChat() {
               someone. */}
           {showBump && (
             <div className="mt-3 animate-cta-appear" data-testid="order-bump">
-              <div className="rounded-2xl border border-amber-100 bg-gradient-to-b from-amber-50/70 via-white to-white px-5 py-5 shadow-sm">
-                <div className="text-center text-[13px] text-amber-500">✦</div>
+              {/* Class-for-class with client/src/components/BumpOfferCard.tsx —
+                  the shipped V1 bump, which arrived in the development merge.
+                  ⚠ ONE deliberate deviation: the offer line is roman, not italic
+                  *(operator, 2026-08-06)*. Every other value is the real card's,
+                  so this preview cannot drift from what actually ships.
+                  ⛔ Do NOT re-scale these. An earlier pass set the body to 19px
+                  by eye off a screenshot and it was unreadable in a max-w-lg
+                  panel. The real card is text-base. */}
+              <div className="overflow-hidden rounded-2xl border border-amber-200/80 bg-gradient-to-b from-amber-50/90 via-white to-white shadow-md">
+                <div className="px-5 pb-2 pt-4 text-center">
+                  <div className="text-xs tracking-[0.3em] text-amber-500/90">✦</div>
+                  <p className="mt-2 font-serif text-base leading-relaxed text-gray-800">
+                    {CHAT_BUMP.body}
+                  </p>
+                </div>
 
-                {/* Evelyn speaking — serif italic, centred, no headline and no
-                    capitals. The ask is a question, not a product.
-                    ⚠ Sizes are deliberately below the live fb-tarot card's: that
-                    one sits in a wider panel, and centred italic serif punishes
-                    every extra line of wrap. Do not scale these back up without
-                    checking a 390px viewport. */}
-                {/* Roman, not italic *(operator, 2026-08-06)*. The live card is
-                    italic; at our narrower panel a wrapped italic paragraph was
-                    the least readable thing in the flow. Serif stays — it is
-                    still Evelyn talking, just upright. */}
-                <p className="mt-3 text-center font-serif text-[15px] leading-[1.65] text-gray-800">
-                  {CHAT_BUMP.body}
-                </p>
+                <div className="px-5 pb-4">
+                  <div className="flex items-baseline justify-center gap-2 text-sm text-gray-700">
+                    <span className="font-semibold text-gray-900">{CHAT_BUMP.priceLine}</span>
+                    <span className="text-gray-400">·</span>
+                    {/* Shown so the total is never a surprise on the Stripe page. */}
+                    <span className="text-gray-500">{CHAT_BUMP.totalLine}</span>
+                  </div>
+                </div>
 
-                <p className="mt-4 text-center text-[14px]">
-                  <span className="font-bold text-gray-900">{CHAT_BUMP.priceLine}</span>
-                  <span className="text-gray-400"> · </span>
-                  <span className="text-gray-500">{CHAT_BUMP.totalLine}</span>
-                </p>
-
-                <button
-                  type="button"
-                  onClick={() => handleBumpChoice(true)}
-                  className="mt-4 w-full rounded-lg bg-gradient-to-r from-orange-400 to-orange-600 px-6 py-3.5 text-[16px] font-bold text-white shadow-md transition-all duration-300 hover:shadow-lg"
-                  data-testid="button-bump-accept"
-                >
-                  {CHAT_BUMP.accept}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleBumpChoice(false)}
-                  className="mt-2 w-full rounded-lg border border-gray-200 bg-white px-6 py-3 text-[14px] text-gray-600 transition-colors hover:bg-gray-50"
-                  data-testid="button-bump-decline"
-                >
-                  {CHAT_BUMP.decline}
-                </button>
+                {/* The decline is full-width and equally legible on purpose.
+                    Burying it would make this a dark pattern, and the arm would
+                    "win" on a charge she did not intend. */}
+                <div className="space-y-2 px-4 pb-4">
+                  <button
+                    type="button"
+                    onClick={() => handleBumpChoice(true)}
+                    className="w-full rounded-lg bg-gradient-to-r from-amber-500 to-orange-600 px-6 py-4 text-lg font-bold text-white shadow-lg transition-all duration-300 hover:shadow-xl"
+                    data-testid="button-bump-accept"
+                  >
+                    {CHAT_BUMP.accept}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleBumpChoice(false)}
+                    className="w-full rounded-lg border border-gray-200 bg-white px-6 py-3 text-sm font-medium text-gray-600 transition-colors duration-200 hover:bg-gray-50"
+                    data-testid="button-bump-decline"
+                  >
+                    {CHAT_BUMP.decline}
+                  </button>
+                </div>
               </div>
 
               <div className="mt-3 flex justify-center gap-4 pb-2 text-xs text-gray-400">
