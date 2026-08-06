@@ -71,7 +71,7 @@ Working document. Source material in this folder:
 │      a. thank-you page       (on success_url)                 │
 │      b. confirmation email   (+ the donkey parable; sells     │
 │                               nothing, pure engagement filler)│
-│      c. [ wait out the SLA ] ⚠ 02 states BOTH 8h and 16h      │
+│      c. [ wait out the SLA ] — 24h for 02/04/05, 3 days for 03│
 │      d. THE PRODUCT — "Your Great Complete Tarot Reading":    │
 │         12 Major Arcana ("The Zodiac Spread") + the free      │
 │         PERSONAL HOROSCOPE bundled in the same email          │
@@ -438,7 +438,7 @@ have: the buyer pays first, then replies with *who* to aim the hex at. No reply,
               be_replies row, keyed by the `to` address ──► order
                         ▼
               human reads intake ──► fulfil within SLA
-                     (03: 2–5 days · 05: 14 hours)
+                     (03: 3 days · 05: 24 hours)
 ```
 
 **Reply-as-intake, not reply-as-conversation.** 03's own P.P.S. sets the expectation: *"I get
@@ -697,4 +697,130 @@ blocking offer 3 in the sequence).
 8. **Support capacity.** Rule 2 only works if replies get answered fast. 03 and 05 *require* a
    reply to fulfil at all — and 03 now lands second, so support has to be staffed from the start
    of the deck rather than a week in. Who answers?
+
+---
+
+# Diagram J — two candidate flows, and they differ in ONE box
+
+*(added 2026-08-05. Copy for both lives in [`copy/02/02-C1-booking-page.md`](../copy/02/02-C1-booking-page.md)
+— the page above the divider, the chat below it.)*
+
+Read this first, because it is the whole comparison: **everything except step 2 is identical.**
+Same letter, same Stripe, same `/welcome1` → `/welcome2`, same thank-you page, same emails. The
+decision is not "pages versus chat." It is **what the CTA lands on**, and nothing else.
+
 ```
+              FLOW 1 — STATIC PAGE            FLOW 2 — CHAT
+              ════════════════════            ═════════════
+
+  1  LETTER   ┌──────────────────┐            ┌──────────────────┐
+     email    │  ESL in the body │            │  ESL in the body │   ← identical
+     prose    │  7 CTAs, one URL │            │  7 CTAs, one URL │
+              └────────┬─────────┘            └────────┬─────────┘
+                       │                               │
+                       ▼                               ▼
+  2  BOOKING  ╔══════════════════╗            ╔══════════════════╗
+     ⚠ THE    ║ /tarot/twin-flame║            ║ /tarot/twin-flame║
+     ONLY     ║                  ║            ║                  ║
+     REAL     ║ ONE SCREEN       ║            ║ ONE CONVERSATION ║
+     DIFF     ║                  ║            ║                  ║
+              ║ [✓] statement 1  ║            ║ Ev: "You came."  ║
+              ║ [✓] statement 2  ║            ║  ① tap → her msg ║
+              ║ [✓] statement 3  ║            ║  ② tap → her msg ║
+              ║ [✓] statement 4  ║            ║  ③ tap → her msg ║
+              ║ [✓] statement 5  ║            ║  ④ tap → her msg ║
+              ║ [✓] statement 6  ║            ║  ⑤ tap → her msg ║
+              ║     ← the price  ║            ║  ⑥ tap ← price   ║
+              ║  statement 7     ║            ║  ⑦ the request   ║
+              ║  statement 8     ║            ║  ⑧ the gift      ║
+              ║ ┌──────────────┐ ║            ║ ┌──────────────┐ ║
+              ║ │ bump +$12.77 │ ║            ║ │ bump +$12.77 │ ║
+              ║ │ total $35.00 │ ║            ║ │ total $35.00 │ ║
+              ║ │ LAY MY TWELVE│ ║            ║ │ LAY MY TWELVE│ ║
+              ║ └──────────────┘ ║            ║ └──────────────┘ ║
+              ║                  ║            ║  ↑ a CARD in the ║
+              ║ Treatment B      ║            ║    transcript,   ║
+              ║ buyer's voice    ║            ║    not a bubble  ║
+              ║ Evelyn SILENT    ║            ║ Evelyn FRAMES,   ║
+              ║                  ║            ║ buyer ASSERTS    ║
+              ╚════════╤═════════╝            ╚════════╤═════════╝
+                       │                               │
+                       └───────────────┬───────────────┘
+                                       │
+                                       ▼   ── from here on, IDENTICAL ──
+  3  STRIPE                 ┌────────────────────────┐
+     hosted                 │  1–2 fixed line items  │
+                            └───────────┬────────────┘
+                                        │ ?session_id={CHECKOUT_SESSION_ID}
+                                        ▼
+  4  UPSELL 1               ┌────────────────────────┐
+     CHAT, V1 reused        │ /welcome1  $47 stone   │
+                            │ UpsellPage.tsx         │
+                            └───────────┬────────────┘
+                                        ▼
+  5  UPSELL 2               ┌────────────────────────┐
+     CHAT, V1 reused        │ /welcome2  $47 → $30   │
+                            │ Upsell2Page.tsx        │
+                            └───────────┬────────────┘
+                                        ▼
+  6  THANK YOU              ┌────────────────────────┐
+     PAGE, not chat         │ 02-T1 · a receipt      │
+                            └───────────┬────────────┘
+                                        ▼
+  7  EMAIL                  02-T3 confirmation → 24h → 02-P1, the twelve
+```
+
+## What actually differs
+
+| | Flow 1 — page | Flow 2 — chat |
+|---|---|---|
+| **Screens to pay** | 1 | 1, revealed across ~9 taps |
+| **Places to lose her** | one (the button) | ~9 |
+| **Commitment act** | ticking a box | saying the sentence — it renders as *her* message |
+| **Can she skim to the price?** | yes, instantly | no; ⑥ is the first money and it is gated |
+| **Evelyn on this step** | silent, third person | frames and acknowledges, never asserts |
+| **Renders on a slow phone** | instantly (Arial, no webfont) | needs the chat shell first |
+| **New build** | `S2` booking-page component | booking flow on the existing chat engine + the checkout card |
+| **Precedent** | the source ran this and made money | V1 runs chat, and this buyer met Evelyn in one |
+
+**The bet Flow 2 is making:** a tapped utterance commits harder than a ticked box, and pacing her
+past the price beats letting her scan it. **The risk it is taking:** nine chances to quit where the
+page had one. Completion rate is the number that settles it, and it must be instrumented per beat
+from the first send — it cannot be reconstructed afterwards.
+
+## Two decisions were taken here, and they are independent
+
+Do not let these merge into one thing.
+
+**1. Step 2 becomes the chat.** *(operator, 2026-08-05.)* The register break used to land four
+seconds after the charge, in the remorse window; it now lands at the click, before money moves. The
+page is **not deleted** — it stays as the A/B challenger if completion comes in under it.
+
+**2. The upsell allocator (`S21`) is dropped.** *(operator, 2026-08-05.)* Everyone sees U1 and U2,
+with no ownership check and no re-minted objects — eight physical SKUs is a bigger operation than
+the deck (§4 of `00b`). ⚠ **This decision applies to whichever flow ships.** It is not a property of
+the chat and must not be re-argued as one.
+
+## What Flow 2 does NOT change
+
+Worth stating plainly, because it is most of the deck:
+
+- The letter. All seven CTAs point at the `{{BOOKING_URL}}` build token, so the destination changes
+  with no rebuild of group A.
+- Five agreements before any mention of money. The bump adjacent to the total. The 24h SLA. $35.
+- `/welcome1` and `/welcome2`, which are already mounted under six funnel prefixes in `App.tsx` —
+  the backend deck is one more route line, not a component.
+- **No conversation is persisted across Stripe.** `UpsellPage.tsx:41` reads `session_id` from the
+  URL and loads the buyer from it; it never used chat history or localStorage. The upsells need
+  nothing from the booking chat but a Stripe session.
+- The thank-you page, the confirmation email, the product, the nudges.
+
+## Carried forward to 03, 04 and 05
+
+The checkout card is the reusable piece, and it is what makes one flow serve four offers: **the chat
+carries the argument, the card takes the money.** So 03/05's pay-what-you-want amount picker and
+04's server-resolved ladder price are card variants, not new conversations. Treatment B's locked
+values (`00b` §3) still apply to the card.
+
+⚠ 03 and 05 need intake — the target's name — which 02 does not. That is an open decision recorded
+in `02-C1b`, and it must not be settled on 02's behalf.

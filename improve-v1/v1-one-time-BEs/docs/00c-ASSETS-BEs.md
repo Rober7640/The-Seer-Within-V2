@@ -8,6 +8,7 @@ and [00b-BUILD-BEs.md](./00b-BUILD-BEs.md) (why).
 
 | | Meaning |
 |---|---|
+| ✅ review | Written and audited — waiting on the human review gate |
 | ✏️ | Source has it — transcribe + recast to Evelyn's voice |
 | 🔨 | Write from scratch (no source) |
 | ⚙️ | Code |
@@ -27,8 +28,8 @@ and [00b-BUILD-BEs.md](./00b-BUILD-BEs.md) (why).
 | 03 Judgement Day | 4 | 9 | 6 | 1 | **20** |
 | 04 Tea Reading | 4 | 12 | 4 | 1 | **21** |
 | 05 Hex Her | 4 | 11 | 4 | 1 | **20** |
-| **Shared** | — | 3 | 26 | — | **29** |
-| | | | | | **115** |
+| **Shared** | — | 4 | 31 | — | **35** |
+| | | | | | **121** |
 
 02 is the cheap one and the only one whose product exists. Everything after it is mostly
 writing, not coding.
@@ -68,6 +69,12 @@ writing, not coding.
 | S25 | *(Phase 2)* n8n workflow: query Supabase by email → prompt → Claude → return body | ⚙️ | greenfield, no n8n in repo today |
 | S26 | *(Phase 2)* Read-only Supabase role scoped to the personalisation columns | ⚙️ | not the app connection string |
 | S27 | *(Phase 2)* Fallback + data-quality gate — thin `concern` → static | ⚙️ | a paid product must never fail to arrive |
+| S28 | **Echo slots** — 3 per product (1 verbatim + 1 paraphrase + 1 name), merged from V1 Supabase data. NOT the n8n generator; a lookup + merge | ⚙️ | the single highest-confidence finding of the 10-lens run |
+| S29 | **Intake queue** — 5 fields, ~3min/order, pre-filled from Supabase. No LLM | ⚙️ | 00e §10 |
+| S30 | **Alarm triage** — keyword pre-screen that marks only; 3 blocking tiers + protective variant | ⚙️ | must exist before the first order |
+| S31 | **30-day TTL + real delete cron** on third-party intake; strip attachments on receipt | ⚙️ | 00e §10 |
+| S32 | Mid-SLA "work has begun" email — never let the SLA pass silently | 🔨 | "product not received" is the dispute code you lose |
+| S33 | Hosted mirror page at a tokenised URL — clone `soulmateLanderSessions.intakeToken` | ⚙️ | backup, never a gate |
 
 **Decided:** inbound runs on **Resend**, not Gmail — already installed (`resend@^6.9.2`), already
 sending as `evelyn@theseerwithin.com`, and its catch-all covers any address on a domain whose MX
@@ -80,12 +87,12 @@ we point. Subdomain `reply.theseerwithin.com` so the root domain's mail is untou
 ### E — Email
 | ID | Asset | Status |
 |---|---|---|
-| 02-E1 | Subject-line bank (7 exist) | ✏️ |
-| 02-E2 | ESL v1 copy — 3 free cards: World / Lovers / Tower | ✏️ |
-| 02-E3 | ESL v2 copy — 3 more: Star / Emperor / Moon | ✏️ |
+| 02-E1 | Subject-line bank — ✅ **drafted**, 8 for v1 + 6 for v2 + nudges, our emoji/name-first format ([copy](../copy/02/02-E1-subject-lines.md)) | ✅ review |
+| 02-E2 | ESL v1 copy — 3 free cards: World / Lovers / Tower — ✅ **drafted** ([copy](../copy/02/02-E2-esl-v1.md)) | ✅ review |
+| 02-E3 | ESL v2 copy — 3 more: Star / Emperor / Moon — ✅ **drafted** ([copy](../copy/02/02-E3-esl-v2.md)) | ✅ review |
 | 02-E4 | Email HTML ×2, AWeber-safe, mobile + dark. **Watch Gmail's ~102KB clip — v1 is long** | 🔨 |
 | 02-E5 | 8 hosted images: hero spread, 6 free cards, case photo | 🔨 |
-| 02-E6 | Abandon nudges +1h / +24h | 🔨 |
+| 02-E6 | Abandon nudges +1h / +24h — ✅ **drafted**, +24h has A/B variants per letter ([copy](../copy/02/02-E6-abandon-nudges.md)) | ✅ review |
 
 ### C — Checkout
 | ID | Asset | Status |
@@ -95,16 +102,16 @@ we point. Subdomain `reply.theseerwithin.com` so the root domain's mail is untou
 | 02-C3 | Order bump copy ("Remove Negative KARMA") | ✏️ |
 | 02-C4 | **Order bump deliverable — copy exists, product does not** | 🔨 |
 | 02-C5 | Stripe prices: $35 + $12.77 bump | ⚙️ |
-| 02-C6 | Pre-checked bump? (negative-option exposure) | ❓ |
+| 02-C6 | ~~Pre-checked bump?~~ — ✅ **DECIDED: ships UNCHECKED, opt-in** (operator, 2026-08-04). A pre-selected paid add-on is a negative option under the FTC rule and card-network rules; this deck already runs PWYW and hex-adjacent products that attract processor scrutiny. `02-C3` copy already reads as an opt-in — no change | ✅ |
 
 ### P — Product
 | ID | Asset | Status |
 |---|---|---|
 | 02-P1 | The 12-card Zodiac Spread copy (`02:501-786`) — **static for MVP**, same 12 cards every buyer | ✏️ |
-| 02-P2 | 12 Major Arcana card images | 🔨 |
-| 02-P3 | Free personal horoscope (`02:787-815`) — no birth data needed | ✏️ |
+| 02-P2 | 12 Major Arcana card images — **7 already on S3**; 5 remain, one command each: `host-card.cjs <slug>` | ⚙️ ~10min |
+| 02-P3 | Free gift — ✅ **decided: the 28-day attention ledger.** Rewrite, never transcribe: the source's gambling instructions (`02:791`, `799-807`) are the Duval pattern. Keeps the four 7-night cycles + the weeks 1–2 / 4 love window; *play four games* → *record one line a night* | 🔨 |
 | 02-P4 | Product delivery email HTML | 🔨 |
-| 02-P5 | **SLA: source says both 8h and 16h. Pick one** | ❓ |
+| 02-P5 | SLA **24 hours** — decided; overrides the source's contradictory 8h/16h | ✅ |
 
 ### T — Post-purchase
 | ID | Asset | Status |
@@ -134,7 +141,7 @@ we point. Subdomain `reply.theseerwithin.com` so the root domain's mail is untou
 | ID | Asset | Status |
 |---|---|---|
 | 03-E1 | Subject lines — **only 2 exist, need 5+** | 🔨 |
-| 03-E2 | ESL copy (aura → hex → 3 case stories → PWYW → scarcity) | ✏️ |
+| 03-E2 | ESL copy (aura → **the open account** → 3 case stories → scarcity). ⚠ mechanism rebuilt off Vodou 2026-08-04 — see [00a §03](./00a-BRIEFS-BEs.md). PWYW moved to the booking page | ✏️ |
 | 03-E3 | Email HTML | 🔨 |
 | 03-E4 | Images — **source has none**, needs art direction | 🔨 |
 | 03-E5 | Abandon nudges | 🔨 |
@@ -149,9 +156,9 @@ we point. Subdomain `reply.theseerwithin.com` so the root domain's mail is untou
 ### P — Product
 | ID | Asset | Status |
 |---|---|---|
-| 03-P1 | **The delivered hex — does not exist.** Only template is 02's structured reading. Write once, static | 🔨 |
+| 03-P1 | **"The Record of Judgement"** — 11-section brief in [00e §10](./00e-FRAMEWORK-BEs.md). Report + forward ledger; 3 spirits = 3 verdicts | 🔨 |
 | 03-P4 | Delivery email HTML | 🔨 |
-| 03-P5 | SLA: 2–5 days (stated) | ✅ |
+| 03-P5 | SLA **3 days** — decided; source said 2–5 days | ✅ |
 | 03-P6 | Intake handling — P.S. asks them to reply with the target's name + what they did. Uses S15/S16 | 🔨 |
 | 03-P7 | Capacity cap ("limited number of hexes") | ⚙️ S8 |
 
@@ -164,7 +171,7 @@ we point. Subdomain `reply.theseerwithin.com` so the root domain's mail is untou
 ### U — Upsell  *(U1 is the strongest fit in the deck)*
 | ID | Asset | Status |
 |---|---|---|
-| 03-U1a | U1 opening beats — **karmic backlash**: strike at an enemy and their energy strikes back | ✏️ |
+| 03-U1a | U1 opening beats — ⚠ **karmic backlash is retired** with the Vodou reframe (nothing is struck, so nothing strikes back). New hinge: closing the account settles what was owed and does not repair **what carrying it cost her** | ✏️ |
 | 03-U1b | U1 bucket block | ✏️ |
 | 03-U2a | U2 opens — weak fit here; consider skipping U2 after 03 | ✏️ |
 
@@ -195,15 +202,18 @@ we point. Subdomain `reply.theseerwithin.com` so the root domain's mail is untou
 |---|---|---|
 | 04-C1 | Booking page copy | 🔨 |
 | 04-C2 | Booking page config entry | ⚙️ |
+| 04-C3 | Order bump copy — **The Still Cup** (§4a) | 🔨 |
+| 04-C4 | Order bump deliverable — the nightly rite | 🔨 |
 | 04-C5 | Stripe prices ×4 rungs | ⚙️ |
 | 04-C7 | Ladder resolver wiring | ⚙️ S9 |
 
 ### P — Product
 | ID | Asset | Status |
 |---|---|---|
-| 04-P1 | **The full tea reading — does not exist.** Letter gives 7 symbols free; define what paid adds. Write once, static | 🔨 |
+| 04-P1 | **"The Turn"** — position not symbols; same 7 leaves re-placed into a 21-day sequence. Brief in [00e §10](./00e-FRAMEWORK-BEs.md) | 🔨 |
+| 04-P3 | Free gift — **the rim calendar**. Added 2026-08-04: 04 had no free gift specced, which left §6c unsatisfied and made the +24h nudge reach for the *paid* bump. 21 days on one page, quiet/speaking weeks marked, meant to be pinned up | 🔨 |
 | 04-P4 | Delivery email HTML | 🔨 |
-| 04-P5 | **SLA — none stated anywhere. Pick one** | ❓ |
+| 04-P5 | SLA **24 hours** — decided; source stated none | ✅ |
 
 ### T — Post-purchase
 | ID | Asset | Status |
@@ -225,14 +235,14 @@ we point. Subdomain `reply.theseerwithin.com` so the root domain's mail is untou
 
 ---
 
-## 05 — Hex Her  *(letter only, and its hook is broken for us)* ⛔ hex go/no-go
+## 05 — Cut the Cord  *(letter only, and its hook is broken for us)* ✅ cleared to write
 
 ### E — Email
 | ID | Asset | Status |
 |---|---|---|
 | 05-E1 | Subject lines — **zero exist** | 🔨 |
 | 05-E2 | ESL copy | ✏️ |
-| 05-E2b | ⚠ **Rewrite the opening hook** — it references "the Commitment Charm", an offer we don't sell | 🔨 |
+| 05-E2b | ⚠ **Rewrite the hook** — it references a "Commitment Charm" we don't sell. Rename ✅ done: the offer is **Cut the Cord** | 🔨 |
 | 05-E3 | Email HTML | 🔨 |
 | 05-E4 | Images — 3 Grand Etteilla cards (Love & Marriage, Wheel of Fate, Card of Misery) | 🔨 |
 | 05-E5 | Abandon nudges | 🔨 |
@@ -247,9 +257,9 @@ we point. Subdomain `reply.theseerwithin.com` so the root domain's mail is untou
 ### P — Product
 | ID | Asset | Status |
 |---|---|---|
-| 05-P1 | **The delivered hex — does not exist.** Write once, static | 🔨 |
+| 05-P1 | **The cord report** — 10-section brief in [00e §10](./00e-FRAMEWORK-BEs.md). Object is the cord, not the woman | 🔨 |
 | 05-P4 | Delivery email HTML | 🔨 |
-| 05-P5 | SLA: 14 hours (stated) | ✅ |
+| 05-P5 | SLA **24 hours** — decided; source said 14 hours | ✅ |
 | 05-P6 | Intake handling — reply with details of the other woman. Uses S15/S16 | 🔨 |
 | 05-P7 | ⚠ **Capacity cap that really disables the link** — "if the link doesn't work it means I've been fully booked" is a promise, not copy | ⚙️ S8 |
 
@@ -277,11 +287,9 @@ we point. Subdomain `reply.theseerwithin.com` so the root domain's mail is untou
 
 | ID | Question |
 |---|---|
-| 02-C6 | Pre-check the order bump? |
-| 02-P5 | 8-hour or 16-hour SLA? |
-| 04-P5 | What SLA for the tea reading? |
-| 02-C4 | What *is* the karma-cleanse bump deliverable? |
-| ⛔ | Hex go/no-go — gates all of 03 and 05 |
+| ~~02-C6~~ | ~~Pre-check the order bump?~~ — ✅ decided: **unchecked** (2026-08-04) |
+| 02-C4 | What *is* the karma-cleanse bump deliverable? Written in 02's group D, ships with group A |
+| ~~⛔~~ | ~~Hex go/no-go~~ — ✅ **GO on both**, 03 first, 05 as *Cut the Cord* (2026-08-03) |
 | S21 | Shared upsell pool with suppression, or mint 8 offer-specific SKUs? (rec: shared pool) |
 
 ## Suggested first slice

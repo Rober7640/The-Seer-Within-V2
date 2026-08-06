@@ -155,6 +155,24 @@ natal input). The birth-data blocker I raised is withdrawn.
 
 ## 1. Per-offer checklist
 
+> ⚠ **STALE FOR COPY, as of 2026-08-04. Read [00c-ASSETS](./00c-ASSETS-BEs.md) and
+> [00g-PENDING](./00g-PENDING.md) instead.**
+>
+> The checkboxes below still show ~25 copy items as undone that are now **written and passing
+> `scripts/copy-check.cjs`** — 02's booking page, bump, thank-you, confirmation, product, horoscope
+> rewrite and bump deliverable; 03's entire A–E including the ESL, subjects, booking page,
+> thank-you, confirmation, product and intake handling; 04's entire A–E including the three ladder
+> emails. **36 copy assets exist across 02, 03 and 04.**
+>
+> Three things below are also now WRONG rather than merely stale:
+> - **03 is no longer a hex.** Its mechanism was rebuilt off Vodou (operator, 2026-08-04) — no
+>   Legba, Kalfu or Samedi. See [00a §03](./00a-BRIEFS-BEs.md).
+> - **05's *"she will NOT pursue him"* is settled** — it never ships (operator, 2026-08-04).
+> - **The pre-checked bump is settled** — it ships unchecked (operator, 2026-08-04).
+>
+> The **code and ops** sections further down are still accurate: none of that is built.
+> This section is kept for its per-offer *reasoning*, not as a live to-do list.
+
 ### 02 Twin Flame Tarot — mostly transcription
 
 - [ ] Recast both ESL versions Madame Delacroix → Evelyn Cross (voice, not name-swap)
@@ -163,9 +181,10 @@ natal input). The birth-data blocker I raised is withdrawn.
 - [ ] Booking page: 6 commitment checkboxes, price in the last one, free-gift paragraph, bump
 - [ ] Thank-you page
 - [ ] Confirmation email + the donkey parable
-- [ ] **Resolve the SLA contradiction: booking page says 16 hours, confirmation email says 8**
+- [ ] SLA **24h** — update both the booking checkbox (says 16h) and the confirmation email (says 8h)
 - [ ] The 12-card product email (transcribe + recast) + 12 card images
-- [ ] Horoscope section (bundled inside the product email, not sent separately)
+- [ ] ⚠ Horoscope **REWRITE, not transcribe** — its gambling instructions are the Duval
+      prosecuted pattern. Replace with a 28-day attention ledger (00e §10)
 - [ ] Bump product "Remove Negative KARMA" — **copy exists, deliverable does not**
 
 ### 03 Judgement Day — letter only, everything else from scratch
@@ -179,7 +198,7 @@ natal input). The birth-data blocker I raised is withdrawn.
 - [ ] **The product from scratch** — what does a hex delivery actually look like? 02 gives the
       only template: a long, structured, named-component reading
 - [ ] Intake handling: P.S. asks them to reply with the target's name and what they did
-- [ ] SLA: 2–5 days (stated)
+- [ ] SLA **3 days** — update the copy (says 2–5 days), incl. the scarcity justification
 - [ ] ~~Swap a case study to a man~~ — **parked**: women-only for v1, and all three are women already
 - [ ] Note: Josephine's story is a *business* rival and Elisabetta's a *family* one — so 03
       genuinely fits `money` and `purpose` buckets, not just love
@@ -191,20 +210,20 @@ natal input). The birth-data blocker I raised is withdrawn.
 - [ ] **Ladder emails days 2, 3, 4 — do not exist.** The ladder cannot function without them
 - [ ] **Booking page from scratch** — price resolved server-side from ladder day
 - [ ] **Thank-you page, confirmation email, product — all from scratch**
-- [ ] **No SLA is stated anywhere.** Pick one
+- [ ] SLA **24h** — none was stated in the source; add it to the booking page + confirmation
 - [ ] Define the product: the letter reveals 7 symbols free (bird, broken heart, withering tree,
       storm boat, bridge, lighthouse, butterfly). What does the *paid* full reading add?
 
-### 05 Hex Her — letter only, and its hook is broken for us
+### 05 Cut the Cord — letter only, and its hook is broken for us
 
-- [ ] Recast ESL
+- [ ] Recast ESL. ✅ Named *Cut the Cord*; the source's "Hex Her" survives only as a filename
 - [ ] **Subject lines: zero exist**
 - [ ] ⚠ **Opening line references "the Commitment Charm" — an offer we don't have.** The letter
       opens *"If you skipped on the opportunity to get the Commitment Charm…"*. Either rewrite
       the hook or the letter's premise doesn't land
 - [ ] **Booking page, thank-you page, confirmation email, product — all from scratch**
 - [ ] Intake: P.S. asks them to reply with details of the other woman
-- [ ] SLA: 14 hours (stated)
+- [ ] SLA **24h** — update the copy (says 14 hours)
 - [ ] ⚠ **"If the link doesn't work it means I've been fully booked"** — this is a real feature,
       not copy. It needs a capacity cap that actually disables the link, or the line is a lie
 - [ ] 3 Grand Etteilla cards (Love & Marriage, Wheel of Fate, Card of Misery) + Etteilla/Thoth
@@ -447,13 +466,21 @@ frontend could be asked for $164 in total.
 
 ## 6. Blockers
 
-1. **Hex go/no-go (03/05).** Judgement Day is offer 2 of 4. Half the deck waits on this.
+1. ~~**Hex go/no-go (03/05).**~~ ✅ **RATIFIED — GO ON BOTH** (operator, 2026-08-03).
+   03 ships first, reframed as a closure/ledger rite. 05 ships after the rename (**now
+   *Cut the Cord***) and the rewrite of its outcome promise. Stripe bans psychic services only in
+   JP/MX/TH — the real exposure is the UDAAP clause, i.e. specific sentences, not the category,
+   and both briefs already remove them. Product briefs: [00e §10](./00e-FRAMEWORK-BEs.md).
+   ⚠ **What GO commits us to:** 03 and 05 cannot be fulfilled without a buyer emailing in a real
+   third party's name and what they did. `S29` intake queue, `S30` alarm triage and `S31` 30-day
+   delete are therefore launch-blocking for 03 — not Phase-2 polish.
 2. **Three products don't exist.** 03, 04 and 05 have no deliverable written — only 02 does.
    This is the real bulk of the remaining work. (Now scoped as *writing* — the static decision
    means none of them needs a generator.)
 3. **Bump product.** "Remove Negative KARMA" is copy with nothing behind it.
 4. **05's hook references an offer we don't sell** ("the Commitment Charm").
-5. **SLA contradiction in 02** (8h vs 16h) and **no SLA at all in 04**.
+5. ~~SLA contradiction in 02, none in 04~~ — **DECIDED: 02 / 04 / 05 = 24 hours, 03 = 3 days.**
+   Overrides the source throughout. One daily send window covers three of the four offers.
 6. ~~Free gift needs a birth date~~ — **withdrawn**, the horoscope needs no natal input.
 
 ### On support capacity — revised
