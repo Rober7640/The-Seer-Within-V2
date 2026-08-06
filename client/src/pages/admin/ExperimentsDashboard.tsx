@@ -75,6 +75,26 @@ interface ResultsResponse {
     rows: TallyVariantRow[];
     significance?: { z: number; p: number; liftPct: number; significant: boolean };
   }>;
+  // Order-bump take rate per arm. Absent unless some arm was actually offered a
+  // bump, so every non-bump experiment omits the block. This is the number the
+  // pooled table above structurally cannot show: there, a bump order and a plain
+  // order are both just "one buyer".
+  bumpTakeRate?: Array<{
+    variant: string;
+    offered: number;
+    saidYes: number;
+    offeredAndPaid: number;
+    paidWithBump: number;
+    bumpRevenueUsd: number;
+  }>;
+  // What the superseded buyer definition would have counted, and why each row was
+  // dropped. Present on v1_main_funnel tallies only.
+  excluded?: Array<{
+    variant: string;
+    legacyBuyers: number;
+    paidBeforeExposure: number;
+    noPaidStamp: number;
+  }>;
   srm?: {
     aViewers: number;
     bViewers: number;
@@ -927,6 +947,116 @@ export default function ExperimentsDashboard() {
                           verdict.
                         </div>
                       </div>
+
+                      {/* Order-bump take rate. Deliberately ABOVE the per-lander
+                          diagnostics: it is a headline number people actually ask
+                          for, not a slice to browse. Absent for non-bump tests. */}
+                      {results.bumpTakeRate && results.bumpTakeRate.length > 0 && (
+                        <div className="space-y-2 border-t border-gray-800 pt-3">
+                          <div className="flex items-baseline gap-2">
+                            <span className="text-sm font-semibold text-gray-200">
+                              Order-bump take rate
+                            </span>
+                            <span className="text-xs text-gray-500">
+                              of the buyers who saw the offer, how many bought it
+                            </span>
+                          </div>
+                          <table className="w-full text-sm">
+                            <thead>
+                              <tr className="border-b border-gray-700 text-left text-gray-400">
+                                <th className="py-2 pr-4">Arm</th>
+                                <th className="py-2 pr-4">Offered</th>
+                                <th className="py-2 pr-4">Said yes</th>
+                                <th className="py-2 pr-4">Intent %</th>
+                                <th className="py-2 pr-4">Offered &amp; paid</th>
+                                <th className="py-2 pr-4">Paid w/ bump</th>
+                                <th className="py-2 pr-4">Take rate</th>
+                                <th className="py-2 pr-4">Bump revenue</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {results.bumpTakeRate.map((b) => (
+                                <tr key={`bump-${b.variant}`} className="border-b border-gray-800/50">
+                                  <td className="py-2 pr-4 font-semibold">{b.variant}</td>
+                                  <td className="py-2 pr-4">{b.offered}</td>
+                                  <td className="py-2 pr-4">{b.saidYes}</td>
+                                  <td className="py-2 pr-4 text-gray-400">
+                                    {b.offered > 0
+                                      ? `${((100 * b.saidYes) / b.offered).toFixed(1)}%`
+                                      : "—"}
+                                  </td>
+                                  <td className="py-2 pr-4">{b.offeredAndPaid}</td>
+                                  <td className="py-2 pr-4 font-semibold text-emerald-300">
+                                    {b.paidWithBump}
+                                  </td>
+                                  <td className="py-2 pr-4 font-semibold text-emerald-300">
+                                    {b.offeredAndPaid > 0
+                                      ? `${((100 * b.paidWithBump) / b.offeredAndPaid).toFixed(1)}%`
+                                      : "—"}
+                                  </td>
+                                  <td className="py-2 pr-4">${b.bumpRevenueUsd.toFixed(2)}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                          <div className="space-y-1 text-xs text-gray-500">
+                            <div>
+                              <span className="text-gray-400">Take rate</span> is the one to quote —
+                              paid with the bump ÷ buyers who were offered it.{" "}
+                              <span className="text-gray-400">Intent %</span> counts everyone who
+                              clicked yes, including carts that were never paid, so it is always the
+                              softer number.
+                            </div>
+                            <div className="text-amber-300/80">
+                              &ldquo;Offered&rdquo; is only recorded once she reaches checkout, so
+                              anyone who saw the offer and left the page entirely is missing from the
+                              denominator — take rate therefore reads slightly high. Those visitors
+                              do count in the pooled table above, which is what decides the test.
+                            </div>
+                            <div>
+                              A control arm reading all zeros is correct — it is never offered a
+                              bump, and that is the evidence no control buyer was charged one.
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Reconciliation against the superseded buyer definition. */}
+                      {results.excluded && results.excluded.some((e) => e.legacyBuyers > 0) && (
+                        <details className="border-t border-gray-800 pt-3 text-xs text-gray-500">
+                          <summary className="cursor-pointer text-gray-400">
+                            Why these buyer counts are lower than they used to be
+                          </summary>
+                          <p className="mt-2">
+                            A buyer now means someone who <em>paid at or after</em> being exposed.
+                            The old definition counted any row flagged as purchased — which, because
+                            conversation rows are keyed by email and reused, included purchases made
+                            weeks or months before the test, plus checkouts that were never paid.
+                          </p>
+                          <table className="mt-2 w-full">
+                            <thead>
+                              <tr className="border-b border-gray-800 text-left text-gray-500">
+                                <th className="py-1 pr-4">Arm</th>
+                                <th className="py-1 pr-4">Old count</th>
+                                <th className="py-1 pr-4">Paid before exposure</th>
+                                <th className="py-1 pr-4">Never confirmed paid</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {results.excluded.map((e) => (
+                                <tr key={`excl-${e.variant}`}>
+                                  <td className="py-1 pr-4 font-semibold text-gray-400">
+                                    {e.variant}
+                                  </td>
+                                  <td className="py-1 pr-4">{e.legacyBuyers}</td>
+                                  <td className="py-1 pr-4">{e.paidBeforeExposure}</td>
+                                  <td className="py-1 pr-4">{e.noPaidStamp}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </details>
+                      )}
 
                       {/* Per-fb-palm-sign breakdown — DIAGNOSTIC ONLY. */}
                       {results.bySign && results.bySign.length > 0 && (
