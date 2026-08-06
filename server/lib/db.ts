@@ -1,7 +1,7 @@
 import { drizzle } from "drizzle-orm/node-postgres";
 import pg from "pg";
 import { conversations, type Conversation, type InsertConversation } from "@shared/schema";
-import { eq, desc, and, isNull } from "drizzle-orm";
+import { eq, desc } from "drizzle-orm";
 import logger from "./logger";
 import { activeStripeAccountTag } from "./stripeAccount";
 
@@ -297,9 +297,24 @@ export async function markUpsellOffered(sessionId: string): Promise<void> {
 // from the Stripe checkout.session.completed webhook. Matched by the checkout
 // session id that /api/checkout saved on the row (updateStripeData) BEFORE
 // payment, so it lands even when the buyer never loads /welcome1 (the case the
-// legacy upsell_offered signal misses). Idempotent: the `main_paid_at IS NULL`
-// guard makes Stripe's webhook retries no-ops. Reporting-only — nothing in the
-// funnel / checkout / pricing / variant-assignment reads this column.
+// legacy upsell_offered signal misses).
+//
+// 🔴 NO `main_paid_at IS NULL` GUARD (removed 2026-08-06). It existed to make
+// Stripe's webhook retries no-ops — but `conversations` is keyed by EMAIL and the
+// row is REUSED across purchases, so once a buyer had any stamp their SECOND
+// purchase could never stamp again and the column froze at their first sale.
+// Returning visitors are ~57% of main buys, so that silently mis-dated most
+// repeat revenue. Matching on stripeSessionId alone is the correct scope:
+// /api/checkout overwrites that id on every new checkout, so a retry for the SAME
+// session just rewrites the same value (still idempotent in effect) while a NEW
+// session stamps fresh.
+//
+// 🔑 tallyV1Main now DEPENDS on this being a per-purchase timestamp — it is the
+// only signal that distinguishes "bought during the test" from "bought in April
+// and merely visited during the test". See V1_IN_TEST_PURCHASE in experiments.ts.
+//
+// Reporting-only — nothing in the funnel / checkout / pricing / variant-assignment
+// reads this column.
 export async function markMainPaid(sessionId: string): Promise<void> {
   try {
     await db
@@ -308,12 +323,7 @@ export async function markMainPaid(sessionId: string): Promise<void> {
         mainPaidAt: new Date(),
         updatedAt: new Date(),
       })
-      .where(
-        and(
-          eq(conversations.stripeSessionId, sessionId),
-          isNull(conversations.mainPaidAt),
-        ),
-      );
+      .where(eq(conversations.stripeSessionId, sessionId));
   } catch (error) {
     logger.error("Database markMainPaid update error:", error);
   }
