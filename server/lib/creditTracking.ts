@@ -263,6 +263,11 @@ export async function checkpointSession(sessionId: string): Promise<void> {
       const split = await refundCoins(
         tx, row.user_id, precheck[0].personaId, refund, previousPromoCharged, realCharged,
       );
+      // The receipt is about to go DOWN on a still-active session. That shape is what the
+      // receipt-guard trigger exists to reject, so declare that the coins are going back in
+      // this same transaction. SET LOCAL dies with the transaction, so it cannot authorise
+      // anything else. See improve-v2/receipt-guard-2026-08-05.sql.
+      await tx.execute(sql`SET LOCAL app.receipt_refund = 'on'`);
       actualDeduction = -(split.toReal + split.toPromo);
       promoDeducted = -split.toPromo;
       logger.info('checkpointSession: refunded dead-air over-billing', {
@@ -323,13 +328,55 @@ export async function checkpointSession(sessionId: string): Promise<void> {
       maxAllowedCoins: maxBillableCoins,
       maxAllowedSeconds: MAX_BILLABLE_SECONDS,
     });
-    // NUCLEAR FIX: force correct the corrupted values
-    await db.execute(
-      sql`UPDATE chat_sessions SET
-            coins_charged = LEAST(coins_charged, ${maxBillableCoins}),
-            duration_seconds = LEAST(duration_seconds, ${MAX_BILLABLE_SECONDS})
-          WHERE id = ${sessionId}`
-    );
+    // Cap the corrupted values — but NEVER lower coins_charged without giving the
+    // coins back. Until 2026-08-04 this block rewrote the receipt and kept the money.
+    // Because billing is charged as a DIFFERENCE (coinsToDeductNow = newTotalCharged
+    // - row.coins_charged, ~line 203), a silently-lowered receipt makes every later
+    // checkpoint re-bill the erased amount — up to MAX_DEDUCTION_SECONDS' worth every
+    // 30s until the wallet is empty. See improve-v2/billing-ratchet.test.ts and
+    // docs/root-cause-1800-wallet-drain-2026-08-04.md.
+    await db.transaction(async (tx) => {
+      const locked = await tx.execute(
+        sql`SELECT user_id, coins_charged, promo_coins_charged
+            FROM chat_sessions WHERE id = ${sessionId} FOR UPDATE`
+      );
+      const row = locked.rows[0] as {
+        user_id: string; coins_charged: number; promo_coins_charged: number;
+      } | undefined;
+      if (!row) return;
+
+      const charged = Number(row.coins_charged);
+      const cappedCharge = Math.min(charged, maxBillableCoins);
+      const erased = charged - cappedCharge;
+      let promoCharged = Number(row.promo_coins_charged);
+
+      if (erased > 0) {
+        // Real balance first, then promo — the same order as every other refund path.
+        const split = await refundCoins(
+          tx, row.user_id, precheck[0].personaId, erased, promoCharged, charged - promoCharged,
+        );
+        promoCharged -= split.toPromo;
+        // Same declaration as the dead-air path: the capped write below lowers the receipt
+        // while the session is still active, and the erased coins have just been refunded.
+        await tx.execute(sql`SET LOCAL app.receipt_refund = 'on'`);
+        logger.info('BILLING_CORRUPTION_REFUNDED: returned the coins the cap erased', {
+          sessionId,
+          userId: row.user_id,
+          erased,
+          refundToReal: split.toReal,
+          refundToPromo: split.toPromo,
+        });
+      }
+
+      await tx.execute(
+        sql`UPDATE chat_sessions SET
+              coins_charged = ${cappedCharge},
+              promo_coins_charged = ${promoCharged},
+              duration_seconds = LEAST(duration_seconds, ${MAX_BILLABLE_SECONDS}),
+              updated_at = (NOW() AT TIME ZONE 'UTC')
+            WHERE id = ${sessionId}`
+      );
+    });
     logger.info('BILLING_CORRUPTION_FIXED: capped values to safety max', { sessionId });
   }
 }
