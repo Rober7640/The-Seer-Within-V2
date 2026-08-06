@@ -1069,6 +1069,12 @@ const TAROT_HOOK_CONTEXT: Record<string, string> = {
   'cards-pulling-away': "A man still in her life has begun putting distance between them with nothing said about it, and she is asking why — usually having already concluded it must be something she did.",
   'cards-gone-cold': "The warmth she used to feel from him has gone without anything being said or ended, and she is trying to understand how the same man can be present and unreachable at once.",
   'cards-losing-interest': "She cannot tell whether he is losing interest or dealing with something of his own, and has been left to work out which from his behaviour rather than being told either way.",
+  // Reconciliation hooks — the same topic as the reunion family above, asked about US
+  // rather than about HIM. She is not waiting to learn what he decides; she is asking
+  // what the two of them still are. The forbidden verdict here is on the RELATIONSHIP.
+  'cards-back-together': "She is asking whether she and the man she loves will get back together, treating it as one outcome to be granted to her when it is really two decisions that have to meet — and only one of them was ever hers.",
+  'cards-still-a-chance': "She is asking outright how likely a reconciliation is, and there is no honest number to give her; she has usually begun to suspect that continuing to hope is a failure of realism on her part.",
+  'cards-really-over': "She is asking to be told whether it is finished, because nobody ever said so plainly — it was left to fade, and she has been made to reach that conclusion alone.",
   // Self-frame hooks — about HER future, not a specific man.
   'cards-love-again': "After heartbreak, she is asking whether she will ever love again — worn down, but the hope is still there.",
   'cards-soulmate': "She is asking WHEN her soulmate will finally arrive — tired of waiting, but still believing the right person is out there for her.",
@@ -1154,6 +1160,22 @@ const TAROT_HOOK_TENDENCY: Record<string, string> = {
   // the either-or and read the state of the question instead.
   'cards-losing-interest':
     'that being left to deduce the answer is itself the weight she has been carrying, and that it is his to say rather than hers to work out. NEVER pick a side of the binary — never state he is losing interest and never state he is only going through something — and NEVER give a date or timeframe. NEVER let the answer land as her overthinking or reading too much into it, and NEVER supply a tactic. Read the card as the STATE of the question rather than its answer, and affirm HER right to be told outright instead of having to read it off his behaviour',
+  // Reconciliation hooks (2026-08-06). The us-framed sibling of the reunion family, and
+  // the verdict at risk is on the RELATIONSHIP rather than on him — which is harder, not
+  // softer: she cannot go and check it against a real man's behaviour. Four failure modes:
+  // (1) ruling the relationship over OR not over; (2) ODDS of any kind, since
+  // 'cards-still-a-chance' asks for a number outright; (3) DIRECTIVES — move on, let go,
+  // fight for him, reach out first; and (4) implying the OUTCOME rests on what she does
+  // next, which quietly hands her the blame for a decision that was never wholly hers.
+  'cards-back-together':
+    'that her own half of this is real, is hers, and does not depend on his half arriving first. NEVER promise they will get back together and NEVER pronounce that they will not, and NEVER give a date or timeframe. NEVER imply the outcome rests on what she does next — no advice about reaching out, waiting, giving him space or proving anything. Read the card as what a reunion would actually REQUIRE rather than whether it happens, and affirm HER right to know her own mind before his is known',
+  'cards-still-a-chance':
+    'that hope is what a person does with a question nobody has answered, not a refusal to face one that has been settled. NEVER quote odds, chances, percentages or likelihoods in either direction — there is no number and inventing one is the harm. NEVER promise a reconciliation and NEVER declare it impossible, and NEVER give a timeframe. NEVER let the answer land as her clinging, deluding herself or lacking realism. Read the card as what remains genuinely UNSETTLED, and affirm HER right to an answer rather than an estimate',
+  // ⚠ The sharpest hook in the family — she is asking to be told whether to stop. BOTH
+  // answers do damage: 'yes' is a death notice delivered by a stranger to a woman who came
+  // asking, and 'no' is false hope. Route to the fact that nobody ever said it to her.
+  'cards-really-over':
+    'that "over" is a word somebody has to actually say, and that it was never said to her — she has been left to reach that conclusion alone, which was never a job for one person. NEVER state that it is over and NEVER state that it is not, NEVER give a date or timeframe, and NEVER tell her to move on, let go, accept it or hold on. NEVER let any part of the answer land as her being unable to face reality. Read the card as the UNFINISHED conversation rather than as a ruling on the relationship, and affirm HER right to have been told plainly',
   // Self-frame — affirm HER future love, not a verdict on any man.
   'cards-love-again': 'that love is finding its way back to her — affirm HER heart and her capacity to love again, read the card as a hopeful sign for her own future; never tie it to one specific person and never a date',
   'cards-soulmate': 'that her soulmate is genuinely on the way and nearer than the waiting has let her believe — affirm HER heart and that the love she is holding out for is real and coming, read the card as a hopeful sign of arrival; answer the "when" only as a leaning (soon, close, sooner than the fear admits), NEVER tie it to one specific named person and NEVER give a date or timeframe',

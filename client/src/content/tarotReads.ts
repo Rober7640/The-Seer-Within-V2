@@ -123,6 +123,27 @@ export type TarotHook =
   | 'cards-pulling-away' // Why is he pulling away from me?
   | 'cards-gone-cold' // Why has he gone cold on me?
   | 'cards-losing-interest' // Is he losing interest, or just going through something?
+  // Reconciliation hooks (2026-08-06). The SAME topic as reunion — getting back together
+  // — but framed around US rather than HIM, and that changes what the read has to do.
+  //
+  // 🔴 The reunion family casts him as the agent and her as the one waiting on his
+  // decision ('will HE come back'). These cast the relationship as a joint thing with two
+  // people in it ('will WE get back together'). Operator call 2026-08-06: run them as
+  // their own angle so him-framing and us-framing can be compared at ANGLE level, which
+  // is the actual question being tested.
+  //
+  // ⚠ The us-framing opens a failure mode the reunion trio does not have: these headlines
+  // ask for a verdict on the RELATIONSHIP rather than on him, and a verdict on a
+  // relationship is just as forbidden and lands harder. 'It is over' is a death notice;
+  // 'it is not over' is a promise. 'cards-still-a-chance' asks for odds outright, and
+  // 'cards-really-over' asks to be told whether to stop hoping — neither is answerable by
+  // a card, and pretending otherwise is the whole harm.
+  //
+  // 🔴 These are NOT self-frame. The us-framing includes her, but a real man is in the
+  // picture and every no-verdict-on-him guardrail stays on. Same warning as HEALING_HOOKS.
+  | 'cards-back-together' // Will we get back together?
+  | 'cards-still-a-chance' // Is there still a chance for us?
+  | 'cards-really-over' // Is it really over between us?
   // Self-frame hooks (read HER, affirm the hopeful yes — like the palm love hooks).
   | 'cards-love-again' // Will I love again?
   | 'cards-soulmate' // When is my soulmate coming?
@@ -195,6 +216,21 @@ export const PULLING_AWAY_HOOKS: TarotHook[] = [
   'cards-losing-interest',
 ]
 
+// The reconciliation hooks (2026-08-06). Same topic as REUNION_HOOKS — getting back
+// together — but framed around US instead of HIM. Their OWN angle rather than being
+// folded into `reunion`: operator call 2026-08-06, the point of running them is to
+// compare him-framing against us-framing, and that comparison only exists if the two
+// families carry different angle labels.
+//
+// 🔴 REUNION_HOOKS must stay exactly three. Moving any of them in here, or adding these
+// three there, destroys the very contrast the test was commissioned to measure. Pinned by
+// tests/tarot-reconciliation-copy.test.ts.
+export const RECONCILIATION_HOOKS: TarotHook[] = [
+  'cards-back-together',
+  'cards-still-a-chance',
+  'cards-really-over',
+]
+
 // The ad ANGLE a hook belongs to. Carried on every tarot PostHog event (see
 // lib/tarotAttribution.ts) so the two decode-him families can be compared as GROUPS
 // without listing each hook: one `angle = trust` filter instead of three hook values,
@@ -210,6 +246,11 @@ export type TarotAngle =
   | 'reunion'
   | 'healing'
   | 'pulling-away'
+  // 🔴 'reconciliation' is the US-framed sibling of 'reunion', NOT a replacement for it.
+  // reunion = "will HE come back" (he decides, she waits); reconciliation = "will WE get
+  // back together" (a joint outcome). Keeping them as separate angle labels is the entire
+  // point of the 2026-08-06 test — collapse them and the comparison disappears.
+  | 'reconciliation'
   | 'self-frame'
 
 export function angleForHook(hook: TarotHook): TarotAngle {
@@ -220,6 +261,7 @@ export function angleForHook(hook: TarotHook): TarotAngle {
   if (REUNION_HOOKS.includes(hook)) return 'reunion'
   if (HEALING_HOOKS.includes(hook)) return 'healing'
   if (PULLING_AWAY_HOOKS.includes(hook)) return 'pulling-away'
+  if (RECONCILIATION_HOOKS.includes(hook)) return 'reconciliation'
   return 'decode-him'
 }
 
@@ -246,6 +288,9 @@ export const TAROT_HOOKS: TarotHook[] = [
   'cards-pulling-away',
   'cards-gone-cold',
   'cards-losing-interest',
+  'cards-back-together',
+  'cards-still-a-chance',
+  'cards-really-over',
   'cards-love-again',
   'cards-soulmate',
 ]
@@ -294,6 +339,11 @@ export const HEADLINES: Record<TarotHook, string> = {
   'cards-pulling-away': 'Why is he pulling away from me?',
   'cards-gone-cold': 'Why has he gone cold on me?',
   'cards-losing-interest': 'Is he losing interest, or just going through something?',
+  // Reconciliation (2026-08-06). Note the pronoun: every reunion headline says "he",
+  // every one of these says "we"/"us". That is the variable under test.
+  'cards-back-together': 'Will we get back together?',
+  'cards-still-a-chance': 'Is there still a chance for us?',
+  'cards-really-over': 'Is it really over between us?',
   'cards-love-again': 'Will I love again?',
   'cards-soulmate': 'When is my soulmate coming?',
 }
@@ -350,6 +400,17 @@ const TAROT_QUESTION: Record<TarotHook, string> = {
   // sits on the second half: what keeps her from being sure is the material the read is
   // actually about.
   'cards-losing-interest': "Before I look closer, tell me… if you had to say tonight which of the two it is, which would you pick — and what keeps you from being sure?",
+  // Reconciliation (2026-08-06). Each asks about the JOINT thing — what the two of them
+  // were, what remains between them — never for a forecast, and never in a way that hands
+  // her the responsibility for the outcome. Deliberately distinct from the reunion
+  // openers, which ask about HIS leaving and HER waiting.
+  'cards-back-together': "Before I look closer, tell me… when you picture the two of you finding your way back, what does it look like?",
+  // Asks what she is still holding, not how likely it is. The question she came with has
+  // no number in it, and the opener must not imply one is coming.
+  'cards-still-a-chance': "Before I look closer, tell me… what is it between you that still feels unfinished to you?",
+  // ⚠ Never asks her to justify why she has not accepted it. She arrives already braced
+  // for someone to tell her to let go; the opener asks what she was never actually told.
+  'cards-really-over': "Before I look closer, tell me… was there ever a moment where it was said plainly, or has it only ever been left to fade?",
   'cards-love-again': "Before I look closer, tell me… what has been weighing on your heart since it happened?",
   'cards-soulmate': "Before I look closer, tell me… what is the love you're still holding out for — the one you haven't given up on?",
 }
@@ -1554,6 +1615,96 @@ const RETURN_MHF: CardSetConfig = {
         "That is not random; your hand went to the card of the account that arrives incomplete.",
         "The Fool refuses to be pushed into calling this one thing or the other — what it shows me is a situation you have been asked to interpret without being given enough to interpret it with. Wherever this is genuinely heading, you were owed the words for it, and going without them has been doing its own damage regardless of which explanation turns out to be true.",
         "Let me look closer at the words you were never given…",
+      ],
+    },
+    // ── Reconciliation (2026-08-06) ──────────────────────────────────────────
+    // The us-framed sibling of the reunion reads. Same topic, different subject: reunion
+    // asks what HE will do, these ask what the TWO of them are. That shift creates a
+    // failure mode the reunion trio does not have, and it is the reason this block is
+    // written separately rather than ported — the forbidden verdict here is on the
+    // RELATIONSHIP, not on him.
+    //
+    // Beyond the standing tendency-never-verdict rule, four things are banned outright in
+    // this block and pinned by tests/tarot-reconciliation-copy.test.ts:
+    //   1. A VERDICT ON THE RELATIONSHIP, both ways. 'It is over' is a death notice
+    //      delivered to someone who came asking; 'it is not over' is a promise the funnel
+    //      cannot keep. Both are worse here than a verdict on him, because she cannot go
+    //      and check them against anything.
+    //   2. ODDS. No chances, percentages, likelihoods or 'strong possibility'.
+    //      'cards-still-a-chance' asks for a number outright and there is no number.
+    //   3. DIRECTIVES. No move on, let go, accept it, fight for him, reach out first. She
+    //      arrives braced to be told what to do about it; that is not a reading.
+    //   4. HER RESPONSIBILITY FOR THE OUTCOME. The us-framing makes it easy to imply the
+    //      result rests on what she does next. It does not, and implying it hands her the
+    //      blame for a decision that was never wholly hers.
+    //
+    // 'Will we get back together?' — THE TWO HALVES. A reunion is not one event granted to
+    // her; it is two decisions that have to meet, and only one of them was ever hers.
+    'cards-back-together': {
+      a: [
+        "You turned the Magician, dear — the card of the thing that only exists if two people build it.",
+        "Your hand went to the card of what has to be made rather than waited for, and for a question worded the way yours is, that is worth noticing.",
+        "The Magician holds no picture of the two of you a year from now — what it marks is that the thing you are asking about was never a single event you could watch for. It is two separate decisions that have to meet, and you have been treating it as one outcome to be granted to you. Half of it has always been yours, and you are allowed to know what your own half is well before his ever arrives.",
+        "Let me look closer at the half of this that has always been yours…",
+      ],
+      b: [
+        "You turned the Hanged Man, dear — the card of what was left standing in the doorway, neither in nor out.",
+        "You reached for the card of the thing never closed and never resumed, which is the exact place the two of you have been left.",
+        "The Hanged Man is not in the business of telling you how this ends, and I will not put words in its mouth — what it shows is a thing suspended rather than finished, and two people can be held in a suspension without either of them having chosen it. That is not the same as being over, and it is not the same as being on its way back. What it has cost you is having to live inside it while nobody will name it.",
+        "Let me look closer at what has been left standing between you…",
+      ],
+      c: [
+        "You turned the Fool, dear — the card of the road that could still be walked from either end.",
+        "That is not random; you reached for the card of the beginning, and a beginning is the one thing that cannot be inherited from what came before it.",
+        "The Fool carries no map of where the two of you end up — what it points at is that whatever opens here would be a different thing wearing a familiar name, not the old one handed back to you intact. You would not be collecting something you left behind. You would be deciding, with the same person and with everything you now know, whether to make something else — and that is a choice you are entitled to make deliberately rather than drift into.",
+        "Let me look closer at what would actually be beginning…",
+      ],
+    },
+    // 'Is there still a chance for us?' — THE ODDS. She is asking for a number and there
+    // is none; quoting one in either direction is the failure. The finding is that hope
+    // is a response to an unanswered question, not a refusal to face a settled one.
+    'cards-still-a-chance': {
+      a: [
+        "You turned the Magician, dear — the card of what is still being held rather than spent.",
+        "Your hand found the card of the thing not yet used up, and for a question shaped like yours that is worth sitting with.",
+        "The Magician puts no number on this and I will not put one on it either — a chance is not a quantity lying somewhere waiting to be measured for you, and anyone who hands you a figure has invented it. What the card marks is that something here has not been spent, and that what you have kept alive is a response to something real rather than a story you told yourself to feel better. That is not a promise, and you deserve to have the difference said plainly rather than blurred.",
+        "Let me look closer at what has not been spent…",
+      ],
+      b: [
+        "You turned the Hanged Man, dear — the card of the answer that has neither arrived nor been refused.",
+        "You reached for the card of the question left open, which is precisely where you have been living.",
+        "There is no measuring here and the Hanged Man does not pretend otherwise — it marks a thing held open, and the holding is being done somewhere you have no hand in. What you are carrying is not the outcome, because the outcome has not happened. It is the waiting without a word, and that is a real weight quite separate from however this eventually falls.",
+        "Let me look closer at what is being held open…",
+      ],
+      c: [
+        "You turned the Fool, dear — the card of the door nobody has closed.",
+        "That is not random; your hand went to the card of what remains unshut, and you have been half-asking whether you are wrong to have noticed it.",
+        "The Fool is not a set of odds and I will not read it as one — what it says is that nothing here has been sealed, and that seeing a door stand open is one thing while refusing to accept a shut one is quite another. You have been bracing to be told that hoping is a failure of realism. It is not. Hope is what a person does with a question that has not been answered, and this question genuinely has not been answered.",
+        "Let me look closer at what has never been closed…",
+      ],
+    },
+    // 'Is it really over between us?' — THE VERDICT REQUEST, and the sharpest hook in the
+    // family. She is asking to be told whether to stop. Both answers are forbidden. The
+    // finding: 'over' is a word somebody has to SAY, and nobody has said it to her — she
+    // has been left to conclude it alone, which is why no amount of thinking settles it.
+    'cards-really-over': {
+      a: [
+        "You turned the Magician, dear — the card of the word that has to be spoken by someone.",
+        "Your hand went to the card of the thing that only becomes true once it is said out loud, and that sits nearer the centre of this than it may sound.",
+        "Endings are not the Magician's to hand down and they are not mine either — what the card puts in front of me is that 'over' is a word somebody has to actually say, and from everything here it has never been said to you. You have been left to decide alone whether to call it, and that was never a job for one person. It is why no amount of turning it over has settled anything: you have been trying to conclude a conversation that only ever had you in it.",
+        "Let me look closer at the words that were never said to you…",
+      ],
+      b: [
+        "You turned the Hanged Man, dear — the card of the thing that neither ended nor carried on.",
+        "You reached for the card of the unresolved, and that describes where you are more truly than either answer you came here for.",
+        "The Hanged Man withholds the word you came for and withholds its opposite just as firmly, and the withholding is itself what I have to give you rather than an evasion of your question. What you are in is not an ending and it is not a continuation; it is the ground between them, and living there wears a person down in a way neither a clean ending nor a clear yes ever would. None of that is explained by you being unable to move on — you have not been handed the thing a person moves on from.",
+        "Let me look closer at the ground you have been left standing on…",
+      ],
+      c: [
+        "You turned the Fool, dear — the card of the sentence that was never finished.",
+        "That is not random; your hand found the card of what breaks off rather than concludes, which is what you have been handed.",
+        "Nothing in the Fool closes this and nothing in it reopens it — what it shows me is something left unfinished rather than something finished badly, and an unfinished thing wears the same face as a finished one when you are the one left holding it. Whichever this turns out to be, you were entitled to hear it plainly and you did not. Wanting that is not clinging, and it does not dissolve by being told to accept a conclusion nobody ever delivered.",
+        "Let me look closer at the ending you were never actually given…",
       ],
     },
   },
