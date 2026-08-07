@@ -144,6 +144,32 @@ export type TarotHook =
   | 'cards-back-together' // Will we get back together?
   | 'cards-still-a-chance' // Is there still a chance for us?
   | 'cards-really-over' // Is it really over between us?
+  // Soulmate-after-loss hooks (2026-08-07). The forward-looking half of bereavement:
+  // she has lost a partner and is asking what is still ahead of her, NOT asking to reach
+  // what is behind her. Sourced from a buyer pull where ~12-15% of the concerns came from
+  // people whose spouse or partner had died (operator brief, 2026-08-07).
+  //
+  // 🔴 This is the ONLY family where the man in the picture may be DEAD, and that creates
+  // a failure mode no other angle has: MEDIUMSHIP. "He is at peace", "he is watching over
+  // you", "he would want you to move on" — contact with the dead is a different product
+  // with a far larger compliance surface, and nothing in universalSafety.ts catches it.
+  // Banned outright in every read here and pinned by tests/tarot-soulmate-after-loss-copy.test.ts.
+  //
+  // ⚠ Deliberately NOT added to SELF_FRAME_HOOKS, and this is the sharpest instance of
+  // that call yet. Self-frame swaps the "tendency, never a verdict" guard for "affirm the
+  // hopeful yes with CERTAINTY" (SELF_FRAME_TAROT_HOOKS, server/lib/prompts.ts). Aimed at
+  // a bereaved partner, certainty becomes a promise of a replacement — and on
+  // 'cards-ready-to-love' it becomes a stranger certifying that a widow has grieved
+  // enough. These get their own third frame instead (AFTER_LOSS_TAROT_HOOKS).
+  //
+  // 🔴 Nearest live neighbours are the self-frame incumbents, which stay exactly as they
+  // are (standing rule: a new headline never replaces an old lander). 'cards-soulmate'
+  // ("When is my soulmate coming?") answers WHEN for someone still waiting for a first
+  // love; 'cards-love-again' ("Will I love again?") reads a heartbreak. These read a
+  // BEREAVEMENT, and the reads are bespoke — no vocabulary is shared with either.
+  | 'cards-new-soulmate' // Will I find a new soulmate after loss?
+  | 'cards-soulmate-out-there' // Is there still a soulmate out there for me?
+  | 'cards-ready-to-love' // Am I ready to love again after losing him?
   // Self-frame hooks (read HER, affirm the hopeful yes — like the palm love hooks).
   | 'cards-love-again' // Will I love again?
   | 'cards-soulmate' // When is my soulmate coming?
@@ -231,6 +257,23 @@ export const RECONCILIATION_HOOKS: TarotHook[] = [
   'cards-really-over',
 ]
 
+// The soulmate-after-loss hooks (2026-08-07). Their OWN angle rather than folded into
+// `self-frame`, for two separate reasons — either alone would be sufficient:
+//
+//  1. SAFETY. angleForHook is only a reporting label, but SELF_FRAME_HOOKS is NOT — it is
+//     mirrored by AFTER_LOSS_TAROT_HOOKS' sibling set in server/lib/prompts.ts, which
+//     decides which guardrail the live Version-C prompt runs under. Adding these to
+//     SELF_FRAME_HOOKS would swap "tendency, never a verdict" for "affirm with certainty"
+//     on a bereaved visitor. See the TarotHook union note.
+//  2. REPORTING. The self-frame incumbents ('cards-soulmate', 'cards-love-again') are
+//     live ad set. Folding these in would pool a new bereavement family with the running
+//     baseline and make the new landers unreadable as a group.
+export const SOULMATE_AFTER_LOSS_HOOKS: TarotHook[] = [
+  'cards-new-soulmate',
+  'cards-soulmate-out-there',
+  'cards-ready-to-love',
+]
+
 // The ad ANGLE a hook belongs to. Carried on every tarot PostHog event (see
 // lib/tarotAttribution.ts) so the two decode-him families can be compared as GROUPS
 // without listing each hook: one `angle = trust` filter instead of three hook values,
@@ -251,6 +294,12 @@ export type TarotAngle =
   // back together" (a joint outcome). Keeping them as separate angle labels is the entire
   // point of the 2026-08-06 test — collapse them and the comparison disappears.
   | 'reconciliation'
+  // 🔴 'soulmate-after-loss' is NOT a variant of 'self-frame' and must never be merged
+  // into it. self-frame = no specific man exists, so the hopeful yes may be affirmed with
+  // certainty. This angle = a specific man existed and has DIED. The label separation is
+  // what keeps the bereavement family readable against the running self-frame baseline;
+  // the guard separation is what keeps the reads safe, and that one lives in prompts.ts.
+  | 'soulmate-after-loss'
   | 'self-frame'
 
 export function angleForHook(hook: TarotHook): TarotAngle {
@@ -262,6 +311,7 @@ export function angleForHook(hook: TarotHook): TarotAngle {
   if (HEALING_HOOKS.includes(hook)) return 'healing'
   if (PULLING_AWAY_HOOKS.includes(hook)) return 'pulling-away'
   if (RECONCILIATION_HOOKS.includes(hook)) return 'reconciliation'
+  if (SOULMATE_AFTER_LOSS_HOOKS.includes(hook)) return 'soulmate-after-loss'
   return 'decode-him'
 }
 
@@ -291,6 +341,9 @@ export const TAROT_HOOKS: TarotHook[] = [
   'cards-back-together',
   'cards-still-a-chance',
   'cards-really-over',
+  'cards-new-soulmate',
+  'cards-soulmate-out-there',
+  'cards-ready-to-love',
   'cards-love-again',
   'cards-soulmate',
 ]
@@ -344,6 +397,13 @@ export const HEADLINES: Record<TarotHook, string> = {
   'cards-back-together': 'Will we get back together?',
   'cards-still-a-chance': 'Is there still a chance for us?',
   'cards-really-over': 'Is it really over between us?',
+  // Soulmate-after-loss (2026-08-07). Note what these do NOT say: none names a death, and
+  // none uses the word widow. The ad has to be recognisable to a bereaved partner without
+  // announcing her situation back to her on a public page — "after loss" and "after losing
+  // him" are the visitor's own words from the buyer pull, and they carry it.
+  'cards-new-soulmate': 'Will I find a new soulmate after loss?',
+  'cards-soulmate-out-there': 'Is there still a soulmate out there for me?',
+  'cards-ready-to-love': 'Am I ready to love again after losing him?',
   'cards-love-again': 'Will I love again?',
   'cards-soulmate': 'When is my soulmate coming?',
 }
@@ -411,6 +471,20 @@ const TAROT_QUESTION: Record<TarotHook, string> = {
   // ⚠ Never asks her to justify why she has not accepted it. She arrives already braced
   // for someone to tell her to let go; the opener asks what she was never actually told.
   'cards-really-over': "Before I look closer, tell me… was there ever a moment where it was said plainly, or has it only ever been left to fade?",
+  // Soulmate-after-loss (2026-08-07). 🔴 NOT ONE of these asks her about the death, what
+  // happened, how long ago, or how she is coping. She should never have to narrate a
+  // bereavement to a stranger to be taken seriously, and an opener that asks for it would
+  // also hand the LLM the raw material for the mediumship failure this angle bans. Each
+  // asks about the QUESTION she arrived with instead.
+  //
+  // ⚠ Deliberately distinct from 'cards-love-again', whose live opener ("what has been
+  // weighing on your heart since it happened?") already gestures at a loss event. Sharing
+  // its wording would collapse the new family into the incumbent from the first line.
+  'cards-new-soulmate': "Before I look closer, tell me… when you picture loving someone again, what is the first thing that rises up against it?",
+  'cards-soulmate-out-there': "Before I look closer, tell me… what made you begin to wonder whether your chance had already been and gone?",
+  // Goes straight at the finding: she is asking to be given permission. The opener asks
+  // whose permission it is, which is a question she can answer without recounting anything.
+  'cards-ready-to-love': "Before I look closer, tell me… who has been deciding whether it is too soon — you, or someone else?",
   'cards-love-again': "Before I look closer, tell me… what has been weighing on your heart since it happened?",
   'cards-soulmate': "Before I look closer, tell me… what is the love you're still holding out for — the one you haven't given up on?",
 }
@@ -1705,6 +1779,105 @@ const RETURN_MHF: CardSetConfig = {
         "That is not random; your hand found the card of what breaks off rather than concludes, which is what you have been handed.",
         "Nothing in the Fool closes this and nothing in it reopens it — what it shows me is something left unfinished rather than something finished badly, and an unfinished thing wears the same face as a finished one when you are the one left holding it. Whichever this turns out to be, you were entitled to hear it plainly and you did not. Wanting that is not clinging, and it does not dissolve by being told to accept a conclusion nobody ever delivered.",
         "Let me look closer at the ending you were never actually given…",
+      ],
+    },
+    // ── Soulmate-after-loss (2026-08-07) ─────────────────────────────────────
+    // The only family on the funnel where the man may be DEAD. Everything else here reads
+    // a man who left, cooled, withheld or lied — all of whom can still be asked. This one
+    // reads a woman whose person is gone in the one way that admits no follow-up, and who
+    // is asking forward rather than back.
+    //
+    // 🔴 MEDIUMSHIP IS THE FAILURE MODE THAT DOES NOT EXIST ANYWHERE ELSE ON THE FUNNEL.
+    // "He is at peace", "he is watching over you", "he would want you to be happy", "he
+    // sent you here" — every one of those is the single most natural thing to say to a
+    // grieving woman, and every one is contact with the dead. That is a different product
+    // with a different licence, `universalSafety.ts` does not catch it, and none of these
+    // reads may go near it. No read below speaks FOR him, ABOUT where he is, or ABOUT what
+    // he would want. He is referred to only as someone she loved and lost.
+    //
+    // Four more banned outright, on top of the standing rules, all pinned by
+    // tests/tarot-soulmate-after-loss-copy.test.ts:
+    //   1. AN ARRIVAL. No one is coming, no one is "out there right now", nothing is "on
+    //      its way". The live self-frame incumbent 'cards-soulmate' is allowed to affirm
+    //      arrival because no one has died; here that same sentence promises a bereaved
+    //      partner a replacement, and it is the reason this family is not self-frame.
+    //   2. A READINESS VERDICT, BOTH WAYS. 'cards-ready-to-love' asks to be graded on her
+    //      grief. "You are ready" prescribes a timeline to a widow; "not yet" does the
+    //      same from the other side. Refuse the binary, as cards-moved-on and
+    //      cards-really-over refuse theirs.
+    //   3. GRIEF DIRECTIVES. Move on, let go, honour him by living, he would want it. She
+    //      arrives having already been told all of these by people who knew him.
+    //   4. RANKING THE TWO LOVES. Nothing about a new love being better, healing, or what
+    //      she "deserves now" — that quietly rates the marriage she lost.
+    //
+    // 'Will I find a new soulmate after loss?' — THE WORD "NEW". The fear underneath is
+    // not whether someone exists; it is whether loving again would mean replacing him.
+    'cards-new-soulmate': {
+      a: [
+        "You turned the Magician, dear — the card of what a person is still able to make.",
+        "Your hand went to the card of capacity rather than arrival, and for a question worded the way yours is, that is worth noticing.",
+        "The Magician does not show me somebody walking toward you, and I will not invent a person to hand you — what it marks instead is that the part of you that knows how to love was not buried with what you lost. That capacity is not a spare part and it is not disloyalty. It is the same thing you spent on him, still whole, and its being whole is evidence of what you had rather than a debt against it. You do not owe anyone an accounting for still having it.",
+        "Let me look closer at what you have carried through intact…",
+      ],
+      b: [
+        "You turned the Hanged Man, dear — the card of the life held still while everything inside it rearranges.",
+        "You reached for the card of the suspended season, and that is where you have been living rather than anywhere you chose to be.",
+        "The Hanged Man makes no forecast of who or when, and I will not read one into it — what it offers instead is a season paused rather than concluded, and there is a difference between a life that has stopped and a life whose pieces are not yet back in any final place. You have been taking the pause itself as your answer. It is not an answer; it is the part that comes before one, and none of it obliges you to know yet what you want or when you should want it.",
+        "Let me look closer at what is still being rearranged…",
+      ],
+      c: [
+        "You turned the Fool, dear — the card of the beginning that carries nothing forward with it.",
+        "That is not random; your hand found the card of the fresh start, and the word 'new' in your own question has been sitting heavier than you have let on.",
+        "The Fool points me to no one and I will not put a face on it — what it says is that anything beginning here would begin as itself, not as a seat left empty for somebody to fill. That matters, because the fear underneath a question like yours is rarely whether such a person exists; it is whether loving again would mean replacing. It would not. A beginning does not overwrite what came before it — it has no such power, and neither would anyone you might one day meet.",
+        "Let me look closer at what the word 'new' has been costing you…",
+      ],
+    },
+    // 'Is there still a soulmate out there for me?' — THE WORD "STILL". She is not asking
+    // where someone is; she is asking whether her one was already issued and already spent.
+    // The read answers the PREMISE, never the location, and never the timing.
+    'cards-soulmate-out-there': {
+      a: [
+        "You turned the Magician, dear — the card of what has not been used up.",
+        "Your hand found the card of the thing still held rather than spent, and the whole weight of your question sits on that one word, 'still'.",
+        "The Magician stands nobody out there where I can see them, and I will not describe a person I cannot see — what it sets before me is the premise you arrived carrying: that a soul is issued one, and that yours has been drawn already. That is the part I can honestly speak to. What you gave was real, and it was never an allowance running down. The capacity to love is not a quantity that empties, and having loved once completely is not the same as having used it up.",
+        "Let me look closer at the premise you have been carrying…",
+      ],
+      b: [
+        "You turned the Hanged Man, dear — the card of the question left hanging with nobody to answer it.",
+        "You reached for the card of what stays suspended, and you have been holding this one suspended a long while now.",
+        "The Hanged Man gives no place and no timing, and I will not manufacture either for you — what it marks is that you have been asking this into a silence, with no one to say anything back. A question asked alone for long enough begins to sound as though it has already been answered, and it has not been. What you have been carrying is not a verdict about your future; it is the silence around the question. Those are not the same weight, even though they sit in the very same place.",
+        "Let me look closer at the silence you have been asking into…",
+      ],
+      c: [
+        "You turned the Fool, dear — the card of the road that has not been walked yet.",
+        "That is not random; you reached for the card of what remains unwritten, at exactly the moment you had begun to suspect your part in it was already finished.",
+        "The Fool holds no map with anyone marked on it, and I would be inventing if I told you otherwise — what it shows is a road genuinely unwalked, not one closed off behind you. There is a difference between not knowing what lies ahead and knowing there is nothing there, and grief blurs the two until they are indistinguishable from the inside. You have been living as though the second were settled fact. Nothing in this card makes it so.",
+        "Let me look closer at the road you have been treating as closed…",
+      ],
+    },
+    // 'Am I ready to love again after losing him?' — THE VERDICT ON HER, and the sharpest
+    // hook in the family. She is asking a stranger to grade her grief. BOTH answers do
+    // damage: "you are ready" prescribes a timetable to a bereaved woman, and "not yet"
+    // does the same thing wearing concern. The finding: she is asking for permission, and
+    // permission was never in anyone else's keeping — which is why waiting has not worked.
+    'cards-ready-to-love': {
+      a: [
+        "You turned the Magician, dear — the card of the thing nobody else can do on your behalf.",
+        "Your hand went to the card of what only its owner may decide, and you came here asking to be told.",
+        "The Magician will not grade you ready and it will not grade you unready, and I am not going to do it in its place — what it shows me is that readiness is not a mark somebody awards you once you have grieved correctly. There is no standard here that you are passing or failing, and no one who has met you is qualified to set one. You have been asking whether you are allowed. The permission you have been waiting on was never in anyone else's keeping, which is precisely why waiting for it has not worked.",
+        "Let me look closer at the permission you have been waiting for…",
+      ],
+      b: [
+        "You turned the Hanged Man, dear — the card of the thing held between two states and belonging fully to neither.",
+        "You reached for the card of the in-between, and that describes where you are more truly than either answer you came here for.",
+        "The Hanged Man will not choose between the two answers you came for, and I am not going to choose between them either — a person is not ready or unready the way a door is open or shut. You can want company and want him back in the very same hour, and neither one cancels the other out. Being in both at once is not confusion, and it is not evidence that you have failed to heal; it is what carrying this actually looks like from inside. Being made to pick one has cost you more than the not-knowing ever did.",
+        "Let me look closer at the two things you have been holding at once…",
+      ],
+      c: [
+        "You turned the Fool, dear — the card of the step taken before the ground is ever certain.",
+        "That is not random; your hand found the card of the beginning made without guarantees, and a guarantee is the thing you have been waiting to be given.",
+        "The Fool issues no verdict on your readiness and I will not stand one in for it — what it observes is that nobody has ever been certain in advance, and that the certainty you are waiting to feel does not arrive ahead of time to give permission. That is not a push, and there is no timetable here you are behind on. It only means the sign you have been watching for will not come as a feeling of being finished, because that feeling is not how any of this works, for you or for anyone.",
+        "Let me look closer at the sign you have been waiting to feel…",
       ],
     },
   },
