@@ -86,7 +86,7 @@ verified 9/9 identical. This matches how `cards-honest` already behaves across t
 
 ### 🔑 The `angle` property — comparing hook FAMILIES
 
-Every tarot PostHog event carries `angle`. Ten families as of 2026-08-07:
+Every tarot PostHog event carries `angle`. Eleven families as of 2026-08-07:
 
 | `angle` | Hooks | Added |
 |---|---|---|
@@ -100,6 +100,7 @@ Every tarot PostHog event carries `angle`. Ten families as of 2026-08-07:
 | `reconciliation` | back-together · still-a-chance · really-over | 2026-08-06 |
 | `soulmate-after-loss` | new-soulmate · soulmate-out-there · ready-to-love | 2026-08-07 |
 | `soulmate-where` | where-soulmate · soulmate-closer · not-found-yet | 2026-08-07 |
+| `loneliness` | alone-forever · meant-alone · someone-for-me | 2026-08-07 |
 | `self-frame` | love-again · soulmate | seeded |
 
 > `pulling-away` and `reconciliation` were live from 08-05/08-06 but had never been added
@@ -398,6 +399,79 @@ banned, and the bracing finding is asserted positively.
 > that one reads a bereavement and answers the one-chance premise; these read a woman who never
 > found it at all. No vocabulary is shared, pinned by a cross-family 6-word-run sweep.
 
+## Loneliness hooks — 3 face-down landers (2026-08-07)
+
+Own `loneliness` angle. Topic: *"Will I be alone forever?"* Face-down `return-mhf` only,
+Version C, clean URLs, no new art.
+
+| Headline | Hook | URL |
+|---|---|---|
+| Will I be alone forever? | `cards-alone-forever` | `/fb-tarot/c?hook=cards-alone-forever` |
+| Am I meant to be alone? | `cards-meant-alone` | `/fb-tarot/c?hook=cards-meant-alone` |
+| Is there really someone out there for me? | `cards-someone-for-me` | `/fb-tarot/c?hook=cards-someone-for-me` |
+
+> ⚠️ Briefed as **"Loneliness/Timing"**, but none of the three headlines is about timing —
+> the slug reflects what actually shipped. A timing hook is still unbuilt.
+
+### 🔴🔴 The closest angle on the funnel to the CRISIS surface
+
+This is the only family with **no man in it at all** — not lost, not left, not sought. The
+subject is her life and whether it stays as it is. *"Will I be alone forever?"* is what
+someone types at 2am, and Version C then asks her to answer **in her own words**.
+
+`SOFT_CRISIS_PATTERNS` (`server/lib/universalSafety.ts`) screens for exactly the phrasing that
+invites — *"nothing left to live for"*, *"i feel hopeless / worthless / empty / numb /
+broken"*, *"life feels meaningless"*, *"tired of living"* — and injects the 988 / 741741 note.
+That is the system working correctly. But it means the **openers carry a constraint no other
+family has: they must not manufacture despair.**
+
+An opener like *"what does the loneliness feel like?"* or *"what do you tell yourself at
+night?"* would actively produce the phrasing the safety layer exists to catch. All three ask
+her to **think about the shape of her question** instead — answers come back reflective, often
+wry, rather than despairing. Asserted in the test file.
+
+### 🔴 The FATE ban — no precedent anywhere else
+
+`cards-meant-alone` is the sharpest hook built to date. Every other angle forbids a verdict on
+a **man** or a **relationship**. This forbids a verdict on **her nature** — whether she has
+been designated for this.
+
+- *"Some people are meant to be alone"* is the single most harmful sentence this funnel could
+  produce, aimed at the audience least able to discount it.
+- *"You're meant for someone"* is a promise wearing destiny's clothes.
+
+Both banned, plus all fate / destiny / plan / purpose / lesson / "there's a reason" language,
+and any suggestion she has been singled out or tested. The read refuses the **premise**: nobody
+is being assigned anything, so there is no ruling on her to appeal.
+
+`cards-alone-forever` carries the same double-refusal on the **absolute** — same structure as
+`cards-really-over`, where one answer is a life sentence from a stranger and the other a
+promise the funnel cannot keep.
+
+### The FIFTH prompt frame — and why self-frame is the dangerous filing here
+
+No man exists in these hooks, so `self-frame` looks like the natural home. It is the worst
+available: its clause is *"affirm the hopeful yes with **certainty**"*, and **certainty about
+whether a person will spend their life alone is the harm itself**, in both directions.
+
+| Frame | Situation | Core guard |
+|---|---|---|
+| decode-him | a real, reachable man | tendency, never a verdict |
+| `self-frame` | no man exists | affirm the yes with certainty |
+| `soulmate-after-loss` | a man existed and **died** | never an arrival, never speak for him |
+| `soulmate-where` | never found anyone | affirm freely, **never a place** |
+| `loneliness` | no man at all; asks about HER LIFE | **nothing fated, nothing forever** |
+
+`LONELINESS_TAROT_HOOKS` is tested **before** self-frame so the stricter guard wins. Also
+banned: pathologising (negative, defeatist, given up, self-sabotaging, "you attract what you
+are", energy/vibration), tactics, and — uniquely — **presuming her history in either
+direction**, since the ad does not sort never-partnered from post-breakup.
+
+> 📌 At five branches the frame ternary in `buildTarotReflectPrompt` is at the limit of what
+> reads well. The better structure is a hook → `{frameLine, guardLine}` lookup. **Deliberately
+> not refactored alongside a shipping family** — it touches the live prompt path for every
+> angle at once and deserves its own change.
+
 ## Concepts
 
 | # | Deck id | Facing | Cards (A/B/C) | Options | Status | Notes |
@@ -441,6 +515,9 @@ banned, and the bracing finding is asserted positively.
 | `cards-where-soulmate` *(soulmate-where)* | Where is my soulmate right now? | ⬜ DRAFT (2026-08-07) — 🔴 asks for a PLACE; the read declines one and answers that the not-yet is not a distance |
 | `cards-soulmate-closer` *(soulmate-where)* | Is my soulmate closer than I think? | ⬜ DRAFT (2026-08-07) — ⚠️ COPY TEST against the live `cards-soulmate`, whose read already says this. Refuses proximity, reads the bracing |
 | `cards-not-found-yet` *(soulmate-where)* | Why haven't I found my soulmate where I am? | ⬜ DRAFT (2026-08-07) — ⚠️ presupposes a failure; refuses to blame her OR her town, and hands back no strategy |
+| `cards-alone-forever` *(loneliness)* | Will I be alone forever? | ⬜ DRAFT (2026-08-07) — ⚠️ the read REFUSES the absolute both ways; routes to "forever" being the language of exhaustion |
+| `cards-meant-alone` *(loneliness)* | Am I meant to be alone? | ⬜ DRAFT (2026-08-07) — 🔴 SHARPEST HOOK ON THE FUNNEL; asks for a verdict on her NATURE. Refuses the premise that anything is assigned |
+| `cards-someone-for-me` *(loneliness)* | Is there really someone out there for me? | ⬜ DRAFT (2026-08-07) — reads the EPISTEMICS (comfort vs answer), deliberately not the one-chance premise or the hope-isn't-naive finding |
 | `cards-love-again` *(self-frame)* | Will I love again? | ⬜ draft — 🔴 **no reads on either FACE-DOWN deck**, so a clean URL silently falls back to `cards-honest`/`decode-him`. Only works with an explicit `&deck=arcana-mfh` |
 | `cards-soulmate` *(self-frame)* | When is my soulmate coming? | ⬜ draft (2026-07-27, from `ZN_Tarot_Rio 8.png` = arcana-eef cards; reads on arcana-eef + arcana-mfh; answers "when" as a leaning, never a date) |
 

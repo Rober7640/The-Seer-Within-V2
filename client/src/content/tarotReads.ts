@@ -198,6 +198,42 @@ export type TarotHook =
   | 'cards-where-soulmate' // Where is my soulmate right now?
   | 'cards-soulmate-closer' // Is my soulmate closer than I think?
   | 'cards-not-found-yet' // Why haven't I found my soulmate where I am?
+  // Loneliness hooks (2026-08-07). No man exists anywhere in these — not lost, not left,
+  // not sought. The subject is her own life and whether it is going to stay as it is.
+  //
+  // 🔴 THE CLOSEST ANGLE ON THE FUNNEL TO THE CRISIS SURFACE. "Will I be alone forever?" is
+  // what someone types at 2am, and Version C then asks her to answer in her own words.
+  // `SOFT_CRISIS_PATTERNS` in server/lib/universalSafety.ts screens for exactly the phrasing
+  // that invites — "nothing left to live for", "i feel hopeless/worthless/empty/numb/broken",
+  // "life feels meaningless", "tired of living" — and injects the 988/741741 note. That is
+  // the system working, but it means the OPENERS here carry a constraint no other family
+  // has: they must not manufacture despair phrasing. Each asks her to think about the
+  // question's shape rather than to describe the pain.
+  //
+  // 🔴 TWO of the three must REFUSE THEIR OWN HEADLINE, and the refusals are different:
+  //   · 'cards-alone-forever' — the ABSOLUTE. Same structure as cards-really-over: "yes"
+  //     is a life sentence handed down by a stranger, "no" is a promise the funnel cannot
+  //     keep. Neither is sayable.
+  //   · 'cards-meant-alone' — the FATE claim, and the sharpest hook built so far. It asks
+  //     for a verdict on her NATURE rather than on a man or a relationship. "Yes, some
+  //     people are meant to be alone" is the most harmful sentence this funnel could
+  //     produce, aimed at the audience least able to discount it; "no, you are meant for
+  //     someone" is a promise dressed as destiny. The read refuses that anything is MEANT.
+  //
+  // ⚠ Written AUDIENCE-AGNOSTIC by operator call 2026-08-07: none of the three headlines
+  // mentions an ex, a loss or a breakup, so the reads may never presume she has had love
+  // before, and may never presume she has not. That rules out both "after what you have
+  // been through" and "you have never had this".
+  //
+  // 🔴 'cards-someone-for-me' sits nearest 'cards-soulmate-out-there' ("Is there STILL a
+  // soulmate out there for me?", soulmate-after-loss, same day). One word separates them:
+  // "still" presumes she had someone; "really" presumes doubt that anyone exists. Its read
+  // also had to steer clear of 'cards-still-a-chance', whose finding is that hope is not a
+  // failure of realism — so this one reads the EPISTEMICS instead: she has been handed
+  // comfort where she asked for an answer.
+  | 'cards-alone-forever' // Will I be alone forever?
+  | 'cards-meant-alone' // Am I meant to be alone?
+  | 'cards-someone-for-me' // Is there really someone out there for me?
   // Self-frame hooks (read HER, affirm the hopeful yes — like the palm love hooks).
   | 'cards-love-again' // Will I love again?
   | 'cards-soulmate' // When is my soulmate coming?
@@ -319,6 +355,25 @@ export const SOULMATE_WHERE_HOOKS: TarotHook[] = [
   'cards-not-found-yet',
 ]
 
+// The loneliness hooks (2026-08-07). Their OWN angle rather than folded into `self-frame`
+// or into either soulmate family:
+//
+//  1. SAFETY. They need a FATE ban (nothing is "meant", in either direction) and a FOREVER
+//     ban (never rule that she will be alone, never promise she will not) that no existing
+//     frame carries. Self-frame's bare "affirm with certainty" is the worst possible guard
+//     here — certainty about someone's future solitude is the harm itself.
+//  2. REPORTING. Same topic-space as `soulmate-where` and `soulmate-after-loss`, different
+//     question: those ask about a person who might exist, these ask about HER LIFE staying
+//     as it is. Pool them and three separately-commissioned families become unreadable.
+//
+// ⚠ Note the category was briefed as "Loneliness/Timing" but none of the three headlines is
+// about timing — the slug reflects what actually shipped.
+export const LONELINESS_HOOKS: TarotHook[] = [
+  'cards-alone-forever',
+  'cards-meant-alone',
+  'cards-someone-for-me',
+]
+
 // The ad ANGLE a hook belongs to. Carried on every tarot PostHog event (see
 // lib/tarotAttribution.ts) so the two decode-him families can be compared as GROUPS
 // without listing each hook: one `angle = trust` filter instead of three hook values,
@@ -351,6 +406,11 @@ export type TarotAngle =
   // completely different guardrails — after-loss must never promise an arrival, while this
   // family may affirm the hopeful yes and must never name a PLACE.
   | 'soulmate-where'
+  // 🔴 'loneliness' is NOT a third soulmate family. Both soulmate angles ask about a PERSON
+  // who might exist — where they are, whether they are coming. These ask whether HER LIFE
+  // is going to stay as it is, and one of them asks whether she is FATED to it. Different
+  // question, different guardrails, and the fate ban exists nowhere else.
+  | 'loneliness'
   | 'self-frame'
 
 export function angleForHook(hook: TarotHook): TarotAngle {
@@ -364,6 +424,7 @@ export function angleForHook(hook: TarotHook): TarotAngle {
   if (RECONCILIATION_HOOKS.includes(hook)) return 'reconciliation'
   if (SOULMATE_AFTER_LOSS_HOOKS.includes(hook)) return 'soulmate-after-loss'
   if (SOULMATE_WHERE_HOOKS.includes(hook)) return 'soulmate-where'
+  if (LONELINESS_HOOKS.includes(hook)) return 'loneliness'
   return 'decode-him'
 }
 
@@ -399,6 +460,9 @@ export const TAROT_HOOKS: TarotHook[] = [
   'cards-where-soulmate',
   'cards-soulmate-closer',
   'cards-not-found-yet',
+  'cards-alone-forever',
+  'cards-meant-alone',
+  'cards-someone-for-me',
   'cards-love-again',
   'cards-soulmate',
 ]
@@ -465,6 +529,11 @@ export const HEADLINES: Record<TarotHook, string> = {
   'cards-where-soulmate': 'Where is my soulmate right now?',
   'cards-soulmate-closer': 'Is my soulmate closer than I think?',
   'cards-not-found-yet': "Why haven't I found my soulmate where I am?",
+  // Loneliness (2026-08-07). ⚠ None names an ex or a loss — deliberately, so the family
+  // reaches both never-partnered and post-breakup visitors. The reads presume neither.
+  'cards-alone-forever': 'Will I be alone forever?',
+  'cards-meant-alone': 'Am I meant to be alone?',
+  'cards-someone-for-me': 'Is there really someone out there for me?',
   'cards-love-again': 'Will I love again?',
   'cards-soulmate': 'When is my soulmate coming?',
 }
@@ -557,6 +626,23 @@ const TAROT_QUESTION: Record<TarotHook, string> = {
   // ⚠ Surfaces the self-blame without endorsing it. She has already answered this privately;
   // the opener asks what she has been telling herself, never asks her to justify it.
   'cards-not-found-yet': "Before I look closer, tell me… when you ask yourself why, what answer have you been giving yourself?",
+  // Loneliness (2026-08-07). 🔴 THE CONSTRAINT NO OTHER FAMILY HAS: these openers must not
+  // MANUFACTURE despair. This angle already selects for the emotional state that
+  // SOFT_CRISIS_PATTERNS (server/lib/universalSafety.ts) exists to catch, and an opener
+  // like "what does the loneliness feel like?" or "what do you tell yourself at night?"
+  // would actively produce the phrasing it screens for. Each of these asks her to THINK
+  // about the shape of her question instead of to describe the pain — the answers come back
+  // reflective, sometimes wry, rather than despairing.
+  //
+  // ⚠ None asks how long it has been, whether she has ever had it, or what went wrong.
+  // The family is audience-agnostic and the openers must not sort her either way.
+  'cards-alone-forever': "Before I look closer, tell me… when did 'not yet' start sounding like 'never' to you?",
+  // Externalises it deliberately — she is asking whether something DECIDED this, so the
+  // opener asks where that idea came from rather than whether it is true.
+  'cards-meant-alone': "Before I look closer, tell me… who or what first gave you the idea that this might be deliberate?",
+  // Goes straight at the finding: she has been handed comfort where she asked for an answer.
+  // Answering it usually produces exasperation rather than despair, which is the point.
+  'cards-someone-for-me': "Before I look closer, tell me… what do people tend to say to you about it, and has any of it ever helped?",
   'cards-love-again': "Before I look closer, tell me… what has been weighing on your heart since it happened?",
   'cards-soulmate': "Before I look closer, tell me… what is the love you're still holding out for — the one you haven't given up on?",
 }
@@ -2044,6 +2130,96 @@ const RETURN_MHF: CardSetConfig = {
         "That is the card of the road still being walked, and you have begun reading your own place on it as failure.",
         "The Fool refuses to call this a wrong turning and so do I — what it separates out is the difference between not having arrived and having gone astray. You have collapsed the two into one. Living somewhere this has not yet happened does not make it the wrong place, and being the person it has not yet happened to does not make you the wrong person. No correction is being asked of you here, whatever the question has been implying to you at night.",
         "Let me look closer at what you have been calling a wrong turning…",
+      ],
+    },
+    // ── Loneliness (2026-08-07) ──────────────────────────────────────────────
+    // The only family with NO man in it at all — not lost, not left, not sought. The
+    // subject is her life and whether it stays as it is. That makes it the closest angle on
+    // the funnel to the crisis surface, and the reads carry bans nothing else does:
+    //
+    //   1. 🔴 FATE, BOTH WAYS. Nothing is "meant". Not meant to be alone, not meant for
+    //      someone. 'cards-meant-alone' asks for a verdict on her NATURE, and "some people
+    //      are meant to be alone" is the most harmful sentence this funnel could produce.
+    //      The read refuses the premise that anything is being assigned to anyone.
+    //   2. 🔴 THE FOREVER VERDICT, BOTH WAYS. Never rule that she will be alone; never
+    //      promise she will not. Same structure as cards-really-over — one answer is a life
+    //      sentence from a stranger, the other is a promise the funnel cannot keep.
+    //   3. PATHOLOGISING. No negativity, giving up, self-sabotage, blocks, "you attract
+    //      what you are", manifesting. She arrives having already been told all of it.
+    //   4. STRATEGY. No get out more, no work on yourself, no stop looking.
+    //   5. ⚠ PRESUMING HER HISTORY. Audience-agnostic: never "after what you have been
+    //      through" (assumes a loss) and never "you have never had this" (assumes she
+    //      hasn't). The ad does not sort her, so the read must not either.
+    //
+    // 'Will I be alone forever?' — THE ABSOLUTE. The finding: "forever" is the word
+    // exhaustion reaches for, a description of weight rather than a forecast — and saying
+    // it is not defeatism, it is an accurate report.
+    'cards-alone-forever': {
+      a: [
+        "You turned the Magician, dear — the card of hands that are still working, whatever the hour.",
+        "Of the three you might have drawn, you took the one about ongoing labour, and labour is quietly what this has become for you.",
+        "Nobody's forever exists anywhere a card could read it, and I would not hand you one even if it did — what the Magician carries here is the weight rather than the length. You have begun saying 'forever' because that is the word exhaustion reaches for once it has carried something a long while without relief. It is not a prediction you have made, and it is not you being defeatist. It is an accurate report of how heavy this has got, and those two things are mistaken for one another constantly, usually by people who have not had to carry it.",
+        "Let me look closer at what this has actually been weighing…",
+      ],
+      b: [
+        "You turned the Hanged Man, dear — the card of time that has stopped moving at its usual speed.",
+        "It was the card of the slowed hour your fingers settled on, and slowness has been doing a great deal of the damage.",
+        "Length is the one thing the Hanged Man never measures, and no honest reading measures it either. What it registers is that your sense of time has been altered by going without — a long enough stretch rearranges how anything feels, until a year of it and the whole rest of a life become indistinguishable from the inside. None of that is a defect in how you think. It is what endurance does to a clock, and you have been judging your entire future from a measurement taken while tired.",
+        "Let me look closer at the measurement you have been using…",
+      ],
+      c: [
+        "You turned the Fool, dear — the card of ground that has not been walked on yet.",
+        "Under a question about always, up came the card that knows nothing whatever of always.",
+        "The Fool holds no forever and cannot be made to hold one; I will not tell you this ends and I will not tell you it does not, because neither sentence would be worth the breath it took. What sits in it instead is that 'forever' is a shape the mind puts around a thing while that thing is still happening, and nobody has ever managed to see out of the middle of something. You are not being asked to believe anything cheerful here. You are being told that the view from where you are standing is not the view.",
+        "Let me look closer at the view you have been taking for the whole of it…",
+      ],
+    },
+    // 'Am I meant to be alone?' — THE FATE CLAIM, and the sharpest hook on the funnel. She
+    // is asking for a ruling on her nature. The finding: 'meant' requires somebody to have
+    // decided, and nobody is assigning anyone anything — so there is no verdict to appeal.
+    'cards-meant-alone': {
+      a: [
+        "You turned the Magician, dear — the card of the maker, which is a different thing entirely from the made.",
+        "The card that came up under your question is the one about authorship, and authorship is precisely what your question assumes.",
+        "There is no one assigning you a part and the Magician does not hand out roles — I will not tell you that you are meant for solitude and I will not tell you that you are meant for company, because 'meant' would require somebody to have decided, and nothing has decided anything about you. Your question quietly supposes that a circumstance is a designation. It is not one. What has happened to you so far is not an instruction about what you are for.",
+        "Let me look closer at the instruction you believe you were given…",
+      ],
+      b: [
+        "You turned the Hanged Man, dear — the card of the thing seen from below and mistaken for the whole.",
+        "Yours was the card of the reversed picture, and this question has sat reversed in you a long time.",
+        "No fate is written in the Hanged Man, and I would not read one out even if it were — what it turns over is the direction of your question. You have been asking whether you were singled out. Nobody is singled out, because nobody is being assigned, and that is a colder comfort than being told you are destined for something lovely. It is also the true one. There is no ruling on you here to be appealed against, because no ruling was ever entered.",
+        "Let me look closer at the ruling you believe was entered…",
+      ],
+      c: [
+        "You turned the Fool, dear — the card of the one who has been handed no part to play.",
+        "You drew the card with no script on it at the very moment you had begun to believe yours was already written.",
+        "The Fool refuses your premise outright and I refuse it alongside the card — 'meant to be' asks for an author, and there is nobody sitting over your life issuing findings about your worth. Whatever you have been reading as a sentence passed upon you is a stretch of circumstance, and circumstance says nothing whatever about a person. None of your being on your own has been a judgement. You have been carrying it as though it were one, which is a far heavier thing than the circumstance itself.",
+        "Let me look closer at the sentence you have been reading over yourself…",
+      ],
+    },
+    // 'Is there really someone out there for me?' — THE PROOF REQUEST. 🔴 Its finding had to
+    // dodge two neighbours: 'cards-soulmate-out-there' (the one-chance premise) and
+    // 'cards-still-a-chance' (hope is not a failure of realism). So this one reads the
+    // EPISTEMICS — the word is "really", and she is asking to be told something she can
+    // actually believe, having been handed comfort every other time she raised it.
+    'cards-someone-for-me': {
+      a: [
+        "You turned the Magician, dear — the card of the honest craftsman, who will not sell you a thing that is not there.",
+        "The card that answered you is the one about straight dealing, and straight dealing is what your question is actually after.",
+        "No card counts people, and it would be a lie to pretend otherwise — what the Magician insists on is the difference between an answer and a comfort. You said 'really', and that word is the whole of it: you have been reassured so often by people who love you that reassurance has stopped landing anywhere. You did not come here for another kind voice. You came looking for somebody with no reason at all to be kind to you, and I would only be joining the queue of comforters if I simply told you yes.",
+        "Let me look closer at what you have been handed instead of an answer…",
+      ],
+      b: [
+        "You turned the Hanged Man, dear — the card of the question other people have already answered on your behalf.",
+        "You settled on the card of the held position, and you have been held in this one by other people's certainty quite as much as by your own doubt.",
+        "The Hanged Man will not count for you either, and no reading honestly can. What it suspends is the pressure you have been under to feel a particular way about this. Everyone near you has an opinion on your outlook — too negative, too fussy, too quick to give up — so you have been managing their view of your hope on top of carrying the thing itself. That second load was never yours. What you asked for was the truth, and that is not the same request as wanting to be cheered up.",
+        "Let me look closer at the second load you have been carrying…",
+      ],
+      c: [
+        "You turned the Fool, dear — the card of what has not been counted and cannot be.",
+        "Under a question asking for proof, up came the one card that has never dealt in proof at all.",
+        "Nothing here is a headcount and the Fool would not give you one — what it stands on is that an unknown is not the same as a negative, though the two wear the same face once a person is tired enough. You have started reading the absence of proof as proof of absence. Those are different things, and the difference is not a technicality; it is the entire space you have been living inside. Doubting is not the same as knowing, and you have been treating your doubt as though it had gone and done the research.",
+        "Let me look closer at what your doubt has been standing in for…",
       ],
     },
   },
