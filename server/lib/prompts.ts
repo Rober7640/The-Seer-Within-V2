@@ -1084,6 +1084,14 @@ const TAROT_HOOK_CONTEXT: Record<string, string> = {
   'cards-new-soulmate': "She has lost the partner she built her life around and is asking whether there could be someone ahead for her — and underneath it, whether loving anyone again would mean replacing him.",
   'cards-soulmate-out-there': "She has lost her person and is asking whether there is still one out there for her, having begun to believe she was issued one chance at this and already spent it.",
   'cards-ready-to-love': "She has lost the man she loved and is asking to be told whether she is ready to love again — which is really a request for permission, from someone she hopes is entitled to give it.",
+  // Fidelity hooks — a THIRD PERSON is the wound, distinct from `trust` (who he IS) and
+  // `honesty` (a specific untruth he told). 🔴 The flagged word appears in none of these,
+  // deliberately: this text is injected into the live prompt, and telling a model not to say
+  // a word still puts the word in front of it.
+  'cards-someone-else': "Something changed and she was given no account of it, so she has been left to author an explanation on her own — and the one she arrived with is that there may be another person.",
+  'cards-talking-someone': "She has watched his attention go somewhere else and has been waiting to feel entitled to mind about it, as though noticing were an accusation she had not earned the right to make.",
+  'cards-faithful': "She is asking for a summary judgment on the man she is with, and underneath it she is asking whether she is allowed to stop bracing — she has not been able to put the question down.",
+  'cards-loyal': "The word carrying her question is 'only'. She has been receiving a portion of him and calling it the whole, and has adjusted herself downward to fit it without noticing she was doing so.",
   // Loneliness hooks — NO man exists in these at all: not lost, not left, not sought. The
   // subject is her own life and whether it stays as it is. 🔴 Audience-agnostic by design:
   // the ad does not sort never-partnered from post-breakup, so the context must not either.
@@ -1240,6 +1248,29 @@ const TAROT_HOOK_TENDENCY: Record<string, string> = {
   // the headline presupposes a failure and offers only her or her circumstances to blame.
   'cards-not-found-yet':
     'that an absence is not always caused, so there is no fault to hand her — not in her and not in the place she lives. NEVER supply a reason she has not found it, NEVER let any part of the answer land as her blocks, walls, standards, neediness, not being ready, or not having loved herself enough, and NEVER blame her town, her circle or her circumstances either. NEVER hand her a tactic or a change to make — no moving, no looking elsewhere, no going out more, no working on herself first. NEVER give a date or timeframe. Read the card as the ASSUMPTION inside her question — that an absence must have a culprit — and affirm that not having arrived is not the same as having gone astray',
+  // Fidelity hooks (2026-08-07). Decode-him in FORM, so they run under the DEFAULT frame —
+  // no sixth frame was added, deliberately. The compliance requirement is carried in these
+  // per-hook strings plus one wording change to the shared decode-him guard (see below).
+  //
+  // 🔴 THE FLAGGED WORD IS ABSENT FROM EVERY STRING HERE. That is not decoration: this text
+  // is injected verbatim into the live prompt, and instructing a model never to say a word
+  // still places the word in its context, where it can be echoed back onto a page the ad
+  // platform reviews. The bans are phrased around the word instead of naming it.
+  //
+  // ⚠ The incumbent 'cards-cheating' above keeps its own string unchanged (standing rule:
+  // do not touch a live lander). It carries the word in its visible headline anyway.
+  'cards-someone-else':
+    'that something genuinely changed, that she was owed an account of it and never given one, and that a mind handed a gap will always build something to fill it — so the explanation she arrived with is that building work rather than evidence, and rather than her being unreasonable. NEVER state that another person exists and NEVER state that none does; both are forbidden, one accuses a real man of something she cannot check and the other is a reassurance the funnel has no standing to give. NEVER call her suspicious, insecure or paranoid, and NEVER use that word to reassure her either — raising it plants it. NEVER tell her to check his phone, his messages or his whereabouts, and NEVER excuse him on his behalf. Read the card as the GAP she was left to fill, and affirm that she was entitled to be told',
+  'cards-talking-someone':
+    'that attention is finite, that she felt some of his go elsewhere, and that she was entitled to mind about it from the moment she noticed rather than only once she could prove something. NEVER state that he is in contact with anyone and NEVER state that he is not. NEVER instruct her to look at his phone, his messages, his accounts or his location, and NEVER suggest testing him or watching him — that is telling her to gather evidence, not reading for her, and it is the most available wrong answer to this question. NEVER let the answer land as her overthinking, and NEVER excuse the distance for him. Read the card as the DIRECTION of his attention as she has experienced it, and affirm that a plain question deserves a plain answer',
+  // ⚠ Asks for a summary judgment on a whole person. Both answers fail: vouching for him is
+  // a guarantee nobody outside a life can give, and convicting him is the forbidden verdict.
+  'cards-faithful':
+    'that not being able to put the question down is a real fact about her life whatever the answer is, and that this is the thing which can honestly be spoken to. NEVER vouch for him and NEVER convict him — a summary judgment on a whole person is not the reading to give, in either direction. NEVER give a guarantee or a reassurance about his conduct. NEVER call her insecure, suspicious or paranoid, and never use that word to comfort her. NEVER hand her a way to test him or check up on him, and NEVER excuse him. Read the card as what the SUSPENSION has cost her, and affirm her right to be able to rest rather than treating the asking as a flaw',
+  // ⚠ The word carrying this headline is "only". It is NOT a question about a rival — it is
+  // about whether what reaches her is the whole of what he has.
+  'cards-loyal':
+    'that her question turns on the word "only", and that it is really about whether what reaches her is the whole of what he has rather than about any rival — she has been accepting a portion, calling it the amount, and adjusting herself downward to fit it. NEVER name, describe or confirm anyone else, and NEVER deny anyone either. NEVER let the answer land as her being demanding, needy, jealous or possessive for wanting the whole of someone. NEVER hand her a tactic and NEVER excuse what she has noticed. Read the card as the PORTION she has been taking for the whole, and affirm that wanting all of a person is not an extravagant thing to want',
   // Loneliness hooks (2026-08-07). No man exists in these, so self-frame looks like the
   // natural home — and it is the worst possible one. Its clause is "affirm the hopeful yes
   // with CERTAINTY", and certainty about whether a person will spend their life alone is
@@ -1454,7 +1485,15 @@ export function buildTarotReflectPrompt(userData: UserData, deck: string, hook: 
         ? `NEVER PLACE A PERSON. Never name or hint at where they are, how near they are, what direction, what setting, what kind of person, or that she may already know them — a location is the specific harm of these headlines, because she can go and act on it. Never give a date or timeframe. Never hand her a tactic — no going out more, no looking elsewhere, no moving, no apps, no working on herself first; that is coaching, not a reading. Never explain the not-yet as a fault in her (blocks, walls, standards, not being ready, not loving herself enough) and never as a fault in her town or her circle. Affirm the hopeful yes warmly about HER, through the card's energy, and let the specifics stay unknown.`
         : selfFrame
           ? `Affirm the hopeful yes with warmth and certainty through the card's energy; withhold ONLY the specifics — never a name, a date, exactly "who", or WHERE.`
-          : `TENDENCY, NEVER A VERDICT. Never declare he is lying, cheating, faithful, or coming back as a fact. Read the card's energy as a leaning and affirm that HER intuition is a real instrument.`
+          // 🔴 WORDING CHANGED 2026-08-07, and it touches EVERY decode-him hook, not just the
+          // new fidelity four. The clause previously named the word the ad platform flags.
+          // Meaning is unchanged — "involved with someone else" covers exactly what the old
+          // wording covered — but the word is now absent from the prompt for every lander
+          // that runs under this frame, so it can no longer be echoed onto a page the
+          // platform reviews. The fidelity family was commissioned to avoid that word, and
+          // it would have inherited it here otherwise. Pinned by
+          // tests/tarot-fidelity-copy.test.ts.
+          : `TENDENCY, NEVER A VERDICT. Never declare he is lying, faithful, involved with someone else, or coming back as a fact. Read the card's energy as a leaning and affirm that HER intuition is a real instrument.`
 
   return `
 ${EVELYN_BASE_PROMPT}
