@@ -234,6 +234,41 @@ export type TarotHook =
   | 'cards-alone-forever' // Will I be alone forever?
   | 'cards-meant-alone' // Am I meant to be alone?
   | 'cards-someone-for-me' // Is there really someone out there for me?
+  // Fidelity hooks (2026-08-07). FOUR landers, not three — decode-him already carries four,
+  // so the count is not novel. Decode-him in FORM: a real man, read strictly as a tendency,
+  // never a verdict. What is new is a COMPLIANCE constraint rather than a safety one.
+  //
+  // 🔴 THE FLAGGED WORD. These exist because the ad platform flags "cheating", so the whole
+  // family is that question asked without it. Two consequences that are easy to miss:
+  //   1. The word must be absent from the LANDER, not just the ad — the platform reviews
+  //      landing pages. A compliant headline pointing at a page that says it in beat 3
+  //      defeats the exercise.
+  //   2. The word must be absent from the HOOK SLUG too, because the slug travels in the
+  //      ad's destination URL (`/fb-tarot/c?hook=…`). That is why none of these four is
+  //      named for the thing it asks about.
+  // Banned across headline, opener, reads, slug and the generated prompt path, and pinned
+  // by tests/tarot-fidelity-copy.test.ts: cheat/cheating/cheater/affair/infidelity.
+  // "Faithful" and "loyal" are explicitly fine — the operator's own headlines use them.
+  //
+  // 🔴 The incumbent is 'cards-cheating' ("Is he cheating on you?"), which is LEFT ALONE
+  // (standing rule: a new headline never replaces an old lander) and stays in `decode-him`.
+  // It carries the flagged word in its visible headline, so it presumably cannot run — but
+  // the consequence for reporting is that an `angle = fidelity` filter EXCLUDES it, exactly
+  // as `angle = reunion` excludes 'cards-return'. New-vs-incumbent is a HOOK-level compare.
+  //
+  // ⚠ All four are the same question from four distances, so the reads are written to four
+  // separate findings and must not drift together: the EXPLANATION she was left to author
+  // (someone-else), the ATTENTION she watched go elsewhere (talking-someone), the SUMMARY
+  // JUDGMENT nobody outside a relationship can issue (faithful), and the SHARE she has been
+  // taking for the whole (loyal).
+  //
+  // 🔴 'cards-cheating' already reads the UNEASE ("real information, not paranoia to
+  // apologize for"). No read here may restate that — it is the incumbent's finding, and
+  // reusing it would make the copy test measure nothing.
+  | 'cards-someone-else' // Is there someone else?
+  | 'cards-talking-someone' // Is he talking to someone else?
+  | 'cards-faithful' // Is he being faithful to me?
+  | 'cards-loyal' // Is he loyal to only me?
   // Self-frame hooks (read HER, affirm the hopeful yes — like the palm love hooks).
   | 'cards-love-again' // Will I love again?
   | 'cards-soulmate' // When is my soulmate coming?
@@ -374,6 +409,26 @@ export const LONELINESS_HOOKS: TarotHook[] = [
   'cards-someone-for-me',
 ]
 
+// The fidelity hooks (2026-08-07). FOUR of them. Their OWN angle rather than folded into
+// `trust`, `honesty` or `decode-him`:
+//
+//  · `trust` reads who he IS (the man underneath the presentation); `honesty` reads a
+//    specific UNTRUTH he told. These read a THIRD PERSON — a different wound from either,
+//    and the operator briefed it as its own category.
+//  · `decode-him` holds the incumbent 'cards-cheating', which stays exactly where it is.
+//    Folding these in would pool four new euphemism landers with the very lander they were
+//    commissioned to replace, and the comparison would vanish.
+//
+// ⚠ The slug is `fidelity`, not the flagged word — and it never reaches a visitor or the ad
+// platform anyway (it rides on PostHog event properties, not the URL). The HOOK slugs are
+// the ones that travel in the destination URL, which is why none of them names the subject.
+export const FIDELITY_HOOKS: TarotHook[] = [
+  'cards-someone-else',
+  'cards-talking-someone',
+  'cards-faithful',
+  'cards-loyal',
+]
+
 // The ad ANGLE a hook belongs to. Carried on every tarot PostHog event (see
 // lib/tarotAttribution.ts) so the two decode-him families can be compared as GROUPS
 // without listing each hook: one `angle = trust` filter instead of three hook values,
@@ -411,6 +466,11 @@ export type TarotAngle =
   // is going to stay as it is, and one of them asks whether she is FATED to it. Different
   // question, different guardrails, and the fate ban exists nowhere else.
   | 'loneliness'
+  // 🔴 'fidelity' is NOT a variant of 'trust' or 'honesty', and must never be merged into
+  // either. trust = who he IS · honesty = a specific untruth he told · fidelity = a THIRD
+  // PERSON. It is also NOT decode-him, which holds the incumbent 'cards-cheating' these
+  // four were commissioned to replace — merging them destroys that comparison.
+  | 'fidelity'
   | 'self-frame'
 
 export function angleForHook(hook: TarotHook): TarotAngle {
@@ -425,6 +485,7 @@ export function angleForHook(hook: TarotHook): TarotAngle {
   if (SOULMATE_AFTER_LOSS_HOOKS.includes(hook)) return 'soulmate-after-loss'
   if (SOULMATE_WHERE_HOOKS.includes(hook)) return 'soulmate-where'
   if (LONELINESS_HOOKS.includes(hook)) return 'loneliness'
+  if (FIDELITY_HOOKS.includes(hook)) return 'fidelity'
   return 'decode-him'
 }
 
@@ -463,6 +524,10 @@ export const TAROT_HOOKS: TarotHook[] = [
   'cards-alone-forever',
   'cards-meant-alone',
   'cards-someone-for-me',
+  'cards-someone-else',
+  'cards-talking-someone',
+  'cards-faithful',
+  'cards-loyal',
   'cards-love-again',
   'cards-soulmate',
 ]
@@ -534,6 +599,12 @@ export const HEADLINES: Record<TarotHook, string> = {
   'cards-alone-forever': 'Will I be alone forever?',
   'cards-meant-alone': 'Am I meant to be alone?',
   'cards-someone-for-me': 'Is there really someone out there for me?',
+  // Fidelity (2026-08-07). 🔴 The flagged word appears in NONE of these — that is the whole
+  // commission. The live 'cards-cheating' headline above still carries it and is untouched.
+  'cards-someone-else': 'Is there someone else?',
+  'cards-talking-someone': 'Is he talking to someone else?',
+  'cards-faithful': 'Is he being faithful to me?',
+  'cards-loyal': 'Is he loyal to only me?',
   'cards-love-again': 'Will I love again?',
   'cards-soulmate': 'When is my soulmate coming?',
 }
@@ -643,6 +714,22 @@ const TAROT_QUESTION: Record<TarotHook, string> = {
   // Goes straight at the finding: she has been handed comfort where she asked for an answer.
   // Answering it usually produces exasperation rather than despair, which is the point.
   'cards-someone-for-me': "Before I look closer, tell me… what do people tend to say to you about it, and has any of it ever helped?",
+  // Fidelity (2026-08-07). 🔴 None asks for EVIDENCE and none uses the flagged word. An
+  // opener that asked "what have you found?" or "what did you see on his phone?" would turn
+  // the page into an interrogation, put the word in her mouth, and hand the LLM material for
+  // an accusation. Each asks about HER experience of the situation instead.
+  //
+  // ⚠ Deliberately distinct from the live 'cards-cheating' opener ("when did the feeling
+  // that something's off first creep in?") — these four must differ from the incumbent and
+  // from each other at the first line she reads.
+  'cards-someone-else': "Before I look closer, tell me… what changed that you have never been given an explanation for?",
+  // Asks where his attention went, not what she has caught him at.
+  'cards-talking-someone': "Before I look closer, tell me… when did you first notice his attention had somewhere else to be?",
+  // ⚠ Never asks her to justify doubting him. Asks what would settle it — which is a
+  // question about her, and answerable without accusing anybody.
+  'cards-faithful': "Before I look closer, tell me… what would you need to hear from him to actually be able to rest?",
+  // The word doing the work in this headline is "only" — the opener goes straight at it.
+  'cards-loyal': "Before I look closer, tell me… what part of him have you never quite felt you had all of?",
   'cards-love-again': "Before I look closer, tell me… what has been weighing on your heart since it happened?",
   'cards-soulmate': "Before I look closer, tell me… what is the love you're still holding out for — the one you haven't given up on?",
 }
@@ -2220,6 +2307,124 @@ const RETURN_MHF: CardSetConfig = {
         "Under a question asking for proof, up came the one card that has never dealt in proof at all.",
         "Nothing here is a headcount and the Fool would not give you one — what it stands on is that an unknown is not the same as a negative, though the two wear the same face once a person is tired enough. You have started reading the absence of proof as proof of absence. Those are different things, and the difference is not a technicality; it is the entire space you have been living inside. Doubting is not the same as knowing, and you have been treating your doubt as though it had gone and done the research.",
         "Let me look closer at what your doubt has been standing in for…",
+      ],
+    },
+    // ── Fidelity (2026-08-07) ────────────────────────────────────────────────
+    // FOUR landers. Decode-him in FORM — a real man, read as a tendency, never a verdict —
+    // but commissioned as a COMPLIANCE exercise: the same question the live 'cards-cheating'
+    // lander asks, without the word the ad platform flags.
+    //
+    // 🔴 THE FLAGGED WORD APPEARS NOWHERE BELOW, and that is load-bearing rather than
+    // stylistic: the platform reviews landing pages, so a compliant ad pointing at a page
+    // that says it in beat 3 defeats the entire commission. Banned here and in the
+    // generated prompt path: cheat / cheating / cheater / affair / infidelity. "Faithful"
+    // and "loyal" are fine — the operator's own headlines use them.
+    //
+    // On top of the standing tendency-never-verdict rule, four bans, all pinned by
+    // tests/tarot-fidelity-copy.test.ts:
+    //   1. NO THIRD PERSON, ASSERTED OR DENIED. "There is someone else" accuses a real man
+    //      of a real act she cannot check; "there is nobody" is a reassurance the funnel has
+    //      no standing to give, and reassurance is the documented failure on this wound.
+    //   2. NO SURVEILLANCE. No checking his phone, his messages, his location, no watching
+    //      him, no testing him. That is instruction to gather evidence, not a reading — and
+    //      it is the single most available answer to these questions elsewhere.
+    //   3. NO PARANOIA FRAMING, in either direction. Never call her suspicious, insecure or
+    //      paranoid — and never use the word to reassure her either, because raising it
+    //      plants it. ⚠ Note the live 'cards-cheating' read already lands "not paranoia to
+    //      apologize for". That is the INCUMBENT'S finding; none of these may restate it.
+    //   4. NO EXCUSING HIM. "He is just busy", "men are like that" — an excuse is a verdict
+    //      wearing a kinder face, same as on the pulling-away family.
+    //
+    // 'Is there someone else?' — THE EXPLANATION. She has been handed a change with no
+    // account of it, and "someone else" is the first explanation that makes the pieces fit.
+    // The read rules on neither, and finds that she was left to author the explanation alone.
+    'cards-someone-else': {
+      a: [
+        "You turned the Magician, dear — the card of the mind that will build an explanation out of whatever it is given.",
+        "Your hand chose the card of construction, and construction is what you have been doing alone, night after night.",
+        "I will not name another person for you, and I will not swear to you there is none; a card cannot see into a life it has never been shown, and anyone claiming otherwise is inventing. What the Magician does hold up is this: something changed, you were handed no account of it, and a mind given a gap will always build something to fill it. The explanation you arrived with is the shape of that building work. It is not evidence, nor is it you being unreasonable — it is what happens when a person is left to work out alone what they should simply have been told.",
+        "Let me look closer at the gap you were left to fill…",
+      ],
+      b: [
+        "You turned the Hanged Man, dear — the card of the account that was never delivered.",
+        "You reached for the card of the thing left owing, and something here has been owed to you a long while.",
+        "The Hanged Man passes no ruling on anyone and I will pass none on your behalf — what it suspends is the question of whether you were entitled to an explanation, and you were. Something shifted and nobody sat you down about it. You have been carrying two separate weights and treating them as one: the change itself, and the silence around it. The second is doing most of the damage, and it is the one that could have been lifted at any point by somebody simply speaking.",
+        "Let me look closer at the second weight you have been carrying…",
+      ],
+      c: [
+        "You turned the Fool, dear — the card of the story that has not been finished by anyone.",
+        "That is not chance; you found the card of the unwritten ending at a moment you had already written one yourself.",
+        "The Fool names no one and neither will I — it will not confirm your story and it will not overwrite it with a kinder one. What it shows me is that the ending you have been rehearsing was authored by you, in the absence of anybody else offering one. That is not a delusion and it is not proof; it is a draft, and you have been treating a draft as a finding because nothing truer was ever put in front of you.",
+        "Let me look closer at the draft you have been living inside…",
+      ],
+    },
+    // 'Is he talking to someone else?' — THE ATTENTION. The most evidence-adjacent of the
+    // four, so the surveillance ban does the heaviest lifting. The finding: she should not
+    // have to produce proof before she is allowed to mind.
+    'cards-talking-someone': {
+      a: [
+        "You turned the Magician, dear — the card of where a person decides to put their effort.",
+        "Of the three, your hand went to the one about direction, and direction is exactly what you have been watching.",
+        "There is nothing in the Magician about anybody's messages, and I will not go looking on your behalf or send you looking either — what it marks is the direction of his attention, which is a thing you have felt rather than a thing you must prove. Attention is finite. When some of it goes elsewhere, the person receiving less notices first and usually says nothing, because saying it out loud feels like an accusation they have not earned the right to make. You have been waiting to be entitled to mind. You were entitled from the moment you noticed.",
+        "Let me look closer at what you have been waiting to be entitled to…",
+      ],
+      b: [
+        "You turned the Hanged Man, dear — the card of the half-turned face.",
+        "You settled on the card of the divided moment, and division is the precise shape of what you have been living with.",
+        "The Hanged Man holds no inventory of anyone's conversations, and I would not invent one — it reads the split rather than its cause. Something of his is elsewhere while he is right there, and you have been asked, without anyone ever asking out loud, to behave as though you had not noticed. That is a strange and lonely job to be handed. Whichever way the reason eventually falls, being made to pretend you cannot see it is its own separate injury.",
+        "Let me look closer at the job you were quietly handed…",
+      ],
+      c: [
+        "You turned the Fool, dear — the card of the open door nobody will speak about.",
+        "You drew the card of the unnamed thing at a question you have not been able to name out loud yourself.",
+        "The Fool identifies nobody and I will not fill the blank in for it — what it will attest to is that something here has gone unnamed, and unnamed things grow heavier rather than lighter. You have been holding a question you cannot ask without it sounding like a charge, and so you have not asked it, and so it has stayed. Nothing about that is you being difficult. A person should be able to ask a plain question of someone they love and get a plain answer back.",
+        "Let me look closer at the question you have not been able to ask…",
+      ],
+    },
+    // 'Is he being faithful to me?' — THE SUMMARY JUDGMENT. Both answers forbidden. The
+    // finding: she is really asking whether she can stop bracing, and she has not been able
+    // to — which is a fact about her life rather than a ruling on him.
+    'cards-faithful': {
+      a: [
+        "You turned the Magician, dear — the card of the thing tested by doing rather than by declaring.",
+        "The card that came to your hand is the one about practice, and practice is a longer question than the one you asked.",
+        "No card issues a character reference, and I would be overstepping badly if I read one out of this — I will not vouch for him and I will not convict him, because a summary judgment on a whole person is not mine to hand down and it is not the Magician's either. What sits in front of me is nearer and more useful: you asked because you have not been able to put the question down. Not being able to rest is a fact about your life, whatever the answer turns out to be, and it is the fact I can actually speak to.",
+        "Let me look closer at why you have not been able to put it down…",
+      ],
+      b: [
+        "You turned the Hanged Man, dear — the card of the verdict that never arrives.",
+        "Yours was the card of the thing left pending, and pending is where this question has lived in you.",
+        "The Hanged Man declines the reassurance you came for, and declines its reverse with exactly the same firmness; that refusal is the honest part of this rather than a dodge. A word like the one in your question describes a whole person across a whole stretch of time, and nobody standing outside a life gets to certify such a thing. What I can see is that you have been left hanging in the asking, and being held there drains something out of you that neither a clear yes nor a clear no ever would.",
+        "Let me look closer at what the suspension has taken out of you…",
+      ],
+      c: [
+        "You turned the Fool, dear — the card of the thing that is chosen again each day rather than settled once.",
+        "You found the card of the fresh step under a question that wanted a permanent answer, and that mismatch is worth sitting with.",
+        "The Fool declines to stamp anybody and I decline alongside it — what it draws attention to is that the quality you are asking about is not a fixed property somebody either has or lacks. It is chosen, repeatedly, by people who could choose otherwise. That is why no reading can hand you a guarantee, and why the reassurance you have been hoping for would have been worth very little even if I had given it to you. What you actually want is to be able to trust your own footing again.",
+        "Let me look closer at the footing you have been missing…",
+      ],
+    },
+    // 'Is he loyal to only me?' — THE WORD "ONLY". Not about a rival: about whether what she
+    // receives is the whole of what he has. The finding: she has been taking a share and
+    // calling it the whole, and has stopped noticing she was doing it.
+    'cards-loyal': {
+      a: [
+        "You turned the Magician, dear — the card of what a person actually spends, as against what they say they have.",
+        "Your hand found the card of the ledger, and there is a reckoning in your question that you have not let yourself do.",
+        "I will not tell you where anything of his goes, and no card can produce that accounting — what the Magician turns over is your own word, the small one: 'only'. That word is not about a rival. It is about whether what reaches you is the whole of what he has, and you have been quietly answering that for yourself for some time by accepting a portion and calling it the amount. Nothing about noticing the difference makes you demanding.",
+        "Let me look closer at the portion you have been calling the whole…",
+      ],
+      b: [
+        "You turned the Hanged Man, dear — the card of the thing held partly back.",
+        "You reached for the card of the withheld share, and a share is precisely what your question is about.",
+        "The Hanged Man keeps no roster of anybody, and naming a name would simply be me making one up — what it suspends is the assumption that this is a question about somebody else at all. It may not be. A person can be entirely where they are supposed to be and still keep a portion of themselves out of reach, and being given most of someone is a particular kind of lonely, because there is nothing in it you are allowed to complain about. You have not been imagining the missing part.",
+        "Let me look closer at the part that has been kept back…",
+      ],
+      c: [
+        "You turned the Fool, dear — the card of the thing given whole or not given at all.",
+        "That is not chance; you drew the card of the undivided at the exact question where you have suspected division.",
+        "The Fool counts nobody and I will not start counting on its behalf — what it holds is a standard rather than a finding. What you asked for in that question is not extravagant: to be the whole of somebody's answer rather than most of it. You have been treating that as a large thing to want, and adjusting yourself downward to fit what you were actually receiving. The adjusting is the part I want to look at, because you have stopped noticing you are doing it.",
+        "Let me look closer at the adjusting you have stopped noticing…",
       ],
     },
   },

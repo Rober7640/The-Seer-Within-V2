@@ -86,7 +86,7 @@ verified 9/9 identical. This matches how `cards-honest` already behaves across t
 
 ### 🔑 The `angle` property — comparing hook FAMILIES
 
-Every tarot PostHog event carries `angle`. Eleven families as of 2026-08-07:
+Every tarot PostHog event carries `angle`. Twelve families as of 2026-08-07:
 
 | `angle` | Hooks | Added |
 |---|---|---|
@@ -101,7 +101,11 @@ Every tarot PostHog event carries `angle`. Eleven families as of 2026-08-07:
 | `soulmate-after-loss` | new-soulmate · soulmate-out-there · ready-to-love | 2026-08-07 |
 | `soulmate-where` | where-soulmate · soulmate-closer · not-found-yet | 2026-08-07 |
 | `loneliness` | alone-forever · meant-alone · someone-for-me | 2026-08-07 |
+| `fidelity` | someone-else · talking-someone · faithful · loyal | 2026-08-07 |
 | `self-frame` | love-again · soulmate | seeded |
+
+> ⚠️ `fidelity` is the only family with **four** hooks besides `decode-him`. It is also the
+> only one commissioned for **compliance** rather than a new wound — see its section below.
 
 > `pulling-away` and `reconciliation` were live from 08-05/08-06 but had never been added
 > to this table or to the admin `ANGLE_LABELS` map; both backfilled 2026-08-07.
@@ -472,6 +476,72 @@ direction**, since the ad does not sort never-partnered from post-breakup.
 > not refactored alongside a shipping family** — it touches the live prompt path for every
 > angle at once and deserves its own change.
 
+## Fidelity hooks — 4 face-down landers (2026-08-07)
+
+Own `fidelity` angle. Topic: *"Is there someone else?"* — **the live `cards-cheating` question
+asked without the word the ad platform flags.** Face-down `return-mhf` only, Version C, clean
+URLs, no new art. Four landers, not three (`decode-him` already carries four).
+
+| Headline | Hook | URL |
+|---|---|---|
+| Is there someone else? | `cards-someone-else` | `/fb-tarot/c?hook=cards-someone-else` |
+| Is he talking to someone else? | `cards-talking-someone` | `/fb-tarot/c?hook=cards-talking-someone` |
+| Is he being faithful to me? | `cards-faithful` | `/fb-tarot/c?hook=cards-faithful` |
+| Is he loyal to only me? | `cards-loyal` | `/fb-tarot/c?hook=cards-loyal` |
+
+### 🔴🔴 The first family commissioned for COMPLIANCE, not for a new wound
+
+The flagged word must be absent from **four** surfaces, not one:
+
+1. **The headline** — obvious.
+2. **The lander copy** — the platform reviews landing pages. A compliant ad pointing at a page
+   that says the word in beat 3 defeats the entire commission.
+3. **The hook slug** — it travels in the ad's destination URL (`?hook=…`). This is why none of
+   the four is named for its own subject.
+4. **The generated prompt** — Version C writes fresh text from `TAROT_HOOK_TENDENCY`.
+   *Instructing a model never to say a word still puts the word in its context*, where it can
+   be echoed straight onto the reviewed page. So these tendency strings phrase their bans
+   **around** the word rather than naming it.
+
+Banned and asserted: `cheat` / `cheating` / `cheater` / `affair` / `infidelity`.
+**`faithful` and `loyal` are permitted** — the operator's own headlines use them.
+
+### 🔴 The shared decode-him guard was REWORDED, and it touches every angle
+
+The frame guard used to read *"Never declare he is lying, **cheating**, faithful, or coming
+back as a fact."* It now reads *"…lying, faithful, **involved with someone else**, or coming
+back…"*. Meaning is identical; the flagged word is gone from the prompt of **every lander
+running under the decode-him frame**, not just these four — which would otherwise have
+inherited it. Asserted in both directions so neither half can be silently undone.
+
+> 📌 No sixth frame was added. These are decode-him in form (a real man, tendency never a
+> verdict), so they use the default frame. The frame-lookup refactor is still owed.
+
+### The incumbent stays, and it excludes itself from reporting
+
+`cards-cheating` ("Is he cheating on you?") is **untouched** in `decode-him` — standing rule.
+It carries the flagged word in its *visible headline*, so it presumably cannot run at all now.
+Consequence: an `angle = fidelity` filter **EXCLUDES** it, exactly as `angle = reunion`
+excludes `cards-return`. New-vs-incumbent is a **hook-level** comparison.
+
+⚠️ Its finding is also off-limits: `cards-cheating` already lands *"the unease is real
+information, not paranoia to apologize for."* None of the four may restate it — and the
+paranoia framing is banned here in **both** directions anyway, since using the word to reassure
+her still plants it.
+
+### Four separate findings, or it is one lander wearing four headlines
+
+| Hook | Finding |
+|---|---|
+| `cards-someone-else` | the **explanation** she was left to author alone, in the absence of any account |
+| `cards-talking-someone` | the **attention** she watched go elsewhere — she was entitled to mind from the moment she noticed, not only once she could prove something |
+| `cards-faithful` | the **summary judgment** nobody outside a life can issue; routes to her not being able to rest |
+| `cards-loyal` | the word is *only* — the **portion** she has been taking for the whole |
+
+Plus the standing bans: no third person asserted **or denied**, no surveillance (check his
+phone, follow, test, catch, confront — the most available wrong answer on the internet), no
+excusing him, no landing as her fault.
+
 ## Concepts
 
 | # | Deck id | Facing | Cards (A/B/C) | Options | Status | Notes |
@@ -518,6 +588,10 @@ direction**, since the ad does not sort never-partnered from post-breakup.
 | `cards-alone-forever` *(loneliness)* | Will I be alone forever? | ⬜ DRAFT (2026-08-07) — ⚠️ the read REFUSES the absolute both ways; routes to "forever" being the language of exhaustion |
 | `cards-meant-alone` *(loneliness)* | Am I meant to be alone? | ⬜ DRAFT (2026-08-07) — 🔴 SHARPEST HOOK ON THE FUNNEL; asks for a verdict on her NATURE. Refuses the premise that anything is assigned |
 | `cards-someone-for-me` *(loneliness)* | Is there really someone out there for me? | ⬜ DRAFT (2026-08-07) — reads the EPISTEMICS (comfort vs answer), deliberately not the one-chance premise or the hope-isn't-naive finding |
+| `cards-someone-else` *(fidelity)* | Is there someone else? | ⬜ DRAFT (2026-08-07) — reads the EXPLANATION she was left to author; rules on no third person either way |
+| `cards-talking-someone` *(fidelity)* | Is he talking to someone else? | ⬜ DRAFT (2026-08-07) — 🔴 most evidence-adjacent; the surveillance ban does the heavy lifting |
+| `cards-faithful` *(fidelity)* | Is he being faithful to me? | ⬜ DRAFT (2026-08-07) — refuses the summary judgment both ways; routes to her not being able to rest |
+| `cards-loyal` *(fidelity)* | Is he loyal to only me? | ⬜ DRAFT (2026-08-07) — the word is "only"; reads the PORTION she has taken for the whole |
 | `cards-love-again` *(self-frame)* | Will I love again? | ⬜ draft — 🔴 **no reads on either FACE-DOWN deck**, so a clean URL silently falls back to `cards-honest`/`decode-him`. Only works with an explicit `&deck=arcana-mfh` |
 | `cards-soulmate` *(self-frame)* | When is my soulmate coming? | ⬜ draft (2026-07-27, from `ZN_Tarot_Rio 8.png` = arcana-eef cards; reads on arcana-eef + arcana-mfh; answers "when" as a leaning, never a date) |
 
