@@ -86,7 +86,7 @@ verified 9/9 identical. This matches how `cards-honest` already behaves across t
 
 ### 🔑 The `angle` property — comparing hook FAMILIES
 
-Every tarot PostHog event carries `angle`. Nine families as of 2026-08-07:
+Every tarot PostHog event carries `angle`. Ten families as of 2026-08-07:
 
 | `angle` | Hooks | Added |
 |---|---|---|
@@ -99,6 +99,7 @@ Every tarot PostHog event carries `angle`. Nine families as of 2026-08-07:
 | `pulling-away` | pulling-away · gone-cold · losing-interest | 2026-08-05 |
 | `reconciliation` | back-together · still-a-chance · really-over | 2026-08-06 |
 | `soulmate-after-loss` | new-soulmate · soulmate-out-there · ready-to-love | 2026-08-07 |
+| `soulmate-where` | where-soulmate · soulmate-closer · not-found-yet | 2026-08-07 |
 | `self-frame` | love-again · soulmate | seeded |
 
 > `pulling-away` and `reconciliation` were live from 08-05/08-06 but had never been added
@@ -336,6 +337,67 @@ the running baseline and make it unreadable as a group.
 > met your soulmate?" — `client/src/content/palmReads.ts`). **It has never run on tarot.** The
 > "less new territory" caveat in the brief holds at palm level, not here.
 
+## Soulmate-where hooks — 3 face-down landers (2026-08-07)
+
+Own `soulmate-where` angle. Topic: *"Where is my soulmate?"* — the **SEEKING** half of the
+soulmate topic, against `soulmate-after-loss`'s bereaved half. Face-down `return-mhf` only,
+Version C, clean URLs, no new art.
+
+| Headline | Hook | URL |
+|---|---|---|
+| Where is my soulmate right now? | `cards-where-soulmate` | `/fb-tarot/c?hook=cards-where-soulmate` |
+| Is my soulmate closer than I think? | `cards-soulmate-closer` | `/fb-tarot/c?hook=cards-soulmate-closer` |
+| Why haven't I found my soulmate where I am? | `cards-not-found-yet` | `/fb-tarot/c?hook=cards-not-found-yet` |
+
+### 🔴🔴 LOCATION — a failure mode with no guard anywhere before this family
+
+The self-frame clause tells the model to withhold *"**ONLY** the specifics — never a name, a
+date, or exactly who"*. Name, date, who. **It omits WHERE.** Asked *"Where is my soulmate right
+now?"* under that clause a model answers with a place, **confidently**, because the clause
+instructs it to withhold nothing else.
+
+The harm is not vagueness. It is **specificity that lands on a real, identifiable person** —
+*"someone already in your circle", "at your work", "a city near water"* — which she can go and
+act on. Banned in the reads, all three tendency strings, the frame guard, and asserted as an
+ALWAYS ban in `tests/tarot-soulmate-where-copy.test.ts`.
+
+> ✅ `where` was added to the **self-frame** withhold list at the same time — the same gap
+> applied to the live `cards-soulmate` lander, which invites "when" and left "where" open.
+
+### The FOURTH prompt frame
+
+`buildTarotReflectPrompt` now branches four ways. Each is genuinely distinct:
+
+| Frame | Situation | Core guard |
+|---|---|---|
+| decode-him | a real man, reachable | tendency, never a verdict |
+| `self-frame` | no man exists | affirm the yes with certainty |
+| `soulmate-after-loss` | a man existed and **died** | affirm HER, never an arrival, never speak for him |
+| `soulmate-where` | never found anyone | affirm the yes freely, **never a place** |
+
+`SOULMATE_WHERE_TAROT_HOOKS` is tested **before** self-frame, so the stricter guard wins if a
+hook is ever filed in both. Two more bans self-frame lacks:
+
+- **STRATEGY** — go out more, look elsewhere, move, try the apps, work on yourself first. This
+  is what the rest of the internet answers these questions with, so it leaks in easily.
+- **HER FAULT** — blocks, walls, standards, not ready, not loving herself enough, manifest
+  harder. Same shape of harm as `cards-wont-commit` and `cards-deceived`, from a fourth side.
+  `cards-not-found-yet` refuses to blame her **town** as well, which is the other half of it.
+
+### ⭐⭐ `cards-soulmate-closer` is a deliberate COPY TEST against the live `cards-soulmate`
+
+That lander's tendency string already lands *"nearer than the waiting has let her believe"* —
+so the new headline **is the incumbent's own read, hoisted into a hook**. The reads therefore
+must not restate it, or the two landers become one lander showing two rows. This one refuses
+the proximity claim outright and reads the **bracing** instead: the hope she has managed
+downward so a disappointment could not reach her. Pinned two ways — the proximity claim is
+banned, and the bracing finding is asserted positively.
+
+> 📌 Nearest live neighbour is `cards-soulmate-out-there` (*"Is there still a soulmate out there
+> for me?"*), shipped the same day under `soulmate-after-loss`. **Opposite starting point** —
+> that one reads a bereavement and answers the one-chance premise; these read a woman who never
+> found it at all. No vocabulary is shared, pinned by a cross-family 6-word-run sweep.
+
 ## Concepts
 
 | # | Deck id | Facing | Cards (A/B/C) | Options | Status | Notes |
@@ -376,6 +438,9 @@ the running baseline and make it unreadable as a group.
 | `cards-new-soulmate` *(soulmate-after-loss)* | Will I find a new soulmate after loss? | ⬜ DRAFT (2026-08-07) — reads on `return-mhf`; answers the fear of REPLACING him, never an arrival |
 | `cards-soulmate-out-there` *(soulmate-after-loss)* | Is there still a soulmate out there for me? | ⬜ DRAFT (2026-08-07) — reads the PREMISE ("I was issued one and spent it"), never a location or a forecast |
 | `cards-ready-to-love` *(soulmate-after-loss)* | Am I ready to love again after losing him? | ⬜ DRAFT (2026-08-07) — ⚠️ the read REFUSES the binary; a stranger may not grade a widow's grief |
+| `cards-where-soulmate` *(soulmate-where)* | Where is my soulmate right now? | ⬜ DRAFT (2026-08-07) — 🔴 asks for a PLACE; the read declines one and answers that the not-yet is not a distance |
+| `cards-soulmate-closer` *(soulmate-where)* | Is my soulmate closer than I think? | ⬜ DRAFT (2026-08-07) — ⚠️ COPY TEST against the live `cards-soulmate`, whose read already says this. Refuses proximity, reads the bracing |
+| `cards-not-found-yet` *(soulmate-where)* | Why haven't I found my soulmate where I am? | ⬜ DRAFT (2026-08-07) — ⚠️ presupposes a failure; refuses to blame her OR her town, and hands back no strategy |
 | `cards-love-again` *(self-frame)* | Will I love again? | ⬜ draft — 🔴 **no reads on either FACE-DOWN deck**, so a clean URL silently falls back to `cards-honest`/`decode-him`. Only works with an explicit `&deck=arcana-mfh` |
 | `cards-soulmate` *(self-frame)* | When is my soulmate coming? | ⬜ draft (2026-07-27, from `ZN_Tarot_Rio 8.png` = arcana-eef cards; reads on arcana-eef + arcana-mfh; answers "when" as a leaning, never a date) |
 
