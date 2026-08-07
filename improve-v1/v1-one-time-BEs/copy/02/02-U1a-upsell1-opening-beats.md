@@ -2,11 +2,13 @@
 
 | | |
 |---|---|
+| **⚠ SUPERSEDED IN PART** | `../../docs/00i-DELIVERABLES-U1-U2.md` — the flow was rebuilt 2026-08-06: the three questions are gone (each became an assumed answer), so `RISK` now absorbs Q1's work and `QUESTION_1`/`AFTER_Q1` are unreachable. The four opening beats below are otherwise as built |
 | **Engine** | `S20`, config-driven clone of `useUpsellChat.ts`. **~48 of ~60 messages reuse verbatim** |
 | **Rewritten here** | `CONFIRMATION` · `GAP` · `RISK` · `QUESTION_1` + `AFTER_Q1` — everything downstream of `SOLUTION` is V1's, unchanged |
 | **Why** | V1's beats hang off *"your Energy Clearing Ritual"*, a product 02's buyer did not purchase. The same four beats hang off **the Tower's warning** instead |
 | **Product sold** | the Protection Ritual + charged lava stone — unchanged. `S21` suppression: never offer an object she already owns |
 | **Source** | `client/src/lib/upsellMessages.ts:43-106` |
+| **BUILT** | `client/src/lib/twinFlameUpsellCopy.ts`, served at `/tarot/twin-flame/welcome1`. Not a clone of the engine after all — the hook resolves its opening beats by URL, exactly as every other per-funnel behaviour in the shared components already does |
 
 ⚠ **The beat structure is proven and is not being changed.** Confirmation → gap → risk → a
 question that makes the risk personal → solution. Only the *content* of the first four moves.

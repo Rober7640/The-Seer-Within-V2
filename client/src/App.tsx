@@ -59,6 +59,7 @@ const SoulmateThankYouPage = lazy(() => import("@/pages/SoulmateThankYouPage"));
 // list above: no traffic reaches these, and firing the pixel would pollute it.
 const TwinFlameBookingPage = lazy(() => import("@/pages/TwinFlameBookingPage"));
 const TwinFlameBookingChat = lazy(() => import("@/pages/TwinFlameBookingChat"));
+const TwinFlameThankYouPage = lazy(() => import("@/pages/TwinFlameThankYouPage"));
 
 // Admin pages (lazy loaded)
 const AdminLogin = lazy(() => import("@/pages/admin/AdminLogin"));
@@ -291,6 +292,18 @@ function Router() {
             Spec: improve-v1/v1-one-time-BEs/copy/02/02-C1-booking-page.md */}
         <Route path="/tarot/twin-flame/preview-page" component={TwinFlameBookingPage} />
         <Route path="/tarot/twin-flame/preview-chat" component={TwinFlameBookingChat} />
+        {/* 02's upsells are V1's components, as every other funnel's are. Only
+            the opening beats differ (lib/twinFlameUpsellCopy.ts) — a tarot
+            buyer is never told her Energy Clearing Ritual is scheduled.
+            Deliberately absent from the FB PageView list above, like the two
+            preview routes: nothing links here yet and Stripe is unwired, so
+            there is no traffic to attribute. Preview with ?demo=true. */}
+        <Route path="/tarot/twin-flame/welcome1" component={UpsellPage} />
+        <Route path="/tarot/twin-flame/welcome2" component={Upsell2Page} />
+        {/* 02's own thank-you (02-T1). NOT V1's /success, which tells her an
+            "Energy Clearing Ritual" begins tonight — a product she never
+            bought. Receipt-shaped and sells nothing, by spec. */}
+        <Route path="/tarot/twin-flame/success" component={TwinFlameThankYouPage} />
         <Route path="/soulmate" component={SoulmateLandingPage} />
 
         {/* Auth routes (no layout wrapper) */}

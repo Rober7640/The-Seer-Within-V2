@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import type { Bucket } from "@shared/types";
 import lavaStoneImage from "../assets/images/lava-stone.jpg";
-import { funnelPath } from "../lib/funnel";
+import { funnelPath, isTwinFlameOffer } from "../lib/funnel";
 import { trackABConversion } from "../hooks/useABTest";
 
 interface UserData {
@@ -37,6 +37,21 @@ export default function UpsellPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [inputValue, setInputValue] = useState("");
+
+  // ⚠ These chat pages never scroll INTERNALLY: the message list is
+  // `flex-1 overflow-y-auto` inside a `min-h-screen` column, and a flex item's
+  // default `min-height: auto` stops it shrinking — so it grows to fit its
+  // content, `scrollHeight === clientHeight`, and the auto-scroll effect below
+  // is dead code. The document grows instead, which puts every message past
+  // roughly the eighth BELOW THE FOLD, along with the footer that holds the
+  // quick replies and the CTA. Measured on this branch: 12 bubbles ⇒ document
+  // 1188px against an 880px viewport, `window.scrollY` still 0.
+  //
+  // Offer 02 opts into the fix (`h-screen` + `min-h-0`) because its flow pauses
+  // on a tap the buyer has to be able to see. The same one-line fix is pending
+  // for V1 / fb / fb2 / fb-palm / fb-tarot / gdn — it changes what live buyers
+  // see, so it is an operator decision, not a tidy-up.
+  const pinnedShell = isTwinFlameOffer();
 
   // Parse URL params
   useEffect(() => {
@@ -157,6 +172,10 @@ export default function UpsellPage() {
     isProcessing,
     isComplete,
     upsellPriceLabel,
+    acceptLabel,
+    showContinue,
+    continueLabel,
+    handleContinue,
     handleUserInput,
     handleQuickReply,
     handleAccept,
@@ -170,6 +189,12 @@ export default function UpsellPage() {
   });
 
   // Auto-scroll to bottom
+  // ⚠ Deps include the footer-visibility flags on purpose: showing the continue
+  // tap / CTA / shipping form GROWS the footer, which shrinks the scroll
+  // container after this effect has already settled — leaving the newest bubble
+  // clipped behind it. Re-scrolling on those flags is a strict NO-OP on every
+  // funnel that has not opted into `pinnedShell`, because there the container is
+  // not scrollable at all and scrollTo() does nothing.
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTo({
@@ -177,7 +202,7 @@ export default function UpsellPage() {
         behavior: "smooth",
       });
     }
-  }, [messages, isTyping]);
+  }, [messages, isTyping, showContinue, showCTA, showShippingForm]);
 
   // Redirect to upsell2 immediately when complete
   useEffect(() => {
@@ -228,11 +253,20 @@ export default function UpsellPage() {
 
   return (
     <div
-      className="min-h-screen relative flex flex-col"
+      className={`${pinnedShell ? "h-screen" : "min-h-screen"} relative flex flex-col`}
       data-testid="page-upsell"
     >
       <CosmicBackground />
-      <BackgroundMusic />
+      <BackgroundMusic
+        // Offer 02 moves the toggle to the TOP right, beside the "Sound on"
+        // notice it belongs with. A bottom offset cannot work: the footer is
+        // ~134px at the CTA and ~400px with the shipping form open, so no fixed
+        // value clears both. Up here it can never steal a tap from the decline
+        // button or the form's submit. Every other funnel keeps the
+        // viewport-pinned default — the same pre-existing overlap they have
+        // always had, which is not ours to change on live pages.
+        positionClass={pinnedShell ? "absolute top-2 right-3" : undefined}
+      />
 
       {/* Header */}
       <div className="relative z-10 p-4 text-center border-b border-white/10 bg-black/20 backdrop-blur-sm">
@@ -245,7 +279,7 @@ export default function UpsellPage() {
       {/* Chat Container */}
       <div
         ref={scrollRef}
-        className="relative z-10 flex-1 overflow-y-auto px-4 py-6 space-y-4 scroll-smooth"
+        className={`relative z-10 flex-1 overflow-y-auto px-4 py-6 space-y-4 scroll-smooth ${pinnedShell ? "min-h-0" : ""}`}
         data-testid="container-chat"
       >
         <div className="max-w-lg mx-auto space-y-4">
@@ -304,8 +338,17 @@ export default function UpsellPage() {
       </div>
 
       {/* Interactive Elements — only render footer when something inside it is visible */}
-      {(showQuickReplies || (inputEnabled && !showCTA && !showShippingForm) || showCTA || showShippingForm) && (
+      {(showQuickReplies || showContinue || (inputEnabled && !showCTA && !showShippingForm) || showCTA || showShippingForm) && (
       <div className="relative z-10 shrink-0 bg-black/30 backdrop-blur-sm border-t border-white/10">
+        {/* Continue tap — offer 02 only. One button, no branch, nothing captured. */}
+        {showContinue && (
+          <QuickReplies
+            replies={[{ text: continueLabel, value: "continue" }]}
+            onSelect={handleContinue}
+            disabled={isTyping}
+          />
+        )}
+
         {/* Quick Replies */}
         {showQuickReplies && (
           <QuickReplies
@@ -351,6 +394,7 @@ export default function UpsellPage() {
               onDecline={handleDecline}
               isProcessing={isProcessing}
               priceLabel={upsellPriceLabel}
+              acceptLabel={acceptLabel}
             />
           </div>
         )}

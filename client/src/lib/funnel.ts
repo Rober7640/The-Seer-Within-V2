@@ -63,14 +63,44 @@ export function skipEmail(search?: string): boolean {
   }
 }
 
+// ─── Backend deck, offer 02 (Twin Flame Tarot) ─────────────────────────────
+// NOT an entry in shared/funnelConfig.ts, deliberately. That file drives the
+// Stripe product suffix, the AWeber tag and the `funnel` param the client
+// sends to the charge endpoints — and offer 02's Stripe is not built yet, with
+// its own bump identifiers still owed (00h "NOT built"). Registering it there
+// would quietly attach 02 to V1's money paths. This prefix is client-side URL
+// knowledge only: which copy the shared upsell components run, and where
+// /welcome1 hands off to next.
+export const TWIN_FLAME_PREFIX = "/tarot/twin-flame";
+
+export function isTwinFlameOffer(pathname?: string): boolean {
+  const p = pathname ?? currentPath();
+  return p === TWIN_FLAME_PREFIX || p.startsWith(`${TWIN_FLAME_PREFIX}/`);
+}
+
 // Prefix a V1 path with the active funnel's prefix when the user is in an ad
 // funnel, otherwise leave it alone. Use for in-funnel navigation so the user
 // stays inside their own funnel for the entire flow.
 export function funnelPath(v1Path: string, pathname?: string): string {
-  const def = funnelDefForPath(pathname ?? currentPath());
-  if (!def) return v1Path;
-  if (v1Path === "/") return def.prefix;
-  return `${def.prefix}${v1Path}`;
+  const path = pathname ?? currentPath();
+  const def = funnelDefForPath(path);
+  if (def) {
+    if (v1Path === "/") return def.prefix;
+    return `${def.prefix}${v1Path}`;
+  }
+  // Offer 02 mounts only the two upsell steps under its prefix. Without this,
+  // /tarot/twin-flame/welcome1 would hand off to V1's /welcome2 and the buyer
+  // would drop out of 02's copy mid-flow.
+  //
+  // ⚠ "/" is deliberately NOT in this list: offer 02 has no lander, because the
+  // buyer arrives from an email letter. It still falls through to V1's.
+  if (
+    isTwinFlameOffer(path) &&
+    (v1Path === "/welcome1" || v1Path === "/welcome2" || v1Path === "/success")
+  ) {
+    return `${TWIN_FLAME_PREFIX}${v1Path}`;
+  }
+  return v1Path;
 }
 
 // ─── PostHog funnel helpers (Option B naming) ──────────────────────────────

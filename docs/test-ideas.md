@@ -1748,3 +1748,35 @@ New spec file `tests/live-thread-evelyn.spec.ts`, following `fb-palm-commitment-
 - [ ] **Already-logged-in reader:** set an auth token in `localStorage` before navigating to `/e/<test-code>` → assert the lander UI never paints (no Frame 1 visible) and the page ends on `/reading` — this is the harness's hardest case to get deterministic, since it depends on Task 5's await-before-redirect fix; use `expect.poll` on the final URL rather than a fixed `waitForTimeout`
 - [ ] **Unresolvable code:** navigate to `/e/does-not-exist` → assert redirect to `/personas`
 - [ ] **Reply survives a real signup round-trip (the one true end-to-end test, network-real for the auth parts):** type a reply, submit a brand-new email, extract the verification link from a stubbed/captured email send, visit it, assert the reply appears as the first message when `/reading` loads
+
+---
+
+## Backend deck, offer 02 (Twin Flame Tarot) — U1 + U2 rebuilt, no questions (2026-08-06)
+
+Offer 02 collects NOTHING before the money (locked booking design), so both upsells
+were rebuilt to ask nothing and depend on no stored data — the fixed spread (`02-P1`)
+carries the specificity instead. Decisions: `improve-v1/v1-one-time-BEs/docs/00i-DELIVERABLES-U1-U2.md`.
+
+Unit-covered in `tests/twin-flame-upsell-copy.test.ts` (24 tests,
+`npx vitest run tests/twin-flame-upsell-copy.test.ts`):
+
+- [x] 02's stage chain never routes into a question or a WAITING state, in either flow
+- [x] Walking 02's chain from the first stage reaches the offer with no cycle, in the exact expected order
+- [x] V1's chain is asserted stage-by-stage against the order the hooks used to hardcode — the regression guard for six live funnels
+- [x] One universal block whatever the bucket is, or is not; no `{personName}` anywhere; reads correctly with no first name
+- [x] "Friend" (the `user-data` placeholder) resolves to Evelyn's "dear" for 02 only — V1 keeps whatever it was given
+- [x] 02 ships static copy in place of BOTH Claude calls; V1 still calls Claude
+- [x] No "clearing" / "energy field" / "both rituals" in any 02 line or button, in any branch
+- [x] The house-12 hinge survives: sold as what she does *instead of looking*, never as a way to find out
+- [x] Three CONTINUE taps per flow at the intended seams (U1 after bubbles 15/30/41, U2 after 11/29/42); labels carry no commitment; `pauses` is empty for every live funnel
+- [x] Verified in a browser: 02's U1 and U2 each walk 50 bubbles to the CTA with three taps, zero questions and zero text input; V1's `/welcome1` still asks its question, shows no continue chip, and still renders the composer
+- [x] 02's tap is reachable WITHOUT scrolling (832–864px in an 880px viewport) — see the shell fix below
+
+Not covered — needs a real Stripe session, so it waits on 02's checkout:
+
+- [ ] **U2 Path B** (declined U1) — `?demo=true` hardcodes `upsellPurchased: true`, so the trimmed Path B open + shared reveal are only unit-covered
+- [ ] **The `/welcome1` → `/welcome2` handoff watched in a browser** — unit-tested via `funnelPath`, but never observed end to end (needs a full flow run plus a decline)
+- [ ] **The accept path**: 1-click charge → shipping form → 02's shipping-confirmed copy → `/welcome2`
+- [ ] **The $30 downsell arm** and its 02 decline label ("No thanks, just my twelve")
+- [ ] **⚠ PRE-EXISTING, ALL SIX LIVE FUNNELS:** the chat pages never scroll internally (`flex-1 overflow-y-auto` under `min-h-screen`, no `min-h-0`), so `scrollHeight === clientHeight`, the auto-scroll effect is dead, and from ~bubble 8 every message AND every footer button sits below the fold. Measured: 12 bubbles ⇒ 1188px document vs 880px viewport, `scrollY` 0. Offer 02 opts into the `h-screen` + `min-h-0` fix; rolling it out to V1/fb/fb2/fb-palm/fb-tarot/gdn is an operator decision. A regression test should assert the CTA is in-viewport when it appears, on every funnel
+- [ ] The Purchase pixel on 02's `/welcome1` — `UpsellPage` fires `trackPurchase(..., "Energy Clearing Ritual")` on load regardless of route, and PostHog labels 02's upsell events `"v1"`. Settle BEFORE the letter's CTA points at this arm
