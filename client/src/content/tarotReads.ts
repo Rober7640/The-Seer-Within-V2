@@ -170,6 +170,34 @@ export type TarotHook =
   | 'cards-new-soulmate' // Will I find a new soulmate after loss?
   | 'cards-soulmate-out-there' // Is there still a soulmate out there for me?
   | 'cards-ready-to-love' // Am I ready to love again after losing him?
+  // Soulmate-where hooks (2026-08-07). The SEEKING half of the soulmate topic — she has
+  // never found it, nobody has died, and no specific man is in the picture. That makes them
+  // self-frame in SHAPE (the hopeful yes may be affirmed) but they are deliberately NOT
+  // filed there, because each carries a ban self-frame does not have. They run under a
+  // fourth frame, SOULMATE_WHERE_TAROT_HOOKS (server/lib/prompts.ts).
+  //
+  // 🔴 LOCATION is the new failure mode, and until this family there was no guard for it
+  // anywhere in the codebase. The self-frame guard says to withhold "ONLY the specifics —
+  // never a name, a date, or exactly who". Name, date, who. NOT where. So a model asked
+  // "Where is my soulmate right now?" under that guard answers with a place, confidently,
+  // because the guard tells it to. The harm is not vagueness — it is specificity that lands
+  // on a real, identifiable person ("someone already in your circle", "at your work"), which
+  // she can then act on. `where` was added to the self-frame withhold list at the same time,
+  // since that gap applied to the live 'cards-soulmate' lander too.
+  //
+  // ⚠ 'cards-soulmate-closer' is a deliberate COPY TEST against the live 'cards-soulmate':
+  // its headline is that lander's own read text hoisted into a hook — the tendency string in
+  // prompts.ts literally lands "nearer than the waiting has let her believe". So the reads
+  // here must NOT restate it. This one refuses the proximity claim outright and reads the
+  // BRACING instead: the hope she has been managing downward in order to stay safe.
+  //
+  // 🔴 Nearest live neighbour is 'cards-soulmate-out-there' ("Is there still a soulmate out
+  // there for me?"), shipped the same day under `soulmate-after-loss`. That one reads a
+  // BEREAVEMENT and answers the premise that she was issued one chance and already spent it.
+  // These read a woman who has never found it at all. No vocabulary is shared with it.
+  | 'cards-where-soulmate' // Where is my soulmate right now?
+  | 'cards-soulmate-closer' // Is my soulmate closer than I think?
+  | 'cards-not-found-yet' // Why haven't I found my soulmate where I am?
   // Self-frame hooks (read HER, affirm the hopeful yes — like the palm love hooks).
   | 'cards-love-again' // Will I love again?
   | 'cards-soulmate' // When is my soulmate coming?
@@ -274,6 +302,23 @@ export const SOULMATE_AFTER_LOSS_HOOKS: TarotHook[] = [
   'cards-ready-to-love',
 ]
 
+// The soulmate-where hooks (2026-08-07). The SEEKING half of the soulmate topic, against
+// `soulmate-after-loss`'s bereaved half. Their own angle rather than folded into
+// `self-frame`, for the same two reasons as that family — one safety, one reporting:
+//
+//  1. SAFETY. These need a LOCATION ban, a no-strategy ban and a no-self-blame ban, none of
+//     which self-frame carries. Filing them there would hand all three landers the bare
+//     "affirm with certainty" clause, which is precisely what makes "Where is my soulmate
+//     right now?" answerable with an invented place.
+//  2. REPORTING. 'cards-soulmate' and 'cards-love-again' are the live baseline this family
+//     is being measured against — and 'cards-soulmate-closer' is a direct copy test against
+//     'cards-soulmate'. Pool them into one angle and that comparison disappears.
+export const SOULMATE_WHERE_HOOKS: TarotHook[] = [
+  'cards-where-soulmate',
+  'cards-soulmate-closer',
+  'cards-not-found-yet',
+]
+
 // The ad ANGLE a hook belongs to. Carried on every tarot PostHog event (see
 // lib/tarotAttribution.ts) so the two decode-him families can be compared as GROUPS
 // without listing each hook: one `angle = trust` filter instead of three hook values,
@@ -300,6 +345,12 @@ export type TarotAngle =
   // what keeps the bereavement family readable against the running self-frame baseline;
   // the guard separation is what keeps the reads safe, and that one lives in prompts.ts.
   | 'soulmate-after-loss'
+  // 🔴 'soulmate-where' is the SEEKING sibling of 'soulmate-after-loss', not a variant of
+  // it and not a variant of 'self-frame'. after-loss = she had someone and lost them;
+  // soulmate-where = she has never found anyone. Same topic, opposite starting point, and
+  // completely different guardrails — after-loss must never promise an arrival, while this
+  // family may affirm the hopeful yes and must never name a PLACE.
+  | 'soulmate-where'
   | 'self-frame'
 
 export function angleForHook(hook: TarotHook): TarotAngle {
@@ -312,6 +363,7 @@ export function angleForHook(hook: TarotHook): TarotAngle {
   if (PULLING_AWAY_HOOKS.includes(hook)) return 'pulling-away'
   if (RECONCILIATION_HOOKS.includes(hook)) return 'reconciliation'
   if (SOULMATE_AFTER_LOSS_HOOKS.includes(hook)) return 'soulmate-after-loss'
+  if (SOULMATE_WHERE_HOOKS.includes(hook)) return 'soulmate-where'
   return 'decode-him'
 }
 
@@ -344,6 +396,9 @@ export const TAROT_HOOKS: TarotHook[] = [
   'cards-new-soulmate',
   'cards-soulmate-out-there',
   'cards-ready-to-love',
+  'cards-where-soulmate',
+  'cards-soulmate-closer',
+  'cards-not-found-yet',
   'cards-love-again',
   'cards-soulmate',
 ]
@@ -404,6 +459,12 @@ export const HEADLINES: Record<TarotHook, string> = {
   'cards-new-soulmate': 'Will I find a new soulmate after loss?',
   'cards-soulmate-out-there': 'Is there still a soulmate out there for me?',
   'cards-ready-to-love': 'Am I ready to love again after losing him?',
+  // Soulmate-where (2026-08-07). ⚠ 'cards-soulmate-closer' is a deliberate copy test against
+  // the live 'cards-soulmate' — it asks in a headline what that lander already answers in
+  // its read. The two must differ in their READS, which is the whole variable.
+  'cards-where-soulmate': 'Where is my soulmate right now?',
+  'cards-soulmate-closer': 'Is my soulmate closer than I think?',
+  'cards-not-found-yet': "Why haven't I found my soulmate where I am?",
   'cards-love-again': 'Will I love again?',
   'cards-soulmate': 'When is my soulmate coming?',
 }
@@ -485,6 +546,17 @@ const TAROT_QUESTION: Record<TarotHook, string> = {
   // Goes straight at the finding: she is asking to be given permission. The opener asks
   // whose permission it is, which is a question she can answer without recounting anything.
   'cards-ready-to-love': "Before I look closer, tell me… who has been deciding whether it is too soon — you, or someone else?",
+  // Soulmate-where (2026-08-07). 🔴 NOT ONE of these asks her where she lives, where she
+  // looks, or what she has tried — that would be gathering material for the strategy answer
+  // the whole family bans, and it would confirm the premise that the absence is hers to fix.
+  // Each asks about the SHAPE of the question she arrived with instead.
+  'cards-where-soulmate': "Before I look closer, tell me… when did this start feeling like something you were supposed to go out and find?",
+  // Asks for her own estimate — which is the material, since the read is about the guarding
+  // rather than any distance. It never implies a correct answer exists.
+  'cards-soulmate-closer': "Before I look closer, tell me… when you let yourself hope for it, how far off does it feel?",
+  // ⚠ Surfaces the self-blame without endorsing it. She has already answered this privately;
+  // the opener asks what she has been telling herself, never asks her to justify it.
+  'cards-not-found-yet': "Before I look closer, tell me… when you ask yourself why, what answer have you been giving yourself?",
   'cards-love-again': "Before I look closer, tell me… what has been weighing on your heart since it happened?",
   'cards-soulmate': "Before I look closer, tell me… what is the love you're still holding out for — the one you haven't given up on?",
 }
@@ -1878,6 +1950,100 @@ const RETURN_MHF: CardSetConfig = {
         "That is not random; your hand found the card of the beginning made without guarantees, and a guarantee is the thing you have been waiting to be given.",
         "The Fool issues no verdict on your readiness and I will not stand one in for it — what it observes is that nobody has ever been certain in advance, and that the certainty you are waiting to feel does not arrive ahead of time to give permission. That is not a push, and there is no timetable here you are behind on. It only means the sign you have been watching for will not come as a feeling of being finished, because that feeling is not how any of this works, for you or for anyone.",
         "Let me look closer at the sign you have been waiting to feel…",
+      ],
+    },
+    // ── Soulmate-where (2026-08-07) ──────────────────────────────────────────
+    // The SEEKING half of the soulmate topic, against soulmate-after-loss's bereaved half.
+    // Nobody has died and no specific man exists, so the hopeful yes MAY be affirmed here —
+    // but three bans apply that no other family carries, and all three are pinned by
+    // tests/tarot-soulmate-where-copy.test.ts:
+    //
+    //   1. 🔴 LOCATION. No place, no direction, no proximity, no "someone you already
+    //      know", no setting, no describing a person. Until this family there was no such
+    //      guard anywhere — the self-frame clause withholds "a name, a date, or exactly
+    //      who" and simply omits WHERE. The harm is not vagueness; it is specificity that
+    //      lands on a real identifiable person she can then go and act on.
+    //   2. STRATEGY. No going out more, no looking elsewhere, no moving, no apps, no
+    //      putting yourself out there, no working on yourself first. That is coaching, and
+    //      on cards-not-found-yet it is also half the accusation the read has to refuse.
+    //   3. HER FAULT. Nothing about blocks, walls, standards, not being ready, self-love
+    //      first, or manifesting harder. She arrives already holding it.
+    //
+    // ⚠ And they must not restate the incumbent. 'cards-soulmate' already lands "nearer
+    // than the waiting has let her believe" — so 'cards-soulmate-closer' refuses the
+    // proximity claim entirely and reads the bracing instead.
+    //
+    // 'Where is my soulmate right now?' — THE PLACE REQUEST. The finding: the not-yet is
+    // not a distance, and she has been treating an absence as a destination she keeps
+    // failing to reach.
+    'cards-where-soulmate': {
+      a: [
+        "You turned the Magician, dear — the card of the thing that gets built rather than located.",
+        "Your hand went past every card that would have pointed somewhere and settled on the one about making.",
+        "I could name you a place and you would carry it about with you for a year, and it would be invention rather than sight — there is no geography in the Magician and I will not pretend there is. What it does put a finger on is the shape your question has taken: you have come to hold this as a matter of distance, as though a person were standing somewhere particular and you were failing to arrive. A love not yet met is not a destination you have been missing your way to, and nothing here is being kept from you by miles.",
+        "Let me look closer at the distance you have been imagining…",
+      ],
+      b: [
+        "You turned the Hanged Man, dear — the card of the search that has to be set down before it will answer.",
+        "You went to the card of the held breath, and that is nearer to how you have been carrying this than you may realise.",
+        "There is no map in the Hanged Man, nor will I sketch one on its behalf — it speaks to your posture rather than to anybody's position. You have been scanning, and scanning wears at a person in a way ordinary living does not; every room you walk into enters your notice as a possibility to be weighed. That is not a flaw in you. It is what anyone does once they have been told the answer is out there to be found. But a thing that has not happened yet is not hiding from you.",
+        "Let me look closer at what the searching has been costing you…",
+      ],
+      c: [
+        "You turned the Fool, dear — the card of the road whose ending is not printed anywhere on it.",
+        "You found the card of the open journey at the very moment you most wanted a fixed point marked on one.",
+        "The Fool gives no coordinates and I would be manufacturing them if I offered any — what it holds instead is that a beginning has no address before it begins. You have been asking where, because where is the only version of this question that feels like something a person could act on. That was reasonable, and it has still been the wrong shape for what you actually want to know. Not-yet and somewhere-else are not the same thing, and you have been treating them as a single article.",
+        "Let me look closer at the question underneath the where…",
+      ],
+    },
+    // 'Is my soulmate closer than I think?' — THE PROXIMITY REQUEST, and a deliberate copy
+    // test against the live cards-soulmate, whose read already says exactly this. So the
+    // finding here is NOT proximity: it is the bracing. She has been managing her own hope
+    // downward to stay safe, and that guarding is what any felt "distance" is made of.
+    'cards-soulmate-closer': {
+      a: [
+        "You turned the Magician, dear — the card of the hand that has taught itself to hold something lightly.",
+        "Your fingers chose the card of measured effort, and it is the measuring in this that is worth naming.",
+        "Nearness is not a figure the Magician will quote you, and I will not quote one in its place; no honest reading hands a person a distance. What sits plainly in it is that you have spent a long while managing your own hope downward — keeping what you expect low enough that a disappointment could not reach you. That was never foolishness. It was sensible and it worked. It also means whatever you feel about how far off this is tells you about the guarding, not about the thing itself.",
+        "Let me look closer at the guarding you have been doing…",
+      ],
+      b: [
+        "You turned the Hanged Man, dear — the card of someone who has stopped letting themselves lean forward.",
+        "You reached for the card of held-back weight, and holding back is the very movement your question is made of.",
+        "I will not put a nearness on this, and the Hanged Man holds out no such figure — what it catches is the flinch. You asked whether it might be closer than you think while already braced for the answer to be no, because bracing has been the cheaper thing to do. Anyone who has waited a long while learns to approach their own hopes sideways. None of that is evidence about timing. It is evidence of what it has cost you to go on wanting this out loud.",
+        "Let me look closer at what it has cost to keep wanting it…",
+      ],
+      c: [
+        "You turned the Fool, dear — the card of the one willing to walk without the ending in hand.",
+        "That card surfaced under a question about how near, which is the single thing the Fool never counts.",
+        "The Fool has no notion of near or far and I will not lend it one — what it recognises is that you asked at all. A question like yours is not really a request for a measurement; it is a person checking whether they are still permitted to expect anything. You have been rationing that quietly. The wanting has stayed intact through a long stretch in which it would have been far easier to set it down, and that is what is in front of me rather than any distance.",
+        "Let me look closer at the wanting you have kept intact…",
+      ],
+    },
+    // 'Why haven't I found my soulmate where I am?' — THE CULPRIT REQUEST. The question
+    // offers exactly two candidates, herself and her circumstances, and both are forbidden.
+    // The finding: an absence is not always caused, so there is no fault to hand her.
+    // 🔴 Operator call 2026-08-07: "where I am" read as GEOGRAPHY first, because the
+    // dangerous answer there is strategy she could act on (move, look elsewhere). A read
+    // that declines to blame her surroundings covers the life-stage reading too.
+    'cards-not-found-yet': {
+      a: [
+        "You turned the Magician, dear — the card of the worker who is not the reason the work is unfinished.",
+        "Your hand landed on the card of effort, under a question that has been quietly accusing you of not making enough of it.",
+        "The Magician hands down no reason, and I decline to invent one merely to satisfy the question — there is no fault to find here, not in you and not in the place you live. You have been asking why as though a why must exist and must name somebody, and your question offers only two candidates: yourself, or your circumstances. Neither is guilty of this. A thing that has not happened is not a verdict on the person waiting for it, and it is not a verdict on the town either.",
+        "Let me look closer at the fault you have been assuming…",
+      ],
+      b: [
+        "You turned the Hanged Man, dear — the card of the question that has hung upside down for too long.",
+        "You went to the card of the inverted view, and you have been looking at this from underneath for a good while.",
+        "I am not going to tell you what to change, and that is not the Hanged Man's trade either — nothing about where to go or who to become. What it exposes is the inversion itself: your question begins from the assumption that an absence has to have been caused, and from that starting point every road leads back to something being wrong with you. Absence is not always caused. Some of it is simply not yet, and not yet carries no explanation that would make sense of anything even if I handed it to you.",
+        "Let me look closer at the assumption you started from…",
+      ],
+      c: [
+        "You turned the Fool, dear — the card of the traveller who has not arrived and is not lost.",
+        "That is the card of the road still being walked, and you have begun reading your own place on it as failure.",
+        "The Fool refuses to call this a wrong turning and so do I — what it separates out is the difference between not having arrived and having gone astray. You have collapsed the two into one. Living somewhere this has not yet happened does not make it the wrong place, and being the person it has not yet happened to does not make you the wrong person. No correction is being asked of you here, whatever the question has been implying to you at night.",
+        "Let me look closer at what you have been calling a wrong turning…",
       ],
     },
   },

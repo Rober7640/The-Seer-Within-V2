@@ -357,6 +357,7 @@ export default function ExperimentsDashboard() {
       "pulling-away": "Pulling Away",
       reconciliation: "Reconciliation",
       "soulmate-after-loss": "Soulmate After Loss",
+      "soulmate-where": "Soulmate — Where / Seeking",
       "self-frame": "Self-Frame",
     };
     return `${f} — ${ANGLE_LABELS[angle] ?? angle}`;

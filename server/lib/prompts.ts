@@ -1084,6 +1084,12 @@ const TAROT_HOOK_CONTEXT: Record<string, string> = {
   'cards-new-soulmate': "She has lost the partner she built her life around and is asking whether there could be someone ahead for her — and underneath it, whether loving anyone again would mean replacing him.",
   'cards-soulmate-out-there': "She has lost her person and is asking whether there is still one out there for her, having begun to believe she was issued one chance at this and already spent it.",
   'cards-ready-to-love': "She has lost the man she loved and is asking to be told whether she is ready to love again — which is really a request for permission, from someone she hopes is entitled to give it.",
+  // Soulmate-where hooks — the SEEKING half of the topic. She has never found it, nobody
+  // has died, and no specific man is in the picture. 🔴 Note none of these says where she
+  // lives or what she has tried: the read must never become advice about either.
+  'cards-where-soulmate': "She is asking WHERE her soulmate is, having come to hold the not-yet as a matter of distance — as though someone were standing somewhere particular and she were failing to arrive.",
+  'cards-soulmate-closer': "She is asking whether it is nearer than she believes, after a long stretch of managing her own hope downward so that disappointment could not reach her.",
+  'cards-not-found-yet': "She is asking why it has not happened where she is, and her question offers only two candidates for the blame — herself, or her circumstances. She has usually already settled on the first.",
   // Self-frame hooks — about HER future, not a specific man.
   'cards-love-again': "After heartbreak, she is asking whether she will ever love again — worn down, but the hope is still there.",
   'cards-soulmate': "She is asking WHEN her soulmate will finally arrive — tired of waiting, but still believing the right person is out there for her.",
@@ -1207,6 +1213,27 @@ const TAROT_HOOK_TENDENCY: Record<string, string> = {
   // cards-losing-interest and cards-really-over refuse theirs.
   'cards-ready-to-love':
     'that readiness is not a mark anybody awards her once she has grieved correctly, and that the permission she is waiting for was never in anyone else\'s keeping. NEVER pick a side of the binary — never tell her she is ready and never tell her she is not — and NEVER give a date, timeframe or milestone she should reach first. NEVER speak for the man she lost, and in particular NEVER say he would want her to be happy or to move on; that is the single most tempting sentence here and it is contact with the dead. NEVER tell her to move on, let go, or that it is time. NEVER let any part of the answer land as her grieving too long or not long enough. Read the card as the fact that she is asking for PERMISSION, and affirm that it was always hers to give',
+  // Soulmate-where hooks (2026-08-07). Self-frame in SHAPE — no man exists, so the hopeful
+  // yes may be affirmed — but each carries a ban self-frame does not have, which is why they
+  // run under their own frame (SOULMATE_WHERE_TAROT_HOOKS below):
+  //   1. 🔴 LOCATION. Nothing about where, how near, what setting, or "someone you already
+  //      know". Before this family nothing in the codebase banned a place — the self-frame
+  //      clause withholds a name, a date and exactly WHO, and omits WHERE entirely. The harm
+  //      is specificity that lands on a real identifiable person she can act on.
+  //   2. STRATEGY. No going out more, looking elsewhere, moving, apps, or working on
+  //      herself first. That is coaching, not a reading.
+  //   3. HER FAULT. No blocks, walls, standards, not being ready, or manifesting harder.
+  'cards-where-soulmate':
+    'that the not-yet is not a distance, and that nothing is being kept from her by geography — she has been treating an absence as a destination she keeps failing to reach. NEVER name or hint at a PLACE, a direction, a distance, a setting, or a type of person, and NEVER suggest she already knows them — inventing a location is the specific harm of this headline, and she can act on it. NEVER give a date or timeframe. NEVER hand her a tactic: no going out more, no looking elsewhere, no moving, no apps. Read the card as the SHAPE her question has taken, and affirm that a love not yet met is not somewhere she has failed to get to',
+  // ⚠ Deliberate copy test against the live 'cards-soulmate', whose tendency already lands
+  // "nearer than the waiting has let her believe". This one must NOT restate it — the whole
+  // point of running both is that the reads differ.
+  'cards-soulmate-closer':
+    'that whatever she feels about how far off this is describes the GUARDING rather than the thing itself — she has spent a long while managing her own hope downward so a disappointment could not reach her, and that was sensible rather than foolish. NEVER quote a nearness, a distance, a likelihood or a timeframe in either direction, and NEVER describe or locate a person. NEVER simply tell her it is close — that is the incumbent lander\'s answer and a promise this one has no standing to make. NEVER let the answer land as her having been negative or lacking faith. Read the card as the BRACING and what it has cost her to go on wanting this out loud',
+  // ⚠ Same shape of harm as cards-wont-commit and cards-deceived, from a fourth direction:
+  // the headline presupposes a failure and offers only her or her circumstances to blame.
+  'cards-not-found-yet':
+    'that an absence is not always caused, so there is no fault to hand her — not in her and not in the place she lives. NEVER supply a reason she has not found it, NEVER let any part of the answer land as her blocks, walls, standards, neediness, not being ready, or not having loved herself enough, and NEVER blame her town, her circle or her circumstances either. NEVER hand her a tactic or a change to make — no moving, no looking elsewhere, no going out more, no working on herself first. NEVER give a date or timeframe. Read the card as the ASSUMPTION inside her question — that an absence must have a culprit — and affirm that not having arrived is not the same as having gone astray',
   // Self-frame — affirm HER future love, not a verdict on any man.
   'cards-love-again': 'that love is finding its way back to her — affirm HER heart and her capacity to love again, read the card as a hopeful sign for her own future; never tie it to one specific person and never a date',
   'cards-soulmate': 'that her soulmate is genuinely on the way and nearer than the waiting has let her believe — affirm HER heart and that the love she is holding out for is real and coming, read the card as a hopeful sign of arrival; answer the "when" only as a leaning (soon, close, sooner than the fear admits), NEVER tie it to one specific named person and NEVER give a date or timeframe',
@@ -1238,6 +1265,28 @@ const AFTER_LOSS_TAROT_HOOKS = new Set([
   'cards-new-soulmate',
   'cards-soulmate-out-there',
   'cards-ready-to-love',
+])
+
+// Soulmate-where hooks (2026-08-07) run under a FOURTH frame. They are self-frame in shape
+// — no man exists, nobody has died, so the hopeful yes may be affirmed with warmth — but
+// self-frame's guard is not sufficient for them:
+//
+//   · It permits a PLACE. "Withhold ONLY the specifics — never a name, a date, or exactly
+//     who" lists three things and omits WHERE. Asked "Where is my soulmate right now?"
+//     under that clause a model answers with a location, confidently, because the clause
+//     tells it to withhold nothing else. (`where` has now been added to the self-frame
+//     wording too — the same gap applied to the live 'cards-soulmate' lander.)
+//   · It says nothing about STRATEGY or SELF-BLAME, and 'cards-not-found-yet' presupposes
+//     a failure whose only two candidates are her and her circumstances.
+//
+// 🔴 Distinct from AFTER_LOSS_TAROT_HOOKS in the opposite direction: that family may never
+// promise an arrival because someone has died, while this one may affirm the hopeful yes
+// freely and must never name a place. Mixing the two sets swaps one family's guard for the
+// other's. Mirrors SOULMATE_WHERE_HOOKS in client/src/content/tarotReads.ts.
+const SOULMATE_WHERE_TAROT_HOOKS = new Set([
+  'cards-where-soulmate',
+  'cards-soulmate-closer',
+  'cards-not-found-yet',
 ])
 
 // Per-deck card vocab (mark + energy label). Mirrors the DECKS registry in
@@ -1316,21 +1365,30 @@ export function buildTarotReflectPrompt(userData: UserData, deck: string, hook: 
   // added to both sets one day by someone reading only the client registry. If that ever
   // happens the STRICTER frame must be the one that runs.
   const afterLoss = AFTER_LOSS_TAROT_HOOKS.has(hook)
-  // Three frames. Self-frame hooks (e.g. "will I love again?") read HER future and affirm
+  // 🔴 soulmate-where is likewise tested before self-frame, for the same reason: it is
+  // self-frame in shape and someone reading only the client registry could reasonably file
+  // it there. Its guard is a superset of self-frame's, so the stricter one must win.
+  const soulmateWhere = SOULMATE_WHERE_TAROT_HOOKS.has(hook)
+  // Four frames. Self-frame hooks (e.g. "will I love again?") read HER future and affirm
   // the hopeful yes; decode-him hooks read HIM strictly as a tendency, never a verdict;
   // after-loss hooks read her future while a real person she has lost stands in the
   // picture — so the hopeful yes may be affirmed about HER, never about an arrival, and
-  // the man is never spoken for.
+  // the man is never spoken for; soulmate-where hooks read a woman who has never found it
+  // at all — the yes may be affirmed freely, but never as a PLACE, a tactic, or her fault.
   const frameLine = afterLoss
     ? `This reading is about HER own future, but a real person she loved has been lost and may have died: land ${tendency}.`
-    : selfFrame
-      ? `This reading is about HER own future: land ${tendency}.`
-      : `This reading is about HIM, but the affirmation is about HER: land ${tendency}.`
+    : soulmateWhere
+      ? `This reading is about HER own future, and no particular person exists in it yet: land ${tendency}.`
+      : selfFrame
+        ? `This reading is about HER own future: land ${tendency}.`
+        : `This reading is about HIM, but the affirmation is about HER: land ${tendency}.`
   const guardLine = afterLoss
     ? `NEVER SPEAK FOR THE PERSON SHE LOST. Never say where he is, that he is at peace, that he is watching over her, that he sent her here, or what he would want for her — that is contact with the dead and it is forbidden outright, however kindly it is meant. Never promise anyone is coming, never describe or locate a future partner, and never give a date or timeframe. Never rule on whether she is ready to love again — not in either direction — and never tell her to move on, let go, or that it is time. Never rank a future love against the one she lost. Affirm HER capacity and her right to her own timing through the card's energy.`
-    : selfFrame
-      ? `Affirm the hopeful yes with warmth and certainty through the card's energy; withhold ONLY the specifics — never a name, a date, or exactly "who".`
-      : `TENDENCY, NEVER A VERDICT. Never declare he is lying, cheating, faithful, or coming back as a fact. Read the card's energy as a leaning and affirm that HER intuition is a real instrument.`
+    : soulmateWhere
+      ? `NEVER PLACE A PERSON. Never name or hint at where they are, how near they are, what direction, what setting, what kind of person, or that she may already know them — a location is the specific harm of these headlines, because she can go and act on it. Never give a date or timeframe. Never hand her a tactic — no going out more, no looking elsewhere, no moving, no apps, no working on herself first; that is coaching, not a reading. Never explain the not-yet as a fault in her (blocks, walls, standards, not being ready, not loving herself enough) and never as a fault in her town or her circle. Affirm the hopeful yes warmly about HER, through the card's energy, and let the specifics stay unknown.`
+      : selfFrame
+        ? `Affirm the hopeful yes with warmth and certainty through the card's energy; withhold ONLY the specifics — never a name, a date, exactly "who", or WHERE.`
+        : `TENDENCY, NEVER A VERDICT. Never declare he is lying, cheating, faithful, or coming back as a fact. Read the card's energy as a leaning and affirm that HER intuition is a real instrument.`
 
   return `
 ${EVELYN_BASE_PROMPT}
