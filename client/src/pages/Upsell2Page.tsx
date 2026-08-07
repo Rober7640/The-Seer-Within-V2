@@ -6,7 +6,7 @@ import { Upsell2CTA, Upsell2DownsellCTA, ShippingForm, QuickReplies } from '../c
 import { useUpsell2Chat, Message } from '../hooks/useUpsell2Chat';
 import { trackUpsellPurchase } from '../lib/facebook';
 import { trackGAdsPurchase } from '../lib/gtm';
-import { funnelPath } from '../lib/funnel';
+import { funnelPath, isTwinFlameOffer } from '../lib/funnel';
 import { Volume2, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -41,6 +41,12 @@ export default function Upsell2Page() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [inputValue, setInputValue] = useState('');
+
+  // ⚠ See UpsellPage.tsx: these chat pages never scroll internally, so past
+  // roughly the eighth message everything — including the footer's buttons —
+  // sits below the fold. Offer 02 opts into the fix; rolling it out to the six
+  // live funnels changes what real buyers see and is an operator decision.
+  const pinnedShell = isTwinFlameOffer();
 
   useEffect(() => {
     const params = new URLSearchParams(searchString);
@@ -177,6 +183,10 @@ export default function Upsell2Page() {
     isProcessing,
     isComplete,
     upsell2Bought,
+    downsellDeclineLabel,
+    showContinue,
+    continueLabel,
+    handleContinue,
     handleUserInput,
     handleQuickReply,
     handleAccept,
@@ -192,9 +202,9 @@ export default function Upsell2Page() {
   });
 
   // Auto-scroll to bottom. The footer flags are deps on purpose: when the quick
-  // replies, CTA, downsell CTA or shipping form appear the footer grows and eats
-  // height off the message list, which would otherwise leave the newest bubble
-  // clipped behind it.
+  // replies / continue tap, CTA, downsell CTA or shipping form appear the footer
+  // grows and eats height off the message list, which would otherwise clip the
+  // newest bubble.
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTo({
@@ -202,7 +212,7 @@ export default function Upsell2Page() {
         behavior: 'smooth',
       });
     }
-  }, [messages, isTyping, showQuickReplies, showCTA, showDownsellCTA, showShippingForm]);
+  }, [messages, isTyping, showQuickReplies, showContinue, showCTA, showDownsellCTA, showShippingForm]);
 
   useEffect(() => {
     if (isComplete && sessionId) {
@@ -255,7 +265,16 @@ export default function Upsell2Page() {
   return (
     <div className="h-dvh relative flex flex-col" data-testid="page-upsell2">
       <CosmicBackground />
-      <BackgroundMusic />
+      <BackgroundMusic
+        // Offer 02 moves the toggle to the TOP right, beside the "Sound on"
+        // notice it belongs with. A bottom offset cannot work: the footer is
+        // ~134px at the CTA and ~400px with the shipping form open, so no fixed
+        // value clears both. Up here it can never steal a tap from the decline
+        // button or the form's submit. Every other funnel keeps the
+        // viewport-pinned default — the same pre-existing overlap they have
+        // always had, which is not ours to change on live pages.
+        positionClass={pinnedShell ? "absolute top-2 right-3" : undefined}
+      />
 
       <div className="relative z-10 p-4 text-center border-b border-white/10 bg-black/20 backdrop-blur-sm">
         <div className="flex items-center justify-center gap-2 text-sm text-white/60">
@@ -314,8 +333,17 @@ export default function Upsell2Page() {
         </div>
       </div>
 
-      {(showQuickReplies || (inputEnabled && !showCTA && !showDownsellCTA && !showShippingForm) || showCTA || showDownsellCTA || showShippingForm) && (
+      {(showQuickReplies || showContinue || (inputEnabled && !showCTA && !showDownsellCTA && !showShippingForm) || showCTA || showDownsellCTA || showShippingForm) && (
       <div className="relative z-10 shrink-0 bg-black/30 backdrop-blur-sm border-t border-white/10">
+        {/* Continue tap — offer 02 only. One button, no branch, nothing captured. */}
+        {showContinue && (
+          <QuickReplies
+            replies={[{ text: continueLabel, value: 'continue' }]}
+            onSelect={handleContinue}
+            disabled={isTyping}
+          />
+        )}
+
         {showQuickReplies && (
           <QuickReplies
             replies={quickReplies}
@@ -363,6 +391,7 @@ export default function Upsell2Page() {
               onAccept={handleDownsellAccept}
               onDecline={handleDownsellDecline}
               isProcessing={isProcessing}
+              declineLabel={downsellDeclineLabel}
             />
           </div>
         )}

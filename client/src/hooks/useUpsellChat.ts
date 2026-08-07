@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import type { Bucket } from "@shared/types";
 import { calculateTypingDelay, sleep, generateId } from "@/lib/typing";
 import {
@@ -9,31 +9,19 @@ import {
   detectQ1Intent,
   detectQ2Intent,
   detectQ3Intent,
-  UPSELL_CONFIRMATION,
-  UPSELL_GAP,
-  UPSELL_RISK,
-  UPSELL_QUESTION_1,
-  UPSELL_QUESTION_1_REPLIES,
-  UPSELL_AFTER_Q1,
-  UPSELL_SOLUTION,
-  UPSELL_LAVA_INTRO,
+  // Questions 2 and 3 are still V1-only constants: offer 02 asks nothing, so its
+  // chain never routes into these stages. Everything else now comes from the
+  // resolved copy (lib/twinFlameUpsellCopy.ts).
   UPSELL_QUESTION_2,
   UPSELL_QUESTION_2_REPLIES,
   UPSELL_AFTER_Q2,
-  UPSELL_RITUAL,
-  UPSELL_FEEL,
   UPSELL_QUESTION_3,
   UPSELL_QUESTION_3_REPLIES,
   UPSELL_AFTER_Q3,
-  UPSELL_BUCKET_MESSAGES,
-  UPSELL_DELIVERY,
-  UPSELL_OFFER,
-  UPSELL_SOFT_DECLINE,
-  UPSELL_SUCCESS,
-  UPSELL_SHIPPING_CONFIRMED,
   formatUpsellPrice,
 } from "@/lib/upsellMessages";
 import { getTrackdeskClickId } from "@/lib/facebook";
+import { upsell1Copy, displayName, type Upsell1Chain } from "@/lib/twinFlameUpsellCopy";
 import { currentFunnel, getPostHogFunnel } from "@/lib/funnel";
 import { track as trackPH } from "@/lib/posthog";
 import { tarotEventProps } from "@/lib/tarotAttribution";
@@ -98,31 +86,45 @@ export function useUpsellChat({
   const [isComplete, setIsComplete] = useState(false);
   const [upsellPaymentId, setUpsellPaymentId] = useState<string | null>(null);
 
+  const [showContinue, setShowContinue] = useState(false);
+  const [continueLabel, setContinueLabel] = useState("");
+  const pendingStageRef = useRef<UpsellStage | null>(null);
+
   const hasStartedRef = useRef(false);
 
+  // Which conversation this page is running — copy AND stage order. V1's
+  // everywhere except the backend deck's offer 02, whose buyer bought a tarot
+  // spread, never had an energy clearing, and is never asked a question.
+  // Resolved once: the URL cannot change under a chat already in progress.
+  const copy = useMemo(() => upsell1Copy(), []);
+
   const upsellPriceLabel = formatUpsellPrice(userData?.upsell1PriceCents);
+
+  // "Friend" is what /api/upsell/user-data stamps when checkout carried no name,
+  // which is every offer-02 order. Evelyn's own fallback ("dear") reads better.
+  const firstName = displayName(userData?.firstName, copy.placeholderNames);
 
   // Personalize helper
   const p = useCallback(
     (msgs: string[]) =>
       personalizeMessages(
         msgs,
-        userData?.firstName || "",
+        firstName,
         userData?.personName || undefined,
         upsellPriceLabel,
       ),
-    [userData, upsellPriceLabel],
+    [firstName, userData, upsellPriceLabel],
   );
 
   const pMsg = useCallback(
     (msg: string) =>
       personalizeMessage(
         msg,
-        userData?.firstName || "",
+        firstName,
         userData?.personName || undefined,
         upsellPriceLabel,
       ),
-    [userData, upsellPriceLabel],
+    [firstName, userData, upsellPriceLabel],
   );
 
   // Add bot message with typing
@@ -170,6 +172,7 @@ export function useUpsellChat({
 
   // Reset UI state
   const resetUI = useCallback(() => {
+    setShowContinue(false);
     setShowQuickReplies(false);
     setInputEnabled(false);
     setShowCTA(false);
@@ -184,25 +187,42 @@ export function useUpsellChat({
       setStage(targetStage);
       resetUI();
 
+      // Move on from `from` — unless the copy marks it as a pause, in which case
+      // hold and show a one-button CONTINUE tap. It asks nothing and branches
+      // nowhere; it exists so a ~50-message flow doesn't arrive as one broadcast.
+      const advance = (from: keyof Upsell1Chain) => {
+        const next = copy.chain[from];
+        const pause = copy.pauses[from];
+        if (pause) {
+          pendingStageRef.current = next;
+          setContinueLabel(pause);
+          setShowContinue(true);
+          return;
+        }
+        processStage(next);
+      };
+
       switch (targetStage) {
         case "CONFIRMATION":
-          await sendBotMessages(p(UPSELL_CONFIRMATION));
-          processStage("GAP");
+          await sendBotMessages(p(copy.CONFIRMATION));
+          advance("CONFIRMATION");
           break;
 
         case "GAP":
-          await sendBotMessages(p(UPSELL_GAP));
-          processStage("RISK");
+          await sendBotMessages(p(copy.GAP));
+          advance("GAP");
           break;
 
+        // → QUESTION_1 on V1. Offer 02 goes straight to SOLUTION: its RISK block
+        // already states what V1's question was fishing for.
         case "RISK":
-          await sendBotMessages(p(UPSELL_RISK));
-          processStage("QUESTION_1");
+          await sendBotMessages(p(copy.RISK));
+          advance("RISK");
           break;
 
         case "QUESTION_1":
-          await sendBotMessage(pMsg(UPSELL_QUESTION_1));
-          setQuickReplies(UPSELL_QUESTION_1_REPLIES);
+          await sendBotMessage(pMsg(copy.QUESTION_1));
+          setQuickReplies(copy.QUESTION_1_REPLIES);
           setShowQuickReplies(true);
           setInputEnabled(true);
           setStage("WAITING_Q1");
@@ -210,23 +230,22 @@ export function useUpsellChat({
 
         case "AFTER_Q1":
           const q1Response =
-            UPSELL_AFTER_Q1[responseKey || "default"] ||
-            UPSELL_AFTER_Q1.default;
+            copy.AFTER_Q1[responseKey || "default"] || copy.AFTER_Q1.default;
           await sendBotMessages(p(q1Response));
-          processStage("SOLUTION");
+          advance("AFTER_Q1");
           break;
 
         case "SOLUTION":
-          await sendBotMessages(p(UPSELL_SOLUTION));
-          processStage("LAVA_INTRO");
+          await sendBotMessages(p(copy.SOLUTION));
+          advance("SOLUTION");
           break;
 
         case "LAVA_INTRO":
-          await sendBotMessages(p(UPSELL_LAVA_INTRO));
+          await sendBotMessages(p(copy.LAVA_INTRO));
           if (lavaStoneImage) {
             await sendImageMessage(lavaStoneImage);
           }
-          processStage("QUESTION_2");
+          advance("LAVA_INTRO");
           break;
 
         case "QUESTION_2":
@@ -242,17 +261,17 @@ export function useUpsellChat({
             UPSELL_AFTER_Q2[responseKey || "default"] ||
             UPSELL_AFTER_Q2.default;
           await sendBotMessages(p(q2Response));
-          processStage("RITUAL");
+          advance("AFTER_Q2");
           break;
 
         case "RITUAL":
-          await sendBotMessages(p(UPSELL_RITUAL));
-          processStage("FEEL");
+          await sendBotMessages(p(copy.RITUAL));
+          advance("RITUAL");
           break;
 
         case "FEEL":
-          await sendBotMessages(p(UPSELL_FEEL));
-          processStage("QUESTION_3");
+          await sendBotMessages(p(copy.FEEL));
+          advance("FEEL");
           break;
 
         case "QUESTION_3":
@@ -268,40 +287,43 @@ export function useUpsellChat({
             UPSELL_AFTER_Q3[responseKey || "default"] ||
             UPSELL_AFTER_Q3.default;
           await sendBotMessages(p(q3Response));
-          processStage("BUCKET");
+          advance("AFTER_Q3");
           break;
 
+        // Four bucket-keyed variants on V1. Offer 02 returns one universal block:
+        // its spread is identical for every buyer, and no bucket was ever chosen.
         case "BUCKET":
-          const bucketMsgs = UPSELL_BUCKET_MESSAGES[userData.bucket] || [];
+          const bucketMsgs = copy.bucketMessages(userData.bucket, userData.personName);
           await sendBotMessages(p(bucketMsgs));
-          processStage("DELIVERY");
+          advance("BUCKET");
           break;
 
         case "DELIVERY":
-          await sendBotMessages(p(UPSELL_DELIVERY));
-          processStage("OFFER");
+          await sendBotMessages(p(copy.DELIVERY));
+          advance("DELIVERY");
           break;
 
         case "OFFER":
-          await sendBotMessages(p(UPSELL_OFFER));
+          await sendBotMessages(p(copy.OFFER));
           await sleep(800);
           setShowCTA(true);
           setStage("CTA");
           break;
 
         case "DECLINED":
-          await sendBotMessages(p(UPSELL_SOFT_DECLINE));
+          await sendBotMessages(p(copy.SOFT_DECLINE));
           setIsComplete(true);
           break;
 
         case "COMPLETE":
-          await sendBotMessages(p(UPSELL_SHIPPING_CONFIRMED));
+          await sendBotMessages(p(copy.SHIPPING_CONFIRMED));
           setIsComplete(true);
           break;
       }
     },
     [
       userData,
+      copy,
       p,
       pMsg,
       sendBotMessage,
@@ -332,6 +354,17 @@ export function useUpsellChat({
     [stage, addUserMessage, resetUI, processStage],
   );
 
+  // The CONTINUE tap. Posts her word as a bubble — the point is that the screen
+  // feels like a conversation, not a slideshow — then resumes the flow.
+  const handleContinue = useCallback(async () => {
+    const next = pendingStageRef.current;
+    if (!next) return;
+    pendingStageRef.current = null;
+    setShowContinue(false);
+    addUserMessage(continueLabel);
+    await processStage(next);
+  }, [continueLabel, addUserMessage, processStage]);
+
   // Handle quick reply click
   const handleQuickReply = useCallback(
     (reply: QuickReply) => {
@@ -346,7 +379,7 @@ export function useUpsellChat({
 
     setShowCTA(false);
     setIsProcessing(true);
-    addUserMessage("Yes, protect what we clear");
+    addUserMessage(copy.acceptLabel);
 
     // Tab-scoped tarot attribution, gated on the funnel so a palm/fb upsell in the
     // same tab can never pick up tarot properties. No-op for every other funnel.
@@ -377,7 +410,7 @@ export function useUpsellChat({
 
       if (result.success) {
         setUpsellPaymentId(result.paymentIntentId);
-        await sendBotMessages(p(UPSELL_SUCCESS));
+        await sendBotMessages(p(copy.SUCCESS));
         setIsProcessing(false);
         setShowShippingForm(true);
         setStage("SHIPPING");
@@ -421,7 +454,7 @@ export function useUpsellChat({
       setIsProcessing(false);
       setShowCTA(true);
     }
-  }, [sessionId, userData, addUserMessage, sendBotMessage, sendBotMessages, p]);
+  }, [sessionId, userData, copy, addUserMessage, sendBotMessage, sendBotMessages, p]);
 
   // Handle CTA Decline
   const handleDecline = useCallback(async () => {
@@ -479,6 +512,10 @@ export function useUpsellChat({
 
   return {
     messages,
+    acceptLabel: copy.acceptLabel,
+    showContinue,
+    continueLabel,
+    handleContinue,
     stage,
     isTyping,
     showQuickReplies,
