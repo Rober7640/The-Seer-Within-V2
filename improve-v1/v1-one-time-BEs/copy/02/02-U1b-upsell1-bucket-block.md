@@ -2,8 +2,10 @@
 
 | | |
 |---|---|
+| **⚠ SUPERSEDED** | `../../docs/00i-DELIVERABLES-U1-U2.md` — the four bucket variants below were REPLACED by one universal block 2026-08-06. No bucket is ever collected, and every fact in the block is in every buyer's fixed spread. The left-wrist mechanic is kept verbatim |
 | **Engine** | `UPSELL_BUCKET_MESSAGES`, keyed on the V1 bucket already stored against the buyer |
 | **Source** | `client/src/lib/upsellMessages.ts:222-247` |
+| **BUILT** | `client/src/lib/twinFlameUpsellCopy.ts`, served at `/tarot/twin-flame/welcome1` |
 | **Kept** | the left-wrist mechanic, four messages per bucket, the *filters what reaches you* logic. It is the stone's own physics and `UPSELL_DELIVERY` downstream depends on it |
 | **Rewritten** | the first and last message of each bucket, so the stone answers **the Tower** rather than an energy clearing |
 
@@ -70,6 +72,10 @@ must fall back to `love` — never render a bare token.
 
 ## Build notes
 
+- ⚠ **This note is wrong about message 3, and the printed copy above is what shipped.** Only
+  message 2 (*"Wear it on your LEFT wrist"*) is V1's verbatim; message 3 is rewritten in all four
+  buckets — *"In this work"* for *"In energy work"*, and so on. The build honours the printed copy,
+  which keeps the mechanic the note is protecting. Nothing downstream broke.
 - **Message 2 and 3 are V1's, unchanged, in all four buckets.** They carry the left-wrist mechanic
   that `UPSELL_DELIVERY` and `UPSELL2_RITUAL_PATH_A_EXTRA` both refer back to. Changing them breaks
   copy further down the chat that nobody is rewriting.

@@ -2,11 +2,13 @@
 
 | | |
 |---|---|
+| **⚠ SUPERSEDED IN PART** | `../../docs/00i-DELIVERABLES-U1-U2.md` — rebuilt 2026-08-06: no questions, and Path B is TRIMMED (its Chariot reveal moved into a shared static reveal that replaces the `manifest_reveal` Claude call, which needed a `concern` 02 never collects) |
 | **Engine** | `S20`, clone of `useUpsell2Chat.ts`. Everything from `UPSELL2_GAP` onward is V1's, unchanged |
 | **Rewritten here** | `UPSELL2_PATH_A_OPEN` (bought U1) and `UPSELL2_PATH_B_OPEN` (declined U1) |
 | **The argument** | *the reading told you what's coming — it doesn't call it toward you* |
 | **Product sold** | the manifestation bracelet. `S21` suppression applies: owns both → straight to thank-you |
 | **Source** | `client/src/lib/upsell2Messages.ts:51-71` |
+| **BUILT** | `client/src/lib/twinFlameUpsellCopy.ts`, served at `/tarot/twin-flame/welcome2`. ⚠ Path B is unreachable in preview: `?demo=true` hardcodes `upsellPurchased: true`, so only Path A can be eyeballed until 02's Stripe exists |
 
 **Path A** follows a purchase and **must not re-sell the stone** — it stacks on it. **Path B**
 follows a decline and must not re-litigate it; V1's *"I respect your decision"* opener is the right

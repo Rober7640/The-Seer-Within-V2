@@ -5,9 +5,11 @@ interface Upsell2DownsellCTAProps {
   onAccept: () => void
   onDecline: () => void
   isProcessing?: boolean
+  // See UpsellCTA — offer 02 has no clearing to fall back to, only her twelve.
+  declineLabel?: string
 }
 
-export function Upsell2DownsellCTA({ onAccept, onDecline, isProcessing = false }: Upsell2DownsellCTAProps) {
+export function Upsell2DownsellCTA({ onAccept, onDecline, isProcessing = false, declineLabel = 'No thanks, just the clearing' }: Upsell2DownsellCTAProps) {
   return (
     <div className="p-4 space-y-4" data-testid="container-upsell2-downsell-cta">
       <p className="text-center text-sm text-muted-foreground italic">
@@ -45,7 +47,7 @@ export function Upsell2DownsellCTA({ onAccept, onDecline, isProcessing = false }
         data-testid="button-upsell2-downsell-decline"
         className="w-full text-muted-foreground text-sm"
       >
-        <span data-testid="text-decline-downsell">No thanks, just the clearing</span>
+        <span data-testid="text-decline-downsell">{declineLabel}</span>
       </Button>
     </div>
   )
