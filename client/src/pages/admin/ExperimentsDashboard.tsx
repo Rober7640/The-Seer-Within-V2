@@ -351,6 +351,12 @@ export default function ExperimentsDashboard() {
       honesty: "Honesty / Lying",
       reunion: "Reunion / Return",
       healing: "Healing / Moving On",
+      // pulling-away (2026-08-05) and reconciliation (2026-08-06) were both shipped
+      // without a label and had been rendering as raw lowercase slugs — the same defect
+      // the note above records for `commitment`. Added 2026-08-07.
+      "pulling-away": "Pulling Away",
+      reconciliation: "Reconciliation",
+      "soulmate-after-loss": "Soulmate After Loss",
       "self-frame": "Self-Frame",
     };
     return `${f} — ${ANGLE_LABELS[angle] ?? angle}`;
