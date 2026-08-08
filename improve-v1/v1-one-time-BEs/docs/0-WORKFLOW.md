@@ -1,147 +1,185 @@
-# 0-WORKFLOW — building offer 03, together
+# 0-WORKFLOW — building a backend offer, together
 
-A working checklist for you and Claude to run in one chat. Offer **03 Judgement
-Day**, from the booking page through to the thank-you page.
+A working checklist for you and Claude to run in one chat. Works for **any offer
+in the deck** — 03, 04, 05 and whatever comes after.
 
-**How we use it:** Claude does one step at a time, shows you the result, and
-waits. You approve or send it back. Nothing goes live at any point — 03 has no
-Stripe, so no button charges anything.
+Covers the app build: booking page → order bump → upsell 1 → upsell 2 →
+thank-you page → wiring → tests. Not the emails.
 
-**Say this to start, or to pick up again later:**
-> Read `improve-v1/v1-one-time-BEs/docs/0-WORKFLOW.md` and do the next unticked step.
+**How we use it:** Claude does one step, shows you, and waits. You approve or
+send it back. Nothing goes live — none of these offers has Stripe yet, so no
+button charges anyone.
 
-Background, only if you want it: [`00j`](./00j-WORKFLOW-UPSELLS.md) is the general
-method, [`00k`](./00k-PLAN-03-UPSELLS.md) is the analysis behind 03's upsells,
-[`00h`](./00h-DELIVERABLES-BEs.md) and [`00i`](./00i-DELIVERABLES-U1-U2.md) are
-what 02 built and why.
+**Say this to start:**
+> Read `improve-v1/v1-one-time-BEs/docs/0-WORKFLOW.md` and build offer `<number>`.
 
----
+**Say this to pick it up again later:**
+> Read `improve-v1/v1-one-time-BEs/docs/0-WORKFLOW.md` and do the next unticked
+> step for offer `<number>`.
 
-## Five things that are true for 03, and easy to get wrong
-
-1. **The money comes first, then the upsells.** Booking page → she pays → U1 →
-   U2 → thank-you page.
-2. **We know almost nothing about her during the upsells.** 03 asks for her
-   details on the *thank-you page*, by email reply — which is after both upsells.
-   So her target's name, what they did, and how long she's carried it **do not
-   exist yet**. Never print those.
-3. **Keep 03's questions.** All three. She answers them in the chat and Evelyn
-   uses the answer straight away. 02 dropped its questions because you asked for
-   that on 02 — it was not a technical limit and it does not carry over.
-4. **The upsell must not fight the product.** 03 promises *you put it down and
-   you sleep*. So U2 sells **choosing** what fills the space, never a feeling to
-   fill it with. And the risk beat is about **her own guard**, never about the
-   other person coming back.
-5. **Nothing we reuse from the old funnel may mention a "clearing".** 03 is about
-   a ledger and an account. The old copy leaks that word 14 times.
+Copy this file per offer if you want a clean set of tick boxes for each — e.g.
+`0-WORKFLOW-03.md`. The steps never change; only the worksheet answers do.
 
 ---
 
-## Decisions
+## Where each offer stands
 
-Claude stops and asks at each of these. Answers get written here as we go.
+| | Archetype | Money | Needs her reply? | Status |
+|---|---|---|---|---|
+| **02** Twin Flame | Reading | $35 fixed + bump | no | ✅ built — see [`00i`](./00i-DELIVERABLES-U1-U2.md) |
+| **03** Judgement Day | **Act** | pay-what-you-want | **yes** | analysed in [`00k`](./00k-PLAN-03-UPSELLS.md), not built |
+| **04** The Turn | Reading | ladder $35→$47→$57→$67 | no | copy written, not analysed |
+| **05** Hex Her | — | — | — | ⚠ no copy yet |
 
-| # | Decision | Status |
+---
+
+## Step 0 — the worksheet
+
+**Fill this in first. It decides everything else.** Claude reads the offer's copy
+specs and proposes the answers; you confirm.
+
+| Question | Where the answer is | This offer |
 |---|---|---|
-| D1 | **Where 03 lives on the site.** 02 is `/tarot/twin-flame`. Suggestion: `/wiccan/judgement-day` | ☐ open |
-| D2 | **The four "her situation" blocks.** Four are written (love / money / purpose / someone) but 03 has nothing to pick between them. Options: look her up by her email in the old database (also fixes 02), or write one block that suits everyone | ☐ open |
-| D3 | **Statement 4 promises "she holds one account at a time"** and that the page closes when the week is full. That is a promise only code can keep. Do we build the cap now, or hide that statement until we do? | ☐ open |
-| D4 | **Pay-what-you-want limits.** She types her own amount. What is the lowest we accept, and is there a ceiling? | ☐ open |
+| Reading or Act? | `0X-C1` header row | |
+| How is it priced? | `0X-C1` — fixed, pay-what-you-want, or a ladder | |
+| Does the work need a reply from her? | `0X-C1` statement 7b, `0X-T1` | |
+| **What do we know about her when the upsells run?** | see below | |
+| Does the booking page promise anything only code can keep? | `0X-C1` — capacity caps, deadlines | |
+| What is the one sentence both upsells sell? | `0X-P1` | |
+
+### The question that decides the most
+
+**What do we know about her at the exact moment the upsells run?**
+
+The order never changes:
+
+```
+  booking page → SHE PAYS → upsell 1 → upsell 2 → thank-you page
+```
+
+So the upsells only know what the booking page collected, plus whatever her
+email address can be matched to. For every name, number or detail the drafted
+upsell copy prints, ask: *is it in hand by then?*
+
+⚠ **On an Act offer the answer is usually no.** Her details arrive as an email
+reply that the thank-you page asks for — which is after both upsells. The copy
+can be perfectly right for the product email later and still be unprintable in
+the upsells. 03 merges four such details. All four are unavailable.
+
+If the answer is no, either cut the sentence or look her up by email in the old
+database — she is a past buyer, so her details may already be there.
+
+---
+
+## Rules that hold for every offer
+
+1. **The money comes first, then the upsells.** Always.
+2. **The upsell must not fight the product.** Find the trap before writing. 02
+   sells the stone as what she does *instead of* investigating, because the
+   product tells her not to investigate. 03 sells *choosing* what fills the
+   space, never a feeling to fill it with, because the product promises calm.
+3. **Nothing reused from the old funnel may mention a "clearing"**, an "energy
+   field", or "our conversation". It leaks 14 times and none of it is true for
+   these buyers.
+4. **Never print a blank where a detail should be.** Cut the sentence instead.
+5. **The live funnel must not change.** Six funnels share this code. The tests
+   prove it, step by step.
+6. **Questions are free.** She answers in the chat and Evelyn uses it two
+   messages later — no stored data needed. Drop them only if you want them
+   dropped. 02 has none because you asked for that on 02; it does not carry over.
+
+---
+
+## What the archetype changes
+
+| | **Reading** (02, 04) | **Act** (03) |
+|---|---|---|
+| Thank-you page | a **receipt** — confirm, name the email subject, stop | an **intake gate** — the reply instruction goes *above* the delivery promise |
+| Her details | may exist at checkout | arrive later, by reply |
+| Sells anything on the thank-you page? | no | no — but the reply request is the whole point |
+| Upsell may threaten | what reaches her while she waits | her own openness, never a person coming back |
+
+## What the pricing model changes
+
+| Model | Booking page needs | Built? |
+|---|---|---|
+| Fixed + bump (02) | a total and a bump card | ✅ yes |
+| Pay-what-you-want (03) | an amount box she types in, with a floor | ❌ new |
+| Ladder (04) | four price options, one chosen | ❌ new |
+
+---
+
+## Decisions log
+
+Claude stops and asks at each. Write the answers here as you go.
+
+| # | Decision | Answer |
+|---|---|---|
+| D1 | The URL this offer lives at (02 is `/tarot/twin-flame`) | ☐ |
+| D2 | The four "her situation" blocks — pick one with an email lookup, or write a single block for everyone | ☐ |
+| D3 | Any promise on the booking page that needs code (capacity caps, deadlines) — build it, or hide the sentence | ☐ |
+| D4 | Money limits — the floor for pay-what-you-want, or the rungs of a ladder | ☐ |
 
 ---
 
 ## The steps
 
-### ☐ 1. Settle D1 and D2
-
-Claude presents the options with a recommendation. Five minutes, and it unblocks
-everything else.
+### ☐ 1. Fill in the worksheet, settle D1 and D2
+Claude proposes, you confirm. Ten minutes, and it unblocks everything.
 
 ### ☐ 2. The booking page
+**Read:** `0X-C1`, and `00e-FRAMEWORK-BEs.md` §3.
 
-**Read:** `copy/03/03-C1-booking-page.md`, and `00e-FRAMEWORK-BEs.md` §3.
+Statements in **her** voice — Evelyn does not speak on this page. Then the money
+part, the bump, the button.
 
-Eight statements in **her** voice — Evelyn never speaks on this page. Then the
-amount field, the bump, and the button.
+⚠ On an Act offer, the statement where she agrees to reply with her details is
+the most important sentence on the page. Without that reply the work never
+starts.
 
-⚠ Two mechanics we have never built:
-- **Pay-what-you-want** — she types the amount. Needs D4.
-- **The capacity cap** — needs D3.
-
-⚠ Statement 7b is the one that makes the offer work: she agrees, in her own
-words, to reply to the email with her details. If that sentence is weak, the
-whole product stalls, because Evelyn cannot start without the reply.
-
-**Done when:** the page renders, all eight statements are there, the button
-appears only when she has ticked them all, and it logs instead of charging.
+**Done when:** it renders, the button only appears once she has ticked
+everything, and it logs instead of charging.
 
 ### ☐ 3. The order bump
+**Read:** `0X-C3`.
 
-**Read:** `copy/03/03-C3-order-bump.md`.
+Sits inline beside the total.
 
-Sits inline on the booking page, next to the total — the placement that makes a
-bump a bump.
-
-⚠ It must **not** reuse 02's or the old funnel's product code. The fulfilment
-robot matches on that exact text, so the wrong code sends her the wrong thing.
-
-**Done when:** it renders, adds to the total, and carries its own product name.
+⚠ It must carry **its own product code**. The fulfilment robot matches on that
+exact text, so a reused code sends her the wrong thing.
 
 ### ☐ 4. Upsell 1
+**Read:** `0X-U*` (the U1 sections), and [`00j`](./00j-WORKFLOW-UPSELLS.md) for
+the method.
 
-**Read:** `copy/03/03-U-upsell-beats.md` (the U1a and U1b sections), and
-[`00k`](./00k-PLAN-03-UPSELLS.md).
-
-Most of this is already written. Claude writes it into the code, keeps all three
-questions, and handles the "her situation" block per D2.
-
-**The argument:** closing the account settles what was owed — it does not undo
-what carrying it cost her. That cost is the vigilance. The stone is for that.
-
-**Done when:** the chat runs start to finish, the questions work, and no line
-mentions a clearing.
+Most of the copy is already drafted. Claude wires it in, keeps the questions
+unless you say otherwise, and handles the "her situation" block per D2.
 
 ### ☐ 5. Upsell 2
+**Read:** the U2 section of the same file.
 
-**Read:** the U2a section of the same file.
+Two openings: one for buyers who took upsell 1, one for those who didn't.
 
-Two openings: one for buyers who took the stone, one for those who didn't.
-
-⚠ The "how long you've carried it" phrase in the first opening **must be cut**,
-not filled in. We don't know it yet.
-
-⚠ The two AI-written passages in the old flow get replaced with fixed copy. They
-need details we don't have, and their instructions still talk about a clearing.
-
-**Done when:** both openings run, the $30 fallback offer works, and nothing
-prints a blank where a detail should be.
+⚠ Cut any detail we do not have by then. ⚠ The two AI-written passages in the old
+flow get replaced with fixed copy unless this offer genuinely knows her concern
+at that moment.
 
 ### ☐ 6. The thank-you page
+**Read:** `0X-T1`.
 
-**Read:** `copy/03/03-T1-thank-you-page.md`.
+Receipt or intake gate — see the archetype table. Getting this backwards is the
+easiest mistake in the whole build.
 
-⚠ **This page is not a receipt.** It is the page that asks her to reply with her
-details. The reply instruction goes **above** the delivery promise, because the
-work cannot start without it. This is the opposite of 02's thank-you page — do
-not copy that one.
-
-**Done when:** the reply instruction is the first thing she reads, and the email
-subject line matches the product email exactly.
+⚠ The email subject line shown here must match the product email **exactly**.
+It is how she finds it in a crowded inbox.
 
 ### ☐ 7. Wiring and tests
+Routes for all four pages. Test file copied from 02's and re-pointed.
 
-Routes for the booking page, both upsells and the thank-you page. Then the test
-file, copied from 02's and re-pointed.
-
-⚠ The tests must prove the **old funnel is untouched**. Six live funnels share
-this code.
-
-⚠ 03 needs the scrolling fix that 02 has, or its buttons sit below the fold.
-
-**Done when:** tests pass, and the old funnel still behaves exactly as before.
+⚠ Tests must prove the live funnel is untouched. ⚠ The offer needs the scrolling
+fix 02 has, or its buttons sit below the fold.
 
 ### ☐ 8. Walk it and screenshot it
-
 Claude drives a real browser through the whole thing and saves the screenshots so
 you can read the flow without sitting through it.
 
@@ -151,10 +189,14 @@ you can read the flow without sitting through it.
 
 ## Not in this workflow
 
-The emails — the sales letter, the reminder nudges, the confirmation email, and
-the product itself. Those are a separate job with different tools.
+The emails — sales letter, reminders, confirmation, and the product itself.
+Different job, different tools.
 
-Also still missing, and the same for every offer: 03 has no Stripe, no source for
-her first name, and no tracking of its own. Listed in
-[`00j`](./00j-WORKFLOW-UPSELLS.md) at the bottom. ⚠ Worth fixing once, centrally,
-rather than a third time on offer 05.
+## Missing for every offer, not just this one
+
+No Stripe. No source for her first name, so she gets called "Friend" unless we
+fix it. No tracking of its own — everything reports as the old funnel. Full list
+at the bottom of [`00j`](./00j-WORKFLOW-UPSELLS.md).
+
+⚠ These cost us a day on 02 and will cost the same on 03, 04 and 05. **Fixing
+them once, centrally, is now cheaper than hitting them three more times.**
