@@ -80,7 +80,20 @@ Users receive AI-powered personalized readings through an interactive chat inter
 
 ## User Preferences
 
-Preferred communication style: Simple, everyday language.
+### Always reply in simple English
+
+This is a hard rule, not a preference. It applies to every reply, including
+technical ones.
+
+- Short words and short sentences. Say "use" not "utilise", "so" not "therefore".
+- Explain the thing itself, not the jargon for it. If a technical term is
+  unavoidable, say it once and immediately say what it means in plain words.
+- Lead with what happened and what it means for the business. Put the technical
+  detail after that, for anyone who wants it.
+- No filler. Do not restate the question before answering it.
+- Tables and short lists beat long paragraphs.
+- Code, file paths, commit messages and code comments stay technical and precise
+  — this rule is about the reply text, not the work itself.
 
 ## Application Routes
 

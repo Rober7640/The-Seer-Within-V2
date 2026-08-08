@@ -3,12 +3,17 @@
 How to take a backend offer from copy specs to a working upsell flow, derived
 from doing it for **02 Twin Flame Tarot** (see [`00i`](./00i-DELIVERABLES-U1-U2.md)).
 
-⚠ **This is a decision procedure, not a template.** The single biggest mistake
+⚠ **This is a decision procedure, not a template.** The biggest mistake
 available here is copying 02's answers. 02 asks nothing, plays one universal
-block and makes no LLM call — and **every one of those was forced by 02's own
-intake, not by house style.** 03 collects a target, a duration and a verbatim
-account, so 03 should almost certainly keep its questions. Run the steps; do not
-inherit the conclusions.
+block and makes no LLM call — and those came from two different causes that must
+be kept apart:
+
+- **the blocks** went universal because 02 collects no bucket and no concern;
+- **the questions** went away because the operator asked for it, not because of
+  any missing data.
+
+03 hits the first cause in the same way (its intake arrives *after* both
+upsells), but not the second. Run the steps; do not inherit the conclusions.
 
 ---
 
@@ -25,6 +30,24 @@ inherit the conclusions.
 | `00h` + `00i` | What is locked, and what 02 already decided (and why) |
 
 ---
+
+## The order never changes
+
+```
+  booking page → SHE PAYS → U1 → U2 → thank-you page → (ACT only: she replies
+                                                        with her intake)
+```
+
+Money first, then the upsells, every time. Two consequences that decide most of
+the rest:
+
+1. **The upsells run seconds after payment.** Whatever the offer knows at that
+   moment is all they can ever use.
+2. ⚠ **For an ACT offer the intake has not happened yet.** `03-T1` is an INTAKE
+   GATE — it is the page that *asks* her to reply with the target, what they did
+   and how long. That page comes **after** both upsells. So `{{TARGET}}`,
+   `{{HOW_LONG}}` and `{{WHAT_THEY_DID}}` exist in the product and **never on the
+   upsell screen.**
 
 ## Step 1 — the data audit. **Do this before writing a word of copy.**
 
@@ -61,7 +84,7 @@ not set that metadata greets her as "Friend". 02 neutralises it to Evelyn's
 
 | If the audit says… | Then |
 |---|---|
-| Nothing is collected | No questions (a question you cannot use is theatre), one universal block, static copy in place of the Claude calls — **02's shape** |
+| Nothing is collected | One universal block, and static copy in place of the Claude calls — **02's shape**. ⚠ This does NOT by itself remove the questions; see below |
 | Bucket exists | Keep the four bucket variants |
 | Target/person exists **at upsell time** | Keep `someone`; otherwise fall back and never render a bare token |
 | Intake arrives later | Write the clause as *droppable*, and drop it in code |
@@ -96,10 +119,17 @@ trap for the offer before writing.
 
 Decide each one explicitly and write down why.
 
-1. **Questions on or off.** Off only when the answers cannot be used. 03's build
-   notes call its Q1 *"the strongest question in the deck… answering it produces
-   the sale rather than Evelyn arguing for it"* — that is a strong reason to keep
-   asking, and it does not apply to 02.
+1. **Questions on or off.** ⚠ **Correction to an earlier draft of this doc:** a
+   question needs NO stored data. She answers it in the chat and the answer is
+   used immediately, in the next two or three messages. So missing data is not a
+   reason to drop questions.
+
+   02 dropped them because the **operator asked for it** — extending the booking
+   step's "ask her nothing" rule (`00h` rules 2 and 9) across the whole flow. That
+   was a design call about this offer, not a technical limit, and it does not
+   carry to 03. 03's build notes call its Q1 *"the strongest question in the
+   deck… answering it produces the sale rather than Evelyn arguing for it"*, and
+   nothing about 03's data stops it working. **Keep 03's questions.**
 2. **Bucket block: four variants or one.** Four when a bucket exists. One when it
    does not, built from facts true for every buyer of that offer.
 3. **The two Claude segments in U2.** Keep only if a real `concern` is in hand.
