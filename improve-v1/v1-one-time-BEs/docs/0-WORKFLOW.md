@@ -541,6 +541,42 @@ open the document, and the document is the product.
 
 ---
 
+# After the POC — personalising the product from Supabase
+
+If this proves out, the next stage is already planned in the deck: **an n8n flow
+that looks her up in Supabase and writes a reading built from what we actually
+know about her.** She is a past buyer, so her own words are sitting there.
+
+The seam is already the right shape. `getReadingBody(offer, buyer)` returns a
+static template today; in Phase 2 the same function calls n8n instead. **That is
+a config change, not a rewrite** — which is the whole reason the seam was built
+before it was needed.
+
+The pieces, as the deck numbers them:
+
+| | What |
+|---|---|
+| `S25` | the n8n flow — query Supabase by email → build the prompt → Claude → return the body |
+| `S26` | a **read-only** database user, scoped to just the personalisation columns. ⚠ Not the app's connection string |
+| `S27` | the quality gate — if what we hold on her is thin, fall back to the static version. **A paid product must never fail to arrive** |
+| `S28` | echo slots — three per reading, one quoting her own words back |
+
+`S28` is the one to build first if only one gets built. Quoting a buyer's own
+sentence back to her, once, does more than a page of generated prose.
+
+⛔ **This does not change the upsells.** They stay impersonal — that is the
+settled rule, and it does not have a Phase 2. Personalisation belongs to the
+product only, where she has paid for it and where it arrives as a considered
+document rather than a chat message that seems to know too much.
+
+⚠ **Two things to get right before it runs on real buyers.** Everything it writes
+about her comes from things she told a different persona, months ago, so it must
+read as Evelyn having *studied* her, not as a database being read aloud. And the
+quality gate has to be honest — a thin record should produce the static reading,
+not a padded one.
+
+---
+
 ## Not in this workflow
 
 The marketing emails — the sales letter and the abandon nudges. Different job,
