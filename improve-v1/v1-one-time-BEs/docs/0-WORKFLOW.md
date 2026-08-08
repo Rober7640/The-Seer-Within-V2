@@ -8,8 +8,10 @@ Two halves:
 - **Phase A — the funnel.** Booking page → order bump → upsell 1 → upsell 2 →
   thank-you page → wiring → tests. This is how she buys.
 - **Phase B — the product.** The reading itself: planned, written to length,
-  formatted as an email, with the tarot cards inserted. **This is the thing she
-  actually paid for.**
+  formatted as a Word doc, exported to PDF, with the tarot cards inserted. **This
+  is the thing she actually paid for.**
+- **Phase C — the two emails that carry it.** The confirmation she gets on
+  purchase, and the one that delivers the reading.
 
 **How we use it:** Claude does one step, shows you, and waits. You approve or
 send it back. Nothing goes live — none of these offers has Stripe yet, so no
@@ -133,6 +135,7 @@ Claude stops and asks at each. Write the answers here as you go.
 | D7 | **One PDF per buyer (merged, automated) or one PDF for everyone** — decides whether Word is a per-order step or a one-off design step | ☐ |
 | D8 | PDF attached to the email, or hosted and linked | ☐ |
 | D9 | The free gift as a closing section of the same PDF, or its own file | ☐ |
+| D10 | How long after delivery the next offer sends, and in which email | ☐ |
 
 ---
 
@@ -429,10 +432,81 @@ Every box, every time:
 
 ---
 
+# Phase C — the two emails that carry it
+
+Only two, and both are part of the purchase. The marketing emails — sales
+letter, abandon nudges — stay out of this workflow.
+
+Between them these two are the whole gap between paying and reading, and that
+gap is where refunds get requested.
+
+### ☐ C1. The confirmation email — sends immediately
+
+**Read:** `0X-T3`.
+
+⚠ **Check whether it already exists before writing one.** 02's is written in full
+(`02-T3`), including a story to fill the wait.
+
+What it has to do:
+
+- Thank her as **her good judgment**, not our good fortune.
+- Say the work has already started, in the present tense.
+- Restate the wait, and name the subject line of the email that will deliver it.
+- **Open a loop, don't close one.** 02 names the question it will answer first —
+  turning a silent 24 hours into anticipation.
+- ⚠ **It sells nothing.** No links to anything buyable.
+
+**The wait-filler.** 02 fills the wait with a story. That story is matched to her
+emotional state, and it does not transfer:
+
+| Offer | Her state during the wait | So the filler |
+|---|---|---|
+| 02 | hopeful, 24 hours | a warm story that resolves |
+| 03 | angry, three nights | quiet inoculation — *don't spend these nights watching for their downfall* |
+| 04 | tempted to act now | argues against texting him tonight |
+
+⚠ **Derive it from the wait, don't lift 02's.** Lifted, it will be the wrong
+register and she will feel it.
+
+⚠ **Subject line: transactional, not the broadcast format.** Our proven send
+format is emoji + first name + curiosity. This one is a receipt — she is
+expecting it and support will ask her to find it six weeks later. Do not turn it
+into a hook.
+
+### ☐ C2. The delivery email — sends when the reading is done
+
+**Read:** `0X-T4`. ⚠ **This asset is new.** It did not exist for any offer,
+because the reading used to *be* the email. Once the product became a PDF, the
+email became the envelope and needed its own copy. 02's is now written.
+
+What it has to do:
+
+- **Subject matches `0X-T1` and `0X-T3` word for word.** Both told her what to
+  watch for.
+- Hand it over in one line, with the link or the attachment.
+- Repeat the one instruction that prevents a refund — for 02, *read all twelve
+  before you decide what it says*. It is inside the PDF too. She needs it in the
+  envelope, because the buyer who gives up does it before she reaches the copy
+  that would have stopped her.
+- **Close the loop the confirmation opened — by pointing, not answering.** Name
+  where the answer is; make her open the document to get it.
+- Name the free gift so she reads to the end. Do not describe it.
+- One line of admin: what to do if it will not open.
+
+⚠ **It sells nothing either.** This is the highest-goodwill moment in the whole
+funnel and it is very tempting to put the next offer in it. She has not read the
+product yet, so an offer here arrives before the value does. **The next offer is
+a separate send, after she has had time to read** — that gap is decision D10.
+
+⚠ **Do not summarise the reading.** Every verdict in the email is a reason not to
+open the document, and the document is the product.
+
+---
+
 ## Not in this workflow
 
-The other emails — the sales letter, reminders, and the confirmation email.
-Different job, different tools.
+The marketing emails — the sales letter and the abandon nudges. Different job,
+different tools.
 
 ## Missing for every offer, not just this one
 
