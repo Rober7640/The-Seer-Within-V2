@@ -54,15 +54,16 @@ specs and proposes the answers; you confirm.
 | Reading or Act? | `0X-C1` header row | |
 | How is it priced? | `0X-C1` — fixed, pay-what-you-want, or a ladder | |
 | Does the work need a reply from her? | `0X-C1` statement 7b, `0X-T1` | |
-| **What do we know about her when the upsells run?** | see below | |
 | Does the booking page promise anything only code can keep? | `0X-C1` — capacity caps, deadlines | |
 | What is the one sentence both upsells sell? | `0X-P1` | |
 | How long is the product, and how many cards? | `0X-P1` — count the words and the `[IMG-…]` tags | |
 | What loops did the sales letter open? | `0X-E2` — and which product section closes each | |
 
-### The question that decides the most
+### ⛔ SETTLED: the upsells use no personal details
 
-**What do we know about her at the exact moment the upsells run?**
+**The upsells never use anything we collected about her.** No situation, no
+concern, no name of the person she is asking about, no how-long. Not because we
+cannot get them — because that is the decision.
 
 The order never changes:
 
@@ -70,17 +71,19 @@ The order never changes:
   booking page → SHE PAYS → upsell 1 → upsell 2 → thank-you page → the product
 ```
 
-So the upsells only know what the booking page collected, plus whatever her email
-address can be matched to. For every name, number or detail the drafted upsell
-copy prints, ask: *is it in hand by then?*
+So every upsell is written to be true for every buyer of that offer, and the
+specifics come from **the product**, not from her. 02's upsells name houses 2, 5
+and 12 out loud, and every buyer's spread has all three.
 
-⚠ **On an Act offer the answer is usually no.** Her details arrive as an email
-reply that the thank-you page asks for — which is after both upsells. The copy
-can be perfectly right for the product email later and still be unprintable in
-the upsells. 03 merges four such details. All four are unavailable.
+The only exception is her **first name**, if checkout captured one. If it did
+not, Evelyn says "dear" and nothing is lost.
 
-If the answer is no, either cut the sentence or look her up by email in the old
-database — she is a past buyer, so her details may already be there.
+⚠ Drafted upsell copy that merges a detail — 03 has four such tokens — gets the
+sentence **cut**, not filled in. This is not a per-offer question. It is the rule.
+
+**The product is the opposite.** It is personal, it merges her name throughout,
+and for an Act offer it is written from the intake she replies with. Keep the two
+straight: impersonal upsells, personal product.
 
 ---
 
@@ -127,7 +130,6 @@ Claude stops and asks at each. Write the answers here as you go.
 | # | Decision | Answer |
 |---|---|---|
 | D1 | The URL this offer lives at (02 is `/tarot/twin-flame`) | ☐ |
-| D2 | The four "her situation" blocks — pick one with an email lookup, or write a single block for everyone | ☐ |
 | D3 | Any promise on the booking page that needs code (capacity caps, deadlines) — build it, or hide the sentence | ☐ |
 | D4 | Money limits — the floor for pay-what-you-want, or the rungs of a ladder | ☐ |
 | D5 | Product length, if it is currently under 3,000 words | ☐ |
@@ -141,7 +143,7 @@ Claude stops and asks at each. Write the answers here as you go.
 
 # Phase A — the funnel
 
-### ☐ A1. Fill in the worksheet, settle D1 and D2
+### ☐ A1. Fill in the worksheet, settle D1
 Claude proposes, you confirm. Ten minutes, and it unblocks everything.
 
 ### ☐ A2. The booking page
@@ -168,8 +170,12 @@ exact text, so a reused code sends her the wrong thing.
 ### ☐ A4. Upsell 1
 **Read:** `0X-U*` (the U1 sections), and [`00j`](./00j-WORKFLOW-UPSELLS.md).
 
-Most of the copy is already drafted. Claude wires it in, keeps the questions
-unless you say otherwise, and handles the "her situation" block per D2.
+Most of the copy is already drafted. Claude wires it in and keeps the questions
+unless you say otherwise.
+
+⚠ The "her situation" block is **one block for everyone**, built from facts true
+of every buyer's product. Any drafted variants that key off her details are not
+used — see the settled rule above.
 
 ### ☐ A5. Upsell 2
 **Read:** the U2 section of the same file.

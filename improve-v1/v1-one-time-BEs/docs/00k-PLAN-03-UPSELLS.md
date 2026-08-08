@@ -1,8 +1,8 @@
 # 00k — PLAN: 03 Judgement Day, U1 + U2
 
 The workflow in [`00j`](./00j-WORKFLOW-UPSELLS.md), run for offer 03. Nothing is
-built yet. **Two decisions are needed before anyone writes code** — they are at
-the bottom.
+built yet. **One decision is needed before anyone writes code** — the URL, at the
+bottom.
 
 ---
 
@@ -22,7 +22,7 @@ is, what they did and how long. That page comes *after* both upsells. So:
 | Field | Collected where | In hand at U1/U2? | Plan |
 |---|---|---|---|
 | `firstName` | Stripe checkout metadata | ⚠ only if 03's checkout sets it | reuse `displayName()` so it degrades to "dear", never "Friend" |
-| `bucket` | **nowhere in 03** | ❌ no | see decision 1 |
+| `bucket` | **nowhere in 03** | ❌ no | not needed — one universal block |
 | `{{TARGET}}` (`personName`) | the Entry, by email reply | ❌ **not yet** | `someone` bucket cannot render |
 | `{{HOW_LONG}}` (`{duration}`) | the Entry | ❌ **not yet** | drop the clause, as `03-U2a` already instructs |
 | `{{WHAT_THEY_DID}}` | the Entry | ❌ not yet | unusable in the upsells |
@@ -57,7 +57,7 @@ are right for the product email. It is a timing fact nobody had checked.
 | Lever | 02 did | **03 should** | Why |
 |---|---|---|---|
 | Questions | removed | **KEEP all three** | A question needs no stored data — she answers in the chat and the answer is used in the next two messages. 03's Q1 is written, and its build notes call it the strongest in the deck |
-| Bucket block | one universal | **decision 1** | Four variants are written, but 03 has no bucket to pick with |
+| Bucket block | one universal | **one universal** | ⛔ Settled rule: upsells use no personal details |
 | Claude segments | static | **static** | No `concern` exists. 03's U2 angle (agency) needs its own copy regardless |
 | Pause taps | three per flow | **none** | The three questions already break the wall |
 
@@ -86,7 +86,7 @@ Copy to write (everything else is V1's, unchanged):
 
 - `CONFIRMATION` · `GAP` · `RISK` · `QUESTION_1` + its three branches — all
   already drafted in `03-U-upsell-beats.md`, usable close to as-written.
-- The bucket block — per decision 1.
+- The bucket block — ONE, impersonal.
 - `PATH_A_OPEN` / `PATH_B_OPEN` — drafted; ⚠ Path A's `{duration}` clause must be
   cut, not merged.
 - A static replacement for the two Claude segments, built from the *agency*
@@ -105,23 +105,17 @@ this offer is most likely to ship.
 
 ---
 
-## ⚠ The two decisions needed before coding
+## ⚠ The one decision needed before coding
 
-### Decision 1 — the bucket block
+### ~~Decision 1 — the bucket block~~ ⛔ SETTLED
 
-Four variants are written and good. 03 has nothing to select them with. Three
-options:
+**One universal block.** The upsells use no personal details — that is a standing
+rule, not a per-offer call. 03's four written variants are not used, and the
+email-lookup option is off the table.
 
-| | What it means | Cost |
-|---|---|---|
-| **A. One universal block** | Write a fifth block true for every 03 buyer, like 02's | Loses four pieces of written copy. Simplest, ships now |
-| **B. Look her up by email** (`S28`) | She is a V1 buyer; her bucket is already in `conversations` under her email. `getConversationByEmail()` exists | A server change on a shared endpoint; needs a fallback when the email doesn't match |
-| **C. Ask her** | A fourth question picks the bucket | Adds a question to a flow that already has three, before the money is even mentioned |
-
-**Recommendation: B, with A as the fallback path.** It is the same lookup `S28`
-already specs for the product, it makes both upsells better, and it is the one
-that also fixes 02 retrospectively. If B is not wanted now, do A and keep the
-four variants for when B lands.
+Write one block from what is true of every 03 buyer: an account is closing, the
+guard she kept has not stood down, and she is about to be open in a way she has
+not been in a long time.
 
 ### Decision 2 — the URL prefix
 

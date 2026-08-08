@@ -85,10 +85,9 @@ not set that metadata greets her as "Friend". 02 neutralises it to Evelyn's
 | If the audit says… | Then |
 |---|---|
 | Nothing is collected | One universal block, and static copy in place of the Claude calls — **02's shape**. ⚠ This does NOT by itself remove the questions; see below |
-| Bucket exists | Keep the four bucket variants |
-| Target/person exists **at upsell time** | Keep `someone`; otherwise fall back and never render a bare token |
-| Intake arrives later | Write the clause as *droppable*, and drop it in code |
-| Free-text concern exists at upsell time | The two Claude calls can stay — otherwise they must not |
+| Anything about *her* | ⛔ **not used.** Settled rule: the upsells are impersonal. Cut the clause |
+| Intake arrives later | Same answer — cut it |
+| Her first name | Use it if checkout captured one; otherwise "dear" |
 
 ---
 
@@ -130,9 +129,11 @@ Decide each one explicitly and write down why.
    carry to 03. 03's build notes call its Q1 *"the strongest question in the
    deck… answering it produces the sale rather than Evelyn arguing for it"*, and
    nothing about 03's data stops it working. **Keep 03's questions.**
-2. **Bucket block: four variants or one.** Four when a bucket exists. One when it
-   does not, built from facts true for every buyer of that offer.
-3. **The two Claude segments in U2.** Keep only if a real `concern` is in hand.
+2. **Bucket block: always ONE.** ⛔ Settled — the upsells use no personal
+   details, so there is nothing to key four variants off. Build one block from
+   facts true of every buyer's product.
+3. **The two Claude segments in U2.** ⛔ Always replaced with fixed copy — they
+   exist to personalise, and the upsells do not personalise.
    ⚠ Their prompts (`buildManifestRevealPrompt`, `buildManifestPersonalizePrompt`
    in `server/lib/prompts.ts`) hardcode *"the clearing ritual"* — any offer that
    keeps them needs its own prompt variant, not just data.
