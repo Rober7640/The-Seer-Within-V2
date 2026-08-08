@@ -11,7 +11,8 @@ operator should confirm rather than a defect.
 | **Trigger** | operator, 2026-08-06: *"redo the conversation flow for U1, U2 — no asking"* |
 | **Supersedes in part** | `02-U1a`, `02-U1b`, `02-U2a` — all three are written as *"only the opening beats change"*, which is no longer true |
 | **Built** | `client/src/lib/twinFlameUpsellCopy.ts` (all copy + stage order, one source of truth) |
-| **Tests** | `tests/twin-flame-upsell-copy.test.ts` — 24, green |
+| **Tests** | `tests/twin-flame-upsell-copy.test.ts` — 25, green |
+| **Reusable workflow** | [`00j-WORKFLOW-UPSELLS.md`](./00j-WORKFLOW-UPSELLS.md) — the decision procedure this run produced, for 03 and 05 |
 
 ---
 
