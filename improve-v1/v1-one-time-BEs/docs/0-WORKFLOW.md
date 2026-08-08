@@ -130,6 +130,9 @@ Claude stops and asks at each. Write the answers here as you go.
 | D4 | Money limits — the floor for pay-what-you-want, or the rungs of a ladder | ☐ |
 | D5 | Product length, if it is currently under 3,000 words | ☐ |
 | D6 | Card artwork — the public-domain deck we already hold, or something commissioned | ☐ |
+| D7 | **One PDF per buyer (merged, automated) or one PDF for everyone** — decides whether Word is a per-order step or a one-off design step | ☐ |
+| D8 | PDF attached to the email, or hosted and linked | ☐ |
+| D9 | The free gift as a closing section of the same PDF, or its own file | ☐ |
 
 ---
 
@@ -197,6 +200,8 @@ you can read the flow without sitting through it.
 # Phase B — the product
 
 This is what she paid for. Everything in Phase A is packaging.
+
+**The product is a PDF**, built from a Word document, with the cards inside it.
 
 A product that arrives thin, late, or looking like a plain email undoes the whole
 funnel — and it is the only part she will judge you on afterwards. Refunds happen
@@ -319,44 +324,89 @@ We already hold a full public-domain deck. **Nothing needs buying or drawing.**
   by default. Name the card in text next to every picture, and give every image
   real alt text. A reading that becomes a column of broken boxes is a refund.
 
-### ☐ B5. Format it as an email
+### ☐ B5. Format it as a document
 
-**Model to copy:** the render script at
-`docs/aweber/evelyn-reframe-deck/scripts/render-aweber.mjs` — proven, and it has
-a test beside it. The design spec is in the `evelyn-tarot-pivot` notes.
+**The product is a PDF, not an email.** The email is only the envelope — it says
+"here it is" and carries the link or the attachment. That decision changes
+everything about formatting: forget 600px widths and Gmail clipping, and think
+about pages, margins and where the page breaks fall.
 
-Email HTML is not web HTML. The rules that actually bite:
+**The chain:** markdown → **Word (.docx)** → **PDF**.
 
-- **Tables for layout.** No flexbox, no grid.
-- **Inline styles.** Most clients strip `<style>` blocks, and Gmail is the worst
-  of them.
-- **600px maximum width**, and it has to survive a 320px phone.
-- **No web fonts.** Use the stack the reframe deck already uses.
-- **Width and height on every image**, so the layout holds before they load.
-- **Dark mode.** Test it. White card art on a dark ground can look broken.
-- **Keep the merge tags intact** — a renderer that escapes `%FIRSTNAME%` sends
-  every buyer a letter addressed to a token.
+The Word file in the middle is the point. It is the version a human can open and
+adjust before anything is sent — nudge a card, fix a widow, re-break a page.
 
-Long emails get clipped by Gmail at around 102KB. A 4,800-word reading with
-twelve images will be close. Check it, and if it clips, that is a real problem —
-the clipped part usually includes the free gift.
+#### What is on this machine
+
+| Tool | Status |
+|---|---|
+| Microsoft Word | ✅ installed |
+| pandoc (markdown → .docx) | ❌ needs `brew install pandoc` — one command |
+| LibreOffice / wkhtmltopdf | ❌ not installed, not needed |
+| Playwright (HTML → PDF) | ✅ installed — the fallback route |
+
+**Recommended:** install pandoc. Then `0X-P1.md` converts straight to a .docx
+that carries our styles, using a **reference document** — a Word file that
+defines what Heading 1, Heading 2 and body text look like. Build that once and
+every offer inherits it.
+
+**Fallback if you would rather not install anything:** write the reading as HTML
+and print it to PDF with Playwright, which is already here. Full control over
+page breaks through print CSS. ⚠ But there is no Word file in that route, so
+nobody can hand-adjust it.
+
+#### Page design to settle once, then reuse
+
+- **Page size.** US Letter, unless most buyers are elsewhere. A4 pages print
+  wrong on US printers and vice versa.
+- **A cover page.** Her name, the offer's title, the date, one card. This is the
+  single cheapest thing that makes a PDF feel like a product rather than a
+  document. 
+- **Margins wide enough to read** — 1 inch minimum, more if the line length feels
+  long.
+- **One card per section**, sized so the section heading and the card sit on the
+  same page. A card stranded alone at the top of a page looks like a mistake.
+- **Page breaks between sections.** Twelve houses should be twelve openings, not
+  a wall.
+- **Page numbers and a running header** with her name or the offer title.
+- **Serif for the body.** It is a reading, not a dashboard.
+- ⚠ **Check the last page.** Documents that end mid-sentence at a page break, or
+  leave one orphan line on a final page, look unfinished.
+
+#### The bit that decides the pipeline
+
+Her name is merged all through the text. So either:
+
+- **one PDF per buyer**, generated with her name in it — which means this has to
+  be automated, not hand-finished in Word each time; or
+- **one PDF for everyone**, with the personal address living in the covering
+  email instead.
+
+⚠ **This is decision D7 and it changes the build.** Hand-finishing in Word does
+not scale past a few orders a day; a fully automated merge means the Word step is
+a *design* step done once, not a per-order step.
+
+Sensible middle: design the template in Word once, export it as the reference,
+then let the code merge each buyer's copy and produce her PDF automatically.
 
 ### ☐ B6. Make it deliverable
 
-The seam already exists: **`getReadingBody(offer, buyer)`**. Build against it.
+The seam already exists: **`getReadingBody(offer, buyer)`**. Build against it —
+it just returns a PDF path or URL now rather than an HTML body.
 
-- **Now:** it returns the static template with `%FIRSTNAME%` merged. That is the
-  whole MVP and it is enough to ship.
-- **Later:** the same function calls out to a generator that personalises from her
-  old funnel data. Because the seam is there, that is a config change rather than
-  a rewrite.
+- **Attachment or link?** Decision D8. An attachment feels more like a product
+  and works offline. A link keeps the email light, can be re-downloaded, and lets
+  you fix a mistake after sending — which an attachment can never do. Big PDFs
+  also hurt inbox placement.
+- **If it is a link,** host it somewhere durable with an unguessable URL, and
+  keep it working — she will come back to this months later.
 - **The subject must match `0X-T1` exactly.** The thank-you page told her what to
-  look for; if it does not match, the promise breaks in the one place she was
-  told to check.
-
-⚠ Also unbuilt, and needed before the first real order: somewhere to store what
-was actually sent (`be_orders.reading_body`), so a re-send is identical and
-support can see what she got.
+  look for.
+- ⚠ **Store what was actually sent** (`be_orders.reading_body`, or the generated
+  file). A re-send has to be identical, and support needs to see what she got.
+- **The free gift** (`0X-P3`) goes in the same PDF as a closing section, not as a
+  second file. Two attachments look like admin; one document looks like a
+  reading. That is decision D9 if you disagree.
 
 ### ☐ B7. The gate before it ships
 
@@ -364,13 +414,17 @@ Every box, every time:
 
 - ☐ Word count in range (or D5 answered).
 - ☐ Every loop the letter opened is closed, by name.
-- ☐ Every `[IMG-…]` replaced with a real image that loads.
-- ☐ Read it once with images blocked. Still a reading?
-- ☐ No `%TOKEN%` left unmerged. No blanks.
+- ☐ Every `[IMG-…]` replaced with a real card image, at the right size.
+- ☐ No `%TOKEN%` left unmerged. No blanks anywhere.
 - ☐ Subject matches the thank-you page word for word.
-- ☐ The free gift appears once, inside this email.
-- ☐ Read it on a phone, in dark mode.
-- ☐ Send it to a real inbox — Gmail and one Outlook — and check clipping.
+- ☐ The free gift appears once, as the closing section.
+- ☐ **Page through the whole PDF.** No card stranded alone, no section heading at
+  the bottom of a page, no orphan final page.
+- ☐ Open it on a phone. Most people will read it there first.
+- ☐ Print one page. If it is ever printed, the margins have to work.
+- ☐ File size sensible — under ~5MB, or the email suffers.
+- ☐ Send a real test to Gmail and one Outlook, and open the attachment or link
+  from each.
 - ☐ Read it aloud. This is the last check and it catches the most.
 
 ---
