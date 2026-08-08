@@ -21,7 +21,7 @@ is, what they did and how long. That page comes *after* both upsells. So:
 
 | Field | Collected where | In hand at U1/U2? | Plan |
 |---|---|---|---|
-| `firstName` | Stripe checkout metadata | ⚠ only if 03's checkout sets it | reuse `displayName()` so it degrades to "dear", never "Friend" |
+| `firstName` | **AWeber** → `?fn=` → checkout metadata | ✅ yes, once the chain is wired | wire it; keep `displayName()` as the fallback |
 | `bucket` | **nowhere in 03** | ❌ no | not needed — one universal block |
 | `{{TARGET}}` (`personName`) | the Entry, by email reply | ❌ **not yet** | `someone` bucket cannot render |
 | `{{HOW_LONG}}` (`{duration}`) | the Entry | ❌ **not yet** | drop the clause, as `03-U2a` already instructs |
@@ -129,7 +129,7 @@ annoying later.
 ## What carries over as still-unbuilt
 
 All seven items in `00j`'s last section apply to 03 unchanged — Stripe, the
-`firstName` source, the PostHog `"v1"` label, the `/api/upsell2/user-data`
+`?fn=` chain, the PostHog `"v1"` label, the `/api/upsell2/user-data`
 fallback, the thank-you pixel, `bumpPurchased` on `/api/order/details`, and
 drop-off instrumentation. ⚠ **Fixing them once, centrally, is now cheaper than
 hitting them a third time on 05.**

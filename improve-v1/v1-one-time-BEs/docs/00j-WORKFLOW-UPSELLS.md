@@ -76,9 +76,13 @@ than rendering a bare token."* Honour that instruction in code, not in hope.
 **Where the values actually come from at runtime:** `/api/upsell/user-data`
 reads the `conversations` row for the Stripe session. When there is no row it
 rebuilds one from the Stripe session, taking `metadata.firstName` — and
-**defaulting to the literal string `"Friend"`**. Any offer whose checkout does
-not set that metadata greets her as "Friend". 02 neutralises it to Evelyn's
-"dear" via `displayName()`; reuse that, or set the metadata at checkout.
+**defaulting to the literal string `"Friend"`**.
+
+⚠ **AWeber has her first name**, so that default should almost never fire. The
+letter's CTA carries `{{ subscriber.first_name | capitalize }}` as `?fn=`, the
+booking page keeps it, and checkout sets `metadata.firstName`. Build that chain
+and every screen after the money greets her properly. Keep `displayName()` as the
+safety net for a forwarded letter.
 
 ### What each answer forces
 
@@ -263,8 +267,9 @@ Playwright, not by hand. Scripts from 02's run are described in
 Each of these bit 02 and will bite the next one identically:
 
 1. **Stripe.** No checkout, so nothing charges and no real session exists.
-2. **`firstName` has no source** — checkout must set `metadata.firstName` or she
-   is "Friend".
+2. **The `?fn=` chain is not wired.** AWeber knows her name; the letter just has
+   to pass it to the booking page, and the booking page to checkout. Until then
+   `displayName()` turns "Friend" into "dear".
 3. **PostHog labels the offer `"v1"`** (`getPostHogFunnel() ?? "v1"`). Settle
    before any letter's CTA points at it, or it pollutes V1's funnel.
 4. **`/api/upsell2/user-data` has no Stripe fallback** where U1's does — it 404s

@@ -87,6 +87,38 @@ straight: impersonal upsells, personal product.
 
 ---
 
+### Her first name — AWeber has it
+
+She arrives from an AWeber letter, and AWeber knows her name. So it just has to
+be carried down the chain:
+
+```
+  AWeber letter                 {{ subscriber.first_name | capitalize }}
+        │  CTA link:  {{BOOKING_URL}}?c=1&fn=<name>
+        ▼
+  booking page                  reads ?fn=, keeps it for the tab
+        ▼
+  checkout                      sends it as Stripe metadata.firstName
+        ▼
+  conversations row             /api/upsell/user-data reads it from there
+        ▼
+  upsells · thank-you · product email
+```
+
+**What to build:** the booking page reads `?fn=` and passes it to checkout. That
+is the whole job, and it is the difference between "Thank you, Sarah" and "Thank
+you, Friend" on every screen after the money.
+
+- ⚠ **URL-encode it.** Names have spaces and apostrophes. O'Brien breaks a query
+  string that was not encoded.
+- ⚠ **Keep it to the first name.** Do not put her email in the URL — it shows up
+  in server logs and referrer headers, and the name alone is enough.
+- ⚠ **Keep the fallback.** She may forward the letter, or open the page without
+  the parameter. Then it is "dear", which reads fine, and `displayName()` already
+  turns the literal `"Friend"` into it.
+
+---
+
 ## Rules that hold for every offer
 
 1. **The money comes first, then the upsells.** Always.
@@ -516,9 +548,8 @@ different tools.
 
 ## Missing for every offer, not just this one
 
-No Stripe. No source for her first name, so she gets called "Friend" unless we
-fix it. No tracking of its own. Nowhere to store the sent product. Full list at
-the bottom of [`00j`](./00j-WORKFLOW-UPSELLS.md).
+No Stripe. No tracking of its own. Nowhere to store the sent product. Full list
+at the bottom of [`00j`](./00j-WORKFLOW-UPSELLS.md).
 
 ⚠ These cost us a day on 02 and will cost the same on 03, 04 and 05. **Fixing
 them once, centrally, is now cheaper than hitting them three more times.**

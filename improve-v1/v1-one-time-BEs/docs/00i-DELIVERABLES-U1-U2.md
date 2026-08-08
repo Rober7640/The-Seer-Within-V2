@@ -243,10 +243,11 @@ returned the music icon). Moved to the top right for offer 02 — overlap now 0.
 Everything in `00h`'s "NOT built" still stands — Stripe, the already-purchased
 redirect, 02's own bump identifiers, drop-off instrumentation — plus:
 
-- **`firstName` has no source.** The "Friend" placeholder is neutralised to
-  Evelyn's *"dear"*, which is decent copy, but if the letter's CTA carried a name
-  into checkout metadata she would be greeted properly. That is a ~10-line change
-  at whatever builds 02's checkout.
+- **The `?fn=` chain is not wired.** ⚠ AWeber HAS her first name
+  (`{{ subscriber.first_name | capitalize }}`), so this is a plumbing job, not a
+  missing-data problem: the letter's CTA passes it, the booking page keeps it,
+  checkout sets `metadata.firstName`. Until then the "Friend" placeholder is
+  neutralised to Evelyn's *"dear"*, which reads fine but is not her name.
 - **PostHog labels 02's upsell events `"v1"`** (`getPostHogFunnel() ?? "v1"`).
   Harmless while nothing links here; must be settled before the letter points at
   this arm.
