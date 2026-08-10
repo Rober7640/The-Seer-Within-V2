@@ -11,7 +11,7 @@ import {
   detectQ3Intent,
   // Questions 2 and 3 are still V1-only constants: offer 02 asks nothing, so its
   // chain never routes into these stages. Everything else now comes from the
-  // resolved copy (lib/twinFlameUpsellCopy.ts).
+  // resolved copy (lib/backendOffers.ts).
   UPSELL_QUESTION_2,
   UPSELL_QUESTION_2_REPLIES,
   UPSELL_AFTER_Q2,
@@ -21,7 +21,7 @@ import {
   formatUpsellPrice,
 } from "@/lib/upsellMessages";
 import { getTrackdeskClickId } from "@/lib/facebook";
-import { upsell1Copy, displayName, type Upsell1Chain } from "@/lib/twinFlameUpsellCopy";
+import { upsell1Copy, displayName, type Upsell1Chain } from "@/lib/backendOffers";
 import { currentFunnel, getPostHogFunnel } from "@/lib/funnel";
 import { track as trackPH } from "@/lib/posthog";
 import { tarotEventProps } from "@/lib/tarotAttribution";

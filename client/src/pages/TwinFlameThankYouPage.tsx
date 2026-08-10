@@ -21,7 +21,7 @@ import { useEffect, useState } from "react";
 import { useSearch } from "wouter";
 import { CosmicBackground } from "../components/CosmicBackground";
 import { CheckCircle, Mail } from "lucide-react";
-import { displayName } from "../lib/twinFlameUpsellCopy";
+import { displayName } from "../lib/backendOffers";
 
 interface OrderData {
   firstName: string;

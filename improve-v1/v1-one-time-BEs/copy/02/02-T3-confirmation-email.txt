@@ -1,0 +1,68 @@
+Dear {{ subscriber.first_name | default: "friend" }},
+
+Thank you for making the right decision, and for listening to me about it.
+
+I'm getting started immediately. The deck is out, and I'll be with your twelve tonight until
+they're laid — one to each house, all of them out of the twenty-two.
+
+It takes the whole of a night, so give me 24 hours. Your reading will be with you inside that,
+titled {{ subscriber.first_name | default: "dear" }} — your twelve are laid.
+
+And I'll tell you now what I'm looking for first, so you know what's coming.
+
+The Lovers handed you two things that feel identical from the inside, {{ subscriber.first_name | default: "dear" }}, and I couldn't
+tell you which of the two you'd been given — not from one card. The house it falls into is what
+separates them. That's the first thing I'll know tonight, and you'll have it by morning.
+
+—————————————————
+
+WHILE YOU WAIT, LET ME TELL YOU SOMETHING
+
+The man who taught me to read cards told me this one, a long time ago now, and I've never quite
+been able to put it down. It isn't about tarot. He didn't tell it to me as though it were.
+
+—————————————————
+
+A farmer kept a donkey. They'd worked the same fields together for years — not a pet, exactly, but
+the two of them understood each other the way you do after that long.
+
+One hot afternoon the donkey went down a well.
+
+The farmer heard him from the yard. He stood at the edge of it for most of an hour, listening to
+the animal bray, and worked out that he had no way of getting him up. The donkey was old. The well
+was dry and needed sealing anyway.
+
+So he went for his neighbours, and they came with shovels, and they began to fill the well in.
+
+The donkey understood immediately what was happening. He made a terrible noise.
+
+And then he stopped — all at once — and the silence was so much worse than the braying that the
+farmer put down his shovel and went to look over the edge.
+
+What he saw was this. Every shovelful of earth that landed on the donkey's back, the donkey shook
+off. And then he stepped up onto it.
+
+Shake it off, step up. Shake it off, step up.
+
+They kept shovelling because they didn't know what else to do, and the donkey kept rising, and
+when the well was full he walked out over the top of it and off across the field.
+
+—————————————————
+
+I've thought about that story on a great many bad afternoons, dear.
+
+The thing that gets me isn't the cleverness of it. It's that from where the farmer was standing, he
+was burying a donkey. He'd have sworn to it. He was doing the kind thing and he was doing it
+carefully, and the whole time the animal was using every shovelful to climb.
+
+What lands on you and what you stand on are not always two different things. Sometimes you only
+find out which it was afterwards.
+
+If it's any use to you, send it on to someone. That's what a story like that is for, and it costs
+you nothing to be the one who passed it along.
+
+I'll be in touch by morning.
+
+— Evelyn
+
+—————————————————

@@ -35,7 +35,7 @@ import {
   UPSELL2_SHIPPING_CONFIRMED,
   UPSELL2_SOFT_DECLINE,
 } from "@/lib/upsell2Messages";
-import { upsell2Copy, displayName, type Upsell2Chain } from "@/lib/twinFlameUpsellCopy";
+import { upsell2Copy, displayName, type Upsell2Chain } from "@/lib/backendOffers";
 import { currentFunnel, getPostHogFunnel } from "@/lib/funnel";
 import { track as trackPH } from "@/lib/posthog";
 import { tarotEventProps } from "@/lib/tarotAttribution";
