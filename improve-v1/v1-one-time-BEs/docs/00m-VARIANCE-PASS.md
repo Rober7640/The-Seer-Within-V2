@@ -1,4 +1,4 @@
-# 00f — Corpus-wide device-variance pass
+# 00m — Corpus-wide device-variance pass
 
 Run 2026-08-04 across **02, 03 and 04** (36 copy assets). ⚠ **05 is not written**, so this pass is
 three-quarters of the check the rule asks for — anything 05 introduces must be re-run against all

@@ -77,7 +77,7 @@ write → audit → revise, then a voice-consistency pass.
       `04-P3` the rim calendar, and `04-C3`/`04-C4` for the Still Cup
 - [ ] **05 Cut the Cord** — **not written this pass.** Still blocked on the Commitment Charm hook
       rewrite ([00b §6.4](./00b-BUILD-BEs.md)). ⛔ It must also **rename "Nine Nights"** — 03 now owns
-      it (see [00f](./00f-VARIANCE-PASS.md))
+      it (see [00m](./00m-VARIANCE-PASS.md))
 
 **Groups per offer** — A runs first, the rest read its output:
 
@@ -120,7 +120,7 @@ gone — it's Evelyn's cadence. See [00a standing constraints](./00a-BRIEFS-BEs.
 line that still needs an operator decision before **05** ships (a payments question, not a copy
 one, and it blocks nothing else).
 
-- [x] **Device-variance pass run across 02/03/04** → [00f-VARIANCE-PASS](./00f-VARIANCE-PASS.md).
+- [x] **Device-variance pass run across 02/03/04** → [00m-VARIANCE-PASS](./00m-VARIANCE-PASS.md).
       Cross-offer sentence collisions **0**; buyer-facing phrase collisions 105 → 4 (all
       framework-mandated statement stems). ⚠ The abandon nudges had become nearly one email in three
       costumes — four shared lines — which no per-offer audit could have seen.

@@ -1,152 +1,118 @@
-# 00g — PENDING
+# 00g — TO-DO, aligned to 0-WORKFLOW
 
-Everything still open on the backend deck, as of **2026-08-04**, after Phase 1 copy for 02/03/04.
+**Everything still open, in the phases [`0-WORKFLOW`](./0-WORKFLOW.md) uses.** That file is the
+runnable doc — the *how*. This is the *what's left*, per offer.
 
-Companion to [00-TODO](./00-TODO-BEs.md) (sequenced next actions) and
-[00c-ASSETS](./00c-ASSETS-BEs.md) (the full register). This file is the *state*; 00-TODO is the
-*order*.
-
-**Where things stand:** 36 copy assets written across 02, 03 and 04, all passing
-`node scripts/copy-check.cjs`. Nothing is built beyond 02's two letters. **Nothing can ship yet** —
-every CTA in every letter points at a booking page that does not exist.
+⚠ **Renumbered 2026-08-10.** An earlier version of this file used its own A/B/C/D scheme, which
+collided head-on with the workflow's Phase A / Phase B / Phase C. **A/B/C here now mean the
+workflow's phases and nothing else.** Same pass: the variance record moved `00f` → `00m`, so
+`00f-PRODUCT-DESIGN-BEs.md` is the only `00f`.
 
 ---
 
-## A · Phase 1 copy — what's left
+## Where each offer stands
 
-- [ ] **A1 · 05 Cut the Cord, groups A–E** (~14 assets). The only offer with no copy at all.
-      Blocked on **B4** and **A2** below.
-- [ ] **A2 · Rename 05's "Nine Nights."** 03 now owns it — nine days is load-bearing in 03's letter,
-      its Ledger of Signs and its silence duty. 05's sealing practice needs a new name before its
-      product is written. *(Corpus finding, [00f](./00f-VARIANCE-PASS.md).)*
-- [x] ✅ **A3 · 04-P1's two alternate self-diagnosis branches — WRITTEN IN FULL** (2026-08-04).
-      *The Turned Handle* (contact intact, weight gone; bridge moves to 13–15; warned off testing
-      him) and *The Sunken Leaf* (nine fully silent days; bridge moves to 19–21; warned that it may
-      produce nothing, and that a null result is the information she paid for).
-      ⚠ **Consequence for `04-P3`:** each branch puts the bridge in a different week, so the rim
-      calendar must be **generated per branch**, not printed once.
-- [ ] **A4 · v2 follow-up letter for 03.** [00e §1c](./00e-FRAMEWORK-BEs.md) calls the missing v2
-      *"the most-missing asset in the deck"* — 02 ships one, nobody else does. **04 does not need
-      one** (its three ladder emails already are the follow-up sequence). 03 does. Roughly a third
-      of the work of a v1: keep the skeleton, new free-read unit, compress the origin, drop the
-      precedent, escalate inward.
-- [ ] **A5 · Image briefs beyond the heroes.** Each letter carries a written hero brief
-      (`IMG-1`), but the supporting sets don't exist: `02-E5` (8 images), `03-E4` (**source has
-      none — needs art direction from scratch**), `04-E4` (1 exists, needs more).
-- [ ] **A6 · Re-run the variance pass with all four offers in view.** [00f](./00f-VARIANCE-PASS.md)
-      covered three of four. Cannot be considered done until 05 exists.
+| | Copy | **A** funnel | **B** product | **C** list + 2 emails |
+|---|---|---|---|---|
+| **02** Twin Flame | ✅ complete | ✅ built, preview-only | ❌ **never run** — 4,821 words, unformatted | ◐ C1/C2 written, C0 undone |
+| **03** Judgement Day | ✅ complete | ◐ booking only — **no U1, U2 or thank-you** | ❌ never run — 2,429 words | ◐ C1 written, C0 undone |
+| **04** The Turn | ✅ complete | ❌ nothing | ❌ never run — 3,714 words | ❌ |
+| **05** Cut the Cord | ❌ **none at all** | ❌ | ❌ | ❌ |
+
+⚠ **"Written" means words in a markdown file.** No product has been formatted, had its cards
+inserted, or been made deliverable. **Phase B has never been run for any offer.**
 
 ---
 
-## B · Decisions only the operator can make
+## ⛔ The blocker under everything: there is no Stripe
 
-Each is short. Several unblock build work that is otherwise ready to start.
+Verified in code 2026-08-10, not inferred from the docs:
 
-- [x] ✅ **B1 · The bump ships UNCHECKED, opt-in** (2026-08-04). `02-C3` was already written as an
-      opt-in, so no copy changed. Clean consent trail on every order.
-- [x] ✅ **B2/B3 · The FULL LADDER runs everywhere** (2026-08-04) — no suppression. My
-      recommendation to skip both was overridden.
-      ⚠ **This had a real copy consequence and it has been actioned.** Both flows had been written
-      *to be skipped* — 03's U2 opened on *flat* and hedged (*"I'm not going to sell you a feeling"*),
-      and 04's U1 was five thin beats restating the product. Shipping copy has to be good, so both
-      were **rebuilt**:
-      · **03's U2** now sells **agency, not filling** — *you never chose what went in that room* —
-        which runs with `03-P1`'s "boredom is what closure feels like" instead of against it.
-      · **04's U1** now has a real risk beat taken from `04-P1`'s third expectation: **the
-        well-meaning friend who tells her to just be honest with him, around day five.** The only U1
-        in the deck whose danger is someone who loves the buyer.
-- [x] ✅ **B4 · 05's source guarantee NEVER SHIPS** (2026-08-04). 05 is written on the reframe
-      only. **A1 is unblocked on this axis** — only the Commitment Charm hook rewrite remains.
-- [x] ✅ **B5 · Headline and deck CENTRED** in both 02 letters (2026-08-04), matching the centred
-      subheads variant B already shipped. Applied identically to v1 and v2 so the A/B stays
-      comparable. ⚠ Both letters need a re-render check at 600px and 390px before send.
-- [ ] **B6 · Seed-test AWeber Liquid `| default: "dear"`.** Untested. Without a fallback, a
-      subscriber with no first name renders **five** empty slots per letter — the live programme
-      already carries this in subjects, and putting the tag in the body multiplies the breakage.
+- `addBackendCustomer` exists at `server/lib/aweber.ts:856` and has **zero callers** outside its test
+- **`be_orders` appears in `shared/schema.ts` zero times** — the table is not in the schema
+- every booking button logs `[preview] would checkout {…}`
+
+So no buyer has ever reached the customer list, and **C3's end-to-end boxes cannot be ticked by
+anybody**. The workflow says it plainly: *these cost us a day on 02 and will cost the same on 03,
+04 and 05 — fixing them once, centrally, is now cheaper than hitting them three more times.*
+
+⚠ **Both AWeber access tokens are expired** (401 `invalid_token`, checked 2026-08-10) —
+`AWEBER_ACCESS_TOKEN` and `AWEBER_BROADCAST_ACCESS_TOKEN`. Nothing in Phase C reaches AWeber
+until they are refreshed.
 
 ---
 
-## C · Production — the critical path
+## Phase A — the funnel
 
-⚠ **The single blocking dependency: `{{BOOKING_URL}}` has no value anywhere.** Every CTA in every
-letter, nudge and ladder email points at it. Until `S1`/`S2`/`S4`/`S5` exist, no offer can take a
-pound.
+- [ ] **A·shared — Stripe.** `be_orders` + checkout + `checkout.session.completed` →
+      `addBackendCustomer`. **Unblocks all four offers and C0/C3.** Do this once, centrally.
+- [ ] **03 · A6 — the thank-you = the Entry form.** 🔴 **Load-bearing.** The booking screens no
+      longer ask for the Entry anywhere, so as built 03 would take money and have no way to ask the
+      one question fulfilment depends on. An ACT offer cannot be filled without her reply.
+- [ ] **03 · A4/A5 — U1 and U2.** Copy drafted (`copy/03/03-U-upsell-beats.md`), plan in
+      [`00k`](./00k-PLAN-03-UPSELLS.md), tick sheet in [`00l`](./00l-DELIVERABLES-03.md).
+- [ ] **04 · A1–A8 — the whole funnel.** Not analysed. Root is `/wiccan/tea-reading`.
+      ⚠ Needs the ladder resolver (`S9`) that no other offer needs.
+- [ ] **05 · A1–A8** — after its copy exists.
 
-### C1 · The minimum sellable slice (02 only)
+## Phase B — the product *(never run; 02 is the pilot)*
 
-- [ ] Offer registry `server/lib/backendOffers/config.ts` (`S1`)
-- [ ] Booking page component, config-driven, Treatment B (`S2`) — one page, not four
-- [ ] Subscriber identification on click (`S3`) — reuse Soulmate hydration, no raw email in URLs
-- [ ] `be_orders` table + Stripe webhook (`S4`)
-- [ ] Checkout mode: fixed + bump (`S5a`) · Stripe prices $35 + $12.77 (`02-C5`)
-- [ ] Thank-you route (`S6`) · idempotency + double-charge guards (`S12`)
-- [ ] `getReadingBody()` seam (`S23`) + `be_orders.reading_body` (`S24`) — build the seam now or
-      pay for it twice
-- [ ] Email HTML: `02-P4` product delivery · `02-T3` confirmation · `02-E6` nudges
-- [ ] Host images (`02-P2` is ~10 min — 7 of 12 cards already on S3)
-- [ ] ESP automation, tags, suppression (`S10`, `02-O1`, `02-O2`) — ⚠ *"I won't write to you about
-      this again"* is a promise only the automation can keep
-- [ ] Per-CTA click tracking (`S11`) — 02 has 7 reserved CTA slots and we need to know which converts
-- [ ] Compliance block (`S13`) + QA checklist (`S14`)
-- [ ] **Segmentation gate (`S7`)** — without it "women-only" is not real, and 02 ships behind it
+- [ ] **02 · B1–B7.** Scope → plan structure → write *(done: `02-P1`)* → insert the 12 cards →
+      format as a document → make deliverable → the gate before it ships.
+      ⚠ **B4/B5/B6 are the unknowns** — nobody has produced a PDF from this pipeline yet.
+- [ ] **03 · B1–B7**, then **04**, then **05**.
 
-### C2 · 03 additionally requires *(must exist before the first 03 order lands)*
+## Phase C — the customer list and its two emails
 
-- [ ] Inbound pipeline (`S15`–`S18`): MX on `reply.theseerwithin.com` → Resend catch-all →
-      `be_replies`; per-order Reply-To; triage view; auto-submitted filter
-- [ ] **Intake queue (`S29`)** — 5 fields, ~3 min/order
-- [ ] **Alarm triage (`S30`)** — keyword pre-screen, 3 blocking tiers + protective variant
-- [ ] **30-day TTL + real delete cron (`S31`)** on third-party intake; strip attachments on receipt
-- [ ] Third-party PII policy (`S19`) — buyers will send names and accusations about people who
-      never consented
-- [ ] **Capacity cap (`S8`)** — `03-C1` statement 4 promises *"if the week is spoken for, this page
-      closes."* Build it or cut the line
-- [ ] PWYW checkout + clamp (`S5b`)
-- [ ] Mid-SLA "work has begun" email (`S32`) — three days is long enough to lose a dispute in
+- [ ] **C0 · Create `theseerwithin_be_customer` in the AWeber UI.** 🙋 **Operator, by hand** — the
+      API returns **405** for list creation (hard limit of API 1.0; tried 2026-08-10, don't retry).
+      Four custom fields, spelled exactly: `stripe_order_id`, `offer`, `entry_url`, `reading_url`.
+      Then `AWEBER_BE_CUSTOMER_LIST_ID` into `.env` — ⚠ **currently absent from `.env` entirely**;
+      it exists only in `.env.example`.
+      ⛔ Not `theseerwithin_paid` — that is V1's 5,290 buyers.
+- [ ] **C1/C2 · The two emails.** Copy exists for 02 (`02-T3`, `02-T4`) and 03 (`03-T3`). Still to
+      write for 04 and 05, and none is uploaded as an AWeber Campaign yet.
+- [ ] **C3 · Upload, automate, prove.** ⛔ Gated on Stripe above.
 
-### C3 · 04 additionally requires
+## Copy — the remainder
 
-- [ ] Ladder state table + server-side resolver (`S9`) → `{{TODAYS_RUNG}}`
-- [ ] Stripe prices ×4 rungs (`04-C5`)
-- [ ] ⚠ **Nudge/ladder suppression cap.** `04-E5a/b/c` fires for women who never reached the page;
-      `04-E6` for women who did. A woman who qualifies for both must not get five emails in four
-      days — suppress the day-2 ladder email
+- [ ] **05's whole deck (~14 assets).** ⛔ Blocked on the *Commitment Charm* hook rewrite
+      ([`00b` §6.4](./00b-BUILD-BEs.md)) — its premise sells an offer we don't have.
+      ⛔ Must also **rename "Nine Nights"**; 03 owns it ([`00m`](./00m-VARIANCE-PASS.md)).
+- [ ] **A v2 follow-up letter for 03.** [`00e` §1c](./00e-FRAMEWORK-BEs.md) calls the missing v2
+      *"the most-missing asset in the deck"*. 04 needs none — its three ladder emails are the
+      follow-up. Roughly a third of the work of a v1.
+- [ ] **Image sets beyond the heroes.** Each letter has a written hero brief; the supporting sets
+      don't exist. `03-E4` has **no source art at all** and needs direction from scratch.
+- [ ] **Re-run the variance pass with all four in view** ([`00m`](./00m-VARIANCE-PASS.md) covered
+      three of four).
+- [ ] **`04-P3` must be generated per branch.** Each self-diagnosis branch puts the bridge in a
+      different week, so one printed rim calendar would contradict two of the three sequences.
 
-### C4 · Shared, later
+## Housekeeping
 
-- [ ] Upsell chat engine (`S20`) — clone `useUpsellChat.ts`; ~48 of ~60 messages reuse verbatim
-- [ ] Upsell allocation + suppression (`S21`) — never offer an object she already owns
-- [ ] Shipping + physical fulfilment (`S22`) — reuse `bracelet_orders`
-- [ ] Echo slots (`S28`) — 3 per product, one verbatim, merged from V1 Supabase
-- [ ] Hosted mirror page at a tokenised URL (`S33`)
-- [ ] n8n generator behind `getReadingBody()` (`S25`–`S27`) — Phase 2 proper
-
----
-
-## D · Housekeeping
-
-- [ ] **D1 · `00b-BUILD-BEs.md`'s per-offer checklists are stale.** Roughly 25 of its unchecked
-      boxes were completed this pass (02's booking page, thank-you, confirmation, product, horoscope
-      rewrite, bump deliverable; 03's ESL, subjects, booking page, thank-you, confirmation, product,
-      intake handling, SLA; 04's ESL, subjects, ladder emails, booking page, product). Reconcile
-      against `00c` or it will mislead the next reader.
-- [x] ✅ **D2 · `02-E4-esl-v1.txt` regenerated**, not deleted — the file is **untracked in git**, so
-      deletion would have been irreversible. All three HTML/text pairs are now internally
-      consistent: plain v1 6/6 CTAs, v1-B 7/7, v2-B 7/7, zero mangled contractions.
-- [ ] **D3 · The plain `02-E4-esl-v1.html` has no job left.** With the P.S. shipping on every letter
-      and the centring applied to variant B only, the plain variant is superseded twice over. It is
-      internally consistent so it is harmless — but it should be deleted once you're confident
-      variant B is the only shipping form. **Operator's call; it is untracked, so deletion is final.**
-- [ ] **D4 · AWeber draft `61250814` must not be scheduled.** Of its three stated blockers, the Moon
-      contradiction is now **resolved** (accepted by decision). Two remain: the booking page does not
-      exist, and it sits on the general free list rather than behind the women-only gate.
+- [ ] **`00b`'s per-offer checklists are stale** — banner added 2026-08-10, but ~25 boxes still
+      read as undone. Reconcile against `00c` or retire the section.
+- [ ] **The plain `02-E4-esl-v1.html` has no job left** (superseded by variant B's P.S. and
+      centring). Harmless; delete when you're confident B is the only shipping form.
+- [ ] **`scripts/_unsubscribe-run2-*` are untracked and not gitignored** — one holds ~47,000 real
+      subscriber IDs. A `git add -A` would commit them. Consider `scripts/_*` in `.gitignore`.
+- [ ] **Seed-test AWeber Liquid `| default: "dear"`.** Untested; without it a subscriber with no
+      first name renders five empty slots per letter. Needs a UI test send — no API endpoint.
 
 ---
 
-## The honest summary
+## Settled — do not re-open
 
-**Copy is nearly done; nothing is built.** Phase 1 is ~75% complete (three offers of four) and the
-remaining copy is small and well-specified apart from 05, which needs one decision (**B4**) and one
-rename (**A2**) before a word of it can be written.
-
-The real distance to revenue is **C1** — and none of C1 is written yet.
+| | Decision |
+|---|---|
+| Voice | 02's ratified letters are the deck standard; 03/04 match them, not the sources |
+| Precedent | Invented precedent **keeps**; each offer writes its own distinct *story* |
+| 02 Moon | The v2 copy/art mismatch is **accepted**. Do not re-flag it as a defect |
+| P.S. | Ships on **all** letters, no A/B. `c=7`/`c=27` are permanent slots |
+| Bump | Ships **unchecked**, opt-in (negative-option exposure) |
+| Upsells | **Full ladder runs everywhere** — no suppression. 03's U2 and 04's U1 were rebuilt to ship |
+| 05 | *"she will NOT pursue him"* **never ships**; 05 is written on the reframe only |
+| 03 | Mechanism **rebuilt off Vodou** — Entry · Transfer · Closing. No spirits, no hex |
+| 02 layout | Headline and deck **centred** in both letters ⚠ needs a re-render check at 600px/390px |
+| Retired | Calendar-deadline + third-party-outcome regexes, and em-dash counting. Never reinstate |
