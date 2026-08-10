@@ -169,7 +169,9 @@ export default function UpsellPage() {
     lavaStoneImage,
   });
 
-  // Auto-scroll to bottom
+  // Auto-scroll to bottom. The footer flags are deps on purpose: when the quick
+  // replies, CTA or shipping form appear the footer grows and eats height off the
+  // message list, which would otherwise leave the newest bubble clipped behind it.
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTo({
@@ -177,7 +179,7 @@ export default function UpsellPage() {
         behavior: "smooth",
       });
     }
-  }, [messages, isTyping]);
+  }, [messages, isTyping, showQuickReplies, showCTA, showShippingForm]);
 
   // Redirect to upsell2 immediately when complete
   useEffect(() => {
@@ -228,7 +230,7 @@ export default function UpsellPage() {
 
   return (
     <div
-      className="min-h-screen relative flex flex-col"
+      className="h-dvh relative flex flex-col"
       data-testid="page-upsell"
     >
       <CosmicBackground />
@@ -245,7 +247,7 @@ export default function UpsellPage() {
       {/* Chat Container */}
       <div
         ref={scrollRef}
-        className="relative z-10 flex-1 overflow-y-auto px-4 py-6 space-y-4 scroll-smooth"
+        className="relative z-10 flex-1 min-h-0 overflow-y-auto px-4 py-6 space-y-4 scroll-smooth"
         data-testid="container-chat"
       >
         <div className="max-w-lg mx-auto space-y-4">
