@@ -7,7 +7,7 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import crypto from 'crypto';
 
-import { experimentBucket, pickVariant, twoSidedP, shouldForceRunning, matchesFunnelScope, PAYWALL_EXPERIMENT_KEY } from './experiments';
+import { experimentBucket, pickVariant, twoSidedP, shouldForceRunning, matchesFunnelScope, matchesLanderScope, PAYWALL_EXPERIMENT_KEY } from './experiments';
 import type { ExperimentVariant } from '../../shared/schema';
 
 const ref = (id: string, key: string) =>
@@ -182,6 +182,80 @@ describe('matchesFunnelScope (funnel enrolment filter)', () => {
     const scope = [null, 'v1-tarot', 42, ''] as unknown as string[];
     assert.equal(matchesFunnelScope(scope, 'v1-tarot'), true);
     assert.equal(matchesFunnelScope(scope, 'v1-palm'), false);
+  });
+});
+
+describe('matchesLanderScope (/fb-tarot per-ad-URL enrolment filter)', () => {
+  // The four clean ad URLs in the Version B-vs-C test (operator scope, 2026-08-10).
+  // 'return-mhf' is DEFAULT_DECK — what a URL with no &deck= serves.
+  const LANDERS = [
+    { hook: 'cards-will-commit', deck: 'return-mhf' },
+    { hook: 'cards-return', deck: 'return-mhf' },
+    { hook: 'cards-who-he-is', deck: 'return-mhf' },
+    { hook: 'cards-feels', deck: 'return-mhf' },
+  ];
+
+  it('no scope → enrols every lander (an unscoped test is unfiltered)', () => {
+    for (const s of [null, undefined, 'not-an-array' as unknown]) {
+      assert.equal(matchesLanderScope(s, 'cards-return', 'return-mhf'), true);
+      assert.equal(matchesLanderScope(s, 'anything', 'any-deck'), true);
+    }
+  });
+
+  it('enrols exactly the listed pairs and nothing else', () => {
+    for (const l of LANDERS) {
+      assert.equal(matchesLanderScope(LANDERS, l.hook, l.deck), true, `${l.hook} must enrol`);
+    }
+    // A tarot hook running alongside but NOT in the test.
+    assert.equal(matchesLanderScope(LANDERS, 'cards-honest', 'return-mhf'), false);
+    assert.equal(matchesLanderScope(LANDERS, 'cards-cheating', 'return-mhf'), false);
+  });
+
+  it('🔴 the SAME hook on a different deck is a DIFFERENT lander and does NOT enrol', () => {
+    // The whole reason scope is (hook, deck) pairs rather than a hook list.
+    // cards-return and cards-who-he-is each run on a second, FACE-UP ad URL
+    // (&deck=arcana-mfh) that the operator deliberately left out of this test.
+    // A bare hook list would have silently enrolled both.
+    assert.equal(matchesLanderScope(LANDERS, 'cards-return', 'arcana-mfh'), false);
+    assert.equal(matchesLanderScope(LANDERS, 'cards-who-he-is', 'arcana-mfh'), false);
+    assert.equal(matchesLanderScope(LANDERS, 'cards-return', 'arcana-eef'), false);
+    // ...and the clean ones still enrol, so this is a real filter, not a blanket no.
+    assert.equal(matchesLanderScope(LANDERS, 'cards-return', 'return-mhf'), true);
+  });
+
+  it('a lander APPENDED later enrols without disturbing the originals', () => {
+    // Requirement: "if we mention you the hooks, you can add them to that test."
+    const extended = [...LANDERS, { hook: 'cards-return', deck: 'arcana-mfh' }];
+    assert.equal(matchesLanderScope(extended, 'cards-return', 'arcana-mfh'), true);
+    for (const l of LANDERS) {
+      assert.equal(matchesLanderScope(extended, l.hook, l.deck), true, `${l.hook} must still enrol`);
+    }
+    assert.equal(matchesLanderScope(extended, 'cards-honest', 'return-mhf'), false);
+  });
+
+  it('missing hook or deck on the visitor never enrols a scoped test', () => {
+    // Off-bridge steps carry no lander params. They must not fall into a scoped test
+    // by default — that would put unattributable traffic in the denominator.
+    assert.equal(matchesLanderScope(LANDERS, null, 'return-mhf'), false);
+    assert.equal(matchesLanderScope(LANDERS, 'cards-return', null), false);
+    assert.equal(matchesLanderScope(LANDERS, undefined, undefined), false);
+  });
+
+  it('an empty / all-junk list is treated as NO filter, never as "no traffic"', () => {
+    // Same reasoning as matchesFunnelScope: a config mistake must not silently scope a
+    // running money test to zero traffic. /start rejects it outright.
+    const junk = [null, 42, {}, { hook: 'x' }, { deck: 'y' }, { hook: '', deck: '' }];
+    for (const bad of [[], junk as unknown]) {
+      assert.equal(matchesLanderScope(bad, 'cards-return', 'return-mhf'), true);
+      assert.equal(matchesLanderScope(bad, 'cards-honest', 'arcana-mfh'), true);
+    }
+  });
+
+  it('ignores half-written entries but still honours the real ones alongside them', () => {
+    const scope = [{ hook: 'cards-return' }, { hook: 'cards-feels', deck: 'return-mhf' }, null];
+    assert.equal(matchesLanderScope(scope, 'cards-feels', 'return-mhf'), true);
+    // The entry missing a deck must not match on hook alone.
+    assert.equal(matchesLanderScope(scope, 'cards-return', 'return-mhf'), false);
   });
 });
 

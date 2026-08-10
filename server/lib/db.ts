@@ -1,7 +1,7 @@
 import { drizzle } from "drizzle-orm/node-postgres";
 import pg from "pg";
 import { conversations, type Conversation, type InsertConversation } from "@shared/schema";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, sql } from "drizzle-orm";
 import logger from "./logger";
 import { activeStripeAccountTag } from "./stripeAccount";
 
@@ -69,6 +69,12 @@ export interface ConversationRecord {
   objectionCount?: number;
   conversationState?: string;
   messages?: string;
+  // The `ab_vid` visitor cookie this lead arrived on — the join between a
+  // LANDER-time experiment exposure and the purchase it produced. FIRST WRITE WINS
+  // (see saveConversation): once a conversation carries a visitor id it is never
+  // reassigned, so a returning buyer on a fresh cookie stays credited to the lander
+  // that originally converted her rather than moving between arms.
+  abVisitorId?: string;
 }
 
 export async function saveConversation(data: ConversationRecord): Promise<string | null> {
@@ -102,6 +108,23 @@ export async function saveConversation(data: ConversationRecord): Promise<string
           objectionCount: data.objectionCount,
           conversationState: data.conversationState,
           messages: data.messages,
+          // FIRST WRITE WINS. COALESCE keeps whatever is already there, so a
+          // conversation is never moved from one visitor to another.
+          //
+          // WHY THAT DIRECTION. saveConversation upserts on EMAIL, so this update
+          // path is exactly the returning-buyer case: same email, possibly a brand
+          // new `ab_vid` (new device, cleared cookies). Overwriting would re-point
+          // her purchase at the latest lander she happened to touch and away from the
+          // exposure that actually converted her — and since arms are assigned per
+          // cookie, that would shuffle revenue between arms on every repeat visit.
+          // Repeat visitors are ~23% of sessions but ~57% of main buys on these
+          // funnels, so that is not a rounding error.
+          //
+          // Omitted entirely when no cookie was sent, so a lead with no visitor id
+          // cannot blank an id already recorded.
+          ...(data.abVisitorId
+            ? { abVisitorId: sql`COALESCE(${conversations.abVisitorId}, ${data.abVisitorId})` }
+            : {}),
           updatedAt: new Date(),
         })
         .where(eq(conversations.id, existing[0].id));
@@ -130,6 +153,7 @@ export async function saveConversation(data: ConversationRecord): Promise<string
           objectionCount: data.objectionCount,
           conversationState: data.conversationState,
           messages: data.messages,
+          abVisitorId: data.abVisitorId,
         })
         .returning({ id: conversations.id });
 

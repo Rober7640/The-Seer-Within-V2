@@ -188,13 +188,14 @@ export default function UpsellPage() {
     lavaStoneImage,
   });
 
-  // Auto-scroll to bottom
-  // ⚠ Deps include the footer-visibility flags on purpose: showing the continue
-  // tap / CTA / shipping form GROWS the footer, which shrinks the scroll
-  // container after this effect has already settled — leaving the newest bubble
-  // clipped behind it. Re-scrolling on those flags is a strict NO-OP on every
-  // funnel that has not opted into `pinnedShell`, because there the container is
-  // not scrollable at all and scrollTo() does nothing.
+  // Auto-scroll to bottom.
+  // ⚠ Deps include EVERY footer-visibility flag on purpose: quick replies, the
+  // continue tap, the CTA and the shipping form each GROW the footer, which
+  // shrinks the scroll container after this effect has already settled, leaving
+  // the newest bubble clipped behind it.
+  // Merge note (be-offers x development): development gated this on
+  // showQuickReplies and this branch on showContinue. The footer renders on
+  // EITHER, so both are required — each side had caught half the bug.
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTo({
@@ -202,7 +203,7 @@ export default function UpsellPage() {
         behavior: "smooth",
       });
     }
-  }, [messages, isTyping, showContinue, showCTA, showShippingForm]);
+  }, [messages, isTyping, showQuickReplies, showContinue, showCTA, showShippingForm]);
 
   // Redirect to upsell2 immediately when complete
   useEffect(() => {
@@ -253,7 +254,7 @@ export default function UpsellPage() {
 
   return (
     <div
-      className={`${pinnedShell ? "h-screen" : "min-h-screen"} relative flex flex-col`}
+      className="h-dvh relative flex flex-col"
       data-testid="page-upsell"
     >
       <CosmicBackground />
@@ -279,7 +280,7 @@ export default function UpsellPage() {
       {/* Chat Container */}
       <div
         ref={scrollRef}
-        className={`relative z-10 flex-1 overflow-y-auto px-4 py-6 space-y-4 scroll-smooth ${pinnedShell ? "min-h-0" : ""}`}
+        className="relative z-10 flex-1 min-h-0 overflow-y-auto px-4 py-6 space-y-4 scroll-smooth"
         data-testid="container-chat"
       >
         <div className="max-w-lg mx-auto space-y-4">

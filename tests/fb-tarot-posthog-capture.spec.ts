@@ -40,6 +40,20 @@ const LIVE_ADS = [
   { hook: 'cards-who-he-is', url: '/fb-tarot/c?hook=cards-who-he-is' },
   { hook: 'cards-real-person', url: '/fb-tarot/c?hook=cards-real-person' },
   { hook: 'cards-misled', url: '/fb-tarot/c?hook=cards-misled' },
+  // Missing-him hooks added 2026-08-10.
+  //
+  // ⚠ This roster is NINE FAMILIES BEHIND. commitment, honesty, reunion, healing,
+  // pulling-away, reconciliation, soulmate-after-loss, soulmate-where, loneliness and
+  // fidelity all shipped without being added here, so the warning above has not actually
+  // been honoured since 2026-07-30. The equivalent assertion has migrated to the per-family
+  // vitest guards (tests/tarot-<angle>-copy.test.ts), which pin hook → angle and the
+  // presence of reads on return-mhf — the two gates whose failure causes the silent
+  // fallback. That is a faster and more reliable check than a browser spec, but it does NOT
+  // cover the PostHog capture path, which is what this file is for. Backfilling the missing
+  // families here is worth doing on its own.
+  { hook: 'cards-stop-hurting', url: '/fb-tarot/c?hook=cards-stop-hurting' },
+  { hook: 'cards-stop-missing', url: '/fb-tarot/c?hook=cards-stop-missing' },
+  { hook: 'cards-still-miss-him', url: '/fb-tarot/c?hook=cards-still-miss-him' },
 ]
 
 // The ad ANGLE each hook rolls up to, so the two decode-him families can be compared as
@@ -60,6 +74,9 @@ const ANGLES: Array<{ hook: string; angle: string; deck?: string }> = [
   { hook: 'cards-who-he-is', angle: 'trust' },
   { hook: 'cards-real-person', angle: 'trust' },
   { hook: 'cards-misled', angle: 'trust' },
+  { hook: 'cards-stop-hurting', angle: 'missing-him' },
+  { hook: 'cards-stop-missing', angle: 'missing-him' },
+  { hook: 'cards-still-miss-him', angle: 'missing-him' },
   { hook: 'cards-love-again', angle: 'self-frame', deck: 'arcana-mfh' },
 ]
 

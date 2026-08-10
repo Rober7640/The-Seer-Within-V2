@@ -86,7 +86,7 @@ verified 9/9 identical. This matches how `cards-honest` already behaves across t
 
 ### 🔑 The `angle` property — comparing hook FAMILIES
 
-Every tarot PostHog event carries `angle`. Six families as of 2026-08-04:
+Every tarot PostHog event carries `angle`. Twelve families as of 2026-08-07:
 
 | `angle` | Hooks | Added |
 |---|---|---|
@@ -96,7 +96,19 @@ Every tarot PostHog event carries `angle`. Six families as of 2026-08-04:
 | `honesty` | lied-to · truth · deceived | 2026-08-03 |
 | `reunion` | come-back · ever-back · moved-on | 2026-08-04 |
 | `healing` | cant-stop · on-my-mind · who-hurt-me | 2026-08-04 |
+| `pulling-away` | pulling-away · gone-cold · losing-interest | 2026-08-05 |
+| `reconciliation` | back-together · still-a-chance · really-over | 2026-08-06 |
+| `soulmate-after-loss` | new-soulmate · soulmate-out-there · ready-to-love | 2026-08-07 |
+| `soulmate-where` | where-soulmate · soulmate-closer · not-found-yet | 2026-08-07 |
+| `loneliness` | alone-forever · meant-alone · someone-for-me | 2026-08-07 |
+| `fidelity` | someone-else · talking-someone · faithful · loyal | 2026-08-07 |
 | `self-frame` | love-again · soulmate | seeded |
+
+> ⚠️ `fidelity` is the only family with **four** hooks besides `decode-him`. It is also the
+> only one commissioned for **compliance** rather than a new wound — see its section below.
+
+> `pulling-away` and `reconciliation` were live from 08-05/08-06 but had never been added
+> to this table or to the admin `ANGLE_LABELS` map; both backfilled 2026-08-07.
 
 Derived by `angleForHook()` from the per-family arrays, so a new hook categorises itself.
 🔴 Miss the array and the hook silently reports `decode-him` and disappears as a family in
@@ -250,6 +262,382 @@ minimising the hurt she has already named (*"maybe he didn't mean it"*) abandons
 pronouncing on him (*"he is cruel"*) is the verdict the funnel forbids. Its opener also
 never asks what he did — she should not have to recount the injury to be taken seriously.
 
+## Soulmate-after-loss hooks — 3 face-down landers (2026-08-07)
+
+Own `soulmate-after-loss` angle. Topic: *"Is there someone ahead for me, after losing him?"*
+Face-down `return-mhf` only, Version C, clean URLs, no new art.
+
+| Headline | Hook | URL |
+|---|---|---|
+| Will I find a new soulmate after loss? | `cards-new-soulmate` | `/fb-tarot/c?hook=cards-new-soulmate` |
+| Is there still a soulmate out there for me? | `cards-soulmate-out-there` | `/fb-tarot/c?hook=cards-soulmate-out-there` |
+| Am I ready to love again after losing him? | `cards-ready-to-love` | `/fb-tarot/c?hook=cards-ready-to-love` |
+
+Commissioned off a buyer pull (operator brief 2026-08-07): 2,852 matching concerns, 436
+purchased, 100 verbatim quotes read. **~12–15% of that pull are people whose spouse or
+partner had died** and who are asking forward — *is there someone ahead* — rather than
+backward. That is the sub-theme these three landers are for.
+
+### ⭐⭐ The FIRST family where the man may be DEAD — and the third prompt frame
+
+Every other angle reads a man who can still, in principle, be asked something: he left, he
+cooled, he lied, he will not commit. This one reads a woman whose person is gone in the one
+way that admits no follow-up.
+
+That breaks the funnel's two-frame model. Until now `buildTarotReflectPrompt` branched twice:
+
+| Frame | When | Guard |
+|---|---|---|
+| `self-frame` | no specific man exists | affirm the hopeful yes **with certainty** |
+| decode-him | a real man is in the picture | tendency, **never** a verdict |
+
+Neither fits. **self-frame is actively dangerous here** — its certainty clause, aimed at a
+bereaved partner, promises a replacement, and on `cards-ready-to-love` it has a stranger
+certifying that a widow has grieved enough. decode-him is merely wrong — its guard is about
+lying, cheating and returning, none of which she asked about.
+
+So there is now a **third frame**, `AFTER_LOSS_TAROT_HOOKS` (`server/lib/prompts.ts`),
+tested *before* self-frame so the stricter guard wins if a hook is ever put in both sets.
+
+> 🔴 That set is hand-mirrored against `SOULMATE_AFTER_LOSS_HOOKS` in
+> `client/src/content/tarotReads.ts`. Drift here is a **safety** defect, not a copy defect: a
+> hook missing from the server set silently falls through to the decode-him guard, which bans
+> none of the things that matter on this angle.
+
+### 🔴 MEDIUMSHIP is the failure mode that exists nowhere else
+
+*"He is at peace." "He is watching over you." "He would want you to be happy." "He sent you
+here."* Every one of those is the most natural thing in the world to say to a grieving woman,
+and every one is **contact with the dead** — a different product with a different compliance
+surface. `server/lib/universalSafety.ts` does not catch any of it (it screens suicidality and
+distress, not bereavement). It is therefore banned in the reads, in all three tendency
+strings, in the frame guard, and asserted in the test file.
+
+**No read here speaks FOR him, says where he is, or says what he would want.** He appears
+only as someone she loved and lost.
+
+Three more, on top of the standing no-verdict rules:
+
+1. **No arrival.** Nobody is coming, nobody is "out there right now", nothing is "on its way".
+   The live self-frame incumbent `cards-soulmate` *is* allowed to affirm arrival — no one has
+   died in that hook. Same sentence here promises a bereaved partner a replacement.
+2. **No readiness verdict, either way.** `cards-ready-to-love` asks to be graded. *"You are
+   ready"* prescribes a timetable to a widow; *"not yet"* does it wearing concern. The read
+   refuses the binary, as `cards-moved-on`, `cards-losing-interest` and `cards-really-over`
+   refuse theirs.
+3. **No grief directives and no ranking the two loves.** Move on, let go, honour him by
+   living — she has already heard all of these from people who actually knew him. And nothing
+   about a new love being better or healthier, which quietly rates the marriage she lost.
+
+### ⚠️ Why these are not merged into the live self-frame landers
+
+`cards-soulmate` ("When is my soulmate coming?") and `cards-love-again` ("Will I love again?")
+are **untouched** — standing rule: a new headline never replaces an old lander. They answer
+different questions (a first love still waited for; a heartbreak) and share no vocabulary with
+these. Folding the new trio into `self-frame` would also pool a fresh bereavement family with
+the running baseline and make it unreadable as a group.
+
+> 📌 Worth knowing when sizing the test: the operator brief counted *"who is my soulmate"* as
+> an already-tested incumbent. It is live on **palm only** (`already-met`, "Have you already
+> met your soulmate?" — `client/src/content/palmReads.ts`). **It has never run on tarot.** The
+> "less new territory" caveat in the brief holds at palm level, not here.
+
+## Soulmate-where hooks — 3 face-down landers (2026-08-07)
+
+Own `soulmate-where` angle. Topic: *"Where is my soulmate?"* — the **SEEKING** half of the
+soulmate topic, against `soulmate-after-loss`'s bereaved half. Face-down `return-mhf` only,
+Version C, clean URLs, no new art.
+
+| Headline | Hook | URL |
+|---|---|---|
+| Where is my soulmate right now? | `cards-where-soulmate` | `/fb-tarot/c?hook=cards-where-soulmate` |
+| Is my soulmate closer than I think? | `cards-soulmate-closer` | `/fb-tarot/c?hook=cards-soulmate-closer` |
+| Why haven't I found my soulmate where I am? | `cards-not-found-yet` | `/fb-tarot/c?hook=cards-not-found-yet` |
+
+### 🔴🔴 LOCATION — a failure mode with no guard anywhere before this family
+
+The self-frame clause tells the model to withhold *"**ONLY** the specifics — never a name, a
+date, or exactly who"*. Name, date, who. **It omits WHERE.** Asked *"Where is my soulmate right
+now?"* under that clause a model answers with a place, **confidently**, because the clause
+instructs it to withhold nothing else.
+
+The harm is not vagueness. It is **specificity that lands on a real, identifiable person** —
+*"someone already in your circle", "at your work", "a city near water"* — which she can go and
+act on. Banned in the reads, all three tendency strings, the frame guard, and asserted as an
+ALWAYS ban in `tests/tarot-soulmate-where-copy.test.ts`.
+
+> ✅ `where` was added to the **self-frame** withhold list at the same time — the same gap
+> applied to the live `cards-soulmate` lander, which invites "when" and left "where" open.
+
+### The FOURTH prompt frame
+
+`buildTarotReflectPrompt` now branches four ways. Each is genuinely distinct:
+
+| Frame | Situation | Core guard |
+|---|---|---|
+| decode-him | a real man, reachable | tendency, never a verdict |
+| `self-frame` | no man exists | affirm the yes with certainty |
+| `soulmate-after-loss` | a man existed and **died** | affirm HER, never an arrival, never speak for him |
+| `soulmate-where` | never found anyone | affirm the yes freely, **never a place** |
+
+`SOULMATE_WHERE_TAROT_HOOKS` is tested **before** self-frame, so the stricter guard wins if a
+hook is ever filed in both. Two more bans self-frame lacks:
+
+- **STRATEGY** — go out more, look elsewhere, move, try the apps, work on yourself first. This
+  is what the rest of the internet answers these questions with, so it leaks in easily.
+- **HER FAULT** — blocks, walls, standards, not ready, not loving herself enough, manifest
+  harder. Same shape of harm as `cards-wont-commit` and `cards-deceived`, from a fourth side.
+  `cards-not-found-yet` refuses to blame her **town** as well, which is the other half of it.
+
+### ⭐⭐ `cards-soulmate-closer` is a deliberate COPY TEST against the live `cards-soulmate`
+
+That lander's tendency string already lands *"nearer than the waiting has let her believe"* —
+so the new headline **is the incumbent's own read, hoisted into a hook**. The reads therefore
+must not restate it, or the two landers become one lander showing two rows. This one refuses
+the proximity claim outright and reads the **bracing** instead: the hope she has managed
+downward so a disappointment could not reach her. Pinned two ways — the proximity claim is
+banned, and the bracing finding is asserted positively.
+
+> 📌 Nearest live neighbour is `cards-soulmate-out-there` (*"Is there still a soulmate out there
+> for me?"*), shipped the same day under `soulmate-after-loss`. **Opposite starting point** —
+> that one reads a bereavement and answers the one-chance premise; these read a woman who never
+> found it at all. No vocabulary is shared, pinned by a cross-family 6-word-run sweep.
+
+## Loneliness hooks — 3 face-down landers (2026-08-07)
+
+Own `loneliness` angle. Topic: *"Will I be alone forever?"* Face-down `return-mhf` only,
+Version C, clean URLs, no new art.
+
+| Headline | Hook | URL |
+|---|---|---|
+| Will I be alone forever? | `cards-alone-forever` | `/fb-tarot/c?hook=cards-alone-forever` |
+| Am I meant to be alone? | `cards-meant-alone` | `/fb-tarot/c?hook=cards-meant-alone` |
+| Is there really someone out there for me? | `cards-someone-for-me` | `/fb-tarot/c?hook=cards-someone-for-me` |
+
+> ⚠️ Briefed as **"Loneliness/Timing"**, but none of the three headlines is about timing —
+> the slug reflects what actually shipped. A timing hook is still unbuilt.
+
+### 🔴🔴 The closest angle on the funnel to the CRISIS surface
+
+This is the only family with **no man in it at all** — not lost, not left, not sought. The
+subject is her life and whether it stays as it is. *"Will I be alone forever?"* is what
+someone types at 2am, and Version C then asks her to answer **in her own words**.
+
+`SOFT_CRISIS_PATTERNS` (`server/lib/universalSafety.ts`) screens for exactly the phrasing that
+invites — *"nothing left to live for"*, *"i feel hopeless / worthless / empty / numb /
+broken"*, *"life feels meaningless"*, *"tired of living"* — and injects the 988 / 741741 note.
+That is the system working correctly. But it means the **openers carry a constraint no other
+family has: they must not manufacture despair.**
+
+An opener like *"what does the loneliness feel like?"* or *"what do you tell yourself at
+night?"* would actively produce the phrasing the safety layer exists to catch. All three ask
+her to **think about the shape of her question** instead — answers come back reflective, often
+wry, rather than despairing. Asserted in the test file.
+
+### 🔴 The FATE ban — no precedent anywhere else
+
+`cards-meant-alone` is the sharpest hook built to date. Every other angle forbids a verdict on
+a **man** or a **relationship**. This forbids a verdict on **her nature** — whether she has
+been designated for this.
+
+- *"Some people are meant to be alone"* is the single most harmful sentence this funnel could
+  produce, aimed at the audience least able to discount it.
+- *"You're meant for someone"* is a promise wearing destiny's clothes.
+
+Both banned, plus all fate / destiny / plan / purpose / lesson / "there's a reason" language,
+and any suggestion she has been singled out or tested. The read refuses the **premise**: nobody
+is being assigned anything, so there is no ruling on her to appeal.
+
+`cards-alone-forever` carries the same double-refusal on the **absolute** — same structure as
+`cards-really-over`, where one answer is a life sentence from a stranger and the other a
+promise the funnel cannot keep.
+
+### The FIFTH prompt frame — and why self-frame is the dangerous filing here
+
+No man exists in these hooks, so `self-frame` looks like the natural home. It is the worst
+available: its clause is *"affirm the hopeful yes with **certainty**"*, and **certainty about
+whether a person will spend their life alone is the harm itself**, in both directions.
+
+| Frame | Situation | Core guard |
+|---|---|---|
+| decode-him | a real, reachable man | tendency, never a verdict |
+| `self-frame` | no man exists | affirm the yes with certainty |
+| `soulmate-after-loss` | a man existed and **died** | never an arrival, never speak for him |
+| `soulmate-where` | never found anyone | affirm freely, **never a place** |
+| `loneliness` | no man at all; asks about HER LIFE | **nothing fated, nothing forever** |
+
+`LONELINESS_TAROT_HOOKS` is tested **before** self-frame so the stricter guard wins. Also
+banned: pathologising (negative, defeatist, given up, self-sabotaging, "you attract what you
+are", energy/vibration), tactics, and — uniquely — **presuming her history in either
+direction**, since the ad does not sort never-partnered from post-breakup.
+
+> 📌 At five branches the frame ternary in `buildTarotReflectPrompt` is at the limit of what
+> reads well. The better structure is a hook → `{frameLine, guardLine}` lookup. **Deliberately
+> not refactored alongside a shipping family** — it touches the live prompt path for every
+> angle at once and deserves its own change.
+
+## Fidelity hooks — 4 face-down landers (2026-08-07)
+
+Own `fidelity` angle. Topic: *"Is there someone else?"* — **the live `cards-cheating` question
+asked without the word the ad platform flags.** Face-down `return-mhf` only, Version C, clean
+URLs, no new art. Four landers, not three (`decode-him` already carries four).
+
+| Headline | Hook | URL |
+|---|---|---|
+| Is there someone else? | `cards-someone-else` | `/fb-tarot/c?hook=cards-someone-else` |
+| Is he talking to someone else? | `cards-talking-someone` | `/fb-tarot/c?hook=cards-talking-someone` |
+| Is he being faithful to me? | `cards-faithful` | `/fb-tarot/c?hook=cards-faithful` |
+| Is he loyal to only me? | `cards-loyal` | `/fb-tarot/c?hook=cards-loyal` |
+
+### 🔴🔴 The first family commissioned for COMPLIANCE, not for a new wound
+
+The flagged word must be absent from **four** surfaces, not one:
+
+1. **The headline** — obvious.
+2. **The lander copy** — the platform reviews landing pages. A compliant ad pointing at a page
+   that says the word in beat 3 defeats the entire commission.
+3. **The hook slug** — it travels in the ad's destination URL (`?hook=…`). This is why none of
+   the four is named for its own subject.
+4. **The generated prompt** — Version C writes fresh text from `TAROT_HOOK_TENDENCY`.
+   *Instructing a model never to say a word still puts the word in its context*, where it can
+   be echoed straight onto the reviewed page. So these tendency strings phrase their bans
+   **around** the word rather than naming it.
+
+Banned and asserted: `cheat` / `cheating` / `cheater` / `affair` / `infidelity`.
+**`faithful` and `loyal` are permitted** — the operator's own headlines use them.
+
+### 🔴 The shared decode-him guard was REWORDED, and it touches every angle
+
+The frame guard used to read *"Never declare he is lying, **cheating**, faithful, or coming
+back as a fact."* It now reads *"…lying, faithful, **involved with someone else**, or coming
+back…"*. Meaning is identical; the flagged word is gone from the prompt of **every lander
+running under the decode-him frame**, not just these four — which would otherwise have
+inherited it. Asserted in both directions so neither half can be silently undone.
+
+> 📌 No sixth frame was added. These are decode-him in form (a real man, tendency never a
+> verdict), so they use the default frame. The frame-lookup refactor is still owed.
+
+### The incumbent stays, and it excludes itself from reporting
+
+`cards-cheating` ("Is he cheating on you?") is **untouched** in `decode-him` — standing rule.
+It carries the flagged word in its *visible headline*, so it presumably cannot run at all now.
+Consequence: an `angle = fidelity` filter **EXCLUDES** it, exactly as `angle = reunion`
+excludes `cards-return`. New-vs-incumbent is a **hook-level** comparison.
+
+⚠️ Its finding is also off-limits: `cards-cheating` already lands *"the unease is real
+information, not paranoia to apologize for."* None of the four may restate it — and the
+paranoia framing is banned here in **both** directions anyway, since using the word to reassure
+her still plants it.
+
+### Four separate findings, or it is one lander wearing four headlines
+
+| Hook | Finding |
+|---|---|
+| `cards-someone-else` | the **explanation** she was left to author alone, in the absence of any account |
+| `cards-talking-someone` | the **attention** she watched go elsewhere — she was entitled to mind from the moment she noticed, not only once she could prove something |
+| `cards-faithful` | the **summary judgment** nobody outside a life can issue; routes to her not being able to rest |
+| `cards-loyal` | the word is *only* — the **portion** she has been taking for the whole |
+
+Plus the standing bans: no third person asserted **or denied**, no surveillance (check his
+phone, follow, test, catch, confront — the most available wrong answer on the internet), no
+excusing him, no landing as her fault.
+
+## Missing-him hooks — 3 face-down landers (2026-08-10)
+
+Own `missing-him` angle. Topic: *"Missing him"* — the **ache of his absence**, as against the
+live `healing` family's **thinking** about him. Face-down `return-mhf` only, Version C, clean
+URLs, no new art.
+
+| Headline | Hook | URL |
+|---|---|---|
+| I miss him so much — will this ever stop hurting? | `cards-stop-hurting` | `/fb-tarot/c?hook=cards-stop-hurting` |
+| Will I ever stop missing him? | `cards-stop-missing` | `/fb-tarot/c?hook=cards-stop-missing` |
+| Why do I still miss him after everything? | `cards-still-miss-him` | `/fb-tarot/c?hook=cards-still-miss-him` |
+
+### 🔴🔴 The TIMEFRAME ban is the whole discipline — two headlines ask for one outright
+
+Every angle on the funnel bans timeframes as an aside. Here it is the commission. *"Will this
+ever stop hurting?"* and *"Will I ever stop missing him?"* are **WHEN questions**, so the model
+is handed a direct request for a duration by the visitor's own headline.
+
+Banned: any number, any season, *"in time"*, *"one day"*, *"you'll know when"*, and any rule of
+thumb about how long these things take. **The refusal is the reading** — the reads say so
+outright and route to what the ache is made of instead.
+
+Running with it, the **FOREVER ban, in both directions** (borrowed from `loneliness`, the only
+other angle that needs it):
+
+- *"You will always miss him"* — a life sentence handed down by a stranger.
+- *"It will pass"* — a promise the funnel cannot keep.
+
+Both poles are refused explicitly. `cards-stop-missing` carries the sharpest version, because
+"ever" is the load-bearing word in its headline.
+
+### 🔴🔴 NEVER PRESUME HOW HE CAME TO BE GONE — she may be bereaved
+
+*"I miss him so much"* is precisely what a **widow** types, and none of these three headlines
+asks her to say which she is. A read that assumes he chose to walk away is brutal if he died; a
+read that assumes a death is absurd if he left.
+
+So nothing in the nine reads, three openers or three context lines names a breakup, a decision
+he made, a death, or a body. The furthest any of them goes is *"no longer in her life"*, and the
+opener asks only *"how long has it been since he was part of your day"* — deliberately neutral
+as to which.
+
+⚠️ **The consequence is a MEDIUMSHIP ban on an angle that has no frame to carry it.** If she is
+bereaved, every failure mode of the `soulmate-after-loss` family applies — *he is at peace*,
+*he is watching over you*, *he sent you here*. That family gets the ban from its own prompt
+frame. This one runs under **decode-him**, which bans none of it, and `universalSafety.ts`
+screens none of it either. **The ban is therefore written out per-hook in
+`TAROT_HOOK_TENDENCY`** and asserted in the guard file.
+
+> 📌 No sixth frame was added — deliberately. The frame ternary in `buildTarotReflectPrompt` is
+> already documented as being at the limit of what reads well, and the lookup refactor is a
+> change worth making on its own rather than riding along with a shipping family. The cost of
+> that decision is that **all four of this family's bans live in the three tendency strings**,
+> which is why the guard file asserts them string-by-string.
+
+### ⚠️ Held apart from `healing` — one word separates the nearest pair
+
+`healing` has been live since 2026-08-04 and `cards-cant-stop` ("Why can't I stop **thinking**
+about him?") sits one word from `cards-stop-missing` ("Will I ever stop **missing** him?").
+
+That closeness is the reason to **separate** them, not to merge them: adding three hooks to a
+running family retroactively mixes two questions inside one set of numbers. The two families are
+held apart at the level of the finding — `healing` reads **why the thinking persists**, these
+read **what the ache is made of** — and the guard file pins zero shared 6-word runs in beat 3.
+
+🔴 `HEALING_HOOKS` must stay exactly three. `cards-cant-stop` is **untouched** (standing rule: a
+new headline never replaces an old lander), so healing-vs-missing-him is an **angle-level**
+comparison, and it is a clean one — unlike `reunion`/`fidelity`, no incumbent is excluded.
+
+### Three separate findings
+
+| Hook | Finding |
+|---|---|
+| `cards-stop-hurting` | the missing is **work she is performing**, not damage being done to her — which is why it exhausts her, and why the exhaustion is earned rather than a sign she is coping badly |
+| `cards-stop-missing` | missing is **not a thing decision can reach**, so failing to will it away is not a verdict on her character |
+| `cards-still-miss-him` | feeling and judgement are **separate instruments that were never synchronised** — one lagging does not overturn the other, so she has not gone back on anything |
+
+⚠️ **`cards-still-miss-him` is the heaviest of the three** and the sibling of
+`cards-who-hurt-me`. *"After everything"* means after what he did, so she has **already named a
+harm** — same two opposite pulls (minimising it abandons her; pronouncing on him is the
+forbidden verdict), plus a third specific to it: the real question under the headline is *what
+is wrong with me*, so nothing may land as her weakness, naivety, low self-worth, poor
+boundaries, trauma bonding or an attachment disorder.
+
+### 🔴 Openers must not manufacture despair
+
+Same constraint as `loneliness`, binding harder: `cards-stop-hurting` says *hurting* in the
+headline, so *"how bad does it get?"* or *"what are the nights like?"* would produce the exact
+phrasings `SOFT_CRISIS_PATTERNS` (`server/lib/universalSafety.ts`) exists to catch — on a page
+that invited them. Each opener asks for a **concrete, answerable detail** instead (a duration,
+an object, a trigger), which is also the material the read actually needs.
+
+⚠️ Expect this family to trip the **soft**-crisis path more often than any other. That path is
+non-blocking by design (`safe: true` + `softCrisisNote`), so it adds care rather than derailing
+the funnel — but it is worth watching in the transcripts once spend starts.
+
 ## Concepts
 
 | # | Deck id | Facing | Cards (A/B/C) | Options | Status | Notes |
@@ -287,6 +675,22 @@ never asks what he did — she should not have to recount the injury to be taken
 | `cards-cant-stop` *(healing)* | Why can't I stop thinking about him? | ⬜ DRAFT (2026-08-04) |
 | `cards-on-my-mind` *(healing)* | Why is he always on my mind? | ⬜ DRAFT (2026-08-04) |
 | `cards-who-hurt-me` *(healing)* | Why do I still think about someone who hurt me? | ⬜ DRAFT (2026-08-04) — ⚠️ heaviest hook on the funnel; never minimise, never convict, never blame her |
+| `cards-new-soulmate` *(soulmate-after-loss)* | Will I find a new soulmate after loss? | ⬜ DRAFT (2026-08-07) — reads on `return-mhf`; answers the fear of REPLACING him, never an arrival |
+| `cards-soulmate-out-there` *(soulmate-after-loss)* | Is there still a soulmate out there for me? | ⬜ DRAFT (2026-08-07) — reads the PREMISE ("I was issued one and spent it"), never a location or a forecast |
+| `cards-ready-to-love` *(soulmate-after-loss)* | Am I ready to love again after losing him? | ⬜ DRAFT (2026-08-07) — ⚠️ the read REFUSES the binary; a stranger may not grade a widow's grief |
+| `cards-where-soulmate` *(soulmate-where)* | Where is my soulmate right now? | ⬜ DRAFT (2026-08-07) — 🔴 asks for a PLACE; the read declines one and answers that the not-yet is not a distance |
+| `cards-soulmate-closer` *(soulmate-where)* | Is my soulmate closer than I think? | ⬜ DRAFT (2026-08-07) — ⚠️ COPY TEST against the live `cards-soulmate`, whose read already says this. Refuses proximity, reads the bracing |
+| `cards-not-found-yet` *(soulmate-where)* | Why haven't I found my soulmate where I am? | ⬜ DRAFT (2026-08-07) — ⚠️ presupposes a failure; refuses to blame her OR her town, and hands back no strategy |
+| `cards-alone-forever` *(loneliness)* | Will I be alone forever? | ⬜ DRAFT (2026-08-07) — ⚠️ the read REFUSES the absolute both ways; routes to "forever" being the language of exhaustion |
+| `cards-meant-alone` *(loneliness)* | Am I meant to be alone? | ⬜ DRAFT (2026-08-07) — 🔴 SHARPEST HOOK ON THE FUNNEL; asks for a verdict on her NATURE. Refuses the premise that anything is assigned |
+| `cards-someone-for-me` *(loneliness)* | Is there really someone out there for me? | ⬜ DRAFT (2026-08-07) — reads the EPISTEMICS (comfort vs answer), deliberately not the one-chance premise or the hope-isn't-naive finding |
+| `cards-someone-else` *(fidelity)* | Is there someone else? | ⬜ DRAFT (2026-08-07) — reads the EXPLANATION she was left to author; rules on no third person either way |
+| `cards-talking-someone` *(fidelity)* | Is he talking to someone else? | ⬜ DRAFT (2026-08-07) — 🔴 most evidence-adjacent; the surveillance ban does the heavy lifting |
+| `cards-faithful` *(fidelity)* | Is he being faithful to me? | ⬜ DRAFT (2026-08-07) — refuses the summary judgment both ways; routes to her not being able to rest |
+| `cards-loyal` *(fidelity)* | Is he loyal to only me? | ⬜ DRAFT (2026-08-07) — the word is "only"; reads the PORTION she has taken for the whole |
+| `cards-stop-hurting` *(missing-him)* | I miss him so much — will this ever stop hurting? | ⬜ DRAFT (2026-08-10) — 🔴 asks for a DURATION outright; the refusal is the reading. Reads the ache as work she is performing |
+| `cards-stop-missing` *(missing-him)* | Will I ever stop missing him? | ⬜ DRAFT (2026-08-10) — ⚠️ the FOREVER question; refuses both poles. Reads missing as a thing decision cannot reach |
+| `cards-still-miss-him` *(missing-him)* | Why do I still miss him after everything? | ⬜ DRAFT (2026-08-10) — 🔴 heaviest of the three, sibling of `cards-who-hurt-me`; never minimise the named harm, never convict him, never land as her weakness |
 | `cards-love-again` *(self-frame)* | Will I love again? | ⬜ draft — 🔴 **no reads on either FACE-DOWN deck**, so a clean URL silently falls back to `cards-honest`/`decode-him`. Only works with an explicit `&deck=arcana-mfh` |
 | `cards-soulmate` *(self-frame)* | When is my soulmate coming? | ⬜ draft (2026-07-27, from `ZN_Tarot_Rio 8.png` = arcana-eef cards; reads on arcana-eef + arcana-mfh; answers "when" as a leaning, never a date) |
 

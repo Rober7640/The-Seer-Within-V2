@@ -201,12 +201,10 @@ export default function Upsell2Page() {
     braceletImage: '/manifestation_bracelet.png',
   });
 
-  // ⚠ Deps include the footer-visibility flags on purpose: showing the continue
-  // tap / CTA / shipping form GROWS the footer, which shrinks the scroll
-  // container after this effect has already settled — leaving the newest bubble
-  // clipped behind it. Re-scrolling on those flags is a strict NO-OP on every
-  // funnel that has not opted into `pinnedShell`, because there the container is
-  // not scrollable at all and scrollTo() does nothing.
+  // Auto-scroll to bottom. The footer flags are deps on purpose: when the quick
+  // replies, CTA, downsell CTA or shipping form appear the footer grows and eats
+  // height off the message list, which would otherwise leave the newest bubble
+  // clipped behind it.
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTo({
@@ -214,7 +212,7 @@ export default function Upsell2Page() {
         behavior: 'smooth',
       });
     }
-  }, [messages, isTyping, showContinue, showCTA, showDownsellCTA, showShippingForm]);
+  }, [messages, isTyping, showQuickReplies, showContinue, showCTA, showDownsellCTA, showShippingForm]);
 
   useEffect(() => {
     if (isComplete && sessionId) {
@@ -265,7 +263,7 @@ export default function Upsell2Page() {
   }
 
   return (
-    <div className={`${pinnedShell ? 'h-screen' : 'min-h-screen'} relative flex flex-col`} data-testid="page-upsell2">
+    <div className="h-dvh relative flex flex-col" data-testid="page-upsell2">
       <CosmicBackground />
       <BackgroundMusic
         // Offer 02 moves the toggle to the TOP right, beside the "Sound on"
@@ -287,7 +285,7 @@ export default function Upsell2Page() {
 
       <div
         ref={scrollRef}
-        className={`relative z-10 flex-1 overflow-y-auto px-4 py-6 space-y-4 scroll-smooth ${pinnedShell ? 'min-h-0' : ''}`}
+        className="relative z-10 flex-1 min-h-0 overflow-y-auto px-4 py-6 space-y-4 scroll-smooth"
         data-testid="container-chat-upsell2"
       >
         <div className="max-w-lg mx-auto space-y-4">
