@@ -102,16 +102,29 @@ VALUES (
        {"hook": "cards-feels",       "deck": "return-mhf"}
      ]
    }'::jsonb,
-  -- ⚠️ targetN IS A PLACEHOLDER. It is the pre-registered per-arm exposure count and
-  -- it gates the verdict + the declare-winner button (no peeking). The SMALLER arm
-  -- governs, and here that is B at 30% — so B reaching N is the real horizon.
+  -- targetN = the pre-registered per-arm exposure count. It gates the verdict and the
+  -- declare-winner button (fixed horizon, no peeking). The SMALLER arm governs, and
+  -- here that is B at 30% — so B reaching N is the real horizon.
   --
-  -- 1200 is what the commitment gate and order bump pre-registered, but those count
-  -- LEADS and this counts LANDERS, which arrive far more often and convert far less.
-  -- Carrying 1200 over would call this test early. Run the sizing query in step 2
-  -- and UPDATE this before pressing Start — it is freely editable while draft and
-  -- frozen the moment the test starts.
-  '{"type": "v1_main_funnel", "windowDays": 7, "targetN": 1200}'::jsonb
+  -- 11,000 is SIZED FROM REAL PRODUCTION TRAFFIC (read-only query, 2026-08-10):
+  --   baseline lead→purchase on these 4 hooks = 264 buyers / 5,376 leads = 4.91%
+  --   80% power, alpha 0.05, adjusted for the 70/30 imbalance
+  --   → 5,533 B-arm LEADS to detect a 20% relative lift (4.91% → 5.89%)
+  --   → at a ~50% chat→email capture rate, ≈11,000 B-arm CHATS
+  --   → ≈3 weeks at the recent ~900–1,200 leads/day across the four hooks
+  --
+  -- ⚠️ The CHAT figure depends on the chat→email capture rate, which lives in
+  -- PostHog, not here. The CALENDAR estimate does not: targetN and the arrival rate
+  -- both scale by that same rate, so "about three weeks" holds either way. Only the
+  -- number in this field moves.
+  --
+  -- 🔴 DO NOT carry over the 1200 the gate and the order bump used. Those count
+  -- LEADS; this counts CHATS, which arrive more often and convert less. 1200 would
+  -- unlock the verdict after roughly two days of B traffic, when the test can only
+  -- see a ~45% swing — a coin flip dressed as a result.
+  --
+  -- Freely editable while draft; FROZEN the moment the test starts.
+  '{"type": "v1_main_funnel", "windowDays": 7, "targetN": 11000}'::jsonb
 );
 
 -- ⛔ Must report exactly 1 row. Anything else → ROLLBACK.
