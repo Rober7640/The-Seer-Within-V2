@@ -121,13 +121,26 @@ try {
   catch (e) { blocked = /read-only|read only/i.test(e.message); }
   if (!blocked) { console.error('REFUSING: canary write was not rejected'); process.exit(2); }
 
+  // 🔴 started_at AS TEXT, deliberately. It is `timestamp without time zone`, and this
+  // script uses raw pg — which has none of the type-parser overrides server/lib/db.ts
+  // installs, so the driver would read the naive string in the LOCAL zone. On an IST
+  // machine against a UTC database that shifts the cohort anchor 5.5 HOURS EARLIER.
+  // The same class of mistake once made a working 30/70 split read as 50/50. Reading
+  // the raw text and appending 'Z' keeps the anchor on the DB's clock — the clock the
+  // exposure rows are stamped on, which is the only one that matters here.
   const { rows: [exp] } = await client.query(
-    `SELECT status, variants::text AS variants, scope::text AS scope, started_at FROM experiments WHERE key = $1`, [KEY]);
+    `SELECT status, variants::text AS variants, scope::text AS scope,
+            started_at::text AS started_at_raw,
+            current_setting('TimeZone') AS db_tz
+     FROM experiments WHERE key = $1`, [KEY]);
   if (!exp) { console.error(`experiment ${KEY} not found on this database`); process.exit(2); }
+  if (exp.db_tz !== 'UTC') {
+    console.log(`⚠️  database TimeZone is '${exp.db_tz}', not UTC — check the cohort anchor by hand.`);
+  }
 
   const variants = JSON.parse(exp.variants);
   const scope = JSON.parse(exp.scope ?? '{}');
-  const start = SINCE ?? (exp.started_at ? new Date(exp.started_at).toISOString() : null);
+  const start = SINCE ?? (exp.started_at_raw ? exp.started_at_raw.replace(' ', 'T') + 'Z' : null);
 
   console.log('═'.repeat(74));
   console.log('  /fb-tarot — Version B (smart template) vs C (LLM)');
