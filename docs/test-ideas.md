@@ -1718,6 +1718,21 @@ Covered = shipped in the skill (`[x]`); open = still a gap (`[ ]`). Runs LOCAL-O
 - [ ] The REAL 1-click off-session charge path (not the fallback) — needs a Stripe TEST customer with a saved card + a completed original checkout; the audit proves the same server price via the fallback instead
 - [ ] Palm finger-shape / decode-him (a hook, not a sign) browser entries — charge audit covers their pricing via the API; a browser entry smoke would extend audit-funnels
 
+### V1 upsell chat shell — viewport pinning / auto-scroll (`tests/upsell-scroll-shell.spec.ts`, 2026-08-10)
+Both upsell steps are shared by all six V1 funnels (`/` `/fb` `/fb2` `/fb-palm` `/fb-tarot` `/gdn`), so a
+regression here hits every one of them. The original defect: the outer column used `min-h-screen` and the
+message list was a flex child without `min-h-0`, so the list never became scrollable, the document grew
+instead, and the auto-scroll effect was dead code — from ~the 8th message every new message and every button
+(quick replies, accept CTA, shipping form) sat below the fold. Fixed with `h-dvh` + `min-h-0` (2026-08-10).
+- [x] `/welcome1` and `/welcome2`: the document does NOT scroll (`documentElement.scrollHeight <= innerHeight + 1`) *(upsell-scroll-shell.spec.ts)*
+- [x] `/welcome1` and `/welcome2`: the message list DOES scroll (`scrollHeight > clientHeight`) *(upsell-scroll-shell.spec.ts)*
+- [x] The first interactive element (quick replies) is fully inside the viewport at 430×880, 375×667 and 1280×900 *(upsell-scroll-shell.spec.ts)*
+- [x] The newest message is not clipped behind the footer (`newest.bottom <= quickReplies.top`) — this is what the footer-growth deps on the auto-scroll effect protect *(upsell-scroll-shell.spec.ts)*
+- [ ] Same four assertions on the remaining five funnel prefixes (proven once by `measure-upsell-scroll.mjs`, 36/36, but not committed as a spec — the shared component makes per-funnel coverage low-yield)
+- [ ] Accept CTA and shipping form stay inside the viewport at the END of the flow, at 375×667 — the footer is `shrink-0`, so a tall shipping form is the case most likely to squeeze the message list
+- [ ] `h-dvh` behaviour with a mobile browser address bar actually showing (needs a real device or a UA-emulated run; `h-dvh` was chosen over `h-screen` precisely for this)
+- [ ] Soft-keyboard open on a real phone does not push the accept CTA off screen
+
 ### fb-palm commitment gate — 3-checkbox pre-purchase ask ('35_palm_gate' variant, retires '55-35_palm') (2026-07-26)
 - [ ] `CommitmentGateCard` renders (in place of `PurchaseCTA`) only when `chat.userData.priceVariantId === '35_palm_gate'`; every other variant (incl. the retired `55-35_palm`) renders the classic `PurchaseCTA`/`ClearingChoiceCard` path unchanged
 - [ ] With 0, 1, or 2 of the 3 commitment checkboxes checked, no purchase button is present in the DOM (or, if present, is not clickable) — only the "Check all three to continue" placeholder shows
