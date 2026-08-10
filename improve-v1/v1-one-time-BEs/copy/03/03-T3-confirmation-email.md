@@ -2,7 +2,8 @@
 
 | | |
 |---|---|
-| **Sends** | immediately on purchase. **It sells nothing.** It is also the email she replies to — `S16` per-order Reply-To |
+| **Sends** | immediately on purchase, from AWeber, triggered by the `be-03-judgement-day` tag. **It sells nothing** |
+| **Also** | it is her **second door to the Entry**, for the woman who closed the thank-you page before filling the form (D11 moved the Entry onto a screen after the money). ⚠ It is no longer the intake vehicle itself |
 | **Register** | **P5** — her buyer is *angry, across three nights*. 02's is hopeful across 24 hours. Three days earns something longer, and it must do **quiet inoculation** |
 | **The inoculation** | *don't spend these nights watching for their downfall* |
 | **Component** | [00e §5](../../docs/00e-FRAMEWORK-BEs.md) |
@@ -11,6 +12,8 @@
 
 **Subject:** Your page is open — now send me the Entry
 
+**Preheader:** The three nights start the moment your Entry reaches me.
+
 ---
 
 Dear %FIRSTNAME%,
@@ -18,8 +21,13 @@ Dear %FIRSTNAME%,
 Thank you for deciding this. It is not a small thing to decide and most women who need it never
 get as far as the page.
 
-**Reply to this email and tell me who it is and what they did.** Your own words, any length, no
-order required. That reply is your Entry and I can't start the three nights without it.
+**Your Entry is the one thing I still need.** Who it is, what they did, how long. Your own words,
+any length, no order required — and I can't start the three nights without it.
+
+If you wrote it out on the page just now, it is already with me and there is nothing else to do.
+
+If you closed the page before you got that far, it is still open and waiting for you:
+[send me your Entry]({{AWEBER_ENTRY_URL}}).
 
 Once it's in, I'll write to you again the same evening to say the first night is done.
 
@@ -104,9 +112,17 @@ Send me your Entry when you're ready, and then let me carry it for three nights.
 - **The share ask is present but quiet** — *"somebody you know is walking past a roof"* — and it is
   the engagement rung 02's donkey also carries. Same job, entirely different story: ⚠ 02 and 03 must
   never share a parable, and a buyer who takes both will read both.
-- **This email is also the intake vehicle** (`S16` per-order Reply-To). The ask appears in the
-  third line, before the advice and the story, so a woman who reads nothing else still knows what
-  to do.
+- ⚠ **REWRITTEN 2026-08-09 — this email is no longer the intake vehicle.** D11 moved the Entry to
+  a form on the thank-you page, *after* the money, so by the time this arrives she has already been
+  shown it. Telling her to "reply to this email" would have sent her down a second, slower intake
+  path that nothing is built to read. It is now her **second door**: it confirms the Entry if she
+  filled it and links her back to it if she did not. The ask still appears in the third line, before
+  the advice and the story, so a woman who reads nothing else still knows what to do.
+- ⛔ **`{{AWEBER_ENTRY_URL}}` is a placeholder, not syntax.** The link is the `entry_url` custom
+  field on her subscriber record (written by `addBackendCustomer`). Insert it from AWeber's own
+  personalization picker when you build the Campaign, then seed-test that it resolves — a token
+  that ships unswapped is read by the buyer as gibberish at the exact moment she is deciding
+  whether this was real.
 - ⚠ **No SLA restated as a delivery date** beyond "the three nights", and no price — she has already
   paid, and naming what she paid on a page about a debt is the one tonal mistake this email could
   make.

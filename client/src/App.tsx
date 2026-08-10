@@ -60,6 +60,8 @@ const SoulmateThankYouPage = lazy(() => import("@/pages/SoulmateThankYouPage"));
 const TwinFlameBookingPage = lazy(() => import("@/pages/TwinFlameBookingPage"));
 const TwinFlameBookingChat = lazy(() => import("@/pages/TwinFlameBookingChat"));
 const TwinFlameThankYouPage = lazy(() => import("@/pages/TwinFlameThankYouPage"));
+const JudgementBookingPage = lazy(() => import("@/pages/JudgementBookingPage"));
+const JudgementBookingChat = lazy(() => import("@/pages/JudgementBookingChat"));
 
 // Admin pages (lazy loaded)
 const AdminLogin = lazy(() => import("@/pages/admin/AdminLogin"));
@@ -293,7 +295,7 @@ function Router() {
         <Route path="/tarot/twin-flame/preview-page" component={TwinFlameBookingPage} />
         <Route path="/tarot/twin-flame/preview-chat" component={TwinFlameBookingChat} />
         {/* 02's upsells are V1's components, as every other funnel's are. Only
-            the opening beats differ (lib/twinFlameUpsellCopy.ts) — a tarot
+            the opening beats differ (lib/upsellCopy/twinFlame.ts) — a tarot
             buyer is never told her Energy Clearing Ritual is scheduled.
             Deliberately absent from the FB PageView list above, like the two
             preview routes: nothing links here yet and Stripe is unwired, so
@@ -304,6 +306,20 @@ function Router() {
             "Energy Clearing Ritual" begins tonight — a product she never
             bought. Receipt-shaped and sells nothing, by spec. */}
         <Route path="/tarot/twin-flame/success" component={TwinFlameThankYouPage} />
+
+        {/* Backend deck, offer 03 — Judgement Day (ACT · pay-what-you-want ·
+            three nights · needs her reply). Review only, like 02: nothing links
+            here and nothing charges — the booking button logs and stops.
+            The booking page sits at the offer root because that is where the
+            letter's {{BOOKING_URL}} points; 02 has two preview paths only
+            because two treatments were competing.
+            Spec: improve-v1/v1-one-time-BEs/copy/03/03-C1-booking-page.md */}
+        {/* Two candidate treatments, as 02 has: the page at the offer root
+            (where the letter's {{BOOKING_URL}} points) and the chat beside it.
+            ⚠ 03's chat carries the deck's only text input — pay-what-you-want
+            has one thing only the buyer can supply. */}
+        <Route path="/wiccan/judgement-day/chat" component={JudgementBookingChat} />
+        <Route path="/wiccan/judgement-day" component={JudgementBookingPage} />
         <Route path="/soulmate" component={SoulmateLandingPage} />
 
         {/* Auth routes (no layout wrapper) */}

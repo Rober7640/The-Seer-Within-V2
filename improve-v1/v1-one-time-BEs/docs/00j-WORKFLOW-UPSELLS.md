@@ -1,0 +1,309 @@
+# 00j — WORKFLOW: building an offer's U1 + U2
+
+How to take a backend offer from copy specs to a working upsell flow, derived
+from doing it for **02 Twin Flame Tarot** (see [`00i`](./00i-DELIVERABLES-U1-U2.md)).
+
+⚠ **This is a decision procedure, not a template.** The biggest mistake
+available here is copying 02's answers. 02 asks nothing, plays one universal
+block and makes no LLM call — and those came from two different causes that must
+be kept apart:
+
+- **the blocks** went universal because 02 collects no bucket and no concern;
+- **the questions** went away because the operator asked for it, not because of
+  any missing data.
+
+03 hits the first cause in the same way (its intake arrives *after* both
+upsells), but not the second. Run the steps; do not inherit the conclusions.
+
+---
+
+## Step 0 — read these, in this order
+
+| Read | Why it decides something |
+|---|---|
+| `0X-P1` (the product) | **The upsells can only argue from what the product actually says.** This is where the specifics come from |
+| `0X-C1` (booking page) | What is collected *before* the money, and in whose voice |
+| `0X-U-*` / `0X-U1a`,`U1b`,`U2a` | The beats already written for this offer |
+| `0X-T1` (thank-you) | The receipt, and whether the archetype makes it a receipt or an intake gate |
+| `0X-C3` (order bump) | Whether a bump promise has to be honoured on the thank-you page |
+| `00e-FRAMEWORK-BEs.md` §6b, §7 | The register rules and the page archetypes |
+| `00h` + `00i` | What is locked, and what 02 already decided (and why) |
+
+---
+
+## The order never changes
+
+```
+  booking page → SHE PAYS → U1 → U2 → thank-you page → (ACT only: she replies
+                                                        with her intake)
+```
+
+Money first, then the upsells, every time. Two consequences that decide most of
+the rest:
+
+1. **The upsells run seconds after payment.** Whatever the offer knows at that
+   moment is all they can ever use.
+2. ⚠ **For an ACT offer the intake has not happened yet.** `03-T1` is an INTAKE
+   GATE — it is the page that *asks* her to reply with the target, what they did
+   and how long. That page comes **after** both upsells. So `{{TARGET}}`,
+   `{{HOW_LONG}}` and `{{WHAT_THEY_DID}}` exist in the product and **never on the
+   upsell screen.**
+
+## Step 1 — the data audit. **Do this before writing a word of copy.**
+
+This is the step that determines the whole shape. For every merge token and
+every keyed block in the drafted upsell copy, answer two questions:
+
+1. **Is it collected at all?**
+2. **Has it arrived *by the time the upsell runs*?** — i.e. in the seconds after
+   checkout, not eventually.
+
+Fill this in for the offer:
+
+| Field | Collected where | In hand at U1? | If missing |
+|---|---|---|---|
+| `firstName` | | | |
+| `bucket` | | | |
+| `personName` / `{{TARGET}}` | | | |
+| `{{HOW_LONG}}` etc. | | | |
+
+⚠ **Question 2 is the one that gets missed.** An ACT offer's intake arrives by
+email *reply* (`S29` queue), so it can be days later — the tokens exist in the
+product but **not** on the upsell screen. `03-U2a` already anticipates this:
+*"`{duration}` merges from the intake. If it's missing, cut the clause rather
+than rendering a bare token."* Honour that instruction in code, not in hope.
+
+**Where the values actually come from at runtime:** `/api/upsell/user-data`
+reads the `conversations` row for the Stripe session. When there is no row it
+rebuilds one from the Stripe session, taking `metadata.firstName` — and
+**defaulting to the literal string `"Friend"`**.
+
+⚠ **AWeber has her first name**, so that default should almost never fire. The
+letter's CTA carries `{{ subscriber.first_name | capitalize }}` as `?fn=`, the
+booking page keeps it, and checkout sets `metadata.firstName`. Build that chain
+and every screen after the money greets her properly. Keep `displayName()` as the
+safety net for a forwarded letter.
+
+### What each answer forces
+
+| If the audit says… | Then |
+|---|---|
+| Nothing is collected | One universal block, and static copy in place of the Claude calls — **02's shape**. ⚠ This does NOT by itself remove the questions; see below |
+| Anything about *her* | ⛔ **not used.** Settled rule: the upsells are impersonal. Cut the clause |
+| Intake arrives later | Same answer — cut it |
+| Her first name | Use it if checkout captured one; otherwise "dear" |
+
+---
+
+## Step 2 — the archetype, and the mechanism hinge
+
+**READING vs ACT** (00e) changes the thank-you page and the intake, and it
+changes what U1 is allowed to threaten.
+
+Then find the hinge. Both of 02's upsells argue from one sentence of its own
+brief — *a spread SHOWS; it does not lift (→ the bump) and does not call (→ U2)*.
+03's is different and is derived the same way, from `03-P1` verdict 2: *closing
+the account settles what was owed and does not undo what carrying it cost her.*
+
+> **Rule:** the hinge is DERIVED from `0X-P1`, never invented. If you cannot
+> point at the sentence in the product that the upsell is selling, the upsell is
+> arguing for a different product and the buyer will feel it.
+
+⚠ **Never let the upsell sell against the product.** 02-P1 tells the buyer not
+to investigate her twelfth house, so 02's U1 sells the stone as *what she does
+instead of looking* — a version promising disclosure would contradict the reading
+she just paid for. 03 has the same trap in reverse: its promise is *you put it
+down and you sleep*, so U2 sells **the choosing, not the filling**. Find this
+trap for the offer before writing.
+
+---
+
+## Step 3 — the four levers
+
+Decide each one explicitly and write down why.
+
+1. **Questions on or off.** ⚠ **Correction to an earlier draft of this doc:** a
+   question needs NO stored data. She answers it in the chat and the answer is
+   used immediately, in the next two or three messages. So missing data is not a
+   reason to drop questions.
+
+   02 dropped them because the **operator asked for it** — extending the booking
+   step's "ask her nothing" rule (`00h` rules 2 and 9) across the whole flow. That
+   was a design call about this offer, not a technical limit, and it does not
+   carry to 03. 03's build notes call its Q1 *"the strongest question in the
+   deck… answering it produces the sale rather than Evelyn arguing for it"*, and
+   nothing about 03's data stops it working. **Keep 03's questions.**
+2. **Bucket block: always ONE.** ⛔ Settled — the upsells use no personal
+   details, so there is nothing to key four variants off. Build one block from
+   facts true of every buyer's product.
+3. **The two Claude segments in U2.** ⛔ Always replaced with fixed copy — they
+   exist to personalise, and the upsells do not personalise.
+   ⚠ Their prompts (`buildManifestRevealPrompt`, `buildManifestPersonalizePrompt`
+   in `server/lib/prompts.ts`) hardcode *"the clearing ritual"* — any offer that
+   keeps them needs its own prompt variant, not just data.
+4. **Pause taps.** Needed when questions are off, because the questions were the
+   only breaks. If questions stay, taps are probably redundant — 50 messages with
+   three questions already breathes.
+
+---
+
+## Step 4 — the code
+
+### 4a. FIRST: make the resolver multi-offer ✅ *(done 2026-08-08)*
+
+`client/src/lib/twinFlameUpsellCopy.ts` used to end with a two-way branch on
+`isTwinFlameOffer()`. **Adding 03 by adding a second `if` was the wrong move**,
+so it is now a prefix-keyed registry. What exists today:
+
+```
+lib/backendOffers.ts         prefix → { upsell1, upsell2 }  (registry + resolver)
+lib/upsellCopy/types.ts      the four shapes + displayName()
+lib/upsellCopy/v1.ts         V1's chains + copy objects — ⛔ six live funnels
+lib/upsellCopy/twinFlame.ts  02's copy, moved byte-identical
+lib/upsellCopy/judgement.ts  03's copy
+```
+
+`lib/twinFlameUpsellCopy.ts` is **gone**; its four importers (both hooks, the 02
+thank-you page, the 02 test suite) now import from `lib/backendOffers`.
+
+The prefixes themselves stay in `lib/funnel.ts`
+(`BACKEND_OFFER_PREFIXES`, `backendOfferPrefix()`), not in the registry, so
+`funnelPath()` can route `/welcome1 → /welcome2 → /success` inside an offer
+without importing any copy. ⚠ Keep that import one-directional.
+
+`upsell1Copy(pathname)` / `upsell2Copy(pathname)` kept their signatures, so no
+hook changed. 02's 25 tests stayed green across the move and `tsc` gained no new
+errors — that is what proves it was a move and not a rewrite.
+
+### 4b. Then, per offer
+
+| File | What it gets |
+|---|---|
+| `lib/upsellCopy/<offer>.ts` | **all** the offer's copy, its `chain`, its `pauses`, its CTA labels, `placeholderNames` |
+| `lib/funnel.ts` | the URL prefix + `is<Offer>()`, and the prefix list inside `funnelPath()` for `/welcome1`, `/welcome2`, `/success` |
+| `App.tsx` | three routes: `welcome1`, `welcome2`, `success` |
+| `pages/<Offer>ThankYouPage.tsx` | `0X-T1` |
+| `tests/<offer>-upsell-copy.test.ts` | copy the 02 suite and re-point it |
+
+**Nothing in the hooks should need editing.** `useUpsellChat` / `useUpsell2Chat`
+are already generic: they read every block and every transition from the resolved
+copy object. If you find yourself editing a hook, you are probably adding a
+capability (a new stage) rather than an offer — stop and check.
+
+The mechanisms available to an offer, all already built:
+
+- `chain` — stage → next stage. Omitting the question stages is what removes them.
+- `pauses` — stage → continue-tap label. Empty = no taps.
+- `REVEAL` / `PERSONALIZE` — non-null replaces the Claude call with static copy.
+- `bucketMessages(bucket, personName)` — return one block or four; own the fallback.
+- `acceptLabel`, `downsellDeclineLabel` — button copy AND the bubble it posts.
+- `placeholderNames` — names that are not names (`"Friend"`).
+
+### 4c. Shell + toggle
+
+`pinnedShell` in both upsell pages is currently `isTwinFlameOffer()`. Any new
+offer must be in that condition too, or its flow drops below the fold. When the
+live-funnel rollout happens (`docs/prompt-fix-upsell-scroll-live-funnels.md`)
+this becomes unconditional and the question disappears.
+
+---
+
+## Step 5 — the leakage pass
+
+V1's reused copy is full of the *clearing* product. Run this and read every hit:
+
+```
+grep -nE "clearing|energy field|both rituals|our conversation" \
+  client/src/lib/upsellMessages.ts client/src/lib/upsell2Messages.ts
+```
+
+02 found **14** in the reused ~40 messages, plus the CTA labels, plus
+`UPSELL_RITUAL`'s *"the energy signature from our conversation"* — false for any
+offer whose buyer never had a chat. Every one needs an offer-appropriate line.
+
+Check the buttons too: `UpsellCTA.acceptLabel` and
+`Upsell2DownsellCTA.declineLabel` both default to clearing language.
+
+---
+
+## Step 6 — verification
+
+**Unit** (`tests/<offer>-upsell-copy.test.ts`) — the 02 suite is the template:
+V1's chain asserted stage-by-stage (the regression guard for six live funnels),
+the offer's chain walked end to end with no cycle, no `{token}` unrendered, no
+leakage strings, the product-consistency assertions, and every other funnel
+unchanged.
+
+**Browser** — the flows take ~5 minutes each of real typing delays, so drive with
+Playwright, not by hand. Scripts from 02's run are described in
+`improve-v1/evidence/02-upsell-flow-2026-08-07/README.md`. Assert:
+
+- bubble count, tap points, no text input;
+- every button fully inside the viewport when it appears, nothing clipped;
+- `/welcome1 → /welcome2 → /success` all stay inside the offer's prefix;
+- the accept path — **stub only the money endpoints** (`/api/upsell/charge`,
+  `/api/upsell2/charge`, the two shipping saves) so the post-charge flow is
+  reachable before Stripe exists. Nothing is charged.
+- V1 unchanged: still opens on its clearing line, still asks, still has its
+  composer.
+
+---
+
+## Step 7 — leave behind
+
+- `00X-DELIVERABLES-*.md` — every departure from the copy specs, with the reason.
+- Annotations on any spec you superseded, pointing at it.
+- `docs/test-ideas.md` entries for what is covered and what is not.
+- Screenshots in `improve-v1/evidence/<offer>-<date>/` with a README. ⚠ 02's ran
+  to 15MB; commit them separately so the history cost is a decision.
+
+---
+
+## Guardrails
+
+- ⛔ **One live purchase action on screen, ever** (V1's rule).
+- ⛔ **Do not register the offer in `shared/funnelConfig.ts`.** That drives the
+  Stripe product suffix, the AWeber tag and the `funnel` param sent to the charge
+  endpoints. Until the offer has its own checkout, registering it attaches it to
+  V1's money paths.
+- ⛔ **Do not inherit `V1_BUMP_PRODUCT_KEY`** (`double_reading`) — n8n
+  exact-matches it and would fulfil the wrong product.
+- ⛔ **Do not change V1's `chain`.** Six live funnels run it.
+- ⚠ Emphasis in specs is written `*italic*`; chat bubbles are plain text. Use
+  single-word CAPS, the device V1 already uses.
+
+## Carried-over unbuilt work — true for every offer until fixed
+
+Each of these bit 02 and will bite the next one identically:
+
+1. **Stripe.** No checkout, so nothing charges and no real session exists.
+2. **The `?fn=` chain is not wired.** AWeber knows her name; the letter just has
+   to pass it to the booking page, and the booking page to checkout. Until then
+   `displayName()` turns "Friend" into "dear".
+3. **PostHog labels the offer `"v1"`** (`getPostHogFunnel() ?? "v1"`). Settle
+   before any letter's CTA points at it, or it pollutes V1's funnel.
+4. **`/api/upsell2/user-data` has no Stripe fallback** where U1's does — it 404s
+   on a session with no row, which constrains where `success_url` can point.
+5. **The thank-you page fires no Purchase pixel** and runs no fallback
+   confirmation. Wire when the checkout lands or U2 sales go unattributed.
+6. **`bumpPurchased` is not returned by `/api/order/details`**, so a thank-you
+   page cannot honour a bump promise.
+7. **No drop-off instrumentation**, per turn, from the first send.
+
+---
+
+## Worked comparison — why you must not copy 02
+
+| | **02 Twin Flame** (built) | **03 Judgement Day** (expected) |
+|---|---|---|
+| Archetype | READING · 24h | ACT · three nights · needs a reply |
+| Collected before money | **nothing** | six statements, PWYW, then an Entry by reply |
+| Intake at upsell time | none | ⚠ **probably none yet** — the Entry has not been sent |
+| Questions | **removed** — became assumed answers | **keep** — Q1 is the deck's strongest |
+| Bucket block | one universal block | **four variants**, already written |
+| Claude segments | replaced with static | only if a concern is in hand at that moment |
+| Pause taps | three per flow | probably none — the questions already break it |
+| Hinge | a spread shows; it does not lift or call | closing settles the debt, not the cost of carrying it |
+| The trap | must not promise to reveal house 12 | must not promise a feeling to fill the room |
+
+Same workflow. Almost none of the same answers.

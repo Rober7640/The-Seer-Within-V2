@@ -1,4 +1,4 @@
-// Unit tests for offer 02's U1 + U2 conversations (client/src/lib/twinFlameUpsellCopy.ts)
+// Unit tests for offer 02's U1 + U2 conversations (client/src/lib/upsellCopy/twinFlame.ts)
 // and the in-funnel navigation that keeps a buyer inside them (client/src/lib/funnel.ts).
 //
 //   npx vitest run tests/twin-flame-upsell-copy.test.ts
@@ -21,7 +21,7 @@
 
 import { describe, expect, it } from 'vitest';
 import { funnelPath, isTwinFlameOffer } from '@/lib/funnel';
-import { upsell1Copy, upsell2Copy, displayName } from '@/lib/twinFlameUpsellCopy';
+import { upsell1Copy, upsell2Copy, displayName } from '@/lib/backendOffers';
 import {
   UPSELL_CONFIRMATION,
   UPSELL_BUCKET_MESSAGES,

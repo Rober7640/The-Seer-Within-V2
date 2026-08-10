@@ -14,6 +14,8 @@
 
 **Subject:** Your Twin Flame Tarot Reading has been confirmed
 
+**Preheader:** The deck is out. Your twelve are laid tonight.
+
 ---
 
 Dear %FIRSTNAME%,
