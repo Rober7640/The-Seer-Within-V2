@@ -1104,6 +1104,14 @@ const TAROT_HOOK_CONTEXT: Record<string, string> = {
   'cards-where-soulmate': "She is asking WHERE her soulmate is, having come to hold the not-yet as a matter of distance — as though someone were standing somewhere particular and she were failing to arrive.",
   'cards-soulmate-closer': "She is asking whether it is nearer than she believes, after a long stretch of managing her own hope downward so that disappointment could not reach her.",
   'cards-not-found-yet': "She is asking why it has not happened where she is, and her question offers only two candidates for the blame — herself, or her circumstances. She has usually already settled on the first.",
+  // Missing-him hooks (2026-08-10) — the ACHE of his absence, as against the `healing`
+  // family's THINKING about him. 🔴 None of these three states how he came to be gone,
+  // deliberately: the same headline is clicked by a woman who was left and by a woman who
+  // was widowed, and a context line that picks one hands the model a premise it will run
+  // with. "No longer in her life" is the furthest any of them goes.
+  'cards-stop-hurting': "A man is no longer in her life, she misses him badly, and she is asking how much longer the pain lasts — she wants a duration, which is the one thing that cannot honestly be given her.",
+  'cards-stop-missing': "She is asking whether the missing ever ends, and has been trying to will it away — taking each failure to do so as evidence of a weakness in her character rather than a category of thing that will not answer to decision.",
+  'cards-still-miss-him': "She still misses a man after something she already counts as disqualifying, and reads that as a fault in herself. Underneath 'after everything' is the real question: what is wrong with me. She has ALREADY named a harm — never minimise it, and never pronounce on him either.",
   // Self-frame hooks — about HER future, not a specific man.
   'cards-love-again': "After heartbreak, she is asking whether she will ever love again — worn down, but the hope is still there.",
   'cards-soulmate': "She is asking WHEN her soulmate will finally arrive — tired of waiting, but still believing the right person is out there for her.",
@@ -1291,6 +1299,28 @@ const TAROT_HOOK_TENDENCY: Record<string, string> = {
   // its subject is the EPISTEMICS of her question, not her hope.
   'cards-someone-for-me':
     'that she asked for an answer and has been handed comfort every time, which is why "really" is in her question — and that wanting something she can believe is not pessimism. NEVER state that someone exists for her and NEVER state that nobody does; there is no count to give and inventing one in either direction is the harm. NEVER describe, locate or date a future person. NEVER tell her to keep the faith, stay positive, or trust the universe — that is the reassurance she came here having already exhausted. NEVER call her doubt a flaw or a self-fulfilling prophecy. Read the card as the difference between an UNKNOWN and a NEGATIVE, and affirm that asking for honesty rather than cheering-up is a reasonable thing to have done',
+  // Missing-him hooks (2026-08-10). 🔴 THESE RUN UNDER THE DECODE-HIM FRAME — no sixth
+  // branch was added to the frame ternary in buildTarotReflectPrompt, deliberately (that
+  // chain is already flagged as being at the limit of what reads well, and the refactor to
+  // a lookup is a change worth making on its own). The consequence is that EVERY ban this
+  // family needs has to live in these three strings, because the shared decode-him guard
+  // carries none of them. Four are load-bearing:
+  //
+  //   1. THE TIMEFRAME. Two of the three headlines ask "will this ever…", so the model is
+  //      being handed a direct request for a duration. Refusing it is the whole discipline.
+  //   2. FOREVER, IN BOTH DIRECTIONS. "You always will" is a life sentence delivered by a
+  //      stranger; "it passes" is a promise the funnel cannot keep. Borrowed from the
+  //      loneliness family, which is the only other angle that needs it.
+  //   3. HOW HE CAME TO BE GONE. Never stated, in either direction — she may be bereaved.
+  //   4. MEDIUMSHIP, for the same reason. The soulmate-after-loss family gets this ban from
+  //      its own frame; this one cannot, so it is written out here. universalSafety.ts
+  //      screens none of it.
+  'cards-stop-hurting':
+    'that the missing is work she has been performing rather than damage being done to her, which is why it exhausts her. NEVER give a duration — no weeks, months, seasons, "in time", "one day", or any rule about how long these things take; she has asked for a date outright and the refusal is the reading. NEVER say it will pass and NEVER say it will not — both are rulings on her life that no card can issue. NEVER state or imply HOW he came to be gone; she has not said, and she may have been bereaved. NEVER speak for him: not that he misses her, not that he is hurting too, not that he is at peace, not that he is watching over her, and never that he is coming back. NEVER tell her to move on, let go, grieve properly or seek closure. NEVER call the pain excessive, unhealthy or too long. Read the card as WHAT the ache is made of, and affirm HER — the size of it is proportional to something that was real',
+  'cards-stop-missing':
+    'that missing someone is not a condition she failed to cure and was never a thing decision could reach, so the failure to will it away says nothing whatever about her character. NEVER rule on "ever" in either direction — never say she will always miss him and never promise that she will stop; both are verdicts on the whole length of a life. NEVER give a date, a timeframe, or "it will happen when you…". NEVER state or imply how he came to be gone, and NEVER speak for him or for the dead — not that he feels it too, not that he is at peace, not that he sent her here. NEVER hand her a tactic for getting over him: no no-contact rules, no deleting photographs, no dating again, no working on herself first — that is coaching, not a reading. NEVER call it an attachment problem, a dependency, or being stuck. Read the card as what the missing IS rather than when it ends, and affirm HER dignity in still carrying it',
+  'cards-still-miss-him':
+    'that missing him is not a retraction of what she already worked out — feeling and judgement are separate instruments and were never synchronised, so one lagging does not overturn the other. NEVER let any part of the answer land as her weakness, naivety, foolishness, low self-worth, poor boundaries, trauma bonding or an attachment disorder; the real question under "after everything" is what is wrong with her, and the answer is nothing. NEVER minimise, excuse, reframe or explain away the harm she has already named — and equally NEVER pronounce on him as a person, never rule on what he did or why. NEVER tell her to forgive, forget, move on, let go, or that she should be over it, and NEVER give a timeframe or suggest she is overdue. NEVER state or imply how he came to be gone beyond what she says, and never speak for him. Read the card as the two things being true at once, and affirm HER right to miss what was also there without it pardoning the rest',
   // Self-frame — affirm HER future love, not a verdict on any man.
   'cards-love-again': 'that love is finding its way back to her — affirm HER heart and her capacity to love again, read the card as a hopeful sign for her own future; never tie it to one specific person and never a date',
   'cards-soulmate': 'that her soulmate is genuinely on the way and nearer than the waiting has let her believe — affirm HER heart and that the love she is holding out for is real and coming, read the card as a hopeful sign of arrival; answer the "when" only as a leaning (soon, close, sooner than the fear admits), NEVER tie it to one specific named person and NEVER give a date or timeframe',

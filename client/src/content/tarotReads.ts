@@ -269,6 +269,49 @@ export type TarotHook =
   | 'cards-talking-someone' // Is he talking to someone else?
   | 'cards-faithful' // Is he being faithful to me?
   | 'cards-loyal' // Is he loyal to only me?
+  // Missing-him hooks (2026-08-10). The SECOND family aimed at her own mind rather than at
+  // him, and the sibling of HEALING_HOOKS — but a different organ of the same wound, and
+  // the two must not drift together:
+  //
+  //   · healing reads the THINKING. Her mind keeps returning to him and she wants to know
+  //     why it will not stop presenting him to her.
+  //   · these read the ACHE OF HIS ABSENCE. Not that she thinks about him — that the place
+  //     where he was still hurts, which is a feeling rather than a cognition.
+  //
+  // 🔴 'cards-cant-stop' ("Why can't I stop thinking about him?") is the nearest live
+  // lander and it STAYS EXACTLY WHERE IT IS, in `healing` (standing rule: a new headline
+  // never replaces an old one). The families are close enough that an `angle` filter is
+  // the only thing keeping their numbers readable — folding these three into HEALING_HOOKS
+  // would retroactively mix two questions inside one set of running numbers.
+  //
+  // ⚠ THE DEFINING BAN IS THE TIMEFRAME, and it is unusually hard here because two of the
+  // three headlines ASK FOR ONE outright. "Will this ever stop hurting?" and "Will I ever
+  // stop missing him?" are WHEN questions, and the answer may never be a when — not "a few
+  // months", not "it takes half the length of the relationship", not "you will know when".
+  // Every other angle bans timeframes as an aside; here it is the whole discipline.
+  //
+  // ⚠ The FOREVER ban runs with it, in both directions, borrowed from LONELINESS_HOOKS:
+  // "you will always love him" is a life sentence handed down by a stranger, and "this will
+  // pass soon, I promise" is a promise the funnel cannot keep. Refuse both poles.
+  //
+  // 🔴 NEVER PRESUME HOW HE CAME TO BE GONE. "I miss him so much" is precisely what a
+  // BEREAVED woman types, and these headlines do not ask her to say which. A read that
+  // assumes he chose to walk away is brutal if he died; a read that assumes a death is
+  // absurd if he left. Nothing here may name the manner of his going — and if he did die,
+  // the mediumship ban of the soulmate-after-loss family applies with full force, because
+  // this family runs under the decode-him frame, which bans none of it (see
+  // TAROT_HOOK_TENDENCY in server/lib/prompts.ts, where that ban is carried per-hook).
+  //
+  // ⚠ 'cards-still-miss-him' is the heaviest of the three and the sibling of
+  // 'cards-who-hurt-me': "after everything" means after what he did, so she has already
+  // named a harm. Same two opposite pulls — minimising what she named abandons her, and
+  // pronouncing on him is the forbidden verdict — plus a third that is specific to it:
+  // she is really asking what is wrong with her for still missing him, and no part of the
+  // answer may land as her weakness, her naivety, her low self-worth or an attachment
+  // disorder. Pinned by tests/tarot-missing-him-copy.test.ts.
+  | 'cards-stop-hurting' // I miss him so much — will this ever stop hurting?
+  | 'cards-stop-missing' // Will I ever stop missing him?
+  | 'cards-still-miss-him' // Why do I still miss him after everything?
   // Self-frame hooks (read HER, affirm the hopeful yes — like the palm love hooks).
   | 'cards-love-again' // Will I love again?
   | 'cards-soulmate' // When is my soulmate coming?
@@ -429,6 +472,27 @@ export const FIDELITY_HOOKS: TarotHook[] = [
   'cards-loyal',
 ]
 
+// The missing-him hooks (2026-08-10). Their OWN angle rather than folded into `healing`,
+// which is the only family they could plausibly join:
+//
+//  1. REPORTING. healing has been live since 2026-08-04 and 'cards-cant-stop' asks a
+//     question one step away from these ("stop thinking about him" vs "stop missing him").
+//     That closeness is the reason to separate them, not the reason to merge: adding three
+//     hooks to a running family retroactively mixes two questions inside one set of
+//     numbers, and the operator commissioned these as a distinct category.
+//  2. SAFETY. healing's per-hook bans are written for the THINKING — pathologising it,
+//     directing her to stop it. These need a timeframe ban strong enough to survive two
+//     headlines that ask for a timeframe outright, a two-directional forever ban, and a
+//     ban on presuming how he came to be gone. None of that is in the healing strings.
+//
+// 🔴 HEALING_HOOKS must stay exactly three. Moving any of these in there, or any of those
+// in here, destroys the comparison the family was commissioned to make.
+export const MISSING_HIM_HOOKS: TarotHook[] = [
+  'cards-stop-hurting',
+  'cards-stop-missing',
+  'cards-still-miss-him',
+]
+
 // The ad ANGLE a hook belongs to. Carried on every tarot PostHog event (see
 // lib/tarotAttribution.ts) so the two decode-him families can be compared as GROUPS
 // without listing each hook: one `angle = trust` filter instead of three hook values,
@@ -471,6 +535,13 @@ export type TarotAngle =
   // PERSON. It is also NOT decode-him, which holds the incumbent 'cards-cheating' these
   // four were commissioned to replace — merging them destroys that comparison.
   | 'fidelity'
+  // 🔴 'missing-him' is the sibling of 'healing', not a variant of it. healing reads the
+  // THINKING (her mind keeps producing him); this reads the ACHE OF HIS ABSENCE (the place
+  // he occupied still hurts). The label separation is what keeps a new family readable
+  // against a running one whose nearest lander, 'cards-cant-stop', asks a question one word
+  // away from these. It is also NOT self-frame — a real man is in the picture, so every
+  // no-verdict-on-him guardrail stays on.
+  | 'missing-him'
   | 'self-frame'
 
 export function angleForHook(hook: TarotHook): TarotAngle {
@@ -486,6 +557,7 @@ export function angleForHook(hook: TarotHook): TarotAngle {
   if (SOULMATE_WHERE_HOOKS.includes(hook)) return 'soulmate-where'
   if (LONELINESS_HOOKS.includes(hook)) return 'loneliness'
   if (FIDELITY_HOOKS.includes(hook)) return 'fidelity'
+  if (MISSING_HIM_HOOKS.includes(hook)) return 'missing-him'
   return 'decode-him'
 }
 
@@ -528,6 +600,9 @@ export const TAROT_HOOKS: TarotHook[] = [
   'cards-talking-someone',
   'cards-faithful',
   'cards-loyal',
+  'cards-stop-hurting',
+  'cards-stop-missing',
+  'cards-still-miss-him',
   'cards-love-again',
   'cards-soulmate',
 ]
@@ -605,6 +680,14 @@ export const HEADLINES: Record<TarotHook, string> = {
   'cards-talking-someone': 'Is he talking to someone else?',
   'cards-faithful': 'Is he being faithful to me?',
   'cards-loyal': 'Is he loyal to only me?',
+  // Missing-him (2026-08-10). ⚠ Note what these do NOT say: none names a breakup, a split,
+  // an ex, or a death. That is deliberate and load-bearing — the family has to reach a
+  // bereaved woman and a dumped woman with the same words, because the reads may not
+  // presume which she is. 'cards-stop-hurting' is the only first-person STATEMENT on the
+  // funnel rather than a bare question; the operator wrote it that way and it stays.
+  'cards-stop-hurting': 'I miss him so much — will this ever stop hurting?',
+  'cards-stop-missing': 'Will I ever stop missing him?',
+  'cards-still-miss-him': 'Why do I still miss him after everything?',
   'cards-love-again': 'Will I love again?',
   'cards-soulmate': 'When is my soulmate coming?',
 }
@@ -730,6 +813,29 @@ const TAROT_QUESTION: Record<TarotHook, string> = {
   'cards-faithful': "Before I look closer, tell me… what would you need to hear from him to actually be able to rest?",
   // The word doing the work in this headline is "only" — the opener goes straight at it.
   'cards-loyal': "Before I look closer, tell me… what part of him have you never quite felt you had all of?",
+  // Missing-him (2026-08-10). 🔴 Same no-manufactured-despair constraint as the loneliness
+  // family, and it binds harder here: 'cards-stop-hurting' says "hurting" in the headline,
+  // so an opener like "how bad does it get?" or "what are the nights like?" would produce
+  // the exact phrasings SOFT_CRISIS_PATTERNS screens for, on a page that invited them. Each
+  // of these asks for a CONCRETE, answerable detail instead — a duration, an object, a
+  // trigger — which is also the material the read actually needs.
+  //
+  // 🔴 None asks HOW he came to be gone. That is the family's defining presumption ban: she
+  // may be bereaved and may be broken up with, and the opener must not sort her. "Part of
+  // your day" is deliberately neutral about which.
+  //
+  // ⚠ Deliberately distinct from the live healing openers, which are the nearest neighbours:
+  // 'cards-cant-stop' asks WHEN he comes to mind, 'cards-on-my-mind' asks what the smallest
+  // thing is that brings him back, 'cards-who-hurt-me' asks what she has never made sense
+  // of. Sharing any of those would collapse the two families at the first line she reads.
+  'cards-stop-hurting': "Before I look closer, tell me… how long has it been since he was part of your day?",
+  // Splits the person from the shape of the life — which is the read, so her own answer
+  // hands it over. Neither half is the wrong answer.
+  'cards-stop-missing': "Before I look closer, tell me… what is it you miss most — him, or the way the days were built around him?",
+  // ⚠ Credits her progress in the asking. She arrives believing the missing cancels out
+  // everything she has worked out, so the opener takes for granted that she HAS worked
+  // things out, and asks only what interrupts it. Never asks her to recount what he did.
+  'cards-still-miss-him': "Before I look closer, tell me… what brings it back, even on the days you were sure you were past it?",
   'cards-love-again': "Before I look closer, tell me… what has been weighing on your heart since it happened?",
   'cards-soulmate': "Before I look closer, tell me… what is the love you're still holding out for — the one you haven't given up on?",
 }
@@ -2425,6 +2531,90 @@ const RETURN_MHF: CardSetConfig = {
         "That is not chance; you drew the card of the undivided at the exact question where you have suspected division.",
         "The Fool counts nobody and I will not start counting on its behalf — what it holds is a standard rather than a finding. What you asked for in that question is not extravagant: to be the whole of somebody's answer rather than most of it. You have been treating that as a large thing to want, and adjusting yourself downward to fit what you were actually receiving. The adjusting is the part I want to look at, because you have stopped noticing you are doing it.",
         "Let me look closer at the adjusting you have stopped noticing…",
+      ],
+    },
+    // ── Missing-him (2026-08-10) ───────────────────────────────────────────────
+    // 🔴 THE TIMEFRAME IS THE WHOLE DISCIPLINE HERE. Two of these three headlines ask
+    // "will this ever…", which is a request for a date, and the reads must refuse it
+    // without refusing HER. No number, no season, no "half the length of the
+    // relationship", no "you will know when it lifts" — and equally no "it never fully
+    // goes", which is the same forbidden ruling pointed the other way.
+    //
+    // 🔴 NEVER PRESUME HOW HE CAME TO BE GONE. A bereaved woman and a woman who was left
+    // both type "I miss him so much". Nothing in these nine reads names a breakup, a
+    // decision he made, a death, or a body — and nothing speaks FOR him, in case he is
+    // dead, because this family runs under the decode-him frame which does not ban
+    // mediumship (that ban is carried per-hook in TAROT_HOOK_TENDENCY).
+    //
+    // ⚠ Held apart from `healing`, the nearest live family, at the level of the finding:
+    // healing reads why the THINKING persists; these read what the ACHE is made of.
+    'cards-stop-hurting': {
+      a: [
+        "You turned the Magician, dear — the card of effort that does not look like effort.",
+        "Three were face down and the one you lifted was the card of work being done, which is nearer to your question than it sounds.",
+        "You have been describing this as something happening to you, and I want to put it differently — not to make it lighter, but because it is not accurate. Some part of you has gone on keeping his place laid. That is not damage being done to you; it is labour you are performing, quietly, every day, and it is the reason you are so tired. I am not going to tell you to stop doing it. I am telling you that the exhaustion is earned rather than a sign you are handling this badly.",
+        "Let me look closer at the work you have not been counting as work…",
+      ],
+      b: [
+        "You turned the Hanged Man, dear — the card of the thing that has not finished arriving.",
+        "Of the three, your fingers chose the one that refuses to be hurried, at the exact moment you asked how much longer.",
+        "You asked when it stops, and I will not give you a date — not a season, not a number of months, and you should be wary of anyone who does, because they are guessing and calling it sight. What the Hanged Man turns over is the shape you have assumed this has. You have been treating it as a stretch to be served, as though the hurt were one long thing wearing itself out. It has not behaved that way, and that is not you doing it wrong. It arrives in instalments, because parts of you are still being told, one at a time, and each part hears it new.",
+        "Let me look closer at the part of you that has not been told yet…",
+      ],
+      c: [
+        "You turned the Fool, dear — the card of the page nothing has been written on.",
+        "Under a question about how much of your life this will take, up came the card that keeps no accounts at all.",
+        "There is an arithmetic hidden in what you asked, and the Fool will not do it. You wanted me to weigh this against everything still in front of you and tell you the proportion. I cannot, and I would not trust the answer if I could. What I will say is that the size of the hurt is the correct size — it is measuring something that was really there, and a smaller ache would have meant less, not more health. What it is not is the full inventory of what is ahead of you. Those are two separate claims, and only the second one is in dispute.",
+        "Let me look closer at the inventory you have been taking…",
+      ],
+    },
+    // 'Will I ever stop missing him?' — THE FOREVER QUESTION, and both poles are banned.
+    // "You always will" is a life sentence issued by a stranger; "it will pass" is a promise
+    // the funnel cannot keep. The finding: she has been treating the missing as a condition
+    // she ought to be able to cure by decision, and grading her character on the failure.
+    'cards-stop-missing': {
+      a: [
+        "You turned the Magician, dear — the card of what intention can reach, and what it cannot.",
+        "The card of the will came up under a question you have been trying to answer by force of it.",
+        "You have been attempting to decide to stop. And when the deciding did not work you took that as information about your character, which is the part I want to correct. Intention is a real instrument and yours is in good order — it is simply not the instrument this is kept in. A person can resolve to stop saying a name out loud and hold to it. Nobody can resolve to stop missing. You have been failing at something that was never on offer, and then marking yourself down for it.",
+        "Let me look closer at the mark you have been giving yourself…",
+      ],
+      b: [
+        "You turned the Hanged Man, dear — the card of the thing that changes position without changing substance.",
+        "You reached past two others for the card of the altered angle, which is what your question needs more than an answer.",
+        "The word in your question is 'ever', and it asks me to rule on the whole length of your life. I will not — not to tell you it lasts and not to tell you it lifts, because both of those are strangers' verdicts on a life that is yours. What the Hanged Man does turn over is the assumption underneath it. You have been treating the missing as an intruder that got in and has to be put out. It is not foreign to you. It is the same feeling you already had for him, in a position where it has nowhere to be delivered. That is a harder thing to be rid of, and a much less shameful thing to be carrying.",
+        "Let me look closer at what has nowhere to go…",
+      ],
+      c: [
+        "You turned the Fool, dear — the card of the one who sets off without having finished.",
+        "That is worth noticing: the card of the unfinished beginning, drawn by someone waiting to be finished.",
+        "You have been holding yourself to a sequence — that this has to be completed before anything else is allowed to open. The Fool does not require a clean ledger before it moves, and neither, it turns out, does a life. Missing him and beginning something can sit in the same person on the same day, and neither one makes the other a lie. I am not telling you it is time for anything. I am telling you that you have been waiting for a permission that was never being withheld by anyone but you.",
+        "Let me look closer at the permission you have been waiting for…",
+      ],
+    },
+    // ⚠ The heaviest of the three and the sibling of 'cards-who-hurt-me'. "After everything"
+    // means after what he did — she has NAMED a harm, so minimising it abandons her, and
+    // pronouncing on him is the forbidden verdict. The third pull is the real question
+    // underneath: she is asking what is wrong with her. Nothing may land as weakness,
+    // naivety, low self-worth, or an attachment disorder.
+    'cards-still-miss-him': {
+      a: [
+        "You turned the Magician, dear — the card of the conclusion already reached.",
+        "The card of clear intent came up under a question in which you have begun to doubt your own.",
+        "You are treating the missing as evidence against yourself — as though still feeling it means you never really meant what you worked out. It does not mean that. What you concluded, you concluded, and nothing you have felt since has withdrawn it. Feeling and judgement are two separate instruments and they have never run at the same speed; one of them lagging is not the other one being overturned. You have not gone back on anything, and you are not being disloyal to yourself by aching.",
+        "Let me look closer at the case you have been building against yourself…",
+      ],
+      b: [
+        "You turned the Hanged Man, dear — the card of two things that are true at once.",
+        "Of the three you could have taken, you took the one that declines to simplify, and simplifying is what you have been asked to do.",
+        "Your question reads the missing as a fault that needs explaining. Turn it over and it is not one. You are not missing what was done to you — that stands exactly where you put it, and I will not talk you out of a word of it. You are missing what was also there, and both of those were real, in the same stretch of your life. People find that unbearable to hold, so they press you to flatten it in one direction to prove you have understood. Missing the good hours is not a pardon you have issued for the rest of it. You are allowed to know both things.",
+        "Let me look closer at the thing you have been asked to flatten…",
+      ],
+      c: [
+        "You turned the Fool, dear — the card of the road with no markers laid along it.",
+        "You drew the card that measures no progress at all, having come here to be told how little you have made.",
+        "'After everything' is you holding yourself to a timetable — as though a certain weight of hurt ought to have bought a certain amount of immunity by now, and you are overdue. There is no such rate of exchange. Nobody set that schedule; you absorbed it from people describing how this was meant to go for them. The Fool grades nothing. That you still miss him on a given day is not a mark against your judgement, not a sign you have learned nothing, and not evidence about what you think you are worth.",
+        "Let me look closer at the timetable you never agreed to…",
       ],
     },
   },

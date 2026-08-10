@@ -542,6 +542,102 @@ Plus the standing bans: no third person asserted **or denied**, no surveillance 
 phone, follow, test, catch, confront — the most available wrong answer on the internet), no
 excusing him, no landing as her fault.
 
+## Missing-him hooks — 3 face-down landers (2026-08-10)
+
+Own `missing-him` angle. Topic: *"Missing him"* — the **ache of his absence**, as against the
+live `healing` family's **thinking** about him. Face-down `return-mhf` only, Version C, clean
+URLs, no new art.
+
+| Headline | Hook | URL |
+|---|---|---|
+| I miss him so much — will this ever stop hurting? | `cards-stop-hurting` | `/fb-tarot/c?hook=cards-stop-hurting` |
+| Will I ever stop missing him? | `cards-stop-missing` | `/fb-tarot/c?hook=cards-stop-missing` |
+| Why do I still miss him after everything? | `cards-still-miss-him` | `/fb-tarot/c?hook=cards-still-miss-him` |
+
+### 🔴🔴 The TIMEFRAME ban is the whole discipline — two headlines ask for one outright
+
+Every angle on the funnel bans timeframes as an aside. Here it is the commission. *"Will this
+ever stop hurting?"* and *"Will I ever stop missing him?"* are **WHEN questions**, so the model
+is handed a direct request for a duration by the visitor's own headline.
+
+Banned: any number, any season, *"in time"*, *"one day"*, *"you'll know when"*, and any rule of
+thumb about how long these things take. **The refusal is the reading** — the reads say so
+outright and route to what the ache is made of instead.
+
+Running with it, the **FOREVER ban, in both directions** (borrowed from `loneliness`, the only
+other angle that needs it):
+
+- *"You will always miss him"* — a life sentence handed down by a stranger.
+- *"It will pass"* — a promise the funnel cannot keep.
+
+Both poles are refused explicitly. `cards-stop-missing` carries the sharpest version, because
+"ever" is the load-bearing word in its headline.
+
+### 🔴🔴 NEVER PRESUME HOW HE CAME TO BE GONE — she may be bereaved
+
+*"I miss him so much"* is precisely what a **widow** types, and none of these three headlines
+asks her to say which she is. A read that assumes he chose to walk away is brutal if he died; a
+read that assumes a death is absurd if he left.
+
+So nothing in the nine reads, three openers or three context lines names a breakup, a decision
+he made, a death, or a body. The furthest any of them goes is *"no longer in her life"*, and the
+opener asks only *"how long has it been since he was part of your day"* — deliberately neutral
+as to which.
+
+⚠️ **The consequence is a MEDIUMSHIP ban on an angle that has no frame to carry it.** If she is
+bereaved, every failure mode of the `soulmate-after-loss` family applies — *he is at peace*,
+*he is watching over you*, *he sent you here*. That family gets the ban from its own prompt
+frame. This one runs under **decode-him**, which bans none of it, and `universalSafety.ts`
+screens none of it either. **The ban is therefore written out per-hook in
+`TAROT_HOOK_TENDENCY`** and asserted in the guard file.
+
+> 📌 No sixth frame was added — deliberately. The frame ternary in `buildTarotReflectPrompt` is
+> already documented as being at the limit of what reads well, and the lookup refactor is a
+> change worth making on its own rather than riding along with a shipping family. The cost of
+> that decision is that **all four of this family's bans live in the three tendency strings**,
+> which is why the guard file asserts them string-by-string.
+
+### ⚠️ Held apart from `healing` — one word separates the nearest pair
+
+`healing` has been live since 2026-08-04 and `cards-cant-stop` ("Why can't I stop **thinking**
+about him?") sits one word from `cards-stop-missing` ("Will I ever stop **missing** him?").
+
+That closeness is the reason to **separate** them, not to merge them: adding three hooks to a
+running family retroactively mixes two questions inside one set of numbers. The two families are
+held apart at the level of the finding — `healing` reads **why the thinking persists**, these
+read **what the ache is made of** — and the guard file pins zero shared 6-word runs in beat 3.
+
+🔴 `HEALING_HOOKS` must stay exactly three. `cards-cant-stop` is **untouched** (standing rule: a
+new headline never replaces an old lander), so healing-vs-missing-him is an **angle-level**
+comparison, and it is a clean one — unlike `reunion`/`fidelity`, no incumbent is excluded.
+
+### Three separate findings
+
+| Hook | Finding |
+|---|---|
+| `cards-stop-hurting` | the missing is **work she is performing**, not damage being done to her — which is why it exhausts her, and why the exhaustion is earned rather than a sign she is coping badly |
+| `cards-stop-missing` | missing is **not a thing decision can reach**, so failing to will it away is not a verdict on her character |
+| `cards-still-miss-him` | feeling and judgement are **separate instruments that were never synchronised** — one lagging does not overturn the other, so she has not gone back on anything |
+
+⚠️ **`cards-still-miss-him` is the heaviest of the three** and the sibling of
+`cards-who-hurt-me`. *"After everything"* means after what he did, so she has **already named a
+harm** — same two opposite pulls (minimising it abandons her; pronouncing on him is the
+forbidden verdict), plus a third specific to it: the real question under the headline is *what
+is wrong with me*, so nothing may land as her weakness, naivety, low self-worth, poor
+boundaries, trauma bonding or an attachment disorder.
+
+### 🔴 Openers must not manufacture despair
+
+Same constraint as `loneliness`, binding harder: `cards-stop-hurting` says *hurting* in the
+headline, so *"how bad does it get?"* or *"what are the nights like?"* would produce the exact
+phrasings `SOFT_CRISIS_PATTERNS` (`server/lib/universalSafety.ts`) exists to catch — on a page
+that invited them. Each opener asks for a **concrete, answerable detail** instead (a duration,
+an object, a trigger), which is also the material the read actually needs.
+
+⚠️ Expect this family to trip the **soft**-crisis path more often than any other. That path is
+non-blocking by design (`safe: true` + `softCrisisNote`), so it adds care rather than derailing
+the funnel — but it is worth watching in the transcripts once spend starts.
+
 ## Concepts
 
 | # | Deck id | Facing | Cards (A/B/C) | Options | Status | Notes |
@@ -592,6 +688,9 @@ excusing him, no landing as her fault.
 | `cards-talking-someone` *(fidelity)* | Is he talking to someone else? | ⬜ DRAFT (2026-08-07) — 🔴 most evidence-adjacent; the surveillance ban does the heavy lifting |
 | `cards-faithful` *(fidelity)* | Is he being faithful to me? | ⬜ DRAFT (2026-08-07) — refuses the summary judgment both ways; routes to her not being able to rest |
 | `cards-loyal` *(fidelity)* | Is he loyal to only me? | ⬜ DRAFT (2026-08-07) — the word is "only"; reads the PORTION she has taken for the whole |
+| `cards-stop-hurting` *(missing-him)* | I miss him so much — will this ever stop hurting? | ⬜ DRAFT (2026-08-10) — 🔴 asks for a DURATION outright; the refusal is the reading. Reads the ache as work she is performing |
+| `cards-stop-missing` *(missing-him)* | Will I ever stop missing him? | ⬜ DRAFT (2026-08-10) — ⚠️ the FOREVER question; refuses both poles. Reads missing as a thing decision cannot reach |
+| `cards-still-miss-him` *(missing-him)* | Why do I still miss him after everything? | ⬜ DRAFT (2026-08-10) — 🔴 heaviest of the three, sibling of `cards-who-hurt-me`; never minimise the named harm, never convict him, never land as her weakness |
 | `cards-love-again` *(self-frame)* | Will I love again? | ⬜ draft — 🔴 **no reads on either FACE-DOWN deck**, so a clean URL silently falls back to `cards-honest`/`decode-him`. Only works with an explicit `&deck=arcana-mfh` |
 | `cards-soulmate` *(self-frame)* | When is my soulmate coming? | ⬜ draft (2026-07-27, from `ZN_Tarot_Rio 8.png` = arcana-eef cards; reads on arcana-eef + arcana-mfh; answers "when" as a leaning, never a date) |
 
