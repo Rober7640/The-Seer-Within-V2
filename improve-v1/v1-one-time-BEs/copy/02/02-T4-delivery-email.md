@@ -66,7 +66,7 @@ it isn't a postscript, it's the part that carries you through the first month.
 
 If it doesn't open, or it lands in your promotions tab, reply to this email and
 I'll send it another way. Keep it somewhere you'll find it again; women come back
-to these months later, usually around the time something in them starts happening.
+to these months later, around the time something in them starts happening.
 
 <!-- BEAT 8 · sign off. No CTA, no next offer -->
 

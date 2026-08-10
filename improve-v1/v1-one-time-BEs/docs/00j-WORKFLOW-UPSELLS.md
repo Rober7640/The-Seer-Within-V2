@@ -149,21 +149,31 @@ Decide each one explicitly and write down why.
 
 ## Step 4 — the code
 
-### 4a. FIRST: make the resolver multi-offer *(one-time refactor, not yet done)*
+### 4a. FIRST: make the resolver multi-offer ✅ *(done 2026-08-08)*
 
-`client/src/lib/twinFlameUpsellCopy.ts` currently ends with a two-way branch on
-`isTwinFlameOffer()`. **Adding 03 by adding a second `if` is the wrong move.**
-Before 03, refactor to a prefix-keyed registry:
+`client/src/lib/twinFlameUpsellCopy.ts` used to end with a two-way branch on
+`isTwinFlameOffer()`. **Adding 03 by adding a second `if` was the wrong move**,
+so it is now a prefix-keyed registry. What exists today:
 
 ```
-lib/backendOffers.ts        prefix → { upsell1, upsell2 }   (registry + resolver)
-lib/upsellCopy/twinFlame.ts 02's copy, moved as-is
-lib/upsellCopy/judgement.ts 03's copy
+lib/backendOffers.ts         prefix → { upsell1, upsell2 }  (registry + resolver)
+lib/upsellCopy/types.ts      the four shapes + displayName()
+lib/upsellCopy/v1.ts         V1's chains + copy objects — ⛔ six live funnels
+lib/upsellCopy/twinFlame.ts  02's copy, moved byte-identical
+lib/upsellCopy/judgement.ts  03's copy
 ```
 
-`upsell1Copy(pathname)` / `upsell2Copy(pathname)` keep their signatures, so the
-hooks do not change. The existing tests must stay green across the move — that
-is what proves it was a move and not a rewrite.
+`lib/twinFlameUpsellCopy.ts` is **gone**; its four importers (both hooks, the 02
+thank-you page, the 02 test suite) now import from `lib/backendOffers`.
+
+The prefixes themselves stay in `lib/funnel.ts`
+(`BACKEND_OFFER_PREFIXES`, `backendOfferPrefix()`), not in the registry, so
+`funnelPath()` can route `/welcome1 → /welcome2 → /success` inside an offer
+without importing any copy. ⚠ Keep that import one-directional.
+
+`upsell1Copy(pathname)` / `upsell2Copy(pathname)` kept their signatures, so no
+hook changed. 02's 25 tests stayed green across the move and `tsc` gained no new
+errors — that is what proves it was a move and not a rewrite.
 
 ### 4b. Then, per offer
 

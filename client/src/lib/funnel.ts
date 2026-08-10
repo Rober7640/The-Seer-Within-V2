@@ -63,19 +63,83 @@ export function skipEmail(search?: string): boolean {
   }
 }
 
-// ─── Backend deck, offer 02 (Twin Flame Tarot) ─────────────────────────────
-// NOT an entry in shared/funnelConfig.ts, deliberately. That file drives the
+// ─── The backend deck's offers ─────────────────────────────────────────────
+// NOT entries in shared/funnelConfig.ts, deliberately. That file drives the
 // Stripe product suffix, the AWeber tag and the `funnel` param the client
-// sends to the charge endpoints — and offer 02's Stripe is not built yet, with
-// its own bump identifiers still owed (00h "NOT built"). Registering it there
-// would quietly attach 02 to V1's money paths. This prefix is client-side URL
-// knowledge only: which copy the shared upsell components run, and where
-// /welcome1 hands off to next.
-export const TWIN_FLAME_PREFIX = "/tarot/twin-flame";
+// sends to the charge endpoints — and no backend offer has its own Stripe yet,
+// with their bump identifiers still owed (00h "NOT built"). Registering one
+// there would quietly attach it to V1's money paths. These prefixes are
+// client-side URL knowledge only: which copy the shared upsell components run,
+// and where /welcome1 hands off to next.
+//
+// The copy each prefix resolves to lives in lib/backendOffers.ts. This file
+// deliberately holds no copy, so routing can never depend on it.
+export const TWIN_FLAME_PREFIX = "/tarot/twin-flame"; // 02 Twin Flame Tarot
+export const JUDGEMENT_PREFIX = "/wiccan/judgement-day"; // 03 Judgement Day
+
+export const BACKEND_OFFER_PREFIXES = [
+  TWIN_FLAME_PREFIX,
+  JUDGEMENT_PREFIX,
+] as const;
+
+// The prefix the path belongs to, or null for V1 and the ad funnels.
+export function backendOfferPrefix(pathname?: string): string | null {
+  const p = pathname ?? currentPath();
+  return (
+    BACKEND_OFFER_PREFIXES.find(
+      (prefix) => p === prefix || p.startsWith(`${prefix}/`),
+    ) ?? null
+  );
+}
+
+export function isBackendOffer(pathname?: string): boolean {
+  return backendOfferPrefix(pathname) !== null;
+}
 
 export function isTwinFlameOffer(pathname?: string): boolean {
-  const p = pathname ?? currentPath();
-  return p === TWIN_FLAME_PREFIX || p.startsWith(`${TWIN_FLAME_PREFIX}/`);
+  return backendOfferPrefix(pathname) === TWIN_FLAME_PREFIX;
+}
+
+export function isJudgementOffer(pathname?: string): boolean {
+  return backendOfferPrefix(pathname) === JUDGEMENT_PREFIX;
+}
+
+// ─── Her first name, carried down from the letter ──────────────────────────
+// She arrives from an AWeber letter, and AWeber knows her name. The letter's
+// CTA carries it as `?fn=`, the booking page keeps it for the tab, and checkout
+// will send it on as Stripe `metadata.firstName` — which is the difference
+// between "Thank you, Sarah" and "Thank you, Friend" on every screen after the
+// money. `displayName()` stays as the safety net for a forwarded letter.
+//
+// sessionStorage, not localStorage, and for the same reason as the no-email
+// arm: a name belongs to this visit and must never leak into a later, unrelated
+// one on the same browser.
+const FIRST_NAME_KEY = "seer_fn";
+
+// Names have spaces and apostrophes, so the letter URL-encodes it and
+// URLSearchParams decodes it back. Anything absurdly long is somebody playing
+// with the query string, not a name.
+const MAX_FIRST_NAME = 40;
+
+export function bookingFirstName(search?: string): string | null {
+  if (typeof window === "undefined") return null;
+  const raw = new URLSearchParams(search ?? window.location.search).get("fn");
+  if (raw !== null) {
+    const name = raw.trim().slice(0, MAX_FIRST_NAME);
+    try {
+      if (name) window.sessionStorage.setItem(FIRST_NAME_KEY, name);
+      else window.sessionStorage.removeItem(FIRST_NAME_KEY);
+    } catch {
+      /* sessionStorage unavailable (private mode) — fall back to URL only */
+    }
+    return name || null;
+  }
+  // Param absent → the name this tab already arrived with, if any.
+  try {
+    return window.sessionStorage.getItem(FIRST_NAME_KEY) || null;
+  } catch {
+    return null;
+  }
 }
 
 // Prefix a V1 path with the active funnel's prefix when the user is in an ad
@@ -88,17 +152,20 @@ export function funnelPath(v1Path: string, pathname?: string): string {
     if (v1Path === "/") return def.prefix;
     return `${def.prefix}${v1Path}`;
   }
-  // Offer 02 mounts only the two upsell steps under its prefix. Without this,
-  // /tarot/twin-flame/welcome1 would hand off to V1's /welcome2 and the buyer
-  // would drop out of 02's copy mid-flow.
+  // A backend offer mounts only the two upsell steps and its thank-you page
+  // under its prefix. Without this, /tarot/twin-flame/welcome1 would hand off
+  // to V1's /welcome2 and the buyer would drop out of the offer's copy
+  // mid-flow.
   //
-  // ⚠ "/" is deliberately NOT in this list: offer 02 has no lander, because the
-  // buyer arrives from an email letter. It still falls through to V1's.
+  // ⚠ "/" is deliberately NOT in this list: no backend offer has a lander,
+  // because the buyer arrives from an email letter. It still falls through to
+  // V1's.
+  const offerPrefix = backendOfferPrefix(path);
   if (
-    isTwinFlameOffer(path) &&
+    offerPrefix &&
     (v1Path === "/welcome1" || v1Path === "/welcome2" || v1Path === "/success")
   ) {
-    return `${TWIN_FLAME_PREFIX}${v1Path}`;
+    return `${offerPrefix}${v1Path}`;
   }
   return v1Path;
 }

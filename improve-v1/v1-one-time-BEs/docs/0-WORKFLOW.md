@@ -10,8 +10,9 @@ Two halves:
 - **Phase B — the product.** The reading itself: planned, written to length,
   formatted as a Word doc, exported to PDF, with the tarot cards inserted. **This
   is the thing she actually paid for.**
-- **Phase C — the two emails that carry it.** The confirmation she gets on
-  purchase, and the one that delivers the reading.
+- **Phase C — the customer list, and the two emails it sends.** She joins the
+  backend deck's own AWeber list the moment she pays. That is what sends her the
+  thank-you, and later the one that delivers the reading.
 
 **How we use it:** Claude does one step, shows you, and waits. You approve or
 send it back. Nothing goes live — none of these offers has Stripe yet, so no
@@ -24,8 +25,30 @@ button charges anyone.
 > Read `improve-v1/v1-one-time-BEs/docs/0-WORKFLOW.md` and do the next unticked
 > step for offer `<number>`.
 
-Copy this file per offer if you want a clean set of tick boxes for each — e.g.
-`0-WORKFLOW-03.md`. The steps never change; only the worksheet answers do.
+### 📋 Every new offer gets its own copy of this file
+
+```
+cp docs/0-WORKFLOW.md docs/<nn>/0-WORKFLOW-<nn>.md
+```
+
+**This file is the single source of truth.** ⛔ It is never ticked — the steps
+stay empty so every new offer reads them clean. The copy is where the offer is
+worked: ticked, answered, annotated.
+
+| | Master *(this file)* | The offer's copy |
+|---|---|---|
+| The steps, and the **rules and craft** learned while building | ✅ the only home | ⛔ never edited there |
+| ☑ **Ticks**, worksheet answers, decision answers, notes | ⛔ never | ✅ that is what it is for |
+| Every screen's URL | ✅ the whole deck, one table | ✅ that offer's rows only |
+| What was built and every departure from the copy specs | ⛔ | the offer's deliverables doc — 03's is [`00l`](./00l-DELIVERABLES-03.md) |
+
+⛔ **Learned something general while building? Write it HERE first, then pull it
+down into the copy.** A rule improved only in a copy is a rule the next offer
+never gets — which is exactly how 02's chat ended up an older shape than 03's
+without anybody deciding it should be. That is the one failure mode of working
+in copies, and it is avoided by hand, every time.
+
+**Live copies:** [`03/0-WORKFLOW-03.md`](./03/0-WORKFLOW-03.md).
 
 ---
 
@@ -34,13 +57,84 @@ Copy this file per offer if you want a clean set of tick boxes for each — e.g.
 | | Archetype | Money | Needs her reply? | Product | Funnel |
 |---|---|---|---|---|---|
 | **02** Twin Flame | Reading | $35 fixed + bump | no | written, 4,821 words, 12 cards | ✅ built — [`00i`](./00i-DELIVERABLES-U1-U2.md) |
-| **03** Judgement Day | **Act** | pay-what-you-want | **yes** | written, 2,429 words | analysed in [`00k`](./00k-PLAN-03-UPSELLS.md) |
+| **03** Judgement Day | **Act** | pay-what-you-want | **yes** | written, 2,429 words | ◐ booking built, upsells not — tick sheet in [`00l`](./00l-DELIVERABLES-03.md), upsells planned in [`00k`](./00k-PLAN-03-UPSELLS.md) |
 | **04** The Turn | Reading | ladder $35→$47→$57→$67 | no | written, 3,714 words | not analysed |
 | **05** Hex Her | — | — | — | — | ⚠ no copy at all yet |
 
 ⚠ **"Written" means the words exist in a markdown file.** No product has been
 formatted, had its cards inserted, or been made deliverable. Phase B has never
 been run.
+
+---
+
+## 📎 Every screen we have built, and how to see it
+
+**One row per screen that renders.** Keep it current as you build — a screen
+nobody can find is a screen nobody reviews, and by the next session the URL and
+the query string that makes it work are gone. See rule 7.
+
+Local base: `http://localhost:5000`, after `npm run dev`.
+⛔ **Nothing here charges.** Every button logs `[preview] would checkout {…}`.
+
+### 02 — Twin Flame *(Reading · $35 fixed + bump)*
+
+| Screen | Path | Treatment | State |
+|---|---|---|---|
+| Booking | `/tarot/twin-flame/preview-page` | page | ✅ built · preview |
+| Booking | `/tarot/twin-flame/preview-chat` | chat | ✅ built · preview |
+| Upsell 1 — Protection Ritual | `/tarot/twin-flame/welcome1?demo=true` | chat | ✅ built · preview |
+| Upsell 2 — Manifestation Bracelet | `/tarot/twin-flame/welcome2?demo=true` | chat | ✅ built · preview |
+| Thank-you *(receipt)* | `/tarot/twin-flame/success` | page | ✅ built · preview |
+
+⚠ `?demo=true` is **required** on the two upsells — without it they expect a real
+conversation in the database and will not render.
+⚠ 02's booking sits at `preview-page` / `preview-chat` because two treatments
+were competing. 03 puts the page at the offer root instead, which is where the
+letter's `{{BOOKING_URL}}` actually points.
+
+### 03 — Judgement Day *(Act · pay-what-you-want · needs her reply)*
+
+| Screen | Path | Treatment | State |
+|---|---|---|---|
+| Booking · step 1 **Agree** | `/wiccan/judgement-day` | page | ✅ built · preview |
+| Booking · step 2 **Give** | `/wiccan/judgement-day?step=give` | page | ✅ built · preview |
+| Booking | `/wiccan/judgement-day/chat` | chat | ✅ built · preview |
+| Upsell 1 | — | chat | ❌ not built (A4). Copy drafted in `copy/03/03-U-upsell-beats.md` |
+| Upsell 2 | — | chat | ❌ not built (A5) |
+| Thank-you = **the Entry form** | — | page | ❌ not built (A6) ⚠ load-bearing: the booking screens no longer ask her for the Entry anywhere |
+
+Query strings that change what you see:
+
+| Add | To | Shows |
+|---|---|---|
+| `?fn=Sarah` | either booking treatment | what the letter passes down. ⚠ Nothing displays it — it rides through to checkout |
+| `?step=give` | the booking page | step 2 — ⛔ only if the four boxes were ticked this visit. A cold link bounces to step 1 |
+| `?cancelled=1` | the booking chat | the back-from-Stripe door, with its own copy |
+
+### 04 — The Turn · 05 — Hex Her
+
+Nothing built. 04 is `/wiccan/tea-reading`, 05 is `/wiccan/hex-her` when they
+come — named in D1 so they slot in beside 03.
+
+### Not this deck, but next door
+
+| Screen | Path | Note |
+|---|---|---|
+| V1 funnel | `/` | ⛔ **live and taking money.** Six funnels share its code — the walks assert it still serves |
+| Paywall redesign | `/paywall-preview` | separate work, behind a disabled flag |
+
+### The proof
+
+| | Evidence |
+|---|---|
+| 02 | see [`00i`](./00i-DELIVERABLES-U1-U2.md) |
+| 03 booking, split | [`03-booking-split-2026-08-09`](../../evidence/03-booking-split-2026-08-09/README.md) — 50 page assertions, 47 chat |
+| 03 booking, single page *(superseded)* | `improve-v1/evidence/03-booking-2026-08-08/` |
+
+```
+node improve-v1/v1-one-time-BEs/scripts/walk-03-booking.mjs      improve-v1/evidence/<folder>
+node improve-v1/v1-one-time-BEs/scripts/walk-03-booking-chat.mjs improve-v1/evidence/<folder>/chat
+```
 
 ---
 
@@ -134,12 +228,22 @@ you, Friend" on every screen after the money.
 6. **Questions are free.** She answers in the chat and Evelyn uses it two
    messages later — no stored data needed. Drop them only if you want them
    dropped. 02 has none because you asked for that on 02; it does not carry over.
+7. 📎 **Every screen that renders gets a row in *Every screen we have built*
+   above** — its path, its treatment, its state, and any query string needed to
+   see it. Do it the moment it renders, not at the end of the step. ⚠ Keep the
+   **state** column honest too: a row still saying *preview* after Stripe lands
+   is worse than no row.
+8. **She joins the customer list the moment she pays, and the tag IS the send.**
+   One AWeber list for the whole deck, one tag per offer, and an AWeber Campaign
+   triggered by that tag is what puts her thank-you in her inbox. So the
+   list-add is not bookkeeping to be done later — a failed write is a woman who
+   paid and got nothing. See C0.
 
 ## What the archetype changes
 
 | | **Reading** (02, 04) | **Act** (03) |
 |---|---|---|
-| Thank-you page | a **receipt** — confirm, name the email subject, stop | an **intake gate** — the reply instruction goes *above* the delivery promise |
+| Thank-you page | a **receipt** — confirm, name the email subject, stop | the **intake itself** — a form she fills in on the page, ⚠ not an instruction to reply to an email (03, 2026-08-09) |
 | Her details | may exist at checkout | arrive later, by reply |
 | Product shape | one section per card | a verdict, then what to do about it |
 | Product length | 3,000–5,000 words | shorter by nature — see Phase B |
@@ -150,36 +254,112 @@ you, Friend" on every screen after the money.
 | Model | Booking page needs | Built? |
 |---|---|---|
 | Fixed + bump (02) | a total and a bump card | ✅ yes |
-| Pay-what-you-want (03) | an amount box she types in, with a floor | ❌ new |
+| Pay-what-you-want (03) | an amount box she types in, empty, with a floor that is **enforced, never printed, and never spoken mid-keystroke** | ❌ new |
 | Ladder (04) | four price options, one chosen | ❌ new |
 
 ---
 
-## Decisions log
+## The decisions Claude must stop and ask
 
-Claude stops and asks at each. Write the answers here as you go.
+⚠ **The answers go in the offer's deliverables doc, not here.** 03's are in
+[`00l`](./00l-DELIVERABLES-03.md), with the reasoning kept — a decision without
+its why gets re-litigated every time somebody new reads it.
 
-| # | Decision | Answer |
+| # | Decision | Asked at |
 |---|---|---|
-| D1 | The URL this offer lives at (02 is `/tarot/twin-flame`) | ☐ |
-| D3 | Any promise on the booking page that needs code (capacity caps, deadlines) — build it, or hide the sentence | ☐ |
-| D4 | Money limits — the floor for pay-what-you-want, or the rungs of a ladder | ☐ |
-| D5 | Product length, if it is currently under 3,000 words | ☐ |
-| D6 | Card artwork — the public-domain deck we already hold, or something commissioned | ☐ |
-| D7 | **One PDF per buyer (merged, automated) or one PDF for everyone** — decides whether Word is a per-order step or a one-off design step | ☐ |
-| D8 | PDF attached to the email, or hosted and linked | ☐ |
-| D9 | The free gift as a closing section of the same PDF, or its own file | ☐ |
-| D10 | How long after delivery the next offer sends, and in which email | ☐ |
+| D1 | The URL this offer lives at (02 is `/tarot/twin-flame`) | A1 |
+| D3 | Any promise on the booking page that needs code — capacity caps, deadlines. **Build it, or cut the sentence** | A2 |
+| D4 | Money limits — the floor for pay-what-you-want, or the rungs of a ladder | A2 |
+| D11 | **One page, or one job per screen** — split it once the booking page passes ~2 phone screens | A2 |
+| D5 | Product length, if it is currently under 3,000 words | B1 |
+| D6 | Card artwork — the public-domain deck we already hold, or something commissioned | B4 |
+| D7 | **One PDF per buyer (merged, automated) or one PDF for everyone** — decides whether Word is a per-order step or a one-off design step | B5 |
+| D8 | PDF attached to the email, or hosted and linked | B6 |
+| D9 | The free gift as a closing section of the same PDF, or its own file | B6 |
+| D10 | How long after delivery the next offer sends, and in which email | C2 |
+
+⚠ **There is no D2** — the gap predates this file and no reason for it survives.
+Left as it is: the offer docs cite these by number, so renumbering would break
+every citation to buy nothing.
 
 ---
 
 # Phase A — the funnel
 
 ### ☐ A1. Fill in the worksheet, settle D1
-Claude proposes, you confirm. Ten minutes, and it unblocks everything.
+Claude proposes, you confirm. Ten minutes, and it unblocks everything. Write the
+answers into **the offer's deliverables doc**, not here.
 
-### ☐ A2. The booking page
+### ☐ A2. The booking page — **and its chat**
 **Read:** `0X-C1`, and `00e-FRAMEWORK-BEs.md` §3.
+
+⚠ **A booking page over about 2 phone screens should be split** *(learned on 03,
+2026-08-09)*. 03's measured 3,450px — 4.1 screens of unbroken commitment copy
+before the button, and it leaks silently at whatever depth she gives up. One
+job per screen: assent, then money. The rules that make it survivable —
+
+- **Step one must cost nothing.** No keyboard, no price. Say so out loud on it.
+- **Its button is her own sentence**, not *Next*.
+- **The step goes in the URL**, so the browser's own Back walks between steps
+  instead of leaving the funnel, and her ticks survive it.
+- ⛔ **A cold arrival at a later step goes back to step one.** Consent not given
+  in that page's lifetime is never assumed.
+- **The bump does not get a screen of its own** — inline beside the total is the
+  whole reason a bump converts.
+- ⚠ **Two screens means two numbers.** That is half the argument for splitting;
+  wire the drop-off measurement when the offer gets tracking.
+
+⚠ **This step has TWO deliverables, not one** — a gap in an earlier draft of
+this workflow, found on 03 *(operator, 2026-08-08)*. Every offer needs a **page
+treatment AND a chat treatment**, because the letter's CTA has two candidates
+for what it lands on. 02 built both (`TwinFlameBookingPage` /
+`TwinFlameBookingChat`) and 03 now does too (`/wiccan/judgement-day` and
+`/wiccan/judgement-day/chat`).
+
+The chat is not a re-skin of the page. What changes:
+
+- **Fewer statements, one line each.** The page is faithful to the source
+  package; the chat is the 3-point commitment gate — plus any the archetype
+  forces. 03 runs four because an ACT offer's intake agreement cannot be
+  dropped.
+- **Evelyn speaks in the stream, never inside the card.** The card is the
+  buyer's first person, exactly as the page is.
+- **The bump is its own TURN, after she has committed**, and it is rewritten in
+  Evelyn's voice as a question. The page's bump is a checkbox label — right
+  there, wrong here.
+- **Resume copy exists**, for a refresh and for the Stripe cancel round-trip.
+  ⛔ Position is restored; consent never is. ⚠ **A refresh is not a return** —
+  she never left, so do not greet her for coming back. That line belongs to the
+  Stripe round-trip alone, where it is true, and there it should also say
+  **nothing has been taken**: she has just walked off a payment page and that is
+  her live question.
+- ⚠ **The letter re-argues nothing.** The chat is a greeting and a close.
+
+**How it is paced** *(learned on 03, 2026-08-09 — applies to every offer's chat)*
+
+- **One sentence per turn.** A beat's lines must not land as a block: that is a
+  transcript being pasted in, not somebody talking.
+- ⛔ **Never a flat delay.** If every line takes the same time, a three-word
+  greeting and a ninety-character sentence arrive at the same speed, and the
+  reader knows it is a machine before she can say why. Pace on **character
+  count, with run-to-run variance** — `client/src/lib/chatPace.ts` does this and
+  is ready to reuse.
+- **Faster than a reading chat.** V1's `lib/typing.ts` runs 60ms/char up to five
+  seconds, which is right for a reading and wrong here: this sits between the CTA
+  and Stripe, and latency in front of a payment reads as a slow payment. 03 runs
+  ~18ms/char, capped at 2s, whole run to the card ~3.5s.
+- **Open on her already writing** — the typing indicator, not a wall of text that
+  was always there, and not a blank screen either. Use V1's own three-dot markup
+  (`ChatPage.tsx`) so every chat looks like the same woman at the same keyboard.
+- **The card gets its own beat**, rather than landing on the heels of the last
+  sentence. It is the payoff.
+- ⚠ **Assert the pace in the walk**, or a later edit flattens it back silently.
+  03 times the long line and fails under 1.2s.
+
+⛔ **Copy 03's chat, not 02's.** `TwinFlameBookingChat.tsx` predates all of the
+above and still reveals a beat's lines as a block with no paced typing. It is
+the older shape, not the agreed one, and 02 should be ported when it is next
+opened.
 
 Statements in **her** voice — Evelyn does not speak on this page. Then the money
 part, the bump, the button.
@@ -189,12 +369,14 @@ the most important sentence on the page. Without that reply the work never
 starts.
 
 **Done when:** it renders, the button only appears once she has ticked
-everything, and it logs instead of charging.
+everything, it logs instead of charging, and 📎 **both treatments have rows in *Every screen
+we have built*** with whatever query string they need.
 
 ### ☐ A3. The order bump
 **Read:** `0X-C3`.
 
-Sits inline beside the total.
+Sits inline beside the total, and is **never pre-checked** — a pre-selected paid
+add-on is a negative option under FTC and card-network rules.
 
 ⚠ It must carry **its own product code**. The fulfilment robot matches on that
 exact text, so a reused code sends her the wrong thing.
@@ -221,16 +403,28 @@ at that moment.
 ### ☐ A6. The thank-you page
 **Read:** `0X-T1`.
 
-Receipt or intake gate — see the archetype table. Getting this backwards is the
+Receipt or intake — see the archetype table. Getting this backwards is the
 easiest mistake in the build.
 
 ⚠ The email subject line shown here must match the product email **exactly**.
+
+⚠ **On an ACT offer this screen IS the intake**, and on 03 it is now
+load-bearing: the booking page no longer asks her for the Entry anywhere. It
+needs the form (who, what they did, how long), a *"send me the link"* escape for
+the woman who cannot write it at that moment, and — because she has already paid
+— a **fallback record** for whoever never comes back. ⛔ A paid product must
+never fail to arrive.
 
 ### ☐ A7. Wiring and tests
 Routes for all four pages. Test file copied from 02's and re-pointed.
 
 ⚠ Tests must prove the live funnel is untouched. ⚠ The offer needs the scrolling
 fix 02 has, or its buttons sit below the fold.
+
+📎 **Then reconcile the whole offer against *Every screen we have built*** —
+every route registered here should already have a row, and this is where a
+missed one shows up. Rows added at the end of a build are the ones with the
+wrong query string in them.
 
 ### ☐ A8. Walk it and screenshot it
 Claude drives a real browser through the whole thing and saves the screenshots so
@@ -470,20 +664,109 @@ Every box, every time:
 
 ---
 
-# Phase C — the two emails that carry it
+# Phase C — the customer list, and the two emails it sends
 
-Only two, and both are part of the purchase. The marketing emails — sales
+Only two emails, and both are part of the purchase. The marketing emails — sales
 letter, abandon nudges — stay out of this workflow.
 
 Between them these two are the whole gap between paying and reading, and that
 gap is where refunds get requested.
 
-### ☐ C1. The confirmation email — sends immediately
+**Both come out of AWeber** *(operator, 2026-08-09)*, off the deck's own customer
+list. Nothing in this phase sends mail from our own code.
+
+### ☐ C0. The customer list — built ONCE, for the whole deck
+
+**Read:** nothing. This step happens on the first offer that ships and every
+offer after it inherits the result. If `AWEBER_BE_CUSTOMER_LIST_ID` is already in
+`.env`, tick it and go to C1.
+
+**ONE list, a tag per offer** *(operator, 2026-08-09)*. Not a list per offer. A
+woman who buys 02 and then 03 is one customer, in one place, counted once against
+the AWeber bill. Everything that differs per offer differs by tag.
+
+⛔ **Not the existing paid list.** `theseerwithin_paid` (6936955) is V1's $35
+buyers — 5,290 of them. Anything automated on that list reaches all of them.
+
+#### Once, by hand
+
+1. **Create the list in AWeber's web UI.** Name it to the account's own
+   convention, beside `theseerwithin_paid` and `theseerwithin_soulmate_paid` —
+   **`theseerwithin_be_customer`**.
+
+   ⛔ **The API cannot do this.** `POST /accounts/{id}/lists` returns
+   **405 Method Not Allowed** — tried 2026-08-10, it is a hard limit of AWeber
+   API 1.0, not a scope problem. Do not spend an hour on it again.
+2. **Add four custom fields to it**, spelled exactly:
+
+   | Field | Written when | Carries |
+   |---|---|---|
+   | `stripe_order_id` | she pays | the join back to Stripe and to support |
+   | `offer` | she pays | `twin-flame`, `judgement-day`, … |
+   | `entry_url` | she pays, ACT offers only | her Entry form, for the woman who closed the page |
+   | `reading_url` | when her PDF exists | what the delivery email links to |
+
+3. **Put the list id in `.env`** as `AWEBER_BE_CUSTOMER_LIST_ID`.
+
+⚠ **A custom field is per-list.** It does not exist on the new list because it
+exists on another one. Missing fields fail quietly — the subscriber is created
+and the value is dropped.
+
+⚠ **The API *can* create custom fields, but our token cannot.**
+`POST …/lists/{id}/custom_fields` answers *"Missing required scopes:
+list.write"* (checked 2026-08-10). The broadcast token is minted with
+`account.read, list.read, subscriber.read, subscriber.write, email.read,
+email.write` — see `SCOPES` in `docs/aweber/aweber-oauth.cjs`. Adding
+`list.write` there and re-authorising would open this path; until somebody wants
+that, four fields by hand on the same screen as the list is two minutes.
+
+#### The tags — ⛔ an API, not labels
+
+`server/lib/backendCustomerList.ts` holds them, and its unit tests assert the
+literal strings, because three things exact-match them and none of them live in
+this repo: the thank-you Campaign, the delivery Campaign, and n8n's fulfilment
+filter. **Add tags; never rename one.**
+
+| Tag | Applied | What it does |
+|---|---|---|
+| `be-customer` | every backend buyer | the segment "has bought from the deck" |
+| `be-<nn>-<slug>` | at purchase | ⚡ **fires her thank-you** |
+| `be-<nn>-bump` | at purchase, if she took the bump | fulfilment, and a segment worth having |
+| `be-<nn>-delivered` | when her PDF exists | ⚡ **fires the delivery email** |
+
+#### Per offer, in code
+
+One call at the moment she pays, and one when her reading is ready:
+
+```ts
+import { addBackendCustomer, markBackendReadingDelivered } from './lib/aweber';
+
+await addBackendCustomer({ email, firstName, offer: 'judgement-day',
+                           stripeOrderId, bumpPurchased, entryUrl });
+await markBackendReadingDelivered({ email, offer: 'judgement-day',
+                                    stripeOrderId, readingUrl });
+```
+
+- ⚠ **Log a failure loudly and retry it.** Rule 8: the write is the send.
+- 🔴 **Never send an empty `custom_fields`.** AWeber reads `{}` with
+  `update_existing` as *clear every custom field*, which is how a soulmate buyer
+  lost her `stripe_order_id` eleven seconds after paying. Both functions above
+  refuse rather than risk it, and the delivery call deliberately re-sends the
+  fields it did not change.
+- Both are idempotent, because Stripe retries `checkout.session.completed`.
+
+**Done when:** the list exists, its four fields exist, the id is in `.env`, and
+`npx vitest run server/lib/backendCustomerList.test.ts` is green.
+
+### ☐ C1. The thank-you email — sends immediately
 
 **Read:** `0X-T3`.
 
 ⚠ **Check whether it already exists before writing one.** 02's is written in full
 (`02-T3`), including a story to fill the wait.
+
+**How it sends:** an AWeber Campaign on the customer list, triggered by this
+offer's tag. She is tagged at the moment she pays, so it lands within a minute.
 
 What it has to do:
 
@@ -511,11 +794,41 @@ format is emoji + first name + curiosity. This one is a receipt — she is
 expecting it and support will ask her to find it six weeks later. Do not turn it
 into a hook.
 
+**Rendering it.** The spec file IS the source — there is deliberately no second
+copy of the words:
+
+```
+node improve-v1/v1-one-time-BEs/scripts/render-be-email.mjs \
+     improve-v1/v1-one-time-BEs/copy/<nn>/<nn>-T3-confirmation-email.md
+```
+
+It writes `.html` and `.txt` beside the spec, in the canonical Evelyn shell, and
+drops the notes (the frontmatter table, `<!-- BEAT n -->` comments, everything
+from `## Build notes` down).
+
+⚠ **`%FIRSTNAME%` becomes AWeber Liquid, with TWO fallbacks.** `Dear
+%FIRSTNAME%,` with a `"dear"` fallback renders **"Dear dear,"** for every buyer
+whose name we never captured — and `?fn=` only arrives from the AWeber letter, so
+that is a real share of them. The renderer gives the salutation `"friend"` and
+everything mid-sentence `"dear"`. Do not flatten them back to one.
+
 ### ☐ C2. The delivery email — sends when the reading is done
 
 **Read:** `0X-T4`. ⚠ **This asset is new.** It did not exist for any offer,
 because the reading used to *be* the email. Once the product became a PDF, the
 email became the envelope and needed its own copy. 02's is now written.
+
+**How it sends:** a second AWeber Campaign, triggered by `be-<nn>-delivered`. We
+apply that tag when her PDF exists, and set `reading_url` in the same call.
+
+🔴 **AWeber cannot put a different link in each buyer's email by itself.** The
+link has to arrive as a custom field on her subscriber record, which the email
+merges. That is the whole reason `reading_url` exists, and it is the one part of
+this design that is doing real work rather than bookkeeping.
+
+⚠ **The alternative is decision D7 — one PDF for everybody.** If the offer takes
+that road, `reading_url` becomes a constant and this whole seam gets simpler.
+Settle D7 before building the Campaign, not after.
 
 What it has to do:
 
@@ -538,6 +851,59 @@ a separate send, after she has had time to read** — that gap is decision D10.
 
 ⚠ **Do not summarise the reading.** Every verdict in the email is a reason not to
 open the document, and the document is the product.
+
+### ☐ C3. Upload them, automate them, and prove it
+
+Both emails now exist as HTML. Neither of them sends until somebody wires it up
+in AWeber, and **that part cannot be scripted.** AWeber's API creates broadcasts;
+it does not create the tag-triggered Campaign that a thank-you needs. So the
+copy is uploaded by tool and the automation is assembled by hand.
+
+**1. Upload the HTML as a draft.** Safe — `create` makes an unscheduled draft and
+nothing in that script can send:
+
+```
+node docs/aweber/aweber-broadcast.cjs create \
+     improve-v1/v1-one-time-BEs/copy/<nn>/<nn>-T3-confirmation-email.html \
+     --subject "…" --text <nn>-T3-confirmation-email.txt \
+     --list $AWEBER_BE_CUSTOMER_LIST_ID
+```
+
+⛔ **Never `schedule` it.** A scheduled broadcast goes to the whole list — every
+backend buyer, including people who bought a different offer months ago. This
+draft exists to be reviewed and to be the source you paste into the Campaign.
+
+**2. Build the Campaign, by hand, in AWeber.** One per offer, per email:
+
+| | Thank-you | Delivery |
+|---|---|---|
+| Trigger | tag applied: `be-<nn>-<slug>` | tag applied: `be-<nn>-delivered` |
+| Wait | none | none |
+| Body | the T3 draft | the T4 draft |
+
+**3. Swap every `{{AWEBER_…}}` slot.** The renderer prints them and refuses to
+be quiet about them. They are placeholders, **not syntax** — insert the real
+field from AWeber's own personalization picker rather than typing it. A token
+that ships unswapped is read by a buyer as gibberish at the exact moment she is
+deciding whether any of this was real.
+
+**4. Seed-test, and read the actual email.** Send one to yourself and one to a
+second inbox. ⚠ Two things are only ever caught here:
+
+- ☐ The Liquid resolved. Both fallbacks: a subscriber **with** a first name, and
+  one **without**. "Dear dear," is the failure this catches.
+- ☐ The custom field resolved. An unset `reading_url` must not send a live email
+  linking to nothing.
+
+**Done when:** every box below is ticked, with the seed test in your own inbox.
+
+- ☐ A test purchase put a real subscriber on the list, with all her fields.
+- ☐ Her offer tag arrived, and the thank-you landed.
+- ☐ It landed **once** — Stripe retries, and a buyer thanked twice looks broken.
+- ☐ A buyer of the *other* offer did **not** get it.
+- ☐ The delivered tag fired the delivery email, with her own PDF link in it.
+- ☐ Subject lines match `0X-T1` word for word, both emails.
+- ☐ Read on a phone. Most of them will.
 
 ---
 
@@ -586,6 +952,12 @@ different tools.
 
 No Stripe. No tracking of its own. Nowhere to store the sent product. Full list
 at the bottom of [`00j`](./00j-WORKFLOW-UPSELLS.md).
+
+⚠ **Stripe is what blocks C0 from being proved.** `addBackendCustomer` is
+written and unit-tested, but its one caller — the `checkout.session.completed`
+handler — does not exist for any backend offer, so no buyer has ever reached the
+list. Until then C0 can be built and C1/C2 can be written and uploaded, but C3's
+end-to-end boxes cannot be ticked by anybody.
 
 ⚠ These cost us a day on 02 and will cost the same on 03, 04 and 05. **Fixing
 them once, centrally, is now cheaper than hitting them three more times.**

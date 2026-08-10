@@ -14,7 +14,7 @@
  * Usage (run at repo root):
  *   node docs/aweber/aweber-broadcast.cjs probe
  *   node docs/aweber/aweber-broadcast.cjs list
- *   node docs/aweber/aweber-broadcast.cjs create <html-file> --subject "..." [--list <id>]
+ *   node docs/aweber/aweber-broadcast.cjs create <html-file> --subject "..." [--text <txt-file>] [--list <id>]
  *   node docs/aweber/aweber-broadcast.cjs schedule <broadcastId> --at <ISO8601-UTC> [--list <id>]
  *
  * `create` makes an UNSCHEDULED DRAFT only (safe — nothing sends). `schedule` is a
@@ -113,8 +113,14 @@ function htmlToText(html) {
     .replace(/<head[\s\S]*?<\/head>/gi, '')
     .replace(/<(br|\/p|\/div|\/tr|\/h[1-6])>/gi, '\n')
     .replace(/<[^>]+>/g, '')
-    .replace(/&mdash;/g, '—').replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&')
-    .replace(/&zwnj;/g, '').replace(/&[a-z]+;/g, ' ')
+    // Decode the entities we actually emit. The old catch-all `&[a-z]+;` -> ' ' turned every
+    // &rsquo; into a space ("I don t draw for people one at a time"), so anything with
+    // contractions shipped a mangled text part. Prefer --text for real sends; this is a fallback.
+    .replace(/&mdash;/g, '—').replace(/&ndash;/g, '–').replace(/&nbsp;/g, ' ')
+    .replace(/&rsquo;/g, '’').replace(/&lsquo;/g, '‘')
+    .replace(/&ldquo;/g, '“').replace(/&rdquo;/g, '”')
+    .replace(/&rarr;/g, '→').replace(/&hellip;/g, '…')
+    .replace(/&amp;/g, '&').replace(/&zwnj;/g, '').replace(/&[a-z]+;/g, ' ')
     .replace(/\n{3,}/g, '\n\n').replace(/[ \t]{2,}/g, ' ')
     .split('\n').map(l => l.trim()).join('\n').trim();
 }
@@ -149,10 +155,14 @@ async function cmdCreate() {
   if (!subject) { console.error('--subject is required'); process.exit(1); }
   const list = flag('list', DEFAULT_LIST);
   const html = fs.readFileSync(path.resolve(REPO, file), 'utf8');
+  // AWeber stores html and text as separate fields. Deriving text from html loses link URLs,
+  // so anything with real CTAs should pass --text (see esl-to-text.cjs in the backend deck).
+  const textFile = flag('text');
+  const text = textFile ? fs.readFileSync(path.resolve(REPO, textFile), 'utf8') : htmlToText(html);
   const payload = {
     subject,
     body_html: html,
-    body_text: htmlToText(html),
+    body_text: text,
     click_tracking_enabled: true,
     is_archived: false,
     notify_on_send: false,
