@@ -1,110 +1,85 @@
 /**
  * analyze-buyer-pull.ts — mechanical stats over a pull-buyer-transcripts.ts output dir.
- * Pure file analysis, no DB. Usage: npx tsx scripts/analyze-buyer-pull.ts <pullDir> [label]
+ * Pure file analysis, no DB. The math lives in scripts/lib/buyer-pull-stats.ts;
+ * this file only formats it.
+ *
+ *   npx tsx scripts/analyze-buyer-pull.ts <pullDir> [label]
+ *   npx tsx scripts/analyze-buyer-pull.ts <pullDir> [label] --persona aiden-powers
  */
-import fs from "fs";
-import path from "path";
+import fs from 'fs';
+import path from 'path';
+import {
+  loadPull, computeBehavior, computeBillingHealth, groupByPersona, MAX_COINS_PER_SECOND,
+} from './lib/buyer-pull-stats';
 
 const dir = process.argv[2];
-const label = process.argv[3] ?? dir;
-if (!dir || !fs.existsSync(path.join(dir, "01-purchases.json"))) {
-  console.error("usage: analyze-buyer-pull.ts <pullDir>");
+const label = process.argv[3] && !process.argv[3].startsWith('--') ? process.argv[3] : dir;
+const onlyIdx = process.argv.indexOf('--persona');
+const onlyPersona = onlyIdx > -1 ? process.argv[onlyIdx + 1] : undefined;
+
+if (!dir || !fs.existsSync(path.join(dir, '01-purchases.json'))) {
+  console.error('usage: analyze-buyer-pull.ts <pullDir> [label] [--persona <slug>]');
   process.exit(1);
 }
-const allRows = JSON.parse(fs.readFileSync(path.join(dir, "01-purchases.json"), "utf8"));
-// $0 rows (admin_adjustment credits) are not customer purchases — excluded from behavior stats.
-const purchases = allRows.filter((p: any) => p.price_usd > 0);
-if (allRows.length !== purchases.length)
-  console.log(`(excluded ${allRows.length - purchases.length} zero-price rows, e.g. admin_adjustment)`);
-const sessions = JSON.parse(fs.readFileSync(path.join(dir, "02-sessions.json"), "utf8"));
 
-// Parse transcripts: full session id -> messages[{role, words, endsQ, text}]
-type Msg = { role: string; words: number; endsQ: boolean; text: string };
-const msgsBySession = new Map<string, Msg[]>();
-for (const f of fs.readdirSync(path.join(dir, "buyers"), { recursive: true }) as string[]) {
-  if (!/session-[0-9a-f]{8}\.md$/.test(f)) continue;
-  const raw = fs.readFileSync(path.join(dir, "buyers", f), "utf8");
-  const idMatch = raw.match(/- session_id: ([0-9a-f-]{36})/);
-  if (!idMatch) continue;
-  const body = raw.split("\n---\n")[1] ?? "";
-  const parts = body.split(/\n\*\*(USER|ASSISTANT|SYSTEM)\*\* \([^)]*\):\n/);
-  const msgs: Msg[] = [];
-  for (let i = 1; i < parts.length; i += 2) {
-    const role = parts[i].toLowerCase();
-    const text = (parts[i + 1] ?? "").trim();
-    msgs.push({ role, text, words: text.split(/\s+/).filter(Boolean).length, endsQ: /\?\s*$/.test(text) });
-  }
-  msgsBySession.set(idMatch[1], msgs);
-}
+const pull = loadPull(dir);
+const pct = (a: number, b: number) => (b ? `${a}/${b} (${Math.round((100 * a) / b)}%)` : '0/0');
+const usd = (cents: number) => `$${(cents / 100).toFixed(2)}`;
 
-const sessById = new Map<string, any>(sessions.map((s: any) => [s.id, s]));
-const pct = (a: number, b: number) => (b ? `${a}/${b} (${Math.round((100 * a) / b)}%)` : "0/0");
-
-// ---- billing anomalies across ALL pulled sessions ----
-let overbilled: any[] = [];
-let zombies = 0;
-let idleTail = 0; // last_message well before billing end (>= 120s tail)
-for (const s of sessions) {
-  const dur = s.duration_seconds ?? 0;
-  const coins = s.coins_charged ?? 0;
-  if (coins >= dur + 60) overbilled.push({ id: s.id.slice(0, 8), user: s.user_id.slice(0, 8), dur, coins, excess: coins - dur });
-  const started = new Date(s.started_at).getTime();
-  const lastMsg = s.last_message_at ? new Date(s.last_message_at).getTime() : null;
-  if (coins === 0 && dur <= 5 && (msgsBySession.get(s.id)?.length ?? 0) >= 2) zombies++;
-  if (lastMsg && coins > 0) {
-    const billedUntil = started + coins * 1000; // 1 coin/sec
-    if (billedUntil - lastMsg >= 120_000) idleTail++;
-  }
-}
-const excessCoins = overbilled.reduce((a, o) => a + o.excess, 0);
-
-// ---- per-purchase behavior ----
-let b2cDuring = 0, b2c15 = 0, b2c60 = 0, coldStart = 0, longGap = 0;
-let cutOnQ = 0, readingBefore = 0, b2cTotal = 0, resumedFast = 0;
-let askOnlyTurns = 0, assistantTurns = 0;
-const multiBuy = new Map<string, number>();
-for (const p of purchases) {
-  multiBuy.set(p.user_id, (multiBuy.get(p.user_id) ?? 0) + 1);
-  const preId = p._during_session_id ?? p._pre_session_id;
-  const gap = p._during_session_id ? 0 : p._pre_gap_min;
-  if (p._during_session_id) b2cDuring++;
-  if (preId && gap !== null && gap <= 15) b2c15++;
-  if (preId && gap !== null && gap <= 60) b2c60++;
-  else if (preId) longGap++;
-  else coldStart++;
-
-  if (preId && gap !== null && gap <= 60) {
-    b2cTotal++;
-    const msgs = msgsBySession.get(preId) ?? [];
-    const assistant = msgs.filter((m) => m.role === "assistant");
-    const last = assistant[assistant.length - 1];
-    if (last?.endsQ) cutOnQ++;
-    if (assistant.some((m) => m.words >= 100)) readingBefore++;
-    if (p._post_gap_min !== null && p._post_gap_min <= 15) resumedFast++;
-    for (const m of assistant) {
-      assistantTurns++;
-      if (m.endsQ && m.words < 30) askOnlyTurns++;
-    }
-  }
-}
-const repeatBuyers = [...multiBuy.values()].filter((n) => n >= 2).length;
+if (pull.excludedZeroPrice)
+  console.log(`(excluded ${pull.excludedZeroPrice} zero-price rows, e.g. admin_adjustment)`);
 
 console.log(`\n═══ ${label} ═══`);
-console.log(`purchases=${purchases.length} buyers=${multiBuy.size} revenue=$${(purchases.reduce((a: number, p: any) => a + p.price_usd, 0) / 100).toFixed(2)} repeat-buyers-in-window=${repeatBuyers}`);
-console.log(`package mix: ${Object.entries(purchases.reduce((m: any, p: any) => ((m[p.package_type] = (m[p.package_type] ?? 0) + 1), m), {})).map(([k, v]) => `${k}=${v}`).join(" ")}`);
-console.log(`\nPurchase context:`);
-console.log(`  bought DURING a live session:      ${pct(b2cDuring, purchases.length)}`);
-console.log(`  buy-to-continue (pre-gap ≤15m):    ${pct(b2c15, purchases.length)}   (≤60m: ${pct(b2c60 + b2cDuring, purchases.length)})`);
-console.log(`  cold start (no session ≤48h):      ${pct(coldStart, purchases.length)}  gap>60m: ${pct(longGap, purchases.length)}`);
-console.log(`\nOf buy-to-continue (≤60m or during) purchases [n=${b2cTotal}]:`);
-console.log(`  pre-session cut on open question:  ${pct(cutOnQ, b2cTotal)}`);
-console.log(`  full reading (≥100w) before cut:   ${pct(readingBefore, b2cTotal)}`);
-console.log(`  resumed chat ≤15m after buying:    ${pct(resumedFast, b2cTotal)}`);
-console.log(`  ask-only assistant turns (<30w+?): ${pct(askOnlyTurns, assistantTurns)}`);
-console.log(`\nBilling health (all ${sessions.length} pulled sessions):`);
-console.log(`  overbilled (coins ≥ dur+60):       ${overbilled.length} sessions, ${excessCoins} excess coins (~$${((excessCoins / 540) * 19.99).toFixed(0)})`);
-console.log(`  zombie sessions (0 coin,≤5s,≥2msg): ${zombies}`);
-console.log(`  billed ≥2min past last message:    ${idleTail}`);
-if (overbilled.length) {
-  console.log(`  worst: ${overbilled.sort((a, b) => b.excess - a.excess).slice(0, 8).map((o) => `${o.id}(+${o.excess})`).join(" ")}`);
+
+// ── pooled totals (unchanged from the original output) ──────────────────────
+const all = computeBehavior(pull.purchases, pull.msgsBySession);
+console.log(`purchases=${all.purchases} buyers=${all.buyers} revenue=${usd(all.revenueCents)} repeat-buyers-in-window=${all.repeatBuyers}`);
+console.log(`package mix: ${Object.entries(all.packageMix).map(([k, v]) => `${k}=${v}`).join(' ')}`);
+console.log(`\nPurchase context (all personas):`);
+console.log(`  bought DURING a live session:      ${pct(all.duringSession, all.purchases)}`);
+console.log(`  buy-to-continue (pre-gap ≤15m):    ${pct(all.b2c15, all.purchases)}   (≤60m: ${pct(all.b2c60 + all.duringSession, all.purchases)})`);
+console.log(`  cold start (no session ≤48h):      ${pct(all.coldStart, all.purchases)}  gap>60m: ${pct(all.longGap, all.purchases)}`);
+console.log(`\nOf buy-to-continue (≤60m or during) purchases [n=${all.b2cTotal}]:`);
+console.log(`  pre-session cut on open question:  ${pct(all.cutOnQ, all.b2cTotal)}`);
+console.log(`  full reading (≥100w) before cut:   ${pct(all.readingBefore, all.b2cTotal)}`);
+console.log(`  resumed chat ≤15m after buying:    ${pct(all.resumedFast, all.b2cTotal)}`);
+console.log(`  ask-only assistant turns (<30w+?): ${pct(all.askOnlyTurns, all.assistantTurns)}`);
+
+// ── per-persona breakdown (the point of this script) ────────────────────────
+const rows = groupByPersona(pull).filter(r => !onlyPersona || r.persona === onlyPersona);
+if (onlyPersona && !rows.length) {
+  console.error(`\nno such persona in this pull: ${onlyPersona}`);
+  process.exit(1);
+}
+
+console.log(`\n─── PER PERSONA ───`);
+console.log(`persona            buyers   purch    revenue   reading-before-cut        cut-on-Q       ask-only    sess`);
+for (const r of rows) {
+  const b = r.behavior;
+  if (!b.purchases && !r.sessionCount) {
+    console.log(`${r.persona.padEnd(16)}  0 buyers in window`);
+    continue;
+  }
+  console.log(
+    `${r.persona.padEnd(16)}` +
+    `${String(b.buyers).padStart(7)}` +
+    `${String(b.purchases).padStart(8)}` +
+    `${usd(b.revenueCents).padStart(11)}` +
+    `${pct(b.readingBefore, b.b2cTotal).padStart(21)}` +
+    `${pct(b.cutOnQ, b.b2cTotal).padStart(16)}` +
+    `${pct(b.askOnlyTurns, b.assistantTurns).padStart(15)}` +
+    `${String(r.sessionCount).padStart(8)}`,
+  );
+}
+
+// ── billing health ─────────────────────────────────────────────────────────
+const health = computeBillingHealth(pull.sessions, pull.msgsBySession);
+console.log(`\nBilling health (all ${pull.sessions.length} pulled sessions):`);
+console.log(`  rate ceiling: ${MAX_COINS_PER_SECOND.toFixed(3)} coins/sec  ·  observed median ${health.medianRatio.toFixed(2)} · max ${health.maxRatio.toFixed(2)}  (n=${health.sessionsChecked} sessions >60s)`);
+console.log(`  billing ABOVE the contractual rate: ${health.overRate.length} sessions`);
+console.log(`  zombie sessions (0 coin,≤5s,≥2msg): ${health.zombies}`);
+console.log(`  billed ≥2min past last message:    ${health.idleTail}`);
+if (health.overRate.length) {
+  console.log(`  worst: ${health.overRate.slice(0, 8).map(o => `${o.id}(${o.ratio.toFixed(2)}/s, ${o.coins}c over ${o.dur}s)`).join(' ')}`);
+  console.log(`  ⚠️ investigate these against credit_transactions — coins_charged is the meter, not the ledger.`);
 }

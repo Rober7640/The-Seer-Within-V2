@@ -26,13 +26,18 @@ The engine is two plain TypeScript scripts; this skill orchestrates **pull → a
    ```bash
    npx tsx scripts/analyze-buyer-pull.ts improve-v2/transcripts/monitor/daily-YYYY-MM-DD "label"
    ```
-   Prints: purchase context (during / buy-to-continue ≤15m/≤60m / cold / long-gap), reading-before-cut %, cut-on-question %, ask-only-turn %, resume-≤15m %, and **billing health** (overbilled sessions where `coins ≥ duration+60`, zombies, idle-tail billing). Compare against the frozen baselines and the previous daily runs.
+   Prints **pooled** figures first (purchase context: during / buy-to-continue ≤15m/≤60m / cold / long-gap; reading-before-cut %; cut-on-question %; ask-only-turn %; resume-≤15m %), then a **PER PERSONA** table — buyers, purchases, revenue, reading-before-cut, cut-on-question, ask-only, session count — with a row for **every** persona in the roster. A persona with no activity reads `0 buyers in window` rather than being omitted; that absence is itself a finding. Add `--persona <slug>` to focus one. Compare against the frozen baselines and the previous daily runs.
+
+   ⚠️ Rows can also appear under `(unknown)` — purchases whose `persona_id` is NULL. That is real revenue with no persona attribution (it was ~37% of the 2026-07-15 window); treat a large `(unknown)` bucket as an attribution finding, not as noise.
+
+   **Billing health** is a rate-ratio check: no session may bill faster than the contractual `COINS_PER_MINUTE / 60` coins/sec (4.983 at 299/min). ⚠️ This REPLACED the old `coins ≥ duration + 60` heuristic, which was pre-wallet-flip and reported a fabricated ~$2k of overbilling on **every** run after 2026-07-28. If the new check flags anything, verify against `credit_transactions` — `coins_charged` is the uncapped meter, not the wallet ledger, and is never dispute evidence. Known limitation: on **pre-flip** pulls it under-detects, because a drain between 1.0 and 4.983 coins/sec looks legal at today's ceiling.
 3. **Read the transcripts — all buyers, not a sample.** (Cohorts are small; 10–20 buyers/day.) Classify per purchase using the rubric below; metadata heuristics (ends-on-`?`, word counts) are leads, not verdicts — the transcript decides.
 4. **Report.** Write `improve-v2/daily/YYYY-MM-DD-buyer-audit.md` (committed, PII-safe) with exactly these sections — template: `improve-v2/prompt-b-buyer-audit-12h-2026-07-10.md`:
    1. Headline + before/after stat table (vs baseline + prior day)
-   2. Per-buyer table (package, buy-to-continue?, reading-before-cut?, buyer type, prompt version, notes)
+   1b. **Per-persona scoreboard** — one row per persona: buyers, reading-before-cut, issue count, and a one-line verdict, ranked by money at risk. This table answers the audit's actual job: *which persona is leaking money, and how.* Without it, an Aiden problem hides inside Evelyn's averages.
+   2. Per-buyer table (**persona**, package, buy-to-continue?, reading-before-cut?, buyer type, prompt version, notes)
    3. Sharpest verbatim quotes (short, initials only)
-   4. **Leaks & gaps ranked by money at risk**, each tagged 🔴/🟠/🟡 and CODE / PROMPT / RUNTIME / ROLLOUT / SYSTEM
+   4. **Leaks & gaps ranked by money at risk**, each tagged 🔴/🟠/🟡 and CODE / PROMPT / RUNTIME / ROLLOUT / SYSTEM. **Every finding MUST also be tagged with the persona it belongs to** — `/persona-iterate` runs one persona at a time, so a finding with no persona is not actionable.
    5. Answers to the standing questions (reading-before-cut? buy-to-continue still converting?)
    6. Repro commands
 5. **Hand off to the fix loop.** For each PROMPT finding, add a reproducing case to `improve-v2/eval/cases.json` (method: `improve-v2/eval/EVAL.md`); for CODE findings, name the exact session ids + the field contradiction (e.g. `coins_charged` vs `duration_seconds`). Prompt changes are then iterated and scored via the eval suite, plus a small Playwright smoke (`improve-v2/playwright/`) for data-level bugs evals can't see. Do not make the changes inside this skill's run unless the user asks.
@@ -48,6 +53,7 @@ The engine is two plain TypeScript scripts; this skill orchestrates **pull → a
 - **Cross-system**: mentions of V1 products (main reading, Protection Ritual/stone, Manifestation Bracelet, energy-clearing PDF) or other surfaces (7-min promo chat, landers) — does the persona disown or mishandle them?
 - **Billing forensics** (trust the DB ledger, not logs): `coins_charged` vs `duration_seconds` vs `last_message_at` (close-out drain / idle-tail); parallel sessions billing the same minutes (content-duplicate messages prove it); zombie session bursts; packs drained to exactly 0 far faster than wall-clock. These are dispute precursors (marihayes shape) — always list exact session ids.
 - **Exposure check**: buyer has the expected `experiment_exposures` variant row; sessions started pre-flip ran the old prompt — split findings accordingly.
+- **Per-persona rubric**: the bullets above are the **shared core** — they apply to every persona. On top of them, judge each persona against **its own live prompt**, read from the audit pull rather than from memory (a persona's prompt is the only honest statement of what it promised to do). Evelyn: TRUE READ / FEELING LAYER, the date ban, the her-bound closing thread. Aiden: numerology guardrails, no diagnoses, no dated predictions. Luna: astrology honesty — tendencies not promises, no personal-placement claims stated as fact. Marcus / Maren / Nova: derive from their prompts the same way. ⚠️ Prompts drift; never audit against a remembered version. ⚠️ Evelyn's live prompt is in an **experiment payload**, everyone else's is in `personas.base_system_prompt` — `scripts/lib/prompt-target.ts` resolves which.
 
 ## Known context (don't rediscover)
 - Experiment `persona_prompt_evelyn_2026` is A=0/B=100 (a rollout, not a test) — flip 2026-07-09 09:13 UTC. Weights are frozen (409 on edit); keep status `running` (done/winner reverts Evelyn to base prompt).
