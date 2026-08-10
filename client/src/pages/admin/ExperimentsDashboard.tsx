@@ -4,6 +4,12 @@ import { adminFetch } from "@/hooks/useAdmin";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle2, FlaskConical, Plus, Play, Pause, Trophy, Pencil, X } from "lucide-react";
+// The ONE constant that says which deck a clean ad URL (no &deck=) serves. Imported
+// rather than copied: a second copy of it here is exactly the kind of duplicated
+// roster that has broken this funnel before, and it would mislabel every lander
+// pasted in as a clean URL. tarotReads.ts is pure client content (no drizzle), and
+// everything else in it tree-shakes out of this bundle.
+import { DEFAULT_DECK } from "@/content/tarotReads";
 
 // Admin dashboard for the unified A/B experiment framework.
 // Phase 2 = read-only results; Phase 3 = self-serve create/edit/start/pause/
@@ -27,7 +33,13 @@ interface ExperimentRow {
   status: string;
   subjectType: string;
   variants: Variant[];
-  scope: { personaId?: string | null; funnel?: string | null; sign?: string | null } | null;
+  scope: {
+    personaId?: string | null;
+    funnel?: string | null;
+    sign?: string | null;
+    landers?: Array<{ hook: string; deck: string }> | null;
+    freezeAssignment?: boolean;
+  } | null;
   conversion: { type?: string; windowDays?: number; targetN?: number } | null;
   startedAt: string | null;
   endedAt: string | null;
@@ -75,6 +87,22 @@ interface ResultsResponse {
     rows: TallyVariantRow[];
     significance?: { z: number; p: number; liftPct: number; significant: boolean };
   }>;
+  // Per-AD-URL split (hook x deck) for VISITOR-KEYED tests — the /fb-tarot version
+  // split. Unlike bySign/byTarotLander this is NOT merely diagnostic: landers can be
+  // appended to a running test, so the pooled row above may blend cohorts that have
+  // been live for different lengths of time, and this table is the read that does not.
+  byTarotHook?: Array<{
+    hook: string;
+    deck: string;
+    rows: TallyVariantRow[];
+    significance?: { z: number; p: number; liftPct: number; significant: boolean };
+  }>;
+  // How many distinct landers are in the test. >1 means the pooled row is a blend.
+  landerCount?: number;
+  // Subject is the anonymous visitor cookie, assigned at the LANDER, so the
+  // denominator is landers rather than leads — not comparable arm-for-arm with the
+  // email-keyed v1_main tests (price, commitment gate, order bump).
+  visitorKeyed?: boolean;
   // Order-bump take rate per arm. Absent unless some arm was actually offered a
   // bump, so every non-bump experiment omits the block. This is the number the
   // pooled table above structurally cannot show: there, a bump order and a plain
@@ -169,9 +197,58 @@ interface ExpForm {
   // applies to every visitor on the funnel.
   funnel: string;
   sign: string;
+  // Enrolled /fb-tarot ad URLs, one per line. Free text in the form so the media
+  // buyer can PASTE THE AD URLS straight in; parsed to (hook, deck) pairs on save.
+  landersText: string;
+  // Pin subjects to their first-exposure arm. Required before weights can be edited
+  // on a running test — the server enforces the same pairing.
+  freezeAssignment: boolean;
   conversionType: string;
   windowDays: string;
   targetN: string;
+}
+
+/**
+ * Parse the landers box into (hook, deck) pairs. Accepts either a full ad URL or a
+ * bare `hook deck` pair per line, because the ask is "here are some URLs, add these
+ * hooks" — anything that makes the operator hand-extract a hook from a URL is a step
+ * where the wrong hook silently enters a live money test.
+ *
+ * A URL with no `&deck=` means the DEFAULT deck (that is what a clean ad link is), so
+ * it resolves the same way the lander itself does.
+ */
+export function parseLanderLines(text: string): Array<{ hook: string; deck: string }> {
+  const out: Array<{ hook: string; deck: string }> = [];
+  const seen = new Set<string>();
+  for (const line of text.split("\n")) {
+    const s = line.trim();
+    if (!s) continue;
+    let hook = "";
+    let deck = "";
+    if (s.includes("?")) {
+      // Full ad URL. Read the query directly rather than via `new URL`, so a pasted
+      // path-only link ("/fb-tarot/c?hook=…") parses the same as a full https one.
+      const q = new URLSearchParams(s.slice(s.indexOf("?") + 1));
+      hook = (q.get("hook") ?? "").trim();
+      deck = (q.get("deck") ?? "").trim();
+    } else {
+      const parts = s.split(/[\s,]+/).filter(Boolean);
+      hook = parts[0] ?? "";
+      deck = parts[1] ?? "";
+    }
+    if (!hook) throw new Error(`could not find a hook in: ${s}`);
+    if (!deck) deck = DEFAULT_DECK;
+    const id = `${hook}|${deck}`;
+    if (seen.has(id)) continue; // pasting the same URL twice is a slip, not an error
+    seen.add(id);
+    out.push({ hook, deck });
+  }
+  return out;
+}
+
+/** Render stored landers back into the textarea, one `hook deck` pair per line. */
+function formatLanderLines(landers: Array<{ hook: string; deck: string }> | null | undefined): string {
+  return (landers ?? []).map((l) => `${l.hook} ${l.deck}`).join("\n");
 }
 
 const BLANK_FORM: ExpForm = {
@@ -186,6 +263,8 @@ const BLANK_FORM: ExpForm = {
   personaId: "",
   funnel: "",
   sign: "",
+  landersText: "",
+  freezeAssignment: false,
   conversionType: "credit_purchase",
   windowDays: "7",
   targetN: "",
@@ -205,6 +284,8 @@ function toForm(exp: ExperimentRow): ExpForm {
     personaId: exp.scope?.personaId ?? "",
     funnel: (exp.scope?.funnel as string | undefined) ?? "",
     sign: (exp.scope?.sign as string | undefined) ?? "",
+    landersText: formatLanderLines(exp.scope?.landers),
+    freezeAssignment: exp.scope?.freezeAssignment === true,
     conversionType: exp.conversion?.type ?? "credit_purchase",
     windowDays: exp.conversion?.windowDays ? String(exp.conversion.windowDays) : "7",
     targetN: exp.conversion?.targetN ? String(exp.conversion.targetN) : "",
@@ -243,12 +324,18 @@ function formToBody(form: ExpForm, includeKey: boolean) {
     subjectType: form.subjectType,
     variants,
     // Preserve EVERY scope key the form knows about. Rebuilding scope from
-    // personaId alone silently dropped funnel/sign on edit (see ExpForm).
+    // personaId alone silently dropped funnel/sign on edit (see ExpForm) — landers
+    // and freezeAssignment are in here for exactly that reason. Dropping `landers`
+    // on a save would widen a four-URL test to every tarot lander; dropping
+    // `freezeAssignment` would unpin every subject mid-flight.
     scope: (() => {
-      const s: Record<string, string> = {};
+      const s: Record<string, unknown> = {};
       if (form.personaId.trim()) s.personaId = form.personaId.trim();
       if (form.funnel.trim()) s.funnel = form.funnel.trim();
       if (form.sign.trim()) s.sign = form.sign.trim();
+      const landers = parseLanderLines(form.landersText);
+      if (landers.length) s.landers = landers;
+      if (form.freezeAssignment) s.freezeAssignment = true;
       return Object.keys(s).length ? s : null;
     })(),
     conversion: {
@@ -290,6 +377,16 @@ export default function ExperimentsDashboard() {
   // Structural fields (variants/scope/subjectType/conversion) are frozen server-side
   // once a test has started — reflect that in the form.
   const structuralLocked = formMode === "edit" && editingStatus !== "draft";
+  // WEIGHTS are the one variant field that stays live-editable after start — but only
+  // on a test that pins subjects to their first-exposure arm. Without that pin,
+  // re-weighting reassigns visitors who have already seen the other arm (the bucket is
+  // sticky, the bucket→variant map is not). The server enforces the same pairing; this
+  // just stops the operator discovering it via a 409.
+  const weightsLocked = structuralLocked && !form.freezeAssignment;
+  // LANDERS stay editable after start because appending an ad URL is the whole point
+  // of the field. The server refuses REMOVALS (they would orphan exposures and move
+  // the denominator under a running test), so the box is open and the guard is there.
+  const landersLocked = false;
 
   useEffect(() => {
     let cancelled = false;
@@ -540,6 +637,51 @@ export default function ExperimentsDashboard() {
                     className="w-full rounded border border-gray-700 bg-gray-900 px-3 py-2 text-sm text-white disabled:opacity-60"
                   />
                 </Field>
+                <Field label="Scope — /fb-tarot ad URLs (optional)">
+                  <textarea
+                    value={form.landersText}
+                    disabled={landersLocked}
+                    onChange={(e) => setForm({ ...form, landersText: e.target.value })}
+                    rows={4}
+                    placeholder={
+                      "(all landers) — paste one ad URL per line, e.g.\n" +
+                      "https://www.theseerwithin.com/fb-tarot/c?hook=cards-return\n" +
+                      "or a bare pair:  cards-return return-mhf"
+                    }
+                    className="w-full rounded border border-gray-700 bg-gray-900 px-3 py-2 font-mono text-xs text-white disabled:opacity-60"
+                  />
+                  <div className="mt-1 text-[11px] text-gray-500">
+                    Enrols only these ad URLs. A URL with no <code className="text-gray-400">&amp;deck=</code>{" "}
+                    means the default deck (<code className="text-gray-400">{DEFAULT_DECK}</code>) — the
+                    face-up <code className="text-gray-400">&amp;deck=</code> version of the same hook is a
+                    SEPARATE lander and is not enrolled unless you list it.
+                    {structuralLocked && (
+                      <>
+                        {" "}
+                        <span className="text-amber-300">
+                          This test has started: you can ADD landers, not remove them.
+                        </span>
+                      </>
+                    )}
+                  </div>
+                </Field>
+                <Field label="Pin assignments (freeze to first exposure)">
+                  <label className="flex items-center gap-2 text-sm text-gray-300">
+                    <input
+                      type="checkbox"
+                      checked={form.freezeAssignment}
+                      disabled={structuralLocked && form.freezeAssignment}
+                      onChange={(e) => setForm({ ...form, freezeAssignment: e.target.checked })}
+                      className="h-4 w-4 accent-purple-600 disabled:opacity-60"
+                    />
+                    <span>Each subject keeps the arm they were first shown</span>
+                  </label>
+                  <div className="mt-1 text-[11px] text-gray-500">
+                    Required before weights can be changed on a running test. Can be switched on at
+                    any time — never off, since unpinning would let a later re-weight move people
+                    who have already seen the other arm.
+                  </div>
+                </Field>
                 <Field label="Conversion type">
                   <select
                     value={form.conversionType}
@@ -550,6 +692,15 @@ export default function ExperimentsDashboard() {
                   >
                     <option value="credit_purchase">credit_purchase (V2 coin purchase)</option>
                     <option value="upsell1_funnel">upsell1_funnel (V1 upsell-1)</option>
+                    {/* 🔴 v1_main_funnel was missing from this list even though four
+                        experiments use it. Harmless while every field was frozen on a
+                        started test — the form simply could not be saved. It stopped
+                        being harmless when weights and landers became live-editable:
+                        the select would fall back to its first option, the save would
+                        send conversion.type='credit_purchase', and the server would
+                        409 on `conversion` — blocking the weight edit for a reason
+                        that had nothing to do with weights. */}
+                    <option value="v1_main_funnel">v1_main_funnel (V1 main/downsell purchase)</option>
                     <option value="event">event (not measurable yet)</option>
                   </select>
                 </Field>
@@ -582,6 +733,23 @@ export default function ExperimentsDashboard() {
                   Variants — the first is the control. Payload is JSON the code reads (e.g.{" "}
                   <code className="text-gray-300">{`{"mainCents":3700}`}</code>).
                 </div>
+                {structuralLocked && (
+                  <div className="mb-2 text-[11px]">
+                    {form.freezeAssignment ? (
+                      <span className="text-emerald-300">
+                        This test pins assignments, so weights can be changed while it runs. A new
+                        split applies to NEW subjects only — everyone already exposed keeps the arm
+                        they saw.
+                      </span>
+                    ) : (
+                      <span className="text-amber-300">
+                        Weights are locked: this test does not pin assignments, so re-weighting it
+                        would move visitors who have already seen the other arm. Tick “Pin
+                        assignments” above and save, then the weights unlock.
+                      </span>
+                    )}
+                  </div>
+                )}
                 <div className="space-y-2">
                   {form.variants.map((v, i) => (
                     <div key={i} className="flex items-start gap-2">
@@ -596,7 +764,7 @@ export default function ExperimentsDashboard() {
                         type="number"
                         min={0}
                         value={v.weight}
-                        disabled={structuralLocked}
+                        disabled={weightsLocked}
                         onChange={(e) => updateVariant(i, { weight: e.target.value })}
                         placeholder="weight"
                         className="w-24 rounded border border-gray-700 bg-gray-900 px-2 py-1.5 text-sm text-white disabled:opacity-60"
@@ -869,6 +1037,16 @@ export default function ExperimentsDashboard() {
                         </div>
                       )}
 
+                      {results.visitorKeyed && (
+                        <p className="text-xs text-gray-500">
+                          <span className="text-gray-300">Denominator = chats started, not leads.</span>{" "}
+                          This test is assigned at the first chat message, before any email, so
+                          “Exposed” counts everyone who reached the chat — deliberately, because the
+                          arms differ before the email step. Its conversion rate is therefore LOWER
+                          by construction than the price / commitment-gate / order-bump tests, which
+                          count leads. Compare arms within this test; never across.
+                        </p>
+                      )}
                       <table className="w-full text-sm">
                         <thead>
                           <tr className="border-b border-gray-700 text-left text-gray-400">
@@ -1200,6 +1378,71 @@ export default function ExperimentsDashboard() {
                                   >
                                     <td className="py-2 pr-4 text-xs text-gray-300">
                                       {i === 0 ? tarotLanderLabel(g.facing, g.angle) : ""}
+                                    </td>
+                                    <td className="py-2 pr-4 font-semibold">{r.variant}</td>
+                                    <td className="py-2 pr-4">{r.viewers}</td>
+                                    <td className="py-2 pr-4">{r.buyers}</td>
+                                    <td className="py-2 pr-4">{r.conversionPct}%</td>
+                                    <td className="py-2 pr-4">{liftOf(r)}</td>
+                                    <td className="py-2 pr-4">${r.revPerViewerUsd.toFixed(2)}</td>
+                                  </tr>
+                                )),
+                              )}
+                            </tbody>
+                          </table>
+                        </div>
+                      )}
+
+                      {/* Per-AD-URL breakdown (visitor-keyed tests) — the honest read
+                          when landers have been added mid-flight. */}
+                      {results.byTarotHook && results.byTarotHook.length > 0 && (
+                        <div className="space-y-2 border-t border-gray-800 pt-3">
+                          <div className="flex items-baseline gap-2">
+                            <span className="text-sm font-semibold text-gray-200">By ad URL</span>
+                            {(results.landerCount ?? 0) > 1 && (
+                              <span className="text-xs text-emerald-300">read this one</span>
+                            )}
+                          </div>
+                          <p className="text-xs text-gray-500">
+                            The same numbers split by the ad URL she clicked — hook × deck.{" "}
+                            {(results.landerCount ?? 0) > 1 ? (
+                              <span className="text-amber-300">
+                                Landers can be added to a running test, so the pooled table above
+                                blends landers that have been live for different lengths of time. Where
+                                the two disagree, trust this table.
+                              </span>
+                            ) : (
+                              <>
+                                With one lander in the test this is just the pooled table again. It
+                                stops being redundant the moment a second ad URL is added.
+                              </>
+                            )}
+                          </p>
+                          <table className="w-full text-sm">
+                            <thead>
+                              <tr className="border-b border-gray-700 text-left text-gray-400">
+                                <th className="py-2 pr-4">Ad URL</th>
+                                <th className="py-2 pr-4">Arm</th>
+                                <th className="py-2 pr-4">Chats</th>
+                                <th className="py-2 pr-4">Buyers</th>
+                                <th className="py-2 pr-4">Conv %</th>
+                                <th className="py-2 pr-4">Lift vs {controlKey}</th>
+                                <th className="py-2 pr-4">$ / visitor</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {results.byTarotHook.map((g) =>
+                                g.rows.map((r, i) => (
+                                  <tr
+                                    key={`${g.hook}-${g.deck}-${r.variant}`}
+                                    className={
+                                      i === g.rows.length - 1
+                                        ? "border-b border-gray-700"
+                                        : "border-b border-gray-800/50"
+                                    }
+                                  >
+                                    <td className="py-2 pr-4 font-mono text-xs text-gray-300">
+                                      {i === 0 ? `${g.hook} · ${g.deck}` : ""}
                                     </td>
                                     <td className="py-2 pr-4 font-semibold">{r.variant}</td>
                                     <td className="py-2 pr-4">{r.viewers}</td>

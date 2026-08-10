@@ -29,7 +29,11 @@ import {
 import { trackLead, trackInitiateCheckout, getTrackdeskClickId } from '@/lib/facebook'
 import { currentFunnel, getPostHogFunnel, skipEmail } from '@/lib/funnel'
 import { track as trackPH, identifyUser as identifyPH, getDistinctId } from '@/lib/posthog'
-import { tarotEventProps } from '@/lib/tarotAttribution'
+import {
+  tarotEventProps,
+  fetchAssignedTarotVersion,
+  rememberTarotVersion,
+} from '@/lib/tarotAttribution'
 import { trackGAdsLead, trackGAdsCheckout, getGclid } from '@/lib/gtm'
 import { isSlidingCloseVariant } from '@shared/types'
 import { pairedBumpBucket, V1_BUMP_CENTS } from '@shared/orderBump'
@@ -425,7 +429,24 @@ export function useConversation() {
         // is the whole appeal of a tarot draw. Attach it to the opener's first line.
         // (Version A already shows the card on the lander, so it isn't repeated here.)
         const art = tarotCardArtFor(tarot.deck, tarot.card)
-        if (tarot.version === 'c') {
+
+        // === /fb-tarot VERSION A/B (v1_tarot_version_bc_2026) ===
+        // Which opener she gets is decided by the SERVER, not by the /b vs /c path she
+        // clicked — the ad URLs all point at /c and the experiment splits them 70/30.
+        //
+        // Awaited HERE, immediately before the opener is sent, because the server logs
+        // the exposure as it answers: assigned and shown are the same instant, so the
+        // log can never claim an arm she did not see. While the experiment is draft
+        // this returns her URL's own version and the two branches below are byte-
+        // identical to what they were.
+        //
+        // rememberTarotVersion keeps the PostHog attribution honest when the arm
+        // differs from the URL — without it every downstream event would report the
+        // version she clicked rather than the one she was shown.
+        const version = await fetchAssignedTarotVersion(tarot.deck, tarot.hook, tarot.version)
+        rememberTarotVersion(version)
+
+        if (version === 'c') {
           // Version C — INTERACTIVE. Open with the card line + one open question,
           // then read HER answer with the LLM in handleTarotReflect.
           await sendBotMessages(tarotOpenerCStart(tarot.deck, tarot.hook, tarot.card), art)
@@ -436,7 +457,7 @@ export function useConversation() {
           })
           return
         }
-        if (tarot.version === 'b') {
+        if (version === 'b') {
           await sendBotMessages(tarotOpenerB(tarot.deck, tarot.hook, tarot.card), art)
         } else {
           await sendBotMessage(tarotGreetingA(tarot.deck, tarot.card))

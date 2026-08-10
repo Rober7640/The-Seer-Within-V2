@@ -51,6 +51,32 @@ export const conversations = pgTable("conversations", {
   downsellAmountCents: integer("downsell_amount_cents"),
   upsell1AmountCents: integer("upsell1_amount_cents"),
 
+  // The `ab_vid` visitor cookie this conversation came from — the bridge between a
+  // LANDER-time experiment and the purchase it eventually produced.
+  //
+  // WHY THIS EXISTS. Every other V1 experiment (price, commitment gate, order bump)
+  // assigns at LEAD CAPTURE, bucketed on the email hash, and its exposure row carries
+  // `conversationId` — so tallyV1Main joins exposure→conversation directly and this
+  // column is not needed. The tarot VERSION test (B smart-template vs C LLM opener)
+  // cannot work that way: it changes the very FIRST chat message, so it must be
+  // assigned before an email exists, on the anonymous visitor cookie instead.
+  //
+  // That leaves the exposure keyed on a visitor id and the purchase keyed on an email,
+  // with nothing joining them. Writing the visitor id here at lead capture is that
+  // join — and it has to be a COLUMN rather than an exposure-context field because
+  // exposures are unique(experiment_key, subject_id) and written exactly once, at
+  // lander time, when no conversation row exists yet to point at.
+  //
+  // Consequence for the numbers: the denominator is everyone who REACHED THE CHAT, not
+  // everyone who left an email. That is the whole point here — B and C differ before
+  // the email step (C asks an open question and reads the answer with the LLM; B
+  // delivers the read and asks her name), so an email-time denominator would hide the
+  // effect being measured.
+  //
+  // Nullable, no default, never back-filled: every existing row reads exactly as it
+  // does today, and any funnel that does not set it is simply absent from this join.
+  abVisitorId: text("ab_visitor_id"),
+
   // V1 ORDER BUMP ("double reading") — the extra chat turn between the buy CTA
   // and the Stripe redirect. Rides the SAME checkout session as the main offer
   // (one PaymentIntent, two line items), so it has no session/payment id of its
@@ -1000,7 +1026,32 @@ export interface ExperimentScope {
                                         // price test never touches the rest of v1-palm's traffic
   route?: string;                       // page/surface for visitor page-copy tests (e.g. 'soulmate_landing')
   element?: string;                     // which element the variant copy targets (e.g. 'headline')
+  // Only enrol these /fb-tarot ad URLs, as (hook, deck) PAIRS. Pairs rather than bare
+  // hooks because several hooks run on more than one live URL — `cards-return` runs
+  // clean (default face-down deck) AND on `&deck=arcana-mfh` (face-UP) — so a hook
+  // list cannot say which of them is in the test. Absent = no lander filter.
+  // Matching lives in matchesLanderScope() (server/lib/experiments.ts).
+  landers?: LanderScope[] | null;
+  // Pin each subject to the variant on their FIRST logged exposure, instead of
+  // re-deriving it from the CURRENT weights on every call.
+  //
+  // 🔴 This is what makes editing weights on a RUNNING test safe, and the admin PATCH
+  // refuses a live weight edit unless it is set. Buckets are permanently sticky, but
+  // the bucket→variant MAP moves with the weights, so re-weighting an unfrozen test
+  // silently reassigns visitors who have already seen the other arm — their logged
+  // exposure then disagrees with what they were subsequently shown.
+  //
+  // Safe to switch on at any time, including mid-flight: the exposure log is the
+  // record of what a subject actually saw, so freezing to it can only ever stop
+  // future drift, never introduce it. Absent/false = today's behaviour exactly.
+  freezeAssignment?: boolean;
   [k: string]: unknown;
+}
+
+// One enrolled /fb-tarot lander: the question the headline asked × the cards shown.
+export interface LanderScope {
+  hook: string;
+  deck: string;
 }
 
 // How a subject's outcome is scored when tallying.

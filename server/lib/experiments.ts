@@ -22,7 +22,7 @@ import {
   type Experiment,
   type ExperimentVariant,
 } from '@shared/schema';
-import { eq, sql, desc } from 'drizzle-orm';
+import { eq, and, sql, desc } from 'drizzle-orm';
 import logger from './logger';
 import type { PaywallVariant } from '@shared/paywall';
 
@@ -222,7 +222,18 @@ export interface AssignContext {
   personaId?: string | null;
   funnel?: string | null;
   sign?: string | null;
+  // /fb-tarot lander identity — WHICH ad she clicked. `hook` is the question the
+  // headline asked, `deck` the card set it showed. Always supplied as a PAIR (see
+  // matchesLanderScope) and always the RESOLVED deck, never a raw query param.
+  hook?: string | null;
+  deck?: string | null;
   [k: string]: unknown;
+}
+
+/** One enrolled /fb-tarot lander: the question asked × the cards shown. */
+export interface LanderScopeEntry {
+  hook: string;
+  deck: string;
 }
 
 export interface Assignment {
@@ -261,6 +272,61 @@ export function matchesFunnelScope(
     return typeof contextFunnel === 'string' && funnels.includes(contextFunnel);
   }
   return contextFunnel === scopeFunnel;
+}
+
+/**
+ * Does this visitor's /fb-tarot lander fall inside the experiment's lander scope?
+ *
+ * `scope.landers` is a LIST OF (hook, deck) PAIRS — one entry per enrolled ad URL:
+ *
+ *   [{ hook: 'cards-return',      deck: 'return-mhf' },     ← /fb-tarot/c?hook=cards-return
+ *    { hook: 'cards-who-he-is',   deck: 'return-mhf' }]     ← ...&deck= omitted ⇒ default deck
+ *
+ * 🔴 WHY PAIRS AND NOT A BARE HOOK LIST. Several live hooks run on MORE THAN ONE ad
+ * URL: `cards-return` and `cards-who-he-is` each run clean (the default face-down
+ * `return-mhf` deck) AND on `&deck=arcana-mfh`, which shows face-UP cards she picks
+ * rather than backs she draws — a materially different lander. A bare hook list
+ * cannot tell those apart, so enrolling a hook would silently enrol every deck it
+ * runs on.
+ *
+ * Pairs also make "add the face-up decks later" a pure DATA edit — append two more
+ * entries — instead of a change to the SHAPE of scope, which is frozen once a test
+ * starts (admin/experiments.ts) and would therefore cost a whole new experiment.
+ *
+ * There is deliberately NO wildcard. A hook with no deck would have to be resolved
+ * against DEFAULT_DECK, and that constant lives in the CLIENT registry
+ * (client/src/content/tarotReads.ts) — a second roster to keep in sync, which is
+ * this funnel's most reliable source of bugs. The client already resolves the deck
+ * before it ever calls us, so the server only ever compares two concrete strings.
+ *
+ * Absent/null/empty scope.landers = no lander filter at all (every other test is
+ * unaffected). An EMPTY ARRAY means "no landers", which would make a test silently
+ * inert — treated as "no filter" here and rejected outright by the /start guard,
+ * exactly as matchesFunnelScope treats an empty funnel list.
+ *
+ * Exported for unit tests: assign() itself needs a DB, this is the pure part.
+ */
+export function matchesLanderScope(
+  scopeLanders: unknown,
+  contextHook: string | null | undefined,
+  contextDeck: string | null | undefined,
+): boolean {
+  if (!Array.isArray(scopeLanders)) return true;
+  // Drop malformed entries rather than let one typo'd row look like a real filter
+  // (same reasoning as matchesFunnelScope). Both halves must be present: a
+  // half-written entry can't identify a lander.
+  const landers = (scopeLanders as unknown[]).filter(
+    (l): l is LanderScopeEntry =>
+      !!l &&
+      typeof l === 'object' &&
+      typeof (l as LanderScopeEntry).hook === 'string' &&
+      (l as LanderScopeEntry).hook.length > 0 &&
+      typeof (l as LanderScopeEntry).deck === 'string' &&
+      (l as LanderScopeEntry).deck.length > 0,
+  );
+  if (landers.length === 0) return true;
+  if (typeof contextHook !== 'string' || typeof contextDeck !== 'string') return false;
+  return landers.some((l) => l.hook === contextHook && l.deck === contextDeck);
 }
 
 /**
@@ -313,6 +379,11 @@ export async function assign(
   // v1-palm — and in particular never disturbs the live thumb-only system_config
   // 70/30. Absent scope.sign = no sign filter (existing funnel-wide tests unchanged).
   if (exp.scope?.sign && context?.sign !== exp.scope.sign) return controlArm;
+  // Lander scope (per-AD-URL /fb-tarot tests): narrows to an explicit list of
+  // (hook, deck) pairs, so a test on four ad URLs never enrols the other tarot
+  // landers running alongside them. Absent scope.landers = no filter (every
+  // existing test unchanged).
+  if (!matchesLanderScope(exp.scope?.landers, context?.hook, context?.deck)) return controlArm;
 
   // Concluded test → roll the declared winner out to the in-scope population:
   // not enrolled (test is over, no more exposures) but its payload IS applied,
@@ -329,11 +400,69 @@ export async function assign(
   const forcedRunning = shouldForceRunning(key, exp.status, process.env.EXPERIMENT_FORCE_RUNNING);
   if (exp.status !== 'running' && !forcedRunning) return controlArm;
 
+  // ASSIGNMENT FREEZE (opt-in, scope.freezeAssignment). Reuse the variant on this
+  // subject's FIRST logged exposure instead of re-deriving it from the current
+  // weights. See the field docs in ExperimentScope: without it, editing weights
+  // mid-flight reassigns people who have already seen the other arm.
+  //
+  // OPT-IN rather than always-on so the three live v1_main_funnel tests (price,
+  // commitment gate, order bump) keep their exact current behaviour AND their
+  // current query count — this adds a DB read per assign(), and those run on every
+  // lead capture. A frozen test pays for one lookup; an unfrozen one pays nothing.
+  //
+  // Failure mode is deliberately "fall through to the weights": a read error, or a
+  // frozen key that is no longer a live variant, must not strand the visitor with no
+  // arm at all. Both are logged rather than silently swallowed.
+  if (exp.scope?.freezeAssignment === true) {
+    const frozen = await frozenVariant(key, subjectId);
+    if (frozen) {
+      const kept = variants.find((v) => v.key === frozen);
+      if (kept) {
+        return { variant: kept.key, payload: kept.payload ?? {}, enrolled: true, applied: true };
+      }
+      logger.warn('frozen exposure variant is no longer a configured arm — re-bucketing', {
+        key,
+        frozen,
+        arms: variants.map((v) => v.key),
+      });
+    }
+  }
+
   const bucket = experimentBucket(subjectId, key);
   const variantKey = pickVariant(bucket, variants);
   const chosen = variants.find((v) => v.key === variantKey) ?? control;
   if (!chosen) return null;
   return { variant: chosen.key, payload: chosen.payload ?? {}, enrolled: true, applied: true };
+}
+
+/**
+ * The variant this subject was recorded as seeing, or null if they have never been
+ * exposed. Reads the exposure log directly — that row IS the record of what was
+ * shown, which is why freezing to it is always safe.
+ *
+ * Never throws into the request path: on a read error it returns null, so assign()
+ * falls back to bucketing rather than failing the page.
+ */
+async function frozenVariant(key: string, subjectId: string): Promise<string | null> {
+  try {
+    const rows = await db
+      .select({ variant: experimentExposures.variant })
+      .from(experimentExposures)
+      .where(
+        and(
+          eq(experimentExposures.experimentKey, key),
+          eq(experimentExposures.subjectId, subjectId),
+        ),
+      )
+      .limit(1);
+    return rows[0]?.variant ?? null;
+  } catch (err) {
+    logger.error('frozen exposure lookup failed — falling back to weights', {
+      key,
+      error: (err as Error).message,
+    });
+    return null;
+  }
 }
 
 /**
@@ -1019,6 +1148,120 @@ export async function tallyV1MainByTarotLander(
   });
 }
 
+// ── VISITOR-KEYED v1_main_funnel (the /fb-tarot version test) ────────────────
+//
+// Same outcome as tallyV1Main — did an exposed subject buy the V1 main offer after
+// being exposed — but reached by a different route, because this test's subject is
+// an anonymous VISITOR COOKIE assigned at the start of the chat, not a hashed email
+// assigned at lead capture. Its exposures therefore carry no `conversationId` (no
+// conversation row existed yet), so the join runs the other way: through
+// conversations.ab_visitor_id, stamped at lead capture.
+//
+// 🔴 WHY A LATERAL AND NOT A PLAIN LEFT JOIN. One visitor can produce SEVERAL
+// conversations — she comes back days later, or uses a second email. A plain join
+// would emit one row per conversation and count that visitor as multiple viewers
+// AND multiple buyers, inflating whichever arm happens to hold the repeat visitors.
+// On this funnel that is not a hypothetical: repeat visitors are ~23% of sessions
+// but ~57% of main buys. The lateral collapses every visitor to exactly ONE row —
+// counted once in the denominator, once as a buyer — while still summing ALL their
+// in-test revenue, so a genuine second purchase is not thrown away either.
+//
+// The in-test purchase definition is identical to V1_IN_TEST_PURCHASE and carries
+// the same reasoning (see the block comment there): `main_paid_at >= e.created_at`
+// excludes both purchases that PREDATE the exposure and abandoned carts, the pair
+// of failure modes that reversed the order-bump result in 2026-08.
+const V1_VISITOR_PURCHASES = sql`
+  LEFT JOIN LATERAL (
+    SELECT count(*)                                                        AS purchases,
+           COALESCE(sum(c.main_purchase_amount + COALESCE(c.bump_amount_cents, 0)), 0) AS revenue
+    FROM conversations c
+    WHERE c.ab_visitor_id = e.subject_id
+      AND c.main_paid_at IS NOT NULL
+      AND c.main_paid_at >= e.created_at
+  ) p ON true`;
+
+/**
+ * Pooled B-vs-C results for a visitor-keyed V1 test. Denominator = everyone who hit
+ * an enrolled LANDER (not everyone who left an email), which is the whole point:
+ * the two arms differ before the email step.
+ */
+export async function tallyV1MainByVisitor(opts: V1MainTallyOptions): Promise<TallyResult> {
+  const result = await db.execute(sql`
+    SELECT e.variant                                        AS variant,
+           count(*)                                         AS viewers,
+           count(*) FILTER (WHERE p.purchases > 0)          AS buyers,
+           COALESCE(sum(p.revenue), 0)                      AS revenue_cents
+    FROM experiment_exposures e
+    ${V1_VISITOR_PURCHASES}
+    WHERE e.experiment_key = ${opts.key}
+      AND e.created_at >= ${opts.startISO}
+    GROUP BY e.variant;
+  `);
+
+  const controlKey = opts.controlKey ?? 'A';
+  const treatmentKey = opts.treatmentKey ?? 'B';
+  const { rows } = assembleRows(result.rows as Record<string, unknown>[], controlKey, treatmentKey);
+  return finalizeStats(rows, controlKey, treatmentKey);
+}
+
+export interface TallyByHookRow {
+  hook: string;
+  deck: string;
+  rows: TallyVariantRow[];
+  significance?: TallyResult['significance'];
+}
+
+/**
+ * Per-AD-URL breakdown of a visitor-keyed test — B vs C for each (hook, deck) pair
+ * in scope.landers, from the hook/deck recorded on the exposure at lander time.
+ *
+ * 🔴 THIS IS THE HONEST READ WHEN LANDERS ARE ADDED MID-FLIGHT, and they are meant
+ * to be: the whole point of scope.landers being editable on a running test is that
+ * new hooks join later. A lander added in week 3 has three weeks less exposure than
+ * the original four but lands in the same POOLED row, so the pooled headline
+ * silently becomes a blend of cohorts with different runtimes. These per-lander rows
+ * do not have that problem.
+ *
+ * ⚠️ Diagnostic, not a decision metric — same multiple-comparisons trap as
+ * tallyV1MainBySign. With enough landers one of them will look significant by
+ * chance. Judge the test on the pooled row (or on a lander pre-registered in
+ * advance), never on the best-looking row after the fact.
+ */
+export async function tallyV1MainByTarotHook(opts: V1MainTallyOptions): Promise<TallyByHookRow[]> {
+  const result = await db.execute(sql`
+    -- An exposure with no hook/deck cannot be attributed to a lander. It is labelled
+    -- rather than dropped, so these rows always sum to the pooled total and a gap in
+    -- attribution shows up as a visible '(unrecorded)' row instead of quietly
+    -- shrinking the table. Same invariant as tallyV1MainBySign.
+    SELECT COALESCE(e.context->>'hook', '(unrecorded)')     AS hook,
+           COALESCE(e.context->>'deck', '(unrecorded)')     AS deck,
+           e.variant                                        AS variant,
+           count(*)                                         AS viewers,
+           count(*) FILTER (WHERE p.purchases > 0)          AS buyers,
+           COALESCE(sum(p.revenue), 0)                      AS revenue_cents
+    FROM experiment_exposures e
+    ${V1_VISITOR_PURCHASES}
+    WHERE e.experiment_key = ${opts.key}
+      AND e.created_at >= ${opts.startISO}
+    GROUP BY 1, 2, 3;
+  `);
+
+  const controlKey = opts.controlKey ?? 'A';
+  const treatmentKey = opts.treatmentKey ?? 'B';
+  const all = result.rows as Record<string, unknown>[];
+
+  const landers = Array.from(
+    new Set(all.map((r) => `${String(r.hook)}|${String(r.deck)}`)),
+  ).sort();
+  return landers.map((lander) => {
+    const [hook, deck] = lander.split('|');
+    const forLander = all.filter((r) => `${String(r.hook)}|${String(r.deck)}` === lander);
+    const { rows } = assembleRows(forLander, controlKey, treatmentKey);
+    const stats = finalizeStats(rows, controlKey, treatmentKey);
+    return { hook, deck, rows: stats.rows, significance: stats.significance };
+  });
+}
+
 export interface BumpTakeRateRow {
   variant: string;
   offered: number;         // saw the offer AND reached checkout (the denominator)
@@ -1199,6 +1442,84 @@ export async function resolveV1Bump(
     variant: a.variant,
     enrolled: a.enrolled,
   };
+}
+
+// ── /fb-tarot VERSION B vs C — which OPENER she gets ─────────────────────────
+// Version B ("smart template"): the full pre-written read is delivered as chat
+// messages, then straight to name capture. Deterministic, no model call.
+// Version C ("LLM"): the card line + one open question, then HER answer is read
+// by Claude. Version C is the incumbent — every tarot lander since `reunion`
+// ships C-only — so C is the CONTROL arm and must stay variants[0].
+//
+// 🔴 ASSIGNED AT THE START OF THE CHAT, NOT AT LEAD CAPTURE. This is the one V1
+// test that cannot bucket on the email hash the way the price test, commitment gate
+// and order bump all do: it changes the FIRST message of the chat, so it has to be
+// decided before an email exists. Subject is the anonymous `ab_vid` visitor cookie
+// instead, and conversations.ab_visitor_id carries that id forward so the tally can
+// still reach the purchase (see tallyV1MainByVisitor).
+//
+// Consequence worth knowing when reading the results: the denominator is everyone
+// who REACHED THE CHAT, not everyone who left an email — deliberately, because B and
+// C differ before the email step, so an email-time denominator would hide exactly
+// the effect being measured. It is NOT comparable arm-for-arm with the gate/bump
+// numbers, which count leads.
+//
+// Chat arrival rather than lander view is also the tighter measurement: the lander is
+// IDENTICAL in both arms (B and C both skip the reveal card and hand straight to
+// chat), so anyone who bounces before the chat is pure noise that would sit in both
+// denominators. The first thing that actually differs is the opener.
+//
+// SCOPED PER AD URL via scope.landers — an explicit list of (hook, deck) pairs
+// rather than a funnel-wide enrolment, because only four of the thirteen live
+// tarot hooks are in this test.
+export const V1_TAROT_VERSION_EXPERIMENT_KEY = 'v1_tarot_version_bc_2026';
+
+/** The three tarot lander versions. Only 'b' and 'c' are ever A/B tested. */
+export type TarotVersion = 'a' | 'b' | 'c';
+
+/**
+ * Which opener should this visitor get?
+ *
+ * `fallbackVersion` is what the URL alone would have served (path `/b` → b, `/c` →
+ * c, else a). It is returned UNCHANGED whenever the experiment does not apply —
+ * draft, paused, out of scope, no visitor id, or a malformed arm payload — so
+ * deploying this code changes nothing at all until the experiment is started.
+ *
+ * 🔴 VERSION A IS NEVER ENROLLED. `/fb-tarot` (no path suffix) shows the reveal on
+ * the LANDER before the chat, which is a different experience from both arms of
+ * this test; flipping such a visitor into b or c would silently change a lander
+ * that is not under test. An 'a' fallback returns immediately, before assignment.
+ *
+ * `enrolled` (running + in scope) tells the caller to log the exposure — the
+ * denominator. No visitor id ⇒ no subject ⇒ fallback, never enrolled.
+ */
+export async function resolveTarotVersion(
+  visitorId: string | null | undefined,
+  fallbackVersion: TarotVersion,
+  hook?: string | null,
+  deck?: string | null,
+  key: string = V1_TAROT_VERSION_EXPERIMENT_KEY, // overridable so tests never touch the live experiment
+): Promise<{ version: TarotVersion; variant: string | null; enrolled: boolean; applied: boolean }> {
+  const notEnrolled = { version: fallbackVersion, variant: null, enrolled: false, applied: false };
+  if (fallbackVersion === 'a') return notEnrolled;
+
+  const subject = typeof visitorId === 'string' && visitorId.trim() ? visitorId.trim() : null;
+  const a = await assign(key, subject, {
+    funnel: 'v1-tarot',
+    hook: hook ?? null,
+    deck: deck ?? null,
+  });
+  if (!a) return notEnrolled;
+
+  // Only 'b'/'c' are meaningful arm payloads. Anything else (a typo'd payload, an
+  // arm carrying 'a') falls back rather than serving a version nobody configured —
+  // same defensive shape as resolveV1Price refusing a half-present price.
+  const assigned = a.payload?.version;
+  const version: TarotVersion | null = assigned === 'b' || assigned === 'c' ? assigned : null;
+  if (!a.applied || !version) {
+    return { version: fallbackVersion, variant: a.variant, enrolled: false, applied: false };
+  }
+  return { version, variant: a.variant, enrolled: a.enrolled, applied: true };
 }
 
 // ── Persona prompt A/B resolution (Phase 4b — live AI path) ───────────────────

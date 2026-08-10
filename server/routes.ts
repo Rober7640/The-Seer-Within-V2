@@ -73,7 +73,14 @@ import {
   saveShipping2Address,
 } from "./lib/db";
 import { assignVariantIfMissing, getVariantForEmail } from "./lib/priceVariant";
-import { resolveV1Bump } from "./lib/experiments";
+import {
+  resolveV1Bump,
+  resolveTarotVersion,
+  logExposure,
+  V1_TAROT_VERSION_EXPERIMENT_KEY,
+  type TarotVersion,
+} from "./lib/experiments";
+import { ensureVisitorId, readVisitorId } from "./lib/visitorCookie";
 import {
   V1_BUMP_CENTS,
   V1_BUMP_PRODUCT_KEY,
@@ -900,6 +907,68 @@ export async function registerRoutes(
     }
   });
 
+  // /fb-tarot Version B-vs-C assignment. Called by TarotBridge before it renders,
+  // because the arm decides the FIRST message of the chat.
+  //
+  // `v` is what the URL alone would have served (path /b -> b, /c -> c, else a) and
+  // is returned unchanged whenever the experiment does not apply — so while the test
+  // is draft this endpoint is a no-op that echoes its input, and the lander behaves
+  // byte-identically to today.
+  //
+  // The exposure is logged HERE, in the same call that hands back the arm, so
+  // "assigned" and "shown" are the same instant and the log can never claim an arm
+  // the visitor did not see. That makes the denominator "everyone who reached the
+  // chat" rather than "everyone who left an email" — which is the point, since the
+  // two arms diverge at the opener, well before the email step. (Lander views are
+  // deliberately NOT the denominator: the lander is identical in both arms, so
+  // counting bounces there would only add noise to both sides.)
+  //
+  // hook/deck ride along because exposures are unique(key, subject_id) and written
+  // exactly once — a lander not recorded now can never be back-filled, and without
+  // it the per-ad-URL breakdown is permanently unanswerable.
+  app.get("/api/tarot/version", async (req: Request, res: Response) => {
+    try {
+      const q = (name: string) => {
+        const v = req.query[name];
+        return typeof v === "string" && v.trim() ? v.trim().slice(0, 40) : undefined;
+      };
+      const raw = q("v");
+      const fallback: TarotVersion = raw === "b" ? "b" : raw === "c" ? "c" : "a";
+      const hook = q("hook");
+      const deck = q("deck");
+
+      // Version A never enters the test (it shows the reveal on the LANDER, a third
+      // experience), so it needs no subject — and minting a cookie for it would add
+      // visitors to the population who can never be assigned.
+      if (fallback === "a") return res.json({ version: "a" });
+
+      const visitorId = ensureVisitorId(req, res);
+      const a = await resolveTarotVersion(visitorId, fallback, hook, deck);
+
+      if (a.enrolled && a.variant) {
+        // PII-free: registry slugs and the anonymous cookie only. `facing`/`angle` are
+        // the client's registry-derived labels, carried for parity with the gate's
+        // exposure context so both tests break down the same way.
+        await logExposure(V1_TAROT_VERSION_EXPERIMENT_KEY, visitorId, a.variant, "tarot_chat_opener", {
+          funnel: "v1-tarot",
+          hook: hook ?? null,
+          deck: deck ?? null,
+          facing: q("facing") ?? null,
+          angle: q("angle") ?? null,
+        });
+      }
+
+      return res.json({ version: a.version });
+    } catch (error) {
+      // Never fail the lander over an experiment. Falling back to the URL's own
+      // version is exactly the draft/OFF behaviour, so an error here degrades to
+      // "today's funnel" rather than to a broken page.
+      logger.warn("tarot version assign failed (falling back to URL version):", error);
+      const raw = typeof req.query.v === "string" ? req.query.v : "";
+      return res.json({ version: raw === "b" ? "b" : raw === "c" ? "c" : "a" });
+    }
+  });
+
   // Lead capture endpoint - saves to Supabase and AWeber
   app.post("/api/lead", async (req: Request, res: Response) => {
     try {
@@ -946,13 +1015,21 @@ export async function registerRoutes(
       // Server-side fallback if frontend didn't resolve location
       const resolvedLocation = location || await resolveLocationFromIP(req);
 
-      // Save to database
+      // Save to database.
+      //
+      // `abVisitorId` carries the anonymous cookie this lead arrived on, so a
+      // LANDER-time experiment (the /fb-tarot version test) can reach the purchase
+      // it eventually produced — its exposure is keyed on the visitor, and the
+      // purchase on the email, with nothing else joining them. READ, never minted:
+      // a lead with no cookie simply records none. First write wins in
+      // saveConversation, so a returning buyer is never moved between visitors.
       await saveConversation({
         email,
         firstName,
         bucket,
         location: resolvedLocation || null,
         timeOfDay: timeOfDay || null,
+        abVisitorId: readVisitorId(req) ?? undefined,
       });
 
       // V1 price split test — assign a variant on first lead capture, idempotent

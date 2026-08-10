@@ -21,9 +21,12 @@ import {
   tallyV1Main,
   tallyV1MainBySign,
   tallyV1MainByTarotLander,
+  tallyV1MainByVisitor,
+  tallyV1MainByTarotHook,
   tallyV1BumpTakeRate,
   type TallyBySignRow,
   type TallyByTarotLanderRow,
+  type TallyByHookRow,
   type BumpTakeRateRow,
   twoSidedP,
   minArmExposures,
@@ -32,6 +35,7 @@ import {
   V1_MAIN_EXPERIMENT_KEY,
   PALM_GATE_EXPERIMENT_KEY,
   V1_BUMP_EXPERIMENT_KEY,
+  V1_TAROT_VERSION_EXPERIMENT_KEY,
   PERSONA_PROMPT_KEY_PREFIX,
   isPersonaPromptKey,
 } from '../../lib/experiments';
@@ -61,6 +65,21 @@ const scopeSchema = z
     funnel: z.union([z.string(), z.array(z.string().min(1)).min(1)]).optional(),
     sign: z.string().optional(),   // same reason: a non-string sign would scope the test to nothing
     route: z.string().optional(),
+    // Enrolled /fb-tarot ad URLs as (hook, deck) PAIRS. Both halves required: a
+    // half-written entry can't identify a lander, and several hooks run on more than
+    // one deck (`cards-return` runs clean AND on &deck=arcana-mfh). `.min(1)` for the
+    // same reason as `funnel` — [] would scope the test to no traffic at all.
+    landers: z
+      .array(z.object({ hook: z.string().min(1).max(60), deck: z.string().min(1).max(60) }))
+      .min(1)
+      .refine(
+        (ls) => new Set(ls.map((l) => `${l.hook}|${l.deck}`)).size === ls.length,
+        'landers must be unique (hook, deck) pairs',
+      )
+      .optional(),
+    // Pin subjects to their first-exposure variant. Required before weights can be
+    // edited on a RUNNING test — see the live-edit guard in PATCH below.
+    freezeAssignment: z.boolean().optional(),
   })
   .passthrough()
   .nullable()
@@ -128,11 +147,24 @@ function u1PayloadError(variants: Array<{ key: string; payload?: Record<string, 
 // own exposure logging, scored by the same funnel outcome — with the bump's line
 // item added back into revenue by tallyV1Main, since mainPurchaseAmount stays the
 // main offer alone. Like the gate it carries no price payload (see below).
+// The /fb-tarot VERSION test joins on the same terms again — its own resolver
+// (resolveTarotVersion), its own exposure logging, scored by the same funnel
+// outcome, and no price payload. It is the first one whose subject is a VISITOR
+// COOKIE rather than a hashed email, so it is tallied through
+// conversations.ab_visitor_id (tallyV1MainByVisitor) instead of the exposure's
+// conversationId — see VISITOR_KEYED_V1_MAIN_KEYS below.
 const V1_MAIN_FUNNEL_KEYS: readonly string[] = [
   V1_MAIN_EXPERIMENT_KEY,
   PALM_GATE_EXPERIMENT_KEY,
   V1_BUMP_EXPERIMENT_KEY,
+  V1_TAROT_VERSION_EXPERIMENT_KEY,
 ];
+
+// Which v1_main_funnel tests are keyed on a VISITOR COOKIE assigned at the lander
+// rather than a hashed email assigned at lead capture. These reach the purchase
+// through conversations.ab_visitor_id, so their denominator is landers rather than
+// leads and their numbers are NOT arm-for-arm comparable with the email-keyed tests.
+const VISITOR_KEYED_V1_MAIN_KEYS: readonly string[] = [V1_TAROT_VERSION_EXPERIMENT_KEY];
 
 // Only the PRICE test's arms carry a price payload. The commitment gate and the
 // order bump are UI-only tests measured by the same funnel outcome, so their arms
@@ -246,6 +278,56 @@ function parsePositiveInt(v: unknown): number | null {
 // route (progress display) and the declare-winner gate (server enforcement), so
 // the two NEVER disagree. ──────────────────────────────────────────────────────
 
+/**
+ * Is this scope edit allowed on a test that has already STARTED? Returns a label
+ * for the offending field, or null if the edit is one of the two permitted live
+ * changes (appending scope.landers, or switching scope.freezeAssignment on).
+ *
+ * Key order is normalised before comparing: this runs on every live edit now, and a
+ * dashboard that serialises the same scope with its keys in a different order must
+ * not read as a change.
+ */
+export function scopeEditError(
+  stored: ExperimentScope | null,
+  incoming: ExperimentScope | null,
+): string | null {
+  // Everything OUTSIDE landers/freezeAssignment stays frozen — funnel, sign,
+  // personaId, route, element all re-partition who is in the test.
+  const stable = (s: ExperimentScope | null): string => {
+    const { landers: _l, freezeAssignment: _f, ...rest } = (s ?? {}) as Record<string, unknown>;
+    return JSON.stringify(Object.fromEntries(Object.entries(rest).sort(([a], [b]) => a.localeCompare(b))));
+  };
+  if (stable(stored) !== stable(incoming)) return 'scope';
+
+  // freezeAssignment may be switched ON at any time (it can only ever stop future
+  // drift), but never back OFF — that would re-expose the test to the reassignment
+  // this whole mechanism exists to prevent.
+  if (stored?.freezeAssignment === true && incoming?.freezeAssignment !== true) {
+    return 'scope.freezeAssignment (it can be switched on mid-flight, never off)';
+  }
+
+  const storedLanders = stored?.landers;
+  const incomingLanders = incoming?.landers;
+  // Absent scope.landers means "every lander". Adding a list to a test that had none
+  // NARROWS it, and dropping the list WIDENS it to traffic that was never enrolled —
+  // both change the population mid-flight, so neither is an append.
+  if (!storedLanders && incomingLanders) {
+    return 'scope.landers (this test enrols every lander; adding a list would narrow it mid-flight)';
+  }
+  if (storedLanders && !incomingLanders) {
+    return 'scope.landers (dropping the list would enrol every lander mid-flight)';
+  }
+  if (storedLanders && incomingLanders) {
+    const id = (l: { hook: string; deck: string }) => `${l.hook}|${l.deck}`;
+    const after = new Set(incomingLanders.map(id));
+    const removed = storedLanders.map(id).filter((k) => !after.has(k));
+    if (removed.length) {
+      return `scope.landers (cannot remove ${removed.join(', ')} — landers are append-only once exposures exist)`;
+    }
+  }
+  return null;
+}
+
 /** Pre-registered per-arm N from the experiment's conversion config; null = no gate. */
 function targetNOf(exp: { conversion?: ExperimentConversion | null }): number | null {
   const t = exp.conversion?.targetN;
@@ -270,6 +352,25 @@ async function cohortStartISO(exp: { key: string; startedAt: Date | null }): Pro
     .where(eq(experimentExposures.experimentKey, exp.key));
   const first = rows[0]?.first;
   return first ? new Date(first).toISOString() : null;
+}
+
+/**
+ * Pre-registered-N gating (fixed-horizon, no peeking): progress toward the
+ * pre-registered per-arm exposure target, measured over the CANONICAL cohort start
+ * (not the ?start tally override) and the positive-weight arms — so this display
+ * always matches the server-side declare-winner gate. `reached` once every such arm
+ * has >= targetN exposures (the smallest governs). Undefined when no target is set.
+ */
+async function progressOf(
+  exp: { key: string; startedAt: Date | null; conversion?: ExperimentConversion | null; variants: unknown },
+  key: string,
+): Promise<{ targetN: number; minExposures: number; reached: boolean } | undefined> {
+  const targetN = targetNOf(exp);
+  if (!targetN) return undefined;
+  const gateStart = await cohortStartISO(exp);
+  const arms = gateArmKeys(exp.variants as Array<{ key: string; weight: number }> | null);
+  const minCount = gateStart ? await minArmExposures(key, gateStart, arms) : 0;
+  return { targetN, minExposures: minCount, reached: minCount >= targetN };
 }
 
 // Augment tally()'s observed split with an SRM (sample-ratio mismatch) check
@@ -382,6 +483,8 @@ router.get('/:key/results', async (req: Request, res: Response) => {
     let result;
     let bySign: TallyBySignRow[] | undefined;
     let byTarotLander: TallyByTarotLanderRow[] | undefined;
+    let byTarotHook: TallyByHookRow[] | undefined;
+    let landerCount: number | undefined;
     let bumpTakeRate: BumpTakeRateRow[] | undefined;
     if (conversionType === 'credit_purchase') {
       result = await tally(key, { startISO, windowDays, personaId, controlKey, treatmentKey });
@@ -408,6 +511,35 @@ router.get('/:key/results', async (req: Request, res: Response) => {
           unsupported: 'experiment needs at least 2 arms to measure',
           params,
           rows: [],
+        });
+      }
+      // VISITOR-KEYED tests (the /fb-tarot version split) reach the purchase through
+      // conversations.ab_visitor_id instead of the exposure's conversationId, because
+      // they are assigned at the LANDER, before any email exists. Their denominator is
+      // landers rather than leads, and their per-lander split is keyed on (hook, deck)
+      // — the ad URL — rather than on palm sign or facing x angle, neither of which
+      // their exposures carry. The sign / facing / bump-take-rate blocks below all
+      // return [] for them anyway; branching keeps three pointless queries off the
+      // request instead of relying on that.
+      if (VISITOR_KEYED_V1_MAIN_KEYS.includes(key)) {
+        result = await tallyV1MainByVisitor({ key, startISO, controlKey, treatmentKey });
+        const hookRows = await tallyV1MainByTarotHook({ key, startISO, controlKey, treatmentKey });
+        if (hookRows.length > 0) byTarotHook = hookRows;
+        // Landers can be appended to a running test, so the pooled row above may blend
+        // cohorts with different runtimes. Tell the dashboard how many distinct landers
+        // are in play rather than leaving that inference to whoever reads the page.
+        landerCount = hookRows.length;
+        return res.json({
+          experiment: meta,
+          started: true,
+          params,
+          rows: result.rows,
+          byTarotHook,
+          landerCount,
+          visitorKeyed: true,
+          srm: augmentSrm(result.srm, exp.variants),
+          significance: result.significance,
+          progress: await progressOf(exp, key),
         });
       }
       result = await tallyV1Main({ key, startISO, controlKey, treatmentKey });
@@ -456,18 +588,7 @@ router.get('/:key/results', async (req: Request, res: Response) => {
     }
     const srm = augmentSrm(result.srm, exp.variants);
 
-    // Pre-registered-N gating (fixed-horizon, no peeking): progress toward the
-    // pre-registered per-arm exposure target, measured over the CANONICAL cohort
-    // start (not the ?start tally override) and the positive-weight arms — so this
-    // display always matches the server-side declare-winner gate. `reached` once
-    // every such arm has ≥ targetN exposures (the smallest governs).
-    const targetN = targetNOf(exp);
-    let progress: { targetN: number; minExposures: number; reached: boolean } | undefined;
-    if (targetN) {
-      const gateStart = await cohortStartISO(exp);
-      const minCount = gateStart ? await minArmExposures(key, gateStart, gateArmKeys(exp.variants)) : 0;
-      progress = { targetN, minExposures: minCount, reached: minCount >= targetN };
-    }
+    const progress = await progressOf(exp, key);
 
     return res.json({
       experiment: meta,
@@ -573,28 +694,73 @@ router.patch('/:key', async (req: Request, res: Response) => {
     if (!exp) return res.status(404).json({ error: 'Experiment not found' });
 
     // ASSIGNMENT FREEZE: once a test has been started (status != draft), its
-    // assignment-affecting fields — variants (keys/weights/order/payload), scope,
-    // subjectType — and its measurement definition (conversion) are FROZEN. Any of
-    // them would re-bucket or re-partition already-enrolled subjects, or retro-
-    // change the metric, corrupting a fixed-horizon test (set the split once, hold;
-    // §6 locked stats model). Only name/description stay editable. To change these,
-    // create a new experiment (a new key). Drafts are fully editable.
+    // assignment-affecting fields — variants (keys/order/payload), scope, subjectType
+    // — and its measurement definition (conversion) are FROZEN. Any of them would
+    // re-bucket or re-partition already-enrolled subjects, or retro-change the metric,
+    // corrupting a fixed-horizon test. Drafts are fully editable.
+    //
+    // TWO NARROW EXCEPTIONS (2026-08-10), both live-editable from the dashboard:
+    //
+    //   1. VARIANT WEIGHTS — but ONLY on a test with scope.freezeAssignment. Weights
+    //      alone are safe to move when subjects are pinned to their first-exposure
+    //      variant; without that pin, re-weighting silently reassigns visitors who
+    //      have already seen the other arm (the bucket is sticky, the bucket→variant
+    //      MAP is not). Coupling the two makes the corrupting version unreachable
+    //      through the API rather than merely discouraged.
+    //
+    //   2. APPENDING scope.landers — adding an ad URL to a running test. Append-only:
+    //      a lander already accruing exposures can never be REMOVED, because its rows
+    //      would stay in the tally with nothing left in scope to explain them, moving
+    //      the denominator under a running test.
+    //
+    // Everything else still requires a new experiment. Note both exceptions change
+    // WHO enters from now on, never what an already-enrolled subject sees — and both
+    // make the pooled row a blend of cohorts with different runtimes, which is why
+    // the per-lander table is the honest read (see tallyV1MainByTarotHook).
     if (exp.status !== 'draft') {
       const changed: string[] = [];
-      const norm = (vs: Array<{ key: string; weight: number; payload?: unknown }> | null | undefined) =>
-        JSON.stringify((vs ?? []).map((v) => ({ key: v.key, weight: v.weight, payload: v.payload ?? {} })));
-      if (data.variants !== undefined && norm(data.variants) !== norm(exp.variants)) changed.push('variants');
+      const identity = (vs: Array<{ key: string; payload?: unknown }> | null | undefined) =>
+        JSON.stringify((vs ?? []).map((v) => ({ key: v.key, payload: v.payload ?? {} })));
+      const weights = (vs: Array<{ key: string; weight: number }> | null | undefined) =>
+        JSON.stringify((vs ?? []).map((v) => v.weight));
+
+      const storedVariants = (exp.variants ?? []) as Array<{ key: string; weight: number; payload?: unknown }>;
+      if (data.variants !== undefined) {
+        // Keys, ORDER and payloads must be untouched. Order matters as much as the
+        // keys: variants[0] is the control arm, and pickVariant walks the list in
+        // order, so re-ordering re-maps every bucket.
+        if (identity(data.variants) !== identity(storedVariants)) {
+          changed.push('variant keys/order/payload');
+        } else if (weights(data.variants) !== weights(storedVariants)) {
+          const effFreeze =
+            (data.scope !== undefined ? data.scope?.freezeAssignment : exp.scope?.freezeAssignment) === true;
+          if (!effFreeze) {
+            return res.status(409).json({
+              error:
+                'cannot change weights on a running test that does not pin assignments — ' +
+                'set scope.freezeAssignment before starting it, so re-weighting only affects NEW subjects ' +
+                'instead of reassigning visitors who have already seen the other arm.',
+            });
+          }
+        }
+      }
+
       if (data.subjectType !== undefined && data.subjectType !== exp.subjectType) changed.push('subjectType');
-      if (data.scope !== undefined && JSON.stringify(data.scope ?? null) !== JSON.stringify(exp.scope ?? null))
-        changed.push('scope');
+
+      if (data.scope !== undefined) {
+        const err = scopeEditError(exp.scope ?? null, data.scope ?? null);
+        if (err) changed.push(err);
+      }
+
       if (
         data.conversion !== undefined &&
         JSON.stringify(data.conversion ?? null) !== JSON.stringify(exp.conversion ?? null)
       )
         changed.push('conversion');
+
       if (changed.length) {
         return res.status(409).json({
-          error: `cannot change ${changed.join(', ')} once a test has started — only name/description are editable. Create a new experiment to change these.`,
+          error: `cannot change ${changed.join(', ')} once a test has started. Weights (on a test that pins assignments) and appending scope.landers are the only live edits; everything else needs a new experiment.`,
         });
       }
     }
@@ -697,6 +863,38 @@ router.post('/:key/start', async (req: Request, res: Response) => {
     if (V1_MAIN_FUNNEL_KEYS.includes(key) && !hasFunnelScope) {
       return res.status(400).json({
         error: `the '${key}' test must set scope.funnel before starting (it applies to those funnels only)`,
+      });
+    }
+    // Same reasoning one level down for scope.landers, and the same escape hatch: []
+    // (or a list of half-written entries) is truthy but matchesLanderScope treats it as
+    // NO filter, so a lander scope that looks present but matches nothing would widen a
+    // four-ad-URL test to every tarot lander running — silently, on live traffic.
+    // Reachable only via a direct DB write; the zod schema rejects it on the API.
+    const scopedLanders = exp.scope?.landers;
+    if (
+      scopedLanders !== undefined &&
+      scopedLanders !== null &&
+      !(
+        Array.isArray(scopedLanders) &&
+        scopedLanders.some(
+          (l) => l && typeof l.hook === 'string' && l.hook && typeof l.deck === 'string' && l.deck,
+        )
+      )
+    ) {
+      return res.status(400).json({
+        error:
+          'scope.landers is present but contains no valid { hook, deck } pair — that would enrol EVERY lander on the funnel. Remove it to run funnel-wide, or fix the entries.',
+      });
+    }
+    // A visitor-keyed v1_main test reaches the purchase through
+    // conversations.ab_visitor_id, which only ever holds the ab_vid COOKIE. Started
+    // with subjectType 'email' or 'user' its exposures would be keyed on a hashed
+    // email, nothing would ever join, and the results page would show landers
+    // accruing against zero buyers in both arms — a failure that looks exactly like
+    // "neither version converts" and could run for weeks before anyone doubted it.
+    if (VISITOR_KEYED_V1_MAIN_KEYS.includes(key) && exp.subjectType !== 'visitor') {
+      return res.status(400).json({
+        error: `the '${key}' test is tallied through conversations.ab_visitor_id, so it must have subjectType 'visitor' (currently '${exp.subjectType}')`,
       });
     }
     // persona_prompt_* tests drive the live AI prompt: arms must be authored, and

@@ -215,6 +215,61 @@ export function rememberTarotDraw(card: TarotOption, panel: TarotOption): void {
 }
 
 /**
+ * Overwrite the stored version after the server assigns an arm.
+ *
+ * 🔴 NOT optional bookkeeping. `version` is resolved from the URL on every route
+ * change and spread onto EVERY tarot PostHog event. When the B-vs-C experiment moves
+ * a visitor off the version her URL named, leaving the store alone would report her
+ * whole session — lander view, card select, lead, checkout, both upsells — under the
+ * arm she did not see, while the database counted her under the arm she did. The two
+ * reporting surfaces would disagree and neither would be checkable against the other.
+ */
+export function rememberTarotVersion(version: TarotVersion): void {
+  const stored = readStored()
+  if (!stored || stored.version === version) return
+  writeStored({ ...stored, version })
+}
+
+/**
+ * Ask the server which opener this visitor should get — Version B (smart template)
+ * or Version C (LLM). See resolveTarotVersion in server/lib/experiments.ts.
+ *
+ * `urlVersion` is what the URL alone would have served, and is returned unchanged on
+ * EVERY failure path: version A (never in the test), a non-OK response, a malformed
+ * body, or a network error. So a draft experiment, a deploy mid-flight or an outage
+ * all degrade to exactly today's funnel rather than to a broken chat.
+ *
+ * 🔴 AWAIT THIS BEFORE RENDERING THE OPENER, never in parallel with it. The server
+ * logs the exposure as it answers, so a caller that renders first and reconciles
+ * later would record an arm the visitor never saw — the one corruption this test
+ * cannot recover from afterwards.
+ */
+export async function fetchAssignedTarotVersion(
+  deck: TarotDeck,
+  hook: TarotHook,
+  urlVersion: TarotVersion,
+): Promise<TarotVersion> {
+  if (urlVersion === 'a') return 'a'
+  try {
+    const qs = new URLSearchParams({
+      v: urlVersion,
+      hook,
+      deck,
+      // Registry-derived, exactly as toProps does it — so the exposure row carries the
+      // same facing/angle labels the PostHog events do and the two can be reconciled.
+      facing: getDeck(deck).facing,
+      angle: angleForHook(hook),
+    })
+    const r = await fetch(`/api/tarot/version?${qs.toString()}`)
+    if (!r.ok) return urlVersion
+    const data = await r.json()
+    return data?.version === 'b' || data?.version === 'c' ? data.version : urlVersion
+  } catch {
+    return urlVersion
+  }
+}
+
+/**
  * The tarot property bag for the current tab, or undefined if this visitor never came
  * through the tarot bridge. Callers on shared V1 components MUST gate on
  * `getPostHogFunnel() === 'tarot'` — sessionStorage outlives the funnel within a tab,
