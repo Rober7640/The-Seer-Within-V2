@@ -360,6 +360,7 @@ export default function ExperimentsDashboard() {
       "soulmate-where": "Soulmate — Where / Seeking",
       loneliness: "Loneliness",
       fidelity: "Fidelity",
+      "missing-him": "Missing Him",
       "self-frame": "Self-Frame",
     };
     return `${f} — ${ANGLE_LABELS[angle] ?? angle}`;
