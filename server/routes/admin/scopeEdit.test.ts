@@ -13,8 +13,51 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { scopeEditError } from './experiments';
+import { scopeEditError, stableJson } from './experiments';
 import type { ExperimentScope } from '../../../shared/schema';
+
+describe('stableJson — jsonb key order must not read as a change', () => {
+  // 🔴 THE BUG THIS PINS (found 2026-08-10, after the test was already live).
+  // jsonb stores keys sorted by length then bytewise, so `conversion` comes back
+  // from Postgres as {type, targetN, windowDays}. The dashboard rebuilds it from
+  // form fields as {type, windowDays, targetN} and re-sends it on EVERY save.
+  // Compared with JSON.stringify those differ, so the frozen-field guard rejected
+  // every live weight edit with "cannot change conversion" — blocking the exact
+  // feature the guard was relaxed for, for a reason having nothing to do with weights.
+  const AS_STORED = { type: 'v1_main_funnel', targetN: 11000, windowDays: 7 };
+  const AS_SENT = { type: 'v1_main_funnel', windowDays: 7, targetN: 11000 };
+
+  it('the live experiment\'s conversion round-trips as UNCHANGED', () => {
+    assert.notEqual(JSON.stringify(AS_STORED), JSON.stringify(AS_SENT), 'precondition: raw order differs');
+    assert.equal(stableJson(AS_STORED), stableJson(AS_SENT));
+  });
+
+  it('a REAL conversion change is still detected', () => {
+    assert.notEqual(stableJson(AS_STORED), stableJson({ ...AS_STORED, targetN: 5000 }));
+    assert.notEqual(stableJson(AS_STORED), stableJson({ ...AS_STORED, type: 'credit_purchase' }));
+    // A dropped field is a change, not a reorder.
+    assert.notEqual(stableJson(AS_STORED), stableJson({ type: 'v1_main_funnel', targetN: 11000 }));
+  });
+
+  it('array ORDER is preserved — variants[0] is the control arm', () => {
+    const cFirst = [{ key: 'C' }, { key: 'B' }];
+    const bFirst = [{ key: 'B' }, { key: 'C' }];
+    assert.notEqual(stableJson(cFirst), stableJson(bFirst), 're-ordering arms must never look unchanged');
+  });
+
+  it('normalises nested objects too (arm payloads are jsonb as well)', () => {
+    assert.equal(
+      stableJson([{ key: 'C', payload: { version: 'c', note: 'x' } }]),
+      stableJson([{ key: 'C', payload: { note: 'x', version: 'c' } }]),
+    );
+  });
+
+  it('treats undefined and absent alike, and null as itself', () => {
+    assert.equal(stableJson({ a: 1, b: undefined }), stableJson({ a: 1 }));
+    assert.notEqual(stableJson({ a: 1, b: null }), stableJson({ a: 1 }));
+    assert.equal(stableJson(null), 'null');
+  });
+});
 
 // The live shape of the /fb-tarot version test.
 const BASE: ExperimentScope = {

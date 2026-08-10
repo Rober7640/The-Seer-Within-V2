@@ -279,13 +279,31 @@ function parsePositiveInt(v: unknown): number | null {
 // the two NEVER disagree. ──────────────────────────────────────────────────────
 
 /**
+ * JSON with object keys sorted, recursively — an order-independent identity for
+ * "is this value the same as that one".
+ *
+ * 🔴 WHY THIS IS NOT OPTIONAL TIDINESS. jsonb does not preserve key order: Postgres
+ * stores keys sorted by length then bytewise, so `{type, windowDays, targetN}` comes
+ * back as `{type, targetN, windowDays}`. The dashboard rebuilds the object from form
+ * fields in ITS own order. A plain JSON.stringify comparison therefore reports a
+ * change when nothing changed, and the frozen-field guard 409s an edit that touched
+ * only the weights — which is precisely the thing live weight editing exists to do.
+ *
+ * Arrays keep their order (it is meaningful — variants[0] is the control arm).
+ */
+export function stableJson(v: unknown): string {
+  if (v === null || typeof v !== 'object') return JSON.stringify(v ?? null);
+  if (Array.isArray(v)) return `[${v.map(stableJson).join(',')}]`;
+  const entries = Object.entries(v as Record<string, unknown>)
+    .filter(([, val]) => val !== undefined)
+    .sort(([a], [b]) => a.localeCompare(b));
+  return `{${entries.map(([k, val]) => `${JSON.stringify(k)}:${stableJson(val)}`).join(',')}}`;
+}
+
+/**
  * Is this scope edit allowed on a test that has already STARTED? Returns a label
  * for the offending field, or null if the edit is one of the two permitted live
  * changes (appending scope.landers, or switching scope.freezeAssignment on).
- *
- * Key order is normalised before comparing: this runs on every live edit now, and a
- * dashboard that serialises the same scope with its keys in a different order must
- * not read as a change.
  */
 export function scopeEditError(
   stored: ExperimentScope | null,
@@ -295,7 +313,7 @@ export function scopeEditError(
   // personaId, route, element all re-partition who is in the test.
   const stable = (s: ExperimentScope | null): string => {
     const { landers: _l, freezeAssignment: _f, ...rest } = (s ?? {}) as Record<string, unknown>;
-    return JSON.stringify(Object.fromEntries(Object.entries(rest).sort(([a], [b]) => a.localeCompare(b))));
+    return stableJson(rest);
   };
   if (stable(stored) !== stable(incoming)) return 'scope';
 
@@ -719,8 +737,11 @@ router.patch('/:key', async (req: Request, res: Response) => {
     // the per-lander table is the honest read (see tallyV1MainByTarotHook).
     if (exp.status !== 'draft') {
       const changed: string[] = [];
+      // stableJson, not JSON.stringify: arm PAYLOADS are jsonb too, so a multi-key
+      // payload comes back from the DB in a different key order than the dashboard
+      // sends it — and that would read as "the payload changed" on a weight-only edit.
       const identity = (vs: Array<{ key: string; payload?: unknown }> | null | undefined) =>
-        JSON.stringify((vs ?? []).map((v) => ({ key: v.key, payload: v.payload ?? {} })));
+        stableJson((vs ?? []).map((v) => ({ key: v.key, payload: v.payload ?? {} })));
       const weights = (vs: Array<{ key: string; weight: number }> | null | undefined) =>
         JSON.stringify((vs ?? []).map((v) => v.weight));
 
@@ -752,9 +773,14 @@ router.patch('/:key', async (req: Request, res: Response) => {
         if (err) changed.push(err);
       }
 
+      // 🔴 stableJson, not JSON.stringify. The dashboard always re-sends `conversion`
+      // on save, rebuilt as {type, windowDays, targetN}; jsonb returns it as
+      // {type, targetN, windowDays}. Compared as raw strings those differ, so EVERY
+      // live weight edit 409'd with "cannot change conversion" — blocking the one
+      // thing this whole mechanism was built for, for a reason unrelated to weights.
       if (
         data.conversion !== undefined &&
-        JSON.stringify(data.conversion ?? null) !== JSON.stringify(exp.conversion ?? null)
+        stableJson(data.conversion ?? null) !== stableJson(exp.conversion ?? null)
       )
         changed.push('conversion');
 
