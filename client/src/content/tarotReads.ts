@@ -312,6 +312,47 @@ export type TarotHook =
   | 'cards-stop-hurting' // I miss him so much — will this ever stop hurting?
   | 'cards-stop-missing' // Will I ever stop missing him?
   | 'cards-still-miss-him' // Why do I still miss him after everything?
+  // Why-he-left hooks (2026-08-11). The operator's category is "Reunion/Return" and the
+  // topic is "Why he left / ghosting" — but the topic, not the category, is the angle:
+  //
+  //   · `reunion` asks WILL HE COME BACK. A question about the FUTURE, and the whole read
+  //     is a leaning about what is ahead.
+  //   · these ask WHY DID HE GO. A question about the PAST, about a thing that has already
+  //     happened and that he never explained.
+  //
+  // 🔴 REUNION_HOOKS must stay exactly three. Filing these there would retroactively mix
+  // two different questions inside one set of running numbers — the same call made for
+  // `missing-him` against `healing` on 08-10, and for `reconciliation` against `reunion`.
+  //
+  // ⚠ THE DEFINING BAN IS THE MOTIVE, and the shared decode-him guard does not carry it.
+  // That guard names four claims — lying, faithful, involved with someone else, coming
+  // back — and every one of these three headlines asks for a FIFTH: why he did it. "He
+  // was overwhelmed", "he was a coward", "he never valued you" are all flat verdicts on a
+  // man's interior, and all three would pass the shared guard untouched. The ban is
+  // therefore written per-hook in TAROT_HOOK_TENDENCY (server/lib/prompts.ts).
+  //
+  // 🔴 NEVER PRESUME WHY OR HOW HE WENT. A man who disappears without a word may have
+  // died, been taken ill, or be in trouble; "ghosted" is HER reading of the silence, not
+  // an established fact. The reads work with the silence itself, which is the only thing
+  // actually known — and if he is in fact dead, the mediumship ban applies for the same
+  // reason it does in `missing-him`: this family runs under the decode-him frame, which
+  // bans none of it.
+  //
+  // 🔴 NEVER HAND HER A TACTIC. "Why did he ghost me?" has the most saturated wrong answer
+  // on the internet attached to it — reach out once more, send this text, check whether he
+  // has read it. The pursuit/surveillance ban from PULLING_AWAY_HOOKS comes along whole.
+  //
+  // ⚠ 'cards-not-enough' is the heaviest headline on the funnel to date. It is the FIRST
+  // that states her own worthlessness as its premise and asks for a ruling on it, and the
+  // only humane answer collides with the standing verdict ban: "you were enough"
+  // necessarily implies he left for reasons that were not about her worth, which is a
+  // claim about him. The resolution is to refuse the comparison itself rather than to
+  // score it — his leaving is not a measurement that was taken, so it returned no verdict
+  // on her to read. NEVER enumerate what she lacked, and NEVER coach her self-worth.
+  // Pinned by tests/tarot-why-he-left-copy.test.ts.
+  | 'cards-left-without-word' // Why did he leave without a word?
+  | 'cards-ghosted' // Why did he ghost me?
+  | 'cards-not-enough' // Was I not enough for him to stay?
   // Self-frame hooks (read HER, affirm the hopeful yes — like the palm love hooks).
   | 'cards-love-again' // Will I love again?
   | 'cards-soulmate' // When is my soulmate coming?
@@ -493,6 +534,29 @@ export const MISSING_HIM_HOOKS: TarotHook[] = [
   'cards-still-miss-him',
 ]
 
+// The why-he-left hooks (2026-08-11). Commissioned under the operator's "Reunion/Return"
+// CATEGORY, topic "Why he left / ghosting" — and filed as their own angle for the same
+// reason `missing-him` was not filed under its "Healing/Moving-on" category: the category
+// is how the ad account is organised, the angle is how the numbers are read.
+//
+//  1. REPORTING. `reunion` asks WILL HE COME BACK — a leaning about the future. These ask
+//     WHY DID HE GO — an account of the past. Same man, opposite direction in time, and a
+//     woman who clicks one is not necessarily in the market for the other. Folding them in
+//     would retroactively mix two questions inside numbers running since 2026-08-04.
+//  2. SAFETY. reunion's per-hook bans are written to refuse a PREDICTION (he is/isn't
+//     coming back). These need to refuse a MOTIVE, which no live family bans, plus a ban
+//     on tactics for making contact, plus — on 'cards-not-enough' — a ban on ruling on her
+//     worth in either direction. None of that is in the reunion strings.
+//
+// 🔴 REUNION_HOOKS and RECONCILIATION_HOOKS must both stay exactly three. Unlike `reunion`
+// (which excludes the incumbent 'cards-return') nothing is excluded here: no live lander
+// asks why he went, so why-he-left-vs-reunion is a clean angle-level comparison.
+export const WHY_HE_LEFT_HOOKS: TarotHook[] = [
+  'cards-left-without-word',
+  'cards-ghosted',
+  'cards-not-enough',
+]
+
 // The ad ANGLE a hook belongs to. Carried on every tarot PostHog event (see
 // lib/tarotAttribution.ts) so the two decode-him families can be compared as GROUPS
 // without listing each hook: one `angle = trust` filter instead of three hook values,
@@ -542,6 +606,13 @@ export type TarotAngle =
   // away from these. It is also NOT self-frame — a real man is in the picture, so every
   // no-verdict-on-him guardrail stays on.
   | 'missing-him'
+  // 🔴 'why-he-left' is the PAST-facing sibling of 'reunion', not a variant of it. reunion
+  // asks whether he is coming back; this asks why he went. It is also NOT 'pulling-away',
+  // which is the only family about a man who is STILL THERE — here there is no ongoing
+  // behaviour to read at all, only the silence he left. And it is NOT self-frame, even
+  // though 'cards-not-enough' is phrased about her: a real man is in the picture, so every
+  // no-verdict-on-him guardrail stays on, and the verdict banned hardest is the MOTIVE.
+  | 'why-he-left'
   | 'self-frame'
 
 export function angleForHook(hook: TarotHook): TarotAngle {
@@ -558,6 +629,7 @@ export function angleForHook(hook: TarotHook): TarotAngle {
   if (LONELINESS_HOOKS.includes(hook)) return 'loneliness'
   if (FIDELITY_HOOKS.includes(hook)) return 'fidelity'
   if (MISSING_HIM_HOOKS.includes(hook)) return 'missing-him'
+  if (WHY_HE_LEFT_HOOKS.includes(hook)) return 'why-he-left'
   return 'decode-him'
 }
 
@@ -603,6 +675,9 @@ export const TAROT_HOOKS: TarotHook[] = [
   'cards-stop-hurting',
   'cards-stop-missing',
   'cards-still-miss-him',
+  'cards-left-without-word',
+  'cards-ghosted',
+  'cards-not-enough',
   'cards-love-again',
   'cards-soulmate',
 ]
@@ -688,6 +763,15 @@ export const HEADLINES: Record<TarotHook, string> = {
   'cards-stop-hurting': 'I miss him so much — will this ever stop hurting?',
   'cards-stop-missing': 'Will I ever stop missing him?',
   'cards-still-miss-him': 'Why do I still miss him after everything?',
+  // Why-he-left (2026-08-11). ⚠ Note what the first two do NOT say: neither states that he
+  // CHOSE to go. "Without a word" and "ghost me" describe the SILENCE, which is the only
+  // part she actually knows — he may have died or be in trouble, and the reads may not
+  // sort her. 'cards-not-enough' is the operator's wording and it stays exactly as given;
+  // it is also the only headline on the funnel that puts her own worth in the question, so
+  // it carries a ban the other two do not (see TAROT_HOOK_TENDENCY).
+  'cards-left-without-word': 'Why did he leave without a word?',
+  'cards-ghosted': 'Why did he ghost me?',
+  'cards-not-enough': 'Was I not enough for him to stay?',
   'cards-love-again': 'Will I love again?',
   'cards-soulmate': 'When is my soulmate coming?',
 }
@@ -836,6 +920,29 @@ const TAROT_QUESTION: Record<TarotHook, string> = {
   // everything she has worked out, so the opener takes for granted that she HAS worked
   // things out, and asks only what interrupts it. Never asks her to recount what he did.
   'cards-still-miss-him': "Before I look closer, tell me… what brings it back, even on the days you were sure you were past it?",
+  // Why-he-left (2026-08-11). 🔴 None of these three asks her to GUESS AT HIS REASON. The
+  // whole family exists because she has been guessing for weeks, and an opener that invites
+  // one more theory hands the model a motive to confirm — which is the exact thing the
+  // tendency strings ban. Each asks instead about something she has first-hand access to:
+  // the last thing that was said, the moment the silence started, what she has done since.
+  //
+  // 🔴 None presumes he chose to go, and none uses the past tense of the relationship as a
+  // settled fact. "The last ordinary day" works whether he walked out or was taken ill.
+  //
+  // 🔴 No-manufactured-despair, and it binds hardest on 'cards-not-enough', whose headline
+  // already contains the self-accusation. An opener like "what do you think you lacked?"
+  // would produce the phrasings SOFT_CRISIS_PATTERNS exists to catch, on a page that asked
+  // for them. It asks about the STAYING rather than the worth — a concrete thing she saw.
+  // ⚠ Deliberately not "what was the last thing that passed between you" — that is almost
+  // exactly the live 'cards-come-back' opener, and the two families must not open alike.
+  'cards-left-without-word': "Before I look closer, tell me… what did the days just before the quiet look like, from where you were standing?",
+  // Asks WHEN she knew, not why he did it. A date she can answer is also the material the
+  // read needs, and it does not require her to characterise him at all.
+  'cards-ghosted': "Before I look closer, tell me… when did you realise it was silence, and not just him being slow to answer?",
+  // ⚠ Refuses the premise gently rather than arguing with it. She has asked to be weighed;
+  // the opener declines the scale and asks what she was actually doing — the effort is
+  // hers, observable, and cannot be scored against her.
+  'cards-not-enough': "Before I look closer, tell me… what were you giving it, in those last weeks, that you have not given yourself credit for?",
   'cards-love-again': "Before I look closer, tell me… what has been weighing on your heart since it happened?",
   'cards-soulmate': "Before I look closer, tell me… what is the love you're still holding out for — the one you haven't given up on?",
 }
@@ -2615,6 +2722,99 @@ const RETURN_MHF: CardSetConfig = {
         "You drew the card that measures no progress at all, having come here to be told how little you have made.",
         "'After everything' is you holding yourself to a timetable — as though a certain weight of hurt ought to have bought a certain amount of immunity by now, and you are overdue. There is no such rate of exchange. Nobody set that schedule; you absorbed it from people describing how this was meant to go for them. The Fool grades nothing. That you still miss him on a given day is not a mark against your judgement, not a sign you have learned nothing, and not evidence about what you think you are worth.",
         "Let me look closer at the timetable you never agreed to…",
+      ],
+    },
+    // ── Why-he-left (2026-08-11) ───────────────────────────────────────────────
+    // 🔴 THE MOTIVE IS THE WHOLE DISCIPLINE HERE. All three headlines ask why a man did
+    // something he never explained, and the shared decode-him guard bans four claims that
+    // do not include this one. Nothing in these nine reads may state, imply or hint at a
+    // reason: not that he was frightened, overwhelmed, immature, seeing someone, punishing
+    // her, protecting her, or unable to cope. The refusal is the reading, and it is said
+    // out loud rather than merely observed.
+    //
+    // 🔴 NEVER PRESUME HE CHOSE IT. A man who goes silent may have died, been taken ill or
+    // be in trouble; "ghosted" is HER account of the silence, not a fact in evidence. The
+    // reads work with THE SILENCE, which is the only thing actually known — the word
+    // "quiet" does the load-bearing work, and no read names a decision, a walking-out, a
+    // death or a body. The mediumship ban of the after-loss family applies for the same
+    // reason it does in `missing-him`: this family runs under the decode-him frame.
+    //
+    // 🔴 NO TACTIC, in either direction. "Why did he ghost me" carries the most saturated
+    // wrong answer on the internet — reach out once more, send this, check if he read it —
+    // and its mirror is just as forbidden: telling her he is gone for good is a prediction.
+    // No read instructs her to make contact, to stop trying, or to expect an answer.
+    //
+    // ⚠ 'cards-not-enough' refuses the COMPARISON rather than scoring it. Answering "yes
+    // you were enough" is kind and is still a claim about why he went. The way through is
+    // that no measurement was ever taken, so there is no result on her to read — which
+    // affirms her without issuing a verdict on him.
+    'cards-left-without-word': {
+      a: [
+        "You turned the Magician, dear — the card of the work being done by one pair of hands.",
+        "Three lay face down and you lifted the card of effort, under a question you have been calling a thing that happened to you.",
+        "You have been writing both halves of a conversation. Every explanation you have tried on, every version where it makes sense at last — that is you, composing his side, and it is exhausting in a way that nothing you can point to accounts for. I am not going to hand you the missing half, and I would be inventing it if I did. What I will say is that the tiredness is not you being unable to cope. It is the cost of keeping a conversation open by yourself.",
+        "Let me look closer at the half you have been writing…",
+      ],
+      b: [
+        "You turned the Hanged Man, dear — the card of the sentence that stopped in the middle.",
+        "Of the three, your fingers found the one that hangs unfinished, which is the shape of what you were left holding.",
+        "You have been treating the quiet as something addressed to you — as though the manner of it were a message about your worth that you ought to be able to decode. Turn it over. Silence is not a text in a code you failed to learn; it carries no content at all, and a person who says nothing has not thereby said something about you. The thing you have been left holding is not an insult you cannot read. It is a sentence that stopped, and stopped sentences ache in a person whether or not anything was meant by them.",
+        "Let me look closer at where it stopped…",
+      ],
+      c: [
+        "You turned the Fool, dear — the card of the page with nothing set down on it.",
+        "You came asking to be told what it meant, and up came the card that holds no meaning at all.",
+        "Here is the thing I will not do, and I want you to hear me refuse it plainly: I will not tell you what was in his head. Nobody sitting where I am sitting can, and anyone who names it for you is filling in a blank to make you feel steadier. The Fool is genuinely blank — that is its whole nature — and so is this. What that leaves you is worse in one way and far better in another. You do not get the reason. You also are not obliged to accept the cruellest one, which is the one you have been living with by default.",
+        "Let me look closer at the version you have been assuming…",
+      ],
+    },
+    // ⚠ The finding: a disappearance makes HER the investigator of her own injury. She has
+    // to supply the motive, build the case and reach a verdict, with nothing admissible and
+    // while being the party who was hurt. The read relieves her of the job rather than
+    // doing it for her — doing it for her IS the banned motive.
+    'cards-ghosted': {
+      a: [
+        "You turned the Magician, dear — the card of intent, which is the one thing that leaves no mark behind it.",
+        "You reached for the card of the will, in a matter where the will in question was never shown to you.",
+        "You have been running an investigation. Rereading the last messages for the tell, dating the change, testing each theory against the evidence — and you have been grading yourself on the fact that it never resolves. It does not resolve because intention is the one thing that leaves nothing behind. You were handed the work of explaining your own injury, with nothing to work from, by a situation that gave you no say in any of it. Failing at that is not stupidity. It was never a solvable job.",
+        "Let me look closer at the job you were handed…",
+      ],
+      b: [
+        "You turned the Hanged Man, dear — the card of the question that has to be inverted before it answers.",
+        "Past two others you took the one that turns things the other way up, which is what yours needs.",
+        "Your question asks what the silence says about you. I am not going to answer it, and the refusal matters more than anything I could invent: a reason built to fit the shape of a hole is a story, and you would build the next year on it. What I can do is turn it the right way up. A silence is information about a silence. You have been reading it as a report on your value, published by someone who never sent you one.",
+        "Let me look closer at what has actually been reported…",
+      ],
+      c: [
+        "You turned the Fool, dear — the card that keeps no ledger of who owes what.",
+        "The card that settles no accounts came up under the account you have not been able to close.",
+        "Something was owed you. Not a reconciliation, not a return — an explanation, the ordinary courtesy of being told, and you did not get it. I want that said plainly, because the people around you have been quietly encouraging you to stop wanting it, as though the wanting were the problem. It is not. The debt is real, and whether it is ever paid is not mine to say; I do not know, and neither does anyone who claims to. But you can put the ledger down without agreeing that nothing was owed.",
+        "Let me look closer at what you have been carrying the accounts for…",
+      ],
+    },
+    // ⚠ The heaviest headline on the funnel: she has put her own worth in the question and
+    // asked for a ruling. 🔴 NEVER score the comparison in either direction — "you were
+    // enough" implies a reason for his going, "you weren't" is unthinkable. Refuse the
+    // premise: no measurement was taken, so no result on her exists. NEVER enumerate what
+    // she lacked, never say she gave too much or loved too hard, never coach her worth.
+    'cards-not-enough': {
+      a: [
+        "You turned the Magician, dear — the card of what was actually done, as against what it was worth.",
+        "Under a question about your value, up came the card that only ever shows the work.",
+        "You have asked me to weigh you. I will not, because the scales in your question do not exist. Staying is not a mark awarded to whoever earns it, and going is not a score published about the one left behind. What the Magician will show is the part that is real and on the record: what you were doing in those last weeks was giving, steadily, and you can see it. Whether it was 'enough' is not a verdict that came back. Nothing was being marked.",
+        "Let me look closer at what you were actually doing…",
+      ],
+      b: [
+        "You turned the Hanged Man, dear — the card of the sum that has to be set up the other way round.",
+        "Of the three you might have taken, you took the one that reverses things, and there is a reversal owed here.",
+        "There is an error in your question, and it is not in you — it is in the setup. You are solving for your own worth using a quantity you were never given, and any answer that comes out the far side is guesswork dressed as arithmetic. People go for reasons that are their own, and some of those reasons are not chosen at all. I will not tell you which was his, and you should be careful with anyone who will. What I can tell you is that his going is not the missing number in a sum about you.",
+        "Let me look closer at the sum you have been trying to finish…",
+      ],
+      c: [
+        "You turned the Fool, dear — the card that awards no marks whatsoever.",
+        "You came here for a result, and the card that grades nothing is the one that came to your hand.",
+        "You have been told, or you have concluded, that there was a line and you came up under it. There was no line. Not one he set, not one you agreed to, and 'not enough' is not a measurement of anything real — it is a phrase that arrives in the small hours and gets mistaken for a finding. Whatever you were, you were it wholly, and that capacity does not shrink because it was not met. The Fool does not report on you. It simply refuses to accept that the question was ever a fair one.",
+        "Let me look closer at the line you never agreed to…",
       ],
     },
   },
