@@ -150,9 +150,33 @@ At a 30% control, 80% power, p<0.05:
 
 ⚠ **`targetN` is in LEADS, the numbers above are in BUYERS.** targetN gates on
 exposures, and an exposure here is a lead (`resolveV1Bump` runs at lead capture).
-So `targetN = 353 / (leads→main-buyer rate)`. The old test's 1200 was sized for a
-different question and is almost certainly too low. Step 0 of the seed file has
-the query that measures the ratio.
+So `targetN = (buyers per arm) / (leads→main-buyer rate)`. The old test's 1200 was
+sized for a different question. Step 0 of the seed file has the query that
+measures the ratio.
+
+## STOPPING RULE — operator decision, 2026-08-11
+
+**Evaluate at 100 total bump purchases across both arms.** Pre-registered here so
+it is a rule and not a peek.
+
+That is ~150 offered-and-paid buyers per arm, which powers a detectable lift of
+roughly **30% → 45%** (80% power, p<0.05). Stated plainly:
+
+| True lift | Readable at 100 bump purchases? |
+|---|---|
+| 30% → 45% | yes |
+| 30% → 40% | borderline — expect ambiguity |
+| 30% → 35% | no |
+
+🔴 **A TIE AT 100 IS NOT "NO DIFFERENCE".** It rules out a big win; it says
+nothing about a modest one. If the read comes back level and the arms look close,
+the options are (a) keep running to ~250 bump purchases, which is what settles
+30%→40%, or (b) call it "no big win" and move to variation B. Do not record a tie
+here as "the ritual copy doesn't work".
+
+Conversion for targetN: 100 bump purchases ≈ 150 buyers/arm ≈ `150 / (leads→buyer
+rate)` exposures per arm. The take-rate query in step 5 of the seed file is what
+actually counts the 100 — targetN only unlocks the dashboard verdict.
 
 ## Measurement
 
@@ -188,8 +212,10 @@ on a real checkout while every real buyer stays on control.
 - [x] Variants built — 48 unit tests, `npx tsx --test server/lib/orderBump.test.ts`
 - [x] Seed written — `improve-v1/create-bump-copy-experiment-2026-08-11.sql`
 - [x] Cutover made reversible — `V1_BUMP_EXPERIMENT_KEY` env var, no deploy
+- [x] Stopping rule decided — 100 total bump purchases (operator, 2026-08-11)
 - [ ] targetN sized (run step 0 of the seed)
 - [ ] Seeded + started in /admin/experiments
+- [ ] `V1_BUMP_EXPERIMENT_KEY=v1_bump_copy_2026` set + restarted
 - [ ] Reviewed before go-live (use `V1_BUMP_QA_COPY=A` to eyeball it)
 
 Merging this changes nothing on its own: with no `copy` key in the live payload,
