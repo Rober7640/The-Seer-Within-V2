@@ -1120,6 +1120,12 @@ const TAROT_HOOK_CONTEXT: Record<string, string> = {
   'cards-left-without-word': "A man went quiet on her without explaining, and she is asking why — she wants a reason, which is the one thing nobody can honestly supply. She has been treating the manner of it as a coded message about her worth.",
   'cards-ghosted': "She is asking why he disappeared on her, and has spent weeks assembling theories out of the last messages — made the investigator of her own injury, with nothing admissible to work from, and grading herself for failing to reach a verdict.",
   'cards-not-enough': "She is asking whether she was insufficient, reading his going as the published result of a measurement taken on her. HER OWN WORTH is the subject of the question and she is asking a stranger to rule on it.",
+  // Searching hooks (2026-08-11) — the second batch under the "Loneliness/Timing" brief.
+  // No man exists in any of them. The subject is the DURATION and the EFFORT of looking,
+  // and in two of the three she is asking to be judged for the outcome.
+  'cards-stop-searching': "She is asking whether the EFFORT of looking ever ends — not whether she finds someone. The searching has become work she performs rather than something she does, and she is asking whether she is allowed to stop.",
+  'cards-end-up-alone': "She is asking WHY, which no other headline on the funnel does about her own life. She has gathered separate endings into one pattern, concluded the common factor must be her, and come to have it confirmed. Underneath 'why' is 'is it me'.",
+  'cards-given-up': "She is asking a stranger to grade her own interior — whether she has closed to love without noticing. She has been guarding herself for a long time and can no longer tell the difference between protecting herself and having quit.",
   // Self-frame hooks — about HER future, not a specific man.
   'cards-love-again': "After heartbreak, she is asking whether she will ever love again — worn down, but the hope is still there.",
   'cards-soulmate': "She is asking WHEN her soulmate will finally arrive — tired of waiting, but still believing the right person is out there for her.",
@@ -1357,6 +1363,17 @@ const TAROT_HOOK_TENDENCY: Record<string, string> = {
     'that she was handed the work of explaining her own injury with nothing admissible to work from, so failing to reach a verdict is not a failure of intelligence — the job was never solvable. NEVER supply the reason he disappeared, in any form, however softly hedged; the refusal is the reading and a reason invented to fit the shape of the silence becomes a story she builds a year on. NEVER diagnose him or his attachment style, and NEVER characterise him as a coward, a user, cruel, broken or damaged — a verdict on his person is still a verdict. NEVER state or imply he chose to disappear, and never speak for him or for the dead. NEVER tell her whether an explanation ever comes. NEVER give her a tactic in either direction — nothing to send, nothing to check, no rule about contact, and equally never instruct her to stop, to block him or to accept he is gone. NEVER tell her this was a blessing, a lucky escape or a lesson. Read the card as the impossible job she was given, and affirm that the explanation was genuinely owed',
   'cards-not-enough':
     'that his going was not a measurement, so it returned no result about her — the scales in her question do not exist, and staying is not a mark awarded to whoever earns it. REFUSE THE COMPARISON, NEVER SCORE IT: never say she was not enough, and NEVER answer that she WAS enough either, because that is still a claim about why he went dressed as reassurance. NEVER enumerate anything she lacked, did wrong, missed or should have done differently. NEVER tell her she gave too much, loved too hard, tried too long or lost herself — those are verdicts on her wearing sympathy. NEVER diagnose her with low self-worth, poor boundaries, people-pleasing, an anxious attachment or a pattern, and never coach her to love herself first or work on herself. NEVER supply his reason or diagnose him, never state he chose to go, and never speak for him or for the dead. NEVER hand her a tactic in either direction — nothing to send him, no way to have kept him, no working on herself first. NEVER promise anyone else is coming and never give a timeframe. Read the card as the error being in the SETUP of her question rather than in her, and affirm the capacity she actually showed — it does not shrink because it was not met',
+  // ── SEARCHING (2026-08-11) ─────────────────────────────────────────────────────────
+  // These run under the LONELINESS frame (see LONELINESS_TAROT_HOOKS), which already bans
+  // fate, forever-in-either-direction, timeframes, tactics, "you attract this", presuming
+  // whether she has had love before, and deepening despair. What follows is only what that
+  // frame does NOT cover — do not restate the frame here, and do not assume it is optional.
+  'cards-stop-searching':
+    'that the effort of looking is real work she has never been given credit for, and that being tired of the maintenance is not the same as being tired of love. NEVER tell her the searching ends and NEVER tell her it does not — the forecast is not available in either direction. NEVER say it happens when she stops looking, when she least expects it, when she is not trying, or once she is happy on her own; that sentence is a tactic and a fault attribution at once and she has been handed it by everyone already. NEVER prescribe a rest, a break, a pause from dating, or any other course of action. NEVER frame the tiredness as a sign she is doing it wrong, wanting it too much, or giving off something. Read the card as the LABOUR the looking has taken, and affirm that noticing its cost is accurate rather than defeatist',
+  'cards-end-up-alone':
+    'that "why" presumes a single reason exists to be found, and no honest reading has one — so the cause is REFUSED rather than supplied. 🔴 NEVER GIVE HER A REASON, in any form, however kind or softly hedged: not that she gives to people who cannot receive it, not that she has never been met at her level, not that her standards or her strength intimidate people, not that she picks the wrong men, not that she is guarded, not that the timing has never been hers, not that she has not healed something first. Those avoid every crude word and are still a ruling on her life delivered by a stranger. NEVER rule on whether she is the reason — not yes and not no; refuse the case rather than acquitting her, because an acquittal concedes there was something to try. NEVER diagnose her with a pattern, an attachment style, low self-worth, walls, or self-sabotage. NEVER characterise the men. NEVER hand her anything to change or work on. Read the card as the difference between SEPARATE ENDINGS and a pattern with a culprit, and affirm that being present at her own endings is not evidence against her',
+  'cards-given-up':
+    'that she is the only authority on her own interior, and the card reads what the guarding has COST rather than whether she has closed. 🔴 REFUSE THE PREMISE OF "WITHOUT REALIZING IT": NEVER claim to see something in her that she cannot see herself, and never tell her what she secretly feels, believes or has decided — she would know, and anyone announcing otherwise is overstepping. NEVER answer the question in either direction: never say she has given up, closed off, gone cold or protected herself into a corner, and never reassure her that she has not, which is the comfort she came here having exhausted. NEVER call her jaded, bitter, cynical, walled-off or hardened. NEVER prescribe opening up, being vulnerable again, putting herself out there, or healing first. NEVER promise the hope will be rewarded. Read the card as the difference between SELF-PROTECTION and surrender — reversible versus not — and affirm that asking the question at all is the conduct of someone still holding it open',
   // Self-frame — affirm HER future love, not a verdict on any man.
   'cards-love-again': 'that love is finding its way back to her — affirm HER heart and her capacity to love again, read the card as a hopeful sign for her own future; never tie it to one specific person and never a date',
   'cards-soulmate': 'that her soulmate is genuinely on the way and nearer than the waiting has let her believe — affirm HER heart and that the love she is holding out for is real and coming, read the card as a hopeful sign of arrival; answer the "when" only as a leaning (soon, close, sooner than the fear admits), NEVER tie it to one specific named person and NEVER give a date or timeframe',
@@ -1430,10 +1447,32 @@ const SOULMATE_WHERE_TAROT_HOOKS = new Set([
 // 🔴 This angle sits closest to the crisis surface of anything on the funnel — see
 // SOFT_CRISIS_PATTERNS in universalSafety.ts, which screens for exactly the state these
 // headlines select for. The guard must never deepen it.
+// 🔴 THIS SET SPANS TWO ANGLES, DELIBERATELY (2026-08-11). It is the FRAME, not the
+// reporting label. The three `searching` hooks below are a separate ANGLE in
+// client/src/content/tarotReads.ts — batch two of the "Loneliness/Timing" brief, kept
+// separate so it can be read against batch one — but they need exactly this frame:
+// no man exists in them either, and every clause above (nothing fated, no forever in
+// either direction, no timeframe, no "you attract this", no tactic, no presuming she has
+// had love before, meet despair without deepening it) is the correct floor for
+// "am I ever going to stop searching", "why do I keep ending up alone" and "have I given
+// up on love without realizing it".
+//
+// Giving them a SIXTH frame would have meant restating all of it and letting the two
+// copies drift; filing them under self-frame would have been the exact mistake this set
+// was created to prevent. What the shared frame does not cover — the ban on supplying a
+// CAUSE, and the ban on claiming to see inside her — lives in their per-hook tendencies.
+//
+// ⚠ So this set is NOT a mirror of LONELINESS_HOOKS any more. It mirrors
+// LONELINESS_HOOKS + SEARCHING_HOOKS. Drift here is a SAFETY defect: a hook missing from
+// this set falls through to the decode-him frame, which is written about a man and bans
+// none of what matters to either family.
 const LONELINESS_TAROT_HOOKS = new Set([
   'cards-alone-forever',
   'cards-meant-alone',
   'cards-someone-for-me',
+  'cards-stop-searching',
+  'cards-end-up-alone',
+  'cards-given-up',
 ])
 
 // Per-deck card vocab (mark + energy label). Mirrors the DECKS registry in
