@@ -54,6 +54,11 @@ const LIVE_ADS = [
   { hook: 'cards-stop-hurting', url: '/fb-tarot/c?hook=cards-stop-hurting' },
   { hook: 'cards-stop-missing', url: '/fb-tarot/c?hook=cards-stop-missing' },
   { hook: 'cards-still-miss-him', url: '/fb-tarot/c?hook=cards-still-miss-him' },
+  // Why-he-left hooks added 2026-08-11. Backlog above still stands — ten families remain
+  // unlisted here, and that backfill is still worth its own pass.
+  { hook: 'cards-left-without-word', url: '/fb-tarot/c?hook=cards-left-without-word' },
+  { hook: 'cards-ghosted', url: '/fb-tarot/c?hook=cards-ghosted' },
+  { hook: 'cards-not-enough', url: '/fb-tarot/c?hook=cards-not-enough' },
 ]
 
 // The ad ANGLE each hook rolls up to, so the two decode-him families can be compared as

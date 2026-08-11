@@ -638,6 +638,105 @@ an object, a trigger), which is also the material the read actually needs.
 non-blocking by design (`safe: true` + `softCrisisNote`), so it adds care rather than derailing
 the funnel — but it is worth watching in the transcripts once spend starts.
 
+## Why-he-left hooks — 3 face-down landers (2026-08-11)
+
+Own `why-he-left` angle. Operator category: *"Reunion/Return"* · topic: *"Why he left / ghosting"*
+— and **the topic is the angle, not the category**, for the same reason `missing-him` was not
+filed under its "Healing/Moving-on" category. Face-down `return-mhf` only, Version C, clean
+URLs, no new art.
+
+| Headline | Hook | URL |
+|---|---|---|
+| Why did he leave without a word? | `cards-left-without-word` | `/fb-tarot/c?hook=cards-left-without-word` |
+| Why did he ghost me? | `cards-ghosted` | `/fb-tarot/c?hook=cards-ghosted` |
+| Was I not enough for him to stay? | `cards-not-enough` | `/fb-tarot/c?hook=cards-not-enough` |
+
+### 🔴🔴 The MOTIVE ban is the commission — and no live family carries it
+
+All three headlines ask **why a man did something he never explained**. The shared decode-him
+guard (`server/lib/prompts.ts`) names exactly four forbidden claims:
+
+> *Never declare he is lying, faithful, involved with someone else, or coming back as a fact.*
+
+**"He left because X" is not among them.** *He was overwhelmed* · *he was a coward* · *he never
+valued you* are all flat verdicts on a man's interior and every one would pass the shared guard
+untouched. **The refusal is the reading**, and the reads say it out loud rather than merely
+omitting it — *"I will not tell you what was in his head… anyone who names it for you is filling
+in a blank to make you feel steadier."*
+
+⚠️ **The DIAGNOSIS is banned separately**, because it is the motive wearing a clinical coat and
+is the single most available answer on the internet to "why did he ghost me": narcissist,
+avoidant, commitment-phobe, emotionally unavailable, breadcrumbing. It reads as expertise rather
+than as a guess, which is precisely what makes it persuasive and therefore worse.
+
+### 🔴🔴 NEVER PRESUME HE CHOSE IT — she may be bereaved
+
+A man who falls silent may have **died, been taken ill, or be in trouble**. *"Ghosted"* is HER
+account of the silence, not a fact in evidence, and none of the three headlines establishes that
+he made a decision.
+
+So the reads work with **the silence itself**, which is the only thing actually known — the word
+*quiet* does the load-bearing work, and nothing in the nine reads, three openers or three context
+lines names a decision, a walking-out, a death or a body. The furthest any read goes is *"a man
+is no longer in her life"*.
+
+⚠️ Same consequence as `missing-him`: **a mediumship ban on an angle with no frame to carry it.**
+This family runs under **decode-him**, which bans none of it, and `universalSafety.ts` screens
+none of it either. Written out per-hook in `TAROT_HOOK_TENDENCY` and asserted in the guard file.
+
+> 📌 No sixth frame was added — deliberately, same call as 08-10. The frame ternary in
+> `buildTarotReflectPrompt` is documented as being at its limit and the lookup refactor is worth
+> making on its own. The cost is that **all five of this family's bans live in three tendency
+> strings**, which is why the guard file asserts them string-by-string on the generated prompt.
+
+### 🔴🔴 No TACTIC, in either direction
+
+*"Why did he ghost me"* has the most saturated wrong answer on the internet attached to it —
+reach out once more, send this text, check whether he read it. Banned. **And so is its mirror**:
+telling her he is gone for good, that she should block him, or that it is time to accept it, is a
+**prediction wearing the clothes of advice**. Neither pole is available to the reads.
+
+### 🔴🔴 `cards-not-enough` — the heaviest headline on the funnel to date
+
+It is the **first headline that puts her own worth in the question** and asks a stranger to rule
+on it. The trap is that the kind answer is also a banned one:
+
+| Answer | Why it is refused |
+|---|---|
+| *"You were not enough"* | unthinkable |
+| *"You **were** enough"* | kind — and still a claim about **why he went**, which is the motive ban |
+
+The way through is to **refuse the comparison rather than score it**: no measurement was ever
+taken, so there is no result on her to read. *"The scales in your question do not exist… staying
+is not a mark awarded to whoever earns it."* Nothing may enumerate what she lacked, nothing may
+land as *you gave too much* / *you lost yourself* (verdicts on her wearing sympathy), and nothing
+may coach her self-worth.
+
+⚠️ **Expect this lander to trip the soft-crisis path more than any other on the funnel.**
+`SOFT_CRISIS_PATTERNS` catches `i feel worthless / empty / broken` — and this headline hands her
+that vocabulary before she types a word. The path is non-blocking by design (`safe: true` +
+`softCrisisNote`) so it adds care rather than derailing, but it is worth watching in transcripts
+once spend starts.
+
+### Three separate findings
+
+| Hook | Finding |
+|---|---|
+| `cards-left-without-word` | the silence is **not a coded message she failed to decode** — it carries no content, and what exhausts her is composing his half of an open conversation by herself |
+| `cards-ghosted` | she was **made the investigator of her own injury**, with nothing admissible to work from, so failing to reach a verdict is not a failure of intelligence — the job was never solvable |
+| `cards-not-enough` | his going was **not a measurement**, so it returned no result about her — the error is in the setup of the question, not in her |
+
+### 🔴 Openers ask for first-hand detail, never for a theory
+
+She has been guessing for weeks. An opener inviting **one more theory** would hand the model a
+motive in her own words to then confirm — the exact banned thing. Each asks instead about
+something only she has: the last ordinary exchange, when she knew it was silence, what she was
+giving in those last weeks.
+
+⚠️ Held apart from `reunion` (which asks forwards) and from `pulling-away` (**the only family
+about a man who is still there** — here there is no ongoing behaviour to read at all). Guard pins
+zero shared 6-word runs in beat 3 against both.
+
 ## Concepts
 
 | # | Deck id | Facing | Cards (A/B/C) | Options | Status | Notes |
@@ -691,6 +790,9 @@ the funnel — but it is worth watching in the transcripts once spend starts.
 | `cards-stop-hurting` *(missing-him)* | I miss him so much — will this ever stop hurting? | ⬜ DRAFT (2026-08-10) — 🔴 asks for a DURATION outright; the refusal is the reading. Reads the ache as work she is performing |
 | `cards-stop-missing` *(missing-him)* | Will I ever stop missing him? | ⬜ DRAFT (2026-08-10) — ⚠️ the FOREVER question; refuses both poles. Reads missing as a thing decision cannot reach |
 | `cards-still-miss-him` *(missing-him)* | Why do I still miss him after everything? | ⬜ DRAFT (2026-08-10) — 🔴 heaviest of the three, sibling of `cards-who-hurt-me`; never minimise the named harm, never convict him, never land as her weakness |
+| `cards-left-without-word` *(why-he-left)* | Why did he leave without a word? | ⬜ DRAFT (2026-08-11) — 🔴 asks for a MOTIVE outright; the refusal is the reading. Reads the silence as carrying no content at all |
+| `cards-ghosted` *(why-he-left)* | Why did he ghost me? | ⬜ DRAFT (2026-08-11) — 🔴 the DIAGNOSIS ban does the heavy lifting (narcissist/avoidant is the internet's answer). Reads her as the investigator of her own injury |
+| `cards-not-enough` *(why-he-left)* | Was I not enough for him to stay? | ⬜ DRAFT (2026-08-11) — 🔴🔴 heaviest headline on the funnel; her own worth is the question. REFUSE the comparison, never score it — "you were enough" is banned too |
 | `cards-love-again` *(self-frame)* | Will I love again? | ⬜ draft — 🔴 **no reads on either FACE-DOWN deck**, so a clean URL silently falls back to `cards-honest`/`decode-him`. Only works with an explicit `&deck=arcana-mfh` |
 | `cards-soulmate` *(self-frame)* | When is my soulmate coming? | ⬜ draft (2026-07-27, from `ZN_Tarot_Rio 8.png` = arcana-eef cards; reads on arcana-eef + arcana-mfh; answers "when" as a leaning, never a date) |
 
