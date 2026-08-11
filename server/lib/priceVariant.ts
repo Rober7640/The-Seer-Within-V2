@@ -48,6 +48,7 @@ import {
   scopeVariantsToFunnel,
   scopeVariantsToSign,
   selectVariant,
+  storedVariantIsServable,
   type PriceVariant,
 } from './priceVariantPool';
 
@@ -59,6 +60,7 @@ export {
   scopeVariantsToFunnel,
   scopeVariantsToSign,
   selectVariant,
+  storedVariantIsServable,
   normalizeSign,
   type PriceVariant,
 };
@@ -363,7 +365,36 @@ export async function assignVariantIfMissing(
     // and never re-roll. Use `!= null` (not truthiness) on the amounts so a stored 0
     // still counts as "assigned" — otherwise a 0/NULL downsell would skip this guard
     // and pickWeighted (Math.random) could flip the customer's main price mid-funnel.
-    if (row.priceVariant && row.priceAmountCents != null && row.downsellAmountCents != null) {
+    //
+    // 🔴 …but ONLY WHILE THIS FUNNEL WOULD STILL SERVE THAT VARIANT (2026-08-11
+    // fix). `conversations` is keyed by email and reused forever, so without this
+    // a visitor's very first price followed her into every other funnel she ever
+    // came back through, and outlived the test that drew it — which is how a
+    // /fb-tarot buyer (a FIXED $35 funnel that has never run a price test) was
+    // charged the root $45 arm assigned to her in May, months after it was parked
+    // at weight 0. See storedVariantIsServable for the full write-up. Inside a
+    // live split both arms are servable, so behaviour there is unchanged.
+    //
+    // The fixed-price funnels are checked against their fixed id rather than the
+    // pool: FIXED_FUNNEL_PRICES entries are stamped directly and deliberately do
+    // not exist in system_config, so a pool lookup would never find them.
+    const fixedForFunnel = funnel ? FIXED_FUNNEL_PRICES[funnel] : undefined;
+    const storedIsServable = fixedForFunnel
+      ? row.priceVariant === fixedForFunnel.id
+      : storedVariantIsServable(row.priceVariant, await getActiveVariants(), funnel, sign);
+    if (row.priceVariant && !storedIsServable) {
+      // Loud, because it means real money was about to be charged at a price this
+      // funnel does not offer — and because the re-draw below OVERWRITES the
+      // stored price, so this line is the only record of what it used to be.
+      logger.warn('priceVariant: stored variant is not servable on this funnel — re-assigning', {
+        email,
+        storedVariant: row.priceVariant,
+        storedPriceCents: row.priceAmountCents,
+        funnel: funnel ?? null,
+        sign: normalizeSign(funnel, sign),
+      });
+    }
+    if (row.priceVariant && storedIsServable && row.priceAmountCents != null && row.downsellAmountCents != null) {
       return {
         variant: row.priceVariant,
         priceCents: row.priceAmountCents,
@@ -374,7 +405,7 @@ export async function assignVariantIfMissing(
       };
     }
 
-    const fixed = funnel ? FIXED_FUNNEL_PRICES[funnel] : undefined;
+    const fixed = fixedForFunnel;
     const picked: PriceVariant = fixed
       ? {
           id: fixed.id,
@@ -495,8 +526,24 @@ export async function assignVariantIfMissing(
  * Read the variant already on a conversation row.
  * Returns the historical default ($35/$25) if no variant has been assigned —
  * this is the safety fallback that lets old conversations keep working.
+ *
+ * `funnel` is OPTIONAL and is a pure SAFETY NET on the charge path: when it is
+ * supplied, the funnel runs a single FIXED price, and the stored variant belongs
+ * to a different funnel, this returns the fixed price instead of the stale one.
+ *
+ * Belt and braces, not the fix. The fix is in assignVariantIfMissing, which
+ * re-stamps the row at lead capture so every reader (chat copy, checkout, both
+ * upsells) already agrees. This exists because /api/checkout is where the money
+ * actually moves, and on a fixed-price funnel the correct price is a constant —
+ * it needs no draw, so it is safe to assert here without any risk of re-rolling a
+ * live A/B arm. Funnels that run a real split are deliberately left alone: there
+ * is no "correct" price to clamp to without drawing one, and drawing at checkout
+ * could charge a price she was never quoted.
  */
-export async function getVariantForEmail(email: string): Promise<AssignedVariant> {
+export async function getVariantForEmail(
+  email: string,
+  funnel?: string | null,
+): Promise<AssignedVariant> {
   try {
     const rows = await db
       .select({
@@ -512,6 +559,22 @@ export async function getVariantForEmail(email: string): Promise<AssignedVariant
 
     const row = rows[0];
     if (row?.priceVariant && row.priceAmountCents && row.downsellAmountCents) {
+      const fixed = funnel ? FIXED_FUNNEL_PRICES[funnel] : undefined;
+      if (fixed && row.priceVariant !== fixed.id) {
+        logger.warn('priceVariant: stored variant is from another funnel on a FIXED-price funnel — serving the fixed price', {
+          email,
+          storedVariant: row.priceVariant,
+          storedPriceCents: row.priceAmountCents,
+          funnel,
+          servedPriceCents: fixed.priceCents,
+        });
+        return {
+          variant: fixed.id,
+          priceCents: fixed.priceCents,
+          downsellCents: fixed.downsellCents,
+          upsell1Cents: fixed.upsell1Cents,
+        };
+      }
       return {
         variant: row.priceVariant,
         priceCents: row.priceAmountCents,

@@ -243,3 +243,55 @@ export function selectVariant(
   const bySign = scopeVariantsToSign(byFunnel, normalizeSign(funnel, sign));
   return pickWeighted(bySign);
 }
+
+/**
+ * Would this visitor's funnel SERVE the variant already stored on her row today?
+ * The guard on price stickiness.
+ *
+ * 🔴 THE BUG THIS EXISTS FOR (2026-08-11, dcwheeler51@gmail.com — $57.77).
+ * `conversations` is keyed by EMAIL and reused forever (saveConversation upserts
+ * on email, it never inserts a second row for a returning lead), so the price
+ * assigned on a visitor's FIRST EVER visit followed that email for the rest of
+ * time — across every funnel she ever came back through, and long after the test
+ * that priced her was switched off. That buyer drew the root `45` arm on
+ * 2026-05-25 while the root $35/$45 test was live, came back through /fb-tarot on
+ * 2026-08-10 — a FIXED $35 funnel that has never run a price test — and the
+ * stickiness guard in assignVariantIfMissing handed her stored $45 straight to
+ * Stripe. With the $12.77 order bump that is the $57.77 charge. In the same 30
+ * days 29 other buyers paid $45–$59 the same way, including three at $59 from an
+ * arm retired months earlier.
+ *
+ * So the stored id is kept only while it is one this funnel would draw RIGHT NOW:
+ *
+ *   wrong funnel  — a price belongs to the funnel it was drawn for, never to the
+ *                   email. A /fb-tarot visitor gets the tarot price, full stop.
+ *   weight 0      — the arm is retired. "We stopped that test months ago" has to
+ *                   mean nobody is still being charged by it, including the
+ *                   returning visitors who are 57% of buys on these funnels.
+ *
+ * Everything else stays exactly as sticky as before — and that is the point of
+ * the guard: inside one live split ($35 vs $45 on /fb, both arms weight > 0) the
+ * stored arm is always servable, so no customer's price can move under her.
+ *
+ * ⚠ IDEMPOTENT BY CONSTRUCTION, and it must stay that way: this checks the SAME
+ * eligible set that selectVariant draws from, so a freshly drawn id is always
+ * servable on the next call. Check against a different set and a returning
+ * visitor would be re-rolled on every page load — her price flapping mid-funnel,
+ * which is the failure this guard was built to prevent in the first place.
+ * The `drawable.length ? … : eligible` fallback mirrors pickWeighted's own
+ * all-weights-zero fallback for exactly that reason.
+ */
+export function storedVariantIsServable(
+  storedVariantId: string | null | undefined,
+  variants: PriceVariant[],
+  funnel?: string | null,
+  sign?: string | null,
+): boolean {
+  if (!storedVariantId) return false;
+  const eligible = scopeVariantsToSign(
+    scopeVariantsToFunnel(variants, funnel),
+    normalizeSign(funnel, sign),
+  );
+  const drawable = eligible.filter((v) => v.weight > 0);
+  return (drawable.length ? drawable : eligible).some((v) => v.id === storedVariantId);
+}
