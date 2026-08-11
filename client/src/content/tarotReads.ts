@@ -353,6 +353,40 @@ export type TarotHook =
   | 'cards-left-without-word' // Why did he leave without a word?
   | 'cards-ghosted' // Why did he ghost me?
   | 'cards-not-enough' // Was I not enough for him to stay?
+  // Searching hooks (2026-08-11) — the SECOND batch commissioned under the
+  // "Loneliness/Timing" brief. The first became LONELINESS_HOOKS on 2026-08-07, and the
+  // note there records that none of those three turned out to be about timing. These are:
+  // the subject is the DURATION and the EFFORT of looking, not whether a person exists.
+  //
+  // Same shape as loneliness — no man appears in any of them — but a different question.
+  // Loneliness asks whether her life STAYS as it is. These ask what the looking has cost
+  // her, and two of them ask her to be judged for it.
+  //
+  // 🔴 EACH OF THE THREE CARRIES A BAN THAT EXISTS NOWHERE ELSE ON THE FUNNEL:
+  //
+  //   · 'cards-end-up-alone' asks WHY — the first headline that requests a CAUSE for her
+  //     own life. Every loneliness guard refuses a *whether* ("will I be alone", "am I
+  //     meant to be"); none refuses a *why*. The banned sentences here are not the crude
+  //     ones the frame already catches (defeatist, self-sabotaging, closed off) but the
+  //     kind, fluent ones that dodge every one of those words while still handing a woman
+  //     a diagnosis of her life: "you keep giving to people who cannot receive it", "the
+  //     timing has never been yours". Those are verdicts on her wearing sympathy. The
+  //     finding is that "why" presumes a reason exists to be found, and no honest reading
+  //     has one — so it refuses to supply a cause at all.
+  //
+  //   · 'cards-given-up' asks her to be graded on her own interior, and BOTH answers do
+  //     harm: "yes" is the exact sentence 'cards-alone-forever' already bans, and "no" is
+  //     the reassurance she came here having exhausted. The novel ban is on the headline's
+  //     own premise — "without realizing it" invites Evelyn to claim better access to her
+  //     mind than she has, and she is the only authority on it.
+  //
+  //   · 'cards-stop-searching' asks for a forecast about the effort ending. It inherits
+  //     loneliness's both-directions refusal, and adds the ban on the single most common
+  //     answer to this question anywhere: "it happens when you stop looking" — which is a
+  //     tactic and a fault attribution wearing a proverb.
+  | 'cards-stop-searching' // Am I ever going to stop searching?
+  | 'cards-end-up-alone' // Why do I keep ending up alone?
+  | 'cards-given-up' // Have I given up on love without realizing it?
   // Self-frame hooks (read HER, affirm the hopeful yes — like the palm love hooks).
   | 'cards-love-again' // Will I love again?
   | 'cards-soulmate' // When is my soulmate coming?
@@ -557,6 +591,33 @@ export const WHY_HE_LEFT_HOOKS: TarotHook[] = [
   'cards-not-enough',
 ]
 
+// Searching hooks (2026-08-11). The SECOND batch under the "Loneliness/Timing" brief.
+//
+// 🔴 A SEPARATE ANGLE FROM `loneliness`, DELIBERATELY — and the reason is the note sitting
+// on LONELINESS_HOOKS above: pool separately-commissioned families and all of them become
+// unreadable. Batch one has been running since 2026-08-07; folding batch two into it would
+// retroactively mix two commissions inside one set of numbers and destroy the only
+// comparison anybody wants (did batch two beat batch one?).
+//
+// They are also a different question. loneliness = will my LIFE stay as it is. searching =
+// what has the LOOKING cost me, and am I the reason it has not worked. The second half of
+// that is why two of the three carry bans no live family has.
+//
+// ⚠ ANGLE ≠ FRAME, and this family is where the two come apart. The angle label below is a
+// REPORTING device. The safety frame these run under is `loneliness`'s — they are added to
+// LONELINESS_TAROT_HOOKS in server/lib/prompts.ts, whose guardLine (nothing fated, no
+// forever in either direction, no timeframe, no "you attract this", no tactic, no
+// presuming she has had love before, meet despair without deepening it) is already the
+// correct floor for these headlines. Filing them under a NEW frame would have meant
+// restating all of it and risking drift; filing them under self-frame would have been the
+// dangerous mistake loneliness itself was created to avoid. The per-hook TENDENCY strings
+// carry what the shared frame does not — see the union comment above.
+export const SEARCHING_HOOKS: TarotHook[] = [
+  'cards-stop-searching',
+  'cards-end-up-alone',
+  'cards-given-up',
+]
+
 // The ad ANGLE a hook belongs to. Carried on every tarot PostHog event (see
 // lib/tarotAttribution.ts) so the two decode-him families can be compared as GROUPS
 // without listing each hook: one `angle = trust` filter instead of three hook values,
@@ -613,6 +674,16 @@ export type TarotAngle =
   // though 'cards-not-enough' is phrased about her: a real man is in the picture, so every
   // no-verdict-on-him guardrail stays on, and the verdict banned hardest is the MOTIVE.
   | 'why-he-left'
+  // 🔴 'searching' is the sibling of 'loneliness', not a variant of it, and the two must
+  // never be merged. loneliness asks whether her LIFE stays as it is; searching asks what
+  // the LOOKING has cost and whether she is the reason it has not worked. They were also
+  // commissioned two batches apart under the same brief — the whole point of a separate
+  // label is that batch two can be read against batch one instead of disappearing into it.
+  // It is NOT self-frame either, for the same reason loneliness is not: no man exists in
+  // these, so self-frame is the obvious filing and its "affirm with CERTAINTY" clause is
+  // precisely the harm. Note the SAFETY frame is shared with loneliness even though the
+  // angle is not — see SEARCHING_HOOKS above.
+  | 'searching'
   | 'self-frame'
 
 export function angleForHook(hook: TarotHook): TarotAngle {
@@ -630,6 +701,7 @@ export function angleForHook(hook: TarotHook): TarotAngle {
   if (FIDELITY_HOOKS.includes(hook)) return 'fidelity'
   if (MISSING_HIM_HOOKS.includes(hook)) return 'missing-him'
   if (WHY_HE_LEFT_HOOKS.includes(hook)) return 'why-he-left'
+  if (SEARCHING_HOOKS.includes(hook)) return 'searching'
   return 'decode-him'
 }
 
@@ -678,6 +750,9 @@ export const TAROT_HOOKS: TarotHook[] = [
   'cards-left-without-word',
   'cards-ghosted',
   'cards-not-enough',
+  'cards-stop-searching',
+  'cards-end-up-alone',
+  'cards-given-up',
   'cards-love-again',
   'cards-soulmate',
 ]
@@ -772,6 +847,10 @@ export const HEADLINES: Record<TarotHook, string> = {
   'cards-left-without-word': 'Why did he leave without a word?',
   'cards-ghosted': 'Why did he ghost me?',
   'cards-not-enough': 'Was I not enough for him to stay?',
+  // Searching (2026-08-11). The operator's wording, shipped exactly as given.
+  'cards-stop-searching': 'Am I ever going to stop searching?',
+  'cards-end-up-alone': 'Why do I keep ending up alone?',
+  'cards-given-up': 'Have I given up on love without realizing it?',
   'cards-love-again': 'Will I love again?',
   'cards-soulmate': 'When is my soulmate coming?',
 }
@@ -943,6 +1022,13 @@ const TAROT_QUESTION: Record<TarotHook, string> = {
   // the opener declines the scale and asks what she was actually doing — the effort is
   // hers, observable, and cannot be scored against her.
   'cards-not-enough': "Before I look closer, tell me… what were you giving it, in those last weeks, that you have not given yourself credit for?",
+  // Searching (2026-08-11). 🔴 None of the three may ask her to account for the outcome —
+  // "why do you think it hasn't worked" invites her to indict herself, and whatever she
+  // types then sits in the transcript as the premise for everything Evelyn says next.
+  // Each asks about the EFFORT or the COST, which she can answer without self-blame.
+  'cards-stop-searching': "Before I look closer, tell me… how long has the looking been something you have to make yourself do?",
+  'cards-end-up-alone': "Before I look closer, tell me… when you picture it going right, what does the ordinary part of it look like?",
+  'cards-given-up': "Before I look closer, tell me… what did you used to let yourself hope for, before you started guarding it?",
   'cards-love-again': "Before I look closer, tell me… what has been weighing on your heart since it happened?",
   'cards-soulmate': "Before I look closer, tell me… what is the love you're still holding out for — the one you haven't given up on?",
 }
@@ -2815,6 +2901,91 @@ const RETURN_MHF: CardSetConfig = {
         "You came here for a result, and the card that grades nothing is the one that came to your hand.",
         "You have been told, or you have concluded, that there was a line and you came up under it. There was no line. Not one he set, not one you agreed to, and 'not enough' is not a measurement of anything real — it is a phrase that arrives in the small hours and gets mistaken for a finding. Whatever you were, you were it wholly, and that capacity does not shrink because it was not met. The Fool does not report on you. It simply refuses to accept that the question was ever a fair one.",
         "Let me look closer at the line you never agreed to…",
+      ],
+    },
+    // ── SEARCHING (2026-08-11) ────────────────────────────────────────────────
+    // 'Am I ever going to stop searching?' — THE DURATION. She is not asking whether
+    // she finds someone; she is asking whether the EFFORT ever ends. Refuse the
+    // forecast in both directions (loneliness's rule), and read the labour instead.
+    // 🔴 The banned answer is the proverb — "it happens when you stop looking" — which
+    // is a tactic and a fault attribution at once, and is what she has been told by
+    // everyone already.
+    'cards-stop-searching': {
+      a: [
+        "You turned the Magician, dear — the card of hands that are still working, long after the light went.",
+        "Of the three you could have taken, yours went to the card about effort, and effort is the part of this nobody has been counting.",
+        "Whether the looking ever ends is not something this card knows, in either direction, and you would be right to distrust anybody who claimed it did. What the Magician has picked up instead is the labour. Somewhere along the way this stopped being something you were doing and became something you were performing — arranging yourself, staying open, keeping the hope in working order — and that is work, and it does not stop being work because people insist it should be effortless. You are not tired of love. You are tired of the maintenance.",
+        "Let me look closer at what the keeping-going has been costing you…",
+      ],
+      b: [
+        "You turned the Hanged Man, dear — the card of the season that will not turn over.",
+        "It was the card of suspended time your hand settled on, and time is doing the damage here rather than anything you have done.",
+        "There is no ending in this card to read out to you, and no promise that there is not one; what the Hanged Man registers is that the searching has quietly changed shape on you. It began as looking forward to something. Somewhere it turned into bracing — going anyway, hoping carefully, keeping the disappointment small enough to survive. That is not the same activity any more, though it wears the same name, and doing the second one for years while calling it the first is exhausting in a way that never shows up from outside.",
+        "Let me look closer at when the looking turned into bracing…",
+      ],
+      c: [
+        "You turned the Fool, dear — the card of someone still setting out, with the road not yet under them.",
+        "Under a question with 'ever' in it, up came the one card that has never heard of ever.",
+        "No card carries an ending to hand you, dear, and this one least of all, so I am not going to pretend otherwise in either direction. What the Fool sets down is smaller than a forecast and considerably more use. Whoever is still asking has not actually stopped. You came here tonight and you turned a card, and that is not the conduct of a woman who has abandoned the road — it is the conduct of one who has been walking it long enough to wonder whether she is permitted to sit down a while. Those are two entirely different questions, and only the second one has ever been yours to ask.",
+        "Let me look closer at the rest you have not let yourself take…",
+      ],
+    },
+    // 'Why do I keep ending up alone?' — THE CAUSE REQUEST, and the first headline on
+    // the funnel to ask for one about HER OWN LIFE.
+    // 🔴 REFUSE TO SUPPLY A CAUSE. The frame already bans the crude verdicts (defeatist,
+    // closed off, self-sabotaging, "you attract this"). What it does NOT catch is the
+    // kind, fluent diagnosis that avoids every one of those words — "you give to people
+    // who cannot receive it", "you have never been met at your level", "the timing has
+    // never been yours". Those are rulings on her life, delivered as fact, by a stranger
+    // reading a card. The finding is that "why" presumes a reason exists to be found,
+    // and no honest reading has one; the real question underneath is "is it me", and
+    // THAT is what gets answered — by refusing to rule, not by ruling kindly.
+    'cards-end-up-alone': {
+      a: [
+        "You turned the Magician, dear — the card of the maker, which is a very different thing from the made.",
+        "Your hand went to the card about authorship, and authorship is exactly what your question has been quietly assuming.",
+        "There is no reason here for me to give you, and whatever I produced would be something I had made up on the spot to fit the shape of your question — that is the honest answer, and it is worth more than a kind invention. Your question contains a hidden claim: that there is a single cause, that it is located in you, and that a stranger could read it off a card. The Magician is the card of what a person actually authors, and what anybody authors is their own conduct — never the whole outcome, which needed another person to show up and keep showing up. You have been holding yourself accountable for a result that was never yours alone to produce.",
+        "Let me look closer at what you have been holding yourself responsible for…",
+      ],
+      b: [
+        "You turned the Hanged Man, dear — the card of the picture that has been hanging upside down.",
+        "Yours was the card of the inverted view, and this question has been sitting inverted in you for a long while.",
+        "The word doing the work in what you asked is 'keep', and it is the one I want to turn the right way up. Separate endings, each with its own reasons and its own other person, get gathered up by the mind and read backwards as a single pattern with a single culprit — and once that is done, the culprit is always the one person present at all of them, which is you. That is not evidence, dear. That is arithmetic performed while tired. The Hanged Man does not tell me why any of them ended, and neither will I, because the truthful answer is that they are not one thing and were never one thing.",
+        "Let me look closer at the pattern you have been reading into it…",
+      ],
+      c: [
+        "You turned the Fool, dear — the card carrying no verdict on anybody, least of all the one holding it.",
+        "You came asking to be told what is wrong with you, and up came the card that has never once made that finding.",
+        "There is nothing in this card that says you are the reason, and there is nothing in it that says you are not — I will not rule on you in either direction, because it is not a ruling anybody is entitled to make and you would carry it either way. What the Fool sets down instead is that your question was built as a case against yourself, and then handed to me to confirm. I am not going to confirm it. Endings happen for reasons that mostly live in other people and in circumstances, and a woman is not a defect for having been present at hers.",
+        "Let me look closer at the case you have been building against yourself…",
+      ],
+    },
+    // 'Have I given up on love without realizing it?' — THE SELF-AUDIT. She is asking a
+    // stranger to grade her own interior, and BOTH answers do harm: "yes, you have" is
+    // the sentence 'cards-alone-forever' already bans outright, and "no, you have not"
+    // is the reassurance she came here having exhausted.
+    // 🔴 The novel ban is on the headline's own premise. "Without realizing it" invites
+    // Evelyn to claim better access to her mind than she has — refuse that outright.
+    // She is the only authority on her interior; the card reads what guarding COSTS,
+    // never whether she has closed.
+    'cards-given-up': {
+      a: [
+        "You turned the Magician, dear — the card of the hands that have not stopped, whatever the person attached to them believes.",
+        "You reached for the card of ongoing work at the exact moment you were wondering whether you had put the work down.",
+        "What you have or have not given up on is not mine to announce, dear, and no card gets to rule on the inside of a person — you read your own interior better than anyone alive, and certainly better than this deck. What I can say is that you are here, at whatever hour this is, asking. That is not the conduct of someone who has closed the matter; a closed matter does not get taken out and examined. Whether the hope has changed shape is a real question and yours alone to answer, but the Magician does not find a woman who has stopped. It finds one who is worried she might have, which is nearly the opposite.",
+        "Let me look closer at what you are afraid you have let go of…",
+      ],
+      b: [
+        "You turned the Hanged Man, dear — the card of the pause that has gone on longer than the one who called it ever intended.",
+        "It was the card of the held moment that came to your hand, and holding is precisely what your question is about.",
+        "Protecting yourself is not the same as giving up, though from the outside — and after enough years — the two can look identical, which is what has you asking. Somewhere you began expecting less out loud so that less would hurt less. That is not surrender, dear, it is a sensible thing a person does after being disappointed enough times, and it is reversible in a way that giving up is not. Neither of those is mine to score, and naming which one this is would be a judgement I have no standing whatever to make. The Hanged Man's business is what the holding has cost, never a verdict on the woman doing the holding.",
+        "Let me look closer at what the guarding has been costing you…",
+      ],
+      c: [
+        "You turned the Fool, dear — the card of the one still standing at the start of the road, whatever they have decided about themselves.",
+        "Your question asked whether the door had quietly shut, and the card that arrived is the one that has never yet been shut.",
+        "Let me take 'without realizing it' out of your hands, dear, because that is the phrase doing the damage. It supposes something has happened inside you that you cannot see and a stranger can — and that is not true of me, or of this card, or of anyone who will ever tell you otherwise. You would know. It might be buried under a great deal of self-protection and a fair amount of tiredness, but it would be yours to find, not mine to announce. The Fool carries no closed doors. What it carries is that the wanting is still in you, or this question would never have been worth typing at one in the morning.",
+        "Let me look closer at what is still in there under the guarding…",
       ],
     },
   },
