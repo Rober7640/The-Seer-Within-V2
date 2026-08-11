@@ -28,6 +28,7 @@ import type { PaywallVariant } from '@shared/paywall';
 import {
   bumpCopyFromPayload,
   isBumpCopyVariant,
+  resolveBumpExperimentKey,
   type BumpCopyVariant,
 } from '@shared/orderBump';
 
@@ -1402,7 +1403,13 @@ export async function resolvePalmGate(
 // Assigning a returning visitor is safe because this test never re-prices the
 // MAIN offer — it only decides whether an EXTRA line item is offered. Their
 // stored main price is returned untouched.
-export const V1_BUMP_EXPERIMENT_KEY = 'v1_order_bump_2026';
+// Env-overridable so the copy test's cutover is a config flip + restart rather
+// than a deploy — and so rollback is the same. Unset ⇒ 'v1_order_bump_2026',
+// byte-identical to before. See resolveBumpExperimentKey for why this must never
+// be hardcoded ahead of the new experiment being started.
+export const V1_BUMP_EXPERIMENT_KEY = resolveBumpExperimentKey(
+  process.env.V1_BUMP_EXPERIMENT_KEY,
+);
 
 /**
  * Should this lead be OFFERED the order bump?

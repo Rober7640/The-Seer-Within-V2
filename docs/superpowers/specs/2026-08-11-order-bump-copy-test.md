@@ -117,18 +117,42 @@ go-live:**
 1. Does the "six hours instead of three" claim match what is actually performed?
 2. Dropping the second written reading changes what the 30-day guarantee covers.
 
+## Run plan (decided 2026-08-11)
+
+**Straight 2-arm A/B: control vs variation A (double-strength ritual).**
+Variation B is built and tested but PARKED — a later run, its own key.
+
+Seed: `improve-v1/create-bump-copy-experiment-2026-08-11.sql`, key
+`v1_bump_copy_2026`.
+
+| Arm | Payload | Renders |
+|---|---|---|
+| A (control) | `{"bump": true}` | today's copy |
+| B (treatment) | `{"bump": true, "copy": "A"}` | double-strength ritual |
+
+⚠ Arm letters ≠ copy letters. "Variation A" (the ritual copy) is ARM B. The arm
+keys are A/B because `tally()` defaults to `controlKey='A'`/`treatmentKey='B'`.
+
+A 2-arm test is also what the stats code actually supports — `experiments.ts:563`
+says "SRM + significance below are the 2-arm A/B case", and `significant` is a
+plain `p < 0.05` with no multiple-comparison correction. A 3-way would have
+needed both arms read at p < 0.025 and ~1.8× the volume.
+
 ## Test math
 
-At a 30% control:
+At a 30% control, 80% power, p<0.05:
 
 | Lift to detect | Buyers per arm |
 |---|---|
-| 30% → 35% | ~1,350 |
-| 30% → 40% | ~340 |
-| 30% → 45% | ~150 |
+| 30% → 35% | ~1,374 |
+| 30% → 40% | ~353 |
+| 30% → 45% | ~157 |
 
-Only large swings are readable in reasonable time. Three-way splits divide
-traffic three ways — prefer Control vs B first unless volume supports more.
+⚠ **`targetN` is in LEADS, the numbers above are in BUYERS.** targetN gates on
+exposures, and an exposure here is a lead (`resolveV1Bump` runs at lead capture).
+So `targetN = 353 / (leads→main-buyer rate)`. The old test's 1200 was sized for a
+different question and is almost certainly too low. Step 0 of the seed file has
+the query that measures the ratio.
 
 ## Measurement
 
@@ -161,9 +185,12 @@ on a real checkout while every real buyer stays on control.
 
 - [x] Ground truth verified
 - [x] Copy locked
-- [x] Variants built — 45 unit tests, `npx tsx --test server/lib/orderBump.test.ts`
-- [ ] Seeded DRAFT/OFF
-- [ ] Reviewed before go-live (use `V1_BUMP_QA_COPY` to eyeball A and B)
+- [x] Variants built — 48 unit tests, `npx tsx --test server/lib/orderBump.test.ts`
+- [x] Seed written — `improve-v1/create-bump-copy-experiment-2026-08-11.sql`
+- [x] Cutover made reversible — `V1_BUMP_EXPERIMENT_KEY` env var, no deploy
+- [ ] targetN sized (run step 0 of the seed)
+- [ ] Seeded + started in /admin/experiments
+- [ ] Reviewed before go-live (use `V1_BUMP_QA_COPY=A` to eyeball it)
 
 Merging this changes nothing on its own: with no `copy` key in the live payload,
 every enrolled lead resolves to control. A test asserts that byte-for-byte.

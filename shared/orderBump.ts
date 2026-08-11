@@ -208,6 +208,28 @@ export function bumpCopyFromPayload(payload: unknown): BumpCopyVariant {
   return isBumpCopyVariant(copy) ? copy : 'control';
 }
 
+/** The experiment key the bump has run under since 2026-08-04. */
+export const V1_BUMP_EXPERIMENT_KEY_DEFAULT = 'v1_order_bump_2026';
+
+/**
+ * Which experiment key `resolveV1Bump` reads, given `process.env
+ * .V1_BUMP_EXPERIMENT_KEY`. Unset/blank ⇒ the live key, unchanged.
+ *
+ * 🔴 WHY THIS IS CONFIG AND NOT A CONSTANT. The copy test needs a NEW key: the
+ * live experiment's control arm is `{}` (NO bump), which is the wrong control
+ * for a test where every arm shows a bump. But `resolveV1Bump` returns
+ * `bump: false` whenever a key resolves to no running experiment — so shipping a
+ * hardcoded new key BEFORE that experiment is started would turn the bump off
+ * for every buyer and silently delete a 30%+ take rate.
+ *
+ * Env-driven, the cutover is: seed the new test RUNNING → set the var → restart.
+ * Rollback is unsetting it. Neither step needs a deploy, and merging this branch
+ * on its own changes nothing at all.
+ */
+export function resolveBumpExperimentKey(envValue: string | undefined): string {
+  return (envValue ?? '').trim() || V1_BUMP_EXPERIMENT_KEY_DEFAULT;
+}
+
 /** Everything an arm needs to render. `productName` carries NO funnel suffix. */
 export interface BumpCopyPack {
   /** Evelyn's offer line. May contain `\n\n` — the card renders one <p> each. */

@@ -31,6 +31,7 @@ import {
   isBumpCopyVariant,
   BUMP_COPY_VARIANTS,
   bumpCopyFromPayload,
+  resolveBumpExperimentKey,
   type BumpBucket,
   type BumpCopyVariant,
 } from '../../shared/orderBump';
@@ -428,5 +429,28 @@ describe('bumpProductName — per arm', () => {
     for (const v of ALL_VARIANTS) {
       assert.notEqual(bumpProductName(' - PALM', v), bumpProductName(' - TAROT', v));
     }
+  });
+});
+
+describe('resolveBumpExperimentKey (cutover switch)', () => {
+  // The copy test needs a NEW experiment key (the live one's control arm is "no
+  // bump", which is the wrong control for a copy test). Making the key env-driven
+  // means the cutover is a config flip + restart, not a redeploy — and rollback is
+  // the same. Deploying a hardcoded new key BEFORE the new experiment is running
+  // would return bump:false for everyone and silently delete a 30%+ take rate.
+  it('defaults to the live experiment, so merging changes nothing', () => {
+    assert.equal(resolveBumpExperimentKey(undefined), 'v1_order_bump_2026');
+    assert.equal(resolveBumpExperimentKey(''), 'v1_order_bump_2026');
+    assert.equal(resolveBumpExperimentKey('   '), 'v1_order_bump_2026');
+  });
+
+  it('switches to the key the env names', () => {
+    assert.equal(resolveBumpExperimentKey('v1_bump_copy_2026'), 'v1_bump_copy_2026');
+  });
+
+  it('trims, so a stray space in the env var cannot point at a missing test', () => {
+    // A key with whitespace finds no experiment, and no experiment ⇒ no bump at
+    // all. Worth trimming rather than trusting the paste.
+    assert.equal(resolveBumpExperimentKey('  v1_bump_copy_2026  '), 'v1_bump_copy_2026');
   });
 });
