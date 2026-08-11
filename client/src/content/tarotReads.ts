@@ -387,6 +387,39 @@ export type TarotHook =
   | 'cards-stop-searching' // Am I ever going to stop searching?
   | 'cards-end-up-alone' // Why do I keep ending up alone?
   | 'cards-given-up' // Have I given up on love without realizing it?
+  // Twin-flame hooks (2026-08-11). ⭐⭐ A VOCABULARY TEST, not a new question. All three
+  // are questions the funnel ALREADY runs, with "my twin flame" substituted for "he":
+  //
+  //   cards-twin-ready  ~ cards-ready-commit  'Is he ever going to be ready for real commitment?'
+  //   cards-twin-feels  ~ cards-feels         'How does he really feel about you?'
+  //   cards-twin-back   ~ cards-ever-back     'Will he ever come back to me?'
+  //
+  // Same design as `reconciliation` against `reunion`, and `fidelity` against the flagged
+  // word: the comparison is at HOOK level against three named incumbents in three DIFFERENT
+  // families, so read it hook-by-hook rather than as one angle-vs-angle number.
+  //
+  // 🔴 DECODE-HIM IN FORM. A real, specific man is in all three — "my twin flame" is
+  // somebody she already has in mind — so every no-verdict-on-him guard stays on and these
+  // are NOT self-frame. What is new is what must be refused ON TOP of that:
+  //
+  //   · THE LABEL. All three headlines PRESUPPOSE he is her twin flame. Evelyn never
+  //     certifies it. A stranger ruling that one named man is somebody's fated other half
+  //     is the claim 'cards-meant-alone' bans, pointed hopefully instead of cruelly — and
+  //     it is unfalsifiable, so she cannot ever test it against what he actually does.
+  //     The move is the one 'cards-not-enough' makes: affirm what she FEELS as real
+  //     information about her, and decline the cosmology the question is built on.
+  //
+  //   · THE THREE COMMUNITY TROPES, none of which is banned anywhere on this funnel today,
+  //     and all of which teach a woman to read being ignored as evidence of destiny:
+  //       RUNNER/CHASER — his avoidance is proof of the bond.
+  //       SEPARATION PHASE — being left is a stage in a journey that ends in reunion.
+  //       ASCEND FIRST — he returns once she has healed/raised her vibration enough.
+  //     The last is the worst: it makes his return her homework, so his absence becomes
+  //     her failure. This is the sharpest form of the standing "never hand her a tactic"
+  //     rule and it is why this family needed its own guard file.
+  | 'cards-twin-ready' // Is my twin flame ready for me?
+  | 'cards-twin-feels' // Does my twin flame feel this too?
+  | 'cards-twin-back' // Is my twin flame coming back to me?
   // Self-frame hooks (read HER, affirm the hopeful yes — like the palm love hooks).
   | 'cards-love-again' // Will I love again?
   | 'cards-soulmate' // When is my soulmate coming?
@@ -618,6 +651,28 @@ export const SEARCHING_HOOKS: TarotHook[] = [
   'cards-given-up',
 ]
 
+// Twin-flame hooks (2026-08-11). Each competes with a NAMED incumbent in a DIFFERENT
+// family — see the union comment for the mapping. That is deliberate and is what makes
+// this a vocabulary test: does the twin-flame framing of a question outperform the plain
+// "he" framing of the same question?
+//
+// 🔴 Read it HOOK BY HOOK, not angle-vs-angle. `twin-flame` as a pooled number is a
+// three-way average across commitment, decode-him and reunion audiences, and those three
+// convert differently from one another already — the pooled figure would tell you nothing
+// about the only thing being tested, which is the wording.
+//
+// 🔴 NOT its own frame. A real man stands in all three, so they run under the DEFAULT
+// decode-him branch in prompts.ts (tendency, never a verdict) with no new Set to keep in
+// sync — the twin-flame-specific bans live in the per-hook tendencies, which is how every
+// family since `healing` has been built. Adding these to any of the no-man frames
+// (self-frame, loneliness, soulmate-where, after-loss) would strip the verdict guard off a
+// question about a real person.
+export const TWIN_FLAME_HOOKS: TarotHook[] = [
+  'cards-twin-ready',
+  'cards-twin-feels',
+  'cards-twin-back',
+]
+
 // The ad ANGLE a hook belongs to. Carried on every tarot PostHog event (see
 // lib/tarotAttribution.ts) so the two decode-him families can be compared as GROUPS
 // without listing each hook: one `angle = trust` filter instead of three hook values,
@@ -684,6 +739,13 @@ export type TarotAngle =
   // precisely the harm. Note the SAFETY frame is shared with loneliness even though the
   // angle is not — see SEARCHING_HOOKS above.
   | 'searching'
+  // 🔴 'twin-flame' is a VOCABULARY angle, not a topic one, and that makes it different in
+  // kind from every label above it. The others each own a question nobody else asks. This
+  // one re-asks three questions that are already running — commitment's cards-ready-commit,
+  // decode-him's cards-feels and reunion's cards-ever-back — in different words. Keeping it
+  // separate is what lets the wording be measured; merging it into any of those three would
+  // put the challenger and its own control in the same bucket and measure nothing.
+  | 'twin-flame'
   | 'self-frame'
 
 export function angleForHook(hook: TarotHook): TarotAngle {
@@ -702,6 +764,7 @@ export function angleForHook(hook: TarotHook): TarotAngle {
   if (MISSING_HIM_HOOKS.includes(hook)) return 'missing-him'
   if (WHY_HE_LEFT_HOOKS.includes(hook)) return 'why-he-left'
   if (SEARCHING_HOOKS.includes(hook)) return 'searching'
+  if (TWIN_FLAME_HOOKS.includes(hook)) return 'twin-flame'
   return 'decode-him'
 }
 
@@ -753,6 +816,9 @@ export const TAROT_HOOKS: TarotHook[] = [
   'cards-stop-searching',
   'cards-end-up-alone',
   'cards-given-up',
+  'cards-twin-ready',
+  'cards-twin-feels',
+  'cards-twin-back',
   'cards-love-again',
   'cards-soulmate',
 ]
@@ -851,6 +917,10 @@ export const HEADLINES: Record<TarotHook, string> = {
   'cards-stop-searching': 'Am I ever going to stop searching?',
   'cards-end-up-alone': 'Why do I keep ending up alone?',
   'cards-given-up': 'Have I given up on love without realizing it?',
+  // Twin flame (2026-08-11). The operator's wording, shipped exactly as given.
+  'cards-twin-ready': 'Is my twin flame ready for me?',
+  'cards-twin-feels': 'Does my twin flame feel this too?',
+  'cards-twin-back': 'Is my twin flame coming back to me?',
   'cards-love-again': 'Will I love again?',
   'cards-soulmate': 'When is my soulmate coming?',
 }
@@ -1029,6 +1099,13 @@ const TAROT_QUESTION: Record<TarotHook, string> = {
   'cards-stop-searching': "Before I look closer, tell me… how long has the looking been something you have to make yourself do?",
   'cards-end-up-alone': "Before I look closer, tell me… when you picture it going right, what does the ordinary part of it look like?",
   'cards-given-up': "Before I look closer, tell me… what did you used to let yourself hope for, before you started guarding it?",
+  // Twin flame (2026-08-11). 🔴 None may invite the RUNNER narrative — "when did he pull
+  // away", "how long has the separation been" hands her the community script and whatever
+  // she types then sits in the transcript as the premise for every later turn. Each asks
+  // about something SHE observed or felt, which is the only material either of us has.
+  'cards-twin-ready': "Before I look closer, tell me… what would you actually notice between you, day to day, if he were ready?",
+  'cards-twin-feels': "Before I look closer, tell me… when did you first notice this felt different from anything before it?",
+  'cards-twin-back': "Before I look closer, tell me… what was it like between the two of you when it was at its easiest?",
   'cards-love-again': "Before I look closer, tell me… what has been weighing on your heart since it happened?",
   'cards-soulmate': "Before I look closer, tell me… what is the love you're still holding out for — the one you haven't given up on?",
 }
@@ -2986,6 +3063,83 @@ const RETURN_MHF: CardSetConfig = {
         "Your question asked whether the door had quietly shut, and the card that arrived is the one that has never yet been shut.",
         "Let me take 'without realizing it' out of your hands, dear, because that is the phrase doing the damage. It supposes something has happened inside you that you cannot see and a stranger can — and that is not true of me, or of this card, or of anyone who will ever tell you otherwise. You would know. It might be buried under a great deal of self-protection and a fair amount of tiredness, but it would be yours to find, not mine to announce. The Fool carries no closed doors. What it carries is that the wanting is still in you, or this question would never have been worth typing at one in the morning.",
         "Let me look closer at what is still in there under the guarding…",
+      ],
+    },
+    // ── TWIN FLAME (2026-08-11) ───────────────────────────────────────────────
+    // 🔴 THREE THINGS ARE REFUSED IN EVERY ONE OF THESE NINE READS:
+    //   1. THE LABEL — never confirm (or deny) that he is her twin flame. It is a verdict
+    //      on a real person, and an unfalsifiable one, so she could never test it against
+    //      what he actually does. Affirm the PULL as real information about her instead.
+    //   2. THE RUNNER SCRIPT — never read his distance as proof of the bond.
+    //   3. ASCENSION HOMEWORK — never make his return contingent on her healing enough.
+    //
+    // 'Is my twin flame ready for me?' ~ competes with cards-ready-commit. That one reads
+    // his CAPABILITY; this one reads the WAITING, because "ready for me" quietly assumes a
+    // schedule she is being kept on.
+    'cards-twin-ready': {
+      a: [
+        "You turned the Magician, dear — the card of the one who does the building, not the one who is waited on.",
+        "You asked about his readiness and drew the card of deliberate action, which is the only form readiness has ever taken.",
+        "Readiness is not weather, dear — it does not roll in over a person while they stand still, and that is the part your question keeps having to work around. The Magician holds no date for his arrival and I would not read one out. What it does say plainly is that nobody becomes ready by being waited for, however patiently and however long. Whether he does the work is genuinely his to do and unknowable from where either of us is sitting. What is knowable is that you have been treating his readiness as a thing that will happen TO him, and it never is.",
+        "Let me look closer at what you have been keeping ready in the meantime…",
+      ],
+      b: [
+        "You turned the Hanged Man, dear — the card of the one who is suspended, and knows it.",
+        "It was the card of hanging that came up, and hanging is a fair description of what waiting on somebody else's readiness feels like.",
+        "This card will not tell me whether he is close to ready, and anybody who claims a card told them that is telling you a story. What the Hanged Man does is turn the picture over. You framed this as a readiness that will one day point in your direction, which puts you at the end of a process he alone controls — and the whole time the process has been running, so have you. There is a life happening at your end of the suspension, dear, and it is not a waiting room. It only got treated like one.",
+        "Let me look closer at what has been on hold at your end…",
+      ],
+      c: [
+        "You turned the Fool, dear — the card of the step taken before anybody has confirmed the ground.",
+        "Under a question about someone else's timing, up came the card of the one who moves without a signal.",
+        "No card knows his readiness and this one knows less than most, so I will not pronounce on it in either direction. The Fool's business is elsewhere. Your question has readiness as a gate he opens and you walk through, and that arrangement leaves the whole of your timing in the keeping of a person who has not told you what he intends. That is a heavy thing to have handed over, and you did not hand it over carelessly. You did it because the pull was real. The pull being real does not make the arrangement fair.",
+        "Let me look closer at the arrangement you have been living inside…",
+      ],
+    },
+    // 'Does my twin flame feel this too?' ~ competes with cards-feels. That one reads what
+    // he feels; this one reads whether the intensity is SHARED, which is a different and
+    // sharper question — and the one where narrating his interior is most tempting.
+    'cards-twin-feels': {
+      a: [
+        "You turned the Magician, dear — the card of what a person does with what is in their hands.",
+        "You asked whether he feels it and drew the card of enactment, which is the only place a feeling ever becomes visible to anyone else.",
+        "I cannot see inside him, dear, and no honest reader will tell you they can — what somebody feels is theirs, and it reaches the rest of us only in what they do about it. So I will not report his heart back to you as though I had been in it. What the Magician says is that you already have the only evidence anybody gets: how he acts, how consistently, and whether it matches the size of what you feel. You have been asking me to confirm a feeling. You already hold the record of the conduct.",
+        "Let me look closer at what the conduct has actually been showing you…",
+      ],
+      b: [
+        "You turned the Hanged Man, dear — the card of two things that look alike until the picture is turned over.",
+        "Yours was the card of the reversal, and there is one sitting inside the question you asked.",
+        "Whether he feels this is not something I will answer, in either direction — not because I am being careful with you, but because I would be making it up. The Hanged Man turns the question instead. You asked whether it is shared, which means the reading you actually came for is not about him at all: it is whether what you have been feeling is real or something you have been generating alone. It is real. That is a separate finding from his, and it does not depend on him at all to stand up.",
+        "Let me look closer at what you have been feeling and doubting at the same time…",
+      ],
+      c: [
+        "You turned the Fool, dear — the card of the heart that sets out before it has been given any assurances.",
+        "The card that came to your hand is the one that starts things without a guarantee at the other end, which is precisely where you are standing.",
+        "There is no confession in this card and I am not going to invent one to send you away happy. What the Fool holds is the thing you may not have been told: a feeling this size is information about YOU — about a capacity you have that plenty of people never locate in themselves — and it stays true whatever he does or fails to do with his own. You came asking whether it was returned. That question has an answer only he can give, in conduct, over time. What you feel needed no confirmation from him to be genuine.",
+        "Let me look closer at the size of what you have been carrying…",
+      ],
+    },
+    // 'Is my twin flame coming back to me?' ~ competes with cards-ever-back. That one reads
+    // the possibility; this one must ALSO refuse the separation-phase script, which is what
+    // turns an absence into a stage of a journey with a guaranteed ending.
+    'cards-twin-back': {
+      a: [
+        "You turned the Magician, dear — the card of a decision that gets made rather than one that gets fated.",
+        "You asked whether he returns, and the card that arrived is the one about somebody choosing to act.",
+        "Whether he comes back is his to decide and not mine to forecast, so I will not hand you a yes and I will not hand you a no. The Magician is worth more to you than either. It says a return, if it comes, will be a thing he decides and does — not a stage that arrives on schedule, and not something the distance itself was secretly arranging on your behalf. Nothing about being apart is doing quiet work toward a reunion. What separates people is separation, dear, and it is allowed to just be that.",
+        "Let me look closer at what has been asked of you while you waited…",
+      ],
+      b: [
+        "You turned the Hanged Man, dear — the card of the interval that refuses to announce how long it is.",
+        "It was the card of the unmeasured wait your hand found, and the not-knowing has been the hardest part of this.",
+        "No timing lives in this card and no outcome does either, and I would not read you one out of an interval nobody can measure. Here is what the Hanged Man will not let stand, though: an absence is not a phase in a journey with a known ending. That story is told very confidently in a great many places, and it asks you to experience being without him as progress toward having him. It is not progress. It is an absence, it is costing you something real, and you are allowed to call it what it is rather than what it has been renamed.",
+        "Let me look closer at what this waiting has actually been costing…",
+      ],
+      c: [
+        "You turned the Fool, dear — the card of the road that has not been walked, in either direction, by anybody yet.",
+        "You came asking about a return and drew the one card that has never once promised anybody an ending.",
+        "The Fool holds no reunion for me to give you and holds no ending either, and I will not manufacture one in either direction. What I will not leave alone is the arithmetic hiding in the question. Nowhere in it is there anything for you to have done differently, or to do now, that determines whether he comes back — not more healing, not more patience, not becoming a version of yourself that would finally earn it. His returning was never a reward for your progress. Anyone who has told you otherwise handed you a job that was never yours.",
+        "Let me look closer at the job you have been given that was never yours…",
       ],
     },
   },
