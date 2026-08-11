@@ -458,6 +458,7 @@ export default function ExperimentsDashboard() {
       loneliness: "Loneliness",
       fidelity: "Fidelity",
       "missing-him": "Missing Him",
+      "why-he-left": "Why He Left / Ghosting",
       "self-frame": "Self-Frame",
     };
     return `${f} — ${ANGLE_LABELS[angle] ?? angle}`;
