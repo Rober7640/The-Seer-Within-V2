@@ -1,5 +1,7 @@
 // /client/src/types/chat.ts
 
+import type { BumpCopyVariant } from '@shared/orderBump'
+
 export type ConversationState =
   | 'INIT'
   | 'GREETING'
@@ -122,6 +124,14 @@ export interface UserData {
   // offer is shown so the accept handler and /api/checkout agree on the second
   // reading's topic without re-deriving it.
   bumpBucket?: Bucket
+  // COPY SPLIT TEST (2026-08-11) — which wording the bump card renders:
+  //   control  today's copy, what the live 30%+ take rate was measured on
+  //   A        sells a STRONGER CLEARING instead of a second reading
+  //   B        the same second-reading offer, reworded
+  // Sent by /api/lead and never chosen here, because /api/checkout re-resolves
+  // the same arm server-side to build the Stripe line item — the card and the
+  // charge must always come from one table. Absent ⇒ control.
+  bumpCopy?: BumpCopyVariant
 }
 
 export interface ShippingAddress {

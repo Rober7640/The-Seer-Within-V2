@@ -25,6 +25,11 @@ import {
 import { eq, and, sql, desc } from 'drizzle-orm';
 import logger from './logger';
 import type { PaywallVariant } from '@shared/paywall';
+import {
+  bumpCopyFromPayload,
+  isBumpCopyVariant,
+  type BumpCopyVariant,
+} from '@shared/orderBump';
 
 // ── Paywall test constants (the one experiment Phase 1 folds in) ──────────────
 export const PAYWALL_EXPERIMENT_KEY = 'paywall_copy_2026';
@@ -1417,7 +1422,7 @@ export async function resolveV1Bump(
   funnel?: string | null,
   sign?: string | null,
   key: string = V1_BUMP_EXPERIMENT_KEY, // overridable so tests never touch the live experiment
-): Promise<{ bump: boolean; variant: string | null; enrolled: boolean }> {
+): Promise<{ bump: boolean; variant: string | null; enrolled: boolean; copy: BumpCopyVariant }> {
   const subject = typeof email === 'string' ? email.trim().toLowerCase() : null;
 
   // ── QA OVERRIDE (tester-only live test) ──────────────────────────────────────
@@ -1432,15 +1437,28 @@ export async function resolveV1Bump(
     .map((s) => s.trim().toLowerCase())
     .filter(Boolean);
   if (subject && qaEmails.includes(subject)) {
-    return { bump: true, variant: 'B', enrolled: false };
+    // Which COPY arm the tester sees. Without this a QA run could only ever
+    // eyeball control, so the two new arms would reach live traffic having never
+    // been looked at on a real checkout. Unset ⇒ control, i.e. today's copy.
+    const qaCopy = (process.env.V1_BUMP_QA_COPY ?? '').trim();
+    return {
+      bump: true,
+      variant: 'B',
+      enrolled: false,
+      copy: isBumpCopyVariant(qaCopy) ? qaCopy : 'control',
+    };
   }
 
   const a = await assign(key, subject, { funnel: funnel ?? null, sign: sign ?? null });
-  if (!a) return { bump: false, variant: null, enrolled: false };
+  if (!a) return { bump: false, variant: null, enrolled: false, copy: 'control' };
   return {
     bump: a.applied && a.payload?.bump === true,
     variant: a.variant,
     enrolled: a.enrolled,
+    // Read from the payload's `copy` key, NOT from `a.variant` — see
+    // bumpCopyFromPayload. An un-seeded payload resolves to control, so merging
+    // this changes nothing until an arm is deliberately configured.
+    copy: bumpCopyFromPayload(a.payload),
   };
 }
 

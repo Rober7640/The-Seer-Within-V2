@@ -136,10 +136,34 @@ Existing `tallyV1BumpTakeRate()` already reports both rates. **Quote
 `paidWithBump / offeredAndPaid`** (money), not `saidYes / offered` (intent) — an
 abandoned $47.77 cart is not bump revenue.
 
+## How an arm is selected
+
+The copy arm lives in the experiment payload's `copy` key, NOT in the arm id:
+
+```jsonc
+{ "bump": true }               // → control (today's live payload)
+{ "bump": true, "copy": "A" }  // → double-strength ritual
+{ "bump": true, "copy": "B" }  // → the channel is already open
+```
+
+`bumpCopyFromPayload()` validates it and falls back to `control` on anything
+unrecognised, so a typo degrades to the shipped copy rather than to a blank card.
+
+⚠ The experiment's own arms are ALSO named A/B (they decide whether the bump is
+offered at all). Two namespaces, same letters. Always read the copy arm from
+`payload.copy`, never from `assignment.variant`.
+
+**QA without starting the experiment:** set `V1_BUMP_QA_EMAILS` (existing) plus
+`V1_BUMP_QA_COPY=A` or `=B` (new). Those testers see and can buy the chosen arm
+on a real checkout while every real buyer stays on control.
+
 ## Status
 
 - [x] Ground truth verified
 - [x] Copy locked
-- [ ] Variants built
+- [x] Variants built — 45 unit tests, `npx tsx --test server/lib/orderBump.test.ts`
 - [ ] Seeded DRAFT/OFF
-- [ ] Reviewed before go-live
+- [ ] Reviewed before go-live (use `V1_BUMP_QA_COPY` to eyeball A and B)
+
+Merging this changes nothing on its own: with no `copy` key in the live payload,
+every enrolled lead resolves to control. A test asserts that byte-for-byte.

@@ -87,6 +87,7 @@ import {
   V1_BUMP_PRODUCT_KEY,
   bumpLineDescription,
   bumpProductName,
+  bumpCopy,
   paymentIntentDescription,
   isBumpBucket,
   pairedBumpBucket,
@@ -670,7 +671,11 @@ export async function registerRoutes(
       const bumpArm =
         type === "main" && typeof email === "string" && email.trim()
           ? await resolveV1Bump(email, funnel, bumpSign)
-          : { bump: false, variant: null, enrolled: false };
+          // Downsell, or the no-optin arm with no email to bucket on. No bump is
+          // charged either way, so the copy arm is irrelevant — but it is spelled
+          // out rather than omitted so the two branches share one shape and the
+          // Stripe line below can read `.copy` unconditionally.
+          : { bump: false, variant: null, enrolled: false, copy: 'control' as const };
       // BOTH sides must agree: the server says she's in the bump arm AND the client
       // says she accepted. Either alone charges nothing.
       const bumpApplied = bumpArm.bump === true && bumpRequested;
@@ -777,12 +782,19 @@ export async function registerRoutes(
                       // (" - PALM" / " - TAROT"), from the same fbSuffix() call,
                       // so a bump order is attributable to its funnel and the two
                       // line items can never disagree about which funnel it was.
-                      name: bumpProductName(fbSuffix(funnel)),
+                      // COPY ARM resolved server-side, from the same table the
+                      // client rendered her offer card from — never from the
+                      // request body. A client that claims arm A cannot make
+                      // Stripe bill arm A's line item.
+                      name: bumpProductName(fbSuffix(funnel), bumpArm.copy),
                       // Names the topic she is actually buying ("Money path"), so
                       // the extra line is self-explanatory on the checkout page
                       // and the receipt. bumpBucket is already validated against
                       // the closed enum above, so this can't render junk.
-                      description: bumpLineDescription(bumpBucket as BumpBucket),
+                      // Variation A has no topic, so its pack returns a
+                      // topic-free description instead.
+                      description: bumpCopy(bumpArm.copy, bumpBucket as BumpBucket)
+                        .lineDescription,
                     },
                     unit_amount: V1_BUMP_CENTS,
                   },
@@ -1157,6 +1169,11 @@ export async function registerRoutes(
         // server-side before adding the line item, so a tampered client can never
         // charge itself a bump.
         orderBump: assigned?.orderBump === true,
+        // Which COPY arm that extra turn renders. Sent alongside the boolean
+        // rather than folded into it because they answer different questions —
+        // "is she offered a bump at all" vs "in which words". Absent/unknown ⇒
+        // control, so a client running older code still renders today's copy.
+        bumpCopy: assigned?.bumpCopy ?? 'control',
       });
     } catch (error) {
       logger.error("Lead capture error:", error);
