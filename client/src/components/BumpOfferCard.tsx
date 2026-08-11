@@ -1,9 +1,8 @@
 import {
-  BUMP_ACCEPT_LABEL,
-  BUMP_DECLINE_LABEL,
-  bumpOfferCopy,
+  bumpCopy,
   V1_BUMP_PRICE_LABEL,
   type BumpBucket,
+  type BumpCopyVariant,
 } from '@shared/orderBump'
 
 // V1 ORDER BUMP ("double reading", v1_order_bump_2026) — the two quick replies
@@ -24,6 +23,12 @@ interface BumpOfferCardProps {
   onAccept: () => void
   onDecline: () => void
   mainDollars?: number
+  // COPY SPLIT TEST (2026-08-11). Defaulted to control so any caller that has not
+  // been updated renders exactly today's card.
+  variant?: BumpCopyVariant
+  // Only variation A addresses her by name. Optional because the no-optin arm can
+  // reach the CTA without one, and that arm's copy closes over its absence.
+  firstName?: string
 }
 
 export function BumpOfferCard({
@@ -31,8 +36,11 @@ export function BumpOfferCard({
   onAccept,
   onDecline,
   mainDollars = 35,
+  variant = 'control',
+  firstName,
 }: BumpOfferCardProps) {
   const total = (mainDollars + 12.77).toFixed(2)
+  const copy = bumpCopy(variant, paired, firstName)
 
   return (
     <div className="p-4 animate-cta-appear" data-testid="bump-offer-card">
@@ -42,11 +50,22 @@ export function BumpOfferCard({
           {/* Evelyn's full offer line lives IN the card (matches the approved
               mockup), so the persuasive copy sits at the decision point instead
               of scrolling up into the chat log. Same string the bubble used
-              (bumpOfferCopy) — the duplicate sendBotMessage bubble was removed
-              from useConversation so it is not shown twice. */}
-          <p className="font-serif italic text-gray-800 text-base mt-2 leading-relaxed">
-            {bumpOfferCopy(paired)}
-          </p>
+              (bumpCopy) — the duplicate sendBotMessage bubble was removed
+              from useConversation so it is not shown twice.
+
+              Split on blank lines: control and B are one paragraph (so this
+              renders a single <p>, byte-identical to before), while variation A
+              is four short beats and needs the breathing room. */}
+          {copy.offer.split('\n\n').map((para, i) => (
+            <p
+              key={i}
+              className={`font-serif italic text-gray-800 text-base leading-relaxed ${
+                i === 0 ? 'mt-2' : 'mt-3'
+              }`}
+            >
+              {para}
+            </p>
+          ))}
         </div>
 
         <div className="px-5 pb-4">
@@ -66,14 +85,14 @@ export function BumpOfferCard({
             data-testid="button-bump-accept"
             className="w-full py-4 px-6 rounded-lg bg-gradient-to-r from-amber-500 to-orange-600 text-white font-bold text-lg shadow-lg hover:shadow-xl transition-all duration-300"
           >
-            {BUMP_ACCEPT_LABEL}
+            {copy.accept}
           </button>
           <button
             onClick={onDecline}
             data-testid="button-bump-decline"
             className="w-full py-3 px-6 rounded-lg border border-gray-200 bg-white text-gray-600 font-medium text-sm hover:bg-gray-50 transition-colors duration-200"
           >
-            {BUMP_DECLINE_LABEL}
+            {copy.decline}
           </button>
         </div>
       </div>

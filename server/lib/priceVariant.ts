@@ -26,6 +26,7 @@ import { db } from './db';
 import { conversations, systemConfig } from '@shared/schema';
 import { eq, desc } from 'drizzle-orm';
 import logger from './logger';
+import type { BumpCopyVariant } from '@shared/orderBump';
 import {
   resolveUpsell1Cents,
   resolveV1Price,
@@ -79,6 +80,12 @@ export interface AssignedVariant {
   // /api/checkout re-resolves this server-side before charging (a stale client
   // can never add one). Absent on the read-only getVariantForEmail path.
   orderBump?: boolean;
+  // Which COPY arm the bump renders ('control' | 'A' | 'B'). Separate from the
+  // experiment's own variant id — see bumpCopyFromPayload. The CLIENT renders the
+  // offer card from this and /api/checkout re-resolves the SAME value server-side
+  // for the Stripe line item, so the words she reads and the line she is billed
+  // for always come from one table. Absent ⇒ control.
+  bumpCopy?: BumpCopyVariant;
 }
 
 /**
@@ -402,6 +409,7 @@ export async function assignVariantIfMissing(
         upsell1Cents: row.upsell1AmountCents ?? DEFAULT_UPSELL1_CENTS,
         commitmentGate: palmGate.gate,
         orderBump: bump.bump,
+        bumpCopy: bump.copy,
       };
     }
 
@@ -515,6 +523,7 @@ export async function assignVariantIfMissing(
       upsell1Cents,
       commitmentGate: palmGate.gate,
       orderBump: bump.bump,
+      bumpCopy: bump.copy,
     };
   } catch (err) {
     logger.error('priceVariant: assignVariantIfMissing failed', { email, err });

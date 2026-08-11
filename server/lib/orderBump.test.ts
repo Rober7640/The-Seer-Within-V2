@@ -25,10 +25,19 @@ import {
   bumpOfferCopy,
   isBumpBucket,
   pairedBumpBucket,
+  BUMP_ACCEPT_LABEL,
+  BUMP_DECLINE_LABEL,
+  bumpCopy,
+  isBumpCopyVariant,
+  BUMP_COPY_VARIANTS,
+  bumpCopyFromPayload,
+  resolveBumpExperimentKey,
   type BumpBucket,
+  type BumpCopyVariant,
 } from '../../shared/orderBump';
 
 const ALL_BUCKETS: BumpBucket[] = ['love', 'money', 'purpose', 'someone'];
+const ALL_VARIANTS: BumpCopyVariant[] = ['control', 'A', 'B'];
 
 describe('BUMP_PAIRINGS', () => {
   it('pairs each bucket exactly as specified', () => {
@@ -215,5 +224,238 @@ describe('bumpOfferCopy', () => {
       assert.doesNotMatch(copy, /undefined/);
       assert.match(copy, new RegExp(BUMP_TOPIC_LABELS[b]));
     }
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// COPY SPLIT TEST (2026-08-11) — see docs/superpowers/specs/2026-08-11-order-
+// bump-copy-test.md. Three arms share one checkout path, so the copy each arm
+// renders is resolved from ONE table that both the client card and the Stripe
+// line item read. These tests exist because the two must never disagree: the
+// client showing arm B's offer while Stripe bills arm A's line item is how a
+// buyer gets charged for something she did not say yes to.
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('bumpCopy — control arm', () => {
+  it('is byte-identical to the shipped copy for every bucket', () => {
+    // THE GUARANTEE THAT MAKES THIS SAFE TO DEPLOY DARK. Until an arm is
+    // started, every lead resolves to 'control'; if this test passes, merging
+    // the split test changes nothing for anyone.
+    for (const b of ALL_BUCKETS) {
+      const pack = bumpCopy('control', b, 'Sarah');
+      assert.equal(pack.offer, bumpOfferCopy(b));
+      assert.equal(pack.accept, BUMP_ACCEPT_LABEL);
+      assert.equal(pack.decline, BUMP_DECLINE_LABEL);
+      assert.equal(pack.productName, V1_BUMP_PRODUCT_NAME);
+      assert.equal(pack.lineDescription, bumpLineDescription(b));
+    }
+  });
+
+  it('ignores firstName — the shipped control copy never used it', () => {
+    assert.equal(
+      bumpCopy('control', 'money', 'Sarah').offer,
+      bumpCopy('control', 'money').offer,
+    );
+  });
+});
+
+describe('bumpCopy — every arm', () => {
+  it('quotes the real price, never a hardcoded one', () => {
+    // A copy string that drifts from V1_BUMP_CENTS bills an amount the offer
+    // did not name. Assert against the label DERIVED from the charge.
+    for (const v of ALL_VARIANTS) {
+      for (const b of ALL_BUCKETS) {
+        assert.match(
+          bumpCopy(v, b, 'Sarah').offer,
+          new RegExp(V1_BUMP_PRICE_LABEL.replace('$', '\\$').replace('.', '\\.')),
+          `${v}/${b} does not quote ${V1_BUMP_PRICE_LABEL}`,
+        );
+      }
+    }
+  });
+
+  it('never leaks undefined or an unfilled placeholder', () => {
+    for (const v of ALL_VARIANTS) {
+      for (const b of ALL_BUCKETS) {
+        const pack = bumpCopy(v, b, 'Sarah');
+        for (const [field, s] of Object.entries(pack)) {
+          assert.ok(s.length > 0, `${v}/${b}/${field} is empty`);
+          assert.doesNotMatch(s, /undefined|null|\{firstName\}|\{\w+\}/, `${v}/${b}/${field}`);
+        }
+      }
+    }
+  });
+
+  it('keeps the product name free of the topic, for Mike\'s fulfilment', () => {
+    // Naming the topic in the PRODUCT would give fulfilment four names for one
+    // product. The topic belongs in the line DESCRIPTION only.
+    for (const v of ALL_VARIANTS) {
+      for (const b of ALL_BUCKETS) {
+        assert.doesNotMatch(bumpCopy(v, b, 'Sarah').productName, /Money|Love|Purpose/);
+      }
+    }
+  });
+});
+
+describe('bumpCopy — variation A (double-strength ritual)', () => {
+  it('never names a topic — it sells the clearing, not a second reading', () => {
+    for (const b of ALL_BUCKETS) {
+      const pack = bumpCopy('A', b, 'Sarah');
+      assert.doesNotMatch(pack.offer, /Money|Love|Purpose/);
+      assert.doesNotMatch(pack.lineDescription, /Money|Love|Purpose/);
+    }
+  });
+
+  it('renders identically for every bucket', () => {
+    // A retires the pairing entirely, so the four buckets must be one string.
+    const offers = new Set(ALL_BUCKETS.map((b) => bumpCopy('A', b, 'Sarah').offer));
+    assert.equal(offers.size, 1);
+  });
+
+  it('does NOT promise durability — that gap belongs to Upsell 1', () => {
+    // U1 (Protection Ritual, $47) sells "removal is only half the work, shadows
+    // creep back". A bump that promises permanence guts the next offer.
+    const offer = bumpCopy('A', 'money', 'Sarah').offer;
+    assert.doesNotMatch(offer, /come back|comes back|coming back|won't return|can't return|never return|for good|permanent/i);
+  });
+
+  it('uses her first name, and degrades cleanly without one', () => {
+    assert.match(bumpCopy('A', 'money', 'Sarah').offer, /Sarah/);
+    const nameless = bumpCopy('A', 'money', '').offer;
+    assert.doesNotMatch(nameless, /,\s*—/); // no orphaned comma before the dash
+    assert.doesNotMatch(nameless, / {2,}/); // no double space where the name was
+    // Paragraph breaks are legitimate here, so only literal double SPACES are
+    // banned — a /\s{2,}/ assertion would outlaw the copy's own line breaks.
+  });
+});
+
+describe('bumpCopy — variation B (the channel is already open)', () => {
+  it('names the paired topic, like control does', () => {
+    assert.match(bumpCopy('B', 'money', 'Sarah').offer, /Money/);
+    assert.match(bumpCopy('B', 'love', 'Sarah').offer, /Love/);
+  });
+
+  it('is a DESCRIPTION-only test — buttons and Stripe strings match control', () => {
+    // If any of these drift, a B win is no longer attributable to the copy.
+    for (const b of ALL_BUCKETS) {
+      const control = bumpCopy('control', b, 'Sarah');
+      const arm = bumpCopy('B', b, 'Sarah');
+      assert.equal(arm.accept, control.accept);
+      assert.equal(arm.decline, control.decline);
+      assert.equal(arm.productName, control.productName);
+      assert.equal(arm.lineDescription, control.lineDescription);
+      assert.notEqual(arm.offer, control.offer);
+    }
+  });
+});
+
+describe('isBumpCopyVariant / unknown arms', () => {
+  it('accepts exactly the three known arms', () => {
+    for (const v of ALL_VARIANTS) assert.equal(isBumpCopyVariant(v), true);
+    assert.deepEqual([...BUMP_COPY_VARIANTS].sort(), ['A', 'B', 'control']);
+  });
+
+  it('rejects anything else, including near-misses', () => {
+    for (const junk of ['a', 'b', 'CONTROL', '', null, undefined, 0, {}, ['A']]) {
+      assert.equal(isBumpCopyVariant(junk), false, `accepted ${JSON.stringify(junk)}`);
+    }
+  });
+
+  it('falls back to control for an unrecognised arm', () => {
+    // A malformed experiment payload must degrade to the shipped copy, never to
+    // an empty card.
+    assert.deepEqual(
+      bumpCopy('nonsense' as BumpCopyVariant, 'money', 'Sarah'),
+      bumpCopy('control', 'money', 'Sarah'),
+    );
+  });
+});
+
+describe('bumpCopyFromPayload (experiment config → arm)', () => {
+  it('reads the arm from the payload', () => {
+    assert.equal(bumpCopyFromPayload({ bump: true, copy: 'A' }), 'A');
+    assert.equal(bumpCopyFromPayload({ bump: true, copy: 'B' }), 'B');
+    assert.equal(bumpCopyFromPayload({ bump: true, copy: 'control' }), 'control');
+  });
+
+  // THE deploy-dark guarantee at the config layer. Today's live payload is
+  // `{ bump: true }` with no `copy` key at all; it must keep rendering the copy
+  // the 30%+ take rate was measured on.
+  it('defaults to control when the payload predates this test', () => {
+    assert.equal(bumpCopyFromPayload({ bump: true }), 'control');
+    assert.equal(bumpCopyFromPayload({}), 'control');
+    assert.equal(bumpCopyFromPayload(null), 'control');
+    assert.equal(bumpCopyFromPayload(undefined), 'control');
+  });
+
+  it('defaults to control on a typo rather than rendering nothing', () => {
+    for (const junk of [{ copy: 'a' }, { copy: 'C' }, { copy: '' }, { copy: 42 }, { copy: null }]) {
+      assert.equal(bumpCopyFromPayload(junk), 'control', JSON.stringify(junk));
+    }
+  });
+
+  it('always returns something bumpCopy() can render', () => {
+    for (const p of [{ copy: 'A' }, { copy: 'junk' }, null, 42, 'string', []]) {
+      const v = bumpCopyFromPayload(p);
+      assert.equal(isBumpCopyVariant(v), true);
+      assert.ok(bumpCopy(v, 'money', 'Sarah').offer.length > 0);
+    }
+  });
+});
+
+describe('bumpProductName — per arm', () => {
+  it('defaults to control, so every existing caller is unchanged', () => {
+    assert.equal(bumpProductName(' - PALM'), '+ Double Your Reading Add-On - PALM');
+    assert.equal(bumpProductName(' - PALM', 'control'), bumpProductName(' - PALM'));
+    assert.equal(bumpProductName(' - PALM', 'B'), bumpProductName(' - PALM'));
+  });
+
+  it("uses variation A's own product name", () => {
+    assert.equal(bumpProductName(' - PALM', 'A'), '+ Double-Strength Clearing - PALM');
+    assert.equal(bumpProductName(' - TAROT', 'A'), '+ Double-Strength Clearing - TAROT');
+  });
+
+  it('keeps the leading + and the funnel suffix for every arm', () => {
+    for (const v of ALL_VARIANTS) {
+      for (const suffix of [' - PALM', ' - TAROT', '']) {
+        const name = bumpProductName(suffix, v);
+        assert.ok(name.startsWith('+ '), `${v}${suffix}: ${name}`);
+        assert.ok(name.endsWith(suffix), `${v}${suffix}: ${name}`);
+      }
+    }
+  });
+
+  it('keeps PALM and TAROT distinguishable within an arm', () => {
+    for (const v of ALL_VARIANTS) {
+      assert.notEqual(bumpProductName(' - PALM', v), bumpProductName(' - TAROT', v));
+    }
+  });
+});
+
+describe('resolveBumpExperimentKey (cutover switch)', () => {
+  // The copy test needs a NEW experiment key (the old one's control arm is "no
+  // bump", which is the wrong control for a copy test). The key is a CONSTANT, not
+  // config: no environment sets V1_BUMP_EXPERIMENT_KEY, matching how the original
+  // bump shipped. What makes the cutover safe is ORDER — seed v1_bump_copy_2026
+  // `running` on that environment's DB, then deploy — because resolveV1Bump returns
+  // bump:false for a key with no running experiment. This assertion is the tripwire:
+  // if it ever reads v1_order_bump_2026 again, the deploy is pointing at a concluded
+  // test and every buyer silently gets the old copy.
+  it('defaults to the copy-test experiment on every environment', () => {
+    assert.equal(resolveBumpExperimentKey(undefined), 'v1_bump_copy_2026');
+    assert.equal(resolveBumpExperimentKey(''), 'v1_bump_copy_2026');
+    assert.equal(resolveBumpExperimentKey('   '), 'v1_bump_copy_2026');
+  });
+
+  // Deliberately a key that is NOT the default: asserting the default value here
+  // would pass even if the override were dead code.
+  it('switches to the key the env names', () => {
+    assert.equal(resolveBumpExperimentKey('v1_bump_copy_next'), 'v1_bump_copy_next');
+  });
+
+  it('trims, so a stray space in the env var cannot point at a missing test', () => {
+    // A key with whitespace finds no experiment, and no experiment ⇒ no bump at
+    // all. Worth trimming rather than trusting the paste.
+    assert.equal(resolveBumpExperimentKey('  v1_bump_copy_next  '), 'v1_bump_copy_next');
   });
 });
