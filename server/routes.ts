@@ -715,7 +715,14 @@ export async function registerRoutes(
       // V1 price split test — pull the variant assigned at lead capture.
       // Falls back to historical $35/$25 if no variant on row (old conversations
       // or feature flag off via missing system_config row).
-      const variantInfo = email ? await getVariantForEmail(email) : null;
+      //
+      // `funnel` is passed as a charge-path safety net: on a FIXED-price funnel
+      // (/fb-tarot) a stored variant belonging to some OTHER funnel — a returning
+      // visitor carrying the price she was assigned months ago on a different
+      // lander — is ignored in favour of the funnel's own price. See
+      // getVariantForEmail. Normal traffic is unaffected: lead capture already
+      // stamps a matching variant, so this never fires.
+      const variantInfo = email ? await getVariantForEmail(email, funnel) : null;
       const mainCents = variantInfo?.priceCents ?? 3500;
       const downsellCents = variantInfo?.downsellCents ?? 2500;
       const priceAmount = type === "downsell" ? downsellCents : mainCents;
