@@ -459,6 +459,12 @@ export default function ExperimentsDashboard() {
       fidelity: "Fidelity",
       "missing-him": "Missing Him",
       "why-he-left": "Why He Left / Ghosting",
+      // searching (2026-08-11) and twin-flame (2026-08-11) shipped without labels and had
+      // been rendering as raw lowercase slugs — the third occurrence of the defect this
+      // block already records twice above. Added 2026-08-12 with hidden-intuition.
+      searching: "Searching",
+      "twin-flame": "Twin Flame",
+      "hidden-intuition": "Hidden / Intuition",
       "self-frame": "Self-Frame",
     };
     return `${f} — ${ANGLE_LABELS[angle] ?? angle}`;

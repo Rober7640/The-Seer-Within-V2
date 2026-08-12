@@ -86,7 +86,7 @@ verified 9/9 identical. This matches how `cards-honest` already behaves across t
 
 ### 🔑 The `angle` property — comparing hook FAMILIES
 
-Every tarot PostHog event carries `angle`. Twelve families as of 2026-08-07:
+Every tarot PostHog event carries `angle`. Eighteen families as of 2026-08-12:
 
 | `angle` | Hooks | Added |
 |---|---|---|
@@ -102,13 +102,30 @@ Every tarot PostHog event carries `angle`. Twelve families as of 2026-08-07:
 | `soulmate-where` | where-soulmate · soulmate-closer · not-found-yet | 2026-08-07 |
 | `loneliness` | alone-forever · meant-alone · someone-for-me | 2026-08-07 |
 | `fidelity` | someone-else · talking-someone · faithful · loyal | 2026-08-07 |
+| `missing-him` | stop-hurting · stop-missing · still-miss-him | 2026-08-10 |
+| `why-he-left` | left-without-word · ghosted · not-enough | 2026-08-11 |
+| `searching` | stop-searching · end-up-alone · given-up | 2026-08-11 |
+| `twin-flame` | twin-ready · twin-feels · twin-back | 2026-08-11 |
+| `hidden-intuition` | hiding-something · feels-off | 2026-08-12 |
 | `self-frame` | love-again · soulmate | seeded |
 
 > ⚠️ `fidelity` is the only family with **four** hooks besides `decode-him`. It is also the
 > only one commissioned for **compliance** rather than a new wound — see its section below.
 
+> ⚠️ `hidden-intuition` is the only family with **two**. Only two headlines were commissioned
+> (operator, 2026-08-12) and the pair is deliberate — a padded third would be the one lander
+> nobody asked for. `HIDDEN_INTUITION_HOOKS.length` is pinned at 2 by its guard test.
+
 > `pulling-away` and `reconciliation` were live from 08-05/08-06 but had never been added
 > to this table or to the admin `ANGLE_LABELS` map; both backfilled 2026-08-07.
+
+> 🔴 THE SAME DEFECT RECURRED, TWICE MORE. `missing-him`, `why-he-left`, `searching` and
+> `twin-flame` all shipped without a row here, and `searching` + `twin-flame` also shipped
+> without an admin `ANGLE_LABELS` entry — so both had been rendering in the dashboard as raw
+> lowercase slugs since 2026-08-11. All four backfilled 2026-08-12 alongside
+> `hidden-intuition`. **Adding the angle to `ANGLE_LABELS` is edit point 5 of 6 and is the
+> one that keeps getting missed** — the lander works perfectly without it, so nothing fails
+> loudly; only the dashboard reads wrong, and only when somebody looks.
 
 Derived by `angleForHook()` from the per-family arrays, so a new hook categorises itself.
 🔴 Miss the array and the hook silently reports `decode-him` and disappears as a family in
@@ -737,6 +754,82 @@ giving in those last weeks.
 about a man who is still there** — here there is no ongoing behaviour to read at all). Guard pins
 zero shared 6-word runs in beat 3 against both.
 
+## Hidden / intuition hooks — 2 face-down landers (2026-08-12)
+
+Operator brief: the **Trust/Honesty FRAME** applied to a topic neither live family covers.
+Face-down `return-mhf` only. Clean URLs, no `&deck=`, Version C ads.
+
+| Headline | Hook | URL |
+|---|---|---|
+| Is he hiding something from me? | `cards-hiding-something` | `/fb-tarot/c?hook=cards-hiding-something` |
+| Something feels off — is my intuition right? | `cards-feels-off` | `/fb-tarot/c?hook=cards-feels-off` |
+
+### ⚠️ TWO landers, not three — deliberate
+
+Every family before this shipped three. Only two headlines were commissioned. A third written
+in-house would be the one lander nobody asked for, so the count is **pinned at 2** by
+`tests/tarot-hidden-intuition-copy.test.ts`. If a third is ever added it should arrive as a
+headline from the operator, not from us.
+
+### 🔑 Why its own angle, and how it differs from `trust` and `honesty`
+
+The distinction is real and it is the reason this is not folded into either:
+
+| Family | The question |
+|---|---|
+| `trust` | who he **IS** — 'Is he really who he says he is?' |
+| `honesty` | a specific untruth **TOLD** — 'Am I being lied to?' |
+| `hidden-intuition` | an **OMISSION**, plus her own reading of it. **Nobody has been caught in anything.** |
+
+The honesty landers have been running since 2026-08-03; folding a new topic into them would
+retroactively mix two commissions inside one set of numbers — the same reason `honesty` was not
+folded into `trust` when it shipped.
+
+### ⚠️ ANGLE ≠ FRAME (as with `searching`)
+
+The angle label is a **reporting** device. The operator specified the Trust/Honesty **frame**, and
+server-side that is the **DEFAULT decode-him branch** in `prompts.ts` (tendency, never a verdict) —
+so there is **no new `Set` to add and none to keep in sync**. The family-specific bans live in the
+per-hook `TAROT_HOOK_TENDENCY` strings, which is how every family since `healing` has been built.
+
+🔴 **`cards-feels-off` reads as though it is about her, and it is not.** It is her reading of a
+specific man. Moving it to any no-man frame (`self-frame`, `loneliness`, `soulmate-where`,
+`after-loss`) strips the verdict guard, and a card would then be free to certify her suspicion
+about a real person. Pinned by the guard test.
+
+### 🔴 Four bans, two of which exist nowhere else on the funnel
+
+1. **THE VERDICT** — never that he IS hiding something, never that he is not. The first convicts a
+   real man from a card; the second tells her what she noticed was never there.
+2. **THE CONTENTS** — never name what is behind the gap (another woman, money, a past, a feeling).
+   Every answer is invention, and here invention **manufactures a crisis inside a relationship that
+   is still running**. This is `searching`'s no-CAUSE ban pointed at a man instead of at her life.
+3. **THE TACTIC** *(no precedent at this sharpness)* — the headline supplies the move itself: check
+   his phone, test him, catch him out. It must never come from us in any form. `cards-talking-someone`
+   needed the surveillance ban; this needs it harder, because "hiding" has one obvious next step.
+4. **GRADING HER FACULTY** *(no precedent anywhere)* — `cards-feels-off` is the only headline on the
+   funnel that submits **her judgement** for a verdict, and all three available answers do harm:
+   - *"yes, your intuition is right"* — convicts him by proxy of whatever she already concluded;
+   - *"no"* — tells a woman her own observation is imaginary. She may have had this done to her
+     already; the funnel does not finish the job;
+   - *"intuition is never wrong"* — the flattering third option and the most dangerous, because it
+     turns every fear into a finding and licences her to act on a guess.
+
+   **The move is to SPLIT the question**: the *noticing* is real and is affirmed; what it *means*
+   stays open. The guard test pins both halves — it checks the refusals AND checks that every read
+   still affirms her, because a family that only refuses is a family that abandons her.
+
+### 🔴 Openers never demand a case
+
+"What makes you think he is hiding something?" puts her on trial for her own unease and hands the
+model a list of suspicions to confirm — breaching the no-CAUSE ban in the opener, before the read
+has even run. Neither opener may ask **what** she thinks is hidden either, since a named suspicion
+in the transcript is exactly the thing the reads must decline to certify. They ask instead about
+the thing she stops short of saying, and about the *shape* of the change.
+
+Guarded by `tests/tarot-hidden-intuition-copy.test.ts` (21 tests, clause-level negation-aware),
+which also pins zero shared 6-word runs in beat 3 against every other hook on the deck.
+
 ## Concepts
 
 | # | Deck id | Facing | Cards (A/B/C) | Options | Status | Notes |
@@ -793,6 +886,14 @@ zero shared 6-word runs in beat 3 against both.
 | `cards-left-without-word` *(why-he-left)* | Why did he leave without a word? | ⬜ DRAFT (2026-08-11) — 🔴 asks for a MOTIVE outright; the refusal is the reading. Reads the silence as carrying no content at all |
 | `cards-ghosted` *(why-he-left)* | Why did he ghost me? | ⬜ DRAFT (2026-08-11) — 🔴 the DIAGNOSIS ban does the heavy lifting (narcissist/avoidant is the internet's answer). Reads her as the investigator of her own injury |
 | `cards-not-enough` *(why-he-left)* | Was I not enough for him to stay? | ⬜ DRAFT (2026-08-11) — 🔴🔴 heaviest headline on the funnel; her own worth is the question. REFUSE the comparison, never score it — "you were enough" is banned too |
+| `cards-stop-searching` *(searching)* | Am I ever going to stop searching? | ⬜ DRAFT (2026-08-11) — 🔴 bans the proverb ("it happens when you stop looking") — a tactic and a fault attribution in one |
+| `cards-end-up-alone` *(searching)* | Why do I keep ending up alone? | ⬜ DRAFT (2026-08-11) — 🔴 refuses to supply a CAUSE at all; "why" presumes a findable reason and no honest reading has one |
+| `cards-given-up` *(searching)* | Have I given up on love without realizing it? | ⬜ DRAFT (2026-08-11) — 🔴 bans the headline's own premise; she is the only authority on her interior |
+| `cards-twin-ready` *(twin-flame)* | Is my twin flame ready for me? | ⬜ DRAFT (2026-08-11) — ⭐ VOCABULARY TEST vs `cards-ready-commit`; never certify the LABEL, never ascension homework |
+| `cards-twin-feels` *(twin-flame)* | Does my twin flame feel this too? | ⬜ DRAFT (2026-08-11) — ⭐ vs `cards-feels`; 🔴 the RUNNER script ban (his distance is never proof of the bond) |
+| `cards-twin-back` *(twin-flame)* | Is my twin flame coming back to me? | ⬜ DRAFT (2026-08-11) — ⭐ vs `cards-ever-back`; 🔴 the SEPARATION-PHASE ban (an absence is not progress toward a reunion) |
+| `cards-hiding-something` *(hidden-intuition)* | Is he hiding something from me? | ⬜ DRAFT (2026-08-12) — 🔴🔴 never name the CONTENTS (invention manufactures a crisis in a live relationship); 🔴🔴 the TACTIC ban is sharpest here — the headline supplies the move (check his phone) and we never do |
+| `cards-feels-off` *(hidden-intuition)* | Something feels off — is my intuition right? | ⬜ DRAFT (2026-08-12) — 🔴🔴 the only headline on the funnel that submits HER JUDGEMENT for a verdict. All three answers harm: "yes" convicts him by proxy, "no" gaslights her, "intuition is never wrong" licences her to act on a guess. SPLIT the question — affirm the noticing, leave the meaning open |
 | `cards-love-again` *(self-frame)* | Will I love again? | ⬜ draft — 🔴 **no reads on either FACE-DOWN deck**, so a clean URL silently falls back to `cards-honest`/`decode-him`. Only works with an explicit `&deck=arcana-mfh` |
 | `cards-soulmate` *(self-frame)* | When is my soulmate coming? | ⬜ draft (2026-07-27, from `ZN_Tarot_Rio 8.png` = arcana-eef cards; reads on arcana-eef + arcana-mfh; answers "when" as a leaning, never a date) |
 

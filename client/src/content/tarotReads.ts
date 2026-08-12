@@ -420,6 +420,38 @@ export type TarotHook =
   | 'cards-twin-ready' // Is my twin flame ready for me?
   | 'cards-twin-feels' // Does my twin flame feel this too?
   | 'cards-twin-back' // Is my twin flame coming back to me?
+  // Hidden/intuition hooks (2026-08-12). Operator brief: the Trust/Honesty FRAME applied to
+  // a topic neither live family covers. Only TWO landers were commissioned — every family
+  // before this shipped three, and the pair is deliberate, not an unfinished set.
+  //
+  // The topic is what is NOT being said, and how she is supposed to know. Held apart from
+  // the two nearest live families on a real distinction:
+  //   trust   = who he IS               ('Is he really who he says he is?')
+  //   honesty = a specific untruth TOLD ('Am I being lied to?')
+  //   here    = an OMISSION, and her own reading of it. Nobody has been caught in anything.
+  //
+  // 🔴 DECODE-HIM IN FORM. A real man stands in both, so every no-verdict-on-him guard
+  // stays on and these are NOT self-frame — see TWIN_FLAME_HOOKS for the same call. What is
+  // new is what must be refused on top:
+  //
+  //   · THE CONTENTS. 'cards-hiding-something' invites Evelyn to say WHAT is being hidden,
+  //     and any answer is invention — another woman, money, a feeling, a past. This is the
+  //     `searching` family's no-CAUSE ban pointed at a man instead of at her life, and here
+  //     it is worse: supplying contents manufactures a crisis in a live relationship.
+  //
+  //   · THE TACTIC. No family on this funnel has needed the standing never-hand-her-a-tactic
+  //     rule as sharply. "Is he hiding something" has one obvious next move — check his
+  //     phone, test him, catch him — and it must never come from us in any form.
+  //
+  //   · GRADING HER FACULTY. 'cards-feels-off' asks a yes/no about her own perception, and
+  //     BOTH answers do harm. "Yes, your intuition is right" convicts him by proxy, since
+  //     her intuition has already reached a conclusion. "No" tells a woman her observation
+  //     is imaginary, which is the one thing this funnel may never do. The move is to split
+  //     the question: the NOTICING is real and may be affirmed; what it MEANS stays open.
+  //     And never the flattering third option — intuition is "never wrong" turns every fear
+  //     into a finding and licences her to act on a guess.
+  | 'cards-hiding-something' // Is he hiding something from me?
+  | 'cards-feels-off' // Something feels off — is my intuition right?
   // Self-frame hooks (read HER, affirm the hopeful yes — like the palm love hooks).
   | 'cards-love-again' // Will I love again?
   | 'cards-soulmate' // When is my soulmate coming?
@@ -673,6 +705,30 @@ export const TWIN_FLAME_HOOKS: TarotHook[] = [
   'cards-twin-back',
 ]
 
+// Hidden/intuition hooks (2026-08-12). Their OWN angle rather than folded into `honesty` —
+// operator call 2026-08-12. The honesty landers have been running since 2026-08-03; adding a
+// new topic to them now would retroactively mix two commissions inside one set of numbers,
+// which is the same reason `honesty` was not folded into `trust` when it shipped.
+//
+// ⚠ TWO hooks, not three. Only two headlines were commissioned. Nothing in reporting or in
+// the gate's per-lander table requires three, and a padded third written in-house would be
+// the one lander in the family nobody asked for.
+//
+// ⚠ ANGLE ≠ FRAME. The angle label below is a REPORTING device. The operator specified the
+// Trust/Honesty FRAME, and server-side that is the DEFAULT decode-him branch in prompts.ts
+// (tendency, never a verdict) — so there is no new Set to add and none to keep in sync. The
+// family-specific bans live in the per-hook TENDENCY strings, which is how every family
+// since `healing` has been built. See the union comment for what those bans are and why.
+//
+// 🔴 Do not add these to any of the no-man frames (self-frame, loneliness, soulmate-where,
+// after-loss). 'cards-feels-off' reads as though it is about her, and it is not — it is her
+// reading of a specific man, and stripping the verdict guard off it would let a card convict
+// him. That is the exact mistake SOULMATE_AFTER_LOSS_HOOKS was created to prevent.
+export const HIDDEN_INTUITION_HOOKS: TarotHook[] = [
+  'cards-hiding-something',
+  'cards-feels-off',
+]
+
 // The ad ANGLE a hook belongs to. Carried on every tarot PostHog event (see
 // lib/tarotAttribution.ts) so the two decode-him families can be compared as GROUPS
 // without listing each hook: one `angle = trust` filter instead of three hook values,
@@ -746,6 +802,13 @@ export type TarotAngle =
   // separate is what lets the wording be measured; merging it into any of those three would
   // put the challenger and its own control in the same bucket and measure nothing.
   | 'twin-flame'
+  // 🔴 'hidden-intuition' is NOT a variant of 'honesty' or 'trust', and merging it into
+  // either destroys both. trust = who he IS · honesty = a specific untruth he TOLD · this =
+  // an OMISSION nobody has caught, plus her own reading of it. Note also that it is the
+  // only angle on the funnel whose second lander puts HER FACULTY in the question rather
+  // than him — which is why it is filed here and not under self-frame, where a card would
+  // be free to convict a real man on her behalf.
+  | 'hidden-intuition'
   | 'self-frame'
 
 export function angleForHook(hook: TarotHook): TarotAngle {
@@ -765,6 +828,7 @@ export function angleForHook(hook: TarotHook): TarotAngle {
   if (WHY_HE_LEFT_HOOKS.includes(hook)) return 'why-he-left'
   if (SEARCHING_HOOKS.includes(hook)) return 'searching'
   if (TWIN_FLAME_HOOKS.includes(hook)) return 'twin-flame'
+  if (HIDDEN_INTUITION_HOOKS.includes(hook)) return 'hidden-intuition'
   return 'decode-him'
 }
 
@@ -819,6 +883,8 @@ export const TAROT_HOOKS: TarotHook[] = [
   'cards-twin-ready',
   'cards-twin-feels',
   'cards-twin-back',
+  'cards-hiding-something',
+  'cards-feels-off',
   'cards-love-again',
   'cards-soulmate',
 ]
@@ -921,6 +987,14 @@ export const HEADLINES: Record<TarotHook, string> = {
   'cards-twin-ready': 'Is my twin flame ready for me?',
   'cards-twin-feels': 'Does my twin flame feel this too?',
   'cards-twin-back': 'Is my twin flame coming back to me?',
+  // Hidden/intuition (2026-08-12). The operator's wording, shipped exactly as given.
+  // ⚠ Note what neither headline says: no lie, no cheating, no betrayal, nothing he has
+  // been caught at. The first asks whether there is something behind a gap; the second asks
+  // her to have her own perception checked. The reads may not upgrade either into an
+  // accusation, and 'cards-feels-off' is the only headline on the funnel that submits HER
+  // JUDGEMENT for a verdict — see the TarotHook union note for why both answers are banned.
+  'cards-hiding-something': 'Is he hiding something from me?',
+  'cards-feels-off': 'Something feels off — is my intuition right?',
   'cards-love-again': 'Will I love again?',
   'cards-soulmate': 'When is my soulmate coming?',
 }
@@ -1106,6 +1180,21 @@ const TAROT_QUESTION: Record<TarotHook, string> = {
   'cards-twin-ready': "Before I look closer, tell me… what would you actually notice between you, day to day, if he were ready?",
   'cards-twin-feels': "Before I look closer, tell me… when did you first notice this felt different from anything before it?",
   'cards-twin-back': "Before I look closer, tell me… what was it like between the two of you when it was at its easiest?",
+  // Hidden/intuition (2026-08-12). ⚠ Neither opener may ask her to BUILD A CASE. "What
+  // makes you think he is hiding something" reads as a demand for evidence, puts her on
+  // trial for her own unease, and hands the model a list of suspicions to confirm — which
+  // is the no-CAUSE ban breached by the opener before the read has even run.
+  //
+  // ⚠ Neither may ask WHAT she thinks is being hidden. That invites her to name it, and a
+  // named suspicion in the transcript is the thing the reads must decline to certify.
+  //
+  // Asks about the thing she stops short of, not about him — the hesitation is hers and
+  // first-hand, and it opens the gap without requiring a single claim about what fills it.
+  'cards-hiding-something': "Before I look closer, tell me… what is the thing you keep almost asking him about, and stopping short of?",
+  // Asks for the SHAPE of the change, never for proof of it. "Was there a day, or did it
+  // creep in" is answerable without characterising him and without her having to justify
+  // the feeling to a stranger before it is taken seriously.
+  'cards-feels-off': "Before I look closer, tell me… when did it start feeling different — was there a day, or did it just creep in?",
   'cards-love-again': "Before I look closer, tell me… what has been weighing on your heart since it happened?",
   'cards-soulmate': "Before I look closer, tell me… what is the love you're still holding out for — the one you haven't given up on?",
 }
@@ -3140,6 +3229,69 @@ const RETURN_MHF: CardSetConfig = {
         "You came asking about a return and drew the one card that has never once promised anybody an ending.",
         "The Fool holds no reunion for me to give you and holds no ending either, and I will not manufacture one in either direction. What I will not leave alone is the arithmetic hiding in the question. Nowhere in it is there anything for you to have done differently, or to do now, that determines whether he comes back — not more healing, not more patience, not becoming a version of yourself that would finally earn it. His returning was never a reward for your progress. Anyone who has told you otherwise handed you a job that was never yours.",
         "Let me look closer at the job you have been given that was never yours…",
+      ],
+    },
+    // ── HIDDEN / INTUITION (2026-08-12) ───────────────────────────────────────
+    // Trust/Honesty frame, a topic neither live family covers: what is NOT said, and how
+    // she is supposed to know. TWO landers by commission — see HIDDEN_INTUITION_HOOKS.
+    //
+    // 🔴 FOUR THINGS ARE REFUSED IN EVERY ONE OF THESE SIX READS:
+    //   1. THE VERDICT — never that he IS hiding something, never that he is not. Both are
+    //      rulings on a real man from a card, and the second is also a dismissal of her.
+    //   2. THE CONTENTS — never name or guess WHAT is withheld. Another woman, money, a
+    //      feeling, a past: every one of them is invention, and inventing one manufactures
+    //      a crisis inside a relationship that is still running.
+    //   3. THE TACTIC — never check his phone, never test him, never catch him out. No
+    //      family has needed this rule as sharply; the headline supplies the move itself.
+    //   4. PATHOLOGISING HER — never paranoid, insecure, overthinking, reading into it.
+    //      She arrived already suspecting herself; the funnel does not finish the job.
+    //
+    // 'Is he hiding something from me?' — an OMISSION, not a lie. Nobody has been caught in
+    // anything, which is exactly what separates this from the live honesty family.
+    'cards-hiding-something': {
+      a: [
+        "You turned the Magician, dear — the card of the one who decides what is shown and what is kept back.",
+        "You asked whether something is being kept from you, and up came the card of deliberate arrangement.",
+        "Whether something is genuinely being kept from you is not a thing this card will settle, dear, and I would not invent its contents to fill the silence — a stranger with a deck telling a woman what a man conceals is making it up, and I have watched that invention do real damage to a life that had none. What the Magician marks is management: a hand deciding, in the moment, how much of a picture to hand across. Everyone alive does a little of that. What you are describing is not the everyday amount, or the question would never have been worth typing. The card convicts him of nothing and neither will I. It says the edge you keep meeting is a made one — and meeting an edge is not the same as imagining one.",
+        "Let me look closer at where the picture keeps stopping…",
+      ],
+      b: [
+        "You turned the Hanged Man, dear — the card of what is held just out of view.",
+        "It was the card of the withheld thing that came to your hand, and withholding is precisely what you came to ask about.",
+        "What he keeps is not something this card can show me, dear, and anyone who claims otherwise is performing — nor am I going to send you looking for it. Going through a man's phone has never once produced peace; it produces a worse version of the same night and a woman who now has something of her own to hide. The Hanged Man turns the thing over instead. You have been doing the work of guessing, and guessing is labour — hours of you, spent assembling a picture you were never handed whole. The needing to do that is not imaginary, whatever sits behind it. Being made to build the thing yourself is a cost you have already paid in full, and it was charged to you quietly.",
+        "Let me look closer at what the guessing has been costing you…",
+      ],
+      c: [
+        "You turned the Fool, dear — the card of the man who has not sat down and worked out what he thinks.",
+        "Your hand went to the card of the unexamined thing, and that is a genuinely different animal from the concealed one.",
+        "Here the Fool asks me to slow down before either of us calls this a secret. Not everything withheld was ever decided on; some of it has simply never been faced by the man carrying it, and a thing he has not admitted to himself cannot be told to you — which lands on your side identically either way, as a gap. I will not rule on which of the two this is, dear, because from the outside they are indistinguishable, and anybody sorting them for you is guessing in a confident voice. What the card will not do is put the gap in your imagination. The gap is there. What it is made of is the open question, and it is a fair one to have.",
+        "Let me look closer at the shape of the gap…",
+      ],
+    },
+    // 'Something feels off — is my intuition right?' — the only headline on the funnel that
+    // submits HER JUDGEMENT for a verdict, and both available verdicts do harm: "yes"
+    // convicts him by proxy of whatever she has already concluded, "no" tells a woman her
+    // own observation is imaginary. Every read here splits the question instead — the
+    // NOTICING is affirmed, the MEANING is left open — and refuses the flattering third
+    // option, that intuition is never wrong, which turns every fear into a finding.
+    'cards-feels-off': {
+      a: [
+        "You turned the Magician, dear — the card of the mind that registers a thing long before it can explain it.",
+        "You asked whether your sense of this is sound, and drew the card of the working intelligence.",
+        "I want to be careful with you here, because there are two questions inside that one and they do not have the same answer. Did you notice something — yes. Something moved in the pattern and you registered it, and the Magician is emphatic that this is a faculty working rather than a nerve misfiring. What the noticed thing MEANS is the part I will not hand you, dear, and I would be lying to you if I dressed a guess up as a reading. Nor will I tell you that intuition is never wrong. That is a flattering sentence which has cost women a great deal, because it quietly turns every fear into a finding. The noticing is real. What it points to is still open, and those are not the same sentence.",
+        "Let me look closer at what it was you actually noticed…",
+      ],
+      b: [
+        "You turned the Hanged Man, dear — the card of two accounts that will not sit flat against each other.",
+        "It was the card of the mismatch your hand found, and a mismatch is very often what 'off' turns out to be made of.",
+        "A feeling of wrongness is usually not mystical, dear, whatever you have been told — most often it is the ordinary result of being given an account that does not match what you can see, and a mind doing its job by flagging the difference. Which of the two is the false one is beyond what this card knows, and I would not guess at a man's honesty from a picture on a table. But I am not going to do the more common thing either — I am not going to suggest you have produced all of this out of insecurity. Being talked out of your own observations is how a person ends up unable to trust herself about anything at all. Something did not line up. That is a finding, and it stands whatever turns out to explain it.",
+        "Let me look closer at what stopped lining up…",
+      ],
+      c: [
+        "You turned the Fool, dear — the card of the step taken before anything has been confirmed.",
+        "You came to have your sense checked, and up came the card of the one who must move without a verdict in hand.",
+        "No card is going to confirm this for you, dear, and it would be an unkindness to pretend one had. The Fool is honest about that much: you are standing where a person stands before they know, and it is genuinely uncomfortable ground. What I will not let pass is the notion that you must earn the right to a straight answer by first assembling proof. You do not. Somewhere along the way, asking plainly and accusing got collapsed into the same act for you, and they were never the same act. The unease you arrived carrying is not evidence against him — I will not let it be used that way. It is also not nothing, and you were not wrong to bring it here.",
+        "Let me look closer at what you have been made to prove before you could ask…",
       ],
     },
   },
