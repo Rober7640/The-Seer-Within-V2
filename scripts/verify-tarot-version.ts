@@ -90,16 +90,34 @@ async function main() {
 
   const inScope: Array<{ hook: string; deck: string }> = scope.landers;
 
-  // ── 2. DRAFT IS INERT ────────────────────────────────────────────────────
-  // The property the whole deploy rests on: with the test not running, every visitor
-  // gets exactly the version her URL named, and nobody is enrolled.
-  console.log(`\n2. INERT WHILE status=${exp.status}`);
+  // ── 2. BEHAVIOUR FOR THE CURRENT STATUS ─────────────────────────────────
+  // 🔴 The correct assertion INVERTS at go-live, so this branches on status rather
+  // than hardcoding one. While the test is off, the property that matters is that
+  // the funnel is untouched: every visitor gets the version her URL named and nobody
+  // is enrolled. Once it is RUNNING, that same result would mean the test is doing
+  // nothing — there the property is the opposite, that in-scope visitors ARE enrolled
+  // and get a real arm. An earlier version of this script asserted only the first,
+  // and reported two false failures the moment the test went live.
+  const live = exp.status === 'running';
+  console.log(`\n2. ${live ? 'ENROLLING WHILE status=running' : `INERT WHILE status=${exp.status}`}`);
   for (const url of ['c', 'b'] as TarotVersion[]) {
     const r = await resolveTarotVersion(`${CANARY}inert-${url}`, url, inScope[0].hook, inScope[0].deck);
-    check(r.version === url && !r.enrolled && !r.applied,
-      `URL version '${url}' is returned untouched, not enrolled`,
-      `got version=${r.version} enrolled=${r.enrolled}`);
+    if (live) {
+      check(r.enrolled && r.applied && (r.version === 'b' || r.version === 'c'),
+        `an in-scope visitor (URL said '${url}') is enrolled and served a real arm`,
+        `got version=${r.version} enrolled=${r.enrolled}`);
+    } else {
+      check(r.version === url && !r.enrolled && !r.applied,
+        `URL version '${url}' is returned untouched, not enrolled`,
+        `got version=${r.version} enrolled=${r.enrolled}`);
+    }
   }
+  // Out-of-scope must stay untouched in EVERY status — this is the guarantee that
+  // the other nine tarot angles never notice the test exists.
+  const offScope = await resolveTarotVersion(`${CANARY}off`, 'c', 'cards-honest', 'return-mhf');
+  check(offScope.version === 'c' && !offScope.enrolled,
+    'an OUT-OF-SCOPE hook is never enrolled, whatever the status',
+    `got version=${offScope.version} enrolled=${offScope.enrolled}`);
 
   // ── 3. VERSION A IS NEVER ENROLLED ──────────────────────────────────────
   console.log('\n3. VERSION A IS NEVER IN THE TEST');

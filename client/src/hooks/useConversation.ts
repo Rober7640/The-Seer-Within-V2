@@ -36,7 +36,7 @@ import {
 } from '@/lib/tarotAttribution'
 import { trackGAdsLead, trackGAdsCheckout, getGclid } from '@/lib/gtm'
 import { isSlidingCloseVariant } from '@shared/types'
-import { pairedBumpBucket, V1_BUMP_CENTS } from '@shared/orderBump'
+import { pairedBumpBucket, isBumpCopyVariant, V1_BUMP_CENTS } from '@shared/orderBump'
 
 const STORAGE_KEY = 'seer_conversation'
 const SESSION_EXPIRY_HOURS = 24
@@ -955,6 +955,11 @@ export function useConversation() {
         // of the price payload, and only ever set to true. Absent ⇒ the buy CTA
         // goes straight to Stripe exactly as it does today.
         if (leadData?.orderBump === true) patch.orderBump = true
+        // Which COPY arm that bump renders. Validated rather than trusted: it is
+        // rendered into the offer card, and /api/checkout independently resolves
+        // the same arm for the Stripe line, so a junk value here must fall back
+        // to control instead of producing a blank card.
+        if (isBumpCopyVariant(leadData?.bumpCopy)) patch.bumpCopy = leadData.bumpCopy
         if (Object.keys(patch).length > 0) updateUserData(patch)
       } catch { /* response body parse is best-effort */ }
 
@@ -1985,6 +1990,9 @@ export function useConversation() {
       step: 'sales',
       bump_bucket: paired,
       price_cents: V1_BUMP_CENTS,
+      // Copy arm on the exposure AND on accept/decline below, so take-rate can be
+      // read per arm in PostHog without waiting on the experiments tally.
+      bump_copy: chat.userData.bumpCopy ?? 'control',
     })
 
     // The offer copy now renders INSIDE BumpOfferCard, so we no longer send it as
@@ -2002,6 +2010,7 @@ export function useConversation() {
       step: 'sales',
       bump_bucket: paired,
       price_cents: V1_BUMP_CENTS,
+      bump_copy: chat.userData.bumpCopy ?? 'control',
     })
 
     await handlePurchase('main', { offered: true, accepted, bucket: paired })

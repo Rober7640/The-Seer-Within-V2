@@ -16,7 +16,7 @@ Second half of Joel's daily loop (call 2026-07-10): **`/persona-audit` finds lea
 
 ## Inputs
 - **Findings**: default = the PROMPT-tagged items in the latest `improve-v2/daily/*-buyer-audit.md` (or `improve-v2/prompt-b-buyer-audit-12h-2026-07-10.md` §4); or a finding the user states directly.
-- **Persona**: default `evelyn-cross`. (cases.json already carries starter cases for aiden/luna/marcus/maren — the port path for Joel's "roll to all personas.")
+- **Persona**: `--persona <slug>` — one of `evelyn-cross` · `aiden-powers` · `luna-voss` · `marcus-stone` · `maren-soleil` · `nova-sharma`. Default `evelyn-cross`. **One persona per run, deliberately.** A prompt change has to be proven before/after; six changes shipped the same day are six untested guesses, and if revenue moves you cannot tell which one did it. Take the worst persona from today's audit scoreboard, fix that one, ship it, and let tomorrow's audit validate it on real buyers. (cases.json carries 58 Evelyn cases and 6 across aiden/luna/marcus/maren — the bank grows from real audit findings, no backfill.)
 - Findings tagged CODE/RUNTIME (billing, wind-down injection, memory system) are **not prompt-iterable** — route them to an engineering task and only cover them here if the Playwright suite can assert them.
 
 ## Steps
@@ -25,10 +25,28 @@ Second half of Joel's daily loop (call 2026-07-10): **`/persona-audit` finds lea
    `npx tsx scripts/eval-chat.ts --label YYYY-MM-DD-pre --case <id> --experiment persona_prompt_evelyn_2026 --variant B`
    Score against the case's `tests[]` and EVAL.md's 12-check rubric. A new case **should FAIL here** — that's the reproduction. If it passes, the finding isn't prompt-reproducible (suspect runtime/data → back to audit evidence).
 3. **Draft the minimal delta.** New spec `improve-v2/specs/evelyn-v2-prompt-B<N+1>.md` (next number; fenced ```prompt block; header section "Delta vs B<N>" stating the change + the finding it addresses). Start from the **live prompt** (refresh the `evelyn-v2-prompt-B-DB-LIVE-snapshot-*.md` convention from the prod experiment row if in doubt — the audit pull's `00-run-meta.json` contains it). One concern per iteration; smallest wording that kills the failure.
-4. **Wire it locally.** Local experiment must exist as `draft` (after `npm run migrate:experiments` on the dev DB). Then:
-   `npx tsx scripts/_wire-evelyn-v2.ts --spec improve-v2/specs/evelyn-v2-prompt-B<N+1>.md --dry` → review → run without `--dry`.
-5. **Prove (post-run).** New cases AND the full frozen suite (regression watch):
-   `npx tsx scripts/eval-chat.ts --label YYYY-MM-DD-post --experiment persona_prompt_evelyn_2026 --variant B`
+4. **Wire it locally.** `.env` must be **localhost** — the script refuses anything else (see rule 1). One command regardless of persona:
+   ```bash
+   npx tsx scripts/wire-persona-prompt.ts --persona <slug> --spec improve-v2/specs/<slug>-prompt-<N+1>.md
+   # review the printed target + char delta, then:
+   npx tsx scripts/wire-persona-prompt.ts --persona <slug> --spec improve-v2/specs/<slug>-prompt-<N+1>.md --write
+   ```
+   It resolves where that persona's live prompt actually lives and writes there:
+   - **Evelyn** → the `persona_prompt_evelyn_2026` experiment's variant-B payload. Requires the local row to be `draft` (after `npm run migrate:experiments`); it refuses a running experiment, which is what protects the prod rollout.
+   - **Everyone else** → `personas.base_system_prompt`. There is **no draft concept here — the row IS the live prompt**, so the localhost guard is the only protection. The script snapshots the prompt it is replacing to `improve-v2/specs/_snapshots/` and prints the exact restore command. Writes require an explicit `--write`; the default is a dry run.
+
+   🔴 **Never run `npm run seed` while iterating** — it overwrites Aiden's live 29K guardrailed prompt with a legacy 9K one.
+
+   (`scripts/_wire-evelyn-v2.ts` still exists so the committed 2026-07-10/07-15 reports stay reproducible. Don't use it for new work.)
+5. **Prove (post-run).** The persona's cases AND the full frozen suite (regression watch):
+   ```bash
+   # Evelyn (experiment-backed):
+   npx tsx scripts/eval-chat.ts --label YYYY-MM-DD-post --persona evelyn-cross \
+     --experiment persona_prompt_evelyn_2026 --variant B
+   # every other persona (base-prompt-backed — NO --experiment flag):
+   npx tsx scripts/eval-chat.ts --label YYYY-MM-DD-post --persona <slug>
+   ```
+   ⚠️ Passing `--experiment` for a base-prompt persona makes the harness throw `experiment … did not enrol eval user` — that flag is only for a persona that has one. Then re-run without `--persona` for the whole-suite regression watch.
    Pass bar: every new case's `tests[]` pass, and no frozen case drops vs its last known verdict (current known state: 13 PASS / 3 PARTIAL / 1 FAIL `contradiction-bait` — see `eval/reports/v2-improve-eval-2026-07-09.md`). Temperature caveat: a flipped check gets re-run once before you attribute it to the delta.
 6. **Playwright data-smoke** (catches what evals can't — Joel: "if the bot stops halfway, eval wouldn't catch that"):
    `npx playwright test -c improve-v2/playwright/playwright.config.ts`
