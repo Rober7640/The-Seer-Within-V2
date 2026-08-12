@@ -211,12 +211,27 @@ on a real checkout while every real buyer stays on control.
 - [x] Copy locked
 - [x] Variants built — 48 unit tests, `npx tsx --test server/lib/orderBump.test.ts`
 - [x] Seed written — `improve-v1/create-bump-copy-experiment-2026-08-11.sql`
-- [x] Cutover made reversible — `V1_BUMP_EXPERIMENT_KEY` env var, no deploy
+- [x] Cutover made reversible — kill switch is arm B weight → 0 from
+      /admin/experiments (needs `scope.freezeAssignment`, which the seed now sets)
 - [x] Stopping rule decided — 100 total bump purchases (operator, 2026-08-11)
-- [ ] targetN sized (run step 0 of the seed)
-- [ ] Seeded + started in /admin/experiments
-- [ ] `V1_BUMP_EXPERIMENT_KEY=v1_bump_copy_2026` set + restarted
-- [ ] Reviewed before go-live (use `V1_BUMP_QA_COPY=A` to eyeball it)
+- [ ] targetN sized (run step 0 of the seed) — **freezes on start, cannot be
+      changed later without a new experiment**
+- [ ] Seeded + started in /admin/experiments — **on that environment's DB**
+- [ ] Code deployed (that IS the cutover — no env var on any environment)
+- [ ] Reviewed before go-live (use `V1_BUMP_QA_COPY=A` locally to eyeball it)
 
-Merging this changes nothing on its own: with no `copy` key in the live payload,
-every enrolled lead resolves to control. A test asserts that byte-for-byte.
+**Cutover procedure (revised 2026-08-11 — Mike).** The key is a hardcoded
+constant in `shared/orderBump.ts`, exactly as `v1_order_bump_2026` shipped; no
+Railway variable is set anywhere. What makes it safe is ORDER: seed + start the
+experiment on that environment's database FIRST, deploy SECOND. The row is inert
+until the code ships, so there is no window in either direction — but deploying
+first would leave every checkout with no bump until the row is started.
+
+Dev and Production are **separate databases** (they shared one until 2026-08), so
+each needs its own seed + start before its own deploy.
+
+Unlike the old plan, merging this DOES change behaviour once deployed: the
+default key moves to `v1_bump_copy_2026`, so that experiment must exist and be
+running on that DB first. The old env-var design deliberately made merging inert;
+that reversibility now lives in the weights instead, which is a faster kill and
+needs no restart.

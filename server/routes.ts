@@ -519,7 +519,7 @@ export async function registerRoutes(
           // against fixed enums; tarotDeck defaults to 'decode-him'. Keep these
           // rosters in sync with client/src/content/tarotReads.ts (fb-tarot-add-card).
           const validDecks = ["decode-him", "arcana-mfh", "arcana-eef", "return-mhf"];
-          const validHooks = ["cards-honest", "cards-return", "cards-feels", "cards-cheating", "cards-who-he-is", "cards-real-person", "cards-misled", "cards-will-commit", "cards-wont-commit", "cards-ready-commit", "cards-lied-to", "cards-truth", "cards-deceived", "cards-come-back", "cards-ever-back", "cards-moved-on", "cards-cant-stop", "cards-on-my-mind", "cards-who-hurt-me", "cards-pulling-away", "cards-gone-cold", "cards-losing-interest", "cards-back-together", "cards-still-a-chance", "cards-really-over", "cards-new-soulmate", "cards-soulmate-out-there", "cards-ready-to-love", "cards-where-soulmate", "cards-soulmate-closer", "cards-not-found-yet", "cards-alone-forever", "cards-meant-alone", "cards-someone-for-me", "cards-someone-else", "cards-talking-someone", "cards-faithful", "cards-loyal", "cards-stop-hurting", "cards-stop-missing", "cards-still-miss-him", "cards-love-again", "cards-soulmate"];
+          const validHooks = ["cards-honest", "cards-return", "cards-feels", "cards-cheating", "cards-who-he-is", "cards-real-person", "cards-misled", "cards-will-commit", "cards-wont-commit", "cards-ready-commit", "cards-lied-to", "cards-truth", "cards-deceived", "cards-come-back", "cards-ever-back", "cards-moved-on", "cards-cant-stop", "cards-on-my-mind", "cards-who-hurt-me", "cards-pulling-away", "cards-gone-cold", "cards-losing-interest", "cards-back-together", "cards-still-a-chance", "cards-really-over", "cards-new-soulmate", "cards-soulmate-out-there", "cards-ready-to-love", "cards-where-soulmate", "cards-soulmate-closer", "cards-not-found-yet", "cards-alone-forever", "cards-meant-alone", "cards-someone-for-me", "cards-someone-else", "cards-talking-someone", "cards-faithful", "cards-loyal", "cards-stop-hurting", "cards-stop-missing", "cards-still-miss-him", "cards-left-without-word", "cards-ghosted", "cards-not-enough", "cards-stop-searching", "cards-end-up-alone", "cards-given-up", "cards-twin-ready", "cards-twin-feels", "cards-twin-back", "cards-love-again", "cards-soulmate"];
           const validCards = ["a", "b", "c"];
           const deck = tarotDeck ?? "decode-him";
           if (!validDecks.includes(deck) || !validHooks.includes(tarotHook ?? "") || !validCards.includes(tarotCard ?? "")) {
@@ -725,7 +725,14 @@ export async function registerRoutes(
       // V1 price split test — pull the variant assigned at lead capture.
       // Falls back to historical $35/$25 if no variant on row (old conversations
       // or feature flag off via missing system_config row).
-      const variantInfo = email ? await getVariantForEmail(email) : null;
+      //
+      // `funnel` is passed as a charge-path safety net: on a FIXED-price funnel
+      // (/fb-tarot) a stored variant belonging to some OTHER funnel — a returning
+      // visitor carrying the price she was assigned months ago on a different
+      // lander — is ignored in favour of the funnel's own price. See
+      // getVariantForEmail. Normal traffic is unaffected: lead capture already
+      // stamps a matching variant, so this never fires.
+      const variantInfo = email ? await getVariantForEmail(email, funnel) : null;
       const mainCents = variantInfo?.priceCents ?? 3500;
       const downsellCents = variantInfo?.downsellCents ?? 2500;
       const priceAmount = type === "downsell" ? downsellCents : mainCents;

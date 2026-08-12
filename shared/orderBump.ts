@@ -208,23 +208,38 @@ export function bumpCopyFromPayload(payload: unknown): BumpCopyVariant {
   return isBumpCopyVariant(copy) ? copy : 'control';
 }
 
-/** The experiment key the bump has run under since 2026-08-04. */
-export const V1_BUMP_EXPERIMENT_KEY_DEFAULT = 'v1_order_bump_2026';
+/**
+ * The experiment key `resolveV1Bump` reads.
+ *
+ * `v1_order_bump_2026` (2026-08-04 → 2026-08-11) answered "bump or no bump" and
+ * concluded with winner B. `v1_bump_copy_2026` succeeds it: BOTH arms show the
+ * bump, only the wording differs, so its arm A is today's shipped copy and the
+ * bump can never disappear by landing on the control.
+ *
+ * 🔴 SEED BEFORE YOU DEPLOY. `resolveV1Bump` returns `bump: false` for any key
+ * that resolves to no RUNNING experiment, so deploying this constant while
+ * `v1_bump_copy_2026` is absent, draft or paused turns the bump off for every
+ * buyer and silently deletes a 30%+ take rate. The row is inert until this code
+ * ships (nothing reads the key before then), so: seed it `running` on that
+ * environment's DB first, deploy second. Same two steps on dev and production —
+ * they have separate databases, so each needs its own row.
+ *
+ * 🔴 STOP THE TEST WITH WEIGHTS, NEVER WITH PAUSE. Pausing makes the key resolve
+ * to nothing → no bump at all. To end it, set the losing arm's weight to 0 from
+ * /admin/experiments: everyone then gets arm A, which is today's exact copy.
+ * That works because the row carries scope.freezeAssignment, which is what lets
+ * weights be edited on a running test.
+ */
+export const V1_BUMP_EXPERIMENT_KEY_DEFAULT = 'v1_bump_copy_2026';
 
 /**
  * Which experiment key `resolveV1Bump` reads, given `process.env
- * .V1_BUMP_EXPERIMENT_KEY`. Unset/blank ⇒ the live key, unchanged.
+ * .V1_BUMP_EXPERIMENT_KEY`. Unset/blank ⇒ the default above, which is the
+ * intended production path — the var is NOT set on any environment.
  *
- * 🔴 WHY THIS IS CONFIG AND NOT A CONSTANT. The copy test needs a NEW key: the
- * live experiment's control arm is `{}` (NO bump), which is the wrong control
- * for a test where every arm shows a bump. But `resolveV1Bump` returns
- * `bump: false` whenever a key resolves to no running experiment — so shipping a
- * hardcoded new key BEFORE that experiment is started would turn the bump off
- * for every buyer and silently delete a 30%+ take rate.
- *
- * Env-driven, the cutover is: seed the new test RUNNING → set the var → restart.
- * Rollback is unsetting it. Neither step needs a deploy, and merging this branch
- * on its own changes nothing at all.
+ * It stays as a local/QA escape hatch: point a dev box or a test at a different
+ * experiment key without touching code. Setting it in Railway is not part of any
+ * deploy procedure; ordering (seed → deploy) is what makes the cutover safe.
  */
 export function resolveBumpExperimentKey(envValue: string | undefined): string {
   return (envValue ?? '').trim() || V1_BUMP_EXPERIMENT_KEY_DEFAULT;

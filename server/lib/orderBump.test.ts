@@ -433,24 +433,29 @@ describe('bumpProductName — per arm', () => {
 });
 
 describe('resolveBumpExperimentKey (cutover switch)', () => {
-  // The copy test needs a NEW experiment key (the live one's control arm is "no
-  // bump", which is the wrong control for a copy test). Making the key env-driven
-  // means the cutover is a config flip + restart, not a redeploy — and rollback is
-  // the same. Deploying a hardcoded new key BEFORE the new experiment is running
-  // would return bump:false for everyone and silently delete a 30%+ take rate.
-  it('defaults to the live experiment, so merging changes nothing', () => {
-    assert.equal(resolveBumpExperimentKey(undefined), 'v1_order_bump_2026');
-    assert.equal(resolveBumpExperimentKey(''), 'v1_order_bump_2026');
-    assert.equal(resolveBumpExperimentKey('   '), 'v1_order_bump_2026');
+  // The copy test needs a NEW experiment key (the old one's control arm is "no
+  // bump", which is the wrong control for a copy test). The key is a CONSTANT, not
+  // config: no environment sets V1_BUMP_EXPERIMENT_KEY, matching how the original
+  // bump shipped. What makes the cutover safe is ORDER — seed v1_bump_copy_2026
+  // `running` on that environment's DB, then deploy — because resolveV1Bump returns
+  // bump:false for a key with no running experiment. This assertion is the tripwire:
+  // if it ever reads v1_order_bump_2026 again, the deploy is pointing at a concluded
+  // test and every buyer silently gets the old copy.
+  it('defaults to the copy-test experiment on every environment', () => {
+    assert.equal(resolveBumpExperimentKey(undefined), 'v1_bump_copy_2026');
+    assert.equal(resolveBumpExperimentKey(''), 'v1_bump_copy_2026');
+    assert.equal(resolveBumpExperimentKey('   '), 'v1_bump_copy_2026');
   });
 
+  // Deliberately a key that is NOT the default: asserting the default value here
+  // would pass even if the override were dead code.
   it('switches to the key the env names', () => {
-    assert.equal(resolveBumpExperimentKey('v1_bump_copy_2026'), 'v1_bump_copy_2026');
+    assert.equal(resolveBumpExperimentKey('v1_bump_copy_next'), 'v1_bump_copy_next');
   });
 
   it('trims, so a stray space in the env var cannot point at a missing test', () => {
     // A key with whitespace finds no experiment, and no experiment ⇒ no bump at
     // all. Worth trimming rather than trusting the paste.
-    assert.equal(resolveBumpExperimentKey('  v1_bump_copy_2026  '), 'v1_bump_copy_2026');
+    assert.equal(resolveBumpExperimentKey('  v1_bump_copy_next  '), 'v1_bump_copy_next');
   });
 });

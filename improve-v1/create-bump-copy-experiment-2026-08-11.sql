@@ -70,7 +70,18 @@ VALUES (
      {"key": "B", "weight": 50, "payload": {"bump": true, "copy": "A"}}
    ]'::jsonb,
   -- Same pooled scope as v1_order_bump_2026. Frozen at start.
-  '{"funnel": ["v1-palm", "v1-tarot"]}'::jsonb,
+  --
+  -- freezeAssignment: pins each subject to the arm on their FIRST logged exposure.
+  -- Set here rather than left off (as v1_order_bump_2026 was) so the traffic split
+  -- is editable from /admin/experiments while the test runs: the PATCH route 409s a
+  -- weight change on a test that does not pin assignments, because the email bucket
+  -- is sticky but the bucket→variant MAP is not — re-weighting an unpinned test moves
+  -- visitors who have already seen the other arm. With the pin on, a weight change
+  -- only affects NEW subjects, so Joel can rebalance without a deploy or a new key.
+  -- It costs one extra DB read per assign() (i.e. per lead capture). Can be switched
+  -- ON later from the dashboard, never off — but starting with it on avoids the
+  -- window where the weight fields are locked.
+  '{"funnel": ["v1-palm", "v1-tarot"], "freezeAssignment": true}'::jsonb,
   -- 🔴 REPLACE 9999 with the number from step 0 before running this.
   '{"type": "v1_main_funnel", "windowDays": 7, "targetN": 9999}'::jsonb
 );
@@ -95,19 +106,26 @@ COMMIT;
 -- which is the cohort anchor every tally reads.
 --
 -- 🔴 START IT **BEFORE** STEP 3. resolveV1Bump returns bump:false when a key
---    resolves to no RUNNING experiment. Flipping the env var while this row is
+--    resolves to no RUNNING experiment. Deploying the code while this row is
 --    still draft turns the bump off for every buyer.
 
 
--- ── 3. CUT OVER — set the env var, then restart. ────────────────────────────
+-- ── 3. DEPLOY THE CODE. That is the whole cutover. ──────────────────────────
 --
---     V1_BUMP_EXPERIMENT_KEY=v1_bump_copy_2026
+-- shared/orderBump.ts hardcodes V1_BUMP_EXPERIMENT_KEY_DEFAULT = the key above,
+-- the same way v1_order_bump_2026 shipped. NO environment variable is set on any
+-- environment. (V1_BUMP_EXPERIMENT_KEY still exists as a local/QA escape hatch;
+-- it is not part of this procedure.)
 --
--- No deploy needed: shared/orderBump.ts resolveBumpExperimentKey() reads it, and
--- unset ⇒ the old key. This is also the rollback — unset it and restart.
+-- 🔴 ORDER MATTERS, AND IT IS THE ONLY THING THAT MAKES THIS SAFE. Seed+start
+--    (steps 1-2) FIRST, deploy SECOND. The row is inert until the code ships —
+--    nothing reads the key before then — so there is no window either way round.
+--    Deploy first and every checkout loses its bump until step 2 lands.
 --
--- 🔴 ORDER MATTERS. Seed+start (steps 1-2) FIRST, env var SECOND. The other way
---    round leaves a window with no bump on any checkout.
+-- 🔴 EACH ENVIRONMENT NEEDS ITS OWN ROW. Development and Production are separate
+--    databases now (they shared one until 2026-08), so seeding on dev does NOT
+--    carry to prod. Run steps 1-2 again against the production DB before the
+--    Production deploy.
 
 
 -- ── 4. WHAT TO DO WITH THE OLD TEST ─────────────────────────────────────────
@@ -147,12 +165,18 @@ ORDER BY 1;
 
 
 -- ============================================================================
--- 🔙 KILL SWITCH — two of them, in order of preference:
+-- 🔙 KILL SWITCH — set arm B's WEIGHT to 0 in /admin/experiments.
 --
---    1. UNSET V1_BUMP_EXPERIMENT_KEY and restart. Reverts to the old test, so
---       the bump keeps running on today's copy. Nothing is lost.
---    2. Set status → 'paused' in /admin/experiments. Reverts everyone to NO
---       bump within ≤30s — this stops the copy test AND the bump revenue.
+--    Everyone then draws arm A, whose payload is {"bump": true} with no "copy"
+--    key — i.e. today's shipped wording. The bump keeps earning, the variation
+--    stops, no deploy and no DB surgery. Takes effect within ≤30s (CACHE_TTL_MS).
+--    This works because scope.freezeAssignment is set: the PATCH route refuses a
+--    weight edit on a test that does not pin assignments.
+--
+-- 🔴 Do NOT kill with 'paused'. A paused key resolves to no running experiment,
+--    so resolveV1Bump returns bump:false and the order bump disappears from the
+--    funnel entirely — that stops the bump revenue, not just the test. Pause is
+--    the intuitive button and it is the wrong one here.
 --
 -- 🔴 Do NOT kill with 'done' + a winner. A concluded test with a declared winner
 --    KEEPS APPLYING that winner's payload — declaring B would ship the ritual
