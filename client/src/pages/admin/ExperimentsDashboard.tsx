@@ -465,6 +465,7 @@ export default function ExperimentsDashboard() {
       searching: "Searching",
       "twin-flame": "Twin Flame",
       "hidden-intuition": "Hidden / Intuition",
+      "real-feelings": "Real Feelings",
       "self-frame": "Self-Frame",
     };
     return `${f} — ${ANGLE_LABELS[angle] ?? angle}`;

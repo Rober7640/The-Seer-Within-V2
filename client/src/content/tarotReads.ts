@@ -452,6 +452,38 @@ export type TarotHook =
   //     into a finding and licences her to act on a guess.
   | 'cards-hiding-something' // Is he hiding something from me?
   | 'cards-feels-off' // Something feels off — is my intuition right?
+  // Real-feelings hooks (2026-08-12). Operator brief: the Feelings/Commitment FRAME on the
+  // "does he really feel it" topic. All three ask the single hardest thing this funnel
+  // refuses — report a real man's heart back to her — so the family's whole existence is a
+  // sustained refusal to do that while still giving her something worth the click.
+  //
+  // 🔴 DECODE-HIM IN FORM. A real, specific man stands in all three ⇒ every no-verdict guard
+  // stays on and these are NOT self-frame. The standing bans that bind hardest here:
+  //   · NARRATING HIS INTERIOR — "he loves you", "he feels it too", "he is frightened of how
+  //     much he feels". This is `cards-twin-feels`' central ban and it applies to all three.
+  //   · No date, no forecast, no tactic, no diagnosis of him as avoidant/emotionally
+  //     unavailable (the internet's answer to all three of these questions).
+  //
+  // ⚠️ 'cards-feel-about-me' IS A PRONOUN VARIANT of the live 'cards-feels' ("How does he
+  // really feel about YOU?"). Operator call 2026-08-12: ship it as a you/me framing test,
+  // read HOOK-LEVEL against that incumbent, never pooled.
+  //
+  // 🔴🔴 THE COMPARISON IS CONFOUNDED AND THAT MUST BE READ WITH THE RESULT. 'cards-feels' is
+  // seeded 2026-07-28 copy from before the current guardrails — its reads assert his interior
+  // outright ("the warmth you've felt from him is intended", "what he feels is real"). Nothing
+  // written today may do that, so the challenger differs in COPY STANDARD as well as pronoun.
+  // It cannot be fixed by rewriting the incumbent: 'cards-feels' is also the control in the
+  // running twin-flame test (tests/tarot-twin-flame-copy.test.ts), so editing it would break
+  // that comparison too. Treat any difference as "new lander vs old lander", not "me vs you".
+  | 'cards-really-love' // Does he really love me?
+  | 'cards-feel-about-me' // How does he really feel about me?
+  // 🔴 A BINARY whose second branch puts HER PERCEPTION on trial. Both doors are banned:
+  // "he loves you" narrates his interior, and "you imagined it" is the gaslighting
+  // 'cards-feels-off' exists to forbid — here the headline actively invites it. Refuse the
+  // either-or the way 'cards-moved-on' does, and affirm the noticing the way 'cards-feels-off'
+  // does. ⚠️ Opposite VALENCE to that hook and that is what keeps the two distinct:
+  // cards-feels-off = she fears something BAD is true · this = she fears something GOOD is not.
+  | 'cards-imagining-it' // Does he love me, or am I imagining it?
   // Self-frame hooks (read HER, affirm the hopeful yes — like the palm love hooks).
   | 'cards-love-again' // Will I love again?
   | 'cards-soulmate' // When is my soulmate coming?
@@ -729,6 +761,24 @@ export const HIDDEN_INTUITION_HOOKS: TarotHook[] = [
   'cards-feels-off',
 ]
 
+// Real-feelings hooks (2026-08-12). Their OWN angle rather than folded into `decode-him`
+// (which holds the 'cards-feels' incumbent one of them is measured against — merging would
+// put challenger and control in one bucket) or into `commitment` (a different question: that
+// family asks about the FUTURE he will not name, these ask whether the feeling exists now).
+//
+// ⚠️ ANGLE ≠ FRAME. The operator specified the Feelings/Commitment FRAME, which server-side is
+// the DEFAULT decode-him branch in prompts.ts — no new Set to add or keep in sync. The
+// family-specific bans live in the per-hook TENDENCY strings.
+//
+// 🔴 'cards-feels' MUST STAY IN decode-him. It is now the control for TWO tests at once —
+// twin-flame's 'cards-twin-feels' and this family's 'cards-feel-about-me'. Moving it here
+// destroys both comparisons in one edit. Pinned by tests/tarot-real-feelings-copy.test.ts.
+export const REAL_FEELINGS_HOOKS: TarotHook[] = [
+  'cards-really-love',
+  'cards-feel-about-me',
+  'cards-imagining-it',
+]
+
 // The ad ANGLE a hook belongs to. Carried on every tarot PostHog event (see
 // lib/tarotAttribution.ts) so the two decode-him families can be compared as GROUPS
 // without listing each hook: one `angle = trust` filter instead of three hook values,
@@ -809,6 +859,14 @@ export type TarotAngle =
   // than him — which is why it is filed here and not under self-frame, where a card would
   // be free to convict a real man on her behalf.
   | 'hidden-intuition'
+  // 🔴 'real-feelings' is NOT a variant of 'decode-him' and must never be merged into it.
+  // decode-him holds 'cards-feels', the incumbent this family's 'cards-feel-about-me' is
+  // measured against — pool them and the challenger sits in the same bucket as its own
+  // control. It is also NOT 'commitment': that family asks about the FUTURE he will not name,
+  // these ask whether the feeling exists at all. And NOT 'hidden-intuition', though
+  // 'cards-imagining-it' shares that family's affirm-the-noticing move — the valence is
+  // opposite (fearing a good thing is absent, not that a bad thing is present).
+  | 'real-feelings'
   | 'self-frame'
 
 export function angleForHook(hook: TarotHook): TarotAngle {
@@ -829,6 +887,7 @@ export function angleForHook(hook: TarotHook): TarotAngle {
   if (SEARCHING_HOOKS.includes(hook)) return 'searching'
   if (TWIN_FLAME_HOOKS.includes(hook)) return 'twin-flame'
   if (HIDDEN_INTUITION_HOOKS.includes(hook)) return 'hidden-intuition'
+  if (REAL_FEELINGS_HOOKS.includes(hook)) return 'real-feelings'
   return 'decode-him'
 }
 
@@ -885,6 +944,9 @@ export const TAROT_HOOKS: TarotHook[] = [
   'cards-twin-back',
   'cards-hiding-something',
   'cards-feels-off',
+  'cards-really-love',
+  'cards-feel-about-me',
+  'cards-imagining-it',
   'cards-love-again',
   'cards-soulmate',
 ]
@@ -995,6 +1057,14 @@ export const HEADLINES: Record<TarotHook, string> = {
   // JUDGEMENT for a verdict — see the TarotHook union note for why both answers are banned.
   'cards-hiding-something': 'Is he hiding something from me?',
   'cards-feels-off': 'Something feels off — is my intuition right?',
+  // Real-feelings (2026-08-12). The operator's wording, shipped exactly as given.
+  // ⚠️ 'cards-feel-about-me' differs from the live 'cards-feels' by ONE PRONOUN — that one
+  // says "about you" (Evelyn's voice), this says "about me" (hers). That is the variable
+  // under test, and it is why HEADLINES may look near-duplicated here. See the union note
+  // for why the comparison is confounded by copy standard as well.
+  'cards-really-love': 'Does he really love me?',
+  'cards-feel-about-me': 'How does he really feel about me?',
+  'cards-imagining-it': 'Does he love me, or am I imagining it?',
   'cards-love-again': 'Will I love again?',
   'cards-soulmate': 'When is my soulmate coming?',
 }
@@ -1195,6 +1265,20 @@ const TAROT_QUESTION: Record<TarotHook, string> = {
   // creep in" is answerable without characterising him and without her having to justify
   // the feeling to a stranger before it is taken seriously.
   'cards-feels-off': "Before I look closer, tell me… when did it start feeling different — was there a day, or did it just creep in?",
+  // Real-feelings (2026-08-12). ⚠️ None may ask her to BUILD A CASE for or against his
+  // feelings ("what makes you think he does?"), which turns the opener into a request for
+  // evidence about a real man and hands the model a verdict to confirm. Each asks instead
+  // about something only SHE has first-hand.
+  //
+  // ⚠️ Deliberately unlike the live 'cards-feels' opener — the two landers are a paired test
+  // and must not open alike, or the pronoun difference is the only thing left un-confounded.
+  'cards-really-love': "Before I look closer, tell me… what is the thing he does that makes you most sure, and the thing that makes you least?",
+  // Asks about the ASKING, which is this hook's whole lens — she came to a stranger for
+  // something a person who knows her could have said.
+  'cards-feel-about-me': "Before I look closer, tell me… how long have you been trying to work this out on your own?",
+  // 🔴 Never "what makes you think you imagined it" — that adopts the headline's crueller
+  // branch as the premise. Asks for the moment she believed it, which she owns outright.
+  'cards-imagining-it': "Before I look closer, tell me… what was the moment you felt most certain about him — before the doubt arrived?",
   'cards-love-again': "Before I look closer, tell me… what has been weighing on your heart since it happened?",
   'cards-soulmate': "Before I look closer, tell me… what is the love you're still holding out for — the one you haven't given up on?",
 }
@@ -3292,6 +3376,94 @@ const RETURN_MHF: CardSetConfig = {
         "You came to have your sense checked, and up came the card of the one who must move without a verdict in hand.",
         "No card is going to confirm this for you, dear, and it would be an unkindness to pretend one had. The Fool is honest about that much: you are standing where a person stands before they know, and it is genuinely uncomfortable ground. What I will not let pass is the notion that you must earn the right to a straight answer by first assembling proof. You do not. Somewhere along the way, asking plainly and accusing got collapsed into the same act for you, and they were never the same act. The unease you arrived carrying is not evidence against him — I will not let it be used that way. It is also not nothing, and you were not wrong to bring it here.",
         "Let me look closer at what you have been made to prove before you could ask…",
+      ],
+    },
+    // ── REAL FEELINGS (2026-08-12) ────────────────────────────────────────────
+    // Feelings/Commitment frame. All three ask the one thing this funnel most firmly
+    // refuses: report a real man's heart back to her. The family is therefore built as a
+    // sustained refusal that still pays her out — never a confession, never a denial.
+    //
+    // 🔴 FOUR REFUSALS IN ALL NINE READS:
+    //   1. NEVER NARRATE HIS INTERIOR — not "he loves you", not "he doesn't", not "he feels
+    //      it but is frightened". This is 'cards-twin-feels'' central ban.
+    //   2. NEVER DIAGNOSE HIM — avoidant, emotionally unavailable, commitment-phobic. That
+    //      is the internet's answer to all three headlines and it is still a verdict.
+    //   3. NEVER GRADE HER — no naive, foolish, too much, gave too soon.
+    //   4. NEVER a date, forecast or tactic (nothing to send, no pulling back to test him).
+    //
+    // 🔴 The route through is the one honest channel: a feeling reaches anyone else only as
+    // CONDUCT, and she already holds that record. Point at the ledger, never read his heart.
+    //
+    // 'Does he really love me?' — the lens is the word REALLY. She is not asking whether he
+    // has feelings; she is asking whether what she has been given amounts to love. That is a
+    // question about a STANDARD, which can be answered honestly — unlike his interior.
+    'cards-really-love': {
+      a: [
+        "You turned the Magician, dear — the card of what a person sets out to do on purpose.",
+        "You asked whether he really loves you, and up came the card of deliberate action.",
+        "His own heart belongs to him, dear, and no deck ever built grants me a window into it — anyone who claims to know what a man feels is reciting something they made up on the spot. The Magician's business is narrower and far more useful to you. It says that love, where it is real, is a thing done on purpose and then done again: chosen on ordinary days when nothing whatever required it. You do not need me for that record. You have been keeping it a long time, and the word 'really' sitting in your question tells me you have been reading it more honestly than you have let yourself say out loud.",
+        "Let me look closer at the record you have been keeping…",
+      ],
+      b: [
+        "You turned the Hanged Man, dear — the card of the sentence somebody could simply have finished.",
+        "You reached for the card of the thing left hanging, and one has been hanging here a long while.",
+        "I am not going to rule on his heart — not a yes and not a no, because neither would be honest and you would carry whichever I handed you for months. What the Hanged Man puts in front of me instead is the position you have been left standing in. Love is not usually a thing a woman has to work out from evidence; it is usually a thing she has been told plainly, and then told again. That you are here asking a deck rather than remembering being told is not proof of anything about him. It is a fact about where this has left you, and it deserves looking at squarely rather than explaining away.",
+        "Let me look closer at what you have had to work out for yourself…",
+      ],
+      c: [
+        "You turned the Fool, dear — the card of the one who gave before anything had been promised back.",
+        "Your hand went to the card of the leap taken without assurances, which is a fair account of what you did.",
+        "Nothing in this deck reaches inside another person, dear, and the Fool reaches least of all. I am not going to manufacture a confession that would comfort you for one evening and cost you a month. What the Fool holds is about you, and you may never have been told it. You went in without a guarantee. That is not naivety, dear, and it is not a lesson you are meant to extract and carry into the next one — it is a capacity, and a great many people go their whole lives without ever locating it in themselves. Whether he has matched it is a separate question with a separate answer, and it was never a verdict on whether you were right to love first.",
+        "Let me look closer at what you gave before you were sure…",
+      ],
+    },
+    // 'How does he really feel about me?' — ⚠️ the PRONOUN VARIANT of the live 'cards-feels'
+    // ("about YOU"). Its lens is HER VOICE and the position of the asker: she has come to a
+    // stranger for something a person who knows her could have said. The incumbent reads his
+    // feelings; this reads the ASKING. See the union note on the confound.
+    'cards-feel-about-me': {
+      a: [
+        "You turned the Magician, dear — the card of the hands rather than the heart.",
+        "You asked what he feels, and drew the card of what actually gets done about it.",
+        "I want to say something about your question before I say anything at all about the card. You have come to a woman you have never met to find out how a man who knows you feels about you. I am not saying that to shame you, dear — I am saying it because it is information, and it is the one piece nobody ever puts in front of you. The Magician does not report anybody's heart to me, and I would not pass it on if it did. It deals only in what is done, and how consistently it is done. Somewhere in what has been done, or has not been, sits the reason you had to come and ask me instead of simply knowing. You are allowed to want that gap named, dear, rather than quietly working around it for another year.",
+        "Let me look closer at why you had to come and ask…",
+      ],
+      b: [
+        "You turned the Hanged Man, dear — the card of the answer that will not settle.",
+        "It was the card of what refuses to come to rest that your hand found, and that is where this has been living.",
+        "There is one word carrying your entire question, dear, and it is 'really'. It means some answer has already been handed to you and it did not hold — it slid off, or it stopped matching what you could see — and here you are, asking a second time, of a stranger. What he feels I cannot reach and would not guess at. What the Hanged Man says is that an answer which has to be asked for twice has not done its work, and that having to ask again reflects nothing whatever about you. It reflects on what you were told the first time.",
+        "Let me look closer at the answer that would not hold…",
+      ],
+      c: [
+        "You turned the Fool, dear — the card of the one standing at the start with nothing settled.",
+        "You came for a report on somebody's heart and drew the card that has never once carried a guarantee.",
+        "This card carries no confession, dear, and dressing one up for you would lighten tonight at the expense of every night after it. But I do not believe a report was ever really what you came for. Underneath 'how does he feel' there is nearly always a second question — whether to keep going, and how much more of yourself to put in — and that one is yours rather than his, and it does not require his answer first. The Fool will not tell you what is in him. It is quite firm, though, that you are allowed to decide what you need before you ever find out.",
+        "Let me look closer at the question underneath the question…",
+      ],
+    },
+    // 'Does he love me, or am I imagining it?' — a BINARY whose second branch puts HER
+    // PERCEPTION on trial. BOTH doors are shut: "he loves you" narrates his interior, and
+    // "you imagined it" is the gaslighting 'cards-feels-off' forbids — and here the headline
+    // itself invites it. Refuse the either-or as 'cards-moved-on' does; affirm the noticing
+    // as 'cards-feels-off' does; never claim a feeling is proof of anything.
+    'cards-imagining-it': {
+      a: [
+        "You turned the Magician, dear — the card of the thing that genuinely got made, whatever either of you calls it.",
+        "You asked whether you invented all this, and drew the card of what was actually built.",
+        "Two answers are available to me here, dear, and I am handing you neither one. What sits inside him is his to speak, and I intend to stay well out of it. Nor am I going to suggest that you conjured the thing yourself, because that is the crueller of the two and it is almost never true. Something happened between the pair of you. It had a shape, it took up real time, and you were present for every hour of it. The Magician deals in what was made rather than in who meant what by it, and whatever it turns out to have meant to him, it was not assembled out of thin air by a woman sitting on her own.",
+        "Let me look closer at what was actually built between you…",
+      ],
+      b: [
+        "You turned the Hanged Man, dear — the card of the question that has been asked the wrong way round.",
+        "It was the card of the reversal your hand found, and there is one sitting inside what you asked me.",
+        "You have offered me two doors, dear, and I am walking through neither of them: not the one where he adores you, and not the one where you assembled all of this by yourself. The choice itself is doing you harm. Those are not the only two things that can be true, dear, and being handed only two is how a woman ends up doubting her own eyes. A thing can be real and unspoken. It can be real and not enough. It can be real to one person at one size and to the other at quite another. The Hanged Man's entire business is turning a question over, and turned over, yours stops being about his heart and becomes about why you were left with only two doors.",
+        "Let me look closer at why it came down to two doors…",
+      ],
+      c: [
+        "You turned the Fool, dear — the card of the one who trusted what she saw.",
+        "You came asking me to rule on your own eyes, and drew the card of the woman who went ahead and believed.",
+        "I am not going to hand you the sentence you have braced for, dear — that none of it was there and you constructed the whole of it yourself. Women are told that far too easily and it does damage that outlasts the man. Nor will I swing the other way and promise you that anything felt strongly enough must therefore be returned in full; a feeling is not evidence, however large it is, and telling you otherwise would be flattery rather than help. The Fool sits with the harder and truer thing. You saw something, and you acted on it, and that was not foolish of you. What it came to on his side is still open — and you are allowed to want it said aloud rather than deduced.",
+        "Let me look closer at what you saw before the doubt arrived…",
       ],
     },
   },

@@ -86,7 +86,7 @@ verified 9/9 identical. This matches how `cards-honest` already behaves across t
 
 ### 🔑 The `angle` property — comparing hook FAMILIES
 
-Every tarot PostHog event carries `angle`. Eighteen families as of 2026-08-12:
+Every tarot PostHog event carries `angle`. Nineteen families as of 2026-08-12:
 
 | `angle` | Hooks | Added |
 |---|---|---|
@@ -107,6 +107,7 @@ Every tarot PostHog event carries `angle`. Eighteen families as of 2026-08-12:
 | `searching` | stop-searching · end-up-alone · given-up | 2026-08-11 |
 | `twin-flame` | twin-ready · twin-feels · twin-back | 2026-08-11 |
 | `hidden-intuition` | hiding-something · feels-off | 2026-08-12 |
+| `real-feelings` | really-love · feel-about-me · imagining-it | 2026-08-12 |
 | `self-frame` | love-again · soulmate | seeded |
 
 > ⚠️ `fidelity` is the only family with **four** hooks besides `decode-him`. It is also the
@@ -830,6 +831,67 @@ the thing she stops short of saying, and about the *shape* of the change.
 Guarded by `tests/tarot-hidden-intuition-copy.test.ts` (21 tests, clause-level negation-aware),
 which also pins zero shared 6-word runs in beat 3 against every other hook on the deck.
 
+## Real-feelings hooks — 3 face-down landers (2026-08-12)
+
+Operator brief: the **Feelings/Commitment FRAME** on the "does he really feel it" topic.
+Face-down `return-mhf` only. Clean URLs, no `&deck=`, Version C ads.
+
+| Headline | Hook | URL |
+|---|---|---|
+| Does he really love me? | `cards-really-love` | `/fb-tarot/c?hook=cards-really-love` |
+| How does he really feel about me? | `cards-feel-about-me` | `/fb-tarot/c?hook=cards-feel-about-me` |
+| Does he love me, or am I imagining it? | `cards-imagining-it` | `/fb-tarot/c?hook=cards-imagining-it` |
+
+### ⭐⭐ This family asks the one thing the funnel most firmly refuses
+
+Every other angle can answer its headline somehow. These three ask Evelyn to **report a real
+man's heart back to her**, which cannot be done honestly — so the whole set is built as a
+sustained refusal that still has to pay her out. The route through is the only channel a
+feeling actually has: **CONDUCT**, which she already observes. Point at her own record; never
+read his interior.
+
+### 🔴🔴 The `cards-feel-about-me` pairing is CONFOUNDED — read the result accordingly
+
+`cards-feel-about-me` differs from the live `cards-feels` by **one pronoun** — "about **me**"
+vs "about **you**" — and the operator commissioned it as a you/me framing test (2026-08-12),
+read HOOK-LEVEL against that incumbent, never pooled.
+
+⚠️ **But the two also differ in COPY STANDARD, and that cannot be fixed.** `cards-feels` is
+seeded 2026-07-28 copy from before the current guardrails; its reads assert his interior
+outright — *"the warmth you've felt from him is intended"*, *"what he feels is real"*. Nothing
+written today may do that. So any difference in the numbers is **"new lander vs old lander"**
+at least as much as "me vs you".
+
+🔴 **It cannot be fixed by rewriting the incumbent.** `cards-feels` is ALSO the control in the
+running twin-flame test (`cards-twin-feels`), so editing its copy would break that comparison
+too. `cards-feels` is now a control for **two tests at once** — a test pins it in `decode-him`,
+and a second test asserts the incumbent still carries its pre-guardrail wording, so that if it
+is ever brought up to standard the failure forces both pairings to be re-evaluated.
+
+### 🔴 Four refusals across all nine reads
+
+1. **NEVER narrate his interior** — not "he loves you", not "he doesn't", and not the softened
+   dodge "he loves you but is frightened to say it". This is `cards-twin-feels`' central ban,
+   here at its sharpest.
+2. **NEVER diagnose him** — avoidant, emotionally unavailable, commitment-phobic. That is the
+   internet's stock answer to all three headlines and it is still a verdict on a real person.
+3. **NEVER grade her for having loved first** — no naive, foolish, too much, too soon, and no
+   "lesson" framing. She arrives half-expecting to be told off for it.
+4. **On `cards-imagining-it`, BOTH doors are shut.** "He loves you" narrates his interior;
+   "you imagined it" is the gaslighting `cards-feels-off` exists to forbid — except that here
+   the headline actively invites it. The read refuses the either-or the way `cards-moved-on`
+   does, and affirms the noticing the way `cards-feels-off` does.
+
+⚠️ **`cards-imagining-it` vs `cards-feels-off` — opposite VALENCE is what keeps them distinct.**
+`cards-feels-off` = she fears something **bad** is true. This = she fears something **good** is
+not. Same faculty question, opposite direction.
+
+Guarded by `tests/tarot-real-feelings-copy.test.ts` (24 tests, clause-level negation-aware).
+⭐ It carries a **restatement exemption** no sibling guard needed: beat 2 routinely repeats her
+own question back ("You asked whether he really loves you") and `cards-imagining-it` must name
+both doors in order to refuse them — restating a question is not asserting its answer. Safe
+because the sweep is clause-level, so a real assertion after the restatement is still caught.
+
 ## Concepts
 
 | # | Deck id | Facing | Cards (A/B/C) | Options | Status | Notes |
@@ -894,6 +956,9 @@ which also pins zero shared 6-word runs in beat 3 against every other hook on th
 | `cards-twin-back` *(twin-flame)* | Is my twin flame coming back to me? | ⬜ DRAFT (2026-08-11) — ⭐ vs `cards-ever-back`; 🔴 the SEPARATION-PHASE ban (an absence is not progress toward a reunion) |
 | `cards-hiding-something` *(hidden-intuition)* | Is he hiding something from me? | ⬜ DRAFT (2026-08-12) — 🔴🔴 never name the CONTENTS (invention manufactures a crisis in a live relationship); 🔴🔴 the TACTIC ban is sharpest here — the headline supplies the move (check his phone) and we never do |
 | `cards-feels-off` *(hidden-intuition)* | Something feels off — is my intuition right? | ⬜ DRAFT (2026-08-12) — 🔴🔴 the only headline on the funnel that submits HER JUDGEMENT for a verdict. All three answers harm: "yes" convicts him by proxy, "no" gaslights her, "intuition is never wrong" licences her to act on a guess. SPLIT the question — affirm the noticing, leave the meaning open |
+| `cards-really-love` *(real-feelings)* | Does he really love me? | ⬜ DRAFT (2026-08-12) — 🔴 never state he loves her OR that he does not. Reads the word "really" as a question about a STANDARD, and points at the record of conduct she already keeps |
+| `cards-feel-about-me` *(real-feelings)* | How does he really feel about me? | ⬜ DRAFT (2026-08-12) — ⚠️ PRONOUN VARIANT of the live `cards-feels` ("about you"). 🔴🔴 the pairing is CONFOUNDED — see the section below. Reads the ASKING, not his heart |
+| `cards-imagining-it` *(real-feelings)* | Does he love me, or am I imagining it? | ⬜ DRAFT (2026-08-12) — 🔴🔴 BOTH doors banned: "he loves you" narrates his interior, "you imagined it" is the gaslighting `cards-feels-off` forbids. Refuses the either-or |
 | `cards-love-again` *(self-frame)* | Will I love again? | ⬜ draft — 🔴 **no reads on either FACE-DOWN deck**, so a clean URL silently falls back to `cards-honest`/`decode-him`. Only works with an explicit `&deck=arcana-mfh` |
 | `cards-soulmate` *(self-frame)* | When is my soulmate coming? | ⬜ draft (2026-07-27, from `ZN_Tarot_Rio 8.png` = arcana-eef cards; reads on arcana-eef + arcana-mfh; answers "when" as a leaning, never a date) |
 
