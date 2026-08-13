@@ -33,6 +33,7 @@ import {
   scopeVariantsToSign,
   DEFAULT_UPSELL1_CENTS,
   selectVariant,
+  storedVariantIsServable,
   type PriceVariant,
 } from './priceVariantPool';
 
@@ -423,5 +424,146 @@ describe('scopeVariantsToFunnel (unchanged behaviour — regression guard)', () 
   it('falls back to the full pool when no variant matches the funnel', () => {
     const vs: PriceVariant[] = [{ id: '35', weight: 1, priceCents: 3500, downsellCents: 2500 }];
     assert.deepEqual(scopeVariantsToFunnel(vs, 'v1-unknown').map((v) => v.id), ['35']);
+  });
+});
+
+
+describe('storedVariantIsServable — the $57.77 bug (2026-08-11)', () => {
+  // dcwheeler51@gmail.com drew the ROOT `45` arm on 2026-05-25 while the $35/$45
+  // test was live, came back through /fb-tarot on 2026-08-10, and was handed that
+  // stored $45 on a funnel that has only ever charged $35. Plus the $12.77 order
+  // bump = $57.77. 29 more buyers in the same 30 days paid $45–$59 the same way.
+  //
+  // The pool used here is the system_config row EXACTLY as it was live in
+  // production on the day of the bug (read 2026-08-11; row last edited
+  // 2026-07-28). The root `45` / `59` / `55-35` and the palm `35_palm` /
+  // `45_palm` / `55-35_palm` arms are all parked at weight 0 — that is what "we
+  // stopped that test long ago" looks like in the config — while /fb, /fb2 and
+  // /gdn run real 50/50 splits and palm runs one arm. Both halves of the rule are
+  // therefore exercised against traffic as it actually was, not a hypothetical.
+  const LIVE_PROD_POOL_2026_08_11 = JSON.stringify({
+    variants: [
+      { id: '35', weight: 1, priceCents: 3500, downsellCents: 2500 },
+      { id: '45', weight: 0, priceCents: 4500, downsellCents: 3200 },
+      { id: '59', weight: 0, priceCents: 5900, downsellCents: 4200 },
+      { id: '55-35', weight: 0, priceCents: 5500, downsellCents: 3500 },
+      { id: '45_fb', funnel: 'v1-fb', weight: 1, priceCents: 4500, upsell1Cents: 4700, downsellCents: 3200 },
+      { id: '35_fb', funnel: 'v1-fb', weight: 1, priceCents: 3500, upsell1Cents: 3700, downsellCents: 2500 },
+      { id: '35_fb2', funnel: 'v1-fb2', weight: 1, priceCents: 3500, upsell1Cents: 3700, downsellCents: 2500 },
+      { id: '45_fb2', funnel: 'v1-fb2', weight: 1, priceCents: 4500, upsell1Cents: 4700, downsellCents: 3200 },
+      { id: '35_gdn', funnel: 'v1-gdn', weight: 1, priceCents: 3500, upsell1Cents: 3700, downsellCents: 2500 },
+      { id: '45_gdn', funnel: 'v1-gdn', weight: 1, priceCents: 4500, upsell1Cents: 4700, downsellCents: 3200 },
+      { id: '35_palm', funnel: 'v1-palm', weight: 0, priceCents: 3500, upsell1Cents: 3700, downsellCents: 2500 },
+      { id: '35_palm_u47', funnel: 'v1-palm', weight: 9, priceCents: 3500, upsell1Cents: 4700, downsellCents: 2500 },
+      { id: '45_palm', funnel: 'v1-palm', weight: 0, priceCents: 4500, upsell1Cents: 4700, downsellCents: 3200 },
+      { id: '55-35_palm', signs: ['thumb'], funnel: 'v1-palm', weight: 0, priceCents: 5500, upsell1Cents: 4700, downsellCents: 3500 },
+    ],
+  });
+  const p = () => parseVariantPool(LIVE_PROD_POOL_2026_08_11).variants;
+
+  it('a retired ROOT arm is no longer served on the root funnel — "we stopped that test"', () => {
+    // The literal complaint: the $35/$45 test was switched off months ago, and a
+    // returning visitor was still being charged by it. Retired ⇒ re-drawn.
+    for (const id of ['45', '59', '55-35']) {
+      assert.equal(storedVariantIsServable(id, p(), null), false, `${id} is parked at weight 0`);
+    }
+    assert.equal(storedVariantIsServable('35', p(), null), true, 'the live root control stays sticky');
+  });
+
+  it('a retired PALM arm is no longer served on /fb-palm — nobody is re-shown $55', () => {
+    for (const id of ['55-35_palm', '45_palm', '35_palm']) {
+      assert.equal(storedVariantIsServable(id, p(), 'v1-palm', 'thumb'), false);
+    }
+    assert.equal(storedVariantIsServable('35_palm_u47', p(), 'v1-palm', 'thumb'), true);
+    // …on every sign, not just thumb (the sliding close was thumb-scoped).
+    for (const sign of OTHER_SIGNS) {
+      assert.equal(storedVariantIsServable('55-35_palm', p(), 'v1-palm', sign), false);
+      assert.equal(storedVariantIsServable('35_palm_u47', p(), 'v1-palm', sign), true);
+    }
+  });
+
+  it('no funnel serves ANOTHER funnel’s price — every live arm, both directions', () => {
+    const byFunnel: Record<string, string[]> = {
+      'v1-fb': ['35_fb', '45_fb'],
+      'v1-fb2': ['35_fb2', '45_fb2'],
+      'v1-gdn': ['35_gdn', '45_gdn'],
+      'v1-palm': ['35_palm_u47'],
+    };
+    for (const [owner, ids] of Object.entries(byFunnel)) {
+      for (const id of ids) {
+        assert.equal(storedVariantIsServable(id, p(), owner, 'thumb'), true, `${id} must serve ${owner}`);
+        for (const other of Object.keys(byFunnel)) {
+          if (other === owner) continue;
+          assert.equal(
+            storedVariantIsServable(id, p(), other, 'thumb'), false,
+            `${id} must NOT serve ${other}`,
+          );
+        }
+        assert.equal(storedVariantIsServable(id, p(), null), false, `${id} must NOT serve base V1`);
+      }
+    }
+    // …and the root arms never leak into an ad funnel. This is the $57.77 charge:
+    // '45' (root, May) meeting a /fb-tarot visit in August.
+    for (const id of ['35', '45', '59']) {
+      for (const f of ['v1-fb', 'v1-fb2', 'v1-gdn', 'v1-palm']) {
+        assert.equal(storedVariantIsServable(id, p(), f, 'thumb'), false, `${id} must NOT serve ${f}`);
+      }
+    }
+  });
+
+  it('STICKINESS IS PRESERVED inside a live split — no price moves under a customer', () => {
+    // The reason the guard exists at all. On /fb both arms are drawing, so
+    // whichever one she was assigned is still servable and is handed straight
+    // back — she can never be quoted $45 and then charged $35.
+    for (const id of ['35_fb', '45_fb']) {
+      assert.equal(storedVariantIsServable(id, p(), 'v1-fb'), true);
+    }
+    for (const id of ['35_gdn', '45_gdn']) {
+      assert.equal(storedVariantIsServable(id, p(), 'v1-gdn'), true);
+    }
+  });
+
+  it('IDEMPOTENT: whatever selectVariant draws is servable on the very next call', () => {
+    // The property that stops a returning visitor being re-rolled on every page
+    // load. The guard and the draw MUST read the same eligible set.
+    for (const [funnel, sign] of [
+      [null, null], ['v1-fb', null], ['v1-fb2', null], ['v1-gdn', null],
+      ['v1-palm', 'thumb'], ['v1-palm', 'hand-size'], ['v1-palm', null],
+    ] as const) {
+      for (let i = 0; i < 200; i++) {
+        const drawn = selectVariant(p(), funnel, sign);
+        assert.equal(
+          storedVariantIsServable(drawn.id, p(), funnel, sign), true,
+          `${drawn.id} was drawn for ${funnel ?? 'root'}/${sign ?? '-'} but is not servable there`,
+        );
+      }
+    }
+  });
+
+  it('an all-zero eligible pool still sticks (mirrors pickWeighted’s fallback) — no flapping', () => {
+    const vs: PriceVariant[] = [
+      { id: 'a', weight: 0, priceCents: 3500, downsellCents: 2500 },
+      { id: 'b', weight: 0, priceCents: 4500, downsellCents: 3200 },
+    ];
+    assert.equal(storedVariantIsServable('a', vs, null), true);
+    assert.equal(storedVariantIsServable('b', vs, null), true);
+    assert.equal(storedVariantIsServable('c', vs, null), false);
+  });
+
+  it('no stored variant ⇒ false, so a fresh row always draws', () => {
+    assert.equal(storedVariantIsServable(null, p(), 'v1-tarot'), false);
+    assert.equal(storedVariantIsServable(undefined, p(), null), false);
+    assert.equal(storedVariantIsServable('', p(), 'v1-palm'), false);
+  });
+
+  it('/fb-tarot is NOT decided here — it is a FIXED price, checked against its own id', () => {
+    // 35_tarot lives in priceVariant.FIXED_FUNNEL_PRICES, not in system_config,
+    // so a pool lookup can never find it. assignVariantIfMissing therefore
+    // compares the stored id against the fixed id for these funnels — this test
+    // pins WHY, so nobody "fixes" that branch by routing tarot through the pool
+    // (which would make every tarot visitor's stored price unservable, and
+    // re-stamp the row on every single lead capture).
+    assert.equal(storedVariantIsServable('35_tarot', p(), 'v1-tarot'), false);
+    assert.equal(p().some((v) => v.funnel === 'v1-tarot'), false, 'tarot must have no pool arm');
   });
 });

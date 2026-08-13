@@ -299,6 +299,13 @@ export default function ChatPage() {
               onAccept={() => answerBump(true)}
               onDecline={() => answerBump(false)}
               mainDollars={chat.userData.priceDollars ?? 35}
+              // COPY SPLIT TEST (2026-08-11) — assigned at lead capture and
+              // re-resolved server-side at checkout. Absent ⇒ today's copy.
+              variant={chat.userData.bumpCopy ?? 'control'}
+              // `?? undefined` because userData carries null for "not captured
+              // yet" — variation A's copy branches on absence, and null would
+              // otherwise be rendered into the greeting.
+              firstName={chat.userData.firstName ?? undefined}
             />
           )}
 

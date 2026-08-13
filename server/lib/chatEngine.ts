@@ -21,6 +21,7 @@ import { replayPendingReply } from './liveThreadReplay';
 import { getPromoBalance, getSpendableCoins } from './promoWallet';
 import { checkAndLogSafety } from './universalSafety';
 import { isRefundRequest, REFUND_TEMPLATE } from './refundDeflection';
+import { getMaxSessionSeconds, SESSION_LIMIT_TEMPLATE } from './sessionLimits';
 import {
   loadPersonaIntentConfig,
   detectIntent,
@@ -1586,6 +1587,68 @@ export async function sendMessage(
     });
     await endChatSession(sessionId);
     throw new Error('OUT_OF_CREDITS');
+  }
+
+  // ── Step 2b: Session wall-clock limit (AFTER the credit check, BEFORE any API call) ──
+  // Past MAX_BILLABLE_SECONDS the meter stops but the session does not, so the balance
+  // never reaches zero and nothing else here ever closes the chat. See sessionLimits.ts.
+  // Placed after the credit check so an out-of-coins customer still gets the existing
+  // 402 (the actionable one), and before loadPersonaConfig so a session over the limit
+  // costs us nothing.
+  const maxSessionSeconds = await getMaxSessionSeconds();
+  if (maxSessionSeconds > 0) {
+    // Elapsed is computed in SQL, never in JS. started_at is written UTC-naive
+    // (NOW() AT TIME ZONE 'UTC'); comparing it to a JS Date is the exact timezone-drift
+    // trap behind the 2026-07 dead-air billing incident.
+    const elapsedRow = await db.execute(
+      sql`SELECT EXTRACT(EPOCH FROM (NOW() - (started_at AT TIME ZONE 'UTC')))::int AS elapsed
+          FROM chat_sessions WHERE id = ${sessionId}`
+    );
+    const sessionElapsed = Number((elapsedRow.rows[0] as { elapsed: number } | undefined)?.elapsed ?? 0);
+
+    if (sessionElapsed >= maxSessionSeconds) {
+      logger.info('SESSION_TIME_LIMIT: closing session at wall-clock limit', {
+        sessionId,
+        userId,
+        sessionElapsed,
+        maxSessionSeconds,
+      });
+
+      // Persist the turn so the transcript shows why the reading closed. Mirrors the
+      // refund short-circuit above: canned copy, no Anthropic call, no coins spent.
+      await db.insert(chatMessages).values({
+        sessionId,
+        userId,
+        role: 'user',
+        content: userMessage,
+      });
+      await db.insert(chatMessages).values({
+        sessionId,
+        userId,
+        role: 'assistant',
+        content: SESSION_LIMIT_TEMPLATE,
+      });
+
+      // Final billing happens here and is still clamped by MAX_BILLABLE_SECONDS, so
+      // closing the session can never charge more than the 30 minutes already capped.
+      await endChatSession(sessionId);
+
+      const limitUser = await db
+        .select({ coinBalance: users.coinBalance })
+        .from(users)
+        .where(eq(users.id, userId))
+        .limit(1);
+      const spendableLimit = await getSpendableCoins(userId, session[0].personaId, limitUser[0]?.coinBalance || 0);
+
+      return {
+        sessionId,
+        message: SESSION_LIMIT_TEMPLATE,
+        topic: null,
+        creditsRemaining: spendableLimit,
+        sessionActive: false,
+        blocked: true,
+      };
+    }
   }
 
   const personaConfig = await loadPersonaConfig(session[0].personaId);

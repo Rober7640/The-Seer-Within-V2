@@ -86,7 +86,7 @@ verified 9/9 identical. This matches how `cards-honest` already behaves across t
 
 ### 🔑 The `angle` property — comparing hook FAMILIES
 
-Every tarot PostHog event carries `angle`. Twelve families as of 2026-08-07:
+Every tarot PostHog event carries `angle`. Nineteen families as of 2026-08-12:
 
 | `angle` | Hooks | Added |
 |---|---|---|
@@ -102,13 +102,31 @@ Every tarot PostHog event carries `angle`. Twelve families as of 2026-08-07:
 | `soulmate-where` | where-soulmate · soulmate-closer · not-found-yet | 2026-08-07 |
 | `loneliness` | alone-forever · meant-alone · someone-for-me | 2026-08-07 |
 | `fidelity` | someone-else · talking-someone · faithful · loyal | 2026-08-07 |
+| `missing-him` | stop-hurting · stop-missing · still-miss-him | 2026-08-10 |
+| `why-he-left` | left-without-word · ghosted · not-enough | 2026-08-11 |
+| `searching` | stop-searching · end-up-alone · given-up | 2026-08-11 |
+| `twin-flame` | twin-ready · twin-feels · twin-back | 2026-08-11 |
+| `hidden-intuition` | hiding-something · feels-off | 2026-08-12 |
+| `real-feelings` | really-love · feel-about-me · imagining-it | 2026-08-12 |
 | `self-frame` | love-again · soulmate | seeded |
 
 > ⚠️ `fidelity` is the only family with **four** hooks besides `decode-him`. It is also the
 > only one commissioned for **compliance** rather than a new wound — see its section below.
 
+> ⚠️ `hidden-intuition` is the only family with **two**. Only two headlines were commissioned
+> (operator, 2026-08-12) and the pair is deliberate — a padded third would be the one lander
+> nobody asked for. `HIDDEN_INTUITION_HOOKS.length` is pinned at 2 by its guard test.
+
 > `pulling-away` and `reconciliation` were live from 08-05/08-06 but had never been added
 > to this table or to the admin `ANGLE_LABELS` map; both backfilled 2026-08-07.
+
+> 🔴 THE SAME DEFECT RECURRED, TWICE MORE. `missing-him`, `why-he-left`, `searching` and
+> `twin-flame` all shipped without a row here, and `searching` + `twin-flame` also shipped
+> without an admin `ANGLE_LABELS` entry — so both had been rendering in the dashboard as raw
+> lowercase slugs since 2026-08-11. All four backfilled 2026-08-12 alongside
+> `hidden-intuition`. **Adding the angle to `ANGLE_LABELS` is edit point 5 of 6 and is the
+> one that keeps getting missed** — the lander works perfectly without it, so nothing fails
+> loudly; only the dashboard reads wrong, and only when somebody looks.
 
 Derived by `angleForHook()` from the per-family arrays, so a new hook categorises itself.
 🔴 Miss the array and the hook silently reports `decode-him` and disappears as a family in
@@ -638,6 +656,242 @@ an object, a trigger), which is also the material the read actually needs.
 non-blocking by design (`safe: true` + `softCrisisNote`), so it adds care rather than derailing
 the funnel — but it is worth watching in the transcripts once spend starts.
 
+## Why-he-left hooks — 3 face-down landers (2026-08-11)
+
+Own `why-he-left` angle. Operator category: *"Reunion/Return"* · topic: *"Why he left / ghosting"*
+— and **the topic is the angle, not the category**, for the same reason `missing-him` was not
+filed under its "Healing/Moving-on" category. Face-down `return-mhf` only, Version C, clean
+URLs, no new art.
+
+| Headline | Hook | URL |
+|---|---|---|
+| Why did he leave without a word? | `cards-left-without-word` | `/fb-tarot/c?hook=cards-left-without-word` |
+| Why did he ghost me? | `cards-ghosted` | `/fb-tarot/c?hook=cards-ghosted` |
+| Was I not enough for him to stay? | `cards-not-enough` | `/fb-tarot/c?hook=cards-not-enough` |
+
+### 🔴🔴 The MOTIVE ban is the commission — and no live family carries it
+
+All three headlines ask **why a man did something he never explained**. The shared decode-him
+guard (`server/lib/prompts.ts`) names exactly four forbidden claims:
+
+> *Never declare he is lying, faithful, involved with someone else, or coming back as a fact.*
+
+**"He left because X" is not among them.** *He was overwhelmed* · *he was a coward* · *he never
+valued you* are all flat verdicts on a man's interior and every one would pass the shared guard
+untouched. **The refusal is the reading**, and the reads say it out loud rather than merely
+omitting it — *"I will not tell you what was in his head… anyone who names it for you is filling
+in a blank to make you feel steadier."*
+
+⚠️ **The DIAGNOSIS is banned separately**, because it is the motive wearing a clinical coat and
+is the single most available answer on the internet to "why did he ghost me": narcissist,
+avoidant, commitment-phobe, emotionally unavailable, breadcrumbing. It reads as expertise rather
+than as a guess, which is precisely what makes it persuasive and therefore worse.
+
+### 🔴🔴 NEVER PRESUME HE CHOSE IT — she may be bereaved
+
+A man who falls silent may have **died, been taken ill, or be in trouble**. *"Ghosted"* is HER
+account of the silence, not a fact in evidence, and none of the three headlines establishes that
+he made a decision.
+
+So the reads work with **the silence itself**, which is the only thing actually known — the word
+*quiet* does the load-bearing work, and nothing in the nine reads, three openers or three context
+lines names a decision, a walking-out, a death or a body. The furthest any read goes is *"a man
+is no longer in her life"*.
+
+⚠️ Same consequence as `missing-him`: **a mediumship ban on an angle with no frame to carry it.**
+This family runs under **decode-him**, which bans none of it, and `universalSafety.ts` screens
+none of it either. Written out per-hook in `TAROT_HOOK_TENDENCY` and asserted in the guard file.
+
+> 📌 No sixth frame was added — deliberately, same call as 08-10. The frame ternary in
+> `buildTarotReflectPrompt` is documented as being at its limit and the lookup refactor is worth
+> making on its own. The cost is that **all five of this family's bans live in three tendency
+> strings**, which is why the guard file asserts them string-by-string on the generated prompt.
+
+### 🔴🔴 No TACTIC, in either direction
+
+*"Why did he ghost me"* has the most saturated wrong answer on the internet attached to it —
+reach out once more, send this text, check whether he read it. Banned. **And so is its mirror**:
+telling her he is gone for good, that she should block him, or that it is time to accept it, is a
+**prediction wearing the clothes of advice**. Neither pole is available to the reads.
+
+### 🔴🔴 `cards-not-enough` — the heaviest headline on the funnel to date
+
+It is the **first headline that puts her own worth in the question** and asks a stranger to rule
+on it. The trap is that the kind answer is also a banned one:
+
+| Answer | Why it is refused |
+|---|---|
+| *"You were not enough"* | unthinkable |
+| *"You **were** enough"* | kind — and still a claim about **why he went**, which is the motive ban |
+
+The way through is to **refuse the comparison rather than score it**: no measurement was ever
+taken, so there is no result on her to read. *"The scales in your question do not exist… staying
+is not a mark awarded to whoever earns it."* Nothing may enumerate what she lacked, nothing may
+land as *you gave too much* / *you lost yourself* (verdicts on her wearing sympathy), and nothing
+may coach her self-worth.
+
+⚠️ **Expect this lander to trip the soft-crisis path more than any other on the funnel.**
+`SOFT_CRISIS_PATTERNS` catches `i feel worthless / empty / broken` — and this headline hands her
+that vocabulary before she types a word. The path is non-blocking by design (`safe: true` +
+`softCrisisNote`) so it adds care rather than derailing, but it is worth watching in transcripts
+once spend starts.
+
+### Three separate findings
+
+| Hook | Finding |
+|---|---|
+| `cards-left-without-word` | the silence is **not a coded message she failed to decode** — it carries no content, and what exhausts her is composing his half of an open conversation by herself |
+| `cards-ghosted` | she was **made the investigator of her own injury**, with nothing admissible to work from, so failing to reach a verdict is not a failure of intelligence — the job was never solvable |
+| `cards-not-enough` | his going was **not a measurement**, so it returned no result about her — the error is in the setup of the question, not in her |
+
+### 🔴 Openers ask for first-hand detail, never for a theory
+
+She has been guessing for weeks. An opener inviting **one more theory** would hand the model a
+motive in her own words to then confirm — the exact banned thing. Each asks instead about
+something only she has: the last ordinary exchange, when she knew it was silence, what she was
+giving in those last weeks.
+
+⚠️ Held apart from `reunion` (which asks forwards) and from `pulling-away` (**the only family
+about a man who is still there** — here there is no ongoing behaviour to read at all). Guard pins
+zero shared 6-word runs in beat 3 against both.
+
+## Hidden / intuition hooks — 2 face-down landers (2026-08-12)
+
+Operator brief: the **Trust/Honesty FRAME** applied to a topic neither live family covers.
+Face-down `return-mhf` only. Clean URLs, no `&deck=`, Version C ads.
+
+| Headline | Hook | URL |
+|---|---|---|
+| Is he hiding something from me? | `cards-hiding-something` | `/fb-tarot/c?hook=cards-hiding-something` |
+| Something feels off — is my intuition right? | `cards-feels-off` | `/fb-tarot/c?hook=cards-feels-off` |
+
+### ⚠️ TWO landers, not three — deliberate
+
+Every family before this shipped three. Only two headlines were commissioned. A third written
+in-house would be the one lander nobody asked for, so the count is **pinned at 2** by
+`tests/tarot-hidden-intuition-copy.test.ts`. If a third is ever added it should arrive as a
+headline from the operator, not from us.
+
+### 🔑 Why its own angle, and how it differs from `trust` and `honesty`
+
+The distinction is real and it is the reason this is not folded into either:
+
+| Family | The question |
+|---|---|
+| `trust` | who he **IS** — 'Is he really who he says he is?' |
+| `honesty` | a specific untruth **TOLD** — 'Am I being lied to?' |
+| `hidden-intuition` | an **OMISSION**, plus her own reading of it. **Nobody has been caught in anything.** |
+
+The honesty landers have been running since 2026-08-03; folding a new topic into them would
+retroactively mix two commissions inside one set of numbers — the same reason `honesty` was not
+folded into `trust` when it shipped.
+
+### ⚠️ ANGLE ≠ FRAME (as with `searching`)
+
+The angle label is a **reporting** device. The operator specified the Trust/Honesty **frame**, and
+server-side that is the **DEFAULT decode-him branch** in `prompts.ts` (tendency, never a verdict) —
+so there is **no new `Set` to add and none to keep in sync**. The family-specific bans live in the
+per-hook `TAROT_HOOK_TENDENCY` strings, which is how every family since `healing` has been built.
+
+🔴 **`cards-feels-off` reads as though it is about her, and it is not.** It is her reading of a
+specific man. Moving it to any no-man frame (`self-frame`, `loneliness`, `soulmate-where`,
+`after-loss`) strips the verdict guard, and a card would then be free to certify her suspicion
+about a real person. Pinned by the guard test.
+
+### 🔴 Four bans, two of which exist nowhere else on the funnel
+
+1. **THE VERDICT** — never that he IS hiding something, never that he is not. The first convicts a
+   real man from a card; the second tells her what she noticed was never there.
+2. **THE CONTENTS** — never name what is behind the gap (another woman, money, a past, a feeling).
+   Every answer is invention, and here invention **manufactures a crisis inside a relationship that
+   is still running**. This is `searching`'s no-CAUSE ban pointed at a man instead of at her life.
+3. **THE TACTIC** *(no precedent at this sharpness)* — the headline supplies the move itself: check
+   his phone, test him, catch him out. It must never come from us in any form. `cards-talking-someone`
+   needed the surveillance ban; this needs it harder, because "hiding" has one obvious next step.
+4. **GRADING HER FACULTY** *(no precedent anywhere)* — `cards-feels-off` is the only headline on the
+   funnel that submits **her judgement** for a verdict, and all three available answers do harm:
+   - *"yes, your intuition is right"* — convicts him by proxy of whatever she already concluded;
+   - *"no"* — tells a woman her own observation is imaginary. She may have had this done to her
+     already; the funnel does not finish the job;
+   - *"intuition is never wrong"* — the flattering third option and the most dangerous, because it
+     turns every fear into a finding and licences her to act on a guess.
+
+   **The move is to SPLIT the question**: the *noticing* is real and is affirmed; what it *means*
+   stays open. The guard test pins both halves — it checks the refusals AND checks that every read
+   still affirms her, because a family that only refuses is a family that abandons her.
+
+### 🔴 Openers never demand a case
+
+"What makes you think he is hiding something?" puts her on trial for her own unease and hands the
+model a list of suspicions to confirm — breaching the no-CAUSE ban in the opener, before the read
+has even run. Neither opener may ask **what** she thinks is hidden either, since a named suspicion
+in the transcript is exactly the thing the reads must decline to certify. They ask instead about
+the thing she stops short of saying, and about the *shape* of the change.
+
+Guarded by `tests/tarot-hidden-intuition-copy.test.ts` (21 tests, clause-level negation-aware),
+which also pins zero shared 6-word runs in beat 3 against every other hook on the deck.
+
+## Real-feelings hooks — 3 face-down landers (2026-08-12)
+
+Operator brief: the **Feelings/Commitment FRAME** on the "does he really feel it" topic.
+Face-down `return-mhf` only. Clean URLs, no `&deck=`, Version C ads.
+
+| Headline | Hook | URL |
+|---|---|---|
+| Does he really love me? | `cards-really-love` | `/fb-tarot/c?hook=cards-really-love` |
+| How does he really feel about me? | `cards-feel-about-me` | `/fb-tarot/c?hook=cards-feel-about-me` |
+| Does he love me, or am I imagining it? | `cards-imagining-it` | `/fb-tarot/c?hook=cards-imagining-it` |
+
+### ⭐⭐ This family asks the one thing the funnel most firmly refuses
+
+Every other angle can answer its headline somehow. These three ask Evelyn to **report a real
+man's heart back to her**, which cannot be done honestly — so the whole set is built as a
+sustained refusal that still has to pay her out. The route through is the only channel a
+feeling actually has: **CONDUCT**, which she already observes. Point at her own record; never
+read his interior.
+
+### 🔴🔴 The `cards-feel-about-me` pairing is CONFOUNDED — read the result accordingly
+
+`cards-feel-about-me` differs from the live `cards-feels` by **one pronoun** — "about **me**"
+vs "about **you**" — and the operator commissioned it as a you/me framing test (2026-08-12),
+read HOOK-LEVEL against that incumbent, never pooled.
+
+⚠️ **But the two also differ in COPY STANDARD, and that cannot be fixed.** `cards-feels` is
+seeded 2026-07-28 copy from before the current guardrails; its reads assert his interior
+outright — *"the warmth you've felt from him is intended"*, *"what he feels is real"*. Nothing
+written today may do that. So any difference in the numbers is **"new lander vs old lander"**
+at least as much as "me vs you".
+
+🔴 **It cannot be fixed by rewriting the incumbent.** `cards-feels` is ALSO the control in the
+running twin-flame test (`cards-twin-feels`), so editing its copy would break that comparison
+too. `cards-feels` is now a control for **two tests at once** — a test pins it in `decode-him`,
+and a second test asserts the incumbent still carries its pre-guardrail wording, so that if it
+is ever brought up to standard the failure forces both pairings to be re-evaluated.
+
+### 🔴 Four refusals across all nine reads
+
+1. **NEVER narrate his interior** — not "he loves you", not "he doesn't", and not the softened
+   dodge "he loves you but is frightened to say it". This is `cards-twin-feels`' central ban,
+   here at its sharpest.
+2. **NEVER diagnose him** — avoidant, emotionally unavailable, commitment-phobic. That is the
+   internet's stock answer to all three headlines and it is still a verdict on a real person.
+3. **NEVER grade her for having loved first** — no naive, foolish, too much, too soon, and no
+   "lesson" framing. She arrives half-expecting to be told off for it.
+4. **On `cards-imagining-it`, BOTH doors are shut.** "He loves you" narrates his interior;
+   "you imagined it" is the gaslighting `cards-feels-off` exists to forbid — except that here
+   the headline actively invites it. The read refuses the either-or the way `cards-moved-on`
+   does, and affirms the noticing the way `cards-feels-off` does.
+
+⚠️ **`cards-imagining-it` vs `cards-feels-off` — opposite VALENCE is what keeps them distinct.**
+`cards-feels-off` = she fears something **bad** is true. This = she fears something **good** is
+not. Same faculty question, opposite direction.
+
+Guarded by `tests/tarot-real-feelings-copy.test.ts` (24 tests, clause-level negation-aware).
+⭐ It carries a **restatement exemption** no sibling guard needed: beat 2 routinely repeats her
+own question back ("You asked whether he really loves you") and `cards-imagining-it` must name
+both doors in order to refuse them — restating a question is not asserting its answer. Safe
+because the sweep is clause-level, so a real assertion after the restatement is still caught.
+
 ## Concepts
 
 | # | Deck id | Facing | Cards (A/B/C) | Options | Status | Notes |
@@ -691,6 +945,20 @@ the funnel — but it is worth watching in the transcripts once spend starts.
 | `cards-stop-hurting` *(missing-him)* | I miss him so much — will this ever stop hurting? | ⬜ DRAFT (2026-08-10) — 🔴 asks for a DURATION outright; the refusal is the reading. Reads the ache as work she is performing |
 | `cards-stop-missing` *(missing-him)* | Will I ever stop missing him? | ⬜ DRAFT (2026-08-10) — ⚠️ the FOREVER question; refuses both poles. Reads missing as a thing decision cannot reach |
 | `cards-still-miss-him` *(missing-him)* | Why do I still miss him after everything? | ⬜ DRAFT (2026-08-10) — 🔴 heaviest of the three, sibling of `cards-who-hurt-me`; never minimise the named harm, never convict him, never land as her weakness |
+| `cards-left-without-word` *(why-he-left)* | Why did he leave without a word? | ⬜ DRAFT (2026-08-11) — 🔴 asks for a MOTIVE outright; the refusal is the reading. Reads the silence as carrying no content at all |
+| `cards-ghosted` *(why-he-left)* | Why did he ghost me? | ⬜ DRAFT (2026-08-11) — 🔴 the DIAGNOSIS ban does the heavy lifting (narcissist/avoidant is the internet's answer). Reads her as the investigator of her own injury |
+| `cards-not-enough` *(why-he-left)* | Was I not enough for him to stay? | ⬜ DRAFT (2026-08-11) — 🔴🔴 heaviest headline on the funnel; her own worth is the question. REFUSE the comparison, never score it — "you were enough" is banned too |
+| `cards-stop-searching` *(searching)* | Am I ever going to stop searching? | ⬜ DRAFT (2026-08-11) — 🔴 bans the proverb ("it happens when you stop looking") — a tactic and a fault attribution in one |
+| `cards-end-up-alone` *(searching)* | Why do I keep ending up alone? | ⬜ DRAFT (2026-08-11) — 🔴 refuses to supply a CAUSE at all; "why" presumes a findable reason and no honest reading has one |
+| `cards-given-up` *(searching)* | Have I given up on love without realizing it? | ⬜ DRAFT (2026-08-11) — 🔴 bans the headline's own premise; she is the only authority on her interior |
+| `cards-twin-ready` *(twin-flame)* | Is my twin flame ready for me? | ⬜ DRAFT (2026-08-11) — ⭐ VOCABULARY TEST vs `cards-ready-commit`; never certify the LABEL, never ascension homework |
+| `cards-twin-feels` *(twin-flame)* | Does my twin flame feel this too? | ⬜ DRAFT (2026-08-11) — ⭐ vs `cards-feels`; 🔴 the RUNNER script ban (his distance is never proof of the bond) |
+| `cards-twin-back` *(twin-flame)* | Is my twin flame coming back to me? | ⬜ DRAFT (2026-08-11) — ⭐ vs `cards-ever-back`; 🔴 the SEPARATION-PHASE ban (an absence is not progress toward a reunion) |
+| `cards-hiding-something` *(hidden-intuition)* | Is he hiding something from me? | ⬜ DRAFT (2026-08-12) — 🔴🔴 never name the CONTENTS (invention manufactures a crisis in a live relationship); 🔴🔴 the TACTIC ban is sharpest here — the headline supplies the move (check his phone) and we never do |
+| `cards-feels-off` *(hidden-intuition)* | Something feels off — is my intuition right? | ⬜ DRAFT (2026-08-12) — 🔴🔴 the only headline on the funnel that submits HER JUDGEMENT for a verdict. All three answers harm: "yes" convicts him by proxy, "no" gaslights her, "intuition is never wrong" licences her to act on a guess. SPLIT the question — affirm the noticing, leave the meaning open |
+| `cards-really-love` *(real-feelings)* | Does he really love me? | ⬜ DRAFT (2026-08-12) — 🔴 never state he loves her OR that he does not. Reads the word "really" as a question about a STANDARD, and points at the record of conduct she already keeps |
+| `cards-feel-about-me` *(real-feelings)* | How does he really feel about me? | ⬜ DRAFT (2026-08-12) — ⚠️ PRONOUN VARIANT of the live `cards-feels` ("about you"). 🔴🔴 the pairing is CONFOUNDED — see the section below. Reads the ASKING, not his heart |
+| `cards-imagining-it` *(real-feelings)* | Does he love me, or am I imagining it? | ⬜ DRAFT (2026-08-12) — 🔴🔴 BOTH doors banned: "he loves you" narrates his interior, "you imagined it" is the gaslighting `cards-feels-off` forbids. Refuses the either-or |
 | `cards-love-again` *(self-frame)* | Will I love again? | ⬜ draft — 🔴 **no reads on either FACE-DOWN deck**, so a clean URL silently falls back to `cards-honest`/`decode-him`. Only works with an explicit `&deck=arcana-mfh` |
 | `cards-soulmate` *(self-frame)* | When is my soulmate coming? | ⬜ draft (2026-07-27, from `ZN_Tarot_Rio 8.png` = arcana-eef cards; reads on arcana-eef + arcana-mfh; answers "when" as a leaning, never a date) |
 
