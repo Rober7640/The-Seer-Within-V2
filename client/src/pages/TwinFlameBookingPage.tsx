@@ -1,5 +1,7 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { CosmicBackground } from '@/components/CosmicBackground'
+import { bookingFirstName } from '@/lib/funnel'
+import { beginBackendCheckout } from '@/lib/backendCheckout'
 import {
   PAGE_HEADER,
   PAGE_STATEMENTS,
@@ -47,11 +49,36 @@ export default function TwinFlameBookingPage() {
   // decorative and would also make this an unfair comparison against the chat.
   const [checked, setChecked] = useState<boolean[]>(() => PAGE_STATEMENTS.map(() => false))
   const [bumpTaken, setBumpTaken] = useState(false)
+  const [busy, setBusy] = useState(false)
+  const [checkoutError, setCheckoutError] = useState<string | null>(null)
   const allChecked = checked.every(Boolean)
   const totalCents = TWIN_FLAME_PRICE_CENTS + (bumpTaken ? TWIN_FLAME_BUMP_CENTS : 0)
 
+  // Read once per mount: the letter's ?fn=. Nothing on this page displays it — the page
+  // is HER voice and never addresses her — but checkout carries it into Stripe metadata
+  // so every screen after the money greets her properly.
+  const firstName = useMemo(() => bookingFirstName(), [])
+
   const toggle = (index: number) =>
     setChecked((prev) => prev.map((v, i) => (i === index ? !v : v)))
+
+  // ⛔ Posts no price. The server charges the catalog's. See lib/backendCheckout.ts —
+  // while BACKEND_CHECKOUT_LIVE is false this still just logs, as A2 requires.
+  const handleCheckout = async () => {
+    if (busy) return
+    setBusy(true)
+    setCheckoutError(null)
+    const result = await beginBackendCheckout({
+      offer: 'twin-flame',
+      treatment: 'page',
+      bump: bumpTaken,
+      firstName,
+    })
+    if (result.status === 'error') setCheckoutError(result.message)
+    // 'redirecting' deliberately leaves the button disabled — the tab is on its way out,
+    // and a re-enabled button is a second charge waiting to happen.
+    if (result.status !== 'redirecting') setBusy(false)
+  }
 
   return (
     <div className="relative min-h-screen">
@@ -150,10 +177,9 @@ export default function TwinFlameBookingPage() {
               {allChecked ? (
                 <button
                   type="button"
-                  onClick={() =>
-                    console.log('[preview] would checkout', { bump: bumpTaken, totalCents })
-                  }
-                  className="w-full animate-pulse rounded-lg bg-gradient-to-r from-purple-600 to-purple-700 px-6 py-5 font-serif text-xl font-bold text-white shadow-lg transition-all duration-300 hover:animate-none hover:shadow-xl"
+                  onClick={handleCheckout}
+                  disabled={busy}
+                  className="w-full animate-pulse rounded-lg bg-gradient-to-r from-purple-600 to-purple-700 px-6 py-5 font-serif text-xl font-bold text-white shadow-lg transition-all duration-300 hover:animate-none hover:shadow-xl disabled:animate-none disabled:opacity-70"
                   data-testid="button-checkout"
                 >
                   {CHECKOUT.button} &nbsp;→
@@ -164,6 +190,17 @@ export default function TwinFlameBookingPage() {
                   data-testid="text-locked-hint"
                 >
                   Agree to all six above to continue
+                </p>
+              )}
+              {/* A dead button is the worst outcome on the screen that takes the money —
+                  if checkout refuses, say so and say what to do. */}
+              {checkoutError && (
+                <p
+                  className="mt-3 text-center text-[13px] text-red-600"
+                  data-testid="text-checkout-error"
+                  role="alert"
+                >
+                  {checkoutError}
                 </p>
               )}
               <p className="mt-4 text-center text-[13px] leading-relaxed text-gray-500">

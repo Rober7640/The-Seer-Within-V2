@@ -3,6 +3,7 @@ import { useLocation, useSearch } from 'wouter'
 import { CosmicBackground } from '@/components/CosmicBackground'
 import { useFloorSpoken } from '@/hooks/useFloorSpoken'
 import { bookingFirstName } from '@/lib/funnel'
+import { beginBackendCheckout } from '@/lib/backendCheckout'
 import {
   PAGE_HEADER,
   PAGE_STEP_ONE,
@@ -17,7 +18,6 @@ import {
   CHECKOUT,
   JUDGEMENT_MIN_CENTS,
   JUDGEMENT_BUMP_CENTS,
-  JUDGEMENT_BUMP_PRODUCT_KEY,
 } from '@/lib/judgementBooking'
 
 // Offer 03 — Judgement Day booking page. TWO STEPS.
@@ -110,6 +110,28 @@ export default function JudgementBookingPage() {
   const ready = priceChecked && amountValid
   // ⛔ Never mid-typing — "17" is under the floor until the 7 arrives.
   const { floorSpoken, speakNow } = useFloorSpoken(amount, amountValid)
+
+  const [busy, setBusy] = useState(false)
+  const [checkoutError, setCheckoutError] = useState<string | null>(null)
+
+  // ⛔ Posts her amount, never a price. The server re-checks the floor — hiding it
+  // client-side is not enforcing it. While BACKEND_CHECKOUT_LIVE is false this still
+  // just logs, as A2 requires.
+  const handleCheckout = async () => {
+    if (busy) return
+    setBusy(true)
+    setCheckoutError(null)
+    const result = await beginBackendCheckout({
+      offer: 'judgement-day',
+      treatment: 'page',
+      bump: bumpTaken,
+      amountCents,
+      firstName,
+    })
+    if (result.status === 'error') setCheckoutError(result.message)
+    // 'redirecting' leaves it disabled — the tab is on its way to Stripe.
+    if (result.status !== 'redirecting') setBusy(false)
+  }
 
   // ⛔ Step 2 without the agreements is not a state this page has. Refreshing
   // there, or opening a shared ?step=give link, lands her back at step 1 with
@@ -336,16 +358,9 @@ export default function JudgementBookingPage() {
                   {ready ? (
                     <button
                       type="button"
-                      onClick={() =>
-                        console.log('[preview] would checkout', {
-                          amountCents,
-                          bump: bumpTaken,
-                          bumpProduct: bumpTaken ? JUDGEMENT_BUMP_PRODUCT_KEY : null,
-                          totalCents,
-                          firstName,
-                        })
-                      }
-                      className="w-full animate-pulse rounded-lg bg-gradient-to-r from-purple-600 to-purple-700 px-6 py-5 font-serif text-xl font-bold text-white shadow-lg transition-all duration-300 hover:animate-none hover:shadow-xl"
+                      onClick={handleCheckout}
+                      disabled={busy}
+                      className="w-full animate-pulse rounded-lg bg-gradient-to-r from-purple-600 to-purple-700 px-6 py-5 font-serif text-xl font-bold text-white shadow-lg transition-all duration-300 hover:animate-none hover:shadow-xl disabled:animate-none disabled:opacity-70"
                       data-testid="button-checkout"
                     >
                       {CHECKOUT.button} &nbsp;→
@@ -356,6 +371,18 @@ export default function JudgementBookingPage() {
                       data-testid="text-locked-hint"
                     >
                       {priceChecked ? PAGE_STEP_TWO.amountHint : PAGE_STEP_TWO.lockedHint}
+                    </p>
+                  )}
+                  {/* A dead button is the worst outcome on the screen that takes the
+                      money. ⛔ The server's floor message never names the floor either —
+                      the rule holds on both sides. */}
+                  {checkoutError && (
+                    <p
+                      className="mt-3 text-center text-[13px] text-red-600"
+                      data-testid="text-checkout-error"
+                      role="alert"
+                    >
+                      {checkoutError}
                     </p>
                   )}
                   <p className="mt-4 text-center text-[13px] leading-relaxed text-gray-500">
