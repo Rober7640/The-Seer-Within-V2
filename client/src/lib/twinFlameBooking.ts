@@ -10,8 +10,14 @@
 // the 3-point commitment gate in docs/intel/how-i-built-a-60k-per-month-astrology-offer.md.
 // That is a product comparison, not a clean single-variable experiment.
 
-export const TWIN_FLAME_PRICE_CENTS = 3500;
-export const TWIN_FLAME_BUMP_CENTS = 1277;
+// ⛔ The prices are NOT defined here. They live in shared/backendOffers.ts, which is
+// also what the checkout endpoint charges from — one number, so the page and the card
+// can never disagree. Re-exported so this file stays the one import a screen needs.
+export {
+  TWIN_FLAME_PRICE_CENTS,
+  TWIN_FLAME_BUMP_CENTS,
+  TWIN_FLAME_BUMP_PRODUCT_KEY,
+} from '@shared/backendOffers';
 
 export const BUMP = {
   headline: 'YES! I Want To Remove Negative KARMA forever!',

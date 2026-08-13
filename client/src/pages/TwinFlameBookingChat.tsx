@@ -1,5 +1,7 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { CosmicBackground } from '@/components/CosmicBackground'
+import { bookingFirstName } from '@/lib/funnel'
+import { beginBackendCheckout } from '@/lib/backendCheckout'
 import {
   CHAT_SCRIPT,
   CHAT_GATE,
@@ -95,8 +97,14 @@ export default function TwinFlameBookingChat() {
   const [gateConfirmed, setGateConfirmed] = useState(false)
   const [showBump, setShowBump] = useState(false)
   const [checked, setChecked] = useState<boolean[]>(() => CHAT_GATE.statements.map(() => false))
+  const [busy, setBusy] = useState(false)
+  const [checkoutError, setCheckoutError] = useState<string | null>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
   const seq = useRef(0)
+
+  // The letter's ?fn=, read once. Carried into Stripe metadata so every screen after
+  // the money can greet her by name.
+  const firstName = useMemo(() => bookingFirstName(), [])
 
   const allChecked = checked.every(Boolean)
 
@@ -161,11 +169,24 @@ export default function TwinFlameBookingChat() {
     setBeatIndex((i) => i + 1)
   }
 
-  const handleBumpChoice = (taken: boolean) =>
-    console.log('[preview] would checkout', {
+  // The bump answer IS the checkout on this treatment — it is the last turn before
+  // the money. ⛔ Posts no price; the server charges the catalog's. While
+  // BACKEND_CHECKOUT_LIVE is false this still just logs, as A2 requires.
+  const handleBumpChoice = async (taken: boolean) => {
+    if (busy) return
+    setBusy(true)
+    setCheckoutError(null)
+    const result = await beginBackendCheckout({
+      offer: 'twin-flame',
+      treatment: 'chat',
       bump: taken,
-      totalCents: TWIN_FLAME_PRICE_CENTS + (taken ? TWIN_FLAME_BUMP_CENTS : 0),
+      firstName,
     })
+    if (result.status === 'error') setCheckoutError(result.message)
+    // 'redirecting' leaves it disabled — the tab is on its way to Stripe, and a
+    // re-enabled button is a second charge waiting to happen.
+    if (result.status !== 'redirecting') setBusy(false)
+  }
 
   return (
     <div className="fixed inset-0 flex flex-col items-center justify-center overflow-hidden p-0 md:p-4">
@@ -319,7 +340,8 @@ export default function TwinFlameBookingChat() {
                   <button
                     type="button"
                     onClick={() => handleBumpChoice(true)}
-                    className="w-full rounded-lg bg-gradient-to-r from-amber-500 to-orange-600 px-6 py-4 text-lg font-bold text-white shadow-lg transition-all duration-300 hover:shadow-xl"
+                    disabled={busy}
+                    className="w-full rounded-lg bg-gradient-to-r from-amber-500 to-orange-600 px-6 py-4 text-lg font-bold text-white shadow-lg transition-all duration-300 hover:shadow-xl disabled:opacity-70"
                     data-testid="button-bump-accept"
                   >
                     {CHAT_BUMP.accept}
@@ -327,11 +349,23 @@ export default function TwinFlameBookingChat() {
                   <button
                     type="button"
                     onClick={() => handleBumpChoice(false)}
-                    className="w-full rounded-lg border border-gray-200 bg-white px-6 py-3 text-sm font-medium text-gray-600 transition-colors duration-200 hover:bg-gray-50"
+                    disabled={busy}
+                    className="w-full rounded-lg border border-gray-200 bg-white px-6 py-3 text-sm font-medium text-gray-600 transition-colors duration-200 hover:bg-gray-50 disabled:opacity-70"
                     data-testid="button-bump-decline"
                   >
                     {CHAT_BUMP.decline}
                   </button>
+                  {/* A dead button is the worst outcome on the turn that takes the
+                      money — if checkout refuses, say so. */}
+                  {checkoutError && (
+                    <p
+                      className="pt-1 text-center text-[12px] text-red-600"
+                      data-testid="text-checkout-error"
+                      role="alert"
+                    >
+                      {checkoutError}
+                    </p>
+                  )}
                 </div>
               </div>
 
