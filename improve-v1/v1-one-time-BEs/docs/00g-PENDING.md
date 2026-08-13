@@ -12,10 +12,15 @@ workflow's phases and nothing else.** Same pass: the variance record moved `00f`
 
 ## Where each offer stands
 
+📎 **Per-offer tick sheets — the step-by-step "what's done, what's not":**
+[`02/0-WORKFLOW-02.md`](./02/0-WORKFLOW-02.md) · [`03/0-WORKFLOW-03.md`](./03/0-WORKFLOW-03.md).
+04 and 05 get theirs when they start. This table is the one-line summary; those
+files are the detail, per step.
+
 | | Copy | **A** funnel | **B** product | **C** list + 2 emails |
 |---|---|---|---|---|
-| **02** Twin Flame | ✅ complete | ✅ built, preview-only | ❌ **never run** — 4,821 words, unformatted | ◐ C1/C2 written, C0 undone |
-| **03** Judgement Day | ✅ complete | ◐ booking only — **no U1, U2 or thank-you** | ❌ never run — 2,429 words | ◐ C1 written, C0 undone |
+| **02** Twin Flame | ✅ complete | ✅ built + **Stripe wired**, dark behind one flag | ❌ **never run** — 4,821 words, unformatted | ◐ C1/C2 written, C0 undone |
+| **03** Judgement Day | ✅ complete | ◐ booking + Stripe — **no U1, U2 or thank-you**, so it refuses money | ❌ never run — 2,429 words | ◐ C1 written, C0 undone |
 | **04** The Turn | ✅ complete | ❌ nothing | ❌ never run — 3,714 words | ❌ |
 | **05** Cut the Cord | ❌ **none at all** | ❌ | ❌ | ❌ |
 
@@ -24,35 +29,62 @@ inserted, or been made deliverable. **Phase B has never been run for any offer.*
 
 ---
 
-## ⛔ The blocker under everything: there is no Stripe
+## ✅ The blocker under everything is cleared: Stripe is built
 
-Verified in code 2026-08-10, not inferred from the docs:
+Built 2026-08-10, once and centrally, so 03/04/05 inherit it:
 
-- `addBackendCustomer` exists at `server/lib/aweber.ts:856` and has **zero callers** outside its test
-- **`be_orders` appears in `shared/schema.ts` zero times** — the table is not in the schema
-- every booking button logs `[preview] would checkout {…}`
+| Piece | Where |
+|---|---|
+| The offer catalog — **the only place a backend price lives** | `shared/backendOffers.ts` |
+| `be_orders` table + its additive migration | `shared/schema.ts`, `migrations/2026-08-10-be-orders.sql` |
+| `POST /api/backend/checkout` + the thank-you lookup | `server/routes/backendOffers.ts` |
+| Webhook branch → order row → `addBackendCustomer` | `server/routes/webhooks.ts`, `server/lib/beOrders.ts` |
+| The client's one way to Stripe | `client/src/lib/backendCheckout.ts` |
+| 48 tests | `server/lib/backendOffers.test.ts`, `beOrders.test.ts`, `backendCustomerList.test.ts` |
 
-So no buyer has ever reached the customer list, and **C3's end-to-end boxes cannot be ticked by
-anybody**. The workflow says it plainly: *these cost us a day on 02 and will cost the same on 03,
-04 and 05 — fixing them once, centrally, is now cheaper than hitting them three more times.*
+`addBackendCustomer` now has a real caller. A new offer is a **catalog row**, not another route.
 
-⚠ **Both AWeber access tokens are expired** (401 `invalid_token`, checked 2026-08-10) —
-`AWEBER_ACCESS_TOKEN` and `AWEBER_BROADCAST_ACCESS_TOKEN`. Nothing in Phase C reaches AWeber
-until they are refreshed.
+⛔ **It still ships dark, deliberately.** Two independent gates, and both must be opened:
+
+1. `BACKEND_CHECKOUT_LIVE = false` (client) — every button still logs `[preview] would
+   checkout {…}`, exactly as A2 requires. That constant carries the go-live checklist.
+2. `readyForMoney: false` on 03 (server) — it **refuses money whatever the client does**,
+   because its `successPath` has no route and its ACT intake does not exist. Flipping gate 1
+   takes **02 only** live.
+
+### What is left before real money can move
+
+- [ ] **Run `migrations/2026-08-10-be-orders.sql`.** ⛔ Never `npm run db:push` — dev and
+      production share one database and push diffs the whole schema.
+- [ ] **C0** below — without `AWEBER_BE_CUSTOMER_LIST_ID` the order is banked and **no
+      thank-you sends**, because the tag is the send. The failure is recorded on the row
+      (`be_orders.customer_list_error`) and retried by the thank-you page, not lost.
+- [ ] **Refresh both AWeber access tokens** — 401 `invalid_token`, checked 2026-08-10
+      (`AWEBER_ACCESS_TOKEN`, `AWEBER_BROADCAST_ACCESS_TOKEN`).
+- [ ] **Point Stripe's `checkout.session.completed` webhook** at `/api/webhooks/stripe` for
+      the live account, then take one real test order.
+- [ ] **Flip `BACKEND_CHECKOUT_LIVE`**, and update the state column in *Every screen we have
+      built* in the same commit.
 
 ---
 
 ## Phase A — the funnel
 
-- [ ] **A·shared — Stripe.** `be_orders` + checkout + `checkout.session.completed` →
-      `addBackendCustomer`. **Unblocks all four offers and C0/C3.** Do this once, centrally.
-- [ ] **03 · A6 — the thank-you = the Entry form.** 🔴 **Load-bearing.** The booking screens no
-      longer ask for the Entry anywhere, so as built 03 would take money and have no way to ask the
-      one question fulfilment depends on. An ACT offer cannot be filled without her reply.
+- [x] **A·shared — Stripe.** ✅ 2026-08-10. `be_orders` + checkout + the `be_*` webhook branch →
+      `addBackendCustomer`. Ships dark behind two gates — see the section above.
+- [ ] **03 · A6 — the thank-you = the Entry form.** 🔴 **Load-bearing, and now the single thing
+      standing between 03 and money.** The booking screens do not ask for the Entry anywhere, so
+      03 would take money with no way to ask the one question fulfilment depends on. An ACT offer
+      cannot be filled without her reply.
+      **When it renders, three one-line changes go in the same commit** (`shared/backendOffers.ts`):
+      `readyForMoney: true`, `entryPath: '/wiccan/judgement-day/entry'`, and a route for
+      `successPath`. The `entry_url` custom field then fills itself on every order.
 - [ ] **03 · A4/A5 — U1 and U2.** Copy drafted (`copy/03/03-U-upsell-beats.md`), plan in
       [`00k`](./00k-PLAN-03-UPSELLS.md), tick sheet in [`00l`](./00l-DELIVERABLES-03.md).
 - [ ] **04 · A1–A8 — the whole funnel.** Not analysed. Root is `/wiccan/tea-reading`.
-      ⚠ Needs the ladder resolver (`S9`) that no other offer needs.
+      ⚠ Needs the ladder resolver (`S9`) that no other offer needs — and it is the one
+      pricing model `shared/backendOffers.ts` does not yet carry (it has `fixed` and `pwyw`;
+      04 adds a third, `ladder`, plus its rungs).
 - [ ] **05 · A1–A8** — after its copy exists.
 
 ## Phase B — the product *(never run; 02 is the pilot)*
@@ -70,9 +102,13 @@ until they are refreshed.
       Then `AWEBER_BE_CUSTOMER_LIST_ID` into `.env` — ⚠ **currently absent from `.env` entirely**;
       it exists only in `.env.example`.
       ⛔ Not `theseerwithin_paid` — that is V1's 5,290 buyers.
+      🔴 **Now the last thing between a paid order and a silent one.** The code that writes
+      this list is live and tested; without the list id it logs `List ID not configured`,
+      records it on `be_orders.customer_list_error`, and sends nothing.
 - [ ] **C1/C2 · The two emails.** Copy exists for 02 (`02-T3`, `02-T4`) and 03 (`03-T3`). Still to
       write for 04 and 05, and none is uploaded as an AWeber Campaign yet.
-- [ ] **C3 · Upload, automate, prove.** ⛔ Gated on Stripe above.
+- [ ] **C3 · Upload, automate, prove.** ✅ No longer gated on Stripe — the write happens on a real
+      `checkout.session.completed`. Still gated on C0 + the expired tokens.
 
 ## Copy — the remainder
 

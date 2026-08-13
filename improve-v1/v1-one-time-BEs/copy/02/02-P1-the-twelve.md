@@ -3,9 +3,10 @@
 | | |
 |---|---|
 | **Offer** | 02 Twin Flame Tarot — the paid product |
-| **Subject** | `%FIRSTNAME% — your twelve are laid` — **must match `02-T1` exactly** |
+| **Subject** | The **delivery email** carries `%FIRSTNAME% — your twelve are laid` and must match `02-T1`/`02-T3` exactly. ⚠ The PDF's own title is *"Your twelve are laid"* — see D7 below |
 | **Source** | `02:501-829`, recast. Architecture [00e §6](../../docs/00e-FRAMEWORK-BEs.md), units §6a, rules §6b |
-| **Delivery** | MVP static via `getReadingBody()` (`S23`); three echo slots merged from V1 Supabase (`S28`) |
+| **Delivery** | **D7 = one PDF for everyone** *(operator, 2026-08-13)*. The document carries no merge tokens; the personal address lives in the covering email (`02-T4`), which does merge. `reading_url` is therefore a constant, not a per-buyer field |
+| **⛔ Cost of D7** | The three **echo slots** (`S28`, houses 1/7/12) are **out**. They were per-buyer merges from V1 Supabase and one document for everyone cannot carry them. Recorded, not re-opened |
 | **Cards** | Magician · High Priestess · Hierophant · Chariot · Strength · Wheel of Fortune · Justice · Hanged Man · Death · Temperance · Devil · Judgment — **zero overlap with the six free cards** (§6b.1) |
 | **Free gift** | `02-P3` renders inside this email as a second act, never as a separate send |
 
@@ -16,22 +17,64 @@ one to a house**. That breaks the mechanism it charges for, and worse, it makes 
 withholds unanswerable — `02-E2` promised *"the **house** the Lovers falls into is what separates
 them"* and `02-C1` statement 7 has the buyer ask for all three by name.
 
-Each card is therefore laid to a numbered house, and **the three loops close in specific houses**:
+Each card is therefore laid to a numbered house, and **every loop both letters open closes in a
+specific house**.
+
+⚠ **There are SIX units, not three** — corrected 2026-08-13. `02-E3` is a follow-up to the same
+woman, not an alternative letter ([`00e` §1c](../../docs/00e-FRAMEWORK-BEs.md): World→Star,
+Lovers→**Emperor**, Tower→Moon). An earlier draft of this table covered `02-E2` only, which left
+the Emperor fork unanswered and the timing promise contradicted. Both are closed below.
 
 | Loop opened in the letter | Closed by |
 |---|---|
-| The World: *which door do the windfalls come through?* | **House 2** (Wheel of Fortune) and **House 8** (Death) — the second arrives through someone else's ending |
-| The Lovers: *renewal of what I have, or arrival of something new?* | **House 5** (Chariot, in motion) against **House 7** (Hanged Man, suspended). The verdict is *arrival* |
-| The Tower: *someone returning, or someone still here who has already begun leaving?* | **House 12** (High Priestess) — the second one. What is hidden is a decision already taken and not spoken |
+| **v1** The World: *which door do the windfalls come through?* | **House 2** (Wheel of Fortune) and **House 8** (Death) — the second arrives through someone else's ending |
+| **v1** The Lovers: *renewal of what I have, or arrival of something new?* | **House 5** (Chariot, in motion) against **House 7** (Hanged Man, suspended). The verdict is *arrival* |
+| **v1** The Tower: *someone returning, or someone still here who has already begun leaving?* | **House 12** (High Priestess) — the second one. What is hidden is a decision already taken and not spoken |
+| **v1 + v2** *"Twelve tells you the day"* · *"which week, and what he looks like when he uses it"* | **House 5** — a dated window (weeks four and five) and a description of him. ⛔ Not hedged; see the timing note below |
+| **v2** The Emperor: *a floor under me, or a room with the door shut?* | **House 4** (Temperance) — it fell in the house of her home, not the house of what owns her. It is a floor. The shut room is the **seventh**, and is named as such |
+| **v2** The Moon: *the man I am reading in the dark* | **House 12** — the same room as the Tower, and the same instruction: ⛔ do not investigate |
 
-⛔ **Do not reorder the houses or reassign the cards without re-reading the letters.** Three
-withholds, three answers, and the buyer has a page in her inbox where she asked for each one.
+⛔ **Do not reorder the houses or reassign the cards without re-reading BOTH letters.** Six
+withholds, six answers, and the buyer has two pages in her inbox where she asked for each one.
+
+### ⚠ Why no free card is re-laid, and how the mechanism still works
+
+The letters make two promises that pull against each other, and both are load-bearing:
+
+| | |
+|---|---|
+| **Novelty** | *"twelve **new** cards, dear. Not these three again."* (`02-E2`) |
+| **Mechanism** | *"the **house** the Lovers falls into is what separates them"* · *"the **house** the Emperor falls into is precisely what separates the two"* |
+
+Taken literally they cannot both hold — the second needs the Lovers dealt, the first forbids it.
+**Novelty wins**, because paying to be shown the same cards again is the fastest way a buyer
+concludes she was robbed, and because it is the promise stated most plainly.
+
+**The mechanism survives intact, because it was never really about the card.** Each fork names two
+candidate ROOMS, and the spread's job is to say which of the two is lit:
+
+- the **Lovers** — renewal would show in the 7th (what she already holds), arrival in the 5th. The
+  5th has the Chariot, in motion; the 7th has the Hanged Man, suspended. House 5 now says this out
+  loud rather than leaving the reader to assemble it.
+- the **Emperor** — v2 names the two rooms itself: *"the house of your home, or the house of what
+  owns you"*. The 4th came up Temperance, so it is the house of her home, and Temperance keeps
+  nobody anywhere. It is a floor.
+
+⛔ **So never write that a free card "fell" in a house.** It did not; it is not in the spread. The
+NEW card in that room is what carries the answer. A first pass of this file said *"It fell here"*
+of the Emperor and had to be corrected 2026-08-13 — it reads as a thirteenth card and quietly makes
+the novelty promise a lie.
+
+⚠ **Deck arithmetic, for 03/04/05.** Twenty-two majors, six spent free, twelve laid — leaving only
+**four spare** (Fool, Empress, Hermit, Sun). That is fine for 02, but if a later offer's letters
+spend the same six free cards *and* it wants twelve new majors, it is drawing from the same
+sixteen. Decide per offer which six the letters spend, before writing its product.
 
 ---
 
-# %FIRSTNAME% — your twelve are laid
+# Your twelve are laid
 
-%FIRSTNAME%,
+Dear friend,
 
 <!-- 1 · PREAMBLE. Evelyn's register: no "cosmic forces have aligned in your favor" -->
 
@@ -84,7 +127,7 @@ you**, and it starts the moment you decide it has.
 
 That is the whole of this card's good news and the whole of its condition at once.
 
-It asks you to break the routine you have been keeping, %FIRSTNAME% — not the big one, the small
+It asks you to break the routine you have been keeping, dear — not the big one, the small
 one. The order of your evenings. The thing you always say when someone asks how you are. The
 Magician says the ruts you are in are not circumstances; they are habits wearing the costume of
 circumstances.
@@ -109,7 +152,7 @@ The Magician rewards nerve and it does nothing at all for the woman who waits to
 
 `[IMG-WHEEL]`
 
-%FIRSTNAME%, this is the door.
+This is the door.
 
 You asked me — and I could not tell you from the World alone — **which door the money comes
 through**. It comes through the second house, and the second house is what you already own.
@@ -144,7 +187,7 @@ or don't.
 
 The Hierophant here asks you for something you will not enjoy: **go back to someone you wrote off.**
 
-Not everyone. One person. You know which, %FIRSTNAME%, and you have known since you read that
+Not everyone. One person. You know which, dear, and you have known since you read that
 sentence. There is a connection you let go cold, and you were probably right about why, and it is
 still the case that this card wants it reopened.
 
@@ -187,11 +230,33 @@ back a year.
 If someone in the family misreads you this month, let them be wrong for a while. Being understood
 immediately is a luxury; being at peace eventually is the thing you actually want.
 
+**And now your answer about the Emperor.**
+
+I asked you whether the structure you are standing inside was one you built or one you are being
+kept in, and I said the two feel identical from within — that only the room would separate them. I
+gave you the two rooms it could be: the house of your home, or the house of what owns you.
+
+It is the house of your home. The card that came up in it is Temperance, and Temperance does not
+keep anybody anywhere. It mixes, it settles, it takes its time.
+
+**So it is a floor, dear. Not a locked room.**
+
+That is a bigger difference than it sounds. A woman being kept somewhere has to get out, and
+everything she does until she does is wasted. A woman standing on something she built has only to
+stop apologising for how slowly it settles. Yours is the second. What has felt like confinement
+this last year has been foundation work — and foundation work looks exactly like confinement from
+the inside, which is the whole trap in that card.
+
+Stop trying the handle on this door. It was never locked. It is just heavy, and it opens outward.
+
+There *is* a room in this reading with the door shut, and I won't let you go on to it unprepared.
+It is the seventh. Do not confuse the two, because the medicine for one is poison for the other.
+
 ---
 
 ## House 5 — romance, and what delights you
 
-### The cosmic forces have guided your selection to the Chariot — and %FIRSTNAME%, this is your answer about the Lovers
+### The cosmic forces have guided your selection to the Chariot — and this is your answer about the Lovers
 
 `[IMG-CHARIOT]`
 
@@ -200,11 +265,40 @@ the arrival of something you do not.
 
 **It is the arrival.**
 
+Here is how the spread separates them, because I promised you it would. The Lovers' two meanings do
+not live in the same room. Renewal would have shown in your seventh — the house of what you already
+hold. Arrival shows in your fifth. So I laid the twelve and looked at which of those two rooms was
+moving.
+
 The Chariot has fallen into your fifth house — the room of new love — and the Chariot is the card of
 a thing in motion coming toward you. Not a door you have to find. Something already travelling.
 
+Your seventh, as you will see, is not moving at all.
+
 That is the plainest answer this spread gives, and I want you to have it without hedging: the
 encounter is real, it is not a stranger, and it is closer to you than the far edge of your life.
+
+Now the two things I promised you that three cards could not give me.
+
+**When.** The Chariot is a thing already in motion, and motion can be timed — it is the one card
+in this spread that can be. Count from the day you read this. The first three weeks are approach,
+and you will not recognise them as anything; looking hard in that stretch is exactly how women
+miss theirs. **It is weeks four and five that carry it.** That is your window, and it is narrower
+than the two months the rest of this reading runs on, because an arrival is an event and the other
+eleven rooms are weather.
+
+**What he looks like when he uses it.** Not lightning, and not a stranger. The Chariot arrives
+already moving, so he comes in sideways — through something that was already happening. Work. A
+room you were going to be in anyway. Someone you both already know, who will not think they have
+introduced anybody.
+
+He will be more direct than you are used to, and he will be visibly occupied with something of his
+own. That second part is the tell, and it is the part women talk themselves out of. The man this
+card describes is not looking for you. He is going somewhere, you are on the way, and he stops.
+
+You will know it because you will notice you are being listened to. That is the recognition. It is
+much quieter than what you have been braced for, and it happens on an ordinary day, in ordinary
+clothes, exactly as I told you it would.
 
 Now the conditions, because the Chariot has them.
 
@@ -233,7 +327,7 @@ you or wears you down.
 
 Strength says you have more of it than you have been spending.
 
-This is a favourable room this season, %FIRSTNAME% — work goes well, health holds, and the thing
+This is a favourable room this season — work goes well, health holds, and the thing
 you have been grinding at moves further in the next two months than it has in the last twelve.
 
 The condition is focus, and I mean that narrowly. Strength is undone by a woman doing four things.
@@ -275,7 +369,7 @@ waiting on something that has stopped.
 
 So the sacrifice this card asks for is not a person. It is the waiting. Set down the waiting.
 
-That may mean asking a question you have been careful not to ask, %FIRSTNAME%. Ask it plainly and
+That may mean asking a question you have been careful not to ask. Ask it plainly and
 be willing to hear the answer, because the answer is the thing that unsticks this house either way.
 
 **And note who benefits from your patience here.** Suspension is uncomfortable for you and
@@ -335,7 +429,7 @@ decides everything she believed was wrong and throws out the good with the borro
 Weigh them one at a time. Keep what has served you. Put down what you only ever carried because
 putting it down felt like losing an argument with someone who is not even in the room.
 
-Justice also asks you to be scrupulous this season, %FIRSTNAME%, in the small ways — the corner you
+Justice also asks you to be scrupulous this season, in the small ways — the corner you
 could cut, the thing you could let someone believe. Not for moral reasons. Because this card returns
 what you put out with unusual speed for the next two months, and it is not a season to be owed
 anything by anybody.
@@ -371,7 +465,7 @@ Accept the past mistakes in this room without making a performance of them. Humi
 strategic, not moral — it removes the only weapon anyone has.
 
 **And be aware that one person's account of you is not accurate**, and that it has been travelling.
-Not a crowd, %FIRSTNAME%. One. You will hear an echo of it this season, and the echo will tell you
+Not a crowd. One. You will hear an echo of it this season, and the echo will tell you
 who.
 
 ---
@@ -409,7 +503,7 @@ it leaks.
 
 ## House 12 — what is being kept from you
 
-### And your twelfth card is the High Priestess, %FIRSTNAME%. This is your Tower.
+### And your twelfth card is the High Priestess. This is your Tower.
 
 `[IMG-PRIESTESS]`
 
@@ -434,6 +528,11 @@ You have felt it. That is the whole reason this reading found you in the first p
 something blocked that you could not name. The block is not in you. You have been reading a room
 with one door closed and blaming your eyesight.
 
+And this is your answer about the Moon, too — the man you have been reading in the dark. I told
+you moonlight is the one light you must never trust. Here is why that mattered: the thing you have
+been straining to make out is in the twelfth house, and **the twelfth house cannot be read by
+looking harder.** You were not failing to see it. You were using the wrong light.
+
 Here is what to do, and it is the least dramatic instruction in this reading.
 
 **Do not go looking for it.** Do not search, do not test them, do not set a trap to see what they
@@ -456,7 +555,7 @@ to you. That nothing happens to you from behind.
 
 ## What I want you to take from all twelve
 
-Read them together, %FIRSTNAME%, because that is where the reading actually is.
+Read them together, dear, because that is where the reading actually is.
 
 Two houses are paying you: the second, from something you already own, and the eighth, through
 someone else's ending. One house is bringing someone toward you: the fifth, already in motion. One
@@ -471,10 +570,13 @@ fifth and the eighth, and it is nearer than you think.
 
 Two last things, and then I'll let you go.
 
-Don't be surprised if some of this takes its time. A reading is not a timetable. The two months are
-the window in which the movement begins, not a promise that everything inside it is finished by the
-end — some of these rooms will have opened by the second week and one or two will take the whole
-season.
+I have dated one room and only one. The fifth, because the Chariot is a card of motion and motion
+can be dated — weeks four and five, and I meant it.
+
+The rest I have not dated, and I won't pretend I can. The two months are the window in which the
+movement begins, not a promise that every room is finished by the end. Some will have opened by
+the second week. The fourth will take the whole season, because seasons are the speed Temperance
+works at, and a woman who reads that as failure will stop three weeks before it comes right.
 
 <!-- INOCULATION #3 · compliance -->
 
@@ -513,15 +615,34 @@ I'm on your side in this, dear.
   the reading; poor outcome proves non-compliance. That is what inoculation #3 collects on.
 - **Zero overlap with the free six** (§6b.1). World, Lovers, Tower, Star, Emperor and Moon appear
   nowhere in the twelve, which is what earns *"twelve **new** cards"* in `02-E2`. Fool, Empress,
-  Hermit and Sun are spare and unused.
+  Hermit and Sun are spare and unused. ✅ **Re-verified against both letters 2026-08-13** — the two
+  letters name exactly those six between them and none of the twelve.
+- **All six withheld units are now closed, and three of them are new** *(2026-08-13)*. The B2 check
+  caught that this product answered `02-E2` only: `02-E3` is a follow-up to the same woman, so the
+  Emperor fork and the Moon were live questions with no closer. House 4 now answers the Emperor
+  (*it is a floor, not a locked room*) and hands the shut door to the seventh; house 12 names the
+  Moon and explains why looking harder never worked. See the contract table at the top.
 - **The twelfth house deliberately refuses to be investigated.** *Don't go looking for it* is the
   single most important instruction in the product: it is honest, it protects her, and it is also
   the only version of this card that doesn't send a woman to search her partner's phone. A product
   that told her to investigate would be a different and much worse product.
-- **`%FIRSTNAME%` × 12 in the body**, all mid-sentence, plus the subject and salutation. The source
-  runs ~24 and it reads as mail-merge by house six; half that, placed mid-sentence, reads as
-  attention. ⚠ Three of these are **echo slots** (`S28`) once the merge exists — houses 1, 7 and 12
-  are the natural sites, since those are the three that claim to know something about her.
+- ⚠ **No merge tokens at all, and that is D7** *(operator, 2026-08-13: one PDF for everyone)*. An
+  earlier draft ran `%FIRSTNAME%` × 12 mid-sentence, which was the right density for a per-buyer
+  document and is impossible in a shared one. They are gone: eight sentences read better without
+  the address and three took *"dear"*, which Evelyn says anyway. **The warmth now has to come from
+  the covering email** (`02-T4`), which does merge — so that email is doing more work than it was
+  designed for, and is worth re-reading with that in mind.
+  ⛔ **The three echo slots (`S28`) died with the same decision.** Houses 1, 7 and 12 were the sites
+  — the three that claim to know something about her — and one document for everyone cannot carry
+  a line pulled from her own V1 transcript. Recorded as a cost, not a defect.
+- **The timing is stated flat, and only where it can be** *(2026-08-13)*. Both letters promise
+  *"the day"*, and v1 promises *"which week, and what he looks like when he uses it"* — an earlier
+  draft answered all three with *"a reading is not a timetable"*, which argued against the thing
+  the letter sold. House 5 now gives a window (weeks four and five, counted from reading) and a
+  description of him. ⚠ **Weeks, not a date**, because one document serves every buyer and a
+  printed date would be wrong for all but one of them. The closing inoculation now dates the fifth
+  house deliberately and declines to date the other eleven, which is honest and no longer a
+  contradiction.
 - **Register.** No *"the cosmic forces have aligned in your favor"*, no *"behold"*, no *"embrace this
   journey"*. The source's product is written by a different persona than the source's letters, and
   neither is ours. Everything above is the woman who wrote `02-E2`.

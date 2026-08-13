@@ -15,8 +15,10 @@ Two halves:
   thank-you, and later the one that delivers the reading.
 
 **How we use it:** Claude does one step, shows you, and waits. You approve or
-send it back. Nothing goes live — none of these offers has Stripe yet, so no
-button charges anyone.
+send it back. ⛔ **Nothing goes live.** Stripe is built now *(2026-08-10)*, but it
+ships dark behind `BACKEND_CHECKOUT_LIVE` in `client/src/lib/backendCheckout.ts`
+— every button still logs and stops, and an offer whose after-the-money screens
+do not exist refuses money server-side as well.
 
 **Say this to start:**
 > Read `improve-v1/v1-one-time-BEs/docs/0-WORKFLOW.md` and build offer `<number>`.
@@ -48,7 +50,122 @@ never gets — which is exactly how 02's chat ended up an older shape than 03's
 without anybody deciding it should be. That is the one failure mode of working
 in copies, and it is avoided by hand, every time.
 
-**Live copies:** [`03/0-WORKFLOW-03.md`](./03/0-WORKFLOW-03.md).
+**Live copies:** [`02/0-WORKFLOW-02.md`](./02/0-WORKFLOW-02.md) ·
+[`03/0-WORKFLOW-03.md`](./03/0-WORKFLOW-03.md).
+
+⚠ **02's copy was written late** (2026-08-11) — 02 was built before this
+convention existed, so its status had been split across `00g`, `00h` and `00b`.
+It **supersedes 00b's 02 section**, whose boxes are stale.
+
+---
+
+## 📐 The whole thing, on one screen
+
+Two flows, and keeping them apart is the point. The first is **what she does** —
+what Phase A builds. The second is **what we do**, in order.
+
+### 1 · Her path — and the second lane she never sees
+
+⚠ **The money event forks into two lanes.** One is her browser — upsells, then
+the thank-you screen. The other is the webhook, and **that is the lane that
+emails her.** It runs even if she closes the tab on the Stripe redirect, which is
+exactly the hole V1 has and this deck does not.
+
+```mermaid
+flowchart TD
+    L["AWeber letter<br/>CTA carries ?c= and ?fn=name"] --> BOOK
+
+    BOOK["A2 · the booking step<br/>ONE offer, TWO candidate treatments:<br/>the page, or the chat"]
+    BOOK --> GATE["her statements, in HER voice<br/>the button does not exist until every box is ticked"]
+    GATE --> BUMP["A3 · the order bump<br/>inline beside the total on the page<br/>its own turn, after commitment, in the chat<br/>NEVER pre-checked"]
+    BUMP --> PAY{"SHE PAYS<br/>Stripe Checkout"}
+
+    PAY -->|"cancels"| RET["back to HER treatment, ?cancelled=1<br/>position restored · consent never<br/>and it says nothing has been taken"]
+    RET --> GATE
+
+    PAY -->|"pays"| U1["A4 · Upsell 1"]
+    U1 --> U2["A5 · Upsell 2<br/>two openings: took U1, or declined it"]
+    U2 --> TY{"A6 · the thank-you<br/>which archetype?"}
+    TY -->|"READING"| REC["a RECEIPT<br/>confirm, name the email subject, stop"]
+    TY -->|"ACT"| INT["the INTAKE ITSELF<br/>a form she fills in on the page"]
+
+    PAY -.->|"checkout.session.completed"| ROW["be_orders row<br/>idempotent · Stripe retries this"]
+    ROW --> TAG["AWeber: be-customer + be-nn-slug"]
+    TAG ==> T3["C1 · the thank-you EMAIL<br/>🔴 the tag IS the send"]
+
+    T3 -.->|"the wait — 24h, or three nights"| PDF["Phase B · her PDF exists"]
+    PDF --> DTAG["AWeber: be-nn-delivered + reading_url"]
+    DTAG ==> T4["C2 · the delivery email<br/>the envelope, not the product"]
+
+    style PAY fill:#7c3aed,color:#fff
+    style TAG fill:#b45309,color:#fff
+    style DTAG fill:#b45309,color:#fff
+    style T3 fill:#166534,color:#fff
+    style T4 fill:#166534,color:#fff
+```
+
+⛔ **The upsells come AFTER the money, always** — and because they do, they are
+written to be true of every buyer, from the product, never from her details.
+
+### 2 · The build order — and what blocks what
+
+```mermaid
+flowchart TD
+    W["Step 0 · the worksheet<br/>archetype · pricing model · the wait<br/>⚠ decides everything else"]
+
+    W --> A1["A1 settle D1 — the URL"]
+
+    subgraph PA["PHASE A — the funnel · how she buys"]
+        A1 --> A2["A2 the booking page AND its chat<br/>two deliverables, not one<br/>D3 · D4 · D11"]
+        A2 --> A3["A3 the order bump<br/>⛔ its OWN product code"]
+        A3 --> A4["A4 upsell 1"]
+        A4 --> A5["A5 upsell 2"]
+        A5 --> A6["A6 the thank-you<br/>receipt or intake — the easiest thing to get backwards"]
+        A6 --> A7["A7 wiring + tests<br/>⚠ prove the live funnel is untouched"]
+        A7 --> A8["A8 walk it in a browser, screenshot it"]
+    end
+
+    SH["A·shared · Stripe ✅ built once, 2026-08-10<br/>catalog · be_orders · checkout · webhook → AWeber<br/>every later offer inherits it — a new offer is a CATALOG ROW"]
+    SH -.->|"serves"| A3
+
+    A8 --> B1
+
+    subgraph PB["PHASE B — the product · what she actually paid for"]
+        B1["B1 scope it — 3,000–5,000 words · D5"]
+        B1 --> B2["B2 plan the structure BEFORE writing · D12<br/>every loop the letter opened gets a closer<br/>and the arrangement must be DRAWABLE"]
+        B2 --> B3["B3 write it"]
+        B3 --> B4["B4 the pictures · D6<br/>the cards · the mechanism drawn · the cover<br/>generated from the same table as the copy"]
+        B4 --> B5["B5 format it — markdown → Word → PDF<br/>🔴 D7 decides the whole pipeline"]
+        B5 --> B6["B6 make it deliverable · D8 · D9"]
+        B6 --> B7["B7 the gate before it ships"]
+    end
+
+    B7 --> C1
+
+    subgraph PC["PHASE C — the list, and the two emails it sends"]
+        C0["C0 the customer list<br/>🙋 OPERATOR, BY HAND — the API cannot create a list<br/>ONCE for the whole deck"]
+        C1["C1 the thank-you email"]
+        C1 --> C2["C2 the delivery email · D10"]
+        C2 --> C3["C3 upload, automate in AWeber, PROVE it"]
+        C0 -.->|"blocks"| C3
+    end
+
+    C3 --> DONE(["the offer can take money"])
+
+    style W fill:#1e3a8a,color:#fff
+    style SH fill:#166534,color:#fff
+    style C0 fill:#991b1b,color:#fff
+    style B5 fill:#b45309,color:#fff
+    style DONE fill:#7c3aed,color:#fff
+```
+
+**Reading the colours:** 🟩 green is done for the whole deck · 🟥 red is a
+hand-done step nobody can script · 🟧 amber is an unanswered decision that changes
+the build · 🟪 purple is money.
+
+⚠ **Phase B has never been run, for any offer.** B4/B5/B6 are the real unknowns —
+nobody has produced a PDF from this pipeline yet. Whatever they cost on the first
+offer, they cost once.
 
 ---
 
@@ -56,7 +173,7 @@ in copies, and it is avoided by hand, every time.
 
 | | Archetype | Money | Needs her reply? | Product | Funnel |
 |---|---|---|---|---|---|
-| **02** Twin Flame | Reading | $35 fixed + bump | no | written, 4,821 words, 12 cards | ✅ built — [`00i`](./00i-DELIVERABLES-U1-U2.md) |
+| **02** Twin Flame | Reading | $35 fixed + bump | no | written, 4,821 words, 12 cards | ✅ built + Stripe wired, dark — tick sheet in [`02/0-WORKFLOW-02.md`](./02/0-WORKFLOW-02.md), records in [`00h`](./00h-DELIVERABLES-BEs.md) + [`00i`](./00i-DELIVERABLES-U1-U2.md) |
 | **03** Judgement Day | **Act** | pay-what-you-want | **yes** | written, 2,429 words | ◐ booking built, upsells not — tick sheet in [`00l`](./00l-DELIVERABLES-03.md), upsells planned in [`00k`](./00k-PLAN-03-UPSELLS.md) |
 | **04** The Turn | Reading | ladder $35→$47→$57→$67 | no | written, 3,714 words | not analysed |
 | **05** Hex Her | — | — | — | — | ⚠ no copy at all yet |
@@ -74,7 +191,15 @@ nobody can find is a screen nobody reviews, and by the next session the URL and
 the query string that makes it work are gone. See rule 7.
 
 Local base: `http://localhost:5000`, after `npm run dev`.
-⛔ **Nothing here charges.** Every button logs `[preview] would checkout {…}`.
+⛔ **Nothing here charges.** Every button still logs `[preview] would checkout {…}`.
+
+⚡ **The Stripe path underneath them is now BUILT** *(2026-08-10)* — `be_orders`,
+`POST /api/backend/checkout`, the `be_*` webhook branch and the `addBackendCustomer`
+write. Every button routes through `beginBackendCheckout()`, which logs and stops
+while **`BACKEND_CHECKOUT_LIVE` is false** in `client/src/lib/backendCheckout.ts`.
+That constant carries the go-live checklist. ⛔ 03 additionally refuses money
+server-side (`readyForMoney: false`) until its thank-you/Entry screen exists —
+flipping the client flag takes **02 only** live.
 
 ### 02 — Twin Flame *(Reading · $35 fixed + bump)*
 
@@ -272,6 +397,7 @@ its why gets re-litigated every time somebody new reads it.
 | D4 | Money limits — the floor for pay-what-you-want, or the rungs of a ladder | A2 |
 | D11 | **One page, or one job per screen** — split it once the booking page passes ~2 phone screens | A2 |
 | D5 | Product length, if it is currently under 3,000 words | B1 |
+| D12 | **The picture that proves this offer's mechanism** — what is it, and does it become the cover? Decided with the structure, because the picture and the section map are the same decision seen twice | B2 |
 | D6 | Card artwork — the public-domain deck we already hold, or something commissioned | B4 |
 | D7 | **One PDF per buyer (merged, automated) or one PDF for everyone** — decides whether Word is a per-order step or a one-off design step | B5 |
 | D8 | PDF attached to the email, or hosted and linked | B6 |
@@ -483,14 +609,39 @@ Then check three things:
    the buyer has paid to be told the same question again.
 2. **No card repeats a card she already saw free.** 02's twelve deliberately have
    zero overlap with the six in the letter.
+
+   ⚠ **This collides with the letters' own mechanism, and novelty wins** *(settled
+   on 02, 2026-08-13)*. The letters promise both *"twelve **new** cards, not these
+   three again"* and *"the **house** the Lovers falls into is what separates them"*
+   — and the second needs the Lovers dealt. Keep novelty: paying to be shown the
+   same cards again is the fastest route to feeling robbed.
+
+   **The mechanism survives, because it was never about the card.** Each fork names
+   two candidate ROOMS; the spread's job is to say which one is lit, using the NEW
+   card that landed there. Write that out loud at the point of the answer — do not
+   leave the reader to assemble it.
+
+   ⛔ **Never write that a free card "fell" in a house.** It is not in the spread.
+   It reads as a thirteenth card and quietly makes the novelty promise a lie. 02
+   shipped that sentence for a day before it was caught.
+
+   ⚠ **Check the arithmetic per offer.** Twenty-two majors, minus what the letters
+   spend free, minus twelve laid. On 02 that leaves four spare. An offer whose
+   letters spend the same six is drawing from the same sixteen.
 3. **The arrangement means something.** 02's rule: *read all twelve before you
    decide what it says, because the meaning is in the arrangement.* That only
    holds if the arrangement was designed.
+4. **The arrangement can be DRAWN** — decision **D12**, and it is settled here rather
+   than at B4 because the picture and the section map are the same decision seen
+   twice. If the map can be drawn, the mechanism is real; if it cannot, that is worth
+   knowing before 4,000 words are written on top of it. See B4.
 
 ⛔ **Do not reorder positions or reassign cards later without re-reading the
 letters.** Three withholds, three answers, and she has the letter in her inbox
 where she asked for each one. The upsells reference these too — 02's upsells name
-houses 2, 5 and 12 out loud.
+houses 2, 5 and 12 out loud. ⚠ **And redraw the picture** — the diagram is generated
+from the same table, and a reassignment that reaches the words but not the image
+leaves the buyer holding two answers.
 
 ### ☐ B3. Write it
 
@@ -516,7 +667,89 @@ Per-section shape that works: *name the card and the position → what it means
 here, specifically → the condition or instruction → the warning that belongs to
 it.*
 
-### ☐ B4. Insert the cards
+### ☐ B4. The pictures — the cards, the mechanism, the cover
+
+Three jobs, not one. **The cards** go beside their sections; **the mechanism** gets
+drawn once (D12); **the cover** is chosen from what you now have.
+
+⚡ **All of it is scripted now** *(built on 02, 2026-08-13 — every later offer is a
+config row, not a new script)*:
+
+```
+node improve-v1/v1-one-time-BEs/scripts/make-be-reference-docx.mjs   # once, for the whole deck
+node improve-v1/v1-one-time-BEs/scripts/make-zodiac-spread.mjs <nn>  # the spread, as one image
+node improve-v1/v1-one-time-BEs/scripts/build-be-product.mjs <nn>    # after any copy edit
+```
+
+### 📐 D12 — draw the mechanism, and prefer it to an ecover
+
+**Every offer in the deck should draw its own mechanism as one image.** An ecover — the
+3D book mockup — makes a digital file feel like an object, which is worth something. A
+mechanism diagram does more: it **proves the thing she paid for**, on the page she opens
+first, and doubles as a map she flips back to while reading.
+
+⚡ **Generate it from the same table the copy is written against.** 02's wheel is drawn
+from its house→card list, so the picture cannot drift from the words. A hand-made image
+can, and will, the first time a position is reassigned.
+
+**It differs per offer, and that is the point of asking at B2:**
+
+| Offer | What the picture is |
+|---|---|
+| **02** Twin Flame *(Reading)* | the twelve cards in their twelve houses — a chart wheel. ✅ built, `make-zodiac-spread.mjs` |
+| **04** Tea Reading *(Reading)* | the cup from above: **handle = her**, angle = how near and how soon, radius = rim → wall → base. ✅ built, `make-tea-cup.mjs` |
+| **03** Judgement Day *(Act)* | not a spread — the three nights. **Entry · Transfer · Closing**, and where her reply enters it |
+| **05** Cut the Cord | decide with its copy; it has none yet |
+
+⛔ **Draw it. Do not source it, and never scrape it.**
+
+- **A paid product needs provenance.** The deck's standard is `assets/tarot-rws/index.json`
+  — source and licence recorded per image. Scraped art cannot meet that, and once a PDF
+  is in 500 inboxes you cannot quietly swap a picture the way you can on a web page.
+- **A photograph usually cannot do the job anyway.** 04's source package shipped a real
+  photo of a real cup with the seven symbols ringed in red
+  (`docs/media/04-tea-reading/image1.jpg`). You cannot see a boat, a bridge or a
+  lighthouse in it, because wet leaves look like wet leaves. It marks positions on a
+  mess. The diagram we drew shows in one glance what that photo cannot show at all.
+- **Symbols want silhouettes, not illustrations.** They have to read at about an inch.
+- If you do want period texture, pre-1929 tasseography and occult plates are public
+  domain in the US — and anything used gets its provenance recorded the same way.
+
+⛔ **A picture of the PAID positions must never appear before the money.** 02's wheel
+shows all twelve cards, so it can be the product's cover and can never be the letter's
+hero. That is what the face-down fan is for — it says *"not yet turned"*, which is true
+on the booking page and false in the delivered reading.
+
+⚠ **The ecover is not cancelled, it is relocated.** As the product's cover it loses to
+the mechanism; as a **Phase A** asset — on the booking page, in the letter, wherever a
+digital file has to look like something you receive — it still earns its place. Build it
+from the mechanism picture only if that picture is safe to show, which on a Reading
+offer it is not. Wrap the face-down deck instead.
+
+**Traps, all three found on 02:**
+
+- ⛔ **Check a chart wheel against all four landmarks, never the first position alone.**
+  02's first render put house 1 correctly at nine o'clock and mirrored everything else,
+  so house 4 sat at the top and house 10 at the bottom. It looked plausible, and was
+  backwards to every reader who has ever seen a birth chart.
+  *(1 → 9 o'clock · 4 → 6 · 7 → 3 · 10 → 12, running anti-clockwise.)*
+- ⛔ **Never rotate a tarot card to fit a layout.** A tilted card reads as REVERSED —
+  a different card with a different meaning.
+- ⚠ **Put each position's number on its own card**, not on a ring of its own. Two
+  concentric rings of labels collide at the left and right extremes.
+
+The build script strips the spec's scaffolding, inlines the gift at its marker, places
+the cards, breaks the page before every section, and calls pandoc. **It refuses to emit
+a document containing a surviving `%TOKEN%` or `[IMG-…]`** — B7 gate items enforced at
+build time, because one document reaches every buyer at once.
+
+⚠ **The upload step below applies to an EMAIL product, not a PDF.** It is kept for an
+offer that ships as mail. A PDF embeds the images from `assets/tarot-rws/` directly, and
+*"must work with images switched off"* is an inbox problem a PDF does not have — so on a
+PDF offer, B4 collapses into B5.
+
+⚠ **The art is 350×600.** At 2.2in wide that is ~159dpi: right on screen, fine from a
+home printer, short of press quality. That is the ceiling of the deck we hold.
 
 We already hold a full public-domain deck. **Nothing needs buying or drawing.**
 
@@ -576,9 +809,37 @@ adjust before anything is sent — nudge a card, fix a widow, re-break a page.
 | Tool | Status |
 |---|---|
 | Microsoft Word | ✅ installed |
-| pandoc (markdown → .docx) | ❌ needs `brew install pandoc` — one command |
+| pandoc (markdown → .docx) | ✅ **installed 2026-08-13** — 3.10.1 |
 | LibreOffice / wkhtmltopdf | ❌ not installed, not needed |
 | Playwright (HTML → PDF) | ✅ installed — the fallback route |
+
+⚡ **The reference document is built** — `assets/be-reference.docx`: US Letter, 1in
+margins, Georgia 12pt on 1.4, a centred page number, and `keepNext` on every heading so
+a house title cannot be stranded at the foot of a page. **All four offers inherit it.**
+
+#### 📄 Exporting a PDF to proof — Word is the only converter here
+
+No LibreOffice, no LaTeX, no wkhtmltopdf on this machine. Word is installed, and it can
+be driven from the shell. Read-only, and it closes without saving:
+
+```bash
+osascript <<'END'
+with timeout of 180 seconds
+  tell application "Microsoft Word"
+    set d to open file name "/abs/path/02-product.docx" with read only
+    save as d file name "/abs/path/02-product.pdf" file format format PDF
+    close d saving no
+  end tell
+end timeout
+END
+```
+
+🔴 **Do this early and look at page one.** Four defects survived into 02's first proof
+and **none of them was visible in the .docx or the markdown** — see B7.
+
+⛔ **It is meant to be hand-adjusted in Word, and `make-be-reference-docx.mjs` rebuilds
+it from pandoc's default.** Run that script once, ever. Running it again discards the
+design pass — which is the whole thing D7 bought.
 
 **Recommended:** install pandoc. Then `0X-P1.md` converts straight to a .docx
 that carries our styles, using a **reference document** — a Word file that
@@ -645,12 +906,31 @@ it just returns a PDF path or URL now rather than an HTML body.
 
 ### ☐ B7. The gate before it ships
 
+🔴 **Export the PDF and page through it before you tick anything.** On 02 that turned up
+four defects, and **not one was visible in the markdown or the .docx**:
+
+| What the proof showed | Why nothing else caught it |
+|---|---|
+| Every heading in **blue sans-serif** | pandoc's reference sets headings to the Word theme's major font and accent-blue. Body was Georgia, so the file *looked* configured |
+| A printed caption **"The Magician"** under a heading that had just said the Magician | pandoc promotes an image WITH alt text to a figure and prints the alt. Use `![](path)`, no alt |
+| **⚠ in the buyer's copy** — a yellow warning triangle mid-reading | the specs use ⚠/⛔ as notes to the writer, and one sat on a real sentence in the gift |
+| A stray **rule under Evelyn's signature** on the last page | the scene-rule stripper was regex-on-newlines and the LAST rule has no newline after it |
+
+⚠ **Three of the four are now enforced by `build-be-product.mjs`**, which strips markers
+and rules and reports what it removed. The blue headings were a reference-doc fix. But
+the general lesson stands: **a document is not proofed until it is a PDF.**
+
 Every box, every time:
 
 - ☐ Word count in range (or D5 answered).
 - ☐ Every loop the letter opened is closed, by name.
 - ☐ Every `[IMG-…]` replaced with a real card image, at the right size.
 - ☐ No `%TOKEN%` left unmerged. No blanks anywhere.
+- ☐ **The mechanism picture agrees with the copy, position by position.** Regenerate
+      it rather than trusting it — a reassignment that reached the words and not the
+      image hands the buyer two answers, and she believes the picture.
+- ☐ **No paid position is visible in any pre-purchase asset** — the letters, the
+      booking page, the nudges. Check the hero images, not just the body copy.
 - ☐ Subject matches the thank-you page word for word.
 - ☐ The free gift appears once, as the closing section.
 - ☐ **Page through the whole PDF.** No card stranded alone, no section heading at

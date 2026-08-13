@@ -66,7 +66,9 @@ Do it tonight if you can.
   the say-so she already gave on the booking page. 03's and 05's equivalents invert this — the
   reply instruction goes **above** the delivery promise there, because the work genuinely cannot
   start without it. Do not copy this page into an ACT offer.
-- **The named subject line is load-bearing** and must match `02-P4` exactly. It is how she finds
+- **The named subject line is load-bearing** and must match `02-T4` (the delivery email that
+  actually carries it) and `02-P1` exactly. ⚠ `02-P4` — cited here until 2026-08-13 — has never
+  existed. It is how she finds
   the product in a crowded inbox, and it is the single cheapest thing on this page.
 - **The bump block is conditional and it is not an afterthought.** `02-C3` says *"I can start it
   tonight"*. If the instructional isn't delivered here, that sentence is false within a minute of

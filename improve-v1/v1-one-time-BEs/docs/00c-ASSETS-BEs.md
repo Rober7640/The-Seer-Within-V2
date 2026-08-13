@@ -40,13 +40,13 @@ writing, not coding.
 
 | ID | Asset | Status | Notes |
 |---|---|---|---|
-| S1 | Offer registry `server/lib/backendOffers/config.ts` | ⚙️ | price model, copy keys, bump, gate, SLA per offer |
+| S1 | Offer registry — **built as `shared/backendOffers.ts`**, not `server/lib/` | ✅ | price model, bump + its n8n key, Stripe product, booking/success paths, `readyForMoney`. In `shared/` so the screen that PRINTS a price and the endpoint that CHARGES one read the same row |
 | S2 | Booking page component `client/src/pages/backend-offers/BookingPage.tsx` | ⚙️ | config-driven, one page not four. **Treatment B — plain direct-response** (decided; see render) |
 | S3 | Subscriber identification on click | ⚙️ | reuse Soulmate hydration (`shared/schema.ts:1305-1310`). No raw email in URLs |
-| S4 | `be_orders` table + webhook handler | ⚙️ | mirror `soulmate_orders` |
-| S5a | Checkout mode: fixed + bump | ⚙️ | 02 |
-| S5b | Checkout mode: PWYW + clamp | ⚙️ | 03, 05 |
-| S5c | Checkout mode: ladder | ⚙️ | 04 |
+| S4 | `be_orders` table + webhook handler | ✅ | `shared/schema.ts` + `migrations/2026-08-10-be-orders.sql` (⛔ run the SQL, never `db:push`); `server/lib/beOrders.ts`; `be_*` branch in `server/routes/webhooks.ts`. Records the AWeber write's success/failure, because that write IS the thank-you send |
+| S5a | Checkout mode: fixed + bump | ✅ | 02. `POST /api/backend/checkout` — price from the catalog, never from the request |
+| S5b | Checkout mode: PWYW + floor | ✅ | 03. Floor **enforced server-side**; the refusal message never names it |
+| S5c | Checkout mode: ladder | ⚙️ | 04 — the one model the catalog does not carry yet |
 | S6 | Thank-you route component | ⚙️ | clone `SoulmateThankYouPage.tsx` |
 | S7 | Segmentation gate (pronoun + bucket) | ⚙️ | without this "women-only" isn't real |
 | S8 | Capacity cap + link deactivation | ⚙️ | 03 + 05 both claim limited slots |
@@ -65,7 +65,10 @@ writing, not coding.
 | S21 | **Upsell allocation + suppression** — never offer an object they already own | ⚙️ | owns nothing → stone → bracelet; owns both → straight to thank-you |
 | S22 | Shipping collection + physical fulfilment | ⚙️ | reuse `bracelet_orders`, `server/lib/braceletOrders.ts` |
 | S23 | **`getReadingBody(offer, buyer)` seam** — MVP returns a static template + `%FIRSTNAME%`; later posts to an n8n webhook. Build the seam in Phase 1 or pay for it twice | ⚙️ | the one bit of Phase-2 thinking worth doing now |
-| S24 | `be_orders.reading_body` column — store what was actually sent | ⚙️ | re-sends identical; support can see it |
+| S24 | `be_orders.reading_body` column — store what was actually sent | ✅ | column exists (with `reading_url` + `delivered_at`); nothing writes it until Phase B produces a product |
+| S34 | **Product build pipeline** — `scripts/build-be-product.mjs` | ✅ | assembles the spec into a document: strips scaffolding, inlines the gift, places the cards, breaks pages, runs pandoc. ⛔ Refuses to emit a surviving `%TOKEN%` or `[IMG-…]`. A new offer is a config row |
+| S35 | **The deck's page design** — `assets/be-reference.docx` | ✅ | US Letter · 1in · Georgia 12/1.4 · page number · headings keep with their card. Built once by `make-be-reference-docx.mjs`; ⛔ meant to be hand-adjusted in Word, so never regenerate it |
+| S36 | **The mechanism, drawn** *(D12)* — one image per offer, generated from the same position table as the copy | ◐ | 02's chart wheel ✅ (`make-zodiac-spread.mjs`, and it is 02's cover) · 04's cup ✅ (`make-tea-cup.mjs`) · 03 and 05 still to decide. ⛔ Drawn, never scraped — a paid product needs provenance. ⛔ Never show paid positions pre-purchase |
 | S25 | *(Phase 2)* n8n workflow: query Supabase by email → prompt → Claude → return body | ⚙️ | greenfield, no n8n in repo today |
 | S26 | *(Phase 2)* Read-only Supabase role scoped to the personalisation columns | ⚙️ | not the app connection string |
 | S27 | *(Phase 2)* Fallback + data-quality gate — thin `concern` → static | ⚙️ | a paid product must never fail to arrive |
@@ -191,7 +194,8 @@ we point. Subdomain `reply.theseerwithin.com` so the root domain's mail is untou
 | 04-E1 | Subject lines — **only 1 exists, need 5+** | 🔨 |
 | 04-E2 | ESL copy — 7 symbols. Structural rule from its brain dump: *"reveal half and tease"* | ✏️ |
 | 04-E3 | Email HTML | 🔨 |
-| 04-E4 | Images — 1 exists (tea cup), need more | 🔨 |
+| 04-E4 | Images — the **letter's** set. 🔴 The cup diagram is NOT one of them: it shows the paid positions, so it is a product asset only. The source photo (`docs/media/04-tea-reading/image1.jpg`) is the swipe's art and shows nothing legible | 🔨 |
+| 04-P2 | **The cup, drawn** *(D12)* — `assets/04-the-cup.png`, from `04-P1`'s "Where your seven landed" table. Handle = her, angle = how near/soon, radius = rim → wall → base | ✅ |
 | 04-E5a | **Ladder email day 2 ($47)** | 🔨 |
 | 04-E5b | **Ladder email day 3 ($57)** | 🔨 |
 | 04-E5c | **Ladder email day 4 ($67, last call)** | 🔨 |

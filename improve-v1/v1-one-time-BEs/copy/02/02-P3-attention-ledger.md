@@ -22,7 +22,7 @@ structurally and instructs nothing but attention.
 
 <!-- TRANSITION · §6c. The gift is a second ACT, not a bonus paragraph -->
 
-### And now the second part, %FIRSTNAME% — this one is yours to keep
+### And now the second part, dear — this one is yours to keep
 
 When you have read your twelve properly — all of them, more than once — there is a second thing I
 want to give you, and it costs you nothing but a minute a night.
@@ -99,7 +99,7 @@ On the twenty-eighth night, read the whole ledger through.
 **In the first two weeks, and again in the fourth**, pay particular attention to the people you
 come across.
 
-Your fifth house has something already in motion toward you, %FIRSTNAME%, and the Chariot said it
+Your fifth house has something already in motion toward you, and the Chariot said it
 is not a stranger. That means it arrives as someone you already know behaving slightly differently
 — which is precisely the kind of thing the eye skips and the ledger catches.
 
@@ -163,4 +163,4 @@ That is what it is to stop finding out last.
   sealing practice is nine, and 05's Four Watches are four *parts of one night* rather than four
   weeks — watch that pairing at the corpus pass. 02's own bump (`02-C4`) is deliberately a **single**
   night's working so the offer isn't selling two nightly practices in one checkout.
-- **`%FIRSTNAME%` × 2**, both mid-sentence, keeping the product's overall cadence.
+- ⚠ **No merge tokens** — removed 2026-08-13 with D7 (one PDF for everyone). One took "dear"; the other reads better without. The gift renders inside `02-P1`, so it follows the same rule.

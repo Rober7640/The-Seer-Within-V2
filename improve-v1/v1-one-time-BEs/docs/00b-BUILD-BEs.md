@@ -170,7 +170,13 @@ natal input). The birth-data blocker I raised is withdrawn.
 > - **05's *"she will NOT pursue him"* is settled** — it never ships (operator, 2026-08-04).
 > - **The pre-checked bump is settled** — it ships unchecked (operator, 2026-08-04).
 >
-> The **code and ops** sections further down are still accurate: none of that is built.
+> ⚠ **The code and ops sections further down are no longer accurate either**
+> *(2026-08-10/11)*. Stripe **is** built — `be_orders`, `/api/backend/checkout`, the
+> `be_*` webhook branch and the `addBackendCustomer` write — and it ships dark behind
+> `BACKEND_CHECKOUT_LIVE`. Read the per-offer tick sheets for what is actually done:
+> **[`02/0-WORKFLOW-02.md`](./02/0-WORKFLOW-02.md)** and
+> [`03/0-WORKFLOW-03.md`](./03/0-WORKFLOW-03.md).
+>
 > This section is kept for its per-offer *reasoning*, not as a live to-do list.
 
 ### 02 Twin Flame Tarot — mostly transcription
