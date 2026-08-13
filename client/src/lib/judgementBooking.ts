@@ -24,21 +24,21 @@
 // explicit — build it or don't write the line. So the page ships with FIVE
 // statements, not six. Restore it verbatim from 03-C1 the day `S8` lands.
 
-// PWYW floor, decision D4 (2026-08-08). The box ships EMPTY — no prefill —
-// because "she sets no price" is the whole reason-why in statement 6, and a
-// number already sitting in the field is a price. The $300 / $250 anchor in
-// that statement does the work a prefill would have done.
-export const JUDGEMENT_MIN_CENTS = 1700;
-
-// Fixed price on a pay-what-you-want offer, and coherent: the WORKING is priced
-// by what she can give; the instructional is a defined product with a defined
-// price (03-C3).
-export const JUDGEMENT_BUMP_CENTS = 1277;
-
-// ⛔ 03's bump gets its OWN key. n8n exact-matches this string to decide what to
-// fulfil, so reusing V1's `double_reading` would post her a second reading
-// instead of The Unburdening.
-export const JUDGEMENT_BUMP_PRODUCT_KEY = 'unburdening';
+// ⛔ The numbers are NOT defined here. They live in shared/backendOffers.ts, which is
+// also what the checkout endpoint charges from and floor-checks against — one number,
+// so the page and the card can never disagree, and so the PWYW floor is ENFORCED
+// server-side rather than only hidden client-side.
+//
+// The box still ships EMPTY — no prefill — because "she sets no price" is the whole
+// reason-why in statement 6, and a number already sitting in the field is a price.
+// The $300 / $250 anchor in that statement does the work a prefill would have done.
+//
+// The bump's key is 03's OWN: n8n exact-matches it to decide what to fulfil.
+export {
+  JUDGEMENT_MIN_CENTS,
+  JUDGEMENT_BUMP_CENTS,
+  JUDGEMENT_BUMP_PRODUCT_KEY,
+} from '@shared/backendOffers';
 
 // ⚠ "CONFIRM", NEVER "CONFIRMED" *(operator, 2026-08-09)*. She clicked "Open my
 // page" in the letter, so a booking is already in flight and this screen is

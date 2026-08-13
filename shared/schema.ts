@@ -1508,3 +1508,83 @@ export const braceletOrders = pgTable("bracelet_orders", {
 
 export type BraceletOrder = typeof braceletOrders.$inferSelect;
 export type InsertBraceletOrder = typeof braceletOrders.$inferInsert;
+
+// ============================================================
+// BACKEND DECK ORDERS (be_orders)
+// ============================================================
+// Every purchase from the one-time backend offers — 02 Twin Flame, 03 Judgement Day,
+// and the two that follow. ONE table for the whole deck, keyed by `offer`, for the same
+// reason there is one AWeber customer list: a woman who buys 02 and then 03 is one
+// customer with two orders, and every query about "backend revenue" wants one place.
+//
+// Workflow: improve-v1/v1-one-time-BEs/docs/0-WORKFLOW.md (asset S4).
+//
+// One row per Stripe Checkout session. `stripeSessionId` is UNIQUE so the webhook can
+// upsert idempotently: Stripe retries checkout.session.completed, and the thank-you page
+// reads the same session as a backstop. Neither may create a duplicate.
+//
+// 🔴 WHY THE ROW MATTERS EVEN THOUGH STRIPE HAS THE MONEY: `customer_list_written_at`.
+// The AWeber write IS the thank-you send (workflow rule 8) — a Campaign triggered by the
+// offer tag. A failed write is a woman who paid and got nothing, and without a column
+// recording it, nobody can find her. This is the table you query to answer "who paid and
+// was never emailed".
+//
+// ⚠️ Create it with migrations/2026-08-10-be-orders.sql (a plain CREATE TABLE IF NOT
+// EXISTS). Do NOT `npm run db:push` — dev and prod share ONE database, and push diffs the
+// WHOLE schema, so any unrelated drift would be applied to production at the same time.
+// ============================================================
+
+export const beOrders = pgTable("be_orders", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+
+  // Stripe is the source of truth for money. UNIQUE => idempotent upsert.
+  stripeSessionId: text("stripe_session_id").notNull().unique(),
+  stripePaymentIntentId: text("stripe_payment_intent_id"),
+
+  // Which offer, in the deck's own vocabulary (shared/backendOffers.ts).
+  offer: text("offer").notNull(),               // twin-flame | judgement-day
+  offerNumber: text("offer_number").notNull(),  // 02 | 03
+  // Which booking treatment sold it — the page or the chat. The two are an A/B on
+  // mechanism, and without this column the test has no readout.
+  treatment: text("treatment"),                 // page | chat
+
+  // The money, split so a pay-what-you-want offer stays analysable: `reading_cents`
+  // is what she chose to give (or the fixed price), `amount_cents` is what Stripe
+  // actually took. They differ by the bump, and only by the bump.
+  readingCents: integer("reading_cents").notNull(),
+  bumpPurchased: boolean("bump_purchased").notNull().default(false),
+  bumpCents: integer("bump_cents").notNull().default(0),
+  // ⛔ n8n exact-matches this to decide what to fulfil. Never rename a key.
+  bumpProductKey: text("bump_product_key"),
+  amountCents: integer("amount_cents").notNull(),
+  currency: text("currency").notNull().default("usd"),
+
+  // Who she is. `first_name` comes down the chain from the AWeber letter's ?fn=,
+  // through Stripe metadata — the difference between "Thank you, Sarah" and "Thank
+  // you, Friend" on every screen after the money.
+  email: text("email"),
+  firstName: text("first_name"),
+
+  status: text("status").notNull().default("paid"), // paid | refunded | cancelled
+
+  // The AWeber write that fires her thank-you. See the header.
+  customerListWrittenAt: timestamp("customer_list_written_at"),
+  customerListError: text("customer_list_error"),
+
+  // Fulfilment. `reading_body` stores what was ACTUALLY sent (asset S24), so a re-send
+  // is identical and support can read what she got.
+  readingBody: text("reading_body"),
+  readingUrl: text("reading_url"),
+  deliveredAt: timestamp("delivered_at"),
+
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_be_orders_offer").on(table.offer, table.createdAt),
+  index("idx_be_orders_email").on(table.email),
+  // The "paid but never emailed" query, which is the one that finds a broken send.
+  index("idx_be_orders_list_written").on(table.customerListWrittenAt),
+]);
+
+export type BeOrder = typeof beOrders.$inferSelect;
+export type InsertBeOrder = typeof beOrders.$inferInsert;
