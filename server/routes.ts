@@ -282,6 +282,45 @@ function aweberLeadListId(funnel: FunnelId): string | undefined {
   return process.env.AWEBER_LIST_ID;
 }
 
+// Absolute per-person link back to her own unfinished reading, stored on the
+// AWeber subscriber as the `resume_url` custom field for the recovery sequence
+// to use as a merge field. Full URL rather than the bare id so the email
+// button's href is one merge field and domain/path/params stay ours.
+//
+// THE PATH MUST CARRY THE FUNNEL'S OWN PREFIX. client/src/lib/funnel.ts →
+// currentFunnel() derives the funnel from window.location.pathname and nothing
+// else; `conversations` has no funnel column and the resume endpoint returns
+// none. So a palm/tarot lead resuming on the bare /chat is treated as base V1
+// from that point on — her Stripe product loses its " - PALM"/" - TAROT"
+// suffix, her paid AWeber tag loses -palm/-tarot, and PostHog records her as
+// v1. Her PRICE is unaffected (locked to her email, returned by the resume
+// endpoint), but the revenue is credited to the wrong funnel, understating
+// those funnels' ROAS. Derived from the shared registry so any future funnel
+// gets this behaviour for free. Not retrofittable: a link is only written at
+// opt-in and she won't opt in twice.
+//
+// BASE_URL, never getBaseUrl(req) — the latter takes the host from the
+// visitor's own request headers, which would permanently bake a
+// *.up.railway.app hostname into her email.
+function buildResumeUrl(
+  funnel: FunnelId,
+  conversationId: string | null,
+): string | undefined {
+  if (!conversationId) return undefined;
+
+  const base = process.env.BASE_URL;
+  // A missing BASE_URL would fall through to a localhost link on a real
+  // subscriber — the local .env carries live AWeber credentials, so that write
+  // reaches the production list. Skip the field instead; the lead still lands.
+  if (!base || /localhost|127\.0\.0\.1/.test(base)) {
+    logger.warn("resume_url skipped: BASE_URL unset or local");
+    return undefined;
+  }
+
+  const prefix = funnelDefForParam(funnel)?.prefix ?? ""; // "" for base traffic
+  return `${base.replace(/\/+$/, "")}${prefix}/chat?resume=${conversationId}&src=recovery`;
+}
+
 // Stripe client for the active account (A primary / B backup). Resolved at boot
 // from ACTIVE_STRIPE_ACCOUNT via the central helper; null when unconfigured.
 const stripe = getStripe();
@@ -1042,7 +1081,12 @@ export async function registerRoutes(
       // purchase on the email, with nothing else joining them. READ, never minted:
       // a lead with no cookie simply records none. First write wins in
       // saveConversation, so a returning buyer is never moved between visitors.
-      await saveConversation({
+      // The id is the recovery link's only secret — a random UUID is precisely
+      // what stops someone editing the URL and reading other people's private
+      // readings. saveConversation upserts on email (newest row per email), so
+      // re-opting in returns the SAME id and rewrites the same link rather than
+      // minting a second one.
+      const conversationId = await saveConversation({
         email,
         firstName,
         bucket,
@@ -1064,11 +1108,22 @@ export async function registerRoutes(
 
       // Add to AWeber email list (non-blocking). Per-lander FREE list when the
       // funnel's AWEBER_LIST_ID_* env is set, else the shared AWEBER_LIST_ID.
+      //
+      // `resume_url` rides along on the same write so the recovery sequence can
+      // link her back to her own unfinished reading. Deliberately NOT carrying
+      // her email (the UUID is what keeps other people's readings private), her
+      // price (a written commitment that could contradict her locked variant),
+      // or her name (AWeber already has it).
+      const resumeUrl = buildResumeUrl(funnel, conversationId);
       addSubscriberToList({
         email,
         name: firstName,
         listId: aweberLeadListId(funnel),
         tags: fbifyAweberTags([bucket || "website", "seer-within"], funnel),
+        // Omitted entirely when we have no link — never `custom_fields: {}`,
+        // which AWeber reads as "clear every custom field" on an
+        // update_existing write.
+        customFields: resumeUrl ? { resume_url: resumeUrl } : undefined,
       })
         .then((result) => {
           if (result.success) {

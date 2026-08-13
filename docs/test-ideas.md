@@ -1741,3 +1741,22 @@ instead, and the auto-scroll effect was dead code — from ~the 8th message ever
 - [ ] Clicking the confirm button after all 3 are checked calls `handlePurchase("main")` and routes through the exact same `/api/checkout` call (same `type=main`, same funnel tag, same price) as the control variant's `PurchaseCTA` — the gate changes only the UI in front of the purchase, never the checkout itself
 - [ ] `35_palm_gate` carries the same $35 main / $25 downsell economics as `35_palm_u47` — price shown and charged is identical between the two arms
 - [ ] Commitment checkbox copy shows "I understand belief is required for this to work", "I'm ready to receive this tonight", "I'll read it with an open heart" (no secrecy or irreversibility framing that would contradict the card's own 30-Day Guarantee footer)
+
+### V1 recovery link — `resume_url` AWeber custom field at lead capture (2026-08-13)
+Written on every V1 funnel's lead write so an AWeber recovery sequence can link a lead back to her own
+unfinished reading. The path MUST carry her funnel's prefix: `currentFunnel()` derives the funnel from
+`window.location.pathname` alone, so resuming a palm/tarot reading on the bare `/chat` re-brands her as base
+V1 — losing the Stripe product suffix, the `-palm`/`-tarot` paid tag and the PostHog funnel, and crediting
+recovered revenue to the wrong funnel. Not retrofittable: a link is only written at opt-in.
+- [x] `custom_fields` is ABSENT (not `{}`) when there are no fields to set — `{}` + `update_existing` makes AWeber clear every custom field *(aweber.customFields.test.ts)*
+- [x] `resume_url` is sent when supplied *(aweber.customFields.test.ts)*
+- [x] A 400 rejecting the custom field retries once WITHOUT it, so the lead still lands on the list *(aweber.customFields.test.ts)*
+- [x] A 400 of "already subscribed" is still treated as success and does NOT retry *(aweber.customFields.test.ts)*
+- [ ] A lead on each of `/`, `/fb`, `/fb2`, `/gdn`, `/fb-palm`, `/fb-tarot` produces a `resume_url` carrying THAT funnel's chat path (`/fb-tarot/chat?resume=…`, not `/chat?resume=…`)
+- [ ] Re-opting in with the same email rewrites the SAME uuid — `saveConversation` updates the newest row per email rather than inserting, so no second link is minted
+- [ ] A later AWeber write on the same subscriber (e.g. a tag-only call) does not wipe `resume_url`
+- [ ] Opening the link restores her reading at her stage with her LOCKED price (`priceVariantId`/`priceDollars` from `/api/conversation/resume/:id`)
+- [ ] Opening a `/fb-tarot/chat?resume=…` link does NOT re-run the card reveal — the greeting effect early-returns on `resumeId && !resumeSettled`, so her saved transcript replays instead
+- [ ] `resume_url` is skipped (and warned) rather than written as a `localhost` link when `BASE_URL` is unset — local `.env` carries LIVE AWeber credentials, so that write would reach the production list
+- [ ] The link 410s after `RESUME_LINK_EXPIRY_DAYS` (30) — the AWeber sequence must send inside that window
+- [ ] The URL never contains her email, price, or name
