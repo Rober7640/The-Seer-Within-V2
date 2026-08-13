@@ -30,7 +30,7 @@
 // in the middle of the thing she paid for. Both are B7 gate items, enforced here rather
 // than left to somebody's eyes at the end.
 
-import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
+import { readFileSync, writeFileSync, mkdirSync, existsSync, statSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -252,7 +252,49 @@ function build(offerKey) {
   } catch (err) {
     die(`pandoc failed:\n     ${err.stderr?.toString() || err.message}`);
   }
-  console.log(`    ${path.relative(ROOT, docxOut)}\n`);
+  console.log(`    ${path.relative(ROOT, docxOut)}`);
+
+  if (process.argv.includes('--no-pdf')) { console.log(); return; }
+
+  // 8 · Word → PDF, because THE PDF IS THE DELIVERABLE
+  //
+  // 🔴 This step used to live in somebody's shell history, and the gap bit immediately:
+  // a rebuild regenerated the .md and .docx and left a STALE PDF beside them — or, after
+  // a `rm -rf build/`, no PDF at all while the other two looked freshly built. A build
+  // that does not produce the thing you ship is a build that lies about being finished.
+  //
+  // ⚠ Word is the only converter on this machine (no LibreOffice, no LaTeX). It is
+  // driven read-only and the document is closed without saving. Where Word is absent
+  // this is skipped with a warning rather than failing — the .docx is still valid, and
+  // on that machine somebody exports by hand.
+  const pdfOut = path.join(outDir, `${offerKey}-product.pdf`);
+  if (process.platform !== 'darwin' || !existsSync('/Applications/Microsoft Word.app')) {
+    console.log(`    ⚠ no Microsoft Word here — export the PDF by hand from the .docx.\n`);
+    return;
+  }
+  try {
+    execFileSync('osascript', ['-e', `
+      with timeout of 300 seconds
+        tell application "Microsoft Word"
+          set d to open file name "${docxOut}" with read only
+          save as d file name "${pdfOut}" file format format PDF
+          close d saving no
+        end tell
+      end timeout`], { stdio: 'pipe' });
+  } catch (err) {
+    console.log(`    ⚠ Word could not export the PDF: ${err.stderr?.toString().trim() || err.message}`);
+    console.log(`      The .docx is fine — open it and export by hand.\n`);
+    return;
+  }
+  if (!existsSync(pdfOut)) {
+    console.log(`    ⚠ Word reported success but wrote no PDF. Export by hand.\n`);
+    return;
+  }
+  const mb = (statSync(pdfOut).size / 1024 / 1024).toFixed(1);
+  console.log(`    ${path.relative(ROOT, pdfOut)}  (${mb}MB)`);
+  // B7 checks the FINAL file, and a fat PDF hurts inbox placement if D8 lands on "attach".
+  if (Number(mb) > 5) console.log(`    ⚠ over the ~5MB gate — see B7.`);
+  console.log(`\n  ⚠ Still needs eyes: read it on a phone · print one page · read it aloud.\n`);
 }
 
 const offerKey = process.argv[2];
