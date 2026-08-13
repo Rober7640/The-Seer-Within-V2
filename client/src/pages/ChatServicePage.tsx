@@ -1666,6 +1666,29 @@ export default function ChatServicePage() {
             const newInitial = acceptedCoins + coinsUsedSoFar;
             setInitialCoinBalance((prev) => session ? Math.min(newInitial, prev) : newInitial);
           }
+          // The server closed the session on this turn (wall-clock limit — see
+          // server/lib/sessionLimits.ts). The closing line has already been appended
+          // above; tear the live session down the same way the 410 branch does so the
+          // timer stops and the "start a new reading" CTA appears.
+          if (data.sessionStatus === 'ended') {
+            if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
+            sessionActiveRef.current = false;
+            setSession(null);
+            setElapsedSeconds(0);
+            setInitialCoinBalance(0);
+            sessionStartTimeRef.current = null;
+            setReadingEnded(true);
+            setMessages((prev) => [
+              ...prev,
+              {
+                id: `reading-ended-${Date.now()}`,
+                role: "assistant" as const,
+                content: "",
+                sentAt: new Date().toISOString(),
+                isReadingEndedDivider: true,
+              },
+            ]);
+          }
           // TEMPORARY: log billing debug info to console
           if (data._billingDebug) {
             console.warn('[BILLING DEBUG] Message response:', JSON.stringify(data._billingDebug, null, 2));
