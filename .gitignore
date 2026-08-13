@@ -84,3 +84,16 @@ logs.*.json
 # keyed by user id; the full-table dumps also carry persona prompts. Never commit.
 DB_Backup/
 server-sandbox.log
+
+# Backend deck — the ASSEMBLED product. Regenerated from the copy specs by
+# scripts/build-be-product.mjs, so committing it would put a 2MB binary in every
+# diff for words that already live in copy/<nn>/ as text.
+# ⚠ assets/be-reference.docx is NOT ignored, and must not be: it is the page design
+# for the whole deck, hand-adjusted in Word, and regenerating it discards that work.
+improve-v1/v1-one-time-BEs/build/
+
+# One-off operational scripts and their data, under scripts/. These carry REAL
+# subscriber data — _unsubscribe-run2-ids.json alone holds ~47,000 AWeber
+# subscriber ids — and they are working files, not source. Ignored by prefix so a
+# stray `git add -A` cannot put them in the history, where they cannot be recalled.
+scripts/_*
