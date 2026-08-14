@@ -22,6 +22,7 @@ import fs from 'node:fs';
 import {
   connectReadOnly, beginReads, PAID, IN_TEST_PURCHASE, FUNNEL_CASE, funnelFilter,
   pct, dollars, day, relChange, twoProportionZ,
+  parseTranscript, botText, PRODUCT_LINE,
 } from './lib/live-db.mjs';
 
 const argv = process.argv.slice(2);
@@ -441,6 +442,129 @@ out(`- upsell-2 reach: ${u.u2off} of ${u.u1off} buyers reached the second offer 
 if (u.u1off > 50 && gap / u.u1off > 0.1) {
   const take = u.u2off ? u.u2buy / u.u2off : 0;
   flag('⚠️', `${gap} buyers (${pct(gap, u.u1off)}) were offered upsell-1 but never upsell-2 — at the observed ${pct(u.u2buy, u.u2off)} take that is ~${dollars(gap * take * u.u2price)} never asked for.`);
+}
+out('');
+
+// ── 6. THE BOTTLENECK — is a lander losing at the TOP or the BOTTOM? ─────────
+// 🔴 THE MOST LOAD-BEARING SECTION IN THIS SCRIPT. A lander's revenue can be poor
+// for two opposite reasons that demand opposite work:
+//   TOP half  (lander → engaged)  poor ⇒ the AD/LANDER is wrong. Rewriting the chat
+//                                       cannot recover it.
+//   BOTTOM half (engaged → paid)  poor ⇒ the CHAT is wrong. More/better traffic
+//                                       cannot recover it.
+// Judging on the pooled rate alone conflates them, and the pooled rate is what every
+// dashboard shows. On the real run this section is built from, the worst lander in the
+// funnel turned out to have a completely NORMAL top half (92.1% vs 91.7%, p=0.69) and a
+// catastrophic bottom half (6.2% vs 10.9%, p<0.001) — i.e. it was a flow problem wearing
+// a traffic problem's clothes, on 3,786 engaged women a month.
+out(`## 6. BOTTLENECK — top half (lander→engaged) vs bottom half (engaged→paid)`);
+const { rows: landers } = await client.query(`
+  SELECT e.context->>'hook' hook,
+         count(DISTINCT c.id)::int exposed,
+         count(DISTINCT c.id) FILTER (WHERE c.concern IS NOT NULL)::int engaged,
+         count(DISTINCT c.id) FILTER (WHERE ${PAID.replace(/main_paid_at|purchased|upsell_offered/g, (m) => 'c.' + m)} AND c.concern IS NOT NULL)::int paid_eng
+  FROM experiment_exposures e
+  JOIN conversations c ON c.id = e.context->>'conversationId'
+  WHERE e.created_at > now() - interval '30 days' AND e.context ? 'hook'
+    AND (${FUNNEL === 'all' ? 'TRUE' : `e.context->>'funnel' = 'v1-${FUNNEL}'`})
+  GROUP BY 1 HAVING count(DISTINCT c.id) >= 150 ORDER BY 2 DESC`);
+
+if (landers.length < 2) {
+  out(`- fewer than two landers with 150+ sessions; nothing to compare.`);
+} else {
+  // The comparator is the BEST bottom-half rate among landers with real volume — the
+  // funnel's own demonstrated ceiling, not an invented target.
+  const best = landers.reduce((a, b) => (b.paid_eng / b.engaged > a.paid_eng / a.engaged ? b : a));
+  out(`hook                     exposed  engage%   engaged→paid   vs best (${best.hook})`);
+  for (const r of landers) {
+    const sig = r.hook === best.hook ? null : twoProportionZ(best.paid_eng, best.engaged, r.paid_eng, r.engaged);
+    const topSig = r.hook === best.hook ? null : twoProportionZ(best.engaged, best.exposed, r.engaged, r.exposed);
+    out(`${(r.hook || '?').padEnd(24)} ${String(r.exposed).padStart(7)} ${pct(r.engaged, r.exposed).padStart(8)} ${pct(r.paid_eng, r.engaged).padStart(14)}   ` +
+        `${sig ? `p=${sig.p.toFixed(3)}${sig.p < 0.05 ? ' ◄ SIGNIFICANT' : ''}` : '— (best)'}`);
+    if (sig && sig.p < 0.05 && r.engaged >= 300) {
+      const topBroken = topSig && topSig.p < 0.05;
+      const lost = r.engaged * (best.paid_eng / best.engaged - r.paid_eng / r.engaged);
+      if (topBroken) {
+        flag('⚠️', `"${r.hook}" is behind at BOTH halves — its lander/ad under-engages AND its chat under-closes. Fix the lander first; chat work on bad traffic is wasted.`);
+      } else {
+        flag('🔴', `BOTTLENECK — "${r.hook}": top half is FINE (engage ${pct(r.engaged, r.exposed)} vs ${pct(best.engaged, best.exposed)}), ` +
+          `but engaged→paid is ${pct(r.paid_eng, r.engaged)} vs ${pct(best.paid_eng, best.engaged)} (p=${sig.p.toFixed(3)}). ` +
+          `That is a CHAT problem on ${r.engaged} engaged women — worth ~${Math.round(lost)} buyers over this window. More traffic will not fix it.`);
+      }
+    }
+  }
+  out(`\n  ⓘ read this table by HALVES, never by the pooled rate: a normal top half with a broken`);
+  out(`    bottom half is a flow problem that no amount of better traffic can rescue, and the`);
+  out(`    reverse is a lander problem that no amount of copy work in the chat can rescue.`);
+}
+out('');
+
+// ── 7. HER WORDS — the real objection corpus, and the script's ent:product ratio ──
+// Never write objection-handling copy from imagination. On the run this was built from,
+// the two "obvious" objections a copywriter would reach for scored 4% and ZERO across
+// 517 sessions, while price — pre-handled nowhere — scored 23–32% in every family.
+out(`## 7. HER WORDS — what she says after the pitch`);
+const OBJECTIONS = {
+  'price / cannot afford':   /(afford|too much|no money|broke|expensive|cost|\$|payment|cheaper)/i,
+  'let me think / not now':  /(think about it|later|tomorrow|not now|need time)/i,
+  'will it work on him':     /(will he|make him|bring him|come back|does he|get him|reach him)/i,
+  'is this real / scam':     /(scam|fake|is this real|prove|proof|legit|trust you|believe you)/i,
+  'already tried / burned':  /(already tried|tried before|another psychic|last time|wasted)/i,
+  'will I receive it':       /(email|receive|send it|get the reading|inbox|spam)/i,
+};
+const { rows: tx } = await client.query(`
+  SELECT c.messages FROM conversations c
+  WHERE ${F} AND c.created_at > now() - interval '${DAYS} days'
+    AND NOT (${PAID}) AND c.messages IS NOT NULL AND length(c.messages) > 2500
+  LIMIT 900`);
+const tally = Object.fromEntries(Object.keys(OBJECTIONS).map((k) => [k, 0]));
+let reached = 0, replied = 0, spoke = 0, entShares = [];
+for (const r of tx) {
+  const msgs = parseTranscript(r.messages);
+  if (!msgs) continue;
+  const bot = botText(msgs);
+  const idx = bot.findIndex((t) => PRODUCT_LINE.test(t));
+  if (idx < 0) continue;
+  reached++;
+  const w = (s) => (s.trim() ? s.trim().split(/\s+/).length : 0);
+  const total = bot.reduce((a, t) => a + w(t), 0);
+  if (total) entShares.push(bot.slice(0, idx).reduce((a, t) => a + w(t), 0) / total);
+  // Her replies land in the tail of the array once the pitch has begun.
+  const botSeen = new Set(bot.slice(0, idx + 1));
+  let past = false; const hers = [];
+  for (const m of msgs) {
+    if (!past && m?.type === 'bot' && PRODUCT_LINE.test(m?.content || '')) past = true;
+    else if (past && m?.type === 'user' && m?.content) hers.push(m.content);
+  }
+  void botSeen;
+  if (!hers.length) continue;
+  replied++;
+  const blob = hers.join(' ');
+  let hit = false;
+  for (const [k, re] of Object.entries(OBJECTIONS)) if (re.test(blob)) { tally[k]++; hit = true; }
+  if (hit) spoke++;
+}
+if (!reached) {
+  out(`- no transcripts reached the pitch in this window.`);
+} else {
+  const med = entShares.sort((a, b) => a - b)[Math.floor(entShares.length / 2)];
+  out(`- script balance: reading ${(med * 100).toFixed(0)}% : offer ${(100 - med * 100).toFixed(0)}%  (Evelyn's words only — see parseTranscript)`);
+  // 🔴 TWO DENOMINATORS, AND THE GAP BETWEEN THEM IS THE FINDING. Most non-buyers who
+  // reach the offer type NOTHING and simply leave. Reporting objections only over the
+  // women who replied inflates every rate ~4× and hides the larger truth: the modal
+  // response to the close is silence, not argument. Both numbers are printed because a
+  // fix aimed at what she SAYS only ever addresses the minority who said it.
+  out(`- ${reached} non-buyers reached the offer · ${replied} replied (${pct(replied, reached)}) · ${spoke} objected`);
+  out(`    objection                    n   of repliers   of all who reached`);
+  for (const [k, n] of Object.entries(tally).sort((a, b) => b[1] - a[1]))
+    out(`    ${k.padEnd(26)} ${String(n).padStart(4)}  ${pct(n, replied).padStart(11)}  ${pct(n, reached).padStart(18)}`);
+  out(`  ⓘ ${pct(reached - replied, reached)} of non-buyers said NOTHING at the offer and left. Objection copy can only`);
+  out(`    reach the ones who speak — unless you assume the silent hold the same objection,`);
+  out(`    which is the whole premise of pre-handling. Worth testing, not worth assuming.`);
+  const top = Object.entries(tally).sort((a, b) => b[1] - a[1])[0];
+  if (top && replied && top[1] / replied > 0.15)
+    flag('⚠️', `"${top[0]}" dominates the spoken objections (${pct(top[1], replied)} of repliers, ${pct(top[1], reached)} of all who reach the offer). ` +
+      `Pre-handle it IN the close — but note ${pct(reached - replied, reached)} leave silently, so size the prize off the smaller number.`);
 }
 out('');
 

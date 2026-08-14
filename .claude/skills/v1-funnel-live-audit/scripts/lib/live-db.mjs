@@ -48,6 +48,27 @@ export function funnelFilter(funnel) {
   return `price_variant ILIKE '%${funnel.replace(/[^a-z0-9_-]/gi, '')}%'`;
 }
 
+/**
+ * 🔴 THE STORED TRANSCRIPT SHAPE. `conversations.messages` is a JSON array of
+ * `{ id, type, content }` where type is 'bot' | 'user' | 'system'.
+ *
+ * It is NOT `{ role }` and NOT `{ sender }`, and it is NOT `{ text }`. Guessing those
+ * fails SILENTLY and in the worst direction: `m.role !== 'user'` is true for every
+ * message, so HER words get counted as Evelyn's and a "% of the script that is X"
+ * measurement comes out confidently wrong. That happened on a real analysis run.
+ * Always split a transcript through these helpers.
+ */
+export function parseTranscript(raw) {
+  let msgs;
+  try { msgs = JSON.parse(raw); } catch { return null; }
+  return Array.isArray(msgs) ? msgs : null;
+}
+export const botText = (msgs) => msgs.filter((m) => m?.type === 'bot').map((m) => m?.content || '').filter(Boolean);
+export const userText = (msgs) => msgs.filter((m) => m?.type === 'user').map((m) => m?.content || '').filter(Boolean);
+
+/** The first bot line that is unambiguously about the OFFER rather than the reading. */
+export const PRODUCT_LINE = /(tonight,? i'?ll enter|deep meditative state|sacred offering|5-7 page|30-day guarantee|trace the roots of this block|personalized .{0,20}reading via email)/i;
+
 export const pct = (n, d) => (d ? `${((n / d) * 100).toFixed(1)}%` : '—');
 export const money = (c) => (c == null ? 'null' : `$${(c / 100).toFixed(2)}`);
 export const dollars = (c) => `$${Math.round(Number(c) / 100).toLocaleString()}`;

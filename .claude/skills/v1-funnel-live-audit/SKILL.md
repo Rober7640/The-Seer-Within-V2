@@ -35,6 +35,8 @@ derail bites real sessions. It is the V1 counterpart to V2's `persona-audit`.
 | "Conversions are down — why?" · a number moved and nobody knows why | **diagnose** — `diagnose-live.mjs` |
 | "Which ad/hook/card should we scale?" | **diagnose** (§3 ranks landers by revenue per 1,000) |
 | "Is this A/B test costing us money?" | **diagnose** (§4 tallies every running arm) |
+| "Which lander is the bottleneck, and is it the ad or the chat?" | **diagnose** (§6) — then follow the bottleneck hunt below |
+| "What do buyers actually object to?" | **diagnose** (§7 mines real transcripts) |
 
 Run **both** when a drop is reported: audit rules out a defect, diagnose finds the cause.
 They share `lib/live-db.mjs`, so they can never disagree about what counts as a sale.
@@ -95,6 +97,56 @@ Ends with a **prioritized issues list** (🔴 high / ⚠️ worth-a-look). Exits
   its fair share of traffic, costed as a total **and a daily rate**.
 - **5. MEASUREMENT INTEGRITY** — `ab_visitor_id` coverage **scoped per test**, un-joinable exposures,
   assigned split vs configured weights, and buyers who were never offered upsell-2.
+- **6. BOTTLENECK** — every lander split into top half (lander→engaged) and bottom half
+  (engaged→paid), tested against the funnel's best performer. Separates an ad problem from
+  a chat problem, which no pooled rate can do. **The most load-bearing section here.**
+- **7. HER WORDS** — the real post-pitch objection corpus and the script's reading:offer
+  ratio, both from `messages`. Reported over two denominators (who replied / who reached),
+  because most non-buyers leave the offer in silence.
+
+## The bottleneck hunt — the workflow this skill exists to run
+
+Finding *a* number that is down is easy. Finding the ONE constraint worth work is the job.
+Run these six steps in order. Each one either hands you the next question or stops you
+from spending weeks on the wrong half of the funnel.
+
+**1. Where is the money, not where is the rate?** Rank landers by revenue per 1,000 (§3).
+Buy-rate ranks them wrong — the hook with the best conversion can sit near the bottom on
+revenue because its buyers skip the back end. A 4% lander on 60% of spend outranks
+everything else by sheer volume, whatever its rate.
+
+**2. Split the suspect funnel in half (§6). This is the step that decides the project.**
+- top half (lander → engaged) broken ⇒ **ad/lander problem.** No chat work can recover it.
+- bottom half (engaged → paid) broken ⇒ **chat problem.** No traffic can recover it.
+- Both ⇒ fix the lander first; copy work on bad traffic is wasted.
+
+A pooled rate cannot tell these apart, and pooled is what every dashboard shows. The real
+run this was built from: the worst lander in the funnel had a *completely normal* top half
+(92.1% vs 91.7%, p=0.69) and a broken bottom half (6.2% vs 10.9%, p<0.001) — a flow problem
+wearing a traffic problem's clothes, on ~3,800 engaged women a month.
+
+**3. Compare against the funnel's own demonstrated ceiling**, not a target you invented.
+The best-performing lander with real volume is the benchmark; the gap to it, times the
+engaged population, is the prize. Size it before designing anything.
+
+**4. Read transcripts at the losing step.** Aggregates say *where*; only the transcript says
+*why*. Read a buyer and a non-buyer from the same lander side by side — the difference is
+usually visible in one exchange.
+
+**5. Mine what she actually says (§7). Never write objection copy from imagination.**
+On the run this was built from, the two objections a copywriter would reach for scored 4%
+and *zero* across 517 sessions, while price — pre-handled nowhere — dominated every family.
+Note the two denominators: ~70% of non-buyers say nothing at all and simply leave, so size
+any objection fix off the number who speak, not the number who reach the offer.
+
+**6. Check for test collisions before proposing one (§4).** Two experiments touching the
+same beat on the same traffic means neither result is readable. Running tests and their
+scopes are listed in §4; reserved-but-unstarted work lives in the memory notes.
+
+⚠ **The V1 close is congested.** The opener (`v1_tarot_version_bc_2026`), the order-bump copy
+(`v1_bump_copy_2026`) and the upcoming 55/35 price rebuild (`hours-55-35_tarot`) all touch
+the same stretch of script. Anything new near the close has to queue behind them or carve
+out a beat none of them own.
 
 ## Reading the output — rules that cost money to learn
 
