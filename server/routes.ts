@@ -75,8 +75,13 @@ import {
 import { assignVariantIfMissing, getVariantForEmail } from "./lib/priceVariant";
 import {
   resolveV1Bump,
+  resolvePalmGate,
   resolveTarotVersion,
   logExposure,
+  exposureSign,
+  hashEmail,
+  PALM_GATE_EXPERIMENT_KEY,
+  V1_BUMP_EXPERIMENT_KEY,
   V1_TAROT_VERSION_EXPERIMENT_KEY,
   type TarotVersion,
 } from "./lib/experiments";
@@ -1422,15 +1427,67 @@ export async function registerRoutes(
       // into a pitch. Deliberately NOT `conversation.purchased`, which is set
       // optimistically at checkout-start and stays true for people who never
       // paid — see conversationWasPaid for why and what it checks instead.
+      //
+      // `reason` is the machine-readable half: BOTH terminal cases are 410, and
+      // the client sends a buyer to the thank-you page while an expired link just
+      // starts a fresh reading. Matching on the human `error` string would put a
+      // wording change one edit away from restarting a paying customer's funnel.
       if (await conversationWasPaid(conversation)) {
-        return res.status(410).json({ error: "Already purchased" });
+        return res
+          .status(410)
+          .json({ error: "Already purchased", reason: "purchased" });
       }
 
       const ageDays =
         (Date.now() - new Date(conversation.createdAt).getTime()) / 86_400_000;
       if (ageDays > RESUME_LINK_EXPIRY_DAYS) {
-        return res.status(410).json({ error: "Link expired" });
+        return res.status(410).json({ error: "Link expired", reason: "expired" });
       }
+
+      // Which funnel she is resuming ON, passed by the client from its own path
+      // (client/src/lib/funnel.ts → currentFunnel). Required, not decorative:
+      // `conversations` has no funnel column, and BOTH V1 UI tests are
+      // funnel-scoped, so without it every resumed reader falls out of scope and
+      // silently loses the arm she was assigned.
+      const resumeFunnel =
+        typeof req.query.funnel === "string" ? req.query.funnel.slice(0, 40) : undefined;
+
+      // The two UI arms she was assigned at lead capture — the commitment gate and
+      // the order bump. Without these the recovery link renders the plain purchase
+      // CTA and jumps straight to Stripe, so a returning reader in either arm sees
+      // neither, while still sitting in that arm's denominator.
+      //
+      // 🔴 RESOLVED DIRECTLY, NEVER VIA assignVariantIfMissing. That function returns
+      // these same three fields and is therefore the tempting one-liner — but it also
+      // RE-DRAWS the price when a stored variant is no longer servable on this funnel
+      // (see storedVariantIsServable, priceVariant.ts). On a resumed session that
+      // would re-price her the moment a new price test starts: chat would quote the
+      // stored price returned below while Stripe charged the freshly drawn one. Her
+      // price must come off her row and nothing else.
+      //
+      // Not a re-roll either. Both resolvers bucket on the hashed email, so they
+      // return the SAME arm she was assigned at lead capture — the same arm
+      // /api/checkout independently re-resolves before it bills the bump line, by
+      // the same call. And logExposure is onConflictDoNothing per (key, subject),
+      // so resuming never adds a second row to the denominator.
+      //
+      // ⏰ THE ONE GAP: bucketing is stable, but the bucket→variant MAP moves with
+      // the experiment's weights, so a weight edit landing BETWEEN her opt-in and
+      // her click would show her the arm her exposure row does not record. The fix
+      // is scope.freezeAssignment, which pins her to that row — see
+      // docs/experiment-freeze-by-default.md. Not a live problem today: recovery
+      // links only exist for leads captured since 2026-08-13 (9b596b7), so every
+      // resumable exposure is newer than every running test's last weight change.
+      const resumeSign = conversation.email
+        ? await exposureSign(
+            [PALM_GATE_EXPERIMENT_KEY, V1_BUMP_EXPERIMENT_KEY],
+            hashEmail(conversation.email),
+          )
+        : null;
+      const [palmGate, bumpArm] = await Promise.all([
+        resolvePalmGate(conversation.email, resumeFunnel, resumeSign),
+        resolveV1Bump(conversation.email, resumeFunnel, resumeSign),
+      ]);
 
       return res.json({
         userData: {
@@ -1452,6 +1509,12 @@ export async function registerRoutes(
           downsellDollars: conversation.downsellAmountCents
             ? conversation.downsellAmountCents / 100
             : undefined,
+          // Same shape /api/lead returns at email capture, so the client merges
+          // them with the identical validation. Only ever true — absent means the
+          // plain CTA straight to Stripe, i.e. today's behaviour.
+          commitmentGate: palmGate.gate === true,
+          orderBump: bumpArm.bump === true,
+          bumpCopy: bumpArm.copy ?? "control",
         },
         conversationState: conversation.conversationState,
         messages: conversation.messages ? JSON.parse(conversation.messages) : [],
