@@ -18,94 +18,39 @@
 //      (shared/production) DB requires BOTH `--live` and `LIVE_AUDIT_CONFIRM=1`.
 //   4. PII-safe: DB host redacted; only initials + aggregates in the report; output
 //      under the gitignored audit-runs/ tree. No raw emails or transcripts are written.
-import pg from 'pg';
 import fs from 'node:fs';
-
-// Naive `timestamp` columns are stored UTC — parse as UTC (same fix as server/lib/db.ts).
-pg.types.setTypeParser(1114, (s) => new Date(s.replace(' ', 'T') + 'Z'));
-pg.types.setTypeParser(1184, (s) => new Date(s));
+// The target gate, the canary, and THE definition of a sale live in lib/live-db.mjs so
+// this script and diagnose-live.mjs can never report different numbers for one window.
+import { connectReadOnly, beginReads, PAID, pct, money } from './lib/live-db.mjs';
 
 const argv = process.argv.slice(2);
 const LIVE = argv.includes('--live');
 const daysArg = (() => { const i = argv.indexOf('--days'); return i >= 0 ? Number(argv[i + 1]) : null; })();
-const ENV_FILE = LIVE ? '.env' : '.env.sandbox';
 const OUT_DIR = 'audit-runs/v1-funnel-live-audit';
-
-function readDatabaseUrl(file) {
-  if (!fs.existsSync(file)) { console.error(`🔴 env file not found: ${file}`); process.exit(2); }
-  const m = [...fs.readFileSync(file, 'utf8').matchAll(/^\s*DATABASE_URL\s*=\s*(.+)\s*$/gm)].pop();
-  if (!m) { console.error(`🔴 no DATABASE_URL in ${file}`); process.exit(2); }
-  return m[1].trim().replace(/^["']|["']$/g, '');
-}
-
-const url = readDatabaseUrl(ENV_FILE);
-const isLocal = /@(localhost|127\.0\.0\.1)[:/]/.test(url) || /\/\/(localhost|127\.0\.0\.1)[:/]/.test(url);
-const redactedHost = url.replace(/:\/\/([^:]+):[^@]*@/, '://$1:***@').split('?')[0];
-
-// ── target-safety gate ───────────────────────────────────────────────────────
-if (!isLocal) {
-  // A non-localhost URL is the shared/production DB (dev + prod share ONE DB).
-  if (!LIVE || process.env.LIVE_AUDIT_CONFIRM !== '1') {
-    console.error(`\n🔴 REFUSING to touch a non-local DB without explicit confirmation.`);
-    console.error(`   Target would be: ${redactedHost}`);
-    console.error(`   This is the LIVE / SHARED production DB. To run the real read-only audit:`);
-    console.error(`     LIVE_AUDIT_CONFIRM=1 node .claude/skills/v1-funnel-live-audit/scripts/audit-live.mjs --live [--days 30]`);
-    console.error(`   (It is strictly read-only — READ ONLY transaction + canary — but it reads real customer data,`);
-    console.error(`    so it must be run deliberately.)\n`);
-    process.exit(2);
-  }
-}
-const MODE = isLocal ? 'LOCAL SANDBOX' : 'LIVE / SHARED PRODUCTION DB';
 
 const findings = []; // { level: '🔴'|'⚠️', text }
 const flag = (level, text) => findings.push({ level, text });
-const money = (c) => (c == null ? 'null' : `$${(c / 100).toFixed(2)}`);
-const pct = (n, d) => (d ? `${((n / d) * 100).toFixed(1)}%` : '—');
 
 // Palm identity tokens — used to measure the known-open derail on REAL transcripts.
 const PALM_TOKENS = ['thumb', 'trident', 'gathering', 'three lines', 'converging', 'the mark', 'your palm'];
 
 async function main() {
   fs.mkdirSync(OUT_DIR, { recursive: true });
-  const client = new pg.Client({ connectionString: url, ssl: isLocal ? false : { rejectUnauthorized: false } });
-  await client.connect();
+  // Resolves the target, enforces the two-key gate, connects, and PROVES read-only
+  // with a canary write Postgres must reject (25006) — or exits before any read.
+  const { client, canary, mode: MODE, redactedHost } = await connectReadOnly({ live: LIVE });
 
   const lines = [];
   const out = (s = '') => { lines.push(s); console.log(s); };
   out(`\nv1-funnel-live-audit  ·  TARGET: ${MODE}`);
   out(`DB: ${redactedHost}`);
-
-  // 1. CANARY — a write inside READ ONLY must be rejected (SQLSTATE 25006) or ABORT.
-  let canary = 'NOT RUN';
-  await client.query('BEGIN TRANSACTION READ ONLY');
-  try {
-    await client.query('UPDATE conversations SET id = id WHERE false');
-    canary = 'WRITE ACCEPTED — READ ONLY NOT ENFORCED';
-  } catch (e) {
-    canary = e?.code === '25006' ? 'rejected (SQLSTATE 25006) ✔' : `rejected (unexpected: ${e?.code} ${e?.message})`;
-  } finally {
-    await client.query('ROLLBACK');
-  }
   out(`Canary write: ${canary}`);
-  if (!canary.startsWith('rejected')) {
-    console.error('🔴 ABORT: canary write was not rejected — refusing to run.');
-    await client.end();
-    process.exit(1);
-  }
 
-  // 2. All reads inside one explicit READ ONLY transaction.
-  await client.query('BEGIN TRANSACTION READ ONLY');
-  await client.query("SET LOCAL timezone = 'UTC'");
-  await client.query('SET LOCAL statement_timeout = 30000');
+  // All reads inside one explicit READ ONLY transaction.
+  await beginReads(client, 30000);
 
   const W = daysArg ? `created_at > now() - interval '${Number(daysArg)} days'` : 'TRUE';
   out(`Window: ${daysArg ? `last ${daysArg} days` : 'all time'}\n`);
-
-  // "paid" = a CONFIRMED front-end sale, matching the /admin/price-test dashboard.
-  // NOT the raw `purchased` flag: that is set optimistically at checkout-CLICK (before
-  // payment), so it counts abandoned Stripe sessions as sales. A real sale is either
-  // webhook-stamped (main_paid_at) or reached the post-payment upsell page (upsell_offered).
-  const PAID = '(main_paid_at IS NOT NULL OR (purchased AND upsell_offered))';
 
   // ── A. Overview ─────────────────────────────────────────────────────────────
   const { rows: [ov] } = await client.query(`

@@ -1,6 +1,6 @@
 ---
 name: v1-funnel-live-audit
-description: "READ-ONLY analysis of REAL V1 (Evelyn 'Original Conversion Funnel') data — the 'find real issues' half of the V1 loop, the counterpart to V2's persona-audit. Reads the live shared Postgres (read-only, with a proven canary) to surface what REAL users actually hit: conversation-flow drop-off, payment reconciliation gaps, abandoned carts, price-variant corruption in the wild, upsell take-rates, and the fb-palm derail's real impact — then prints a prioritized report. It only RECOMMENDS fixes; it never writes. Use when asked to: find real V1 issues, audit the live funnel/payments, see where real users drop off, check the live price test for corruption, measure the palm derail on real data. Verify LOCALLY first; the live read is flag-gated + confirmation-required."
+description: "READ-ONLY analysis of REAL V1 (Evelyn 'Original Conversion Funnel') data, covering the fb-tarot, fb-palm and bare-v1 landers — the 'find real issues' half of the V1 loop, the counterpart to V2's persona-audit. Use when conversions/sales/revenue are DOWN or UP and nobody knows why; when asked to audit the live V1 funnel or a lander; to see where real users drop off; to find which ad hook or tarot card/palm sign is actually earning; to check a live A/B test's arms, a losing arm holding most of the traffic, or a price test for corruption; to check payment reconciliation, abandoned carts, upsell take-rates, or the palm derail on real data. Two modes: audit (is anything broken?) and diagnose (why did the number move?). It only RECOMMENDS fixes; it never writes. The live read is flag-gated + confirmation-required."
 ---
 
 # v1-funnel-live-audit — read-only audit of REAL V1 funnel data
@@ -27,6 +27,18 @@ derail bites real sessions. It is the V1 counterpart to V2's `persona-audit`.
 3. **PII-safe.** The DB host is redacted in all output; the report is **aggregates only** (no raw
    emails or transcripts) and is written under the gitignored `audit-runs/` tree.
 
+## Which mode? Start here
+
+| The question you were asked | Run |
+|---|---|
+| "Is anything broken?" · routine health check · payments, price corruption, derail | **audit** — `audit-live.mjs` |
+| "Conversions are down — why?" · a number moved and nobody knows why | **diagnose** — `diagnose-live.mjs` |
+| "Which ad/hook/card should we scale?" | **diagnose** (§3 ranks landers by revenue per 1,000) |
+| "Is this A/B test costing us money?" | **diagnose** (§4 tallies every running arm) |
+
+Run **both** when a drop is reported: audit rules out a defect, diagnose finds the cause.
+They share `lib/live-db.mjs`, so they can never disagree about what counts as a sale.
+
 ## Run it
 
 ```bash
@@ -35,6 +47,12 @@ node .claude/skills/v1-funnel-live-audit/scripts/audit-live.mjs
 
 # 2) The REAL read-only audit against the live shared DB — deliberate, two-key:
 LIVE_AUDIT_CONFIRM=1 node .claude/skills/v1-funnel-live-audit/scripts/audit-live.mjs --live --days 30
+
+# 3) DIAGNOSE a move. Auto-detects the busiest funnel; --funnel tarot|palm|other|all.
+LIVE_AUDIT_CONFIRM=1 node .claude/skills/v1-funnel-live-audit/scripts/diagnose-live.mjs --live
+
+#    Both halves of the comparison MUST sit inside one traffic regime — see the rules below.
+LIVE_AUDIT_CONFIRM=1 node .../diagnose-live.mjs --live --funnel tarot --days 14 --split 7
 ```
 
 - Default (no `--live`) reads `DATABASE_URL` from **`.env.sandbox`** (the local sandbox).
@@ -62,9 +80,40 @@ LIVE_AUDIT_CONFIRM=1 node .claude/skills/v1-funnel-live-audit/scripts/audit-live
 
 Ends with a **prioritized issues list** (🔴 high / ⚠️ worth-a-look). Exits non-zero if any 🔴.
 
+## What DIAGNOSE reports (`diagnose-live.mjs`)
+
+- **1. WHEN** — weekly leads / sales / revenue / **$ per 1,000 leads** / **$ per buyer**. Flags a
+  week-over-week revenue-per-1k fall, and warns when volume grew enough that rate regression is expected.
+- **2. WHERE** — the five funnel steps (lead→pitch→checkout→paid→U1→U2), recent vs prior, with the
+  one verdict that matters: *localised drop* (defect/change) vs *everything sagging* (traffic mix).
+- **3. WHICH AD** — every lander ranked by **revenue per 1,000 visitors**, broken into
+  `main/buyer · bump · U1 take · U2 take · back/buyer · rev/buyer`. Flags a hook holding
+  >30% of traffic while earning below median, and a hook whose buyers skip the back end.
+- **4. WHICH TEST** — every running experiment tallied with the *correct* join for its subject type,
+  with a two-proportion z-test. Flags a losing arm holding more than its fair share of traffic.
+- **5. MEASUREMENT INTEGRITY** — `ab_visitor_id` coverage **scoped per test**, un-joinable exposures,
+  assigned split vs configured weights, and buyers who were never offered upsell-2.
+
+## Reading the output — rules that cost money to learn
+
+Each of these is a mistake this script made on a real run before it was fixed. The script now
+guards them, but it can only guard what it can see — you still have to read it this way.
+
+| Rule | Why |
+|---|---|
+| **Compare like with like.** Both halves must sit inside one traffic regime. | Comparing a 5,000-lead week against the 200-lead week before scaling manufactures a decline at *every* step and sends you bug-hunting. The script now refuses a verdict past a 5× volume ratio — honour it, don't override it. |
+| **Several steps sagging together = traffic mix. One step = a defect.** | The single most useful signal here. Getting it backwards costs days: on the first real run it looked like the order bump had broken checkout, and the arm tally cleared the bump completely. |
+| **Rank landers by revenue per 1,000 — NEVER by buy-rate.** | They genuinely disagree. `cards-someone-else` had the best conversion of any tarot hook (9.0%) and near the worst revenue, because its buyers took upsell-1 at 11%. Buy-rate would have you scale the wrong ad. |
+| **Read `rev/buyer` next to conversion.** | Front-end price is near-constant, so the whole spread in $/1k is the BACK end. A hook at 4.6% earning $53/buyer and one at 5.8% earning $81/buyer are two different problems: the first is an *offer-match* problem, not an ad problem. |
+| **A losing arm holding the majority of traffic is worth acting on BEFORE significance.** | "Not significant yet" is not "costing nothing". Re-weight to 50/50 and let it resolve — that is free. Waiting for p<0.05 while 70% of traffic sits on the worse arm is a decision to keep paying. |
+| **An even 50/50 split is a test running correctly.** | Don't flag it. Only a share meaningfully above the arm's configured weight is a misallocation. |
+| **Scope every measurement-integrity check to the test's own start date and funnel.** | `ab_visitor_id` read as "79% missing" over a calendar window and **100% present** since the test that uses it began. A column at 100% reported as broken sends someone to fix nothing. |
+| **`user`-keyed experiments are V2 chat tests.** | They buy through `credit_purchases` and never touch `conversations`. Tallying them here prints a healthy test as zero-buyer. The script skips them by name. |
+
 ## Output
 
-`audit-runs/v1-funnel-live-audit/report.md` (gitignored) + console.
+`audit-runs/v1-funnel-live-audit/report.md` (audit) and `diagnose.md` (diagnose) — both
+gitignored — plus console.
 
 ## Proven
 
@@ -85,6 +134,12 @@ A **Stripe cross-check** (read-only `retrieve`/`list` via `server/lib/stripeAcco
 for a sample of paid rows, compare the stored `price_amount_cents` to the amount Stripe actually charged —
 catching a corruption that agrees between the row and the display but diverges from the real charge.
 Kept out of v1 so the core DB audit verifies locally without live-Stripe access.
+
+**DIAGNOSE mode verified 2026-08-14** against the live shared DB (read-only, canary `25006 ✔`).
+Rebuilt, from scratch and unprompted, all four findings from that day's manual fb-tarot
+investigation — the mis-weighted B/C test, the traffic concentrated on the lowest-earning hook,
+the upsell-2 reach gap, and the order bump's exoneration — and additionally CORRECTED one
+conclusion the manual pass had got wrong (`ab_visitor_id` coverage, see the rules table).
 
 Sibling skills: **`v1-funnel-audit`** (synthetic flow/charge regression, sandbox) · **`v1-funnel-eval`**
 (prompt-quality scoring, offline).
