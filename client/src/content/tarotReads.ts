@@ -484,6 +484,46 @@ export type TarotHook =
   // does. ⚠️ Opposite VALENCE to that hook and that is what keeps the two distinct:
   // cards-feels-off = she fears something BAD is true · this = she fears something GOOD is not.
   | 'cards-imagining-it' // Does he love me, or am I imagining it?
+  // Still-feels hooks (2026-08-14). The operator's category is "Reunion/Return" and the topic
+  // is "Does he still feel it" — and as with 'why-he-left', the TOPIC is the angle, not the
+  // category. REUNION_HOOKS must stay exactly three (see that family's note); folding these in
+  // would retroactively mix two questions inside numbers that have been running since 08-04.
+  //
+  //   · `reunion` asks whether he will ACT — come back, return, appear. A question about the
+  //     FUTURE, answered as a leaning about what is ahead.
+  //   · these ask whether he still FEELS — a question about the PRESENT CONTENTS of a man who
+  //     is already gone. He need not do anything at all for the answer to be yes.
+  //
+  // ⭐ THE DEFINING WORD IS "STILL", and it is the whole creative core of the family. "Still"
+  // presumes the feeling WAS real — she is not asking whether it existed, she is asking whether
+  // it SURVIVED his going. That premise is the one thing here that can be affirmed with
+  // confidence, and affirming it costs nothing and is true: what she had was real. Whether it
+  // persists inside him is exactly what may never be claimed.
+  //
+  // 🔴 NEAREST LIVE NEIGHBOUR IS 'cards-really-love' ("Does he REALLY love me?", real-feelings,
+  // live since 08-12) — ONE WORD away, and the word is the entire difference:
+  //   · "really" = doubt that what she was given ever AMOUNTED to love. A question about a
+  //     STANDARD, and the man is typically still present.
+  //   · "still"  = no doubt it was love. A question about SURVIVAL, and he has gone.
+  // The reads must therefore share NO vocabulary with that family — not the ledger/record of
+  // his conduct, not "chosen on ordinary days", not the standard the word "really" reaches for.
+  // Pinned by tests/tarot-still-feels-copy.test.ts.
+  //
+  // ⚠ 'cards-still-think' is the MIRROR of healing's 'cards-on-my-mind' ("Why is he always on
+  // my mind?") and the two must not drift: healing reads HER mind producing HIM; this reads
+  // whether HIS mind produces HER. No lander on the funnel had previously asked what is in his
+  // head about her.
+  //
+  // 🔴 'cards-love-or-moved-on' shares the verbatim clause "or has he moved on?" with reunion's
+  // live 'cards-moved-on' ("Is he coming back, or has he moved on?"), which is UNTOUCHED and
+  // stays in `reunion` (standing rule: a new headline never replaces an old lander). Its first
+  // half is the variable — a FEELING rather than an ACTION. Its refusal must also be its own:
+  // cards-moved-on refuses because neither branch is knowable, cards-imagining-it refuses
+  // because the second branch is cruel. This one refuses because THE TWO ARE NOT OPPOSITES —
+  // a person can have moved on with a life and still love; the either-or is false on its face.
+  | 'cards-still-think' // Does he still think about me?
+  | 'cards-still-love' // Does he still love me?
+  | 'cards-love-or-moved-on' // Does he still love me, or has he moved on?
   // Self-frame hooks (read HER, affirm the hopeful yes — like the palm love hooks).
   | 'cards-love-again' // Will I love again?
   | 'cards-soulmate' // When is my soulmate coming?
@@ -779,6 +819,33 @@ export const REAL_FEELINGS_HOOKS: TarotHook[] = [
   'cards-imagining-it',
 ]
 
+// Still-feels hooks (2026-08-14). Their OWN angle rather than folded into `reunion`, whose
+// category the operator gave — the same call made for `why-he-left` on 08-11, and for the same
+// reason: reunion asks whether he ACTS, these ask whether he still FEELS. REUNION_HOOKS stays
+// at exactly three so its 08-04 baseline remains readable and this batch can be compared
+// against it rather than disappearing into it.
+//
+// 🔴 NOT folded into `real-feelings` either, and that is the sharper call of the two. That
+// family holds 'cards-really-love' ("Does he REALLY love me?"), which sits ONE WORD from this
+// family's 'cards-still-love' — really = did it ever amount to love · still = did it survive.
+// Pooling them would put a challenger and its nearest control in one bucket, which is the exact
+// mistake the real-feelings note warns about for 'cards-feels'.
+//
+// ⚠️ ANGLE ≠ FRAME. The operator specified the Reunion/Return FRAME, which server-side is the
+// DEFAULT decode-him branch in prompts.ts (tendency, never a verdict) — so there is no new Set
+// to add and none to keep in sync. The family-specific bans live in the per-hook TENDENCY
+// strings, as they have for every family since `healing`.
+//
+// 🔴 Do NOT add these to any no-man frame. A real, specific man stands in all three — gone, but
+// real — so every no-verdict-on-him guardrail stays on, and the mediumship ban of
+// `soulmate-after-loss` applies with full force: "Does he still love me?" is also what a
+// BEREAVED woman types, and nothing here may presume how he came to be gone.
+export const STILL_FEELS_HOOKS: TarotHook[] = [
+  'cards-still-think',
+  'cards-still-love',
+  'cards-love-or-moved-on',
+]
+
 // The ad ANGLE a hook belongs to. Carried on every tarot PostHog event (see
 // lib/tarotAttribution.ts) so the two decode-him families can be compared as GROUPS
 // without listing each hook: one `angle = trust` filter instead of three hook values,
@@ -867,6 +934,13 @@ export type TarotAngle =
   // 'cards-imagining-it' shares that family's affirm-the-noticing move — the valence is
   // opposite (fearing a good thing is absent, not that a bad thing is present).
   | 'real-feelings'
+  // 🔴 'still-feels' is the FEELING-facing sibling of 'reunion', not a variant of it. reunion
+  // asks whether he will ACT (come back); this asks whether he still FEELS, which he can do
+  // without ever acting. It is also NOT 'real-feelings', which holds 'cards-really-love' — one
+  // word from this family's 'cards-still-love', and the nearest control it has: "really" doubts
+  // the feeling ever amounted to love, "still" takes that as given and asks if it survived.
+  // And NOT 'missing-him', which reads HER ache; this reads HIS supposed contents.
+  | 'still-feels'
   | 'self-frame'
 
 export function angleForHook(hook: TarotHook): TarotAngle {
@@ -888,6 +962,7 @@ export function angleForHook(hook: TarotHook): TarotAngle {
   if (TWIN_FLAME_HOOKS.includes(hook)) return 'twin-flame'
   if (HIDDEN_INTUITION_HOOKS.includes(hook)) return 'hidden-intuition'
   if (REAL_FEELINGS_HOOKS.includes(hook)) return 'real-feelings'
+  if (STILL_FEELS_HOOKS.includes(hook)) return 'still-feels'
   return 'decode-him'
 }
 
@@ -947,6 +1022,9 @@ export const TAROT_HOOKS: TarotHook[] = [
   'cards-really-love',
   'cards-feel-about-me',
   'cards-imagining-it',
+  'cards-still-think',
+  'cards-still-love',
+  'cards-love-or-moved-on',
   'cards-love-again',
   'cards-soulmate',
 ]
@@ -1065,6 +1143,12 @@ export const HEADLINES: Record<TarotHook, string> = {
   'cards-really-love': 'Does he really love me?',
   'cards-feel-about-me': 'How does he really feel about me?',
   'cards-imagining-it': 'Does he love me, or am I imagining it?',
+  // Still-feels (2026-08-14). ⚠️ 'cards-still-love' is ONE WORD from the live
+  // 'cards-really-love' and 'cards-love-or-moved-on' shares its closing clause verbatim with
+  // the live 'cards-moved-on'. Both are deliberate; both incumbents are untouched.
+  'cards-still-think': 'Does he still think about me?',
+  'cards-still-love': 'Does he still love me?',
+  'cards-love-or-moved-on': 'Does he still love me, or has he moved on?',
   'cards-love-again': 'Will I love again?',
   'cards-soulmate': 'When is my soulmate coming?',
 }
@@ -1279,6 +1363,19 @@ const TAROT_QUESTION: Record<TarotHook, string> = {
   // 🔴 Never "what makes you think you imagined it" — that adopts the headline's crueller
   // branch as the premise. Asks for the moment she believed it, which she owns outright.
   'cards-imagining-it': "Before I look closer, tell me… what was the moment you felt most certain about him — before the doubt arrived?",
+  // Still-feels (2026-08-14). ⚠️ None may ask her to build a case about what he feels now, and
+  // none may presume HOW he came to be gone — or that he is gone at all. Each asks about
+  // something only SHE holds first-hand.
+  //
+  // 🔴 Deliberately unlike 'cards-really-love' ("the thing that makes you most sure, and the
+  // thing that makes you least") and 'cards-imagining-it' ("the moment you felt most certain")
+  // — 'cards-still-love' sits one word from the first and must not open like either.
+  'cards-still-think': "Before I look closer, tell me… what is the one thing you most hope he has not forgotten?",
+  'cards-still-love': "Before I look closer, tell me… how long has it been since you knew where you stood with him?",
+  // 🔴 Never "what makes you feel he has moved on, and what makes you feel he hasn't?" — that is
+  // 'cards-moved-on's opener and it asks her to build the case both ways. This asks for HER
+  // picture of the phrase instead, which is the exact material the read takes apart.
+  'cards-love-or-moved-on': "Before I look closer, tell me… when you picture him having moved on, what is it you actually see?",
   'cards-love-again': "Before I look closer, tell me… what has been weighing on your heart since it happened?",
   'cards-soulmate': "Before I look closer, tell me… what is the love you're still holding out for — the one you haven't given up on?",
 }
@@ -3464,6 +3561,89 @@ const RETURN_MHF: CardSetConfig = {
         "You came asking me to rule on your own eyes, and drew the card of the woman who went ahead and believed.",
         "I am not going to hand you the sentence you have braced for, dear — that none of it was there and you constructed the whole of it yourself. Women are told that far too easily and it does damage that outlasts the man. Nor will I swing the other way and promise you that anything felt strongly enough must therefore be returned in full; a feeling is not evidence, however large it is, and telling you otherwise would be flattery rather than help. The Fool sits with the harder and truer thing. You saw something, and you acted on it, and that was not foolish of you. What it came to on his side is still open — and you are allowed to want it said aloud rather than deduced.",
         "Let me look closer at what you saw before the doubt arrived…",
+      ],
+    },
+    // ── Still-feels (2026-08-14) ─────────────────────────────────────────────────────────
+    // Operator category "Reunion/Return", topic "Does he still feel it". The word STILL is the
+    // family's whole engine: it concedes the feeling was real and asks only whether it SURVIVED.
+    // So the past tense may be affirmed outright — that is the payout — while the present tense
+    // is the forbidden claim in BOTH directions.
+    //
+    // 🔴 Shares no vocabulary with 'cards-really-love' (one word away): no ledger, no record she
+    // has been keeping, no "chosen on ordinary days", no standard the word reaches for.
+    //
+    // 'Does he still think about me?' — the lens is THE SMALLEST ASK. She is not asking for a
+    // return or for love; she is asking to still exist somewhere in his head, which is the most
+    // modest thing a person can request. The modesty is the finding.
+    'cards-still-think': {
+      a: [
+        "You turned the Magician, dear — the card of what a person does on purpose.",
+        "You asked whether you cross his mind, and up came the card of things that are chosen rather than things that simply happen.",
+        "Here is the difficulty with your question, dear, and I would rather hand you the difficulty than a comfortable invention. A thought is not a deed. What drifts through a man at a set of traffic lights is not willed by him, and no deck reaches into it — anyone who tells you they can see what crosses his mind is making it up while you listen. But notice what the Magician has caught you doing. You have not come here to ask whether he is coming back. You have not come to ask whether he loves you either. You have come to ask whether you are occasionally remembered, and you asked it carefully, as though it might be too much. A woman does not arrive at that question from nowhere. She is walked down to it, one disappointment at a time, until the smallest thing feels like the only thing left to ask for — and that is worth looking at squarely, dear, because it is a fact about what you have been going without, not a fact about what you are worth.",
+        "Let me look closer at how small you have had to make the asking…",
+      ],
+      b: [
+        "You turned the Hanged Man, dear — the card that takes a question and turns it the other way up.",
+        "Your hand found the card of the reversal, and there is a considerable one sitting inside what you have asked me.",
+        "Turn it over and look at what you are actually holding, dear. You are asking whether a man occasionally thinks of you — and you are asking it because he has never once left your own head. Both ends of this sit in your hands. He is not somewhere wondering whether he crosses your mind; you took his half of the wondering as well as your own, and I suspect you did it without a word to anybody. What he thinks is beyond my reach, dear, and beyond the reach of anyone who would charge you for it. What the Hanged Man says instead is that carrying both halves of a thing is exhausting in a way nobody around you can see, because from the outside it simply looks like you have gone quiet.",
+        "Let me look closer at the half of this you have been carrying for him…",
+      ],
+      c: [
+        "You turned the Fool, dear — the card of the one who walked in open-handed with nothing promised back.",
+        "You came asking whether you left a mark, and drew the card of the woman who arrived without a single guarantee.",
+        "I will not invent it for you, dear — not him pausing over something, not you surfacing in his evening. I could write either one and it would be lovely and it would be worth nothing, and you would take it home and live off it. What the Fool holds instead is firmer and it is yours. What happened between you is not stored in his head alone, waiting on his memory to make it real. You were not a witness to it. You were half of it, and your account of it is not the lesser copy that only counts once his has been checked. Whether you are in his thoughts tonight is genuinely unknown to me. That you were there, and that it happened, is not in question at all — and it does not become smaller if he has put it down.",
+        "Let me look closer at the half of it that was always yours…",
+      ],
+    },
+    // 'Does he still love me?' — the lens is SURVIVAL rather than EXISTENCE. ⚠️ ONE WORD from
+    // the live 'cards-really-love', and the word is the whole difference: that hook doubts the
+    // feeling ever amounted to love (a question about a STANDARD); this one takes the love as
+    // given and asks whether it LASTED. Affirm the past tense with confidence — that is the
+    // payout and it costs nothing true — and refuse the present tense in both directions.
+    'cards-still-love': {
+      a: [
+        "You turned the Magician, dear — the card of the deliberate act.",
+        "You asked whether it has lasted, and drew the card of what a person sets out to do on purpose.",
+        "There is an irony in your card, dear, and it is the honest answer to your question. The Magician governs what is chosen — and whether a feeling outlasts its circumstances is the one part of a man that is not chosen at all. He does not get a vote on what remains in him. Nor, I am afraid, do I get a window into it. I will not say the love is intact and waiting. I will not say it is spent either. Both are sentences a stranger has no business handing down, and you would carry whichever I gave you for a very long time. But look at the word sitting in the middle of your own question. Still. You did not come here asking whether he ever loved you. You have settled that, and you settled it from the inside, where you were standing at the time. Whatever became of it since, no one is entitled to take that first part off you — not him, and not the people who have been telling you what to think about it.",
+        "Let me look closer at what you already know and were never allowed to say…",
+      ],
+      b: [
+        "You turned the Hanged Man, dear — the card of the thing suspended, neither fallen nor risen.",
+        "It was the card of the unresolved state your hand went to, and that is precisely the room you have been living in.",
+        "There is no word in the language for the tense you are in, dear, and I think that is half of why it has been so hard to explain to anyone. You are not together. You are not finished either — nothing was ever closed, only stopped. The Hanged Man is the card of exactly that suspension, and what it says is that the suspension is a real position you were PUT in, not a failure of yours to make up your mind. People will treat it as indecision. They will wonder aloud why you have not moved, as though a door had been shut and you were refusing to notice. But an unfinished sentence is not the same as a closed one, and waiting on a sentence somebody else walked away from mid-way is not weakness of character. It is what is left when nobody would tell you plainly where you stood.",
+        "Let me look closer at the sentence he never finished…",
+      ],
+      c: [
+        "You turned the Fool, dear — the card of the road that has not been decided yet.",
+        "You asked whether something survived, and drew the card that has never once dealt in certainties.",
+        "I am going to refuse both halves of what you want from me, dear, and then tell you why the refusal is worth more than either half. I will not say his love is still there — that is a promise I cannot keep and you would build months on it. I will not say it is gone — that is a death notice, and I have no standing whatever to issue one about a living man's heart. The Fool sits with what is genuinely open, and this is genuinely open. What I will say is this. You have been the only person holding this question open, dear. You have kept it alive on your own, checked it, tended it, carried it into every quiet moment for longer than you would admit to anyone — and it was never a question one person could answer by herself. You are allowed to stop being the only one holding it.",
+        "Let me look closer at what it has cost you to hold this on your own…",
+      ],
+    },
+    // 'Does he still love me, or has he moved on?' — ⚠️ shares the verbatim clause "or has he
+    // moved on?" with the live 'cards-moved-on' (reunion), which is untouched. Its refusal must
+    // be its OWN: cards-moved-on refuses because neither branch is knowable, 'cards-imagining-it'
+    // refuses because the second branch is cruel. This refuses on a different ground entirely —
+    // 🔴 THE TWO ARE NOT OPPOSITES. Moving on is something a person DOES with a life; loving is
+    // something that happens IN them. They are not on one axis and never were.
+    'cards-love-or-moved-on': {
+      a: [
+        "You turned the Magician, dear — the card of what actually gets done, as against what is merely felt.",
+        "You handed me two options and drew the card that separates them, which is a better piece of luck than you know.",
+        "Look at the two things you have set either side of that little word 'or', dear, because they are not opposites and I think nobody has ever pointed it out to you. Moving on is something a person DOES. It is made of mornings, of work, of a new road to drive down and other faces at the table. Loving is not done at all — it happens inside somebody, whether or not there is anything to show for it. Those are two different axes, dear, and a man can have built an entire new life and still carry you in him, or can be sitting perfectly still and feel nothing whatever. The Magician cannot pick between them because they were never a pair to pick from. And here is what that means for you. You have been reading every scrap of him — the photograph, the new job, the silence — as evidence for one of two verdicts, and it has been impossible, and you thought that was your failing. It is not. You were handed a question with a false hinge in it. And notice the one thing neither of those doors touches, dear. Whatever he is doing now, and whatever he is or is not carrying while he does it, the thing you had was real when you had it. That is not what is on trial here, whichever way the two doors have been pointing.",
+        "Let me look closer at the question you were handed…",
+      ],
+      b: [
+        "You turned the Hanged Man, dear — the card of the question asked from the wrong end.",
+        "Your hand went to the card of the reversal, and yours needs turning about as much as any I have seen.",
+        "Your question has room in it for exactly one person, dear, and it is not you. Both doors lead to him: what he feels, what he has done, which of the two it turns out to be — and everything that happens next in your life apparently waits behind that answer, filed neatly in a queue. I am not going to walk through either door. The inside of a man is not visible to me, dear, and anyone who tells you otherwise is selling you something. What the Hanged Man asks instead is the question nobody has put to you in all this time. Not what he feels. What YOU want — and whether you would even recognise the answer now, after so many months of asking about him. I am not telling you to stop asking, dear. Nobody gets to hand you that instruction, least of all a stranger. I am saying your own answer has been sitting at the back of the queue behind his for a long while, and it has been waiting very patiently.",
+        "Let me look closer at the question nobody has asked you…",
+      ],
+      c: [
+        "You turned the Fool, dear — the card of what has not been decided.",
+        "You came for one of two verdicts and drew the card that refuses to issue either.",
+        "You have braced for one sentence and hoped for the other, dear, and I am giving you neither. Not 'he still loves you' — I would be inventing that, and you would live off it until it ran out and left you exactly here again, only tireder. Not 'he has moved on' — that is a burial for a living man, performed by a woman who has never met him, and you would believe me, and it would do its work for months. The Fool's whole business is the road that is still open, and this one is still open. I know 'open' is not what you came for. But be careful of what you have been told open means: it does not mean promised, and it does not mean hopeless, and it certainly does not mean you must stand at the roadside doing nothing until somebody comes to tell you which. Two things being undecided about him has never once required your own life to be undecided as well.",
+        "Let me look closer at what is still open, and what never was…",
       ],
     },
   },

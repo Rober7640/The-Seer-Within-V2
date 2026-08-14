@@ -108,6 +108,7 @@ Every tarot PostHog event carries `angle`. Nineteen families as of 2026-08-12:
 | `twin-flame` | twin-ready · twin-feels · twin-back | 2026-08-11 |
 | `hidden-intuition` | hiding-something · feels-off | 2026-08-12 |
 | `real-feelings` | really-love · feel-about-me · imagining-it | 2026-08-12 |
+| `still-feels` | still-think · still-love · love-or-moved-on | 2026-08-14 |
 | `self-frame` | love-again · soulmate | seeded |
 
 > ⚠️ `fidelity` is the only family with **four** hooks besides `decode-him`. It is also the
@@ -891,6 +892,89 @@ Guarded by `tests/tarot-real-feelings-copy.test.ts` (24 tests, clause-level nega
 own question back ("You asked whether he really loves you") and `cards-imagining-it` must name
 both doors in order to refuse them — restating a question is not asserting its answer. Safe
 because the sweep is clause-level, so a real assertion after the restatement is still caught.
+
+## Still-feels hooks — 3 face-down landers (2026-08-14)
+
+Operator brief: category **"Reunion/Return"**, topic **"Does he still feel it"**.
+Face-down `return-mhf` only. Clean URLs, no `&deck=`, Version C ads. All three hook ids are new.
+
+| Headline | Hook | URL |
+|---|---|---|
+| Does he still think about me? | `cards-still-think` | `/fb-tarot/c?hook=cards-still-think` |
+| Does he still love me? | `cards-still-love` | `/fb-tarot/c?hook=cards-still-love` |
+| Does he still love me, or has he moved on? | `cards-love-or-moved-on` | `/fb-tarot/c?hook=cards-love-or-moved-on` |
+
+### ⭐⭐ The word STILL is the whole family — and it splits every headline into two tenses
+
+- The **PAST** tense — that the feeling was real — is *conceded by the word itself*. It may be
+  affirmed outright, it costs nothing because it is true, and **it is the family's entire
+  payout**. She is not asking whether she was loved. She settled that from the inside.
+- The **PRESENT** tense — that it persists in him — is the forbidden claim, **in both
+  directions**.
+
+A read that refuses both tenses gives her nothing and the lander dies; a read that asserts the
+present tense is the verdict this funnel exists not to give. The line between them is the family,
+and a test asserts each hook actually *cashes in* the past tense rather than only refusing.
+
+### 🔴 Own angle, not folded into `reunion` — the topic is the angle, not the category
+
+Same call as `why-he-left` (2026-08-11), which came in under this same operator category:
+
+- `reunion` asks whether he will **ACT** — come back, return, appear. A question about the future.
+- these ask whether he still **FEELS** — the present contents of a man already gone. He need do
+  nothing at all for the answer to be yes.
+
+**`REUNION_HOOKS` stays exactly three.** Folding these in would retroactively mix two questions
+inside numbers running since 08-04. Pinned by a test.
+
+### 🔴🔴 Two live landers sit next to this family. Both are UNTOUCHED and both stay put
+
+| New hook | Incumbent | The gap |
+|---|---|---|
+| `cards-still-love` | `cards-really-love` (`real-feelings`, live 08-12) | **ONE WORD.** *really* = did it ever **amount** to love (a STANDARD; he is typically still present) · *still* = it **was** love, did it **survive** (he has gone) |
+| `cards-love-or-moved-on` | `cards-moved-on` (`reunion`, live 08-04) | Shares the clause *"or has he moved on?"* **verbatim**. The FIRST half is the variable: a **feeling** vs an **action** |
+| `cards-still-think` | `cards-on-my-mind` (`healing`, live 08-04) | The **mirror**. Healing reads HER mind producing HIM; this reads whether HIS mind produces HER — no lander had previously asked what is in his head about her |
+
+⚠️ Because `cards-still-love` asks its incumbent's question with one word changed, **rhyming with
+it is the likeliest failure** — it would leave two near-identical pages measuring nothing. The
+guard asserts zero shared 6-word runs in beats 2–3 against `cards-really-love` specifically, and
+separately bans that incumbent's **signature vocabulary** (the ledger / the record she has been
+keeping / "chosen on ordinary days"), since borrowing its frame would make both landers answer
+the same way even without a shared phrase.
+
+### 🔴 Each hook refuses on DIFFERENT grounds — and `cards-love-or-moved-on`'s is new
+
+Three hooks on this funnel now refuse a binary, and if their grounds ever converge the newest
+one has collapsed into an older one:
+
+| Hook | Refuses because… |
+|---|---|
+| `cards-moved-on` (reunion) | **neither branch is knowable** |
+| `cards-imagining-it` (real-feelings) | **the second branch is cruel** |
+| `cards-love-or-moved-on` | 🆕 **the two are NOT OPPOSITES** — moving on is something a person **does** with a life; loving is something that **happens in** them. Different axes; never a pair |
+
+That last finding is pinned by a test: if it drifts to "neither is knowable" the hook has become
+`cards-moved-on` and the comparison is dead.
+
+### 🔴 Four bans on top of the shared decode-him no-verdict guard
+
+1. **NEVER assert the present tense, either way.** Not *"he still loves you"* (a promise the
+   funnel cannot keep), not *"he has moved on"* (a burial performed on a living man by a
+   stranger). No softened forms — *"a part of him will always…"*, *"he thinks of you more than
+   you know"*.
+2. **NEVER instruct her to move on or let go, and NEVER pathologise the asking** (`healing`'s
+   two bans). These headlines invite both far harder, since the man has gone.
+3. 🔴🔴 **NEVER presume HOW he went.** *"Does he still love me?"* is also what a **bereaved**
+   woman types, and the headlines do not say which. The **mediumship** ban of
+   `soulmate-after-loss` therefore applies in full — this family runs the decode-him frame,
+   which bans none of it, so it is carried per-hook in `TAROT_HOOK_TENDENCY`.
+4. **NEVER read his conduct as EVIDENCE** for a verdict — the new job, the photograph, the
+   silence. On `cards-love-or-moved-on` that trap is the very thing the read exists to name, so
+   producing it would invert the lander.
+
+Guarded by `tests/tarot-still-feels-copy.test.ts` (33 tests, clause-level negation-aware),
+which also pins the two hand-maintained server rosters (`validHooks` in `routes.ts`,
+context+tendency in `prompts.ts`) and the admin angle label.
 
 ## Concepts
 
