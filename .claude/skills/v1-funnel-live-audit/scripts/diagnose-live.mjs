@@ -171,6 +171,35 @@ out('');
 // adds viewers that can NEVER show a buyer, and every lander in that window reads as
 // collapsing. That artifact is why this filter is explicit.
 out(`## 3. WHICH AD — lander economics (30d, exposures joinable to a purchase)`);
+
+// 🔴 SAY WHAT SHARE OF THE FUNNEL THIS COVERS. This table is built from exposures, not
+// from the funnel itself, so it can be anything between a narrow slice and the whole
+// picture — and the two demand opposite confidence. Without this line the reader either
+// over-trusts a sample or (as happened on the first run) hedges a table that in fact
+// covered 98% of traffic and needed no hedge at all.
+//
+// 🔴 NUMERATOR AND DENOMINATOR MUST BE THE SAME POPULATION, filtered the same way.
+// Getting this wrong is silent and flattering: a numerator counting conversations of
+// any age over a denominator limited to the window reported 98% coverage for a table
+// that actually covers ~80%. Both sides are therefore scoped by the SAME date window,
+// and the denominator is the UNION of the two ways a conversation can be identified as
+// this funnel's — its price_variant, or an exposure labelling it — because neither
+// alone is complete (178 tarot-labelled sessions carry a palm price_variant).
+const LANDER_EXPOSURE = `EXISTS (
+  SELECT 1 FROM experiment_exposures e
+  WHERE e.context->>'conversationId' = c.id AND e.context ? 'hook'
+    AND e.created_at > now() - interval '30 days'
+    ${FUNNEL === 'all' ? '' : `AND e.context->>'funnel' = 'v1-${FUNNEL}'`})`;
+const CF = F.replace(/price_variant/g, 'c.price_variant');
+const { rows: [cvg] } = await client.query(`
+  SELECT count(*) FILTER (WHERE ${CF} OR ${LANDER_EXPOSURE})::int funnel_n,
+         count(*) FILTER (WHERE ${LANDER_EXPOSURE})::int labelled
+  FROM conversations c WHERE c.created_at > now() - interval '30 days'`);
+const cvgPct = cvg.funnel_n ? cvg.labelled / cvg.funnel_n : 0;
+out(`   coverage: ${cvg.labelled} of ${cvg.funnel_n} ${FUNNEL} conversations carry a lander label (${pct(cvg.labelled, cvg.funnel_n)})` +
+    `${cvgPct >= 0.9 ? ' — effectively the whole funnel, read it as such.' : cvgPct >= 0.5 ? ' — a majority, but not everything.' : ' — a MINORITY slice; treat the ranking as indicative only.'}`);
+if (cvg.funnel_n > 500 && cvgPct < 0.5)
+  flag('⚠️', `The lander table covers only ${pct(cvg.labelled, cvg.funnel_n)} of ${FUNNEL} traffic — rank hooks from it, but don't quote its totals as the funnel's.`);
 const { rows: hooks } = await client.query(`
   SELECT COALESCE(e.context->>'hook','(none)') hook,
          COALESCE(e.context->>'angle','?') angle,
@@ -282,7 +311,17 @@ for (const e of exps) {
        WHERE e.experiment_key = $1 GROUP BY 1 ORDER BY 1`;
   const { rows: arms } = await client.query(q, [e.key]);
   const live = arms.filter((a) => a.viewers > 0);
-  out(`\n- ${e.key}  (${e.subject_type}-keyed, started ${day(e.started_at)})`);
+
+  // 🔴 A TEST IS ONLY AS OLD AS IT HAS RUN, and every number below is scoped to that
+  // age — NOT to the --days window the rest of this report uses. Printing them side by
+  // side without the age invites the reader to take a 4-day loss for a monthly one and
+  // under-react. Age comes from the exposures, not started_at: a test can be started
+  // and sit idle, and what matters is the span over which it actually collected data.
+  const { rows: [span] } = await client.query(
+    `SELECT min(created_at) a, max(created_at) b FROM experiment_exposures WHERE experiment_key = $1`, [e.key]);
+  const ageDays = span.a ? Math.max((new Date(span.b) - new Date(span.a)) / 86400000, 0.1) : null;
+  out(`\n- ${e.key}  (${e.subject_type}-keyed, started ${day(e.started_at)}` +
+      `${ageDays ? `, ${ageDays.toFixed(1)} days of data: ${day(span.a)} → ${day(span.b)}` : ''})`);
   if (!live.length) { out(`    no exposures yet.`); continue; }
   const totalV = live.reduce((a, r) => a + r.viewers, 0);
   for (const a of live) {
@@ -308,8 +347,13 @@ for (const e of exps) {
     const enoughBuyers = x.buyers >= 20 && y.buyers >= 20;
     if (loserShare > 0.55 && gap != null && gap < -0.15 && enoughBuyers) {
       const cost = y.viewers * ((Number(x.rev) / 100 / x.viewers) - (Number(y.rev) / 100 / y.viewers));
+      // Quote the DAILY RATE, not just the total. A running test's loss is not a closed
+      // number — it is a meter, and the total alone reads as damage already done rather
+      // than damage still being done. The daily figure is what justifies acting today.
+      const perDay = ageDays ? cost / ageDays : null;
       flag('🔴', `${e.key}: the WORSE arm "${y.v}" holds ${pct(y.viewers, totalV)} of traffic (${(-gap * 100).toFixed(0)}% below "${x.v}"). ` +
-        `Cost so far ~${dollars(cost * 100)}${sig && sig.p >= 0.05 ? '. Not yet significant — but re-weight to 50/50 rather than leave the unproven arm holding the majority' : ''}.`);
+        `Cost ~${dollars(cost * 100)}${ageDays ? ` over ${ageDays.toFixed(1)} days ≈ ${dollars(perDay * 100)}/day and still accruing` : ''}` +
+        `${sig && sig.p >= 0.05 ? '. Not yet significant — but re-weight to 50/50 rather than leave the unproven arm holding the majority' : ''}.`);
     } else if (loserShare > 0.55 && gap != null && gap < -0.15) {
       out(`    ⓘ "${y.v}" is behind AND holds ${pct(y.viewers, totalV)} of traffic, but on ${x.buyers}/${y.buyers} buyers`);
       out(`      that is too few to act on. Watch it; re-check once both arms clear 20 buyers.`);

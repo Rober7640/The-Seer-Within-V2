@@ -87,10 +87,12 @@ Ends with a **prioritized issues list** (🔴 high / ⚠️ worth-a-look). Exits
 - **2. WHERE** — the five funnel steps (lead→pitch→checkout→paid→U1→U2), recent vs prior, with the
   one verdict that matters: *localised drop* (defect/change) vs *everything sagging* (traffic mix).
 - **3. WHICH AD** — every lander ranked by **revenue per 1,000 visitors**, broken into
-  `main/buyer · bump · U1 take · U2 take · back/buyer · rev/buyer`. Flags a hook holding
+  `main/buyer · bump · U1 take · U2 take · back/buyer · rev/buyer`, and led by a **coverage
+  line** stating what share of the funnel the table actually sees. Flags a hook holding
   >30% of traffic while earning below median, and a hook whose buyers skip the back end.
 - **4. WHICH TEST** — every running experiment tallied with the *correct* join for its subject type,
-  with a two-proportion z-test. Flags a losing arm holding more than its fair share of traffic.
+  with its **real age in days** and a two-proportion z-test. Flags a losing arm holding more than
+  its fair share of traffic, costed as a total **and a daily rate**.
 - **5. MEASUREMENT INTEGRITY** — `ab_visitor_id` coverage **scoped per test**, un-joinable exposures,
   assigned split vs configured weights, and buyers who were never offered upsell-2.
 
@@ -109,6 +111,8 @@ guards them, but it can only guard what it can see — you still have to read it
 | **An even 50/50 split is a test running correctly.** | Don't flag it. Only a share meaningfully above the arm's configured weight is a misallocation. |
 | **Scope every measurement-integrity check to the test's own start date and funnel.** | `ab_visitor_id` read as "79% missing" over a calendar window and **100% present** since the test that uses it began. A column at 100% reported as broken sends someone to fix nothing. |
 | **`user`-keyed experiments are V2 chat tests.** | They buy through `credit_purchases` and never touch `conversations`. Tallying them here prints a healthy test as zero-buyer. The script skips them by name. |
+| **Every figure carries its own window — quote it, and quote a test's loss as a DAILY RATE.** | The funnel totals are the `--days` window, but a test can only be measured over the days it has run. A ~$730 loss read as monthly is a shrug; the same loss over 3.6 days is $200/day and still running, which is the number that justifies acting today. §4 now prints each test's real age from its exposures (not `started_at` — a test can be started and sit idle). |
+| **A ratio's numerator and denominator must be the same population, filtered the same way.** | The most flattering error on this page. A numerator counting conversations of any age over a denominator limited to the window reported the lander table at **98% coverage** when it truly covers **~80%** — and 98% invites you to quote its totals as the funnel's. §3 now scopes both sides identically, and takes the denominator as the UNION of the two ways a session identifies as a funnel's (its `price_variant` *or* an exposure labelling it) because neither alone is complete — 178 tarot-labelled sessions carry a *palm* `price_variant`. |
 
 ## Output
 
