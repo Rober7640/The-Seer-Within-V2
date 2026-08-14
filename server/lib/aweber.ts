@@ -14,6 +14,10 @@ interface AddSubscriberParams {
   // Optional per-lander list override. Falls back to AWEBER_LIST_ID when unset,
   // so existing callers are unaffected.
   listId?: string;
+  // Optional AWeber custom fields (e.g. `resume_url`). Only ever sent when
+  // non-empty — see the wipe guard in addSubscriberToList. The field must
+  // already exist ON THAT LIST; custom fields are per-list, not per-account.
+  customFields?: Record<string, string>;
 }
 
 interface ShippingAddress {
@@ -133,48 +137,97 @@ export async function addSubscriberToList(params: AddSubscriberParams): Promise<
     return { success: false, error: 'AWeber tokens not configured' };
   }
   
+  const customFields = params.customFields ?? {};
+  const hasCustomFields = Object.keys(customFields).length > 0;
+
   try {
-    const subscriberData: Record<string, unknown> = {
-      email: params.email,
-      update_existing: true,
-    };
-    
-    if (params.name) {
-      subscriberData.name = params.name;
-    }
-    
-    if (params.tags && params.tags.length > 0) {
-      subscriberData.tags = params.tags;
-    }
-    
-    const response = await makeAWeberRequest(
-      `/accounts/${accountId}/lists/${listId}/subscribers`,
-      {
-        method: 'POST',
-        body: JSON.stringify(subscriberData),
+    const postSubscriber = (withCustomFields: boolean) => {
+      const subscriberData: Record<string, unknown> = {
+        email: params.email,
+        update_existing: true,
+      };
+
+      if (params.name) {
+        subscriberData.name = params.name;
       }
-    );
-    
+
+      if (params.tags && params.tags.length > 0) {
+        subscriberData.tags = params.tags;
+      }
+
+      // Only include custom_fields when there's at least one to set. AWeber
+      // treats `custom_fields: {}` with update_existing as "clear all custom
+      // fields" — which silently wipes values set by earlier API calls on the
+      // same subscriber/list. Same trap already guarded in
+      // writeSoulmateSubscriber, where a decline-tag call with no custom
+      // fields wiped three populated values ~11s after a purchase.
+      if (withCustomFields && hasCustomFields) {
+        subscriberData.custom_fields = customFields;
+      }
+
+      return makeAWeberRequest(
+        `/accounts/${accountId}/lists/${listId}/subscribers`,
+        {
+          method: 'POST',
+          body: JSON.stringify(subscriberData),
+        }
+      );
+    };
+
+    const isAlreadySubscribed = (body: string): boolean => {
+      try {
+        return !!JSON.parse(body).error?.message?.includes('already subscribed');
+      } catch {
+        return false;
+      }
+    };
+
+    let response = await postSubscriber(true);
+
     if (response.ok || response.status === 201) {
       logger.info(`AWeber: Successfully added subscriber ${params.email}`);
       return { success: true };
     }
 
-    const errorText = await response.text();
+    let errorText = await response.text();
     logger.error(`AWeber add subscriber failed: status=${response.status} body=${errorText}`);
 
     if (response.status === 400) {
-      try {
-        const errorData = JSON.parse(errorText);
-        if (errorData.error?.message?.includes('already subscribed')) {
+      if (isAlreadySubscribed(errorText)) {
+        logger.info(`AWeber: Subscriber ${params.email} already exists`);
+        return { success: true };
+      }
+
+      // A custom field the list doesn't define is rejected for the WHOLE
+      // request, so an unknown/misnamed field would cost us the SUBSCRIBER and
+      // not just the field. Custom fields are per-list, so standing up a new
+      // per-lander list (AWEBER_LIST_ID_<FUNNEL>) without creating `resume_url`
+      // on it would otherwise silently stop that funnel's leads reaching
+      // AWeber at all. Retry once without them: the lead always lands, and the
+      // warning below is what tells us the field is missing or misnamed.
+      if (hasCustomFields) {
+        logger.warn(
+          `AWeber: retrying ${params.email} without custom fields (${Object.keys(customFields).join(', ')}) — list ${listId} may not define them`
+        );
+        response = await postSubscriber(false);
+
+        if (response.ok || response.status === 201) {
+          logger.info(`AWeber: Added subscriber ${params.email} WITHOUT custom fields`);
+          return { success: true };
+        }
+
+        errorText = await response.text();
+        logger.error(`AWeber retry without custom fields failed: status=${response.status} body=${errorText}`);
+
+        if (response.status === 400 && isAlreadySubscribed(errorText)) {
           logger.info(`AWeber: Subscriber ${params.email} already exists`);
           return { success: true };
         }
-      } catch {}
+      }
     }
 
     return { success: false, error: `AWeber API error: ${response.status} - ${errorText}` };
-    
+
   } catch (error) {
     logger.error('AWeber error:', error);
     return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
