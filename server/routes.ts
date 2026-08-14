@@ -75,8 +75,13 @@ import {
 import { assignVariantIfMissing, getVariantForEmail } from "./lib/priceVariant";
 import {
   resolveV1Bump,
+  resolvePalmGate,
   resolveTarotVersion,
   logExposure,
+  exposureSign,
+  hashEmail,
+  PALM_GATE_EXPERIMENT_KEY,
+  V1_BUMP_EXPERIMENT_KEY,
   V1_TAROT_VERSION_EXPERIMENT_KEY,
   type TarotVersion,
 } from "./lib/experiments";
@@ -95,7 +100,7 @@ import {
 import { fireGoogleAdsConversion } from "./lib/googleAds";
 import { funnelDefForParam, FUNNELS, type FunnelParam } from "@shared/funnelConfig";
 import Stripe from "stripe";
-import { getStripe } from "./lib/stripeAccount";
+import { getStripe, getStripeForRow } from "./lib/stripeAccount";
 import type { ChatRequest, CheckoutRequest } from "../shared/types";
 import {
   addSubscriberToList,
@@ -135,6 +140,71 @@ const funnelSchema = z
 
 // How long an emailed /chat?resume=<id> recovery link stays valid.
 const RESUME_LINK_EXPIRY_DAYS = 30;
+
+// Did this V1 conversation ACTUALLY get paid for?
+//
+// `conversations.purchased` cannot answer that. /api/checkout flips it the moment
+// the buy button is clicked — before Stripe has taken a cent — and nothing ever
+// flips it back (see the markPurchased call in the checkout handler, comment and
+// all: "optimistic - will be confirmed by webhook"). Over a recent 30-day window
+// 1,813 rows claimed purchased=true while only 229 payments were webhook-confirmed.
+// So trusting that flag alone locks ~1,100 people who reached for their card and
+// stopped OUT of their own reading — precisely the group an emailed recovery link
+// exists to bring back.
+//
+// Instead: consult only signals that cannot exist unless money moved, then ask
+// Stripe directly. Affordable here because this runs once per emailed-link click,
+// not as a bulk job.
+async function conversationWasPaid(conversation: {
+  mainPaidAt?: Date | null;
+  upsellPurchased?: boolean | null;
+  upsell2Purchased?: boolean | null;
+  upsellOffered?: boolean | null;
+  stripeSessionId?: string | null;
+  stripeAccount?: string | null;
+}): Promise<boolean> {
+  // 1. Stamped by the checkout.session.completed webhook — server-side and
+  //    browser-independent, so it catches buyers who paid then closed the tab.
+  //    The strongest signal available.
+  if (conversation.mainPaidAt) return true;
+
+  // 2. Bought an upsell, which is only reachable after paying for the front-end
+  //    offer. Implies the main purchase even when its own signal is missing.
+  if (conversation.upsellPurchased || conversation.upsell2Purchased) return true;
+
+  // 3. Reached /welcome1. Normally only happens via Stripe's post-payment
+  //    redirect, but markUpsellOffered fires there WITHOUT re-verifying against
+  //    Stripe — so this stays a heuristic, and step 4 is what makes the verdict
+  //    trustworthy rather than merely probable.
+  if (conversation.upsellOffered) return true;
+
+  // 4. Nothing trustworthy on the row — ask Stripe about the saved session.
+  //    Via getStripeForRow, because Stripe object ids only resolve against the
+  //    account that created them (A primary / B backup).
+  if (conversation.stripeSessionId) {
+    const client = getStripeForRow(conversation.stripeAccount);
+    if (client) {
+      try {
+        const session = await client.checkout.sessions.retrieve(
+          conversation.stripeSessionId,
+        );
+        if (session.payment_status === "paid") return true;
+      } catch (err) {
+        // Stripe unreachable, or the session no longer resolves. Fall through to
+        // "not paid" so she still gets her reading back. The only person that can
+        // misjudge is someone who paid, whose webhook never landed, who never
+        // loaded /welcome1, at the moment Stripe is erroring — and the AWeber
+        // paid-list exclusion keeps her out of the send independently.
+        logger.warn(
+          "Resume paid-check: Stripe lookup failed, treating as unpaid:",
+          err,
+        );
+      }
+    }
+  }
+
+  return false;
+}
 
 const upsellChargeSchema = z.object({
   checkoutSessionId: z.string().min(1),
@@ -280,6 +350,45 @@ function aweberLeadListId(funnel: FunnelId): string | undefined {
     if (perLander) return perLander;
   }
   return process.env.AWEBER_LIST_ID;
+}
+
+// Absolute per-person link back to her own unfinished reading, stored on the
+// AWeber subscriber as the `resume_url` custom field for the recovery sequence
+// to use as a merge field. Full URL rather than the bare id so the email
+// button's href is one merge field and domain/path/params stay ours.
+//
+// THE PATH MUST CARRY THE FUNNEL'S OWN PREFIX. client/src/lib/funnel.ts →
+// currentFunnel() derives the funnel from window.location.pathname and nothing
+// else; `conversations` has no funnel column and the resume endpoint returns
+// none. So a palm/tarot lead resuming on the bare /chat is treated as base V1
+// from that point on — her Stripe product loses its " - PALM"/" - TAROT"
+// suffix, her paid AWeber tag loses -palm/-tarot, and PostHog records her as
+// v1. Her PRICE is unaffected (locked to her email, returned by the resume
+// endpoint), but the revenue is credited to the wrong funnel, understating
+// those funnels' ROAS. Derived from the shared registry so any future funnel
+// gets this behaviour for free. Not retrofittable: a link is only written at
+// opt-in and she won't opt in twice.
+//
+// BASE_URL, never getBaseUrl(req) — the latter takes the host from the
+// visitor's own request headers, which would permanently bake a
+// *.up.railway.app hostname into her email.
+function buildResumeUrl(
+  funnel: FunnelId,
+  conversationId: string | null,
+): string | undefined {
+  if (!conversationId) return undefined;
+
+  const base = process.env.BASE_URL;
+  // A missing BASE_URL would fall through to a localhost link on a real
+  // subscriber — the local .env carries live AWeber credentials, so that write
+  // reaches the production list. Skip the field instead; the lead still lands.
+  if (!base || /localhost|127\.0\.0\.1/.test(base)) {
+    logger.warn("resume_url skipped: BASE_URL unset or local");
+    return undefined;
+  }
+
+  const prefix = funnelDefForParam(funnel)?.prefix ?? ""; // "" for base traffic
+  return `${base.replace(/\/+$/, "")}${prefix}/chat?resume=${conversationId}&src=recovery`;
 }
 
 // Stripe client for the active account (A primary / B backup). Resolved at boot
@@ -1042,7 +1151,12 @@ export async function registerRoutes(
       // purchase on the email, with nothing else joining them. READ, never minted:
       // a lead with no cookie simply records none. First write wins in
       // saveConversation, so a returning buyer is never moved between visitors.
-      await saveConversation({
+      // The id is the recovery link's only secret — a random UUID is precisely
+      // what stops someone editing the URL and reading other people's private
+      // readings. saveConversation upserts on email (newest row per email), so
+      // re-opting in returns the SAME id and rewrites the same link rather than
+      // minting a second one.
+      const conversationId = await saveConversation({
         email,
         firstName,
         bucket,
@@ -1064,11 +1178,22 @@ export async function registerRoutes(
 
       // Add to AWeber email list (non-blocking). Per-lander FREE list when the
       // funnel's AWEBER_LIST_ID_* env is set, else the shared AWEBER_LIST_ID.
+      //
+      // `resume_url` rides along on the same write so the recovery sequence can
+      // link her back to her own unfinished reading. Deliberately NOT carrying
+      // her email (the UUID is what keeps other people's readings private), her
+      // price (a written commitment that could contradict her locked variant),
+      // or her name (AWeber already has it).
+      const resumeUrl = buildResumeUrl(funnel, conversationId);
       addSubscriberToList({
         email,
         name: firstName,
         listId: aweberLeadListId(funnel),
         tags: fbifyAweberTags([bucket || "website", "seer-within"], funnel),
+        // Omitted entirely when we have no link — never `custom_fields: {}`,
+        // which AWeber reads as "clear every custom field" on an
+        // update_existing write.
+        customFields: resumeUrl ? { resume_url: resumeUrl } : undefined,
       })
         .then((result) => {
           if (result.success) {
@@ -1298,16 +1423,71 @@ export async function registerRoutes(
         return res.status(404).json({ error: "Not found" });
       }
 
-      // Already bought — nothing to resume; don't drop them back into a pitch.
-      if (conversation.purchased) {
-        return res.status(410).json({ error: "Already purchased" });
+      // Already bought — nothing to resume; never drop a paying customer back
+      // into a pitch. Deliberately NOT `conversation.purchased`, which is set
+      // optimistically at checkout-start and stays true for people who never
+      // paid — see conversationWasPaid for why and what it checks instead.
+      //
+      // `reason` is the machine-readable half: BOTH terminal cases are 410, and
+      // the client sends a buyer to the thank-you page while an expired link just
+      // starts a fresh reading. Matching on the human `error` string would put a
+      // wording change one edit away from restarting a paying customer's funnel.
+      if (await conversationWasPaid(conversation)) {
+        return res
+          .status(410)
+          .json({ error: "Already purchased", reason: "purchased" });
       }
 
       const ageDays =
         (Date.now() - new Date(conversation.createdAt).getTime()) / 86_400_000;
       if (ageDays > RESUME_LINK_EXPIRY_DAYS) {
-        return res.status(410).json({ error: "Link expired" });
+        return res.status(410).json({ error: "Link expired", reason: "expired" });
       }
+
+      // Which funnel she is resuming ON, passed by the client from its own path
+      // (client/src/lib/funnel.ts → currentFunnel). Required, not decorative:
+      // `conversations` has no funnel column, and BOTH V1 UI tests are
+      // funnel-scoped, so without it every resumed reader falls out of scope and
+      // silently loses the arm she was assigned.
+      const resumeFunnel =
+        typeof req.query.funnel === "string" ? req.query.funnel.slice(0, 40) : undefined;
+
+      // The two UI arms she was assigned at lead capture — the commitment gate and
+      // the order bump. Without these the recovery link renders the plain purchase
+      // CTA and jumps straight to Stripe, so a returning reader in either arm sees
+      // neither, while still sitting in that arm's denominator.
+      //
+      // 🔴 RESOLVED DIRECTLY, NEVER VIA assignVariantIfMissing. That function returns
+      // these same three fields and is therefore the tempting one-liner — but it also
+      // RE-DRAWS the price when a stored variant is no longer servable on this funnel
+      // (see storedVariantIsServable, priceVariant.ts). On a resumed session that
+      // would re-price her the moment a new price test starts: chat would quote the
+      // stored price returned below while Stripe charged the freshly drawn one. Her
+      // price must come off her row and nothing else.
+      //
+      // Not a re-roll either. Both resolvers bucket on the hashed email, so they
+      // return the SAME arm she was assigned at lead capture — the same arm
+      // /api/checkout independently re-resolves before it bills the bump line, by
+      // the same call. And logExposure is onConflictDoNothing per (key, subject),
+      // so resuming never adds a second row to the denominator.
+      //
+      // ⏰ THE ONE GAP: bucketing is stable, but the bucket→variant MAP moves with
+      // the experiment's weights, so a weight edit landing BETWEEN her opt-in and
+      // her click would show her the arm her exposure row does not record. The fix
+      // is scope.freezeAssignment, which pins her to that row — see
+      // docs/experiment-freeze-by-default.md. Not a live problem today: recovery
+      // links only exist for leads captured since 2026-08-13 (9b596b7), so every
+      // resumable exposure is newer than every running test's last weight change.
+      const resumeSign = conversation.email
+        ? await exposureSign(
+            [PALM_GATE_EXPERIMENT_KEY, V1_BUMP_EXPERIMENT_KEY],
+            hashEmail(conversation.email),
+          )
+        : null;
+      const [palmGate, bumpArm] = await Promise.all([
+        resolvePalmGate(conversation.email, resumeFunnel, resumeSign),
+        resolveV1Bump(conversation.email, resumeFunnel, resumeSign),
+      ]);
 
       return res.json({
         userData: {
@@ -1329,6 +1509,12 @@ export async function registerRoutes(
           downsellDollars: conversation.downsellAmountCents
             ? conversation.downsellAmountCents / 100
             : undefined,
+          // Same shape /api/lead returns at email capture, so the client merges
+          // them with the identical validation. Only ever true — absent means the
+          // plain CTA straight to Stripe, i.e. today's behaviour.
+          commitmentGate: palmGate.gate === true,
+          orderBump: bumpArm.bump === true,
+          bumpCopy: bumpArm.copy ?? "control",
         },
         conversationState: conversation.conversationState,
         messages: conversation.messages ? JSON.parse(conversation.messages) : [],
