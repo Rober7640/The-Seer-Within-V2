@@ -524,6 +524,55 @@ export type TarotHook =
   | 'cards-still-think' // Does he still think about me?
   | 'cards-still-love' // Does he still love me?
   | 'cards-love-or-moved-on' // Does he still love me, or has he moved on?
+  // His-other-life hooks (2026-08-14). FIVE landers, the largest family on the funnel. The
+  // operator's category is "Persona" and the topic "persona commitment" — and this is the first
+  // commission that is genuinely a PERSONA rather than a topic: every headline describes the same
+  // woman, one fitting herself into a life that was already furnished before she arrived. His
+  // children. A woman who came first. His own front door. The years already spent.
+  //
+  // 🔴 NOT folded into `commitment` (live since 2026-07-31), and the line is clean:
+  //   · `commitment` asks WILL HE EVER — a bare question with no circumstances attached.
+  //   · these ask WHY HE HASN'T, and each names the specific obstacle she is living beside.
+  // Folding them in would retroactively mix a generic question and five situated ones inside
+  // numbers running since 07-31. Same call as `why-he-left` vs `reunion`, `missing-him` vs
+  // `healing`, `still-feels` vs `real-feelings`.
+  //
+  // ⭐⭐ THE SHARED MOVE, and every read in the family turns on it: NAME HER POSITION WITHOUT
+  // RANKING HER AGAINST WHAT WAS THERE FIRST. Every one of these headlines invites a ranking
+  // answer — "you should come first", "you deserve better than second place" — and ranking is
+  // precisely what may never be supplied, because the things she is measured against are either
+  // children (who legitimately come first), a woman who may be dead, or a history nobody can
+  // compete with. The affirmable thing is not a HIGHER place. It is a DEFINED one: she has never
+  // been told where she stands, and she is allowed to want that said out loud without wanting
+  // anybody else to have less.
+  //
+  // 🔴 WRITTEN AUDIENCE-AGNOSTIC BY OPERATOR CALL 2026-08-14. Four of the five turn on his
+  // circumstances and NONE of the headlines states them. The reads may never presume whether he
+  // is divorced, widowed, separated or still married. Assuming an ex is brutal if she has died;
+  // assuming a death is absurd if they divorced; assuming a wife names the visitor a mistress on
+  // a public page. Same discipline as `missing-him`, and harder here because it must hold across
+  // five headlines rather than three.
+  //
+  // 🔴🔴 'cards-his-children' IS THE SHARPEST LANDER ON THE FUNNEL and carries a ban that exists
+  // nowhere else: it asks a card to comment on a man's relationship with HIS CHILDREN — real
+  // third parties, very possibly minors, who are not the visitor's rivals and cannot consent to
+  // being read. The internet's stock answer to this headline is "you deserve to come first",
+  // which tells a woman she should outrank a man's children. That may never be produced. Nor may
+  // the children be framed as an obstacle, nor he be graded as a father.
+  //
+  // ⚠ 'cards-her-shadow' inherits the `soulmate-after-loss` MEDIUMSHIP ban for the same reason
+  // `missing-him` does — "her" may be a dead wife, and this family runs the decode-him frame,
+  // which bans none of it. The other woman may also be entirely legitimate (the mother of his
+  // children, a late spouse) rather than a rival, so unlike `fidelity` she may NEVER be
+  // disparaged, doubted or positioned as competition.
+  //
+  // ⚠ 'cards-forever-or-now' is the FOURTH binary-refusing hook and its grounds must differ from
+  // the three already live — see the note on HIS_OTHER_LIFE_HOOKS below.
+  | 'cards-forever-or-now' // Am I his forever, or his now?
+  | 'cards-his-children' // Why do his children come before me?
+  | 'cards-her-shadow' // Am I living in her shadow?
+  | 'cards-live-apart' // Why do we still live apart?
+  | 'cards-too-long' // Have I already given him too long?
   // Self-frame hooks (read HER, affirm the hopeful yes — like the palm love hooks).
   | 'cards-love-again' // Will I love again?
   | 'cards-soulmate' // When is my soulmate coming?
@@ -846,6 +895,39 @@ export const STILL_FEELS_HOOKS: TarotHook[] = [
   'cards-love-or-moved-on',
 ]
 
+// His-other-life hooks (2026-08-14). FIVE landers — the largest family on the funnel, and the
+// first commission that is a PERSONA rather than a topic. Operator category "Persona", topic
+// "persona commitment"; the angle is named for what the landers ask, per house convention.
+//
+// 🔴 NOT folded into `commitment`, which holds the generic "will he ever commit" trio live since
+// 07-31. That family asks WILL HE; these ask WHY HE HASN'T and each names its own obstacle.
+//
+// ⚠️ ANGLE ≠ FRAME. The operator specified the Persona/commitment FRAME, which server-side is the
+// DEFAULT decode-him branch in prompts.ts — no new Set to add or keep in sync. The
+// family-specific bans live in the per-hook TENDENCY strings.
+//
+// ⭐⭐ 'cards-forever-or-now' is the FOURTH binary-refusing hook on the funnel, and the four
+// grounds must stay distinct or the newest has collapsed into an older one:
+//   · 'cards-moved-on'        (reunion)      — neither branch is knowable
+//   · 'cards-imagining-it'    (real-feelings)— the second branch is cruel
+//   · 'cards-love-or-moved-on'(still-feels)  — the two are not opposites
+//   · this one                               — 🆕 permanence is NOT A STATUS she already has and
+//     he has already assigned. "Forever" is not a property of a person awaiting discovery; it is
+//     a thing built or not built, and nobody is living in it yet, including him. The binary is a
+//     category error rather than an unanswerable question.
+//
+// 🔴 Do NOT add any of these to a no-man frame. A real, specific man stands in all five, plus —
+// uniquely on this funnel — real THIRD PARTIES who are not the visitor's rivals: his children,
+// and a woman who may be living or dead. Every no-verdict guard stays on and is extended to
+// them. See the union comment for the full ban list.
+export const HIS_OTHER_LIFE_HOOKS: TarotHook[] = [
+  'cards-forever-or-now',
+  'cards-his-children',
+  'cards-her-shadow',
+  'cards-live-apart',
+  'cards-too-long',
+]
+
 // The ad ANGLE a hook belongs to. Carried on every tarot PostHog event (see
 // lib/tarotAttribution.ts) so the two decode-him families can be compared as GROUPS
 // without listing each hook: one `angle = trust` filter instead of three hook values,
@@ -941,6 +1023,14 @@ export type TarotAngle =
   // the feeling ever amounted to love, "still" takes that as given and asks if it survived.
   // And NOT 'missing-him', which reads HER ache; this reads HIS supposed contents.
   | 'still-feels'
+  // 🔴 'his-other-life' is the SITUATED sibling of 'commitment', not a variant of it. commitment
+  // asks whether he will ever commit, with no circumstances attached; this asks why he has not,
+  // and every lander names the obstacle — his children, a woman who came first, separate homes,
+  // the years already given. It is also NOT 'fidelity': the third parties here are not rivals
+  // and may be entirely legitimate. And NOT self-frame, though two headlines are phrased about
+  // her — a real man and real third parties stand in all five, so every no-verdict guard stays
+  // on and extends to them.
+  | 'his-other-life'
   | 'self-frame'
 
 export function angleForHook(hook: TarotHook): TarotAngle {
@@ -963,6 +1053,7 @@ export function angleForHook(hook: TarotHook): TarotAngle {
   if (HIDDEN_INTUITION_HOOKS.includes(hook)) return 'hidden-intuition'
   if (REAL_FEELINGS_HOOKS.includes(hook)) return 'real-feelings'
   if (STILL_FEELS_HOOKS.includes(hook)) return 'still-feels'
+  if (HIS_OTHER_LIFE_HOOKS.includes(hook)) return 'his-other-life'
   return 'decode-him'
 }
 
@@ -1025,6 +1116,11 @@ export const TAROT_HOOKS: TarotHook[] = [
   'cards-still-think',
   'cards-still-love',
   'cards-love-or-moved-on',
+  'cards-forever-or-now',
+  'cards-his-children',
+  'cards-her-shadow',
+  'cards-live-apart',
+  'cards-too-long',
   'cards-love-again',
   'cards-soulmate',
 ]
@@ -1149,6 +1245,14 @@ export const HEADLINES: Record<TarotHook, string> = {
   'cards-still-think': 'Does he still think about me?',
   'cards-still-love': 'Does he still love me?',
   'cards-love-or-moved-on': 'Does he still love me, or has he moved on?',
+  // His-other-life (2026-08-14). The operator's wording, shipped exactly as given.
+  // ⚠️ Note what none of them states: whether he is divorced, widowed, separated or married.
+  // That silence is deliberate and load-bearing — the reads must hold for every one of those.
+  'cards-forever-or-now': 'Am I his forever, or his now?',
+  'cards-his-children': 'Why do his children come before me?',
+  'cards-her-shadow': 'Am I living in her shadow?',
+  'cards-live-apart': 'Why do we still live apart?',
+  'cards-too-long': 'Have I already given him too long?',
   'cards-love-again': 'Will I love again?',
   'cards-soulmate': 'When is my soulmate coming?',
 }
@@ -1376,6 +1480,22 @@ const TAROT_QUESTION: Record<TarotHook, string> = {
   // 'cards-moved-on's opener and it asks her to build the case both ways. This asks for HER
   // picture of the phrase instead, which is the exact material the read takes apart.
   'cards-love-or-moved-on': "Before I look closer, tell me… when you picture him having moved on, what is it you actually see?",
+  // His-other-life (2026-08-14). ⚠️ None may ask her to state his circumstances (married,
+  // divorced, widowed) — the family is audience-agnostic and an opener that asks would break it
+  // on the FIRST question Evelyn asks. 🔴 None may invite her to make a case against a third
+  // party: not his children, not the woman who came first. Each asks for something only SHE
+  // holds — her own position, in her own words.
+  'cards-forever-or-now': "Before I look closer, tell me… what has he actually said about where this is going — in his words, not what you have pieced together?",
+  // 🔴 Never "how do his children treat you?" or anything inviting a complaint about them. Asks
+  // about the ARRANGEMENT she has been fitted into, which is his doing and not theirs.
+  'cards-his-children': "Before I look closer, tell me… when the two of you do get time, is it planned for — or is it whatever is left over?",
+  // 🔴 Never asks who "her" is, whether she is alive, or what she was like. Asks how the
+  // comparison reaches HER, which is the only part she has first-hand.
+  'cards-her-shadow': "Before I look closer, tell me… how do you know she is there — is it something he does, or something you feel?",
+  // 🔴 Never "why do you think he won't move in?" — that asks her to author his reasons. Asks
+  // whether it was ever DECIDED, which is the read's actual finding.
+  'cards-live-apart': "Before I look closer, tell me… was living apart something the two of you decided, or something that simply never changed?",
+  'cards-too-long': "Before I look closer, tell me… what were you told, back at the start, about how long this would take?",
   'cards-love-again': "Before I look closer, tell me… what has been weighing on your heart since it happened?",
   'cards-soulmate': "Before I look closer, tell me… what is the love you're still holding out for — the one you haven't given up on?",
 }
@@ -3644,6 +3764,136 @@ const RETURN_MHF: CardSetConfig = {
         "You came for one of two verdicts and drew the card that refuses to issue either.",
         "You have braced for one sentence and hoped for the other, dear, and I am giving you neither. Not 'he still loves you' — I would be inventing that, and you would live off it until it ran out and left you exactly here again, only tireder. Not 'he has moved on' — that is a burial for a living man, performed by a woman who has never met him, and you would believe me, and it would do its work for months. The Fool's whole business is the road that is still open, and this one is still open. I know 'open' is not what you came for. But be careful of what you have been told open means: it does not mean promised, and it does not mean hopeless, and it certainly does not mean you must stand at the roadside doing nothing until somebody comes to tell you which. Two things being undecided about him has never once required your own life to be undecided as well.",
         "Let me look closer at what is still open, and what never was…",
+      ],
+    },
+    // ── His-other-life (2026-08-14) ──────────────────────────────────────────────────────
+    // Five landers describing ONE WOMAN: she is fitting into a life that was already furnished.
+    // ⭐⭐ The shared move is to NAME HER POSITION WITHOUT RANKING HER against what was there
+    // first. Every headline invites "you should come first"; none of them may get it. The payout
+    // is not a higher place, it is a DEFINED one — nobody has told her where she stands.
+    // 🔴 AUDIENCE-AGNOSTIC: never presume divorced / widowed / separated / married.
+    //
+    // 'Am I his forever, or his now?' — the FOURTH binary-refusing hook, and its grounds are new:
+    // permanence is not a STATUS she already holds and he has already assigned. It is built or
+    // not built, and nobody is living in it yet. A category error, not an unanswerable question.
+    'cards-forever-or-now': {
+      a: [
+        "You turned the Magician, dear — the card of the thing made deliberately, in daylight.",
+        "You asked which of two things you are to him, and drew the card of what gets built rather than what merely happens.",
+        "I want to take your question apart before I answer any of it, dear, because I think it has been put to you the wrong way round. You have asked which of two categories you are in, as though he decided some time ago, wrote it down, and you are simply waiting to be shown the page. Forever is not a condition a woman is discovered to be in. It is built — named out loud, planned for, said in front of other people — and the Magician's entire business is that difference. So the honest answer is not one of your two, dear. It is a question back: has anything actually been built here, or has it only been felt? Those can look identical from the inside for years, and feeling has never once been short supply in your position. It is the building that has gone missing.",
+        "Let me look closer at what has been built here, and what has only been felt…",
+      ],
+      b: [
+        "You turned the Hanged Man, dear — the card of the question that has been hung upside down.",
+        "Your hand went to the card of the reversal, and yours is carrying a hidden assumption that needs turning over.",
+        "Underneath what you asked me is a belief that there is a fact about you sitting inside that man, settled and filed, and that your whole life is waiting on somebody reading it out. But nobody lives in forever, dear. He is not living in it either. There is no such fact, and that is not bad news — it means you have not been quietly assigned to the lesser of your two boxes without being told. What the Hanged Man shows instead is far more ordinary and far more fixable: you are in an arrangement that has never been named, and the not-naming is the thing you are actually feeling. You have been treating a silence as a verdict. It is not a verdict. It is a silence, and silences can be broken by either person in them.",
+        "Let me look closer at the thing that has never been named…",
+      ],
+      c: [
+        "You turned the Fool, dear — the card of the road walked before anyone drew a map of it.",
+        "You came asking to be sorted into one of two boxes, and drew the card that has never once been willing to sort anybody.",
+        "I am giving you neither of your two answers, dear. Not that you are his forever, which would be a promise I invented and you would spend months living inside. Not that you are only his now, which is a dismissal, and you would carry it into every ordinary evening after this one. The Fool leaves this in the honest middle, dear: it is not decided. But hear what I am not saying — undecided is not the same as doomed, and it is not the same as promised, and the wait itself is not proof of either. Here is the part that is yours. There is a difference between a road with no map and a road with no destination, and you have been treated as though those were one thing. You are allowed to ask which of them you are walking, dear, and to ask it out loud, of him.",
+        "Let me look closer at the road you have actually been walking…",
+      ],
+    },
+    // 🔴🔴 'Why do his children come before me?' — THE SHARPEST LANDER ON THE FUNNEL. It asks a
+    // card to comment on a man's CHILDREN: real third parties, very possibly minors, who are not
+    // her rivals. NEVER rank her against them, NEVER frame them as an obstacle, NEVER grade him
+    // as a father, NEVER an ultimatum. The finding: children legitimately do come first, and that
+    // is NOT the wound — the wound is that she has been left to infer her place from the leftovers.
+    'cards-his-children': {
+      a: [
+        "You turned the Magician, dear — the card of what is planned rather than what is left over.",
+        "You asked about the place you hold, and drew the card of intention, which is exactly where this needs looking.",
+        "Let me be straight with you, dear, because I think you have had enough gentle evasions. A man's children do have a first call on him. That is not an injustice done to you and I will not pretend otherwise to make this evening easier — you would not respect me for it, and I suspect you would not believe it either. So you will hear no such thing from this card as 'you ought to come first'. Nothing worth having would say it. But look at what it IS the card of. Planning. Intention. Things put in a diary on purpose. Children coming first has never once meant that the woman who loves him gets whatever remains when everything else is finished. Those are two entirely different arrangements, dear, and they have been allowed to blur into one another until you stopped being able to name what was wrong. First call is not the same as only call. You are not asking to be moved up a list. You are asking to appear on one.",
+        "Let me look closer at what has actually been planned for you…",
+      ],
+      b: [
+        "You turned the Hanged Man, dear — the card that turns a question over and shows you its underside.",
+        "Your hand found the card of the reversal, and there is one here that I would like you to see.",
+        "You have asked why they come before you — and hearing it put that way, dear, notice what the question has done. It has placed you and those children on a single ladder with one rung worth having, and set you to competing for it. I do not think that ladder is yours. I think it was handed to you: by an arrangement in which you are always the one who adjusts, by every plan that moved, and possibly not by him at all — he may never have thought in those terms in his life. You are not in a contest with children, dear. You were never going to win one, and you would not have wanted the version of yourself who did. The Hanged Man turns it into a quieter question, and a fairer one. Not whether you rank above them. Where you sit at all — named, reliable, somewhere a person could point to.",
+        "Let me look closer at where you actually sit in all this…",
+      ],
+      c: [
+        "You turned the Fool, dear — the card of the one who walked into it open-handed.",
+        "You came into a life that was already full, and drew the card of the woman who went in without conditions.",
+        "You arrived somewhere already occupied and you did it generously, dear, and naive is not what I would call it — a great many people could not have done it at all. But the Fool has never pretended a thing costs nothing, so I will not either. Two things I decline outright, dear. Grading that man as a father is the first — I have never once seen him with them, and neither has this card. Pronouncing on what his children ought to mean to him is the second, since the answer there is everything, and you know it far better than I do. Here is the thing I suspect nobody has ever said to you plainly. Wanting a place of your own is not the same as wanting theirs to be smaller. You may have been told those are the same — you may have told yourself, on the harder nights — but they are not, and believing they are is how a woman comes to ask for nothing whatever and call it being reasonable.",
+        "Let me look closer at what you have stopped letting yourself ask for…",
+      ],
+    },
+    // 'Am I living in her shadow?' — ⚠️ "her" may be an ex OR a woman who has DIED, and the
+    // headline does not say. 🔴 MEDIUMSHIP BAN applies (this family runs the decode-him frame,
+    // which carries none of it). 🔴 She may NEVER be disparaged, doubted or made a rival —
+    // unlike `fidelity`'s third person, she may be entirely legitimate. The finding: a shadow is
+    // cast by something she cannot see the whole of, so the comparison has no visible terms.
+    'cards-her-shadow': {
+      a: [
+        "You turned the Magician, dear — the card of the thing itself, as against the shape it throws.",
+        "You asked about a shadow, and drew the card that deals only in what is solid and actually made.",
+        "Consider what a shadow really is, dear, because your own word is doing more work than you realise. A shadow is not a person. It is what falls when something stands between you and the light, and from inside one you can never make out the shape of the thing casting it. What she was, or is, I shall stay out of entirely. I do not know, inventing a woman for you to be set against is beneath what you came here for, and you would not thank me for her once the evening was over. What the Magician will say is this. You are being measured against something you have never been shown — not a person, but a version of one. Versions get edited, dear. By memory, which is a poor and flattering archivist. By grief. By resentment. By children who need her to have been one thing. Nobody alive can be compared against an edited version and come out level, and you have been quietly failing that comparison for a long time without ever being shown its terms.",
+        "Let me look closer at the comparison nobody has ever shown you…",
+      ],
+      b: [
+        "You turned the Hanged Man, dear — the card that asks who is holding the lamp.",
+        "Your hand went to the card of the reversal, and the reversal here is not about her at all.",
+        "You have asked whether you are in her shadow, and every part of your attention is pointed at her. Turn it round, dear. A comparison does not make itself. Somebody has to hold it up, and that is the question worth your evening. Sometimes it is him, in small ways he may not even hear himself doing. Sometimes — and I say this with no unkindness whatsoever — it is her name doing work inside your own head, because no one has ever sat you down and told you plainly that you are not being weighed. You have no way of knowing which of those it is, dear, and that is not a failure of your perception or a sign you are imagining things. It is the absence of a piece of information you were always entitled to, and have been going without so long that you started supplying it yourself.",
+        "Let me look closer at who has been holding this up…",
+      ],
+      c: [
+        "You turned the Fool, dear — the card of the one who arrives after the story has begun.",
+        "You came asking where you stand beside another woman, and drew the card of the one who walked in with nothing settled.",
+        "You came into this after her. That is a fact about the order of events, dear — no verdict on your worth lives anywhere inside it, though the two get confused constantly by people standing where you stand. Now, I will not do the thing you may have half hoped for. I will not weigh you against her, I will not suggest she was less than you have been told, and I will not hand you an enemy to feel taller beside. Whoever she is or was, she is not your opponent, and a reading that made her one would be doing you harm dressed as comfort. What the Fool holds is simpler and it is entirely yours. You have the right to be looked at as yourself rather than in relation to somebody else — to be a person in this life rather than the chapter that came afterwards. That is not a lot to ask, dear, and I notice you have not been asking it.",
+        "Let me look closer at what it would mean to be seen as yourself…",
+      ],
+    },
+    // 'Why do we still live apart?' — the most concrete of the five: a physical arrangement.
+    // 🔴 NEVER supply a CAUSE for it (the `searching` family's ban, pointed at a man), never
+    // "he is not serious", never "he is protecting himself". The finding: an arrangement that was
+    // DECIDED is a different object from one that merely never changed, and nobody has told her
+    // which she is living in.
+    'cards-live-apart': {
+      a: [
+        "You turned the Magician, dear — the card of the decision actually taken.",
+        "You asked about an arrangement, and drew the card that separates the things chosen from the things merely arrived at.",
+        "Most arrangements of the kind you are describing were never decided at all, dear. They were arrived at. There was a reason once — a good, practical, unromantic one, the sort nobody could argue with at the time — and then somewhere along the way that reason quietly stopped applying, and the arrangement simply stayed on, because nothing had ever been set up to end it. I will not tell you what is behind that man's front door, or what the distance means about his feelings. I do not know, and a guess from me would be something you could act on that I invented while you were listening. But the Magician is very firm on one distinction. A plan and a habit are different objects, dear. They can look identical from outside for years. And nobody has ever told you which of the two you have been living inside.",
+        "Let me look closer at whether this was ever actually decided…",
+      ],
+      b: [
+        "You turned the Hanged Man, dear — the card of the question that turns out to be about something else.",
+        "Your hand found the card of the reversal, and there is one sitting inside the word 'why'.",
+        "You have brought your 'why' to me, dear, and I have to tell you honestly that it is not mine to answer — the reason lives in him and there is only one person who can hand it over. So the Hanged Man turns your question round and asks a different one, which I think is the real one. Why are you asking me rather than asking him? Something has made that question hard to put. Perhaps it has been put, and slid off. Perhaps it has never quite found a moment. Either way, dear, that is worth more of your attention than the reason itself, because an arrangement that cannot be discussed is not the same as one that simply has not been. I am not saying it proves anything about his feelings — it does not, and I will not pretend to read it that way. I am saying there is a locked room in a shared life, and you have been living beside the door.",
+        "Let me look closer at why this has been so hard to ask him…",
+      ],
+      c: [
+        "You turned the Fool, dear — the card of the open road, and there is a closed door in your question.",
+        "You asked about the distance between two homes, and drew the card of the one who travels light and asks for nothing.",
+        "I will not read that man's front door as a verdict on you, dear. A man living behind his own door is not automatically a man withholding himself; that reading is available on any forum you care to open, and dressing it up as a finding of the cards is something I decline to do — you would carry it home, and it would change how you looked at him over breakfast. Here is what the Fool does put in front of me, and it is about you rather than him. You have been reading an arrangement instead of being given a reason. Every visit, every goodbye at a door, every drive home — all of it interpreted, weighed, checked against the last time. That is exhausting in a way that being told plainly never is, and you have been doing the work of two people: living the thing, and translating it for yourself afterwards.",
+        "Let me look closer at how long you have been translating this on your own…",
+      ],
+    },
+    // 'Have I already given him too long?' — asks for a verdict on HER OWN PAST. 🔴 Both poles
+    // banned: "yes, too long" is a sentence a stranger has no standing to pass, "no, it was worth
+    // it" is a promise. 🔴 NEVER grade her (wasted, naive, foolish), NEVER a timeframe, NEVER
+    // "you will know when". The finding: "too long" treats the years as a DEPOSIT toward a
+    // purchase that may not complete — but they were also her life, and she lived them.
+    'cards-too-long': {
+      a: [
+        "You turned the Magician, dear — the card of what was actually made in all that time.",
+        "You asked me to audit the years, and drew the card of what gets built rather than what gets spent.",
+        "You will hear no such verdict from me as 'you have given too much', dear. That is a sentence, and you would carry it out of here and into every anniversary that is left to you. Nor will I tell you it has all been worth it, because I cannot know that and flattery is not what you came for. What I want to argue with is the shape of the question itself. 'Too long' treats those years as a payment you have been making towards something that might not complete — as though the whole sum is forfeit if it does not. But you did not spend that time in a waiting room, dear. You lived it. There were ordinary Tuesdays in there that belonged to you, and mornings that were good, and they are not retrospectively cancelled by how this turns out. Time given to a person is not the same thing as time lost. The accounting you have been doing on yourself uses only one of those columns.",
+        "Let me look closer at what those years actually held…",
+      ],
+      b: [
+        "You turned the Hanged Man, dear — the card of the thing suspended, going neither up nor down.",
+        "You asked about the length of it, and drew the card that concerns itself with stillness instead.",
+        "You have asked whether you have given too long, as though the number of years were the thing that decides it. I do not believe it is the length, dear. It is whether anything moved. Ten years in which things were said and named and built is a completely different object from two in which nothing did, and you would not confuse them if you saw them side by side. The Hanged Man's whole business is suspension — and what you are actually feeling, I think, is not duration but STILLNESS. Those two get mistaken for each other constantly, and the mistake is expensive: it sets a woman to interrogating the calendar, counting up the years, doing sums about her own age, when the calendar was never what was wrong. Nothing has moved. That is the thing. And it would be the thing at half the time or twice it.",
+        "Let me look closer at what has actually moved, and what has not…",
+      ],
+      c: [
+        "You turned the Fool, dear — the card of the one who set out without a guarantee.",
+        "You came asking whether you were foolish to stay, and drew the card that has never once accepted that charge.",
+        "I think there is a different question underneath yours, dear, and I would like to hand it back to you plainly. 'Have I given him too long' is very often 'am I allowed to want this to change' — and you do not need my permission for that, nor a card's, nor his. Notice what your question quietly requires, though. It asks me to certify that the years were WASTED, because only then would you be entitled to want more. That is a cruel toll to have to pay at your own gate, dear, and you have been paying it. You do not have to prove the time was squandered in order to be allowed to ask for something different now. The Fool names no hour for going and none for staying — anyone who fixes that hour for you is guessing at your life. But it is quite firm that wanting more was never a thing you had to earn by first calling the past a mistake.",
+        "Let me look closer at what you have been making yourself prove…",
       ],
     },
   },

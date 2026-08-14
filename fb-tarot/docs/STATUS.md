@@ -109,6 +109,7 @@ Every tarot PostHog event carries `angle`. Nineteen families as of 2026-08-12:
 | `hidden-intuition` | hiding-something · feels-off | 2026-08-12 |
 | `real-feelings` | really-love · feel-about-me · imagining-it | 2026-08-12 |
 | `still-feels` | still-think · still-love · love-or-moved-on | 2026-08-14 |
+| `his-other-life` | forever-or-now · his-children · her-shadow · live-apart · too-long | 2026-08-14 |
 | `self-frame` | love-again · soulmate | seeded |
 
 > ⚠️ `fidelity` is the only family with **four** hooks besides `decode-him`. It is also the
@@ -975,6 +976,104 @@ That last finding is pinned by a test: if it drifts to "neither is knowable" the
 Guarded by `tests/tarot-still-feels-copy.test.ts` (33 tests, clause-level negation-aware),
 which also pins the two hand-maintained server rosters (`validHooks` in `routes.ts`,
 context+tendency in `prompts.ts`) and the admin angle label.
+
+## His-other-life hooks — 5 face-down landers (2026-08-14)
+
+Operator brief: category **"Persona"**, topic **"persona commitment"**.
+Face-down `return-mhf` only. Clean URLs, no `&deck=`, Version C ads. All five hook ids are new.
+**Five landers — the largest family on the funnel** (fidelity's four was the previous record).
+
+| Headline | Hook | URL |
+|---|---|---|
+| Am I his forever, or his now? | `cards-forever-or-now` | `/fb-tarot/c?hook=cards-forever-or-now` |
+| Why do his children come before me? | `cards-his-children` | `/fb-tarot/c?hook=cards-his-children` |
+| Am I living in her shadow? | `cards-her-shadow` | `/fb-tarot/c?hook=cards-her-shadow` |
+| Why do we still live apart? | `cards-live-apart` | `/fb-tarot/c?hook=cards-live-apart` |
+| Have I already given him too long? | `cards-too-long` | `/fb-tarot/c?hook=cards-too-long` |
+
+### ⭐⭐ The first commission that is a PERSONA, not a topic
+
+Every other family is a *question* asked five ways. These five are one **woman**: she is fitting
+herself into a life that was already furnished before she arrived. His children. A woman who came
+first. His own front door. The years already given. The angle is named for that, not for the
+operator's word "Persona" — which in this codebase already means the V2 chat advisors.
+
+### ⭐⭐ The shared move: NAME HER POSITION WITHOUT RANKING HER
+
+Every one of these headlines invites the same answer — *"you should come first"*, *"you deserve
+better than second place"* — and **ranking is exactly what may never be supplied.** The things she
+is measured against are children (who legitimately come first), a woman who may be dead, or a
+history nobody can compete with.
+
+🔑 **The payout is not a HIGHER place. It is a DEFINED one.** Nobody has told her where she
+stands; she has been inferring it from leftovers. She is allowed to want that said out loud
+without wanting anybody else to have less. A test pins that each read actually pays this out
+rather than only refusing.
+
+### 🔴 Own angle, not folded into `commitment`
+
+- `commitment` (live since 07-31) asks **WILL HE EVER** — a bare question, no circumstances.
+- these ask **WHY HE HASN'T**, and each names the specific obstacle she lives beside.
+
+**`COMMITMENT_HOOKS` stays exactly three.** Pinned by a test.
+
+### 🔴 AUDIENCE-AGNOSTIC — operator call 2026-08-14
+
+Four of the five turn on his circumstances and **none of the headlines states them.** The reads may
+never presume whether he is divorced, widowed, separated or still married:
+
+| Assume… | …and it lands as |
+|---|---|
+| an ex | brutal, if she has died |
+| a death | absurd, if they divorced |
+| a wife | it names the visitor a **mistress** on a public page |
+
+Same discipline as `missing-him`, and harder — it must hold across five headlines, not three.
+
+### 🔴🔴 `cards-his-children` is the sharpest lander on the funnel
+
+It asks a card to comment on a man's **children** — real third parties, very possibly minors, who
+are not the visitor's rivals and cannot consent to being read. **No existing guard covered this.**
+
+1. **NEVER rank her against them, in either direction.** The internet's stock answer to this
+   headline is *"you deserve to come first"*, which tells a woman she should outrank a man's kids.
+2. **NEVER frame the children** as an obstacle, a burden or a rival, and never characterise them.
+3. **NEVER grade him as a father.**
+4. **NEVER an ultimatum**, and never a leave/stay instruction.
+
+⭐ The read says the true part **plainly rather than evading it**: a parent's children *do* have a
+first call. That is not the wound. The wound is that **first call has been allowed to blur into
+only call** — and she is not asking to move up a list, she is asking to appear on one.
+
+### 🔴 `cards-her-shadow` — the other woman may be DEAD, and may be entirely legitimate
+
+*"Her"* is an ex **or** a late wife; the headline does not say. So this hook inherits the
+`soulmate-after-loss` **MEDIUMSHIP ban** for the same reason `missing-him` does — the family runs
+the decode-him frame, which carries none of it.
+
+🔴 Unlike `fidelity`'s third person, **she is not a rival.** She may be the mother of his children.
+She may never be disparaged, doubted, or positioned as competition — *handing the visitor an enemy
+is harm dressed as comfort*. The finding instead: a shadow is cast by something she can never see
+the whole of, so she is being measured against an **edited version** of a woman, on terms she has
+never been shown.
+
+### The other three findings
+
+| Hook | Refuses / finds |
+|---|---|
+| `cards-forever-or-now` | 🆕 **the FOURTH binary-refusing hook**, on new grounds — permanence is not a **status** he assigned and she is waiting to be shown. It is *built*: named, planned, said out loud. A category error, not an unanswerable question. She has been reading a **silence as a verdict** |
+| `cards-live-apart` | a decided arrangement is a different object from one that **merely never changed**. 🔴 NEVER supply a cause (the `searching` no-CAUSE ban aimed at a man). She has been **interpreting** an arrangement instead of being given a reason |
+| `cards-too-long` | refuses the **sunk-cost frame itself** — "too long" treats the years as a deposit toward a purchase that may not complete, but she did not spend them in a waiting room, she **lived** them. ⭐ Names the buried question: *"am I allowed to want this to change"* — and refuses its toll, since she need not certify the past as a mistake to earn the right to want more |
+
+⚠️ **Four hooks on the funnel now refuse a binary and their grounds must stay distinct**, or the
+newest has collapsed into an older one: `cards-moved-on` (neither branch knowable) ·
+`cards-imagining-it` (second branch cruel) · `cards-love-or-moved-on` (not opposites) ·
+`cards-forever-or-now` (permanence is not a status). Pinned.
+
+Guarded by `tests/tarot-his-other-life-copy.test.ts` (29 tests, clause-level negation-aware),
+which also pins the two hand-maintained server rosters and the admin angle label, and adds a
+**slug-substring check** — no new hook id may contain, or be contained by, an existing one, since
+a PostHog `contains` filter would then double-count.
 
 ## Concepts
 
