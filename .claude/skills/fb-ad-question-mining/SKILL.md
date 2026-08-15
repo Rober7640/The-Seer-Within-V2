@@ -244,6 +244,27 @@ essentially all the discriminating.
 running. It cannot see demand no question has ever touched. Running the ad is what makes
 prevalence spike — that is the point of running it.
 
+## Step 2e — COVERAGE GAP: does any lander already ask this? (no DB needed)
+
+```bash
+node .claude/skills/fb-ad-question-mining/scripts/coverage-gap.mjs \
+  --theme commitment --subs ./subs.json
+```
+
+Cross-references proposed sub-buckets against **every** question in
+`client/src/content/tarotReads.ts` (57 today) and prints which are already served, which
+are unserved, plus the landers currently covering `--theme`.
+
+🔴 **Run this BEFORE Step 2d, and trust it over flatness.** Step 2d's flatness signal
+*infers* "nothing targets this" from ~15 days of exposure data across four live hooks.
+This reads the actual roster from source: complete, no attribution needed, cannot go stale.
+Flatness is corroboration; this is the finding.
+
+It also prints the **nearest existing questions by shared vocabulary**, because a
+sub-bucket regex is tuned for her prose and can miss short ad copy. Check those by eye
+before calling a gap real — on the commitment run they confirmed all five (the nearest to
+SHADOW was "why do I still think about someone who hurt me", which is HER past, not HIS ex).
+
 ## Step 3 — Read the quotes, don't lead with stats
 
 Read all ~100 quotes directly. Tally recurring themes by hand (rough counts are fine).
