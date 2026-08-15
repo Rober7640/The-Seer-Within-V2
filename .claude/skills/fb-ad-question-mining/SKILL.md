@@ -1,6 +1,6 @@
 ---
 name: fb-ad-question-mining
-description: "Use when mining the `conversations` table for VOC-grounded FB ad headline candidates for The Seer Within's v1 funnels — either building the full 6-sub-group roadmap from scratch, or refreshing one/all sub-groups with new buyer data since the last run (e.g. a monthly re-mine). Reads real purchased `concern` quotes directly (never leads with n-gram/frequency stats), clusters them into main-concern groups with 3 phrasing variants each (direct / intensified-or-plea / tension-framed), tags confidence by how literally each headline traces to VOC, checks compliance against the live Meta ad policy, and flags cross-cutting sensitive themes (bereavement, health/disability) before writing into docs/fb-ad-question-testing-roadmap.md. Use when asked to: mine for new ad questions, refresh the FB ad headline roadmap, re-run the VOC exercise for a sub-group, check what's changed since the last question-mining pass."
+description: "Use when mining the `conversations` table for VOC-grounded FB ad headline candidates for The Seer Within's v1 funnels — either building the full 6-sub-group roadmap from scratch, or refreshing one/all sub-groups with new buyer data since the last run (e.g. a monthly re-mine). Reads real purchased `concern` quotes directly (never leads with n-gram/frequency stats), clusters them into main-concern groups with 3 phrasing variants each (direct / intensified-or-plea / tension-framed), tags confidence by how literally each headline traces to VOC, ranks every sub-group by revenue per 1,000 conversations (front end + order bump + both upsells — never by buy-rate alone), checks compliance against the live Meta ad policy, and flags cross-cutting sensitive themes (bereavement, health/disability) before writing into docs/fb-ad-question-testing-roadmap.md. Use when asked to: mine for new ad questions, refresh the FB ad headline roadmap, re-run the VOC exercise for a sub-group, check what's changed since the last question-mining pass."
 ---
 
 # fb-ad-question-mining — VOC-grounded FB ad headline mining
@@ -100,6 +100,89 @@ random() limit 100`. If a finding feels thin or you're about to bet a wave of ad
 on it, redraw at `limit 200` and confirm the tally holds before trusting it (it did,
 both times this was checked — but verify again, don't assume it always will).
 
+## Step 2b — Pull the economics, not just the buy-rate (REQUIRED before ranking anything)
+
+Buy-rate alone will rank sub-groups wrong. It ignores order value and upsell take, and
+upsell take is where sub-groups actually separate. Proven on the money bucket 2026-08-13
+(`docs/v1-money-bucket-voc.md`): grief and the invisible block bought at effectively the
+same rate (29.4% vs 29.7%) but differed by $470 per thousand conversations; the partner
+theme bought *above* average (25.8%) and then collapsed at the upsell (8.4% vs 14.1%),
+landing it below average on revenue.
+
+**The metric to rank on is revenue per 1,000 conversations** — buy-rate × order value ×
+upsell take in one number, and directly comparable to ad spend.
+
+Pull per-conversation revenue (all amounts are **cents**):
+```sql
+select id, coalesce(main_purchase_amount,0) main, coalesce(bump_amount_cents,0) bump,
+       coalesce(upsell_purchased,false) u1, coalesce(upsell_amount,0) u1amt,
+       coalesce(upsell2_purchased,false) u2, coalesce(upsell2_amount,0) u2amt
+from conversations where bucket='<bucket>' and purchased
+```
+Revenue per conversation = `main + bump + (u1 ? u1amt : 0) + (u2 ? u2amt : 0)`. Then per
+sub-group report: conversations, buy-rate, upsell-1 take, revenue per buyer, and revenue
+per 1,000 conversations. **Pull non-buyers too** — Step 2's VOC query filters
+`purchased=true`, which is right for reading quotes and wrong for every rate here, since
+the denominator is all conversations.
+
+**Three checks that changed the recommendation last time — run all three:**
+
+1. **Theme alone vs theme + a second frame.** Split each sub-group into rows carrying
+   only that theme vs rows carrying it plus another. Bare debt (no second theme) returned
+   $7,544 per thousand — the worst segment in the bucket. The same debt paired with the
+   invisible block returned $13,485. If a sub-group's bare segment underperforms, the
+   headline must carry a second element, and that is the finding, not the theme itself.
+2. **Concern length.** Bucket the stated concern by character count against revenue. On
+   the money bucket this beat every theme as a predictor: 200+ chars returned $16,619 per
+   thousand, under 50 chars $7,412 — 2.2×. If it holds again, it outranks targeting work.
+3. **Poverty is not the variable.** Don't infer "broke audience won't pay" from a low
+   buy-rate. Acutely broke people (no food, empty account) bought *above* the bucket
+   average and simply didn't take the $47 upsell (6.3% vs 14.1%). That makes them a
+   one-purchase audience to price for, not an audience to exclude.
+
+Report these numbers in the doc alongside the VOC. Rank the summary table by revenue per
+1,000 conversations, not by buy-rate.
+
+## Step 2c — DISCOVER sub-buckets inside a theme (optional, for "deepening")
+
+Use when doubling down on one theme and you need sub-buckets you have NOT already
+thought of. The 6 sub-groups above stay fixed; this works one level BELOW them.
+
+```bash
+LIVE_AUDIT_CONFIRM=1 node .claude/skills/fb-ad-question-mining/scripts/discover-subbuckets.mjs \
+  --live --theme commitment          # or trust | reunion | loneliness | any raw regex
+```
+
+**It is a candidate generator, not a ranker. It does not replace Step 3 — it shortens
+the reading list.** Read the verbatims it prints; ignore the lift percentages.
+
+🔴 **This is NOT the n-gram frequency mining Step 3 forbids.** They rank on opposite
+things and surface opposite language:
+
+| | ranks by | surfaces | targets |
+|---|---|---|---|
+| frequency (forbidden) | how OFTEN a phrase appears | "does he love me" | nobody — every woman could say it |
+| lift (this script) | how much MORE her cohort is worth, length-controlled | "his children come before me" | one woman: 40s, blended family |
+
+**A specific situation is rare BECAUSE it is specific.** Frequency actively suppresses
+exactly what you're hunting.
+
+**Known limits — do not paper over these:**
+- **~40% of the top rows are function-word noise** ("and live", "neither of", "life
+  that"). The read is irreducible. A tighter filter was tried and it removed the good
+  finds too.
+- **The percentages are a sorting heuristic, not a measurement.** Candidates run n=12–25
+  with 4–7 buyers. A "+585% lift" means "read this one first", nothing more.
+- **Raising min-n to make it statistically comfortable defeats it.** At `--min-n 40` the
+  list filled with "i wonder" and "trying to", and buried `should i stay` — a real
+  sub-bucket. Confidence is not this step's job; the lander test is.
+- **Concern text is not click behaviour.** This tells you which *women* are valuable, not
+  which *ad* they would have clicked. Only a lander test closes that gap.
+
+**Always run Step 5 on the output.** The strongest finds skew toward health, disability
+and bereavement, which are Meta personal-attributes territory. First live run surfaced
+two such sub-buckets in its top five.
+
 ## Step 3 — Read the quotes, don't lead with stats
 
 Read all ~100 quotes directly. Tally recurring themes by hand (rough counts are fine).
@@ -148,8 +231,10 @@ running the same ad under two sub-group labels isn't a real second test.
 
 ## Step 7 — Write to the doc
 
-**Full rebuild:** write the doc in this order — Summary (with the ranked sub-group
-table, total headline count, and any cross-cutting flags) → Wave 1 axis-discovery
+**Full rebuild:** write the doc in this order — Summary (with the sub-group table **ranked
+by revenue per 1,000 conversations** per Step 2b, carrying conversations, buy-rate,
+upsell-1 take, revenue per buyer and revenue per 1,000; plus total headline count, and any
+cross-cutting flags) → Wave 1 axis-discovery
 checklist → the 6 sub-group sections in the order they were run → Wave 2-4 → full
 candidate-pool appendix → open questions. Match the existing doc's format exactly (main
 concern header, 3 bulleted variants with confidence tags, headline count, compliance
