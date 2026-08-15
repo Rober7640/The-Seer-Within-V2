@@ -1,6 +1,6 @@
 ---
 name: fb-ad-question-mining
-description: "Use when mining the `conversations` table for VOC-grounded FB ad headline candidates for The Seer Within's v1 funnels — either building the full 6-sub-group roadmap from scratch, or refreshing one/all sub-groups with new buyer data since the last run (e.g. a monthly re-mine). Reads real purchased `concern` quotes directly (never leads with n-gram/frequency stats), clusters them into main-concern groups with 3 phrasing variants each (direct / intensified-or-plea / tension-framed), tags confidence by how literally each headline traces to VOC, ranks every sub-group by revenue per 1,000 conversations (front end + order bump + both upsells — never by buy-rate alone), checks compliance against the live Meta ad policy, and flags cross-cutting sensitive themes (bereavement, health/disability) before writing into docs/fb-ad-question-testing-roadmap.md. Use when asked to: mine for new ad questions, refresh the FB ad headline roadmap, re-run the VOC exercise for a sub-group, check what's changed since the last question-mining pass."
+description: "Use when mining The Seer Within's v1 `conversations` for VOC-grounded FB ad questions. Two jobs. (1) BUILD/REFRESH the 6-sub-group headline roadmap in docs/fb-ad-question-testing-roadmap.md. (2) DEEPEN a winning theme into sub-buckets — which landers already serve a theme, which proposed sub-buckets NO lander asks about, and how big each is. Use when asked to: mine or refresh FB ad questions, deepen/double down on a theme, get more questions under one theme, see which landers serve a theme, find what we are not asking about, size or validate a sub-bucket, re-run the VOC exercise. Reads real buyer `concern` quotes (never n-gram frequency), ranks by revenue per 1,000 and by ad-independent prevalence — never raw counts, which reflect Meta's past delivery choices. Flags Meta-policy and sensitive themes (bereavement, health/disability) before writing."
 ---
 
 # fb-ad-question-mining — VOC-grounded FB ad headline mining
@@ -31,6 +31,13 @@ Ask the operator (AskUserQuestion) which mode this run is:
   (the existing doc has Wave 1-4 checkbox progress and launched-headline status that must
   survive a refresh). This is the expected mode for a periodic re-run. Offer the 6
   sub-group names, allow picking one, several, or all.
+- **Deepen a theme** — the operator has a WINNING theme and wants more ad questions
+  inside it (sub-buckets), not a new sub-group. Triggers: *"deepen commitment"*, *"more
+  questions under X"*, *"which landers serve X"*, *"what are we not asking"*, *"find
+  sub-buckets"*. This mode SKIPS the 6-sub-group configuration entirely and runs:
+  **Step 2e → 2d → 2b → Step 3 → 4 → 5**. Ask which theme, and whether they already have
+  candidate sub-buckets (they usually do — operator intuition has outperformed every
+  automated attempt at proposing them; see Step 2c).
 
 ## The 6 sub-groups — fixed configuration, don't rediscover
 
