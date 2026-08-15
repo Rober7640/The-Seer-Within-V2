@@ -102,6 +102,9 @@ both times this was checked — but verify again, don't assume it always will).
 
 ## Step 2b — Pull the economics, not just the buy-rate (REQUIRED before ranking anything)
 
+> Revenue per 1,000 answers *value density*. For *addressable size* — and to avoid ranking
+> Meta's delivery choices — pair it with **Step 2d**. Never rank on raw counts.
+
 Buy-rate alone will rank sub-groups wrong. It ignores order value and upsell take, and
 upsell take is where sub-groups actually separate. Proven on the money bucket 2026-08-13
 (`docs/v1-money-bucket-voc.md`): grief and the invisible block bought at effectively the
@@ -143,10 +146,25 @@ the denominator is all conversations.
 Report these numbers in the doc alongside the VOC. Rank the summary table by revenue per
 1,000 conversations, not by buy-rate.
 
-## Step 2c — DISCOVER sub-buckets inside a theme (optional, for "deepening")
+## Step 2c — Surface unusual verbatims inside a theme (optional, WEAK — read the caveat)
 
-Use when doubling down on one theme and you need sub-buckets you have NOT already
-thought of. The 6 sub-groups above stay fixed; this works one level BELOW them.
+⚠ **This FAILED its held-out test. Do not rely on it to discover sub-buckets.**
+Given a corpus where `YEARS` and `RANK` were already known to be strong, it ranked RANK
+**119th of 123** and scattered YEARS across ranks 48–110. Reading its top 20 would have
+missed both. Two causes, both structural:
+
+- **Lift-ranking buries big sub-buckets.** A 260-concern concept averages toward the base
+  by construction; a 12-concern phrase can post +585%. It is biased against exactly the
+  sub-buckets large enough to build on.
+- **The unit is wrong.** A sub-bucket is a CONCEPT said many ways ("his kids", "his ex",
+  "not a priority"). This scores individual PHRASES, so the concept fragments across
+  dozens of low-n phrases that each fail the floor. No phrase carries RANK, so RANK never
+  appears. Fixing it needs phrase→concept clustering before scoring; that is not built.
+
+Its remaining use is narrow: it surfaces vivid verbatims a human might not otherwise
+read. On the first run that did produce one real find nobody had proposed — a
+leave-decision bucket ("Do I stay in a 27 year marriage or leave"). Treat it as a reading
+aid, never as a ranking. **Propose sub-buckets yourself and size them with Step 2d.**
 
 ```bash
 LIVE_AUDIT_CONFIRM=1 node .claude/skills/fb-ad-question-mining/scripts/discover-subbuckets.mjs \
@@ -182,6 +200,36 @@ exactly what you're hunting.
 **Always run Step 5 on the output.** The strongest finds skew toward health, disability
 and bereavement, which are Meta personal-attributes territory. First live run surfaced
 two such sub-buckets in its top five.
+
+## Step 2d — SIZE a proposed sub-bucket without letting Meta's ad choices decide
+
+```bash
+LIVE_AUDIT_CONFIRM=1 node .claude/skills/fb-ad-question-mining/scripts/size-subbuckets.mjs \
+  --live --subs .claude/skills/fb-ad-question-mining/examples/commitment-subs.json
+```
+
+🔴 **Never rank build order by raw `n`.** The corpus contains whoever the ads we happened
+to run brought in, and META chose that mix. A count is part demand, part delivery
+decision, and the two cannot be separated afterwards. Ranking by n ranks Meta's past ad
+choices.
+
+**Step 2b's revenue per 1,000 is NOT affected by this** — it is already a rate, so 10× the
+traffic leaves it unchanged. It stays required. But it measures value DENSITY, and a build
+decision also needs addressable SIZE. That is what this step adds, without using n:
+
+| Measure | What it is | Why it is ad-independent |
+|---|---|---|
+| **Prevalence** | share of women volunteering the frame, computed *within each source hook's own traffic* | a property of the audience, not of how much traffic that hook got |
+| **Flatness** | how much prevalence varies across source hooks | flat ⇒ no current ad targets it and she says it anyway ⇒ **untapped** |
+| **Rev/buyer** | value once she buys | measured inside her own cohort |
+
+**Rank on prevalence first, rev/buyer as tiebreaker.** On the commitment run, rev/buyer
+came out $59–$71 across all five sub-buckets — nearly constant — so prevalence did
+essentially all the discriminating.
+
+**Limit:** "flat" means no *current* ad targets it, and the hooks compared are only those
+running. It cannot see demand no question has ever touched. Running the ad is what makes
+prevalence spike — that is the point of running it.
 
 ## Step 3 — Read the quotes, don't lead with stats
 

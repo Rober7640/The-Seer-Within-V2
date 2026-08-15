@@ -151,7 +151,8 @@ for (const c of cands) {
 console.log(`## Candidate sub-bucket phrases — ranked by LENGTH-CONTROLLED revenue lift`);
 console.log(`   ${index.size} phrases considered · ${cands.length} cleared the conversion floor · ${kept.length} after dedup\n`);
 console.log('phrase                              n  buyers    cvr   vs base    $/1k   raw lift   SAFE lift');
-for (const c of kept.slice(0, 20))
+const TOPN = Number(arg('top', 20));
+for (const c of kept.slice(0, TOPN))
   console.log(`${c.phrase.slice(0, 34).padEnd(35)} ${String(c.n).padStart(4)} ${String(c.buyers).padStart(6)} ` +
     `${pct(c.buyers, c.n).padStart(6)} ${pct(c.baseCvr * 100, 100).padStart(7)}  ${dollars(c.sub1k).padStart(7)}  ` +
     `${((c.lift * 100).toFixed(0) + '%').padStart(8)}  ${((c.safeLift * 100).toFixed(0) + '%').padStart(9)}`);

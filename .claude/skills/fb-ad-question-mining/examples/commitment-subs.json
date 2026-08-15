@@ -1,0 +1,7 @@
+{
+  "YEARS":  "([0-9]+ ?(year|yr)|years|how long|how much longer|wasted|waiting|running out)",
+  "RANK":   "(his (kid|child|son|daughter|ex|wife|mother|family|work|job)|comes? (first|before)|priority|second place|not a priority)",
+  "SHADOW": "(his (ex|late |dead |former)|shadow|compare|compares? me|first wife|her memory|still loves? (his|her)|never got over)",
+  "APART":  "(long.?distance|live(s)? (apart|far|in another)|move in|moving in|different (city|state|country)|never together)",
+  "DECIDE": "(too long|given him|enough time|patient|walk away|give up on|cut my losses|worth (it|waiting))"
+}
