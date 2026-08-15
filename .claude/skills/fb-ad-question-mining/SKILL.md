@@ -20,6 +20,44 @@ Full derivation history + the reasoning behind the taxonomy: memory
 `feedback-voc-first-headline-method`. Known cross-cutting finding: memory
 `fb-ad-bereavement-crosscut`.
 
+## How to invoke this
+
+**Say it in plain language** — the description triggers on all of these:
+
+| You say | Mode it picks | What runs |
+|---|---|---|
+| *"deepen commitment"* · *"more questions under X"* | **Deepen a theme** | 2e → 2d → 2b → 3 → 4 → 5 |
+| *"which landers serve commitment?"* | **Deepen a theme** | 2e alone answers it |
+| *"what are we not asking about?"* | **Deepen a theme** | 2e (coverage gap) |
+| *"size these sub-buckets"* · *"is X worth building?"* | **Deepen a theme** | 2e + 2d |
+| *"refresh the roadmap"* · *"re-mine sub-group N"* | **Refresh** | 2 → 2b → 3 → 4 → 5 → 6 → 7 |
+| *"rebuild the roadmap from scratch"* | **Full rebuild** | all 6 sub-groups, same chain |
+
+### Standalone commands (skip the skill, run the script)
+
+```bash
+# Which landers serve a theme + which proposed sub-buckets nothing asks about.
+# No DB, no flags, instant.
+node .claude/skills/fb-ad-question-mining/scripts/coverage-gap.mjs \
+  --theme commitment --subs .claude/skills/fb-ad-question-mining/examples/commitment-subs.json
+
+# How big and how valuable each sub-bucket is. Needs BOTH keys; run from repo root.
+LIVE_AUDIT_CONFIRM=1 node .claude/skills/fb-ad-question-mining/scripts/size-subbuckets.mjs \
+  --live --theme commitment \
+  --subs .claude/skills/fb-ad-question-mining/examples/commitment-subs.json
+```
+
+`--theme` takes `commitment | trust | reunion | loneliness`, or any raw regex, and means
+the same thing in every script. Sub-buckets are a JSON file — `{"NAME": "regex", ...}` —
+so a run is reproducible and reviewable. Copy `examples/commitment-subs.json` and edit.
+
+### Bring your own sub-buckets
+
+The Deepen mode asks whether you already have candidates. **You usually should.** Operator
+intuition has beaten every automated attempt here: given a corpus where `YEARS` and `RANK`
+were already known strong, the discovery script (Step 2c) ranked RANK **119th of 123** and
+scattered YEARS across 48–110. Propose them yourself; use the scripts to size and gap-check.
+
 ## Step 1 — Ask which mode (REQUIRED — do this first)
 
 Ask the operator (AskUserQuestion) which mode this run is:
