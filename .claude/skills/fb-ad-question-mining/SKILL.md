@@ -204,9 +204,22 @@ two such sub-buckets in its top five.
 ## Step 2d — SIZE a proposed sub-bucket without letting Meta's ad choices decide
 
 ```bash
+# Scoped to ONE theme — sub-bucket share of the theme you are deepening
 LIVE_AUDIT_CONFIRM=1 node .claude/skills/fb-ad-question-mining/scripts/size-subbuckets.mjs \
-  --live --subs .claude/skills/fb-ad-question-mining/examples/commitment-subs.json
+  --live --theme commitment \
+  --subs .claude/skills/fb-ad-question-mining/examples/commitment-subs.json
+
+# Unscoped — share of ALL love/someone traffic, i.e. total addressable pool
+LIVE_AUDIT_CONFIRM=1 node .../size-subbuckets.mjs --live --subs ./subs.json
 ```
+
+`--theme` takes `commitment | trust | reunion | loneliness`, or any raw regex. The named
+themes are shared with Step 2c so a theme means the same thing in both.
+
+🔴 **The denominator is a decision, not a detail.** The same sub-bucket reads ~2× higher
+scoped to its theme (YEARS: 19.2% within commitment, 11.7% across all love/someone).
+Neither is wrong — theme-scoped answers *"how much of this theme is this sub-bucket?"*,
+unscoped answers *"how many women exist in total?"*. **Always state which you ran.**
 
 🔴 **Never rank build order by raw `n`.** The corpus contains whoever the ads we happened
 to run brought in, and META chose that mix. A count is part demand, part delivery

@@ -32,6 +32,24 @@ const LIVE = argv.includes('--live');
 const BUCKETS = arg('buckets', 'love,someone').split(',').map((b) => `'${b.trim()}'`).join(',');
 const MIN_HOOK_N = Number(arg('min-hook-n', 120));
 
+// Named themes, shared with discover-subbuckets.mjs so a theme means the same thing in
+// both. Any raw regex is also accepted.
+const THEMES = {
+  commitment: 'commit|marry|marriage|propose|future|serious|exclusive|relationship|together',
+  trust:      'lie|lying|honest|truth|trust|hiding|secret|cheat',
+  reunion:    'come back|comes back|return|back together|reconcile|left me|walked away',
+  loneliness: 'alone|lonely|by myself|no one|nobody|find someone|will i ever',
+};
+// 🔴 THE DENOMINATOR IS A DECISION, NOT A DETAIL.
+//   --theme commitment  → prevalence is "of COMMITMENT-minded women, X% raise this"
+//                         = the sub-bucket's share of a theme you are deepening
+//   no --theme          → prevalence is "of ALL love/someone women, X% raise this"
+//                         = total addressable pool, across every theme
+// The same sub-bucket reads roughly 2× higher scoped to its theme. Say which you used.
+const themeArg = arg('theme', null);
+const THEME = themeArg ? (THEMES[themeArg] ?? themeArg) : null;
+const THEME_SQL = THEME ? `AND c.concern ~* '(${THEME})'` : '';
+
 const subsPath = arg('subs', null);
 if (!subsPath || !fs.existsSync(subsPath)) {
   console.error('🔴 --subs <file.json> required: { "NAME": "regex", ... }');
@@ -64,10 +82,13 @@ const { rows } = await client.query(`
   )
   SELECT c.concern, m.hook, (${P}) paid, CASE WHEN ${P} THEN ${REV} ELSE 0 END::int rev
   FROM conversations c LEFT JOIN map m ON m.cid = c.id
-  WHERE c.concern IS NOT NULL AND length(c.concern) > 15 AND c.bucket IN (${BUCKETS})`);
+  WHERE c.concern IS NOT NULL AND length(c.concern) > 15 AND c.bucket IN (${BUCKETS})
+    ${THEME_SQL}`);
 
 const withHook = rows.filter((r) => r.hook);
-console.log(`${rows.length} concerns · ${withHook.length} with a known source ad\n`);
+console.log(`scope: ${themeArg ? `theme "${themeArg}"` : 'ALL love/someone (no --theme)'} ` +
+  `· ${rows.length} concerns · ${withHook.length} with a known source ad`);
+console.log(`prevalence below is a share OF THAT SCOPE — scoping to a theme roughly doubles it\n`);
 
 const byHook = {};
 for (const r of withHook) (byHook[r.hook] ||= []).push(r);
