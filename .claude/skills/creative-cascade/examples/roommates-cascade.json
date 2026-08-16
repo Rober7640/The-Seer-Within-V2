@@ -1,0 +1,62 @@
+{
+  "_comment": "One SEGMENT's cascade. Copy and edit. Every question here must already exist in a fb-ad-question-mining run file — this skill maps territory, it never invents a question. Free-text questions are PROPOSED (from the mining run) and report as UNBUILT; 'cards-*' slugs resolve against client/src/content/tarotReads.ts.",
+  "segment": "ROOMMATES",
+  "source": "docs/fb-ad-question-mining/deepen-commitment-2026-08-15.md (section 2 re-derived 2026-08-16)",
+  "_history": "The 2026-08-15 pass shipped ONE injury. Step 3b re-read the same 123 buyer concerns for WOUNDS rather than topic and found five. The shipped one ('he stopped reaching') turned out to cover 10% of its own segment and to earn BELOW the pool base — the dominant wound, the clock at 39%, had no question at all. Ranked by share, not by money: the wound piles run 7-18 rows with 1-4 buyers, and the two highest-earning both lose a third of their value when one buyer is dropped.",
+  "_economics": "MINED, not measured: segment rev/1,000 $14,065 = 2.4x the commitment base of $5,824, at ~1% of the theme. Margin rung: build it, expect it to tap out fast, have the next rung ready. Never compare this to a live attributed rate — different population and window. Per-INJURY dollar figures are hypotheses, not rankings.",
+  "formats": ["tarot-a", "tarot-b", "tarot-c", "bare"],
+  "injuries": {
+    "the clock — the years are spent and I am running out of time to have anything else": {
+      "theme": "commitment",
+      "_share": "39% of the segment — the dominant wound, and the 2026-08-15 pass wrote nothing for it",
+      "_verbatim": "10 years… not even hand holding · we have not had sex for 7 years · 33 yrs of unloved marriage and separate bedrooms · Are my husband and I just roommates at this point. Is that all there is left?",
+      "_compliance": "Age sits inside this wound (too old / my age / I'm 69). The banned FORM is the second-person age assertion. Keep every line first-person; never assert her age back at her.",
+      "questions": [
+        "How many more years in a marriage with no intimacy?",
+        "Is a loveless marriage all there is left for me?",
+        "Why does my husband think I'll keep waiting to be wanted?",
+        "What have the years in a sexless marriage cost me?"
+      ]
+    },
+    "someone else is already there — I was invisible at home for years and then someone was kind to me": {
+      "theme": "commitment",
+      "_share": "11% of the segment — missed entirely by the first pass",
+      "_verbatim": "I'm stuck in a loveless marriage but it feels like someone is out there waiting for me · I am in a loveless marriage and have been walking around as a zombie for many years. Then I meet a person who showed me I still had value.",
+      "_gate2": "SHE ARRIVES INNOCENT governs this whole injury. Every early draft made her the cheater and she is not one — she did not go looking. Never write a question where clicking is confessing.",
+      "questions": [
+        "Is this a real connection, or just the first kindness I've had in years?",
+        "Why did a connection I never went looking for hit this hard?",
+        "How long was I invisible at home before someone else noticed me?",
+        "What is this connection trying to show me about my marriage?"
+      ]
+    },
+    "he stopped reaching — nobody left and nobody cheated, so there is no event to grieve": {
+      "theme": "commitment",
+      "_share": "10% of the segment — this is the ONE injury the 2026-08-15 pass shipped, and it is the weakest of the five ($7,833/1,000 vs a $10,470 pool base)",
+      "_verbatim": "He shows absolutely no affection at all · She will allow me but she never initiates · We don't have intimacy. No kissing for long time frames.",
+      "questions": [
+        "Why did my husband stop reaching for me?",
+        "When did my husband and I become roommates?",
+        "Is he still in this marriage, or just still in the house?",
+        "What gets my husband's attention now that I don't?",
+        "Does my husband still want me, or just let me?"
+      ]
+    },
+    "stuck — he is not cruel, he is absent, so there is nothing to point at that justifies leaving": {
+      "theme": "commitment",
+      "_share": "7% of the segment",
+      "_verbatim": "Loveless marriage, more like a roommate but I don't dislike him I'm just lonely and feel stuck · In a loveless, non intimate marriage for 30+ yrs. I dont know what to do.",
+      "questions": [
+        "He's a good man. So why does staying feel like giving up on my life?",
+        "How long do I stay in a marriage nobody did anything wrong in?",
+        "Is my marriage worth saving, or already finished?"
+      ]
+    }
+  },
+  "_do_not": [
+    "⛔ HEALTH / CARETAKER is the segment's SECOND-largest wound at 15% — three times the ~5% first estimated — and it gets NO questions. Meta personal-attributes territory. But a ROOMMATES ad WILL pull this audience whatever the copy says, because it shares the vocabulary exactly ('loveless', 'no intimacy'). The reveal must never assume the silence is his choice. For her, it isn't.",
+    "Do not add a question to round the grid up to 4 per injury. An empty cell is a finding.",
+    "Do not stretch Deck 2's cards (Four of Cups / Four of Wands / The Hermit) over the other three injuries — they were written for 'he stopped reaching' only. The Four of Cups says nothing about years running out.",
+    "ROOMMATES is stronger UNPAIRED ($11,843 alone vs $9,395 paired with a second theme) — do not double it up."
+  ]
+}
