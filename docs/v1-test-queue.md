@@ -21,11 +21,38 @@ what's running, progress, arm splits — comes from `plan-live.mjs`. Commands at
 
 ## Coming next
 
-| # | Test                  | What it changes                         | Split | Covers                     | Starts                                     |
-|---|-----------------------|-----------------------------------------|-------|----------------------------|--------------------------------------------|
-| 1 | `v1_close_depth_2026` | Thickened close — 132 → 431 words       | 50/50 | fb-tarot, all 13 landers   | **Built + dark. Run the SQL, then Start**  |
-| 2 | Non-buyer close page  | Email the free list to a new close page | n/a   | all funnels, one free list | Needs the page built. No code for the send |
-| 3 | `hours-55-35_tarot`   | Two-price close — $55 alongside $35     | 50/50 | fb-tarot, all 13 landers   | ~3 weeks later, against the winner         |
+| # | Test                  | What it changes                         | Split | Covers                      | Starts                                     |
+|---|-----------------------|-----------------------------------------|-------|-----------------------------|--------------------------------------------|
+| 1 | `v1_close_depth_2026` | Thickened close — 132 → 431 words       | 50/50 | fb-tarot, all 13 landers    | **Built + dark. Run the SQL, then Start**  |
+| 2 | Non-buyer close page  | Email the free list to a new close page | n/a   | all funnels, one free list  | Needs the page built. No code for the send |
+| 3 | `hours-55-35_tarot`   | Two-price close — $55 alongside $35     | 50/50 | fb-tarot, all 13 landers    | ~3 weeks later, against the winner         |
+| 4 | `v1_bump_price_2026`  | Bump price — $12.77 vs $9.77            | 50/50 | **main path**, not downsell | After bump copy is called                  |
+
+### 4 · Bump price — $12.77 vs $9.77
+
+**A 23% price cut needs a 31% lift in take just to break even.** That is the whole test in
+one line, and it is worth writing down before anyone runs it:
+
+| $12.77 at            | = per buyer | $9.77 must reach | to merely MATCH |
+|----------------------|-------------|------------------|-----------------|
+| 37.2% (control copy) | $4.75       | **48.6%**        | +31% relative   |
+| 50.0% (new copy)     | $6.38       | **65.4%**        | +31% relative   |
+
+🔴 **Run it on the MAIN bump, not the downsell.** The idea came from the $25 downsell, but
+that path has ~34 bump offers a month — detecting the breakeven lift there takes **10–17
+months**. The main path has ~350/month and answers the same question in **1–2 months**.
+
+| Where         | Offers/mo | Time to detect the breakeven lift |
+|---------------|-----------|-----------------------------------|
+| Downsell only | 34        | **10–17 months — infeasible**     |
+| Main path     | 350       | 1–2 months                        |
+
+Whatever wins on the main path can then be applied to the downsell for free — the price is
+one constant, and the downsell will never have the volume to be tested on its own.
+
+**Judge on revenue per buyer, never take-rate.** A cheaper bump will always win take. The
+only question is whether it wins *money*, and at these numbers it has to win take by a
+third to draw level.
 
 ### 2 · Non-buyer close page
 
@@ -87,14 +114,14 @@ contains contradictory copy, and a cell you have to mutilate isn't the same trea
 the one it's compared against. Assignment is orthogonal, so this is never a statistics
 problem — always a copy problem.
 
-| Beat                          | Owned by                                              |
-|-------------------------------|-------------------------------------------------------|
-| opener — first chat message   | `v1_tarot_version_bc_2026`                            |
-| crisis — CRISIS_REVEAL → COST | `v1_clearing_theme_palm_2026_b`                       |
-| ritual + deliverable          | `v1_close_depth_2026`                                 |
-| price + guarantee + proof     | `v1_close_depth_2026` first, then `hours-55-35_tarot` |
-| objection handling            | `v1_close_depth_2026` first, then `hours-55-35_tarot` |
-| order-bump row                | `v1_bump_copy_2026` **and** `hours-55-35_tarot` ⚠     |
+| Beat                          | Owned by                                                                   |
+|-------------------------------|----------------------------------------------------------------------------|
+| opener — first chat message   | `v1_tarot_version_bc_2026`                                                 |
+| crisis — CRISIS_REVEAL → COST | `v1_clearing_theme_palm_2026_b`                                            |
+| ritual + deliverable          | `v1_close_depth_2026`                                                      |
+| price + guarantee + proof     | `v1_close_depth_2026` first, then `hours-55-35_tarot`                      |
+| objection handling            | `v1_close_depth_2026` first, then `hours-55-35_tarot`                      |
+| order-bump row                | `v1_bump_copy_2026`, then `v1_bump_price_2026`, then `hours-55-35_tarot` ⚠ |
 
 Close depth now runs first and owns those beats until it resolves; 55/35 takes them after.
 Map lives in `plan-live.mjs` as `BEATS` — edit it there when a test touches new ground.
