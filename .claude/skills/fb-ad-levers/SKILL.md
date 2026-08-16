@@ -67,7 +67,12 @@ a deliberate decision, never a default.
 
 ## Rules for writing an age set
 
-1. **The theme word is in every headline.** It is the constant.
+1. **The theme word is in every headline.** It is the constant. 🔴 **Check the BINARY line
+   last — that is where it goes missing.** An either/or reads as a finished sentence
+   without its noun (*"Is something blocking me, or is this just how it ends?"*), so the
+   eye passes over the gap. WHY and HOW-LONG force the noun; the binary does not. Read
+   every headline with the ad set covered up: if you cannot tell which bucket it belongs
+   to, Meta cannot either.
 2. **Never state her age in the copy.** The ad set carries it. Meta's banned *form* is the second-person assertion — *"Are you over 65 and still alone?"*. First-person is fine.
 3. **Three different attacks per band** — WHY, HOW-LONG, BINARY. Not three rewordings.
 4. **Price on the full pool, read on the theme.** Only ~0.8% of women state an age, so scoping to one theme collapses the sample (the soulmate-scoped run fell to n=27 with zero buyers in two bands). The script warns you. Never present a pool-wide age value as if it were measured inside one wound.
@@ -141,7 +146,9 @@ tests whether adding a mechanism helps; only this tests whether soulmate earns i
 
 ## Rules for writing a keyword set
 
-1. **The theme word stays in every arm** except the probe.
+1. **The theme word stays in every arm** except the probe — and the probe drops the
+   *mechanism* word only, never the bucket word. "Why does money never stay?" is a valid
+   probe; "Is something blocking me?" is not an arm at all, it is an untargeted ad.
 2. **Anchors are not wound-neutral** — *soulmate* is the future, *connection* is a present person, *blocked* is an obstacle, *energy* is her state, *healing* is after damage. You are testing anchor+wound pairs. Don't claim you isolated the keyword.
 3. **Start with blocked and connection.** Blocked matches what the reading actually delivers; connection is the highest-volume mechanism word and the only one that makes the question about a present man.
 4. **Skip `purpose`** (+42%, 974 mentions) in a love slate — it belongs to a different bucket and pulls the wrong traffic. **`god`/`prayer`** (+50%, 627) works but recruits a religious audience: a brand decision, not a performance one.
