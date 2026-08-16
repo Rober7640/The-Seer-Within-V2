@@ -36,6 +36,7 @@ import {
   PALM_GATE_EXPERIMENT_KEY,
   V1_BUMP_EXPERIMENT_KEY,
   V1_TAROT_VERSION_EXPERIMENT_KEY,
+  V1_CLOSE_DEPTH_EXPERIMENT_KEY,
   PERSONA_PROMPT_KEY_PREFIX,
   isPersonaPromptKey,
 } from '../../lib/experiments';
@@ -153,11 +154,17 @@ function u1PayloadError(variants: Array<{ key: string; payload?: Record<string, 
 // COOKIE rather than a hashed email, so it is tallied through
 // conversations.ab_visitor_id (tallyV1MainByVisitor) instead of the exposure's
 // conversationId — see VISITOR_KEYED_V1_MAIN_KEYS below.
+// CLOSE DEPTH joins on the gate/bump terms, not the tarot-version ones: its own
+// resolver (resolveV1CloseDepth), its own exposure logging with a conversationId,
+// no price payload, and an EMAIL subject assigned at lead capture — so it tallies
+// through tallyV1Main like the first three, and its per-lander split comes free
+// from the tarot labels on its exposures.
 const V1_MAIN_FUNNEL_KEYS: readonly string[] = [
   V1_MAIN_EXPERIMENT_KEY,
   PALM_GATE_EXPERIMENT_KEY,
   V1_BUMP_EXPERIMENT_KEY,
   V1_TAROT_VERSION_EXPERIMENT_KEY,
+  V1_CLOSE_DEPTH_EXPERIMENT_KEY,
 ];
 
 // Which v1_main_funnel tests are keyed on a VISITOR COOKIE assigned at the lander
