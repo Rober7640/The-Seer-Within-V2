@@ -298,7 +298,7 @@ const TALLY = argv.includes('--tally');
 const LOOKS_FILE = `${OUT_DIR}/experiment-looks.json`;
 out(`## 4. WHICH TEST — running experiments${TALLY ? '  ⚠ --tally: THIS RUN SPENDS A LOOK' : ''}`);
 const { rows: allExps } = await client.query(`
-  SELECT key, subject_type, started_at, variants, scope FROM experiments
+  SELECT key, subject_type, started_at, variants, scope, weights_changed_at FROM experiments
   WHERE status = 'running' AND started_at IS NOT NULL ORDER BY started_at DESC`);
 
 // 🔴 A 'user'-keyed test is a V2 CHAT-SERVICE test. Its subjects are user accounts and
@@ -339,8 +339,20 @@ for (const e of exps) {
   if (touchesThis) out(`    ⚠ runs on the traffic being diagnosed — its effect is inside every number above.`);
 
   // ASSIGNED SPLIT — pure assignment mechanics, not outcomes. Safe to print always.
+  //
+  // 🔴 GRADE ONLY THE CURRENT WEIGHTS ERA. If a running test's ratio was changed, every
+  // exposure before the change was assigned under the OLD weights — measuring them
+  // against today's ratio manufactures a permanent "drift" warning that can never clear,
+  // because new traffic adds to both arms roughly equally while the old imbalance stays
+  // baked into the cumulative count. On the live tarot test that read as 37/63 against a
+  // configured 50/50, when the split since the change is a clean 50.5/49.5.
+  // (Same defect the app fixed in 2369f5d; experiments.weights_changed_at is its stamp.)
+  const wChanged = e.weights_changed_at;
+  const eraSql = wChanged ? `AND created_at >= '${new Date(wChanged).toISOString()}'` : '';
   const { rows: split } = await client.query(
-    `SELECT variant v, count(*)::int n FROM experiment_exposures WHERE experiment_key = $1 GROUP BY 1 ORDER BY 1`, [e.key]);
+    `SELECT variant v, count(*)::int n FROM experiment_exposures
+     WHERE experiment_key = $1 ${eraSql} GROUP BY 1 ORDER BY 1`, [e.key]);
+  if (wChanged) out(`    ⓘ weights changed ${day(wChanged)} — split below covers only the era since.`);
   const nTot = split.reduce((a, r) => a + r.n, 0);
   for (const sp of split) {
     const want = wTotal ? (weights[sp.v] || 0) / wTotal : null;
@@ -482,8 +494,11 @@ for (const e of exps) {
   const weights = Object.fromEntries((e.variants ?? []).map((v) => [v.key, v.weight]));
   const wTotal = Object.values(weights).reduce((a, b) => a + (b || 0), 0);
   if (!wTotal) continue;
+  // Same weights-era scoping as §4 — see the comment there.
+  const eraSql2 = e.weights_changed_at ? `AND created_at >= '${new Date(e.weights_changed_at).toISOString()}'` : '';
   const { rows: split } = await client.query(
-    `SELECT variant v, count(*)::int n FROM experiment_exposures WHERE experiment_key = $1 GROUP BY 1`, [e.key]);
+    `SELECT variant v, count(*)::int n FROM experiment_exposures
+     WHERE experiment_key = $1 ${eraSql2} GROUP BY 1`, [e.key]);
   const n = split.reduce((a, r) => a + r.n, 0);
   if (n < 200) continue;
   for (const s of split) {
