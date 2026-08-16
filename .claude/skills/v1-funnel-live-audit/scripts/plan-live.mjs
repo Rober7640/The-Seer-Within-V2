@@ -95,6 +95,38 @@ if (askedBeats.length) {
   console.log(`\n  → a new test on [${askedBeats.join(', ')}] would collide with: ${[...new Set(clash)].join(', ') || 'nothing running'}`);
 }
 
+// ── B2. Lander coverage ──────────────────────────────────────────────────────
+// 🔴 SCOPE IS NOT ONE THING. A test scoped `funnel: v1-tarot` covers every lander; one
+// scoped with `scope.landers` covers a named few. Two tests can share a funnel and still
+// only overlap on part of it — and the landers OUTSIDE the narrower test are a free
+// single-factor slice, which is worth knowing before anyone designs around an overlap
+// they think is total.
+const { rows: landers } = await client.query(`
+  SELECT e.context->>'hook' hook, count(DISTINCT c.id)::int n
+  FROM experiment_exposures e
+  JOIN conversations c ON (c.id = e.context->>'conversationId' OR c.ab_visitor_id = e.subject_id)
+  WHERE e.context ? 'hook' AND c.created_at > now() - interval '7 days'
+    AND c.price_variant ILIKE '%tarot%'
+  GROUP BY 1 HAVING count(DISTINCT c.id) >= 15 ORDER BY 2 DESC`);
+const totL = landers.reduce((a, r) => a + r.n, 0);
+console.log(`\n## Lander coverage — live tarot landers, last 7d (${landers.length} with 15+ convos)`);
+// Which running/draft tests name specific landers rather than a whole funnel?
+const scoped = v1.filter((e) => Array.isArray(e.scope?.landers) && e.scope.landers.length);
+const scopeSets = scoped.map((e) => ({
+  key: e.key, status: e.status,
+  hooks: new Set(e.scope.landers.map((l) => l.hook).filter(Boolean)),
+}));
+console.log(`lander                   convos   share  ${scopeSets.map((x) => x.key.slice(0, 14).padEnd(15)).join('')}`);
+for (const r of landers)
+  console.log(`${(r.hook || '?').padEnd(24)} ${String(r.n).padStart(6)} ${pct(r.n, totL).padStart(7)}  ` +
+    scopeSets.map((x) => (x.hooks.has(r.hook) ? '✓' : '·').padEnd(15)).join(''));
+for (const x of scopeSets) {
+  const covered = landers.filter((r) => x.hooks.has(r.hook)).reduce((a, r) => a + r.n, 0);
+  console.log(`  ${x.key} (${x.status}) covers ${x.hooks.size} lander(s) = ${pct(covered, totL)} of tarot traffic`);
+  console.log(`    → the other ${pct(totL - covered, totL)} is a clean slice, unaffected by it`);
+}
+if (!scopeSets.length) console.log(`  (no running test is lander-scoped — every test covers its whole funnel)`);
+
 // ── C. Sample size ───────────────────────────────────────────────────────────
 if (argv.includes('--size')) {
   const effect = Number(arg('effect', 30)) / 100;

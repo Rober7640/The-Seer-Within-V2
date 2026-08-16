@@ -22,12 +22,22 @@ LIVE_AUDIT_CONFIRM=1 node .../diagnose-live.mjs --live --tally
 
 ## The queue
 
-| | Test | Why here |
-|---|---|---|
-| **NEXT** | Call `v1_bump_copy_2026` for arm B | Answered: take-rate 37.8% → 54.5%, p=0.034. Gating 55/35 for a $1,156/30d prize. |
-| 2 | Call `v1_tarot_version_bc_2026` for arm B | Directional, not significant. Call on low regret, not evidence — see Peeking. |
-| 3 | Start `hours-55-35_tarot` | **Before close depth**, because it restructures the close and close depth is built on the structure. |
-| 4 | Start `v1_close_depth_2026` | Designed against whichever close wins in 3. |
+| | Test | Landers | Why here |
+|---|---|---|---|
+| **NEXT** | Call `v1_bump_copy_2026` for arm B | fb-palm + fb-tarot, **all** | Answered: take-rate 37.8% → 54.5%, p=0.034. Gating 55/35 for a $1,156/30d prize. |
+| 2 | Call `v1_tarot_version_bc_2026` for arm B | **4 named** — `cards-return`, `cards-will-commit`, `cards-feels`, `cards-who-he-is` (83% of tarot traffic) | Directional, not significant. Call on low regret, not evidence — see Peeking. |
+| 3 | Start `hours-55-35_tarot` | fb-tarot, **all** landers | **Before close depth**, because it restructures the close and close depth is built on the structure. |
+| 4 | Start `v1_close_depth_2026` | fb-tarot, **all** landers | Designed against whichever close wins in 3. |
+
+🔴 **Scope is not one thing.** `hours-55-35_tarot` and `v1_close_depth_2026` are scoped by
+FUNNEL, so they hit all 13 live tarot landers. `v1_tarot_version_bc_2026` is scoped by
+LANDER — four of them, 83% of traffic. The remaining 17% (`cards-meant-alone`,
+`cards-someone-else`, `cards-come-back`, `cards-hiding-something`, and the tail) is a clean
+slice with no opener test on it, and therefore a free single-factor read on anything
+funnel-wide that runs alongside B/C.
+
+Live lander shares change weekly — `plan-live.mjs --live` prints the current table with a
+column per lander-scoped test.
 
 **Why 55/35 before close depth.** If 55/35 wins, the close is rebuilt — guarantee and
 proof hoisted above the price bubbles, objection step-down suppressed, a new offer card
@@ -89,6 +99,7 @@ conversion:{ type: "v1_main_funnel", targetN: 7300, windowDays: 7 }
 | Primary | Revenue per 1,000 leads (main + bump + U1 + U2) |
 | Guardrail | Pitch→paid (the mechanism) · upsell-1 take (a longer close must not buy the front end at the back end's cost) |
 | Detectable | **+30% on a 9.6% baseline. A +20% effect will not be visible** |
+| Landers | All 13 live tarot landers — funnel-scoped, not lander-scoped |
 | Duration | ~21 days at 356 leads/day. **Recompute targetN at start** — `plan-live.mjs --size --effect 30` reads the live baseline, and it moved 6,800 → 7,300 in a day as traffic shifted. |
 | Looks | **Two only** — 3,650 and 7,300 exposures |
 | Stop early | Upsell-1 take drops >20% relative in arm B |
