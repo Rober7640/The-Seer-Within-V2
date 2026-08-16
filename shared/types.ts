@@ -60,6 +60,12 @@ export interface UserData {
   // the physical tell (e.g. "a trident, three lines rising to one").
   palmReading?: string
   palmMark?: string
+  // Close-depth A/B (v1_close_depth_2026) — 'deep' ⇒ the thickened pitch. Set
+  // client-side from the /api/lead response (or the ?close_depth= preview
+  // override) and carried here only because the client posts the whole userData
+  // object to /api/chat; NO server prompt builder reads it, so an absent value is
+  // byte-identical to today. Client-side counterpart: client/src/types/chat.ts.
+  closeDepth?: 'deep'
 }
 
 // Sliding-scale close ("$55 anchor / $35 grace") — price variants whose id

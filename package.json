@@ -16,7 +16,7 @@
     "migrate:experiments": "tsx server/scripts/migrateExperiments.ts",
     "verify:wallet": "tsx scripts/verify-wallet-rates.ts",
     "test:e2e": "tsx server/lib/e2eTest.ts",
-    "test:experiments": "tsx --env-file=.env.test --test server/lib/experiments.test.ts server/lib/experimentTally.test.ts server/lib/personaPrompt.test.ts",
+    "test:experiments": "tsx --env-file=.env.test --test server/lib/experiments.test.ts server/lib/experimentTally.test.ts server/lib/personaPrompt.test.ts server/lib/closeDepth.test.ts",
     "test:price": "tsx --test server/lib/priceVariantPool.test.ts server/lib/purchaseAnalytics.test.ts server/lib/braceletIsolation.test.ts server/lib/perMinutePricing.test.ts server/lib/minutesMeter.test.ts",
     "test": "playwright test",
     "test:ui": "playwright test --ui",

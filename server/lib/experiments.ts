@@ -1469,6 +1469,62 @@ export async function resolveV1Bump(
   };
 }
 
+// ── V1 CLOSE DEPTH — 140 words vs ~430 at the pitch ──────────────────────────
+// The V1 close is 8 hardcoded messages, ~140 words. Against a standard close
+// checklist five of seven slots are empty: no mechanism, no price justification,
+// one line of proof, no objection pre-handling. Arm B fills all five.
+//
+// WHY: 47–52% of non-buyers stop at PITCH — 2,942 women a month reach the offer
+// and never click. It is the single biggest in-funnel leak. HYPOTHESIS, not a
+// proven fix: buyers and non-buyers show the SAME 80:20 reading:offer ratio
+// today, so the data says the offer is thin and the leak sits where a thin offer
+// would hurt — it does not say a thicker close converts better.
+//
+// COPY-ONLY, in the strongest sense: this arm changes which chat bubbles are
+// sent at the pitch and nothing else. No price, no line item, no CTA, no server
+// prompt. That is why it is safe to resolve it for returning visitors too (see
+// priceVariant.ts) and why a draft/paused test is byte-identical to today.
+//
+// SCOPED TO v1-tarot. Root V1 is ~10 pitch-arrivals/day at 4.4% against tarot's
+// ~180 at 9.6% — including it would add ~5% sample while mixing two baselines.
+// Palm has no traffic (spend deliberately cut).
+export const V1_CLOSE_DEPTH_EXPERIMENT_KEY = 'v1_close_depth_2026';
+
+/**
+ * Should this lead get the THICKENED close?
+ *
+ * Same shape as resolvePalmGate / resolveV1Bump: `deep` is true only when the
+ * assigned arm's payload says so AND the arm is `applied`, so a draft / paused /
+ * out-of-scope test yields today's close for everyone and deploying this code
+ * changes nothing until the experiment is started. `enrolled` (running + in
+ * scope) tells the caller to log the exposure — the denominator.
+ *
+ * 🔴 SUBJECT IS THE HASHED EMAIL, not the raw one (every other V1 email test
+ * passes the raw address and hashes only at logExposure). It matters here because
+ * this test sets `scope.freezeAssignment`, and the freeze looks the subject up in
+ * `experiment_exposures.subject_id` — which stores the HASH. Passing the raw
+ * email would make the lookup miss every time, so the freeze would silently
+ * degrade to plain re-bucketing and a weight edit could move women who had
+ * already seen the other close. Hashing here also means the bucket and the
+ * exposure row are keyed by the same string, which is what the freeze assumes.
+ *
+ * No email ⇒ no subject ⇒ control, never enrolled.
+ */
+export async function resolveV1CloseDepth(
+  email: string | null | undefined,
+  funnel?: string | null,
+  key: string = V1_CLOSE_DEPTH_EXPERIMENT_KEY, // overridable so tests never touch the live experiment
+): Promise<{ deep: boolean; variant: string | null; enrolled: boolean }> {
+  const subject = typeof email === 'string' && email.trim() ? hashEmail(email) : null;
+  const a = await assign(key, subject, { funnel: funnel ?? null });
+  if (!a) return { deep: false, variant: null, enrolled: false };
+  return {
+    deep: a.applied && a.payload?.close === 'deep',
+    variant: a.variant,
+    enrolled: a.enrolled,
+  };
+}
+
 // ── /fb-tarot VERSION B vs C — which OPENER she gets ─────────────────────────
 // Version B ("smart template"): the full pre-written read is delivered as chat
 // messages, then straight to name capture. Deterministic, no model call.
