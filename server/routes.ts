@@ -77,6 +77,7 @@ import { assignVariantIfMissing, getVariantForEmail } from "./lib/priceVariant";
 import {
   resolveV1Bump,
   resolvePalmGate,
+  resolveV1DownsellBumpPrice,
   resolveTarotVersion,
   logExposure,
   exposureSign,
@@ -90,6 +91,9 @@ import { TAROT_C_PATH, tarotBTarget } from "./lib/tarotRedirect";
 import { ensureVisitorId, readVisitorId } from "./lib/visitorCookie";
 import {
   V1_BUMP_CENTS,
+  resolveBumpCents,
+  type BumpTier,
+  V1_BUMP_PRODUCT_KEY,
   bumpLineDescription,
   bumpProductName,
   bumpCopy,
@@ -831,8 +835,11 @@ export async function registerRoutes(
       // while the experiment is draft/paused this resolves false for everyone and
       // the whole block below is inert (no second line item, no extra metadata).
       //
-      // MAIN ONLY, never the downsell: the bump is an upsell on the full offer,
-      // and the $25/$35 downsell is already the "cheaper" branch.
+      // BOTH TIERS since 2026-08-17. The downsell used to be excluded on the
+      // reasoning that it is already the cheaper branch; it now carries the bump at a
+      // PROPORTIONAL price ($9.77 on $25 vs $12.77 on $35) under
+      // v1_downsell_bump_price_2026. See the spec for why that reversal was made
+      // knowingly, and for the downsell-completion guardrail it ships with.
       const bumpRequested = req.body?.bumpAccepted === true;
       // Did the client actually PLAY the offer turn? Tracked separately from
       // `bumpAccepted` so the take-rate denominator is "was offered", not "was in
@@ -847,17 +854,33 @@ export async function registerRoutes(
       // — so `offered` is recorded even when she declines. Sticky per email, so it
       // returns the same arm she was assigned at lead capture.
       const bumpArm =
-        type === "main" && typeof email === "string" && email.trim()
+        typeof email === "string" && email.trim()
           ? await resolveV1Bump(email, funnel, bumpSign)
-          // Downsell, or the no-optin arm with no email to bucket on. No bump is
-          // charged either way, so the copy arm is irrelevant — but it is spelled
-          // out rather than omitted so the two branches share one shape and the
-          // Stripe line below can read `.copy` unconditionally.
+          // The no-optin arm, with no email to bucket on. No bump is charged, so the
+          // copy arm is irrelevant — but it is spelled out rather than omitted so the
+          // two branches share one shape and the Stripe line below can read `.copy`
+          // unconditionally.
           : { bump: false, variant: null, enrolled: false, copy: 'control' as const };
       // BOTH sides must agree: the server says she's in the bump arm AND the client
       // says she accepted. Either alone charges nothing.
       const bumpApplied = bumpArm.bump === true && bumpRequested;
       const bumpWasOffered = bumpArm.bump === true && (bumpShown || bumpRequested);
+      // Which tier the bump rides on, resolved from the checkout TYPE — never from a
+      // client-sent price. `type` is already validated above and drives the main
+      // amount, so deriving the bump from it means the two lines can never disagree
+      // about which offer she accepted.
+      const bumpTier: BumpTier = type === "downsell" ? "downsell" : "main";
+      // Only the DOWNSELL is under test (v1_downsell_bump_price_2026); main keeps its
+      // flat constant. resolveBumpCents validates against a closed set, so an absent
+      // arm (experiment draft/OFF) or a junk payload falls back to the tier default
+      // rather than charging something nobody chose.
+      const bumpPriceArm =
+        bumpTier === "downsell" && typeof email === "string" && email.trim()
+          ? await resolveV1DownsellBumpPrice(email, funnel)
+          : null;
+      const bumpCentsResolved = bumpTier === "downsell"
+        ? resolveBumpCents(bumpPriceArm, "downsell")
+        : V1_BUMP_CENTS;
       // Which second topic she was offered. Validated against the closed bucket
       // enum — it reaches Stripe metadata and Mike's n8n flow, so an arbitrary
       // client string must never flow through. An invalid/absent value falls back
@@ -900,7 +923,7 @@ export async function registerRoutes(
         ? {
             bumpProduct: bumpProductKeyFor(funnel, bucket, tarotHook),
             bumpBucket: bumpBucket as string,
-            bumpAmount: String(V1_BUMP_CENTS),
+            bumpAmount: String(bumpCentsResolved),
           }
         : {};
 
@@ -993,10 +1016,14 @@ export async function registerRoutes(
                       // the closed enum above, so this can't render junk.
                       // Variation A has no topic, so its pack returns a
                       // topic-free description instead.
-                      description: bumpCopy(bumpArm.copy, bumpBucket as BumpBucket)
-                        .lineDescription,
+                      description: bumpCopy(
+                        bumpArm.copy,
+                        bumpBucket as BumpBucket,
+                        undefined,
+                        bumpCentsResolved,
+                      ).lineDescription,
                     },
-                    unit_amount: V1_BUMP_CENTS,
+                    unit_amount: bumpCentsResolved,
                   },
                   quantity: 1,
                 },
@@ -1102,7 +1129,7 @@ export async function registerRoutes(
                     bumpOffered: true,
                     bumpPurchased: bumpApplied,
                     ...(bumpApplied
-                      ? { bumpBucket, bumpAmountCents: V1_BUMP_CENTS }
+                      ? { bumpBucket, bumpAmountCents: bumpCentsResolved }
                       : {}),
                   }
                 : {}),

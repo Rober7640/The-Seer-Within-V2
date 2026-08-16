@@ -15,7 +15,11 @@ import {
   BUMP_PAIRINGS,
   BUMP_TOPIC_LABELS,
   V1_BUMP_CENTS,
+  V1_BUMP_CENTS_DOWNSELL,
   V1_BUMP_PRICE_LABEL,
+  bumpCents,
+  bumpPriceLabel,
+  resolveBumpCents,
   V1_BUMP_PRODUCT_KEY,
   V1_BUMP_DESCRIPTION_MARKER,
   V1_BUMP_PRODUCT_NAME,
@@ -528,5 +532,102 @@ describe('resolveBumpExperimentKey (cutover switch)', () => {
     // A key with whitespace finds no experiment, and no experiment ⇒ no bump at
     // all. Worth trimming rather than trusting the paste.
     assert.equal(resolveBumpExperimentKey('  v1_bump_copy_next  '), 'v1_bump_copy_next');
+  });
+});
+
+
+// ── DOWNSELL BUMP PRICE (v1_downsell_bump_price_2026) ────────────────────────
+// The downsell carried no bump at all until 2026-08-17. It now carries one at a
+// PROPORTIONAL price: $12.77 is 36.5% of a $35 order but 51.1% of a $25 one, and
+// $9.77 restores near-parity at 39.1%.
+//
+// What these tests actually protect: the price the CARD renders and the price the
+// STRIPE LINE charges are both derived from one resolved number. A buyer shown
+// $9.77 and charged $12.77 is the failure this whole tier-threading exists to stop.
+describe('downsell bump price', () => {
+  it('is 977 cents and renders as $9.77', () => {
+    assert.equal(V1_BUMP_CENTS_DOWNSELL, 977);
+    assert.equal(bumpPriceLabel(V1_BUMP_CENTS_DOWNSELL), '$9.77');
+  });
+
+  it('is proportionate to a $25 order the way $12.77 is to $35', () => {
+    // The whole reason for a second price. Not a style choice — 51% of her order
+    // is a materially different ask from 36%, and she reached the downsell by
+    // saying the larger number was too much.
+    const mainRatio = V1_BUMP_CENTS / 3500;
+    const downsellRatio = V1_BUMP_CENTS_DOWNSELL / 2500;
+    assert.ok(Math.abs(downsellRatio - mainRatio) < 0.03,
+      `downsell ratio ${downsellRatio} should sit near main's ${mainRatio}`);
+    // And the un-adjusted price would NOT have been proportionate.
+    assert.ok(V1_BUMP_CENTS / 2500 - mainRatio > 0.14);
+  });
+
+  describe('tier defaults', () => {
+    it('main is unchanged, with and without an explicit tier', () => {
+      assert.equal(bumpCents(), V1_BUMP_CENTS);
+      assert.equal(bumpCents('main'), V1_BUMP_CENTS);
+      assert.equal(bumpPriceLabel(), V1_BUMP_PRICE_LABEL);
+    });
+
+    it('downsell resolves to the lower price', () => {
+      assert.equal(bumpCents('downsell'), V1_BUMP_CENTS_DOWNSELL);
+    });
+  });
+
+  describe('resolveBumpCents — the only thing that may reach a Stripe line', () => {
+    it('accepts either allowed price', () => {
+      assert.equal(resolveBumpCents(1277, 'downsell'), 1277);
+      assert.equal(resolveBumpCents(977, 'downsell'), 977);
+    });
+
+    it('falls back to the tier default when the experiment is draft/OFF', () => {
+      // null is what resolveV1DownsellBumpPrice returns for an unstarted test. It
+      // must charge the tier default, never throw and never charge zero — she has
+      // already committed to the checkout by this point.
+      assert.equal(resolveBumpCents(null, 'downsell'), V1_BUMP_CENTS_DOWNSELL);
+      assert.equal(resolveBumpCents(undefined, 'downsell'), V1_BUMP_CENTS_DOWNSELL);
+      assert.equal(resolveBumpCents(null, 'main'), V1_BUMP_CENTS);
+    });
+
+    it('rejects anything outside the closed set', () => {
+      // A client-supplied bargain, a typo'd payload, a string, an object. Every one
+      // falls back rather than becoming a charge nobody chose.
+      for (const junk of [1, 0, -977, 99999, '977 ', 'free', {}, [], NaN, Infinity]) {
+        assert.equal(resolveBumpCents(junk, 'downsell'), V1_BUMP_CENTS_DOWNSELL,
+          `junk value ${JSON.stringify(junk)} must not reach a Stripe line`);
+      }
+    });
+
+    it('coerces a numeric string, since payloads arrive as JSON', () => {
+      assert.equal(resolveBumpCents('977', 'downsell'), 977);
+    });
+  });
+
+  describe('copy renders the price it will actually charge', () => {
+    it('control names the resolved price, not the constant', () => {
+      assert.ok(bumpOfferCopy('money', 977).includes('$9.77'));
+      assert.ok(!bumpOfferCopy('money', 977).includes('$12.77'));
+    });
+
+    it('every copy arm carries the downsell price when given it', () => {
+      for (const variant of ['control', 'A', 'B'] as const) {
+        const pack = bumpCopy(variant, 'money', 'Carol', 977);
+        assert.ok(pack.offer.includes('$9.77'),
+          `${variant} must name the price being charged`);
+        assert.ok(!pack.offer.includes('$12.77'),
+          `${variant} must not name the main-path price on a downsell`);
+      }
+    });
+
+    it('omitting the price leaves every arm byte-identical to today', () => {
+      // The regression guard for the ~10 existing call sites that were never
+      // touched: a defaulted parameter must not have moved any of them.
+      for (const variant of ['control', 'A', 'B'] as const) {
+        assert.deepEqual(
+          bumpCopy(variant, 'money', 'Carol'),
+          bumpCopy(variant, 'money', 'Carol', V1_BUMP_CENTS),
+        );
+      }
+    });
   });
 });

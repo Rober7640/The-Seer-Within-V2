@@ -11,7 +11,7 @@ import { DownsellCTA } from "../components/DownsellCTA";
 import { BackgroundMusic } from "../components/BackgroundMusic";
 import { useConversation } from "../hooks/useConversation";
 import { isSlidingCloseVariant } from "@shared/types";
-import { pairedBumpBucket } from "@shared/orderBump";
+import { resolveBumpCents, V1_BUMP_CENTS, pairedBumpBucket } from "@shared/orderBump";
 import { Volume2, Send, Sparkles } from "lucide-react";
 import { Link } from "wouter";
 import { funnelPath } from "../lib/funnel";
@@ -298,7 +298,18 @@ export default function ChatPage() {
               }
               onAccept={() => answerBump(true)}
               onDecline={() => answerBump(false)}
-              mainDollars={chat.userData.priceDollars ?? 35}
+              // The card must price from the SAME tier the checkout will charge on:
+              // a downsell buyer sees $25 + $9.77, not $35 + $12.77.
+              mainDollars={
+                chat.userData.bumpTier === 'downsell'
+                  ? (chat.userData.downsellDollars ?? 25)
+                  : (chat.userData.priceDollars ?? 35)
+              }
+              bumpCents={
+                chat.userData.bumpTier === 'downsell'
+                  ? resolveBumpCents(chat.userData.bumpCentsDownsell, 'downsell')
+                  : V1_BUMP_CENTS
+              }
               // COPY SPLIT TEST (2026-08-11) — assigned at lead capture and
               // re-resolved server-side at checkout. Absent ⇒ today's copy.
               variant={chat.userData.bumpCopy ?? 'control'}

@@ -1,6 +1,7 @@
 import {
   bumpCopy,
-  V1_BUMP_PRICE_LABEL,
+  bumpPriceLabel,
+  V1_BUMP_CENTS,
   type BumpBucket,
   type BumpCopyVariant,
 } from '@shared/orderBump'
@@ -29,6 +30,11 @@ interface BumpOfferCardProps {
   // Only variation A addresses her by name. Optional because the no-optin arm can
   // reach the CTA without one, and that arm's copy closes over its absence.
   firstName?: string
+  // What she will actually be charged for the bump, in cents. Defaulted to the
+  // main-path constant so every existing caller renders today's card unchanged.
+  // The DOWNSELL path passes 977 (v1_downsell_bump_price_2026) — see the spec at
+  // docs/superpowers/specs/2026-08-16-v1-downsell-bump.md.
+  bumpCents?: number
 }
 
 export function BumpOfferCard({
@@ -38,9 +44,12 @@ export function BumpOfferCard({
   mainDollars = 35,
   variant = 'control',
   firstName,
+  bumpCents = V1_BUMP_CENTS,
 }: BumpOfferCardProps) {
-  const total = (mainDollars + 12.77).toFixed(2)
-  const copy = bumpCopy(variant, paired, firstName)
+  // 🔴 Derived from bumpCents, never a literal. A hardcoded 12.77 here was the one
+  // place the card could show a total that disagreed with the Stripe charge.
+  const total = (mainDollars + bumpCents / 100).toFixed(2)
+  const copy = bumpCopy(variant, paired, firstName, bumpCents)
 
   return (
     <div className="p-4 animate-cta-appear" data-testid="bump-offer-card">
@@ -71,7 +80,7 @@ export function BumpOfferCard({
         <div className="px-5 pb-4">
           <div className="flex items-baseline justify-center gap-2 text-sm text-gray-700">
             <span className="font-semibold text-gray-900">
-              + {V1_BUMP_PRICE_LABEL}
+              + {bumpPriceLabel(bumpCents)}
             </span>
             <span className="text-gray-400">·</span>
             {/* Shown so the total is never a surprise on the Stripe page. */}
