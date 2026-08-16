@@ -3,7 +3,7 @@
 **Status:** specced, not built.
 **Type:** shipped change, **not an experiment**. See §2 for why it cannot be tested.
 **Independent of** `v1_close_depth_2026` — different beat, not an arm, immaterial size (§3).
-**Queue entry:** `docs/v1-test-queue.md` item 4.
+**Queue entry:** `docs/v1-test-queue.md` item 2.
 
 ---
 

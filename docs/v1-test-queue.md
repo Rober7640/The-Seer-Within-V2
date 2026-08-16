@@ -24,42 +24,17 @@ what's running, progress, arm splits — comes from `plan-live.mjs`. Commands at
 | # | Test                  | What it changes                         | Split | Covers                     | Starts                                     |
 |---|-----------------------|-----------------------------------------|-------|----------------------------|--------------------------------------------|
 | 1 | `v1_close_depth_2026` | Thickened close — 132 → 448 words       | 50/50 | fb-tarot, all 13 landers   | **Built + dark. Run the SQL, then Start**  |
-| 2 | Non-buyer close page  | Email the free list to a new close page | n/a   | all funnels, one free list | Needs the page built. No code for the send |
-| 3 | `hours-55-35_tarot`   | Two-price close — $55 alongside $35     | 50/50 | fb-tarot, all 13 landers   | ~3 weeks later, against the winner         |
-| 4 | Downsell bump price   | $12.77 → $9.77 on the $25 path          | n/a   | downsell path only         | **Not a test** — ship it, see below        |
+| 2 | Downsell bump         | Add the bump to the $25 path, at $9.77  | n/a   | downsell path only         | **Not a test** — half a day, ship it       |
+| 3 | Non-buyer close page  | Email the free list to a new close page | n/a   | all funnels, one free list | Needs the page built. No code for the send |
+| 4 | `hours-55-35_tarot`   | Two-price close — $55 alongside $35     | 50/50 | fb-tarot, all 13 landers   | ~3 weeks later, against the winner         |
 
-### 2 · Non-buyer close page
+**Why 2 and 3 sit where they do.** Neither consumes traffic or a test slot, so they are
+ordered by build cost rather than value — they cannot delay each other or anything else.
+The downsell bump is worth less (~$130/mo vs the close page's larger, unmeasured pool) but
+is half a day against a page build, so it ships first. **If either ever needed traffic,
+order by value instead.**
 
-Opted in, never bought → stays on the **free** list (`AWEBER_LIST_ID=6936953`); buyers are
-written to a **separate paid list** by `addPaidSubscriber()` with a `paid` tag. So the
-segment already exists in AWeber with no code change:
-
-> **free list, no `paid` tag** = opted in, didn't buy
-
-**Build needed:** the close page. Nothing else — the send is an AWeber sequence.
-
-🔴 **That segment is ~7,500/month and mixes three very different women.** It is a broadcast,
-not a cart-recovery email:
-
-| Who                                  | 30d tarot | What she needs to hear            |
-|--------------------------------------|-----------|-----------------------------------|
-| Never reached the pitch              | ~3,950    | come back and finish your reading |
-| Reached the pitch, never clicked     | 2,942     | the offer, properly               |
-| **Clicked buy, abandoned at Stripe** | **671**   | *"you were one step away"*        |
-
-**To split them you need an abandonment tag** — `checkout.session.expired` is currently
-unhandled, so nothing marks her. A few hours of work, and it is what lets the 671 get their
-own urgent email instead of one broad one. Do it early or the sequence can never be
-targeted.
-
-**Also:** the free list is the same list Evelyn's daily reframe deck sends to — check send
-fatigue before adding a sequence. And `AWEBER_LIST_ID_TAROT` is empty, so all funnels share
-one free list; a tarot-only sequence needs a tag filter.
-
-**Why it is worth doing regardless:** **0 of 671** abandoners bought later on their own.
-Nothing here is cannibalised — every recovered sale is incremental.
-
-### 4 · Downsell bump price — a decision, NOT a test
+### 2 · Downsell bump — a decision, NOT a test
 
 🔴 **This cannot be tested and should not be queued as one.** The $25 downsell has ~34 bump
 offers a month. Detecting whether $9.77 beats $12.77 there needs **10–17 months**. Ship a
@@ -101,6 +76,37 @@ the noise floor — so it is a monthly eyeball, not a stopping rule. Revert is o
 
 *(If you ever want the main bump's price tested properly, that path has ~350 offers/month
 and would resolve in 1–2 months. Different question, and not currently queued.)*
+
+### 3 · Non-buyer close page
+
+Opted in, never bought → stays on the **free** list (`AWEBER_LIST_ID=6936953`); buyers are
+written to a **separate paid list** by `addPaidSubscriber()` with a `paid` tag. So the
+segment already exists in AWeber with no code change:
+
+> **free list, no `paid` tag** = opted in, didn't buy
+
+**Build needed:** the close page. Nothing else — the send is an AWeber sequence.
+
+🔴 **That segment is ~7,500/month and mixes three very different women.** It is a broadcast,
+not a cart-recovery email:
+
+| Who                                  | 30d tarot | What she needs to hear            |
+|--------------------------------------|-----------|-----------------------------------|
+| Never reached the pitch              | ~3,950    | come back and finish your reading |
+| Reached the pitch, never clicked     | 2,942     | the offer, properly               |
+| **Clicked buy, abandoned at Stripe** | **671**   | *"you were one step away"*        |
+
+**To split them you need an abandonment tag** — `checkout.session.expired` is currently
+unhandled, so nothing marks her. A few hours of work, and it is what lets the 671 get their
+own urgent email instead of one broad one. Do it early or the sequence can never be
+targeted.
+
+**Also:** the free list is the same list Evelyn's daily reframe deck sends to — check send
+fatigue before adding a sequence. And `AWEBER_LIST_ID_TAROT` is empty, so all funnels share
+one free list; a tarot-only sequence needs a tag filter.
+
+**Why it is worth doing regardless:** **0 of 671** abandoners bought later on their own.
+Nothing here is cannibalised — every recovered sale is incremental.
 
 **Why close depth goes first — reordered 2026-08-16.** Both target the same leak: the
 **2,942 women a month who reach the pitch and never click** (72.7% of everyone who gets
