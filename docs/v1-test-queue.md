@@ -1,8 +1,10 @@
 # V1 test queue
 
-> **Next action — build and start `v1_close_depth_2026`, full five blocks.**
-> It is unblocked, targets the biggest leak in the funnel, and is worth ~3× the test
-> that was previously queued ahead of it.
+> **Next action — deploy, then create the `v1_close_depth_2026` draft row and start it.**
+> The code is BUILT and dark (2026-08-16). Run
+> `improve-v1/create-close-depth-experiment-2026-08-16.sql` on dev, then prod, then
+> press Start in `/admin/experiments`. Nothing changes for a single woman until that
+> last step.
 
 This doc holds only what a script cannot: what we decided and why. Every live number —
 what's running, progress, arm splits — comes from `plan-live.mjs`. Commands at the bottom.
@@ -21,7 +23,7 @@ what's running, progress, arm splits — comes from `plan-live.mjs`. Commands at
 
 | # | Test                  | What it changes                     | Split | Covers                   | Starts                            |
 |---|-----------------------|-------------------------------------|-------|--------------------------|-----------------------------------|
-| 1 | `v1_close_depth_2026` | Thickened close — 140 → ~365 words  | 50/50 | fb-tarot, all 13 landers | **Now — nothing blocks it**       |
+| 1 | `v1_close_depth_2026` | Thickened close — 132 → 431 words   | 50/50 | fb-tarot, all 13 landers | **Built + dark. Run the SQL, then Start** |
 | 2 | `hours-55-35_tarot`   | Two-price close — $55 alongside $35 | 50/50 | fb-tarot, all 13 landers | ~3 weeks later, against the winner |
 
 **Why close depth goes first — reordered 2026-08-16.** Both target the same leak: the
@@ -92,28 +94,29 @@ is a `startsWith` match and would co-fire the retired arm.
 | **Stop-loss** | **~15% drop in buyers.** At 30% choosing $55, rev/buyer rises ~18% — beyond a 15% conversion drop the mix gain stops covering lost sales.                     |
 | Watch         | **Conversion, not tier mix.** The retired arm didn't lose on mix — women picked $55. It lost by turning giving into shopping, which only shows in conversion. |
 
-### `v1_close_depth_2026` — thickened close *(not created)*
+### `v1_close_depth_2026` — thickened close *(code built + dark; row not created)*
 
 ```
 subject_type: email
 variants:  A 50 {}   ·   B 50 { close: "deep" }
 scope:     { funnel: ["v1-tarot"], freezeAssignment: true }
-conversion:{ type: "v1_main_funnel", targetN: 7300, windowDays: 7 }
+conversion:{ type: "v1_main_funnel", targetN: 7200, windowDays: 7 }
 ```
 
 | Parameter      | Value                                                                                        |
 |----------------|----------------------------------------------------------------------------------------------|
 | Primary        | Revenue per 1,000 leads (main + bump + U1 + U2)                                              |
 | Guardrails     | Pitch→paid · upsell-1 take (a longer close mustn't buy the front end at the back end's cost) |
-| Detectable     | **+30% on a 9.6% baseline. A +20% effect will not be visible.**                              |
-| Duration       | ~21 days at 356 leads/day. Recompute targetN at start — it moved 6,800 → 7,300 in one day.   |
-| Looks          | 3,650 and 7,300 exposures. No others.                                                        |
+| Detectable     | **+30% on a 9.8% baseline. A +20% effect will not be visible** — it needs 15,600 exposures (~44 days) against 7,200 (~21). |
+| Duration       | ~21 days at 355 leads/day. Recompute targetN at start — it moved 6,800 → 7,300 → 7,200 in two days. |
+| **Looks**      | **3,600 and 7,200 exposures. No others.** Pre-registered 2026-08-16, before the first exposure. |
 | Stop early     | Upsell-1 take drops >20% relative in arm B                                                   |
-| Arm B contents | **All five blocks** — mechanism, ritual, deliverable, price, objections. ~365 words / 26 msgs. Restored 2026-08-16 when this moved ahead of 55/35. |
+| Arm B contents | **All five blocks** — mechanism, ritual, deliverable, price, objections. Measured at **431 words / 25 messages** against control's 132 / 8. Price block restored 2026-08-16 when this moved ahead of 55/35. |
+| Preview        | `?close_depth=deep` on any /fb-tarot chat URL — forces arm B, enrols nobody.                 |
 
 🔴 **Build spec: [`docs/superpowers/specs/2026-08-16-v1-close-depth-2026.md`](superpowers/specs/2026-08-16-v1-close-depth-2026.md)**
-— the full arm-B copy, all four edit points, and the verification checklist. Everything
-needed to build it without re-deriving anything.
+— the full arm-B copy, every edit point, and the verification checklist.
+**Create the row with [`improve-v1/create-close-depth-experiment-2026-08-16.sql`](../improve-v1/create-close-depth-experiment-2026-08-16.sql)** — dev first, then prod, then Start in `/admin/experiments`.
 
 *(Artifacts `bcf892f7-…` and `d3c2103b-…` are the visual walkthroughs. Reference only —
 the spec is the source of truth.)*
@@ -140,6 +143,11 @@ a number in six weeks that was never load-bearing.
 
 | Date       | Decision                                                                     | Basis                                                                                                                                                                                                |
 |------------|------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| 2026-08-16 | Close depth **REVERSED to run BEFORE 55/35** (supersedes the row below)       | Same leak, ~3× the value, and unblocked. The rework risk that put 55/35 first is real but costs days; running the smaller test first costs three weeks of the bigger one's return.                   |
+| 2026-08-16 | Close depth **ships WITH its price block** (supersedes the row below)         | It now owns the price beat until it resolves, so the collision that cut the block is gone. Arm B is the full five-block treatment. Cutting it later would invalidate everything collected before.     |
+| 2026-08-16 | Looks pre-registered at **3,600 / 7,200** exposures                           | targetN recomputed on the live baseline the day it was built (123/1258 = 9.8% pitch→paid, +30%, 80% power). Written here before the first exposure, per rule 3.                                       |
+| 2026-08-16 | Price-justification block placed **before** the existing three price messages | The spec said both "preceded by" (§4) and "immediately before the guarantee" (§5). Before all three builds plain → sacred; after the first restarts a block that has already named the price.         |
+| 2026-08-16 | Close depth buckets on **hashEmail(email)**, unlike the other email tests     | It is the first email-keyed test to set `freezeAssignment`, and the freeze looks the subject up in `experiment_exposures.subject_id`, which stores the hash. The raw address would miss every time — the freeze would silently degrade to re-bucketing. Locked by `server/lib/closeDepth.test.ts`. |
 | 2026-08-16 | Call `v1_bump_copy_2026` for **B** at 41% of sample                          | Take-rate p=0.034 is the metric the copy was written to move. Revenue difference between arms is noise (p=0.416). Worth $1,156/30d and gates a larger test.                                          |
 | 2026-08-16 | Call `v1_tarot_version_bc_2026` for **B** on direction, **not significance** | B led at every look and on all 4 landers, but ~9 looks were spent and the gap decayed +41% (15 Aug) → +19% (16 Aug) as data arrived. Ship B because the downside is ~zero. **Do not quote p=0.023.** |
 | 2026-08-16 | Close depth ordered **after** 55/35                                          | 55/35 restructures the close; close depth is built on that structure. Asymmetric rework risk.                                                                                                        |
@@ -167,5 +175,5 @@ LIVE_AUDIT_CONFIRM=1 node .claude/skills/v1-funnel-live-audit/scripts/plan-live.
 ```
 
 **Baselines** *(2026-08-16, fb-tarot, 7d — refresh with `--size`)*
-320–356 leads/day · 180 reaching the pitch/day · pitch→paid 9.6% · $65 per buyer.
+320–355 leads/day · 180 reaching the pitch/day · pitch→paid **9.8%** (123/1258) · $65 per buyer.
 Volume is down ~65% from the 6–7 Aug peak, deliberately.
