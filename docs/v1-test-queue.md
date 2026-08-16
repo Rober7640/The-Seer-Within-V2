@@ -1,7 +1,8 @@
 # V1 test queue
 
-> **Next action — call `v1_bump_copy_2026` for arm B.**
-> It has already answered its question, and it is blocking the 55/35 price test.
+> **Next action — build and start `v1_close_depth_2026`, full five blocks.**
+> It is unblocked, targets the biggest leak in the funnel, and is worth ~3× the test
+> that was previously queued ahead of it.
 
 This doc holds only what a script cannot: what we decided and why. Every live number —
 what's running, progress, arm splits — comes from `plan-live.mjs`. Commands at the bottom.
@@ -18,19 +19,30 @@ what's running, progress, arm splits — comes from `plan-live.mjs`. Commands at
 
 ## Coming next
 
-| # | Test                  | What it changes                     | Split | Covers                   | Starts                              |
-|---|-----------------------|-------------------------------------|-------|--------------------------|-------------------------------------|
-| 1 | `hours-55-35_tarot`   | Two-price close — $55 alongside $35 | 50/50 | fb-tarot, all 13 landers | When the two above are called       |
-| 2 | `v1_close_depth_2026` | Thickened close — 140 → ~315 words  | 50/50 | fb-tarot, all 13 landers | ~3 weeks later, once 55/35 resolves |
+| # | Test                  | What it changes                     | Split | Covers                   | Starts                            |
+|---|-----------------------|-------------------------------------|-------|--------------------------|-----------------------------------|
+| 1 | `v1_close_depth_2026` | Thickened close — 140 → ~365 words  | 50/50 | fb-tarot, all 13 landers | **Now — nothing blocks it**       |
+| 2 | `hours-55-35_tarot`   | Two-price close — $55 alongside $35 | 50/50 | fb-tarot, all 13 landers | ~3 weeks later, against the winner |
 
-**Why 55/35 goes first.** It rebuilds the close — guarantee and proof move above the price
-bubbles, the objection step-down is suppressed, a new offer card replaces the ending. Close
-depth is designed on top of today's close, so if 55/35 won first, close depth would have to
-be redesigned. The reverse isn't true: a longer close still accepts 55/35's bubbles fine.
+**Why close depth goes first — reordered 2026-08-16.** Both target the same leak: the
+**2,942 women a month who reach the pitch and never click** (72.7% of everyone who gets
+there). Close depth is worth roughly **3×** more, and it is the only one that can start
+today.
 
-**What that costs.** Close depth's modelled prize ($8,117/30d) is bigger than 55/35's tier
-mix ($2,000–5,900/30d). Deferring it ~3 weeks gives up roughly $5,700 *if it works* — which
-is unproven. We're buying a clean sequence with a speculative gain.
+| | Close depth | 55/35 |
+|---|-------------|-------|
+| Value if it hits its powered effect | **~$8,450/30d** | ~$2,600/30d from tier mix |
+| Blocked by | nothing | bump copy — its card moves the bump row |
+| Prior evidence | none — fresh hypothesis | **the previous two-price close lost** |
+| Downside risk | a longer close may tire her | conversion loss, which is how the last one died |
+
+The earlier order put 55/35 first on **rework risk** — it restructures the close, so close
+depth would need redesigning against the winner. That is true and it was over-weighted:
+the rework is a day or two of rewriting arm B, while running the smaller test first costs
+three weeks of the bigger test's return.
+
+Going first also lets close depth run as the **full five-block treatment** including its
+price block, rather than the 315-word version cut to avoid the 55/35 collision.
 
 ---
 
@@ -46,11 +58,11 @@ problem — always a copy problem.
 | opener — first chat message   | `v1_tarot_version_bc_2026`                          |
 | crisis — CRISIS_REVEAL → COST | `v1_clearing_theme_palm_2026_b`                     |
 | ritual + deliverable          | `v1_close_depth_2026`                               |
-| price + guarantee + proof     | `hours-55-35_tarot` **and** `v1_close_depth_2026` ⚠ |
-| objection handling            | `hours-55-35_tarot` **and** `v1_close_depth_2026` ⚠ |
+| price + guarantee + proof     | `v1_close_depth_2026` first, then `hours-55-35_tarot` |
+| objection handling            | `v1_close_depth_2026` first, then `hours-55-35_tarot` |
 | order-bump row                | `v1_bump_copy_2026` **and** `hours-55-35_tarot` ⚠   |
 
-The ⚠ rows are why close depth waits, and why it ships **without its price block**.
+Close depth now runs first and owns those beats until it resolves; 55/35 takes them after.
 Map lives in `plan-live.mjs` as `BEATS` — edit it there when a test touches new ground.
 
 **2 · Default to 50/50.** An uneven split bets that the majority arm is better before you
@@ -97,7 +109,7 @@ conversion:{ type: "v1_main_funnel", targetN: 7300, windowDays: 7 }
 | Duration       | ~21 days at 356 leads/day. Recompute targetN at start — it moved 6,800 → 7,300 in one day.   |
 | Looks          | 3,650 and 7,300 exposures. No others.                                                        |
 | Stop early     | Upsell-1 take drops >20% relative in arm B                                                   |
-| Arm B contents | Mechanism, ritual, deliverable, objections. **No price block** — that beat belongs to 55/35. |
+| Arm B contents | **All five blocks** — mechanism, ritual, deliverable, price, objections. ~365 words / 26 msgs. Restored 2026-08-16 when this moved ahead of 55/35. |
 
 🔴 **Build spec: [`docs/superpowers/specs/2026-08-16-v1-close-depth-2026.md`](superpowers/specs/2026-08-16-v1-close-depth-2026.md)**
 — the full arm-B copy, all four edit points, and the verification checklist. Everything
