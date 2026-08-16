@@ -55,7 +55,10 @@ if (!subsPath || !fs.existsSync(subsPath)) {
   console.error('🔴 --subs <file.json> required: { "NAME": "regex", ... }');
   process.exit(2);
 }
-const SUBS = JSON.parse(fs.readFileSync(subsPath, 'utf8'));
+// `_`-prefixed keys are metadata (_comment, _verified) — a subs file is meant to carry
+// the reasoning next to the regex. Without this they get compiled as patterns.
+const SUBS = Object.fromEntries(
+  Object.entries(JSON.parse(fs.readFileSync(subsPath, 'utf8'))).filter(([k]) => !k.startsWith('_')));
 
 const { client, canary, mode, redactedHost } = await connectReadOnly({ live: LIVE });
 console.log(`\nsub-bucket sizing · ${mode}\nDB: ${redactedHost}\nCanary: ${canary}\n`);

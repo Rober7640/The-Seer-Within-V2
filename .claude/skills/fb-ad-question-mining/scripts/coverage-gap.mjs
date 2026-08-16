@@ -23,7 +23,10 @@ if (!subsPath || !fs.existsSync(subsPath)) {
   console.error('🔴 --subs <file.json> required: { "NAME": "regex", ... }');
   process.exit(2);
 }
-const SUBS = JSON.parse(fs.readFileSync(subsPath, 'utf8'));
+// `_`-prefixed keys are metadata (_comment, _verified), not sub-buckets — see the same
+// filter in size-subbuckets.mjs.
+const SUBS = Object.fromEntries(
+  Object.entries(JSON.parse(fs.readFileSync(subsPath, 'utf8'))).filter(([k]) => !k.startsWith('_')));
 const THEMES = {
   commitment: 'commit|marry|marriage|propose|future|serious|exclusive',
   trust:      'lie|lying|honest|truth|trust|hiding|secret|cheat|real person|who he says|misled|deceiv',

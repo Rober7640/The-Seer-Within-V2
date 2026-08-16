@@ -1,0 +1,19 @@
+{
+  "_comment": "Deepen-commitment run, 2026-08-15, POST-VERIFICATION. UNAVAILABLE and ROOMMATES are the cleaned patterns — see 'Verification pass — 2026-08-15' in docs/fb-ad-question-testing-roadmap.md. Three defect classes were found and fixed here: (1) missing \\b, so `he is married` matched inside 'SHE is married'; (2) a bucket's own name in its literal sense, so bare `room ?mate` caught actual housemates at $1,455/1,000 and dragged the bucket down; (3) wrong party, so `the other woman` caught the betrayed WIFE. Cleaning RAISED both buckets (+19%, +14%) — a precision check is not a formality that only deflates numbers. Do not loosen any of these without reading 12 random matches per bucket AND auditing each regex arm separately.",
+  "_verified": "ROOMMATES n=73 buy=21.9% $14,065/1k (99% beats rest) · UNAVAILABLE n=83 buy=21.7% $11,431/1k (98% beats rest) · theme base $5,824",
+  "_not_built": "TWOBOATS failed the noise test (79%, one buyer = 29% of its value) and stays below as the ORIGINAL pattern, unverified, for the record only. WENTCOLD/NEVERMET/PROPOSAL also failed. Do not build from them without re-verifying.",
+
+  "UNAVAILABLE": "\\bmarried man|\\bhe.?s (still )?married|\\bhe is (still )?married|(seeing|dating|in love with|involved with) a married|another woman in his life|\\bhe.?s taken|not available to me|belongs to (someone|another)|secret relationship|a secret in his life|\\bhe (is|.?s) in a (long.?term |committed )?relationship|his wife (gave|found|doesn|won|is|has|wants|would)|\\bhe loves his wife|is married to (someone|another|her)|marriage breaker",
+
+  "ROOMMATES": "(like|just|more like|basically|only) (a |having a )?room ?mates?|room ?mates? (now|at this point)|room ?mate (dynamic|than)|sexless|loveless|no (intimacy|affection|sex)\\b|haven.?t been intimate|not been intimate|no longer intimate|separate (beds|rooms|bedrooms)|dead marriage|marriage is dead|going through the motions|more like (friends|siblings|brother)|peaceful friends",
+
+  "TWOBOATS": "love (someone|somebody) else|feelings for (someone|somebody) else|in love with (someone|somebody) else|torn between|in two minds|caught between|choos(e|ing) between|leave (my|him|her|this) ?(husband|wife|marriage|relationship|partner)? ?for (another|someone)|(while|although|even though) (i.?m|i am|i was) (still )?married|the other man|two men|two women|both men",
+
+  "NOLABEL": "(won.?t|wont|will not|doesn.?t want to|does not want to|never) commit|no commitment|not commit|ever commit|commit (to me|fully)|no label|situationship|casual (sexual )?relationship|friends with benefits|just (sex|physical|sex only)|doesn.?t want a relationship|does not want a relationship|not ready for a relationship|where (do )?(i|we) stand|what are we|make it official|be exclusive|ask me out|really want(s)? (a |the )?relationship|serious with me|serious about me",
+
+  "WENTCOLD": "(went|gone|turn(ed|s)?|turning|got|goes) cold|(he|she) (has |had )?pull(ed|ing|s)? (away|back)|distant|withdraw|hot and cold|reserved with me|not the (same|man)|used to be|he.?s changed|stopped (being|showing|texting|calling|talking)|no longer (affectionate|attentive)|make time for|no actions|won.?t put me first|doesn.?t put me first",
+
+  "NEVERMET": "never met (in person|him|her|face)|not met (in person|yet)|haven.?t met|have not met|never actually met|only (talk|talked|spoken|texted|communicated)|online relationship|met in person|keeps? (postponing|delaying|putting off)|something (always )?came up|come (and )?(see|meet|visit) me|coming to (see|meet|visit) me|plane ticket|send him (some )?money",
+
+  "PROPOSAL": "propose|proposal|engaged|engagement|get(ting)? married|marry me|ever marry|will (he|she) marry|set a date|wedding|make me his wife|tie the knot|(a|the) ring|put a ring"
+}
