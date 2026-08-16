@@ -1896,27 +1896,20 @@ export function useConversation() {
     const downsellDollars = chat.userData.downsellDollars ?? 25
     const slidingClose = isSlidingCloseVariant(chat.userData.priceVariantId)
 
-    // The deep arm speaks the price in WORDS ("Thirty-five"), so those blocks are
-    // only coherent on a $35 close. Inside this test that is guaranteed — it is
-    // scoped to v1-tarot, a FIXED $35 funnel (FIXED_FUNNEL_PRICES, 35_tarot) — so
-    // this guard never fires for a real subject. It exists for the two ways a
-    // session can still reach here at another price: the ?close=55 preview, and a
-    // future funnel-wide rollout onto a funnel that runs a price test. Either would
-    // put two different prices in one close, which is worse than a shorter arm B.
-    const deepPriceCopy = deep && pitchPrice === 35
-    if (deep && !deepPriceCopy && import.meta.env.DEV) {
-      console.warn(`close depth: price is $${pitchPrice}, not $35 — price + objection blocks suppressed`)
-    }
-
     // NEW BLOCK — PRICE JUSTIFICATION (deep arm). Placed BEFORE the existing three
     // so the plain reason-why lands first and "the sacred offering is $35" closes
     // the block instead of restarting it. Argues WORTH and never mentions a
     // discount: the $25 downsell stays reactive, because pre-announcing it is
     // exactly what lost the retired sliding-scale arm (2026-07-22).
-    if (deepPriceCopy) await sendBotMessages([
-      `Now the offering, ${firstName}. Thirty-five dollars. Let me tell you plainly why it's that and not more.`,
+    //
+    // The price is INTERPOLATED, never spelled out, for three reasons: the bubble
+    // right below it already reads "$35", numerals are what a woman skimming on a
+    // phone actually catches, and a hardcoded number would silently contradict any
+    // funnel that prices differently.
+    if (deep) await sendBotMessages([
+      `Now the offering, ${firstName}. It's $${pitchPrice}. Let me tell you plainly why it's that and not more.`,
       "Because the women who need this most are usually the ones who've already paid a great deal to be told nothing.",
-      "Thirty-five keeps me in candles and keeps this honest. It's a marker that you're ready. Not a wall.",
+      `$${pitchPrice} covers what the night costs me and keeps this honest. It's a sign you're ready. Not a wall.`,
     ])
 
     await sendBotMessages(slidingClose ? [
@@ -1955,9 +1948,9 @@ export function useConversation() {
     // majority hold the same objection. That is the standard premise of
     // pre-handling and it is a premise, not a finding. If arm B ever has to
     // shrink, this is the block to cut.
-    if (deepPriceCopy) await sendBotMessages([
+    if (deep) await sendBotMessages([
       "Two things women say to me here. I'd rather answer them now than have you sitting with them.",
-      "The first is money, dear. I know. Thirty-five is not nothing when the month is already thin.",
+      `The first is money, dear. I know. $${pitchPrice} is not nothing when the month is already thin.`,
       "So don't decide by what you can spare. Decide by what another year of this costs you.",
       `The second is "let me think about it." That's fair. But I read what's live tonight, not what's cooled by Friday.`,
       "Waiting doesn't keep it safe for you. It just means I'd be reading a fainter thing.",
