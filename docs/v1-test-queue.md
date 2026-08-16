@@ -18,11 +18,10 @@ what's running, progress, arm splits — comes from `plan-live.mjs`. Commands at
 
 ## Coming next
 
-**1 · `hours-55-35_tarot`** — two-price close, $55 alongside $35.
-Blocked by the two tests above. Start as soon as they're called.
-
-**2 · `v1_close_depth_2026`** — thickened close, 140 → ~315 words.
-Starts after 55/35 resolves, ~3 weeks later.
+| # | Test | What it changes | Split | Covers | Starts |
+|---|---|---|---|---|---|
+| 1 | `hours-55-35_tarot` | Two-price close — $55 alongside $35 | 50/50 | fb-tarot, all 13 landers | When the two above are called |
+| 2 | `v1_close_depth_2026` | Thickened close — 140 → ~315 words | 50/50 | fb-tarot, all 13 landers | ~3 weeks later, once 55/35 resolves |
 
 **Why 55/35 goes first.** It rebuilds the close — guarantee and proof move above the price
 bubbles, the objection step-down is suppressed, a new offer card replaces the ending. Close
@@ -122,23 +121,15 @@ they're invisible because they appear in no experiment table.
 Append, never rewrite. The point is that a conclusion's *basis* survives, so nobody quotes
 a number in six weeks that was never load-bearing.
 
-**2026-08-16 · Call `v1_bump_copy_2026` for B at 41% of sample.**
-Take-rate p=0.034 is the metric the copy was written to move. The revenue difference between
-arms is noise (p=0.416). The whole test is worth $1,156/30d and gates a larger one.
-
-**2026-08-16 · Call `v1_tarot_version_bc_2026` for B on direction, not significance.**
-B led at every look and on all four landers, but ~9 looks were spent and the gap decayed
-from +41% (15 Aug) to +19% (16 Aug) as data arrived. Ship B because the downside is ~zero.
-**Do not quote p=0.023.**
-
-**2026-08-16 · Close depth ordered after 55/35.** Asymmetric rework risk — see *Coming next*.
-
-**2026-08-16 · Close depth scoped to fb-tarot only.** Root is 10 pitch-arrivals/day at 4.4%
-vs tarot's 180 at 9.6% — adds ~5% sample while mixing two baselines. Palm has no traffic.
-
-**2026-08-16 · Palm traffic stopped.** Deliberate — spend cut to test new landers. Not decay.
-
-**2026-08-14 · B/C re-weighted 70/30 → 50/50.** Arm C held 70% while converting worse.
+| Date | Decision | Basis |
+|---|---|---|
+| 2026-08-16 | Call `v1_bump_copy_2026` for **B** at 41% of sample | Take-rate p=0.034 is the metric the copy was written to move. Revenue difference between arms is noise (p=0.416). Worth $1,156/30d and gates a larger test. |
+| 2026-08-16 | Call `v1_tarot_version_bc_2026` for **B** on direction, **not significance** | B led at every look and on all 4 landers, but ~9 looks were spent and the gap decayed +41% (15 Aug) → +19% (16 Aug) as data arrived. Ship B because the downside is ~zero. **Do not quote p=0.023.** |
+| 2026-08-16 | Close depth ordered **after** 55/35 | 55/35 restructures the close; close depth is built on that structure. Asymmetric rework risk. |
+| 2026-08-16 | Close depth scoped **fb-tarot only** | Root is 10 pitch-arrivals/day at 4.4% vs tarot's 180 at 9.6% — adds ~5% sample while mixing two baselines. Palm has no traffic. |
+| 2026-08-16 | Close depth ships **without its price block** | That beat belongs to 55/35. Avoids a mid-flight re-cut, which would invalidate everything collected before it. |
+| 2026-08-16 | Palm traffic stopped | Deliberate — spend cut to test new landers. Not decay. |
+| 2026-08-14 | B/C re-weighted 70/30 → 50/50 | Arm C held 70% while converting worse. ~$200/day. |
 
 ---
 
