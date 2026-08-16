@@ -22,12 +22,19 @@ LIVE_AUDIT_CONFIRM=1 node .../diagnose-live.mjs --live --tally
 
 ## The queue
 
-| | Test | Landers | Why here |
-|---|---|---|---|
-| **NEXT** | Call `v1_bump_copy_2026` for arm B | fb-palm + fb-tarot, **all** | Answered: take-rate 37.8% → 54.5%, p=0.034. Gating 55/35 for a $1,156/30d prize. |
-| 2 | Call `v1_tarot_version_bc_2026` for arm B | **4 named** — `cards-return`, `cards-will-commit`, `cards-feels`, `cards-who-he-is` (83% of tarot traffic) | Directional, not significant. Call on low regret, not evidence — see Peeking. |
-| 3 | Start `hours-55-35_tarot` | fb-tarot, **all** landers | **Before close depth**, because it restructures the close and close depth is built on the structure. |
-| 4 | Start `v1_close_depth_2026` | fb-tarot, **all** landers | Designed against whichever close wins in 3. |
+| | Test | Split | Landers | Why here |
+|---|---|---|---|---|
+| **NEXT** | Call `v1_bump_copy_2026` for arm B | 50 / 50 | fb-palm + fb-tarot, **all** | Answered: take-rate 37.8% → 54.5%, p=0.034. Gating 55/35 for a $1,156/30d prize. |
+| 2 | Call `v1_tarot_version_bc_2026` for arm B | 50 / 50 *(was 30 B / 70 C until 14 Aug)* | **4 named** — `cards-return`, `cards-will-commit`, `cards-feels`, `cards-who-he-is` (83% of tarot traffic) | Directional, not significant. Call on low regret, not evidence — see Peeking. |
+| 3 | Start `hours-55-35_tarot` | **50 / 50** — decide before start | fb-tarot, **all** landers | **Before close depth**, because it restructures the close and close depth is built on the structure. |
+| 4 | Start `v1_close_depth_2026` | **50 / 50** | fb-tarot, **all** landers | Designed against whichever close wins in 3. |
+
+🔴 **Default to 50/50 and justify anything else.** An uneven split is a bet that the
+majority arm is the better one, placed before you have any evidence. B/C ran 70% on arm C
+and C turned out to be the weaker arm — roughly $200/day until it was re-weighted on
+14 Aug. A 50/50 test also resolves fastest for a given total sample, because power is
+maximised when the arms are equal. `plan-live.mjs` flags any arm configured above 60%
+without needing to look at outcomes.
 
 🔴 **Scope is not one thing.** `hours-55-35_tarot` and `v1_close_depth_2026` are scoped by
 FUNNEL, so they hit all 13 live tarot landers. `v1_tarot_version_bc_2026` is scoped by
@@ -80,6 +87,7 @@ Spec: commit `d865636`. Variant id deliberately does **not** start `55-35`, beca
 
 | | |
 |---|---|
+| Split | **50 / 50.** Not yet created — set at creation. Do not start it uneven: the retired arm's failure was a conversion effect, and an uneven split makes a conversion loss both bigger and slower to see. |
 | Primary | Revenue per visitor through `/success` — not checkout conversion |
 | 🔴 Stop-loss | **~15% drop in buyers.** At 30% choosing $55, rev/buyer rises ~18%, so beyond a 15% conversion drop the mix gain stops covering the lost sales. |
 | Watch | Conversion, **not** tier mix. The retired arm did not lose on mix — women picked $55. It lost by turning giving into shopping, which only shows in conversion. |
@@ -96,6 +104,7 @@ conversion:{ type: "v1_main_funnel", targetN: 7300, windowDays: 7 }
 
 | | |
 |---|---|
+| Split | **50 / 50** (`A 50 {}` · `B 50 { close: "deep" }`) |
 | Primary | Revenue per 1,000 leads (main + bump + U1 + U2) |
 | Guardrail | Pitch→paid (the mechanism) · upsell-1 take (a longer close must not buy the front end at the back end's cost) |
 | Detectable | **+30% on a 9.6% baseline. A +20% effect will not be visible** |
