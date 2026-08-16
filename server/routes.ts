@@ -1370,6 +1370,12 @@ export async function registerRoutes(
         // "is she offered a bump at all" vs "in which words". Absent/unknown ⇒
         // control, so a client running older code still renders today's copy.
         bumpCopy: assigned?.bumpCopy ?? 'control',
+        // Close-depth arm (v1_close_depth_2026) — chat COPY only: which bubbles the
+        // pitch sends. Emitted ONLY when the arm is 'deep', so while the experiment
+        // is draft/paused this response is byte-identical to today's, key for key.
+        // Nothing re-resolves it server-side (unlike orderBump/bumpCopy, which the
+        // checkout must agree with) because no money depends on it.
+        ...(assigned?.closeDepth === 'deep' ? { closeDepth: 'deep' } : {}),
       });
     } catch (error) {
       logger.error("Lead capture error:", error);
