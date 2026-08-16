@@ -21,22 +21,54 @@ what's running, progress, arm splits — comes from `plan-live.mjs`. Commands at
 
 ## Coming next
 
-| # | Test                  | What it changes                     | Split | Covers                   | Starts                            |
-|---|-----------------------|-------------------------------------|-------|--------------------------|-----------------------------------|
-| 1 | `v1_close_depth_2026` | Thickened close — 132 → 431 words   | 50/50 | fb-tarot, all 13 landers | **Built + dark. Run the SQL, then Start** |
-| 2 | `hours-55-35_tarot`   | Two-price close — $55 alongside $35 | 50/50 | fb-tarot, all 13 landers | ~3 weeks later, against the winner |
+| # | Test                  | What it changes                         | Split | Covers                     | Starts                                     |
+|---|-----------------------|-----------------------------------------|-------|----------------------------|--------------------------------------------|
+| 1 | `v1_close_depth_2026` | Thickened close — 132 → 431 words       | 50/50 | fb-tarot, all 13 landers   | **Built + dark. Run the SQL, then Start**  |
+| 2 | Non-buyer close page  | Email the free list to a new close page | n/a   | all funnels, one free list | Needs the page built. No code for the send |
+| 3 | `hours-55-35_tarot`   | Two-price close — $55 alongside $35     | 50/50 | fb-tarot, all 13 landers   | ~3 weeks later, against the winner         |
+
+### 2 · Non-buyer close page
+
+Opted in, never bought → stays on the **free** list (`AWEBER_LIST_ID=6936953`); buyers are
+written to a **separate paid list** by `addPaidSubscriber()` with a `paid` tag. So the
+segment already exists in AWeber with no code change:
+
+> **free list, no `paid` tag** = opted in, didn't buy
+
+**Build needed:** the close page. Nothing else — the send is an AWeber sequence.
+
+🔴 **That segment is ~7,500/month and mixes three very different women.** It is a broadcast,
+not a cart-recovery email:
+
+| Who                                  | 30d tarot | What she needs to hear            |
+|--------------------------------------|-----------|-----------------------------------|
+| Never reached the pitch              | ~3,950    | come back and finish your reading |
+| Reached the pitch, never clicked     | 2,942     | the offer, properly               |
+| **Clicked buy, abandoned at Stripe** | **671**   | *"you were one step away"*        |
+
+**To split them you need an abandonment tag** — `checkout.session.expired` is currently
+unhandled, so nothing marks her. A few hours of work, and it is what lets the 671 get their
+own urgent email instead of one broad one. Do it early or the sequence can never be
+targeted.
+
+**Also:** the free list is the same list Evelyn's daily reframe deck sends to — check send
+fatigue before adding a sequence. And `AWEBER_LIST_ID_TAROT` is empty, so all funnels share
+one free list; a tarot-only sequence needs a tag filter.
+
+**Why it is worth doing regardless:** **0 of 671** abandoners bought later on their own.
+Nothing here is cannibalised — every recovered sale is incremental.
 
 **Why close depth goes first — reordered 2026-08-16.** Both target the same leak: the
 **2,942 women a month who reach the pitch and never click** (72.7% of everyone who gets
 there). Close depth is worth roughly **3×** more, and it is the only one that can start
 today.
 
-| | Close depth | 55/35 |
-|---|-------------|-------|
-| Value if it hits its powered effect | **~$8,450/30d** | ~$2,600/30d from tier mix |
-| Blocked by | nothing | bump copy — its card moves the bump row |
-| Prior evidence | none — fresh hypothesis | **the previous two-price close lost** |
-| Downside risk | a longer close may tire her | conversion loss, which is how the last one died |
+|                                     | Close depth                 | 55/35                                           |
+|-------------------------------------|-----------------------------|-------------------------------------------------|
+| Value if it hits its powered effect | **~$8,450/30d**             | ~$2,600/30d from tier mix                       |
+| Blocked by                          | nothing                     | bump copy — its card moves the bump row         |
+| Prior evidence                      | none — fresh hypothesis     | **the previous two-price close lost**           |
+| Downside risk                       | a longer close may tire her | conversion loss, which is how the last one died |
 
 The earlier order put 55/35 first on **rework risk** — it restructures the close, so close
 depth would need redesigning against the winner. That is true and it was over-weighted:
@@ -55,14 +87,14 @@ contains contradictory copy, and a cell you have to mutilate isn't the same trea
 the one it's compared against. Assignment is orthogonal, so this is never a statistics
 problem — always a copy problem.
 
-| Beat                          | Owned by                                            |
-|-------------------------------|-----------------------------------------------------|
-| opener — first chat message   | `v1_tarot_version_bc_2026`                          |
-| crisis — CRISIS_REVEAL → COST | `v1_clearing_theme_palm_2026_b`                     |
-| ritual + deliverable          | `v1_close_depth_2026`                               |
+| Beat                          | Owned by                                              |
+|-------------------------------|-------------------------------------------------------|
+| opener — first chat message   | `v1_tarot_version_bc_2026`                            |
+| crisis — CRISIS_REVEAL → COST | `v1_clearing_theme_palm_2026_b`                       |
+| ritual + deliverable          | `v1_close_depth_2026`                                 |
 | price + guarantee + proof     | `v1_close_depth_2026` first, then `hours-55-35_tarot` |
 | objection handling            | `v1_close_depth_2026` first, then `hours-55-35_tarot` |
-| order-bump row                | `v1_bump_copy_2026` **and** `hours-55-35_tarot` ⚠   |
+| order-bump row                | `v1_bump_copy_2026` **and** `hours-55-35_tarot` ⚠     |
 
 Close depth now runs first and owns those beats until it resolves; 55/35 takes them after.
 Map lives in `plan-live.mjs` as `BEATS` — edit it there when a test touches new ground.
@@ -103,16 +135,16 @@ scope:     { funnel: ["v1-tarot"], freezeAssignment: true }
 conversion:{ type: "v1_main_funnel", targetN: 7200, windowDays: 7 }
 ```
 
-| Parameter      | Value                                                                                        |
-|----------------|----------------------------------------------------------------------------------------------|
-| Primary        | Revenue per 1,000 leads (main + bump + U1 + U2)                                              |
-| Guardrails     | Pitch→paid · upsell-1 take (a longer close mustn't buy the front end at the back end's cost) |
-| Detectable     | **+30% on a 9.8% baseline. A +20% effect will not be visible** — it needs 15,600 exposures (~44 days) against 7,200 (~21). |
-| Duration       | ~21 days at 355 leads/day. Recompute targetN at start — it moved 6,800 → 7,300 → 7,200 in two days. |
-| **Looks**      | **3,600 and 7,200 exposures. No others.** Pre-registered 2026-08-16, before the first exposure. |
-| Stop early     | Upsell-1 take drops >20% relative in arm B                                                   |
+| Parameter      | Value                                                                                                                                                                                                       |
+|----------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Primary        | Revenue per 1,000 leads (main + bump + U1 + U2)                                                                                                                                                             |
+| Guardrails     | Pitch→paid · upsell-1 take (a longer close mustn't buy the front end at the back end's cost)                                                                                                                |
+| Detectable     | **+30% on a 9.8% baseline. A +20% effect will not be visible** — it needs 15,600 exposures (~44 days) against 7,200 (~21).                                                                                  |
+| Duration       | ~21 days at 355 leads/day. Recompute targetN at start — it moved 6,800 → 7,300 → 7,200 in two days.                                                                                                         |
+| **Looks**      | **3,600 and 7,200 exposures. No others.** Pre-registered 2026-08-16, before the first exposure.                                                                                                             |
+| Stop early     | Upsell-1 take drops >20% relative in arm B                                                                                                                                                                  |
 | Arm B contents | **All five blocks** — mechanism, ritual, deliverable, price, objections. Measured at **431 words / 25 messages** against control's 132 / 8. Price block restored 2026-08-16 when this moved ahead of 55/35. |
-| Preview        | `?close_depth=deep` on any /fb-tarot chat URL — forces arm B, enrols nobody.                 |
+| Preview        | `?close_depth=deep` on any /fb-tarot chat URL — forces arm B, enrols nobody.                                                                                                                                |
 
 🔴 **Build spec: [`docs/superpowers/specs/2026-08-16-v1-close-depth-2026.md`](superpowers/specs/2026-08-16-v1-close-depth-2026.md)**
 — the full arm-B copy, every edit point, and the verification checklist.
@@ -141,20 +173,20 @@ they're invisible because they appear in no experiment table.
 Append, never rewrite. The point is that a conclusion's *basis* survives, so nobody quotes
 a number in six weeks that was never load-bearing.
 
-| Date       | Decision                                                                     | Basis                                                                                                                                                                                                |
-|------------|------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| 2026-08-16 | Close depth **REVERSED to run BEFORE 55/35** (supersedes the row below)       | Same leak, ~3× the value, and unblocked. The rework risk that put 55/35 first is real but costs days; running the smaller test first costs three weeks of the bigger one's return.                   |
-| 2026-08-16 | Close depth **ships WITH its price block** (supersedes the row below)         | It now owns the price beat until it resolves, so the collision that cut the block is gone. Arm B is the full five-block treatment. Cutting it later would invalidate everything collected before.     |
-| 2026-08-16 | Looks pre-registered at **3,600 / 7,200** exposures                           | targetN recomputed on the live baseline the day it was built (123/1258 = 9.8% pitch→paid, +30%, 80% power). Written here before the first exposure, per rule 3.                                       |
-| 2026-08-16 | Price-justification block placed **before** the existing three price messages | The spec said both "preceded by" (§4) and "immediately before the guarantee" (§5). Before all three builds plain → sacred; after the first restarts a block that has already named the price.         |
+| Date       | Decision                                                                      | Basis                                                                                                                                                                                                                                                                                              |
+|------------|-------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| 2026-08-16 | Close depth **REVERSED to run BEFORE 55/35** (supersedes the row below)       | Same leak, ~3× the value, and unblocked. The rework risk that put 55/35 first is real but costs days; running the smaller test first costs three weeks of the bigger one's return.                                                                                                                 |
+| 2026-08-16 | Close depth **ships WITH its price block** (supersedes the row below)         | It now owns the price beat until it resolves, so the collision that cut the block is gone. Arm B is the full five-block treatment. Cutting it later would invalidate everything collected before.                                                                                                  |
+| 2026-08-16 | Looks pre-registered at **3,600 / 7,200** exposures                           | targetN recomputed on the live baseline the day it was built (123/1258 = 9.8% pitch→paid, +30%, 80% power). Written here before the first exposure, per rule 3.                                                                                                                                    |
+| 2026-08-16 | Price-justification block placed **before** the existing three price messages | The spec said both "preceded by" (§4) and "immediately before the guarantee" (§5). Before all three builds plain → sacred; after the first restarts a block that has already named the price.                                                                                                      |
 | 2026-08-16 | Close depth buckets on **hashEmail(email)**, unlike the other email tests     | It is the first email-keyed test to set `freezeAssignment`, and the freeze looks the subject up in `experiment_exposures.subject_id`, which stores the hash. The raw address would miss every time — the freeze would silently degrade to re-bucketing. Locked by `server/lib/closeDepth.test.ts`. |
-| 2026-08-16 | Call `v1_bump_copy_2026` for **B** at 41% of sample                          | Take-rate p=0.034 is the metric the copy was written to move. Revenue difference between arms is noise (p=0.416). Worth $1,156/30d and gates a larger test.                                          |
-| 2026-08-16 | Call `v1_tarot_version_bc_2026` for **B** on direction, **not significance** | B led at every look and on all 4 landers, but ~9 looks were spent and the gap decayed +41% (15 Aug) → +19% (16 Aug) as data arrived. Ship B because the downside is ~zero. **Do not quote p=0.023.** |
-| 2026-08-16 | Close depth ordered **after** 55/35                                          | 55/35 restructures the close; close depth is built on that structure. Asymmetric rework risk.                                                                                                        |
-| 2026-08-16 | Close depth scoped **fb-tarot only**                                         | Root is 10 pitch-arrivals/day at 4.4% vs tarot's 180 at 9.6% — adds ~5% sample while mixing two baselines. Palm has no traffic.                                                                      |
-| 2026-08-16 | Close depth ships **without its price block**                                | That beat belongs to 55/35. Avoids a mid-flight re-cut, which would invalidate everything collected before it.                                                                                       |
-| 2026-08-16 | Palm traffic stopped                                                         | Deliberate — spend cut to test new landers. Not decay.                                                                                                                                               |
-| 2026-08-14 | B/C re-weighted 70/30 → 50/50                                                | Arm C held 70% while converting worse. ~$200/day.                                                                                                                                                    |
+| 2026-08-16 | Call `v1_bump_copy_2026` for **B** at 41% of sample                           | Take-rate p=0.034 is the metric the copy was written to move. Revenue difference between arms is noise (p=0.416). Worth $1,156/30d and gates a larger test.                                                                                                                                        |
+| 2026-08-16 | Call `v1_tarot_version_bc_2026` for **B** on direction, **not significance**  | B led at every look and on all 4 landers, but ~9 looks were spent and the gap decayed +41% (15 Aug) → +19% (16 Aug) as data arrived. Ship B because the downside is ~zero. **Do not quote p=0.023.**                                                                                               |
+| 2026-08-16 | Close depth ordered **after** 55/35                                           | 55/35 restructures the close; close depth is built on that structure. Asymmetric rework risk.                                                                                                                                                                                                      |
+| 2026-08-16 | Close depth scoped **fb-tarot only**                                          | Root is 10 pitch-arrivals/day at 4.4% vs tarot's 180 at 9.6% — adds ~5% sample while mixing two baselines. Palm has no traffic.                                                                                                                                                                    |
+| 2026-08-16 | Close depth ships **without its price block**                                 | That beat belongs to 55/35. Avoids a mid-flight re-cut, which would invalidate everything collected before it.                                                                                                                                                                                     |
+| 2026-08-16 | Palm traffic stopped                                                          | Deliberate — spend cut to test new landers. Not decay.                                                                                                                                                                                                                                             |
+| 2026-08-14 | B/C re-weighted 70/30 → 50/50                                                 | Arm C held 70% while converting worse. ~$200/day.                                                                                                                                                                                                                                                  |
 
 ---
 
