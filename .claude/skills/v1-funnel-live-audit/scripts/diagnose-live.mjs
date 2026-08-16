@@ -34,6 +34,9 @@ const OUT_DIR = 'audit-runs/v1-funnel-live-audit';
 
 const findings = [];
 const flag = (level, text) => findings.push({ level, text });
+// Look counts are only persisted AFTER a run completes, so an aborted run never
+// charges a test for a peek it did not actually take.
+const looksPending = {};
 
 const { client, canary, mode, redactedHost } = await connectReadOnly({ live: LIVE });
 
@@ -272,12 +275,28 @@ if (!hooks.length) {
 }
 out('');
 
-// ── 4. WHICH TEST — every running experiment, tallied with the right join ────
-// Two join shapes exist and using the wrong one reports zeros:
-//   email-keyed  → exposure context carries conversationId (assigned at lead capture)
-//   visitor-keyed→ no conversationId; join through conversations.ab_visitor_id, and
-//                  via a LATERAL so one repeat visitor counts once, not once per session.
-out(`## 4. WHICH TEST — running experiments`);
+// ── 4. WHICH TEST — running experiments ─────────────────────────────────────
+// 🔴 THIS SECTION DOES NOT COMPARE ARMS BY DEFAULT, AND THAT IS DELIBERATE.
+//
+// Every look at a running test's outcome is a PEEK, and peeks compound. A p-value
+// promises "if there were no real effect I would see this only 5% of the time" — but
+// that promise holds for ONE look at ONE pre-decided sample size. Look repeatedly and
+// stop when the number looks good and the real false-positive rate climbs:
+//   1 look 5% · 2 looks 8% · 4 looks 13% · 10 looks 19% · unlimited looks 100%
+// (Armitage, McPherson & Rowe 1969.)
+//
+// This script used to tally every running experiment on every run. That made peeks a
+// SIDE EFFECT of asking an unrelated question — six diagnose runs while debugging the
+// script silently spent six looks on a live test, and nobody chose to spend them. A
+// diagnostic must not erode the experiments it reports on.
+//
+// So the default answers only the question this section exists for — "is a live test
+// confounding my diagnosis, or structurally misallocating traffic?" — which needs
+// identity, scope, age and the ASSIGNED SPLIT. None of that is outcome data, so none of
+// it costs a look. Arm outcomes require --tally, which is explicit and is counted.
+const TALLY = argv.includes('--tally');
+const LOOKS_FILE = `${OUT_DIR}/experiment-looks.json`;
+out(`## 4. WHICH TEST — running experiments${TALLY ? '  ⚠ --tally: THIS RUN SPENDS A LOOK' : ''}`);
 const { rows: allExps } = await client.query(`
   SELECT key, subject_type, started_at, variants, scope FROM experiments
   WHERE status = 'running' AND started_at IS NOT NULL ORDER BY started_at DESC`);
@@ -290,8 +309,58 @@ const exps = allExps.filter((e) => e.subject_type !== 'user');
 const v2 = allExps.filter((e) => e.subject_type === 'user');
 if (v2.length) out(`  (skipping ${v2.length} V2 chat-service test(s) — ${v2.map((e) => e.key).join(', ')} — they buy through credit_purchases, not this funnel.)`);
 
+// Peek accounting. Local to this machine, so it UNDER-counts if the test is also being
+// read elsewhere — it is a floor on the number of looks, never an authoritative total.
+const readLooks = () => { try { return JSON.parse(fs.readFileSync(LOOKS_FILE, 'utf8')); } catch { return {}; } };
+// `_note` is human metadata in that file, not a test. It must survive the merge.
+// Armitage et al. 1969: true false-positive rate after k repeated tests at nominal 0.05.
+const ALPHA = { 1: 0.05, 2: 0.083, 3: 0.107, 4: 0.126, 5: 0.142, 6: 0.155, 7: 0.166, 8: 0.176, 9: 0.184, 10: 0.193 };
+const trueAlpha = (k) => ALPHA[Math.min(k, 10)] ?? (k > 10 ? 0.193 + Math.min(0.05, (k - 10) * 0.005) : 0.05);
+
 for (const e of exps) {
   const weights = Object.fromEntries((e.variants ?? []).map((v) => [v.key, v.weight]));
+  const wTotal = Object.values(weights).reduce((a, b) => a + (b || 0), 0);
+
+  // Age from the EXPOSURES, not started_at: a test can be started and then sit idle, and
+  // what matters is the span over which it actually collected data.
+  const { rows: [span] } = await client.query(
+    `SELECT min(created_at) a, max(created_at) b, count(*)::int n
+     FROM experiment_exposures WHERE experiment_key = $1`, [e.key]);
+  const ageDays = span.a ? Math.max((new Date(span.b) - new Date(span.a)) / 86400000, 0.1) : null;
+  out(`\n- ${e.key}  (${e.subject_type}-keyed, started ${day(e.started_at)}` +
+      `${ageDays ? `, ${ageDays.toFixed(1)} days of data` : ''})`);
+  if (!span.n) { out(`    no exposures yet.`); continue; }
+
+  // Scope — the collision check this section exists for. No outcome data involved.
+  const sc = e.scope ?? {};
+  const scFunnel = Array.isArray(sc.funnel) ? sc.funnel.join(', ') : (sc.funnel ?? 'global');
+  out(`    scope: ${scFunnel}${sc.landers ? ` · ${sc.landers.length} lander(s)` : ''}`);
+  const touchesThis = FUNNEL === 'all' || String(scFunnel).includes(FUNNEL);
+  if (touchesThis) out(`    ⚠ runs on the traffic being diagnosed — its effect is inside every number above.`);
+
+  // ASSIGNED SPLIT — pure assignment mechanics, not outcomes. Safe to print always.
+  const { rows: split } = await client.query(
+    `SELECT variant v, count(*)::int n FROM experiment_exposures WHERE experiment_key = $1 GROUP BY 1 ORDER BY 1`, [e.key]);
+  const nTot = split.reduce((a, r) => a + r.n, 0);
+  for (const sp of split) {
+    const want = wTotal ? (weights[sp.v] || 0) / wTotal : null;
+    out(`    ${sp.v.padEnd(9)} ${String(sp.n).padStart(6)} exposures (${pct(sp.n, nTot).padStart(6)}` +
+        `${want != null ? `, configured ${(want * 100).toFixed(0)}%` : ''})`);
+  }
+
+  // 🔴 STRUCTURAL RISK, FLAGGED WITHOUT SPENDING A LOOK. A deliberately lopsided split
+  // is a bet that the majority arm is the better one. That bet is knowable from the
+  // CONFIG alone — no outcome data needed — and it is expensive if wrong, so it is worth
+  // naming every run. Whether it IS wrong requires --tally, which is the reader's call.
+  const lopsided = Object.entries(weights).find(([, w]) => wTotal && w / wTotal > 0.6);
+  if (lopsided && ageDays && ageDays > 2) {
+    flag('⚠️', `${e.key}: arm "${lopsided[0]}" is configured for ${((lopsided[1] / wTotal) * 100).toFixed(0)}% of traffic. ` +
+      `If it is the weaker arm that is expensive every day it runs — but confirming costs a peek. ` +
+      `Re-weight to even, or run --tally deliberately and record the look.`);
+  }
+  if (!TALLY) continue;
+
+  // ── beyond this point is OUTCOME DATA and costs a look ────────────────────
   const emailKeyed = e.subject_type === 'email';
   const q = emailKeyed
     ? `SELECT e.variant v, count(*)::int viewers,
@@ -312,54 +381,49 @@ for (const e of exps) {
        WHERE e.experiment_key = $1 GROUP BY 1 ORDER BY 1`;
   const { rows: arms } = await client.query(q, [e.key]);
   const live = arms.filter((a) => a.viewers > 0);
+  if (!live.length) { out(`    (no joinable outcomes yet)`); continue; }
 
-  // 🔴 A TEST IS ONLY AS OLD AS IT HAS RUN, and every number below is scoped to that
-  // age — NOT to the --days window the rest of this report uses. Printing them side by
-  // side without the age invites the reader to take a 4-day loss for a monthly one and
-  // under-react. Age comes from the exposures, not started_at: a test can be started
-  // and sit idle, and what matters is the span over which it actually collected data.
-  const { rows: [span] } = await client.query(
-    `SELECT min(created_at) a, max(created_at) b FROM experiment_exposures WHERE experiment_key = $1`, [e.key]);
-  const ageDays = span.a ? Math.max((new Date(span.b) - new Date(span.a)) / 86400000, 0.1) : null;
-  out(`\n- ${e.key}  (${e.subject_type}-keyed, started ${day(e.started_at)}` +
-      `${ageDays ? `, ${ageDays.toFixed(1)} days of data: ${day(span.a)} → ${day(span.b)}` : ''})`);
-  if (!live.length) { out(`    no exposures yet.`); continue; }
+  const looks = readLooks();
+  const k = (looks[e.key]?.looks ?? 0) + 1;
+  looksPending[e.key] = { looks: k, last: new Date().toISOString().slice(0, 10) };
+  out(`    ── outcomes · LOOK #${k} on this test ──`);
+
   const totalV = live.reduce((a, r) => a + r.viewers, 0);
   for (const a of live) {
     const per1k = Number(a.rev) / 100 / (a.viewers / 1000);
-    out(`    ${a.v.padEnd(9)} viewers=${String(a.viewers).padStart(6)} (${pct(a.viewers, totalV).padStart(6)}, weight ${weights[a.v] ?? '?'})  buyers=${String(a.buyers).padStart(4)} ${pct(a.buyers, a.viewers).padStart(6)}  $/1k=$${per1k.toFixed(0)}`);
+    out(`    ${a.v.padEnd(9)} buyers=${String(a.buyers).padStart(4)} of ${String(a.viewers).padStart(6)} ${pct(a.buyers, a.viewers).padStart(6)}  $/1k=$${per1k.toFixed(0)}`);
   }
   if (live.length === 2) {
     const [x, y] = [...live].sort((a, b) => (b.buyers / b.viewers) - (a.buyers / a.viewers));
     const sig = twoProportionZ(x.buyers, x.viewers, y.buyers, y.viewers);
     const loserShare = y.viewers / totalV;
     const gap = relChange(y.buyers / y.viewers, x.buyers / x.viewers);
-    if (sig) out(`    ${x.v} leads ${y.v} by ${gap == null ? '—' : `${(-gap * 100).toFixed(0)}%`} · z=${sig.z.toFixed(2)} p=${sig.p.toFixed(3)}${sig.p < 0.05 ? ' (significant)' : ' (NOT significant — directional only)'}`);
-    // 🔴 The finding that pays for this whole script: the worse-performing arm is
-    // holding MORE THAN ITS FAIR SHARE of the traffic. That is a live cost every day it
-    // runs, and it is invisible in any dashboard that only asks "has it reached p<0.05?".
-    //
-    // Three guards, each of which this script got wrong on its first live run:
-    //   · loserShare > 0.55, NOT > 0.5 — an even 50/50 split is a test running CORRECTLY.
-    //     Flagging it tells the operator to "fix" a test that has nothing wrong with it.
-    //   · both arms need ≥20 buyers — a 10-vs-5 gap on huge traffic is a 0.1% conversion
-    //     rate where one buyer either way swings the "loss" by tens of percent.
-    //   · the cost estimate is only shown when it is built on those real buyer counts.
+    if (sig) {
+      const ta = trueAlpha(k);
+      out(`    ${x.v} leads ${y.v} by ${gap == null ? '—' : `${(-gap * 100).toFixed(0)}%`} · z=${sig.z.toFixed(2)} p=${sig.p.toFixed(3)}`);
+      // 🔴 REPORT THE PEEK-ADJUSTED BAR, NOT THE NOMINAL ONE. After k looks a nominal
+      // 0.05 really behaves like trueAlpha(k), so quoting "p<0.05, significant" here
+      // would be the exact error this section was rewritten to stop causing.
+      out(`      after ${k} look(s) a nominal 0.05 behaves like ~${ta.toFixed(2)} — ` +
+          `${sig.p < 0.05 ? (k > 2 ? 'treat as DIRECTIONAL, not significant' : 'significant') : 'not significant either way'}`);
+      if (k > 3) out(`      ⓘ ${k} looks is enough that "it finally went significant" is not evidence. Decide on direction + downside.`);
+    }
     const enoughBuyers = x.buyers >= 20 && y.buyers >= 20;
     if (loserShare > 0.55 && gap != null && gap < -0.15 && enoughBuyers) {
       const cost = y.viewers * ((Number(x.rev) / 100 / x.viewers) - (Number(y.rev) / 100 / y.viewers));
-      // Quote the DAILY RATE, not just the total. A running test's loss is not a closed
-      // number — it is a meter, and the total alone reads as damage already done rather
-      // than damage still being done. The daily figure is what justifies acting today.
       const perDay = ageDays ? cost / ageDays : null;
       flag('🔴', `${e.key}: the WORSE arm "${y.v}" holds ${pct(y.viewers, totalV)} of traffic (${(-gap * 100).toFixed(0)}% below "${x.v}"). ` +
-        `Cost ~${dollars(cost * 100)}${ageDays ? ` over ${ageDays.toFixed(1)} days ≈ ${dollars(perDay * 100)}/day and still accruing` : ''}` +
-        `${sig && sig.p >= 0.05 ? '. Not yet significant — but re-weight to 50/50 rather than leave the unproven arm holding the majority' : ''}.`);
+        `Cost ~${dollars(cost * 100)}${ageDays ? ` over ${ageDays.toFixed(1)} days ≈ ${dollars(perDay * 100)}/day and still accruing` : ''}.`);
     } else if (loserShare > 0.55 && gap != null && gap < -0.15) {
       out(`    ⓘ "${y.v}" is behind AND holds ${pct(y.viewers, totalV)} of traffic, but on ${x.buyers}/${y.buyers} buyers`);
       out(`      that is too few to act on. Watch it; re-check once both arms clear 20 buyers.`);
     }
   }
+}
+if (!TALLY && exps.length) {
+  out(`\n  ⓘ arm outcomes NOT shown — every look at a running test inflates its false-positive`);
+  out(`    rate (1 look 5% · 4 looks 13% · 10 looks 19%). Pass --tally to compare arms;`);
+  out(`    the run will say which look number it is and adjust the bar accordingly.`);
 }
 out('');
 
@@ -580,6 +644,15 @@ for (const x of [...reds, ...ambers]) out(`- ${x.level} ${x.text}`);
 out('');
 
 fs.mkdirSync(OUT_DIR, { recursive: true });
+
+// Persist peek accounting only now that the run has completed. Merged rather than
+// overwritten so a concurrent run cannot lose another test's count.
+if (Object.keys(looksPending).length) {
+  let prior = {};
+  try { prior = JSON.parse(fs.readFileSync(`${OUT_DIR}/experiment-looks.json`, 'utf8')); } catch { /* first run */ }
+  fs.writeFileSync(`${OUT_DIR}/experiment-looks.json`, JSON.stringify({ ...prior, ...looksPending }, null, 2));
+  out(`  (recorded ${Object.keys(looksPending).length} look(s) in ${OUT_DIR}/experiment-looks.json)`);
+}
 const report = `# v1-funnel-live-audit · DIAGNOSE — ${mode}\n\n` +
   `DB: ${redactedHost} · funnel: ${FUNNEL} · window: ${DAYS}d (split ${SPLIT}d) · ${reds.length} 🔴 / ${ambers.length} ⚠️\n\n` +
   '```\n' + lines.join('\n') + '\n```\n';
