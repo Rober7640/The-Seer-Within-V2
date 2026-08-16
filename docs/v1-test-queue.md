@@ -28,32 +28,6 @@ what's running, progress, arm splits — comes from `plan-live.mjs`. Commands at
 | 3 | `hours-55-35_tarot`   | Two-price close — $55 alongside $35     | 50/50 | fb-tarot, all 13 landers    | ~3 weeks later, against the winner         |
 | 4 | `v1_bump_price_2026`  | Bump price — $12.77 vs $9.77            | 50/50 | **main path**, not downsell | After bump copy is called                  |
 
-### 4 · Bump price — $12.77 vs $9.77
-
-**A 23% price cut needs a 31% lift in take just to break even.** That is the whole test in
-one line, and it is worth writing down before anyone runs it:
-
-| $12.77 at            | = per buyer | $9.77 must reach | to merely MATCH |
-|----------------------|-------------|------------------|-----------------|
-| 37.2% (control copy) | $4.75       | **48.6%**        | +31% relative   |
-| 50.0% (new copy)     | $6.38       | **65.4%**        | +31% relative   |
-
-🔴 **Run it on the MAIN bump, not the downsell.** The idea came from the $25 downsell, but
-that path has ~34 bump offers a month — detecting the breakeven lift there takes **10–17
-months**. The main path has ~350/month and answers the same question in **1–2 months**.
-
-| Where         | Offers/mo | Time to detect the breakeven lift |
-|---------------|-----------|-----------------------------------|
-| Downsell only | 34        | **10–17 months — infeasible**     |
-| Main path     | 350       | 1–2 months                        |
-
-Whatever wins on the main path can then be applied to the downsell for free — the price is
-one constant, and the downsell will never have the volume to be tested on its own.
-
-**Judge on revenue per buyer, never take-rate.** A cheaper bump will always win take. The
-only question is whether it wins *money*, and at these numbers it has to win take by a
-third to draw level.
-
 ### 2 · Non-buyer close page
 
 Opted in, never bought → stays on the **free** list (`AWEBER_LIST_ID=6936953`); buyers are
@@ -84,6 +58,32 @@ one free list; a tarot-only sequence needs a tag filter.
 
 **Why it is worth doing regardless:** **0 of 671** abandoners bought later on their own.
 Nothing here is cannibalised — every recovered sale is incremental.
+
+### 4 · Bump price — $12.77 vs $9.77
+
+**A 23% price cut needs a 31% lift in take just to break even.** That is the whole test in
+one line, and it is worth writing down before anyone runs it:
+
+| $12.77 at            | = per buyer | $9.77 must reach | to merely MATCH |
+|----------------------|-------------|------------------|-----------------|
+| 37.2% (control copy) | $4.75       | **48.6%**        | +31% relative   |
+| 50.0% (new copy)     | $6.38       | **65.4%**        | +31% relative   |
+
+🔴 **Run it on the MAIN bump, not the downsell.** The idea came from the $25 downsell, but
+that path has ~34 bump offers a month — detecting the breakeven lift there takes **10–17
+months**. The main path has ~350/month and answers the same question in **1–2 months**.
+
+| Where         | Offers/mo | Time to detect the breakeven lift |
+|---------------|-----------|-----------------------------------|
+| Downsell only | 34        | **10–17 months — infeasible**     |
+| Main path     | 350       | 1–2 months                        |
+
+Whatever wins on the main path can then be applied to the downsell for free — the price is
+one constant, and the downsell will never have the volume to be tested on its own.
+
+**Judge on revenue per buyer, never take-rate.** A cheaper bump will always win take. The
+only question is whether it wins *money*, and at these numbers it has to win take by a
+third to draw level.
 
 **Why close depth goes first — reordered 2026-08-16.** Both target the same leak: the
 **2,942 women a month who reach the pitch and never click** (72.7% of everyone who gets
