@@ -1856,9 +1856,23 @@ export function useConversation() {
       "Naming it precisely is what loosens it. Not wishing. Not hoping. Naming.",
     ])
 
+    // The deep ritual is where the SENSORY detail belongs (see the step label above),
+    // so this is where arm B puts its physical objects — a cord and wax, which are
+    // the clearing's OWN verbs made touchable ("sever that thread" → a cord she can
+    // picture being cut; "seal" → wax). Cord cutting is also a practice this audience
+    // already has a name for, so it reads as specific rather than invented.
+    //
+    // 🔴 DELIBERATELY NOT U1's KIT. The altar, white candle, blessed water, sage and
+    // the 2-4am window all belong to UPSELL_RITUAL (client/src/lib/upsellMessages.ts),
+    // and she meets them ~3 minutes later on /welcome1 as an 8-message curtain-lift.
+    // Spending them here costs that reveal its novelty, and the clock costs more than
+    // that: the close already says the clearing takes 2-3 hours and U1 says its ritual
+    // runs 2-4am for ~2 hours, so putting an hour on this one invents an arithmetic
+    // problem that does not exist today. Two different workings should look different.
     const ritual = deep ? [
       `Tonight, I'll enter a deep meditative state and focus entirely on your energy field, ${firstName}.`,
-      "I go back to the hour it took hold. I trace what feeds it, sever that thread, and seal where it entered.",
+      "I go back to the hour it took hold and find what feeds it. On my table, that's a length of black cord.",
+      "I cut it, then seal both ends with wax — so nothing can travel back along it to you.",
       "It takes 2-3 hours of concentrated work. It drains me... but for those who are ready, it's worth it.",
       "A thing named properly doesn't grow back, dear. That's why I do it slowly.",
     ] : [
@@ -1907,21 +1921,23 @@ export function useConversation() {
     // phone actually catches, and a hardcoded number would silently contradict any
     // funnel that prices differently.
     //
-    // The materials are NAMED, and named from the kit this funnel already has —
-    // the altar, white candle, blessed water and sage smoke, and the 2-4am window,
-    // all established in UPSELL_RITUAL (client/src/lib/upsellMessages.ts). She
-    // meets the same altar on /welcome1 three minutes later, so the two describe
-    // one practice instead of two.
+    // The itemisation POINTS BACK at the cord and the wax she has already watched
+    // being used in the ritual block. Show it, then charge for it — introducing
+    // props at the moment of the ask is weaker, and it is what the first draft did.
     //
     // 🔴 THINGS AND HOURS, NEVER A DOLLAR BREAKDOWN. "$9 of it is the candle" is a
     // factual claim about the business, and at this price an itemised total also
     // makes the whole clearing feel like the sum of its wax. What justifies $35 is
     // that the materials are spent once and the hours cannot be resold.
+    //
+    // A fourth bubble here used to read "Because the women who need this most are
+    // usually the ones who've already paid a great deal to be told nothing." CUT on
+    // operator review: it builds solidarity, but it also plants "I paid a reader and
+    // got nothing" seconds before the buy button, and it made the block answer its
+    // own "where it goes" promise a detour late.
     if (deep) await sendBotMessages([
       `Now the offering, ${firstName}. It's $${pitchPrice}. Let me tell you plainly where it goes.`,
-      "A white candle that burns down to nothing. Blessed water. Sage. Used once, for you, then never again.",
-      "And the hours between 2 and 4am, when the veil is thinnest. I can't give those to anyone else.",
-      "Because the women who need this most are usually the ones who've already paid a great deal to be told nothing.",
+      "The cord, the wax, and two to three hours of a night I can't give to anyone else. Spent once, for you.",
       `$${pitchPrice} covers the whole of it and keeps this honest. It's a sign you're ready. Not a wall.`,
     ])
 
