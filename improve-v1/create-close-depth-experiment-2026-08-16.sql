@@ -1,5 +1,5 @@
 -- ============================================================================
--- CREATE the V1 CLOSE-DEPTH experiment — today's 8-message close vs 25
+-- CREATE the V1 CLOSE-DEPTH experiment — today's 8-message close vs 27
 -- 2026-08-16 · Build spec: docs/superpowers/specs/2026-08-16-v1-close-depth-2026.md
 --
 --   key            v1_close_depth_2026
@@ -13,7 +13,7 @@
 -- has never had: mechanism (why naming a pattern loosens it), a longer ritual, a
 -- page-by-page deliverable, a plain price justification, one line of small
 -- believable proof, and the two objections she actually raises. 8 messages / 132
--- words → 25 messages / 432 words. No price, line item, CTA or server prompt
+-- words → 27 messages / 465 words. No price, line item, CTA or server prompt
 -- moves, which is why this can be resolved for returning visitors too.
 --
 -- WHY. 47–52% of non-buyers stop at PITCH — 2,942 women a month reach the offer
@@ -76,12 +76,12 @@ BEGIN;
 INSERT INTO experiments (key, name, description, status, subject_type, variants, scope, conversion)
 VALUES (
   'v1_close_depth_2026',
-  'Close depth — 8-message close vs 25',
+  'Close depth — 8-message close vs 27',
   'Chat COPY only, at the pitch. A = today''s close (8 messages, 132 words). '
   'B = the same offer with the five blocks the close has never had: mechanism, a '
   'longer ritual, a page-by-page deliverable, a plain price justification, one '
   'line of small believable proof, and the two objections non-buyers actually '
-  'raise (money 23-32%, "let me think" 3-8%) — 25 messages, 432 words. No price, '
+  'raise (money 23-32%, "let me think" 3-8%) — 27 messages, 465 words. No price, '
   'line item, CTA or prompt changes on either arm. Assigned at lead capture on '
   'the hashed email, so returning visitors are re-split across both arms. '
   'fb-tarot only: root V1 is ~10 pitch-arrivals/day at 4.4% against tarot''s ~180 '

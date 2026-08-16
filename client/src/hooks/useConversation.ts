@@ -1906,10 +1906,23 @@ export function useConversation() {
     // right below it already reads "$35", numerals are what a woman skimming on a
     // phone actually catches, and a hardcoded number would silently contradict any
     // funnel that prices differently.
+    //
+    // The materials are NAMED, and named from the kit this funnel already has —
+    // the altar, white candle, blessed water and sage smoke, and the 2-4am window,
+    // all established in UPSELL_RITUAL (client/src/lib/upsellMessages.ts). She
+    // meets the same altar on /welcome1 three minutes later, so the two describe
+    // one practice instead of two.
+    //
+    // 🔴 THINGS AND HOURS, NEVER A DOLLAR BREAKDOWN. "$9 of it is the candle" is a
+    // factual claim about the business, and at this price an itemised total also
+    // makes the whole clearing feel like the sum of its wax. What justifies $35 is
+    // that the materials are spent once and the hours cannot be resold.
     if (deep) await sendBotMessages([
-      `Now the offering, ${firstName}. It's $${pitchPrice}. Let me tell you plainly why it's that and not more.`,
+      `Now the offering, ${firstName}. It's $${pitchPrice}. Let me tell you plainly where it goes.`,
+      "A white candle that burns down to nothing. Blessed water. Sage. Used once, for you, then never again.",
+      "And the hours between 2 and 4am, when the veil is thinnest. I can't give those to anyone else.",
       "Because the women who need this most are usually the ones who've already paid a great deal to be told nothing.",
-      `$${pitchPrice} covers what the night costs me and keeps this honest. It's a sign you're ready. Not a wall.`,
+      `$${pitchPrice} covers the whole of it and keeps this honest. It's a sign you're ready. Not a wall.`,
     ])
 
     await sendBotMessages(slidingClose ? [

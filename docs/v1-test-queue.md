@@ -23,7 +23,7 @@ what's running, progress, arm splits — comes from `plan-live.mjs`. Commands at
 
 | # | Test                  | What it changes                         | Split | Covers                      | Starts                                     |
 |---|-----------------------|-----------------------------------------|-------|-----------------------------|--------------------------------------------|
-| 1 | `v1_close_depth_2026` | Thickened close — 132 → 432 words       | 50/50 | fb-tarot, all 13 landers    | **Built + dark. Run the SQL, then Start**  |
+| 1 | `v1_close_depth_2026` | Thickened close — 132 → 465 words       | 50/50 | fb-tarot, all 13 landers    | **Built + dark. Run the SQL, then Start**  |
 | 2 | Non-buyer close page  | Email the free list to a new close page | n/a   | all funnels, one free list  | Needs the page built. No code for the send |
 | 3 | `hours-55-35_tarot`   | Two-price close — $55 alongside $35     | 50/50 | fb-tarot, all 13 landers    | ~3 weeks later, against the winner         |
 | 4 | `v1_bump_price_2026`  | Bump price — $12.77 vs $9.77            | 50/50 | **main path**, not downsell | After bump copy is called                  |
@@ -170,7 +170,7 @@ conversion:{ type: "v1_main_funnel", targetN: 7200, windowDays: 7 }
 | Duration       | ~21 days at 355 leads/day. Recompute targetN at start — it moved 6,800 → 7,300 → 7,200 in two days.                                                                                                         |
 | **Looks**      | **3,600 and 7,200 exposures. No others.** Pre-registered 2026-08-16, before the first exposure.                                                                                                             |
 | Stop early     | Upsell-1 take drops >20% relative in arm B                                                                                                                                                                  |
-| Arm B contents | **All five blocks** — mechanism, ritual, deliverable, price, objections. Measured at **432 words / 25 messages** against control's 132 / 8. Price block restored 2026-08-16 when this moved ahead of 55/35. |
+| Arm B contents | **All five blocks** — mechanism, ritual, deliverable, price, objections. Measured at **465 words / 27 messages** against control's 132 / 8. Price block restored 2026-08-16 when this moved ahead of 55/35. |
 | Preview        | `?close_depth=deep` on any /fb-tarot chat URL — forces arm B, enrols nobody.                                                                                                                                |
 
 🔴 **Build spec: [`docs/superpowers/specs/2026-08-16-v1-close-depth-2026.md`](superpowers/specs/2026-08-16-v1-close-depth-2026.md)**
