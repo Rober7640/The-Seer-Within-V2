@@ -24,7 +24,7 @@ what's running, progress, arm splits — comes from `plan-live.mjs`. Commands at
 | # | Test                  | What it changes                         | Split | Covers                     | Starts                                     |
 |---|-----------------------|-----------------------------------------|-------|----------------------------|--------------------------------------------|
 | 1 | `v1_close_depth_2026` | Thickened close — 132 → 448 words       | 50/50 | fb-tarot, all 13 landers   | **Built + dark. Run the SQL, then Start**  |
-| 2 | Downsell bump         | Add it to the $25 path; $12.77 vs $9.77 | 50/50 | downsell path only         | Half a day. **Stops on a DATE, not a p**   |
+| 2 | Downsell bump         | Add it to the $25 path; $12.77 vs $9.77 | 50/50 | downsell path only         | ⛔ **Built, but DO NOT START** — see below |
 | 3 | Non-buyer close page  | Email the free list to a new close page | n/a   | all funnels, one free list | Needs the page built. No code for the send |
 | 4 | `hours-55-35_tarot`   | Two-price close — $55 alongside $35     | 50/50 | fb-tarot, all 13 landers   | ~3 weeks later, against the winner         |
 
@@ -35,6 +35,20 @@ is half a day against a page build, so it ships first. **If either ever needed t
 order by value instead.**
 
 ### 2 · Downsell bump — split test with a date-based stop
+
+⛔ **BLOCKER (found 2026-08-17, browser-verified). Ship the bump; do NOT start the price
+split.** Arm A would show her **$9.77** and charge her **$12.77**. The card price and the
+Stripe price come from two different reads, and only one of them is wired: `/api/checkout`
+resolves the real arm (`server/routes.ts:809-815`) ✅, but `/api/lead` never sends
+`bumpCentsDownsell` (`routes.ts:1316-1343`) and `useConversation.ts:967-982` never captures
+it, so the card is pinned at the `$9.77` fallback. Reproduced on 3 of 8 sample emails.
+
+It is **harmless while the row stays draft** — with no arm assigned both sides fall back to
+$9.77 and agree, which is why `audit-downsell-bump.mjs` passes 13/13 today. Starting the row
+is what breaks them apart. Fix = send the arm at lead capture and capture it client-side, the
+same shape `bumpCopy` already uses; note that resolving in `/api/lead` enrolls every tarot
+lead rather than only downsell-reachers, so the "exposed" count changes meaning (the verdict
+metric, revenue per downsell buyer, does not).
 
 🔴 **It will not reach significance — that is the design.** ~60 downsell buyers/month; the
 breakeven lift needs 590 offers, i.e. **~10 months**. So it **stops on 2026-11-17**, takes
