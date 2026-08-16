@@ -24,7 +24,7 @@ what's running, progress, arm splits — comes from `plan-live.mjs`. Commands at
 | # | Test                  | What it changes                         | Split | Covers                     | Starts                                     |
 |---|-----------------------|-----------------------------------------|-------|----------------------------|--------------------------------------------|
 | 1 | `v1_close_depth_2026` | Thickened close — 132 → 448 words       | 50/50 | fb-tarot, all 13 landers   | **Built + dark. Run the SQL, then Start**  |
-| 2 | Downsell bump         | Add the bump to the $25 path, at $9.77  | n/a   | downsell path only         | **Not a test** — half a day, ship it       |
+| 2 | Downsell bump         | Add it to the $25 path; $12.77 vs $9.77 | 50/50 | downsell path only         | Half a day. **Stops on a DATE, not a p**   |
 | 3 | Non-buyer close page  | Email the free list to a new close page | n/a   | all funnels, one free list | Needs the page built. No code for the send |
 | 4 | `hours-55-35_tarot`   | Two-price close — $55 alongside $35     | 50/50 | fb-tarot, all 13 landers   | ~3 weeks later, against the winner         |
 
@@ -34,11 +34,13 @@ The downsell bump is worth less (~$130/mo vs the close page's larger, unmeasured
 is half a day against a page build, so it ships first. **If either ever needed traffic,
 order by value instead.**
 
-### 2 · Downsell bump — a decision, NOT a test
+### 2 · Downsell bump — split test with a date-based stop
 
-🔴 **This cannot be tested and should not be queued as one.** The $25 downsell has ~34 bump
-offers a month. Detecting whether $9.77 beats $12.77 there needs **10–17 months**. Ship a
-price on judgement, document the reasoning, revisit only if downsell volume ever grows.
+🔴 **It will not reach significance — that is the design.** ~60 downsell buyers/month; the
+breakeven lift needs 590 offers, i.e. **~10 months**. So it **stops on 2026-11-17**, takes
+whichever arm has higher revenue per downsell buyer, and ships it. Being wrong costs ~$65/mo,
+which is cheaper than seven more months of indecision. **Do not extend it when it is not
+significant at the stop date.**
 
 **The reasoning: match the ratio, not the absolute.** A woman on the downsell has just said
 $35 was too much. Charging her the same $12.77 asks for half as much again on top of a
