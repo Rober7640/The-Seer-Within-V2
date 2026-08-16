@@ -1469,6 +1469,44 @@ export async function resolveV1Bump(
   };
 }
 
+// ── V1 DOWNSELL BUMP PRICE — $12.77 vs $9.77 on the $25 path ─────────────────
+// The downsell carried NO bump at all until 2026-08-17, on the reasoning that it
+// "is already the cheaper branch". Fair: she reaches it by saying $35 was too much,
+// and a third ask is how the sliding-scale arm died in July. It is offered now at a
+// PROPORTIONAL price rather than the same absolute one — $12.77 is 36.5% of a $35
+// order but 51.1% of a $25 one, and $9.77 restores near-parity at 39.1%.
+//
+// 🔴 THIS TEST CANNOT REACH SIGNIFICANCE, BY DESIGN. ~60 downsell buyers a month
+// against the ~590 offers the breakeven lift needs is roughly 10 months. It stops on
+// a DATE (2026-11-17), takes the higher revenue per downsell buyer, and ships it.
+// That is defensible only because the whole item is worth ~$130/month, so a wrong
+// call costs ~$65/month — cheaper than seven further months of indecision. Do NOT
+// extend it when it is not significant at the stop date; it never will be.
+//
+// Spec: docs/superpowers/specs/2026-08-16-v1-downsell-bump.md
+export const V1_DOWNSELL_BUMP_PRICE_KEY = 'v1_downsell_bump_price_2026';
+
+/**
+ * What the DOWNSELL bump costs for this lead, in cents.
+ *
+ * Returns the raw payload value; the caller passes it through `resolveBumpCents`,
+ * which validates against the closed set {1277, 977} before it can reach a Stripe
+ * line. A draft/paused/absent experiment returns null ⇒ the tier default ($9.77),
+ * so starting the test is what splits the price, not deploying this.
+ */
+export async function resolveV1DownsellBumpPrice(
+  email: string | null | undefined,
+  funnel?: string | null,
+  key: string = V1_DOWNSELL_BUMP_PRICE_KEY, // overridable so tests never touch the live experiment
+): Promise<number | null> {
+  const subject = typeof email === 'string' ? email.trim().toLowerCase() : null;
+  if (!subject) return null;
+  const a = await assign(key, subject, { funnel: funnel ?? null });
+  if (!a?.applied) return null;
+  const cents = (a.payload as { bumpCents?: unknown } | null)?.bumpCents;
+  return typeof cents === 'number' ? cents : null;
+}
+
 // ── V1 CLOSE DEPTH — 140 words vs ~430 at the pitch ──────────────────────────
 // The V1 close is 8 hardcoded messages, ~140 words. Against a standard close
 // checklist five of seven slots are empty: no mechanism, no price justification,
