@@ -99,7 +99,12 @@ conversion:{ type: "v1_main_funnel", targetN: 7300, windowDays: 7 }
 | Stop early     | Upsell-1 take drops >20% relative in arm B                                                   |
 | Arm B contents | Mechanism, ritual, deliverable, objections. **No price block** — that beat belongs to 55/35. |
 
-Copy: artifact `bcf892f7-4b4f-4487-b84e-415fca7f35fc` · root read-through: `d3c2103b-100b-472a-9d0e-7d7ae0317956`
+🔴 **Build spec: [`docs/superpowers/specs/2026-08-16-v1-close-depth-2026.md`](superpowers/specs/2026-08-16-v1-close-depth-2026.md)**
+— the full arm-B copy, all four edit points, and the verification checklist. Everything
+needed to build it without re-deriving anything.
+
+*(Artifacts `bcf892f7-…` and `d3c2103b-…` are the visual walkthroughs. Reference only —
+the spec is the source of truth.)*
 
 ---
 

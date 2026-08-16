@@ -178,6 +178,33 @@ phrasing variants to test *within* this existing cluster rather than as a new su
 
 No new mechanism needed — same plain ad→chat delivery as the rest of this sub-group.
 
+### Deepen — 2026-08-15 (sub-buckets inside the commitment theme)
+
+📄 **Full run: [`fb-ad-question-mining/deepen-commitment-2026-08-15.md`](fb-ad-question-mining/deepen-commitment-2026-08-15.md)**
+— sizing for all 7 proposed sub-buckets, same-day verification pass, buyer life-stage,
+5 angles, 17 concepts, and tarot card specs. Summary only below.
+
+The question: *what else can we ask underneath commitment that no lander asks today?*
+Base = 9,875 commitment-theme conversations, 9.4% buy-rate, $5,824 per 1,000.
+
+**Verdict: build two landers.** Commitment's big territory is already built (3 landers,
+all asking "will he commit?" in different words); what's left is high-value and small.
+
+| Build | Rev/1,000 | vs base | Buy-rate | n |
+|---|---|---|---|---|
+| **ROOMMATES** — the marriage still standing but empty | **$14,065** | 2.4× | 21.9% | 73 |
+| **UNAVAILABLE** — he belongs to another woman | **$11,431** | 2.0× | 21.7% | 83 |
+
+Rejected: TWOBOATS (one buyer = 29% of its value), PROPOSAL (the big gap, but below
+base — don't re-propose it), NEVERMET/WENTCOLD/NOLABEL (near base or already served).
+
+Two findings that outrank the sub-bucket choice itself:
+- **Length beats targeting.** 400+ character concerns return $9,613 per 1,000 vs $2,634
+  under 50 — 3.6×, monotonic. Reproduces the V1 money-bucket result.
+- **Precision errors cut both ways.** Cleaning the regexes *raised* ROOMMATES 19% and
+  UNAVAILABLE 14% (junk was cheap traffic diluting expensive traffic), after the same
+  class of bug had *sunk* PROPOSAL earlier the same day.
+
 ## 3. Reunion/Return
 
 Pulled from `love/LOST_LOVE` + `someone/REUNION`, filtered to the reunion-flavored half
