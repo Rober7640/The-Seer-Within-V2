@@ -82,9 +82,22 @@ charm-price shape used everywhere else, so it is the natural pick.
 against 37–50% on the main path. Directionally consistent with "$12.77 is too much there",
 but n=9 proves nothing on its own. The ratio argument is doing the work.
 
-**Ship $9.77 on the downsell path.** One constant, no experiment, no traffic. Worth roughly
-$130/month either way — the reason to do it is that the current price is disproportionate,
-not that the money is meaningful.
+🔴 **There is no downsell bump today.** `useConversation.ts:2093` sends the downsell
+straight through: *"MAIN ONLY: the $25/$35 downsell is already the cheaper branch and never
+carries a bump."* So this is **add the bump to the downsell at $9.77**, not a price change.
+The 33.3% figure above is women who saw the bump on their *main* attempt, declined $35, then
+took the downsell.
+
+That comment is a deliberate decision being reversed — she has now said money is tight
+twice, and a third ask is how the sliding-scale arm died. Ship it with the guardrail.
+
+**Build spec: [`docs/superpowers/specs/2026-08-16-v1-downsell-bump.md`](superpowers/specs/2026-08-16-v1-downsell-bump.md)**
+— half a day, mostly threading a tier through `V1_BUMP_CENTS`'s ~10 consumers. Independent
+of close depth: different beat, not an arm, $0.30/buyer.
+
+**Guardrail: watch downsell COMPLETION, not bump take.** The risk is the third ask costing
+a $25 sale worth twice the bump. At ~38 downsell buyers/month a 10% drop is ~4 buyers, below
+the noise floor — so it is a monthly eyeball, not a stopping rule. Revert is one constant.
 
 *(If you ever want the main bump's price tested properly, that path has ~350 offers/month
 and would resolve in 1–2 months. Different question, and not currently queued.)*
