@@ -1,0 +1,4 @@
+{
+  "note": "ALL-LEGACY CYCLE, third in a row. server/routes/emailLinkRedirect.ts is still NOT on origin/Production (re-verified 2026-08-16), so /e/<code> would not resolve. No send carries a **Continue Seed:**; every CTA ships on the legacy ?campaign= link and nothing touches the production database.",
+  "sends": []
+}

@@ -47,6 +47,14 @@ Soft, value-day close. Benefit-worded and gentle: **"Come tell me what you're st
 - *Italics* on any quoted dialogue (the sister's lines).
 - No quote box needed unless there's a spoken line worth setting apart.
 
+## 7b. ⚠ Don't clone the last parable — vary these three
+
+The skeleton below hard-codes signature sentences, and writers who follow it faithfully reproduce the previous parable almost line for line (this happened in cycle 2 and again in cycle 3). **Before drafting, read the last parable in `STATE.md` and deliberately vary all three of these:**
+
+1. **The turn line.** Don't reuse *"Here is what they couldn't see."* Variants: *"His sister was right about the stubbornness and wrong about what it was for." · "Everyone in that kitchen read it correctly and drew the wrong conclusion." · "What the neighbours were looking at, none of them could name."* Or cut the turn line entirely and go straight from the obvious read into the pull-quote.
+2. **The reframe's *axis*.** Not just a new object on the same mechanism. Used axes: *keeping a capacity alive* (dead plant), *keeping the "we" alive* (fence), *keeping your own light lit* (lighthouse), *a wish kept from becoming a decision* (the jar), *deciding while nothing is at stake* (the ring), *holding the one act of ending that's still yours* (the key). **Find a seventh axis, not a seventh object.**
+3. **The generalize-to-you list.** *"The texts we reread, the keepsake we won't box up"* is spent. Build a fresh, specific list each time, and don't reuse an object another parable already owns.
+
 ## 8. Do / Don't
 - **Do** keep the central image concrete and a little strange — that oddity is the hook.
 - **Do** vary the protagonist's gender across uses.

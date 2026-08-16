@@ -46,6 +46,14 @@ Interactive — a reply-style prompt. Benefit-worded: **"Tell me your sign."** T
 - Reframe **pull-quote** carries "a message about where your attention lives."
 - **Bold** the *leash → lamp* turn.
 
+## 7b. ⚠ Don't clone the last sign — vary these three
+
+The skeleton hard-codes signature phrasing, and it has produced near-reprints twice (cycle 2's photo send nearly reran cycle 1's song send). **Read the last 07 in `STATE.md` first, then deliberately vary:**
+
+1. **The pivot and the payoff phrases.** *"Something gentler and truer"* and *"stops being a leash and becomes a lamp"* are both spent. Write the two competing readings fresh each time, and find your own image for the swap.
+2. **The reframe's *axis*.** Don't keep landing on *"it's about where your attention lives"* — that's the gold, and cycle 1 already reran it. Used axes: *your attention flags an open question* (11:11), *your attention, not their message* (the song), *the returning, not the arrival* (the photo), *the hour you stop managing the wanting* (the dream), *the timing of the asking is the reading* (the sign that says stay). **Find a new one.**
+3. **What the sign *is*.** Rotate the modality, not just the object: a number, a song, a photo, a dream, an animal, a name, a smell, a coincidence of timing. Never reuse one from STATE's hook list.
+
 ## 8. Do / Don't
 - **Do** honor the sign before redirecting it. The audience is spiritual; validate the instinct, then lift it — never debunk or condescend.
 - **Do** keep it **empowering** (their agency), not deflating.
