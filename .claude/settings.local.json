@@ -74,7 +74,8 @@
       "Bash(git status *)",
       "Bash(node aweber-ops.mjs list sent)",
       "Bash(grep -rniE '\\(you \\(have|only|still|ve got\\)|running \\(low|out\\)|minutes? \\(left|remaining\\)|out of \\(credit|coin\\)|purchase|buy\\).{0,40}\\(minute|credit|coin\\)|\\(minute|credit|coin\\).{0,20}\\(left|remaining|ran out|run out\\)' server --include=\"*.ts\")",
-      "Bash(grep -iE 'prompt|you |system|`|\"')"
+      "Bash(grep -iE 'prompt|you |system|`|\"')",
+      "mcp__kit__get_stats_for_a_list_of_broadcasts"
     ]
   }
 }
