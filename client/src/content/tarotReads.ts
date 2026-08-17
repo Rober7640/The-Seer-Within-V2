@@ -573,6 +573,59 @@ export type TarotHook =
   | 'cards-her-shadow' // Am I living in her shadow?
   | 'cards-live-apart' // Why do we still live apart?
   | 'cards-too-long' // Have I already given him too long?
+  // Soulmate-label hooks (2026-08-17). The operator's category is "Feelings/Commitment" and the
+  // topic "Soulmate / twin-flame crossover" — but as always the angle is named for what the
+  // landers ASK, and all three ask the same thing: is a WORD true of this connection.
+  //
+  // 🔴 NOT folded into `twin-flame`, which is the nearest family and the tempting filing.
+  // That family is a VOCABULARY test: three questions already running ("is he ready", "does he
+  // feel it", "is he coming back") re-asked with "my twin flame" swapped in for "he". The
+  // question underneath is unchanged and the label is only the wrapper. These three put THE
+  // LABEL ITSELF in the question — there is no other question underneath. Folding them in would
+  // put a family that interrogates the word into the family that merely uses it, and destroy
+  // the wording comparison twin-flame exists to make.
+  //
+  // 🔴 NOT `soulmate-where` or `soulmate-after-loss`, which share the word and nothing else:
+  // both ask about a person who might EXIST (where is he / is there still one for me) and
+  // neither has a man in the picture. A real, specific man stands in these — so every
+  // no-verdict-on-him guard stays on, and they must NEVER be added to SELF_FRAME_HOOKS. That
+  // set is mirrored by SELF_FRAME_TAROT_HOOKS in server/lib/prompts.ts, whose clause is "affirm
+  // the hopeful yes with CERTAINTY" — which on these headlines means certifying a living man as
+  // her soulmate. That is precisely the banned move, so the filing would produce the harm.
+  // ⚠ 'cards-met-already' is the one that most looks like self-frame and is not: she is very
+  // often thinking of a particular man she already knows.
+  //
+  // ⚠ THE DEFINING BAN IS THE LABEL, in BOTH directions — never certify and never deny that he
+  // is her soulmate or her twin flame. Inherited from the twin-flame family and extended to
+  // "soulmate": it is a verdict on a real person and an UNFALSIFIABLE one, so she could never
+  // test it against anything he does. Affirm the PULL as real information about HER; leave the
+  // cosmology alone. The shared decode-him guard names four claims (lying, faithful, someone
+  // else, coming back) and the label is none of them, so it is carried per-hook.
+  //
+  // 🔴🔴 AND A BAN THAT EXISTS NOWHERE ELSE: NEVER RANK THE LABELS. Never that a twin flame is
+  // rarer, higher, deeper or more fated than a soulmate or a "strong connection", and never the
+  // reverse. The whole internet does exactly this, and the ranking is what turns her own
+  // "just a strong connection" into a consolation prize. Refuse the ladder rather than placing
+  // him on it — the same move `his-other-life` makes about her position, applied to the words.
+  //
+  // ⚠ The RUNNER SCRIPT and SEPARATION-PHASE bans ride along from twin-flame, because the term
+  // arrives carrying its community's whole teaching: never read his distance or silence as
+  // PROOF of the bond, never call an absence a phase or a stage, and never make anything
+  // conditional on her healing or raising her vibration.
+  | 'cards-really-soulmate' // Is he really my soulmate?
+  // ⚠ The FIFTH binary-refusing hook. Its grounds must differ from the four already live and do:
+  // 'cards-moved-on' refuses because neither branch is knowable · 'cards-imagining-it' because
+  // the second branch is cruel · 'cards-love-or-moved-on' because the two are not opposites ·
+  // 'cards-forever-or-now' because permanence is built rather than assigned. THIS one refuses
+  // because BOTH BRANCHES DESCRIBE THE SAME EVIDENCE UNDER TWO DIFFERENT WORDS — the answer
+  // would not change one thing he does, or one thing she could observe or check. It is a naming
+  // dispute wearing the clothes of a fact question.
+  | 'cards-twin-or-connection' // Is he my twin flame, or just a strong connection?
+  // 🔴🔴 NEVER NAME OR POINT AT A PERSON FROM HER PAST, and 🔴🔴 NEVER TELL HER SHE MISSED HIM.
+  // The headline invites both and they are the two things this lander may never do: the first
+  // sends her back through her own phone on a stranger's say-so, the second invents a loss for
+  // her to grieve. Nor may the opposite be promised — "he is still ahead of you" is a forecast.
+  | 'cards-met-already' // Have I already met my soulmate without realizing it?
   // Self-frame hooks (read HER, affirm the hopeful yes — like the palm love hooks).
   | 'cards-love-again' // Will I love again?
   | 'cards-soulmate' // When is my soulmate coming?
@@ -928,6 +981,23 @@ export const HIS_OTHER_LIFE_HOOKS: TarotHook[] = [
   'cards-too-long',
 ]
 
+// The soulmate-label hooks (2026-08-17). All three ask whether a WORD is true of a
+// connection — see the union comment for why this is its own angle and not `twin-flame`,
+// `soulmate-where` or `soulmate-after-loss`.
+//
+// 🔴 NOT its own frame. A real, specific man stands in all three, so they run under the
+// DEFAULT decode-him branch in prompts.ts (tendency, never a verdict) with no new Set to
+// keep in sync — the label bans live in the per-hook tendencies, which is how every family
+// since `healing` has been built. Adding them to any of the no-man frames (self-frame,
+// loneliness, soulmate-where, after-loss) would strip the verdict guard off a question
+// about a living man, and self-frame would actively instruct "affirm with CERTAINTY" that
+// he is her soulmate — the exact banned move.
+export const SOULMATE_LABEL_HOOKS: TarotHook[] = [
+  'cards-really-soulmate',
+  'cards-twin-or-connection',
+  'cards-met-already',
+]
+
 // The ad ANGLE a hook belongs to. Carried on every tarot PostHog event (see
 // lib/tarotAttribution.ts) so the two decode-him families can be compared as GROUPS
 // without listing each hook: one `angle = trust` filter instead of three hook values,
@@ -1031,6 +1101,17 @@ export type TarotAngle =
   // her — a real man and real third parties stand in all five, so every no-verdict guard stays
   // on and extends to them.
   | 'his-other-life'
+  // 🔴 'soulmate-label' is the INTERROGATING sibling of 'twin-flame', not a variant of it, and
+  // merging them destroys the only thing twin-flame measures. That family swaps "my twin flame"
+  // into three questions already running and tests the WORDING; the question underneath is
+  // untouched and the label is only the wrapper. These three make the label itself the whole
+  // question. It is also NOT 'soulmate-where' or 'soulmate-after-loss': those share the word and
+  // nothing else — both ask about a person who might EXIST and neither has a man in the picture,
+  // while a real specific man stands in all of these. And NOT 'commitment' or 'real-feelings',
+  // the operator's briefing category: those ask what he will DO and what he FEELS, both of which
+  // are claims about him that could in principle be checked. A label can never be checked at all,
+  // which is why the family needs its own guard and its own numbers.
+  | 'soulmate-label'
   | 'self-frame'
 
 export function angleForHook(hook: TarotHook): TarotAngle {
@@ -1054,6 +1135,7 @@ export function angleForHook(hook: TarotHook): TarotAngle {
   if (REAL_FEELINGS_HOOKS.includes(hook)) return 'real-feelings'
   if (STILL_FEELS_HOOKS.includes(hook)) return 'still-feels'
   if (HIS_OTHER_LIFE_HOOKS.includes(hook)) return 'his-other-life'
+  if (SOULMATE_LABEL_HOOKS.includes(hook)) return 'soulmate-label'
   return 'decode-him'
 }
 
@@ -1121,6 +1203,9 @@ export const TAROT_HOOKS: TarotHook[] = [
   'cards-her-shadow',
   'cards-live-apart',
   'cards-too-long',
+  'cards-really-soulmate',
+  'cards-twin-or-connection',
+  'cards-met-already',
   'cards-love-again',
   'cards-soulmate',
 ]
@@ -1253,6 +1338,15 @@ export const HEADLINES: Record<TarotHook, string> = {
   'cards-her-shadow': 'Am I living in her shadow?',
   'cards-live-apart': 'Why do we still live apart?',
   'cards-too-long': 'Have I already given him too long?',
+  // Soulmate-label (2026-08-17). The operator's wording, shipped exactly as given.
+  // ⚠️ 'cards-met-already' shares the clause "without realizing it" verbatim with the live
+  // 'cards-given-up' ("Have I given up on love without realizing it?"), which is untouched and
+  // stays in `searching`. Deliberate, and the same shape as 'cards-love-or-moved-on' sharing its
+  // closing clause with 'cards-moved-on'. ⚠️ Note also what none of the three states: whether the
+  // man is a partner, an ex, or someone she has never spoken to. The reads may not sort her.
+  'cards-really-soulmate': 'Is he really my soulmate?',
+  'cards-twin-or-connection': 'Is he my twin flame, or just a strong connection?',
+  'cards-met-already': 'Have I already met my soulmate without realizing it?',
   'cards-love-again': 'Will I love again?',
   'cards-soulmate': 'When is my soulmate coming?',
 }
@@ -1496,6 +1590,15 @@ const TAROT_QUESTION: Record<TarotHook, string> = {
   // whether it was ever DECIDED, which is the read's actual finding.
   'cards-live-apart': "Before I look closer, tell me… was living apart something the two of you decided, or something that simply never changed?",
   'cards-too-long': "Before I look closer, tell me… what were you told, back at the start, about how long this would take?",
+  // Soulmate-label (2026-08-17). 🔴 None may ask her to argue FOR the label ("what makes you
+  // think he's the one?") — that sets her building a case Evelyn would then have to judge, which
+  // is the verdict this family refuses. Each asks for something only SHE holds.
+  'cards-really-soulmate': "Before I look closer, tell me… what is it he does that makes the word feel true — and what is it that makes you check?",
+  // ⭐ This is the read's own finding put as the opening question: the answer changes nothing.
+  'cards-twin-or-connection': "Before I look closer, tell me… if you knew for certain which of those two it was, what would actually be different tomorrow?",
+  // 🔴 Never "who do you think it might have been?" — naming a person is the family's hardest ban.
+  // Asks what set the wondering off, which is the material the read actually works with.
+  'cards-met-already': "Before I look closer, tell me… what set you wondering whether it has already happened?",
   'cards-love-again': "Before I look closer, tell me… what has been weighing on your heart since it happened?",
   'cards-soulmate': "Before I look closer, tell me… what is the love you're still holding out for — the one you haven't given up on?",
 }
@@ -3894,6 +3997,79 @@ const RETURN_MHF: CardSetConfig = {
         "You came asking whether you were foolish to stay, and drew the card that has never once accepted that charge.",
         "I think there is a different question underneath yours, dear, and I would like to hand it back to you plainly. 'Have I given him too long' is very often 'am I allowed to want this to change' — and you do not need my permission for that, nor a card's, nor his. Notice what your question quietly requires, though. It asks me to certify that the years were WASTED, because only then would you be entitled to want more. That is a cruel toll to have to pay at your own gate, dear, and you have been paying it. You do not have to prove the time was squandered in order to be allowed to ask for something different now. The Fool names no hour for going and none for staying — anyone who fixes that hour for you is guessing at your life. But it is quite firm that wanting more was never a thing you had to earn by first calling the past a mistake.",
         "Let me look closer at what you have been making yourself prove…",
+      ],
+    },
+    // Soulmate-label (2026-08-17). 🔴🔴 THE LABEL BAN RUNS THROUGH ALL NINE: never certify and
+    // never deny that he is her soulmate or her twin flame. Unfalsifiable, and a verdict on a
+    // real man. 🔴🔴 NEVER RANK THE LABELS — no word here is higher, rarer or deeper than
+    // another, and "just a strong connection" may never be treated as the losing branch. The
+    // shared move: affirm the PULL as real information about HER, refuse the WORD.
+    'cards-really-soulmate': {
+      a: [
+        "You turned the Magician, dear — the card of what is made by hand, never of what is handed down.",
+        "You came asking whether a word belongs to a man, and drew the card that has never once dealt in words.",
+        "Here is what the Magician will and will not do, dear. It will not award that word to him — and it will not take it off him either, which matters every bit as much. 'Soulmate' is not a property a man carries about his person, like a height or a birthday, that anyone could measure him for. There is no test, and nobody has ever been able to check the answer — which is why the word can be laid on anybody and argued over forever. But look at what your hand went to. This card's concern is what gets MADE, deliberately, by somebody's hands, and you already hold that evidence. What he does on an ordinary Wednesday. What he has said where others could hear it. Which things he told you he would do, and which of them happened. None of it gets truer if the word is granted, or falser if it is withheld. You went looking for a label to spare you weighing what you already know. It cannot do that, dear.",
+        "Let me look closer at what the two of you have actually made…",
+      ],
+      b: [
+        "You turned the Hanged Man, dear — the card that takes a question by the ankles and shows you its underside.",
+        "Your hand found the reversal, and there is one sitting inside the very way you asked.",
+        "Read your question back and listen for the small word in the middle. Really. You did not ask whether the word fits him, dear — you asked whether it REALLY fits, and that only turns up when somebody is checking against a doubt they were already carrying. So the doubt came first. It is the older of the two. But it does not become a verdict in my hands, in either direction: a doubt is not evidence that he is not, any more than a strong feeling is evidence that he is. This card's whole business is turning a thing over. Underneath your question there is nearly always something more specific and far more answerable — a conversation that went badly and never got finished, a pattern you have noticed twice now, a silence you have not asked about. The label is the easier thing to ask about. It does not oblige you to name the small hard thing, and the small hard thing is what you walked in carrying.",
+        "Let me look closer at what the word has been standing in front of…",
+      ],
+      c: [
+        "You turned the Fool, dear — the card of the one who set out with no guarantee in her pocket.",
+        "You asked for a certainty about a man, and drew the card that has never issued one to anybody.",
+        "Let me give you the reasoning, dear, not merely the refusal. If the answer tonight were yes, you would not fold it away in a drawer. You would take it out on the difficult nights and use it to explain away things that deserve looking at squarely — that word carries an obligation to endure, and that is very often what it gets used for. And if it were no, you would carry that into every ordinary good evening you have left and let it sour something that may be perfectly sound. Both are heavy objects to hand a woman on one card and no acquaintance with the man. What the Fool leaves you is lighter and truer. The pull is real, and it is genuine information about you — what you recognise, and what you reach for. But no word has ever made a hard thing right, dear, and none has made a good thing more real than it was.",
+        "Let me look closer at what it has actually been like to be inside it…",
+      ],
+    },
+    // ⚠️ The FIFTH binary-refusing hook. Its ground is its own: both branches describe THE SAME
+    // EVIDENCE under two words, so the answer would change nothing she could observe or act on.
+    // 🔴 The word doing the damage is her own "just" — refuse the ladder, do not climb it.
+    // 🔴 The RUNNER SCRIPT ban is sharpest here: never read his distance or silence as proof.
+    'cards-twin-or-connection': {
+      a: [
+        "You turned the Magician, dear — the card of the thing itself, standing there before anybody has named it.",
+        "You asked me which of two words applies, and drew the card that attends only to what is actually there.",
+        "There is a word in your question doing quiet damage, dear, and it is neither of the big ones. It is 'just'. Just a strong connection. You have laid your two answers out as a prize and a consolation, then asked which one you have been awarded. I will not put him on that ladder, and I would sooner take the ladder away — you did not build it. It was handed to you by a great deal of writing that grades love as though it arrived in tiers. This card deals in what is real and holds no opinion on vocabulary. So look at what is genuinely in front of you. The same man. The same history. The same thing that happens in your chest when somebody says his name unexpectedly. All of it is identical under both your words, because nothing about him shifts when the label does. You are choosing between two names for one situation, and you have been taught to hear one of them as a disappointment.",
+        "Let me look closer at what is actually there, underneath whichever word you use…",
+      ],
+      b: [
+        "You turned the Hanged Man, dear — the card that hangs a question upside down until its pockets empty.",
+        "Your hand went to the reversal, and yours has been carrying something that wants turning over.",
+        "Try this with me, dear. Suppose I settled it. Suppose I said, with all the certainty you came here hoping for: twin flame. Now tell me what is different tomorrow. What does he do that he was not going to do anyway? What could you check, or watch for, or decide differently? Nothing, dear. Not one thing. And it comes out the same if I say the other one instead. That is what this card shows from underneath — it was never really a question about the man. It is a question about a word, and the word fastens onto nothing you could test, which is why neither of them is being handed to you here. One caution about the first of your two. That term arrives with a teaching strapped to its back: distance is a stage, silence is proof, his return waits on how much you have healed. None of it has any part in this reading. A man's absence is not evidence of a bond.",
+        "Let me look closer at what you would still be holding either way…",
+      ],
+      c: [
+        "You turned the Fool, dear — the card of the road nobody has drawn a map for.",
+        "You came to be sorted into one of two words, and drew the card that has never sorted a soul.",
+        "Neither word is in my gift, dear, and I would not press one on you even if it were. Grant you 'twin flame' and I have not given you an answer — I have given you a script, and it comes with instructions: wait, bear the distance, treat the silence as meaningful, work on yourself until he is ready. Women live inside that for years and call it devotion. Withhold it and pronounce this 'just' a strong connection, and I have handed down a demotion on what may be the best you have known. The Fool sets both of them down. Your two options are not opposites and never were a pair: one is a claim about the machinery of the universe, well above my station, and the other describes what it is like to stand near somebody. You are entitled to the whole of the second without ever settling the first. Whatever this has been, it does not become smaller for being called by a plain name.",
+        "Let me look closer at what this has actually been, in plain words…",
+      ],
+    },
+    // 🔴🔴 NEVER NAME OR POINT AT A PERSON FROM HER PAST — no face, no initial, no "you already
+    // know who". 🔴🔴 NEVER TELL HER SHE MISSED HIM (invents a loss to grieve) and NEVER promise
+    // an arrival instead (a date in disguise). The finding: "without realizing it" presumes a
+    // moment she failed a test, and a meeting was never an examination.
+    'cards-met-already': {
+      a: [
+        "You turned the Magician, dear — the card of recognition, of knowing the thing when it is standing in front of you.",
+        "You asked whether you have already walked past something, and drew the card of noticing.",
+        "Two things will not be happening this evening, dear. Nobody is going to be pointed at — no face from your past, no name, nothing you could go and look up tonight. I have never met one of them, and a name conjured at this table would send you back through years of your own messages hunting for a sign that was never in them. And you are not going to be told that you missed him. That is the sentence you half came here expecting, and it is the one thing this card has no intention of supplying. So let me argue with your question instead. 'Without realizing it' assumes there was a moment when the information sat there and you failed to read it. But recognition is often not instant — people have met the person they spent a life with and thought nothing whatever at the time. A meeting is not an examination. The Magician's own contribution is this: noticing is a real faculty, and yours is plainly in working order.",
+        "Let me look closer at what you have been afraid you walked past…",
+      ],
+      b: [
+        "You turned the Hanged Man, dear — the card of the thing that can only be seen properly from the other side.",
+        "You asked about hindsight, and drew the card that deals in nothing else at all.",
+        "Here is what hindsight does, dear, and it does it to all of us. It goes back through the past, quietly folds in everything you have learned since, then presents the result as though it had been lying in plain view at the time. It never was. You could only ever have known what you knew then, and a woman cannot be held to account for failing to read a page that had not yet been written. So no charges will be filed against your younger self here — she was working with less than you have now, and she was doing her best with it. But there is a second thing worth seeing. A question like yours does not arrive out of nowhere. It comes when the road ahead has gone quiet. When nothing is arriving, the mind goes back through the archive looking for where the mistake must have been — a past mistake is at least an object with a shape to it. Uncertainty about what is ahead has none.",
+        "Let me look closer at why this question has come now…",
+      ],
+      c: [
+        "You turned the Fool, dear — the card of the road that carries on well past the part you can see.",
+        "You asked whether the road is behind you, and drew the card whose whole nature is what has not happened yet.",
+        "Your door stays open, dear, and I want it clear that this is a refusal running in both directions rather than a kindness. You will not be told it has already happened and slipped by — that would be inventing a loss for you to grieve, and you would grieve it, on far less than a card. Nor will you be promised an arrival, because a promise of that kind is a date wearing a disguise, and you would start measuring the months against it. What the Fool takes issue with is buried underneath the question. You have asked it as though there were exactly one, issued once, no second copy ever printed — and as though your life were a single-question examination you may already have failed without anybody telling you. A life is not an examination, dear, and the road you are actually walking is not the one you have been auditing.",
+        "Let me look closer at what you have been treating as a test you already failed…",
       ],
     },
   },

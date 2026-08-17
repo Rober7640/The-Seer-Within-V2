@@ -479,6 +479,7 @@ export default function ExperimentsDashboard() {
       "real-feelings": "Real Feelings",
       "still-feels": "Still Feels",
       "his-other-life": "His Other Life",
+      "soulmate-label": "Soulmate / Twin Flame — The Label",
       "self-frame": "Self-Frame",
     };
     return `${f} — ${ANGLE_LABELS[angle] ?? angle}`;

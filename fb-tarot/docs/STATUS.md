@@ -1075,6 +1075,119 @@ which also pins the two hand-maintained server rosters and the admin angle label
 **slug-substring check** — no new hook id may contain, or be contained by, an existing one, since
 a PostHog `contains` filter would then double-count.
 
+## Soulmate-label hooks — 3 face-down landers (2026-08-17)
+
+Operator brief: category **"Feelings/Commitment"**, topic **"Soulmate / twin-flame crossover"**.
+Face-down `return-mhf` only. Clean URLs, no `&deck=`. All three hook ids are new.
+🔴 **THE FIRST FAMILY TO SHIP ON `/fb-tarot/b`** — operator decision, see below.
+
+| Headline | Hook | URL |
+|---|---|---|
+| Is he really my soulmate? | `cards-really-soulmate` | `/fb-tarot/b?hook=cards-really-soulmate` |
+| Is he my twin flame, or just a strong connection? | `cards-twin-or-connection` | `/fb-tarot/b?hook=cards-twin-or-connection` |
+| Have I already met my soulmate without realizing it? | `cards-met-already` | `/fb-tarot/b?hook=cards-met-already` |
+
+### 🔴🔴 Version B, not C — and what that changes
+
+Operator instruction 2026-08-17: *"only use /b urls from now onwards"*. The bridge reads the
+version off the **route** (`TarotBridge.tsx:55`, `path.endsWith('/b')`) and forwards it as `&v=b`;
+`useConversation` then asks the server via `fetchAssignedTarotVersion`, and
+`resolveTarotVersion` (`server/lib/experiments.ts:1528`) returns **the URL's own version
+unchanged** for any lander outside the `v1_tarot_version_bc_2026` scope. These three are outside
+it, so **B is what actually ships.**
+
+⚠️ **The `/b`-only policy is a no-op for the four hooks INSIDE that test** (`cards-will-commit`,
+`cards-return`, `cards-who-he-is`, `cards-feels`): those are server-assigned B-or-C regardless of
+the path clicked, so pointing their ads at `/b` changes nothing. Concluding that test is a
+separate decision and has not been taken.
+
+⭐⭐ **B makes NO model call.** `openerB` (`tarotReads.ts`) sends the whole static read then goes
+straight to name capture — so **the copy below IS the entire reading**, and every guard is
+load-bearing in a way it is not on a Version-C lander, where the reflect prompt gets a second
+chance to hold the line. Nothing here may lean on `prompts.ts` to catch it. That is also why this
+family is a *good* fit for `/b`: all three headlines ask a card to certify a label, and with no
+LLM in the path there is nothing that can freelance the verdict.
+
+🔴 The server rosters were synced anyway (`validHooks`, `TAROT_HOOK_CONTEXT`,
+`TAROT_HOOK_TENDENCY`). `scope.landers` is **append-only on a running test** — the day one of
+these is enrolled, Version C goes live on it, and an unsynced roster would 400 the handoff.
+
+### ⭐⭐ The shared move: AFFIRM THE PULL, REFUSE THE WORD
+
+All three ask a card to settle a **label**. What she actually holds — the recognition, the
+history, what he does on ordinary days — is real information about *her*, and it does not become
+truer if the word is granted or false if it is withheld. **The label was never the thing carrying
+the weight.** Every read pays that out rather than only declining.
+
+### 🔴 Own angle, not folded into `twin-flame`
+
+The tempting filing, and the damaging one. `twin-flame` (live 2026-08-11) is a **vocabulary
+test**: three questions already running, re-asked with *"my twin flame"* swapped in for *"he"* —
+the question underneath is unchanged and the label is only the wrapper. **These three put the
+label itself in the question**; there is no other question underneath. Pool them and the
+challenger-vs-incumbent comparison twin-flame exists to make is destroyed. `TWIN_FLAME_HOOKS`
+stays exactly three, pinned.
+
+🔴 Not `soulmate-where` / `soulmate-after-loss` either — those share the word and nothing else:
+both ask about a person who might **exist**, and neither has a man in the picture.
+
+### 🔴🔴 NEVER RANK THE LABELS — a ban that exists nowhere else on the funnel
+
+`cards-twin-or-connection` is the only lander that asks *which of two labels is the better one*.
+Never that a twin flame is rarer, higher, deeper or more fated than a soulmate or a strong
+connection — **and never the reverse.** The entire internet does exactly this, and the ranking is
+what turns her own word *"just"* into a consolation prize. **Refuse the ladder rather than placing
+him on a rung.** She did not build it; she was handed it.
+
+### 🔴 The label ban runs in BOTH directions, and the runner script rides along
+
+Never certify **and never deny** that he is her soulmate or twin flame — a verdict on a real
+person and an **unfalsifiable** one, so she could never test it against anything he does.
+Inherited from `twin-flame` and extended to "soulmate". The term also drags its community's whole
+teaching in with it, so those bans come too: **distance is never proof of the bond**, an absence
+is never a *phase* or a *stage*, and nothing is ever conditional on her healing or raising her
+vibration.
+
+### 🔴🔴 `cards-met-already` — two things it may never do
+
+The headline invites both. **Never name, describe or point toward any particular person from her
+past** — a name conjured here sends her back through years of her own messages hunting for a sign
+that was never in them. And **never tell her she missed him**: that invents a loss she would then
+grieve. 🔴 The opposite is banned too — a promised arrival is a date in disguise. The finding:
+*"without realizing it"* presumes a moment she failed a test, and **a meeting was never an
+examination.**
+
+### Three separate findings
+
+| Hook | Refuses / finds |
+|---|---|
+| `cards-really-soulmate` | the word is **not a property he carries** that anyone could measure him for — there is no test, which is why it can be laid on anybody and argued over forever. ⭐ The *"really"* is the tell: the doubt came first. Names what the label was being asked to do — settle it so she need not weigh what she already knows |
+| `cards-twin-or-connection` | 🆕 **the FIFTH binary-refusing hook**, on new grounds — **both branches describe the same evidence under two words**, so the answer would not change one thing he does or one thing she could check. A naming dispute wearing the clothes of a fact question |
+| `cards-met-already` | hindsight folds in everything learned since and then presents it as though it had been in plain view at the time. She could only know what she knew then. ⭐ Takes issue with the buried assumption that there is **exactly one, issued once**, and that her life is a single-question exam she may already have failed |
+
+⚠️ **Five hooks on the funnel now refuse a binary and their grounds must stay distinct**, or the
+newest has collapsed into an older one: `cards-moved-on` (neither branch knowable) ·
+`cards-imagining-it` (second branch cruel) · `cards-love-or-moved-on` (not opposites) ·
+`cards-forever-or-now` (permanence is not a status) · `cards-twin-or-connection` (same evidence,
+two words). Pinned.
+
+⚠️ `cards-met-already` shares the clause *"without realizing it"* verbatim with the live
+`cards-given-up` (*"Have I given up on love without realizing it?"*, `searching`). Deliberate,
+operator's wording, and the incumbent is untouched — the same shape as `cards-love-or-moved-on`
+sharing its closing clause with `cards-moved-on`.
+
+Guarded by `tests/tarot-soulmate-label-copy.test.ts` (29 tests, clause-level negation-aware),
+which also pins the two hand-maintained server rosters, the admin angle label, the slug-substring
+check, and — new for this family — **the Version B path itself**: that the chat URL the `/b`
+bridge builds resolves to version `b` on the right deck, and that `openerB` delivers the complete
+read plus name capture for all nine card/hook pairs.
+
+⭐⭐ Its `RAW_BANS` block is the deliberate exception to negation-awareness: a handful of strings
+may never appear in **any** form, including inside a refusal, because a reader skimming does not
+reliably carry the negation. Two of my own drafted lines tripped it and were **reworded — never
+weaken the ban** (the rule established when the twin-flame guard caught copy quoting her own
+question back).
+
 ## Concepts
 
 | # | Deck id | Facing | Cards (A/B/C) | Options | Status | Notes |
