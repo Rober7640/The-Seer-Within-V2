@@ -94,6 +94,7 @@ import {
   bumpCopy,
   paymentIntentDescription,
   isBumpBucket,
+  isRecoverySrc,
   pairedBumpBucket,
   type BumpBucket,
 } from "@shared/orderBump";
@@ -623,7 +624,7 @@ export async function registerRoutes(
           // against fixed enums; tarotDeck defaults to 'decode-him'. Keep these
           // rosters in sync with client/src/content/tarotReads.ts (fb-tarot-add-card).
           const validDecks = ["decode-him", "arcana-mfh", "arcana-eef", "return-mhf"];
-          const validHooks = ["cards-honest", "cards-return", "cards-feels", "cards-cheating", "cards-who-he-is", "cards-real-person", "cards-misled", "cards-will-commit", "cards-wont-commit", "cards-ready-commit", "cards-lied-to", "cards-truth", "cards-deceived", "cards-come-back", "cards-ever-back", "cards-moved-on", "cards-cant-stop", "cards-on-my-mind", "cards-who-hurt-me", "cards-pulling-away", "cards-gone-cold", "cards-losing-interest", "cards-back-together", "cards-still-a-chance", "cards-really-over", "cards-new-soulmate", "cards-soulmate-out-there", "cards-ready-to-love", "cards-where-soulmate", "cards-soulmate-closer", "cards-not-found-yet", "cards-alone-forever", "cards-meant-alone", "cards-someone-for-me", "cards-someone-else", "cards-talking-someone", "cards-faithful", "cards-loyal", "cards-stop-hurting", "cards-stop-missing", "cards-still-miss-him", "cards-left-without-word", "cards-ghosted", "cards-not-enough", "cards-stop-searching", "cards-end-up-alone", "cards-given-up", "cards-twin-ready", "cards-twin-feels", "cards-twin-back", "cards-hiding-something", "cards-feels-off", "cards-really-love", "cards-feel-about-me", "cards-imagining-it", "cards-still-think", "cards-still-love", "cards-love-or-moved-on", "cards-forever-or-now", "cards-his-children", "cards-her-shadow", "cards-live-apart", "cards-too-long", "cards-love-again", "cards-soulmate"];
+          const validHooks = ["cards-honest", "cards-return", "cards-feels", "cards-cheating", "cards-who-he-is", "cards-real-person", "cards-misled", "cards-will-commit", "cards-wont-commit", "cards-ready-commit", "cards-lied-to", "cards-truth", "cards-deceived", "cards-come-back", "cards-ever-back", "cards-moved-on", "cards-cant-stop", "cards-on-my-mind", "cards-who-hurt-me", "cards-pulling-away", "cards-gone-cold", "cards-losing-interest", "cards-back-together", "cards-still-a-chance", "cards-really-over", "cards-new-soulmate", "cards-soulmate-out-there", "cards-ready-to-love", "cards-where-soulmate", "cards-soulmate-closer", "cards-not-found-yet", "cards-alone-forever", "cards-meant-alone", "cards-someone-for-me", "cards-someone-else", "cards-talking-someone", "cards-faithful", "cards-loyal", "cards-stop-hurting", "cards-stop-missing", "cards-still-miss-him", "cards-left-without-word", "cards-ghosted", "cards-not-enough", "cards-stop-searching", "cards-end-up-alone", "cards-given-up", "cards-twin-ready", "cards-twin-feels", "cards-twin-back", "cards-hiding-something", "cards-feels-off", "cards-really-love", "cards-feel-about-me", "cards-imagining-it", "cards-still-think", "cards-still-love", "cards-love-or-moved-on", "cards-love-again", "cards-soulmate"];
           const validCards = ["a", "b", "c"];
           const deck = tarotDeck ?? "decode-him";
           if (!validDecks.includes(deck) || !validHooks.includes(tarotHook ?? "") || !validCards.includes(tarotCard ?? "")) {
@@ -741,6 +742,17 @@ export async function registerRoutes(
       // V2 account creation on the purchase webhook. Falsy for every normal
       // funnel, so this whole feature is a no-op outside the no-optin arm.
       const noemail = req.body?.noemail === true;
+      // Emailed-recovery order: she arrived on `<funnel>/chat?resume=<id>&src=recovery`
+      // and bought in that same visit. Drives an internal Stripe description marker
+      // plus `metadata.src`, which is what makes the abandoned-reading sequence
+      // reportable at all — the link already carried `&src=recovery`, but until now
+      // nothing read it, so recovered revenue could only be found by matching AWeber
+      // click reports to Stripe by hand.
+      //
+      // CLOSED CHECK, never a pass-through. This is an untrusted client string that
+      // ends up in Stripe metadata and therefore in Mike's n8n flow — the same reason
+      // `bumpBucket` below is validated against its enum rather than forwarded.
+      const isRecovery = isRecoverySrc(req.body?.src);
       const funnel: FunnelId =
         parseFunnel(req.body?.funnel);
       // Google Ads click id (from the _gcl_aw cookie). Stored in Stripe
@@ -917,18 +929,24 @@ export async function registerRoutes(
         mode: "payment",
         payment_intent_data: {
           // Internal-only markers: appended to the PaymentIntent description so a
-          // no-optin order — and now an ORDER-BUMP order — is identifiable in the
-          // Stripe Dashboard "Description" column at a glance. Without the bump
-          // marker a two-product order is indistinguishable from a normal one in
-          // the payments list except by its amount.
+          // no-optin order, an ORDER-BUMP order, and now an order RECOVERED through
+          // the emailed resume link are each identifiable in the Stripe Dashboard
+          // "Description" column at a glance. Without the bump marker a two-product
+          // order is indistinguishable from a normal one in the payments list except
+          // by its amount; without the recovery marker the abandoned-reading
+          // sequence has no visible revenue of its own at all.
           //
           // NOT the customer-facing line item (`product_data.name` stays clean),
-          // so neither marker ever shows on the receipt or the checkout page.
+          // so no marker ever shows on the receipt or the checkout page. This is
+          // also why the marker stops here and is NOT repeated on the upsell
+          // charges: those are off-session PaymentIntents, whose description DOES
+          // reach the customer's receipt. Upsells inherit `metadata.src` instead.
           //
-          // Both markers are EMPTY on a normal order, so this string is
-          // byte-identical to what it has always been for non-bump traffic.
+          // All three markers are EMPTY on a normal order, so this string is
+          // byte-identical to what it has always been for ordinary traffic.
           description: paymentIntentDescription(productName, {
             bump: bumpApplied,
+            recovery: isRecovery,
             noemail,
           }),
           setup_future_usage: "off_session",
@@ -942,6 +960,7 @@ export async function registerRoutes(
             ...(funnel && { funnel }),
             ...(gclid && { gclid }),
             ...(noemail && { noemail: "1" }),
+            ...(isRecovery && { src: "recovery" }),
             ...bumpMetadata,
           },
         },
@@ -966,6 +985,13 @@ export async function registerRoutes(
           // paths read this off the session to tag AWeber and create the V2
           // account. Set once here so the whole funnel inherits it.
           ...(noemail && { noemail: "1" }),
+          // 🔴 THE LOAD-BEARING COPY for recovery attribution too. Both upsell
+          // paths inherit `src` by reading it back off THIS session, so a missing
+          // key here silently un-attributes every upsell a recovered buyer takes.
+          //
+          // ABSENT (not empty-string) on a normal order, so "does src exist" stays
+          // a clean test — same contract as the bump keys below.
+          ...(isRecovery && { src: "recovery" }),
           // 🔴 THE LOAD-BEARING COPY. Mike's n8n filter reads
           // `body.data.object.metadata.*`, where data.object is the checkout
           // SESSION — so the bump keys must be in THIS block or he never sees
@@ -2062,6 +2088,15 @@ export async function registerRoutes(
           // no description suffix on off-session PIs so it can never reach a
           // customer receipt).
           ...(session.metadata?.noemail === "1" && { noemail: "1" }),
+          // Same inheritance for the emailed-recovery marker, so Joel can see the
+          // FULL value of a recovered buyer — front-end offer plus everything she
+          // takes afterwards — rather than just the first $35.
+          //
+          // METADATA ONLY, deliberately no description marker: this is an
+          // off-session PaymentIntent, whose `description` DOES surface on the
+          // customer's Stripe receipt. The main checkout can carry the marker
+          // because there the customer reads `product_data.name` instead.
+          ...(session.metadata?.src === "recovery" && { src: "recovery" }),
         },
       });
 
@@ -2193,12 +2228,19 @@ export async function registerRoutes(
         // Inherit the no-optin flag from the original purchase so a fallback
         // upsell charge is marked internally + AWeber-tagged like the 1-click
         // path. Non-fatal lookup — defaults to off for normal funnels.
+        //
+        // `src` rides the SAME retrieve rather than adding a second Stripe call,
+        // and fails the same way: on a lookup error both default to off, so a
+        // recovered buyer's upsell books as ordinary revenue. That under-counts
+        // the campaign, which is the right direction to be wrong in.
         let inheritNoemail = false;
+        let inheritSrc = false;
         try {
           const orig = await stripe.checkout.sessions.retrieve(originalSessionId);
           inheritNoemail = orig.metadata?.noemail === "1";
+          inheritSrc = orig.metadata?.src === "recovery";
         } catch (e) {
-          logger.warn("Upsell fallback: noemail lookup failed (non-fatal)", e);
+          logger.warn("Upsell fallback: noemail/src lookup failed (non-fatal)", e);
         }
 
         const session = await stripe.checkout.sessions.create({
@@ -2227,6 +2269,7 @@ export async function registerRoutes(
               email,
               ...(funnel && { funnel }),
               ...(inheritNoemail && { noemail: "1" }),
+              ...(inheritSrc && { src: "recovery" }),
             },
           },
           shipping_address_collection: {
@@ -2244,6 +2287,7 @@ export async function registerRoutes(
             ...(funnel && { funnel }),
             ...(trackdeskClickId && { trackdeskClickId }),
             ...(inheritNoemail && { noemail: "1" }),
+            ...(inheritSrc && { src: "recovery" }),
           },
         });
 
@@ -2648,6 +2692,10 @@ export async function registerRoutes(
           ...(funnel && { funnel }),
           // Inherit the no-optin flag from the main session (internal only).
           ...(session.metadata?.noemail === "1" && { noemail: "1" }),
+          // Emailed-recovery marker, inherited the same way. Metadata only — see
+          // the protection_ritual note: an off-session PI's description reaches
+          // the customer's receipt, so no marker goes there.
+          ...(session.metadata?.src === "recovery" && { src: "recovery" }),
         },
       });
 
@@ -2887,13 +2935,17 @@ export async function registerRoutes(
         const productName = `${baseProductName}${fbSuffix(funnel)}`;
 
         // Inherit the no-optin flag from the original purchase so a fallback
-        // upsell-2 charge is marked internally like the 1-click path.
+        // upsell-2 charge is marked internally like the 1-click path. `src` rides
+        // the same retrieve, and defaults to off on a lookup error — under-counting
+        // the recovery campaign rather than over-claiming for it.
         let inheritNoemail = false;
+        let inheritSrc = false;
         try {
           const orig = await stripe.checkout.sessions.retrieve(originalSessionId);
           inheritNoemail = orig.metadata?.noemail === "1";
+          inheritSrc = orig.metadata?.src === "recovery";
         } catch (e) {
-          logger.warn("Upsell2 fallback: noemail lookup failed (non-fatal)", e);
+          logger.warn("Upsell2 fallback: noemail/src lookup failed (non-fatal)", e);
         }
 
         const session = await stripe.checkout.sessions.create({
@@ -2924,6 +2976,7 @@ export async function registerRoutes(
               email,
               ...(funnel && { funnel }),
               ...(inheritNoemail && { noemail: "1" }),
+              ...(inheritSrc && { src: "recovery" }),
             },
           },
           shipping_address_collection: {
@@ -2942,6 +2995,7 @@ export async function registerRoutes(
             ...(funnel && { funnel }),
             ...(trackdeskClickId && { trackdeskClickId }),
             ...(inheritNoemail && { noemail: "1" }),
+            ...(inheritSrc && { src: "recovery" }),
           },
         });
 

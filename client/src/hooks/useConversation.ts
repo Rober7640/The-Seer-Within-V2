@@ -138,6 +138,25 @@ export function useConversation() {
   )
   const [resumeSettled, setResumeSettled] = useState(false)
 
+  // `&src=recovery` off the same emailed link — forwarded to /api/checkout so the
+  // purchase carries a `src` marker into Stripe (description column + metadata) and
+  // the recovery sequence finally has a revenue number of its own.
+  //
+  // Captured at mount rather than read at checkout time. The chat never navigates
+  // (it is one SPA route, and nothing rewrites the URL), so reading it later would
+  // work today — but a ref makes that independent of anything that adds a
+  // replaceState later, and mirrors how `resume` itself is captured above.
+  //
+  // Not persisted deliberately: if she clicks the email link, leaves, and returns
+  // days later by typing the address in, that sale books as ordinary traffic. The
+  // marker means "arrived from the recovery email THIS visit", which is the claim
+  // the number should be making.
+  const srcParam = useRef<string | null>(
+    typeof window !== 'undefined'
+      ? new URLSearchParams(window.location.search).get('src')
+      : null,
+  )
+
   // Initialize from saved session if available. A resume link wins over
   // localStorage — the server copy is the authoritative one.
   const [chat, setChat] = useState<ChatState>(() => {
@@ -1972,6 +1991,9 @@ export function useConversation() {
           // and V2 account creation on the webhook). Absent/false for every
           // normal funnel → no behavior change.
           noemail: skipEmail(),
+          // Emailed-recovery marker (`&src=recovery`). Sent raw; the server accepts
+          // only the exact string 'recovery' before it reaches Stripe metadata.
+          src: srcParam.current,
           // Browser PostHog id → Stripe metadata so the server-side
           // purchase_completed event ties back to this visitor (connected funnel).
           posthogDistinctId: getDistinctId(),
