@@ -1797,3 +1797,19 @@ has to be cleared first. These are the tests to write WHEN it ships; none of the
 - [ ] Live weight edits are accepted on a default-frozen running test (no 409) and rejected on one that opted out
 - [ ] Concluded (`done` + winner) and out-of-scope subjects return before the freeze lookup — no extra DB read on those paths
 - [ ] `persona_prompt_evelyn_2026`: no user with an `A` exposure row starts receiving the base/stub prompt (the regression this was held back for)
+
+### /fb-tarot/c → /fb-tarot/b redirect (built 2026-08-17)
+Live FB ads point at `/c` and cannot be re-pointed without losing their engagement, while every new tarot
+lander ships on `/b`. The redirect closes that gap server-side. Behaviour-neutral for what the visitor sees:
+on tarot the route is only a fallback, since `resolveTarotVersion` picks the opener.
+- [x] Each of the four in-test ad URLs lands on `/fb-tarot/b` with its `hook` intact *(fb-tarot-c-redirect.spec.ts)*
+- [x] `fbclid` and the `utm_*` params survive the hop — `fbclid` becomes the `_fbc` cookie CAPI matches on *(fb-tarot-c-redirect.spec.ts)*
+- [x] Exactly ONE server-side hop; the document response is 200 and the chain has no second redirect *(fb-tarot-c-redirect.spec.ts)*
+- [x] A `/c` landing fires exactly as many PageViews as a direct `/b` landing (a client-side bounce would double them) *(fb-tarot-c-redirect.spec.ts)*
+- [x] The bridge still renders after the hop and the card tap hands off to `/fb-tarot/chat` carrying `v=b` *(fb-tarot-c-redirect.spec.ts)*
+- [x] `/fb-tarot/b`, bare `/fb-tarot` (Version A) and `/fb-palm/c` are NOT redirected *(fb-tarot-c-redirect.spec.ts)*
+- [x] Query string forwarded byte-for-byte: pre-encoded values not re-encoded, repeated params not collapsed *(tarotRedirect.test.ts)*
+- [x] Trailing slash and wrong case still redirect; a deeper path under `/c` does not *(tarotRedirect.http.test.ts)*
+- [x] The redirect beats an SPA catch-all mounted after it (the registration-order guarantee) *(tarotRedirect.http.test.ts)*
+- [ ] ⏰ Post-conclusion: with B declared winner, a `/c` ad URL serves the B opener and an out-of-scope tarot `/c` still serves C — needs the winner declared, so it is a staging/prod smoke rather than a local test
+- [ ] Stape/sGTM: no CAPI trigger, report or custom audience is keyed on `event_source_url` containing `/fb-tarot/c` — external to this repo, must be checked by hand
