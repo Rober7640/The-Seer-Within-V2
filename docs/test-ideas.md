@@ -1741,3 +1741,59 @@ instead, and the auto-scroll effect was dead code — from ~the 8th message ever
 - [ ] Clicking the confirm button after all 3 are checked calls `handlePurchase("main")` and routes through the exact same `/api/checkout` call (same `type=main`, same funnel tag, same price) as the control variant's `PurchaseCTA` — the gate changes only the UI in front of the purchase, never the checkout itself
 - [ ] `35_palm_gate` carries the same $35 main / $25 downsell economics as `35_palm_u47` — price shown and charged is identical between the two arms
 - [ ] Commitment checkbox copy shows "I understand belief is required for this to work", "I'm ready to receive this tonight", "I'll read it with an open heart" (no secrecy or irreversibility framing that would contradict the card's own 30-Day Guarantee footer)
+
+### V1 recovery link — `resume_url` AWeber custom field at lead capture (2026-08-13)
+Written on every V1 funnel's lead write so an AWeber recovery sequence can link a lead back to her own
+unfinished reading. The path MUST carry her funnel's prefix: `currentFunnel()` derives the funnel from
+`window.location.pathname` alone, so resuming a palm/tarot reading on the bare `/chat` re-brands her as base
+V1 — losing the Stripe product suffix, the `-palm`/`-tarot` paid tag and the PostHog funnel, and crediting
+recovered revenue to the wrong funnel. Not retrofittable: a link is only written at opt-in.
+- [x] `custom_fields` is ABSENT (not `{}`) when there are no fields to set — `{}` + `update_existing` makes AWeber clear every custom field *(aweber.customFields.test.ts)*
+- [x] `resume_url` is sent when supplied *(aweber.customFields.test.ts)*
+- [x] A 400 rejecting the custom field retries once WITHOUT it, so the lead still lands on the list *(aweber.customFields.test.ts)*
+- [x] A 400 of "already subscribed" is still treated as success and does NOT retry *(aweber.customFields.test.ts)*
+- [ ] A lead on each of `/`, `/fb`, `/fb2`, `/gdn`, `/fb-palm`, `/fb-tarot` produces a `resume_url` carrying THAT funnel's chat path (`/fb-tarot/chat?resume=…`, not `/chat?resume=…`)
+- [ ] Re-opting in with the same email rewrites the SAME uuid — `saveConversation` updates the newest row per email rather than inserting, so no second link is minted
+- [ ] A later AWeber write on the same subscriber (e.g. a tag-only call) does not wipe `resume_url`
+- [ ] Opening the link restores her reading at her stage with her LOCKED price (`priceVariantId`/`priceDollars` from `/api/conversation/resume/:id`)
+- [ ] Opening a `/fb-tarot/chat?resume=…` link does NOT re-run the card reveal — the greeting effect early-returns on `resumeId && !resumeSettled`, so her saved transcript replays instead
+- [ ] `resume_url` is skipped (and warned) rather than written as a `localhost` link when `BASE_URL` is unset — local `.env` carries LIVE AWeber credentials, so that write would reach the production list
+- [ ] The link 410s after `RESUME_LINK_EXPIRY_DAYS` (30) — the AWeber sequence must send inside that window
+- [ ] The URL never contains her email, price, or name
+
+### V1 recovery link — UI arms carried onto a resumed session + already-bought handling (2026-08-14)
+Found by Mike's dev-server test: opening a `?resume=` link showed the plain purchase CTA with no commitment
+gate and no order bump, because `/api/conversation/resume/:id` returned only her name/bucket/price — the
+three experiment fields (`commitmentGate`, `orderBump`, `bumpCopy`) are set ONLY from the `/api/lead`
+response at email capture, which a resumed session never re-runs. She therefore sat in the arm's denominator
+while being structurally unable to see the offer. Second half: a reader who had already PAID was dropped
+back at the start of the funnel and could buy the same reading twice.
+🔑 The fix is SERVER-side. The client already spreads `data.userData` wholesale, so a browser spec that stubs
+the resume endpoint proves only that the client renders what it is given — it passes with or without the fix
+(verified by reverting: 6 of 8 still green). The endpoint returning `false` and the endpoint OMITTING the key
+look identical from the browser. That is why the load-bearing assertion is `'commitmentGate' in body.userData`
+in the HTTP-level test, not anything in the spec.
+- [x] The endpoint returns `commitmentGate` / `orderBump` / `bumpCopy` **as keys** (absent ⇒ the bug) *(resumeEndpoint.test.ts — fails on reverted code with "commitmentGate missing from resume payload")*
+- [x] The endpoint hands back her LOCKED price, never a fresh draw *(resumeEndpoint.test.ts)*
+- [x] A resumed session in the gate arm renders `CommitmentGateCard`, not the plain `PurchaseCTA` *(v1-resume-arms.spec.ts)*
+- [x] A resumed session in the bump arm plays the bump turn on the buy CTA (`BumpOfferCard`) instead of jumping straight to Stripe, and posts `bumpOffered` on BOTH accept and decline *(v1-resume-arms.spec.ts)*
+- [x] The resume request carries `?funnel=` from `currentFunnel()`; without it a funnel-scoped test drops her to control *(v1-resume-arms.spec.ts)*
+- [x] A PAID conversation's link redirects to that funnel's `/success` (`/fb-palm/success`, not `/success`) and never restarts the funnel *(v1-resume-arms.spec.ts)*
+- [x] An EXPIRED link (>30d) still falls through to a fresh greeting — both are 410, so the client must branch on `reason`, not the message text *(v1-resume-arms.spec.ts)*
+- [ ] The bump copy arm rendered on resume is the SAME one `/api/checkout` bills — card copy and Stripe line description agree
+- [ ] Her arm on resume equals the variant on her ORIGINAL exposure row even after the experiment's weights are edited — ⏰ needs `scope.freezeAssignment`, held back (see `docs/experiment-freeze-by-default.md`). Not live today: recovery links only exist for leads captured since 2026-08-13, so every resumable exposure is newer than any running test's last weight change
+- [ ] Resuming does NOT write a second `experiment_exposures` row (`onConflictDoNothing` on key+subject)
+- [ ] Her main/downsell price on resume is unchanged after a NEW price test starts and her old variant is no longer servable — the resume path must never call `assignVariantIfMissing`, which re-draws and overwrites the stored price
+- [ ] `/success` reached this way fires no Purchase pixel/CAPI event (no `session_id` ⇒ the tracking block is skipped)
+
+### Experiment framework — assignment freeze on by default (designed 2026-08-14, NOT shipped)
+⏰ Built alongside the recovery-link fix and deliberately split out of it — see
+`docs/experiment-freeze-by-default.md` for the design and the `persona_prompt_evelyn_2026` prerequisite that
+has to be cleared first. These are the tests to write WHEN it ships; none of them apply to today's code.
+- [x] Existing assign() gating suite still passed with the change applied — sticky, ~50/50, scope-aware, OFF⇒control, pause kill-switch, winner rollout *(experimentTally.test.ts, 87/87)*
+- [ ] A subject WITH an exposure row keeps that variant after the weights are changed; a subject WITHOUT one is bucketed from the new weights
+- [ ] A test with `freezeAssignment: false` still re-derives from weights (the opt-out survives)
+- [ ] The admin PATCH refuses switching `freezeAssignment` to `false` on a started test that never set the field (default-on must be protected, not just an explicit `true`)
+- [ ] Live weight edits are accepted on a default-frozen running test (no 409) and rejected on one that opted out
+- [ ] Concluded (`done` + winner) and out-of-scope subjects return before the freeze lookup — no extra DB read on those paths
+- [ ] `persona_prompt_evelyn_2026`: no user with an `A` exposure row starts receiving the base/stub prompt (the regression this was held back for)

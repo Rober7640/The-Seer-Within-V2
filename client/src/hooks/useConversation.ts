@@ -27,7 +27,7 @@ import {
   getPriceQuestionResponse
 } from '@/lib/intent'
 import { trackLead, trackInitiateCheckout, getTrackdeskClickId } from '@/lib/facebook'
-import { currentFunnel, getPostHogFunnel, skipEmail } from '@/lib/funnel'
+import { currentFunnel, funnelPath, getPostHogFunnel, skipEmail } from '@/lib/funnel'
 import { track as trackPH, identifyUser as identifyPH, getDistinctId } from '@/lib/posthog'
 import {
   tarotEventProps,
@@ -258,8 +258,30 @@ export function useConversation() {
 
     async function loadFromServer() {
       try {
-        const res = await fetch(`/api/conversation/resume/${id}`)
-        if (!res.ok) return // expired / already bought / bad link → normal greeting
+        // The funnel comes from OUR path — the server can't derive it (there is no
+        // funnel column on the conversation) and both V1 UI tests are funnel-scoped,
+        // so without this a resumed reader falls out of scope and loses her arm.
+        const funnel = currentFunnel()
+        const res = await fetch(
+          `/api/conversation/resume/${id}${funnel ? `?funnel=${encodeURIComponent(funnel)}` : ''}`,
+        )
+
+        // She already paid. Restarting the funnel would pitch a customer the exact
+        // reading she has already bought and let her pay for it twice — so send her
+        // to her own funnel's thank-you page instead, which tells her the reading is
+        // on its way and carries the Luna offer. `replace` so Back doesn't bounce her
+        // straight into the same dead link.
+        //
+        // Keyed on `reason`, not the message text, and only this one value: the other
+        // 410 (an expired link) SHOULD fall through to a fresh reading.
+        if (res.status === 410) {
+          const body = await res.json().catch(() => null)
+          if (body?.reason === 'purchased') {
+            window.location.replace(funnelPath('/success'))
+            return
+          }
+        }
+        if (!res.ok) return // expired / bad link → normal greeting
 
         const data = await res.json()
         if (cancelled || !data?.conversationState) return
@@ -273,6 +295,17 @@ export function useConversation() {
           inputEnabled: true,
           inputType: 'text',
         }
+
+        // The two UI arms, validated exactly as they are at email capture rather
+        // than trusted — `bumpCopy` is rendered into the offer card and /api/checkout
+        // resolves the same arm independently for the Stripe line, so a junk value
+        // must fall back to control instead of producing a blank card. Only ever set
+        // to true; absent ⇒ the plain CTA straight to Stripe.
+        restored.userData.commitmentGate = data.userData?.commitmentGate === true
+        restored.userData.orderBump = data.userData?.orderBump === true
+        restored.userData.bumpCopy = isBumpCopyVariant(data.userData?.bumpCopy)
+          ? data.userData.bumpCopy
+          : 'control'
 
         // Hand it to the welcome-back sequence, which greets her by name and
         // re-opens the input wherever she stopped.
