@@ -27,7 +27,7 @@ import {
   getPriceQuestionResponse
 } from '@/lib/intent'
 import { trackLead, trackInitiateCheckout, getTrackdeskClickId } from '@/lib/facebook'
-import { currentFunnel, funnelPath, getPostHogFunnel, skipEmail } from '@/lib/funnel'
+import { currentFunnel, funnelPath, getPostHogFunnel, linkParams, skipEmail } from '@/lib/funnel'
 import { track as trackPH, identifyUser as identifyPH, getDistinctId } from '@/lib/posthog'
 import {
   tarotEventProps,
@@ -131,11 +131,10 @@ export function useConversation() {
   // the server, so we can rebuild it on a device that never held the localStorage
   // session (or held one that has since expired). Until the fetch settles we hold
   // the greeting back, otherwise she'd be asked her name again mid-restore.
-  const resumeId = useRef<string | null>(
-    typeof window !== 'undefined'
-      ? new URLSearchParams(window.location.search).get('resume')
-      : null,
-  )
+  //
+  // Read through linkParams, NOT URLSearchParams — an emailed link can arrive with
+  // its `&` still written as the entity `&amp;`. See the note on linkParams.
+  const resumeId = useRef<string | null>(linkParams().get('resume'))
   const [resumeSettled, setResumeSettled] = useState(false)
 
   // `&src=recovery` off the same emailed link — forwarded to /api/checkout so the
@@ -151,11 +150,13 @@ export function useConversation() {
   // days later by typing the address in, that sale books as ordinary traffic. The
   // marker means "arrived from the recovery email THIS visit", which is the claim
   // the number should be making.
-  const srcParam = useRef<string | null>(
-    typeof window !== 'undefined'
-      ? new URLSearchParams(window.location.search).get('src')
-      : null,
-  )
+  //
+  // 🔴 linkParams, not URLSearchParams. `src` sits AFTER `resume` in the emailed
+  // URL, which makes it the first casualty of an un-decoded `&amp;` — the query
+  // then carries a param called `amp;src` and this reads null while the reading
+  // still resumes normally. That combination cost a live test run on 2026-08-17
+  // and is invisible without inspecting the raw query.
+  const srcParam = useRef<string | null>(linkParams().get('src'))
 
   // Initialize from saved session if available. A resume link wins over
   // localStorage — the server copy is the authoritative one.
