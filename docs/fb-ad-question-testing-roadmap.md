@@ -10,6 +10,19 @@ tension-framed), built directly from reading ~100 real buyer `concern` quotes pe
 sub-group — not led by statistical n-gram mining (tried once, corrected; see memory
 `feedback-voc-first-headline-method`).
 
+> **This doc is the MINING. The live tests are in [`docs/fb-ad-test-queue.md`](./fb-ad-test-queue.md).**
+>
+> | | This doc | `fb-ad-test-queue.md` |
+> |---|---|---|
+> | Answers | *What could we ask her, and why do we think so?* | *What are we running right now, and what settles it?* |
+> | Holds | VOC, sub-groups, confidence tags, the candidate pool | Arms, budgets, destinations, stop rules, decision log |
+> | Changes when | New mining runs, new VOC | A test launches, resolves, or is killed |
+>
+> **A headline is born here and promoted there when it gets funded.** Its outcome is
+> logged in the queue's decision log, then written back to memory as the new incumbent —
+> never pasted back into this doc as a results table. If you are about to add a budget, a
+> stop rule or an ad-set name to *this* file, it belongs in the queue instead.
+
 **Scope note:** this doc is primarily about WHICH QUESTIONS to test and in what
 sequence — delivery mechanism (plain ad→chat, palm-sign quiz, card pull, or anything
 else) is generally worked out separately. **Exception, starting with sub-group 7

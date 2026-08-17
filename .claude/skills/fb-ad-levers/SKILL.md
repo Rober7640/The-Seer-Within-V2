@@ -111,7 +111,19 @@ the only major spiritual word below base. Two sources agree it buys volume, not 
 cheapest CPL in the account ($3.88) and the weakest lead→purchase (8.2–10%, against
 13.8–19.2% for present-man questions).
 
+**But it is not there by accident — it was chosen as a SPIRITUALITY keyword.** The word is
+an audience-recruitment lever: it tells Meta which pool to buy from and reliably brings the
+spiritually-minded woman this offer needs. The cheap-and-thin numbers above are the price of
+that, not a mistake to correct.
+
 **So keep it for reach and stack a mechanism on top.** Theme constant, keyword the variable.
+
+🔴 **Which means every arm in the keyword test is also a spiritual word.** The contrast is
+between an **identity/outcome** word (*soulmate* — a person who will arrive) and a
+**practice** word (*blocked*, *energy*, *healing* — a procedure the reading performs). It is
+not spiritual vs secular, and the probe is the only arm that leaves the spiritual register
+at all — which is exactly why a probe win must be read as a diagnostic, not scaled, until
+you have checked what audience it brought.
 
 ## Worked example — soulmate + mechanism, 12 headlines
 
