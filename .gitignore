@@ -78,3 +78,8 @@ logs.*.json
 # keyed by user id; the full-table dumps also carry persona prompts. Never commit.
 DB_Backup/
 server-sandbox.log
+
+# Local n8n study folder — workflow JSON exports live here and are NEVER pushed
+# (Joel's own working copies; also carry webhook URLs / node credentials refs).
+# Any n8n workflow JSON we build goes in here, not anywhere else in the repo.
+n8n-workflows/
