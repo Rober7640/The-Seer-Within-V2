@@ -85,6 +85,7 @@ import {
   V1_TAROT_VERSION_EXPERIMENT_KEY,
   type TarotVersion,
 } from "./lib/experiments";
+import { TAROT_C_PATH, tarotBTarget } from "./lib/tarotRedirect";
 import { ensureVisitorId, readVisitorId } from "./lib/visitorCookie";
 import {
   V1_BUMP_CENTS,
@@ -400,6 +401,15 @@ export async function registerRoutes(
   httpServer: Server,
   app: Express,
 ): Promise<Server> {
+  // /fb-tarot/c → /fb-tarot/b. Registered FIRST so it is reached before the SPA
+  // catch-all (serveStatic / setupVite, both mounted after registerRoutes in
+  // index.ts) ever sees the request. The full rationale — why 302, why the query
+  // string is forwarded verbatim, and why fb-palm is deliberately excluded — is
+  // in server/lib/tarotRedirect.ts.
+  app.get(TAROT_C_PATH, (req: Request, res: Response) =>
+    res.redirect(302, tarotBTarget(req.originalUrl)),
+  );
+
   // Health check endpoint - visit this URL to verify production server is running
   app.get("/api/health-check", async (req: Request, res: Response) => {
     logger.info("Health check called");
