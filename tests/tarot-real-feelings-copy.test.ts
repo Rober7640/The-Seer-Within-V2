@@ -108,18 +108,37 @@ describe('real-feelings hooks are wired end to end', () => {
     expect(REAL_FEELINGS_HOOKS).not.toContain(INCUMBENT as never);
   });
 
-  // ⭐ THE CONFOUND, pinned as documentation rather than as a defect. If the incumbent's copy
-  // is ever brought up to current standards this test fails, which is the moment to revisit
-  // whether the pronoun comparison has become clean — and to check the twin-flame control.
-  it('documents that the incumbent still carries pre-guardrail interior-narration copy', () => {
+  // ⭐ THE CONFOUND — RESOLVED 2026-08-19, and this test now pins the resolution.
+  //
+  // It used to assert the OPPOSITE: that the incumbent still carried pre-guardrail copy which
+  // narrated his interior ("feelings that are real", "the warmth you've felt from him is
+  // intended"), while both challengers were written under the current ban. The comparison was
+  // therefore testing old-standard copy against new-standard copy, not the pronoun.
+  //
+  // The readability migration rewrote cards-feels, this test fired exactly as designed, and the
+  // rewrite was corrected in the same pass — the first draft had swapped one breach for another
+  // ("He does feel it, dear"), which is why the check below tests the PROPERTY rather than the
+  // old wording. Plain English never required the breach: "You haven't been reading coldness,
+  // dear. You've been reading a hold." says it at grade 5, about HER reading.
+  //
+  // 🔴 WHAT THIS MEANS FOR THE TWO COMPARISONS. Both are now clean on copy standard — and both
+  // have a BROKEN BASELINE. Anything collected before 2026-08-19 was measured against the old
+  // incumbent. Do not pool across that date; restart the comparison from the deploy.
+  it('the incumbent no longer states his interior as fact — the confound is gone', () => {
     const inc = DECKS[DECK].reads[INCUMBENT];
     expect(inc, 'incumbent must exist on this deck for the pairing to be real').toBeTruthy();
-    const joined = CARDS.map((c) => inc![c][2]).join(' ');
-    // The incumbent asserts his interior. New copy may not. THIS IS THE CONFOUND.
-    expect(
-      /what he feels is real|feelings that are real|the warmth you've felt from him is intended/i.test(joined),
-      'incumbent copy changed — re-evaluate the pronoun test AND the twin-flame control',
-    ).toBe(true);
+    // Negation-aware, as in tarot-honesty-copy.test.ts: a REFUSAL ("doesn't mean he's cold") is
+    // the safe form this funnel uses everywhere, so only unnegated clauses are checked.
+    const NEGATOR = /\b(no|not|never|n't|nor|rather than|instead of)\b/i;
+    const ASSERTS_INTERIOR = /\bhe (does feel|feels|cares|loves|wants)\b|\bwhat he feels is\b|\bhis feelings are\b/i;
+    const bad: string[] = [];
+    for (const c of CARDS) {
+      for (const clause of inc![c][2].split(/[—;:.\n]/)) {
+        if (NEGATOR.test(clause)) continue;
+        if (ASSERTS_INTERIOR.test(clause)) bad.push(`${c}: "${clause.trim()}"`);
+      }
+    }
+    expect(bad, `incumbent narrates his interior again:\n${bad.join('\n')}`).toEqual([]);
   });
 
   // ⭐⭐ THE SAFETY PIN. A real, specific man stands in all three, so every no-man frame is

@@ -7,7 +7,7 @@ Two tracks: **A** rewrites the 88 landers already live; **B** builds the 11 new 
 > The tick is derived from the gate, not from anyone remembering to tick it, so this file
 > can never claim a lander is done when the code says otherwise.
 
-`█░░░░░░░░░░░░░░░░░░░`  **6 / 88 landers clean** · 1748 gate problems left
+`███░░░░░░░░░░░░░░░░░`  **12 / 88 landers clean** · 1659 gate problems left
 
 Rules: ≤25 words · ≤2 sentences · grade ≤5 · ≤3 syllables · ≤2 negatives per sentence · echo the ad in bubbles 1–2 · no banned constructions.
 
@@ -204,28 +204,6 @@ Work top-down: families are ordered by how much unreadable copy they hold.
 
 # Track A — the 88 live landers
 
-## decode-him — 4/16 clean · 166 problems
-
-⚠️ **No dedicated guard file** (`tests/tarot-decode-him-copy.test.ts` does not exist) — a seed family, written before the per-family convention. Only the generic guards apply, so this copy is the least protected on the funnel.
-
-- [ ] `cards-honest` `arcana-eef` — "Is he being honest with you?" · **18**
-- [ ] `cards-cheating` — "Is he cheating on you?" · **17**
-- [ ] `cards-cheating` `arcana-mfh` — "Is he cheating on you?" · **15**
-- [ ] `cards-honest` — "Is he being honest with you?" · **15**
-- [ ] `cards-honest` `arcana-mfh` — "Is he being honest with you?" · **14**
-- [ ] `cards-feels` — "How does he really feel about you?" · **14** · 📝 **DRAFTED — awaiting sign-off**
-- [ ] `cards-feels` `arcana-mfh` — "How does he really feel about you?" · **13** · 📝 **DRAFTED — awaiting sign-off**
-- [ ] `cards-cheating` `arcana-eef` — "Is he cheating on you?" · **13**
-- [ ] `cards-honest` `decode-him` — "Is he being honest with you?" · **12**
-      🔴 B2 — decode-him-strip.png is the fb-PALM thumb strip, not tarot art, and there is no revealStrip. These 4 cannot take a picture line until the art is settled or the deck is retired.
-- [ ] `cards-cheating` `decode-him` — "Is he cheating on you?" · **12**
-- [ ] `cards-feels` `arcana-eef` — "How does he really feel about you?" · **12** · 📝 **DRAFTED — awaiting sign-off**
-- [ ] `cards-feels` `decode-him` — "How does he really feel about you?" · **11** · 📝 **DRAFTED — awaiting sign-off**
-- [x] `cards-return` `decode-him` — "Will he come back?" · clean
-- [x] `cards-return` `arcana-mfh` — "Will he come back?" · clean
-- [x] `cards-return` `arcana-eef` — "Will he come back?" · clean
-- [x] `cards-return` — "Will he come back?" · clean
-
 ## his-other-life — 0/5 clean · 120 problems
 
 `tests/tarot-his-other-life-copy.test.ts` — read it BEFORE rewriting; it carries bans, and some copy is pinned verbatim.
@@ -236,16 +214,27 @@ Work top-down: families are ordered by how much unreadable copy they hold.
 - [ ] `cards-his-children` — "Why do his children come before me?" · **22**
 - [ ] `cards-too-long` — "Have I already given him too long?" · **21**
 
-## trust — 0/6 clean · 116 problems
+## decode-him — 8/16 clean · 116 problems
 
-⚠️ **No dedicated guard file** (`tests/tarot-trust-copy.test.ts` does not exist) — a seed family, written before the per-family convention. Only the generic guards apply, so this copy is the least protected on the funnel.
+⚠️ **No dedicated guard file** (`tests/tarot-decode-him-copy.test.ts` does not exist) — a seed family, written before the per-family convention. Only the generic guards apply, so this copy is the least protected on the funnel.
 
-- [ ] `cards-who-he-is` — "Is he really who he says he is?" · **20** · 📝 **DRAFTED — awaiting sign-off**
-- [ ] `cards-real-person` — "Is he the real person, or just a picture?" · **20**
-- [ ] `cards-who-he-is` `arcana-mfh` — "Is he really who he says he is?" · **19** · 📝 **DRAFTED — awaiting sign-off**
-- [ ] `cards-real-person` `arcana-mfh` — "Is he the real person, or just a picture?" · **19**
-- [ ] `cards-misled` `arcana-mfh` — "Am I being misled?" · **19**
-- [ ] `cards-misled` — "Am I being misled?" · **19**
+- [ ] `cards-honest` `arcana-eef` — "Is he being honest with you?" · **18**
+- [ ] `cards-cheating` — "Is he cheating on you?" · **17**
+- [ ] `cards-cheating` `arcana-mfh` — "Is he cheating on you?" · **15**
+- [ ] `cards-honest` — "Is he being honest with you?" · **15**
+- [ ] `cards-honest` `arcana-mfh` — "Is he being honest with you?" · **14**
+- [ ] `cards-cheating` `arcana-eef` — "Is he cheating on you?" · **13**
+- [ ] `cards-honest` `decode-him` — "Is he being honest with you?" · **12**
+      🔴 B2 — decode-him-strip.png is the fb-PALM thumb strip, not tarot art, and there is no revealStrip. These 4 cannot take a picture line until the art is settled or the deck is retired.
+- [ ] `cards-cheating` `decode-him` — "Is he cheating on you?" · **12**
+- [x] `cards-return` `decode-him` — "Will he come back?" · clean
+- [x] `cards-feels` `decode-him` — "How does he really feel about you?" · clean
+- [x] `cards-return` `arcana-mfh` — "Will he come back?" · clean
+- [x] `cards-feels` `arcana-mfh` — "How does he really feel about you?" · clean
+- [x] `cards-return` `arcana-eef` — "Will he come back?" · clean
+- [x] `cards-feels` `arcana-eef` — "How does he really feel about you?" · clean
+- [x] `cards-return` — "Will he come back?" · clean
+- [x] `cards-feels` — "How does he really feel about you?" · clean
 
 ## fidelity — 0/4 clean · 101 problems
 
@@ -291,6 +280,17 @@ Work top-down: families are ordered by how much unreadable copy they hold.
 - [ ] `cards-wont-commit` — "Why won't he commit to me?" · **18**
 - [x] `cards-will-commit` `arcana-mfh` — "Will he ever commit?" · clean
 - [x] `cards-will-commit` — "Will he ever commit?" · clean
+
+## trust — 2/6 clean · 77 problems
+
+⚠️ **No dedicated guard file** (`tests/tarot-trust-copy.test.ts` does not exist) — a seed family, written before the per-family convention. Only the generic guards apply, so this copy is the least protected on the funnel.
+
+- [ ] `cards-real-person` — "Is he the real person, or just a picture?" · **20**
+- [ ] `cards-real-person` `arcana-mfh` — "Is he the real person, or just a picture?" · **19**
+- [ ] `cards-misled` `arcana-mfh` — "Am I being misled?" · **19**
+- [ ] `cards-misled` — "Am I being misled?" · **19**
+- [x] `cards-who-he-is` `arcana-mfh` — "Is he really who he says he is?" · clean
+- [x] `cards-who-he-is` — "Is he really who he says he is?" · clean
 
 ## soulmate-where — 0/3 clean · 77 problems
 
