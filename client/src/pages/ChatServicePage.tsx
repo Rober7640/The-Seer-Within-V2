@@ -3,6 +3,7 @@ import { useSearch, useLocation, useRoute, Link } from "wouter";
 import { useAuth, authFetch } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
 import { calculateTypingDelay, sleep } from "@/lib/typingAnimation";
+import { createTimeoutSignal } from "@/lib/timeoutSignal";
 import { PreReadingWelcome } from "@/components/PreReadingWelcome";
 import { GuideSidebar } from "@/components/GuideSidebar";
 import TarotCardDraw from "@/components/TarotCardDraw";
@@ -144,6 +145,46 @@ function touchStoredLiveSession() {
   } catch {}
 }
 
+// "The Live Thread" (Task 14): what this reader typed into the persona's lander
+// BEFORE they had an account, plus the persona's answer to it. Both are rendered as
+// PRE-SESSION bubbles — no session is created and nothing is billed until the reader
+// types, which is the property the whole design was chosen for. When they do type,
+// POST /session/start replays both into the database (server/lib/liveThreadReplay.ts),
+// so the thread on screen and the thread the model reads stay the same thread.
+interface LiveThreadPreview {
+  reply: string;
+  response: string | null;
+}
+
+/**
+ * Free, read-only lookup. Resolves to null for every persona and every reader with
+ * nothing parked — i.e. for all normal traffic — and on any error, timeout or
+ * malformed body, so a failure here can only ever mean "show today's greeting".
+ *
+ * Timeout via createTimeoutSignal, never AbortSignal.timeout directly: this funnel's
+ * paid traffic includes stale Android WebView, where calling it throws synchronously
+ * before fetch is issued (see client/src/lib/timeoutSignal.ts).
+ */
+async function fetchLiveThread(slug: string): Promise<LiveThreadPreview | null> {
+  const { signal, cleanup } = createTimeoutSignal(10000);
+  try {
+    const res = await authFetch(`/api/chat-service/live-thread/${slug}`, { signal });
+    if (!res.ok) return null;
+    const data = await res.json();
+    const lt = data?.liveThread;
+    if (!lt || typeof lt.reply !== "string" || !lt.reply.trim()) return null;
+    return {
+      reply: lt.reply,
+      response:
+        typeof lt.response === "string" && lt.response.trim() ? lt.response : null,
+    };
+  } catch {
+    return null;
+  } finally {
+    cleanup();
+  }
+}
+
 interface MemoryContext {
   hasPriorMemory: boolean;
   lastTopic?: string;
@@ -264,6 +305,13 @@ export default function ChatServicePage() {
   const lastUserMessageAt = useRef<number | null>(null);
   // Stores a queued question from the instructions screen to auto-send once greeting appears
   const pendingQuestionAfterGreeting = useRef<string | null>(null);
+  // True once the reader has sent anything in the currently-open thread. Read by the
+  // Live Thread append (below), which resolves asynchronously and must not splice the
+  // reader's parked exchange in BELOW a message they typed while it was still in
+  // flight — on screen that would read [greeting][their new message][their old
+  // reply][answer], while the database holds the opposite order. A ref, not state:
+  // the append closes over render-time values and would see a stale `false`.
+  const hasSentInThisThreadRef = useRef(false);
 
   // Refs for volatile values used inside the credit timer (Fix 4: stabilize timer deps)
   const coinBalanceRef = useRef(coinBalance);
@@ -909,10 +957,82 @@ export default function ChatServicePage() {
     if (!appendMode) {
       setMessages([]);
       setPreSessionGreeting(null);
+      // A fresh thread is being opened — nothing has been said in it yet.
+      hasSentInThisThreadRef.current = false;
     }
 
     const addMsg = (msg: ChatMessageData) => {
       setMessages(prev => [...prev, msg]);
+    };
+
+    // Live Thread: fired in PARALLEL with the greeting so it can never delay the first
+    // bubble. Skipped for the teaser path (a deliberate different entry point, which
+    // returns before the greeting call) and for appendMode (nothing is being opened).
+    const liveThreadPromise: Promise<LiveThreadPreview | null> =
+      teaserContent || appendMode ? Promise.resolve(null) : fetchLiveThread(slug);
+
+    // Appended UNDER the greeting, so the thread reads [greeting][their words][answer]
+    // — the same order server/lib/liveThreadReplay.ts writes to the database when the
+    // session eventually starts. Resolves to a no-op for everyone without a parked
+    // reply, which is all normal traffic.
+    //
+    // ⚠ RUN DETACHED, NEVER AWAITED. Awaiting it held fetchGreeting's `finally` open,
+    // and with it `isStarting`, for the whole round trip — while the composer and the
+    // suggested-question bubbles were ALREADY visible (setPreSessionGreeting fires
+    // first). A bubble tapped in that window takes the `if (isStarting)` branch and
+    // parks the question in pendingQuestionAfterGreeting, whose only flush point is an
+    // effect keyed on [preSessionGreeting] that has already fired — so the tap did
+    // nothing, permanently, on EVERY persona. Rare when /greeting is a live model call,
+    // repeatable within its 30-minute cache, where the greeting returns instantly and
+    // this round trip does not. Holding isStarting open also let the deferred `finally`
+    // kill the typing indicator seconds after sendMessage set it.
+    //
+    // Detaching is the fix rather than just moving setIsStarting(false) earlier,
+    // because the append is genuinely not part of opening the thread: fetchGreeting is
+    // "the greeting has arrived and the reader may speak", and this is additive
+    // decoration that lands later. isStale() and hasSentInThisThreadRef already make it
+    // safe to complete after fetchGreeting has returned — that is what they are for.
+    const appendLiveThread = async () => {
+      let lt: LiveThreadPreview | null = null;
+      try {
+        lt = await liveThreadPromise;
+      } catch {
+        lt = null;
+      }
+      // isStale() covers a persona switch; hasSentInThisThreadRef covers the reader
+      // typing while this was in flight. In that second case the session has already
+      // been created and the server has already replayed the pair into it, so
+      // appending here would duplicate them on screen AND in the wrong order.
+      if (!lt || isStale() || hasSentInThisThreadRef.current) return;
+      addMsg({
+        id: `live-thread-reply-${Date.now()}`,
+        role: "user",
+        content: lt.reply,
+        sentAt: new Date().toISOString(),
+      });
+      // No answer (generation failed server-side): the reader still sees their own
+      // words in the thread, and the persona answers them on her next turn.
+      if (!lt.response) return;
+      await sleep(400);
+      if (isStale() || hasSentInThisThreadRef.current) return;
+      setIsTyping(true);
+      await sleep(calculateTypingDelay(lt.response));
+      // Guards BEFORE clearing the indicator, not after. Once the reader has spoken (or
+      // switched persona) someone else owns isTyping — sendMessage sets it for their
+      // first real answer — and clearing it here would blank their typing dots.
+      if (isStale() || hasSentInThisThreadRef.current) return;
+      setIsTyping(false);
+      addMsg({
+        id: `live-thread-response-${Date.now()}`,
+        role: "assistant",
+        content: lt.response,
+        sentAt: new Date().toISOString(),
+      });
+    };
+
+    /** Detached start. Swallows its own rejection so it can never surface unhandled. */
+    const startLiveThreadAppend = () => {
+      void appendLiveThread().catch(() => {});
     };
 
     // If the user clicked through from a sidebar teaser, deliver that message directly
@@ -1044,6 +1164,8 @@ export default function ChatServicePage() {
           setPersonaStatus('online');
           setPersonaStatusText('Online');
         }, 800);
+
+        startLiveThreadAppend();
       } else if (res.status === 402) {
         setReadingEnded(true);
         setShowBuyCredits(true);
@@ -1067,6 +1189,8 @@ export default function ChatServicePage() {
           setPersonaStatus('online');
           setPersonaStatusText('Online');
         }, 800);
+
+        startLiveThreadAppend();
       }
     } catch (err) {
       console.error("Failed to fetch greeting:", err);
@@ -1085,6 +1209,8 @@ export default function ChatServicePage() {
       setIsTyping(false);
       setPersonaStatus('online');
       setPersonaStatusText('Online');
+
+      startLiveThreadAppend();
     } finally {
       setIsStarting(false);
       setIsTyping(false);
@@ -1466,6 +1592,11 @@ export default function ChatServicePage() {
       if (isSending || !content.trim()) return;
       // Must have either an active session or a pre-session greeting to send into
       if (!session && !preSessionGreeting) return;
+
+      // Set BEFORE the optimistic append, so an in-flight Live Thread append can see
+      // that the reader has spoken and stand down rather than splicing their parked
+      // exchange in underneath this message.
+      hasSentInThisThreadRef.current = true;
 
       const userMessage: ChatMessageData = {
         id: `temp-${Date.now()}`,
@@ -2348,7 +2479,10 @@ export default function ChatServicePage() {
                 }
 
                 // A "real" DB message ID is a UUID — not a temp- or assistant- prefixed local ID
-                const isRealId = !msg.id.startsWith('temp-') && !msg.id.startsWith('assistant-') && !msg.id.startsWith('reveal-') && !msg.id.startsWith('reading-ended-') && !msg.id.startsWith('credits-purchased-');
+                // 'live-thread-' covers the two PRE-SESSION bubbles (the reader's parked
+                // reply and its answer). They are shown before any session exists, so no
+                // chat_messages row exists to bookmark yet — offering Save would 404.
+                const isRealId = !msg.id.startsWith('temp-') && !msg.id.startsWith('assistant-') && !msg.id.startsWith('reveal-') && !msg.id.startsWith('reading-ended-') && !msg.id.startsWith('credits-purchased-') && !msg.id.startsWith('live-thread-');
                 const isSaved = savedMessageIds.has(msg.id);
 
                 return (

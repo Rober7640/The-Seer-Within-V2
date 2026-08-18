@@ -1,10 +1,22 @@
 // Evelyn Lander backend — segment resolution, anonymous chat, auth handoff.
 //
 //   POST /api/evelyn-lander/start  → resolve segment, insert session row,
-//                                    return Evelyn's static opener
+//                                    return an opener: the campaign's AUTHORED
+//                                    continuation line when `campaign` resolves
+//                                    to an email_link_codes row, else Evelyn's
+//                                    static opener. Reads an
+//                                    optional `Authorization: Bearer <jwt>`:
+//                                    a verified, active account resolves to
+//                                    'v2_active'. Precedence is
+//                                    magic token > JWT > email param.
 //   POST /api/evelyn-lander/turn   → run safety + Haiku for one chat turn,
 //                                    enforce 2-user-message hard cap
 //   POST /api/evelyn-lander/cta    → handoff (mint JWT only for token-magic path)
+//   POST /api/evelyn-lander/reply  → park a reader-typed reply on the session row
+//                                    before they have an account
+//   POST /api/evelyn-lander/check-email
+//                                  → account detection at the email ask; three
+//                                    outcomes (verified / unverified / none)
 //
 // Security note: JWTs are ONLY issued when a server-validated magic-link token is
 // present. Email-param-only segments redirect to /login, which is the existing
@@ -13,15 +25,26 @@
 import { Router, Request, Response } from 'express';
 import { z } from 'zod';
 import { createHash } from 'crypto';
-import { eq, sql } from 'drizzle-orm';
+import { isIP } from 'node:net';
+import { and, eq, isNull, sql } from 'drizzle-orm';
 import { db } from '../lib/db';
-import { evelynLanderSessions, users } from '@shared/schema';
+import { evelynLanderSessions, personas, users } from '@shared/schema';
 import { extractClientIp, extractUserAgent } from '../lib/fraudDetection';
-import { verifyMagicLinkToken } from '../lib/magicLink';
-import { generateToken } from '../lib/auth';
-import { landerLimiter, landerTurnLimiter } from '../lib/rateLimiter';
+import { generateMagicLinkToken, verifyMagicLinkToken } from '../lib/magicLink';
+import { escapeHtml, reissueVerificationEmail } from '../lib/verificationEmail';
+import { resolveWelcomeGrantTier } from '../lib/welcomeGrantTier';
+import { generateToken, verifyToken } from '../lib/auth';
+import {
+  accountDetectionLimiter,
+  landerAuthedStartLimiter,
+  landerLimiter,
+  landerTurnLimiter,
+} from '../lib/rateLimiter';
+import type { NextFunction } from 'express';
 import { checkAndLogSafety } from '../lib/universalSafety';
+import { getCountryFromIP } from '../lib/crisisHotlines';
 import { verifyTurnstileToken } from '../lib/turnstile';
+import { resolveCampaignContinueSeed } from '../lib/emailLinkCodes';
 import {
   selectStaticOpener,
   generateTurnReply,
@@ -32,6 +55,21 @@ import logger from '../lib/logger';
 
 // Hard cap on user messages allowed in the lander chat (PRD §6.3 — turn 5 = CTA).
 const MAX_USER_MESSAGES = 2;
+
+// Longest single chat message this router will accept or emit.
+//
+// ONE constant, used in two places that MUST agree: turnSchema's `history` entry
+// cap below, and the ceiling /start puts on an authored campaign opener. The
+// chatbox arm replays the opener back as history[0] on the reader's first message
+// (EvelynLanderPage.tsx), so a seed longer than the history cap would 400 that
+// message — strictly worse for the reader than the generic opener, and invisible
+// until someone authored a long one. Written twice, that agreement is a comment;
+// written once, it is a fact. Do not re-inline either use.
+const MAX_MESSAGE_CHARS = 2000;
+
+// This whole rollout is Evelyn-only. Used by /check-email's magic link and by
+// the campaign-opener lookup in /start, which must stay persona-scoped.
+const EVELYN_SLUG = 'evelyn-cross';
 
 const router = Router();
 
@@ -64,6 +102,15 @@ const ctaSchema = z.object({
   token: z.string().min(16).max(128).optional(),
 });
 
+const replySchema = z.object({
+  sessionToken: z.string().min(8).max(128),
+  // Matches turnSchema's userMessage cap — reader-typed free text, later rendered
+  // as a chat message. No sanitisation here: it's stored/rendered exactly like
+  // /turn's userMessage, so the same downstream layer (React's default escaping)
+  // is responsible; duplicating it here would just be the wrong layer.
+  reply: z.string().min(1).max(2000),
+});
+
 // ---------- Helpers ----------
 
 function hashEmailForAnalytics(email: string): string {
@@ -81,11 +128,18 @@ interface ResolvedSegment {
 }
 
 async function resolveSegment(input: {
+  authHeader?: string;
   email?: string;
   token?: string;
   fallbackName?: string;
 }): Promise<ResolvedSegment> {
-  // Token wins per PRD §9 ("Token wins. Email param ignored.")
+  // Token wins per PRD §9 ("Token wins. Email param ignored.") — and it also
+  // outranks a JWT already in localStorage (operator decision 2026-08-02).
+  // Rationale: if a reader signed in as account A clicks a magic link minted for
+  // account B, they clicked THAT link seconds ago, so it is the fresher and more
+  // deliberate statement of who they mean to be — and a magic link that silently
+  // did nothing would look broken. When both point at the same account the
+  // outcome is identical either way.
   if (input.token) {
     const result = await verifyMagicLinkToken(input.token);
     if (result) {
@@ -101,7 +155,45 @@ async function resolveSegment(input: {
         isReturning: true,
       };
     }
-    // Token invalid/expired — silently fall through to email/brand-new path.
+    // Token invalid/expired — silently fall through. Note this is a fall-through
+    // and NOT a return: an authenticated reader whose link has gone stale must
+    // still reach the auth branch below rather than being stranded on brand_new.
+  }
+
+  // An already-signed-in reader outranks the `?email=` param (which is just an
+  // unauthenticated hint) but NOT a live magic token, handled above. They don't
+  // need the lander's login/register handoff at all, they need their reading.
+  // verifyToken() returns null (never throws) for malformed, expired, or forged
+  // tokens, so any bad header falls through to the param-driven branches below
+  // exactly as if it were absent.
+  if (input.authHeader?.startsWith('Bearer ')) {
+    const payload = verifyToken(input.authHeader.slice(7));
+    if (payload?.userId) {
+      const authedRows = await db
+        .select({
+          id: users.id,
+          firstName: users.firstName,
+          emailVerified: users.emailVerified,
+          accountStatus: users.accountStatus,
+        })
+        .from(users)
+        .where(eq(users.id, payload.userId))
+        .limit(1);
+      const authed = authedRows[0];
+      // emailVerified is required: an unverified account is deliberately NOT
+      // treated as active (locked decision — it still needs the verify flow).
+      // accountStatus is free text ('active' | 'suspended' | 'banned' |
+      // 'flagged_for_review'); only 'active' skips the lander, matching the
+      // email branch below.
+      if (authed && authed.emailVerified && authed.accountStatus === 'active') {
+        return {
+          segment: 'v2_active',
+          resolvedUserId: authed.id,
+          firstName: authed.firstName ?? input.fallbackName ?? null,
+          isReturning: true,
+        };
+      }
+    }
   }
 
   if (input.email) {
@@ -149,12 +241,71 @@ async function resolveSegment(input: {
 // ---------- POST /start ----------
 // Validates URL params, resolves segment, inserts a session row, returns
 // segment + display info (firstName, isReturning) for the lander UI.
-router.post('/start', landerLimiter, async (req: Request, res: Response) => {
+/**
+ * Chooses which rate limiter /start runs under, by whether the caller is signed in.
+ *
+ * A signed-in visitor to /evelyn is redirected to /reading, but the page POSTs
+ * /start FIRST so the visit is attributed before they leave (that await is the
+ * whole point of the redirect change — without it the campaign is never recorded
+ * for returning readers). Those requests were landing in landerLimiter's
+ * 5/hr/**IP** budget, which is sized for new anonymous sessions. Behind a
+ * carrier-NAT or an office IP that lets a few logged-in visits starve genuinely
+ * anonymous readers on the same address, whose /start then 429s, whose client
+ * falls back to an opener with no server session row, and whose /cta and /turn
+ * subsequently 404 — the exact failure the redirect change was audited against.
+ *
+ * The alternative (drop the await) would fix the budget by removing the
+ * attribution, i.e. by undoing the feature. This keeps it and moves the
+ * authenticated case onto a per-USER key instead, so shared IPs stop coupling the
+ * two populations while every caller stays bounded.
+ *
+ * The JWT is VERIFIED here (verifyToken is synchronous, so this can run as a
+ * middleware) — an unsigned or expired token falls through to the anonymous
+ * limiter rather than buying a private budget. It is deliberately NOT checked
+ * against the users table: that would be an async DB read on the hot path, and a
+ * signature we minted is already proof this is one identifiable account and not an
+ * anonymous crowd, which is all the key needs to be. /start's own segment
+ * resolution still does the real account check.
+ */
+function landerStartLimiter(req: Request, res: Response, next: NextFunction) {
+  const header = req.headers.authorization;
+  const bearer = header?.startsWith('Bearer ') ? header.slice(7) : null;
+  const payload = bearer ? verifyToken(bearer) : null;
+  if (payload?.userId) {
+    (req as any).landerAuthedUserId = payload.userId;
+    return landerAuthedStartLimiter(req, res, next);
+  }
+  return landerLimiter(req, res, next);
+}
+
+router.post('/start', landerStartLimiter, async (req: Request, res: Response) => {
   try {
     const parsed = startSchema.safeParse(req.body);
     if (!parsed.success) {
       // PRD §4: param validation failures fall through to defaults silently.
       // We log + treat as a bare /evelyn hit rather than 400'ing the user.
+      //
+      // ⚠ THIS PATH DISCARDS THE WHOLE PAYLOAD, NOT JUST THE BAD FIELD. It
+      // re-enters with `{ sessionToken }` only, so `campaign`, `bucket`, `src`,
+      // `email` and `token` are all dropped and the session row is written with
+      // campaign NULL. That is pre-existing and deliberate, but it now costs more
+      // than it used to, and the trigger is realistic rather than theoretical:
+      // the `name` regex in startSchema rejects digits and periods, so a failed
+      // AWeber merge tag, or a reader legitimately called "Jr.", invalidates the
+      // payload and takes the campaign with it.
+      //
+      // What it costs today: that reader gets the generic static opener instead
+      // of the campaign's authored line, and their session row carries no
+      // campaign — so arrivalReading.ts also finds nothing later.
+      //
+      // WHAT IT WILL COST THE OPENER BUBBLE (read this before building it): the
+      // plan in the Task 15 report resolves the reader's greeting from
+      // evelynLanderSessions.campaign on the row findEligibleParkedReply()
+      // selects. This path writes that column NULL, so the opener bubble silently
+      // degrades to the generic greeting for exactly these readers, with no
+      // signal beyond the warn below. If that matters, the fix is to validate the
+      // params individually here rather than all-or-nothing — not to work around
+      // it downstream.
       logger.warn('evelyn-lander: invalid start payload, falling through', {
         issues: parsed.error.issues.map((i) => i.path.join('.')),
       });
@@ -175,12 +326,61 @@ router.post('/start', landerLimiter, async (req: Request, res: Response) => {
   }
 });
 
+/**
+ * The authored opener for `campaign`, or null to use the static one.
+ *
+ * `campaign` is READER-SUPPLIED — it arrives in the query string and anyone can
+ * type any slug. Three consequences, all handled here:
+ *
+ *   - No per-recipient data is reachable. An email_link_codes row holds one
+ *     send's authored marketing copy; there is no email, user id or token in the
+ *     table at all. So the worst case is reading copy, never reading anyone.
+ *   - But that copy is NOT necessarily public yet, and an earlier version of this
+ *     comment wrongly said it was. Rows are minted at RENDER time, which happens
+ *     before scheduling (render-aweber.mjs mints; aweber-ops.mjs schedules the
+ *     build afterwards) — so between those two steps a guessed slug can surface
+ *     the opening line of an email that has not been sent to anyone. The real
+ *     mitigation is the rate limit on this route: 5 requests/hr/IP anonymously in
+ *     production, or 30/hr/user id for a signed-in caller (landerStartLimiter
+ *     below, rateLimiter.ts), which makes slug-guessing an unattractive way to read
+ *     an unsent draft's single opening sentence. DO NOT relax that limiter on the
+ *     belief that this content was already published — it may not have been.
+ *   - It must not cross personas. The lookup is keyed on (EVELYN_SLUG, campaign),
+ *     the pair the table's unique index is built on, so a guessed Luna or Aiden
+ *     slug can never put that persona's authored line in Evelyn's mouth.
+ *
+ * Never throws: a DB blip here must degrade to the static opener, not 500 a
+ * reader's arrival on the one page this whole feature funnels into.
+ */
+async function resolveCampaignOpener(campaign: string | undefined): Promise<string | null> {
+  if (!campaign) return null;
+  try {
+    const seed = await resolveCampaignContinueSeed(EVELYN_SLUG, campaign);
+    if (!seed) return null;
+    if (seed.length > MAX_MESSAGE_CHARS) {
+      logger.warn('evelyn-lander: authored continueSeed too long for the opener, using static', {
+        campaign,
+        length: seed.length,
+      });
+      return null;
+    }
+    return seed;
+  } catch (error: any) {
+    logger.error('evelyn-lander: continueSeed lookup failed, using static opener', {
+      campaign,
+      error: error?.message,
+    });
+    return null;
+  }
+}
+
 async function resolveAndInsert(
   req: Request,
   res: Response,
   data: z.infer<typeof startSchema>,
 ) {
   const resolved = await resolveSegment({
+    authHeader: req.headers.authorization,
     email: data.email,
     token: data.token,
     fallbackName: data.name,
@@ -207,12 +407,34 @@ async function resolveAndInsert(
     }
   }
 
-  // Static opener (no Haiku call here — PRD §9 prefetcher protection).
-  const opener = selectStaticOpener({
-    firstName: resolved.firstName,
-    bucket: (data.bucket as Bucket | undefined) ?? null,
-    isReturning: resolved.isReturning,
-  });
+  // The opener. Two sources, in order:
+  //
+  //   1. The campaign's AUTHORED continuation line, when `?campaign=` resolves to
+  //      an email_link_codes row for Evelyn. This is the point of the whole
+  //      email→chat feature: the lander opens by continuing the specific letter
+  //      the reader just clicked, in the words the operator wrote for that send.
+  //   2. Otherwise the segment-aware static opener, exactly as before.
+  //
+  // Still no Haiku call either way (PRD §9 prefetcher protection) — this is a
+  // single indexed row read, not a generation.
+  //
+  // WHAT THIS CHANGES FOR EXISTING READERS: `campaign` reaches BOTH lander arms.
+  // The quiz arm discards the opener, but the chatbox arm renders it and replays
+  // it into /turn as history[0], so a resolving campaign visibly changes the live
+  // chatbox — including replacing the "Welcome back, <name>" line a returning
+  // reader would otherwise get. That is intended (the seed continues the letter
+  // they actually read, which is more specific than their name), and it only
+  // engages for campaigns that have a minted row: every organic visit, every
+  // legacy `?campaign=` email, and every unknown slug degrade to case 2 exactly
+  // as today.
+  const campaignOpener = await resolveCampaignOpener(data.campaign);
+  const opener =
+    campaignOpener ??
+    selectStaticOpener({
+      firstName: resolved.firstName,
+      bucket: (data.bucket as Bucket | undefined) ?? null,
+      isReturning: resolved.isReturning,
+    });
 
   res.json({
     segment: resolved.segment,
@@ -238,8 +460,15 @@ router.post('/cta', async (req: Request, res: Response) => {
     }
     const { sessionToken, token } = parsed.data;
 
+    // EXPLICIT projection, not `.select()`. Drizzle expands a bare select into the
+    // full column list taken from the TABLE DEFINITION, so the moment schema.ts grows
+    // a column this handler would name it in SQL — and against a database that has not
+    // yet had the matching migration applied, Postgres answers 42703 (undefined_column),
+    // the catch below turns that into a 500, and the CTA (the handoff for BOTH live
+    // arms) breaks for everyone. Naming only the columns actually read keeps this route
+    // independent of columns added for other features. Read here: resolvedSegment.
     const rows = await db
-      .select()
+      .select({ resolvedSegment: evelynLanderSessions.resolvedSegment })
       .from(evelynLanderSessions)
       .where(eq(evelynLanderSessions.sessionToken, sessionToken))
       .limit(1);
@@ -316,6 +545,147 @@ router.post('/cta', async (req: Request, res: Response) => {
   }
 });
 
+// ---------- POST /reply ----------
+// Parks a reader-typed reply on their session row before they have an account
+// (PRD "Live Thread" flow). Task 10 reads pendingReply back and turns it into
+// the first real chat message once the account is verified.
+//
+// Rate limit: landerTurnLimiter, not landerLimiter. landerLimiter (5/hr/IP)
+// bounds NEW session creation (/start); this route never creates a session, it
+// writes free text onto an existing one, same category of action as /turn's
+// userMessage write. landerTurnLimiter (30/hr prod, 200/hr dev) matches that.
+//
+// Overwrite semantics: writes pendingReply unconditionally, so a second call
+// replaces the first. This is intentional, not an oversight — a reader who
+// edits their typed reply before submitting must have the latest version win;
+// rejecting the second call would strand their edit, and appending would
+// produce a garbled first chat message (the plan's intent is exactly one
+// reply per lander session, not a transcript).
+//
+// Safety screening (round 2): this is the moment a reader is actually reaching
+// out, possibly before they have any account, so the reply is run through the
+// same checkAndLogSafety() gate /turn uses on userMessage — see the report for
+// the full reasoning on storage-on-flag and the response shape.
+//
+// Round 3 fix: the operator ruled on CRISIS/SELF-HARM screening specifically,
+// not the full 7-type violation taxonomy checkAndLogSafety() covers (crisis,
+// inappropriate, prompt_injection, harassment, gibberish, non_english, minor —
+// server/lib/universalSafety.ts:15-22). Only `violationType === 'crisis'` skips
+// the store below; every other violation type still gets written to
+// pendingReply and lets the reader through. See the report for why: /turn can
+// safely block a non-crisis message because it stores nothing and the reader
+// can just retype, but /reply blocking a non-crisis message would destroy the
+// one artifact this whole feature exists to preserve, for a class of content
+// that isn't a safety emergency.
+router.post('/reply', landerTurnLimiter, async (req: Request, res: Response) => {
+  try {
+    const parsed = replySchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ error: 'Invalid payload' });
+    }
+    const { sessionToken, reply } = parsed.data;
+
+    // EXPLICIT projection — see the note on /cta's select for why a bare `.select()`
+    // is a live-outage hazard on this table. Read here: resolvedUserId (the safety
+    // log's user attribution). The write below targets the row by sessionToken, so
+    // nothing else off the row is needed.
+    const rows = await db
+      .select({ resolvedUserId: evelynLanderSessions.resolvedUserId })
+      .from(evelynLanderSessions)
+      .where(eq(evelynLanderSessions.sessionToken, sessionToken))
+      .limit(1);
+    const row = rows[0];
+    if (!row) {
+      return res.status(404).json({ error: 'Session not found' });
+    }
+
+    const ipAddress = extractClientIp(req);
+    // getCountryFromIP() makes an outbound HTTP call and keys an unbounded,
+    // module-level cache (server/lib/crisisHotlines.ts) on this string. This
+    // route is unauthenticated, and extractClientIp() trusts X-Forwarded-For
+    // verbatim with no validation (server/lib/fraudDetection.ts) — so without
+    // this check, an attacker could spray arbitrary header values to grow that
+    // shared cache without bound and generate outbound traffic to a third
+    // party. Only resolve country for syntactically valid IPs; anything else
+    // (including the 'unknown' fallback) skips the lookup — countryCode stays
+    // null, which getHotlineForCountry() already treats as "use the US
+    // default," so this doesn't change behavior for any real caller.
+    const countryCode = isIP(ipAddress) ? await getCountryFromIP(ipAddress) : null;
+    const safety = await checkAndLogSafety(reply, {
+      userId: row.resolvedUserId ?? undefined,
+      ipAddress,
+      userAgent: extractUserAgent(req),
+      countryCode,
+    });
+
+    if (safety.violationType === 'crisis' && !safety.safe && safety.response) {
+      // Hard crisis ONLY: mirrors /turn's precedent — the flagged text does NOT
+      // proceed into the normal downstream flow (there, no generateTurnReply
+      // call; here, no pendingReply write, so Task 10 never replays it as a
+      // cheerful first chat message). checkAndLogSafety() has already fired a
+      // (fire-and-forget) write to safetyViolations, flagged for review — this
+      // response doesn't wait on or guarantee that write landed, so treat it as
+      // best-effort capture for the review queue, not a hard persistence
+      // guarantee, when reasoning about "is the content really preserved."
+      return res.json({
+        ok: false,
+        blocked: 'safety',
+        reply: safety.response,
+        crisisDisclaimer: safety.crisisDisclaimer ?? null,
+      });
+    }
+
+    // Safe, soft-crisis-but-safe, OR any non-crisis violation (inappropriate,
+    // prompt_injection, harassment, gibberish, non_english, minor). All of
+    // these proceed to the normal store: /turn treats a soft crisis signal the
+    // same way (silently continues to generateTurnReply), and a non-crisis
+    // violation is a content-moderation signal, not a safety emergency — it's
+    // already logged via checkAndLogSafety() for review, and losing the
+    // reader's only artifact over it would be a worse outcome than storing it.
+    //
+    // The verdict is stored ALONGSIDE the text. Storing it does not change what
+    // happens here — the reply is written and the reader is let through either way,
+    // exactly as the operator ruled — it changes what happens LATER: the replay
+    // (server/lib/liveThreadReplay.ts) withholds a flagged reply from the model,
+    // because the normal chat path would have intercepted those same words with a
+    // canned response instead of generating against them (chatEngine.ts's step-1
+    // safety gate). Without this, typing a jailbreak into the lander would reach the
+    // model when typing it in chat would not.
+    //
+    // The condition mirrors that gate exactly (`!safe && response`) so the two paths
+    // agree by construction rather than by two lists that happen to match today.
+    // Written unconditionally, including the null: /reply is an UPDATE a reader can
+    // repeat, so a clean reply replacing a flagged one must clear the old verdict.
+    //
+    // pending_reply_response is cleared for the same reason and it matters just as
+    // much: it holds the persona's answer to the PREVIOUS text (Task 14 —
+    // liveThreadPreview.ts). Leave it and a reader who rewrites their reply is shown,
+    // and later replayed, an answer to words they deliberately replaced. Nulling it
+    // makes the next /reading load regenerate against what they actually said.
+    const violationType = !safety.safe && safety.response ? safety.violationType : null;
+    const result = await db
+      .update(evelynLanderSessions)
+      .set({
+        pendingReply: reply,
+        pendingReplyViolationType: violationType,
+        pendingReplyResponse: null,
+      })
+      .where(eq(evelynLanderSessions.sessionToken, sessionToken))
+      .returning({ id: evelynLanderSessions.id });
+
+    // Belt-and-suspenders: the row existed a moment ago (checked above); this
+    // only fires on a genuine race (deleted between the select and this update).
+    if (result.length === 0) {
+      return res.status(404).json({ error: 'Session not found' });
+    }
+
+    res.json({ ok: true });
+  } catch (error: any) {
+    logger.error('evelyn-lander reply error', { error: error?.message });
+    res.status(500).json({ error: 'Failed to store reply' });
+  }
+});
+
 // ---------- POST /turn ----------
 // Accepts a single user message + the conversation so far, runs universal
 // safety, calls Haiku for Evelyn's reply, and increments the server-side
@@ -332,15 +702,20 @@ const turnSchema = z.object({
   // .max(2048) here rejected valid tokens as "Invalid payload" (breaking the
   // chatbox first message). Matches the uncapped magic-register schema (auth.ts).
   turnstileToken: z.string().optional(),
-  // Full conversation so far, including the static opener as the first
-  // assistant message. Server uses this verbatim to seed Haiku — server-side
-  // turnCount in the DB is the authoritative cap, so a tampered client
-  // history can't extend the chat.
+  // Full conversation so far, including the opener as the first assistant
+  // message. Server uses this verbatim to seed Haiku — server-side turnCount in
+  // the DB is the authoritative cap, so a tampered client history can't extend
+  // the chat.
+  //
+  // The entry cap is MAX_MESSAGE_CHARS, not a literal: /start refuses to serve an
+  // authored campaign opener longer than this precisely because the client
+  // replays that opener back through here. Raising one without the other would
+  // re-open the 400 that pairing exists to prevent.
   history: z
     .array(
       z.object({
         role: z.enum(['user', 'assistant']),
-        content: z.string().max(2000),
+        content: z.string().max(MAX_MESSAGE_CHARS),
       }),
     )
     .max(10)
@@ -356,8 +731,17 @@ router.post('/turn', landerTurnLimiter, async (req: Request, res: Response) => {
     }
     const { sessionToken, userMessage, turnstileToken, history } = parsed.data;
 
+    // EXPLICIT projection — see the note on /cta's select for why a bare `.select()`
+    // is a live-outage hazard on this table, and this is the hottest route on the
+    // lander (every chatbox message). Read here: turnCount (hard cap + Turnstile
+    // gate), resolvedUserId (safety attribution + first-name lookup), bucket (the
+    // model prompt's topic).
     const rows = await db
-      .select()
+      .select({
+        turnCount: evelynLanderSessions.turnCount,
+        resolvedUserId: evelynLanderSessions.resolvedUserId,
+        bucket: evelynLanderSessions.bucket,
+      })
       .from(evelynLanderSessions)
       .where(eq(evelynLanderSessions.sessionToken, sessionToken))
       .limit(1);
@@ -447,6 +831,303 @@ router.post('/turn', landerTurnLimiter, async (req: Request, res: Response) => {
   } catch (error: any) {
     logger.error('evelyn-lander turn error', { error: error?.message });
     res.status(500).json({ error: 'Failed to generate reply' });
+  }
+});
+
+// ---------- POST /check-email ----------
+// Account detection at the moment the reader hands over their email (spec
+// "Frame 1.5"). Exactly three outcomes drive three different in-thread
+// confirmation bubbles on the client:
+//
+//   verified_match   → an existing, already-verified account. Mail a magic link
+//                      so one tap brings them straight back into the reading.
+//   unverified_match → an existing account that never verified. Resend/resume
+//                      THAT account's verification — never a second account, and
+//                      never a magic link (which would sign them in without ever
+//                      verifying; spec §Decisions).
+//   no_match         → nobody here. The client proceeds to the normal signup.
+//
+// On either match it also stamps the account onto the reader's lander session row
+// (optional `sessionToken`), which is how the post-auth routes later find the
+// pendingReply parked while they were anonymous — see linkSessionToUser below.
+//
+// ACCOUNT ENUMERATION IS ACCEPTED HERE, NOT A BUG. Unlike
+// /api/auth/resend-verification and /api/auth/send-magic-login — which both
+// return a deliberately uniform "if an account exists..." response — this route
+// tells the caller which of the three cases it is, because the whole feature is
+// showing the reader the right next step in the thread. That was decided
+// explicitly; do not "fix" it by collapsing the outcomes. The agreed mitigation
+// is accountDetectionLimiter (10/hr/IP — see rateLimiter.ts), which also bounds
+// how much mail a caller can aim at an address they don't own.
+//
+// Repeat submissions of the same address DO re-send every time, matching both
+// sibling auth routes (neither debounces per-address either). See the task
+// report for the reasoning: a reader who lost the first mail needs the second,
+// and a per-address cooldown is state this route doesn't have — the per-IP
+// ceiling is the bound that actually applies.
+const checkEmailSchema = z.object({
+  // .max(254) matches /start's email field (RFC 5321 address limit).
+  email: z.string().email().max(254),
+  // Optional, and deliberately so: the reader's lander session, used to stamp
+  // resolvedUserId once the email identifies them (see linkSessionToUser). A caller
+  // that omits it still gets a normal outcome, so this is not a breaking change to
+  // the contract Task 11 builds against. Bounds match every other sessionToken
+  // field in this file.
+  sessionToken: z.string().min(8).max(128).optional(),
+});
+
+/**
+ * Mail an existing VERIFIED account a magic link back into the Evelyn thread.
+ *
+ * Deliberately scoped to Evelyn by slug rather than the user's defaultPersonaId:
+ * the token's personaSlug is what MagicAuthPage turns into
+ * `/reading?persona=<slug>`, and this reader clicked an Evelyn email, so anything
+ * else would land them in the wrong guide's chat. (This whole rollout is Evelyn-only.)
+ *
+ * Follows the same shape as the closest existing precedent — the /soulmate
+ * lander's existing-account branch (soulmateLanderSignup.ts:103-123) — including
+ * its RESEND_API_KEY guard, which is what makes this a no-op under test.
+ */
+async function sendLiveThreadMagicLink(user: {
+  id: string;
+  email: string;
+  firstName: string;
+  accountStatus: string;
+}): Promise<void> {
+  // verifyMagicLinkToken() refuses any non-'active' account (magicLink.ts:78), so
+  // minting one here would mail a link that is guaranteed to fail on click.
+  // Precedent: soulmateLanderSignup.ts:103-106 skips the send for banned accounts;
+  // widened to "not active" to match the verifier's own gate. The OUTCOME is
+  // unchanged, so this never becomes an account-status oracle.
+  if (user.accountStatus !== 'active') {
+    logger.info('evelyn-lander check-email: skipping magic link for non-active account', {
+      userId: user.id,
+      accountStatus: user.accountStatus,
+    });
+    return;
+  }
+
+  const personaRows = await db
+    .select({ id: personas.id })
+    .from(personas)
+    .where(eq(personas.slug, EVELYN_SLUG))
+    .limit(1);
+  const evelynId = personaRows[0]?.id;
+  if (!evelynId) {
+    logger.error('evelyn-lander check-email: evelyn-cross persona not found — no magic link sent');
+    return;
+  }
+
+  const magicToken = await generateMagicLinkToken(user.id, evelynId, EVELYN_SLUG);
+  // No &redirect= — MagicAuthPage already defaults to /reading?persona=<personaSlug>
+  // off the token itself, which is exactly where the thread continues.
+  const magicUrl = `${process.env.BASE_URL || 'http://localhost:5000'}/magic-auth?t=${magicToken}`;
+
+  const { Resend } = await import('resend');
+  const resendClient = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
+  if (!resendClient) {
+    logger.warn('evelyn-lander check-email: Resend not configured — magic URL:', magicUrl);
+    return;
+  }
+
+  // firstName is user-supplied and goes into an HTML body, so it is escaped —
+  // matching the sibling verification mail (verificationEmail.ts:50 escapes it) and
+  // deliberately NOT matching the two magic-link senders that interpolate it raw
+  // (soulmateLanderSignup.ts:118, auth.ts:992). Of the two precedents this follows
+  // the safer one rather than adding a third unescaped site.
+  const safeName = escapeHtml(user.firstName || 'there');
+
+  // A Resend outage must not turn a successful detection into an error screen. The
+  // unverified branch already cannot fail this way — sendVerificationEmail() catches
+  // internally and returns { success: false } — so without this catch the two
+  // branches behave asymmetrically: a returning verified reader would get a 500 (and
+  // no confirmation bubble) for a transient third-party blip, while an unverified one
+  // sees success. The magic-link row is already committed above and stays valid for
+  // 30 days, so the outcome we return is still true; only the delivery is in doubt,
+  // and the client already offers a resend.
+  try {
+    await resendClient.emails.send({
+      from: `The Seer Within <${process.env.FOLLOW_UP_FROM_EMAIL || 'noreply@theseerwithin.com'}>`,
+      to: user.email,
+      subject: 'Your reading with Evelyn is open',
+      html:
+        `<p>Hi ${safeName},</p>` +
+        `<p>You left something with Evelyn — click below to pick it back up where you left off:</p>` +
+        `<p style="margin:24px 0"><a href="${magicUrl}" style="background:#6d28d9;color:#fff;padding:12px 32px;border-radius:8px;text-decoration:none;font-weight:600">Open My Reading</a></p>` +
+        `<p style="color:#888;font-size:13px">This link expires in 30 days.</p>`,
+    });
+    logger.info('evelyn-lander check-email: magic link sent', { userId: user.id });
+  } catch (error: any) {
+    logger.error('evelyn-lander check-email: magic link send failed', {
+      userId: user.id,
+      error: error?.message,
+    });
+  }
+}
+
+/**
+ * Stamps the matched account onto the reader's lander session row, so the
+ * verify-email / magic-verify handlers can find the `pendingReply` they parked
+ * while still anonymous (Task 10). `resolvedUserId` and its index already exist
+ * (schema.ts:1114, :1136) and /start already writes them for the segments it can
+ * resolve — this is the same write, at the moment the email finally identifies them.
+ *
+ * `sessionToken` is OPTIONAL on the request, so a caller that omits it still gets a
+ * normal outcome; this is best-effort linkage, never a reason to fail the response.
+ * The `resolvedUserId IS NULL` guard means an identity /start already established
+ * (a live magic token, or a JWT) is never clobbered by a different email typed into
+ * the box afterwards.
+ */
+/**
+ * Whether the verification grant will treat this reader as an Evelyn-lander signup.
+ *
+ * Deliberately the SAME existence check isFromEvelynLander() runs (auth.ts:132-143):
+ * any evelyn_lander_sessions row whose resolved_user_id is this user. Two consequences
+ * that are easy to get backwards, so they're spelled out:
+ *
+ *   - It asks whether a row EXISTS, not whether linkSessionToUser() just wrote one.
+ *     When the session was already linked to this same user the UPDATE matches zero
+ *     rows, but the row is still there and the grant still fires — keying off the
+ *     update's row count would quote 3 while granting 5.
+ *   - Any row counts, not only this visit's. A reader with an older linked session
+ *     is already eligible even if no sessionToken was supplied this time.
+ *
+ * The persona half of the condition needs no handling here: reissueVerificationEmail()
+ * resolves personaSlug from defaultPersonaId, and getFreeMinutesForSignup() only
+ * returns 5 when that slug is 'evelyn-cross' (verificationEmail.ts:52-58) — precisely
+ * when isEvelynUser() would be true. The two sides move together by construction.
+ *
+ * Silent-fails to false, mirroring isFromEvelynLander(): if the lookup errors, the
+ * grant may still fire while the copy quotes 3. Under-promising is the safe direction.
+ */
+async function hasEvelynLanderLink(userId: string): Promise<boolean> {
+  try {
+    const rows = await db
+      .select({ id: evelynLanderSessions.id })
+      .from(evelynLanderSessions)
+      .where(eq(evelynLanderSessions.resolvedUserId, userId))
+      .limit(1);
+    return rows.length > 0;
+  } catch (error: any) {
+    logger.warn('evelyn-lander check-email: lander-link lookup failed', { error: error?.message });
+    return false;
+  }
+}
+
+async function linkSessionToUser(sessionToken: string | undefined, userId: string): Promise<void> {
+  if (!sessionToken) return;
+  try {
+    await db
+      .update(evelynLanderSessions)
+      .set({ resolvedUserId: userId })
+      .where(
+        and(
+          eq(evelynLanderSessions.sessionToken, sessionToken),
+          isNull(evelynLanderSessions.resolvedUserId),
+        ),
+      );
+  } catch (error: any) {
+    logger.warn('evelyn-lander check-email: failed to link session to user', {
+      error: error?.message,
+    });
+  }
+}
+
+router.post('/check-email', accountDetectionLimiter, async (req: Request, res: Response) => {
+  try {
+    const parsed = checkEmailSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ error: 'Invalid email' });
+    }
+
+    // Same normalisation resolveSegment() uses above, which is the same
+    // `.toLowerCase()` registration stores by (auth.ts:315). A mismatch here would
+    // report no_match for an account that genuinely exists and push the reader into
+    // a signup that then collides with the unique-email constraint.
+    const email = parsed.data.email.trim().toLowerCase();
+
+    const userRows = await db
+      .select({
+        id: users.id,
+        email: users.email,
+        firstName: users.firstName,
+        emailVerified: users.emailVerified,
+        accountStatus: users.accountStatus,
+        defaultPersonaId: users.defaultPersonaId,
+        welcomeCoinsGrantedAt: users.welcomeCoinsGrantedAt,
+      })
+      .from(users)
+      .where(eq(users.email, email))
+      .limit(1);
+    const existing = userRows[0];
+
+    if (!existing) {
+      return res.json({ outcome: 'no_match' });
+    }
+
+    // Any match — verified or not — is the moment this reader stops being anonymous,
+    // so link the session either way. Both post-auth routes (verify-email and
+    // magic-verify) need it to find their pendingReply.
+    //
+    // Gated on accountStatus for the same reason resolveSegment() returns
+    // resolvedUserId: null for non-active accounts (:188-195 — "treat as brand-new
+    // opener... but DO record the lookup"), and matching sendLiveThreadMagicLink()'s
+    // own gate below: a banned/suspended reader has no way back in, so writing a link
+    // that grants them lander minutes and enrols them in a nurture drip would be
+    // wrong. The OUTCOME is unchanged either way, so this stays invisible to the
+    // caller and the route never becomes an account-status oracle.
+    if (existing.accountStatus === 'active') {
+      await linkSessionToUser(parsed.data.sessionToken, existing.id);
+    }
+
+    if (existing.emailVerified) {
+      await sendLiveThreadMagicLink(existing);
+      return res.json({ outcome: 'verified_match' });
+    }
+
+    // Shared with POST /api/auth/resend-verification, so the 24-hour expiry has a
+    // single definition.
+    //
+    // `source` is passed exactly when the reader will genuinely receive the
+    // Evelyn-lander grant. The link written just above is what makes
+    // isFromEvelynLander() true at verify time, selecting EVELYN_LANDER_FREE_COINS
+    // (5 min) over the persona default (3) and enrolling them in the Evelyn verified
+    // drip — so the copy has to quote 5 too, or it contradicts the write it just
+    // caused. Evaluated AFTER the link, and by row existence rather than rows-updated:
+    // see hasEvelynLanderLink() for why that distinction decides the answer.
+    //
+    // The Live Thread tier is the same argument one level up — but it must NOT be
+    // re-derived here as "linked && has a pending_reply". That is what the grant chain
+    // asks LAST, not first. It evaluates the soulmate tier BEFORE either Evelyn tier,
+    // and a /soulmate signup is created unverified with defaultPersonaId=evelyn-cross
+    // and a linked soulmate row (soulmateLanderSignup.ts:129-149) — so such a reader can
+    // satisfy both Evelyn conditions here while the grant still resolves to soulmate's
+    // 5 minutes. Quoting 10 there would promise a grant that never arrives.
+    //
+    // So the tier comes from the SAME resolver the grant sites read
+    // (server/lib/welcomeGrantTier.ts), which owns the precedence. `landerLinked` still
+    // drives `source`, unchanged, so the soulmate and Luna paths keep quoting exactly
+    // what they quoted before the Live Thread tier existed.
+    const landerLinked = await hasEvelynLanderLink(existing.id);
+    const welcomeTier = await resolveWelcomeGrantTier(existing.id, existing.defaultPersonaId);
+    const engagedViaLiveThread = welcomeTier === 'live-thread';
+    const { freeMinutesQuoted } = await reissueVerificationEmail(
+      existing,
+      landerLinked ? { source: 'evelyn-lander', engagedViaLiveThread } : {},
+    );
+    // Logged because a minutes mismatch is otherwise invisible until a reader
+    // complains: this records what the copy promised and why.
+    logger.info('evelyn-lander check-email: verification reissued', {
+      userId: existing.id,
+      landerLinked,
+      welcomeTier,
+      engagedViaLiveThread,
+      freeMinutesQuoted,
+    });
+    return res.json({ outcome: 'unverified_match' });
+  } catch (error: any) {
+    logger.error('evelyn-lander check-email error', { error: error?.message });
+    res.status(500).json({ error: 'Failed to check email' });
   }
 });
 

@@ -13,7 +13,15 @@ import { magicLinkTokens, users } from '@shared/schema';
 import { eq, and, gt, lt } from 'drizzle-orm';
 import logger from './logger';
 
-const MAGIC_LINK_EXPIRY_DAYS = 30;
+/**
+ * How long a minted magic link stays clickable. Exported because it is also the
+ * outer bound on how long the Live Thread flow can still be in progress for a
+ * reader — server/lib/liveThreadReplay.ts reuses it as its freshness window so
+ * the two can never drift apart. Shortening this shortens that window too, which
+ * is the intended coupling: a parked reply should outlive every link that can
+ * still deliver its owner into the chat, and not a day longer.
+ */
+export const MAGIC_LINK_EXPIRY_DAYS = 30;
 
 /**
  * Generate a magic link token for a user/persona pair and persist it.
