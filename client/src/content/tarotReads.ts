@@ -1714,19 +1714,19 @@ const DECODE_HIM: CardSetConfig = {
         "You turned the Sun, dear — the card of what stands in the light.",
         "You asked if he'll come back. Your hand went to the warm card, not the cold one.",
         "The Sun makes no promise about a knock at the door.\nIt says the warmth between you was real, dear. Real warmth is slow to go cold.\nAnd that pull you still feel? It isn't only yours.",
-        "Let me look closer at what's keeping him from turning back around…",
+        "Let me look closer at what's keeping that warmth from reaching you…",
       ],
       b: [
         "You turned the Moon, dear — the card of what is kept in the half-light.",
         "You asked if he'll come back. Your hand went to the card of what is still unclear.",
         "The Moon doesn't say he is gone for good.\nIt says his own side is unclear, even to him.\nSo this isn't finished, dear. You have felt that all along.\nThat's your gut, and it's sound.",
-        "Let me look closer at what he hasn't worked out yet…",
+        "Let me look closer at what sits between you and a clear answer…",
       ],
       c: [
         "You turned the Tower, dear — the card of the sudden break.",
         "You asked if he'll come back. Your hand went to the card that breaks things open.",
         "The Tower doesn't mean the door is shut.\nIt means the old shape between you broke, dear.\nSomething down there is still moving into a new one.\nWhat feels like an ending is often the ground being cleared.",
-        "Let me look closer at what's being built underneath…",
+        "Let me look closer at what the break left standing between you…",
       ],
     },
     'cards-feels': {
@@ -1869,19 +1869,19 @@ const ARCANA_MFH: CardSetConfig = {
         "You chose the Magician, dear. Look — a cup, a coin, a blade and a wand, all laid out on his table.",
         "You asked if he'll come back. Your hand went straight to the man who can act.",
         "He isn't short of a way back, dear. He has one.\nSo this was never about whether he could.\nAnd that pull you still feel? It isn't only yours.\nYou've felt him on the other end of it. You're reading that right.",
-        "Let me look closer at what's holding his hand back…",
+        "Let me look closer at what sits between you and his way back…",
       ],
       b: [
         "You chose the Hanged Man, dear. Look — he hangs by one ankle from a green tree, and his face is calm.",
         "You asked if he'll come back. Your hand went to a man still up in the air.",
         "Nothing has been settled here, dear. Not for you, and not against you.\nHe hasn't shut the door. He hasn't opened it either.\nYou keep refusing to call this over.\nThat isn't you clinging, dear. You're reading it right.",
-        "Let me look closer at what he's turning over up there…",
+        "Let me look closer at what's holding this in between…",
       ],
       c: [
         "You chose the Fool, dear. Look — a white rose in one hand, a small bundle on a stick, a dog at his heel.",
         "You asked if he'll come back. Your hand went to the one card that won't call this over.",
         "The road is still open, dear. The door was never shut.\nBut look where his eyes are. On what's ahead, not behind.\nSo if this does come to something, it starts new.\nIt won't pick up where it broke. That isn't a smaller thing, dear.",
-        "Let me look closer at the turn that's forming…",
+        "Let me look closer at what stands between you and that open road…",
       ],
     },
     'cards-feels': {
@@ -2162,19 +2162,19 @@ const ARCANA_EEF: CardSetConfig = {
         "You chose the Emperor, dear. Look — a grey-bearded king on a stone throne, facing straight ahead, not moving.",
         "You asked if he'll come back. Your hand went to the man who moves on his own clock.",
         "He doesn't act on a feeling, dear. He acts once he has weighed it.\nSo the quiet is not a no. It only reads like one from where you sit.\nHis side is less shut than it feels to you.\nAnd you were right to keep asking, dear. That wasn't you being foolish.",
-        "Let me look closer at what he's weighing…",
+        "Let me look closer at what sits between you and his answer…",
       ],
       b: [
         "You chose the Empress, dear. Look — a woman resting in a field of wheat, a crown of stars in her hair.",
         "You asked if he'll come back. Your hand went to the card of what was warm and real.",
         "The care between you was real, dear. You did not invent it.\nAnd real warmth keeps its pull long after two people stop speaking.\nIt is still working on him.\nYou can feel that, dear. That's not you hoping — that's you knowing.",
-        "Let me look closer at what's drawing him back…",
+        "Let me look closer at what keeps that bond from reaching you…",
       ],
       c: [
         "You chose the Fool, dear. Look — one foot out over the cliff edge, eyes on the sky, a dog at his heel.",
         "You asked if he'll come back. Your hand went to the turn nobody sees coming.",
         "The Fool doesn't do repeats, dear. He does fresh starts.\nSo if this comes back, it comes back in a new shape.\nNot the old one. That one already broke.\nYou have felt that too. You just had no words for it.",
-        "Let me look closer at the turn that's forming…",
+        "Let me look closer at what stands between you and that new start…",
       ],
     },
     'cards-feels': {
@@ -2275,24 +2275,33 @@ const RETURN_MHF: CardSetConfig = {
     // per card, no return predicted, no timeframe, her instinct affirmed. Only the
     // reading level moved. The 2026-07-30 lesson is kept too — beat 3 on card c stays
     // conditional ('if this does come to something'), never presupposing he comes back.
+    //
+    // BEAT 4 REWRITTEN 2026-08-19. It must name an OBSTRUCTION, not an absence or a becoming —
+    // 9 of these 12 named neither ('the turn that's forming', 'what he's weighing') and the
+    // Empress line named the OPPOSITE ('what's drawing him back', a pull rather than a block).
+    // Act 1 sells an Energy Clearing Ritual that removes "the shadow that's been blocking your
+    // path"; improve-v1/08-clearing-theme-coherence.md found clearing is SPRUNG at the pitch
+    // rather than seeded, and this is the earliest place to seed it. The object sits between HER
+    // and the return she asked about — the love bucket frames every block as an impersonal thing
+    // in her path precisely so that removing it blames nobody.
     'cards-return': {
       a: [
         "You turned the Magician, dear. Look — a cup, a coin, a blade and a wand, all laid out on his table.",
         "You asked if he'll come back. Your hand went straight to the man who can act.",
         "He isn't short of a way back, dear. He has one.\nSo this was never about whether he could.\nAnd that pull you still feel? It isn't only yours.\nYou've felt him on the other end of it. You're reading that right.",
-        "Let me look closer at what's holding his hand back…",
+        "Let me look closer at what sits between you and his way back…",
       ],
       b: [
         "You turned the Hanged Man, dear. Look — he hangs by one ankle from a green tree, and his face is calm.",
         "You asked if he'll come back. Your hand went to a man still up in the air.",
         "Nothing has been settled here, dear. Not for you, and not against you.\nHe hasn't shut the door. He hasn't opened it either.\nYou keep refusing to call this over.\nThat isn't you clinging, dear. You're reading it right.",
-        "Let me look closer at what he's turning over up there…",
+        "Let me look closer at what's holding this in between…",
       ],
       c: [
         "You turned the Fool, dear. Look — a white rose in one hand, a small bundle on a stick, a dog at his heel.",
         "You asked if he'll come back. Your hand went to the one card that won't call this over.",
         "The road is still open, dear. The door was never shut.\nBut look where his eyes are. On what's ahead, not behind.\nSo if this does come to something, it starts new.\nIt won't pick up where it broke. That isn't a smaller thing, dear.",
-        "Let me look closer at the turn that's forming…",
+        "Let me look closer at what stands between you and that open road…",
       ],
     },
     'cards-honest': {
