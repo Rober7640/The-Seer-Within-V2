@@ -37,19 +37,42 @@ WHERE key = 'v1_downsell_bump_price_2026';
 -- ── 1. WIDEN THE SCOPE. Status untouched. ───────────────────────────────────
 BEGIN;
 
+-- jsonb_set on a NULL scope returns NULL (it is strict), which would silently
+-- turn this row global instead of tarot+root-scoped — coalesce guards that.
+-- Not reachable today (create-downsell-bump-price-experiment-2026-08-17.sql
+-- inserts a genuine non-null scope), but if `scope` were ever cleared
+-- out-of-band, a NULL write here would make matchesFunnelScope
+-- (server/lib/experiments.ts:272) read it as "matches everyone" — priming the
+-- row to enrol every funnel for whoever starts it later. Same guard as
+-- ship-gate-bump-to-root-2026-08-18.sql.
 UPDATE experiments
-SET scope = jsonb_set(scope, '{funnel}', '["v1-tarot","v1-root"]'::jsonb),
+SET scope = jsonb_set(coalesce(scope, '{}'::jsonb), '{funnel}',
+                       '["v1-tarot","v1-root"]'::jsonb, true),
     updated_at = now()
 WHERE key = 'v1_downsell_bump_price_2026'
   AND status = 'draft';   -- refuses to touch a row someone has already started
 
--- Expect 1 row: status STILL 'draft', two funnels.
+-- ⛔ STOP AND READ: this must report exactly 1 row — status STILL 'draft',
+--    scope.funnel = ["v1-tarot","v1-root"].
+--    0 rows  = the guard above did not match: status was not 'draft', which
+--              means someone already started this row (or it doesn't exist).
+--              ROLLBACK and go find out who/why before deciding whether to
+--              proceed. Do NOT relax the guard, and do NOT read "0 rows,
+--              COMMIT ran fine" as success — it isn't.
+--    >1 rows = impossible (key is unique) → ROLLBACK immediately.
 SELECT key, status, scope->'funnel' AS funnels
 FROM experiments WHERE key = 'v1_downsell_bump_price_2026';
 
 COMMIT;
 
 -- ── 2. ROLLBACK ─────────────────────────────────────────────────────────────
--- UPDATE experiments SET scope = jsonb_set(scope, '{funnel}', '["v1-tarot"]'::jsonb),
---        updated_at = now()
--- WHERE key = 'v1_downsell_bump_price_2026';
+-- BEGIN;
+-- UPDATE experiments
+-- SET scope      = jsonb_set(coalesce(scope, '{}'::jsonb), '{funnel}',
+--                             '["v1-tarot"]'::jsonb, true),
+--     updated_at = now()
+-- WHERE key    = 'v1_downsell_bump_price_2026'
+--   AND status = 'draft';
+-- SELECT key, status, scope->'funnel' AS funnels
+-- FROM experiments WHERE key = 'v1_downsell_bump_price_2026';
+-- COMMIT;
