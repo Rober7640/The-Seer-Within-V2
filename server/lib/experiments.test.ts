@@ -198,6 +198,18 @@ describe('experimentFunnel (root sentinel)', () => {
     }
   });
 
+  it('an arbitrary non-enum string passes through unchanged too', () => {
+    // experimentFunnel has no enum check — it only asks "is this a non-empty
+    // string". That matters because the caller doesn't always hand it a
+    // FunnelParam: the resume path (server/routes.ts, ~line 1522) reads
+    // req.query.funnel raw, with only a length cap and no parseFunnel
+    // validation, so a junk or hand-edited ?funnel= value reaches this function
+    // directly in production. This case exists so an implementation that
+    // hardcodes the known funnel enum (and falls back to the root sentinel for
+    // anything else) cannot pass the suite.
+    assert.equal(experimentFunnel('anything'), 'anything');
+  });
+
   it('the sentinel does NOT enrol root in a test scoped to other funnels', () => {
     // Widening scope is what enrols root. The sentinel alone must change nothing —
     // this is the property that makes tasks 1-4 a no-op until the SQL runs.

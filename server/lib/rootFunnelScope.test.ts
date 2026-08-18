@@ -41,8 +41,17 @@ const GATE_TAROT_ONLY = `root_gate_tarot_only_${STAMP}`;
 const BUMP_ROOT = `root_bump_${STAMP}`;
 const DOWNSELL_ROOT = `root_downsell_${STAMP}`;
 const CLOSE_ROOT = `root_close_${STAMP}`;
+const GATE_DONE_ROOT = `root_gate_done_${STAMP}`;
 const EXPOSURE_KEY = `root_exposure_${STAMP}`;
-const ALL_KEYS = [GATE_ROOT, GATE_TAROT_ONLY, BUMP_ROOT, DOWNSELL_ROOT, CLOSE_ROOT, EXPOSURE_KEY];
+const ALL_KEYS = [
+  GATE_ROOT,
+  GATE_TAROT_ONLY,
+  BUMP_ROOT,
+  DOWNSELL_ROOT,
+  CLOSE_ROOT,
+  GATE_DONE_ROOT,
+  EXPOSURE_KEY,
+];
 
 // Every arm carries its payload so the resolver has something to apply. Weight is
 // 100 on the single arm: these tests assert ENROLMENT and SCOPE, not the split.
@@ -59,6 +68,29 @@ const running = (key: string, variants: ReturnType<typeof oneArm>, funnels: stri
   conversion: { type: 'v1_main_funnel', windowDays: 7, targetN: 1000 },
 });
 
+// Same shape as `running`, but concluded with a declared winner — the combination
+// that actually ships a feature to root (see ship-gate-bump-to-root-2026-08-18.sql):
+// assign()'s status==='done' && winnerVariant branch (experiments.ts:419) applies
+// the winning arm's payload to everyone in scope, with enrolled:false, because a
+// concluded test logs no new exposures anywhere.
+const doneWithWinner = (
+  key: string,
+  variants: ReturnType<typeof oneArm>,
+  funnels: string[],
+  winner: string,
+) => ({
+  key,
+  name: key,
+  status: 'done',
+  startedAt: new Date(),
+  endedAt: new Date(),
+  subjectType: 'email',
+  variants,
+  scope: { funnel: funnels },
+  winnerVariant: winner,
+  conversion: { type: 'v1_main_funnel', windowDays: 7, targetN: 1000 },
+});
+
 before(async () => {
   if (!hasDb) return;
   await db.insert(experiments).values([
@@ -67,6 +99,7 @@ before(async () => {
     running(BUMP_ROOT, oneArm({ bump: true, copy: 'A' }), ['v1-tarot', ROOT_FUNNEL]),
     running(DOWNSELL_ROOT, oneArm({ bumpCents: 977 }), ['v1-tarot', ROOT_FUNNEL]),
     running(CLOSE_ROOT, oneArm({ close: 'deep' }), ['v1-tarot', ROOT_FUNNEL]),
+    doneWithWinner(GATE_DONE_ROOT, oneArm({ gate: true }), ['v1-tarot', ROOT_FUNNEL], 'B'),
   ]);
   _resetExperimentCache();
 });
@@ -124,6 +157,20 @@ describe('a scope WITHOUT v1-root still skips root', { skip: !hasDb }, () => {
     const r = await resolvePalmGate('fb-user@example.com', 'v1-fb', null, GATE_ROOT);
     assert.equal(r.gate, false, 'v1-fb is not in scope and must stay out');
     assert.equal(r.enrolled, false);
+  });
+});
+
+// This is the mechanism that actually ships a feature to root — see
+// improve-v1/ship-gate-bump-to-root-2026-08-18.sql. Marking a row `done` with a
+// winner is not just "a running test with one arm at weight 100"; it is a
+// DIFFERENT branch in assign() (status==='done' && winnerVariant, above the
+// assignment-freeze check) that applies the payload to everyone in scope while
+// enrolling nobody, forever.
+describe('a concluded test applies its winner to root without enrolling anyone', { skip: !hasDb }, () => {
+  it('resolvePalmGate — a done row with a declared winner still gates root, but stops counting', async () => {
+    const r = await resolvePalmGate('root-done@example.com', undefined, null, GATE_DONE_ROOT);
+    assert.equal(r.gate, true, 'a concluded test must still apply its winning payload to root');
+    assert.equal(r.enrolled, false, 'a concluded test never adds to the denominator, root included');
   });
 });
 
