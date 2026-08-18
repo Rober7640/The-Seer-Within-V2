@@ -48,6 +48,9 @@ const EVELYN_PERSONA_SLUG = "evelyn-cross";
 const READING_DEST = `/reading?persona=${EVELYN_PERSONA_SLUG}`;
 const SESSION_KEY = "evelyn_lander_token";
 const HISTORY_KEY = "evelyn_lander_history";
+// Which campaign the cached history belongs to. Without it the cache is replayed
+// across a change of email, showing the reader the previous send's opener.
+const CAMPAIGN_KEY = "evelyn_lander_campaign";
 const MAX_USER_TURNS = 2;
 // Bounds how long a caller can be stuck waiting on /start (e.g. a stalled
 // mobile connection) before we give up and fall through to the catch block,
@@ -151,10 +154,39 @@ function getSessionToken(): string {
 function clearSession() {
   sessionStorage.removeItem(SESSION_KEY);
   sessionStorage.removeItem(HISTORY_KEY);
+  sessionStorage.removeItem(CAMPAIGN_KEY);
+}
+
+/**
+ * The campaign the cached history was written under, or null for a visit that
+ * carried none. Read/written by loadHistory + saveHistory only, so the tag and
+ * the messages it guards can never be set from different places.
+ */
+function cachedCampaign(): string | null {
+  try {
+    return sessionStorage.getItem(CAMPAIGN_KEY);
+  } catch {
+    return null;
+  }
 }
 
 function loadHistory(): ChatMessage[] {
   try {
+    // The cache exists so a REFRESH mid-conversation doesn't lose the thread. It
+    // must NOT survive a change of campaign.
+    //
+    // The restore path in the mount effect returns BEFORE /start is called, so a
+    // reader who opens Monday's email, leaves, then clicks Tuesday's in the same
+    // tab gets Monday's opening line — /start is never asked for Tuesday's. Her
+    // lander session is tagged with Tuesday's campaign server-side, so the screen
+    // and the record disagree, and the one thing this lander promises (it
+    // continues the email you just clicked) is exactly what breaks. Nothing
+    // errors; she is simply read the wrong reading.
+    //
+    // Compared against the LIVE url rather than a value threaded through the
+    // caller, so this cannot drift from what /start would have been sent.
+    if (cachedCampaign() !== readParams().campaign) return [];
+
     const raw = sessionStorage.getItem(HISTORY_KEY);
     if (!raw) return [];
     const parsed = JSON.parse(raw);
@@ -171,6 +203,13 @@ function loadHistory(): ChatMessage[] {
 function saveHistory(messages: ChatMessage[]) {
   try {
     sessionStorage.setItem(HISTORY_KEY, JSON.stringify(messages));
+    // Stamp the campaign this history belongs to, so the next arrival can tell
+    // whether it is a refresh (restore) or a different email (start fresh).
+    // Written on every save, not just the first, so a mid-conversation url change
+    // cannot leave the tag pointing at the wrong send.
+    const campaign = readParams().campaign;
+    if (campaign === null) sessionStorage.removeItem(CAMPAIGN_KEY);
+    else sessionStorage.setItem(CAMPAIGN_KEY, campaign);
   } catch {
     // sessionStorage full / disabled — chat just won't survive refresh.
   }
