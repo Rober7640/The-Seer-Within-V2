@@ -165,8 +165,13 @@ const FRAMEWORK = [
   '| 6 | 3 | **The absolution** — name the accusation, refuse it | The most valuable line on the page goes unsaid |',
   '| 7 | 4 | **The object** — something *sitting between her and what she wants* | The clearing ritual arrives from nowhere at minute eight |',
   '',
-  'Order is load-bearing: payoff before gap, or she feels short-changed before she has been given',
-  'anything. Absolution last, because it is about her and it is what she carries into the chat.',
+  '**The order is doing work.**',
+  '',
+  '- **Payoff before gap.** Reverse them and she feels short-changed before she has been given',
+  '  anything.',
+  '- **Absolution last of the read.** It is the only line that is about *her*, so it is the note',
+  '  she carries into the chat.',
+  '- **Object last of all.** It is the handover, and the one line that has to survive into the sale.',
   '',
   '**4 · Gate it, then show a human.**',
   '',
@@ -200,6 +205,17 @@ const FRAMEWORK = [
   '---',
   '',
 ]
+
+// The clearing copy, read from the client rather than pasted — it is the payoff bubble 7
+// sets up, and a quoted-but-stale version of it would teach the wrong target.
+function pitchLines() {
+  try {
+    const src = readFileSync(new URL('../../../../client/src/hooks/useConversation.ts', import.meta.url), 'utf8')
+    const want = [/"(I know exactly what needs to be cleared[^"]*)"/, /`(What you need, \$\{firstName\}[^`]*)`/, /"(I'll trace the roots of this block[^"]*)"/]
+    return want.map((re) => src.match(re)?.[1]).filter(Boolean)
+      .map((l) => l.replace('${firstName}', 'Sarah'))
+  } catch { return [] }
+}
 
 if (has('--checklist')) {
   const fams = new Map()
@@ -264,6 +280,16 @@ if (has('--checklist')) {
   // example in this repo eventually hit.
   const JOBS = ['THE PICTURE', 'THE ECHO + THE PULL', 'THE PAYOFF', 'THE REASON WHY',
                 'THE GAP', 'THE ABSOLUTION', 'THE OBJECT']
+  // Written about the JOB, not the line, so it stays true whichever read is rendered.
+  const WHY = [
+    'She is looking at that card while she reads this. Every detail is on the art, so she checks it in one second without deciding to. That is the credit everything after it spends.',
+    'First half: she is on the right page. The second half is the one that matters — *her hand went*. The reading is now hers, not the card\'s.',
+    'Note what it certifies: **her evidence**. Not his heart. Say "he loves you" and she does not believe you — her friends say that for free.',
+    'Ties the payoff back to the card. Without this, bubble 3 is a compliment. With it, it is evidence.',
+    'She now has something real **and** something unfinished. This is what keeps the question alive.',
+    'The accusation she walked in with — *you are overthinking it, you are inventing it* — named and refused. The line she will remember.',
+    'Not an absence. Something is **sitting between** them. An object. Objects can be moved.',
+  ]
   // Prefer a DRAFT, because drafts are written to the formula by construction. The wired
   // landers predate it — cards-return's middle bubbles were written before "the gap" and
   // "the reason why" had names, so it maps loosely and makes a poor demonstration.
@@ -290,12 +316,45 @@ if (has('--checklist')) {
     out.push('')
     ex.forEach((b, i) => {
       out.push(`**${i + 1} · ${JOBS[i]}**`)
+      out.push('')
       out.push(`> ${b}`)
       out.push('')
+      out.push(WHY[i])
+      out.push('')
     })
-    out.push('Then, forty turns later, Evelyn says the line the whole funnel is built on —')
-    out.push('*"I know exactly what needs to be cleared."* Bubble 7 is why that lands as the answer')
-    out.push('to something the card already said, instead of a block appearing from nowhere.')
+    out.push('### Why bubble 7 matters — the thread landing')
+    out.push('')
+    out.push('Forty turns later Evelyn says this, and it is already in the code:')
+    out.push('')
+    for (const line of pitchLines()) out.push(`> "${line}"`)
+    out.push('')
+    out.push('With an ABSENCE in bubble 7, *"the shadow that\'s been blocking your path"* is the first')
+    out.push('she has heard of any shadow. A block appears at minute eight and a ritual is sold to')
+    out.push('remove it.')
+    out.push('')
+    out.push('With an OBSTRUCTION, she was told something was in the way in the first thirty seconds —')
+    out.push('by the card, before Evelyn had anything to sell. The pitch is not a swerve. It is Evelyn')
+    out.push('finally naming the thing the card already showed her.')
+    out.push('')
+    out.push('### The whole arc')
+    out.push('')
+    out.push('| Bubble | What she does |')
+    out.push('|---|---|')
+    out.push("| 1 | *That's really what's on the card* |")
+    out.push('| 2 | *I picked this one* |')
+    out.push("| 3–4 | *So I wasn't imagining it* |")
+    out.push("| 5 | *But something's still missing* |")
+    out.push("| 6 | *I wasn't crazy after all* |")
+    out.push("| 7 | *…something's in the way* |")
+    out.push('| ↓ | **"I know exactly what needs to be cleared."** |')
+    out.push('')
+    out.push('Bubbles 1–6 buy her trust. Bubble 7 hands the sale a thread to pull. That is the')
+    out.push('difference between a lander that validates her and a lander that sells.')
+    out.push('')
+    out.push('⚠️ **Bubble 7 is the one piece with no evidence behind it.** Bubbles 1–6 were checked')
+    out.push('against 400 real concerns, and that check changed the copy. The obstruction framing is')
+    out.push('reasoning from how the offer works, not an observation — and at this traffic')
+    out.push('(96% on three hooks) a test will not settle it either. Ship it knowing that.')
     out.push('')
     out.push('⚠️ **The already-wired landers map only loosely.** `cards-return` and')
     out.push('`cards-will-commit` were written before the middle bubbles had names, so they carry the')

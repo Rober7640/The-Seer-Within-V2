@@ -67,8 +67,13 @@ before writing. It carries the bans, and they are there because someone thought 
 | 6 | 3 | **The absolution** — name the accusation, refuse it | The most valuable line on the page goes unsaid |
 | 7 | 4 | **The object** — something *sitting between her and what she wants* | The clearing ritual arrives from nowhere at minute eight |
 
-Order is load-bearing: payoff before gap, or she feels short-changed before she has been given
-anything. Absolution last, because it is about her and it is what she carries into the chat.
+**The order is doing work.**
+
+- **Payoff before gap.** Reverse them and she feels short-changed before she has been given
+  anything.
+- **Absolution last of the read.** It is the only line that is about *her*, so it is the note
+  she carries into the chat.
+- **Object last of all.** It is the handover, and the one line that has to survive into the sale.
 
 **4 · Gate it, then show a human.**
 
@@ -106,29 +111,82 @@ Bubbles 1-6 buy her trust. Bubble 7 hands the sale a thread to pull.
 The ad asked **"How does he really feel about you?"**. Bubble by bubble:
 
 **1 · THE PICTURE**
+
 > You turned the Magician, dear. Look — a red robe over white, and a loop above his head with no end to it.
 
+She is looking at that card while she reads this. Every detail is on the art, so she checks it in one second without deciding to. That is the credit everything after it spends.
+
 **2 · THE ECHO + THE PULL**
+
 > You asked how he really feels. Your hand went to the man who does nothing by accident.
 
+First half: she is on the right page. The second half is the one that matters — *her hand went*. The reading is now hers, not the card's.
+
 **3 · THE PAYOFF**
+
 > So the warmth you felt was not made up, dear.
 
+Note what it certifies: **her evidence**. Not his heart. Say "he loves you" and she does not believe you — her friends say that for free.
+
 **4 · THE REASON WHY**
+
 > A man like this doesn't warm to someone by accident.
 
+Ties the payoff back to the card. Without this, bubble 3 is a compliment. With it, it is evidence.
+
 **5 · THE GAP**
+
 > What he hasn't done is say it out loud.
 
+She now has something real **and** something unfinished. This is what keeps the question alive.
+
 **6 · THE ABSOLUTION**
+
 > That gap is real, dear. You've been reading it right.
 
+The accusation she walked in with — *you are overthinking it, you are inventing it* — named and refused. The line she will remember.
+
 **7 · THE OBJECT**
+
 > Let me look closer at what's sitting between you and the words…
 
-Then, forty turns later, Evelyn says the line the whole funnel is built on —
-*"I know exactly what needs to be cleared."* Bubble 7 is why that lands as the answer
-to something the card already said, instead of a block appearing from nowhere.
+Not an absence. Something is **sitting between** them. An object. Objects can be moved.
+
+### Why bubble 7 matters — the thread landing
+
+Forty turns later Evelyn says this, and it is already in the code:
+
+> "I know exactly what needs to be cleared. But I need your full permission to begin."
+> "What you need, Sarah, is an Energy Clearing Ritual — I'll focus entirely on removing the shadow that's been blocking your path."
+> "I'll trace the roots of this block, sever its hold, and seal the clearing so it can't return."
+
+With an ABSENCE in bubble 7, *"the shadow that's been blocking your path"* is the first
+she has heard of any shadow. A block appears at minute eight and a ritual is sold to
+remove it.
+
+With an OBSTRUCTION, she was told something was in the way in the first thirty seconds —
+by the card, before Evelyn had anything to sell. The pitch is not a swerve. It is Evelyn
+finally naming the thing the card already showed her.
+
+### The whole arc
+
+| Bubble | What she does |
+|---|---|
+| 1 | *That's really what's on the card* |
+| 2 | *I picked this one* |
+| 3–4 | *So I wasn't imagining it* |
+| 5 | *But something's still missing* |
+| 6 | *I wasn't crazy after all* |
+| 7 | *…something's in the way* |
+| ↓ | **"I know exactly what needs to be cleared."** |
+
+Bubbles 1–6 buy her trust. Bubble 7 hands the sale a thread to pull. That is the
+difference between a lander that validates her and a lander that sells.
+
+⚠️ **Bubble 7 is the one piece with no evidence behind it.** Bubbles 1–6 were checked
+against 400 real concerns, and that check changed the copy. The obstruction framing is
+reasoning from how the offer works, not an observation — and at this traffic
+(96% on three hooks) a test will not settle it either. Ship it knowing that.
 
 ⚠️ **The already-wired landers map only loosely.** `cards-return` and
 `cards-will-commit` were written before the middle bubbles had names, so they carry the
