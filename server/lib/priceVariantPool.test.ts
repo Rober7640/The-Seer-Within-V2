@@ -427,6 +427,35 @@ describe('scopeVariantsToFunnel (unchanged behaviour — regression guard)', () 
   });
 });
 
+describe('root must never draw another funnel\'s price (v1-root sentinel guard)', () => {
+  // The real shape: root's arms carry NO funnel field, every other funnel's are scoped.
+  const POOL: PriceVariant[] = [
+    { id: '35', weight: 1, priceCents: 3500, downsellCents: 2500 },
+    { id: '45', weight: 0, priceCents: 4500, downsellCents: 3200 },
+    { id: '59', weight: 0, priceCents: 5900, downsellCents: 4200 },
+    { id: '45_fb', funnel: 'v1-fb', weight: 1, priceCents: 4500, downsellCents: 3200 },
+    { id: '35_palm_u47', funnel: 'v1-palm', weight: 9, priceCents: 3500, downsellCents: 2500 },
+  ];
+
+  it('root (undefined funnel) draws ONLY the unscoped arms — unchanged by the sentinel', () => {
+    assert.deepEqual(
+      scopeVariantsToFunnel(POOL, undefined).map((v) => v.id),
+      ['35', '45', '59'],
+    );
+  });
+
+  it('🔴 passing the EXPERIMENT sentinel here would hand root every funnel\'s price', () => {
+    // Documents WHY experimentFunnel() must never reach this function: no variant is
+    // scoped to 'v1-root', so the no-match fallback returns the WHOLE pool, palm and
+    // fb prices included. If this assertion ever needs changing, something upstream
+    // is passing the sentinel into pricing.
+    assert.deepEqual(
+      scopeVariantsToFunnel(POOL, 'v1-root').map((v) => v.id),
+      ['35', '45', '59', '45_fb', '35_palm_u47'],
+    );
+  });
+});
+
 
 describe('storedVariantIsServable — the $57.77 bug (2026-08-11)', () => {
   // dcwheeler51@gmail.com drew the ROOT `45` arm on 2026-05-25 while the $35/$45
