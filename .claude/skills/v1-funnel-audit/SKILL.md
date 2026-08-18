@@ -241,7 +241,8 @@ It shares its rule set with **`scripts/check-read.mjs`** (the drafting tool a wr
 BEFORE showing anyone a draft) by importing it, so the writer's gate and the audit's gate
 can never drift apart. `check-read.mjs --file draft.json` scores unwired copy.
 
-⚠️ **Baseline 2026-08-18: 0 of 88 landers pass.** The whole deck predates these rules —
+⚠️ **Baseline 2026-08-18: 0 of 88 landers passed.** (6 of 88 now — `cards-return` and
+`cards-will-commit` are migrated; run `--checklist` for the live count.) The whole deck predates these rules —
 761 bubbles over grade 5, 274 over the word limit, 174 with no echo of their own ad. So the
 default run is a REPORT, not a gate: use `--hook` to hold new and edited landers to the bar,
 and switch the suite to `--strict` only once the migration is done.
@@ -250,6 +251,53 @@ and switch the suite to `--strict` only once the migration is done.
 ankles"* passes every numeric rule and is caught only because someone thought to ban the
 construction afterwards. It is a floor, not a bar — the last line of its output says *read
 it aloud*, and that is not decoration.
+
+## Migrating a lander — the loop
+
+Proven on `cards-will-commit` (2026-08-18) and `cards-return` (2026-08-18, 61 problems → 0).
+Follow it in order; every step is here because skipping it cost something once.
+
+**The checklist of what is left** is generated, never hand-kept:
+
+```bash
+node .claude/skills/v1-funnel-audit/scripts/audit-copy.mjs --checklist
+```
+
+writes `fb-tarot/docs/copy-migration-checklist.md` — both tracks, grouped by family, with the
+tick DERIVED from the gate so it cannot claim a lander is done when the code disagrees.
+
+1. **Baseline.** `audit-copy.mjs --hook <hook>` — it gates every deck carrying that hook, not
+   just the live one.
+2. **Read the family's guard file first** (`tests/tarot-<family>-copy.test.ts`). It carries bans
+   a rewrite must not trip, and some pin copy verbatim. Three seed families — `decode-him`,
+   `trust`, `self-frame` — have no such file at all; the checklist says so on the row.
+3. **Draft to JSON in the scratchpad**, gate with `scripts/check-read.mjs --file draft.json`.
+   Never show the operator an ungated draft — that is what the four rounds bought.
+4. **The shape** (from `cards-will-commit`): bubble 1 = card + PICTURE · bubble 2 = her ad
+   question said back + where her hand went · then the read, one idea per bubble · then the
+   open loop. The picture must be sourced from the actual art file, not from tarot convention
+   — she is looking at it, so a detail that is not there reads as a lie (see the note above
+   `RETURN_MHF.cardPicture`).
+5. **Wire it** into `client/src/content/tarotReads.ts`. Beat 3 carries `\n`; the registry stays
+   **four beats** so all 150+ existing assertions keep meaning. 🔴 Beat 1 must remain ONE bubble
+   — `checkEcho` reads bubbles 1–2 only, so splitting beat 1 pushes the echo out of range and
+   the lander fails a rule the copy actually satisfies.
+6. **Every deck carrying the hook**, or the parity test fails. A migrated lander also writes the
+   picture into beat 1 itself and must NOT be in `PICTURE_HOOKS`, or the splice duplicates it.
+7. **Beat 1 must stay unique across the whole deck** — the distinctness guards compare beat 1 by
+   exact string, so reusing a sibling hook's picture line fails. Same card, different true
+   detail.
+8. **Re-gate and run**: `--hook` (exit 0), the family test, `tarot-readability`, then the full
+   `tests/tarot-*.test.ts` suite and `tsc` against baseline.
+9. **Shrink `GRANDFATHERED`** in `tests/tarot-readability.test.ts` and ratchet its pin down to the
+   new size. The list may only shrink; splitting a beat adds bubble indices, so no key goes stale.
+10. **Read it aloud.** The gate is a floor, not a bar.
+
+⚠️ **Landmine — `tests/tarot-soulmate-label-copy.test.ts`.** Lines 439/441/444 assert `openerB`
+returns exactly 5 messages, index the open loop at `msgs[3]`, and require `msgs[2].length > 400`.
+All three assume one unsplit beat 3 and fail the moment that family migrates. It is the only file
+in the suite with that assumption. Delete those three with a note, re-anchoring the shape checks to
+first/last; do not work around them.
 
 ## Output
 

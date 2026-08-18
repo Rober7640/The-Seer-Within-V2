@@ -104,7 +104,8 @@ export function report(label, headline, bubbles) {
 // space is percent-encoded in import.meta.url but not in argv[1] — so the naive compare
 // never matched, the CLI branch never ran, and `--hook`/`--file` exited 0 printing
 // NOTHING. A gate that silently passes is worse than no gate. Found 2026-08-18.
-if (import.meta.url !== pathToFileURL(process.argv[1]).href) { /* imported: export only */ } else {
+// (argv[1] is undefined under `node -e`, where nothing is the entry point — hence the ?? '')
+if (import.meta.url !== pathToFileURL(process.argv[1] ?? '').href) { /* imported: export only */ } else {
 const argv = process.argv.slice(2)
 const arg = (n) => { const i = argv.indexOf(n); return i >= 0 ? argv[i + 1] : null }
 

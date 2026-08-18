@@ -16,14 +16,16 @@
 //   node .claude/skills/v1-funnel-audit/scripts/audit-copy.mjs --hook X    # gate ONE lander (exit 1 on any problem)
 //   node .claude/skills/v1-funnel-audit/scripts/audit-copy.mjs --strict    # fail if ANY lander fails
 //   node .claude/skills/v1-funnel-audit/scripts/audit-copy.mjs --worst 15  # the migration queue
+//   node .claude/skills/v1-funnel-audit/scripts/audit-copy.mjs --checklist # (re)write the migration checklist doc
 
 import { checkBubble, checkEcho, RULES } from '../../../../scripts/check-read.mjs'
+import { writeFileSync, existsSync } from 'node:fs'
 
 const argv = process.argv.slice(2)
 const arg = (n) => { const i = argv.indexOf(n); return i >= 0 ? argv[i + 1] : null }
 const has = (n) => argv.includes(n)
 
-const { DECKS, HEADLINES, openerB } = await import('../../../../client/src/content/tarotReads.ts')
+const { DECKS, HEADLINES, openerB, angleForHook } = await import('../../../../client/src/content/tarotReads.ts')
 
 const only = arg('--hook')
 const rows = []
@@ -57,6 +59,173 @@ const clean = [...landers.values()].filter((l) => l.problems === 0).length
 
 console.log(`\n${'═'.repeat(78)}\nCOPY READABILITY — ${landers.size} landers, ${rows.length} card reads`)
 console.log(`rules: ≤${RULES.MAX_WORDS} words · ≤${RULES.MAX_SENTENCES} sentences · grade ≤${RULES.MAX_GRADE} · ≤${RULES.MAX_SYLLABLES} syllables · ≤${RULES.MAX_NEGATIVES} negatives\n`)
+
+// ── --checklist: (re)write fb-tarot/docs/copy-migration-checklist.md ─────────
+// WHY GENERATED. Eighty-two rows ticked by hand drift from the code inside one session,
+// and a checklist that lies is worse than none — somebody skips a lander because a stale
+// [x] said it was done. The tick is DERIVED: clean == [x]. Re-running this IS the update.
+//
+// Grouped by FAMILY (angleForHook) because that is the unit of work: 3 hooks x 3 cards,
+// one guard file, and the "beat 3 shares no 6-word run with its siblings" test compares
+// WITHIN the family — so a family written together cannot collide with itself.
+//
+// NOTES are the standing warnings that a score can never derive. They live here, next to
+// the row, rather than in a handoff somebody has to remember to re-read.
+const NOTES = {
+  'cards-someone-else': '⚠️ STUDY FIRST — best converter on the funnel (9.8%). A grade-5 pass could remove what works.',
+  'cards-really-soulmate': '⚠️ B1 — tests/tarot-soulmate-label-copy.test.ts:439/441/444 assume ONE unsplit beat 3. Delete those three with a note before migrating this family.',
+  'cards-twin-or-connection': '⚠️ B1 — see cards-really-soulmate.',
+  'cards-met-already': '⚠️ B1 — see cards-really-soulmate.',
+  'cards-who-hurt-me': '⚠️ heaviest hook on the funnel — never minimise, never convict, never blame her.',
+  'cards-still-miss-him': '⚠️ sibling of cards-who-hurt-me — never minimise the named harm.',
+  'cards-feels-off': '⚠️ submits HER JUDGEMENT for a verdict. Split the question; do not answer it.',
+}
+const DECK_NOTES = {
+  'decode-him': '🔴 B2 — decode-him-strip.png is the fb-PALM thumb strip, not tarot art, and there is no revealStrip. These 4 cannot take a picture line until the art is settled or the deck is retired.',
+}
+
+// ── Track B: the money batch ────────────────────────────────────────────────
+// Hard-coded because these hooks do NOT exist in the registry yet — the checklist has to
+// show work that is not built, or the operator sees "6/88" and thinks that is the job.
+// Every row moves to the generated section above the moment its hook is wired.
+// Source of truth: fb-tarot/docs/drafts/money-block.draft.md.
+const MONEY = [
+  ['money-retiring (55–64)', [
+    ['cards-blocked-retiring', 'Why is my money still blocked this close to retiring?'],
+    ['cards-nest-egg', 'How long has something been blocking me from a nest egg?'],
+    ['cards-too-late', 'Is something blocking my money, or did I just leave it too late?'],
+  ]],
+  ['money-working (65+)', [
+    ['cards-still-working', 'Why am I still working when the money should have come by now?'],
+    ['cards-how-much-longer', 'How much longer will something keep blocking my money?'],
+    ['cards-out-of-time', 'Is something still blocking my money, or have I run out of time?'],
+  ]],
+  ['money-energy', [
+    ['cards-my-energy', 'Is my energy blocking my money?'],
+    ['cards-money-wont-stay', "What does my energy say about why money won't stay?"],
+    ['cards-energy-how-long', 'How long has my energy been working against my money?'],
+  ]],
+  ['money-prayer', [
+    ['cards-prayed-years', "I've prayed about money for years. What's still blocking it?"],
+    ['cards-prayers-unanswered', 'How long will my prayers for money keep going unanswered?'],
+  ]],
+]
+
+if (has('--checklist')) {
+  const fams = new Map()
+  for (const r of rows) {
+    const fam = angleForHook(r.hook)
+    if (!fams.has(fam)) fams.set(fam, new Map())
+    const byLander = fams.get(fam)
+    const k = `${r.deck}/${r.hook}`
+    const cur = byLander.get(k) ?? { deck: r.deck, hook: r.hook, problems: 0 }
+    cur.problems += r.problems.length
+    byLander.set(k, cur)
+  }
+  const famRows = [...fams.entries()].map(([fam, m]) => {
+    const ls = [...m.values()].sort((a, b) => b.problems - a.problems)
+    return { fam, ls, clean: ls.filter((l) => !l.problems).length, problems: ls.reduce((a, l) => a + l.problems, 0) }
+  }).sort((a, b) => b.problems - a.problems)
+
+  const totalClean = famRows.reduce((a, f) => a + f.clean, 0)
+  const totalLanders = famRows.reduce((a, f) => a + f.ls.length, 0)
+  const totalProblems = famRows.reduce((a, f) => a + f.problems, 0)
+  const bar = (c, n) => '█'.repeat(Math.round(c / n * 20)) + '░'.repeat(20 - Math.round(c / n * 20))
+
+  const out = []
+  out.push('# /fb-tarot copy migration — checklist')
+  out.push('')
+  out.push('Two tracks: **A** rewrites the 88 landers already live; **B** builds the 11 new money landers.')
+  out.push('')
+  out.push('> 🤖 **GENERATED — do not hand-edit.** Rewrite it with')
+  out.push('> `node .claude/skills/v1-funnel-audit/scripts/audit-copy.mjs --checklist`.')
+  out.push('> The tick is derived from the gate, not from anyone remembering to tick it, so this file')
+  out.push('> can never claim a lander is done when the code says otherwise.')
+  out.push('')
+  out.push(`\`${bar(totalClean, totalLanders)}\`  **${totalClean} / ${totalLanders} landers clean** · ${totalProblems} gate problems left`)
+  out.push('')
+  out.push(`Rules: ≤${RULES.MAX_WORDS} words · ≤${RULES.MAX_SENTENCES} sentences · grade ≤${RULES.MAX_GRADE} · ≤${RULES.MAX_SYLLABLES} syllables · ≤${RULES.MAX_NEGATIVES} negatives per sentence · echo the ad in bubbles 1–2 · no banned constructions.`)
+  out.push('')
+  out.push('**A lander is one deck × one hook.** Most hooks live only on `return-mhf` (the default')
+  out.push('face-down deck every live ad points at); a few also have `arcana-mfh` / `arcana-eef` /')
+  out.push('`decode-him` variants, and an edit must be applied to **every** deck carrying the hook or')
+  out.push('the parity test fails.')
+  out.push('')
+  out.push('The migration loop is in `.claude/skills/v1-funnel-audit/SKILL.md` § "Migrating a lander".')
+  out.push('Work top-down: families are ordered by how much unreadable copy they hold.')
+  out.push('')
+  out.push('---')
+  out.push('')
+  out.push('# Track A — the 88 live landers')
+  out.push('')
+  for (const f of famRows) {
+    out.push(`## ${f.fam} — ${f.clean}/${f.ls.length} clean · ${f.problems} problems`)
+    out.push('')
+    // Not every family has one. decode-him / trust / self-frame are the SEED hooks — they
+    // predate the per-family guard convention, so the busiest copy on the funnel is also
+    // the least guarded. Say that out loud rather than linking a file that is not there.
+    const guard = `tests/tarot-${f.fam}-copy.test.ts`
+    out.push(existsSync(new URL(`../../../../${guard}`, import.meta.url))
+      ? `\`${guard}\` — read it BEFORE rewriting; it carries bans, and some copy is pinned verbatim.`
+      : `⚠️ **No dedicated guard file** (\`${guard}\` does not exist) — a seed family, written before the per-family convention. Only the generic guards apply, so this copy is the least protected on the funnel.`)
+    out.push('')
+    const seenDeckNote = new Set()
+    for (const l of f.ls) {
+      const tick = l.problems ? ' ' : 'x'
+      const tail = l.problems ? `· **${l.problems}**` : '· clean'
+      const deckTag = l.deck === 'return-mhf' ? '' : ` \`${l.deck}\``
+      out.push(`- [${tick}] \`${l.hook}\`${deckTag} — "${HEADLINES[l.hook]}" ${tail}`)
+      // Deck notes print ONCE per family — the same red paragraph on four consecutive
+      // rows stops being read by the third.
+      const deckNote = l.problems && !seenDeckNote.has(l.deck) ? DECK_NOTES[l.deck] : null
+      if (deckNote) seenDeckNote.add(l.deck)
+      const note = NOTES[l.hook] ?? deckNote
+      if (note && l.problems) out.push(`      ${note}`)
+    }
+    out.push('')
+  }
+  // ── Track B section ────────────────────────────────────────────────────────
+  const built = new Set(rows.map((r) => r.hook))
+  out.push('---')
+  out.push('')
+  out.push('# Track B — the money batch (not built yet)')
+  out.push('')
+  out.push('The first non-love territory on the funnel. Deck: `return-mhf`, face-down, no new art.')
+  out.push('Draft + the 7 bans + the wiring list: `fb-tarot/docs/drafts/money-block.draft.md`.')
+  out.push('')
+  out.push('🔴 **The 33 reveals in that draft must be REWRITTEN, not just wired.** Scored against this')
+  out.push('gate they carry ~176 problems — the same failure rate `cards-return` had before its')
+  out.push('rewrite. Track B\'s copy work is the Track A loop, run on 11 new hooks.')
+  out.push('')
+  out.push('**Structural work these 11 need that no love lander did:**')
+  out.push('')
+  out.push('- [ ] `hookToBucket()` returns `\'money\'` for the 11 — `tarotReads.ts`, hardcoded `\'love\'` today.')
+  out.push('      This is the load-bearing one: it sets `userData.bucket`, which steers the whole V1 chat')
+  out.push('      after the opener. V1 already has a full money path (`MONEY_BUCKET_PROMPT`), so the flip')
+  out.push('      routes her into an established path rather than needing new prompt work.')
+  out.push('- [ ] Per-hook tap instruction — an optional `hookInstruction` on `CardSetConfig`, read by')
+  out.push('      `TarotBridge.tsx`. The deck-level line says *"Think of the man on your mind."*')
+  out.push('- [ ] Money frame in `buildTarotReflectPrompt` — **insurance, not a pillar.** Version C is')
+  out.push('      unreachable on tarot today (`/fb-tarot/c` 302s to `/b`), so this only runs if a hook is')
+  out.push('      ever enrolled in the version experiment.')
+  out.push('- [ ] 4 angles, 4 family arrays, `TAROT_HOOKS` / `HEADLINES` / `TAROT_QUESTION`,')
+  out.push('      `TAROT_HOOK_CONTEXT` / `TAROT_HOOK_TENDENCY`, `validHooks` in `routes.ts`, `STATUS.md`.')
+  out.push('- [ ] `tests/tarot-money-block-copy.test.ts` — the 7 bans (no amount/date/source · never name a')
+  out.push('      person as the block · no financial advice · never blame her · never "too late" and never a')
+  out.push('      promised arrival · never rule on God · never presume her finances).')
+  out.push('')
+  for (const [fam, hooks] of MONEY) {
+    out.push(`## ${fam} — 0/${hooks.length} built`)
+    out.push('')
+    for (const [h, headline] of hooks)
+      out.push(`- [${built.has(h) ? 'x' : ' '}] \`${h}\` — "${headline}" · 3 reveals`)
+    out.push('')
+  }
+  const path = new URL('../../../../fb-tarot/docs/copy-migration-checklist.md', import.meta.url)
+  writeFileSync(path, out.join('\n'))
+  console.log(`wrote fb-tarot/docs/copy-migration-checklist.md — ${totalClean}/${totalLanders} clean, ${totalProblems} problems left`)
+  process.exit(0)
+}
 
 if (only) {
   // Single-lander gate: print every problem, exit non-zero on any.
