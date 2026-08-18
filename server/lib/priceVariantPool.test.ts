@@ -456,6 +456,75 @@ describe('root must never draw another funnel\'s price (v1-root sentinel guard)'
   });
 });
 
+describe('STATIC GUARD — the v1-root sentinel must never reach pricing code (2026-08-18)', () => {
+  // WHY THIS EXISTS. The block above only proves what scopeVariantsToFunnel WOULD
+  // do IF handed 'v1-root' — it never checks whether any real call site actually
+  // hands it that. ROOT_FUNNEL / experimentFunnel() (server/lib/experiments.ts)
+  // exist so the EXPERIMENT framework can name root traffic that otherwise sends
+  // no funnel param. If that sentinel ever gets threaded into a PRICING call —
+  // selectVariant / scopeVariantsToFunnel / storedVariantIsServable — the no-match
+  // fallback above fires for real: a root visitor stops matching root's unscoped
+  // 35/45/59 arms and is handed the WHOLE pool instead — palm's $35 (with its $47
+  // upsell), fb's $45, every other funnel's price. That is a silent overcharge (or
+  // undercharge) with no error, no crash, and — until this guard — no test that
+  // would fail. This reads the two real shipping files off disk, not a copy, so a
+  // future edit that wires the sentinel into a pricing call trips this the moment
+  // it lands rather than the moment someone remembers to update a test by hand.
+  const POOL_SRC = readFileSync(join(import.meta.dirname, 'priceVariantPool.ts'), 'utf8');
+  const VARIANT_SRC = readFileSync(join(import.meta.dirname, 'priceVariant.ts'), 'utf8');
+
+  it('priceVariantPool.ts never references the sentinel, in any form', () => {
+    // The pricing module has no business knowing the experiment framework's name
+    // for root at all — funnel-partitioning here works off whatever funnel string
+    // it is handed, never a hardcoded 'v1-root' special case.
+    assert.ok(!POOL_SRC.includes('ROOT_FUNNEL'), 'priceVariantPool.ts must not import/reference ROOT_FUNNEL');
+    assert.ok(!POOL_SRC.includes('experimentFunnel'), 'priceVariantPool.ts must not import/call experimentFunnel()');
+    assert.ok(!POOL_SRC.includes('v1-root'), "priceVariantPool.ts must not hardcode the 'v1-root' sentinel literal");
+  });
+
+  // Extracts the full, balanced-paren argument text of every `fnName(...)` call in
+  // `source` — so a multi-line/multi-arg call is inspected whole, not truncated at
+  // the first newline or the first nested paren (both calls this guards are
+  // multi-arg, e.g. `selectVariant(await getActiveVariants(), funnel, sign)`).
+  function callArgLists(source: string, fnName: string): string[] {
+    const marker = `${fnName}(`;
+    const calls: string[] = [];
+    let from = 0;
+    for (;;) {
+      const start = source.indexOf(marker, from);
+      if (start === -1) break;
+      let depth = 1;
+      let i = start + marker.length;
+      while (i < source.length && depth > 0) {
+        if (source[i] === '(') depth++;
+        else if (source[i] === ')') depth--;
+        i++;
+      }
+      calls.push(source.slice(start + marker.length, i - 1));
+      from = i;
+    }
+    return calls;
+  }
+
+  it('priceVariant.ts never passes experimentFunnel(...) into a pricing call site', () => {
+    // priceVariant.ts LEGITIMATELY imports and calls experimentFunnel() three times
+    // (gate/bump/close-depth logExposure() context) — it only ever LABELS an
+    // exposure row there, never decides a price, so a blanket "this file must not
+    // mention experimentFunnel" assertion would be wrong and would fail TODAY. This
+    // instead targets the three functions that actually draw or validate a price
+    // and fails only if the sentinel shows up inside one of THEIR argument lists.
+    for (const fn of ['selectVariant', 'scopeVariantsToFunnel', 'storedVariantIsServable']) {
+      for (const args of callArgLists(VARIANT_SRC, fn)) {
+        assert.ok(
+          !args.includes('experimentFunnel('),
+          `${fn}(${args}) passes experimentFunnel() into pricing — this would hand a ` +
+            `root visitor every other funnel's price the moment she hits scopeVariantsToFunnel's ` +
+            `no-match fallback (see the sentinel-guard block above)`,
+        );
+      }
+    }
+  });
+});
 
 describe('storedVariantIsServable — the $57.77 bug (2026-08-11)', () => {
   // dcwheeler51@gmail.com drew the ROOT `45` arm on 2026-05-25 while the $35/$45
