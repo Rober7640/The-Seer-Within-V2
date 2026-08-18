@@ -1665,6 +1665,13 @@ const DECODE_HIM: CardSetConfig = {
   beatNoun: 'cards',
   continueCta: "There's more the card is showing me — begin your free reading",
   chooseMoment: 'the moment your hand reached for it',
+  // 🔴 FOUND 2026-08-18, NOT FIXED HERE: decode-him-strip.png is the fb-PALM thumb strip
+  // (three hands, A/B/C), not tarot art — and this deck has no `revealStrip`, so a
+  // face-down visitor taps a thumb and is then told "you turned the Sun". Every read on
+  // this deck therefore describes a card she is not looking at, which is why its beat 1s
+  // are deliberately left picture-free. No live ad points here (DEFAULT_DECK is
+  // return-mhf and the other two ride ?deck=), so it is reachable only by hand-typed URL.
+  // Needs an operator decision: ship real Sun/Moon/Tower art, or retire the deck.
   strip: { url: '/tarot/decode-him-strip.png', width: 972, height: 460 },
   options: ['a', 'b', 'c'],
   // A — The Sun (what's in the light); B — The Moon (what's veiled);
@@ -1705,21 +1712,21 @@ const DECODE_HIM: CardSetConfig = {
     'cards-return': {
       a: [
         "You turned the Sun, dear — the card of what stands in the light.",
-        "You're asking if he'll come back… and your hand reached for the warm card, not the cold one.",
-        "The Sun doesn't promise a knock at the door tomorrow — it says the warmth between you was real, and real warmth rarely goes fully cold; the pull you still feel is not one-sided.",
+        "You asked if he'll come back. Your hand went to the warm card, not the cold one.",
+        "The Sun makes no promise about a knock at the door.\nIt says the warmth between you was real, dear. Real warmth is slow to go cold.\nAnd that pull you still feel? It isn't only yours.",
         "Let me look closer at what's keeping him from turning back around…",
       ],
       b: [
-        "You turned the Moon, dear — the card of what's kept in the half-light.",
-        "You're asking if he'll return, and I can feel how long you've been holding that question.",
-        "The Moon doesn't mean he's gone for good — it means his side is still unclear even to him, and the sense that 'this isn't finished' is your intuition reading him accurately.",
-        "Let me look closer at what's unresolved in him — and whether it's pulling him back or holding him still…",
+        "You turned the Moon, dear — the card of what is kept in the half-light.",
+        "You asked if he'll come back. Your hand went to the card of what is still unclear.",
+        "The Moon doesn't say he is gone for good.\nIt says his own side is unclear, even to him.\nSo this isn't finished, dear. You have felt that all along.\nThat's your gut, and it's sound.",
+        "Let me look closer at what he hasn't worked out yet…",
       ],
       c: [
-        "You turned the Tower, dear — the card of what's already moving beneath the surface.",
-        "You're asking if he'll come back, after everything shifted so suddenly.",
-        "The Tower doesn't mean the door is shut — it means the old shape between you broke, and something is still rearranging; what feels like an ending is often the ground clearing for a different return.",
-        "Let me look closer at what's rebuilding underneath…",
+        "You turned the Tower, dear — the card of the sudden break.",
+        "You asked if he'll come back. Your hand went to the card that breaks things open.",
+        "The Tower doesn't mean the door is shut.\nIt means the old shape between you broke, dear.\nSomething down there is still moving into a new one.\nWhat feels like an ending is often the ground being cleared.",
+        "Let me look closer at what's being built underneath…",
       ],
     },
     'cards-feels': {
@@ -1859,25 +1866,21 @@ const ARCANA_MFH: CardSetConfig = {
     },
     'cards-return': {
       a: [
-        "You chose the Magician, dear — the card of power and the will to act.",
-        "You're asking if he'll come back, and you reached for the card of someone who can make a move.",
-        "The Magician doesn't promise a knock at the door — it says he has the power to return if he chooses it, and the pull you still feel between you is not one-sided.",
+        "You chose the Magician, dear. Look — a cup, a coin, a blade and a wand, all laid out on his table.",
+        "You asked if he'll come back. Your hand went straight to the man who can act.",
+        "He isn't short of a way back, dear. He has one.\nSo this was never about whether he could.\nAnd that pull you still feel? It isn't only yours.\nYou've felt him on the other end of it. You're reading that right.",
         "Let me look closer at what's holding his hand back…",
       ],
       b: [
-        "You chose the Hanged Man, dear — the card of the pause before movement.",
-        "You reached for the card that matches the in-between you've been living in.",
-        "The Hanged Man doesn't promise a return — it says this is unresolved rather than finished, and the part of you that refuses to call it over is reading the situation accurately.",
-        "Let me look closer at what he's reconsidering…",
+        "You chose the Hanged Man, dear. Look — he hangs by one ankle from a green tree, and his face is calm.",
+        "You asked if he'll come back. Your hand went to a man still up in the air.",
+        "Nothing has been settled here, dear. Not for you, and not against you.\nHe hasn't shut the door. He hasn't opened it either.\nYou keep refusing to call this over.\nThat isn't you clinging, dear. You're reading it right.",
+        "Let me look closer at what he's turning over up there…",
       ],
       c: [
-        // 2026-07-30: brought in line with the 2026-07-28 sign-off (return-mhf:596-598).
-        // The previous beat 3 read 'what comes back often comes back as a new beginning',
-        // which presupposes a return. The signed-off wording is conditional — it never
-        // predicts that he comes back.
-        "You chose the Fool, dear — the card of the unwritten chapter, the road still open.",
-        "Your hand went to the one card that refuses to call this finished.",
-        "The Fool doesn't mean he's gone for good — it points to a road still open rather than a door closed; if something does come of this, it begins fresh rather than picking up where it broke.",
+        "You chose the Fool, dear. Look — a white rose in one hand, a small bundle on a stick, a dog at his heel.",
+        "You asked if he'll come back. Your hand went to the one card that won't call this over.",
+        "The road is still open, dear. The door was never shut.\nBut look where his eyes are. On what's ahead, not behind.\nSo if this does come to something, it starts new.\nIt won't pick up where it broke. That isn't a smaller thing, dear.",
         "Let me look closer at the turn that's forming…",
       ],
     },
@@ -2156,21 +2159,21 @@ const ARCANA_EEF: CardSetConfig = {
     },
     'cards-return': {
       a: [
-        "You chose the Emperor, dear — the card of a man who moves on his own terms.",
-        "You're asking if he'll come back, and you reached for the card of control and timing.",
-        "The Emperor doesn't promise a sudden return — it leans toward someone who acts deliberately, not on impulse; if he comes back it will be a considered choice, and his side isn't as shut as it feels.",
+        "You chose the Emperor, dear. Look — a grey-bearded king on a stone throne, facing straight ahead, not moving.",
+        "You asked if he'll come back. Your hand went to the man who moves on his own clock.",
+        "He doesn't act on a feeling, dear. He acts once he has weighed it.\nSo the quiet is not a no. It only reads like one from where you sit.\nHis side is less shut than it feels to you.\nAnd you were right to keep asking, dear. That wasn't you being foolish.",
         "Let me look closer at what he's weighing…",
       ],
       b: [
-        "You chose the Empress, dear — the card of warmth and the pull of a real bond.",
-        "You're asking if he'll return, carrying the memory of what you had.",
-        "The Empress leans toward reconciliation, dear — the care between you was real, and real warmth keeps its pull; that bond is still working on him.",
+        "You chose the Empress, dear. Look — a woman resting in a field of wheat, a crown of stars in her hair.",
+        "You asked if he'll come back. Your hand went to the card of what was warm and real.",
+        "The care between you was real, dear. You did not invent it.\nAnd real warmth keeps its pull long after two people stop speaking.\nIt is still working on him.\nYou can feel that, dear. That's not you hoping — that's you knowing.",
         "Let me look closer at what's drawing him back…",
       ],
       c: [
-        "You chose the Fool, dear — the card of the unexpected turn.",
-        "You're asking if he'll come back, with something still unfinished.",
-        "The Fool leans toward a fresh, unexpected turn — what returns often returns as a new beginning, not the old shape; don't rule out a surprise.",
+        "You chose the Fool, dear. Look — one foot out over the cliff edge, eyes on the sky, a dog at his heel.",
+        "You asked if he'll come back. Your hand went to the turn nobody sees coming.",
+        "The Fool doesn't do repeats, dear. He does fresh starts.\nSo if this comes back, it comes back in a new shape.\nNot the old one. That one already broke.\nYou have felt that too. You just had no words for it.",
         "Let me look closer at the turn that's forming…",
       ],
     },
@@ -2259,23 +2262,36 @@ const RETURN_MHF: CardSetConfig = {
   },
   reads: {
     // The ad's hook — "Will he come back?". Reads HIM as a tendency, never a verdict.
+    // ── Rewritten for readability 2026-08-18 ────────────────────────────────
+    // The funnel's highest-traffic lander (5,311 leads) and its worst converter at
+    // 6.12%. It read at grade 13.4 to an audience that is 55+ and on a phone. The shape
+    // is the one proven on cards-will-commit: the PICTURE first (she has the card art on
+    // screen at message 1, so a claim she can check in one second is what earns the
+    // sentence after it), then her own ad question said back to her, then the read in
+    // one-idea bubbles. Gated by scripts/check-read.mjs — grade <=5, <=25 words and
+    // <=2 sentences per bubble.
+    //
+    // The MEANING is unchanged from the 2026-07-28 sign-off, deliberately: same tendency
+    // per card, no return predicted, no timeframe, her instinct affirmed. Only the
+    // reading level moved. The 2026-07-30 lesson is kept too — beat 3 on card c stays
+    // conditional ('if this does come to something'), never presupposing he comes back.
     'cards-return': {
       a: [
-        "You turned the Magician, dear — the card of power and the will to act.",
-        "You're asking if he'll come back, and your hand reached for the card of someone who can make a move.",
-        "The Magician doesn't promise a knock at the door — it says he has the power to return if he chooses it, and the pull you still feel between you is not one-sided.",
+        "You turned the Magician, dear. Look — a cup, a coin, a blade and a wand, all laid out on his table.",
+        "You asked if he'll come back. Your hand went straight to the man who can act.",
+        "He isn't short of a way back, dear. He has one.\nSo this was never about whether he could.\nAnd that pull you still feel? It isn't only yours.\nYou've felt him on the other end of it. You're reading that right.",
         "Let me look closer at what's holding his hand back…",
       ],
       b: [
-        "You turned the Hanged Man, dear — the card of the moment held still, seen from a new angle.",
-        "You reached for the card that matches the in-between you've been living in.",
-        "The Hanged Man doesn't promise a return — it says this is unresolved rather than finished, and the part of you that refuses to call it over is reading the situation accurately.",
-        "Let me look closer at what he's reconsidering…",
+        "You turned the Hanged Man, dear. Look — he hangs by one ankle from a green tree, and his face is calm.",
+        "You asked if he'll come back. Your hand went to a man still up in the air.",
+        "Nothing has been settled here, dear. Not for you, and not against you.\nHe hasn't shut the door. He hasn't opened it either.\nYou keep refusing to call this over.\nThat isn't you clinging, dear. You're reading it right.",
+        "Let me look closer at what he's turning over up there…",
       ],
       c: [
-        "You turned the Fool, dear — the card of the unwritten chapter, the road still open.",
-        "Your hand went to the one card that refuses to call this finished.",
-        "The Fool doesn't mean he's gone for good — it points to a road still open rather than a door closed; if something does come of this, it begins fresh rather than picking up where it broke.",
+        "You turned the Fool, dear. Look — a white rose in one hand, a small bundle on a stick, a dog at his heel.",
+        "You asked if he'll come back. Your hand went to the one card that won't call this over.",
+        "The road is still open, dear. The door was never shut.\nBut look where his eyes are. On what's ahead, not behind.\nSo if this does come to something, it starts new.\nIt won't pick up where it broke. That isn't a smaller thing, dear.",
         "Let me look closer at the turn that's forming…",
       ],
     },

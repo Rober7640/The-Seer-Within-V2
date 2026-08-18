@@ -11,10 +11,11 @@
 //     test, and makes "the reads are actually different" a correctness property rather
 //     than a style preference. Beat 3 is compared against cards-return specifically.
 //
-//  2. cards-return MUST NOT MOVE OR CHANGE. Operator instruction 2026-08-04: it stays on
-//     both its live ad URLs (clean, and &deck=arcana-mfh), keeps its signed-off reads,
-//     and stays in the decode-him angle. Its beat 3s are pinned verbatim below so a
-//     careless edit to a neighbouring hook cannot quietly rewrite the live lander.
+//  2. cards-return MUST NOT BE MOVED OR ABSORBED. Operator instruction 2026-08-04: it
+//     stays on both its live ad URLs (clean, and &deck=arcana-mfh) and stays in the
+//     decode-him angle. Its beat 3s are pinned verbatim below so a careless edit to a
+//     NEIGHBOURING hook cannot quietly rewrite the live lander. (The reads themselves
+//     were rewritten on purpose 2026-08-18 for readability, same meaning — see the pin.)
 //
 //  3. THIS IS THE MOST PREDICTION-BAITING ANGLE ON THE FUNNEL. Every headline is
 //     literally a request for a forecast. "He will come back" is a promise the funnel
@@ -86,18 +87,32 @@ describe('reunion hooks are wired end to end', () => {
     // lander, so comparing the two "Will he come back?" pages is a HOOK-level breakdown.
   });
 
-  // The signed-off (2026-07-28) reads on the live lander, pinned verbatim. If a future
-  // edit to a neighbouring hook rewrites these, this fails rather than shipping silently.
+  // The reads on the live lander, pinned verbatim. If a future edit to a neighbouring
+  // hook rewrites these, this fails rather than shipping silently.
+  //
+  // ⚠️ RE-PINNED 2026-08-18 (readability migration). The 2026-08-04 instruction this
+  // guard encodes was "the new reunion hooks must not touch the incumbent" — it was
+  // never a freeze on deliberate work ON cards-return. This lander is the funnel's
+  // highest-traffic page (5,311 leads) and its worst converter (6.12%), and it read at
+  // grade 13.4 to a 55+ mobile audience, so it was rewritten to the cards-will-commit
+  // shape and gated by scripts/check-read.mjs.
+  //
+  // What the pin is protecting is UNCHANGED, and that is the point of re-pinning rather
+  // than deleting: same tendency per card (a — he has the means, the pull is not
+  // one-sided; b — unresolved rather than finished, her refusal to call it over is
+  // accurate; c — the road is open rather than the door closed, and anything that comes
+  // of it starts fresh), still no return predicted and still no timeframe. Only the
+  // reading level moved. Beat 3 now carries '\n' bubble breaks, which openerB splits.
   it('cards-return keeps its signed-off reads on both of its live decks', () => {
     const live = DECKS[DECK].reads['cards-return']!;
     expect(live.a[2]).toBe(
-      "The Magician doesn't promise a knock at the door — it says he has the power to return if he chooses it, and the pull you still feel between you is not one-sided."
+      "He isn't short of a way back, dear. He has one.\nSo this was never about whether he could.\nAnd that pull you still feel? It isn't only yours.\nYou've felt him on the other end of it. You're reading that right."
     );
     expect(live.b[2]).toBe(
-      "The Hanged Man doesn't promise a return — it says this is unresolved rather than finished, and the part of you that refuses to call it over is reading the situation accurately."
+      "Nothing has been settled here, dear. Not for you, and not against you.\nHe hasn't shut the door. He hasn't opened it either.\nYou keep refusing to call this over.\nThat isn't you clinging, dear. You're reading it right."
     );
     expect(live.c[2]).toBe(
-      "The Fool doesn't mean he's gone for good — it points to a road still open rather than a door closed; if something does come of this, it begins fresh rather than picking up where it broke."
+      "The road is still open, dear. The door was never shut.\nBut look where his eyes are. On what's ahead, not behind.\nSo if this does come to something, it starts new.\nIt won't pick up where it broke. That isn't a smaller thing, dear."
     );
     // The face-up lander (?hook=cards-return&deck=arcana-mfh) is live too and untouched.
     expect(DECKS['arcana-mfh'].reads['cards-return'], 'the face-up cards-return lander vanished').toBeTruthy();

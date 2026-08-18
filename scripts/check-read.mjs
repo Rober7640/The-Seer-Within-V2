@@ -16,6 +16,7 @@
 // 6 because somebody thought to ban the construction. Read it aloud anyway.
 
 import { readFileSync } from 'node:fs'
+import { pathToFileURL } from 'node:url'
 
 export const RULES = {
   MAX_WORDS: 25,        // the house rule, docs/test-ideas.md:16 + "max 25 words" in prompts.ts
@@ -99,7 +100,11 @@ export function report(label, headline, bubbles) {
 }
 
 // ── entry — CLI only when run directly, so the audit skill can import the rules ──
-if (import.meta.url !== `file://${process.argv[1]}`) { /* imported: export only */ } else {
+// 🔴 pathToFileURL, NOT `file://${argv[1]}`. This repo lives under "Fun Projects", and a
+// space is percent-encoded in import.meta.url but not in argv[1] — so the naive compare
+// never matched, the CLI branch never ran, and `--hook`/`--file` exited 0 printing
+// NOTHING. A gate that silently passes is worse than no gate. Found 2026-08-18.
+if (import.meta.url !== pathToFileURL(process.argv[1]).href) { /* imported: export only */ } else {
 const argv = process.argv.slice(2)
 const arg = (n) => { const i = argv.indexOf(n); return i >= 0 ? argv[i + 1] : null }
 

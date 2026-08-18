@@ -80,15 +80,13 @@ function everyBeat(): { key: string; text: string }[] {
 // violation that predates the guard — not permission to write another one.
 const GRANDFATHERED = new Set<string>([
   'decode-him/cards-honest/a/2', 'decode-him/cards-honest/b/2', 'decode-him/cards-honest/c/2',
-  'decode-him/cards-return/a/2', 'decode-him/cards-return/b/2', 'decode-him/cards-return/c/1',
-  'decode-him/cards-return/c/2', 'decode-him/cards-feels/a/2', 'decode-him/cards-feels/b/2',
-  'decode-him/cards-feels/c/2', 'decode-him/cards-cheating/a/2', 'decode-him/cards-cheating/b/2',
+  'decode-him/cards-feels/a/2', 'decode-him/cards-feels/b/2', 'decode-him/cards-feels/c/2',
+  'decode-him/cards-cheating/a/2', 'decode-him/cards-cheating/b/2',
   'decode-him/cards-cheating/c/2', 'arcana-mfh/cards-love-again/a/2',
   'arcana-mfh/cards-love-again/b/2', 'arcana-mfh/cards-love-again/c/2',
   'arcana-mfh/cards-soulmate/a/2', 'arcana-mfh/cards-soulmate/b/2',
   'arcana-mfh/cards-soulmate/c/2', 'arcana-mfh/cards-honest/a/2', 'arcana-mfh/cards-honest/b/2',
-  'arcana-mfh/cards-honest/c/2', 'arcana-mfh/cards-return/a/2', 'arcana-mfh/cards-return/b/2',
-  'arcana-mfh/cards-return/c/2', 'arcana-mfh/cards-feels/a/2', 'arcana-mfh/cards-feels/b/2',
+  'arcana-mfh/cards-honest/c/2', 'arcana-mfh/cards-feels/a/2', 'arcana-mfh/cards-feels/b/2',
   'arcana-mfh/cards-feels/c/2', 'arcana-mfh/cards-cheating/a/2', 'arcana-mfh/cards-cheating/b/2',
   'arcana-mfh/cards-cheating/c/2', 'arcana-mfh/cards-who-he-is/a/2',
   'arcana-mfh/cards-who-he-is/b/2', 'arcana-mfh/cards-who-he-is/c/2',
@@ -102,11 +100,9 @@ const GRANDFATHERED = new Set<string>([
   'arcana-eef/cards-honest/b/2', 'arcana-eef/cards-honest/c/2', 'arcana-eef/cards-love-again/b/2',
   'arcana-eef/cards-love-again/c/2', 'arcana-eef/cards-soulmate/a/2',
   'arcana-eef/cards-soulmate/b/2', 'arcana-eef/cards-soulmate/c/1',
-  'arcana-eef/cards-soulmate/c/2', 'arcana-eef/cards-return/a/2', 'arcana-eef/cards-return/b/2',
-  'arcana-eef/cards-return/c/2', 'arcana-eef/cards-feels/a/2', 'arcana-eef/cards-feels/b/2',
+  'arcana-eef/cards-soulmate/c/2', 'arcana-eef/cards-feels/a/2', 'arcana-eef/cards-feels/b/2',
   'arcana-eef/cards-feels/c/2', 'arcana-eef/cards-cheating/a/2', 'arcana-eef/cards-cheating/b/2',
-  'arcana-eef/cards-cheating/c/2', 'return-mhf/cards-return/a/2', 'return-mhf/cards-return/b/2',
-  'return-mhf/cards-return/c/2', 'return-mhf/cards-honest/a/2', 'return-mhf/cards-honest/b/2',
+  'arcana-eef/cards-cheating/c/2', 'return-mhf/cards-honest/a/2', 'return-mhf/cards-honest/b/2',
   'return-mhf/cards-honest/c/2', 'return-mhf/cards-feels/a/2', 'return-mhf/cards-feels/b/2',
   'return-mhf/cards-feels/c/2', 'return-mhf/cards-cheating/a/2', 'return-mhf/cards-cheating/b/2',
   'return-mhf/cards-cheating/c/2', 'return-mhf/cards-who-he-is/a/2',
@@ -233,7 +229,7 @@ const GRANDFATHERED = new Set<string>([
   'return-mhf/cards-twin-or-connection/a/0', 'return-mhf/cards-twin-or-connection/a/2',
   'return-mhf/cards-twin-or-connection/b/2', 'return-mhf/cards-twin-or-connection/c/2',
   'return-mhf/cards-met-already/a/1', 'return-mhf/cards-met-already/a/2',
-  'return-mhf/cards-met-already/b/2', 'return-mhf/cards-met-already/c/2',
+  'return-mhf/cards-met-already/b/2', 'return-mhf/cards-met-already/c/2'
 ]);
 
 describe('tarot reads — readability', () => {
@@ -253,8 +249,12 @@ describe('tarot reads — readability', () => {
 
   // The pin. Adding an entry means editing this number, which is the point — freezing a
   // new violation should be a decision somebody makes on purpose, not a quiet append.
+  //
+  // RATCHET. It is tightened to the real size every time a lander is migrated, so the
+  // debt can only ever fall. 333 → 320 on 2026-08-18, when cards-return (the funnel's
+  // highest-traffic lander) was rewritten and its 13 frozen bubbles came off the list.
   it('the grandfathered list has not grown', () => {
-    expect(GRANDFATHERED.size).toBeLessThanOrEqual(333);
+    expect(GRANDFATHERED.size).toBeLessThanOrEqual(320);
   });
 
   // Keeps the list honest as hooks are renamed or retired: a key that no longer matches
