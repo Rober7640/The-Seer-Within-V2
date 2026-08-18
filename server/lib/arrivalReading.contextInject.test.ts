@@ -15,7 +15,7 @@ import { assertLocalDb } from './testGuards';
 assertLocalDb();
 
 import { db, pool } from './db';
-import { users, personas, chatSessions, evelynLanderSessions } from '../../shared/schema';
+import { users, personas, chatSessions, evelynLanderSessions, emailLinkCodes } from '../../shared/schema';
 import { _buildMessageContext } from './chatEngine';
 
 const HAS_DB = Boolean(process.env.DATABASE_URL);
@@ -39,6 +39,15 @@ describe('arrival reading is injected into a fresh Evelyn session', { skip: !HAS
       email: `arrival-inject-${STAMP}@eval.internal`, firstName: 'Inject', coinBalance: 100000,
     }).returning({ id: users.id });
     userId = u.id;
+
+    // This case asserts the BUILT-IN REGISTRY's copy reaches the prompt, and
+    // briefs now resolve email_link_codes FIRST. reframe-04-serious is a cycle-1
+    // send that the pipeline refuses to mint (it already went out — see
+    // sends/cycle-1/short-links.json), so no such row exists in any real
+    // database. A local QA session can easily leave one behind though, and it
+    // would silently swap the expected copy for whatever that row said. Clear it
+    // so the test asserts against the source it names.
+    await db.delete(emailLinkCodes).where(eq(emailLinkCodes.campaign, 'reframe-04-serious'));
 
     await db.insert(evelynLanderSessions).values({
       sessionToken: `inj-${STAMP}`, resolvedSegment: 'v2_active', resolvedUserId: userId, campaign: 'reframe-04-serious',

@@ -7,25 +7,54 @@
 // (docs/aweber/evelyn-reframe-deck/scripts/render-aweber.mjs builds it as
 // `campaign=<slug>`), which the lander persists to *_lander_sessions.campaign.
 //
-// This registry is the ONLY place email specifics live for the chat engine. Keep
-// each recap to what the email ACTUALLY said — the engine is instructed never to
-// invent beyond it.
+// Keep each recap to what the email ACTUALLY said — the engine is instructed
+// never to invent beyond it.
 //
-// OVERLAP WITH email_link_codes: a send migrated to a `/e/<code>` short link
-// carries the same three fields (readingRecap / openLoop / continueSeed) in its
-// own draft frontmatter, snapshotted into the `email_link_codes` row at render
-// time. That row — not this registry — is what the short link resolves. This
-// registry still serves every send on the legacy `?campaign=` link. When a
-// campaign exists in both, they should say the same thing; the draft frontmatter
-// is the authoring source, so copy from it, not the other way round.
+// ── WHERE BRIEFS COME FROM (changed 2026-08-18) ─────────────────────────────
+// `email_link_codes` FIRST, this file as the fallback. `resolveEmailReadingBrief`
+// below is what the chat engine calls; the hardcoded BRIEFS array now only
+// answers for campaigns that have no row.
+//
+// WHY. Both stores hold the same three fields (readingRecap / openLoop /
+// continueSeed) — the short link's row is written by the render pipeline, this
+// array by hand. That made every new email cycle a CODE DEPLOY: mint the links
+// (a data change) and then edit-commit-push this file (a code change), or the
+// lander would continue the reading while the chat quietly forgot it. Nothing
+// failed loudly; the greeting just went cold. Reading the row the pipeline has
+// already written removes the second step, so shipping a cycle is data again.
+//
+// The array stays, and is NOT deprecated: cycle 1's nine sends went out on the
+// legacy `?campaign=` link before short links existed, are marked historical, and
+// are deliberately BLOCKED from ever being minted — minting for an already-sent
+// campaign would retroactively rewrite what its readers see (see
+// sends/cycle-1/short-links.json). They have no row and never will, so this file
+// is the only thing that can answer for them.
+//
+// Precedence is DB-first, not file-first, so an authored correction reaches
+// readers by re-running the pipeline. If a campaign somehow exists in both and
+// they disagree, the row wins: it is what the pipeline wrote from the draft
+// frontmatter, which is the authoring source.
+
+import { db } from './db';
+import { and, eq } from 'drizzle-orm';
+import { emailLinkCodes } from '@shared/schema';
+import logger from './logger';
 
 export interface EmailReadingBrief {
   /** Matches the ?campaign= slug, e.g. 'reframe-04-serious'. */
   campaign: string;
   /** Persona whose email this was, e.g. 'evelyn-cross'. */
   personaSlug: string;
-  /** Human label for logs + the injected block header, e.g. 'The tell'. */
-  label: string;
+  /**
+   * Human label for logs + the injected block header, e.g. 'The tell'.
+   *
+   * Optional because `email_link_codes` has no column for it — it is an internal
+   * name the reader never saw, so a DB-derived brief simply has none and the
+   * prompt builders say "your recent email" instead of naming one. Adding a
+   * column would mean a migration plus a pipeline change to populate it, for a
+   * string no reader has ever read.
+   */
+  label?: string;
   /** 2–5 sentences: the exact reading the email delivered (the specifics). */
   readingRecap: string;
   /** The personal question the email left open for the chat to resolve. */
@@ -158,4 +187,157 @@ export function getEmailReadingBrief(campaign: string): EmailReadingBrief | null
  * arrival-reading lookup entirely for personas (Marcus, Luna, …) that never have one. */
 export function hasBriefsForPersona(personaSlug: string): boolean {
   return BRIEFS.some((b) => b.personaSlug === personaSlug);
+}
+
+// ---------------------------------------------------------------------------
+// DB-backed resolution (the accessors the chat engine actually uses)
+// ---------------------------------------------------------------------------
+/**
+ * A row can be minted with only `continue_seed` — that is all the LANDER needs
+ * to render its opening bubble, and `reading_recap` / `open_loop` are optional
+ * columns. The CHAT needs more than that: `buildArrivalReadingSection` hands the
+ * persona the recap as "here is exactly what you showed them" and the open loop
+ * as the question to resolve. With either missing, the injected block would tell
+ * her she wrote something and then not say what — which is precisely the cold,
+ * inventing-details failure this whole mechanism exists to prevent.
+ *
+ * So a row that cannot produce a COMPLETE brief is treated as no brief at all,
+ * and resolution falls through to the built-in registry. Partial is worse than
+ * absent here.
+ */
+function briefFromRow(row: {
+  campaign: string;
+  personaSlug: string;
+  readingRecap: string | null;
+  openLoop: string | null;
+  continueSeed: string;
+}): EmailReadingBrief | null {
+  const readingRecap = row.readingRecap?.trim();
+  const openLoop = row.openLoop?.trim();
+  if (!readingRecap || !openLoop) return null;
+  return {
+    campaign: row.campaign,
+    personaSlug: row.personaSlug,
+    readingRecap,
+    openLoop,
+    continueSeed: row.continueSeed,
+    // No label column — see EmailReadingBrief.label.
+  };
+}
+
+/**
+ * The brief for a campaign: the `email_link_codes` row if it can produce a
+ * complete one, else the built-in registry.
+ *
+ * Scoped by persona in the QUERY rather than checked afterwards. `campaign` is
+ * unique only per (persona, campaign) — the table's own unique index says so —
+ * so looking up by campaign alone could return another persona's row and hand
+ * Evelyn's recap to Luna. The caller in arrivalReading.ts also re-checks the
+ * persona, which is belt-and-braces for the registry path, not a substitute here.
+ *
+ * A DB failure is logged and falls back to the registry rather than propagating:
+ * this runs inside greeting generation, and continuity going cold is a far
+ * better outcome than a greeting that fails to send at all.
+ */
+export async function resolveEmailReadingBrief(
+  campaign: string,
+  personaSlug: string,
+): Promise<EmailReadingBrief | null> {
+  if (!campaign || !personaSlug) return null;
+
+  try {
+    const [row] = await db
+      .select({
+        campaign: emailLinkCodes.campaign,
+        personaSlug: emailLinkCodes.personaSlug,
+        readingRecap: emailLinkCodes.readingRecap,
+        openLoop: emailLinkCodes.openLoop,
+        continueSeed: emailLinkCodes.continueSeed,
+      })
+      .from(emailLinkCodes)
+      .where(
+        and(
+          eq(emailLinkCodes.campaign, campaign),
+          eq(emailLinkCodes.personaSlug, personaSlug),
+        ),
+      )
+      .limit(1);
+
+    if (row) {
+      const brief = briefFromRow(row);
+      if (brief) {
+        // The row wins on CONTENT, but has no label column. Where the same
+        // campaign also exists in the built-in registry, borrow its label rather
+        // than dropping to the unnamed phrasing — the two stores describe the
+        // same send, and a name we already have beats none. New campaigns
+        // (cycle 2 onward) have no registry entry and so stay unnamed, which is
+        // the intended steady state.
+        const label = getEmailReadingBrief(campaign)?.label;
+        return label ? { ...brief, label } : brief;
+      }
+      // Row exists but is lander-only (no recap/open loop). Not an error — the
+      // pipeline allows it — but worth seeing, because the chat half of
+      // continuity is silently off for that campaign.
+      logger.warn('emailReadingBriefs: link row has no recap/open loop — chat continuity falls back', {
+        campaign,
+        personaSlug,
+      });
+    }
+  } catch (error: any) {
+    logger.error('emailReadingBriefs: DB lookup failed — falling back to built-in registry', {
+      campaign,
+      personaSlug,
+      error: error?.message,
+    });
+  }
+
+  const fallback = getEmailReadingBrief(campaign);
+  return fallback && fallback.personaSlug === personaSlug ? fallback : null;
+}
+
+/**
+ * Cheap "could this persona have a brief at all?" guard, so personas that never
+ * have one (Marcus, Nova, Maren…) skip the lander lookup entirely — this runs on
+ * every greeting and every early in-session message.
+ *
+ * Cached because it is on that hot path and its answer changes about as often as
+ * a new email cycle ships. The TTL is what bounds how long a newly-minted
+ * persona waits to be recognised; a minute is far below the gap between minting
+ * a cycle and its first send, so no reader can land inside the window.
+ *
+ * On a DB error we return TRUE (assume it might), which costs one wasted lookup
+ * downstream instead of silently disabling continuity for everyone.
+ */
+const PERSONA_SET_TTL_MS = 60_000;
+let personaSetCache: { slugs: Set<string>; expiresAt: number } | null = null;
+
+/** Test-only: drop the cache so a freshly-inserted row is seen immediately. */
+export function __resetBriefPersonaCache(): void {
+  personaSetCache = null;
+}
+
+export async function personaMayHaveBriefs(personaSlug: string): Promise<boolean> {
+  if (!personaSlug) return false;
+  // The built-in registry is free to check and answers for cycle 1.
+  if (hasBriefsForPersona(personaSlug)) return true;
+
+  const now = Date.now();
+  if (!personaSetCache || personaSetCache.expiresAt <= now) {
+    try {
+      const rows = await db
+        .selectDistinct({ personaSlug: emailLinkCodes.personaSlug })
+        .from(emailLinkCodes);
+      personaSetCache = {
+        slugs: new Set(rows.map((r) => r.personaSlug)),
+        expiresAt: now + PERSONA_SET_TTL_MS,
+      };
+    } catch (error: any) {
+      logger.error('emailReadingBriefs: persona-set lookup failed — assuming briefs may exist', {
+        error: error?.message,
+      });
+      return true;
+    }
+  }
+
+  return personaSetCache.slugs.has(personaSlug);
 }

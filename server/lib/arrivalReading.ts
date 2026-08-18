@@ -5,7 +5,7 @@
 import { db } from './db';
 import { and, eq, desc, gte, isNotNull } from 'drizzle-orm';
 import { evelynLanderSessions, personaLanderSessions } from '@shared/schema';
-import { getEmailReadingBrief, hasBriefsForPersona, type EmailReadingBrief } from './emailReadingBriefs';
+import { resolveEmailReadingBrief, personaMayHaveBriefs, type EmailReadingBrief } from './emailReadingBriefs';
 
 /** Evelyn's arrival campaign lives in evelyn_lander_sessions (Evelyn-only table). */
 const EVELYN_SLUG = 'evelyn-cross';
@@ -58,28 +58,46 @@ export async function resolveArrivalCampaign(
  * The reading brief for this user+persona if they just arrived from a known
  * campaign email, else null. Guards that the brief belongs to this persona.
  * Short-circuits before any query for personas (Marcus, Luna, …) that have no
- * briefs registered at all — this runs on every early in-session message and
- * every greeting, so skipping the lander lookup entirely matters.
+ * briefs at all — this runs on every early in-session message and every
+ * greeting, so skipping the lander lookup entirely matters.
+ *
+ * Both lookups resolve `email_link_codes` first and the built-in registry
+ * second, so a new email cycle reaches the chat as soon as its links are minted
+ * — no code deploy. See emailReadingBriefs.ts's header for why.
  */
 export async function loadArrivalReading(
   userId: string,
   personaSlug: string,
 ): Promise<EmailReadingBrief | null> {
-  if (!hasBriefsForPersona(personaSlug)) return null;
+  if (!(await personaMayHaveBriefs(personaSlug))) return null;
 
   const campaign = await resolveArrivalCampaign(userId, personaSlug);
   if (!campaign) return null;
 
-  const brief = getEmailReadingBrief(campaign);
-  if (!brief || brief.personaSlug !== personaSlug) return null;
-  return brief;
+  // Persona-scoped inside the resolver (campaign is unique only per persona), so
+  // this cannot hand one persona's reading to another.
+  return resolveEmailReadingBrief(campaign, personaSlug);
+}
+
+/**
+ * How the injected prompt refers to the email itself.
+ *
+ * `label` is an INTERNAL name ('The tell') that no reader ever saw, and briefs
+ * resolved from `email_link_codes` have none — the table has no column for it.
+ * Interpolating undefined would put the literal `your email "undefined"` into
+ * the system prompt, which the persona would faithfully repeat. So a brief
+ * without a label gets an unnamed reference, which reads more naturally anyway.
+ */
+function emailReference(brief: EmailReadingBrief): string {
+  const label = brief.label?.trim();
+  return label ? `your email "${label}"` : 'your recent email';
 }
 
 /** System-prompt block that hands the persona the reading they already sent. */
 export function buildArrivalReadingSection(brief: EmailReadingBrief): string {
   return [
     '<arrival_reading>',
-    `This client just arrived from your email "${brief.label}". You already began a reading for them in that letter. Here is exactly what you showed them — treat it as something YOU wrote and read for them, never as an "automated email":`,
+    `This client just arrived from ${emailReference(brief)}. You already began a reading for them in that letter. Here is exactly what you showed them — treat it as something YOU wrote and read for them, never as an "automated email":`,
     brief.readingRecap,
     `The question you left open: ${brief.openLoop}`,
     '',
@@ -93,7 +111,7 @@ export function buildArrivalReadingSection(brief: EmailReadingBrief): string {
 /** Greeting-prompt instruction (turn 0) telling the persona to continue the reading. */
 export function buildArrivalGreetingInstruction(brief: EmailReadingBrief, firstName: string): string {
   return [
-    `Generate a brief opening message for ${firstName}, who just arrived from your email "${brief.label}" where you began a reading for them.`,
+    `Generate a brief opening message for ${firstName}, who just arrived from ${emailReference(brief)} where you began a reading for them.`,
     `In that letter you showed them: ${brief.readingRecap}`,
     `You left this open: ${brief.openLoop}`,
     '',

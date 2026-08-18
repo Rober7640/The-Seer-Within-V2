@@ -32,7 +32,7 @@
     "luna:calendar": "tsx scripts/transit-calendar.ts",
     "luna:sky": "tsx scripts/daily-sky.ts",
     "test:local": "tsx --env-file=.env.test --test",
-    "test:live-thread": "tsx --env-file=.env.test --test server/lib/emailLinkCodes.pure.test.ts server/lib/emailLinkCodes.test.ts server/lib/liveThreadPreview.test.ts server/lib/liveThreadReplay.test.ts server/lib/verificationEmail.freeMinutes.test.ts server/routes/auth.test.ts server/routes/emailLinkRedirect.test.ts server/routes/evelynLander.test.ts shared/schema.test.ts docs/aweber/evelyn-reframe-deck/scripts/render-aweber.test.ts",
+    "test:live-thread": "tsx --env-file=.env.test --test --test-concurrency=1 server/lib/emailLinkCodes.pure.test.ts server/lib/emailLinkCodes.test.ts server/lib/emailReadingBriefs.db.test.ts server/lib/liveThreadPreview.test.ts server/lib/liveThreadReplay.test.ts server/lib/verificationEmail.freeMinutes.test.ts server/routes/auth.test.ts server/routes/emailLinkRedirect.test.ts server/routes/evelynLander.test.ts shared/schema.test.ts docs/aweber/evelyn-reframe-deck/scripts/render-aweber.test.ts",
     "test:pure": "tsx --test server/lib/emailLinkCodes.pure.test.ts server/lib/verificationEmail.freeMinutes.test.ts"
   },
   "dependencies": {
