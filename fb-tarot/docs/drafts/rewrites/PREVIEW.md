@@ -13,6 +13,8 @@ shown underneath so you can see what it replaces. `[Nw gN.N]` = words and readin
 
 Card-sets differ by deck, so the copy does too: Magician/Hanged Man/Fool (return-mhf + arcana-mfh), Sun/Moon/Tower (decode-him), Emperor/Empress/Fool (arcana-eef). The two Magician decks share one set, verb swapped. 🔴 decode-him's beat 1s are written fresh rather than kept: all four hooks on that deck currently open with the SAME line per card (no guard file catches it — see the duplication note in the checklist).
 
+🔴 BEAT 4 REWRITTEN 2026-08-19 — it must name an OBSTRUCTION, not an absence. Act 1 of the trilogy sells an Energy Clearing Ritual that removes "the shadow that's been blocking your path"; improve-v1/08-clearing-theme-coherence.md found that clearing is SPRUNG at the pitch rather than seeded. This is where it gets seeded, and the object goes between HER and what she wants — the love bucket frames every block as an impersonal thing in her path precisely so removing it blames nobody. "What he never said" cannot be cleared; "what's sitting between you and the words" can.
+
 ## return-mhf — cards face DOWN (she turned)
 
 ### card a — the Magician, the card of will and intention
@@ -27,7 +29,7 @@ Card-sets differ by deck, so the copy does too: Magician/Hanged Man/Fool (return
 4. A man like this doesn't warm to someone by accident.
 5. What he hasn't done is say it out loud.
 6. That gap is real, dear. You've been reading it right.
-7. Let me look closer at what he feels and hasn't found words for…
+7. Let me look closer at what's sitting between you and the words…
 
 <details><summary>OLD — what she reads today</summary>
 
@@ -50,7 +52,7 @@ Card-sets differ by deck, so the copy does too: Magician/Hanged Man/Fool (return
 4. So the mixed signals were not you misreading him.
 5. You were reading two true things at once.
 6. That pull you sense is genuine. So is the hold.
-7. Let me look closer at what's holding him there…
+7. Let me look closer at what's holding you both in the middle…
 
 <details><summary>OLD — what she reads today</summary>
 
@@ -73,7 +75,7 @@ Card-sets differ by deck, so the copy does too: Magician/Hanged Man/Fool (return
 4. But look where his eyes are. Up, not down the road.
 5. So he hasn't worked out where this goes.
 6. That's a different thing from not caring, dear. You've felt both at once.
-7. Let me look closer at where his heart is actually pointing…
+7. Let me look closer at what keeps this from settling…
 
 <details><summary>OLD — what she reads today</summary>
 
@@ -98,7 +100,7 @@ Card-sets differ by deck, so the copy does too: Magician/Hanged Man/Fool (return
 4. A man like this doesn't warm to someone by accident.
 5. What he hasn't done is say it out loud.
 6. That gap is real, dear. You've been reading it right.
-7. Let me look closer at what he feels and hasn't found words for…
+7. Let me look closer at what's sitting between you and the words…
 
 <details><summary>OLD — what she reads today</summary>
 
@@ -121,7 +123,7 @@ Card-sets differ by deck, so the copy does too: Magician/Hanged Man/Fool (return
 4. So the mixed signals were not you misreading him.
 5. You were reading two true things at once.
 6. That pull you sense is genuine. So is the hold.
-7. Let me look closer at what's holding him there…
+7. Let me look closer at what's holding you both in the middle…
 
 <details><summary>OLD — what she reads today</summary>
 
@@ -144,7 +146,7 @@ Card-sets differ by deck, so the copy does too: Magician/Hanged Man/Fool (return
 4. But look where his eyes are. Up, not down the road.
 5. So he hasn't worked out where this goes.
 6. That's a different thing from not caring, dear. You've felt both at once.
-7. Let me look closer at where his heart is actually pointing…
+7. Let me look closer at what keeps this from settling…
 
 <details><summary>OLD — what she reads today</summary>
 
@@ -169,7 +171,7 @@ Card-sets differ by deck, so the copy does too: Magician/Hanged Man/Fool (return
 4. It says the warmth you felt from him was real.
 5. Not made up. Not you being soft with yourself.
 6. Your read on him is truer than the doubt.
-7. Let me look closer at what he feels and hasn't found words for…
+7. Let me look closer at what's sitting between you and hearing it…
 
 <details><summary>OLD — what she reads today</summary>
 
@@ -192,7 +194,7 @@ Card-sets differ by deck, so the copy does too: Magician/Hanged Man/Fool (return
 4. It means what he feels is real, and only half said out loud.
 5. You keep sensing there's more than he shows you.
 6. There is. That's you reading him, not you inventing him.
-7. Let me look closer at what he keeps in the dark…
+7. Let me look closer at what keeps getting between you and the rest…
 
 <details><summary>OLD — what she reads today</summary>
 
@@ -215,7 +217,7 @@ Card-sets differ by deck, so the copy does too: Magician/Hanged Man/Fool (return
 4. It means they are changing shape.
 5. Something between you has felt shaky. You felt it too.
 6. That's real movement. It isn't in your head.
-7. Let me look closer at where his feelings are heading…
+7. Let me look closer at what stands between you and steady ground…
 
 <details><summary>OLD — what she reads today</summary>
 
@@ -240,7 +242,7 @@ Card-sets differ by deck, so the copy does too: Magician/Hanged Man/Fool (return
 4. It means he holds it behind a calm face.
 5. He shows it by being steady, not by saying it.
 6. So it's realer than his restraint makes it look. You weren't wrong to feel it.
-7. Let me look closer at what the calm is hiding…
+7. Let me look closer at what sits between you and what he holds back…
 
 <details><summary>OLD — what she reads today</summary>
 
@@ -263,7 +265,7 @@ Card-sets differ by deck, so the copy does too: Magician/Hanged Man/Fool (return
 4. He cares more, and more softly, than he has found a way to say.
 5. The warmth you feel is not one-sided.
 6. You've known that. You just wanted it said by someone else.
-7. Let me look closer at what his heart already knows…
+7. Let me look closer at what's in the way of him saying it…
 
 <details><summary>OLD — what she reads today</summary>
 
@@ -286,7 +288,7 @@ Card-sets differ by deck, so the copy does too: Magician/Hanged Man/Fool (return
 4. What he hasn't done is think about where it leads.
 5. Those are two different things.
 6. The spark is real. The plan is what's missing.
-7. Let me look closer at where his heart is pointing…
+7. Let me look closer at what sits between you and a plan…
 
 <details><summary>OLD — what she reads today</summary>
 
@@ -303,6 +305,8 @@ Card-sets differ by deck, so the copy does too: Magician/Hanged Man/Fool (return
 
 Only on the two Magician/Hanged Man/Fool decks, so one set of copy, verb swapped. 🔴 REVISED 2026-08-19 after reading 200 real concerns from this lander. A large share of its traffic is women talking to men they have NEVER MET — dating-site and social-media contacts, some plainly being defrauded ("I couldn't find him at that address", "I don't know who's real E, M, C or K"). The first draft acquitted him ("isn't a liar", "isn't pretending", "that's not the same as false"), which breaches this hook's standing rule — NEVER state he is pretending OR that he is genuine as fact — and, to that reader, is a line that could cost her money. Every beat 3 now refuses BOTH verdicts and affirms her caution instead, the same stance cards-real-person takes.
 
+🔴 BEAT 4 REWRITTEN 2026-08-19 — it must name an OBSTRUCTION, not an absence. Act 1 of the trilogy sells an Energy Clearing Ritual that removes "the shadow that's been blocking your path"; improve-v1/08-clearing-theme-coherence.md found that clearing is SPRUNG at the pitch rather than seeded. This is where it gets seeded, and the object goes between HER and what she wants — the love bucket frames every block as an impersonal thing in her path precisely so removing it blames nobody. "What he never said" cannot be cleared; "what's sitting between you and the words" can.
+
 ## return-mhf — cards face DOWN (she turned)
 
 ### card a — the Magician, the card of will and intention
@@ -317,7 +321,7 @@ Only on the two Magician/Hanged Man/Fool decks, so one set of copy, verb swapped
 4. So what he shows you was put together on purpose.
 5. That doesn't tell me who stands behind it. It tells me there is a behind.
 6. You already sensed that, dear. Keep hold of it.
-7. Let me look closer at the man he leaves out…
+7. Let me look closer at what sits between you and the man behind it…
 
 <details><summary>OLD — what she reads today</summary>
 
@@ -340,7 +344,7 @@ Only on the two Magician/Hanged Man/Fool decks, so one set of copy, verb swapped
 4. You were given a part, and asked to judge the whole.
 5. That is why you can't get a clean read on him.
 6. The trouble isn't your judgement, dear. It's what you were handed.
-7. Let me look closer at the side he never showed you…
+7. Let me look closer at what stands between you and a straight answer…
 
 <details><summary>OLD — what she reads today</summary>
 
@@ -363,7 +367,7 @@ Only on the two Magician/Hanged Man/Fool decks, so one set of copy, verb swapped
 4. So the man you met and the man now can both be him.
 5. Or he has not shown you the whole road. The card won't say which.
 6. Either way, you noticed the change. That is worth trusting.
-7. Let me look closer at which of him is the one that stays…
+7. Let me look closer at what keeps getting between you and all of him…
 
 <details><summary>OLD — what she reads today</summary>
 
@@ -388,7 +392,7 @@ Only on the two Magician/Hanged Man/Fool decks, so one set of copy, verb swapped
 4. So what he shows you was put together on purpose.
 5. That doesn't tell me who stands behind it. It tells me there is a behind.
 6. You already sensed that, dear. Keep hold of it.
-7. Let me look closer at the man he leaves out…
+7. Let me look closer at what sits between you and the man behind it…
 
 <details><summary>OLD — what she reads today</summary>
 
@@ -411,7 +415,7 @@ Only on the two Magician/Hanged Man/Fool decks, so one set of copy, verb swapped
 4. You were given a part, and asked to judge the whole.
 5. That is why you can't get a clean read on him.
 6. The trouble isn't your judgement, dear. It's what you were handed.
-7. Let me look closer at the side he never showed you…
+7. Let me look closer at what stands between you and a straight answer…
 
 <details><summary>OLD — what she reads today</summary>
 
@@ -434,7 +438,7 @@ Only on the two Magician/Hanged Man/Fool decks, so one set of copy, verb swapped
 4. So the man you met and the man now can both be him.
 5. Or he has not shown you the whole road. The card won't say which.
 6. Either way, you noticed the change. That is worth trusting.
-7. Let me look closer at which of him is the one that stays…
+7. Let me look closer at what keeps getting between you and all of him…
 
 <details><summary>OLD — what she reads today</summary>
 
