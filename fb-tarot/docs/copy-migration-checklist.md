@@ -16,6 +16,18 @@ face-down deck every live ad points at); a few also have `arcana-mfh` / `arcana-
 `decode-him` variants, and an edit must be applied to **every** deck carrying the hook or
 the parity test fails.
 
+**Three states per lander:** blank = not started · 📝 DRAFTED = copy written and gated,
+waiting on your go (read it in `fb-tarot/docs/drafts/rewrites/PREVIEW.md`) · `[x]` = wired
+and passing. Nothing is wired before you have seen it.
+
+📝 awaiting sign-off right now: `cards-feels`, `cards-who-he-is`
+
+🔴 **Known content bug, `decode-him` deck.** All four of its hooks open with the SAME
+beat 1 per card ("You turned the Sun, dear — the card of what stands in the light." serves
+cards-honest, cards-return, cards-feels AND cards-cheating). Every other family has a test
+forbidding this; decode-him has no guard file, so it was never caught. Each rewrite there
+must write a fresh beat 1 — `scripts/preview-rewrite.mjs` fails the preview if it collides.
+
 The migration loop is in `.claude/skills/v1-funnel-audit/SKILL.md` § "Migrating a lander".
 Work top-down: families are ordered by how much unreadable copy they hold.
 
@@ -32,14 +44,14 @@ Work top-down: families are ordered by how much unreadable copy they hold.
 - [ ] `cards-cheating` `arcana-mfh` — "Is he cheating on you?" · **15**
 - [ ] `cards-honest` — "Is he being honest with you?" · **15**
 - [ ] `cards-honest` `arcana-mfh` — "Is he being honest with you?" · **14**
-- [ ] `cards-feels` — "How does he really feel about you?" · **14**
-- [ ] `cards-feels` `arcana-mfh` — "How does he really feel about you?" · **13**
+- [ ] `cards-feels` — "How does he really feel about you?" · **14** · 📝 **DRAFTED — awaiting sign-off**
+- [ ] `cards-feels` `arcana-mfh` — "How does he really feel about you?" · **13** · 📝 **DRAFTED — awaiting sign-off**
 - [ ] `cards-cheating` `arcana-eef` — "Is he cheating on you?" · **13**
 - [ ] `cards-honest` `decode-him` — "Is he being honest with you?" · **12**
       🔴 B2 — decode-him-strip.png is the fb-PALM thumb strip, not tarot art, and there is no revealStrip. These 4 cannot take a picture line until the art is settled or the deck is retired.
 - [ ] `cards-cheating` `decode-him` — "Is he cheating on you?" · **12**
-- [ ] `cards-feels` `arcana-eef` — "How does he really feel about you?" · **12**
-- [ ] `cards-feels` `decode-him` — "How does he really feel about you?" · **11**
+- [ ] `cards-feels` `arcana-eef` — "How does he really feel about you?" · **12** · 📝 **DRAFTED — awaiting sign-off**
+- [ ] `cards-feels` `decode-him` — "How does he really feel about you?" · **11** · 📝 **DRAFTED — awaiting sign-off**
 - [x] `cards-return` `decode-him` — "Will he come back?" · clean
 - [x] `cards-return` `arcana-mfh` — "Will he come back?" · clean
 - [x] `cards-return` `arcana-eef` — "Will he come back?" · clean
@@ -59,9 +71,9 @@ Work top-down: families are ordered by how much unreadable copy they hold.
 
 ⚠️ **No dedicated guard file** (`tests/tarot-trust-copy.test.ts` does not exist) — a seed family, written before the per-family convention. Only the generic guards apply, so this copy is the least protected on the funnel.
 
-- [ ] `cards-who-he-is` — "Is he really who he says he is?" · **20**
+- [ ] `cards-who-he-is` — "Is he really who he says he is?" · **20** · 📝 **DRAFTED — awaiting sign-off**
 - [ ] `cards-real-person` — "Is he the real person, or just a picture?" · **20**
-- [ ] `cards-who-he-is` `arcana-mfh` — "Is he really who he says he is?" · **19**
+- [ ] `cards-who-he-is` `arcana-mfh` — "Is he really who he says he is?" · **19** · 📝 **DRAFTED — awaiting sign-off**
 - [ ] `cards-real-person` `arcana-mfh` — "Is he the real person, or just a picture?" · **19**
 - [ ] `cards-misled` `arcana-mfh` — "Am I being misled?" · **19**
 - [ ] `cards-misled` — "Am I being misled?" · **19**

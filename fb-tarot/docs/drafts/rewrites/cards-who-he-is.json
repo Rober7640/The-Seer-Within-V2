@@ -1,0 +1,65 @@
+{
+  "hook": "cards-who-he-is",
+  "headline": "Is he really who he says he is?",
+  "note": "Only on the two Magician/Hanged Man/Fool decks, so one set of copy, verb swapped.",
+  "decks": {
+    "return-mhf": {
+      "a": [
+        "You turned the Magician, dear. Look — roses and lilies at his feet, and one arm held straight up.",
+        "You asked if he's really who he says he is. Your hand went to the man who builds what you see.",
+        "The Magician isn't a liar, dear. He's a maker.",
+        "What he shows you was put together on purpose.",
+        "That's not the same as false. But it isn't all of him.",
+        "You sensed a second man under the first one. Take that seriously.",
+        "Let me look closer at the man he leaves out…"
+      ],
+      "b": [
+        "You turned the Hanged Man, dear. Look — one leg tied to the branch, the other bent behind it, out of sight.",
+        "You asked if he's really who he says he is. Your hand went to the card of one hidden side.",
+        "The card doesn't say he's someone else, dear.",
+        "It says you have only ever seen one side of him.",
+        "That's why you can't get a clean read on him.",
+        "The trouble isn't your judgement, dear. It's what you were handed.",
+        "Let me look closer at the side he never showed you…"
+      ],
+      "c": [
+        "You turned the Fool, dear. Look — all he owns is tied in one small bundle on a stick.",
+        "You asked if he's really who he says he is. Your hand went to the man still deciding.",
+        "The Fool isn't pretending, dear. He hasn't finished choosing.",
+        "So the man you met and the man now are both him.",
+        "They just aren't the same one yet.",
+        "You keep noticing he doesn't add up. He doesn't yet — and you saw it.",
+        "Let me look closer at which of him is the one that stays…"
+      ]
+    },
+    "arcana-mfh": {
+      "a": [
+        "You chose the Magician, dear. Look — roses and lilies at his feet, and one arm held straight up.",
+        "You asked if he's really who he says he is. Your hand went to the man who builds what you see.",
+        "The Magician isn't a liar, dear. He's a maker.",
+        "What he shows you was put together on purpose.",
+        "That's not the same as false. But it isn't all of him.",
+        "You sensed a second man under the first one. Take that seriously.",
+        "Let me look closer at the man he leaves out…"
+      ],
+      "b": [
+        "You chose the Hanged Man, dear. Look — one leg tied to the branch, the other bent behind it, out of sight.",
+        "You asked if he's really who he says he is. Your hand went to the card of one hidden side.",
+        "The card doesn't say he's someone else, dear.",
+        "It says you have only ever seen one side of him.",
+        "That's why you can't get a clean read on him.",
+        "The trouble isn't your judgement, dear. It's what you were handed.",
+        "Let me look closer at the side he never showed you…"
+      ],
+      "c": [
+        "You chose the Fool, dear. Look — all he owns is tied in one small bundle on a stick.",
+        "You asked if he's really who he says he is. Your hand went to the man still deciding.",
+        "The Fool isn't pretending, dear. He hasn't finished choosing.",
+        "So the man you met and the man now are both him.",
+        "They just aren't the same one yet.",
+        "You keep noticing he doesn't add up. He doesn't yet — and you saw it.",
+        "Let me look closer at which of him is the one that stays…"
+      ]
+    }
+  }
+}

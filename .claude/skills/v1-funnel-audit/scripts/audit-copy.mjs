@@ -19,7 +19,7 @@
 //   node .claude/skills/v1-funnel-audit/scripts/audit-copy.mjs --checklist # (re)write the migration checklist doc
 
 import { checkBubble, checkEcho, RULES } from '../../../../scripts/check-read.mjs'
-import { writeFileSync, existsSync } from 'node:fs'
+import { writeFileSync, existsSync, readdirSync, readFileSync } from 'node:fs'
 
 const argv = process.argv.slice(2)
 const arg = (n) => { const i = argv.indexOf(n); return i >= 0 ? argv[i + 1] : null }
@@ -111,6 +111,18 @@ const MONEY = [
   ]],
 ]
 
+// Hooks with a signed-off-pending DRAFT. Three states, not two: a lander can be un-started,
+// DRAFTED (copy written and gated, waiting on a human), or wired. Collapsing the middle state
+// is how a finished rewrite gets forgotten between sessions.
+const DRAFTS_DIR = new URL('../../../../fb-tarot/docs/drafts/rewrites/', import.meta.url)
+const drafted = new Set()
+try {
+  for (const f of readdirSync(DRAFTS_DIR)) {
+    if (!f.endsWith('.json')) continue
+    drafted.add(JSON.parse(readFileSync(new URL(f, DRAFTS_DIR), 'utf8')).hook)
+  }
+} catch { /* no drafts yet */ }
+
 if (has('--checklist')) {
   const fams = new Map()
   for (const r of rows) {
@@ -151,6 +163,18 @@ if (has('--checklist')) {
   out.push('`decode-him` variants, and an edit must be applied to **every** deck carrying the hook or')
   out.push('the parity test fails.')
   out.push('')
+  out.push('**Three states per lander:** blank = not started · 📝 DRAFTED = copy written and gated,')
+  out.push('waiting on your go (read it in `fb-tarot/docs/drafts/rewrites/PREVIEW.md`) · `[x]` = wired')
+  out.push('and passing. Nothing is wired before you have seen it.')
+  out.push('')
+  out.push(`📝 awaiting sign-off right now: ${drafted.size ? [...drafted].map((h) => '`' + h + '`').join(', ') : 'nothing'}`)
+  out.push('')
+  out.push('🔴 **Known content bug, `decode-him` deck.** All four of its hooks open with the SAME')
+  out.push('beat 1 per card ("You turned the Sun, dear — the card of what stands in the light." serves')
+  out.push('cards-honest, cards-return, cards-feels AND cards-cheating). Every other family has a test')
+  out.push('forbidding this; decode-him has no guard file, so it was never caught. Each rewrite there')
+  out.push('must write a fresh beat 1 — `scripts/preview-rewrite.mjs` fails the preview if it collides.')
+  out.push('')
   out.push('The migration loop is in `.claude/skills/v1-funnel-audit/SKILL.md` § "Migrating a lander".')
   out.push('Work top-down: families are ordered by how much unreadable copy they hold.')
   out.push('')
@@ -172,7 +196,9 @@ if (has('--checklist')) {
     const seenDeckNote = new Set()
     for (const l of f.ls) {
       const tick = l.problems ? ' ' : 'x'
-      const tail = l.problems ? `· **${l.problems}**` : '· clean'
+      const tail = !l.problems ? '· clean'
+        : drafted.has(l.hook) ? `· **${l.problems}** · 📝 **DRAFTED — awaiting sign-off**`
+        : `· **${l.problems}**`
       const deckTag = l.deck === 'return-mhf' ? '' : ` \`${l.deck}\``
       out.push(`- [${tick}] \`${l.hook}\`${deckTag} — "${HEADLINES[l.hook]}" ${tail}`)
       // Deck notes print ONCE per family — the same red paragraph on four consecutive

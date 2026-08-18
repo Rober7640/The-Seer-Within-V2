@@ -1,0 +1,455 @@
+<title>Tarot Read Rewrites</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --ground:#F6F5F9; --surface:#FFFFFF; --sunk:#EFEEF4; --line:#DEDCE7;
+  --text:#1A1823; --muted:#5D5872; --faint:#8B86A0;
+  --violet:#6B5CA5; --ochre:#8A6320; --pass:#2A6F51; --flag:#9B3535;
+  --bubble:#EAE7F2; --bubble-text:#241F33;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --ground:#14121C; --surface:#1C1927; --sunk:#191622; --line:#2E2A3D;
+  --text:#E9E7F0; --muted:#A8A2BC; --faint:#7C7694;
+  --violet:#A697DE; --ochre:#D4A855; --pass:#69C79B; --flag:#E58A8A;
+  --bubble:#2A2539; --bubble-text:#E9E7F0;
+}}
+:root[data-theme="dark"]{
+  --ground:#14121C; --surface:#1C1927; --sunk:#191622; --line:#2E2A3D;
+  --text:#E9E7F0; --muted:#A8A2BC; --faint:#7C7694;
+  --violet:#A697DE; --ochre:#D4A855; --pass:#69C79B; --flag:#E58A8A;
+  --bubble:#2A2539; --bubble-text:#E9E7F0;
+}
+*{box-sizing:border-box}
+body{background:var(--ground);color:var(--text);
+  font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;
+  font-size:16px;line-height:1.6;margin:0;padding:0 1.25rem 6rem;
+  -webkit-font-smoothing:antialiased}
+.wrap{max-width:54rem;margin:0 auto}
+header.top{padding:3.5rem 0 2rem;border-bottom:1px solid var(--line);margin-bottom:2.5rem}
+h1{font-family:"Playfair Display",Georgia,serif;font-weight:600;
+  font-size:clamp(1.9rem,4.5vw,2.7rem);line-height:1.15;margin:0 0 .6rem;text-wrap:balance}
+.standfirst{color:var(--muted);font-size:1.0625rem;max-width:40rem;margin:0 0 1.5rem}
+.callout{background:var(--sunk);border-left:3px solid var(--violet);
+  padding:1rem 1.15rem;border-radius:0 6px 6px 0;font-size:.9375rem;color:var(--muted)}
+.callout strong{color:var(--text)}
+h2.hook{font-family:"Playfair Display",Georgia,serif;font-weight:600;
+  font-size:clamp(1.45rem,3.2vw,1.9rem);margin:4rem 0 .35rem;text-wrap:balance}
+.slug{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:.8125rem;
+  color:var(--violet);letter-spacing:.02em;margin:0 0 .5rem}
+.note{color:var(--muted);font-size:.9375rem;margin:0 0 2rem;max-width:42rem}
+h3.deck{font-size:.75rem;font-weight:600;text-transform:uppercase;letter-spacing:.11em;
+  color:var(--faint);margin:2.75rem 0 1.25rem;padding-bottom:.5rem;border-bottom:1px solid var(--line)}
+h3.deck em{font-style:normal;color:var(--violet);text-transform:none;letter-spacing:0;font-weight:500}
+.reveal{background:var(--surface);border:1px solid var(--line);border-radius:10px;
+  padding:1.4rem 1.5rem 1.25rem;margin-bottom:1.25rem}
+.cardname{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:.75rem;
+  text-transform:uppercase;letter-spacing:.08em;color:var(--ochre);margin:0 0 .15rem}
+.mark{font-family:"Playfair Display",Georgia,serif;font-size:1.15rem;margin:0 0 1rem;color:var(--text)}
+.pill{display:inline-flex;align-items:center;gap:.4rem;font-size:.78125rem;font-weight:500;
+  padding:.22rem .6rem;border-radius:999px;margin-bottom:1.15rem;
+  font-family:"IBM Plex Mono",ui-monospace,monospace}
+.pill.ok{color:var(--pass);background:color-mix(in srgb,var(--pass) 12%,transparent)}
+.pill.bad{color:var(--flag);background:color-mix(in srgb,var(--flag) 14%,transparent)}
+ol.thread{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:.55rem}
+ol.thread li{display:grid;grid-template-columns:1.5rem 1fr;gap:.7rem;align-items:start}
+.n{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:.75rem;color:var(--faint);
+  text-align:right;padding-top:.55rem;font-variant-numeric:tabular-nums}
+.bub{background:var(--bubble);color:var(--bubble-text);border-radius:14px 14px 14px 4px;
+  padding:.6rem .9rem;max-width:34rem;font-size:.98rem;line-height:1.55}
+.meta{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:.6875rem;color:var(--faint);
+  padding-top:.7rem;white-space:nowrap;font-variant-numeric:tabular-nums}
+li.withmeta{grid-template-columns:1.5rem 1fr auto}
+details{margin-top:1.15rem;border-top:1px dashed var(--line);padding-top:.85rem}
+summary{cursor:pointer;font-size:.8125rem;color:var(--faint);font-weight:500}
+summary:hover{color:var(--violet)}
+summary:focus-visible{outline:2px solid var(--violet);outline-offset:3px;border-radius:3px}
+details ol{list-style:none;padding:0;margin:.9rem 0 0;display:flex;flex-direction:column;gap:.5rem}
+details .bub{background:transparent;border:1px solid var(--line);color:var(--muted);border-radius:8px}
+.prob{color:var(--flag);font-size:.875rem;margin:.5rem 0 0}
+footer.end{margin-top:5rem;padding-top:2rem;border-top:1px solid var(--line);color:var(--muted);font-size:.9375rem}
+footer.end .verdict{font-family:"Playfair Display",Georgia,serif;font-size:1.35rem;color:var(--text);margin:0 0 .5rem}
+@media (max-width:34rem){.meta{display:none}li.withmeta{grid-template-columns:1.5rem 1fr}}
+</style>
+<div class="wrap">
+<header class="top">
+<h1>Proposed read rewrites</h1>
+<p class="standfirst">Every bubble below is one chat message with its own typing pause — shown at the width she reads it, because that is the only way to judge whether it lands. 2 hooks: cards-feels · cards-who-he-is.</p>
+<p class="callout"><strong>Nothing here is in the code yet.</strong> This is generated from draft files, and the strings you approve are wired verbatim — nothing gets retyped between your go and the deploy. Old copy sits under each panel so you can see what it replaces.</p>
+</header>
+<h2 class="hook">&ldquo;How does he really feel about you?&rdquo;</h2>
+<p class="slug">?hook=cards-feels</p>
+<p class="note">Card-sets differ by deck, so the copy does too: Magician/Hanged Man/Fool (return-mhf + arcana-mfh), Sun/Moon/Tower (decode-him), Emperor/Empress/Fool (arcana-eef). The two Magician decks share one set, verb swapped. 🔴 decode-him's beat 1s are written fresh rather than kept: all four hooks on that deck currently open with the SAME line per card (no guard file catches it — see the duplication note in the checklist).</p>
+<h3 class="deck">return-mhf <em>she turned a face-down card</em></h3>
+<article class="reveal">
+<p class="cardname">Card a</p>
+<p class="mark">the Magician, the card of will and intention</p>
+<p class="pill ok">passes the gate · beat 1 unique on this deck</p>
+<ol class="thread">
+<li class="withmeta"><span class="n">1</span><span class="bub">You turned the Magician, dear. Look — a red robe over white, and a loop above his head with no end to it.</span><span class="meta">22w</span></li>
+<li class="withmeta"><span class="n">2</span><span class="bub">You asked how he really feels. Your hand went to the man who does nothing by accident.</span><span class="meta">17w</span></li>
+<li class="withmeta"><span class="n">3</span><span class="bub">So the warmth you felt was not made up, dear.</span><span class="meta">10w</span></li>
+<li class="withmeta"><span class="n">4</span><span class="bub">A man like this doesn't warm to someone by accident.</span><span class="meta">10w</span></li>
+<li class="withmeta"><span class="n">5</span><span class="bub">What he hasn't done is say it out loud.</span><span class="meta">9w</span></li>
+<li class="withmeta"><span class="n">6</span><span class="bub">That gap is real, dear. You've been reading it right.</span><span class="meta">10w</span></li>
+<li class="withmeta"><span class="n">7</span><span class="bub">Let me look closer at what he feels and hasn't found words for…</span><span class="meta">13w</span></li>
+</ol>
+<details><summary>Show what she reads today</summary><ol>
+<li class="withmeta"><span class="n">1</span><span class="bub">You turned the Magician, dear — the card of intention, of feeling that's active, not passive.</span></li>
+<li class="withmeta"><span class="n">2</span><span class="bub">You're asking how he really feels, and you reached for the card of directed will.</span></li>
+<li class="withmeta"><span class="n">3</span><span class="bub">The Magician doesn't hand you a confession — it leans toward feelings that are real and deliberate, not idle; the warmth you've felt from him is intended, not imagined.</span></li>
+<li class="withmeta"><span class="n">4</span><span class="bub">Let me look closer at what he hasn't found the words for…</span></li>
+</ol></details>
+</article>
+<article class="reveal">
+<p class="cardname">Card b</p>
+<p class="mark">the Hanged Man, the card of the pause and a new angle</p>
+<p class="pill ok">passes the gate · beat 1 unique on this deck</p>
+<ol class="thread">
+<li class="withmeta"><span class="n">1</span><span class="bub">You turned the Hanged Man, dear. Look — he's upside down, and there's a light around his head.</span><span class="meta">17w</span></li>
+<li class="withmeta"><span class="n">2</span><span class="bub">You asked how he really feels. Your hand went to the man stuck between two things.</span><span class="meta">16w</span></li>
+<li class="withmeta"><span class="n">3</span><span class="bub">He does feel it, dear. What's stuck is him being ready.</span><span class="meta">11w</span></li>
+<li class="withmeta"><span class="n">4</span><span class="bub">So the mixed signals were not you misreading him.</span><span class="meta">9w</span></li>
+<li class="withmeta"><span class="n">5</span><span class="bub">You were reading two true things at once.</span><span class="meta">8w</span></li>
+<li class="withmeta"><span class="n">6</span><span class="bub">That pull you sense is genuine. So is the hold.</span><span class="meta">10w</span></li>
+<li class="withmeta"><span class="n">7</span><span class="bub">Let me look closer at what's holding him there…</span><span class="meta">9w</span></li>
+</ol>
+<details><summary>Show what she reads today</summary><ol>
+<li class="withmeta"><span class="n">1</span><span class="bub">You turned the Hanged Man, dear — the card of feeling held in suspension.</span></li>
+<li class="withmeta"><span class="n">2</span><span class="bub">You reached for the card that matches the mixed signals you've been reading.</span></li>
+<li class="withmeta"><span class="n">3</span><span class="bub">The Hanged Man doesn't mean he feels nothing — it leans toward feelings that are real but suspended, caught between what he wants and what he's ready for; the pull you sense is genuine.</span></li>
+<li class="withmeta"><span class="n">4</span><span class="bub">Let me look closer at what he's holding back, and why…</span></li>
+</ol></details>
+</article>
+<article class="reveal">
+<p class="cardname">Card c</p>
+<p class="mark">the Fool, the card of new beginnings</p>
+<p class="pill ok">passes the gate · beat 1 unique on this deck</p>
+<ol class="thread">
+<li class="withmeta"><span class="n">1</span><span class="bub">You turned the Fool, dear. Look — he's looking up at the sky, not down at the drop.</span><span class="meta">17w</span></li>
+<li class="withmeta"><span class="n">2</span><span class="bub">You asked how he really feels. Your hand went to the man living in the moment.</span><span class="meta">16w</span></li>
+<li class="withmeta"><span class="n">3</span><span class="bub">What he feels, he feels now. There's nothing put on about it.</span><span class="meta">12w</span></li>
+<li class="withmeta"><span class="n">4</span><span class="bub">But look where his eyes are. Up, not down the road.</span><span class="meta">11w</span></li>
+<li class="withmeta"><span class="n">5</span><span class="bub">So he hasn't worked out where this goes.</span><span class="meta">8w</span></li>
+<li class="withmeta"><span class="n">6</span><span class="bub">That's a different thing from not caring, dear. You've felt both at once.</span><span class="meta">13w</span></li>
+<li class="withmeta"><span class="n">7</span><span class="bub">Let me look closer at where his heart is actually pointing…</span><span class="meta">11w</span></li>
+</ol>
+<details><summary>Show what she reads today</summary><ol>
+<li class="withmeta"><span class="n">1</span><span class="bub">You turned the Fool, dear — the card of open, uncomplicated feeling.</span></li>
+<li class="withmeta"><span class="n">2</span><span class="bub">That's not random; you reached for the card that matches how fresh this still feels.</span></li>
+<li class="withmeta"><span class="n">3</span><span class="bub">The Fool doesn't mean he's careless with you — it leans toward feelings that are genuine and in the moment; what he feels is real, even if he hasn't thought through where it leads.</span></li>
+<li class="withmeta"><span class="n">4</span><span class="bub">Let me look closer at where his heart is actually pointing…</span></li>
+</ol></details>
+</article>
+<h3 class="deck">arcana-mfh <em>she chose a face-up card</em></h3>
+<article class="reveal">
+<p class="cardname">Card a</p>
+<p class="mark">the Magician, the card of will and intention</p>
+<p class="pill ok">passes the gate · beat 1 unique on this deck</p>
+<ol class="thread">
+<li class="withmeta"><span class="n">1</span><span class="bub">You chose the Magician, dear. Look — a red robe over white, and a loop above his head with no end to it.</span><span class="meta">22w</span></li>
+<li class="withmeta"><span class="n">2</span><span class="bub">You asked how he really feels. Your hand went to the man who does nothing by accident.</span><span class="meta">17w</span></li>
+<li class="withmeta"><span class="n">3</span><span class="bub">So the warmth you felt was not made up, dear.</span><span class="meta">10w</span></li>
+<li class="withmeta"><span class="n">4</span><span class="bub">A man like this doesn't warm to someone by accident.</span><span class="meta">10w</span></li>
+<li class="withmeta"><span class="n">5</span><span class="bub">What he hasn't done is say it out loud.</span><span class="meta">9w</span></li>
+<li class="withmeta"><span class="n">6</span><span class="bub">That gap is real, dear. You've been reading it right.</span><span class="meta">10w</span></li>
+<li class="withmeta"><span class="n">7</span><span class="bub">Let me look closer at what he feels and hasn't found words for…</span><span class="meta">13w</span></li>
+</ol>
+<details><summary>Show what she reads today</summary><ol>
+<li class="withmeta"><span class="n">1</span><span class="bub">You chose the Magician, dear — the card of intention, of feeling that's active, not passive.</span></li>
+<li class="withmeta"><span class="n">2</span><span class="bub">You're asking how he really feels, and you reached for the card of directed will.</span></li>
+<li class="withmeta"><span class="n">3</span><span class="bub">The Magician doesn't hand you a confession — it leans toward feelings that are real and deliberate, not idle; the warmth you've felt from him is intended, not imagined.</span></li>
+<li class="withmeta"><span class="n">4</span><span class="bub">Let me look closer at what he hasn't found the words for…</span></li>
+</ol></details>
+</article>
+<article class="reveal">
+<p class="cardname">Card b</p>
+<p class="mark">the Hanged Man, the card of the pause and a new angle</p>
+<p class="pill ok">passes the gate · beat 1 unique on this deck</p>
+<ol class="thread">
+<li class="withmeta"><span class="n">1</span><span class="bub">You chose the Hanged Man, dear. Look — he's upside down, and there's a light around his head.</span><span class="meta">17w</span></li>
+<li class="withmeta"><span class="n">2</span><span class="bub">You asked how he really feels. Your hand went to the man stuck between two things.</span><span class="meta">16w</span></li>
+<li class="withmeta"><span class="n">3</span><span class="bub">He does feel it, dear. What's stuck is him being ready.</span><span class="meta">11w</span></li>
+<li class="withmeta"><span class="n">4</span><span class="bub">So the mixed signals were not you misreading him.</span><span class="meta">9w</span></li>
+<li class="withmeta"><span class="n">5</span><span class="bub">You were reading two true things at once.</span><span class="meta">8w</span></li>
+<li class="withmeta"><span class="n">6</span><span class="bub">That pull you sense is genuine. So is the hold.</span><span class="meta">10w</span></li>
+<li class="withmeta"><span class="n">7</span><span class="bub">Let me look closer at what's holding him there…</span><span class="meta">9w</span></li>
+</ol>
+<details><summary>Show what she reads today</summary><ol>
+<li class="withmeta"><span class="n">1</span><span class="bub">You chose the Hanged Man, dear — the card of feeling held in suspension.</span></li>
+<li class="withmeta"><span class="n">2</span><span class="bub">You reached for the card that matches the mixed signals you've been reading.</span></li>
+<li class="withmeta"><span class="n">3</span><span class="bub">The Hanged Man doesn't mean he feels nothing — it leans toward feelings that are real but suspended, caught between what he wants and what he's ready for; the pull you sense is genuine.</span></li>
+<li class="withmeta"><span class="n">4</span><span class="bub">Let me look closer at what he's holding back, and why…</span></li>
+</ol></details>
+</article>
+<article class="reveal">
+<p class="cardname">Card c</p>
+<p class="mark">the Fool, the card of new beginnings</p>
+<p class="pill ok">passes the gate · beat 1 unique on this deck</p>
+<ol class="thread">
+<li class="withmeta"><span class="n">1</span><span class="bub">You chose the Fool, dear. Look — he's looking up at the sky, not down at the drop.</span><span class="meta">17w</span></li>
+<li class="withmeta"><span class="n">2</span><span class="bub">You asked how he really feels. Your hand went to the man living in the moment.</span><span class="meta">16w</span></li>
+<li class="withmeta"><span class="n">3</span><span class="bub">What he feels, he feels now. There's nothing put on about it.</span><span class="meta">12w</span></li>
+<li class="withmeta"><span class="n">4</span><span class="bub">But look where his eyes are. Up, not down the road.</span><span class="meta">11w</span></li>
+<li class="withmeta"><span class="n">5</span><span class="bub">So he hasn't worked out where this goes.</span><span class="meta">8w</span></li>
+<li class="withmeta"><span class="n">6</span><span class="bub">That's a different thing from not caring, dear. You've felt both at once.</span><span class="meta">13w</span></li>
+<li class="withmeta"><span class="n">7</span><span class="bub">Let me look closer at where his heart is actually pointing…</span><span class="meta">11w</span></li>
+</ol>
+<details><summary>Show what she reads today</summary><ol>
+<li class="withmeta"><span class="n">1</span><span class="bub">You chose the Fool, dear — the card of open, uncomplicated feeling.</span></li>
+<li class="withmeta"><span class="n">2</span><span class="bub">That's not random; you reached for the card that matches how fresh this still feels.</span></li>
+<li class="withmeta"><span class="n">3</span><span class="bub">The Fool doesn't mean he's careless with you — it leans toward feelings that are genuine and in the moment; what he feels is real, even if he hasn't thought through where it leads.</span></li>
+<li class="withmeta"><span class="n">4</span><span class="bub">Let me look closer at where his heart is actually pointing…</span></li>
+</ol></details>
+</article>
+<h3 class="deck">decode-him <em>she turned a face-down card</em></h3>
+<article class="reveal">
+<p class="cardname">Card a</p>
+<p class="mark">the Sun, the card of what stands in the light</p>
+<p class="pill ok">passes the gate · beat 1 unique on this deck</p>
+<ol class="thread">
+<li class="withmeta"><span class="n">1</span><span class="bub">You turned the Sun, dear — the warmest card in this deck.</span><span class="meta">11w</span></li>
+<li class="withmeta"><span class="n">2</span><span class="bub">You asked how he really feels. Your hand went to the open card, not the guarded one.</span><span class="meta">17w</span></li>
+<li class="withmeta"><span class="n">3</span><span class="bub">The Sun hands you no confession, dear.</span><span class="meta">7w</span></li>
+<li class="withmeta"><span class="n">4</span><span class="bub">It says the warmth you felt from him was real.</span><span class="meta">10w</span></li>
+<li class="withmeta"><span class="n">5</span><span class="bub">Not made up. Not you being soft with yourself.</span><span class="meta">9w</span></li>
+<li class="withmeta"><span class="n">6</span><span class="bub">Your read on him is truer than the doubt.</span><span class="meta">9w</span></li>
+<li class="withmeta"><span class="n">7</span><span class="bub">Let me look closer at what he feels and hasn't found words for…</span><span class="meta">13w</span></li>
+</ol>
+<details><summary>Show what she reads today</summary><ol>
+<li class="withmeta"><span class="n">1</span><span class="bub">You turned the Sun, dear — the card of what stands in the light.</span></li>
+<li class="withmeta"><span class="n">2</span><span class="bub">You're asking how he really feels, and your hand reached for the card of what's genuine.</span></li>
+<li class="withmeta"><span class="n">3</span><span class="bub">The Sun doesn't hand you a confession — it says the warmth you've felt from him is real, not imagined, and your read on it is truer than the doubt you keep talking yourself into.</span></li>
+<li class="withmeta"><span class="n">4</span><span class="bub">Let me look closer at what he feels but hasn't found the words for…</span></li>
+</ol></details>
+</article>
+<article class="reveal">
+<p class="cardname">Card b</p>
+<p class="mark">the Moon, the card of what is kept in the half-light</p>
+<p class="pill ok">passes the gate · beat 1 unique on this deck</p>
+<ol class="thread">
+<li class="withmeta"><span class="n">1</span><span class="bub">You turned the Moon, dear — the card that shows things by half.</span><span class="meta">12w</span></li>
+<li class="withmeta"><span class="n">2</span><span class="bub">You asked how he really feels. Your hand went to the half-lit card, not the bright one.</span><span class="meta">18w</span></li>
+<li class="withmeta"><span class="n">3</span><span class="bub">The Moon doesn't mean he's cold, dear.</span><span class="meta">7w</span></li>
+<li class="withmeta"><span class="n">4</span><span class="bub">It means what he feels is real, and only half said out loud.</span><span class="meta">13w</span></li>
+<li class="withmeta"><span class="n">5</span><span class="bub">You keep sensing there's more than he shows you.</span><span class="meta">9w</span></li>
+<li class="withmeta"><span class="n">6</span><span class="bub">There is. That's you reading him, not you inventing him.</span><span class="meta">10w</span></li>
+<li class="withmeta"><span class="n">7</span><span class="bub">Let me look closer at what he keeps in the dark…</span><span class="meta">11w</span></li>
+</ol>
+<details><summary>Show what she reads today</summary><ol>
+<li class="withmeta"><span class="n">1</span><span class="bub">You turned the Moon, dear — the card of what's kept in the half-light.</span></li>
+<li class="withmeta"><span class="n">2</span><span class="bub">You're asking what he feels, because he keeps some of it just out of reach.</span></li>
+<li class="withmeta"><span class="n">3</span><span class="bub">The Moon doesn't mean he's cold — it means his feelings are real but half-spoken, and that sense of 'there's more here than he shows' is you reading him correctly.</span></li>
+<li class="withmeta"><span class="n">4</span><span class="bub">Let me look closer at what he's holding back — and why…</span></li>
+</ol></details>
+</article>
+<article class="reveal">
+<p class="cardname">Card c</p>
+<p class="mark">the Tower, the card of what is already moving beneath the surface</p>
+<p class="pill ok">passes the gate · beat 1 unique on this deck</p>
+<ol class="thread">
+<li class="withmeta"><span class="n">1</span><span class="bub">You turned the Tower, dear — the card of the ground shifting.</span><span class="meta">11w</span></li>
+<li class="withmeta"><span class="n">2</span><span class="bub">You asked how he really feels. Your hand went to the card of what's changing.</span><span class="meta">15w</span></li>
+<li class="withmeta"><span class="n">3</span><span class="bub">The Tower doesn't mean his feelings fell down, dear.</span><span class="meta">9w</span></li>
+<li class="withmeta"><span class="n">4</span><span class="bub">It means they are changing shape.</span><span class="meta">6w</span></li>
+<li class="withmeta"><span class="n">5</span><span class="bub">Something between you has felt shaky. You felt it too.</span><span class="meta">10w</span></li>
+<li class="withmeta"><span class="n">6</span><span class="bub">That's real movement. It isn't in your head.</span><span class="meta">8w</span></li>
+<li class="withmeta"><span class="n">7</span><span class="bub">Let me look closer at where his feelings are heading…</span><span class="meta">10w</span></li>
+</ol>
+<details><summary>Show what she reads today</summary><ol>
+<li class="withmeta"><span class="n">1</span><span class="bub">You turned the Tower, dear — the card of what's already moving beneath the surface.</span></li>
+<li class="withmeta"><span class="n">2</span><span class="bub">You're asking how he feels, and something between you has recently shifted.</span></li>
+<li class="withmeta"><span class="n">3</span><span class="bub">The Tower doesn't mean his feelings collapsed — it means they're changing shape, and the unsteadiness you sense is real movement, not you overthinking it.</span></li>
+<li class="withmeta"><span class="n">4</span><span class="bub">Let me look closer at where his feelings are actually heading…</span></li>
+</ol></details>
+</article>
+<h3 class="deck">arcana-eef <em>she chose a face-up card</em></h3>
+<article class="reveal">
+<p class="cardname">Card a</p>
+<p class="mark">the Emperor, the card of authority and structure</p>
+<p class="pill ok">passes the gate · beat 1 unique on this deck</p>
+<ol class="thread">
+<li class="withmeta"><span class="n">1</span><span class="bub">You chose the Emperor, dear. Look — a long white beard, a heavy crown, rams' heads carved in his chair.</span><span class="meta">19w</span></li>
+<li class="withmeta"><span class="n">2</span><span class="bub">You asked how he really feels. Your hand went to the man who keeps it behind his face.</span><span class="meta">18w</span></li>
+<li class="withmeta"><span class="n">3</span><span class="bub">The Emperor doesn't mean he feels little, dear.</span><span class="meta">8w</span></li>
+<li class="withmeta"><span class="n">4</span><span class="bub">It means he holds it behind a calm face.</span><span class="meta">9w</span></li>
+<li class="withmeta"><span class="n">5</span><span class="bub">He shows it by being steady, not by saying it.</span><span class="meta">10w</span></li>
+<li class="withmeta"><span class="n">6</span><span class="bub">So it's realer than his restraint makes it look. You weren't wrong to feel it.</span><span class="meta">15w</span></li>
+<li class="withmeta"><span class="n">7</span><span class="bub">Let me look closer at what the calm is hiding…</span><span class="meta">10w</span></li>
+</ol>
+<details><summary>Show what she reads today</summary><ol>
+<li class="withmeta"><span class="n">1</span><span class="bub">You chose the Emperor, dear — the card of feeling held behind control.</span></li>
+<li class="withmeta"><span class="n">2</span><span class="bub">You're asking how he really feels, and you reached for the card of the guarded heart.</span></li>
+<li class="withmeta"><span class="n">3</span><span class="bub">The Emperor doesn't mean he feels little — it leans toward strong feeling kept behind composure; he shows it through steadiness more than words, and it's realer than his restraint suggests.</span></li>
+<li class="withmeta"><span class="n">4</span><span class="bub">Let me look closer at what the composure is protecting…</span></li>
+</ol></details>
+</article>
+<article class="reveal">
+<p class="cardname">Card b</p>
+<p class="mark">the Empress, the card of warmth and abundance</p>
+<p class="pill ok">passes the gate · beat 1 unique on this deck</p>
+<ol class="thread">
+<li class="withmeta"><span class="n">1</span><span class="bub">You chose the Empress, dear. Look — she rests on soft cushions, and a shield by her feet carries a heart.</span><span class="meta">20w</span></li>
+<li class="withmeta"><span class="n">2</span><span class="bub">You asked how he really feels. Your hand went to the warmest card in the deck.</span><span class="meta">16w</span></li>
+<li class="withmeta"><span class="n">3</span><span class="bub">The Empress leans tender, dear.</span><span class="meta">5w</span></li>
+<li class="withmeta"><span class="n">4</span><span class="bub">He cares more, and more softly, than he has found a way to say.</span><span class="meta">14w</span></li>
+<li class="withmeta"><span class="n">5</span><span class="bub">The warmth you feel is not one-sided.</span><span class="meta">8w</span></li>
+<li class="withmeta"><span class="n">6</span><span class="bub">You've known that. You just wanted it said by someone else.</span><span class="meta">11w</span></li>
+<li class="withmeta"><span class="n">7</span><span class="bub">Let me look closer at what his heart already knows…</span><span class="meta">10w</span></li>
+</ol>
+<details><summary>Show what she reads today</summary><ol>
+<li class="withmeta"><span class="n">1</span><span class="bub">You chose the Empress, dear — the card of deep, nurturing feeling.</span></li>
+<li class="withmeta"><span class="n">2</span><span class="bub">You're asking how he feels, wanting to trust the warmth you sense.</span></li>
+<li class="withmeta"><span class="n">3</span><span class="bub">The Empress leans toward genuine, tender feeling, dear — he cares more, and more softly, than he's found a way to say; the warmth you feel is not one-sided.</span></li>
+<li class="withmeta"><span class="n">4</span><span class="bub">Let me look closer at what his heart already knows…</span></li>
+</ol></details>
+</article>
+<article class="reveal">
+<p class="cardname">Card c</p>
+<p class="mark">the Fool, the card of new beginnings</p>
+<p class="pill ok">passes the gate · beat 1 unique on this deck</p>
+<ol class="thread">
+<li class="withmeta"><span class="n">1</span><span class="bub">You chose the Fool, dear. Look — a white rose in his hand, and his eyes on the sky.</span><span class="meta">18w</span></li>
+<li class="withmeta"><span class="n">2</span><span class="bub">You asked how he really feels. Your hand went to the plainest card in the deck.</span><span class="meta">16w</span></li>
+<li class="withmeta"><span class="n">3</span><span class="bub">The Fool feels it now, dear. Plainly, with nothing put on.</span><span class="meta">11w</span></li>
+<li class="withmeta"><span class="n">4</span><span class="bub">What he hasn't done is think about where it leads.</span><span class="meta">10w</span></li>
+<li class="withmeta"><span class="n">5</span><span class="bub">Those are two different things.</span><span class="meta">5w</span></li>
+<li class="withmeta"><span class="n">6</span><span class="bub">The spark is real. The plan is what's missing.</span><span class="meta">9w</span></li>
+<li class="withmeta"><span class="n">7</span><span class="bub">Let me look closer at where his heart is pointing…</span><span class="meta">10w</span></li>
+</ol>
+<details><summary>Show what she reads today</summary><ol>
+<li class="withmeta"><span class="n">1</span><span class="bub">You chose the Fool, dear — the card of open, in-the-moment feeling.</span></li>
+<li class="withmeta"><span class="n">2</span><span class="bub">You're asking what he feels, reading something fresh and unguarded in him.</span></li>
+<li class="withmeta"><span class="n">3</span><span class="bub">The Fool leans toward feeling that's real but uncomplicated — he feels it now, genuinely, even if he hasn't thought through where it leads; the spark is real.</span></li>
+<li class="withmeta"><span class="n">4</span><span class="bub">Let me look closer at where his heart is pointing…</span></li>
+</ol></details>
+</article>
+<h2 class="hook">&ldquo;Is he really who he says he is?&rdquo;</h2>
+<p class="slug">?hook=cards-who-he-is</p>
+<p class="note">Only on the two Magician/Hanged Man/Fool decks, so one set of copy, verb swapped.</p>
+<h3 class="deck">return-mhf <em>she turned a face-down card</em></h3>
+<article class="reveal">
+<p class="cardname">Card a</p>
+<p class="mark">the Magician, the card of will and intention</p>
+<p class="pill ok">passes the gate · beat 1 unique on this deck</p>
+<ol class="thread">
+<li class="withmeta"><span class="n">1</span><span class="bub">You turned the Magician, dear. Look — roses and lilies at his feet, and one arm held straight up.</span><span class="meta">18w</span></li>
+<li class="withmeta"><span class="n">2</span><span class="bub">You asked if he's really who he says he is. Your hand went to the man who builds what you see.</span><span class="meta">21w</span></li>
+<li class="withmeta"><span class="n">3</span><span class="bub">The Magician isn't a liar, dear. He's a maker.</span><span class="meta">9w</span></li>
+<li class="withmeta"><span class="n">4</span><span class="bub">What he shows you was put together on purpose.</span><span class="meta">9w</span></li>
+<li class="withmeta"><span class="n">5</span><span class="bub">That's not the same as false. But it isn't all of him.</span><span class="meta">12w</span></li>
+<li class="withmeta"><span class="n">6</span><span class="bub">You sensed a second man under the first one. Take that seriously.</span><span class="meta">12w</span></li>
+<li class="withmeta"><span class="n">7</span><span class="bub">Let me look closer at the man he leaves out…</span><span class="meta">10w</span></li>
+</ol>
+<details><summary>Show what she reads today</summary><ol>
+<li class="withmeta"><span class="n">1</span><span class="bub">You turned the Magician, dear — the card of the man who authors himself.</span></li>
+<li class="withmeta"><span class="n">2</span><span class="bub">Your hand went to the card of someone who decides what the world gets to see, and I don't think that was chance.</span></li>
+<li class="withmeta"><span class="n">3</span><span class="bub">The Magician doesn't make him a fraud — it says the man he introduces you to is a version he built on purpose, and your sense that there is a second one living underneath it is worth taking seriously.</span></li>
+<li class="withmeta"><span class="n">4</span><span class="bub">Let me look closer at the man he keeps out of the introduction…</span></li>
+</ol></details>
+</article>
+<article class="reveal">
+<p class="cardname">Card b</p>
+<p class="mark">the Hanged Man, the card of the pause and a new angle</p>
+<p class="pill ok">passes the gate · beat 1 unique on this deck</p>
+<ol class="thread">
+<li class="withmeta"><span class="n">1</span><span class="bub">You turned the Hanged Man, dear. Look — one leg tied to the branch, the other bent behind it, out of sight.</span><span class="meta">21w</span></li>
+<li class="withmeta"><span class="n">2</span><span class="bub">You asked if he's really who he says he is. Your hand went to the card of one hidden side.</span><span class="meta">20w</span></li>
+<li class="withmeta"><span class="n">3</span><span class="bub">The card doesn't say he's someone else, dear.</span><span class="meta">8w</span></li>
+<li class="withmeta"><span class="n">4</span><span class="bub">It says you have only ever seen one side of him.</span><span class="meta">11w</span></li>
+<li class="withmeta"><span class="n">5</span><span class="bub">That's why you can't get a clean read on him.</span><span class="meta">10w</span></li>
+<li class="withmeta"><span class="n">6</span><span class="bub">The trouble isn't your judgement, dear. It's what you were handed.</span><span class="meta">11w</span></li>
+<li class="withmeta"><span class="n">7</span><span class="bub">Let me look closer at the side he never showed you…</span><span class="meta">11w</span></li>
+</ol>
+<details><summary>Show what she reads today</summary><ol>
+<li class="withmeta"><span class="n">1</span><span class="bub">You turned the Hanged Man, dear — the card of the single angle, of what you can only see from one side.</span></li>
+<li class="withmeta"><span class="n">2</span><span class="bub">You reached for the card that matches how partial he still feels to you, even now.</span></li>
+<li class="withmeta"><span class="n">3</span><span class="bub">The Hanged Man doesn't say he is someone else — it says you have only ever been shown one side of him, and the reason you cannot get a clean read is that you have never been given the whole.</span></li>
+<li class="withmeta"><span class="n">4</span><span class="bub">Let me look closer at the part of him you were never introduced to…</span></li>
+</ol></details>
+</article>
+<article class="reveal">
+<p class="cardname">Card c</p>
+<p class="mark">the Fool, the card of new beginnings</p>
+<p class="pill ok">passes the gate · beat 1 unique on this deck</p>
+<ol class="thread">
+<li class="withmeta"><span class="n">1</span><span class="bub">You turned the Fool, dear. Look — all he owns is tied in one small bundle on a stick.</span><span class="meta">18w</span></li>
+<li class="withmeta"><span class="n">2</span><span class="bub">You asked if he's really who he says he is. Your hand went to the man still deciding.</span><span class="meta">18w</span></li>
+<li class="withmeta"><span class="n">3</span><span class="bub">The Fool isn't pretending, dear. He hasn't finished choosing.</span><span class="meta">9w</span></li>
+<li class="withmeta"><span class="n">4</span><span class="bub">So the man you met and the man now are both him.</span><span class="meta">12w</span></li>
+<li class="withmeta"><span class="n">5</span><span class="bub">They just aren't the same one yet.</span><span class="meta">7w</span></li>
+<li class="withmeta"><span class="n">6</span><span class="bub">You keep noticing he doesn't add up. He doesn't yet — and you saw it.</span><span class="meta">14w</span></li>
+<li class="withmeta"><span class="n">7</span><span class="bub">Let me look closer at which of him is the one that stays…</span><span class="meta">13w</span></li>
+</ol>
+<details><summary>Show what she reads today</summary><ol>
+<li class="withmeta"><span class="n">1</span><span class="bub">You turned the Fool, dear — the card of the man who is still becoming.</span></li>
+<li class="withmeta"><span class="n">2</span><span class="bub">That is not random; you reached for the card that matches how unsettled he seems, even to himself.</span></li>
+<li class="withmeta"><span class="n">3</span><span class="bub">The Fool doesn't accuse him of pretending — it leans toward a man who has not finished deciding who he is, so the person you met and the one in front of you now genuinely differ; the inconsistency you keep noticing is real, and it is not your imagination.</span></li>
+<li class="withmeta"><span class="n">4</span><span class="bub">Let me look closer at which of him is the one that stays…</span></li>
+</ol></details>
+</article>
+<h3 class="deck">arcana-mfh <em>she chose a face-up card</em></h3>
+<article class="reveal">
+<p class="cardname">Card a</p>
+<p class="mark">the Magician, the card of will and intention</p>
+<p class="pill ok">passes the gate · beat 1 unique on this deck</p>
+<ol class="thread">
+<li class="withmeta"><span class="n">1</span><span class="bub">You chose the Magician, dear. Look — roses and lilies at his feet, and one arm held straight up.</span><span class="meta">18w</span></li>
+<li class="withmeta"><span class="n">2</span><span class="bub">You asked if he's really who he says he is. Your hand went to the man who builds what you see.</span><span class="meta">21w</span></li>
+<li class="withmeta"><span class="n">3</span><span class="bub">The Magician isn't a liar, dear. He's a maker.</span><span class="meta">9w</span></li>
+<li class="withmeta"><span class="n">4</span><span class="bub">What he shows you was put together on purpose.</span><span class="meta">9w</span></li>
+<li class="withmeta"><span class="n">5</span><span class="bub">That's not the same as false. But it isn't all of him.</span><span class="meta">12w</span></li>
+<li class="withmeta"><span class="n">6</span><span class="bub">You sensed a second man under the first one. Take that seriously.</span><span class="meta">12w</span></li>
+<li class="withmeta"><span class="n">7</span><span class="bub">Let me look closer at the man he leaves out…</span><span class="meta">10w</span></li>
+</ol>
+<details><summary>Show what she reads today</summary><ol>
+<li class="withmeta"><span class="n">1</span><span class="bub">You chose the Magician, dear — the card of the man who authors himself.</span></li>
+<li class="withmeta"><span class="n">2</span><span class="bub">Your hand went to the card of someone who decides what the world gets to see, and I don't think that was chance.</span></li>
+<li class="withmeta"><span class="n">3</span><span class="bub">The Magician doesn't make him a fraud — it says the man he introduces you to is a version he built on purpose, and your sense that there is a second one living underneath it is worth taking seriously.</span></li>
+<li class="withmeta"><span class="n">4</span><span class="bub">Let me look closer at the man he keeps out of the introduction…</span></li>
+</ol></details>
+</article>
+<article class="reveal">
+<p class="cardname">Card b</p>
+<p class="mark">the Hanged Man, the card of the pause and a new angle</p>
+<p class="pill ok">passes the gate · beat 1 unique on this deck</p>
+<ol class="thread">
+<li class="withmeta"><span class="n">1</span><span class="bub">You chose the Hanged Man, dear. Look — one leg tied to the branch, the other bent behind it, out of sight.</span><span class="meta">21w</span></li>
+<li class="withmeta"><span class="n">2</span><span class="bub">You asked if he's really who he says he is. Your hand went to the card of one hidden side.</span><span class="meta">20w</span></li>
+<li class="withmeta"><span class="n">3</span><span class="bub">The card doesn't say he's someone else, dear.</span><span class="meta">8w</span></li>
+<li class="withmeta"><span class="n">4</span><span class="bub">It says you have only ever seen one side of him.</span><span class="meta">11w</span></li>
+<li class="withmeta"><span class="n">5</span><span class="bub">That's why you can't get a clean read on him.</span><span class="meta">10w</span></li>
+<li class="withmeta"><span class="n">6</span><span class="bub">The trouble isn't your judgement, dear. It's what you were handed.</span><span class="meta">11w</span></li>
+<li class="withmeta"><span class="n">7</span><span class="bub">Let me look closer at the side he never showed you…</span><span class="meta">11w</span></li>
+</ol>
+<details><summary>Show what she reads today</summary><ol>
+<li class="withmeta"><span class="n">1</span><span class="bub">You chose the Hanged Man, dear — the card of the single angle, of what you can only see from one side.</span></li>
+<li class="withmeta"><span class="n">2</span><span class="bub">You reached for the card that matches how partial he still feels to you, even now.</span></li>
+<li class="withmeta"><span class="n">3</span><span class="bub">The Hanged Man doesn't say he is someone else — it says you have only ever been shown one side of him, and the reason you cannot get a clean read is that you have never been given the whole.</span></li>
+<li class="withmeta"><span class="n">4</span><span class="bub">Let me look closer at the part of him you were never introduced to…</span></li>
+</ol></details>
+</article>
+<article class="reveal">
+<p class="cardname">Card c</p>
+<p class="mark">the Fool, the card of new beginnings</p>
+<p class="pill ok">passes the gate · beat 1 unique on this deck</p>
+<ol class="thread">
+<li class="withmeta"><span class="n">1</span><span class="bub">You chose the Fool, dear. Look — all he owns is tied in one small bundle on a stick.</span><span class="meta">18w</span></li>
+<li class="withmeta"><span class="n">2</span><span class="bub">You asked if he's really who he says he is. Your hand went to the man still deciding.</span><span class="meta">18w</span></li>
+<li class="withmeta"><span class="n">3</span><span class="bub">The Fool isn't pretending, dear. He hasn't finished choosing.</span><span class="meta">9w</span></li>
+<li class="withmeta"><span class="n">4</span><span class="bub">So the man you met and the man now are both him.</span><span class="meta">12w</span></li>
+<li class="withmeta"><span class="n">5</span><span class="bub">They just aren't the same one yet.</span><span class="meta">7w</span></li>
+<li class="withmeta"><span class="n">6</span><span class="bub">You keep noticing he doesn't add up. He doesn't yet — and you saw it.</span><span class="meta">14w</span></li>
+<li class="withmeta"><span class="n">7</span><span class="bub">Let me look closer at which of him is the one that stays…</span><span class="meta">13w</span></li>
+</ol>
+<details><summary>Show what she reads today</summary><ol>
+<li class="withmeta"><span class="n">1</span><span class="bub">You chose the Fool, dear — the card of the man who is still becoming.</span></li>
+<li class="withmeta"><span class="n">2</span><span class="bub">That is not random; you reached for the card that matches how unsettled he seems, even to himself.</span></li>
+<li class="withmeta"><span class="n">3</span><span class="bub">The Fool doesn't accuse him of pretending — it leans toward a man who has not finished deciding who he is, so the person you met and the one in front of you now genuinely differ; the inconsistency you keep noticing is real, and it is not your imagination.</span></li>
+<li class="withmeta"><span class="n">4</span><span class="bub">Let me look closer at which of him is the one that stays…</span></li>
+</ol></details>
+</article>
+<footer class="end">
+<p class="verdict">All wirable as written</p>
+<p>The gate checks length, reading grade, stacked negatives, the echo of the ad and a banned-phrase list. It cannot judge warmth, rhythm, or whether a line is worth saying — so read it aloud before you say go.</p>
+</footer></div>
