@@ -101,9 +101,12 @@ captured locally.
   the user can only ever type an email. Proof: `improve-v1/evidence/email-lock/repro.mjs`. Currently ✅
   (green regression guard).
 - **DIAGNOSTIC — identity-persist** (informational, does NOT fail the run): does the palm identity survive
-  past `palmReflect` into reading1/reading2/crisis? A **known-open derail** — the fix in
-  `improve-v1/04-fb-palm-derail-PROVEN.md §3` was designed but never shipped, so it reports 🔴 today and
-  flips ✅ automatically once the fix lands. (Reuses Joel's `/api/chat` replay.)
+  past `palmReflect` into reading1/reading2/crisis? (Reuses Joel's `/api/chat` replay.)
+  ✅ **The §3 fix HAS since shipped** — `palmDirective()` lives at `prompts.ts:385` and is called by
+  `buildReading1Prompt` / `buildReading2Prompt` / `buildFutureValidationPrompt` /
+  `buildCrisisRevealPrompt` / `buildCrisisCostPrompt`, fed by `palmReading` / `palmMark` written at
+  name-capture (`useConversation.ts:696`). So this diagnostic should now read ✅; the 2026-07-16 🔴
+  below predates the fix. Re-confirm on the next sandbox run.
 
 ## Price-variant charge correctness (`audit-charge.mjs`)
 
@@ -335,13 +338,19 @@ first/last; do not work around them.
 > now references that column, so without it `saveConversation` fails and `/api/lead` assigns no variant.
 > Apply any newer migrations to the sandbox DB the same way if `/api/lead` starts returning a null variant.
 
-## 🔴 Relay to the team (not a skill bug — a live product finding)
+## ✅ Resolved — the fb-palm derail (was a live product finding)
 
-The **fb-palm derail is still OPEN as of 2026-07-16**: the palm identity (`gathering, mark, three lines`)
-survives `palmReflect` but is absent from reading1/reading2/crisis. The fix is designed in
-`improve-v1/04-fb-palm-derail-PROVEN.md §3` but was never shipped (`server/lib/prompts.ts` has zero `palm*`
-refs). Small, high-leverage, on the top-traffic funnel. `audit-palm.mjs`'s diagnostic flips ✅ the moment
-the §3 fix lands.
+The palm identity (`gathering, mark, three lines`) used to survive `palmReflect` and then vanish from
+reading1/reading2/crisis, so a palm visitor's deeper reading collapsed into the house generic-love
+script. **Fixed since 2026-07-16** by the design in `improve-v1/04-fb-palm-derail-PROVEN.md §3`:
+`palmDirective()` (`prompts.ts:385`) is threaded through five shared builders and returns `''` unless
+both palm fields are set, so every non-palm funnel's prompt stays byte-identical.
+
+🔴 **`/fb-tarot` deliberately does NOT do this** — see the comment at `useConversation.ts:741`: "the card
+identity already lives in the opener, so the deeper flow stays the GENERIC engine". A decision, not an
+oversight. It is worth revisiting now that Version B's beat 4 names a specific thread ("let me look
+closer at what's holding his hand back…") that the chat cannot pick up. Scoped in
+`improve-v1/11-fb-tarot-identity-carry-SCOPE.md`.
 
 ## Coverage status
 
