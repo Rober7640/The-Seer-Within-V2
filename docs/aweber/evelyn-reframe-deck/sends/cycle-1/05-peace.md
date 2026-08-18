@@ -8,6 +8,9 @@
 - **Subject:** `🚩 {{ subscriber.first_name | capitalize }}, "protecting my peace" is sometimes just a locked door.`
 - **Preheader:** The gentle word we use to hide the frightened thing.
 - **CTA:** Show me what I'm really guarding → `campaign=reframe-05-peace`
+- **Reading Recap:** You wrote to them about the phrase "protecting my peace" — how it can be a real boundary, or a wall wearing gentler words. You gave them the test: a boundary is aimed at the one person who hurt them; a wall is aimed at anyone who might get close enough to, keeping everyone out and calling the empty room serenity.
+- **Open Loop:** You gave them a truer sentence to test their peace against — "I'm keeping everyone at a distance so nothing can reach me" — and told them if it landed, not to sit with that alone.
+- **Continue Seed:** You came to find out what you're really guarding — good. So tell me honestly: this peace of yours, is it still a door someone could knock on, or has it become the wall?
 
 ---
 

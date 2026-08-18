@@ -1820,6 +1820,20 @@ marked historical and blocked from ever being minted, so nothing else can answer
 - [ ] The 60s `personaMayHaveBriefs` cache: a persona minted mid-window is picked up on the next refresh, and the TTL is shorter than any real mint→send gap
 - [ ] Cycle 2 end to end: mint a real cycle, confirm BOTH the lander opener and the chat greeting continue it with no code change
 
+### Lander cache is scoped to the campaign (found on dev 2026-08-18)
+`EvelynLanderPage` caches the thread in sessionStorage so a REFRESH mid-chat doesn't lose it, and the restore
+path returns BEFORE `/start` is called. The cache carried no campaign tag, so it was replayed for any later
+arrival in the same tab — a reader who opened Monday's email, left, then clicked Tuesday's was shown MONDAY's
+opening line. Nothing errored; her session was tagged with Tuesday's campaign server-side, so the screen and
+the record disagreed and the lander's one promise (it continues the email you just clicked) silently broke.
+Found while testing three different `/e/` codes on development that all opened identically — the codes were
+correct, the cache was masking them. Fixed by stamping the campaign alongside the history.
+- [x] A second campaign in the same tab renders ITS opener, and the first one's opener AND the reader's earlier reply are both gone *(evelyn-lander-campaign-cache.spec.ts — fails on the untagged cache)*
+- [x] A refresh on the SAME campaign restores from cache and does NOT re-hit `/start` — asserted on the call count, so a fix that simply discarded the cache every time would fail here *(evelyn-lander-campaign-cache.spec.ts)*
+- [x] A direct visit with no campaign does not inherit an email arrival's thread — `null` is a value, not "no opinion" *(evelyn-lander-campaign-cache.spec.ts — fails on the untagged cache)*
+- [ ] The chatbox arm (not just live_thread) gets the same treatment — it shares the cache, so it has the same bug, but these cases only drive the live_thread arm
+- [ ] In the live_thread arm a refresh shows the opener WITHOUT the reader's reply (it lives in `LiveThreadLander` state, never cached). Harmless today because the reply is already parked server-side — but if the pre-session preview is ever meant to survive a refresh on screen, that needs its own persistence
+
 ## Live Thread (Evelyn) — email → lander → chat continuity (2026-08-02)
 
 Spec file `tests/live-thread-evelyn.spec.ts` (written 2026-08-18), following `fb-palm-commitment-gate.spec.ts`'s
