@@ -1443,7 +1443,7 @@ export async function resolvePalmGate(
   key: string = PALM_GATE_EXPERIMENT_KEY, // overridable so tests never touch the live experiment
 ): Promise<{ gate: boolean; variant: string | null; enrolled: boolean }> {
   const subject = typeof email === 'string' ? email.trim().toLowerCase() : null;
-  const a = await assign(key, subject, { funnel: funnel ?? null, sign: sign ?? null });
+  const a = await assign(key, subject, { funnel: experimentFunnel(funnel), sign: sign ?? null });
   if (!a) return { gate: false, variant: null, enrolled: false };
   return {
     gate: a.applied && a.payload?.gate === true,
@@ -1528,7 +1528,7 @@ export async function resolveV1Bump(
     };
   }
 
-  const a = await assign(key, subject, { funnel: funnel ?? null, sign: sign ?? null });
+  const a = await assign(key, subject, { funnel: experimentFunnel(funnel), sign: sign ?? null });
   if (!a) return { bump: false, variant: null, enrolled: false, copy: 'control' };
   return {
     bump: a.applied && a.payload?.bump === true,
@@ -1573,7 +1573,7 @@ export async function resolveV1DownsellBumpPrice(
 ): Promise<number | null> {
   const subject = typeof email === 'string' ? email.trim().toLowerCase() : null;
   if (!subject) return null;
-  const a = await assign(key, subject, { funnel: funnel ?? null });
+  const a = await assign(key, subject, { funnel: experimentFunnel(funnel) });
   if (!a?.applied) return null;
   const cents = (a.payload as { bumpCents?: unknown } | null)?.bumpCents;
   return typeof cents === 'number' ? cents : null;
@@ -1626,7 +1626,7 @@ export async function resolveV1CloseDepth(
   key: string = V1_CLOSE_DEPTH_EXPERIMENT_KEY, // overridable so tests never touch the live experiment
 ): Promise<{ deep: boolean; variant: string | null; enrolled: boolean }> {
   const subject = typeof email === 'string' && email.trim() ? hashEmail(email) : null;
-  const a = await assign(key, subject, { funnel: funnel ?? null });
+  const a = await assign(key, subject, { funnel: experimentFunnel(funnel) });
   if (!a) return { deep: false, variant: null, enrolled: false };
   return {
     deep: a.applied && a.payload?.close === 'deep',
