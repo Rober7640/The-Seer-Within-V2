@@ -1,0 +1,6 @@
+{
+  "note": "HISTORICAL, NOT LIVE. Cycle 1 shipped Jul 23-31 2026, before short links existed, so every send in it went out on the legacy ?campaign= link -- including #04 (reframe-04-serious), which sent on Jul 25 to ~59k inboxes. This file records that #04 is the send whose Continue Seed frontmatter was authored, and exists so the renderer's gate is exercised against a real cycle. Do NOT re-render or re-schedule cycle 1 to 'fix' its links: those emails are already in inboxes and their URLs cannot change. The first /e/ link to reach a real reader will come from a future cycle.",
+  "historical": true,
+  "historicalNote": "The \"historical\" flag is the ENFORCED half of the note above, added by Live Thread Task 15. /start now serves email_link_codes.continue_seed as the lander's opening line and cannot tell a legacy ?campaign= arrival from an /e/:code one -- so minting a row for reframe-04-serious would retroactively rewrite the opener for every reader still clicking the Jul 25 mail. render-aweber.mjs hard-fails rather than mint for this cycle. A prose note was not enough: re-rendering to inspect HTML or fix a typo is routine, and only helps someone who reads the note first.",
+  "sends": ["04"]
+}
