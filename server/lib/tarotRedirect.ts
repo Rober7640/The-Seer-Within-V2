@@ -34,13 +34,24 @@
 // fire its PageView, then fire a second PageView on /b — double-counting every
 // visitor in both the pixel and PostHog.
 //
-// ⚠️ DELIBERATELY NOT APPLIED TO /fb-palm/c. On the tarot funnel the route is
-// only a FALLBACK — the server decides the opener (resolveTarotVersion) — so
-// moving a visitor from /c to /b changes nothing about what she sees. On fb-palm
-// there is no such experiment: parsePalmParams reads the version straight off the
-// URL and branches on it, so redirecting palm /c → /b would silently switch live
-// palm traffic from the interactive LLM opener to the pre-written one. That is a
-// real content change nobody has asked for or tested.
+// 🔴 THIS IS A CONTENT CHANGE, NOT A ROUTING TIDY-UP — do not read it as inert.
+// The route is only a FALLBACK for hooks INSIDE v1_tarot_version_bc_2026, where
+// resolveTarotVersion overrides the URL. That test scopes to four (hook, deck)
+// pairs; for the other ~64 hooks matchesLanderScope returns false, assign() yields
+// the control arm with applied:false, and resolveTarotVersion hands back the URL's
+// OWN version (server/lib/experiments.ts). So on every out-of-scope lander this
+// redirect swaps C's interactive LLM opener for B's whole pre-written read.
+//
+// That is the POINT — it is how the funnel standardises on Version B (operator
+// decision, 2026-08-17, after B was declared the winner of the version test). It is
+// recorded here because an earlier draft of this comment claimed the redirect was
+// behaviour-neutral, which is true only for those four landers.
+//
+// ⚠️ DELIBERATELY NOT APPLIED TO /fb-palm/c. There is no palm version experiment at
+// all: parsePalmParams reads the version straight off the URL and branches on it, so
+// redirecting palm /c → /b would switch live palm traffic from the interactive LLM
+// opener to the pre-written one — the same class of change as above, but one nobody
+// has asked for or tested.
 
 export const TAROT_C_PATH = '/fb-tarot/c';
 export const TAROT_B_PATH = '/fb-tarot/b';
