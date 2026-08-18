@@ -1080,6 +1080,16 @@ export const experiments = pgTable("experiments", {
   conversion: jsonb("conversion").$type<ExperimentConversion | null>(),
   startedAt: timestamp("started_at"),
   endedAt: timestamp("ended_at"),
+  // When a STARTED test's variant WEIGHTS were last changed (null = never changed,
+  // which is every test today). Stamped by the admin PATCH. Only reachable on a test
+  // with scope.freezeAssignment, since that is the only kind whose weights may be
+  // edited live.
+  //
+  // Exists solely so the SRM check can tell the two eras apart: every exposure before
+  // this instant was assigned under a DIFFERENT ratio, so grading it against today's
+  // weights fails by construction and — because new traffic adds to both arms — can
+  // never recover. See augmentSrm() in server/routes/admin/experiments.ts.
+  weightsChangedAt: timestamp("weights_changed_at"),
   winnerVariant: text("winner_variant"),
   createdBy: varchar("created_by").references(() => adminUsers.id),
   updatedBy: varchar("updated_by").references(() => adminUsers.id),

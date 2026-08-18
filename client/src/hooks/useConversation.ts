@@ -27,7 +27,7 @@ import {
   getPriceQuestionResponse
 } from '@/lib/intent'
 import { trackLead, trackInitiateCheckout, getTrackdeskClickId } from '@/lib/facebook'
-import { currentFunnel, getPostHogFunnel, skipEmail } from '@/lib/funnel'
+import { currentFunnel, funnelPath, getPostHogFunnel, linkParams, skipEmail } from '@/lib/funnel'
 import { track as trackPH, identifyUser as identifyPH, getDistinctId } from '@/lib/posthog'
 import {
   tarotEventProps,
@@ -131,12 +131,32 @@ export function useConversation() {
   // the server, so we can rebuild it on a device that never held the localStorage
   // session (or held one that has since expired). Until the fetch settles we hold
   // the greeting back, otherwise she'd be asked her name again mid-restore.
-  const resumeId = useRef<string | null>(
-    typeof window !== 'undefined'
-      ? new URLSearchParams(window.location.search).get('resume')
-      : null,
-  )
+  //
+  // Read through linkParams, NOT URLSearchParams — an emailed link can arrive with
+  // its `&` still written as the entity `&amp;`. See the note on linkParams.
+  const resumeId = useRef<string | null>(linkParams().get('resume'))
   const [resumeSettled, setResumeSettled] = useState(false)
+
+  // `&src=recovery` off the same emailed link — forwarded to /api/checkout so the
+  // purchase carries a `src` marker into Stripe (description column + metadata) and
+  // the recovery sequence finally has a revenue number of its own.
+  //
+  // Captured at mount rather than read at checkout time. The chat never navigates
+  // (it is one SPA route, and nothing rewrites the URL), so reading it later would
+  // work today — but a ref makes that independent of anything that adds a
+  // replaceState later, and mirrors how `resume` itself is captured above.
+  //
+  // Not persisted deliberately: if she clicks the email link, leaves, and returns
+  // days later by typing the address in, that sale books as ordinary traffic. The
+  // marker means "arrived from the recovery email THIS visit", which is the claim
+  // the number should be making.
+  //
+  // 🔴 linkParams, not URLSearchParams. `src` sits AFTER `resume` in the emailed
+  // URL, which makes it the first casualty of an un-decoded `&amp;` — the query
+  // then carries a param called `amp;src` and this reads null while the reading
+  // still resumes normally. That combination cost a live test run on 2026-08-17
+  // and is invisible without inspecting the raw query.
+  const srcParam = useRef<string | null>(linkParams().get('src'))
 
   // Initialize from saved session if available. A resume link wins over
   // localStorage — the server copy is the authoritative one.
@@ -258,8 +278,30 @@ export function useConversation() {
 
     async function loadFromServer() {
       try {
-        const res = await fetch(`/api/conversation/resume/${id}`)
-        if (!res.ok) return // expired / already bought / bad link → normal greeting
+        // The funnel comes from OUR path — the server can't derive it (there is no
+        // funnel column on the conversation) and both V1 UI tests are funnel-scoped,
+        // so without this a resumed reader falls out of scope and loses her arm.
+        const funnel = currentFunnel()
+        const res = await fetch(
+          `/api/conversation/resume/${id}${funnel ? `?funnel=${encodeURIComponent(funnel)}` : ''}`,
+        )
+
+        // She already paid. Restarting the funnel would pitch a customer the exact
+        // reading she has already bought and let her pay for it twice — so send her
+        // to her own funnel's thank-you page instead, which tells her the reading is
+        // on its way and carries the Luna offer. `replace` so Back doesn't bounce her
+        // straight into the same dead link.
+        //
+        // Keyed on `reason`, not the message text, and only this one value: the other
+        // 410 (an expired link) SHOULD fall through to a fresh reading.
+        if (res.status === 410) {
+          const body = await res.json().catch(() => null)
+          if (body?.reason === 'purchased') {
+            window.location.replace(funnelPath('/success'))
+            return
+          }
+        }
+        if (!res.ok) return // expired / bad link → normal greeting
 
         const data = await res.json()
         if (cancelled || !data?.conversationState) return
@@ -273,6 +315,17 @@ export function useConversation() {
           inputEnabled: true,
           inputType: 'text',
         }
+
+        // The two UI arms, validated exactly as they are at email capture rather
+        // than trusted — `bumpCopy` is rendered into the offer card and /api/checkout
+        // resolves the same arm independently for the Stripe line, so a junk value
+        // must fall back to control instead of producing a blank card. Only ever set
+        // to true; absent ⇒ the plain CTA straight to Stripe.
+        restored.userData.commitmentGate = data.userData?.commitmentGate === true
+        restored.userData.orderBump = data.userData?.orderBump === true
+        restored.userData.bumpCopy = isBumpCopyVariant(data.userData?.bumpCopy)
+          ? data.userData.bumpCopy
+          : 'control'
 
         // Hand it to the welcome-back sequence, which greets her by name and
         // re-opens the input wherever she stopped.
@@ -2071,6 +2124,9 @@ export function useConversation() {
           // and V2 account creation on the webhook). Absent/false for every
           // normal funnel → no behavior change.
           noemail: skipEmail(),
+          // Emailed-recovery marker (`&src=recovery`). Sent raw; the server accepts
+          // only the exact string 'recovery' before it reaches Stripe metadata.
+          src: srcParam.current,
           // Browser PostHog id → Stripe metadata so the server-side
           // purchase_completed event ties back to this visitor (connected funnel).
           posthogDistinctId: getDistinctId(),

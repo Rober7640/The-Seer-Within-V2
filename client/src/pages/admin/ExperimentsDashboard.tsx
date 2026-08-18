@@ -130,6 +130,17 @@ interface ResultsResponse {
     expectedBSharePct?: number;
     chiSquareP?: number;
     ok?: boolean;
+    // Present ONLY when the weights were changed mid-flight. When set, ok/chiSquareP
+    // describe the CURRENT-weights era alone (since*), because the earlier era was
+    // assigned under a different ratio and can never match today's weights. The
+    // aViewers/bViewers above stay lifetime totals.
+    weightsChangedAt?: string;
+    sinceA?: number;
+    sinceB?: number;
+    sinceBSharePct?: number;
+    priorA?: number;
+    priorB?: number;
+    priorBSharePct?: number;
   };
   significance?: { z: number; p: number; liftPct: number; significant: boolean };
   // Pre-registered-N gate progress (present only when conversion.targetN is set).
@@ -466,6 +477,9 @@ export default function ExperimentsDashboard() {
       "twin-flame": "Twin Flame",
       "hidden-intuition": "Hidden / Intuition",
       "real-feelings": "Real Feelings",
+      "still-feels": "Still Feels",
+      "his-other-life": "His Other Life",
+      "soulmate-label": "Soulmate / Twin Flame — The Label",
       "self-frame": "Self-Frame",
     };
     return `${f} — ${ANGLE_LABELS[angle] ?? angle}`;
@@ -1007,12 +1021,35 @@ export default function ExperimentsDashboard() {
                         {results.params.personaId ? ` · persona ${results.params.personaId}` : ""}
                       </div>
 
-                      {/* SRM alert banner — sample-ratio mismatch invalidates results. */}
+                      {/* SRM alert banner — sample-ratio mismatch invalidates results.
+                          On a reweighted test this judges the CURRENT-weights era only;
+                          say so, or the reader assumes it covers the whole run. */}
                       {results.srm?.ok === false && (
                         <div className="rounded border border-red-700 bg-red-950/40 p-3 text-sm text-red-200">
                           ⚠ <strong>Sample-ratio mismatch</strong> — the observed split is off from the
                           configured weights, so randomization is suspect and these results may be
                           invalid. Investigate assignment before trusting any verdict.
+                          {results.srm.weightsChangedAt
+                            ? ` Measured over the ${(results.srm.sinceA ?? 0) + (results.srm.sinceB ?? 0)} exposures assigned since the weights changed on ${new Date(results.srm.weightsChangedAt).toLocaleString()} — earlier exposures used a different ratio and are excluded.`
+                            : ""}
+                        </div>
+                      )}
+
+                      {/* A reweight is not an error, but it DOES mean the pooled table
+                          below blends two allocation ratios — which can distort the
+                          comparison if conversion drifts over time. Say it once, here. */}
+                      {results.srm?.weightsChangedAt && (
+                        <div className="rounded border border-amber-700/60 bg-amber-950/30 p-3 text-xs text-amber-200">
+                          <strong>Weights changed mid-test</strong> on{" "}
+                          {new Date(results.srm.weightsChangedAt).toLocaleString()}. The
+                          sample-ratio check above covers only the exposures assigned since then
+                          ({results.srm.sinceA ?? 0} {controlKey} / {results.srm.sinceB ?? 0}{" "}
+                          {treatmentKey}); the {results.srm.priorA ?? 0} {controlKey} /{" "}
+                          {results.srm.priorB ?? 0} {treatmentKey} before it were assigned under
+                          the previous ratio, so grading them against today's weights would flag a
+                          mismatch that no amount of new traffic could ever clear.{" "}
+                          <strong>The table below still pools both eras</strong> — read it split at
+                          the change, or treat the combined figure as approximate.
                         </div>
                       )}
 
@@ -1101,14 +1138,42 @@ export default function ExperimentsDashboard() {
                             Split: {controlKey}={results.srm.aViewers} · {treatmentKey}=
                             {results.srm.bViewers} — {treatmentKey} share{" "}
                             {results.srm.bSharePct.toFixed(1)}%
-                            {typeof results.srm.expectedBSharePct === "number"
-                              ? ` vs ${results.srm.expectedBSharePct.toFixed(1)}% configured`
-                              : ""}
-                            {results.srm.ok === false
-                              ? " · ⚠ sample-ratio mismatch — results may be invalid"
-                              : results.srm.ok === true
-                                ? " · SRM ok"
-                                : ""}
+                            {/* On a reweighted test the LIFETIME share is not comparable
+                                with the configured weights, so don't print them side by
+                                side — that pairing is exactly what read as a mismatch. */}
+                            {results.srm.weightsChangedAt ? (
+                              <>
+                                {" (lifetime, spans both ratios)"}
+                                <br />
+                                Since the weight change: {controlKey}={results.srm.sinceA ?? 0} ·{" "}
+                                {treatmentKey}={results.srm.sinceB ?? 0} — {treatmentKey} share{" "}
+                                {(results.srm.sinceBSharePct ?? 0).toFixed(1)}%
+                                {typeof results.srm.expectedBSharePct === "number"
+                                  ? ` vs ${results.srm.expectedBSharePct.toFixed(1)}% configured`
+                                  : ""}
+                                {results.srm.ok === false
+                                  ? " · ⚠ sample-ratio mismatch — results may be invalid"
+                                  : results.srm.ok === true
+                                    ? " · SRM ok"
+                                    : ""}
+                                <br />
+                                Before the change: {controlKey}={results.srm.priorA ?? 0} ·{" "}
+                                {treatmentKey}={results.srm.priorB ?? 0} — {treatmentKey} share{" "}
+                                {(results.srm.priorBSharePct ?? 0).toFixed(1)}% (previous ratio, not
+                                checked)
+                              </>
+                            ) : (
+                              <>
+                                {typeof results.srm.expectedBSharePct === "number"
+                                  ? ` vs ${results.srm.expectedBSharePct.toFixed(1)}% configured`
+                                  : ""}
+                                {results.srm.ok === false
+                                  ? " · ⚠ sample-ratio mismatch — results may be invalid"
+                                  : results.srm.ok === true
+                                    ? " · SRM ok"
+                                    : ""}
+                              </>
+                            )}
                           </div>
                         )}
                         {nGated ? (

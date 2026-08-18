@@ -22,7 +22,7 @@ import {
   type Experiment,
   type ExperimentVariant,
 } from '@shared/schema';
-import { eq, and, sql, desc } from 'drizzle-orm';
+import { eq, and, sql, desc, inArray } from 'drizzle-orm';
 import logger from './logger';
 import type { PaywallVariant } from '@shared/paywall';
 import {
@@ -416,6 +416,12 @@ export async function assign(
   // current query count — this adds a DB read per assign(), and those run on every
   // lead capture. A frozen test pays for one lookup; an unfrozen one pays nothing.
   //
+  // ⏰ FLIPPING THIS DEFAULT ON is worth doing and is deliberately NOT part of the
+  // recovery-link change (2026-08-14) — see docs/experiment-freeze-by-default.md
+  // for the finished design, and for the one prerequisite: persona_prompt_evelyn_2026
+  // is a running rollout whose weights were edited AFTER people were assigned, so
+  // freezing it would revert those users to an empty arm (the base/stub prompt).
+  //
   // Failure mode is deliberately "fall through to the weights": a read error, or a
   // frozen key that is no longer a live variant, must not strand the visitor with no
   // arm at all. Both are logged rather than silently swallowed.
@@ -465,6 +471,50 @@ async function frozenVariant(key: string, subjectId: string): Promise<string | n
   } catch (err) {
     logger.error('frozen exposure lookup failed — falling back to weights', {
       key,
+      error: (err as Error).message,
+    });
+    return null;
+  }
+}
+
+/**
+ * The fb-palm `sign` recorded on this subject's first exposure to any of `keys`,
+ * or null if none of them carries one.
+ *
+ * 🔴 WHY THIS EXISTS — the emailed V1 recovery link cannot carry a sign. It is built
+ * ONCE at opt-in as `<funnel-prefix>/chat?resume=<id>&src=recovery` (buildResumeUrl,
+ * server/routes.ts) and a link already sitting in someone's inbox can never be
+ * retrofitted. A resumed session therefore has no `&sign=` to re-derive from its URL.
+ *
+ * That matters because assign() checks scope FIRST — deliberately, so a test never
+ * applies to traffic it was not scoped to — so a future SIGN-SCOPED test would drop
+ * every resumed reader straight to control. Guessing 'thumb' (what the client does
+ * for a live palm session) would be worse: it silently files her under the wrong
+ * lander's test. Today's tests are funnel-scoped only, so this is insurance.
+ *
+ * The exposure row already stores the sign she was assigned under, so read it back
+ * from there. Never throws into the request path: on a read error the caller passes
+ * no sign, which is exactly today's behaviour.
+ */
+export async function exposureSign(keys: string[], subjectId: string): Promise<string | null> {
+  if (keys.length === 0) return null;
+  try {
+    const rows = await db
+      .select({ sign: sql<string | null>`${experimentExposures.context}->>'sign'` })
+      .from(experimentExposures)
+      .where(
+        and(
+          inArray(experimentExposures.experimentKey, keys),
+          eq(experimentExposures.subjectId, subjectId),
+          sql`${experimentExposures.context}->>'sign' IS NOT NULL`,
+        ),
+      )
+      .orderBy(experimentExposures.createdAt)
+      .limit(1);
+    return rows[0]?.sign ?? null;
+  } catch (err) {
+    logger.error('exposure sign lookup failed — resuming without a sign', {
+      keys,
       error: (err as Error).message,
     });
     return null;

@@ -97,3 +97,8 @@ improve-v1/v1-one-time-BEs/build/
 # subscriber ids — and they are working files, not source. Ignored by prefix so a
 # stray `git add -A` cannot put them in the history, where they cannot be recalled.
 scripts/_*
+
+# Local n8n study folder — workflow JSON exports live here and are NEVER pushed
+# (Joel's own working copies; also carry webhook URLs / node credentials refs).
+# Any n8n workflow JSON we build goes in here, not anywhere else in the repo.
+n8n-workflows/

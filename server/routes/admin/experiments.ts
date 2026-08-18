@@ -398,27 +398,110 @@ async function progressOf(
   return { targetN, minExposures: minCount, reached: minCount >= targetN };
 }
 
-// Augment tally()'s observed split with an SRM (sample-ratio mismatch) check
-// against the configured A/B weights — a chi-square (df=1) test of observed vs
-// expected counts. `ok:false` ⇒ assignment is skewed and the results are suspect.
-function augmentSrm(
+/** Chi-square (df=1) SRM verdict for an observed a/b split against configured
+ *  weights. `ok:false` ⇒ assignment is skewed and the results are suspect. */
+export function srmVerdict(a: number, b: number, wA: number, wB: number) {
+  const n = a + b;
+  const expectedBSharePct = (wB / (wA + wB)) * 100;
+  if (n === 0) return { expectedBSharePct, chiSquareP: 1, ok: true };
+  const expA = (n * wA) / (wA + wB);
+  const expB = (n * wB) / (wA + wB);
+  const chi2 = (a - expA) ** 2 / expA + (b - expB) ** 2 / expB;
+  // χ²₁ = Z², so its upper-tail p equals the two-sided normal p at sqrt(chi2).
+  const chiSquareP = twoSidedP(Math.sqrt(chi2));
+  return { expectedBSharePct, chiSquareP, ok: chiSquareP >= 0.001 };
+}
+
+/** Per-arm exposure counts split either side of a reweight instant, from ONE query
+ *  so both eras come from the same source and always sum to the same total. */
+async function armExposuresAroundReweight(
+  key: string,
+  sinceISO: string,
+  controlKey: string,
+  treatmentKey: string,
+): Promise<{ sinceA: number; sinceB: number; priorA: number; priorB: number }> {
+  const res = await db.execute(sql`
+    SELECT variant,
+           count(*) FILTER (WHERE created_at >= ${sinceISO}) AS since_n,
+           count(*) FILTER (WHERE created_at <  ${sinceISO}) AS prior_n
+    FROM experiment_exposures
+    WHERE experiment_key = ${key}
+    GROUP BY variant;
+  `);
+  const since: Record<string, number> = {};
+  const prior: Record<string, number> = {};
+  for (const r of res.rows as Record<string, unknown>[]) {
+    since[String(r.variant)] = Number(r.since_n) || 0;
+    prior[String(r.variant)] = Number(r.prior_n) || 0;
+  }
+  return {
+    sinceA: since[controlKey] ?? 0,
+    sinceB: since[treatmentKey] ?? 0,
+    priorA: prior[controlKey] ?? 0,
+    priorB: prior[treatmentKey] ?? 0,
+  };
+}
+
+/**
+ * Augment tally()'s observed split with an SRM (sample-ratio mismatch) check
+ * against the configured A/B weights.
+ *
+ * 🔴 SCOPED TO THE CURRENT WEIGHTS. If the weights were changed mid-flight
+ * (`weightsChangedAt`), every exposure BEFORE that instant was assigned under a
+ * different ratio. Grading those against today's weights fails by construction, and
+ * it can never recover: new traffic adds to both arms roughly equally, so the
+ * imbalance the old era baked in never shrinks while only the denominator grows —
+ * the chi-square bottoms out well above the threshold and then RISES. The banner
+ * would therefore stay red for the rest of the run, which is worse than useless
+ * because it hides a GENUINE randomisation failure behind a warning everyone has
+ * learned to ignore. So the verdict is computed over the CURRENT-weights era only,
+ * and the earlier era is reported separately for context.
+ *
+ * ⭐ Scoping to exposures is exactly right, not an approximation:
+ * experiment_exposures is unique(experiment_key, subject_id), so every row is a
+ * FIRST assignment. A visitor pinned by scope.freezeAssignment writes no second row,
+ * and therefore cannot drag the post-reweight split away from the new ratio.
+ *
+ * `weightsChangedAt = null` (every test that has never been reweighted) ⇒ the exact
+ * behaviour this had before, and no extra query.
+ */
+async function augmentSrm(
   srm: { aViewers: number; bViewers: number; bSharePct: number } | undefined,
   variants: Array<{ key: string; weight: number }> | null | undefined,
+  exp: { key: string; weightsChangedAt: Date | null },
+  controlKey: string | undefined,
+  treatmentKey: string | undefined,
 ) {
   if (!srm) return undefined;
   // Control/treatment = the first two arms (matches tally()'s controlKey/treatmentKey).
   const wA = variants?.[0]?.weight ?? 0;
   const wB = variants?.[1]?.weight ?? 0;
   if (wA <= 0 || wB <= 0) return srm; // no configured weights to compare against
-  const n = srm.aViewers + srm.bViewers;
-  const expectedBSharePct = (wB / (wA + wB)) * 100;
-  if (n === 0) return { ...srm, expectedBSharePct, chiSquareP: 1, ok: true };
-  const expA = (n * wA) / (wA + wB);
-  const expB = (n * wB) / (wA + wB);
-  const chi2 = (srm.aViewers - expA) ** 2 / expA + (srm.bViewers - expB) ** 2 / expB;
-  // χ²₁ = Z², so its upper-tail p equals the two-sided normal p at sqrt(chi2).
-  const chiSquareP = twoSidedP(Math.sqrt(chi2));
-  return { ...srm, expectedBSharePct, chiSquareP, ok: chiSquareP >= 0.001 };
+
+  // Fall back to the lifetime check when the reweight era cannot be resolved: no
+  // stamp, or no arm keys to count exposures by. Never leave the caller with no
+  // verdict at all — an absent banner reads as "randomisation is fine".
+  if (!exp.weightsChangedAt || !controlKey || !treatmentKey) {
+    return { ...srm, ...srmVerdict(srm.aViewers, srm.bViewers, wA, wB) };
+  }
+
+  const weightsChangedAt = exp.weightsChangedAt.toISOString();
+  const eras = await armExposuresAroundReweight(exp.key, weightsChangedAt, controlKey, treatmentKey);
+  const sinceN = eras.sinceA + eras.sinceB;
+  const priorN = eras.priorA + eras.priorB;
+  return {
+    ...srm,
+    ...srmVerdict(eras.sinceA, eras.sinceB, wA, wB),
+    // Present ONLY on a reweighted test — the dashboard keys its two-era rendering
+    // off this field, so its absence keeps every other test's display identical.
+    weightsChangedAt,
+    sinceA: eras.sinceA,
+    sinceB: eras.sinceB,
+    sinceBSharePct: sinceN > 0 ? (eras.sinceB / sinceN) * 100 : 0,
+    priorA: eras.priorA,
+    priorB: eras.priorB,
+    priorBSharePct: priorN > 0 ? (eras.priorB / priorN) * 100 : 0,
+  };
 }
 
 // GET /api/admin/experiments — the registry (newest first).
@@ -562,7 +645,7 @@ router.get('/:key/results', async (req: Request, res: Response) => {
           byTarotHook,
           landerCount,
           visitorKeyed: true,
-          srm: augmentSrm(result.srm, exp.variants),
+          srm: await augmentSrm(result.srm, exp.variants, exp, controlKey, treatmentKey),
           significance: result.significance,
           progress: await progressOf(exp, key),
         });
@@ -611,7 +694,7 @@ router.get('/:key/results', async (req: Request, res: Response) => {
         rows: [],
       });
     }
-    const srm = augmentSrm(result.srm, exp.variants);
+    const srm = await augmentSrm(result.srm, exp.variants, exp, controlKey, treatmentKey);
 
     const progress = await progressOf(exp, key);
 
@@ -742,6 +825,12 @@ router.patch('/:key', async (req: Request, res: Response) => {
     // WHO enters from now on, never what an already-enrolled subject sees — and both
     // make the pooled row a blend of cohorts with different runtimes, which is why
     // the per-lander table is the honest read (see tallyV1MainByTarotHook).
+    // Set when this edit actually moves a STARTED test's weights, so the update below
+    // can stamp weightsChangedAt. Drafts are excluded deliberately: they have no
+    // exposures, so there is no earlier era to separate, and a stamp older than
+    // startedAt would only be noise.
+    let weightsChanged = false;
+
     if (exp.status !== 'draft') {
       const changed: string[] = [];
       // stableJson, not JSON.stringify: arm PAYLOADS are jsonb too, so a multi-key
@@ -770,6 +859,11 @@ router.patch('/:key', async (req: Request, res: Response) => {
                 'instead of reassigning visitors who have already seen the other arm.',
             });
           }
+          // Allowed live reweight ⇒ mark the era boundary. Set only in this branch,
+          // so an edit that re-sends identical weights (the dashboard always re-sends
+          // `variants` on save) does NOT move the boundary and silently discard the
+          // data collected since the real change.
+          weightsChanged = true;
         }
       }
 
@@ -848,6 +942,10 @@ router.patch('/:key', async (req: Request, res: Response) => {
         ...(data.conversion !== undefined
           ? { conversion: (data.conversion ?? null) as ExperimentConversion | null }
           : {}),
+        // The SRM era boundary. NOT `updatedAt` — that moves on any edit (name,
+        // description, appending scope.landers), so reusing it would silently
+        // re-scope the check to zero exposures every time someone renamed a test.
+        ...(weightsChanged ? { weightsChangedAt: new Date() } : {}),
         updatedBy: req.adminId,
         updatedAt: new Date(),
       })

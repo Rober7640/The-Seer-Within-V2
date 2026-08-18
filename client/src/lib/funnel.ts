@@ -42,9 +42,35 @@ export function currentFunnel(pathname?: string): FunnelParam | undefined {
 // traffic.
 const NOEMAIL_KEY = "seer_noemail";
 
+/**
+ * Query params off a URL that may have arrived through an EMAIL.
+ *
+ * 🔴 WHY THIS IS NOT JUST `new URLSearchParams(location.search)`. In HTML mail an
+ * `&` inside an href is correctly written as the entity `&amp;`. A browser decodes
+ * that when it follows the link, so a genuine click is fine — but the entity
+ * survives whenever the raw href is copied out of the message, and whenever a
+ * client renders a plain-text part. The query then parses with the entity glued to
+ * the NEXT parameter's name: `?resume=<id>&amp;src=recovery` yields `resume` plus a
+ * param literally called `amp;src`, so `get("src")` is null and everything keyed on
+ * it silently does nothing.
+ *
+ * That is not hypothetical — it is exactly how the first live test of the recovery
+ * marker came back unmarked (2026-08-17): the reading resumed perfectly, because
+ * `resume` happens to come FIRST and is therefore the one parameter the mangling
+ * cannot reach. Any param after it is exposed, and `resume` itself would be exposed
+ * the moment anything is prepended to the query.
+ *
+ * Undoing the entity first costs nothing on a well-formed URL and makes every
+ * caller tolerant of it.
+ */
+export function linkParams(search?: string): URLSearchParams {
+  const raw = search ?? (typeof window === "undefined" ? "" : window.location.search);
+  return new URLSearchParams(raw.replace(/&amp;/gi, "&"));
+}
+
 export function skipEmail(search?: string): boolean {
   if (typeof window === "undefined") return false;
-  const p = new URLSearchParams(search ?? window.location.search);
+  const p = linkParams(search);
   if (p.has("noemail")) {
     const on = p.get("noemail") !== "0";
     try {

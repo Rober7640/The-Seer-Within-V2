@@ -26,6 +26,8 @@ import {
   bumpLineDescription,
   bumpProductName,
   paymentIntentDescription,
+  V1_RECOVERY_DESCRIPTION_MARKER,
+  isRecoverySrc,
   bumpOfferCopy,
   isBumpBucket,
   pairedBumpBucket,
@@ -210,6 +212,75 @@ describe('paymentIntentDescription (Stripe Dashboard column)', () => {
     assert.ok(!bumpProductName(' - PALM').includes(V1_BUMP_DESCRIPTION_MARKER));
     for (const b of ALL_BUCKETS) {
       assert.ok(!bumpLineDescription(b).includes(V1_BUMP_DESCRIPTION_MARKER));
+    }
+  });
+
+  // Recovery marker — the whole point is that Joel can scan the payments list and
+  // see which sales the abandoned-reading emails produced.
+  it('marks an order recovered through the emailed resume link', () => {
+    assert.equal(
+      paymentIntentDescription(NAME, { recovery: true }),
+      'Energy Clearing Ritual - PALM - Recovery',
+    );
+  });
+
+  it('leaves a normal order untouched when recovery is off', () => {
+    assert.equal(paymentIntentDescription(NAME, { recovery: false }), NAME);
+    assert.equal(
+      paymentIntentDescription(NAME, { bump: false, recovery: false, noemail: false }),
+      NAME,
+    );
+  });
+
+  // Order matters: `noemail` is documented as staying last, so recovery slots in
+  // ahead of it. These two can't actually co-occur in production — the no-optin arm
+  // never captures an email, so it can never be sent a recovery link — but the
+  // builder should still be well-defined rather than accidentally position-dependent.
+  it('composes with the bump and keeps the no-email marker last', () => {
+    assert.equal(
+      paymentIntentDescription(NAME, { bump: true, recovery: true }),
+      'Energy Clearing Ritual - PALM + Double Reading - Recovery',
+    );
+    assert.equal(
+      paymentIntentDescription(NAME, { bump: true, recovery: true, noemail: true }),
+      'Energy Clearing Ritual - PALM + Double Reading - Recovery - No email',
+    );
+  });
+
+  it('keeps the recovery marker out of the customer-facing product name', () => {
+    assert.ok(!bumpProductName(' - PALM').includes(V1_RECOVERY_DESCRIPTION_MARKER));
+    for (const b of ALL_BUCKETS) {
+      assert.ok(!bumpLineDescription(b).includes(V1_RECOVERY_DESCRIPTION_MARKER));
+    }
+  });
+});
+
+describe('isRecoverySrc (untrusted ?src= from the client)', () => {
+  it('accepts only the exact recovery marker', () => {
+    assert.equal(isRecoverySrc('recovery'), true);
+  });
+
+  // This value reaches Stripe metadata and therefore Mike's n8n flow, so anything
+  // other than the one known string must be dropped rather than forwarded.
+  it('rejects everything else, including near-misses and junk', () => {
+    for (const v of [
+      'Recovery',
+      'recovery ',
+      ' recovery',
+      'RECOVERY',
+      'recovery-email',
+      'email',
+      '',
+      null,
+      undefined,
+      0,
+      1,
+      true,
+      {},
+      [],
+      ['recovery'],
+    ]) {
+      assert.equal(isRecoverySrc(v), false, `accepted ${JSON.stringify(v)}`);
     }
   });
 });

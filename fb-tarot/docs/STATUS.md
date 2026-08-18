@@ -108,6 +108,8 @@ Every tarot PostHog event carries `angle`. Nineteen families as of 2026-08-12:
 | `twin-flame` | twin-ready · twin-feels · twin-back | 2026-08-11 |
 | `hidden-intuition` | hiding-something · feels-off | 2026-08-12 |
 | `real-feelings` | really-love · feel-about-me · imagining-it | 2026-08-12 |
+| `still-feels` | still-think · still-love · love-or-moved-on | 2026-08-14 |
+| `his-other-life` | forever-or-now · his-children · her-shadow · live-apart · too-long | 2026-08-14 |
 | `self-frame` | love-again · soulmate | seeded |
 
 > ⚠️ `fidelity` is the only family with **four** hooks besides `decode-him`. It is also the
@@ -891,6 +893,300 @@ Guarded by `tests/tarot-real-feelings-copy.test.ts` (24 tests, clause-level nega
 own question back ("You asked whether he really loves you") and `cards-imagining-it` must name
 both doors in order to refuse them — restating a question is not asserting its answer. Safe
 because the sweep is clause-level, so a real assertion after the restatement is still caught.
+
+## Still-feels hooks — 3 face-down landers (2026-08-14)
+
+Operator brief: category **"Reunion/Return"**, topic **"Does he still feel it"**.
+Face-down `return-mhf` only. Clean URLs, no `&deck=`, Version C ads. All three hook ids are new.
+
+| Headline | Hook | URL |
+|---|---|---|
+| Does he still think about me? | `cards-still-think` | `/fb-tarot/c?hook=cards-still-think` |
+| Does he still love me? | `cards-still-love` | `/fb-tarot/c?hook=cards-still-love` |
+| Does he still love me, or has he moved on? | `cards-love-or-moved-on` | `/fb-tarot/c?hook=cards-love-or-moved-on` |
+
+### ⭐⭐ The word STILL is the whole family — and it splits every headline into two tenses
+
+- The **PAST** tense — that the feeling was real — is *conceded by the word itself*. It may be
+  affirmed outright, it costs nothing because it is true, and **it is the family's entire
+  payout**. She is not asking whether she was loved. She settled that from the inside.
+- The **PRESENT** tense — that it persists in him — is the forbidden claim, **in both
+  directions**.
+
+A read that refuses both tenses gives her nothing and the lander dies; a read that asserts the
+present tense is the verdict this funnel exists not to give. The line between them is the family,
+and a test asserts each hook actually *cashes in* the past tense rather than only refusing.
+
+### 🔴 Own angle, not folded into `reunion` — the topic is the angle, not the category
+
+Same call as `why-he-left` (2026-08-11), which came in under this same operator category:
+
+- `reunion` asks whether he will **ACT** — come back, return, appear. A question about the future.
+- these ask whether he still **FEELS** — the present contents of a man already gone. He need do
+  nothing at all for the answer to be yes.
+
+**`REUNION_HOOKS` stays exactly three.** Folding these in would retroactively mix two questions
+inside numbers running since 08-04. Pinned by a test.
+
+### 🔴🔴 Two live landers sit next to this family. Both are UNTOUCHED and both stay put
+
+| New hook | Incumbent | The gap |
+|---|---|---|
+| `cards-still-love` | `cards-really-love` (`real-feelings`, live 08-12) | **ONE WORD.** *really* = did it ever **amount** to love (a STANDARD; he is typically still present) · *still* = it **was** love, did it **survive** (he has gone) |
+| `cards-love-or-moved-on` | `cards-moved-on` (`reunion`, live 08-04) | Shares the clause *"or has he moved on?"* **verbatim**. The FIRST half is the variable: a **feeling** vs an **action** |
+| `cards-still-think` | `cards-on-my-mind` (`healing`, live 08-04) | The **mirror**. Healing reads HER mind producing HIM; this reads whether HIS mind produces HER — no lander had previously asked what is in his head about her |
+
+⚠️ Because `cards-still-love` asks its incumbent's question with one word changed, **rhyming with
+it is the likeliest failure** — it would leave two near-identical pages measuring nothing. The
+guard asserts zero shared 6-word runs in beats 2–3 against `cards-really-love` specifically, and
+separately bans that incumbent's **signature vocabulary** (the ledger / the record she has been
+keeping / "chosen on ordinary days"), since borrowing its frame would make both landers answer
+the same way even without a shared phrase.
+
+### 🔴 Each hook refuses on DIFFERENT grounds — and `cards-love-or-moved-on`'s is new
+
+Three hooks on this funnel now refuse a binary, and if their grounds ever converge the newest
+one has collapsed into an older one:
+
+| Hook | Refuses because… |
+|---|---|
+| `cards-moved-on` (reunion) | **neither branch is knowable** |
+| `cards-imagining-it` (real-feelings) | **the second branch is cruel** |
+| `cards-love-or-moved-on` | 🆕 **the two are NOT OPPOSITES** — moving on is something a person **does** with a life; loving is something that **happens in** them. Different axes; never a pair |
+
+That last finding is pinned by a test: if it drifts to "neither is knowable" the hook has become
+`cards-moved-on` and the comparison is dead.
+
+### 🔴 Four bans on top of the shared decode-him no-verdict guard
+
+1. **NEVER assert the present tense, either way.** Not *"he still loves you"* (a promise the
+   funnel cannot keep), not *"he has moved on"* (a burial performed on a living man by a
+   stranger). No softened forms — *"a part of him will always…"*, *"he thinks of you more than
+   you know"*.
+2. **NEVER instruct her to move on or let go, and NEVER pathologise the asking** (`healing`'s
+   two bans). These headlines invite both far harder, since the man has gone.
+3. 🔴🔴 **NEVER presume HOW he went.** *"Does he still love me?"* is also what a **bereaved**
+   woman types, and the headlines do not say which. The **mediumship** ban of
+   `soulmate-after-loss` therefore applies in full — this family runs the decode-him frame,
+   which bans none of it, so it is carried per-hook in `TAROT_HOOK_TENDENCY`.
+4. **NEVER read his conduct as EVIDENCE** for a verdict — the new job, the photograph, the
+   silence. On `cards-love-or-moved-on` that trap is the very thing the read exists to name, so
+   producing it would invert the lander.
+
+Guarded by `tests/tarot-still-feels-copy.test.ts` (33 tests, clause-level negation-aware),
+which also pins the two hand-maintained server rosters (`validHooks` in `routes.ts`,
+context+tendency in `prompts.ts`) and the admin angle label.
+
+## His-other-life hooks — 5 face-down landers (2026-08-14)
+
+Operator brief: category **"Persona"**, topic **"persona commitment"**.
+Face-down `return-mhf` only. Clean URLs, no `&deck=`, Version C ads. All five hook ids are new.
+**Five landers — the largest family on the funnel** (fidelity's four was the previous record).
+
+| Headline | Hook | URL |
+|---|---|---|
+| Am I his forever, or his now? | `cards-forever-or-now` | `/fb-tarot/c?hook=cards-forever-or-now` |
+| Why do his children come before me? | `cards-his-children` | `/fb-tarot/c?hook=cards-his-children` |
+| Am I living in her shadow? | `cards-her-shadow` | `/fb-tarot/c?hook=cards-her-shadow` |
+| Why do we still live apart? | `cards-live-apart` | `/fb-tarot/c?hook=cards-live-apart` |
+| Have I already given him too long? | `cards-too-long` | `/fb-tarot/c?hook=cards-too-long` |
+
+### ⭐⭐ The first commission that is a PERSONA, not a topic
+
+Every other family is a *question* asked five ways. These five are one **woman**: she is fitting
+herself into a life that was already furnished before she arrived. His children. A woman who came
+first. His own front door. The years already given. The angle is named for that, not for the
+operator's word "Persona" — which in this codebase already means the V2 chat advisors.
+
+### ⭐⭐ The shared move: NAME HER POSITION WITHOUT RANKING HER
+
+Every one of these headlines invites the same answer — *"you should come first"*, *"you deserve
+better than second place"* — and **ranking is exactly what may never be supplied.** The things she
+is measured against are children (who legitimately come first), a woman who may be dead, or a
+history nobody can compete with.
+
+🔑 **The payout is not a HIGHER place. It is a DEFINED one.** Nobody has told her where she
+stands; she has been inferring it from leftovers. She is allowed to want that said out loud
+without wanting anybody else to have less. A test pins that each read actually pays this out
+rather than only refusing.
+
+### 🔴 Own angle, not folded into `commitment`
+
+- `commitment` (live since 07-31) asks **WILL HE EVER** — a bare question, no circumstances.
+- these ask **WHY HE HASN'T**, and each names the specific obstacle she lives beside.
+
+**`COMMITMENT_HOOKS` stays exactly three.** Pinned by a test.
+
+### 🔴 AUDIENCE-AGNOSTIC — operator call 2026-08-14
+
+Four of the five turn on his circumstances and **none of the headlines states them.** The reads may
+never presume whether he is divorced, widowed, separated or still married:
+
+| Assume… | …and it lands as |
+|---|---|
+| an ex | brutal, if she has died |
+| a death | absurd, if they divorced |
+| a wife | it names the visitor a **mistress** on a public page |
+
+Same discipline as `missing-him`, and harder — it must hold across five headlines, not three.
+
+### 🔴🔴 `cards-his-children` is the sharpest lander on the funnel
+
+It asks a card to comment on a man's **children** — real third parties, very possibly minors, who
+are not the visitor's rivals and cannot consent to being read. **No existing guard covered this.**
+
+1. **NEVER rank her against them, in either direction.** The internet's stock answer to this
+   headline is *"you deserve to come first"*, which tells a woman she should outrank a man's kids.
+2. **NEVER frame the children** as an obstacle, a burden or a rival, and never characterise them.
+3. **NEVER grade him as a father.**
+4. **NEVER an ultimatum**, and never a leave/stay instruction.
+
+⭐ The read says the true part **plainly rather than evading it**: a parent's children *do* have a
+first call. That is not the wound. The wound is that **first call has been allowed to blur into
+only call** — and she is not asking to move up a list, she is asking to appear on one.
+
+### 🔴 `cards-her-shadow` — the other woman may be DEAD, and may be entirely legitimate
+
+*"Her"* is an ex **or** a late wife; the headline does not say. So this hook inherits the
+`soulmate-after-loss` **MEDIUMSHIP ban** for the same reason `missing-him` does — the family runs
+the decode-him frame, which carries none of it.
+
+🔴 Unlike `fidelity`'s third person, **she is not a rival.** She may be the mother of his children.
+She may never be disparaged, doubted, or positioned as competition — *handing the visitor an enemy
+is harm dressed as comfort*. The finding instead: a shadow is cast by something she can never see
+the whole of, so she is being measured against an **edited version** of a woman, on terms she has
+never been shown.
+
+### The other three findings
+
+| Hook | Refuses / finds |
+|---|---|
+| `cards-forever-or-now` | 🆕 **the FOURTH binary-refusing hook**, on new grounds — permanence is not a **status** he assigned and she is waiting to be shown. It is *built*: named, planned, said out loud. A category error, not an unanswerable question. She has been reading a **silence as a verdict** |
+| `cards-live-apart` | a decided arrangement is a different object from one that **merely never changed**. 🔴 NEVER supply a cause (the `searching` no-CAUSE ban aimed at a man). She has been **interpreting** an arrangement instead of being given a reason |
+| `cards-too-long` | refuses the **sunk-cost frame itself** — "too long" treats the years as a deposit toward a purchase that may not complete, but she did not spend them in a waiting room, she **lived** them. ⭐ Names the buried question: *"am I allowed to want this to change"* — and refuses its toll, since she need not certify the past as a mistake to earn the right to want more |
+
+⚠️ **Four hooks on the funnel now refuse a binary and their grounds must stay distinct**, or the
+newest has collapsed into an older one: `cards-moved-on` (neither branch knowable) ·
+`cards-imagining-it` (second branch cruel) · `cards-love-or-moved-on` (not opposites) ·
+`cards-forever-or-now` (permanence is not a status). Pinned.
+
+Guarded by `tests/tarot-his-other-life-copy.test.ts` (29 tests, clause-level negation-aware),
+which also pins the two hand-maintained server rosters and the admin angle label, and adds a
+**slug-substring check** — no new hook id may contain, or be contained by, an existing one, since
+a PostHog `contains` filter would then double-count.
+
+## Soulmate-label hooks — 3 face-down landers (2026-08-17)
+
+Operator brief: category **"Feelings/Commitment"**, topic **"Soulmate / twin-flame crossover"**.
+Face-down `return-mhf` only. Clean URLs, no `&deck=`. All three hook ids are new.
+🔴 **THE FIRST FAMILY TO SHIP ON `/fb-tarot/b`** — operator decision, see below.
+
+| Headline | Hook | URL |
+|---|---|---|
+| Is he really my soulmate? | `cards-really-soulmate` | `/fb-tarot/b?hook=cards-really-soulmate` |
+| Is he my twin flame, or just a strong connection? | `cards-twin-or-connection` | `/fb-tarot/b?hook=cards-twin-or-connection` |
+| Have I already met my soulmate without realizing it? | `cards-met-already` | `/fb-tarot/b?hook=cards-met-already` |
+
+### 🔴🔴 Version B, not C — and what that changes
+
+Operator instruction 2026-08-17: *"only use /b urls from now onwards"*. The bridge reads the
+version off the **route** (`TarotBridge.tsx:55`, `path.endsWith('/b')`) and forwards it as `&v=b`;
+`useConversation` then asks the server via `fetchAssignedTarotVersion`, and
+`resolveTarotVersion` (`server/lib/experiments.ts:1528`) returns **the URL's own version
+unchanged** for any lander outside the `v1_tarot_version_bc_2026` scope. These three are outside
+it, so **B is what actually ships.**
+
+⚠️ **The `/b`-only policy is a no-op for the four hooks INSIDE that test** (`cards-will-commit`,
+`cards-return`, `cards-who-he-is`, `cards-feels`): those are server-assigned B-or-C regardless of
+the path clicked, so pointing their ads at `/b` changes nothing. Concluding that test is a
+separate decision and has not been taken.
+
+⭐⭐ **B makes NO model call.** `openerB` (`tarotReads.ts`) sends the whole static read then goes
+straight to name capture — so **the copy below IS the entire reading**, and every guard is
+load-bearing in a way it is not on a Version-C lander, where the reflect prompt gets a second
+chance to hold the line. Nothing here may lean on `prompts.ts` to catch it. That is also why this
+family is a *good* fit for `/b`: all three headlines ask a card to certify a label, and with no
+LLM in the path there is nothing that can freelance the verdict.
+
+🔴 The server rosters were synced anyway (`validHooks`, `TAROT_HOOK_CONTEXT`,
+`TAROT_HOOK_TENDENCY`). `scope.landers` is **append-only on a running test** — the day one of
+these is enrolled, Version C goes live on it, and an unsynced roster would 400 the handoff.
+
+### ⭐⭐ The shared move: AFFIRM THE PULL, REFUSE THE WORD
+
+All three ask a card to settle a **label**. What she actually holds — the recognition, the
+history, what he does on ordinary days — is real information about *her*, and it does not become
+truer if the word is granted or false if it is withheld. **The label was never the thing carrying
+the weight.** Every read pays that out rather than only declining.
+
+### 🔴 Own angle, not folded into `twin-flame`
+
+The tempting filing, and the damaging one. `twin-flame` (live 2026-08-11) is a **vocabulary
+test**: three questions already running, re-asked with *"my twin flame"* swapped in for *"he"* —
+the question underneath is unchanged and the label is only the wrapper. **These three put the
+label itself in the question**; there is no other question underneath. Pool them and the
+challenger-vs-incumbent comparison twin-flame exists to make is destroyed. `TWIN_FLAME_HOOKS`
+stays exactly three, pinned.
+
+🔴 Not `soulmate-where` / `soulmate-after-loss` either — those share the word and nothing else:
+both ask about a person who might **exist**, and neither has a man in the picture.
+
+### 🔴🔴 NEVER RANK THE LABELS — a ban that exists nowhere else on the funnel
+
+`cards-twin-or-connection` is the only lander that asks *which of two labels is the better one*.
+Never that a twin flame is rarer, higher, deeper or more fated than a soulmate or a strong
+connection — **and never the reverse.** The entire internet does exactly this, and the ranking is
+what turns her own word *"just"* into a consolation prize. **Refuse the ladder rather than placing
+him on a rung.** She did not build it; she was handed it.
+
+### 🔴 The label ban runs in BOTH directions, and the runner script rides along
+
+Never certify **and never deny** that he is her soulmate or twin flame — a verdict on a real
+person and an **unfalsifiable** one, so she could never test it against anything he does.
+Inherited from `twin-flame` and extended to "soulmate". The term also drags its community's whole
+teaching in with it, so those bans come too: **distance is never proof of the bond**, an absence
+is never a *phase* or a *stage*, and nothing is ever conditional on her healing or raising her
+vibration.
+
+### 🔴🔴 `cards-met-already` — two things it may never do
+
+The headline invites both. **Never name, describe or point toward any particular person from her
+past** — a name conjured here sends her back through years of her own messages hunting for a sign
+that was never in them. And **never tell her she missed him**: that invents a loss she would then
+grieve. 🔴 The opposite is banned too — a promised arrival is a date in disguise. The finding:
+*"without realizing it"* presumes a moment she failed a test, and **a meeting was never an
+examination.**
+
+### Three separate findings
+
+| Hook | Refuses / finds |
+|---|---|
+| `cards-really-soulmate` | the word is **not a property he carries** that anyone could measure him for — there is no test, which is why it can be laid on anybody and argued over forever. ⭐ The *"really"* is the tell: the doubt came first. Names what the label was being asked to do — settle it so she need not weigh what she already knows |
+| `cards-twin-or-connection` | 🆕 **the FIFTH binary-refusing hook**, on new grounds — **both branches describe the same evidence under two words**, so the answer would not change one thing he does or one thing she could check. A naming dispute wearing the clothes of a fact question |
+| `cards-met-already` | hindsight folds in everything learned since and then presents it as though it had been in plain view at the time. She could only know what she knew then. ⭐ Takes issue with the buried assumption that there is **exactly one, issued once**, and that her life is a single-question exam she may already have failed |
+
+⚠️ **Five hooks on the funnel now refuse a binary and their grounds must stay distinct**, or the
+newest has collapsed into an older one: `cards-moved-on` (neither branch knowable) ·
+`cards-imagining-it` (second branch cruel) · `cards-love-or-moved-on` (not opposites) ·
+`cards-forever-or-now` (permanence is not a status) · `cards-twin-or-connection` (same evidence,
+two words). Pinned.
+
+⚠️ `cards-met-already` shares the clause *"without realizing it"* verbatim with the live
+`cards-given-up` (*"Have I given up on love without realizing it?"*, `searching`). Deliberate,
+operator's wording, and the incumbent is untouched — the same shape as `cards-love-or-moved-on`
+sharing its closing clause with `cards-moved-on`.
+
+Guarded by `tests/tarot-soulmate-label-copy.test.ts` (29 tests, clause-level negation-aware),
+which also pins the two hand-maintained server rosters, the admin angle label, the slug-substring
+check, and — new for this family — **the Version B path itself**: that the chat URL the `/b`
+bridge builds resolves to version `b` on the right deck, and that `openerB` delivers the complete
+read plus name capture for all nine card/hook pairs.
+
+⭐⭐ Its `RAW_BANS` block is the deliberate exception to negation-awareness: a handful of strings
+may never appear in **any** form, including inside a refusal, because a reader skimming does not
+reliably carry the negation. Two of my own drafted lines tripped it and were **reworded — never
+weaken the ban** (the rule established when the twin-flame guard caught copy quoting her own
+question back).
 
 ## Concepts
 

@@ -180,23 +180,51 @@ export const V1_BUMP_PRODUCT_KEY = 'double_reading';
 export const V1_BUMP_DESCRIPTION_MARKER = ' + Double Reading';
 
 /**
+ * INTERNAL marker for an order that came back through an emailed recovery link
+ * (`/chat?resume=<id>&src=recovery`), so the Stripe Dashboard's Description column
+ * shows at a glance which sales the abandoned-reading sequence actually produced.
+ * Without it, recovered revenue is indistinguishable from ordinary traffic except
+ * by exporting AWeber click reports and matching them to Stripe by email by hand.
+ *
+ * NOT customer-facing, exactly like the bump marker above: `product_data.name` is
+ * what appears on the checkout page and the receipt, and it is untouched by this.
+ *
+ * The machine-readable half is `metadata.src = 'recovery'`, which is what should be
+ * filtered/reported on. This string is for eyeballing the payments list.
+ */
+export const V1_RECOVERY_DESCRIPTION_MARKER = ' - Recovery';
+
+/**
  * The internal PaymentIntent description — what the Stripe Dashboard shows in its
  * Description column. Built here rather than inline so the "a normal order is
- * unchanged" guarantee is actually covered by a test: with both flags false this
+ * unchanged" guarantee is actually covered by a test: with every flag false this
  * returns `productName` untouched, exactly as it has always been.
  *
  * `noemail` stays last so the pre-existing " - No email" marker keeps its
- * position on the no-optin arm.
+ * position on the no-optin arm. `recovery` therefore slots in ahead of it — and in
+ * practice the two can never co-occur, since the no-optin arm captures no email and
+ * so can never be sent a recovery link in the first place.
  */
 export function paymentIntentDescription(
   productName: string,
-  opts: { bump?: boolean; noemail?: boolean } = {},
+  opts: { bump?: boolean; recovery?: boolean; noemail?: boolean } = {},
 ): string {
   return (
     productName +
     (opts.bump ? V1_BUMP_DESCRIPTION_MARKER : '') +
+    (opts.recovery ? V1_RECOVERY_DESCRIPTION_MARKER : '') +
     (opts.noemail ? ' - No email' : '')
   );
+}
+
+/**
+ * The one accepted value of the `?src=` param, and the only string ever written to
+ * `metadata.src`. A closed check rather than a pass-through because this arrives
+ * from the client and lands in Stripe metadata, which Mike's n8n flow reads — the
+ * same rule the bump bucket follows in /api/checkout.
+ */
+export function isRecoverySrc(value: unknown): boolean {
+  return value === 'recovery';
 }
 
 /**
