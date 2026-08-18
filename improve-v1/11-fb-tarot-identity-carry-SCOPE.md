@@ -25,9 +25,17 @@ card.
 That reasoning held when the opener was a short static reveal and Version C's LLM did the weaving.
 Two things changed underneath it:
 
-1. **Every visitor now gets Version B, which makes no model call.** The pre-written read is the entire
-   reading, so "the identity lives in the opener" now means it lives *only* there, in text she has
-   already scrolled past.
+1. **Every visitor now gets Version B, whose OPENER is pre-written.** ⚠️ Corrected 2026-08-19 (operator):
+   "B makes no model call" is true of the *reveal*, not the session. STATUS.md scopes it to `openerB`
+   ("sends the whole static read then goes straight to name capture"). The scripted run ends at email
+   capture; the first model call is `reading1` (`useConversation.ts:632`) and ten more follow
+   (reading2 · futureValidation · crisisReveal · crisisCost · crisisUrgency · objection ·
+   shadowSummary · valueExplain).
+
+   The card is therefore dropped exactly at that boundary: every message before it knows the card
+   because the card is hard-coded into it, and all eleven model calls after it receive `userData` with
+   no tarot field on it. That is what makes this worth doing — there is a live model on the far side of
+   the loop, with somewhere for the identity to land.
 2. **The readability rewrite makes beat 4 more specific, not less.** The old beat 4 was a vague "let me
    look closer at what he hasn't found the words for". The rewrite names the thread. A sharper promise
    makes the silence that follows more noticeable, not less.
