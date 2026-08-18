@@ -23,7 +23,7 @@
 --    The fix is the shape bumpCopy already uses: resolve the arm at lead capture,
 --    return it on /api/lead, capture it client-side. Fix that, then start this.
 --    Note resolveV1DownsellBumpPrice logs NO exposure today
---    (experiments.ts:1547-1558), so the row has no denominator until the same fix
+--    (experiments.ts:1569-1580), so the row has no denominator until the same fix
 --    supplies one.
 --
 -- 🔴 RUN IT TWICE — once on DEV, once on PROD.

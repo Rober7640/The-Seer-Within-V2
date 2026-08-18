@@ -4,7 +4,7 @@
 --
 -- WHAT THIS DOES. For each of the two rows: widens scope.funnel to include the
 -- new 'v1-root' sentinel, then marks the test `done` with its winning arm.
--- assign()'s status='done' branch (server/lib/experiments.ts:397) applies that
+-- assign()'s status='done' branch (server/lib/experiments.ts:419) applies that
 -- winner's payload to EVERYONE in scope with enrolled:false — so root gets the
 -- treatment permanently and no new exposures accumulate anywhere.
 --
@@ -14,10 +14,22 @@
 -- 🔴 RUN IT TWICE — once on DEV, once on PROD. The two databases were separated
 --    on 2026-08-05.
 --
--- 🔴 THIS ENDS BOTH TESTS FOR PALM AND TAROT TOO. Marking a row `done` stops
---    enrolment everywhere, not only on root. Step 0 exists so you see the live
---    status before you decide. If either row is still `running` and you are not
---    ready to call it, STOP and run only the half you are ready for.
+-- 🔴 THIS IS NOT A ROOT-ONLY SHIP — IT IS A LIVE CONVERSION CHANGE ON PALM AND
+--    TAROT TOO, the moment each UPDATE commits. In server/lib/experiments.ts the
+--    status==='done' && winnerVariant branch (line 419) sits ABOVE the
+--    assignment-freeze branch, so every palm/tarot visitor currently sitting in
+--    the LOSING arm is moved onto the winner immediately — not just future
+--    visitors, everyone in scope right now:
+--      - v1_palm_commitment_gate_2026 runs A w70 / B w30
+--        (improve-v1/extend-gate-to-tarot-2026-07-31.sql:13-14). A large share
+--        of palm+tarot traffic — everyone bucketed A, i.e. ~70% — starts getting
+--        the commitment-gate UI it does not get today.
+--      - v1_bump_copy_2026: the arm-A half of palm+tarot traffic switches to arm
+--        B's bump copy AND B's Stripe line-item name ("+ Double-Strength
+--        Clearing"), mid-session for anyone who already opted in under A.
+--    Step 0 exists so you see the live status before you decide. If either row
+--    is still `running` and you are not ready to call it — for root OR for
+--    palm/tarot — STOP and run only the half you are ready for.
 --
 -- WHY RAW SQL AND NOT THE ADMIN UI: PATCH /api/admin/experiments/:key refuses a
 -- scope edit on a non-draft row (the assignment freeze,
@@ -162,9 +174,14 @@ COMMIT;
 -- ── 3. POST-FLIGHT, after the first real root lead ──────────────────────────
 -- Root exposures stop accumulating (status done ⇒ enrolled:false), so the check
 -- is on the CONVERSATION side: a root buyer with a bump line.
-SELECT id, email, funnel, bump_offered, bump_purchased, bump_amount_cents, created_at
+--
+-- `conversations` HAS NO `funnel` COLUMN — every other funnel writes its price
+-- variant with a suffix ('_fb', '_palm', '_gdn', ...; see
+-- improve-v1/go-live-pool.json), so root is identified by its own price arm ids
+-- instead: '35', '45', '59', '55-35' carry no funnel suffix at all.
+SELECT id, email, price_variant, bump_offered, bump_purchased, bump_amount_cents, created_at
 FROM conversations
-WHERE funnel IS NULL AND bump_offered = true
+WHERE price_variant IN ('35', '45', '59', '55-35') AND bump_offered = true
 ORDER BY created_at DESC
 LIMIT 20;
 
@@ -174,7 +191,7 @@ LIMIT 20;
 -- (a) STOP THE PAYLOAD FROM APPLYING, right now, everywhere it is currently
 --     scoped (root + palm + tarot together — there is no root-only stop, see
 --     the 🔴 at the top). assign()'s 'done' branch only fires when
---     status='done' AND winner_variant is set (server/lib/experiments.ts:418);
+--     status='done' AND winner_variant is set (server/lib/experiments.ts:419);
 --     clearing either one alone is enough to send every scoped funnel to
 --     control. This does NOT touch `scope`, so it is a pure kill switch, not a
 --     restore — re-running this file afterwards is still a no-op, because
