@@ -1,6 +1,7 @@
 # DRAFT — the MONEY-BLOCK batch on /fb-tarot (11 landers, 33 reveals)
 
-**Status: ⬜ AWAITING SIGN-OFF. No code has been written.**
+**Status: 🟡 §8 DECIDED 2026-08-18 (four angles · keep both twins · 11 landers). No code has
+been written. The 33 reveals still need rewriting to the readability gate before wiring — see §9.**
 
 Commissioned 2026-08-18. Deck: **`return-mhf`** (face-down Magician / Hanged Man / Fool).
 No new art, no new deck entry — same three cards, same strip, same faces.
@@ -473,13 +474,42 @@ Grammar matches the existing entries: `land ${tendency}` → "that … — NEVER
 
 ---
 
-## 8. Two things to decide before wiring
+## 8. Two things to decide before wiring — ✅ BOTH DECIDED 2026-08-18
 
-1. **Four angles or two?** Four gives the age-vs-mechanism comparison the batch was built
-   for. Two (`money-block-age`, `money-block-belief`) is tidier but throws away the 55–64
-   vs 65+ read. Recommendation: four.
+1. **Four angles or two?** → **FOUR.** `money-retiring` · `money-working` · `money-energy` ·
+   `money-prayer`. Keeps the 55–64 vs 65+ read and the age-vs-mechanism comparison the batch
+   was built for. Two angles (`money-block-age`, `money-block-belief`) would have been tidier
+   reporting with bigger n per arm, but would have thrown away the age-band answer.
 
-2. **`cards-too-late` and `cards-out-of-time` are near-twins.** Both are "block or too
-   late", one per age band, and their reads deliberately land on the same answer. That is
-   correct for message scent, but if you would rather run one and point both age bands at
-   it, say so now — it drops 3 reveals and one lander.
+2. **`cards-too-late` and `cards-out-of-time` are near-twins.** → **KEEP BOTH. 11 landers,
+   33 reveals.** Message scent decides it: a 65-year-old reading *"this close to retiring"*
+   knows the page is not for her, which is the same reason the batch splits age bands at all.
+   Costs 3 extra reveals.
+
+---
+
+## 9. What changed after the readability gate landed (2026-08-18)
+
+This draft was written the same day the copy gate was built, and predates it. Two corrections
+to §5 and §7, both found while migrating `cards-return`:
+
+**§5 — the 33 reveals must be REWRITTEN, not just wired.** Scored against
+`scripts/check-read.mjs` they carry **176 problems, 5.3 per reveal** — the same failure rate
+`cards-return` had *before* its rewrite (5.1). They are in the old long-sentence style: a
+50-word beat 3 as one sentence, at grade 12+, aimed at 55–64 and 65+ women on phones. Rewrite
+them to the shape in `.claude/skills/v1-funnel-audit/SKILL.md` § "Migrating a lander" — picture
+first, her ad question said back, then one idea per bubble — and gate each before showing anyone.
+
+**§7 step 10 is insurance, not a pillar.** The money frame in `buildTarotReflectPrompt` is
+Version-C-only code, and Version C is unreachable on tarot today: `/fb-tarot/c` 302-redirects to
+`/b` (`server/lib/tarotRedirect.ts`) and `tarotReflect` is called only on the Version C path
+(`client/src/hooks/useConversation.ts:859`). Version B makes no model call at all. Still add it —
+`tests/tarot-soulmate-label-copy.test.ts:467` records that any hook enrolled in the version
+experiment gets Version C back — but budget it as a small addition.
+
+**The load-bearing structural change is `hookToBucket()`** (§7 step 7). It sets
+`userData.bucket` (`useConversation.ts:744`), which steers the entire V1 chat after the opener.
+Good news: V1 already has a complete money path — `MONEY_BUCKET_PROMPT`
+(`server/lib/prompts.ts:323`), the money clarification branches, and money-framed upsell copy —
+so returning `'money'` routes her into an established, high-volume path rather than needing new
+prompt work.
