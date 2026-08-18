@@ -1637,6 +1637,19 @@ export interface CardSetConfig {
   // label (e.g. "what's veiled"). Feed the Version-A greeting + Version-C LLM.
   mark: Record<TarotOption, string>
   reading: Record<TarotOption, string>
+  // The card's PICTURE — what she is literally looking at, in plain words. The art is
+  // attached to the FIRST message only (sendBotMessages passes cardArt at i===0), so she
+  // reads this with the card on screen: a claim she can check in one second, which is
+  // what earns belief for the sentence after it.
+  //
+  // WHY PER-CARD AND NOT PER-HOOK. The picture is the same whatever she asked about — the
+  // Hanged Man hangs upside down whether her question is money or a man. Three lines cover
+  // all 198 openings on this deck, and none of the 264 written framings is touched, which
+  // is what keeps the "every card framing is distinct across the whole deck" guards
+  // passing (8 test files assert it).
+  //
+  // Optional: a deck without it renders exactly as it does today.
+  cardPicture?: Record<TarotOption, string>
   // reads[hook][option] = the 4-sentence reveal. Partial on the hook axis.
   reads: Partial<Record<TarotHook, Record<TarotOption, string[]>>>
 }
@@ -1993,22 +2006,22 @@ const ARCANA_MFH: CardSetConfig = {
     // tests/tarot-commitment-copy.test.ts.
     'cards-will-commit': {
       a: [
-        "You chose the Magician, dear — the card of will, of what a man is actually choosing.",
-        "You are asking whether he will ever commit, and your hand found the card of choice rather than circumstance.",
-        "The Magician hands down no yes and no no — it says the capability is sitting right there unused, and your sense that he could if he decided to is reading him accurately, not flattering him.",
-        "Let me look closer at what he keeps choosing instead…",
+        "You chose the Magician, dear. Look — one hand up to the sky, one down to the ground, every tool laid out on his table.",
+        "You asked whether he'll ever commit. Your hand went to the man who already has all he needs.",
+        "He isn't missing a thing, dear. He could decide.\nHe just hasn't.\nYou've felt that all along. You're reading him right — you're not making it up.\nAnd wanting an answer by now isn't you pushing. It's you being awake.",
+        "Let me look closer at what he keeps picking instead…",
       ],
       b: [
-        "You chose the Hanged Man, dear — the card of the held breath, of the thing suspended between two answers.",
-        "You reached for the card that matches exactly where he has left you standing.",
-        "The Hanged Man will not tell me he will or he won't — it says he is genuinely undecided rather than quietly certain, and the waiting you have done has been real waiting, not something you invented to stay hopeful.",
-        "Let me look closer at what he is weighing…",
+        "You chose the Hanged Man, dear. Look at him — hanging upside down by one ankle, and not fighting it.",
+        "You asked whether he'll ever commit. Your hand went to the man hanging between two answers.",
+        "He hasn't come down on either side. Not toward you, not away.\nHe isn't keeping a decision from you, dear. He hasn't made one.\nThat's the harder answer, I know. But it's the true one.\nAnd you did wait, dear. That was real — you didn't make it up to keep hoping.",
+        "Let me look closer at what's holding him up there…",
       ],
       c: [
-        "You chose the Fool, dear — the card of the open road, of the step not yet taken.",
-        "Your hand went to the card of beginnings, which is telling for a question about a man who has not begun.",
-        "The Fool promises nothing about the step being taken — it says nothing here has been sealed shut, and the part of you that has not stopped hoping is reading an open situation rather than being naive.",
-        "Let me look closer at the step that is waiting…",
+        "You chose the Fool, dear. Look — one foot out over the edge, the other still on the ground.",
+        "You asked whether he'll ever commit. Your hand went to the man caught mid-step.",
+        "That foot is still in the air. He hasn't come down either way.\nSo nothing has been settled against you. Not yet.\nYou kept hoping. That isn't you fooling yourself, dear — you were reading it right.",
+        "Let me look closer at which way that foot comes down…",
       ],
     },
     'cards-wont-commit': {
@@ -2235,6 +2248,14 @@ const RETURN_MHF: CardSetConfig = {
     a: 'will and intention',
     b: 'a suspended, turning moment',
     c: 'a new beginning',
+  },
+  // Described from the actual art in /tarot/return-mhf-faces.png (Rider-Waite), not from
+  // tarot convention — she is looking at THAT picture, so a detail that is not in it reads
+  // as a lie and costs the trust the line was added to buy.
+  cardPicture: {
+    a: 'Look at him — one hand raised to the sky, the other pointing at the ground. Every tool he needs is already on the table.',
+    b: 'Look at him — hanging upside down by one ankle, and not struggling.',
+    c: 'Look — one foot already over the cliff edge, eyes on the sky, everything they own tied in one small bundle.',
   },
   reads: {
     // The ad's hook — "Will he come back?". Reads HIM as a tendency, never a verdict.
@@ -2481,22 +2502,22 @@ const RETURN_MHF: CardSetConfig = {
     // shared 6-word run in beat 3).
     'cards-will-commit': {
       a: [
-        "You turned the Magician, dear — the card of will, of what a man is actually choosing.",
-        "You are asking whether he will ever commit, and your hand found the card of choice rather than circumstance.",
-        "The Magician hands down no yes and no no — it says the capability is sitting right there unused, and your sense that he could if he decided to is reading him accurately, not flattering him.",
-        "Let me look closer at what he keeps choosing instead…",
+        "You turned the Magician, dear. Look — one hand up to the sky, one down to the ground, every tool laid out on his table.",
+        "You asked whether he'll ever commit. Your hand went to the man who already has all he needs.",
+        "He isn't missing a thing, dear. He could decide.\nHe just hasn't.\nYou've felt that all along. You're reading him right — you're not making it up.\nAnd wanting an answer by now isn't you pushing. It's you being awake.",
+        "Let me look closer at what he keeps picking instead…",
       ],
       b: [
-        "You turned the Hanged Man, dear — the card of the held breath, of the thing suspended between two answers.",
-        "You reached for the card that matches exactly where he has left you standing.",
-        "The Hanged Man will not tell me he will or he won't — it says he is genuinely undecided rather than quietly certain, and the waiting you have done has been real waiting, not something you invented to stay hopeful.",
-        "Let me look closer at what he is weighing…",
+        "You turned the Hanged Man, dear. Look at him — hanging upside down by one ankle, and not fighting it.",
+        "You asked whether he'll ever commit. Your hand went to the man hanging between two answers.",
+        "He hasn't come down on either side. Not toward you, not away.\nHe isn't keeping a decision from you, dear. He hasn't made one.\nThat's the harder answer, I know. But it's the true one.\nAnd you did wait, dear. That was real — you didn't make it up to keep hoping.",
+        "Let me look closer at what's holding him up there…",
       ],
       c: [
-        "You turned the Fool, dear — the card of the open road, of the step not yet taken.",
-        "Your hand went to the card of beginnings, which is telling for a question about a man who has not begun.",
-        "The Fool promises nothing about the step being taken — it says nothing here has been sealed shut, and the part of you that has not stopped hoping is reading an open situation rather than being naive.",
-        "Let me look closer at the step that is waiting…",
+        "You turned the Fool, dear. Look — one foot out over the edge, the other still on the ground.",
+        "You asked whether he'll ever commit. Your hand went to the man caught mid-step.",
+        "That foot is still in the air. He hasn't come down either way.\nSo nothing has been settled against you. Not yet.\nYou kept hoping. That isn't you fooling yourself, dear — you were reading it right.",
+        "Let me look closer at which way that foot comes down…",
       ],
     },
     // ⚠ This hook PRESUPPOSES his refusal. Two failure modes, not one: pronouncing
@@ -4181,9 +4202,57 @@ export function cardArtFor(deck: TarotDeck, card: TarotOption): TarotCardArt {
   }
 }
 
+// ── The card PICTURE rollout gate ───────────────────────────────────────────
+// Which landers currently serve the picture line. STAGED DELIBERATELY: the config lives
+// on the deck, so without this gate one edit would change all 66 hooks at once. Widen one
+// lander at a time, after a human has read the result; reverting is deleting a word. A
+// hook not listed here renders exactly as it does today.
+//
+// Rolled out so far:
+//   2026-08-18  cards-will-commit  — first. ~18 leads/day, 13% of tarot traffic, so a week
+//               shows real sessions without betting the funnel on it. Deliberately NOT
+//               cards-return, which carries 58% of all traffic.
+// 🔴 A MIGRATED lander writes the picture into beat 1 itself and is REMOVED from this set —
+// otherwise the splice duplicates the line the writer just wrote. This gate is the cheap
+// retrofit for landers not yet rewritten, nothing more.
+//   2026-08-18  cards-will-commit  — migrated fully, so it left this set the same day.
+const PICTURE_HOOKS = new Set<TarotHook>([])
+
+// Beat 1 is invariably "You turned|chose the X, dear — {framing}" — 264/264 across every
+// deck. Splitting on that first dash lets the PICTURE sit between the card's name and its
+// meaning, so she is told what she is looking at before she is told what it means. No
+// written framing is edited, so the distinctness guards are untouched.
+//
+// 🔴 Returns the original line unchanged if the shape is not recognised. A mangled opener
+// is worse than an un-improved one, and this runs on every lander.
+function beat1WithPicture(beat1: string, picture?: string): string {
+  if (!picture) return beat1
+  const m = /^(You (?:turned|chose) the .+?, dear) — (.+)$/.exec(beat1)
+  return m ? `${m[1]}. ${picture} This is ${m[2]}` : beat1
+}
+
+// ── Bubble breaks ───────────────────────────────────────────────────────────
+// A beat may carry '\n' to split itself into SEPARATE chat bubbles. The registry entry
+// stays four beats, so every existing guard keeps meaning what it meant — reads[h][c][2]
+// is still "the read", [3] is still the open loop, and the 19 files pinning four beats
+// still pass. Only the RENDERING changes.
+//
+// WHY IT IS AUTHORED AND NOT AUTOMATIC. Splitting on every full stop would break pairs
+// that belong together ("He isn't keeping a decision from you, dear. He hasn't made one.").
+// The writer decides where she takes a breath; the renderer just obeys.
+//
+// It also fixes pacing for free: each bubble gets its own typing delay, so a read split
+// into five bubbles gets five pauses instead of one — no change to client/src/lib/typing.ts,
+// whose 5s cap (≈83 characters) is why one long bubble always felt rushed.
+const intoBubbles = (beat: string): string[] =>
+  beat.split('\n').map((s) => s.trim()).filter(Boolean)
+
 export function openerB(deck: TarotDeck, hook: TarotHook, card: TarotOption): string[] {
+  const [beat1, ...rest] = readsFor(deck, hook)[card]
+  const picture = PICTURE_HOOKS.has(hook) ? DECKS[deck].cardPicture?.[card] : undefined
   return [
-    ...readsFor(deck, hook)[card],
+    ...intoBubbles(beat1WithPicture(beat1, picture)),
+    ...rest.flatMap(intoBubbles),
     "Before I follow this thread any further, I need to know who I'm speaking with… what's your first name, dear?",
   ]
 }
