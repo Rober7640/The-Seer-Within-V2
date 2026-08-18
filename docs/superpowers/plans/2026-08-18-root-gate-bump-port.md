@@ -413,8 +413,16 @@ Add `experimentFunnel` to the existing import from `./experiments` at the top of
 `resolveV1CloseDepth`, `logExposure`).
 
 🔴 Do **not** touch the `funnel` variable itself, and do not change any other use of
-`funnel` in this file — `selectVariant`, `storedVariantIsServable` and the logger calls all
-need the raw value.
+`funnel` in this file. `grep` finds **five** lines matching `funnel: funnel ?? null,` and
+only three are exposures. Leave these two exactly as they are:
+
+| Line | Call | Why it keeps the raw value |
+|---|---|---|
+| ~438 | `logger.warn('priceVariant: stored variant is not servable on this funnel — re-assigning', …)` | A pricing log. It must say what the funnel really was |
+| ~554 | `logger.info('priceVariant: assigned', …)` | Same — this is the audit trail for which price was drawn |
+
+`selectVariant` and `storedVariantIsServable` also take the raw `funnel` and must keep it,
+for the reason in Global Constraints.
 
 - [ ] **Step 4: Verify all three call sites changed, and nothing else moved**
 
@@ -423,7 +431,16 @@ Expected: `3` — one per `logExposure` call. A `2` means one block was missed a
 experiment's root rows will report as unrecorded.
 
 Run: `grep -c "funnel: funnel ?? null," server/lib/priceVariant.ts`
-Expected: `0`.
+Expected: `2`, **not** `0`. Five lines in this file match that pattern and only three of
+them are exposures. The two that MUST keep the raw value are the log calls:
+`logger.warn('priceVariant: stored variant is not servable on this funnel …')` at line ~438
+and `logger.info('priceVariant: assigned', …)` at line ~554. Those record what the funnel
+actually was; rewriting them to `v1-root` would make the logs lie about traffic that
+genuinely carries no funnel.
+
+Run: `grep -n "funnel: experimentFunnel(funnel)," server/lib/priceVariant.ts`
+Expected: three line numbers, each inside a `logExposure(...)` call — around 333, 363, 401.
+If any reported line sits inside a `logger.` call, revert that one.
 
 Run: `npx tsc --noEmit`
 Expected: no new errors in `server/lib/priceVariant.ts`. (The repo has ~46 pre-existing
