@@ -274,13 +274,47 @@ tick DERIVED from the gate so it cannot claim a lander is done when the code dis
 2. **Read the family's guard file first** (`tests/tarot-<family>-copy.test.ts`). It carries bans
    a rewrite must not trip, and some pin copy verbatim. Three seed families — `decode-him`,
    `trust`, `self-frame` — have no such file at all; the checklist says so on the row.
-3. **Draft to JSON in the scratchpad**, gate with `scripts/check-read.mjs --file draft.json`.
-   Never show the operator an ungated draft — that is what the four rounds bought.
-4. **The shape** (from `cards-will-commit`): bubble 1 = card + PICTURE · bubble 2 = her ad
-   question said back + where her hand went · then the read, one idea per bubble · then the
-   open loop. The picture must be sourced from the actual art file, not from tarot convention
-   — she is looking at it, so a detail that is not there reads as a lie (see the note above
+3. **Read what she actually typed** —
+   `LIVE_AUDIT_CONFIRM=1 node .claude/skills/v1-funnel-live-audit/scripts/voc-by-hook.mjs --live --hook <hook>`.
+   Read-only, gitignored output. Reasoning the intent out from the headline gets you close and
+   confidently wrong: on `cards-who-he-is` it produced copy that ACQUITTED a man a large share of
+   that lander's readers had never met and some were being defrauded by. Do this before drafting,
+   not after.
+3b. **Draft to JSON in `fb-tarot/docs/drafts/rewrites/`**, then
+   `node scripts/preview-rewrite.mjs --html` and let a human read it. Never show an ungated
+   draft — that is what the four rounds bought.
+4. **The shape — seven bubbles, and what each one is for.** Four registry beats; beat 3 carries
+   four bubbles. Each job below is here because something breaks without it.
+
+   | # | Beat | Job | Without it |
+   |---|---|---|---|
+   | 1 | 1 | **The picture.** What is literally on the card, in plain words. | The read is assertion. She has nothing to check, so she discounts everything after it. |
+   | 2 | 2 | **The echo + the pull.** Her ad question said back, then *where her hand went*. | It reads as a horoscope. The echo also proves she is on the right page; the pull makes her the author, which is what turns a broadly-true line into "this is about me". |
+   | 3 | 3 | **The payoff.** Certify HER evidence — never report his heart. | She got no answer and feels conned. |
+   | 4 | 3 | **The reason why.** Tie the payoff back to the card. | Bubble 3 is flattery with nothing carrying it. |
+   | 5 | 3 | **The gap.** What is missing, flat. Answers the SHAPE, withholds the CONTENT. | The question is closed and there is nothing left to buy. |
+   | 6 | 3 | **The absolution.** Name the accusation she arrived carrying, and refuse it. | The most valuable line on the page goes unsaid. |
+   | 7 | 4 | **The object + handover.** Name something *sitting between her and what she wants*, then hand into the chat. | The clearing ritual arrives from nowhere at minute eight. |
+
+   **Order is load-bearing.** Payoff before gap, or she feels short-changed before she has been
+   given anything. Absolution last, because it is about her and it is the note she carries into
+   the chat.
+
+   🔴 **Bubble 7 must name an OBSTRUCTION, not an absence.** "What he never said" cannot be
+   cleared; "what is sitting between you and a straight answer" can. Act 1 of the trilogy sells
+   an **Energy Clearing Ritual** that removes "the shadow blocking your path"
+   (`improve-v1/08-clearing-theme-coherence.md`), and that audit's finding was that clearing is
+   *sprung at the pitch rather than seeded*. Bubble 7 is where it gets seeded. Put the object
+   between HER and what she wants — the love bucket frames every block as an impersonal thing in
+   her path precisely so removing it blames nobody.
+
+   🔴 **The picture must come from the actual art file**, not from tarot convention — she is
+   looking at it, so a detail that is not there reads as a lie (see the note above
    `RETURN_MHF.cardPicture`).
+
+   🔴 **Bubble 3 is about HER PERCEPTION, never his heart.** That is not delicacy, it is the only
+   version she will believe — "he loves you" is what her friends say for free. It is also what
+   the per-hook bans in `TAROT_HOOK_TENDENCY` require; read the hook's entry before writing it.
 5. **Wire it** into `client/src/content/tarotReads.ts`. Beat 3 carries `\n`; the registry stays
    **four beats** so all 150+ existing assertions keep meaning. 🔴 Beat 1 must remain ONE bubble
    — `checkEcho` reads bubbles 1–2 only, so splitting beat 1 pushes the echo out of range and
