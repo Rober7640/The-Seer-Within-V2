@@ -28,7 +28,118 @@ cards-honest, cards-return, cards-feels AND cards-cheating). Every other family 
 forbidding this; decode-him has no guard file, so it was never caught. Each rewrite there
 must write a fresh beat 1 — `scripts/preview-rewrite.mjs` fails the preview if it collides.
 
-The migration loop is in `.claude/skills/v1-funnel-audit/SKILL.md` § "Migrating a lander".
+## How a lander gets rewritten
+
+**1 · Read what she actually typed.** Not the headline — her words.
+
+```bash
+LIVE_AUDIT_CONFIRM=1 node .claude/skills/v1-funnel-live-audit/scripts/voc-by-hook.mjs \
+  --live --hook <hook>          # read-only, output is gitignored
+```
+
+Working the intent out from the headline gets you close and confidently wrong. On
+`cards-who-he-is` it produced copy that ACQUITTED a man — and a large share of that
+lander's readers have never met the man, and some are being defrauded by him.
+
+**2 · Find the intent.** The question is carried by one word, not by its subject.
+
+- *Which word is doing the work?* `really` = did it ever amount to love · `still` = did it
+  survive · `ever` = she has waited long enough to be asking whether to stop.
+- *What answer would she actually accept?* "He loves you" is what her friends say for free.
+  "The warmth you felt was real" certifies HER evidence, and she believes it.
+- *What has she already been told?* Overthinking. Clinging. Imagining it. The read exists to
+  refuse that.
+- *Can the question be answered at all?* Some are traps where every literal answer harms.
+  Then split it — affirm the noticing, leave the meaning open.
+
+Cross-check against the hook's own entry in `TAROT_HOOK_TENDENCY` (`server/lib/prompts.ts`)
+before writing. It carries the bans, and they are there because someone thought about this hook.
+
+**3 · Write the seven bubbles.** Four registry beats; beat 3 carries four bubbles.
+
+| # | Beat | Job | Without it |
+|---|---|---|---|
+| 1 | 1 | **The picture** — what is literally on the card | She has nothing to check, so she discounts everything after |
+| 2 | 2 | **The echo + the pull** — her question back, then *where her hand went* | It reads as a horoscope. The pull makes her the author |
+| 3 | 3 | **The payoff** — certify HER evidence, never his heart | She got no answer and feels conned |
+| 4 | 3 | **The reason why** — tie it back to the card | Bubble 3 is flattery with nothing carrying it |
+| 5 | 3 | **The gap** — answers the SHAPE, withholds the CONTENT | The question closes and there is nothing left to buy |
+| 6 | 3 | **The absolution** — name the accusation, refuse it | The most valuable line on the page goes unsaid |
+| 7 | 4 | **The object** — something *sitting between her and what she wants* | The clearing ritual arrives from nowhere at minute eight |
+
+Order is load-bearing: payoff before gap, or she feels short-changed before she has been given
+anything. Absolution last, because it is about her and it is what she carries into the chat.
+
+**4 · Gate it, then show a human.**
+
+```bash
+node scripts/preview-rewrite.mjs --html    # draft JSON -> PREVIEW.html, exits 1 if unwirable
+```
+
+### The three rules that decide whether it works
+
+🔴 **Bubble 3 is about her PERCEPTION, never his heart.** Not delicacy — the only version she
+believes, and what the per-hook bans require.
+
+🔴 **Bubble 7 names an OBSTRUCTION, not an absence.** "What he never said" cannot be cleared;
+"what sits between you and a straight answer" can. Act 1 sells an **Energy Clearing Ritual**
+that removes "the shadow that's been blocking your path", and
+`improve-v1/08-clearing-theme-coherence.md` found that clearing is SPRUNG at the pitch rather
+than seeded. Bubble 7 is where it gets seeded — and the object goes between HER and what she
+wants, because the love bucket frames every block as an impersonal thing in her path precisely
+so that removing it blames nobody.
+
+🔴 **The picture comes from the ART FILE, not from tarot convention.** She is looking at the
+card. A detail that is not there reads as a lie and costs the trust the line was added to buy.
+
+### What the arc is doing
+
+> She sees the card is real → she picked it, so the reading is hers → her instinct was right →
+> but something is in the way → **"I know exactly what needs to be cleared."**
+
+Bubbles 1-6 buy her trust. Bubble 7 hands the sale a thread to pull.
+
+---
+
+### Worked example — `cards-feels` on `return-mhf`, card a — DRAFTED, not yet live
+
+The ad asked **"How does he really feel about you?"**. Bubble by bubble:
+
+**1 · THE PICTURE**
+> You turned the Magician, dear. Look — a red robe over white, and a loop above his head with no end to it.
+
+**2 · THE ECHO + THE PULL**
+> You asked how he really feels. Your hand went to the man who does nothing by accident.
+
+**3 · THE PAYOFF**
+> So the warmth you felt was not made up, dear.
+
+**4 · THE REASON WHY**
+> A man like this doesn't warm to someone by accident.
+
+**5 · THE GAP**
+> What he hasn't done is say it out loud.
+
+**6 · THE ABSOLUTION**
+> That gap is real, dear. You've been reading it right.
+
+**7 · THE OBJECT**
+> Let me look closer at what's sitting between you and the words…
+
+Then, forty turns later, Evelyn says the line the whole funnel is built on —
+*"I know exactly what needs to be cleared."* Bubble 7 is why that lands as the answer
+to something the card already said, instead of a block appearing from nowhere.
+
+⚠️ **The already-wired landers map only loosely.** `cards-return` and
+`cards-will-commit` were written before the middle bubbles had names, so they carry the
+payoff and the absolution but not always a distinct gap. They pass the gate and they
+read well; they are just not the thing to copy. Copy the shape above.
+
+---
+
+Full version, with the reasoning behind each rule:
+`.claude/skills/v1-funnel-audit/SKILL.md` § "Migrating a lander".
+
 Work top-down: families are ordered by how much unreadable copy they hold.
 
 ---
@@ -250,7 +361,18 @@ Draft + the 7 bans + the wiring list: `fb-tarot/docs/drafts/money-block.draft.md
 
 🔴 **The 33 reveals in that draft must be REWRITTEN, not just wired.** Scored against this
 gate they carry ~176 problems — the same failure rate `cards-return` had before its
-rewrite. Track B's copy work is the Track A loop, run on 11 new hooks.
+rewrite. Track B's copy work is the four steps above, run on 11 new hooks: pull the VOC,
+find the intent, write the seven bubbles, gate and preview.
+
+Two of the steps land differently on money and are worth flagging before drafting:
+
+- **Step 1 has no data yet.** These hooks have never run, so `voc-by-hook.mjs` returns
+  nothing. The nearest real corpus is `docs/v1-money-bucket-voc.md` — 10,514 money
+  concerns from V1, already themed. Read that instead of skipping the step.
+- **Bubble 7 is easier here, and bubble 3 is harder.** The block is the headline, so the
+  object practically writes itself. But the payoff has to certify her noticing WITHOUT
+  conceding the self-blame the `money-energy` headlines offer ("Is my energy blocking my
+  money?") — affirm the noticing, refuse the fault, exactly as `hidden-intuition` splits it.
 
 **Structural work these 11 need that no love lander did:**
 

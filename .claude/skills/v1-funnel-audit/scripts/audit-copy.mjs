@@ -123,6 +123,84 @@ try {
   }
 } catch { /* no drafts yet */ }
 
+// The method every lander goes through. Four steps, then seven bubbles, then three rules.
+// Each line here is something that went wrong once.
+const FRAMEWORK = [
+  '## How a lander gets rewritten',
+  '',
+  '**1 · Read what she actually typed.** Not the headline — her words.',
+  '',
+  '```bash',
+  'LIVE_AUDIT_CONFIRM=1 node .claude/skills/v1-funnel-live-audit/scripts/voc-by-hook.mjs \\',
+  '  --live --hook <hook>          # read-only, output is gitignored',
+  '```',
+  '',
+  'Working the intent out from the headline gets you close and confidently wrong. On',
+  '`cards-who-he-is` it produced copy that ACQUITTED a man — and a large share of that',
+  "lander's readers have never met the man, and some are being defrauded by him.",
+  '',
+  '**2 · Find the intent.** The question is carried by one word, not by its subject.',
+  '',
+  '- *Which word is doing the work?* `really` = did it ever amount to love · `still` = did it',
+  '  survive · `ever` = she has waited long enough to be asking whether to stop.',
+  '- *What answer would she actually accept?* "He loves you" is what her friends say for free.',
+  '  "The warmth you felt was real" certifies HER evidence, and she believes it.',
+  '- *What has she already been told?* Overthinking. Clinging. Imagining it. The read exists to',
+  '  refuse that.',
+  '- *Can the question be answered at all?* Some are traps where every literal answer harms.',
+  '  Then split it — affirm the noticing, leave the meaning open.',
+  '',
+  'Cross-check against the hook\'s own entry in `TAROT_HOOK_TENDENCY` (`server/lib/prompts.ts`)',
+  'before writing. It carries the bans, and they are there because someone thought about this hook.',
+  '',
+  '**3 · Write the seven bubbles.** Four registry beats; beat 3 carries four bubbles.',
+  '',
+  '| # | Beat | Job | Without it |',
+  '|---|---|---|---|',
+  '| 1 | 1 | **The picture** — what is literally on the card | She has nothing to check, so she discounts everything after |',
+  '| 2 | 2 | **The echo + the pull** — her question back, then *where her hand went* | It reads as a horoscope. The pull makes her the author |',
+  '| 3 | 3 | **The payoff** — certify HER evidence, never his heart | She got no answer and feels conned |',
+  '| 4 | 3 | **The reason why** — tie it back to the card | Bubble 3 is flattery with nothing carrying it |',
+  '| 5 | 3 | **The gap** — answers the SHAPE, withholds the CONTENT | The question closes and there is nothing left to buy |',
+  '| 6 | 3 | **The absolution** — name the accusation, refuse it | The most valuable line on the page goes unsaid |',
+  '| 7 | 4 | **The object** — something *sitting between her and what she wants* | The clearing ritual arrives from nowhere at minute eight |',
+  '',
+  'Order is load-bearing: payoff before gap, or she feels short-changed before she has been given',
+  'anything. Absolution last, because it is about her and it is what she carries into the chat.',
+  '',
+  '**4 · Gate it, then show a human.**',
+  '',
+  '```bash',
+  'node scripts/preview-rewrite.mjs --html    # draft JSON -> PREVIEW.html, exits 1 if unwirable',
+  '```',
+  '',
+  '### The three rules that decide whether it works',
+  '',
+  '🔴 **Bubble 3 is about her PERCEPTION, never his heart.** Not delicacy — the only version she',
+  'believes, and what the per-hook bans require.',
+  '',
+  '🔴 **Bubble 7 names an OBSTRUCTION, not an absence.** "What he never said" cannot be cleared;',
+  '"what sits between you and a straight answer" can. Act 1 sells an **Energy Clearing Ritual**',
+  'that removes "the shadow that\'s been blocking your path", and',
+  '`improve-v1/08-clearing-theme-coherence.md` found that clearing is SPRUNG at the pitch rather',
+  'than seeded. Bubble 7 is where it gets seeded — and the object goes between HER and what she',
+  'wants, because the love bucket frames every block as an impersonal thing in her path precisely',
+  'so that removing it blames nobody.',
+  '',
+  '🔴 **The picture comes from the ART FILE, not from tarot convention.** She is looking at the',
+  'card. A detail that is not there reads as a lie and costs the trust the line was added to buy.',
+  '',
+  '### What the arc is doing',
+  '',
+  '> She sees the card is real → she picked it, so the reading is hers → her instinct was right →',
+  '> but something is in the way → **"I know exactly what needs to be cleared."**',
+  '',
+  'Bubbles 1-6 buy her trust. Bubble 7 hands the sale a thread to pull.',
+  '',
+  '---',
+  '',
+]
+
 if (has('--checklist')) {
   const fams = new Map()
   for (const r of rows) {
@@ -175,7 +253,61 @@ if (has('--checklist')) {
   out.push('forbidding this; decode-him has no guard file, so it was never caught. Each rewrite there')
   out.push('must write a fresh beat 1 — `scripts/preview-rewrite.mjs` fails the preview if it collides.')
   out.push('')
-  out.push('The migration loop is in `.claude/skills/v1-funnel-audit/SKILL.md` § "Migrating a lander".')
+  // ── The framework, in the doc the operator actually opens ─────────────────
+  // It lives in SKILL.md too, for whoever is doing the work. It is repeated here on
+  // purpose: the checklist is the page somebody opens to decide what to do next, and a
+  // method that is one click away is a method that gets skipped.
+  out.push(...FRAMEWORK)
+
+  // A worked example, READ LIVE FROM THE REGISTRY rather than pasted — so it can never
+  // drift from what the funnel actually sends, which is the failure every hand-written
+  // example in this repo eventually hit.
+  const JOBS = ['THE PICTURE', 'THE ECHO + THE PULL', 'THE PAYOFF', 'THE REASON WHY',
+                'THE GAP', 'THE ABSOLUTION', 'THE OBJECT']
+  // Prefer a DRAFT, because drafts are written to the formula by construction. The wired
+  // landers predate it — cards-return's middle bubbles were written before "the gap" and
+  // "the reason why" had names, so it maps loosely and makes a poor demonstration.
+  let ex = null, exLabel = null, exHead = null
+  try {
+    const d = [...drafted][0]
+    if (d) {
+      const j = JSON.parse(readFileSync(new URL(`${d}.json`, DRAFTS_DIR), 'utf8'))
+      const deck = Object.keys(j.decks)[0]
+      ex = j.decks[deck].a
+      exLabel = `\`${d}\` on \`${deck}\`, card a — DRAFTED, not yet live`
+      exHead = j.headline ?? HEADLINES[d]
+    }
+  } catch { /* fall through to the registry */ }
+  if (!ex) {
+    ex = openerB('return-mhf', 'cards-return', 'a').slice(0, -1)
+    exLabel = '`cards-return` on `return-mhf`, card a — live'
+    exHead = HEADLINES['cards-return']
+  }
+  if (ex.length === JOBS.length) {
+    out.push(`### Worked example — ${exLabel}`)
+    out.push('')
+    out.push(`The ad asked **"${exHead}"**. Bubble by bubble:`)
+    out.push('')
+    ex.forEach((b, i) => {
+      out.push(`**${i + 1} · ${JOBS[i]}**`)
+      out.push(`> ${b}`)
+      out.push('')
+    })
+    out.push('Then, forty turns later, Evelyn says the line the whole funnel is built on —')
+    out.push('*"I know exactly what needs to be cleared."* Bubble 7 is why that lands as the answer')
+    out.push('to something the card already said, instead of a block appearing from nowhere.')
+    out.push('')
+    out.push('⚠️ **The already-wired landers map only loosely.** `cards-return` and')
+    out.push('`cards-will-commit` were written before the middle bubbles had names, so they carry the')
+    out.push('payoff and the absolution but not always a distinct gap. They pass the gate and they')
+    out.push('read well; they are just not the thing to copy. Copy the shape above.')
+    out.push('')
+    out.push('---')
+    out.push('')
+  }
+  out.push('Full version, with the reasoning behind each rule:')
+  out.push('`.claude/skills/v1-funnel-audit/SKILL.md` § "Migrating a lander".')
+  out.push('')
   out.push('Work top-down: families are ordered by how much unreadable copy they hold.')
   out.push('')
   out.push('---')
@@ -221,7 +353,18 @@ if (has('--checklist')) {
   out.push('')
   out.push('🔴 **The 33 reveals in that draft must be REWRITTEN, not just wired.** Scored against this')
   out.push('gate they carry ~176 problems — the same failure rate `cards-return` had before its')
-  out.push('rewrite. Track B\'s copy work is the Track A loop, run on 11 new hooks.')
+  out.push('rewrite. Track B\'s copy work is the four steps above, run on 11 new hooks: pull the VOC,')
+  out.push('find the intent, write the seven bubbles, gate and preview.')
+  out.push('')
+  out.push('Two of the steps land differently on money and are worth flagging before drafting:')
+  out.push('')
+  out.push('- **Step 1 has no data yet.** These hooks have never run, so `voc-by-hook.mjs` returns')
+  out.push('  nothing. The nearest real corpus is `docs/v1-money-bucket-voc.md` — 10,514 money')
+  out.push('  concerns from V1, already themed. Read that instead of skipping the step.')
+  out.push('- **Bubble 7 is easier here, and bubble 3 is harder.** The block is the headline, so the')
+  out.push('  object practically writes itself. But the payoff has to certify her noticing WITHOUT')
+  out.push('  conceding the self-blame the `money-energy` headlines offer ("Is my energy blocking my')
+  out.push('  money?") — affirm the noticing, refuse the fault, exactly as `hidden-intuition` splits it.')
   out.push('')
   out.push('**Structural work these 11 need that no love lander did:**')
   out.push('')
