@@ -7,7 +7,7 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import crypto from 'crypto';
 
-import { experimentBucket, pickVariant, twoSidedP, shouldForceRunning, matchesFunnelScope, matchesLanderScope, PAYWALL_EXPERIMENT_KEY } from './experiments';
+import { experimentBucket, pickVariant, twoSidedP, shouldForceRunning, matchesFunnelScope, matchesLanderScope, experimentFunnel, PAYWALL_EXPERIMENT_KEY } from './experiments';
 import type { ExperimentVariant } from '../../shared/schema';
 
 const ref = (id: string, key: string) =>
@@ -182,6 +182,36 @@ describe('matchesFunnelScope (funnel enrolment filter)', () => {
     const scope = [null, 'v1-tarot', 42, ''] as unknown as string[];
     assert.equal(matchesFunnelScope(scope, 'v1-tarot'), true);
     assert.equal(matchesFunnelScope(scope, 'v1-palm'), false);
+  });
+});
+
+describe('experimentFunnel (root sentinel)', () => {
+  it('absent funnel becomes the root sentinel', () => {
+    assert.equal(experimentFunnel(undefined), 'v1-root');
+    assert.equal(experimentFunnel(null), 'v1-root');
+    assert.equal(experimentFunnel(''), 'v1-root');
+  });
+
+  it('a real funnel param passes through untouched', () => {
+    for (const f of ['v1-fb', 'v1-fb2', 'v1-gdn', 'v1-palm', 'v1-tarot']) {
+      assert.equal(experimentFunnel(f), f);
+    }
+  });
+
+  it('the sentinel does NOT enrol root in a test scoped to other funnels', () => {
+    // Widening scope is what enrols root. The sentinel alone must change nothing —
+    // this is the property that makes tasks 1-4 a no-op until the SQL runs.
+    assert.equal(matchesFunnelScope(['v1-palm', 'v1-tarot'], experimentFunnel(undefined)), false);
+    assert.equal(matchesFunnelScope('v1-tarot', experimentFunnel(null)), false);
+  });
+
+  it('a scope listing the sentinel DOES enrol root, and nothing else changes', () => {
+    const scope = ['v1-palm', 'v1-tarot', 'v1-root'];
+    assert.equal(matchesFunnelScope(scope, experimentFunnel(undefined)), true);
+    assert.equal(matchesFunnelScope(scope, experimentFunnel('v1-tarot')), true);
+    for (const f of ['v1-fb', 'v1-fb2', 'v1-gdn']) {
+      assert.equal(matchesFunnelScope(scope, experimentFunnel(f)), false, `${f} must not leak in`);
+    }
   });
 });
 

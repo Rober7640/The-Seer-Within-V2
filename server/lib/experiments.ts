@@ -281,6 +281,28 @@ export function matchesFunnelScope(
 }
 
 /**
+ * The funnel string the EXPERIMENT FRAMEWORK sees for V1 traffic.
+ *
+ * Root V1 (`/`, `/chat` — the original Evelyn funnel email traffic lands on)
+ * deliberately sends no funnel param: currentFunnel() returns undefined there so
+ * root requests stay byte-identical to the pre-ad-funnel app. That makes
+ * `context.funnel` undefined, and matchesFunnelScope requires a STRING, so every
+ * funnel-scoped V1 test skips root by construction. This gives root a name.
+ *
+ * 🔴 EXPERIMENTS ONLY — NEVER pass this to the price pool. scopeVariantsToFunnel
+ * (priceVariantPool.ts:188) matches `(v.funnel ?? null) === target` exactly and
+ * falls back to the WHOLE pool when nothing matches. Root's `35`/`45`/`59` carry
+ * no `funnel` field, so a root visitor carrying 'v1-root' would stop matching them
+ * and start drawing `45_fb`, `35_palm_u47` and every other funnel's price. Guarded
+ * by a regression test in priceVariantPool.test.ts.
+ */
+export const ROOT_FUNNEL = 'v1-root';
+
+export function experimentFunnel(funnel?: string | null): string {
+  return typeof funnel === 'string' && funnel.length > 0 ? funnel : ROOT_FUNNEL;
+}
+
+/**
  * Does this visitor's /fb-tarot lander fall inside the experiment's lander scope?
  *
  * `scope.landers` is a LIST OF (hook, deck) PAIRS — one entry per enrolled ad URL:
