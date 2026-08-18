@@ -102,3 +102,9 @@ scripts/_*
 # (Joel's own working copies; also carry webhook URLs / node credentials refs).
 # Any n8n workflow JSON we build goes in here, not anywhere else in the repo.
 n8n-workflows/
+
+# Plain-file snapshots of source files, taken before a risky edit (see
+# backups/*/MANIFEST.md). Deliberately NOT committed: git already holds every version,
+# this tree sits in OneDrive so the files are synced off-machine anyway, and a committed
+# duplicate of a 367 KB source file rots into a misleading second source of truth.
+backups/
