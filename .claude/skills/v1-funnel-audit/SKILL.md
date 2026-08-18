@@ -1,6 +1,6 @@
 ---
 name: v1-funnel-audit
-description: "Playwright flow audit for the V1 (Evelyn 'Original Conversion Funnel') system — acts as a user, walks the full funnel (greeting → bucket → deepening → crisis/pitch → close incl. the $55/$35 sliding close → 3-objection fallback → downsell fork), screenshots every stage, and ASSERTS health (choice-card prices, dead-air, empty bubbles, pixel safety), then prints a PASS/FAIL checklist and exits non-zero on any failure. The V1 counterpart to the V2 persona-audit + conversation-flow-tests skills. Use when asked to: audit the V1 funnel, verify the Evelyn close/pitch, screenshot the sliding close, run the V1 flow audit, check the funnel end-to-end. Runs LOCAL-ONLY against a muted sandbox — never production."
+description: "Playwright flow audit for the V1 (Evelyn 'Original Conversion Funnel') system — acts as a user, walks the full funnel (greeting → bucket → deepening → crisis/pitch → close incl. the $55/$35 sliding close → 3-objection fallback → downsell fork), screenshots every stage, and ASSERTS health (choice-card prices, dead-air, empty bubbles, pixel safety) AND copy readability (words per bubble, one idea per bubble, reading grade, echo of the ad, banned constructions — `audit-copy.mjs`), then prints a PASS/FAIL checklist and exits non-zero on any failure. The V1 counterpart to the V2 persona-audit + conversation-flow-tests skills. Use when asked to: audit the V1 funnel, verify the Evelyn close/pitch, screenshot the sliding close, run the V1 flow audit, check the funnel end-to-end, or check whether a lander's copy is readable before it ships. Runs LOCAL-ONLY against a muted sandbox — never production."
 ---
 
 # v1-funnel-audit — asserting flow audit for the V1 Evelyn funnel
@@ -201,6 +201,55 @@ and a $30 downsell. Two complementary layers:
   **mocked** (charge is proven authoritatively in PART 1; mocking the reading keeps the run free of
   Anthropic calls). Meta is blocked. The scripted typing delays (1–5 s/msg) are fast-forwarded by clamping
   `setTimeout` in the browser — the question gates still gate (they wait on a click, not a timer).
+
+## Copy readability (`audit-copy.mjs`) — can she READ it
+
+Every sibling script asks *does the funnel work*. This one asks *can she read it*, which
+nothing checked until 2026-08-18 — the day a live line reading *"the card that takes a
+question by the ankles and shows you its underside"* was found aimed at a 55+ audience on
+phones. Cleaning ONE lander after that took four rounds of operator review; these rules are
+those four rounds, so the next seventy-five landers cost one.
+
+No browser, no server, no DB — it reads the registry through `openerB`, i.e. the messages
+Version B actually sends, **not** the raw `reads` strings. That distinction matters: message
+1 is composed at render time (`cardPicture` is spliced in), so scoring the registry would
+grade a 106-character line while a 181-character one ships.
+
+| Rule | Limit | Where it came from |
+|---|---|---|
+| Words per bubble | 25 | the house rule — `docs/test-ideas.md:16`, and "max 25 words" throughout `prompts.ts` |
+| Sentences per bubble | 2 | one idea per bubble |
+| Reading grade (Flesch–Kincaid) | 5 | operator's number, 2026-08-18 |
+| Syllables per word | 3 | 4+ syllable words are what drag a *short* bubble to grade 9 |
+| Negatives per sentence | 2 | 3+ is the pile-up that stops her parsing it |
+| Echo of the ad in bubbles 1–2 | required | she clicked a question; say it back |
+| Banned constructions | 6 | each lifted from copy the operator rejected, none invented |
+
+The banned list is the one that catches what a score cannot: `the card of the …` outside
+message 1 (a metaphor handed over without being cashed out), `the hoping` / `the waiting`
+(a verb turned into a noun), `what it does say is` (filler), `the situation` (vague noun),
+`which is telling` (explaining your own explanation), `nothing here has` (vague "here").
+
+```bash
+node .claude/skills/v1-funnel-audit/scripts/audit-copy.mjs             # whole-deck report
+node .claude/skills/v1-funnel-audit/scripts/audit-copy.mjs --hook X    # gate ONE lander, exit 1 on any problem
+node .claude/skills/v1-funnel-audit/scripts/audit-copy.mjs --strict    # fail if ANY lander fails
+node .claude/skills/v1-funnel-audit/scripts/audit-copy.mjs --worst 15  # the migration queue
+```
+
+It shares its rule set with **`scripts/check-read.mjs`** (the drafting tool a writer runs
+BEFORE showing anyone a draft) by importing it, so the writer's gate and the audit's gate
+can never drift apart. `check-read.mjs --file draft.json` scores unwired copy.
+
+⚠️ **Baseline 2026-08-18: 0 of 88 landers pass.** The whole deck predates these rules —
+761 bubbles over grade 5, 274 over the word limit, 174 with no echo of their own ad. So the
+default run is a REPORT, not a gate: use `--hook` to hold new and edited landers to the bar,
+and switch the suite to `--strict` only once the migration is done.
+
+🔴 **What it cannot catch.** Warmth, rhythm, whether a line is worth saying. *"By the
+ankles"* passes every numeric rule and is caught only because someone thought to ban the
+construction afterwards. It is a floor, not a bar — the last line of its output says *read
+it aloud*, and that is not decoration.
 
 ## Output
 
