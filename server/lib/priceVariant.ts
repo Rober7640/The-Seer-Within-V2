@@ -35,6 +35,7 @@ import {
   resolveV1CloseDepth,
   logExposure,
   hashEmail,
+  experimentFunnel,
   U1_PRICE_EXPERIMENT_KEY,
   V1_MAIN_EXPERIMENT_KEY,
   PALM_GATE_EXPERIMENT_KEY,
@@ -330,7 +331,7 @@ export async function assignVariantIfMissing(
       await logExposure(PALM_GATE_EXPERIMENT_KEY, hashEmail(email), palmGate.variant, 'palm_gate_assigned', {
         conversationId: row.id,
         sign: gateSign,
-        funnel: funnel ?? null,
+        funnel: experimentFunnel(funnel),
         ...(tarotLander?.deck ? { deck: tarotLander.deck } : {}),
         ...(tarotLander?.hook ? { hook: tarotLander.hook } : {}),
         ...(tarotLander?.facing ? { facing: tarotLander.facing } : {}),
@@ -360,7 +361,7 @@ export async function assignVariantIfMissing(
       await logExposure(V1_BUMP_EXPERIMENT_KEY, hashEmail(email), bump.variant, 'bump_assigned', {
         conversationId: row.id,
         sign: gateSign,
-        funnel: funnel ?? null,
+        funnel: experimentFunnel(funnel),
         // Palm hook. Normalised + length-capped by the caller; a label only, so an
         // unrecognised value can mislabel its own row and nothing else.
         ...(palmHook ? { hook: palmHook } : {}),
@@ -398,7 +399,7 @@ export async function assignVariantIfMissing(
       // mismatch here would silently disable the freeze.
       await logExposure(V1_CLOSE_DEPTH_EXPERIMENT_KEY, hashEmail(email), closeDepth.variant, 'close_depth_assigned', {
         conversationId: row.id,
-        funnel: funnel ?? null,
+        funnel: experimentFunnel(funnel),
         ...(tarotLander?.deck ? { deck: tarotLander.deck } : {}),
         ...(tarotLander?.hook ? { hook: tarotLander.hook } : {}),
         ...(tarotLander?.facing ? { facing: tarotLander.facing } : {}),

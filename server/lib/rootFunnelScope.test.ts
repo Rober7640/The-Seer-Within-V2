@@ -126,3 +126,28 @@ describe('a scope WITHOUT v1-root still skips root', { skip: !hasDb }, () => {
     assert.equal(r.enrolled, false);
   });
 });
+
+describe('exposure context identifies root rows', { skip: !hasDb }, () => {
+  it('an exposure written for root carries funnel=v1-root, not null', async () => {
+    const subject = hashEmail('root-exposure@example.com');
+    await logExposure(EXPOSURE_KEY, subject, 'B', 'gate_assigned', {
+      conversationId: 'test-conversation',
+      funnel: experimentFunnel(undefined),
+    });
+
+    const [row] = await db
+      .select()
+      .from(experimentExposures)
+      .where(
+        and(
+          eq(experimentExposures.experimentKey, EXPOSURE_KEY),
+          eq(experimentExposures.subjectId, subject),
+        ),
+      );
+
+    assert.ok(row, 'the exposure must have been written');
+    // The tally reads e.context->>'funnel'; a null there reports as unrecorded, so
+    // root's rows would be invisible in the per-funnel breakdown.
+    assert.equal((row.context as { funnel?: string } | null)?.funnel, 'v1-root');
+  });
+});
