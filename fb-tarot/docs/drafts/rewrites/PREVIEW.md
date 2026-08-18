@@ -301,7 +301,7 @@ Card-sets differ by deck, so the copy does too: Magician/Hanged Man/Fool (return
 
 # `cards-who-he-is` — "Is he really who he says he is?"
 
-Only on the two Magician/Hanged Man/Fool decks, so one set of copy, verb swapped.
+Only on the two Magician/Hanged Man/Fool decks, so one set of copy, verb swapped. 🔴 REVISED 2026-08-19 after reading 200 real concerns from this lander. A large share of its traffic is women talking to men they have NEVER MET — dating-site and social-media contacts, some plainly being defrauded ("I couldn't find him at that address", "I don't know who's real E, M, C or K"). The first draft acquitted him ("isn't a liar", "isn't pretending", "that's not the same as false"), which breaches this hook's standing rule — NEVER state he is pretending OR that he is genuine as fact — and, to that reader, is a line that could cost her money. Every beat 3 now refuses BOTH verdicts and affirms her caution instead, the same stance cards-real-person takes.
 
 ## return-mhf — cards face DOWN (she turned)
 
@@ -313,10 +313,10 @@ Only on the two Magician/Hanged Man/Fool decks, so one set of copy, verb swapped
 
 1. You turned the Magician, dear. Look — roses and lilies at his feet, and one arm held straight up.
 2. You asked if he's really who he says he is. Your hand went to the man who builds what you see.
-3. The Magician isn't a liar, dear. He's a maker.
-4. What he shows you was put together on purpose.
-5. That's not the same as false. But it isn't all of him.
-6. You sensed a second man under the first one. Take that seriously.
+3. The Magician builds what people see, dear. That is his craft.
+4. So what he shows you was put together on purpose.
+5. That doesn't tell me who stands behind it. It tells me there is a behind.
+6. You already sensed that, dear. Keep hold of it.
 7. Let me look closer at the man he leaves out…
 
 <details><summary>OLD — what she reads today</summary>
@@ -336,9 +336,9 @@ Only on the two Magician/Hanged Man/Fool decks, so one set of copy, verb swapped
 
 1. You turned the Hanged Man, dear. Look — one leg tied to the branch, the other bent behind it, out of sight.
 2. You asked if he's really who he says he is. Your hand went to the card of one hidden side.
-3. The card doesn't say he's someone else, dear.
-4. It says you have only ever seen one side of him.
-5. That's why you can't get a clean read on him.
+3. The Hanged Man shows one side, dear. Never both.
+4. You were given a part, and asked to judge the whole.
+5. That is why you can't get a clean read on him.
 6. The trouble isn't your judgement, dear. It's what you were handed.
 7. Let me look closer at the side he never showed you…
 
@@ -359,10 +359,10 @@ Only on the two Magician/Hanged Man/Fool decks, so one set of copy, verb swapped
 
 1. You turned the Fool, dear. Look — all he owns is tied in one small bundle on a stick.
 2. You asked if he's really who he says he is. Your hand went to the man still deciding.
-3. The Fool isn't pretending, dear. He hasn't finished choosing.
-4. So the man you met and the man now are both him.
-5. They just aren't the same one yet.
-6. You keep noticing he doesn't add up. He doesn't yet — and you saw it.
+3. The Fool travels light, dear. Nothing about him is settled yet.
+4. So the man you met and the man now can both be him.
+5. Or he has not shown you the whole road. The card won't say which.
+6. Either way, you noticed the change. That is worth trusting.
 7. Let me look closer at which of him is the one that stays…
 
 <details><summary>OLD — what she reads today</summary>
@@ -384,10 +384,10 @@ Only on the two Magician/Hanged Man/Fool decks, so one set of copy, verb swapped
 
 1. You chose the Magician, dear. Look — roses and lilies at his feet, and one arm held straight up.
 2. You asked if he's really who he says he is. Your hand went to the man who builds what you see.
-3. The Magician isn't a liar, dear. He's a maker.
-4. What he shows you was put together on purpose.
-5. That's not the same as false. But it isn't all of him.
-6. You sensed a second man under the first one. Take that seriously.
+3. The Magician builds what people see, dear. That is his craft.
+4. So what he shows you was put together on purpose.
+5. That doesn't tell me who stands behind it. It tells me there is a behind.
+6. You already sensed that, dear. Keep hold of it.
 7. Let me look closer at the man he leaves out…
 
 <details><summary>OLD — what she reads today</summary>
@@ -407,9 +407,9 @@ Only on the two Magician/Hanged Man/Fool decks, so one set of copy, verb swapped
 
 1. You chose the Hanged Man, dear. Look — one leg tied to the branch, the other bent behind it, out of sight.
 2. You asked if he's really who he says he is. Your hand went to the card of one hidden side.
-3. The card doesn't say he's someone else, dear.
-4. It says you have only ever seen one side of him.
-5. That's why you can't get a clean read on him.
+3. The Hanged Man shows one side, dear. Never both.
+4. You were given a part, and asked to judge the whole.
+5. That is why you can't get a clean read on him.
 6. The trouble isn't your judgement, dear. It's what you were handed.
 7. Let me look closer at the side he never showed you…
 
@@ -430,10 +430,10 @@ Only on the two Magician/Hanged Man/Fool decks, so one set of copy, verb swapped
 
 1. You chose the Fool, dear. Look — all he owns is tied in one small bundle on a stick.
 2. You asked if he's really who he says he is. Your hand went to the man still deciding.
-3. The Fool isn't pretending, dear. He hasn't finished choosing.
-4. So the man you met and the man now are both him.
-5. They just aren't the same one yet.
-6. You keep noticing he doesn't add up. He doesn't yet — and you saw it.
+3. The Fool travels light, dear. Nothing about him is settled yet.
+4. So the man you met and the man now can both be him.
+5. Or he has not shown you the whole road. The card won't say which.
+6. Either way, you noticed the change. That is worth trusting.
 7. Let me look closer at which of him is the one that stays…
 
 <details><summary>OLD — what she reads today</summary>
