@@ -73,7 +73,7 @@ const BRIEFS: EmailReadingBrief[] = [
     openLoop:
       "You asked them to bring you the question they're really asking about someone — the true one hiding under the one they keep repeating — so you could find the question they actually get to answer.",
     continueSeed:
-      "You came to find your real question — good. Tell me the one you keep asking about them, and let's find what's actually hiding under it.",
+      "You came back about the list — the man who fixed everything he could think of to prove it to one person. Tell me the question you keep asking about them, and I'll show you the truer one hiding underneath it.",
   },
   {
     campaign: 'reframe-02-fence',
@@ -84,7 +84,7 @@ const BRIEFS: EmailReadingBrief[] = [
     openLoop:
       "You asked them to notice which fence THEY keep painting — the ritual, the untouched side of the bed, the thing they keep exactly as it was — and come tell you what it is.",
     continueSeed:
-      "You came to tell me about your fence — good. Tell me what it is you keep painting the same color, and let's find out what you're really keeping alive.",
+      "You came back about the green fence — the one he repaints the same colour every spring. Tell me what you keep painting, and I'll tell you what you're really keeping alive.",
   },
   {
     campaign: 'reframe-03-devil',
@@ -95,7 +95,7 @@ const BRIEFS: EmailReadingBrief[] = [
     openLoop:
       "You asked them to simply name the loop out loud — the one true sentence about what they keep going back to — without trying to lift it yet.",
     continueSeed:
-      "You came to name your loop — good. Tell me the sentence, the true one about what you keep going back to, and we'll look at what it's really tied to.",
+      "You came back about the Devil card — those chains, loose enough to lift off with two hands and a decision. Tell me the one you haven't lifted yet, the thing you keep going back to, and we'll look at what it's actually tied to.",
   },
   {
     campaign: 'reframe-04-serious',
@@ -106,7 +106,7 @@ const BRIEFS: EmailReadingBrief[] = [
     openLoop:
       "You asked them to tell you the line they catch themselves repeating — the one you'd read as guarding something.",
     continueSeed:
-      "You came — good. I've been holding that line of yours, the one you say twice. Tell me what it is, and I'll tell you what it's guarding.",
+      "You came back about the tell — the sentence said twice. I've been holding that line of yours since the letter went out. Tell me what it is, and I'll tell you what it's guarding.",
   },
   {
     campaign: 'reframe-05-peace',
@@ -117,7 +117,7 @@ const BRIEFS: EmailReadingBrief[] = [
     openLoop:
       "You gave them a truer sentence to test their peace against — \"I'm keeping everyone at a distance so nothing can reach me\" — and told them if it landed, not to sit with that alone.",
     continueSeed:
-      "You came to find out what you're really guarding — good. So tell me honestly: this peace of yours, is it still a door someone could knock on, or has it become the wall?",
+      "You came back about protecting your peace — good. So tell me honestly: is it still a door someone could knock on, or has it quietly become the wall?",
   },
   {
     campaign: 'reframe-06-love-yourself',
@@ -128,7 +128,7 @@ const BRIEFS: EmailReadingBrief[] = [
     openLoop:
       "You gave them a truer question to sit with — \"where am I turning love away because I've decided I haven't earned it yet\" — and asked them to come tell you where they're standing outside that door.",
     continueSeed:
-      "You came to find your door — good. Tell me where you've been turning love away because you don't think you've earned it, and let's look at what's really locking it.",
+      "You came back about that saying — that you can't love anyone until you love yourself. Tell me where you've been turning love away because you decided you haven't earned it yet, and we'll look at what's really locking that door.",
   },
   {
     campaign: 'reframe-07-song',
@@ -139,7 +139,7 @@ const BRIEFS: EmailReadingBrief[] = [
     openLoop:
       "You asked them to tell you their sign — the thing that keeps finding them — so you could tell them what you think it's really pointing at, what it's asking OF them rather than what it's promising.",
     continueSeed:
-      "You came to tell me your sign — good. Tell me the thing that keeps finding you, and I'll tell you what I think it's really asking of you.",
+      "You came back about the song — the one that keeps finding you everywhere. Tell me what it is, and I'll tell you what your attention is really flagging.",
   },
   {
     campaign: 'reframe-08-lighthouse',
@@ -150,7 +150,7 @@ const BRIEFS: EmailReadingBrief[] = [
     openLoop:
       "You asked them which lamp they've let go dark while watching the sea — the piece of their own life they keep saving for \"once they come\" — and to come tell you what it is.",
     continueSeed:
-      "You came to tell me about your lamp — good. Tell me which one you've let go dark while you've been watching the water, and let's light it.",
+      "You came back about the lamp — the keeper lighting it every night for ships that rarely come. Tell me which of yours you've let go dark while you watched the water, and let's light it.",
   },
   {
     campaign: 'reframe-09-stop-looking',
@@ -161,7 +161,7 @@ const BRIEFS: EmailReadingBrief[] = [
     openLoop:
       "You gave them a truer question to sit with — \"where am I auditioning, when I could just be living\" — and asked them to come tell you if they can feel the difference but can't quite find it.",
     continueSeed:
-      "You came to find where you're standing — good. Tell me where you think you've been auditioning instead of living, and let's find the difference.",
+      "You came back about that advice — that you'll find love when you stop looking. Tell me where you've been auditioning instead of living, and we'll find the difference.",
   },
 ];
 

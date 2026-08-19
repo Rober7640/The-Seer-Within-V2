@@ -106,6 +106,16 @@ const BUBBLE_TIMEOUT_MS = 20_000;
 // keeps the fixture honest about what gets parked.
 const READER_REPLY = "I'm not enough. That's the sentence. Every single day.";
 
+// Her second answer. Since 2026-08-19 the lander takes TWO answers before it
+// asks for an email (Joel: "we don't want them to log in so quickly — two
+// questions, engage, and after that the magic link").
+const READER_REPLY_2 = "Since the spring, if I'm honest. Maybe longer.";
+
+// The question she asks back after the FIRST answer — the beat that buys the
+// engagement. Matched on the fragment that carries the meaning: she asks again
+// instead of asking for an email.
+const FOLLOWUP_ASK = "how long have you been carrying that";
+
 const READER_EMAIL = "livethread.qa@example.com";
 
 // The lander's own composer placeholder. Deliberately DIFFERENT text from the
@@ -299,9 +309,26 @@ async function expectFrameOne(page: Page) {
  * Enter-to-send is the path a reader on a phone actually takes, and it is the
  * same handler the Send button calls.
  */
-async function sendReply(page: Page, text = READER_REPLY) {
+/** Send ONE answer. Enter-to-send is the path a phone reader actually takes. */
+async function sendOneReply(page: Page, text = READER_REPLY) {
   await page.getByPlaceholder(COMPOSER).fill(text);
   await page.getByPlaceholder(COMPOSER).press("Enter");
+}
+
+/**
+ * Walk the whole reply phase: both answers, ending with the email ask on screen.
+ *
+ * Most tests below care about what happens AFTER the reply phase (outcomes, the
+ * handoff, rollback), so they call this and stay readable. The tests that care
+ * about the two-turn shape itself drive `sendOneReply` directly.
+ */
+async function sendReply(page: Page, text = READER_REPLY) {
+  await sendOneReply(page, text);
+  // Her follow-up question marks turn 1 as accepted and the composer as back.
+  await expect(page.getByText(FOLLOWUP_ASK, { exact: false }))
+    .toBeVisible({ timeout: BUBBLE_TIMEOUT_MS });
+  await expect(page.getByPlaceholder(COMPOSER)).toBeVisible({ timeout: BUBBLE_TIMEOUT_MS });
+  await sendOneReply(page, READER_REPLY_2);
 }
 
 /**
@@ -360,11 +387,44 @@ test.describe("Live Thread (Evelyn) — email → lander → chat continuity", (
       .toBeVisible({ timeout: BUBBLE_TIMEOUT_MS });
     await expect(page.getByPlaceholder(EMAIL_FIELD)).toBeVisible({ timeout: BUBBLE_TIMEOUT_MS });
 
-    // And the reply that was parked is the reader's actual text, carrying the
-    // session token the post-auth routes later use to find it again.
-    expect(captured.reply).toHaveLength(1);
+    // Two answers were taken, so /reply was called twice.
+    expect(captured.reply).toHaveLength(2);
+
+    // The FIRST park is answer 1 alone — that is what protects a reader who
+    // abandons after one answer.
     expect(captured.reply[0].reply).toBe(READER_REPLY);
+
+    // The SECOND park carries BOTH answers. This is the assertion that matters:
+    // /reply OVERWRITES pending_reply rather than appending (evelynLander.ts), so
+    // posting only the second answer would silently erase the first. Anyone who
+    // "simplifies" the client to send just the latest message fails here.
+    expect(captured.reply[1].reply).toContain(READER_REPLY);
+    expect(captured.reply[1].reply).toContain(READER_REPLY_2);
+
     expect(captured.reply[0].sessionToken, "reply must be keyed to the lander session").toBeTruthy();
+  });
+
+  test("she asks a SECOND question before ever asking for an email", async ({ page }) => {
+    // Joel, 2026-08-19: "we don't want them to log in so quickly, we want to
+    // engage them a bit — two questions, and after that the magic link."
+    await harness(page, { outcome: "no_match" });
+    await gotoLander(page);
+
+    await expectFrameOne(page);
+    await sendOneReply(page);
+
+    // After ONE answer she asks again, and the compose bar comes back.
+    await expect(page.getByText(FOLLOWUP_ASK, { exact: false }))
+      .toBeVisible({ timeout: BUBBLE_TIMEOUT_MS });
+    await expect(page.getByPlaceholder(COMPOSER)).toBeVisible({ timeout: BUBBLE_TIMEOUT_MS });
+
+    // And crucially the email ask is NOT on screen yet — one answer is not enough.
+    await expect(page.getByPlaceholder(EMAIL_FIELD)).toHaveCount(0);
+    await expect(page.getByText(RESPONSE_ASK, { exact: false })).toHaveCount(0);
+
+    // The second answer is what unlocks it.
+    await sendOneReply(page, READER_REPLY_2);
+    await expect(page.getByPlaceholder(EMAIL_FIELD)).toBeVisible({ timeout: BUBBLE_TIMEOUT_MS });
   });
 
   test("a reader who answers mid-reveal gets the rest of the opener first, not after", async ({
@@ -381,7 +441,7 @@ test.describe("Live Thread (Evelyn) — email → lander → chat continuity", (
     // Send as soon as the FIRST bubble lands, while the rest are still queued.
     await expect(page.getByText(SEED_BUBBLES[0], { exact: false }))
       .toBeVisible({ timeout: BUBBLE_TIMEOUT_MS });
-    await sendReply(page);
+    await sendOneReply(page);
 
     // Nothing of hers was dropped by the flush...
     for (const bubble of SEED_BUBBLES) {
@@ -434,11 +494,13 @@ test.describe("Live Thread (Evelyn) — email → lander → chat continuity", (
     await gotoLander(page);
 
     await expectFrameOne(page);
-    await sendReply(page);
+    await sendOneReply(page);
 
-    // The optimistic bubble is allowed to paint immediately; the email ask is not.
+    // The optimistic bubble is allowed to paint immediately; nothing else is.
+    // Neither her answer nor the email ask may appear while the park is open.
     await expect(page.getByText(READER_REPLY, { exact: false })).toBeVisible();
     await expect(page.getByPlaceholder(EMAIL_FIELD)).toHaveCount(0);
+    await expect(page.getByText(FOLLOWUP_ASK, { exact: false })).toHaveCount(0);
 
     await expect
       .poll(() => typeof captured.releaseReply === "function", {
@@ -447,7 +509,17 @@ test.describe("Live Thread (Evelyn) — email → lander → chat continuity", (
       .toBe(true);
     captured.releaseReply!();
 
-    await expect(page.getByPlaceholder(EMAIL_FIELD)).toBeVisible({ timeout: BUBBLE_TIMEOUT_MS });
+    // Released: turn 1 is parked, so the thread advances — she answers and asks
+    // her second question, and the compose bar comes back for it.
+    //
+    // The test stops here on purpose. The guarantee under test is "nothing
+    // advances until the park lands", and turn 1 proves it. Driving turn 2 would
+    // prove nothing extra AND cannot work here anyway: `holdReply` holds every
+    // /reply call while the fixture exposes a single release, so the second park
+    // would hang by construction.
+    await expect(page.getByText(FOLLOWUP_ASK, { exact: false }))
+      .toBeVisible({ timeout: BUBBLE_TIMEOUT_MS });
+    await expect(page.getByPlaceholder(COMPOSER)).toBeVisible({ timeout: BUBBLE_TIMEOUT_MS });
   });
 
   test("a failed park rolls the reply back into the box instead of advancing", async ({ page }) => {
@@ -459,7 +531,7 @@ test.describe("Live Thread (Evelyn) — email → lander → chat continuity", (
     await gotoLander(page);
 
     await expectFrameOne(page);
-    await sendReply(page);
+    await sendOneReply(page);
 
     await expect(page.getByPlaceholder(COMPOSER)).toHaveValue(READER_REPLY);
     await expect(page.getByPlaceholder(EMAIL_FIELD)).toHaveCount(0);

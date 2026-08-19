@@ -174,6 +174,26 @@ const HANDOFF_BUBBLE =
 // (see confirmationCopy below). Promising an inbox here would be false for a
 // large share of readers, and which share is not knowable until they submit.
 // ---------------------------------------------------------------------------
+// How many answers she takes before asking for the email.
+//
+// Joel, 2026-08-19 call: "we also don't want them to log in so quickly, we want
+// to engage them a bit... two questions, engage, and after that the magic link."
+// The 2026-08-01 spec's wireframes show ONE answer then the ask; this supersedes
+// them on the operator's instruction.
+const REPLY_TURNS = 2;
+
+// Her reply to the FIRST answer. Ends on a question so the thread keeps going —
+// this is the beat that buys the engagement Joel asked for.
+//
+// Deliberately campaign-agnostic. These bubbles are scripted (see the header),
+// so they must read true after ANY first answer across all nine sends — which
+// rules out naming the letter's image here, since only the opener knows it.
+// "How long" works after a repeated sentence, a fence, a card, or a song alike.
+const FOLLOWUP_BUBBLES = [
+  "That's the one. I can feel the weight sitting on it.",
+  "Before I read it back to you — how long have you been carrying that?",
+];
+
 const RESPONSE_BUBBLES = [
   "Okay. I've got what you wrote — it's held on my side now, it isn't going anywhere.",
   "Before I take this any further: what's the email you read my letter on? That's how I know it's you, and how I keep this thread instead of starting you over.",
@@ -257,6 +277,14 @@ export default function LiveThreadLander({
   const [isTyping, setIsTyping] = useState(false);
 
   const [replyDraft, setReplyDraft] = useState("");
+  // Every answer they have given, in order.
+  //
+  // WHY IT ACCUMULATES: /reply OVERWRITES `pending_reply` (evelynLander.ts) — it
+  // does not append. Posting only the second answer would silently erase the
+  // first, and the first is usually the one that matters. So each send posts the
+  // whole transcript so far, joined. After answer 1 the parked copy is answer 1
+  // (a reader who abandons there still keeps it); after answer 2 it is both.
+  const [replies, setReplies] = useState<string[]>([]);
   // Seeded once from the merge-tag hint. Not synced to later prop changes on
   // purpose: this is the reader's own editable field from first render onward,
   // and re-seeding it would clobber a correction they had already typed.
@@ -426,6 +454,27 @@ export default function LiveThreadLander({
    * it cannot fire before this finishes). React's dev warning for a stray update
    * would be the worst outcome here, so this stays simple.
    */
+  /** Plays a list of her bubbles with chat pacing. Shared by both beats. */
+  async function playBubbles(list: readonly string[]) {
+    for (let i = 0; i < list.length; i++) {
+      const text = list[i];
+      setIsTyping(true);
+      await sleep(Math.min(calculateTypingDelay(text), RESPONSE_MAX_TYPING_MS));
+      setIsTyping(false);
+      setMessages((prev) => [...prev, { role: "assistant", content: text }]);
+      if (i < list.length - 1) await sleep(calculatePauseBetweenMessages());
+    }
+  }
+
+  /**
+   * Beat 1: she answers the first reply and asks one more question, then hands
+   * the composer back. No email ask yet — that is the whole point of REPLY_TURNS.
+   */
+  async function playFollowup() {
+    await playBubbles(FOLLOWUP_BUBBLES);
+    setStage("reply");
+  }
+
   async function playResponse() {
     for (let i = 0; i < RESPONSE_BUBBLES.length; i++) {
       const text = RESPONSE_BUBBLES[i];
@@ -467,12 +516,20 @@ export default function LiveThreadLander({
     });
     setReplyDraft("");
 
+    // The full transcript so far, which is what gets parked (see `replies`).
+    // Trimmed to the server's own limit so a long pair cannot 400 as an opaque
+    // error — the textarea already caps a SINGLE answer at MAX_REPLY_LENGTH, but
+    // two of them joined can exceed it.
+    const nextReplies = [...replies, text];
+    const nextCount = nextReplies.length;
+    const parked = nextReplies.join("\n\n").slice(0, MAX_REPLY_LENGTH);
+
     const { signal, cleanup } = createTimeoutSignal(REPLY_TIMEOUT_MS);
     try {
       const res = await fetch("/api/evelyn-lander/reply", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sessionToken, reply: text }),
+        body: JSON.stringify({ sessionToken, reply: parked }),
         signal,
       });
 
@@ -549,8 +606,12 @@ export default function LiveThreadLander({
       // The reply is parked, so she can now answer it and ask for the email in
       // her own voice. `stage` moves off 'reply' here rather than inside
       // playResponse so the compose bar cannot linger for a frame after send.
+      setReplies(nextReplies);
       setStage("responding");
-      void playResponse();
+      // Answer 1 of REPLY_TURNS gets a question back; the last answer gets the
+      // email ask. `nextCount` is computed here rather than read from `replies`,
+      // which React has not re-rendered with yet.
+      void (nextCount < REPLY_TURNS ? playFollowup() : playResponse());
     } catch (err) {
       // Network failure, or a timeout (TimeoutError on modern browsers /
       // AbortError on createTimeoutSignal's fallback path). Same treatment as a

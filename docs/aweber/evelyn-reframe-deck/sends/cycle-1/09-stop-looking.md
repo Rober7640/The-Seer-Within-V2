@@ -10,7 +10,7 @@
 - **CTA:** Show me where I'm really standing → `campaign=reframe-09-stop-looking`
 - **Reading Recap:** You wrote to them about the line "you'll find love when you stop looking" — how half of it is true (frantic scanning, auditioning every date like a job interview, does wear a person down and show) but the saying smuggles in a cruelty: hearing "stop looking" as "stop wanting, go numb, disappear." You showed them the reframe: stop auditioning, yes — but never stop wanting, showing up, being seen; the real shift is where their eyes point, not whether they want it at all.
 - **Open Loop:** You gave them a truer question to sit with — "where am I auditioning, when I could just be living" — and asked them to come tell you if they can feel the difference but can't quite find it.
-- **Continue Seed:** You came to find where you're standing — good. Tell me where you think you've been auditioning instead of living, and let's find the difference.
+- **Continue Seed:** You came back about that advice — that you'll find love when you stop looking. Tell me where you've been auditioning instead of living, and we'll find the difference.
 
 ---
 

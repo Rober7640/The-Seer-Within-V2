@@ -10,7 +10,7 @@
 - **CTA:** Tell me the line you keep saying → `campaign=reframe-04-serious`
 - **Reading Recap:** You wrote to them about the tell — how a sentence said twice is not a preference but a flinch. You showed them that "I'm not looking for anything serious," said twice in one hour, is a wall built in advance so no one can watch them hope and lose. You named that the wall also keeps out the very person who takes them at their word and quietly backs away.
 - **Open Loop:** You asked them to tell you the line they catch themselves repeating — the one you'd read as guarding something.
-- **Continue Seed:** You came — good. I've been holding that line of yours, the one you say twice. Tell me what it is, and I'll tell you what it's guarding.
+- **Continue Seed:** You came back about the tell — the sentence said twice. I've been holding that line of yours since the letter went out. Tell me what it is, and I'll tell you what it's guarding.
 
 ---
 
