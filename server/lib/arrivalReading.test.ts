@@ -54,6 +54,35 @@ describe('buildArrivalGreetingInstruction', () => {
     assert.match(s, /The tell/);
     assert.match(s, /do not greet them as a stranger|not a stranger/i);
   });
+
+  it('still ends on a question when the reader has not answered yet', () => {
+    const s = buildArrivalGreetingInstruction(BRIEF, 'Sam');
+    assert.match(s, /End with one open question/i);
+    assert.doesNotMatch(s, /HAS ALREADY ANSWERED/);
+  });
+
+  // The lander takes the answer BEFORE the account exists. Greeting the reader with
+  // the question they just answered is the failure this flag exists to stop.
+  it('hands off instead of re-asking when the reader already answered on the lander', () => {
+    const s = buildArrivalGreetingInstruction(BRIEF, 'Sam', { alreadyAnswered: true });
+    assert.match(s, /HAS ALREADY ANSWERED/);
+    assert.match(s, /Do NOT ask them the open question again/i);
+    assert.match(s, /Ask NOTHING here/i);
+    assert.doesNotMatch(s, /End with one open question/i);
+  });
+
+  it('keeps the hand-off short — the reading below it carries the question', () => {
+    const s = buildArrivalGreetingInstruction(BRIEF, 'Sam', { alreadyAnswered: true });
+    assert.match(s, /1-2 sentences/);
+    assert.doesNotMatch(s, /2-3 sentences/);
+  });
+
+  it('an explicit false reads exactly like the default', () => {
+    assert.equal(
+      buildArrivalGreetingInstruction(BRIEF, 'Sam', { alreadyAnswered: false }),
+      buildArrivalGreetingInstruction(BRIEF, 'Sam'),
+    );
+  });
 });
 
 describe('resolveArrivalCampaign (DB)', { skip: !HAS_DB }, () => {

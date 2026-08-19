@@ -17,7 +17,7 @@ import { loadQuizIntake, buildQuizPromptSection } from './quizMemory';
 import { loadArrivalReading, buildArrivalReadingSection, buildArrivalGreetingInstruction, ARRIVAL_READING_FRESH_MSG_LIMIT } from './arrivalReading';
 import { loadCrossPersonaMemories, formatTransferContext } from './memoryTransfer';
 import { startChatSession, endChatSession, checkpointSession } from './creditTracking';
-import { replayPendingReply } from './liveThreadReplay';
+import { replayPendingReply, findEligibleParkedReply } from './liveThreadReplay';
 import { getPromoBalance, getSpendableCoins } from './promoWallet';
 import { checkAndLogSafety } from './universalSafety';
 import { isRefundRequest, REFUND_TEMPLATE } from './refundDeflection';
@@ -855,6 +855,21 @@ export async function generateGreeting(config: {
   // Email arrival: did they land here from one of this persona's emails (≤24h)?
   const arrivalReading = await loadArrivalReading(config.userId, personaConfig.slug);
 
+  // …and did they ALREADY answer the question that letter left open, on the lander,
+  // before they had an account? Observed on development 2026-08-19: a reader typed
+  // "I keep going back to my ex even though she treats me badly", signed in, and was
+  // greeted with "Have you named it yet, that one true thing you keep going back to?"
+  // — the open loop re-asked, verbatim, to someone who had just closed it. Their words
+  // and Evelyn's answer to them render DIRECTLY BELOW that greeting (liveThreadPreview),
+  // so the greeting must hand off to them rather than talk over them.
+  //
+  // Only looked up when a brief resolved, so this adds no query to any other reader's
+  // greeting. It reads through findEligibleParkedReply for the reason its own header
+  // gives: the greeting must agree with what the preview shows and the replay carries.
+  const parkedReply = arrivalReading
+    ? await findEligibleParkedReply({ userId: config.userId, personaSlug: personaConfig.slug })
+    : null;
+
   // For astrology personas: load birth chart to personalize the greeting
   const isAstrologyPersona = personaConfig.baseSystemPrompt.includes('[ASTROLOGY_PERSONA]') ||
     personaConfig.baseSystemPrompt.includes('[VEDIC_ASTROLOGY_PERSONA]');
@@ -1000,7 +1015,7 @@ Return JSON: {"message": "your greeting"}`;
   } else if (arrivalReading) {
     greetingPrompt = `${personaVoice}
 
-${buildArrivalGreetingInstruction(arrivalReading, user[0].firstName)}
+${buildArrivalGreetingInstruction(arrivalReading, user[0].firstName, { alreadyAnswered: Boolean(parkedReply) })}
 
 Return JSON: {"message": "your greeting"}`;
   } else if (user[0].migratedFromConversationId && memoryContext) {
