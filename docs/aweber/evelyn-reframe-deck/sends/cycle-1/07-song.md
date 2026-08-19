@@ -10,7 +10,7 @@
 - **CTA:** Tell me your sign → `campaign=reframe-07-song`
 - **Reading Recap:** You wrote to them about the song that keeps finding them — in a café, a stranger's car, a playlist they didn't build — and the story everyone tells about it ("they're thinking of you, it's a sign, wait"). You showed them the reframe: the song isn't a message FROM the person they're missing, it's a message about where their own attention still lives — their ear keeps catching it because a question is open in them, and the song is only the flag for it, not a leash but a lamp.
 - **Open Loop:** You asked them to tell you their sign — the thing that keeps finding them — so you could tell them what you think it's really pointing at, what it's asking OF them rather than what it's promising.
-- **Continue Seed:** You came to tell me your sign — good. Tell me the thing that keeps finding you, and I'll tell you what I think it's really asking of you.
+- **Continue Seed:** You came back about the song — the one that keeps finding you everywhere. Tell me what it is, and I'll tell you what your attention is really flagging.
 
 ---
 

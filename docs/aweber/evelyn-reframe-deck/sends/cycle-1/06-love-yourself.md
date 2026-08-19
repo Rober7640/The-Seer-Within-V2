@@ -10,7 +10,7 @@
 - **CTA:** Help me find the door → `campaign=reframe-06-love-yourself`
 - **Reading Recap:** You wrote to them about the phrase "you can't love anyone until you love yourself" — how half of it is true (certain you're worthless, you'll take scraps and call them a feast) but the saying turns that truth into an entrance fee, locking the door on the very people still learning their worth. You showed them the reframe: self-love is rarely the finish line you cross before you're allowed to be loved — far more often it's what being chosen well, and stayed with, actually teaches you.
 - **Open Loop:** You gave them a truer question to sit with — "where am I turning love away because I've decided I haven't earned it yet" — and asked them to come tell you where they're standing outside that door.
-- **Continue Seed:** You came to find your door — good. Tell me where you've been turning love away because you don't think you've earned it, and let's look at what's really locking it.
+- **Continue Seed:** You came back about that saying — that you can't love anyone until you love yourself. Tell me where you've been turning love away because you decided you haven't earned it yet, and we'll look at what's really locking that door.
 
 ---
 
