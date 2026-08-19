@@ -1,0 +1,36 @@
+{
+  "hook": "cards-too-late",
+  "headline": "Is something blocking my money, or did I just leave it too late?",
+  "note": "🔄 REWRITTEN 2026-08-19 to the Natural Tarot-Cut framework. Money translation: cut 3 answers her fear about HERSELF (\"it was never you\"), cut 4 says where the thing in the way actually sits, cut 5 is EARNING against KEEPING, cut 6 is the NEAR-MISS. 🔴 NONE of the seven bans below was loosened with the love families — this is the one place where a wrong sentence costs her actual money.\n\n🆕 TRACK B — the first NON-LOVE family on /fb-tarot. Face-down return-mhf, no new art.\n\n🔴 SEVEN BANS, three of which exist nowhere else on the funnel. No amount, no date, no SOURCE (no inheritance, no windfall, no legal case — she can act on an invented source with her actual savings). 🔴🔴 Never name a person as the block: the accusation lands on someone real inside a real family. 🔴🔴 No financial advice in any form — invest, sell, hold, take the pension, delay it, go back to work, stop working. This is the one ban where the harm is measured in her money. 🔴🔴 Never blame her: no poverty mindset, no 'you attract lack', no vibration. 🔴 Never 'too late' and never a promised arrival. 🔴 Never presume the state of her finances — she said blocked, not broke.\n\n✅ GUARDED as of 2026-08-19: `tests/tarot-money-block-copy.test.ts` now exists and runs against these drafts DIRECTLY. It had to: the drafts setup can only patch a hook the registry already has, so an unwired family is checked by nothing at all and still prints a green tick. All seven bans were fed a deliberate violation and all seven fired.\n\n📊 WHAT THE VOC CHANGED. These hooks have never run, so there is no per-hook data. The nearest real corpus is docs/v1-money-bucket-voc.md — 10,514 V1 money concerns. Two themes matter here and they pull in different directions.\n**Retirement (554 concerns, the highest earner in the bucket at $15,146/1k):** the emotion is not panic, it is quiet arithmetic dread. 'I'm worried that I'll outlive my few savings.' 'Prices are going up but my pension is not.' 'I thought I would be set by now.'\n**The invisible block (1,208 concerns) — and its instruction is explicit: 'The near-miss is the hook, not the poverty.'** 'I keep trying to get ahead and no matter what I do nothing seems to work out, it's like something is holding me back.' 'I sometimes feel I am close to money only to have it vanish.' 'Everything appears to be reaching me but doesn't.'\nSo these reads are built on the NEAR-MISS, not on being short of money. That also satisfies ban 7 for free — nothing here presumes she is broke, only that she has got close and watched it go.\n\nTendency: she did NOT leave it too late — say it plainly — and what is in the way is a block, which is a thing that can move. Never promise money is coming, never a date or an amount, never grade her past choices. ⚠️ This is the one hook where 'too late' must appear, in order to be refused; the ban is on asserting it, not on naming it.\n\n🔴 GUARD-FILE NOTE for whoever writes tests/tarot-money-block-copy.test.ts: beat 2 quotes her headline verbatim, so the clause 'or if you left it too late' contains ban 5's phrase with no negator in it. A naive clause-level sweep will fail this copy — the very copy the ban exists to protect, since beat 3 then refuses it plainly. Carry a RESTATEMENT EXEMPTION, exactly as tests/tarot-his-other-life-copy.test.ts does (`RESTATES = /\\byou (asked|came asking|are asking|have asked)\\b/i`, skipped before the ban sweep). This is the same collision the 2026-08-19 audit found ten times across the love families.",
+  "decks": {
+    "return-mhf": {
+      "a": [
+        "You turned the Magician, dear. Look — red roses over his head and white ones down at his feet.",
+        "You asked if something is blocking your money, or if you left it too late. Your hand went to the maker.",
+        "So you did not leave it too late, dear. I'll say that plainly.",
+        "And his hands still work, dear. That part is your answer.",
+        "But what stands in your way is a block, dear, and blocks are things.",
+        "That's why a shut door is what you see, dear. It's a thing in front of one.",
+        "Let me look closer at what has been standing there…"
+      ],
+      "b": [
+        "You turned the Hanged Man, dear. Look — he's held up, not fallen down.",
+        "You asked if something is blocking your money, or if you left it too late. Your hand went to the card that holds.",
+        "So you're not too late, dear. Look — he's held up, not fallen down.",
+        "And nothing about him has run out, dear. He's held, that's all.",
+        "But a hold is the opposite of running out, dear. Quite the opposite.",
+        "That's why you've blamed your own timing, dear. Timing wasn't it.",
+        "Let me look closer at what has had hold of it…"
+      ],
+      "c": [
+        "You turned the Fool, dear. Look — the sun is out and it's full daylight on him.",
+        "You asked if something is blocking your money, or if you left it too late. Your hand went to the card that begins.",
+        "So you're not too late, dear. The Fool never asks your age.",
+        "And he steps off in full daylight, dear, and nobody stops him.",
+        "But what stops you is a thing, dear, not a date on a calendar.",
+        "That's why it can move, dear. Dates can't be moved, and things can.",
+        "Let me look closer at what has been put in that road…"
+      ]
+    }
+  }
+}

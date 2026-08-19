@@ -1,0 +1,36 @@
+{
+  "hook": "cards-really-love",
+  "headline": "Does he really love me?",
+  "note": "Face-down only (return-mhf). 🔄 REWRITTEN 2026-08-19 to the Natural Tarot-Cut framework, after the interior ban was loosened. The read may now ANSWER: the card carries the claim about him. 🔴 THE DENIAL IS STILL BANNED — 'he does not love you' is the one direction she has no use for. 🔴 NO DIAGNOSIS: avoidant, emotionally unavailable, commitment-phobic, narcissist. 🔴 Never grade her (naive, foolish, gave too much). 🔴 No dates. The seven cuts run as ONE causal chain — so / and / but / that's why / let me look closer — and every cut must add information the last one did not carry.",
+  "decks": {
+    "return-mhf": {
+      "a": [
+        "You turned the Magician, dear. Look — the wand in his hand is white and lifted above the roses.",
+        "You asked whether the love is really love. Your hand went to the card of what a man does.",
+        "So yes, dear. What you've been given is real love.",
+        "And a man like this does nothing by halves. He knew what he was building with you.",
+        "But building it and saying it out loud are two different jobs for him.",
+        "That's why you got the care, dear, and never quite got the words.",
+        "Let me look closer at what keeps the words from coming…"
+      ],
+      "b": [
+        "You turned the Hanged Man, dear. Look — the rope holds and the tree keeps growing round it.",
+        "You asked whether the love is really love. Your hand went to the card of a thing held in place.",
+        "So the love is real, dear. What you've been given is not in doubt.",
+        "And he knows he's stuck there. That's the part he has never said out loud.",
+        "But he can't get himself down from there just by knowing it.",
+        "That's why nothing moves, dear, however warm he is with you.",
+        "Let me look closer at what has been holding that rope in place…"
+      ],
+      "c": [
+        "You turned the Fool, dear. Look — he holds the flower up, not down.",
+        "You asked if he really loves you. Your hand went to the card of an open heart.",
+        "So it's real, dear. What he gives you, he gives freely.",
+        "And nothing in this card is weighed out or held back on purpose.",
+        "But a heart this open has not worked out where it's going yet.",
+        "That's why he can be warm with you, dear, and still name nothing.",
+        "Let me look closer at what stops him putting a name to it…"
+      ]
+    }
+  }
+}

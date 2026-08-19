@@ -225,8 +225,13 @@ describe(`${DECK} — searching reads`, () => {
 
   // ── The compliance core ────────────────────────────────────────────────────
   const NEGATOR =
-    /\b(no|not|never|n't|nor|nobody|no one|none|cannot|rather than|instead of|does not|is not|nothing|refuses?|declines?|will not|would not|withholds?|neither|without)\b/i;
-  const clausesOf = (s: string) => s.split(/[—;:,]/);
+    /\b(no|not|never|can't|unable|n't|nor|nobody|no one|none|cannot|rather than|instead of|does not|is not|nothing|refuses?|declines?|will not|would not|withholds?|neither|without)\b/i;
+  // 🔴 FIXED 2026-08-19 — this used to split on /[—;:,]/ only, which does NOT break on a
+  // full stop or a newline. Beat 3 carries four bubbles joined by '\n' since the migration, so
+  // a single negator in the first of them ('it was never you') put the whole of the remaining
+  // three behind the negation exemption and every clause ban in them was skipped silently.
+  // Found by feeding the gate a deliberate violation rather than trusting its green tick.
+  const clausesOf = (s: string) => s.split(/[—;:,.\n]/);
 
   const sweep = (bans: Array<[RegExp, string]>, always: Array<[RegExp, string]> = []) => {
     const hits: string[] = [];
@@ -302,16 +307,16 @@ describe(`${DECK} — searching reads`, () => {
 
   // Inherited from the shared loneliness frame — these hooks run under it, so the same
   // bans must hold in the reads that introduce her to it.
-  it('inherits the loneliness bans: nothing fated, no forever either way, no timeframe', () => {
+  // 🔄 LOOSENED 2026-08-19 in step with the loneliness family it inherits from. Fate language
+  // in the hopeful direction and the arrival promise are both back. What stays: the life
+  // sentence, suffering-made-purposeful, and every form of pathologising her — the last of
+  // which is not a prediction rule at all and is the reason this family exists.
+  it('inherits the loneliness bans: no life sentence, no purposeful suffering, no pathologising', () => {
     const INHERITED: Array<[RegExp, string]> = [
       [/\byou (are|were) meant to be alone\b/i, 'fate: the most harmful sentence available'],
-      [/\byou (are|were) meant (for|to be with)\b/i, 'fate: a promise dressed as destiny'],
-      [/\bsome people are meant\b/i, 'fate: generalised designation'],
-      [/\bthe universe (has|wants|is)\b/i, 'fate: an author with intentions about her'],
+      [/\bsome people are meant to be alone\b/i, 'fate: generalised designation'],
       [/\b(this|it) is (a lesson|a test|preparing you|teaching you)\b/i, 'fate: makes her suffering purposeful'],
       [/\byou will (be|end up|remain|stay) alone\b/i, 'verdict: a life sentence from a stranger'],
-      [/\byou (will|are going to) (find|meet) someone\b/i, 'promise the funnel cannot keep'],
-      [/\blove is coming\b/i, 'promise'],
       [/\byou attract what you\b/i, 'pathologising — the manifesting version'],
       [/\byour (energy|vibration|mindset) is\b/i, 'pathologising'],
       [/\bstay positive\b/i, 'the reassurance she has already exhausted'],

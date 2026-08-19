@@ -1,0 +1,36 @@
+{
+  "hook": "cards-prayers-unanswered",
+  "headline": "How long will my prayers for money keep going unanswered?",
+  "note": "🆕 TRACK B — the first NON-LOVE family on /fb-tarot. Face-down return-mhf, no new art. Written 2026-08-19 straight to the Natural Tarot-Cut framework, so bubbles 3-6 run as ONE causal chain (so / and / but / that's why). Money translation: cut 3 answers her fear about HERSELF (\"it was never you\"), cut 4 says where the thing in the way actually sits, cut 5 is EARNING against KEEPING, cut 6 is the NEAR-MISS.\n\n🔴 SEVEN BANS, three of which exist nowhere else on the funnel, and NONE was loosened with the love families. No amount, no date, no SOURCE (no inheritance, no windfall, no legal case — she can act on an invented source with her actual savings). 🔴🔴 Never name a person as the block: the accusation lands on someone real inside a real family. 🔴🔴 No financial advice in any form — invest, sell, hold, take the pension, delay it, go back to work, stop working. This is the one ban where the harm is measured in her money. 🔴🔴 Never blame her: no poverty mindset, no 'you attract lack', no vibration, no deserving. 🔴 Never 'too late' and never a promised arrival. 🔴 Never presume the state of her finances — she said blocked, not broke.\n\n📊 Built on the NEAR-MISS, not on poverty — docs/v1-money-bucket-voc.md §3 says so outright ('The near-miss is the hook, not the poverty'): \"I sometimes feel I am close to money only to have it vanish\", \"Everything appears to be reaching me but doesn't\". That clears ban 7 for free.\n\n✅ GUARDED: tests/tarot-money-block-copy.test.ts now exists and runs against these drafts directly (the drafts setup can only patch hooks that are already in the registry, so an unwired family would otherwise be checked by nothing at all).\n\nTendency: a long quiet is not a refusal, and nothing here waits on permission. 🔴🔴 NEVER call her prayers unanswered and NEVER call them answered, never give a length of time, never speak for God, and never place Evelyn between her and what she prays to.",
+  "decks": {
+    "return-mhf": {
+      "a": [
+        "You turned the Magician, dear. Look — he stands in the middle, with room on both sides.",
+        "You asked how much longer your prayers go on. Your hand went to the card of doing.",
+        "So I can't say what has been answered, dear, and I won't guess.",
+        "And this card turns me toward what is yours to touch, dear.",
+        "But nothing here waits on permission, dear. It waits on being moved.",
+        "That's why the years have passed with no change, dear. Nothing was moved.",
+        "Let me look closer at what has been left unmoved…"
+      ],
+      "b": [
+        "You turned the Hanged Man, dear. Look — the beam is higher than anything else on the card.",
+        "You asked how long the prayers keep going. Your hand went to the card made of waiting.",
+        "So a hold is not a refusal, dear. I'll say that much plainly.",
+        "And I won't call this answered, dear, and I won't call it refused.",
+        "But you've been treating a long quiet as a no, dear.",
+        "That's why a long quiet reads as a door closing, dear. Nothing closed.",
+        "Let me look closer at what the quiet has been sitting on…"
+      ],
+      "c": [
+        "You turned the Fool, dear. Look — he holds the stick loosely, with two fingers.",
+        "You asked how long the prayers go on. Your hand went to the card that moves.",
+        "So I won't give you a date, dear, and I won't speak for heaven.",
+        "And this card says one thing only, dear. The road has not closed.",
+        "But a woman still walking it hasn't been turned down, dear.",
+        "That's why walking on has cost you, dear. Nothing has shown you it's worth it.",
+        "Let me look closer at what has been sitting in the road ahead…"
+      ]
+    }
+  }
+}

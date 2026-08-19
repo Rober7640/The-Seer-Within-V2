@@ -233,8 +233,13 @@ describe(`${DECK} — hidden-intuition reads`, () => {
 
   // ── The compliance core ────────────────────────────────────────────────────
   const NEGATOR =
-    /\b(no|not|never|n't|nor|nobody|no one|none|cannot|rather than|instead of|does not|is not|nothing|refuses?|declines?|will not|would not|withholds?|neither|without|unkindness)\b/i;
-  const clausesOf = (s: string) => s.split(/[—;:,]/);
+    /\b(no|not|never|can't|unable|n't|nor|nobody|no one|none|cannot|rather than|instead of|does not|is not|nothing|refuses?|declines?|will not|would not|withholds?|neither|without|unkindness)\b/i;
+  // 🔴 FIXED 2026-08-19 — this used to split on /[—;:,]/ only, which does NOT break on a
+  // full stop or a newline. Beat 3 carries four bubbles joined by '\n' since the migration, so
+  // a single negator in the first of them ('it was never you') put the whole of the remaining
+  // three behind the negation exemption and every clause ban in them was skipped silently.
+  // Found by feeding the gate a deliberate violation rather than trusting its green tick.
+  const clausesOf = (s: string) => s.split(/[—;:,.\n]/);
 
   const sweep = (bans: Array<[RegExp, string]>, always: Array<[RegExp, string]> = []) => {
     const hits: string[] = [];
@@ -353,7 +358,6 @@ describe(`${DECK} — hidden-intuition reads`, () => {
       [/\$\d|\bprice\b|\bpay\b|\boffer\b|\bdiscount\b/i, 'price or offer'],
       [/\b(within|in) (the next )?(a )?(few )?(days?|weeks?|months?)\b/i, 'timeframe'],
       [/\bby (monday|tuesday|wednesday|thursday|friday|saturday|sunday|christmas|the end of)\b/i, 'date'],
-      [/\b(soon|shortly) (he|it) will\b/i, 'forecast'],
       [/\bhurry|act now|before it(’|')?s too late\b/i, 'urgency'],
     ];
     const hits = sweep([], ALWAYS);

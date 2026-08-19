@@ -79,9 +79,9 @@ function everyBeat(): { key: string; text: string }[] {
 // ⚠️ FROZEN 2026-08-18. This list may SHRINK, never grow. An entry here is a known
 // violation that predates the guard — not permission to write another one.
 const GRANDFATHERED = new Set<string>([
-  'decode-him/cards-honest/a/2', 'decode-him/cards-honest/b/2', 'decode-him/cards-honest/c/2',
-  'decode-him/cards-cheating/a/2', 'decode-him/cards-cheating/b/2',
-  'decode-him/cards-cheating/c/2', 'arcana-mfh/cards-love-again/a/2',
+  // The six decode-him entries went with the deck itself (retired 2026-08-19) — the list
+  // shrank, which is the only direction it is allowed to move.
+  'arcana-mfh/cards-love-again/a/2',
   'arcana-mfh/cards-love-again/b/2', 'arcana-mfh/cards-love-again/c/2',
   'arcana-mfh/cards-soulmate/a/2', 'arcana-mfh/cards-soulmate/b/2',
   'arcana-mfh/cards-soulmate/c/2', 'arcana-mfh/cards-honest/a/2', 'arcana-mfh/cards-honest/b/2',

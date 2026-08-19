@@ -1,0 +1,36 @@
+{
+  "hook": "cards-deceived",
+  "headline": "Am I being deceived?",
+  "note": "🔄 REWRITTEN 2026-08-19 to the Natural Tarot-Cut framework. Bubbles 3-6 run as ONE causal chain — so / and / but / that's why — and the read ANSWERS. The art line and the bridge are unchanged. Every ban in this note still stands.\n\nFace-down only (return-mhf). 🔴 NO VERDICT IN EITHER DIRECTION. These three name an untruth outright, so both answers are live harms: 'he lied to you' is an accusation against a real man on no evidence, and 'he is telling you the truth' is a reassurance the funnel has no standing to give — and on this audience the second is the more dangerous of the two. 🔴 Never blame her judgment: naive, gullible, too trusting, 'should have known' are all out. 🔴 No timeframe.\n\nFinding: 'deceived' is a heavier word than 'lied to' — it means a whole picture, not one sentence. She is asking whether the shape of the thing is what she thinks. ⚠️ Its beat 2 could not restate her headline: 'you are being deceived' is itself a banned phrase, so the echo is built as 'you asked about being deceived'.",
+  "decks": {
+    "return-mhf": {
+      "a": [
+        "You turned the Magician, dear. Look — his right arm is straight up and quite still.",
+        "You asked about being deceived. Your hand went to the man who sets a whole scene.",
+        "So deceived is a big word, dear. It means the whole picture.",
+        "And he sets out all of it himself, dear. Every piece.",
+        "But a whole picture is harder to check than one line, dear.",
+        "That's why nothing pins down, dear. You're checking it all at once.",
+        "Let me look closer at what has been arranged around you…"
+      ],
+      "b": [
+        "You turned the Hanged Man, dear. Look — the wood he hangs from is a single cut beam.",
+        "You asked about being deceived. Your hand went to the card that turns a whole picture over.",
+        "So you've been trying to turn the whole thing over, dear.",
+        "And there's one view of him, dear, and no way to walk round it.",
+        "But the shape of what you can't see isn't mine to give, dear.",
+        "That's why the not-seeing has worn you down. You've carried it alone, dear.",
+        "Let me look closer at what has been keeping this side-on to you…"
+      ],
+      "c": [
+        "You turned the Fool, dear. Look — his tunic is patterned all over with small shapes.",
+        "You asked about being deceived. Your hand went to the one who wears no disguise.",
+        "So one odd piece doesn't tell you the whole design, dear.",
+        "And his coat has many small shapes, dear, and only one pattern.",
+        "But you've been holding the pieces up one at a time, dear.",
+        "That's why nothing has come together yet, dear. You were right to look.",
+        "Let me look closer at what has been holding the pattern out of view…"
+      ]
+    }
+  }
+}

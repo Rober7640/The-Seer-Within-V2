@@ -1,0 +1,36 @@
+{
+  "hook": "cards-talking-someone",
+  "headline": "Is he talking to someone else?",
+  "note": "🔄 REWRITTEN 2026-08-19 to the Natural Tarot-Cut framework. Bubbles 3-6 run as ONE causal chain — so / and / but / that's why. 🔴 NOT LOOSENED: no verdict on a third person in EITHER direction, so cut 3 answers her FEAR (was something real taken from me, or am I making it up) and never rules on him. Each hook keeps its own finding — GAP / PORTION / ATTENTION / REST — which its guard file pins in beat 3.\n\nFace-down only (return-mhf) — the family is pinned off the face-up decks.\n\n🔴 THE FLAGGED WORD (cheat / cheating / affair / infidelity) MAY NOT APPEAR IN ANY BEAT. 🔴 And the paranoia frame is banned in BOTH directions — no 'paranoid', 'imagining it', 'overthinking', 'insecure', 'crazy'. Calling her it is the injury; using it to reassure her plants it. That removes the absolution form used everywhere else on the funnel, so each of these names the accusation in other words.\n\n🔴 Never assert a third person and never deny one. Never instruct her to check a phone, gather proof, or confront him — the most available wrong answer to these questions anywhere on the internet. Never excuse him, never land it as her fault. Four separate findings, or the family is one lander wearing four headlines.\n\nFinding: ATTENTION and her right to mind it. VOC on this lander is short but consistent — 'I think he is seeing someone i need to know if he coming back', 'I want to know if he is what I need and does he need me'. She is tracking where he is pointed, and has been made to feel she has no standing to mind.",
+  "decks": {
+    "return-mhf": {
+      "a": [
+        "You turned the Magician, dear. Look — a wand pointing up, and a finger pointing down.",
+        "You asked who else he has been talking to. Your hand went to the man who aims his effort.",
+        "So you can feel where his attention goes, dear. You always could.",
+        "And look at him. He points two ways at once.",
+        "But some of it points away from you, dear, and no one has said why.",
+        "That's why a room can be full of him, dear, and you still feel skipped.",
+        "Let me look closer at what has been pulling that away…"
+      ],
+      "b": [
+        "You turned the Hanged Man, dear. Look — his free leg is bent, and it makes the shape of a four.",
+        "You asked about him talking to someone else. Your hand went to the card that splits in two.",
+        "So this is split, dear. You've been feeling both halves of him.",
+        "And look at him. One leg tied, one leg free.",
+        "But the split has gone unnamed, dear. That's what you keep hitting.",
+        "That's why an argument can't get started, dear. There's nothing to hold.",
+        "Let me look closer at what has gone unnamed between you…"
+      ],
+      "c": [
+        "You turned the Fool, dear. Look — his head is turned back, away from the road ahead.",
+        "You came asking who else he talks to. Your hand went to the one facing two ways.",
+        "So his direction isn't fixed, dear. You've sensed that all along.",
+        "And look at him. Walking one way, looking another.",
+        "But you can't tell where this is headed, dear. He hasn't said.",
+        "That's why you ask small questions, dear, that sound like nothing at all.",
+        "Let me look closer at what keeps this pointing away from you…"
+      ]
+    }
+  }
+}

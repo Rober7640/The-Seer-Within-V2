@@ -35,13 +35,16 @@ const arg = (n) => { const i = argv.indexOf(n); return i >= 0 ? argv[i + 1] : nu
 const DIR = new URL('../fb-tarot/docs/drafts/rewrites/', import.meta.url)
 const { DECKS, HEADLINES, openerB } = await import('../client/src/content/tarotReads.ts')
 
-const only = arg('--hook')
+// --hook may be repeated, so one family can be previewed on its own page for review.
+const only = argv.reduce((a, v, i) => (v === '--hook' ? [...a, argv[i + 1]] : a), [])
+// --out redirects both files, so a filtered run never overwrites the full PREVIEW.
+const outHtml = arg('--out')
 const drafts = readdirSync(DIR).filter((f) => f.endsWith('.json'))
   .map((f) => JSON.parse(readFileSync(new URL(f, DIR), 'utf8')))
-  .filter((d) => !only || d.hook === only)
+  .filter((d) => !only.length || only.includes(d.hook))
   .sort((a, b) => a.hook.localeCompare(b.hook))
 
-if (!drafts.length) { console.error(`no drafts found${only ? ` for ${only}` : ''} in fb-tarot/docs/drafts/rewrites/`); process.exit(2) }
+if (!drafts.length) { console.error(`no drafts found${only.length ? ` for ${only.join(', ')}` : ''} in fb-tarot/docs/drafts/rewrites/`); process.exit(2) }
 
 // Beat 1 is compared by EXACT STRING across the whole deck by the distinctness guards in
 // 8 test files. Reusing a sibling hook's picture line is the easy mistake — same card, so
@@ -100,11 +103,17 @@ for (const d of drafts) {
       for (const p of problems) md.push(`- 🔴 bubble issue: ${p}`)
       for (const c of clash) md.push(`- 🔴 beat 1 is identical to \`${c}\` on this deck — the distinctness guard fails`)
       if (problems.length || clash.length) md.push('')
-      md.push('<details><summary>OLD — what she reads today</summary>')
-      md.push('')
-      openerB(deck, d.hook, card).slice(0, -1).forEach((b, i) => md.push(`${i + 1}. ${b}`))
-      md.push('')
-      md.push('</details>')
+      // Track B landers do not exist in the registry yet, so there is nothing to compare
+      // against — say so rather than rendering an empty panel that reads like a bug.
+      if (!DECKS[deck].reads[d.hook]) {
+        md.push('> 🆕 **New lander** — nothing to compare against; this hook is not in the registry yet.')
+      } else {
+        md.push('<details><summary>OLD — what she reads today</summary>')
+        md.push('')
+        openerB(deck, d.hook, card).slice(0, -1).forEach((b, i) => md.push(`${i + 1}. ${b}`))
+        md.push('')
+        md.push('</details>')
+      }
       md.push('')
     }
   }
@@ -195,6 +204,7 @@ summary:focus-visible{outline:2px solid var(--violet);outline-offset:3px;border-
 details ol{list-style:none;padding:0;margin:.9rem 0 0;display:flex;flex-direction:column;gap:.5rem}
 details .bub{background:transparent;border:1px solid var(--line);color:var(--muted);border-radius:8px}
 .prob{color:var(--flag);font-size:.875rem;margin:.5rem 0 0}
+.newlander{margin:1.15rem 0 0;padding-top:.85rem;border-top:1px dashed var(--line);font-size:.8125rem;color:var(--faint)}
 footer.end{margin-top:5rem;padding-top:2rem;border-top:1px solid var(--line);color:var(--muted);font-size:.9375rem}
 footer.end .verdict{font-family:"Playfair Display",Georgia,serif;font-size:1.35rem;color:var(--text);margin:0 0 .5rem}
 @media (max-width:34rem){.meta{display:none}li.withmeta{grid-template-columns:1.5rem 1fr}}
@@ -233,10 +243,14 @@ footer.end .verdict{font-family:"Playfair Display",Georgia,serif;font-size:1.35r
         h.push('</ol>')
         for (const p of probs) h.push(`<p class="prob">${esc(p)}</p>`)
         for (const c of clash) h.push(`<p class="prob">beat 1 is identical to ${esc(c)} on this deck</p>`)
-        h.push('<details><summary>Show what she reads today</summary><ol>')
-        openerB(deck, d.hook, card).slice(0, -1).forEach((b, i) =>
-          h.push(`<li class="withmeta"><span class="n">${i + 1}</span><span class="bub">${esc(b)}</span></li>`))
-        h.push('</ol></details>')
+        if (!DECKS[deck].reads[d.hook]) {
+          h.push('<p class="newlander">🆕 New lander — nothing to compare against yet.</p>')
+        } else {
+          h.push('<details><summary>Show what she reads today</summary><ol>')
+          openerB(deck, d.hook, card).slice(0, -1).forEach((b, i) =>
+            h.push(`<li class="withmeta"><span class="n">${i + 1}</span><span class="bub">${esc(b)}</span></li>`))
+          h.push('</ol></details>')
+        }
         h.push('</article>')
       }
     }
@@ -245,14 +259,15 @@ footer.end .verdict{font-family:"Playfair Display",Georgia,serif;font-size:1.35r
   h.push(`<p class="verdict">${failures ? `${failures} problem${failures === 1 ? '' : 's'} to fix first` : 'All wirable as written'}</p>`)
   h.push('<p>The gate checks length, reading grade, stacked negatives, the echo of the ad and a banned-phrase list. It cannot judge warmth, rhythm, or whether a line is worth saying — so read it aloud before you say go.</p>')
   h.push('</footer></div>')
-  writeFileSync(new URL('PREVIEW.html', DIR), h.join('\n'))
-  console.log(`wrote fb-tarot/docs/drafts/rewrites/PREVIEW.html`)
+  const htmlPath = outHtml ? new URL(`file://${outHtml}`) : new URL('PREVIEW.html', DIR)
+  writeFileSync(htmlPath, h.join('\n'))
+  console.log(`wrote ${outHtml ?? 'fb-tarot/docs/drafts/rewrites/PREVIEW.html'}`)
 }
 
 const text = md.join('\n')
 if (argv.includes('--stdout')) console.log(text)
 else {
-  writeFileSync(new URL('PREVIEW.md', DIR), text)
-  console.log(`wrote fb-tarot/docs/drafts/rewrites/PREVIEW.md — ${drafts.length} hook(s), ${failures} problem(s)`)
+  if (!outHtml) writeFileSync(new URL('PREVIEW.md', DIR), text)
+  console.log(`${outHtml ? 'rendered' : 'wrote fb-tarot/docs/drafts/rewrites/PREVIEW.md'} — ${drafts.length} hook(s), ${failures} problem(s)`)
 }
 process.exit(failures ? 1 : 0)

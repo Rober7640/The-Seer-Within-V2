@@ -1,0 +1,36 @@
+{
+  "hook": "cards-stop-searching",
+  "headline": "Am I ever going to stop searching?",
+  "note": "🔄 REWRITTEN 2026-08-19 to the Natural Tarot-Cut framework. Bubbles 3-6 run as ONE causal chain — so / and / but / that's why — and the read ANSWERS. The art line and the bridge are unchanged. Every ban in this note still stands.\n\nFace-down only (return-mhf). 🔴 NO KIND DIAGNOSIS — 'you love too much', 'you are too strong', 'your standards intimidate them' are the internet's stock answers and every one is a verdict wearing a compliment. 🔴 NO CAUSE asserted, 🔴 no prerequisite framing ('until you love yourself'), 🔴 no ruling that she has given up, and 🔴 no claiming access to her interior — 'deep down you', 'part of you knows', 'what you really want' are all banned.\n\nFinding: 'stop' is the tell. She is asking to be RELEASED from the searching, not to find — it has become a job nobody gave her, and nobody has told her she may put it down.",
+  "decks": {
+    "return-mhf": {
+      "a": [
+        "You turned the Magician, dear. Look — the wand in his raised hand catches light at the tip.",
+        "You asked if the searching ever ends. Your hand went to the man always at work.",
+        "So this turned into work, dear. Heavy work, and nobody gave it to you.",
+        "And his hands are never idle, dear. That's the whole of his card.",
+        "But you're allowed to set a job like that down, dear.",
+        "That's why it feels like unpaid work. No one said you could rest, dear.",
+        "Let me look closer at what keeps putting it back in your hands…"
+      ],
+      "b": [
+        "You turned the Hanged Man, dear. Look — the beam is bare where the branches were cut off.",
+        "You asked if the searching ever ends. Your hand went to the card that stops without ending.",
+        "So you're asking to be let off, dear. Not asking to find someone.",
+        "And he has stopped, dear, and nothing bad has happened to him.",
+        "But stopping and giving up are two different things, dear.",
+        "That's why resting feels like quitting, dear. You've held them as one.",
+        "Let me look closer at what has been holding those two together…"
+      ],
+      "c": [
+        "You turned the Fool, dear. Look — a dark green cap sits low on his head.",
+        "You asked if the searching ever ends. Your hand went to the one who never calls it that.",
+        "So he's just walking, dear. He'd never call it a search.",
+        "And he goes without counting what he hasn't found, dear.",
+        "But the word searching turns a life into a hunt, dear.",
+        "That's why your own days tire you, dear. You didn't pick that word.",
+        "Let me look closer at what keeps handing you that word…"
+      ]
+    }
+  }
+}

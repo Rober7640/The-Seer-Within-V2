@@ -1,0 +1,36 @@
+{
+  "hook": "cards-feel-about-me",
+  "headline": "How does he really feel about me?",
+  "note": "Face-down only (return-mhf). 🔄 REWRITTEN 2026-08-19 to the Natural Tarot-Cut framework, after the interior ban was loosened. The read may now ANSWER: the card carries the claim about him. 🔴 THE DENIAL IS STILL BANNED — 'he does not love you' is the one direction she has no use for. 🔴 NO DIAGNOSIS: avoidant, emotionally unavailable, commitment-phobic, narcissist. 🔴 Never grade her (naive, foolish, gave too much). 🔴 No dates. The seven cuts run as ONE causal chain — so / and / but / that's why / let me look closer — and every cut must add information the last one did not carry.",
+  "decks": {
+    "return-mhf": {
+      "a": [
+        "You turned the Magician, dear. Look — the four things on the table are all within his reach.",
+        "You asked how he really feels about you. Your hand went to the card of a man who chooses.",
+        "So he feels it, dear. The card is plain with me about that.",
+        "And he has chosen how much of it reaches you. That choosing is done on purpose.",
+        "But choosing what to show you is not the same as feeling less.",
+        "That's why he can seem near one day, dear, and measured the next.",
+        "Let me look closer at what sits behind the part he keeps back…"
+      ],
+      "b": [
+        "You turned the Hanged Man, dear. Look — his face is the lowest thing on the card.",
+        "You asked how he really feels about you. Your hand went to the card of a man seen upside down.",
+        "So he does feel it, dear. You've been picking that up correctly.",
+        "And there is more of it in him than that angle has let you see.",
+        "But hanging there, he cannot turn himself the right way up.",
+        "That's why you keep getting halves of him, dear, and never the whole.",
+        "Let me look closer at what has been holding him in that position…"
+      ],
+      "c": [
+        "You turned the Fool, dear. Look — the dog is barking and he hasn't turned round.",
+        "You asked how he really feels about you. Your hand went to the card of a man mid-step.",
+        "So he feels it, dear. What you picked up from him was there.",
+        "And this card walks on without once looking back at what it left.",
+        "But walking on is a habit in him. It is not a ruling on you.",
+        "That's why the warmth reached you, dear, and the account never did.",
+        "Let me look closer at what keeps him from stopping long enough…"
+      ]
+    }
+  }
+}

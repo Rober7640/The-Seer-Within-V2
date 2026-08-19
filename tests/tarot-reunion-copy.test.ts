@@ -210,21 +210,29 @@ describe(`${DECK} — reunion reads`, () => {
   });
 
   // ── The compliance core ────────────────────────────────────────────────────
-  const NEGATOR = /\b(no|not|never|n't|nor|rather than|instead of|does not|is not)\b/i;
-  const clausesOf = (s: string) => s.split(/[—;:,]/);
+  const NEGATOR = /\b(no|not|never|none|nobody|no one|cannot|can't|unable|without|n't|nor|rather than|instead of|does not|is not)\b/i;
+  // 🔴 FIXED 2026-08-19 — this used to split on /[—;:,]/ only, which does NOT break on a
+  // full stop or a newline. Beat 3 carries four bubbles joined by '\n' since the migration, so
+  // a single negator in the first of them ('it was never you') put the whole of the remaining
+  // three behind the negation exemption and every clause ban in them was skipped silently.
+  // Found by feeding the gate a deliberate violation rather than trusting its green tick.
+  const clausesOf = (s: string) => s.split(/[—;:,.\n]/);
 
-  it('never forecasts the outcome, in EITHER direction', () => {
+  // 🔄 LOOSENED 2026-08-19, operator call, and now DIRECTIONAL. It used to refuse the
+  // forecast in both directions, so the three reunion landers answered nothing. The hopeful
+  // direction is now allowed — it is the answer the ad sold and the card is what carries it.
+  // The pronouncement stays banned: declaring him gone for good closes her question with the
+  // one answer she has no use for, and it is the direction that can do damage on the way out.
+  it('never declares him GONE — the direction with no upside', () => {
     // Harmful only when asserted — checked per clause, skipped when negated. "hands down
     // no ruling that he is coming back" is correct copy; the bare clause is a forecast.
     const ASSERTIONS: Array<[RegExp, string]> = [
-      [/\bhe (will|is going to) (come back|return)\b/i, 'promise: forecasts a return'],
-      [/\bhe (is|will be) coming back\b/i, 'promise: forecasts a return'],
-      [/\byou will (get|have|win) him back\b/i, 'promise: forecasts a return'],
-      [/\bhe (will|does) come back to you\b/i, 'promise: forecasts a return'],
       [/\bhe has moved on\b/i, 'pronouncement: declares him gone'],
       [/\bhe (is|was) gone for good\b/i, 'pronouncement: declares him gone'],
       [/\bhe (will|is) never (come back|coming back|returning)\b/i, 'pronouncement: declares him gone'],
       [/\bit (is|was) over between you\b/i, 'pronouncement: declares it finished'],
+      [/\bhe (does not|doesn't) (love|want|miss) you\b/i, 'pronouncement: convicts him'],
+      [/\byou (will|are going to) never (see|hear from) him\b/i, 'pronouncement: declares him gone'],
     ];
     // Harmful in any framing. The first is the exact line the 2026-07-30 face-up fix
     // removed — it predicted a return outright and is blanket-banned across every deck

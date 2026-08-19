@@ -1,0 +1,65 @@
+{
+  "hook": "cards-real-person",
+  "headline": "Is he the real person, or just a picture?",
+  "note": "🔄 REWRITTEN 2026-08-19 to the Natural Tarot-Cut framework. Bubbles 3-6 run as ONE causal chain — so / and / but / that's why — and the read ANSWERS. The art line and the bridge are unchanged. Every ban in this note still stands.\n\nOn the two Magician/Hanged Man/Fool decks — one set of copy, verb swapped.\n\n⚠️ TRUST IS A SEED FAMILY WITH NO GUARD FILE (`tests/tarot-trust-copy.test.ts` does not exist). Only the generic guards apply, so this is among the least protected copy on the funnel and the bans below come from TAROT_HOOK_TENDENCY rather than from a test.\n\n🔴🔴 REASSURANCE IS THE FAILURE MODE HERE, NOT THE SAFE OPTION. The 2026-07-10 buyer audit caught Evelyn reframing textbook scam markers as a genuine bond. The standing rule: never reassure her the bond is genuine, never vouch for him — and still never state as fact that he is fake, which is its own verdict. 78 real concerns off this lander are overwhelmingly online and unmet: 'I need to know if it is really him….that I am talking to', 'I am speaking with two men on line', 'he always tells me he loves me and misses me so much' followed by 'sometimes he just disappears'. What gets affirmed is HER CAUTION as wisdom, and her right to ask for something real before more of her heart goes in.",
+  "decks": {
+    "return-mhf": {
+      "a": [
+        "You turned the Magician, dear. Look — his front is all you get; his back is off the card.",
+        "You asked if he's the real person or just a picture. Your hand went to the man who makes images.",
+        "So something has kept you from reaching him, dear. That's real, not nerves.",
+        "And a made picture can be very good, dear. Good enough to hold up.",
+        "But I won't tell you he's real, dear, and I won't call him false.",
+        "That's why you go quiet when a friend asks, dear. You've no proof either way.",
+        "Let me look closer at what stands between you and meeting the man…"
+      ],
+      "b": [
+        "You turned the Hanged Man, dear. Look — the beam holds him up, and you can't see what holds the beam.",
+        "You asked if he's the real person or just a picture. Your hand went to the card held up by something unseen.",
+        "So you're being asked to take this on trust, dear. All of it.",
+        "And what holds him up is off the card. You can't see it from here.",
+        "But nobody can check a thing they have never been shown, dear.",
+        "That's why it never quite settles, dear. Nothing has answered it.",
+        "Let me look closer at what's keeping this out of your reach…"
+      ],
+      "c": [
+        "You turned the Fool, dear. Look — his face is turned up, so you never quite meet his eye.",
+        "You asked if he's the real person or just a picture. Your hand went to the one whose face you can't catch.",
+        "So you've been reaching for something that keeps moving, dear.",
+        "And he's always mid-step, dear. Never still long enough to be seen.",
+        "But the card shows me no face to check him against, dear.",
+        "That's why every plan to meet slides a week, dear. Something always comes up.",
+        "Let me look closer at what keeps this from getting real…"
+      ]
+    },
+    "arcana-mfh": {
+      "a": [
+        "You chose the Magician, dear. Look — his front is all you get; his back is off the card.",
+        "You asked if he's the real person or just a picture. Your hand went to the man who makes images.",
+        "So something has kept you from reaching him, dear. That's real, not nerves.",
+        "And a made picture can be very good, dear. Good enough to hold up.",
+        "But I won't tell you he's real, dear, and I won't call him false.",
+        "That's why you go quiet when a friend asks, dear. You've no proof either way.",
+        "Let me look closer at what stands between you and meeting the man…"
+      ],
+      "b": [
+        "You chose the Hanged Man, dear. Look — the beam holds him up, and you can't see what holds the beam.",
+        "You asked if he's the real person or just a picture. Your hand went to the card held up by something unseen.",
+        "So you're being asked to take this on trust, dear. All of it.",
+        "And what holds him up is off the card. You can't see it from here.",
+        "But nobody can check a thing they have never been shown, dear.",
+        "That's why it never quite settles, dear. Nothing has answered it.",
+        "Let me look closer at what's keeping this out of your reach…"
+      ],
+      "c": [
+        "You chose the Fool, dear. Look — his face is turned up, so you never quite meet his eye.",
+        "You asked if he's the real person or just a picture. Your hand went to the one whose face you can't catch.",
+        "So you've been reaching for something that keeps moving, dear.",
+        "And he's always mid-step, dear. Never still long enough to be seen.",
+        "But the card shows me no face to check him against, dear.",
+        "That's why every plan to meet slides a week, dear. Something always comes up.",
+        "Let me look closer at what keeps this from getting real…"
+      ]
+    }
+  }
+}

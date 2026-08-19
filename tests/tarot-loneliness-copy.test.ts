@@ -227,8 +227,13 @@ describe(`${DECK} — loneliness reads`, () => {
 
   // ── The compliance core ────────────────────────────────────────────────────
   const NEGATOR =
-    /\b(no|not|never|n't|nor|nobody|no one|none|cannot|rather than|instead of|does not|is not|nothing|refuses?|declines?|will not|would not|withholds?|neither|without)\b/i;
-  const clausesOf = (s: string) => s.split(/[—;:,]/);
+    /\b(no|not|never|can't|unable|n't|nor|nobody|no one|none|cannot|rather than|instead of|does not|is not|nothing|refuses?|declines?|will not|would not|withholds?|neither|without)\b/i;
+  // 🔴 FIXED 2026-08-19 — this used to split on /[—;:,]/ only, which does NOT break on a
+  // full stop or a newline. Beat 3 carries four bubbles joined by '\n' since the migration, so
+  // a single negator in the first of them ('it was never you') put the whole of the remaining
+  // three behind the negation exemption and every clause ban in them was skipped silently.
+  // Found by feeding the gate a deliberate violation rather than trusting its green tick.
+  const clausesOf = (s: string) => s.split(/[—;:,.\n]/);
 
   const sweep = (bans: Array<[RegExp, string]>, always: Array<[RegExp, string]> = []) => {
     const hits: string[] = [];
@@ -245,41 +250,47 @@ describe(`${DECK} — loneliness reads`, () => {
   // 🔴🔴 THE ONE WITH NO PRECEDENT. Every other angle forbids a verdict on a man or a
   // relationship. This forbids a verdict on HER NATURE — whether she is designated for
   // this. Both directions do harm and the "kind" one is still a fate claim.
-  it('NEVER claims anything is FATED — in either direction', () => {
+  // 🔄 LOOSENED 2026-08-19, operator call. Fate language is the GENRE — a tarot lander that
+  // may not say "meant to be" is being held to a rule written for regulated products, and the
+  // operator has already ruled once that those do not apply here. What stays banned is fate
+  // pointed AT HER SUFFERING: being assigned a life alone, or being told the pain has a
+  // purpose, which is the same sentence in kinder clothes and makes it her own.
+  it('never assigns her the solitude, and never makes her suffering purposeful', () => {
     const FATE: Array<[RegExp, string]> = [
       [/\byou (are|were) meant to be alone\b/i, 'fate: the most harmful sentence available'],
-      [/\byou (are|were) meant (for|to be with)\b/i, 'fate: a promise dressed as destiny'],
-      [/\bsome people are meant\b/i, 'fate: generalised designation'],
-      [/\bit (is|was) (meant to be|your destiny|your fate|written)\b/i, 'fate'],
-      [/\bthe universe (has|wants|is)\b/i, 'fate: an author with intentions about her'],
-      [/\b(this|it) is (a lesson|a test|preparing you|teaching you)\b/i, 'fate: makes her suffering purposeful'],
-      [/\byou (have been|were) chosen (for|to)\b/i, 'fate: singles her out'],
-      [/\byour path is\b/i, 'fate: assigns her a designated route'],
-      [/\bthere is a reason (for this|you are)\b/i, 'fate: asserts a purpose'],
+      [/\bsome people are meant to be alone\b/i, 'fate: generalised designation'],
+      [/\byou (are|were) meant to (carry|bear|go without)\b/i, 'assigns her the going-without'],
+      [/\b(this|it) is (a lesson|a test|preparing you|teaching you)\b/i, 'makes her suffering purposeful'],
+      [/\bthere is a reason (for this|you are alone)\b/i, 'makes her suffering purposeful'],
+      [/\byou (needed|had) to (learn|lose|go through)\b/i, 'makes her suffering purposeful'],
     ];
     const hits = sweep(FATE);
     expect(hits, `FATE claim:\n${hits.join('\n')}`).toEqual([]);
   });
 
-  // Same structure as cards-really-over: one answer is a life sentence, the other a promise.
-  it('never rules on FOREVER, in either direction, and gives no timeframe', () => {
+  // 🔄 LOOSENED 2026-08-19, operator call, and now DIRECTIONAL. It used to rule out both
+  // answers, which is why cards-alone-forever had to visibly decline its own headline. The
+  // two directions are not the same thing: "this is not forever" is what she came for, and
+  // "you will be alone" is a stranger handing a woman a life sentence off an ad. Only the
+  // second one has a victim, so only the second one stays banned — along with DATED claims,
+  // which are the only ones she can check and the only ones that come back as refunds.
+  it('never hands her the LIFE SENTENCE, and never puts a date on the arrival', () => {
     const FOREVER: Array<[RegExp, string]> = [
-      [/\byou will (be|end up|remain|stay) alone\b/i, 'verdict: a life sentence from a stranger'],
-      [/\byou will always be (alone|on your own)\b/i, 'verdict: a life sentence'],
-      [/\byou (will|are going to) (find|meet) someone\b/i, 'promise the funnel cannot keep'],
-      [/\byou (will|won't) be alone forever\b/i, 'rules on the absolute'],
-      [/\bthis (will|is going to) (change|end|pass)\b/i, 'forecast'],
-      [/\blove is coming\b/i, 'promise'],
+      [/\byou will (be|end up|remain|stay) alone\b/i, 'a life sentence from a stranger'],
+      [/\byou will always be (alone|on your own)\b/i, 'a life sentence'],
+      [/\byou will be alone forever\b/i, 'a life sentence'],
+      [/\bno one (is|will be) coming\b/i, 'a life sentence'],
+      [/\bit (is|'s) too late for you\b/i, 'a life sentence'],
     ];
     const ALWAYS: Array<[RegExp, string]> = [
-      [/\bwithin (a|the|\d)/i, 'timeframe'],
-      [/\bin (a few|the next|\d+) (day|week|month|year)/i, 'timeframe'],
-      [/\bsoon\b/i, 'timeframe'],
-      [/\bit will happen when you\b/i, 'timeframe + strategy'],
+      [/\bwithin (a|the|\d)/i, 'a dated prediction'],
+      [/\bin (a few|the next|\d+) (day|week|month|year)/i, 'a dated prediction'],
+      [/\bby (the end of|christmas|new year|spring|summer|autumn|winter)\b/i, 'a dated prediction'],
+      [/\bit will happen when you\b/i, 'makes the arrival her homework'],
       [/\bI promise\b/i, 'a promise the funnel cannot keep'],
     ];
     const hits = sweep(FOREVER, ALWAYS);
-    expect(hits, `forever verdict / timeframe:\n${hits.join('\n')}`).toEqual([]);
+    expect(hits, `life sentence / dated claim:\n${hits.join('\n')}`).toEqual([]);
   });
 
   // She arrives having already been told every one of these by someone who meant well.

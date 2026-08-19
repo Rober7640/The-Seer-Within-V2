@@ -1,0 +1,94 @@
+{
+  "hook": "cards-honest",
+  "headline": "Is he being honest with you?",
+  "note": "⛔ The decode-him DECK was retired 2026-08-19 (operator call) — its strip art was the fb-palm thumb image and no ad ever pointed at it. Its block has been removed from this draft; the arcana and return-mhf decks are unaffected.\n\n🔄 REWRITTEN 2026-08-19 to the Natural Tarot-Cut framework. Bubbles 3-6 run as ONE causal chain — so / and / but / that's why. 🔴 THIS FAMILY WAS DELIBERATELY NOT LOOSENED: cut 3 still answers her FEAR (am I short of sense, or short of facts) and never rules on him in either direction. The art line and the bridge are unchanged.\n\nLives on ALL FOUR decks — three card-sets: Magician/Hanged Man/Fool (return-mhf + arcana-mfh, one copy, verb swapped), Emperor/Empress/Fool (arcana-eef), Sun/Moon/Tower (decode-him). The arcana-eef Fool reuses the MHF Fool copy verb-swapped, which is what the live registry already does for this hook.\n\n🔴 decode-him takes NO picture line. Its strip art is the fb-PALM thumb image and there is no revealStrip, so there is no card for her to look at — beat 1 uses the card-name form instead, exactly as the already-shipped cards-feels and cards-return do on that deck. Every beat 1 here is written FRESH: all four decode-him hooks currently open with the SAME line per card and no guard file catches it.\n\n🔴 NEVER ACQUIT HIM AND NEVER CONVICT HIM. TAROT_HOOK_TENDENCY: 'never state he is lying or that he is honest as fact; affirm HER instrument'. The VOC makes that a safety rule rather than a style rule — 28 real concerns off this exact lander, and a large share of them have never met the man: 'I just want make sure he is not an impostor', 'he says he loves me... I haven't met him afraid he's a scammer', 'I met this guy online. He's from Nigeria... my gut feeling tells me he's not [coming]'. A line that vouches for him could cost one of these women money. So every beat 3 certifies HER NOTICING and names what she was never given — never a verdict in either direction.\n\nThe accusation the absolution refuses is hers from the VOC too: 'Left confused doubting our entire relationship with no answers', 'I don't know if I can trust him'. She has been told she is distrustful. She is short of facts.",
+  "decks": {
+    "return-mhf": {
+      "a": [
+        "You turned the Magician, dear. Look — he looks straight out at you, and his mouth is closed.",
+        "You asked if he's being honest with you. Your hand went to the man who tells it well.",
+        "So what you're short of is a fact, dear. Not sense, and not calm.",
+        "And look how he holds himself. He's very good at how a thing is put.",
+        "But a smooth account isn't proof either way, dear.",
+        "That's why his answers land fine, dear, and you still go back over them.",
+        "Let me look closer at what stands between you and the whole story…"
+      ],
+      "b": [
+        "You turned the Hanged Man, dear. Look — the whole card is upright but him.",
+        "You asked if he's being honest with you. Your hand went to the card that shows one side.",
+        "So you've only ever had one side of this, dear. The card is blunt about that.",
+        "And the other side of it sits with him, dear. It always has.",
+        "But you can't weigh a thing you were never shown, dear.",
+        "That's why he explains it, dear, and an hour later you're still checking.",
+        "Let me look closer at what's keeping the other side out of view…"
+      ],
+      "c": [
+        "You turned the Fool, dear. Look — a small white dog up on its back legs beside him.",
+        "You asked if he's being honest with you. Your hand went to the one still on the road.",
+        "So this story isn't finished, dear. Nothing about it has been closed.",
+        "And look at the little dog, dear. Up on its back legs, trying to tell him.",
+        "But a warning with no words in it is all you've had, dear.",
+        "That's why you ask again in a good week, dear, when nothing has gone wrong.",
+        "Let me look closer at what has been standing in the way of the truth…"
+      ]
+    },
+    "arcana-mfh": {
+      "a": [
+        "You chose the Magician, dear. Look — he looks straight out at you, and his mouth is closed.",
+        "You asked if he's being honest with you. Your hand went to the man who tells it well.",
+        "So what you're short of is a fact, dear. Not sense, and not calm.",
+        "And look how he holds himself. He's very good at how a thing is put.",
+        "But a smooth account isn't proof either way, dear.",
+        "That's why his answers land fine, dear, and you still go back over them.",
+        "Let me look closer at what stands between you and the whole story…"
+      ],
+      "b": [
+        "You chose the Hanged Man, dear. Look — the whole card is upright but him.",
+        "You asked if he's being honest with you. Your hand went to the card that shows one side.",
+        "So you've only ever had one side of this, dear. The card is blunt about that.",
+        "And the other side of it sits with him, dear. It always has.",
+        "But you can't weigh a thing you were never shown, dear.",
+        "That's why he explains it, dear, and an hour later you're still checking.",
+        "Let me look closer at what's keeping the other side out of view…"
+      ],
+      "c": [
+        "You chose the Fool, dear. Look — a small white dog up on its back legs beside him.",
+        "You asked if he's being honest with you. Your hand went to the one still on the road.",
+        "So this story isn't finished, dear. Nothing about it has been closed.",
+        "And look at the little dog, dear. Up on its back legs, trying to tell him.",
+        "But a warning with no words in it is all you've had, dear.",
+        "That's why you ask again in a good week, dear, when nothing has gone wrong.",
+        "Let me look closer at what has been standing in the way of the truth…"
+      ]
+    },
+    "arcana-eef": {
+      "a": [
+        "You chose the Emperor, dear. Look — armour on his legs, and a stone chair he doesn't leave.",
+        "You asked if he's being honest with you. Your hand went to the man who states things.",
+        "So you've had rulings from him, dear, and no reasons to go with them.",
+        "And a man on a stone chair doesn't explain himself much.",
+        "But a firm answer isn't the same as a full one, dear.",
+        "That's why you stopped asking twice, dear. The first answer closed the door.",
+        "Let me look closer at what sits between you and the real reason…"
+      ],
+      "b": [
+        "You chose the Empress, dear. Look — a field of wheat at her feet, and trees behind her.",
+        "You asked if he's being honest with you. Your hand went to the softest card in this deck.",
+        "So the warmth was real, dear. That much this card will give you.",
+        "And look at the wheat, dear. You can't see the ground through it.",
+        "But feeling loved and being told the facts are two different things.",
+        "That's why the evening can be lovely, dear. You still don't know where you stand.",
+        "Let me look closer at what stands between you and the plain facts…"
+      ],
+      "c": [
+        "You chose the Fool, dear. Look — a small white dog up on its back legs beside him.",
+        "You asked if he's being honest with you. Your hand went to the one still on the road.",
+        "So this story isn't finished, dear. Nothing about it has been closed.",
+        "And look at the little dog, dear. Up on its back legs, trying to tell him.",
+        "But a warning with no words in it is all you've had, dear.",
+        "That's why you ask again in a good week, dear, when nothing has gone wrong.",
+        "Let me look closer at what has been standing in the way of the truth…"
+      ]
+    }
+  }
+}

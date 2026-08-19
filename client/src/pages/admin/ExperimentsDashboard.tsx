@@ -481,6 +481,11 @@ export default function ExperimentsDashboard() {
       "his-other-life": "His Other Life",
       "soulmate-label": "Soulmate / Twin Flame — The Label",
       "self-frame": "Self-Frame",
+      // The money-block batch (2026-08-19) — the first non-love angles on the funnel.
+      "money-retiring": "Money — Retiring (55-64)",
+      "money-working": "Money — Still Working (65+)",
+      "money-energy": "Money — Her Energy",
+      "money-prayer": "Money — Prayer",
     };
     return `${f} — ${ANGLE_LABELS[angle] ?? angle}`;
   };

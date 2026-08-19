@@ -73,9 +73,10 @@ console.log(`rules: ≤${RULES.MAX_WORDS} words · ≤${RULES.MAX_SENTENCES} sen
 // the row, rather than in a handoff somebody has to remember to re-read.
 const NOTES = {
   'cards-someone-else': '⚠️ STUDY FIRST — best converter on the funnel (9.8%). A grade-5 pass could remove what works.',
-  'cards-really-soulmate': '⚠️ B1 — tests/tarot-soulmate-label-copy.test.ts:439/441/444 assume ONE unsplit beat 3. Delete those three with a note before migrating this family.',
-  'cards-twin-or-connection': '⚠️ B1 — see cards-really-soulmate.',
-  'cards-met-already': '⚠️ B1 — see cards-really-soulmate.',
+  // ✅ RESOLVED 2026-08-19. The openerB test was made split-aware rather than gutted: it
+  // accepts either copy shape, asserts the open loop and name capture by position from the
+  // END, and measures the WHOLE served read instead of beat 3 alone.
+  'cards-really-soulmate': '⚠️ STUDY FIRST — Version B serves this static read with no model call, so every guard in its file is the whole safety net.',
   'cards-who-hurt-me': '⚠️ heaviest hook on the funnel — never minimise, never convict, never blame her.',
   'cards-still-miss-him': '⚠️ sibling of cards-who-hurt-me — never minimise the named harm.',
   'cards-feels-off': '⚠️ submits HER JUDGEMENT for a verdict. Split the question; do not answer it.',
@@ -128,6 +129,12 @@ try {
 const FRAMEWORK = [
   '## How a lander gets rewritten',
   '',
+  '> 🔄 **The framework changed on 2026-08-19** (operator: the Natural Tarot-Cut). The old shape',
+  '> refused to answer and certified her instead, because the guards forbade a claim about a real',
+  '> man in either direction. Those guards are now DIRECTIONAL — see "What may be said" below —',
+  '> and the read ANSWERS. If you are reading a lander written before that date, it will not match',
+  '> this table; the table is right and the lander is the queue.',
+  '',
   '**1 · Read what she actually typed.** Not the headline — her words.',
   '',
   '```bash',
@@ -139,68 +146,140 @@ const FRAMEWORK = [
   '`cards-who-he-is` it produced copy that ACQUITTED a man — and a large share of that',
   "lander's readers have never met the man, and some are being defrauded by him.",
   '',
-  '**2 · Find the intent.** The question is carried by one word, not by its subject.',
+  '**2 · Find the intent, then find the FEAR under it.** The question is carried by one word.',
   '',
   '- *Which word is doing the work?* `really` = did it ever amount to love · `still` = did it',
   '  survive · `ever` = she has waited long enough to be asking whether to stop.',
-  '- *What answer would she actually accept?* "He loves you" is what her friends say for free.',
-  '  "The warmth you felt was real" certifies HER evidence, and she believes it.',
+  '- *What is she actually afraid of?* This is what cut 3 answers, and it is rarely the literal',
+  '  headline. Under "does he love me" sits *did I invent this*. Under "why is my money blocked"',
+  '  sits *was this my own fault*. Answer the fear, not the sentence.',
   '- *What has she already been told?* Overthinking. Clinging. Imagining it. The read exists to',
-  '  refuse that.',
-  '- *Can the question be answered at all?* Some are traps where every literal answer harms.',
-  '  Then split it — affirm the noticing, leave the meaning open.',
+  '  refuse that — but by DESCRIBING what she has lived, never by announcing she was right.',
   '',
-  'Cross-check against the hook\'s own entry in `TAROT_HOOK_TENDENCY` (`server/lib/prompts.ts`)',
-  'before writing. It carries the bans, and they are there because someone thought about this hook.',
+  "Cross-check against the hook's own entry in `TAROT_HOOK_TENDENCY` (`server/lib/prompts.ts`)",
+  'before writing. It carries the per-hook bans, and it is the copy the Version-C model obeys —',
+  'if you loosen a guard file without loosening the tendency, B and C contradict each other on',
+  'the same lander.',
   '',
-  '**3 · Write the seven bubbles.** Four registry beats; beat 3 carries four bubbles.',
+  '**3 · Write the seven cuts.** Four registry beats; beat 3 carries four bubbles.',
   '',
-  '| # | Beat | Job | Without it |',
-  '|---|---|---|---|',
-  '| 1 | 1 | **The picture** — what is literally on the card | She has nothing to check, so she discounts everything after |',
-  '| 2 | 2 | **The echo + the pull** — her question back, then *where her hand went* | It reads as a horoscope. The pull makes her the author |',
-  '| 3 | 3 | **The payoff** — certify HER evidence, never his heart | She got no answer and feels conned |',
-  '| 4 | 3 | **The reason why** — tie it back to the card | Bubble 3 is flattery with nothing carrying it |',
-  '| 5 | 3 | **The gap** — answers the SHAPE, withholds the CONTENT | The question closes and there is nothing left to buy |',
-  '| 6 | 3 | **The absolution** — name the accusation, refuse it | The most valuable line on the page goes unsaid |',
-  '| 7 | 4 | **The object** — something *sitting between her and what she wants* | The clearing ritual arrives from nowhere at minute eight |',
+  '| # | Beat | Cut | Job | Without it |',
+  '|---|---|---|---|---|',
+  '| 1 | 1 | **The picture** | One or two details that are literally on the art | She has nothing to check, so she discounts everything after |',
+  '| 2 | 2 | **The bridge** | Her question back, plus the card in plain English | It reads as a horoscope, and the card does no work |',
+  '| 3 | 3 | **The answer** | Answers her deepest fear, flat. The clearest line on the page | She got no answer and feels conned |',
+  '| 4 | 3 | **The hidden layer** | Something she could not see — what he holds, or what the block has been doing | Cut 3 gets restated in different words and the read stalls |',
+  '| 5 | 3 | **The contradiction** | Why the behaviour does not match the answer | Nothing is left unresolved, so there is nothing to buy |',
+  '| 6 | 3 | **The recognition** | The specific thing she has actually lived | The read is a claim she has to take on trust |',
+  '| 7 | 4 | **The next mystery** | Narrow, aimed at the CAUSE of the contradiction — and still an obstruction | The clearing ritual arrives from nowhere at minute eight |',
   '',
-  '**The order is doing work.**',
+  '**4 · Make it one thought, not seven lines.** This is the single biggest difference between',
+  'copy that reads spoken and copy that reads written, and it is mechanical:',
   '',
-  '- **Payoff before gap.** Reverse them and she feels short-changed before she has been given',
-  '  anything.',
-  '- **Absolution last of the read.** It is the only line that is about *her*, so it is the note',
-  '  she carries into the chat.',
-  '- **Object last of all.** It is the handover, and the one line that has to survive into the sale.',
+  '| Cut | Opens on | Doing |',
+  '|---|---|---|',
+  '| 3 | *So…* | gives the answer |',
+  '| 4 | *And…* | deepens it |',
+  '| 5 | *But…* | turns it |',
+  '| 6 | *That is why…* | explains her experience |',
+  '| 7 | *Let me look closer at…* | opens the next layer |',
   '',
-  '**4 · Gate it, then show a human.**',
+  'Each line must make the next line necessary. Measured on the pre-2026-08-19 batch, only',
+  '**121 of 1,020** middle bubbles opened on a connective — 12%. That is what made 255 reveals',
+  'read as seven separate copywriting lines sitting next to each other.',
+  '',
+  '**5 · Gate it, then show a human.**',
   '',
   '```bash',
-  'node scripts/preview-rewrite.mjs --html    # draft JSON -> PREVIEW.html, exits 1 if unwirable',
+  'node scripts/check-draft.mjs <hook>                                  # readability + comprehension',
+  'npx tsx scripts/dryrun-drafts.mts                                    # the shared registry guards',
+  'npx vitest run --config scripts/vitest.drafts.config.ts tests/tarot-  # the REAL guard files',
+  'node scripts/preview-rewrite.mjs --html                              # draft JSON -> PREVIEW.html',
   '```',
   '',
-  '### The three rules that decide whether it works',
+  '⚠️ **A green gate on an UNWIRED family means nothing.** The three money drafts passed both',
+  'gates for a day while being checked by neither: their hooks are not in the registry, so every',
+  'deck-level guard skipped them and the run still printed a tick. Before trusting a gate on a new',
+  'family, feed it a deliberate violation and watch it fail.',
   '',
-  '🔴 **Bubble 3 is about her PERCEPTION, never his heart.** Not delicacy — the only version she',
-  'believes, and what the per-hook bans require.',
+  '### The four rules that decide whether it works',
   '',
-  '🔴 **Bubble 7 names an OBSTRUCTION, not an absence.** "What he never said" cannot be cleared;',
-  '"what sits between you and a straight answer" can. Act 1 sells an **Energy Clearing Ritual**',
+  '🔴 **Cut 3 answers, and the CARD is the warrant.** "He loves you" from a stranger is what her',
+  'friends say for free. "You pulled the card of intention, so the warmth was not one-sided" is',
+  'evidence-shaped, and she believes it. Never make HER FEELING the proof ("a feeling that strong',
+  'must be returned") — that is flattery that licences her to act on a guess.',
+  '',
+  '🔴 **Cut 6 describes, it does not announce.** "You have been reading it right" is the psychic',
+  'ruling on her. "That is why he can feel close one moment and guarded the next" is her own week',
+  'handed back to her. She believes the second because it describes her life, not because someone',
+  'certified her. Same rule kills "you did not make it up" and "you are not crazy" — those repeat',
+  'the insult while denying it. Prefer "it was not one-sided", "he felt the shift too".',
+  '',
+  '🔴 **Cut 7 names an OBSTRUCTION, and it is NARROW.** "What he never said" cannot be cleared;',
+  '"what goes up in him the moment this gets real" can. Act 1 sells an **Energy Clearing Ritual**',
   'that removes "the shadow that\'s been blocking your path", and',
   '`improve-v1/08-clearing-theme-coherence.md` found that clearing is SPRUNG at the pitch rather',
-  'than seeded. Bubble 7 is where it gets seeded — and the object goes between HER and what she',
-  'wants, because the love bucket frames every block as an impersonal thing in her path precisely',
-  'so that removing it blames nobody.',
+  'than seeded. Cut 7 is where it gets seeded. Narrow beats broad — "let me look closer at what is',
+  'between you" tells her nothing about what comes next; naming the exact unresolved cause makes',
+  'the next question obvious to her before Evelyn asks it.',
   '',
   '🔴 **The picture comes from the ART FILE, not from tarot convention.** She is looking at the',
   'card. A detail that is not there reads as a lie and costs the trust the line was added to buy.',
   '',
+  '### What may now be said, and what may not',
+  '',
+  'Loosened 2026-08-19. The rule is DIRECTIONAL: the half she came for is allowed, the half with a',
+  'victim is not. Nothing here was relaxed because it was inconvenient — each row is the answer the',
+  'ad already sold her.',
+  '',
+  '| Family | Now allowed | Still banned |',
+  '|---|---|---|',
+  '| real-feelings | "he loves you", "he feels it" | "he does not love you" |',
+  '| still-feels | it survived | "he has moved on", "he has forgotten you" |',
+  '| reunion · reconciliation | it is not over | "he is gone for good", "it is over" |',
+  '| loneliness · searching | this is not forever; fate language | "you will always be alone"; suffering made purposeful |',
+  '| commitment | "he will commit" | "he never will"; a ruling on his capacity |',
+  '| soulmate-where · after-loss | the arrival promise, "closer than you think" | a PLACE; mediumship |',
+  '| missing-him | the hurt will pass | "you will always hurt" |',
+  '| twin-flame | "he feels it too" | the runner script; a promised return |',
+  '| pulling-away | reassurance | "he is losing interest" |',
+  '',
+  '**Banned everywhere, and not up for negotiation:** a DATE (the only claim she can check, and a',
+  'failed one is a refund) · a quantified probability · mediumship · naming a real person as the',
+  'block · blaming or pathologising her · platform-flagged words.',
+  '',
+  '**Deliberately NOT loosened.** `honesty` and `hidden-intuition` keep both doors shut — "he is',
+  'lying" convicts a real man and "he is telling the truth" vouches for one who may be defrauding',
+  'her, and neither is the hopeful direction. `why-he-left` and `missing-him` keep the motive ban,',
+  'because a man who falls silent may have died and supplying a reason presumes he chose it.',
+  '`cards-honest` / `cards-cheating` / `cards-real-person` / `cards-misled` keep the full interior',
+  'ban for the same reason. **All seven money bans stand** — the directional argument does not',
+  'reach a family where she can act on the reading with her actual savings.',
+  '',
+  '⛔ **`cards-feels` and `cards-return` are OUT of the migration.** `cards-feels` is the control',
+  'for two live comparisons and its baseline already broke once on 2026-08-19. A second break',
+  'inside the same month makes both numbers unreadable.',
+  '',
+  '### On a lander with no man in it',
+  '',
+  'Cuts 4, 5 and 6 are written around a person. Money, loneliness and the self-frame hooks have',
+  'nobody to contradict, so the hinge moves — it does not disappear. For money the VOC supplies it',
+  "outright (*\"I feel I am close to money only to have it vanish\"*):",
+  '',
+  '| Cut | With a man | Without one |',
+  '|---|---|---|',
+  '| 3 | her fear about him | her fear about **herself** — "it was never you" |',
+  '| 4 | what he holds back | where the thing in the way actually sits |',
+  '| 5 | feeling against action | **earning against keeping** |',
+  '| 6 | hot and cold | the **near-miss** — "it goes just as it is about to land" |',
+  '',
   '### What the arc is doing',
   '',
-  '> She sees the card is real → she picked it, so the reading is hers → her instinct was right →',
-  '> but something is in the way → **"I know exactly what needs to be cleared."**',
+  '> I see the card → this is what it means for your question → here is the answer you needed →',
+  '> but there is another layer → here is the contradiction → that explains what you have lived →',
+  '> **"I know exactly what needs to be cleared."**',
   '',
-  'Bubbles 1-6 buy her trust. Bubble 7 hands the sale a thread to pull.',
+  'Cuts 1-6 buy her trust. Cut 7 hands the sale a thread to pull.',
   '',
   '---',
   '',
@@ -278,24 +357,31 @@ if (has('--checklist')) {
   // A worked example, READ LIVE FROM THE REGISTRY rather than pasted — so it can never
   // drift from what the funnel actually sends, which is the failure every hand-written
   // example in this repo eventually hit.
-  const JOBS = ['THE PICTURE', 'THE ECHO + THE PULL', 'THE PAYOFF', 'THE REASON WHY',
-                'THE GAP', 'THE ABSOLUTION', 'THE OBJECT']
+  const JOBS = ['THE PICTURE', 'THE BRIDGE', 'THE ANSWER', 'THE HIDDEN LAYER',
+                'THE CONTRADICTION', 'THE RECOGNITION', 'THE NEXT MYSTERY']
   // Written about the JOB, not the line, so it stays true whichever read is rendered.
   const WHY = [
     'She is looking at that card while she reads this. Every detail is on the art, so she checks it in one second without deciding to. That is the credit everything after it spends.',
-    'First half: she is on the right page. The second half is the one that matters — *her hand went*. The reading is now hers, not the card\'s.',
-    'Note what it certifies: **her evidence**. Not his heart. Say "he loves you" and she does not believe you — her friends say that for free.',
-    'Ties the payoff back to the card. Without this, bubble 3 is a compliment. With it, it is evidence.',
-    'She now has something real **and** something unfinished. This is what keeps the question alive.',
-    'The accusation she walked in with — *you are overthinking it, you are inventing it* — named and refused. The line she will remember.',
-    'Not an absence. Something is **sitting between** them. An object. Objects can be moved.',
+    'Her question back, so she knows she is on the right page — then the card in plain English, because that is what makes the next line evidence rather than an opinion.',
+    'The clearest line on the page, and it answers the fear rather than the headline. The CARD carries it; a stranger asserting it carries nothing.',
+    'Adds something she could not see. If this restates cut 3 in different words, the read has stalled and she can feel it.',
+    'The turn. Why his behaviour does not match the answer she just got — this is what is left unresolved, and it is the only reason there is anything to buy.',
+    'Her own week handed back to her. Not "you were right about him" (that is the psychic ruling on her) but the specific thing she has watched happen.',
+    'Not an absence. Something is **sitting between** them, named narrowly enough that she already knows what the next question is. Objects can be moved.',
   ]
   // Prefer a DRAFT, because drafts are written to the formula by construction. The wired
   // landers predate it — cards-return's middle bubbles were written before "the gap" and
   // "the reason why" had names, so it maps loosely and makes a poor demonstration.
   let ex = null, exLabel = null, exHead = null
   try {
-    const d = [...drafted][0]
+    // Prefer a lander already written to the Natural Tarot-Cut, so the worked example
+    // demonstrates the framework above rather than the shape it replaced.
+    const pick = [...drafted].find((h) => {
+      try {
+        return /Natural Tarot-Cut/.test(readFileSync(new URL(`${h}.json`, DRAFTS_DIR), 'utf8'))
+      } catch { return false }
+    })
+    const d = pick ?? [...drafted][0]
     if (d) {
       const j = JSON.parse(readFileSync(new URL(`${d}.json`, DRAFTS_DIR), 'utf8'))
       const deck = Object.keys(j.decks)[0]
@@ -322,13 +408,13 @@ if (has('--checklist')) {
       out.push(WHY[i])
       out.push('')
     })
-    out.push('### Why bubble 7 matters — the thread landing')
+    out.push('### Why cut 7 matters — the thread landing')
     out.push('')
     out.push('Forty turns later Evelyn says this, and it is already in the code:')
     out.push('')
     for (const line of pitchLines()) out.push(`> "${line}"`)
     out.push('')
-    out.push('With an ABSENCE in bubble 7, *"the shadow that\'s been blocking your path"* is the first')
+    out.push('With an ABSENCE in cut 7, *"the shadow that\'s been blocking your path"* is the first')
     out.push('she has heard of any shadow. A block appears at minute eight and a ritual is sold to')
     out.push('remove it.')
     out.push('')
@@ -338,28 +424,30 @@ if (has('--checklist')) {
     out.push('')
     out.push('### The whole arc')
     out.push('')
-    out.push('| Bubble | What she does |')
+    out.push('| Cut | What she does |')
     out.push('|---|---|')
     out.push("| 1 | *That's really what's on the card* |")
     out.push('| 2 | *I picked this one* |')
-    out.push("| 3–4 | *So I wasn't imagining it* |")
-    out.push("| 5 | *But something's still missing* |")
-    out.push("| 6 | *I wasn't crazy after all* |")
-    out.push("| 7 | *…something's in the way* |")
+    out.push('| 3 | *So there IS an answer* |')
+    out.push("| 4 | *And there's more to it than I knew* |")
+    out.push("| 5 | *But that's not the whole of it* |")
+    out.push("| 6 | *That's exactly what my week has been like* |")
+    out.push("| 7 | *…so THAT's what's in the way* |")
     out.push('| ↓ | **"I know exactly what needs to be cleared."** |')
     out.push('')
-    out.push('Bubbles 1–6 buy her trust. Bubble 7 hands the sale a thread to pull. That is the')
+    out.push('Cuts 1–6 buy her trust. Cut 7 hands the sale a thread to pull. That is the')
     out.push('difference between a lander that validates her and a lander that sells.')
     out.push('')
-    out.push('⚠️ **Bubble 7 is the one piece with no evidence behind it.** Bubbles 1–6 were checked')
+    out.push('⚠️ **Cut 7 is the one piece with no evidence behind it.** Cuts 1–6 were checked')
     out.push('against 400 real concerns, and that check changed the copy. The obstruction framing is')
     out.push('reasoning from how the offer works, not an observation — and at this traffic')
     out.push('(96% on three hooks) a test will not settle it either. Ship it knowing that.')
     out.push('')
-    out.push('⚠️ **The already-wired landers map only loosely.** `cards-return` and')
-    out.push('`cards-will-commit` were written before the middle bubbles had names, so they carry the')
-    out.push('payoff and the absolution but not always a distinct gap. They pass the gate and they')
-    out.push('read well; they are just not the thing to copy. Copy the shape above.')
+    out.push('⚠️ **Most drafts in the queue predate this framework.** Everything written before')
+    out.push('2026-08-19 — the wired `cards-return` / `cards-will-commit` / `cards-feels`, and the bulk')
+    out.push('of the drafts awaiting sign-off — was built to REFUSE rather than answer, because the')
+    out.push('guards required it. They pass the gate and they read well. They are not the thing to')
+    out.push('copy. Copy the worked example above, which is written to the cuts.')
     out.push('')
     out.push('---')
     out.push('')
@@ -379,7 +467,13 @@ if (has('--checklist')) {
     // Not every family has one. decode-him / trust / self-frame are the SEED hooks — they
     // predate the per-family guard convention, so the busiest copy on the funnel is also
     // the least guarded. Say that out loud rather than linking a file that is not there.
-    const guard = `tests/tarot-${f.fam}-copy.test.ts`
+    // The four money angles share ONE guard file — they take the same seven bans, and what
+    // differs between them is the reporting label and the per-hook finding, not the guard.
+    // Without this the doc claimed the money copy had no guard file and was "the least
+    // protected on the funnel", which was the opposite of true.
+    const guard = f.fam.startsWith('money-')
+      ? 'tests/tarot-money-block-copy.test.ts'
+      : `tests/tarot-${f.fam}-copy.test.ts`
     out.push(existsSync(new URL(`../../../../${guard}`, import.meta.url))
       ? `\`${guard}\` — read it BEFORE rewriting; it carries bans, and some copy is pinned verbatim.`
       : `⚠️ **No dedicated guard file** (\`${guard}\` does not exist) — a seed family, written before the per-family convention. Only the generic guards apply, so this copy is the least protected on the funnel.`)
@@ -413,32 +507,40 @@ if (has('--checklist')) {
   out.push('🔴 **The 33 reveals in that draft must be REWRITTEN, not just wired.** Scored against this')
   out.push('gate they carry ~176 problems — the same failure rate `cards-return` had before its')
   out.push('rewrite. Track B\'s copy work is the four steps above, run on 11 new hooks: pull the VOC,')
-  out.push('find the intent, write the seven bubbles, gate and preview.')
+  out.push('find the fear under the question, write the seven cuts, chain them, gate and preview.')
   out.push('')
   out.push('Two of the steps land differently on money and are worth flagging before drafting:')
   out.push('')
   out.push('- **Step 1 has no data yet.** These hooks have never run, so `voc-by-hook.mjs` returns')
   out.push('  nothing. The nearest real corpus is `docs/v1-money-bucket-voc.md` — 10,514 money')
   out.push('  concerns from V1, already themed. Read that instead of skipping the step.')
-  out.push('- **Bubble 7 is easier here, and bubble 3 is harder.** The block is the headline, so the')
-  out.push('  object practically writes itself. But the payoff has to certify her noticing WITHOUT')
-  out.push('  conceding the self-blame the `money-energy` headlines offer ("Is my energy blocking my')
-  out.push('  money?") — affirm the noticing, refuse the fault, exactly as `hidden-intuition` splits it.')
+  out.push('- **Cut 7 is easier here, and cuts 4-6 are harder.** The block IS the headline, so the')
+  out.push('  obstruction practically writes itself. The hinge is the problem: cuts 4, 5 and 6 are')
+  out.push('  written around a person and there is nobody here to contradict. Use the money')
+  out.push('  translation in the framework above — cut 3 answers her fear about HERSELF ("it was')
+  out.push('  never you"), cut 5 becomes the EARNING against the KEEPING, and cut 6 names the')
+  out.push("  near-miss, which is the VOC's own sentence: *\"I feel I am close to money only to have")
+  out.push('  it vanish."*')
+  out.push('- **Cut 3 must not concede the self-blame the `money-energy` headlines offer** ("Is my')
+  out.push('  energy blocking my money?"). Affirm the noticing, refuse the fault, exactly as')
+  out.push('  `hidden-intuition` splits it — and note that **none of the seven money bans was')
+  out.push('  loosened** on 2026-08-19. The directional argument does not reach a family where she')
+  out.push('  can act on the reading with her own savings.')
   out.push('')
   out.push('**Structural work these 11 need that no love lander did:**')
   out.push('')
-  out.push('- [ ] `hookToBucket()` returns `\'money\'` for the 11 — `tarotReads.ts`, hardcoded `\'love\'` today.')
+  out.push('- [x] `hookToBucket()` returns `\'money\'` for the 11 — done 2026-08-19, `tarotReads.ts`.')
   out.push('      This is the load-bearing one: it sets `userData.bucket`, which steers the whole V1 chat')
   out.push('      after the opener. V1 already has a full money path (`MONEY_BUCKET_PROMPT`), so the flip')
   out.push('      routes her into an established path rather than needing new prompt work.')
-  out.push('- [ ] Per-hook tap instruction — an optional `hookInstruction` on `CardSetConfig`, read by')
-  out.push('      `TarotBridge.tsx`. The deck-level line says *"Think of the man on your mind."*')
-  out.push('- [ ] Money frame in `buildTarotReflectPrompt` — **insurance, not a pillar.** Version C is')
+  out.push('- [x] Per-hook tap instruction — done 2026-08-19: `hookInstruction` on `CardSetConfig`, read via')
+  out.push('      `instructionFor()` in `TarotBridge.tsx`. The deck line says *"Think of the man on your mind."*')
+  out.push('- [x] Money frame in `buildTarotReflectPrompt` — done 2026-08-19, tested FIRST. **Insurance, not a pillar.** Version C is')
   out.push('      unreachable on tarot today (`/fb-tarot/c` 302s to `/b`), so this only runs if a hook is')
   out.push('      ever enrolled in the version experiment.')
-  out.push('- [ ] 4 angles, 4 family arrays, `TAROT_HOOKS` / `HEADLINES` / `TAROT_QUESTION`,')
+  out.push('- [x] 4 angles, 4 family arrays, `TAROT_HOOKS` / `HEADLINES` / `TAROT_QUESTION`,')
   out.push('      `TAROT_HOOK_CONTEXT` / `TAROT_HOOK_TENDENCY`, `validHooks` in `routes.ts`, `STATUS.md`.')
-  out.push('- [ ] `tests/tarot-money-block-copy.test.ts` — the 7 bans (no amount/date/source · never name a')
+  out.push('- [x] `tests/tarot-money-block-copy.test.ts` — written 2026-08-19, and every one of the 7 bans was fed a deliberate violation and fired (no amount/date/source · never name a')
   out.push('      person as the block · no financial advice · never blame her · never "too late" and never a')
   out.push('      promised arrival · never rule on God · never presume her finances).')
   out.push('')

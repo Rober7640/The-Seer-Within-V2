@@ -1,0 +1,36 @@
+{
+  "hook": "cards-where-soulmate",
+  "headline": "Where is my soulmate right now?",
+  "note": "🔄 REWRITTEN 2026-08-19 to the Natural Tarot-Cut framework. Bubbles 3-6 run as ONE causal chain — so / and / but / that's why — and the read ANSWERS. The art line and the bridge are unchanged. Every ban in this note still stands.\n\nFace-down only (return-mhf). 🔴 NO LOCATION, EVER — never place him, never name a setting, never 'someone you already know', never 'crossed paths before'. 🔴 NO PROXIMITY CLAIM: 'closer than you think' is the INCUMBENT cards-soulmate's answer, and if this family repeats it the two landers are the same lander while the dashboard still shows two rows. 🔴 NO STRATEGY — get out there, put yourself out there, stop looking, work on yourself first, 'it will happen when you…' are all directives. 🔴 Never her fault: no walls, no baggage, no standards, no 'too picky'.\n\nFinding: the not-yet is not a DISTANCE. She turned an unanswerable ache into a geography question because geography felt answerable — so the read hands back the real shape of it without ever naming a place.",
+  "decks": {
+    "return-mhf": {
+      "a": [
+        "You turned the Magician, dear. Look — the blade on his table lies flat, pointing away from him.",
+        "You asked where your soulmate is right now. Your hand went to the man who makes rather than finds.",
+        "So this isn't a distance, dear. Nothing is keeping him miles from you.",
+        "And nothing on that table came from far away, dear.",
+        "But I won't give you an address, dear. There's none on this card.",
+        "That's why looking harder has never helped, dear. You were looking outward.",
+        "Let me look closer at what has been standing in that gap…"
+      ],
+      "b": [
+        "You turned the Hanged Man, dear. Look — his belt hangs down away from his waist.",
+        "You asked where your soulmate is right now. Your hand went to the card with no ground in it.",
+        "So there's no place on this card, dear. None at all.",
+        "And he hangs with no road and no map behind him, dear.",
+        "But you made it a somewhere else, dear. That felt easier to hold.",
+        "That's why you've thought about moving, dear. A new town, a fresh start.",
+        "Let me look closer at what's actually in your way…"
+      ],
+      "c": [
+        "You turned the Fool, dear. Look — his right foot is flat and his left one is lifting.",
+        "You asked where your soulmate is right now. Your hand went to the one with no fixed end.",
+        "So you're still moving, dear. You have not stopped at all.",
+        "And he's mid-step, dear, going somewhere he can't name yet.",
+        "But not knowing where isn't the same as stopping, dear.",
+        "That's why those years feel wasted to you, dear. The road was under you.",
+        "Let me look closer at what has been slowing your road…"
+      ]
+    }
+  }
+}

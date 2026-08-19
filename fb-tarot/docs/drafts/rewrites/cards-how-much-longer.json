@@ -1,0 +1,36 @@
+{
+  "hook": "cards-how-much-longer",
+  "headline": "How much longer will something keep blocking my money?",
+  "note": "🆕 TRACK B — the first NON-LOVE family on /fb-tarot. Face-down return-mhf, no new art. Written 2026-08-19 straight to the Natural Tarot-Cut framework, so bubbles 3-6 run as ONE causal chain (so / and / but / that's why). Money translation: cut 3 answers her fear about HERSELF (\"it was never you\"), cut 4 says where the thing in the way actually sits, cut 5 is EARNING against KEEPING, cut 6 is the NEAR-MISS.\n\n🔴 SEVEN BANS, three of which exist nowhere else on the funnel, and NONE was loosened with the love families. No amount, no date, no SOURCE (no inheritance, no windfall, no legal case — she can act on an invented source with her actual savings). 🔴🔴 Never name a person as the block: the accusation lands on someone real inside a real family. 🔴🔴 No financial advice in any form — invest, sell, hold, take the pension, delay it, go back to work, stop working. This is the one ban where the harm is measured in her money. 🔴🔴 Never blame her: no poverty mindset, no 'you attract lack', no vibration, no deserving. 🔴 Never 'too late' and never a promised arrival. 🔴 Never presume the state of her finances — she said blocked, not broke.\n\n📊 Built on the NEAR-MISS, not on poverty — docs/v1-money-bucket-voc.md §3 says so outright ('The near-miss is the hook, not the poverty'): \"I sometimes feel I am close to money only to have it vanish\", \"Everything appears to be reaching me but doesn't\". That clears ban 7 for free.\n\n✅ GUARDED: tests/tarot-money-block-copy.test.ts now exists and runs against these drafts directly (the drafts setup can only patch hooks that are already in the registry, so an unwired family would otherwise be checked by nothing at all).\n\nTendency: a block does not run down like a clock — it lasts as long as it is left alone, so the honest answer is about what gets moved, not a number. 🔴 NEVER give a date, a timeframe or a season, even a soft one.",
+  "decks": {
+    "return-mhf": {
+      "a": [
+        "You turned the Magician, dear. Look — he could touch all four things without moving his feet.",
+        "You asked how much longer. Your hand went to the card of a person who acts.",
+        "So this isn't a wait, dear. It's a thing that has to be moved.",
+        "And every tool he needs is within reach, dear. Nothing is far off.",
+        "But no number from me, dear. A block doesn't run down like a clock.",
+        "That's why last year looked just like this one, dear. Nothing was touched.",
+        "Let me look closer at what has not been touched…"
+      ],
+      "b": [
+        "You turned the Hanged Man, dear. Look — he hangs quite still, without a swing in him.",
+        "You asked how much longer. Your hand went to the card of a hold that doesn't tire.",
+        "So a block doesn't run out, dear. It sits where it is.",
+        "And he hasn't moved an inch, dear, and nothing about him is tiring.",
+        "But I won't hand you a date, dear. A date would be a comfort I made up.",
+        "That's why nothing has changed on its own, dear. It waits to be moved.",
+        "Let me look closer at what is doing the holding…"
+      ],
+      "c": [
+        "You turned the Fool, dear. Look — his head is up, and his eyes are off the ground.",
+        "You asked how much longer. Your hand went to the card that doesn't count.",
+        "So this ends by moving, dear. Not by time running out.",
+        "And he counts nothing, dear. He steps, and the counting stops.",
+        "But you've been serving a sentence, dear. Nobody handed you one.",
+        "That's why counting has got you nowhere, dear. It was never a countdown.",
+        "Let me look closer at what has been standing in the way of that step…"
+      ]
+    }
+  }
+}

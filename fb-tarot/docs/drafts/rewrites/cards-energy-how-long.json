@@ -1,0 +1,36 @@
+{
+  "hook": "cards-energy-how-long",
+  "headline": "How long has my energy been working against my money?",
+  "note": "🆕 TRACK B — the first NON-LOVE family on /fb-tarot. Face-down return-mhf, no new art. Written 2026-08-19 straight to the Natural Tarot-Cut framework, so bubbles 3-6 run as ONE causal chain (so / and / but / that's why). Money translation: cut 3 answers her fear about HERSELF (\"it was never you\"), cut 4 says where the thing in the way actually sits, cut 5 is EARNING against KEEPING, cut 6 is the NEAR-MISS.\n\n🔴 SEVEN BANS, three of which exist nowhere else on the funnel, and NONE was loosened with the love families. No amount, no date, no SOURCE (no inheritance, no windfall, no legal case — she can act on an invented source with her actual savings). 🔴🔴 Never name a person as the block: the accusation lands on someone real inside a real family. 🔴🔴 No financial advice in any form — invest, sell, hold, take the pension, delay it, go back to work, stop working. This is the one ban where the harm is measured in her money. 🔴🔴 Never blame her: no poverty mindset, no 'you attract lack', no vibration, no deserving. 🔴 Never 'too late' and never a promised arrival. 🔴 Never presume the state of her finances — she said blocked, not broke.\n\n📊 Built on the NEAR-MISS, not on poverty — docs/v1-money-bucket-voc.md §3 says so outright ('The near-miss is the hook, not the poverty'): \"I sometimes feel I am close to money only to have it vanish\", \"Everything appears to be reaching me but doesn't\". That clears ban 7 for free.\n\n✅ GUARDED: tests/tarot-money-block-copy.test.ts now exists and runs against these drafts directly (the drafts setup can only patch hooks that are already in the registry, so an unwired family would otherwise be checked by nothing at all).\n\nTendency: her energy has not been working against her at all — refuse the premise gently — and whatever settled on this settled long ago and was never named. 🔴 NEVER give a length of time and never date it to an event in her life.",
+  "decks": {
+    "return-mhf": {
+      "a": [
+        "You turned the Magician, dear. Look — the wand is the only thing he's holding.",
+        "You asked how long your energy has worked against you. Your hand went to the card of aim.",
+        "So it never once did, dear. Your aim has been right the whole time.",
+        "And every year of it went at something, dear. It went in straight.",
+        "But something at the far end kept taking it in, dear.",
+        "That's why the work vanished, dear. You started to blame yourself.",
+        "Let me look closer at how far back that reaches…"
+      ],
+      "b": [
+        "You turned the Hanged Man, dear. Look — the rope is tied neatly, not knotted in a hurry.",
+        "You asked how long your energy has worked against you. Your hand went to the older card.",
+        "So this began before you started keeping score, dear.",
+        "And whatever settled here settled long ago, dear. No one named it.",
+        "But I won't give you a count of years, dear. Nobody honest would.",
+        "That's why no day marks the start, dear. There isn't one to find.",
+        "Let me look closer at when it settled…"
+      ],
+      "c": [
+        "You turned the Fool, dear. Look — his belt is tied in a simple knot at the front.",
+        "You asked how long the energy has worked against your money. Your hand went to the card that keeps no record.",
+        "So nothing has been running against you, dear. Nothing at all.",
+        "And this card carries no account of your years, dear. None.",
+        "But a bare field and a poisoned one are different things, dear.",
+        "That's why waste is the word you reach for, dear. Nothing was spoiled.",
+        "Let me look closer at why the ground has stayed bare…"
+      ]
+    }
+  }
+}

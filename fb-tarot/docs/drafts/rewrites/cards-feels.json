@@ -1,7 +1,7 @@
 {
   "hook": "cards-feels",
   "headline": "How does he really feel about you?",
-  "note": "Card-sets differ by deck, so the copy does too: Magician/Hanged Man/Fool (return-mhf + arcana-mfh), Sun/Moon/Tower (decode-him), Emperor/Empress/Fool (arcana-eef). The two Magician decks share one set, verb swapped. 🔴 decode-him's beat 1s are written fresh rather than kept: all four hooks on that deck currently open with the SAME line per card (no guard file catches it — see the duplication note in the checklist).\n\n🔴 BEAT 4 REWRITTEN 2026-08-19 — it must name an OBSTRUCTION, not an absence. Act 1 of the trilogy sells an Energy Clearing Ritual that removes \"the shadow that's been blocking your path\"; improve-v1/08-clearing-theme-coherence.md found that clearing is SPRUNG at the pitch rather than seeded. This is where it gets seeded, and the object goes between HER and what she wants — the love bucket frames every block as an impersonal thing in her path precisely so removing it blames nobody. \"What he never said\" cannot be cleared; \"what's sitting between you and the words\" can.\n\n🔴 BEAT 3 CORRECTED 2026-08-19. tests/tarot-real-feelings-copy.test.ts fired — a deliberate tripwire on this hook, because cards-feels is the CONTROL for two comparisons. The first rewrite dropped the old copy's \"leans toward\" hedge to reach grade 5, which turned a tendency into a flat verdict on his heart (\"He does feel it, dear\") — exactly what this hook's TAROT_HOOK_TENDENCY bans. Plain English did not require it: \"You haven't been reading coldness, dear. You've been reading a hold.\" says the same thing at the same grade, about HER reading rather than his interior. Rule applied: no sentence may take \"he\" as the subject of a feeling verb stated as fact; negations (\"doesn't mean he's cold\") and card-tendency forms (\"it reads as\") are fine.",
+  "note": "⛔ The decode-him DECK was retired 2026-08-19 (operator call) — its strip art was the fb-palm thumb image and no ad ever pointed at it. Its block has been removed from this draft; the arcana and return-mhf decks are unaffected.\n\nCard-sets differ by deck, so the copy does too: Magician/Hanged Man/Fool (return-mhf + arcana-mfh), Sun/Moon/Tower (decode-him), Emperor/Empress/Fool (arcana-eef). The two Magician decks share one set, verb swapped. 🔴 decode-him's beat 1s are written fresh rather than kept: all four hooks on that deck currently open with the SAME line per card (no guard file catches it — see the duplication note in the checklist).\n\n🔴 BEAT 4 REWRITTEN 2026-08-19 — it must name an OBSTRUCTION, not an absence. Act 1 of the trilogy sells an Energy Clearing Ritual that removes \"the shadow that's been blocking your path\"; improve-v1/08-clearing-theme-coherence.md found that clearing is SPRUNG at the pitch rather than seeded. This is where it gets seeded, and the object goes between HER and what she wants — the love bucket frames every block as an impersonal thing in her path precisely so removing it blames nobody. \"What he never said\" cannot be cleared; \"what's sitting between you and the words\" can.\n\n🔴 BEAT 3 CORRECTED 2026-08-19. tests/tarot-real-feelings-copy.test.ts fired — a deliberate tripwire on this hook, because cards-feels is the CONTROL for two comparisons. The first rewrite dropped the old copy's \"leans toward\" hedge to reach grade 5, which turned a tendency into a flat verdict on his heart (\"He does feel it, dear\") — exactly what this hook's TAROT_HOOK_TENDENCY bans. Plain English did not require it: \"You haven't been reading coldness, dear. You've been reading a hold.\" says the same thing at the same grade, about HER reading rather than his interior. Rule applied: no sentence may take \"he\" as the subject of a feeling verb stated as fact; negations (\"doesn't mean he's cold\") and card-tendency forms (\"it reads as\") are fine.",
   "decks": {
     "return-mhf": {
       "a": [
@@ -59,35 +59,6 @@
         "So he hasn't worked out where this goes.",
         "That's a different thing from not caring, dear. You've felt both at once.",
         "Let me look closer at what keeps this from settling…"
-      ]
-    },
-    "decode-him": {
-      "a": [
-        "You turned the Sun, dear — the warmest card in this deck.",
-        "You asked how he really feels. Your hand went to the open card, not the guarded one.",
-        "The Sun hands you no confession, dear.",
-        "It says the warmth you felt from him was real.",
-        "Not made up. Not you being soft with yourself.",
-        "Your read on him is truer than the doubt.",
-        "Let me look closer at what's sitting between you and hearing it…"
-      ],
-      "b": [
-        "You turned the Moon, dear — the card that shows things by half.",
-        "You asked how he really feels. Your hand went to the half-lit card, not the bright one.",
-        "The Moon doesn't mean he's cold, dear.",
-        "It means what you sensed is real, and only half said out loud.",
-        "You keep sensing there's more than he shows you.",
-        "There is. That's you reading him, not you inventing him.",
-        "Let me look closer at what keeps getting between you and the rest…"
-      ],
-      "c": [
-        "You turned the Tower, dear — the card of the ground shifting.",
-        "You asked how he really feels. Your hand went to the card of what's changing.",
-        "The Tower doesn't mean his feelings fell down, dear.",
-        "It means the ground under this is moving.",
-        "Something between you has felt shaky. You felt it too.",
-        "That's real movement. It isn't in your head.",
-        "Let me look closer at what stands between you and steady ground…"
       ]
     },
     "arcana-eef": {

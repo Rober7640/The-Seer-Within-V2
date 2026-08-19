@@ -1,0 +1,36 @@
+{
+  "hook": "cards-lied-to",
+  "headline": "Am I being lied to?",
+  "note": "🔄 REWRITTEN 2026-08-19 to the Natural Tarot-Cut framework. Bubbles 3-6 run as ONE causal chain — so / and / but / that's why — and the read ANSWERS. The art line and the bridge are unchanged. Every ban in this note still stands.\n\nFace-down only (return-mhf). 🔴 NO VERDICT IN EITHER DIRECTION. These three name an untruth outright, so both answers are live harms: 'he lied to you' is an accusation against a real man on no evidence, and 'he is telling you the truth' is a reassurance the funnel has no standing to give — and on this audience the second is the more dangerous of the two. 🔴 Never blame her judgment: naive, gullible, too trusting, 'should have known' are all out. 🔴 No timeframe.\n\nFinding, kept distinct from cards-truth: she has already checked her own read three times, and the checking is the tell. What can be affirmed is the instrument — not the finding it reached.",
+  "decks": {
+    "return-mhf": {
+      "a": [
+        "You turned the Magician, dear. Look — his belt sits low and dark against the red robe.",
+        "You asked if you're being lied to. Your hand went to the man with a practised hand.",
+        "So no honest reader can settle this for you, dear. I won't pretend.",
+        "And a hand that practised is hard to read from outside, dear.",
+        "But you've gone over this again and again, dear. Something snagged.",
+        "That's why you return to it, dear. Your ear caught on something.",
+        "Let me look closer at what your ear keeps catching on…"
+      ],
+      "b": [
+        "You turned the Hanged Man, dear. Look — his knees are bent and one is behind the other.",
+        "You asked if you're being lied to. Your hand went to the card that holds a thing open.",
+        "So the question won't resolve, dear. Not from where you stand.",
+        "And half the shape is behind the other half, dear.",
+        "But you can't see round it, dear, and neither can I.",
+        "That's why the choice sits wrong, dear. You've had half a picture.",
+        "Let me look closer at what has been hiding the other half…"
+      ],
+      "c": [
+        "You turned the Fool, dear. Look — his sleeve ends in a wide pale cuff.",
+        "You asked if you're being lied to. Your hand went to the one with nothing up his sleeve.",
+        "So you wanted someone with nothing up the sleeve, dear.",
+        "And he's open, dear. Plain, and carrying no trick at all.",
+        "But that's exactly what's been missing, dear. I think you know it.",
+        "That's why wanting it plain feels like blame, dear. It isn't blame.",
+        "Let me look closer at what sits between you and plain dealing…"
+      ]
+    }
+  }
+}

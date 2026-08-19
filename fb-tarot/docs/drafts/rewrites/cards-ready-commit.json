@@ -1,0 +1,65 @@
+{
+  "hook": "cards-ready-commit",
+  "headline": "Is he ever going to be ready for real commitment?",
+  "note": "🔄 REWRITTEN 2026-08-19 to the Natural Tarot-Cut framework. Bubbles 3-6 run as ONE causal chain — so / and / but / that's why — and the read ANSWERS. The art line and the bridge are unchanged. Every ban in this note still stands.\n\nOn the two Magician/Hanged Man/Fool decks — one set of copy, verb swapped ('turned' face-down, 'chose' face-up).\n\n🔴 THESE ASK FOR A PREDICTION OUTRIGHT, which is the exact thing the funnel forbids, so the no-verdict rule runs in BOTH directions plus a no-timeframe rule: 'he will, give it time' reads as a promise and 'he never will' is a pronouncement on a man she loves. 🔴 The bans in tests/tarot-commitment-copy.test.ts are WHOLE-BEAT rather than clause-level, so 'not enough' and 'too much' are unavailable even inside a refusal — the usual absolution form had to be rebuilt without them.\n\nFinding: the GAP between what SHE is ready for and where HE is standing is real information — and her readiness is legitimate rather than impatience. Kept deliberately distinct from cards-twin-ready, which is its measured pair in tests/tarot-twin-flame-copy.test.ts and may share no 6-word run with it.",
+  "decks": {
+    "return-mhf": {
+      "a": [
+        "You turned the Magician, dear. Look — the table hides him from the waist down.",
+        "You asked if he will be ready for real commitment. Your hand went to the man who builds.",
+        "So he will get there, dear. This card is a man who builds things.",
+        "And the making of it is already in his hands, dear.",
+        "But the table hides him from the waist down. You can't see his footing.",
+        "That's why he can talk about a future, dear. He never steps toward it.",
+        "Let me look closer at what sits in the gap between you…"
+      ],
+      "b": [
+        "You turned the Hanged Man, dear. Look — one shoe points down, and the other points out sideways.",
+        "You asked if he will be ready for real commitment. Your hand went to the card that stops the clock.",
+        "So he has stopped in one spot, dear. Stopped is not finished.",
+        "And look at his feet. One shoe points down, one points off sideways.",
+        "But I won't name a day for you, dear. There's no day on this card.",
+        "That's why it stalls at the very same place, dear, every single time.",
+        "Let me look closer at what keeps stopping this at the same spot…"
+      ],
+      "c": [
+        "You turned the Fool, dear. Look — a small circle floats above him, next to a big bright sun.",
+        "You asked if he will be ready for real commitment. Your hand went to the one who hasn't chosen.",
+        "So nothing has been chosen yet, dear. Nothing has been ruled out either.",
+        "And he's stepping out with no one thing in mind, dear.",
+        "But you know exactly what you're ready for. That's the difference here.",
+        "That's why you wait for him to catch up, dear. You got there first.",
+        "Let me look closer at what stands between you and a real choice…"
+      ]
+    },
+    "arcana-mfh": {
+      "a": [
+        "You chose the Magician, dear. Look — the table hides him from the waist down.",
+        "You asked if he will be ready for real commitment. Your hand went to the man who builds.",
+        "So he will get there, dear. This card is a man who builds things.",
+        "And the making of it is already in his hands, dear.",
+        "But the table hides him from the waist down. You can't see his footing.",
+        "That's why he can talk about a future, dear. He never steps toward it.",
+        "Let me look closer at what sits in the gap between you…"
+      ],
+      "b": [
+        "You chose the Hanged Man, dear. Look — one shoe points down, and the other points out sideways.",
+        "You asked if he will be ready for real commitment. Your hand went to the card that stops the clock.",
+        "So he has stopped in one spot, dear. Stopped is not finished.",
+        "And look at his feet. One shoe points down, one points off sideways.",
+        "But I won't name a day for you, dear. There's no day on this card.",
+        "That's why it stalls at the very same place, dear, every single time.",
+        "Let me look closer at what keeps stopping this at the same spot…"
+      ],
+      "c": [
+        "You chose the Fool, dear. Look — a small circle floats above him, next to a big bright sun.",
+        "You asked if he will be ready for real commitment. Your hand went to the one who hasn't chosen.",
+        "So nothing has been chosen yet, dear. Nothing has been ruled out either.",
+        "And he's stepping out with no one thing in mind, dear.",
+        "But you know exactly what you're ready for. That's the difference here.",
+        "That's why you wait for him to catch up, dear. You got there first.",
+        "Let me look closer at what stands between you and a real choice…"
+      ]
+    }
+  }
+}

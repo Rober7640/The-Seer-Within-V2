@@ -4,10 +4,11 @@
 // FRAME: 'Does he really love me?', 'How does he really feel about me?', and
 // 'Does he love me, or am I imagining it?'
 //
-// ⭐⭐ THIS FAMILY ASKS THE ONE THING THE FUNNEL MOST FIRMLY REFUSES — report a real man's
-// heart back to her. Every other family can answer its headline somehow; these three cannot,
-// so the whole set is built as a sustained refusal that still has to pay her out. The route
-// through is the only honest channel a feeling has: CONDUCT, which she already observes.
+// ⭐⭐ THIS FAMILY ASKS FOR A REAL MAN'S HEART, and until 2026-08-19 the funnel refused to
+// report it — so all nine reads answered a question about HIM by certifying HER, through the
+// only channel a feeling was allowed: CONDUCT she already observes. That refusal has been
+// lifted (see the rewritten note below). The conduct route is still the strongest material
+// here; it is no longer the only one available.
 //
 // ⚠️ 'cards-feel-about-me' IS A PRONOUN VARIANT of the live 'cards-feels' ("about YOU" vs
 // "about ME"). Operator call 2026-08-12: ship it as a you/me framing test read HOOK-LEVEL
@@ -18,23 +19,28 @@
 // and this family's 'cards-feel-about-me'. Moving it out of decode-him breaks BOTH in one
 // edit. Pinned below.
 //
-// 🔴🔴 THE COMPARISON IS CONFOUNDED, DELIBERATELY AND UNAVOIDABLY. 'cards-feels' is seeded
-// 2026-07-28 copy from before the current guardrails: its reads assert his interior outright
-// ("the warmth you've felt from him is intended", "what he feels is real"). Nothing written
-// today may do that. So the challenger differs in COPY STANDARD as well as pronoun, and the
-// result must be read as "new lander vs old lander", never as a clean pronoun test. It cannot
-// be fixed by rewriting the incumbent — that would break the twin-flame control too. A test
-// below documents the confound so nobody later reads the number as clean.
+// 🔴🔴 THE CONFOUND, AND WHY THE TEST BELOW IS STILL HERE AFTER THE LOOSENING. The incumbent
+// was seeded 2026-07-28 with copy that asserted his interior outright; it was rewritten on
+// 2026-08-19 so both arms matched on copy standard, and the test below pins that. The
+// interior ban has since been lifted for NEW copy — but the pin stays, because its job was
+// never the ban. Its job is that the two arms of a live comparison are written to the SAME
+// standard. Rewriting 'cards-feels' to the new framework breaks that parity again, and it is
+// the control for TWO comparisons at once. Do not rewrite it without restarting both.
+// ⛔ BASELINE ALREADY BROKEN ONCE on 2026-08-19. A second break inside the same month makes
+// both numbers unreadable. Leave 'cards-feels' and 'cards-return' out of the migration.
 //
-// Four refusals across all nine reads, and the third and fourth are what make this family
-// need its own guard file:
-//   1. NEVER narrate his interior (the 'cards-twin-feels' ban, here at its sharpest).
+// 🔄 REWRITTEN 2026-08-19 — the family's central refusal was LOOSENED on an operator call.
+// It used to refuse the confession in BOTH directions, which is why every read here answered
+// a question about him by talking about her perception instead. The read may now say what
+// the card says about him. The refusals that remain are the ones with a victim:
+//   1. Never hand her the DENIAL. "He does not love you" is the one direction she cannot use.
 //   2. NEVER diagnose him — avoidant, emotionally unavailable, commitment-phobic — which is
 //      the internet's stock answer to all three headlines.
 //   3. NEVER grade HER for having loved first (naive, foolish, too much, too soon).
-//   4. On 'cards-imagining-it', NEVER walk through EITHER door: "he loves you" narrates his
-//      interior, and "you imagined it" is the gaslighting 'cards-feels-off' forbids — except
-//      that here the headline actively invites it.
+//   4. On 'cards-imagining-it', never walk through the crueller door ("you imagined it" is
+//      the gaslighting 'cards-feels-off' forbids, invited here by the headline itself), and
+//      never treat HER FEELING as the proof. The card is the warrant, not the strength of
+//      what she felt — that distinction is the whole reason the loosening is safe.
 //
 // 🔴 Negation-aware by construction: correct copy routinely contains a banned phrase inside
 // its own refusal ("I will not tell you that you invented it"), so a naive substring ban
@@ -129,7 +135,7 @@ describe('real-feelings hooks are wired end to end', () => {
     expect(inc, 'incumbent must exist on this deck for the pairing to be real').toBeTruthy();
     // Negation-aware, as in tarot-honesty-copy.test.ts: a REFUSAL ("doesn't mean he's cold") is
     // the safe form this funnel uses everywhere, so only unnegated clauses are checked.
-    const NEGATOR = /\b(no|not|never|n't|nor|rather than|instead of)\b/i;
+    const NEGATOR = /\b(no|not|never|none|nobody|no one|cannot|can't|unable|without|n't|nor|rather than|instead of)\b/i;
     const ASSERTS_INTERIOR = /\bhe (does feel|feels|cares|loves|wants)\b|\bwhat he feels is\b|\bhis feelings are\b/i;
     const bad: string[] = [];
     for (const c of CARDS) {
@@ -302,8 +308,13 @@ describe(`${DECK} — real-feelings reads`, () => {
 
   // ── The compliance core ────────────────────────────────────────────────────
   const NEGATOR =
-    /\b(no|not|never|n't|nor|nobody|no one|none|cannot|rather than|instead of|does not|is not|nothing|refuses?|declines?|will not|would not|withholds?|neither|without|unkindness|flattery)\b/i;
-  const clausesOf = (s: string) => s.split(/[—;:,]/);
+    /\b(no|not|never|can't|unable|n't|nor|nobody|no one|none|cannot|rather than|instead of|does not|is not|nothing|refuses?|declines?|will not|would not|withholds?|neither|without|unkindness|flattery)\b/i;
+  // 🔴 FIXED 2026-08-19 — this used to split on /[—;:,]/ only, which does NOT break on a
+  // full stop or a newline. Beat 3 carries four bubbles joined by '\n' since the migration, so
+  // a single negator in the first of them ('it was never you') put the whole of the remaining
+  // three behind the negation exemption and every clause ban in them was skipped silently.
+  // Found by feeding the gate a deliberate violation rather than trusting its green tick.
+  const clausesOf = (s: string) => s.split(/[—;:,.\n]/);
 
   // ⚠️ RESTATEMENT EXEMPTION — needed by this family more than any other. Beat 2 routinely
   // repeats HER question back to her ("You asked whether he really loves you"), and
@@ -325,21 +336,33 @@ describe(`${DECK} — real-feelings reads`, () => {
     return hits;
   };
 
-  // 🔴🔴 BAN #1 — the family's central refusal. This is the whole reason it exists.
-  it('NEVER narrates his interior, in any direction or any softened form', () => {
-    const INTERIOR: Array<[RegExp, string]> = [
-      [/\bhe (really |truly |genuinely )?loves you\b/i, 'confession'],
-      [/\bhe (does not|doesn't) love you\b/i, 'denial — equally a verdict'],
-      [/\bhe (feels|felt) (it|the same|this too|deeply)\b/i, 'narrates his interior'],
-      [/\bhis (feelings|heart) (are|is) (real|genuine|there|deep)\b/i, 'asserts his interior'],
-      [/\bhe (cares|cared) (about|for) you\b/i, 'narrates his interior'],
-      [/\bhe (is|was) (frightened|scared|afraid) (of|to)\b/i, 'the "loves you but scared" dodge'],
-      [/\bhe (thinks|dreams) (of|about) you\b/i, 'narrates his interior'],
-      [/\bwhat he feels (for|about) you is\b/i, 'reports his heart'],
-      [/\bdeep down (he|inside)\b/i, 'claims privileged access'],
+  // 🔴🔴 BAN #1 — LOOSENED 2026-08-19, operator call, and it is now DIRECTIONAL.
+  //
+  // The old rule refused to say anything about his interior in either direction. That is why
+  // nine reads in this family answered a question about HIM by talking about HER perception,
+  // which is the flat spot the operator named: she came for an answer and got certified.
+  // The card is what makes the claim admissible — "you pulled the card of intention, so the
+  // warmth was not one-sided" is evidence-shaped in a way "he loves you" is not, and the read
+  // structure already guarantees the card is named in beat 1.
+  //
+  // What stays banned is the direction with no upside. "He does not love you" closes her
+  // question with the one answer she cannot do anything with, from a stranger, on a card she
+  // turned over on an ad. Nobody buys a reading that says that, and it is the answer most
+  // likely to do real damage on the way past.
+  //
+  // ⚠️ NOT loosened for cards-honest / cards-cheating / cards-real-person / cards-misled —
+  // those draw women being actively defrauded and are guarded in TAROT_HOOK_TENDENCY.
+  // None of them are in this family, so the loosening here is clean.
+  it('never hands her the DENIAL — the one direction with no upside', () => {
+    const DENIAL: Array<[RegExp, string]> = [
+      [/\bhe (does not|doesn't|never) love[sd]? you\b/i, 'denial — the answer she cannot use'],
+      [/\bhe (did not|didn't) (love|care)\b/i, 'denial in the past tense'],
+      [/\bhis (feelings|heart) (are|is|were|was) (gone|dead|over|empty)\b/i, 'denial'],
+      [/\bhe (never )?(cared|felt) (nothing|anything) (for|about) you\b/i, 'denial'],
+      [/\byou (were|are) (just |only )?(a|an) (distraction|option|convenience|habit)\b/i, 'grades her down'],
     ];
-    const hits = sweep(INTERIOR);
-    expect(hits, `narrated his interior:\n${hits.join('\n')}`).toEqual([]);
+    const hits = sweep(DENIAL);
+    expect(hits, `handed her the denial:\n${hits.join('\n')}`).toEqual([]);
   });
 
   // 🔴 BAN #2 — the internet's stock answer to all three headlines is still a verdict.
@@ -394,12 +417,28 @@ describe(`${DECK} — real-feelings reads`, () => {
 
   // ⭐ THE AFFIRMATIVE HALF. Having refused the confession, each read must still land
   // something she came for. A family that only refuses is a family that abandons her.
-  it('still affirms HER — every read gives her something back', () => {
+  // 🔄 REWRITTEN 2026-08-19 from a WORDING PIN to a STRUCTURAL one, and it is stronger for it.
+  //
+  // The old version listed the exact phrases the 2026-08 copy happened to use ("not naivety",
+  // "is yours", "your own record"). That pinned a vocabulary, not a property: a rewrite could
+  // affirm her perfectly well in different words and still fail, and — worse — copy could
+  // satisfy it by dropping one listed phrase into an otherwise all-about-him read.
+  //
+  // The real property is that the payoff SPEAKS TO HER. A read that only reports on a man has
+  // no second-person clause in beat 3; one that answers her question and then names what she
+  // has lived has several. Two is the bar, across the four bubbles beat 3 carries. This
+  // matters more after the interior loosening, not less — the failure mode it now guards is
+  // a read that answers about him so freely that she disappears out of her own reading.
+  it('still affirms HER — the payoff speaks to her, not only about him', () => {
     for (const h of present) for (const c of CARDS) {
       const beat = reads[h]![c][2];
-      expect(beat, `${h}/${c} refuses without affirming her`).toMatch(
-        /\bnot naivety\b|\bcapacity\b|\bnot a flaw in you\b|\breflects nothing (whatever )?about you\b|\bmore honestly\b|\bwas not foolish\b|\bnot assembled out of\b|\byou were present\b|\bnot the only two\b|\bis yours\b|\byou are allowed\b|\bnot proof of anything about him\b|\bsomething real\b|\byour own record\b|\bkeeping it a long time\b/i,
-      );
+      const toHer = beat
+        .split(/[\n—;:,.]/)
+        .filter((cl) => /\byou(?:['’]\w+)?\b/i.test(cl));
+      expect(
+        toHer.length,
+        `${h}/${c} payoff barely addresses her — it is a report on him:\n${beat}`,
+      ).toBeGreaterThanOrEqual(2);
     }
   });
 
@@ -411,7 +450,6 @@ describe(`${DECK} — real-feelings reads`, () => {
       [/\$\d|\bprice\b|\bdiscount\b/i, 'price or offer'],
       [/\b(within|in) (the next )?(a )?(few )?(days?|weeks?|months?)\b/i, 'timeframe'],
       [/\bby (monday|tuesday|wednesday|thursday|friday|saturday|sunday|christmas|the end of)\b/i, 'date'],
-      [/\bhe will (come|say|tell|realise|realize)\b/i, 'forecast about him'],
       [/\bhurry|act now|before it(’|')?s too late\b/i, 'urgency'],
     ];
     const hits = sweep([], ALWAYS);

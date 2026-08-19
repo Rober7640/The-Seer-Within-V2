@@ -244,8 +244,13 @@ describe(`${DECK} — twin-flame reads`, () => {
 
   // ── The compliance core ────────────────────────────────────────────────────
   const NEGATOR =
-    /\b(no|not|never|n't|nor|nobody|no one|none|cannot|rather than|instead of|does not|is not|nothing|refuses?|declines?|will not|would not|withholds?|neither|without)\b/i;
-  const clausesOf = (s: string) => s.split(/[—;:,]/);
+    /\b(no|not|never|can't|unable|n't|nor|nobody|no one|none|cannot|rather than|instead of|does not|is not|nothing|refuses?|declines?|will not|would not|withholds?|neither|without)\b/i;
+  // 🔴 FIXED 2026-08-19 — this used to split on /[—;:,]/ only, which does NOT break on a
+  // full stop or a newline. Beat 3 carries four bubbles joined by '\n' since the migration, so
+  // a single negator in the first of them ('it was never you') put the whole of the remaining
+  // three behind the negation exemption and every clause ban in them was skipped silently.
+  // Found by feeding the gate a deliberate violation rather than trusting its green tick.
+  const clausesOf = (s: string) => s.split(/[—;:,.\n]/);
 
   const sweep = (bans: Array<[RegExp, string]>, always: Array<[RegExp, string]> = []) => {
     const hits: string[] = [];
@@ -283,10 +288,13 @@ describe(`${DECK} — twin-flame reads`, () => {
       [/\bhe (pulls|pulled) away because\b/i, 'explains his distance as the bond'],
       [/\bhis (distance|silence|absence) (is|shows|proves|means)\b/i, 'distance read as evidence'],
       [/\b(overwhelmed|frightened|scared) by (the|this) (intensity|connection|bond)\b/i, 'the runner rationale'],
-      [/\bhe (feels|felt) it too\b/i, 'narrates his interior'],
-      [/\bhe (thinks|dreams) (of|about) you\b/i, 'narrates his interior'],
-      [/\bhe (cannot|can't) (stay away|escape|deny)\b/i, 'narrates his interior'],
-      [/\bhe (is|will be) drawn back\b/i, 'forecast + narrates him'],
+      // 🔄 LOOSENED 2026-08-19 — "he feels it too" and "he thinks about you" were banned here
+      // as interior claims. They are now allowed on the operator's call: cards-twin-feels asks
+      // that exact question in its headline, and a lander that will not answer its own ad is
+      // the problem we are fixing. What stays banned below is the part that keeps her WAITING —
+      // his absence read as devotion, and his return promised as a thing that is coming.
+      [/\bhe (cannot|can't) (stay away|escape|deny)\b/i, 'the runner script — makes his absence devotion'],
+      [/\bhe (is|will be) drawn back\b/i, 'promises the return'],
     ];
     const hits = sweep(RUNNER);
     expect(hits, `ran the runner script:\n${hits.join('\n')}`).toEqual([]);

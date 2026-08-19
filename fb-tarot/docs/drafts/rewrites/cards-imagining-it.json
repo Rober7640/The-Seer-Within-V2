@@ -1,0 +1,36 @@
+{
+  "hook": "cards-imagining-it",
+  "headline": "Does he love me, or am I imagining it?",
+  "note": "Face-down only (return-mhf). 🔄 REWRITTEN 2026-08-19 to the Natural Tarot-Cut framework, after the interior ban was loosened. The read may now ANSWER: the card carries the claim about him. 🔴 THE DENIAL IS STILL BANNED — 'he does not love you' is the one direction she has no use for. 🔴 NO DIAGNOSIS: avoidant, emotionally unavailable, commitment-phobic, narcissist. 🔴 Never grade her (naive, foolish, gave too much). 🔴 No dates. The seven cuts run as ONE causal chain — so / and / but / that's why / let me look closer — and every cut must add information the last one did not carry. 🔴🔴 The crueller door stays shut: never that she imagined it, invented it or is seeing what she wants. 🔴 The warrant is the CARD, never the strength of what she felt.",
+  "decks": {
+    "return-mhf": {
+      "a": [
+        "You turned the Magician, dear. Look — the table is between you and the rest of him.",
+        "You asked about his love, and about your own eyes. Your hand went to the card of things truly made.",
+        "So you did not imagine it, dear. He loves you.",
+        "And this card builds nothing by chance. What stands between you was made on purpose.",
+        "But he has put it into the doing, dear, and not into words you can hold.",
+        "That's why you keep checking it against your own memory.",
+        "Let me look closer at what keeps him from saying it plainly…"
+      ],
+      "b": [
+        "You turned the Hanged Man, dear. Look — you're seeing him from below, not from level.",
+        "You asked about his love, and about your own eyes. Your hand went to the card of a crooked view.",
+        "So the love is there, dear. You have been looking at it sideways.",
+        "And from down there, every plain thing can look like something else.",
+        "But the angle is the trouble, dear. Your eyes are working fine.",
+        "That's why one week you are certain, and the next week you are not.",
+        "Let me look closer at what has been holding you at that angle…"
+      ],
+      "c": [
+        "You turned the Fool, dear. Look — the drop is real and it's right there beside his boot.",
+        "You asked about his love, and about your own eyes. Your hand went to the card of a man who steps out anyway.",
+        "So it's real, dear. You did not build this on your own.",
+        "And he stepped out too. That is not a thing a man does over nothing.",
+        "But he stepped without once looking at where it lands.",
+        "That's why it feels real to you, dear, and unsteady at the same time.",
+        "Let me look closer at what makes the ground feel so unsteady…"
+      ]
+    }
+  }
+}

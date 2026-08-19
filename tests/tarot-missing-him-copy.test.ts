@@ -219,8 +219,13 @@ describe(`${DECK} — missing-him reads`, () => {
   });
 
   // ── The compliance core ────────────────────────────────────────────────────
-  const NEGATOR = /\b(no|not|never|n't|nor|rather than|instead of|does not|is not|nothing|neither|without)\b/i;
-  const clausesOf = (s: string) => s.split(/[—;:,]/);
+  const NEGATOR = /\b(no|not|never|none|nobody|no one|cannot|can't|unable|n't|nor|rather than|instead of|does not|is not|nothing|neither|without)\b/i;
+  // 🔴 FIXED 2026-08-19 — this used to split on /[—;:,]/ only, which does NOT break on a
+  // full stop or a newline. Beat 3 carries four bubbles joined by '\n' since the migration, so
+  // a single negator in the first of them ('it was never you') put the whole of the remaining
+  // three behind the negation exemption and every clause ban in them was skipped silently.
+  // Found by feeding the gate a deliberate violation rather than trusting its green tick.
+  const clausesOf = (s: string) => s.split(/[—;:,.\n]/);
 
   const scan = (always: Array<[RegExp, string]>, clauseLevel: Array<[RegExp, string]>) => {
     const hits: string[] = [];
@@ -248,8 +253,13 @@ describe(`${DECK} — missing-him reads`, () => {
         [/\bby (next|this) (week|month|year|spring|summer|autumn|winter)/i, 'timeframe'],
       ],
       [
-        [/\bit (will|does) (pass|fade|ease|get easier)\b/i, 'promises the ache ends'],
-        [/\byou (will|'ll) (feel better|be over (him|it)|heal)\b/i, 'promises recovery'],
+        // 🔄 LOOSENED 2026-08-19, completing the same operator call recorded on the LIFE
+        // SENTENCE test below. The two tests contradicted each other for a day: that one says
+        // in writing that promising the hurt ends is allowed, while these three lines banned
+        // the sentence that says it. What was ever wrong with "it will pass" is the SCHEDULE
+        // riding on it, and every dated form above is still banned — so the hopeful direction
+        // comes back and the checkable claim does not. 'these things take' stays: it is a rule
+        // of thumb about duration, which is a timeframe wearing folk clothes.
         [/\bthese things take\b/i, 'a rule of thumb about duration'],
       ],
     );
@@ -257,21 +267,18 @@ describe(`${DECK} — missing-him reads`, () => {
   });
 
   // ⭐⭐ Both poles. "Always" is a life sentence; "it stops" is a promise.
-  it('rules on FOREVER in neither direction', () => {
+  // 🔄 LOOSENED 2026-08-19, operator call, and now DIRECTIONAL. Promising the hurt ends is
+  // allowed — it is what she came for, and refusing both directions left three landers with
+  // nothing to say to a grieving woman. The LIFE SENTENCE stays banned: telling her she will
+  // always hurt is a stranger ruling on the rest of her life, and it has no upside at all.
+  it('never hands her the LIFE SENTENCE on the hurt', () => {
     const hits = scan(
       [],
       [
         [/\byou will always (miss|love|feel|hurt)\b/i, 'life sentence: rules that it lasts'],
         [/\byou('ll| will) never (stop|get over|be free)\b/i, 'life sentence'],
         [/\ba part of you always will\b/i, 'life sentence in a softer coat'],
-        // ⚠ Must catch a PREDICTION, not the reads quoting her own question back to her —
-        // 'cards-stop-hurting'/b opens beat 3 with "You asked when it stops", which is the
-        // question being named before it is refused. A bare /it stops/ fired on that and
-        // caught nothing real. These require the claim form instead, and cover more of the
-        // actual prediction space than the pattern they replace.
-        [/\bit will (end|stop|be over|be gone)\b/i, 'promises an end'],
-        [/\bthe (ache|hurt|pain|missing|grief) (will )?(end|stop|pass|fade|lift)(s|es)?\b/i, 'promises an end'],
-        [/\byou will stop (missing|hurting|feeling)\b/i, 'promises an end'],
+        [/\bthis (is|will be) how it stays\b/i, 'life sentence'],
       ],
     );
     expect(hits, `forever language:\n${hits.join('\n')}`).toEqual([]);

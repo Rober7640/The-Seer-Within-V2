@@ -1,0 +1,65 @@
+{
+  "hook": "cards-wont-commit",
+  "headline": "Why won't he commit to me?",
+  "note": "🔄 REWRITTEN 2026-08-19 to the Natural Tarot-Cut framework. Bubbles 3-6 run as ONE causal chain — so / and / but / that's why — and the read ANSWERS. The art line and the bridge are unchanged. Every ban in this note still stands.\n\nOn the two Magician/Hanged Man/Fool decks — one set of copy, verb swapped ('turned' face-down, 'chose' face-up).\n\n🔴 THESE ASK FOR A PREDICTION OUTRIGHT, which is the exact thing the funnel forbids, so the no-verdict rule runs in BOTH directions plus a no-timeframe rule: 'he will, give it time' reads as a promise and 'he never will' is a pronouncement on a man she loves. 🔴 The bans in tests/tarot-commitment-copy.test.ts are WHOLE-BEAT rather than clause-level, so 'not enough' and 'too much' are unavailable even inside a refusal — the usual absolution form had to be rebuilt without them.\n\n⚠️ THIS HOOK PRESUPPOSES HIS REFUSAL, which opens a failure mode the others do not have: the answer sliding into HER fault. 123 real concerns off this lander show she has usually already started turning the question on herself — 'I feel he's never really tried. Like I'm an option even tho he said different', 'I feel inconsistent energy from him', 'he says he loves me and I believe him but there's something underlying that I can't explain'. So the 'why' is routed to where HE is stuck and left there — never a character verdict, never invented — and what gets affirmed is that her read is sound and the tiredness is earned.",
+  "decks": {
+    "return-mhf": {
+      "a": [
+        "You turned the Magician, dear. Look — a white band round his dark hair.",
+        "You asked why he won't commit to you. Your hand went to the man who decides.",
+        "So the hold on this isn't yours, dear. Nothing you did put it there.",
+        "And the tools for building are all laid out in front of him, dear.",
+        "But having the tools is not the same as picking them up, dear.",
+        "That's why you get the words, dear, and the week after looks the same.",
+        "Let me look closer at what stands in the way of a choice…"
+      ],
+      "b": [
+        "You turned the Hanged Man, dear. Look — his arms are out of sight, and his body makes a triangle.",
+        "You asked why he won't commit to you. Your hand went to the card that stalls.",
+        "So something has him stuck, dear. You've been feeling exactly that.",
+        "And his arms are out of sight, dear. You can't see what he's holding.",
+        "But where he is stuck is his to name, dear. Not mine, and not yours.",
+        "That's why every reason you land on slides off, dear. None of them stick.",
+        "Let me look closer at what has this stuck in place…"
+      ],
+      "c": [
+        "You turned the Fool, dear. Look — the little dog has its tail straight up.",
+        "You asked why he won't commit to you. Your hand went to the one who ties nothing down.",
+        "So nothing in his life is tied down, dear. You saw that early.",
+        "And the little dog has its tail straight up, dear. It knows the mood.",
+        "But loose isn't the same as gone, dear. He still walks beside you.",
+        "That's why asking for more never turns into a row. It just slides off.",
+        "Let me look closer at what has been keeping this loose…"
+      ]
+    },
+    "arcana-mfh": {
+      "a": [
+        "You chose the Magician, dear. Look — a white band round his dark hair.",
+        "You asked why he won't commit to you. Your hand went to the man who decides.",
+        "So the hold on this isn't yours, dear. Nothing you did put it there.",
+        "And the tools for building are all laid out in front of him, dear.",
+        "But having the tools is not the same as picking them up, dear.",
+        "That's why you get the words, dear, and the week after looks the same.",
+        "Let me look closer at what stands in the way of a choice…"
+      ],
+      "b": [
+        "You chose the Hanged Man, dear. Look — his arms are out of sight, and his body makes a triangle.",
+        "You asked why he won't commit to you. Your hand went to the card that stalls.",
+        "So something has him stuck, dear. You've been feeling exactly that.",
+        "And his arms are out of sight, dear. You can't see what he's holding.",
+        "But where he is stuck is his to name, dear. Not mine, and not yours.",
+        "That's why every reason you land on slides off, dear. None of them stick.",
+        "Let me look closer at what has this stuck in place…"
+      ],
+      "c": [
+        "You chose the Fool, dear. Look — the little dog has its tail straight up.",
+        "You asked why he won't commit to you. Your hand went to the one who ties nothing down.",
+        "So nothing in his life is tied down, dear. You saw that early.",
+        "And the little dog has its tail straight up, dear. It knows the mood.",
+        "But loose isn't the same as gone, dear. He still walks beside you.",
+        "That's why asking for more never turns into a row. It just slides off.",
+        "Let me look closer at what has been keeping this loose…"
+      ]
+    }
+  }
+}

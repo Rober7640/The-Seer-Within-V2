@@ -260,7 +260,7 @@ describe(`${DECK} — his-other-life reads`, () => {
 
   // ── The compliance core ────────────────────────────────────────────────────
   const NEGATOR =
-    /\b(no|not|never|n't|nor|nobody|no one|none|cannot|rather than|instead of|does not|is not|nothing|refuses?|declines?|will not|would not|withholds?|neither|without|inventing|invent|manufacture|pretend|flattery|would be|ought to|should)\b/i;
+    /\b(no|not|never|can't|unable|n't|nor|nobody|no one|none|cannot|rather than|instead of|does not|is not|nothing|refuses?|declines?|will not|would not|withholds?|neither|without|inventing|invent|manufacture|pretend|flattery|would be|ought to|should)\b/i;
   const clausesOf = (s: string) => s.split(/[—;:,.]/);
 
   // ⚠️ RESTATEMENT EXEMPTION — beat 2 repeats HER question back, and several reads must NAME a
