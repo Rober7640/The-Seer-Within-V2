@@ -130,19 +130,54 @@ export function buildArrivalReadingSection(brief: EmailReadingBrief): string {
   ].join('\n');
 }
 
-/** Greeting-prompt instruction (turn 0) telling the persona to continue the reading. */
-export function buildArrivalGreetingInstruction(brief: EmailReadingBrief, firstName: string): string {
+/**
+ * Greeting-prompt instruction (turn 0) telling the persona to continue the reading.
+ *
+ * `alreadyAnswered` says the reader ALREADY replied to the open loop on the lander,
+ * before they had an account, and that their words plus this persona's answer to them
+ * are rendered directly beneath this greeting (liveThreadPreview.ts). Without it the
+ * greeting re-asks the question they just answered: observed on development
+ * 2026-08-19, a reader who typed "I keep going back to my ex even though she treats me
+ * badly" was met with "Have you named it yet, that one true thing you keep going back
+ * to?". Nothing is broken underneath — the answer below it is correct and on-subject —
+ * but the first line a reader reads still tells them nobody listened, which is the
+ * whole failure this feature exists to prevent.
+ *
+ * So in that case the greeting becomes a bridge, not an opening question: the question
+ * belongs to the answer below, and two questions stacked in one screen is a worse read
+ * than none.
+ */
+export function buildArrivalGreetingInstruction(
+  brief: EmailReadingBrief,
+  firstName: string,
+  opts: { alreadyAnswered?: boolean } = {},
+): string {
+  const alreadyAnswered = opts.alreadyAnswered === true;
   return [
     `Generate a brief opening message for ${firstName}, who just arrived from ${emailReference(brief)} where you began a reading for them.`,
     `In that letter you showed them: ${brief.readingRecap}`,
     `You left this open: ${brief.openLoop}`,
+    ...(alreadyAnswered
+      ? [
+          '',
+          `${firstName} HAS ALREADY ANSWERED THAT. They wrote it into this thread before they signed in, and their words — with your answer to them — appear immediately below this message. Treat it as said and heard.`,
+        ]
+      : []),
     '',
     'RULES:',
     '- Open by CONTINUING that reading — pick up the exact thread, glad they came to finish it. Do NOT greet them as a stranger and do NOT say "welcome".',
     '- Reference the specific thing you showed them, naturally — do not say "my email", "you clicked", or "from your quiz".',
     '- Never disown the letter and never invent details beyond what is above.',
-    '- End with one open question that moves the reading forward.',
-    '- Keep it to 2-3 sentences. No markdown.',
+    ...(alreadyAnswered
+      ? [
+          '- Do NOT ask them the open question again, and do NOT ask whether they have named it — they named it, and re-asking reads as not having read them.',
+          '- Ask NOTHING here. This message only marks that you have them and their answer; your reply to what they wrote is the message directly below it.',
+          '- Keep it to 1-2 sentences. No markdown.',
+        ]
+      : [
+          '- End with one open question that moves the reading forward.',
+          '- Keep it to 2-3 sentences. No markdown.',
+        ]),
     '',
     `EXAMPLE REGISTER (do not copy): "${brief.continueSeed}"`,
   ].join('\n');
