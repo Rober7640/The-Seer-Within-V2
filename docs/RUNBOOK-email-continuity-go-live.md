@@ -50,6 +50,45 @@ not.
 
 ---
 
+## EVERY SQL STATEMENT, IN ONE LIST
+
+If you only want to know "what do I have to run on production", it is this — in
+this order. Each links to the step that explains it.
+
+| # | Where | What it does | Step |
+|---|-------|--------------|------|
+| 1 | production | Create `email_link_codes` + add the `pending_reply` columns | [Step 1](#step-1--add-the-tables-to-the-production-database) |
+| 2 | production | Verify: **14 rows** | [Step 1](#step-1--add-the-tables-to-the-production-database) |
+| 3 | production | Turn the Live Thread arm on — ONLY if you chose Option B | [Step 4](#step-4--decide-does-everyone-see-the-new-page) |
+
+**That is the whole list. There is no SQL for the email content itself.**
+
+That surprises people, so here is why. The nine rows in `email_link_codes` —
+their opening lines and their Big Ideas — are NOT inserted by hand on
+production. They are written by the render pipeline in
+[Step 6](#step-6--build-the-emails-and-create-the-links), lifted straight out of
+the send drafts in `docs/aweber/evelyn-reframe-deck/sends/cycle-1/`. Minting a
+row by hand on production creates a destination that no email points at, which
+is worse than having no row at all.
+
+So when the CONTENT changes — a better opening line, a corrected Big Idea —
+**you edit the draft and re-run Step 6.** You do not write SQL. A re-run reuses
+each existing code and updates the row in place, so links already baked into a
+scheduled broadcast keep working.
+
+### Content changed on development? Nothing to carry across.
+
+Development rows were updated directly with SQL during build-out (2026-08-19:
+nine new opening lines that name each email's subject, plus the `big_idea` for
+each). **Do not copy those statements to production.** The same values are in
+the drafts, and Step 6 puts them on production the right way.
+
+The one thing that IS structural, and therefore IS in the list above, is the
+`big_idea` COLUMN — statement 1 creates it. The values that fill it come from
+each draft's `**Big Idea:**` line.
+
+---
+
 ## STEP 1 — Add the tables to the production database
 
 Open the **production** Supabase project.
