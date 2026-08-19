@@ -35,13 +35,21 @@ const COMPOSER = "Type your reply...";
 
 // Two campaigns with unmistakably different openers — the whole point is telling
 // which one the lander served, so near-identical copy would defeat the test.
+//
+// `marker` is what the assertions actually match on, and it must be a fragment
+// that lives inside ONE bubble. Since 2026-08-19 the Live Thread arm splits the
+// seed across several bubbles (lib/chatBubbles.ts), so no single element holds
+// the whole opener any more — matching `opener` would fail for a reason that has
+// nothing to do with which campaign was served, which is all this file tests.
 const MONDAY = {
   campaign: "reframe-02-fence",
   opener: "You came to tell me about your fence — good. Tell me what it is you keep painting.",
+  marker: "about your fence",
 };
 const TUESDAY = {
   campaign: "reframe-08-lighthouse",
   opener: "You came to tell me about your lamp — good. Tell me which one you've let go dark.",
+  marker: "about your lamp",
 };
 
 /** Serve each campaign its own opener, exactly as a resolved /e/ code would. */
@@ -97,7 +105,7 @@ test.describe("lander cache is scoped to the campaign", () => {
 
     // Monday's email.
     await page.goto(landerUrl(MONDAY.campaign), { waitUntil: "domcontentloaded" });
-    await expect(page.getByText(MONDAY.opener, { exact: false })).toBeVisible({ timeout: 20_000 });
+    await expect(page.getByText(MONDAY.marker, { exact: false })).toBeVisible({ timeout: 20_000 });
 
     // She types, which is what writes the cache — an arrival alone would leave
     // less behind and would not reproduce the bug.
@@ -108,10 +116,10 @@ test.describe("lander cache is scoped to the campaign", () => {
     // Tuesday's email, SAME TAB — sessionStorage survives a same-tab navigation.
     await page.goto(landerUrl(TUESDAY.campaign), { waitUntil: "domcontentloaded" });
 
-    await expect(page.getByText(TUESDAY.opener, { exact: false })).toBeVisible({ timeout: 20_000 });
+    await expect(page.getByText(TUESDAY.marker, { exact: false })).toBeVisible({ timeout: 20_000 });
     // The load-bearing half: Monday must be gone, not merely outranked. Before
     // the fix this is what was on screen.
-    await expect(page.getByText(MONDAY.opener, { exact: false })).toHaveCount(0);
+    await expect(page.getByText(MONDAY.marker, { exact: false })).toHaveCount(0);
     // ...and so must her Monday reply — restoring it under Tuesday's opener
     // would read as Evelyn answering a message about a different reading.
     await expect(page.getByText("It's the green fence", { exact: false })).toHaveCount(0);
@@ -131,12 +139,12 @@ test.describe("lander cache is scoped to the campaign", () => {
     const counts = await harness(page);
 
     await page.goto(landerUrl(MONDAY.campaign), { waitUntil: "domcontentloaded" });
-    await expect(page.getByText(MONDAY.opener, { exact: false })).toBeVisible({ timeout: 20_000 });
+    await expect(page.getByText(MONDAY.marker, { exact: false })).toBeVisible({ timeout: 20_000 });
     expect(counts.start, "first arrival must hit /start").toBe(1);
 
     await page.reload({ waitUntil: "domcontentloaded" });
 
-    await expect(page.getByText(MONDAY.opener, { exact: false })).toBeVisible({ timeout: 20_000 });
+    await expect(page.getByText(MONDAY.marker, { exact: false })).toBeVisible({ timeout: 20_000 });
     expect(counts.start, "a refresh on the same campaign must restore, not re-fetch").toBe(1);
   });
 
@@ -147,7 +155,7 @@ test.describe("lander cache is scoped to the campaign", () => {
     await harness(page);
 
     await page.goto(landerUrl(MONDAY.campaign), { waitUntil: "domcontentloaded" });
-    await expect(page.getByText(MONDAY.opener, { exact: false })).toBeVisible({ timeout: 20_000 });
+    await expect(page.getByText(MONDAY.marker, { exact: false })).toBeVisible({ timeout: 20_000 });
     await page.getByPlaceholder(COMPOSER).fill("It's the green fence, every spring.");
     await page.getByPlaceholder(COMPOSER).press("Enter");
     await expect(page.getByText("It's the green fence", { exact: false })).toBeVisible();
@@ -155,7 +163,7 @@ test.describe("lander cache is scoped to the campaign", () => {
     await page.goto("/evelyn?mechanic=live_thread", { waitUntil: "domcontentloaded" });
 
     await expect(page.getByText("Generic opener", { exact: false })).toBeVisible({ timeout: 20_000 });
-    await expect(page.getByText(MONDAY.opener, { exact: false })).toHaveCount(0);
+    await expect(page.getByText(MONDAY.marker, { exact: false })).toHaveCount(0);
     await expect(page.getByText("It's the green fence", { exact: false })).toHaveCount(0);
   });
 });
