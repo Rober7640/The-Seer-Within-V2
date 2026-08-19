@@ -17,6 +17,8 @@ export interface ResolvedEmailLink {
   readingRecap: string | null;
   openLoop: string | null;
   continueSeed: string;
+  /** The ONE thing this email is about — see shared/schema.ts's big_idea. */
+  bigIdea: string | null;
   /** Lander context the legacy `?bucket=&src=` query string carried; the
    *  redirector rebuilds the query string from these. See shared/schema.ts. */
   bucket: string | null;
@@ -29,6 +31,13 @@ export interface MintEmailLinkCodeInput {
   continueSeed: string;
   readingRecap?: string;
   openLoop?: string;
+  /**
+   * The email's subject as a phrase the persona can say — lifted from the
+   * draft's `**Big Idea:**` line. Optional: a draft without one still mints,
+   * and the chat falls back to inferring the topic from the recap (which is
+   * exactly the failure this field exists to remove, so drafts should carry it).
+   */
+  bigIdea?: string;
   bucket?: string;
   src?: string;
 }
@@ -87,6 +96,7 @@ export async function mintEmailLinkCode(
         continueSeed: input.continueSeed,
         readingRecap: input.readingRecap ?? null,
         openLoop: input.openLoop ?? null,
+        bigIdea: input.bigIdea ?? null,
         bucket: input.bucket ?? null,
         src: input.src ?? null,
       });
@@ -151,6 +161,7 @@ export async function upsertEmailLinkCodeForCampaign(
   const row = existing[0];
   const readingRecap = input.readingRecap ?? null;
   const openLoop = input.openLoop ?? null;
+  const bigIdea = input.bigIdea ?? null;
   const bucket = input.bucket ?? null;
   const src = input.src ?? null;
 
@@ -158,6 +169,7 @@ export async function upsertEmailLinkCodeForCampaign(
     row.continueSeed === input.continueSeed &&
     row.readingRecap === readingRecap &&
     row.openLoop === openLoop &&
+    row.bigIdea === bigIdea &&
     row.bucket === bucket &&
     row.src === src
   ) {
@@ -166,7 +178,7 @@ export async function upsertEmailLinkCodeForCampaign(
 
   await db
     .update(emailLinkCodes)
-    .set({ continueSeed: input.continueSeed, readingRecap, openLoop, bucket, src })
+    .set({ continueSeed: input.continueSeed, readingRecap, openLoop, bigIdea, bucket, src })
     .where(eq(emailLinkCodes.code, row.code));
 
   return { code: row.code, action: 'updated' };
@@ -225,6 +237,7 @@ export async function resolveEmailLinkCode(code: string): Promise<ResolvedEmailL
     campaign: row.campaign,
     readingRecap: row.readingRecap,
     openLoop: row.openLoop,
+    bigIdea: row.bigIdea,
     bucket: row.bucket,
     src: row.src,
     continueSeed: row.continueSeed,

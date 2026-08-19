@@ -10,6 +10,7 @@
 - **CTA:** Come tell me what you keep painting → `campaign=reframe-02-fence`
 - **Reading Recap:** You wrote to them about a widower on your street who repaints his fence the same soft green every spring — the color his wife chose the last spring she was alive, four years gone now. You showed them the reframe: he isn't failing to let her go, he's keeping alive the part of him that still shares a life, the part that considers another person and asks "what would you think?" — and that capacity didn't go into the ground with her, it's still his to use.
 - **Open Loop:** You asked them to notice which fence THEY keep painting — the ritual, the untouched side of the bed, the thing they keep exactly as it was — and come tell you what it is.
+- **Big Idea:** the widower's green fence, repainted her colour every spring
 - **Continue Seed:** You came back about the green fence — the one he repaints the same colour every spring. Tell me what you keep painting, and I'll tell you what you're really keeping alive.
 
 ---
