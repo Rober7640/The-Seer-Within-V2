@@ -17,11 +17,9 @@ import { randomUUID } from 'crypto';
 import { eq, sql } from 'drizzle-orm';
 import { db } from './db';
 import { soulmateLanderSessions, users, personas } from '@shared/schema';
-import { sendVerificationEmail } from './verificationEmail';
+import { sendVerificationEmail, VERIFICATION_TOKEN_EXPIRY_HOURS } from './verificationEmail';
 import { generateMagicLinkToken } from './magicLink';
 import logger from './logger';
-
-const VERIFICATION_TOKEN_EXPIRY_HOURS = 24;
 
 interface CreateArgs {
   email: string;

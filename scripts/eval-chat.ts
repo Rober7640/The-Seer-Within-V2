@@ -19,7 +19,7 @@ import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { db } from '../server/lib/db';
-import { users, personas, userMemory, experimentExposures } from '@shared/schema';
+import { users, personas, userMemory, experimentExposures, evelynLanderSessions } from '@shared/schema';
 import { eq } from 'drizzle-orm';
 import { initSession, sendMessage } from '../server/lib/chatEngine';
 import { endChatSession } from '../server/lib/creditTracking';
@@ -35,6 +35,20 @@ type EvalCase = {
   title: string;
   tests: string[];
   memory?: string;
+  /**
+   * Campaign slug of an Evelyn email this client "just arrived from", e.g.
+   * 'reframe-04-serious'. Seeds an evelyn_lander_sessions row stamped to the eval
+   * user, which is the ONLY thing loadArrivalReading() looks for — so the engine
+   * then generates its arrival greeting (continuing that email's reading) and
+   * injects <arrival_reading> into the system prompt for the first
+   * ARRIVAL_READING_FRESH_MSG_LIMIT messages, exactly as production does.
+   *
+   * Without this, email->chat continuity is untestable here: every eval user looks
+   * like a cold visitor, so a case about CONTINUING a reading can only ever pass
+   * vacuously. The brief itself is resolved from email_link_codes (or the built-in
+   * registry), so the campaign must exist in whichever the local DB has.
+   */
+  arrivalCampaign?: string;
   turns: string[];
 };
 
@@ -84,6 +98,18 @@ async function runCase(
     }
   }
 
+  // Seed the "arrived from one of Evelyn's emails" fixture. Must land BEFORE
+  // initSession: the greeting it generates is arrival-aware, and that greeting is
+  // what the first user turn is answering.
+  if (c.arrivalCampaign) {
+    await db.insert(evelynLanderSessions).values({
+      sessionToken: `eval-${c.id}-${label}`.toLowerCase().slice(0, 120),
+      resolvedSegment: 'new',
+      resolvedUserId: user.id,
+      campaign: c.arrivalCampaign,
+    });
+  }
+
   // Seed saga memory for returning-user cases
   if (c.memory) {
     await db.insert(userMemory).values({
@@ -102,6 +128,7 @@ async function runCase(
   lines.push(`checks: ${c.tests.join(' · ')}`);
   if (experiment) lines.push(`experiment: ${experiment.key} → variant ${experiment.variant} (forced for eval)`);
   if (c.memory) lines.push(`seeded memory: ${c.memory}`);
+  if (c.arrivalCampaign) lines.push(`arrived from campaign: ${c.arrivalCampaign}`);
   lines.push('\n---\n');
 
   let sessionId: string | null = null;
