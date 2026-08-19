@@ -80,13 +80,10 @@ const MAX_USER_TURNS = 2;
 //   deliberately.
 const START_TIMEOUT_MS = 10_000;
 const REDIRECT_START_TIMEOUT_MS = 4_000;
-// Live Thread `no_match` only: how long the reader gets to read Frame 2b's
-// "Good — I've got it saved" confirmation before we carry them into
-// registration. Without a beat the bubble that tells them their reply survived
-// would render and vanish in the same frame — that reassurance IS the feature.
-// Roughly matches the quiz arm's own 1200ms post-completion beat
-// (EvelynQuizMechanic.tsx:196).
-const NO_MATCH_HANDOFF_DELAY_MS = 1600;
+// The Live Thread `no_match` beat now lives in LiveThreadLander, which renders
+// the countdown, alongside NO_MATCH_HANDOFF_DELAY_MS. This file still owns WHERE
+// the reader goes; the component owns WHEN, because it is the thing that knows
+// what is on screen. See handleLiveThreadOutcome / handleLiveThreadHandoff below.
 
 type Segment = "v2_active" | "v2_password" | "v1_migrated" | "brand_new" | "token_magic";
 
@@ -236,18 +233,15 @@ export default function EvelynLanderPage() {
   const params = readParams();
   const sessionToken = getSessionToken();
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
-  // Live Thread `no_match` handoff timer. Held in a ref and cleared on unmount so
-  // a reader who taps "Sign in instead" (or navigates any other way) inside the
-  // beat can't have a queued navigate() yank them back out of where they went —
-  // wouter's navigate is a global location write and fires happily after unmount.
-  // Same defence EvelynQuizMechanic.tsx:110-118 uses for its own transition timers.
-  const noMatchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  useEffect(
-    () => () => {
-      if (noMatchTimerRef.current) clearTimeout(noMatchTimerRef.current);
-    },
-    [],
-  );
+  // The `no_match` destination, parked between the outcome landing and the reader
+  // (or the countdown) asking to go. A ref rather than state: nothing renders from
+  // it, so a re-render would be pure cost.
+  //
+  // The timer that used to sit here — and the unmount guard that stopped a queued
+  // navigate() from yanking back a reader who tapped "Sign in instead" mid-beat —
+  // moved into LiveThreadLander with the countdown. The guard moved with it; it is
+  // the component's own effect cleanup now.
+  const noMatchDestRef = useRef<string | null>(null);
 
   // Resolve the lander MECHANIC via the `evelyn_lander_mechanic` structural A/B
   // (visitor-scoped, scope.route='evelyn_lander', element='mechanic'): control
@@ -685,17 +679,28 @@ export default function EvelynLanderPage() {
     // chatbox arm's `register` branch builds, via the shared helper, so the
     // persona / source / landerSessionToken / bucket params (and the parked reply
     // + Live Thread grant they carry) cannot drift between the two arms.
-    const dest = buildRegisterDest(submittedEmail);
-    // Clear any timer already armed before overwriting the ref. A second
-    // onOutcome is unreachable through LiveThreadLander today (handleResend
-    // deliberately never re-fires it), but that guarantee lives in ANOTHER
-    // component's internals — without this line a change over there turns into a
-    // leaked timer and a double navigate over here.
-    if (noMatchTimerRef.current) clearTimeout(noMatchTimerRef.current);
-    noMatchTimerRef.current = setTimeout(() => {
-      clearSession();
-      navigate(dest, { replace: true });
-    }, NO_MATCH_HANDOFF_DELAY_MS);
+    // Park the destination; the component decides when to use it. Overwriting is
+    // safe and deliberate — a second onOutcome is unreachable through
+    // LiveThreadLander today (handleResend never re-fires it), but that guarantee
+    // lives in ANOTHER component's internals, and a ref write cannot leak the way
+    // a second armed timer could.
+    noMatchDestRef.current = buildRegisterDest(submittedEmail);
+  }
+
+  /**
+   * Perform the `no_match` handoff. Called by LiveThreadLander when its countdown
+   * runs out or the reader taps "Go now" — the component fires it at most once.
+   *
+   * Guarded on the parked destination anyway: without an outcome there is nothing
+   * to navigate to, and navigating to a half-built URL would be worse than not
+   * navigating at all.
+   */
+  function handleLiveThreadHandoff() {
+    const dest = noMatchDestRef.current;
+    if (!dest) return;
+    noMatchDestRef.current = null;
+    clearSession();
+    navigate(dest, { replace: true });
   }
 
   // One gate for BOTH arms: wait for auth, the mechanic assignment, AND /start
@@ -762,6 +767,7 @@ export default function EvelynLanderPage() {
         continueSeed={messages.find((m) => m.role === "assistant")?.content ?? ""}
         sessionToken={sessionToken}
         onOutcome={handleLiveThreadOutcome}
+        onHandoffNow={handleLiveThreadHandoff}
         // The same merge-tag hint the quiz arm above is handed — saves a typing
         // step on the most conversion-critical field in the flow. Never trusted
         // for identity; /check-email still resolves the account from what the

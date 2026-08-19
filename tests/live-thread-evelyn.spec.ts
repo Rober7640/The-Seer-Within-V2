@@ -131,12 +131,21 @@ const COPY = {
   no_match: "Nothing's set up under",
 } as const;
 
-// Frame 2b's footer, under the no_match bubble.
-const NO_MATCH_FOOTER = "We'll email you a one-click link. No password needed.";
+// Evelyn's last bubble before the page moves, and the counter under it.
+//
+// These replaced Frame 2b's old footer, "We'll email you a one-click link. No
+// password needed." — false on both halves: nothing is mailed to a no_match
+// reader, and the form they land on requires a password (LoginPage.tsx:377).
+// The absence assertions below still name that string, so it cannot come back.
+const HANDOFF_BUBBLE = "I'm sending you there now.";
+const HANDOFF_COUNTER = /taking you there in \d+/i;
+const OLD_FALSE_FOOTER = "No password needed";
 
-// EvelynLanderPage.NO_MATCH_HANDOFF_DELAY_MS is 1600ms — the beat that lets the
-// reader read the bubble before the page moves. Waits below must clear it.
-const HANDOFF_DELAY_MS = 1600;
+// LiveThreadLander.NO_MATCH_HANDOFF_DELAY_MS is 6000ms — the beat that lets the
+// reader actually READ the bubble before the page moves (it was 1600ms, which
+// moved the page a fifth of the way into the sentence explaining the move).
+// Waits below must clear it, plus the typing beat before the counter starts.
+const HANDOFF_DELAY_MS = 6_000;
 
 const AUTH_TOKEN_KEY = "seer_auth_token";
 
@@ -466,7 +475,14 @@ test.describe("Live Thread (Evelyn) — email → lander → chat continuity", (
     await submitEmail(page);
 
     await expect(page.getByText(COPY.no_match, { exact: false })).toBeVisible();
-    await expect(page.getByText(NO_MATCH_FOOTER, { exact: false })).toBeVisible();
+    // She names the move before it happens, and the counter announces it — the
+    // fix for "the redirect was too fast, I did not understand what happened".
+    await expect(page.getByText(HANDOFF_BUBBLE, { exact: false }))
+      .toBeVisible({ timeout: BUBBLE_TIMEOUT_MS });
+    await expect(page.getByText(HANDOFF_COUNTER)).toBeVisible({ timeout: BUBBLE_TIMEOUT_MS });
+    // The old footer promised no password, then sent them to a form that demands
+    // one. It must not return.
+    await expect(page.getByText(OLD_FALSE_FOOTER, { exact: false })).toHaveCount(0);
     // No inbox is promised and no resend is offered: nothing was mailed.
     await expect(page.getByRole("button", { name: /send it again/i })).toHaveCount(0);
 
@@ -489,6 +505,33 @@ test.describe("Live Thread (Evelyn) — email → lander → chat continuity", (
     expect(dest.searchParams.get("landerSessionToken")).toBeTruthy();
   });
 
+  test("no_match: the page does not move at the OLD 1600ms beat, and 'Go now' skips the wait", async ({
+    page,
+  }) => {
+    // The regression this exists for, stated as a clock. At 1600ms — the beat the
+    // handoff used to fire on — the reader is still mid-sentence, so the page must
+    // still be there. Asserting the new delay's LENGTH would just restate the
+    // constant; asserting the old one FAILS if anyone quietly restores it.
+    await harness(page, { outcome: "no_match" });
+    await gotoLander(page);
+
+    await expectFrameOne(page);
+    await sendReply(page);
+    await submitEmail(page);
+
+    await expect(page.getByText(COPY.no_match, { exact: false }))
+      .toBeVisible({ timeout: BUBBLE_TIMEOUT_MS });
+    await page.waitForTimeout(1_600);
+    expect(page.url(), "must not hand off at the old 1600ms beat").toContain("/evelyn");
+
+    // And a reader who reads fast is not held: Go now takes them immediately,
+    // well inside what remains of the countdown.
+    await expect(page.getByTestId("button-live-thread-go-now"))
+      .toBeVisible({ timeout: BUBBLE_TIMEOUT_MS });
+    await page.getByTestId("button-live-thread-go-now").click();
+    await expect.poll(() => page.url(), { timeout: 3_000 }).toMatch(/\/login\?mode=signup/);
+  });
+
   test("verified_match: 'I know you', a resend, and the page does NOT navigate", async ({ page }) => {
     await harness(page, { outcome: "verified_match" });
     await gotoLander(page);
@@ -501,7 +544,7 @@ test.describe("Live Thread (Evelyn) — email → lander → chat continuity", (
     // Frame 2b's copy must NOT also be on screen — the two branches are one
     // switch statement apart and regress into each other easily.
     await expect(page.getByText(COPY.no_match, { exact: false })).toHaveCount(0);
-    await expect(page.getByText(NO_MATCH_FOOTER, { exact: false })).toHaveCount(0);
+    await expect(page.getByText(OLD_FALSE_FOOTER, { exact: false })).toHaveCount(0);
 
     // Spec Frame 2: "Resend available now" — no hidden timer.
     await expect(page.getByRole("button", { name: /send it again/i })).toBeEnabled();
@@ -526,7 +569,7 @@ test.describe("Live Thread (Evelyn) — email → lander → chat continuity", (
 
     await expect(page.getByText(COPY.unverified_match, { exact: false })).toBeVisible();
     await expect(page.getByText(COPY.verified_match, { exact: false })).toHaveCount(0);
-    await expect(page.getByText(NO_MATCH_FOOTER, { exact: false })).toHaveCount(0);
+    await expect(page.getByText(OLD_FALSE_FOOTER, { exact: false })).toHaveCount(0);
     await expect(page.getByRole("button", { name: /send it again/i })).toBeEnabled();
 
     await page.waitForTimeout(HANDOFF_DELAY_MS + 900);
