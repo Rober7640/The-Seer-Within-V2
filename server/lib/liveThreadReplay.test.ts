@@ -32,7 +32,7 @@ import { and, eq, asc } from 'drizzle-orm';
 import { db, pool } from './db';
 import { chatMessages, chatSessions, evelynLanderSessions, personas, users } from '@shared/schema';
 import { initSession } from './chatEngine';
-import { replayPendingReply, LIVE_THREAD_REPLAY_WINDOW_DAYS } from './liveThreadReplay';
+import { replayPendingReply, findEligibleParkedReply, LIVE_THREAD_REPLAY_WINDOW_DAYS } from './liveThreadReplay';
 import { startChatSession } from './creditTracking';
 import evelynLanderRouter from '../routes/evelynLander';
 import {
@@ -731,5 +731,27 @@ describe('the replayed session bills from the reader\'s arrival', { skip: !HAS_D
       .where(eq(users.id, user.id))
       .limit(1);
     assert.equal(u!.coinBalance, 5000);
+  });
+});
+
+// The campaign rides along on the eligible reply because liveThreadPreview.ts needs
+// it to look up the email's big idea. Without it that turn — the first thing the
+// reader reads after signing in — answers with no idea what the letter was about.
+describe('findEligibleParkedReply — carries the arrival campaign', { skip: !HAS_DB }, () => {
+  it('returns the campaign the reader arrived on', async () => {
+    const user = await readerWithCoins();
+    await makeLanderSession('campaign-carried', {
+      resolvedUserId: user.id,
+      pendingReply: '444. Every day.',
+    });
+
+    const eligible = await findEligibleParkedReply({
+      userId: user.id,
+      personaSlug: 'evelyn-cross',
+    });
+
+    assert.ok(eligible, 'the parked reply is eligible');
+    assert.equal(eligible!.campaign, 'replay-test-campaign');
+    assert.equal(eligible!.reply, '444. Every day.');
   });
 });

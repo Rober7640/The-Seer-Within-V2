@@ -91,6 +91,15 @@ export interface EligibleParkedReply {
   reply: string;
   /** The persona's pre-session answer, once generated. Null until then. */
   response: string | null;
+  /**
+   * The campaign this reader arrived on, or null if they landed without one.
+   * Carried so liveThreadPreview.ts can look up the email's BIG IDEA and answer
+   * ON that subject — the pre-session turn is the first thing a reader reads
+   * after signing in, and it was the one place the 2026-08-19 anchoring rule did
+   * not reach. See buildArrivalReadingSection() for why naming the subject is
+   * what makes the difference.
+   */
+  campaign: string | null;
 }
 
 /**
@@ -122,6 +131,7 @@ export async function findEligibleParkedReply(config: {
       id: evelynLanderSessions.id,
       pendingReply: evelynLanderSessions.pendingReply,
       pendingReplyResponse: evelynLanderSessions.pendingReplyResponse,
+      campaign: evelynLanderSessions.campaign,
     })
     .from(evelynLanderSessions)
     .where(and(
@@ -141,6 +151,7 @@ export async function findEligibleParkedReply(config: {
     landerSessionId: row.id,
     reply: row.pendingReply,
     response: row.pendingReplyResponse ?? null,
+    campaign: row.campaign ?? null,
   };
 }
 
