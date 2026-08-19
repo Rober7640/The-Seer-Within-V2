@@ -10,27 +10,50 @@
 // any signup ask.
 //
 // Frames, in order:
-//   Frame 1   — Evelyn's continueSeed bubble + a real compose bar.
+//   Frame 1   — Evelyn's opener, revealed as SEVERAL bubbles with typing
+//               pacing, plus a real compose bar.
 //   Frame 1.5 — the reader's reply is POSTed to /api/evelyn-lander/reply and
 //               PARKED server-side (pendingReply). Only once that write lands
-//               does the email field appear. That ordering is the whole point:
-//               the reply must survive even if the reader abandons here or
-//               account detection fails, so it is never gated behind an email.
+//               does Evelyn answer, and her answer is what asks for the email.
+//               That ordering is the whole point: the reply must survive even
+//               if the reader abandons here or account detection fails, so it
+//               is never gated behind an email.
 //   Frame 2 / 2b / 2c — one confirmation bubble per /check-email outcome.
 //
-// This is a FUNCTIONAL SKELETON matching the wireframes' behaviour contract,
-// not final visual styling (plan §Task 11 Step 4 says so explicitly). It follows
-// the chat-bubble conventions already in EvelynLanderPage.tsx / evelyn-lander/
-// so the two arms of the experiment look like the same product.
+// ── 2026-08-19 REBUILD (Joel's flow feedback) ───────────────────────────────
+// Three changes, all to how this READS; the network contract is untouched.
+//
+//  1. MULTI-BUBBLE OPENER. It was one bubble holding the whole seed. The seed is
+//     now split (lib/chatBubbles.ts) and revealed bubble by bubble behind typing
+//     dots, because "a few messages" is what a person sends and one paragraph is
+//     what a notice sends. The bubbles come from the EMAIL's own authored copy —
+//     see chatBubbles.ts for why the seed is the only field that can be shown.
+//  2. CHAT PARITY. The shell was a Card floating on the cosmic background. It now
+//     uses the same frame, header, bubble classes and typing indicator as the
+//     real chat (ChatPage.tsx / ChatServicePage.tsx), so a reader who continues
+//     into /reading sees the same room they were already standing in.
+//  3. EVELYN ASKS FOR THE EMAIL. It used to jump straight from the reader's reply
+//     to a form panel labelled, in the third person, "Save this so Evelyn can
+//     answer it:" — she was described rather than speaking, which read as a
+//     system prompt wearing her name. She now answers first, in character, and
+//     the ask lives in her own bubble with the input sitting in the composer
+//     where her last question can be answered like any other.
+//
+// Her two answering bubbles are SCRIPTED, not generated. This is the highest-
+// intent moment in the funnel and an LLM call here would buy personalisation at
+// the cost of latency, spend and a failure mode on the one step that must not
+// fail. They are written to be true for all three /check-email outcomes, since
+// which one applies is not known until after the email is submitted.
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "wouter";
 import { CosmicBackground } from "@/components/CosmicBackground";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Sparkles, Send, Lock } from "lucide-react";
+import { Send, Lock } from "lucide-react";
 import CrisisDisclaimer from "@/components/CrisisDisclaimer";
 import { createTimeoutSignal } from "@/lib/timeoutSignal";
+import { splitIntoBubbles } from "@/lib/chatBubbles";
+import { calculateTypingDelay, calculatePauseBetweenMessages, sleep } from "@/lib/typingAnimation";
 
 // The three outcomes of POST /api/evelyn-lander/check-email
 // (server/routes/evelynLander.ts:849-945). Named exactly as the route returns
@@ -78,12 +101,39 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const EVELYN_AVATAR = "/uploads/avatars/evelyn-cross.png";
 
-// Spec Frame 1: "If the code is missing, unresolvable, or not yet paired with
-// content ... fall back to a generic-but-still-in-character opener — never to
-// the old quiz." Task 12 passes a resolved seed, but rendering an EMPTY opening
-// bubble would be the one unrecoverable first impression, so guard here too.
-const FALLBACK_SEED =
-  "You came back — good. I've been holding a thread for you since that email went out. Tell me what's been sitting with you, and I'll tell you what's actually underneath it.";
+// ---------------------------------------------------------------------------
+// Typing pacing.
+//
+// Same SHAPE as the live chat — dots in a bubble, one message at a time — using
+// the same helpers, but with the opener capped tighter than
+// calculateTypingDelay's own 5s ceiling. In chat, a reader who just sent
+// something will wait; here they have just landed from an email and a page that
+// shows nothing but dots for eight seconds is a page they leave. Capped, three
+// bubbles land in ~5s, which is roughly the time it takes to read the first two.
+//
+// The composer stays live throughout regardless (see flushOpener) so this pacing
+// can never hold anyone up.
+// ---------------------------------------------------------------------------
+const OPENER_FIRST_TYPING_MS = 600;
+const OPENER_MAX_TYPING_MS = 1_600;
+const OPENER_PAUSE_MS = 500;
+/** Her reply to the reader gets the real chat pause, and a slightly longer cap. */
+const RESPONSE_MAX_TYPING_MS = 1_800;
+
+// ---------------------------------------------------------------------------
+// Evelyn's answer to the reply, and the email ask inside it.
+//
+// TRUE FOR EVERY OUTCOME. When these render, /reply has returned ok — so the
+// words ARE parked server-side and "held" is literal. The ask names IDENTITY
+// ("how I know it's you"), never a send: /check-email mails nothing at all on
+// no_match, and its verified_match branch has two paths that also send nothing
+// (see confirmationCopy below). Promising an inbox here would be false for a
+// large share of readers, and which share is not knowable until they submit.
+// ---------------------------------------------------------------------------
+const RESPONSE_BUBBLES = [
+  "Okay. I've got what you wrote — it's held on my side now, it isn't going anywhere.",
+  "Before I take this any further: what's the email you read my letter on? That's how I know it's you, and how I keep this thread instead of starting you over.",
+];
 
 interface Bubble {
   role: "assistant" | "user";
@@ -142,10 +192,24 @@ export default function LiveThreadLander({
   onOutcome,
   prefillEmail,
 }: Props) {
-  const seed = continueSeed.trim() || FALLBACK_SEED;
+  // FALLBACK_SEED is inlined here rather than kept as a module constant so the
+  // "never render a blank bubble" floor sits next to the only place it applies.
+  const seed =
+    continueSeed.trim() ||
+    "You came back — good. I've been holding a thread for you since that email went out. Tell me what's been sitting with you, and I'll tell you what's actually underneath it.";
 
-  const [messages, setMessages] = useState<Bubble[]>([{ role: "assistant", content: seed }]);
-  const [stage, setStage] = useState<"reply" | "email" | "done">("reply");
+  // The opener's bubbles, resolved once. Empty is impossible (`seed` has a
+  // floor), but splitIntoBubbles can return [] for blank input, so the guard
+  // below still treats an empty list as "nothing left to reveal".
+  const openerBubbles = useMemo(() => splitIntoBubbles(seed), [seed]);
+
+  const [messages, setMessages] = useState<Bubble[]>([]);
+  // 'responding' is Evelyn answering the reply. It is a stage of its own so the
+  // compose bar is gone while she types — without it a reader could fire a
+  // second reply into a thread that is mid-answer, and /reply would park it over
+  // the first.
+  const [stage, setStage] = useState<"reply" | "responding" | "email" | "done">("reply");
+  const [isTyping, setIsTyping] = useState(false);
 
   const [replyDraft, setReplyDraft] = useState("");
   // Seeded once from the merge-tag hint. Not synced to later prop changes on
@@ -173,13 +237,109 @@ export default function LiveThreadLander({
   // of them are ever legitimately concurrent.
   const inFlight = useRef(false);
 
-  // A long continueSeed plus a long reply can overflow the thread's scroll box,
-  // which would push the confirmation bubble — the whole payoff of the flow —
-  // out of view. Same anchor EvelynLanderPage uses for the same reason.
+  // Set while the opener is still being revealed; calling it drops the rest of
+  // the animation on the floor and prints every remaining bubble at once. See
+  // flushOpener.
+  const openerFlushRef = useRef<(() => void) | null>(null);
+
+  // A long opener plus a long reply can overflow the thread's scroll box, which
+  // would push the confirmation bubble — the whole payoff of the flow — out of
+  // view. Same anchor EvelynLanderPage uses for the same reason. `isTyping` is a
+  // dependency because the dots appearing also grow the box.
   const threadEndRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
     threadEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages.length, stage]);
+  }, [messages.length, stage, isTyping]);
+
+  // -------------------------------------------------------------------------
+  // The opener animation.
+  //
+  // Runs once on mount. `cancelled` covers unmount mid-reveal (React 18 StrictMode
+  // double-invokes effects in dev, and the reader can navigate at any time), so no
+  // state update ever lands on a dead component.
+  //
+  // The flush path exists because the pacing must never cost anyone a turn: a
+  // reader who types and sends while she is still "typing" gets the rest of her
+  // opener printed instantly, ahead of their own message, so the thread stays in
+  // the order it was actually said.
+  // -------------------------------------------------------------------------
+  useEffect(() => {
+    let cancelled = false;
+    let revealed = 0;
+
+    openerFlushRef.current = () => {
+      cancelled = true;
+      openerFlushRef.current = null;
+      setIsTyping(false);
+      if (revealed < openerBubbles.length) {
+        const rest = openerBubbles.slice(revealed).map((content) => ({
+          role: "assistant" as const,
+          content,
+        }));
+        revealed = openerBubbles.length;
+        setMessages((prev) => [...prev, ...rest]);
+      }
+    };
+
+    (async () => {
+      for (let i = 0; i < openerBubbles.length; i++) {
+        const text = openerBubbles[i];
+        const typingMs =
+          i === 0
+            ? OPENER_FIRST_TYPING_MS
+            : Math.min(calculateTypingDelay(text), OPENER_MAX_TYPING_MS);
+
+        setIsTyping(true);
+        await sleep(typingMs);
+        if (cancelled) return;
+        setIsTyping(false);
+        setMessages((prev) => [...prev, { role: "assistant", content: text }]);
+        revealed = i + 1;
+
+        if (i < openerBubbles.length - 1) {
+          await sleep(OPENER_PAUSE_MS);
+          if (cancelled) return;
+        }
+      }
+      openerFlushRef.current = null;
+    })();
+
+    return () => {
+      cancelled = true;
+      openerFlushRef.current = null;
+    };
+  }, [openerBubbles]);
+
+  /** Print any un-revealed opener bubbles immediately. No-op once it has run. */
+  function flushOpener() {
+    openerFlushRef.current?.();
+  }
+
+  /**
+   * Evelyn's answer to the reply, then the email ask. Runs only after /reply has
+   * confirmed the words are parked, so `stage` moves to 'email' at the END of it
+   * — the field appearing is the last beat of her asking for it, not a separate
+   * form that opens alongside.
+   *
+   * Not cancellable on unmount by design: it is a fire-and-forget sequence whose
+   * only writes are setState, and the component unmounting mid-way means the
+   * reader has already navigated (the no_match handoff is the only navigation and
+   * it cannot fire before this finishes). React's dev warning for a stray update
+   * would be the worst outcome here, so this stays simple.
+   */
+  async function playResponse() {
+    for (let i = 0; i < RESPONSE_BUBBLES.length; i++) {
+      const text = RESPONSE_BUBBLES[i];
+      setIsTyping(true);
+      await sleep(Math.min(calculateTypingDelay(text), RESPONSE_MAX_TYPING_MS));
+      setIsTyping(false);
+      setMessages((prev) => [...prev, { role: "assistant", content: text }]);
+      if (i < RESPONSE_BUBBLES.length - 1) {
+        await sleep(calculatePauseBetweenMessages());
+      }
+    }
+    setStage("email");
+  }
 
   async function handleSendReply() {
     const text = replyDraft.trim();
@@ -189,11 +349,23 @@ export default function LiveThreadLander({
     setSending(true);
     setErrorMsg(null);
 
+    // Anything of hers still queued goes in FIRST, so the transcript reads in
+    // the order it was said rather than showing her finishing a thought after
+    // the reader had already answered it.
+    flushOpener();
+
     // Optimistic: their words become a sent bubble immediately (Frame 1.5 shows
     // the reply as a real chat bubble, not form input), and the compose bar
     // shows a spinner, so the wait is never a blank screen.
-    const priorMessages = messages;
-    setMessages([...priorMessages, { role: "user", content: text }]);
+    //
+    // `priorMessages` is read from the setter rather than from `messages` so the
+    // rollback baseline includes the bubbles flushOpener may have just added —
+    // reading the render-time value would silently erase them on a failed send.
+    let priorMessages: Bubble[] = [];
+    setMessages((prev) => {
+      priorMessages = prev;
+      return [...prev, { role: "user", content: text }];
+    });
     setReplyDraft("");
 
     const { signal, cleanup } = createTimeoutSignal(REPLY_TIMEOUT_MS);
@@ -250,6 +422,10 @@ export default function LiveThreadLander({
       // the hotline stays visible in the thread above it either way. We do NOT
       // restore the flagged text into the box (that would only invite an
       // immediate re-send of the same words).
+      //
+      // It also does NOT get the typing animation the ordinary answer gets:
+      // holding a hotline number behind two seconds of dots to seem lifelike is
+      // the wrong trade on the one message that might matter most.
       if (data?.ok === false && data?.blocked === "safety") {
         // The route only takes this branch when safety.response is truthy, so
         // `reply` is always populated in practice — but an EMPTY support bubble
@@ -270,7 +446,12 @@ export default function LiveThreadLander({
       // Everything else is `{ ok: true }` — safe, soft-crisis-but-safe, or a
       // non-crisis violation (all of which ARE stored, evelynLander.ts:473-499).
       // Exactly two branches to handle, per the route's own documented contract.
-      setStage("email");
+      //
+      // The reply is parked, so she can now answer it and ask for the email in
+      // her own voice. `stage` moves off 'reply' here rather than inside
+      // playResponse so the compose bar cannot linger for a frame after send.
+      setStage("responding");
+      void playResponse();
     } catch (err) {
       // Network failure, or a timeout (TimeoutError on modern browsers /
       // AbortError on createTimeoutSignal's fallback path). Same treatment as a
@@ -370,8 +551,11 @@ export default function LiveThreadLander({
       }
       setSubmittedEmail(value);
       setOutcome(result.outcome);
+      // Her address answers her question, so it goes in as the reader's own
+      // bubble — the same shape the reply took — before her confirmation lands.
       setMessages((prev) => [
         ...prev,
+        { role: "user", content: value },
         { role: "assistant", content: confirmationCopy(result.outcome, value) },
       ]);
       setStage("done");
@@ -410,38 +594,64 @@ export default function LiveThreadLander({
 
   const sendDisabled = sending || replyDraft.trim().length === 0;
 
+  // ---------------------------------------------------------------------------
+  // Shell, header, thread and composer all mirror ChatPage.tsx (V1 /chat) and
+  // ChatServicePage.tsx (V2 /reading), which already share these classes. Kept
+  // as literal class strings rather than an extracted component because the two
+  // chat pages do the same, and a shared abstraction here would be the only
+  // caller of itself while making three files harder to diff against each other.
+  // ---------------------------------------------------------------------------
   return (
-    <div className="min-h-screen relative flex items-center justify-center p-4">
+    <div className="fixed inset-0 flex flex-col items-center justify-center p-0 md:p-4 overflow-hidden">
       <CosmicBackground />
 
-      <Card className="bg-white/95 backdrop-blur-md border-white/20 w-full max-w-md relative z-10">
-        <CardContent className="pt-6 pb-6 space-y-4">
-          {/* Header — persona identity + the "secure" cue from the wireframe */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="relative">
+      <div className="w-full max-w-lg h-full md:h-[90vh] flex flex-col bg-white/95 backdrop-blur-md md:rounded-2xl shadow-2xl overflow-hidden border border-white/20 relative z-10">
+        {/* Header — same identity strip as /chat. The lock replaces /chat's
+            "Exit": there is nowhere to exit TO from an emailed arrival, and the
+            wireframe's "secure" cue is worth more at the point where an email
+            address is about to be asked for. */}
+        <header className="bg-bg-mid text-white p-4 flex items-center justify-between gap-2 shadow-md shrink-0">
+          <div className="flex items-center gap-3">
+            <div className="relative">
+              <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-secondary">
                 <img
                   src={EVELYN_AVATAR}
                   alt="Evelyn Cross"
-                  className="w-10 h-10 rounded-full object-cover border-2 border-purple-300/50"
+                  className="w-full h-full object-cover"
                 />
-                <Sparkles className="w-3 h-3 text-purple-500 absolute -top-0.5 -right-0.5" />
               </div>
-              <h1 className="font-serif text-base text-gray-900">Evelyn Cross</h1>
+              <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-bg-mid animate-pulse" />
             </div>
-            <span className="flex items-center gap-1 text-[11px] text-gray-500">
-              <Lock className="w-3 h-3" />
-              secure
-            </span>
+            <div>
+              <h1 className="font-serif font-bold text-lg leading-none">Evelyn Cross</h1>
+              <span className="text-xs text-green-400 font-medium">Online Now</span>
+            </div>
           </div>
+          <span className="flex items-center gap-1 text-[11px] text-white/70">
+            <Lock className="w-3 h-3" />
+            secure
+          </span>
+        </header>
 
-          {/* The thread */}
-          <div className="border-t border-purple-100 pt-4 space-y-3 max-h-[55vh] overflow-y-auto">
-            {messages.map((m, i) => (
-              <ChatBubble key={i} role={m.role} content={m.content} />
-            ))}
-            <div ref={threadEndRef} />
-          </div>
+        {/* The thread */}
+        <div
+          className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50/50 scroll-smooth"
+          data-testid="container-live-thread-messages"
+        >
+          {messages.map((m, i) => (
+            <ChatBubble key={i} role={m.role} content={m.content} />
+          ))}
+
+          {/* Typing indicator — identical markup to both chat pages. */}
+          {isTyping && (
+            <div className="flex justify-start w-full animate-fade-in" data-testid="indicator-typing">
+              <div className="bg-white border border-gray-100 rounded-2xl rounded-bl-none px-4 py-3 shadow-sm flex items-center gap-1">
+                <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce [animation-delay:-0.3s]" />
+                <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce [animation-delay:-0.15s]" />
+                <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" />
+              </div>
+            </div>
+          )}
 
           {/* Crisis banner — reuses the same component the real chat renders
               (ChatServicePage.tsx:2433) so the support surface is identical
@@ -454,6 +664,13 @@ export default function LiveThreadLander({
             />
           )}
 
+          <div ref={threadEndRef} />
+        </div>
+
+        {/* Composer. One bar, three states — her question is answered in the
+            same place whatever she asked for, which is the point of the rebuild:
+            the email is a turn in the conversation, not a form below it. */}
+        <div className="border-t border-gray-100 bg-white p-3 shrink-0 space-y-2">
           {/* Live region for every failure in this flow — errors are surfaced
               here and nowhere else, so without it a screen-reader user who taps
               Send and gets a 429 hears nothing change at all.
@@ -464,8 +681,7 @@ export default function LiveThreadLander({
                 registered at mount, before any text is injected; a region
                 created and populated in the same DOM insertion is not reliably
                 announced. `empty:hidden` toggles only `display`, so the node
-                stays permanently in the DOM while costing zero layout (an
-                always-present empty <p> would otherwise take a space-y gap). */}
+                stays permanently in the DOM while costing zero layout. */}
           <p
             className="text-sm text-red-600 text-center empty:hidden"
             role="status"
@@ -474,7 +690,7 @@ export default function LiveThreadLander({
             {errorMsg}
           </p>
 
-          {/* Frame 1 — compose bar */}
+          {/* Frame 1 — reply */}
           {stage === "reply" && (
             <div className="flex items-end gap-2">
               <textarea
@@ -487,10 +703,12 @@ export default function LiveThreadLander({
                   }
                 }}
                 placeholder="Type your reply..."
+                aria-label="Your reply to Evelyn"
                 maxLength={MAX_REPLY_LENGTH}
                 disabled={sending}
                 rows={2}
-                className="flex-1 resize-none rounded-md border border-purple-200 bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:border-purple-400 focus:outline-none disabled:bg-gray-50 disabled:text-gray-400"
+                data-testid="input-live-thread-reply"
+                className="flex-1 resize-none rounded-2xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:border-purple-400 focus:outline-none disabled:bg-gray-50 disabled:text-gray-400"
               />
               <Button
                 type="button"
@@ -498,7 +716,8 @@ export default function LiveThreadLander({
                 disabled={sendDisabled}
                 size="icon"
                 aria-label="Send"
-                className="bg-purple-600 hover:bg-purple-700 text-white shrink-0"
+                data-testid="button-live-thread-send"
+                className="bg-purple-600 hover:bg-purple-700 text-white shrink-0 rounded-full"
               >
                 {sending ? (
                   <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -509,15 +728,18 @@ export default function LiveThreadLander({
             </div>
           )}
 
-          {/* Frame 1.5 — the single email field both branches read from. Only
-              reachable once /reply has confirmed the reply is parked. */}
+          {/* Frame 1.5 — the email, asked for in the bubble above this. No
+              label and no divider on purpose: the question is Evelyn's last
+              message, so a second written prompt here would say it twice in two
+              different voices. `aria-label` carries the same information for
+              anyone who cannot see that bubble sitting above the field. */}
           {stage === "email" && (
-            <div className="space-y-2 border-t border-purple-100 pt-4">
-              <p className="text-sm text-gray-700">Save this so Evelyn can answer it:</p>
+            <div className="flex items-center gap-2">
               <input
                 type="email"
                 inputMode="email"
                 autoComplete="email"
+                autoFocus
                 value={emailDraft}
                 onChange={(e) => setEmailDraft(e.target.value)}
                 onKeyDown={(e) => {
@@ -527,20 +749,25 @@ export default function LiveThreadLander({
                   }
                 }}
                 placeholder="your@email.com"
+                aria-label="The email address you read Evelyn's letter on"
                 maxLength={254}
                 disabled={checking}
-                className="w-full rounded-md border border-purple-200 bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:border-purple-400 focus:outline-none disabled:bg-gray-50 disabled:text-gray-400"
+                data-testid="input-live-thread-email"
+                className="flex-1 rounded-2xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:border-purple-400 focus:outline-none disabled:bg-gray-50 disabled:text-gray-400"
               />
               <Button
                 type="button"
                 onClick={handleSubmitEmail}
                 disabled={checking || emailDraft.trim().length === 0}
-                className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white"
+                size="icon"
+                aria-label="Send my email address"
+                data-testid="button-live-thread-email-submit"
+                className="bg-purple-600 hover:bg-purple-700 text-white shrink-0 rounded-full"
               >
                 {checking ? (
                   <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                 ) : (
-                  "Continue"
+                  <Send className="w-4 h-4" />
                 )}
               </Button>
             </div>
@@ -548,7 +775,7 @@ export default function LiveThreadLander({
 
           {/* Frames 2 / 2b / 2c — the footer under the confirmation bubble */}
           {stage === "done" && outcome && submittedEmail && (
-            <div className="space-y-2 border-t border-purple-100 pt-4 text-center">
+            <div className="space-y-2 text-center">
               {outcome === "no_match" ? (
                 // Frame 2b. No mail has been dispatched and none will be until
                 // they activate, so this stays in the future tense. Task 12's
@@ -586,27 +813,27 @@ export default function LiveThreadLander({
               )}
             </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 }
 
-// Same bubble treatment as EvelynLanderPage's chat arm, so the two experiment
-// arms read as one product.
+// The exact bubble treatment both chat pages use (ChatPage.tsx:196-201,
+// ChatServicePage.tsx:2493-2497), so a reader who continues into /reading is
+// looking at the same thread they started here.
 function ChatBubble({ role, content }: { role: "assistant" | "user"; content: string }) {
-  if (role === "assistant") {
-    return (
-      <div className="flex">
-        <div className="bg-purple-50 text-gray-800 rounded-2xl rounded-tl-sm px-4 py-2 max-w-[85%] text-sm leading-relaxed font-serif">
-          {content}
-        </div>
-      </div>
-    );
-  }
+  const isUser = role === "user";
   return (
-    <div className="flex justify-end">
-      <div className="bg-purple-600 text-white rounded-2xl rounded-tr-sm px-4 py-2 max-w-[85%] text-sm leading-relaxed">
+    <div className={`flex w-full ${isUser ? "justify-end" : "justify-start"}`}>
+      <div
+        data-testid={isUser ? "user-message" : "assistant-message"}
+        className={`max-w-[80%] rounded-2xl px-4 py-3 shadow-sm text-sm md:text-base leading-relaxed ${
+          isUser
+            ? "bg-purple-600 text-white rounded-br-none"
+            : "bg-white text-gray-800 border border-gray-100 rounded-bl-none"
+        }`}
+      >
         {content}
       </div>
     </div>
