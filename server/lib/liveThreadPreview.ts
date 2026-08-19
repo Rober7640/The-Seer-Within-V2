@@ -97,7 +97,8 @@ ${config.firstName} typed the message below into your thread before their readin
 
 - Do NOT greet them, welcome them, or introduce yourself. They have already been greeted; opening with a greeting makes it obvious nobody read what they wrote.
 - Do NOT tell them to say more first, and do not stall. Give them something real about what they actually said — one observation with substance in it.
-- 2 to 4 sentences. Plain prose: no markdown, no bullet points, no headers.
+- AT MOST 40 WORDS. Two short sentences and a question — count them. Your voice rules say a reply usually runs 60-140 words; that range is for a READING, and this is not one yet. It is the first thing they see after signing in, they have typed one line, and nothing has been read for them. Overrun this and it lands as a brochure, not a person.
+- Plain prose: no markdown, no bullet points, no headers.
 - End with one question that opens the reading.
 - Do not offer, promise, or mention anything they would have to pay for.`;
 
@@ -109,7 +110,10 @@ ${config.firstName} typed the message below into your thread before their readin
     const response = await fireWithBreaker(anthropicBreaker, () =>
       anthropic.messages.create({
         model: conversationModel,
-        max_tokens: 400,
+        // ~150 words of headroom against a 40-word instruction. Deliberately not
+        // tight enough to truncate a compliant reply mid-sentence — the ceiling
+        // is enforced by the instruction above; this only stops a runaway.
+        max_tokens: 200,
         system,
         messages: [{ role: 'user', content: config.reply }],
       }),

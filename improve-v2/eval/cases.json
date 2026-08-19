@@ -1146,6 +1146,26 @@
         "idk",
         "i keep saying i'm fine with however it goes"
       ]
+    },
+    {
+      "id": "arrival-reading-what-can-you-do",
+      "persona": "evelyn-cross",
+      "firstName": "Mike",
+      "arrivalCampaign": "reframe-03-devil",
+      "title": "2026-08-19 field report, reproduced from the operator's own walkthrough. Arrived from the Devil-card letter, correct arrival greeting asking him to name the loop, then a META question about her service (\"how can you help me?\"). She answered with a generic capabilities pitch and closed on the generic gather (\"What's been weighing on your heart lately?\"), dropping the card entirely. Joel's model is one email = one big idea and the chat must stay on it; this case is the guard for that. Synthetic name; scenario reworded.",
+      "tests": [
+        "answers the 'how can you help' question briefly and plainly — does not refuse it",
+        "does NOT close with a generic gather ('what's weighing on you', 'what brought you here', 'what's on your mind')",
+        "names the letter's subject — the Devil card and its chains — rather than describing her services in general",
+        "the way back she offers IS the specific open loop: the loop/thing he keeps going back to",
+        "turn 2 ('idk what you mean') stays on the same subject instead of widening",
+        "turn 3 supplies the loop — she reads THAT, and never re-asks what it is"
+      ],
+      "turns": [
+        "how can you help me?",
+        "idk what you mean",
+        "i keep going back to my ex every time things get quiet"
+      ]
     }
   ]
 }
