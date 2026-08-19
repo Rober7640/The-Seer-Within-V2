@@ -32,8 +32,9 @@ describe('getFreeMinutesForSignup — the number the verification email quotes',
   // Pins the operator's decision. Every other assertion here (and in auth.test.ts)
   // compares against LIVE_THREAD_FREE_MINUTES, so without this line the whole suite
   // is tautological — retuning the constant to 4 or 20 would keep it all green.
-  it('grants 10 minutes, the operator-confirmed amount', () => {
-    assert.equal(LIVE_THREAD_FREE_MINUTES, 10, 'operator-confirmed grant');
+  it('grants 5 minutes, the operator-confirmed amount', () => {
+    // Cut from 10 to 5 on 2026-08-19, before the tier had ever fired in production.
+    assert.equal(LIVE_THREAD_FREE_MINUTES, 5, 'operator-confirmed grant');
   });
 
   it('quotes the Live Thread amount for an engaged Evelyn-lander signup', () => {

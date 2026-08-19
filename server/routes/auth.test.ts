@@ -140,7 +140,7 @@ async function unverifiedUserWithToken(overrides: Record<string, unknown> = {}) 
 //   server/lib/verificationEmail.freeMinutes.test.ts
 //
 // Eight pure-function cases pinning what getFreeMinutesForSignup() quotes,
-// including that LIVE_THREAD_FREE_MINUTES is 10 (without which every assertion
+// including that LIVE_THREAD_FREE_MINUTES is 5 (without which every assertion
 // BELOW is tautological — they all compare against the constant, so retuning it
 // to 4 would keep this whole file green). They were written here on purpose, to
 // sit beside the grant they must stay in lockstep with. They were moved out

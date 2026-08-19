@@ -12,8 +12,10 @@
 // WHY THIS IS FREE AND SESSIONLESS. The obvious fix — start the session on page load
 // so the reply and an answer can be rendered from it — restarts the wall-clock meter
 // at arrival instead of at the reader's first word. On Evelyn that is 299¢/min against
-// a 2990¢ grant: a minute of reading time is 10% of the gift, spent before they say
-// anything. Task 10 was redesigned to remove exactly that charge (see
+// a 1495¢ grant: a minute of reading time is 20% of the gift, spent before they say
+// anything. (That was 10% when this was written against the old 2990¢ Live Thread
+// grant; halving the grant on 2026-08-19 doubled the damage, so the argument for
+// staying sessionless got stronger, not weaker.) Task 10 was redesigned to remove exactly that charge (see
 // liveThreadReplay.ts's header for the measurements) and this must not put it back.
 // So this module makes ONE unbilled model call and creates NO session — the shape
 // GET /api/chat-service/greeting already establishes for every visitor. Billing still

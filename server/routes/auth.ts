@@ -73,7 +73,7 @@ const SOULMATE_LANDER_FREE_COINS = minutesToCoins(5); // 1495¢ = 5:00 at the de
 // on top of isFromEvelynLander() — see the note below that function. The minute count is imported, not
 // re-declared, because getFreeMinutesForSignup() quotes the same constant — which is
 // what stops the quote and the grant from drifting apart (verificationEmail.ts:52).
-const LIVE_THREAD_FREE_COINS = minutesToCoins(LIVE_THREAD_FREE_MINUTES); // 2990¢ = 10:00
+const LIVE_THREAD_FREE_COINS = minutesToCoins(LIVE_THREAD_FREE_MINUTES); // 1495¢ = 5:00
 // VERIFICATION_TOKEN_EXPIRY_HOURS now lives in ../lib/verificationEmail (imported
 // above) — same value (24), one definition, so shortening the window can't miss a
 // call site. Still used by /register and /magic-register below.
