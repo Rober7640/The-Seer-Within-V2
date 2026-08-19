@@ -36,6 +36,7 @@ import { and, eq, isNull } from 'drizzle-orm';
 import { db } from './db';
 import { evelynLanderSessions, personas, users } from '@shared/schema';
 import { findEligibleParkedReply } from './liveThreadReplay';
+import { resolveEmailReadingBrief } from './emailReadingBriefs';
 import { anthropicFailover as anthropic } from './anthropicWithFailover';
 import { fireWithBreaker, anthropicBreaker, isCircuitOpenError } from './circuitBreaker';
 import { getConversationModel } from './modelConfig';
@@ -80,27 +81,52 @@ function stripMarkers(prompt: string): string {
  * Returns null on any failure — the caller then shows the reply on its own, which is
  * still the continuity the reader came for.
  */
-async function generateResponse(config: {
+/**
+ * The system prompt for the pre-session turn. Exported so it can be asserted without
+ * a model call — this file's suite is hard-guarded against billing the account, so a
+ * prompt rule that is not testable in isolation is a rule nothing checks.
+ *
+ * THE SUBJECT IS STATED HERE TOO (2026-08-19). buildArrivalReadingSection() names the
+ * email's big idea for every turn the chat engine runs, but this turn does not go
+ * through that engine: it is one sessionless call built from the persona prompt alone.
+ * So the reader's FIRST message after signing in — the one that sets whether the
+ * thread continued or restarted — was the single beat the anchoring rule missed, and
+ * it answered off the reply alone. Observed on development: a reader who arrived on
+ * the Devil-card letter typed "444 I havent last few daya" and got a generic numerology
+ * reading closing with "What's been weighing heaviest on your heart lately?" — the
+ * exact stock question the arrival rule forbids by name.
+ */
+export function buildPreSessionSystemPrompt(config: {
   baseSystemPrompt: string;
-  aiModel: string | null;
   firstName: string;
-  reply: string;
-}): Promise<string | null> {
+  bigIdea: string | null;
+}): string {
   // The persona's REAL system prompt, so this reads in her voice rather than in a
   // second, thinner one written here. The framing below is the only thing added, and
   // it exists because this turn is genuinely unusual: there is no conversation above
   // it, and the reader has already been greeted by the bubble sitting on top.
-  const system = `${stripMarkers(config.baseSystemPrompt)}
+  return `${stripMarkers(config.baseSystemPrompt)}
 
 ## THIS TURN — the first thing you say to this client
 ${config.firstName} typed the message below into your thread before their reading was open. They have not spoken since. Answer THAT message, directly.
 
 - Do NOT greet them, welcome them, or introduce yourself. They have already been greeted; opening with a greeting makes it obvious nobody read what they wrote.
 - Do NOT tell them to say more first, and do not stall. Give them something real about what they actually said — one observation with substance in it.
-- AT MOST 40 WORDS. Two short sentences and a question — count them. Your voice rules say a reply usually runs 60-140 words; that range is for a READING, and this is not one yet. It is the first thing they see after signing in, they have typed one line, and nothing has been read for them. Overrun this and it lands as a brochure, not a person.
+${config.bigIdea ? `- THE SUBJECT OF THE LETTER THEY ARRIVED FROM, and therefore of this answer: ${config.bigIdea}. Answer what they typed THROUGH that subject and how it lives in their life — it is the only thing they came here for. A message that gives you little to work with does not release you from it, and your question at the end is about THAT, never a general one: not what is on their mind, not what is weighing on them, not which part of their life this concerns.\n` : ''}- AT MOST 40 WORDS. Two short sentences and a question — count them. Your voice rules say a reply usually runs 60-140 words; that range is for a READING, and this is not one yet. It is the first thing they see after signing in, they have typed one line, and nothing has been read for them. Overrun this and it lands as a brochure, not a person.
 - Plain prose: no markdown, no bullet points, no headers.
 - End with one question that opens the reading.
 - Do not offer, promise, or mention anything they would have to pay for.`;
+}
+
+async function generateResponse(config: {
+  baseSystemPrompt: string;
+  aiModel: string | null;
+  firstName: string;
+  reply: string;
+  /** The ONE thing the email they arrived from was about, when we know it. */
+  bigIdea: string | null;
+}): Promise<string | null> {
+  const system = buildPreSessionSystemPrompt(config);
 
   try {
     // Same model resolution the real chat turn uses (chatEngine.ts's sendMessage), so
@@ -189,11 +215,20 @@ export async function resolveLiveThreadPreview(config: {
       .where(eq(users.id, config.userId))
       .limit(1);
 
+    // The email's big idea, when this reader arrived on a campaign we have a brief
+    // for. Resolved here rather than inside generateResponse so a brief lookup
+    // failure cannot cost us the answer itself: null just means this turn reads the
+    // way it did before, off the reply alone.
+    const brief = eligible.campaign
+      ? await resolveEmailReadingBrief(eligible.campaign, config.personaSlug)
+      : null;
+
     const generated = await generateResponse({
       baseSystemPrompt: persona.baseSystemPrompt,
       aiModel: persona.aiModel ?? null,
       firstName: reader?.firstName || 'there',
       reply: eligible.reply,
+      bigIdea: brief?.bigIdea?.trim() || null,
     });
     if (!generated) return { reply: eligible.reply, response: null };
 
