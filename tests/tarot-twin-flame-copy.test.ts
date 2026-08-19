@@ -122,15 +122,34 @@ describe('twin-flame hooks are wired end to end', () => {
   // 🔴 The operator asked explicitly for hooks that do not overlap anything shipped.
   it('reuses no existing hook id and no existing headline', () => {
     expect(new Set(TAROT_HOOKS).size).toBe(TAROT_HOOKS.length);
-    const others = TAROT_HOOKS.filter((h) => !TWIN_FLAME_HOOKS.includes(h)).map((h) => HEADLINES[h]);
+    // 🔴 'cards-twinflame-back' (soulmate-return, 2026-08-19) is EXCLUDED here deliberately: it
+    // carries this family's 'cards-twin-back' headline verbatim, by operator decision, so that
+    // the two run as a copy test on identical pages. It is the one permitted counterpart — the
+    // assertion below still proves no OTHER lander has taken a twin-flame headline, and the
+    // funnel-wide dupes check that follows still pins the total set of deliberate pairs at two.
+    const COPY_TEST_COUNTERPART = 'cards-twinflame-back';
+    const others = TAROT_HOOKS.filter(
+      (h) => !TWIN_FLAME_HOOKS.includes(h) && h !== COPY_TEST_COUNTERPART,
+    ).map((h) => HEADLINES[h]);
     for (const h of TWIN_FLAME_HOOKS) {
       expect(others, `${h} headline collides with an existing lander`).not.toContain(HEADLINES[h]);
     }
+    // …and the counterpart really does still carry the incumbent's headline (if this ever
+    // diverges, the copy test has silently become two different ads).
+    expect(HEADLINES[COPY_TEST_COUNTERPART]).toBe(HEADLINES['cards-twin-back']);
+    expect(angleForHook('cards-twin-back')).toBe('twin-flame');
+    expect(angleForHook(COPY_TEST_COUNTERPART)).toBe('soulmate-return');
     // …and every headline on the funnel is still unique overall.
     const all = TAROT_HOOKS.map((h) => HEADLINES[h]);
     const dupes = all.filter((x, i) => all.indexOf(x) !== i);
     // cards-return / cards-come-back deliberately share one headline (reunion, 2026-08-04).
-    expect(new Set(dupes)).toEqual(new Set(['Will he come back?']));
+    // 🔴 'cards-twin-back' / 'cards-twinflame-back' share one headline too, by operator
+    // decision 2026-08-19 (the soulmate-return family): the incumbent keeps its ad URL and its
+    // `twin-flame` angle, and the challenger runs bespoke reads against it. Same call as
+    // cards-return / cards-come-back — identical pages mean the READS are the only variable.
+    expect(new Set(dupes)).toEqual(
+      new Set(['Will he come back?', 'Is my twin flame coming back to me?']),
+    );
   });
 
   it('leaves every previously shipped family exactly where it was', () => {
@@ -244,8 +263,13 @@ describe(`${DECK} — twin-flame reads`, () => {
 
   // ── The compliance core ────────────────────────────────────────────────────
   const NEGATOR =
-    /\b(no|not|never|n't|nor|nobody|no one|none|cannot|rather than|instead of|does not|is not|nothing|refuses?|declines?|will not|would not|withholds?|neither|without)\b/i;
-  const clausesOf = (s: string) => s.split(/[—;:,]/);
+    /\b(no|not|never|can't|unable|n't|nor|nobody|no one|none|cannot|rather than|instead of|does not|is not|nothing|refuses?|declines?|will not|would not|withholds?|neither|without)\b/i;
+  // 🔴 FIXED 2026-08-19 — this used to split on /[—;:,]/ only, which does NOT break on a
+  // full stop or a newline. Beat 3 carries four bubbles joined by '\n' since the migration, so
+  // a single negator in the first of them ('it was never you') put the whole of the remaining
+  // three behind the negation exemption and every clause ban in them was skipped silently.
+  // Found by feeding the gate a deliberate violation rather than trusting its green tick.
+  const clausesOf = (s: string) => s.split(/[—;:,.\n]/);
 
   const sweep = (bans: Array<[RegExp, string]>, always: Array<[RegExp, string]> = []) => {
     const hits: string[] = [];
@@ -283,10 +307,13 @@ describe(`${DECK} — twin-flame reads`, () => {
       [/\bhe (pulls|pulled) away because\b/i, 'explains his distance as the bond'],
       [/\bhis (distance|silence|absence) (is|shows|proves|means)\b/i, 'distance read as evidence'],
       [/\b(overwhelmed|frightened|scared) by (the|this) (intensity|connection|bond)\b/i, 'the runner rationale'],
-      [/\bhe (feels|felt) it too\b/i, 'narrates his interior'],
-      [/\bhe (thinks|dreams) (of|about) you\b/i, 'narrates his interior'],
-      [/\bhe (cannot|can't) (stay away|escape|deny)\b/i, 'narrates his interior'],
-      [/\bhe (is|will be) drawn back\b/i, 'forecast + narrates him'],
+      // 🔄 LOOSENED 2026-08-19 — "he feels it too" and "he thinks about you" were banned here
+      // as interior claims. They are now allowed on the operator's call: cards-twin-feels asks
+      // that exact question in its headline, and a lander that will not answer its own ad is
+      // the problem we are fixing. What stays banned below is the part that keeps her WAITING —
+      // his absence read as devotion, and his return promised as a thing that is coming.
+      [/\bhe (cannot|can't) (stay away|escape|deny)\b/i, 'the runner script — makes his absence devotion'],
+      [/\bhe (is|will be) drawn back\b/i, 'promises the return'],
     ];
     const hits = sweep(RUNNER);
     expect(hits, `ran the runner script:\n${hits.join('\n')}`).toEqual([]);

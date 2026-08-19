@@ -242,8 +242,13 @@ describe(`${DECK} — soulmate-after-loss reads`, () => {
   // the refusals on this angle lean on them heavily ("The Magician stands nobody out
   // there", "a person I cannot see").
   const NEGATOR =
-    /\b(no|not|never|n't|nor|nobody|no one|none|cannot|rather than|instead of|does not|is not|nothing|refuses|declines?|will not|withholds?|neither)\b/i;
-  const clausesOf = (s: string) => s.split(/[—;:,]/);
+    /\b(no|not|never|can't|unable|without|n't|nor|nobody|no one|none|cannot|rather than|instead of|does not|is not|nothing|refuses|declines?|will not|withholds?|neither)\b/i;
+  // 🔴 FIXED 2026-08-19 — this used to split on /[—;:,]/ only, which does NOT break on a
+  // full stop or a newline. Beat 3 carries four bubbles joined by '\n' since the migration, so
+  // a single negator in the first of them ('it was never you') put the whole of the remaining
+  // three behind the negation exemption and every clause ban in them was skipped silently.
+  // Found by feeding the gate a deliberate violation rather than trusting its green tick.
+  const clausesOf = (s: string) => s.split(/[—;:,.\n]/);
 
   const sweep = (bans: Array<[RegExp, string]>, always: Array<[RegExp, string]> = []) => {
     const hits: string[] = [];
@@ -287,23 +292,24 @@ describe(`${DECK} — soulmate-after-loss reads`, () => {
   // The live self-frame incumbent 'cards-soulmate' IS allowed to affirm arrival — nobody
   // has died in that hook. The identical sentence here promises a bereaved partner a
   // replacement, which is the entire reason this family is not self-frame.
-  it('never promises an ARRIVAL, and never gives a timeframe', () => {
+  // 🔄 LOOSENED 2026-08-19, operator call. The arrival promise is the desire-affirmation the
+  // funnel was BUILT on — the palm formula this deck inherits says it in writing ("affirm the
+  // hopeful answer with certainty… 'closer than you think'"). Banning it is what made
+  // cards-ready-to-love decline its own headline. It comes back.
+  //
+  // ⚠️ 'nearer than' STAYS banned, and not as a content rule: it is the live cards-soulmate
+  // incumbent's exact landing, and reusing it makes this hook the same lander as that one.
+  // Distinctness, not safety. Dates stay banned — a checkable claim is a refund.
+  it('never puts a DATE on the arrival, and does not become cards-soulmate', () => {
     const ARRIVAL: Array<[RegExp, string]> = [
-      [/\b(he|she|they|someone|somebody) (is|are) (coming|arriving|on the way|almost here)\b/i, 'promise: an arrival'],
-      [/\bis on (his|her|their|the) way (to you)?\b/i, 'promise: an arrival'],
-      [/\byou (will|are going to) (meet|find) (him|her|them|someone|somebody)\b/i, 'promise: forecasts a meeting'],
-      [/\b(someone|somebody) is (out there )?waiting for you\b/i, 'promise: locates a person'],
-      [/\bthe (right|next) (one|person) (is|will be)\b/i, 'promise: describes a future partner'],
-      [/\byour (new )?soulmate (is|will)\b/i, 'promise: forecasts arrival'],
-      [/\bnearer than\b/i, 'promise: the incumbent cards-soulmate proximity claim'],
-      [/\byou will (love|be loved) again\b/i, 'promise: forecasts her future'],
+      [/\bnearer than\b/i, 'collides with the live cards-soulmate landing'],
     ];
     const ALWAYS: Array<[RegExp, string]> = [
-      [/\bwithin (a|the|\d)/i, 'timeframe'],
-      [/\bin (a few|the next|\d+) (day|week|month|year)/i, 'timeframe'],
-      [/\bsoon\b/i, 'timeframe'],
+      [/\bwithin (a|the|\d)/i, 'a dated prediction'],
+      [/\bin (a few|the next|\d+) (day|week|month|year)/i, 'a dated prediction'],
+      [/\bby (the end of|christmas|new year|spring|summer|autumn|winter)\b/i, 'a dated prediction'],
       [/\bI promise\b/i, 'a promise the funnel cannot keep'],
-      [/\bnot (much )?long now\b/i, 'timeframe'],
+      [/\bnot (much )?long now\b/i, 'a dated prediction in soft clothes'],
     ];
     const hits = sweep(ARRIVAL, ALWAYS);
     expect(hits, `arrival / timeframe:\n${hits.join('\n')}`).toEqual([]);

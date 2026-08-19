@@ -203,22 +203,29 @@ describe(`${DECK} — pulling-away reads`, () => {
   });
 
   // ── The compliance core ────────────────────────────────────────────────────
-  const NEGATOR = /\b(no|not|never|n't|nor|rather than|instead of|does not|is not|nothing|refuses|declines|will not)\b/i;
-  const clausesOf = (s: string) => s.split(/[—;:,]/);
+  const NEGATOR = /\b(no|not|never|none|nobody|no one|cannot|can't|unable|without|n't|nor|rather than|instead of|does not|is not|nothing|refuses|declines|will not)\b/i;
+  // 🔴 FIXED 2026-08-19 — this used to split on /[—;:,]/ only, which does NOT break on a
+  // full stop or a newline. Beat 3 carries four bubbles joined by '\n' since the migration, so
+  // a single negator in the first of them ('it was never you') put the whole of the remaining
+  // three behind the negation exemption and every clause ban in them was skipped silently.
+  // Found by feeding the gate a deliberate violation rather than trusting its green tick.
+  const clausesOf = (s: string) => s.split(/[—;:,.\n]/);
 
-  it('never hands down a VERDICT in either direction', () => {
+  // 🔄 LOOSENED 2026-08-19 — was "never hands down a VERDICT in either direction". The
+  // reassuring direction is now allowed: refusing it is what made these reads sit in the
+  // middle and answer nothing. The CONVICTING direction stays banned, and so do dated
+  // predictions — a date is the only claim she can check, and a failed one is a refund.
+  it('never CONVICTS him, and never puts a date on anything', () => {
     const ASSERTIONS: Array<[RegExp, string]> = [
       [/\bhe (is|has been) losing interest\b/i, 'verdict: convicts him'],
       [/\bhe (is|has) (moved on|checked out|given up|done with you)\b/i, 'verdict: convicts him'],
       [/\bhe (does not|doesn't) (love|want|care about) you\b/i, 'verdict: convicts him'],
-      [/\bhe (still |really )?(loves|adores|wants) you\b/i, 'verdict: reassures on his behalf'],
-      [/\bhe (is|will be) coming back\b/i, 'promise: forecasts a return'],
-      [/\bnothing (is|has gone) wrong\b/i, 'verdict: reassures'],
+      [/\bnothing (is|has gone) wrong\b/i, 'verdict: reassures past the point of use'],
     ];
     const ALWAYS: Array<[RegExp, string]> = [
-      [/\bwithin (a|the|\d)/i, 'timeframe'],
-      [/\bin (a few|the next|\d+) (day|week|month|year)/i, 'timeframe'],
-      [/\bsoon\b/i, 'timeframe'],
+      [/\bwithin (a|the|\d)/i, 'a dated prediction'],
+      [/\bin (a few|the next|\d+) (day|week|month|year)/i, 'a dated prediction'],
+      [/\bby (the end of|christmas|new year|spring|summer|autumn|winter)\b/i, 'a dated prediction'],
       [/\bI promise\b/i, 'a promise the funnel cannot keep'],
     ];
     const hits: string[] = [];

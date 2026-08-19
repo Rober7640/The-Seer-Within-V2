@@ -1164,9 +1164,36 @@ const TAROT_HOOK_CONTEXT: Record<string, string> = {
   'cards-really-soulmate': "She is asking to have a word confirmed about a man she already knows. The 'really' is the tell: the doubt came before the question, and she has been trying to settle something specific and difficult by asking a much larger and vaguer thing instead.",
   'cards-twin-or-connection': "She is asking which of two labels belongs to a connection, and has arranged them so that one is a prize and the other a consolation — the word 'just' is hers. She has met the teaching that grades these things and has been measuring what she has against it.",
   'cards-met-already': "She is asking whether the person she has been waiting for is already behind her and went unrecognised. She arrives braced to be told she missed him, and the question has usually come up because nothing is arriving now, not because of anything that happened then.",
+  // Closure hooks — the subject is HER OWN RECOVERY, not him. He is named in none of the three
+  // headlines and must not be supplied. She arrives measuring herself against a standard nobody
+  // agreed with her, and finding herself behind on it.
+  'cards-find-closure': "She is asking whether an ending will ever arrive. She has been taught that closure is an object somebody hands over — a last conversation, an apology, an explanation — so she is waiting on a delivery that may never be sent, and reading every day it does not arrive as evidence that she is failing at this.",
+  'cards-heart-heal': "She is asking whether the hurt will ever mend. The word carries a medical frame with it — a wound, a chart, a schedule, a patient — and underneath her question sits a second one she is more afraid of: whether she is taking too long.",
+  'cards-feel-like-myself': "She is asking whether she will be returned to the person she was before this. The word doing the damage is 'again': it places the correct version of her in the past, so every morning she does not feel like that person is counted against her.",
+  // Soulmate-return hooks — the LABEL IS BEING ASKED TO PREDICT. A real, specific man has
+  // already gone, and she is treating the word she gave the connection as evidence about what
+  // he will do next. The word is load-bearing here, not a wrapper on a question that would
+  // stand without it, and never a request to have the word graded.
+  'cards-my-soulmate-back': "She has already granted the word and is now asking it to make a promise. She is not really asking whether he will return so much as asking to be told that the size of what she felt guarantees it, and the waiting has been organised around that guarantee.",
+  'cards-twinflame-back': "She is asking a term of art to forecast a man. The word arrived after the feeling, as an account of how unusually large it was, and she has since been taught that connections of that kind are supposed to come back — so his absence has been reading to her as a stage rather than as an absence.",
+  'cards-was-he-soulmate': "She is running the same question backwards. He has not returned, so she has begun re-examining the word, and behind it the whole of what she lived — she arrives half-braced to be told it was never what she thought, which would make her foolish for having felt it.",
   // Self-frame hooks — about HER future, not a specific man.
   'cards-love-again': "After heartbreak, she is asking whether she will ever love again — worn down, but the hope is still there.",
   'cards-soulmate': "She is asking WHEN her soulmate will finally arrive — tired of waiting, but still believing the right person is out there for her.",
+  // ── Money-block (2026-08-19). The first hooks on the funnel with no man in them at
+  // all — she is asking about her own money, and the reply may never touch what she
+  // should DO with it.
+  'cards-blocked-retiring': "She is within a few years of retiring and the money she expected to have by now has not come; she is asking what has been in the way.",
+  'cards-nest-egg': "She has been trying to build savings for years and nothing has accumulated; she is asking how long something has stood between her and it.",
+  'cards-too-late': "She is close to retirement and torn between believing something is blocking her money and believing she simply left it too late.",
+  'cards-still-working': "She is past the age she expected to stop and is still working, because money she counted on never arrived.",
+  'cards-how-much-longer': "She believes something is blocking her money and wants to know how much longer it will hold.",
+  'cards-out-of-time': "She is past retirement age and is asking whether a block is still in the way, or whether her time for it has gone.",
+  'cards-my-energy': "She has been told, or has come to suspect, that her own energy is what keeps money from her.",
+  'cards-money-wont-stay': "Money comes to her and does not stay, and she is asking what her own energy has to do with it.",
+  'cards-energy-how-long': "She has concluded her energy has been working against her money and wants to know how far back it goes.",
+  'cards-prayed-years': "She has prayed about money for years without the change she asked for, and is asking what is still in the way.",
+  'cards-prayers-unanswered': "She has prayed about money for a long time without seeing an answer, and is asking how much longer that goes on.",
 }
 
 // The TENDENCY the reply may land, per hook. Reading HIM ⇒ NEVER a verdict:
@@ -1440,19 +1467,21 @@ const TAROT_HOOK_TENDENCY: Record<string, string> = {
   'cards-feels-off':
     'that the NOTICING is a faculty working, while what it MEANS stays open — those are two questions and only the first may be answered. NEVER confirm the suspicion she has arrived with and NEVER pronounce on him in any direction. 🔴 NEVER TELL HER SHE IS IMAGINING IT, and never attribute the feeling to her insecurity, anxiety, past hurt or overthinking — being talked out of her own observation is the specific harm this hook exists to avoid, and she may already have had it done to her. 🔴 NEVER CLAIM INTUITION IS INFALLIBLE: never "your intuition is never wrong", never "always trust your gut", never that the feeling is proof of anything. That flattery turns every fear into a finding and licences her to act on a guess. NEVER supply a cause for the feeling, NEVER give a timeframe, and NEVER hand her a tactic or a test to run on him. Read the card as the mismatch between what she is told and what she can see, and affirm HER standing to ask plainly without first having to assemble proof',
   // Real-feelings hooks (2026-08-12). Feelings/Commitment frame = the DEFAULT decode-him
-  // branch, so "tendency, never a verdict" is already on. These three ask for the ONE thing
-  // that cannot be honestly supplied — the contents of a real man's heart — so the shared
-  // route through is the only honest channel a feeling has: CONDUCT, which she already
-  // observes. Point at her own record; never read his interior.
+  // branch, so "tendency, never a verdict" is already on. 🔄 LOOSENED 2026-08-19: these
+  // three used to refuse the answer in BOTH directions, which meant a lander bought on "does
+  // he love me" replied by talking about her. The card may now carry the answer. What is
+  // still refused is the DENIAL, which she has no use for and which a card cannot support.
   'cards-really-love':
-    'that love, where it is real, shows up as something chosen deliberately and then chosen again — so the honest answer lives in the record of his conduct that she has already been keeping, not in any reading of his heart. 🔴 NEVER STATE THAT HE LOVES HER AND NEVER STATE THAT HE DOES NOT — both are verdicts on a real person that a card cannot support. NEVER report his interior in softer forms either: not "he loves you but cannot say it", not "he is frightened of how much he feels". NEVER diagnose him as avoidant, emotionally unavailable or commitment-phobic. NEVER grade her for having loved first — no naive, foolish, too much, too soon — and NEVER give a date, forecast or tactic. Read the card as the STANDARD the word "really" is reaching for, and affirm that she has been reading her own evidence more honestly than she admits',
+    'that love, where it is real, shows up as something chosen deliberately and then chosen again — so the card reads the record of his conduct she has already been keeping, and it may say plainly that what she has been given meets that standard. 🔴 NEVER STATE THAT HE DOES NOT LOVE HER — a stranger closing that question with the one answer she cannot use, on a card, is the harm here. NEVER diagnose him as avoidant, emotionally unavailable or commitment-phobic. NEVER grade her for having loved first — no naive, foolish, too much, too soon — and NEVER give a DATE or a tactic. Read the card as the STANDARD the word "really" is reaching for, and affirm that she has been reading her own evidence more honestly than she admits',
   // ⚠️ The pronoun variant of the live 'cards-feels'. Its lens is the ASKING, not his heart —
   // she has come to a stranger for something a person who knows her could have said.
   'cards-feel-about-me':
-    'that an answer which has to be asked a second time has not done its work, and that needing to ask again is a fact about the answer rather than a flaw in her. 🔴 NEVER NARRATE HIS INTERIOR in any direction — no confession, no denial, no "he feels more than he shows". NEVER diagnose him. Read the card as the POSITION she has been put in — working it out alone, and coming to a stranger for it — and route to the question underneath, which is what SHE needs and how much more of herself to put in; that one is hers and does not require his answer first. NEVER hand her a tactic to extract a feeling from him, and NEVER give a timeframe',
-  // 🔴🔴 A BINARY whose second branch puts HER PERCEPTION on trial. BOTH doors are banned.
+    'that an answer which has to be asked a second time has not done its work, and that needing to ask again is a fact about the answer rather than a flaw in her. The card may say what it reads in him, including that there is more there than he has put into words. 🔴 NEVER HAND HER THE DENIAL — not that he feels nothing, not that she was a passing thing to him. NEVER diagnose him. Still read the card as the POSITION she has been put in — working it out alone, and coming to a stranger for it — and route to the question underneath, which is what SHE needs and how much more of herself to put in; that one is hers and does not require his answer first. NEVER hand her a tactic to extract a feeling from him, and NEVER give a DATE',
+  // 🔴🔴 A BINARY whose second branch puts HER PERCEPTION on trial. 🔄 LOOSENED
+  // 2026-08-19: the first door is now OPEN — the card may say the love is real. The second
+  // stays shut and always will, because it is the gaslighting she arrived braced for.
   'cards-imagining-it':
-    'that those are not the only two things that can be true — a thing can be real and unspoken, real and not enough, or real at different sizes to two people. REFUSE THE EITHER-OR outright. 🔴 NEVER say he loves her, and 🔴🔴 NEVER say or imply she imagined it, invented it, built it alone or is seeing what she wants to see — that is the crueller door and the funnel may never walk through it. NEVER attribute it to her insecurity, anxiety or past hurt. Equally NEVER claim that a feeling strong enough must be returned, and NEVER treat a feeling as proof — that is flattery that licences her to act on a guess. NEVER diagnose him. Affirm that something real was built and that she was present for it, and affirm HER right to have it said aloud rather than deduced',
+    'that she did not invent it — and that a thing can also be real and unspoken, real and not enough, or real at different sizes to two people. 🔴🔴 NEVER say or imply she imagined it, invented it, built it alone or is seeing what she wants to see — that is the crueller door and the funnel may never walk through it. NEVER attribute it to her insecurity, anxiety or past hurt. 🔴 The warrant is the CARD, never the strength of what she felt: NEVER claim that a feeling strong enough must be returned, and NEVER treat a feeling as proof — that is flattery that licences her to act on a guess. NEVER diagnose him, and NEVER give a DATE. Affirm that something real was built and that she was present for it, and affirm HER right to have it said aloud rather than deduced',
   // Still-feels hooks (2026-08-14). Reunion/Return frame = the DEFAULT decode-him branch, so
   // "tendency, never a verdict" is already on. What is specific here is that the word STILL
   // splits the question in two: the PAST tense (was it real) may be affirmed outright and is the
@@ -1509,9 +1538,44 @@ const TAROT_HOOK_TENDENCY: Record<string, string> = {
   // verdict. The headline invites both.
   'cards-met-already':
     'that "without realizing it" presumes there was a moment when the information was available and she failed to read it — but recognition is often not instant, a meeting was never an examination, and hindsight folds in everything learned since and then presents it as though it had been in plain view at the time. 🔴🔴 NEVER NAME, DESCRIBE, HINT AT OR POINT TOWARD ANY PARTICULAR PERSON from her past — no face, no initial, no profession, no "you already know who this is" — she would spend the night going back through her own messages hunting for a sign that was never there. 🔴🔴 NEVER TELL HER SHE HAS ALREADY MET HIM AND MISSED HIM: that invents a loss for her to grieve and she would grieve it. 🔴 NEVER promise an arrival instead — that is a date in disguise — and NEVER give a timeframe. NEVER grade her past self as blind, naive or careless, and NEVER hand her a tactic for reconnecting with anyone. ⭐ Take issue with the buried assumption that there is exactly one, issued once, and that her life is a single-question exam she may already have failed',
+  // 🔴🔴 CLOSURE — the ONLY family on the funnel where the HOPEFUL YES IS ITSELF THE BANNED
+  // MOVE. Everywhere else "affirm the yes" is the safe direction; here "yes, you will heal"
+  // is a forecast about the inside of a person, and if she is still hurting later it becomes
+  // evidence to her that she is failing. Do NOT borrow the self-frame instruction for these.
+  'cards-find-closure':
+    'that closure has been sold to her as an OBJECT somebody hands over — a final conversation, an apology, an explanation — so she has been waiting on a delivery nobody agreed to send, and the peace she is after was never his to sign for. 🔴🔴 NEVER ANSWER THE "EVER" IN EITHER DIRECTION: never that closure will come, never that it will not, and never the softened "in time" or "when you are ready", which are timeframes in disguise. 🔴 NEVER GIVE A SCHEDULE of any kind — no weeks, no months, no stages of grief, no "you will know when". 🔴 NEVER tell her to contact him, confront him or ask him for anything, and NEVER read his silence as meaningful. ⭐ Land that she is not failing at this and that the standard she has been marking herself against was never hers',
+  'cards-heart-heal':
+    'that "heal" is a word borrowed from medicine and brings a chart with it — a wound, a schedule, a patient — and that the borrowed word is doing harm of its own, because it has her inspecting the wound daily and running a second exhausting task alongside the feeling: an assessment of how well she is doing at having it. 🔴🔴 NEVER PROMISE THE MENDING AND NEVER DENY IT — both are forecasts about the inside of a person. 🔴🔴 NEVER GIVE OR IMPLY A TIMETABLE: not weeks or months, not "half the length of the relationship", not stages, not "these things take time". 🔴 NEVER pathologise her, never call her stuck or broken, never suggest she needs fixing or professional help. ⭐ Land that a heart able to hurt at this volume is a working instrument rather than a damaged one',
+  'cards-feel-like-myself':
+    'that the word doing the damage is "again" — it places the correct version of her somewhere behind her and makes every morning she does not feel like that person count against her, when a person is not a house to be put back exactly as it stood. 🔴🔴 THIS IS THE CLOSEST HOOK ON THE FUNNEL TO DEPRESSION LANGUAGE: NEVER diagnose her, NEVER name or imply a condition, NEVER suggest therapy or that she needs help, and NEVER manufacture despair. 🔴🔴 NEVER promise the return and NEVER say that self is gone — the first is a forecast, the second a cruelty, and both are invented. 🔴 NO timeframe, no stages, and NEVER make it conditional on work she must do first. ⭐ Land that the woman who noticed, and minded, and came looking tonight is present and is her — she is not waiting to become herself',
+  // 🔴🔴 SOULMATE-RETURN — the label is being asked to PREDICT, and the whole family turns on
+  // refusing to let it. The move that will try hardest to get in is "if he is truly yours he
+  // will come back": it is the runner and ascension teaching in one sentence, it makes his
+  // return the proof of the bond, and therefore makes his absence evidence against her.
+  'cards-my-soulmate-back':
+    'that the word is a DESCRIPTION she gave something because of how it felt to be inside it, and a description is not a mechanism — it does not steer anybody and was never a contract he signed. 🔴🔴 NEVER LET THE LABEL CARRY A PREDICTION: never that he will return because he is her soulmate, never that he will not because he is not, and NEVER the softened "if he is truly yours he will come back", which makes his absence proof against her. 🔴🔴 NEVER AWARD OR WITHHOLD THE WORD ITSELF. 🔴 NEVER forecast the return in either direction, NEVER give a date or timeframe, NEVER supply a motive for his leaving, and NEVER hand her a tactic for reaching him. 🔴 No runner script, no separation phase, no ascension homework. ⭐ Land that what she felt is real information about HER and stays true whatever he does next',
+  'cards-twinflame-back':
+    'that the feeling came FIRST and the word arrived afterwards to account for how large it was — so it is her account of the past, which can be entirely fair, and an explanation of how strong a thing was is never a prediction of how long it will last. 🔴🔴 NEVER LET THE TERM FORECAST HIM, in either direction, and never the "if he is truly yours" form. 🔴🔴 NEVER RANK THE LABELS: never that a twin flame is rarer, higher, deeper or more fated than a soulmate or a strong connection, and never the reverse — refuse the ladder rather than placing her on a rung. 🔴🔴 NO RUNNER SCRIPT: never read distance or silence as PROOF of the bond, never call an absence a phase or a stage or part of a journey, and NEVER make his return conditional on her healing or her growth. 🔴 No date, no timeframe, no motive for his leaving, no tactic. ⭐ Land that the naming was fair to make and simply cannot be asked to do the returning',
+  'cards-was-he-soulmate':
+    'that she is reading the whole of it backwards from the last page, and hindsight gathers up everything learned since and lays it over the earlier days as though it had all been visible at the time — it was not, and she was not a fool for feeling what she felt with what stood in front of her then. 🔴🔴 NEVER REVOKE THE WORD AND NEVER CONFIRM IT: "he was never really yours" is a cruelty that would cancel years she actually lived, and "he was" turns the word into a debt he still owes and points her back at waiting. 🔴🔴 NEVER TREAT HIS LEAVING AS EVIDENCE ABOUT THE PAST — an ending describes how a thing finished, not whether it was ever happening. 🔴 NEVER supply a MOTIVE for his going, NEVER grade her earlier self as naive or blind, NEVER pass any verdict on him, and NEVER promise a return or give a timeframe. ⭐ Land that what she felt was real while she was feeling it, and that this was never in the word\'s gift to grant or to take back',
   // Self-frame — affirm HER future love, not a verdict on any man.
   'cards-love-again': 'that love is finding its way back to her — affirm HER heart and her capacity to love again, read the card as a hopeful sign for her own future; never tie it to one specific person and never a date',
   'cards-soulmate': 'that her soulmate is genuinely on the way and nearer than the waiting has let her believe — affirm HER heart and that the love she is holding out for is real and coming, read the card as a hopeful sign of arrival; answer the "when" only as a leaning (soon, close, sooner than the fear admits), NEVER tie it to one specific named person and NEVER give a date or timeframe',
+  // ── Money-block (2026-08-19). Each one is where its read must land, and the NEVER
+  // clauses are the per-hook half of the seven bans in
+  // tests/tarot-money-block-copy.test.ts. The shared half is the money guard line in
+  // buildTarotReflectPrompt.
+  'cards-blocked-retiring': "that her ability was never the problem and something has been standing between the earning and the keeping. NEVER name what or who the block is, never a sum, a date or a source, and never suggest anything be done with money",
+  'cards-nest-egg': "that this is long-standing rather than recent, and that steady effort which never accumulates points at something in the way rather than a failing in her. NEVER give a length of time, and never tell her she should have saved differently",
+  'cards-too-late': "that she did NOT leave it too late — say it plainly — and that what is in the way is a block, which is a thing that can move. NEVER promise money is coming, never a date or an amount, and never grade her past choices",
+  'cards-still-working': "that a lifetime of effort went in and did not come back out, which is a question about where it went rather than about how hard she tried. NEVER name a person or a cause, and never suggest she keep working or stop",
+  'cards-how-much-longer': "that a block does not run down like a clock — it lasts as long as it is left alone, so the honest answer is about what gets moved, not a number. NEVER give a date, a timeframe or a season, even a soft one",
+  'cards-out-of-time': "that she has NOT run out of time — say it plainly — and that a hold is not an ending. NEVER promise an arrival, never a date, and never rule on how much time she has",
+  'cards-my-energy': "that her energy is not the block and never was; affirm what she has noticed while refusing the fault. NEVER agree that she blocks herself, never mindset, vibration, deserving or self-sabotage, and never hand her a practice to fix herself",
+  'cards-money-wont-stay': "that the drawing-in half has always worked and what is at issue is everything after it arrives. NEVER name who or what takes it, never call her careless with money, and never advise her on keeping it",
+  'cards-energy-how-long': "that her energy has not been working against her at all — refuse the premise gently — and that whatever settled on this settled long ago and was never named. NEVER give a length of time and never date it to an event in her life",
+  'cards-prayed-years': "that what is in the way is an ordinary thing in her own life, findable and nameable. NEVER say whether her prayers were heard or answered, never that she is being tested, taught, punished or refused, never speak for God, and never set the cards above or against her faith",
+  'cards-prayers-unanswered': "that a long quiet is not a refusal, and that nothing here waits on permission. NEVER call her prayers unanswered and NEVER call them answered, never give a length of time, never speak for God, and never place Evelyn between her and what she prays to",
 }
 const DEFAULT_TAROT_TENDENCY =
   'that her intuition is a real instrument and the clarity she came for is close — read the card as a tendency, never a verdict on him'
@@ -1614,23 +1678,6 @@ const LONELINESS_TAROT_HOOKS = new Set([
 // client/src/content/tarotReads.ts — keep them in sync. The route validates
 // deck/hook/card against these keys before injecting, so lookups never miss.
 const TAROT_CARD_VOCAB: Record<string, { mark: Record<string, string>; reading: Record<string, string> }> = {
-  'decode-him': {
-    mark: {
-      a: 'the Sun, the card of what stands in the light',
-      b: 'the Moon, the card of what is kept in the half-light',
-      c: 'the Tower, the card of what is already moving beneath the surface',
-    },
-    reading: {
-      a: "what's in the light",
-      b: "what's veiled",
-      c: "what's shifting",
-    },
-  },
-  // Panel order changed 2026-07-31 (operator): the strip art was re-ordered from
-  // Magician|Fool|HangedMan to Magician|HangedMan|Fool, so b and c swapped here to
-  // keep each reading bound to its own card. MUST mirror ARCANA_MFH in
-  // client/src/content/tarotReads.ts — this roster is hand-maintained, and drift
-  // makes the Version-C chat opener name a card the visitor did not choose.
   'arcana-mfh': {
     mark: {
       a: 'the Magician, the card of will and intention',
@@ -1670,9 +1717,44 @@ const TAROT_CARD_VOCAB: Record<string, { mark: Record<string, string>; reading: 
 }
 
 function tarotVocab(deck: string, card: string): { mark: string; reading: string } {
-  const v = TAROT_CARD_VOCAB[deck] || TAROT_CARD_VOCAB['decode-him']
+  // The fallback pointed at 'decode-him' until that deck was retired 2026-08-19. It has to
+  // point at a deck that still exists, and return-mhf is the live one every ad serves.
+  const v = TAROT_CARD_VOCAB[deck] || TAROT_CARD_VOCAB['return-mhf']
   return { mark: v.mark[card] || '', reading: v.reading[card] || '' }
 }
+
+// ── The money-block frame (2026-08-19) ──────────────────────────────────────────────────
+// 🔴 THE FIRST NON-LOVE FRAME ON THE FUNNEL, and the only one where a wrong sentence costs
+// her money rather than her feelings. She can act on an invented inheritance with her actual
+// savings, so the SOURCE ban matters as much as the date ban.
+//
+// Mirrors the four MONEY_*_HOOKS arrays in client/src/content/tarotReads.ts. Kept as one Set
+// here because every money hook takes the same frame — what differs between the four angles
+// is the reporting label and the per-hook tendency, not the guard.
+const MONEY_TAROT_HOOKS = new Set([
+  'cards-blocked-retiring',
+  'cards-nest-egg',
+  'cards-too-late',
+  'cards-still-working',
+  'cards-how-much-longer',
+  'cards-out-of-time',
+  'cards-my-energy',
+  'cards-money-wont-stay',
+  'cards-energy-how-long',
+  'cards-prayed-years',
+  'cards-prayers-unanswered',
+])
+// The prayer pair takes the money guard PLUS a clause that exists nowhere else on the funnel:
+// both directions on God are rulings, and neither is a card's to make.
+const MONEY_PRAYER_TAROT_HOOKS = new Set([
+  'cards-prayed-years',
+  'cards-prayers-unanswered',
+])
+
+const MONEY_GUARD =
+  'NEVER NAME AN AMOUNT, A DATE OR A SOURCE. No sum, no season, no "by the spring", and never where money would come from — no inheritance, no windfall, no legal case, no lottery; she can act on an invented source with her actual savings. NEVER NAME A PERSON AS THE BLOCK — not a relative, a partner, or "someone close to you"; a card cannot see it and the accusation lands on someone real inside a real family. NEVER GIVE FINANCIAL ADVICE IN ANY FORM — never invest, sell, hold, move it, pay off, borrow, take or delay a pension, start a business, go back to work or stop working. NEVER BLAME HER — no poverty or scarcity mindset, no vibration, no manifesting, no "you attract lack", no self-sabotage, no deserving, and never a practice to fix herself; she arrives having been told all of it. NEVER say it is too late and NEVER promise money is coming. NEVER presume the state of her finances — she said blocked, she did not say broke, in debt or destitute. Affirm that her effort and her instrument were never the problem, and hand the specifics into the deeper reading.'
+const MONEY_PRAYER_GUARD =
+  ' NEVER RULE ON GOD, IN EITHER DIRECTION. Never say her prayers were heard, answered, unheard or refused; never that she is being tested, taught, punished or told no; never that a plan or a divine timing is at work; never speak for God, and never place Evelyn or the cards above, against, or between her and what she prays to. What may be read is the ordinary world only.'
 
 // Version C (interactive) — Evelyn reads what she just typed in answer to the
 // opener question, woven with the card she drew. Reads HIM as a tendency.
@@ -1695,6 +1777,12 @@ export function buildTarotReflectPrompt(userData: UserData, deck: string, hook: 
   // "affirm with CERTAINTY" clause is the harm here, since certainty about whether someone
   // will spend their life alone is forbidden in both directions.
   const loneliness = LONELINESS_TAROT_HOOKS.has(hook)
+  // 🔴 MONEY IS TESTED FIRST, ahead of every branch below, and deliberately so. The spec
+  // (fb-tarot/docs/drafts/money-block.draft.md §1) called for it: the chain underneath is
+  // already at the limit of what reads well at five branches, and every one of those frames
+  // assumes a man or a romantic future — so a money hook that fell through to any of them
+  // would be guarded by rules written for a different question entirely.
+  const money = MONEY_TAROT_HOOKS.has(hook)
   // Five frames. Self-frame hooks (e.g. "will I love again?") read HER future and affirm
   // the hopeful yes; decode-him hooks read HIM strictly as a tendency, never a verdict;
   // after-loss hooks read her future while a real person she has lost stands in the
@@ -1708,7 +1796,9 @@ export function buildTarotReflectPrompt(userData: UserData, deck: string, hook: 
   // structure is a hook → {frameLine, guardLine} lookup. Deliberately NOT refactored here:
   // it touches the live prompt path for every angle at once, and that is a change worth
   // making on its own rather than riding along with a shipping family.
-  const frameLine = afterLoss
+  const frameLine = money
+    ? `This reading is about HER MONEY. No particular person appears in it, nothing may be said about what she should DO with money, and the answer she needs is that the block was never her: land ${tendency}.`
+    : afterLoss
     ? `This reading is about HER own future, but a real person she loved has been lost and may have died: land ${tendency}.`
     : loneliness
       ? `This reading is about HER OWN LIFE. No particular person appears in it at all, and she is asking whether it stays as it is: land ${tendency}.`
@@ -1717,7 +1807,9 @@ export function buildTarotReflectPrompt(userData: UserData, deck: string, hook: 
         : selfFrame
           ? `This reading is about HER own future: land ${tendency}.`
           : `This reading is about HIM, but the affirmation is about HER: land ${tendency}.`
-  const guardLine = afterLoss
+  const guardLine = money
+    ? MONEY_GUARD + (MONEY_PRAYER_TAROT_HOOKS.has(hook) ? MONEY_PRAYER_GUARD : '')
+    : afterLoss
     ? `NEVER SPEAK FOR THE PERSON SHE LOST. Never say where he is, that he is at peace, that he is watching over her, that he sent her here, or what he would want for her — that is contact with the dead and it is forbidden outright, however kindly it is meant. Never promise anyone is coming, never describe or locate a future partner, and never give a date or timeframe. Never rule on whether she is ready to love again — not in either direction — and never tell her to move on, let go, or that it is time. Never rank a future love against the one she lost. Affirm HER capacity and her right to her own timing through the card's energy.`
     : loneliness
       ? `NOTHING IS FATED AND NOTHING IS FOREVER. Never say she is meant to be alone and never say she is meant for someone; never speak of fate, destiny, a plan, a purpose, a lesson or a reason for this in either direction. Never state she will be alone and never promise she will not — one is a life sentence delivered by a stranger, the other is a promise that cannot be kept. Never give a date, a timeframe, or "it will happen when you…". Never call her negative, defeatist, closed off, self-sabotaging, or say she attracts this — she arrives having already been told all of it. Never hand her a tactic. Never presume whether she has had love before, in either direction. If she sounds despairing, meet it plainly and without alarm, and never deepen it. Affirm HER dignity and the honesty of her own report through the card's energy.`

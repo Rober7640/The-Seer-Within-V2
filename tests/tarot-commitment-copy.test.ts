@@ -207,16 +207,23 @@ describe.each(DECKS_WITH_COMMITMENT)('%s — commitment reads', (deck) => {
     }
   });
 
-  it('never predicts, never gives a timeframe, never lands as HER fault', () => {
+  // 🔄 LOOSENED 2026-08-19, operator call, and now DIRECTIONAL. "He will commit" is allowed:
+  // the headline asks for exactly that and refusing it in both directions is what left these
+  // three landers answering nothing. What stays is the direction that hurts — pronouncing
+  // that he never will, ruling on his capacity — plus DATES, and the whole HER-FAULT block,
+  // which was never a prediction rule and is not being touched.
+  //
+  // ⚠️ The blame bans stay WHOLE-BEAT, not clause-level. "not enough" and "too much" are
+  // unavailable even inside a refusal, because this hook presupposes his refusal and the
+  // reading slides into her fault at the first opening.
+  it('never pronounces he NEVER will, never dates it, never lands as HER fault', () => {
     const BANNED: Array<[RegExp, string]> = [
-      [/\bhe will commit\b/i, 'promises he commits'],
-      [/\bhe'll commit\b/i, 'promises he commits'],
       [/\bhe will never\b/i, 'pronounces he never will'],
       [/\bnever commit\b/i, 'pronounces he never will'],
       [/\bhe is not capable\b/i, 'verdict on his capacity'],
-      [/\bwithin (a|the|\d)/i, 'timeframe'],
-      [/\bin (a few|the next|\d+) (day|week|month|year)/i, 'timeframe'],
-      [/\bsoon\b/i, 'timeframe'],
+      [/\bwithin (a|the|\d)/i, 'a dated prediction'],
+      [/\bin (a few|the next|\d+) (day|week|month|year)/i, 'a dated prediction'],
+      [/\bby (the end of|christmas|new year|spring|summer|autumn|winter)\b/i, 'a dated prediction'],
       [/\byour fault\b/i, 'blames her'],
       [/\btoo much\b/i, 'blames her'],
       [/\bnot enough\b/i, 'blames her'],

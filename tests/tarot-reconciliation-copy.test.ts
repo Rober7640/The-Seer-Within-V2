@@ -224,25 +224,31 @@ describe(`${DECK} — reconciliation reads`, () => {
   });
 
   // ── The compliance core ────────────────────────────────────────────────────
-  const NEGATOR = /\b(no|not|never|n't|nor|rather than|instead of|does not|is not|nothing|refuses|declines|will not|withholds|neither)\b/i;
-  const clausesOf = (s: string) => s.split(/[—;:,]/);
+  const NEGATOR = /\b(no|not|never|none|nobody|no one|cannot|can't|unable|without|n't|nor|rather than|instead of|does not|is not|nothing|refuses|declines|will not|withholds|neither)\b/i;
+  // 🔴 FIXED 2026-08-19 — this used to split on /[—;:,]/ only, which does NOT break on a
+  // full stop or a newline. Beat 3 carries four bubbles joined by '\n' since the migration, so
+  // a single negator in the first of them ('it was never you') put the whole of the remaining
+  // three behind the negation exemption and every clause ban in them was skipped silently.
+  // Found by feeding the gate a deliberate violation rather than trusting its green tick.
+  const clausesOf = (s: string) => s.split(/[—;:,.\n]/);
 
   // 🔴 The failure mode unique to this angle: the verdict is on the RELATIONSHIP.
-  it('never rules on the relationship in either direction', () => {
+  // 🔄 LOOSENED 2026-08-19, operator call, and now DIRECTIONAL. Refusing both answers is
+  // what forced cards-really-over to visibly decline its own headline. The hopeful direction
+  // is now allowed; the burial is not, because "it is over" from a stranger on a card is the
+  // one answer that ends her question and sells nothing after it.
+  it('never pronounces the relationship DEAD, and never puts a date on it', () => {
     const ASSERTIONS: Array<[RegExp, string]> = [
       [/\bit (is|really is|has been) over\b/i, 'verdict: pronounces the relationship dead'],
       [/\b(this|it) (is|has) (finished|ended|done)\b/i, 'verdict: pronounces the relationship dead'],
-      [/\byou (two )?(will|are going to) (get back together|find your way back|reconcile)\b/i, 'promise: forecasts reunion'],
-      [/\b(it|this) (is|will be) not over\b/i, 'promise: forecasts reunion'],
-      [/\bthere is still (a real|every) (chance|hope)\b/i, 'promise dressed as a reading'],
-      [/\byou (will|are going to) be together again\b/i, 'promise: forecasts reunion'],
-      [/\bhe (is|will be) coming back\b/i, 'promise: forecasts a return'],
       [/\bhe (does not|doesn't) (love|want) you\b/i, 'verdict: convicts him'],
+      [/\bthere is (no|nothing) (chance|hope|left)\b/i, 'verdict: pronounces it dead'],
+      [/\bhe (is|has) moved on\b/i, 'verdict: pronounces it dead'],
     ];
     const ALWAYS: Array<[RegExp, string]> = [
-      [/\bwithin (a|the|\d)/i, 'timeframe'],
-      [/\bin (a few|the next|\d+) (day|week|month|year)/i, 'timeframe'],
-      [/\bsoon\b/i, 'timeframe'],
+      [/\bwithin (a|the|\d)/i, 'a dated prediction'],
+      [/\bin (a few|the next|\d+) (day|week|month|year)/i, 'a dated prediction'],
+      [/\bby (the end of|christmas|new year|spring|summer|autumn|winter)\b/i, 'a dated prediction'],
       [/\bI promise\b/i, 'a promise the funnel cannot keep'],
     ];
     const hits: string[] = [];
@@ -257,14 +263,14 @@ describe(`${DECK} — reconciliation reads`, () => {
   });
 
   // 🔴 cards-still-a-chance asks for a number outright. There is no number.
-  it('never quotes ODDS, in any form', () => {
+  // 🔄 LOOSENED 2026-08-19 — "a real chance" and "likely" are now allowed; they are how a
+  // reading talks, not a measurement. QUANTIFIED odds stay banned for the same reason dates
+  // do: a number is checkable, and a checkable claim that fails comes back as a refund.
+  it('never quotes a NUMBER on it', () => {
     const ODDS: Array<[RegExp, string]> = [
       [/\b\d+\s*(%|percent)/i, 'odds: a percentage'],
-      [/\b(good|strong|slim|high|low|fair) (odds|chance|chances|possibility)\b/i, 'odds: quantified'],
-      [/\bthe odds are\b/i, 'odds'],
-      [/\b(likely|unlikely|probable|improbable)\b/i, 'odds: a likelihood claim'],
-      [/\bmore than likely\b/i, 'odds'],
-      [/\b(every|a real) chance\b/i, 'odds: quantified'],
+      [/\bthe odds are\b/i, 'odds stated as a measurement'],
+      [/\b(nine|eight|seven|six|five|four|three|two) (in|out of) (ten|five|three)\b/i, 'odds: a ratio'],
     ];
     const hits: string[] = [];
     for (const h of present) for (const c of CARDS) for (const beat of reads[h]![c]) {
