@@ -150,8 +150,13 @@ describe(`${DECK} — honesty reads`, () => {
   // Clause-level negation awareness: a banned ASSERTION is only a hit when the clause
   // containing it carries no negator. "hands down no verdict that you have been lied
   // to" is the correct read; "you have been lied to" on its own is a verdict.
-  const NEGATOR = /\b(no|not|never|n't|nor|rather than|instead of|does not|is not)\b/i;
-  const clausesOf = (s: string) => s.split(/[—;:,]/);
+  const NEGATOR = /\b(no|not|never|none|nobody|no one|cannot|can't|unable|without|n't|nor|rather than|instead of|does not|is not)\b/i;
+  // 🔴 FIXED 2026-08-19 — this used to split on /[—;:,]/ only, which does NOT break on a
+  // full stop or a newline. Beat 3 carries four bubbles joined by '\n' since the migration, so
+  // a single negator in the first of them ('it was never you') put the whole of the remaining
+  // three behind the negation exemption and every clause ban in them was skipped silently.
+  // Found by feeding the gate a deliberate violation rather than trusting its green tick.
+  const clausesOf = (s: string) => s.split(/[—;:,.\n]/);
 
   it('never hands down a verdict on him, in EITHER direction', () => {
     // Harmful only when asserted — checked per clause, skipped when negated.
@@ -191,10 +196,14 @@ describe(`${DECK} — honesty reads`, () => {
       [/\byour own fault\b/i, 'blames her'],
       [/\bfoolish\b/i, 'calls her foolish'],
     ];
+    // 🔄 NARROWED 2026-08-19 — only DATES stay banned here. The blame list above is
+    // untouched: this family's verdict ban also stays ON (operator call), because "he is
+    // lying" convicts a real man and "he is telling you the truth" vouches for one who may
+    // be defrauding her. Both doors are bad and neither is the hopeful one.
     const ALWAYS: Array<[RegExp, string]> = [
-      [/\bwithin (a|the|\d)/i, 'timeframe'],
-      [/\bin (a few|the next|\d+) (day|week|month|year)/i, 'timeframe'],
-      [/\bsoon\b/i, 'timeframe'],
+      [/\bwithin (a|the|\d)/i, 'a dated prediction'],
+      [/\bin (a few|the next|\d+) (day|week|month|year)/i, 'a dated prediction'],
+      [/\bby (the end of|christmas|new year|spring|summer|autumn|winter)\b/i, 'a dated prediction'],
     ];
     const hits: string[] = [];
     for (const h of present) for (const c of CARDS) for (const beat of reads[h]![c]) {

@@ -178,8 +178,13 @@ describe(`${DECK} — healing reads`, () => {
   });
 
   // ── The compliance core ────────────────────────────────────────────────────
-  const NEGATOR = /\b(no|not|never|n't|nor|rather than|instead of|does not|is not|nothing)\b/i;
-  const clausesOf = (s: string) => s.split(/[—;:,]/);
+  const NEGATOR = /\b(no|not|never|none|nobody|no one|cannot|can't|unable|without|n't|nor|rather than|instead of|does not|is not|nothing)\b/i;
+  // 🔴 FIXED 2026-08-19 — this used to split on /[—;:,]/ only, which does NOT break on a
+  // full stop or a newline. Beat 3 carries four bubbles joined by '\n' since the migration, so
+  // a single negator in the first of them ('it was never you') put the whole of the remaining
+  // three behind the negation exemption and every clause ban in them was skipped silently.
+  // Found by feeding the gate a deliberate violation rather than trusting its green tick.
+  const clausesOf = (s: string) => s.split(/[—;:,.\n]/);
 
   it('never issues a DIRECTIVE about how she should live', () => {
     const ASSERTIONS: Array<[RegExp, string]> = [
@@ -200,18 +205,23 @@ describe(`${DECK} — healing reads`, () => {
     expect(hits, `directive language:\n${hits.join('\n')}`).toEqual([]);
   });
 
-  it('never PROMISES — not his thoughts, not his return, not a timeframe', () => {
+  // 🔄 NARROWED 2026-08-19, operator call — but this family is loosened LESS than the others,
+  // and deliberately. Its subject is HER OWN MIND ("why can't I stop thinking about him"),
+  // so a claim about him is not the answer to the headline here, it is a change of subject
+  // that hands her a reason to keep waiting. What is dropped is only the DATE-free timeframe
+  // words; what stays is the pull back toward him.
+  it('never redirects her question onto HIM, and never dates anything', () => {
     const ASSERTIONS: Array<[RegExp, string]> = [
-      [/\bhe (is|must be|will be) thinking (of|about) you\b/i, 'promise: claims his thoughts'],
-      [/\bhe misses you\b/i, 'promise: claims his feeling'],
-      [/\bhe feels it too\b/i, 'promise: claims mutuality'],
-      [/\bhe (will|is going to) (come back|return)\b/i, 'promise: forecasts a return'],
-      [/\byou are still connected\b/i, 'promise: asserts a bond'],
+      [/\bhe (is|must be|will be) thinking (of|about) you\b/i, 'redirects onto him'],
+      [/\bhe misses you\b/i, 'redirects onto him'],
+      [/\bhe feels it too\b/i, 'redirects onto him'],
+      [/\bhe (will|is going to) (come back|return)\b/i, 'forecasts a return she did not ask about'],
+      [/\byou are still connected\b/i, 'asserts a bond to keep her waiting'],
     ];
     const ALWAYS: Array<[RegExp, string]> = [
-      [/\bwithin (a|the|\d)/i, 'timeframe'],
-      [/\bin (a few|the next|\d+) (day|week|month|year)/i, 'timeframe'],
-      [/\bsoon\b/i, 'timeframe'],
+      [/\bwithin (a|the|\d)/i, 'a dated prediction'],
+      [/\bin (a few|the next|\d+) (day|week|month|year)/i, 'a dated prediction'],
+      [/\bby (the end of|christmas|new year|spring|summer|autumn|winter)\b/i, 'a dated prediction'],
       [/\bI promise\b/i, 'a promise the funnel cannot keep'],
     ];
     const hits: string[] = [];

@@ -181,7 +181,13 @@ describe('still-feels hooks are wired end to end', () => {
     const dupes = all.filter((x, i) => all.indexOf(x) !== i);
     // cards-return / cards-come-back deliberately share one headline (reunion, 2026-08-04).
     // This family must not add a second collision.
-    expect(new Set(dupes)).toEqual(new Set(['Will he come back?']));
+    // 🔴 'cards-twin-back' / 'cards-twinflame-back' share one headline too, by operator
+    // decision 2026-08-19 (the soulmate-return family): the incumbent keeps its ad URL and its
+    // `twin-flame` angle, and the challenger runs bespoke reads against it. Same call as
+    // cards-return / cards-come-back — identical pages mean the READS are the only variable.
+    expect(new Set(dupes)).toEqual(
+      new Set(['Will he come back?', 'Is my twin flame coming back to me?']),
+    );
   });
 
   it('leaves every previously shipped family exactly where it was', () => {
@@ -345,7 +351,7 @@ describe(`${DECK} — still-feels reads`, () => {
 
   // ── The compliance core ────────────────────────────────────────────────────
   const NEGATOR =
-    /\b(no|not|never|n't|nor|nobody|no one|none|cannot|rather than|instead of|does not|is not|nothing|refuses?|declines?|will not|would not|withholds?|neither|without|inventing|invent|manufacture|pretend|flattery|would be)\b/i;
+    /\b(no|not|never|can't|unable|n't|nor|nobody|no one|none|cannot|rather than|instead of|does not|is not|nothing|refuses?|declines?|will not|would not|withholds?|neither|without|inventing|invent|manufacture|pretend|flattery|would be)\b/i;
   const clausesOf = (s: string) => s.split(/[—;:,.]/);
 
   // ⚠️ RESTATEMENT EXEMPTION — beat 2 repeats HER question back ("You asked whether it has
@@ -366,26 +372,28 @@ describe(`${DECK} — still-feels reads`, () => {
     return hits;
   };
 
-  // 🔴🔴 BAN #1 — the family's central refusal, and it runs in BOTH directions. This is the
-  // whole reason the family needs its own guard file.
-  it('NEVER asserts the present tense — not that it survived, not that it ended', () => {
-    const PRESENT_TENSE: Array<[RegExp, string]> = [
-      [/\bhe (still |does still )?loves? you\b/i, 'promises the love survived'],
+  // 🔴🔴 BAN #1 — LOOSENED 2026-08-19, operator call, and now DIRECTIONAL.
+  //
+  // It used to refuse the present tense in BOTH directions, which left the reads with only
+  // the past tense to sell and made "did it survive?" a question the lander declined to
+  // answer. The read may now say the connection is still live, because that is the direction
+  // she came for and the card is what carries it.
+  //
+  // THE BURIAL STAYS BANNED. "He has moved on", "he has forgotten you" — a stranger closing
+  // her question with the answer that ends it, on the strength of a card she turned over on
+  // an ad. There is no upside in that direction and it is the one that can do real harm.
+  it('never issues the BURIAL — the direction that ends her question for good', () => {
+    const BURIAL: Array<[RegExp, string]> = [
       [/\bhe (has |had )?moved on\b/i, 'issues the burial'],
       [/\bhe (is|has got) over (you|it)\b/i, 'issues the burial'],
       [/\bhe (has )?forgotten you\b/i, 'issues the burial'],
-      [/\bhe (still )?(thinks|dreams) (of|about) you\b/i, 'narrates his interior'],
-      [/\byou (still )?cross(es)? his mind\b/i, 'narrates his interior'],
-      [/\bhe (still )?misses you\b/i, 'narrates his interior'],
-      [/\bhe (still )?(carries|holds) you\b/i, 'narrates his interior'],
-      [/\ba part of him (still|will always)\b/i, 'the softened confession'],
-      [/\bdeep down (he|inside)\b/i, 'claims privileged access'],
-      [/\bwhat he feels (for|about) you is\b/i, 'reports his heart'],
-      [/\bhis (feelings|heart) (are|is) (real|genuine|there|gone|dead)\b/i, 'asserts his interior'],
-      [/\bhe (is|was) (frightened|scared|afraid) (of|to)\b/i, 'the "loves you but scared" dodge'],
+      [/\bhe (does not|doesn't|no longer) (love|want|miss)s? you\b/i, 'issues the burial'],
+      [/\bhis (feelings|heart) (are|is|were|was) (gone|dead|over)\b/i, 'issues the burial'],
+      [/\byou (are|were) nothing to him\b/i, 'issues the burial'],
+      [/\bit (is|was) over for him\b/i, 'issues the burial'],
     ];
-    const hits = sweep(PRESENT_TENSE);
-    expect(hits, `asserted the present tense:\n${hits.join('\n')}`).toEqual([]);
+    const hits = sweep(BURIAL);
+    expect(hits, `issued the burial:\n${hits.join('\n')}`).toEqual([]);
   });
 
   // ⭐⭐ THE PAYOUT, pinned as a REQUIREMENT rather than a ban. A family that refuses both
@@ -446,16 +454,17 @@ describe(`${DECK} — still-feels reads`, () => {
   });
 
   // 🔴 BAN #5 — the funnel-wide timeframe ban. Every headline here invites one.
-  it('NEVER gives a timeframe or a forecast', () => {
+  // 🔄 NARROWED 2026-08-19 — the undated forecast is now allowed; only DATES stay banned.
+  // A date is the one claim she can hold the reading to, and a failed one is a refund.
+  it('never puts a DATE on it', () => {
     const TIME: Array<[RegExp, string]> = [
-      [/\bwithin (a|the) (day|week|month|year)\b/i, 'timeframe'],
-      [/\b(in|after) (a few|several|three|six) (days|weeks|months|years)\b/i, 'timeframe'],
-      [/\bby (the end of|next) \w+\b/i, 'timeframe'],
-      [/\byou will (hear|see|know) (from him|him) (soon|shortly)\b/i, 'forecast'],
-      [/\b(soon|any day now|before long), (he|you)\b/i, 'forecast'],
+      [/\bwithin (a|the) (day|week|month|year)\b/i, 'a dated prediction'],
+      [/\b(in|after) (a few|several|three|six) (days|weeks|months|years)\b/i, 'a dated prediction'],
+      [/\bby (the end of|next) \w+\b/i, 'a dated prediction'],
+      [/\bany day now\b/i, 'a dated prediction in soft clothes'],
     ];
     const hits = sweep(TIME);
-    expect(hits, `gave a timeframe:\n${hits.join('\n')}`).toEqual([]);
+    expect(hits, `gave a date:\n${hits.join('\n')}`).toEqual([]);
   });
 
   // 🔴 BAN #6 — never grade her, and never diagnose him. Both are verdicts.

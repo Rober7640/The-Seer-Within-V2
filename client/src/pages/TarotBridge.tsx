@@ -13,6 +13,7 @@ import {
   cardArtFor,
   cardReveal,
   getDeck,
+  instructionFor,
   isTarotHook,
   isTarotDeck,
   type TarotHook,
@@ -214,7 +215,9 @@ export default function TarotBridge() {
             <h2 className="font-serif text-2xl md:text-3xl text-gray-900 text-center mb-2 leading-tight">
               {HEADLINES[hook]}
             </h2>
-            <p className="text-gray-500 text-center text-sm mb-6">{cfg.instruction}</p>
+            {/* The deck's tap line, unless this hook overrides it — return-mhf says "Think of
+                the man on your mind", which is the wrong sentence in front of a money hook. */}
+            <p className="text-gray-500 text-center text-sm mb-6">{instructionFor(deck, hook)}</p>
             <div className={`grid ${GRID_COLS[columns]} gap-2 md:gap-3`}>
               {cfg.options.map((t) => (
                 <button

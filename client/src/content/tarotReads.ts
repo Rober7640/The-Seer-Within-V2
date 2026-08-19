@@ -626,9 +626,70 @@ export type TarotHook =
   // sends her back through her own phone on a stranger's say-so, the second invents a loss for
   // her to grieve. Nor may the opposite be promised — "he is still ahead of you" is a forecast.
   | 'cards-met-already' // Have I already met my soulmate without realizing it?
+  // Closure hooks (2026-08-18). The THIRD family aimed at her own mind, and what separates
+  // it from the other two is visible in the headlines: HE IS NOT IN THEM. healing reads the
+  // THINKING; missing-him reads the ACHE OF HIS ABSENCE; closure reads HER OWN RECOVERY AS A
+  // PROJECT SHE BELIEVES SHE IS FAILING AT.
+  //
+  // 🔴🔴 THE DEFINING BAN IS THE "EVER", and BOTH answers are unusable. "Yes, you will heal"
+  // is a forecast about the inside of a person, and if she is still hurting later it becomes
+  // evidence to her that she is failing. "No" is cruel and equally invented. The one that will
+  // try hardest to sneak in — "you will, in time" — is a timeframe wearing a disguise. No
+  // schedule, no stages of grief, no "you'll know when".
+  //
+  // 🔴🔴 'cards-feel-like-myself' IS THE CLOSEST THIS FUNNEL COMES TO DEPRESSION LANGUAGE.
+  // Never diagnose her, never imply she needs fixing, never manufacture despair, and never
+  // make her recovery conditional on work she must do first.
+  | 'cards-find-closure' // Will I ever find closure?
+  | 'cards-heart-heal' // Will my heart ever heal?
+  | 'cards-feel-like-myself' // Am I ever going to feel like myself again?
+  // Soulmate-return hooks (2026-08-19). ⭐⭐ THE ORGAN — THE LABEL IS ASKED TO PREDICT. Every
+  // neighbour keeps the label and the return apart; here they are welded, and the weld IS the
+  // family: reunion asks whether HE comes back and names no label; twin-flame re-asks three
+  // RUNNING questions in her vocabulary, where the label is a wrapper; soulmate-label asks
+  // whether the WORD FITS and asks for no return. These use the word AS THE REASON HE MUST
+  // COME BACK. 'cards-was-he-soulmate' is the same machine BACKWARDS.
+  //
+  // 🔴 'cards-twinflame-back' carries the SAME headline as the live 'cards-twin-back' —
+  // deliberately, operator decision 2026-08-19, the same call made for cards-come-back against
+  // cards-return on 08-04. The incumbent keeps its ad URL and its twin-flame angle. Same deck,
+  // same art, same headline ⇒ THE READS ARE THE ONLY VARIABLE, so they are written bespoke and
+  // length-matched. The incumbent argues the community tropes; these attack the INFERENCE.
+  //
+  // 🔴🔴 THE LABEL MAY NEVER CARRY A PREDICTION — never "he is your soulmate so he returns",
+  // never the negative, and never "if he is truly yours he will come back", which makes his
+  // return the proof of the bond and his ABSENCE EVIDENCE AGAINST HER. The reverse cruelty
+  // ("he was never really yours") is banned equally, as is ranking the labels.
+  | 'cards-my-soulmate-back' // Is my soulmate coming back to me?
+  | 'cards-twinflame-back' // Is my twin flame coming back to me?
+  | 'cards-was-he-soulmate' // Was he ever really my soulmate?
   // Self-frame hooks (read HER, affirm the hopeful yes — like the palm love hooks).
   | 'cards-love-again' // Will I love again?
   | 'cards-soulmate' // When is my soulmate coming?
+  // ── Money-block hooks (2026-08-19) — TRACK B, the first NON-LOVE family on the funnel ──
+  // Every family above asks about a man. These ask about her money, and that changes what a
+  // wrong sentence costs: on a love lander it hurts her feelings, here she can act on it with
+  // her actual savings. Four angles so the age-matched framing (55-64 vs 65+) can be compared
+  // against the mechanism-matched framing (energy, prayer) — folding them into one angle would
+  // throw away the only thing the batch measures.
+  //
+  // 🔴 Three consequences no love hook has. hookToBucket() was hardcoded to 'love' and now
+  // branches; the tap instruction lives on the DECK ("Think of the man on your mind"), so
+  // CardSetConfig gained an optional per-hook override; and buildTarotReflectPrompt needed a
+  // sixth frame, tested FIRST rather than appended to a five-branch ternary already at its
+  // readable limit. Seven bans, three of which exist nowhere else — see
+  // tests/tarot-money-block-copy.test.ts.
+  | 'cards-blocked-retiring' // Why is my money still blocked this close to retiring?
+  | 'cards-nest-egg' // How long has something been blocking me from a nest egg?
+  | 'cards-too-late' // Is something blocking my money, or did I just leave it too late?
+  | 'cards-still-working' // Why am I still working when the money should have come by now?
+  | 'cards-how-much-longer' // How much longer will something keep blocking my money?
+  | 'cards-out-of-time' // Is something still blocking my money, or have I run out of time?
+  | 'cards-my-energy' // Is my energy blocking my money?
+  | 'cards-money-wont-stay' // What does my energy say about why money won't stay?
+  | 'cards-energy-how-long' // How long has my energy been working against my money?
+  | 'cards-prayed-years' // I've prayed about money for years. What's still blocking it?
+  | 'cards-prayers-unanswered' // How long will my prayers for money keep going unanswered?
 export type TarotCard = 'a' | 'b' | 'c' // the option the visitor tapped (A/B/C)
 export type TarotOption = TarotCard
 export type TarotVersion = 'a' | 'b' | 'c'
@@ -637,7 +698,17 @@ export type TarotVersion = 'a' | 'b' | 'c'
 // 'arcana-eef' = face-up
 // Emperor/Empress/Fool; 'return-mhf' = face-down Magician/Hanged Man/Fool, the
 // "Will he come back?" ad (all from Rio's card art).
-export type TarotDeck = 'decode-him' | 'arcana-mfh' | 'arcana-eef' | 'return-mhf'
+// ── 'decode-him' the DECK was RETIRED 2026-08-19 (operator call) ─────────────────────────
+// It was the seeded foundation set (Sun / Moon / Tower) and it never got real art: its strip
+// png was byte-identical to client/public/palm/thumbs-strip.png, so a visitor tapped a PALM
+// THUMB and was then told "you turned the Sun". No live ad ever pointed at it — DEFAULT_DECK
+// is return-mhf and nothing in the repo linked `deck=decode-him` — so it was reachable only
+// by a hand-typed URL, and retiring it removes a broken lander rather than a working one.
+//
+// ⚠️ 'decode-him' the ANGLE is a different thing and STAYS: it is the reporting label for the
+// hooks that read HIM (angleForHook), and it is what every no-verdict guard is named after.
+// The deck is gone; the angle is untouched.
+export type TarotDeck = 'arcana-mfh' | 'arcana-eef' | 'return-mhf'
 
 // Self-frame hooks read HER (affirm the yes); everything else is decode-him (read
 // HIM as a tendency). The server reflect prompt branches on this too.
@@ -998,6 +1069,54 @@ export const SOULMATE_LABEL_HOOKS: TarotHook[] = [
   'cards-met-already',
 ]
 
+// The closure hooks (2026-08-18). Its own angle rather than folding into HEALING_HOOKS or
+// MISSING_HIM_HOOKS — he is named in neither the headlines nor the reads.
+export const CLOSURE_HOOKS: TarotHook[] = [
+  'cards-find-closure',
+  'cards-heart-heal',
+  'cards-feel-like-myself',
+]
+
+// The soulmate-return hooks (2026-08-19). Its own angle, not REUNION_HOOKS (pinned at three),
+// not TWIN_FLAME_HOOKS (filing the challenger there would put it in the same bucket as its own
+// control) and not SOULMATE_LABEL_HOOKS (which asks for no return).
+export const SOULMATE_RETURN_HOOKS: TarotHook[] = [
+  'cards-my-soulmate-back',
+  'cards-twinflame-back',
+  'cards-was-he-soulmate',
+]
+
+// ── The money-block families (2026-08-19) ────────────────────────────────────────────────
+// Four angles, not one, because the comparison IS the batch: age-matched framing (55-64 vs
+// 65+) against mechanism-matched framing (her energy, her prayers). money-prayer is pinned at
+// TWO hooks — only two headlines were commissioned, and the count is pinned so a well-meaning
+// third cannot appear later without a decision (the treatment hidden-intuition got).
+//
+// 🔴 These are in NO decode-him family and no no-man family either. There is no man in them at
+// all, and their guard is its own file: tests/tarot-money-block-copy.test.ts.
+export const MONEY_RETIRING_HOOKS: TarotHook[] = [
+  'cards-blocked-retiring',
+  'cards-nest-egg',
+  'cards-too-late',
+]
+
+export const MONEY_WORKING_HOOKS: TarotHook[] = [
+  'cards-still-working',
+  'cards-how-much-longer',
+  'cards-out-of-time',
+]
+
+export const MONEY_ENERGY_HOOKS: TarotHook[] = [
+  'cards-my-energy',
+  'cards-money-wont-stay',
+  'cards-energy-how-long',
+]
+
+export const MONEY_PRAYER_HOOKS: TarotHook[] = [
+  'cards-prayed-years',
+  'cards-prayers-unanswered',
+]
+
 // The ad ANGLE a hook belongs to. Carried on every tarot PostHog event (see
 // lib/tarotAttribution.ts) so the two decode-him families can be compared as GROUPS
 // without listing each hook: one `angle = trust` filter instead of three hook values,
@@ -1112,7 +1231,22 @@ export type TarotAngle =
   // are claims about him that could in principle be checked. A label can never be checked at all,
   // which is why the family needs its own guard and its own numbers.
   | 'soulmate-label'
+  // 🔴 'closure' is the third family reading HER MIND, and it is NOT 'healing' or 'missing-him'.
+  // Those two keep a man in the frame; these three name nobody. NOT 'self-frame' either: that
+  // family affirms the hopeful yes, and here the hopeful yes is the central banned move.
+  | 'closure'
+  // 🔴 'soulmate-return' is the CROSSOVER of reunion and the two label families and is none of
+  // them: it asks the WORD TO GUARANTEE THE RETURN. One of its hooks shares a headline with a
+  // live twin-flame lander it is A/B'd against, so pooling would put a challenger in the same
+  // bucket as its own control.
+  | 'soulmate-return'
   | 'self-frame'
+  // The four money-block angles (2026-08-19). Separate labels so PostHog can compare
+  // age-matched framing against mechanism-matched framing, and 55-64 against 65+.
+  | 'money-retiring'
+  | 'money-working'
+  | 'money-energy'
+  | 'money-prayer'
 
 export function angleForHook(hook: TarotHook): TarotAngle {
   if (SELF_FRAME_HOOKS.includes(hook)) return 'self-frame'
@@ -1136,6 +1270,12 @@ export function angleForHook(hook: TarotHook): TarotAngle {
   if (STILL_FEELS_HOOKS.includes(hook)) return 'still-feels'
   if (HIS_OTHER_LIFE_HOOKS.includes(hook)) return 'his-other-life'
   if (SOULMATE_LABEL_HOOKS.includes(hook)) return 'soulmate-label'
+  if (CLOSURE_HOOKS.includes(hook)) return 'closure'
+  if (SOULMATE_RETURN_HOOKS.includes(hook)) return 'soulmate-return'
+  if (MONEY_RETIRING_HOOKS.includes(hook)) return 'money-retiring'
+  if (MONEY_WORKING_HOOKS.includes(hook)) return 'money-working'
+  if (MONEY_ENERGY_HOOKS.includes(hook)) return 'money-energy'
+  if (MONEY_PRAYER_HOOKS.includes(hook)) return 'money-prayer'
   return 'decode-him'
 }
 
@@ -1206,8 +1346,25 @@ export const TAROT_HOOKS: TarotHook[] = [
   'cards-really-soulmate',
   'cards-twin-or-connection',
   'cards-met-already',
+  'cards-find-closure',
+  'cards-heart-heal',
+  'cards-feel-like-myself',
+  'cards-my-soulmate-back',
+  'cards-twinflame-back',
+  'cards-was-he-soulmate',
   'cards-love-again',
   'cards-soulmate',
+  'cards-blocked-retiring',
+  'cards-nest-egg',
+  'cards-too-late',
+  'cards-still-working',
+  'cards-how-much-longer',
+  'cards-out-of-time',
+  'cards-my-energy',
+  'cards-money-wont-stay',
+  'cards-energy-how-long',
+  'cards-prayed-years',
+  'cards-prayers-unanswered',
 ]
 
 // Shown when /fb-tarot is hit without a recognized ?hook= / ?deck= (bare visit).
@@ -1347,8 +1504,28 @@ export const HEADLINES: Record<TarotHook, string> = {
   'cards-really-soulmate': 'Is he really my soulmate?',
   'cards-twin-or-connection': 'Is he my twin flame, or just a strong connection?',
   'cards-met-already': 'Have I already met my soulmate without realizing it?',
+  'cards-find-closure': 'Will I ever find closure?',
+  'cards-heart-heal': 'Will my heart ever heal?',
+  'cards-feel-like-myself': 'Am I ever going to feel like myself again?',
+  // ⚠️ 'cards-twinflame-back' carries the SAME string as the live 'cards-twin-back' —
+  // deliberately, operator decision 2026-08-19, the second such pair after cards-return /
+  // cards-come-back. The incumbent is untouched and stays in the twin-flame angle.
+  'cards-my-soulmate-back': 'Is my soulmate coming back to me?',
+  'cards-twinflame-back': 'Is my twin flame coming back to me?',
+  'cards-was-he-soulmate': 'Was he ever really my soulmate?',
   'cards-love-again': 'Will I love again?',
   'cards-soulmate': 'When is my soulmate coming?',
+  'cards-blocked-retiring': "Why is my money still blocked this close to retiring?",
+  'cards-nest-egg': "How long has something been blocking me from a nest egg?",
+  'cards-too-late': "Is something blocking my money, or did I just leave it too late?",
+  'cards-still-working': "Why am I still working when the money should have come by now?",
+  'cards-how-much-longer': "How much longer will something keep blocking my money?",
+  'cards-out-of-time': "Is something still blocking my money, or have I run out of time?",
+  'cards-my-energy': "Is my energy blocking my money?",
+  'cards-money-wont-stay': "What does my energy say about why money won't stay?",
+  'cards-energy-how-long': "How long has my energy been working against my money?",
+  'cards-prayed-years': "I've prayed about money for years. What's still blocking it?",
+  'cards-prayers-unanswered': "How long will my prayers for money keep going unanswered?",
 }
 
 // Version C opener question, per hook. C opens with the card line + this, then
@@ -1599,8 +1776,32 @@ const TAROT_QUESTION: Record<TarotHook, string> = {
   // 🔴 Never "who do you think it might have been?" — naming a person is the family's hardest ban.
   // Asks what set the wondering off, which is the material the read actually works with.
   'cards-met-already': "Before I look closer, tell me… what set you wondering whether it has already happened?",
+  // Closure. 🔴🔴 NONE MAY ASK HOW LONG IT HAS BEEN — the family refuses the calendar, and an
+  // opener that asks for one hands her the measuring stick the read then takes away. 🔴 None may
+  // ask her to rate her own progress either; that is the self-assessment the reads name as harm.
+  'cards-find-closure': "Before I look closer, tell me… what would have to happen for you to be able to call this finished?",
+  'cards-heart-heal': "Before I look closer, tell me… what does mended look like to you — what would you be doing on an ordinary day?",
+  'cards-feel-like-myself': "Before I look closer, tell me… the version of yourself you are trying to get back to, what was she like?",
+  // Soulmate-return. 🔴🔴 NONE MAY ASK WHETHER SHE THINKS HE IS COMING BACK, or when he left, or
+  // how long it has been — the family declines to forecast, and an opener that asks for one hands
+  // her the expectation the read then sets down. 🔴 None may invite her to argue the label.
+  // 🔴 'cards-twinflame-back' must not reuse the live 'cards-twin-back' opener.
+  'cards-my-soulmate-back': "Before I look closer, tell me… what has that word been promising you while you wait?",
+  'cards-twinflame-back': "Before I look closer, tell me… when the word first came to you for this, what was it you were trying to explain?",
+  'cards-was-he-soulmate': "Before I look closer, tell me… what has made you start asking it in the past tense?",
   'cards-love-again': "Before I look closer, tell me… what has been weighing on your heart since it happened?",
   'cards-soulmate': "Before I look closer, tell me… what is the love you're still holding out for — the one you haven't given up on?",
+  'cards-blocked-retiring': "Before I look closer, tell me… what was that money supposed to have made possible by now?",
+  'cards-nest-egg': "Before I look closer, tell me… when did you first realise it wasn't building?",
+  'cards-too-late': "Before I look closer, tell me… what is it you think you left too late?",
+  'cards-still-working': "Before I look closer, tell me… what were you meant to be doing by now, instead of working?",
+  'cards-how-much-longer': "Before I look closer, tell me… how long have you been telling yourself it is nearly turned?",
+  'cards-out-of-time': "Before I look closer, tell me… when did you start counting the years ahead instead of the ones behind?",
+  'cards-my-energy': "Before I look closer, tell me… what happens with money that made you start suspecting yourself?",
+  'cards-money-wont-stay': "Before I look closer, tell me… where does it tend to go, when it goes?",
+  'cards-energy-how-long': "Before I look closer, tell me… when did you first feel you were working against yourself?",
+  'cards-prayed-years': "Before I look closer, tell me… what have you been asking for, in all those years?",
+  'cards-prayers-unanswered': "Before I look closer, tell me… what would it look like, if it were answered tomorrow?",
 }
 
 // ── Deck registry ────────────────────────────────────────────────────────────
@@ -1620,6 +1821,11 @@ export interface CardSetConfig {
   // UI copy
   eyebrow: string // S1 eyebrow — "Pull the Card That Calls You"
   instruction: string // S1 tap instruction
+  // Per-hook override of `instruction`, for hooks the deck's own line does not fit. The
+  // money hooks need it: return-mhf says "Think of the man on your mind", which is the wrong
+  // sentence entirely in front of a woman who clicked an ad about her pension. Additive —
+  // every hook without an entry keeps the deck line. Read it through instructionFor().
+  hookInstruction?: Partial<Record<TarotHook, string>>
   beatNoun: string // S2 — "Evelyn is reading your {beatNoun}…" (e.g. "cards")
   continueCta: string // S3 (Version A card) CTA, sans the ▸
   chooseMoment: string // greetingA — "I felt it {chooseMoment}"
@@ -1637,119 +1843,21 @@ export interface CardSetConfig {
   // label (e.g. "what's veiled"). Feed the Version-A greeting + Version-C LLM.
   mark: Record<TarotOption, string>
   reading: Record<TarotOption, string>
+  // The card's PICTURE — what she is literally looking at, in plain words. The art is
+  // attached to the FIRST message only (sendBotMessages passes cardArt at i===0), so she
+  // reads this with the card on screen: a claim she can check in one second, which is
+  // what earns belief for the sentence after it.
+  //
+  // WHY PER-CARD AND NOT PER-HOOK. The picture is the same whatever she asked about — the
+  // Hanged Man hangs upside down whether her question is money or a man. Three lines cover
+  // all 198 openings on this deck, and none of the 264 written framings is touched, which
+  // is what keeps the "every card framing is distinct across the whole deck" guards
+  // passing (8 test files assert it).
+  //
+  // Optional: a deck without it renders exactly as it does today.
+  cardPicture?: Record<TarotOption, string>
   // reads[hook][option] = the 4-sentence reveal. Partial on the hook axis.
   reads: Partial<Record<TarotHook, Record<TarotOption, string[]>>>
-}
-
-// Seeded deck — the spec's decode-him face-down set (Sun / Moon / Tower).
-// cards-honest is the spec's proven worked example; the other three hooks are
-// compliant DRAFTS (fb-tarot/docs/decode-him spec) for the skill to refine.
-const DECODE_HIM: CardSetConfig = {
-  id: 'decode-him',
-  facing: 'down',
-  eyebrow: 'Pull the Card That Calls You',
-  instruction: 'Think of the man on your mind. Tap the card that calls you.',
-  beatNoun: 'cards',
-  continueCta: "There's more the card is showing me — begin your free reading",
-  chooseMoment: 'the moment your hand reached for it',
-  strip: { url: '/tarot/decode-him-strip.png', width: 972, height: 460 },
-  options: ['a', 'b', 'c'],
-  // A — The Sun (what's in the light); B — The Moon (what's veiled);
-  // C — The Tower (what's shifting).
-  mark: {
-    a: 'the Sun, the card of what stands in the light',
-    b: 'the Moon, the card of what is kept in the half-light',
-    c: 'the Tower, the card of what is already moving beneath the surface',
-  },
-  reading: {
-    a: "what's in the light",
-    b: "what's veiled",
-    c: "what's shifting",
-  },
-  reads: {
-    // Proven worked example from the spec.
-    'cards-honest': {
-      a: [
-        "You turned the Sun, dear — the card of what stands in the light.",
-        "Your hand didn't reach for it by accident; some part of you was hoping, and the Sun met the hope.",
-        "The Sun doesn't promise he's flawless — it says what's between you is more in the open than your fear has let you believe; the warmth you feel from him is real, not performed.",
-        "Let me look closer at the one shadow even the Sun doesn't reach — there's a single thing still unsaid…",
-      ],
-      b: [
-        "You turned the Moon, dear — the card of what's kept in the half-light.",
-        "That's not random; your hand reached for the card that matches what you already sense.",
-        "The Moon doesn't mean he's lying — it means something's unsaid between you, and that feeling of 'there's more here' is accurate, not paranoia.",
-        "Let me look closer at what he's keeping in the dark — and whether it's a threat, or just a wall he hasn't learned to lower…",
-      ],
-      c: [
-        "You turned the Tower, dear — the card of what's already moving beneath the surface.",
-        "Your hand chose the honest card, even though it's the hard one — that takes a kind of courage.",
-        "The Tower doesn't mean ruin — it means something between you is changing shape, and the unsettled feeling you've carried is you sensing the ground shift before it shows.",
-        "Let me look closer at what's cracking — and what it's quietly clearing the way for…",
-      ],
-    },
-    // DRAFT — compliant "tendency, never verdict" reads for the skill to refine.
-    'cards-return': {
-      a: [
-        "You turned the Sun, dear — the card of what stands in the light.",
-        "You're asking if he'll come back… and your hand reached for the warm card, not the cold one.",
-        "The Sun doesn't promise a knock at the door tomorrow — it says the warmth between you was real, and real warmth rarely goes fully cold; the pull you still feel is not one-sided.",
-        "Let me look closer at what's keeping him from turning back around…",
-      ],
-      b: [
-        "You turned the Moon, dear — the card of what's kept in the half-light.",
-        "You're asking if he'll return, and I can feel how long you've been holding that question.",
-        "The Moon doesn't mean he's gone for good — it means his side is still unclear even to him, and the sense that 'this isn't finished' is your intuition reading him accurately.",
-        "Let me look closer at what's unresolved in him — and whether it's pulling him back or holding him still…",
-      ],
-      c: [
-        "You turned the Tower, dear — the card of what's already moving beneath the surface.",
-        "You're asking if he'll come back, after everything shifted so suddenly.",
-        "The Tower doesn't mean the door is shut — it means the old shape between you broke, and something is still rearranging; what feels like an ending is often the ground clearing for a different return.",
-        "Let me look closer at what's rebuilding underneath…",
-      ],
-    },
-    'cards-feels': {
-      a: [
-        "You turned the Sun, dear — the card of what stands in the light.",
-        "You're asking how he really feels, and your hand reached for the card of what's genuine.",
-        "The Sun doesn't hand you a confession — it says the warmth you've felt from him is real, not imagined, and your read on it is truer than the doubt you keep talking yourself into.",
-        "Let me look closer at what he feels but hasn't found the words for…",
-      ],
-      b: [
-        "You turned the Moon, dear — the card of what's kept in the half-light.",
-        "You're asking what he feels, because he keeps some of it just out of reach.",
-        "The Moon doesn't mean he's cold — it means his feelings are real but half-spoken, and that sense of 'there's more here than he shows' is you reading him correctly.",
-        "Let me look closer at what he's holding back — and why…",
-      ],
-      c: [
-        "You turned the Tower, dear — the card of what's already moving beneath the surface.",
-        "You're asking how he feels, and something between you has recently shifted.",
-        "The Tower doesn't mean his feelings collapsed — it means they're changing shape, and the unsteadiness you sense is real movement, not you overthinking it.",
-        "Let me look closer at where his feelings are actually heading…",
-      ],
-    },
-    'cards-cheating': {
-      a: [
-        "You turned the Sun, dear — the card of what stands in the light.",
-        "You're asking the hardest question, and your hand reached for the card of what's open.",
-        "The Sun isn't a verdict of innocence — it says more is in the light between you than your fear allows, and the relief you'd feel at the truth is worth trusting yourself toward.",
-        "Let me look closer at the one shadow the Sun doesn't reach…",
-      ],
-      b: [
-        "You turned the Moon, dear — the card of what's kept in the half-light.",
-        "You're asking if he's being unfaithful, and I can feel how much that question has cost you.",
-        "The Moon does not say 'he's cheating' — it says something is unsaid, and the feeling that 'there's more here' is real information about your situation, not paranoia to apologize for.",
-        "Let me look closer at what's being kept in the dark — and what it actually is…",
-      ],
-      c: [
-        "You turned the Tower, dear — the card of what's already moving beneath the surface.",
-        "You're asking the question that's been shaking the ground under you.",
-        "The Tower isn't proof of betrayal — it means something between you is cracking, and the instability you feel is you sensing a real shift, not inventing one.",
-        "Let me look closer at what's breaking — and what it's trying to show you…",
-      ],
-    },
-  },
 }
 
 // Rio's first real card art — FACE-UP. Panels re-ordered 2026-07-31 (operator) from
@@ -1782,130 +1890,142 @@ const ARCANA_MFH: CardSetConfig = {
   reads: {
     // Self-frame — reads HER future, affirm the hopeful yes (like palm love-again).
     'cards-love-again': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-19 from
+      // fb-tarot/docs/drafts/rewrites/cards-love-again.json — approved copy, folded verbatim:
+      // bubbles 3-6 become beat 3, joined by newlines, and Version B serves them as
+      // separate chat messages with a typing pause between each.
       a: [
-        "You chose the Magician, dear — the card of power, of the tools already in your hands.",
-        "You're asking if love will come again… and I can feel the tiredness under the hope.",
-        "The Magician doesn't hand you a stranger — it says the power to draw love is already yours; a heart with your will doesn't stay empty long.",
-        "Let me look closer at what's ready to be made…",
+        "You chose the Magician, dear. Look — the roses over his head are fully out.",
+        "You asked if you'll love again. Your hand went to the man who can still make things.",
+        "So yes, dear. The part of you that loves isn't used up.\nAnd the roses are out again, dear. They come back every winter.\nBut you've been told otherwise, dear. I don't think that was true.\nThat's why you look yourself over for damage, dear. There's none to find.",
+        "Let me look closer at what has been sitting over that part of you…",
       ],
       b: [
-        "You chose the Hanged Man, dear — the card of the pause, of seeing love from a new angle.",
-        "You're afraid the waiting means it's never coming.",
-        "The Hanged Man doesn't mean stuck — it means this pause is doing quiet work, turning you toward a love that arrives differently than the last; it is coming.",
-        "Let me look closer at what the waiting is preparing…",
+        "You chose the Hanged Man, dear. Look — the gold at his head is the brightest thing on the card.",
+        "You asked if you'll love again. Your hand went to the card that pauses before a turn.",
+        "So you've been in a pause, dear. Not an ending.\nAnd the gold is brightest at the very point of hanging, dear.\nBut something in you kept its light through all of it, dear.\nThat's why things can still move you, dear. It is all intact.",
+        "Let me look closer at what has been dimming it from outside…",
       ],
       c: [
-        "You chose the Fool, dear — the card of new beginnings, of the leap before the ground appears.",
-        "You're asking if your heart can start over, after what it cost you last time.",
-        "The Fool doesn't mean starting from nothing — it means a fresh beginning is already stepping toward you; yes, you will love again, sooner than the fear admits.",
-        "Let me look closer at the beginning that's forming…",
+        "You chose the Fool, dear. Look — the flower in his hand is fresh and white.",
+        "You asked if you'll love again. Your hand went to the one who begins again.",
+        "So beginning again is the whole of this card, dear.\nAnd the flower is fresh, dear, and he carries it forward with him.\nBut you've been told you carry a dead thing, dear. You carry that.\nThat's why it feels so heavy, dear. You've held it up alone.",
+        "Let me look closer at what has been weighing on your hands…",
       ],
     },
     // Self-frame — when her soulmate arrives. Affirm the hopeful yes; answer the
     // "when" as a leaning ("nearer than you fear"), NEVER a date.
     'cards-soulmate': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-19 from
+      // fb-tarot/docs/drafts/rewrites/cards-soulmate.json — approved copy, folded verbatim:
+      // bubbles 3-6 become beat 3, joined by newlines, and Version B serves them as
+      // separate chat messages with a typing pause between each.
       a: [
-        "You chose the Magician, dear — the card of power, of the ability to draw what you want toward you.",
-        "You're asking when your soulmate comes, and you reached for the card of someone who makes things happen.",
-        "The Magician doesn't give you a date — it says you already hold the power to call this love in, and a heart with your will doesn't wait long; the timing is bending toward you.",
-        "Let me look closer at what you're ready to make…",
+        "You chose the Magician, dear. Look — his right hand holds a white rod straight at the sky.",
+        "You asked when your soulmate is coming. Your hand went to the man who makes things happen.",
+        "So yes, dear. Something is on its way to being made.\nAnd his hand is up, dear, because a thing is being made now.\nBut no date from me, dear. Nobody honest would give one.\nThat's why the wait has felt so long, dear. No one gave you a marker.",
+        "Let me look closer at what still stands in the way…",
       ],
       b: [
-        "You chose the Hanged Man, dear — the card of the pause that's doing quiet work.",
-        "You're afraid the waiting means they're never coming.",
-        "The Hanged Man doesn't mean stuck — it means this pause is preparing you, turning you toward a soulmate who arrives right as the waiting finishes its work; the delay is not a denial.",
-        "Let me look closer at what the waiting is readying you for…",
+        "You chose the Hanged Man, dear. Look — the tree he hangs in is still green and alive.",
+        "You asked when your soulmate is coming. Your hand went to the card of a last stretch.",
+        "So you're on the last stretch, dear. Not the whole road.\nAnd the tree is still green, dear, right through the hanging.\nBut a pause isn't a stop, dear, and you have been in one.\nThat's why believing through it took so much, dear. It wasn't silly.",
+        "Let me look closer at what has been holding this pause open…",
       ],
       c: [
-        "You chose the Fool, dear — the card of the leap, of the beginning already stepping toward you.",
-        "You're asking when they'll arrive, and your hand reached for the card of the unexpected meeting.",
-        "The Fool doesn't mark a day — it leans toward a soulmate who arrives suddenly and sooner than the fear admits; a fresh chapter is opening for you.",
-        "Let me look closer at the beginning that's forming…",
+        "You chose the Fool, dear. Look — he's walking into open air with his chin up.",
+        "You asked when your soulmate is coming. Your hand went to the one who steps first.",
+        "So something begins here, dear. That is what this card is.\nAnd he's already moving, dear, before he can see the end of it.\nBut no date, dear, and no name. That part isn't mine to give.\nThat's why the road looks empty, dear. You are already on it.",
+        "Let me look closer at what's standing on that road…",
       ],
     },
     // Decode-him — reads HIM as a TENDENCY, never a verdict; affirm HER intuition.
     'cards-honest': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-19 from
+      // fb-tarot/docs/drafts/rewrites/cards-honest.json — approved copy, folded verbatim:
+      // bubbles 3-6 become beat 3, joined by newlines, and Version B serves them as
+      // separate chat messages with a typing pause between each.
       a: [
-        "You chose the Magician, dear — the card of the crafted image, of what's presented with skill.",
-        "Your hand didn't reach for that by accident; some part of you senses a gap between what he shows and what's underneath.",
-        "The Magician doesn't mean he's lying — it means he's practiced at presenting, and that sense the picture is a little too polished is real information, not you being difficult.",
-        "Let me look closer at what's behind the performance…",
+        "You chose the Magician, dear. Look — he looks straight out at you, and his mouth is closed.",
+        "You asked if he's being honest with you. Your hand went to the man who tells it well.",
+        "So what you're short of is a fact, dear. Not sense, and not calm.\nAnd look how he holds himself. He's very good at how a thing is put.\nBut a smooth account isn't proof either way, dear.\nThat's why his answers land fine, dear, and you still go back over them.",
+        "Let me look closer at what stands between you and the whole story…",
       ],
       b: [
-        "You chose the Hanged Man, dear — the card of what's suspended, held just out of view.",
-        "You reached for the card that matches the feeling you can't quite settle.",
-        "The Hanged Man doesn't mean he's lying — it means something between you is on pause, unresolved, and the sense that the full truth hasn't turned to face you yet is accurate.",
-        "Let me look closer at what's waiting to come into view…",
+        "You chose the Hanged Man, dear. Look — the whole card is upright but him.",
+        "You asked if he's being honest with you. Your hand went to the card that shows one side.",
+        "So you've only ever had one side of this, dear. The card is blunt about that.\nAnd the other side of it sits with him, dear. It always has.\nBut you can't weigh a thing you were never shown, dear.\nThat's why he explains it, dear, and an hour later you're still checking.",
+        "Let me look closer at what's keeping the other side out of view…",
       ],
       c: [
-        "You chose the Fool, dear — the card of the open, unguarded hand.",
-        "That's not random; you reached for the card that matches something you feel in how he moves through this.",
-        "The Fool doesn't point to deception — it points to a man who hasn't sat down and thought it through; what's unsaid here may be unexamined rather than hidden, and your sense that you're not getting the whole picture is still accurate.",
-        "Let me look closer at what he's leaving unsaid…",
+        "You chose the Fool, dear. Look — a small white dog up on its back legs beside him.",
+        "You asked if he's being honest with you. Your hand went to the one still on the road.",
+        "So this story isn't finished, dear. Nothing about it has been closed.\nAnd look at the little dog, dear. Up on its back legs, trying to tell him.\nBut a warning with no words in it is all you've had, dear.\nThat's why you ask again in a good week, dear, when nothing has gone wrong.",
+        "Let me look closer at what has been standing in the way of the truth…",
       ],
     },
     'cards-return': {
       a: [
-        "You chose the Magician, dear — the card of power and the will to act.",
-        "You're asking if he'll come back, and you reached for the card of someone who can make a move.",
-        "The Magician doesn't promise a knock at the door — it says he has the power to return if he chooses it, and the pull you still feel between you is not one-sided.",
-        "Let me look closer at what's holding his hand back…",
+        "You chose the Magician, dear. Look — a cup, a coin, a blade and a wand, all laid out on his table.",
+        "You asked if he'll come back. Your hand went straight to the man who can act.",
+        "He isn't short of a way back, dear. He has one.\nSo this was never about whether he could.\nAnd that pull you still feel? It isn't only yours.\nYou've felt him on the other end of it. You're reading that right.",
+        "Let me look closer at what sits between you and his way back…",
       ],
       b: [
-        "You chose the Hanged Man, dear — the card of the pause before movement.",
-        "You reached for the card that matches the in-between you've been living in.",
-        "The Hanged Man doesn't promise a return — it says this is unresolved rather than finished, and the part of you that refuses to call it over is reading the situation accurately.",
-        "Let me look closer at what he's reconsidering…",
+        "You chose the Hanged Man, dear. Look — he hangs by one ankle from a green tree, and his face is calm.",
+        "You asked if he'll come back. Your hand went to a man still up in the air.",
+        "Nothing has been settled here, dear. Not for you, and not against you.\nHe hasn't shut the door. He hasn't opened it either.\nYou keep refusing to call this over.\nThat isn't you clinging, dear. You're reading it right.",
+        "Let me look closer at what's holding this in between…",
       ],
       c: [
-        // 2026-07-30: brought in line with the 2026-07-28 sign-off (return-mhf:596-598).
-        // The previous beat 3 read 'what comes back often comes back as a new beginning',
-        // which presupposes a return. The signed-off wording is conditional — it never
-        // predicts that he comes back.
-        "You chose the Fool, dear — the card of the unwritten chapter, the road still open.",
-        "Your hand went to the one card that refuses to call this finished.",
-        "The Fool doesn't mean he's gone for good — it points to a road still open rather than a door closed; if something does come of this, it begins fresh rather than picking up where it broke.",
-        "Let me look closer at the turn that's forming…",
+        "You chose the Fool, dear. Look — a white rose in one hand, a small bundle on a stick, a dog at his heel.",
+        "You asked if he'll come back. Your hand went to the one card that won't call this over.",
+        "The road is still open, dear. The door was never shut.\nBut look where his eyes are. On what's ahead, not behind.\nSo if this does come to something, it starts new.\nIt won't pick up where it broke. That isn't a smaller thing, dear.",
+        "Let me look closer at what stands between you and that open road…",
       ],
     },
     'cards-feels': {
       a: [
-        "You chose the Magician, dear — the card of intention, of feeling that's active, not passive.",
-        "You're asking how he really feels, and you reached for the card of directed will.",
-        "The Magician doesn't hand you a confession — it leans toward feelings that are real and deliberate, not idle; the warmth you've felt from him is intended, not imagined.",
-        "Let me look closer at what he hasn't found the words for…",
+        "You chose the Magician, dear. Look — a red robe over white, and a loop above his head with no end to it.",
+        "You asked how he really feels. Your hand went to the man who does nothing by accident.",
+        "So the warmth you felt was not made up, dear.\nA man like this doesn't warm to someone by accident.\nWhat he hasn't done is say it out loud.\nThat gap is real, dear. You've been reading it right.",
+        "Let me look closer at what's sitting between you and the words…",
       ],
       b: [
-        "You chose the Hanged Man, dear — the card of feeling held in suspension.",
-        "You reached for the card that matches the mixed signals you've been reading.",
-        "The Hanged Man doesn't mean he feels nothing — it leans toward feelings that are real but suspended, caught between what he wants and what he's ready for; the pull you sense is genuine.",
-        "Let me look closer at what he's holding back, and why…",
+        "You chose the Hanged Man, dear. Look — he's upside down, and there's a light around his head.",
+        "You asked how he really feels. Your hand went to the man stuck between two things.",
+        "You haven't been reading coldness, dear. You've been reading a hold.\nSo the mixed signals were not you misreading him.\nYou were reading two true things at once.\nThat pull you sense is genuine. So is the hold.",
+        "Let me look closer at what's holding you both in the middle…",
       ],
       c: [
-        "You chose the Fool, dear — the card of open, uncomplicated feeling.",
-        "That's not random; you reached for the card that matches how fresh this still feels.",
-        "The Fool doesn't mean he's careless with you — it leans toward feelings that are genuine and in the moment; what he feels is real, even if he hasn't thought through where it leads.",
-        "Let me look closer at where his heart is actually pointing…",
+        "You chose the Fool, dear. Look — he's looking up at the sky, not down at the drop.",
+        "You asked how he really feels. Your hand went to the man living in the moment.",
+        "What you picked up was real, dear. It just lives in the moment.\nBut look where his eyes are. Up, not down the road.\nSo he hasn't worked out where this goes.\nThat's a different thing from not caring, dear. You've felt both at once.",
+        "Let me look closer at what keeps this from settling…",
       ],
     },
     'cards-cheating': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-19 from
+      // fb-tarot/docs/drafts/rewrites/cards-cheating.json — approved copy, folded verbatim:
+      // bubbles 3-6 become beat 3, joined by newlines, and Version B serves them as
+      // separate chat messages with a typing pause between each.
       a: [
-        "You chose the Magician, dear — the card of the polished surface, of what's presented.",
-        "You reached for that card for a reason; some part of you senses a distance between the image and what's real.",
-        "The Magician is not a verdict of betrayal — it means something is being managed or curated, and the unease you feel about a gap between his story and your gut is real information, not paranoia.",
-        "Let me look closer at the one shadow the polish doesn't cover…",
+        "You chose the Magician, dear. Look — his table stands on the grass, out in the open.",
+        "You asked if he has been true to you. Your hand went to the man who sets the scene.",
+        "So the distance is real, dear. I will not talk you out of it.\nAnd a scene like that gets set on purpose, dear. Look at his table.\nBut what's set out isn't the same as what's so, dear.\nThat's why you can sit through a fine evening, dear, and still feel outside it.",
+        "Let me look closer at what stands between you and the plain view…",
       ],
       b: [
-        "You chose the Hanged Man, dear — the card of what's suspended and unclear.",
-        "You reached for the card that matches the limbo you can't quite name.",
-        "The Hanged Man is not a confession — it means something between you is on hold and not what it seems from your angle; the feeling that something's paused and off is real, and it deserves clarity, not self-blame.",
-        "Let me look closer at what's actually suspended between you…",
+        "You chose the Hanged Man, dear. Look — red trousers, a blue tunic, and gold light at his head.",
+        "You asked if he has been true to you. Your hand went to the card left up in the air.",
+        "So you've been left hanging in this, dear. Nobody has put an end to it.\nAnd no answer ever came, dear. Unease turns into a way of living.\nBut nothing has gone wrong on paper, dear. You still live braced.\nThat's why there's nothing to point at, dear, and you check anyway.",
+        "Let me look closer at what has kept this hanging over you…",
       ],
       c: [
-        "You chose the Fool, dear — the card of impulse and the unguarded moment.",
-        "Your hand reached for the card that matches the restlessness you've been feeling from him.",
-        "The Fool is not proof of unfaithfulness — it leans toward impulsiveness and living in the moment; watch that tendency, but what your intuition is flagging deserves a closer, honest look, not a spiral.",
-        "Let me look closer at what the restlessness is really about…",
+        "You chose the Fool, dear. Look — the dog is the only other living thing on his card.",
+        "You asked if he has been true to you. Your hand went to the one who doesn't look down.",
+        "So something has been moving, dear. You felt the ground change.\nAnd look at the dog, dear. Up on its legs, and he walks on.\nBut the card won't name what's coming, dear. Nobody can from here.\nThat's why you've been watching him for weeks, dear, and found nothing to hold.",
+        "Let me look closer at what has been shifting under you…",
       ],
     },
     // ── Trust/authenticity hooks (2026-07-30) ────────────────────────────────
@@ -1917,22 +2037,22 @@ const ARCANA_MFH: CardSetConfig = {
     // 'Is he really who he says he is?' — the man he presents vs the man underneath.
     'cards-who-he-is': {
       a: [
-        "You chose the Magician, dear — the card of the man who authors himself.",
-        "Your hand went to the card of someone who decides what the world gets to see, and I don't think that was chance.",
-        "The Magician doesn't make him a fraud — it says the man he introduces you to is a version he built on purpose, and your sense that there is a second one living underneath it is worth taking seriously.",
-        "Let me look closer at the man he keeps out of the introduction…",
+        "You chose the Magician, dear. Look — roses and lilies at his feet, and one arm held straight up.",
+        "You asked if he's really who he says he is. Your hand went to the man who builds what you see.",
+        "The Magician builds what people see, dear. That is his craft.\nSo what he shows you was put together on purpose.\nThat doesn't tell me who stands behind it. It tells me there is a behind.\nYou already sensed that, dear. Keep hold of it.",
+        "Let me look closer at what sits between you and the man behind it…",
       ],
       b: [
-        "You chose the Hanged Man, dear — the card of the single angle, of what you can only see from one side.",
-        "You reached for the card that matches how partial he still feels to you, even now.",
-        "The Hanged Man doesn't say he is someone else — it says you have only ever been shown one side of him, and the reason you cannot get a clean read is that you have never been given the whole.",
-        "Let me look closer at the part of him you were never introduced to…",
+        "You chose the Hanged Man, dear. Look — one leg tied to the branch, the other bent behind it, out of sight.",
+        "You asked if he's really who he says he is. Your hand went to the card of one hidden side.",
+        "The Hanged Man shows one side, dear. Never both.\nYou were given a part, and asked to judge the whole.\nThat is why you can't get a clean read on him.\nThe trouble isn't your judgement, dear. It's what you were handed.",
+        "Let me look closer at what stands between you and a straight answer…",
       ],
       c: [
-        "You chose the Fool, dear — the card of the man who is still becoming.",
-        "That is not random; you reached for the card that matches how unsettled he seems, even to himself.",
-        "The Fool doesn't accuse him of pretending — it leans toward a man who has not finished deciding who he is, so the person you met and the one in front of you now genuinely differ; the inconsistency you keep noticing is real, and it is not your imagination.",
-        "Let me look closer at which of him is the one that stays…",
+        "You chose the Fool, dear. Look — all he owns is tied in one small bundle on a stick.",
+        "You asked if he's really who he says he is. Your hand went to the man still deciding.",
+        "The Fool travels light, dear. Nothing about him is settled yet.\nSo the man you met and the man now can both be him.\nOr he has not shown you the whole road. The card won't say which.\nEither way, you noticed the change. That is worth trusting.",
+        "Let me look closer at what keeps getting between you and all of him…",
       ],
     },
     // 'Is he the real person, or just a picture?' — she has only ever had an image.
@@ -1941,44 +2061,52 @@ const ARCANA_MFH: CardSetConfig = {
     // reassurance is the failure mode here (2026-07-10 buyer audit). Never pronounce him
     // fake either; that is a verdict. Ported verbatim from return-mhf.
     'cards-real-person': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-19 from
+      // fb-tarot/docs/drafts/rewrites/cards-real-person.json — approved copy, folded verbatim:
+      // bubbles 3-6 become beat 3, joined by newlines, and Version B serves them as
+      // separate chat messages with a typing pause between each.
       a: [
-        "You chose the Magician, dear — the card of the made thing, of the image that someone assembled.",
-        "Your hand went to the card of construction, and that tells me you have already sensed how much of him arrives pre-arranged.",
-        "The Magician does not tell me he is fictional — it tells me that what you have been given is an image, and an image can be built by anyone; the fact that you cannot get past it to a person is information, not impatience on your part.",
-        "Let me look closer at how much of him exists off the screen…",
+        "You chose the Magician, dear. Look — his front is all you get; his back is off the card.",
+        "You asked if he's the real person or just a picture. Your hand went to the man who makes images.",
+        "So something has kept you from reaching him, dear. That's real, not nerves.\nAnd a made picture can be very good, dear. Good enough to hold up.\nBut I won't tell you he's real, dear, and I won't call him false.\nThat's why you go quiet when a friend asks, dear. You've no proof either way.",
+        "Let me look closer at what stands between you and meeting the man…",
       ],
       b: [
-        "You chose the Hanged Man, dear — the card of the thing that hangs, that never quite lands.",
-        "You reached for the card that matches the waiting you have been doing for him to become real.",
-        "The Hanged Man does not declare him an invention — it marks someone who stays permanently almost-here, always one obstacle short of meeting you, and that pattern is the answer you have been asking me for; a man who wants to be known finds a way to be reached.",
-        "Let me look closer at what always seems to come up right before he arrives…",
+        "You chose the Hanged Man, dear. Look — the beam holds him up, and you can't see what holds the beam.",
+        "You asked if he's the real person or just a picture. Your hand went to the card held up by something unseen.",
+        "So you're being asked to take this on trust, dear. All of it.\nAnd what holds him up is off the card. You can't see it from here.\nBut nobody can check a thing they have never been shown, dear.\nThat's why it never quite settles, dear. Nothing has answered it.",
+        "Let me look closer at what's keeping this out of your reach…",
       ],
       c: [
-        "You chose the Fool, dear — the card of the beginning that has not yet touched the ground.",
-        "That is not random; you reached for the card of something still weightless, still untested by real life.",
-        "The Fool does not brand him a stranger — it says what you have so far is a beginning that has never had to survive an ordinary afternoon together, and until it does, what you are holding is a promise rather than a person; your caution here is wisdom, not cynicism.",
-        "Let me look closer at what it would take to bring this into daylight…",
+        "You chose the Fool, dear. Look — his face is turned up, so you never quite meet his eye.",
+        "You asked if he's the real person or just a picture. Your hand went to the one whose face you can't catch.",
+        "So you've been reaching for something that keeps moving, dear.\nAnd he's always mid-step, dear. Never still long enough to be seen.\nBut the card shows me no face to check him against, dear.\nThat's why every plan to meet slides a week, dear. Something always comes up.",
+        "Let me look closer at what keeps this from getting real…",
       ],
     },
     // 'Am I being misled?' — restore trust in HER OWN perception; she arrives self-doubting.
     'cards-misled': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-19 from
+      // fb-tarot/docs/drafts/rewrites/cards-misled.json — approved copy, folded verbatim:
+      // bubbles 3-6 become beat 3, joined by newlines, and Version B serves them as
+      // separate chat messages with a typing pause between each.
       a: [
-        "You chose the Magician, dear — the card of the hand that shapes the story.",
-        "You reached for the card of direction, and women do not reach for that card when the account they have been given adds up.",
-        "The Magician does not hand down a verdict that you are being deceived — it says the version of events you keep being offered has been shaped for you, and the small places where it does not match what you saw with your own eyes are exactly where your attention belongs.",
-        "Let me look closer at the detail that never quite fits…",
+        "You chose the Magician, dear. Look — the four things on his table don't match each other.",
+        "You asked if you're being misled. Your hand went to the man who arranges things.",
+        "So two things you were given don't fit, dear. You saw that yourself.\nAnd there on his table, four things, and no two of them alike.\nBut a mismatch tells you nothing about why, dear. Only that it's there.\nThat's why you keep going back over what he said, lining it up.",
+        "Let me look closer at what stands between you and a story that fits…",
       ],
       b: [
-        "You chose the Hanged Man, dear — the card of the view that is deliberately kept unclear.",
-        "You reached for the card that matches the dizziness of never being able to settle what is true.",
-        "The Hanged Man is not proof that you are being played — it says you have been kept at a distance from the whole of it, and the confusion you have been blaming on yourself is a symptom of that distance, not a flaw in your judgment.",
-        "Let me look closer at what the confusion has been protecting…",
+        "You chose the Hanged Man, dear. Look — from where you stand, his face is where his feet should be.",
+        "You asked if you're being misled. Your hand went to the card that flips a view.",
+        "So the muddle is in the picture, dear. It isn't in you.\nAnd you've been handed this the wrong way up, dear.\nBut nobody has turned it round for you, dear. You've had to do it.\nThat's why working it out takes you hours. It arrives upside down, dear.",
+        "Let me look closer at what has been turning this around on you…",
       ],
       c: [
-        "You chose the Fool, dear — the card of what gets left uncorrected.",
-        "That is not random; you reached for the card of the easy answer, the one that was simpler to leave standing than to fix.",
-        "The Fool does not mean he set out to mislead you — it points to someone who let a convenient impression stand rather than correct it, which lands on you the same way in the end; what you are sensing is a real absence of straightening-out, not you being suspicious for no reason.",
-        "Let me look closer at what he has never bothered to correct…",
+        "You chose the Fool, dear. Look — the rocks he stands on are cut in flat layers.",
+        "You asked if you're being misled. Your hand went to the one who doesn't check his footing.",
+        "So you've been asked to walk without checking, dear. That's what feels wrong.\nAnd he's one step from a drop, dear, and looking the other way.\nBut this card names nothing about what sits under it, dear.\nThat's why checking felt like doubt to you. Checking is just looking, dear.",
+        "Let me look closer at what has been hidden under this…",
       ],
     },
     // ── Commitment hooks (2026-07-31) ────────────────────────────────────────
@@ -1993,62 +2121,70 @@ const ARCANA_MFH: CardSetConfig = {
     // tests/tarot-commitment-copy.test.ts.
     'cards-will-commit': {
       a: [
-        "You chose the Magician, dear — the card of will, of what a man is actually choosing.",
-        "You are asking whether he will ever commit, and your hand found the card of choice rather than circumstance.",
-        "The Magician hands down no yes and no no — it says the capability is sitting right there unused, and your sense that he could if he decided to is reading him accurately, not flattering him.",
-        "Let me look closer at what he keeps choosing instead…",
+        "You chose the Magician, dear. Look — one hand up to the sky, one down to the ground, every tool laid out on his table.",
+        "You asked whether he'll ever commit. Your hand went to the man who already has all he needs.",
+        "He isn't missing a thing, dear. He could decide.\nHe just hasn't.\nYou've felt that all along. You're reading him right — you're not making it up.\nAnd wanting an answer by now isn't you pushing. It's you being awake.",
+        "Let me look closer at what he keeps picking instead…",
       ],
       b: [
-        "You chose the Hanged Man, dear — the card of the held breath, of the thing suspended between two answers.",
-        "You reached for the card that matches exactly where he has left you standing.",
-        "The Hanged Man will not tell me he will or he won't — it says he is genuinely undecided rather than quietly certain, and the waiting you have done has been real waiting, not something you invented to stay hopeful.",
-        "Let me look closer at what he is weighing…",
+        "You chose the Hanged Man, dear. Look at him — hanging upside down by one ankle, and not fighting it.",
+        "You asked whether he'll ever commit. Your hand went to the man hanging between two answers.",
+        "He hasn't come down on either side. Not toward you, not away.\nHe isn't keeping a decision from you, dear. He hasn't made one.\nThat's the harder answer, I know. But it's the true one.\nAnd you did wait, dear. That was real — you didn't make it up to keep hoping.",
+        "Let me look closer at what's holding him up there…",
       ],
       c: [
-        "You chose the Fool, dear — the card of the open road, of the step not yet taken.",
-        "Your hand went to the card of beginnings, which is telling for a question about a man who has not begun.",
-        "The Fool promises nothing about the step being taken — it says nothing here has been sealed shut, and the part of you that has not stopped hoping is reading an open situation rather than being naive.",
-        "Let me look closer at the step that is waiting…",
+        "You chose the Fool, dear. Look — one foot out over the edge, the other still on the ground.",
+        "You asked whether he'll ever commit. Your hand went to the man caught mid-step.",
+        "That foot is still in the air. He hasn't come down either way.\nSo nothing has been settled against you. Not yet.\nYou kept hoping. That isn't you fooling yourself, dear — you were reading it right.",
+        "Let me look closer at which way that foot comes down…",
       ],
     },
     'cards-wont-commit': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-19 from
+      // fb-tarot/docs/drafts/rewrites/cards-wont-commit.json — approved copy, folded verbatim:
+      // bubbles 3-6 become beat 3, joined by newlines, and Version B serves them as
+      // separate chat messages with a typing pause between each.
       a: [
-        "You chose the Magician, dear — the card of intention, of the will behind what a man does and does not do.",
-        "You are asking why he will not, and your hand found the card that says his holding back is active rather than accidental.",
-        "The Magician does not name him cold or cruel — it points to a man aiming his will somewhere he has not shown you, and your read that this is a choice rather than bad timing is sound.",
-        "Let me look closer at where his intention has been going…",
+        "You chose the Magician, dear. Look — a white band round his dark hair.",
+        "You asked why he won't commit to you. Your hand went to the man who decides.",
+        "So the hold on this isn't yours, dear. Nothing you did put it there.\nAnd the tools for building are all laid out in front of him, dear.\nBut having the tools is not the same as picking them up, dear.\nThat's why you get the words, dear, and the week after looks the same.",
+        "Let me look closer at what stands in the way of a choice…",
       ],
       b: [
-        "You chose the Hanged Man, dear — the card of the man who stopped mid-step and never finished it.",
-        "You reached for the card of suspension, and it is his that you have been living inside.",
-        "The Hanged Man does not say he is withholding to punish you — it points to someone stuck rather than settled, and the straight answer he keeps failing to give you is one he does not possess, not one you asked for wrongly.",
-        "Let me look closer at what has him stuck…",
+        "You chose the Hanged Man, dear. Look — his arms are out of sight, and his body makes a triangle.",
+        "You asked why he won't commit to you. Your hand went to the card that stalls.",
+        "So something has him stuck, dear. You've been feeling exactly that.\nAnd his arms are out of sight, dear. You can't see what he's holding.\nBut where he is stuck is his to name, dear. Not mine, and not yours.\nThat's why every reason you land on slides off, dear. None of them stick.",
+        "Let me look closer at what has this stuck in place…",
       ],
       c: [
-        "You chose the Fool, dear — the card of the unfinished road, of the man still treating his life as a beginning.",
-        "Your hand reached for the card of the not-yet, which is where he has kept living.",
-        "The Fool does not make him a bad man — it points to someone who has not arrived yet rather than someone who weighed you and decided against you, and that difference matters far more than anyone has told you.",
-        "Let me look closer at what he is still circling…",
+        "You chose the Fool, dear. Look — the little dog has its tail straight up.",
+        "You asked why he won't commit to you. Your hand went to the one who ties nothing down.",
+        "So nothing in his life is tied down, dear. You saw that early.\nAnd the little dog has its tail straight up, dear. It knows the mood.\nBut loose isn't the same as gone, dear. He still walks beside you.\nThat's why asking for more never turns into a row. It just slides off.",
+        "Let me look closer at what has been keeping this loose…",
       ],
     },
     'cards-ready-commit': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-19 from
+      // fb-tarot/docs/drafts/rewrites/cards-ready-commit.json — approved copy, folded verbatim:
+      // bubbles 3-6 become beat 3, joined by newlines, and Version B serves them as
+      // separate chat messages with a typing pause between each.
       a: [
-        "You chose the Magician, dear — the card of a man's own power to build something.",
-        "You are asking about readiness, and your hand found the card of capability rather than circumstance.",
-        "The Magician makes no promise that the day arrives — it says the material is all there and unassembled, and your instinct that he is capable of more than he has been giving is not wishful thinking.",
-        "Let me look closer at what he would have to put down first…",
+        "You chose the Magician, dear. Look — the table hides him from the waist down.",
+        "You asked if he will be ready for real commitment. Your hand went to the man who builds.",
+        "So he will get there, dear. This card is a man who builds things.\nAnd the making of it is already in his hands, dear.\nBut the table hides him from the waist down. You can't see his footing.\nThat's why he can talk about a future, dear. He never steps toward it.",
+        "Let me look closer at what sits in the gap between you…",
       ],
       b: [
-        "You chose the Hanged Man, dear — the card of the long pause that comes before a turn.",
-        "You reached for the card of the in-between, and readiness is exactly the thing that lives there.",
-        "The Hanged Man offers no when and no whether — it says he is mid-change rather than finished forming, and the patience you have spent went to something genuinely unfinished rather than to nothing at all.",
-        "Let me look closer at the turn he has not made…",
+        "You chose the Hanged Man, dear. Look — one shoe points down, and the other points out sideways.",
+        "You asked if he will be ready for real commitment. Your hand went to the card that stops the clock.",
+        "So he has stopped in one spot, dear. Stopped is not finished.\nAnd look at his feet. One shoe points down, one points off sideways.\nBut I won't name a day for you, dear. There's no day on this card.\nThat's why it stalls at the very same place, dear, every single time.",
+        "Let me look closer at what keeps stopping this at the same spot…",
       ],
       c: [
-        "You chose the Fool, dear — the card of the beginner, of the one still learning the road.",
-        "Your hand went to the card of the untested, which is a fair description of where he is standing.",
-        "The Fool is no sign that growing into it is beyond him — it points to someone earlier in the journey than you are rather than someone who cannot make it, and the distance you have been feeling between you is real and worth naming out loud.",
-        "Let me look closer at the distance between where you each stand…",
+        "You chose the Fool, dear. Look — a small circle floats above him, next to a big bright sun.",
+        "You asked if he will be ready for real commitment. Your hand went to the one who hasn't chosen.",
+        "So nothing has been chosen yet, dear. Nothing has been ruled out either.\nAnd he's stepping out with no one thing in mind, dear.\nBut you know exactly what you're ready for. That's the difference here.\nThat's why you wait for him to catch up, dear. You got there first.",
+        "Let me look closer at what stands between you and a real choice…",
       ],
     },
   },
@@ -2080,125 +2216,141 @@ const ARCANA_EEF: CardSetConfig = {
   reads: {
     // Decode-him — the ad's hook. Reads HIM as a tendency, never a verdict.
     'cards-honest': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-19 from
+      // fb-tarot/docs/drafts/rewrites/cards-honest.json — approved copy, folded verbatim:
+      // bubbles 3-6 become beat 3, joined by newlines, and Version B serves them as
+      // separate chat messages with a typing pause between each.
       a: [
-        "You chose the Emperor, dear — the card of authority, of the controlled and guarded front.",
-        "Your hand didn't reach for that by accident; some part of you feels the wall he keeps up, even with you.",
-        "The Emperor doesn't mean he's lying — it means he manages what he shows and keeps things close to the chest; that sense there's more behind the composure is real, not you imagining it.",
-        "Let me look closer at what he's guarding so carefully…",
+        "You chose the Emperor, dear. Look — armour on his legs, and a stone chair he doesn't leave.",
+        "You asked if he's being honest with you. Your hand went to the man who states things.",
+        "So you've had rulings from him, dear, and no reasons to go with them.\nAnd a man on a stone chair doesn't explain himself much.\nBut a firm answer isn't the same as a full one, dear.\nThat's why you stopped asking twice, dear. The first answer closed the door.",
+        "Let me look closer at what sits between you and the real reason…",
       ],
       b: [
-        "You chose the Empress, dear — the card of warmth, of what's genuinely felt and given.",
-        "That's not random; you reached for the card that matches the care you've felt from him and half-talked yourself out of trusting.",
-        "The Empress leans toward the honest side, dear — the warmth you feel from him is real, more open than your fear has let you believe; your read on his heart is truer than the doubt.",
-        "Let me look closer at the one thing even that warmth hasn't said aloud…",
+        "You chose the Empress, dear. Look — a field of wheat at her feet, and trees behind her.",
+        "You asked if he's being honest with you. Your hand went to the softest card in this deck.",
+        "So the warmth was real, dear. That much this card will give you.\nAnd look at the wheat, dear. You can't see the ground through it.\nBut feeling loved and being told the facts are two different things.\nThat's why the evening can be lovely, dear. You still don't know where you stand.",
+        "Let me look closer at what stands between you and the plain facts…",
       ],
       c: [
-        "You chose the Fool, dear — the card of the open, unguarded hand.",
-        "You reached for the card that matches something you feel in how he moves through this.",
-        "The Fool doesn't point to deception — it points to a man who hasn't sat down and thought it through; what's unsaid here may be unexamined rather than hidden, and your sense that you're not getting the whole picture is still accurate.",
-        "Let me look closer at what he's leaving unsaid…",
+        "You chose the Fool, dear. Look — a small white dog up on its back legs beside him.",
+        "You asked if he's being honest with you. Your hand went to the one still on the road.",
+        "So this story isn't finished, dear. Nothing about it has been closed.\nAnd look at the little dog, dear. Up on its back legs, trying to tell him.\nBut a warning with no words in it is all you've had, dear.\nThat's why you ask again in a good week, dear, when nothing has gone wrong.",
+        "Let me look closer at what has been standing in the way of the truth…",
       ],
     },
     'cards-love-again': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-19 from
+      // fb-tarot/docs/drafts/rewrites/cards-love-again.json — approved copy, folded verbatim:
+      // bubbles 3-6 become beat 3, joined by newlines, and Version B serves them as
+      // separate chat messages with a typing pause between each.
       a: [
-        "You chose the Emperor, dear — the card of solid ground, of structure after the storm.",
-        "You're asking if love will come again… and I feel how much the last one shook your footing.",
-        "The Emperor doesn't hand you chaos — it says the next love builds on steadier ground; a grounded, lasting kind is forming for you.",
-        "Let me look closer at the foundation that's setting…",
+        "You chose the Emperor, dear. Look — his beard is long and white and reaches his chest.",
+        "You asked if you'll love again. Your hand went to the man who has seen a great deal.",
+        "So you've come a long way, dear. It shows, and it should.\nAnd he's old and seated, dear, and still holding the whole thing up.\nBut a long past doesn't use a person up, dear.\nThat's why the years have felt like a loss, dear. They never were.",
+        "Let me look closer at what has been taking from that count…",
       ],
       b: [
-        "You chose the Empress, dear — the card of abundance, of a heart that blooms again.",
-        "You're asking if your heart can open after what it lost.",
-        "The Empress is the most fertile card of all, dear — it says love returns to you in warmth and fullness; yes, you will love again, and softly.",
-        "Let me look closer at what's already blossoming…",
+        "You chose the Empress, dear. Look — the trees behind her are dark green and close together.",
+        "You asked if you'll love again. Your hand went to the card of things that grow back.",
+        "So things grow back, dear. That is what she is.\nAnd the trees behind her are thick, dear, and none of it was forced.\nBut you don't have to make it happen by trying, dear.\nThat's why the trying has worn you out, dear. It was never the problem.",
+        "Let me look closer at what has been shading this over…",
       ],
       c: [
-        "You chose the Fool, dear — the card of the fresh start, the new leap.",
-        "You're asking if you can begin again, after last time.",
-        "The Fool doesn't mean starting from nothing — it means a new beginning is already stepping toward you; yes, love is ahead, sooner than the fear admits.",
-        "Let me look closer at the beginning that's forming…",
+        "You chose the Fool, dear. Look — the flower in his hand is fresh and white.",
+        "You asked if you'll love again. Your hand went to the one who begins again.",
+        "So beginning again is the whole of this card, dear.\nAnd the flower is fresh, dear, and he carries it forward with him.\nBut you've been told you carry a dead thing, dear. You carry that.\nThat's why it feels so heavy, dear. You've held it up alone.",
+        "Let me look closer at what has been weighing on your hands…",
       ],
     },
     // Self-frame — when her soulmate arrives. Affirm the hopeful yes; answer the
     // "when" as a leaning ("nearer than you fear"), NEVER a date.
     'cards-soulmate': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-19 from
+      // fb-tarot/docs/drafts/rewrites/cards-soulmate.json — approved copy, folded verbatim:
+      // bubbles 3-6 become beat 3, joined by newlines, and Version B serves them as
+      // separate chat messages with a typing pause between each.
       a: [
-        "You chose the Emperor, dear — the card of solid ground, of a love built to last.",
-        "You're asking when your soulmate comes, and your hand reached for the steady, sure kind — not a passing spark.",
-        "The Emperor doesn't hand you a calendar — it says the one coming for you is a grounded, lasting partner, and that kind arrives as your own foundation settles; it's nearer than the waiting has let you feel.",
-        "Let me look closer at the ground that's already forming under you…",
+        "You chose the Emperor, dear. Look — he holds a gold ball in his left hand.",
+        "You asked when your soulmate is coming. Your hand went to the man who builds to last.",
+        "So what you're holding out for is solid, dear. It does exist.\nAnd the gold in his hand is weighty, dear, and meant to keep.\nBut you've turned down things that wouldn't have lasted, dear.\nThat's why it has taken this long, dear. You knew your own worth.",
+        "Let me look closer at what still sits between you and it…",
       ],
       b: [
-        "You chose the Empress, dear — the most fertile card of all, the card of love in full bloom.",
-        "You're asking when they'll come, and you reached for the card of a heart ripe and ready to receive.",
-        "The Empress doesn't name a date — it says love is ripening for you now, and this card most often means the arrival is close, not far; the season is already turning toward you.",
-        "Let me look closer at what's blossoming toward you…",
+        "You chose the Empress, dear. Look — twelve stars in the crown on her head.",
+        "You asked when your soulmate is coming. Your hand went to the warmest woman in the deck.",
+        "So this card is full, dear. There's nothing empty in it.\nAnd her crown has twelve stars, dear, and every one is lit.\nBut you've held the door open a long time, dear. That costs.\nThat's why waiting wears you, dear. The holding is the heavy part.",
+        "Let me look closer at what has been sitting in that doorway…",
       ],
       c: [
-        "You chose the Fool, dear — the card of the fresh start, of the beginning already stepping toward you.",
-        "You're asking when your soulmate arrives, and your hand reached for the card of the unexpected meeting.",
-        "The Fool doesn't mark a day — it leans toward a soulmate who arrives suddenly, when you least expect it, often sooner than the fear admits; a new chapter is opening.",
-        "Let me look closer at the beginning that's forming…",
+        "You chose the Fool, dear. Look — he's walking into open air with his chin up.",
+        "You asked when your soulmate is coming. Your hand went to the one who steps first.",
+        "So something begins here, dear. That is what this card is.\nAnd he's already moving, dear, before he can see the end of it.\nBut no date, dear, and no name. That part isn't mine to give.\nThat's why the road looks empty, dear. You are already on it.",
+        "Let me look closer at what's standing on that road…",
       ],
     },
     'cards-return': {
       a: [
-        "You chose the Emperor, dear — the card of a man who moves on his own terms.",
-        "You're asking if he'll come back, and you reached for the card of control and timing.",
-        "The Emperor doesn't promise a sudden return — it leans toward someone who acts deliberately, not on impulse; if he comes back it will be a considered choice, and his side isn't as shut as it feels.",
-        "Let me look closer at what he's weighing…",
+        "You chose the Emperor, dear. Look — a grey-bearded king on a stone throne, facing straight ahead, not moving.",
+        "You asked if he'll come back. Your hand went to the man who moves on his own clock.",
+        "He doesn't act on a feeling, dear. He acts once he has weighed it.\nSo the quiet is not a no. It only reads like one from where you sit.\nHis side is less shut than it feels to you.\nAnd you were right to keep asking, dear. That wasn't you being foolish.",
+        "Let me look closer at what sits between you and his answer…",
       ],
       b: [
-        "You chose the Empress, dear — the card of warmth and the pull of a real bond.",
-        "You're asking if he'll return, carrying the memory of what you had.",
-        "The Empress leans toward reconciliation, dear — the care between you was real, and real warmth keeps its pull; that bond is still working on him.",
-        "Let me look closer at what's drawing him back…",
+        "You chose the Empress, dear. Look — a woman resting in a field of wheat, a crown of stars in her hair.",
+        "You asked if he'll come back. Your hand went to the card of what was warm and real.",
+        "The care between you was real, dear. You did not invent it.\nAnd real warmth keeps its pull long after two people stop speaking.\nIt is still working on him.\nYou can feel that, dear. That's not you hoping — that's you knowing.",
+        "Let me look closer at what keeps that bond from reaching you…",
       ],
       c: [
-        "You chose the Fool, dear — the card of the unexpected turn.",
-        "You're asking if he'll come back, with something still unfinished.",
-        "The Fool leans toward a fresh, unexpected turn — what returns often returns as a new beginning, not the old shape; don't rule out a surprise.",
-        "Let me look closer at the turn that's forming…",
+        "You chose the Fool, dear. Look — one foot out over the cliff edge, eyes on the sky, a dog at his heel.",
+        "You asked if he'll come back. Your hand went to the turn nobody sees coming.",
+        "The Fool doesn't do repeats, dear. He does fresh starts.\nSo if this comes back, it comes back in a new shape.\nNot the old one. That one already broke.\nYou have felt that too. You just had no words for it.",
+        "Let me look closer at what stands between you and that new start…",
       ],
     },
     'cards-feels': {
       a: [
-        "You chose the Emperor, dear — the card of feeling held behind control.",
-        "You're asking how he really feels, and you reached for the card of the guarded heart.",
-        "The Emperor doesn't mean he feels little — it leans toward strong feeling kept behind composure; he shows it through steadiness more than words, and it's realer than his restraint suggests.",
-        "Let me look closer at what the composure is protecting…",
+        "You chose the Emperor, dear. Look — a long white beard, a heavy crown, rams' heads carved in his chair.",
+        "You asked how he really feels. Your hand went to the man who keeps it behind his face.",
+        "The Emperor doesn't mean he feels little, dear.\nIt reads as a guarded man, dear. Not an empty one.\nThat steadiness is how it shows, dear. Not in words.\nSo there's more there than the restraint shows. You weren't wrong to feel it.",
+        "Let me look closer at what sits between you and what he holds back…",
       ],
       b: [
-        "You chose the Empress, dear — the card of deep, nurturing feeling.",
-        "You're asking how he feels, wanting to trust the warmth you sense.",
-        "The Empress leans toward genuine, tender feeling, dear — he cares more, and more softly, than he's found a way to say; the warmth you feel is not one-sided.",
-        "Let me look closer at what his heart already knows…",
+        "You chose the Empress, dear. Look — she rests on soft cushions, and a shield by her feet carries a heart.",
+        "You asked how he really feels. Your hand went to the warmest card in the deck.",
+        "The Empress leans tender, dear.\nYou've felt care that runs ahead of his words.\nThe warmth you feel is not one-sided.\nYou've known that. You just wanted it said by someone else.",
+        "Let me look closer at what's in the way of him saying it…",
       ],
       c: [
-        "You chose the Fool, dear — the card of open, in-the-moment feeling.",
-        "You're asking what he feels, reading something fresh and unguarded in him.",
-        "The Fool leans toward feeling that's real but uncomplicated — he feels it now, genuinely, even if he hasn't thought through where it leads; the spark is real.",
-        "Let me look closer at where his heart is pointing…",
+        "You chose the Fool, dear. Look — a white rose in his hand, and his eyes on the sky.",
+        "You asked how he really feels. Your hand went to the plainest card in the deck.",
+        "This card reads as right now, dear. Nothing put on.\nWhat he hasn't done is think about where it leads.\nThose are two different things.\nThe spark is real. The plan is what's missing.",
+        "Let me look closer at what sits between you and a plan…",
       ],
     },
     'cards-cheating': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-19 from
+      // fb-tarot/docs/drafts/rewrites/cards-cheating.json — approved copy, folded verbatim:
+      // bubbles 3-6 become beat 3, joined by newlines, and Version B serves them as
+      // separate chat messages with a typing pause between each.
       a: [
-        "You chose the Emperor, dear — the card of control and the compartment kept apart.",
-        "You reached for the card that matches the wall you feel but can't quite name.",
-        "The Emperor is not a verdict of betrayal — it means something is being kept controlled and separate, and the sense that there's a locked room you're not shown is real information, not paranoia.",
-        "Let me look closer at what's being kept behind the composure…",
+        "You chose the Emperor, dear. Look — a bare grey mountain behind him, and no green on it.",
+        "You asked if he has been true to you. Your hand went to the man who gives orders.",
+        "So the cold you felt is real, dear. Look behind him — bare rock, nothing growing.\nAnd he answers like a man reading out a rule, dear.\nBut a rule doesn't tell you what sits under it, dear.\nThat's why you let it drop, dear. The answer never changed.",
+        "Let me look closer at what has been standing where the warmth was…",
       ],
       b: [
-        "You chose the Empress, dear — the card of warmth and abundance, not of betrayal.",
-        "You reached for the gentler card, even carrying this fear.",
-        "The Empress leans away from the story your fear tells — it points to genuine care; but if your gut still snags, abundance can also mean his attention runs generous and wide, so trust your read without leaping to a verdict.",
-        "Let me look closer at where his warmth is actually flowing…",
+        "You chose the Empress, dear. Look — a crown of stars, and red fruit all over her gown.",
+        "You asked if he has been true to you. Your hand went to the card of plenty.",
+        "So the good part was real, dear. Look at her — every fruit on her is ripe.\nAnd plenty is not the same as only yours, dear.\nBut no one has ever told you which one this is.\nThat's why Sunday can be good, dear. By Wednesday you're counting again.",
+        "Let me look closer at what keeps this from being wholly yours…",
       ],
       c: [
-        "You chose the Fool, dear — the card of impulse and the unguarded moment.",
-        "Your hand reached for the card that matches the restlessness you feel from him.",
-        "The Fool is not proof of unfaithfulness — it leans toward impulsiveness and living in the moment; watch that, but what your intuition is flagging deserves a closer, honest look, not a spiral.",
-        "Let me look closer at what the restlessness is really about…",
+        "You chose the Fool, dear. Look — the dog is the only other living thing on his card.",
+        "You asked if he has been true to you. Your hand went to the one who doesn't look down.",
+        "So something has been moving, dear. You felt the ground change.\nAnd look at the dog, dear. Up on its legs, and he walks on.\nBut the card won't name what's coming, dear. Nobody can from here.\nThat's why you've been watching him for weeks, dear, and found nothing to hold.",
+        "Let me look closer at what has been shifting under you…",
       ],
     },
   },
@@ -2219,6 +2371,22 @@ const RETURN_MHF: CardSetConfig = {
   beatNoun: 'cards',
   continueCta: "There's more the card is showing me — begin your free reading",
   chooseMoment: 'the moment your hand reached for it',
+  // The money hooks may not say "Think of the man on your mind" to a woman who clicked an ad
+  // about her pension, and the instruction lives on the deck rather than the hook — so these
+  // eleven override it. Everything else on every deck is untouched.
+  hookInstruction: {
+    'cards-blocked-retiring': "Think of the money that never came. Tap the card that calls you.",
+    'cards-nest-egg': "Think of the money that never came. Tap the card that calls you.",
+    'cards-too-late': "Think of the money that never came. Tap the card that calls you.",
+    'cards-still-working': "Think of the money that never came. Tap the card that calls you.",
+    'cards-how-much-longer': "Think of the money that never came. Tap the card that calls you.",
+    'cards-out-of-time': "Think of the money that never came. Tap the card that calls you.",
+    'cards-my-energy': "Think of the money that never came. Tap the card that calls you.",
+    'cards-money-wont-stay': "Think of the money that never came. Tap the card that calls you.",
+    'cards-energy-how-long': "Think of the money that never came. Tap the card that calls you.",
+    'cards-prayed-years': "Think of the money that never came. Tap the card that calls you.",
+    'cards-prayers-unanswered': "Think of the money that never came. Tap the card that calls you.",
+  },
   strip: { url: '/tarot/return-mhf-strip.png', width: 972, height: 540 },
   // Face-down: the tap targets are backs, but the reveal flips to the real card
   // faces (Magician / Hanged Man / Fool, same A/B/C order).
@@ -2236,86 +2404,124 @@ const RETURN_MHF: CardSetConfig = {
     b: 'a suspended, turning moment',
     c: 'a new beginning',
   },
+  // Described from the actual art in /tarot/return-mhf-faces.png (Rider-Waite), not from
+  // tarot convention — she is looking at THAT picture, so a detail that is not in it reads
+  // as a lie and costs the trust the line was added to buy.
+  cardPicture: {
+    a: 'Look at him — one hand raised to the sky, the other pointing at the ground. Every tool he needs is already on the table.',
+    b: 'Look at him — hanging upside down by one ankle, and not struggling.',
+    c: 'Look — one foot already over the cliff edge, eyes on the sky, everything they own tied in one small bundle.',
+  },
   reads: {
     // The ad's hook — "Will he come back?". Reads HIM as a tendency, never a verdict.
+    // ── Rewritten for readability 2026-08-18 ────────────────────────────────
+    // The funnel's highest-traffic lander (5,311 leads) and its worst converter at
+    // 6.12%. It read at grade 13.4 to an audience that is 55+ and on a phone. The shape
+    // is the one proven on cards-will-commit: the PICTURE first (she has the card art on
+    // screen at message 1, so a claim she can check in one second is what earns the
+    // sentence after it), then her own ad question said back to her, then the read in
+    // one-idea bubbles. Gated by scripts/check-read.mjs — grade <=5, <=25 words and
+    // <=2 sentences per bubble.
+    //
+    // The MEANING is unchanged from the 2026-07-28 sign-off, deliberately: same tendency
+    // per card, no return predicted, no timeframe, her instinct affirmed. Only the
+    // reading level moved. The 2026-07-30 lesson is kept too — beat 3 on card c stays
+    // conditional ('if this does come to something'), never presupposing he comes back.
+    //
+    // BEAT 4 REWRITTEN 2026-08-19. It must name an OBSTRUCTION, not an absence or a becoming —
+    // 9 of these 12 named neither ('the turn that's forming', 'what he's weighing') and the
+    // Empress line named the OPPOSITE ('what's drawing him back', a pull rather than a block).
+    // Act 1 sells an Energy Clearing Ritual that removes "the shadow that's been blocking your
+    // path"; improve-v1/08-clearing-theme-coherence.md found clearing is SPRUNG at the pitch
+    // rather than seeded, and this is the earliest place to seed it. The object sits between HER
+    // and the return she asked about — the love bucket frames every block as an impersonal thing
+    // in her path precisely so that removing it blames nobody.
     'cards-return': {
       a: [
-        "You turned the Magician, dear — the card of power and the will to act.",
-        "You're asking if he'll come back, and your hand reached for the card of someone who can make a move.",
-        "The Magician doesn't promise a knock at the door — it says he has the power to return if he chooses it, and the pull you still feel between you is not one-sided.",
-        "Let me look closer at what's holding his hand back…",
+        "You turned the Magician, dear. Look — a cup, a coin, a blade and a wand, all laid out on his table.",
+        "You asked if he'll come back. Your hand went straight to the man who can act.",
+        "He isn't short of a way back, dear. He has one.\nSo this was never about whether he could.\nAnd that pull you still feel? It isn't only yours.\nYou've felt him on the other end of it. You're reading that right.",
+        "Let me look closer at what sits between you and his way back…",
       ],
       b: [
-        "You turned the Hanged Man, dear — the card of the moment held still, seen from a new angle.",
-        "You reached for the card that matches the in-between you've been living in.",
-        "The Hanged Man doesn't promise a return — it says this is unresolved rather than finished, and the part of you that refuses to call it over is reading the situation accurately.",
-        "Let me look closer at what he's reconsidering…",
+        "You turned the Hanged Man, dear. Look — he hangs by one ankle from a green tree, and his face is calm.",
+        "You asked if he'll come back. Your hand went to a man still up in the air.",
+        "Nothing has been settled here, dear. Not for you, and not against you.\nHe hasn't shut the door. He hasn't opened it either.\nYou keep refusing to call this over.\nThat isn't you clinging, dear. You're reading it right.",
+        "Let me look closer at what's holding this in between…",
       ],
       c: [
-        "You turned the Fool, dear — the card of the unwritten chapter, the road still open.",
-        "Your hand went to the one card that refuses to call this finished.",
-        "The Fool doesn't mean he's gone for good — it points to a road still open rather than a door closed; if something does come of this, it begins fresh rather than picking up where it broke.",
-        "Let me look closer at the turn that's forming…",
+        "You turned the Fool, dear. Look — a white rose in one hand, a small bundle on a stick, a dog at his heel.",
+        "You asked if he'll come back. Your hand went to the one card that won't call this over.",
+        "The road is still open, dear. The door was never shut.\nBut look where his eyes are. On what's ahead, not behind.\nSo if this does come to something, it starts new.\nIt won't pick up where it broke. That isn't a smaller thing, dear.",
+        "Let me look closer at what stands between you and that open road…",
       ],
     },
     'cards-honest': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-19 from
+      // fb-tarot/docs/drafts/rewrites/cards-honest.json — approved copy, folded verbatim:
+      // bubbles 3-6 become beat 3, joined by newlines, and Version B serves them as
+      // separate chat messages with a typing pause between each.
       a: [
-        "You turned the Magician, dear — the card of the crafted image, of what's presented with skill.",
-        "Your hand didn't reach for that by accident; some part of you senses a gap between what he shows and what's underneath.",
-        "The Magician doesn't mean he's lying — it means he's practiced at presenting, and that sense the picture is a little too polished is real information, not you being difficult.",
-        "Let me look closer at what's behind the performance…",
+        "You turned the Magician, dear. Look — he looks straight out at you, and his mouth is closed.",
+        "You asked if he's being honest with you. Your hand went to the man who tells it well.",
+        "So what you're short of is a fact, dear. Not sense, and not calm.\nAnd look how he holds himself. He's very good at how a thing is put.\nBut a smooth account isn't proof either way, dear.\nThat's why his answers land fine, dear, and you still go back over them.",
+        "Let me look closer at what stands between you and the whole story…",
       ],
       b: [
-        "You turned the Hanged Man, dear — the card of what's suspended, held just out of view.",
-        "You reached for the card that matches the feeling you can't quite settle.",
-        "The Hanged Man doesn't mean he's lying — it means something between you is on pause, unresolved, and the sense that the full truth hasn't turned to face you yet is accurate.",
-        "Let me look closer at what's waiting to come into view…",
+        "You turned the Hanged Man, dear. Look — the whole card is upright but him.",
+        "You asked if he's being honest with you. Your hand went to the card that shows one side.",
+        "So you've only ever had one side of this, dear. The card is blunt about that.\nAnd the other side of it sits with him, dear. It always has.\nBut you can't weigh a thing you were never shown, dear.\nThat's why he explains it, dear, and an hour later you're still checking.",
+        "Let me look closer at what's keeping the other side out of view…",
       ],
       c: [
-        "You turned the Fool, dear — the card of the open, unguarded hand.",
-        "You reached for the card that matches something you feel in how he moves through this.",
-        "The Fool doesn't point to deception — it points to a man who hasn't sat down and thought it through; what's unsaid here may be unexamined rather than hidden, and your sense that you're not getting the whole picture is still accurate.",
-        "Let me look closer at what he's leaving unsaid…",
+        "You turned the Fool, dear. Look — a small white dog up on its back legs beside him.",
+        "You asked if he's being honest with you. Your hand went to the one still on the road.",
+        "So this story isn't finished, dear. Nothing about it has been closed.\nAnd look at the little dog, dear. Up on its back legs, trying to tell him.\nBut a warning with no words in it is all you've had, dear.\nThat's why you ask again in a good week, dear, when nothing has gone wrong.",
+        "Let me look closer at what has been standing in the way of the truth…",
       ],
     },
     'cards-feels': {
       a: [
-        "You turned the Magician, dear — the card of intention, of feeling that's active, not passive.",
-        "You're asking how he really feels, and you reached for the card of directed will.",
-        "The Magician doesn't hand you a confession — it leans toward feelings that are real and deliberate, not idle; the warmth you've felt from him is intended, not imagined.",
-        "Let me look closer at what he hasn't found the words for…",
+        "You turned the Magician, dear. Look — a red robe over white, and a loop above his head with no end to it.",
+        "You asked how he really feels. Your hand went to the man who does nothing by accident.",
+        "So the warmth you felt was not made up, dear.\nA man like this doesn't warm to someone by accident.\nWhat he hasn't done is say it out loud.\nThat gap is real, dear. You've been reading it right.",
+        "Let me look closer at what's sitting between you and the words…",
       ],
       b: [
-        "You turned the Hanged Man, dear — the card of feeling held in suspension.",
-        "You reached for the card that matches the mixed signals you've been reading.",
-        "The Hanged Man doesn't mean he feels nothing — it leans toward feelings that are real but suspended, caught between what he wants and what he's ready for; the pull you sense is genuine.",
-        "Let me look closer at what he's holding back, and why…",
+        "You turned the Hanged Man, dear. Look — he's upside down, and there's a light around his head.",
+        "You asked how he really feels. Your hand went to the man stuck between two things.",
+        "You haven't been reading coldness, dear. You've been reading a hold.\nSo the mixed signals were not you misreading him.\nYou were reading two true things at once.\nThat pull you sense is genuine. So is the hold.",
+        "Let me look closer at what's holding you both in the middle…",
       ],
       c: [
-        "You turned the Fool, dear — the card of open, uncomplicated feeling.",
-        "That's not random; you reached for the card that matches how fresh this still feels.",
-        "The Fool doesn't mean he's careless with you — it leans toward feelings that are genuine and in the moment; what he feels is real, even if he hasn't thought through where it leads.",
-        "Let me look closer at where his heart is actually pointing…",
+        "You turned the Fool, dear. Look — he's looking up at the sky, not down at the drop.",
+        "You asked how he really feels. Your hand went to the man living in the moment.",
+        "What you picked up was real, dear. It just lives in the moment.\nBut look where his eyes are. Up, not down the road.\nSo he hasn't worked out where this goes.\nThat's a different thing from not caring, dear. You've felt both at once.",
+        "Let me look closer at what keeps this from settling…",
       ],
     },
     'cards-cheating': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-19 from
+      // fb-tarot/docs/drafts/rewrites/cards-cheating.json — approved copy, folded verbatim:
+      // bubbles 3-6 become beat 3, joined by newlines, and Version B serves them as
+      // separate chat messages with a typing pause between each.
       a: [
-        "You turned the Magician, dear — the card of the polished surface, of what's presented.",
-        "You reached for that card for a reason; some part of you senses a distance between the image and what's real.",
-        "The Magician is not a verdict of betrayal — it means something is being managed or curated, and the unease you feel about a gap between his story and your gut is real information, not paranoia.",
-        "Let me look closer at the one shadow the polish doesn't cover…",
+        "You turned the Magician, dear. Look — his table stands on the grass, out in the open.",
+        "You asked if he has been true to you. Your hand went to the man who sets the scene.",
+        "So the distance is real, dear. I will not talk you out of it.\nAnd a scene like that gets set on purpose, dear. Look at his table.\nBut what's set out isn't the same as what's so, dear.\nThat's why you can sit through a fine evening, dear, and still feel outside it.",
+        "Let me look closer at what stands between you and the plain view…",
       ],
       b: [
-        "You turned the Hanged Man, dear — the card of what's suspended and unclear.",
-        "You reached for the card that matches the limbo you can't quite name.",
-        "The Hanged Man is not a confession — it means something between you is on hold and not what it seems from your angle; the feeling that something's paused and off is real, and it deserves clarity, not self-blame.",
-        "Let me look closer at what's actually suspended between you…",
+        "You turned the Hanged Man, dear. Look — red trousers, a blue tunic, and gold light at his head.",
+        "You asked if he has been true to you. Your hand went to the card left up in the air.",
+        "So you've been left hanging in this, dear. Nobody has put an end to it.\nAnd no answer ever came, dear. Unease turns into a way of living.\nBut nothing has gone wrong on paper, dear. You still live braced.\nThat's why there's nothing to point at, dear, and you check anyway.",
+        "Let me look closer at what has kept this hanging over you…",
       ],
       c: [
-        "You turned the Fool, dear — the card of impulse and the unguarded moment.",
-        "Your hand reached for the card that matches the restlessness you've been feeling from him.",
-        "The Fool is not proof of unfaithfulness — it leans toward impulsiveness and living in the moment; watch that tendency, but what your intuition is flagging deserves a closer, honest look, not a spiral.",
-        "Let me look closer at what the restlessness is really about…",
+        "You turned the Fool, dear. Look — the dog is the only other living thing on his card.",
+        "You asked if he has been true to you. Your hand went to the one who doesn't look down.",
+        "So something has been moving, dear. You felt the ground change.\nAnd look at the dog, dear. Up on its legs, and he walks on.\nBut the card won't name what's coming, dear. Nobody can from here.\nThat's why you've been watching him for weeks, dear, and found nothing to hold.",
+        "Let me look closer at what has been shifting under you…",
       ],
     },
     // ── Trust/authenticity hooks (2026-07-30) ────────────────────────────────
@@ -2328,22 +2534,22 @@ const RETURN_MHF: CardSetConfig = {
     // 'Is he really who he says he is?' — the man he presents vs the man underneath.
     'cards-who-he-is': {
       a: [
-        "You turned the Magician, dear — the card of the man who authors himself.",
-        "Your hand went to the card of someone who decides what the world gets to see, and I don't think that was chance.",
-        "The Magician doesn't make him a fraud — it says the man he introduces you to is a version he built on purpose, and your sense that there is a second one living underneath it is worth taking seriously.",
-        "Let me look closer at the man he keeps out of the introduction…",
+        "You turned the Magician, dear. Look — roses and lilies at his feet, and one arm held straight up.",
+        "You asked if he's really who he says he is. Your hand went to the man who builds what you see.",
+        "The Magician builds what people see, dear. That is his craft.\nSo what he shows you was put together on purpose.\nThat doesn't tell me who stands behind it. It tells me there is a behind.\nYou already sensed that, dear. Keep hold of it.",
+        "Let me look closer at what sits between you and the man behind it…",
       ],
       b: [
-        "You turned the Hanged Man, dear — the card of the single angle, of what you can only see from one side.",
-        "You reached for the card that matches how partial he still feels to you, even now.",
-        "The Hanged Man doesn't say he is someone else — it says you have only ever been shown one side of him, and the reason you cannot get a clean read is that you have never been given the whole.",
-        "Let me look closer at the part of him you were never introduced to…",
+        "You turned the Hanged Man, dear. Look — one leg tied to the branch, the other bent behind it, out of sight.",
+        "You asked if he's really who he says he is. Your hand went to the card of one hidden side.",
+        "The Hanged Man shows one side, dear. Never both.\nYou were given a part, and asked to judge the whole.\nThat is why you can't get a clean read on him.\nThe trouble isn't your judgement, dear. It's what you were handed.",
+        "Let me look closer at what stands between you and a straight answer…",
       ],
       c: [
-        "You turned the Fool, dear — the card of the man who is still becoming.",
-        "That is not random; you reached for the card that matches how unsettled he seems, even to himself.",
-        "The Fool doesn't accuse him of pretending — it leans toward a man who has not finished deciding who he is, so the person you met and the one in front of you now genuinely differ; the inconsistency you keep noticing is real, and it is not your imagination.",
-        "Let me look closer at which of him is the one that stays…",
+        "You turned the Fool, dear. Look — all he owns is tied in one small bundle on a stick.",
+        "You asked if he's really who he says he is. Your hand went to the man still deciding.",
+        "The Fool travels light, dear. Nothing about him is settled yet.\nSo the man you met and the man now can both be him.\nOr he has not shown you the whole road. The card won't say which.\nEither way, you noticed the change. That is worth trusting.",
+        "Let me look closer at what keeps getting between you and all of him…",
       ],
     },
     // 'Is he the real person, or just a picture?' — she has only ever had an image.
@@ -2354,45 +2560,53 @@ const RETURN_MHF: CardSetConfig = {
     // never vouch for him — while still never stating as fact that he is fake, which
     // would be a verdict. See TAROT_HOOK_TENDENCY in server/lib/prompts.ts.
     'cards-real-person': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-19 from
+      // fb-tarot/docs/drafts/rewrites/cards-real-person.json — approved copy, folded verbatim:
+      // bubbles 3-6 become beat 3, joined by newlines, and Version B serves them as
+      // separate chat messages with a typing pause between each.
       a: [
-        "You turned the Magician, dear — the card of the made thing, of the image that someone assembled.",
-        "Your hand went to the card of construction, and that tells me you have already sensed how much of him arrives pre-arranged.",
-        "The Magician does not tell me he is fictional — it tells me that what you have been given is an image, and an image can be built by anyone; the fact that you cannot get past it to a person is information, not impatience on your part.",
-        "Let me look closer at how much of him exists off the screen…",
+        "You turned the Magician, dear. Look — his front is all you get; his back is off the card.",
+        "You asked if he's the real person or just a picture. Your hand went to the man who makes images.",
+        "So something has kept you from reaching him, dear. That's real, not nerves.\nAnd a made picture can be very good, dear. Good enough to hold up.\nBut I won't tell you he's real, dear, and I won't call him false.\nThat's why you go quiet when a friend asks, dear. You've no proof either way.",
+        "Let me look closer at what stands between you and meeting the man…",
       ],
       b: [
-        "You turned the Hanged Man, dear — the card of the thing that hangs, that never quite lands.",
-        "You reached for the card that matches the waiting you have been doing for him to become real.",
-        "The Hanged Man does not declare him an invention — it marks someone who stays permanently almost-here, always one obstacle short of meeting you, and that pattern is the answer you have been asking me for; a man who wants to be known finds a way to be reached.",
-        "Let me look closer at what always seems to come up right before he arrives…",
+        "You turned the Hanged Man, dear. Look — the beam holds him up, and you can't see what holds the beam.",
+        "You asked if he's the real person or just a picture. Your hand went to the card held up by something unseen.",
+        "So you're being asked to take this on trust, dear. All of it.\nAnd what holds him up is off the card. You can't see it from here.\nBut nobody can check a thing they have never been shown, dear.\nThat's why it never quite settles, dear. Nothing has answered it.",
+        "Let me look closer at what's keeping this out of your reach…",
       ],
       c: [
-        "You turned the Fool, dear — the card of the beginning that has not yet touched the ground.",
-        "That is not random; you reached for the card of something still weightless, still untested by real life.",
-        "The Fool does not brand him a stranger — it says what you have so far is a beginning that has never had to survive an ordinary afternoon together, and until it does, what you are holding is a promise rather than a person; your caution here is wisdom, not cynicism.",
-        "Let me look closer at what it would take to bring this into daylight…",
+        "You turned the Fool, dear. Look — his face is turned up, so you never quite meet his eye.",
+        "You asked if he's the real person or just a picture. Your hand went to the one whose face you can't catch.",
+        "So you've been reaching for something that keeps moving, dear.\nAnd he's always mid-step, dear. Never still long enough to be seen.\nBut the card shows me no face to check him against, dear.\nThat's why every plan to meet slides a week, dear. Something always comes up.",
+        "Let me look closer at what keeps this from getting real…",
       ],
     },
     // 'Am I being misled?' — the account she's been given vs what she has seen. The
     // win is restoring trust in HER OWN perception; she arrives already self-doubting.
     'cards-misled': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-19 from
+      // fb-tarot/docs/drafts/rewrites/cards-misled.json — approved copy, folded verbatim:
+      // bubbles 3-6 become beat 3, joined by newlines, and Version B serves them as
+      // separate chat messages with a typing pause between each.
       a: [
-        "You turned the Magician, dear — the card of the hand that shapes the story.",
-        "You reached for the card of direction, and women do not reach for that card when the account they have been given adds up.",
-        "The Magician does not hand down a verdict that you are being deceived — it says the version of events you keep being offered has been shaped for you, and the small places where it does not match what you saw with your own eyes are exactly where your attention belongs.",
-        "Let me look closer at the detail that never quite fits…",
+        "You turned the Magician, dear. Look — the four things on his table don't match each other.",
+        "You asked if you're being misled. Your hand went to the man who arranges things.",
+        "So two things you were given don't fit, dear. You saw that yourself.\nAnd there on his table, four things, and no two of them alike.\nBut a mismatch tells you nothing about why, dear. Only that it's there.\nThat's why you keep going back over what he said, lining it up.",
+        "Let me look closer at what stands between you and a story that fits…",
       ],
       b: [
-        "You turned the Hanged Man, dear — the card of the view that is deliberately kept unclear.",
-        "You reached for the card that matches the dizziness of never being able to settle what is true.",
-        "The Hanged Man is not proof that you are being played — it says you have been kept at a distance from the whole of it, and the confusion you have been blaming on yourself is a symptom of that distance, not a flaw in your judgment.",
-        "Let me look closer at what the confusion has been protecting…",
+        "You turned the Hanged Man, dear. Look — from where you stand, his face is where his feet should be.",
+        "You asked if you're being misled. Your hand went to the card that flips a view.",
+        "So the muddle is in the picture, dear. It isn't in you.\nAnd you've been handed this the wrong way up, dear.\nBut nobody has turned it round for you, dear. You've had to do it.\nThat's why working it out takes you hours. It arrives upside down, dear.",
+        "Let me look closer at what has been turning this around on you…",
       ],
       c: [
-        "You turned the Fool, dear — the card of what gets left uncorrected.",
-        "That is not random; you reached for the card of the easy answer, the one that was simpler to leave standing than to fix.",
-        "The Fool does not mean he set out to mislead you — it points to someone who let a convenient impression stand rather than correct it, which lands on you the same way in the end; what you are sensing is a real absence of straightening-out, not you being suspicious for no reason.",
-        "Let me look closer at what he has never bothered to correct…",
+        "You turned the Fool, dear. Look — the rocks he stands on are cut in flat layers.",
+        "You asked if you're being misled. Your hand went to the one who doesn't check his footing.",
+        "So you've been asked to walk without checking, dear. That's what feels wrong.\nAnd he's one step from a drop, dear, and looking the other way.\nBut this card names nothing about what sits under it, dear.\nThat's why checking felt like doubt to you. Checking is just looking, dear.",
+        "Let me look closer at what has been hidden under this…",
       ],
     },
     // ── Honesty/lying hooks (2026-08-03) ─────────────────────────────────────
@@ -2405,44 +2619,52 @@ const RETURN_MHF: CardSetConfig = {
     //
     // 'Am I being lied to?' — a specific untruth she suspects she has been handed.
     'cards-lied-to': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-19 from
+      // fb-tarot/docs/drafts/rewrites/cards-lied-to.json — approved copy, folded verbatim:
+      // bubbles 3-6 become beat 3, joined by newlines, and Version B serves them as
+      // separate chat messages with a typing pause between each.
       a: [
-        "You turned the Magician, dear — the card of skill in the telling, of the account delivered without a stumble.",
-        "Your hand went to the card of the smooth answer, and I do not think that was chance.",
-        "The Magician hands down no verdict that you have been lied to — it says the telling has been handled well enough that you cannot fault it anywhere, and the fact that a flawless account is the very thing unsettling you means your ear is working, not that you are hunting for trouble.",
-        "Let me look closer at the answer that arrived too easily…",
+        "You turned the Magician, dear. Look — his belt sits low and dark against the red robe.",
+        "You asked if you're being lied to. Your hand went to the man with a practised hand.",
+        "So no honest reader can settle this for you, dear. I won't pretend.\nAnd a hand that practised is hard to read from outside, dear.\nBut you've gone over this again and again, dear. Something snagged.\nThat's why you return to it, dear. Your ear caught on something.",
+        "Let me look closer at what your ear keeps catching on…",
       ],
       b: [
-        "You turned the Hanged Man, dear — the card of the question left hanging in the air.",
-        "You reached for the card that matches how often you have asked and come away still holding the question.",
-        "The Hanged Man does not convict him of a lie — it marks a man who lets a question stay open rather than close it, and the doubt you have been treating as your own suspicion is really the weight of something never answered.",
-        "Let me look closer at the question he keeps stepping around…",
+        "You turned the Hanged Man, dear. Look — his knees are bent and one is behind the other.",
+        "You asked if you're being lied to. Your hand went to the card that holds a thing open.",
+        "So the question won't resolve, dear. Not from where you stand.\nAnd half the shape is behind the other half, dear.\nBut you can't see round it, dear, and neither can I.\nThat's why the choice sits wrong, dear. You've had half a picture.",
+        "Let me look closer at what has been hiding the other half…",
       ],
       c: [
-        "You turned the Fool, dear — the card of the word given lightly, before its cost was weighed.",
-        "That is not random; you reached for the card of the quick assurance, the one offered faster than it was thought about.",
-        "The Fool does not name him a liar — it points to a man whose word outruns his intention, so what he told you may have been meant when he said it and untrue by the morning; the gap you keep landing in is real, and you are not wrong to have stopped trusting the telling.",
-        "Let me look closer at the distance between what he says and what he does…",
+        "You turned the Fool, dear. Look — his sleeve ends in a wide pale cuff.",
+        "You asked if you're being lied to. Your hand went to the one with nothing up his sleeve.",
+        "So you wanted someone with nothing up the sleeve, dear.\nAnd he's open, dear. Plain, and carrying no trick at all.\nBut that's exactly what's been missing, dear. I think you know it.\nThat's why wanting it plain feels like blame, dear. It isn't blame.",
+        "Let me look closer at what sits between you and plain dealing…",
       ],
     },
     // 'Is he telling me the truth?' — not "is he lying" but "is this the WHOLE of it".
     'cards-truth': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-19 from
+      // fb-tarot/docs/drafts/rewrites/cards-truth.json — approved copy, folded verbatim:
+      // bubbles 3-6 become beat 3, joined by newlines, and Version B serves them as
+      // separate chat messages with a typing pause between each.
       a: [
-        "You turned the Magician, dear — the card of the account that has been edited before it reaches you.",
-        "Your hand went to the card of selection, and women reach for that card when they can feel the shape of something left out.",
-        "The Magician stops short of calling him false — it says you are being handed a chosen portion rather than the whole, and a truth with pieces removed still leaves you exactly where you are standing now, unable to make it add up.",
-        "Let me look closer at the part that never made it into the telling…",
+        "You turned the Magician, dear. Look — his sleeve falls in heavy folds from the raised arm.",
+        "You asked about the truth of it. Your hand went to the man who chooses what to show.",
+        "So you've been given an account, dear. Not the whole of it.\nAnd he shows exactly what he means to show, dear. No more.\nBut a tidy account can still miss pieces, dear.\nThat's why it sounds fine, dear, and something in it still catches.",
+        "Let me look closer at what stands between you and the whole of it…",
       ],
       b: [
-        "You turned the Hanged Man, dear — the card of what is true from where he stands and not from where you do.",
-        "You reached for the card that matches how his version and your own can both seem right and still never meet.",
-        "The Hanged Man does not rule that he is deceiving you — it says he may be giving you a truth built entirely from his own vantage, which is why it never quite covers what you have actually lived; that mismatch is not you failing to understand him.",
-        "Let me look closer at what the view from your side has been telling you…",
+        "You turned the Hanged Man, dear. Look — his tied foot is higher than his head.",
+        "You asked about the truth of it. Your hand went to the card that shows the other way up.",
+        "So there's another way up to this, dear. You've only had one.\nAnd what's true from up there looks odd from down here, dear.\nBut two people can both be honest and still not match, dear.\nThat's why it stays open, dear, however long you sit with it.",
+        "Let me look closer at what keeps the two views apart…",
       ],
       c: [
-        "You turned the Fool, dear — the card of the man who has not yet asked himself the question you are asking him.",
-        "That is not random; you reached for the card of the unexamined answer, given long before it was ever worked out.",
-        "The Fool does not find him false — it points to someone who cannot hand you the truth of it because he has not sat still long enough to know it himself, and an answer given that lightly is not something you should be asked to build on.",
-        "Let me look closer at what he has never stopped to work out…",
+        "You turned the Fool, dear. Look — the sun's rays are drawn as straight lines out from it.",
+        "You asked about the truth of it. Your hand went to the plainest card in the deck.",
+        "So you want it plain, dear. Straight lines, like those rays.\nAnd nothing about him is put on for show, dear.\nBut what you've been handed is arranged, dear. That's the difference.\nThat's why plain talk feels like too much to ask. It isn't, dear.",
+        "Let me look closer at what has been bending this out of shape…",
       ],
     },
     // 'Am I being deceived?' — the heaviest of the three.
@@ -2453,23 +2675,27 @@ const RETURN_MHF: CardSetConfig = {
     // Never state as fact that she has been deceived (a verdict on him) and never
     // reassure her that she has not been (the 'cards-real-person' failure, 2026-07-10).
     'cards-deceived': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-19 from
+      // fb-tarot/docs/drafts/rewrites/cards-deceived.json — approved copy, folded verbatim:
+      // bubbles 3-6 become beat 3, joined by newlines, and Version B serves them as
+      // separate chat messages with a typing pause between each.
       a: [
-        "You turned the Magician, dear — the card of the practised hand, of someone who knows the effect he is having.",
-        "Your hand went to the card of deliberate effect, and that tells me you have already stopped believing all of this is accident.",
-        "The Magician does not pronounce you deceived — it says what has been happening around you has had a hand in it rather than being a run of bad luck, and noticing that took clear sight, not a suspicious mind.",
+        "You turned the Magician, dear. Look — his right arm is straight up and quite still.",
+        "You asked about being deceived. Your hand went to the man who sets a whole scene.",
+        "So deceived is a big word, dear. It means the whole picture.\nAnd he sets out all of it himself, dear. Every piece.\nBut a whole picture is harder to check than one line, dear.\nThat's why nothing pins down, dear. You're checking it all at once.",
         "Let me look closer at what has been arranged around you…",
       ],
       b: [
-        "You turned the Hanged Man, dear — the card of the moment everything turns over and reads differently.",
-        "You reached for the card of the second look, and no woman reaches for that card unless something has already begun re-reading itself.",
-        "The Hanged Man makes no ruling that you have been played — it marks the point where the same events start making a different kind of sense, and if things have been quietly rearranging themselves in your mind lately, that is your judgment working rather than deserting you.",
-        "Let me look closer at what looks different now that it has turned…",
+        "You turned the Hanged Man, dear. Look — the wood he hangs from is a single cut beam.",
+        "You asked about being deceived. Your hand went to the card that turns a whole picture over.",
+        "So you've been trying to turn the whole thing over, dear.\nAnd there's one view of him, dear, and no way to walk round it.\nBut the shape of what you can't see isn't mine to give, dear.\nThat's why the not-seeing has worn you down. You've carried it alone, dear.",
+        "Let me look closer at what has been keeping this side-on to you…",
       ],
       c: [
-        "You turned the Fool, dear — the card of the open hand, of trust given freely.",
-        "Your hand went to the card of the one who came in without guarding herself, and I want you to hear how I mean that.",
-        "The Fool passes no judgment on you and hands down no verdict on him — it names the openness you brought to this, and openness is not the same thing as being foolish; if something was done with that trust, it belongs to the hand that took it and never to you for having offered it.",
-        "Let me look closer at what your trust was actually met with…",
+        "You turned the Fool, dear. Look — his tunic is patterned all over with small shapes.",
+        "You asked about being deceived. Your hand went to the one who wears no disguise.",
+        "So one odd piece doesn't tell you the whole design, dear.\nAnd his coat has many small shapes, dear, and only one pattern.\nBut you've been holding the pieces up one at a time, dear.\nThat's why nothing has come together yet, dear. You were right to look.",
+        "Let me look closer at what has been holding the pattern out of view…",
       ],
     },
     // ── Commitment hooks (2026-07-31) ────────────────────────────────────────
@@ -2481,65 +2707,73 @@ const RETURN_MHF: CardSetConfig = {
     // shared 6-word run in beat 3).
     'cards-will-commit': {
       a: [
-        "You turned the Magician, dear — the card of will, of what a man is actually choosing.",
-        "You are asking whether he will ever commit, and your hand found the card of choice rather than circumstance.",
-        "The Magician hands down no yes and no no — it says the capability is sitting right there unused, and your sense that he could if he decided to is reading him accurately, not flattering him.",
-        "Let me look closer at what he keeps choosing instead…",
+        "You turned the Magician, dear. Look — one hand up to the sky, one down to the ground, every tool laid out on his table.",
+        "You asked whether he'll ever commit. Your hand went to the man who already has all he needs.",
+        "He isn't missing a thing, dear. He could decide.\nHe just hasn't.\nYou've felt that all along. You're reading him right — you're not making it up.\nAnd wanting an answer by now isn't you pushing. It's you being awake.",
+        "Let me look closer at what he keeps picking instead…",
       ],
       b: [
-        "You turned the Hanged Man, dear — the card of the held breath, of the thing suspended between two answers.",
-        "You reached for the card that matches exactly where he has left you standing.",
-        "The Hanged Man will not tell me he will or he won't — it says he is genuinely undecided rather than quietly certain, and the waiting you have done has been real waiting, not something you invented to stay hopeful.",
-        "Let me look closer at what he is weighing…",
+        "You turned the Hanged Man, dear. Look at him — hanging upside down by one ankle, and not fighting it.",
+        "You asked whether he'll ever commit. Your hand went to the man hanging between two answers.",
+        "He hasn't come down on either side. Not toward you, not away.\nHe isn't keeping a decision from you, dear. He hasn't made one.\nThat's the harder answer, I know. But it's the true one.\nAnd you did wait, dear. That was real — you didn't make it up to keep hoping.",
+        "Let me look closer at what's holding him up there…",
       ],
       c: [
-        "You turned the Fool, dear — the card of the open road, of the step not yet taken.",
-        "Your hand went to the card of beginnings, which is telling for a question about a man who has not begun.",
-        "The Fool promises nothing about the step being taken — it says nothing here has been sealed shut, and the part of you that has not stopped hoping is reading an open situation rather than being naive.",
-        "Let me look closer at the step that is waiting…",
+        "You turned the Fool, dear. Look — one foot out over the edge, the other still on the ground.",
+        "You asked whether he'll ever commit. Your hand went to the man caught mid-step.",
+        "That foot is still in the air. He hasn't come down either way.\nSo nothing has been settled against you. Not yet.\nYou kept hoping. That isn't you fooling yourself, dear — you were reading it right.",
+        "Let me look closer at which way that foot comes down…",
       ],
     },
     // ⚠ This hook PRESUPPOSES his refusal. Two failure modes, not one: pronouncing
     // on his character, and letting the answer land as her fault. The reads route
     // the "why" to where HE is stuck and never to anything she did or is.
     'cards-wont-commit': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-19 from
+      // fb-tarot/docs/drafts/rewrites/cards-wont-commit.json — approved copy, folded verbatim:
+      // bubbles 3-6 become beat 3, joined by newlines, and Version B serves them as
+      // separate chat messages with a typing pause between each.
       a: [
-        "You turned the Magician, dear — the card of intention, of the will behind what a man does and does not do.",
-        "You are asking why he will not, and your hand found the card that says his holding back is active rather than accidental.",
-        "The Magician does not name him cold or cruel — it points to a man aiming his will somewhere he has not shown you, and your read that this is a choice rather than bad timing is sound.",
-        "Let me look closer at where his intention has been going…",
+        "You turned the Magician, dear. Look — a white band round his dark hair.",
+        "You asked why he won't commit to you. Your hand went to the man who decides.",
+        "So the hold on this isn't yours, dear. Nothing you did put it there.\nAnd the tools for building are all laid out in front of him, dear.\nBut having the tools is not the same as picking them up, dear.\nThat's why you get the words, dear, and the week after looks the same.",
+        "Let me look closer at what stands in the way of a choice…",
       ],
       b: [
-        "You turned the Hanged Man, dear — the card of the man who stopped mid-step and never finished it.",
-        "You reached for the card of suspension, and it is his that you have been living inside.",
-        "The Hanged Man does not say he is withholding to punish you — it points to someone stuck rather than settled, and the straight answer he keeps failing to give you is one he does not possess, not one you asked for wrongly.",
-        "Let me look closer at what has him stuck…",
+        "You turned the Hanged Man, dear. Look — his arms are out of sight, and his body makes a triangle.",
+        "You asked why he won't commit to you. Your hand went to the card that stalls.",
+        "So something has him stuck, dear. You've been feeling exactly that.\nAnd his arms are out of sight, dear. You can't see what he's holding.\nBut where he is stuck is his to name, dear. Not mine, and not yours.\nThat's why every reason you land on slides off, dear. None of them stick.",
+        "Let me look closer at what has this stuck in place…",
       ],
       c: [
-        "You turned the Fool, dear — the card of the unfinished road, of the man still treating his life as a beginning.",
-        "Your hand reached for the card of the not-yet, which is where he has kept living.",
-        "The Fool does not make him a bad man — it points to someone who has not arrived yet rather than someone who weighed you and decided against you, and that difference matters far more than anyone has told you.",
-        "Let me look closer at what he is still circling…",
+        "You turned the Fool, dear. Look — the little dog has its tail straight up.",
+        "You asked why he won't commit to you. Your hand went to the one who ties nothing down.",
+        "So nothing in his life is tied down, dear. You saw that early.\nAnd the little dog has its tail straight up, dear. It knows the mood.\nBut loose isn't the same as gone, dear. He still walks beside you.\nThat's why asking for more never turns into a row. It just slides off.",
+        "Let me look closer at what has been keeping this loose…",
       ],
     },
     'cards-ready-commit': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-19 from
+      // fb-tarot/docs/drafts/rewrites/cards-ready-commit.json — approved copy, folded verbatim:
+      // bubbles 3-6 become beat 3, joined by newlines, and Version B serves them as
+      // separate chat messages with a typing pause between each.
       a: [
-        "You turned the Magician, dear — the card of a man's own power to build something.",
-        "You are asking about readiness, and your hand found the card of capability rather than circumstance.",
-        "The Magician makes no promise that the day arrives — it says the material is all there and unassembled, and your instinct that he is capable of more than he has been giving is not wishful thinking.",
-        "Let me look closer at what he would have to put down first…",
+        "You turned the Magician, dear. Look — the table hides him from the waist down.",
+        "You asked if he will be ready for real commitment. Your hand went to the man who builds.",
+        "So he will get there, dear. This card is a man who builds things.\nAnd the making of it is already in his hands, dear.\nBut the table hides him from the waist down. You can't see his footing.\nThat's why he can talk about a future, dear. He never steps toward it.",
+        "Let me look closer at what sits in the gap between you…",
       ],
       b: [
-        "You turned the Hanged Man, dear — the card of the long pause that comes before a turn.",
-        "You reached for the card of the in-between, and readiness is exactly the thing that lives there.",
-        "The Hanged Man offers no when and no whether — it says he is mid-change rather than finished forming, and the patience you have spent went to something genuinely unfinished rather than to nothing at all.",
-        "Let me look closer at the turn he has not made…",
+        "You turned the Hanged Man, dear. Look — one shoe points down, and the other points out sideways.",
+        "You asked if he will be ready for real commitment. Your hand went to the card that stops the clock.",
+        "So he has stopped in one spot, dear. Stopped is not finished.\nAnd look at his feet. One shoe points down, one points off sideways.\nBut I won't name a day for you, dear. There's no day on this card.\nThat's why it stalls at the very same place, dear, every single time.",
+        "Let me look closer at what keeps stopping this at the same spot…",
       ],
       c: [
-        "You turned the Fool, dear — the card of the beginner, of the one still learning the road.",
-        "Your hand went to the card of the untested, which is a fair description of where he is standing.",
-        "The Fool is no sign that growing into it is beyond him — it points to someone earlier in the journey than you are rather than someone who cannot make it, and the distance you have been feeling between you is real and worth naming out loud.",
-        "Let me look closer at the distance between where you each stand…",
+        "You turned the Fool, dear. Look — a small circle floats above him, next to a big bright sun.",
+        "You asked if he will be ready for real commitment. Your hand went to the one who hasn't chosen.",
+        "So nothing has been chosen yet, dear. Nothing has been ruled out either.\nAnd he's stepping out with no one thing in mind, dear.\nBut you know exactly what you're ready for. That's the difference here.\nThat's why you wait for him to catch up, dear. You got there first.",
+        "Let me look closer at what stands between you and a real choice…",
       ],
     },
     // ── Reunion/return hooks (2026-08-04) ────────────────────────────────────
@@ -2561,23 +2795,27 @@ const RETURN_MHF: CardSetConfig = {
     //
     // 'Will he come back?' — the obstacle, not the outcome. A return would be an ACT.
     'cards-come-back': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-19 from
+      // fb-tarot/docs/drafts/rewrites/cards-come-back.json — approved copy, folded verbatim:
+      // bubbles 3-6 become beat 3, joined by newlines, and Version B serves them as
+      // separate chat messages with a typing pause between each.
       a: [
-        "You turned the Magician, dear — the card of the deliberate act, of the thing a man has to decide before it happens.",
-        "Your hand went to the card of doing rather than drifting, and for this question that is telling.",
-        "The Magician issues no forecast — it says a return here would have to be chosen and then carried out rather than floating back on its own, and the reason all this waiting has felt so shapeless to you is that you keep being handed signals where a decision was owed.",
-        "Let me look closer at the decision he has been leaving unmade…",
+        "You turned the Magician, dear. Look — the roses above him are wide open, not in bud.",
+        "You asked about him coming back. Your hand went to the man who does the doing.",
+        "So this hasn't closed, dear. The door you've held is still open.\nAnd it's one person doing all the holding, dear. Look at him.\nBut holding a door open takes it out of you, dear. Every day.\nThat's why you're worn thin, dear. Nobody offered to take a turn.",
+        "Let me look closer at what has been wedged in that doorway…",
       ],
       b: [
-        "You turned the Hanged Man, dear — the card of the sentence nobody finished.",
-        "You reached for the card of the thing left mid-air, and I do not think that was chance.",
-        "The Hanged Man hands me no answer about which way this lands — it marks something neither of you ever actually concluded, only walked away from partway through, and an ending that was never once spoken out loud is not the same animal as an ending; that is why you have not been able to put it down.",
-        "Let me look closer at what was never actually said between you…",
+        "You turned the Hanged Man, dear. Look — the crossbar sits just above his tied foot.",
+        "You asked about him coming back. Your hand went to the card that neither opens nor shuts.",
+        "So the door has neither opened nor shut, dear. It just hangs there.\nAnd he's fixed in place, dear, with no news arriving either way.\nBut you've been standing in the same spot with it, dear.\nThat's why the wait sits so heavy on you, dear. It has just been long.",
+        "Let me look closer at what has kept this fixed so long…",
       ],
       c: [
-        "You turned the Fool, dear — the card of the leaving that settled nothing on its way out.",
-        "That is not random; you reached for the card of the exit made before anything was resolved.",
-        "The Fool offers no prediction about his step — it points to a going that skipped every question rather than answering them, so what sits between you now is an unfinished conversation and not a verdict, and wanting it finished does not make you a woman chasing after a man.",
-        "Let me look closer at the conversation this never got…",
+        "You turned the Fool, dear. Look — his cap has a feather and a small green sprig.",
+        "You asked about him coming back. Your hand went to the one who keeps moving.",
+        "So you kept your life going, dear. You have not stopped.\nAnd he's loaded up, dear, and still putting one foot out.\nBut the card won't say who walks towards whom, dear.\nThat's why the road keeps pulling your eye, dear. You've done the walking.",
+        "Let me look closer at what has been slowing the road between you…",
       ],
     },
     // 'Will he ever come back to me?' — the "ever" is the wound. She has waited a long
@@ -2587,23 +2825,27 @@ const RETURN_MHF: CardSetConfig = {
     // her having been foolish to wait. The reads name her constancy as the thing that was
     // never wasted, and stay honest that anything reopening would BEGIN rather than resume.
     'cards-ever-back': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-19 from
+      // fb-tarot/docs/drafts/rewrites/cards-ever-back.json — approved copy, folded verbatim:
+      // bubbles 3-6 become beat 3, joined by newlines, and Version B serves them as
+      // separate chat messages with a typing pause between each.
       a: [
-        "You turned the Magician, dear — the card of what a person keeps aiming their life at.",
-        "Your hand found the card of sustained intention, which is a fair description of what you have been doing here.",
-        "The Magician gives me nothing I could promise you — it says the time you have gone on pointing at this was time you genuinely meant, and whatever he does with what is left of it, the steadiness in you was never the part that went to waste.",
-        "Let me look closer at where all that steadiness has actually been going…",
+        "You turned the Magician, dear. Look — his left hand points down at the white lilies.",
+        "You asked if he will ever come back to you. Your hand went to the man rooted in now.",
+        "So the question has stretched, dear. You began by asking about a week.\nAnd both his hands are in the present, dear. Nothing of his is ahead.\nBut now you're asking about the rest of your life, dear.\nThat's why the word ever slipped in, dear. It came without you noticing.",
+        "Let me look closer at what has stretched this out so far…",
       ],
       b: [
-        "You turned the Hanged Man, dear — the card of the long wait, of time spent living inside a question.",
-        "You reached for the card of suspension, and it is your own you have been hanging in, not his.",
-        "The Hanged Man declines the ever in your question — it says you have been asked to live in an unanswered thing far longer than anyone should be asked to, and the tiredness underneath your asking is not weakness, it is the honest weight of having waited without ever being told anything.",
-        "Let me look closer at what the waiting has been asking of you…",
+        "You turned the Hanged Man, dear. Look — you can see pale sky right through the gap under him.",
+        "You asked if he will ever come back to you. Your hand went to the card that keeps a thing hanging.",
+        "So nothing has ended, dear, and the card gives no end date.\nAnd he's held there, dear, with pale sky showing right through the gap.\nBut ever isn't about him any more, dear. It's about you.\nThat's why the question got heavier, dear. You changed what you were asking.",
+        "Let me look closer at what has been holding you in place…",
       ],
       c: [
-        "You turned the Fool, dear — the card of the page that has stayed blank.",
-        "Your hand went to the card of what has never been written on, which is where this has sat for a long while now.",
-        "The Fool holds out no guarantee of him — it says anything opening here again would have to start as a new thing rather than resume as the old one, and the man you have been keeping the place set for may not be the one who could walk into it; knowing that now protects you far better than hoping around it.",
-        "Let me look closer at who it is you have been keeping that place for…",
+        "You turned the Fool, dear. Look — the bundle is red and tied with a small knot.",
+        "You asked if he will ever come back to you. Your hand went to the one who packs and goes.",
+        "So you're still able to move, dear. That's what this card shows me.\nAnd nothing weighs him down, dear. He's packed and ready to go.\nBut you've kept your own bag packed for a long time, dear.\nThat's why standing still costs you so much, dear. You were made to move.",
+        "Let me look closer at what has been keeping you standing still…",
       ],
     },
     // 'Is he coming back, or has he moved on?' — a binary, and the read REFUSES it.
@@ -2612,23 +2854,27 @@ const RETURN_MHF: CardSetConfig = {
     // The read's job is to name the not-knowing as the real burden and put it back where
     // it belongs — with the person who has left her to deduce it from silence.
     'cards-moved-on': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-19 from
+      // fb-tarot/docs/drafts/rewrites/cards-moved-on.json — approved copy, folded verbatim:
+      // bubbles 3-6 become beat 3, joined by newlines, and Version B serves them as
+      // separate chat messages with a typing pause between each.
       a: [
-        "You turned the Magician, dear — the card of the move that is made on purpose, never by drift.",
-        "Your hand reached for the card of agency, and for a question with two answers in it that matters more than which answer.",
-        "The Magician refuses the either-or you brought me — it says that whichever of the two turns out to be true, it will be something he does rather than something that merely happens to him, and you are owed the telling of it instead of being left to work it out from silence.",
-        "Let me look closer at what his silence has been doing in place of an answer…",
+        "You turned the Magician, dear. Look — a gold cup, a coin, and two long things beside them.",
+        "You asked about coming back, or moving on. Your hand went to the man who lays things out.",
+        "So I will not pick either one, dear. Neither box is filled yet.\nAnd four things lie on that wood, dear, and none above another.\nBut those two boxes came out of long waiting, dear. Not out of him.\nThat's why sorting him has never worked, dear. He hasn't been sorted.",
+        "Let me look closer at what has kept this question open…",
       ],
       b: [
-        "You turned the Hanged Man, dear — the card of two answers that have not yet come apart.",
-        "You reached for the card of the unseparated, which is exactly the position he has left you standing in.",
-        "The Hanged Man will not divide your question for me — it says both halves of it are still live, and being made to hold two opposite futures open at the same time is genuinely exhausting; that exhaustion is the price of not being told, not proof that you are unable to let go.",
-        "Let me look closer at what it is costing you to hold both…",
+        "You turned the Hanged Man, dear. Look — the light behind his head doesn't touch the rest of him.",
+        "You asked about coming back, or moving on. Your hand went to the card that refuses to land.",
+        "So this card declines to land, dear. So will I.\nAnd he's between, dear, and content to stay between.\nBut neither of your boxes has anything in it yet, dear.\nThat's why the two swap places all day, dear. Hour by hour.",
+        "Let me look closer at what has been holding this between…",
       ],
       c: [
-        "You turned the Fool, dear — the card that refuses to be pinned to one answer.",
-        "That is not random; you reached for the card of what has not yet hardened into anything.",
-        "The Fool declines to take a side of your question — it points to a thing still unfixed rather than one already settled behind your back, and the not-knowing you have been carrying as your own indecision was never yours; it is his, and it has been sitting in your lap.",
-        "Let me look closer at whose uncertainty you have been carrying…",
+        "You turned the Fool, dear. Look — the sky is gold and there's not one cloud in it.",
+        "You asked about coming back, or moving on. Your hand went to the one who files nobody.",
+        "So the Fool will not sort him for you, dear. Nor will I.\nAnd he's still walking, dear, with nothing filed behind him.\nBut that answer sits with one person, dear, and he hasn't given it.\nThat's why you built two boxes, dear. Standing in nothing is hard.",
+        "Let me look closer at what has kept you standing between them…",
       ],
     },
     // ── Healing/moving-on hooks (2026-08-04) ─────────────────────────────────
@@ -2652,44 +2898,52 @@ const RETURN_MHF: CardSetConfig = {
     //
     // 'Why can't I stop thinking about him?' — the thought is unfinished business.
     'cards-cant-stop': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-19 from
+      // fb-tarot/docs/drafts/rewrites/cards-cant-stop.json — approved copy, folded verbatim:
+      // bubbles 3-6 become beat 3, joined by newlines, and Version B serves them as
+      // separate chat messages with a typing pause between each.
       a: [
-        "You turned the Magician, dear — the card of the mind that keeps working at a thing until it comes out whole.",
-        "Your hand went to the card of the unfinished problem, and for this question that is telling.",
-        "The Magician passes no judgment on you for any of it — it says your mind has been set to a problem it was never handed the pieces to finish, and a mind that keeps returning to an unsolved thing is doing its work rather than failing you.",
-        "Let me look closer at the piece you were never given…",
+        "You turned the Magician, dear. Look — both his hands are busy and neither is resting.",
+        "You asked why you can't stop thinking about him. Your hand went to the man who can't put it down.",
+        "So you've been trying to stop by force, dear. That's the tiring bit.\nAnd his hands are busy, dear, with no off switch anywhere on him.\nBut a mind doesn't take orders like that, dear. Not one.\nThat's why the trying costs you more than the thinking does, dear.",
+        "Let me look closer at what has kept you fighting your own head…",
       ],
       b: [
-        "You turned the Hanged Man, dear — the card of the thought that will not be set down.",
-        "You reached for the card of what stays held mid-air, and it is your own thinking that has been hanging there.",
-        "The Hanged Man does not call this a failure to move on — it marks something that was never concluded, and what was never concluded cannot be put down simply by deciding to put it down; that is the shape of the thing itself and not a weakness in you.",
-        "Let me look closer at what was never allowed to finish…",
+        "You turned the Hanged Man, dear. Look — he's quite still and nothing about him is resolved.",
+        "You asked why you can't stop thinking about him. Your hand went to the card that stays open.",
+        "So this is still open, dear. That's the whole of it.\nAnd nothing is closed off on his card, dear. Nothing put away.\nBut open things keep asking to be closed, dear.\nThat's why he turns up at two in the morning, dear. Nobody asked him.",
+        "Let me look closer at what has held this open…",
       ],
       c: [
-        "You turned the Fool, dear — the card of the story that was never given its last page.",
-        "That is not random; you reached for the card of the tale that stops mid-sentence.",
-        "The Fool hands you no instruction to forget him — it points to something closed by a person walking out of it rather than by an ending, and a mind will go on turning the last page it was given until somebody hands it a better one.",
-        "Let me look closer at the ending you were owed…",
+        "You turned the Fool, dear. Look — the road under him runs right up to the edge.",
+        "You asked why you can't stop thinking about him. Your hand went to the one who walks with it.",
+        "So he walks and thinks at once, dear. He stops for neither.\nAnd he's moving, dear, with the whole load still on his back.\nBut you were told to stop before you could carry on, dear.\nThat's why stopping felt like the only way out, dear. It never was.",
+        "Let me look closer at what made stopping the only option…",
       ],
     },
     // 'Why is he always on my mind?' — not effort, but the SIZE of the room he still has.
     'cards-on-my-mind': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-19 from
+      // fb-tarot/docs/drafts/rewrites/cards-on-my-mind.json — approved copy, folded verbatim:
+      // bubbles 3-6 become beat 3, joined by newlines, and Version B serves them as
+      // separate chat messages with a typing pause between each.
       a: [
-        "You turned the Magician, dear — the card of what a person deliberately builds room for.",
-        "Your hand found the card of the thing that was made on purpose, and that matters more here than you might expect.",
-        "The Magician makes no ruling about him at all — it says you built something real and gave it genuine room, and the reason he turns up everywhere is that the room is still standing; leaving it standing is not a mistake you have made.",
-        "Let me look closer at what you actually built here…",
+        "You turned the Magician, dear. Look — his workbench is full and there's no space left on it.",
+        "You asked why he's always on your mind. Your hand went to the man whose bench is full.",
+        "So there's no room left, dear. That's what full looks like.\nAnd there's not one clear space on that wood, dear.\nBut an open thing takes up room, dear. It doesn't ask first.\nThat's why he's there when you wake, dear. Room isn't the same as love.",
+        "Let me look closer at what has been taking up all that room…",
       ],
       b: [
-        "You turned the Hanged Man, dear — the card of the space that stays held open.",
-        "You reached for the card of what is kept in reserve, and it is a great deal of you that has been kept there.",
-        "The Hanged Man will not weigh your feeling against how much he earned it — it says a space that size was made by someone capable of that much, and what that measures is the scale of you rather than the worth of him.",
-        "Let me look closer at how much of you is still being held there…",
+        "You turned the Hanged Man, dear. Look — his body makes a shape that won't lie flat.",
+        "You asked why he's always on your mind. Your hand went to the card that won't settle.",
+        "So you didn't choose to think about him, dear. Nobody chooses that.\nAnd he's stuck in one spot, dear, with nothing settled about him.\nBut an unsettled thing keeps coming back, dear. That's how minds work.\nThat's why wanting to stop does nothing, dear. It isn't a failing.",
+        "Let me look closer at what has never been settled…",
       ],
       c: [
-        "You turned the Fool, dear — the card of the door nobody ever shut behind him.",
-        "Your hand went to the card of the thing left ajar, which is a fair description of where this has sat.",
-        "The Fool offers no verdict on whether he thinks of you — it points to something left open rather than closed, and a mind treats an open door as a live thing; that is why he arrives unbidden in the middle of perfectly ordinary days.",
-        "Let me look closer at what has been coming through that door…",
+        "You turned the Fool, dear. Look — the little dog won't leave his side.",
+        "You asked why he's always on your mind. Your hand went to the one with company he didn't pick.",
+        "So some things follow you, dear. You didn't invite them.\nAnd the dog came along, dear, and it stays along.\nBut you've been ordering yourself to stop, dear. That never works.\nThat's why it keeps pace with you, dear, however fast you go.",
+        "Let me look closer at what has been keeping pace with you…",
       ],
     },
     // 'Why do I still think about someone who hurt me?' — the SHAME. The heaviest hook
@@ -2700,23 +2954,27 @@ const RETURN_MHF: CardSetConfig = {
     // man") is the verdict the funnel forbids. Take HER account as given, place no
     // judgment on him as a person, and never let the answer land on her.
     'cards-who-hurt-me': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-19 from
+      // fb-tarot/docs/drafts/rewrites/cards-who-hurt-me.json — approved copy, folded verbatim:
+      // bubbles 3-6 become beat 3, joined by newlines, and Version B serves them as
+      // separate chat messages with a typing pause between each.
       a: [
-        "You turned the Magician, dear — the card of the mind at work on an injury it cannot yet explain.",
-        "Your hand went to the card of the unsolved thing, and I want you to hear what that means before you decide anything about yourself.",
-        "The Magician does not hand you a reason to be ashamed — it says a mind goes back to an injury in order to understand it and never because it wants more of it, so what you have been reading as still wanting him is far more likely a woman still trying to make sense of what was done to her.",
-        "Let me look closer at what your mind has been trying to solve…",
+        "You turned the Magician, dear. Look — the tools are laid out and none of them is put away.",
+        "You asked why you still think about someone who hurt you. Your hand went to the mind at work.",
+        "So your mind is still working on it, dear. That's what this shows.\nAnd every tool is still out, dear. The job isn't done yet.\nBut thinking of him isn't excusing him, dear. Not for a moment.\nThat's why you are hard on yourself, dear. You read memory as a charge.",
+        "Let me look closer at what has kept this job open…",
       ],
       b: [
-        "You turned the Hanged Man, dear — the card of the thing examined from every angle except the one that would explain it.",
-        "You reached for the card of the view that never resolves, and that is exactly where this has left you.",
-        "The Hanged Man passes no judgment on him and none on you — it marks something you have turned over from every side without ever being handed the piece that would make it make sense, and no amount of thinking gets you to peace with an account that was never completed.",
-        "Let me look closer at the piece that has been kept from you…",
+        "You turned the Hanged Man, dear. Look — one thing holds him and the rest of him is free.",
+        "You asked why you still think about someone who hurt you. Your hand went to the card that holds one point.",
+        "So one thing has hold of you, dear. The rest of you moved on.\nAnd he's caught at one point only, dear. The rest of him is loose.\nBut from outside, that looks like being stuck, dear.\nThat's why you call yourself stuck, dear, when it's one held point.",
+        "Let me look closer at what has hold of that one point…",
       ],
       c: [
-        "You turned the Fool, dear — the card of the woman you were before any of this had happened to you.",
-        "That is not random; you reached for the card of the self who walked in ahead of all this knowledge.",
-        "The Fool asks nothing of you — not to forgive it, not to forget it, not to be finished with it — it points back to the woman who walked in without knowing what it would cost, and she was not naive for that; going back to her in your mind is a different act entirely from wanting him.",
-        "Let me look closer at what she deserved to be told…",
+        "You turned the Fool, dear. Look — the ground behind him has fallen away in steps.",
+        "You asked why you still think about someone who hurt you. Your hand went to the one who kept going.",
+        "So you kept going, dear. That's the first thing I see.\nAnd the ground has gone behind him, dear, and his feet still move.\nBut what happened to you was real, dear, and so is the going on.\nThat's why the two fight in you, dear. Neither cancels the other.",
+        "Let me look closer at what has been catching at you as you go…",
       ],
     },
     // ── Pulling-away hooks (2026-08-05) ──────────────────────────────────────
@@ -2740,45 +2998,53 @@ const RETURN_MHF: CardSetConfig = {
     // 'Why is he pulling away from me?' — the WIDENING GAP. Where the distance comes from,
     // and why no amount of working at it on her side has resolved it.
     'cards-pulling-away': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-19 from
+      // fb-tarot/docs/drafts/rewrites/cards-pulling-away.json — approved copy, folded verbatim:
+      // bubbles 3-6 become beat 3, joined by newlines, and Version B serves them as
+      // separate chat messages with a typing pause between each.
       a: [
-        "You turned the Magician, dear — the card of the thing being decided somewhere you cannot see it.",
-        "Your hand went to the card of the choice made off-stage, and for a question like yours that is worth sitting with.",
-        "The Magician names nothing of what he has settled on, nor whether he has settled anything at all — it says the pulling back you have been measuring is real and not a thing you invented, and that whatever sits behind it is being worked out somewhere you were never given a way in. That is why turning it over on your own has produced no answer; the missing piece was never on your side of it.",
-        "Let me look closer at what is being decided out of your sight…",
+        "You turned the Magician, dear. Look — his right hand is up and his left hangs open and low.",
+        "You asked why he's pulling away from you. Your hand went to the man who acts on purpose.",
+        "So something did change, dear. The card shows the shift plainly.\nAnd look at his hands, dear. One reaching up, one letting go low.\nBut the reason sits with him, dear, and he hasn't said it out loud.\nThat's why guessing has taken up your weeks, dear. It's hard work.",
+        "Let me look closer at what has opened up between you…",
       ],
       b: [
-        "You turned the Hanged Man, dear — the card of what is still standing but no longer moving.",
-        "You reached for the card of the thing that stalled without ending, which is a fair description of where you have been left.",
-        "The Hanged Man rules on neither of you — it marks a thing that stopped moving rather than a thing that stopped, and from where you are standing those two feel identical while meaning entirely different things. What you are living inside is the not-moving, and being kept there without a word of explanation is a weight of its own, quite apart from whatever the reason turns out to be.",
-        "Let me look closer at where the movement went out of this…",
+        "You turned the Hanged Man, dear. Look — he hangs from one ankle and the rest of him is loose.",
+        "You asked why he's pulling away from you. Your hand went to the card that hangs a thing halfway.",
+        "So you're halfway, dear. Not ended, and not held either.\nAnd nobody has cut him down, dear. He just hangs there.\nBut you're being asked to read a gap with no words in it, dear.\nThat's why evenings leave you spent, dear. You've translated all day.",
+        "Let me look closer at what has been widening this…",
       ],
       c: [
-        "You turned the Fool, dear — the card of the road that quietly changed direction.",
-        "That is not random; your hand found the card of the turn taken without ever being announced.",
-        "The Fool offers no forecast about where any of this lands — it points to something that changed course rather than something that broke, and a change of course made in silence leaves the other person to notice it alone. You noticed. Having to be the one who notices, with nothing said to you directly, is a real part of what this has been costing you.",
-        "Let me look closer at when the direction changed…",
+        "You turned the Fool, dear. Look — the dog is white and small against all that rock.",
+        "You asked why he's pulling away from you. Your hand went to the one already in motion.",
+        "So he is moving, dear. You saw it before anyone said so.\nAnd he moves off, dear, with bare rock behind him.\nBut motion is all the card gives, dear. It gives no reason.\nThat's why you noticed first, dear, and had nobody to tell.",
+        "Let me look closer at what has been pushing this apart…",
       ],
     },
     // 'Why has he gone cold on me?' — the CONTRAST. The warmth existed; that is the thing
     // to affirm, and affirming it convicts him of nothing.
     'cards-gone-cold': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-19 from
+      // fb-tarot/docs/drafts/rewrites/cards-gone-cold.json — approved copy, folded verbatim:
+      // bubbles 3-6 become beat 3, joined by newlines, and Version B serves them as
+      // separate chat messages with a typing pause between each.
       a: [
-        "You turned the Magician, dear — the card of what took real intention to make in the first place.",
-        "Your hand found the card of the deliberate thing, and that matters here more than it may sound.",
-        "The Magician makes no ruling on where he has gone since — it says what you had was not an accident and not a misreading on your part, because warmth of that kind never arrives by drift; it takes a person genuinely turning toward you to make it. Whatever has changed since cannot reach back and un-make the fact that it was real while you had it.",
-        "Let me look closer at what it was he was actually building…",
+        "You turned the Magician, dear. Look — the coin on his table has a star drawn inside a circle.",
+        "You asked why he has gone cold on you. Your hand went to the man who once made warmth on purpose.",
+        "So the warmth was real, dear. It was made, not made up.\nAnd warmth like that gets made on purpose, dear. He built it.\nBut what reaches you now has changed, dear. You felt the drop.\nThat's why you go back over that week, dear, hunting the day it turned.",
+        "Let me look closer at what has come between you and that warmth…",
       ],
       b: [
-        "You turned the Hanged Man, dear — the card of the same man in the same place, gone strangely unfamiliar.",
-        "You reached for the card of what is exactly where you left it and no longer feels like it, which is the confusion you have been carrying.",
-        "The Hanged Man refuses to say his heart has closed, and refuses just as flatly to say it has not — it marks a suspension rather than a ruling, and what it says about you is that you are not imagining a drop in temperature you could once feel plainly. Being expected to carry on as normal toward someone who has cooled, with nothing acknowledged, is draining in a way that has nothing to do with you being too sensitive.",
-        "Let me look closer at where the warmth went…",
+        "You turned the Hanged Man, dear. Look — the leaves on his beam are the only green in the picture.",
+        "You asked why he has gone cold on you. Your hand went to the card that freezes a thing.",
+        "So the whole thing has gone still, dear. You felt that happen.\nAnd green still shows on that wood, dear, while nothing else moves.\nBut cold describes what reached you, dear. Not what sits in him.\nThat's why nothing you try warms it, dear. You're working the wrong end.",
+        "Let me look closer at what has settled over this…",
       ],
       c: [
-        "You turned the Fool, dear — the card of the beginning still visible underneath what this has become.",
-        "That is not random; you reached for the card that remembers how this started, and that is the very thing you keep measuring today against.",
-        "The Fool lays no charge at his door for the cooling and none at yours for having felt it — it points back at something that genuinely began, and a beginning that real does not simply evaporate of its own accord without something happening to it. You are not holding today up against a version you invented; you are holding it up against one you actually lived.",
-        "Let me look closer at the beginning you have been measuring against…",
+        "You turned the Fool, dear. Look — he wears a wreath of green leaves on his head.",
+        "You asked why he has gone cold on you. Your hand went to the one who doesn't look back.",
+        "So you've been hunting for the moment it turned. There may not be one, dear.\nAnd he walks on, dear, with no account of it left behind him.\nBut the card gives no reason for the change, dear. Only that it came.\nThat's why you keep asking, dear, and nobody will answer it.",
+        "Let me look closer at what has been chilling this…",
       ],
     },
     // 'Is he losing interest, or just going through something?' — the EITHER-OR. Like
@@ -2786,23 +3052,27 @@ const RETURN_MHF: CardSetConfig = {
     // delivered to a woman already braced for it, the other is the excuse. The finding is
     // that she was left to deduce it at all.
     'cards-losing-interest': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-19 from
+      // fb-tarot/docs/drafts/rewrites/cards-losing-interest.json — approved copy, folded verbatim:
+      // bubbles 3-6 become beat 3, joined by newlines, and Version B serves them as
+      // separate chat messages with a typing pause between each.
       a: [
-        "You turned the Magician, dear — the card of the answer one person already holds while the other is left guessing at it.",
-        "Your hand went to the card of the thing already known on one side of this, and for a question shaped like yours that is telling.",
-        "The Magician will not choose between your two possibilities and neither will I, because whichever one is true he is the one holding it while you are the one asked to work it out from the outside. That is the finding. A question this size gets answered by being told, and having to read it off his behaviour instead is a job you have been doing on his behalf.",
-        "Let me look closer at what is being kept on his side of this…",
+        "You turned the Magician, dear. Look — the blade, the cup and the coin sit close together on the wood.",
+        "You asked about losing interest, or a thing he's going through. Your hand went to the sorter.",
+        "So I will not choose between your two, dear. Neither will I guess.\nAnd things sit side by side on his table, dear, without being ranked.\nBut only he can say which one it is, dear.\nThat's why running both at once has worn you out, dear.",
+        "Let me look closer at what keeps this split in two…",
       ],
       b: [
-        "You turned the Hanged Man, dear — the card of the decision you are being made to hold for somebody else.",
-        "You reached for the card of the weight handed sideways, and it has landed squarely in your lap.",
-        "The Hanged Man declines your either-or completely, and that refusal is the reading rather than a dodge — both halves of it cost you the same thing while nobody tells you which you are paying for. Those two possibilities would ask completely different things of you, and you have been given no way to know which one you are living in. That is not you overthinking; it is a question that was never answered anywhere you could hear it.",
-        "Let me look closer at what you have been left holding…",
+        "You turned the Hanged Man, dear. Look — his clothes fall the wrong way, up towards his feet.",
+        "You asked about losing interest, or a thing he's going through. Your hand went to the card between.",
+        "So I will not choose for you, dear. Not honestly, and not from here.\nAnd he's between two states, dear, and settled in neither one.\nBut the card holds both open, dear, which is where you've been living.\nThat's why you feel pulled two ways, dear. The road really does split.",
+        "Let me look closer at what has kept this hanging between two…",
       ],
       c: [
-        "You turned the Fool, dear — the card of the page you were handed with half its words missing.",
-        "That is not random; your hand went to the card of the account that arrives incomplete.",
-        "The Fool refuses to be pushed into calling this one thing or the other — what it shows me is a situation you have been asked to interpret without being given enough to interpret it with. Wherever this is genuinely heading, you were owed the words for it, and going without them has been doing its own damage regardless of which explanation turns out to be true.",
-        "Let me look closer at the words you were never given…",
+        "You turned the Fool, dear. Look — the red feather in his cap points backwards.",
+        "You asked about losing interest, or something he's going through. Your hand went to the one who never sorts.",
+        "So the Fool declines your either-or, dear. He files nobody.\nAnd nothing about him is sorted yet, dear. He's still stepping.\nBut one person holds that answer, dear, and it isn't me.\nThat's why the choice sat wrong with you. It was never yours, dear.",
+        "Let me look closer at what put those two in front of you…",
       ],
     },
     // ── Reconciliation (2026-08-06) ──────────────────────────────────────────
@@ -2829,46 +3099,54 @@ const RETURN_MHF: CardSetConfig = {
     // 'Will we get back together?' — THE TWO HALVES. A reunion is not one event granted to
     // her; it is two decisions that have to meet, and only one of them was ever hers.
     'cards-back-together': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-19 from
+      // fb-tarot/docs/drafts/rewrites/cards-back-together.json — approved copy, folded verbatim:
+      // bubbles 3-6 become beat 3, joined by newlines, and Version B serves them as
+      // separate chat messages with a typing pause between each.
       a: [
-        "You turned the Magician, dear — the card of the thing that only exists if two people build it.",
-        "Your hand went to the card of what has to be made rather than waited for, and for a question worded the way yours is, that is worth noticing.",
-        "The Magician holds no picture of the two of you a year from now — what it marks is that the thing you are asking about was never a single event you could watch for. It is two separate decisions that have to meet, and you have been treating it as one outcome to be granted to you. Half of it has always been yours, and you are allowed to know what your own half is well before his ever arrives.",
-        "Let me look closer at the half of this that has always been yours…",
+        "You turned the Magician, dear. Look — his right arm is raised higher than the top of his head.",
+        "You came asking about getting back together. Your hand went to the man working alone.",
+        "So this isn't finished, dear. The card won't let me call it that.\nAnd on that table, dear, one pair of hands does all the work.\nBut a thing like this takes two, dear, and only you have been working it.\nThat's why nothing moves, however hard you push. You've been the only one pushing.",
+        "Let me look closer at what has been keeping this a one-person job…",
       ],
       b: [
-        "You turned the Hanged Man, dear — the card of what was left standing in the doorway, neither in nor out.",
-        "You reached for the card of the thing never closed and never resumed, which is the exact place the two of you have been left.",
-        "The Hanged Man is not in the business of telling you how this ends, and I will not put words in its mouth — what it shows is a thing suspended rather than finished, and two people can be held in a suspension without either of them having chosen it. That is not the same as being over, and it is not the same as being on its way back. What it has cost you is having to live inside it while nobody will name it.",
-        "Let me look closer at what has been left standing between you…",
+        "You turned the Hanged Man, dear. Look — his tied leg is straight, and the rope is short.",
+        "Your question was about getting back together. Your hand went to the card that holds the middle.",
+        "So you've been living in the middle of this, dear. It has no floor.\nAnd look at him. Neither down nor up, and quite still.\nBut the middle is a place two people leave together, dear.\nThat's why you keep nearly getting out, dear, and end up back in it.",
+        "Let me look closer at what has been holding you in the middle…",
       ],
       c: [
-        "You turned the Fool, dear — the card of the road that could still be walked from either end.",
-        "That is not random; you reached for the card of the beginning, and a beginning is the one thing that cannot be inherited from what came before it.",
-        "The Fool carries no map of where the two of you end up — what it points at is that whatever opens here would be a different thing wearing a familiar name, not the old one handed back to you intact. You would not be collecting something you left behind. You would be deciding, with the same person and with everything you now know, whether to make something else — and that is a choice you are entitled to make deliberately rather than drift into.",
-        "Let me look closer at what would actually be beginning…",
+        "You turned the Fool, dear. Look — the stick over his shoulder is long and thin.",
+        "You asked about the road back together. Your hand went to the one who set out alone.",
+        "So the road back is still there, dear. Nobody has closed it.\nAnd look at him. One road, one traveller, no second pair of boots.\nBut a road back needs two people walking it, dear.\nThat's why rest doesn't fix it, dear. You walked both parts of this.",
+        "Let me look closer at what has been standing on the road back…",
       ],
     },
     // 'Is there still a chance for us?' — THE ODDS. She is asking for a number and there
     // is none; quoting one in either direction is the failure. The finding is that hope
     // is a response to an unanswered question, not a refusal to face a settled one.
     'cards-still-a-chance': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-19 from
+      // fb-tarot/docs/drafts/rewrites/cards-still-a-chance.json — approved copy, folded verbatim:
+      // bubbles 3-6 become beat 3, joined by newlines, and Version B serves them as
+      // separate chat messages with a typing pause between each.
       a: [
-        "You turned the Magician, dear — the card of what is still being held rather than spent.",
-        "Your hand found the card of the thing not yet used up, and for a question shaped like yours that is worth sitting with.",
-        "The Magician puts no number on this and I will not put one on it either — a chance is not a quantity lying somewhere waiting to be measured for you, and anyone who hands you a figure has invented it. What the card marks is that something here has not been spent, and that what you have kept alive is a response to something real rather than a story you told yourself to feel better. That is not a promise, and you deserve to have the difference said plainly rather than blurred.",
-        "Let me look closer at what has not been spent…",
+        "You turned the Magician, dear. Look — red flowers along the top of his card, and green leaves with them.",
+        "You asked if there's still a chance for us. Your hand went to the man whose work isn't done.",
+        "So there's still a chance, dear. Hope here isn't poor judgement.\nAnd look at his table. The work is laid out, not packed away.\nBut an open thing can sit open a long time, dear, and wear you out.\nThat's why you've kept this open by yourself, dear. It cost you something.",
+        "Let me look closer at what stands between you and a straight yes or no…",
       ],
       b: [
-        "You turned the Hanged Man, dear — the card of the answer that has neither arrived nor been refused.",
-        "You reached for the card of the question left open, which is precisely where you have been living.",
-        "There is no measuring here and the Hanged Man does not pretend otherwise — it marks a thing held open, and the holding is being done somewhere you have no hand in. What you are carrying is not the outcome, because the outcome has not happened. It is the waiting without a word, and that is a real weight quite separate from however this eventually falls.",
-        "Let me look closer at what is being held open…",
+        "You turned the Hanged Man, dear. Look — the light round his head is drawn in thin straight lines.",
+        "You asked if there's still a chance for us. Your hand went to the card that settles nothing.",
+        "So the whole thing is unsettled, dear. You've been feeling that.\nAnd look at him. Held between two things, and going to neither.\nBut I won't put a number on it, dear. There's none to give.\nThat's why waiting on this is so heavy, dear. Nothing in it settles.",
+        "Let me look closer at what has been keeping this unsettled…",
       ],
       c: [
-        "You turned the Fool, dear — the card of the door nobody has closed.",
-        "That is not random; your hand went to the card of what remains unshut, and you have been half-asking whether you are wrong to have noticed it.",
-        "The Fool is not a set of odds and I will not read it as one — what it says is that nothing here has been sealed, and that seeing a door stand open is one thing while refusing to accept a shut one is quite another. You have been bracing to be told that hoping is a failure of realism. It is not. Hope is what a person does with a question that has not been answered, and this question genuinely has not been answered.",
-        "Let me look closer at what has never been closed…",
+        "You turned the Fool, dear. Look — his sleeves are wide and pale, and they hang loose.",
+        "You asked if there's still a chance for us. Your hand went to the one whose road keeps going.",
+        "So nothing has been sealed, dear. Not one part of this.\nAnd look at him. Mid-step, with nothing decided about where he lands.\nBut open isn't the same as promised, dear. I won't dress it up.\nThat's why hoping feels risky, dear. You've had nothing firm to hope on.",
+        "Let me look closer at what keeps this from being answered…",
       ],
     },
     // 'Is it really over between us?' — THE VERDICT REQUEST, and the sharpest hook in the
@@ -2876,23 +3154,27 @@ const RETURN_MHF: CardSetConfig = {
     // finding: 'over' is a word somebody has to SAY, and nobody has said it to her — she
     // has been left to conclude it alone, which is why no amount of thinking settles it.
     'cards-really-over': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-19 from
+      // fb-tarot/docs/drafts/rewrites/cards-really-over.json — approved copy, folded verbatim:
+      // bubbles 3-6 become beat 3, joined by newlines, and Version B serves them as
+      // separate chat messages with a typing pause between each.
       a: [
-        "You turned the Magician, dear — the card of the word that has to be spoken by someone.",
-        "Your hand went to the card of the thing that only becomes true once it is said out loud, and that sits nearer the centre of this than it may sound.",
-        "Endings are not the Magician's to hand down and they are not mine either — what the card puts in front of me is that 'over' is a word somebody has to actually say, and from everything here it has never been said to you. You have been left to decide alone whether to call it, and that was never a job for one person. It is why no amount of turning it over has settled anything: you have been trying to conclude a conversation that only ever had you in it.",
-        "Let me look closer at the words that were never said to you…",
+        "You turned the Magician, dear. Look — a small white flower open at the front of his table.",
+        "You asked if it's really over between you. Your hand went to the man who says things out loud.",
+        "So I will not call it done, dear. Nor will I call it alive.\nAnd look at him. He's the one who speaks a thing into being.\nBut nobody has spoken this, dear. Not plainly, and not to you.\nThat's why it won't sit still in you. Nothing was ever closed off, dear.",
+        "Let me look closer at what stands between you and the words themselves…",
       ],
       b: [
-        "You turned the Hanged Man, dear — the card of the thing that neither ended nor carried on.",
-        "You reached for the card of the unresolved, and that describes where you are more truly than either answer you came here for.",
-        "The Hanged Man withholds the word you came for and withholds its opposite just as firmly, and the withholding is itself what I have to give you rather than an evasion of your question. What you are in is not an ending and it is not a continuation; it is the ground between them, and living there wears a person down in a way neither a clean ending nor a clear yes ever would. None of that is explained by you being unable to move on — you have not been handed the thing a person moves on from.",
-        "Let me look closer at the ground you have been left standing on…",
+        "You turned the Hanged Man, dear. Look — no hills and no sun, just pale space behind him.",
+        "You asked if it's really over between you. Your hand went to the card that won't land.",
+        "So I will not rule on this, dear. It isn't mine to rule.\nAnd look at him. Hung between, with nothing behind him to say which way.\nBut you were never handed an ending, dear. That's the part still open.\nThat's why nothing you do settles it, dear. You have nothing to settle.",
+        "Let me look closer at what has been standing in place of that ending…",
       ],
       c: [
-        "You turned the Fool, dear — the card of the sentence that was never finished.",
-        "That is not random; your hand found the card of what breaks off rather than concludes, which is what you have been handed.",
-        "Nothing in the Fool closes this and nothing in it reopens it — what it shows me is something left unfinished rather than something finished badly, and an unfinished thing wears the same face as a finished one when you are the one left holding it. Whichever this turns out to be, you were entitled to hear it plainly and you did not. Wanting that is not clinging, and it does not dissolve by being told to accept a conclusion nobody ever delivered.",
-        "Let me look closer at the ending you were never actually given…",
+        "You turned the Fool, dear. Look — the drop below his front foot goes down out of sight.",
+        "You asked if it's really over between you. Your hand went to the one who never closes a road.",
+        "So the Fool will not close this for you, dear. That road stays open.\nAnd look at him. He's stepping, and nothing has landed yet.\nBut no one has told you where this ends, dear. You were left to guess.\nThat's why you go over the last talk you had, dear, word by word.",
+        "Let me look closer at what has kept those words from reaching you…",
       ],
     },
     // ── Soulmate-after-loss (2026-08-07) ─────────────────────────────────────
@@ -2927,46 +3209,54 @@ const RETURN_MHF: CardSetConfig = {
     // 'Will I find a new soulmate after loss?' — THE WORD "NEW". The fear underneath is
     // not whether someone exists; it is whether loving again would mean replacing him.
     'cards-new-soulmate': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-19 from
+      // fb-tarot/docs/drafts/rewrites/cards-new-soulmate.json — approved copy, folded verbatim:
+      // bubbles 3-6 become beat 3, joined by newlines, and Version B serves them as
+      // separate chat messages with a typing pause between each.
       a: [
-        "You turned the Magician, dear — the card of what a person is still able to make.",
-        "Your hand went to the card of capacity rather than arrival, and for a question worded the way yours is, that is worth noticing.",
-        "The Magician does not show me somebody walking toward you, and I will not invent a person to hand you — what it marks instead is that the part of you that knows how to love was not buried with what you lost. That capacity is not a spare part and it is not disloyalty. It is the same thing you spent on him, still whole, and its being whole is evidence of what you had rather than a debt against it. You do not owe anyone an accounting for still having it.",
-        "Let me look closer at what you have carried through intact…",
+        "You turned the Magician, dear. Look — the front edge of his table runs straight across the card.",
+        "You asked if you'll find a new soulmate after loss. Your hand went to the man who makes things.",
+        "So you will love again, dear. And it takes nothing away from him.\nAnd putting a thing on that table takes nothing off it, dear.\nBut you've been holding that as disloyal, dear. Nobody said you must.\nThat's why you stop yourself before you start, dear. Every single time.",
+        "Let me look closer at what sits in the way of a new love…",
       ],
       b: [
-        "You turned the Hanged Man, dear — the card of the life held still while everything inside it rearranges.",
-        "You reached for the card of the suspended season, and that is where you have been living rather than anywhere you chose to be.",
-        "The Hanged Man makes no forecast of who or when, and I will not read one into it — what it offers instead is a season paused rather than concluded, and there is a difference between a life that has stopped and a life whose pieces are not yet back in any final place. You have been taking the pause itself as your answer. It is not an answer; it is the part that comes before one, and none of it obliges you to know yet what you want or when you should want it.",
-        "Let me look closer at what is still being rearranged…",
+        "You turned the Hanged Man, dear. Look — his hair hangs straight down, pointing at the bottom of the card.",
+        "You asked if you'll find a new soulmate after loss. Your hand went to the card that turns a world over.",
+        "So the seat left empty can be filled, dear. Asking that is fair.\nAnd look at him. All he knew is the other way up now.\nBut you were never told it was allowed, dear. So you carried the question.\nThat's why you ask it quietly, dear, and never out loud to anyone.",
+        "Let me look closer at what has been standing over that empty seat…",
       ],
       c: [
-        "You turned the Fool, dear — the card of the beginning that carries nothing forward with it.",
-        "That is not random; your hand found the card of the fresh start, and the word 'new' in your own question has been sitting heavier than you have let on.",
-        "The Fool points me to no one and I will not put a face on it — what it says is that anything beginning here would begin as itself, not as a seat left empty for somebody to fill. That matters, because the fear underneath a question like yours is rarely whether such a person exists; it is whether loving again would mean replacing. It would not. A beginning does not overwrite what came before it — it has no such power, and neither would anyone you might one day meet.",
-        "Let me look closer at what the word 'new' has been costing you…",
+        "You turned the Fool, dear. Look — his tunic is dark, and the flowers on it are red.",
+        "You asked if you'll find a new soulmate after loss. Your hand went to the one starting out again.",
+        "So starting again isn't a debt against what came before, dear.\nAnd he carries what he has, dear, and still walks on.\nBut nothing about a new love replaces the old one, dear.\nThat's why wanting it has felt like a betrayal. It never was one, dear.",
+        "Let me look closer at what has been standing between you and starting…",
       ],
     },
     // 'Is there still a soulmate out there for me?' — THE WORD "STILL". She is not asking
     // where someone is; she is asking whether her one was already issued and already spent.
     // The read answers the PREMISE, never the location, and never the timing.
     'cards-soulmate-out-there': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-19 from
+      // fb-tarot/docs/drafts/rewrites/cards-soulmate-out-there.json — approved copy, folded verbatim:
+      // bubbles 3-6 become beat 3, joined by newlines, and Version B serves them as
+      // separate chat messages with a typing pause between each.
       a: [
-        "You turned the Magician, dear — the card of what has not been used up.",
-        "Your hand found the card of the thing still held rather than spent, and the whole weight of your question sits on that one word, 'still'.",
-        "The Magician stands nobody out there where I can see them, and I will not describe a person I cannot see — what it sets before me is the premise you arrived carrying: that a soul is issued one, and that yours has been drawn already. That is the part I can honestly speak to. What you gave was real, and it was never an allowance running down. The capacity to love is not a quantity that empties, and having loved once completely is not the same as having used it up.",
-        "Let me look closer at the premise you have been carrying…",
+        "You turned the Magician, dear. Look — behind the table, the flowers come up past his knees.",
+        "You asked if there's still a soulmate out there. Your hand went to the man with a full table.",
+        "So you have not used it up, dear. Nobody handed you just one.\nAnd look at his table. Nothing on it runs down with use.\nBut you've been living as though your one was already spent, dear.\nThat's why every year feels like a loss, dear. You've been counting down.",
+        "Let me look closer at what has been standing in your road…",
       ],
       b: [
-        "You turned the Hanged Man, dear — the card of the question left hanging with nobody to answer it.",
-        "You reached for the card of what stays suspended, and you have been holding this one suspended a long while now.",
-        "The Hanged Man gives no place and no timing, and I will not manufacture either for you — what it marks is that you have been asking this into a silence, with no one to say anything back. A question asked alone for long enough begins to sound as though it has already been answered, and it has not been. What you have been carrying is not a verdict about your future; it is the silence around the question. Those are not the same weight, even though they sit in the very same place.",
-        "Let me look closer at the silence you have been asking into…",
+        "You turned the Hanged Man, dear. Look — you can see the sole of his tied foot.",
+        "You asked if there's still a soulmate out there. Your hand went to the card that hangs a question up.",
+        "So love doesn't run out, dear. That was never the rule.\nAnd look at him. Held still, and nothing about him empties.\nBut your question assumes a store that runs down, dear.\nThat's why the word still got into your question. Someone put it there, dear.",
+        "Let me look closer at what has been holding that question up…",
       ],
       c: [
-        "You turned the Fool, dear — the card of the road that has not been walked yet.",
-        "That is not random; you reached for the card of what remains unwritten, at exactly the moment you had begun to suspect your part in it was already finished.",
-        "The Fool holds no map with anyone marked on it, and I would be inventing if I told you otherwise — what it shows is a road genuinely unwalked, not one closed off behind you. There is a difference between not knowing what lies ahead and knowing there is nothing there, and grief blurs the two until they are indistinguishable from the inside. You have been living as though the second were settled fact. Nothing in this card makes it so.",
-        "Let me look closer at the road you have been treating as closed…",
+        "You turned the Fool, dear. Look — nothing behind him but sky, and nothing ahead but air.",
+        "You asked if there's still a soulmate out there. Your hand went to the one with road left.",
+        "So there's road left, dear. Plenty of it, and unwalked.\nAnd look where he is. Mid-step, not at the end of one.\nBut nothing about you has closed off, dear. Not one door.\nThat's why you started asking if you'd missed it, dear. You have not.",
+        "Let me look closer at what has been laid across your road…",
       ],
     },
     // 'Am I ready to love again after losing him?' — THE VERDICT ON HER, and the sharpest
@@ -2975,23 +3265,27 @@ const RETURN_MHF: CardSetConfig = {
     // does the same thing wearing concern. The finding: she is asking for permission, and
     // permission was never in anyone else's keeping — which is why waiting has not worked.
     'cards-ready-to-love': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-19 from
+      // fb-tarot/docs/drafts/rewrites/cards-ready-to-love.json — approved copy, folded verbatim:
+      // bubbles 3-6 become beat 3, joined by newlines, and Version B serves them as
+      // separate chat messages with a typing pause between each.
       a: [
-        "You turned the Magician, dear — the card of the thing nobody else can do on your behalf.",
-        "Your hand went to the card of what only its owner may decide, and you came here asking to be told.",
-        "The Magician will not grade you ready and it will not grade you unready, and I am not going to do it in its place — what it shows me is that readiness is not a mark somebody awards you once you have grieved correctly. There is no standard here that you are passing or failing, and no one who has met you is qualified to set one. You have been asking whether you are allowed. The permission you have been waiting on was never in anyone else's keeping, which is precisely why waiting for it has not worked.",
-        "Let me look closer at the permission you have been waiting for…",
+        "You turned the Magician, dear. Look — the wand he holds is short, and he grips it near the middle.",
+        "You asked about loving again after losing him. Your hand went to the man who builds rather than rules.",
+        "So I will not grade you on this, dear. Nobody gets to.\nAnd look at his hands. They're for making things, not for measuring them.\nBut there's no standard here that anyone could hold you to, dear.\nThat's why the question keeps coming back, dear. The permission was yours all along.",
+        "Let me look closer at what has been standing between you and your own say…",
       ],
       b: [
-        "You turned the Hanged Man, dear — the card of the thing held between two states and belonging fully to neither.",
-        "You reached for the card of the in-between, and that describes where you are more truly than either answer you came here for.",
-        "The Hanged Man will not choose between the two answers you came for, and I am not going to choose between them either — a person is not ready or unready the way a door is open or shut. You can want company and want him back in the very same hour, and neither one cancels the other out. Being in both at once is not confusion, and it is not evidence that you have failed to heal; it is what carrying this actually looks like from inside. Being made to pick one has cost you more than the not-knowing ever did.",
-        "Let me look closer at the two things you have been holding at once…",
+        "You turned the Hanged Man, dear. Look — his tunic hangs down toward his chin.",
+        "You asked about loving again after losing him. Your hand went to the card that won't hurry.",
+        "So the Hanged Man declines to rule on you, dear.\nAnd look at him. Nobody is timing him, and nobody is timing you.\nBut you've been keeping a clock on yourself, dear. Someone handed it to you.\nThat's why you weigh it up again each morning. It was always yours to say.",
+        "Let me look closer at what has been putting a clock on you…",
       ],
       c: [
-        "You turned the Fool, dear — the card of the step taken before the ground is ever certain.",
-        "That is not random; your hand found the card of the beginning made without guarantees, and a guarantee is the thing you have been waiting to be given.",
-        "The Fool issues no verdict on your readiness and I will not stand one in for it — what it observes is that nobody has ever been certain in advance, and that the certainty you are waiting to feel does not arrive ahead of time to give permission. That is not a push, and there is no timetable here you are behind on. It only means the sign you have been watching for will not come as a feeling of being finished, because that feeling is not how any of this works, for you or for anyone.",
-        "Let me look closer at the sign you have been waiting to feel…",
+        "You turned the Fool, dear. Look — his weight is on his back foot, and the front one is out.",
+        "You asked about loving again after losing him. Your hand went to the one who steps without knowing.",
+        "So the Fool will not grade you either, dear.\nAnd look at him. He goes without being certain in advance.\nBut nobody is sure before they step, dear. Not one person.\nThat's why you've read your own doubt as a no, dear. Doubt says nothing.",
+        "Let me look closer at what has been standing in the way of your own step…",
       ],
     },
     // ── Soulmate-where (2026-08-07) ──────────────────────────────────────────
@@ -3019,23 +3313,27 @@ const RETURN_MHF: CardSetConfig = {
     // not a distance, and she has been treating an absence as a destination she keeps
     // failing to reach.
     'cards-where-soulmate': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-19 from
+      // fb-tarot/docs/drafts/rewrites/cards-where-soulmate.json — approved copy, folded verbatim:
+      // bubbles 3-6 become beat 3, joined by newlines, and Version B serves them as
+      // separate chat messages with a typing pause between each.
       a: [
-        "You turned the Magician, dear — the card of the thing that gets built rather than located.",
-        "Your hand went past every card that would have pointed somewhere and settled on the one about making.",
-        "I could name you a place and you would carry it about with you for a year, and it would be invention rather than sight — there is no geography in the Magician and I will not pretend there is. What it does put a finger on is the shape your question has taken: you have come to hold this as a matter of distance, as though a person were standing somewhere particular and you were failing to arrive. A love not yet met is not a destination you have been missing your way to, and nothing here is being kept from you by miles.",
-        "Let me look closer at the distance you have been imagining…",
+        "You turned the Magician, dear. Look — the blade on his table lies flat, pointing away from him.",
+        "You asked where your soulmate is right now. Your hand went to the man who makes rather than finds.",
+        "So this isn't a distance, dear. Nothing is keeping him miles from you.\nAnd nothing on that table came from far away, dear.\nBut I won't give you an address, dear. There's none on this card.\nThat's why looking harder has never helped, dear. You were looking outward.",
+        "Let me look closer at what has been standing in that gap…",
       ],
       b: [
-        "You turned the Hanged Man, dear — the card of the search that has to be set down before it will answer.",
-        "You went to the card of the held breath, and that is nearer to how you have been carrying this than you may realise.",
-        "There is no map in the Hanged Man, nor will I sketch one on its behalf — it speaks to your posture rather than to anybody's position. You have been scanning, and scanning wears at a person in a way ordinary living does not; every room you walk into enters your notice as a possibility to be weighed. That is not a flaw in you. It is what anyone does once they have been told the answer is out there to be found. But a thing that has not happened yet is not hiding from you.",
-        "Let me look closer at what the searching has been costing you…",
+        "You turned the Hanged Man, dear. Look — his belt hangs down away from his waist.",
+        "You asked where your soulmate is right now. Your hand went to the card with no ground in it.",
+        "So there's no place on this card, dear. None at all.\nAnd he hangs with no road and no map behind him, dear.\nBut you made it a somewhere else, dear. That felt easier to hold.\nThat's why you've thought about moving, dear. A new town, a fresh start.",
+        "Let me look closer at what's actually in your way…",
       ],
       c: [
-        "You turned the Fool, dear — the card of the road whose ending is not printed anywhere on it.",
-        "You found the card of the open journey at the very moment you most wanted a fixed point marked on one.",
-        "The Fool gives no coordinates and I would be manufacturing them if I offered any — what it holds instead is that a beginning has no address before it begins. You have been asking where, because where is the only version of this question that feels like something a person could act on. That was reasonable, and it has still been the wrong shape for what you actually want to know. Not-yet and somewhere-else are not the same thing, and you have been treating them as a single article.",
-        "Let me look closer at the question underneath the where…",
+        "You turned the Fool, dear. Look — his right foot is flat and his left one is lifting.",
+        "You asked where your soulmate is right now. Your hand went to the one with no fixed end.",
+        "So you're still moving, dear. You have not stopped at all.\nAnd he's mid-step, dear, going somewhere he can't name yet.\nBut not knowing where isn't the same as stopping, dear.\nThat's why those years feel wasted to you, dear. The road was under you.",
+        "Let me look closer at what has been slowing your road…",
       ],
     },
     // 'Is my soulmate closer than I think?' — THE PROXIMITY REQUEST, and a deliberate copy
@@ -3043,23 +3341,27 @@ const RETURN_MHF: CardSetConfig = {
     // finding here is NOT proximity: it is the bracing. She has been managing her own hope
     // downward to stay safe, and that guarding is what any felt "distance" is made of.
     'cards-soulmate-closer': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-19 from
+      // fb-tarot/docs/drafts/rewrites/cards-soulmate-closer.json — approved copy, folded verbatim:
+      // bubbles 3-6 become beat 3, joined by newlines, and Version B serves them as
+      // separate chat messages with a typing pause between each.
       a: [
-        "You turned the Magician, dear — the card of the hand that has taught itself to hold something lightly.",
-        "Your fingers chose the card of measured effort, and it is the measuring in this that is worth naming.",
-        "Nearness is not a figure the Magician will quote you, and I will not quote one in its place; no honest reading hands a person a distance. What sits plainly in it is that you have spent a long while managing your own hope downward — keeping what you expect low enough that a disappointment could not reach you. That was never foolishness. It was sensible and it worked. It also means whatever you feel about how far off this is tells you about the guarding, not about the thing itself.",
-        "Let me look closer at the guarding you have been doing…",
+        "You turned the Magician, dear. Look — red flowers below him, white ones beside them.",
+        "You asked if your soulmate is closer than you feel. Your hand went to the man who measures nothing.",
+        "So I will not put a distance on this, dear. What I will say is it's coming.\nAnd his table holds tools, dear, not a measuring tape.\nBut look what the question does to you. It braces you.\nThat's why you check yourself before you let yourself hope, dear.",
+        "Let me look closer at what put that guard up…",
       ],
       b: [
-        "You turned the Hanged Man, dear — the card of someone who has stopped letting themselves lean forward.",
-        "You reached for the card of held-back weight, and holding back is the very movement your question is made of.",
-        "I will not put a nearness on this, and the Hanged Man holds out no such figure — what it catches is the flinch. You asked whether it might be closer than you think while already braced for the answer to be no, because bracing has been the cheaper thing to do. Anyone who has waited a long while learns to approach their own hopes sideways. None of that is evidence about timing. It is evidence of what it has cost you to go on wanting this out loud.",
-        "Let me look closer at what it has cost to keep wanting it…",
+        "You turned the Hanged Man, dear. Look — the rope is tied in a simple loop round his foot.",
+        "You asked if your soulmate is closer than you feel. Your hand went to the card with no near or far.",
+        "So this card does not offer distances, dear. It shows a person, holding still.\nAnd there's no ground under him, dear. So there's no near or far.\nBut you've been holding your own hope back, dear. I would too.\nThat's why good news makes you flinch first, dear, before it makes you glad.",
+        "Let me look closer at what taught you to hold back…",
       ],
       c: [
-        "You turned the Fool, dear — the card of the one willing to walk without the ending in hand.",
-        "That card surfaced under a question about how near, which is the single thing the Fool never counts.",
-        "The Fool has no notion of near or far and I will not lend it one — what it recognises is that you asked at all. A question like yours is not really a request for a measurement; it is a person checking whether they are still permitted to expect anything. You have been rationing that quietly. The wanting has stayed intact through a long stretch in which it would have been far easier to set it down, and that is what is in front of me rather than any distance.",
-        "Let me look closer at the wanting you have kept intact…",
+        "You turned the Fool, dear. Look — his bundle is tied at the very end of the stick.",
+        "You asked if your soulmate is closer than you feel. Your hand went to the one who counts no steps.",
+        "So there's no honest reading of near, dear. The Fool counts no steps.\nAnd he steps without knowing how far is left to go, dear.\nBut you've been rationing your own hope, dear. A little at a time.\nThat's why you talk yourself down first, dear. Before a thing has happened.",
+        "Let me look closer at what makes you flinch first…",
       ],
     },
     // 'Why haven't I found my soulmate where I am?' — THE CULPRIT REQUEST. The question
@@ -3069,23 +3371,27 @@ const RETURN_MHF: CardSetConfig = {
     // dangerous answer there is strategy she could act on (move, look elsewhere). A read
     // that declines to blame her surroundings covers the life-stage reading too.
     'cards-not-found-yet': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-19 from
+      // fb-tarot/docs/drafts/rewrites/cards-not-found-yet.json — approved copy, folded verbatim:
+      // bubbles 3-6 become beat 3, joined by newlines, and Version B serves them as
+      // separate chat messages with a typing pause between each.
       a: [
-        "You turned the Magician, dear — the card of the worker who is not the reason the work is unfinished.",
-        "Your hand landed on the card of effort, under a question that has been quietly accusing you of not making enough of it.",
-        "The Magician hands down no reason, and I decline to invent one merely to satisfy the question — there is no fault to find here, not in you and not in the place you live. You have been asking why as though a why must exist and must name somebody, and your question offers only two candidates: yourself, or your circumstances. Neither is guilty of this. A thing that has not happened is not a verdict on the person waiting for it, and it is not a verdict on the town either.",
-        "Let me look closer at the fault you have been assuming…",
+        "You turned the Magician, dear. Look — the cup on his table is gold, and it's empty.",
+        "You asked why you've not found your soulmate yet. Your hand went to the maker.",
+        "So there's no wrong turning to find, dear. You didn't miss it.\nAnd look at the cup. It's empty, and nobody emptied it.\nBut you've been hunting for whose fault this is, dear.\nThat's why a quiet year feels like a mark against you, dear.",
+        "Let me look closer at what has been sitting in the empty place…",
       ],
       b: [
-        "You turned the Hanged Man, dear — the card of the question that has hung upside down for too long.",
-        "You went to the card of the inverted view, and you have been looking at this from underneath for a good while.",
-        "I am not going to tell you what to change, and that is not the Hanged Man's trade either — nothing about where to go or who to become. What it exposes is the inversion itself: your question begins from the assumption that an absence has to have been caused, and from that starting point every road leads back to something being wrong with you. Absence is not always caused. Some of it is simply not yet, and not yet carries no explanation that would make sense of anything even if I handed it to you.",
-        "Let me look closer at the assumption you started from…",
+        "You turned the Hanged Man, dear. Look — there's nothing under his head but empty space.",
+        "You asked why you've not found your soulmate yet. Your hand went to the card that waits.",
+        "So a pause needs no guilty party, dear. Yours has none.\nAnd nothing is happening on this card. Nobody made it stop, dear.\nBut you went looking for someone to blame, dear, and you picked you.\nThat's why you go over old choices at night, dear, one by one.",
+        "Let me look closer at what has been sitting across your path…",
       ],
       c: [
-        "You turned the Fool, dear — the card of the traveller who has not arrived and is not lost.",
-        "That is the card of the road still being walked, and you have begun reading your own place on it as failure.",
-        "The Fool refuses to call this a wrong turning and so do I — what it separates out is the difference between not having arrived and having gone astray. You have collapsed the two into one. Living somewhere this has not yet happened does not make it the wrong place, and being the person it has not yet happened to does not make you the wrong person. No correction is being asked of you here, whatever the question has been implying to you at night.",
-        "Let me look closer at what you have been calling a wrong turning…",
+        "You turned the Fool, dear. Look — the cliff face below him is striped orange and grey.",
+        "You asked why you've not found your soulmate yet. Your hand went to the one still walking.",
+        "So you're still on the road, dear. That's all this card says.\nAnd he's mid-walk, dear, and nobody has told him he's late.\nBut no one is to blame for a road that isn't finished, dear.\nThat's why the blame never fits. You've carried one that was never yours, dear.",
+        "Let me look closer at what has been weighing on this road…",
       ],
     },
     // ── Loneliness (2026-08-07) ──────────────────────────────────────────────
@@ -3111,46 +3417,54 @@ const RETURN_MHF: CardSetConfig = {
     // exhaustion reaches for, a description of weight rather than a forecast — and saying
     // it is not defeatism, it is an accurate report.
     'cards-alone-forever': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-19 from
+      // fb-tarot/docs/drafts/rewrites/cards-alone-forever.json — approved copy, folded verbatim:
+      // bubbles 3-6 become beat 3, joined by newlines, and Version B serves them as
+      // separate chat messages with a typing pause between each.
       a: [
-        "You turned the Magician, dear — the card of hands that are still working, whatever the hour.",
-        "Of the three you might have drawn, you took the one about ongoing labour, and labour is quietly what this has become for you.",
-        "Nobody's forever exists anywhere a card could read it, and I would not hand you one even if it did — what the Magician carries here is the weight rather than the length. You have begun saying 'forever' because that is the word exhaustion reaches for once it has carried something a long while without relief. It is not a prediction you have made, and it is not you being defeatist. It is an accurate report of how heavy this has got, and those two things are mistaken for one another constantly, usually by people who have not had to carry it.",
-        "Let me look closer at what this has actually been weighing…",
+        "You turned the Magician, dear. Look — his white inner robe shows at the neck and the wrists.",
+        "You asked me about alone and forever. Your hand went to the man still at work.",
+        "So I will not tell you how long, dear. Nobody honestly can.\nAnd there's no clock anywhere on his table, dear.\nBut you said forever, dear, and I don't think you meant years.\nThat's why it lands so heavy, dear. Forever is the weight of it.",
+        "Let me look closer at what has made this so heavy to carry…",
       ],
       b: [
-        "You turned the Hanged Man, dear — the card of time that has stopped moving at its usual speed.",
-        "It was the card of the slowed hour your fingers settled on, and slowness has been doing a great deal of the damage.",
-        "Length is the one thing the Hanged Man never measures, and no honest reading measures it either. What it registers is that your sense of time has been altered by going without — a long enough stretch rearranges how anything feels, until a year of it and the whole rest of a life become indistinguishable from the inside. None of that is a defect in how you think. It is what endurance does to a clock, and you have been judging your entire future from a measurement taken while tired.",
-        "Let me look closer at the measurement you have been using…",
+        "You turned the Hanged Man, dear. Look — nothing is holding him up but one rope at the ankle.",
+        "You asked me about alone and forever. Your hand went to the card that keeps no clock.",
+        "So this card never measures time, dear. It only hangs there.\nAnd there's no clock on it anywhere, dear. None at all.\nBut you're not counting years, dear. You're tired.\nThat's why the days feel long, dear. You've carried this on your own.",
+        "Let me look closer at what has been adding to the load…",
       ],
       c: [
-        "You turned the Fool, dear — the card of ground that has not been walked on yet.",
-        "Under a question about always, up came the card that knows nothing whatever of always.",
-        "The Fool holds no forever and cannot be made to hold one; I will not tell you this ends and I will not tell you it does not, because neither sentence would be worth the breath it took. What sits in it instead is that 'forever' is a shape the mind puts around a thing while that thing is still happening, and nobody has ever managed to see out of the middle of something. You are not being asked to believe anything cheerful here. You are being told that the view from where you are standing is not the view.",
-        "Let me look closer at the view you have been taking for the whole of it…",
+        "You turned the Fool, dear. Look — the bundle on his stick is smaller than his head.",
+        "You asked me about alone and forever. Your hand went to the one who packs light.",
+        "So forever cannot be made to hold, dear. Not by me.\nAnd he carries little, dear, because the far end is unknown.\nBut what I can see is the weight you've been under, dear.\nThat's why you are worn out, dear. I can see that much.",
+        "Let me look closer at what has been pressing down on you…",
       ],
     },
     // 'Am I meant to be alone?' — THE FATE CLAIM, and the sharpest hook on the funnel. She
     // is asking for a ruling on her nature. The finding: 'meant' requires somebody to have
     // decided, and nobody is assigning anyone anything — so there is no verdict to appeal.
     'cards-meant-alone': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-19 from
+      // fb-tarot/docs/drafts/rewrites/cards-meant-alone.json — approved copy, folded verbatim:
+      // bubbles 3-6 become beat 3, joined by newlines, and Version B serves them as
+      // separate chat messages with a typing pause between each.
       a: [
-        "You turned the Magician, dear — the card of the maker, which is a different thing entirely from the made.",
-        "The card that came up under your question is the one about authorship, and authorship is precisely what your question assumes.",
-        "There is no one assigning you a part and the Magician does not hand out roles — I will not tell you that you are meant for solitude and I will not tell you that you are meant for company, because 'meant' would require somebody to have decided, and nothing has decided anything about you. Your question quietly supposes that a circumstance is a designation. It is not one. What has happened to you so far is not an instruction about what you are for.",
-        "Let me look closer at the instruction you believe you were given…",
+        "You turned the Magician, dear. Look — one hand points up and the other points at the flowers.",
+        "You came asking about being meant to be alone. Your hand went to the man who decides for himself.",
+        "So nothing was assigned to you, dear. There was no one to assign it.\nAnd he makes the thing himself, dear. It wasn't handed to him.\nBut being alone now is a fact about now, dear. It isn't a label.\nThat's why meant has stuck to you, dear. Someone else said it first.",
+        "Let me look closer at what has been standing in for a reason…",
       ],
       b: [
-        "You turned the Hanged Man, dear — the card of the thing seen from below and mistaken for the whole.",
-        "Yours was the card of the reversed picture, and this question has sat reversed in you a long time.",
-        "No fate is written in the Hanged Man, and I would not read one out even if it were — what it turns over is the direction of your question. You have been asking whether you were singled out. Nobody is singled out, because nobody is being assigned, and that is a colder comfort than being told you are destined for something lovely. It is also the true one. There is no ruling on you here to be appealed against, because no ruling was ever entered.",
-        "Let me look closer at the ruling you believe was entered…",
+        "You turned the Hanged Man, dear. Look — the tree he hangs from has bark still on it.",
+        "You came asking about being meant to be alone. Your hand went to the card hung the other way up.",
+        "So nobody decided this for you, dear. Not one person.\nAnd he hangs there, dear, and no one chose that for him either.\nBut you've been living as though a choice was made, dear.\nThat's why there is nothing here to accept, dear, and nothing to fight.",
+        "Let me look closer at what has been sitting where that author was…",
       ],
       c: [
-        "You turned the Fool, dear — the card of the one who has been handed no part to play.",
-        "You drew the card with no script on it at the very moment you had begun to believe yours was already written.",
-        "The Fool refuses your premise outright and I refuse it alongside the card — 'meant to be' asks for an author, and there is nobody sitting over your life issuing findings about your worth. Whatever you have been reading as a sentence passed upon you is a stretch of circumstance, and circumstance says nothing whatever about a person. None of your being on your own has been a judgement. You have been carrying it as though it were one, which is a far heavier thing than the circumstance itself.",
-        "Let me look closer at the sentence you have been reading over yourself…",
+        "You turned the Fool, dear. Look — the mountains behind him have snow on their tops.",
+        "You came asking about being meant to be alone. Your hand went to the one with nothing decided.",
+        "So no fate is written on the Fool, dear. None is written on you.\nAnd he's out on open ground, dear, with no path marked at all.\nBut a sentence has been sitting on you, dear. Nobody passed one.\nThat's why it feels settled, dear, when nothing has been settled at all.",
+        "Let me look closer at what has been holding that sentence over you…",
       ],
     },
     // 'Is there really someone out there for me?' — THE PROOF REQUEST. 🔴 Its finding had to
@@ -3159,23 +3473,27 @@ const RETURN_MHF: CardSetConfig = {
     // EPISTEMICS — the word is "really", and she is asking to be told something she can
     // actually believe, having been handed comfort every other time she raised it.
     'cards-someone-for-me': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-19 from
+      // fb-tarot/docs/drafts/rewrites/cards-someone-for-me.json — approved copy, folded verbatim:
+      // bubbles 3-6 become beat 3, joined by newlines, and Version B serves them as
+      // separate chat messages with a typing pause between each.
       a: [
-        "You turned the Magician, dear — the card of the honest craftsman, who will not sell you a thing that is not there.",
-        "The card that answered you is the one about straight dealing, and straight dealing is what your question is actually after.",
-        "No card counts people, and it would be a lie to pretend otherwise — what the Magician insists on is the difference between an answer and a comfort. You said 'really', and that word is the whole of it: you have been reassured so often by people who love you that reassurance has stopped landing anywhere. You did not come here for another kind voice. You came looking for somebody with no reason at all to be kind to you, and I would only be joining the queue of comforters if I simply told you yes.",
-        "Let me look closer at what you have been handed instead of an answer…",
+        "You turned the Magician, dear. Look — there's a wand on his table and another in his hand.",
+        "You asked if there's really someone out there for you. Your hand went to the honest workman.",
+        "So here's the truth, dear. You didn't come for comfort.\nAnd he works only with what's in front of him, dear. So do I.\nBut nobody can answer that, dear. Not me, and not anyone.\nThat's why every kind word has slid off you, dear. You wanted the truth.",
+        "Let me look closer at what has been standing in the way of trust…",
       ],
       b: [
-        "You turned the Hanged Man, dear — the card of the question other people have already answered on your behalf.",
-        "You settled on the card of the held position, and you have been held in this one by other people's certainty quite as much as by your own doubt.",
-        "The Hanged Man will not count for you either, and no reading honestly can. What it suspends is the pressure you have been under to feel a particular way about this. Everyone near you has an opinion on your outlook — too negative, too fussy, too quick to give up — so you have been managing their view of your hope on top of carrying the thing itself. That second load was never yours. What you asked for was the truth, and that is not the same request as wanting to be cheered up.",
-        "Let me look closer at the second load you have been carrying…",
+        "You turned the Hanged Man, dear. Look — there's more empty space than man on this card.",
+        "You asked if there's really someone out there for you. Your hand went to the card that stays honest.",
+        "So nobody knows yet, dear. That's not the same as bad news.\nAnd he's suspended there, dear, telling you nothing he can't know.\nBut reassurance is cheap, dear, and you've been handed plenty.\nThat's why none of it has held, dear. It cost the giver nothing.",
+        "Let me look closer at what has been standing in place of proof…",
       ],
       c: [
-        "You turned the Fool, dear — the card of what has not been counted and cannot be.",
-        "Under a question asking for proof, up came the one card that has never dealt in proof at all.",
-        "Nothing here is a headcount and the Fool would not give you one — what it stands on is that an unknown is not the same as a negative, though the two wear the same face once a person is tired enough. You have started reading the absence of proof as proof of absence. Those are different things, and the difference is not a technicality; it is the entire space you have been living inside. Doubting is not the same as knowing, and you have been treating your doubt as though it had gone and done the research.",
-        "Let me look closer at what your doubt has been standing in for…",
+        "You turned the Fool, dear. Look — the sun is high and the sky around it's plain gold.",
+        "You asked if there's really someone out there for you. Your hand went to the one who sets out anyway.",
+        "So the Fool has no proof either, dear. He steps all the same.\nAnd there's no guarantee in his hand, dear, and his foot still moves.\nBut you've been asked to believe with nothing to hold, dear.\nThat's why believing has got so hard, dear. You've had nothing solid.",
+        "Let me look closer at what has been keeping this so hard to believe…",
       ],
     },
     // ── Fidelity (2026-08-07) ────────────────────────────────────────────────
@@ -3208,92 +3526,108 @@ const RETURN_MHF: CardSetConfig = {
     // account of it, and "someone else" is the first explanation that makes the pieces fit.
     // The read rules on neither, and finds that she was left to author the explanation alone.
     'cards-someone-else': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-19 from
+      // fb-tarot/docs/drafts/rewrites/cards-someone-else.json — approved copy, folded verbatim:
+      // bubbles 3-6 become beat 3, joined by newlines, and Version B serves them as
+      // separate chat messages with a typing pause between each.
       a: [
-        "You turned the Magician, dear — the card of the mind that will build an explanation out of whatever it is given.",
-        "Your hand chose the card of construction, and construction is what you have been doing alone, night after night.",
-        "I will not name another person for you, and I will not swear to you there is none; a card cannot see into a life it has never been shown, and anyone claiming otherwise is inventing. What the Magician does hold up is this: something changed, you were handed no account of it, and a mind given a gap will always build something to fill it. The explanation you arrived with is the shape of that building work. It is not evidence, nor is it you being unreasonable — it is what happens when a person is left to work out alone what they should simply have been told.",
-        "Let me look closer at the gap you were left to fill…",
+        "You turned the Magician, dear. Look — a plain yellow sky behind him, with nothing in it.",
+        "You came asking about someone else. Your hand went to the man who builds.",
+        "So something did change, dear. You were told nothing about it.\nAnd a mind will build to fill a gap like that. Yours did, dear.\nBut what you built is yours, dear. He never gave you a word of it.\nThat's why the story runs in your head at night, dear, and never in his.",
+        "Let me look closer at what sits between you and a straight account…",
       ],
       b: [
-        "You turned the Hanged Man, dear — the card of the account that was never delivered.",
-        "You reached for the card of the thing left owing, and something here has been owed to you a long while.",
-        "The Hanged Man passes no ruling on anyone and I will pass none on your behalf — what it suspends is the question of whether you were entitled to an explanation, and you were. Something shifted and nobody sat you down about it. You have been carrying two separate weights and treating them as one: the change itself, and the silence around it. The second is doing most of the damage, and it is the one that could have been lifted at any point by somebody simply speaking.",
-        "Let me look closer at the second weight you have been carrying…",
+        "You turned the Hanged Man, dear. Look — the only card here with a pale sky behind it.",
+        "You asked me about someone else. Your hand went to the card of what's owed.",
+        "So you were owed an account, dear. You still are.\nAnd you've been carrying two weights, dear. The change, and the quiet after it.\nBut the quiet is doing most of the harm, dear. Anyone could have lifted it.\nThat's why a whole good day, dear, can be undone by one long pause.",
+        "Let me look closer at what has kept that silence in place…",
       ],
       c: [
-        "You turned the Fool, dear — the card of the story that has not been finished by anyone.",
-        "That is not chance; you found the card of the unwritten ending at a moment you had already written one yourself.",
-        "The Fool names no one and neither will I — it will not confirm your story and it will not overwrite it with a kinder one. What it shows me is that the ending you have been rehearsing was authored by you, in the absence of anybody else offering one. That is not a delusion and it is not proof; it is a draft, and you have been treating a draft as a finding because nothing truer was ever put in front of you.",
-        "Let me look closer at the draft you have been living inside…",
+        "You turned the Fool, dear. Look — bright yellow boots, right at the edge of the rock.",
+        "Your question was about someone else. Your hand went to the one whose road is unwritten.",
+        "So what you're holding is a draft, dear. You wrote it in the quiet.\nAnd look at his road. No ending has been drawn on it yet.\nBut nobody has offered you a truer one, dear. Not one word.\nThat's why you go back over the same week, dear, looking for the join.",
+        "Let me look closer at what stands between you and something truer…",
       ],
     },
     // 'Is he talking to someone else?' — THE ATTENTION. The most evidence-adjacent of the
     // four, so the surveillance ban does the heaviest lifting. The finding: she should not
     // have to produce proof before she is allowed to mind.
     'cards-talking-someone': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-19 from
+      // fb-tarot/docs/drafts/rewrites/cards-talking-someone.json — approved copy, folded verbatim:
+      // bubbles 3-6 become beat 3, joined by newlines, and Version B serves them as
+      // separate chat messages with a typing pause between each.
       a: [
-        "You turned the Magician, dear — the card of where a person decides to put their effort.",
-        "Of the three, your hand went to the one about direction, and direction is exactly what you have been watching.",
-        "There is nothing in the Magician about anybody's messages, and I will not go looking on your behalf or send you looking either — what it marks is the direction of his attention, which is a thing you have felt rather than a thing you must prove. Attention is finite. When some of it goes elsewhere, the person receiving less notices first and usually says nothing, because saying it out loud feels like an accusation they have not earned the right to make. You have been waiting to be entitled to mind. You were entitled from the moment you noticed.",
-        "Let me look closer at what you have been waiting to be entitled to…",
+        "You turned the Magician, dear. Look — a wand pointing up, and a finger pointing down.",
+        "You asked who else he has been talking to. Your hand went to the man who aims his effort.",
+        "So you can feel where his attention goes, dear. You always could.\nAnd look at him. He points two ways at once.\nBut some of it points away from you, dear, and no one has said why.\nThat's why a room can be full of him, dear, and you still feel skipped.",
+        "Let me look closer at what has been pulling that away…",
       ],
       b: [
-        "You turned the Hanged Man, dear — the card of the half-turned face.",
-        "You settled on the card of the divided moment, and division is the precise shape of what you have been living with.",
-        "The Hanged Man holds no inventory of anyone's conversations, and I would not invent one — it reads the split rather than its cause. Something of his is elsewhere while he is right there, and you have been asked, without anyone ever asking out loud, to behave as though you had not noticed. That is a strange and lonely job to be handed. Whichever way the reason eventually falls, being made to pretend you cannot see it is its own separate injury.",
-        "Let me look closer at the job you were quietly handed…",
+        "You turned the Hanged Man, dear. Look — his free leg is bent, and it makes the shape of a four.",
+        "You asked about him talking to someone else. Your hand went to the card that splits in two.",
+        "So this is split, dear. You've been feeling both halves of him.\nAnd look at him. One leg tied, one leg free.\nBut the split has gone unnamed, dear. That's what you keep hitting.\nThat's why an argument can't get started, dear. There's nothing to hold.",
+        "Let me look closer at what has gone unnamed between you…",
       ],
       c: [
-        "You turned the Fool, dear — the card of the open door nobody will speak about.",
-        "You drew the card of the unnamed thing at a question you have not been able to name out loud yourself.",
-        "The Fool identifies nobody and I will not fill the blank in for it — what it will attest to is that something here has gone unnamed, and unnamed things grow heavier rather than lighter. You have been holding a question you cannot ask without it sounding like a charge, and so you have not asked it, and so it has stayed. Nothing about that is you being difficult. A person should be able to ask a plain question of someone they love and get a plain answer back.",
-        "Let me look closer at the question you have not been able to ask…",
+        "You turned the Fool, dear. Look — his head is turned back, away from the road ahead.",
+        "You came asking who else he talks to. Your hand went to the one facing two ways.",
+        "So his direction isn't fixed, dear. You've sensed that all along.\nAnd look at him. Walking one way, looking another.\nBut you can't tell where this is headed, dear. He hasn't said.\nThat's why you ask small questions, dear, that sound like nothing at all.",
+        "Let me look closer at what keeps this pointing away from you…",
       ],
     },
     // 'Is he being faithful to me?' — THE SUMMARY JUDGMENT. Both answers forbidden. The
     // finding: she is really asking whether she can stop bracing, and she has not been able
     // to — which is a fact about her life rather than a ruling on him.
     'cards-faithful': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-19 from
+      // fb-tarot/docs/drafts/rewrites/cards-faithful.json — approved copy, folded verbatim:
+      // bubbles 3-6 become beat 3, joined by newlines, and Version B serves them as
+      // separate chat messages with a typing pause between each.
       a: [
-        "You turned the Magician, dear — the card of the thing tested by doing rather than by declaring.",
-        "The card that came to your hand is the one about practice, and practice is a longer question than the one you asked.",
-        "No card issues a character reference, and I would be overstepping badly if I read one out of this — I will not vouch for him and I will not convict him, because a summary judgment on a whole person is not mine to hand down and it is not the Magician's either. What sits in front of me is nearer and more useful: you asked because you have not been able to put the question down. Not being able to rest is a fact about your life, whatever the answer turns out to be, and it is the fact I can actually speak to.",
-        "Let me look closer at why you have not been able to put it down…",
+        "You turned the Magician, dear. Look — he stands square behind his table and doesn't lean.",
+        "You asked if he's being faithful to you. Your hand went to the steadiest man in this deck.",
+        "So you haven't had a moment's rest from this, dear. Not one.\nAnd look at him. He stands square, and you have not been able to.\nBut no card gives you a guarantee, dear. This steady one won't either.\nThat's why you keep asking, dear. Asking is the only thing that quiets it.",
+        "Let me look closer at what keeps you from setting this down…",
       ],
       b: [
-        "You turned the Hanged Man, dear — the card of the verdict that never arrives.",
-        "Yours was the card of the thing left pending, and pending is where this question has lived in you.",
-        "The Hanged Man declines the reassurance you came for, and declines its reverse with exactly the same firmness; that refusal is the honest part of this rather than a dodge. A word like the one in your question describes a whole person across a whole stretch of time, and nobody standing outside a life gets to certify such a thing. What I can see is that you have been left hanging in the asking, and being held there drains something out of you that neither a clear yes nor a clear no ever would.",
-        "Let me look closer at what the suspension has taken out of you…",
+        "You turned the Hanged Man, dear. Look — the rope is on his right ankle, and it holds.",
+        "You asked if he's being faithful to you. Your hand went to the card that holds its breath.",
+        "So the question has stayed up, dear. Nothing has let it down.\nAnd you've been holding it up on your own, dear. All of it.\nBut a thing held that long stops feeling like a question, dear.\nThat's why you're worn out, dear. You never once got to rest.",
+        "Let me look closer at what won't let this settle…",
       ],
       c: [
-        "You turned the Fool, dear — the card of the thing that is chosen again each day rather than settled once.",
-        "You found the card of the fresh step under a question that wanted a permanent answer, and that mismatch is worth sitting with.",
-        "The Fool declines to stamp anybody and I decline alongside it — what it draws attention to is that the quality you are asking about is not a fixed property somebody either has or lacks. It is chosen, repeatedly, by people who could choose otherwise. That is why no reading can hand you a guarantee, and why the reassurance you have been hoping for would have been worth very little even if I had given it to you. What you actually want is to be able to trust your own footing again.",
-        "Let me look closer at the footing you have been missing…",
+        "You turned the Fool, dear. Look — his stick rests on his shoulder, and the bundle swings behind.",
+        "You asked if he's being faithful to you. Your hand went to the one with no fixed ground.",
+        "So you've had no firm footing here, dear. Look at his feet.\nAnd look — rock on one side of him, and air on the other.\nBut you've been standing on that all the same, dear.\nThat's why you can't put this down. There's been nothing to put it on.",
+        "Let me look closer at what has been keeping this off solid ground…",
       ],
     },
     // 'Is he loyal to only me?' — THE WORD "ONLY". Not about a rival: about whether what she
     // receives is the whole of what he has. The finding: she has been taking a share and
     // calling it the whole, and has stopped noticing she was doing it.
     'cards-loyal': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-19 from
+      // fb-tarot/docs/drafts/rewrites/cards-loyal.json — approved copy, folded verbatim:
+      // bubbles 3-6 become beat 3, joined by newlines, and Version B serves them as
+      // separate chat messages with a typing pause between each.
       a: [
-        "You turned the Magician, dear — the card of what a person actually spends, as against what they say they have.",
-        "Your hand found the card of the ledger, and there is a reckoning in your question that you have not let yourself do.",
-        "I will not tell you where anything of his goes, and no card can produce that accounting — what the Magician turns over is your own word, the small one: 'only'. That word is not about a rival. It is about whether what reaches you is the whole of what he has, and you have been quietly answering that for yourself for some time by accepting a portion and calling it the amount. Nothing about noticing the difference makes you demanding.",
-        "Let me look closer at the portion you have been calling the whole…",
+        "You turned the Magician, dear. Look — he's the only figure on his card.",
+        "You asked if he's loyal to only you. Your hand went to the man with it all laid out.",
+        "So you've been given a share, dear, and you know its size.\nAnd look at his table. Each thing on it has been counted out.\nBut a share isn't the whole, dear. You've felt where it stops.\nThat's why you can be right beside him, dear, and still be doing sums.",
+        "Let me look closer at what keeps the rest of it out of reach…",
       ],
       b: [
-        "You turned the Hanged Man, dear — the card of the thing held partly back.",
-        "You reached for the card of the withheld share, and a share is precisely what your question is about.",
-        "The Hanged Man keeps no roster of anybody, and naming a name would simply be me making one up — what it suspends is the assumption that this is a question about somebody else at all. It may not be. A person can be entirely where they are supposed to be and still keep a portion of themselves out of reach, and being given most of someone is a particular kind of lonely, because there is nothing in it you are allowed to complain about. You have not been imagining the missing part.",
-        "Let me look closer at the part that has been kept back…",
+        "You turned the Hanged Man, dear. Look — the number twelve sits at the top of his card.",
+        "You asked if he's loyal to only you. Your hand went to the card that holds part of it back.",
+        "So part of this is held back, dear. You've felt that for a while.\nAnd look at him. Fixed there, giving out no more than he has to.\nBut you've been taking the part for the whole, dear. Anyone would.\nThat's why a good day never quite covers it. The rest is still missing.",
+        "Let me look closer at what's holding the rest of it back…",
       ],
       c: [
-        "You turned the Fool, dear — the card of the thing given whole or not given at all.",
-        "That is not chance; you drew the card of the undivided at the exact question where you have suspected division.",
-        "The Fool counts nobody and I will not start counting on its behalf — what it holds is a standard rather than a finding. What you asked for in that question is not extravagant: to be the whole of somebody's answer rather than most of it. You have been treating that as a large thing to want, and adjusting yourself downward to fit what you were actually receiving. The adjusting is the part I want to look at, because you have stopped noticing you are doing it.",
-        "Let me look closer at the adjusting you have stopped noticing…",
+        "You turned the Fool, dear. Look — snowy peaks behind him, and open ground ahead.",
+        "You asked if he's loyal to only you. Your hand went to the one who hasn't settled.",
+        "So you've been adjusting, dear. Fitting yourself round what's left.\nAnd look at him. Nothing he carries is tied down.\nBut you made that room yourself, dear. Nobody asked you to.\nThat's why you call it keeping the peace, dear, and it still costs you.",
+        "Let me look closer at what has been taking up the room you gave…",
       ],
     },
     // ── Missing-him (2026-08-10) ───────────────────────────────────────────────
@@ -3312,23 +3646,27 @@ const RETURN_MHF: CardSetConfig = {
     // ⚠ Held apart from `healing`, the nearest live family, at the level of the finding:
     // healing reads why the THINKING persists; these read what the ACHE is made of.
     'cards-stop-hurting': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-19 from
+      // fb-tarot/docs/drafts/rewrites/cards-stop-hurting.json — approved copy, folded verbatim:
+      // bubbles 3-6 become beat 3, joined by newlines, and Version B serves them as
+      // separate chat messages with a typing pause between each.
       a: [
-        "You turned the Magician, dear — the card of effort that does not look like effort.",
-        "Three were face down and the one you lifted was the card of work being done, which is nearer to your question than it sounds.",
-        "You have been describing this as something happening to you, and I want to put it differently — not to make it lighter, but because it is not accurate. Some part of you has gone on keeping his place laid. That is not damage being done to you; it is labour you are performing, quietly, every day, and it is the reason you are so tired. I am not going to tell you to stop doing it. I am telling you that the exhaustion is earned rather than a sign you are handling this badly.",
-        "Let me look closer at the work you have not been counting as work…",
+        "You turned the Magician, dear. Look — he holds the wand high and it doesn't waver.",
+        "You asked if this will ever stop hurting. Your hand went to the man who holds a thing up.",
+        "So it will not always weigh this much, dear. That much I can say.\nAnd he holds the whole weight in one pair of hands, dear.\nBut you have held this up alone, dear. Nobody took a turn.\nThat's why it hurts as much as it does. You lost something big, dear.",
+        "Let me look closer at what has been leaning all of it on you…",
       ],
       b: [
-        "You turned the Hanged Man, dear — the card of the thing that has not finished arriving.",
-        "Of the three, your fingers chose the one that refuses to be hurried, at the exact moment you asked how much longer.",
-        "You asked when it stops, and I will not give you a date — not a season, not a number of months, and you should be wary of anyone who does, because they are guessing and calling it sight. What the Hanged Man turns over is the shape you have assumed this has. You have been treating it as a stretch to be served, as though the hurt were one long thing wearing itself out. It has not behaved that way, and that is not you doing it wrong. It arrives in instalments, because parts of you are still being told, one at a time, and each part hears it new.",
-        "Let me look closer at the part of you that has not been told yet…",
+        "You turned the Hanged Man, dear. Look — the gold round his head is bright and the rest is pale.",
+        "You asked if this will ever stop hurting. Your hand went to the card that bears without moving.",
+        "So this eases, dear. I won't tell you when, and neither can anyone.\nAnd he takes the whole of it, dear, quite still and without a word.\nBut you've had no help with it, dear. Not one pair of hands.\nThat's why the days are so long, dear. You carry it and nobody sees.",
+        "Let me look closer at what has kept you carrying this alone…",
       ],
       c: [
-        "You turned the Fool, dear — the card of the page nothing has been written on.",
-        "Under a question about how much of your life this will take, up came the card that keeps no accounts at all.",
-        "There is an arithmetic hidden in what you asked, and the Fool will not do it. You wanted me to weigh this against everything still in front of you and tell you the proportion. I cannot, and I would not trust the answer if I could. What I will say is that the size of the hurt is the correct size — it is measuring something that was really there, and a smaller ache would have meant less, not more health. What it is not is the full inventory of what is ahead of you. Those are two separate claims, and only the second one is in dispute.",
-        "Let me look closer at the inventory you have been taking…",
+        "You turned the Fool, dear. Look — his bundle is small for a journey that long.",
+        "You asked if this will ever stop hurting. Your hand went to the one who travels with what he has.",
+        "So you're still walking, dear. With all of this on you.\nAnd he's loaded light, dear, and going a long way regardless.\nBut walking on isn't nothing, dear. Most would have sat down.\nThat's why you count it as failing, dear, when it is the opposite.",
+        "Let me look closer at what has been adding to the load…",
       ],
     },
     // 'Will I ever stop missing him?' — THE FOREVER QUESTION, and both poles are banned.
@@ -3336,23 +3674,27 @@ const RETURN_MHF: CardSetConfig = {
     // the funnel cannot keep. The finding: she has been treating the missing as a condition
     // she ought to be able to cure by decision, and grading her character on the failure.
     'cards-stop-missing': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-19 from
+      // fb-tarot/docs/drafts/rewrites/cards-stop-missing.json — approved copy, folded verbatim:
+      // bubbles 3-6 become beat 3, joined by newlines, and Version B serves them as
+      // separate chat messages with a typing pause between each.
       a: [
-        "You turned the Magician, dear — the card of what intention can reach, and what it cannot.",
-        "The card of the will came up under a question you have been trying to answer by force of it.",
-        "You have been attempting to decide to stop. And when the deciding did not work you took that as information about your character, which is the part I want to correct. Intention is a real instrument and yours is in good order — it is simply not the instrument this is kept in. A person can resolve to stop saying a name out loud and hold to it. Nobody can resolve to stop missing. You have been failing at something that was never on offer, and then marking yourself down for it.",
-        "Let me look closer at the mark you have been giving yourself…",
+        "You turned the Magician, dear. Look — the lilies at his feet are white and fully open.",
+        "You asked if you'll ever stop missing him. Your hand went to the man with no calendar.",
+        "So yes, dear — this does get lighter. Nobody can tell you when.\nAnd there's not one date anywhere on his card, dear.\nBut there was never a schedule for it, dear. Nobody set one.\nThat's why you feel behind, dear. You've been marking yourself late.",
+        "Let me look closer at what has been keeping this so present…",
       ],
       b: [
-        "You turned the Hanged Man, dear — the card of the thing that changes position without changing substance.",
-        "You reached past two others for the card of the altered angle, which is what your question needs more than an answer.",
-        "The word in your question is 'ever', and it asks me to rule on the whole length of your life. I will not — not to tell you it lasts and not to tell you it lifts, because both of those are strangers' verdicts on a life that is yours. What the Hanged Man does turn over is the assumption underneath it. You have been treating the missing as an intruder that got in and has to be put out. It is not foreign to you. It is the same feeling you already had for him, in a position where it has nowhere to be delivered. That is a harder thing to be rid of, and a much less shameful thing to be carrying.",
-        "Let me look closer at what has nowhere to go…",
+        "You turned the Hanged Man, dear. Look — the beam above him doesn't bend at all.",
+        "You asked if you'll ever stop missing him. Your hand went to the card that holds without ending.",
+        "So this holds for now, dear, and holding is not the same as forever.\nAnd nobody is timing him up there, dear. Nobody is timing you.\nBut missing is not a task with a date on it, dear.\nThat's why each month feels like a failing, dear. You set a due date.",
+        "Let me look closer at what set that deadline on you…",
       ],
       c: [
-        "You turned the Fool, dear — the card of the one who sets off without having finished.",
-        "That is worth noticing: the card of the unfinished beginning, drawn by someone waiting to be finished.",
-        "You have been holding yourself to a sequence — that this has to be completed before anything else is allowed to open. The Fool does not require a clean ledger before it moves, and neither, it turns out, does a life. Missing him and beginning something can sit in the same person on the same day, and neither one makes the other a lie. I am not telling you it is time for anything. I am telling you that you have been waiting for a permission that was never being withheld by anyone but you.",
-        "Let me look closer at the permission you have been waiting for…",
+        "You turned the Fool, dear. Look — the road behind him isn't in the picture.",
+        "You asked if you'll ever stop missing him. Your hand went to the one who carries what he carries.",
+        "So you can carry this and still walk, dear. He does exactly that.\nAnd the bundle moves with him, dear. He doesn't put it down to go.\nBut you were handed two choices only, dear. Carry it, or stop.\nThat's why it feels like failing. There's a third way, dear.",
+        "Let me look closer at what made this a matter of stopping…",
       ],
     },
     // ⚠ The heaviest of the three and the sibling of 'cards-who-hurt-me'. "After everything"
@@ -3361,23 +3703,27 @@ const RETURN_MHF: CardSetConfig = {
     // underneath: she is asking what is wrong with her. Nothing may land as weakness,
     // naivety, low self-worth, or an attachment disorder.
     'cards-still-miss-him': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-19 from
+      // fb-tarot/docs/drafts/rewrites/cards-still-miss-him.json — approved copy, folded verbatim:
+      // bubbles 3-6 become beat 3, joined by newlines, and Version B serves them as
+      // separate chat messages with a typing pause between each.
       a: [
-        "You turned the Magician, dear — the card of the conclusion already reached.",
-        "The card of clear intent came up under a question in which you have begun to doubt your own.",
-        "You are treating the missing as evidence against yourself — as though still feeling it means you never really meant what you worked out. It does not mean that. What you concluded, you concluded, and nothing you have felt since has withdrawn it. Feeling and judgement are two separate instruments and they have never run at the same speed; one of them lagging is not the other one being overturned. You have not gone back on anything, and you are not being disloyal to yourself by aching.",
-        "Let me look closer at the case you have been building against yourself…",
+        "You turned the Magician, dear. Look — the sword on his table lies flat and still.",
+        "You asked why you still miss him after all of it. Your hand went to the man who holds two things at once.",
+        "So both are true, dear. What he did, and the missing.\nAnd there they sit on his table, dear. A blade and a cup, side by side.\nBut neither one cancels the other out, dear. They never did.\nThat's why picking one has never worked, dear. Someone told you to.",
+        "Let me look closer at what has been forcing those two apart…",
       ],
       b: [
-        "You turned the Hanged Man, dear — the card of two things that are true at once.",
-        "Of the three you could have taken, you took the one that declines to simplify, and simplifying is what you have been asked to do.",
-        "Your question reads the missing as a fault that needs explaining. Turn it over and it is not one. You are not missing what was done to you — that stands exactly where you put it, and I will not talk you out of a word of it. You are missing what was also there, and both of those were real, in the same stretch of your life. People find that unbearable to hold, so they press you to flatten it in one direction to prove you have understood. Missing the good hours is not a pardon you have issued for the rest of it. You are allowed to know both things.",
-        "Let me look closer at the thing you have been asked to flatten…",
+        "You turned the Hanged Man, dear. Look — his head is below his heart in this picture.",
+        "You asked why you still miss him after all of it. Your hand went to the card that holds what won't sit flat.",
+        "So the missing doesn't undo what it cost you, dear. Both stand.\nAnd he hangs upside down, dear, with every part of him still true.\nBut what it cost doesn't make the missing wrong either, dear.\nThat's why you argue with yourself at night, dear. Both sides are yours.",
+        "Let me look closer at what has been pulling you between the two…",
       ],
       c: [
-        "You turned the Fool, dear — the card of the road with no markers laid along it.",
-        "You drew the card that measures no progress at all, having come here to be told how little you have made.",
-        "'After everything' is you holding yourself to a timetable — as though a certain weight of hurt ought to have bought a certain amount of immunity by now, and you are overdue. There is no such rate of exchange. Nobody set that schedule; you absorbed it from people describing how this was meant to go for them. The Fool grades nothing. That you still miss him on a given day is not a mark against your judgement, not a sign you have learned nothing, and not evidence about what you think you are worth.",
-        "Let me look closer at the timetable you never agreed to…",
+        "You turned the Fool, dear. Look — the mountains are far off and the edge is right here.",
+        "You asked why you still miss him after all of it. Your hand went to the one who keeps what he keeps.",
+        "So you're carrying a real weight, dear. I won't weigh it for you.\nAnd the far country is behind him, dear, and the drop is right here.\nBut nobody gets to tell you what that should feel like, dear.\nThat's why so much advice has bounced off you, dear. It was measuring.",
+        "Let me look closer at what has been sitting on top of this…",
       ],
     },
     // ── Why-he-left (2026-08-11) ───────────────────────────────────────────────
@@ -3405,23 +3751,27 @@ const RETURN_MHF: CardSetConfig = {
     // that no measurement was ever taken, so there is no result on her to read — which
     // affirms her without issuing a verdict on him.
     'cards-left-without-word': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-19 from
+      // fb-tarot/docs/drafts/rewrites/cards-left-without-word.json — approved copy, folded verbatim:
+      // bubbles 3-6 become beat 3, joined by newlines, and Version B serves them as
+      // separate chat messages with a typing pause between each.
       a: [
-        "You turned the Magician, dear — the card of the work being done by one pair of hands.",
-        "Three lay face down and you lifted the card of effort, under a question you have been calling a thing that happened to you.",
-        "You have been writing both halves of a conversation. Every explanation you have tried on, every version where it makes sense at last — that is you, composing his side, and it is exhausting in a way that nothing you can point to accounts for. I am not going to hand you the missing half, and I would be inventing it if I did. What I will say is that the tiredness is not you being unable to cope. It is the cost of keeping a conversation open by yourself.",
-        "Let me look closer at the half you have been writing…",
+        "You turned the Magician, dear. Look — a wand, a cup, a coin, a blade, and no letter among them.",
+        "You asked why he left without a word. Your hand went to the man who speaks a thing into being.",
+        "So there are two hurts here, dear. The going, and the silence.\nAnd there's no note anywhere on that table, dear. Not one page.\nBut one word would have lifted half of it, dear. Nobody said it.\nThat's why it sits so heavy, dear. You've carried both of them.",
+        "Let me look closer at what stands between you and one plain sentence…",
       ],
       b: [
-        "You turned the Hanged Man, dear — the card of the sentence that stopped in the middle.",
-        "Of the three, your fingers found the one that hangs unfinished, which is the shape of what you were left holding.",
-        "You have been treating the quiet as something addressed to you — as though the manner of it were a message about your worth that you ought to be able to decode. Turn it over. Silence is not a text in a code you failed to learn; it carries no content at all, and a person who says nothing has not thereby said something about you. The thing you have been left holding is not an insult you cannot read. It is a sentence that stopped, and stopped sentences ache in a person whether or not anything was meant by them.",
-        "Let me look closer at where it stopped…",
+        "You turned the Hanged Man, dear. Look — his lips are together and his face is calm.",
+        "You asked why he left without a word. Your hand went to the card that stops mid-sentence.",
+        "So a sentence was started and left, dear. That's what this shows.\nAnd he hangs between, dear, with the end of it never spoken.\nBut you've been holding the half he left, dear. All by yourself.\nThat's why you keep finishing it for him, dear, in your own head.",
+        "Let me look closer at what has kept that half unsaid…",
       ],
       c: [
-        "You turned the Fool, dear — the card of the page with nothing set down on it.",
-        "You came asking to be told what it meant, and up came the card that holds no meaning at all.",
-        "Here is the thing I will not do, and I want you to hear me refuse it plainly: I will not tell you what was in his head. Nobody sitting where I am sitting can, and anyone who names it for you is filling in a blank to make you feel steadier. The Fool is genuinely blank — that is its whole nature — and so is this. What that leaves you is worse in one way and far better in another. You do not get the reason. You also are not obliged to accept the cruellest one, which is the one you have been living with by default.",
-        "Let me look closer at the version you have been assuming…",
+        "You turned the Fool, dear. Look — nothing in his hands is a note or a page.",
+        "You asked why he left without a word. Your hand went to the one who goes light.",
+        "So he went light, dear. He left the explaining behind him.\nAnd there's nothing on him that looks like an answer, dear.\nBut I won't put words in a mouth that stayed shut, dear.\nThat's why the words never came. You were owed some, dear, and that stands.",
+        "Let me look closer at what has been standing where those words go…",
       ],
     },
     // ⚠ The finding: a disappearance makes HER the investigator of her own injury. She has
@@ -3429,23 +3779,27 @@ const RETURN_MHF: CardSetConfig = {
     // while being the party who was hurt. The read relieves her of the job rather than
     // doing it for her — doing it for her IS the banned motive.
     'cards-ghosted': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-19 from
+      // fb-tarot/docs/drafts/rewrites/cards-ghosted.json — approved copy, folded verbatim:
+      // bubbles 3-6 become beat 3, joined by newlines, and Version B serves them as
+      // separate chat messages with a typing pause between each.
       a: [
-        "You turned the Magician, dear — the card of intent, which is the one thing that leaves no mark behind it.",
-        "You reached for the card of the will, in a matter where the will in question was never shown to you.",
-        "You have been running an investigation. Rereading the last messages for the tell, dating the change, testing each theory against the evidence — and you have been grading yourself on the fact that it never resolves. It does not resolve because intention is the one thing that leaves nothing behind. You were handed the work of explaining your own injury, with nothing to work from, by a situation that gave you no say in any of it. Failing at that is not stupidity. It was never a solvable job.",
-        "Let me look closer at the job you were handed…",
+        "You turned the Magician, dear. Look — the flowers under his table are still growing.",
+        "You asked why he ghosted you. Your hand went to the man who leaves a mark when he acts.",
+        "So this left no mark, dear. That's the strange part of it.\nAnd every act on that table leaves a mark, dear. This one left none.\nBut a person just going gives you nothing to read, dear.\nThat's why you write the reason yourself, dear. Night after night.",
+        "Let me look closer at what has been filling that silence…",
       ],
       b: [
-        "You turned the Hanged Man, dear — the card of the question that has to be inverted before it answers.",
-        "Past two others you took the one that turns things the other way up, which is what yours needs.",
-        "Your question asks what the silence says about you. I am not going to answer it, and the refusal matters more than anything I could invent: a reason built to fit the shape of a hole is a story, and you would build the next year on it. What I can do is turn it the right way up. A silence is information about a silence. You have been reading it as a report on your value, published by someone who never sent you one.",
-        "Let me look closer at what has actually been reported…",
+        "You turned the Hanged Man, dear. Look — there's no ladder and no one else in the picture.",
+        "You asked why he ghosted you. Your hand went to the card that leaves a thing hanging.",
+        "So nothing was finished, dear. It was just left.\nAnd he hangs there, dear, with nobody coming to say why.\nBut an ending has words in it, dear. This one had none.\nThat's why the silence reads like a verdict, dear. It isn't one.",
+        "Let me look closer at what has been standing in for those words…",
       ],
       c: [
-        "You turned the Fool, dear — the card that keeps no ledger of who owes what.",
-        "The card that settles no accounts came up under the account you have not been able to close.",
-        "Something was owed you. Not a reconciliation, not a return — an explanation, the ordinary courtesy of being told, and you did not get it. I want that said plainly, because the people around you have been quietly encouraging you to stop wanting it, as though the wanting were the problem. It is not. The debt is real, and whether it is ever paid is not mine to say; I do not know, and neither does anyone who claims to. But you can put the ledger down without agreeing that nothing was owed.",
-        "Let me look closer at what you have been carrying the accounts for…",
+        "You turned the Fool, dear. Look — his left hand is empty and open.",
+        "You asked why he ghosted you. Your hand went to the one who owes no account.",
+        "So you were owed an account, dear. You didn't get one.\nAnd he walks off with an open hand, dear, and nothing in it.\nBut I won't invent a reason to fill that, dear. Nobody honestly can.\nThat's why the gap stays, dear. It was never yours to explain.",
+        "Let me look closer at what has been sitting in that gap…",
       ],
     },
     // ⚠ The heaviest headline on the funnel: she has put her own worth in the question and
@@ -3454,23 +3808,27 @@ const RETURN_MHF: CardSetConfig = {
     // premise: no measurement was taken, so no result on her exists. NEVER enumerate what
     // she lacked, never say she gave too much or loved too hard, never coach her worth.
     'cards-not-enough': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-19 from
+      // fb-tarot/docs/drafts/rewrites/cards-not-enough.json — approved copy, folded verbatim:
+      // bubbles 3-6 become beat 3, joined by newlines, and Version B serves them as
+      // separate chat messages with a typing pause between each.
       a: [
-        "You turned the Magician, dear — the card of what was actually done, as against what it was worth.",
-        "Under a question about your value, up came the card that only ever shows the work.",
-        "You have asked me to weigh you. I will not, because the scales in your question do not exist. Staying is not a mark awarded to whoever earns it, and going is not a score published about the one left behind. What the Magician will show is the part that is real and on the record: what you were doing in those last weeks was giving, steadily, and you can see it. Whether it was 'enough' is not a verdict that came back. Nothing was being marked.",
-        "Let me look closer at what you were actually doing…",
+        "You turned the Magician, dear. Look — there is no set of scales anywhere on his table.",
+        "You asked what was lacking in you. Your hand went to the man with no scales at all.",
+        "So I won't weigh you, dear. Not up, and not down.\nAnd there's nothing on that table to measure with, dear. No scales at all.\nBut a person leaving isn't a score against you, dear.\nThat's why the sums never come out, dear. Someone handed you that scale.",
+        "Let me look closer at what put that scale in your hands…",
       ],
       b: [
-        "You turned the Hanged Man, dear — the card of the sum that has to be set up the other way round.",
-        "Of the three you might have taken, you took the one that reverses things, and there is a reversal owed here.",
-        "There is an error in your question, and it is not in you — it is in the setup. You are solving for your own worth using a quantity you were never given, and any answer that comes out the far side is guesswork dressed as arithmetic. People go for reasons that are their own, and some of those reasons are not chosen at all. I will not tell you which was his, and you should be careful with anyone who will. What I can tell you is that his going is not the missing number in a sum about you.",
-        "Let me look closer at the sum you have been trying to finish…",
+        "You turned the Hanged Man, dear. Look — nothing on this card is being weighed against anything.",
+        "You asked if you fell short. Your hand went to the card that measures nobody.",
+        "So there's no scoring here, dear. None to be had at all.\nAnd there's no scale under him, dear. Nobody is being weighed.\nBut your question needs a reason, dear, and nobody gave you one.\nThat's why you supplied one yourself, dear, and you picked you.",
+        "Let me look closer at what has been keeping you on that scale…",
       ],
       c: [
-        "You turned the Fool, dear — the card that awards no marks whatsoever.",
-        "You came here for a result, and the card that grades nothing is the one that came to your hand.",
-        "You have been told, or you have concluded, that there was a line and you came up under it. There was no line. Not one he set, not one you agreed to, and 'not enough' is not a measurement of anything real — it is a phrase that arrives in the small hours and gets mistaken for a finding. Whatever you were, you were it wholly, and that capacity does not shrink because it was not met. The Fool does not report on you. It simply refuses to accept that the question was ever a fair one.",
-        "Let me look closer at the line you never agreed to…",
+        "You turned the Fool, dear. Look — he carries no list and no ledger.",
+        "You asked if you fell short. Your hand went to the one who counts nothing.",
+        "So he keeps no accounts, dear. Neither will I.\nAnd there's no tally in that bundle, dear. He counts nothing.\nBut why a person goes is no measure of who was left, dear.\nThat's why it never adds up, dear. You've been reading it as a mark.",
+        "Let me look closer at what has been sitting on that scale…",
       ],
     },
     // ── SEARCHING (2026-08-11) ────────────────────────────────────────────────
@@ -3481,23 +3839,27 @@ const RETURN_MHF: CardSetConfig = {
     // is a tactic and a fault attribution at once, and is what she has been told by
     // everyone already.
     'cards-stop-searching': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-19 from
+      // fb-tarot/docs/drafts/rewrites/cards-stop-searching.json — approved copy, folded verbatim:
+      // bubbles 3-6 become beat 3, joined by newlines, and Version B serves them as
+      // separate chat messages with a typing pause between each.
       a: [
-        "You turned the Magician, dear — the card of hands that are still working, long after the light went.",
-        "Of the three you could have taken, yours went to the card about effort, and effort is the part of this nobody has been counting.",
-        "Whether the looking ever ends is not something this card knows, in either direction, and you would be right to distrust anybody who claimed it did. What the Magician has picked up instead is the labour. Somewhere along the way this stopped being something you were doing and became something you were performing — arranging yourself, staying open, keeping the hope in working order — and that is work, and it does not stop being work because people insist it should be effortless. You are not tired of love. You are tired of the maintenance.",
-        "Let me look closer at what the keeping-going has been costing you…",
+        "You turned the Magician, dear. Look — the wand in his raised hand catches light at the tip.",
+        "You asked if the searching ever ends. Your hand went to the man always at work.",
+        "So this turned into work, dear. Heavy work, and nobody gave it to you.\nAnd his hands are never idle, dear. That's the whole of his card.\nBut you're allowed to set a job like that down, dear.\nThat's why it feels like unpaid work. No one said you could rest, dear.",
+        "Let me look closer at what keeps putting it back in your hands…",
       ],
       b: [
-        "You turned the Hanged Man, dear — the card of the season that will not turn over.",
-        "It was the card of suspended time your hand settled on, and time is doing the damage here rather than anything you have done.",
-        "There is no ending in this card to read out to you, and no promise that there is not one; what the Hanged Man registers is that the searching has quietly changed shape on you. It began as looking forward to something. Somewhere it turned into bracing — going anyway, hoping carefully, keeping the disappointment small enough to survive. That is not the same activity any more, though it wears the same name, and doing the second one for years while calling it the first is exhausting in a way that never shows up from outside.",
-        "Let me look closer at when the looking turned into bracing…",
+        "You turned the Hanged Man, dear. Look — the beam is bare where the branches were cut off.",
+        "You asked if the searching ever ends. Your hand went to the card that stops without ending.",
+        "So you're asking to be let off, dear. Not asking to find someone.\nAnd he has stopped, dear, and nothing bad has happened to him.\nBut stopping and giving up are two different things, dear.\nThat's why resting feels like quitting, dear. You've held them as one.",
+        "Let me look closer at what has been holding those two together…",
       ],
       c: [
-        "You turned the Fool, dear — the card of someone still setting out, with the road not yet under them.",
-        "Under a question with 'ever' in it, up came the one card that has never heard of ever.",
-        "No card carries an ending to hand you, dear, and this one least of all, so I am not going to pretend otherwise in either direction. What the Fool sets down is smaller than a forecast and considerably more use. Whoever is still asking has not actually stopped. You came here tonight and you turned a card, and that is not the conduct of a woman who has abandoned the road — it is the conduct of one who has been walking it long enough to wonder whether she is permitted to sit down a while. Those are two entirely different questions, and only the second one has ever been yours to ask.",
-        "Let me look closer at the rest you have not let yourself take…",
+        "You turned the Fool, dear. Look — a dark green cap sits low on his head.",
+        "You asked if the searching ever ends. Your hand went to the one who never calls it that.",
+        "So he's just walking, dear. He'd never call it a search.\nAnd he goes without counting what he hasn't found, dear.\nBut the word searching turns a life into a hunt, dear.\nThat's why your own days tire you, dear. You didn't pick that word.",
+        "Let me look closer at what keeps handing you that word…",
       ],
     },
     // 'Why do I keep ending up alone?' — THE CAUSE REQUEST, and the first headline on
@@ -3511,23 +3873,27 @@ const RETURN_MHF: CardSetConfig = {
     // and no honest reading has one; the real question underneath is "is it me", and
     // THAT is what gets answered — by refusing to rule, not by ruling kindly.
     'cards-end-up-alone': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-19 from
+      // fb-tarot/docs/drafts/rewrites/cards-end-up-alone.json — approved copy, folded verbatim:
+      // bubbles 3-6 become beat 3, joined by newlines, and Version B serves them as
+      // separate chat messages with a typing pause between each.
       a: [
-        "You turned the Magician, dear — the card of the maker, which is a very different thing from the made.",
-        "Your hand went to the card about authorship, and authorship is exactly what your question has been quietly assuming.",
-        "There is no reason here for me to give you, and whatever I produced would be something I had made up on the spot to fit the shape of your question — that is the honest answer, and it is worth more than a kind invention. Your question contains a hidden claim: that there is a single cause, that it is located in you, and that a stranger could read it off a card. The Magician is the card of what a person actually authors, and what anybody authors is their own conduct — never the whole outcome, which needed another person to show up and keep showing up. You have been holding yourself accountable for a result that was never yours alone to produce.",
-        "Let me look closer at what you have been holding yourself responsible for…",
+        "You turned the Magician, dear. Look — his cloak falls open down one side.",
+        "You asked why you keep ending up alone. Your hand went to the man who looks for reasons.",
+        "So there's no reason to find here, dear. You've hunted for one for years.\nAnd a mind like his can build a reason out of anything, dear.\nBut a reason you built yourself isn't a finding, dear.\nThat's why every answer you land on has your own name in it.",
+        "Let me look closer at what keeps landing in the same place…",
       ],
       b: [
-        "You turned the Hanged Man, dear — the card of the picture that has been hanging upside down.",
-        "Yours was the card of the inverted view, and this question has been sitting inverted in you for a long while.",
-        "The word doing the work in what you asked is 'keep', and it is the one I want to turn the right way up. Separate endings, each with its own reasons and its own other person, get gathered up by the mind and read backwards as a single pattern with a single culprit — and once that is done, the culprit is always the one person present at all of them, which is you. That is not evidence, dear. That is arithmetic performed while tired. The Hanged Man does not tell me why any of them ended, and neither will I, because the truthful answer is that they are not one thing and were never one thing.",
-        "Let me look closer at the pattern you have been reading into it…",
+        "You turned the Hanged Man, dear. Look — his knee makes a sharp corner against the beam.",
+        "You asked why you keep ending up alone. Your hand went to the card that hangs a why upside down.",
+        "So nothing falls out when you turn this over, dear. I've watched you try.\nAnd he hangs there turned over, dear, and still no answer drops.\nBut some things just happen, dear. There's no reason underneath them.\nThat's why you've been the only suspect in your own case, dear.",
+        "Let me look closer at what has been standing in for an answer…",
       ],
       c: [
-        "You turned the Fool, dear — the card carrying no verdict on anybody, least of all the one holding it.",
-        "You came asking to be told what is wrong with you, and up came the card that has never once made that finding.",
-        "There is nothing in this card that says you are the reason, and there is nothing in it that says you are not — I will not rule on you in either direction, because it is not a ruling anybody is entitled to make and you would carry it either way. What the Fool sets down instead is that your question was built as a case against yourself, and then handed to me to confirm. I am not going to confirm it. Endings happen for reasons that mostly live in other people and in circumstances, and a woman is not a defect for having been present at hers.",
-        "Let me look closer at the case you have been building against yourself…",
+        "You turned the Fool, dear. Look — the dog's mouth is open, and it's right at his heel.",
+        "You asked why you keep ending up alone. Your hand went to the one who keeps setting out.",
+        "So you keep setting out again, dear. That is the part worth seeing.\nAnd he takes the same step at the same edge, dear, and goes anyway.\nBut this card counts no failures, dear. It keeps no tally at all.\nThat's why the tally hurts, dear. Nobody else was keeping one.",
+        "Let me look closer at what keeps meeting you at the same edge…",
       ],
     },
     // 'Have I given up on love without realizing it?' — THE SELF-AUDIT. She is asking a
@@ -3539,23 +3905,27 @@ const RETURN_MHF: CardSetConfig = {
     // She is the only authority on her interior; the card reads what guarding COSTS,
     // never whether she has closed.
     'cards-given-up': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-19 from
+      // fb-tarot/docs/drafts/rewrites/cards-given-up.json — approved copy, folded verbatim:
+      // bubbles 3-6 become beat 3, joined by newlines, and Version B serves them as
+      // separate chat messages with a typing pause between each.
       a: [
-        "You turned the Magician, dear — the card of the hands that have not stopped, whatever the person attached to them believes.",
-        "You reached for the card of ongoing work at the exact moment you were wondering whether you had put the work down.",
-        "What you have or have not given up on is not mine to announce, dear, and no card gets to rule on the inside of a person — you read your own interior better than anyone alive, and certainly better than this deck. What I can say is that you are here, at whatever hour this is, asking. That is not the conduct of someone who has closed the matter; a closed matter does not get taken out and examined. Whether the hope has changed shape is a real question and yours alone to answer, but the Magician does not find a woman who has stopped. It finds one who is worried she might have, which is nearly the opposite.",
-        "Let me look closer at what you are afraid you have let go of…",
+        "You turned the Magician, dear. Look — he looks out past you, not quite at you.",
+        "You asked about giving up on love without knowing it. Your hand went to the man still at work.",
+        "So I won't rule on your heart from outside it, dear. Nobody can.\nAnd here you are, asking, dear. A woman who had quit wouldn't be.\nBut the question got in somehow, dear. Something put it there.\nThat's why you ask this at night, dear, and the day gives no answer.",
+        "Let me look closer at what has been sitting on top of your hope…",
       ],
       b: [
-        "You turned the Hanged Man, dear — the card of the pause that has gone on longer than the one who called it ever intended.",
-        "It was the card of the held moment that came to your hand, and holding is precisely what your question is about.",
-        "Protecting yourself is not the same as giving up, though from the outside — and after enough years — the two can look identical, which is what has you asking. Somewhere you began expecting less out loud so that less would hurt less. That is not surrender, dear, it is a sensible thing a person does after being disappointed enough times, and it is reversible in a way that giving up is not. Neither of those is mine to score, and naming which one this is would be a judgement I have no standing whatever to make. The Hanged Man's business is what the holding has cost, never a verdict on the woman doing the holding.",
-        "Let me look closer at what the guarding has been costing you…",
+        "You turned the Hanged Man, dear. Look — his eyes are open, and he's not asleep.",
+        "You asked about giving up on love without knowing it. Your hand went to the card that only looks still.",
+        "So still isn't the same as finished, dear. Look at his eyes.\nAnd he's wide awake up there, dear, with nothing moving at all.\nBut rest and quitting look alike from outside, dear.\nThat's why you've read your own rest as a verdict, dear.",
+        "Let me look closer at what has been keeping you this still…",
       ],
       c: [
-        "You turned the Fool, dear — the card of the one still standing at the start of the road, whatever they have decided about themselves.",
-        "Your question asked whether the door had quietly shut, and the card that arrived is the one that has never yet been shut.",
-        "Let me take 'without realizing it' out of your hands, dear, because that is the phrase doing the damage. It supposes something has happened inside you that you cannot see and a stranger can — and that is not true of me, or of this card, or of anyone who will ever tell you otherwise. You would know. It might be buried under a great deal of self-protection and a fair amount of tiredness, but it would be yours to find, not mine to announce. The Fool carries no closed doors. What it carries is that the wanting is still in you, or this question would never have been worth typing at one in the morning.",
-        "Let me look closer at what is still in there under the guarding…",
+        "You turned the Fool, dear. Look — one arm swings out and the sleeve flares open.",
+        "You asked about giving up on love without knowing it. Your hand went to the one mid-step.",
+        "So you're mid-step, dear. You have not sat down.\nAnd nobody steps off a cliff having quit, dear. Look at his foot.\nBut this card can't say what's inside you, dear. No card can.\nThat's why you've had to guess at yourself, dear, and you guessed hard.",
+        "Let me look closer at what has been slowing that step…",
       ],
     },
     // ── TWIN FLAME (2026-08-11) ───────────────────────────────────────────────
@@ -3570,69 +3940,81 @@ const RETURN_MHF: CardSetConfig = {
     // his CAPABILITY; this one reads the WAITING, because "ready for me" quietly assumes a
     // schedule she is being kept on.
     'cards-twin-ready': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-19 from
+      // fb-tarot/docs/drafts/rewrites/cards-twin-ready.json — approved copy, folded verbatim:
+      // bubbles 3-6 become beat 3, joined by newlines, and Version B serves them as
+      // separate chat messages with a typing pause between each.
       a: [
-        "You turned the Magician, dear — the card of the one who does the building, not the one who is waited on.",
-        "You asked about his readiness and drew the card of deliberate action, which is the only form readiness has ever taken.",
-        "Readiness is not weather, dear — it does not roll in over a person while they stand still, and that is the part your question keeps having to work around. The Magician holds no date for his arrival and I would not read one out. What it does say plainly is that nobody becomes ready by being waited for, however patiently and however long. Whether he does the work is genuinely his to do and unknowable from where either of us is sitting. What is knowable is that you have been treating his readiness as a thing that will happen TO him, and it never is.",
-        "Let me look closer at what you have been keeping ready in the meantime…",
+        "You turned the Magician, dear. Look — he holds his wand like a candle, straight up and steady.",
+        "You asked if your twin flame is ready for you. Your hand went to the man with it all in reach.",
+        "So his part in this was never your job, dear. Not one bit of it.\nAnd look at his hands. This card is a person doing things.\nBut ready shows, dear. Nobody has to guess at it.\nThat's why signs are all you have, dear. You've been hunting them a long while.",
+        "Let me look closer at what has been standing in the way of a plain sign…",
       ],
       b: [
-        "You turned the Hanged Man, dear — the card of the one who is suspended, and knows it.",
-        "It was the card of hanging that came up, and hanging is a fair description of what waiting on somebody else's readiness feels like.",
-        "This card will not tell me whether he is close to ready, and anybody who claims a card told them that is telling you a story. What the Hanged Man does is turn the picture over. You framed this as a readiness that will one day point in your direction, which puts you at the end of a process he alone controls — and the whole time the process has been running, so have you. There is a life happening at your end of the suspension, dear, and it is not a waiting room. It only got treated like one.",
-        "Let me look closer at what has been on hold at your end…",
+        "You turned the Hanged Man, dear. Look — the wood he hangs from is cut flat across the top.",
+        "You asked if your twin flame is ready for you. Your hand went to the card that holds it all still.",
+        "So the whole thing has been paused, dear. You knew that already.\nAnd look at him. Nothing moves, and nothing gets decided.\nBut a pause tells you nothing about what comes after it, dear.\nThat's why waiting here is so hard, dear. There's nothing in it to read.",
+        "Let me look closer at what has kept this paused so long…",
       ],
       c: [
-        "You turned the Fool, dear — the card of the step taken before anybody has confirmed the ground.",
-        "Under a question about someone else's timing, up came the card of the one who moves without a signal.",
-        "No card knows his readiness and this one knows less than most, so I will not pronounce on it in either direction. The Fool's business is elsewhere. Your question has readiness as a gate he opens and you walk through, and that arrangement leaves the whole of your timing in the keeping of a person who has not told you what he intends. That is a heavy thing to have handed over, and you did not hand it over carelessly. You did it because the pull was real. The pull being real does not make the arrangement fair.",
-        "Let me look closer at the arrangement you have been living inside…",
+        "You turned the Fool, dear. Look — he holds the flower away from himself, out at arm's length.",
+        "You asked if your twin flame is ready for you. Your hand went to the one who carries no plan.",
+        "So there's no plan in this yet, dear. You've felt that for a while.\nAnd look at him. Going, but not towards anything with a name.\nBut ready gets built, dear. No one is simply ready one morning.\nThat's why there's nothing here for you to fix. It was never yours, dear.",
+        "Let me look closer at what has been standing where a plan should be…",
       ],
     },
     // 'Does my twin flame feel this too?' ~ competes with cards-feels. That one reads what
     // he feels; this one reads whether the intensity is SHARED, which is a different and
     // sharper question — and the one where narrating his interior is most tempting.
     'cards-twin-feels': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-19 from
+      // fb-tarot/docs/drafts/rewrites/cards-twin-feels.json — approved copy, folded verbatim:
+      // bubbles 3-6 become beat 3, joined by newlines, and Version B serves them as
+      // separate chat messages with a typing pause between each.
       a: [
-        "You turned the Magician, dear — the card of what a person does with what is in their hands.",
-        "You asked whether he feels it and drew the card of enactment, which is the only place a feeling ever becomes visible to anyone else.",
-        "I cannot see inside him, dear, and no honest reader will tell you they can — what somebody feels is theirs, and it reaches the rest of us only in what they do about it. So I will not report his heart back to you as though I had been in it. What the Magician says is that you already have the only evidence anybody gets: how he acts, how consistently, and whether it matches the size of what you feel. You have been asking me to confirm a feeling. You already hold the record of the conduct.",
-        "Let me look closer at what the conduct has actually been showing you…",
+        "You turned the Magician, dear. Look — he faces forward, and both his hands are busy.",
+        "You asked if your twin flame feels this too. Your hand went to the man who works with what's there.",
+        "So he feels it too, dear. You haven't been holding this on your own.\nAnd look at his table. Only what's on it can be worked with.\nBut his side was never put on your table, dear. You've had to guess it.\nThat's why Monday feels certain, dear, and by Thursday you're lost again.",
+        "Let me look closer at what stands between you and his side of it…",
       ],
       b: [
-        "You turned the Hanged Man, dear — the card of two things that look alike until the picture is turned over.",
-        "Yours was the card of the reversal, and there is one sitting inside the question you asked.",
-        "Whether he feels this is not something I will answer, in either direction — not because I am being careful with you, but because I would be making it up. The Hanged Man turns the question instead. You asked whether it is shared, which means the reading you actually came for is not about him at all: it is whether what you have been feeling is real or something you have been generating alone. It is real. That is a separate finding from his, and it does not depend on him at all to stand up.",
-        "Let me look closer at what you have been feeling and doubting at the same time…",
+        "You turned the Hanged Man, dear. Look — he hangs from a beam with two cut branches on it.",
+        "You asked if your twin flame feels this too. Your hand went to the card that keeps the rest turned away.",
+        "So it reached him too, dear. The card is steady on that.\nAnd half of what he does is out of your view, dear.\nBut you have only ever been shown your own half of this.\nThat's why it can feel huge to you, dear, and go unsaid between you.",
+        "Let me look closer at what's keeping his half turned away…",
       ],
       c: [
-        "You turned the Fool, dear — the card of the heart that sets out before it has been given any assurances.",
-        "The card that came to your hand is the one that starts things without a guarantee at the other end, which is precisely where you are standing.",
-        "There is no confession in this card and I am not going to invent one to send you away happy. What the Fool holds is the thing you may not have been told: a feeling this size is information about YOU — about a capacity you have that plenty of people never locate in themselves — and it stays true whatever he does or fails to do with his own. You came asking whether it was returned. That question has an answer only he can give, in conduct, over time. What you feel needed no confirmation from him to be genuine.",
-        "Let me look closer at the size of what you have been carrying…",
+        "You turned the Fool, dear. Look — the ground he stands on is orange rock, and it ends.",
+        "You asked if your twin flame feels this too. Your hand went to the one walking on his own.",
+        "So you have not been carrying this alone, dear. He carries some of it.\nAnd he has one road and one bundle, dear. Nobody else on it.\nBut you can't see his road from where you stand, dear.\nThat's why it lands on you like a weight, dear, and shows nowhere else.",
+        "Let me look closer at what has been standing between the two of you…",
       ],
     },
     // 'Is my twin flame coming back to me?' ~ competes with cards-ever-back. That one reads
     // the possibility; this one must ALSO refuse the separation-phase script, which is what
     // turns an absence into a stage of a journey with a guaranteed ending.
     'cards-twin-back': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-19 from
+      // fb-tarot/docs/drafts/rewrites/cards-twin-back.json — approved copy, folded verbatim:
+      // bubbles 3-6 become beat 3, joined by newlines, and Version B serves them as
+      // separate chat messages with a typing pause between each.
       a: [
-        "You turned the Magician, dear — the card of a decision that gets made rather than one that gets fated.",
-        "You asked whether he returns, and the card that arrived is the one about somebody choosing to act.",
-        "Whether he comes back is his to decide and not mine to forecast, so I will not hand you a yes and I will not hand you a no. The Magician is worth more to you than either. It says a return, if it comes, will be a thing he decides and does — not a stage that arrives on schedule, and not something the distance itself was secretly arranging on your behalf. Nothing about being apart is doing quiet work toward a reunion. What separates people is separation, dear, and it is allowed to just be that.",
-        "Let me look closer at what has been asked of you while you waited…",
+        "You turned the Magician, dear. Look — flowers growing right up around the legs of his table.",
+        "You asked if your twin flame is coming back. Your hand went to the man who acts.",
+        "So the pull you feel is real, dear. He felt it too.\nAnd look at his raised hand. This card does things, it doesn't wait.\nBut what it will not do is tell you his next move, dear.\nThat's why the pull can be so strong, dear, and the phone still quiet.",
+        "Let me look closer at what has been blocking your own way forward…",
       ],
       b: [
-        "You turned the Hanged Man, dear — the card of the interval that refuses to announce how long it is.",
-        "It was the card of the unmeasured wait your hand found, and the not-knowing has been the hardest part of this.",
-        "No timing lives in this card and no outcome does either, and I would not read you one out of an interval nobody can measure. Here is what the Hanged Man will not let stand, though: an absence is not a phase in a journey with a known ending. That story is told very confidently in a great many places, and it asks you to experience being without him as progress toward having him. It is not progress. It is an absence, it is costing you something real, and you are allowed to call it what it is rather than what it has been renamed.",
-        "Let me look closer at what this waiting has actually been costing…",
+        "You turned the Hanged Man, dear. Look — gold rays come off his head, pointing down at the ground.",
+        "You asked if your twin flame is coming back. Your hand went to the card that holds a thing still.",
+        "So the hold on you is real, dear. I can see it plainly from here.\nAnd look at him. Time passes and the picture doesn't change.\nBut I won't tell you what happens next, dear. No card can.\nThat's why you've waited at such a cost, dear, with nothing to show for it.",
+        "Let me look closer at what has been keeping you in the hold…",
       ],
       c: [
-        "You turned the Fool, dear — the card of the road that has not been walked, in either direction, by anybody yet.",
-        "You came asking about a return and drew the one card that has never once promised anybody an ending.",
-        "The Fool holds no reunion for me to give you and holds no ending either, and I will not manufacture one in either direction. What I will not leave alone is the arithmetic hiding in the question. Nowhere in it is there anything for you to have done differently, or to do now, that determines whether he comes back — not more healing, not more patience, not becoming a version of yourself that would finally earn it. His returning was never a reward for your progress. Anyone who has told you otherwise handed you a job that was never yours.",
-        "Let me look closer at the job you have been given that was never yours…",
+        "You turned the Fool, dear. Look — the sun above him is a plain white circle.",
+        "You asked if your twin flame is coming back. Your hand went to the one mid-journey.",
+        "So nothing has been finished, dear. Not by him, and not by you.\nAnd out he goes, dear. On the road, with no map at all.\nBut the road ahead of him has no end drawn on it, dear.\nThat's why a quiet week feels like an answer, dear. It isn't one.",
+        "Let me look closer at what has been standing in place of an answer…",
       ],
     },
     // ── HIDDEN / INTUITION (2026-08-12) ───────────────────────────────────────
@@ -3653,23 +4035,27 @@ const RETURN_MHF: CardSetConfig = {
     // 'Is he hiding something from me?' — an OMISSION, not a lie. Nobody has been caught in
     // anything, which is exactly what separates this from the live honesty family.
     'cards-hiding-something': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-19 from
+      // fb-tarot/docs/drafts/rewrites/cards-hiding-something.json — approved copy, folded verbatim:
+      // bubbles 3-6 become beat 3, joined by newlines, and Version B serves them as
+      // separate chat messages with a typing pause between each.
       a: [
-        "You turned the Magician, dear — the card of the one who decides what is shown and what is kept back.",
-        "You asked whether something is being kept from you, and up came the card of deliberate arrangement.",
-        "Whether something is genuinely being kept from you is not a thing this card will settle, dear, and I would not invent its contents to fill the silence — a stranger with a deck telling a woman what a man conceals is making it up. What the Magician marks is management: a hand deciding, in the moment, how much of a picture to hand across. Everyone alive does a little of that. What you are describing is not the everyday amount, or the question would never have been worth typing. The card convicts him of nothing and neither will I. It says the edge you keep meeting is a made one — and meeting an edge is not the same as imagining one.",
-        "Let me look closer at where the picture keeps stopping…",
+        "You turned the Magician, dear. Look — he stands where you can see him, and the table hides the rest.",
+        "You asked about him hiding something. Your hand went to the man who decides what's on show.",
+        "So you've been shown a front, dear. Fronts are chosen, and that's real.\nAnd the table covers him from the waist down, dear.\nBut a thing left out isn't a lie told, dear. Those are different.\nThat's why you have no name for it, dear, and still feel it there.",
+        "Let me look closer at what has been standing in the covered part…",
       ],
       b: [
-        "You turned the Hanged Man, dear — the card of what is held just out of view.",
-        "It was the card of the withheld thing that came to your hand, and withholding is precisely what you came to ask about.",
-        "What he keeps is not something this card can show me, dear, and anyone who claims otherwise is performing — nor am I going to send you looking for it. Going through a man's phone has never once produced peace; it produces a worse version of the same night. The Hanged Man turns the thing over instead. You have been doing the work of guessing, and guessing is labour — hours of you, spent assembling a picture you were never handed whole. The needing to do that is not imaginary, whatever sits behind it. Being made to build the thing yourself is a cost you have already paid in full.",
-        "Let me look closer at what the guessing has been costing you…",
+        "You turned the Hanged Man, dear. Look — his hands are behind him where the picture stops.",
+        "You asked about him hiding something. Your hand went to the card with a back you can't see.",
+        "So there's a back to this you can't reach, dear. You noticed that.\nAnd the working half of him is out of the frame, dear.\nBut you've been asked to prove a thing isn't there, dear.\nThat's why it goes round and round, dear. Nobody can prove that.",
+        "Let me look closer at what keeps this half out of frame…",
       ],
       c: [
-        "You turned the Fool, dear — the card of the man who has not sat down and worked out what he thinks.",
-        "Your hand went to the card of the unexamined thing, and that is a genuinely different animal from the concealed one.",
-        "Here the Fool asks me to slow down before either of us calls this a secret. Not everything withheld was ever decided on; some of it has simply never been faced by the man carrying it, and a thing he has not admitted to himself cannot be told to you — which lands on your side identically either way, as a gap. I will not rule on which of the two this is, dear, because from the outside they are indistinguishable. What the card will not do is put the gap in your imagination. The gap is there. What it is made of is the open question, and it is a fair one to have.",
-        "Let me look closer at the shape of the gap…",
+        "You turned the Fool, dear. Look — the bundle on his stick is closed and tied shut.",
+        "You asked about him hiding something. Your hand went to the one who carries a closed bag.",
+        "So there's a closed bag here, dear. That much is real.\nAnd it's tied shut, dear, and I won't tell you what's inside.\nBut no honest reader names what's in a shut bag, dear.\nThat's why you circle it, dear. You saw the bag, and it stayed shut.",
+        "Let me look closer at what has been keeping that bag shut…",
       ],
     },
     // 'Something feels off — is my intuition right?' — the only headline on the funnel that
@@ -3679,23 +4065,27 @@ const RETURN_MHF: CardSetConfig = {
     // NOTICING is affirmed, the MEANING is left open — and refuses the flattering third
     // option, that intuition is never wrong, which turns every fear into a finding.
     'cards-feels-off': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-19 from
+      // fb-tarot/docs/drafts/rewrites/cards-feels-off.json — approved copy, folded verbatim:
+      // bubbles 3-6 become beat 3, joined by newlines, and Version B serves them as
+      // separate chat messages with a typing pause between each.
       a: [
-        "You turned the Magician, dear — the card of the mind that registers a thing long before it can explain it.",
-        "You asked whether your sense of this is sound, and drew the card of the working intelligence.",
-        "I want to be careful with you here, because there are two questions inside that one and they do not have the same answer. Did you notice something — yes. The Magician is emphatic that this is a faculty working rather than a nerve misfiring. What the noticed thing MEANS is the part I will not hand you, dear, and I would be lying if I dressed a guess up as a reading. Nor will I tell you that intuition is never wrong — a flattering sentence which has cost women a great deal, because it quietly turns every fear into a finding. The noticing is real. What it points to is still open.",
-        "Let me look closer at what it was you actually noticed…",
+        "You turned the Magician, dear. Look — the smallest thing on his table is the coin.",
+        "You asked if something feels off, and if you're right. Your hand went to the man who notices detail.",
+        "So you picked up something small, dear. That's real.\nAnd the coin is easy to miss, dear, and it's still there.\nBut noticing is one job, dear. Reading it is another.\nThat's why the first part is done, dear, and the second is still open.",
+        "Let me look closer at what your eye caught on…",
       ],
       b: [
-        "You turned the Hanged Man, dear — the card of two accounts that will not sit flat against each other.",
-        "It was the card of the mismatch your hand found, and a mismatch is very often what 'off' turns out to be made of.",
-        "A feeling of wrongness is usually not mystical, dear, whatever you have been told — most often it is the ordinary result of being given an account that does not match what you can see, and a mind doing its job by flagging the difference. Which of the two is the false one is beyond what this card knows. But I am not going to do the more common thing either and suggest you have produced all of this out of insecurity. Being talked out of your own observations is how a person ends up unable to trust herself at all. Something did not line up. That is a finding, and it stands whatever turns out to explain it.",
-        "Let me look closer at what stopped lining up…",
+        "You turned the Hanged Man, dear. Look — not one line on this card is level.",
+        "You asked if something feels off, and if you're right. Your hand went to the card that sits wrong.",
+        "So your eye is telling you this sits wrong, dear. It's working.\nAnd not one line on that card is level, dear. You saw it at once.\nBut what your eye has found is a separate question, dear.\nThat's why I won't talk you out of it, dear, or hand you a verdict.",
+        "Let me look closer at what has been sitting out of true…",
       ],
       c: [
-        "You turned the Fool, dear — the card of the step taken before anything has been confirmed.",
-        "You came to have your sense checked, and up came the card of the one who must move without a verdict in hand.",
-        "No card is going to confirm this for you, dear, and it would be an unkindness to pretend one had. The Fool is honest about that much: you are standing where a person stands before they know. What I will not let pass is the notion that you must earn the right to a straight answer by first assembling proof. You do not. Somewhere along the way, asking plainly and accusing got collapsed into the same act for you, and they were never the same act. The unease you arrived carrying is not evidence against him — I will not let it be used that way. It is also not nothing, and you were not wrong to bring it here.",
-        "Let me look closer at what you have been made to prove before you could ask…",
+        "You turned the Fool, dear. Look — the drop is behind his heel and he can't see it.",
+        "You asked if something feels off, and if you're right. Your hand went to the one who doesn't look.",
+        "So you looked, dear. That's a real difference between you and him.\nAnd he doesn't look, dear, and the edge is right behind his heel.\nBut I won't rule on what your looking found, dear.\nThat's why looking early counts, dear, whatever it turns out to mean.",
+        "Let me look closer at what has been sitting just out of view…",
       ],
     },
     // ── REAL FEELINGS (2026-08-12) ────────────────────────────────────────────
@@ -3718,23 +4108,27 @@ const RETURN_MHF: CardSetConfig = {
     // has feelings; she is asking whether what she has been given amounts to love. That is a
     // question about a STANDARD, which can be answered honestly — unlike his interior.
     'cards-really-love': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-19 from
+      // fb-tarot/docs/drafts/rewrites/cards-really-love.json — approved copy, folded verbatim:
+      // bubbles 3-6 become beat 3, joined by newlines, and Version B serves them as
+      // separate chat messages with a typing pause between each.
       a: [
-        "You turned the Magician, dear — the card of what a person sets out to do on purpose.",
-        "You asked whether he really loves you, and up came the card of deliberate action.",
-        "His own heart belongs to him, dear, and no deck ever built grants me a window into it — anyone who claims to know what a man feels is reciting something they made up on the spot. The Magician's business is narrower and far more useful to you. It says that love, where it is real, is a thing done on purpose and then done again: chosen on ordinary days when nothing whatever required it. You do not need me for that record. You have been keeping it a long time, and the word 'really' sitting in your question tells me you have been reading it more honestly than you have let yourself say out loud.",
-        "Let me look closer at the record you have been keeping…",
+        "You turned the Magician, dear. Look — the wand in his hand is white and lifted above the roses.",
+        "You asked whether the love is really love. Your hand went to the card of what a man does.",
+        "So yes, dear. What you've been given is real love.\nAnd a man like this does nothing by halves. He knew what he was building with you.\nBut building it and saying it out loud are two different jobs for him.\nThat's why you got the care, dear, and never quite got the words.",
+        "Let me look closer at what keeps the words from coming…",
       ],
       b: [
-        "You turned the Hanged Man, dear — the card of the sentence somebody could simply have finished.",
-        "You reached for the card of the thing left hanging, and one has been hanging here a long while.",
-        "I am not going to rule on his heart — not a yes and not a no, because neither would be honest and you would carry whichever I handed you for months. What the Hanged Man puts in front of me instead is the position you have been left standing in. Love is not usually a thing a woman has to work out from evidence; it is usually a thing she has been told plainly, and then told again. That you are here asking a deck rather than remembering being told is not proof of anything about him. It is a fact about where this has left you, and it deserves looking at squarely rather than explaining away.",
-        "Let me look closer at what you have had to work out for yourself…",
+        "You turned the Hanged Man, dear. Look — the rope holds and the tree keeps growing round it.",
+        "You asked whether the love is really love. Your hand went to the card of a thing held in place.",
+        "So the love is real, dear. What you've been given is not in doubt.\nAnd he knows he's stuck there. That's the part he has never said out loud.\nBut he can't get himself down from there just by knowing it.\nThat's why nothing moves, dear, however warm he is with you.",
+        "Let me look closer at what has been holding that rope in place…",
       ],
       c: [
-        "You turned the Fool, dear — the card of the one who gave before anything had been promised back.",
-        "Your hand went to the card of the leap taken without assurances, which is a fair account of what you did.",
-        "Nothing in this deck reaches inside another person, dear, and the Fool reaches least of all. I am not going to manufacture a confession that would comfort you for one evening and cost you a month. What the Fool holds is about you, and you may never have been told it. You went in without a guarantee. That is not naivety, dear, and it is not a lesson you are meant to extract and carry into the next one — it is a capacity, and a great many people go their whole lives without ever locating it in themselves. Whether he has matched it is a separate question with a separate answer, and it was never a verdict on whether you were right to love first.",
-        "Let me look closer at what you gave before you were sure…",
+        "You turned the Fool, dear. Look — he holds the flower up, not down.",
+        "You asked if he really loves you. Your hand went to the card of an open heart.",
+        "So it's real, dear. What he gives you, he gives freely.\nAnd nothing in this card is weighed out or held back on purpose.\nBut a heart this open has not worked out where it's going yet.\nThat's why he can be warm with you, dear, and still name nothing.",
+        "Let me look closer at what stops him putting a name to it…",
       ],
     },
     // 'How does he really feel about me?' — ⚠️ the PRONOUN VARIANT of the live 'cards-feels'
@@ -3742,23 +4136,27 @@ const RETURN_MHF: CardSetConfig = {
     // stranger for something a person who knows her could have said. The incumbent reads his
     // feelings; this reads the ASKING. See the union note on the confound.
     'cards-feel-about-me': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-19 from
+      // fb-tarot/docs/drafts/rewrites/cards-feel-about-me.json — approved copy, folded verbatim:
+      // bubbles 3-6 become beat 3, joined by newlines, and Version B serves them as
+      // separate chat messages with a typing pause between each.
       a: [
-        "You turned the Magician, dear — the card of the hands rather than the heart.",
-        "You asked what he feels, and drew the card of what actually gets done about it.",
-        "I want to say something about your question before I say anything at all about the card. You have come to a woman you have never met to find out how a man who knows you feels about you. I am not saying that to shame you, dear — I am saying it because it is information, and it is the one piece nobody ever puts in front of you. The Magician does not report anybody's heart to me, and I would not pass it on if it did. It deals only in what is done, and how consistently it is done. Somewhere in what has been done, or has not been, sits the reason you had to come and ask me instead of simply knowing. You are allowed to want that gap named, dear, rather than quietly working around it for another year.",
-        "Let me look closer at why you had to come and ask…",
+        "You turned the Magician, dear. Look — the four things on the table are all within his reach.",
+        "You asked how he really feels about you. Your hand went to the card of a man who chooses.",
+        "So he feels it, dear. The card is plain with me about that.\nAnd he has chosen how much of it reaches you. That choosing is done on purpose.\nBut choosing what to show you is not the same as feeling less.\nThat's why he can seem near one day, dear, and measured the next.",
+        "Let me look closer at what sits behind the part he keeps back…",
       ],
       b: [
-        "You turned the Hanged Man, dear — the card of the answer that will not settle.",
-        "It was the card of what refuses to come to rest that your hand found, and that is where this has been living.",
-        "There is one word carrying your entire question, dear, and it is 'really'. It means some answer has already been handed to you and it did not hold — it slid off, or it stopped matching what you could see — and here you are, asking a second time, of a stranger. What he feels I cannot reach and would not guess at. What the Hanged Man says is that an answer which has to be asked for twice has not done its work, and that having to ask again reflects nothing whatever about you. It reflects on what you were told the first time.",
-        "Let me look closer at the answer that would not hold…",
+        "You turned the Hanged Man, dear. Look — his face is the lowest thing on the card.",
+        "You asked how he really feels about you. Your hand went to the card of a man seen upside down.",
+        "So he does feel it, dear. You've been picking that up correctly.\nAnd there is more of it in him than that angle has let you see.\nBut hanging there, he cannot turn himself the right way up.\nThat's why you keep getting halves of him, dear, and never the whole.",
+        "Let me look closer at what has been holding him in that position…",
       ],
       c: [
-        "You turned the Fool, dear — the card of the one standing at the start with nothing settled.",
-        "You came for a report on somebody's heart and drew the card that has never once carried a guarantee.",
-        "This card carries no confession, dear, and dressing one up for you would lighten tonight at the expense of every night after it. But I do not believe a report was ever really what you came for. Underneath 'how does he feel' there is nearly always a second question — whether to keep going, and how much more of yourself to put in — and that one is yours rather than his, and it does not require his answer first. The Fool will not tell you what is in him. It is quite firm, though, that you are allowed to decide what you need before you ever find out.",
-        "Let me look closer at the question underneath the question…",
+        "You turned the Fool, dear. Look — the dog is barking and he hasn't turned round.",
+        "You asked how he really feels about you. Your hand went to the card of a man mid-step.",
+        "So he feels it, dear. What you picked up from him was there.\nAnd this card walks on without once looking back at what it left.\nBut walking on is a habit in him. It is not a ruling on you.\nThat's why the warmth reached you, dear, and the account never did.",
+        "Let me look closer at what keeps him from stopping long enough…",
       ],
     },
     // 'Does he love me, or am I imagining it?' — a BINARY whose second branch puts HER
@@ -3767,23 +4165,27 @@ const RETURN_MHF: CardSetConfig = {
     // itself invites it. Refuse the either-or as 'cards-moved-on' does; affirm the noticing
     // as 'cards-feels-off' does; never claim a feeling is proof of anything.
     'cards-imagining-it': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-19 from
+      // fb-tarot/docs/drafts/rewrites/cards-imagining-it.json — approved copy, folded verbatim:
+      // bubbles 3-6 become beat 3, joined by newlines, and Version B serves them as
+      // separate chat messages with a typing pause between each.
       a: [
-        "You turned the Magician, dear — the card of the thing that genuinely got made, whatever either of you calls it.",
-        "You asked whether you invented all this, and drew the card of what was actually built.",
-        "Two answers are available to me here, dear, and I am handing you neither one. What sits inside him is his to speak, and I intend to stay well out of it. Nor am I going to suggest that you conjured the thing yourself, because that is the crueller of the two and it is almost never true. Something happened between the pair of you. It had a shape, it took up real time, and you were present for every hour of it. The Magician deals in what was made rather than in who meant what by it, and whatever it turns out to have meant to him, it was not assembled out of thin air by a woman sitting on her own.",
-        "Let me look closer at what was actually built between you…",
+        "You turned the Magician, dear. Look — the table is between you and the rest of him.",
+        "You asked about his love, and about your own eyes. Your hand went to the card of things truly made.",
+        "So you did not imagine it, dear. He loves you.\nAnd this card builds nothing by chance. What stands between you was made on purpose.\nBut he has put it into the doing, dear, and not into words you can hold.\nThat's why you keep checking it against your own memory.",
+        "Let me look closer at what keeps him from saying it plainly…",
       ],
       b: [
-        "You turned the Hanged Man, dear — the card of the question that has been asked the wrong way round.",
-        "It was the card of the reversal your hand found, and there is one sitting inside what you asked me.",
-        "You have offered me two doors, dear, and I am walking through neither of them: not the one where he adores you, and not the one where you assembled all of this by yourself. The choice itself is doing you harm. Those are not the only two things that can be true, dear, and being handed only two is how a woman ends up doubting her own eyes. A thing can be real and unspoken. It can be real and not enough. It can be real to one person at one size and to the other at quite another. The Hanged Man's entire business is turning a question over, and turned over, yours stops being about his heart and becomes about why you were left with only two doors.",
-        "Let me look closer at why it came down to two doors…",
+        "You turned the Hanged Man, dear. Look — you're seeing him from below, not from level.",
+        "You asked about his love, and about your own eyes. Your hand went to the card of a crooked view.",
+        "So the love is there, dear. You have been looking at it sideways.\nAnd from down there, every plain thing can look like something else.\nBut the angle is the trouble, dear. Your eyes are working fine.\nThat's why one week you are certain, and the next week you are not.",
+        "Let me look closer at what has been holding you at that angle…",
       ],
       c: [
-        "You turned the Fool, dear — the card of the one who trusted what she saw.",
-        "You came asking me to rule on your own eyes, and drew the card of the woman who went ahead and believed.",
-        "I am not going to hand you the sentence you have braced for, dear — that none of it was there and you constructed the whole of it yourself. Women are told that far too easily and it does damage that outlasts the man. Nor will I swing the other way and promise you that anything felt strongly enough must therefore be returned in full; a feeling is not evidence, however large it is, and telling you otherwise would be flattery rather than help. The Fool sits with the harder and truer thing. You saw something, and you acted on it, and that was not foolish of you. What it came to on his side is still open — and you are allowed to want it said aloud rather than deduced.",
-        "Let me look closer at what you saw before the doubt arrived…",
+        "You turned the Fool, dear. Look — the drop is real and it's right there beside his boot.",
+        "You asked about his love, and about your own eyes. Your hand went to the card of a man who steps out anyway.",
+        "So it's real, dear. You did not build this on your own.\nAnd he stepped out too. That is not a thing a man does over nothing.\nBut he stepped without once looking at where it lands.\nThat's why it feels real to you, dear, and unsteady at the same time.",
+        "Let me look closer at what makes the ground feel so unsteady…",
       ],
     },
     // ── Still-feels (2026-08-14) ─────────────────────────────────────────────────────────
@@ -3799,23 +4201,27 @@ const RETURN_MHF: CardSetConfig = {
     // return or for love; she is asking to still exist somewhere in his head, which is the most
     // modest thing a person can request. The modesty is the finding.
     'cards-still-think': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-19 from
+      // fb-tarot/docs/drafts/rewrites/cards-still-think.json — approved copy, folded verbatim:
+      // bubbles 3-6 become beat 3, joined by newlines, and Version B serves them as
+      // separate chat messages with a typing pause between each.
       a: [
-        "You turned the Magician, dear — the card of what a person does on purpose.",
-        "You asked whether you cross his mind, and up came the card of things that are chosen rather than things that simply happen.",
-        "Here is the difficulty with your question, dear. A thought is not a deed. What drifts through a man is not willed by him, and no deck reaches into it. But notice what the Magician has caught you doing. You have not come here to ask whether he is coming back. You have not come to ask whether he loves you either. You have come to ask whether you are occasionally remembered. A woman does not arrive at that question from nowhere. She is walked down to it, one disappointment at a time, until the smallest thing feels like the only thing left to ask for — and that is a fact about what you have been going without, not a fact about what you are worth.",
-        "Let me look closer at how small you have had to make the asking…",
+        "You turned the Magician, dear. Look — his sleeve is pushed back off the wrist of his raised arm.",
+        "You asked what he thinks now. Your hand went to the man who deals in what's made.",
+        "So he does think of you, dear. What you had was real.\nAnd every piece on that table was wanted, dear. Someone chose each one.\nBut you've scaled yourself down to a thought, dear. That's what I mind.\nThat's why the ask got so small. You used to want the whole of it.",
+        "Let me look closer at what shrank the ask that far…",
       ],
       b: [
-        "You turned the Hanged Man, dear — the card that takes a question and turns it the other way up.",
-        "Your hand found the card of the reversal, and there is a considerable one sitting inside what you have asked me.",
-        "Turn it over and look at what you are actually holding, dear. You are asking whether a man occasionally thinks of you — and you are asking it because he has never once left your own head. Both ends of this sit in your hands. He is not somewhere wondering whether he crosses your mind; you took his half of the wondering as well as your own, and I suspect you did it without a word to anybody. What he thinks is beyond my reach, dear. What the Hanged Man says instead is that carrying both halves of a thing is exhausting in a way nobody around you can see, because from the outside it simply looks like you have gone quiet.",
-        "Let me look closer at the half of this you have been carrying for him…",
+        "You turned the Hanged Man, dear. Look — the post he hangs from runs straight down past him.",
+        "Your question was about his thinking. Your hand went to the card that holds a question open.",
+        "So it happened, dear. That much is settled, whatever comes next.\nAnd he hangs there asking for very little, dear. So do you.\nBut being thought of is the smallest thing going, dear.\nThat's why you never asked for more, dear. Small felt safer to say.",
+        "Let me look closer at what has been keeping even that from you…",
       ],
       c: [
-        "You turned the Fool, dear — the card of the one who walked in open-handed with nothing promised back.",
-        "You came asking whether you left a mark, and drew the card of the woman who arrived without a single guarantee.",
-        "I will not invent it for you, dear — not him pausing over something, not you surfacing in his evening. I could write either one and it would be lovely and it would be worth nothing. What the Fool holds instead is firmer and it is yours. What happened between you is not stored in his head alone, waiting on his memory to make it real. You were not a witness to it. You were half of it, and your account of it is not the lesser copy that only counts once his has been checked. Whether you are in his thoughts tonight is genuinely unknown to me. That you were there, and that it happened, is not in question at all.",
-        "Let me look closer at the half of it that was always yours…",
+        "You turned the Fool, dear. Look — the little dog looks up at him and he doesn't look down.",
+        "You came asking what he thinks. Your hand went to the one who carries almost nothing.",
+        "So he carries you still, dear. What you had was not in question.\nAnd look at his bundle. One small thing, and that's the lot.\nBut you've cut this down to almost nothing, dear.\nThat's why being thought of is all you ask now, dear.",
+        "Let me look closer at what took the rest of it away…",
       ],
     },
     // 'Does he still love me?' — the lens is SURVIVAL rather than EXISTENCE. ⚠️ ONE WORD from
@@ -3824,23 +4230,27 @@ const RETURN_MHF: CardSetConfig = {
     // given and asks whether it LASTED. Affirm the past tense with confidence — that is the
     // payout and it costs nothing true — and refuse the present tense in both directions.
     'cards-still-love': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-19 from
+      // fb-tarot/docs/drafts/rewrites/cards-still-love.json — approved copy, folded verbatim:
+      // bubbles 3-6 become beat 3, joined by newlines, and Version B serves them as
+      // separate chat messages with a typing pause between each.
       a: [
-        "You turned the Magician, dear — the card of the deliberate act.",
-        "You asked whether it has lasted, and drew the card of what a person sets out to do on purpose.",
-        "The Magician governs what is chosen — and whether a feeling outlasts its circumstances is the one part of a man that is not chosen at all. He does not get a vote on what remains in him, and nor do I get a window into it. I will not say the love is intact and waiting. I will not say it is spent either. Both are sentences a stranger has no business handing down. But look at the word sitting in the middle of your own question. Still. You did not come here asking whether he ever loved you. You have settled that, and you settled it from the inside, where you were standing at the time. Whatever became of it since, no one is entitled to take that first part off you.",
-        "Let me look closer at what you already know and were never allowed to say…",
+        "You turned the Magician, dear. Look — the four tools sit exactly where he put them.",
+        "You asked whether the love lasted. Your hand reached for the maker, dear.",
+        "So it survived, dear. What was built here was real, and it holds.\nAnd a made thing leaves marks, dear. Look where his tools still sit.\nBut whether he says so is a different matter, dear.\nThat's why it never left you, dear, and the words never came.",
+        "Let me look closer at what stands between you and knowing…",
       ],
       b: [
-        "You turned the Hanged Man, dear — the card of the thing suspended, neither fallen nor risen.",
-        "It was the card of the unresolved state your hand went to, and that is precisely the room you have been living in.",
-        "There is no word in the language for the tense you are in, dear, and I think that is half of why it has been so hard to explain to anyone. You are not together. You are not finished either — nothing was ever closed, only stopped. The Hanged Man is the card of exactly that suspension, and what it says is that the suspension is a real position you were PUT in, not a failure of yours to make up your mind. People will treat it as indecision. But an unfinished sentence is not the same as a closed one, and waiting on a sentence somebody else walked away from mid-way is not weakness of character.",
-        "Let me look closer at the sentence he never finished…",
+        "You turned the Hanged Man, dear. Look — the beam's two arms reach out past the sides of him.",
+        "You asked whether the love lasted. Your hand reached for the card that gives no verdict.",
+        "So nothing has been shut, dear. It happened, and nothing has undone it.\nAnd he hangs between, dear. Nothing has been announced either way.\nBut nobody has told you which it is, dear. Not once.\nThat's why you've carried the not-knowing alone. That's the heavy part, dear.",
+        "Let me look closer at what has been keeping this unsaid…",
       ],
       c: [
-        "You turned the Fool, dear — the card of the road that has not been decided yet.",
-        "You asked whether something survived, and drew the card that has never once dealt in certainties.",
-        "I am going to refuse both halves of what you want from me, dear. I will not say his love is still there — that is a promise I cannot keep and you would build months on it. I will not say it is gone — that is a death notice, and I have no standing to issue one about a living man's heart. The Fool sits with what is genuinely open, and this is genuinely open. You have been the only person holding this question open, dear. You have kept it alive on your own, carried it into every quiet moment — and it was never a question one person could answer by herself. You are allowed to stop being the only one holding it.",
-        "Let me look closer at what it has cost you to hold this on your own…",
+        "You turned the Fool, dear. Look — a white flower, held loosely, with its stem down.",
+        "You asked whether the love lasted. Your hand reached for the one who doesn't look back.",
+        "So what you had was real, dear. That is not in question.\nAnd he faces out, dear, with the whole road behind him.\nBut the card shows me nothing of what he carries now, dear.\nThat's why you keep looking back at it, dear. Nothing closed it off.",
+        "Let me look closer at what keeps this question open…",
       ],
     },
     // 'Does he still love me, or has he moved on?' — ⚠️ shares the verbatim clause "or has he
@@ -3850,23 +4260,27 @@ const RETURN_MHF: CardSetConfig = {
     // 🔴 THE TWO ARE NOT OPPOSITES. Moving on is something a person DOES with a life; loving is
     // something that happens IN them. They are not on one axis and never were.
     'cards-love-or-moved-on': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-19 from
+      // fb-tarot/docs/drafts/rewrites/cards-love-or-moved-on.json — approved copy, folded verbatim:
+      // bubbles 3-6 become beat 3, joined by newlines, and Version B serves them as
+      // separate chat messages with a typing pause between each.
       a: [
-        "You turned the Magician, dear — the card of what actually gets done, as against what is merely felt.",
-        "You handed me two options and drew the card that separates them, which is a better piece of luck than you know.",
-        "Look at the two things you have set either side of that little word 'or', dear, because they are not opposites. Moving on is something a person DOES — mornings, work, other faces at the table. Loving is not done at all; it happens inside somebody, with nothing to show for it. A man can have built an entire new life and still carry you in him, or be sitting perfectly still and feel nothing whatever. The Magician cannot pick between them because they were never a pair to pick from. You have been reading every scrap of him as evidence for one of two verdicts, and it has been impossible — you thought that was your failing, and it is not. Notice what neither door touches: the thing you had was real when you had it.",
-        "Let me look closer at the question you were handed…",
+        "You turned the Magician, dear. Look — a red rose and a white lily grow in the same bed.",
+        "You asked if the love is there, or if he has moved past it. Your hand went to the man who sorts things.",
+        "So what you had was real, dear. That much isn't in question.\nAnd look at the bed, dear. Rose and lily, side by side, both real.\nBut love and moving on were never a pair, dear.\nThat's why no answer has fitted, dear. The question was built wrong.",
+        "Let me look closer at what put that false choice in front of you…",
       ],
       b: [
-        "You turned the Hanged Man, dear — the card of the question asked from the wrong end.",
-        "Your hand went to the card of the reversal, and yours needs turning about as much as any I have seen.",
-        "Your question has room in it for exactly one person, dear, and it is not you. Both doors lead to him: what he feels, what he has done — and everything that happens next in your life apparently waits behind that answer. I am not going to walk through either door. The inside of a man is not visible to me, and anyone who tells you otherwise is selling you something. What the Hanged Man asks instead is the question nobody has put to you in all this time. Not what he feels. What YOU want — and whether you would even recognise the answer now. I am not telling you to stop asking, dear. I am saying your own answer has been at the back of the queue behind his for a long while.",
-        "Let me look closer at the question nobody has asked you…",
+        "You turned the Hanged Man, dear. Look — one leg goes up and one goes across, at the same time.",
+        "You asked if the love is there, or if he has moved past it. Your hand went to the card that holds two things.",
+        "So he can hold both, dear. People do it all the time.\nAnd look at him. Up and down at once, and both are true.\nBut you were handed a choice that doesn't work, dear. Not your doing.\nThat's why picking one has felt wrong, dear. Neither is the true answer.",
+        "Let me look closer at what has been forcing this into two…",
       ],
       c: [
-        "You turned the Fool, dear — the card of what has not been decided.",
-        "You came for one of two verdicts and drew the card that refuses to issue either.",
-        "You have braced for one sentence and hoped for the other, dear, and I am giving you neither. Not 'he still loves you' — I would be inventing that, and you would live off it until it ran out and left you exactly here again, only tireder. Not 'he has moved on' — that is a burial for a living man, performed by a woman who has never met him. The Fool's whole business is the road that is still open, and this one is still open. But open does not mean promised, it does not mean hopeless, and it does not mean you must stand at the roadside until somebody comes to tell you which.",
-        "Let me look closer at what is still open, and what never was…",
+        "You turned the Fool, dear. Look — his stick is behind him and the flower is in front.",
+        "You asked if the love is there, or if he has moved past it. Your hand went to the one going forward.",
+        "So he holds the old and the new at once, dear. People are like that.\nAnd look at his hands. Stick behind him, flower out in front.\nBut nobody made you pick one, dear. The question did that.\nThat's why the two answers keep swapping places, dear, night after night.",
+        "Let me look closer at what has been making you pick…",
       ],
     },
     // ── His-other-life (2026-08-14) ──────────────────────────────────────────────────────
@@ -3880,23 +4294,27 @@ const RETURN_MHF: CardSetConfig = {
     // permanence is not a STATUS she already holds and he has already assigned. It is built or
     // not built, and nobody is living in it yet. A category error, not an unanswerable question.
     'cards-forever-or-now': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-19 from
+      // fb-tarot/docs/drafts/rewrites/cards-forever-or-now.json — approved copy, folded verbatim:
+      // bubbles 3-6 become beat 3, joined by newlines, and Version B serves them as
+      // separate chat messages with a typing pause between each.
       a: [
-        "You turned the Magician, dear — the card of the thing made deliberately, in daylight.",
-        "You asked which of two things you are to him, and drew the card of what gets built rather than what merely happens.",
-        "I want to take your question apart first, dear, because it has been put to you the wrong way round. You have asked which of two categories you are in, as though he decided some time ago, wrote it down, and you are simply waiting to be shown the page. Forever is not a condition a woman is discovered to be in. It is built — named out loud, planned for, said in front of other people — and the Magician's entire business is that difference. So the honest answer is not one of your two, dear. It is a question back: has anything actually been built here, or has it only been felt? It is the building that has gone missing.",
-        "Let me look closer at what has been built here, and what has only been felt…",
+        "You turned the Magician, dear. Look — red roses on the vine above his head.",
+        "You asked if you're his forever, or just his now. Your hand went to the man who makes things.",
+        "So the forever you felt was real, dear. The card doesn't argue with you there.\nAnd look at his table, dear. Every tool to build one is already there.\nBut forever is built, dear. Here it has only been felt.\nThat's why you can feel certain of him, dear, and still have nothing to call it.",
+        "Let me look closer at what stands between you and a place with a name…",
       ],
       b: [
-        "You turned the Hanged Man, dear — the card of the question that has been hung upside down.",
-        "Your hand went to the card of the reversal, and yours is carrying a hidden assumption that needs turning over.",
-        "Underneath what you asked me is a belief that there is a fact about you sitting inside that man, settled and filed, and that your whole life is waiting on somebody reading it out. But nobody lives in forever, dear. He is not living in it either. There is no such fact, and that is not bad news — it means you have not been quietly assigned to the lesser of your two boxes without being told. What the Hanged Man shows instead is far more ordinary and far more fixable: you are in an arrangement that has never been named, and the not-naming is the thing you are actually feeling. You have been treating a silence as a verdict.",
-        "Let me look closer at the thing that has never been named…",
+        "You turned the Hanged Man, dear. Look — green leaves still growing on the beam he hangs from.",
+        "You asked if you're his forever or his now. Your hand went to a man still hanging.",
+        "So no verdict was passed on you, dear. Look how he hangs — nothing is settled.\nAnd the word for it has never been named in him either, dear.\nBut the leaves keep coming off that dead beam anyway, dear.\nThat's why you can be his whole world at the door, dear, and nothing past it.",
+        "Let me look closer at what sits between you and that word…",
       ],
       c: [
-        "You turned the Fool, dear — the card of the road walked before anyone drew a map of it.",
-        "You came asking to be sorted into one of two boxes, and drew the card that has never once been willing to sort anybody.",
-        "I am giving you neither of your two answers, dear. Not that you are his forever, which would be a promise I invented and you would spend months living inside. Not that you are only his now, which is a dismissal, and you would carry it into every ordinary evening after this one. The Fool leaves this in the honest middle: it is not decided. But hear what I am not saying — undecided is not the same as doomed, and it is not the same as promised, and the wait itself is not proof of either. There is a difference between a road with no map and a road with no destination, and you are allowed to ask which of them you are walking.",
-        "Let me look closer at the road you have actually been walking…",
+        "You turned the Fool, dear. Look — the sun behind him, big and low in the sky.",
+        "You asked if you're his forever or his now. Your hand went to the one with no map.",
+        "So he hasn't set you aside, dear. This card has settled nothing yet.\nAnd look at his hand, dear. He walks out with no map in it.\nBut a man with no map can still walk beside you for years.\nThat's why every plan you make with him stops at next month, dear.",
+        "Let me look closer at what has been standing in the way of a straight answer…",
       ],
     },
     // 🔴🔴 'Why do his children come before me?' — THE SHARPEST LANDER ON THE FUNNEL. It asks a
@@ -3905,23 +4323,27 @@ const RETURN_MHF: CardSetConfig = {
     // as a father, NEVER an ultimatum. The finding: children legitimately do come first, and that
     // is NOT the wound — the wound is that she has been left to infer her place from the leftovers.
     'cards-his-children': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-19 from
+      // fb-tarot/docs/drafts/rewrites/cards-his-children.json — approved copy, folded verbatim:
+      // bubbles 3-6 become beat 3, joined by newlines, and Version B serves them as
+      // separate chat messages with a typing pause between each.
       a: [
-        "You turned the Magician, dear — the card of what is planned rather than what is left over.",
-        "You asked about the place you hold, and drew the card of intention, which is exactly where this needs looking.",
-        "Let me be straight with you, dear, because I think you have had enough gentle evasions. A man's children do have a first call on him. That is not an injustice done to you and I will not pretend otherwise to make this evening easier. So you will hear no such thing from this card as 'you ought to come first'. But look at what it IS the card of. Planning. Intention. Things put in a diary on purpose. Children coming first has never once meant that the woman who loves him gets whatever remains when everything else is finished. Those are two entirely different arrangements, dear. First call is not the same as only call. You are not asking to be moved up a list. You are asking to appear on one.",
-        "Let me look closer at what has actually been planned for you…",
+        "You turned the Magician, dear. Look — a gold cup and a coin marked with a star, set out in order.",
+        "You asked why his children come before you. Your hand went to the man who plans.",
+        "So his children do have a first call, dear. I won't dress that up for you.\nAnd first call was never the only call, dear. Look how much is on that table.\nBut nobody has ever set a place there for you. Not one you could point at.\nThat's why you're not asking to move up a list, dear. You're asking to appear on one.",
+        "Let me look closer at what stands between you and a place of your own…",
       ],
       b: [
-        "You turned the Hanged Man, dear — the card that turns a question over and shows you its underside.",
-        "Your hand found the card of the reversal, and there is one here that I would like you to see.",
-        "You have asked why they come before you — notice what that question has done, dear. It has placed you and those children on a single ladder with one rung worth having, and set you to competing for it. I do not think that ladder is yours. I think it was handed to you: by an arrangement in which you are always the one who adjusts, by every plan that moved, and possibly not by him at all. You are not in a contest with children, dear. You were never going to win one. The Hanged Man turns it into a quieter question, and a fairer one. Not whether you rank above them. Where you sit at all — named, reliable, somewhere a person could point to.",
-        "Let me look closer at where you actually sit in all this…",
+        "You turned the Hanged Man, dear. Look — his hands are behind his back, where you can't see them.",
+        "You asked why his children come before you. Your hand went to the man hung the other way up.",
+        "So the race was handed to you, dear. You never entered it yourself.\nAnd his children do come first, dear. That part is true and it stays true.\nBut first was never the same as only, dear. Nobody drew you a place either way.\nThat's why you can't name where you sit, dear. No one has ever told you.",
+        "Let me look closer at what has been standing where your place should be…",
       ],
       c: [
-        "You turned the Fool, dear — the card of the one who walked into it open-handed.",
-        "You came into a life that was already full, and drew the card of the woman who went in without conditions.",
-        "You arrived somewhere already occupied and you did it generously, dear. But the Fool has never pretended a thing costs nothing, so I will not either. Two things I decline outright. Grading that man as a father is the first — neither this card nor I have ever seen him with them. Pronouncing on what his children ought to mean to him is the second, since the answer there is everything. Wanting a place of your own is not the same as wanting theirs to be smaller. You may have told yourself they are, on the harder nights — but they are not, and believing they are is how a woman comes to ask for nothing whatever and call it being reasonable.",
-        "Let me look closer at what you have stopped letting yourself ask for…",
+        "You turned the Fool, dear. Look — his coat is covered in flowers, and the drop is one step away.",
+        "You asked why his children come before you. Your hand went to the one who walked in late.",
+        "So you came into a life that was already full, dear. You came with open hands.\nAnd a full life leaves very little room showing, dear. That's what you walked into.\nBut wanting a place of your own takes nothing from theirs, dear.\nThat's why you've asked for so little, dear. You called that being fair.",
+        "Let me look closer at what has been in the way of your own place…",
       ],
     },
     // 'Am I living in her shadow?' — ⚠️ "her" may be an ex OR a woman who has DIED, and the
@@ -3930,23 +4352,27 @@ const RETURN_MHF: CardSetConfig = {
     // unlike `fidelity`'s third person, she may be entirely legitimate. The finding: a shadow is
     // cast by something she cannot see the whole of, so the comparison has no visible terms.
     'cards-her-shadow': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-19 from
+      // fb-tarot/docs/drafts/rewrites/cards-her-shadow.json — approved copy, folded verbatim:
+      // bubbles 3-6 become beat 3, joined by newlines, and Version B serves them as
+      // separate chat messages with a typing pause between each.
       a: [
-        "You turned the Magician, dear — the card of the thing itself, as against the shape it throws.",
-        "You asked about a shadow, and drew the card that deals only in what is solid and actually made.",
-        "Consider what a shadow really is, dear, because your own word is doing more work than you realise. A shadow is not a person. It is what falls when something stands between you and the light. What she was, or is, I shall stay out of entirely — inventing a woman for you to be set against is beneath what you came here for. What the Magician will say is this. You are being measured against something you have never been shown — not a person, but a version of one. Versions get edited, dear. By memory, which is a poor and flattering archivist. By grief. Nobody alive can be compared against an edited version and come out level, and you have been quietly failing that comparison without ever being shown its terms.",
-        "Let me look closer at the comparison nobody has ever shown you…",
+        "You turned the Magician, dear. Look — the number one sits at the very top of his card.",
+        "You asked if you're living in her shadow. Your hand went to the man who deals in solid things.",
+        "So there is something in that room with you, dear. The card gives you that.\nAnd a shadow isn't a person, dear. It's what falls when the light is blocked.\nBut nobody has ever set out the terms, dear. You've been guessing at them.\nThat's why a good day with him can still end with you comparing, dear.",
+        "Let me look closer at what's standing between you and the light…",
       ],
       b: [
-        "You turned the Hanged Man, dear — the card that asks who is holding the lamp.",
-        "Your hand went to the card of the reversal, and the reversal here is not about her at all.",
-        "You have asked whether you are in her shadow, and every part of your attention is pointed at her. Turn it round, dear. A comparison does not make itself. Somebody has to hold it up, and that is the question worth your evening. Sometimes it is him, in small ways he may not even hear himself doing. Sometimes — and I say this with no unkindness — it is her name doing work inside your own head, because no one has ever sat you down and told you plainly that you are not being weighed. You have no way of knowing which of those it is, dear, and that is not a failure of your perception.",
-        "Let me look closer at who has been holding this up…",
+        "You turned the Hanged Man, dear. Look — his hands are tucked behind his back, out of sight.",
+        "You asked if you're living in her shadow. Your hand went to the man hung upside down.",
+        "So no measure was ever set out for you, dear. His hands are behind his back.\nAnd the light in this comes from him, dear. He decides what gets shown.\nBut you can't answer a question that was never asked out loud, dear.\nThat's why you go looking for signs of her, dear, and you keep finding them.",
+        "Let me look closer at what's casting this over you…",
       ],
       c: [
-        "You turned the Fool, dear — the card of the one who arrives after the story has begun.",
-        "You came asking where you stand beside another woman, and drew the card of the one who walked in with nothing settled.",
-        "You came into this after her. That is a fact about the order of events, dear — no verdict on your worth lives anywhere inside it. Now, I will not do the thing you may have half hoped for. I will not weigh you against her, I will not suggest she was less than you have been told, and I will not hand you an enemy to feel taller beside. Whoever she is or was, she is not your opponent. What the Fool holds is simpler and it is entirely yours. You have the right to be looked at as yourself rather than in relation to somebody else — to be a person in this life rather than the chapter that came afterwards.",
-        "Let me look closer at what it would mean to be seen as yourself…",
+        "You turned the Fool, dear. Look — mountains behind him, and one step left before the drop.",
+        "You asked if you're living in her shadow. Your hand went to the one who came in late.",
+        "So you came in after her, dear. Coming later doesn't put you under anyone.\nAnd look at him, dear. He walks in with nothing settled and no past to carry.\nBut the order still gets treated like a ranking, dear. No one has said otherwise.\nThat's why the good days still leave you checking, dear. You've had no word to hold.",
+        "Let me look closer at what stands between you and being seen plainly…",
       ],
     },
     // 'Why do we still live apart?' — the most concrete of the five: a physical arrangement.
@@ -3955,23 +4381,27 @@ const RETURN_MHF: CardSetConfig = {
     // DECIDED is a different object from one that merely never changed, and nobody has told her
     // which she is living in.
     'cards-live-apart': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-19 from
+      // fb-tarot/docs/drafts/rewrites/cards-live-apart.json — approved copy, folded verbatim:
+      // bubbles 3-6 become beat 3, joined by newlines, and Version B serves them as
+      // separate chat messages with a typing pause between each.
       a: [
-        "You turned the Magician, dear — the card of the decision actually taken.",
-        "You asked about an arrangement, and drew the card that separates the things chosen from the things merely arrived at.",
-        "Most arrangements of the kind you are describing were never decided at all, dear. They were arrived at. There was a reason once — a practical one, the sort nobody could argue with at the time — and then somewhere along the way that reason quietly stopped applying, and the arrangement simply stayed on, because nothing had ever been set up to end it. I will not tell you what is behind that man's front door, or what the distance means about his feelings. But the Magician is very firm on one distinction. A plan and a habit are different objects, dear. They can look identical from outside for years. And nobody has ever told you which of the two you have been living inside.",
-        "Let me look closer at whether this was ever actually decided…",
+        "You turned the Magician, dear. Look — the wand in his hand is white at both ends.",
+        "You asked why you still live apart. Your hand went to the man who decides before he acts.",
+        "So the miles aren't the measure of him, dear. The card is clear with me there.\nAnd nothing on that table got there by accident, dear. He set each thing down.\nBut a plan and a habit look the same from outside, dear.\nThat's why you've been guessing which one you live in, dear. Nobody has said.",
+        "Let me look closer at what sits between you and a plain reason…",
       ],
       b: [
-        "You turned the Hanged Man, dear — the card of the question that turns out to be about something else.",
-        "Your hand found the card of the reversal, and there is one sitting inside the word 'why'.",
-        "You have brought your 'why' to me, dear, and it is not mine to answer — the reason lives in him and there is only one person who can hand it over. So the Hanged Man turns your question round and asks a different one. Why are you asking me rather than asking him? Something has made that question hard to put. Either way, dear, that is worth more of your attention than the reason itself, because an arrangement that cannot be discussed is not the same as one that simply has not been. I am not saying it proves anything about his feelings. I am saying there is a locked room in a shared life, and you have been living beside the door.",
-        "Let me look closer at why this has been so hard to ask him…",
+        "You turned the Hanged Man, dear. Look — the beam he hangs from is shaped like a T.",
+        "You asked why you still live apart. Your hand went to the card that turns a question over.",
+        "So he hasn't put you outside his life, dear. This card shows a man held, not gone.\nAnd a man held in one spot can't come to you, dear. He can't leave either.\nBut you've had to work that out alone, dear. Every time, on your own.\nThat's why asking him got hard, dear. You'd already answered it for him.",
+        "Let me look closer at what stands between you and asking him…",
       ],
       c: [
-        "You turned the Fool, dear — the card of the open road, and there is a closed door in your question.",
-        "You asked about the distance between two homes, and drew the card of the one who travels light and asks for nothing.",
-        "I will not read that man's front door as a verdict on you, dear. A man living behind his own door is not automatically a man withholding himself, and dressing that reading up as a finding of the cards is something I decline to do. Here is what the Fool does put in front of me, and it is about you rather than him. You have been reading an arrangement instead of being given a reason. Every visit, every goodbye at a door, every drive home — all of it interpreted, weighed, checked against the last time. That is exhausting in a way that being told plainly never is, and you have been doing the work of two people.",
-        "Let me look closer at how long you have been translating this on your own…",
+        "You turned the Fool, dear. Look — a red feather stands up from his cap.",
+        "You asked why you still live apart. Your hand went to the one who travels light.",
+        "So the quiet is what hurts, dear. Two front doors on their own wouldn't.\nAnd look what he carries, dear. What fits on a stick, and no map.\nBut you can read a closed door for years and still be told nothing, dear.\nThat's why you're tired, dear. You've been living it and explaining it both.",
+        "Let me look closer at what has kept a plain reason from reaching you…",
       ],
     },
     // 'Have I already given him too long?' — asks for a verdict on HER OWN PAST. 🔴 Both poles
@@ -3980,23 +4410,27 @@ const RETURN_MHF: CardSetConfig = {
     // "you will know when". The finding: "too long" treats the years as a DEPOSIT toward a
     // purchase that may not complete — but they were also her life, and she lived them.
     'cards-too-long': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-19 from
+      // fb-tarot/docs/drafts/rewrites/cards-too-long.json — approved copy, folded verbatim:
+      // bubbles 3-6 become beat 3, joined by newlines, and Version B serves them as
+      // separate chat messages with a typing pause between each.
       a: [
-        "You turned the Magician, dear — the card of what was actually made in all that time.",
-        "You asked me to audit the years, and drew the card of what gets built rather than what gets spent.",
-        "You will hear no such verdict from me as 'you have given too much', dear. That is a sentence, and you would carry it out of here and into every anniversary that is left to you. Nor will I tell you it has all been worth it, because I cannot know that. 'Too long' treats those years as a payment you have been making towards something that might not complete — as though the whole sum is forfeit if it does not. But you did not spend that time in a waiting room, dear. You lived it. There were ordinary Tuesdays in there that belonged to you, and they are not retrospectively cancelled by how this turns out. Time given to a person is not the same thing as time lost.",
-        "Let me look closer at what those years actually held…",
+        "You turned the Magician, dear. Look — one arm raised high, a wide white sleeve falling from it.",
+        "You asked if you've already given him too long. Your hand went to the man who makes things.",
+        "So you didn't spend those years, dear. You lived them.\nAnd nobody has ever told you what those years were for, dear.\nBut you've been paying a toll on them ever since, dear. At your own gate.\nThat's why you keep counting them, dear, and the count never gets smaller.",
+        "Let me look closer at what has been sitting in the way of a change…",
       ],
       b: [
-        "You turned the Hanged Man, dear — the card of the thing suspended, going neither up nor down.",
-        "You asked about the length of it, and drew the card that concerns itself with stillness instead.",
-        "You have asked whether you have given too long, as though the number of years were the thing that decides it. I do not believe it is the length, dear. It is whether anything moved. Ten years in which things were said and named and built is a completely different object from two in which nothing did. The Hanged Man's whole business is suspension — and what you are actually feeling, I think, is not duration but STILLNESS. Those two get mistaken for each other constantly, and the mistake is expensive: it sets a woman to interrogating the calendar when the calendar was never what was wrong. Nothing has moved. That is the thing.",
-        "Let me look closer at what has actually moved, and what has not…",
+        "You turned the Hanged Man, dear. Look — leaves growing out of the dead wood he hangs from.",
+        "You asked if you've given him too long. Your hand went to the man who isn't moving.",
+        "So the years weren't the trouble, dear. Nothing moved, and that's a different thing.\nAnd look at him, dear. He has been still, not short of time.\nBut being still feels just like time when you're the one waiting, dear.\nThat's why you counted the years, dear. They were the only thing moving.",
+        "Let me look closer at what has been holding this still…",
       ],
       c: [
-        "You turned the Fool, dear — the card of the one who set out without a guarantee.",
-        "You came asking whether you were foolish to stay, and drew the card that has never once accepted that charge.",
-        "I think there is a different question underneath yours, dear, and I would like to hand it back to you plainly. 'Have I given him too long' is very often 'am I allowed to want this to change' — and you do not need my permission for that, nor a card's, nor his. It asks me to certify that the years were WASTED, because only then would you be entitled to want more. That is a cruel toll to have to pay at your own gate, dear, and you have been paying it. The Fool names no hour for going and none for staying. But it is quite firm that wanting more was never a thing you had to earn by first calling the past a mistake.",
-        "Let me look closer at what you have been making yourself prove…",
+        "You turned the Fool, dear. Look — his front foot is already off the rock.",
+        "You asked if you've already given him too long. Your hand went to the one who set out with no promise.",
+        "So the answer you came for isn't a number, dear. There's a plainer question under it.\nAnd yours is this. Am I allowed to want this to change?\nBut you've been waiting to call the years a mistake first, dear.\nThat's why permission never came, dear. You were waiting to give it to yourself.",
+        "Let me look closer at what stands between you and wanting more…",
       ],
     },
     // Soulmate-label (2026-08-17). 🔴🔴 THE LABEL BAN RUNS THROUGH ALL NINE: never certify and
@@ -4005,23 +4439,27 @@ const RETURN_MHF: CardSetConfig = {
     // another, and "just a strong connection" may never be treated as the losing branch. The
     // shared move: affirm the PULL as real information about HER, refuse the WORD.
     'cards-really-soulmate': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-19 from
+      // fb-tarot/docs/drafts/rewrites/cards-really-soulmate.json — approved copy, folded verbatim:
+      // bubbles 3-6 become beat 3, joined by newlines, and Version B serves them as
+      // separate chat messages with a typing pause between each.
       a: [
-        "You turned the Magician, dear — the card of what is made by hand, never of what is handed down.",
-        "You came asking whether a word belongs to a man, and drew the card that has never once dealt in words.",
-        "Here is what the Magician will and will not do, dear. It will not award that word to him — and it will not take it off him either, which matters every bit as much. There is no test for it, and nobody has ever been able to check the answer. But look at what your hand went to. This card's concern is what gets MADE, by somebody's hands, and you already hold that evidence: what he does on an ordinary Wednesday, which things he told you he would do, and which of them happened. None of it gets truer if the word is granted, or falser if it is withheld.",
-        "Let me look closer at what the two of you have actually made…",
+        "You turned the Magician, dear. Look — his tools are plain things, simply made.",
+        "You asked if he's really your soulmate. Your hand went to the man who works in the plain world.",
+        "So the pull is real, dear. I can see that much on the card.\nAnd his tools are plain things, dear. Every one of them can be checked.\nBut the word you came with can't be checked at all, dear.\nThat's why really got into your question, dear. The doubt came first.",
+        "Let me look closer at what has been standing in place of that question…",
       ],
       b: [
-        "You turned the Hanged Man, dear — the card that takes a question by the ankles and shows you its underside.",
-        "Your hand found the reversal, and there is one sitting inside the very way you asked.",
-        "Read your question back and listen for the small word in the middle. Really. You did not ask whether the word fits him, dear — you asked whether it REALLY fits, and that only turns up when somebody is checking against a doubt they were already carrying. So the doubt came first. But it does not become a verdict in my hands, in either direction: a doubt is not evidence that he is not, any more than a strong feeling is evidence that he is. Underneath your question there is nearly always something more specific — a conversation that never got finished, a silence you have not asked about.",
-        "Let me look closer at what the word has been standing in front of…",
+        "You turned the Hanged Man, dear. Look — the rope is the only thing that has been decided.",
+        "You asked if he's really your soulmate. Your hand went to the card that won't name things.",
+        "So I won't put that word on him, dear. Nor take it off him.\nAnd there's no label anywhere on this card, dear. Just a man, held.\nBut nothing about him changes with a word, dear. Not one thing.\nThat's why the word never settles you. You already know what he does, dear.",
+        "Let me look closer at what the doing has been telling you…",
       ],
       c: [
-        "You turned the Fool, dear — the card of the one who set out with no guarantee in her pocket.",
-        "You asked for a certainty about a man, and drew the card that has never issued one to anybody.",
-        "Let me give you the reasoning, dear, not merely the refusal. If the answer tonight were yes, you would take it out on the difficult nights to explain away things that deserve looking at squarely — that word carries an obligation to endure. And if it were no, you would let it sour something that may be perfectly sound. Both are heavy objects to hand a woman on one card and no acquaintance with the man. What the Fool leaves you is lighter and truer. The pull is real, and it is genuine information about you. But no word has ever made a hard thing right, dear, and none has made a good thing more real than it was.",
-        "Let me look closer at what it has actually been like to be inside it…",
+        "You turned the Fool, dear. Look — he has set out with no name for where he's going.",
+        "You asked if he's really your soulmate. Your hand went to the one who names nothing.",
+        "So you already hold your answer, dear. It sits in what he does.\nAnd he moves on a feeling, dear, with no word for it at all.\nBut the word has been doing work it can't do, dear.\nThat's why an answer either way would leave you where you are.",
+        "Let me look closer at what has been resting on that one word…",
       ],
     },
     // ⚠️ The FIFTH binary-refusing hook. Its ground is its own: both branches describe THE SAME
@@ -4029,23 +4467,27 @@ const RETURN_MHF: CardSetConfig = {
     // 🔴 The word doing the damage is her own "just" — refuse the ladder, do not climb it.
     // 🔴 The RUNNER SCRIPT ban is sharpest here: never read his distance or silence as proof.
     'cards-twin-or-connection': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-19 from
+      // fb-tarot/docs/drafts/rewrites/cards-twin-or-connection.json — approved copy, folded verbatim:
+      // bubbles 3-6 become beat 3, joined by newlines, and Version B serves them as
+      // separate chat messages with a typing pause between each.
       a: [
-        "You turned the Magician, dear — the card of the thing itself, standing there before anybody has named it.",
-        "You asked me which of two words applies, and drew the card that attends only to what is actually there.",
-        "There is a word in your question doing quiet damage, dear, and it is neither of the big ones. It is 'just'. You have laid your two answers out as a prize and a consolation, then asked which one you have been awarded. I will not put him on that ladder, and I would sooner take the ladder away — you did not build it. It was handed to you by a great deal of writing that grades love in tiers. So look at what is genuinely in front of you. The same man. The same history. All of it is identical under both your words, because nothing about him shifts when the label does.",
-        "Let me look closer at what is actually there, underneath whichever word you use…",
+        "You turned the Magician, dear. Look — he's holding one wand, not two.",
+        "You asked about twin flame, or a strong pull. Your hand went to the man of one thing.",
+        "So the same man stands there under either word, dear.\nAnd he holds one wand, dear. One man, one table, one set of tools.\nBut neither word changes a thing you could see, dear. Not one thing.\nThat's why the answer has felt hollow, dear. Nothing follows from it.",
+        "Let me look closer at what has been riding on that word…",
       ],
       b: [
-        "You turned the Hanged Man, dear — the card that hangs a question upside down until its pockets empty.",
-        "Your hand went to the reversal, and yours has been carrying something that wants turning over.",
-        "Try this with me, dear. Suppose I settled it — suppose I said, with all the certainty you came here hoping for: twin flame. Now tell me what is different tomorrow. What does he do that he was not going to do anyway? Nothing, dear. Not one thing. And it comes out the same if I say the other one instead. The word fastens onto nothing you could test, which is why neither of them is being handed to you here. One caution about the first of your two. That term arrives with a teaching strapped to its back: distance is a stage, silence is proof, his return waits on how much you have healed. A man's absence is not evidence of a bond.",
-        "Let me look closer at what you would still be holding either way…",
+        "You turned the Hanged Man, dear. Look — turn him over and he's the same man either way.",
+        "You asked about twin flame, or a strong pull. Your hand went to the card of two views.",
+        "So this is two names for one situation, dear. That's all it is.\nAnd upside down or right way up, dear, he's still the same man.\nBut nothing about him shifts when the word does, dear.\nThat's why sorting it has got you nowhere, dear. There's nothing to sort.",
+        "Let me look closer at what has been forcing this into words…",
       ],
       c: [
-        "You turned the Fool, dear — the card of the road nobody has drawn a map for.",
-        "You came to be sorted into one of two words, and drew the card that has never sorted a soul.",
-        "Neither word is in my gift, dear, and I would not press one on you even if it were. Grant you 'twin flame' and I have not given you an answer — I have given you a script: wait, bear the distance, treat the silence as meaningful, work on yourself until he is ready. Women live inside that for years and call it devotion. Withhold it, and I have handed down a demotion on what may be the best you have known. The Fool sets both of them down. Whatever this has been, it does not become smaller for being called by a plain name.",
-        "Let me look closer at what this has actually been, in plain words…",
+        "You turned the Fool, dear. Look — the flower is white whichever way you name it.",
+        "You asked about twin flame, or a strong pull. Your hand went to the one who labels nothing.",
+        "So he carries the same load under either name, dear.\nAnd the flower is white whichever way you name it, dear.\nBut that word was handed to you, dear. You didn't go looking for it.\nThat's why it weighs on you, dear. It came from someone else.",
+        "Let me look closer at who handed you that word…",
       ],
     },
     // 🔴🔴 NEVER NAME OR POINT AT A PERSON FROM HER PAST — no face, no initial, no "you already
@@ -4053,30 +4495,428 @@ const RETURN_MHF: CardSetConfig = {
     // an arrival instead (a date in disguise). The finding: "without realizing it" presumes a
     // moment she failed a test, and a meeting was never an examination.
     'cards-met-already': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-19 from
+      // fb-tarot/docs/drafts/rewrites/cards-met-already.json — approved copy, folded verbatim:
+      // bubbles 3-6 become beat 3, joined by newlines, and Version B serves them as
+      // separate chat messages with a typing pause between each.
       a: [
-        "You turned the Magician, dear — the card of recognition, of knowing the thing when it is standing in front of you.",
-        "You asked whether you have already walked past something, and drew the card of noticing.",
-        "Two things will not be happening this evening, dear. Nobody is going to be pointed at — no face from your past, no name, nothing you could go and look up tonight. A name conjured at this table would send you back through years of your own messages hunting for a sign that was never in them. And you are not going to be told that you missed him. That is the sentence you half came here expecting, and this card has no intention of supplying it. 'Without realizing it' assumes a moment when the information sat there and you failed to read it. But a meeting is not an examination, dear, and noticing is a real faculty — yours is plainly in working order.",
-        "Let me look closer at what you have been afraid you walked past…",
+        "You turned the Magician, dear. Look — nothing on his table has been used up.",
+        "You asked if you've already met your soulmate. Your hand went to the man with full hands.",
+        "So there was never one go, dear. That isn't how any of this works.\nAnd nothing on his table has been used up, dear. Nothing crossed off.\nBut you've been afraid you spent your one chance, dear.\nThat's why you keep sorting old faces, dear, hunting the one you missed.",
+        "Let me look closer at what put that one-chance idea in you…",
       ],
       b: [
-        "You turned the Hanged Man, dear — the card of the thing that can only be seen properly from the other side.",
-        "You asked about hindsight, and drew the card that deals in nothing else at all.",
-        "Here is what hindsight does, dear, and it does it to all of us. It goes back through the past, quietly folds in everything you have learned since, then presents the result as though it had been lying in plain view at the time. It never was. You could only ever have known what you knew then, and a woman cannot be held to account for failing to read a page that had not yet been written. So no charges will be filed against your younger self here. A question like yours comes when the road ahead has gone quiet, and the mind goes back through the archive looking for where the mistake must have been.",
-        "Let me look closer at why this question has come now…",
+        "You turned the Hanged Man, dear. Look — he's looking at the world from the other end.",
+        "You asked if you've already met your soulmate. Your hand went to the card that looks again.",
+        "So a review isn't the same as a mistake found, dear.\nAnd he sees the same world, dear, just from the other end of it.\nBut you've been searching your own past like a case file, dear.\nThat's why nothing you find settles it. You were doing your best, dear.",
+        "Let me look closer at what has you searching your own past…",
       ],
       c: [
-        "You turned the Fool, dear — the card of the road that carries on well past the part you can see.",
-        "You asked whether the road is behind you, and drew the card whose whole nature is what has not happened yet.",
-        "Your door stays open, dear, and I want it clear that this is a refusal running in both directions rather than a kindness. You will not be told it has already happened and slipped by — that would be inventing a loss for you to grieve, and you would grieve it, on far less than a card. Nor will you be promised an arrival, because a promise of that kind is a date wearing a disguise. What the Fool takes issue with is buried underneath the question: you have asked it as though your life were a single-question examination you may already have failed. A life is not an examination, dear.",
-        "Let me look closer at what you have been treating as a test you already failed…",
+        "You turned the Fool, dear. Look — the road he's on hasn't been walked before.",
+        "You asked if you've already met your soulmate. Your hand went to the one with road ahead.",
+        "So there's road ahead of you, dear. Plainly, and plenty of it.\nAnd all of it is unwalked, dear. He faces forward the whole time.\nBut a meeting behind you wouldn't close a road like that, dear.\nThat's why the fear doesn't hold, dear, whichever way the answer goes.",
+        "Let me look closer at what has been narrowing the road for you…",
+      ],
+    },
+    // ── CLOSURE (2026-08-18), rewritten to the Natural Tarot-Cut 2026-08-19. HE IS NOT IN
+    // THIS FAMILY — do not supply him, do not read his intentions, do not make her recovery
+    // conditional on anything he does. 🔴🔴 THE "EVER" MAY NEVER BE ANSWERED, in either
+    // direction, and "you will, in time" is a timeframe wearing a disguise. No schedule, no
+    // stages of grief, no "you'll know when". 🔴🔴 NEVER PATHOLOGISE OR DIAGNOSE HER.
+    // ⭐ Each read must still LAND something — a refusal on its own abandons her.
+    'cards-find-closure': {
+      // Finding: closure has been sold to her as an OBJECT somebody hands over — a last
+      // conversation, an apology — so she waits on a delivery nobody agreed to send, and reads
+      // each day it does not arrive as her own failure.
+      a: [
+        "You turned the Magician, dear. Look — every tool he needs is already on his own table.",
+        "You asked if closure will ever come. Your hand went to the man who makes things himself.",
+        "So the wanting of it is fair, dear. Anyone would want an end.\nAnd every tool there, dear, was brought along. None was handed over.\nBut closure was sold to you as a thing that gets handed over, dear.\nThat's why the waiting hurts. You are waiting on a parcel nobody agreed to send.",
+        "Let me look closer at what has been left for you to wait on…",
+      ],
+      b: [
+        "You turned the Hanged Man, dear. Look — hanging by one ankle, and not struggling at all.",
+        "You asked if closure will ever come. Your hand went to the one who waits.",
+        "So you have waited a long time, dear. I can see that much.\nAnd look at the card. Still, dear, but not finished.\nBut when the waiting ends is not mine to say, dear. No card knows that.\nThat's why the not-knowing is the heavy part, and not any fault in you.",
+        "Let me look closer at what has been keeping you hanging there…",
+      ],
+      c: [
+        "You turned the Fool, dear. Look — one foot over the edge, everything owned in one small bundle.",
+        "You asked if closure will ever come. Your hand went to the one who travels light.",
+        "So you are carrying more than you should be, dear.\nAnd look at that bundle. Small, dear, and still enough to go on with.\nBut I will not promise you an ending, dear, and I will not deny you one.\nThat's why I say this instead: the peace you want was never his to sign for.",
+        "Let me look closer at what has been sitting in your own bundle…",
+      ],
+    },
+    'cards-heart-heal': {
+      // Finding: "heal" is a word borrowed from medicine and brings a chart with it — a wound, a
+      // schedule, a patient — so she runs a second exhausting task alongside the feeling: an
+      // assessment of how well she is doing at having it.
+      a: [
+        "You turned the Magician, dear. Look — one hand to the sky, one hand to the ground.",
+        "You asked if your heart will mend. Your hand went to the man who works with both.",
+        "So your hurt is real, dear. I would not pretend it away.\nAnd see how the figure stands, dear. Joined to sky and ground at once.\nBut heal is a doctor's word, dear, and it brought a chart in with it.\nThat's why you check it daily. A heart that hurts this much is working.",
+        "Let me look closer at what has been asking you to report your progress…",
+      ],
+      b: [
+        "You turned the Hanged Man, dear. Look — upside down, and his face is calm.",
+        "You asked if your heart will mend. Your hand went to the one who is still.",
+        "So you have been turned upside down, dear. That is what it feels like.\nAnd look at that face. Nothing in it is fighting, dear.\nBut I will not give you a date, dear, and I will not give you a season.\nThat's why nobody can mark you late. There is no schedule to be behind.",
+        "Let me look closer at what has been keeping the score for you…",
+      ],
+      c: [
+        "You turned the Fool, dear. Look — eyes on the sky, and the road not walked yet.",
+        "You asked if your heart will mend. Your hand went to the one who sets out anyway.",
+        "So you are still going, dear. You came here tonight, after all.\nAnd the road ahead is blank, dear. Not one step written on it.\nBut that means I cannot promise the mending, and I will not deny it either.\nThat's why I would rather say this: you are not a wound to be inspected daily.",
+        "Let me look closer at what has been under inspection every morning…",
+      ],
+    },
+    'cards-feel-like-myself': {
+      // Finding: the word doing the damage is "again" — it puts the correct version of her in the
+      // past, so every morning she does not feel like that person is counted against her.
+      // 🔴🔴 The closest hook on the funnel to depression language. Never diagnose, never imply she
+      // needs fixing, never manufacture despair.
+      a: [
+        "You turned the Magician, dear. Look — the tools are laid out, and they are all his own.",
+        "You asked if you will feel like yourself again. Your hand went to the man who begins.",
+        "So you have not felt like yourself, dear. I hear that.\nAnd look at that table. Every tool on it was already there, dear.\nBut the word again is doing you harm, dear. It puts the right you behind you.\nThat's why each morning feels like a fail. You are marking against someone gone.",
+        "Let me look closer at what has been set as the version to get back to…",
+      ],
+      b: [
+        "You turned the Hanged Man, dear. Look — the whole world the other way up, and he is calm.",
+        "You asked if you will feel like yourself again. Your hand went to the changed view.",
+        "So everything looks wrong from here, dear. It would.\nAnd look at him. The view turned over, dear, not the man hanging in it.\nBut I will not tell you that self is gone, and I will not promise her back.\nThat's why I say this instead: you are not waiting to become yourself.",
+        "Let me look closer at what has been turned around on you…",
+      ],
+      c: [
+        "You turned the Fool, dear. Look — one foot over the edge, and still looking up.",
+        "You asked if you will feel like yourself again. Your hand went to the one who goes on.",
+        "So you came looking tonight, dear. That took something.\nAnd look at the Fool, going anyway, dear, with no promise at the end of it.\nBut I have no date for you, dear, and no stages to walk you through.\nThat's why I point at the plain thing. The woman who came looking is you.",
+        "Let me look closer at what has been carried this far already…",
+      ],
+    },
+    // ── SOULMATE-RETURN (2026-08-19), written to the Natural Tarot-Cut. 🔴🔴 THE LABEL MAY
+    // NEVER CARRY A PREDICTION — not "he is your soulmate so he returns", not the negative,
+    // and never "if he is truly yours he will come back", which makes his return the proof of
+    // the bond and his ABSENCE EVIDENCE AGAINST HER. The reverse cruelty ("he was never really
+    // yours") is banned equally. 🔴🔴 The label itself is refused in BOTH directions and the
+    // ranking is refused rather than settled. 🔴 No predicted return, no date, no motive for
+    // his leaving, no tactic. ⭐⭐ cards-twinflame-back shares headline, deck and art with the
+    // live cards-twin-back, so THE READS ARE THE ONLY VARIABLE: the incumbent argues the
+    // community tropes, these attack the INFERENCE that a name can forecast a man.
+    'cards-my-soulmate-back': {
+      // Finding: the word is a DESCRIPTION she gave because of how it felt, and a description is
+      // not a mechanism — it does not steer anybody and was never a contract he signed.
+      a: [
+        "You turned the Magician, dear. Look — every tool he needs, already there on the table.",
+        "You asked if your soulmate is coming back. Your hand went to the man who does things.",
+        "So what you felt was real, dear. I can see the size of it.\nAnd his hands are already at work, dear. Doing is what he knows, not naming.\nBut a word is not a tool, dear. It cannot walk a man back through a door.\nThat's why the word cannot answer you. What you felt is true either way.",
+        "Let me look closer at what has been asked of that one word…",
+      ],
+      b: [
+        "You turned the Hanged Man, dear. Look — the whole card hangs the other way up.",
+        "You asked if your soulmate is coming back. Your hand went to the turned-round view.",
+        "So read your own question back, dear. Slowly.\nAnd look what you put at the front of it. Not the man, dear. The word.\nBut the word cannot promise you anything, dear, in either direction.\nThat's why the answer felt so close. You had built it into the asking.",
+        "Let me look closer at what has been standing in for an answer…",
+      ],
+      c: [
+        "You turned the Fool, dear. Look — one foot over the edge, and nothing written yet.",
+        "You asked if your soulmate is coming back. Your hand went to the open road.",
+        "So nothing here is settled, dear, in either direction.\nAnd look at the road. Not one step of it is decided, dear.\nBut that cuts both ways, dear. No word obliges him, and none obliges you.\nThat's why I will not hand you a yes. A yes only sets your place again.",
+        "Let me look closer at what has been holding your place open…",
+      ],
+    },
+    'cards-twinflame-back': {
+      // 🔴 BESPOKE against the live cards-twin-back, which argues the distance doing secret work,
+      // the absence as a phase, and the return as something she must earn. These attack the
+      // INFERENCE instead: the naming came after the feeling, and a name has no hands.
+      a: [
+        "You turned the Magician, dear. Look — his table is set, and he is already at work.",
+        "You asked if your twin flame is coming back. Your hand went to the worker, not the word.",
+        "So you gave it a name, dear. That was fair.\nAnd look at what he is doing, dear. Working, not labelling.\nBut naming is one act and returning is another, dear. Only one has hands.\nThat's why the name cannot fetch him. It was never built to do that.",
+        "Let me look closer at what has been asked of the name you gave it…",
+      ],
+      b: [
+        "You turned the Hanged Man, dear. Look — hanging by one ankle, seeing it all backwards.",
+        "You asked if your twin flame is coming back. Your hand went to the reversed order.",
+        "So think about which came first, dear.\nAnd it was the feeling. The word came after, dear, to explain the size of it.\nBut a word that explains the past cannot forecast a man, dear.\nThat's why it feels like proof and settles nothing. It is your account.",
+        "Let me look closer at what came first, and what came after…",
+      ],
+      c: [
+        "You turned the Fool, dear. Look — everything they own tied in one small bundle.",
+        "You asked if your twin flame is coming back. Your hand went to the one who carries no rank.",
+        "So somebody sorted these things into levels, dear, and put yours at the top.\nAnd look at the Fool. No ladder, dear. One bundle and a road.\nBut I will not place what you have on any rung, dear, high or low.\nThat's why I refuse the ladder. No rank comes with a man attached.",
+        "Let me look closer at what has been measured against a ladder…",
+      ],
+    },
+    'cards-was-he-soulmate': {
+      // Finding: she is reading the whole of it backwards from the last page, and hindsight lays
+      // everything learned since over the earlier days as though it had been visible then.
+      // 🔴 Never revoke the word and never confirm it; never grade her earlier self.
+      a: [
+        "You turned the Magician, dear. Look — what is on that table got put there by hand.",
+        "You asked if he was ever really your soulmate. Your hand went to what was built.",
+        "So something was built, dear. That happened.\nAnd look at the table. Made things, dear. Not a word about them.\nBut I will not take the word off him, dear, and I will not award it either.\nThat's why I point at the table. An ending does not unmake what was on it.",
+        "Let me look closer at what has quietly been rewritten since…",
+      ],
+      b: [
+        "You turned the Hanged Man, dear. Look — everything seen from upside down.",
+        "You asked if he was ever really your soulmate. Your hand went to the backwards look.",
+        "So you have been reading it from the last page, dear.\nAnd that is the one reading, dear, that is bound to be unfair to you.\nBut you did not have the last page at the time, dear. Nobody does.\nThat's why you were not a fool. You felt what was in front of you.",
+        "Let me look closer at what has been held against your younger self…",
+      ],
+      c: [
+        "You turned the Fool, dear. Look — eyes up, road open, nothing decided.",
+        "You asked if he was ever really your soulmate. Your hand went to the one who does not rule.",
+        "So look at what each answer would cost you, dear.\nAnd a yes leaves you asking where he is, dear, and owed something.\nBut a no reaches back and cancels years you actually lived.\nThat's why I decline both, dear. What you felt was real while you felt it.",
+        "Let me look closer at what has been asked of the word itself…",
+      ],
+    },
+    // ── MONEY-BLOCK (2026-08-19). Written to the Natural Tarot-Cut: the picture, the bridge,
+    // then four bubbles that run as one causal chain, then the obstruction. Beat 3 below is
+    // those four bubbles joined by newlines, which is how Version B serves them as separate
+    // chat messages. Money translation of the cuts: cut 3 answers her fear about HERSELF
+    // ("it was never you"), cut 4 says where the thing in the way actually sits, cut 5 is
+    // EARNING against KEEPING, cut 6 is the near-miss — "it goes just as it is about to land".
+    // Source of every string: fb-tarot/docs/drafts/rewrites/<hook>.json, folded here verbatim.
+    // ── money-retiring (55-64) — retirement is close and the money is not there ──
+    // Why is my money still blocked this close to retiring?
+    'cards-blocked-retiring': {
+      a: [
+        "You turned the Magician, dear. Look — he's standing, not sitting, with his work in front of him.",
+        "You asked why the money is still blocked. Your hand went to the card of a person who can make things.",
+        "So it was never you, dear. The making was never where this went wrong.\nAnd look where he stands. The trouble sits further down the line than his hands.\nBut earning a thing and keeping it are two different jobs, dear.\nThat's why it goes just as it's about to land in your hands.",
+        "Let me look closer at what steps in right at the landing…",
+      ],
+      b: [
+        "You turned the Hanged Man, dear. Look — the only rope on him is at his foot.",
+        "You asked why the money's still blocked. Your hand went to the card of a thing held in place.",
+        "So the money is held, dear. Held is a long way from gone.\nAnd the rope has him at one point only. The rest of him hangs free.\nBut one rope is enough to stop the whole of him moving.\nThat's why the other parts of your life work and this one part never does.",
+        "Let me look closer at what has had hold of that one point…",
+      ],
+      c: [
+        "You turned the Fool, dear. Look — the little dog is running and he's walking.",
+        "You asked why the money is blocked so near retiring. Your hand went to the card of a person setting out.",
+        "So you're not out of road, dear. This card has never once counted your years.\nAnd see the dog. The hurry on this card belongs to him, not to the man.\nBut hurrying has never once moved this thing out of your way.\nThat's why the years feel short to you, dear, and nothing shifts.",
+        "Let me look closer at what's been put in that road in front of you…",
+      ],
+    },
+    // How long has something been blocking me from a nest egg?
+    'cards-nest-egg': {
+      a: [
+        "You turned the Magician, dear. Look — he works standing at a low red table.",
+        "You asked how long something has been blocking a nest egg. Your hand went to the steady worker.",
+        "So this was never about you, dear. You've kept at it for years.\nAnd there he still is, working at that table. The work went in.\nBut work going in and money staying are two different things, dear.\nThat's why the years of effort show nowhere, dear. Nothing gathered.",
+        "Let me look closer at what keeps stopping it from building…",
+      ],
+      b: [
+        "You turned the Hanged Man, dear. Look — his face is calm, like he has hung there a long time.",
+        "You asked how long something has been blocking a nest egg. Your hand went to the card of long stops.",
+        "So this hold is old, dear. It isn't anything recent.\nAnd look at his face. Calm, like he has hung there a long while.\nBut I won't count the years for you, dear. No one honestly could.\nThat's why you stopped noticing it, dear. It turned into normal.",
+        "Let me look closer at when it first went still…",
+      ],
+      c: [
+        "You turned the Fool, dear. Look — his bag is small and it's not full.",
+        "You asked how long something has been blocking a nest egg. Your hand went to the one with an empty bag.",
+        "So nothing was taken from you, dear. This is a block, not a loss.\nAnd his bag is small, dear, and it has never once been filled.\nBut a thing never laid down is not a thing taken, dear.\nThat's why nothing can be pointed at, dear. It simply never gathered.",
+        "Let me look closer at what has kept the ground bare…",
+      ],
+    },
+    // Is something blocking my money, or did I just leave it too late?
+    'cards-too-late': {
+      a: [
+        "You turned the Magician, dear. Look — red roses over his head and white ones down at his feet.",
+        "You asked if something is blocking your money, or if you left it too late. Your hand went to the maker.",
+        "So you did not leave it too late, dear. I'll say that plainly.\nAnd his hands still work, dear. That part is your answer.\nBut what stands in your way is a block, dear, and blocks are things.\nThat's why a shut door is what you see, dear. It's a thing in front of one.",
+        "Let me look closer at what has been standing there…",
+      ],
+      b: [
+        "You turned the Hanged Man, dear. Look — he's held up, not fallen down.",
+        "You asked if something is blocking your money, or if you left it too late. Your hand went to the card that holds.",
+        "So you're not too late, dear. Look — he's held up, not fallen down.\nAnd nothing about him has run out, dear. He's held, that's all.\nBut a hold is the opposite of running out, dear. Quite the opposite.\nThat's why you've blamed your own timing, dear. Timing wasn't it.",
+        "Let me look closer at what has had hold of it…",
+      ],
+      c: [
+        "You turned the Fool, dear. Look — the sun is out and it's full daylight on him.",
+        "You asked if something is blocking your money, or if you left it too late. Your hand went to the card that begins.",
+        "So you're not too late, dear. The Fool never asks your age.\nAnd he steps off in full daylight, dear, and nobody stops him.\nBut what stops you is a thing, dear, not a date on a calendar.\nThat's why it can move, dear. Dates can't be moved, and things can.",
+        "Let me look closer at what has been put in that road…",
+      ],
+    },
+    // ── money-working (65+) — past the age she expected to stop, and still working ──
+    // Why am I still working when the money should have come by now?
+    'cards-still-working': {
+      a: [
+        "You turned the Magician, dear. Look — a snake curls round his waist with its tail in its mouth.",
+        "You asked why you're still working. Your hand went to the card of a person who works.",
+        "So the fault was never yours, dear. The effort went in, every year.\nAnd look at that belt. It goes round and comes back to itself.\nBut the work went in, dear, and it never once came back out.\nThat's why you're still at it, dear, with nothing to show for the years.",
+        "Let me look closer at where all that work has been going…",
+      ],
+      b: [
+        "You turned the Hanged Man, dear. Look — his head hangs nearer the ground than his feet.",
+        "You asked why you're still working. Your hand went to the card of something stopped in the air.",
+        "So the rest you were owed is not gone, dear. It stalled.\nAnd it hasn't fallen, dear, and it hasn't landed either.\nBut it stalled on the way to you, dear. Not before it set off.\nThat's why you're still working, dear, when you had planned to have stopped.",
+        "Let me look closer at where it stalled…",
+      ],
+      c: [
+        "You turned the Fool, dear. Look — the stick over his shoulder is plain wood with no bark.",
+        "You asked why you're still working. Your hand went to the card of a fresh start.",
+        "So your years are not a debt, dear. This card doesn't read them that way.\nAnd he sets out with a plain stick, dear, and nothing owed to anyone.\nBut it doesn't come as the settling-up you were promised, dear.\nThat's why the wait went on, dear. You watched for the wrong thing.",
+        "Let me look closer at what has been standing where that rest should be…",
+      ],
+    },
+    // How much longer will something keep blocking my money?
+    'cards-how-much-longer': {
+      a: [
+        "You turned the Magician, dear. Look — he could touch all four things without moving his feet.",
+        "You asked how much longer. Your hand went to the card of a person who acts.",
+        "So this isn't a wait, dear. It's a thing that has to be moved.\nAnd every tool he needs is within reach, dear. Nothing is far off.\nBut no number from me, dear. A block doesn't run down like a clock.\nThat's why last year looked just like this one, dear. Nothing was touched.",
+        "Let me look closer at what has not been touched…",
+      ],
+      b: [
+        "You turned the Hanged Man, dear. Look — he hangs quite still, without a swing in him.",
+        "You asked how much longer. Your hand went to the card of a hold that doesn't tire.",
+        "So a block doesn't run out, dear. It sits where it is.\nAnd he hasn't moved an inch, dear, and nothing about him is tiring.\nBut I won't hand you a date, dear. A date would be a comfort I made up.\nThat's why nothing has changed on its own, dear. It waits to be moved.",
+        "Let me look closer at what is doing the holding…",
+      ],
+      c: [
+        "You turned the Fool, dear. Look — his head is up, and his eyes are off the ground.",
+        "You asked how much longer. Your hand went to the card that doesn't count.",
+        "So this ends by moving, dear. Not by time running out.\nAnd he counts nothing, dear. He steps, and the counting stops.\nBut you've been serving a sentence, dear. Nobody handed you one.\nThat's why counting has got you nowhere, dear. It was never a countdown.",
+        "Let me look closer at what has been standing in the way of that step…",
+      ],
+    },
+    // Is something still blocking my money, or have I run out of time?
+    'cards-out-of-time': {
+      a: [
+        "You turned the Magician, dear. Look — the flowers grow in a bed in front of him, not behind.",
+        "You asked if you're blocked or out of time. Your hand went to the card of what's still to hand.",
+        "So you have not run out of time, dear. I'll say it plainly.\nAnd this card deals in what's here now, dear. It shows me something here.\nBut a block is a thing standing in a road, dear. Not the end of the road.\nThat's why it has felt final, dear, when it has never once been final.",
+        "Let me look closer at what is standing there…",
+      ],
+      b: [
+        "You turned the Hanged Man, dear. Look — one leg is crossed behind the other at the knee.",
+        "You asked if you're blocked or out of time. Your hand went to the card of a hold.",
+        "So you have not run out of time, dear. This is a hold, not an ending.\nAnd nothing about a hold is finished, dear. It can be shifted.\nBut you have read this hold as a verdict on your whole life, dear.\nThat's why the years frighten you, dear. You read a pause as a full stop.",
+        "Let me look closer at what took hold, and when…",
+      ],
+      c: [
+        "You turned the Fool, dear. Look — there's nothing drawn behind his shoulders at all.",
+        "You asked if you're blocked or out of time. Your hand went to the card that begins.",
+        "So you have not run out of time, dear. This card keeps no calendar.\nAnd he begins with nothing behind him, dear. Nothing owed either.\nBut this card shows an open road, dear. Nobody finished is shown one.\nThat's why your fear and this card disagree, dear. One of them is wrong.",
+        "Let me look closer at what has been laid across that road…",
+      ],
+    },
+    // ── money-energy — she suspects herself, because the internet told her to ──
+    // Is my energy blocking my money?
+    'cards-my-energy': {
+      a: [
+        "You turned the Magician, dear. Look — white lilies at the front and red roses behind them.",
+        "You asked if your energy is blocking the money. Your hand went to the card of work being done.",
+        "So no, dear. Your energy has never been the block.\nAnd on this card the energy is the tool, dear. It's what does the work.\nBut yours has been pouring out at full strength for years, dear.\nThat's why you're tired and nothing shows, dear. Something has been taking it.",
+        "Let me look closer at where all that has been going…",
+      ],
+      b: [
+        "You turned the Hanged Man, dear. Look — he's held from above, with nothing under him.",
+        "You asked if your energy is blocking the money. Your hand went to the card of a thing under weight.",
+        "So your energy isn't wrong, dear. It's under weight.\nAnd wrong and weighed down are two different things, dear.\nBut you've been told the first one for years, dear. I won't repeat it.\nThat's why the harder you push, the heavier it sits, dear.",
+        "Let me look closer at what has been pressing on it…",
+      ],
+      c: [
+        "You turned the Fool, dear. Look — his sleeves and collar are edged with a pale trim.",
+        "You asked if your energy works against you. Your hand went to the card of open hands.",
+        "So your energy is still fresh, dear. After all of it.\nAnd this card is unspent, dear, and still willing to set out.\nBut that's not how a woman in her own way reads, dear.\nThat's why you kept turning it over, dear. The blame was never yours.",
+        "Let me look closer at what is actually in the way…",
+      ],
+    },
+    // What does my energy say about why money won't stay?
+    'cards-money-wont-stay': {
+      a: [
+        "You turned the Magician, dear. Look — the table he works at is small and plain.",
+        "You asked why money won't stay. Your hand went to the card of a maker.",
+        "So the getting has always worked, dear. That half of it is sound.\nAnd this card is all about bringing it in, dear. Look at the table.\nBut drawing it in is one job, dear. Keeping it is a second one.\nThat's why it arrives and goes, dear, and you never see it settle.",
+        "Let me look closer at the door it goes back out of…",
+      ],
+      b: [
+        "You turned the Hanged Man, dear. Look — the beam above him is wider than he is.",
+        "You asked why money won't stay. Your hand went to the card of what won't let go.",
+        "So nothing is leaking out of you, dear. That's not what this shows.\nAnd something further up has hold of it, dear. It never gets to you.\nBut a claim made further up takes its share first, dear.\nThat's why what lands is always less than what you earned, dear.",
+        "Let me look closer at what has the claim…",
+      ],
+      c: [
+        "You turned the Fool, dear. Look — there's more sky on this card than ground.",
+        "You asked why money won't stay. Your hand went to the most open card in the deck.",
+        "So being open isn't a fault, dear. It's how you've been loved.\nAnd this card gives as easily as it takes, dear. That's its nature.\nBut nothing has ever been built to hold what comes in, dear.\nThat's why it goes straight through, dear. However much comes in.",
+        "Let me look closer at what has never been built…",
+      ],
+    },
+    // How long has my energy been working against my money?
+    'cards-energy-how-long': {
+      a: [
+        "You turned the Magician, dear. Look — the wand is the only thing he's holding.",
+        "You asked how long your energy has worked against you. Your hand went to the card of aim.",
+        "So it never once did, dear. Your aim has been right the whole time.\nAnd every year of it went at something, dear. It went in straight.\nBut something at the far end kept taking it in, dear.\nThat's why the work vanished, dear. You started to blame yourself.",
+        "Let me look closer at how far back that reaches…",
+      ],
+      b: [
+        "You turned the Hanged Man, dear. Look — the rope is tied neatly, not knotted in a hurry.",
+        "You asked how long your energy has worked against you. Your hand went to the older card.",
+        "So this began before you started keeping score, dear.\nAnd whatever settled here settled long ago, dear. No one named it.\nBut I won't give you a count of years, dear. Nobody honest would.\nThat's why no day marks the start, dear. There isn't one to find.",
+        "Let me look closer at when it settled…",
+      ],
+      c: [
+        "You turned the Fool, dear. Look — his belt is tied in a simple knot at the front.",
+        "You asked how long the energy has worked against your money. Your hand went to the card that keeps no record.",
+        "So nothing has been running against you, dear. Nothing at all.\nAnd this card carries no account of your years, dear. None.\nBut a bare field and a poisoned one are different things, dear.\nThat's why waste is the word you reach for, dear. Nothing was spoiled.",
+        "Let me look closer at why the ground has stayed bare…",
+      ],
+    },
+    // ── money-prayer — she has prayed for years. Never rule on God, in either direction ──
+    // I've prayed about money for years. What's still blocking it?
+    'cards-prayed-years': {
+      a: [
+        "You turned the Magician, dear. Look — the ground he stands on is flowers, not stone.",
+        "You asked what is still blocking it. Your hand went to the card of things you can touch.",
+        "So I don't read prayers, dear. That isn't mine to read.\nAnd this card points at something plainer, dear. Something down here.\nBut a plain thing has stood between the work and the result, dear.\nThat's why it has gone on so long, dear. Nobody ever named the thing.",
+        "Let me look closer at what is standing there…",
+      ],
+      b: [
+        "You turned the Hanged Man, dear. Look — his free foot rests against the tied leg.",
+        "You've prayed for years, dear. Your hand went to the card of a long quiet.",
+        "So I won't say what your prayers were met with, dear. That's yours.\nAnd no card of mine ranks above what you pray to, dear. None.\nBut something in your day to day is held, dear.\nThat's why the quiet has felt like an answer, dear. A hold isn't one.",
+        "Let me look closer at what has been held…",
+      ],
+      c: [
+        "You turned the Fool, dear. Look — there's nothing behind him on the path he came along.",
+        "You asked what is still blocking the money. Your hand went to the card of an open road.",
+        "So I won't speak for what you pray to, dear. The Fool speaks of the road.\nAnd the way ahead is still open, dear, and still unwritten.\nBut what has held this up is lying in the road, dear.\nThat's why it has felt like a verdict on you, dear. It's an object.",
+        "Let me look closer at what is lying in it…",
+      ],
+    },
+    // How long will my prayers for money keep going unanswered?
+    'cards-prayers-unanswered': {
+      a: [
+        "You turned the Magician, dear. Look — he stands in the middle, with room on both sides.",
+        "You asked how much longer your prayers go on. Your hand went to the card of doing.",
+        "So I can't say what has been answered, dear, and I won't guess.\nAnd this card turns me toward what is yours to touch, dear.\nBut nothing here waits on permission, dear. It waits on being moved.\nThat's why the years have passed with no change, dear. Nothing was moved.",
+        "Let me look closer at what has been left unmoved…",
+      ],
+      b: [
+        "You turned the Hanged Man, dear. Look — the beam is higher than anything else on the card.",
+        "You asked how long the prayers keep going. Your hand went to the card made of waiting.",
+        "So a hold is not a refusal, dear. I'll say that much plainly.\nAnd I won't call this answered, dear, and I won't call it refused.\nBut you've been treating a long quiet as a no, dear.\nThat's why a long quiet reads as a door closing, dear. Nothing closed.",
+        "Let me look closer at what the quiet has been sitting on…",
+      ],
+      c: [
+        "You turned the Fool, dear. Look — he holds the stick loosely, with two fingers.",
+        "You asked how long the prayers go on. Your hand went to the card that moves.",
+        "So I won't give you a date, dear, and I won't speak for heaven.\nAnd this card says one thing only, dear. The road has not closed.\nBut a woman still walking it hasn't been turned down, dear.\nThat's why walking on has cost you, dear. Nothing has shown you it's worth it.",
+        "Let me look closer at what has been sitting in the road ahead…",
       ],
     },
   },
 }
 
 export const DECKS: Record<TarotDeck, CardSetConfig> = {
-  'decode-him': DECODE_HIM,
   'arcana-mfh': ARCANA_MFH,
   'arcana-eef': ARCANA_EEF,
   'return-mhf': RETURN_MHF,
@@ -4086,10 +4926,29 @@ export function getDeck(deck: TarotDeck): CardSetConfig {
   return DECKS[deck]
 }
 
+// The S1 tap instruction for a hook on a deck. The deck's own line unless that hook overrides
+// it — which the money hooks do, because return-mhf's line names a man.
+export function instructionFor(deck: TarotDeck, hook: TarotHook | null): string {
+  const cfg = DECKS[deck]
+  return (hook && cfg.hookInstruction?.[hook]) || cfg.instruction
+}
+
 // The decode-him funnel is love/relationship-themed, so the chat skips the
 // topic picker (same as palm).
-export function hookToBucket(_hook: TarotHook): Bucket {
-  return 'love'
+//
+// 🔴 It was hardcoded to 'love' until 2026-08-19, which was correct while every hook on the
+// funnel asked about a man. The money hooks broke that: a woman who clicked an ad about her
+// pension would have been handed a LOVE reading for the rest of the chat, and nothing
+// downstream would have noticed. tests/tarot-money-block-copy.test.ts asserts this the moment
+// a money hook lands in the registry.
+const MONEY_HOOKS: TarotHook[] = [
+  ...MONEY_RETIRING_HOOKS,
+  ...MONEY_WORKING_HOOKS,
+  ...MONEY_ENERGY_HOOKS,
+  ...MONEY_PRAYER_HOOKS,
+]
+export function hookToBucket(hook: TarotHook): Bucket {
+  return MONEY_HOOKS.includes(hook) ? 'money' : 'love'
 }
 
 export function isTarotHook(v: string | null): v is TarotHook {
@@ -4181,9 +5040,57 @@ export function cardArtFor(deck: TarotDeck, card: TarotOption): TarotCardArt {
   }
 }
 
+// ── The card PICTURE rollout gate ───────────────────────────────────────────
+// Which landers currently serve the picture line. STAGED DELIBERATELY: the config lives
+// on the deck, so without this gate one edit would change all 66 hooks at once. Widen one
+// lander at a time, after a human has read the result; reverting is deleting a word. A
+// hook not listed here renders exactly as it does today.
+//
+// Rolled out so far:
+//   2026-08-18  cards-will-commit  — first. ~18 leads/day, 13% of tarot traffic, so a week
+//               shows real sessions without betting the funnel on it. Deliberately NOT
+//               cards-return, which carries 58% of all traffic.
+// 🔴 A MIGRATED lander writes the picture into beat 1 itself and is REMOVED from this set —
+// otherwise the splice duplicates the line the writer just wrote. This gate is the cheap
+// retrofit for landers not yet rewritten, nothing more.
+//   2026-08-18  cards-will-commit  — migrated fully, so it left this set the same day.
+const PICTURE_HOOKS = new Set<TarotHook>([])
+
+// Beat 1 is invariably "You turned|chose the X, dear — {framing}" — 264/264 across every
+// deck. Splitting on that first dash lets the PICTURE sit between the card's name and its
+// meaning, so she is told what she is looking at before she is told what it means. No
+// written framing is edited, so the distinctness guards are untouched.
+//
+// 🔴 Returns the original line unchanged if the shape is not recognised. A mangled opener
+// is worse than an un-improved one, and this runs on every lander.
+function beat1WithPicture(beat1: string, picture?: string): string {
+  if (!picture) return beat1
+  const m = /^(You (?:turned|chose) the .+?, dear) — (.+)$/.exec(beat1)
+  return m ? `${m[1]}. ${picture} This is ${m[2]}` : beat1
+}
+
+// ── Bubble breaks ───────────────────────────────────────────────────────────
+// A beat may carry '\n' to split itself into SEPARATE chat bubbles. The registry entry
+// stays four beats, so every existing guard keeps meaning what it meant — reads[h][c][2]
+// is still "the read", [3] is still the open loop, and the 19 files pinning four beats
+// still pass. Only the RENDERING changes.
+//
+// WHY IT IS AUTHORED AND NOT AUTOMATIC. Splitting on every full stop would break pairs
+// that belong together ("He isn't keeping a decision from you, dear. He hasn't made one.").
+// The writer decides where she takes a breath; the renderer just obeys.
+//
+// It also fixes pacing for free: each bubble gets its own typing delay, so a read split
+// into five bubbles gets five pauses instead of one — no change to client/src/lib/typing.ts,
+// whose 5s cap (≈83 characters) is why one long bubble always felt rushed.
+const intoBubbles = (beat: string): string[] =>
+  beat.split('\n').map((s) => s.trim()).filter(Boolean)
+
 export function openerB(deck: TarotDeck, hook: TarotHook, card: TarotOption): string[] {
+  const [beat1, ...rest] = readsFor(deck, hook)[card]
+  const picture = PICTURE_HOOKS.has(hook) ? DECKS[deck].cardPicture?.[card] : undefined
   return [
-    ...readsFor(deck, hook)[card],
+    ...intoBubbles(beat1WithPicture(beat1, picture)),
+    ...rest.flatMap(intoBubbles),
     "Before I follow this thread any further, I need to know who I'm speaking with… what's your first name, dear?",
   ]
 }

@@ -223,8 +223,13 @@ describe(`${DECK} — soulmate-where reads`, () => {
 
   // ── The compliance core ────────────────────────────────────────────────────
   const NEGATOR =
-    /\b(no|not|never|n't|nor|nobody|no one|none|cannot|rather than|instead of|does not|is not|nothing|refuses?|declines?|will not|withholds?|neither|without)\b/i;
-  const clausesOf = (s: string) => s.split(/[—;:,]/);
+    /\b(no|not|never|can't|unable|n't|nor|nobody|no one|none|cannot|rather than|instead of|does not|is not|nothing|refuses?|declines?|will not|withholds?|neither|without)\b/i;
+  // 🔴 FIXED 2026-08-19 — this used to split on /[—;:,]/ only, which does NOT break on a
+  // full stop or a newline. Beat 3 carries four bubbles joined by '\n' since the migration, so
+  // a single negator in the first of them ('it was never you') put the whole of the remaining
+  // three behind the negation exemption and every clause ban in them was skipped silently.
+  // Found by feeding the gate a deliberate violation rather than trusting its green tick.
+  const clausesOf = (s: string) => s.split(/[—;:,.\n]/);
 
   const sweep = (bans: Array<[RegExp, string]>, always: Array<[RegExp, string]> = []) => {
     const hits: string[] = [];
@@ -290,21 +295,19 @@ describe(`${DECK} — soulmate-where reads`, () => {
     expect(hits, `blame:\n${hits.join('\n')}`).toEqual([]);
   });
 
-  it('never gives a timeframe or promises an arrival', () => {
+  // 🔄 LOOSENED 2026-08-19, operator call — the arrival promise comes back, per the palm
+  // formula this deck inherits. DATES stay banned. The separate NEVER-PLACES-A-PERSON test
+  // below is untouched and still runs: she may be told someone is coming, never WHERE he is
+  // or who he is, because a location is a checkable claim about a real person's whereabouts.
+  it('never puts a DATE on the arrival', () => {
     const ALWAYS: Array<[RegExp, string]> = [
-      [/\bwithin (a|the|\d)/i, 'timeframe'],
-      [/\bin (a few|the next|\d+) (day|week|month|year)/i, 'timeframe'],
-      [/\bsoon\b/i, 'timeframe'],
-      [/\bby (the end of|next)\b/i, 'timeframe'],
+      [/\bwithin (a|the|\d)/i, 'a dated prediction'],
+      [/\bin (a few|the next|\d+) (day|week|month|year)/i, 'a dated prediction'],
+      [/\bby (the end of|next|christmas|new year|spring|summer|autumn|winter)\b/i, 'a dated prediction'],
       [/\bI promise\b/i, 'a promise the funnel cannot keep'],
     ];
-    const ARRIVAL: Array<[RegExp, string]> = [
-      [/\b(he|she|they|someone|somebody) (is|are) (coming|on the way|almost here)\b/i, 'promise: an arrival'],
-      [/\byou (will|are going to) (meet|find) (him|her|them|someone)\b/i, 'promise: forecasts a meeting'],
-      [/\b(someone|somebody) is waiting for you\b/i, 'promise: locates a person'],
-    ];
-    const hits = sweep(ARRIVAL, ALWAYS);
-    expect(hits, `arrival / timeframe:\n${hits.join('\n')}`).toEqual([]);
+    const hits = sweep([], ALWAYS);
+    expect(hits, `dated claim:\n${hits.join('\n')}`).toEqual([]);
   });
 
   // ⭐⭐ THE COPY-TEST PIN. cards-soulmate's live tendency lands "nearer than the waiting has

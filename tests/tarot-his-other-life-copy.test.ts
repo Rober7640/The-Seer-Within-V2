@@ -131,7 +131,13 @@ describe('his-other-life hooks are wired end to end', () => {
     const all = TAROT_HOOKS.map((h) => HEADLINES[h]);
     const dupes = all.filter((x, i) => all.indexOf(x) !== i);
     // cards-return / cards-come-back deliberately share one headline (reunion, 2026-08-04).
-    expect(new Set(dupes)).toEqual(new Set(['Will he come back?']));
+    // 🔴 'cards-twin-back' / 'cards-twinflame-back' share one headline too, by operator
+    // decision 2026-08-19 (the soulmate-return family): the incumbent keeps its ad URL and its
+    // `twin-flame` angle, and the challenger runs bespoke reads against it. Same call as
+    // cards-return / cards-come-back — identical pages mean the READS are the only variable.
+    expect(new Set(dupes)).toEqual(
+      new Set(['Will he come back?', 'Is my twin flame coming back to me?']),
+    );
   });
 
   // ⚠️ THE NEAR-IDENTICAL-SLUG HAZARD that put a wrong lander on a PostHog money step on 08-12.
@@ -260,7 +266,7 @@ describe(`${DECK} — his-other-life reads`, () => {
 
   // ── The compliance core ────────────────────────────────────────────────────
   const NEGATOR =
-    /\b(no|not|never|n't|nor|nobody|no one|none|cannot|rather than|instead of|does not|is not|nothing|refuses?|declines?|will not|would not|withholds?|neither|without|inventing|invent|manufacture|pretend|flattery|would be|ought to|should)\b/i;
+    /\b(no|not|never|can't|unable|n't|nor|nobody|no one|none|cannot|rather than|instead of|does not|is not|nothing|refuses?|declines?|will not|would not|withholds?|neither|without|inventing|invent|manufacture|pretend|flattery|would be|ought to|should)\b/i;
   const clausesOf = (s: string) => s.split(/[—;:,.]/);
 
   // ⚠️ RESTATEMENT EXEMPTION — beat 2 repeats HER question back, and several reads must NAME a

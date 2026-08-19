@@ -210,7 +210,8 @@ describe(`${DECK} — fidelity reads`, () => {
   it('beat 3 shares no 6-word run with the INCUMBENT on any deck it appears on', () => {
     const found: string[] = [];
     for (const nh of present) for (const c of CARDS) {
-      for (const deck of ['return-mhf', 'arcana-mfh', 'arcana-eef', 'decode-him'] as const) {
+      // 'decode-him' the DECK was retired 2026-08-19; the three below are what exist.
+      for (const deck of ['return-mhf', 'arcana-mfh', 'arcana-eef'] as const) {
         const inc = DECKS[deck].reads['cards-cheating'];
         if (!inc) continue;
         for (const r of shared(reads[nh]![c][2], inc[c][2])) found.push(`${nh}/${c} ~ cards-cheating@${deck}/${c}: "${r}"`);
@@ -241,8 +242,13 @@ describe(`${DECK} — fidelity reads`, () => {
 
   // ── The compliance core ────────────────────────────────────────────────────
   const NEGATOR =
-    /\b(no|not|never|n't|nor|nobody|no one|none|cannot|rather than|instead of|does not|is not|nothing|refuses?|declines?|will not|would not|withholds?|neither|without)\b/i;
-  const clausesOf = (s: string) => s.split(/[—;:,]/);
+    /\b(no|not|never|can't|unable|n't|nor|nobody|no one|none|cannot|rather than|instead of|does not|is not|nothing|refuses?|declines?|will not|would not|withholds?|neither|without)\b/i;
+  // 🔴 FIXED 2026-08-19 — this used to split on /[—;:,]/ only, which does NOT break on a
+  // full stop or a newline. Beat 3 carries four bubbles joined by '\n' since the migration, so
+  // a single negator in the first of them ('it was never you') put the whole of the remaining
+  // three behind the negation exemption and every clause ban in them was skipped silently.
+  // Found by feeding the gate a deliberate violation rather than trusting its green tick.
+  const clausesOf = (s: string) => s.split(/[—;:,.\n]/);
 
   const sweep = (bans: Array<[RegExp, string]>, always: Array<[RegExp, string]> = []) => {
     const hits: string[] = [];
