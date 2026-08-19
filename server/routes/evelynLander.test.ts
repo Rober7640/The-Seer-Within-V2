@@ -823,8 +823,14 @@ describe('POST /api/evelyn-lander/check-email', { skip: !HAS_DB }, () => {
     // The Live Thread tier. Once linked, a session carrying a pendingReply makes
     // userHasLiveThreadReply() (liveThreadEngagement.ts), read via
     // resolveWelcomeGrantTier(), true at verify time, which selects
-    // LIVE_THREAD_FREE_COINS over EVELYN_LANDER_FREE_COINS — so quoting 5 here would
-    // under-promise against a grant this route itself just enabled.
+    // LIVE_THREAD_FREE_COINS over EVELYN_LANDER_FREE_COINS.
+    //
+    // ⚠ WEAKENED 2026-08-19. Both constants are now 5, so this case can no longer tell
+    // the two tiers apart by their amount — it would stay green even if the tier were
+    // resolved wrongly. What it still proves is the WIRING: that the route links the
+    // session, sees the parked reply, and reports engagedViaLiveThread — which the two
+    // assertions below it check directly. If the amounts ever diverge again, this
+    // regains its teeth for free.
     it('quotes the Live Thread amount when the linked session carries a pendingReply', async () => {
       const user = await createTestUser({
         emailVerified: false,

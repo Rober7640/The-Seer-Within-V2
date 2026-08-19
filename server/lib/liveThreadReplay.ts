@@ -13,10 +13,11 @@
 // and chat billing is wall-clock from that stamp (creditTracking.ts:174-199), so
 // everything between the click and the reader's first typed word — the redirect
 // chain, greeting generation, reading, typing, any distraction — is billed to the
-// very grant this feature exists to hand them. Measured on Evelyn (299¢/min, a
-// 2990¢ Live Thread grant): a 60-second gap cost 299¢, four minutes cost 897¢ and
-// tripped BILLING_ANOMALY, and a reader returning later inside the 30-minute
-// reattach window was drained 2990 → 0 in four checkpoint cycles. Replaying here,
+// very grant this feature exists to hand them. Measured on Evelyn (299¢/min, against
+// the 2990¢ Live Thread grant of the time — halved to 1495¢ on 2026-08-19, which only
+// makes each figure below a bigger share of the gift): a 60-second gap cost 299¢, four
+// minutes cost 897¢ and tripped BILLING_ANOMALY, and a reader returning later inside
+// the 30-minute reattach window was drained 2990 → 0 in four checkpoint cycles. Replaying here,
 // inside initSession, means the clock starts when the reader really starts. See
 // .superpowers/sdd/lt-task-10-report.md for the full measurements.
 //

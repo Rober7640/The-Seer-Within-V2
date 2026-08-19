@@ -53,8 +53,16 @@ import logger from './logger';
  *   - the GRANT — auth.ts's LIVE_THREAD_FREE_COINS, which is
  *     minutesToCoins(this).
  * Changing it here moves both at once; there is no second copy to forget.
+ *
+ * 2026-08-19: cut from 10 to 5 by the operator, before the tier had ever fired in
+ * production (the migration adding `pending_reply` has not been applied there, so
+ * userHasLiveThreadReply() has never returned true on live data). No existing user
+ * was affected. It now MATCHES the plain evelyn-lander grant, which means the tier
+ * no longer changes the amount — it still exists, and is still resolved and logged
+ * separately, so the engagement it identifies stays measurable and the number can be
+ * moved again from this one line.
  */
-export const LIVE_THREAD_FREE_MINUTES = 10;
+export const LIVE_THREAD_FREE_MINUTES = 5;
 
 /**
  * Did the reader type into THIS lander session? Keyed by session token, for the
