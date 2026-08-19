@@ -77,6 +77,15 @@ interface Props {
    * `params.email` (string | null) by EvelynLanderPage.tsx:566.
    */
   prefillEmail?: string | null;
+  /**
+   * `no_match` only: perform the handoff into registration NOW.
+   *
+   * The parent still owns WHERE the reader goes (it builds the destination and
+   * writes the location); this component owns WHEN, because it is the thing
+   * that knows what is on screen and how long it takes to read. Called at most
+   * once — either when the countdown runs out or when the reader taps "Go now".
+   */
+  onHandoffNow?: () => void;
 }
 
 // Both budgets bound a client -> our-API round trip over a possibly poor mobile
@@ -119,6 +128,41 @@ const OPENER_MAX_TYPING_MS = 1_600;
 const OPENER_PAUSE_MS = 500;
 /** Her reply to the reader gets the real chat pause, and a slightly longer cap. */
 const RESPONSE_MAX_TYPING_MS = 1_800;
+
+/**
+ * `no_match` only: how long the reader gets before they are carried into
+ * registration. Exported because EvelynLanderPage renders the countdown's
+ * consequence (the navigation) while this file renders the countdown itself —
+ * one definition, so tuning the beat cannot desync the two.
+ *
+ * WHY IT IS 6s AND NOT 1.6s. It used to live in EvelynLanderPage, at 1600ms,
+ * tuned against the quiz arm's much shorter transition. Nobody re-checked it
+ * against THIS branch's copy: the confirmation bubble alone is ~35 words, so the
+ * page changed roughly a fifth of the way into the sentence explaining why it
+ * was changing. Reported as "the redirect was too fast to the signup window. I
+ * did not understand what happened."
+ *
+ * A longer wait is only an improvement if it is ANNOUNCED — six silent seconds
+ * reads as a hung page. So the beat is spent on Evelyn saying where she is
+ * sending them, with a visible counter and a way to skip it.
+ */
+export const NO_MATCH_HANDOFF_DELAY_MS = 6_000;
+
+/**
+ * Evelyn's last word before the page moves.
+ *
+ * Deliberately does NOT repeat the confirmation bubble above it, which has
+ * already said their reply is saved and that activating unlocks the answer.
+ * This one does the single thing that bubble does not: name what is about to
+ * happen to them.
+ *
+ * "Set it up" is exact, and matters — the destination is /login?mode=signup with
+ * a REQUIRED password field. These readers have no account, so any wording that
+ * implied signing in ("so you can log in") would send them hunting for a
+ * password they never set.
+ */
+const HANDOFF_BUBBLE =
+  "I'm sending you there now. Set it up, and I'll be waiting on the other side with what you just told me.";
 
 // ---------------------------------------------------------------------------
 // Evelyn's answer to the reply, and the email ask inside it.
@@ -191,6 +235,7 @@ export default function LiveThreadLander({
   sessionToken,
   onOutcome,
   prefillEmail,
+  onHandoffNow,
 }: Props) {
   // FALLBACK_SEED is inlined here rather than kept as a module constant so the
   // "never render a blank bubble" floor sits next to the only place it applies.
@@ -226,6 +271,15 @@ export default function LiveThreadLander({
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [resendMsg, setResendMsg] = useState<string | null>(null);
   const [crisis, setCrisis] = useState<CrisisState | null>(null);
+
+  // Seconds still to run on the no_match handoff, or null when no handoff is
+  // pending. Drives both the visible counter and the navigation itself, so what
+  // the reader is told and what actually happens cannot disagree.
+  const [handoffSecondsLeft, setHandoffSecondsLeft] = useState<number | null>(null);
+  // onHandoffNow navigates, and navigating twice is a real hazard: wouter's
+  // navigate is a global location write, so a second call after the reader has
+  // already left would yank them back. Fires at most once.
+  const handoffFiredRef = useRef(false);
 
   // Double-submit guard. The `sending`/`checking` state flags drive the UI
   // (spinner + disabled controls), but state is applied asynchronously, so they
@@ -313,6 +367,51 @@ export default function LiveThreadLander({
   /** Print any un-revealed opener bubbles immediately. No-op once it has run. */
   function flushOpener() {
     openerFlushRef.current?.();
+  }
+
+  /**
+   * Hand off, once. Shared by the countdown reaching zero and the "Go now" tap so
+   * the two can never both fire.
+   */
+  function fireHandoff() {
+    if (handoffFiredRef.current) return;
+    handoffFiredRef.current = true;
+    setHandoffSecondsLeft(null);
+    onHandoffNow?.();
+  }
+
+  // The countdown. One timeout per tick rather than one interval, so React state
+  // is the only clock — there is no separately-running timer that could survive a
+  // re-render and double-decrement.
+  //
+  // Clearing on unmount is load-bearing, not hygiene: this is the guard
+  // EvelynLanderPage used to hold for the same reason. A reader who taps "Sign in
+  // instead" during the beat must not have a queued navigate() drag them back out
+  // of where they went, and wouter's navigate fires happily after unmount.
+  useEffect(() => {
+    if (handoffSecondsLeft === null) return;
+    if (handoffSecondsLeft <= 0) {
+      fireHandoff();
+      return;
+    }
+    const id = setTimeout(() => {
+      setHandoffSecondsLeft((s) => (s === null ? null : s - 1));
+    }, 1_000);
+    return () => clearTimeout(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [handoffSecondsLeft]);
+
+  /**
+   * `no_match` only: Evelyn names where she is sending them, then the counter
+   * starts. The countdown begins AFTER her bubble lands rather than alongside it,
+   * so the reader never watches a timer tick against words that have not appeared.
+   */
+  async function playHandoff() {
+    setIsTyping(true);
+    await sleep(Math.min(calculateTypingDelay(HANDOFF_BUBBLE), RESPONSE_MAX_TYPING_MS));
+    setIsTyping(false);
+    setMessages((prev) => [...prev, { role: "assistant", content: HANDOFF_BUBBLE }]);
+    setHandoffSecondsLeft(Math.round(NO_MATCH_HANDOFF_DELAY_MS / 1_000));
   }
 
   /**
@@ -560,6 +659,11 @@ export default function LiveThreadLander({
       ]);
       setStage("done");
       onOutcome(result.outcome, value);
+
+      // no_match is the only outcome that navigates. The other two end on this
+      // page with a resend and a sign-in link, so there is nothing to count down
+      // to and no bubble to add.
+      if (result.outcome === "no_match") void playHandoff();
     } finally {
       setChecking(false);
       inFlight.current = false;
@@ -777,12 +881,34 @@ export default function LiveThreadLander({
           {stage === "done" && outcome && submittedEmail && (
             <div className="space-y-2 text-center">
               {outcome === "no_match" ? (
-                // Frame 2b. No mail has been dispatched and none will be until
-                // they activate, so this stays in the future tense. Task 12's
-                // onOutcome handler is what carries them into registration.
-                <p className="text-sm text-gray-600">
-                  We'll email you a one-click link. No password needed.
-                </p>
+                // Frame 2b. Replaces the old "We'll email you a one-click link.
+                // No password needed." — which was false twice over: nothing is
+                // mailed to a no_match reader (that is the whole meaning of the
+                // outcome), and the form they are about to land on has a
+                // REQUIRED password field, min 8 characters (LoginPage.tsx:377).
+                // Telling someone "no password needed" and then demanding one on
+                // the very next screen costs more trust than the wait ever did.
+                //
+                // What replaces it says only what is true and about to happen,
+                // and gives them the door if they would rather not wait. Until
+                // the counter starts (Evelyn is still typing) there is nothing to
+                // announce, so this renders nothing rather than a 0.
+                handoffSecondsLeft !== null && (
+                  <div className="flex items-center justify-center gap-3 text-xs">
+                    <span className="text-gray-500" role="status" aria-live="polite">
+                      Taking you there in {handoffSecondsLeft}…
+                    </span>
+                    <span className="text-gray-300">·</span>
+                    <button
+                      type="button"
+                      onClick={fireHandoff}
+                      data-testid="button-live-thread-go-now"
+                      className="text-purple-700 hover:underline"
+                    >
+                      Go now
+                    </button>
+                  </div>
+                )
               ) : (
                 <>
                   <p className="text-sm text-gray-600">✉️ {submittedEmail}</p>
