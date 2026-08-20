@@ -117,6 +117,33 @@ export function bumpLineDescription(paired: BumpBucket): string {
 export const V1_BUMP_PRODUCT_KEY = 'double_reading';
 
 /**
+ * `metadata.bumpProduct` for a bump bought on one of the eleven /fb-tarot
+ * MONEY-BLOCK landers (Lewis, 2026-08-20).
+ *
+ * 🔴 WHY A DIFFERENT VALUE AT ALL: Mike's n8n branches on `bumpProduct` and
+ * generates the second-reading PDF from it. These eleven landers have no
+ * second-reading product yet, so they must NOT reach that branch. Giving those
+ * orders a value his condition does not match is what keeps them out of it.
+ *
+ * 🔴 WHY IT DOES NOT CONTAIN `double_reading`: an equality filter and a CONTAINS
+ * filter must BOTH fail. `double_reading_money` would still match a contains-check
+ * and the PDF would generate anyway — the exact outcome this exists to prevent — so
+ * the string is deliberately disjoint from the key above. Never rename this to
+ * anything with `double_reading` inside it; tests/money-lander-isolation.test.ts
+ * fails if you do.
+ *
+ * 🔴 AND NOT `..._money`: on a money lander the bump she buys is a LOVE reading —
+ * BUMP_PAIRINGS maps money → love — so a money-flavoured product name would
+ * misdescribe the thing sold. This names the LANDER, not the topic.
+ *
+ * ⚠️ Money-lander bump buyers are charged V1_BUMP_CENTS and receive no second
+ * reading until fulfilment for them is built (Lewis's explicit call, 2026-08-20,
+ * after the delivery gap was raised). `product` stays `energy_clearing_ritual`, so
+ * her MAIN reading is unaffected.
+ */
+export const V1_BUMP_PRODUCT_KEY_MONEY_LANDER = 'money_lander_addon';
+
+/**
  * INTERNAL marker appended to the PaymentIntent description on a bump order, so
  * the Stripe Dashboard's Description column shows at a glance that the payment
  * covers two products (Lewis, 2026-08-04). Without it a bump order is
