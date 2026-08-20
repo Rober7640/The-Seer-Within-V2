@@ -132,6 +132,14 @@ export interface UserData {
   // the same arm server-side to build the Stripe line item — the card and the
   // charge must always come from one table. Absent ⇒ control.
   bumpCopy?: BumpCopyVariant
+  // CLOSE DEPTH (v1_close_depth_2026) — 'deep' when this lead bucketed into the
+  // thickened close: five extra blocks in the pitch (mechanism, a longer ritual,
+  // a page-by-page deliverable, price justification, proof, pre-handled
+  // objections). Assigned by the EXPERIMENT framework at lead capture, exactly
+  // like commitmentGate/orderBump, and COPY-ONLY — it never touches a price, a
+  // line item or the CTA. Only ever set to 'deep'; absent ⇒ today's 8-message
+  // close, byte-identical.
+  closeDepth?: 'deep'
 }
 
 export interface ShippingAddress {

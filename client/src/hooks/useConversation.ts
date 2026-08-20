@@ -583,6 +583,20 @@ export function useConversation() {
       .catch(() => { /* non-blocking — default to control */ })
   }, [updateUserData])
 
+  // === CLOSE-DEPTH PREVIEW (?close_depth=deep) ===
+  // Forces the thickened close (v1_close_depth_2026 arm B) for a live self-test
+  // WITHOUT enrolling — mirrors ?clearing=woven. COPY-ONLY: no price, CTA or
+  // line item changes, so a preview session is safe to walk to the pitch. It
+  // does NOT log an exposure, so it never lands in the test's denominator.
+  const closeDepthPreviewResolved = useRef(false)
+  useEffect(() => {
+    if (closeDepthPreviewResolved.current) return
+    closeDepthPreviewResolved.current = true
+    if (new URLSearchParams(window.location.search).get('close_depth') === 'deep') {
+      updateUserData({ closeDepth: 'deep' })
+    }
+  }, [updateUserData])
+
   // === SLIDING-SCALE CLOSE PREVIEW (?close=55) ===
   // Forces the 55-35 pitch copy + CTAs for a live self-test WITHOUT enrolling.
   // COPY-ONLY: the server still charges whatever variant is stored on the
@@ -1013,6 +1027,12 @@ export function useConversation() {
         // the same arm for the Stripe line, so a junk value here must fall back
         // to control instead of producing a blank card.
         if (isBumpCopyVariant(leadData?.bumpCopy)) patch.bumpCopy = leadData.bumpCopy
+        // Close-depth arm — framework-assigned at lead capture, same shape as
+        // orderBump. Only ever set to 'deep'; absent ⇒ today's close, unchanged.
+        // No preview guard is needed (unlike the ?close=55 price override above):
+        // the server never sends this key on the control arm, so a ?close_depth=deep
+        // self-test can't be clobbered by the response.
+        if (leadData?.closeDepth === 'deep') patch.closeDepth = 'deep'
         if (Object.keys(patch).length > 0) updateUserData(patch)
       } catch { /* response body parse is best-effort */ }
 
@@ -1864,20 +1884,71 @@ export function useConversation() {
     // V1 prompt A/B ('woven' arm, v1_clearing_theme_palm_2026): NAME the Energy
     // Clearing Ritual up front — un-orphans the canonical clearing framing so the
     // trilogy's Act 1 lands. Control ⇒ today's copy, byte-identical.
+    //
+    // CLOSE DEPTH ('deep' arm, v1_close_depth_2026): the close today is 8 messages
+    // / ~140 words, and against a standard close checklist five of seven slots are
+    // empty. The deep arm fills all five — mechanism (below), a longer ritual, a
+    // page-by-page deliverable, a price justification, proof, and pre-handled
+    // objections. 47–52% of non-buyers stop at this exact step.
+    //
+    // 🔴 With both flags off this whole section is byte-identical to today, message
+    // for message. Arm A is the control path — do not refactor it.
+    //
+    // The two arms COMPOSE (woven prefixes its naming line, deep swaps the body)
+    // rather than one winning, because the preview overrides can set both. They
+    // never co-occur in live traffic: woven is fb-palm-scoped, deep is fb-tarot.
     const woven = chat.userData.promptVariant === 'woven'
-    await sendBotMessages(woven ? [
-      `What you need, ${firstName}, is an Energy Clearing Ritual — I'll focus entirely on removing the shadow that's been blocking your path.`,
+    const deep = chat.userData.closeDepth === 'deep'
+
+    // NEW BLOCK — MECHANISM (deep arm). Hopkins' reason-why: WHY the ritual works.
+    // Missing entirely today — the ritual is asserted, never explained, which is
+    // what makes every psychic's ritual sound like every other psychic's ritual.
+    if (deep) await sendBotMessages([
+      "What sits on you isn't a mood, dear. It's a pattern. And a pattern holds by staying unnamed.",
+      "That's the whole of it. Nobody has ever said this thing out loud to you, so it kept its grip.",
+      "Naming it precisely is what loosens it. Not wishing. Not hoping. Naming.",
+    ])
+
+    // The deep ritual is where the SENSORY detail belongs (see the step label above),
+    // so this is where arm B puts its physical objects — a cord and wax, which are
+    // the clearing's OWN verbs made touchable ("sever that thread" → a cord she can
+    // picture being cut; "seal" → wax). Cord cutting is also a practice this audience
+    // already has a name for, so it reads as specific rather than invented.
+    //
+    // 🔴 DELIBERATELY NOT U1's KIT. The altar, white candle, blessed water, sage and
+    // the 2-4am window all belong to UPSELL_RITUAL (client/src/lib/upsellMessages.ts),
+    // and she meets them ~3 minutes later on /welcome1 as an 8-message curtain-lift.
+    // Spending them here costs that reveal its novelty, and the clock costs more than
+    // that: the close already says the clearing takes 2-3 hours and U1 says its ritual
+    // runs 2-4am for ~2 hours, so putting an hour on this one invents an arithmetic
+    // problem that does not exist today. Two different workings should look different.
+    const ritual = deep ? [
       `Tonight, I'll enter a deep meditative state and focus entirely on your energy field, ${firstName}.`,
-      "I'll trace the roots of this block, sever its hold, and seal the clearing so it can't return.",
+      "I go back to the hour it took hold and find what feeds it. On my table, that's a length of black cord.",
+      "I cut it, then seal both ends with wax — so nothing can travel back along it to you.",
       "It takes 2-3 hours of concentrated work. It drains me... but for those who are ready, it's worth it.",
+      "A thing named properly doesn't grow back, dear. That's why I do it slowly.",
     ] : [
       `Tonight, I'll enter a deep meditative state and focus entirely on your energy field, ${firstName}.`,
       "I'll trace the roots of this block, sever its hold, and seal the clearing so it can't return.",
       "It takes 2-3 hours of concentrated work. It drains me... but for those who are ready, it's worth it.",
-    ])
+    ]
+    await sendBotMessages(woven ? [
+      `What you need, ${firstName}, is an Energy Clearing Ritual — I'll focus entirely on removing the shadow that's been blocking your path.`,
+      ...ritual,
+    ] : ritual)
 
-    // Step 4: Explain deliverables with SPECIFICS
-    await sendBotMessages([
+    // Step 4: Explain deliverables with SPECIFICS.
+    // Deep arm: Ogilvy's specificity. "5-7 pages" is a SIZE, not a promise — this
+    // version says what is actually ON them, page by page.
+    await sendBotMessages(deep ? [
+      "Within 24 hours, you'll receive a personalized 5-7 page reading via email.",
+      "Page one is what I found — the exact shape of it, and the hour it first took hold.",
+      "Page two is what I cleared, and what resisted me. I tell you both. I don't tidy it up.",
+      "Then the part most women read twice. Your next thirty days, set out week by week.",
+      "What to expect in week one. What shifts by week three. The one sign that tells you it's working.",
+      "And three steps. Small ones — things you can do on a Tuesday, not a mountain to climb.",
+    ] : [
       "Within 24 hours, you'll receive a personalized 5-7 page reading via email.",
       "It will show you exactly what I found, what I cleared, and 3 specific steps for the next 30 days.",
     ])
@@ -1891,6 +1962,38 @@ export function useConversation() {
     const pitchPrice = chat.userData.priceDollars ?? 35
     const downsellDollars = chat.userData.downsellDollars ?? 25
     const slidingClose = isSlidingCloseVariant(chat.userData.priceVariantId)
+
+    // NEW BLOCK — PRICE JUSTIFICATION (deep arm). Placed BEFORE the existing three
+    // so the plain reason-why lands first and "the sacred offering is $35" closes
+    // the block instead of restarting it. Argues WORTH and never mentions a
+    // discount: the $25 downsell stays reactive, because pre-announcing it is
+    // exactly what lost the retired sliding-scale arm (2026-07-22).
+    //
+    // The price is INTERPOLATED, never spelled out, for three reasons: the bubble
+    // right below it already reads "$35", numerals are what a woman skimming on a
+    // phone actually catches, and a hardcoded number would silently contradict any
+    // funnel that prices differently.
+    //
+    // The itemisation POINTS BACK at the cord and the wax she has already watched
+    // being used in the ritual block. Show it, then charge for it — introducing
+    // props at the moment of the ask is weaker, and it is what the first draft did.
+    //
+    // 🔴 THINGS AND HOURS, NEVER A DOLLAR BREAKDOWN. "$9 of it is the candle" is a
+    // factual claim about the business, and at this price an itemised total also
+    // makes the whole clearing feel like the sum of its wax. What justifies $35 is
+    // that the materials are spent once and the hours cannot be resold.
+    //
+    // A fourth bubble here used to read "Because the women who need this most are
+    // usually the ones who've already paid a great deal to be told nothing." CUT on
+    // operator review: it builds solidarity, but it also plants "I paid a reader and
+    // got nothing" seconds before the buy button, and it made the block answer its
+    // own "where it goes" promise a detour late.
+    if (deep) await sendBotMessages([
+      `Now the offering, ${firstName}. It's $${pitchPrice}. Let me tell you plainly where it goes.`,
+      "The cord, the wax, and two to three hours of a night I can't give to anyone else. Spent once, for you.",
+      `$${pitchPrice} covers the whole of it and keeps this honest. It's a sign you're ready. Not a wall.`,
+    ])
+
     await sendBotMessages(slidingClose ? [
       `Before I begin, ${firstName}, let me be honest with you about how this works.`,
       `The full offering for this work is $${pitchPrice}.`,
@@ -1904,6 +2007,35 @@ export function useConversation() {
       `The sacred offering is $${pitchPrice} — a declaration to the universe that you're ready for this change.`,
       "It comes with my 30-day guarantee. If you feel nothing has shifted, every penny returned.",
       `I've done this work for hundreds of seekers, ${firstName}. Most feel a shift within the first week.`,
+    ])
+
+    // NEW BLOCK — PROOF (deep arm). Believable beats impressive: one line making
+    // the result small and concrete instead of grand. The love-bucket detail is
+    // safe here because this test is fb-tarot-scoped (96.6% love); a funnel-wide
+    // rollout would need the neutral rewrite in the spec's §8.
+    if (deep) await sendBotMessages([
+      "It rarely arrives how they expect. It's small — sleeping through the night. Not reaching for the phone.",
+    ])
+
+    // NEW BLOCK — OBJECTIONS (deep arm). The two she ACTUALLY raises, mined from
+    // 517 non-buying sessions: price (23–32% in every hook family) and "let me
+    // think about it" (3–8%). "What if I feel nothing?" was said ZERO times and is
+    // deliberately not answered here.
+    //
+    // 🔴 NEVER name the $25 downsell. This block argues worth, not discount — see
+    // the price block above.
+    //
+    // Weakest-evidenced of the five blocks: only ~30% of non-buyers say anything at
+    // all at the offer, so pre-handling reaches the other 70% only if the silent
+    // majority hold the same objection. That is the standard premise of
+    // pre-handling and it is a premise, not a finding. If arm B ever has to
+    // shrink, this is the block to cut.
+    if (deep) await sendBotMessages([
+      "Two things women say to me here. I'd rather answer them now than have you sitting with them.",
+      `The first is money, dear. I know. $${pitchPrice} is not nothing when the month is already thin.`,
+      "So don't decide by what you can spare. Decide by what another year of this costs you.",
+      `The second is "let me think about it." That's fair. But I read what's live tonight, not what's cooled by Friday.`,
+      "Waiting doesn't keep it safe for you. It just means I'd be reading a fainter thing.",
     ])
 
     // Step 6: Call Claude API for personalized mystical close (references their
