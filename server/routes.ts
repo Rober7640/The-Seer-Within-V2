@@ -89,8 +89,6 @@ import { TAROT_C_PATH, tarotBTarget } from "./lib/tarotRedirect";
 import { ensureVisitorId, readVisitorId } from "./lib/visitorCookie";
 import {
   V1_BUMP_CENTS,
-  V1_BUMP_PRODUCT_KEY,
-  V1_BUMP_PRODUCT_KEY_MONEY_LANDER,
   bumpLineDescription,
   bumpProductName,
   bumpCopy,
@@ -102,7 +100,7 @@ import {
 } from "@shared/orderBump";
 import { fireGoogleAdsConversion } from "./lib/googleAds";
 import { funnelDefForParam, FUNNELS, type FunnelParam } from "@shared/funnelConfig";
-import { isTarotMoneyLead, moneyLanderListId } from "@shared/moneyLander";
+import { bumpProductKeyFor, moneyLanderListId } from "@shared/moneyLander";
 import Stripe from "stripe";
 import { getStripe, getStripeForRow } from "./lib/stripeAccount";
 import type { ChatRequest, CheckoutRequest } from "../shared/types";
@@ -866,9 +864,7 @@ export async function registerRoutes(
       // the revenue tally and the Stripe line item are all unchanged.
       const bumpMetadata = bumpApplied
         ? {
-            bumpProduct: isTarotMoneyLead(funnel, bucket)
-              ? V1_BUMP_PRODUCT_KEY_MONEY_LANDER
-              : V1_BUMP_PRODUCT_KEY,
+            bumpProduct: bumpProductKeyFor(funnel, bucket),
             bumpBucket: bumpBucket as string,
             bumpAmount: String(V1_BUMP_CENTS),
           }

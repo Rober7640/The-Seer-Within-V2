@@ -8,7 +8,12 @@
 // Run: npx vitest run tests/money-lander-isolation.test.ts
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { isTarotMoneyLead, moneyLanderListId } from '@shared/moneyLander';
+import {
+  isTarotMoneyLead,
+  moneyLanderListId,
+  moneyLanderSplitLive,
+  bumpProductKeyFor,
+} from '@shared/moneyLander';
 import { V1_BUMP_PRODUCT_KEY, V1_BUMP_PRODUCT_KEY_MONEY_LANDER } from '@shared/orderBump';
 import { FUNNELS } from '@shared/funnelConfig';
 
@@ -112,5 +117,50 @@ describe('moneyLanderListId — the free list, and the dark-ship guarantee', () 
   it('treats an empty env value as unset rather than writing to list ""', () => {
     process.env[KEY] = '';
     expect(moneyLanderListId('v1-tarot', 'money')).toBeUndefined();
+  });
+});
+
+describe('ONE switch governs both halves', () => {
+  const KEY = 'AWEBER_LIST_ID_TAROT_MONEY';
+  let saved: string | undefined;
+  beforeEach(() => { saved = process.env[KEY]; delete process.env[KEY]; });
+  afterEach(() => {
+    if (saved === undefined) delete process.env[KEY];
+    else process.env[KEY] = saved;
+  });
+
+  // 🔴 THE DARK-SHIP GUARANTEE, now covering the bump key too. Before this the key
+  // changed the moment the code deployed, with no switch and no env rollback.
+  it("with the switch OFF, a money lander keeps Mike's key", () => {
+    expect(moneyLanderSplitLive()).toBe(false);
+    expect(bumpProductKeyFor('v1-tarot', 'money')).toBe(V1_BUMP_PRODUCT_KEY);
+  });
+
+  it('with the switch ON, a money lander gets the key his EQUALS filter misses', () => {
+    process.env[KEY] = '6971693';
+    expect(moneyLanderSplitLive()).toBe(true);
+    expect(bumpProductKeyFor('v1-tarot', 'money')).toBe(V1_BUMP_PRODUCT_KEY_MONEY_LANDER);
+  });
+
+  it('never changes the key for any other lander, switch on or off', () => {
+    for (const on of [false, true]) {
+      if (on) process.env[KEY] = '6971693'; else delete process.env[KEY];
+      expect(bumpProductKeyFor('v1-tarot', 'love')).toBe(V1_BUMP_PRODUCT_KEY);
+      expect(bumpProductKeyFor('v1-palm', 'money')).toBe(V1_BUMP_PRODUCT_KEY);
+      expect(bumpProductKeyFor('v1-fb', 'money')).toBe(V1_BUMP_PRODUCT_KEY);
+      expect(bumpProductKeyFor(undefined, 'money')).toBe(V1_BUMP_PRODUCT_KEY);
+    }
+  });
+
+  // 🔴 THE HALF-ON STATE. The list and the key must flip together — a money lead on
+  // the new list whose order still fires Mike's PDF (or the reverse) is the one
+  // outcome neither behaviour was built to produce.
+  it('list and bump key are never on independently', () => {
+    for (const on of [false, true]) {
+      if (on) process.env[KEY] = '6971693'; else delete process.env[KEY];
+      const listMoved = moneyLanderListId('v1-tarot', 'money') !== undefined;
+      const keyChanged = bumpProductKeyFor('v1-tarot', 'money') !== V1_BUMP_PRODUCT_KEY;
+      expect(listMoved, `switch=${on}: list and key disagree`).toBe(keyChanged);
+    }
   });
 });
