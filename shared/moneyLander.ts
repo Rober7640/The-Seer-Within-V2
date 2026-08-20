@@ -1,3 +1,5 @@
+import { V1_BUMP_PRODUCT_KEY, V1_BUMP_PRODUCT_KEY_MONEY_LANDER } from './orderBump';
+
 /**
  * The eleven /fb-tarot MONEY-BLOCK landers (Lewis, 2026-08-20).
  *
@@ -48,4 +50,42 @@ export function moneyLanderListId(
 ): string | undefined {
   if (!isTarotMoneyLead(funnel, bucket)) return undefined;
   return process.env.AWEBER_LIST_ID_TAROT_MONEY || undefined;
+}
+
+/**
+ * Is the money-lander cutover LIVE on this environment?
+ *
+ * 🔑 ONE SWITCH FOR BOTH BEHAVIOURS, deliberately. The free list and the bump key are
+ * a single cutover: they describe the same eleven landers, and an environment where
+ * one is on and the other off is a state nobody asked for — money leads filed on the
+ * new list while their orders still trigger Mike's PDF, or the reverse. Two variables
+ * could drift into exactly that; one cannot.
+ *
+ * The presence of AWEBER_LIST_ID_TAROT_MONEY IS that switch. It reads slightly oddly
+ * that an AWeber variable also governs Stripe metadata, which is why this function
+ * exists rather than the env being read inline in two places — the coupling is the
+ * point, and it is named and documented here.
+ *
+ * 🔴 UNSET ⇒ EVERY LANDER BEHAVES EXACTLY AS IT DID BEFORE, the eleven included. That
+ * is what lets the code reach production inert, with the cutover and the rollback both
+ * being one variable rather than a deploy.
+ */
+export function moneyLanderSplitLive(): boolean {
+  return !!(process.env.AWEBER_LIST_ID_TAROT_MONEY || '').trim();
+}
+
+/**
+ * `metadata.bumpProduct` for an order, given its funnel and bucket.
+ *
+ * Money landers get the key Mike's n8n does NOT match (he confirmed 2026-08-20 that
+ * his filter is an EQUALS on `double_reading`), so no second-reading PDF is generated
+ * for them. Everything else keeps the key his branch fires on.
+ */
+export function bumpProductKeyFor(
+  funnel: string | null | undefined,
+  bucket: unknown,
+): string {
+  return moneyLanderSplitLive() && isTarotMoneyLead(funnel, bucket)
+    ? V1_BUMP_PRODUCT_KEY_MONEY_LANDER
+    : V1_BUMP_PRODUCT_KEY;
 }
