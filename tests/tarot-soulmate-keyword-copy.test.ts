@@ -54,6 +54,8 @@ const CARDS = ['a', 'b', 'c'] as const;
 const DRAFTS = new URL('../fb-tarot/docs/drafts/rewrites/', import.meta.url);
 
 // The four keywords, pinned. A keyword gains a hook only by a decision, not by a stray edit.
+// @roster-start — the family's members. Tooling reads between these markers; keep any
+// other hook this file mentions (money twins, neighbours) OUTSIDE them.
 const KEYWORDS = {
   blocked: ['cards-blocking-soulmate', 'cards-blocked-before'],
   connection: ['cards-connection-soulmate', 'cards-connection-nothing'],
@@ -61,6 +63,7 @@ const KEYWORDS = {
   healing: ['cards-waiting-to-heal', 'cards-heal-first'],
 } as const;
 const HOOKS = Object.values(KEYWORDS).flat();
+// @roster-end
 
 // The six with nobody in them. MUST match SOULMATE_KEYWORD_TAROT_HOOKS in prompts.ts.
 const NO_MAN = [...KEYWORDS.blocked, ...KEYWORDS.energy, ...KEYWORDS.healing] as const;

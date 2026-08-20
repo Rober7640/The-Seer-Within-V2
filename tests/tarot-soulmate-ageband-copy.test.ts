@@ -80,6 +80,8 @@ const CARDS = ['a', 'b', 'c'] as const;
 const DRAFTS = new URL('../fb-tarot/docs/drafts/rewrites/', import.meta.url);
 
 // The four bands, pinned. A band gains a hook only by a decision, not by a well-meaning edit.
+// @roster-start — the family's members. Tooling reads between these markers; keep any
+// other hook this file mentions (money twins, neighbours) OUTSIDE them.
 const BANDS = {
   '25-44': ['cards-slipping-past', 'cards-choosing-wrong'],
   '45-54': ['cards-found-me-yet', 'cards-keeps-waiting', 'cards-missed-chance'],
@@ -87,6 +89,7 @@ const BANDS = {
   '65+': ['cards-too-late-love', 'cards-longer-to-wait', 'cards-allowed-to-want'],
 } as const;
 const HOOKS = Object.values(BANDS).flat();
+// @roster-end
 
 // The four HOW-LONG rungs. Ban 1 is absolute on all eight, but these are the ones whose ad
 // asks for a length outright, so they are also asserted to DECLINE it out loud (see below).

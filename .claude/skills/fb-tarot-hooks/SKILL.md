@@ -27,6 +27,7 @@ every live ad points at. Param-driven (`/fb-tarot/c?hook=X&deck=Y`), no new rout
 | The real guards | `npx vitest run tests/tarot- --testTimeout=300000 --maxWorkers=2` |
 | Prove the guard bites | `node scripts/guard-tripwire.mjs <family>` |
 | Preview | `node scripts/preview-rewrite.mjs --html` |
+| **Did the run actually do each stage** | `npx tsx scripts/skill-smoke.mts --family <name> --all-in-guard` |
 
 ## Operating mode (locked)
 
@@ -94,6 +95,40 @@ Write down, per hook: **the word doing the work**, **the fear under the headline
 literal question), **who the ad will harm**, and **what she has already been told** that the read
 must refuse.
 
+🔴 **Record the pull as a `voc` block in the draft, not as prose in the note.** Prose is what
+failed: on 2026-08-20 eight landers shipped with no pull at all and the only trace was a
+sentence someone happened to type. `scripts/skill-smoke.mts` reads this field and fails without
+it, so the evidence level travels with the copy instead of living in someone's memory.
+
+```json
+"voc": { "pulled": "2026-08-20", "pattern": "sm-best-years",
+         "matched": 60, "buyers": 9, "verdict": "ok", "why": "" }
+```
+
+| verdict | when | what it costs you |
+|---|---|---|
+| `ok` | 5+ buyers, counts recorded | nothing |
+| `thin` | fewer than 5 buyers | a WARN, and `why` is required |
+| `unrecorded` | the pull ran, the numbers were not written down | a WARN — re-pull to clear it |
+| `none` | no pull ran | a **FAIL**. The run is incomplete. |
+
+### When the pull comes back thin or empty
+
+🔴 **A thin pull is a finding, not a formality.** `cards-found-me-yet` matched FOUR concerns and
+ZERO buyers, because nobody phrases it as him finding her — the agency flip is the AD's idea.
+That is not "no data"; it is the data telling you the headline invented a question. Do not then
+answer the headline. Write to the fear the corpus DOES record (there, `"HAVE I DONE SOMETHING TO
+PREVENT OUR MEETING?"` from the how-long pull) and say in the note that you did.
+
+🔴 **With no pull at all, you may not invent an intent.** Inheriting a *shipped* family's finding
+is allowed and is what the money family is for — `cards-my-energy` had already solved "is it me?"
+on the identical headline. Inventing what she means from the ad copy is the thing that produced a
+read acquitting a man. The difference is whether the finding has ever been checked against a real
+person's words.
+
+⚠ **And "the operator said skip it" is a reason, not an exemption.** Mark it `none`, write the
+reason and the theme to pull, and expect the smoke test to fail — that failure is the record.
+
 ### 2 · Draft to the seven cuts
 
 To `fb-tarot/docs/drafts/rewrites/<hook>.json` — `{hook, headline, note, decks:{<deck>:{a,b,c}}}`,
@@ -140,6 +175,26 @@ age" ban was ignored twice until rewritten as a positive instruction ("open on t
 guard patterns written against the draft's own vocabulary scored the model's actual self-blame
 ("a pattern your soul is ready to break") as CLEAN. Fix the patterns from what comes back.
 
+### 5b · Did the run actually happen?
+
+```bash
+npx tsx scripts/skill-smoke.mts --family <name> --all-in-guard
+```
+
+Every gate above checks the COPY. This checks the RUN — that each stage left the artifact it was
+supposed to. It reads the `voc` block (stage 1), the seven-cut shape (2), the guard file and
+tripwire rows (4), a Playwright spec per lander (5), and all three rosters plus exactly-one-frame
+(7). It exists because on 2026-08-20 eight landers passed readability, collisions, the registry
+gate, their own guard file and 12/12 tripwire cases **while no VOC pull had ever run behind
+them**. Every copy gate was green; the stage that decides who the ad reaches had been skipped.
+
+⚠ The guard file needs `@roster-start` / `@roster-end` markers around its roster, or
+`--all-in-guard` cannot tell the family's own hooks from the neighbours it names as collision
+twins. Add them when you copy the sibling guard.
+
+Green here means the run was complete. It says nothing about whether the copy is good — that is
+what the guards and the human below are for.
+
 ### 6 · REVIEW GATE — hard stop
 
 `node scripts/preview-rewrite.mjs --html`, then publish a focused review page for the operator
@@ -173,3 +228,4 @@ conversations**, not buy-rate — buy-rate hides upsell take and ranks sub-group
 4. ⛔ `cards-feels` and `cards-return` are live controls — never rewritten, never touched.
 5. Never `git checkout` to undo, and never run a blind regex pass over copy.
 6. Every new family gets its own guard file AND its own tripwire rows.
+7. Every lander carries a `voc` record. No pull is a FAIL, not a footnote.
