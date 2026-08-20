@@ -62,6 +62,19 @@ export type LiveThreadOutcome = "verified_match" | "unverified_match" | "no_matc
 
 interface Props {
   continueSeed: string;
+  /**
+   * The card this letter was about, when it had one — `email_link_codes
+   * .card_image_url`, handed over by /start. Shown as its own bubble BETWEEN the
+   * line that names the card and the line that asks the reader for something
+   * (Joel, 2026-08-20: the Devil letter should show the Devil).
+   *
+   * That position is the whole point: bubble 1 names it, so the image is the
+   * payoff of a sentence rather than an ad dropped on a stranger — and the ASK
+   * stays last, directly above the composer, which is where the reader's next
+   * action is. Null for most letters, and the thread then renders exactly as it
+   * did before this existed.
+   */
+  cardImageUrl?: string | null;
   sessionToken: string;
   onOutcome: (outcome: LiveThreadOutcome, email: string) => void;
   /**
@@ -126,6 +139,16 @@ const EVELYN_AVATAR = "/uploads/avatars/evelyn-cross.png";
 const OPENER_FIRST_TYPING_MS = 600;
 const OPENER_MAX_TYPING_MS = 1_600;
 const OPENER_PAUSE_MS = 500;
+/** An image has no words to type, so its beat is fixed and short. */
+const OPENER_IMAGE_TYPING_MS = 900;
+
+/**
+ * Alt text for the card bubble. Deliberately generic and NOT the card's name: the
+ * name lives on the row only as part of the authored line above it, and a wrong
+ * name read aloud by a screen reader would be worse than none. Also what a card
+ * that fails to load leaves behind in the accessibility tree.
+ */
+const CARD_IMAGE_ALT = "The card from your reading";
 /** Her reply to the reader gets the real chat pause, and a slightly longer cap. */
 const RESPONSE_MAX_TYPING_MS = 1_800;
 
@@ -202,6 +225,8 @@ const RESPONSE_BUBBLES = [
 interface Bubble {
   role: "assistant" | "user";
   content: string;
+  /** An image bubble: `content` is then the alt text, never rendered as prose. */
+  imageUrl?: string;
 }
 
 interface CrisisState {
@@ -252,6 +277,7 @@ function confirmationCopy(outcome: LiveThreadOutcome, email: string): string {
 
 export default function LiveThreadLander({
   continueSeed,
+  cardImageUrl,
   sessionToken,
   onOutcome,
   prefillEmail,
@@ -267,6 +293,32 @@ export default function LiveThreadLander({
   // floor), but splitIntoBubbles can return [] for blank input, so the guard
   // below still treats an empty list as "nothing left to reveal".
   const openerBubbles = useMemo(() => splitIntoBubbles(seed), [seed]);
+
+  /**
+   * The opener as it is actually revealed: her bubbles, with the card slotted in
+   * AFTER the first one.
+   *
+   * After the first and not before it, because the first bubble is what names
+   * the card ("You came back about the Devil card — those chains…"); shown above
+   * that line the image is a picture from a stranger. Not last either: the last
+   * bubble is the ask, and it has to stay against the composer or the reader is
+   * left looking at a picture with an empty box under it.
+   *
+   * A one-bubble opener therefore ends on the image. That is the correct read of
+   * the rule (name it, then show it) and it is also unreachable in practice —
+   * splitIntoBubbles returns 2-3 for every seed minted so far.
+   */
+  const openerItems = useMemo<Bubble[]>(() => {
+    const items: Bubble[] = openerBubbles.map((content) => ({
+      role: "assistant" as const,
+      content,
+    }));
+    const url = cardImageUrl?.trim();
+    if (url && items.length > 0) {
+      items.splice(1, 0, { role: "assistant", content: CARD_IMAGE_ALT, imageUrl: url });
+    }
+    return items;
+  }, [openerBubbles, cardImageUrl]);
 
   const [messages, setMessages] = useState<Bubble[]>([]);
   // 'responding' is Evelyn answering the reply. It is a stage of its own so the
@@ -353,32 +405,33 @@ export default function LiveThreadLander({
       cancelled = true;
       openerFlushRef.current = null;
       setIsTyping(false);
-      if (revealed < openerBubbles.length) {
-        const rest = openerBubbles.slice(revealed).map((content) => ({
-          role: "assistant" as const,
-          content,
-        }));
-        revealed = openerBubbles.length;
+      if (revealed < openerItems.length) {
+        const rest = openerItems.slice(revealed);
+        revealed = openerItems.length;
         setMessages((prev) => [...prev, ...rest]);
       }
     };
 
     (async () => {
-      for (let i = 0; i < openerBubbles.length; i++) {
-        const text = openerBubbles[i];
-        const typingMs =
-          i === 0
+      for (let i = 0; i < openerItems.length; i++) {
+        const item = openerItems[i];
+        // An image has no words to "type", so its beat is a short fixed one —
+        // long enough to read as her sending something, short enough that it
+        // never becomes the slowest thing on the screen.
+        const typingMs = item.imageUrl
+          ? OPENER_IMAGE_TYPING_MS
+          : i === 0
             ? OPENER_FIRST_TYPING_MS
-            : Math.min(calculateTypingDelay(text), OPENER_MAX_TYPING_MS);
+            : Math.min(calculateTypingDelay(item.content), OPENER_MAX_TYPING_MS);
 
         setIsTyping(true);
         await sleep(typingMs);
         if (cancelled) return;
         setIsTyping(false);
-        setMessages((prev) => [...prev, { role: "assistant", content: text }]);
+        setMessages((prev) => [...prev, item]);
         revealed = i + 1;
 
-        if (i < openerBubbles.length - 1) {
+        if (i < openerItems.length - 1) {
           await sleep(OPENER_PAUSE_MS);
           if (cancelled) return;
         }
@@ -390,7 +443,7 @@ export default function LiveThreadLander({
       cancelled = true;
       openerFlushRef.current = null;
     };
-  }, [openerBubbles]);
+  }, [openerItems]);
 
   /** Print any un-revealed opener bubbles immediately. No-op once it has run. */
   function flushOpener() {
@@ -804,7 +857,7 @@ export default function LiveThreadLander({
           data-testid="container-live-thread-messages"
         >
           {messages.map((m, i) => (
-            <ChatBubble key={i} role={m.role} content={m.content} />
+            <ChatBubble key={i} role={m.role} content={m.content} imageUrl={m.imageUrl} />
           ))}
 
           {/* Typing indicator — identical markup to both chat pages. */}
@@ -1009,8 +1062,44 @@ export default function LiveThreadLander({
 // The exact bubble treatment both chat pages use (ChatPage.tsx:196-201,
 // ChatServicePage.tsx:2493-2497), so a reader who continues into /reading is
 // looking at the same thread they started here.
-function ChatBubble({ role, content }: { role: "assistant" | "user"; content: string }) {
+function ChatBubble({
+  role,
+  content,
+  imageUrl,
+}: {
+  role: "assistant" | "user";
+  content: string;
+  imageUrl?: string;
+}) {
   const isUser = role === "user";
+
+  // An image bubble: the card, sized like something a person sent rather than a
+  // hero banner, with the same tail and shadow as her words. `content` is the alt
+  // text here, so it is never printed. A load failure renders NOTHING — no broken
+  // icon, no empty white box — because her sentences above and below already
+  // carry the reading on their own.
+  if (imageUrl) {
+    return (
+      <div className="flex w-full justify-start">
+        <div
+          data-testid="assistant-image"
+          className="max-w-[62%] rounded-2xl rounded-bl-none overflow-hidden shadow-sm bg-white border border-gray-100 p-1.5"
+        >
+          <img
+            src={imageUrl}
+            alt={content}
+            loading="eager"
+            className="w-full h-auto rounded-xl block"
+            onError={(e) => {
+              const bubble = e.currentTarget.closest("div.flex");
+              if (bubble instanceof HTMLElement) bubble.style.display = "none";
+            }}
+          />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className={`flex w-full ${isUser ? "justify-end" : "justify-start"}`}>
       <div

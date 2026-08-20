@@ -51,6 +51,9 @@ const HISTORY_KEY = "evelyn_lander_history";
 // Which campaign the cached history belongs to. Without it the cache is replayed
 // across a change of email, showing the reader the previous send's opener.
 const CAMPAIGN_KEY = "evelyn_lander_campaign";
+// The card image /start resolved for this campaign, cached beside the history it
+// belongs to (see loadCardImage) so a refresh does not drop it out of the thread.
+const CARD_KEY = "evelyn_lander_card_image";
 const MAX_USER_TURNS = 2;
 // Bounds how long a caller can be stuck waiting on /start (e.g. a stalled
 // mobile connection) before we give up and fall through to the catch block,
@@ -97,6 +100,8 @@ interface StartResponse {
   firstName: string | null;
   isReturning: boolean;
   opener: string;
+  /** The card this letter was about, when it had one. Null for most sends. */
+  cardImageUrl?: string | null;
 }
 
 interface TurnResponse {
@@ -167,6 +172,33 @@ function cachedCampaign(): string | null {
   }
 }
 
+/**
+ * The card image that belongs to the cached history.
+ *
+ * It has to survive a refresh for the same reason the messages do: the restore
+ * path returns BEFORE /start is called, so without this a reader who refreshes
+ * mid-thread keeps her words and silently loses the card out of the middle of
+ * them. Guarded by the SAME campaign check as the history — a card from Monday's
+ * letter must never appear inside Tuesday's thread.
+ */
+function loadCardImage(): string | null {
+  try {
+    if (cachedCampaign() !== readParams().campaign) return null;
+    return sessionStorage.getItem(CARD_KEY);
+  } catch {
+    return null;
+  }
+}
+
+function saveCardImage(url: string | null) {
+  try {
+    if (url) sessionStorage.setItem(CARD_KEY, url);
+    else sessionStorage.removeItem(CARD_KEY);
+  } catch {
+    // sessionStorage full / disabled — the card just won't survive a refresh.
+  }
+}
+
 function loadHistory(): ChatMessage[] {
   try {
     // The cache exists so a REFRESH mid-conversation doesn't lose the thread. It
@@ -220,6 +252,9 @@ export default function EvelynLanderPage() {
   const [segment, setSegment] = useState<Segment | null>(null);
   const [firstName, setFirstName] = useState<string | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
+  // The card the letter was about, when it had one. Only the Live Thread arm
+  // renders it; every other arm ignores it exactly as it ignores the opener.
+  const [cardImageUrl, setCardImageUrl] = useState<string | null>(null);
   const [userTurns, setUserTurns] = useState(0);
   const [ctaReady, setCtaReady] = useState(false);
   const [draft, setDraft] = useState("");
@@ -377,6 +412,10 @@ export default function EvelynLanderPage() {
       const initial: ChatMessage[] = [{ role: "assistant", content: data.opener }];
       setMessages(initial);
       saveHistory(initial);
+      // Saved AFTER the history, so the campaign tag saveHistory() writes is
+      // already in place when loadCardImage() checks it on the next load.
+      setCardImageUrl(data.cardImageUrl ?? null);
+      saveCardImage(data.cardImageUrl ?? null);
       setPhase("chat");
     } catch (err) {
       // Breadcrumb so a silent failure here (including the older-browser
@@ -403,6 +442,9 @@ export default function EvelynLanderPage() {
       ];
       setMessages(fallback);
       saveHistory(fallback);
+      // The placeholder opener names no card, so it must show none.
+      setCardImageUrl(null);
+      saveCardImage(null);
       setPhase("chat");
     } finally {
       cleanup();
@@ -469,6 +511,7 @@ export default function EvelynLanderPage() {
     const restored = loadHistory();
     if (restored.length > 0) {
       setMessages(restored);
+      setCardImageUrl(loadCardImage());
       setUserTurns(restored.filter((m) => m.role === "user").length);
       setSegment(null);
       setFirstName(params.name ?? null);
@@ -765,6 +808,7 @@ export default function EvelynLanderPage() {
     return (
       <LiveThreadLander
         continueSeed={messages.find((m) => m.role === "assistant")?.content ?? ""}
+        cardImageUrl={cardImageUrl}
         sessionToken={sessionToken}
         onOutcome={handleLiveThreadOutcome}
         onHandoffNow={handleLiveThreadHandoff}

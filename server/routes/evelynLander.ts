@@ -44,7 +44,7 @@ import type { NextFunction } from 'express';
 import { checkAndLogSafety } from '../lib/universalSafety';
 import { getCountryFromIP } from '../lib/crisisHotlines';
 import { verifyTurnstileToken } from '../lib/turnstile';
-import { resolveCampaignContinueSeed } from '../lib/emailLinkCodes';
+import { resolveCampaignOpenerContent } from '../lib/emailLinkCodes';
 import {
   selectStaticOpener,
   generateTurnReply,
@@ -352,19 +352,24 @@ router.post('/start', landerStartLimiter, async (req: Request, res: Response) =>
  * Never throws: a DB blip here must degrade to the static opener, not 500 a
  * reader's arrival on the one page this whole feature funnels into.
  */
-async function resolveCampaignOpener(campaign: string | undefined): Promise<string | null> {
+async function resolveCampaignOpener(
+  campaign: string | undefined,
+): Promise<{ opener: string; cardImageUrl: string | null } | null> {
   if (!campaign) return null;
   try {
-    const seed = await resolveCampaignContinueSeed(EVELYN_SLUG, campaign);
-    if (!seed) return null;
-    if (seed.length > MAX_MESSAGE_CHARS) {
+    const content = await resolveCampaignOpenerContent(EVELYN_SLUG, campaign);
+    if (!content) return null;
+    if (content.continueSeed.length > MAX_MESSAGE_CHARS) {
       logger.warn('evelyn-lander: authored continueSeed too long for the opener, using static', {
         campaign,
-        length: seed.length,
+        length: content.continueSeed.length,
       });
       return null;
     }
-    return seed;
+    // The image belongs to the AUTHORED opener and is dropped with it. A static
+    // opener says nothing about a card, so showing one under it would put a
+    // picture in a thread whose words never mention it.
+    return { opener: content.continueSeed, cardImageUrl: content.cardImageUrl };
   } catch (error: any) {
     logger.error('evelyn-lander: continueSeed lookup failed, using static opener', {
       campaign,
@@ -429,7 +434,7 @@ async function resolveAndInsert(
   // as today.
   const campaignOpener = await resolveCampaignOpener(data.campaign);
   const opener =
-    campaignOpener ??
+    campaignOpener?.opener ??
     selectStaticOpener({
       firstName: resolved.firstName,
       bucket: (data.bucket as Bucket | undefined) ?? null,
@@ -441,6 +446,9 @@ async function resolveAndInsert(
     firstName: resolved.firstName,
     isReturning: resolved.isReturning,
     opener,
+    // Null for every reader whose letter had no card — which is most of them —
+    // so the client renders exactly what it rendered before this existed.
+    cardImageUrl: campaignOpener?.cardImageUrl ?? null,
   });
 }
 

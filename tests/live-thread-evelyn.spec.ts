@@ -179,6 +179,8 @@ interface HarnessOptions {
   replyStatus?: number;
   /** Serve an authenticated visitor (tier 1) from /api/auth/me. */
   authenticated?: boolean;
+  /** Return a card image on /start, as a letter built on a card does. */
+  cardImageUrl?: string;
 }
 
 async function harness(page: Page, opts: HarnessOptions = {}): Promise<Captured> {
@@ -233,6 +235,7 @@ async function harness(page: Page, opts: HarnessOptions = {}): Promise<Captured>
         firstName: null,
         isReturning: !!opts.authenticated,
         opener: CONTINUE_SEED,
+        cardImageUrl: opts.cardImageUrl ?? null,
       }),
     });
   });
@@ -402,6 +405,59 @@ test.describe("Live Thread (Evelyn) — email → lander → chat continuity", (
     expect(captured.reply[1].reply).toContain(READER_REPLY_2);
 
     expect(captured.reply[0].sessionToken, "reply must be keyed to the lander session").toBeTruthy();
+  });
+
+  // ── The card bubble (Joel, 2026-08-20: the Devil letter should show the Devil) ──
+  //
+  // Position is the whole feature, so position is what these assert. The card
+  // goes AFTER the line that names it (above that line it is a picture from a
+  // stranger) and BEFORE the ask (the ask has to stay against the composer, or
+  // the reader is left looking at a picture with an empty box under it).
+  test("the card lands between the line that names it and the ask", async ({ page }) => {
+    await harness(page, { outcome: "no_match", cardImageUrl: "/tarot/rws-devil.jpg" });
+    await gotoLander(page);
+
+    const card = page.getByTestId("assistant-image");
+    await expect(card).toBeVisible({ timeout: BUBBLE_TIMEOUT_MS });
+    const img = card.locator("img");
+    await expect(img).toHaveAttribute("src", "/tarot/rws-devil.jpg");
+    // Not just requested — DECODED. A 404 or a broken path still renders an <img>
+    // with the right src, and the bubble would be an empty white box on the one
+    // screen this feature exists to improve.
+    await expect
+      .poll(() => img.evaluate((el: HTMLImageElement) => el.naturalWidth), {
+        timeout: BUBBLE_TIMEOUT_MS,
+      })
+      .toBeGreaterThan(0);
+
+    // Every seed bubble still arrives, in order — the card is inserted into the
+    // thread, it does not replace or reorder a word of what she says.
+    for (const text of SEED_BUBBLES) {
+      await expect(page.getByText(text, { exact: false }).first())
+        .toBeVisible({ timeout: BUBBLE_TIMEOUT_MS });
+    }
+
+    // …and it sits in the second slot: after bubble 1, before the last bubble
+    // (the ask). Compared in DOM order, which is thread order here.
+    const order = await page.evaluate(() => {
+      const nodes = Array.from(
+        document.querySelectorAll('[data-testid="assistant-message"], [data-testid="assistant-image"]'),
+      );
+      return nodes.map((n) => n.getAttribute("data-testid"));
+    });
+    expect(order[0]).toBe("assistant-message");
+    expect(order[1]).toBe("assistant-image");
+    expect(order[order.length - 1]).toBe("assistant-message");
+  });
+
+  test("a letter with no card shows no image bubble", async ({ page }) => {
+    await harness(page, { outcome: "no_match" });
+    await gotoLander(page);
+
+    await expectFrameOne(page);
+    // The normal case for eight of the nine letters: the thread is exactly what
+    // it was before the card existed.
+    await expect(page.getByTestId("assistant-image")).toHaveCount(0);
   });
 
   test("she asks a SECOND question before ever asking for an email", async ({ page }) => {
