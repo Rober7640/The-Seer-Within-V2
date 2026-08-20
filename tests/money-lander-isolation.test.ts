@@ -13,6 +13,7 @@ import {
   moneyLanderListId,
   moneyLanderSplitLive,
   bumpProductKeyFor,
+  bumpPaidListWanted,
 } from '@shared/moneyLander';
 import { V1_BUMP_PRODUCT_KEY, V1_BUMP_PRODUCT_KEY_MONEY_LANDER } from '@shared/orderBump';
 import { FUNNELS } from '@shared/funnelConfig';
@@ -162,5 +163,50 @@ describe('ONE switch governs both halves', () => {
       const keyChanged = bumpProductKeyFor('v1-tarot', 'money') !== V1_BUMP_PRODUCT_KEY;
       expect(listMoved, `switch=${on}: list and key disagree`).toBe(keyChanged);
     }
+  });
+});
+
+describe('the ORDER-BUMP paid list (6969209)', () => {
+  const KEY = 'AWEBER_LIST_ID_TAROT_MONEY';
+  let saved: string | undefined;
+  beforeEach(() => { saved = process.env[KEY]; delete process.env[KEY]; });
+  afterEach(() => {
+    if (saved === undefined) delete process.env[KEY];
+    else process.env[KEY] = saved;
+  });
+
+  // 🔴 THE ASK: money-lander bump buyers must not be added to a list that follows up
+  // on a second reading they never receive.
+  it('SKIPS a money-lander bump order', () => {
+    expect(bumpPaidListWanted(V1_BUMP_PRODUCT_KEY_MONEY_LANDER)).toBe(false);
+  });
+
+  it('still writes every other bump order', () => {
+    expect(bumpPaidListWanted(V1_BUMP_PRODUCT_KEY)).toBe(true);
+  });
+
+  // 🔴 THE ORIGINAL GATE WAS `metadata.bumpProduct` TRUTHY. Every falsy shape must
+  // still mean "no write", or a plain main purchase or an upsell starts landing on
+  // the bump list.
+  it('preserves the original truthiness gate for non-bump orders', () => {
+    for (const v of [undefined, null, '', '   ', 0, false, {}, []]) {
+      expect(bumpPaidListWanted(v), `${JSON.stringify(v)} must not write`).toBe(false);
+    }
+  });
+
+  // The whole chain flips on ONE switch: with the cutover off a money lander stamps
+  // the normal key, so it is written exactly as it always was.
+  it('with the switch OFF a money lander is written exactly as before', () => {
+    const stamped = bumpProductKeyFor('v1-tarot', 'money');
+    expect(stamped).toBe(V1_BUMP_PRODUCT_KEY);
+    expect(bumpPaidListWanted(stamped)).toBe(true);
+  });
+
+  it('with the switch ON a money lander is skipped, a love lander is not', () => {
+    process.env[KEY] = '6971693';
+    expect(bumpPaidListWanted(bumpProductKeyFor('v1-tarot', 'money'))).toBe(false);
+    expect(bumpPaidListWanted(bumpProductKeyFor('v1-tarot', 'love'))).toBe(true);
+    expect(bumpPaidListWanted(bumpProductKeyFor('v1-palm', 'money'))).toBe(true);
+    expect(bumpPaidListWanted(bumpProductKeyFor('v1-fb', 'money'))).toBe(true);
   });
 });
