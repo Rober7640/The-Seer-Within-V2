@@ -90,6 +90,7 @@ import { ensureVisitorId, readVisitorId } from "./lib/visitorCookie";
 import {
   V1_BUMP_CENTS,
   V1_BUMP_PRODUCT_KEY,
+  V1_BUMP_PRODUCT_KEY_MONEY_LANDER,
   bumpLineDescription,
   bumpProductName,
   bumpCopy,
@@ -101,6 +102,7 @@ import {
 } from "@shared/orderBump";
 import { fireGoogleAdsConversion } from "./lib/googleAds";
 import { funnelDefForParam, FUNNELS, type FunnelParam } from "@shared/funnelConfig";
+import { isTarotMoneyLead, moneyLanderListId } from "@shared/moneyLander";
 import Stripe from "stripe";
 import { getStripe, getStripeForRow } from "./lib/stripeAccount";
 import type { ChatRequest, CheckoutRequest } from "../shared/types";
@@ -345,7 +347,25 @@ function landerLabel(funnel: FunnelId): string {
 // AWEBER_LIST_ID_<FB|FB2|GDN|PALM>; homepage (base V1) and any unset funnel
 // fall back to the shared AWEBER_LIST_ID — so lead capture is byte-identical
 // until the per-lander env vars are configured.
-function aweberLeadListId(funnel: FunnelId): string | undefined {
+//
+// The eleven /fb-tarot money-block landers get their OWN free list ahead of that
+// chain (AWEBER_LIST_ID_TAROT_MONEY, list 6971693 "theseerwithin_free_tarot_money"),
+// so money leads are separable without depending on a bare `money` tag — that tag is
+// NOT funnel-suffixed by fbifyAweberTags() and is therefore shared with every other
+// funnel's money-bucket traffic.
+//
+// 🔴 UNSET ENV ⇒ EXACT OLD PATH. With AWEBER_LIST_ID_TAROT_MONEY absent this falls
+// straight through to the tarot/shared chain, so shipping the code changes nothing
+// until the variable is set in Railway — the deploy and the cutover stay separate,
+// independently reversible steps.
+//
+// ⚠️ The new list must define the `resume_url` custom field. AWeber rejects an
+// undefined custom field for the WHOLE request, so without it addSubscriberToList()
+// retries without custom fields (aweber.ts) and every money lead silently loses its
+// recovery link. Confirmed created on 6971693 by Lewis, 2026-08-20.
+function aweberLeadListId(funnel: FunnelId, bucket?: unknown): string | undefined {
+  const moneyList = moneyLanderListId(funnel, bucket);
+  if (moneyList) return moneyList;
   const def = funnelDefForParam(funnel);
   if (def) {
     const perLander = process.env[`AWEBER_LIST_ID_${def.posthog.toUpperCase()}`];
@@ -829,9 +849,26 @@ export async function registerRoutes(
       //
       // Keys are ABSENT (not empty-string) on a normal order, which is what makes
       // "does bumpProduct exist" a clean test on his side.
+      //
+      // 🔴 The eleven /fb-tarot MONEY-BLOCK landers send a DIFFERENT `bumpProduct`
+      // (Lewis, 2026-08-20). Mike's n8n branches on this value to generate the
+      // second-reading PDF; those landers have no second-reading product yet, so a
+      // value his condition cannot match is what keeps them out of that branch. The
+      // string is deliberately disjoint from `double_reading` so a CONTAINS filter
+      // fails too — see V1_BUMP_PRODUCT_KEY_MONEY_LANDER for the full rationale.
+      //
+      // Every other lander on every funnel — including the other 74 tarot landers and
+      // any non-tarot visitor who picked the "Money" topic in chat — keeps
+      // V1_BUMP_PRODUCT_KEY exactly as before.
+      //
+      // The KEY still EXISTS on these orders, which is what our own webhook gates on
+      // (`metadata.bumpProduct` truthy, webhooks.ts) — so the bump-paid AWeber write,
+      // the revenue tally and the Stripe line item are all unchanged.
       const bumpMetadata = bumpApplied
         ? {
-            bumpProduct: V1_BUMP_PRODUCT_KEY,
+            bumpProduct: isTarotMoneyLead(funnel, bucket)
+              ? V1_BUMP_PRODUCT_KEY_MONEY_LANDER
+              : V1_BUMP_PRODUCT_KEY,
             bumpBucket: bumpBucket as string,
             bumpAmount: String(V1_BUMP_CENTS),
           }
@@ -1224,7 +1261,7 @@ export async function registerRoutes(
       addSubscriberToList({
         email,
         name: firstName,
-        listId: aweberLeadListId(funnel),
+        listId: aweberLeadListId(funnel, bucket),
         tags: fbifyAweberTags([bucket || "website", "seer-within"], funnel),
         // Omitted entirely when we have no link — never `custom_fields: {}`,
         // which AWeber reads as "clear every custom field" on an
