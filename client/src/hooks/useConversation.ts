@@ -1909,9 +1909,23 @@ export function useConversation() {
       "Naming it precisely is what loosens it. Not wishing. Not hoping. Naming.",
     ])
 
+    // The deep ritual is where the SENSORY detail belongs (see the step label above),
+    // so this is where arm B puts its physical objects — a cord and wax, which are
+    // the clearing's OWN verbs made touchable ("sever that thread" → a cord she can
+    // picture being cut; "seal" → wax). Cord cutting is also a practice this audience
+    // already has a name for, so it reads as specific rather than invented.
+    //
+    // 🔴 DELIBERATELY NOT U1's KIT. The altar, white candle, blessed water, sage and
+    // the 2-4am window all belong to UPSELL_RITUAL (client/src/lib/upsellMessages.ts),
+    // and she meets them ~3 minutes later on /welcome1 as an 8-message curtain-lift.
+    // Spending them here costs that reveal its novelty, and the clock costs more than
+    // that: the close already says the clearing takes 2-3 hours and U1 says its ritual
+    // runs 2-4am for ~2 hours, so putting an hour on this one invents an arithmetic
+    // problem that does not exist today. Two different workings should look different.
     const ritual = deep ? [
       `Tonight, I'll enter a deep meditative state and focus entirely on your energy field, ${firstName}.`,
-      "I go back to the hour it took hold. I trace what feeds it, sever that thread, and seal where it entered.",
+      "I go back to the hour it took hold and find what feeds it. On my table, that's a length of black cord.",
+      "I cut it, then seal both ends with wax — so nothing can travel back along it to you.",
       "It takes 2-3 hours of concentrated work. It drains me... but for those who are ready, it's worth it.",
       "A thing named properly doesn't grow back, dear. That's why I do it slowly.",
     ] : [
@@ -1949,27 +1963,35 @@ export function useConversation() {
     const downsellDollars = chat.userData.downsellDollars ?? 25
     const slidingClose = isSlidingCloseVariant(chat.userData.priceVariantId)
 
-    // The deep arm speaks the price in WORDS ("Thirty-five"), so those blocks are
-    // only coherent on a $35 close. Inside this test that is guaranteed — it is
-    // scoped to v1-tarot, a FIXED $35 funnel (FIXED_FUNNEL_PRICES, 35_tarot) — so
-    // this guard never fires for a real subject. It exists for the two ways a
-    // session can still reach here at another price: the ?close=55 preview, and a
-    // future funnel-wide rollout onto a funnel that runs a price test. Either would
-    // put two different prices in one close, which is worse than a shorter arm B.
-    const deepPriceCopy = deep && pitchPrice === 35
-    if (deep && !deepPriceCopy && import.meta.env.DEV) {
-      console.warn(`close depth: price is $${pitchPrice}, not $35 — price + objection blocks suppressed`)
-    }
-
     // NEW BLOCK — PRICE JUSTIFICATION (deep arm). Placed BEFORE the existing three
     // so the plain reason-why lands first and "the sacred offering is $35" closes
     // the block instead of restarting it. Argues WORTH and never mentions a
     // discount: the $25 downsell stays reactive, because pre-announcing it is
     // exactly what lost the retired sliding-scale arm (2026-07-22).
-    if (deepPriceCopy) await sendBotMessages([
-      `Now the offering, ${firstName}. Thirty-five dollars. Let me tell you plainly why it's that and not more.`,
-      "Because the women who need this most are usually the ones who've already paid a great deal to be told nothing.",
-      "Thirty-five keeps me in candles and keeps this honest. It's a marker that you're ready. Not a wall.",
+    //
+    // The price is INTERPOLATED, never spelled out, for three reasons: the bubble
+    // right below it already reads "$35", numerals are what a woman skimming on a
+    // phone actually catches, and a hardcoded number would silently contradict any
+    // funnel that prices differently.
+    //
+    // The itemisation POINTS BACK at the cord and the wax she has already watched
+    // being used in the ritual block. Show it, then charge for it — introducing
+    // props at the moment of the ask is weaker, and it is what the first draft did.
+    //
+    // 🔴 THINGS AND HOURS, NEVER A DOLLAR BREAKDOWN. "$9 of it is the candle" is a
+    // factual claim about the business, and at this price an itemised total also
+    // makes the whole clearing feel like the sum of its wax. What justifies $35 is
+    // that the materials are spent once and the hours cannot be resold.
+    //
+    // A fourth bubble here used to read "Because the women who need this most are
+    // usually the ones who've already paid a great deal to be told nothing." CUT on
+    // operator review: it builds solidarity, but it also plants "I paid a reader and
+    // got nothing" seconds before the buy button, and it made the block answer its
+    // own "where it goes" promise a detour late.
+    if (deep) await sendBotMessages([
+      `Now the offering, ${firstName}. It's $${pitchPrice}. Let me tell you plainly where it goes.`,
+      "The cord, the wax, and two to three hours of a night I can't give to anyone else. Spent once, for you.",
+      `$${pitchPrice} covers the whole of it and keeps this honest. It's a sign you're ready. Not a wall.`,
     ])
 
     await sendBotMessages(slidingClose ? [
@@ -2008,9 +2030,9 @@ export function useConversation() {
     // majority hold the same objection. That is the standard premise of
     // pre-handling and it is a premise, not a finding. If arm B ever has to
     // shrink, this is the block to cut.
-    if (deepPriceCopy) await sendBotMessages([
+    if (deep) await sendBotMessages([
       "Two things women say to me here. I'd rather answer them now than have you sitting with them.",
-      "The first is money, dear. I know. Thirty-five is not nothing when the month is already thin.",
+      `The first is money, dear. I know. $${pitchPrice} is not nothing when the month is already thin.`,
       "So don't decide by what you can spare. Decide by what another year of this costs you.",
       `The second is "let me think about it." That's fair. But I read what's live tonight, not what's cooled by Friday.`,
       "Waiting doesn't keep it safe for you. It just means I'd be reading a fainter thing.",
