@@ -89,3 +89,28 @@ export function bumpProductKeyFor(
     ? V1_BUMP_PRODUCT_KEY_MONEY_LANDER
     : V1_BUMP_PRODUCT_KEY;
 }
+
+/**
+ * Should this paid order be written to the ORDER-BUMP paid list
+ * (`theseerwithin_money_ob_paid`, 6969209)?
+ *
+ * 🔴 THE ELEVEN MONEY LANDERS ARE EXCLUDED (Lewis, 2026-08-20, after seeing a real
+ * money-lander buyer land on it). That list exists to follow up on a second reading
+ * those buyers do not receive, so putting them on it promises them something nobody
+ * is going to send.
+ *
+ * 🔑 KEYED ON THE STAMPED `bumpProduct`, NOT re-derived from funnel + bucket. That is
+ * what makes this inherit the cutover switch for nothing: with the switch OFF a money
+ * lander stamps V1_BUMP_PRODUCT_KEY, so this returns true and the write happens
+ * exactly as it always did; with it ON the order stamps the money key and is skipped.
+ * The list, the bump key and this write therefore flip together, and the half-on state
+ * stays unreachable.
+ *
+ * Absent / empty / non-string ⇒ false, preserving the original truthiness gate: the
+ * key is absent on every non-bump order, so this can still never fire for a plain main
+ * purchase, an upsell, or another funnel's product.
+ */
+export function bumpPaidListWanted(bumpProduct: unknown): boolean {
+  if (typeof bumpProduct !== 'string' || !bumpProduct.trim()) return false;
+  return bumpProduct !== V1_BUMP_PRODUCT_KEY_MONEY_LANDER;
+}
