@@ -32,12 +32,14 @@ import {
   resolveV1Price,
   resolvePalmGate,
   resolveV1Bump,
+  resolveV1CloseDepth,
   logExposure,
   hashEmail,
   U1_PRICE_EXPERIMENT_KEY,
   V1_MAIN_EXPERIMENT_KEY,
   PALM_GATE_EXPERIMENT_KEY,
   V1_BUMP_EXPERIMENT_KEY,
+  V1_CLOSE_DEPTH_EXPERIMENT_KEY,
 } from './experiments';
 import {
   DEFAULT_UPSELL1_CENTS,
@@ -86,6 +88,11 @@ export interface AssignedVariant {
   // for the Stripe line item, so the words she reads and the line she is billed
   // for always come from one table. Absent ⇒ control.
   bumpCopy?: BumpCopyVariant;
+  // Close-depth arm — 'deep' ⇒ the thickened pitch (five extra blocks of chat
+  // copy). The purest UI-only arm of the three: it changes only which bubbles are
+  // sent at the close, so no price, line item or CTA depends on it, and nothing
+  // downstream of this object re-resolves it. Absent ⇒ today's close.
+  closeDepth?: 'deep';
 }
 
 /**
@@ -368,6 +375,37 @@ export async function assignVariantIfMissing(
       });
     }
 
+    // V1 CLOSE DEPTH — resolved here for the same reason as the gate and the bump
+    // above, and deliberately ABOVE the price idempotency guard so returning
+    // visitors are re-split into both arms instead of all landing in control.
+    // Safest of the three to put here: this arm decides only which chat bubbles the
+    // pitch sends, so it cannot touch priceCents / downsellCents / upsell1Cents, and
+    // a returning visitor's stored price is returned below completely unchanged.
+    const closeDepth = await resolveV1CloseDepth(email, funnel);
+    if (closeDepth.enrolled && closeDepth.variant) {
+      // 🔴 ONE-SHOT WRITE — experiment_exposures is unique(experiment_key, subject_id),
+      // so every label is recorded now or never. conversationId is what tallyV1Main
+      // joins on to reach the purchase; without it the test has no numerator at all.
+      //
+      // The tarot lander identity rides along for the same reason it does on the bump:
+      // this test is scoped to v1-tarot, ~13 landers deep, and "did the longer close
+      // work on the trust angle but not on decode-him?" is unanswerable later if the
+      // lander is not written now. The pooled A-vs-B row stays the decision metric —
+      // per-lander slices are diagnostic only (multiple-comparisons trap).
+      //
+      // 🔴 SUBJECT MUST BE hashEmail(email) — the same string resolveV1CloseDepth
+      // bucketed on. scope.freezeAssignment reads this row back by subject_id, so a
+      // mismatch here would silently disable the freeze.
+      await logExposure(V1_CLOSE_DEPTH_EXPERIMENT_KEY, hashEmail(email), closeDepth.variant, 'close_depth_assigned', {
+        conversationId: row.id,
+        funnel: funnel ?? null,
+        ...(tarotLander?.deck ? { deck: tarotLander.deck } : {}),
+        ...(tarotLander?.hook ? { hook: tarotLander.hook } : {}),
+        ...(tarotLander?.facing ? { facing: tarotLander.facing } : {}),
+        ...(tarotLander?.angle ? { angle: tarotLander.angle } : {}),
+      });
+    }
+
     // Idempotency / stickiness: once a variant id is stored, return the stored price
     // and never re-roll. Use `!= null` (not truthiness) on the amounts so a stored 0
     // still counts as "assigned" — otherwise a 0/NULL downsell would skip this guard
@@ -410,6 +448,7 @@ export async function assignVariantIfMissing(
         commitmentGate: palmGate.gate,
         orderBump: bump.bump,
         bumpCopy: bump.copy,
+        ...(closeDepth.deep ? { closeDepth: 'deep' as const } : {}),
       };
     }
 
@@ -524,6 +563,8 @@ export async function assignVariantIfMissing(
       commitmentGate: palmGate.gate,
       orderBump: bump.bump,
       bumpCopy: bump.copy,
+      // Emitted ONLY on the deep arm, so control's response shape is unchanged.
+      ...(closeDepth.deep ? { closeDepth: 'deep' as const } : {}),
     };
   } catch (err) {
     logger.error('priceVariant: assignVariantIfMissing failed', { email, err });
