@@ -1,6 +1,6 @@
 ---
 name: fb-tarot-add-card
-description: "Use when adding a new tarot 'decode-him card' lander to the /fb-tarot quiz-bridge funnel — the media buyer drops a card-strip image into fb-tarot/ and this builds the lander from it. The skill READS the supplied image: it detects whether the cards are FACE-DOWN (backs, drawn on reveal) or FACE-UP (visible cards, chosen), identifies the card(s), and populates that card's details + the 4-beat 'decode-him' reveal (reads HIM as a tendency, never a verdict). A 'lander' in fb-tarot = one deck registry entry on the EXISTING /fb-tarot funnel, NOT a new page/route/component. It then applies all edit points in order and keeps the two un-synced tarot rosters (client DECKS + server TAROT_CARD_VOCAB, plus the routes.ts validDecks) in sync so the chat handoff doesn't 400. Use when asked to: add a tarot/decode-him card lander, build a tarot card concept from an image, wire up a new /fb-tarot quiz, populate a drawn tarot card's reading."
+description: "Use when adding a new tarot 'decode-him card' lander to the /fb-tarot quiz-bridge funnel — the media buyer drops a card-strip image into fb-tarot/ and this builds the lander from it. The skill READS the supplied image: it detects whether the cards are FACE-DOWN (backs, drawn on reveal) or FACE-UP (visible cards, chosen), identifies the card(s), and populates that card's details + the reveal, written to the Natural Tarot-Cut (seven cuts folded into four registry beats; the read ANSWERS). A 'lander' in fb-tarot = one deck registry entry on the EXISTING /fb-tarot funnel, NOT a new page/route/component. It then applies all edit points in order and keeps the two un-synced tarot rosters (client DECKS + server TAROT_CARD_VOCAB, plus the routes.ts validDecks) in sync so the chat handoff doesn't 400. Use when asked to: add a tarot/decode-him card lander, build a tarot card concept from an image, wire up a new /fb-tarot quiz, populate a drawn tarot card's reading. For new QUESTIONS on decks that already exist (no new art), use fb-tarot-hooks instead."
 ---
 
 # fb-tarot-add-card — build a tarot "decode-him card" lander from a supplied image
@@ -15,9 +15,13 @@ the routes in `App.tsx`, the server reflect path, the fixed price). You add **on
 strip art + one server vocab mirror + one validator entry**, deploy, and it's live.
 
 - The tarot funnel is the **"reads-HIM" exception**: a palm sign reads HER hand; a tarot pull legitimately
-  reads another person (is he honest / coming back / how he feels / cheating). The guardrail is therefore
-  **TIGHTER — "tendency, never verdict"**: read the card's energy as a leaning, affirm HER intuition,
-  never a flat accusation of him.
+  reads another person (is he honest / coming back / how he feels / cheating). 🔄 **The guardrail changed
+  on 2026-08-19 (the Natural Tarot-Cut).** It is no longer a global "tendency, never verdict" — the reads
+  now ANSWER, and the bans are **DIRECTIONAL**: the half she came for is allowed, the half with a victim is
+  not ("he loves you" yes, "he does not love you" no). Which door is shut is a **per-family** call, and the
+  table that decides it is in `fb-tarot/docs/natural-tarot-cut.md` § "What may now be said, and what may
+  not". `honesty` / `cheating` / `real-person` / `misled` keep BOTH doors shut — convicting a real man and
+  vouching for one who may be defrauding her are both harms, and neither is the hopeful direction.
 - Two axes: **deck** (which card set) × **hook** (the decode-him question: `cards-honest` / `cards-return`
   / `cards-feels` / `cards-cheating`). A deck supplies `reads[hook][card]`; unsupplied hooks fall back to
   `DEFAULT_HOOK`.
@@ -71,16 +75,19 @@ every read.
 
 ## Step 2 — Draft the reads (the creative core — draft + sign-off, never silent autogen)
 
-Each read is the **4-beat decode-him reveal** (see `fb-tarot/docs/PRD-tarot-bridge.md`), one sentence per
-beat, reading HIM as a **tendency**:
-1. **Name the card she drew/chose** + its energy. ("You turned the Moon, dear — the card of what's kept in
-   the half-light.")
-2. **Affirm the pull** — her intuition chose it; she sees him. ("That's not random; your hand reached for
-   the card that matches what you already sense.")
-3. **The read — TENDENCY, never verdict.** Apply the card's energy as a leaning that affirms **her
-   intuition**, never a flat accusation. ("The Moon doesn't mean he's lying — it means something's unsaid,
-   and that feeling of 'there's more here' is accurate, not paranoia.")
-4. **Open loop → chat.** ("Let me look closer at what he's keeping in the dark…")
+🔄 Each read is **seven cuts folded into four registry beats** — beat 3 carries cuts 3-6 as one causal
+chain (so / and / but / that's why). The full table, the four rules, and a worked example are in
+**`fb-tarot/docs/natural-tarot-cut.md`**; read it before writing. In outline:
+
+| Beat | Cuts | Job |
+|---|---|---|
+| 1 | 1 · the picture | one or two details **literally on the art file** — she is looking at the card |
+| 2 | 2 · the bridge | her question back, plus the card in plain English |
+| 3 | 3 the answer · 4 the hidden layer · 5 the contradiction · 6 the recognition | cut 3 ANSWERS her deepest fear flat, and the CARD is the warrant |
+| 4 | 7 · the next mystery | narrow, and an **obstruction** — this is where the clearing ritual gets seeded |
+
+🔴 The old shape refused to answer and certified her instead ("you were right about him"). That is what
+changed: cut 3 answers, and cut 6 DESCRIBES what she has lived rather than ruling on her.
 
 Draft `reads[hook][a|b|c]` for each hook the ad will run (default: all 4 = 12 reads for a 3-card deck).
 Do NOT invent the copy silently — **invoke `/direct-response-copy`** to generate 2–3 alternatives per read,
@@ -88,9 +95,14 @@ present them for the operator to choose/edit, and only wire the signed-off versi
 `decode-him` `cards-honest` copy in `tarotReads.ts` as the gold-standard example.
 
 Hard guardrails (tighter than palm — you are reading a real person):
-- **Tendency, never verdict.** Never "yes, he's cheating / lying / faithful / coming back" as fact.
-- **Affirm HER, not an accusation of him.** The win is "your intuition is real," not "he's guilty."
+- **Check the family's row in the directional ban table first** — it decides which door is open. For
+  `honesty` / `cheating` / `real-person` / `misled` both stay shut: never "yes, he's cheating" and never
+  "he's telling you the truth" as fact.
+- **Cut 6 describes, it does not announce.** "You were right about him" is the psychic ruling on her;
+  "that's why he can feel close one moment and guarded the next" is her own week handed back.
 - No specific date/name/guaranteed outcome; no exclamation marks, emoji, price/offer/urgency.
+- 🔴 **Pick the prompt FRAME before drafting.** A hook in no frame set inherits decode-him, which tells the
+  model "this reading is about HIM" — and it will invent a man who does not exist. See the method doc.
 - "For Entertainment Purposes Only" carries extra weight here.
 
 ## Step 3 — The edit points (apply in this order)
@@ -161,5 +173,6 @@ engine and is **not** touched by this skill — only the lander + the opening re
 | `TAROT_CARD_VOCAB` drifts from the client `mark`/`reading` | Version C opener injects a mismatched/blank card. |
 | Forgot the deck in `validDecks` | Version C chat handoff 400s; Versions A/B still look fine — the classic silent half-fix. |
 | Added a route / component | Unnecessary — the `/fb-tarot` bridge is deck-agnostic. Don't. |
-| Wrote a "verdict" read ("yes he's cheating") | Compliance + brand failure. Tendency, never verdict — affirm HER. |
-| Codegen'd the reads with no sign-off | The 4-beat reads are the creative core; draft + get sign-off. |
+| Wrote a verdict the family's row bans ("yes he's cheating") | Compliance + brand failure. Check the directional ban table — which door is open is per-family. |
+| Wrote a read that CERTIFIES her instead of answering ("you were right all along") | The pre-2026-08-19 failure. Cut 3 answers; cut 6 describes her week. |
+| Codegen'd the reads with no sign-off | The seven cuts are the creative core; draft + get sign-off. |

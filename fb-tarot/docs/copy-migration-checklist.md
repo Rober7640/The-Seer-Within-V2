@@ -20,7 +20,7 @@ the parity test fails.
 waiting on your go (read it in `fb-tarot/docs/drafts/rewrites/PREVIEW.md`) · `[x]` = wired
 and passing. Nothing is wired before you have seen it.
 
-📝 awaiting sign-off right now: `cards-alone-forever`, `cards-back-together`, `cards-blocked-retiring`, `cards-cant-stop`, `cards-cheating`, `cards-come-back`, `cards-deceived`, `cards-end-up-alone`, `cards-energy-how-long`, `cards-ever-back`, `cards-faithful`, `cards-feel-about-me`, `cards-feels-off`, `cards-feels`, `cards-forever-or-now`, `cards-ghosted`, `cards-given-up`, `cards-gone-cold`, `cards-her-shadow`, `cards-hiding-something`, `cards-his-children`, `cards-honest`, `cards-how-much-longer`, `cards-imagining-it`, `cards-left-without-word`, `cards-lied-to`, `cards-live-apart`, `cards-losing-interest`, `cards-love-again`, `cards-love-or-moved-on`, `cards-loyal`, `cards-meant-alone`, `cards-met-already`, `cards-misled`, `cards-money-wont-stay`, `cards-moved-on`, `cards-my-energy`, `cards-nest-egg`, `cards-new-soulmate`, `cards-not-enough`, `cards-not-found-yet`, `cards-on-my-mind`, `cards-out-of-time`, `cards-prayed-years`, `cards-prayers-unanswered`, `cards-pulling-away`, `cards-ready-commit`, `cards-ready-to-love`, `cards-real-person`, `cards-really-love`, `cards-really-over`, `cards-really-soulmate`, `cards-someone-else`, `cards-someone-for-me`, `cards-soulmate-closer`, `cards-soulmate-out-there`, `cards-soulmate`, `cards-still-a-chance`, `cards-still-love`, `cards-still-miss-him`, `cards-still-think`, `cards-still-working`, `cards-stop-hurting`, `cards-stop-missing`, `cards-stop-searching`, `cards-talking-someone`, `cards-too-late`, `cards-too-long`, `cards-truth`, `cards-twin-back`, `cards-twin-feels`, `cards-twin-or-connection`, `cards-twin-ready`, `cards-where-soulmate`, `cards-who-he-is`, `cards-who-hurt-me`, `cards-wont-commit`
+📝 awaiting sign-off right now: `cards-after-marriage`, `cards-alone-forever`, `cards-back-together`, `cards-blocked-retiring`, `cards-cant-stop`, `cards-cheating`, `cards-choosing-wrong`, `cards-come-back`, `cards-deceived`, `cards-end-up-alone`, `cards-energy-how-long`, `cards-ever-back`, `cards-faithful`, `cards-feel-about-me`, `cards-feels-off`, `cards-feels`, `cards-forever-or-now`, `cards-found-me-yet`, `cards-ghosted`, `cards-given-up`, `cards-gone-cold`, `cards-her-shadow`, `cards-hiding-something`, `cards-his-children`, `cards-honest`, `cards-how-much-longer`, `cards-imagining-it`, `cards-keeps-waiting`, `cards-left-without-word`, `cards-lied-to`, `cards-live-apart`, `cards-longer-to-wait`, `cards-losing-interest`, `cards-love-again`, `cards-love-or-moved-on`, `cards-loyal`, `cards-meant-alone`, `cards-met-already`, `cards-misled`, `cards-money-wont-stay`, `cards-moved-on`, `cards-my-energy`, `cards-nest-egg`, `cards-new-soulmate`, `cards-not-enough`, `cards-not-found-yet`, `cards-on-my-mind`, `cards-out-of-time`, `cards-prayed-years`, `cards-prayers-unanswered`, `cards-pulling-away`, `cards-ready-commit`, `cards-ready-to-love`, `cards-real-person`, `cards-really-love`, `cards-really-over`, `cards-really-soulmate`, `cards-second-time`, `cards-slipping-past`, `cards-someone-else`, `cards-someone-for-me`, `cards-soulmate-closer`, `cards-soulmate-out-there`, `cards-soulmate`, `cards-still-a-chance`, `cards-still-love`, `cards-still-miss-him`, `cards-still-think`, `cards-still-working`, `cards-stop-hurting`, `cards-stop-missing`, `cards-stop-searching`, `cards-talking-someone`, `cards-too-late-love`, `cards-too-late`, `cards-too-long`, `cards-truth`, `cards-twin-back`, `cards-twin-feels`, `cards-twin-or-connection`, `cards-twin-ready`, `cards-where-soulmate`, `cards-who-he-is`, `cards-who-hurt-me`, `cards-wont-commit`
 
 🔴 **Known content bug, `decode-him` deck.** All four of its hooks open with the SAME
 beat 1 per card ("You turned the Sun, dear — the card of what stands in the light." serves
@@ -183,6 +183,92 @@ outright (*"I feel I am close to money only to have it vanish"*):
 Cuts 1-6 buy her trust. Cut 7 hands the sale a thread to pull.
 
 ---
+
+
+## Choosing the frame — do this BEFORE you draft
+
+🔴 **A new family that is in no frame set inherits `decode-him`, which says "This reading is
+about HIM".** Aimed at a woman who has never met anyone, the model obeys it and invents a
+man. Measured live on 2026-08-19: four new soulmate hooks, unframed, and the reply to a
+70-year-old asking when her soulmate arrives was *"there's something you need to see
+differently about **him**… what's actually holding you **both** in place."* There is no him.
+
+The frames live in `server/lib/prompts.ts`, each a `Set` tested in order inside
+`buildTarotReflectPrompt`. Read them before writing copy, and answer three questions:
+
+| Question | If the answer is no |
+|---|---|
+| Does a real man exist in this headline? | It is not decode-him. Do not let it fall through. |
+| Does an existing frame ban everything this headline can go wrong on? | You need a new frame. Say so before drafting. |
+| Is the stricter frame tested first? | Reorder. Every frame in that ternary is ordered strictest-first on purpose. |
+
+**A frame gap does not announce itself.** Each one so far was found by asking what the
+headline asks for that the frame never mentions:
+
+| Family | The gap | Why the standing bans missed it |
+|---|---|---|
+| soulmate-where | a PLACE | the clause withheld "a name, a date, or exactly who" — and omitted *where* |
+| soulmate age-band | a DURATION | every frame bans a *date*; "not much longer" is a **length**, and a length is not a date |
+
+### Write the ban as an instruction, not a prohibition
+
+🔴 **A "never do X" does not beat a strong generative instinct.** The strongest pull in a
+Version-C reply is to reflect back what she just typed. A frame that said *"never repeat her
+age or anything she said about her health"* was ignored twice in three runs — *"Seventy
+years…"*, *"A stroke at sixty-eight…"*. Replacing it with a positive instruction —
+*"open on the card; acknowledge her feeling in words of your own, never in hers"* — stopped
+it, and the refusal improved unprompted (*"I won't lie and give you a timeline"*).
+
+Prohibit the thing AND name what to do instead. The instinct needs somewhere to go.
+
+## Guard files
+
+One per family, `tests/tarot-<family>-copy.test.ts`. Copy the newest sibling's shape.
+
+🔴 **An unwired family is checked by NOTHING.** `scripts/wire-drafts-setup.mts` only patches
+hooks the registry already has (`if (!reads?.[d.hook]) continue`), so for a new family every
+deck-level guard skips and the run still prints a tick. Three money drafts passed both gates
+for a day while being checked by neither. So the guard file must load **whichever source is
+real** — the registry once wired, the draft JSON until then — and say which in its
+`describe()`.
+
+**Then prove it bites:** `node scripts/guard-tripwire.mjs <family>` injects a deliberate
+violation per ban into the real draft files, asserts the suite fails, and restores
+byte-for-byte. A gate that silently passes is worse than no gate.
+
+### Negation exemptions: narrow for the ban, broad for the assertion
+
+Correct copy names a banned thing in order to refuse it, so every guard exempts clauses
+carrying a negator. 🔴 **That blanket exemption is wrong wherever the violation itself
+carries one.** `"it won't be long now"` IS the duration violation, and a blanket negator
+exemption waves through the exact sentence the ban exists to stop.
+
+Two patterns, kept separate:
+
+- **The exemption** — narrow. Only the reader *declining* ("I won't…", "no reader can…").
+  Every phrase added here punches a hole in the ban.
+- **The presence assertion** — broad. "Did the read decline out loud?" Widening it can only
+  ever demand more of the copy.
+
+Merging them means every new way of saying "I can't tell you" becomes a new way to smuggle
+the banned thing past.
+
+### Write the patterns against the MODEL's vocabulary, not your own
+
+A guard written while reading your own draft learns your draft's wording. Ban patterns for
+self-blame written against copy that says *"you keep choosing"* scored **clean** on the
+model's actual output — *"a pattern your soul is ready to break"*, *"what keeps pulling you
+toward the wrong ones"*. Run the generated path first (below), then write the patterns
+against what came back.
+
+## Smoke the generated path before wiring
+
+The guard file covers the canned bubbles. It cannot cover the Version-C reply the model
+writes to what she actually types — and that is the half where the frame either holds or
+does not. Build the real prompt with `buildTarotReflectPrompt`, send a real answer drawn
+from the VOC pull, and scan the reply with the guard's own ban patterns. Two configurations
+minimum: as it stands today, and with the proposed frame swapped in. If the frame does not
+measurably reduce violations, it is not the right frame yet.
 
 ### Worked example — `cards-alone-forever` on `return-mhf`, card a — DRAFTED, not yet live
 

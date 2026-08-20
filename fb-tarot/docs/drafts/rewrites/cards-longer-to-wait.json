@@ -1,0 +1,36 @@
+{
+  "hook": "cards-longer-to-wait",
+  "headline": "How much longer do I have to wait for my soulmate?",
+  "note": "Soulmate age-band batch (2026-08-19), 65+ HOW-LONG rung. ⚠ The hook is `cards-longer-to-wait`, NOT `cards-how-much-longer` — that name is already taken by a MONEY lander ('How much longer will something keep blocking my money?').\n\nFace-down only (return-mhf). 🔴🔴 NO DURATION — see cards-keeps-waiting. She is asking for a length outright, and 'not much longer' is a length rather than a date, so the standing date ban does not catch it. Banned: any span, any 'soon', any 'not long now', any pace.\n\n🔴 THIS IS THE MORTALITY-ADJACENT ONE. Her own words from the how-long pull: 'I'm 70 years old and not sure how much longer I have to wait?' At this age 'how much longer' carries 'is there enough time left' underneath it, and the read must answer the second question without ever touching the first. NO AGE, NO NUMBER, no 'while you still can', no 'before it is too late', nothing about time running out, and NOTHING about health — the sm-too-late pull that sits beside this one is thick with illness and Meta prohibits it.\n\n🔴 NO MEDIUMSHIP. At 65+ a share of these readers are widowed; 'how much longer' can mean waiting to be reunited with someone who has died.\n\n🔴 The refusal must be VISIBLE, then replaced with a real finding: one small thing has been holding all of it, and small things can be moved. 🔴 No promised arrival, no PLACE, no self-blame.",
+  "decks": {
+    "return-mhf": {
+      "a": [
+        "You turned the Magician, dear. Look — the vine above him only reaches the two top corners.",
+        "You asked how much longer you have to wait for your soulmate. Your hand went to the man still at his table.",
+        "So I won't count it out for you, dear. That count doesn't exist.",
+        "And nothing on that card is waiting, dear. Both hands are busy.",
+        "But you've been living in the wait, dear. Not just passing through.",
+        "That's why sleep hasn't helped, dear. Part way through wears at you.",
+        "Let me look closer at what has held this part way through…"
+      ],
+      "b": [
+        "You turned the Hanged Man, dear. Look — the rope goes round his foot once and stops there.",
+        "You asked how much longer you have to wait for your soulmate. Your hand went to the card that hangs on.",
+        "So there's no number here, dear. I'd be making it up and you'd know.",
+        "And one rope is all there is on that card, dear. Just the one.",
+        "But you've been braced for something much bigger, dear.",
+        "That's why so little has moved, dear. One small thing has been holding all of it.",
+        "Let me look closer at the one thing holding this…"
+      ],
+      "c": [
+        "You turned the Fool, dear. Look — the sun is up in the corner, and the sky is clear.",
+        "You asked how much longer you have to wait for your soulmate. Your hand went to the one out on the road.",
+        "So I can't hand you a number, dear. There isn't one to hand.",
+        "And no one on that road knows how far, dear. It isn't written anywhere.",
+        "But you've stood still to count it, dear. And the counting is the weight.",
+        "That's why the question won't leave you, dear. You can see the road and still not the end.",
+        "Let me look closer at what's keeping the end out of sight…"
+      ]
+    }
+  }
+}

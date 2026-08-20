@@ -1,0 +1,36 @@
+{
+  "hook": "cards-energy-soulmate",
+  "headline": "What does my energy say about my soulmate?",
+  "note": "Test B — soulmate × keyword (2026-08-20). ENERGY rung, WHY.\n\n⚠ NO VOC PULL YET.\n\nFRAME: no man. Must not fall through to decode-him.\n\n⚠ NAME AND WORDING: the live MONEY lander `cards-money-wont-stay` is 'What does my energy say about why money won't stay?' — the same sentence with one noun changed. Six-word runs will collide unless the reads are built on different nouns; check-collisions must pass before this is trusted.\n\n🔴 THE WORD DOING THE WORK IS 'SAYS'. She is not asking for a verdict ON her energy — she is asking Evelyn to READ it, the way you'd read a card. That is the difference from cards-energy-away, which answers an accusation. Here there is no accusation to refuse, so refusing one wastes the lander.\n\n🔴 IT MUST STILL NOT GRADE HER. Reading her energy is allowed; scoring it is not. No 'your energy is low/blocked/closed/misaligned', no vibration level, no chakra, no 'you are giving off'. And no coaching that follows from a score.\n\n⚠ MUST NOT RESTATE `cards-energy-away`. That one says her energy is not the barrier. This one says what it is actually pointed at.\n\nThe finding: it says she is still reaching. The energy has never been withdrawn — and she has been reading her own tiredness as proof that she gave up.",
+  "decks": {
+    "return-mhf": {
+      "a": [
+        "You turned the Magician, dear. Look — one arm straight up, and the sleeve falling back off the wrist.",
+        "You asked what your energy says about your soulmate. Your hand went to the card of a thing still being made.",
+        "So it says you are still reaching, dear. That arm has not come down.",
+        "And it points up and out, dear. Away from himself, at something not here yet.",
+        "But you've read your own tiredness as giving up, dear.",
+        "That's why closed off is the phrase you reach for, dear. Worn would be nearer.",
+        "Let me look closer at what has been wearing on that reach…"
+      ],
+      "b": [
+        "You turned the Hanged Man, dear. Look — his eyes are open, and he is not asleep.",
+        "You asked what your energy says about your soulmate. Your hand went to the card that waits awake.",
+        "So it says you are still here, dear. Waiting is not the same as leaving.",
+        "And the eyes stay open, dear. Through all of it, on a card where nothing else moves.",
+        "But you've called that stubbornness, dear. Or worse.",
+        "That's why you play it down when people ask, dear. You'd rather they didn't see it.",
+        "Let me look closer at what made it something to hide…"
+      ],
+      "c": [
+        "You turned the Fool, dear. Look — his head is up and his eyes are off the ground.",
+        "You asked what your energy says about your soulmate. Your hand went to the card that keeps looking up.",
+        "So it says you have not stopped looking, dear. The head on this card is up.",
+        "And it stays up, dear, with the drop right there at the boot.",
+        "But you've been counting the years and calling that foolish, dear.",
+        "That's why hoping has started to feel like a fault, dear. It is the one thing that never went.",
+        "Let me look closer at what turned hoping into a fault…"
+      ]
+    }
+  }
+}
