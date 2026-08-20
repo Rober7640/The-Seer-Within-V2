@@ -19,6 +19,8 @@ export interface ResolvedEmailLink {
   continueSeed: string;
   /** The ONE thing this email is about — see shared/schema.ts's big_idea. */
   bigIdea: string | null;
+  /** The letter's card art, shown as its own lander bubble. Usually null. */
+  cardImageUrl: string | null;
   /** Lander context the legacy `?bucket=&src=` query string carried; the
    *  redirector rebuilds the query string from these. See shared/schema.ts. */
   bucket: string | null;
@@ -38,6 +40,12 @@ export interface MintEmailLinkCodeInput {
    * exactly the failure this field exists to remove, so drafts should carry it).
    */
   bigIdea?: string;
+  /**
+   * The letter's card art, lifted from the draft's `**Card Image:**` line.
+   * Optional and usually absent — most letters show no card, and one that does
+   * needs only this value, never a code change.
+   */
+  cardImageUrl?: string;
   bucket?: string;
   src?: string;
 }
@@ -97,6 +105,7 @@ export async function mintEmailLinkCode(
         readingRecap: input.readingRecap ?? null,
         openLoop: input.openLoop ?? null,
         bigIdea: input.bigIdea ?? null,
+        cardImageUrl: input.cardImageUrl ?? null,
         bucket: input.bucket ?? null,
         src: input.src ?? null,
       });
@@ -162,6 +171,7 @@ export async function upsertEmailLinkCodeForCampaign(
   const readingRecap = input.readingRecap ?? null;
   const openLoop = input.openLoop ?? null;
   const bigIdea = input.bigIdea ?? null;
+  const cardImageUrl = input.cardImageUrl ?? null;
   const bucket = input.bucket ?? null;
   const src = input.src ?? null;
 
@@ -170,6 +180,7 @@ export async function upsertEmailLinkCodeForCampaign(
     row.readingRecap === readingRecap &&
     row.openLoop === openLoop &&
     row.bigIdea === bigIdea &&
+    row.cardImageUrl === cardImageUrl &&
     row.bucket === bucket &&
     row.src === src
   ) {
@@ -178,7 +189,7 @@ export async function upsertEmailLinkCodeForCampaign(
 
   await db
     .update(emailLinkCodes)
-    .set({ continueSeed: input.continueSeed, readingRecap, openLoop, bigIdea, bucket, src })
+    .set({ continueSeed: input.continueSeed, readingRecap, openLoop, bigIdea, cardImageUrl, bucket, src })
     .where(eq(emailLinkCodes.code, row.code));
 
   return { code: row.code, action: 'updated' };
@@ -216,16 +227,38 @@ export async function resolveCampaignContinueSeed(
   personaSlug: string,
   campaign: string,
 ): Promise<string | null> {
+  return (await resolveCampaignOpenerContent(personaSlug, campaign))?.continueSeed ?? null;
+}
+
+/** Everything the lander thread renders for a campaign: the authored line, and
+ *  the card the letter was about when it had one.
+ *
+ *  ONE query for both. The image is not a second lookup bolted onto the opener —
+ *  it is part of the same authored snapshot, resolved on the same row read that
+ *  the lander's /start already pays for.
+ *
+ *  A blank or whitespace-only seed resolves to null overall, exactly as the
+ *  seed-only lookup did: without a line to say, there is no thread to put an
+ *  image in, and a lone picture is the "reads like an ad" failure this feature
+ *  is trying to avoid. */
+export async function resolveCampaignOpenerContent(
+  personaSlug: string,
+  campaign: string,
+): Promise<{ continueSeed: string; cardImageUrl: string | null } | null> {
   if (!campaign) return null;
   const rows = await db
-    .select({ continueSeed: emailLinkCodes.continueSeed })
+    .select({
+      continueSeed: emailLinkCodes.continueSeed,
+      cardImageUrl: emailLinkCodes.cardImageUrl,
+    })
     .from(emailLinkCodes)
     .where(
       and(eq(emailLinkCodes.personaSlug, personaSlug), eq(emailLinkCodes.campaign, campaign)),
     )
     .limit(1);
   const seed = rows[0]?.continueSeed?.trim();
-  return seed ? seed : null;
+  if (!seed) return null;
+  return { continueSeed: seed, cardImageUrl: rows[0]?.cardImageUrl?.trim() || null };
 }
 
 export async function resolveEmailLinkCode(code: string): Promise<ResolvedEmailLink | null> {
@@ -238,6 +271,7 @@ export async function resolveEmailLinkCode(code: string): Promise<ResolvedEmailL
     readingRecap: row.readingRecap,
     openLoop: row.openLoop,
     bigIdea: row.bigIdea,
+    cardImageUrl: row.cardImageUrl,
     bucket: row.bucket,
     src: row.src,
     continueSeed: row.continueSeed,

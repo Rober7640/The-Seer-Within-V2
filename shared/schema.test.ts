@@ -26,7 +26,9 @@ describe('email_link_codes table', () => {
     );
     const byName = Object.fromEntries(rows.map((r) => [r.column_name, r]));
 
-    assert.equal(rows.length, 10, `expected 10 columns, found ${rows.length}: ${rows.map((r) => r.column_name).join(', ')}`);
+    // 11 since 2026-08-20 (card_image_url). The RUNBOOK's production check counts
+    // the same columns and must move with this number — it reads 15 rows total.
+    assert.equal(rows.length, 11, `expected 11 columns, found ${rows.length}: ${rows.map((r) => r.column_name).join(', ')}`);
 
     assert.equal(byName.code?.data_type, 'character varying');
     assert.equal(byName.code?.is_nullable, 'NO');
@@ -63,6 +65,12 @@ describe('email_link_codes table', () => {
     // and dropping the letter's topic on turn one.
     assert.equal(byName.big_idea?.data_type, 'text');
     assert.equal(byName.big_idea?.is_nullable, 'YES');
+
+    // 2026-08-20: the card a letter shows in the lander thread, as a URL or a
+    // path on our own origin. Nullable and null for MOST sends — only a letter
+    // built on a card has one — so a null here is the normal case, not a gap.
+    assert.equal(byName.card_image_url?.data_type, 'text');
+    assert.equal(byName.card_image_url?.is_nullable, 'YES');
 
     assert.equal(byName.src?.data_type, 'text');
     assert.equal(byName.src?.is_nullable, 'YES');

@@ -58,7 +58,7 @@ this order. Each links to the step that explains it.
 | # | Where | What it does | Step |
 |---|-------|--------------|------|
 | 1 | production | Create `email_link_codes` + add the `pending_reply` columns | [Step 1](#step-1--add-the-tables-to-the-production-database) |
-| 2 | production | Verify: **14 rows** | [Step 1](#step-1--add-the-tables-to-the-production-database) |
+| 2 | production | Verify: **15 rows** | [Step 1](#step-1--add-the-tables-to-the-production-database) |
 | 3 | production | Turn the Live Thread arm on — ONLY if you chose Option B | [Step 4](#step-4--decide-does-everyone-see-the-new-page) |
 
 **That is the whole list. There is no SQL for the email content itself.**
@@ -125,6 +125,7 @@ CREATE TABLE IF NOT EXISTS email_link_codes (
 ALTER TABLE email_link_codes ADD COLUMN IF NOT EXISTS bucket text;
 ALTER TABLE email_link_codes ADD COLUMN IF NOT EXISTS src text;
 ALTER TABLE email_link_codes ADD COLUMN IF NOT EXISTS big_idea text;
+ALTER TABLE email_link_codes ADD COLUMN IF NOT EXISTS card_image_url text;
 
 CREATE INDEX IF NOT EXISTS idx_email_link_codes_campaign
   ON email_link_codes (campaign);
@@ -149,19 +150,22 @@ WHERE table_schema = 'public'
 ORDER BY table_name, column_name;
 ```
 
-**You must get exactly 14 rows.** Count them.
+**You must get exactly 15 rows.** Count them.
 
-- 10 rows for `email_link_codes`
+- 11 rows for `email_link_codes`
 - 4 rows for `evelyn_lander_sessions`
 
 (It was 13 until 2026-08-19, when `email_link_codes.big_idea` was added — the
 column that tells the chat what the email was ABOUT, so it stays on that subject
-instead of wandering off it on the first reply.)
+instead of wandering off it on the first reply. It became 15 on 2026-08-20 with
+`email_link_codes.card_image_url`, the card a letter shows in the lander thread.
+Like `big_idea`, its VALUES come from the drafts in Step 6 — there is no SQL here
+that fills it.)
 
 If you get 0 rows, the SQL above did not run. Try again.
-If you get fewer than 14, run the SQL in 1b again.
+If you get fewer than 15, run the SQL in 1b again.
 
-**Do not continue until you see 14 rows.**
+**Do not continue until you see 15 rows.**
 
 ---
 
