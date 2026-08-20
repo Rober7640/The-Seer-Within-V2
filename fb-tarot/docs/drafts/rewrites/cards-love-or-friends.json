@@ -1,0 +1,44 @@
+{
+  "hook": "cards-love-or-friends",
+  "headline": "Is there still love here, or have we turned into friends?",
+  "voc": {
+    "pulled": "2026-08-20",
+    "pattern": "rm-roommates",
+    "matched": 66,
+    "buyers": 11,
+    "verdict": "ok",
+    "why": ""
+  },
+  "note": "Settle-depth batch (test D, 2026-08-20). BINARY rung on the ROOMMATES theme.\n\n🔴 THE WORD DOING THE WORK IS 'STILL' — did it survive. And her own words hold both halves at once: 'I have love for him but I am not in love with him. He is a good man just not good for me.' · 'peaceful friends, living together but sexless' · 'more like friends now'.\n\n🔴🔴 BOTH ANSWERS ARE HARMFUL AND BOTH ARE BANNED. 'Yes, still love' tells a woman in an empty marriage to stay in it on a stranger's word. 'No, only friendship' ends a live marriage on the same authority. This lander refuses the binary rather than picking a side — the same structure as cards-really-over and cards-meant-alone, where one answer is a life sentence and the other is a promise the funnel cannot keep.\n\nThe finding: the warmth is real, and it is why she has not gone. But warmth is not what went missing. Something else did, and it is not friendship — she has been handed two words and needed a third.\n\n🔴 WHO THIS AD COLLECTS, from the pull (rm-roommates, 2026-08-20 — 66 concerns, 11 buyers). Every group here is IN the room and none of them is in the headline:\n\n  · SHE OFTEN CANNOT LEAVE. 'I feel stuck caring for my husband of 25 years who is 84... He has dementia. I have health issues from stress and he'll probably out live me. I can't afford a nursing home.' That is a caretaker marriage, and the read may never imply a door she does not have.\n  · SEXLESSNESS IS EXPLICIT AND EVERYWHERE — 'living together but sexless', 'we have not had sex for 7 years', 'no intimacy for 15 years'. Meta prohibits sexual practices as a personal attribute. The word she used is ROOMMATES; the read uses her word and never the literal one.\n  · AFFAIRS, ACTUAL AND CONTEMPLATED. 'I find myself looking elsewhere', 'I did make eye contact with a younger woman... we have each others contacts', 'I have this person who keeps popping up in my mind. But I'm engaged.' A read that warms up leaving is advice on a live marriage.\n  · ABUSE. 'He's rather mean mouthed and says nasty things to me', narcissistic abuse across several. No ruling on him, in either direction.\n  · IT IS NOT ALWAYS A WOMAN ASKING ABOUT A MAN — 'my wife', 'she sleeps in separate rooms', 'I'm with a woman I've been with for 20 years'. Do not gender the partner.\n\n🔴🔴 NEVER ADVISE ON A LIVE MARRIAGE. No leave, no stay, no work on it, no counselling, no date night, no 'it is normal after this long'. No verdict that it is over and none that it is fine. She is inside it tonight either way.\n\n🔴 NO HEALTH (dementia, medication and menopause are all in the pull), NO SEX, NO THIRD PARTY named as the cause, NO DATE.\n\n⚠ FRAME: NONE OF THE EIGHT EXISTING FRAMES FITS. A real partner exists, so it is not the no-man frames; but decode-him reads HIM as a tendency and bans none of what matters here — no advice on a marriage, no leave/stay, no sex, no health. This family needs its own frame before it is wired. Flagged at stage 0, not after.",
+  "decks": {
+    "return-mhf": {
+      "a": [
+        "You turned the Magician, dear. Look — one hand holds a thing and the other holds nothing.",
+        "You asked if there's still love, or only friendship. Your hand went to the man holding two things.",
+        "So the warmth is real, dear. That's not the part that went.",
+        "And there's two of them, dear, and he's holding both.",
+        "But you've been made to pick, dear. Love or friendship.",
+        "That's why neither word fits, dear. Neither one is what you've got.",
+        "Let me look closer at the thing that actually went…"
+      ],
+      "b": [
+        "You turned the Hanged Man, dear. Look — nothing on this card has been cut away.",
+        "You asked if there's still love, or only friendship. Your hand went to the card that keeps hold.",
+        "So nothing's been lost here, dear. It's all still on the card.",
+        "And what you're missing is on it too, dear. Turned the wrong way up.",
+        "But you've been checking whether it's gone, dear. It isn't.",
+        "That's why the question keeps coming back, dear. You've been asking the wrong one.",
+        "Let me look closer at what turned it the wrong way up…"
+      ],
+      "c": [
+        "You turned the Fool, dear. Look — the stick is in one hand and the flower is in the other.",
+        "You asked if there's still love, or only friendship. Your hand went to the one carrying both.",
+        "So you're carrying both, dear. You don't have to drop one.",
+        "And he's got both, dear, and he hasn't put either down.",
+        "But you've been told it's one or the other, dear.",
+        "That's why you feel like a liar either way, dear. Both answers miss something.",
+        "Let me look closer at the part both answers miss…"
+      ]
+    }
+  }
+}

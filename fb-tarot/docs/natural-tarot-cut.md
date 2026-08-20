@@ -110,6 +110,66 @@ the next question obvious to her before Evelyn asks it.
 🔴 **The picture comes from the ART FILE, not from tarot convention.** She is looking at the
 card. A detail that is not there reads as a lie and costs the trust the line was added to buy.
 
+### How Evelyn sounds — the four voice rules
+
+The four rules above decide whether the read WORKS. These four decide whether it sounds like a
+person. They are the operator's own corrections, each one written down after it had already cost
+a batch, and three of the four are now machine-checked — the fourth is judgement.
+
+**1 · Picture before meaning.** Describe what is literally on the card, THEN what it means. The
+art is attached to message 1, so she is looking at it while she reads. No metaphor she has to
+decode first, and no detail that is not on the card — a detail she cannot find reads as a lie
+and costs the trust the line was added to buy. *Enforced:* beat-1 uniqueness across the deck
+(the guard files) and "the picture comes from the ART FILE" above. *Operator, 2026-08-18.*
+
+**2 · Grade 5 is not the same as comprehensible.** The numeric gate counts syllables and
+sentence length; it cannot see abstraction. It passed *"It is not a length."* — grade 2, and she
+still stops. Three specific failures follow from that, all of them now caught:
+
+- Never open a bubble on a bare *It / That / This / They*. Each bubble is its own chat message
+  with a typing pause, so the referent has scrolled. *"That gap is real"* is fine — the noun is
+  attached.
+- No concept-nouns. Not *a length*, *the premise*, *the unknown*, *mid-air*. Name the thing.
+- Never make her analyse her own wording. Do that work for her.
+
+*Enforced:* the COMPREHENSION rules in `scripts/check-draft.mjs`. *Operator, 2026-08-19.*
+
+**3 · Conversational — she is being spoken to, not written at.** The signed-off landers run
+**83–100% contractions**; treat 60% as the floor and anything under it as a defect. Then two
+shapes that make copy sound written even when the contractions are there:
+
+- **No balanced clauses.** *"Drawing it in is one job; keeping it is a second one."*
+- **No aphorisms.** A line that would work on a fridge magnet is not about the woman reading it.
+  *"Stopped and gone are not the same." · "Careful looks the same from outside." · "Waiting is
+  not the same as leaving."* Measured 2026-08-20: the signed-off landers contain **zero**; the
+  batch the operator flagged as flowery carried up to three per lander. The tell is that the
+  sentence would survive unchanged on any other lander on the funnel.
+
+⚠ **Never run a blind contraction regex over copy.** One produced *"which one it's"* and *"the
+most modest thing there's"*. Contract by hand, clause by clause.
+
+⚠ **Do NOT strip the short verbless tail** — *"One thing at a time, and quietly." · "Close, and
+then quiet."* It reads flowery in isolation, and it is not: there are 246 across the wired
+corpus, it is house style, and removing them makes the copy stiffer rather than plainer. This
+was very nearly "fixed" on 2026-08-20 and measuring stopped it.
+
+*Enforced:* the aphorism patterns and the per-lander contraction floor in `check-draft.mjs`.
+
+**4 · She is the subject, and the card figure is a prop.** The `return-mhf` figures are all male,
+so leaning on one as the subject of the read silently turns a soulmate lander into reunion copy:
+written as an ACTOR — *"he is walking", "he can't reach it", "he isn't falling", "he's out in
+full sun"* — a reader hears a specific man who is stalled, held, or on his way back. That is the
+`cards-back-together` job, not a read about someone she has not met.
+
+In cuts 2–7 SHE is the subject. The figure may be DESCRIBED — *"he hangs with no road and no map
+behind him"* — but never given intent or motion toward her. **Cut 1 is exempt**: describing the
+figure IS the picture, and that is its job.
+
+Measured benchmark: the shipped soulmate families run **0.41–0.63** he/him/his per registry beat
+2–4. The first age-band drafts ran roughly double, and 36 of 144 middle bubbles put the figure in
+the subject slot. *Enforced:* the ACTOR ban and the density check in the soulmate guard files.
+*Operator, 2026-08-19: "soulmate landers are not about will we get back together."*
+
 ### What may now be said, and what may not
 
 Loosened 2026-08-19. The rule is DIRECTIONAL: the half she came for is allowed, the half with a

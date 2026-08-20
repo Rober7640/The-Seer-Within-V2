@@ -7,7 +7,7 @@ Two tracks: **A** rewrites the 88 landers already live; **B** builds the 11 new 
 > The tick is derived from the gate, not from anyone remembering to tick it, so this file
 > can never claim a lander is done when the code says otherwise.
 
-`████████████████████`  **95 / 95 landers clean** · 0 gate problems left
+`████████████████████`  **114 / 114 landers clean** · 0 gate problems left
 
 Rules: ≤25 words · ≤2 sentences · grade ≤5 · ≤3 syllables · ≤2 negatives per sentence · echo the ad in bubbles 1–2 · no banned constructions.
 
@@ -20,7 +20,7 @@ the parity test fails.
 waiting on your go (read it in `fb-tarot/docs/drafts/rewrites/PREVIEW.md`) · `[x]` = wired
 and passing. Nothing is wired before you have seen it.
 
-📝 awaiting sign-off right now: `cards-after-marriage`, `cards-alone-forever`, `cards-back-together`, `cards-blocked-retiring`, `cards-cant-stop`, `cards-cheating`, `cards-choosing-wrong`, `cards-come-back`, `cards-deceived`, `cards-end-up-alone`, `cards-energy-how-long`, `cards-ever-back`, `cards-faithful`, `cards-feel-about-me`, `cards-feels-off`, `cards-feels`, `cards-forever-or-now`, `cards-found-me-yet`, `cards-ghosted`, `cards-given-up`, `cards-gone-cold`, `cards-her-shadow`, `cards-hiding-something`, `cards-his-children`, `cards-honest`, `cards-how-much-longer`, `cards-imagining-it`, `cards-keeps-waiting`, `cards-left-without-word`, `cards-lied-to`, `cards-live-apart`, `cards-longer-to-wait`, `cards-losing-interest`, `cards-love-again`, `cards-love-or-moved-on`, `cards-loyal`, `cards-meant-alone`, `cards-met-already`, `cards-misled`, `cards-money-wont-stay`, `cards-moved-on`, `cards-my-energy`, `cards-nest-egg`, `cards-new-soulmate`, `cards-not-enough`, `cards-not-found-yet`, `cards-on-my-mind`, `cards-out-of-time`, `cards-prayed-years`, `cards-prayers-unanswered`, `cards-pulling-away`, `cards-ready-commit`, `cards-ready-to-love`, `cards-real-person`, `cards-really-love`, `cards-really-over`, `cards-really-soulmate`, `cards-second-time`, `cards-slipping-past`, `cards-someone-else`, `cards-someone-for-me`, `cards-soulmate-closer`, `cards-soulmate-out-there`, `cards-soulmate`, `cards-still-a-chance`, `cards-still-love`, `cards-still-miss-him`, `cards-still-think`, `cards-still-working`, `cards-stop-hurting`, `cards-stop-missing`, `cards-stop-searching`, `cards-talking-someone`, `cards-too-late-love`, `cards-too-late`, `cards-too-long`, `cards-truth`, `cards-twin-back`, `cards-twin-feels`, `cards-twin-or-connection`, `cards-twin-ready`, `cards-where-soulmate`, `cards-who-he-is`, `cards-who-hurt-me`, `cards-wont-commit`
+📝 awaiting sign-off right now: `cards-after-marriage`, `cards-allowed-to-want`, `cards-alone-forever`, `cards-back-together`, `cards-best-years`, `cards-blocked-before`, `cards-blocked-retiring`, `cards-blocking-soulmate`, `cards-cant-stop`, `cards-cheating`, `cards-choosing-wrong`, `cards-come-back`, `cards-connection-nothing`, `cards-connection-soulmate`, `cards-deceived`, `cards-end-up-alone`, `cards-energy-away`, `cards-energy-how-long`, `cards-energy-soulmate`, `cards-ever-back`, `cards-faithful`, `cards-feel-about-me`, `cards-feels-off`, `cards-feels`, `cards-forever-or-now`, `cards-found-me-yet`, `cards-ghosted`, `cards-given-up`, `cards-gone-cold`, `cards-heal-first`, `cards-her-shadow`, `cards-hiding-something`, `cards-his-children`, `cards-honest`, `cards-how-much-longer`, `cards-imagining-it`, `cards-keeps-waiting`, `cards-left-without-word`, `cards-lied-to`, `cards-live-apart`, `cards-longer-to-wait`, `cards-losing-interest`, `cards-love-again`, `cards-love-or-friends`, `cards-love-or-moved-on`, `cards-loyal`, `cards-meant-alone`, `cards-met-already`, `cards-misled`, `cards-missed-chance`, `cards-money-wont-stay`, `cards-moved-on`, `cards-my-energy`, `cards-nest-egg`, `cards-new-soulmate`, `cards-not-enough`, `cards-not-found-yet`, `cards-on-my-mind`, `cards-out-of-time`, `cards-prayed-years`, `cards-prayers-unanswered`, `cards-pulling-away`, `cards-ready-commit`, `cards-ready-to-love`, `cards-real-person`, `cards-really-love`, `cards-really-over`, `cards-really-soulmate`, `cards-roommates`, `cards-second-time`, `cards-slipping-past`, `cards-someone-else`, `cards-someone-for-me`, `cards-soulmate-closer`, `cards-soulmate-out-there`, `cards-soulmate`, `cards-still-a-chance`, `cards-still-love`, `cards-still-miss-him`, `cards-still-think`, `cards-still-working`, `cards-stop-hurting`, `cards-stop-missing`, `cards-stop-searching`, `cards-strangers-house`, `cards-talking-someone`, `cards-too-late-love`, `cards-too-late`, `cards-too-long`, `cards-truth`, `cards-twin-back`, `cards-twin-feels`, `cards-twin-or-connection`, `cards-twin-ready`, `cards-waiting-to-heal`, `cards-where-soulmate`, `cards-who-he-is`, `cards-who-hurt-me`, `cards-wont-commit`
 
 🔴 **Known content bug, `decode-him` deck.** All four of its hooks open with the SAME
 beat 1 per card ("You turned the Sun, dear — the card of what stands in the light." serves
@@ -126,6 +126,66 @@ the next question obvious to her before Evelyn asks it.
 
 🔴 **The picture comes from the ART FILE, not from tarot convention.** She is looking at the
 card. A detail that is not there reads as a lie and costs the trust the line was added to buy.
+
+### How Evelyn sounds — the four voice rules
+
+The four rules above decide whether the read WORKS. These four decide whether it sounds like a
+person. They are the operator's own corrections, each one written down after it had already cost
+a batch, and three of the four are now machine-checked — the fourth is judgement.
+
+**1 · Picture before meaning.** Describe what is literally on the card, THEN what it means. The
+art is attached to message 1, so she is looking at it while she reads. No metaphor she has to
+decode first, and no detail that is not on the card — a detail she cannot find reads as a lie
+and costs the trust the line was added to buy. *Enforced:* beat-1 uniqueness across the deck
+(the guard files) and "the picture comes from the ART FILE" above. *Operator, 2026-08-18.*
+
+**2 · Grade 5 is not the same as comprehensible.** The numeric gate counts syllables and
+sentence length; it cannot see abstraction. It passed *"It is not a length."* — grade 2, and she
+still stops. Three specific failures follow from that, all of them now caught:
+
+- Never open a bubble on a bare *It / That / This / They*. Each bubble is its own chat message
+  with a typing pause, so the referent has scrolled. *"That gap is real"* is fine — the noun is
+  attached.
+- No concept-nouns. Not *a length*, *the premise*, *the unknown*, *mid-air*. Name the thing.
+- Never make her analyse her own wording. Do that work for her.
+
+*Enforced:* the COMPREHENSION rules in `scripts/check-draft.mjs`. *Operator, 2026-08-19.*
+
+**3 · Conversational — she is being spoken to, not written at.** The signed-off landers run
+**83–100% contractions**; treat 60% as the floor and anything under it as a defect. Then two
+shapes that make copy sound written even when the contractions are there:
+
+- **No balanced clauses.** *"Drawing it in is one job; keeping it is a second one."*
+- **No aphorisms.** A line that would work on a fridge magnet is not about the woman reading it.
+  *"Stopped and gone are not the same." · "Careful looks the same from outside." · "Waiting is
+  not the same as leaving."* Measured 2026-08-20: the signed-off landers contain **zero**; the
+  batch the operator flagged as flowery carried up to three per lander. The tell is that the
+  sentence would survive unchanged on any other lander on the funnel.
+
+⚠ **Never run a blind contraction regex over copy.** One produced *"which one it's"* and *"the
+most modest thing there's"*. Contract by hand, clause by clause.
+
+⚠ **Do NOT strip the short verbless tail** — *"One thing at a time, and quietly." · "Close, and
+then quiet."* It reads flowery in isolation, and it is not: there are 246 across the wired
+corpus, it is house style, and removing them makes the copy stiffer rather than plainer. This
+was very nearly "fixed" on 2026-08-20 and measuring stopped it.
+
+*Enforced:* the aphorism patterns and the per-lander contraction floor in `check-draft.mjs`.
+
+**4 · She is the subject, and the card figure is a prop.** The `return-mhf` figures are all male,
+so leaning on one as the subject of the read silently turns a soulmate lander into reunion copy:
+written as an ACTOR — *"he is walking", "he can't reach it", "he isn't falling", "he's out in
+full sun"* — a reader hears a specific man who is stalled, held, or on his way back. That is the
+`cards-back-together` job, not a read about someone she has not met.
+
+In cuts 2–7 SHE is the subject. The figure may be DESCRIBED — *"he hangs with no road and no map
+behind him"* — but never given intent or motion toward her. **Cut 1 is exempt**: describing the
+figure IS the picture, and that is its job.
+
+Measured benchmark: the shipped soulmate families run **0.41–0.63** he/him/his per registry beat
+2–4. The first age-band drafts ran roughly double, and 36 of 144 middle bubbles put the figure in
+the subject slot. *Enforced:* the ACTOR ban and the density check in the soulmate guard files.
+*Operator, 2026-08-19: "soulmate landers are not about will we get back together."*
 
 ### What may now be said, and what may not
 
@@ -379,7 +439,7 @@ Work top-down: families are ordered by how much unreadable copy they hold.
 - [x] `cards-love-again` `arcana-eef` — "Will I love again?" · clean
 - [x] `cards-soulmate` `arcana-eef` — "When is my soulmate coming?" · clean
 
-## decode-him — 12/12 clean · 0 problems
+## decode-him — 31/31 clean · 0 problems
 
 ⚠️ **No dedicated guard file** (`tests/tarot-decode-him-copy.test.ts` does not exist) — a seed family, written before the per-family convention. Only the generic guards apply, so this copy is the least protected on the funnel.
 
@@ -395,6 +455,25 @@ Work top-down: families are ordered by how much unreadable copy they hold.
 - [x] `cards-honest` — "Is he being honest with you?" · clean
 - [x] `cards-feels` — "How does he really feel about you?" · clean
 - [x] `cards-cheating` — "Is he cheating on you?" · clean
+- [x] `cards-slipping-past` — "Why does my soulmate keep slipping past me?" · clean
+- [x] `cards-choosing-wrong` — "What keeps me choosing everyone but my soulmate?" · clean
+- [x] `cards-found-me-yet` — "Why hasn't my soulmate found me yet?" · clean
+- [x] `cards-keeps-waiting` — "How long does a soulmate keep you waiting?" · clean
+- [x] `cards-missed-chance` — "Is my soulmate still coming, or have I already missed him?" · clean
+- [x] `cards-after-marriage` — "Is there a soulmate for me after the marriage ended?" · clean
+- [x] `cards-second-time` — "How long does it take to find a soulmate the second time?" · clean
+- [x] `cards-best-years` — "Why did I give my best years to someone who wasn't my soulmate?" · clean
+- [x] `cards-too-late-love` — "Is it too late to meet my soulmate?" · clean
+- [x] `cards-longer-to-wait` — "How much longer do I have to wait for my soulmate?" · clean
+- [x] `cards-allowed-to-want` — "Am I still allowed to want a soulmate?" · clean
+- [x] `cards-blocking-soulmate` — "Is something blocking me from meeting my soulmate?" · clean
+- [x] `cards-blocked-before` — "Why do I keep getting blocked before my soulmate arrives?" · clean
+- [x] `cards-connection-soulmate` — "Is this connection my soulmate, or something else?" · clean
+- [x] `cards-connection-nothing` — "Why does this connection feel like my soulmate when nothing is happening?" · clean
+- [x] `cards-energy-away` — "Is my energy keeping my soulmate away?" · clean
+- [x] `cards-energy-soulmate` — "What does my energy say about my soulmate?" · clean
+- [x] `cards-waiting-to-heal` — "Is my soulmate waiting for me to heal?" · clean
+- [x] `cards-heal-first` — "Do I need to heal before my soulmate arrives?" · clean
 
 ## trust — 6/6 clean · 0 problems
 

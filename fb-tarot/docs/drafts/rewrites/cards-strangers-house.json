@@ -1,0 +1,44 @@
+{
+  "hook": "cards-strangers-house",
+  "headline": "Why do we live like strangers in the same house?",
+  "voc": {
+    "pulled": "2026-08-20",
+    "pattern": "rm-roommates",
+    "matched": 66,
+    "buyers": 11,
+    "verdict": "ok",
+    "why": ""
+  },
+  "note": "Settle-depth batch (test D, 2026-08-20). WHY rung on the ROOMMATES theme.\n\n🔴 THE WORD DOING THE WORK IS 'STRANGERS' — not enemies. Nobody in this pull describes a war; they describe a silence. 'No arguing or violence, just peaceful friends' · 'we've been disconnected. She sleeps in separate rooms and it makes you feel empty' · 'We don't talk about things that are important. I feel like a convenience.'\n\n⚠ MUST NOT RESTATE cards-roommates, which answers WHEN (there was no day). This one answers WHAT IS ACTUALLY BETWEEN THEM, and the answer is not distance — it is care taken around something specific.\n\nThe finding: they are not strangers, they are careful — and careful looks identical from outside. Something stopped being said and the house got arranged around it.\n\n🔴 WHO THIS AD COLLECTS, from the pull (rm-roommates, 2026-08-20 — 66 concerns, 11 buyers). Every group here is IN the room and none of them is in the headline:\n\n  · SHE OFTEN CANNOT LEAVE. 'I feel stuck caring for my husband of 25 years who is 84... He has dementia. I have health issues from stress and he'll probably out live me. I can't afford a nursing home.' That is a caretaker marriage, and the read may never imply a door she does not have.\n  · SEXLESSNESS IS EXPLICIT AND EVERYWHERE — 'living together but sexless', 'we have not had sex for 7 years', 'no intimacy for 15 years'. Meta prohibits sexual practices as a personal attribute. The word she used is ROOMMATES; the read uses her word and never the literal one.\n  · AFFAIRS, ACTUAL AND CONTEMPLATED. 'I find myself looking elsewhere', 'I did make eye contact with a younger woman... we have each others contacts', 'I have this person who keeps popping up in my mind. But I'm engaged.' A read that warms up leaving is advice on a live marriage.\n  · ABUSE. 'He's rather mean mouthed and says nasty things to me', narcissistic abuse across several. No ruling on him, in either direction.\n  · IT IS NOT ALWAYS A WOMAN ASKING ABOUT A MAN — 'my wife', 'she sleeps in separate rooms', 'I'm with a woman I've been with for 20 years'. Do not gender the partner.\n\n🔴🔴 NEVER ADVISE ON A LIVE MARRIAGE. No leave, no stay, no work on it, no counselling, no date night, no 'it is normal after this long'. No verdict that it is over and none that it is fine. She is inside it tonight either way.\n\n🔴 NO HEALTH (dementia, medication and menopause are all in the pull), NO SEX, NO THIRD PARTY named as the cause, NO DATE.\n\n⚠ FRAME: NONE OF THE EIGHT EXISTING FRAMES FITS. A real partner exists, so it is not the no-man frames; but decode-him reads HIM as a tendency and bans none of what matters here — no advice on a marriage, no leave/stay, no sex, no health. This family needs its own frame before it is wired. Flagged at stage 0, not after.",
+  "decks": {
+    "return-mhf": {
+      "a": [
+        "You turned the Magician, dear. Look — he stands square on, and nothing about him is turned away.",
+        "You asked why you live like strangers. Your hand went to the card that keeps nothing back.",
+        "So you're not strangers, dear. You've both gone careful with each other.",
+        "And nothing's hidden on that table, dear. It's all sat out in front of him.",
+        "But there's one thing you've both stopped saying, dear.",
+        "That's why the house has gone so quiet, dear. The rest got moved round it.",
+        "Let me look closer at the thing that stopped being said…"
+      ],
+      "b": [
+        "You turned the Hanged Man, dear. Look — there's no wind in this picture at all.",
+        "You asked why you live like strangers. Your hand went to the card where nothing stirs.",
+        "So nothing's wrong between you, dear. Nothing's moving either.",
+        "And the room isn't empty, dear. It's gone still.",
+        "But you've read the stillness as the whole story, dear.",
+        "That's why you feel unknown, dear. Nothing real's been said in a long while.",
+        "Let me look closer at what settled the air like that…"
+      ],
+      "c": [
+        "You turned the Fool, dear. Look — his eyes are on the sky and the dog's eyes are on him.",
+        "You asked why you live like strangers. Your hand went to the one walking with company.",
+        "So you're still going the same way, dear. You're just not looking at each other.",
+        "And they've come a long way without a word, dear. Him and that dog.",
+        "But you've called that strangers, dear. It's closer to worn out.",
+        "That's why it hurts more than fighting would, dear. Nothing happened.",
+        "Let me look closer at what wore the talking out…"
+      ]
+    }
+  }
+}

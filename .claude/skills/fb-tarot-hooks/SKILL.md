@@ -11,7 +11,9 @@ already exist — almost always `return-mhf`, the face-down Magician / Hanged Ma
 every live ad points at. Param-driven (`/fb-tarot/c?hook=X&deck=Y`), no new routes.
 
 > 🔒 **The method is not in this file.** It lives in **`fb-tarot/docs/natural-tarot-cut.md`** —
-> the seven cuts, the four rules, the directional ban table, frame selection, guard design.
+> the seven cuts, the four rules that decide whether a read WORKS, §"How Evelyn sounds" (the
+> four voice rules: picture before meaning · grade 5 is not comprehensible · conversational ·
+> she is the subject), the directional ban table, frame selection, guard design.
 > Read it before drafting. It is also inlined into `fb-tarot/docs/copy-migration-checklist.md`
 > by the checklist generator, so the two can never disagree. Do not restate it here.
 

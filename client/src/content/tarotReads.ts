@@ -4832,7 +4832,7 @@ const RETURN_MHF: CardSetConfig = {
       b: [
         "You turned the Hanged Man, dear. Look — his beard hangs down toward the bottom of the card.",
         "You asked why your soulmate keeps slipping past. Your hand went to the card that stops half way.",
-        "So none of them got away from you, dear. They stopped before the end.\nAnd this whole card is a stop, dear. Nothing in it has finished.\nBut you've counted each one as a loss, dear. They were stops.\nThat's why it never feels done, dear. Stopped and gone are not the same.",
+        "So none of them got away from you, dear. They stopped before the end.\nAnd this whole card is a stop, dear. Nothing in it has finished.\nBut you've counted each one as a loss, dear. They were stops.\nThat's why it never feels done, dear. Not one of them actually left.",
         "Let me look closer at what you've been left holding each time…",
       ],
       c: [
@@ -5000,7 +5000,7 @@ const RETURN_MHF: CardSetConfig = {
       b: [
         "You turned the Hanged Man, dear. Look — his blue coat and red legs are the brightest things here.",
         "You asked why you gave your best years to the wrong man. Your hand went to the card that holds on.",
-        "So they were not thrown away, dear. Held is not the same as gone.\nAnd this card holds it all in place, dear. Nothing on it has been lost.\nBut you've written that stretch off already, dear. Crossed out, all of it.\nThat's why looking back stings so, dear. You cross it out again each time.",
+        "So you didn't throw them away, dear. They're still held on this card.\nAnd this card holds it all in place, dear. Nothing on it has been lost.\nBut you've written that stretch off already, dear. Crossed out, all of it.\nThat's why looking back stings so, dear. You cross it out again each time.",
         "Let me look closer at what makes you cross those years out…",
       ],
       c: [
@@ -5137,7 +5137,7 @@ const RETURN_MHF: CardSetConfig = {
       // bubbles 3-6 become beat 3, joined by newlines, and Version B serves them as
       // separate chat messages with a typing pause between each.
       a: [
-        "You turned the Magician, dear. Look — a cup and a coin on the table, and they are not the same thing.",
+        "You turned the Magician, dear. Look — a cup and a coin sat side by side on the table.",
         "You asked if this connection is your soulmate or something else. Your hand went to the card that names things.",
         "So this is not nothing, dear. Whatever you end up calling it, there is something there.\nAnd there are four names on that table, dear. All four are real things.\nBut you've made the name the first job, dear. Before anything else can happen.\nThat's why the question never closes, dear. A name was never going to settle this.",
         "Let me look closer at what the naming has been standing in for…",
@@ -5169,14 +5169,14 @@ const RETURN_MHF: CardSetConfig = {
       b: [
         "You turned the Hanged Man, dear. Look — nothing on this card is falling and nothing is climbing.",
         "You asked why this feels like your soulmate when nothing is happening. Your hand went to the card where nothing moves.",
-        "So a stop is not an absence, dear. This whole card is a held thing, and it is full.\nAnd there is nothing underneath him at all, dear. So nothing has anywhere to move.\nBut you've taken quiet as proof, dear. Proof of what you feared.\nThat's why you re-read old messages at night, dear. Hunting for something to hold up.",
+        "So a stop isn't an absence, dear. This whole card is a held thing, and it's full.\nAnd there's nothing underneath him at all, dear. So nothing has anywhere to move.\nBut you've taken quiet as proof, dear. Proof of what you feared.\nThat's why you re-read old messages at night, dear. Hunting for something to hold up.",
         "Let me look closer at what has been holding all of this still…",
       ],
       c: [
         "You turned the Fool, dear. Look — the little dog is up on its back legs and he has not turned round.",
         "You asked why this feels like your soulmate when nothing is happening. Your hand went to the card that starts before it shows.",
-        "So you felt it first, dear. On this card that always comes before there is anything to see.\nAnd nothing on that road has happened yet, dear. Not one thing.\nBut you've been grading yourself on what has shown up, dear.\nThat's why the word fool keeps coming up, dear. You had nothing to check it against.",
-        "Let me look closer at what is due to show and hasn't…",
+        "So you felt it first, dear. On this card that always comes before there's anything to see.\nAnd nothing on that road has happened yet, dear. Not one thing.\nBut you've been grading yourself on what has shown up, dear.\nThat's why the word fool keeps coming up, dear. You had nothing to check it against.",
+        "Let me look closer at what's due to show and hasn't…",
       ],
     },
     'cards-energy-away': {
@@ -5187,19 +5187,19 @@ const RETURN_MHF: CardSetConfig = {
       a: [
         "You turned the Magician, dear. Look — the wand in his raised hand is lit at the tip.",
         "You asked if your energy is keeping your soulmate away. Your hand went to the card where the power is the tool.",
-        "So no, dear. What you carry has never been what keeps people off.\nAnd on this card it is the thing that works, dear. Not the thing in the way.\nBut yours has been going out at full strength a long while, dear.\nThat's why you have nothing to point at, dear. And you are tired out all the same.",
+        "So no, dear. What you carry has never been what keeps people off.\nAnd on this card it's the thing that works, dear. Not the thing in the way.\nBut yours has been going out at full strength a long while, dear.\nThat's why there's nothing to point at, dear. And you're tired out all the same.",
         "Let me look closer at where all of it has been going…",
       ],
       b: [
         "You turned the Hanged Man, dear. Look — the light behind his head is bright and his face is quite calm.",
-        "You asked if your energy is keeping your soulmate away. Your hand went to the card that is still lit.",
+        "You asked if your energy is keeping your soulmate away. Your hand went to the card that's still lit.",
         "So no, dear. Nothing about you sends people off — look at that light.\nAnd that light is doing the work, dear. It never once stood in your way.\nBut you've been looking inward first, dear, and it was never in there.\nThat's why you're tired, dear. Something outside you has been drawing on it.",
         "Let me look closer at what has been drawing on that light…",
       ],
       c: [
         "You turned the Fool, dear. Look — the sun is high and it is full daylight on the whole card.",
         "You asked if your energy is keeping your soulmate away. Your hand went to the card in open sun.",
-        "So no, dear. There is no shadow on you here, and the light falls on all of it.\nAnd nothing on it is in shade, dear. Nothing hidden, nothing held back.\nBut you've started dimming yourself on purpose, dear. Just in case.\nThat's why meeting people costs you now, dear. You go in half turned down.",
+        "So no, dear. There's no shadow on you here, and the light falls on all of it.\nAnd nothing on it's in shade, dear. Nothing hidden, nothing held back.\nBut you've started dimming yourself on purpose, dear. Just in case.\nThat's why meeting people costs you now, dear. You go in half turned down.",
         "Let me look closer at what taught you to turn yourself down…",
       ],
     },
@@ -5217,7 +5217,7 @@ const RETURN_MHF: CardSetConfig = {
       b: [
         "You turned the Hanged Man, dear. Look — his eyes are open, and he is not asleep.",
         "You asked what your energy says about your soulmate. Your hand went to the card that waits awake.",
-        "So it says you are still here, dear. Waiting is not the same as leaving.\nAnd the eyes stay open, dear. Through all of it, on a card where nothing else moves.\nBut you've called that stubbornness, dear. Or worse.\nThat's why you play it down when people ask, dear. You'd rather they didn't see it.",
+        "So it says you're still here, dear. You never went anywhere.\nAnd the eyes stay open, dear. Through all of it, on a card where nothing else moves.\nBut you've called that stubbornness, dear. Or worse.\nThat's why you play it down when people ask, dear. You'd rather they didn't see it.",
         "Let me look closer at what made it something to hide…",
       ],
       c: [
@@ -5235,20 +5235,20 @@ const RETURN_MHF: CardSetConfig = {
       a: [
         "You turned the Magician, dear. Look — nothing on that table is put away.",
         "You asked if your soulmate is waiting for you to heal. Your hand went to the card where the work is already begun.",
-        "So no, dear. Nothing is standing still, waiting on you to be finished.\nAnd there is no test on that table, dear. Nothing on it has to be passed.\nBut you've run your life as though there is one, dear. Yourself last.\nThat's why later is where things go, dear. Something taught you to wait your turn.",
+        "So no, dear. Nothing is standing still, waiting on you to be finished.\nAnd there's no test on that table, dear. Nothing on it has to be passed.\nBut you've run your life as though there's one, dear. Yourself last.\nThat's why later is where things go, dear. Something taught you to wait your turn.",
         "Let me look closer at what put you last in your own queue…",
       ],
       b: [
         "You turned the Hanged Man, dear. Look — he hangs by one foot and his face has no strain in it.",
         "You asked if your soulmate is waiting for you to heal. Your hand went to the card that holds without struggling.",
-        "So no, dear. Nothing on this card is on hold, and nothing waits on you.\nAnd a thing can be held and whole at once, dear. This card is both.\nBut you've been told to be whole first, dear, and you believed it.\nThat's why you keep setting the bar further out, dear. It moves each time you near it.",
+        "So no, dear. Nothing on this card is on hold, and nothing waits on you.\nAnd this card is held and whole at the same time, dear.\nBut someone told you to be whole first, dear, and you believed it.\nThat's why you keep setting the bar further out, dear. It moves each time you near it.",
         "Let me look closer at what keeps moving that bar…",
       ],
       c: [
         "You turned the Fool, dear. Look — he steps off with his bundle still tied shut.",
         "You asked if your soulmate is waiting for you to heal. Your hand went to the card that goes as it is.",
-        "So no, dear. Not one thing here is holding back until you are ready.\nAnd the bundle is not unpacked, dear. It goes with him, tied as it is.\nBut you've been unpacking yours first, dear. Before you'd let yourself go anywhere.\nThat's why the going never comes, dear. There's always one more thing in the bag.",
-        "Let me look closer at what is still in that bundle…",
+        "So no, dear. Not one thing here is holding back until you're ready.\nAnd the bundle isn't unpacked, dear. It goes with him, tied as it is.\nBut you've been unpacking yours first, dear. Before you'd let yourself go anywhere.\nThat's why the going never comes, dear. There's always one more thing in the bag.",
+        "Let me look closer at what's still in that bundle…",
       ],
     },
     'cards-heal-first': {
@@ -5258,21 +5258,21 @@ const RETURN_MHF: CardSetConfig = {
       // separate chat messages with a typing pause between each.
       a: [
         "You turned the Magician, dear. Look — all four things are on the table at once, not one after another.",
-        "You asked if healing comes first, before your soulmate. Your hand went to the card where it is all out together.",
-        "So there is no before, dear. Nothing on that table is waiting its turn.\nAnd all four sit there at once, dear. None of them is first.\nBut you've been running yours in order, dear. This, then that, then love.\nThat's why love keeps sliding down the list, dear. It has been last for years.",
+        "You asked if healing comes first, before your soulmate. Your hand went to the card where it's all out together.",
+        "So there's no before, dear. Nothing on that table is waiting its turn.\nAnd all four sit there at once, dear. None of them is first.\nBut you've been running yours in order, dear. This, then that, then love.\nThat's why love keeps sliding down the list, dear. It has been last for years.",
         "Let me look closer at what put love at the end of that list…",
       ],
       b: [
         "You turned the Hanged Man, dear. Look — the wood he hangs from has green leaves still coming out of it.",
         "You asked if healing comes first, before your soulmate. Your hand went to the card where two things happen at once.",
-        "So it does not go in order, dear. On this card the mending and the hanging are the same moment.\nAnd the leaves come out of cut wood, dear. Straight out of the cut, not after it.\nBut you've been waiting for one to finish, dear, so the other can start.\nThat's why you feel behind, dear. You've been queueing for a door that is open.",
+        "So it doesn't go in order, dear. On this card the mending and the hanging are one moment.\nAnd the leaves come out of cut wood, dear. Straight out of the cut, not after it.\nBut you've been waiting for one to finish, dear, so the other can start.\nThat's why you feel behind, dear. You've been queueing for a door that's open.",
         "Let me look closer at what keeps you stood at that door…",
       ],
       c: [
         "You turned the Fool, dear. Look — his foot is already off the rock and the flower is still in his hand.",
         "You asked if healing comes first, before your soulmate. Your hand went to the card that goes anyway.",
         "So no, dear. Nothing on this card was finished before it started.\nAnd the step and the flower happen together, dear. Not one, then the other.\nBut you've set yourself a mark to reach first, dear.\nThat's why not yet has become your answer, dear. To yourself, mostly.",
-        "Let me look closer at what set that mark where it is…",
+        "Let me look closer at what set that mark where it's at…",
       ],
     },
   },
