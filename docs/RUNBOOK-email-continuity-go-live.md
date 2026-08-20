@@ -53,49 +53,20 @@ not.
 ## EVERY SQL STATEMENT, IN ONE LIST
 
 If you only want to know "what do I have to run on production", it is this — in
-this order. Each links to the step that explains it.
+this order, ready to paste. Each links to the step that explains it.
 
 | # | Where | What it does | Step |
 |---|-------|--------------|------|
-| 1 | production | Create `email_link_codes` + add the `pending_reply` columns | [Step 1](#step-1--add-the-tables-to-the-production-database) |
-| 2 | production | Verify: **15 rows** | [Step 1](#step-1--add-the-tables-to-the-production-database) |
-| 3 | production | Turn the Live Thread arm on — ONLY if you chose Option B | [Step 4](#step-4--decide-does-everyone-see-the-new-page) |
+| 1 | production | Confirm you are on the production database | [Step 1](#step-1--add-the-tables-to-the-production-database) |
+| 2 | production | Create `email_link_codes` + add the new columns | [Step 1](#step-1--add-the-tables-to-the-production-database) |
+| 3 | production | Verify: **15 rows** | [Step 1](#step-1--add-the-tables-to-the-production-database) |
+| 4 | production | Turn the Live Thread arm on — ONLY if you chose Option B | [Step 4](#step-4--decide-does-everyone-see-the-new-page) |
 
-**That is the whole list. There is no SQL for the email content itself.**
+**This is the only copy of these statements in the runbook.** Step 1 explains
+them and tells you what to check; the SQL itself lives here, once, so there is no
+second version to drift out of date.
 
-That surprises people, so here is why. The nine rows in `email_link_codes` —
-their opening lines and their Big Ideas — are NOT inserted by hand on
-production. They are written by the render pipeline in
-[Step 6](#step-6--build-the-emails-and-create-the-links), lifted straight out of
-the send drafts in `docs/aweber/evelyn-reframe-deck/sends/cycle-1/`. Minting a
-row by hand on production creates a destination that no email points at, which
-is worse than having no row at all.
-
-So when the CONTENT changes — a better opening line, a corrected Big Idea —
-**you edit the draft and re-run Step 6.** You do not write SQL. A re-run reuses
-each existing code and updates the row in place, so links already baked into a
-scheduled broadcast keep working.
-
-### Content changed on development? Nothing to carry across.
-
-Development rows were updated directly with SQL during build-out (2026-08-19:
-nine new opening lines that name each email's subject, plus the `big_idea` for
-each). **Do not copy those statements to production.** The same values are in
-the drafts, and Step 6 puts them on production the right way.
-
-The one thing that IS structural, and therefore IS in the list above, is the
-`big_idea` COLUMN — statement 1 creates it. The values that fill it come from
-each draft's `**Big Idea:**` line.
-
----
-
-## STEP 1 — Add the tables to the production database
-
-Open the **production** Supabase project.
-
-### 1a. Make sure you are on the right database
-
-Run this first:
+### 1. Confirm you are on production
 
 ```sql
 SELECT current_database(), current_user;
@@ -104,10 +75,9 @@ SELECT current_database(), current_user;
 Check with someone that this is **production**, not development. Everything below
 writes to whichever project you have open.
 
-### 1b. Run this
+### 2. Structure
 
-It only adds new things. It does not change or delete any existing data. It is
-safe to run twice.
+Only adds new things. Changes and deletes nothing. Safe to run twice.
 
 ```sql
 CREATE TABLE IF NOT EXISTS email_link_codes (
@@ -139,7 +109,7 @@ ALTER TABLE evelyn_lander_sessions ADD COLUMN IF NOT EXISTS pending_reply_violat
 ALTER TABLE evelyn_lander_sessions ADD COLUMN IF NOT EXISTS pending_reply_response text;
 ```
 
-### 1c. Check it worked
+### 3. Verify — you must get exactly 15 rows
 
 ```sql
 SELECT table_name, column_name
@@ -149,6 +119,79 @@ WHERE table_schema = 'public'
        OR (table_name = 'evelyn_lander_sessions' AND column_name LIKE 'pending_reply%'))
 ORDER BY table_name, column_name;
 ```
+
+11 rows for `email_link_codes` + 4 for `evelyn_lander_sessions`. Fewer than 15
+means statement 2 did not fully run — run it again. **Do not continue until you
+see 15.** [Step 1c](#step-1--add-the-tables-to-the-production-database) explains
+what each one is for.
+
+### 4. Only if Joel chose Option B — turn the arm on
+
+⚠️ Do NOT paste this one blind. Read
+[Step 4](#step-4--decide-does-everyone-see-the-new-page) first: it makes the new
+page live for **everyone**, and B3 must keep the option names in the order B1
+shows you.
+
+**That is the whole list. There is no SQL for the email content itself.**
+
+That surprises people, so here is why. The nine rows in `email_link_codes` —
+their opening lines and their Big Ideas — are NOT inserted by hand on
+production. They are written by the render pipeline in
+[Step 6](#step-6--build-the-emails-and-create-the-links), lifted straight out of
+the send drafts in `docs/aweber/evelyn-reframe-deck/sends/cycle-1/`. Minting a
+row by hand on production creates a destination that no email points at, which
+is worse than having no row at all.
+
+So when the CONTENT changes — a better opening line, a corrected Big Idea —
+**you edit the draft and re-run Step 6.** You do not write SQL. A re-run reuses
+each existing code and updates the row in place, so links already baked into a
+scheduled broadcast keep working.
+
+### Content changed on development? Nothing to carry across.
+
+Development rows were updated directly with SQL during build-out (2026-08-19:
+nine new opening lines that name each email's subject, plus the `big_idea` for
+each; 2026-08-20: the Devil letter's `card_image_url`). **Do not copy those
+statements to production.** The same values are in the drafts, and Step 6 puts
+them on production the right way.
+
+The things that ARE structural, and therefore ARE in the list above, are the
+`big_idea` and `card_image_url` COLUMNS — statement 2 creates both. What fills
+them comes from each draft's `**Big Idea:**` and `**Card Image:**` lines.
+
+---
+
+## STEP 1 — Add the tables to the production database
+
+Open the **production** Supabase project.
+
+### 1a. Make sure you are on the right database
+
+Run statement **1** from
+[EVERY SQL STATEMENT](#every-sql-statement-in-one-list) and check with someone
+that what comes back is **production**, not development. Everything below writes
+to whichever project you have open.
+
+### 1b. Run the structure statement
+
+Statement **2** from the list above. It only adds new things — it does not change
+or delete any existing data, and it is safe to run twice.
+
+What it creates, and why each part matters:
+
+- **`email_link_codes`** — one row per email send, holding the opening line the
+  lander continues from. No `/e/` link resolves without this table.
+- **`big_idea`** — the ONE thing each letter is about, so the chat stays on that
+  subject instead of wandering off it on the first reply.
+- **`card_image_url`** — the card a letter shows in the lander thread. Null for
+  most sends; only a letter built on a card has one.
+- **the `pending_reply*` columns** — where a reader's typed reply is parked
+  before they have an account, and where the answer they were shown is stored.
+  Without these, the reply they typed is lost at sign-up.
+
+### 1c. Check it worked
+
+Statement **3** from the list above.
 
 **You must get exactly 15 rows.** Count them.
 
@@ -176,9 +219,16 @@ The code is on the `development` branch. It is **not** on `Production` yet.
 Normal process for this project: open a pull request from `development` into
 `Production`, get it reviewed, merge it.
 
-As of 2026-08-18, `development` is **9 commits ahead** of `Production`. Those 9
+As of 2026-08-20, `development` is **19 commits ahead** of `Production`. Those 19
 include this feature **and** other unrelated work (fb-tarot changes). Whoever
 opens the PR should check with the team that all of it is meant to ship.
+
+Re-count before you open the PR — this number goes stale every time anything
+merges:
+
+```bash
+git fetch origin && git rev-list --count origin/Production..origin/development
+```
 
 ---
 
@@ -304,7 +354,11 @@ experience yourself without sending anything to anyone.
 
 ### D1. Do Step 1 on the DEVELOPMENT database
 
-Same SQL as Step 1, but on the development Supabase project. Check for 14 rows.
+Same SQL as Step 1, but on the development Supabase project. Check for 15 rows.
+
+**Already done, 2026-08-20.** Development has every column, including
+`card_image_url` with the Devil card set on `dev03` — so a dev walk-through needs
+no SQL at all right now.
 
 ### D2. Put nine test links in the development database
 
@@ -480,7 +534,7 @@ If Step 4 was not done yet, you will see the old quiz. That is expected.
 | # | Step | Done when |
 |---|---|---|
 | — | *(optional)* Tried on development first | Two dev links show two different openings |
-| 1 | Tables added to production database | The check query returns **13 rows** |
+| 1 | Tables added to production database | The check query returns **15 rows** |
 | 2 | Code merged to `Production` | PR merged |
 | 3 | Deploy confirmed | A made-up `/e/` link lands on `/personas` |
 | 4 | Turn-on decision | **Joel has chosen A or B** |
