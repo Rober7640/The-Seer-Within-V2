@@ -1194,6 +1194,27 @@ const TAROT_HOOK_CONTEXT: Record<string, string> = {
   'cards-energy-how-long': "She has concluded her energy has been working against her money and wants to know how far back it goes.",
   'cards-prayed-years': "She has prayed about money for years without the change she asked for, and is asking what is still in the way.",
   'cards-prayers-unanswered': "She has prayed about money for a long time without seeing an answer, and is asking how much longer that goes on.",
+  // Soulmate age-band, test A (2026-08-19).
+  'cards-slipping-past': 'Love has come close more than once and stopped short each time. She is asking why it keeps happening, and underneath that whether she is the common factor.',
+  'cards-choosing-wrong': "The ad asks why she keeps choosing wrong. In her own words she often did not choose at all — she was deceived, or she was hurt. Treat the premise as the ad's, not hers.",
+  'cards-found-me-yet': 'The ad flips the agency — it asks why HE has not found HER. Her own words never phrase it that way; she asks why she has not found love. Answer her fear, not the flip.',
+  'cards-keeps-waiting': "She is asking for a LENGTH, and the headline's phrasing implies someone is doing the waiting TO her. In the corpus 'how long' almost always means waiting on a specific named man.",
+  'cards-missed-chance': "She believes the event already happened and she failed to hold it. Many readers have a specific remembered man in mind — 'the one that got away' — who is frequently married or the man who left.",
+  'cards-after-marriage': 'A marriage has ended. The ad does not say how, and the corpus returns both divorce and bereavement, so the read must hold for a widow and for a woman who walked out.',
+  'cards-second-time': 'She is asking for a length and positioning herself as behind. How the first one ended is not stated and must not be presumed.',
+  'cards-best-years': 'She is counting time already spent. A large share of these readers are STILL IN the relationship — married, unable to leave — even though the headline is past tense.',
+  'cards-too-late-love': 'She is asking whether a deadline has passed. The corpus behind this headline is thick with illness and fertility, and neither may appear.',
+  'cards-longer-to-wait': "She asks for a length outright. At this age 'how much longer' often carries 'is there enough time left' underneath it, and a share of these readers are widowed.",
+  'cards-allowed-to-want': 'She is not asking for a forecast. She is asking whether wanting it is legitimate, and in her own words the permission was taken by other people — friends, adult children, a mother.',
+  // Soulmate keyword, test B (2026-08-20).
+  'cards-blocking-soulmate': "She has decided it is not nothing and wants it named. The answer she fears is 'nothing is blocking it, so the problem is you'.",
+  'cards-blocked-before': 'It stops before anyone actually arrives — the word is BEFORE. This is the door never opening, not people who came close and went.',
+  'cards-connection-soulmate': 'A real, specific man is in the picture and she wants the connection labelled. In this corpus he is frequently unavailable, married, or running a romance scam.',
+  'cards-connection-nothing': 'She has supplied both halves — a strong feeling and no evidence — and wants them reconciled. Both obvious answers are forbidden.',
+  'cards-energy-away': 'She is asking to be told whether she is the repellent. The affirmative is banned funnel-wide.',
+  'cards-energy-soulmate': 'The word is SAYS. She wants her energy READ, not judged — there is no accusation here to refuse, so refusing one wastes the reading.',
+  'cards-waiting-to-heal': "She believes she is the hold-up. 'Yes' would tell her love is withheld pending her repair, by a person, indefinitely.",
+  'cards-heal-first': 'She is asking Evelyn to confirm a precondition. Confirming it is the single most common thing she has already been told for free.',
 }
 
 // The TENDENCY the reply may land, per hook. Reading HIM ⇒ NEVER a verdict:
@@ -1576,6 +1597,31 @@ const TAROT_HOOK_TENDENCY: Record<string, string> = {
   'cards-energy-how-long': "that her energy has not been working against her at all — refuse the premise gently — and that whatever settled on this settled long ago and was never named. NEVER give a length of time and never date it to an event in her life",
   'cards-prayed-years': "that what is in the way is an ordinary thing in her own life, findable and nameable. NEVER say whether her prayers were heard or answered, never that she is being tested, taught, punished or refused, never speak for God, and never set the cards above or against her faith",
   'cards-prayers-unanswered': "that a long quiet is not a refusal, and that nothing here waits on permission. NEVER call her prayers unanswered and NEVER call them answered, never give a length of time, never speak for God, and never place Evelyn between her and what she prays to",
+  // Soulmate age-band, test A (2026-08-19).
+  'cards-slipping-past': 'that she was never the reason, and that it stops at the same point every time — a position, not a verdict on her. NEVER give a length of time or a date, NEVER contact or speak for anyone who has died (this ad collects widows and widowers), NEVER hand her a fault, a pattern in herself, or a tactic',
+  'cards-choosing-wrong': 'that she was not choosing from a full field, she was choosing from who came near — and what she was shown first was not what was there. NEVER accept that she chose badly, NEVER blame her judgement, NEVER rule on any real man in either direction, NEVER give a date',
+  'cards-found-me-yet': 'that nothing she did stopped this and nothing about her is hidden. NEVER say she is not ready, NEVER hand her a tactic (going out more, apps, working on herself), NEVER give a length of time, NEVER name a place, NEVER promise an arrival on a clock',
+  'cards-keeps-waiting': "that the tiredness is not from the length of the wait but from holding it open on her own. DECLINE THE LENGTH OUT LOUD — she must hear the refusal, not a change of subject. NEVER give any span, pace, season or 'soon', NEVER answer as though a named man exists, NEVER promise an arrival",
+  'cards-missed-chance': 'that a chance is not one event with a door on it, so there was never a moment to fail. NEVER say she missed him, in any softened form. NEVER revive or point at a remembered man, NEVER mention children or fertility, NEVER give a date',
+  'cards-after-marriage': "that the count she is doing is her own, and nothing allots one. NEVER presume how the marriage ended — no divorce, no 'when he left', no 'since he passed', no 'your ex'. NEVER contact or speak for the dead, NEVER rule on the man, NEVER blame her, NEVER give a date",
+  'cards-second-time': 'that she is not starting over — she is carrying what the first one taught her, and that is what makes it feel heavy. DECLINE THE LENGTH OUT LOUD. NEVER give a span or a pace, NEVER say the second time is quicker, NEVER presume how the first one ended',
+  'cards-best-years': 'that the years were not paid out to him, and that what hurts is the count she keeps running rather than the man. NEVER say it is over or that she is free, NEVER tell her to leave, NEVER make the years a lesson or a reason, NEVER blame her for staying, NEVER speak for anyone who has died',
+  'cards-too-late-love': 'that there is no door and no closing time, and she has been counting from the wrong end. NEVER agree it is too late and NEVER promise a dated arrival, NEVER mention health, a body, or children, NEVER name her age or any number',
+  'cards-longer-to-wait': "that one small thing has been holding all of it, and small things can be moved. DECLINE THE NUMBER OUT LOUD. NEVER give a span, a pace or 'soon', NEVER touch time running out, NEVER mention health or age, NEVER contact or speak for the dead",
+  'cards-allowed-to-want': 'that nobody hands this permission out, so nobody could take it back, and the wanting has picked up an apology on the way. NEVER predict an arrival — she did not ask. NEVER mention her looks, her body or her age, NEVER gender the soulmate, NEVER name who withheld it, NEVER contact or speak for the dead, NEVER tell her she deserves it',
+  // Soulmate keyword, test B (2026-08-20). The two connection hooks are absent from
+  // SOULMATE_KEYWORD_TAROT_HOOKS on purpose and run under decode-him, so their per-hook
+  // tendency carries the bans the shared frame does not — in particular the ban on treating
+  // HER FEELING as the proof, which the decode-him guard's "affirm that HER intuition is a
+  // real instrument" clause otherwise pulls straight against.
+  'cards-blocking-soulmate': 'that yes, something is in the way, and it was never her — a block has a position, and a thing with a position can be found and moved. NEVER locate the block in her (walls, guard, standards, not being ready, not loving herself, her energy), NEVER name a real person as the block, NEVER give a date or a place, NEVER hand her a tactic',
+  'cards-blocked-before': 'that it stops at the same point every time, and a repeat has a position — that is what makes it findable rather than a fact about her. NEVER call it a pattern in her, NEVER say she pushes people away or sabotages it, NEVER give a date, NEVER hand her a tactic',
+  'cards-connection-soulmate': 'that what it is called is the smaller question, and she has made the label the thing she must settle first. NEVER make her FEELING the proof — the card is the warrant. NEVER rule on him in either direction, NEVER promise movement, NEVER give a date or a place, NEVER tell her what to do about him',
+  'cards-connection-nothing': "that the feeling and the movement run on two different clocks, and she has been using the silence to grade her own judgement. NEVER say the feeling proves it and NEVER say nothing is there. NEVER certify her ('you are not imagining it', 'you are not crazy') — describe what she has lived instead. NEVER rule on him, NEVER give a date",
+  'cards-energy-away': 'that her energy is the TOOL and never the barrier — it has been going out at full strength and something has been taking it. NEVER agree her energy keeps anyone away, NEVER score it (low, blocked, closed, misaligned), NEVER hand her a practice (raise your vibration, protect your energy, shields, cord-cutting), NEVER give a date',
+  'cards-energy-soulmate': 'that it says she is still reaching, that it was never withdrawn, and that she has read her own tiredness as proof she gave up. NEVER grade or score her energy, NEVER use vibration or chakra language, NEVER call her closed off, NEVER give a date or promise an arrival',
+  'cards-waiting-to-heal': 'that nothing is standing still pending her repair, and that she has been cast as the delay. NEVER say anyone is waiting on her to heal. NEVER rule on whether she is healed in either direction. NEVER use therapy or diagnosis language (trauma, attachment, inner child, nervous system, shadow work, do the work), NEVER mention health, NEVER give a date',
+  'cards-heal-first': "that there is no before — it does not run in order — and she has been holding a queue of her own making, with love filed last. NEVER say she must heal first and NEVER rule on her healing at all. NEVER hand her advice of any kind, including the kind ones ('just live your life', 'it comes when you stop looking'). NEVER use therapy language, NEVER give a date",
 }
 const DEFAULT_TAROT_TENDENCY =
   'that her intuition is a real instrument and the clarity she came for is close — read the card as a tendency, never a verdict on him'
@@ -1731,6 +1777,49 @@ function tarotVocab(deck: string, card: string): { mark: string; reading: string
 // Mirrors the four MONEY_*_HOOKS arrays in client/src/content/tarotReads.ts. Kept as one Set
 // here because every money hook takes the same frame — what differs between the four angles
 // is the reporting label and the per-hook tendency, not the guard.
+// Soulmate age-band hooks (test A, 2026-08-19) run under a SEVENTH frame, and the reason is
+// a gap none of the six above closes. Every frame on this funnel bans a DATE. Four of these
+// headlines ask HOW LONG outright, and "not much longer", "a few more months", "soon" are
+// LENGTHS — a length is not a date, so it walks straight through every date ban already
+// written. The duration ban had to be its own clause.
+//
+// 🔴 Tested BEFORE soulmate-where, which is otherwise the closest fit and would win on shape.
+// Its guard is a superset of soulmate-where's: same place, tactic and her-fault bans, plus the
+// duration, plus age and health, which the 65+ rung needs and no other family does.
+const SOULMATE_AGEBAND_TAROT_HOOKS = new Set([
+  'cards-slipping-past',
+  'cards-choosing-wrong',
+  'cards-found-me-yet',
+  'cards-keeps-waiting',
+  'cards-missed-chance',
+  'cards-after-marriage',
+  'cards-second-time',
+  'cards-best-years',
+  'cards-too-late-love',
+  'cards-longer-to-wait',
+  'cards-allowed-to-want',
+])
+
+// Soulmate keyword hooks (test B, 2026-08-20) run under an EIGHTH frame. Six of the eight,
+// not all: the two CONNECTION hooks are deliberately absent because a real, specific man
+// exists in "is this connection my soulmate" — they fall through to decode-him, which is
+// correct for them and wrong for these six.
+//
+// 🔴 What makes this frame necessary rather than just soulmate-where again: these headlines
+// ASK HER TO BE BLAMED. "Is my energy keeping my soulmate away?", "Do I need to heal before
+// my soulmate arrives?" The affirmative is banned funnel-wide, but a bare denial restates
+// cards-not-found-yet — so the clause below tells the model what to do INSTEAD of blaming
+// her, per fb-tarot/docs/natural-tarot-cut.md: prohibit the thing AND name where the
+// instinct should go. The keyword is real and it is hers; something else has been taking it.
+const SOULMATE_KEYWORD_TAROT_HOOKS = new Set([
+  'cards-blocking-soulmate',
+  'cards-blocked-before',
+  'cards-energy-away',
+  'cards-energy-soulmate',
+  'cards-waiting-to-heal',
+  'cards-heal-first',
+])
+
 const MONEY_TAROT_HOOKS = new Set([
   'cards-blocked-retiring',
   'cards-nest-egg',
@@ -1783,6 +1872,10 @@ export function buildTarotReflectPrompt(userData: UserData, deck: string, hook: 
   // assumes a man or a romantic future — so a money hook that fell through to any of them
   // would be guarded by rules written for a different question entirely.
   const money = MONEY_TAROT_HOOKS.has(hook)
+  // 🔴 Both soulmate-batch frames are tested BEFORE soulmate-where and before self-frame,
+  // for the reason given at each Set: they are supersets, and the stricter frame must win.
+  const ageBand = SOULMATE_AGEBAND_TAROT_HOOKS.has(hook)
+  const keyword = SOULMATE_KEYWORD_TAROT_HOOKS.has(hook)
   // Five frames. Self-frame hooks (e.g. "will I love again?") read HER future and affirm
   // the hopeful yes; decode-him hooks read HIM strictly as a tendency, never a verdict;
   // after-loss hooks read her future while a real person she has lost stands in the
@@ -1798,6 +1891,10 @@ export function buildTarotReflectPrompt(userData: UserData, deck: string, hook: 
   // making on its own rather than riding along with a shipping family.
   const frameLine = money
     ? `This reading is about HER MONEY. No particular person appears in it, nothing may be said about what she should DO with money, and the answer she needs is that the block was never her: land ${tendency}.`
+    : ageBand
+    ? `This reading is about HER own future. No particular person exists in it yet, and she is asking WHEN or WHETHER, never about a man she has met: land ${tendency}.`
+    : keyword
+    ? `This reading is about HER OWN LIFE. No particular person appears in it, the ad has already suggested to her that she is the problem, and the answer she needs is that she never was: land ${tendency}.`
     : afterLoss
     ? `This reading is about HER own future, but a real person she loved has been lost and may have died: land ${tendency}.`
     : loneliness
@@ -1809,6 +1906,10 @@ export function buildTarotReflectPrompt(userData: UserData, deck: string, hook: 
           : `This reading is about HIM, but the affirmation is about HER: land ${tendency}.`
   const guardLine = money
     ? MONEY_GUARD + (MONEY_PRAYER_TAROT_HOOKS.has(hook) ? MONEY_PRAYER_GUARD : '')
+    : ageBand
+    ? `NEVER GIVE A LENGTH OF TIME. Not a date and not a duration — no "soon", no "not much longer", no "any day now", no season, no number of days, weeks, months or years, forward or back, and nothing that positions her on a timeline ("almost there", "halfway"). If she asks how long, DECLINE IT OUT LOUD and then give her something real instead; a quiet change of subject reads as evasion and she feels conned. Never place a person and never describe one. Never hand her a tactic — no going out more, no apps, no moving, no working on herself first. Never explain the not-yet as a fault in her (blocks, walls, standards, not being ready, not loving herself enough). Never name her age or any number about her, never mention her health, her body or children, and never presume how a marriage ended. Never contact or speak for anyone who has died. Affirm the hopeful yes warmly about HER, through the card's energy.`
+    : keyword
+    ? `THE THING SHE NAMED IS HERS, AND IT IS NOT THE FAULT. Her energy, her healing, her readiness — none of them is what keeps love away, and you may never agree that it is, however gently. But do NOT simply deny it and stop: say what the thing actually IS on this card (the tool, the light, the thing still growing) and then name what has been drawing on it or standing across it. Never score or grade her (low, blocked, closed off, misaligned, not ready, not healed) and never rule on her healing in either direction. Never use therapy or diagnosis language — no trauma, attachment, inner child, nervous system, shadow work, "do the work". Never hand her a practice or a tactic, including the kind-sounding ones ("just live your life", "it comes when you stop looking", "raise your energy", "protect your energy"). Never name a real person as the block. Never give a date or a length of time, and never place a person. Affirm the hopeful yes about HER, through the card's energy.`
     : afterLoss
     ? `NEVER SPEAK FOR THE PERSON SHE LOST. Never say where he is, that he is at peace, that he is watching over her, that he sent her here, or what he would want for her — that is contact with the dead and it is forbidden outright, however kindly it is meant. Never promise anyone is coming, never describe or locate a future partner, and never give a date or timeframe. Never rule on whether she is ready to love again — not in either direction — and never tell her to move on, let go, or that it is time. Never rank a future love against the one she lost. Affirm HER capacity and her right to her own timing through the card's energy.`
     : loneliness

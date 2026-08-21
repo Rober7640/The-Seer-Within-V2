@@ -144,6 +144,32 @@ export const V1_BUMP_PRODUCT_KEY = 'double_reading';
 export const V1_BUMP_PRODUCT_KEY_MONEY_LANDER = 'money_lander_addon';
 
 /**
+ * `metadata.bumpProduct` for a bump bought on one of the nineteen /fb-tarot
+ * SOULMATE landers (Lewis, 2026-08-21).
+ *
+ * The money key's reasoning, applied a second time — read
+ * V1_BUMP_PRODUCT_KEY_MONEY_LANDER above for the full version. In short:
+ *
+ * 🔴 DISJOINT FROM BOTH EXISTING KEYS. It must fail an EQUALS on `double_reading`
+ * (Mike confirmed 2026-08-20 that is what his filter is) AND a CONTAINS, so it
+ * cannot have `double_reading` anywhere inside it. It must also be distinguishable
+ * from the money key, because the whole point of a third value is that the two
+ * lander families can be routed apart later without another deploy. Never rename
+ * this to anything containing `double_reading`; the isolation tests fail if you do.
+ *
+ * 🔴 THIS NAMES THE LANDER, NOT THE TOPIC. The bump sold on a soulmate lander is a
+ * MONEY reading — BUMP_PAIRINGS maps love -> money — so a love-flavoured product
+ * name would misdescribe the thing sold, exactly as `..._money` would have on the
+ * money landers.
+ *
+ * WARNING: same delivery gap as the money landers — soulmate-lander bump buyers are
+ * charged V1_BUMP_CENTS and receive no second reading until fulfilment for them
+ * exists. `product` stays `energy_clearing_ritual`, so her MAIN reading is unaffected.
+ */
+export const V1_BUMP_PRODUCT_KEY_SOULMATE_LANDER = 'soulmate_lander_addon';
+
+
+/**
  * INTERNAL marker appended to the PaymentIntent description on a bump order, so
  * the Stripe Dashboard's Description column shows at a glance that the payment
  * covers two products (Lewis, 2026-08-04). Without it a bump order is

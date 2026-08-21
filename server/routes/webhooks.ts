@@ -23,7 +23,7 @@ import {
   addBumpPaidSubscriber,
 } from '../lib/aweber';
 import { funnelDefForParam } from '@shared/funnelConfig';
-import { bumpPaidListWanted } from '@shared/moneyLander';
+import { bumpPaidListWanted } from '@shared/landerBumpRouting';
 import { recordSoulmatePurchase, getSoulmateOrderByEmail } from '../lib/soulmateOrders';
 
 const router = Router();

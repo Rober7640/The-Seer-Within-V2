@@ -12,9 +12,8 @@ import {
   isTarotMoneyLead,
   moneyLanderListId,
   moneyLanderSplitLive,
-  bumpProductKeyFor,
-  bumpPaidListWanted,
 } from '@shared/moneyLander';
+import { bumpProductKeyFor, bumpPaidListWanted } from '@shared/landerBumpRouting';
 import { V1_BUMP_PRODUCT_KEY, V1_BUMP_PRODUCT_KEY_MONEY_LANDER } from '@shared/orderBump';
 import { FUNNELS } from '@shared/funnelConfig';
 

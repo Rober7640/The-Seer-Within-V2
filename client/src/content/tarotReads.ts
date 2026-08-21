@@ -1,3 +1,11 @@
+import {
+  SOULMATE_AGEBAND_LANDER_HOOKS,
+  SOULMATE_KEYWORD_BLOCKED_LANDER_HOOKS,
+  SOULMATE_KEYWORD_CONNECTION_LANDER_HOOKS,
+  SOULMATE_KEYWORD_ENERGY_LANDER_HOOKS,
+  SOULMATE_KEYWORD_HEALING_LANDER_HOOKS,
+} from '@shared/soulmateLanderHooks'
+
 // Copy + lookup tables for the /fb-tarot "decode-him card" quiz-bridge funnel.
 // Single source of truth shared by TarotBridge (the lander) and useConversation
 // (the chat handoff). Parallel to palmReads.ts but a SEPARATE system so the palm
@@ -690,6 +698,54 @@ export type TarotHook =
   | 'cards-energy-how-long' // How long has my energy been working against my money?
   | 'cards-prayed-years' // I've prayed about money for years. What's still blocking it?
   | 'cards-prayers-unanswered' // How long will my prayers for money keep going unanswered?
+  // ── Soulmate age-band, test A (2026-08-19) ───────────────────────────────────────────
+  // Eleven landers for docs/fb-ad-test-queue.md test A. Every destination in that table was
+  // an EXISTING lander asking a different question — HEADLINES is printed on the page, so
+  // pointing a new ad at an old hook puts one question in the ad and another in front of
+  // her. These carry the ad's own question.
+  //
+  // 🔴 They need a frame nothing else on the funnel provides. Every existing frame bans a
+  // DATE; four of these ask HOW LONG, and "not much longer" is a LENGTH, which walks
+  // straight through a date ban. See SOULMATE_AGEBAND_TAROT_HOOKS in server/lib/prompts.ts.
+  //
+  // ⚠ Two names here are deliberate near-misses. 'cards-too-late-love' is NOT 'cards-too-late'
+  // and 'cards-longer-to-wait' is NOT 'cards-how-much-longer' — both of those are MONEY
+  // landers above, and wiring a love hook under either would serve a woman asking about love
+  // a reading about her pension. 'cards-missed-chance' is likewise NOT 'cards-already-missed',
+  // which sits one word from the live 'cards-met-already'.
+  | 'cards-slipping-past' // Why does my soulmate keep slipping past me?
+  | 'cards-choosing-wrong' // What keeps me choosing everyone but my soulmate?
+  | 'cards-found-me-yet' // Why hasn't my soulmate found me yet?
+  | 'cards-keeps-waiting' // How long does a soulmate keep you waiting?
+  | 'cards-missed-chance' // Is my soulmate still coming, or have I already missed him?
+  | 'cards-after-marriage' // Is there a soulmate for me after the marriage ended?
+  | 'cards-second-time' // How long does it take to find a soulmate the second time?
+  | 'cards-best-years' // Why did I give my best years to someone who wasn't my soulmate?
+  | 'cards-too-late-love' // Is it too late to meet my soulmate?
+  | 'cards-longer-to-wait' // How much longer do I have to wait for my soulmate?
+  | 'cards-allowed-to-want' // Am I still allowed to want a soulmate?
+  // ── Soulmate keyword, test B (2026-08-20) ────────────────────────────────────────────
+  // Eight landers for test B — the contrast is identity/outcome (soulmate) against practice
+  // (blocked, energy, healing). Five are the MONEY landers above with one noun swapped, so
+  // the reads had to be pushed apart by hand; check-collisions caught 25 shared six-word runs
+  // on the first pass.
+  //
+  // 🔴 SIX OF THESE HEADLINES ASK A HER-FAULT QUESTION whose "yes" is banned funnel-wide.
+  // The answer is no — but a bare "it wasn't you" restates cards-not-found-yet, so they use
+  // the money family's move instead: turn the keyword from an accusation into an ASSET, then
+  // name what has been taking it. See SOULMATE_KEYWORD_TAROT_HOOKS.
+  //
+  // 🔴 THE TWO CONNECTION HOOKS ARE DECODE-HIM AND THE OTHER SIX ARE NOT. "This connection"
+  // means a real, specific man exists. One test, two frames — deliberate, and the reason
+  // they are absent from SOULMATE_KEYWORD_TAROT_HOOKS.
+  | 'cards-blocking-soulmate' // Is something blocking me from meeting my soulmate?
+  | 'cards-blocked-before' // Why do I keep getting blocked before my soulmate arrives?
+  | 'cards-connection-soulmate' // Is this connection my soulmate, or something else?
+  | 'cards-connection-nothing' // Why does this connection feel like my soulmate when nothing is happening?
+  | 'cards-energy-away' // Is my energy keeping my soulmate away?
+  | 'cards-energy-soulmate' // What does my energy say about my soulmate?
+  | 'cards-waiting-to-heal' // Is my soulmate waiting for me to heal?
+  | 'cards-heal-first' // Do I need to heal before my soulmate arrives?
 export type TarotCard = 'a' | 'b' | 'c' // the option the visitor tapped (A/B/C)
 export type TarotOption = TarotCard
 export type TarotVersion = 'a' | 'b' | 'c'
@@ -1247,6 +1303,23 @@ export type TarotAngle =
   | 'money-working'
   | 'money-energy'
   | 'money-prayer'
+  // The five soulmate-lander angles (2026-08-21), from docs/fb-ad-test-queue.md tests
+  // A and B. ONE label for the whole age-band family, because the band lives in the ad
+  // set and never in the copy — per-band numbers come from the ad, and giving each band
+  // its own angle would put the same eleven landers in four buckets that PostHog cannot
+  // recombine. Then one label PER KEYWORD, because there the keyword IS the variable
+  // under test and it is carried by the hook — the same shape as the four money angles.
+  //
+  // 🔴 NOT folded into 'soulmate-where', 'soulmate-after-loss' or 'soulmate-label',
+  // which share the word and nothing else. Those ask where he is, whether there is one
+  // after a death, and whether a specific man deserves the label. These ask whether she
+  // has run out of time, and what is blocking her — and the keyword four exist precisely
+  // to be compared against each other, which pooling would destroy.
+  | 'soulmate-ageband'
+  | 'soulmate-blocked'
+  | 'soulmate-connection'
+  | 'soulmate-energy'
+  | 'soulmate-healing'
 
 export function angleForHook(hook: TarotHook): TarotAngle {
   if (SELF_FRAME_HOOKS.includes(hook)) return 'self-frame'
@@ -1276,8 +1349,40 @@ export function angleForHook(hook: TarotHook): TarotAngle {
   if (MONEY_WORKING_HOOKS.includes(hook)) return 'money-working'
   if (MONEY_ENERGY_HOOKS.includes(hook)) return 'money-energy'
   if (MONEY_PRAYER_HOOKS.includes(hook)) return 'money-prayer'
+  // 🔴 THESE FIVE WERE MISSING when the nineteen soulmate landers were written: the
+  // rosters below were declared and never consulted, so every one of them fell through
+  // to 'decode-him' and reported as a decode-him lander in `tarot_bridge_view`,
+  // `tarot_card_select` and the version-test exposure. Silent — the pages rendered
+  // correctly and only the attribution was wrong, which is the kind of thing that is
+  // discovered a month later when the numbers refuse to add up.
+  if (SOULMATE_AGEBAND_HOOKS.includes(hook)) return 'soulmate-ageband'
+  if (KEYWORD_BLOCKED_HOOKS.includes(hook)) return 'soulmate-blocked'
+  if (KEYWORD_CONNECTION_HOOKS.includes(hook)) return 'soulmate-connection'
+  if (KEYWORD_ENERGY_HOOKS.includes(hook)) return 'soulmate-energy'
+  if (KEYWORD_HEALING_HOOKS.includes(hook)) return 'soulmate-healing'
   return 'decode-him'
 }
+
+// The five soulmate-lander rosters. The slugs themselves live in
+// shared/soulmateLanderHooks.ts, NOT here, because the server needs the identical
+// nineteen to route their free-list and bumpProduct (shared/soulmateLander.ts) and two
+// hand-maintained copies of the same roster is the drift this codebase avoids. These
+// re-exports keep every existing reader — angleForHook above, the copy guards — working
+// off the registry name it already used.
+//
+// The `as TarotHook[]` cast is what the shared file cannot do for itself: TarotHook is
+// declared here and shared/ must not import client content. It is not a hole — a test
+// asserts all nineteen appear in TAROT_HOOKS, which is the same guarantee the union
+// type gives, checked at test time instead of compile time.
+//
+// Age-band is ONE angle, not four: the band lives in the ad set and never in the copy,
+// so per-band reporting comes from the ad, not from the hook. Keyword is one angle each,
+// because there the keyword IS the variable under test.
+export const SOULMATE_AGEBAND_HOOKS = SOULMATE_AGEBAND_LANDER_HOOKS as unknown as TarotHook[]
+export const KEYWORD_BLOCKED_HOOKS = SOULMATE_KEYWORD_BLOCKED_LANDER_HOOKS as unknown as TarotHook[]
+export const KEYWORD_CONNECTION_HOOKS = SOULMATE_KEYWORD_CONNECTION_LANDER_HOOKS as unknown as TarotHook[]
+export const KEYWORD_ENERGY_HOOKS = SOULMATE_KEYWORD_ENERGY_LANDER_HOOKS as unknown as TarotHook[]
+export const KEYWORD_HEALING_HOOKS = SOULMATE_KEYWORD_HEALING_LANDER_HOOKS as unknown as TarotHook[]
 
 export const TAROT_HOOKS: TarotHook[] = [
   'cards-honest',
@@ -1365,6 +1470,25 @@ export const TAROT_HOOKS: TarotHook[] = [
   'cards-energy-how-long',
   'cards-prayed-years',
   'cards-prayers-unanswered',
+  'cards-slipping-past',
+  'cards-choosing-wrong',
+  'cards-found-me-yet',
+  'cards-keeps-waiting',
+  'cards-missed-chance',
+  'cards-after-marriage',
+  'cards-second-time',
+  'cards-best-years',
+  'cards-too-late-love',
+  'cards-longer-to-wait',
+  'cards-allowed-to-want',
+  'cards-blocking-soulmate',
+  'cards-blocked-before',
+  'cards-connection-soulmate',
+  'cards-connection-nothing',
+  'cards-energy-away',
+  'cards-energy-soulmate',
+  'cards-waiting-to-heal',
+  'cards-heal-first',
 ]
 
 // Shown when /fb-tarot is hit without a recognized ?hook= / ?deck= (bare visit).
@@ -1526,6 +1650,27 @@ export const HEADLINES: Record<TarotHook, string> = {
   'cards-energy-how-long': "How long has my energy been working against my money?",
   'cards-prayed-years': "I've prayed about money for years. What's still blocking it?",
   'cards-prayers-unanswered': "How long will my prayers for money keep going unanswered?",
+  // Soulmate age-band (2026-08-19). Verbatim from docs/fb-ad-test-queue.md test A.
+  'cards-slipping-past': 'Why does my soulmate keep slipping past me?',
+  'cards-choosing-wrong': 'What keeps me choosing everyone but my soulmate?',
+  'cards-found-me-yet': "Why hasn't my soulmate found me yet?",
+  'cards-keeps-waiting': 'How long does a soulmate keep you waiting?',
+  'cards-missed-chance': 'Is my soulmate still coming, or have I already missed him?',
+  'cards-after-marriage': 'Is there a soulmate for me after the marriage ended?',
+  'cards-second-time': 'How long does it take to find a soulmate the second time?',
+  'cards-best-years': "Why did I give my best years to someone who wasn't my soulmate?",
+  'cards-too-late-love': 'Is it too late to meet my soulmate?',
+  'cards-longer-to-wait': 'How much longer do I have to wait for my soulmate?',
+  'cards-allowed-to-want': 'Am I still allowed to want a soulmate?',
+  // Soulmate keyword (2026-08-20). Verbatim from test B.
+  'cards-blocking-soulmate': 'Is something blocking me from meeting my soulmate?',
+  'cards-blocked-before': 'Why do I keep getting blocked before my soulmate arrives?',
+  'cards-connection-soulmate': 'Is this connection my soulmate, or something else?',
+  'cards-connection-nothing': 'Why does this connection feel like my soulmate when nothing is happening?',
+  'cards-energy-away': 'Is my energy keeping my soulmate away?',
+  'cards-energy-soulmate': 'What does my energy say about my soulmate?',
+  'cards-waiting-to-heal': 'Is my soulmate waiting for me to heal?',
+  'cards-heal-first': 'Do I need to heal before my soulmate arrives?',
 }
 
 // Version C opener question, per hook. C opens with the card line + this, then
@@ -1802,6 +1947,30 @@ const TAROT_QUESTION: Record<TarotHook, string> = {
   'cards-energy-how-long': "Before I look closer, tell me… when did you first feel you were working against yourself?",
   'cards-prayed-years': "Before I look closer, tell me… what have you been asking for, in all those years?",
   'cards-prayers-unanswered': "Before I look closer, tell me… what would it look like, if it were answered tomorrow?",
+  // Soulmate age-band (2026-08-19). ⚠ None of these asks her age, and none asks HOW LONG she
+  // has waited — the family's defining ban is a duration, and an opener that invites her to
+  // supply one hands the model the number it must not repeat.
+  'cards-slipping-past': 'Before I look closer, tell me… when it starts to go quiet, what is the first thing you notice?',
+  'cards-choosing-wrong': 'Before I look closer, tell me… what did the last one show you at the start that turned out not to be true?',
+  'cards-found-me-yet': 'Before I look closer, tell me… what reason have you settled on for why it has not happened?',
+  'cards-keeps-waiting': 'Before I look closer, tell me… what does the waiting actually take out of you?',
+  'cards-missed-chance': 'Before I look closer, tell me… which moment do you keep going back to?',
+  'cards-after-marriage': 'Before I look closer, tell me… what have you told yourself about starting again?',
+  'cards-second-time': 'Before I look closer, tell me… what do you carry now that you did not carry the first time?',
+  'cards-best-years': 'Before I look closer, tell me… when you count those years up, what is the part that stings?',
+  'cards-too-late-love': 'Before I look closer, tell me… when did late first start to feel like the right word?',
+  'cards-longer-to-wait': 'Before I look closer, tell me… what would it change for you, to be told a number?',
+  'cards-allowed-to-want': 'Before I look closer, tell me… what do you add on the end when you say it out loud?',
+  // Soulmate keyword (2026-08-20). ⚠ The healing and energy openers ask what she was TOLD or
+  // what it COSTS, never what is wrong with her — the headline already put that on the table.
+  'cards-blocking-soulmate': 'Before I look closer, tell me… what have you already been told is in the way?',
+  'cards-blocked-before': 'Before I look closer, tell me… how far does it usually get before it stops?',
+  'cards-connection-soulmate': 'Before I look closer, tell me… what made you start looking for a name for it?',
+  'cards-connection-nothing': 'Before I look closer, tell me… what do you tell yourself on the days nothing comes?',
+  'cards-energy-away': 'Before I look closer, tell me… what takes the most out of you in a week?',
+  'cards-energy-soulmate': 'Before I look closer, tell me… when did you last feel like yourself about this?',
+  'cards-waiting-to-heal': 'Before I look closer, tell me… what were you told you had to do first?',
+  'cards-heal-first': 'Before I look closer, tell me… what is at the top of the list, before love?',
 }
 
 // ── Deck registry ────────────────────────────────────────────────────────────
@@ -4911,6 +5080,464 @@ const RETURN_MHF: CardSetConfig = {
         "You asked how long the prayers go on. Your hand went to the card that moves.",
         "So I won't give you a date, dear, and I won't speak for heaven.\nAnd this card says one thing only, dear. The road has not closed.\nBut a woman still walking it hasn't been turned down, dear.\nThat's why walking on has cost you, dear. Nothing has shown you it's worth it.",
         "Let me look closer at what has been sitting in the road ahead…",
+      ],
+    },
+    // ── Soulmate age-band, test A (wired 2026-08-20) ──────────────────────────────────
+    'cards-slipping-past': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-20 from
+      // fb-tarot/docs/drafts/rewrites/cards-slipping-past.json — approved copy, folded verbatim:
+      // bubbles 3-6 become beat 3, joined by newlines, and Version B serves them as
+      // separate chat messages with a typing pause between each.
+      a: [
+        "You turned the Magician, dear. Look — the roses above him hang from the corners, not the middle.",
+        "You asked why your soulmate keeps slipping past. Your hand went to the man who holds his work close.",
+        "So you were never what was missing, dear. Look at that table — nothing on it is short.\nAnd it broke at the same point every time, dear. Right before it held.\nBut you've gone over your own part again and again, dear.\nThat's why you feel it coming now, dear. Close, and then quiet.",
+        "Let me look closer at what steps in just before it lands…",
+      ],
+      b: [
+        "You turned the Hanged Man, dear. Look — his beard hangs down toward the bottom of the card.",
+        "You asked why your soulmate keeps slipping past. Your hand went to the card that stops half way.",
+        "So none of them got away from you, dear. They stopped before the end.\nAnd this whole card is a stop, dear. Nothing in it has finished.\nBut you've counted each one as a loss, dear. They were stops.\nThat's why it never feels done, dear. Stopped and gone are not the same.",
+        "Let me look closer at what you've been left holding each time…",
+      ],
+      c: [
+        "You turned the Fool, dear. Look — his collar is white and cut into points.",
+        "You asked why your soulmate keeps slipping past. Your hand went to the one still walking.",
+        "So you didn't miss them, dear. The ground ran out under each one.\nAnd it ran out behind you, dear. Not out in front where you'd see it.\nBut you've searched the front of it every time, dear. For a warning.\nThat's why you never see it coming, dear. You watch the wrong end.",
+        "Let me look closer at what has been cutting these short each time…",
+      ],
+    },
+    'cards-choosing-wrong': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-20 from
+      // fb-tarot/docs/drafts/rewrites/cards-choosing-wrong.json — approved copy, folded verbatim:
+      // bubbles 3-6 become beat 3, joined by newlines, and Version B serves them as
+      // separate chat messages with a typing pause between each.
+      a: [
+        "You turned the Magician, dear. Look — the sword on his table has a cross at the handle.",
+        "You asked what keeps you choosing everyone but your soulmate. Your hand went to the man with his tools laid out.",
+        "So you didn't choose them, dear. They showed you one man and turned into another.\nAnd that table has four different things on it, dear. You got shown one.\nBut you had one thing to go on, dear. Anyone would have read it the same.\nThat's why it changed on you later, dear. You'd only ever seen the front.",
+        "Let me look closer at what gets shown first and what comes after…",
+      ],
+      b: [
+        "You turned the Hanged Man, dear. Look — his shoes are gold, and they're the brightest thing he wears.",
+        "You asked what keeps you choosing everyone but your soulmate. Your hand went to the card that hangs the wrong way up.",
+        "So the fault was not in your choosing, dear. You were shown the wrong way up.\nAnd the gold on this card sits at his feet, dear. Not at his head.\nBut you can only see what's turned toward you, dear. The rest stays round the back.\nThat's why they seemed right at the start, dear. The bright part faces out.",
+        "Let me look closer at what has been turned away from you each time…",
+      ],
+      c: [
+        "You turned the Fool, dear. Look — the flowers on his coat are stitched, not picked.",
+        "You asked what keeps you choosing everyone but your soulmate. Your hand went to the one dressed for the road.",
+        "So you were not picking badly, dear. You were picking from what came near you.\nAnd the flowers on that coat are stitched on, dear. Not one of them grew.\nBut from where you stood they looked real, dear. Anyone would think so.\nThat's why you believed them, dear. They were made to look that way.",
+        "Let me look closer at what was sewn on before you ever met…",
+      ],
+    },
+    'cards-found-me-yet': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-20 from
+      // fb-tarot/docs/drafts/rewrites/cards-found-me-yet.json — approved copy, folded verbatim:
+      // bubbles 3-6 become beat 3, joined by newlines, and Version B serves them as
+      // separate chat messages with a typing pause between each.
+      a: [
+        "You turned the Magician, dear. Look — the cup on his table has a stem and a foot.",
+        "You asked why your soulmate hasn't found you yet. Your hand went to the man with his work set out.",
+        "So you did nothing to stop this, dear. Not one thing you did closed it off.\nAnd the cup on that table is already out, dear. Filled and standing.\nBut you've read that as something you failed at, dear.\nThat's why you turn it over so often, dear. You were ready, and it still didn't come.",
+        "Let me look closer at what's been left standing in front of that cup…",
+      ],
+      b: [
+        "You turned the Hanged Man, dear. Look — leaves grow on both arms of the beam above him.",
+        "You asked why your soulmate hasn't found you yet. Your hand went to the card that waits.",
+        "So this was never yours to fix, dear. Nothing here was put in place by you.\nAnd the wood still has green on it, dear. A stop, not an ending.\nBut you've worked at it as though it were yours, dear.\nThat's why trying harder changed nothing, dear. It was never in your hands.",
+        "Let me look closer at what tied this up in the first place…",
+      ],
+      c: [
+        "You turned the Fool, dear. Look — his hair curls out from under the green wreath.",
+        "You asked why your soulmate hasn't found you yet. Your hand went to the one already walking.",
+        "So you are not hard to find, dear. Look at that card — nothing on it is hidden.\nAnd there's no map drawn anywhere on it, dear. None was needed.\nBut you've started to think you're the thing that's hidden, dear.\nThat's why silence has felt personal, dear. Like it was aimed at you.",
+        "Let me look closer at what made that quiet feel aimed at you…",
+      ],
+    },
+    'cards-keeps-waiting': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-20 from
+      // fb-tarot/docs/drafts/rewrites/cards-keeps-waiting.json — approved copy, folded verbatim:
+      // bubbles 3-6 become beat 3, joined by newlines, and Version B serves them as
+      // separate chat messages with a typing pause between each.
+      a: [
+        "You turned the Magician, dear. Look — his raised sleeve is white, and the robe over it is red.",
+        "You asked how long a soulmate keeps you waiting. Your hand went to the man at work.",
+        "So I won't put a number on it, dear. No honest reader would.\nAnd there's no door on that card, dear. Nothing on it is being watched.\nBut you've been watching it, dear. Your eyes go there before anything else.\nThat's why rest doesn't help, dear. You've been holding a door open on your own.",
+        "Let me look closer at what has been keeping that door shut…",
+      ],
+      b: [
+        "You turned the Hanged Man, dear. Look — there's no ground drawn under him at all.",
+        "You asked how long a soulmate keeps you waiting. Your hand went to the card that hangs.",
+        "So this card gives no length, dear. It was never built to.\nAnd nothing on it is being counted, dear. No marks, no tally.\nBut you've been keeping that count yourself, dear. Quietly.\nThat's why it stays on your mind, dear. Nothing has been settled yet.",
+        "Let me look closer at what has been holding the settling up…",
+      ],
+      c: [
+        "You turned the Fool, dear. Look — he carries it all on one shoulder, and it's the right one.",
+        "You asked how long a soulmate keeps you waiting. Your hand went to the one still on the road.",
+        "So no reader can give you a date, dear. Anyone who does is guessing.\nAnd there's no date on that card, dear. Nowhere on it.\nBut you've been reading the quiet as an answer, dear.\nThat's why the quiet has weighed so much, dear. Nothing said, so you filled it in.",
+        "Let me look closer at what has been keeping this so quiet…",
+      ],
+    },
+    'cards-missed-chance': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-20 from
+      // fb-tarot/docs/drafts/rewrites/cards-missed-chance.json — approved copy, folded verbatim:
+      // bubbles 3-6 become beat 3, joined by newlines, and Version B serves them as
+      // separate chat messages with a typing pause between each.
+      a: [
+        "You turned the Magician, dear. Look — there's no chair on this card, only him and the table.",
+        "You asked if you've already missed your soulmate. Your hand went to the card of a thing being made.",
+        "So no, dear. Nothing on that table has been used up and carried off.\nAnd nothing there is being handed out, dear. There's no queue and no last one.\nBut you've pictured it as one thing passing by, dear. Once, and gone.\nThat's why you keep sifting back through it, dear. Looking for where you let it go.",
+        "Let me look closer at what keeps pulling you back over it…",
+      ],
+      b: [
+        "You turned the Hanged Man, dear. Look — his hair hangs straight down and none of it moves.",
+        "You asked if you've already missed your soulmate. Your hand went to the card that hasn't finished.",
+        "So no, dear. This card is a middle, and a middle has no ending on it.\nAnd nothing on it has gone past, dear. It's all still hanging there.\nBut you've settled it in your own mind already, dear. Missed, and done.\nThat's why good news slides off you now, dear. You'd already shut the book.",
+        "Let me look closer at what shut that book so early…",
+      ],
+      c: [
+        "You turned the Fool, dear. Look — the little dog's coat is drawn in tight curls.",
+        "You asked if you've already missed your soulmate. Your hand went to the card that starts.",
+        "So no, dear. That card opens the deck, it does not end one.\nAnd there's no gate on it, dear. Nothing on that road opens and then shuts.\nBut you've been living as though one shut, dear. Somewhere back there, quietly.\nThat's why you count backwards now, dear. You're hunting for the door you walked past.",
+        "Let me look closer at what put a door on that road…",
+      ],
+    },
+    'cards-after-marriage': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-20 from
+      // fb-tarot/docs/drafts/rewrites/cards-after-marriage.json — approved copy, folded verbatim:
+      // bubbles 3-6 become beat 3, joined by newlines, and Version B serves them as
+      // separate chat messages with a typing pause between each.
+      a: [
+        "You turned the Magician, dear. Look — the loop above his head is lying on its side.",
+        "You asked if there's a soulmate for you after the marriage ended. Your hand went to the man who starts things.",
+        "So yes, dear. The loop above him has no end and no one place to start.\nAnd four things sit out on that wood, dear. Not one.\nBut you've been counting, dear. One marriage, one chance, and the sum stops there.\nThat's why it felt like the end of it, dear. One ended, so you counted none left.",
+        "Let me look closer at what has been closing this off since…",
+      ],
+      b: [
+        "You turned the Hanged Man, dear. Look — his tunic is grey-green, and his legs are in red.",
+        "You asked if there's a soulmate for you after the marriage ended. Your hand went to the card that turns things over.",
+        "So the answer is yes, dear. This card ends nothing — it turns it.\nAnd nothing on this card is broken, dear. Turned round, but whole.\nBut you've been living it as an ending, dear. Not as a turn.\nThat's why nothing has felt steady since, dear. A turn feels like a fall while you're in it.",
+        "Let me look closer at what has stopped this turning all the way…",
+      ],
+      c: [
+        "You turned the Fool, dear. Look — the dog's front paws are up off the ground.",
+        "You asked if there's a soulmate for you after the marriage ended. Your hand went to the one who starts again.",
+        "So yes, dear. That card is a first step, and it opens the whole deck.\nAnd the road behind is off the card, dear. It isn't drawn anywhere.\nBut you've been standing at the edge, dear. Looking down, not out.\nThat's why you look down first now, dear. You know what a drop costs.",
+        "Let me look closer at what has kept you at that edge…",
+      ],
+    },
+    'cards-second-time': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-20 from
+      // fb-tarot/docs/drafts/rewrites/cards-second-time.json — approved copy, folded verbatim:
+      // bubbles 3-6 become beat 3, joined by newlines, and Version B serves them as
+      // separate chat messages with a typing pause between each.
+      a: [
+        "You turned the Magician, dear. Look — the lilies at the front have long stems and stand straight.",
+        "You asked how long it takes to find a soulmate the second time. Your hand went to the man who begins.",
+        "So there's no rule for a second one, dear. I won't pretend there is.\nAnd that table is set the same as it ever was, dear. Nothing missing.\nBut you come to it knowing things now, dear. You didn't before.\nThat's why this one feels heavier, dear. You're carrying what the first one taught you.",
+        "Let me look closer at what came with you from the first…",
+      ],
+      b: [
+        "You turned the Hanged Man, dear. Look — a small mark sits in the bottom corner of the card.",
+        "You asked how long it takes to find a soulmate the second time. Your hand went to the card that holds still.",
+        "So no clock runs on this card, dear. Not the first time, and not now.\nAnd this card keeps no score, dear. First or second, it reads the same.\nBut you've been keeping score yourself, dear. First, second, and how far behind.\nThat's why this feels like catching up, dear. You've been counting from where you started over.",
+        "Let me look closer at what has been running that count…",
+      ],
+      c: [
+        "You turned the Fool, dear. Look — the cliff below him is layered like steps of rock.",
+        "You asked how long it takes to find a soulmate the second time. Your hand went to the one who sets out.",
+        "So I can't time it for you, dear. Nobody walks this at a set pace.\nAnd that card has no second time on it, dear. Every step out is a first.\nBut you've walked out before, dear. You know what the ground does.\nThat's why you're slower now, dear. You're watching where you put your foot.",
+        "Let me look closer at what has made the ground feel unsafe…",
+      ],
+    },
+    'cards-best-years': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-20 from
+      // fb-tarot/docs/drafts/rewrites/cards-best-years.json — approved copy, folded verbatim:
+      // bubbles 3-6 become beat 3, joined by newlines, and Version B serves them as
+      // separate chat messages with a typing pause between each.
+      a: [
+        "You turned the Magician, dear. Look — there's no shadow under him at all.",
+        "You asked why you gave your best years to the wrong man. Your hand went to the man who builds.",
+        "So those years were not paid out, dear. Nothing on that table ever left it.\nAnd what you built in them is still yours, dear. It didn't go with him.\nBut you've been adding them up as a loss, dear. Year by year.\nThat's why the number is the part that hurts, dear. Not him — the count.",
+        "Let me look closer at what keeps that count running…",
+      ],
+      b: [
+        "You turned the Hanged Man, dear. Look — his blue coat and red legs are the brightest things here.",
+        "You asked why you gave your best years to the wrong man. Your hand went to the card that holds on.",
+        "So they were not thrown away, dear. Held is not the same as gone.\nAnd this card holds it all in place, dear. Nothing on it has been lost.\nBut you've written that stretch off already, dear. Crossed out, all of it.\nThat's why looking back stings so, dear. You cross it out again each time.",
+        "Let me look closer at what makes you cross those years out…",
+      ],
+      c: [
+        "You turned the Fool, dear. Look — his belt is worked with small circles all the way round.",
+        "You asked why you gave your best years to the wrong man. Your hand went to the one on the road.",
+        "So you didn't come out of it empty, dear. What you carry is on you, not behind you.\nAnd the road behind him isn't drawn, dear. Not one bit of it made the card.\nBut you keep turning round to look at yours, dear. It's all you measure by.\nThat's why each year feels spent, dear. You've been counting what it cost you.",
+        "Let me look closer at what keeps you turned round…",
+      ],
+    },
+    'cards-too-late-love': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-20 from
+      // fb-tarot/docs/drafts/rewrites/cards-too-late-love.json — approved copy, folded verbatim:
+      // bubbles 3-6 become beat 3, joined by newlines, and Version B serves them as
+      // separate chat messages with a typing pause between each.
+      a: [
+        "You turned the Magician, dear. Look — there's no wall and no door behind him, only sky.",
+        "You asked if it's too late to meet your soulmate. Your hand went to the man who is still working.",
+        "So no door has shut, dear. There isn't one on this card to close.\nAnd nothing on that table is packed away, dear. It's all still out.\nBut you've been treating it as shut, dear. So you stopped trying the handle.\nThat's why you stopped looking, dear. You had no reason to keep checking.",
+        "Let me look closer at what put that door there…",
+      ],
+      b: [
+        "You turned the Hanged Man, dear. Look — the rays at his head are short, and they all match.",
+        "You asked if it's too late to meet your soulmate. Your hand went to the card that waits with him.",
+        "So this card does not say late, dear. It has no way of saying it.\nAnd the light at his head is still on, dear. Bright as it ever was.\nBut you've been reading it from underneath, dear. All of it looks late from there.\nThat's why late was the word that fitted, dear. It was the only one left.",
+        "Let me look closer at what turned you upside down in the first place…",
+      ],
+      c: [
+        "You turned the Fool, dear. Look — his sleeves are slit, and there's red showing through.",
+        "You asked if it's too late to meet your soulmate. Your hand went to the one just setting off.",
+        "So there is no late on this card, dear. Nothing on it has a time to be there by.\nAnd that card is the first in the whole deck, dear. Numbered nothing at all.\nBut you've been putting yourself near the end, dear. Counting from the wrong side.\nThat's why running out is how it feels, dear. You've been counting down, not up.",
+        "Let me look closer at what set that count going…",
+      ],
+    },
+    'cards-longer-to-wait': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-20 from
+      // fb-tarot/docs/drafts/rewrites/cards-longer-to-wait.json — approved copy, folded verbatim:
+      // bubbles 3-6 become beat 3, joined by newlines, and Version B serves them as
+      // separate chat messages with a typing pause between each.
+      a: [
+        "You turned the Magician, dear. Look — the vine above him only reaches the two top corners.",
+        "You asked how much longer you have to wait for your soulmate. Your hand went to the man still at his table.",
+        "So I won't count it out for you, dear. That count doesn't exist.\nAnd nothing on that card is waiting, dear. Both hands are busy.\nBut you've been living in the wait, dear. Not just passing through.\nThat's why sleep hasn't helped, dear. Part way through wears at you.",
+        "Let me look closer at what has held this part way through…",
+      ],
+      b: [
+        "You turned the Hanged Man, dear. Look — the rope goes round his foot once and stops there.",
+        "You asked how much longer you have to wait for your soulmate. Your hand went to the card that hangs on.",
+        "So there's no number here, dear. I'd be making it up and you'd know.\nAnd one rope is all there is on that card, dear. Just the one.\nBut you've been braced for something much bigger, dear.\nThat's why so little has moved, dear. One small thing has been holding all of it.",
+        "Let me look closer at the one thing holding this…",
+      ],
+      c: [
+        "You turned the Fool, dear. Look — the sun is up in the corner, and the sky is clear.",
+        "You asked how much longer you have to wait for your soulmate. Your hand went to the one out on the road.",
+        "So I can't hand you a number, dear. There isn't one to hand.\nAnd no one on that road knows how far, dear. It isn't written anywhere.\nBut you've stood still to count it, dear. And the counting is the weight.\nThat's why the question won't leave you, dear. You can see the road and still not the end.",
+        "Let me look closer at what's keeping the end out of sight…",
+      ],
+    },
+    'cards-allowed-to-want': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-20 from
+      // fb-tarot/docs/drafts/rewrites/cards-allowed-to-want.json — approved copy, folded verbatim:
+      // bubbles 3-6 become beat 3, joined by newlines, and Version B serves them as
+      // separate chat messages with a typing pause between each.
+      a: [
+        "You turned the Magician, dear. Look — the cup on his table has no lid on it.",
+        "You asked if you're still allowed to want a soulmate. Your hand went to the card where the work sits out in the open.",
+        "So nobody hands that out, dear. There's no one on this card giving leave.\nAnd nothing there has been taken away, dear. Not one thing.\nBut you've been waiting to be told it's alright, dear. By someone.\nThat's why you say it quietly, dear. Or add that you know it's silly.",
+        "Let me look closer at what taught you to ask first…",
+      ],
+      b: [
+        "You turned the Hanged Man, dear. Look — the light behind his head has points on it, like a star.",
+        "You asked if you're still allowed to want a soulmate. Your hand went to the card that will not be hurried.",
+        "So you are not wrong to want it, dear. That light is on and nothing has dimmed it.\nAnd it sits behind his head, dear. Not out front where it gets judged.\nBut you've kept yours out of sight too, dear. Where nobody can weigh in.\nThat's why you tell people you're content, dear. It's easier than being talked out of it.",
+        "Let me look closer at what made it safer to say nothing…",
+      ],
+      c: [
+        "You turned the Fool, dear. Look — there's nobody stood at that edge telling him to stop.",
+        "You asked if you're still allowed to want a soulmate. Your hand went to the one who just goes.",
+        "So there's no one whose word you need, dear. Look at that card — nobody is asked.\nAnd nothing on that road is marked off, dear. No sign, no rope across it.\nBut you put the question to other people, dear. And you took their answer.\nThat's why you say sorry for it now, dear. You never used to.",
+        "Let me look closer at what that answer left behind…",
+      ],
+    },
+    // ── Soulmate keyword, test B (wired 2026-08-20) ───────────────────────────────────
+    'cards-blocking-soulmate': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-20 from
+      // fb-tarot/docs/drafts/rewrites/cards-blocking-soulmate.json — approved copy, folded verbatim:
+      // bubbles 3-6 become beat 3, joined by newlines, and Version B serves them as
+      // separate chat messages with a typing pause between each.
+      a: [
+        "You turned the Magician, dear. Look — his right hand is up and his left points at the ground.",
+        "You asked if something is blocking you from your soulmate. Your hand went to the card of a thing being worked.",
+        "So yes, dear. Something is in the way, and it was never you.\nAnd look where he points, dear. Down at the ground, not out at the world.\nBut you've been searching yourself for it, dear. Turning over what you did.\nThat's why nothing you tried has shifted it, dear. You were looking in the wrong place.",
+        "Let me look closer at where the block is actually sitting…",
+      ],
+      b: [
+        "You turned the Hanged Man, dear. Look — one rope, one ankle, and the rest of him quite free.",
+        "You asked if something is blocking you from your soulmate. Your hand went to the card of a thing held.",
+        "So yes, dear. Something has a hold on this, and it is one thing, not you.\nAnd it's a small thing, dear. One rope, and the whole card stops.\nBut you've been treating it as all of you, dear. Your whole self.\nThat's why it has felt so big, dear. One rope holding still can stop a life.",
+        "Let me look closer at the one thing that has a hold on this…",
+      ],
+      c: [
+        "You turned the Fool, dear. Look — the drop is right at his boot and the sun is still full on him.",
+        "You asked if something is blocking you from your soulmate. Your hand went to the card of open road.",
+        "So yes, dear. Something sits across the road, and you did not put it there.\nAnd the road itself is clear, dear. Wide open, and lit.\nBut you've begun to think the road was never yours, dear.\nThat's why you slowed, dear. Not because you gave up — because nothing gave.",
+        "Let me look closer at what is lying across that road…",
+      ],
+    },
+    'cards-blocked-before': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-20 from
+      // fb-tarot/docs/drafts/rewrites/cards-blocked-before.json — approved copy, folded verbatim:
+      // bubbles 3-6 become beat 3, joined by newlines, and Version B serves them as
+      // separate chat messages with a typing pause between each.
+      a: [
+        "You turned the Magician, dear. Look — every tool on that table is within reach of one hand.",
+        "You asked why you keep getting blocked before your soulmate comes. Your hand went to the card where nothing is missing.",
+        "So it stops at the same place each time, dear. That is a position, not a habit of yours.\nAnd it stops early, dear. Before a single person is in it.\nBut you've read the repeat as a fact about yourself, dear.\nThat's why the sameness is what wears, dear. Not the loss — the repeat of it.",
+        "Let me look closer at the point it keeps stopping at…",
+      ],
+      b: [
+        "You turned the Hanged Man, dear. Look — the beam holds and not one line under it is level.",
+        "You asked why you keep getting blocked before your soulmate comes. Your hand went to the card that halts.",
+        "So the halt comes first, dear. Long before anyone arrives, and that is the whole point.\nAnd a halt sits in one spot, dear. It does not follow you about.\nBut you've carried it as though it travels with you, dear.\nThat's why every fresh start feels borrowed, dear. You're waiting for it to catch up.",
+        "Let me look closer at the spot it has been sitting in…",
+      ],
+      c: [
+        "You turned the Fool, dear. Look — the road behind him is not drawn, only the ground he is on.",
+        "You asked why you keep getting blocked before your soulmate comes. Your hand went to the card of setting out.",
+        "So you get as far as the setting out, dear. Then it closes, before a person is in it.\nAnd this card is only ever the setting out, dear. It never shows the arriving.\nBut you've counted each one as a failure, dear. They were the same stop.\nThat's why hope costs you more each time, dear. You've paid at the same gate twice over.",
+        "Let me look closer at the gate that keeps closing…",
+      ],
+    },
+    'cards-connection-soulmate': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-20 from
+      // fb-tarot/docs/drafts/rewrites/cards-connection-soulmate.json — approved copy, folded verbatim:
+      // bubbles 3-6 become beat 3, joined by newlines, and Version B serves them as
+      // separate chat messages with a typing pause between each.
+      a: [
+        "You turned the Magician, dear. Look — a cup and a coin on the table, and they are not the same thing.",
+        "You asked if this connection is your soulmate or something else. Your hand went to the card that names things.",
+        "So this is not nothing, dear. Whatever you end up calling it, there is something there.\nAnd there are four names on that table, dear. All four are real things.\nBut you've made the name the first job, dear. Before anything else can happen.\nThat's why the question never closes, dear. A name was never going to settle this.",
+        "Let me look closer at what the naming has been standing in for…",
+      ],
+      b: [
+        "You turned the Hanged Man, dear. Look — he sees the whole card, just not the way up you do.",
+        "You asked if this connection is your soulmate or something else. Your hand went to the card that hangs the other way up.",
+        "So it is real, dear. This card does not deal in made-up things.\nAnd it shows one thing from two ways up, dear. Both of them true.\nBut you've been asking which one it is, dear. As though only one can be.\nThat's why no answer has stuck, dear. You've been sorting something that will not sort.",
+        "Let me look closer at what you'd have to give up to stop sorting it…",
+      ],
+      c: [
+        "You turned the Fool, dear. Look — the white flower is held out, away from him, at arm's length.",
+        "You asked if this connection is your soulmate or something else. Your hand went to the card with no label on it.",
+        "So it counts, dear. This card puts no name on where it leads, and it counts anyway.\nAnd that flower is held out, dear. Offered, and not yet taken.\nBut you've wanted it named before you'd let it matter, dear.\nThat's why there's no settling in it, dear. You've been waiting on a word.",
+        "Let me look closer at what has kept that word out of reach…",
+      ],
+    },
+    'cards-connection-nothing': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-20 from
+      // fb-tarot/docs/drafts/rewrites/cards-connection-nothing.json — approved copy, folded verbatim:
+      // bubbles 3-6 become beat 3, joined by newlines, and Version B serves them as
+      // separate chat messages with a typing pause between each.
+      a: [
+        "You turned the Magician, dear. Look — his wand is raised and nothing on the table has moved yet.",
+        "You asked why this feels like your soulmate when nothing is happening. Your hand went to the card of work not yet done.",
+        "So what you feel and what moves are two things, dear. They keep different time.\nAnd the hand on this card is still up, dear. Nothing on the table has stirred.\nBut you've been reading the stillness as your answer, dear.\nThat's why you doubt yourself at night, dear. Nothing moved, so you marked yourself wrong.",
+        "Let me look closer at what has been keeping it all so still…",
+      ],
+      b: [
+        "You turned the Hanged Man, dear. Look — nothing on this card is falling and nothing is climbing.",
+        "You asked why this feels like your soulmate when nothing is happening. Your hand went to the card where nothing moves.",
+        "So a stop is not an absence, dear. This whole card is a held thing, and it is full.\nAnd there is nothing underneath him at all, dear. So nothing has anywhere to move.\nBut you've taken quiet as proof, dear. Proof of what you feared.\nThat's why you re-read old messages at night, dear. Hunting for something to hold up.",
+        "Let me look closer at what has been holding all of this still…",
+      ],
+      c: [
+        "You turned the Fool, dear. Look — the little dog is up on its back legs and he has not turned round.",
+        "You asked why this feels like your soulmate when nothing is happening. Your hand went to the card that starts before it shows.",
+        "So you felt it first, dear. On this card that always comes before there is anything to see.\nAnd nothing on that road has happened yet, dear. Not one thing.\nBut you've been grading yourself on what has shown up, dear.\nThat's why the word fool keeps coming up, dear. You had nothing to check it against.",
+        "Let me look closer at what is due to show and hasn't…",
+      ],
+    },
+    'cards-energy-away': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-20 from
+      // fb-tarot/docs/drafts/rewrites/cards-energy-away.json — approved copy, folded verbatim:
+      // bubbles 3-6 become beat 3, joined by newlines, and Version B serves them as
+      // separate chat messages with a typing pause between each.
+      a: [
+        "You turned the Magician, dear. Look — the wand in his raised hand is lit at the tip.",
+        "You asked if your energy is keeping your soulmate away. Your hand went to the card where the power is the tool.",
+        "So no, dear. What you carry has never been what keeps people off.\nAnd on this card it is the thing that works, dear. Not the thing in the way.\nBut yours has been going out at full strength a long while, dear.\nThat's why you have nothing to point at, dear. And you are tired out all the same.",
+        "Let me look closer at where all of it has been going…",
+      ],
+      b: [
+        "You turned the Hanged Man, dear. Look — the light behind his head is bright and his face is quite calm.",
+        "You asked if your energy is keeping your soulmate away. Your hand went to the card that is still lit.",
+        "So no, dear. Nothing about you sends people off — look at that light.\nAnd that light is doing the work, dear. It never once stood in your way.\nBut you've been looking inward first, dear, and it was never in there.\nThat's why you're tired, dear. Something outside you has been drawing on it.",
+        "Let me look closer at what has been drawing on that light…",
+      ],
+      c: [
+        "You turned the Fool, dear. Look — the sun is high and it is full daylight on the whole card.",
+        "You asked if your energy is keeping your soulmate away. Your hand went to the card in open sun.",
+        "So no, dear. There is no shadow on you here, and the light falls on all of it.\nAnd nothing on it is in shade, dear. Nothing hidden, nothing held back.\nBut you've started dimming yourself on purpose, dear. Just in case.\nThat's why meeting people costs you now, dear. You go in half turned down.",
+        "Let me look closer at what taught you to turn yourself down…",
+      ],
+    },
+    'cards-energy-soulmate': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-20 from
+      // fb-tarot/docs/drafts/rewrites/cards-energy-soulmate.json — approved copy, folded verbatim:
+      // bubbles 3-6 become beat 3, joined by newlines, and Version B serves them as
+      // separate chat messages with a typing pause between each.
+      a: [
+        "You turned the Magician, dear. Look — one arm straight up, and the sleeve falling back off the wrist.",
+        "You asked what your energy says about your soulmate. Your hand went to the card of a thing still being made.",
+        "So it says you are still reaching, dear. That arm has not come down.\nAnd it points up and out, dear. Away from himself, at something not here yet.\nBut you've read your own tiredness as giving up, dear.\nThat's why closed off is the phrase you reach for, dear. Worn would be nearer.",
+        "Let me look closer at what has been wearing on that reach…",
+      ],
+      b: [
+        "You turned the Hanged Man, dear. Look — his eyes are open, and he is not asleep.",
+        "You asked what your energy says about your soulmate. Your hand went to the card that waits awake.",
+        "So it says you are still here, dear. Waiting is not the same as leaving.\nAnd the eyes stay open, dear. Through all of it, on a card where nothing else moves.\nBut you've called that stubbornness, dear. Or worse.\nThat's why you play it down when people ask, dear. You'd rather they didn't see it.",
+        "Let me look closer at what made it something to hide…",
+      ],
+      c: [
+        "You turned the Fool, dear. Look — his head is up and his eyes are off the ground.",
+        "You asked what your energy says about your soulmate. Your hand went to the card that keeps looking up.",
+        "So it says you have not stopped looking, dear. The head on this card is up.\nAnd it stays up, dear, with the drop right there at the boot.\nBut you've been counting the years and calling that foolish, dear.\nThat's why hoping has started to feel like a fault, dear. It is the one thing that never went.",
+        "Let me look closer at what turned hoping into a fault…",
+      ],
+    },
+    'cards-waiting-to-heal': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-20 from
+      // fb-tarot/docs/drafts/rewrites/cards-waiting-to-heal.json — approved copy, folded verbatim:
+      // bubbles 3-6 become beat 3, joined by newlines, and Version B serves them as
+      // separate chat messages with a typing pause between each.
+      a: [
+        "You turned the Magician, dear. Look — nothing on that table is put away.",
+        "You asked if your soulmate is waiting for you to heal. Your hand went to the card where the work is already begun.",
+        "So no, dear. Nothing is standing still, waiting on you to be finished.\nAnd there is no test on that table, dear. Nothing on it has to be passed.\nBut you've run your life as though there is one, dear. Yourself last.\nThat's why later is where things go, dear. Something taught you to wait your turn.",
+        "Let me look closer at what put you last in your own queue…",
+      ],
+      b: [
+        "You turned the Hanged Man, dear. Look — he hangs by one foot and his face has no strain in it.",
+        "You asked if your soulmate is waiting for you to heal. Your hand went to the card that holds without struggling.",
+        "So no, dear. Nothing on this card is on hold, and nothing waits on you.\nAnd a thing can be held and whole at once, dear. This card is both.\nBut you've been told to be whole first, dear, and you believed it.\nThat's why you keep setting the bar further out, dear. It moves each time you near it.",
+        "Let me look closer at what keeps moving that bar…",
+      ],
+      c: [
+        "You turned the Fool, dear. Look — he steps off with his bundle still tied shut.",
+        "You asked if your soulmate is waiting for you to heal. Your hand went to the card that goes as it is.",
+        "So no, dear. Not one thing here is holding back until you are ready.\nAnd the bundle is not unpacked, dear. It goes with him, tied as it is.\nBut you've been unpacking yours first, dear. Before you'd let yourself go anywhere.\nThat's why the going never comes, dear. There's always one more thing in the bag.",
+        "Let me look closer at what is still in that bundle…",
+      ],
+    },
+    'cards-heal-first': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-20 from
+      // fb-tarot/docs/drafts/rewrites/cards-heal-first.json — approved copy, folded verbatim:
+      // bubbles 3-6 become beat 3, joined by newlines, and Version B serves them as
+      // separate chat messages with a typing pause between each.
+      a: [
+        "You turned the Magician, dear. Look — all four things are on the table at once, not one after another.",
+        "You asked if healing comes first, before your soulmate. Your hand went to the card where it is all out together.",
+        "So there is no before, dear. Nothing on that table is waiting its turn.\nAnd all four sit there at once, dear. None of them is first.\nBut you've been running yours in order, dear. This, then that, then love.\nThat's why love keeps sliding down the list, dear. It has been last for years.",
+        "Let me look closer at what put love at the end of that list…",
+      ],
+      b: [
+        "You turned the Hanged Man, dear. Look — the wood he hangs from has green leaves still coming out of it.",
+        "You asked if healing comes first, before your soulmate. Your hand went to the card where two things happen at once.",
+        "So it does not go in order, dear. On this card the mending and the hanging are the same moment.\nAnd the leaves come out of cut wood, dear. Straight out of the cut, not after it.\nBut you've been waiting for one to finish, dear, so the other can start.\nThat's why you feel behind, dear. You've been queueing for a door that is open.",
+        "Let me look closer at what keeps you stood at that door…",
+      ],
+      c: [
+        "You turned the Fool, dear. Look — his foot is already off the rock and the flower is still in his hand.",
+        "You asked if healing comes first, before your soulmate. Your hand went to the card that goes anyway.",
+        "So no, dear. Nothing on this card was finished before it started.\nAnd the step and the flower happen together, dear. Not one, then the other.\nBut you've set yourself a mark to reach first, dear.\nThat's why not yet has become your answer, dear. To yourself, mostly.",
+        "Let me look closer at what set that mark where it is…",
       ],
     },
   },
