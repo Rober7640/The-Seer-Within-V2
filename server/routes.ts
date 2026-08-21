@@ -1283,10 +1283,23 @@ export async function registerRoutes(
       // price (a written commitment that could contradict her locked variant),
       // or her name (AWeber already has it).
       const resumeUrl = buildResumeUrl(funnel, conversationId);
+      // WHICH LIST THIS LEAD LANDED ON. Nothing recorded this until 2026-08-21, which
+      // is why the money cutover could only be confirmed by watching a live walk and
+      // then reading AWeber by hand. With two lander families now diverging from the
+      // per-funnel default, a cutover is verifiable from the logs alone: resolve the id
+      // once, log it, pass the same value on. `default` means no split and no
+      // per-funnel override matched — the shared AWEBER_LIST_ID.
+      const leadListId = aweberLeadListId(funnel, bucket, tarotLander?.hook);
+      logger.info("Lead list resolved:", {
+        funnel,
+        bucket: bucket ?? null,
+        tarotHook: tarotLander?.hook ?? null,
+        listId: leadListId ?? "default",
+      });
       addSubscriberToList({
         email,
         name: firstName,
-        listId: aweberLeadListId(funnel, bucket, tarotLander?.hook),
+        listId: leadListId,
         tags: fbifyAweberTags([bucket || "website", "seer-within"], funnel),
         // Omitted entirely when we have no link — never `custom_fields: {}`,
         // which AWeber reads as "clear every custom field" on an

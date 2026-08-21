@@ -1,0 +1,44 @@
+{
+  "hook": "cards-keeps-waiting",
+  "headline": "How long does a soulmate keep you waiting?",
+  "voc": {
+    "pulled": "2026-08-19",
+    "pattern": "how-long",
+    "matched": null,
+    "buyers": null,
+    "verdict": "unrecorded",
+    "why": "Drew on the shared how-long pull; the exact pattern and counts were not recorded on the draft."
+  },
+  "note": "Soulmate age-band batch (2026-08-19), 45-54 HOW-LONG rung.\n\nFace-down only (return-mhf). 🔴🔴 NO DURATION — the defining ban of this batch, and the reason four of these landers cannot run under any existing frame. Every frame on the funnel bans a DATE. This headline asks for a LENGTH, and 'not much longer', 'a few more months', 'soon', 'not long now' are all lengths rather than dates, so the date ban does not touch them. Banned outright: any span of time, any pace, any 'by then', any season, forward or back.\n\n🔴 THE REFUSAL MUST BE VISIBLE, not a sidestep. Both answers are unavailable here, so a read that quietly changes the subject reads as evasion and she feels conned — same treatment as cards-alone-forever, which declines the length out loud and then gives her something real instead.\n\n⚠ The corpus warning: in her own words 'how long' almost always means waiting on a SPECIFIC man ('how long should I wait for Jack'). This lander must not answer as though a named man exists. 🔴 No verdict on any real person, no promised arrival, no PLACE, no self-blame, no 'he is worth the wait'.\n\nThe finding that replaces the verdict: the tiredness is not from the length of the wait. It is from holding it open on her own.",
+  "decks": {
+    "return-mhf": {
+      "a": [
+        "You turned the Magician, dear. Look — his raised sleeve is white, and the robe over it is red.",
+        "You asked how long a soulmate keeps you waiting. Your hand went to the man at work.",
+        "So I won't put a number on it, dear. No honest reader would.",
+        "And there's no door on that card, dear. Nothing on it is being watched.",
+        "But you've been watching it, dear. Your eyes go there before anything else.",
+        "That's why rest doesn't help, dear. You've been holding a door open on your own.",
+        "Let me look closer at what has been keeping that door shut…"
+      ],
+      "b": [
+        "You turned the Hanged Man, dear. Look — there's no ground drawn under him at all.",
+        "You asked how long a soulmate keeps you waiting. Your hand went to the card that hangs.",
+        "So this card gives no length, dear. It was never built to.",
+        "And nothing on it is being counted, dear. No marks, no tally.",
+        "But you've been keeping that count yourself, dear. Quietly.",
+        "That's why it stays on your mind, dear. Nothing has been settled yet.",
+        "Let me look closer at what has been holding the settling up…"
+      ],
+      "c": [
+        "You turned the Fool, dear. Look — he carries it all on one shoulder, and it's the right one.",
+        "You asked how long a soulmate keeps you waiting. Your hand went to the one still on the road.",
+        "So no reader can give you a date, dear. Anyone who does is guessing.",
+        "And there's no date on that card, dear. Nowhere on it.",
+        "But you've been reading the quiet as an answer, dear.",
+        "That's why the quiet has weighed so much, dear. Nothing said, so you filled it in.",
+        "Let me look closer at what has been keeping this so quiet…"
+      ]
+    }
+  }
+}

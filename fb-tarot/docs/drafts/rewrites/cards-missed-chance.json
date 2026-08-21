@@ -1,0 +1,44 @@
+{
+  "hook": "cards-missed-chance",
+  "headline": "Is my soulmate still coming, or have I already missed him?",
+  "voc": {
+    "pulled": "2026-08-20",
+    "pattern": "sm-already-missed",
+    "matched": 30,
+    "buyers": 2,
+    "verdict": "thin",
+    "why": "First pull was contaminated by \"let him go\" and returned a different question; the tightened pull matched 30 with 2 buyers. Small, but it names the harm precisely — the remembered man is often married."
+  },
+  "note": "Soulmate age-band batch (2026-08-19), 45-54 BINARY rung. ⚠ The hook is `cards-missed-chance`, NOT `cards-already-missed` — that name sits one word away from the live `cards-met-already` ('Have I already met my soulmate without realizing it?') and the two would be misread for each other in every report and every wiring diff.\n\nFace-down only (return-mhf). The word doing the work is ALREADY: she believes the event has happened, in the past, and that she failed to notice or failed to hold it. The theme pull (sm-already-missed, 2026-08-19) says it almost verbatim — 'Have I missed out on who is or was to be my husband or soulmate', 'I'm afraid I've already missed my soulmate', 'Wondering if I have missed my chance', 'I feel like I already missed my one chance at real love'.\n\n🔴🔴 NEVER REVIVE A SPECIFIC PAST MAN. The same pull returns 'the one that got away' over and over, and when she names him he is very often married — 'By the time I met him 44 years ago he was married... he loved his wife and would never leave her' — or the man who abandoned her. A read that says the one she is thinking of is still coming points her at a real, identifiable, unavailable person she can go and contact. That is `cards-back-together` territory and it is banned outright here: no him, no the one, no he is still there, nothing that can attach to a man already in her memory.\n\n🔴🔴 NO FERTILITY AND NO CHILDREN. 'I've already missed the opportunity to have children. I'm 45 now.' This is the one window in the pull that genuinely did close, it is Meta-prohibited health material, and there is no honest hopeful half. The read does not go near children, a family, or time running on her body.\n\n🔴 NO DATE. The binary form does not ask for a length, so the duration ban of the HOW-LONG landers is not the live risk here — the date ban is, and it stands.\n\n🔴 DISTRESS IS IN THIS PULL — 'every day I'm getting closer to suicidal thoughts'. The banned half of the binary is not merely unkind, it confirms a loss to someone already at the edge. 'You missed him' may never be said in any form, including softened ones.\n\nNo mediumship. No place. No blame — she arrives already holding it.\n\nThe finding: a chance is not one event with a door on it. Nothing went past her that she could have caught, so there was never a moment to fail.",
+  "decks": {
+    "return-mhf": {
+      "a": [
+        "You turned the Magician, dear. Look — there's no chair on this card, only him and the table.",
+        "You asked if you've already missed your soulmate. Your hand went to the card of a thing being made.",
+        "So no, dear. Nothing on that table has been used up and carried off.",
+        "And nothing there is being handed out, dear. There's no queue and no last one.",
+        "But you've pictured it as one thing passing by, dear. Once, and gone.",
+        "That's why you keep sifting back through it, dear. Looking for where you let it go.",
+        "Let me look closer at what keeps pulling you back over it…"
+      ],
+      "b": [
+        "You turned the Hanged Man, dear. Look — his hair hangs straight down and none of it moves.",
+        "You asked if you've already missed your soulmate. Your hand went to the card that hasn't finished.",
+        "So no, dear. This card is a middle, and a middle has no ending on it.",
+        "And nothing on it has gone past, dear. It's all still hanging there.",
+        "But you've settled it in your own mind already, dear. Missed, and done.",
+        "That's why good news slides off you now, dear. You'd already shut the book.",
+        "Let me look closer at what shut that book so early…"
+      ],
+      "c": [
+        "You turned the Fool, dear. Look — the little dog's coat is drawn in tight curls.",
+        "You asked if you've already missed your soulmate. Your hand went to the card that starts.",
+        "So no, dear. That card opens the deck, it does not end one.",
+        "And there's no gate on it, dear. Nothing on that road opens and then shuts.",
+        "But you've been living as though one shut, dear. Somewhere back there, quietly.",
+        "That's why you count backwards now, dear. You're hunting for the door you walked past.",
+        "Let me look closer at what put a door on that road…"
+      ]
+    }
+  }
+}
