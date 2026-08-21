@@ -73,6 +73,33 @@
 -- ⚠ MAY COLLIDE WITH hours-55-35_tarot LATER. That test moves the bump row inside
 --   its new offer card. Before starting 55/35 while this is live, verify the
 --   DOWNSELL render is genuinely separate. Believed separate; not confirmed.
+--
+-- ============================================================================
+-- ⛔ DO NOT START THIS EXPERIMENT YET — ARM A WOULD BILL THE WRONG PRICE.
+--    Found 2026-08-17 by .claude/skills/v1-funnel-audit/scripts/audit-downsell-bump.mjs
+--    plus a direct arm probe. Reproduced: 3 of 8 sample emails drew arm A and every
+--    one of them would be SHOWN $9.77 and CHARGED $12.77.
+--
+--    WHY. The price reaches the Stripe line and the offer card by two different
+--    routes, and only one of them exists:
+--      · CHARGE  server/routes.ts:809-815 — /api/checkout calls
+--                resolveV1DownsellBumpPrice() and charges the real arm. ✅ works
+--      · CARD    client reads userData.bumpCentsDownsell (chat.ts:141-145), which
+--                is documented as "Sent by /api/lead". IT IS NOT. /api/lead
+--                (routes.ts:1316-1343) sends commitmentGate/orderBump/bumpCopy/
+--                closeDepth and never this field, and useConversation.ts:967-982
+--                never captures it. So it is permanently undefined and
+--                resolveBumpCents(undefined,'downsell') pins the card at $9.77.
+--
+--    HARMLESS ONLY WHILE THIS ROW IS DRAFT: with no arm assigned both sides fall
+--    back to $9.77 and agree — which is exactly why the browser audit passes 13/13
+--    today. Pressing Start is what breaks them apart.
+--
+--    THE FIX is to send the arm at lead capture and capture it client-side, the
+--    same shape bumpCopy already uses. ⚠ Note the trade-off before doing it:
+--    resolving in /api/lead ENROLLS every tarot lead, not just the ~3% who reach
+--    the downsell, so the "exposed" column in §3 stops meaning "was offered the
+--    bump". The verdict metric (revenue per downsell BUYER) is unaffected.
 -- ============================================================================
 
 -- ── 0. PRE-FLIGHT ───────────────────────────────────────────────────────────
