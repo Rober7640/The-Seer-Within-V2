@@ -26,6 +26,7 @@ import adminRouter, { abTestingPublicRouter } from "./routes/admin/index";
 import personasRouter from "./routes/personas";
 import webhooksRouter, { reportTrackdeskConversion } from "./routes/webhooks";
 import unsubscribeRouter from "./routes/unsubscribe";
+import { emailLinkRedirectRouter } from "./routes/emailLinkRedirect";
 import userStatsRouter from "./routes/userStats";
 import migrateRouter from "./routes/migrate";
 import astrologyRouter from "./routes/astrology";
@@ -527,6 +528,10 @@ export async function registerRoutes(
   // Mounted at root so the URL is a clean https://www.theseerwithin.com/unsubscribe?email=...&src=...
   // Kept separate from /api/webhooks/unsubscribe (token-based, for our own emails).
   app.use("/", unsubscribeRouter);
+
+  // Short-link redirector for marketing emails (Live Thread). Mounted at
+  // root so the URL is a clean https://www.theseerwithin.com/e/<code>.
+  app.use(emailLinkRedirectRouter);
 
   // Diagnostic endpoint to test Stripe session retrieval
   // Usage: GET /api/upsell/test-session/cs_xxx (replace cs_xxx with actual Stripe session ID)
