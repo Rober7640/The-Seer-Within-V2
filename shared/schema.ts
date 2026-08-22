@@ -1252,6 +1252,32 @@ export const emailLinkCodes = pgTable("email_link_codes", {
   readingRecap: text("reading_recap"),
   openLoop: text("open_loop"),
   continueSeed: text("continue_seed").notNull(),
+  // The ONE thing this email is about, as a short noun phrase the persona can
+  // say out loud: "the Devil card and its loose chains", "444", "the green
+  // fence". Nullable so older rows and any persona whose pipeline does not emit
+  // it yet keep working.
+  //
+  // WHY IT IS ITS OWN COLUMN and not inferred from the prose above it. Joel's
+  // model (2026-08-19 call) is one email = one big idea, and the chat's job is
+  // to stay on it: "if the previous conversation was 444, it should continue
+  // talking about 444". Handing the chat a 3-5 sentence recap and asking it to
+  // work out the topic is what produced the failure he reported — the reader
+  // said "how can you help me?" and Evelyn answered with a generic description
+  // of her services, dropping the Devil card she had just asked about. Naming
+  // the subject explicitly is the difference between continuing a thread and
+  // hoping a model infers one.
+  bigIdea: text("big_idea"),
+  // The ONE image this letter is about, shown as its own bubble in the lander
+  // thread between the line that NAMES it and the line that asks the reader for
+  // something. Joel's ask, 2026-08-20: the Devil letter should show the Devil.
+  //
+  // A URL, not an asset id, and nullable: most letters have no image (the fence,
+  // the list, the song), and a letter that gains one later should need a value in
+  // this column and nothing else. Same road as `big_idea` — the send draft
+  // carries it, render-aweber.mjs lifts it, the upsert writes it — so a new card
+  // in a future cycle needs no deploy. Self-hosted paths (/tarot/rws-devil.jpg)
+  // are preferred over hotlinks: this renders on ad traffic, on phones.
+  cardImageUrl: text("card_image_url"),
   // Lander context the legacy `?bucket=&src=` query string used to carry. The
   // short link has no room for it (and query params get stripped in transit),
   // so it rides on the row and /e/:code rebuilds the query string from here.

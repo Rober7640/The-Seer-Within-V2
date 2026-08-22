@@ -823,8 +823,14 @@ describe('POST /api/evelyn-lander/check-email', { skip: !HAS_DB }, () => {
     // The Live Thread tier. Once linked, a session carrying a pendingReply makes
     // userHasLiveThreadReply() (liveThreadEngagement.ts), read via
     // resolveWelcomeGrantTier(), true at verify time, which selects
-    // LIVE_THREAD_FREE_COINS over EVELYN_LANDER_FREE_COINS — so quoting 5 here would
-    // under-promise against a grant this route itself just enabled.
+    // LIVE_THREAD_FREE_COINS over EVELYN_LANDER_FREE_COINS.
+    //
+    // ⚠ WEAKENED 2026-08-19. Both constants are now 5, so this case can no longer tell
+    // the two tiers apart by their amount — it would stay green even if the tier were
+    // resolved wrongly. What it still proves is the WIRING: that the route links the
+    // session, sees the parked reply, and reports engagedViaLiveThread — which the two
+    // assertions below it check directly. If the amounts ever diverge again, this
+    // regains its teeth for free.
     it('quotes the Live Thread amount when the linked session carries a pendingReply', async () => {
       const user = await createTestUser({
         emailVerified: false,
@@ -1043,6 +1049,50 @@ describe('POST /api/evelyn-lander/start — campaign continueSeed opener', { ski
       .limit(1);
     assert.equal(row.campaign, campaign);
     assert.equal(res.body.segment, 'brand_new');
+  });
+
+  // 2026-08-20: the card the letter was about travels with the opener, so the
+  // lander can show it as its own bubble between her naming it and her asking
+  // for something. Most sends have none, and those must be unchanged.
+  it("returns the campaign's card image when the letter has one", async () => {
+    const campaign = campaignSlug('card');
+    const seed = 'You came back about the Devil card — those chains hang loose. Tell me the one you keep going back to.';
+    await createEmailLinkCode({ campaign, continueSeed: seed, cardImageUrl: '/tarot/rws-devil.jpg' });
+
+    const res = await request(app)
+      .post(START)
+      .send({ sessionToken: landerSessionToken('t15-card'), campaign });
+
+    assert.equal(res.status, 200);
+    assert.equal(res.body.opener, seed);
+    assert.equal(res.body.cardImageUrl, '/tarot/rws-devil.jpg');
+  });
+
+  it('returns a null card image for a letter without one', async () => {
+    const campaign = campaignSlug('nocard');
+    const seed = 'You came back about the green fence. Tell me what you keep painting.';
+    await createEmailLinkCode({ campaign, continueSeed: seed });
+
+    const res = await request(app)
+      .post(START)
+      .send({ sessionToken: landerSessionToken('t15-nocard'), campaign });
+
+    assert.equal(res.status, 200);
+    assert.equal(res.body.opener, seed);
+    assert.equal(res.body.cardImageUrl, null);
+  });
+
+  // An unknown slug falls back to the STATIC opener, which names no card — so it
+  // must carry none. A picture under a line that never mentions it is the "reads
+  // like an ad" failure the placement rule exists to avoid.
+  it('sends no card image when the campaign does not resolve', async () => {
+    const res = await request(app)
+      .post(START)
+      .send({ sessionToken: landerSessionToken('t15-unknown'), campaign: campaignSlug('unknown') });
+
+    assert.equal(res.status, 200);
+    assert.equal(res.body.opener, brandNewOpener);
+    assert.equal(res.body.cardImageUrl, null);
   });
 
   // The trade-off this task accepts, made explicit: for a reader whose email

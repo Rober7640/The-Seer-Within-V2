@@ -75,10 +75,46 @@ const CONTINUE_SEED =
   "You came — good. I've been holding that line of yours since the email went out. " +
   "Tell me the sentence you keep repeating to yourself, and I'll tell you where it actually came from.";
 
+// Since 2026-08-19 the opener is SPLIT across bubbles and revealed with typing
+// pacing (lib/chatBubbles.ts + LiveThreadLander's opener effect), because Joel's
+// note was that one paragraph reads like a notice and a few messages read like a
+// person. So no element holds CONTINUE_SEED whole any more — these are the three
+// bubbles it becomes, and asserting on each of them is what proves the split
+// kept every word and kept them in order.
+const SEED_BUBBLES = [
+  "You came — good.",
+  "I've been holding that line of yours since the email went out.",
+  "Tell me the sentence you keep repeating to yourself, and I'll tell you where it actually came from.",
+] as const;
+
+// Evelyn's scripted answer to the reply, which is what ASKS for the email —
+// the field is the last beat of her asking, not a form that opens beside it.
+// Matched on the fragment that carries the meaning: she is asking, in the first
+// person, and the ask is about identity rather than about sending mail.
+// Source: RESPONSE_BUBBLES in LiveThreadLander.tsx.
+const RESPONSE_HELD = "it's held on my side now";
+const RESPONSE_ASK = "what's the email you read my letter on?";
+
+// The opener animation (~5s for three bubbles) plus her two answering bubbles
+// (~5.5s) both outrun Playwright's 5s default. Every assertion that waits on a
+// bubble carries this instead, so a slow CI box cannot turn pacing into a
+// red suite. Generous on purpose: it bounds a local animation, not a network.
+const BUBBLE_TIMEOUT_MS = 20_000;
+
 // A substantive reply. The reply path has no low-intent guard (unlike the
 // chatbox arm's /turn), but a real sentence is what a reader actually sends and
 // keeps the fixture honest about what gets parked.
 const READER_REPLY = "I'm not enough. That's the sentence. Every single day.";
+
+// Her second answer. Since 2026-08-19 the lander takes TWO answers before it
+// asks for an email (Joel: "we don't want them to log in so quickly — two
+// questions, engage, and after that the magic link").
+const READER_REPLY_2 = "Since the spring, if I'm honest. Maybe longer.";
+
+// The question she asks back after the FIRST answer — the beat that buys the
+// engagement. Matched on the fragment that carries the meaning: she asks again
+// instead of asking for an email.
+const FOLLOWUP_ASK = "how long have you been carrying that";
 
 const READER_EMAIL = "livethread.qa@example.com";
 
@@ -105,12 +141,21 @@ const COPY = {
   no_match: "Nothing's set up under",
 } as const;
 
-// Frame 2b's footer, under the no_match bubble.
-const NO_MATCH_FOOTER = "We'll email you a one-click link. No password needed.";
+// Evelyn's last bubble before the page moves, and the counter under it.
+//
+// These replaced Frame 2b's old footer, "We'll email you a one-click link. No
+// password needed." — false on both halves: nothing is mailed to a no_match
+// reader, and the form they land on requires a password (LoginPage.tsx:377).
+// The absence assertions below still name that string, so it cannot come back.
+const HANDOFF_BUBBLE = "I'm sending you there now.";
+const HANDOFF_COUNTER = /taking you there in \d+/i;
+const OLD_FALSE_FOOTER = "No password needed";
 
-// EvelynLanderPage.NO_MATCH_HANDOFF_DELAY_MS is 1600ms — the beat that lets the
-// reader read the bubble before the page moves. Waits below must clear it.
-const HANDOFF_DELAY_MS = 1600;
+// LiveThreadLander.NO_MATCH_HANDOFF_DELAY_MS is 6000ms — the beat that lets the
+// reader actually READ the bubble before the page moves (it was 1600ms, which
+// moved the page a fifth of the way into the sentence explaining the move).
+// Waits below must clear it, plus the typing beat before the counter starts.
+const HANDOFF_DELAY_MS = 6_000;
 
 const AUTH_TOKEN_KEY = "seer_auth_token";
 
@@ -134,6 +179,8 @@ interface HarnessOptions {
   replyStatus?: number;
   /** Serve an authenticated visitor (tier 1) from /api/auth/me. */
   authenticated?: boolean;
+  /** Return a card image on /start, as a letter built on a card does. */
+  cardImageUrl?: string;
 }
 
 async function harness(page: Page, opts: HarnessOptions = {}): Promise<Captured> {
@@ -188,6 +235,7 @@ async function harness(page: Page, opts: HarnessOptions = {}): Promise<Captured>
         firstName: null,
         isReturning: !!opts.authenticated,
         opener: CONTINUE_SEED,
+        cardImageUrl: opts.cardImageUrl ?? null,
       }),
     });
   });
@@ -233,9 +281,25 @@ async function harness(page: Page, opts: HarnessOptions = {}): Promise<Captured>
   return captured;
 }
 
-/** Frame 1: the campaign's line, a real compose bar, and no email ask yet. */
+/**
+ * Frame 1: the campaign's line as SEVERAL bubbles, a real compose bar, and no
+ * email ask yet.
+ *
+ * Waits on the LAST bubble first: it only paints once the whole reveal has run,
+ * so the earlier assertions cannot race the animation.
+ */
 async function expectFrameOne(page: Page) {
-  await expect(page.getByText(CONTINUE_SEED, { exact: false })).toBeVisible({ timeout: 20_000 });
+  await expect(page.getByText(SEED_BUBBLES[SEED_BUBBLES.length - 1], { exact: false }))
+    .toBeVisible({ timeout: BUBBLE_TIMEOUT_MS });
+
+  // Every word of the campaign's line survived the split, each in its own
+  // bubble. Counting the bubbles as well as matching them is what would catch a
+  // splitter that dropped or merged a sentence.
+  for (const bubble of SEED_BUBBLES) {
+    await expect(page.getByText(bubble, { exact: false })).toBeVisible();
+  }
+  await expect(page.getByTestId("assistant-message")).toHaveCount(SEED_BUBBLES.length);
+
   await expect(page.getByPlaceholder(COMPOSER)).toBeVisible();
   // The email ask belongs to Frame 1.5 and must not be on screen before the
   // reader has said anything — the spec's "nothing else on screen" wireframe.
@@ -248,9 +312,44 @@ async function expectFrameOne(page: Page) {
  * Enter-to-send is the path a reader on a phone actually takes, and it is the
  * same handler the Send button calls.
  */
-async function sendReply(page: Page, text = READER_REPLY) {
+/** Send ONE answer. Enter-to-send is the path a phone reader actually takes. */
+async function sendOneReply(page: Page, text = READER_REPLY) {
   await page.getByPlaceholder(COMPOSER).fill(text);
   await page.getByPlaceholder(COMPOSER).press("Enter");
+}
+
+/**
+ * Walk the whole reply phase: both answers, ending with the email ask on screen.
+ *
+ * Most tests below care about what happens AFTER the reply phase (outcomes, the
+ * handoff, rollback), so they call this and stay readable. The tests that care
+ * about the two-turn shape itself drive `sendOneReply` directly.
+ */
+async function sendReply(page: Page, text = READER_REPLY) {
+  await sendOneReply(page, text);
+  // Her follow-up question marks turn 1 as accepted and the composer as back.
+  await expect(page.getByText(FOLLOWUP_ASK, { exact: false }))
+    .toBeVisible({ timeout: BUBBLE_TIMEOUT_MS });
+  await expect(page.getByPlaceholder(COMPOSER)).toBeVisible({ timeout: BUBBLE_TIMEOUT_MS });
+  await sendOneReply(page, READER_REPLY_2);
+}
+
+/**
+ * Answer Evelyn's email question and submit.
+ *
+ * Waits for the field on BUBBLE_TIMEOUT_MS because it only appears after her two
+ * answering bubbles have finished typing. Submits with Enter — the path a reader
+ * on a phone takes, and the same handler the send button calls. The button is
+ * asserted separately (it stopped being a "Continue" button in the 2026-08-19
+ * rebuild: the email is now a turn in the thread, so it sends with the same
+ * round arrow the reply does).
+ */
+async function submitEmail(page: Page, email = READER_EMAIL) {
+  const field = page.getByPlaceholder(EMAIL_FIELD);
+  await expect(field).toBeVisible({ timeout: BUBBLE_TIMEOUT_MS });
+  await expect(page.getByRole("button", { name: /send my email address/i })).toBeVisible();
+  await field.fill(email);
+  await field.press("Enter");
 }
 
 async function gotoLander(page: Page, query = "") {
@@ -281,14 +380,164 @@ test.describe("Live Thread (Evelyn) — email → lander → chat continuity", (
     // not a form value that disappears.
     await expect(page.getByText(READER_REPLY, { exact: false })).toBeVisible();
 
-    // Frame 1.5's email ask appears only after the park succeeded.
-    await expect(page.getByPlaceholder(EMAIL_FIELD)).toBeVisible();
+    // Frame 1.5's email ask appears only after the park succeeded — and only
+    // after EVELYN has answered, in her own voice, and asked for it. That her
+    // two bubbles land BEFORE the field is the whole of Joel's third note: the
+    // reader should feel asked by her, not presented with a form.
+    await expect(page.getByText(RESPONSE_HELD, { exact: false }))
+      .toBeVisible({ timeout: BUBBLE_TIMEOUT_MS });
+    await expect(page.getByText(RESPONSE_ASK, { exact: false }))
+      .toBeVisible({ timeout: BUBBLE_TIMEOUT_MS });
+    await expect(page.getByPlaceholder(EMAIL_FIELD)).toBeVisible({ timeout: BUBBLE_TIMEOUT_MS });
 
-    // And the reply that was parked is the reader's actual text, carrying the
-    // session token the post-auth routes later use to find it again.
-    expect(captured.reply).toHaveLength(1);
+    // Two answers were taken, so /reply was called twice.
+    expect(captured.reply).toHaveLength(2);
+
+    // The FIRST park is answer 1 alone — that is what protects a reader who
+    // abandons after one answer.
     expect(captured.reply[0].reply).toBe(READER_REPLY);
+
+    // The SECOND park carries BOTH answers. This is the assertion that matters:
+    // /reply OVERWRITES pending_reply rather than appending (evelynLander.ts), so
+    // posting only the second answer would silently erase the first. Anyone who
+    // "simplifies" the client to send just the latest message fails here.
+    expect(captured.reply[1].reply).toContain(READER_REPLY);
+    expect(captured.reply[1].reply).toContain(READER_REPLY_2);
+
     expect(captured.reply[0].sessionToken, "reply must be keyed to the lander session").toBeTruthy();
+  });
+
+  // ── The card bubble (Joel, 2026-08-20: the Devil letter should show the Devil) ──
+  //
+  // Position is the whole feature, so position is what these assert. The card
+  // goes AFTER the line that names it (above that line it is a picture from a
+  // stranger) and BEFORE the ask (the ask has to stay against the composer, or
+  // the reader is left looking at a picture with an empty box under it).
+  test("the card lands between the line that names it and the ask", async ({ page }) => {
+    await harness(page, { outcome: "no_match", cardImageUrl: "/tarot/rws-devil.jpg" });
+    await gotoLander(page);
+
+    const card = page.getByTestId("assistant-image");
+    await expect(card).toBeVisible({ timeout: BUBBLE_TIMEOUT_MS });
+    const img = card.locator("img");
+    await expect(img).toHaveAttribute("src", "/tarot/rws-devil.jpg");
+    // Not just requested — DECODED. A 404 or a broken path still renders an <img>
+    // with the right src, and the bubble would be an empty white box on the one
+    // screen this feature exists to improve.
+    await expect
+      .poll(() => img.evaluate((el: HTMLImageElement) => el.naturalWidth), {
+        timeout: BUBBLE_TIMEOUT_MS,
+      })
+      .toBeGreaterThan(0);
+
+    // Every seed bubble still arrives, in order — the card is inserted into the
+    // thread, it does not replace or reorder a word of what she says.
+    for (const text of SEED_BUBBLES) {
+      await expect(page.getByText(text, { exact: false }).first())
+        .toBeVisible({ timeout: BUBBLE_TIMEOUT_MS });
+    }
+
+    // …and it sits in the second slot: after bubble 1, before the last bubble
+    // (the ask). Compared in DOM order, which is thread order here.
+    const order = await page.evaluate(() => {
+      const nodes = Array.from(
+        document.querySelectorAll('[data-testid="assistant-message"], [data-testid="assistant-image"]'),
+      );
+      return nodes.map((n) => n.getAttribute("data-testid"));
+    });
+    expect(order[0]).toBe("assistant-message");
+    expect(order[1]).toBe("assistant-image");
+    expect(order[order.length - 1]).toBe("assistant-message");
+  });
+
+  test("a letter with no card shows no image bubble", async ({ page }) => {
+    await harness(page, { outcome: "no_match" });
+    await gotoLander(page);
+
+    await expectFrameOne(page);
+    // The normal case for eight of the nine letters: the thread is exactly what
+    // it was before the card existed.
+    await expect(page.getByTestId("assistant-image")).toHaveCount(0);
+  });
+
+  test("she asks a SECOND question before ever asking for an email", async ({ page }) => {
+    // Joel, 2026-08-19: "we don't want them to log in so quickly, we want to
+    // engage them a bit — two questions, and after that the magic link."
+    await harness(page, { outcome: "no_match" });
+    await gotoLander(page);
+
+    await expectFrameOne(page);
+    await sendOneReply(page);
+
+    // After ONE answer she asks again, and the compose bar comes back.
+    await expect(page.getByText(FOLLOWUP_ASK, { exact: false }))
+      .toBeVisible({ timeout: BUBBLE_TIMEOUT_MS });
+    await expect(page.getByPlaceholder(COMPOSER)).toBeVisible({ timeout: BUBBLE_TIMEOUT_MS });
+
+    // And crucially the email ask is NOT on screen yet — one answer is not enough.
+    await expect(page.getByPlaceholder(EMAIL_FIELD)).toHaveCount(0);
+    await expect(page.getByText(RESPONSE_ASK, { exact: false })).toHaveCount(0);
+
+    // The second answer is what unlocks it.
+    await sendOneReply(page, READER_REPLY_2);
+    await expect(page.getByPlaceholder(EMAIL_FIELD)).toBeVisible({ timeout: BUBBLE_TIMEOUT_MS });
+  });
+
+  test("a reader who answers mid-reveal gets the rest of the opener first, not after", async ({
+    page,
+  }) => {
+    // The pacing must never cost anyone a turn. Someone who reads the first
+    // bubble, knows their answer and sends immediately would otherwise watch
+    // Evelyn finish a thought they had already replied to — the thread would
+    // read out of order. The component flushes what is still queued ahead of
+    // the reader's own bubble instead.
+    const captured = await harness(page, { outcome: "no_match" });
+    await gotoLander(page);
+
+    // Send as soon as the FIRST bubble lands, while the rest are still queued.
+    await expect(page.getByText(SEED_BUBBLES[0], { exact: false }))
+      .toBeVisible({ timeout: BUBBLE_TIMEOUT_MS });
+    await sendOneReply(page);
+
+    // Nothing of hers was dropped by the flush...
+    for (const bubble of SEED_BUBBLES) {
+      await expect(page.getByText(bubble, { exact: false }))
+        .toBeVisible({ timeout: BUBBLE_TIMEOUT_MS });
+    }
+    // ...and all of it sits ABOVE the reader's reply, which is the ordering
+    // claim. Read positionally rather than by index so the assertion survives
+    // a future change to how many bubbles a seed splits into.
+    const bubbles = page.getByTestId("assistant-message");
+    const lastSeedBubble = bubbles.nth(SEED_BUBBLES.length - 1);
+    await expect(lastSeedBubble).toContainText(SEED_BUBBLES[SEED_BUBBLES.length - 1]);
+
+    // And the reply still parked exactly once — flushing is a render concern
+    // and must not touch the request.
+    await expect.poll(() => captured.reply.length).toBe(1);
+    expect(captured.reply[0].reply).toBe(READER_REPLY);
+  });
+
+  test("the email is asked for by Evelyn, not by a form label", async ({ page }) => {
+    // Joel's note, as a regression guard. This step used to render a bordered
+    // panel under a divider, introduced by the THIRD-PERSON line "Save this so
+    // Evelyn can answer it:" — she was described rather than speaking, which is
+    // what made it feel like an AI collecting a field. The ask now lives in her
+    // own bubble, in the first person, and the input sits in the composer.
+    await harness(page, { outcome: "no_match" });
+    await gotoLander(page);
+
+    await expectFrameOne(page);
+    await sendReply(page);
+
+    await expect(page.getByText(RESPONSE_ASK, { exact: false }))
+      .toBeVisible({ timeout: BUBBLE_TIMEOUT_MS });
+
+    // Her question is a message in the thread, not chrome around the input.
+    const askBubble = page.getByTestId("assistant-message").filter({ hasText: RESPONSE_ASK });
+    await expect(askBubble).toHaveCount(1);
+
+    // The third-person framing must not come back, in any casing.
+    await expect(page.getByText(/save this so evelyn/i)).toHaveCount(0);
   });
 
   test("the email ask stays hidden while the park is still in flight", async ({ page }) => {
@@ -301,11 +550,13 @@ test.describe("Live Thread (Evelyn) — email → lander → chat continuity", (
     await gotoLander(page);
 
     await expectFrameOne(page);
-    await sendReply(page);
+    await sendOneReply(page);
 
-    // The optimistic bubble is allowed to paint immediately; the email ask is not.
+    // The optimistic bubble is allowed to paint immediately; nothing else is.
+    // Neither her answer nor the email ask may appear while the park is open.
     await expect(page.getByText(READER_REPLY, { exact: false })).toBeVisible();
     await expect(page.getByPlaceholder(EMAIL_FIELD)).toHaveCount(0);
+    await expect(page.getByText(FOLLOWUP_ASK, { exact: false })).toHaveCount(0);
 
     await expect
       .poll(() => typeof captured.releaseReply === "function", {
@@ -314,7 +565,17 @@ test.describe("Live Thread (Evelyn) — email → lander → chat continuity", (
       .toBe(true);
     captured.releaseReply!();
 
-    await expect(page.getByPlaceholder(EMAIL_FIELD)).toBeVisible();
+    // Released: turn 1 is parked, so the thread advances — she answers and asks
+    // her second question, and the compose bar comes back for it.
+    //
+    // The test stops here on purpose. The guarantee under test is "nothing
+    // advances until the park lands", and turn 1 proves it. Driving turn 2 would
+    // prove nothing extra AND cannot work here anyway: `holdReply` holds every
+    // /reply call while the fixture exposes a single release, so the second park
+    // would hang by construction.
+    await expect(page.getByText(FOLLOWUP_ASK, { exact: false }))
+      .toBeVisible({ timeout: BUBBLE_TIMEOUT_MS });
+    await expect(page.getByPlaceholder(COMPOSER)).toBeVisible({ timeout: BUBBLE_TIMEOUT_MS });
   });
 
   test("a failed park rolls the reply back into the box instead of advancing", async ({ page }) => {
@@ -326,7 +587,7 @@ test.describe("Live Thread (Evelyn) — email → lander → chat continuity", (
     await gotoLander(page);
 
     await expectFrameOne(page);
-    await sendReply(page);
+    await sendOneReply(page);
 
     await expect(page.getByPlaceholder(COMPOSER)).toHaveValue(READER_REPLY);
     await expect(page.getByPlaceholder(EMAIL_FIELD)).toHaveCount(0);
@@ -339,11 +600,17 @@ test.describe("Live Thread (Evelyn) — email → lander → chat continuity", (
 
     await expectFrameOne(page);
     await sendReply(page);
-    await page.getByPlaceholder(EMAIL_FIELD).fill(READER_EMAIL);
-    await page.getByRole("button", { name: /continue/i }).click();
+    await submitEmail(page);
 
     await expect(page.getByText(COPY.no_match, { exact: false })).toBeVisible();
-    await expect(page.getByText(NO_MATCH_FOOTER, { exact: false })).toBeVisible();
+    // She names the move before it happens, and the counter announces it — the
+    // fix for "the redirect was too fast, I did not understand what happened".
+    await expect(page.getByText(HANDOFF_BUBBLE, { exact: false }))
+      .toBeVisible({ timeout: BUBBLE_TIMEOUT_MS });
+    await expect(page.getByText(HANDOFF_COUNTER)).toBeVisible({ timeout: BUBBLE_TIMEOUT_MS });
+    // The old footer promised no password, then sent them to a form that demands
+    // one. It must not return.
+    await expect(page.getByText(OLD_FALSE_FOOTER, { exact: false })).toHaveCount(0);
     // No inbox is promised and no resend is offered: nothing was mailed.
     await expect(page.getByRole("button", { name: /send it again/i })).toHaveCount(0);
 
@@ -366,20 +633,46 @@ test.describe("Live Thread (Evelyn) — email → lander → chat continuity", (
     expect(dest.searchParams.get("landerSessionToken")).toBeTruthy();
   });
 
+  test("no_match: the page does not move at the OLD 1600ms beat, and 'Go now' skips the wait", async ({
+    page,
+  }) => {
+    // The regression this exists for, stated as a clock. At 1600ms — the beat the
+    // handoff used to fire on — the reader is still mid-sentence, so the page must
+    // still be there. Asserting the new delay's LENGTH would just restate the
+    // constant; asserting the old one FAILS if anyone quietly restores it.
+    await harness(page, { outcome: "no_match" });
+    await gotoLander(page);
+
+    await expectFrameOne(page);
+    await sendReply(page);
+    await submitEmail(page);
+
+    await expect(page.getByText(COPY.no_match, { exact: false }))
+      .toBeVisible({ timeout: BUBBLE_TIMEOUT_MS });
+    await page.waitForTimeout(1_600);
+    expect(page.url(), "must not hand off at the old 1600ms beat").toContain("/evelyn");
+
+    // And a reader who reads fast is not held: Go now takes them immediately,
+    // well inside what remains of the countdown.
+    await expect(page.getByTestId("button-live-thread-go-now"))
+      .toBeVisible({ timeout: BUBBLE_TIMEOUT_MS });
+    await page.getByTestId("button-live-thread-go-now").click();
+    await expect.poll(() => page.url(), { timeout: 3_000 }).toMatch(/\/login\?mode=signup/);
+  });
+
   test("verified_match: 'I know you', a resend, and the page does NOT navigate", async ({ page }) => {
     await harness(page, { outcome: "verified_match" });
     await gotoLander(page);
 
     await expectFrameOne(page);
     await sendReply(page);
-    await page.getByPlaceholder(EMAIL_FIELD).fill(READER_EMAIL);
-    await page.getByRole("button", { name: /continue/i }).click();
+    await submitEmail(page);
 
     await expect(page.getByText(COPY.verified_match, { exact: false })).toBeVisible();
     // Frame 2b's copy must NOT also be on screen — the two branches are one
     // switch statement apart and regress into each other easily.
     await expect(page.getByText(COPY.no_match, { exact: false })).toHaveCount(0);
-    await expect(page.getByText(NO_MATCH_FOOTER, { exact: false })).toHaveCount(0);
+    await expect(page.getByText(OLD_FALSE_FOOTER, { exact: false })).toHaveCount(0);
 
     // Spec Frame 2: "Resend available now" — no hidden timer.
     await expect(page.getByRole("button", { name: /send it again/i })).toBeEnabled();
@@ -400,12 +693,11 @@ test.describe("Live Thread (Evelyn) — email → lander → chat continuity", (
 
     await expectFrameOne(page);
     await sendReply(page);
-    await page.getByPlaceholder(EMAIL_FIELD).fill(READER_EMAIL);
-    await page.getByRole("button", { name: /continue/i }).click();
+    await submitEmail(page);
 
     await expect(page.getByText(COPY.unverified_match, { exact: false })).toBeVisible();
     await expect(page.getByText(COPY.verified_match, { exact: false })).toHaveCount(0);
-    await expect(page.getByText(NO_MATCH_FOOTER, { exact: false })).toHaveCount(0);
+    await expect(page.getByText(OLD_FALSE_FOOTER, { exact: false })).toHaveCount(0);
     await expect(page.getByRole("button", { name: /send it again/i })).toBeEnabled();
 
     await page.waitForTimeout(HANDOFF_DELAY_MS + 900);

@@ -220,6 +220,8 @@ export async function createEmailLinkCode(input: {
   campaign: string;
   continueSeed: string;
   personaSlug?: string;
+  /** The letter's card art. Absent for most sends, as in production. */
+  cardImageUrl?: string;
 }): Promise<string> {
   // NOT truncated. `code` is an unbounded varchar, and stamp()'s uniqueness lives
   // in its trailing sequence counter — clipping the string to a "realistic" 7-char
@@ -231,6 +233,7 @@ export async function createEmailLinkCode(input: {
     personaSlug: input.personaSlug ?? 'evelyn-cross',
     campaign: input.campaign,
     continueSeed: input.continueSeed,
+    cardImageUrl: input.cardImageUrl ?? null,
   });
   createdEmailLinkCodes.push(code);
   return code;

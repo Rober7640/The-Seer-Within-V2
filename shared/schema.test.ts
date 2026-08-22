@@ -26,7 +26,9 @@ describe('email_link_codes table', () => {
     );
     const byName = Object.fromEntries(rows.map((r) => [r.column_name, r]));
 
-    assert.equal(rows.length, 9, `expected 9 columns, found ${rows.length}: ${rows.map((r) => r.column_name).join(', ')}`);
+    // 11 since 2026-08-20 (card_image_url). The RUNBOOK's production check counts
+    // the same columns and must move with this number — it reads 15 rows total.
+    assert.equal(rows.length, 11, `expected 11 columns, found ${rows.length}: ${rows.map((r) => r.column_name).join(', ')}`);
 
     assert.equal(byName.code?.data_type, 'character varying');
     assert.equal(byName.code?.is_nullable, 'NO');
@@ -52,6 +54,23 @@ describe('email_link_codes table', () => {
     // get generic Drip 1 copy instead of the bucket-specific phrase.
     assert.equal(byName.bucket?.data_type, 'text');
     assert.equal(byName.bucket?.is_nullable, 'YES');
+
+    // 2026-08-19: the ONE thing an email is about, as a phrase the persona can
+    // say ("the Devil card, and how loose those chains actually are"). Nullable,
+    // because rows minted before this column — and any persona whose pipeline
+    // does not emit one yet — must keep resolving. It is load-bearing for the
+    // CHAT, not the lander: arrivalReading.ts states it as the subject and
+    // anchors every early reply to it, which is what stops the persona
+    // answering a vague "how can you help me?" with a generic services pitch
+    // and dropping the letter's topic on turn one.
+    assert.equal(byName.big_idea?.data_type, 'text');
+    assert.equal(byName.big_idea?.is_nullable, 'YES');
+
+    // 2026-08-20: the card a letter shows in the lander thread, as a URL or a
+    // path on our own origin. Nullable and null for MOST sends — only a letter
+    // built on a card has one — so a null here is the normal case, not a gap.
+    assert.equal(byName.card_image_url?.data_type, 'text');
+    assert.equal(byName.card_image_url?.is_nullable, 'YES');
 
     assert.equal(byName.src?.data_type, 'text');
     assert.equal(byName.src?.is_nullable, 'YES');

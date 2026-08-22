@@ -61,6 +61,16 @@ export interface EmailReadingBrief {
   openLoop: string;
   /** A register-example opener Evelyn can use to pick the thread back up (turn 0). */
   continueSeed: string;
+  /**
+   * The ONE thing this email is about, as a short noun phrase she can say out
+   * loud: "the Devil card and its loose chains". Optional — a campaign without
+   * one still gets the recap and open loop, just no explicit anchor.
+   *
+   * This is what keeps the CHAT on topic, not just the lander opener. See the
+   * `big_idea` column comment in shared/schema.ts for why it is stated rather
+   * than inferred from the recap.
+   */
+  bigIdea?: string;
 }
 
 const BRIEFS: EmailReadingBrief[] = [
@@ -73,7 +83,8 @@ const BRIEFS: EmailReadingBrief[] = [
     openLoop:
       "You asked them to bring you the question they're really asking about someone — the true one hiding under the one they keep repeating — so you could find the question they actually get to answer.",
     continueSeed:
-      "You came to find your real question — good. Tell me the one you keep asking about them, and let's find what's actually hiding under it.",
+      "You came back about the list — the man who fixed everything he could think of to prove it to one person. Tell me the question you keep asking about them, and I'll show you the truer one hiding underneath it.",
+    bigIdea: "the man's list \u2014 every fix he made to prove he'd changed, with her name under it",
   },
   {
     campaign: 'reframe-02-fence',
@@ -84,7 +95,8 @@ const BRIEFS: EmailReadingBrief[] = [
     openLoop:
       "You asked them to notice which fence THEY keep painting — the ritual, the untouched side of the bed, the thing they keep exactly as it was — and come tell you what it is.",
     continueSeed:
-      "You came to tell me about your fence — good. Tell me what it is you keep painting the same color, and let's find out what you're really keeping alive.",
+      "You came back about the green fence — the one he repaints the same colour every spring. Tell me what you keep painting, and I'll tell you what you're really keeping alive.",
+    bigIdea: "the widower's green fence, repainted her colour every spring",
   },
   {
     campaign: 'reframe-03-devil',
@@ -95,7 +107,8 @@ const BRIEFS: EmailReadingBrief[] = [
     openLoop:
       "You asked them to simply name the loop out loud — the one true sentence about what they keep going back to — without trying to lift it yet.",
     continueSeed:
-      "You came to name your loop — good. Tell me the sentence, the true one about what you keep going back to, and we'll look at what it's really tied to.",
+      "You came back about the Devil card — those chains, loose enough to lift off with two hands and a decision. Tell me the one you haven't lifted yet, the thing you keep going back to, and we'll look at what it's actually tied to.",
+    bigIdea: "the Devil card, and how loose those chains actually are",
   },
   {
     campaign: 'reframe-04-serious',
@@ -106,7 +119,8 @@ const BRIEFS: EmailReadingBrief[] = [
     openLoop:
       "You asked them to tell you the line they catch themselves repeating — the one you'd read as guarding something.",
     continueSeed:
-      "You came — good. I've been holding that line of yours, the one you say twice. Tell me what it is, and I'll tell you what it's guarding.",
+      "You came back about the tell — the sentence said twice. I've been holding that line of yours since the letter went out. Tell me what it is, and I'll tell you what it's guarding.",
+    bigIdea: "the tell \u2014 a sentence said twice is a flinch, not a preference",
   },
   {
     campaign: 'reframe-05-peace',
@@ -117,7 +131,8 @@ const BRIEFS: EmailReadingBrief[] = [
     openLoop:
       "You gave them a truer sentence to test their peace against — \"I'm keeping everyone at a distance so nothing can reach me\" — and told them if it landed, not to sit with that alone.",
     continueSeed:
-      "You came to find out what you're really guarding — good. So tell me honestly: this peace of yours, is it still a door someone could knock on, or has it become the wall?",
+      "You came back about protecting your peace — good. So tell me honestly: is it still a door someone could knock on, or has it quietly become the wall?",
+    bigIdea: "the phrase \"protecting my peace\", and whether it is a boundary or a wall",
   },
   {
     campaign: 'reframe-06-love-yourself',
@@ -128,7 +143,8 @@ const BRIEFS: EmailReadingBrief[] = [
     openLoop:
       "You gave them a truer question to sit with — \"where am I turning love away because I've decided I haven't earned it yet\" — and asked them to come tell you where they're standing outside that door.",
     continueSeed:
-      "You came to find your door — good. Tell me where you've been turning love away because you don't think you've earned it, and let's look at what's really locking it.",
+      "You came back about that saying — that you can't love anyone until you love yourself. Tell me where you've been turning love away because you decided you haven't earned it yet, and we'll look at what's really locking that door.",
+    bigIdea: "the myth that you cannot be loved until you love yourself",
   },
   {
     campaign: 'reframe-07-song',
@@ -139,7 +155,8 @@ const BRIEFS: EmailReadingBrief[] = [
     openLoop:
       "You asked them to tell you their sign — the thing that keeps finding them — so you could tell them what you think it's really pointing at, what it's asking OF them rather than what it's promising.",
     continueSeed:
-      "You came to tell me your sign — good. Tell me the thing that keeps finding you, and I'll tell you what I think it's really asking of you.",
+      "You came back about the song — the one that keeps finding you everywhere. Tell me what it is, and I'll tell you what your attention is really flagging.",
+    bigIdea: "the song that keeps finding you, and what it is really flagging",
   },
   {
     campaign: 'reframe-08-lighthouse',
@@ -150,7 +167,8 @@ const BRIEFS: EmailReadingBrief[] = [
     openLoop:
       "You asked them which lamp they've let go dark while watching the sea — the piece of their own life they keep saving for \"once they come\" — and to come tell you what it is.",
     continueSeed:
-      "You came to tell me about your lamp — good. Tell me which one you've let go dark while you've been watching the water, and let's light it.",
+      "You came back about the lamp — the keeper lighting it every night for ships that rarely come. Tell me which of yours you've let go dark while you watched the water, and let's light it.",
+    bigIdea: "the keeper's lamp, lit for ships that rarely come",
   },
   {
     campaign: 'reframe-09-stop-looking',
@@ -161,7 +179,8 @@ const BRIEFS: EmailReadingBrief[] = [
     openLoop:
       "You gave them a truer question to sit with — \"where am I auditioning, when I could just be living\" — and asked them to come tell you if they can feel the difference but can't quite find it.",
     continueSeed:
-      "You came to find where you're standing — good. Tell me where you think you've been auditioning instead of living, and let's find the difference.",
+      "You came back about that advice — that you'll find love when you stop looking. Tell me where you've been auditioning instead of living, and we'll find the difference.",
+    bigIdea: "the advice that you will find love when you stop looking",
   },
 ];
 
@@ -211,6 +230,7 @@ function briefFromRow(row: {
   readingRecap: string | null;
   openLoop: string | null;
   continueSeed: string;
+  bigIdea: string | null;
 }): EmailReadingBrief | null {
   const readingRecap = row.readingRecap?.trim();
   const openLoop = row.openLoop?.trim();
@@ -221,6 +241,7 @@ function briefFromRow(row: {
     readingRecap,
     openLoop,
     continueSeed: row.continueSeed,
+    bigIdea: row.bigIdea?.trim() || undefined,
     // No label column — see EmailReadingBrief.label.
   };
 }
@@ -253,6 +274,7 @@ export async function resolveEmailReadingBrief(
         readingRecap: emailLinkCodes.readingRecap,
         openLoop: emailLinkCodes.openLoop,
         continueSeed: emailLinkCodes.continueSeed,
+        bigIdea: emailLinkCodes.bigIdea,
       })
       .from(emailLinkCodes)
       .where(

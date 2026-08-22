@@ -1,3 +1,11 @@
+import {
+  SOULMATE_AGEBAND_LANDER_HOOKS,
+  SOULMATE_KEYWORD_BLOCKED_LANDER_HOOKS,
+  SOULMATE_KEYWORD_CONNECTION_LANDER_HOOKS,
+  SOULMATE_KEYWORD_ENERGY_LANDER_HOOKS,
+  SOULMATE_KEYWORD_HEALING_LANDER_HOOKS,
+} from '@shared/soulmateLanderHooks'
+
 // Copy + lookup tables for the /fb-tarot "decode-him card" quiz-bridge funnel.
 // Single source of truth shared by TarotBridge (the lander) and useConversation
 // (the chat handoff). Parallel to palmReads.ts but a SEPARATE system so the palm
@@ -626,6 +634,43 @@ export type TarotHook =
   // sends her back through her own phone on a stranger's say-so, the second invents a loss for
   // her to grieve. Nor may the opposite be promised — "he is still ahead of you" is a forecast.
   | 'cards-met-already' // Have I already met my soulmate without realizing it?
+  // Closure hooks (2026-08-18). The THIRD family aimed at her own mind, and what separates
+  // it from the other two is visible in the headlines: HE IS NOT IN THEM. healing reads the
+  // THINKING; missing-him reads the ACHE OF HIS ABSENCE; closure reads HER OWN RECOVERY AS A
+  // PROJECT SHE BELIEVES SHE IS FAILING AT.
+  //
+  // 🔴🔴 THE DEFINING BAN IS THE "EVER", and BOTH answers are unusable. "Yes, you will heal"
+  // is a forecast about the inside of a person, and if she is still hurting later it becomes
+  // evidence to her that she is failing. "No" is cruel and equally invented. The one that will
+  // try hardest to sneak in — "you will, in time" — is a timeframe wearing a disguise. No
+  // schedule, no stages of grief, no "you'll know when".
+  //
+  // 🔴🔴 'cards-feel-like-myself' IS THE CLOSEST THIS FUNNEL COMES TO DEPRESSION LANGUAGE.
+  // Never diagnose her, never imply she needs fixing, never manufacture despair, and never
+  // make her recovery conditional on work she must do first.
+  | 'cards-find-closure' // Will I ever find closure?
+  | 'cards-heart-heal' // Will my heart ever heal?
+  | 'cards-feel-like-myself' // Am I ever going to feel like myself again?
+  // Soulmate-return hooks (2026-08-19). ⭐⭐ THE ORGAN — THE LABEL IS ASKED TO PREDICT. Every
+  // neighbour keeps the label and the return apart; here they are welded, and the weld IS the
+  // family: reunion asks whether HE comes back and names no label; twin-flame re-asks three
+  // RUNNING questions in her vocabulary, where the label is a wrapper; soulmate-label asks
+  // whether the WORD FITS and asks for no return. These use the word AS THE REASON HE MUST
+  // COME BACK. 'cards-was-he-soulmate' is the same machine BACKWARDS.
+  //
+  // 🔴 'cards-twinflame-back' carries the SAME headline as the live 'cards-twin-back' —
+  // deliberately, operator decision 2026-08-19, the same call made for cards-come-back against
+  // cards-return on 08-04. The incumbent keeps its ad URL and its twin-flame angle. Same deck,
+  // same art, same headline ⇒ THE READS ARE THE ONLY VARIABLE, so they are written bespoke and
+  // length-matched. The incumbent argues the community tropes; these attack the INFERENCE.
+  //
+  // 🔴🔴 THE LABEL MAY NEVER CARRY A PREDICTION — never "he is your soulmate so he returns",
+  // never the negative, and never "if he is truly yours he will come back", which makes his
+  // return the proof of the bond and his ABSENCE EVIDENCE AGAINST HER. The reverse cruelty
+  // ("he was never really yours") is banned equally, as is ranking the labels.
+  | 'cards-my-soulmate-back' // Is my soulmate coming back to me?
+  | 'cards-twinflame-back' // Is my twin flame coming back to me?
+  | 'cards-was-he-soulmate' // Was he ever really my soulmate?
   // Self-frame hooks (read HER, affirm the hopeful yes — like the palm love hooks).
   | 'cards-love-again' // Will I love again?
   | 'cards-soulmate' // When is my soulmate coming?
@@ -1080,6 +1125,23 @@ export const SOULMATE_LABEL_HOOKS: TarotHook[] = [
   'cards-met-already',
 ]
 
+// The closure hooks (2026-08-18). Its own angle rather than folding into HEALING_HOOKS or
+// MISSING_HIM_HOOKS — he is named in neither the headlines nor the reads.
+export const CLOSURE_HOOKS: TarotHook[] = [
+  'cards-find-closure',
+  'cards-heart-heal',
+  'cards-feel-like-myself',
+]
+
+// The soulmate-return hooks (2026-08-19). Its own angle, not REUNION_HOOKS (pinned at three),
+// not TWIN_FLAME_HOOKS (filing the challenger there would put it in the same bucket as its own
+// control) and not SOULMATE_LABEL_HOOKS (which asks for no return).
+export const SOULMATE_RETURN_HOOKS: TarotHook[] = [
+  'cards-my-soulmate-back',
+  'cards-twinflame-back',
+  'cards-was-he-soulmate',
+]
+
 // ── The money-block families (2026-08-19) ────────────────────────────────────────────────
 // Four angles, not one, because the comparison IS the batch: age-matched framing (55-64 vs
 // 65+) against mechanism-matched framing (her energy, her prayers). money-prayer is pinned at
@@ -1225,6 +1287,15 @@ export type TarotAngle =
   // are claims about him that could in principle be checked. A label can never be checked at all,
   // which is why the family needs its own guard and its own numbers.
   | 'soulmate-label'
+  // 🔴 'closure' is the third family reading HER MIND, and it is NOT 'healing' or 'missing-him'.
+  // Those two keep a man in the frame; these three name nobody. NOT 'self-frame' either: that
+  // family affirms the hopeful yes, and here the hopeful yes is the central banned move.
+  | 'closure'
+  // 🔴 'soulmate-return' is the CROSSOVER of reunion and the two label families and is none of
+  // them: it asks the WORD TO GUARANTEE THE RETURN. One of its hooks shares a headline with a
+  // live twin-flame lander it is A/B'd against, so pooling would put a challenger in the same
+  // bucket as its own control.
+  | 'soulmate-return'
   | 'self-frame'
   // The four money-block angles (2026-08-19). Separate labels so PostHog can compare
   // age-matched framing against mechanism-matched framing, and 55-64 against 65+.
@@ -1232,6 +1303,23 @@ export type TarotAngle =
   | 'money-working'
   | 'money-energy'
   | 'money-prayer'
+  // The five soulmate-lander angles (2026-08-21), from docs/fb-ad-test-queue.md tests
+  // A and B. ONE label for the whole age-band family, because the band lives in the ad
+  // set and never in the copy — per-band numbers come from the ad, and giving each band
+  // its own angle would put the same eleven landers in four buckets that PostHog cannot
+  // recombine. Then one label PER KEYWORD, because there the keyword IS the variable
+  // under test and it is carried by the hook — the same shape as the four money angles.
+  //
+  // 🔴 NOT folded into 'soulmate-where', 'soulmate-after-loss' or 'soulmate-label',
+  // which share the word and nothing else. Those ask where he is, whether there is one
+  // after a death, and whether a specific man deserves the label. These ask whether she
+  // has run out of time, and what is blocking her — and the keyword four exist precisely
+  // to be compared against each other, which pooling would destroy.
+  | 'soulmate-ageband'
+  | 'soulmate-blocked'
+  | 'soulmate-connection'
+  | 'soulmate-energy'
+  | 'soulmate-healing'
 
 export function angleForHook(hook: TarotHook): TarotAngle {
   if (SELF_FRAME_HOOKS.includes(hook)) return 'self-frame'
@@ -1255,50 +1343,46 @@ export function angleForHook(hook: TarotHook): TarotAngle {
   if (STILL_FEELS_HOOKS.includes(hook)) return 'still-feels'
   if (HIS_OTHER_LIFE_HOOKS.includes(hook)) return 'his-other-life'
   if (SOULMATE_LABEL_HOOKS.includes(hook)) return 'soulmate-label'
+  if (CLOSURE_HOOKS.includes(hook)) return 'closure'
+  if (SOULMATE_RETURN_HOOKS.includes(hook)) return 'soulmate-return'
   if (MONEY_RETIRING_HOOKS.includes(hook)) return 'money-retiring'
   if (MONEY_WORKING_HOOKS.includes(hook)) return 'money-working'
   if (MONEY_ENERGY_HOOKS.includes(hook)) return 'money-energy'
   if (MONEY_PRAYER_HOOKS.includes(hook)) return 'money-prayer'
+  // 🔴 THESE FIVE WERE MISSING when the nineteen soulmate landers were written: the
+  // rosters below were declared and never consulted, so every one of them fell through
+  // to 'decode-him' and reported as a decode-him lander in `tarot_bridge_view`,
+  // `tarot_card_select` and the version-test exposure. Silent — the pages rendered
+  // correctly and only the attribution was wrong, which is the kind of thing that is
+  // discovered a month later when the numbers refuse to add up.
+  if (SOULMATE_AGEBAND_HOOKS.includes(hook)) return 'soulmate-ageband'
+  if (KEYWORD_BLOCKED_HOOKS.includes(hook)) return 'soulmate-blocked'
+  if (KEYWORD_CONNECTION_HOOKS.includes(hook)) return 'soulmate-connection'
+  if (KEYWORD_ENERGY_HOOKS.includes(hook)) return 'soulmate-energy'
+  if (KEYWORD_HEALING_HOOKS.includes(hook)) return 'soulmate-healing'
   return 'decode-him'
 }
 
-// Soulmate age-band (2026-08-19) — ONE angle, not four. The band lives in the ad set and
-// never in the copy, so per-band reporting comes from the ad, not from the hook.
-export const SOULMATE_AGEBAND_HOOKS: TarotHook[] = [
-  'cards-slipping-past',
-  'cards-choosing-wrong',
-  'cards-found-me-yet',
-  'cards-keeps-waiting',
-  'cards-missed-chance',
-  'cards-after-marriage',
-  'cards-second-time',
-  'cards-best-years',
-  'cards-too-late-love',
-  'cards-longer-to-wait',
-  'cards-allowed-to-want',
-]
-
-// Soulmate keyword (2026-08-20) — one angle PER KEYWORD, because the keyword is the variable
-// under test and it is carried by the hook. Mirrors the money family's four sub-angles.
-export const KEYWORD_BLOCKED_HOOKS: TarotHook[] = [
-  'cards-blocking-soulmate',
-  'cards-blocked-before',
-]
-
-export const KEYWORD_CONNECTION_HOOKS: TarotHook[] = [
-  'cards-connection-soulmate',
-  'cards-connection-nothing',
-]
-
-export const KEYWORD_ENERGY_HOOKS: TarotHook[] = [
-  'cards-energy-away',
-  'cards-energy-soulmate',
-]
-
-export const KEYWORD_HEALING_HOOKS: TarotHook[] = [
-  'cards-waiting-to-heal',
-  'cards-heal-first',
-]
+// The five soulmate-lander rosters. The slugs themselves live in
+// shared/soulmateLanderHooks.ts, NOT here, because the server needs the identical
+// nineteen to route their free-list and bumpProduct (shared/soulmateLander.ts) and two
+// hand-maintained copies of the same roster is the drift this codebase avoids. These
+// re-exports keep every existing reader — angleForHook above, the copy guards — working
+// off the registry name it already used.
+//
+// The `as TarotHook[]` cast is what the shared file cannot do for itself: TarotHook is
+// declared here and shared/ must not import client content. It is not a hole — a test
+// asserts all nineteen appear in TAROT_HOOKS, which is the same guarantee the union
+// type gives, checked at test time instead of compile time.
+//
+// Age-band is ONE angle, not four: the band lives in the ad set and never in the copy,
+// so per-band reporting comes from the ad, not from the hook. Keyword is one angle each,
+// because there the keyword IS the variable under test.
+export const SOULMATE_AGEBAND_HOOKS = SOULMATE_AGEBAND_LANDER_HOOKS as unknown as TarotHook[]
+export const KEYWORD_BLOCKED_HOOKS = SOULMATE_KEYWORD_BLOCKED_LANDER_HOOKS as unknown as TarotHook[]
+export const KEYWORD_CONNECTION_HOOKS = SOULMATE_KEYWORD_CONNECTION_LANDER_HOOKS as unknown as TarotHook[]
+export const KEYWORD_ENERGY_HOOKS = SOULMATE_KEYWORD_ENERGY_LANDER_HOOKS as unknown as TarotHook[]
+export const KEYWORD_HEALING_HOOKS = SOULMATE_KEYWORD_HEALING_LANDER_HOOKS as unknown as TarotHook[]
 
 export const TAROT_HOOKS: TarotHook[] = [
   'cards-honest',
@@ -1367,6 +1451,12 @@ export const TAROT_HOOKS: TarotHook[] = [
   'cards-really-soulmate',
   'cards-twin-or-connection',
   'cards-met-already',
+  'cards-find-closure',
+  'cards-heart-heal',
+  'cards-feel-like-myself',
+  'cards-my-soulmate-back',
+  'cards-twinflame-back',
+  'cards-was-he-soulmate',
   'cards-love-again',
   'cards-soulmate',
   'cards-blocked-retiring',
@@ -1538,6 +1628,15 @@ export const HEADLINES: Record<TarotHook, string> = {
   'cards-really-soulmate': 'Is he really my soulmate?',
   'cards-twin-or-connection': 'Is he my twin flame, or just a strong connection?',
   'cards-met-already': 'Have I already met my soulmate without realizing it?',
+  'cards-find-closure': 'Will I ever find closure?',
+  'cards-heart-heal': 'Will my heart ever heal?',
+  'cards-feel-like-myself': 'Am I ever going to feel like myself again?',
+  // ⚠️ 'cards-twinflame-back' carries the SAME string as the live 'cards-twin-back' —
+  // deliberately, operator decision 2026-08-19, the second such pair after cards-return /
+  // cards-come-back. The incumbent is untouched and stays in the twin-flame angle.
+  'cards-my-soulmate-back': 'Is my soulmate coming back to me?',
+  'cards-twinflame-back': 'Is my twin flame coming back to me?',
+  'cards-was-he-soulmate': 'Was he ever really my soulmate?',
   'cards-love-again': 'Will I love again?',
   'cards-soulmate': 'When is my soulmate coming?',
   'cards-blocked-retiring': "Why is my money still blocked this close to retiring?",
@@ -1822,6 +1921,19 @@ const TAROT_QUESTION: Record<TarotHook, string> = {
   // 🔴 Never "who do you think it might have been?" — naming a person is the family's hardest ban.
   // Asks what set the wondering off, which is the material the read actually works with.
   'cards-met-already': "Before I look closer, tell me… what set you wondering whether it has already happened?",
+  // Closure. 🔴🔴 NONE MAY ASK HOW LONG IT HAS BEEN — the family refuses the calendar, and an
+  // opener that asks for one hands her the measuring stick the read then takes away. 🔴 None may
+  // ask her to rate her own progress either; that is the self-assessment the reads name as harm.
+  'cards-find-closure': "Before I look closer, tell me… what would have to happen for you to be able to call this finished?",
+  'cards-heart-heal': "Before I look closer, tell me… what does mended look like to you — what would you be doing on an ordinary day?",
+  'cards-feel-like-myself': "Before I look closer, tell me… the version of yourself you are trying to get back to, what was she like?",
+  // Soulmate-return. 🔴🔴 NONE MAY ASK WHETHER SHE THINKS HE IS COMING BACK, or when he left, or
+  // how long it has been — the family declines to forecast, and an opener that asks for one hands
+  // her the expectation the read then sets down. 🔴 None may invite her to argue the label.
+  // 🔴 'cards-twinflame-back' must not reuse the live 'cards-twin-back' opener.
+  'cards-my-soulmate-back': "Before I look closer, tell me… what has that word been promising you while you wait?",
+  'cards-twinflame-back': "Before I look closer, tell me… when the word first came to you for this, what was it you were trying to explain?",
+  'cards-was-he-soulmate': "Before I look closer, tell me… what has made you start asking it in the past tense?",
   'cards-love-again': "Before I look closer, tell me… what has been weighing on your heart since it happened?",
   'cards-soulmate': "Before I look closer, tell me… what is the love you're still holding out for — the one you haven't given up on?",
   'cards-blocked-retiring': "Before I look closer, tell me… what was that money supposed to have made possible by now?",
@@ -4573,6 +4685,159 @@ const RETURN_MHF: CardSetConfig = {
         "You asked if you've already met your soulmate. Your hand went to the one with road ahead.",
         "So there's road ahead of you, dear. Plainly, and plenty of it.\nAnd all of it is unwalked, dear. He faces forward the whole time.\nBut a meeting behind you wouldn't close a road like that, dear.\nThat's why the fear doesn't hold, dear, whichever way the answer goes.",
         "Let me look closer at what has been narrowing the road for you…",
+      ],
+    },
+    // ── CLOSURE (2026-08-18), rewritten to the Natural Tarot-Cut 2026-08-19. HE IS NOT IN
+    // THIS FAMILY — do not supply him, do not read his intentions, do not make her recovery
+    // conditional on anything he does. 🔴🔴 THE "EVER" MAY NEVER BE ANSWERED, in either
+    // direction, and "you will, in time" is a timeframe wearing a disguise. No schedule, no
+    // stages of grief, no "you'll know when". 🔴🔴 NEVER PATHOLOGISE OR DIAGNOSE HER.
+    // ⭐ Each read must still LAND something — a refusal on its own abandons her.
+    'cards-find-closure': {
+      // Finding: closure has been sold to her as an OBJECT somebody hands over — a last
+      // conversation, an apology — so she waits on a delivery nobody agreed to send, and reads
+      // each day it does not arrive as her own failure.
+      a: [
+        "You turned the Magician, dear. Look — every tool he needs is already on his own table.",
+        "You asked if closure will ever come. Your hand went to the man who makes things himself.",
+        "So the wanting of it is fair, dear. Anyone would want an end.\nAnd every tool there, dear, was brought along. None was handed over.\nBut closure was sold to you as a thing that gets handed over, dear.\nThat's why the waiting hurts. You are waiting on a parcel nobody agreed to send.",
+        "Let me look closer at what has been left for you to wait on…",
+      ],
+      b: [
+        "You turned the Hanged Man, dear. Look — hanging by one ankle, and not struggling at all.",
+        "You asked if closure will ever come. Your hand went to the one who waits.",
+        "So you have waited a long time, dear. I can see that much.\nAnd look at the card. Still, dear, but not finished.\nBut when the waiting ends is not mine to say, dear. No card knows that.\nThat's why the not-knowing is the heavy part, and not any fault in you.",
+        "Let me look closer at what has been keeping you hanging there…",
+      ],
+      c: [
+        "You turned the Fool, dear. Look — one foot over the edge, everything owned in one small bundle.",
+        "You asked if closure will ever come. Your hand went to the one who travels light.",
+        "So you are carrying more than you should be, dear.\nAnd look at that bundle. Small, dear, and still enough to go on with.\nBut I will not promise you an ending, dear, and I will not deny you one.\nThat's why I say this instead: the peace you want was never his to sign for.",
+        "Let me look closer at what has been sitting in your own bundle…",
+      ],
+    },
+    'cards-heart-heal': {
+      // Finding: "heal" is a word borrowed from medicine and brings a chart with it — a wound, a
+      // schedule, a patient — so she runs a second exhausting task alongside the feeling: an
+      // assessment of how well she is doing at having it.
+      a: [
+        "You turned the Magician, dear. Look — one hand to the sky, one hand to the ground.",
+        "You asked if your heart will mend. Your hand went to the man who works with both.",
+        "So your hurt is real, dear. I would not pretend it away.\nAnd see how the figure stands, dear. Joined to sky and ground at once.\nBut heal is a doctor's word, dear, and it brought a chart in with it.\nThat's why you check it daily. A heart that hurts this much is working.",
+        "Let me look closer at what has been asking you to report your progress…",
+      ],
+      b: [
+        "You turned the Hanged Man, dear. Look — upside down, and his face is calm.",
+        "You asked if your heart will mend. Your hand went to the one who is still.",
+        "So you have been turned upside down, dear. That is what it feels like.\nAnd look at that face. Nothing in it is fighting, dear.\nBut I will not give you a date, dear, and I will not give you a season.\nThat's why nobody can mark you late. There is no schedule to be behind.",
+        "Let me look closer at what has been keeping the score for you…",
+      ],
+      c: [
+        "You turned the Fool, dear. Look — eyes on the sky, and the road not walked yet.",
+        "You asked if your heart will mend. Your hand went to the one who sets out anyway.",
+        "So you are still going, dear. You came here tonight, after all.\nAnd the road ahead is blank, dear. Not one step written on it.\nBut that means I cannot promise the mending, and I will not deny it either.\nThat's why I would rather say this: you are not a wound to be inspected daily.",
+        "Let me look closer at what has been under inspection every morning…",
+      ],
+    },
+    'cards-feel-like-myself': {
+      // Finding: the word doing the damage is "again" — it puts the correct version of her in the
+      // past, so every morning she does not feel like that person is counted against her.
+      // 🔴🔴 The closest hook on the funnel to depression language. Never diagnose, never imply she
+      // needs fixing, never manufacture despair.
+      a: [
+        "You turned the Magician, dear. Look — the tools are laid out, and they are all his own.",
+        "You asked if you will feel like yourself again. Your hand went to the man who begins.",
+        "So you have not felt like yourself, dear. I hear that.\nAnd look at that table. Every tool on it was already there, dear.\nBut the word again is doing you harm, dear. It puts the right you behind you.\nThat's why each morning feels like a fail. You are marking against someone gone.",
+        "Let me look closer at what has been set as the version to get back to…",
+      ],
+      b: [
+        "You turned the Hanged Man, dear. Look — the whole world the other way up, and he is calm.",
+        "You asked if you will feel like yourself again. Your hand went to the changed view.",
+        "So everything looks wrong from here, dear. It would.\nAnd look at him. The view turned over, dear, not the man hanging in it.\nBut I will not tell you that self is gone, and I will not promise her back.\nThat's why I say this instead: you are not waiting to become yourself.",
+        "Let me look closer at what has been turned around on you…",
+      ],
+      c: [
+        "You turned the Fool, dear. Look — one foot over the edge, and still looking up.",
+        "You asked if you will feel like yourself again. Your hand went to the one who goes on.",
+        "So you came looking tonight, dear. That took something.\nAnd look at the Fool, going anyway, dear, with no promise at the end of it.\nBut I have no date for you, dear, and no stages to walk you through.\nThat's why I point at the plain thing. The woman who came looking is you.",
+        "Let me look closer at what has been carried this far already…",
+      ],
+    },
+    // ── SOULMATE-RETURN (2026-08-19), written to the Natural Tarot-Cut. 🔴🔴 THE LABEL MAY
+    // NEVER CARRY A PREDICTION — not "he is your soulmate so he returns", not the negative,
+    // and never "if he is truly yours he will come back", which makes his return the proof of
+    // the bond and his ABSENCE EVIDENCE AGAINST HER. The reverse cruelty ("he was never really
+    // yours") is banned equally. 🔴🔴 The label itself is refused in BOTH directions and the
+    // ranking is refused rather than settled. 🔴 No predicted return, no date, no motive for
+    // his leaving, no tactic. ⭐⭐ cards-twinflame-back shares headline, deck and art with the
+    // live cards-twin-back, so THE READS ARE THE ONLY VARIABLE: the incumbent argues the
+    // community tropes, these attack the INFERENCE that a name can forecast a man.
+    'cards-my-soulmate-back': {
+      // Finding: the word is a DESCRIPTION she gave because of how it felt, and a description is
+      // not a mechanism — it does not steer anybody and was never a contract he signed.
+      a: [
+        "You turned the Magician, dear. Look — every tool he needs, already there on the table.",
+        "You asked if your soulmate is coming back. Your hand went to the man who does things.",
+        "So what you felt was real, dear. I can see the size of it.\nAnd his hands are already at work, dear. Doing is what he knows, not naming.\nBut a word is not a tool, dear. It cannot walk a man back through a door.\nThat's why the word cannot answer you. What you felt is true either way.",
+        "Let me look closer at what has been asked of that one word…",
+      ],
+      b: [
+        "You turned the Hanged Man, dear. Look — the whole card hangs the other way up.",
+        "You asked if your soulmate is coming back. Your hand went to the turned-round view.",
+        "So read your own question back, dear. Slowly.\nAnd look what you put at the front of it. Not the man, dear. The word.\nBut the word cannot promise you anything, dear, in either direction.\nThat's why the answer felt so close. You had built it into the asking.",
+        "Let me look closer at what has been standing in for an answer…",
+      ],
+      c: [
+        "You turned the Fool, dear. Look — one foot over the edge, and nothing written yet.",
+        "You asked if your soulmate is coming back. Your hand went to the open road.",
+        "So nothing here is settled, dear, in either direction.\nAnd look at the road. Not one step of it is decided, dear.\nBut that cuts both ways, dear. No word obliges him, and none obliges you.\nThat's why I will not hand you a yes. A yes only sets your place again.",
+        "Let me look closer at what has been holding your place open…",
+      ],
+    },
+    'cards-twinflame-back': {
+      // 🔴 BESPOKE against the live cards-twin-back, which argues the distance doing secret work,
+      // the absence as a phase, and the return as something she must earn. These attack the
+      // INFERENCE instead: the naming came after the feeling, and a name has no hands.
+      a: [
+        "You turned the Magician, dear. Look — his table is set, and he is already at work.",
+        "You asked if your twin flame is coming back. Your hand went to the worker, not the word.",
+        "So you gave it a name, dear. That was fair.\nAnd look at what he is doing, dear. Working, not labelling.\nBut naming is one act and returning is another, dear. Only one has hands.\nThat's why the name cannot fetch him. It was never built to do that.",
+        "Let me look closer at what has been asked of the name you gave it…",
+      ],
+      b: [
+        "You turned the Hanged Man, dear. Look — hanging by one ankle, seeing it all backwards.",
+        "You asked if your twin flame is coming back. Your hand went to the reversed order.",
+        "So think about which came first, dear.\nAnd it was the feeling. The word came after, dear, to explain the size of it.\nBut a word that explains the past cannot forecast a man, dear.\nThat's why it feels like proof and settles nothing. It is your account.",
+        "Let me look closer at what came first, and what came after…",
+      ],
+      c: [
+        "You turned the Fool, dear. Look — everything they own tied in one small bundle.",
+        "You asked if your twin flame is coming back. Your hand went to the one who carries no rank.",
+        "So somebody sorted these things into levels, dear, and put yours at the top.\nAnd look at the Fool. No ladder, dear. One bundle and a road.\nBut I will not place what you have on any rung, dear, high or low.\nThat's why I refuse the ladder. No rank comes with a man attached.",
+        "Let me look closer at what has been measured against a ladder…",
+      ],
+    },
+    'cards-was-he-soulmate': {
+      // Finding: she is reading the whole of it backwards from the last page, and hindsight lays
+      // everything learned since over the earlier days as though it had been visible then.
+      // 🔴 Never revoke the word and never confirm it; never grade her earlier self.
+      a: [
+        "You turned the Magician, dear. Look — what is on that table got put there by hand.",
+        "You asked if he was ever really your soulmate. Your hand went to what was built.",
+        "So something was built, dear. That happened.\nAnd look at the table. Made things, dear. Not a word about them.\nBut I will not take the word off him, dear, and I will not award it either.\nThat's why I point at the table. An ending does not unmake what was on it.",
+        "Let me look closer at what has quietly been rewritten since…",
+      ],
+      b: [
+        "You turned the Hanged Man, dear. Look — everything seen from upside down.",
+        "You asked if he was ever really your soulmate. Your hand went to the backwards look.",
+        "So you have been reading it from the last page, dear.\nAnd that is the one reading, dear, that is bound to be unfair to you.\nBut you did not have the last page at the time, dear. Nobody does.\nThat's why you were not a fool. You felt what was in front of you.",
+        "Let me look closer at what has been held against your younger self…",
+      ],
+      c: [
+        "You turned the Fool, dear. Look — eyes up, road open, nothing decided.",
+        "You asked if he was ever really your soulmate. Your hand went to the one who does not rule.",
+        "So look at what each answer would cost you, dear.\nAnd a yes leaves you asking where he is, dear, and owed something.\nBut a no reaches back and cancels years you actually lived.\nThat's why I decline both, dear. What you felt was real while you felt it.",
+        "Let me look closer at what has been asked of the word itself…",
       ],
     },
     // ── MONEY-BLOCK (2026-08-19). Written to the Natural Tarot-Cut: the picture, the bridge,

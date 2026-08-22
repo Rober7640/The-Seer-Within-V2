@@ -24,7 +24,7 @@ import { defineConfig, devices } from "@playwright/test";
 // `import.meta.env.DEV`. A production build cannot see the dark arm at all.
 export default defineConfig({
   testDir: "./tests",
-  testMatch: /live-thread-evelyn\.spec\.ts/,
+  testMatch: /(live-thread-evelyn|live-thread-after-auth|evelyn-lander-campaign-cache)\.spec\.ts/,
   workers: 1,
   retries: 0,
   reporter: "line",

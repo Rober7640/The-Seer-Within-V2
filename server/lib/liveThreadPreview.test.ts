@@ -44,7 +44,7 @@ import request from 'supertest';
 import { eq } from 'drizzle-orm';
 import { db, pool } from './db';
 import { chatMessages, chatSessions, evelynLanderSessions, personas, users } from '@shared/schema';
-import { resolveLiveThreadPreview } from './liveThreadPreview';
+import { resolveLiveThreadPreview, buildPreSessionSystemPrompt } from './liveThreadPreview';
 import { LIVE_THREAD_REPLAY_WINDOW_DAYS } from './liveThreadReplay';
 import { generateToken } from './auth';
 import chatServiceRouter from '../routes/chatService';
@@ -372,5 +372,57 @@ describe('GET /api/chat-service/live-thread/:personaSlug', { skip: !HAS_DB }, ()
 
     assert.equal(res.status, 200);
     assert.equal(res.body.liveThread, null);
+  });
+});
+
+// The prompt itself, asserted without a model call — see this file's header for why
+// that guard is absolute. These cases pin the 2026-08-19 anchoring rule onto the ONE
+// turn the chat engine never runs: the answer a reader reads first after signing in.
+describe('buildPreSessionSystemPrompt — the email\'s subject reaches this turn', () => {
+  const BASE = 'You are Evelyn. [RUNTIME_CONTEXT] Speak plainly.';
+  const BIG_IDEA = 'the Devil card, and how loose those chains actually are';
+
+  it('states the big idea, so the answer is written through it', () => {
+    const prompt = buildPreSessionSystemPrompt({
+      baseSystemPrompt: BASE,
+      firstName: 'Mike',
+      bigIdea: BIG_IDEA,
+    });
+    assert.ok(prompt.includes(BIG_IDEA), 'the subject must be named, not left to be inferred');
+    // The stock closers the arrival rule forbids by name. Their presence in the
+    // prompt is the prohibition; the live failure was Evelyn ending on one of them.
+    assert.ok(prompt.includes('not what is weighing on them'));
+  });
+
+  it('keeps the 40-word cap alongside the subject, not instead of it', () => {
+    const prompt = buildPreSessionSystemPrompt({
+      baseSystemPrompt: BASE,
+      firstName: 'Mike',
+      bigIdea: BIG_IDEA,
+    });
+    assert.ok(prompt.includes('AT MOST 40 WORDS'), 'the cap must survive the anchoring block');
+    assert.ok(
+      prompt.indexOf(BIG_IDEA) < prompt.indexOf('AT MOST 40 WORDS'),
+      'subject is stated before the size rule, matching the order of every other rule block',
+    );
+  });
+
+  it('falls back to the pre-2026-08-19 wording when no big idea is known', () => {
+    const prompt = buildPreSessionSystemPrompt({
+      baseSystemPrompt: BASE,
+      firstName: 'Mike',
+      bigIdea: null,
+    });
+    assert.ok(!prompt.includes('THE SUBJECT OF THE LETTER'), 'must not invent a subject');
+    assert.ok(prompt.includes('AT MOST 40 WORDS'), 'every other rule still applies');
+  });
+
+  it('strips runtime markers this sessionless path cannot substitute', () => {
+    const prompt = buildPreSessionSystemPrompt({
+      baseSystemPrompt: BASE,
+      firstName: 'Mike',
+      bigIdea: BIG_IDEA,
+    });
+    assert.ok(!prompt.includes('[RUNTIME_CONTEXT]'));
   });
 });

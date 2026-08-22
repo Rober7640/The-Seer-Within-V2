@@ -8,6 +8,10 @@
 - **Subject:** `{{ subscriber.first_name | capitalize }}, she lights the lamp every night for a sea with almost no ships left.`
 - **Preheader:** It was never about the ships.
 - **CTA:** Come tell me which lamp went dark → `campaign=reframe-08-lighthouse`
+- **Reading Recap:** You wrote to them about a lighthouse keeper who still lights her lamp every dusk on a coast the ships stopped visiting years ago. You showed them the reframe: she doesn't climb those stairs for the ships — a lit lamp is a life still tended, and lighting it is for her, not to summon anyone; waiting done that way keeps a person whole instead of hollowing them out at the glass.
+- **Open Loop:** You asked them which lamp they've let go dark while watching the sea — the piece of their own life they keep saving for "once they come" — and to come tell you what it is.
+- **Big Idea:** the keeper's lamp, lit for ships that rarely come
+- **Continue Seed:** You came back about the lamp — the keeper lighting it every night for ships that rarely come. Tell me which of yours you've let go dark while you watched the water, and let's light it.
 
 ---
 

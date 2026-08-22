@@ -3,6 +3,7 @@ import { useSearch, useLocation, useRoute, Link } from "wouter";
 import { useAuth, authFetch } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
 import { calculateTypingDelay, sleep } from "@/lib/typingAnimation";
+import { splitIntoBubbles } from "@/lib/chatBubbles";
 import { createTimeoutSignal } from "@/lib/timeoutSignal";
 import { PreReadingWelcome } from "@/components/PreReadingWelcome";
 import { GuideSidebar } from "@/components/GuideSidebar";
@@ -1013,21 +1014,41 @@ export default function ChatServicePage() {
       // No answer (generation failed server-side): the reader still sees their own
       // words in the thread, and the persona answers them on her next turn.
       if (!lt.response) return;
-      await sleep(400);
-      if (isStale() || hasSentInThisThreadRef.current) return;
-      setIsTyping(true);
-      await sleep(calculateTypingDelay(lt.response));
-      // Guards BEFORE clearing the indicator, not after. Once the reader has spoken (or
-      // switched persona) someone else owns isTyping — sendMessage sets it for their
-      // first real answer — and clearing it here would blank their typing dots.
-      if (isStale() || hasSentInThisThreadRef.current) return;
-      setIsTyping(false);
-      addMsg({
-        id: `live-thread-response-${Date.now()}`,
-        role: "assistant",
-        content: lt.response,
-        sentAt: new Date().toISOString(),
-      });
+
+      // SPLIT INTO BUBBLES, like the lander (Joel, 2026-08-20: this landed as one
+      // big block). It is the same helper the Live Thread lander opens with
+      // (lib/chatBubbles.ts), so the two halves of the same conversation — before
+      // the account and after it — arrive in the same rhythm instead of the thread
+      // visibly changing character at the moment the reader signs in.
+      //
+      // Display only. The server stores this answer as ONE row on the lander
+      // session and replays it as ONE message when the session starts
+      // (liveThreadReplay.ts), which is correct: what she said is one turn. This
+      // splits how it LANDS, not what was said.
+      const parts = splitIntoBubbles(lt.response);
+      for (let i = 0; i < parts.length; i++) {
+        // The pause between her bubbles; the 400ms above is the beat after the
+        // reader's own words, which is a different thing and stays as it was.
+        await sleep(i === 0 ? 400 : 500);
+        if (isStale() || hasSentInThisThreadRef.current) return;
+        setIsTyping(true);
+        await sleep(calculateTypingDelay(parts[i]));
+        // Guards BEFORE clearing the indicator, not after. Once the reader has spoken (or
+        // switched persona) someone else owns isTyping — sendMessage sets it for their
+        // first real answer — and clearing it here would blank their typing dots.
+        if (isStale() || hasSentInThisThreadRef.current) return;
+        setIsTyping(false);
+        addMsg({
+          // Index in the id, not just the timestamp: two bubbles appended inside the
+          // same millisecond would otherwise collide on a key that the transcript
+          // code also reads as an identity (see the 'live-thread-' prefix check
+          // where real message ids are separated from client-side ones).
+          id: `live-thread-response-${Date.now()}-${i}`,
+          role: "assistant",
+          content: parts[i],
+          sentAt: new Date().toISOString(),
+        });
+      }
     };
 
     /** Detached start. Swallows its own rejection so it can never surface unhandled. */

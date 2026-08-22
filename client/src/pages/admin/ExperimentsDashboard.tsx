@@ -480,6 +480,8 @@ export default function ExperimentsDashboard() {
       "still-feels": "Still Feels",
       "his-other-life": "His Other Life",
       "soulmate-label": "Soulmate / Twin Flame — The Label",
+      closure: "Closure / Healing",
+      "soulmate-return": "Soulmate / Twin Flame — The Return",
       "self-frame": "Self-Frame",
       // The money-block batch (2026-08-19) — the first non-love angles on the funnel.
       "money-retiring": "Money — Retiring (55-64)",

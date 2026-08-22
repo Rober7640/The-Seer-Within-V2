@@ -181,7 +181,13 @@ describe('still-feels hooks are wired end to end', () => {
     const dupes = all.filter((x, i) => all.indexOf(x) !== i);
     // cards-return / cards-come-back deliberately share one headline (reunion, 2026-08-04).
     // This family must not add a second collision.
-    expect(new Set(dupes)).toEqual(new Set(['Will he come back?']));
+    // 🔴 'cards-twin-back' / 'cards-twinflame-back' share one headline too, by operator
+    // decision 2026-08-19 (the soulmate-return family): the incumbent keeps its ad URL and its
+    // `twin-flame` angle, and the challenger runs bespoke reads against it. Same call as
+    // cards-return / cards-come-back — identical pages mean the READS are the only variable.
+    expect(new Set(dupes)).toEqual(
+      new Set(['Will he come back?', 'Is my twin flame coming back to me?']),
+    );
   });
 
   it('leaves every previously shipped family exactly where it was', () => {

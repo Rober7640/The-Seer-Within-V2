@@ -48,6 +48,12 @@ const EVELYN_PERSONA_SLUG = "evelyn-cross";
 const READING_DEST = `/reading?persona=${EVELYN_PERSONA_SLUG}`;
 const SESSION_KEY = "evelyn_lander_token";
 const HISTORY_KEY = "evelyn_lander_history";
+// Which campaign the cached history belongs to. Without it the cache is replayed
+// across a change of email, showing the reader the previous send's opener.
+const CAMPAIGN_KEY = "evelyn_lander_campaign";
+// The card image /start resolved for this campaign, cached beside the history it
+// belongs to (see loadCardImage) so a refresh does not drop it out of the thread.
+const CARD_KEY = "evelyn_lander_card_image";
 const MAX_USER_TURNS = 2;
 // Bounds how long a caller can be stuck waiting on /start (e.g. a stalled
 // mobile connection) before we give up and fall through to the catch block,
@@ -77,13 +83,10 @@ const MAX_USER_TURNS = 2;
 //   deliberately.
 const START_TIMEOUT_MS = 10_000;
 const REDIRECT_START_TIMEOUT_MS = 4_000;
-// Live Thread `no_match` only: how long the reader gets to read Frame 2b's
-// "Good — I've got it saved" confirmation before we carry them into
-// registration. Without a beat the bubble that tells them their reply survived
-// would render and vanish in the same frame — that reassurance IS the feature.
-// Roughly matches the quiz arm's own 1200ms post-completion beat
-// (EvelynQuizMechanic.tsx:196).
-const NO_MATCH_HANDOFF_DELAY_MS = 1600;
+// The Live Thread `no_match` beat now lives in LiveThreadLander, which renders
+// the countdown, alongside NO_MATCH_HANDOFF_DELAY_MS. This file still owns WHERE
+// the reader goes; the component owns WHEN, because it is the thing that knows
+// what is on screen. See handleLiveThreadOutcome / handleLiveThreadHandoff below.
 
 type Segment = "v2_active" | "v2_password" | "v1_migrated" | "brand_new" | "token_magic";
 
@@ -97,6 +100,8 @@ interface StartResponse {
   firstName: string | null;
   isReturning: boolean;
   opener: string;
+  /** The card this letter was about, when it had one. Null for most sends. */
+  cardImageUrl?: string | null;
 }
 
 interface TurnResponse {
@@ -151,10 +156,66 @@ function getSessionToken(): string {
 function clearSession() {
   sessionStorage.removeItem(SESSION_KEY);
   sessionStorage.removeItem(HISTORY_KEY);
+  sessionStorage.removeItem(CAMPAIGN_KEY);
+}
+
+/**
+ * The campaign the cached history was written under, or null for a visit that
+ * carried none. Read/written by loadHistory + saveHistory only, so the tag and
+ * the messages it guards can never be set from different places.
+ */
+function cachedCampaign(): string | null {
+  try {
+    return sessionStorage.getItem(CAMPAIGN_KEY);
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * The card image that belongs to the cached history.
+ *
+ * It has to survive a refresh for the same reason the messages do: the restore
+ * path returns BEFORE /start is called, so without this a reader who refreshes
+ * mid-thread keeps her words and silently loses the card out of the middle of
+ * them. Guarded by the SAME campaign check as the history — a card from Monday's
+ * letter must never appear inside Tuesday's thread.
+ */
+function loadCardImage(): string | null {
+  try {
+    if (cachedCampaign() !== readParams().campaign) return null;
+    return sessionStorage.getItem(CARD_KEY);
+  } catch {
+    return null;
+  }
+}
+
+function saveCardImage(url: string | null) {
+  try {
+    if (url) sessionStorage.setItem(CARD_KEY, url);
+    else sessionStorage.removeItem(CARD_KEY);
+  } catch {
+    // sessionStorage full / disabled — the card just won't survive a refresh.
+  }
 }
 
 function loadHistory(): ChatMessage[] {
   try {
+    // The cache exists so a REFRESH mid-conversation doesn't lose the thread. It
+    // must NOT survive a change of campaign.
+    //
+    // The restore path in the mount effect returns BEFORE /start is called, so a
+    // reader who opens Monday's email, leaves, then clicks Tuesday's in the same
+    // tab gets Monday's opening line — /start is never asked for Tuesday's. Her
+    // lander session is tagged with Tuesday's campaign server-side, so the screen
+    // and the record disagree, and the one thing this lander promises (it
+    // continues the email you just clicked) is exactly what breaks. Nothing
+    // errors; she is simply read the wrong reading.
+    //
+    // Compared against the LIVE url rather than a value threaded through the
+    // caller, so this cannot drift from what /start would have been sent.
+    if (cachedCampaign() !== readParams().campaign) return [];
+
     const raw = sessionStorage.getItem(HISTORY_KEY);
     if (!raw) return [];
     const parsed = JSON.parse(raw);
@@ -171,6 +232,13 @@ function loadHistory(): ChatMessage[] {
 function saveHistory(messages: ChatMessage[]) {
   try {
     sessionStorage.setItem(HISTORY_KEY, JSON.stringify(messages));
+    // Stamp the campaign this history belongs to, so the next arrival can tell
+    // whether it is a refresh (restore) or a different email (start fresh).
+    // Written on every save, not just the first, so a mid-conversation url change
+    // cannot leave the tag pointing at the wrong send.
+    const campaign = readParams().campaign;
+    if (campaign === null) sessionStorage.removeItem(CAMPAIGN_KEY);
+    else sessionStorage.setItem(CAMPAIGN_KEY, campaign);
   } catch {
     // sessionStorage full / disabled — chat just won't survive refresh.
   }
@@ -184,6 +252,9 @@ export default function EvelynLanderPage() {
   const [segment, setSegment] = useState<Segment | null>(null);
   const [firstName, setFirstName] = useState<string | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
+  // The card the letter was about, when it had one. Only the Live Thread arm
+  // renders it; every other arm ignores it exactly as it ignores the opener.
+  const [cardImageUrl, setCardImageUrl] = useState<string | null>(null);
   const [userTurns, setUserTurns] = useState(0);
   const [ctaReady, setCtaReady] = useState(false);
   const [draft, setDraft] = useState("");
@@ -197,18 +268,15 @@ export default function EvelynLanderPage() {
   const params = readParams();
   const sessionToken = getSessionToken();
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
-  // Live Thread `no_match` handoff timer. Held in a ref and cleared on unmount so
-  // a reader who taps "Sign in instead" (or navigates any other way) inside the
-  // beat can't have a queued navigate() yank them back out of where they went —
-  // wouter's navigate is a global location write and fires happily after unmount.
-  // Same defence EvelynQuizMechanic.tsx:110-118 uses for its own transition timers.
-  const noMatchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  useEffect(
-    () => () => {
-      if (noMatchTimerRef.current) clearTimeout(noMatchTimerRef.current);
-    },
-    [],
-  );
+  // The `no_match` destination, parked between the outcome landing and the reader
+  // (or the countdown) asking to go. A ref rather than state: nothing renders from
+  // it, so a re-render would be pure cost.
+  //
+  // The timer that used to sit here — and the unmount guard that stopped a queued
+  // navigate() from yanking back a reader who tapped "Sign in instead" mid-beat —
+  // moved into LiveThreadLander with the countdown. The guard moved with it; it is
+  // the component's own effect cleanup now.
+  const noMatchDestRef = useRef<string | null>(null);
 
   // Resolve the lander MECHANIC via the `evelyn_lander_mechanic` structural A/B
   // (visitor-scoped, scope.route='evelyn_lander', element='mechanic'): control
@@ -344,6 +412,10 @@ export default function EvelynLanderPage() {
       const initial: ChatMessage[] = [{ role: "assistant", content: data.opener }];
       setMessages(initial);
       saveHistory(initial);
+      // Saved AFTER the history, so the campaign tag saveHistory() writes is
+      // already in place when loadCardImage() checks it on the next load.
+      setCardImageUrl(data.cardImageUrl ?? null);
+      saveCardImage(data.cardImageUrl ?? null);
       setPhase("chat");
     } catch (err) {
       // Breadcrumb so a silent failure here (including the older-browser
@@ -370,6 +442,9 @@ export default function EvelynLanderPage() {
       ];
       setMessages(fallback);
       saveHistory(fallback);
+      // The placeholder opener names no card, so it must show none.
+      setCardImageUrl(null);
+      saveCardImage(null);
       setPhase("chat");
     } finally {
       cleanup();
@@ -436,6 +511,7 @@ export default function EvelynLanderPage() {
     const restored = loadHistory();
     if (restored.length > 0) {
       setMessages(restored);
+      setCardImageUrl(loadCardImage());
       setUserTurns(restored.filter((m) => m.role === "user").length);
       setSegment(null);
       setFirstName(params.name ?? null);
@@ -646,17 +722,28 @@ export default function EvelynLanderPage() {
     // chatbox arm's `register` branch builds, via the shared helper, so the
     // persona / source / landerSessionToken / bucket params (and the parked reply
     // + Live Thread grant they carry) cannot drift between the two arms.
-    const dest = buildRegisterDest(submittedEmail);
-    // Clear any timer already armed before overwriting the ref. A second
-    // onOutcome is unreachable through LiveThreadLander today (handleResend
-    // deliberately never re-fires it), but that guarantee lives in ANOTHER
-    // component's internals — without this line a change over there turns into a
-    // leaked timer and a double navigate over here.
-    if (noMatchTimerRef.current) clearTimeout(noMatchTimerRef.current);
-    noMatchTimerRef.current = setTimeout(() => {
-      clearSession();
-      navigate(dest, { replace: true });
-    }, NO_MATCH_HANDOFF_DELAY_MS);
+    // Park the destination; the component decides when to use it. Overwriting is
+    // safe and deliberate — a second onOutcome is unreachable through
+    // LiveThreadLander today (handleResend never re-fires it), but that guarantee
+    // lives in ANOTHER component's internals, and a ref write cannot leak the way
+    // a second armed timer could.
+    noMatchDestRef.current = buildRegisterDest(submittedEmail);
+  }
+
+  /**
+   * Perform the `no_match` handoff. Called by LiveThreadLander when its countdown
+   * runs out or the reader taps "Go now" — the component fires it at most once.
+   *
+   * Guarded on the parked destination anyway: without an outcome there is nothing
+   * to navigate to, and navigating to a half-built URL would be worse than not
+   * navigating at all.
+   */
+  function handleLiveThreadHandoff() {
+    const dest = noMatchDestRef.current;
+    if (!dest) return;
+    noMatchDestRef.current = null;
+    clearSession();
+    navigate(dest, { replace: true });
   }
 
   // One gate for BOTH arms: wait for auth, the mechanic assignment, AND /start
@@ -721,8 +808,10 @@ export default function EvelynLanderPage() {
     return (
       <LiveThreadLander
         continueSeed={messages.find((m) => m.role === "assistant")?.content ?? ""}
+        cardImageUrl={cardImageUrl}
         sessionToken={sessionToken}
         onOutcome={handleLiveThreadOutcome}
+        onHandoffNow={handleLiveThreadHandoff}
         // The same merge-tag hint the quiz arm above is handed — saves a typing
         // step on the most conversion-critical field in the flow. Never trusted
         // for identity; /check-email still resolves the account from what the

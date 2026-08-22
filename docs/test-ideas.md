@@ -1874,6 +1874,20 @@ marked historical and blocked from ever being minted, so nothing else can answer
 - [ ] The 60s `personaMayHaveBriefs` cache: a persona minted mid-window is picked up on the next refresh, and the TTL is shorter than any real mint→send gap
 - [ ] Cycle 2 end to end: mint a real cycle, confirm BOTH the lander opener and the chat greeting continue it with no code change
 
+### Lander cache is scoped to the campaign (found on dev 2026-08-18)
+`EvelynLanderPage` caches the thread in sessionStorage so a REFRESH mid-chat doesn't lose it, and the restore
+path returns BEFORE `/start` is called. The cache carried no campaign tag, so it was replayed for any later
+arrival in the same tab — a reader who opened Monday's email, left, then clicked Tuesday's was shown MONDAY's
+opening line. Nothing errored; her session was tagged with Tuesday's campaign server-side, so the screen and
+the record disagreed and the lander's one promise (it continues the email you just clicked) silently broke.
+Found while testing three different `/e/` codes on development that all opened identically — the codes were
+correct, the cache was masking them. Fixed by stamping the campaign alongside the history.
+- [x] A second campaign in the same tab renders ITS opener, and the first one's opener AND the reader's earlier reply are both gone *(evelyn-lander-campaign-cache.spec.ts — fails on the untagged cache)*
+- [x] A refresh on the SAME campaign restores from cache and does NOT re-hit `/start` — asserted on the call count, so a fix that simply discarded the cache every time would fail here *(evelyn-lander-campaign-cache.spec.ts)*
+- [x] A direct visit with no campaign does not inherit an email arrival's thread — `null` is a value, not "no opinion" *(evelyn-lander-campaign-cache.spec.ts — fails on the untagged cache)*
+- [ ] The chatbox arm (not just live_thread) gets the same treatment — it shares the cache, so it has the same bug, but these cases only drive the live_thread arm
+- [ ] In the live_thread arm a refresh shows the opener WITHOUT the reader's reply (it lives in `LiveThreadLander` state, never cached). Harmless today because the reply is already parked server-side — but if the pre-session preview is ever meant to survive a refresh on screen, that needs its own persistence
+
 ## Live Thread (Evelyn) — email → lander → chat continuity (2026-08-02)
 
 Spec file `tests/live-thread-evelyn.spec.ts` (written 2026-08-18), following `fb-palm-commitment-gate.spec.ts`'s
@@ -1891,9 +1905,11 @@ npx playwright test --config=playwright.live-thread.config.ts
 `NODE_ENV=development` is required, not incidental: the dark arm is only reachable via `?mechanic=live_thread`,
 which is gated behind `import.meta.env.DEV`.
 
-The locators are placeholder/copy-based, NOT `data-testid` as the plan assumed — `LiveThreadLander.tsx` ships
-with zero test ids. Worth adding them later; the copy assertions are deliberately scoped to the fragments that
-carry meaning per outcome so a wording polish doesn't redden the suite.
+The locators are placeholder/copy-based, NOT `data-testid` as the plan assumed. The 2026-08-19 rebuild added
+ids for the structural parts (`assistant-message`, `user-message`, `input-live-thread-reply`,
+`input-live-thread-email`, and both send buttons) and the bubble-count assertions use them; the outcome
+assertions stay on copy, deliberately scoped to the fragments that carry meaning per outcome so a wording
+polish doesn't redden the suite.
 
 Every assertion below was mutation-tested (deliberately break the behaviour, confirm the test fails). That pass
 caught a real hole in the already-logged-in case — see its entry.
@@ -1907,7 +1923,11 @@ caught a real hole in the already-logged-in case — see its entry.
 - [x] **Already-logged-in reader:** the lander never paints and the page ends on `/reading?persona=evelyn-cross` — AND `/start` completes first. 🔑 Asserting "`/start` was called" is NOT enough and the first draft of this test made exactly that mistake: replacing Task 5's `await postStart(...)` with a bare `void postStart(...)` still fires the request before navigating, so the call-count assertion stayed GREEN on broken code. The load-bearing version holds the `/start` response open and asserts the URL has not moved *(live-thread-evelyn.spec.ts)*
 - [x] **Unresolvable code:** `/e/does-not-exist-qa` → `/personas`. The one case that exercises the real redirector rather than a stub — a pure read, so it needs no fixture and writes nothing *(live-thread-evelyn.spec.ts)*
 - [ ] **Reply survives a real signup round-trip (network-real for the auth parts):** deliberately NOT automated in Playwright. Driving it for real creates a user, a verification token and a lander session, then needs the verification URL read back out of the SERVER LOG — which Playwright cannot see, and which only works because a blank `RESEND_API_KEY` makes `verificationEmail.ts` log instead of send. Against the default `webServer` that walk writes real users to the shared database. The same ground is held at a lower level by `liveThreadReplay.test.ts` (22 tests), `auth.test.ts` and `verificationEmail.freeMinutes.test.ts` — `npm run test:live-thread`. Walked by hand end-to-end on 2026-08-18: reply visible in `/reading` as a free pre-session preview, 10 free minutes granted, no `chat_sessions`/`chat_messages` row and no billing until she sends. Revisit only if a browser-level harness can capture the verification link without a shared-DB write
-- [ ] `LiveThreadLander.tsx` has no `data-testid`s — add them and move the copy-based locators onto ids, so wording changes and behaviour changes fail for different reasons
+- [x] **The opener arrives as SEVERAL bubbles, not one paragraph** *(2026-08-19 rebuild — Joel: "its supposed to be a few messages and not a single message")*: every sentence of the campaign's seed is its own bubble, all of them present, in order, and counted — a splitter that dropped or merged a sentence fails here *(live-thread-evelyn.spec.ts)*
+- [x] **A reader who answers mid-reveal gets the rest of the opener FIRST:** sending while bubbles are still queued flushes them ahead of the reader's own bubble, so the transcript never shows Evelyn finishing a thought that was already answered — and `/reply` still fires exactly once, because flushing is a render concern *(live-thread-evelyn.spec.ts)*
+- [x] **Evelyn asks for the email, not a form label** *(the same rebuild)*: her two answering bubbles land BEFORE the field appears, the ask is a message in the thread (`assistant-message` containing it, count 1), and the old third-person "Save this so Evelyn can answer it:" panel is asserted absent in any casing *(live-thread-evelyn.spec.ts)*
+- [x] `splitIntoBubbles` unit coverage: authored `\n`/`\n\n` breaks win over inferred splits, sentence splitting never breaks on Evelyn's mid-sentence em dash, the cap holds without losing text, empty input returns `[]` *(tests/chatBubbles.test.ts — vitest, 9 cases)*
+- [ ] Move the remaining copy-based locators onto the new ids where it doesn't cost meaning, so wording changes and behaviour changes fail for different reasons
 - [ ] Rate-limit copy: a 429 from `/reply` shows the hour-window message ("Give it an hour"), not a "give it a minute" that would send the reader straight into a second 429
 - [ ] A hard-crisis reply (`ok:false` + `blocked:'safety'`) renders the hotline bubble + `CrisisDisclaimer`, keeps the compose bar enabled, and does NOT advance to the email ask
 - [ ] The campaign's seed reaching the lander for a REAL `/e/<code>` (not a stubbed `/start`) — needs a seeded `email_link_codes` row, so it wants a fixture story that does not touch the shared DB

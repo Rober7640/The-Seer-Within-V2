@@ -124,6 +124,20 @@ function parse(file) {
     continueSeed: pick(/\*\*Continue Seed:\*\*\s*(.+)/, 'Continue Seed', true),
     openLoop: pick(/\*\*Open Loop:\*\*\s*(.+)/, 'Open Loop'),
     readingRecap: pick(/\*\*Reading Recap:\*\*\s*(.+)/, 'Reading Recap'),
+    // The ONE thing this send is about, in words the persona can say. Feeds
+    // email_link_codes.big_idea, which arrivalReading.ts states as the subject
+    // and anchors every early chat reply to. Without it the chat has to infer
+    // the topic from the recap prose, and that is what let a reader ask "how
+    // can you help me?" and get a generic services pitch with the letter's
+    // subject dropped (Joel, 2026-08-19).
+    bigIdea: pick(/\*\*Big Idea:\*\*\s*(.+)/, 'Big Idea'),
+    // OPTIONAL, and absent from most drafts: the card this letter is about,
+    // shown as its own bubble in the lander thread between the line that names
+    // it and the line that asks the reader for something. Feeds
+    // email_link_codes.card_image_url. A path (/tarot/…) is served by our own
+    // origin; a full URL works too but pays a third-party round trip on ad
+    // traffic, on phones.
+    cardImageUrl: pick(/\*\*Card Image:\*\*\s*(.+)/, 'Card Image'),
     bucket,
     body,
   };
@@ -397,6 +411,8 @@ if (needCodes.length) {
         campaign: m.slug,
         continueSeed: m.continueSeed,
         openLoop: m.openLoop || undefined,
+        bigIdea: m.bigIdea || undefined,
+        cardImageUrl: m.cardImageUrl || undefined,
         readingRecap: m.readingRecap || undefined,
         bucket: m.bucket || undefined,
         src: 'aweber',

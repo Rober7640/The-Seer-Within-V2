@@ -25,6 +25,7 @@ import {
   addBumpPaidSubscriber,
 } from '../lib/aweber';
 import { funnelDefForParam } from '@shared/funnelConfig';
+import { bumpPaidListWanted } from '@shared/landerBumpRouting';
 import { recordSoulmatePurchase, getSoulmateOrderByEmail } from '../lib/soulmateOrders';
 
 const router = Router();
@@ -1061,7 +1062,12 @@ router.post('/stripe', async (req: Request, res: Response) => {
     // Idempotent: Stripe retries this event, and addBumpPaidSubscriber upserts
     // (update_existing) and treats "already subscribed" as success. Non-blocking —
     // an AWeber outage must never fail the webhook ack and trigger more retries.
-    if (product === 'energy_clearing_ritual' && metadata.bumpProduct) {
+    //
+    // 🔴 EXCEPT the eleven /fb-tarot money landers (Lewis, 2026-08-20). This list
+    // follows up on a second reading they do not receive, so they are skipped —
+    // see bumpPaidListWanted(), which reads the stamped key and therefore turns on
+    // and off with the same switch as the list and the bump key.
+    if (product === 'energy_clearing_ritual' && bumpPaidListWanted(metadata.bumpProduct)) {
       // Resolve the buyer's address properly rather than reusing the `email`
       // binding above, which falls back to metadata.firstName and can therefore
       // hold a NAME. Same precedence the no-optin branch below uses.

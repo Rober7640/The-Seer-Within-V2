@@ -106,6 +106,9 @@ import {
 } from "@shared/orderBump";
 import { fireGoogleAdsConversion } from "./lib/googleAds";
 import { funnelDefForParam, FUNNELS, type FunnelParam } from "@shared/funnelConfig";
+import { moneyLanderListId } from "@shared/moneyLander";
+import { soulmateLanderListId } from "@shared/soulmateLander";
+import { bumpProductKeyFor } from "@shared/landerBumpRouting";
 import Stripe from "stripe";
 import { getStripe, getStripeForRow } from "./lib/stripeAccount";
 import type { ChatRequest, CheckoutRequest } from "../shared/types";
@@ -350,7 +353,34 @@ function landerLabel(funnel: FunnelId): string {
 // AWEBER_LIST_ID_<FB|FB2|GDN|PALM>; homepage (base V1) and any unset funnel
 // fall back to the shared AWEBER_LIST_ID — so lead capture is byte-identical
 // until the per-lander env vars are configured.
-function aweberLeadListId(funnel: FunnelId): string | undefined {
+//
+// The eleven /fb-tarot money-block landers get their OWN free list ahead of that
+// chain (AWEBER_LIST_ID_TAROT_MONEY, list 6971693 "theseerwithin_free_tarot_money"),
+// so money leads are separable without depending on a bare `money` tag — that tag is
+// NOT funnel-suffixed by fbifyAweberTags() and is therefore shared with every other
+// funnel's money-bucket traffic.
+//
+// 🔴 UNSET ENV ⇒ EXACT OLD PATH. With AWEBER_LIST_ID_TAROT_MONEY absent this falls
+// straight through to the tarot/shared chain, so shipping the code changes nothing
+// until the variable is set in Railway — the deploy and the cutover stay separate,
+// independently reversible steps.
+//
+// ⚠️ The new list must define the `resume_url` custom field. AWeber rejects an
+// undefined custom field for the WHOLE request, so without it addSubscriberToList()
+// retries without custom fields (aweber.ts) and every money lead silently loses its
+// recovery link. Confirmed created on 6971693 by Lewis, 2026-08-20.
+function aweberLeadListId(
+  funnel: FunnelId,
+  bucket?: unknown,
+  tarotHook?: unknown,
+): string | undefined {
+  const moneyList = moneyLanderListId(funnel, bucket);
+  if (moneyList) return moneyList;
+  // The nineteen soulmate landers, keyed on the HOOK rather than the bucket — they
+  // are all `love`, so bucket cannot tell them from the other tarot landers. Same
+  // dark-ship guarantee: undefined until AWEBER_LIST_ID_TAROT_SOULMATE is set.
+  const soulmateList = soulmateLanderListId(funnel, tarotHook);
+  if (soulmateList) return soulmateList;
   const def = funnelDefForParam(funnel);
   if (def) {
     const perLander = process.env[`AWEBER_LIST_ID_${def.posthog.toUpperCase()}`];
@@ -649,7 +679,7 @@ export async function registerRoutes(
           // against fixed enums; tarotDeck defaults to 'decode-him'. Keep these
           // rosters in sync with client/src/content/tarotReads.ts (fb-tarot-add-card).
           const validDecks = ["arcana-mfh", "arcana-eef", "return-mhf"]; // decode-him retired 2026-08-19
-          const validHooks = ["cards-honest", "cards-return", "cards-feels", "cards-cheating", "cards-who-he-is", "cards-real-person", "cards-misled", "cards-will-commit", "cards-wont-commit", "cards-ready-commit", "cards-lied-to", "cards-truth", "cards-deceived", "cards-come-back", "cards-ever-back", "cards-moved-on", "cards-cant-stop", "cards-on-my-mind", "cards-who-hurt-me", "cards-pulling-away", "cards-gone-cold", "cards-losing-interest", "cards-back-together", "cards-still-a-chance", "cards-really-over", "cards-new-soulmate", "cards-soulmate-out-there", "cards-ready-to-love", "cards-where-soulmate", "cards-soulmate-closer", "cards-not-found-yet", "cards-alone-forever", "cards-meant-alone", "cards-someone-for-me", "cards-someone-else", "cards-talking-someone", "cards-faithful", "cards-loyal", "cards-stop-hurting", "cards-stop-missing", "cards-still-miss-him", "cards-left-without-word", "cards-ghosted", "cards-not-enough", "cards-stop-searching", "cards-end-up-alone", "cards-given-up", "cards-twin-ready", "cards-twin-feels", "cards-twin-back", "cards-hiding-something", "cards-feels-off", "cards-really-love", "cards-feel-about-me", "cards-imagining-it", "cards-still-think", "cards-still-love", "cards-love-or-moved-on", "cards-forever-or-now", "cards-his-children", "cards-her-shadow", "cards-live-apart", "cards-too-long", "cards-really-soulmate", "cards-twin-or-connection", "cards-met-already", "cards-love-again", "cards-soulmate", "cards-blocked-retiring", "cards-nest-egg", "cards-too-late", "cards-still-working", "cards-how-much-longer", "cards-out-of-time", "cards-my-energy", "cards-money-wont-stay", "cards-energy-how-long", "cards-prayed-years", "cards-prayers-unanswered", "cards-slipping-past", "cards-choosing-wrong", "cards-found-me-yet", "cards-keeps-waiting", "cards-missed-chance", "cards-after-marriage", "cards-second-time", "cards-best-years", "cards-too-late-love", "cards-longer-to-wait", "cards-allowed-to-want", "cards-blocking-soulmate", "cards-blocked-before", "cards-connection-soulmate", "cards-connection-nothing", "cards-energy-away", "cards-energy-soulmate", "cards-waiting-to-heal", "cards-heal-first"];
+          const validHooks = ["cards-honest", "cards-return", "cards-feels", "cards-cheating", "cards-who-he-is", "cards-real-person", "cards-misled", "cards-will-commit", "cards-wont-commit", "cards-ready-commit", "cards-lied-to", "cards-truth", "cards-deceived", "cards-come-back", "cards-ever-back", "cards-moved-on", "cards-cant-stop", "cards-on-my-mind", "cards-who-hurt-me", "cards-pulling-away", "cards-gone-cold", "cards-losing-interest", "cards-back-together", "cards-still-a-chance", "cards-really-over", "cards-new-soulmate", "cards-soulmate-out-there", "cards-ready-to-love", "cards-where-soulmate", "cards-soulmate-closer", "cards-not-found-yet", "cards-alone-forever", "cards-meant-alone", "cards-someone-for-me", "cards-someone-else", "cards-talking-someone", "cards-faithful", "cards-loyal", "cards-stop-hurting", "cards-stop-missing", "cards-still-miss-him", "cards-left-without-word", "cards-ghosted", "cards-not-enough", "cards-stop-searching", "cards-end-up-alone", "cards-given-up", "cards-twin-ready", "cards-twin-feels", "cards-twin-back", "cards-hiding-something", "cards-feels-off", "cards-really-love", "cards-feel-about-me", "cards-imagining-it", "cards-still-think", "cards-still-love", "cards-love-or-moved-on", "cards-forever-or-now", "cards-his-children", "cards-her-shadow", "cards-live-apart", "cards-too-long", "cards-really-soulmate", "cards-twin-or-connection", "cards-met-already", "cards-find-closure", "cards-heart-heal", "cards-feel-like-myself", "cards-my-soulmate-back", "cards-twinflame-back", "cards-was-he-soulmate", "cards-love-again", "cards-soulmate", "cards-blocked-retiring", "cards-nest-egg", "cards-too-late", "cards-still-working", "cards-how-much-longer", "cards-out-of-time", "cards-my-energy", "cards-money-wont-stay", "cards-energy-how-long", "cards-prayed-years", "cards-prayers-unanswered", "cards-slipping-past", "cards-choosing-wrong", "cards-found-me-yet", "cards-keeps-waiting", "cards-missed-chance", "cards-after-marriage", "cards-second-time", "cards-best-years", "cards-too-late-love", "cards-longer-to-wait", "cards-allowed-to-want", "cards-blocking-soulmate", "cards-blocked-before", "cards-connection-soulmate", "cards-connection-nothing", "cards-energy-away", "cards-energy-soulmate", "cards-waiting-to-heal", "cards-heal-first"];
           const validCards = ["a", "b", "c"];
           const deck = tarotDeck ?? "decode-him";
           if (!validDecks.includes(deck) || !validHooks.includes(tarotHook ?? "") || !validCards.includes(tarotCard ?? "")) {
@@ -785,6 +815,24 @@ export async function registerRoutes(
       // (offline) conversion to Google Ads via Stape sGTM.
       const gclid =
         typeof req.body?.gclid === "string" ? req.body.gclid.slice(0, 200) : undefined;
+      // /fb-tarot lander hook — NEW on this endpoint (2026-08-21), and the only reason
+      // it is here is the soulmate split. Every earlier lander decision could be made
+      // from `bucket`; the nineteen soulmate landers are all `love`, so nothing already
+      // in this payload can tell them from the other tarot landers or from a root-funnel
+      // visitor who picked "Love" in the topic picker. The client already holds it in
+      // sessionStorage for its PostHog properties (tarotAttribution.ts), so this reuses
+      // that value rather than introducing a new source of truth.
+      //
+      // 🔴 UNTRUSTED, AND DELIBERATELY HARMLESS IF TAMPERED. It is length-capped here and
+      // then only ever compared against the closed nineteen-hook roster, gated on
+      // funnel === 'v1-tarot' (shared/soulmateLander.ts). The worst a forged value can do
+      // is give its own order the soulmate bumpProduct — which SKIPS a follow-up list and
+      // a PDF. It cannot change a price, a product, or anyone else's order. Same trust
+      // posture as `bumpBucket` and `src` above: a closed check, never a pass-through.
+      const tarotHook =
+        typeof req.body?.tarotHook === "string"
+          ? req.body.tarotHook.trim().slice(0, 40) || undefined
+          : undefined;
       const productName = `Energy Clearing Ritual${fbSuffix(funnel)}`;
 
       // ── V1 ORDER BUMP ("double reading") ──────────────────────────────────
@@ -863,9 +911,24 @@ export async function registerRoutes(
       //
       // Keys are ABSENT (not empty-string) on a normal order, which is what makes
       // "does bumpProduct exist" a clean test on his side.
+      //
+      // 🔴 The eleven /fb-tarot MONEY-BLOCK landers send a DIFFERENT `bumpProduct`
+      // (Lewis, 2026-08-20). Mike's n8n branches on this value to generate the
+      // second-reading PDF; those landers have no second-reading product yet, so a
+      // value his condition cannot match is what keeps them out of that branch. The
+      // string is deliberately disjoint from `double_reading` so a CONTAINS filter
+      // fails too — see V1_BUMP_PRODUCT_KEY_MONEY_LANDER for the full rationale.
+      //
+      // Every other lander on every funnel — including the other 74 tarot landers and
+      // any non-tarot visitor who picked the "Money" topic in chat — keeps
+      // V1_BUMP_PRODUCT_KEY exactly as before.
+      //
+      // The KEY still EXISTS on these orders, which is what our own webhook gates on
+      // (`metadata.bumpProduct` truthy, webhooks.ts) — so the bump-paid AWeber write,
+      // the revenue tally and the Stripe line item are all unchanged.
       const bumpMetadata = bumpApplied
         ? {
-            bumpProduct: V1_BUMP_PRODUCT_KEY,
+            bumpProduct: bumpProductKeyFor(funnel, bucket, tarotHook),
             bumpBucket: bumpBucket as string,
             bumpAmount: String(bumpCentsResolved),
           }
@@ -1259,10 +1322,23 @@ export async function registerRoutes(
       // price (a written commitment that could contradict her locked variant),
       // or her name (AWeber already has it).
       const resumeUrl = buildResumeUrl(funnel, conversationId);
+      // WHICH LIST THIS LEAD LANDED ON. Nothing recorded this until 2026-08-21, which
+      // is why the money cutover could only be confirmed by watching a live walk and
+      // then reading AWeber by hand. With two lander families now diverging from the
+      // per-funnel default, a cutover is verifiable from the logs alone: resolve the id
+      // once, log it, pass the same value on. `default` means no split and no
+      // per-funnel override matched — the shared AWEBER_LIST_ID.
+      const leadListId = aweberLeadListId(funnel, bucket, tarotLander?.hook);
+      logger.info("Lead list resolved:", {
+        funnel,
+        bucket: bucket ?? null,
+        tarotHook: tarotLander?.hook ?? null,
+        listId: leadListId ?? "default",
+      });
       addSubscriberToList({
         email,
         name: firstName,
-        listId: aweberLeadListId(funnel),
+        listId: leadListId,
         tags: fbifyAweberTags([bucket || "website", "seer-within"], funnel),
         // Omitted entirely when we have no link — never `custom_fields: {}`,
         // which AWeber reads as "clear every custom field" on an

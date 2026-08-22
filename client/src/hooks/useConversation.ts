@@ -2108,6 +2108,14 @@ export function useConversation() {
         })
       }
 
+      // The tarot lander she arrived on, for the soulmate landers' bumpProduct key.
+      // Gated on getPostHogFunnel() === 'tarot' exactly as the PostHog block above is:
+      // sessionStorage outlives the funnel within a tab, so an ungated read would tag a
+      // later palm/root order with a stale tarot hook. Recomputed rather than lifted out
+      // of that block, which is scoped to its own braces.
+      const tarotHookForCheckout =
+        getPostHogFunnel() === 'tarot' ? tarotEventProps()?.hook : undefined
+
       const response = await fetch('/api/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -2119,6 +2127,9 @@ export function useConversation() {
           trackdeskClickId: getTrackdeskClickId(),
           gclid: getGclid(),
           funnel: currentFunnel(),
+          // Undefined on every funnel but /fb-tarot. The server reads it for one
+          // thing: the soulmate landers' bumpProduct key.
+          tarotHook: tarotHookForCheckout,
           // No-optin variant: tells the server to mark this purchase as a
           // no-email-lander order (AWeber tag, internal Stripe description,
           // and V2 account creation on the webhook). Absent/false for every

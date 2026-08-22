@@ -8,6 +8,10 @@
 - **Subject:** `{{ subscriber.first_name | capitalize }}, he listed everything he'd fixed. He still asked the wrong question.`
 - **Preheader:** The question under his question.
 - **CTA:** Ask me your real question → `campaign=reframe-01-changed`
+- **Reading Recap:** You wrote to them about a man who wrote to you listing everything he'd fixed — sober now, at the gym, calling his mother every Sunday — all to prove to a woman he'd changed. You showed them the reframe: every fix on his list had her name written under it, so it wasn't a life he was building, it was a case presented to a jury of one. You told them the truer question isn't "how do I show her I've changed" but "would I still want to be this person if she never came back" — because change built for someone else to notice is just the old chasing in cleaner clothes.
+- **Open Loop:** You asked them to bring you the question they're really asking about someone — the true one hiding under the one they keep repeating — so you could find the question they actually get to answer.
+- **Big Idea:** the man's list — every fix he made to prove he'd changed, with her name under it
+- **Continue Seed:** You came back about the list — the man who fixed everything he could think of to prove it to one person. Tell me the question you keep asking about them, and I'll show you the truer one hiding underneath it.
 
 ---
 

@@ -128,6 +128,14 @@ export interface CheckoutRequest {
   firstName: string
   bucket: string
   type?: 'main' | 'downsell'
+  /**
+   * The /fb-tarot lander hook this order came from, e.g. 'cards-slipping-past'.
+   * Optional and absent on every non-tarot funnel. Read ONLY to decide the soulmate
+   * landers' `bumpProduct` key — the nineteen of them are all `bucket: 'love'`, so
+   * they cannot be identified from anything else in this payload. Validated against a
+   * closed roster server-side; see the note at the /api/checkout call site.
+   */
+  tarotHook?: string
 }
 
 export interface CheckoutResponse {

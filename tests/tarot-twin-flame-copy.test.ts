@@ -122,15 +122,34 @@ describe('twin-flame hooks are wired end to end', () => {
   // 🔴 The operator asked explicitly for hooks that do not overlap anything shipped.
   it('reuses no existing hook id and no existing headline', () => {
     expect(new Set(TAROT_HOOKS).size).toBe(TAROT_HOOKS.length);
-    const others = TAROT_HOOKS.filter((h) => !TWIN_FLAME_HOOKS.includes(h)).map((h) => HEADLINES[h]);
+    // 🔴 'cards-twinflame-back' (soulmate-return, 2026-08-19) is EXCLUDED here deliberately: it
+    // carries this family's 'cards-twin-back' headline verbatim, by operator decision, so that
+    // the two run as a copy test on identical pages. It is the one permitted counterpart — the
+    // assertion below still proves no OTHER lander has taken a twin-flame headline, and the
+    // funnel-wide dupes check that follows still pins the total set of deliberate pairs at two.
+    const COPY_TEST_COUNTERPART = 'cards-twinflame-back';
+    const others = TAROT_HOOKS.filter(
+      (h) => !TWIN_FLAME_HOOKS.includes(h) && h !== COPY_TEST_COUNTERPART,
+    ).map((h) => HEADLINES[h]);
     for (const h of TWIN_FLAME_HOOKS) {
       expect(others, `${h} headline collides with an existing lander`).not.toContain(HEADLINES[h]);
     }
+    // …and the counterpart really does still carry the incumbent's headline (if this ever
+    // diverges, the copy test has silently become two different ads).
+    expect(HEADLINES[COPY_TEST_COUNTERPART]).toBe(HEADLINES['cards-twin-back']);
+    expect(angleForHook('cards-twin-back')).toBe('twin-flame');
+    expect(angleForHook(COPY_TEST_COUNTERPART)).toBe('soulmate-return');
     // …and every headline on the funnel is still unique overall.
     const all = TAROT_HOOKS.map((h) => HEADLINES[h]);
     const dupes = all.filter((x, i) => all.indexOf(x) !== i);
     // cards-return / cards-come-back deliberately share one headline (reunion, 2026-08-04).
-    expect(new Set(dupes)).toEqual(new Set(['Will he come back?']));
+    // 🔴 'cards-twin-back' / 'cards-twinflame-back' share one headline too, by operator
+    // decision 2026-08-19 (the soulmate-return family): the incumbent keeps its ad URL and its
+    // `twin-flame` angle, and the challenger runs bespoke reads against it. Same call as
+    // cards-return / cards-come-back — identical pages mean the READS are the only variable.
+    expect(new Set(dupes)).toEqual(
+      new Set(['Will he come back?', 'Is my twin flame coming back to me?']),
+    );
   });
 
   it('leaves every previously shipped family exactly where it was', () => {
