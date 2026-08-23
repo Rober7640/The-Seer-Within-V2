@@ -12,7 +12,9 @@ How a /fb-tarot lander is written. Applies to a rewrite of a live lander and to 
 hook alike — the only difference is that a new hook has no traffic, so step 1 changes tool.
 
 > 🔀 **There are now TWO methods, and this is the incumbent.** The other is the **Inherited
-> Shadow** (3 beats) — `fb-tarot/docs/inherited-shadow-cut.md`. Neither supersedes the other.
+> Shadow** — `fb-tarot/docs/inherited-shadow-cut.md`. Neither supersedes the other, and
+> **both serve seven bubbles in four registry slots** — the difference is what the middle four
+> say, never how many there are.
 > Where this method's cut 3 **answers** her question flat, that one **withholds** it behind a
 > block passed down her family line, to hand the pitch a live problem instead of springing the
 > clearing on her. `fb-tarot-hooks` asks the operator which to use at stage 0, per family.

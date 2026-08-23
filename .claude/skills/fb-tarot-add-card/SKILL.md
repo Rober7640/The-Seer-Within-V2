@@ -76,7 +76,7 @@ every read.
 ## Step 2 — Draft the reads (the creative core — draft + sign-off, never silent autogen)
 
 🔀 **ASK WHICH METHOD FIRST.** Two are live and the operator chooses per deck — the 7-cut
-**Natural Tarot-Cut** (`fb-tarot/docs/natural-tarot-cut.md`, the read ANSWERS) and the 3-beat
+**Natural Tarot-Cut** (`fb-tarot/docs/natural-tarot-cut.md`, the read ANSWERS) and the
 **Inherited Shadow** (`fb-tarot/docs/inherited-shadow-cut.md`, the read WITHHOLDS the answer
 behind a block passed down her family line). Both fold into the same four registry beats, so
 everything below about edit points and roster sync is unchanged either way. Default to neither;
@@ -89,8 +89,7 @@ contradict each other. Cards that cannot carry it: the Fool, the Magician, the E
 Chariot, Strength, the Star, the Sun, the World. If the supplied strip is one of those and the
 operator wants the shadow method, say so before wiring anything.
 
-🔄 Each read is **seven cuts folded into four registry beats** (or the shadow method's three
-beats into the same four) — beat 3 carries cuts 3-6 as one causal
+🔄 Each read is **seven bubbles folded into four registry beats**, on EITHER method — beat 3 carries the middle four as one causal
 chain (so / and / but / that's why). The full table, the four rules, and a worked example are in
 **`fb-tarot/docs/natural-tarot-cut.md`**; read it before writing. In outline:
 

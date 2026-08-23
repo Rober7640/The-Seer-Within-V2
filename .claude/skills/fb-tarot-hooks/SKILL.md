@@ -1,6 +1,6 @@
 ---
 name: fb-tarot-hooks
-description: "Source, draft, guard, smoke-test and ship new /fb-tarot question-hooks (the QUESTION axis) on the existing card decks. Use when the user says: build new tarot landers, add tarot hooks/questions, write the next soulmate/money/commitment landers, turn these ad headlines into landers, draft a new fb-tarot family, wire the approved tarot reads. A 'lander' in fb-tarot = one hook entry in the deck registry, NOT a new page/route/component and NOT new card art — for a new CARD SET from a supplied image use fb-tarot-add-card instead. This RUNS the proven pipeline (VOC by theme → draft to the CHOSEN method → collision check → guard file + tripwire → live smoke of the generated path → human review gate → wire). TWO methods are live and the operator picks per family at stage 0: the 7-cut Natural Tarot-Cut (fb-tarot/docs/natural-tarot-cut.md) and the 3-beat Inherited Shadow (fb-tarot/docs/inherited-shadow-cut.md)."
+description: "Source, draft, guard, smoke-test and ship new /fb-tarot question-hooks (the QUESTION axis) on the existing card decks. Use when the user says: build new tarot landers, add tarot hooks/questions, write the next soulmate/money/commitment landers, turn these ad headlines into landers, draft a new fb-tarot family, wire the approved tarot reads. A 'lander' in fb-tarot = one hook entry in the deck registry, NOT a new page/route/component and NOT new card art — for a new CARD SET from a supplied image use fb-tarot-add-card instead. This RUNS the proven pipeline (VOC by theme → draft to the CHOSEN method → collision check → guard file + tripwire → live smoke of the generated path → human review gate → wire). TWO methods are live and the operator picks per family at stage 0: the 7-cut Natural Tarot-Cut (fb-tarot/docs/natural-tarot-cut.md) and the Inherited Shadow (fb-tarot/docs/inherited-shadow-cut.md). BOTH serve seven bubbles in four registry slots — they differ in what the middle four say, never in length."
 ---
 
 # /fb-tarot-hooks — launch new question-hooks on the tarot funnel
@@ -16,7 +16,7 @@ every live ad points at. Param-driven (`/fb-tarot/c?hook=X&deck=Y`), no new rout
 > | Method | Doc | Shape | Its job |
 > |---|---|---|---|
 > | **Natural Tarot-Cut** (7 cuts) | `fb-tarot/docs/natural-tarot-cut.md` | So · And · But · That's why — **resolves** | The read ANSWERS her question. Trust and relief |
-> | **Inherited Shadow** (3 beats) | `fb-tarot/docs/inherited-shadow-cut.md` | So · But · And · That's why — **escalates** | The read WITHHOLDS the answer behind a block passed down her family line. Hands the pitch a live problem |
+> | **Inherited Shadow** | `fb-tarot/docs/inherited-shadow-cut.md` | So · But · And · That's why — **escalates** | The read WITHHOLDS the answer behind a block passed down her family line. Hands the pitch a live problem |
 >
 > Both fold into the same four registry beats, so every structural guard keeps working either
 > way. What differs is the connective order, whether cut 3 answers, and what the loop points at.
@@ -84,7 +84,7 @@ ad headlines pointed at hook names.
 stage 1, with a recommendation and the reason — do not default to the seven cuts because it is
 the incumbent, and do not default to the shadow because it is newer.
 
-| | **Natural Tarot-Cut** — 7 cuts | **Inherited Shadow** — 3 beats |
+| | **Natural Tarot-Cut** | **Inherited Shadow** |
 |---|---|---|
 | Doc | `fb-tarot/docs/natural-tarot-cut.md` | `fb-tarot/docs/inherited-shadow-cut.md` |
 | Cut 3 | **answers her flat** | withholds it behind the block |

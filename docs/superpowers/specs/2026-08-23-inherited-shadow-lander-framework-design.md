@@ -1,4 +1,4 @@
-# The Inherited Shadow — a three-beat lander framework
+# The Inherited Shadow — a second lander framework
 
 **Date:** 2026-08-23 · **Status:** design, approved in brainstorm · nothing built
 
@@ -48,7 +48,7 @@ from nowhere.
 
 ---
 
-## 2 · The three beats
+## 2 · The three candles
 
 Folded into the existing four registry slots, so every structural guard keeps meaning what it
 meant: `[0]` is still the picture, `[3]` is still the open loop, and `reads[h][c].length === 4`

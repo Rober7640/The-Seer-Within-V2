@@ -1,10 +1,10 @@
-<!-- 🔒 CANONICAL. This file is the ONE source for the Inherited Shadow (3-beat) method.
+<!-- 🔒 CANONICAL. This file is the ONE source for the Inherited Shadow method.
      Its sibling is fb-tarot/docs/natural-tarot-cut.md — the Natural Tarot-Cut (7-cut).
      BOTH ARE LIVE METHODS. Neither supersedes the other. The skill asks which one to use
      before drafting; §"Choosing between the two" below is the decision.
      Added 2026-08-23. Nothing built on it yet — see §Status. -->
 
-# The Inherited Shadow — the three-beat method
+# The Inherited Shadow
 
 Where the Natural Tarot-Cut **answers** her question, this one **withholds** the answer behind a
 block — and names the block as something passed down her family line. It exists to make the
@@ -42,7 +42,7 @@ The lander is not getting a new mechanism. It is getting the chat's own mechanis
 
 ---
 
-## The three beats
+## The three candles
 
 The shape is Evelyn's own **three candles**, from `improve-v2/specs/evelyn-v2-prompt-B16.md`
 §HOW A READING LANDS — not something invented for this funnel:
@@ -248,7 +248,7 @@ clause.
 Same five landers, 15 reads each, 75 bubbles each, each measured against its own spine
 (2026-08-23):
 
-| | 7-cut | 3-beat |
+| | Natural Tarot-Cut | Inherited Shadow |
 |---|---|---|
 | Avg grade (beat 3) | 1.16 | **0.78** |
 | Words per bubble | 12.9 | **11.0** |
@@ -270,7 +270,7 @@ and block-native questions where the ad already put a block in her head; familie
 take matters more than front-end conversion; decks whose cards mean tradition, fear or
 suspension.
 
-**Neither is proven.** The seven cuts are the incumbent with live numbers; the three beats are
+**Neither is proven.** The seven cuts are the incumbent with live numbers; the shadow is
 better on every measurable craft dimension and give up the flat answer. Read the result on
 **revenue per 1,000 conversations**, not buy-rate — this method's claimed benefit lands in
 upsell take (U1 literally sells *"protect what we cleared"*), which buy-rate hides.
