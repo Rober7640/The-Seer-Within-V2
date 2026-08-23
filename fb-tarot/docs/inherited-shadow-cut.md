@@ -284,6 +284,25 @@ Every gate in `natural-tarot-cut.md` applies. Two additions this method earns:
 - **The authorship tripwire.** The guard file gets four deliberate violations, not one: a named
   relative, a gestured-at relative ("someone close to you"), a generation count, and "you passed
   it to your children".
+
+🔴 **Scope the generation-count ban to WORDS, never to bare numerals.** Found by the first smoke
+test of this doc, 2026-08-23. A guard written as `\b(two|three|four)\b` fires on *"Two keys, and
+nobody's picked them up"* — and two keys, two pillars, two towers and two fingers are all
+**drawn details on the designated deck**. The ban is about dating an inheritance, so match
+`generations?` · `centur` · `great-grand` · `(two|three) (women|men|lives) back`, and leave
+counts of things on the card alone. A ban that fires on the art will get switched off by the
+next person, and then it protects nothing.
+
+🔴 **When the ad already asserts a block, cut 3 collides across all three cards.** Also found by
+that smoke test. On a hook like *"Is something blocking me from meeting my soulmate?"* every card
+must answer *yes, there is one* — so the **affirmation** becomes the shared six-word run, not
+the block. The doc's existing warning is about the block sentence; this is the opposite end of
+the read. Vary the SHAPE of the yes per card, not just the block:
+
+| | |
+|---|---|
+| ✗ all three | "So yes, dear — there is. And it's…" |
+| ✓ varied | "So yes, dear — there is." · "So there is, dear. Something's there…" · "So something's there, dear." |
 - **The meaning check.** Before drafting, confirm `TAROT_CARD_VOCAB` for that deck says the same
   thing the read will say. If it does not, either pick a different card or write the vocab —
   never let B and C disagree.
