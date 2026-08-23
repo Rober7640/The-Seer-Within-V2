@@ -11,6 +11,20 @@
 How a /fb-tarot lander is written. Applies to a rewrite of a live lander and to a brand-new
 hook alike — the only difference is that a new hook has no traffic, so step 1 changes tool.
 
+> 🔀 **There are now TWO methods, and this is the incumbent.** The other is the **Inherited
+> Shadow** (3 beats) — `fb-tarot/docs/inherited-shadow-cut.md`. Neither supersedes the other.
+> Where this method's cut 3 **answers** her question flat, that one **withholds** it behind a
+> block passed down her family line, to hand the pitch a live problem instead of springing the
+> clearing on her. `fb-tarot-hooks` asks the operator which to use at stage 0, per family.
+>
+> **Everything below still applies to both** except the cut table, the connective order, and
+> whether cut 3 answers. §"How Evelyn sounds", the directional ban table, §"Choosing the frame"
+> and §"Guard files" are shared, and the shadow doc deliberately does not restate them.
+>
+> ⚠ This file is the only one the checklist generator inlines, so
+> `fb-tarot/docs/copy-migration-checklist.md` describes the 7-cut method **only**. A
+> shadow-method family is not covered by the generated checklist.
+
 ## How a lander gets rewritten
 
 > 🔄 **The framework changed on 2026-08-19** (operator: the Natural Tarot-Cut). The old shape

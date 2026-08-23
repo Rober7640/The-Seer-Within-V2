@@ -75,7 +75,22 @@ every read.
 
 ## Step 2 — Draft the reads (the creative core — draft + sign-off, never silent autogen)
 
-🔄 Each read is **seven cuts folded into four registry beats** — beat 3 carries cuts 3-6 as one causal
+🔀 **ASK WHICH METHOD FIRST.** Two are live and the operator chooses per deck — the 7-cut
+**Natural Tarot-Cut** (`fb-tarot/docs/natural-tarot-cut.md`, the read ANSWERS) and the 3-beat
+**Inherited Shadow** (`fb-tarot/docs/inherited-shadow-cut.md`, the read WITHHOLDS the answer
+behind a block passed down her family line). Both fold into the same four registry beats, so
+everything below about edit points and roster sync is unchanged either way. Default to neither;
+put the choice to them with a recommendation.
+
+🔴 **On a NEW deck this choice comes before the card art is accepted.** The shadow method needs
+the card's public meaning to already BE the block — because the `TAROT_CARD_VOCAB` you are about
+to write is injected into the Version-C prompt, and a canned read fighting it makes B and C
+contradict each other. Cards that cannot carry it: the Fool, the Magician, the Empress, the
+Chariot, Strength, the Star, the Sun, the World. If the supplied strip is one of those and the
+operator wants the shadow method, say so before wiring anything.
+
+🔄 Each read is **seven cuts folded into four registry beats** (or the shadow method's three
+beats into the same four) — beat 3 carries cuts 3-6 as one causal
 chain (so / and / but / that's why). The full table, the four rules, and a worked example are in
 **`fb-tarot/docs/natural-tarot-cut.md`**; read it before writing. In outline:
 

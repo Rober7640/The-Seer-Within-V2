@@ -1,6 +1,6 @@
 ---
 name: fb-tarot-hooks
-description: "Source, draft, guard, smoke-test and ship new /fb-tarot question-hooks (the QUESTION axis) on the existing card decks. Use when the user says: build new tarot landers, add tarot hooks/questions, write the next soulmate/money/commitment landers, turn these ad headlines into landers, draft a new fb-tarot family, wire the approved tarot reads. A 'lander' in fb-tarot = one hook entry in the deck registry, NOT a new page/route/component and NOT new card art — for a new CARD SET from a supplied image use fb-tarot-add-card instead. This RUNS the proven pipeline (VOC by theme → seven cuts → collision check → guard file + tripwire → live smoke of the generated path → human review gate → wire). Method: fb-tarot/docs/natural-tarot-cut.md."
+description: "Source, draft, guard, smoke-test and ship new /fb-tarot question-hooks (the QUESTION axis) on the existing card decks. Use when the user says: build new tarot landers, add tarot hooks/questions, write the next soulmate/money/commitment landers, turn these ad headlines into landers, draft a new fb-tarot family, wire the approved tarot reads. A 'lander' in fb-tarot = one hook entry in the deck registry, NOT a new page/route/component and NOT new card art — for a new CARD SET from a supplied image use fb-tarot-add-card instead. This RUNS the proven pipeline (VOC by theme → draft to the CHOSEN method → collision check → guard file + tripwire → live smoke of the generated path → human review gate → wire). TWO methods are live and the operator picks per family at stage 0: the 7-cut Natural Tarot-Cut (fb-tarot/docs/natural-tarot-cut.md) and the 3-beat Inherited Shadow (fb-tarot/docs/inherited-shadow-cut.md)."
 ---
 
 # /fb-tarot-hooks — launch new question-hooks on the tarot funnel
@@ -10,12 +10,23 @@ deck of art she is shown) is `fb-tarot-add-card`'s job. This adds new *questions
 already exist — almost always `return-mhf`, the face-down Magician / Hanged Man / Fool deck
 every live ad points at. Param-driven (`/fb-tarot/c?hook=X&deck=Y`), no new routes.
 
-> 🔒 **The method is not in this file.** It lives in **`fb-tarot/docs/natural-tarot-cut.md`** —
-> the seven cuts, the four rules that decide whether a read WORKS, §"How Evelyn sounds" (the
-> four voice rules: picture before meaning · grade 5 is not comprehensible · conversational ·
-> she is the subject), the directional ban table, frame selection, guard design.
-> Read it before drafting. It is also inlined into `fb-tarot/docs/copy-migration-checklist.md`
-> by the checklist generator, so the two can never disagree. Do not restate it here.
+> 🔒 **The method is not in this file — and there are TWO of them.** Both are live. Neither
+> supersedes the other. **Ask the operator which one before drafting** (stage 0, step 6).
+>
+> | Method | Doc | Shape | Its job |
+> |---|---|---|---|
+> | **Natural Tarot-Cut** (7 cuts) | `fb-tarot/docs/natural-tarot-cut.md` | So · And · But · That's why — **resolves** | The read ANSWERS her question. Trust and relief |
+> | **Inherited Shadow** (3 beats) | `fb-tarot/docs/inherited-shadow-cut.md` | So · But · And · That's why — **escalates** | The read WITHHOLDS the answer behind a block passed down her family line. Hands the pitch a live problem |
+>
+> Both fold into the same four registry beats, so every structural guard keeps working either
+> way. What differs is the connective order, whether cut 3 answers, and what the loop points at.
+>
+> `natural-tarot-cut.md` carries what BOTH methods share and the shadow doc does not restate:
+> §"How Evelyn sounds" (picture before meaning · grade 5 is not comprehensible · conversational
+> · she is the subject), the directional ban table, frame selection, guard design. Read it
+> either way. It is also inlined into `fb-tarot/docs/copy-migration-checklist.md` by the
+> checklist generator — ⚠ that generator reads the 7-cut doc only, so a shadow-method family is
+> **not** described by the generated checklist. Do not restate either doc here.
 
 **Repo assets this skill drives** (all already exist — do not rebuild them):
 
@@ -66,6 +77,36 @@ ad headlines pointed at hook names.
   half that hurts.
 - Confirm the final list, the age/segment split if there is one, and which headline (if any) is
   the control. A control should be the KNOWN question — often an existing lander, not a new one.
+
+#### 🔴 ASK WHICH METHOD. Never assume one.
+
+**Two methods are live and the operator chooses per family.** Put the question to them before
+stage 1, with a recommendation and the reason — do not default to the seven cuts because it is
+the incumbent, and do not default to the shadow because it is newer.
+
+| | **Natural Tarot-Cut** — 7 cuts | **Inherited Shadow** — 3 beats |
+|---|---|---|
+| Doc | `fb-tarot/docs/natural-tarot-cut.md` | `fb-tarot/docs/inherited-shadow-cut.md` |
+| Cut 3 | **answers her flat** | withholds it behind the block |
+| Chain | So · And · But · That's why (resolves) | So · But · And · That's why (escalates) |
+| The loop | names an obstruction | names where it came from — **roots** |
+| Best for | trust and relief; her-fault questions whose "it was never you" IS the product | handing the pitch a live problem; block-native questions; families where upsell take matters most |
+| Proven? | incumbent, live numbers | **designed, never shipped** |
+
+Recommend the seven cuts when the answer is the thing she came for. Recommend the shadow when
+the ad already put a block in her head (money, "is something blocking me"), or when the family's
+value is in Act 1 coherence and upsell take rather than front-end conversion.
+
+🔴 **The shadow method constrains the DECK, and the seven cuts do not.** It requires the card's
+public meaning to already BE the block, because `TAROT_CARD_VOCAB` injects that meaning into the
+Version-C prompt — a canned read fighting it makes B and C contradict each other on the same
+lander. Cards that cannot carry it: the Fool, **the Magician**, the Empress, **the Chariot**,
+Strength, the Star, the Sun, the World. If the family must run on `return-mhf` (Magician /
+Hanged Man / Fool), **say so at stage 0** — two of those three fight the shadow method, and the
+choice is then seven cuts or a new deck.
+
+Record the choice in the draft `note` and in the family's guard file `describe()`. A reviewer
+must never have to guess which method a lander was written to.
 
 ### 1 · VOC — read what she actually typed
 
@@ -131,14 +172,29 @@ person's words.
 ⚠ **And "the operator said skip it" is a reason, not an exemption.** Mark it `none`, write the
 reason and the theme to pull, and expect the smoke test to fail — that failure is the record.
 
-### 2 · Draft to the seven cuts
+### 2 · Draft to the method chosen at stage 0
 
-To `fb-tarot/docs/drafts/rewrites/<hook>.json` — `{hook, headline, note, decks:{<deck>:{a,b,c}}}`,
-7 flat bubbles per card. The `note` field carries the family's bans and WHY each exists; it is
-what the next person reads. Follow `fb-tarot/docs/natural-tarot-cut.md`.
+To `fb-tarot/docs/drafts/rewrites/<hook>.json` — `{hook, headline, method, note, voc,
+decks:{<deck>:{a,b,c}}}`, 7 flat bubbles per card **either way** — both methods fold into the
+same four registry beats, so the file shape and every structural guard are identical. The `note`
+field carries the family's bans and WHY each exists; it is what the next person reads.
 
-Pick the frame here, **before** writing — §"Choosing the frame" in the method doc. A family in
-no frame set inherits decode-him and the model invents a man.
+- `"method": "natural-cut"` → follow `fb-tarot/docs/natural-tarot-cut.md`
+- `"method": "inherited-shadow"` → follow `fb-tarot/docs/inherited-shadow-cut.md`
+
+Pick the frame here, **before** writing — §"Choosing the frame" in `natural-tarot-cut.md`, which
+governs both methods. A family in no frame set inherits decode-him and the model invents a man.
+
+**If the method is inherited-shadow, two extra things happen before the first bubble:**
+
+1. **Check `TAROT_CARD_VOCAB`** (`server/lib/prompts.ts`) for the deck. The meaning it injects
+   must agree with the block the read will name. If it does not, pick a different card or write
+   the vocab — never let Version B and Version C disagree about what a card means.
+2. **Write the card grammar first, once per deck, and reuse it.** One shadow side per card,
+   constant across every lander on that deck — that is what makes the block arrive from the
+   picture instead of being asserted. ⚠ It also makes the block SENTENCE collide: keeping the
+   fact constant while varying the angle is the whole job. Measured 2026-08-23: five landers on
+   one card grammar produced **17 shared six-word runs** on the first pass.
 
 ### 3 · Gate the copy
 
@@ -163,6 +219,15 @@ node scripts/guard-tripwire.mjs <family>                          # 🔴 require
 
 Add a tripwire row to `scripts/guard-tripwire.mjs` for every ban the family invents. **A green
 suite on an unwired family means nothing until the tripwire has run.**
+
+The `describe()` must also name the METHOD — a reviewer reading a guard file has to know whether
+cut 3 is supposed to answer or withhold, or they will "fix" the wrong thing.
+
+**An inherited-shadow family gets four authorship tripwire rows, not one.** The ban dies by
+degrees, so feed it all four: a named relative (*"your mother"*), a gestured-at relative
+(*"someone close to you"*), a generation count (*"three women back"*), and *"you passed it to
+your children"*. Plus the method's own set — curse/karma/fate, trauma language, "who laid that
+table". See `fb-tarot/docs/inherited-shadow-cut.md` §The authorship ban.
 
 ### 5 · Smoke the generated path
 
@@ -231,3 +296,11 @@ conversations**, not buy-rate — buy-rate hides upsell take and ranks sub-group
 5. Never `git checkout` to undo, and never run a blind regex pass over copy.
 6. Every new family gets its own guard file AND its own tripwire rows.
 7. Every lander carries a `voc` record. No pull is a FAIL, not a footnote.
+8. **Two methods are live. ASK which one — never assume, never default.** The choice is the
+   operator's, it is made per family at stage 0, and it is recorded in the draft `method` field
+   and the guard file's `describe()`.
+9. **The seven cuts are never deleted or migrated away from.** They are the incumbent, the
+   control, and the only method with live numbers behind them. A shadow family is an ARM
+   alongside them, not a replacement, until a result says otherwise.
+10. On the inherited-shadow method the CARD's public meaning must already be the block, and
+    `TAROT_CARD_VOCAB` must agree. A card meaning power, hope or completion cannot carry it.
