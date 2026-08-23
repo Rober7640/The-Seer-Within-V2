@@ -91,19 +91,23 @@ the incumbent, and do not default to the shadow because it is newer.
 | Chain | So · And · But · That's why (resolves) | So · But · And · That's why (escalates) |
 | The loop | names an obstruction | names where it came from — **roots** |
 | Best for | trust and relief; her-fault questions whose "it was never you" IS the product | handing the pitch a live problem; block-native questions; families where upsell take matters most |
+| Deck | any | any — the card is the warrant, so a bright card works best |
 | Proven? | incumbent, live numbers | **designed, never shipped** |
 
 Recommend the seven cuts when the answer is the thing she came for. Recommend the shadow when
 the ad already put a block in her head (money, "is something blocking me"), or when the family's
 value is in Act 1 coherence and upsell take rather than front-end conversion.
 
-🔴 **The shadow method constrains the DECK, and the seven cuts do not.** It requires the card's
-public meaning to already BE the block, because `TAROT_CARD_VOCAB` injects that meaning into the
-Version-C prompt — a canned read fighting it makes B and C contradict each other on the same
-lander. Cards that cannot carry it: the Fool, **the Magician**, the Empress, **the Chariot**,
-Strength, the Star, the Sun, the World. If the family must run on `return-mhf` (Magician /
-Hanged Man / Fool), **say so at stage 0** — two of those three fight the shadow method, and the
-choice is then seven cuts or a new deck.
+🔴 **Neither method constrains the deck.** Both run on `return-mhf` or anywhere else. What the
+shadow method requires is that the card be read **as it actually means** — its meaning is the
+WARRANT for cut 1 ("you have what it takes"), and the block is what that positivity proves must
+exist. A bright card is the *strongest* warrant, not a disqualification.
+
+⛔ An earlier version of this file ruled out eight cards here — the Fool, Magician, Empress,
+Chariot, Strength, Star, Sun, World — on the premise that the card must CONTAIN the block. That
+premise was wrong (operator correction 2026-08-23) and the list is deleted. The failure it was
+groping at is a read that INVERTS a card: the Magician's lemniscate written as a treadmill when
+it means unlimited potential. See `fb-tarot/docs/inherited-shadow-cut.md` §Never invert the card.
 
 Record the choice in the draft `note` and in the family's guard file `describe()`. A reviewer
 must never have to guess which method a lander was written to.
@@ -189,11 +193,11 @@ governs both methods. A family in no frame set inherits decode-him and the model
 `fb-tarot/docs/inherited-shadow-cut.md` §Pre-flight. These are not gates. A gate catches the
 fault after the copy exists, and each one then costs a rewrite:
 
-1. **Check `TAROT_CARD_VOCAB`** (`server/lib/prompts.ts`) for the deck. The meaning it injects
-   must agree with the block the read will name. If it does not, pick a different card or write
-   the vocab — never let Version B and Version C disagree. Proven necessary 2026-08-23: on the
-   live deck the copy passed **every** mechanical gate with two of three cards contradicting
-   their own stated meaning. No gate in this pipeline can see it.
+1. **Write cut 1 FROM `TAROT_CARD_VOCAB`, not against it** (`server/lib/prompts.ts`). Cut 1 says
+   what that line says — she has what it takes. If cut 1 argues with the vocab, rewrite cut 1;
+   the deck is not the problem. Proven necessary 2026-08-23: on the live deck the copy passed
+   **every** mechanical gate while two of three cards contradicted their own stated meaning. No
+   gate in this pipeline can see it.
 2. **Write the card grammar, once per deck.** One shadow side per card, constant across every
    lander on that deck — that is what makes the block arrive from the picture instead of being
    asserted. ⚠ Keeping the fact constant while varying the angle is the whole job: five landers
@@ -310,5 +314,6 @@ conversations**, not buy-rate — buy-rate hides upsell take and ranks sub-group
 9. **The seven cuts are never deleted or migrated away from.** They are the incumbent, the
    control, and the only method with live numbers behind them. A shadow family is an ARM
    alongside them, not a replacement, until a result says otherwise.
-10. On the inherited-shadow method the CARD's public meaning must already be the block, and
-    `TAROT_CARD_VOCAB` must agree. A card meaning power, hope or completion cannot carry it.
+10. On the inherited-shadow method the card is the WARRANT, never the block: cut 1 states what
+    the card means, and the block is what that positivity proves must exist. NEVER invert a card
+    to find a block in it. No card is ruled out by its meaning.

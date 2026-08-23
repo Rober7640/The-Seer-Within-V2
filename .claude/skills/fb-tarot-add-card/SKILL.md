@@ -82,12 +82,14 @@ behind a block passed down her family line). Both fold into the same four regist
 everything below about edit points and roster sync is unchanged either way. Default to neither;
 put the choice to them with a recommendation.
 
-🔴 **On a NEW deck this choice comes before the card art is accepted.** The shadow method needs
-the card's public meaning to already BE the block — because the `TAROT_CARD_VOCAB` you are about
-to write is injected into the Version-C prompt, and a canned read fighting it makes B and C
-contradict each other. Cards that cannot carry it: the Fool, the Magician, the Empress, the
-Chariot, Strength, the Star, the Sun, the World. If the supplied strip is one of those and the
-operator wants the shadow method, say so before wiring anything.
+🔴 **On the shadow method the card is the WARRANT, never the block.** Cut 1 states what the card
+MEANS — she has what it takes — and the block is what that positivity proves must exist. So the
+`TAROT_CARD_VOCAB` you are about to write and the read must say the same thing. **No card is
+ruled out by its meaning**; a bright card is the strongest warrant there is. What IS forbidden
+is inverting a card to manufacture a block — writing the Magician's lemniscate as a treadwheel
+when it means unlimited potential. See `fb-tarot/docs/inherited-shadow-cut.md` §Never invert the
+card. (An earlier version of this file listed eight "unusable" cards; that premise was wrong and
+the list is deleted.)
 
 🔄 Each read is **seven bubbles folded into four registry beats**, on EITHER method — beat 3 carries the middle four as one causal
 chain (so / and / but / that's why). The full table, the four rules, and a worked example are in

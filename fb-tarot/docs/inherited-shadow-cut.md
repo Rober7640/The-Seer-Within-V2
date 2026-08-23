@@ -53,6 +53,13 @@ The shape is Evelyn's own **three candles**, from `improve-v2/specs/evelyn-v2-pr
 > know," and it should sting a little. **THE OPENING** — what is shifting, and what to watch
 > for, riding the image.
 
+⚠ **"The image's shadow side" does NOT mean invert the card.** In B16 the image is one Evelyn
+forges from the client's own words, so its shadow side is *the client's* blind spot. On a tarot
+lander the image is a fixed card with a public meaning, and reading its "shadow side" as the
+opposite of what it means is how the Magician's lemniscate became a treadmill. Here the shadow
+side is **the gap between what the card says she can do and what has actually happened** — see
+§The card is the WARRANT.
+
 Folded into the same four registry slots the seven cuts use, so every structural guard keeps
 meaning what it meant and `reads[h][c].length === 4` still holds across the 24 test files that
 pin it.
@@ -61,11 +68,35 @@ pin it.
 |---|---|---|---|---|
 | `[0]` | The picture | One or two details literally on the art | — | She has nothing to check |
 | `[1]` | The bridge | Her question back, plus the card in plain English | — | It reads as a horoscope |
-| `[2]` | **1 · What I see** | Affirm her. The thing she fears is her fault is NOT the fault | *So…* | She braces for blame and stops reading |
-| `[2]` | **2 · The block** | The card's own shadow side. Point at something drawn | *But…* | The block is asserted, and she can't check it |
-| `[2]` | **3 · The block in her life** | What that thing is, in her situation | *And…* | It stays a fact about a picture |
+| `[2]` | **1 · What the card says** | The card's own meaning, straight: she HAS what it takes | *So…* | The block has no warrant and lands as a guess |
+| `[2]` | **2 · And yet** | It still has not happened. Her own life, said back plainly | *But…* | Nothing forces the deduction in cut 3 |
+| `[2]` | **3 · So it isn't her** | The only thing left that explains it — something is in the way | *And…* | She keeps the blame she arrived with |
 | `[2]` | **4 · The cost** | A week she has actually lived, explained by the block | *That's why…* | The block is a claim she must take on trust |
 | `[3]` | **The opening** | Where it came from — narrow, and pointing at ROOTS | *Let me look closer at…* | The clearing ritual arrives from nowhere |
+
+### 🔴 The card is the WARRANT, never the block
+
+The block is not in the card. **The card's meaning is what proves the block must exist.**
+
+> the card says she CAN → and yet it hasn't happened → **therefore something is in the way,
+> and it isn't her**
+
+That deduction is the engine, and it only works if the card is read **as it actually means**.
+A strong, positive card is a *better* warrant than a shadowy one, because it establishes
+capability before anything is named:
+
+| Card | Says | Therefore |
+|---|---|---|
+| The Magician | you have every tool, and the will to use them | you are not what is missing |
+| The Empress | everything grew | and none of it reached you |
+| The Sun | the light is full on you | so something stands between you and it |
+| Strength | you have had the strength | and it still did not move |
+
+⚠ **Never invert a card to find a block in it.** Operator correction, 2026-08-23: an early
+draft read the Magician's lemniscate as *"it comes back to where it started"* — a treadmill.
+It is the symbol of **unlimited potential**. Taking the deck's clearest sign of mastery as
+evidence of futility is the exact failure the warrant rule exists to prevent, and any reader
+who knows tarot catches it instantly.
 
 ### The connective order is the difference, and it is deliberate
 
@@ -157,57 +188,65 @@ bans, the per-frame place/tactic/her-fault bans. Nothing here is loosened.
 
 ---
 
-## 🔴 The card must MEAN the block
+## 🔴 Never invert the card
 
-The seven cuts only require the block to be **drawn**. This method requires it to be **drawn AND
-meant**, because the card is the warrant and a warrant that contradicts itself is worse than
-none.
+> ⛔ **SUPERSEDED 2026-08-23.** This section used to be headed *"The card must MEAN the block"*
+> and it ruled out eight cards — the Fool, the Magician, the Empress, the Chariot, Strength, the
+> Star, the Sun, the World — on the grounds that their meaning "fights" a block. **That premise
+> was wrong.** It assumed the card has to *contain* the block. It does not: the card is the
+> warrant, and a positive card is the strongest warrant there is (see §The card is the WARRANT).
+> **No card is ruled out by its meaning.** The rule that replaces it is below.
 
 `server/lib/prompts.ts` injects each card's meaning into the Version-C prompt via
-`TAROT_CARD_VOCAB` — e.g. *"the Magician, the card of will and intention."* A canned read that
-says "the loop goes round to the same place, nothing's moved" on a card the server calls *will
-and intention* makes **Version B and Version C contradict each other on the same lander**. She
-can also simply look the card up.
+`TAROT_CARD_VOCAB` — e.g. *"the Magician, the card of will and intention."* **Read the card as
+that says**, and use it as the warrant for cut 1.
 
-**Test every candidate card three ways. All three must agree:**
+The failure to guard against is not a card whose meaning is too bright. It is a read that
+**turns a card against its own meaning** to manufacture a block:
 
-| | Question |
+| ✗ inverted | ✓ used as warrant |
 |---|---|
-| Picture | Is the block a thing literally drawn, that she can point at? |
-| Meaning | Does the card's public meaning already carry that block? |
-| Vocab | Does `TAROT_CARD_VOCAB` say the same thing — or can it be written to? |
+| "that loop comes back to where it started" | "every tool he needs is out — you can do this" |
+| "each new start went the old way" | "this card says you're able to start" |
+| "the wheat stands uncut, nothing was taken in" | "look how much grew — and none of it reached you" |
 
-Cards whose meaning **fights** a block and must not carry this method: the Fool (new
-beginnings) · **the Magician (power, manifestation)** · the Empress (abundance) · **the Chariot
-(moving forward)** · Strength (courage) · the Star (hope) · the Sun (joy) · the World
-(completion).
+An inverted read fails twice over: Version B and Version C contradict each other on the same
+lander, and she can look the card up in ten seconds and find you were wrong about it.
 
-### The four ways a card fails
+**One check, run in the pre-flight:** put `TAROT_CARD_VOCAB`'s line next to cut 1. If cut 1 says
+what the vocab says, the card is usable. If cut 1 argues with it, rewrite cut 1 — not the deck.
 
-Found by assessing all 22 Major Arcana, one assessor per card, 2026-08-23. Only the first is
-about writing:
+### The three ways a card fails
 
-1. **The block has to be invented.** The read needs history the picture doesn't show —
-   *"he didn't build that table"* on the Magician, *"he can't reach it"* on the Hanged Man (his
-   hands are hidden, not tied). The Star fails hardest: it contains no obstruction anywhere, so
-   its block can only be a *direction of flow*.
-2. **Copy cannot outrun a title.** The Devil has the best clearing image in the deck — a chain
+Found by assessing all 22 Major Arcana, one assessor per card, 2026-08-23. ⛔ That audit scored
+every card on *"can this card contain a block"* — the wrong question, per §Never invert the
+card. Its **safety** findings stand and are the reason the four below are still out; its
+block-quality scores should be ignored.
+
+None of these three is about writing. A card that survives them can carry the method whatever
+its meaning is:
+1. **Copy cannot outrun a title.** The Devil has the best clearing image in the deck — a chain
    loose enough to lift off — and fails on its name, its nudity, and the fact that cropping the
    nudity crops the mechanism. Judgement's caption fights an audience whose whole question is
    "is this my fault?"
-3. **The card provokes a question the funnel must refuse.** Death is the strongest card in the
+2. **The card provokes a question the funnel must refuse.** Death is the strongest card in the
    deck for making her ask about her dead husband in the paid chat — where the mediumship ban
    forces Evelyn to turn her down, at exactly the trust moment.
-4. **The card clears its own block.** The Tower's crown is already being blasted off. *"The
+3. **The card clears its own block.** The Tower's crown is already being blasted off. *"The
    lightning does the clearing on the card itself, which leaves nothing for a paid ritual to be
    sold as doing."*
 
-### The deck this method was designed for
+### Decks
 
-Meaning, picture and block all agree, and the three blocks are different **kinds** — which is
-what stops the three reads on one lander colliding:
+**Any deck can carry this method**, including the live `return-mhf` (Magician / Hanged Man /
+Fool). Run it on the deck the family already needs; a new deck is never required by the method
+itself.
 
-| Card | Means | Kind | The block, drawn |
+The one that was purpose-built for it, before the warrant rule was understood, is Hierophant /
+Moon / Hanged Man. It is still a good deck — three different flavours of block — but it is now
+an option, not a prerequisite:
+
+| Card | Means | Flavour | What the read points at |
 |---|---|---|---|
 | **V · The Hierophant** | tradition, conformity | **received** | two kneel with backs turned; keys unheld on the step |
 | **XVIII · The Moon** | illusion, fear, subconscious | **unseen** | the road starts in dark water nothing faces; it narrows at the towers |
@@ -226,15 +265,16 @@ beat 1, and retire the male figure after beat 1 or he becomes "him" on a soulmat
 None of these is a gate. A gate catches the fault after the copy exists, and every one of them
 then costs a rewrite. Do them in order, on paper, before writing a word.
 
-### 1 · Check the card's meaning against `TAROT_CARD_VOCAB`
+### 1 · Write cut 1 from `TAROT_CARD_VOCAB`, not against it
 
-Per §"The card must MEAN the block". Pull the deck's entry from `server/lib/prompts.ts` and
-write it next to the block you intend. If they fight, pick a different card or write the vocab —
-never let Version B and Version C disagree.
+Per §Never invert the card. Pull the deck's entry from `server/lib/prompts.ts` and write cut 1
+as what that line *says* — she has what it takes. If cut 1 argues with the vocab, rewrite cut 1;
+the deck is not the problem.
 
 Proven necessary 2026-08-23: run on the live `return-mhf` deck, the copy passed **every**
-mechanical gate and still had two of three cards contradicting their own stated meaning. No gate
-in the pipeline can see this.
+mechanical gate while two of three cards contradicted their own stated meaning — the Magician's
+lemniscate read as a treadmill, the Fool's new beginnings read as never beginning. No gate in
+the pipeline can see this.
 
 ### 2 · Write the card grammar, once per deck
 

@@ -48,6 +48,15 @@ from nowhere.
 
 ---
 
+> ⛔ **AMENDED 2026-08-23 (operator correction).** This spec was written on the premise that the
+> block lives IN the card — its "shadow side". That is wrong. **The card is the WARRANT, never
+> the block:** cut 1 states what the card MEANS (she has what it takes), and the block is what
+> that positivity proves must exist. No card is ruled out by its meaning, and inverting one to
+> manufacture a block — the Magician's lemniscate read as a treadmill — is the failure the rule
+> exists to prevent. The canonical method doc
+> `fb-tarot/docs/inherited-shadow-cut.md` carries the corrected version; where this spec and
+> that doc disagree, the doc wins.
+
 ## 2 · The three candles
 
 Folded into the existing four registry slots, so every structural guard keeps meaning what it
