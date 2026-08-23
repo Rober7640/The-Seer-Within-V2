@@ -221,6 +221,57 @@ beat 1, and retire the male figure after beat 1 or he becomes "him" on a soulmat
 
 ---
 
+## 🔴 Pre-flight — three things BEFORE the first bubble
+
+None of these is a gate. A gate catches the fault after the copy exists, and every one of them
+then costs a rewrite. Do them in order, on paper, before writing a word.
+
+### 1 · Check the card's meaning against `TAROT_CARD_VOCAB`
+
+Per §"The card must MEAN the block". Pull the deck's entry from `server/lib/prompts.ts` and
+write it next to the block you intend. If they fight, pick a different card or write the vocab —
+never let Version B and Version C disagree.
+
+Proven necessary 2026-08-23: run on the live `return-mhf` deck, the copy passed **every**
+mechanical gate and still had two of three cards contradicting their own stated meaning. No gate
+in the pipeline can see this.
+
+### 2 · Write the card grammar, once per deck
+
+One shadow side per card, constant across every lander on that deck. That is what makes the
+block arrive from the picture instead of being asserted. Write all three before any lander.
+
+⚠ Keeping the fact constant while varying the angle is the whole job. Five landers on one card
+grammar produced **17 shared six-word runs** on the first pass.
+
+### 3 · Write the THREE AFFIRMATIONS first, and check they differ
+
+🔴 **This is the one that keeps happening.** Write cut 1 for all three cards — nothing else —
+and read them side by side. If two share a six-word run, fix them now, while it costs a line
+instead of a read.
+
+**It fires whenever the ad blames her or asserts a block**, because then every card has to open
+the same way:
+
+| The ad | What every card must say | So they collide on |
+|---|---|---|
+| *"Is something blocking me…"* | yes, there is one | *"So yes, dear — there is…"* |
+| *"Why do I **keep** getting blocked…"* | it isn't you | *"So it isn't you, dear…"* |
+| *"Is my energy blocking my money?"* | your energy is fine | *"So your energy's not it, dear…"* |
+
+Vary the SHAPE of the yes, not just the words after it:
+
+| | |
+|---|---|
+| ✗ | "So it isn't you, dear…" · "So it isn't you, dear…" · "So it isn't you, dear…" |
+| ✓ | "So it isn't you, dear." · "So none of this is your doing, dear." · "So you're not the reason, dear." |
+
+⚠ **Written as a prose warning first, and it did not work.** The warning went into this doc on
+2026-08-23 and the very next run walked into it anyway — three cards, three identical openings.
+A note tells you the fault exists; only a step before the writing stops it.
+
+---
+
 ## How Evelyn sounds — tighter than the seven cuts
 
 Everything in `natural-tarot-cut.md` §"How Evelyn sounds" applies unchanged: picture before
@@ -293,16 +344,8 @@ nobody's picked them up"* — and two keys, two pillars, two towers and two fing
 counts of things on the card alone. A ban that fires on the art will get switched off by the
 next person, and then it protects nothing.
 
-🔴 **When the ad already asserts a block, cut 3 collides across all three cards.** Also found by
-that smoke test. On a hook like *"Is something blocking me from meeting my soulmate?"* every card
-must answer *yes, there is one* — so the **affirmation** becomes the shared six-word run, not
-the block. The doc's existing warning is about the block sentence; this is the opposite end of
-the read. Vary the SHAPE of the yes per card, not just the block:
-
-| | |
-|---|---|
-| ✗ all three | "So yes, dear — there is. And it's…" |
-| ✓ varied | "So yes, dear — there is." · "So there is, dear. Something's there…" · "So something's there, dear." |
+The affirmation-collision check is **§Pre-flight step 3**, not a gate — by the time a gate sees
+it the copy is written and the fix is a rewrite. Run it before the first bubble.
 - **The meaning check.** Before drafting, confirm `TAROT_CARD_VOCAB` for that deck says the same
   thing the read will say. If it does not, either pick a different card or write the vocab —
   never let B and C disagree.

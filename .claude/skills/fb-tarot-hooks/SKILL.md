@@ -185,16 +185,24 @@ field carries the family's bans and WHY each exists; it is what the next person 
 Pick the frame here, **before** writing — §"Choosing the frame" in `natural-tarot-cut.md`, which
 governs both methods. A family in no frame set inherits decode-him and the model invents a man.
 
-**If the method is inherited-shadow, two extra things happen before the first bubble:**
+**If the method is inherited-shadow, run the 3-step PRE-FLIGHT before the first bubble** —
+`fb-tarot/docs/inherited-shadow-cut.md` §Pre-flight. These are not gates. A gate catches the
+fault after the copy exists, and each one then costs a rewrite:
 
 1. **Check `TAROT_CARD_VOCAB`** (`server/lib/prompts.ts`) for the deck. The meaning it injects
    must agree with the block the read will name. If it does not, pick a different card or write
-   the vocab — never let Version B and Version C disagree about what a card means.
-2. **Write the card grammar first, once per deck, and reuse it.** One shadow side per card,
-   constant across every lander on that deck — that is what makes the block arrive from the
-   picture instead of being asserted. ⚠ It also makes the block SENTENCE collide: keeping the
-   fact constant while varying the angle is the whole job. Measured 2026-08-23: five landers on
-   one card grammar produced **17 shared six-word runs** on the first pass.
+   the vocab — never let Version B and Version C disagree. Proven necessary 2026-08-23: on the
+   live deck the copy passed **every** mechanical gate with two of three cards contradicting
+   their own stated meaning. No gate in this pipeline can see it.
+2. **Write the card grammar, once per deck.** One shadow side per card, constant across every
+   lander on that deck — that is what makes the block arrive from the picture instead of being
+   asserted. ⚠ Keeping the fact constant while varying the angle is the whole job: five landers
+   on one card grammar produced **17 shared six-word runs** on the first pass.
+3. 🔴 **Write the THREE AFFIRMATIONS first and check they differ.** Cut 1 for all three cards,
+   nothing else, read side by side. It fires whenever the ad blames her or asserts a block,
+   because then every card must open the same way — *"So it isn't you, dear"* ×3. Fix it here,
+   where it costs a line, not at the collision gate where it costs a read.
+   ⚠ This was a prose warning in the doc first and the very next run walked into it anyway.
 
 ### 3 · Gate the copy
 
