@@ -1,0 +1,5 @@
+{
+  "note": "All nine cycle-1 sends carry /e/ short links. Confirmed with the operator on 2026-08-18: NONE of these nine was ever used in an AWeber broadcast, so nothing here is in an inbox and there is no already-sent copy to protect. The earlier version of this file recorded cycle 1 as shipped Jul 23-31 to ~59k and set historical:true on that basis; that was wrong, and the AWeber broadcast ids logged in STATE.md were scheduled-then-never-sent rather than delivered. Anything re-rendered here is still a draft.",
+  "historical": false,
+  "sends": ["01", "02", "03", "04", "05", "06", "07", "08", "09"]
+}

@@ -1197,6 +1197,29 @@ export const evelynLanderSessions = pgTable("evelyn_lander_sessions", {
   bucket: text("bucket"),
   src: text("src"),
   campaign: text("campaign"),
+  pendingReply: text("pending_reply"),
+  // When the parked reply was replayed into a real chat session. A SEPARATE marker
+  // rather than nulling pending_reply: that text is also the durable evidence for
+  // the 10-minute Live Thread welcome grant, which is re-derived at verification
+  // time and on every /check-email resend — clearing it would silently drop those
+  // readers back to 5 minutes. See server/lib/liveThreadEngagement.ts's header.
+  pendingReplyConsumedAt: timestamp("pending_reply_consumed_at"),
+  // The safety verdict POST /reply reached on pending_reply, at the moment it was
+  // written and with that request's context. NULL means the text passed. A non-null
+  // violation type means the normal chat path would have intercepted these words
+  // with a canned response instead of generating against them (chatEngine.ts's
+  // step-1 safety gate), so the replay must not smuggle them into the model later.
+  // The text is still stored and the reader is still let through — that is the
+  // operator's Task 6 ruling and this does not touch it.
+  pendingReplyViolationType: text("pending_reply_violation_type"),
+  // The persona's answer to pending_reply, generated ONCE before any billing session
+  // exists (GET /api/chat-service/live-thread/:personaSlug — free, like /greeting) and
+  // shown to the reader on their first /reading load. Persisted rather than kept in the
+  // browser so replayPendingReply() can insert it alongside the reply when the session
+  // finally starts: otherwise the screen would show an answer the database has never
+  // seen, and the persona would answer the same disclosure a second time. Also makes a
+  // reload free — a stored answer is returned as-is, never regenerated. See migration 023.
+  pendingReplyResponse: text("pending_reply_response"),
   hadToken: boolean("had_token").default(false).notNull(),
 
   // Funnel progress (chat layer fills these later)
@@ -1218,6 +1241,64 @@ export const evelynLanderSessions = pgTable("evelyn_lander_sessions", {
 export const insertEvelynLanderSessionSchema = createInsertSchema(evelynLanderSessions);
 export type EvelynLanderSession = typeof evelynLanderSessions.$inferSelect;
 export type InsertEvelynLanderSession = z.infer<typeof insertEvelynLanderSessionSchema>;
+
+// Email link codes: the content snapshot behind an opaque short link (/e/:code)
+// sent in a marketing email, so the lander can continue the specific reading
+// the reader clicked from rather than greeting them as a stranger.
+export const emailLinkCodes = pgTable("email_link_codes", {
+  code: varchar("code").primaryKey(),
+  personaSlug: text("persona_slug").notNull(),
+  campaign: text("campaign").notNull(),
+  readingRecap: text("reading_recap"),
+  openLoop: text("open_loop"),
+  continueSeed: text("continue_seed").notNull(),
+  // The ONE thing this email is about, as a short noun phrase the persona can
+  // say out loud: "the Devil card and its loose chains", "444", "the green
+  // fence". Nullable so older rows and any persona whose pipeline does not emit
+  // it yet keep working.
+  //
+  // WHY IT IS ITS OWN COLUMN and not inferred from the prose above it. Joel's
+  // model (2026-08-19 call) is one email = one big idea, and the chat's job is
+  // to stay on it: "if the previous conversation was 444, it should continue
+  // talking about 444". Handing the chat a 3-5 sentence recap and asking it to
+  // work out the topic is what produced the failure he reported — the reader
+  // said "how can you help me?" and Evelyn answered with a generic description
+  // of her services, dropping the Devil card she had just asked about. Naming
+  // the subject explicitly is the difference between continuing a thread and
+  // hoping a model infers one.
+  bigIdea: text("big_idea"),
+  // The ONE image this letter is about, shown as its own bubble in the lander
+  // thread between the line that NAMES it and the line that asks the reader for
+  // something. Joel's ask, 2026-08-20: the Devil letter should show the Devil.
+  //
+  // A URL, not an asset id, and nullable: most letters have no image (the fence,
+  // the list, the song), and a letter that gains one later should need a value in
+  // this column and nothing else. Same road as `big_idea` — the send draft
+  // carries it, render-aweber.mjs lifts it, the upsert writes it — so a new card
+  // in a future cycle needs no deploy. Self-hosted paths (/tarot/rws-devil.jpg)
+  // are preferred over hotlinks: this renders on ad traffic, on phones.
+  cardImageUrl: text("card_image_url"),
+  // Lander context the legacy `?bucket=&src=` query string used to carry. The
+  // short link has no room for it (and query params get stripped in transit),
+  // so it rides on the row and /e/:code rebuilds the query string from here.
+  // bucket is functionally load-bearing, not analytics: it selects Drip 1's
+  // bucket-specific phrase (evelynVerifiedDripGenerator BUCKET_PHRASES).
+  bucket: text("bucket"),
+  src: text("src"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_email_link_codes_campaign").on(table.campaign),
+  // One live code per (persona, campaign). The email-rendering pipeline
+  // (render-aweber.mjs) is read-then-write on this pair so a re-render reuses
+  // the code already sitting in a scheduled broadcast; this makes that
+  // invariant something the database enforces rather than something the
+  // pipeline merely assumes.
+  uniqueIndex("uq_email_link_codes_persona_campaign").on(table.personaSlug, table.campaign),
+]);
+
+export const insertEmailLinkCodeSchema = createInsertSchema(emailLinkCodes);
+export type EmailLinkCode = typeof emailLinkCodes.$inferSelect;
+export type InsertEmailLinkCode = z.infer<typeof insertEmailLinkCodeSchema>;
 
 // Generalized persona lander sessions: ONE shared table for every additional
 // persona's chat lander (Marcus, Luna, Nova, Maren, ...). Same shape as

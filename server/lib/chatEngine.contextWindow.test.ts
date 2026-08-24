@@ -7,15 +7,21 @@
 // seeds a 60-message session and proves the built context contains exactly that
 // window in chronological order.
 //
-//   npx tsx --test server/lib/chatEngine.contextWindow.test.ts
+//   npm run test:local server/lib/chatEngine.contextWindow.test.ts
 //
 // Requires DATABASE_URL (skips otherwise). Seeds temp persona/user/session
-// rows and deletes them afterwards.
+// rows and deletes them afterwards — which is why assertLocalDb() runs at module
+// scope below: `dotenv/config` loads .env, whose DATABASE_URL is PRODUCTION
+// Supabase, so without the guard the plain `tsx --test` invocation this header
+// used to recommend seeded and deleted rows in the live database.
 
 import 'dotenv/config'; // must load DATABASE_URL before ./db builds the pool
 import { describe, it, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { eq } from 'drizzle-orm';
+import { assertLocalDb } from './testGuards';
+
+assertLocalDb();
 
 import { db, pool } from './db';
 import { personas, users, chatSessions, chatMessages } from '../../shared/schema';
