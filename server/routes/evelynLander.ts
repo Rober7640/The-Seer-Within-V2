@@ -957,12 +957,15 @@ async function sendLiveThreadMagicLink(user: {
     await resendClient.emails.send({
       from: `The Seer Within <${process.env.FOLLOW_UP_FROM_EMAIL || 'noreply@theseerwithin.com'}>`,
       to: user.email,
-      subject: 'Your reading with Evelyn is open',
+      subject: "Here's the link to open your reading",
       html:
+        // Hidden preheader: without one the inbox preview repeats the greeting.
+        `<div style="display:none;max-height:0;overflow:hidden;opacity:0">I've kept what you wrote — this takes you straight to it.</div>` +
         `<p>Hi ${safeName},</p>` +
-        `<p>You left something with Evelyn — click below to pick it back up where you left off:</p>` +
-        `<p style="margin:24px 0"><a href="${magicUrl}" style="background:#6d28d9;color:#fff;padding:12px 32px;border-radius:8px;text-decoration:none;font-weight:600">Open My Reading</a></p>` +
-        `<p style="color:#888;font-size:13px">This link expires in 30 days.</p>`,
+        `<p>Here's the link I said I'd send — it signs you in and takes you straight to our thread.</p>` +
+        `<p>I've kept what you wrote, and I haven't answered it yet. That's waiting for you inside.</p>` +
+        `<p style="margin:24px 0"><a href="${magicUrl}" style="background:#6d28d9;color:#fff;padding:12px 32px;border-radius:8px;text-decoration:none;font-weight:600">Open my reading</a></p>` +
+        `<p style="color:#888;font-size:13px">This link stays good for the next 10 minutes.</p>`,
     });
     logger.info('evelyn-lander check-email: magic link sent', { userId: user.id });
   } catch (error: any) {
