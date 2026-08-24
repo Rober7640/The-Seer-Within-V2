@@ -8,6 +8,7 @@
 - **Subject:** `{{ subscriber.first_name | capitalize }}, he repaints the fence her color every spring. She's been gone four years.`
 - **Preheader:** It was never about the fence.
 - **CTA:** Come tell me what you keep painting → `campaign=reframe-02-fence`
+- **Short Link:** `https://www.theseerwithin.com/e/R8g74v8?email={!email}`
 - **Reading Recap:** You wrote to them about a widower on your street who repaints his fence the same soft green every spring — the color his wife chose the last spring she was alive, four years gone now. You showed them the reframe: he isn't failing to let her go, he's keeping alive the part of him that still shares a life, the part that considers another person and asks "what would you think?" — and that capacity didn't go into the ground with her, it's still his to use.
 - **Open Loop:** You asked them to notice which fence THEY keep painting — the ritual, the untouched side of the bed, the thing they keep exactly as it was — and come tell you what it is.
 - **Big Idea:** the widower's green fence, repainted her colour every spring

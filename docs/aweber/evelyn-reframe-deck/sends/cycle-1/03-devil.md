@@ -8,6 +8,7 @@
 - **Subject:** `🌙 {{ subscriber.first_name | capitalize }}, everyone flinches at this card. They're looking at the wrong part of it.`
 - **Preheader:** It isn't the horns. It's the chain.
 - **CTA:** Show me what's really got me → `campaign=reframe-03-devil`
+- **Short Link:** `https://www.theseerwithin.com/e/4lHNqhw?email={!email}`
 - **Reading Recap:** You wrote to them about the Devil card — how everyone flinches at the horns and the firelight, but you pointed them at the chains themselves: loose loops dropped over the two figures' heads, no lock, wide enough to lift off with two hands and a decision. You showed them the reframe — the card isn't a curse arriving, it's a mirror asking why they haven't taken off something that only looks locked, something familiar enough it's started to feel like home.
 - **Open Loop:** You asked them to simply name the loop out loud — the one true sentence about what they keep going back to — without trying to lift it yet.
 - **Big Idea:** the Devil card, and how loose those chains actually are

@@ -1,15 +1,25 @@
--- Nine test link codes for the DEVELOPMENT database (Evelyn cycle-1).
+-- Nine link codes for Evelyn cycle-1.
 --
 -- Codes are CSPRNG-generated, 7 chars, same shape and entropy as the ones
 -- render-aweber.mjs mints (randomBytes(5) -> base64url). Deliberately NOT a
 -- readable sequence: a guessable code lets anyone step through the set and
 -- read campaign copy that has not been mailed yet.
 --
--- FOR DEVELOPMENT ONLY. On production the pipeline mints the codes AND writes
--- them into the email HTML in one step; hand-inserting there leaves you with
--- rows no email points at. See docs/RUNBOOK-email-continuity-go-live.md.
+-- WHERE TO RUN THIS (changed 2026-08-24). Originally development-only, because
+-- hand-inserting rows on production leaves destinations no email points at.
+-- That objection does not apply to cycle 1: the nine broadcasts are being built
+-- BY HAND in the AWeber UI using exactly the codes below, so every row does have
+-- an email pointing at it. Run it on production for cycle 1, and on development
+-- for the dry-run. Future cycles should still go through render-aweber.mjs
+-- (Step 6), which mints and writes the links into the HTML in one step.
 --
--- Your URLs (development):
+-- Run it AFTER the runbook's structure statement — the table and the big_idea /
+-- card_image_url columns must exist first. Safe to run twice.
+--
+-- The nine drafts in docs/aweber/evelyn-reframe-deck/sends/cycle-1/ each carry
+-- their URL on a **Short Link:** line; those must match the codes below.
+--
+-- Your URLs (put the site's address in front of each):
 -- /e/7AIKaoY  ->  reframe-01-changed
 -- /e/R8g74v8  ->  reframe-02-fence
 -- /e/4lHNqhw  ->  reframe-03-devil
@@ -32,3 +42,33 @@ VALUES
   ('ByMVKFU', 'evelyn-cross', 'reframe-08-lighthouse', 'You came back about the lamp — the keeper lighting it every night for ships that rarely come. Tell me which of yours you''ve let go dark while you watched the water, and let''s light it.', 'You wrote to them about a lighthouse keeper who still lights her lamp every dusk on a coast the ships stopped visiting years ago. You showed them the reframe: she doesn''t climb those stairs for the ships — a lit lamp is a life still tended, and lighting it is for her, not to summon anyone; waiting done that way keeps a person whole instead of hollowing them out at the glass.', 'You asked them which lamp they''ve let go dark while watching the sea — the piece of their own life they keep saving for "once they come" — and to come tell you what it is.', 'love', 'aweber'),
   ('rFuArrM', 'evelyn-cross', 'reframe-09-stop-looking', 'You came back about that advice — that you''ll find love when you stop looking. Tell me where you''ve been auditioning instead of living, and we''ll find the difference.', 'You wrote to them about the line "you''ll find love when you stop looking" — how half of it is true (frantic scanning, auditioning every date like a job interview, does wear a person down and show) but the saying smuggles in a cruelty: hearing "stop looking" as "stop wanting, go numb, disappear." You showed them the reframe: stop auditioning, yes — but never stop wanting, showing up, being seen; the real shift is where their eyes point, not whether they want it at all.', 'You gave them a truer question to sit with — "where am I auditioning, when I could just be living" — and asked them to come tell you if they can feel the difference but can''t quite find it.', 'love', 'aweber')
 ON CONFLICT (code) DO NOTHING;
+
+-- ---------------------------------------------------------------------------
+-- big_idea + card_image_url (added 2026-08-24)
+--
+-- The INSERT above predates both columns, so on its own it leaves them NULL.
+-- Both are nullable and nothing errors when they are missing — the chat just
+-- goes quietly generic (no subject anchor to lead with) and the Devil letter
+-- shows no card. This block is idempotent and set-based: run it whether the
+-- rows were just inserted or already existed. Values come from each draft's
+-- **Big Idea:** / **Card Image:** frontmatter in sends/cycle-1/.
+-- ---------------------------------------------------------------------------
+
+UPDATE email_link_codes AS e
+SET big_idea = v.big_idea,
+    card_image_url = v.card_image_url
+FROM (VALUES
+    ('reframe-01-changed', 'the man''s list — every fix he made to prove he''d changed, with her name under it', NULL),
+    ('reframe-02-fence', 'the widower''s green fence, repainted her colour every spring', NULL),
+    ('reframe-03-devil', 'the Devil card, and how loose those chains actually are', '/tarot/rws-devil.jpg'),
+    ('reframe-04-serious', 'the tell — a sentence said twice is a flinch, not a preference', NULL),
+    ('reframe-05-peace', 'the phrase "protecting my peace", and whether it is a boundary or a wall', NULL),
+    ('reframe-06-love-yourself', 'the myth that you cannot be loved until you love yourself', NULL),
+    ('reframe-07-song', 'the song that keeps finding you, and what it is really flagging', NULL),
+    ('reframe-08-lighthouse', 'the keeper''s lamp, lit for ships that rarely come', NULL),
+    ('reframe-09-stop-looking', 'the advice that you will find love when you stop looking', NULL)
+) AS v(campaign, big_idea, card_image_url)
+WHERE e.campaign = v.campaign
+  AND e.persona_slug = 'evelyn-cross';
+
+-- Expect: UPDATE 9

@@ -8,6 +8,7 @@
 - **Subject:** `{{ subscriber.first_name | capitalize }}, "love yourself first" is half a truth. The other half keeps people alone.`
 - **Preheader:** Who told you the door was locked until you're finished?
 - **CTA:** Help me find the door → `campaign=reframe-06-love-yourself`
+- **Short Link:** `https://www.theseerwithin.com/e/3-deu_I?email={!email}`
 - **Reading Recap:** You wrote to them about the phrase "you can't love anyone until you love yourself" — how half of it is true (certain you're worthless, you'll take scraps and call them a feast) but the saying turns that truth into an entrance fee, locking the door on the very people still learning their worth. You showed them the reframe: self-love is rarely the finish line you cross before you're allowed to be loved — far more often it's what being chosen well, and stayed with, actually teaches you.
 - **Open Loop:** You gave them a truer question to sit with — "where am I turning love away because I've decided I haven't earned it yet" — and asked them to come tell you where they're standing outside that door.
 - **Big Idea:** the myth that you cannot be loved until you love yourself
