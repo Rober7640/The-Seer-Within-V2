@@ -1,7 +1,9 @@
 import {
   V1_BUMP_PRODUCT_KEY,
+  V1_BUMP_PRODUCT_KEY_DOWNSELL,
   V1_BUMP_PRODUCT_KEY_MONEY_LANDER,
   V1_BUMP_PRODUCT_KEY_SOULMATE_LANDER,
+  type BumpTier,
 } from './orderBump';
 import { isTarotMoneyLead, moneyLanderSplitLive } from './moneyLander';
 import { isTarotSoulmateLead, soulmateLanderSplitLive } from './soulmateLander';
@@ -43,6 +45,10 @@ export function bumpProductKeyFor(
   funnel: string | null | undefined,
   bucket: unknown,
   tarotHook?: unknown,
+  // Which checkout the bump rode on. TRAILING AND DEFAULTED so every pre-existing
+  // caller keeps its exact behaviour without being touched — only a caller that
+  // deliberately passes 'downsell' can reach the branch below.
+  tier: BumpTier = 'main',
 ): string {
   if (moneyLanderSplitLive() && isTarotMoneyLead(funnel, bucket)) {
     return V1_BUMP_PRODUCT_KEY_MONEY_LANDER;
@@ -50,6 +56,14 @@ export function bumpProductKeyFor(
   if (soulmateLanderSplitLive() && isTarotSoulmateLead(funnel, tarotHook)) {
     return V1_BUMP_PRODUCT_KEY_SOULMATE_LANDER;
   }
+  // 🔴 LAST, AND ONLY OVER THE DEFAULT KEY. A money or soulmate lander keeps its
+  // own key on the downsell too: those two values are what hold those orders OUT of
+  // Mike's PDF branch AND off the order-bump paid list (bumpPaidListWanted reads the
+  // stamped value), so overriding them here would put a money-lander downsell buyer
+  // back on a list that follows up on a reading she is never sent — re-opening the
+  // exact bug fixed on 2026-08-20. The downsell rename replaces `double_reading`
+  // and nothing else.
+  if (tier === 'downsell') return V1_BUMP_PRODUCT_KEY_DOWNSELL;
   return V1_BUMP_PRODUCT_KEY;
 }
 

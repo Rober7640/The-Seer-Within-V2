@@ -36,7 +36,7 @@ import {
 } from '@/lib/tarotAttribution'
 import { trackGAdsLead, trackGAdsCheckout, getGclid } from '@/lib/gtm'
 import { isSlidingCloseVariant } from '@shared/types'
-import { pairedBumpBucket, isBumpCopyVariant, V1_BUMP_CENTS } from '@shared/orderBump'
+import { pairedBumpBucket, isBumpCopyVariant, resolveBumpCents, V1_BUMP_CENTS, type BumpTier } from '@shared/orderBump'
 
 const STORAGE_KEY = 'seer_conversation'
 const SESSION_EXPIRY_HOURS = 24
@@ -326,6 +326,16 @@ export function useConversation() {
         restored.userData.bumpCopy = isBumpCopyVariant(data.userData?.bumpCopy)
           ? data.userData.bumpCopy
           : 'control'
+        // Downsell bump price, restored on the same terms and through the same
+        // closed-set validation. Dropping it here would redraw the card at the
+        // $9.77 default for a resumed session whose checkout still charges her
+        // assigned arm — the very mismatch this field exists to close.
+        if (typeof data.userData?.bumpCentsDownsell === 'number') {
+          restored.userData.bumpCentsDownsell = resolveBumpCents(
+            data.userData.bumpCentsDownsell,
+            'downsell',
+          )
+        }
 
         // Hand it to the welcome-back sequence, which greets her by name and
         // re-opens the input wherever she stopped.
@@ -1027,6 +1037,19 @@ export function useConversation() {
         // the same arm for the Stripe line, so a junk value here must fall back
         // to control instead of producing a blank card.
         if (isBumpCopyVariant(leadData?.bumpCopy)) patch.bumpCopy = leadData.bumpCopy
+        // What the DOWNSELL bump will cost (v1_downsell_bump_price_2026). The card
+        // could not read this anywhere until now — the field was declared and read
+        // but never sent, so it was permanently undefined and every card fell back
+        // to $9.77 while arm A charged $12.77.
+        //
+        // 🔴 VALIDATED, NOT TRUSTED — resolveBumpCents accepts only the closed set
+        // {1277, 977}. It is rendered into the offer card AND, more importantly, it
+        // is what she reads before consenting to a charge, so a junk value must land
+        // on the tier default rather than draw an arbitrary price. Absent ⇒ the key
+        // is simply not set and the card keeps today's $9.77 fallback.
+        if (typeof leadData?.bumpCentsDownsell === 'number') {
+          patch.bumpCentsDownsell = resolveBumpCents(leadData.bumpCentsDownsell, 'downsell')
+        }
         // Close-depth arm — framework-assigned at lead capture, same shape as
         // orderBump. Only ever set to 'deep'; absent ⇒ today's close, unchanged.
         // No preview guard is needed (unlike the ?close=55 price override above):
@@ -2170,16 +2193,29 @@ export function useConversation() {
   // directly. Outside the bump arm it is a pass-through, so the plain / sliding /
   // commitment-gate closes behave exactly as they do today.
   //
-  // MAIN ONLY: the $25/$35 downsell is already the cheaper branch and never
-  // carries a bump, so it goes straight through.
+  // BOTH TIERS carry a bump since 2026-08-17. The downsell used to go straight
+  // through on the reasoning that it "is already the cheaper branch" — a fair point,
+  // since she reaches it by saying $35 was too much, and a third ask is how the
+  // sliding-scale arm died in July. It is offered now at a PROPORTIONAL price rather
+  // than the same absolute one: $12.77 is 36.5% of a $35 order but 51.1% of a $25
+  // one, and $9.77 restores near-parity at 39.1%. Under test as
+  // v1_downsell_bump_price_2026 — docs/superpowers/specs/2026-08-16-v1-downsell-bump.md
   const startPurchase = useCallback(async (type: 'main' | 'downsell' = 'main') => {
-    if (type !== 'main' || chat.userData.orderBump !== true) {
+    if (chat.userData.orderBump !== true) {
       await handlePurchase(type)
       return
     }
 
+    const tier: BumpTier = type === 'downsell' ? 'downsell' : 'main'
+    // The arm prices the DOWNSELL only; main keeps its flat constant. An absent or
+    // junk arm falls back to the tier default, so a draft/OFF experiment renders
+    // exactly today's card on main.
+    const cents = tier === 'downsell'
+      ? resolveBumpCents(chat.userData.bumpCentsDownsell, 'downsell')
+      : V1_BUMP_CENTS
+
     const paired = pairedBumpBucket(chat.userData.bucket)
-    updateUserData({ bumpBucket: paired })
+    updateUserData({ bumpBucket: paired, bumpTier: tier })
     // Hide the CTA before the offer renders: one live action at a time, so a
     // double-tap can't open two checkout sessions.
     updateState({ showPurchaseCTA: false, showDownsellCTA: false })
@@ -2188,7 +2224,8 @@ export function useConversation() {
       funnel: getPostHogFunnel() ?? 'v1',
       step: 'sales',
       bump_bucket: paired,
-      price_cents: V1_BUMP_CENTS,
+      price_cents: cents,
+      bump_tier: tier,
       // Copy arm on the exposure AND on accept/decline below, so take-rate can be
       // read per arm in PostHog without waiting on the experiments tally.
       bump_copy: chat.userData.bumpCopy ?? 'control',
@@ -2202,17 +2239,25 @@ export function useConversation() {
 
   const answerBump = useCallback(async (accepted: boolean) => {
     const paired = chat.userData.bumpBucket ?? pairedBumpBucket(chat.userData.bucket)
+    // 🔴 Resume on the tier she was OFFERED, not 'main'. Hardcoding 'main' was safe
+    // only while the downsell could never reach this handler; it would now send a $25
+    // buyer to a $35 checkout.
+    const tier: BumpTier = chat.userData.bumpTier ?? 'main'
+    const cents = tier === 'downsell'
+      ? resolveBumpCents(chat.userData.bumpCentsDownsell, 'downsell')
+      : V1_BUMP_CENTS
     updateState({ showBumpOffer: false })
 
     trackPH(accepted ? 'bump_accepted' : 'bump_declined', {
       funnel: getPostHogFunnel() ?? 'v1',
       step: 'sales',
       bump_bucket: paired,
-      price_cents: V1_BUMP_CENTS,
+      price_cents: cents,
+      bump_tier: tier,
       bump_copy: chat.userData.bumpCopy ?? 'control',
     })
 
-    await handlePurchase('main', { offered: true, accepted, bucket: paired })
+    await handlePurchase(tier, { offered: true, accepted, bucket: paired })
   }, [chat.userData, handlePurchase, updateState])
 
   // === START FRESH (clear session and restart) ===

@@ -19,6 +19,57 @@ export const V1_BUMP_CENTS = 1277;
 export const V1_BUMP_PRICE_LABEL = `$${(V1_BUMP_CENTS / 100).toFixed(2)}`;
 
 /**
+ * Downsell-path bump price, under test as `v1_downsell_bump_price_2026`.
+ *
+ * WHY A SECOND PRICE. $12.77 is 36.5% of a $35 order but 51.1% of a $25 one, and she
+ * only reaches the downsell by saying $35 was too much — so the same absolute bump is a
+ * much larger ask of a buyer who has already flinched. $9.77 restores near-parity at
+ * 39.1%. (Exact parity is $9.12; $9.77 keeps the `.77` shape used everywhere else.)
+ */
+export const V1_BUMP_CENTS_DOWNSELL = 977;
+
+/** Which checkout the bump is riding on. */
+export type BumpTier = 'main' | 'downsell';
+
+/**
+ * The prices a bump line is EVER allowed to carry.
+ *
+ * 🔴 A closed set, not a range. This value reaches a Stripe line item, and the arm it
+ * comes from is read off an experiment payload — so it is validated here the same way
+ * `bumpBucket` and `bumpCopy` are, and for the same reason: an arbitrary number flowing
+ * from a payload to a charge is how a buyer gets billed something nobody chose.
+ */
+const ALLOWED_BUMP_CENTS: readonly number[] = [V1_BUMP_CENTS, V1_BUMP_CENTS_DOWNSELL];
+
+/**
+ * Coerce an experiment payload's `bumpCents` to something chargeable.
+ *
+ * Anything not in the closed set — absent, junk, a client-supplied bargain — falls back
+ * to the tier's default rather than throwing, so a draft/OFF experiment or a malformed
+ * arm charges today's price instead of failing a checkout she has already committed to.
+ */
+export function resolveBumpCents(raw: unknown, tier: BumpTier = 'main'): number {
+  const n = typeof raw === 'number' ? raw : Number(raw);
+  return ALLOWED_BUMP_CENTS.includes(n) ? n : bumpCents(tier);
+}
+
+/** Default price for a tier, before any experiment arm is applied. */
+export function bumpCents(tier: BumpTier = 'main'): number {
+  return tier === 'downsell' ? V1_BUMP_CENTS_DOWNSELL : V1_BUMP_CENTS;
+}
+
+/**
+ * `$12.77` / `$9.77` — formatted from whatever will actually be charged.
+ *
+ * Takes CENTS rather than a tier so the card, the copy and the Stripe line all render
+ * from one resolved number. Passing the tier instead would let the label and the charge
+ * disagree the moment an arm overrides the default.
+ */
+export function bumpPriceLabel(cents: number = V1_BUMP_CENTS): string {
+  return `$${(cents / 100).toFixed(2)}`;
+}
+
+/**
  * Which SECOND topic to offer, given the topic she already chose. Static — no AI
  * call — so the offer is instant and identical every time.
  *
@@ -170,6 +221,39 @@ export const V1_BUMP_PRODUCT_KEY_SOULMATE_LANDER = 'soulmate_lander_addon';
 
 
 /**
+ * `metadata.bumpProduct` for a bump bought on the DOWNSELL checkout (Lewis,
+ * 2026-08-21).
+ *
+ * 🔴 DOWNSELL ONLY. The main path keeps V1_BUMP_PRODUCT_KEY untouched — that value
+ * is what Mike's n8n EQUALS-matches to generate the second-reading PDF, and every
+ * main-path bump must keep firing it exactly as it does today.
+ *
+ * WHY THE DOWNSELL NEEDS ITS OWN VALUE: the live copy arm sells a DOUBLE-STRENGTH
+ * CLEARING ("twice the depth on tonight's clearing"), not a second reading, and the
+ * downsell bump is the first place that is being fulfilled as its own thing. Giving
+ * it its own key is what lets Mike route it to its own branch later without another
+ * deploy.
+ *
+ * ⚠️ FULFILMENT CONSEQUENCE, KNOWN AND ACCEPTED. Mike's filter is an EQUALS on
+ * `double_reading` (confirmed 2026-08-20), so from the moment this ships a downsell
+ * bump buyer no longer reaches that branch and receives NO second-reading PDF until
+ * he adds one. Same posture as the money and soulmate lander keys, which ship with
+ * the identical gap by explicit decision. `product` stays `energy_clearing_ritual`,
+ * so her MAIN reading is unaffected either way.
+ *
+ * 🔴 IT DELIBERATELY DOES NOT CONTAIN `double_reading`. An EQUALS and a CONTAINS
+ * filter must BOTH fail — the same rule the money and soulmate keys follow, and for
+ * the same reason: a value like `double_reading_downsell` would still satisfy a
+ * contains-check and generate the PDF anyway.
+ *
+ * ⚠️ IT IS NOT IN BUMP_PAID_LIST_EXCLUDED_KEYS, on purpose. Downsell bump buyers
+ * keep reaching the order-bump paid AWeber list exactly as they do today; only the
+ * routing key changes. Adding it there would silently drop them from that list.
+ */
+export const V1_BUMP_PRODUCT_KEY_DOWNSELL = 'double_strength_reading_ob';
+
+
+/**
  * INTERNAL marker appended to the PaymentIntent description on a bump order, so
  * the Stripe Dashboard's Description column shows at a glance that the payment
  * covers two products (Lewis, 2026-08-04). Without it a bump order is
@@ -235,9 +319,9 @@ export function isRecoverySrc(value: unknown): boolean {
  * ⚠ PLACEHOLDER COPY, from Joel's own wording on the 7/27 call — directional until
  * he approves the mockup.
  */
-export function bumpOfferCopy(paired: BumpBucket): string {
+export function bumpOfferCopy(paired: BumpBucket, cents: number = V1_BUMP_CENTS): string {
   const topic = BUMP_TOPIC_LABELS[paired];
-  return `Before I prepare your clearing… I'm also sensing something blocking your ${topic} path. Want me to reveal that too? Just ${V1_BUMP_PRICE_LABEL} more for the double reading.`;
+  return `Before I prepare your clearing… I'm also sensing something blocking your ${topic} path. Want me to reveal that too? Just ${bumpPriceLabel(cents)} more for the double reading.`;
 }
 
 export const BUMP_ACCEPT_LABEL = 'Yes, double it';
@@ -350,13 +434,13 @@ export interface BumpCopyPack {
  * `firstName` is optional and the copy closes over its absence cleanly — a lead
  * can reach the CTA without a captured name on the no-optin arm.
  */
-function variationAOffer(firstName?: string): string {
+function variationAOffer(firstName?: string, cents: number = V1_BUMP_CENTS): string {
   const name = (firstName ?? '').trim();
   const address = name ? `Before I begin, ${name} — one thing.` : 'Before I begin — one thing.';
   return [
     address,
     "A shadow this old has roots. Three hours gets its hold. It doesn't always get the root.",
-    `For ${V1_BUMP_PRICE_LABEL} I'll go twice as deep tonight. Six hours instead of three, double the force, all the way down.`,
+    `For ${bumpPriceLabel(cents)} I'll go twice as deep tonight. Six hours instead of three, double the force, all the way down.`,
     'It drains me more. But nothing gets left in you.',
   ].join('\n\n');
 }
@@ -368,10 +452,10 @@ function variationAOffer(firstName?: string): string {
  * new sitting). It deliberately does NOT argue *why that topic*; read a win
  * accordingly.
  */
-function variationBOffer(paired: BumpBucket): string {
+function variationBOffer(paired: BumpBucket, cents: number = V1_BUMP_CENTS): string {
   return (
     `I'm already in your energy tonight — the channel's open, and I can see a second thread ` +
-    `pulling at your ${BUMP_TOPIC_LABELS[paired]} side. Reading it now costs ${V1_BUMP_PRICE_LABEL} ` +
+    `pulling at your ${BUMP_TOPIC_LABELS[paired]} side. Reading it now costs ${bumpPriceLabel(cents)} ` +
     `because I don't have to open the way twice. Tomorrow it's a new reading at full price.`
   );
 }
@@ -387,9 +471,13 @@ export function bumpCopy(
   variant: BumpCopyVariant,
   paired: BumpBucket,
   firstName?: string,
+  // The price actually being charged. Defaulted to the main-path constant so every
+  // pre-existing caller — including bumpProductName() above, which only wants the
+  // product name — keeps byte-identical output without being touched.
+  cents: number = V1_BUMP_CENTS,
 ): BumpCopyPack {
   const control: BumpCopyPack = {
-    offer: bumpOfferCopy(paired),
+    offer: bumpOfferCopy(paired, cents),
     accept: BUMP_ACCEPT_LABEL,
     decline: BUMP_DECLINE_LABEL,
     productName: V1_BUMP_PRODUCT_NAME,
@@ -399,7 +487,7 @@ export function bumpCopy(
   switch (variant) {
     case 'A':
       return {
-        offer: variationAOffer(firstName),
+        offer: variationAOffer(firstName, cents),
         accept: 'Yes — go all the way down',
         decline: 'No, the standard clearing is enough',
         productName: '+ Double-Strength Clearing',
@@ -407,7 +495,7 @@ export function bumpCopy(
       };
     case 'B':
       // Description-only by design — everything else is control's, by reference.
-      return { ...control, offer: variationBOffer(paired) };
+      return { ...control, offer: variationBOffer(paired, cents) };
     default:
       return control;
   }

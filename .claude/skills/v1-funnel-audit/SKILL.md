@@ -36,6 +36,13 @@ and run steps.
 Start-Process -FilePath "D:\pg-local\pgsql\bin\pg_ctl.exe" -WindowStyle Hidden `
   -ArgumentList '-D "D:\pg-local\data" -l "D:\pg-local\logfile" -o "-p 5433 -c listen_addresses=127.0.0.1" start'
 
+# 1b. macOS equivalent (Homebrew postgres) — first run creates the cluster, then reuse it
+export PGDATA="$HOME/.v1-sandbox-pg"
+[ -d "$PGDATA" ] || initdb -D "$PGDATA" -U postgres --auth=trust
+pg_ctl -D "$PGDATA" -l "$PGDATA/logfile" -o "-p 5433 -c listen_addresses=127.0.0.1" start
+createdb -h 127.0.0.1 -p 5433 -U postgres seer          # first run only
+DOTENV_CONFIG_PATH=.env.sandbox npx drizzle-kit push --force   # applies the whole schema
+
 # 2. Generate the muted env file
 node scripts/make-sandbox-env.mjs
 
@@ -50,6 +57,9 @@ node .claude/skills/v1-funnel-audit/scripts/audit-palm.mjs           # fb-palm r
 node .claude/skills/v1-funnel-audit/scripts/audit-charge.mjs         # price-variant charge correctness (Stripe TEST)
 node .claude/skills/v1-funnel-audit/scripts/audit-funnels.mjs        # per-funnel entry + client funnel/sign threading
 node .claude/skills/v1-funnel-audit/scripts/audit-upsells.mjs        # /welcome1 → /welcome2 → /success upsell chats (Stripe TEST)
+node .claude/skills/v1-funnel-audit/scripts/audit-downsell-bump.mjs  # the $25-path order bump: does the card render (MOCKS checkout)
+npx tsx --env-file=.env.sandbox \
+  .claude/skills/v1-funnel-audit/scripts/verify-downsell-bump-charge.mjs  # card price == the REAL Stripe line (mocks nothing)
 ```
 
 > **`audit-charge.mjs` and `audit-upsells.mjs` need the Stripe TEST key.** They read
@@ -148,6 +158,61 @@ serves face-DOWN backs), and the newest angle (guarding `angleForHook`: a hook l
 `COMMITMENT_HOOKS` silently reports `decode-him`). Each also asserts tarot sends **no** `sign`, since
 that field feeds the palm price-variant pool.
 
+## Downsell order bump (`audit-downsell-bump.mjs`)
+
+Walks `/fb-tarot`, refuses the $35 close three times, presses the $25 downsell, and asserts the
+bump row that path never used to carry: it renders, it is priced at **$9.77**, and it shows the
+**$34.77** total. Then accepts it and asserts the captured `/api/checkout` body is
+`type=downsell`, `bumpAccepted=true`, and carries **no client price**.
+
+Two traps this script exists to remember:
+
+- **It must NOT use `?noemail=1`** (unlike `audit-flow`). The bump arm is assigned by
+  `/api/lead`, which the email step is what fires — skip it and the card can never appear. The
+  `/api/lead` MOCK is what keeps the real email step harmless, and it is also where the arm is
+  switched on. The first version of this script skipped the email step and silently proved nothing.
+- **`ARM_CENTS=1277`** stands in for arm A, so the run asserts the card follows the arm rather
+  than a constant. That is the check that catches a **card/charge mismatch**, which is the whole
+  reason the price is threaded through a tier.
+
+**Proven 2026-08-17: 13/13 passed** on the default arm — card at $9.77, $34.77 total, downsell
+checkout with no client price. ⛔ **But it also surfaced a latent billing bug:** `/api/lead` never
+sent `bumpCentsDownsell`, so the card was pinned at $9.77 while `/api/checkout` charged the real
+arm — **arm A showed $9.77 and charged $12.77**. ✅ **Fixed 2026-08-25**; the guard against it
+coming back is the next script, not this one.
+
+## Card price == Stripe charge (`verify-downsell-bump-charge.mjs`)
+
+```bash
+npx tsx --env-file=.env.sandbox .claude/skills/v1-funnel-audit/scripts/verify-downsell-bump-charge.mjs
+TIER=main ... same script                      # the main path, which must stay $12.77 flat
+```
+
+🔴 **THIS EXISTS BECAUSE `audit-downsell-bump.mjs` STRUCTURALLY CANNOT CATCH A BILLING BUG.** That
+script fulfils `/api/lead` and `/api/checkout` itself, so it never sees what the server builds —
+which is exactly how the card/charge split above passed a 13/13 green audit for eight days. This
+one mocks nothing: real `/api/lead`, real `/api/checkout`, then `stripe.checkout.sessions.retrieve`
+with the TEST key to read the actual line items.
+
+It samples 16 emails and **fails if only one price arm was drawn**. That guard is the point:
+while the experiment is draft BOTH sides fall back to $9.77 and agree perfectly, so unanimous
+agreement is exactly what a live mismatch looks like. To exercise both arms, start
+`v1_downsell_bump_price_2026` on the **sandbox** DB — and remember `v1_bump_copy_2026` must be
+RUNNING too, or she is never offered a bump at all and every session comes back bumpless.
+
+**Proven 2026-08-25:** 16/16 agreeing across both arms ($9.77 and $12.77), `bumpProduct` =
+`double_strength_reading_ob` on the downsell and `double_reading` on main. Verified to FAIL as
+designed by reverting the `/api/lead` half: `7/16 would be SHOWN $9.77 and CHARGED $12.77`.
+
+### If a bump line item goes missing
+
+`/api/checkout` now logs a `warn` when the client asks for a bump and the server refuses it:
+`order bump REQUESTED by the client but REFUSED by the server`. That state is the fail-closed
+path working — `resolveV1Bump` returns false for any key with no RUNNING, in-scope experiment —
+and it is almost always **`v1_bump_copy_2026` not running on that environment**, not a code bug.
+Reproduced 2026-08-25: with that row draft, 4/4 checkouts carried no bump line and no
+`bumpProduct`, exactly as reported. Check the row before you read any code.
+
 ## Upsell chats (`audit-upsells.mjs`) — `/welcome1` → `/welcome2` → `/success`
 
 The last uncovered V1 surface: the post-purchase upsell chats, each a separate state machine
@@ -223,6 +288,7 @@ the §3 fix lands.
 - Price-variant charge correctness + thumb-only scoping (root/fb/fb2/gdn/palm) — ✅ `audit-charge.mjs`
 - Per-funnel entry + client funnel/sign/tarot-lander threading (root/fb/fb2/gdn/palm signs/tarot decks+angles) — ✅ `audit-funnels.mjs`
 - Upsell chats `/welcome1`→`/welcome2`→`/success` (charge correctness + U1/U2 flow, Path A/B, $30 downsell) — ✅ `audit-upsells.mjs`
+- Downsell order bump (card renders, price, total, and what-she-saw == what-she-pays) — ✅ `audit-downsell-bump.mjs`
 - Still open: a deep LLM flow-walk per non-root funnel (fb/fb2/gdn share the root chat engine, so entry +
   charge cover the meaningful deltas; palm's woven flow is covered by `audit-palm`). The `/success` page's
   own order-summary + Luna cross-sell handoff is only touched incidentally (the upsell audit asserts the
