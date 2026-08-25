@@ -1537,24 +1537,45 @@ export async function resolveV1Bump(
 export const V1_DOWNSELL_BUMP_PRICE_KEY = 'v1_downsell_bump_price_2026';
 
 /**
- * What the DOWNSELL bump costs for this lead, in cents.
+ * What the DOWNSELL bump costs for this lead, in cents — plus the arm it came from.
  *
- * Returns the raw payload value; the caller passes it through `resolveBumpCents`,
+ * `cents` is the RAW payload value; the caller passes it through `resolveBumpCents`,
  * which validates against the closed set {1277, 977} before it can reach a Stripe
- * line. A draft/paused/absent experiment returns null ⇒ the tier default ($9.77),
- * so starting the test is what splits the price, not deploying this.
+ * line. A draft/paused/absent experiment yields `cents: null` ⇒ the tier default
+ * ($9.77), so starting the test is what splits the price, not deploying this.
+ *
+ * `variant` + `enrolled` exist for ONE reason: the exposure row. This test shipped
+ * with no exposure logging at all — every other V1 test writes one — so the
+ * dashboard had no denominator and its results table counted nothing. The caller
+ * logs the exposure AT THE OFFER rather than at lead capture; see the call site in
+ * /api/checkout for why that denominator is the honest one.
+ *
+ * 🔴 CALLED FROM TWO PLACES, AND THEY MUST AGREE. Lead capture resolves it to send
+ * the CARD its price; /api/checkout re-resolves it to price the STRIPE LINE. Both
+ * pass the same subject (the trimmed, lowercased email) and the same funnel, so the
+ * same arm comes back — which is the whole point, since a disagreement between them
+ * is a woman shown $9.77 and charged $12.77. The one window where they can differ is
+ * a WEIGHT EDIT landing between her offer and her click; this test carries no
+ * scope.freezeAssignment (deliberately — see the creation SQL), so do not re-weight
+ * it while it runs.
  */
 export async function resolveV1DownsellBumpPrice(
   email: string | null | undefined,
   funnel?: string | null,
   key: string = V1_DOWNSELL_BUMP_PRICE_KEY, // overridable so tests never touch the live experiment
-): Promise<number | null> {
+): Promise<{ cents: number | null; variant: string | null; enrolled: boolean }> {
   const subject = typeof email === 'string' ? email.trim().toLowerCase() : null;
-  if (!subject) return null;
+  if (!subject) return { cents: null, variant: null, enrolled: false };
   const a = await assign(key, subject, { funnel: funnel ?? null });
-  if (!a?.applied) return null;
+  if (!a) return { cents: null, variant: null, enrolled: false };
   const cents = (a.payload as { bumpCents?: unknown } | null)?.bumpCents;
-  return typeof cents === 'number' ? cents : null;
+  return {
+    // `applied` gates the PRICE exactly as before: a draft or out-of-scope arm must
+    // never reach a Stripe line, so it still falls back to the tier default.
+    cents: a.applied && typeof cents === 'number' ? cents : null,
+    variant: a.variant,
+    enrolled: a.enrolled,
+  };
 }
 
 // ── V1 CLOSE DEPTH — 140 words vs ~430 at the pitch ──────────────────────────

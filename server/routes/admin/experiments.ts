@@ -35,6 +35,7 @@ import {
   V1_MAIN_EXPERIMENT_KEY,
   PALM_GATE_EXPERIMENT_KEY,
   V1_BUMP_EXPERIMENT_KEY,
+  V1_DOWNSELL_BUMP_PRICE_KEY,
   V1_TAROT_VERSION_EXPERIMENT_KEY,
   V1_CLOSE_DEPTH_EXPERIMENT_KEY,
   PERSONA_PROMPT_KEY_PREFIX,
@@ -159,12 +160,29 @@ function u1PayloadError(variants: Array<{ key: string; payload?: Record<string, 
 // no price payload, and an EMAIL subject assigned at lead capture — so it tallies
 // through tallyV1Main like the first three, and its per-lander split comes free
 // from the tarot labels on its exposures.
+// THE DOWNSELL BUMP PRICE joins on the gate/bump/close-depth terms: its own resolver
+// (resolveV1DownsellBumpPrice), its own exposure logging, an EMAIL subject, and a
+// conversationId on the exposure — so it tallies through tallyV1Main like the rest and
+// its bump take-rate block comes free from conversations.bump_offered.
+//
+// 🔴 IT IS ALLOWLISTED HERE BECAUSE conversion.type MUST BE SET AT ALL. With it NULL
+// the results endpoint falls through to its default, `credit_purchase` — the V2 CHAT
+// conversion — and the page renders a table of zeros counted from chat-minute
+// purchases. That is worse than an empty dashboard: it looks like a result.
+//
+// ⚠️ ITS DENOMINATOR IS NOT THE OTHERS'. Every other key here enrols at LEAD capture,
+// so "exposed" means "was a lead". This one enrols at the OFFER, so "exposed" means
+// "was offered the downsell bump" — roughly 3% as many rows, and a conversion rate an
+// order of magnitude higher. The arms are comparable with each other and NOT with the
+// other tests' numbers. Read the two side by side and you will think this test is
+// converting spectacularly.
 const V1_MAIN_FUNNEL_KEYS: readonly string[] = [
   V1_MAIN_EXPERIMENT_KEY,
   PALM_GATE_EXPERIMENT_KEY,
   V1_BUMP_EXPERIMENT_KEY,
   V1_TAROT_VERSION_EXPERIMENT_KEY,
   V1_CLOSE_DEPTH_EXPERIMENT_KEY,
+  V1_DOWNSELL_BUMP_PRICE_KEY,
 ];
 
 // Which v1_main_funnel tests are keyed on a VISITOR COOKIE assigned at the lander

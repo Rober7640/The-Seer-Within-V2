@@ -57,7 +57,9 @@ node .claude/skills/v1-funnel-audit/scripts/audit-palm.mjs           # fb-palm r
 node .claude/skills/v1-funnel-audit/scripts/audit-charge.mjs         # price-variant charge correctness (Stripe TEST)
 node .claude/skills/v1-funnel-audit/scripts/audit-funnels.mjs        # per-funnel entry + client funnel/sign threading
 node .claude/skills/v1-funnel-audit/scripts/audit-upsells.mjs        # /welcome1 → /welcome2 → /success upsell chats (Stripe TEST)
-node .claude/skills/v1-funnel-audit/scripts/audit-downsell-bump.mjs  # the $25-path order bump: card price == charged price
+node .claude/skills/v1-funnel-audit/scripts/audit-downsell-bump.mjs  # the $25-path order bump: does the card render (MOCKS checkout)
+npx tsx --env-file=.env.sandbox \
+  .claude/skills/v1-funnel-audit/scripts/verify-downsell-bump-charge.mjs  # card price == the REAL Stripe line (mocks nothing)
 ```
 
 > **`audit-charge.mjs` and `audit-upsells.mjs` need the Stripe TEST key.** They read
@@ -175,9 +177,41 @@ Two traps this script exists to remember:
 
 **Proven 2026-08-17: 13/13 passed** on the default arm — card at $9.77, $34.77 total, downsell
 checkout with no client price. ⛔ **But it also surfaced a latent billing bug:** `/api/lead` never
-sends `bumpCentsDownsell`, so the card is pinned at $9.77 while `/api/checkout` charges the real
-arm. Harmless while `v1_downsell_bump_price_2026` is draft (both fall back to $9.77 and agree);
-**arm A would show $9.77 and charge $12.77** the moment it is started. See `docs/v1-test-queue.md` §2.
+sent `bumpCentsDownsell`, so the card was pinned at $9.77 while `/api/checkout` charged the real
+arm — **arm A showed $9.77 and charged $12.77**. ✅ **Fixed 2026-08-25**; the guard against it
+coming back is the next script, not this one.
+
+## Card price == Stripe charge (`verify-downsell-bump-charge.mjs`)
+
+```bash
+npx tsx --env-file=.env.sandbox .claude/skills/v1-funnel-audit/scripts/verify-downsell-bump-charge.mjs
+TIER=main ... same script                      # the main path, which must stay $12.77 flat
+```
+
+🔴 **THIS EXISTS BECAUSE `audit-downsell-bump.mjs` STRUCTURALLY CANNOT CATCH A BILLING BUG.** That
+script fulfils `/api/lead` and `/api/checkout` itself, so it never sees what the server builds —
+which is exactly how the card/charge split above passed a 13/13 green audit for eight days. This
+one mocks nothing: real `/api/lead`, real `/api/checkout`, then `stripe.checkout.sessions.retrieve`
+with the TEST key to read the actual line items.
+
+It samples 16 emails and **fails if only one price arm was drawn**. That guard is the point:
+while the experiment is draft BOTH sides fall back to $9.77 and agree perfectly, so unanimous
+agreement is exactly what a live mismatch looks like. To exercise both arms, start
+`v1_downsell_bump_price_2026` on the **sandbox** DB — and remember `v1_bump_copy_2026` must be
+RUNNING too, or she is never offered a bump at all and every session comes back bumpless.
+
+**Proven 2026-08-25:** 16/16 agreeing across both arms ($9.77 and $12.77), `bumpProduct` =
+`double_strength_reading_ob` on the downsell and `double_reading` on main. Verified to FAIL as
+designed by reverting the `/api/lead` half: `7/16 would be SHOWN $9.77 and CHARGED $12.77`.
+
+### If a bump line item goes missing
+
+`/api/checkout` now logs a `warn` when the client asks for a bump and the server refuses it:
+`order bump REQUESTED by the client but REFUSED by the server`. That state is the fail-closed
+path working — `resolveV1Bump` returns false for any key with no RUNNING, in-scope experiment —
+and it is almost always **`v1_bump_copy_2026` not running on that environment**, not a code bug.
+Reproduced 2026-08-25: with that row draft, 4/4 checkouts carried no bump line and no
+`bumpProduct`, exactly as reported. Check the row before you read any code.
 
 ## Upsell chats (`audit-upsells.mjs`) — `/welcome1` → `/welcome2` → `/success`
 
