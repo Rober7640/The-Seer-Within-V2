@@ -84,6 +84,7 @@ import {
   hashEmail,
   PALM_GATE_EXPERIMENT_KEY,
   V1_BUMP_EXPERIMENT_KEY,
+  V1_DOWNSELL_BUMP_PRICE_KEY,
   V1_TAROT_VERSION_EXPERIMENT_KEY,
   type TarotVersion,
 } from "./lib/experiments";
@@ -865,6 +866,42 @@ export async function registerRoutes(
       // says she accepted. Either alone charges nothing.
       const bumpApplied = bumpArm.bump === true && bumpRequested;
       const bumpWasOffered = bumpArm.bump === true && (bumpShown || bumpRequested);
+
+      // 🔴 THE CLIENT OFFERED A BUMP THAT THE SERVER WILL NOT HONOUR.
+      //
+      // This is the fail-closed path working as designed — `resolveV1Bump` returns
+      // false for any key that resolves to no RUNNING, in-scope experiment, and that
+      // is deliberately what stops a tampered client adding a charge. But until now it
+      // was SILENT, and silence is what made it cost days: the buyer sees the offer
+      // card, taps "yes", and the checkout comes back with no second line item and no
+      // bumpProduct, with nothing anywhere saying why. Reported by Lewis 2026-08-21 as
+      // "a bug in Joel's build"; reproduced 2026-08-25 as this exact state.
+      //
+      // It means the client's `orderBump` and the server's live resolution disagree.
+      // In practice that is one of:
+      //   · v1_bump_copy_2026 is not RUNNING on this environment (draft/paused/absent
+      //     — remember pausing it turns the bump off for everyone), or
+      //   · its scope.funnel does not include the funnel on this request, or
+      //   · she was assigned while it WAS running and is checking out after it stopped,
+      //     or is on a restored session carrying a stale orderBump, or
+      //   · V1_BUMP_QA_EMAILS covered the lead call but not this one.
+      //
+      // Logged, never corrected: honouring the client here would be exactly the
+      // free-charge hole the two-sided check exists to close.
+      if (bumpRequested && bumpArm.bump !== true) {
+        logger.warn(
+          "order bump REQUESTED by the client but REFUSED by the server — no bump line item will be added",
+          {
+            email,
+            funnel: funnel ?? null,
+            tier: type === "downsell" ? "downsell" : "main",
+            experimentKey: V1_BUMP_EXPERIMENT_KEY,
+            armVariant: bumpArm.variant,
+            enrolled: bumpArm.enrolled,
+            hint: "is v1_bump_copy_2026 running, and does its scope.funnel include this funnel?",
+          },
+        );
+      }
       // Which tier the bump rides on, resolved from the checkout TYPE — never from a
       // client-sent price. `type` is already validated above and drives the main
       // amount, so deriving the bump from it means the two lines can never disagree
@@ -879,7 +916,7 @@ export async function registerRoutes(
           ? await resolveV1DownsellBumpPrice(email, funnel)
           : null;
       const bumpCentsResolved = bumpTier === "downsell"
-        ? resolveBumpCents(bumpPriceArm, "downsell")
+        ? resolveBumpCents(bumpPriceArm?.cents, "downsell")
         : V1_BUMP_CENTS;
       // Which second topic she was offered. Validated against the closed bucket
       // enum — it reaches Stripe metadata and Mike's n8n flow, so an arbitrary
@@ -919,13 +956,66 @@ export async function registerRoutes(
       // The KEY still EXISTS on these orders, which is what our own webhook gates on
       // (`metadata.bumpProduct` truthy, webhooks.ts) — so the bump-paid AWeber write,
       // the revenue tally and the Stripe line item are all unchanged.
+      //
+      // 🔴 THE TIER IS PASSED (Lewis, 2026-08-21). A DOWNSELL bump stamps
+      // `double_strength_reading_ob` instead of `double_reading`, so Mike can route
+      // it to its own fulfilment branch. The MAIN path is untouched — the argument is
+      // trailing and defaulted, and `bumpProductKeyFor` only overrides the DEFAULT
+      // key, so a money- or soulmate-lander downsell keeps its own family key and
+      // stays off the order-bump paid list exactly as it does today.
       const bumpMetadata = bumpApplied
         ? {
-            bumpProduct: bumpProductKeyFor(funnel, bucket, tarotHook),
+            bumpProduct: bumpProductKeyFor(funnel, bucket, tarotHook, bumpTier),
             bumpBucket: bumpBucket as string,
             bumpAmount: String(bumpCentsResolved),
           }
         : {};
+
+      // ── DOWNSELL BUMP PRICE — the exposure row (the denominator) ────────────
+      // 🔴 LOGGED AT THE OFFER, NOT AT LEAD CAPTURE. Every other V1 test enrols at
+      // lead capture, and this one deliberately does not, for two reasons:
+      //
+      //  1. HONEST DENOMINATOR. Only ~3% of tarot leads ever reach the downsell. An
+      //     exposure per lead would make "exposed" mean "was a tarot lead", and the
+      //     dashboard would read a 0.1% conversion rate on a test about a $9.77 line.
+      //  2. THE TAKE-RATE TABLE WOULD LIE. tallyV1BumpTakeRate counts
+      //     conversations.bump_offered, which is set by the MAIN bump too. Enrol every
+      //     lead and that block fills up with main-path bumps and reports them as this
+      //     test's take rate.
+      //
+      // Fires for accept AND decline — declining goes straight on to this same
+      // endpoint — so the denominator is "was offered the downsell bump", which is
+      // exactly the population `bump_offered` records in the very same request.
+      // The only women it misses are those who abandon on the offer card itself.
+      //
+      // conversationId is what tallyV1Main and the creation SQL's read query JOIN on;
+      // without it this test has no numerator at all. onConflictDoNothing per
+      // (key, subject) inside logExposure, so a second checkout never double-counts.
+      if (
+        bumpTier === "downsell" &&
+        bumpWasOffered &&
+        bumpPriceArm?.enrolled &&
+        bumpPriceArm.variant &&
+        typeof email === "string" &&
+        email.trim()
+      ) {
+        try {
+          const convo = await getConversationByEmail(email);
+          if (convo?.id) {
+            await logExposure(
+              V1_DOWNSELL_BUMP_PRICE_KEY,
+              hashEmail(email),
+              bumpPriceArm.variant,
+              "downsell_bump_assigned",
+              { conversationId: convo.id, funnel: funnel ?? null },
+            );
+          }
+        } catch (err) {
+          // Never fail a checkout for a measurement row. A lost exposure costs one
+          // row of denominator; a thrown error here would cost the sale.
+          logger.error("downsell bump exposure logging failed", { err });
+        }
+      }
 
       // Mark as purchased in Supabase (optimistic - will be confirmed by webhook in production)
       if (email) {
@@ -1444,6 +1534,18 @@ export async function registerRoutes(
         // "is she offered a bump at all" vs "in which words". Absent/unknown ⇒
         // control, so a client running older code still renders today's copy.
         bumpCopy: assigned?.bumpCopy ?? 'control',
+        // What the DOWNSELL bump will cost her (v1_downsell_bump_price_2026). The
+        // offer card reads this; /api/checkout re-resolves the same arm to price the
+        // Stripe line. Sending it is what stops the card showing $9.77 while arm A
+        // charges $12.77 — the card had NO source for this value at all until now.
+        //
+        // ABSENT unless an arm applied, so while the test is draft this response is
+        // byte-identical to today's and the client falls back to the $9.77 default
+        // exactly as it does now. Advisory to the client only: the charge is always
+        // the server's own re-resolution, never this number coming back.
+        ...(assigned?.bumpCentsDownsell != null
+          ? { bumpCentsDownsell: assigned.bumpCentsDownsell }
+          : {}),
         // Close-depth arm (v1_close_depth_2026) — chat COPY only: which bubbles the
         // pitch sends. Emitted ONLY when the arm is 'deep', so while the experiment
         // is draft/paused this response is byte-identical to today's, key for key.
@@ -1633,9 +1735,14 @@ export async function registerRoutes(
             hashEmail(conversation.email),
           )
         : null;
-      const [palmGate, bumpArm] = await Promise.all([
+      const [palmGate, bumpArm, downsellBumpArm] = await Promise.all([
         resolvePalmGate(conversation.email, resumeFunnel, resumeSign),
         resolveV1Bump(conversation.email, resumeFunnel, resumeSign),
+        // Resolved on resume for the same reason the two above are: a restored
+        // session that dropped this field would draw the offer card at the $9.77
+        // default while /api/checkout still charged her assigned arm. Pure read —
+        // it enrols nobody and writes nothing.
+        resolveV1DownsellBumpPrice(conversation.email, resumeFunnel),
       ]);
 
       return res.json({
@@ -1664,6 +1771,10 @@ export async function registerRoutes(
           commitmentGate: palmGate.gate === true,
           orderBump: bumpArm.bump === true,
           bumpCopy: bumpArm.copy ?? "control",
+          // Absent unless an arm applied ⇒ draft/OFF restores exactly as before.
+          ...(downsellBumpArm.cents != null
+            ? { bumpCentsDownsell: downsellBumpArm.cents }
+            : {}),
         },
         conversationState: conversation.conversationState,
         messages: conversation.messages ? JSON.parse(conversation.messages) : [],

@@ -221,6 +221,39 @@ export const V1_BUMP_PRODUCT_KEY_SOULMATE_LANDER = 'soulmate_lander_addon';
 
 
 /**
+ * `metadata.bumpProduct` for a bump bought on the DOWNSELL checkout (Lewis,
+ * 2026-08-21).
+ *
+ * 🔴 DOWNSELL ONLY. The main path keeps V1_BUMP_PRODUCT_KEY untouched — that value
+ * is what Mike's n8n EQUALS-matches to generate the second-reading PDF, and every
+ * main-path bump must keep firing it exactly as it does today.
+ *
+ * WHY THE DOWNSELL NEEDS ITS OWN VALUE: the live copy arm sells a DOUBLE-STRENGTH
+ * CLEARING ("twice the depth on tonight's clearing"), not a second reading, and the
+ * downsell bump is the first place that is being fulfilled as its own thing. Giving
+ * it its own key is what lets Mike route it to its own branch later without another
+ * deploy.
+ *
+ * ⚠️ FULFILMENT CONSEQUENCE, KNOWN AND ACCEPTED. Mike's filter is an EQUALS on
+ * `double_reading` (confirmed 2026-08-20), so from the moment this ships a downsell
+ * bump buyer no longer reaches that branch and receives NO second-reading PDF until
+ * he adds one. Same posture as the money and soulmate lander keys, which ship with
+ * the identical gap by explicit decision. `product` stays `energy_clearing_ritual`,
+ * so her MAIN reading is unaffected either way.
+ *
+ * 🔴 IT DELIBERATELY DOES NOT CONTAIN `double_reading`. An EQUALS and a CONTAINS
+ * filter must BOTH fail — the same rule the money and soulmate keys follow, and for
+ * the same reason: a value like `double_reading_downsell` would still satisfy a
+ * contains-check and generate the PDF anyway.
+ *
+ * ⚠️ IT IS NOT IN BUMP_PAID_LIST_EXCLUDED_KEYS, on purpose. Downsell bump buyers
+ * keep reaching the order-bump paid AWeber list exactly as they do today; only the
+ * routing key changes. Adding it there would silently drop them from that list.
+ */
+export const V1_BUMP_PRODUCT_KEY_DOWNSELL = 'double_strength_reading_ob';
+
+
+/**
  * INTERNAL marker appended to the PaymentIntent description on a bump order, so
  * the Stripe Dashboard's Description column shows at a glance that the payment
  * covers two products (Lewis, 2026-08-04). Without it a bump order is
