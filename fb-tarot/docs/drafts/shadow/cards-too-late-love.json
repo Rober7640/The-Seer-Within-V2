@@ -1,0 +1,41 @@
+{
+  "hook": "cards-too-late-love",
+  "headline": "Is it too late to meet my soulmate?",
+  "method": "inherited-shadow",
+  "note": "FRAME: soulmate x age band. NO MAN EXISTS YET — she asks WHEN or WHETHER. Must not fall through to decode-him.\n🔴 THE AGE BAND LIVES IN THE AD SET, NEVER IN THE COPY. No age, no number, no life-stage.\n🔴 NO DURATION, forward or back — 'not much longer' is a LENGTH, and a length is not a date.\n⚠ SHE is the subject of beats 3-6; the male figure is described in beats 1-2 and retired there.\n⚠ NO FAMILY-LINE LANGUAGE anywhere in the read.\n\n⚠ The Fool in full sun is symbols.md's marked best-for on any 'too late' question — a woman asking whether she has run out of time is looking at broad daylight, and that lands before a sentence does.\n⛔ The read never says the words in either direction — no verdict on lateness, no date on the other side of it.",
+  "readback": {
+    "1 would a person say this": "Yes. 'And you've counted the years' is her own week, and her ad's premise.",
+    "2 is every noun real": "Busy hands, the unworn face, the cloudless gold sky — all on the card.",
+    "3 anything she could catch me getting wrong": "No. Beat 4 says nobody has come and she has started to call it late. The ad's question is exactly that.",
+    "4 does the symbol prove the line at a glance": "Yes — the gold sky answers 'too late' at a glance, which is the whole reason it is used here.",
+    "5 does the card mean what TAROT_CARD_VOCAB says": "Yes."
+  },
+  "decks": {
+    "return-mhf": {
+      "a": [
+        "You turned the Magician. You couldn't see a face, and your hand found the one who came ready.",
+        "Look at his table. All four things are out, and none has been put back.",
+        "You asked whether the moment has gone for meeting your soulmate. It's the laid-out table that stops me here.",
+        "Still, nobody has come. And you've started to wonder whether the time for it has gone.",
+        "The hold is steady, and it hasn't eased. I don't think it started with you.",
+        "Let me look closer at what's holding it…"
+      ],
+      "b": [
+        "You turned the Hanged Man. Nothing showed through, and yours was the only card still growing.",
+        "Look at the wood he hangs from. It has green leaves on it, and it's alive.",
+        "You asked whether the moment has gone for meeting your soulmate. What holds my eye is the green on that wood.",
+        "And yet nobody has come. And the question you brought me is about time running out.",
+        "Something is sitting between you and this. I don't think any of it began with you.",
+        "Let me look closer at what's behind this…"
+      ],
+      "c": [
+        "You turned the Fool. Face down, all three, and yours was the one in full sun.",
+        "Look at the sky behind him. It's gold, and there isn't a cloud anywhere in it.",
+        "You asked whether the moment has gone for meeting your soulmate. This card brings me to the middle of a bright day.",
+        "But nobody has come. And you're the one asking whether the day is done.",
+        "Something turns up right where this would start. I don't think it began with you.",
+        "Let me look closer at what's holding it…"
+      ]
+    }
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "hook": "cards-allowed-to-want",
+  "headline": "Am I still allowed to want a soulmate?",
+  "method": "inherited-shadow",
+  "note": "FRAME: soulmate x age band. NO MAN EXISTS YET — she asks WHEN or WHETHER. Must not fall through to decode-him.\n🔴 THE AGE BAND LIVES IN THE AD SET, NEVER IN THE COPY. No age, no number, no life-stage.\n🔴 NO DURATION, forward or back — 'not much longer' is a LENGTH, and a length is not a date.\n⚠ SHE is the subject of beats 3-6; the male figure is described in beats 1-2 and retired there.\n⚠ NO FAMILY-LINE LANGUAGE anywhere in the read.\n\n🔴 A PERMISSION QUESTION, AND THE READ MUST NEVER RULE AGAINST HER. It also must not grant permission as though it were Evelyn's to give — the answer is that nobody hands that out. No shame anywhere in the read.\n⛔ 'the wanting' is banned by check-draft as a verb turned into a noun; every line here says 'to want' instead.",
+  "readback": {
+    "1 would a person say this": "Yes. 'And you've kept it to yourself' is a feeling that reaches, not a fact that can miss.",
+    "2 is every noun real": "The self-laid table, the unjudged face, the already-taken step — all on the card.",
+    "3 anything she could catch me getting wrong": "No. Beat 4 says nobody has come and that she is asking whether she may. The ad is that question.",
+    "4 does the symbol prove the line at a glance": "Yes. A man who set his own table out and asked nobody proves 'you need no one's say-so'.",
+    "5 does the card mean what TAROT_CARD_VOCAB says": "Yes."
+  },
+  "decks": {
+    "return-mhf": {
+      "a": [
+        "You turned the Magician. You reached without seeing, and your hand landed on the busiest card here.",
+        "Look at his hands. One is raised, the other points down, and both are working.",
+        "You asked if you're still allowed to want a soulmate. What catches me is that neither hand is empty.",
+        "Still, nobody has come. And you've started asking whether you're allowed to want it.",
+        "Whatever is in the way of this holds steady. I don't think any of it began with you.",
+        "Let me look closer at what's got hold of it…"
+      ],
+      "b": [
+        "You turned the Hanged Man. Nothing told the three apart, and you took the calmest man in the deck.",
+        "He hangs upside down by one ankle. Look at his face, though — it's calm.",
+        "You asked if you're still allowed to want a soulmate. It's the pause itself I keep looking at.",
+        "And yet nobody has come. And the question has turned into whether you may even ask it.",
+        "Something is sitting between you and this, close in. I don't think it began with you.",
+        "Let me look closer at what's sitting there…"
+      ],
+      "c": [
+        "You turned the Fool. Face down, all three, and you took the one in full sun.",
+        "Look at the sky behind him. It's gold, and there isn't a cloud in it.",
+        "You asked if you're still allowed to want a soulmate. The sky is gold and his foot is already moving — that's what I'm looking at.",
+        "But nobody has come. And you're the one asking whether it's alright to hope.",
+        "Something turns up as soon as this gets going. I don't think this began with you.",
+        "Let me look closer at what that is…"
+      ]
+    }
+  }
+}

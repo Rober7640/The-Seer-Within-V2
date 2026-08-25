@@ -1,0 +1,34 @@
+{
+  "hook": "cards-money-wont-stay",
+  "headline": "What does my energy say about why money won't stay?",
+  "method": "inherited-shadow",
+  "note": "generated from REVIEW-new-voice.md — not a wired draft",
+  "decks": {
+    "return-mhf": {
+      "a": [
+        "You turned the Magician. Nothing told them apart, and you took the one who came ready.",
+        "Look at his table. Four things on it, and all of them still in place.",
+        "You asked what your energy says about money not staying. What catches me is that all four things sit on that table.",
+        "Still, it doesn't stay, dear. It comes in and then it's gone again.",
+        "Whatever is here holds steady, and nothing about it changes. I don't think any of it began with you.",
+        "Let me look closer at what's got hold of it…"
+      ],
+      "b": [
+        "You turned the Hanged Man. Face down, all three, and yours was held by one rope.",
+        "Look at the rope. One ankle, and the rest hangs free.",
+        "You asked what your energy says about money not staying. What holds my eye is the single line of it.",
+        "And yet it doesn't stay. And you've put that down to something in you.",
+        "Something sits at the point where it would settle. I don't think it began with you.",
+        "Let me look closer at what's behind it…"
+      ],
+      "c": [
+        "You turned the Fool. You couldn't see them, and you chose the one travelling light.",
+        "Look at the bundle on his stick. Small, and tied shut.",
+        "You asked what your energy says about money not staying. How little is being carried — that's the part I keep looking at.",
+        "But it doesn't stay. And you're the one asking why it goes.",
+        "Something turns up just as the money would stay. I don't think this began with you.",
+        "Let me look closer at what's behind this…"
+      ]
+    }
+  }
+}

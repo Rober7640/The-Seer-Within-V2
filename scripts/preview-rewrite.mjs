@@ -67,7 +67,7 @@ md.push('> file. **Nothing here is in the code yet.** Say go and it gets wired v
 md.push('> approved strings are the strings that ship, nothing is retyped.')
 md.push('')
 md.push('Each bubble below is a **separate chat message**, with its own typing pause. Old copy is')
-md.push('shown underneath so you can see what it replaces. `[Nw gN.N]` = words and reading grade.')
+md.push('shown underneath so you can see what it replaces. `[Nw gN.N]` = words and reading grade — grade is shown for information only and fails nothing.')
 md.push('')
 
 for (const d of drafts) {
@@ -257,7 +257,7 @@ footer.end .verdict{font-family:"Playfair Display",Georgia,serif;font-size:1.35r
   }
   h.push('<footer class="end">')
   h.push(`<p class="verdict">${failures ? `${failures} problem${failures === 1 ? '' : 's'} to fix first` : 'All wirable as written'}</p>`)
-  h.push('<p>The gate checks length, reading grade, stacked negatives, the echo of the ad and a banned-phrase list. It cannot judge warmth, rhythm, or whether a line is worth saying — so read it aloud before you say go.</p>')
+  h.push('<p>The gate checks length, stacked negatives, the echo of the ad and a banned-phrase list. Reading grade is shown but no longer gated — it fell whenever a real noun was deleted, so it rewarded vagueness. It cannot judge warmth, rhythm, or whether a line is worth saying — so read it aloud before you say go.</p>')
   h.push('</footer></div>')
   const htmlPath = outHtml ? new URL(`file://${outHtml}`) : new URL('PREVIEW.html', DIR)
   writeFileSync(htmlPath, h.join('\n'))

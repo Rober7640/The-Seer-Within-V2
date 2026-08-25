@@ -23,6 +23,20 @@ export const clientSecret = get("AWEBER_CLIENT_SECRET");
 export const accountId = get("AWEBER_ACCOUNT_ID");
 export const listId = get("AWEBER_LIST_ID");
 export const BASE = `https://api.aweber.com/1.0/accounts/${accountId}/lists/${listId}`;
+
+// Every list the daily send goes out to. The V1 ad funnels write leads to their
+// own AWeber list (AWEBER_LIST_ID_PALM / _TAROT in the app), so mailing only
+// AWEBER_LIST_ID silently skipped those audiences. Comma-separated override via
+// AWEBER_DAILY_LIST_IDS; falls back to the single shared list so existing
+// callers behave exactly as before.
+//
+// NOTE: these lists overlap (~23% of the palm list is also on the shared list),
+// and AWeber has no cross-list dedupe — a subscriber on two of them receives the
+// broadcast twice. That is a deliberate, operator-approved trade-off.
+export const dailyListIds = (get("AWEBER_DAILY_LIST_IDS") || listId || "")
+  .split(",").map(s => s.trim()).filter(Boolean);
+export const listBase = (id) =>
+  `https://api.aweber.com/1.0/accounts/${accountId}/lists/${id}`;
 let accessToken = get("AWEBER_BROADCAST_ACCESS_TOKEN");
 export const mask = t => t ? t.slice(0, 4) + "…" + t.slice(-3) : "(none)";
 
@@ -49,13 +63,33 @@ async function refresh() {
   console.error(`  [refreshed broadcast token → ${mask(newAccess)}, backup ${path.basename(backup)}]`);
 }
 
-// api(method, url, {form}) — form => x-www-form-urlencoded body. Refreshes once on 401.
-export async function api(method, url, { form } = {}, _retried = false) {
+const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+
+// AWeber answers a burst with 403 "Rate Limit Error" — NOT 429. It reads like a
+// permissions failure, so an unguarded caller treats a throttled GET as an
+// authoritative empty result. That silently defeated the replicate idempotency
+// scan (empty "already scheduled" set => duplicate broadcasts). Every call now
+// backs off and retries a rate-limited response before returning it.
+const isRateLimited = (status, text) =>
+  status === 403 && /rate limit/i.test(text || "");
+
+// api(method, url, {form}) — form => x-www-form-urlencoded body. Refreshes once
+// on 401; retries with backoff on a 403 rate limit.
+export async function api(method, url, { form } = {}, _retried = false, _throttled = 0) {
   const headers = { "Authorization": `Bearer ${accessToken}`, "Accept": "application/json" };
   const opts = { method, headers };
   if (form) { headers["Content-Type"] = "application/x-www-form-urlencoded"; opts.body = new URLSearchParams(form).toString(); }
   const r = await fetch(url, opts);
-  if (r.status === 401 && !_retried) { await refresh(); return api(method, url, { form }, true); }
+  if (r.status === 401 && !_retried) { await refresh(); return api(method, url, { form }, true, _throttled); }
+  if (r.status === 403 && _throttled < 8) {
+    const peek = await r.clone().text();
+    if (isRateLimited(r.status, peek)) {
+      const wait = Math.min(30000, 2000 * 2 ** _throttled);
+      console.error(`  [rate limited — waiting ${wait / 1000}s, attempt ${_throttled + 1}/8]`);
+      await sleep(wait);
+      return api(method, url, { form }, _retried, _throttled + 1);
+    }
+  }
   const text = await r.text();
   let json = null; try { json = text ? JSON.parse(text) : null; } catch {}
   return { ok: r.ok, status: r.status, text, json, location: r.headers.get("location") };

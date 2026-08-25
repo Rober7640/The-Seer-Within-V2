@@ -1,0 +1,34 @@
+{
+  "hook": "cards-where-soulmate",
+  "headline": "Where is my soulmate right now?",
+  "method": "inherited-shadow",
+  "note": "generated from REVIEW-new-voice.md — not a wired draft",
+  "decks": {
+    "return-mhf": {
+      "a": [
+        "You turned the Magician. Nothing showed through, and your hand found the busiest of the three.",
+        "Look at his hands. One is up, one is down, and neither is empty.",
+        "You asked where your soulmate is right now. What catches me is how much of this card is already in use.",
+        "Still, nobody has come. And what you want from me is a where.",
+        "Something turns up right when this would get anywhere. I don't think it started with you.",
+        "Let me look closer at what's doing that…"
+      ],
+      "b": [
+        "You turned the Hanged Man. Face down, all three, and yours was held by one rope.",
+        "Look at the rope. It's tied at one ankle, and nothing else holds him.",
+        "You asked where your soulmate is right now. The rope goes up into the beam, and that's what holds my attention.",
+        "And yet nobody has come. And you're asking me to point somewhere.",
+        "The hold is fixed, and it stays put. I don't think any of it began with you.",
+        "Let me look closer at what's got hold of it…"
+      ],
+      "c": [
+        "You turned the Fool. Nothing told them apart, and you took the one travelling light.",
+        "Look at the bundle on his stick. That's all he's carrying.",
+        "You asked where your soulmate is right now. Travelling, and what gets carried with it — that's where this one puts me.",
+        "But nobody has come. And you're the one asking for a location.",
+        "Something is sitting right in the middle of this. I don't think it began with you.",
+        "Let me look closer at what's doing that…"
+      ]
+    }
+  }
+}

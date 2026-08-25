@@ -58,6 +58,7 @@ node .claude/skills/v1-funnel-audit/scripts/audit-charge.mjs         # price-var
 node .claude/skills/v1-funnel-audit/scripts/audit-funnels.mjs        # per-funnel entry + client funnel/sign threading
 node .claude/skills/v1-funnel-audit/scripts/audit-upsells.mjs        # /welcome1 → /welcome2 → /success upsell chats (Stripe TEST)
 node .claude/skills/v1-funnel-audit/scripts/audit-downsell-bump.mjs  # the $25-path order bump: card price == charged price
+npx tsx .claude/skills/v1-funnel-audit/scripts/audit-tarot-shadow.mjs # BOTH ARMS of the /fb-tarot Inherited Shadow split test
 ```
 
 > **`audit-charge.mjs` and `audit-upsells.mjs` need the Stripe TEST key.** They read
@@ -204,6 +205,38 @@ and a $30 downsell. Two complementary layers:
   **mocked** (charge is proven authoritatively in PART 1; mocking the reading keeps the run free of
   Anthropic calls). Meta is blocked. The scripted typing delays (1–5 s/msg) are fast-forwarded by clamping
   `setTimeout` in the browser — the question gates still gate (they wait on a click, not a timer).
+
+## /fb-tarot both-arm smoke (`audit-tarot-shadow.mjs`)
+
+The Phase-4 gate of `fb-tarot/docs/shadow-split-test-checklist.md`. Walks the real
+`/fb-tarot/b` bridge for three landers — one commitment, one money, one after-loss — **on
+each arm of `v1_tarot_shadow_2026`**, and asserts the six bubbles that arrive on screen are
+character-for-character what `openerB` says that arm should send.
+
+🔴 **It forces the arm through the DATABASE, not by mocking the response.** Mocking
+`/api/tarot/version` would only re-prove that the client renders what it is told. What had
+never run is the whole chain — experiment row → `assign()` → `resolveTarotMethod` → the route
+→ the fetch → `openerB` → `sendBotMessages` — so the arm is forced by weighting a
+**sandbox-only** copy of the experiment 100/0 and letting every link decide for itself. The
+row is deleted in a `finally` block.
+
+- ⚠ **`npx tsx`, not `node`** — it imports the read registry (through the `@shared/*` alias)
+  to compare the screen against it.
+- ⚠ **It is NOT `?noemail=1`.** `TarotBridge.goToChat` forwards only `clearing` when it builds
+  the chat URL, so the flag is dropped at the bridge and would silently do nothing.
+  `/api/lead` is captured and fulfilled locally instead — the email step runs, nothing enrols.
+- ⚠ **It must reach a real `/api/chat`.** Stopping at the email step leaves `chatStatus` null
+  and the "did not 400" check passes vacuously — the trap `audit-downsell-bump.mjs` fell into
+  once. There is an explicit check that reading1 fired, guarding the guard.
+- 🔴 **Extra guard: a SANDBOX-DB check.** It refuses to run unless `DATABASE_URL` is the
+  `:5433` sandbox, because it writes an experiment row. The live `v1_tarot_shadow_2026` is
+  seeded as a DRAFT by a human, and never by this script.
+
+Asserts per lander per arm: `/api/tarot/version` returned the forced method with `version:'b'`
+· the exact bubble sequence · no empty bubble · ends on name capture · **card art on bubble 1**
+(it rides `sendBotMessages(msgs, art)` independently of the read text, so it must appear on
+both arms) · the handoff into chat did not 400. Then, across arms: the natural arm is
+**byte-identical to today's funnel**, and the two arms actually differ.
 
 ## Copy readability (`audit-copy.mjs`) — can she READ it
 
@@ -370,6 +403,7 @@ closer at what's holding his hand back…") that the chat cannot pick up. Scoped
 - Per-funnel entry + client funnel/sign/tarot-lander threading (root/fb/fb2/gdn/palm signs/tarot decks+angles) — ✅ `audit-funnels.mjs`
 - Upsell chats `/welcome1`→`/welcome2`→`/success` (charge correctness + U1/U2 flow, Path A/B, $30 downsell) — ✅ `audit-upsells.mjs`
 - Downsell order bump (card renders, price, total, and what-she-saw == what-she-pays) — ✅ `audit-downsell-bump.mjs`
+- /fb-tarot Inherited Shadow split test, both arms end-to-end — ✅ `audit-tarot-shadow.mjs`
 - Still open: a deep LLM flow-walk per non-root funnel (fb/fb2/gdn share the root chat engine, so entry +
   charge cover the meaningful deltas; palm's woven flow is covered by `audit-palm`). The `/success` page's
   own order-summary + Luna cross-sell handoff is only touched incidentally (the upsell audit asserts the

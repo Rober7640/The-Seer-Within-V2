@@ -1,6 +1,6 @@
 ---
 name: fb-tarot-hooks
-description: "Source, draft, guard, smoke-test and ship new /fb-tarot question-hooks (the QUESTION axis) on the existing card decks. Use when the user says: build new tarot landers, add tarot hooks/questions, write the next soulmate/money/commitment landers, turn these ad headlines into landers, draft a new fb-tarot family, wire the approved tarot reads. A 'lander' in fb-tarot = one hook entry in the deck registry, NOT a new page/route/component and NOT new card art — for a new CARD SET from a supplied image use fb-tarot-add-card instead. This RUNS the proven pipeline (VOC by theme → draft to the CHOSEN method → collision check → guard file + tripwire → live smoke of the generated path → human review gate → wire). TWO methods are live and the operator picks per family at stage 0: the 7-cut Natural Tarot-Cut (fb-tarot/docs/natural-tarot-cut.md) and the Inherited Shadow (fb-tarot/docs/inherited-shadow-cut.md). BOTH serve seven bubbles in four registry slots — they differ in what the middle four say, never in length."
+description: "Source, draft, guard, smoke-test and ship new /fb-tarot question-hooks (the QUESTION axis) on the existing card decks. Use when the user says: build new tarot landers, add tarot hooks/questions, write the next soulmate/money/commitment landers, turn these ad headlines into landers, draft a new fb-tarot family, wire the approved tarot reads. A 'lander' in fb-tarot = one hook entry in the deck registry, NOT a new page/route/component and NOT new card art — for a new CARD SET from a supplied image use fb-tarot-add-card instead. This RUNS the proven pipeline (VOC by theme → draft to the CHOSEN method → collision check → guard file + tripwire → live smoke of the generated path → human review gate → wire). TWO methods are live and the operator picks per family at stage 0: the 7-cut Natural Tarot-Cut (fb-tarot/docs/natural-tarot-cut.md) and the Inherited Shadow (fb-tarot/docs/inherited-shadow-cut.md). The seven cuts serve 7 bubbles; the inherited shadow serves 6. Both fold into four registry slots."
 ---
 
 # /fb-tarot-hooks — launch new question-hooks on the tarot funnel
@@ -16,7 +16,7 @@ every live ad points at. Param-driven (`/fb-tarot/c?hook=X&deck=Y`), no new rout
 > | Method | Doc | Shape | Its job |
 > |---|---|---|---|
 > | **Natural Tarot-Cut** (7 cuts) | `fb-tarot/docs/natural-tarot-cut.md` | So · And · But · That's why — **resolves** | The read ANSWERS her question. Trust and relief |
-> | **Inherited Shadow** | `fb-tarot/docs/inherited-shadow-cut.md` | So · But · And · That's why — **escalates** | The read WITHHOLDS the answer behind a block passed down her family line. Hands the pitch a live problem |
+> | **Inherited Shadow** | `fb-tarot/docs/inherited-shadow-cut.md` | **But** (beat 4) · **So** (beat 5) — **argues** | The read WITHHOLDS the answer behind a block. Beat 5 is the thing she pays to remove, so it carries a property she can picture. ⚠ The LANDER never says "family line" — the inheritance goes in as AGE (decided 2026-08-24) |
 >
 > Both fold into the same four registry beats, so every structural guard keeps working either
 > way. What differs is the connective order, whether cut 3 answers, and what the loop points at.
@@ -45,8 +45,10 @@ every live ad points at. Param-driven (`/fb-tarot/c?hook=X&deck=Y`), no new rout
 ## Operating mode (locked)
 
 Semi-auto **with a human review gate**. Drafts are JSON, never code, until approved. **No hook
-is wired before the operator has read the copy.** Three cards per hook (a/b/c), seven bubbles
-per card, folded to four registry beats at wiring time.
+is wired before the operator has read the copy.** Three cards per hook (a/b/c), folded to four
+registry beats at wiring time — **7 bubbles on the seven cuts, 6 on the inherited shadow**. A
+beat may carry `\n` and split itself, so the count is free; the FOLD is what has to be checked,
+and only when a lander is actually being wired.
 
 ## The 8 stages
 
@@ -77,6 +79,44 @@ ad headlines pointed at hook names.
   half that hurts.
 - Confirm the final list, the age/segment split if there is one, and which headline (if any) is
   the control. A control should be the KNOWN question — often an existing lander, not a new one.
+
+#### 🔴 WHAT ALREADY EXISTS — check the registry before proposing anything
+
+`fb-tarot/docs/lander-registry.md` — all 104 landers grouped by category (money, soulmate ×
+keyword / age band / after loss / where, loneliness, self-frame, decode-him), each with its ad
+headline, the decks carrying it, and **which method it runs**. It is GENERATED from the
+registry and the frame Sets — `npx tsx scripts/lander-registry.mts` — so it cannot claim a
+lander is something the code says it is not.
+
+Read it at stage 0 to answer three questions the operator will ask: does this hook already
+exist, what category does it fall in, and what is running on it today.
+
+⚠ It answers *what exists*. `fb-tarot/docs/copy-migration-checklist.md` answers *is the copy
+clean*. Different files, both generated, do not conflate them.
+
+#### 🔴 CHECK THE DECK'S SYMBOL TABLE BEFORE SCOPING
+
+`fb-tarot/docs/decks/<deck>/symbols.md` — for `return-mhf` it lists, per card, which drawn
+detail proves what, and which details to leave alone because they are ambiguous (the Fool's
+cliff) or easy to invert (the Magician's lemniscate). It also carries **card-level decisions**.
+Read it at stage 0 rather than discovering it at stage 2.
+
+> ✅ **No card on `return-mhf` is currently restricted.** An earlier note told the next set of
+> landers to avoid the Magician, on the grounds that its beat 5 came out weakest. **That was
+> withdrawn on 2026-08-23** — beat 5 has since changed job, from a cold read to the "SO"
+> conclusion, and re-testing three cards × three questions put the Magician strongest in two
+> and weakest in none. The full working is in `symbols.md`.
+>
+> 🔴 **The reason this is worth reading rather than skipping.** A card-level restriction can
+> outlive the evidence behind it by a matter of hours. Before you honour one, check WHAT it was
+> measured on and whether that thing still works the same way.
+
+⚠ Two live cautions on this deck, neither of them a restriction:
+- **Ration the Magician's table.** The four objects are its strongest detail by a distance and
+  will try to open every Magician card. Three landers in a row nearly did.
+- **Split the Hanged Man's halves.** Its warrant already names the block, so beat 3 and beat 5
+  collapse into each other unless beat 3 carries *you are not broken* and beat 5 carries *so
+  something else is holding it*.
 
 #### 🔴 ASK WHICH METHOD. Never assume one.
 
@@ -179,8 +219,9 @@ reason and the theme to pull, and expect the smoke test to fail — that failure
 ### 2 · Draft to the method chosen at stage 0
 
 To `fb-tarot/docs/drafts/rewrites/<hook>.json` — `{hook, headline, method, note, voc,
-decks:{<deck>:{a,b,c}}}`, 7 flat bubbles per card **either way** — both methods fold into the
-same four registry beats, so the file shape and every structural guard are identical. The `note`
+decks:{<deck>:{a,b,c}}}` — **7 flat bubbles per card on `natural-cut`, 6 on `inherited-shadow`**.
+Both fold into the same four registry beats, so the file shape and every structural guard are
+identical; only the fold differs. The `note`
 field carries the family's bans and WHY each exists; it is what the next person reads.
 
 - `"method": "natural-cut"` → follow `fb-tarot/docs/natural-tarot-cut.md`
@@ -189,7 +230,7 @@ field carries the family's bans and WHY each exists; it is what the next person 
 Pick the frame here, **before** writing — §"Choosing the frame" in `natural-tarot-cut.md`, which
 governs both methods. A family in no frame set inherits decode-him and the model invents a man.
 
-**If the method is inherited-shadow, run the 3-step PRE-FLIGHT before the first bubble** —
+**If the method is inherited-shadow, run the 4-step PRE-FLIGHT before the first bubble** —
 `fb-tarot/docs/inherited-shadow-cut.md` §Pre-flight. These are not gates. A gate catches the
 fault after the copy exists, and each one then costs a rewrite:
 
@@ -207,11 +248,56 @@ fault after the copy exists, and each one then costs a rewrite:
    because then every card must open the same way — *"So it isn't you, dear"* ×3. Fix it here,
    where it costs a line, not at the collision gate where it costs a read.
    ⚠ This was a prose warning in the doc first and the very next run walked into it anyway.
+4. 🔴 **Write the THREE BLOCKS first, and give each one a PROPERTY.** Beat 5 for all three cards,
+   nothing else, side by side. Beat 5 is not a tidy conclusion — it is **the thing she is being
+   asked to pay to remove**, and she will not pay to remove something she cannot picture. Each
+   card names one property: **age** (*"since before he ever turned up"*), **timing** (*"it turns
+   up whenever this gets close"*), **position** (*"it steps in at the landing"*) or **manner**
+   (*"it has held this quietly"*). A card ending on a bare *"something is in the way"* is not
+   written yet. ⚠ Found 2026-08-24: 37 landers written to the old instruction passed every
+   mechanical gate with ~100 of 111 beat 5s blank. A blank is short, plain, grade-2 English that
+   breaks no ban, so no gate can see it.
+
+#### 🔴 THE READ-BACK — run it before you show anyone, and report the result
+
+`fb-tarot/docs/natural-tarot-cut.md` §"The read-back". Five questions, read aloud, per bubble:
+
+1. **Would a person say this?** 2. **Is every noun real** — on the card, or in her life?
+3. **Is there anything she could catch me getting wrong?** 4. **Does the symbol prove the line
+at a glance, with no explaining?** 5. **Does the card mean what `TAROT_CARD_VOCAB` says?**
+
+🔴 **Those five ask whether the copy is TRUE. Three more ask whether it SELLS** — added
+2026-08-24, after an audit of 37 landers found copy that passed all five and did none of the
+three jobs the lander exists to do. A lander that is accurate and does not convert has failed.
+
+6. **Does the opener earn the tap?** Beat 1 is the uncanny reach — *she* could not see the card
+   and still chose the one that answers her. If it is about the deck (*"Of the three backs…"*
+   ×111, on rotation) it is furniture, not a hook.
+7. **Can she picture the block?** Beat 5 is the offer. If she cannot see it, she will not pay to
+   have it removed. *"Something is in the way"* is a blank.
+8. **Does the last message make her type?** *"Let me look closer at…"* announces that Evelyn will
+   continue. It does not ask her anything, and her first reply is the metric.
+
+🔴 **This is not the gate below, and passing the gate is not a substitute.** On 2026-08-23 a
+batch passed every mechanical check while containing an invented word, an invented prop, an
+invented fact about her life, and a symbol that proved the opposite of its line. The gate counts
+syllables — it cannot see any of that, and it pushes the wrong way: reading grade FALLS when you
+delete a real noun, so *"Something holds this, dear"* scores better than *"Something is holding
+your love life back, dear."*
+
+Two working rules that go with it:
+- **One lander at a time, finished.** Thirty reads shown at once wastes the reviewer — the fault
+  is usually in the first three, and everything after was written to the same broken assumption.
+- **Do not invent rules.** If it is not in these docs or in the operator's own feedback, do not
+  optimise to it. An invented loop rule produced *"the fence that was put up long before you
+  walked to it"* within the hour.
 
 ### 3 · Gate the copy
 
 ```bash
-node scripts/check-draft.mjs <hook…>          # ≤25 words · ≤2 sentences · grade ≤5 · ≤3 syllables
+node scripts/check-draft.mjs <hook…>          # ≤25 words · ≤2 sentences · ≤3 syllables · ≤2 negatives
+#   ⚠ reading grade is REPORTED, not gated (removed 2026-08-23) — it fell when you deleted a
+#     real noun, so it rewarded the vagueness it was meant to prevent
 npx tsx scripts/check-collisions.mts <hook…>  # beat-1 art + beat-3 six-word runs
 npx tsx scripts/dryrun-drafts.mts             # shared registry guards
 ```

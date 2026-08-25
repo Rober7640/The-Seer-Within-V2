@@ -122,6 +122,31 @@ const clausesOf = (s: string) => s.split(/[—;:,.\n]/);
 const NEGATOR =
   /\b(no|not|never|can't|cannot|n't|nor|nobody|no one|none|nothing|neither|without|rather than|instead of|refuses?|declines?)\b/i;
 const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9 ]/g, ' ').replace(/\s+/g, ' ').trim();
+// 🔴 WIDENED 2026-08-25 (operator: "loosen the checks"). The bridge exemption used to require
+// the clause to open literally "you asked". The Natural rewrite of the 36 landers says her
+// question back in several other ways — "You came asking whether…", "What you want to know
+// is…", "Your question is why…" — and every one was read as Evelyn ASSERTING the ad's claim.
+//
+// ⚠ ONLY THE FRAME WIDENED. The 70%-of-content-words test is untouched, so a clause that adds
+// anything the headline does not already say is still swept.
+//
+// 🔴 AND THE COMPARISON HAD TO SURVIVE THE PERSON FLIP. Her ad is first person ("Am I ready to
+// love again?"); the bridge says it back in the second ("you are ready to love again"). Raw
+// overlap scored that 67% and swept a pure quotation. i/you, my/your and am/are now count as
+// the same word, as do a word and its -s/-ing/-ed form. That cannot admit a word the headline
+// never had, so "anything new is still swept" still holds.
+const ASK_FRAME =
+  /^(you asked me to tell you|you (came )?ask(ed|ing)|what you (want to know|came to ask)( is)?|your question (is|was|asks))\b/;
+const STRIP_FRAME =
+  /^(you asked me to tell you|you (came )?ask(ed|ing)|what you (want to know|came to ask)( is)?|your question (is|was|asks))( me)? ?(if|why|what|how|whether|when|that)? ?/;
+const PERSON: Record<string, string> = { i: 'you', my: 'your', me: 'you', mine: 'yours', am: 'are' };
+const stemOf = (w: string) => w.replace(/(ing|ed|s)$/, '');
+const sameWord = (w: string, head: Set<string>) => {
+  const forms = new Set([w, PERSON[w] ?? w, stemOf(w), stemOf(PERSON[w] ?? w)]);
+  for (const h of head) if (forms.has(h) || forms.has(PERSON[h] ?? h) || forms.has(stemOf(h)) || forms.has(stemOf(PERSON[h] ?? h))) return true;
+  return false;
+};
+
 const isRestatement = (clause: string, hook: string) => {
   const c = norm(clause);
   if (c.length > 0 && norm(HEADLINES_B[hook]).includes(c)) return true;
@@ -134,11 +159,11 @@ const isRestatement = (clause: string, hook: string) => {
   // So: a clause that opens "You asked" and is otherwise made of the headline's own words is
   // her question coming back, not Evelyn asserting it. Content words only, 70% of them, so a
   // clause that smuggles in anything NEW still gets swept.
-  if (!/^you asked\b/.test(c)) return false;
+  if (!ASK_FRAME.test(c)) return false;
   const head = new Set(norm(HEADLINES_B[hook]).split(' '));
-  const mine = c.replace(/^you asked (if|why|what|how|whether|when) ?/, '').split(' ').filter(Boolean);
+  const mine = c.replace(STRIP_FRAME, '').split(' ').filter(Boolean);
   if (!mine.length) return false;
-  const shared = mine.filter((w) => head.has(w) || head.has(w.replace(/s$/, '')) || w === 'your' && head.has('my'));
+  const shared = mine.filter((w) => sameWord(w, head));
   return shared.length / mine.length >= 0.7;
 };
 
@@ -266,19 +291,25 @@ describe(`soulmate keyword (test B) — loaded from ${[...new Set(Object.values(
   it('every read has the 4-beat shape, the face-DOWN verb and the open loop', () => {
     for (const h of HOOKS) for (const c of CARDS) {
       const [b1, b2, , b4] = reads[h][c];
-      expect(b1, `${h}/${c} beat 1 must open on the turned card`).toMatch(/^You turned the /);
+      // 🔄 2026-08-25: face-down truth now leads beat 1; the card is named mid-bubble.
+      expect(b1, `${h}/${c} beat 1 must name the turned card`).toMatch(/\bYou turned the /);
+      expect(b1, `${h}/${c} beat 1 must tell the truth about the blind choice`).toMatch(/face[- ]down|hidden|conceal|the backs?\b|through the (?:card )?backs?|before seeing|couldn'?t see|could not see|without seeing|gave you no|no picture to (?:follow|guide)|matching backs|selected from/i);
       expect(b2, `${h}/${c} beat 2 must bridge from her question`).toMatch(/^You asked /);
       expect(b4, `${h}/${c} beat 4 must leave the loop open`).toMatch(/…$/);
     }
   });
 
-  it('beat 3 runs as one causal chain — so / and / but / that is why', () => {
+  it('beat 3 carries four non-empty cuts (the fixed connective chain is retired)', () => {
     for (const h of HOOKS) for (const c of CARDS) {
-      const [b3, b4, b5, b6] = reads[h][c][2].split('\n');
-      expect(b3, `${h}/${c} cut 3 must answer`).toMatch(/^So /);
-      expect(b4, `${h}/${c} cut 4 must deepen`).toMatch(/^And /);
-      expect(b5, `${h}/${c} cut 5 must turn`).toMatch(/^But /);
-      expect(b6, `${h}/${c} cut 6 must explain what she has lived`).toMatch(/^That's why /);
+      // ⛔ THE FIXED CHAIN WAS RETIRED 2026-08-25 — natural-tarot-cut.md §"4 · Make it one
+      // spoken thought, without a formula": "no cut has a mandatory opening word." The fixed
+      // cadence is what made the old batch read as generated. What survives mechanically is
+      // the SHAPE — four cuts, none empty; the flow itself is a read-aloud item, not a regex.
+      const cuts = reads[h][c][2].split('\n');
+      expect(cuts.length, `${h}/${c} beat 3 must carry cuts 3-6`).toBe(4);
+      for (const [i, cut] of cuts.entries()) {
+        expect(cut.trim().length, `${h}/${c} cut ${i + 3} is empty`).toBeGreaterThan(10);
+      }
     }
   });
 

@@ -80,12 +80,14 @@ import {
   resolveV1DownsellBumpPrice,
   resolvePalmGate,
   resolveTarotVersion,
+  resolveTarotMethod,
   logExposure,
   exposureSign,
   hashEmail,
   PALM_GATE_EXPERIMENT_KEY,
   V1_BUMP_EXPERIMENT_KEY,
   V1_TAROT_VERSION_EXPERIMENT_KEY,
+  V1_TAROT_SHADOW_EXPERIMENT_KEY,
   type TarotVersion,
 } from "./lib/experiments";
 import { TAROT_C_PATH, tarotBTarget } from "./lib/tarotRedirect";
@@ -1172,13 +1174,23 @@ export async function registerRoutes(
     }
   });
 
-  // /fb-tarot Version B-vs-C assignment. Called by TarotBridge before it renders,
-  // because the arm decides the FIRST message of the chat.
+  // /fb-tarot arm assignment — BOTH tarot experiments, in one round trip. Called
+  // before the opener is sent, because the arms decide the FIRST message of the chat.
+  //
+  //   `version`  B-vs-C (v1_tarot_version_bc_2026) — WHICH opener she gets.
+  //   `method`   shadow-vs-natural (v1_tarot_shadow_2026) — which READ Version B
+  //              delivers. Resolved from the ASSIGNED version, not the URL's, and
+  //              only ever non-default when that resolves to 'b'.
+  //
+  // One endpoint rather than two because both are read at the same instant by the same
+  // caller: a second round trip would let the two exposures land in different requests,
+  // and a failure between them would count a visitor into one test and not the other.
   //
   // `v` is what the URL alone would have served (path /b -> b, /c -> c, else a) and
   // is returned unchanged whenever the experiment does not apply — so while the test
   // is draft this endpoint is a no-op that echoes its input, and the lander behaves
-  // byte-identically to today.
+  // byte-identically to today. `method` defaults to "natural", which IS today's read,
+  // for exactly the same reason.
   //
   // The exposure is logged HERE, in the same call that hands back the arm, so
   // "assigned" and "shown" are the same instant and the log can never claim an arm
@@ -1205,32 +1217,45 @@ export async function registerRoutes(
       // Version A never enters the test (it shows the reveal on the LANDER, a third
       // experience), so it needs no subject — and minting a cookie for it would add
       // visitors to the population who can never be assigned.
-      if (fallback === "a") return res.json({ version: "a" });
+      if (fallback === "a") return res.json({ version: "a", method: "natural" });
 
       const visitorId = ensureVisitorId(req, res);
       const a = await resolveTarotVersion(visitorId, fallback, hook, deck);
 
+      // PII-free: registry slugs and the anonymous cookie only. `facing`/`angle` are
+      // the client's registry-derived labels, carried for parity with the gate's
+      // exposure context so both tests break down the same way.
+      const context = {
+        funnel: "v1-tarot",
+        hook: hook ?? null,
+        deck: deck ?? null,
+        facing: q("facing") ?? null,
+        angle: q("angle") ?? null,
+      };
+
       if (a.enrolled && a.variant) {
-        // PII-free: registry slugs and the anonymous cookie only. `facing`/`angle` are
-        // the client's registry-derived labels, carried for parity with the gate's
-        // exposure context so both tests break down the same way.
-        await logExposure(V1_TAROT_VERSION_EXPERIMENT_KEY, visitorId, a.variant, "tarot_chat_opener", {
-          funnel: "v1-tarot",
-          hook: hook ?? null,
-          deck: deck ?? null,
-          facing: q("facing") ?? null,
-          angle: q("angle") ?? null,
-        });
+        await logExposure(V1_TAROT_VERSION_EXPERIMENT_KEY, visitorId, a.variant, "tarot_chat_opener", context);
       }
 
-      return res.json({ version: a.version });
+      // The method test rides on the version the visitor was ACTUALLY assigned, so a
+      // visitor moved into C by the version test is never counted into a test whose
+      // arms only exist on B.
+      const m = await resolveTarotMethod(visitorId, a.version, hook, deck);
+      if (m.enrolled && m.variant) {
+        await logExposure(V1_TAROT_SHADOW_EXPERIMENT_KEY, visitorId, m.variant, "tarot_chat_opener", context);
+      }
+
+      return res.json({ version: a.version, method: m.method });
     } catch (error) {
       // Never fail the lander over an experiment. Falling back to the URL's own
       // version is exactly the draft/OFF behaviour, so an error here degrades to
       // "today's funnel" rather than to a broken page.
       logger.warn("tarot version assign failed (falling back to URL version):", error);
       const raw = typeof req.query.v === "string" ? req.query.v : "";
-      return res.json({ version: raw === "b" ? "b" : raw === "c" ? "c" : "a" });
+      return res.json({
+        version: raw === "b" ? "b" : raw === "c" ? "c" : "a",
+        method: "natural",
+      });
     }
   });
 

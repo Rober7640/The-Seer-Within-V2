@@ -1,0 +1,34 @@
+{
+  "hook": "cards-out-of-time",
+  "headline": "Is something still blocking my money, or have I run out of time?",
+  "method": "inherited-shadow",
+  "note": "FRAME: money — the strictest guard on the funnel. No amount, no date, no source, no financial advice, never blames her, never 'too late', never presumes she is broke.\n\n🔴 Beat 4 says the money has not LANDED or not STAYED — never that she has none. Her own ad asserts the block, so restating it is her premise, not our claim.\n\n⚠ NO FAMILY-LINE LANGUAGE. The six beats never need it; naming an inheritance is the shortest path to the authorship ban.\n\nFINDING: 'she has not run out of time' — beat 5a 'open road' and beat 5b 'a hold, not an ending'.\n\n⛔ 'you have run out of time' is banned outright. The read never uses the words in either direction; it says what the cards show instead — a hold, and road left.",
+  "decks": {
+    "return-mhf": {
+      "a": [
+        "You turned the Magician. Nothing told the backs apart, and you took the one who came ready.",
+        "Look at his table. A cup, a coin, a blade and a wand, all four in the open.",
+        "You asked if something is blocking your money, or if time has gone. What catches me is that all four are still out.",
+        "And yet it hasn't landed. And you've offered me the harder half yourself.",
+        "Whatever is here holds without moving, and it doesn't come and go. I don't think it began with you.",
+        "Let me look closer at what's got hold of it…"
+      ],
+      "b": [
+        "You turned the Hanged Man. Face down, all three, and yours was held at one ankle.",
+        "Look at the rope. One line, one ankle, and nothing else.",
+        "You asked if something is blocking your money, or if time has gone. It's the rope and the beam I keep looking at.",
+        "Still, it hasn't come through. And you're asking me to rule between the two.",
+        "Something is sitting in front of it, close in. I don't think this began with you.",
+        "Let me look closer at what that is…"
+      ],
+      "c": [
+        "You turned the Fool. Nothing showed through the backs, and yours was the one in full sun.",
+        "Look at the sky behind him. Gold, and no cloud anywhere in it.",
+        "You asked if something is blocking your money, or if time has gone. A bright day, and a lifted foot.",
+        "But it hasn't landed. And you're the one asking which of the two it is.",
+        "Something turns up right at the point it would come. I don't think it started with you.",
+        "Let me look closer at what's there…"
+      ]
+    }
+  }
+}

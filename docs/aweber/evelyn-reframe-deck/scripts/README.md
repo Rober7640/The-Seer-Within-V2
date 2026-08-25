@@ -116,7 +116,22 @@ draft (.md)  →  check.mjs  →  render-aweber.mjs  →  aweber-ops.mjs schedul
 - **Unschedule:** `POST /broadcasts/{id}/cancel` → reverts to draft (recoverable; not deleted).
 - **Subject limit:** 120 bytes, tag included. **Personalization:** `{{ subscriber.first_name |
   capitalize }}` (matches the live program). **Body** stays "dear", no name.
-- List: `theseerwithin_free` (6936953). One send/day at 10:30 UTC.
+- Lists: **thirteen**, set by `AWEBER_DAILY_LIST_IDS`. Free: `theseerwithin_free` 6936953,
+  `_palm` 6963143, `_tarot` 6970613, `_fb` 6963139, `_fb2` 6963141. Paid: `theseerwithin_paid`
+  6936955, `_money_ob_paid` 6969209, `_upsell_paid` 6937139, `_upsell2_paid` 6939683. Soulmate:
+  `_soulmate_free` 6956485, `_soulmate_paid` 6956486, `_soulmate_upsell1` 6956488,
+  `_soulmate_upsell2` 6956490. (`_gdn` 6963142 is deliberately excluded — empty.)
+  One send/day at 10:30 UTC. `schedule` writes one broadcast **per list**, so a 10-email cycle
+  now creates 130 broadcasts.
+- ⚠ **The lists overlap heavily and AWeber has no cross-list dedupe.** Measured 2026-08-20:
+  **100%** of every paid list (n=60 each) is already on a mailed free list, so the four paid
+  lists add **zero** new readers — only extra copies. A buyer on free+palm who took the order
+  bump and both upsells receives the same email **6x/day**. `soulmate_free` is 68% covered
+  (~197 new); `_fb` is 15 people; `_fb2` is empty. Operator was shown these numbers and chose
+  to wire all of them anyway (2026-08-20). Watch complaint + unsubscribe rates on the paid
+  lists especially — buyer complaints carry the most weight with inbox providers.
+- `replicate` is **idempotent** (skips a list that already has that subject at that send time)
+  and continues past a failing list, so adding more lists later and re-running is safe.
 
 ## Files
 

@@ -1,0 +1,34 @@
+{
+  "hook": "cards-blocking-soulmate",
+  "headline": "Is something blocking me from meeting my soulmate?",
+  "method": "inherited-shadow",
+  "note": "FRAME: soulmate x keyword. NO PARTICULAR MAN EXISTS — the read must not fall through to decode-him.\n\n🔴 The ad already tells her she is the problem, which is the best fit on the funnel for this method: the card acquits her, and the block is what is left.\n\n⚠ SHE is the subject of beats 3-6. The return-mhf figures are all male, so he is DESCRIBED in beats 1-2 and retired there — never given intent or motion toward her, or a soulmate lander turns into reunion copy.\n\n⚠ NO FAMILY-LINE LANGUAGE anywhere in the read.\n\n⚠ The ad ASSERTS a block, so pre-flight step 3 fires: all three cards have to open on the same 'yes'. The three affirmations are different shapes — 'you're not lacking' · 'nothing in you is wrong' · 'you didn't need fixing first'.",
+  "decks": {
+    "return-mhf": {
+      "a": [
+        "You turned the Magician. You couldn't see a thing, and your hand found the busiest card here.",
+        "Look at his hands. One points up, one points down, and both are working.",
+        "You asked if something is blocking you from meeting your soulmate. What catches me is that neither of those hands is idle.",
+        "And yet nobody has come. And you came in already suspecting something.",
+        "Something turns up at the point where this would start. I don't think it began with you.",
+        "Let me look closer at what's doing that…"
+      ],
+      "b": [
+        "You turned the Hanged Man. The backs told you nothing, and you took the one held at one ankle.",
+        "Look at the rope. It's a single line, and it does all the holding.",
+        "You asked if something is blocking you from meeting your soulmate. One thin line does all the work here, and I can't get past it.",
+        "Still, nobody has come. And that's the question you brought me.",
+        "The hold is light, and it doesn't slip. I don't think this began with you.",
+        "Let me look closer at what's holding it…"
+      ],
+      "c": [
+        "You turned the Fool. Nothing showed through the backs, and you took the one travelling light.",
+        "Look at the bundle on his stick. All he has is in it.",
+        "You asked if something is blocking you from meeting your soulmate. A start with almost nothing carried — that's what I keep looking at.",
+        "But nobody has come. And you're the one who came asking what's in the way.",
+        "Whatever this is, it sits right where things begin. I don't think it started with you.",
+        "Let me look closer at what's sitting right there…"
+      ]
+    }
+  }
+}

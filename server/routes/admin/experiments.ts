@@ -36,6 +36,7 @@ import {
   PALM_GATE_EXPERIMENT_KEY,
   V1_BUMP_EXPERIMENT_KEY,
   V1_TAROT_VERSION_EXPERIMENT_KEY,
+  V1_TAROT_SHADOW_EXPERIMENT_KEY,
   V1_CLOSE_DEPTH_EXPERIMENT_KEY,
   PERSONA_PROMPT_KEY_PREFIX,
   isPersonaPromptKey,
@@ -159,11 +160,18 @@ function u1PayloadError(variants: Array<{ key: string; payload?: Record<string, 
 // no price payload, and an EMAIL subject assigned at lead capture — so it tallies
 // through tallyV1Main like the first three, and its per-lander split comes free
 // from the tarot labels on its exposures.
+// The TAROT SHADOW test joins on the tarot-version terms exactly: own resolver
+// (resolveTarotMethod), own exposure logging, no price payload, and the same anonymous
+// visitor cookie for a subject — so it is visitor-keyed too. It is here for the
+// GUARDRAIL, which is the reason the test is run this way at all: revenue per 1,000
+// conversations, read BEFORE the reply rate. A read that wins replies and loses sales
+// is a loss, and at 70/30 that lands on most of the tarot traffic.
 const V1_MAIN_FUNNEL_KEYS: readonly string[] = [
   V1_MAIN_EXPERIMENT_KEY,
   PALM_GATE_EXPERIMENT_KEY,
   V1_BUMP_EXPERIMENT_KEY,
   V1_TAROT_VERSION_EXPERIMENT_KEY,
+  V1_TAROT_SHADOW_EXPERIMENT_KEY,
   V1_CLOSE_DEPTH_EXPERIMENT_KEY,
 ];
 
@@ -171,7 +179,10 @@ const V1_MAIN_FUNNEL_KEYS: readonly string[] = [
 // rather than a hashed email assigned at lead capture. These reach the purchase
 // through conversations.ab_visitor_id, so their denominator is landers rather than
 // leads and their numbers are NOT arm-for-arm comparable with the email-keyed tests.
-const VISITOR_KEYED_V1_MAIN_KEYS: readonly string[] = [V1_TAROT_VERSION_EXPERIMENT_KEY];
+const VISITOR_KEYED_V1_MAIN_KEYS: readonly string[] = [
+  V1_TAROT_VERSION_EXPERIMENT_KEY,
+  V1_TAROT_SHADOW_EXPERIMENT_KEY,
+];
 
 // Only the PRICE test's arms carry a price payload. The commitment gate and the
 // order bump are UI-only tests measured by the same funnel outcome, so their arms

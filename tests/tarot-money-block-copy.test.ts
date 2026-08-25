@@ -128,8 +128,11 @@ describe(`money-block — loaded from ${[...new Set(Object.values(source))].join
   it('every read has the 4-beat shape, the face-DOWN verb and the open loop', () => {
     for (const h of MONEY_HOOKS) for (const c of CARDS) {
       const beats = reads[h][c];
-      expect(beats[0], `${h}/${c} must open on the turned card`).toMatch(/^You turned /);
-      expect(beats[3], `${h}/${c} must keep the open loop`).toMatch(/^Let me look closer at .*…$/);
+      expect(beats[0], `${h}/${c} must name the turned card`).toMatch(/\bYou turned /);
+      if (FAMILIES['money-prayer'].includes(h as never)) {
+        expect(beats[0], `${h}/${c} must tell the truth about the blind choice`).toMatch(/face[- ]down|hidden|conceal|the backs?\b|through the (?:card )?backs?|before seeing|couldn'?t see|could not see|without seeing|gave you no|no picture to (?:follow|guide)|matching backs|selected from/i);
+      }
+      expect(beats[3], `${h}/${c} must keep the open loop`).toMatch(/^(?:Let me|Let's|Now let me|Now let's) (?:look closer at|look at|see) .*…$/);
       for (const beat of beats) {
         expect(beat.trim().length, `${h}/${c} has an empty beat`).toBeGreaterThan(20);
         expect(beat, `${h}/${c} exclamation`).not.toMatch(/!/);
@@ -201,9 +204,62 @@ describe(`money-block — loaded from ${[...new Set(Object.values(source))].join
   // ("did I just leave it too late?") and its bridge has to say it back to her. Restating her
   // ad is allowed; asserting it is not, and an assertion is never a substring of the ad.
   const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9 ]/g, ' ').replace(/\s+/g, ' ').trim();
+
+  // 🔴 THE COMPARISON HAS TO SURVIVE THE PERSON FLIP. Her ad is written in the first person
+
+  // ("Am I ready to love again?") and the bridge says it back in the second ("you are ready to
+
+  // love again"). Counting raw word overlap scored that at 67% and swept a pure quotation.
+
+  // So i/you, my/your and am/are are treated as the same word, and a word matches its own
+
+  // -s/-ing/-ed form ("block" vs the headline's "blocking").
+
+  //
+
+  // ⚠ This changes only whether two forms of the SAME word count as shared. It cannot let a
+
+  // word the headline never contained through, so "anything new is still swept" still holds.
+
+  const PERSON: Record<string, string> = { i: 'you', my: 'your', me: 'you', mine: 'yours', am: 'are', "i'm": "you're" };
+
+  const stem = (w: string) => w.replace(/(ing|ed|s)$/, '');
+
+  const same = (w: string, head: Set<string>) => {
+
+    const forms = new Set([w, PERSON[w] ?? w, stem(w), stem(PERSON[w] ?? w)]);
+
+    for (const h of head) { if (forms.has(h) || forms.has(PERSON[h] ?? h) || forms.has(stem(h)) || forms.has(stem(PERSON[h] ?? h))) return true; }
+
+    return false;
+
+  };
+
+  // 🔴 WIDENED 2026-08-25 (operator: "loosen the checks"). The bridge exemption used to require
+  // the clause to open literally "you asked". The Natural rewrite of the 36 landers says her
+  // question back in several other ways — "You came asking whether…", "What you want to know
+  // is…", "Your question is why…", "You asked me to tell you whether…" — and every one of them
+  // was being read as Evelyn ASSERTING the ad's claim rather than quoting it.
+  //
+  // ⚠ ONLY THE FRAME WIDENED. The 70%-of-content-words test below is untouched, so a clause that
+  // smuggles in anything the headline does not already say is still swept. This exempts quoting
+  // her ad; it has never exempted asserting it.
+  const ASK_FRAME =
+    /^(you asked me to tell you|you (came )?ask(ed|ing)|what you (want to know|came to ask)( is)?|your question (is|was|asks))\b/;
+  const STRIP_FRAME =
+    /^(you asked me to tell you|you (came )?ask(ed|ing)|what you (want to know|came to ask)( is)?|your question (is|was|asks))( me)? ?(if|why|what|how|whether|when|that)? ?/;
   const isRestatement = (clause: string, hook: string) => {
     const c = norm(clause);
-    return c.length > 0 && norm(HEADLINES[hook]).includes(c);
+    if (c.length > 0 && norm(HEADLINES[hook]).includes(c)) return true;
+    // 🔴 BRIDGE EXEMPTION, added 2026-08-25 alongside the Natural rewrite. Same rule the love
+    // families use: a clause that quotes her ad question back is not Evelyn asserting it.
+    // Frame + 70% of content words from the headline; anything NEW is still swept.
+    if (!ASK_FRAME.test(c)) return false;
+    const head = new Set(norm(HEADLINES[hook]).split(' '));
+    const mine = c.replace(STRIP_FRAME, '').split(' ').filter(Boolean);
+    if (!mine.length) return false;
+    const shared = mine.filter((w) => same(w, head));
+    return shared.length / mine.length >= 0.7;
   };
 
   const sweep = (bans: Array<[RegExp, string]>, hooks: readonly string[] = MONEY_HOOKS) => {
@@ -289,9 +345,9 @@ describe(`money-block — loaded from ${[...new Set(Object.values(source))].join
     expect(hits, `too late / promised arrival:\n${hits.join('\n')}`).toEqual([]);
   });
 
-  // 🔴🔴 BAN 6 — money-prayer only, and it exists nowhere else on the funnel. Both directions
-  // are rulings, and neither is a card's to make. Evelyn never stands between her and what she
-  // prays to.
+  // 🔴🔴 BAN 6 — money-prayer only, and it exists nowhere else on the funnel. Prayer may be
+  // named naturally; what stays forbidden is divine authority in either direction. Evelyn
+  // never stands between the woman and her faith.
   it('money-prayer never rules on God, in either direction', () => {
     const hits = sweep([
       [/\byour prayers (were|have been|are) (heard|answered|unanswered|ignored|refused)\b/i, 'rules on her prayers'],
@@ -328,8 +384,8 @@ describe(`money-block — loaded from ${[...new Set(Object.values(source))].join
     'cards-my-energy': [/never been the block|isn't wrong|still fresh|under weight/i, 'her energy is not the block'],
     'cards-money-wont-stay': [/getting has always worked|two different doors|hold of it|built to hold/i, 'the getting works; the keeping is the question'],
     'cards-energy-how-long': [/never once did|settled long ago|running against you|bare field/i, 'nothing has been running against her'],
-    'cards-prayed-years': [/don't read prayers|won't say what your prayers|won't speak for|ordinary|plain thing|everyday|day to day/i, 'the block is an ordinary thing'],
-    'cards-prayers-unanswered': [/hold is not a refusal|waits on permission|long quiet|won't call this answered/i, 'a long quiet is not a refusal'],
+    'cards-prayed-years': [/\bprayer isn't (?:what (?:blocked|stopped) this|the blockage here)\b/i, 'prayer may be named; the blockage stays outside it'],
+    'cards-prayers-unanswered': [/\byears (?:you've prayed|of prayer)\b|\bcan't turn (?:this card|this road) into a length\b/i, 'acknowledges the prayer and refuses duration without ruling on it'],
   };
   it('every hook lands on its OWN finding', () => {
     for (const h of MONEY_HOOKS) {
@@ -337,5 +393,36 @@ describe(`money-block — loaded from ${[...new Set(Object.values(source))].join
       const joined = CARDS.map((c) => reads[h][c][2]).join(' ');
       expect(re.test(joined), `${h} lost its finding — ${what}`).toBe(true);
     }
+  });
+
+  it('the runtime prompt allows prayer language but still forbids divine authority', async () => {
+    const { buildTarotReflectPrompt } = await import('../server/lib/prompts');
+    const userData = {
+      firstName: 'Test', email: null, bucket: null, subBucket: null, personName: null,
+      concern: null, desires: null, location: null, timeOfDay: null, objectionCount: 0,
+    } as Parameters<typeof buildTarotReflectPrompt>[0];
+
+    for (const h of FAMILIES['money-prayer']) {
+      const prompt = buildTarotReflectPrompt(
+        userData,
+        DECK,
+        h,
+        'a',
+        'I have prayed about this money for years and nothing has changed.',
+      );
+      expect(prompt, `${h} must allow prayer language`).toContain('PRAYER IS ALLOWED LANGUAGE; DIVINE AUTHORITY IS NOT');
+      expect(prompt, `${h} must permit acknowledgement`).toMatch(/Speak plainly about the prayer she described/);
+      expect(prompt, `${h} must still forbid divine rulings`).toMatch(/Never say her prayers were heard, answered, unheard, ignored or refused/);
+      expect(prompt, `${h} must keep the cards below her faith`).toMatch(/never place Evelyn or the cards above, against, or between her and her faith/);
+    }
+
+    const ordinaryMoneyPrompt = buildTarotReflectPrompt(
+      userData,
+      DECK,
+      'cards-money-wont-stay',
+      'a',
+      'It comes close and then disappears.',
+    );
+    expect(ordinaryMoneyPrompt).not.toContain('PRAYER IS ALLOWED LANGUAGE');
   });
 });

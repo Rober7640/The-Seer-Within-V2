@@ -1,0 +1,34 @@
+{
+  "hook": "cards-prayers-unanswered",
+  "headline": "How long will my prayers for money keep going unanswered?",
+  "method": "inherited-shadow",
+  "note": "FRAME: money — the strictest guard on the funnel. No amount, no date, no source, no financial advice, never blames her, never 'too late', never presumes she is broke.\n\n🔴 Beat 4 says the money has not LANDED or not STAYED — never that she has none.\n\n⚠ NO FAMILY-LINE LANGUAGE anywhere in the read.\n\n✝ CARRIES A BAN THAT EXISTS NOWHERE ELSE ON THE FUNNEL: never rule on God, in either direction.\n\n🔴 THE HARDEST ONE ON THE FAMILY. The ad ASSERTS her prayers go unanswered and asks how much longer. Confirming it rules on God; denying it rules on God; giving a length breaks the duration ban. The read does none of the three — it declines the verdict and names what the cards DO show: a hold.\n\nFINDING: 'a long quiet is not a refusal' — beat 5a 'a long quiet', beat 5b 'a hold is not a refusal'.",
+  "decks": {
+    "return-mhf": {
+      "a": [
+        "You turned the Magician. Nothing marked them apart, and you took the one who came ready.",
+        "Look at his table. Four things laid out, none of them put back.",
+        "You asked how much longer your prayers will go unanswered. What catches me is that all four sit within reach.",
+        "And yet it hasn't landed. And what you want from me is a number.",
+        "Something turns up just as it would come through. I don't think it started with you.",
+        "Let me look closer at what's behind this…"
+      ],
+      "b": [
+        "You turned the Hanged Man. The backs told you nothing, and yours was held by a single rope.",
+        "Look at the rope. One ankle, and the rest of him hangs loose.",
+        "You asked how much longer your prayers will go unanswered. This card makes me look at one rope taking all the weight.",
+        "Still, it hasn't come through. And the quiet has gone on.",
+        "The hold is steady — it doesn't tighten and it doesn't ease. I don't think any of it began with you.",
+        "Let me look closer at what's holding this…"
+      ],
+      "c": [
+        "You turned the Fool. Face down, all three, and yours was the one in full sun.",
+        "Look at the sky behind him. It's gold, without a cloud in it.",
+        "You asked how much longer your prayers will go unanswered. This card brings me to a gold sky with no cloud in it.",
+        "But it hasn't landed. And you're the one still asking how long.",
+        "Something sits right where it would arrive. I don't think it began with you.",
+        "Let me look closer at what's standing there…"
+      ]
+    }
+  }
+}

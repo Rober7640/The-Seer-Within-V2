@@ -1,35 +1,35 @@
 {
   "hook": "cards-prayed-years",
   "headline": "I've prayed about money for years. What's still blocking it?",
-  "note": "🆕 TRACK B — the first NON-LOVE family on /fb-tarot. Face-down return-mhf, no new art. Written 2026-08-19 straight to the Natural Tarot-Cut framework, so bubbles 3-6 run as ONE causal chain (so / and / but / that's why). Money translation: cut 3 answers her fear about HERSELF (\"it was never you\"), cut 4 says where the thing in the way actually sits, cut 5 is EARNING against KEEPING, cut 6 is the NEAR-MISS.\n\n🔴 SEVEN BANS, three of which exist nowhere else on the funnel, and NONE was loosened with the love families. No amount, no date, no SOURCE (no inheritance, no windfall, no legal case — she can act on an invented source with her actual savings). 🔴🔴 Never name a person as the block: the accusation lands on someone real inside a real family. 🔴🔴 No financial advice in any form — invest, sell, hold, take the pension, delay it, go back to work, stop working. This is the one ban where the harm is measured in her money. 🔴🔴 Never blame her: no poverty mindset, no 'you attract lack', no vibration, no deserving. 🔴 Never 'too late' and never a promised arrival. 🔴 Never presume the state of her finances — she said blocked, not broke.\n\n📊 Built on the NEAR-MISS, not on poverty — docs/v1-money-bucket-voc.md §3 says so outright ('The near-miss is the hook, not the poverty'): \"I sometimes feel I am close to money only to have it vanish\", \"Everything appears to be reaching me but doesn't\". That clears ban 7 for free.\n\n✅ GUARDED: tests/tarot-money-block-copy.test.ts now exists and runs against these drafts directly (the drafts setup can only patch hooks that are already in the registry, so an unwired family would otherwise be checked by nothing at all).\n\nTendency: what is in the way is an ordinary thing in her own life, findable and nameable. 🔴🔴 NEVER say whether her prayers were heard or answered, never that she is being tested, taught, punished or refused, never speak for God, and never set the cards above or against her faith.",
+  "note": "🆕 TRACK B — the first NON-LOVE family on /fb-tarot. Face-down return-mhf, no new art. Written to the Natural Tarot-Cut framework: seven spoken cuts, with cut 3 giving the card-warranted answer and cuts 4-6 carrying the unresolved tension forward.\n\n🔴 MONEY SAFETY: no amount, date or source; no person named as the block; no financial advice; no blame, mindset, vibration, deserving or self-sabotage; no 'too late' and no promised arrival; no invented state of her finances.\n\n🙏 PRAYER POLICY: prayer is allowed language; divine authority is not. Evelyn may acknowledge the prayer, the years spent praying and the change the woman has not seen. When the card supports it, she may say prayer is not the blockage. She never says whether a prayer was heard, answered, ignored or refused; explains God's actions, plan or timing; promises an answer; or places the cards above, against or between the woman and her faith.\n\n✅ GUARDED: tests/tarot-money-block-copy.test.ts reads this draft directly while it remains unwired.",
   "decks": {
     "return-mhf": {
       "a": [
-        "You turned the Magician, dear. Look — the ground he stands on is flowers, not stone.",
-        "You asked what is still blocking it. Your hand went to the card of things you can touch.",
-        "So I don't read prayers, dear. That isn't mine to read.",
-        "And this card points at something plainer, dear. Something down here.",
-        "But a plain thing has stood between the work and the result, dear.",
-        "That's why it has gone on so long, dear. Nobody ever named the thing.",
-        "Let me look closer at what is standing there…"
+        "All three were face down. You turned the Magician — look at the cup, coin, blade and wand laid out on his table.",
+        "You've prayed about this money for years. Every tool on the table is ready.",
+        "Your prayer isn't what blocked this.",
+        "The card keeps my attention on those ready tools, dear.",
+        "Every tool is ready, but the money is still blocked.",
+        "Years of prayer haven't changed that blockage.",
+        "Let me look closer at what keeps the money blocked when the tools are ready…"
       ],
       "b": [
-        "You turned the Hanged Man, dear. Look — his free foot rests against the tied leg.",
-        "You've prayed for years, dear. Your hand went to the card of a long quiet.",
-        "So I won't say what your prayers were met with, dear. That's yours.",
-        "And no card of mine ranks above what you pray to, dear. None.",
-        "But something in your day to day is held, dear.",
-        "That's why the quiet has felt like an answer, dear. A hold isn't one.",
-        "Let me look closer at what has been held…"
+        "You couldn't see the cards when you chose. You turned the Hanged Man — see his calm face, even with one ankle tied above him.",
+        "You've prayed about this money for years. One rope is holding the whole figure still.",
+        "Prayer isn't the blockage here.",
+        "My eye keeps coming back to that one rope.",
+        "His body has room to move. That ankle doesn't.",
+        "You've been asking for years, and the money is still blocked.",
+        "Let me see what's had hold of that one point…"
       ],
       "c": [
-        "You turned the Fool, dear. Look — there's nothing behind him on the path he came along.",
-        "You asked what is still blocking the money. Your hand went to the card of an open road.",
-        "So I won't speak for what you pray to, dear. The Fool speaks of the road.",
-        "And the way ahead is still open, dear, and still unwritten.",
-        "But what has held this up is lying in the road, dear.",
-        "That's why it has felt like a verdict on you, dear. It's an object.",
-        "Let me look closer at what is lying in it…"
+        "The backs told you nothing. You turned the Fool — notice the bundle on his stick, small enough to carry.",
+        "You've prayed for years, and the money is still blocked. The Fool carries one small bundle and keeps moving.",
+        "Your prayer isn't what stopped this.",
+        "The road is open. The card doesn't show where the money gets held.",
+        "The Fool is moving, but the money is still blocked.",
+        "Years of prayer haven't moved that blockage.",
+        "Now let's look at what's holding the money still…"
       ]
     }
   }

@@ -1,0 +1,41 @@
+{
+  "hook": "cards-second-time",
+  "headline": "How long does it take to find a soulmate the second time?",
+  "method": "inherited-shadow",
+  "note": "FRAME: soulmate x age band. NO MAN EXISTS YET — she asks WHEN or WHETHER. Must not fall through to decode-him.\n🔴 THE AGE BAND LIVES IN THE AD SET, NEVER IN THE COPY. No age, no number, no life-stage.\n🔴 NO DURATION, forward or back — 'not much longer' is a LENGTH, and a length is not a date.\n⚠ SHE is the subject of beats 3-6; the male figure is described in beats 1-2 and retired there.\n⚠ NO FAMILY-LINE LANGUAGE anywhere in the read.\n\n🔴 A LENGTH IS BANNED AND SHE IS ASKING FOR ONE. The read says no length was ever set, which is true and is the only answer available.\n⚠ 'The second time' implies a first that ended. The read never asks about it and never rules on it.",
+  "readback": {
+    "1 would a person say this": "Yes. 'And it's stayed like that' is plain speech.",
+    "2 is every noun real": "The same four objects laid out again, the calm face, the fresh flower — all on the card.",
+    "3 anything she could catch me getting wrong": "No. Beat 4 says nobody has come and she has had nothing to go on. Neither is a count or a life-fact.",
+    "4 does the symbol prove the line at a glance": "Yes. The same four things laid out ready proves 'you can do it again' with nothing to explain.",
+    "5 does the card mean what TAROT_CARD_VOCAB says": "Yes."
+  },
+  "decks": {
+    "return-mhf": {
+      "a": [
+        "You turned the Magician. You reached without knowing, and you took the one with nothing put away.",
+        "Look at his table. Every tool is out, and the table stands on open grass.",
+        "You asked how long it takes the second time. The thing I keep looking at is the table, still laid out.",
+        "And yet nobody has come. And what you want from me is how long.",
+        "Something sits in front of this, between you and it. I don't think it began with you.",
+        "Let me look closer at what that is…"
+      ],
+      "b": [
+        "You turned the Hanged Man. Nothing showed you which was which, and yours was the card still growing.",
+        "Look at the wood he hangs from. There are green leaves on it.",
+        "You asked how long it takes the second time. Living wood, with a rope on it.",
+        "Still, nobody has come. And the number you want is the whole of your question.",
+        "Something shows up at the moment things would settle. I don't think this began with you.",
+        "Let me look closer at what's holding this…"
+      ],
+      "c": [
+        "You turned the Fool. The backs gave nothing away, and you chose the one travelling light.",
+        "Look at the bundle on his stick. That's the whole of what he carries.",
+        "You asked how long it takes the second time. A start already made — that's what this card shows me.",
+        "But nobody has come. And you're still the one asking for a number.",
+        "Whatever holds this holds it evenly, with no give in it. I don't think it started with you.",
+        "Let me look closer at what's holding it…"
+      ]
+    }
+  }
+}

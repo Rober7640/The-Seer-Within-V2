@@ -1,0 +1,34 @@
+{
+  "hook": "cards-energy-soulmate",
+  "headline": "What does my energy say about my soulmate?",
+  "method": "inherited-shadow",
+  "note": "FRAME: soulmate x keyword. NO PARTICULAR MAN EXISTS — the read must not fall through to decode-him.\n\n🔴 The ad already tells her she is the problem, which is the best fit on the funnel for this method: the card acquits her, and the block is what is left.\n\n⚠ SHE is the subject of beats 3-6. The return-mhf figures are all male, so he is DESCRIBED in beats 1-2 and retired there — never given intent or motion toward her, or a soulmate lander turns into reunion copy.\n\n⚠ NO FAMILY-LINE LANGUAGE anywhere in the read.\n\n⚠ The softest ad in the family — it does not assert a block, it asks for a reading. So beat 3 answers the question straight (what her energy says) and beat 5 still earns the block off beat 4.",
+  "decks": {
+    "return-mhf": {
+      "a": [
+        "You turned the Magician. Nothing showed through, and you took the one with nothing put away.",
+        "Look at his table. It's out in the open, and all of it is in reach.",
+        "You asked what your energy says about your soulmate. The thing I keep looking at is how much of this card is ready to hand.",
+        "And yet nobody has come. And it's your own side of it you're asking about.",
+        "Something stands in the space between, close in. I don't think it started with you.",
+        "Let me look closer at what it is…"
+      ],
+      "b": [
+        "You turned the Hanged Man. The backs gave nothing away, and yours was the card still growing.",
+        "Look at the wood he hangs from. Green leaves, on living wood.",
+        "You asked what your energy says about your soulmate. This card makes me look at something alive with a rope on it.",
+        "Still, nobody has come. And the reading you want is of your own side.",
+        "Something comes in just as things would move. I don't think any of it began with you.",
+        "Let me look closer at what's holding this…"
+      ],
+      "c": [
+        "You turned the Fool. You couldn't see the faces, and you chose the one already on his way.",
+        "Look at his feet. One is lifted, the other still down.",
+        "You asked what your energy says about your soulmate. The movement here has already started.",
+        "But nobody has come. And you're the one asking what your part of it says.",
+        "The hold here is light, and it doesn't loosen. I don't think it began with you.",
+        "Let me look closer at what's holding this…"
+      ]
+    }
+  }
+}

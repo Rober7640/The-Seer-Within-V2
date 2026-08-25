@@ -581,7 +581,8 @@ if (wired.length) console.log(`\nalready wired, not re-checked: ${wired.join(' �
 for (const [deck, reads] of Object.entries(byDeck)) {
   const cfg = (DECKS as any)[deck]
   if (!cfg) { bad(`unknown deck ${deck}`); continue }
-  const openVerb = cfg.facing === 'up' ? 'You chose ' : 'You turned '
+  const opensOnCard = cfg.facing === 'up' ? /^You chose / : /\bYou turned /
+  const openLoop = /^(?:Let me (?:look closer|see)|Now (?:let me|let's)|Let's look) .*…$/
   console.log(`\n${'═'.repeat(76)}\n${deck} — ${reads.length} draft(s), cards face ${cfg.facing.toUpperCase()}`)
 
   for (const { hook, beats } of reads) {
@@ -589,8 +590,8 @@ for (const [deck, reads] of Object.entries(byDeck)) {
       const b = beats[i], tag = `${hook}/${CARDS[i]}`
       if (b.length !== 4) bad(`${tag} not 4 beats`)
       for (const x of b) if (x.trim().length <= 20) bad(`${tag} a beat is <=20 chars`)
-      if (!b[0].startsWith(openVerb)) bad(`${tag} beat 1 must start "${openVerb}" (facing ${cfg.facing})`)
-      if (!/^Let me look closer at .*…$/.test(b[3])) bad(`${tag} beat 4 breaks the open loop`)
+      if (!opensOnCard.test(b[0])) bad(`${tag} beat 1 must name the card she ${cfg.facing === 'up' ? 'chose' : 'turned'} (facing ${cfg.facing})`)
+      if (!openLoop.test(b[3])) bad(`${tag} beat 4 breaks the open loop`)
       for (const x of b) {
         if (/!/.test(x)) bad(`${tag} exclamation mark`)
         if (/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/u.test(x)) bad(`${tag} emoji`)

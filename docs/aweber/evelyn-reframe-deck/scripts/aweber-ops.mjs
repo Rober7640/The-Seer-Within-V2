@@ -6,26 +6,32 @@
 //   node aweber-ops.mjs cancel <id> [<id>...] # cancel scheduled broadcasts -> draft (recoverable)
 //   node aweber-ops.mjs schedule <buildDir>   # create + schedule every entry in <buildDir>/index.json
 //                                             # (each needs a non-null scheduled_for)
+//                                             # -> goes to EVERY list in AWEBER_DAILY_LIST_IDS
+//   node aweber-ops.mjs replicate [--dry-run] # copy the source list's scheduled broadcasts onto the
+//                                             # other AWEBER_DAILY_LIST_IDS lists (same bytes, same time)
+//
+// `list` and `cancel` take an optional --list=<id> (default: AWEBER_LIST_ID).
 import fs from 'node:fs';
 import path from 'node:path';
-import { api, BASE, listId } from './aweber-lib.mjs';
+import { api, BASE, listId, dailyListIds, listBase } from './aweber-lib.mjs';
 
 const idOf = (e) => e.broadcast_id || (e.self_link || '').split('/').pop();
 
-async function list(status = 'scheduled') {
-  const r = await api('GET', `${BASE}/broadcasts?status=${status}&ws.size=100`);
+async function list(status = 'scheduled', which = listId) {
+  const r = await api('GET', `${listBase(which)}/broadcasts?status=${status}&ws.size=100`);
   if (!r.ok) { console.error('list failed', r.status, r.text.slice(0, 300)); process.exit(1); }
   const rows = (r.json.entries || []).map(e => ({ id: idOf(e), when: e.scheduled_for, subject: e.subject }))
     .sort((a, b) => String(a.when).localeCompare(String(b.when)));
-  console.log(`list ${listId} status=${status}: ${rows.length}`);
+  console.log(`list ${which} status=${status}: ${rows.length}`);
   for (const s of rows) console.log(`  ${String(s.when).slice(0, 16)}  id=${s.id}  ${(s.subject || '').replace(/\{\{[^}]*\}\}/, '{name}').slice(0, 56)}`);
 }
 
-async function cancel(ids) {
+async function cancel(ids, which = listId) {
+  const base = listBase(which);
   for (const id of ids) {
-    let r = await api('POST', `${BASE}/broadcasts/${id}/cancel`);
-    if (!r.ok) r = await api('POST', `${BASE}/broadcasts/${id}/cancel`, { form: {} });
-    const g = await api('GET', `${BASE}/broadcasts/${id}`);
+    let r = await api('POST', `${base}/broadcasts/${id}/cancel`);
+    if (!r.ok) r = await api('POST', `${base}/broadcasts/${id}/cancel`, { form: {} });
+    const g = await api('GET', `${base}/broadcasts/${id}`);
     const st = g.ok ? g.json.status : `GET ${g.status}`;
     console.log(`cancel id=${id}  http=${r.status}  now=${st}`);
     if (st !== 'draft') { console.error(`STOP: id ${id} did not become draft.`); process.exit(1); }
@@ -113,29 +119,124 @@ async function preflight(index) {
   console.log(`preflight: ${short.length} short link(s) verified live against ${SITE_BASE}.`);
 }
 
+// Create + schedule one broadcast per (email x list). Every list in
+// `dailyListIds` gets its own copy: AWeber broadcasts belong to exactly one
+// list, so reaching N audiences means N broadcasts of the same bytes.
+async function scheduleOne(base, e, buildDir, label) {
+  const c = await api('POST', `${base}/broadcasts`, { form: {
+    subject: e.subject,
+    body_html: fs.readFileSync(path.join(buildDir, e.html_file), 'utf8'),
+    body_text: fs.readFileSync(path.join(buildDir, e.text_file), 'utf8'),
+    click_tracking_enabled: 'true',
+  }});
+  if (!c.ok) { console.error(`create #${e.num} [${label}] failed`, c.status, c.text.slice(0, 200)); process.exit(1); }
+  const id = (c.location || c.json.self_link).split('/').pop();
+  const s = await api('POST', `${base}/broadcasts/${id}/schedule`, { form: { scheduled_for: e.scheduled_for } });
+  if (!s.ok) { console.error(`schedule #${e.num} [${label}] failed`, s.status, s.text.slice(0, 200)); process.exit(1); }
+  const g = await api('GET', `${base}/broadcasts/${id}`);
+  console.log(`#${e.num}  list=${label}  id=${id}  status=${g.json.status}  when=${g.json.scheduled_for}`);
+  if (g.json.status !== 'scheduled') { console.error(`STOP: #${e.num} [${label}] not scheduled.`); process.exit(1); }
+  return id;
+}
+
 async function schedule(buildDir) {
   const index = JSON.parse(fs.readFileSync(path.join(buildDir, 'index.json'), 'utf8'));
   await preflight(index);
+  const targets = dailyListIds.length ? dailyListIds : [listId];
+  console.log(`scheduling to ${targets.length} list(s): ${targets.join(', ')}`);
+  let n = 0;
   for (const e of index) {
-    const c = await api('POST', `${BASE}/broadcasts`, { form: {
-      subject: e.subject,
-      body_html: fs.readFileSync(path.join(buildDir, e.html_file), 'utf8'),
-      body_text: fs.readFileSync(path.join(buildDir, e.text_file), 'utf8'),
-      click_tracking_enabled: 'true',
-    }});
-    if (!c.ok) { console.error(`create #${e.num} failed`, c.status, c.text.slice(0, 200)); process.exit(1); }
-    const id = (c.location || c.json.self_link).split('/').pop();
-    const s = await api('POST', `${BASE}/broadcasts/${id}/schedule`, { form: { scheduled_for: e.scheduled_for } });
-    if (!s.ok) { console.error(`schedule #${e.num} failed`, s.status, s.text.slice(0, 200)); process.exit(1); }
-    const g = await api('GET', `${BASE}/broadcasts/${id}`);
-    console.log(`#${e.num}  id=${id}  status=${g.json.status}  when=${g.json.scheduled_for}`);
-    if (g.json.status !== 'scheduled') { console.error(`STOP: #${e.num} not scheduled.`); process.exit(1); }
+    for (const t of targets) { await scheduleOne(listBase(t), e, buildDir, t); n++; }
   }
-  console.log(`scheduled ${index.length} broadcasts.`);
+  console.log(`scheduled ${n} broadcasts (${index.length} email(s) x ${targets.length} list(s)).`);
 }
 
-const [cmd, ...args] = process.argv.slice(2);
-if (cmd === 'list') await list(args[0]);
-else if (cmd === 'cancel') await cancel(args);
+// Copy the broadcasts already scheduled on `from` onto every other daily list,
+// preserving subject, both bodies and the exact send time. Used once, to fold
+// the ad-funnel lists into a rotation that was already queued on the shared list.
+async function replicate({ from = listId, dryRun = false, only = null } = {}) {
+  let targets = dailyListIds.filter(id => id !== from);
+  if (only) targets = targets.filter(id => only.includes(id));
+  if (!targets.length) { console.error('no target lists: set AWEBER_DAILY_LIST_IDS'); process.exit(1); }
+  const r = await api('GET', `${listBase(from)}/broadcasts?status=scheduled&ws.size=100`);
+  if (!r.ok) { console.error('read source failed', r.status, r.text.slice(0, 300)); process.exit(1); }
+  const src = [];
+  for (const e of (r.json.entries || [])) {
+    const d = await api('GET', `${listBase(from)}/broadcasts/${idOf(e)}`);
+    if (!d.ok) { console.error('read broadcast failed', idOf(e), d.status); process.exit(1); }
+    src.push(d.json);
+  }
+  src.sort((a, b) => String(a.scheduled_for).localeCompare(String(b.scheduled_for)));
+  console.log(`source list ${from}: ${src.length} scheduled`);
+  console.log(`targets: ${targets.join(', ')}  =>  ${src.length * targets.length} new broadcast(s)`);
+  for (const b of src) {
+    console.log(`  ${String(b.scheduled_for).slice(0, 16)}  ${(b.subject || '').replace(/\{\{[^}]*\}\}/, '{name}').slice(0, 58)}`);
+  }
+  if (dryRun) { console.log('\nDRY RUN — nothing written.'); return; }
+  if (!src.length) { console.log('nothing to replicate.'); return; }
+
+  // Idempotency: a list that already carries this exact subject at this exact
+  // send time is skipped. Re-running after adding lists to AWEBER_DAILY_LIST_IDS
+  // must not double-book the lists that were already filled.
+  // A scan that FAILS must never be read as "this list has nothing scheduled" —
+  // that is exactly how duplicates get created. Any read error here is fatal.
+  const already = new Map();
+  for (const t of targets) {
+    const r2 = await api('GET', `${listBase(t)}/broadcasts?status=scheduled&ws.size=100`);
+    if (!r2.ok) {
+      console.error(`STOP: cannot read scheduled broadcasts for list ${t} (${r2.status}).`);
+      console.error('Refusing to continue — an unreadable list cannot be checked for duplicates.');
+      process.exit(1);
+    }
+    const seen = new Set();
+    for (const e of (r2.json.entries || [])) {
+      const d = await api('GET', `${listBase(t)}/broadcasts/${idOf(e)}`);
+      if (!d.ok) {
+        console.error(`STOP: cannot read broadcast ${idOf(e)} on list ${t} (${d.status}).`);
+        process.exit(1);
+      }
+      seen.add(`${d.json.subject}|${d.json.scheduled_for}`);
+    }
+    already.set(t, seen);
+    console.log(`  [${t}] already scheduled: ${seen.size} — those will be skipped`);
+  }
+
+  let n = 0, skipped = 0;
+  const failed = [];
+  for (const b of src) {
+    for (const t of targets) {
+      if (already.get(t).has(`${b.subject}|${b.scheduled_for}`)) { skipped++; continue; }
+      const c = await api('POST', `${listBase(t)}/broadcasts`, { form: {
+        subject: b.subject,
+        body_html: b.body_html,
+        body_text: b.body_text,
+        click_tracking_enabled: 'true',
+      }});
+      if (!c.ok) { console.error(`  create [${t}] FAILED ${c.status} ${c.text.slice(0, 120)}`); failed.push(`${t}:create`); continue; }
+      const id = (c.location || c.json.self_link).split('/').pop();
+      const sc = await api('POST', `${listBase(t)}/broadcasts/${id}/schedule`, { form: { scheduled_for: b.scheduled_for } });
+      if (!sc.ok) { console.error(`  schedule [${t}] id=${id} FAILED ${sc.status} ${sc.text.slice(0, 120)}`); failed.push(`${t}:schedule:${id}`); continue; }
+      const g = await api('GET', `${listBase(t)}/broadcasts/${id}`);
+      if (!g.ok || g.json.status !== 'scheduled') { console.error(`  [${t}] id=${id} did NOT reach scheduled`); failed.push(`${t}:verify:${id}`); continue; }
+      console.log(`  list=${t} id=${id} when=${g.json.scheduled_for}  OK`);
+      n++;
+    }
+  }
+  console.log(`replicated ${n}, skipped ${skipped} (already present), failed ${failed.length}.`);
+  if (failed.length) {
+    console.error('FAILURES:', failed.join(', '));
+    console.error('An empty list cannot take a broadcast — that is the usual cause. Re-run after fixing; existing copies are skipped.');
+    process.exitCode = 1;
+  }
+}
+
+const argv = process.argv.slice(2);
+const flag = (name) => argv.find(a => a.startsWith(`--${name}=`))?.split('=')[1];
+const has = (name) => argv.includes(`--${name}`);
+const [cmd, ...args] = argv.filter(a => !a.startsWith('--'));
+const whichList = flag('list') || listId;
+if (cmd === 'list') await list(args[0], whichList);
+else if (cmd === 'cancel') await cancel(args, whichList);
 else if (cmd === 'schedule') await schedule(path.resolve(args[0]));
+else if (cmd === 'replicate') await replicate({ from: flag('from') || listId, dryRun: has('dry-run'), only: flag('only')?.split(',').map(x => x.trim()).filter(Boolean) || null });
 else { console.error('usage: aweber-ops.mjs list [status] | cancel <id...> | schedule <buildDir>'); process.exit(2); }

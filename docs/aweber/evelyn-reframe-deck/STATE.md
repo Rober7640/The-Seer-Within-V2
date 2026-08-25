@@ -2,7 +2,9 @@
 
 Rolling state for the reframe deck. **Update after every email.** This is how the next writer (or a future skill) sees what's been used and keeps the rotation, the balance, and the no-repeats honest. See [PLAYBOOK.md](PLAYBOOK.md) for the rules this table enforces.
 
-List: `theseerwithin_free` (6936953). Daily slot: 6:30pm SGT = 10:30 UTC. Subjects personalize with `{{ subscriber.first_name | capitalize }}`; bodies keep "dear".
+Lists (since 2026-08-20): **thirteen**, set in `AWEBER_DAILY_LIST_IDS` — free (`theseerwithin_free` 6936953, `_palm` 6963143, `_tarot` 6970613, `_fb` 6963139, `_fb2` 6963141), paid (`theseerwithin_paid` 6936955, `_money_ob_paid` 6969209, `_upsell_paid` 6937139, `_upsell2_paid` 6939683) and soulmate (`_soulmate_free` 6956485, `_soulmate_paid` 6956486, `_soulmate_upsell1` 6956488, `_soulmate_upsell2` 6956490). `_gdn` excluded (empty). Each email = one broadcast per list, so a 10-email cycle writes 130 broadcasts. Daily slot: 6:30pm SGT = 10:30 UTC. Subjects personalize with `{{ subscriber.first_name | capitalize }}`; bodies keep "dear".
+
+⚠ **Heavy overlap, no cross-list dedupe.** Measured 2026-08-20 (spread samples): all four paid lists are **100%** already on a mailed free list — they add **zero** reach and only extra copies; a buyer on free+palm with the bump and both upsells gets each daily **6x**. `soulmate_free` 68% covered (~197 genuinely new), `_fb` 15 people, `_fb2` empty. The operator was shown these numbers and chose to wire every list anyway. **If open rates fall or complaints rise, the paid lists are the first thing to pull** — `node aweber-ops.mjs cancel <id> --list=<listid>`.
 
 ## Sends log
 

@@ -111,6 +111,24 @@ technical ones.
 | `/terms` | Terms of service |
 | `/refund` | Refund policy |
 
+### Quiz-Bridge Ad Funnels
+
+**Where the Facebook ad traffic actually lands.** Both are param-driven — one page, many landers —
+so a "lander" is a registry entry, never a new route.
+
+| Route | Description |
+|-------|-------------|
+| `/fb-tarot/b` | Tarot "card pull" bridge. She taps 1 of 3 cards, gets a reading, hands into `/chat`. **104 landers** across money / soulmate / decode-him categories |
+| `/fb-tarot/c` | 302-redirects to `/fb-tarot/b` — old ad URLs that cannot be edited without losing engagement |
+| `/fb-palm` | Palm-reading quiz bridge. Same shape, a physical "sign" instead of a card |
+
+- **Tarot docs:** `fb-tarot/docs/` — start at `lander-registry.md` (every lander by category,
+  generated) and `STATUS.md` (the card decks). Copy is written to one of two methods:
+  `natural-tarot-cut.md` or `inherited-shadow-cut.md`.
+- **Palm docs:** `fb-palm/docs/` — `PRD-quiz-bridge.md`.
+- **Skills:** `fb-tarot-hooks` (new questions), `fb-tarot-add-card` (new card art),
+  `fb-palm-add-sign`, `fb-palm-hooks`.
+
 ### Multi-Persona Chat Service
 **Entry Point:** `/login`
 

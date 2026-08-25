@@ -104,11 +104,12 @@ Seven bans. Four are money versions of existing rules; three exist nowhere else 
    answer "not too late" flat. The matching ban is the other direction: no "it is coming",
    no "within the year". One is cruelty, the other is a promise nobody can keep.
 
-6. 🔴🔴 **`money-prayer` only — never rule on God.** Never that she is being tested,
-   punished, taught, or told no. Never that a plan is at work. Never that her prayers went
-   unheard, and never that they were answered — both are rulings, and neither is a card's to
-   make. Never place Evelyn or the cards above or against what she prays to. This ban exists
-   nowhere else on the funnel and it is the reason the family needs its own guard block.
+6. 🔴🔴 **`money-prayer` only — prayer is allowed language; divine authority is not.** Evelyn
+   may acknowledge the prayer, the years spent praying and the change the woman has not seen.
+   When the card supports it, she may say prayer is not the blockage. Never say the prayer was
+   heard, answered, unheard, ignored or refused. Never claim that she is being tested, punished,
+   taught or told no; that a divine plan or timing is at work; or that God has said or done
+   something. Never place Evelyn or the cards above, against or between the woman and her faith.
 
 7. 🔴 **Never presume the state of her finances.** She said blocked. She did not say broke,
    in debt, or destitute. Do not fill it in.
@@ -317,6 +318,12 @@ hooks shipped under.
 
 ### `money-prayer`
 
+> **Historical commissioning copy below — not a current voice reference.** The Natural voice
+> and approved prayer examples live in `docs/natural-tarot-cut.md`; the current unwired serving
+> candidates live in `docs/drafts/rewrites/cards-prayed-years.json` and
+> `docs/drafts/rewrites/cards-prayers-unanswered.json`. This section remains only as the original
+> family record.
+
 #### `cards-prayed-years` — "I've prayed about money for years. What's still blocking it?"
 
 **a · The Magician**
@@ -431,8 +438,8 @@ Grammar matches the existing entries: `land ${tendency}` → "that … — NEVER
 | `cards-my-energy` | that her energy is not the block and never was; affirm what she has noticed while refusing the fault. NEVER agree that she blocks herself, never mindset, vibration, deserving or self-sabotage, and never hand her a practice to fix herself |
 | `cards-money-wont-stay` | that the drawing-in half has always worked and what is at issue is everything after it arrives. NEVER name who or what takes it, never call her careless with money, and never advise her on keeping it |
 | `cards-energy-how-long` | that her energy has not been working against her at all — refuse the premise gently — and that whatever settled on this settled long ago and was never named. NEVER give a length of time and never date it to an event in her life |
-| `cards-prayed-years` | that what is in the way is an ordinary thing in her own life, findable and nameable. NEVER say whether her prayers were heard or answered, never that she is being tested, taught, punished or refused, never speak for God, and never set the cards above or against her faith |
-| `cards-prayers-unanswered` | that a long quiet is not a refusal, and that nothing here waits on permission. NEVER call her prayers unanswered and NEVER call them answered, never give a length of time, never speak for God, and never place Evelyn between her and what she prays to |
+| `cards-prayed-years` | that she has prayed for years and has not seen the change she asked for; acknowledge that plainly, and when the card supports it, say prayer is not the blockage and keep the obstruction in ordinary, findable life. NEVER say whether her prayers were heard or answered, never that she is being tested, taught, punished or refused, never speak for God, and never set the cards above or against her faith |
+| `cards-prayers-unanswered` | that she has prayed for years without seeing the change she asked for; acknowledge the prayer and the waiting plainly, decline the requested length out loud, and read what the card shows without adopting "unanswered" as Evelyn's verdict. NEVER call her prayers answered or refused, never give a length of time, never speak for God, and never place Evelyn between her and her faith |
 
 ---
 
