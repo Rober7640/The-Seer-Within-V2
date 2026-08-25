@@ -246,9 +246,11 @@ export const V1_BUMP_PRODUCT_KEY_SOULMATE_LANDER = 'soulmate_lander_addon';
  * the same reason: a value like `double_reading_downsell` would still satisfy a
  * contains-check and generate the PDF anyway.
  *
- * ⚠️ IT IS NOT IN BUMP_PAID_LIST_EXCLUDED_KEYS, on purpose. Downsell bump buyers
- * keep reaching the order-bump paid AWeber list exactly as they do today; only the
- * routing key changes. Adding it there would silently drop them from that list.
+ * ⚠️ IT IS IN BUMP_PAID_LIST_EXCLUDED_KEYS (Lewis, 2026-08-25). The downsell bump is
+ * a double-STRENGTH clearing, not a second reading, so its buyers are kept OFF
+ * `theseerwithin_money_ob_paid` — a list that follows up on a second reading they do
+ * not receive (Mike's EQUALS filter on `double_reading` does not match this key, so
+ * no second-reading PDF is sent either).
  */
 export const V1_BUMP_PRODUCT_KEY_DOWNSELL = 'double_strength_reading_ob';
 

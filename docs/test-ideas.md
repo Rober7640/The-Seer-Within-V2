@@ -1902,7 +1902,7 @@ are the same question — does what she sees match what she is billed, and can a
 - [x] The downsell `bumpProduct` rename is DOWNSELL-ONLY; main keeps `double_reading` *(downsell-bump-routing.test.ts)*
 - [x] `double_strength_reading_ob` fails an EQUALS **and** a CONTAINS on `double_reading` *(downsell-bump-routing.test.ts)*
 - [x] A money- or soulmate-lander downsell keeps ITS OWN key and stays off the order-bump paid list — the rename must not re-open the 2026-08-20 bug *(downsell-bump-routing.test.ts)*
-- [x] Downsell bump buyers still REACH the order-bump paid list; only the routing key changed *(downsell-bump-routing.test.ts)*
+- [x] Downsell bump buyers are kept OFF the order-bump paid list (`theseerwithin_money_ob_paid`) — it's a double-STRENGTH clearing, not a second reading, so following up about a second reading would be wrong (Lewis, 2026-08-25) *(downsell-bump-routing.test.ts)*
 - [x] Variation A (the live copy arm) renders at $9.77 on the downsell and $12.77 on arm A, identical wording apart from the price *(downsell-bump-routing.test.ts)*
 - [x] Card price == the real Stripe line item, sampled over ≥16 emails, FAILING if only one arm was drawn *(verify-downsell-bump-charge.mjs — real server, real Stripe TEST session, mocks nothing)*
 - [ ] An exposure row is written at the OFFER and never at lead capture — assert a lead that never reaches the downsell has NO row for `v1_downsell_bump_price_2026`. Hand-verified 2026-08-25 (16 main-tier checkouts added 0 rows); wants a spec so it cannot drift back to lead-capture enrolment
