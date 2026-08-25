@@ -1,6 +1,6 @@
 // /client/src/types/chat.ts
 
-import type { BumpCopyVariant } from '@shared/orderBump'
+import type { BumpCopyVariant, BumpTier } from '@shared/orderBump'
 
 export type ConversationState =
   | 'INIT'
@@ -132,6 +132,17 @@ export interface UserData {
   // the same arm server-side to build the Stripe line item — the card and the
   // charge must always come from one table. Absent ⇒ control.
   bumpCopy?: BumpCopyVariant
+  // Which checkout the bump is riding on — 'downsell' when she declined $35 and took
+  // the $25 grace offer. Set by startPurchase() at the moment she taps a CTA, NOT by
+  // /api/lead, because it is a property of which button she pressed rather than of
+  // which arm she was assigned. Absent ⇒ 'main'.
+  bumpTier?: BumpTier
+  // What the bump will be charged at, in cents. Sent by /api/lead when the downsell
+  // price test (v1_downsell_bump_price_2026) assigns an arm, and used ONLY to render
+  // the card. /api/checkout re-resolves the same arm server-side to build the Stripe
+  // line, so a tampered value here changes what she is shown and never what she pays —
+  // and the mismatch is what the checkout test asserts against. Absent ⇒ tier default.
+  bumpCentsDownsell?: number
   // CLOSE DEPTH (v1_close_depth_2026) — 'deep' when this lead bucketed into the
   // thickened close: five extra blocks in the pitch (mechanism, a longer ritual,
   // a page-by-page deliverable, price justification, proof, pre-handled

@@ -32,6 +32,7 @@ import {
   resolveV1Price,
   resolvePalmGate,
   resolveV1Bump,
+  resolveV1DownsellBumpPrice,
   resolveV1CloseDepth,
   logExposure,
   hashEmail,
@@ -88,6 +89,22 @@ export interface AssignedVariant {
   // for the Stripe line item, so the words she reads and the line she is billed
   // for always come from one table. Absent ⇒ control.
   bumpCopy?: BumpCopyVariant;
+  // What the DOWNSELL bump will cost her, in cents (v1_downsell_bump_price_2026).
+  //
+  // 🔴 THIS FIELD EXISTS BECAUSE THE CARD AND THE CHARGE READ THE PRICE FROM TWO
+  // DIFFERENT PLACES. /api/checkout resolves the arm server-side to price the Stripe
+  // line; the offer CARD reads userData.bumpCentsDownsell, which nothing ever sent —
+  // so it fell back to the $9.77 tier default while arm A was charging $12.77.
+  // Reproduced 7 times in 16 on 2026-08-25. Harmless only while the experiment is
+  // draft (both sides then agree on $9.77); starting it is what breaks them apart.
+  //
+  // EMITTED ONLY WHEN AN ARM ACTUALLY APPLIED, so while the test is draft this key is
+  // ABSENT and the /api/lead response is byte-identical to today's, key for key.
+  //
+  // Resolving here does NOT enrol anyone: `assign` is a pure read, and the exposure
+  // row is written at the OFFER instead (see /api/checkout). That is what keeps the
+  // denominator meaning "was offered the downsell bump" rather than "was a lead".
+  bumpCentsDownsell?: number;
   // Close-depth arm — 'deep' ⇒ the thickened pitch (five extra blocks of chat
   // copy). The purest UI-only arm of the three: it changes only which bubbles are
   // sent at the close, so no price, line item or CTA depends on it, and nothing
@@ -381,6 +398,18 @@ export async function assignVariantIfMissing(
     // Safest of the three to put here: this arm decides only which chat bubbles the
     // pitch sends, so it cannot touch priceCents / downsellCents / upsell1Cents, and
     // a returning visitor's stored price is returned below completely unchanged.
+    // DOWNSELL BUMP PRICE — resolved for its CENTS only, so the offer card can be
+    // drawn at the price the Stripe line will actually carry. Deliberately NOT
+    // logged as an exposure here (unlike the three tests above): only ~3% of leads
+    // ever reach the downsell, so enrolling every one of them would make the
+    // dashboard's denominator meaningless and would fill the bump take-rate table
+    // with main-path bumps. The exposure is written at the offer instead.
+    //
+    // Safe above the price idempotency guard for the same reason as the others: it
+    // prices a SEPARATE line item and never touches priceCents / downsellCents /
+    // upsell1Cents.
+    const downsellBumpArm = await resolveV1DownsellBumpPrice(email, funnel);
+
     const closeDepth = await resolveV1CloseDepth(email, funnel);
     if (closeDepth.enrolled && closeDepth.variant) {
       // 🔴 ONE-SHOT WRITE — experiment_exposures is unique(experiment_key, subject_id),
@@ -448,6 +477,10 @@ export async function assignVariantIfMissing(
         commitmentGate: palmGate.gate,
         orderBump: bump.bump,
         bumpCopy: bump.copy,
+        // Absent unless an arm applied ⇒ draft/OFF is byte-identical to today.
+        ...(downsellBumpArm.cents != null
+          ? { bumpCentsDownsell: downsellBumpArm.cents }
+          : {}),
         ...(closeDepth.deep ? { closeDepth: 'deep' as const } : {}),
       };
     }
@@ -563,6 +596,10 @@ export async function assignVariantIfMissing(
       commitmentGate: palmGate.gate,
       orderBump: bump.bump,
       bumpCopy: bump.copy,
+      // Absent unless an arm applied ⇒ draft/OFF is byte-identical to today.
+      ...(downsellBumpArm.cents != null
+        ? { bumpCentsDownsell: downsellBumpArm.cents }
+        : {}),
       // Emitted ONLY on the deep arm, so control's response shape is unchanged.
       ...(closeDepth.deep ? { closeDepth: 'deep' as const } : {}),
     };

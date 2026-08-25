@@ -1519,6 +1519,65 @@ export async function resolveV1Bump(
   };
 }
 
+// ── V1 DOWNSELL BUMP PRICE — $12.77 vs $9.77 on the $25 path ─────────────────
+// The downsell carried NO bump at all until 2026-08-17, on the reasoning that it
+// "is already the cheaper branch". Fair: she reaches it by saying $35 was too much,
+// and a third ask is how the sliding-scale arm died in July. It is offered now at a
+// PROPORTIONAL price rather than the same absolute one — $12.77 is 36.5% of a $35
+// order but 51.1% of a $25 one, and $9.77 restores near-parity at 39.1%.
+//
+// 🔴 THIS TEST CANNOT REACH SIGNIFICANCE, BY DESIGN. ~60 downsell buyers a month
+// against the ~590 offers the breakeven lift needs is roughly 10 months. It stops on
+// a DATE (2026-11-17), takes the higher revenue per downsell buyer, and ships it.
+// That is defensible only because the whole item is worth ~$130/month, so a wrong
+// call costs ~$65/month — cheaper than seven further months of indecision. Do NOT
+// extend it when it is not significant at the stop date; it never will be.
+//
+// Spec: docs/superpowers/specs/2026-08-16-v1-downsell-bump.md
+export const V1_DOWNSELL_BUMP_PRICE_KEY = 'v1_downsell_bump_price_2026';
+
+/**
+ * What the DOWNSELL bump costs for this lead, in cents — plus the arm it came from.
+ *
+ * `cents` is the RAW payload value; the caller passes it through `resolveBumpCents`,
+ * which validates against the closed set {1277, 977} before it can reach a Stripe
+ * line. A draft/paused/absent experiment yields `cents: null` ⇒ the tier default
+ * ($9.77), so starting the test is what splits the price, not deploying this.
+ *
+ * `variant` + `enrolled` exist for ONE reason: the exposure row. This test shipped
+ * with no exposure logging at all — every other V1 test writes one — so the
+ * dashboard had no denominator and its results table counted nothing. The caller
+ * logs the exposure AT THE OFFER rather than at lead capture; see the call site in
+ * /api/checkout for why that denominator is the honest one.
+ *
+ * 🔴 CALLED FROM TWO PLACES, AND THEY MUST AGREE. Lead capture resolves it to send
+ * the CARD its price; /api/checkout re-resolves it to price the STRIPE LINE. Both
+ * pass the same subject (the trimmed, lowercased email) and the same funnel, so the
+ * same arm comes back — which is the whole point, since a disagreement between them
+ * is a woman shown $9.77 and charged $12.77. The one window where they can differ is
+ * a WEIGHT EDIT landing between her offer and her click; this test carries no
+ * scope.freezeAssignment (deliberately — see the creation SQL), so do not re-weight
+ * it while it runs.
+ */
+export async function resolveV1DownsellBumpPrice(
+  email: string | null | undefined,
+  funnel?: string | null,
+  key: string = V1_DOWNSELL_BUMP_PRICE_KEY, // overridable so tests never touch the live experiment
+): Promise<{ cents: number | null; variant: string | null; enrolled: boolean }> {
+  const subject = typeof email === 'string' ? email.trim().toLowerCase() : null;
+  if (!subject) return { cents: null, variant: null, enrolled: false };
+  const a = await assign(key, subject, { funnel: funnel ?? null });
+  if (!a) return { cents: null, variant: null, enrolled: false };
+  const cents = (a.payload as { bumpCents?: unknown } | null)?.bumpCents;
+  return {
+    // `applied` gates the PRICE exactly as before: a draft or out-of-scope arm must
+    // never reach a Stripe line, so it still falls back to the tier default.
+    cents: a.applied && typeof cents === 'number' ? cents : null,
+    variant: a.variant,
+    enrolled: a.enrolled,
+  };
+}
+
 // ── V1 CLOSE DEPTH — 140 words vs ~430 at the pitch ──────────────────────────
 // The V1 close is 8 hardcoded messages, ~140 words. Against a standard close
 // checklist five of seven slots are empty: no mechanism, no price justification,
