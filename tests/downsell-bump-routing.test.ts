@@ -50,11 +50,12 @@ describe('the DOWNSELL bumpProduct key', () => {
     expect(V1_BUMP_PRODUCT_KEY_DOWNSELL).not.toBe(V1_BUMP_PRODUCT_KEY_SOULMATE_LANDER);
   });
 
-  it('KEEPS downsell bump buyers on the order-bump paid list', () => {
-    // The rename changes routing, not entitlement. Adding this key to
-    // BUMP_PAID_LIST_EXCLUDED_KEYS would silently drop every downsell bump buyer
-    // from a list she reaches today.
-    expect(bumpPaidListWanted(V1_BUMP_PRODUCT_KEY_DOWNSELL)).toBe(true);
+  it('keeps downsell bump buyers OFF the order-bump paid list', () => {
+    // The downsell bump is a double-STRENGTH clearing, not a second reading, so its
+    // buyers must not land on theseerwithin_money_ob_paid — a list that follows up on
+    // a second reading they do not receive (Lewis, 2026-08-25). Same reason the money
+    // and soulmate lander keys are excluded.
+    expect(bumpPaidListWanted(V1_BUMP_PRODUCT_KEY_DOWNSELL)).toBe(false);
   });
 });
 
@@ -84,10 +85,11 @@ describe('bumpProductKeyFor — the tier argument', () => {
 
 describe('the lander families keep their own key on the downsell', () => {
   // 🔴 THE REGRESSION THIS FILE EXISTS FOR. If the downsell rename were applied
-  // blindly, a money-lander downsell bump would stamp double_strength_reading_ob,
-  // which is NOT in BUMP_PAID_LIST_EXCLUDED_KEYS — so she would be written to
-  // theseerwithin_money_ob_paid and followed up about a second reading nobody is
-  // going to send her. That is the exact bug fixed on 2026-08-20, re-opened.
+  // blindly, a money-lander downsell bump would stamp double_strength_reading_ob
+  // instead of money_lander_addon, losing its own fulfilment routing. (Both keys are
+  // now in BUMP_PAID_LIST_EXCLUDED_KEYS as of 2026-08-25, so the AWeber-list half of
+  // the original 2026-08-20 bug can no longer re-open — but the key must still be its
+  // own, which is what these tests hold.)
   const prevMoney = process.env.AWEBER_LIST_ID_TAROT_MONEY;
   const prevSoulmate = process.env.AWEBER_LIST_ID_TAROT_SOULMATE;
 

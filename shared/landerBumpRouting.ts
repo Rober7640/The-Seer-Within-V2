@@ -77,6 +77,11 @@ export function bumpProductKeyFor(
 const BUMP_PAID_LIST_EXCLUDED_KEYS: readonly string[] = [
   V1_BUMP_PRODUCT_KEY_MONEY_LANDER,
   V1_BUMP_PRODUCT_KEY_SOULMATE_LANDER,
+  // The DOWNSELL bump is a double-STRENGTH clearing, not a second reading (Lewis,
+  // 2026-08-25) — so its buyers must not land on a list that follows up on a second
+  // reading. Consistent with Mike's EQUALS filter on `double_reading` not matching
+  // this key, so no second-reading PDF is sent to them either.
+  V1_BUMP_PRODUCT_KEY_DOWNSELL,
 ];
 
 /**
