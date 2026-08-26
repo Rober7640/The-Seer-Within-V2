@@ -1,0 +1,36 @@
+{
+  "hook": "cards-moved-on",
+  "headline": "Is he coming back, or has he moved on?",
+  "note": "🔄 REWRITTEN 2026-08-19 to the Natural Tarot-Cut framework. Bubbles 3-6 run as ONE causal chain — so / and / but / that's why — and the read ANSWERS. The art line and the bridge are unchanged. Every ban in this note still stands.\n\nFace-down only (return-mhf). 🔴 NO FORECAST IN EITHER DIRECTION — 'he will come back' and 'he has moved on' are both things no card knows, and the second is the one that sounds like honesty. 🔴 Never blame her for waiting: naive, too trusting, foolish, clinging, desperate and 'wasted your time' are all banned outright. 🔴 No timeframe, no guarantee.\n\n🔴 THE HEADLINE HANDS OVER AN EITHER-OR AND ANSWERING EITHER HALF IS THE FAILURE, so every card must visibly decline it. Its own grounds, kept distinct from cards-love-or-moved-on: the pair was manufactured by the WAITING, not by anything he did — she built two boxes because two boxes are easier to live in than an open question.",
+  "decks": {
+    "return-mhf": {
+      "a": [
+        "You turned the Magician, dear. Look — a gold cup, a coin, and two long things beside them.",
+        "You asked about coming back, or moving on. Your hand went to the man who lays things out.",
+        "So I will not pick either one, dear. Neither box is filled yet.",
+        "And four things lie on that wood, dear, and none above another.",
+        "But those two boxes came out of long waiting, dear. Not out of him.",
+        "That's why sorting him has never worked, dear. He hasn't been sorted.",
+        "Let me look closer at what has kept this question open…"
+      ],
+      "b": [
+        "You turned the Hanged Man, dear. Look — the light behind his head doesn't touch the rest of him.",
+        "You asked about coming back, or moving on. Your hand went to the card that refuses to land.",
+        "So this card declines to land, dear. So will I.",
+        "And he's between, dear, and content to stay between.",
+        "But neither of your boxes has anything in it yet, dear.",
+        "That's why the two swap places all day, dear. Hour by hour.",
+        "Let me look closer at what has been holding this between…"
+      ],
+      "c": [
+        "You turned the Fool, dear. Look — the sky is gold and there's not one cloud in it.",
+        "You asked about coming back, or moving on. Your hand went to the one who files nobody.",
+        "So the Fool will not sort him for you, dear. Nor will I.",
+        "And he's still walking, dear, with nothing filed behind him.",
+        "But that answer sits with one person, dear, and he hasn't given it.",
+        "That's why you built two boxes, dear. Standing in nothing is hard.",
+        "Let me look closer at what has kept you standing between them…"
+      ]
+    }
+  }
+}

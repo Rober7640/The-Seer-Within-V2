@@ -1,0 +1,41 @@
+{
+  "hook": "cards-soulmate-closer",
+  "headline": "Is my soulmate closer than I think?",
+  "method": "inherited-shadow",
+  "note": "FRAME: soulmate x where. ⛔ THE DEFINING BAN IS THAT NO PLACE MAY BE NAMED — not a town, a room, a job, a website, a distance. This gap was found the hard way: every frame withheld 'a name, a date, or exactly who' and omitted WHERE.\n⛔ NO TACTIC. Nothing she could act on — no 'get out more', no 'look closer to home'. Never her fault.\n🔴 The method suits this frame unusually well: it answers about the BLOCK instead of the location, so the banned answer is never even approached.\n⚠ SHE is the subject of beats 3-6. ⚠ NO FAMILY-LINE LANGUAGE.\n\n⚠ 'nearer than' IS BANNED — not for safety but for distinctness: it is the live cards-soulmate incumbent's exact landing, and reusing it makes this hook that lander. Nothing here says it.\n⚠ 'Closer' is her word and may be said back; a PLACE still may not be named, and none is.",
+  "readback": {
+    "1 would a person say this": "Yes. 'And it's stayed that way' is spoken.",
+    "2 is every noun real": "Objects within his reach, the single rope, the mid-step feet — all on the card.",
+    "3 anything she could catch me getting wrong": "No. Beat 4 says he is not with her and she has seen no sign. Both certain for anyone who clicked.",
+    "4 does the symbol prove the line at a glance": "Yes. Four things under his hand rather than across the room proves 'close is right'.",
+    "5 does the card mean what TAROT_CARD_VOCAB says": "Yes."
+  },
+  "decks": {
+    "return-mhf": {
+      "a": [
+        "You turned the Magician. Nothing marked the backs, and you took the one with nothing put away.",
+        "Look at his table. It's all out, and all of it within arm's reach.",
+        "You asked if your soulmate is closer than you think. What catches me is that nothing on that table had to be fetched.",
+        "And yet nobody has come. And you're the one asking how close it is.",
+        "Something stands in between, close in rather than far off. I don't think any of it began with you.",
+        "Let me look closer at what's there…"
+      ],
+      "b": [
+        "You turned the Hanged Man. The backs gave nothing away, and you found the calmest man in the deck.",
+        "He hangs by one ankle. Look at his face, though — it's calm.",
+        "You asked if your soulmate is closer than you think. What holds my eye is how little is moving in this picture.",
+        "Still, nobody has come. And the whole question you brought is how close it is.",
+        "The hold is quiet, and it doesn't strain. I don't think it began with you.",
+        "Let me look closer at what's doing that…"
+      ],
+      "c": [
+        "You turned the Fool. You couldn't see a face, and yours was the one in full sun.",
+        "Look at the sky. It's gold, and there's not one cloud in it.",
+        "You asked if your soulmate is closer than you think. A bright day, and the walking started.",
+        "But nobody has come. And you're still the one asking how far off it is.",
+        "Something turns up at the point where it would show. I don't think this began with you.",
+        "Let me look closer at what's behind this…"
+      ]
+    }
+  }
+}

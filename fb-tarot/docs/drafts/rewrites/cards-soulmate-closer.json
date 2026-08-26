@@ -1,0 +1,36 @@
+{
+  "hook": "cards-soulmate-closer",
+  "headline": "Is my soulmate closer than I think?",
+  "note": "🔄 REWRITTEN 2026-08-19 to the Natural Tarot-Cut framework. Bubbles 3-6 run as ONE causal chain — so / and / but / that's why — and the read ANSWERS. The art line and the bridge are unchanged. Every ban in this note still stands.\n\nFace-down only (return-mhf). 🔴 NO LOCATION, EVER — never place him, never name a setting, never 'someone you already know', never 'crossed paths before'. 🔴 NO PROXIMITY CLAIM: 'closer than you think' is the INCUMBENT cards-soulmate's answer, and if this family repeats it the two landers are the same lander while the dashboard still shows two rows. 🔴 NO STRATEGY — get out there, put yourself out there, stop looking, work on yourself first, 'it will happen when you…' are all directives. 🔴 Never her fault: no walls, no baggage, no standards, no 'too picky'.\n\n🔴 THE COPY-TEST PIN: every card must VISIBLY DECLINE to quote a distance, because 'nearer than the waiting has let her believe' is the live incumbent's answer and repeating it kills the comparison. The finding it routes to instead: the GUARDING. She asks whether it is closer in the same breath as bracing for it not to be, and the bracing is the thing actually worth naming.",
+  "decks": {
+    "return-mhf": {
+      "a": [
+        "You turned the Magician, dear. Look — red flowers below him, white ones beside them.",
+        "You asked if your soulmate is closer than you feel. Your hand went to the man who measures nothing.",
+        "So I will not put a distance on this, dear. What I will say is it's coming.",
+        "And his table holds tools, dear, not a measuring tape.",
+        "But look what the question does to you. It braces you.",
+        "That's why you check yourself before you let yourself hope, dear.",
+        "Let me look closer at what put that guard up…"
+      ],
+      "b": [
+        "You turned the Hanged Man, dear. Look — the rope is tied in a simple loop round his foot.",
+        "You asked if your soulmate is closer than you feel. Your hand went to the card with no near or far.",
+        "So this card does not offer distances, dear. It shows a person, holding still.",
+        "And there's no ground under him, dear. So there's no near or far.",
+        "But you've been holding your own hope back, dear. I would too.",
+        "That's why good news makes you flinch first, dear, before it makes you glad.",
+        "Let me look closer at what taught you to hold back…"
+      ],
+      "c": [
+        "You turned the Fool, dear. Look — his bundle is tied at the very end of the stick.",
+        "You asked if your soulmate is closer than you feel. Your hand went to the one who counts no steps.",
+        "So there's no honest reading of near, dear. The Fool counts no steps.",
+        "And he steps without knowing how far is left to go, dear.",
+        "But you've been rationing your own hope, dear. A little at a time.",
+        "That's why you talk yourself down first, dear. Before a thing has happened.",
+        "Let me look closer at what makes you flinch first…"
+      ]
+    }
+  }
+}

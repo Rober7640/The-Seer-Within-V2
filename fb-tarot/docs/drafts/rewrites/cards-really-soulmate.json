@@ -1,0 +1,36 @@
+{
+  "hook": "cards-really-soulmate",
+  "headline": "Is he really my soulmate?",
+  "note": "🔄 REWRITTEN 2026-08-19 to the Natural Tarot-Cut framework. Bubbles 3-6 run as ONE causal chain — so / and / but / that's why — and the read ANSWERS. The art line and the bridge are unchanged. Every ban in this note still stands.\n\nFace-down only (return-mhf). 🔴🔴 THE LABEL BAN RUNS BOTH WAYS — never certify that he is her soulmate or twin flame, and never deny it. It is unfalsifiable, so she could never check it against anything he actually does, and it is a verdict on a real man. 🔴🔴 NEVER RANK THE LABELS: no word here is higher, rarer or deeper than another, and 'just a strong connection' may never be the losing branch. 🔴 No runner script, no separation phase, no ascension homework, no tactic, no timeframe. ⭐ The shared move: affirm the PULL as real information about HER, and refuse the WORD.\n\n🔴 WIRING NOTE — READ BEFORE SHIPPING THIS FAMILY. tests/tarot-soulmate-label-copy.test.ts:439/441/444 assume ONE UNSPLIT beat 3 (openerB length 5, msgs[3] is the loop line, msgs[2].length > 400). The 7-bubble shape splits beat 3, so those three assertions must be DELETED with a note when this family is wired — not worked around. Nothing else in that file needs touching.\n\nFinding: the word 'really' is the tell — the doubt came before the question. She is trying to settle something specific and hard by asking a much larger and vaguer thing instead, and the larger question cannot be checked.",
+  "decks": {
+    "return-mhf": {
+      "a": [
+        "You turned the Magician, dear. Look — his tools are plain things, simply made.",
+        "You asked if he's really your soulmate. Your hand went to the man who works in the plain world.",
+        "So the pull is real, dear. I can see that much on the card.",
+        "And his tools are plain things, dear. Every one of them can be checked.",
+        "But the word you came with can't be checked at all, dear.",
+        "That's why really got into your question, dear. The doubt came first.",
+        "Let me look closer at what has been standing in place of that question…"
+      ],
+      "b": [
+        "You turned the Hanged Man, dear. Look — the rope is the only thing that has been decided.",
+        "You asked if he's really your soulmate. Your hand went to the card that won't name things.",
+        "So I won't put that word on him, dear. Nor take it off him.",
+        "And there's no label anywhere on this card, dear. Just a man, held.",
+        "But nothing about him changes with a word, dear. Not one thing.",
+        "That's why the word never settles you. You already know what he does, dear.",
+        "Let me look closer at what the doing has been telling you…"
+      ],
+      "c": [
+        "You turned the Fool, dear. Look — he has set out with no name for where he's going.",
+        "You asked if he's really your soulmate. Your hand went to the one who names nothing.",
+        "So you already hold your answer, dear. It sits in what he does.",
+        "And he moves on a feeling, dear, with no word for it at all.",
+        "But the word has been doing work it can't do, dear.",
+        "That's why an answer either way would leave you where you are.",
+        "Let me look closer at what has been resting on that one word…"
+      ]
+    }
+  }
+}

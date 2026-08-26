@@ -1,0 +1,34 @@
+{
+  "hook": "cards-trusted-loss-blocking-money",
+  "headline": "I lost what I had through someone I trusted. Is that still blocking my money?",
+  "method": "inherited-shadow",
+  "note": "Wired 2026-08-25 from fb-tarot/docs/writeups/shadow/REVIEW-money-alone-commit-2026-08-25.md — approved copy, transferred verbatim. Reuses the existing MONEY_TAROT_HOOKS frame; no new guard.",
+  "decks": {
+    "return-mhf": {
+      "a": [
+        "You turned the Magician. The cards were hidden, but your hand found the one standing openly before you.",
+        "He stands behind his table, out in the open. Every tool is still there.",
+        "You asked whether the loss through someone you trusted is still blocking your money. What catches me is that open table.",
+        "The loss happened, and the money is still the question in front of you.",
+        "Something shows up right where the loss meets the money now. I don't think it started with you.",
+        "Let me look closer at what that is…"
+      ],
+      "b": [
+        "You turned the Hanged Man. You couldn't see the figures, yet you chose the calmest man in the deck.",
+        "He hangs upside down by one ankle. Look at his face — it is calm.",
+        "You asked whether that loss still has hold of your money. This card makes me look at the calm around the restraint.",
+        "Still, the money remains blocked, and the loss is the event you placed beside it.",
+        "Something stands between what happened and the result. I don't think this began with you.",
+        "Let me see what's holding this…"
+      ],
+      "c": [
+        "You turned the Fool. Nothing on the backs told you, but your hand went to the only card in full sun.",
+        "The sky behind him is gold. There is not one cloud in it.",
+        "You asked whether what happened still blocks the money. The full light on this card keeps drawing my eye.",
+        "But the money remains blocked, and the loss sits behind the question you asked.",
+        "The thing that has hold of the money keeps its grip without showing a person. I don't think it began with you.",
+        "Now let me look at what has hold of the money…"
+      ]
+    }
+  }
+}

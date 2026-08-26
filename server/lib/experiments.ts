@@ -1712,6 +1712,86 @@ export async function resolveTarotVersion(
   return { version, variant: a.variant, enrolled: a.enrolled, applied: true };
 }
 
+// ── /fb-tarot INHERITED SHADOW vs NATURAL — which READ she gets ──────────────
+// A SECOND axis on top of the version test, and only meaningful on Version B: B is
+// the arm that delivers a whole pre-written read, so it is the only arm where the
+// writing METHOD is a thing a visitor can experience. Version C writes her read live
+// from her own answer, and Version A shows the reveal on the lander.
+//
+// natural ("Natural Tarot-Cut", fb-tarot/docs/natural-tarot-cut.md): the read ANSWERS
+// her ad's question. This is what serves today, on every lander, and it is the CONTROL —
+// so it must stay variants[0].
+// shadow ("Inherited Shadow", fb-tarot/docs/inherited-shadow-cut.md): six beats that
+// name a cause she did not start, and hand into the chat on an open loop.
+//
+// 🔴 THE FAILURE MODE MUST BE "NOTHING CHANGED". The shadow reads live in their own
+// roster (client/src/content/tarotReadsShadow.ts); DECKS[deck].reads — the natural read —
+// is never edited. So draft, paused, out of scope, no cookie, a malformed payload, a
+// mid-deploy request or an outright error all hand back `natural`, which is byte-identical
+// to today's funnel. These 37 hooks are most of the tarot traffic and this method has
+// never served a live visitor, so the unproven arm must never be the one that leaks out.
+//
+// SUBJECT IS THE ANONYMOUS `ab_vid` COOKIE, for the same reason the version test uses it:
+// this changes the FIRST message of the chat, so it is decided before an email exists.
+// Denominator is everyone who REACHED THE CHAT, not everyone who left an email.
+//
+// SCOPED PER AD URL via scope.landers — the explicit list of 37 (hook, deck) pairs that
+// have an approved shadow read. That list is also what keeps assignment and content in
+// step: a lander with no shadow read would render the natural one anyway (the client
+// falls back), so enrolling it would put a visitor in the shadow arm who saw the natural
+// read. Scope is the guard against that; the client fallback is only the second net.
+export const V1_TAROT_SHADOW_EXPERIMENT_KEY = 'v1_tarot_shadow_2026';
+
+/** Which written method a Version-B read is authored to. */
+export type TarotMethod = 'natural' | 'shadow';
+
+/**
+ * Which READ should this visitor get — the natural cut, or the inherited shadow?
+ *
+ * `version` is the ALREADY-RESOLVED arm of the version test, not the URL's version.
+ * Anything but 'b' returns immediately, before assignment: A and C cannot serve a
+ * shadow read at all, so minting an exposure for them would add visitors to the
+ * population who can never experience the arm they were counted in.
+ *
+ * `enrolled` (running + in scope) tells the caller to log the exposure — the
+ * denominator. No visitor id ⇒ no subject ⇒ natural, never enrolled.
+ */
+export async function resolveTarotMethod(
+  visitorId: string | null | undefined,
+  version: TarotVersion,
+  hook?: string | null,
+  deck?: string | null,
+  key: string = V1_TAROT_SHADOW_EXPERIMENT_KEY, // overridable so tests never touch the live experiment
+): Promise<{ method: TarotMethod; variant: string | null; enrolled: boolean; applied: boolean }> {
+  const notEnrolled = {
+    method: 'natural' as TarotMethod,
+    variant: null,
+    enrolled: false,
+    applied: false,
+  };
+  if (version !== 'b') return notEnrolled;
+
+  const subject = typeof visitorId === 'string' && visitorId.trim() ? visitorId.trim() : null;
+  const a = await assign(key, subject, {
+    funnel: 'v1-tarot',
+    hook: hook ?? null,
+    deck: deck ?? null,
+  });
+  if (!a) return notEnrolled;
+
+  // Only 'natural'/'shadow' are meaningful arm payloads. Anything else (a typo'd
+  // payload, an arm carrying nothing) serves the natural read rather than a method
+  // nobody configured — same defensive shape as resolveTarotVersion refusing a
+  // version outside b/c.
+  const assigned = a.payload?.method;
+  const method: TarotMethod | null =
+    assigned === 'natural' || assigned === 'shadow' ? assigned : null;
+  if (!a.applied || !method) {
+    return { method: 'natural', variant: a.variant, enrolled: false, applied: false };
+  }
+  return { method, variant: a.variant, enrolled: a.enrolled, applied: true };
+}
+
 // ── Persona prompt A/B resolution (Phase 4b — live AI path) ───────────────────
 
 export interface PromptAssignment {

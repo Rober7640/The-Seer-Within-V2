@@ -1,0 +1,34 @@
+{
+  "hook": "cards-wont-commit-years-together",
+  "headline": "Why won't he commit after all these years together?",
+  "method": "inherited-shadow",
+  "note": "Wired 2026-08-25 from fb-tarot/docs/writeups/shadow/REVIEW-money-alone-commit-2026-08-25.md — approved copy, transferred verbatim. Reuses the existing default decode-him frame; no new guard.",
+  "decks": {
+    "return-mhf": {
+      "a": [
+        "You turned the Magician. The pictures were hidden, but your hand found the one with every means to build.",
+        "Every tool is laid out and ready on his table.",
+        "You asked why he will not commit after all these years. The complete working table catches my attention.",
+        "The years together are real, and the commitment is still absent.",
+        "Something appears where years together would become a named commitment. I don't think it started with you.",
+        "Let me look closer at what's doing this…"
+      ],
+      "b": [
+        "You turned the Hanged Man. You reached without seeing him and chose the card held at one point.",
+        "One rope holds one ankle. The rest of him has room.",
+        "You asked what has held the commitment across the years. This card brings me to the one rope.",
+        "Still, the future remains held after the time you named.",
+        "Something stands between the relationship and its future. I don't think it began with you.",
+        "Let me see what's holding the future…"
+      ],
+      "c": [
+        "You turned the Fool. Nothing revealed the picture, yet your hand went to the one travelling light.",
+        "The bundle stays on his stick as he moves.",
+        "You asked why the years together have not settled the future. The carried bundle is the part I notice first.",
+        "But the relationship has moved through years, while commitment remains unsettled.",
+        "The thing that has hold of the commitment keeps it carried without being settled. I don't think this began with you.",
+        "Now let me look at what has hold of the commitment…"
+      ]
+    }
+  }
+}

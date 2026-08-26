@@ -1,0 +1,94 @@
+{
+  "hook": "cards-cheating",
+  "headline": "Is he cheating on you?",
+  "note": "⛔ The decode-him DECK was retired 2026-08-19 (operator call) — its strip art was the fb-palm thumb image and no ad ever pointed at it. Its block has been removed from this draft; the arcana and return-mhf decks are unaffected.\n\n🔄 REWRITTEN 2026-08-19 to the Natural Tarot-Cut framework. Bubbles 3-6 run as ONE causal chain — so / and / but / that's why. 🔴 THIS FAMILY WAS DELIBERATELY NOT LOOSENED: cut 3 still answers her FEAR (am I short of sense, or short of facts) and never rules on him in either direction. The art line and the bridge are unchanged.\n\nLives on ALL FOUR decks — three card-sets: Magician/Hanged Man/Fool (return-mhf + arcana-mfh, one copy, verb swapped), Emperor/Empress/Fool (arcana-eef), Sun/Moon/Tower (decode-him). The arcana-eef Fool reuses the MHF Fool copy verb-swapped.\n\n🔴 THE FLAGGED WORD IS AVOIDED IN EVERY BEAT — 'cheat' and its forms appear nowhere, which is what the live copy on three of the four decks already does (decode-him has one slip today; this rewrite removes it). The ad headline carries the word; the read does not. The echo still lands because the gate keys on 'you'.\n\n🔴 NEVER SAY HE HAS OR HAS NOT. TAROT_HOOK_TENDENCY: 'that the unease she feels is real information about her situation, not paranoia to apologize for. NEVER say he is cheating or that he is faithful as fact.' So what gets certified is her UNEASE — a signal she has been apologising for — and what gets named is that no answer was ever put beside it.\n\nThis hook is the INCUMBENT the whole fidelity family is tested against: tests/tarot-fidelity-copy.test.ts requires those four landers to share no 6-word run with it on any deck. Its own finding is kept distinct from all four — unease as a real signal, where cards-someone-else takes the GAP, cards-loyal the PORTION, cards-talking-someone the ATTENTION, cards-faithful the REST.\n\n🔴 decode-him takes no picture line — its strip is the fb-PALM thumb art and there is no revealStrip, so there is no card for her to look at. Beat 1 uses the card-name form, and all three are written fresh (all four hooks on that deck currently share one).",
+  "decks": {
+    "return-mhf": {
+      "a": [
+        "You turned the Magician, dear. Look — his table stands on the grass, out in the open.",
+        "You asked if he has been true to you. Your hand went to the man who sets the scene.",
+        "So the distance is real, dear. I will not talk you out of it.",
+        "And a scene like that gets set on purpose, dear. Look at his table.",
+        "But what's set out isn't the same as what's so, dear.",
+        "That's why you can sit through a fine evening, dear, and still feel outside it.",
+        "Let me look closer at what stands between you and the plain view…"
+      ],
+      "b": [
+        "You turned the Hanged Man, dear. Look — red trousers, a blue tunic, and gold light at his head.",
+        "You asked if he has been true to you. Your hand went to the card left up in the air.",
+        "So you've been left hanging in this, dear. Nobody has put an end to it.",
+        "And no answer ever came, dear. Unease turns into a way of living.",
+        "But nothing has gone wrong on paper, dear. You still live braced.",
+        "That's why there's nothing to point at, dear, and you check anyway.",
+        "Let me look closer at what has kept this hanging over you…"
+      ],
+      "c": [
+        "You turned the Fool, dear. Look — the dog is the only other living thing on his card.",
+        "You asked if he has been true to you. Your hand went to the one who doesn't look down.",
+        "So something has been moving, dear. You felt the ground change.",
+        "And look at the dog, dear. Up on its legs, and he walks on.",
+        "But the card won't name what's coming, dear. Nobody can from here.",
+        "That's why you've been watching him for weeks, dear, and found nothing to hold.",
+        "Let me look closer at what has been shifting under you…"
+      ]
+    },
+    "arcana-mfh": {
+      "a": [
+        "You chose the Magician, dear. Look — his table stands on the grass, out in the open.",
+        "You asked if he has been true to you. Your hand went to the man who sets the scene.",
+        "So the distance is real, dear. I will not talk you out of it.",
+        "And a scene like that gets set on purpose, dear. Look at his table.",
+        "But what's set out isn't the same as what's so, dear.",
+        "That's why you can sit through a fine evening, dear, and still feel outside it.",
+        "Let me look closer at what stands between you and the plain view…"
+      ],
+      "b": [
+        "You chose the Hanged Man, dear. Look — red trousers, a blue tunic, and gold light at his head.",
+        "You asked if he has been true to you. Your hand went to the card left up in the air.",
+        "So you've been left hanging in this, dear. Nobody has put an end to it.",
+        "And no answer ever came, dear. Unease turns into a way of living.",
+        "But nothing has gone wrong on paper, dear. You still live braced.",
+        "That's why there's nothing to point at, dear, and you check anyway.",
+        "Let me look closer at what has kept this hanging over you…"
+      ],
+      "c": [
+        "You chose the Fool, dear. Look — the dog is the only other living thing on his card.",
+        "You asked if he has been true to you. Your hand went to the one who doesn't look down.",
+        "So something has been moving, dear. You felt the ground change.",
+        "And look at the dog, dear. Up on its legs, and he walks on.",
+        "But the card won't name what's coming, dear. Nobody can from here.",
+        "That's why you've been watching him for weeks, dear, and found nothing to hold.",
+        "Let me look closer at what has been shifting under you…"
+      ]
+    },
+    "arcana-eef": {
+      "a": [
+        "You chose the Emperor, dear. Look — a bare grey mountain behind him, and no green on it.",
+        "You asked if he has been true to you. Your hand went to the man who gives orders.",
+        "So the cold you felt is real, dear. Look behind him — bare rock, nothing growing.",
+        "And he answers like a man reading out a rule, dear.",
+        "But a rule doesn't tell you what sits under it, dear.",
+        "That's why you let it drop, dear. The answer never changed.",
+        "Let me look closer at what has been standing where the warmth was…"
+      ],
+      "b": [
+        "You chose the Empress, dear. Look — a crown of stars, and red fruit all over her gown.",
+        "You asked if he has been true to you. Your hand went to the card of plenty.",
+        "So the good part was real, dear. Look at her — every fruit on her is ripe.",
+        "And plenty is not the same as only yours, dear.",
+        "But no one has ever told you which one this is.",
+        "That's why Sunday can be good, dear. By Wednesday you're counting again.",
+        "Let me look closer at what keeps this from being wholly yours…"
+      ],
+      "c": [
+        "You chose the Fool, dear. Look — the dog is the only other living thing on his card.",
+        "You asked if he has been true to you. Your hand went to the one who doesn't look down.",
+        "So something has been moving, dear. You felt the ground change.",
+        "And look at the dog, dear. Up on its legs, and he walks on.",
+        "But the card won't name what's coming, dear. Nobody can from here.",
+        "That's why you've been watching him for weeks, dear, and found nothing to hold.",
+        "Let me look closer at what has been shifting under you…"
+      ]
+    }
+  }
+}

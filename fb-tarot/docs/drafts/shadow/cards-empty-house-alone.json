@@ -1,0 +1,34 @@
+{
+  "hook": "cards-empty-house-alone",
+  "headline": "Why is being alone hardest now that the house is empty?",
+  "method": "inherited-shadow",
+  "note": "Wired 2026-08-25 from fb-tarot/docs/writeups/shadow/REVIEW-money-alone-commit-2026-08-25.md — approved copy, transferred verbatim. Reuses the existing LONELINESS_TAROT_HOOKS frame; no new guard.",
+  "decks": {
+    "return-mhf": {
+      "a": [
+        "You turned the Magician. The cards were hidden, yet your hand found the one standing alone beside a full table.",
+        "He stands by himself behind a table where every tool is present.",
+        "You asked why being alone is hardest now that the house is empty. The full table beside one figure catches me.",
+        "The house is empty, and being alone is harder now.",
+        "There's something between what is available and company. I don't think it began with you.",
+        "Let me look closer at what's standing there…"
+      ],
+      "b": [
+        "You turned the Hanged Man. You chose without seeing him and found the calmest figure in the deck.",
+        "He hangs upside down by one ankle. His face is calm.",
+        "You asked why the empty house has made solitude harder. This card makes me look at the calm inside the stillness.",
+        "Still, the empty house has changed the weight of the solitude you already knew.",
+        "What has hold of the solitude makes the empty space carry more weight. I don't think this began with you.",
+        "Let me see what's holding this…"
+      ],
+      "c": [
+        "You turned the Fool. Nothing revealed the picture, but your hand went to the one crossing a wide open space.",
+        "The full sky opens behind him, and he carries one small bundle.",
+        "You asked why being alone weighs more in that empty space. The wide sky and small bundle hold my attention.",
+        "But the open space feels heavier now, not freer.",
+        "Something turns up just where open space should feel like room to move. I don't think it started with you.",
+        "Now let's look at what's behind it…"
+      ]
+    }
+  }
+}

@@ -1,0 +1,34 @@
+{
+  "hook": "cards-working-money-by-now",
+  "headline": "I'm still working. What's blocking the money I should have by now?",
+  "method": "inherited-shadow",
+  "note": "Wired 2026-08-25 from fb-tarot/docs/writeups/shadow/REVIEW-money-alone-commit-2026-08-25.md — approved copy, transferred verbatim. Reuses the existing MONEY_TAROT_HOOKS frame; no new guard.",
+  "decks": {
+    "return-mhf": {
+      "a": [
+        "You turned the Magician. You couldn't see the picture, and your hand still found the worker of the three.",
+        "Look at both hands. They are working above a table where every tool is out.",
+        "You asked what blocks the money you should have by now while you are still working. The busy hands are the part I cannot ignore.",
+        "And yet you are still working, and the money you expected has not arrived.",
+        "I keep coming back to something between the work and the result. I don't think it began with you.",
+        "Let me look closer at what's holding the result…"
+      ],
+      "b": [
+        "You turned the Hanged Man. The backs were identical, but you reached for the one held at a single point.",
+        "One rope holds one ankle. Nothing else on him is tied.",
+        "You asked why the money is still blocked. This card brings me to the one point doing the holding.",
+        "Still, the result remains held while the work continues.",
+        "Something is holding the money hard. I don't think this began with you.",
+        "Let me see what that obstruction is…"
+      ],
+      "c": [
+        "You turned the Fool. The card was hidden, yet your hand went to the one in full light.",
+        "The full sun is high behind him.",
+        "You asked about money that should have come by now. The full light on this card holds my eye.",
+        "But the money has not moved with the work, and “by now” is already in your question.",
+        "Something turns up just where the work should become the result. I don't think it started with you.",
+        "Now let's look at what's behind it…"
+      ]
+    }
+  }
+}

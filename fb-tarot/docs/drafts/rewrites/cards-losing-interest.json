@@ -1,0 +1,36 @@
+{
+  "hook": "cards-losing-interest",
+  "headline": "Is he losing interest, or just going through something?",
+  "note": "🔄 REWRITTEN 2026-08-19 to the Natural Tarot-Cut framework. Bubbles 3-6 run as ONE causal chain — so / and / but / that's why — and the read ANSWERS. The art line and the bridge are unchanged. Every ban in this note still stands.\n\nFace-down only (return-mhf). 🔴 NO VERDICT EITHER WAY — 'he is losing interest' convicts him, 'he still loves you' reassures on his behalf, and 'nothing has gone wrong' is the same reassurance in a smaller coat. 🔴 NO CHASE STRATEGY, which is what the whole internet sells against this headline: no giving him space, no pulling back, no matching his energy, no going quiet so he chases. 🔴 Never blame her — nothing about being too much, too eager, moving too fast, or what she should have held back.\n\n🔴 ITS HEADLINE IS AN EITHER-OR AND BOTH HALVES ARE FORBIDDEN ANSWERS. The test requires every card to VISIBLY refuse the binary — and to never resolve it in passing either. The finding: the choice is not hers to make and was never hers to carry, and she has been running both branches at once for weeks.",
+  "decks": {
+    "return-mhf": {
+      "a": [
+        "You turned the Magician, dear. Look — the blade, the cup and the coin sit close together on the wood.",
+        "You asked about losing interest, or a thing he's going through. Your hand went to the sorter.",
+        "So I will not choose between your two, dear. Neither will I guess.",
+        "And things sit side by side on his table, dear, without being ranked.",
+        "But only he can say which one it is, dear.",
+        "That's why running both at once has worn you out, dear.",
+        "Let me look closer at what keeps this split in two…"
+      ],
+      "b": [
+        "You turned the Hanged Man, dear. Look — his clothes fall the wrong way, up towards his feet.",
+        "You asked about losing interest, or a thing he's going through. Your hand went to the card between.",
+        "So I will not choose for you, dear. Not honestly, and not from here.",
+        "And he's between two states, dear, and settled in neither one.",
+        "But the card holds both open, dear, which is where you've been living.",
+        "That's why you feel pulled two ways, dear. The road really does split.",
+        "Let me look closer at what has kept this hanging between two…"
+      ],
+      "c": [
+        "You turned the Fool, dear. Look — the red feather in his cap points backwards.",
+        "You asked about losing interest, or something he's going through. Your hand went to the one who never sorts.",
+        "So the Fool declines your either-or, dear. He files nobody.",
+        "And nothing about him is sorted yet, dear. He's still stepping.",
+        "But one person holds that answer, dear, and it isn't me.",
+        "That's why the choice sat wrong with you. It was never yours, dear.",
+        "Let me look closer at what put those two in front of you…"
+      ]
+    }
+  }
+}

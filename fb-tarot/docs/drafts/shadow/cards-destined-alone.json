@@ -1,0 +1,34 @@
+{
+  "hook": "cards-destined-alone",
+  "headline": "Why do I feel destined to be alone?",
+  "method": "inherited-shadow",
+  "note": "Wired 2026-08-25 from fb-tarot/docs/writeups/shadow/REVIEW-money-alone-commit-2026-08-25.md — approved copy, transferred verbatim. Reuses the existing LONELINESS_TAROT_HOOKS frame; no new guard.",
+  "decks": {
+    "return-mhf": {
+      "a": [
+        "You turned the Magician. You couldn't see the cards, but your hand found the one with every possibility still out.",
+        "Look at his table. The cup, coin, blade and wand are all still there.",
+        "You asked why you feel destined to be alone. What catches me is that nothing on the table has been decided for him.",
+        "And yet you are alone, and the word “destined” has entered the question.",
+        "I keep coming back to something between your open life and connection. I don't think it began with you.",
+        "Let me look closer at what that is…"
+      ],
+      "b": [
+        "You turned the Hanged Man. The picture was hidden, yet you chose the one that's still growing.",
+        "Green leaves grow from the wood above the paused figure.",
+        "You asked why solitude feels like destiny. This card makes me look at the living growth inside the pause.",
+        "Still, you are alone, and the pause has become a question about destiny.",
+        "Something has hold of the solitude without announcing itself. I don't think this began with you.",
+        "Let me see what's holding this…"
+      ],
+      "c": [
+        "You turned the Fool. Nothing gave the card away, but your hand went to the one at the start of the road.",
+        "The small bundle on his stick is all he has packed.",
+        "You asked why you feel destined to be alone. This card brings me to the beginning rather than the end.",
+        "But no one is on the road with you, and the question has become one about destiny.",
+        "Something turns up just where a different beginning would open. I don't think it started with you.",
+        "Now let me look at what's behind it…"
+      ]
+    }
+  }
+}

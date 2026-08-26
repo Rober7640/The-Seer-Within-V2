@@ -6,6 +6,10 @@ reveals) added via the `fb-tarot-add-card` skill. Drop raw card art per concept 
 
 Status: ✅ built & wired · ⬜ pending · ⛔ parked
 
+> 📋 **This file tracks DECKS — the card art.** For the LANDERS (one hook each, 104 of them)
+> see **`fb-tarot/docs/lander-registry.md`** — every lander, by category, with the method each one
+> runs. **Generated** (`npx tsx scripts/lander-registry.mts`), so it cannot drift from the code.
+
 ## 🔑 EVERY LANDER IS ON `/fb-tarot/b` (2026-08-18)
 
 Two changes shipped to Production on 2026-08-18, and **every tarot visitor now gets Version B**:

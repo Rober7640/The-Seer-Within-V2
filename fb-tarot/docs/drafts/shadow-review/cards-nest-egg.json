@@ -1,0 +1,34 @@
+{
+  "hook": "cards-nest-egg",
+  "headline": "How long has something been blocking me from a nest egg?",
+  "method": "inherited-shadow",
+  "note": "generated from REVIEW-new-voice.md — not a wired draft",
+  "decks": {
+    "return-mhf": {
+      "a": [
+        "You turned the Magician. You couldn't see them, and your hand went to the worker of the three.",
+        "Look at his hands. Both busy, and neither one empty.",
+        "You asked how long something has been blocking your nest egg. What catches me is how full both those hands are.",
+        "And yet nothing has gathered. And you're asking me how long it's been that way.",
+        "Something turns up at the point where things would start to build. I don't think this began with you.",
+        "Let me look closer at what's holding it…"
+      ],
+      "b": [
+        "You turned the Hanged Man. Nothing marked the backs, and you took the one held at one ankle.",
+        "Look at the rope. One ankle, and the rest of him hangs loose.",
+        "You asked how long something has been blocking your nest egg. One rope holds all of it.",
+        "Still, nothing has gathered. And how long is what you want from me.",
+        "Something has a quiet hold on this, and it doesn't shift. I don't think it started with you.",
+        "Let me look closer at what that is…"
+      ],
+      "c": [
+        "You turned the Fool. Face down, all three, and you chose the one travelling light.",
+        "Look at the bundle on his stick. That's all he owns.",
+        "You asked how long something has been blocking your nest egg. A small bundle, and a step already taken — that's what stops me here.",
+        "But nothing has gathered. And you're the one asking how long that's gone on.",
+        "Something sits right where it would gather. I don't think any of it began with you.",
+        "Let me look closer at what's sitting there…"
+      ]
+    }
+  }
+}

@@ -1,0 +1,65 @@
+{
+  "hook": "cards-misled",
+  "headline": "Am I being misled?",
+  "note": "🔄 REWRITTEN 2026-08-19 to the Natural Tarot-Cut framework. Bubbles 3-6 run as ONE causal chain — so / and / but / that's why — and the read ANSWERS. The art line and the bridge are unchanged. Every ban in this note still stands.\n\nOn the two Magician/Hanged Man/Fool decks — one set of copy, verb swapped.\n\n⚠️ TRUST IS A SEED FAMILY WITH NO GUARD FILE (`tests/tarot-trust-copy.test.ts` does not exist). Only the generic guards apply, so this is among the least protected copy on the funnel and the bans below come from TAROT_HOOK_TENDENCY rather than from a test.\n\nFinding: the MISMATCH between what she has been told and what she has observed is real information, and the confusion is not a flaw in her judgment. 🔴 Never state he is deceiving her, and 🔴 never tell her she is imagining it — both are available and both are wrong. What gets affirmed is her perception and her right to trust her own eyes.",
+  "decks": {
+    "return-mhf": {
+      "a": [
+        "You turned the Magician, dear. Look — the four things on his table don't match each other.",
+        "You asked if you're being misled. Your hand went to the man who arranges things.",
+        "So two things you were given don't fit, dear. You saw that yourself.",
+        "And there on his table, four things, and no two of them alike.",
+        "But a mismatch tells you nothing about why, dear. Only that it's there.",
+        "That's why you keep going back over what he said, lining it up.",
+        "Let me look closer at what stands between you and a story that fits…"
+      ],
+      "b": [
+        "You turned the Hanged Man, dear. Look — from where you stand, his face is where his feet should be.",
+        "You asked if you're being misled. Your hand went to the card that flips a view.",
+        "So the muddle is in the picture, dear. It isn't in you.",
+        "And you've been handed this the wrong way up, dear.",
+        "But nobody has turned it round for you, dear. You've had to do it.",
+        "That's why working it out takes you hours. It arrives upside down, dear.",
+        "Let me look closer at what has been turning this around on you…"
+      ],
+      "c": [
+        "You turned the Fool, dear. Look — the rocks he stands on are cut in flat layers.",
+        "You asked if you're being misled. Your hand went to the one who doesn't check his footing.",
+        "So you've been asked to walk without checking, dear. That's what feels wrong.",
+        "And he's one step from a drop, dear, and looking the other way.",
+        "But this card names nothing about what sits under it, dear.",
+        "That's why checking felt like doubt to you. Checking is just looking, dear.",
+        "Let me look closer at what has been hidden under this…"
+      ]
+    },
+    "arcana-mfh": {
+      "a": [
+        "You chose the Magician, dear. Look — the four things on his table don't match each other.",
+        "You asked if you're being misled. Your hand went to the man who arranges things.",
+        "So two things you were given don't fit, dear. You saw that yourself.",
+        "And there on his table, four things, and no two of them alike.",
+        "But a mismatch tells you nothing about why, dear. Only that it's there.",
+        "That's why you keep going back over what he said, lining it up.",
+        "Let me look closer at what stands between you and a story that fits…"
+      ],
+      "b": [
+        "You chose the Hanged Man, dear. Look — from where you stand, his face is where his feet should be.",
+        "You asked if you're being misled. Your hand went to the card that flips a view.",
+        "So the muddle is in the picture, dear. It isn't in you.",
+        "And you've been handed this the wrong way up, dear.",
+        "But nobody has turned it round for you, dear. You've had to do it.",
+        "That's why working it out takes you hours. It arrives upside down, dear.",
+        "Let me look closer at what has been turning this around on you…"
+      ],
+      "c": [
+        "You chose the Fool, dear. Look — the rocks he stands on are cut in flat layers.",
+        "You asked if you're being misled. Your hand went to the one who doesn't check his footing.",
+        "So you've been asked to walk without checking, dear. That's what feels wrong.",
+        "And he's one step from a drop, dear, and looking the other way.",
+        "But this card names nothing about what sits under it, dear.",
+        "That's why checking felt like doubt to you. Checking is just looking, dear.",
+        "Let me look closer at what has been hidden under this…"
+      ]
+    }
+  }
+}

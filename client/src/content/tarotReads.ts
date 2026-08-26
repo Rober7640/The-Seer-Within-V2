@@ -5,6 +5,11 @@ import {
   SOULMATE_KEYWORD_ENERGY_LANDER_HOOKS,
   SOULMATE_KEYWORD_HEALING_LANDER_HOOKS,
 } from '@shared/soulmateLanderHooks'
+// The second roster — the 70% arm of v1_tarot_shadow_2026. GENERATED from the approved
+// drafts by scripts/shadow-drafts-to-registry.mts; never hand-edited. It imports only
+// TYPES from this file, so the cycle is erased at compile time and there is no runtime
+// import loop.
+import { SHADOW_READS } from './tarotReadsShadow'
 
 // Copy + lookup tables for the /fb-tarot "decode-him card" quiz-bridge funnel.
 // Single source of truth shared by TarotBridge (the lander) and useConversation
@@ -746,9 +751,63 @@ export type TarotHook =
   | 'cards-energy-soulmate' // What does my energy say about my soulmate?
   | 'cards-waiting-to-heal' // Is my soulmate waiting for me to heal?
   | 'cards-heal-first' // Do I need to heal before my soulmate arrives?
+// ── Money-age-energy, alone-age/energy and commit-age-matrix hooks (2026-08-25) ──
+// 44 new hooks, both Natural + Shadow arms, wired verbatim from the approved manuscripts.
+// Money reuses MONEY_TAROT_HOOKS as-is; alone reuses LONELINESS_TAROT_HOOKS as-is; commit
+// has no frame Set, same decode-him fallthrough as cards-wont-commit. No new guard.
+  | 'cards-money-time-running-out' // My time is running out. Is my energy blocking my money?
+  | 'cards-money-has-to-last' // Whatever I've got has to last now. What's blocking my money?
+  | 'cards-trusted-loss-blocking-money' // I lost what I had through someone I trusted. Is that still blocking my money?
+  | 'cards-working-money-by-now' // I'm still working. What's blocking the money I should have by now?
+  | 'cards-nothing-put-away' // I've got nothing put away. Is my energy blocking my money?
+  | 'cards-money-cant-stop-working' // I can't stop working yet. What's still blocking my money?
+  | 'cards-earn-and-gone' // I earn it and it's gone. What's blocking my money?
+  | 'cards-talk-myself-out' // I talk myself out of everything. What's blocking my money?
+  | 'cards-paycheck-to-paycheck' // I'm living paycheck to paycheck and can't get started. Is my energy blocking my money?
+  | 'cards-money-reach-me' // Everybody is getting ahead. Why won't the money reach me?
+  | 'cards-paying-what-i-owe' // I keep paying what I owe. Why is my money still blocked?
+  | 'cards-destined-alone' // Why do I feel destined to be alone?
+  | 'cards-how-long-alone' // How long am I going to be alone?
+  | 'cards-love-not-happened-yet' // Did I miss my chance, or has love just not happened yet?
+  | 'cards-alone-for-years' // I've been alone for years. What's keeping me here?
+  | 'cards-more-years-alone' // How many more years alone before something changes?
+  | 'cards-held-alone' // Is something holding me here alone, or is this just my life now?
+  | 'cards-empty-house-alone' // Why is being alone hardest now that the house is empty?
+  | 'cards-alone-a-decade' // I've been alone a decade. How much longer?
+  | 'cards-too-late-or-now' // Is it too late for love, or is this only where I am now?
+  | 'cards-alone-heavier-now' // Why does being alone feel heavier now than it used to?
+  | 'cards-alone-rest-of-life' // Will I be alone for the rest of my life?
+  | 'cards-meant-alone-still-time' // Am I meant to be alone now, or is there still time?
+  | 'cards-know-not-destined-alone' // How long before I know I'm not destined to be alone?
+  | 'cards-destined-or-not-yet' // Am I destined to be alone, or has it just not happened yet?
+  | 'cards-god-with-me-alone' // God is with me. Why am I still alone?
+  | 'cards-god-mean-me-alone' // How much longer does God mean me to be alone?
+  | 'cards-gods-intention-alone' // Is it God's intention for me to be alone, or is someone coming?
+  | 'cards-love-never-stays' // Why does love never stay with me?
+  | 'cards-connection-kept-alive' // Why have I kept this connection alive on my own?
+  | 'cards-wait-on-connection' // How much longer am I going to wait on this connection?
+  | 'cards-real-connection-coming' // Is a real connection coming, or do I stay alone?
+  | 'cards-picking-noncommittal-men' // Why do I keep picking non-committal men?
+  | 'cards-time-to-commit-before-moving-on' // How long do I give him to commit before I move on?
+  | 'cards-slow-commit-or-wasting-time' // Is he slow to commit, or is he wasting my time?
+  | 'cards-doing-wrong-wont-commit' // What am I doing wrong that he won't commit?
+  | 'cards-wait-commit-this-time' // How long do I wait for him to commit this time?
+  | 'cards-scared-or-never-commit' // Is he scared to commit, or just never going to?
+  | 'cards-wont-commit-years-together' // Why won't he commit after all these years together?
+  | 'cards-years-before-commitment' // How many years together before he makes a commitment?
+  | 'cards-commitment-uncertain-years' // Why is commitment still uncertain after all these years?
+  | 'cards-no-time-to-waste-commit' // Why won't he commit when neither of us has time to waste?
+  | 'cards-how-much-longer-commit' // How much longer do I wait for him to commit?
+  | 'cards-commit-or-company' // Does he want to commit, or does he just want company?
 export type TarotCard = 'a' | 'b' | 'c' // the option the visitor tapped (A/B/C)
 export type TarotOption = TarotCard
 export type TarotVersion = 'a' | 'b' | 'c'
+// Which WRITTEN METHOD a Version-B read is authored to. 'natural' is the Natural
+// Tarot-Cut in DECKS[deck].reads below — what serves today, on every lander, and the
+// control arm of v1_tarot_shadow_2026. 'shadow' is the Inherited Shadow, in its own
+// roster (./tarotReadsShadow), on the 37 hooks that have an approved shadow read.
+// Only Version B can serve either: it is the arm that delivers a whole pre-written read.
+export type TarotMethod = 'natural' | 'shadow'
 // Deck ids the skill can add. 'decode-him' = seeded face-down Sun/Moon/Tower;
 // 'arcana-mfh' = face-up Magician/HangedMan/Fool (art re-ordered 2026-07-31);
 // 'arcana-eef' = face-up
@@ -1320,6 +1379,10 @@ export type TarotAngle =
   | 'soulmate-connection'
   | 'soulmate-energy'
   | 'soulmate-healing'
+  // The three age-matrix angles (2026-08-25) — see MONEY_AGEBAND_HOOKS etc above.
+  | 'money-ageband'
+  | 'loneliness-ageband'
+  | 'commitment-ageband'
 
 export function angleForHook(hook: TarotHook): TarotAngle {
   if (SELF_FRAME_HOOKS.includes(hook)) return 'self-frame'
@@ -1360,6 +1423,9 @@ export function angleForHook(hook: TarotHook): TarotAngle {
   if (KEYWORD_CONNECTION_HOOKS.includes(hook)) return 'soulmate-connection'
   if (KEYWORD_ENERGY_HOOKS.includes(hook)) return 'soulmate-energy'
   if (KEYWORD_HEALING_HOOKS.includes(hook)) return 'soulmate-healing'
+  if (MONEY_AGEBAND_HOOKS.includes(hook)) return 'money-ageband'
+  if (LONELINESS_AGEBAND_HOOKS.includes(hook)) return 'loneliness-ageband'
+  if (COMMITMENT_AGEBAND_HOOKS.includes(hook)) return 'commitment-ageband'
   return 'decode-him'
 }
 
@@ -1383,6 +1449,65 @@ export const KEYWORD_BLOCKED_HOOKS = SOULMATE_KEYWORD_BLOCKED_LANDER_HOOKS as un
 export const KEYWORD_CONNECTION_HOOKS = SOULMATE_KEYWORD_CONNECTION_LANDER_HOOKS as unknown as TarotHook[]
 export const KEYWORD_ENERGY_HOOKS = SOULMATE_KEYWORD_ENERGY_LANDER_HOOKS as unknown as TarotHook[]
 export const KEYWORD_HEALING_HOOKS = SOULMATE_KEYWORD_HEALING_LANDER_HOOKS as unknown as TarotHook[]
+
+// The three age-matrix angles (2026-08-25). Each is its own reporting label so these
+// don't silently pool into an existing family's live numbers — money-ageband against
+// MONEY_RETIRING/WORKING/ENERGY/PRAYER, loneliness-ageband against the 6-hook
+// LONELINESS_HOOKS baseline, commitment-ageband against the 3-hook live COMMITMENT_HOOKS.
+// None of the three carries a new guard — money and loneliness hooks run the existing
+// MONEY_TAROT_HOOKS / LONELINESS_TAROT_HOOKS frame in prompts.ts unmodified; commitment
+// hooks have no frame Set at all, same as cards-will-commit / cards-wont-commit /
+// cards-ready-commit.
+export const MONEY_AGEBAND_HOOKS: TarotHook[] = [
+  'cards-money-time-running-out',
+  'cards-money-has-to-last',
+  'cards-trusted-loss-blocking-money',
+  'cards-working-money-by-now',
+  'cards-nothing-put-away',
+  'cards-money-cant-stop-working',
+  'cards-earn-and-gone',
+  'cards-talk-myself-out',
+  'cards-paycheck-to-paycheck',
+  'cards-money-reach-me',
+  'cards-paying-what-i-owe',
+]
+export const LONELINESS_AGEBAND_HOOKS: TarotHook[] = [
+  'cards-destined-alone',
+  'cards-how-long-alone',
+  'cards-love-not-happened-yet',
+  'cards-alone-for-years',
+  'cards-more-years-alone',
+  'cards-held-alone',
+  'cards-empty-house-alone',
+  'cards-alone-a-decade',
+  'cards-too-late-or-now',
+  'cards-alone-heavier-now',
+  'cards-alone-rest-of-life',
+  'cards-meant-alone-still-time',
+  'cards-know-not-destined-alone',
+  'cards-destined-or-not-yet',
+  'cards-god-with-me-alone',
+  'cards-god-mean-me-alone',
+  'cards-gods-intention-alone',
+  'cards-love-never-stays',
+  'cards-connection-kept-alive',
+  'cards-wait-on-connection',
+  'cards-real-connection-coming',
+]
+export const COMMITMENT_AGEBAND_HOOKS: TarotHook[] = [
+  'cards-picking-noncommittal-men',
+  'cards-time-to-commit-before-moving-on',
+  'cards-slow-commit-or-wasting-time',
+  'cards-doing-wrong-wont-commit',
+  'cards-wait-commit-this-time',
+  'cards-scared-or-never-commit',
+  'cards-wont-commit-years-together',
+  'cards-years-before-commitment',
+  'cards-commitment-uncertain-years',
+  'cards-no-time-to-waste-commit',
+  'cards-how-much-longer-commit',
+  'cards-commit-or-company',
+]
 
 export const TAROT_HOOKS: TarotHook[] = [
   'cards-honest',
@@ -1489,6 +1614,50 @@ export const TAROT_HOOKS: TarotHook[] = [
   'cards-energy-soulmate',
   'cards-waiting-to-heal',
   'cards-heal-first',
+  'cards-money-time-running-out',
+  'cards-money-has-to-last',
+  'cards-trusted-loss-blocking-money',
+  'cards-working-money-by-now',
+  'cards-nothing-put-away',
+  'cards-money-cant-stop-working',
+  'cards-earn-and-gone',
+  'cards-talk-myself-out',
+  'cards-paycheck-to-paycheck',
+  'cards-money-reach-me',
+  'cards-paying-what-i-owe',
+  'cards-destined-alone',
+  'cards-how-long-alone',
+  'cards-love-not-happened-yet',
+  'cards-alone-for-years',
+  'cards-more-years-alone',
+  'cards-held-alone',
+  'cards-empty-house-alone',
+  'cards-alone-a-decade',
+  'cards-too-late-or-now',
+  'cards-alone-heavier-now',
+  'cards-alone-rest-of-life',
+  'cards-meant-alone-still-time',
+  'cards-know-not-destined-alone',
+  'cards-destined-or-not-yet',
+  'cards-god-with-me-alone',
+  'cards-god-mean-me-alone',
+  'cards-gods-intention-alone',
+  'cards-love-never-stays',
+  'cards-connection-kept-alive',
+  'cards-wait-on-connection',
+  'cards-real-connection-coming',
+  'cards-picking-noncommittal-men',
+  'cards-time-to-commit-before-moving-on',
+  'cards-slow-commit-or-wasting-time',
+  'cards-doing-wrong-wont-commit',
+  'cards-wait-commit-this-time',
+  'cards-scared-or-never-commit',
+  'cards-wont-commit-years-together',
+  'cards-years-before-commitment',
+  'cards-commitment-uncertain-years',
+  'cards-no-time-to-waste-commit',
+  'cards-how-much-longer-commit',
+  'cards-commit-or-company',
 ]
 
 // Shown when /fb-tarot is hit without a recognized ?hook= / ?deck= (bare visit).
@@ -1671,6 +1840,50 @@ export const HEADLINES: Record<TarotHook, string> = {
   'cards-energy-soulmate': 'What does my energy say about my soulmate?',
   'cards-waiting-to-heal': 'Is my soulmate waiting for me to heal?',
   'cards-heal-first': 'Do I need to heal before my soulmate arrives?',
+  'cards-money-time-running-out': "My time is running out. Is my energy blocking my money?",
+  'cards-money-has-to-last': "Whatever I've got has to last now. What's blocking my money?",
+  'cards-trusted-loss-blocking-money': "I lost what I had through someone I trusted. Is that still blocking my money?",
+  'cards-working-money-by-now': "I'm still working. What's blocking the money I should have by now?",
+  'cards-nothing-put-away': "I've got nothing put away. Is my energy blocking my money?",
+  'cards-money-cant-stop-working': "I can't stop working yet. What's still blocking my money?",
+  'cards-earn-and-gone': "I earn it and it's gone. What's blocking my money?",
+  'cards-talk-myself-out': "I talk myself out of everything. What's blocking my money?",
+  'cards-paycheck-to-paycheck': "I'm living paycheck to paycheck and can't get started. Is my energy blocking my money?",
+  'cards-money-reach-me': "Everybody is getting ahead. Why won't the money reach me?",
+  'cards-paying-what-i-owe': "I keep paying what I owe. Why is my money still blocked?",
+  'cards-destined-alone': "Why do I feel destined to be alone?",
+  'cards-how-long-alone': "How long am I going to be alone?",
+  'cards-love-not-happened-yet': "Did I miss my chance, or has love just not happened yet?",
+  'cards-alone-for-years': "I've been alone for years. What's keeping me here?",
+  'cards-more-years-alone': "How many more years alone before something changes?",
+  'cards-held-alone': "Is something holding me here alone, or is this just my life now?",
+  'cards-empty-house-alone': "Why is being alone hardest now that the house is empty?",
+  'cards-alone-a-decade': "I've been alone a decade. How much longer?",
+  'cards-too-late-or-now': "Is it too late for love, or is this only where I am now?",
+  'cards-alone-heavier-now': "Why does being alone feel heavier now than it used to?",
+  'cards-alone-rest-of-life': "Will I be alone for the rest of my life?",
+  'cards-meant-alone-still-time': "Am I meant to be alone now, or is there still time?",
+  'cards-know-not-destined-alone': "How long before I know I'm not destined to be alone?",
+  'cards-destined-or-not-yet': "Am I destined to be alone, or has it just not happened yet?",
+  'cards-god-with-me-alone': "God is with me. Why am I still alone?",
+  'cards-god-mean-me-alone': "How much longer does God mean me to be alone?",
+  'cards-gods-intention-alone': "Is it God's intention for me to be alone, or is someone coming?",
+  'cards-love-never-stays': "Why does love never stay with me?",
+  'cards-connection-kept-alive': "Why have I kept this connection alive on my own?",
+  'cards-wait-on-connection': "How much longer am I going to wait on this connection?",
+  'cards-real-connection-coming': "Is a real connection coming, or do I stay alone?",
+  'cards-picking-noncommittal-men': "Why do I keep picking non-committal men?",
+  'cards-time-to-commit-before-moving-on': "How long do I give him to commit before I move on?",
+  'cards-slow-commit-or-wasting-time': "Is he slow to commit, or is he wasting my time?",
+  'cards-doing-wrong-wont-commit': "What am I doing wrong that he won't commit?",
+  'cards-wait-commit-this-time': "How long do I wait for him to commit this time?",
+  'cards-scared-or-never-commit': "Is he scared to commit, or just never going to?",
+  'cards-wont-commit-years-together': "Why won't he commit after all these years together?",
+  'cards-years-before-commitment': "How many years together before he makes a commitment?",
+  'cards-commitment-uncertain-years': "Why is commitment still uncertain after all these years?",
+  'cards-no-time-to-waste-commit': "Why won't he commit when neither of us has time to waste?",
+  'cards-how-much-longer-commit': "How much longer do I wait for him to commit?",
+  'cards-commit-or-company': "Does he want to commit, or does he just want company?",
 }
 
 // Version C opener question, per hook. C opens with the card line + this, then
@@ -1971,6 +2184,50 @@ const TAROT_QUESTION: Record<TarotHook, string> = {
   'cards-energy-soulmate': 'Before I look closer, tell me… when did you last feel like yourself about this?',
   'cards-waiting-to-heal': 'Before I look closer, tell me… what were you told you had to do first?',
   'cards-heal-first': 'Before I look closer, tell me… what is at the top of the list, before love?',
+  'cards-money-time-running-out': "Before I look closer, tell me… what does 'running out of time' actually feel like day to day for you?",
+  'cards-money-has-to-last': "Before I look closer, tell me… what is it that has to last, and for how long?",
+  'cards-trusted-loss-blocking-money': "Before I look closer, tell me… what did you lose, and how did trusting them play into it?",
+  'cards-working-money-by-now': "Before I look closer, tell me… what did you think you'd have by now that you don't?",
+  'cards-nothing-put-away': "Before I look closer, tell me… what does 'nothing put away' feel like when you think about it?",
+  'cards-money-cant-stop-working': "Before I look closer, tell me… what would it take for you to be able to stop?",
+  'cards-earn-and-gone': "Before I look closer, tell me… where do you notice it going, when it goes?",
+  'cards-talk-myself-out': "Before I look closer, tell me… what's the last thing you talked yourself out of?",
+  'cards-paycheck-to-paycheck': "Before I look closer, tell me… what would 'getting started' actually look like for you?",
+  'cards-money-reach-me': "Before I look closer, tell me… who is it you keep comparing yourself to when you think this?",
+  'cards-paying-what-i-owe': "Before I look closer, tell me… what are you paying down right now that weighs on you most?",
+  'cards-destined-alone': "Before I look closer, tell me… when did being alone first start feeling like something decided rather than something happening?",
+  'cards-how-long-alone': "Before I look closer, tell me… what makes the waiting feel open-ended rather than temporary?",
+  'cards-love-not-happened-yet': "Before I look closer, tell me… is there a moment you keep going back to, wondering if that was the chance?",
+  'cards-alone-for-years': "Before I look closer, tell me… what do you think has kept you here the longest?",
+  'cards-more-years-alone': "Before I look closer, tell me… what would count as something changing, for you?",
+  'cards-held-alone': "Before I look closer, tell me… does it feel like something is holding you, or like this has just become normal?",
+  'cards-empty-house-alone': "Before I look closer, tell me… what changed in the house that made the quiet louder?",
+  'cards-alone-a-decade': "Before I look closer, tell me… what has the last ten years taught you about waiting?",
+  'cards-too-late-or-now': "Before I look closer, tell me… when you think 'too late', what exactly do you picture missing?",
+  'cards-alone-heavier-now': "Before I look closer, tell me… what's different about how it feels now compared to before?",
+  'cards-alone-rest-of-life': "Before I look closer, tell me… when you picture the rest of your life, what part of it worries you most?",
+  'cards-meant-alone-still-time': "Before I look closer, tell me… what makes 'meant to be' feel more likely than 'not yet'?",
+  'cards-know-not-destined-alone': "Before I look closer, tell me… what would actually convince you, if something did?",
+  'cards-destined-or-not-yet': "Before I look closer, tell me… which one do you catch yourself believing on your hardest days?",
+  'cards-god-with-me-alone': "Before I look closer, tell me… how does your faith sit alongside the loneliness, most days?",
+  'cards-god-mean-me-alone': "Before I look closer, tell me… what have you been asking for in your prayers about this?",
+  'cards-gods-intention-alone': "Before I look closer, tell me… which feels more true lately — that it's intended, or that someone's coming?",
+  'cards-love-never-stays': "Before I look closer, tell me… looking back, is there a pattern to how it ends, or does each one feel different?",
+  'cards-connection-kept-alive': "Before I look closer, tell me… what have you been doing to keep it going, that they have not?",
+  'cards-wait-on-connection': "Before I look closer, tell me… what are you actually waiting for them to do?",
+  'cards-real-connection-coming': "Before I look closer, tell me… what would tell you it was real, if it did arrive?",
+  'cards-picking-noncommittal-men': "Before I look closer, tell me… looking back, what do the men you've picked tend to have in common?",
+  'cards-time-to-commit-before-moving-on': "Before I look closer, tell me… what would tell you it's time to stop waiting?",
+  'cards-slow-commit-or-wasting-time': "Before I look closer, tell me… what does he do that makes it hard to tell which one it is?",
+  'cards-doing-wrong-wont-commit': "Before I look closer, tell me… what's the story you tell yourself about why he hasn't committed?",
+  'cards-wait-commit-this-time': "Before I look closer, tell me… what's different about waiting this time than before?",
+  'cards-scared-or-never-commit': "Before I look closer, tell me… what have you seen in him that makes you wonder which one it is?",
+  'cards-wont-commit-years-together': "Before I look closer, tell me… what has he said, if anything, about why he hasn't?",
+  'cards-years-before-commitment': "Before I look closer, tell me… what would commitment actually need to look like, coming from him?",
+  'cards-commitment-uncertain-years': "Before I look closer, tell me… what's stayed the same the whole time you've been uncertain?",
+  'cards-no-time-to-waste-commit': "Before I look closer, tell me… what makes the time feel like it's running out for you both?",
+  'cards-how-much-longer-commit': "Before I look closer, tell me… what have you been telling yourself while you wait?",
+  'cards-commit-or-company': "Before I look closer, tell me… what does he do that makes you wonder which one it is?",
 }
 
 // ── Deck registry ────────────────────────────────────────────────────────────
@@ -2555,6 +2812,44 @@ const RETURN_MHF: CardSetConfig = {
     'cards-energy-how-long': "Think of the money that never came. Tap the card that calls you.",
     'cards-prayed-years': "Think of the money that never came. Tap the card that calls you.",
     'cards-prayers-unanswered': "Think of the money that never came. Tap the card that calls you.",
+    // 2026-08-26 — the money-age-energy batch (11 new hooks) shares the same instruction
+    // as the original 11 money hooks above, on purpose: one category-level line, not
+    // per-hook variation.
+    'cards-money-time-running-out': "Think of the money that never came. Tap the card that calls you.",
+    'cards-money-has-to-last': "Think of the money that never came. Tap the card that calls you.",
+    'cards-trusted-loss-blocking-money': "Think of the money that never came. Tap the card that calls you.",
+    'cards-working-money-by-now': "Think of the money that never came. Tap the card that calls you.",
+    'cards-nothing-put-away': "Think of the money that never came. Tap the card that calls you.",
+    'cards-money-cant-stop-working': "Think of the money that never came. Tap the card that calls you.",
+    'cards-earn-and-gone': "Think of the money that never came. Tap the card that calls you.",
+    'cards-talk-myself-out': "Think of the money that never came. Tap the card that calls you.",
+    'cards-paycheck-to-paycheck': "Think of the money that never came. Tap the card that calls you.",
+    'cards-money-reach-me': "Think of the money that never came. Tap the card that calls you.",
+    'cards-paying-what-i-owe': "Think of the money that never came. Tap the card that calls you.",
+    // 2026-08-26 — the alone-age-energy + connection batch (21 hooks). No particular man
+    // exists in this frame, so the deck default ("think of the man on your mind") is
+    // exactly as wrong here as it was on money — neutral instruction instead.
+    'cards-destined-alone': "Think of what's on your mind. Tap the card that calls you.",
+    'cards-how-long-alone': "Think of what's on your mind. Tap the card that calls you.",
+    'cards-love-not-happened-yet': "Think of what's on your mind. Tap the card that calls you.",
+    'cards-alone-for-years': "Think of what's on your mind. Tap the card that calls you.",
+    'cards-more-years-alone': "Think of what's on your mind. Tap the card that calls you.",
+    'cards-held-alone': "Think of what's on your mind. Tap the card that calls you.",
+    'cards-empty-house-alone': "Think of what's on your mind. Tap the card that calls you.",
+    'cards-alone-a-decade': "Think of what's on your mind. Tap the card that calls you.",
+    'cards-too-late-or-now': "Think of what's on your mind. Tap the card that calls you.",
+    'cards-alone-heavier-now': "Think of what's on your mind. Tap the card that calls you.",
+    'cards-alone-rest-of-life': "Think of what's on your mind. Tap the card that calls you.",
+    'cards-meant-alone-still-time': "Think of what's on your mind. Tap the card that calls you.",
+    'cards-know-not-destined-alone': "Think of what's on your mind. Tap the card that calls you.",
+    'cards-destined-or-not-yet': "Think of what's on your mind. Tap the card that calls you.",
+    'cards-god-with-me-alone': "Think of what's on your mind. Tap the card that calls you.",
+    'cards-god-mean-me-alone': "Think of what's on your mind. Tap the card that calls you.",
+    'cards-gods-intention-alone': "Think of what's on your mind. Tap the card that calls you.",
+    'cards-love-never-stays': "Think of what's on your mind. Tap the card that calls you.",
+    'cards-connection-kept-alive': "Think of what's on your mind. Tap the card that calls you.",
+    'cards-wait-on-connection': "Think of what's on your mind. Tap the card that calls you.",
+    'cards-real-connection-coming': "Think of what's on your mind. Tap the card that calls you.",
   },
   strip: { url: '/tarot/return-mhf-strip.png', width: 972, height: 540 },
   // Face-down: the tap targets are backs, but the reveal flips to the real card
@@ -2875,74 +3170,75 @@ const RETURN_MHF: CardSetConfig = {
     // recycled from the decode-him or trust hooks (verified mechanically — no
     // shared 6-word run in beat 3).
     'cards-will-commit': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-natural-36.md — approved copy, folded verbatim:
+      // cuts 3-6 become beat 3, joined by newlines, and Version B serves them as separate
+      // chat messages with a typing pause between each.
       a: [
-        "You turned the Magician, dear. Look — one hand up to the sky, one down to the ground, every tool laid out on his table.",
-        "You asked whether he'll ever commit. Your hand went to the man who already has all he needs.",
-        "He isn't missing a thing, dear. He could decide.\nHe just hasn't.\nYou've felt that all along. You're reading him right — you're not making it up.\nAnd wanting an answer by now isn't you pushing. It's you being awake.",
-        "Let me look closer at what he keeps picking instead…",
+        "Nothing showed through the backs. You turned the Magician — see him standing behind a table where every tool is already laid out.",
+        "Your question is whether he'll ever commit. The Magician has the means to act when he chooses.",
+        "He is capable of commitment.\nWhat he can do doesn't tell us whether he'll make that choice.\nAll is within reach, and the decision still hasn't been made.\nYou aren't asking whether he could commit, dear. You need to know whether he will.",
+        "Let me see what's keeping that decision on the table…",
       ],
       b: [
-        "You turned the Hanged Man, dear. Look at him — hanging upside down by one ankle, and not fighting it.",
-        "You asked whether he'll ever commit. Your hand went to the man hanging between two answers.",
-        "He hasn't come down on either side. Not toward you, not away.\nHe isn't keeping a decision from you, dear. He hasn't made one.\nThat's the harder answer, I know. But it's the true one.\nAnd you did wait, dear. That was real — you didn't make it up to keep hoping.",
-        "Let me look closer at what's holding him up there…",
+        "You chose without seeing the pictures. You turned the Hanged Man — look at his calm face, even though one ankle is tied above him.",
+        "What you want to know is whether he'll ever commit. One rope has stopped the whole figure.",
+        "His holding back is real, dear.\nI can't tell you whether he moves from that point.\nHis arms and free leg can move. The tied ankle still keeps him there.\nWhat may happen is no longer enough for you.",
+        "Let's see what's keeping him holding back…",
       ],
       c: [
-        "You turned the Fool, dear. Look — one foot out over the edge, the other still on the ground.",
-        "You asked whether he'll ever commit. Your hand went to the man caught mid-step.",
-        "That foot is still in the air. He hasn't come down either way.\nSo nothing has been settled against you. Not yet.\nYou kept hoping. That isn't you fooling yourself, dear — you were reading it right.",
-        "Let me look closer at which way that foot comes down…",
+        "The cards were face down. You turned the Fool — notice the small bundle on his stick and the open sky above him.",
+        "You came asking whether he'll ever commit. The Fool has only packed for the beginning.",
+        "This card places him at the beginning, not in commitment.\nI can't tell you what he'll choose later.\nThe Fool is ready to move, but he carries almost nothing with him.\nYou need a commitment, and the card shows a man travelling light.",
+        "I want to look at what stands between this beginning and a commitment…",
       ],
     },
     // ⚠ This hook PRESUPPOSES his refusal. Two failure modes, not one: pronouncing
     // on his character, and letting the answer land as her fault. The reads route
     // the "why" to where HE is stuck and never to anything she did or is.
     'cards-wont-commit': {
-      // 🔄 Natural Tarot-Cut, wired 2026-08-19 from
-      // fb-tarot/docs/drafts/rewrites/cards-wont-commit.json — approved copy, folded verbatim:
-      // bubbles 3-6 become beat 3, joined by newlines, and Version B serves them as
-      // separate chat messages with a typing pause between each.
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-natural-36.md — approved copy, folded verbatim:
+      // cuts 3-6 become beat 3, joined by newlines, and Version B serves them as separate
+      // chat messages with a typing pause between each.
       a: [
-        "You turned the Magician, dear. Look — a white band round his dark hair.",
-        "You asked why he won't commit to you. Your hand went to the man who decides.",
-        "So the hold on this isn't yours, dear. Nothing you did put it there.\nAnd the tools for building are all laid out in front of him, dear.\nBut having the tools is not the same as picking them up, dear.\nThat's why you get the words, dear, and the week after looks the same.",
-        "Let me look closer at what stands in the way of a choice…",
+        "You chose the Magician — look at the cup, coin, blade and wand already spread across his table.",
+        "Your question is why he won't commit to you. This is a man with every tool he needs.",
+        "He can commit. Your worth was never the missing part.\nThe card doesn't show what he chooses to do with that.\nAll is ready, and he still hasn't made the commitment.\nYou're asking why he won't commit to you, even though he is the one holding back, dear.",
+        "I want to look at what's keeping him from using what he already has…",
       ],
       b: [
-        "You turned the Hanged Man, dear. Look — his arms are out of sight, and his body makes a triangle.",
-        "You asked why he won't commit to you. Your hand went to the card that stalls.",
-        "So something has him stuck, dear. You've been feeling exactly that.\nAnd his arms are out of sight, dear. You can't see what he's holding.\nBut where he is stuck is his to name, dear. Not mine, and not yours.\nThat's why every reason you land on slides off, dear. None of them stick.",
-        "Let me look closer at what has this stuck in place…",
+        "You chose the Hanged Man — see his calm face, even while one ankle holds him up.",
+        "What you want to know is why he won't commit. One rope is keeping the whole figure in place.",
+        "He's the one who's stuck. This isn't a measure of your worth.\nThe card doesn't tell me whether he'll move on his own.\nMost of him hangs free, but that one ankle keeps him there.\nYou want commitment, and he's still hanging at the same point.",
+        "Let me look closer at what's keeping him at that one point…",
       ],
       c: [
-        "You turned the Fool, dear. Look — the little dog has its tail straight up.",
-        "You asked why he won't commit to you. Your hand went to the one who ties nothing down.",
-        "So nothing in his life is tied down, dear. You saw that early.\nAnd the little dog has its tail straight up, dear. It knows the mood.\nBut loose isn't the same as gone, dear. He still walks beside you.\nThat's why asking for more never turns into a row. It just slides off.",
-        "Let me look closer at what has been keeping this loose…",
+        "You chose the Fool — notice the small bundle on his stick; that's all he's carrying.",
+        "You came asking why he won't commit to you. The Fool is travelling light.",
+        "He isn't carrying the commitment you're asking for.\nThe card doesn't tell me whether he'll choose it later, dear.\nYou want a commitment. He's still travelling with one small bundle.\nHe's carrying less than you're asking for. The commitment is missing, not your worth.",
+        "Now let's look at what keeps him from carrying more…",
       ],
     },
     'cards-ready-commit': {
-      // 🔄 Natural Tarot-Cut, wired 2026-08-19 from
-      // fb-tarot/docs/drafts/rewrites/cards-ready-commit.json — approved copy, folded verbatim:
-      // bubbles 3-6 become beat 3, joined by newlines, and Version B serves them as
-      // separate chat messages with a typing pause between each.
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-natural-36.md — approved copy, folded verbatim:
+      // cuts 3-6 become beat 3, joined by newlines, and Version B serves them as separate
+      // chat messages with a typing pause between each.
       a: [
-        "You turned the Magician, dear. Look — the table hides him from the waist down.",
-        "You asked if he will be ready for real commitment. Your hand went to the man who builds.",
-        "So he will get there, dear. This card is a man who builds things.\nAnd the making of it is already in his hands, dear.\nBut the table hides him from the waist down. You can't see his footing.\nThat's why he can talk about a future, dear. He never steps toward it.",
-        "Let me look closer at what sits in the gap between you…",
+        "The cards were face down. You turned the Magician — every tool he could need is already laid out on the table.",
+        "You came asking whether he will ever be ready for real commitment. He already can act.",
+        "The gap between what he can do and where he stands is real.\nWhat he can do does not promise that he will choose commitment.\nEvery tool is ready, and the decision is still missing.\nYou are ready for a decision, dear. The card shows why what he can do has not been enough for you.",
+        "Let me look closer at what keeps his power to act from becoming a decision…",
       ],
       b: [
-        "You turned the Hanged Man, dear. Look — one shoe points down, and the other points out sideways.",
-        "You asked if he will be ready for real commitment. Your hand went to the card that stops the clock.",
-        "So he has stopped in one spot, dear. Stopped is not finished.\nAnd look at his feet. One shoe points down, one points off sideways.\nBut I won't name a day for you, dear. There's no day on this card.\nThat's why it stalls at the very same place, dear, every single time.",
-        "Let me look closer at what keeps stopping this at the same spot…",
+        "You chose without seeing the figure. You turned the Hanged Man — one ankle holds him while the rest of his body hangs free.",
+        "You asked whether he will become ready. The card shows a man stopped at one point.",
+        "He is not standing where you are ready to stand.\nWhether he leaves that point is still outside the card.\nMost of him is free, but one tied ankle still stops him.\nThe question is whether he will join you in commitment. This card only shows the gap between your position and his.",
+        "I want to look at what holds him short of that decision…",
       ],
       c: [
-        "You turned the Fool, dear. Look — a small circle floats above him, next to a big bright sun.",
-        "You asked if he will be ready for real commitment. Your hand went to the one who hasn't chosen.",
-        "So nothing has been chosen yet, dear. Nothing has been ruled out either.\nAnd he's stepping out with no one thing in mind, dear.\nBut you know exactly what you're ready for. That's the difference here.\nThat's why you wait for him to catch up, dear. You got there first.",
-        "Let me look closer at what stands between you and a real choice…",
+        "The backs showed you nothing. You turned the Fool — notice the small bundle tied to his stick.",
+        "What you want to know is whether he will be ready for commitment. The Fool is still travelling light.",
+        "He is still near the beginning of this.\nA beginning does not say whether he builds toward commitment.\nYou are asking for something real, while he is carrying almost nothing forward.\nYour readiness is not impatience. It is simply farther along than the place this card shows.",
+        "Let me see what keeps him travelling so lightly…",
       ],
     },
     // ── Reunion/return hooks (2026-08-04) ────────────────────────────────────
@@ -3378,54 +3674,52 @@ const RETURN_MHF: CardSetConfig = {
     // 'Will I find a new soulmate after loss?' — THE WORD "NEW". The fear underneath is
     // not whether someone exists; it is whether loving again would mean replacing him.
     'cards-new-soulmate': {
-      // 🔄 Natural Tarot-Cut, wired 2026-08-19 from
-      // fb-tarot/docs/drafts/rewrites/cards-new-soulmate.json — approved copy, folded verbatim:
-      // bubbles 3-6 become beat 3, joined by newlines, and Version B serves them as
-      // separate chat messages with a typing pause between each.
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-natural-36.md — approved copy, folded verbatim:
+      // cuts 3-6 become beat 3, joined by newlines, and Version B serves them as separate
+      // chat messages with a typing pause between each.
       a: [
-        "You turned the Magician, dear. Look — the front edge of his table runs straight across the card.",
-        "You asked if you'll find a new soulmate after loss. Your hand went to the man who makes things.",
-        "So you will love again, dear. And it takes nothing away from him.\nAnd putting a thing on that table takes nothing off it, dear.\nBut you've been holding that as disloyal, dear. Nobody said you must.\nThat's why you stop yourself before you start, dear. Every single time.",
-        "Let me look closer at what sits in the way of a new love…",
+        "The pictures were face down when you chose. You turned the Magician — the cup remains on his table beside every other tool.",
+        "You asked whether you can find a new soulmate after loss. The cup has not gone from the table.",
+        "Loving again would not replace what you lost.\nI cannot promise that another person is coming.\nThe cup remains, while the thought of using it again feels like taking something from the love before it.\nYou asked for a new soulmate, but \"new\" carries the fear of taking his place. The card keeps both loves apart, dear.",
+        "I want to look at what made another love feel like it would take the first one's place…",
       ],
       b: [
-        "You turned the Hanged Man, dear. Look — his hair hangs straight down, pointing at the bottom of the card.",
-        "You asked if you'll find a new soulmate after loss. Your hand went to the card that turns a world over.",
-        "So the seat left empty can be filled, dear. Asking that is fair.\nAnd look at him. All he knew is the other way up now.\nBut you were never told it was allowed, dear. So you carried the question.\nThat's why you ask it quietly, dear, and never out loud to anyone.",
-        "Let me look closer at what has been standing over that empty seat…",
+        "You picked without seeing the card. You turned the Hanged Man — green leaves grow from the living wood above him.",
+        "You came asking whether love can exist after loss. Life is still visible in the wood that holds this card.",
+        "You can still love. That does not erase the love you lost.\nLiving wood cannot name a future person or a time.\nNew leaves grow on the same wood, while your question fears that new love would cancel the old.\nYou are not only asking whether you can love again. You are asking what that would mean about the love you lost.",
+        "Now let's look at what keeps new growth tied to the fear of erasing what came before…",
       ],
       c: [
-        "You turned the Fool, dear. Look — his tunic is dark, and the flowers on it are red.",
-        "You asked if you'll find a new soulmate after loss. Your hand went to the one starting out again.",
-        "So starting again isn't a debt against what came before, dear.\nAnd he carries what he has, dear, and still walks on.\nBut nothing about a new love replaces the old one, dear.\nThat's why wanting it has felt like a betrayal. It never was one, dear.",
-        "Let me look closer at what has been standing between you and starting…",
+        "The backs gave nothing away. You turned the Fool — notice the white rose in his hand and the small bundle behind him.",
+        "Your question is whether there can be love after loss. The Fool carries what came before as he faces a beginning.",
+        "Beginning again would not mean leaving that love behind, dear.\nThe road ahead does not tell me who appears on it.\nThe Fool can carry something forward and still hold the rose.\nThe loss remains in your question, even as you look ahead. The Fool does not ask you to discard it.",
+        "Let me see what makes carrying love forward feel like leaving it behind…",
       ],
     },
     // 'Is there still a soulmate out there for me?' — THE WORD "STILL". She is not asking
     // where someone is; she is asking whether her one was already issued and already spent.
     // The read answers the PREMISE, never the location, and never the timing.
     'cards-soulmate-out-there': {
-      // 🔄 Natural Tarot-Cut, wired 2026-08-19 from
-      // fb-tarot/docs/drafts/rewrites/cards-soulmate-out-there.json — approved copy, folded verbatim:
-      // bubbles 3-6 become beat 3, joined by newlines, and Version B serves them as
-      // separate chat messages with a typing pause between each.
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-natural-36.md — approved copy, folded verbatim:
+      // cuts 3-6 become beat 3, joined by newlines, and Version B serves them as separate
+      // chat messages with a typing pause between each.
       a: [
-        "You turned the Magician, dear. Look — behind the table, the flowers come up past his knees.",
-        "You asked if there's still a soulmate out there. Your hand went to the man with a full table.",
-        "So you have not used it up, dear. Nobody handed you just one.\nAnd look at his table. Nothing on it runs down with use.\nBut you've been living as though your one was already spent, dear.\nThat's why every year feels like a loss, dear. You've been counting down.",
-        "Let me look closer at what has been standing in your road…",
+        "Nothing on the backs revealed the card. You turned the Magician — his cup is still standing among the tools on the table.",
+        "What you want to know is whether there is still a soulmate for you. The cup has not been used up or removed.",
+        "One great love did not use up the love in you.\nI cannot tell you that anyone is out there, or that nobody is.\nThe cup is still there. You are asking whether love was only issued once.\nThe word \"still\" asks whether your chance was already spent. The love in you was not.",
+        "Now let's look at what made love feel like a one-time allowance…",
       ],
       b: [
-        "You turned the Hanged Man, dear. Look — you can see the sole of his tied foot.",
-        "You asked if there's still a soulmate out there. Your hand went to the card that hangs a question up.",
-        "So love doesn't run out, dear. That was never the rule.\nAnd look at him. Held still, and nothing about him empties.\nBut your question assumes a store that runs down, dear.\nThat's why the word still got into your question. Someone put it there, dear.",
-        "Let me look closer at what has been holding that question up…",
+        "You chose a hidden picture. You turned the Hanged Man — the wood is alive, and green leaves remain above him.",
+        "Your question is whether love was limited to the person you lost. The living wood has not run out of growth.",
+        "The love in you was not a set amount that ran out.\nGrowth on the card does not forecast another person.\nThe wood remains alive, while you are asking whether all its growth belonged to the past.\nYou are not only asking about a future person. You are asking whether the love in you had a limit.",
+        "Let me look closer at what tied all future growth to the love already lived…",
       ],
       c: [
-        "You turned the Fool, dear. Look — nothing behind him but sky, and nothing ahead but air.",
-        "You asked if there's still a soulmate out there. Your hand went to the one with road left.",
-        "So there's road left, dear. Plenty of it, and unwalked.\nAnd look where he is. Mid-step, not at the end of one.\nBut nothing about you has closed off, dear. Not one door.\nThat's why you started asking if you'd missed it, dear. You have not.",
-        "Let me look closer at what has been laid across your road…",
+        "The images were face down. You turned the Fool — he keeps the white rose in hand while carrying a small bundle forward.",
+        "You asked whether one great love means no soulmate is still out there. The card carries what mattered into a new road.",
+        "Loving once with all your heart did not empty you, dear.\nThe open road cannot locate or promise a soulmate.\nThe Fool still carries the rose, while the question fears there is nothing left to carry forward.\nThe person you lost is not being replaced here. The card is answering what remains possible inside you.",
+        "I want to look at what made love feel as though it could no longer happen…",
       ],
     },
     // 'Am I ready to love again after losing him?' — THE VERDICT ON HER, and the sharpest
@@ -3434,27 +3728,26 @@ const RETURN_MHF: CardSetConfig = {
     // does the same thing wearing concern. The finding: she is asking for permission, and
     // permission was never in anyone else's keeping — which is why waiting has not worked.
     'cards-ready-to-love': {
-      // 🔄 Natural Tarot-Cut, wired 2026-08-19 from
-      // fb-tarot/docs/drafts/rewrites/cards-ready-to-love.json — approved copy, folded verbatim:
-      // bubbles 3-6 become beat 3, joined by newlines, and Version B serves them as
-      // separate chat messages with a typing pause between each.
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-natural-36.md — approved copy, folded verbatim:
+      // cuts 3-6 become beat 3, joined by newlines, and Version B serves them as separate
+      // chat messages with a typing pause between each.
       a: [
-        "You turned the Magician, dear. Look — the wand he holds is short, and he grips it near the middle.",
-        "You asked about loving again after losing him. Your hand went to the man who builds rather than rules.",
-        "So I will not grade you on this, dear. Nobody gets to.\nAnd look at his hands. They're for making things, not for measuring them.\nBut there's no standard here that anyone could hold you to, dear.\nThat's why the question keeps coming back, dear. The permission was yours all along.",
-        "Let me look closer at what has been standing between you and your own say…",
+        "You chose while every picture was hidden. You turned the Magician — all four tools are present on his table.",
+        "What you want to know is whether you are ready to love again. Nothing on this table waits for anyone else to mark it ready.",
+        "I will not grade you ready or unready. No one else gets to declare it.\nI won't force a yes or no before you choose one.\nEvery tool is present, while you are still looking outside yourself for permission to use them.\nYou asked me to tell you whether you are ready. The card returns that decision to you, dear.",
+        "Let's see what placed your readiness in anyone else's hands…",
       ],
       b: [
-        "You turned the Hanged Man, dear. Look — his tunic hangs down toward his chin.",
-        "You asked about loving again after losing him. Your hand went to the card that won't hurry.",
-        "So the Hanged Man declines to rule on you, dear.\nAnd look at him. Nobody is timing him, and nobody is timing you.\nBut you've been keeping a clock on yourself, dear. Someone handed it to you.\nThat's why you weigh it up again each morning. It was always yours to say.",
-        "Let me look closer at what has been putting a clock on you…",
+        "The cards were face down. You turned the Hanged Man — his calm face remains unchanged inside the pause.",
+        "Your question is whether you are ready after losing him. The card shows a pause without judging how long it should last.",
+        "This card issues no verdict on whether you are ready, dear.\nNothing here tells you that you have grieved too long or not long enough.\nThe face stays calm, though your question turns the pause into a test.\nThe question is not only about love. It is about who is allowed to release you from waiting.",
+        "Let me see what turned grief into a test you must finish…",
       ],
       c: [
-        "You turned the Fool, dear. Look — his weight is on his back foot, and the front one is out.",
-        "You asked about loving again after losing him. Your hand went to the one who steps without knowing.",
-        "So the Fool will not grade you either, dear.\nAnd look at him. He goes without being certain in advance.\nBut nobody is sure before they step, dear. Not one person.\nThat's why you've read your own doubt as a no, dear. Doubt says nothing.",
-        "Let me look closer at what has been standing in the way of your own step…",
+        "You couldn't see the image when you picked. You turned the Fool — look at the small bundle on his stick.",
+        "You asked whether you may love again. The card begins without proof that the past is finished.",
+        "I refuse to call you ready or unready. The permission to love again is yours.\nA beginning does not decide whether today is your day to take it.\nThe Fool can begin without a verdict, while you are waiting for one.\nYou already brought the chance to love again into the question. No one else has to say yes.",
+        "Let me look closer at what keeps you waiting for permission before the first step…",
       ],
     },
     // ── Soulmate-where (2026-08-07) ──────────────────────────────────────────
@@ -3482,27 +3775,26 @@ const RETURN_MHF: CardSetConfig = {
     // not a distance, and she has been treating an absence as a destination she keeps
     // failing to reach.
     'cards-where-soulmate': {
-      // 🔄 Natural Tarot-Cut, wired 2026-08-19 from
-      // fb-tarot/docs/drafts/rewrites/cards-where-soulmate.json — approved copy, folded verbatim:
-      // bubbles 3-6 become beat 3, joined by newlines, and Version B serves them as
-      // separate chat messages with a typing pause between each.
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-natural-36.md — approved copy, folded verbatim:
+      // cuts 3-6 become beat 3, joined by newlines, and Version B serves them as separate
+      // chat messages with a typing pause between each.
       a: [
-        "You turned the Magician, dear. Look — the blade on his table lies flat, pointing away from him.",
-        "You asked where your soulmate is right now. Your hand went to the man who makes rather than finds.",
-        "So this isn't a distance, dear. Nothing is keeping him miles from you.\nAnd nothing on that table came from far away, dear.\nBut I won't give you an address, dear. There's none on this card.\nThat's why looking harder has never helped, dear. You were looking outward.",
-        "Let me look closer at what has been standing in that gap…",
+        "You selected from hidden pictures. You turned the Magician — the whole card is centered on one table, but no second person appears.",
+        "Your question is where your soulmate is right now. The Magician cannot place someone outside this picture.",
+        "No card can honestly locate a soulmate for you.\nNothing here supports a direction, setting or type of person.\nOne table fills the card, while your question reaches beyond it for a real-world address.\nYou have been treating \"not yet\" as though it meant \"somewhere else.\" The card cannot make that leap, dear.",
+        "Now let's look at what turned an absence into a place you could not reach…",
       ],
       b: [
-        "You turned the Hanged Man, dear. Look — his belt hangs down away from his waist.",
-        "You asked where your soulmate is right now. Your hand went to the card with no ground in it.",
-        "So there's no place on this card, dear. None at all.\nAnd he hangs with no road and no map behind him, dear.\nBut you made it a somewhere else, dear. That felt easier to hold.\nThat's why you've thought about moving, dear. A new town, a fresh start.",
-        "Let me look closer at what's actually in your way…",
+        "The cards were face down when you chose. You turned the Hanged Man — see his calm face as he hangs upside down.",
+        "What you want to know is where your soulmate is. The Hanged Man shows waiting, not where anyone lives.",
+        "The waiting is real, but it is not a location.\nThe card gives no place, distance or clue you could follow.\nThe figure stays in one place, but that cannot locate the person in your question.\nYou asked where because the absence had begun to feel like distance. Waiting is all this picture gives us.",
+        "Let's see what made the waiting feel like someone was elsewhere…",
       ],
       c: [
-        "You turned the Fool, dear. Look — his right foot is flat and his left one is lifting.",
-        "You asked where your soulmate is right now. Your hand went to the one with no fixed end.",
-        "So you're still moving, dear. You have not stopped at all.\nAnd he's mid-step, dear, going somewhere he can't name yet.\nBut not knowing where isn't the same as stopping, dear.\nThat's why those years feel wasted to you, dear. The road was under you.",
-        "Let me look closer at what has been slowing your road…",
+        "Nothing on the backs showed the picture. You turned the Fool — a white rose is in one hand, with a small bundle behind him.",
+        "You came asking where your soulmate is now. The Fool has a road with no marked end.",
+        "The road does not point to a place where anyone is waiting, dear.\nThe Fool cannot tell you to search, move or look somewhere else.\nThe road is in view, while its end and any person on it remain absent.\nThe question turns love into an end you have failed to reach. The card does not show that failure.",
+        "Now let's look at what keeps the road from becoming a meeting without making up an end…",
       ],
     },
     // 'Is my soulmate closer than I think?' — THE PROXIMITY REQUEST, and a deliberate copy
@@ -3510,27 +3802,26 @@ const RETURN_MHF: CardSetConfig = {
     // finding here is NOT proximity: it is the bracing. She has been managing her own hope
     // downward to stay safe, and that guarding is what any felt "distance" is made of.
     'cards-soulmate-closer': {
-      // 🔄 Natural Tarot-Cut, wired 2026-08-19 from
-      // fb-tarot/docs/drafts/rewrites/cards-soulmate-closer.json — approved copy, folded verbatim:
-      // bubbles 3-6 become beat 3, joined by newlines, and Version B serves them as
-      // separate chat messages with a typing pause between each.
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-natural-36.md — approved copy, folded verbatim:
+      // cuts 3-6 become beat 3, joined by newlines, and Version B serves them as separate
+      // chat messages with a typing pause between each.
       a: [
-        "You turned the Magician, dear. Look — red flowers below him, white ones beside them.",
-        "You asked if your soulmate is closer than you feel. Your hand went to the man who measures nothing.",
-        "So I will not put a distance on this, dear. What I will say is it's coming.\nAnd his table holds tools, dear, not a measuring tape.\nBut look what the question does to you. It braces you.\nThat's why you check yourself before you let yourself hope, dear.",
-        "Let me look closer at what put that guard up…",
+        "The backs gave no sign of the picture. You turned the Magician — all four tools are close enough for him to reach.",
+        "You came asking whether your soulmate is closer than you think. The Magician shows control over what is near, not where another person is.",
+        "No honest reading can measure where a soulmate is. This card takes me to the way you've guarded your hope.\nThe table cannot tell me whether that hope will be met.\nYou want to believe love may be near, but you have been keeping that hope under tight control.\nYou are not only asking about distance. You are checking how much hope it is safe to allow, dear.",
+        "Let's see what taught you to keep hope under such tight control…",
       ],
       b: [
-        "You turned the Hanged Man, dear. Look — the rope is tied in a simple loop round his foot.",
-        "You asked if your soulmate is closer than you feel. Your hand went to the card with no near or far.",
-        "So this card does not offer distances, dear. It shows a person, holding still.\nAnd there's no ground under him, dear. So there's no near or far.\nBut you've been holding your own hope back, dear. I would too.\nThat's why good news makes you flinch first, dear, before it makes you glad.",
-        "Let me look closer at what taught you to hold back…",
+        "You couldn't see the card you chose. You turned the Hanged Man — one rope keeps him fixed while the world appears at a different angle.",
+        "You asked whether love is nearer than you believe. Waiting can change how every distance feels.",
+        "This card does not offer a distance. It shows how the waiting taught you to brace.\nThat rope gives no time for when the waiting changes.\nThe waiting has not ended, and you have learned to brace before you let hope in.\nThe waiting taught you to brace first. That is what this card can see, not where love is.",
+        "Let me see what taught you to brace before you hope…",
       ],
       c: [
-        "You turned the Fool, dear. Look — his bundle is tied at the very end of the stick.",
-        "You asked if your soulmate is closer than you feel. Your hand went to the one who counts no steps.",
-        "So there's no honest reading of near, dear. The Fool counts no steps.\nAnd he steps without knowing how far is left to go, dear.\nBut you've been rationing your own hope, dear. A little at a time.\nThat's why you talk yourself down first, dear. Before a thing has happened.",
-        "Let me look closer at what makes you flinch first…",
+        "All three were face down. You turned the Fool — his face is tipped toward the sky, with a white rose in one hand.",
+        "What you want to know is whether a soulmate is closer. Nothing on the Fool's road measures that distance.",
+        "No honest reading can call love close or far away. What I see is you rationing hope.\nThe open sky cannot tell me who arrives or when.\nYou asked whether love is close, but part of you is already getting ready for it not to be.\nYou asked whether love is close because hope has become something you let in a little at a time, dear.",
+        "Let me look closer at why hope has had to come in such small amounts…",
       ],
     },
     // 'Why haven't I found my soulmate where I am?' — THE CULPRIT REQUEST. The question
@@ -3540,27 +3831,26 @@ const RETURN_MHF: CardSetConfig = {
     // dangerous answer there is strategy she could act on (move, look elsewhere). A read
     // that declines to blame her surroundings covers the life-stage reading too.
     'cards-not-found-yet': {
-      // 🔄 Natural Tarot-Cut, wired 2026-08-19 from
-      // fb-tarot/docs/drafts/rewrites/cards-not-found-yet.json — approved copy, folded verbatim:
-      // bubbles 3-6 become beat 3, joined by newlines, and Version B serves them as
-      // separate chat messages with a typing pause between each.
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-natural-36.md — approved copy, folded verbatim:
+      // cuts 3-6 become beat 3, joined by newlines, and Version B serves them as separate
+      // chat messages with a typing pause between each.
       a: [
-        "You turned the Magician, dear. Look — the cup on his table is gold, and it's empty.",
-        "You asked why you've not found your soulmate yet. Your hand went to the maker.",
-        "So there's no wrong turning to find, dear. You didn't miss it.\nAnd look at the cup. It's empty, and nobody emptied it.\nBut you've been hunting for whose fault this is, dear.\nThat's why a quiet year feels like a mark against you, dear.",
-        "Let me look closer at what has been sitting in the empty place…",
+        "The cards were face down. You turned the Magician — he and every tool on his table are standing plainly in the open.",
+        "You asked why you have not found your soulmate where you are. Nothing on this card is hidden or in the wrong setting.",
+        "Not finding love here is not proof that you caused the absence.\nNo reason, place or change you should make appears here.\nAll is in view, while your question asks whether you or this place must be at fault.\nYou asked why it has not happened where you are, and the question offered you or that place as the cause. Neither is shown.",
+        "Let me look closer at what keeps the meeting absent without turning the absence into your fault…",
       ],
       b: [
-        "You turned the Hanged Man, dear. Look — there's nothing under his head but empty space.",
-        "You asked why you've not found your soulmate yet. Your hand went to the card that waits.",
-        "So a pause needs no guilty party, dear. Yours has none.\nAnd nothing is happening on this card. Nobody made it stop, dear.\nBut you went looking for someone to blame, dear, and you picked you.\nThat's why you go over old choices at night, dear, one by one.",
-        "Let me look closer at what has been sitting across your path…",
+        "You picked without seeing the figure. You turned the Hanged Man — he is visible, but one rope keeps the picture still.",
+        "You came asking why love has not appeared where you are. The card shows stillness without assigning blame.",
+        "The absence does not need a culprit, dear.\nThat rope gives no blame to you or where you live.\nOne thing holds the card still, but there is no honest place to put the blame.\nThe meeting has not happened. That fact alone does not turn you or your surroundings into the reason.",
+        "I want to look at what's behind the stillness when neither you nor your surroundings caused it…",
       ],
       c: [
-        "You turned the Fool, dear. Look — the cliff face below him is striped orange and grey.",
-        "You asked why you've not found your soulmate yet. Your hand went to the one still walking.",
-        "So you're still on the road, dear. That's all this card says.\nAnd he's mid-walk, dear, and nobody has told him he's late.\nBut no one is to blame for a road that isn't finished, dear.\nThat's why the blame never fits. You've carried one that was never yours, dear.",
-        "Let me look closer at what has been weighing on this road…",
+        "The backs concealed the art. You turned the Fool — the full sun is behind him, and a white rose is in his hand.",
+        "Your question is why you have not found love here. The road has no map telling us where love belongs.",
+        "You have not gone wrong simply because love has not arrived.\nNothing on the road tells you to move, search elsewhere or try harder.\nThe road remains open, though the love you asked about is absent.\nYou have not found love, but that does not mean you wandered away from it, dear.",
+        "Let me see what lies between an open road and a meeting that has not happened…",
       ],
     },
     // ── Loneliness (2026-08-07) ──────────────────────────────────────────────
@@ -4850,550 +5140,570 @@ const RETURN_MHF: CardSetConfig = {
     // ── money-retiring (55-64) — retirement is close and the money is not there ──
     // Why is my money still blocked this close to retiring?
     'cards-blocked-retiring': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-natural-36.md — approved copy, folded verbatim:
+      // cuts 3-6 become beat 3, joined by newlines, and Version B serves them as separate
+      // chat messages with a typing pause between each.
       a: [
-        "You turned the Magician, dear. Look — he's standing, not sitting, with his work in front of him.",
-        "You asked why the money is still blocked. Your hand went to the card of a person who can make things.",
-        "So it was never you, dear. The making was never where this went wrong.\nAnd look where he stands. The trouble sits further down the line than his hands.\nBut earning a thing and keeping it are two different jobs, dear.\nThat's why it goes just as it's about to land in your hands.",
-        "Let me look closer at what steps in right at the landing…",
+        "All three were face down. You turned the Magician — look at the cup, coin, blade and wand laid out on his table.",
+        "You asked why the money's still blocked this close to retiring. Every tool on the table is ready.",
+        "Your skill was never what blocked this, dear.\nWhy that skill did not pay off isn't pictured.\nThe tools are ready, but the money still hasn't moved.\nBeing this close to retiring makes the block harder to grasp. You have the skill, and the money still isn't moving.",
+        "Let me see what's kept the money from moving…",
       ],
       b: [
-        "You turned the Hanged Man, dear. Look — the only rope on him is at his foot.",
-        "You asked why the money's still blocked. Your hand went to the card of a thing held in place.",
-        "So the money is held, dear. Held is a long way from gone.\nAnd the rope has him at one point only. The rest of him hangs free.\nBut one rope is enough to stop the whole of him moving.\nThat's why the other parts of your life work and this one part never does.",
-        "Let me look closer at what has had hold of that one point…",
+        "You turned the Hanged Man without seeing him. Look at his calm face, even with one ankle tied above him.",
+        "You came asking why the money's still blocked. One rope is holding the whole figure in place.",
+        "The money is held, not gone.\nNothing here names what's holding the money.\nMost of the card hangs free, but one ankle keeps it still.\nYou asked why the money is still blocked. My eye keeps coming back to that one rope.",
+        "Let me see what's had hold of that one point…",
       ],
       c: [
-        "You turned the Fool, dear. Look — the little dog is running and he's walking.",
-        "You asked why the money is blocked so near retiring. Your hand went to the card of a person setting out.",
-        "So you're not out of road, dear. This card has never once counted your years.\nAnd see the dog. The hurry on this card belongs to him, not to the man.\nBut hurrying has never once moved this thing out of your way.\nThat's why the years feel short to you, dear, and nothing shifts.",
-        "Let me look closer at what's been put in that road in front of you…",
+        "The backs told you nothing. You turned the Fool — look at the full sun behind him.",
+        "Your question is why the money's blocked this close to retiring. The Fool is already moving under a full sun.",
+        "This card doesn't say you've run out of time.\nThe card shows a start. It doesn't show what happens farther down the road.\nThe Fool is moving, but the money is still blocked.\nWhat matters this close to retiring is the mismatch: movement on the card, none in the money.",
+        "Let's look closer at where that movement gets caught…",
       ],
     },
     // How long has something been blocking me from a nest egg?
     'cards-nest-egg': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-natural-36.md — approved copy, folded verbatim:
+      // cuts 3-6 become beat 3, joined by newlines, and Version B serves them as separate
+      // chat messages with a typing pause between each.
       a: [
-        "You turned the Magician, dear. Look — he works standing at a low red table.",
-        "You asked how long something has been blocking a nest egg. Your hand went to the steady worker.",
-        "So this was never about you, dear. You've kept at it for years.\nAnd there he still is, working at that table. The work went in.\nBut work going in and money staying are two different things, dear.\nThat's why the years of effort show nowhere, dear. Nothing gathered.",
-        "Let me look closer at what keeps stopping it from building…",
+        "Nothing showed through the backs. You turned the Magician — see the four tools arranged across his table.",
+        "Your question is what has blocked you from building a nest egg. The card shows no lack of effort or skill.",
+        "Your effort was never the missing part.\nI cannot honestly date when the blockage began.\nThe table is ready for work, but the nest egg has not gathered.\nYou asked how long because the effort has been steady and the result hasn't matched it.",
+        "Let me look closer at what kept that steady work from building up…",
       ],
       b: [
-        "You turned the Hanged Man, dear. Look — his face is calm, like he has hung there a long time.",
-        "You asked how long something has been blocking a nest egg. Your hand went to the card of long stops.",
-        "So this hold is old, dear. It isn't anything recent.\nAnd look at his face. Calm, like he has hung there a long while.\nBut I won't count the years for you, dear. No one honestly could.\nThat's why you stopped noticing it, dear. It turned into normal.",
-        "Let me look closer at when it first went still…",
+        "You chose from three hidden pictures. You turned the Hanged Man — green leaves are still growing on the wood above him.",
+        "What you want to know is how long something has blocked your nest egg. Growth is visible, even while the figure stays still.",
+        "The lack of growth was never a failing in you.\nThe leaves show life, not how long the money has been held back.\nLife keeps growing on the card, while the savings in your question do not.\nYou asked how long because the nest egg still hasn't gathered. The leaves show growth without blaming you, dear.",
+        "Now let's look at what's holding the money while the rest keeps growing…",
       ],
       c: [
-        "You turned the Fool, dear. Look — his bag is small and it's not full.",
-        "You asked how long something has been blocking a nest egg. Your hand went to the one with an empty bag.",
-        "So nothing was taken from you, dear. This is a block, not a loss.\nAnd his bag is small, dear, and it has never once been filled.\nBut a thing never laid down is not a thing taken, dear.\nThat's why nothing can be pointed at, dear. It simply never gathered.",
-        "Let me look closer at what has kept the ground bare…",
+        "All three pictures were face down. You turned the Fool — look at the one small bundle tied to his stick.",
+        "You came asking what has kept a nest egg from gathering. The card carries something, but very little.",
+        "You haven't failed at trying to build it, dear.\nThat bundle gives no start date for the problem.\nThe Fool carries a bundle, but the nest egg never became one.\nYou're asking about something that never gathered, despite the trying already in your question.",
+        "Let's see what kept the nest egg from gathering…",
       ],
     },
     // Is something blocking my money, or did I just leave it too late?
     'cards-too-late': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-natural-36.md — approved copy, folded verbatim:
+      // cuts 3-6 become beat 3, joined by newlines, and Version B serves them as separate
+      // chat messages with a typing pause between each.
       a: [
-        "You turned the Magician, dear. Look — red roses over his head and white ones down at his feet.",
-        "You asked if something is blocking your money, or if you left it too late. Your hand went to the maker.",
-        "So you did not leave it too late, dear. I'll say that plainly.\nAnd his hands still work, dear. That part is your answer.\nBut what stands in your way is a block, dear, and blocks are things.\nThat's why a shut door is what you see, dear. It's a thing in front of one.",
-        "Let me look closer at what has been standing there…",
+        "You picked without seeing the pictures. You turned the Magician — every tool remains unpacked across his table.",
+        "You asked whether the money is blocked or you left it too late. Every tool remains on the table.",
+        "You did not leave it too late.\nI cannot promise that the money arrives.\nThe tools remain ready, and the money remains blocked.\nYou came with two answers. The card takes your lateness off the table.",
+        "I want to look at what is blocking the money instead…",
       ],
       b: [
-        "You turned the Hanged Man, dear. Look — he's held up, not fallen down.",
-        "You asked if something is blocking your money, or if you left it too late. Your hand went to the card that holds.",
-        "So you're not too late, dear. Look — he's held up, not fallen down.\nAnd nothing about him has run out, dear. He's held, that's all.\nBut a hold is the opposite of running out, dear. Quite the opposite.\nThat's why you've blamed your own timing, dear. Timing wasn't it.",
-        "Let me look closer at what has had hold of it…",
+        "The cards were face down. You turned the Hanged Man — notice his calm expression, even while one ankle holds him.",
+        "You came asking whether the blockage means you're too late. The figure is paused, not finished.",
+        "The money is held. Your time is not over, dear.\nNothing in the pause names what keeps the money in place.\nThe picture is not finished, but the money still hasn't moved.\nYou asked whether the blockage had become an ending. This card keeps those two things separate.",
+        "Let me look closer at what's keeping the money in that pause…",
       ],
       c: [
-        "You turned the Fool, dear. Look — the sun is out and it's full daylight on him.",
-        "You asked if something is blocking your money, or if you left it too late. Your hand went to the card that begins.",
-        "So you're not too late, dear. The Fool never asks your age.\nAnd he steps off in full daylight, dear, and nobody stops him.\nBut what stops you is a thing, dear, not a date on a calendar.\nThat's why it can move, dear. Dates can't be moved, and things can.",
-        "Let me look closer at what has been put in that road…",
+        "The backs kept the pictures hidden. You turned the Fool — his face is raised beneath the full sun.",
+        "Your question is whether you left it too late. The Fool is only beginning.",
+        "Your timing is not the fault here.\nA beginning doesn't tell me what happens farther along.\nThe road is open. Your money remains caught.\nThe fear in your question is that the chance has passed. The Fool is still at the start.",
+        "Let's see where the money catches after the beginning…",
       ],
     },
     // ── money-working (65+) — past the age she expected to stop, and still working ──
     // Why am I still working when the money should have come by now?
     'cards-still-working': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-natural-36.md — approved copy, folded verbatim:
+      // cuts 3-6 become beat 3, joined by newlines, and Version B serves them as separate
+      // chat messages with a typing pause between each.
       a: [
-        "You turned the Magician, dear. Look — a snake curls round his waist with its tail in its mouth.",
-        "You asked why you're still working. Your hand went to the card of a person who works.",
-        "So the fault was never yours, dear. The effort went in, every year.\nAnd look at that belt. It goes round and comes back to itself.\nBut the work went in, dear, and it never once came back out.\nThat's why you're still at it, dear, with nothing to show for the years.",
-        "Let me look closer at where all that work has been going…",
+        "The pictures were hidden when you chose. You turned the Magician — look at both hands working above a table full of tools.",
+        "Your question is why you're still working when the money should have come. This card leaves no doubt about the work.",
+        "The work was never the missing part.\nNothing here reveals why that work did not pay off.\nBoth hands are busy, and you are still waiting for the money.\nYour question already carries the work you put in. What is missing is what should have come back.",
+        "Let's see where the work stopped becoming money…",
       ],
       b: [
-        "You turned the Hanged Man, dear. Look — his head hangs nearer the ground than his feet.",
-        "You asked why you're still working. Your hand went to the card of something stopped in the air.",
-        "So the rest you were owed is not gone, dear. It stalled.\nAnd it hasn't fallen, dear, and it hasn't landed either.\nBut it stalled on the way to you, dear. Not before it set off.\nThat's why you're still working, dear, when you had planned to have stopped.",
-        "Let me look closer at where it stalled…",
+        "You turned the Hanged Man from three face-down cards. His arms hang free, but one ankle remains tied.",
+        "What you want to know is why you're still working. Most of the card is free, yet one point keeps it suspended.",
+        "You are not still working because you failed to try.\nOne tied ankle doesn't explain what happened to the money.\nThe card is largely free, but you are still working.\nYou asked why the work continues. The card keeps my eye on what stopped the return, dear.",
+        "Let me see what's keeping the result from coming back to you…",
       ],
       c: [
-        "You turned the Fool, dear. Look — the stick over his shoulder is plain wood with no bark.",
-        "You asked why you're still working. Your hand went to the card of a fresh start.",
-        "So your years are not a debt, dear. This card doesn't read them that way.\nAnd he sets out with a plain stick, dear, and nothing owed to anyone.\nBut it doesn't come as the settling-up you were promised, dear.\nThat's why the wait went on, dear. You watched for the wrong thing.",
-        "Let me look closer at what has been standing where that rest should be…",
+        "Nothing on the backs showed the answer. You turned the Fool — see him already walking beneath a full sun.",
+        "You came asking why you're still working when the money should have arrived. The Fool has already covered ground.",
+        "Your effort is not what held the money back, dear.\nThe road already crossed does not tell me why the money failed to follow.\nThe Fool is moving, and the result you expected still hasn't arrived.\nYou aren't asking whether you worked hard enough. You're asking why the work never became the result.",
+        "Let me look closer at where the result fell behind the effort…",
       ],
     },
     // How much longer will something keep blocking my money?
     'cards-how-much-longer': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-natural-36.md — approved copy, folded verbatim:
+      // cuts 3-6 become beat 3, joined by newlines, and Version B serves them as separate
+      // chat messages with a typing pause between each.
       a: [
-        "You turned the Magician, dear. Look — he could touch all four things without moving his feet.",
-        "You asked how much longer. Your hand went to the card of a person who acts.",
-        "So this isn't a wait, dear. It's a thing that has to be moved.\nAnd every tool he needs is within reach, dear. Nothing is far off.\nBut no number from me, dear. A block doesn't run down like a clock.\nThat's why last year looked just like this one, dear. Nothing was touched.",
-        "Let me look closer at what has not been touched…",
+        "The backs gave nothing away. You turned the Magician — look at his table, where all four tools are already within reach.",
+        "What you want to know is how much longer the money stays blocked. The Magician shows what can act, not a clock.",
+        "I can't give you the number you want, dear. There is no clock on this table.\nThe table shows what is ready. It doesn't say when the blockage ends.\nAll you need is on the table. The money has not moved.\nYou're asking when it ends. The card keeps returning to what hasn't moved.",
+        "Let me look closer at what still hasn't moved around those ready tools…",
       ],
       b: [
-        "You turned the Hanged Man, dear. Look — he hangs quite still, without a swing in him.",
-        "You asked how much longer. Your hand went to the card of a hold that doesn't tire.",
-        "So a block doesn't run out, dear. It sits where it is.\nAnd he hasn't moved an inch, dear, and nothing about him is tiring.\nBut I won't hand you a date, dear. A date would be a comfort I made up.\nThat's why nothing has changed on its own, dear. It waits to be moved.",
-        "Let me look closer at what is doing the holding…",
+        "You chose without seeing the cards. You turned the Hanged Man — notice the single rope around one ankle.",
+        "Your question is how much longer the blockage lasts. One rope is keeping the card still.",
+        "I won't make up an answer. The rope stays until something changes.\nThe card shows one point of pressure, but not how long it remains.\nOne small rope holds the whole figure in place.\nYou came asking how long, dear. The card gives me one place to examine instead.",
+        "I want to look at what's keeping that one rope in place…",
       ],
       c: [
-        "You turned the Fool, dear. Look — his head is up, and his eyes are off the ground.",
-        "You asked how much longer. Your hand went to the card that doesn't count.",
-        "So this ends by moving, dear. Not by time running out.\nAnd he counts nothing, dear. He steps, and the counting stops.\nBut you've been serving a sentence, dear. Nobody handed you one.\nThat's why counting has got you nowhere, dear. It was never a countdown.",
-        "Let me look closer at what has been standing in the way of that step…",
+        "All three were face down. You turned the Fool — look at the full sun and the small bundle over his shoulder.",
+        "You asked how much longer the money stays blocked. The Fool gives you a road, not a measure of it.",
+        "No honest reader can count this out from the Fool.\nThe road shows movement. It doesn't mark an ending time.\nThe Fool can move, and the money in your question cannot.\nYou need to know when. This picture only shows where the movement gets stopped.",
+        "Let me see where the road and the money stop matching…",
       ],
     },
     // Is something still blocking my money, or have I run out of time?
     'cards-out-of-time': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-natural-36.md — approved copy, folded verbatim:
+      // cuts 3-6 become beat 3, joined by newlines, and Version B serves them as separate
+      // chat messages with a typing pause between each.
       a: [
-        "You turned the Magician, dear. Look — the flowers grow in a bed in front of him, not behind.",
-        "You asked if you're blocked or out of time. Your hand went to the card of what's still to hand.",
-        "So you have not run out of time, dear. I'll say it plainly.\nAnd this card deals in what's here now, dear. It shows me something here.\nBut a block is a thing standing in a road, dear. Not the end of the road.\nThat's why it has felt final, dear, when it has never once been final.",
-        "Let me look closer at what is standing there…",
+        "The backs told you nothing. You turned the Magician — every tool is still laid out in front of him.",
+        "Your question is whether the money is blocked or your time has gone. Nothing on this table has been put away.",
+        "You have not run out of time.\nWhen or whether the money changes is not shown.\nNothing has been put away, yet the money remains blocked.\nYou offered two answers: a blockage, or no time left. This card refuses the second one.",
+        "Let's see what is blocking the money while those tools remain ready…",
       ],
       b: [
-        "You turned the Hanged Man, dear. Look — one leg is crossed behind the other at the knee.",
-        "You asked if you're blocked or out of time. Your hand went to the card of a hold.",
-        "So you have not run out of time, dear. This is a hold, not an ending.\nAnd nothing about a hold is finished, dear. It can be shifted.\nBut you have read this hold as a verdict on your whole life, dear.\nThat's why the years frighten you, dear. You read a pause as a full stop.",
-        "Let me look closer at what took hold, and when…",
+        "You couldn't see which card was which. You turned the Hanged Man — his face is calm, even while he remains suspended.",
+        "What you want to know is whether you've run out of time. The card shows a pause, not a finished picture.",
+        "The pause is not an ending, dear.\nA pause still doesn't tell me what is holding the money.\nThe figure is suspended, and your money has not moved.\nYou asked whether the waiting had become an ending. The calm face says it hasn't.",
+        "Let me see what's keeping this pause in place…",
       ],
       c: [
-        "You turned the Fool, dear. Look — there's nothing drawn behind his shoulders at all.",
-        "You asked if you're blocked or out of time. Your hand went to the card that begins.",
-        "So you have not run out of time, dear. This card keeps no calendar.\nAnd he begins with nothing behind him, dear. Nothing owed either.\nBut this card shows an open road, dear. Nobody finished is shown one.\nThat's why your fear and this card disagree, dear. One of them is wrong.",
-        "Let me look closer at what has been laid across that road…",
+        "The cards were hidden when you picked. You turned the Fool — look at the full sun and open sky behind him.",
+        "You came asking whether time has run out. The Fool is standing at the beginning, not the end.",
+        "The card does not put you at the end of the road.\nA beginning cannot promise what arrives farther ahead.\nThe road begins, but your money remains caught.\nThe fear is that the road is over. The card still has the road in front of it, dear.",
+        "Let me look closer at where the money gets caught before it can move…",
       ],
     },
     // ── money-energy — she suspects herself, because the internet told her to ──
     // Is my energy blocking my money?
     'cards-my-energy': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-natural-36.md — approved copy, folded verbatim:
+      // cuts 3-6 become beat 3, joined by newlines, and Version B serves them as separate
+      // chat messages with a typing pause between each.
       a: [
-        "You turned the Magician, dear. Look — white lilies at the front and red roses behind them.",
-        "You asked if your energy is blocking the money. Your hand went to the card of work being done.",
-        "So no, dear. Your energy has never been the block.\nAnd on this card the energy is the tool, dear. It's what does the work.\nBut yours has been pouring out at full strength for years, dear.\nThat's why you're tired and nothing shows, dear. Something has been taking it.",
-        "Let me look closer at where all that has been going…",
+        "The cards were face down when you reached for one. You turned the Magician — both hands are active, and every tool is out.",
+        "You asked whether your energy blocks your money. This card shows energy being used, not shut down.",
+        "Your energy isn't blocking your money.\nNothing here names why the work fails to become money.\nBoth hands are active, yet the money stays blocked.\nYou noticed the blockage and turned the blame toward your own energy. The card sends it elsewhere.",
+        "I want to look at what stands between that effort and the money…",
       ],
       b: [
-        "You turned the Hanged Man, dear. Look — he's held from above, with nothing under him.",
-        "You asked if your energy is blocking the money. Your hand went to the card of a thing under weight.",
-        "So your energy isn't wrong, dear. It's under weight.\nAnd wrong and weighed down are two different things, dear.\nBut you've been told the first one for years, dear. I won't repeat it.\nThat's why the harder you push, the heavier it sits, dear.",
-        "Let me look closer at what has been pressing on it…",
+        "You turned the Hanged Man without seeing the picture. Look at the rope around his ankle; nothing else is tied.",
+        "You came asking whether your energy is the block. The card puts the holding in one rope.",
+        "Your energy is not what holds the money.\nThat rope cannot name the real-world blockage.\nThe card has room to move, but one point keeps it still.\nYou asked whether you were doing the holding. This card puts the pressure somewhere else, dear.",
+        "Let me look closer at what's behind that one point of pressure…",
       ],
       c: [
-        "You turned the Fool, dear. Look — his sleeves and collar are edged with a pale trim.",
-        "You asked if your energy works against you. Your hand went to the card of open hands.",
-        "So your energy is still fresh, dear. After all of it.\nAnd this card is unspent, dear, and still willing to set out.\nBut that's not how a woman in her own way reads, dear.\nThat's why you kept turning it over, dear. The blame was never yours.",
-        "Let me look closer at what is actually in the way…",
+        "The backs gave you no clue. You turned the Fool — notice how lightly he moves under the open sky.",
+        "Your question is whether your energy blocks your money. Movement carries the whole card forward.",
+        "Your energy is not what stops this, dear.\nThe open road still does not show where the money catches.\nThe Fool moves ahead. The money does not.\nThe question makes your energy the problem. The movement in front of you doesn't.",
+        "Now let's look at where the money stops while your energy keeps moving…",
       ],
     },
     // What does my energy say about why money won't stay?
     'cards-money-wont-stay': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-natural-36.md — approved copy, folded verbatim:
+      // cuts 3-6 become beat 3, joined by newlines, and Version B serves them as separate
+      // chat messages with a typing pause between each.
       a: [
-        "You turned the Magician, dear. Look — the table he works at is small and plain.",
-        "You asked why money won't stay. Your hand went to the card of a maker.",
-        "So the getting has always worked, dear. That half of it is sound.\nAnd this card is all about bringing it in, dear. Look at the table.\nBut drawing it in is one job, dear. Keeping it is a second one.\nThat's why it arrives and goes, dear, and you never see it settle.",
-        "Let me look closer at the door it goes back out of…",
+        "You couldn't see the cards first. You turned the Magician — notice the coin already resting among the tools on his table.",
+        "You came asking what your energy says about money that won't stay. The coin has already reached the table.",
+        "Your energy is getting the money to you. The trouble begins afterward.\nWhat happens after the money arrives is not pictured.\nThe coin is on the table, and your money still doesn't stay.\nYour question is about staying, dear. Getting the money there was never the whole problem.",
+        "Let me see what happens after the money reaches the table…",
       ],
       b: [
-        "You turned the Hanged Man, dear. Look — the beam above him is wider than he is.",
-        "You asked why money won't stay. Your hand went to the card of what won't let go.",
-        "So nothing is leaking out of you, dear. That's not what this shows.\nAnd something further up has hold of it, dear. It never gets to you.\nBut a claim made further up takes its share first, dear.\nThat's why what lands is always less than what you earned, dear.",
-        "Let me look closer at what has the claim…",
+        "The pictures were hidden when you chose. You turned the Hanged Man — his whole body depends on one tied ankle.",
+        "You asked why money won't stay. One point holds the whole card still.",
+        "Money reaches you. The part that fails comes after it arrives.\nNothing here names what breaks after the money reaches you.\nOne point can hold the whole figure, while your money keeps slipping free.\nYou aren't asking why money never comes. You're asking why it doesn't remain.",
+        "Let me see where the keeping breaks down…",
       ],
       c: [
-        "You turned the Fool, dear. Look — there's more sky on this card than ground.",
-        "You asked why money won't stay. Your hand went to the most open card in the deck.",
-        "So being open isn't a fault, dear. It's how you've been loved.\nAnd this card gives as easily as it takes, dear. That's its nature.\nBut nothing has ever been built to hold what comes in, dear.\nThat's why it goes straight through, dear. However much comes in.",
-        "Let me look closer at what has never been built…",
+        "The backs looked the same. You turned the Fool — see the small bundle tied shut on his stick.",
+        "What you want to know is why money won't stay. The Fool is carrying something forward in a bundle.",
+        "Your energy isn't failing at the arrival.\nThe bundle is secure, but the card doesn't show why your money leaves.\nThe bundle moves forward. The money in your question does not.\nThe money gets close enough to arrive. What troubles you is all that happens next.",
+        "Let's look closer at what keeps the money from travelling forward with you…",
       ],
     },
     // How long has my energy been working against my money?
     'cards-energy-how-long': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-natural-36.md — approved copy, folded verbatim:
+      // cuts 3-6 become beat 3, joined by newlines, and Version B serves them as separate
+      // chat messages with a typing pause between each.
       a: [
-        "You turned the Magician, dear. Look — the wand is the only thing he's holding.",
-        "You asked how long your energy has worked against you. Your hand went to the card of aim.",
-        "So it never once did, dear. Your aim has been right the whole time.\nAnd every year of it went at something, dear. It went in straight.\nBut something at the far end kept taking it in, dear.\nThat's why the work vanished, dear. You started to blame yourself.",
-        "Let me look closer at how far back that reaches…",
+        "The cards were face down. You turned the Magician — notice both hands above a table where every tool is arranged.",
+        "Your question is how long your energy has worked against your money. Nothing on this table is working against anything else.",
+        "Your energy isn't working against your money.\nThere is no honest length I can take from this picture.\nAll four tools are on the table, yet the money stays blocked.\nYou came asking how long your energy had betrayed you. The card doesn't show a betrayal.",
+        "Now let's look at what keeps that working energy from reaching the money…",
       ],
       b: [
-        "You turned the Hanged Man, dear. Look — the rope is tied neatly, not knotted in a hurry.",
-        "You asked how long your energy has worked against you. Your hand went to the older card.",
-        "So this began before you started keeping score, dear.\nAnd whatever settled here settled long ago, dear. No one named it.\nBut I won't give you a count of years, dear. Nobody honest would.\nThat's why no day marks the start, dear. There isn't one to find.",
-        "Let me look closer at when it settled…",
+        "You couldn't see the pictures when you chose. You turned the Hanged Man — one rope holds his ankle, while the rest of him hangs loose.",
+        "What you want to know is how long your energy has worked against your money. The rope is doing the holding, not the whole figure.",
+        "Your energy isn't the thing holding the money back.\nThat rope shows where the stop is. It doesn't tell me when it began.\nOnly one ankle is tied, and the money still isn't moving.\nYou asked how far back your energy caused this. The card keeps pointing to something else.",
+        "Let's look closer at what's doing the holding instead…",
       ],
       c: [
-        "You turned the Fool, dear. Look — his belt is tied in a simple knot at the front.",
-        "You asked how long the energy has worked against your money. Your hand went to the card that keeps no record.",
-        "So nothing has been running against you, dear. Nothing at all.\nAnd this card carries no account of your years, dear. None.\nBut a bare field and a poisoned one are different things, dear.\nThat's why waste is the word you reach for, dear. Nothing was spoiled.",
-        "Let me look closer at why the ground has stayed bare…",
+        "Nothing on the backs marked a choice. You turned the Fool — see him moving with one small bundle on his stick.",
+        "You came asking how long your energy has worked against your money. The Fool is already moving freely.",
+        "Your energy is moving, not fighting you.\nThe road gives me movement, but no starting date.\nThe Fool keeps going, but the money stays blocked.\nThe question puts the fault on your energy. The movement on this card refuses that.",
+        "Now let's look at where that movement stops reaching the money…",
       ],
     },
     // ── money-prayer — she has prayed for years. Never rule on God, in either direction ──
     // I've prayed about money for years. What's still blocking it?
     'cards-prayed-years': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-natural-36.md — approved copy, folded verbatim:
+      // cuts 3-6 become beat 3, joined by newlines, and Version B serves them as separate
+      // chat messages with a typing pause between each.
       a: [
-        "You turned the Magician, dear. Look — the ground he stands on is flowers, not stone.",
-        "You asked what is still blocking it. Your hand went to the card of things you can touch.",
-        "So I don't read prayers, dear. That isn't mine to read.\nAnd this card points at something plainer, dear. Something down here.\nBut a plain thing has stood between the work and the result, dear.\nThat's why it has gone on so long, dear. Nobody ever named the thing.",
-        "Let me look closer at what is standing there…",
+        "The cards were face down when you chose. You turned the Magician — see the cup, coin, blade and wand spread across his table.",
+        "You've prayed about this money for years. Every tool on the table is ready.",
+        "Your prayer isn't what blocked this.\nThe card keeps my attention on those ready tools, dear.\nEvery tool is ready, but the money is still blocked.\nYears of prayer haven't changed that blockage.",
+        "Now let's look at what keeps the money blocked when the tools are ready…",
       ],
       b: [
-        "You turned the Hanged Man, dear. Look — his free foot rests against the tied leg.",
-        "You've prayed for years, dear. Your hand went to the card of a long quiet.",
-        "So I won't say what your prayers were met with, dear. That's yours.\nAnd no card of mine ranks above what you pray to, dear. None.\nBut something in your day to day is held, dear.\nThat's why the quiet has felt like an answer, dear. A hold isn't one.",
-        "Let me look closer at what has been held…",
+        "You couldn't see the cards when you chose. You turned the Hanged Man — see his calm face, even with one ankle tied above him.",
+        "You've prayed about this money for years. One rope is holding the whole figure still.",
+        "Prayer isn't the blockage here.\nThat single rope keeps drawing my eye.\nThe rope catches one ankle. The money still has not moved.\nYou've been asking for years, and the money is still blocked.",
+        "I want to look at what keeps that ankle caught…",
       ],
       c: [
-        "You turned the Fool, dear. Look — there's nothing behind him on the path he came along.",
-        "You asked what is still blocking the money. Your hand went to the card of an open road.",
-        "So I won't speak for what you pray to, dear. The Fool speaks of the road.\nAnd the way ahead is still open, dear, and still unwritten.\nBut what has held this up is lying in the road, dear.\nThat's why it has felt like a verdict on you, dear. It's an object.",
-        "Let me look closer at what is lying in it…",
+        "The backs told you nothing. You turned the Fool — notice the bundle on his stick, small enough to carry.",
+        "You've prayed for years, and the money is still blocked. The Fool carries one small bundle and keeps moving.",
+        "Your prayer isn't what stopped this.\nThe road is open. Nothing here shows where the money is held.\nThe road keeps moving, while the money remains blocked.\nYears of prayer haven't moved that blockage.",
+        "I want to look at what's holding the money still…",
       ],
     },
     // How long will my prayers for money keep going unanswered?
     'cards-prayers-unanswered': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-natural-36.md — approved copy, folded verbatim:
+      // cuts 3-6 become beat 3, joined by newlines, and Version B serves them as separate
+      // chat messages with a typing pause between each.
       a: [
-        "You turned the Magician, dear. Look — he stands in the middle, with room on both sides.",
-        "You asked how much longer your prayers go on. Your hand went to the card of doing.",
-        "So I can't say what has been answered, dear, and I won't guess.\nAnd this card turns me toward what is yours to touch, dear.\nBut nothing here waits on permission, dear. It waits on being moved.\nThat's why the years have passed with no change, dear. Nothing was moved.",
-        "Let me look closer at what has been left unmoved…",
+        "You turned the Magician from three face-down cards. Look at the red flowers growing above his table.",
+        "After years of prayer, you're asking how much longer. Every tool on the Magician's table is ready.",
+        "Your prayer isn't what's holding this back.\nI can read the ready tools, not the number of years ahead.\nThe table is ready. The money hasn't followed.\nYou've spent years praying, and you're still asking when the money changes.",
+        "Let's look closer at what keeps the money from changing…",
       ],
       b: [
-        "You turned the Hanged Man, dear. Look — the beam is higher than anything else on the card.",
-        "You asked how long the prayers keep going. Your hand went to the card made of waiting.",
-        "So a hold is not a refusal, dear. I'll say that much plainly.\nAnd I won't call this answered, dear, and I won't call it refused.\nBut you've been treating a long quiet as a no, dear.\nThat's why a long quiet reads as a door closing, dear. Nothing closed.",
-        "Let me look closer at what the quiet has been sitting on…",
+        "You turned the Hanged Man without seeing him first. Notice the green leaves still growing around the beam above him.",
+        "You've prayed for years and want to know how much longer. The figure is still, but the wood around it is alive.",
+        "This card shows a pause, dear. It doesn't show me how long it lasts.\nThe leaves show life inside the pause. They do not tell me when the money changes.\nNew leaves show life around a figure that does not move.\nThe years have passed. The same money question is still in front of you.",
+        "Now let's look at what's keeping the money still…",
       ],
       c: [
-        "You turned the Fool, dear. Look — he holds the stick loosely, with two fingers.",
-        "You asked how long the prayers go on. Your hand went to the card that moves.",
-        "So I won't give you a date, dear, and I won't speak for heaven.\nAnd this card says one thing only, dear. The road has not closed.\nBut a woman still walking it hasn't been turned down, dear.\nThat's why walking on has cost you, dear. Nothing has shown you it's worth it.",
-        "Let me look closer at what has been sitting in the road ahead…",
+        "You turned the Fool from three face-down cards. Look at the full sun behind him and the white rose in his hand.",
+        "You've prayed for years and asked how much longer. The Fool is already moving under an open sky.",
+        "This card gives me movement, not a number.\nThe open road gives no count for the years ahead.\nThe road has begun. The money has not moved with it.\nYou are asking how many more years, dear, because the money has not changed.",
+        "Let me see where the money stops…",
       ],
     },
     // ── Soulmate age-band, test A (wired 2026-08-20) ──────────────────────────────────
     'cards-slipping-past': {
-      // 🔄 Natural Tarot-Cut, wired 2026-08-20 from
-      // fb-tarot/docs/drafts/rewrites/cards-slipping-past.json — approved copy, folded verbatim:
-      // bubbles 3-6 become beat 3, joined by newlines, and Version B serves them as
-      // separate chat messages with a typing pause between each.
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-natural-36.md — approved copy, folded verbatim:
+      // cuts 3-6 become beat 3, joined by newlines, and Version B serves them as separate
+      // chat messages with a typing pause between each.
       a: [
-        "You turned the Magician, dear. Look — the roses above him hang from the corners, not the middle.",
-        "You asked why your soulmate keeps slipping past. Your hand went to the man who holds his work close.",
-        "So you were never what was missing, dear. Look at that table — nothing on it is short.\nAnd it broke at the same point every time, dear. Right before it held.\nBut you've gone over your own part again and again, dear.\nThat's why you feel it coming now, dear. Close, and then quiet.",
-        "Let me look closer at what steps in just before it lands…",
+        "The backs hid every picture. You turned the Magician — all four tools are present, with nothing missing from the table.",
+        "You came asking why love keeps slipping past. The Magician gives no missing piece on your side.",
+        "You were never the missing part.\nWhat enters between readiness and the meeting is still not shown.\nThe table is complete, and love still stops short.\nYou said it keeps slipping past. That made you look for the missing part in yourself, but it isn't there.",
+        "Let me look closer at what steps between the complete table and the meeting…",
       ],
       b: [
-        "You turned the Hanged Man, dear. Look — his beard hangs down toward the bottom of the card.",
-        "You asked why your soulmate keeps slipping past. Your hand went to the card that stops half way.",
-        "So none of them got away from you, dear. They stopped before the end.\nAnd this whole card is a stop, dear. Nothing in it has finished.\nBut you've counted each one as a loss, dear. They were stops.\nThat's why it never feels done, dear. Stopped and gone are not the same.",
-        "Let me look closer at what you've been left holding each time…",
+        "You chose before seeing the art. You turned the Hanged Man — a single rope stops him at one ankle.",
+        "You asked why your soulmate keeps stopping short. The card gives the stop one exact point.",
+        "The stop belongs to one repeated point, not to you.\nThat rope gives no real-life name to the point it marks.\nMost of the figure is free, but it all stops at the same ankle.\nThe word \"keeps\" tells us the position repeats. The card gives that position a visible point, dear.",
+        "Now let's look at what keeps catching the meeting at that same point…",
       ],
       c: [
-        "You turned the Fool, dear. Look — his collar is white and cut into points.",
-        "You asked why your soulmate keeps slipping past. Your hand went to the one still walking.",
-        "So you didn't miss them, dear. The ground ran out under each one.\nAnd it ran out behind you, dear. Not out in front where you'd see it.\nBut you've searched the front of it every time, dear. For a warning.\nThat's why you never see it coming, dear. You watch the wrong end.",
-        "Let me look closer at what has been cutting these short each time…",
+        "All three were face down. You turned the Fool — he is already moving, carrying only one small bundle.",
+        "What you want to know is why your soulmate keeps slipping past. The card itself is full of movement.",
+        "You are not the reason the meeting fails to land, dear.\nMovement does not explain where the meeting falls away.\nThere is movement on the card, while the meeting keeps failing to arrive.\nYou are present each time, but that does not make you the cause. The card keeps you moving.",
+        "Let's see where the meeting slips away from the movement…",
       ],
     },
     'cards-choosing-wrong': {
-      // 🔄 Natural Tarot-Cut, wired 2026-08-20 from
-      // fb-tarot/docs/drafts/rewrites/cards-choosing-wrong.json — approved copy, folded verbatim:
-      // bubbles 3-6 become beat 3, joined by newlines, and Version B serves them as
-      // separate chat messages with a typing pause between each.
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-natural-36.md — approved copy, folded verbatim:
+      // cuts 3-6 become beat 3, joined by newlines, and Version B serves them as separate
+      // chat messages with a typing pause between each.
       a: [
-        "You turned the Magician, dear. Look — the sword on his table has a cross at the handle.",
-        "You asked what keeps you choosing everyone but your soulmate. Your hand went to the man with his tools laid out.",
-        "So you didn't choose them, dear. They showed you one man and turned into another.\nAnd that table has four different things on it, dear. You got shown one.\nBut you had one thing to go on, dear. Anyone would have read it the same.\nThat's why it changed on you later, dear. You'd only ever seen the front.",
-        "Let me look closer at what gets shown first and what comes after…",
+        "Nothing showed through the card backs. You turned the Magician — his table is arranged so every object meets your eye at once.",
+        "What you want to know is what keeps you choosing the wrong people. The table only shows what was placed in front of you.",
+        "The problem wasn't your choosing. You could only choose from who reached you.\nI cannot judge any one man from this card.\nThe table can look complete even when it is only what stood in front of you.\nYou asked why you choose wrongly. The card brings me back to who was there to choose from, dear.",
+        "Let me look closer at what was missing from the picture you were shown…",
       ],
       b: [
-        "You turned the Hanged Man, dear. Look — his shoes are gold, and they're the brightest thing he wears.",
-        "You asked what keeps you choosing everyone but your soulmate. Your hand went to the card that hangs the wrong way up.",
-        "So the fault was not in your choosing, dear. You were shown the wrong way up.\nAnd the gold on this card sits at his feet, dear. Not at his head.\nBut you can only see what's turned toward you, dear. The rest stays round the back.\nThat's why they seemed right at the start, dear. The bright part faces out.",
-        "Let me look closer at what has been turned away from you each time…",
+        "You couldn't see which figure you chose. You turned the Hanged Man — one side faces you, while his arms remain behind him.",
+        "Your question is why you keep choosing everyone but your soulmate. This picture cannot show you every side at once.",
+        "You did not choose wrongly; you chose from one visible side.\nA hidden side is not proof of what any real man intended.\nOne visible side had to carry the weight of the whole decision.\nYou asked why you chose wrongly. This card asks how anyone chooses from one visible side.",
+        "Let's see what stayed on the side you could not judge…",
       ],
       c: [
-        "You turned the Fool, dear. Look — the flowers on his coat are stitched, not picked.",
-        "You asked what keeps you choosing everyone but your soulmate. Your hand went to the one dressed for the road.",
-        "So you were not picking badly, dear. You were picking from what came near you.\nAnd the flowers on that coat are stitched on, dear. Not one of them grew.\nBut from where you stood they looked real, dear. Anyone would think so.\nThat's why you believed them, dear. They were made to look that way.",
-        "Let me look closer at what was sewn on before you ever met…",
+        "The pictures stayed hidden until you picked. You turned the Fool — one hand holds a white rose, the other a stick and bundle.",
+        "You asked why you choose everyone but your soulmate. One small bundle is all the card shows you.",
+        "You were not picking from everyone who might have suited you.\nThat bundle gives no proof of what someone kept back or why.\nWhat arrived in front of you was only the field you could actually choose from.\nThe choice was yours, but the field was never every possible person. That matters here, dear.",
+        "Let's see what kept the fuller field from reaching you…",
       ],
     },
     'cards-found-me-yet': {
-      // 🔄 Natural Tarot-Cut, wired 2026-08-20 from
-      // fb-tarot/docs/drafts/rewrites/cards-found-me-yet.json — approved copy, folded verbatim:
-      // bubbles 3-6 become beat 3, joined by newlines, and Version B serves them as
-      // separate chat messages with a typing pause between each.
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-natural-36.md — approved copy, folded verbatim:
+      // cuts 3-6 become beat 3, joined by newlines, and Version B serves them as separate
+      // chat messages with a typing pause between each.
       a: [
-        "You turned the Magician, dear. Look — the cup on his table has a stem and a foot.",
-        "You asked why your soulmate hasn't found you yet. Your hand went to the man with his work set out.",
-        "So you did nothing to stop this, dear. Not one thing you did closed it off.\nAnd the cup on that table is already out, dear. Filled and standing.\nBut you've read that as something you failed at, dear.\nThat's why you turn it over so often, dear. You were ready, and it still didn't come.",
-        "Let me look closer at what's been left standing in front of that cup…",
+        "The cards were face down when you reached. You turned the Magician — he stands in the open behind a table where nothing is concealed.",
+        "Your question is why your soulmate has not found you. The Magician is not hidden from view.",
+        "Nothing about you is hidden, and you did not stop this.\nBeing visible does not tell me why the meeting has not happened.\nAll of it stands in the open, and the meeting is still absent.\nYou asked why you have not been found, as though something you did made you disappear. The card refuses that.",
+        "Let me see why the meeting is absent when you are already visible…",
       ],
       b: [
-        "You turned the Hanged Man, dear. Look — leaves grow on both arms of the beam above him.",
-        "You asked why your soulmate hasn't found you yet. Your hand went to the card that waits.",
-        "So this was never yours to fix, dear. Nothing here was put in place by you.\nAnd the wood still has green on it, dear. A stop, not an ending.\nBut you've worked at it as though it were yours, dear.\nThat's why trying harder changed nothing, dear. It was never in your hands.",
-        "Let me look closer at what tied this up in the first place…",
+        "You chose without seeing him. You turned the Hanged Man — green leaves grow above him, and one rope circles his ankle.",
+        "What you want to know is why love has not found you. The figure is visible, but something else holds the card still.",
+        "The delay was never yours to fix.\nThat rope gives no name to whatever delayed the meeting.\nThe living wood remains visible, while one point keeps the picture still.\nThe question turns the delay into something you should have solved. This card puts the holding elsewhere.",
+        "Let me see what's holding the meeting outside your hands…",
       ],
       c: [
-        "You turned the Fool, dear. Look — his hair curls out from under the green wreath.",
-        "You asked why your soulmate hasn't found you yet. Your hand went to the one already walking.",
-        "So you are not hard to find, dear. Look at that card — nothing on it is hidden.\nAnd there's no map drawn anywhere on it, dear. None was needed.\nBut you've started to think you're the thing that's hidden, dear.\nThat's why silence has felt personal, dear. Like it was aimed at you.",
-        "Let me look closer at what made that quiet feel aimed at you…",
+        "The backs gave nothing away. You turned the Fool — the full sun is behind him, with a white rose in his hand.",
+        "You came asking why your soulmate has not found you. Nothing in this picture is hidden by darkness.",
+        "You are not difficult to find, dear.\nThe sunlight cannot promise who finds you or when.\nThe road is bright, and the person in your question is still not there.\nYou made being seen answer for the absence. Nothing on this card supports that.",
+        "I want to look at what keeps the road bright but empty…",
       ],
     },
     'cards-keeps-waiting': {
-      // 🔄 Natural Tarot-Cut, wired 2026-08-20 from
-      // fb-tarot/docs/drafts/rewrites/cards-keeps-waiting.json — approved copy, folded verbatim:
-      // bubbles 3-6 become beat 3, joined by newlines, and Version B serves them as
-      // separate chat messages with a typing pause between each.
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-natural-36.md — approved copy, folded verbatim:
+      // cuts 3-6 become beat 3, joined by newlines, and Version B serves them as separate
+      // chat messages with a typing pause between each.
       a: [
-        "You turned the Magician, dear. Look — his raised sleeve is white, and the robe over it is red.",
-        "You asked how long a soulmate keeps you waiting. Your hand went to the man at work.",
-        "So I won't put a number on it, dear. No honest reader would.\nAnd there's no door on that card, dear. Nothing on it is being watched.\nBut you've been watching it, dear. Your eyes go there before anything else.\nThat's why rest doesn't help, dear. You've been holding a door open on your own.",
-        "Let me look closer at what has been keeping that door shut…",
+        "The pictures were face down. You turned the Magician — both of his hands are occupied, and every tool remains on the table.",
+        "What you want to know is how long a soulmate keeps you waiting. Nobody on this card is running a clock.",
+        "I can't give you a time, dear. No unseen person is setting one here.\nThose tools can act, but none can tell you how long this wait lasts.\nAll the work is happening at this table, while the answer still depends on someone absent.\nThe tiredness in \"how long\" comes from carrying an open question without help.",
+        "I want to look at what has kept that question open in your hands…",
       ],
       b: [
-        "You turned the Hanged Man, dear. Look — there's no ground drawn under him at all.",
-        "You asked how long a soulmate keeps you waiting. Your hand went to the card that hangs.",
-        "So this card gives no length, dear. It was never built to.\nAnd nothing on it is being counted, dear. No marks, no tally.\nBut you've been keeping that count yourself, dear. Quietly.\nThat's why it stays on your mind, dear. Nothing has been settled yet.",
-        "Let me look closer at what has been holding the settling up…",
+        "You picked from three hidden cards. You turned the Hanged Man — the whole picture is held open by one rope.",
+        "Your question is how long a soulmate keeps you waiting. The card shows the weight of holding something in place.",
+        "I won't invent a number. The waiting has been yours to carry, not something a soulmate is doing to you.\nThe rope shows the strain of keeping the question suspended.\nOne rope keeps the question open, and nobody has arrived to settle it.\nYou asked who keeps you waiting. The card shows you carrying the waiting itself, dear.",
+        "Let me look closer at what's made you carry the waiting alone…",
       ],
       c: [
-        "You turned the Fool, dear. Look — he carries it all on one shoulder, and it's the right one.",
-        "You asked how long a soulmate keeps you waiting. Your hand went to the one still on the road.",
-        "So no reader can give you a date, dear. Anyone who does is guessing.\nAnd there's no date on that card, dear. Nowhere on it.\nBut you've been reading the quiet as an answer, dear.\nThat's why the quiet has weighed so much, dear. Nothing said, so you filled it in.",
-        "Let me look closer at what has been keeping this so quiet…",
+        "Nothing on the backs set one apart. You turned the Fool — a small bundle is tied to the stick over his shoulder.",
+        "You asked how long someone keeps you waiting. Movement is visible, but no one here controls another person's time.",
+        "No reader can tell you how long, and no hidden person is choosing that length.\nNo time for the meeting is marked on the road.\nThe road continues, while your hope still has to travel without an answer.\nThe question gives an unseen soulmate control of the clock. This card does not.",
+        "Now let's look at what keeps the road moving without bringing the question to rest…",
       ],
     },
     'cards-missed-chance': {
-      // 🔄 Natural Tarot-Cut, wired 2026-08-20 from
-      // fb-tarot/docs/drafts/rewrites/cards-missed-chance.json — approved copy, folded verbatim:
-      // bubbles 3-6 become beat 3, joined by newlines, and Version B serves them as
-      // separate chat messages with a typing pause between each.
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-natural-36.md — approved copy, folded verbatim:
+      // cuts 3-6 become beat 3, joined by newlines, and Version B serves them as separate
+      // chat messages with a typing pause between each.
       a: [
-        "You turned the Magician, dear. Look — there's no chair on this card, only him and the table.",
-        "You asked if you've already missed your soulmate. Your hand went to the card of a thing being made.",
-        "So no, dear. Nothing on that table has been used up and carried off.\nAnd nothing there is being handed out, dear. There's no queue and no last one.\nBut you've pictured it as one thing passing by, dear. Once, and gone.\nThat's why you keep sifting back through it, dear. Looking for where you let it go.",
-        "Let me look closer at what keeps pulling you back over it…",
+        "The backs kept every symbol hidden. You turned the Magician — the cup, coin, blade and wand remain on his table.",
+        "What you want to know is whether one chance already passed you. Nothing on this table has been handed out and taken away.",
+        "You did not miss one allotted chance.\nThe table still cannot promise that someone is coming.\nThe table is still ready, while your question treats love as already given to someone else.\nYou offered two choices: someone still coming, or someone already lost. The card refuses the second.",
+        "Let's see what made love feel like one chance already handed out…",
       ],
       b: [
-        "You turned the Hanged Man, dear. Look — his hair hangs straight down and none of it moves.",
-        "You asked if you've already missed your soulmate. Your hand went to the card that hasn't finished.",
-        "So no, dear. This card is a middle, and a middle has no ending on it.\nAnd nothing on it has gone past, dear. It's all still hanging there.\nBut you've settled it in your own mind already, dear. Missed, and done.\nThat's why good news slides off you now, dear. You'd already shut the book.",
-        "Let me look closer at what shut that book so early…",
+        "You picked before seeing the picture. You turned the Hanged Man — see his calm face, even while he hangs upside down.",
+        "Your question is whether you missed your soulmate. This card has paused; it has not moved past you.",
+        "The card does not show a chance that passed you by.\nA pause does not point to a man from your past or bring back a chance that once seemed open.\nNothing has moved past, while you are searching behind you for what you missed.\nYou are looking for a past moment where love escaped. This picture has not gone anywhere.",
+        "Let me see what keeps pulling your attention behind the pause…",
       ],
       c: [
-        "You turned the Fool, dear. Look — the little dog's coat is drawn in tight curls.",
-        "You asked if you've already missed your soulmate. Your hand went to the card that starts.",
-        "So no, dear. That card opens the deck, it does not end one.\nAnd there's no gate on it, dear. Nothing on that road opens and then shuts.\nBut you've been living as though one shut, dear. Somewhere back there, quietly.\nThat's why you count backwards now, dear. You're hunting for the door you walked past.",
-        "Let me look closer at what put a door on that road…",
+        "All three images were face down. You turned the Fool — the full sun is above him, and a white rose is in his hand.",
+        "You asked whether the chance is already gone. The Fool is the beginning, not the aftermath.",
+        "Your chance was not one door that closed behind you, dear.\nA beginning does not name who comes next or when.\nThe deck opens here, while your question places the important moment somewhere in the past.\nThe word \"missed\" turns love into one event. The Fool does not limit the road that way.",
+        "Let me look closer at what placed a single closing door on that open road…",
       ],
     },
     'cards-after-marriage': {
-      // 🔄 Natural Tarot-Cut, wired 2026-08-20 from
-      // fb-tarot/docs/drafts/rewrites/cards-after-marriage.json — approved copy, folded verbatim:
-      // bubbles 3-6 become beat 3, joined by newlines, and Version B serves them as
-      // separate chat messages with a typing pause between each.
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-natural-36.md — approved copy, folded verbatim:
+      // cuts 3-6 become beat 3, joined by newlines, and Version B serves them as separate
+      // chat messages with a typing pause between each.
       a: [
-        "You turned the Magician, dear. Look — the loop above his head is lying on its side.",
-        "You asked if there's a soulmate for you after the marriage ended. Your hand went to the man who starts things.",
-        "So yes, dear. The loop above him has no end and no one place to start.\nAnd four things sit out on that wood, dear. Not one.\nBut you've been counting, dear. One marriage, one chance, and the sum stops there.\nThat's why it felt like the end of it, dear. One ended, so you counted none left.",
-        "Let me look closer at what has been closing this off since…",
+        "You chose while all three pictures were hidden. You turned the Magician — his full set of tools is still spread across the table.",
+        "You came asking whether there can be a soulmate after the marriage ended. Nothing on this table has been used up.",
+        "The marriage ended, but you can still love.\nWho comes next, and when, stays outside this card.\nYou can still love, while the ending has made love feel finished.\nYou asked what remains after the marriage. The table says you did not spend all your love there.",
+        "Let's see what made one ending feel like the limit of love…",
       ],
       b: [
-        "You turned the Hanged Man, dear. Look — his tunic is grey-green, and his legs are in red.",
-        "You asked if there's a soulmate for you after the marriage ended. Your hand went to the card that turns things over.",
-        "So the answer is yes, dear. This card ends nothing — it turns it.\nAnd nothing on this card is broken, dear. Turned round, but whole.\nBut you've been living it as an ending, dear. Not as a turn.\nThat's why nothing has felt steady since, dear. A turn feels like a fall while you're in it.",
-        "Let me look closer at what has stopped this turning all the way…",
+        "The cards were face down. You turned the Hanged Man — he is upside down, but his face is calm and the wood is alive.",
+        "You asked whether love can exist after the marriage ended. The picture is upside down, but the living wood is whole.",
+        "You weren't given only one chance to love.\nA changed view still cannot forecast another person.\nThe living wood remains whole, while you are asking whether love ended with the marriage.\nThe marriage changed shape, and now you are asking whether love itself was limited to it.",
+        "Now let's look at what tied love to a single chance…",
       ],
       c: [
-        "You turned the Fool, dear. Look — the dog's front paws are up off the ground.",
-        "You asked if there's a soulmate for you after the marriage ended. Your hand went to the one who starts again.",
-        "So yes, dear. That card is a first step, and it opens the whole deck.\nAnd the road behind is off the card, dear. It isn't drawn anywhere.\nBut you've been standing at the edge, dear. Looking down, not out.\nThat's why you look down first now, dear. You know what a drop costs.",
-        "Let me look closer at what has kept you at that edge…",
+        "Nothing on the backs showed the picture. You turned the Fool — see the small bundle tied to his stick.",
+        "What you want to know is whether there is love after the marriage. The card begins with one small bundle from the life already lived.",
+        "You are not barred from beginning again, dear.\nA new road does not tell me who will share it.\nA beginning is visible, while your question counts the marriage as love's final opening.\nYour question places a full stop after the marriage. The Fool's road does not.",
+        "Let's see what keeps that new road feeling closed…",
       ],
     },
     'cards-second-time': {
-      // 🔄 Natural Tarot-Cut, wired 2026-08-20 from
-      // fb-tarot/docs/drafts/rewrites/cards-second-time.json — approved copy, folded verbatim:
-      // bubbles 3-6 become beat 3, joined by newlines, and Version B serves them as
-      // separate chat messages with a typing pause between each.
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-natural-36.md — approved copy, folded verbatim:
+      // cuts 3-6 become beat 3, joined by newlines, and Version B serves them as separate
+      // chat messages with a typing pause between each.
       a: [
-        "You turned the Magician, dear. Look — the lilies at the front have long stems and stand straight.",
-        "You asked how long it takes to find a soulmate the second time. Your hand went to the man who begins.",
-        "So there's no rule for a second one, dear. I won't pretend there is.\nAnd that table is set the same as it ever was, dear. Nothing missing.\nBut you come to it knowing things now, dear. You didn't before.\nThat's why this one feels heavier, dear. You're carrying what the first one taught you.",
-        "Let me look closer at what came with you from the first…",
+        "You chose with the cards face down. You turned the Magician — the cup, coin, blade and wand are arranged across his table.",
+        "What you want to know is how long love takes the second time. The Magician is not beginning with empty hands.",
+        "What came before is still with you. No card can say how long this takes.\nThe tools do not say when another person appears.\nYou bring all you have learned, while the word \"second\" makes it sound like starting over.\nYou asked how long the second time takes. What came before is still with you, dear.",
+        "Now let's look at what makes all you carry feel like delay…",
       ],
       b: [
-        "You turned the Hanged Man, dear. Look — a small mark sits in the bottom corner of the card.",
-        "You asked how long it takes to find a soulmate the second time. Your hand went to the card that holds still.",
-        "So no clock runs on this card, dear. Not the first time, and not now.\nAnd this card keeps no score, dear. First or second, it reads the same.\nBut you've been keeping score yourself, dear. First, second, and how far behind.\nThat's why this feels like catching up, dear. You've been counting from where you started over.",
-        "Let me look closer at what has been running that count…",
+        "Nothing on the backs showed which figure you picked. You turned the Hanged Man — see his calm face as he hangs upside down.",
+        "Your question is for the timing of a second soulmate. The card changes the view without erasing what came before.",
+        "A second love is not a race back to where you once were. No card can time it.\nA new angle does not tell me how the first bond ended or when another begins.\nThe view has changed, while you are measuring yourself against an earlier starting point.\nThe count says \"second.\" The card says you are looking from a place you could not have occupied before.",
+        "Let me look closer at what keeps the new angle tied to the old count…",
       ],
       c: [
-        "You turned the Fool, dear. Look — the cliff below him is layered like steps of rock.",
-        "You asked how long it takes to find a soulmate the second time. Your hand went to the one who sets out.",
-        "So I can't time it for you, dear. Nobody walks this at a set pace.\nAnd that card has no second time on it, dear. Every step out is a first.\nBut you've walked out before, dear. You know what the ground does.\nThat's why you're slower now, dear. You're watching where you put your foot.",
-        "Let me look closer at what has made the ground feel unsafe…",
+        "The backs concealed the art. You turned the Fool — notice the small bundle tied to his stick.",
+        "You asked how long the second time takes. The road goes forward, with the bundle still present.",
+        "The second time is not an empty beginning, dear. I still cannot give it a clock.\nThat bundle gives us no pace for how the road changes.\nThe bundle moves forward, though your question calls the new road empty.\nYou are not walking onto the next road empty-handed. That is why a simple schedule would be false.",
+        "I want to look at what in that bundle makes the next beginning feel farther away…",
       ],
     },
     'cards-best-years': {
-      // 🔄 Natural Tarot-Cut, wired 2026-08-20 from
-      // fb-tarot/docs/drafts/rewrites/cards-best-years.json — approved copy, folded verbatim:
-      // bubbles 3-6 become beat 3, joined by newlines, and Version B serves them as
-      // separate chat messages with a typing pause between each.
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-natural-36.md — approved copy, folded verbatim:
+      // cuts 3-6 become beat 3, joined by newlines, and Version B serves them as separate
+      // chat messages with a typing pause between each.
       a: [
-        "You turned the Magician, dear. Look — there's no shadow under him at all.",
-        "You asked why you gave your best years to the wrong man. Your hand went to the man who builds.",
-        "So those years were not paid out, dear. Nothing on that table ever left it.\nAnd what you built in them is still yours, dear. It didn't go with him.\nBut you've been adding them up as a loss, dear. Year by year.\nThat's why the number is the part that hurts, dear. Not him — the count.",
-        "Let me look closer at what keeps that count running…",
+        "All three were face down. You turned the Magician — look at the cup, coin, blade and wand spread across his table.",
+        "You came asking why you gave your best years to someone who was not your soulmate. Nothing on this table is being paid away.",
+        "Those years belong to your life. They were not a payment to someone else.\nI cannot decide from this card what that man was to you or what comes next.\nThose years remain part of your life, while your question counts them as someone else's.\nYou called them your best years and then described them as something you gave away. That is where the pain sits.",
+        "Now let's look at what keeps those years counted as someone else's…",
       ],
       b: [
-        "You turned the Hanged Man, dear. Look — his blue coat and red legs are the brightest things here.",
-        "You asked why you gave your best years to the wrong man. Your hand went to the card that holds on.",
-        "So they were not thrown away, dear. Held is not the same as gone.\nAnd this card holds it all in place, dear. Nothing on it has been lost.\nBut you've written that stretch off already, dear. Crossed out, all of it.\nThat's why looking back stings so, dear. You cross it out again each time.",
-        "Let me look closer at what makes you cross those years out…",
+        "You selected a hidden picture. You turned the Hanged Man — see his calm face while he hangs upside down.",
+        "Your question is what happened to your best years. The card changes how they are seen without erasing them.",
+        "The years were not thrown away, dear.\nA different view does not make the hurt or the count disappear.\nThe whole figure remains on the card, while you have marked that stretch as lost.\nThe man is in the question, but the count is what keeps cutting into those years.",
+        "Let's look closer at what keeps the count turned against you…",
       ],
       c: [
-        "You turned the Fool, dear. Look — his belt is worked with small circles all the way round.",
-        "You asked why you gave your best years to the wrong man. Your hand went to the one on the road.",
-        "So you didn't come out of it empty, dear. What you carry is on you, not behind you.\nAnd the road behind him isn't drawn, dear. Not one bit of it made the card.\nBut you keep turning round to look at yours, dear. It's all you measure by.\nThat's why each year feels spent, dear. You've been counting what it cost you.",
-        "Let me look closer at what keeps you turned round…",
+        "The backs offered no clue. You turned the Fool — one small bundle hangs from the stick over his shoulder.",
+        "What you want to know is why your best years went to the wrong person. The card keeps those years on the road with you.",
+        "You did not come out of those years empty.\nThat bundle gives no advice about what you should do with that bond now.\nThe bundle moves forward, while your question places the years all the way behind you.\nYou are measuring the years by what they cost, not by all that still belongs to you.",
+        "Now let's look at what you carried forward without counting it…",
       ],
     },
     'cards-too-late-love': {
-      // 🔄 Natural Tarot-Cut, wired 2026-08-20 from
-      // fb-tarot/docs/drafts/rewrites/cards-too-late-love.json — approved copy, folded verbatim:
-      // bubbles 3-6 become beat 3, joined by newlines, and Version B serves them as
-      // separate chat messages with a typing pause between each.
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-natural-36.md — approved copy, folded verbatim:
+      // cuts 3-6 become beat 3, joined by newlines, and Version B serves them as separate
+      // chat messages with a typing pause between each.
       a: [
-        "You turned the Magician, dear. Look — there's no wall and no door behind him, only sky.",
-        "You asked if it's too late to meet your soulmate. Your hand went to the man who is still working.",
-        "So no door has shut, dear. There isn't one on this card to close.\nAnd nothing on that table is packed away, dear. It's all still out.\nBut you've been treating it as shut, dear. So you stopped trying the handle.\nThat's why you stopped looking, dear. You had no reason to keep checking.",
-        "Let me look closer at what put that door there…",
+        "You picked from three face-down cards. You turned the Magician — his tools are out, and nothing has been packed away.",
+        "What you want to know is whether it is too late to meet your soulmate. The table is still open for use.",
+        "You are not too late to meet someone.\nI cannot promise who arrives or when.\nThe tools remain out, though your question treats the table as closed.\nYou came asking whether a deadline had passed. Nothing on this card contains one.",
+        "Let's see what made love feel closed while every tool is still ready…",
       ],
       b: [
-        "You turned the Hanged Man, dear. Look — the rays at his head are short, and they all match.",
-        "You asked if it's too late to meet your soulmate. Your hand went to the card that waits with him.",
-        "So this card does not say late, dear. It has no way of saying it.\nAnd the light at his head is still on, dear. Bright as it ever was.\nBut you've been reading it from underneath, dear. All of it looks late from there.\nThat's why late was the word that fitted, dear. It was the only one left.",
-        "Let me look closer at what turned you upside down in the first place…",
+        "The pictures were hidden when you chose. You turned the Hanged Man — he remains calm, and green leaves still grow above him.",
+        "Your question is whether love is now too late. The card shows life continuing inside a pause.",
+        "The pause is not a closing time, dear.\nContinuing life does not give us an arrival date.\nThe leaves keep growing, while the word \"late\" tries to end the picture.\nThe question turns waiting into a deadline. This card gives me a pause with life still in it.",
+        "Let me see what turned this living pause into a deadline…",
       ],
       c: [
-        "You turned the Fool, dear. Look — his sleeves are slit, and there's red showing through.",
-        "You asked if it's too late to meet your soulmate. Your hand went to the one just setting off.",
-        "So there is no late on this card, dear. Nothing on it has a time to be there by.\nAnd that card is the first in the whole deck, dear. Numbered nothing at all.\nBut you've been putting yourself near the end, dear. Counting from the wrong side.\nThat's why running out is how it feels, dear. You've been counting down, not up.",
-        "Let me look closer at what set that count going…",
+        "Nothing on the backs revealed the card. You turned the Fool — his face is raised beneath a clear sky.",
+        "You asked if it is too late to meet your soulmate. The Fool stands at a beginning.",
+        "This card does not place you at the end.\nA beginning does not guarantee a person farther down the road.\nA beginning is visible, while you are asking whether beginnings are still allowed.\nYou are counting from an ending. The Fool's place in the deck makes me start from the other side.",
+        "Let me look closer at what keeps the beginning feeling out of reach…",
       ],
     },
     'cards-longer-to-wait': {
-      // 🔄 Natural Tarot-Cut, wired 2026-08-20 from
-      // fb-tarot/docs/drafts/rewrites/cards-longer-to-wait.json — approved copy, folded verbatim:
-      // bubbles 3-6 become beat 3, joined by newlines, and Version B serves them as
-      // separate chat messages with a typing pause between each.
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-natural-36.md — approved copy, folded verbatim:
+      // cuts 3-6 become beat 3, joined by newlines, and Version B serves them as separate
+      // chat messages with a typing pause between each.
       a: [
-        "You turned the Magician, dear. Look — the vine above him only reaches the two top corners.",
-        "You asked how much longer you have to wait for your soulmate. Your hand went to the man still at his table.",
-        "So I won't count it out for you, dear. That count doesn't exist.\nAnd nothing on that card is waiting, dear. Both hands are busy.\nBut you've been living in the wait, dear. Not just passing through.\nThat's why sleep hasn't helped, dear. Part way through wears at you.",
-        "Let me look closer at what has held this part way through…",
+        "You had no picture to guide you. You turned the Magician — all four tools are spread across his table.",
+        "You asked how much longer you must wait. The card shows readiness, but it gives no count.",
+        "I won't give you a number. This card does not contain one.\nReadiness still does not tell me when a meeting happens.\nThe whole table is ready, and you are still asking how much longer.\nYou asked how much longer because the meeting still hasn't happened. The ready table gives no clock.",
+        "Let me look closer at what keeps all that readiness from becoming a meeting…",
       ],
       b: [
-        "You turned the Hanged Man, dear. Look — the rope goes round his foot once and stops there.",
-        "You asked how much longer you have to wait for your soulmate. Your hand went to the card that hangs on.",
-        "So there's no number here, dear. I'd be making it up and you'd know.\nAnd one rope is all there is on that card, dear. Just the one.\nBut you've been braced for something much bigger, dear.\nThat's why so little has moved, dear. One small thing has been holding all of it.",
-        "Let me look closer at the one thing holding this…",
+        "The cards were hidden when you chose. You turned the Hanged Man — one rope at one ankle is enough to stop the whole figure.",
+        "You came asking how much longer the wait lasts. One small point is holding the whole card.",
+        "I cannot count the wait for you, dear. I can see that one point is doing the holding.\nThe rope gives no time and tells us nothing beyond the card.\nOne small rope keeps the entire meeting from moving.\nThe number is what you asked for. The card gives us one point to examine instead.",
+        "I want to look at what's keeping that single point in place…",
       ],
       c: [
-        "You turned the Fool, dear. Look — the sun is up in the corner, and the sky is clear.",
-        "You asked how much longer you have to wait for your soulmate. Your hand went to the one out on the road.",
-        "So I can't hand you a number, dear. There isn't one to hand.\nAnd no one on that road knows how far, dear. It isn't written anywhere.\nBut you've stood still to count it, dear. And the counting is the weight.\nThat's why the question won't leave you, dear. You can see the road and still not the end.",
-        "Let me look closer at what's keeping the end out of sight…",
+        "You chose from matching backs. You turned the Fool — the bundle on his stick fits in one hand.",
+        "Your question is how much longer you must wait for your soulmate. The card shows one small thing being carried forward.",
+        "The Fool gives no length of time.\nThe bundle shows something limited, but it does not date an arrival.\nThe Fool moves forward, but the meeting still hasn't happened.\nYou asked how much longer because the meeting still hasn't happened. The Fool gives that wait no clock.",
+        "Let me see where an open road stops becoming a meeting…",
       ],
     },
     'cards-allowed-to-want': {
-      // 🔄 Natural Tarot-Cut, wired 2026-08-20 from
-      // fb-tarot/docs/drafts/rewrites/cards-allowed-to-want.json — approved copy, folded verbatim:
-      // bubbles 3-6 become beat 3, joined by newlines, and Version B serves them as
-      // separate chat messages with a typing pause between each.
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-natural-36.md — approved copy, folded verbatim:
+      // cuts 3-6 become beat 3, joined by newlines, and Version B serves them as separate
+      // chat messages with a typing pause between each.
       a: [
-        "You turned the Magician, dear. Look — the cup on his table has no lid on it.",
-        "You asked if you're still allowed to want a soulmate. Your hand went to the card where the work sits out in the open.",
-        "So nobody hands that out, dear. There's no one on this card giving leave.\nAnd nothing there has been taken away, dear. Not one thing.\nBut you've been waiting to be told it's alright, dear. By someone.\nThat's why you say it quietly, dear. Or add that you know it's silly.",
-        "Let me look closer at what taught you to ask first…",
+        "You couldn't see the cards when you picked. You turned the Magician — one hand is raised, and every tool is within his reach.",
+        "You came asking whether you're allowed to want a soulmate. Nothing on this table waits for anyone else's approval.",
+        "You do not need permission to want a soulmate.\nWanting it still cannot tell us whether or when someone arrives.\nYour will is still present, and the question asks someone else to say yes.\nThe word \"allowed\" puts your own wish in someone else's hands. The card gives it back, dear.",
+        "Let me see what made your own yes feel too small…",
       ],
       b: [
-        "You turned the Hanged Man, dear. Look — the light behind his head has points on it, like a star.",
-        "You asked if you're still allowed to want a soulmate. Your hand went to the card that will not be hurried.",
-        "So you are not wrong to want it, dear. That light is on and nothing has dimmed it.\nAnd it sits behind his head, dear. Not out front where it gets judged.\nBut you've kept yours out of sight too, dear. Where nobody can weigh in.\nThat's why you tell people you're content, dear. It's easier than being talked out of it.",
-        "Let me look closer at what made it safer to say nothing…",
+        "The backs concealed the figures. You turned the Hanged Man — look at his calm face, untouched by the strange position.",
+        "You asked whether you're still allowed to want love. The card does not treat wanting love as a fault.",
+        "Wanting love is not something you need to defend.\nPermission is all this card gives; it is not a forecast.\nThe calm face stays open, while your wish has been made to stand trial.\nYou are not asking whether you want love. You are asking whether you may want it.",
+        "Let's see what taught you to defend that wanting…",
       ],
       c: [
-        "You turned the Fool, dear. Look — there's nobody stood at that edge telling him to stop.",
-        "You asked if you're still allowed to want a soulmate. Your hand went to the one who just goes.",
-        "So there's no one whose word you need, dear. Look at that card — nobody is asked.\nAnd nothing on that road is marked off, dear. No sign, no rope across it.\nBut you put the question to other people, dear. And you took their answer.\nThat's why you say sorry for it now, dear. You never used to.",
-        "Let me look closer at what that answer left behind…",
+        "The cards were face down. You turned the Fool — notice the white rose in one hand and the bundle over his shoulder.",
+        "What you want to know is whether you may still want a soulmate. The road opens in front of what you want.",
+        "The permission was always yours.\nThe open road does not promise who appears on it.\nA road can open without outside approval, while you are still waiting to be told it is okay.\nYou already know what you want. You're asking whether you may say so without anyone else's approval, dear.",
+        "Let me look closer at what put someone else's answer ahead of your own…",
       ],
     },
     // ── Soulmate keyword, test B (wired 2026-08-20) ───────────────────────────────────
     'cards-blocking-soulmate': {
-      // 🔄 Natural Tarot-Cut, wired 2026-08-20 from
-      // fb-tarot/docs/drafts/rewrites/cards-blocking-soulmate.json — approved copy, folded verbatim:
-      // bubbles 3-6 become beat 3, joined by newlines, and Version B serves them as
-      // separate chat messages with a typing pause between each.
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-natural-36.md — approved copy, folded verbatim:
+      // cuts 3-6 become beat 3, joined by newlines, and Version B serves them as separate
+      // chat messages with a typing pause between each.
       a: [
-        "You turned the Magician, dear. Look — his right hand is up and his left points at the ground.",
-        "You asked if something is blocking you from your soulmate. Your hand went to the card of a thing being worked.",
-        "So yes, dear. Something is in the way, and it was never you.\nAnd look where he points, dear. Down at the ground, not out at the world.\nBut you've been searching yourself for it, dear. Turning over what you did.\nThat's why nothing you tried has shifted it, dear. You were looking in the wrong place.",
-        "Let me look closer at where the block is actually sitting…",
+        "The cards gave you no picture to follow. You turned the Magician — every tool is already out where you can see it.",
+        "What you want to know is whether something blocks you from meeting your soulmate. Nothing on this table is missing.",
+        "Something is in the way, and it isn't you.\nWhere that blockage sits is still not shown.\nYou have every tool, and the meeting is still blocked.\nYou asked whether there was a blockage because the missing part had begun to look like you. It isn't.",
+        "Let me look closer at what's in the way when nothing on your side is missing…",
       ],
       b: [
-        "You turned the Hanged Man, dear. Look — one rope, one ankle, and the rest of him quite free.",
-        "You asked if something is blocking you from your soulmate. Your hand went to the card of a thing held.",
-        "So yes, dear. Something has a hold on this, and it is one thing, not you.\nAnd it's a small thing, dear. One rope, and the whole card stops.\nBut you've been treating it as all of you, dear. Your whole self.\nThat's why it has felt so big, dear. One rope holding still can stop a life.",
-        "Let me look closer at the one thing that has a hold on this…",
+        "You picked while the cards were face down. You turned the Hanged Man — see the single rope holding one ankle.",
+        "Your question is whether something is blocking the meeting. One visible thing is holding the whole card.",
+        "Yes, something is holding this. The card does not place it in you.\nThe rope gives the blockage a shape, but not a real-world name.\nThe rest of the figure is free, while one point holds the whole card back.\nYour question offered yourself as one possible cause. This card puts the holding somewhere else.",
+        "Now let's look at what's behind the one point doing the holding…",
       ],
       c: [
-        "You turned the Fool, dear. Look — the drop is right at his boot and the sun is still full on him.",
-        "You asked if something is blocking you from your soulmate. Your hand went to the card of open road.",
-        "So yes, dear. Something sits across the road, and you did not put it there.\nAnd the road itself is clear, dear. Wide open, and lit.\nBut you've begun to think the road was never yours, dear.\nThat's why you slowed, dear. Not because you gave up — because nothing gave.",
-        "Let me look closer at what is lying across that road…",
+        "The backs hid every detail. You turned the Fool — look at him moving with one light bundle beneath a clear sky.",
+        "You asked whether something blocks you from meeting your soulmate. The road is open and the bundle is light.",
+        "Nothing here makes your readiness the problem. Something else is in the way.\nThe road looks open, yet the card doesn't explain why the meeting hasn't happened.\nThe card keeps moving, while the meeting does not.\nYou came asking whether something stands between you and the meeting. The movement here says you aren't standing still.",
+        "Let's see where the meeting stops while the road remains open…",
       ],
     },
     'cards-blocked-before': {
-      // 🔄 Natural Tarot-Cut, wired 2026-08-20 from
-      // fb-tarot/docs/drafts/rewrites/cards-blocked-before.json — approved copy, folded verbatim:
-      // bubbles 3-6 become beat 3, joined by newlines, and Version B serves them as
-      // separate chat messages with a typing pause between each.
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-natural-36.md — approved copy, folded verbatim:
+      // cuts 3-6 become beat 3, joined by newlines, and Version B serves them as separate
+      // chat messages with a typing pause between each.
       a: [
-        "You turned the Magician, dear. Look — every tool on that table is within reach of one hand.",
-        "You asked why you keep getting blocked before your soulmate comes. Your hand went to the card where nothing is missing.",
-        "So it stops at the same place each time, dear. That is a position, not a habit of yours.\nAnd it stops early, dear. Before a single person is in it.\nBut you've read the repeat as a fact about yourself, dear.\nThat's why the sameness is what wears, dear. Not the loss — the repeat of it.",
-        "Let me look closer at the point it keeps stopping at…",
+        "Nothing on the backs showed which was which. You turned the Magician — look at the complete set of tools spread across his table.",
+        "What you want to know is why this keeps stopping before your soulmate arrives. The full table is ready for a beginning.",
+        "The stop happens before the meeting. It isn't a fault in you.\nWhat stops that beginning is not shown.\nEvery tool is ready, but nobody has arrived.\nYou said it keeps happening before anyone arrives. That puts the question at the threshold, not in you.",
+        "I want to look at what interrupts the beginning before anyone arrives…",
       ],
       b: [
-        "You turned the Hanged Man, dear. Look — the beam holds and not one line under it is level.",
-        "You asked why you keep getting blocked before your soulmate comes. Your hand went to the card that halts.",
-        "So the halt comes first, dear. Long before anyone arrives, and that is the whole point.\nAnd a halt sits in one spot, dear. It does not follow you about.\nBut you've carried it as though it travels with you, dear.\nThat's why every fresh start feels borrowed, dear. You're waiting for it to catch up.",
-        "Let me look closer at the spot it has been sitting in…",
+        "You couldn't see the figures when you chose. You turned the Hanged Man — one rope at one ankle keeps his whole body still.",
+        "Your question is why the meeting keeps getting blocked before anyone arrives. The card stops at one exact point.",
+        "The repeated stop has a position, and that position isn't inside you.\nThe rope marks the point, but it doesn't name what is behind it.\nThe rest hangs free, but the meeting still stops at that one point.\nThe word \"before\" matters here, dear. The card gives that stop a place we can examine.",
+        "Let me look closer at what's sitting behind that one stopping point…",
       ],
       c: [
-        "You turned the Fool, dear. Look — the road behind him is not drawn, only the ground he is on.",
-        "You asked why you keep getting blocked before your soulmate comes. Your hand went to the card of setting out.",
-        "So you get as far as the setting out, dear. Then it closes, before a person is in it.\nAnd this card is only ever the setting out, dear. It never shows the arriving.\nBut you've counted each one as a failure, dear. They were the same stop.\nThat's why hope costs you more each time, dear. You've paid at the same gate twice over.",
-        "Let me look closer at the gate that keeps closing…",
+        "The pictures were face down. You turned the Fool — notice the small bundle and white rose in his hands.",
+        "You asked why it gets blocked before anyone arrives. The Fool is still at the beginning.",
+        "The beginning is where this catches. You are not the cause, dear.\nThe card shows where the road starts, not what keeps the meeting from happening.\nA beginning is possible on the card, while the arrival never gets that far.\nYou're asking about a beginning that never becomes a meeting. The card stays with that exact gap.",
+        "Now let's look at what catches the road before the meeting begins…",
       ],
     },
     'cards-connection-soulmate': {
@@ -5402,7 +5712,7 @@ const RETURN_MHF: CardSetConfig = {
       // bubbles 3-6 become beat 3, joined by newlines, and Version B serves them as
       // separate chat messages with a typing pause between each.
       a: [
-        "You turned the Magician, dear. Look — a cup and a coin on the table, and they are not the same thing.",
+        "You turned the Magician, dear. Look — a cup and a coin sat side by side on the table.",
         "You asked if this connection is your soulmate or something else. Your hand went to the card that names things.",
         "So this is not nothing, dear. Whatever you end up calling it, there is something there.\nAnd there are four names on that table, dear. All four are real things.\nBut you've made the name the first job, dear. Before anything else can happen.\nThat's why the question never closes, dear. A name was never going to settle this.",
         "Let me look closer at what the naming has been standing in for…",
@@ -5434,86 +5744,83 @@ const RETURN_MHF: CardSetConfig = {
       b: [
         "You turned the Hanged Man, dear. Look — nothing on this card is falling and nothing is climbing.",
         "You asked why this feels like your soulmate when nothing is happening. Your hand went to the card where nothing moves.",
-        "So a stop is not an absence, dear. This whole card is a held thing, and it is full.\nAnd there is nothing underneath him at all, dear. So nothing has anywhere to move.\nBut you've taken quiet as proof, dear. Proof of what you feared.\nThat's why you re-read old messages at night, dear. Hunting for something to hold up.",
+        "So a stop isn't an absence, dear. This whole card is a held thing, and it's full.\nAnd there's nothing underneath him at all, dear. So nothing has anywhere to move.\nBut you've taken quiet as proof, dear. Proof of what you feared.\nThat's why you re-read old messages at night, dear. Hunting for something to hold up.",
         "Let me look closer at what has been holding all of this still…",
       ],
       c: [
         "You turned the Fool, dear. Look — the little dog is up on its back legs and he has not turned round.",
         "You asked why this feels like your soulmate when nothing is happening. Your hand went to the card that starts before it shows.",
-        "So you felt it first, dear. On this card that always comes before there is anything to see.\nAnd nothing on that road has happened yet, dear. Not one thing.\nBut you've been grading yourself on what has shown up, dear.\nThat's why the word fool keeps coming up, dear. You had nothing to check it against.",
-        "Let me look closer at what is due to show and hasn't…",
+        "So you felt it first, dear. On this card that always comes before there's anything to see.\nAnd nothing on that road has happened yet, dear. Not one thing.\nBut you've been grading yourself on what has shown up, dear.\nThat's why the word fool keeps coming up, dear. You had nothing to check it against.",
+        "Let me look closer at what's due to show and hasn't…",
       ],
     },
     'cards-energy-away': {
-      // 🔄 Natural Tarot-Cut, wired 2026-08-20 from
-      // fb-tarot/docs/drafts/rewrites/cards-energy-away.json — approved copy, folded verbatim:
-      // bubbles 3-6 become beat 3, joined by newlines, and Version B serves them as
-      // separate chat messages with a typing pause between each.
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-natural-36.md — approved copy, folded verbatim:
+      // cuts 3-6 become beat 3, joined by newlines, and Version B serves them as separate
+      // chat messages with a typing pause between each.
       a: [
-        "You turned the Magician, dear. Look — the wand in his raised hand is lit at the tip.",
-        "You asked if your energy is keeping your soulmate away. Your hand went to the card where the power is the tool.",
-        "So no, dear. What you carry has never been what keeps people off.\nAnd on this card it is the thing that works, dear. Not the thing in the way.\nBut yours has been going out at full strength a long while, dear.\nThat's why you have nothing to point at, dear. And you are tired out all the same.",
-        "Let me look closer at where all of it has been going…",
+        "All three cards were face down. You turned the Magician — one hand is raised, the other points down, and both are active.",
+        "You asked whether your energy keeps your soulmate away. This is energy being directed, not shut off.",
+        "Your energy is a tool here. It is not the barrier.\nNothing here names where that energy goes without a meeting.\nBoth hands are working, and nobody has come into view.\nYou felt the absence and made your own energy answer for it. The card doesn't support that blame.",
+        "Let's see what takes that energy without letting the meeting form…",
       ],
       b: [
-        "You turned the Hanged Man, dear. Look — the light behind his head is bright and his face is quite calm.",
-        "You asked if your energy is keeping your soulmate away. Your hand went to the card that is still lit.",
-        "So no, dear. Nothing about you sends people off — look at that light.\nAnd that light is doing the work, dear. It never once stood in your way.\nBut you've been looking inward first, dear, and it was never in there.\nThat's why you're tired, dear. Something outside you has been drawing on it.",
-        "Let me look closer at what has been drawing on that light…",
+        "You chose without seeing the art. You turned the Hanged Man — one ankle is tied, while both arms hang loose behind him.",
+        "You came asking whether your energy is doing the keeping-away. The card puts the restraint in one rope.",
+        "Your energy isn't doing the holding.\nThe rope still doesn't tell us what the real obstruction is.\nMost of the card is free, but the meeting remains held back.\nYou asked whether you were pushing love away. The restraint on this card sits elsewhere, dear.",
+        "Let me see what's behind the restraint instead…",
       ],
       c: [
-        "You turned the Fool, dear. Look — the sun is high and it is full daylight on the whole card.",
-        "You asked if your energy is keeping your soulmate away. Your hand went to the card in open sun.",
-        "So no, dear. There is no shadow on you here, and the light falls on all of it.\nAnd nothing on it is in shade, dear. Nothing hidden, nothing held back.\nBut you've started dimming yourself on purpose, dear. Just in case.\nThat's why meeting people costs you now, dear. You go in half turned down.",
-        "Let me look closer at what taught you to turn yourself down…",
+        "You couldn't see what you were picking. You turned the Fool — see him moving under a bright, open sky.",
+        "Your question is whether your energy keeps love away. Movement runs through the whole card.",
+        "Your energy is not keeping your soulmate away, dear.\nThat forward movement cannot account for the meeting's absence.\nThe card is full of movement, while the love in your question stays out of reach.\nThe question turns the distance into something your energy caused. This card keeps moving.",
+        "Let me look closer at where that forward energy stops becoming a meeting…",
       ],
     },
     'cards-energy-soulmate': {
-      // 🔄 Natural Tarot-Cut, wired 2026-08-20 from
-      // fb-tarot/docs/drafts/rewrites/cards-energy-soulmate.json — approved copy, folded verbatim:
-      // bubbles 3-6 become beat 3, joined by newlines, and Version B serves them as
-      // separate chat messages with a typing pause between each.
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-natural-36.md — approved copy, folded verbatim:
+      // cuts 3-6 become beat 3, joined by newlines, and Version B serves them as separate
+      // chat messages with a typing pause between each.
       a: [
-        "You turned the Magician, dear. Look — one arm straight up, and the sleeve falling back off the wrist.",
-        "You asked what your energy says about your soulmate. Your hand went to the card of a thing still being made.",
-        "So it says you are still reaching, dear. That arm has not come down.\nAnd it points up and out, dear. Away from himself, at something not here yet.\nBut you've read your own tiredness as giving up, dear.\nThat's why closed off is the phrase you reach for, dear. Worn would be nearer.",
-        "Let me look closer at what has been wearing on that reach…",
+        "The pictures were hidden from you. You turned the Magician — look at one hand reaching upward and the other reaching toward the earth.",
+        "You asked what your energy says about your soulmate. Both hands are still reaching.",
+        "Your energy says you are still reaching for love.\nReaching does not tell me who meets it or when.\nBoth hands reach, and the soulmate in your question remains unmet.\nYou asked what your energy says because the waiting made you wonder whether it had gone quiet. It hasn't.",
+        "Now let's look at what keeps that reaching from being met…",
       ],
       b: [
-        "You turned the Hanged Man, dear. Look — his eyes are open, and he is not asleep.",
-        "You asked what your energy says about your soulmate. Your hand went to the card that waits awake.",
-        "So it says you are still here, dear. Waiting is not the same as leaving.\nAnd the eyes stay open, dear. Through all of it, on a card where nothing else moves.\nBut you've called that stubbornness, dear. Or worse.\nThat's why you play it down when people ask, dear. You'd rather they didn't see it.",
-        "Let me look closer at what made it something to hide…",
+        "The cards were face down when you chose. You turned the Hanged Man — green leaves are growing from the wood that holds him.",
+        "You came asking what your energy says about love. The figure is still, but the living wood keeps growing.",
+        "Your energy is still alive, even inside the waiting.\nThe leaves don't name a person or promise an arrival.\nThe wood is alive, but no meeting has happened.\nThe waiting has not turned your energy off. That is what this card answers.",
+        "Let's look closer at what holds the meeting while the energy stays alive…",
       ],
       c: [
-        "You turned the Fool, dear. Look — his head is up and his eyes are off the ground.",
-        "You asked what your energy says about your soulmate. Your hand went to the card that keeps looking up.",
-        "So it says you have not stopped looking, dear. The head on this card is up.\nAnd it stays up, dear, with the drop right there at the boot.\nBut you've been counting the years and calling that foolish, dear.\nThat's why hoping has started to feel like a fault, dear. It is the one thing that never went.",
-        "Let me look closer at what turned hoping into a fault…",
+        "You picked without seeing the image. You turned the Fool — his face is lifted and his feet are already carrying him forward.",
+        "Your question is what your energy says about your soulmate. Movement is already present from head to foot.",
+        "Your energy has not withdrawn from love.\nThe card shows direction, but no person waiting at the other end.\nThe card moves forward, but the soulmate in your question remains absent.\nYou are still asking about a soulmate. The movement in that question is present on the card too, dear.",
+        "Now let's look at why the movement on the card has not become a meeting…",
       ],
     },
     'cards-waiting-to-heal': {
-      // 🔄 Natural Tarot-Cut, wired 2026-08-20 from
-      // fb-tarot/docs/drafts/rewrites/cards-waiting-to-heal.json — approved copy, folded verbatim:
-      // bubbles 3-6 become beat 3, joined by newlines, and Version B serves them as
-      // separate chat messages with a typing pause between each.
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-natural-36.md — approved copy, folded verbatim:
+      // cuts 3-6 become beat 3, joined by newlines, and Version B serves them as separate
+      // chat messages with a typing pause between each.
       a: [
-        "You turned the Magician, dear. Look — nothing on that table is put away.",
-        "You asked if your soulmate is waiting for you to heal. Your hand went to the card where the work is already begun.",
-        "So no, dear. Nothing is standing still, waiting on you to be finished.\nAnd there is no test on that table, dear. Nothing on it has to be passed.\nBut you've run your life as though there is one, dear. Yourself last.\nThat's why later is where things go, dear. Something taught you to wait your turn.",
-        "Let me look closer at what put you last in your own queue…",
+        "The backs gave you no hint. You turned the Magician — see the cup, coin, blade and wand already arranged in front of him.",
+        "Your question is whether your soulmate is waiting for you to heal. Nothing on this table is waiting to become complete.",
+        "Your healing is not a rule anyone else gets to set.\nI cannot grade whether you are healed, and I do not need to.\nAll four tools are ready, yet the meeting still has not happened.\nThe question puts you in charge of the delay. The complete table says the missing piece is not you, dear.",
+        "Let me look closer at what delays the meeting when nothing in you needs completing first…",
       ],
       b: [
-        "You turned the Hanged Man, dear. Look — he hangs by one foot and his face has no strain in it.",
-        "You asked if your soulmate is waiting for you to heal. Your hand went to the card that holds without struggling.",
-        "So no, dear. Nothing on this card is on hold, and nothing waits on you.\nAnd a thing can be held and whole at once, dear. This card is both.\nBut you've been told to be whole first, dear, and you believed it.\nThat's why you keep setting the bar further out, dear. It moves each time you near it.",
-        "Let me look closer at what keeps moving that bar…",
+        "You couldn't see the cards before choosing. You turned the Hanged Man — look at his calm face and the rope at one ankle.",
+        "What you want to know is whether anyone is waiting for you to heal. The card shows a pause, but the restraint is a rope.",
+        "Your healing isn't what caused this pause.\nNothing here rules on whether you are healed enough.\nOne rope holds the figure, but your question puts the whole pause on your healing.\nYou asked whether your healing caused the pause. The rope places the holding elsewhere.",
+        "I want to look at what's holding the pause outside your healing…",
       ],
       c: [
-        "You turned the Fool, dear. Look — he steps off with his bundle still tied shut.",
-        "You asked if your soulmate is waiting for you to heal. Your hand went to the card that goes as it is.",
-        "So no, dear. Not one thing here is holding back until you are ready.\nAnd the bundle is not unpacked, dear. It goes with him, tied as it is.\nBut you've been unpacking yours first, dear. Before you'd let yourself go anywhere.\nThat's why the going never comes, dear. There's always one more thing in the bag.",
-        "Let me look closer at what is still in that bundle…",
+        "All three were face down. You turned the Fool — a small bundle hangs behind him, and a white rose rests in one hand.",
+        "You came asking whether love waits for you to heal first. The card begins with very little packed for the road.",
+        "Love is not waiting for you to become finished.\nBeginning before all is settled does not promise who arrives.\nThe card begins with little settled, while your question casts you as the reason love cannot begin.\nYou are asking whether you must be finished before love can start. The beginning happens before that.",
+        "Let me see what keeps the meeting from beginning while the road is open…",
       ],
     },
     'cards-heal-first': {
@@ -5523,21 +5830,989 @@ const RETURN_MHF: CardSetConfig = {
       // separate chat messages with a typing pause between each.
       a: [
         "You turned the Magician, dear. Look — all four things are on the table at once, not one after another.",
-        "You asked if healing comes first, before your soulmate. Your hand went to the card where it is all out together.",
-        "So there is no before, dear. Nothing on that table is waiting its turn.\nAnd all four sit there at once, dear. None of them is first.\nBut you've been running yours in order, dear. This, then that, then love.\nThat's why love keeps sliding down the list, dear. It has been last for years.",
+        "You asked if healing comes first, before your soulmate. Your hand went to the card where it's all out together.",
+        "So there's no before, dear. Nothing on that table is waiting its turn.\nAnd all four sit there at once, dear. None of them is first.\nBut you've been running yours in order, dear. This, then that, then love.\nThat's why love keeps sliding down the list, dear. It has been last for years.",
         "Let me look closer at what put love at the end of that list…",
       ],
       b: [
         "You turned the Hanged Man, dear. Look — the wood he hangs from has green leaves still coming out of it.",
         "You asked if healing comes first, before your soulmate. Your hand went to the card where two things happen at once.",
-        "So it does not go in order, dear. On this card the mending and the hanging are the same moment.\nAnd the leaves come out of cut wood, dear. Straight out of the cut, not after it.\nBut you've been waiting for one to finish, dear, so the other can start.\nThat's why you feel behind, dear. You've been queueing for a door that is open.",
+        "So it doesn't go in order, dear. On this card the mending and the hanging are one moment.\nAnd the leaves come out of cut wood, dear. Straight out of the cut, not after it.\nBut you've been waiting for one to finish, dear, so the other can start.\nThat's why you feel behind, dear. You've been queueing for a door that's open.",
         "Let me look closer at what keeps you stood at that door…",
       ],
       c: [
         "You turned the Fool, dear. Look — his foot is already off the rock and the flower is still in his hand.",
         "You asked if healing comes first, before your soulmate. Your hand went to the card that goes anyway.",
         "So no, dear. Nothing on this card was finished before it started.\nAnd the step and the flower happen together, dear. Not one, then the other.\nBut you've set yourself a mark to reach first, dear.\nThat's why not yet has become your answer, dear. To yourself, mostly.",
-        "Let me look closer at what set that mark where it is…",
+        "Let me look closer at what set that mark where it's at…",
+      ],
+    },
+  'cards-money-time-running-out': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
+      // folded verbatim: cuts 3-6 become beat 3, joined by newlines.
+      a: [
+        "All three cards were face down. You turned the Magician — look at the cup, coin, blade and wand laid across his table.",
+        "You asked whether your energy is blocking your money as time runs short. Every tool on this table is ready.",
+        "Your energy isn't the missing tool, dear.\nIt still doesn't show what has kept the money from moving.\nEvery tool is ready, and the money is still blocked while the clock worries you.\nYou put your energy on trial because the money is blocked and time matters. Nothing on that table makes your energy the missing tool.",
+        "Let me look closer at what keeps all that readiness from reaching the money…",
+      ],
+      b: [
+        "You couldn't see the pictures when you chose. You turned the Hanged Man — one rope holds him at the ankle while the rest hangs free.",
+        "You asked whether your energy is the block. This card puts all the holding at one visible point.",
+        "This card doesn't put the blockage in your energy.\nThe rope marks the hold, but it cannot name a cause outside the card.\nMost of the figure is free, yet the result in your question remains held.\nYour question asks whether you are doing the holding. The card keeps my eye on that single rope instead.",
+        "Let me see what has hold of the result at that one point…",
+      ],
+      c: [
+        "The backs gave you no clue. You turned the Fool — notice the clear gold sky behind him.",
+        "You asked whether your energy is blocking the money. Nothing on this card is hidden in darkness.",
+        "The card gives me no reason to call your energy the problem.\nFull light does not tell us why the money has not reached you.\nThe card is bright and moving, but the money still has not moved with it.\n“Time is running out” made your energy the suspect. Nothing in this picture supports that charge.",
+        "Now let me look at what keeps the money from meeting the movement on this card…",
+      ],
+    },
+    'cards-money-has-to-last': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
+      // folded verbatim: cuts 3-6 become beat 3, joined by newlines.
+      a: [
+        "You chose from three hidden pictures. You turned the Magician — his table is full, and every object is out where you can see it.",
+        "You asked what is blocking your money when what you have must last. The Magician begins with a complete set of tools.",
+        "Your ability to work with what you have isn't the weak point here.\nThe table cannot show what has kept those tools from producing the result you need.\nThe working set is complete, while the money remains blocked.\n“It has to last” puts all the pressure on what you already have. The card keeps pointing to what those tools have not been allowed to do.",
+        "Let me look closer at what keeps the tools from doing their work…",
+      ],
+      b: [
+        "The cards were face down when you reached. You turned the Hanged Man — look at the green leaves growing from the wood above him.",
+        "You asked what is blocking your money now. This card shows life continuing even while the figure is paused.",
+        "The pause does not mean everything has stopped.\nGrowing leaves do not name what is holding the money.\nLife continues on the card, but the money in your question is still held.\nYou are asking about a block, not whether everything in your life has stopped. The green leaves keep that difference visible.",
+        "Let me see what is holding the money while the rest keeps living…",
+      ],
+      c: [
+        "Nothing showed through the backs. You turned the Fool — the bundle on his stick is small enough to carry in one hand.",
+        "You asked what is blocking your money when what you have must last. The Fool moves with one small bundle.",
+        "What you have isn't what blocked the money.\nThe bundle gives no source, amount or instruction for what happens next.\nThe Fool can move with little, while your money has not moved with him.\nYour question turns the amount you carry into the whole problem. The card shows movement without asking for a larger bundle.",
+        "Let's look at what stops the money when the small bundle doesn't stop the Fool…",
+      ],
+    },
+    'cards-trusted-loss-blocking-money': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
+      // folded verbatim: cuts 3-6 become beat 3, joined by newlines.
+      a: [
+        "The card faces were hidden. You turned the Magician — see him standing in the open behind a table where every tool is still present.",
+        "You asked whether the loss through someone you trusted is still blocking your money. This table has not been stripped bare.",
+        "That loss didn't take your ability with it.\nNothing here can identify the person, judge what they intended or promise that anything returns.\nEvery tool remains available, while the loss still stands between you and the money question.\nYou named the loss and the trust together. The table brings me back to what remains yours without making a claim about that person.",
+        "Let me look closer at what keeps the loss attached to the money now…",
+      ],
+      b: [
+        "You reached without seeing the picture. You turned the Hanged Man — his face is calm, even while one ankle is tied above him.",
+        "You asked whether that loss still has hold of your money. One point, not the whole figure, carries the restraint here.",
+        "The card does not place the blame for that loss on you.\nThe rope cannot tell us whether that person still affects your money now.\nMost of the figure is free, yet your question is still tied to that loss.\nYou asked whether the loss is still doing the holding. This card gives us one point to examine, not someone to accuse.",
+        "Let me see what still ties the loss to the money question…",
+      ],
+      c: [
+        "All three backs looked the same. You turned the Fool — look at the full sun behind him and the small bundle on his stick.",
+        "You asked whether what happened still blocks your money. The Fool is carrying something, but he is not standing still.",
+        "What happened didn't close every road from here.\nThe road does not recover what was lost or say where future money comes from.\nThe card moves forward, while your money question keeps turning back to what happened.\nThe loss is behind the question, but the Fool does not let me turn that person into the answer.",
+        "Now let's look at what keeps what happened from staying behind you…",
+      ],
+    },
+    'cards-working-money-by-now': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
+      // folded verbatim: cuts 3-6 become beat 3, joined by newlines.
+      a: [
+        "You couldn't see which card you reached for. You turned the Magician — both hands are occupied and every tool remains on the table.",
+        "You asked what is blocking the money you should have by now while you are still working. This card is full of effort and means.",
+        "Your ability to work was never the problem.\nThe Magician does not show why the work has not paid off in the way you expected.\nBoth hands are working, and the money you expected is still blocked.\n“Still working” and “by now” are the two facts you gave me. The full table shows why effort alone cannot explain the gap.",
+        "Let me see what kept all that work from becoming the money you expected…",
+      ],
+      b: [
+        "The pictures were face down. You turned the Hanged Man — one ankle is caught by the rope, and the rest of him hangs loose.",
+        "You asked why the money is still blocked. The card shows one point holding everything still.",
+        "The work is not what this card puts under suspicion.\nOne rope tells us there is a hold, but not what caused it outside the picture.\nThe figure has room everywhere except that ankle, while the result remains still.\nYou are not asking whether you worked. You are asking why the result stayed held.",
+        "Let me look at what holds the result when the rest has room to move…",
+      ],
+      c: [
+        "The backs revealed nothing. You turned the Fool — notice the small bundle tied to his stick.",
+        "You asked about money that should have arrived by now. That small bundle says he didn't wait to have everything before setting out.",
+        "I can't turn “by now” into a deadline. Nothing here says the road is over.\nThe road gives no amount, source or date for the money.\nThe card moves, but the money in your question has not arrived with that movement.\nThe date you expected has passed, and you are still working. The Fool gives that disappointment no new date.",
+        "Let's look closer at where the work and the expected result stopped matching…",
+      ],
+    },
+    'cards-nothing-put-away': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
+      // folded verbatim: cuts 3-6 become beat 3, joined by newlines.
+      a: [
+        "All three images were hidden. You turned the Magician — the cup, coin, blade and wand are already laid out in front of him.",
+        "You said you have nothing put away and asked whether your energy blocks your money. The Magician is missing no tool.",
+        "Your energy is not a missing tool, dear.\nA full table still cannot tell us why the money has not stayed with you.\nNothing on the table is missing, while nothing is put away in your question.\nYou joined “nothing put away” to a question about your own energy. The card gives me tools, not a defect in you.",
+        "Let me look closer at what keeps those tools from leaving something behind…",
+      ],
+      b: [
+        "You chose before the card was visible. You turned the Hanged Man — see the one rope at his ankle and the loose space around the rest of him.",
+        "You asked whether your energy is blocking the money. The card places the holding at one point.",
+        "This card does not make your energy the restraint.\nThe rope names no amount, source or financial decision.\nMost of the figure hangs free, yet the money remains held.\nYour question asks whether the restraint belongs to you. The picture puts it at one visible point instead.",
+        "Let me see what has hold of the money at that one point…",
+      ],
+      c: [
+        "The backs told you nothing. You turned the Fool — one small bundle is tied to the stick over his shoulder.",
+        "You asked whether your energy is the reason nothing is put away. The Fool can move without carrying everything.",
+        "The card does not grade your energy as the problem.\nThe bundle gives no advice about saving or what you should carry.\nThe Fool carries little and keeps moving, while the money has not built behind you.\nThe lack you named is financial. The small bundle does not turn it into a judgement on your energy.",
+        "Now let's look at what keeps movement from becoming something you can keep…",
+      ],
+    },
+    'cards-money-cant-stop-working': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
+      // folded verbatim: cuts 3-6 become beat 3, joined by newlines.
+      a: [
+        "The pictures stayed hidden until you chose. You turned the Magician — look at both hands busy above a table full of tools.",
+        "You said you cannot stop working yet and asked what is blocking your money. The Magician is already doing the work.",
+        "More effort is not the missing answer here.\nThe table cannot name what prevented the effort from becoming the result.\nThe work is already happening, and the money is still blocked.\n“Can't stop working yet” tells me the work is not missing. The full table makes that plain.",
+        "Let me look closer at what keeps the work from becoming the result…",
+      ],
+      b: [
+        "Nothing on the backs showed the card. You turned the Hanged Man — the rope catches one ankle while the rest of him hangs free.",
+        "You asked what still blocks the money. This card gives the holding one clear point.",
+        "The block is not a failure to keep working.\nThe rope gives no financial cause and no decision for you to make.\nThe figure is held at one point, while your work continues outside the card.\nYou asked what is still blocking the money, not whether you should keep working. This rope keeps those questions separate.",
+        "Let me see what holds the money while the work goes on…",
+      ],
+      c: [
+        "You picked from three matching backs. You turned the Fool — he is moving with a single small bundle.",
+        "You asked why you still cannot stop working. The Fool shows movement, but he gives no instruction about work.",
+        "I won't tell you to work longer or stop now. The work itself isn't what blocked the money.\nThis road gives me no date for the money and no source.\nThe Fool moves forward, while the money question keeps you at work.\nYour question asks for the reason, not a retirement instruction. The moving card gives no order either way.",
+        "Now let's look at what keeps the money from moving with you…",
+      ],
+    },
+    'cards-earn-and-gone': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
+      // folded verbatim: cuts 3-6 become beat 3, joined by newlines.
+      a: [
+        "You had no picture to guide your hand. You turned the Magician — every tool is out and both hands are at work.",
+        "You said you earn the money and then it is gone. The earning side of this card is already working.",
+        "Earning it is not where this is failing.\nThe tools cannot show where the money goes or tell you what to do with it.\nThe work succeeds, but the money still does not stay.\n“I earn it” rules out the part this table proves. Your question begins after the earning.",
+        "Let me look at what happens between earning the money and keeping it…",
+      ],
+      b: [
+        "The cards were face down when you chose. You turned the Hanged Man — one rope holds one ankle; nothing else is tied.",
+        "You asked what blocks money that will not stay. The picture puts the hold at one point, not everywhere.",
+        "Your effort is not what has the money held.\nThe rope does not name a bill, person, habit or financial cause.\nMost of the figure is free, while the money keeps meeting a hold.\nYou are asking about what happens after the money arrives. The single rope keeps my attention there.",
+        "Let me see what catches the money after the work is done…",
+      ],
+      c: [
+        "All three pictures were hidden. You turned the Fool — notice how little fits in the bundle on his stick.",
+        "You said you earn it and it is gone. The Fool carries little, but the card gives no judgement about keeping money.",
+        "The card does not call you careless with money.\nThe bundle gives no budget, source or advice.\nThe Fool moves with what he carries, while your money is gone after you earn it.\nYou named both halves yourself: earned, then gone. The bundle cannot turn that into a fault in you.",
+        "Now let's look at what keeps what you earn from travelling with you…",
+      ],
+    },
+    'cards-talk-myself-out': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
+      // folded verbatim: cuts 3-6 become beat 3, joined by newlines.
+      a: [
+        "Nothing on the backs gave the card away. You turned the Magician — the full set of tools is laid out in reach.",
+        "You said you talk yourself out of everything and asked what blocks your money. The Magician has every means in front of him.",
+        "Talking yourself out of things is not enough to explain this block.\nThe table still cannot name why the money has not responded to what you can do.\nEvery tool remains available, though your question places the block inside your own decision.\nYou led with what you do to yourself, then asked about money. The card will not let one sentence about you explain the whole result.",
+        "Let me see what remains unexplained after your hesitation is taken off trial…",
+      ],
+      b: [
+        "You chose without seeing him. You turned the Hanged Man — his face is calm, and one ankle is held by the rope.",
+        "You asked whether your own hesitation explains the money block. This card separates the calm figure from the point that holds him.",
+        "The card does not turn your hesitation into the whole cause.\nThe rope tells us there is restraint, but not what created it in your money.\nThe figure stays calm, while one outside point carries the hold.\nYour question makes your hesitation answer for the block. The card makes me keep those two things apart.",
+        "Let me look closer at what holds the money outside that self-judgement…",
+      ],
+      c: [
+        "The images were hidden when you reached. You turned the Fool — his eyes are lifted toward the clear sky.",
+        "You asked what blocks your money after naming your second thoughts. His eyes are still raised toward what lies ahead.",
+        "Your second thoughts don't explain the whole money block.\nMovement does not tell us why the money remains blocked.\nThe Fool moves, while your question says your own mind stops everything.\n“I talk myself out of everything” is already a verdict on you. This moving figure does not support it.",
+        "Now let's look at what keeps the money still when the card itself moves…",
+      ],
+    },
+    'cards-paycheck-to-paycheck': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
+      // folded verbatim: cuts 3-6 become beat 3, joined by newlines.
+      a: [
+        "The cards were face down. You turned the Magician — a cup, coin, blade and wand are waiting on the table in front of him.",
+        "You said you are living paycheck to paycheck and cannot get started. The Magician is not short of a working tool.",
+        "Your energy is not the missing piece in this picture.\nThe tools do not name the financial cause or tell you what action to take.\nEverything needed to begin is visible, while you still cannot get started financially.\nYou connected paycheck-to-paycheck living to your own energy. The complete table leaves that connection unproven.",
+        "Let me look closer at what keeps a ready beginning from becoming financial movement…",
+      ],
+      b: [
+        "You reached for a hidden picture. You turned the Hanged Man — green leaves grow from the wood, though one ankle is tied.",
+        "You asked whether your energy is blocking the money. This picture holds one point while life remains around it.",
+        "The card does not make your energy the thing that is tied.\nThe growing leaves cannot promise money or tell us where it comes from.\nLife continues around the pause, but the money remains blocked.\nYour question puts the block inside you. The living wood and single rope make me look elsewhere.",
+        "Let me see what holds the money while the rest of the picture keeps growing…",
+      ],
+      c: [
+        "The backs offered no hint. You turned the Fool — his small bundle is already over his shoulder.",
+        "You asked whether your energy keeps you from getting started. The Fool has already set out with little.",
+        "This card doesn't make your energy the reason you can't get started.\nThe bundle gives no amount, plan or instruction.\nThe Fool begins with little, while your money question has not found a beginning.\n“Can't get started” is the tension you brought. The Fool is already moving without asking you to become someone else.",
+        "Now let's look at what keeps this beginning from reaching the money…",
+      ],
+    },
+    'cards-money-reach-me': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
+      // folded verbatim: cuts 3-6 become beat 3, joined by newlines.
+      a: [
+        "You chose from three unseen cards. You turned the Magician — he stands in the open with every tool arranged before him.",
+        "You asked why money reaches everyone else and not you. Nothing about this Magician is hidden or unequipped.",
+        "Other people's progress is not evidence that something is missing in you.\nThe table cannot tell us why the result differs or what anyone else has.\nYour table is complete, but the money has still not reached you while others appear ahead.\n“Everybody” made their result the measure of your own. The Magician gives me no lack on your side.",
+        "Let me look at what keeps your complete table from producing the result you see elsewhere…",
+      ],
+      b: [
+        "The pictures were hidden when you chose. You turned the Hanged Man — one rope holds him while the rest of the card has room.",
+        "You asked why the money has not reached you. The card puts the stopping at one point.",
+        "The money being held doesn't make you the one holding it, dear.\nOne rope cannot explain another person's money or compare it with yours.\nMost of the figure is free, yet your result remains held beside the comparison.\nYou asked why it reaches them and not you. The card gives us a hold to examine, not a verdict about who deserves more.",
+        "Let me see what holds your result without turning anyone else's money into the answer…",
+      ],
+      c: [
+        "All three backs were alike. You turned the Fool — the sun fills the sky behind him as he moves.",
+        "You asked why others get ahead while the money does not reach you. The Fool is moving in full light.",
+        "Their movement does not make you the reason the money is blocked.\nThe road gives no ranking, amount or promise.\nThe card moves brightly, while the money in your question has not caught up.\nThe comparison says they are ahead. The Fool only shows that your question still has movement in it.",
+        "Now let's look at what keeps the money from joining the movement already here…",
+      ],
+    },
+    'cards-paying-what-i-owe': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
+      // folded verbatim: cuts 3-6 become beat 3, joined by newlines.
+      a: [
+        "You couldn't see the card before choosing. You turned the Magician — both hands are working above a table where every tool is present.",
+        "You said you keep paying what you owe and asked why the money stays blocked. The work on this table is already being done.",
+        "Paying what you owe is not proof that you caused the block.\nThe tools give no repayment advice and cannot name a financial cause.\nThe work continues and the obligation is being met, but the money remains blocked.\n“I keep paying” is the effort you brought to the question. The full table does not let that effort become the accusation.",
+        "Let me look closer at what keeps the money blocked while the work is being done…",
+      ],
+      b: [
+        "The backs hid the picture. You turned the Hanged Man — one ankle is held, while the rest of him hangs loose.",
+        "You asked why the money remains blocked while you keep paying what you owe. The card gives the hold one point.",
+        "This card does not turn your payments into the reason the money is held.\nThe rope cannot tell you what to pay, stop paying or change.\nOne point holds the figure, while the action you named keeps happening.\nYou named what you are already doing and asked why it has not changed the result. The card keeps the hold separate.",
+        "Let me see what has hold of the result beyond the action you named…",
+      ],
+      c: [
+        "Three hidden pictures, and you turned the Fool — look at the small bundle he carries as he moves.",
+        "You asked why paying what you owe has not moved the money. The Fool keeps moving with what he carries.",
+        "The card does not blame what you carry responsibly.\nThe bundle gives no amount, source or plan.\nThe Fool moves with his bundle, while the money still does not move with your payments.\nThe question asks why responsibility has not opened the money. Nothing here turns responsibility into the fault.",
+        "Now let's look at what keeps the money from moving with what you already carry…",
+      ],
+    },
+    'cards-destined-alone': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
+      // folded verbatim: cuts 3-6 become beat 3, joined by newlines.
+      a: [
+        "The pictures were hidden when you chose. You turned the Magician — every tool on his table is laid out in the open.",
+        "You asked why you feel destined to be alone. Nothing on this table marks one fixed outcome.",
+        "Nothing here says your life has been assigned to solitude.\nThe tools cannot promise a person or explain why love has not happened.\nThe table holds several possibilities, while the word “destined” allows only one.\nYou said “destined” because being alone has started to feel like a decision already made. The card shows no such decision.",
+        "Let me look at what has made one outcome feel already decided…",
+      ],
+      b: [
+        "You couldn't see the figure before you reached. You turned the Hanged Man — look at the green leaves growing from the wood above him.",
+        "You asked why solitude feels like destiny. This card contains a pause with life still growing through it.",
+        "This pause is not evidence that your future was decided.\nThe leaves give no date and do not tell us who may enter your life.\nLife keeps growing inside the pause, while your question treats the pause as permanent.\nThe feeling is real, but the conclusion is larger than the pause this card can support.",
+        "Let me see what keeps this pause sounding permanent…",
+      ],
+      c: [
+        "All three cards were face down. You turned the Fool — the full sun is high behind him.",
+        "You asked why you feel destined to be alone. The Fool stands at a beginning, not at a final judgement.",
+        "This card does not turn being alone now into a life sentence.\nA beginning gives no name, place or promise.\nThe deck opens with this card, while your question closes the whole road.\nYou asked about destiny, and the Fool gives me no finished future to read back to you.",
+        "Now let's look at what keeps an open beginning feeling closed…",
+      ],
+    },
+    'cards-how-long-alone': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
+      // folded verbatim: cuts 3-6 become beat 3, joined by newlines.
+      a: [
+        "You reached for a card you could not see. You turned the Magician — the cup, coin, blade and wand are all ready on his table.",
+        "You asked how long you are going to be alone. This table contains tools, not a clock.",
+        "I won't invent a length for you, dear. Nothing here says solitude is your permanent state.\nThe ready tools still do not tell us when another person appears.\nEverything on the table is available, while your question has been reduced to a clock.\nYou asked for a length because being alone has no visible end from where you stand. The card gives no sentence of permanence.",
+        "Let me look closer at what has made the open question feel permanent…",
+      ],
+      b: [
+        "The backs gave nothing away. You turned the Hanged Man — one rope holds his ankle while the rest hangs loose.",
+        "You asked for the length of the waiting. The card shows one point holding the picture still.",
+        "No card can count this wait. One held point is not your whole future.\nThe rope gives no date, pace or promised release.\nMost of the figure has room, yet the unanswered length holds the whole question still.\nThe number is what you wanted, but the card brings me back to the single point carrying all that waiting.",
+        "Let me see what gives that one point so much of the waiting…",
+      ],
+      c: [
+        "Nothing on the backs set one card apart. You turned the Fool — he is already moving beneath a clear sky.",
+        "You asked how long being alone will last. The Fool shows movement, but no timetable.",
+        "I cannot give the road a number, and I will not turn it into forever.\nMovement does not name who comes or when.\nThe Fool keeps moving, while “how long” makes your life wait on one missing answer.\n“How long” asks the road to tell you where it ends. This card only lets me say it is not closed.",
+        "Now let's look at what keeps the road open without making it feel available to you…",
+      ],
+    },
+    'cards-love-not-happened-yet': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
+      // folded verbatim: cuts 3-6 become beat 3, joined by newlines.
+      a: [
+        "Three hidden pictures, and you turned the Magician — none of the tools on his table has been taken away.",
+        "You asked whether you missed your chance at love. This card does not show one tool already spent.",
+        "The card gives me no single chance that you used up.\nThe table still cannot promise that someone is coming.\nEvery tool remains present, while your question treats love as something already handed out.\nYou offered me two choices: missed, or not yet. The Magician refuses the idea that one allotted chance disappeared.",
+        "Let me see what made love feel like one chance already spent…",
+      ],
+      b: [
+        "You chose without seeing the card. You turned the Hanged Man — his face stays calm while the picture is paused.",
+        "You asked whether love is late or already missed. The Hanged Man is still here; nothing has passed out of the picture.",
+        "Nothing here shows love passing you by once and for all.\nA pause does not name a future person or say when anything changes.\nThe picture has not moved past you, while your attention is searching behind the pause.\nThe question asks me to find a lost moment. This card gives me stillness, not a moment that escaped.",
+        "Let me look at what keeps your attention searching behind this pause…",
+      ],
+      c: [
+        "The cards were face down. You turned the Fool — notice the small bundle and the bright sky as he starts out.",
+        "You asked whether the chance has gone. The Fool brings us to the beginning of a road.",
+        "Your chance at love is not one closed moment behind you.\nThe road gives no arrival, place or identity.\nThe card begins here, while “missed” puts the important moment in the past.\n“Missed my chance” makes love one event. The Fool does not limit the road that way.",
+        "Now let's look at what placed one closing moment on an open road…",
+      ],
+    },
+    'cards-alone-for-years': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
+      // folded verbatim: cuts 3-6 become beat 3, joined by newlines.
+      a: [
+        "The card faces were hidden. You turned the Magician — he stands openly behind a table where every tool is within reach.",
+        "You said you have been alone for years and asked what keeps you here. The Magician shows no missing ability on your side.",
+        "Those years are not proof that you caused the solitude.\nThe table cannot supply the reason or promise a meeting.\nNothing is missing from the table, but the relationship you want is still absent.\nYou asked what keeps you here, which puts the years and the cause beside each other. The card does not put that cause in you.",
+        "Let me look closer at what keeps a complete life from meeting the relationship you want…",
+      ],
+      b: [
+        "You chose from three matching backs. You turned the Hanged Man — one ankle is held and the rest of the figure hangs free.",
+        "You asked what has kept you alone. This card puts the restraint at one point, not through the whole figure.",
+        "Being alone this long does not make you the thing doing the holding.\nThe rope cannot name a cause outside the picture.\nMost of the figure has room, yet the one result in your question stays held.\nYou named the years, then asked what keeps you here. The rope keeps my attention on the hold, not on you.",
+        "Let me see what gives one held point so much of this question…",
+      ],
+      c: [
+        "You could not see the picture you picked. You turned the Fool — his eyes are raised toward the clear sky.",
+        "You asked what keeps you here after years alone. The Fool does not show you refusing to move.",
+        "This card gives me no failure to begin on your side.\nMovement gives no person, date or explanation.\nThe Fool is moving, while the years in your question make life feel fixed in one place.\nYou named the years, then asked what keeps you here. The moving card gives me no picture of you choosing stillness.",
+        "Now let's look at what keeps the movement from becoming a meeting…",
+      ],
+    },
+    'cards-more-years-alone': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
+      // folded verbatim: cuts 3-6 become beat 3, joined by newlines.
+      a: [
+        "Nothing showed through the backs. You turned the Magician — every tool is out, and neither hand is idle.",
+        "You asked how many more years pass before something changes. No number is marked on this table.",
+        "I won't give you a number the card can't know. Nothing on this table turns the waiting into a permanent ending.\nA ready table gives me no date for another person.\nThe whole table is ready for use, while the question asks only how much longer nothing changes.\n“How many more years” tells me the waiting has become the measure of everything. The Magician gives no such count.",
+        "Let me look at what keeps readiness from feeling like change…",
+      ],
+      b: [
+        "You reached before the image was visible. You turned the Hanged Man — green leaves remain on the wood above him.",
+        "You asked for a count of years. The card shows life continuing inside the pause.",
+        "I cannot count the years for you, dear. The pause is not a verdict on your whole life.\nThe leaves give no pace, date or promised arrival.\nLife is still present, though the waiting has made the pause feel fixed.\nYou asked for a number because the pause has lasted long enough to feel permanent. The living wood says only that it is not dead.",
+        "Let me see what keeps this living pause from opening into movement…",
+      ],
+      c: [
+        "All three were face down. You turned the Fool — the sun is full and high behind him.",
+        "You asked how many more years you will be alone. The full sun gives me light, not a clock.",
+        "No reader can measure this road, and no card should call it endless.\nThe road does not name who comes or when.\nThe card moves forward, while the requested number would hold your life to a schedule.\nThe question asks the Fool to number the road. He gives movement, not a promise about its end.",
+        "Now let's look at what keeps forward movement from feeling real in your life…",
+      ],
+    },
+    'cards-held-alone': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
+      // folded verbatim: cuts 3-6 become beat 3, joined by newlines.
+      a: [
+        "The cards were hidden when you chose. You turned the Magician — a complete set of tools lies open on his table.",
+        "You asked whether something holds you alone or this is simply your life. The Magician still has every tool in front of him.",
+        "Being alone here isn't a permanent identity.\nThose tools can't promise a relationship or explain the absence.\nThe table holds several ways forward, while your question reduces life to one present condition.\nYou placed a block on one side and your whole life on the other. Neither verdict is written on this card.",
+        "Let me look closer at what has made the present condition feel like the whole life…",
+      ],
+      b: [
+        "You couldn't see the figure. You turned the Hanged Man — one rope catches his ankle while the rest hangs loose.",
+        "You asked whether you are held here. This card shows restraint without making it the whole person.",
+        "The held point is not a verdict that your whole life stays this way.\nThe rope gives no person, date or outside cause.\nMost of the figure remains free, though one held point has come to describe everything.\nThe question asks whether the hold is all there is. The picture keeps the hold smaller than the person.",
+        "Let me see what lets one held point speak for everything…",
+      ],
+      c: [
+        "The backs gave no clue. You turned the Fool — one small bundle rests on his shoulder as he moves.",
+        "You asked whether solitude is now your life. The Fool stands at a beginning with little weighing him down.",
+        "Solitude now is not the only life this card can hold.\nA beginning gives no arrival or timetable.\nThe Fool moves lightly, while “just my life now” makes the road sound finished.\n“Just my life” is a final sentence. The Fool gives me no final card.",
+        "Now let's look at what keeps a beginning from feeling available…",
+      ],
+    },
+    'cards-empty-house-alone': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
+      // folded verbatim: cuts 3-6 become beat 3, joined by newlines.
+      a: [
+        "You chose while every picture was hidden. You turned the Magician — his table is full, but he stands there by himself.",
+        "You asked why being alone feels hardest now that the house is empty. The card puts fullness and one standing figure in the same picture.",
+        "The harder feeling does not mean you are failing at being alone.\nThe table cannot tell us why the house became empty or who used to be there.\nThere is fullness on the table, but only one figure stands beside it.\nYou gave me only two facts: the house is empty, and being alone is harder now. The card lets those facts matter without inventing the story between them.",
+        "Let me look closer at what makes fullness feel absent in that empty space…",
+      ],
+      b: [
+        "The backs hid the card. You turned the Hanged Man — the figure is still, and the green leaves above him remain alive.",
+        "You asked why the empty house has made solitude harder. The card holds stillness beside living wood.",
+        "The stillness is real; it is not evidence that something is wrong with you.\nThe leaves do not name a loss, a child, a partner or an ending.\nLife remains on the card, while the stillness in your question has grown harder to carry.\nThe leaves let me stay with what changed without pretending I know why.",
+        "Let me see what has changed inside the stillness you described…",
+      ],
+      c: [
+        "You reached for an unseen image. You turned the Fool — he carries one small bundle under a wide sky.",
+        "You asked why being alone weighs more in an empty house. The Fool carries little through a great deal of open space.",
+        "Feeling the empty space is not a weakness, dear.\nThe bundle cannot tell us what left the house or what should fill it.\nThe Fool moves through open space, while your empty house makes openness feel heavy.\nThe empty house is the space you named; the heavier feeling is the change. I don't need to invent what happened between them.",
+        "Now let's look at what makes the open space weigh so much now…",
+      ],
+    },
+    'cards-alone-a-decade': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
+      // folded verbatim: cuts 3-6 become beat 3, joined by newlines.
+      a: [
+        "You could not see which picture you chose. You turned the Magician — all four tools remain laid out and ready.",
+        "You said you have been alone a decade and asked how much longer. The Magician gives no count, only readiness.",
+        "I can't give you another number. Nothing on this table turns ten years into forever.\nThose tools give me no date for a meeting.\nThe table is ready, while the decade has made waiting feel like the only result.\nYou named the decade first because its length now feels like evidence. The card won't let it become a verdict.",
+        "Let me look at what makes readiness feel powerless beside that decade…",
+      ],
+      b: [
+        "Three identical backs, and you turned the Hanged Man — one ankle is held while the rest of him hangs free.",
+        "You asked for the remaining length of a wait already measured in years. The card puts the pause at one point.",
+        "No card can count what remains. The rope is not a sentence on the rest of your life.\nThe card gives no date, pace or promised release.\nMost of the figure is free, though the length already lived now holds the whole question.\n“How much longer” turns the years already lived into a forecast. The rope cannot make that forecast.",
+        "Let me see what gives the years so much hold over the future question…",
+      ],
+      c: [
+        "The card was hidden when you reached. You turned the Fool — the full sun is high behind him.",
+        "You asked how much longer after a decade alone. That full sun gives me no measure of time.",
+        "I will not invent a length, and this road is not marked “finished.”\nMovement gives no person or arrival.\nThe Fool moves, while the decade behind you makes the road ahead feel still.\nThe decade is real. It still gives the Fool no ending to show you.",
+        "Now let's look at what keeps a moving road feeling stopped by the years behind it…",
+      ],
+    },
+    'cards-too-late-or-now': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
+      // folded verbatim: cuts 3-6 become beat 3, joined by newlines.
+      a: [
+        "The backs hid every symbol. You turned the Magician — nothing on his working table has been put away.",
+        "You asked whether it is too late for love or this is only where you are now. The Magician's table is still open.",
+        "This card does not call your life too late for love.\nThe tools cannot promise that someone comes or tell us when.\nThe table remains ready, while “too late” treats it as closed.\nYou offered “too late” against “only now.” The Magician gives the present more room than the first answer allows.",
+        "Let me look closer at what has made an open table feel closed…",
+      ],
+      b: [
+        "You picked before seeing the art. You turned the Hanged Man — green leaves still grow from the wood above him.",
+        "You asked whether the pause has become a closing time. Life is still visible on this card.",
+        "The pause does not prove that love has closed.\nGrowing leaves give no arrival, date or person.\nLife continues inside the pause, while your question asks whether the whole chance has ended.\nThe question asks a pause to become a permanent ruling. This card will not carry that weight.",
+        "Let me see what makes this living pause feel final…",
+      ],
+      c: [
+        "Nothing showed which card was which. You turned the Fool — the sun is full behind him at the start of the road.",
+        "You asked whether love is too late. The Fool brings us to a beginning, not an ending.",
+        "You are not standing at the end of the road in this picture.\nA beginning gives no promise about who appears.\nThe Fool begins, while your question looks for a final closing point.\n“Only where I am now” is the part the Fool supports. He does not turn it into a timetable.",
+        "Now let's look at what keeps the beginning from feeling like part of your life…",
+      ],
+    },
+    'cards-alone-heavier-now': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
+      // folded verbatim: cuts 3-6 become beat 3, joined by newlines.
+      a: [
+        "The cards were face down when your hand moved. You turned the Magician — both hands are occupied above a table full of tools.",
+        "You asked why being alone feels heavier now. The Magician has much in front of him and nobody beside the table.",
+        "Feeling the weight more clearly is not a flaw in you.\nThe table cannot tell us what changed outside the facts you gave.\nThe tools are all present, while the absence beside them has become harder to ignore.\nYou did not say being alone is new; you said the weight has changed. The card keeps me with that difference.",
+        "Let me look closer at what has made the absence beside you harder to carry now…",
+      ],
+      b: [
+        "You chose from hidden pictures. You turned the Hanged Man — his face is calm while the rest of the card stays still.",
+        "You asked why solitude carries more weight now. The card puts calm and suspension in the same picture.",
+        "The heavier feeling does not mean you are handling life wrongly.\nThe still card cannot invent an event, loss or reason.\nThe face stays calm, though the stillness in your question has gained weight.\n“Heavier now” is the change you brought. The calm face lets me acknowledge it without inventing why.",
+        "Let me see what has changed inside the stillness you already knew…",
+      ],
+      c: [
+        "The backs gave no warning of the picture. You turned the Fool — one small bundle rests over his shoulder.",
+        "You asked why being alone feels heavier than it used to. The Fool carries little, which makes the weight in your question stand out.",
+        "This card does not call you weak for feeling the difference now.\nThe bundle says nothing about what happened in your life.\nThe Fool carries little, while solitude now feels like more.\nThe question compares now with before. The small bundle makes that added weight the part worth examining.",
+        "Now let's look at what has made being alone feel heavier now…",
+      ],
+    },
+    'cards-alone-rest-of-life': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
+      // folded verbatim: cuts 3-6 become beat 3, joined by newlines.
+      a: [
+        "You reached for a face-down card. You turned the Magician — the complete set of tools is still spread across his table.",
+        "You asked whether you will be alone for the rest of your life. Nothing here can carry a verdict that large.",
+        "I will not sentence you to being alone or promise you otherwise. The card supports neither verdict.\nThe table gives no person, date or guarantee.\nSeveral tools remain available, while the question allows one outcome for every year ahead.\nYou asked the present to speak for every year ahead. The Magician can't make that leap.",
+        "Let me look at what makes the present feel strong enough to predict the whole life…",
+      ],
+      b: [
+        "You couldn't see the picture you chose. You turned the Hanged Man — one rope holds him, while green leaves remain above.",
+        "You asked whether this pause lasts for life. The card shows one held point and living wood.",
+        "No reader can turn this pause into the rest of your life.\nThe leaves promise nobody and the rope sets no duration.\nLife remains around the held point, while “the rest of my life” makes the hold permanent.\nThe phrase “rest of my life” asks one rope to speak for everything. This card keeps it to one point.",
+        "Let me see what lets one held point sound permanent…",
+      ],
+      c: [
+        "All three backs concealed the art. You turned the Fool — he begins beneath a wide, bright sky.",
+        "You asked whether solitude fills the whole road ahead. The Fool stands at its beginning.",
+        "I can't tell you who comes. I can tell you this road isn't finished.\nA beginning is no guarantee of a meeting.\nThe road opens on the card, while your question closes it beyond today.\nYou asked this road to speak for the rest of your life. The Fool only shows its beginning.",
+        "Now let's look at what keeps the open road from feeling open to you…",
+      ],
+    },
+    'cards-meant-alone-still-time': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
+      // folded verbatim: cuts 3-6 become beat 3, joined by newlines.
+      a: [
+        "The images were hidden. You turned the Magician — every tool remains laid out and ready for use.",
+        "You asked whether you are meant to be alone or still have time. The table holds no fate and no clock.",
+        "Nothing marks you here as meant for solitude, dear. I can't give you a remaining time.\nThose tools promise nobody and give me no when.\nThe table is open, while “meant to be alone” closes every use of it.\nYou put fate on one side and a clock on the other. The table gives neither answer, and it doesn't condemn you to the first.",
+        "Let me look closer at what has made fate and time feel like the only two answers…",
+      ],
+      b: [
+        "Three matching backs, and you turned the Hanged Man — look at the living leaves above the still figure.",
+        "You asked whether the pause is a purpose or a deadline. The card shows life, not an explanation for your life.",
+        "Nothing here says solitude was designed for you, dear. No card can count what remains.\nThe living wood gives no divine plan, lesson or arrival.\nLife continues inside the pause, while your question turns the pause into a designation.\n“Meant” makes the solitude purposeful. The card lets me acknowledge the pause without inventing a purpose.",
+        "Let me see what makes the pause feel assigned to you…",
+      ],
+      c: [
+        "You chose without seeing the card. You turned the Fool — the clear sun is high behind him.",
+        "You asked whether you are meant to be alone. The Fool carries no final assignment.",
+        "The Fool does not call being alone your purpose or set a time for love.\nThe road gives no identity, place or guarantee.\nThe card begins, while your question asks whether the ending has already been assigned.\n“Still time” asks for a count, while “meant alone” asks for fate. The Fool gives me an open road instead of either claim.",
+        "Now let's look at what makes being alone feel assigned rather than temporary…",
+      ],
+    },
+    'cards-know-not-destined-alone': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
+      // folded verbatim: cuts 3-6 become beat 3, joined by newlines.
+      a: [
+        "You reached for a picture you could not see. You turned the Magician — the cup, coin, blade and wand are all present on his table.",
+        "You asked how long before you know you are not destined to be alone. This table shows ability, not fate or time.",
+        "I cannot give you a length, but nothing here designates you for solitude.\nThe tools do not promise a person or say when love appears.\nEvery tool remains available, while the question asks time to clear a sentence already passed on your life.\nYou are asking when love changes and when you may stop treating solitude as fate. The Magician rejects the fate without inventing the when.",
+        "Let me see what keeps the fate claim alive while you wait for proof against it…",
+      ],
+      b: [
+        "The cards were face down. You turned the Hanged Man — one ankle is held while the living wood above him keeps its leaves.",
+        "You asked for a length that would disprove destiny. The card gives us a living pause instead.",
+        "No number can prove or disprove a fate the card does not support.\nThe rope and leaves give no person, date or guarantee.\nLife continues around the pause, while you wait for a number to release you from destiny.\n“How long before I know” makes certainty depend on the end of the pause. The card gives no basis for the destiny now.",
+        "Let me look closer at what ties certainty to the end of this pause…",
+      ],
+      c: [
+        "Nothing on the backs marked your choice. You turned the Fool — one small bundle hangs from the stick over his shoulder.",
+        "You asked when you can stop believing solitude is destined. The Fool carries neither a clock nor a final verdict.",
+        "I will not invent a time, and I will not call being alone your destiny.\nThe road names nobody and promises no arrival.\nThe card begins, while the question makes a future moment responsible for proving you are not condemned.\nYou asked time to settle destiny. The Fool cannot settle either, but he does not close the road.",
+        "Now let's look at what makes a future answer feel necessary before the road can be open…",
+      ],
+    },
+    'cards-destined-or-not-yet': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
+      // folded verbatim: cuts 3-6 become beat 3, joined by newlines.
+      a: [
+        "The pictures stayed hidden until you chose. You turned the Magician — nothing on his complete table has been removed.",
+        "You asked whether you are destined to be alone or love simply has not happened. The Magician shows no assigned lack.",
+        "Nothing on this card marks you as destined for solitude.\nThe table cannot promise that love happens later.\nThe table stays complete, while “destined” makes one absence explain the whole future.\nYou offered destiny against “not yet.” The Magician lets me refuse the first without pretending I can promise the second.",
+        "Let me look closer at what has made an unknown future feel assigned…",
+      ],
+      b: [
+        "You chose from three unseen cards. You turned the Hanged Man — the figure is paused, and green leaves remain above him.",
+        "You asked whether the pause is destiny. This card holds still without turning stillness into a life.",
+        "The pause is not proof of a fate written for you.\nThe living wood gives no arrival or timeframe.\nLife remains in the pause, while the question asks the pause to become permanent.\nThe feeling of permanence comes from the pause you are living. The card does not turn that feeling into fate.",
+        "Let me see what keeps this pause sounding like destiny…",
+      ],
+      c: [
+        "All three were face down. You turned the Fool — one small bundle goes with him as the road begins.",
+        "You asked whether love is fated away or still unknown. The Fool starts without answering who waits ahead.",
+        "Being alone now is not a destiny this card can declare.\nThe road offers no person, date or guarantee.\nThe road is open, while your two choices ask for a finished answer about it.\n“Hasn't happened yet” leaves the future unknown. The Fool can stay with that unknown without turning it negative.",
+        "Now let's look at what keeps the unknown side of the road feeling like a no…",
+      ],
+    },
+    'cards-god-with-me-alone': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
+      // folded verbatim: cuts 3-6 become beat 3, joined by newlines.
+      a: [
+        "You could not see the card your hand found. You turned the Magician — every tool lies openly on the table before him.",
+        "You said God is with you and asked why you are still alone. The Magician puts a full working life in front of us.",
+        "Nothing on this table makes your faith the reason you are alone.\nThe tools cannot tell us God's intention or promise a person.\nThe table is full and your faith is present, while the relationship you want is absent.\nYou did not ask whether God is with you; you stated it. The unanswered part is why companionship is still missing.",
+        "Let me look closer at what keeps companionship absent while your faith remains present…",
+      ],
+      b: [
+        "The backs hid the image. You turned the Hanged Man — his face is calm while one ankle is held.",
+        "You said God is with you and asked about the solitude. The card gives us calm inside a pause, not an explanation from God.",
+        "This card does not turn the waiting into a message from God.\nThe pause cannot say you were heard, refused, tested or taught.\nCalm and waiting share the card, while your question asks faith to explain the wait.\nYour faith is not the uncertain part of the question. The card keeps me with the solitude instead of inventing God's reason.",
+        "Let me see what holds the companionship question without speaking for God…",
+      ],
+      c: [
+        "Three hidden pictures, and you turned the Fool — the full sun is behind him as he moves.",
+        "You said God is with you and asked why you are alone. The Fool moves in full light without telling us why no one is beside him.",
+        "Your faith does not have to answer for the absence in your question.\nThe road cannot speak for God or say who may come.\nThe Fool moves under full light, while you are still alone and asking why.\nYou brought faith and loneliness into the same sentence. The card lets both be present without making one the cause of the other.",
+        "Now let's look at what keeps the road moving without bringing the company you asked about…",
+      ],
+    },
+    'cards-god-mean-me-alone': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
+      // folded verbatim: cuts 3-6 become beat 3, joined by newlines.
+      a: [
+        "Nothing on the backs revealed the picture. You turned the Magician — his full set of tools remains ready on the table.",
+        "You asked how much longer God means you to be alone. This table carries no divine timetable.",
+        "I cannot give you a length or tell you that God assigned this solitude.\nThe tools promise nobody and reveal no divine response.\nThe table remains ready, while the question turns solitude into both a schedule and an intention.\n“How much longer” asks for time; “God mean me to” asks for authority. This card cannot honestly supply either.",
+        "Let me look at what has made the loneliness feel assigned as well as prolonged…",
+      ],
+      b: [
+        "You reached for an unseen card. You turned the Hanged Man — green leaves grow above the figure even while he is still.",
+        "You asked for God's intention and a length of time. The card shows a pause, not the reason for it.",
+        "No card can say God means you to be alone, dear, and I will not invent how long.\nThe leaves do not say you are tested, taught, refused or waiting on a plan.\nLife continues inside the pause, while “God means me to” makes the pause a decision about you.\nYou stated the solitude and asked what God means by it. The card lets me read the pause, not God's mind.",
+        "Let me see what keeps the pause tied to a meaning no card can claim…",
+      ],
+      c: [
+        "The cards were face down. You turned the Fool — he is already moving beneath a clear sun.",
+        "You asked how long God means this solitude to last. The Fool carries no message from God and no clock.",
+        "I won't speak for God or number the road ahead. Nothing on this card says solitude was assigned to you.\nMovement gives no arrival or divine timing.\nThe road moves, while the question asks God to have fixed its length in advance.\nThe question gives the whole road a divine schedule. The Fool gives me no such schedule to report.",
+        "Now let's look at what makes this loneliness feel assigned and prolonged…",
+      ],
+    },
+    'cards-gods-intention-alone': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
+      // folded verbatim: cuts 3-6 become beat 3, joined by newlines.
+      a: [
+        "The images were hidden when you chose. You turned the Magician — a complete working table stands in front of him.",
+        "You asked whether solitude is God's intention or someone is coming. The Magician cannot turn either claim into knowledge.",
+        "Nothing here calls solitude a divine sentence, and nothing here can promise a person.\nThe tools reveal no divine response, date, identity or place.\nThe table stays open, while both choices ask for a future already decided.\nYou gave me two certainties, but neither is available from a card. What remains true is that being alone has not become a verdict about you.",
+        "Let me look closer at what makes an unknown future feel like a divine ruling…",
+      ],
+      b: [
+        "You picked from three matching backs. You turned the Hanged Man — one rope holds the figure while the wood above remains alive.",
+        "You asked whether God intends the pause or a person will end it. The card shows the pause, not God's purpose.",
+        "I will not say God intended this or promise that someone comes.\nThe rope names no plan, lesson, test or arrival.\nLife remains in the pause, while the binary makes either God or a future person explain everything.\nThe question asks me to read God's intention and another person's arrival at once. The Hanged Man supports neither claim.",
+        "Let me see what keeps the pause caught between a plan and a promise…",
+      ],
+      c: [
+        "You could not see the card you reached for. You turned the Fool — the road begins in broad daylight.",
+        "You asked for a choice between divine intention and a future arrival. The Fool gives an open road, not either verdict.",
+        "The card cannot speak for God or place a person on the road.\nThe road gives no who, where or when.\nThe Fool moves into the unknown, while your question asks the unknown to choose one fixed answer.\nYou want to know whether the road is assigned or occupied. The Fool keeps it open without inventing either.",
+        "Now let's look at what makes the unknown future feel already decided…",
+      ],
+    },
+    'cards-love-never-stays': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
+      // folded verbatim: cuts 3-6 become beat 3, joined by newlines.
+      a: [
+        "The card faces were hidden. You turned the Magician — all four tools remain on the table in front of him.",
+        "You asked why love never stays with you. This card gives me no missing capacity on your side.",
+        "The endings do not add up to a defect in you.\nThe table cannot supply one cause or judge the people involved.\nThe capacity remains complete, while your question turns separate endings into one verdict about you.\nYou asked for one reason behind “never.” The Magician gives no culprit and no missing part in you.",
+        "Let me look at what keeps separate endings feeling like one judgement on you…",
+      ],
+      b: [
+        "You chose without seeing the figure. You turned the Hanged Man — one ankle is held while everything else hangs free.",
+        "You asked why love doesn't stay. The picture gives the restraint one point rather than making it the whole person.",
+        "Nothing here makes you the reason love doesn't stay.\nThat rope can't explain any real person's choice or character.\nMost of the figure is free, yet “never stays” makes every ending feel like the same hold.\nThe word ‘never’ comes from your question. The card gives me one present hold, not a pattern.",
+        "Let me see what makes each ending return to the same held question…",
+      ],
+      c: [
+        "The backs offered no clue. You turned the Fool — a small bundle hangs from the stick over his shoulder.",
+        "You asked why love never stays. The Fool carries something forward instead of leaving the card empty.",
+        "Love leaving has not emptied you of the ability to love.\nThe bundle gives no reason for an ending and no promise about the next person.\nSomething is carried forward, while “never” makes each ending erase what came before.\n“With me” puts you at the centre of every ending. The Fool keeps what you carry separate from why someone left.",
+        "Now let's look at what you keep carrying when love does not stay…",
+      ],
+    },
+    'cards-connection-kept-alive': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
+      // folded verbatim: cuts 3-6 become beat 3, joined by newlines.
+      a: [
+        "You reached before seeing the picture. You turned the Magician — both hands are working above the full table.",
+        "You asked why you have kept this connection alive on your own. The Magician makes the work impossible to miss.",
+        "Wanting the connection was not your mistake.\nThe table cannot tell us what the other person felt or why they did less.\nBoth hands are working, while the connection in your question had only yours keeping it active.\n“On my own” is the part you already know. The card lets me affirm the work without inventing the other person's reason.",
+        "Let me look closer at what made the connection depend so heavily on your work…",
+      ],
+      b: [
+        "The cards were face down. You turned the Hanged Man — one rope holds the figure, and nothing else is tied.",
+        "You said the connection stayed alive through your effort. This card shows what it takes to keep one point suspended.",
+        "Keeping it alive does not make you foolish, dear.\nThe rope cannot supply their motive or promise that they take hold now.\nOne point carries the whole suspension, just as your question gives one person all the keeping.\nYou did not ask whether you carried it; you asked why. This picture shows the strain without pretending to know their mind.",
+        "Let me see what kept all the weight at one point…",
+      ],
+      c: [
+        "Nothing on the backs showed the image. You turned the Fool — he carries one bundle and keeps moving.",
+        "You asked why you carried the connection alone. The Fool puts one person's bundle plainly in view.",
+        "What you carried was real to you, even if you carried it alone.\nThe bundle gives no verdict on them and no instruction to stay or leave.\nThe Fool keeps moving with his bundle, while the connection depended on what you carried.\nThe connection and the carrying are both in your words. The Fool keeps me with your side of it.",
+        "Now let's look at what made keeping the connection depend on your effort…",
+      ],
+    },
+    'cards-wait-on-connection': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
+      // folded verbatim: cuts 3-6 become beat 3, joined by newlines.
+      a: [
+        "All three pictures were hidden. You turned the Magician — every tool is ready, but no second person stands at the table.",
+        "You asked how much longer you will wait on this connection. The table contains means, not the other person's timetable.",
+        "I can't tell you how long or choose for you. This table still leaves the decision in your hands.\nThe tools do not reveal their intention, future contact or commitment.\nEverything needed for action is present, while the answer still depends on someone absent from the table.\n“How much longer” asks for a limit because the connection has not supplied one. The card cannot manufacture it.",
+        "Let me look at what keeps the connection without a limit you can trust…",
+      ],
+      b: [
+        "You chose from matching backs. You turned the Hanged Man — one rope keeps the whole figure suspended.",
+        "You asked for the length of a wait tied to this connection. The card shows the suspension, not its end.",
+        "No card can set the length or choose for you. This pause doesn't make waiting your only option.\nHis calm face gives no motive, promise or release date.\nThe whole connection remains suspended, while the waiting is yours to feel.\nYou asked how long you wait, not how long the card hangs. The picture lets me see the suspension without choosing for you.",
+        "Let me see what keeps the connection suspended without giving you a decision…",
+      ],
+      c: [
+        "You could not see the card you picked. You turned the Fool — he moves with one small bundle beneath a clear sky.",
+        "You asked how much longer you will wait. The Fool shows your movement, not another person's decision.",
+        "I won't invent a timetable or choose for you. Your life doesn't have to stand still with this connection.\nThe road does not show whether they join you.\nYou can move, while the connection in your question still has no movement you can rely on.\nThe question is about your waiting, not a prediction of their next move. The Fool keeps that distinction clear.",
+        "Now let's look at what keeps your movement and the connection from meeting…",
+      ],
+    },
+    'cards-real-connection-coming': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
+      // folded verbatim: cuts 3-6 become beat 3, joined by newlines.
+      a: [
+        "You chose from three hidden cards. You turned the Magician — the complete set of tools is open on his table.",
+        "You asked whether a real connection is coming or you remain alone. The Magician shows capacity, not a person approaching.",
+        "Being alone now is not proof that you lack the capacity for a real connection.\nThe tools cannot promise a person, date, place or identity.\nThe capacity is present, while the real connection in your question is not.\nYou offered a promised connection against staying alone. The Magician lets me refuse a judgement on your capacity without pretending I can promise the first.",
+        "Let me look closer at what keeps real connection absent when the capacity is already here…",
+      ],
+      b: [
+        "The backs gave nothing away. You turned the Hanged Man — life remains in the green leaves above the paused figure.",
+        "You asked whether the pause ends in connection or continued solitude. The card shows the pause, not who may change it.",
+        "The pause does not turn solitude into your permanent condition.\nThe leaves guarantee no arrival and give no timeframe.\nLife remains inside the pause, while your binary allows either arrival or permanent solitude.\nThe missing connection has made the pause feel permanent. This card does not turn that feeling into fact.",
+        "Let me see what makes the pause feel like a permanent answer…",
+      ],
+      c: [
+        "The pictures were face down. You turned the Fool — he begins under a full sun with one small bundle.",
+        "You asked whether someone is coming. The Fool gives an open road without placing anyone on it.",
+        "An empty road isn't a verdict against you.\nThe road names nobody and promises nobody.\nThe Fool moves along an open road, while your question asks whether you travel it alone forever.\n“Do I stay alone?” asks the empty road to predict the whole journey. The Fool cannot honestly do that.",
+        "Now let's look at what makes the empty road feel like the only answer…",
+      ],
+    },
+    'cards-picking-noncommittal-men': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
+      // folded verbatim: cuts 3-6 become beat 3, joined by newlines.
+      a: [
+        "The backs hid every picture. You turned the Magician — he stands in the open behind a table arranged to be seen.",
+        "You asked why you keep choosing men who do not commit. The Magician controls what appears on the table.",
+        "Their lack of commitment is not proof that you are bad at choosing.\nThe card cannot diagnose those men or supply one motive they all share.\nThe table is complete, while the commitment in your question is not.\n“I keep picking” puts the whole pattern in your hands. This card doesn't give me permission to put it all there.",
+        "Let me look closer at what keeps commitment absent when the table looks complete…",
+      ],
+      b: [
+        "You chose without seeing the figure. You turned the Hanged Man — one side faces you while his arms remain behind him.",
+        "You asked why the men you choose do not commit. This card makes one visible side carry the whole picture.",
+        "Their lack of commitment isn't proof that you chose badly.\nThe hidden side is not evidence of what any real man intends.\nOne side is visible on the card, while commitment remains unresolved in your question.\nYour question puts their lack of commitment inside your choice. This card won't support that.",
+        "Let me see what keeps commitment unresolved beyond what this card can show…",
+      ],
+      c: [
+        "All three cards were face down. You turned the Fool — one small bundle is all he shows you.",
+        "You asked why you keep choosing non-committal men. The Fool shows very little settled at the start.",
+        "Their lack of commitment isn't proof that your choice caused it.\nThe bundle cannot tell us which man commits or why one does not.\nThe road is open, while commitment remains unsettled in your question.\n“I keep picking” puts their lack of commitment inside your choice. The Fool doesn't support that.",
+        "Now let's look at what keeps commitment unsettled on that open road…",
+      ],
+    },
+    'cards-time-to-commit-before-moving-on': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
+      // folded verbatim: cuts 3-6 become beat 3, joined by newlines.
+      a: [
+        "You reached for a card you could not see. You turned the Magician — every tool is out, and both hands are occupied.",
+        "You asked how long to give him before moving on. The Magician can act, but he cannot set another person's deadline.",
+        "I can't give you a length or choose for you. The decision about your limit is still yours.\nThe tools do not reveal when or whether he commits.\nEverything needed for a decision is on the table, while the missing commitment keeps the choice open.\n“Before I move on” tells me you are asking the card to choose a limit. The Magician gives your agency back without choosing for you.",
+        "Let me look at what keeps the commitment question open despite everything already on the table…",
+      ],
+      b: [
+        "The pictures were hidden. You turned the Hanged Man — one rope keeps the figure in suspension.",
+        "You asked for a limit on waiting for his commitment. The card shows the suspension without choosing its end.",
+        "No card can set your deadline, dear. This pause doesn't make waiting your only choice.\nThe rope gives no motive, promise or release date.\nThe relationship question remains suspended, while the cost of waiting is yours.\nYou asked how long to give him because the relationship has supplied no clear point itself. The card cannot invent one.",
+        "Let me see what keeps the relationship suspended without a limit you can trust…",
+      ],
+      c: [
+        "The backs gave no clue. You turned the Fool — he is already moving with one small bundle.",
+        "You asked when to stop waiting and move on. The Fool shows movement, not the decision you should make.",
+        "I won't tell you to wait or go. His decision and your movement aren't the same thing.\nThe road does not tell us his future decision.\nYou can move, while his commitment remains outside the movement you control.\nThe question joins your movement to his decision. The Fool keeps those two actions separate.",
+        "Now let's look at what keeps your movement tied to a decision only he can make…",
+      ],
+    },
+    'cards-slow-commit-or-wasting-time': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
+      // folded verbatim: cuts 3-6 become beat 3, joined by newlines.
+      a: [
+        "You could not see the picture before choosing. You turned the Magician — his table is deliberate, with every object placed in view.",
+        "You asked whether he is slow to commit or wasting your time. The Magician shows deliberate presentation, not private motive.",
+        "I can't choose between those motives from a card. The delay itself is real.\nThat table gives me no access to his later plan.\nHe can appear deliberate and still leave the future unnamed.\nYou aren't asking whether the delay exists. You want to know what it says about him, and I can't decide that from this card.",
+        "Let me look closer at what keeps him presenting a future without naming it…",
+      ],
+      b: [
+        "Three matching backs, and you turned the Hanged Man — one rope holds him while the rest hangs free.",
+        "You asked whether the delay is fear, slowness or disregard. The card shows the delay at one point.",
+        "The hold is visible; his reason for it is not.\nThe rope gives no timeline and no verdict on his character.\nMost of the figure is free, while the commitment remains held at one point.\nThe two choices in your question are both explanations of his mind. This picture only supports the hold you have already seen.",
+        "Let me see what keeps the commitment caught at that one point…",
+      ],
+      c: [
+        "The images stayed hidden. You turned the Fool — he carries almost nothing at the start of the road.",
+        "You asked what his lack of commitment means. The Fool shows an unsettled beginning, not the reason inside him.",
+        "His lack of commitment does not give me permission to invent what he wants.\nThe bundle cannot promise commitment or declare it impossible.\nA relationship can begin while the decision you need stays unsettled.\n“Slow” and “wasting my time” give him two motives. The Fool gives me neither.",
+        "Now let's look at what remains unsettled after the beginning…",
+      ],
+    },
+    'cards-doing-wrong-wont-commit': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
+      // folded verbatim: cuts 3-6 become beat 3, joined by newlines.
+      a: [
+        "The cards were face down. You turned the Magician — the cup, coin, blade and wand are all present on his table.",
+        "You asked what you are doing wrong because he will not commit. The Magician gives me no missing part on your side.",
+        "His lack of commitment is not a grade on you.\nThe table cannot supply his motive or promise that he commits.\nNothing is missing from the table, while the commitment you asked for is still missing from him.\n“What am I doing wrong” turns his decision into your report card. The Magician refuses that arrangement.",
+        "Let me look at what keeps his commitment absent when nothing is missing from you…",
+      ],
+      b: [
+        "You chose from hidden pictures. You turned the Hanged Man — one ankle is held while everything else hangs free.",
+        "You asked what in you is causing his lack of commitment. The card puts the restraint at one point outside the rest of the figure.",
+        "This card does not make you the reason he has not committed.\nThe rope cannot tell us what he thinks or what he chooses next.\nMost of the picture has room, while one point keeps the future held.\nYou put yourself where the rope is. The card gives me no warrant to hold you responsible for his decision.",
+        "Let me see what has hold of the future he has not named…",
+      ],
+      c: [
+        "Nothing on the backs gave the card away. You turned the Fool — one small bundle is enough for him to begin.",
+        "You asked what you did wrong. The Fool begins without asking for a perfect load.",
+        "His lack of commitment isn't proof that you did something wrong.\nThe bundle gives no verdict on his future capacity.\nThe Fool can begin with little, while he has left the commitment unsettled.\nYour question makes your imperfection the explanation. This card does not ask for perfection before a beginning.",
+        "Now let's look at what keeps his decision unsettled beyond the beginning…",
+      ],
+    },
+    'cards-wait-commit-this-time': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
+      // folded verbatim: cuts 3-6 become beat 3, joined by newlines.
+      a: [
+        "The card faces were hidden. You turned the Magician — every tool remains available on the table.",
+        "You asked how long to wait for him to commit this time. The table gives means, not another person's schedule.",
+        "I can't set the length or tell you to keep waiting. His timing doesn't take your choice away.\nThe tools reveal no motive, future promise or deadline.\nEverything needed to name a future is available, while he has still not named one.\n“This time” is all you told me about the past. I won't fill in the rest or pretend his timing is yours.",
+        "Let me look closer at what keeps the future unnamed while you wait for it…",
+      ],
+      b: [
+        "You reached without seeing the figure. You turned the Hanged Man — one rope keeps him in the same suspended position.",
+        "You asked for the length of this wait. The card shows suspension without a release date.",
+        "No reader can give you that number or choose for you. His delay doesn't set your limit.\nThe rope tells us nothing about his intention.\nThe commitment remains suspended, while the time spent waiting belongs to your life.\nYou asked for a length because the commitment has not created its own limit. The Hanged Man cannot create one either.",
+        "Let me see what keeps the commitment suspended without a limit…",
+      ],
+      c: [
+        "All three backs looked alike. You turned the Fool — his eyes are raised toward the bright sky.",
+        "You asked how long to wait. His eyes stay on what lies ahead, but they can't show his decision.",
+        "I won't invent a timetable or choose your next move. This card keeps your movement separate from his answer.\nThe road does not show whether or when he commits.\nThe Fool moves, while your next move is being held beside his answer.\nThe question asks your movement to wait on his decision. The Fool makes that tension visible without resolving it for you.",
+        "Now let's look at what keeps your movement tied to his answer…",
+      ],
+    },
+    'cards-scared-or-never-commit': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
+      // folded verbatim: cuts 3-6 become beat 3, joined by newlines.
+      a: [
+        "You picked from three hidden pictures. You turned the Magician — he stands openly behind a table arranged with care.",
+        "You asked whether fear stops him or he will never commit. The Magician shows what he presents, not what he fears.",
+        "I cannot say he is scared, and I will not declare that he never commits.\nThe table does not promise commitment or explain the delay.\nHis presentation may be deliberate, while the commitment remains unnamed.\nYou offered fear against never. Both answers claim knowledge of him that his conduct has not supplied.",
+        "Let me look at what keeps the future carefully presented but unnamed…",
+      ],
+      b: [
+        "The backs concealed the card. You turned the Hanged Man — his calm face is visible while one ankle is held.",
+        "You asked whether he is scared or incapable of commitment. The card shows a pause without naming his inner state.",
+        "The pause is real; the reason inside him is not available here.\nThe rope gives no motive, diagnosis or timeframe.\nHis face can be calm while the future stays held. Neither fact tells us why.\nThe two choices in your question go beyond the pause you can actually see. The card stays with the pause.",
+        "Let me see what keeps the commitment in this pause…",
+      ],
+      c: [
+        "You could not see what you chose. You turned the Fool — one small bundle is all he carries at the beginning.",
+        "You asked for a verdict on his fear and his whole future. The Fool shows neither settled yet.",
+        "No card can read his fear or sentence his future.\nThe bundle cannot tell us what he eventually chooses.\nThe relationship can be underway while the commitment question remains at the beginning.\n“Scared” reads his interior; “never” reads his whole future. The Fool gives me no honest way to choose.",
+        "Now let's look at what has kept the commitment from settling beyond the start…",
+      ],
+    },
+    'cards-wont-commit-years-together': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
+      // folded verbatim: cuts 3-6 become beat 3, joined by newlines.
+      a: [
+        "The pictures were face down. You turned the Magician — every tool is laid out, and nothing has been put away.",
+        "You asked why he will not commit after years together. The Magician gives a full table with no missing means.",
+        "His lack of commitment is not proof that you failed to give enough.\nThe table cannot tell us his motive or guarantee that he commits.\nEverything needed to build is visible, while the commitment remains unspoken after the years you named.\n“After all these years” is the evidence you brought. It proves the length, not the reason inside him.",
+        "Let me look closer at what keeps years together from becoming a named commitment…",
+      ],
+      b: [
+        "You chose without seeing him. You turned the Hanged Man — one rope holds the whole figure at the ankle.",
+        "You asked what has kept commitment from happening across the years. The card gives the hold one point.",
+        "The years do not make you the reason the commitment is held.\nThe rope gives no reason inside him and no date for change.\nMost of the relationship may have room, while its future stays held at one point.\nThe time together makes the held point harder to dismiss. It still does not make that hold your fault.",
+        "Let me see what has hold of the future after so much time together…",
+      ],
+      c: [
+        "The backs gave nothing away. You turned the Fool — the small bundle remains on his stick as he moves.",
+        "You asked why years together still haven't settled the commitment. The Fool set out without packing for everything.",
+        "Time together does not turn his decision into your fault.\nThe bundle cannot say whether he ever makes the commitment.\nThe relationship has moved through years, while the commitment remains near the beginning.\nThe years show movement in the relationship. They do not answer why his commitment stayed unsettled.",
+        "Now let's look at what keeps the commitment near the start while the relationship moves on…",
+      ],
+    },
+    'cards-years-before-commitment': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
+      // folded verbatim: cuts 3-6 become beat 3, joined by newlines.
+      a: [
+        "Nothing on the backs showed which card you chose. You turned the Magician — all four tools remain on the table.",
+        "You asked how many years together it takes before he commits. The Magician has no clock on his table.",
+        "I won't invent a number or promise commitment. Years together can't make his decision for him.\nThe tools reveal no motive or future choice.\nEverything needed for commitment appears available, while the decision remains unnamed.\nThe number is what you asked for because the years together have not produced their own answer. The table cannot manufacture one.",
+        "Let me look at what keeps the available future from being named…",
+      ],
+      b: [
+        "You reached for an unseen picture. You turned the Hanged Man — one ankle is held while the rest hangs loose.",
+        "You asked for a count before commitment. This card shows a hold, not its duration.",
+        "No card can count the years or decide what he does. The length of the relationship doesn't settle his choice.\nThe rope gives no release date and no verdict on his capacity.\nMost of the picture has room, while the future stays held.\nYou are asking time to force a decision from him. This card gives no such rule.",
+        "Let me see what holds the commitment without a date…",
+      ],
+      c: [
+        "The cards were face down. You turned the Fool — he is moving with one small bundle.",
+        "You asked how many years before he decides. The Fool shows movement without another person's timetable.",
+        "His decision can't be scheduled from this road. Time together doesn't make commitment automatic.\nThe bundle tells us nothing about whether he commits.\nThe relationship can keep moving, while the commitment remains unsettled.\n“How many years” makes time responsible for his choice. The Fool keeps the choice with the person who makes it.",
+        "Now let's look at what keeps the relationship moving without settling its future…",
+      ],
+    },
+    'cards-commitment-uncertain-years': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
+      // folded verbatim: cuts 3-6 become beat 3, joined by newlines.
+      a: [
+        "You chose before seeing the image. You turned the Magician — his table is complete and arranged in plain sight.",
+        "You asked why commitment remains uncertain after years together. The Magician shows preparation without the final statement.",
+        "The uncertainty is real; it is not evidence that you failed to make the relationship worthy.\nThe table cannot tell us his motive or predict his commitment.\nThe means to build are visible, while the commitment remains uncertain.\n“Still uncertain” after the years you named is the mismatch. The card lets that mismatch stand without blaming you.",
+        "Let me look closer at what keeps commitment unnamed when so much else is already in place…",
+      ],
+      b: [
+        "The pictures were hidden. You turned the Hanged Man — one rope keeps the whole figure in suspension.",
+        "You asked why the future is still suspended. This card makes the suspension visible without explaining it.",
+        "The held future is not a judgement on your worth.\nThe rope gives no diagnosis, intention or timeframe.\nMuch of the relationship may move, while one future question stays held.\nYou asked why the future is held, not whether the relationship has existed. One rope keeps my attention on the unresolved point.",
+        "Let me see what has hold of that future point…",
+      ],
+      c: [
+        "Three unseen cards, and you turned the Fool — the bundle stays with him as he continues forward.",
+        "You asked why commitment is still uncertain. The Fool shows a journey that has not settled its destination.",
+        "His unsettled decision does not make the years meaningless.\nThe road cannot say what he ultimately chooses.\nThe years have moved forward, while the commitment still has not found a settled shape.\nThe time together is not in question; the commitment is. The Fool keeps those facts from cancelling each other.",
+        "Now let's look at what keeps the shared road from settling into commitment…",
+      ],
+    },
+    'cards-no-time-to-waste-commit': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
+      // folded verbatim: cuts 3-6 become beat 3, joined by newlines.
+      a: [
+        "The card faces were hidden. You turned the Magician — everything needed for action is already on his table.",
+        "You asked why he will not commit when there is no time to waste. The Magician shows readiness without revealing his decision.",
+        "The urgency is real, but it does not let me invent his motive.\nThe table cannot promise commitment or tell you what action to take.\nEverything appears ready for a clear decision, while the commitment remains unnamed.\n“Neither of us has time to waste” is the urgency you stated. The card can respect it without pretending to know why he delays.",
+        "Let me look at what keeps a ready decision from being spoken…",
+      ],
+      b: [
+        "You chose from three matching backs. You turned the Hanged Man — one rope holds him while the rest hangs free.",
+        "You asked why commitment remains held when time matters. The card gives us the hold, not the reason in him.",
+        "His delay is not proof that you caused the hold.\nThe rope gives no diagnosis, deadline or stay-or-leave answer.\nThe future stays held at one point, while the time in your question feels costly.\nYou are not asking whether time matters, but why he leaves the future held. The card stays with that fact.",
+        "Let me see what has hold of the commitment while the urgency grows…",
+      ],
+      c: [
+        "Nothing revealed the image beforehand. You turned the Fool — the clear sky is fully lit behind him.",
+        "You asked why he has not committed. The whole card is in full light, but it can't measure either person's time.",
+        "I cannot read his future decision or turn time into a threat.\nThe road gives no date and no measure for the time in your question.\nThe relationship moves, while the commitment has not moved with it.\nTime matters in your question, but the Fool gives no count and no verdict on him.",
+        "Now let's look at what keeps the commitment from moving with the relationship…",
+      ],
+    },
+    'cards-how-much-longer-commit': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
+      // folded verbatim: cuts 3-6 become beat 3, joined by newlines.
+      a: [
+        "You reached for a face-down card. You turned the Magician — every tool is present and both hands are ready to act.",
+        "You asked how much longer to wait for his commitment. No clock on this table belongs to him.",
+        "I can't give you a length or tell you to wait. His missing answer hasn't taken away your ability to choose.\nThe tools reveal no motive, promise or future commitment.\nEverything needed for a decision is available, while his answer remains absent.\n“How much longer” asks the card to set a limit the relationship has not supplied. The Magician cannot do that honestly.",
+        "Let me look closer at what keeps his answer absent from a table ready for action…",
+      ],
+      b: [
+        "The backs hid the picture. You turned the Hanged Man — a single rope keeps the figure suspended.",
+        "You asked for the remaining length of the wait. The card shows suspension without measuring it.",
+        "No card can set that time or choose your limit. The pause doesn't set your limit for you.\nThe rope gives no release date and no reason inside him.\nThe commitment stays suspended, while the waiting happens in your life.\nYou asked for time because his commitment remains held. The picture gives the hold, not your answer about staying.",
+        "Let me see what keeps the commitment suspended…",
+      ],
+      c: [
+        "All three images were hidden. You turned the Fool — one small bundle hangs from the stick over his shoulder.",
+        "You asked how much longer you wait. The Fool shows your movement, not his timetable.",
+        "I won't invent a schedule or make your decision for you. His commitment and your movement are separate.\nThe road does not say whether he commits.\nYou can move, while the question keeps your movement tied to his.\nThe question joins your next move to his future choice. The Fool separates them without deciding for you.",
+        "Now let's look at what keeps your movement waiting on his decision…",
+      ],
+    },
+    'cards-commit-or-company': {
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
+      // folded verbatim: cuts 3-6 become beat 3, joined by newlines.
+      a: [
+        "The pictures stayed hidden until you chose. You turned the Magician — his table is carefully arranged and fully visible.",
+        "You asked whether he wants commitment or only company. The Magician shows deliberate presentation, not the intention behind it.",
+        "I can't choose between those private motives from a card.\nThe table gives no promise of commitment and no proof that he is using the relationship.\nHe can place much on the table and still leave the purpose of it unnamed.\nYou aren't asking whether he is there. You want to know what his presence means, and I can't read that intention for him.",
+        "Let me look closer at what he leaves unnamed when he puts the relationship in front of you…",
+      ],
+      b: [
+        "You could not see the figure before reaching. You turned the Hanged Man — his face is calm while one ankle is held.",
+        "You asked what he truly wants from the relationship. The card shows a pause without opening his mind.",
+        "His calm presence does not tell us what future he intends.\nThe rope gives no verdict on his character or eventual choice.\nHe can remain present while the commitment question stays held.\n“Commit or company” gives two explanations for the same presence. The Hanged Man supports neither motive.",
+        "Let me see what keeps his purpose for the relationship suspended…",
+      ],
+      c: [
+        "Three face-down cards, and you turned the Fool — one small bundle is all he carries.",
+        "You asked whether he wants a future or the comfort of now. The Fool lives near the beginning of that question.",
+        "What he wants cannot be proved by this unsettled beginning.\nThe bundle cannot say he never commits or that he will.\nHe can share the road now while the future remains unsettled.\nThe difference you need sits in his intention, not in the fact that the connection began. The Fool keeps that intention unknown.",
+        "Now let's look at what remains unsettled about his intention for the future…",
       ],
     },
   },
@@ -5573,6 +6848,7 @@ const MONEY_HOOKS: TarotHook[] = [
   ...MONEY_WORKING_HOOKS,
   ...MONEY_ENERGY_HOOKS,
   ...MONEY_PRAYER_HOOKS,
+  ...MONEY_AGEBAND_HOOKS,
 ]
 export function hookToBucket(hook: TarotHook): Bucket {
   return MONEY_HOOKS.includes(hook) ? 'money' : 'love'
@@ -5621,6 +6897,31 @@ export function parseTarotParams(
 // practice — it keeps the lookup total for TypeScript.
 function readsFor(deck: TarotDeck, hook: TarotHook): Record<TarotOption, string[]> {
   return DECKS[deck].reads[hook] ?? DECKS[deck].reads[DEFAULT_HOOK]!
+}
+
+/**
+ * The read for one (deck, hook), in the requested METHOD — the shadow arm of
+ * v1_tarot_shadow_2026, or the natural read that serves today.
+ *
+ * 🔴 FALLS BACK TO NATURAL when this lander has no shadow read, rather than reaching
+ * for DEFAULT_HOOK's shadow read the way readsFor reaches for its natural one. A hook
+ * with no shadow read is a lander that was never written or approved for this method,
+ * and showing her another lander's shadow read would answer a question she did not ask.
+ *
+ * The scope of the experiment (`scope.landers`, the 37 approved pairs) is what is
+ * supposed to make this unreachable; this is the second net, so a scope edit can only
+ * mislabel an exposure and can never serve unapproved copy.
+ */
+function readsForMethod(
+  deck: TarotDeck,
+  hook: TarotHook,
+  method: TarotMethod,
+): Record<TarotOption, string[]> {
+  if (method === 'shadow') {
+    const shadow = SHADOW_READS[deck]?.[hook]
+    if (shadow) return shadow
+  }
+  return readsFor(deck, hook)
 }
 
 // Version A — the static S3 reveal card: the 4-sentence reveal as one paragraph.
@@ -5712,8 +7013,16 @@ function beat1WithPicture(beat1: string, picture?: string): string {
 const intoBubbles = (beat: string): string[] =>
   beat.split('\n').map((s) => s.trim()).filter(Boolean)
 
-export function openerB(deck: TarotDeck, hook: TarotHook, card: TarotOption): string[] {
-  const [beat1, ...rest] = readsFor(deck, hook)[card]
+// 🔴 `method` DEFAULTS TO 'natural', and every caller that does not pass one keeps
+// serving exactly what it serves today — the tests, the preview scripts, the readability
+// gates. Only the chat handoff passes an arm, and only when the server assigned one.
+export function openerB(
+  deck: TarotDeck,
+  hook: TarotHook,
+  card: TarotOption,
+  method: TarotMethod = 'natural',
+): string[] {
+  const [beat1, ...rest] = readsForMethod(deck, hook, method)[card]
   const picture = PICTURE_HOOKS.has(hook) ? DECKS[deck].cardPicture?.[card] : undefined
   return [
     ...intoBubbles(beat1WithPicture(beat1, picture)),

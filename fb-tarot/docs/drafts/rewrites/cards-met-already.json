@@ -1,0 +1,36 @@
+{
+  "hook": "cards-met-already",
+  "headline": "Have I already met my soulmate without realizing it?",
+  "note": "🔄 REWRITTEN 2026-08-19 to the Natural Tarot-Cut framework. Bubbles 3-6 run as ONE causal chain — so / and / but / that's why — and the read ANSWERS. The art line and the bridge are unchanged. Every ban in this note still stands.\n\nFace-down only (return-mhf). 🔴🔴 THE LABEL BAN RUNS BOTH WAYS — never certify that he is her soulmate or twin flame, and never deny it. It is unfalsifiable, so she could never check it against anything he actually does, and it is a verdict on a real man. 🔴🔴 NEVER RANK THE LABELS: no word here is higher, rarer or deeper than another, and 'just a strong connection' may never be the losing branch. 🔴 No runner script, no separation phase, no ascension homework, no tactic, no timeframe. ⭐ The shared move: affirm the PULL as real information about HER, and refuse the WORD.\n\n🔴 WIRING NOTE — READ BEFORE SHIPPING THIS FAMILY. tests/tarot-soulmate-label-copy.test.ts:439/441/444 assume ONE UNSPLIT beat 3 (openerB length 5, msgs[3] is the loop line, msgs[2].length > 400). The 7-bubble shape splits beat 3, so those three assertions must be DELETED with a note when this family is wired — not worked around. Nothing else in that file needs touching.\n\n🔴 NEVER POINT AT ANYBODY. This headline invites the reading to send her back through her own past hunting for a face — 'you already know who', 'think back to', 'the one who came before' are all banned, and so is grading her past self for missing him. Finding: the fear underneath is that she has already spent her one chance, and the read answers that premise rather than the search.",
+  "decks": {
+    "return-mhf": {
+      "a": [
+        "You turned the Magician, dear. Look — nothing on his table has been used up.",
+        "You asked if you've already met your soulmate. Your hand went to the man with full hands.",
+        "So there was never one go, dear. That isn't how any of this works.",
+        "And nothing on his table has been used up, dear. Nothing crossed off.",
+        "But you've been afraid you spent your one chance, dear.",
+        "That's why you keep sorting old faces, dear, hunting the one you missed.",
+        "Let me look closer at what put that one-chance idea in you…"
+      ],
+      "b": [
+        "You turned the Hanged Man, dear. Look — he's looking at the world from the other end.",
+        "You asked if you've already met your soulmate. Your hand went to the card that looks again.",
+        "So a review isn't the same as a mistake found, dear.",
+        "And he sees the same world, dear, just from the other end of it.",
+        "But you've been searching your own past like a case file, dear.",
+        "That's why nothing you find settles it. You were doing your best, dear.",
+        "Let me look closer at what has you searching your own past…"
+      ],
+      "c": [
+        "You turned the Fool, dear. Look — the road he's on hasn't been walked before.",
+        "You asked if you've already met your soulmate. Your hand went to the one with road ahead.",
+        "So there's road ahead of you, dear. Plainly, and plenty of it.",
+        "And all of it is unwalked, dear. He faces forward the whole time.",
+        "But a meeting behind you wouldn't close a road like that, dear.",
+        "That's why the fear doesn't hold, dear, whichever way the answer goes.",
+        "Let me look closer at what has been narrowing the road for you…"
+      ]
+    }
+  }
+}

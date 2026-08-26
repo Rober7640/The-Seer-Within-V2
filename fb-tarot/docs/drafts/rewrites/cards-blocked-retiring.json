@@ -1,0 +1,36 @@
+{
+  "hook": "cards-blocked-retiring",
+  "headline": "Why is my money still blocked this close to retiring?",
+  "note": "🔄 REWRITTEN 2026-08-19 to the Natural Tarot-Cut framework. Money translation: there is no man here, so cut 4 becomes what the block has been DOING, cut 5 becomes the EARNING against the KEEPING, and cut 6 names the near-miss she has lived — the VOC's own sentence. 🔴 NONE of the seven bans below was loosened with the love families; this is the one place where a wrong sentence costs her actual money.\n\n🆕 TRACK B — the first NON-LOVE family on /fb-tarot. Face-down return-mhf, no new art.\n\n🔴 SEVEN BANS, three of which exist nowhere else on the funnel. No amount, no date, no SOURCE (no inheritance, no windfall, no legal case — she can act on an invented source with her actual savings). 🔴🔴 Never name a person as the block: the accusation lands on someone real inside a real family. 🔴🔴 No financial advice in any form — invest, sell, hold, take the pension, delay it, go back to work, stop working. This is the one ban where the harm is measured in her money. 🔴🔴 Never blame her: no poverty mindset, no 'you attract lack', no vibration. 🔴 Never 'too late' and never a promised arrival. 🔴 Never presume the state of her finances — she said blocked, not broke.\n\n✅ GUARDED as of 2026-08-19: `tests/tarot-money-block-copy.test.ts` now exists and runs against these drafts DIRECTLY. It had to: the drafts setup can only patch a hook the registry already has, so an unwired family is checked by nothing at all and still prints a green tick. All seven bans were fed a deliberate violation and all seven fired.\n\n📊 WHAT THE VOC CHANGED. These hooks have never run, so there is no per-hook data. The nearest real corpus is docs/v1-money-bucket-voc.md — 10,514 V1 money concerns. Two themes matter here and they pull in different directions.\n**Retirement (554 concerns, the highest earner in the bucket at $15,146/1k):** the emotion is not panic, it is quiet arithmetic dread. 'I'm worried that I'll outlive my few savings.' 'Prices are going up but my pension is not.' 'I thought I would be set by now.'\n**The invisible block (1,208 concerns) — and its instruction is explicit: 'The near-miss is the hook, not the poverty.'** 'I keep trying to get ahead and no matter what I do nothing seems to work out, it's like something is holding me back.' 'I sometimes feel I am close to money only to have it vanish.' 'Everything appears to be reaching me but doesn't.'\nSo these reads are built on the NEAR-MISS, not on being short of money. That also satisfies ban 7 for free — nothing here presumes she is broke, only that she has got close and watched it go.\n\nTendency: her ability was never the problem, and something stands between the EARNING and the KEEPING. Never name what or who, never a sum, a date or a source, never suggest anything be done with money.",
+  "decks": {
+    "return-mhf": {
+      "a": [
+        "You turned the Magician, dear. Look — he's standing, not sitting, with his work in front of him.",
+        "You asked why the money is still blocked. Your hand went to the card of a person who can make things.",
+        "So it was never you, dear. The making was never where this went wrong.",
+        "And look where he stands. The trouble sits further down the line than his hands.",
+        "But earning a thing and keeping it are two different jobs, dear.",
+        "That's why it goes just as it's about to land in your hands.",
+        "Let me look closer at what steps in right at the landing…"
+      ],
+      "b": [
+        "You turned the Hanged Man, dear. Look — the only rope on him is at his foot.",
+        "You asked why the money's still blocked. Your hand went to the card of a thing held in place.",
+        "So the money is held, dear. Held is a long way from gone.",
+        "And the rope has him at one point only. The rest of him hangs free.",
+        "But one rope is enough to stop the whole of him moving.",
+        "That's why the other parts of your life work and this one part never does.",
+        "Let me look closer at what has had hold of that one point…"
+      ],
+      "c": [
+        "You turned the Fool, dear. Look — the little dog is running and he's walking.",
+        "You asked why the money is blocked so near retiring. Your hand went to the card of a person setting out.",
+        "So you're not out of road, dear. This card has never once counted your years.",
+        "And see the dog. The hurry on this card belongs to him, not to the man.",
+        "But hurrying has never once moved this thing out of your way.",
+        "That's why the years feel short to you, dear, and nothing shifts.",
+        "Let me look closer at what's been put in that road in front of you…"
+      ]
+    }
+  }
+}

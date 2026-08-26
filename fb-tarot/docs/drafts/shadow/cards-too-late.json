@@ -1,0 +1,34 @@
+{
+  "hook": "cards-too-late",
+  "headline": "Is something blocking my money, or did I just leave it too late?",
+  "method": "inherited-shadow",
+  "note": "FRAME: money — the strictest guard on the funnel. No amount, no date, no source, no financial advice, never blames her, never 'too late', never presumes she is broke.\n\n🔴 Beat 4 says the money has not LANDED or not STAYED — never that she has none. Her own ad asserts the block, so restating it is her premise, not our claim.\n\n⚠ NO FAMILY-LINE LANGUAGE. The six beats never need it; naming an inheritance is the shortest path to the authorship ban.\n\nFINDING: 'not too late, and a block moves' — carried by beat 5b, 'what holds it can move'.\n\n🔴 The ad hands her the self-blame outright. Beat 3 declines it on all three cards, in three different shapes (pre-flight step 3). ⛔ 'it's too late' is banned outright — the read never says the words in either direction.",
+  "decks": {
+    "return-mhf": {
+      "a": [
+        "You turned the Magician. Nothing told the three apart, and you took the one who came ready.",
+        "Look at his table. Four things on it, and the table stands in the open.",
+        "You asked if something is blocking your money, or if the moment has gone. What catches me is that all four are within reach.",
+        "And yet it hasn't landed. And you've offered me the harsher half yourself.",
+        "Something stands between you and it, close in and squarely in the way. I don't think it began with you.",
+        "Let me look closer at what this is…"
+      ],
+      "b": [
+        "You turned the Hanged Man. Face down, all three, and yours was held by one rope.",
+        "Look at the rope. It's tied at one ankle, and that's all.",
+        "You asked if something is blocking your money, or if the moment has gone. One rope can hold all of that.",
+        "Still, it hasn't come through. And you're asking me to choose between the two.",
+        "Whatever it is comes in right as the money would. I don't think this began with you.",
+        "Let me look closer at what that is…"
+      ],
+      "c": [
+        "You turned the Fool. Nothing showed through, and yours was the only card in full sun.",
+        "Look at the sky behind him. Gold, and not a cloud in sight.",
+        "You asked if something is blocking your money, or if the moment has gone. That day is bright, and his foot is up.",
+        "But it hasn't landed. And you're the one asking whether it's gone past you.",
+        "Whatever holds this holds it firmly, and nothing in it moves. I don't think it started with you.",
+        "Let me look closer at what's holding this…"
+      ]
+    }
+  }
+}

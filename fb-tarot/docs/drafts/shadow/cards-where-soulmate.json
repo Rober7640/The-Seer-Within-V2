@@ -1,0 +1,41 @@
+{
+  "hook": "cards-where-soulmate",
+  "headline": "Where is my soulmate right now?",
+  "method": "inherited-shadow",
+  "note": "FRAME: soulmate x where. ⛔ THE DEFINING BAN IS THAT NO PLACE MAY BE NAMED — not a town, a room, a job, a website, a distance. This gap was found the hard way: every frame withheld 'a name, a date, or exactly who' and omitted WHERE.\n⛔ NO TACTIC. Nothing she could act on — no 'get out more', no 'look closer to home'. Never her fault.\n🔴 The method suits this frame unusually well: it answers about the BLOCK instead of the location, so the banned answer is never even approached.\n⚠ SHE is the subject of beats 3-6. ⚠ NO FAMILY-LINE LANGUAGE.\n\n⚠ The one lander whose headline asks directly for the banned answer. Beat 3 affirms that he is REAL (the allowed hopeful direction) and says nothing about location; beat 5 moves the question off 'where' altogether.",
+  "readback": {
+    "1 would a person say this": "Yes. 'And nobody's told you why' is plain speech.",
+    "2 is every noun real": "Four solid objects, the rope and tree, the mid-step feet — all on the card.",
+    "3 anything she could catch me getting wrong": "No. Beat 4 says he is not here and nobody has told her why. Neither is checkable against her life.",
+    "4 does the symbol prove the line at a glance": "Yes. Four things you could pick up prove 'he's real enough' with no explaining.",
+    "5 does the card mean what TAROT_CARD_VOCAB says": "Yes — the Hanged Man read as held rather than gone, which is Waite's own point."
+  },
+  "decks": {
+    "return-mhf": {
+      "a": [
+        "You turned the Magician. Nothing showed through, and your hand found the busiest of the three.",
+        "Look at his hands. One is up, one is down, and neither is empty.",
+        "You asked where your soulmate is right now. What catches me is how much of this card is already in use.",
+        "Still, nobody has come. And what you want from me is a where.",
+        "Something turns up right when this would get anywhere. I don't think it started with you.",
+        "Let me look closer at what's doing that…"
+      ],
+      "b": [
+        "You turned the Hanged Man. Face down, all three, and yours was held by one rope.",
+        "Look at the rope. It's tied at one ankle, and nothing else holds him.",
+        "You asked where your soulmate is right now. The rope goes up into the beam, and that's what holds my attention.",
+        "And yet nobody has come. And you're asking me to point somewhere.",
+        "The hold is fixed, and it stays put. I don't think any of it began with you.",
+        "Let me look closer at what's got hold of it…"
+      ],
+      "c": [
+        "You turned the Fool. Nothing told them apart, and you took the one travelling light.",
+        "Look at the bundle on his stick. That's all he's carrying.",
+        "You asked where your soulmate is right now. Travelling, and what gets carried with it — that's where this one puts me.",
+        "But nobody has come. And you're the one asking for a location.",
+        "Something is sitting right in the middle of this. I don't think it began with you.",
+        "Let me look closer at what's doing that…"
+      ]
+    }
+  }
+}

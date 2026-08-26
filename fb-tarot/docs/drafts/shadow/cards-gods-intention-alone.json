@@ -1,0 +1,34 @@
+{
+  "hook": "cards-gods-intention-alone",
+  "headline": "Is it God's intention for me to be alone, or is someone coming?",
+  "method": "inherited-shadow",
+  "note": "Wired 2026-08-25 from fb-tarot/docs/writeups/shadow/REVIEW-money-alone-commit-2026-08-25.md — approved copy, transferred verbatim. Reuses the existing LONELINESS_TAROT_HOOKS frame; no new guard.",
+  "decks": {
+    "return-mhf": {
+      "a": [
+        "You turned the Magician. You could not see the picture, but your hand found the one with every possibility in view.",
+        "Every tool is present and visible on the table.",
+        "You asked whether solitude is God's intention or someone is coming. What catches me is how much remains available on this table.",
+        "No one has come, and the absence has become a question about God's intention.",
+        "Something has hold of the relationship, keeping it apart from the possibilities already here. I don't think this began with you.",
+        "Let me see what is holding this…"
+      ],
+      "b": [
+        "You turned the Hanged Man. The backs were alike, yet you reached for the one held at one point.",
+        "One rope holds one ankle. The rest of him hangs free.",
+        "You asked whether the pause has divine meaning or ends in a person. This card makes me look at the one rope.",
+        "Still, the relationship is absent, and you are asking what the pause means.",
+        "Something reaches the question just where the pause would become connection. I don't think it started with you.",
+        "Let me see what's behind this…"
+      ],
+      "c": [
+        "You turned the Fool. The card was hidden, but your hand went to the beginning beneath a full sun.",
+        "The road opens under a gold, cloudless sky.",
+        "You asked whether the road was assigned to solitude. The open beginning is the part I keep coming back to.",
+        "But the road is empty of company, and the future feels caught between a plan and a promise.",
+        "I keep coming back to something between the open road and company. I don't think it began with you.",
+        "Now let's look at what's there…"
+      ]
+    }
+  }
+}

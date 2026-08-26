@@ -1,0 +1,36 @@
+{
+  "hook": "cards-prayed-years",
+  "headline": "I've prayed about money for years. What's still blocking it?",
+  "note": "🆕 TRACK B — the first NON-LOVE family on /fb-tarot. Face-down return-mhf, no new art. Written to the Natural Tarot-Cut framework: seven spoken cuts, with cut 3 giving the card-warranted answer and cuts 4-6 carrying the unresolved tension forward.\n\n🔴 MONEY SAFETY: no amount, date or source; no person named as the block; no financial advice; no blame, mindset, vibration, deserving or self-sabotage; no 'too late' and no promised arrival; no invented state of her finances.\n\n🙏 PRAYER POLICY: prayer is allowed language; divine authority is not. Evelyn may acknowledge the prayer, the years spent praying and the change the woman has not seen. When the card supports it, she may say prayer is not the blockage. She never says whether a prayer was heard, answered, ignored or refused; explains God's actions, plan or timing; promises an answer; or places the cards above, against or between the woman and her faith.\n\n✅ GUARDED: tests/tarot-money-block-copy.test.ts reads this draft directly while it remains unwired.",
+  "decks": {
+    "return-mhf": {
+      "a": [
+        "All three were face down. You turned the Magician — look at the cup, coin, blade and wand laid out on his table.",
+        "You've prayed about this money for years. Every tool on the table is ready.",
+        "Your prayer isn't what blocked this.",
+        "The card keeps my attention on those ready tools, dear.",
+        "Every tool is ready, but the money is still blocked.",
+        "Years of prayer haven't changed that blockage.",
+        "Let me look closer at what keeps the money blocked when the tools are ready…"
+      ],
+      "b": [
+        "You couldn't see the cards when you chose. You turned the Hanged Man — see his calm face, even with one ankle tied above him.",
+        "You've prayed about this money for years. One rope is holding the whole figure still.",
+        "Prayer isn't the blockage here.",
+        "My eye keeps coming back to that one rope.",
+        "His body has room to move. That ankle doesn't.",
+        "You've been asking for years, and the money is still blocked.",
+        "Let me see what's had hold of that one point…"
+      ],
+      "c": [
+        "The backs told you nothing. You turned the Fool — notice the bundle on his stick, small enough to carry.",
+        "You've prayed for years, and the money is still blocked. The Fool carries one small bundle and keeps moving.",
+        "Your prayer isn't what stopped this.",
+        "The road is open. The card doesn't show where the money gets held.",
+        "The Fool is moving, but the money is still blocked.",
+        "Years of prayer haven't moved that blockage.",
+        "Now let's look at what's holding the money still…"
+      ]
+    }
+  }
+}

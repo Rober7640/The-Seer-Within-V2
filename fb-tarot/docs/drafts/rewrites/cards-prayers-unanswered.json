@@ -1,0 +1,36 @@
+{
+  "hook": "cards-prayers-unanswered",
+  "headline": "How long will my prayers for money keep going unanswered?",
+  "note": "🆕 TRACK B — the first NON-LOVE family on /fb-tarot. Face-down return-mhf, no new art. Written to the Natural Tarot-Cut framework: seven spoken cuts, with cut 3 giving the card-warranted answer and cuts 4-6 carrying the unresolved tension forward.\n\n🔴 MONEY SAFETY: no amount, date or source; no person named as the block; no financial advice; no blame, mindset, vibration, deserving or self-sabotage; no 'too late' and no promised arrival; no invented state of her finances. The requested length is declined out loud.\n\n🙏 PRAYER POLICY: prayer is allowed language; divine authority is not. Evelyn may acknowledge the prayer, the years spent praying and the change the woman has not seen. She does not adopt 'unanswered' as her own verdict. She never says whether a prayer was heard, answered, ignored or refused; explains God's actions, plan or timing; promises an answer; or places the cards above, against or between the woman and her faith.\n\n✅ GUARDED: tests/tarot-money-block-copy.test.ts reads this draft directly while it remains unwired.",
+  "decks": {
+    "return-mhf": {
+      "a": [
+        "You turned the Magician from three face-down cards. Look at the red flowers growing above his table.",
+        "After years of prayer, you're asking how much longer. Every tool on the Magician's table is ready.",
+        "Your prayer isn't what's holding this back.",
+        "I can speak about the years you've prayed, dear. I still can't tell you how many more.",
+        "His table is ready. The money hasn't followed.",
+        "You've spent years praying, and you're still asking when the money changes.",
+        "Let me look closer at what keeps the money from changing…"
+      ],
+      "b": [
+        "You turned the Hanged Man without seeing him first. Notice the green leaves still growing around the beam above him.",
+        "You've prayed for years and want to know how much longer. The figure is still, but the wood around him is alive.",
+        "This card shows a pause. It doesn't show me how long it lasts.",
+        "The years you've prayed matter here, dear. They still don't tell me how many more.",
+        "The leaves keep growing while the figure stays still.",
+        "The years have passed. The same money question is still in front of you.",
+        "Let me look closer at what's keeping it still…"
+      ],
+      "c": [
+        "You turned the Fool from three face-down cards. Look at the full sun behind him as he sets out.",
+        "You've prayed for years and asked how much longer. The Fool is already moving under an open sky.",
+        "This card gives me movement, not a number.",
+        "You've prayed for years, dear. I still can't tell you how many more.",
+        "He's already on the road. The money hasn't moved with him.",
+        "That's why you're asking how many more years.",
+        "Now let's look at where the money stops…"
+      ]
+    }
+  }
+}

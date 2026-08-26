@@ -1,0 +1,34 @@
+{
+  "hook": "cards-energy-away",
+  "headline": "Is my energy keeping my soulmate away?",
+  "method": "inherited-shadow",
+  "note": "generated from REVIEW-new-voice.md — not a wired draft",
+  "decks": {
+    "return-mhf": {
+      "a": [
+        "You turned the Magician. You couldn't see them, and your hand went to the one who came ready.",
+        "Look at his table. A cup, a coin, a blade and a wand — all out.",
+        "You asked if your energy is keeping your soulmate away. What catches me is that all four things are still out.",
+        "Still, nobody has come. And you've started to think you're the reason.",
+        "Whatever is in the way of this doesn't waver. I don't think any of it began with you.",
+        "Let me look closer at what's doing that…"
+      ],
+      "b": [
+        "You turned the Hanged Man. Nothing told them apart, and you found the calmest man here.",
+        "He's upside down, held at the ankle. Look at his face, though — it's calm.",
+        "You asked if your energy is keeping your soulmate away. What holds my eye is where that rope goes.",
+        "And yet nobody has come. And the reason you're offering me is yourself.",
+        "Something stands between you and this, and not off in the distance. I don't think it began with you.",
+        "Let me look closer at what that is…"
+      ],
+      "c": [
+        "You turned the Fool. Face down, all three, and yours was the one in full sun.",
+        "Look at the sky behind him. Gold, and not a cloud in it.",
+        "You asked if your energy is keeping your soulmate away. Open daylight, and a step already taken — that's what this one shows me.",
+        "But nobody has come. And you're the one turning that question on yourself.",
+        "Something arrives right when this gets close. I don't think this began with you.",
+        "Let me look closer at what's behind it…"
+      ]
+    }
+  }
+}

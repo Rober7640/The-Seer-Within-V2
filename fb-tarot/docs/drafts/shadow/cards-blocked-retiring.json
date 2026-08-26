@@ -1,0 +1,34 @@
+{
+  "hook": "cards-blocked-retiring",
+  "headline": "Why is my money still blocked this close to retiring?",
+  "method": "inherited-shadow",
+  "note": "FRAME: money — the strictest guard on the funnel. No amount, no date, no source, no financial advice, never blames her, never 'too late', never presumes she is broke.\n\n🔴 Beat 4 says the money has not LANDED or not STAYED — never that she has none. Her own ad asserts the block, so restating it is her premise, not our claim.\n\n⚠ NO FAMILY-LINE LANGUAGE. The six beats never need it; naming an inheritance is the shortest path to the authorship ban.\n\nFINDING (money guard): 'it was never her' — carried by beat 5a, 'the earning was never the problem'.\n\n⚠ Worked as example 2 of inherited-shadow-cut.md. Written fresh here — the doc says copy the SHAPE, not the line.",
+  "decks": {
+    "return-mhf": {
+      "a": [
+        "You turned the Magician. You couldn't see it, and your hand went to the worker of the three.",
+        "Look at his hands. Both are busy, and neither one is resting.",
+        "You asked why your money is still blocked this close to retiring. What catches me is how busy both those hands are.",
+        "And yet it hasn't landed, dear. And retiring keeps getting nearer.",
+        "The hold is steady, and it doesn't loosen. I don't think it started with you.",
+        "Let me look closer at what's holding it…"
+      ],
+      "b": [
+        "You turned the Hanged Man. Nothing showed which was which, and you took the one held by a single rope.",
+        "Look at the rope. One ankle, and the rest of him hangs loose.",
+        "You asked why your money is still blocked this close to retiring. I keep looking at where that rope goes.",
+        "Still, it hasn't come through. And retiring is closer than it was.",
+        "Something is sitting between you and the money. I don't think any of it began with you.",
+        "Let me look closer at what's doing the holding…"
+      ],
+      "c": [
+        "You turned the Fool. Face down, all three, and yours was the one in full sun.",
+        "Look at the sky behind him. It's gold, and there's not a cloud in it.",
+        "You asked why your money is still blocked this close to retiring. Broad daylight, and a foot already up.",
+        "But it still hasn't landed. And you're the one asking why, this close in.",
+        "Something turns up right when it should land. I don't think it began with you.",
+        "Let me look closer at what's there…"
+      ]
+    }
+  }
+}

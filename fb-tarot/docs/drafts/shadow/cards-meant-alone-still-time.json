@@ -1,0 +1,34 @@
+{
+  "hook": "cards-meant-alone-still-time",
+  "headline": "Am I meant to be alone now, or is there still time?",
+  "method": "inherited-shadow",
+  "note": "Wired 2026-08-25 from fb-tarot/docs/writeups/shadow/REVIEW-money-alone-commit-2026-08-25.md — approved copy, transferred verbatim. Reuses the existing LONELINESS_TAROT_HOOKS frame; no new guard.",
+  "decks": {
+    "return-mhf": {
+      "a": [
+        "You turned the Magician. The cards were face down, but your hand found the one whose table is still open.",
+        "The cup, coin, blade and wand are all still laid out.",
+        "You asked whether you are meant to be alone or still have time. What catches me is that open table.",
+        "Love has not come, and your question has narrowed to destiny or time.",
+        "Just as possibility should become connection, something appears. I don't think it started with you.",
+        "Now let me look at what's standing there…"
+      ],
+      "b": [
+        "You turned the Hanged Man. Nothing revealed him, yet you reached for the card that's still growing.",
+        "Living green leaves remain on the wood above him.",
+        "You asked whether the pause has a purpose or an end. This card makes me look at the life still present.",
+        "Still, you are alone, and the pause has started to feel like a designation.",
+        "Something stands between the living pause and the relationship. I don't think it began with you.",
+        "Let me see what's holding this…"
+      ],
+      "c": [
+        "You turned the Fool. You couldn't see the picture, but your hand went to the one already setting out.",
+        "The small bundle on his stick is all he is carrying.",
+        "You asked whether solitude is assigned to you. The light bundle holds my attention.",
+        "But no one has joined the road, and you are asking whether the chance remains.",
+        "The thing that has hold of the beginning keeps it from becoming a meeting. I don't think this began with you.",
+        "Now let me look at what has hold of this…"
+      ]
+    }
+  }
+}

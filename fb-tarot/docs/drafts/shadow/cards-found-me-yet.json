@@ -1,0 +1,41 @@
+{
+  "hook": "cards-found-me-yet",
+  "headline": "Why hasn't my soulmate found me yet?",
+  "method": "inherited-shadow",
+  "note": "FRAME: soulmate x age band. NO MAN EXISTS YET — she asks WHEN or WHETHER. Must not fall through to decode-him, which would have Evelyn invent a man.\n🔴 THE AGE BAND LIVES IN THE AD SET, NEVER IN THE COPY. No age, no number, no life-stage, nothing she could check.\n🔴 NO DURATION, forward or back. Every frame bans a DATE; this family's own gap was that 'not much longer' is a LENGTH, and a length is not a date. Nothing here gives one.\n⚠ SHE is the subject of beats 3-6; the male figure is described in beats 1-2 and retired there.\n⚠ NO FAMILY-LINE LANGUAGE anywhere in the read.\n\n⚠ The ad puts the finding on HIM, so the read must not quietly turn it into a job for her — no tactic, no 'get out more', nothing she could act on.",
+  "readback": {
+    "1 would a person say this": "Yes. 'And you've had no word' is plain.",
+    "2 is every noun real": "Open table, single rope, gold sky — all on the card.",
+    "3 anything she could catch me getting wrong": "No. Beat 4 says nobody has come and she is still the one asking. Both certain for anyone who clicked.",
+    "4 does the symbol prove the line at a glance": "Yes. Standing out in the open with nothing put away proves 'you're not hidden'.",
+    "5 does the card mean what TAROT_CARD_VOCAB says": "Yes."
+  },
+  "decks": {
+    "return-mhf": {
+      "a": [
+        "You turned the Magician. Three backs, no way to tell, and you took the worker of the three.",
+        "Look at his hands. Both are busy, and neither is resting.",
+        "You asked why your soulmate hasn't found you yet. What catches me is that both hands have something to do.",
+        "The part that doesn't fit is that nobody has found you. And you're the one who has been waiting.",
+        "Whatever holds this hasn't shifted. I don't think it began with you.",
+        "Let me look closer at what's holding it…"
+      ],
+      "b": [
+        "You turned the Hanged Man. Nothing showed which was which, and yours was the only card still growing.",
+        "Look at the wood he hangs from. It's alive, with green leaves on it.",
+        "You asked why your soulmate hasn't found you yet. What holds my eye is that the wood is still living.",
+        "Still, nobody has found you. And the question has come back to you.",
+        "Something is standing between you and this, close in. I don't think this began with you.",
+        "Let me look closer at what's behind this…"
+      ],
+      "c": [
+        "You turned the Fool. Face down, all three, and you took the one already on his way.",
+        "Look at his feet. One is lifted, and the other is following it.",
+        "You asked why your soulmate hasn't found you yet. The journey in this one is already under way.",
+        "But nobody has found you. And you're still the one waiting.",
+        "Something is there at the start of it, turning up just as things move. I don't think it started with you.",
+        "Let me look closer at what's got hold of it…"
+      ]
+    }
+  }
+}

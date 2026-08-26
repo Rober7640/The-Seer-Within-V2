@@ -1,0 +1,41 @@
+{
+  "hook": "cards-ready-to-love",
+  "headline": "Am I ready to love again after losing him?",
+  "method": "inherited-shadow",
+  "note": "FRAME: soulmate x after loss. SOMEONE HAS DIED.\n⛔ NO MEDIUMSHIP IN ANY FORM — the man she lost is never spoken for, never reported on, never made the agent of anything. He does not appear in beats 3-6 AT ALL, which is deliberate: it is what stops beat 5's 'something in the way' from ever reading as him.\n⛔ NO ARRIVAL. The shadow method cannot promise one anyway — it withholds — so the strictest ban on the family is satisfied by the shape rather than by restraint.\n⛔ NO GRIEF DIRECTIVE, no ranking of the two loves, no readiness verdict in either direction.\n⚠ NO FAMILY-LINE LANGUAGE — and here more than anywhere: an inherited shadow in a bereaved woman's read is one step from naming the dead man as the block.\n\n🔴 THE HEADLINE ASKS A STRANGER TO GRADE HER GRIEF, AND BOTH ANSWERS DO DAMAGE. 'You are ready' prescribes a timetable to a bereaved woman; 'not yet' does the same wearing concern. The read REFUSES VISIBLY rather than sidestepping — a sidestep reads as evasion.\n🔴 A different refusal on each card, so the guard's required refusal is present whichever card she draws: 'I will not grade you' (a) · 'the card declines that' (b) · 'I refuse to mark you' (c). Beat 5a adds 'no standard here'.\n⛔ The man she lost appears nowhere after beat 2 — see the frame note. That is what keeps beat 5 clean.",
+  "readback": {
+    "1 would a person say this": "Yes. 'And you've been left to judge yourself' is the position the ad puts her in.",
+    "2 is every noun real": "Making hands, the unhurried face, the mid-step feet — all on the card.",
+    "3 anything she could catch me getting wrong": "No. Nothing in the read describes her grief, dates the loss, or claims anything about her week.",
+    "4 does the symbol prove the line at a glance": "Yes. Hands for making rather than measuring prove the refusal to grade — the image does the argument.",
+    "5 does the card mean what TAROT_CARD_VOCAB says": "Yes — the Magician as will and intention, read as making, never as measuring."
+  },
+  "decks": {
+    "return-mhf": {
+      "a": [
+        "You turned the Magician. Nothing showed through the backs, and you took the one with nothing put away.",
+        "Look at his table. All he owns is out on it.",
+        "You asked if you're ready to love again. What catches me is that the whole table is laid out.",
+        "And yet nobody has come. And the question you brought is about yourself.",
+        "Something stands between you and this, right up against it. I don't think it began with you.",
+        "Let me look closer at what's sitting there…"
+      ],
+      "b": [
+        "You turned the Hanged Man. The backs told you nothing, and you found the calmest man in the deck.",
+        "He hangs upside down from one ankle. Look at his face, though — it's calm.",
+        "You asked if you're ready to love again, dear. This card makes me look at the pause in that question.",
+        "Still, nobody has come. And you've asked me to say where you stand.",
+        "Something turns up at the point where this would open. I don't think this began with you.",
+        "Let me look closer at what that is…"
+      ],
+      "c": [
+        "You turned the Fool. Face down, all three, and you chose the one travelling light.",
+        "Look at the bundle on his stick. It's small, and that's all of it.",
+        "You asked if you're ready to love again. This card brings me to a bundle small enough to carry in one hand.",
+        "But nobody has come. And you're still the one asking.",
+        "Whatever holds this holds it evenly, with no jolt in it. I don't think it started with you.",
+        "Let me look closer at what's got hold of it…"
+      ]
+    }
+  }
+}

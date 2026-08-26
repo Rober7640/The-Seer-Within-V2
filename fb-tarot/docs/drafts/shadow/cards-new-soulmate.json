@@ -1,0 +1,41 @@
+{
+  "hook": "cards-new-soulmate",
+  "headline": "Will I find a new soulmate after loss?",
+  "method": "inherited-shadow",
+  "note": "FRAME: soulmate x after loss. SOMEONE HAS DIED.\n⛔ NO MEDIUMSHIP IN ANY FORM — the man she lost is never spoken for, never reported on, never made the agent of anything. He does not appear in beats 3-6 AT ALL, which is deliberate: it is what stops beat 5's 'something in the way' from ever reading as him.\n⛔ NO ARRIVAL. The shadow method cannot promise one anyway — it withholds — so the strictest ban on the family is satisfied by the shape rather than by restraint.\n⛔ NO GRIEF DIRECTIVE, no ranking of the two loves, no readiness verdict in either direction.\n⚠ NO FAMILY-LINE LANGUAGE — and here more than anywhere: an inherited shadow in a bereaved woman's read is one step from naming the dead man as the block.\n\n⚠ Beat 3 affirms HER, never an arrival — 'you've plenty in you still' is about what she has, not about somebody coming. That is the line between this and the live natural read, which answers 'so you will love again'. The shadow read cannot say that and does not.",
+  "readback": {
+    "1 would a person say this": "Yes. 'And you've carried this on your own' is a feeling that reaches, not a fact that can miss.",
+    "2 is every noun real": "Freshly set table, the living wood, the carried bundle — all on the card.",
+    "3 anything she could catch me getting wrong": "No. Beat 4 says nobody has come and that she has carried it alone. Neither dates the loss, counts anything, or describes her week.",
+    "4 does the symbol prove the line at a glance": "Yes. Wood still green and in leaf proves 'nothing in you has closed'.",
+    "5 does the card mean what TAROT_CARD_VOCAB says": "Yes — no card here is inverted to find a block in it."
+  },
+  "decks": {
+    "return-mhf": {
+      "a": [
+        "You turned the Magician. Three backs, and no way to know — yours was the one who came ready.",
+        "Look at his table. A cup, a coin, a blade and a wand, all of them out.",
+        "You asked whether you'll find a new soulmate after your loss. What catches me is how much is laid out on that table.",
+        "Still, nobody has come. And you're the one left holding the question.",
+        "Whatever is in the way of this holds steady, and it hasn't shifted. I don't think this began with you.",
+        "Let me look closer at what's holding it…"
+      ],
+      "b": [
+        "You turned the Hanged Man. Nothing showed which was which, and yours was the card still growing.",
+        "Look at the wood he hangs from. It's alive, with green leaves on it.",
+        "You asked whether you'll find a new soulmate after your loss. What holds my eye is living wood with a rope through it.",
+        "And yet nobody has come. And you're the one asking whether there's another.",
+        "Something stands between you and this, close by. I don't think it started with you.",
+        "Let me look closer at what's holding this…"
+      ],
+      "c": [
+        "You turned the Fool. Face down, all three, and you took the only one in full sun.",
+        "Look at the sky behind him. Gold, and not one cloud in it.",
+        "You asked whether you'll find a new soulmate after your loss. The light is still on that day, and that's what I keep looking at.",
+        "But nobody has come. And you're the one carrying that question now.",
+        "Something turns up the moment this would go anywhere. I don't think any of it began with you.",
+        "Let me look closer at what's behind it…"
+      ]
+    }
+  }
+}

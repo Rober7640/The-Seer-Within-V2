@@ -1,0 +1,36 @@
+{
+  "hook": "cards-out-of-time",
+  "headline": "Is something still blocking my money, or have I run out of time?",
+  "note": "🆕 TRACK B — the first NON-LOVE family on /fb-tarot. Face-down return-mhf, no new art. Written 2026-08-19 straight to the Natural Tarot-Cut framework, so bubbles 3-6 run as ONE causal chain (so / and / but / that's why). Money translation: cut 3 answers her fear about HERSELF (\"it was never you\"), cut 4 says where the thing in the way actually sits, cut 5 is EARNING against KEEPING, cut 6 is the NEAR-MISS.\n\n🔴 SEVEN BANS, three of which exist nowhere else on the funnel, and NONE was loosened with the love families. No amount, no date, no SOURCE (no inheritance, no windfall, no legal case — she can act on an invented source with her actual savings). 🔴🔴 Never name a person as the block: the accusation lands on someone real inside a real family. 🔴🔴 No financial advice in any form — invest, sell, hold, take the pension, delay it, go back to work, stop working. This is the one ban where the harm is measured in her money. 🔴🔴 Never blame her: no poverty mindset, no 'you attract lack', no vibration, no deserving. 🔴 Never 'too late' and never a promised arrival. 🔴 Never presume the state of her finances — she said blocked, not broke.\n\n📊 Built on the NEAR-MISS, not on poverty — docs/v1-money-bucket-voc.md §3 says so outright ('The near-miss is the hook, not the poverty'): \"I sometimes feel I am close to money only to have it vanish\", \"Everything appears to be reaching me but doesn't\". That clears ban 7 for free.\n\n✅ GUARDED: tests/tarot-money-block-copy.test.ts now exists and runs against these drafts directly (the drafts setup can only patch hooks that are already in the registry, so an unwired family would otherwise be checked by nothing at all).\n\nTendency: she has NOT run out of time — say it plainly — and a hold is not an ending. 🔴 NEVER promise an arrival, never a date, and never rule on how much time she has.",
+  "decks": {
+    "return-mhf": {
+      "a": [
+        "You turned the Magician, dear. Look — the flowers grow in a bed in front of him, not behind.",
+        "You asked if you're blocked or out of time. Your hand went to the card of what's still to hand.",
+        "So you have not run out of time, dear. I'll say it plainly.",
+        "And this card deals in what's here now, dear. It shows me something here.",
+        "But a block is a thing standing in a road, dear. Not the end of the road.",
+        "That's why it has felt final, dear, when it has never once been final.",
+        "Let me look closer at what is standing there…"
+      ],
+      "b": [
+        "You turned the Hanged Man, dear. Look — one leg is crossed behind the other at the knee.",
+        "You asked if you're blocked or out of time. Your hand went to the card of a hold.",
+        "So you have not run out of time, dear. This is a hold, not an ending.",
+        "And nothing about a hold is finished, dear. It can be shifted.",
+        "But you have read this hold as a verdict on your whole life, dear.",
+        "That's why the years frighten you, dear. You read a pause as a full stop.",
+        "Let me look closer at what took hold, and when…"
+      ],
+      "c": [
+        "You turned the Fool, dear. Look — there's nothing drawn behind his shoulders at all.",
+        "You asked if you're blocked or out of time. Your hand went to the card that begins.",
+        "So you have not run out of time, dear. This card keeps no calendar.",
+        "And he begins with nothing behind him, dear. Nothing owed either.",
+        "But this card shows an open road, dear. Nobody finished is shown one.",
+        "That's why your fear and this card disagree, dear. One of them is wrong.",
+        "Let me look closer at what has been laid across that road…"
+      ]
+    }
+  }
+}
