@@ -190,7 +190,14 @@ describe(`${DECK} — soulmate-after-loss reads`, () => {
   it('opener phrasing matches the facing — she TURNED a face-down card', () => {
     expect(DECKS[DECK].facing).toBe('down');
     for (const h of present) for (const c of CARDS) {
-      expect(reads[h]![c][0], `${h}/${c}`).toMatch(/^You turned /);
+      // 🔄 2026-08-25: the Natural rewrite moved the face-down truth to the FRONT of beat 1
+      // ("You selected from hidden pictures. You turned the Fool — …"), so the card is named
+      // mid-bubble rather than at the start. The requirement did not change — she must be told
+      // she chose blind AND which card she turned — so this asserts both, without pinning the
+      // order the sentence puts them in. See fb-tarot/docs/natural-tarot-cut.md §"1 · Turn,
+      // then picture, then meaning".
+      expect(reads[h]![c][0], `${h}/${c} must name the turned card`).toMatch(/\bYou turned /);
+      expect(reads[h]![c][0], `${h}/${c} must tell the truth about the blind choice`).toMatch(/face[- ]down|hidden|conceal|the backs?\b|through the (?:card )?backs?|before seeing|couldn'?t see|could not see|without seeing|gave you no|no picture to (?:follow|guide)|matching backs|selected from/i);
     }
   });
 
@@ -241,6 +248,48 @@ describe(`${DECK} — soulmate-after-loss reads`, () => {
   // 'nobody', 'no one' and 'cannot' are in the negator set on top of the shared list —
   // the refusals on this angle lean on them heavily ("The Magician stands nobody out
   // there", "a person I cannot see").
+  // 🔴 THE COMPARISON HAS TO SURVIVE THE PERSON FLIP. Her ad is written in the first person
+  // ("Am I ready to love again?") and the bridge says it back in the second ("you are ready to
+  // love again"). Counting raw word overlap scored that at 67% and swept a pure quotation.
+  // So i/you, my/your and am/are are treated as the same word, and a word matches its own
+  // -s/-ing/-ed form ("block" vs the headline's "blocking").
+  //
+  // ⚠ This changes only whether two forms of the SAME word count as shared. It cannot let a
+  // word the headline never contained through, so "anything new is still swept" still holds.
+  const PERSON: Record<string, string> = { i: 'you', my: 'your', me: 'you', mine: 'yours', am: 'are', "i'm": "you're" };
+  const stem = (w: string) => w.replace(/(ing|ed|s)$/, '');
+  const same = (w: string, head: Set<string>) => {
+    const forms = new Set([w, PERSON[w] ?? w, stem(w), stem(PERSON[w] ?? w)]);
+    for (const h of head) { if (forms.has(h) || forms.has(PERSON[h] ?? h) || forms.has(stem(h)) || forms.has(stem(PERSON[h] ?? h))) return true; }
+    return false;
+  };
+  // 🔴 THE BRIDGE EXEMPTION, added 2026-08-25 (operator: "loosen the checks"). Cut 2's job is
+  // to say her ad question back to her. The Natural rewrite phrases that as "You came asking
+  // whether your soulmate is closer than you think" — the ad's own claim, in her mouth — and
+  // the sweep below was reading it as the lander making the claim.
+  //
+  // ⚠ NARROW ON PURPOSE, and identical to the rule the age-band and keyword families use:
+  // the clause must open on an asking frame AND be at least 70% the headline's own content
+  // words. A clause that adds anything new is still swept, and `always` bans are untouched.
+  const ASK_FRAME =
+    /^(you asked me to tell you|you (came )?ask(ed|ing)|what you (want to know|came to ask)( is)?|your question (is|was|asks))\b/;
+  const STRIP_FRAME =
+    /^(you asked me to tell you|you (came )?ask(ed|ing)|what you (want to know|came to ask)( is)?|your question (is|was|asks))( me)? ?(if|why|what|how|whether|when|that)? ?/;
+  const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9 ]/g, ' ').replace(/\s+/g, ' ').trim();
+  const isRestatement = (clause: string, hook: string) => {
+    const c = norm(clause);
+    if (c.length > 0 && norm(HEADLINES[hook]).includes(c)) return true;
+    // 🔴 BRIDGE EXEMPTION, added 2026-08-25 alongside the Natural rewrite. Same rule the love
+    // families use: a clause that quotes her ad question back is not Evelyn asserting it.
+    // Frame + 70% of content words from the headline; anything NEW is still swept.
+    if (!ASK_FRAME.test(c)) return false;
+    const head = new Set(norm(HEADLINES[hook]).split(' '));
+    const mine = c.replace(STRIP_FRAME, '').split(' ').filter(Boolean);
+    if (!mine.length) return false;
+    const shared = mine.filter((w) => same(w, head));
+    return shared.length / mine.length >= 0.7;
+  };
+
   const NEGATOR =
     /\b(no|not|never|can't|unable|without|n't|nor|nobody|no one|none|cannot|rather than|instead of|does not|is not|nothing|refuses|declines?|will not|withholds?|neither)\b/i;
   // 🔴 FIXED 2026-08-19 — this used to split on /[—;:,]/ only, which does NOT break on a
@@ -255,7 +304,7 @@ describe(`${DECK} — soulmate-after-loss reads`, () => {
     for (const h of present) for (const c of CARDS) for (const beat of reads[h]![c]) {
       for (const [re, why] of always) if (re.test(beat)) hits.push(`${h}/${c} (${why}): "${beat}"`);
       for (const clause of clausesOf(beat)) {
-        if (NEGATOR.test(clause)) continue;
+        if (NEGATOR.test(clause) || isRestatement(clause, h)) continue;
         for (const [re, why] of bans) if (re.test(clause)) hits.push(`${h}/${c} (${why}): "${clause.trim()}"`);
       }
     }

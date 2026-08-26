@@ -1,0 +1,34 @@
+{
+  "hook": "cards-god-mean-me-alone",
+  "headline": "How much longer does God mean me to be alone?",
+  "method": "inherited-shadow",
+  "note": "Wired 2026-08-25 from fb-tarot/docs/writeups/shadow/REVIEW-money-alone-commit-2026-08-25.md — approved copy, transferred verbatim. Reuses the existing LONELINESS_TAROT_HOOKS frame; no new guard.",
+  "decks": {
+    "return-mhf": {
+      "a": [
+        "You turned the Magician. The cards were hidden, but your hand found the one whose table remains open.",
+        "The whole set of tools is still laid out for use.",
+        "You asked how much longer God means you to be alone. The open table is where my attention goes.",
+        "You are alone, and the waiting now feels both prolonged and assigned.",
+        "Something stands between your open life and companionship. I don't think it began with you.",
+        "Let me look closer at what's sitting there…"
+      ],
+      "b": [
+        "You turned the Hanged Man. You reached without seeing him and chose the card with life inside the pause.",
+        "Green leaves remain on the living wood above him.",
+        "You asked about God's meaning and the length of the pause. This card brings me to the living leaves.",
+        "Still, the companionship is absent, and the pause has become a question about God's intention.",
+        "The thing that has hold of the relationship question keeps it quiet. I don't think this began with you.",
+        "Let me see what's holding the question…"
+      ],
+      "c": [
+        "You turned the Fool. Nothing revealed the picture, yet you chose the card in full light.",
+        "The full sun is high behind the Fool.",
+        "You asked how long this solitude is meant to last. The beginning on the card catches me.",
+        "But no one is on the road with you, and you are asking whether God fixed its length.",
+        "Something appears just where the road would become shared. I don't think it started with you.",
+        "Now let's look at what's behind this…"
+      ]
+    }
+  }
+}

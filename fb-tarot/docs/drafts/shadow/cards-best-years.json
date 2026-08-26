@@ -1,0 +1,41 @@
+{
+  "hook": "cards-best-years",
+  "headline": "Why did I give my best years to someone who wasn't my soulmate?",
+  "method": "inherited-shadow",
+  "note": "FRAME: soulmate x age band. NO MAN EXISTS YET — she asks WHEN or WHETHER. Must not fall through to decode-him.\n🔴 THE AGE BAND LIVES IN THE AD SET, NEVER IN THE COPY. No age, no number, no life-stage.\n🔴 NO DURATION, forward or back — 'not much longer' is a LENGTH, and a length is not a date.\n⚠ SHE is the subject of beats 3-6; the male figure is described in beats 1-2 and retired there.\n⚠ NO FAMILY-LINE LANGUAGE anywhere in the read.\n\n🔴 THE HARDEST BEAT 4 IN THE FAMILY. Her ad states the years went to the wrong person, so the read may say it — but it must not grade the man, grade her choice, or hand her a consolation that reads as ranking two loves. It acquits the years instead: nothing she gave was wasted.\n⛔ No verdict on the ex, in either direction.",
+  "readback": {
+    "1 would a person say this": "Yes. 'And those years are behind you' is honest without being bleak.",
+    "2 is every noun real": "Nothing going spare on the table, the still-growing wood, the mid-step feet — all on the card.",
+    "3 anything she could catch me getting wrong": "No. Beat 4 says it was not him and those years are behind her. Her ad says both outright.",
+    "4 does the symbol prove the line at a glance": "Yes. Wood that kept growing the whole time it hung proves 'you weren't standing still'.",
+    "5 does the card mean what TAROT_CARD_VOCAB says": "Yes — the Hanged Man is read as suspension WITH life in it, which is exactly Waite's point."
+  },
+  "decks": {
+    "return-mhf": {
+      "a": [
+        "You turned the Magician. You couldn't see them, and your hand went to the worker of the three.",
+        "Look at his hands. Both are busy, and neither one is resting.",
+        "You asked why your best years went to someone who wasn't your soulmate. The thing I keep looking at is how much work is here.",
+        "What troubles me is that they went to someone who wasn't the one. And you're the one left with the question.",
+        "Something sits in the way of this, close in rather than far off. I don't think it started with you.",
+        "Let me look closer at what's sitting there…"
+      ],
+      "b": [
+        "You turned the Hanged Man. Nothing showed which was which, and you took the one held by one rope.",
+        "Look at the rope. One ankle holds him, and nothing else does.",
+        "You asked why your best years went to someone who wasn't your soulmate. The rope runs up into the beam, and that's what I'm reading.",
+        "And yet they went to someone who wasn't the one. You're the one asking what those years were for.",
+        "Something arrives at the point where things would settle. I don't think any of it began with you.",
+        "Let me look closer at what that is…"
+      ],
+      "c": [
+        "You turned the Fool. The backs gave nothing away, and you chose the one travelling light.",
+        "Look at the bundle on his stick. That's all he's taking with him.",
+        "You asked why your best years went to someone who wasn't your soulmate. A start made with very little — that's what this one shows me.",
+        "They went to someone who wasn't the one, though. And you're the one asking why.",
+        "Whatever holds this holds it steady, and it hasn't shifted. I don't think it began with you.",
+        "Let me look closer at what's holding this…"
+      ]
+    }
+  }
+}

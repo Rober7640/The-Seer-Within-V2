@@ -1,0 +1,36 @@
+{
+  "hook": "cards-my-energy",
+  "headline": "Is my energy blocking my money?",
+  "note": "🆕 TRACK B — the first NON-LOVE family on /fb-tarot. Face-down return-mhf, no new art. Written 2026-08-19 straight to the Natural Tarot-Cut framework, so bubbles 3-6 run as ONE causal chain (so / and / but / that's why). Money translation: cut 3 answers her fear about HERSELF (\"it was never you\"), cut 4 says where the thing in the way actually sits, cut 5 is EARNING against KEEPING, cut 6 is the NEAR-MISS.\n\n🔴 SEVEN BANS, three of which exist nowhere else on the funnel, and NONE was loosened with the love families. No amount, no date, no SOURCE (no inheritance, no windfall, no legal case — she can act on an invented source with her actual savings). 🔴🔴 Never name a person as the block: the accusation lands on someone real inside a real family. 🔴🔴 No financial advice in any form — invest, sell, hold, take the pension, delay it, go back to work, stop working. This is the one ban where the harm is measured in her money. 🔴🔴 Never blame her: no poverty mindset, no 'you attract lack', no vibration, no deserving. 🔴 Never 'too late' and never a promised arrival. 🔴 Never presume the state of her finances — she said blocked, not broke.\n\n📊 Built on the NEAR-MISS, not on poverty — docs/v1-money-bucket-voc.md §3 says so outright ('The near-miss is the hook, not the poverty'): \"I sometimes feel I am close to money only to have it vanish\", \"Everything appears to be reaching me but doesn't\". That clears ban 7 for free.\n\n✅ GUARDED: tests/tarot-money-block-copy.test.ts now exists and runs against these drafts directly (the drafts setup can only patch hooks that are already in the registry, so an unwired family would otherwise be checked by nothing at all).\n\nTendency: her energy is not the block and never was; affirm what she has noticed while refusing the fault, exactly as hidden-intuition splits its question. 🔴 NEVER agree that she blocks herself, never mindset, vibration, deserving or self-sabotage, and never hand her a practice to fix herself.",
+  "decks": {
+    "return-mhf": {
+      "a": [
+        "You turned the Magician, dear. Look — white lilies at the front and red roses behind them.",
+        "You asked if your energy is blocking the money. Your hand went to the card of work being done.",
+        "So no, dear. Your energy has never been the block.",
+        "And on this card the energy is the tool, dear. It's what does the work.",
+        "But yours has been pouring out at full strength for years, dear.",
+        "That's why you're tired and nothing shows, dear. Something has been taking it.",
+        "Let me look closer at where all that has been going…"
+      ],
+      "b": [
+        "You turned the Hanged Man, dear. Look — he's held from above, with nothing under him.",
+        "You asked if your energy is blocking the money. Your hand went to the card of a thing under weight.",
+        "So your energy isn't wrong, dear. It's under weight.",
+        "And wrong and weighed down are two different things, dear.",
+        "But you've been told the first one for years, dear. I won't repeat it.",
+        "That's why the harder you push, the heavier it sits, dear.",
+        "Let me look closer at what has been pressing on it…"
+      ],
+      "c": [
+        "You turned the Fool, dear. Look — his sleeves and collar are edged with a pale trim.",
+        "You asked if your energy works against you. Your hand went to the card of open hands.",
+        "So your energy is still fresh, dear. After all of it.",
+        "And this card is unspent, dear, and still willing to set out.",
+        "But that's not how a woman in her own way reads, dear.",
+        "That's why you kept turning it over, dear. The blame was never yours.",
+        "Let me look closer at what is actually in the way…"
+      ]
+    }
+  }
+}

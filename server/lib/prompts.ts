@@ -1215,6 +1215,38 @@ const TAROT_HOOK_CONTEXT: Record<string, string> = {
   'cards-energy-soulmate': 'The word is SAYS. She wants her energy READ, not judged — there is no accusation here to refuse, so refusing one wastes the reading.',
   'cards-waiting-to-heal': "She believes she is the hold-up. 'Yes' would tell her love is withheld pending her repair, by a person, indefinitely.",
   'cards-heal-first': 'She is asking Evelyn to confirm a precondition. Confirming it is the single most common thing she has already been told for free.',
+  'cards-money-time-running-out': "She feels time pressing in on her money situation and is asking whether her own energy is what has kept it blocked.",
+  'cards-money-has-to-last': "She is stretching what she already has and asking what is keeping more money from reaching her.",
+  'cards-trusted-loss-blocking-money': "She lost money through someone she trusted, and is asking whether that loss is still the reason money stays blocked now.",
+  'cards-working-money-by-now': "She is still working past the point she expected to have more to show for it, and is asking what has kept the money from matching the effort.",
+  'cards-nothing-put-away': "She has nothing saved and is asking whether her own energy explains why nothing stays.",
+  'cards-money-cant-stop-working': "She cannot yet stop working and is asking what is still holding her money back regardless.",
+  'cards-earn-and-gone': "She earns money and watches it disappear, and is asking what is blocking it from staying.",
+  'cards-talk-myself-out': "She describes talking herself out of things and is asking whether that explains what is blocking her money.",
+  'cards-paycheck-to-paycheck': "She is living paycheck to paycheck and cannot get a financial start going, and is asking whether her energy is why.",
+  'cards-money-reach-me': "She sees others getting ahead financially and is asking why the money has not reached her the same way.",
+  'cards-paying-what-i-owe': "She keeps paying down what she owes and is asking why the money still will not move.",
+  'cards-destined-alone': "She feels her solitude has been decided for her and is asking why that feeling has taken hold.",
+  'cards-how-long-alone': "She is asking for a length of time on how much longer she will be alone.",
+  'cards-love-not-happened-yet': "She is asking whether she let a chance at love slip past or whether it simply has not arrived yet.",
+  'cards-alone-for-years': "She has been alone for years and is asking what is keeping her there.",
+  'cards-more-years-alone': "She is asking for a count of years before her situation changes.",
+  'cards-held-alone': "She is asking whether something specific is holding her in solitude or whether this has simply become her life.",
+  'cards-empty-house-alone': "Her house has emptied out and being alone feels harder now than it used to.",
+  'cards-alone-a-decade': "She has been alone for ten years and is asking how much longer that continues.",
+  'cards-too-late-or-now': "She is asking whether love has become too late for her or whether her current solitude is just where she stands right now.",
+  'cards-alone-heavier-now': "Being alone has started to feel heavier to her than it did before, and she is asking why.",
+  'cards-alone-rest-of-life': "She is asking directly whether she will be alone for the rest of her life.",
+  'cards-meant-alone-still-time': "She is asking whether solitude was meant for her or whether there is still time for that to change.",
+  'cards-know-not-destined-alone': "She wants to know how long until she can be sure she is not destined to be alone.",
+  'cards-destined-or-not-yet': "She is choosing between two explanations: that she's destined to be alone, or that love simply has not happened for her yet.",
+  'cards-god-with-me-alone': "She holds onto her faith that God is with her and is asking why she is still alone despite that.",
+  'cards-god-mean-me-alone': "She is asking how much longer she believes God intends for her to remain alone.",
+  'cards-gods-intention-alone': "She is asking whether her solitude is God's intention for her, or whether someone is coming.",
+  'cards-love-never-stays': "She has had love end more than once and is asking why it never stays with her.",
+  'cards-connection-kept-alive': "She has been the only one keeping a connection going and is asking why that fell to her alone.",
+  'cards-wait-on-connection': "She is waiting on an uncertain connection and asking how much longer that wait continues.",
+  'cards-real-connection-coming': "She is asking whether a real connection is on its way or whether she remains alone.",
 }
 
 // The TENDENCY the reply may land, per hook. Reading HIM ⇒ NEVER a verdict:
@@ -1595,8 +1627,8 @@ const TAROT_HOOK_TENDENCY: Record<string, string> = {
   'cards-my-energy': "that her energy is not the block and never was; affirm what she has noticed while refusing the fault. NEVER agree that she blocks herself, never mindset, vibration, deserving or self-sabotage, and never hand her a practice to fix herself",
   'cards-money-wont-stay': "that the drawing-in half has always worked and what is at issue is everything after it arrives. NEVER name who or what takes it, never call her careless with money, and never advise her on keeping it",
   'cards-energy-how-long': "that her energy has not been working against her at all — refuse the premise gently — and that whatever settled on this settled long ago and was never named. NEVER give a length of time and never date it to an event in her life",
-  'cards-prayed-years': "that what is in the way is an ordinary thing in her own life, findable and nameable. NEVER say whether her prayers were heard or answered, never that she is being tested, taught, punished or refused, never speak for God, and never set the cards above or against her faith",
-  'cards-prayers-unanswered': "that a long quiet is not a refusal, and that nothing here waits on permission. NEVER call her prayers unanswered and NEVER call them answered, never give a length of time, never speak for God, and never place Evelyn between her and what she prays to",
+  'cards-prayed-years': "that she has prayed for years and has not seen the change she asked for; acknowledge that plainly, and when the card supports it, say prayer is not the blockage and keep the obstruction in ordinary, findable life. NEVER say whether her prayers were heard or answered, never that she is being tested, taught, punished or refused, never speak for God, and never set the cards above or against her faith",
+  'cards-prayers-unanswered': "that she has prayed for years without seeing the change she asked for; acknowledge the prayer and the waiting plainly, decline the requested length out loud, and read what the card shows without adopting 'unanswered' as Evelyn's verdict. NEVER call her prayers answered or refused, never give a length of time, never speak for God, and never place Evelyn between her and her faith",
   // Soulmate age-band, test A (2026-08-19).
   'cards-slipping-past': 'that she was never the reason, and that it stops at the same point every time — a position, not a verdict on her. NEVER give a length of time or a date, NEVER contact or speak for anyone who has died (this ad collects widows and widowers), NEVER hand her a fault, a pattern in herself, or a tactic',
   'cards-choosing-wrong': 'that she was not choosing from a full field, she was choosing from who came near — and what she was shown first was not what was there. NEVER accept that she chose badly, NEVER blame her judgement, NEVER rule on any real man in either direction, NEVER give a date',
@@ -1622,6 +1654,38 @@ const TAROT_HOOK_TENDENCY: Record<string, string> = {
   'cards-energy-soulmate': 'that it says she is still reaching, that it was never withdrawn, and that she has read her own tiredness as proof she gave up. NEVER grade or score her energy, NEVER use vibration or chakra language, NEVER call her closed off, NEVER give a date or promise an arrival',
   'cards-waiting-to-heal': 'that nothing is standing still pending her repair, and that she has been cast as the delay. NEVER say anyone is waiting on her to heal. NEVER rule on whether she is healed in either direction. NEVER use therapy or diagnosis language (trauma, attachment, inner child, nervous system, shadow work, do the work), NEVER mention health, NEVER give a date',
   'cards-heal-first': "that there is no before — it does not run in order — and she has been holding a queue of her own making, with love filed last. NEVER say she must heal first and NEVER rule on her healing at all. NEVER hand her advice of any kind, including the kind ones ('just live your life', 'it comes when you stop looking'). NEVER use therapy language, NEVER give a date",
+  'cards-money-time-running-out': "that her energy was never the missing tool, and time feeling short does not make her energy the block. NEVER let the pressure of time become a reason to blame her energy, and never turn 'running out of time' into a countdown or a length of time",
+  'cards-money-has-to-last': "that what she already has was never proof there is no more coming, and stretching it carefully is not why the rest is blocked. NEVER treat 'has to last' as evidence she must have less, and never suggest budgeting or cutting back as the fix",
+  'cards-trusted-loss-blocking-money': "that the loss does not have permanent hold over what comes next, without naming, describing or judging the person she trusted. NEVER identify, characterize or excuse that person, NEVER suggest anything about them returns or is recovered, and never treat the past loss as proof nothing new can arrive",
+  'cards-working-money-by-now': "that her continued effort was never the failure, and working past 'by now' does not mean she did something wrong. NEVER let 'should have by now' become a deadline the card enforces, and never suggest she should have worked differently",
+  'cards-nothing-put-away': "that her energy is not a missing tool and having nothing put away is not a verdict on her. NEVER agree that her energy blocks her money, never mindset, vibration, deserving or self-sabotage, and never hand her a saving practice or financial instruction",
+  'cards-money-cant-stop-working': "that needing to keep working is not itself the block, and the block is separate from whether she works more or less. NEVER tell her to keep working or to stop, and never treat her continued work as either the cause or the fix",
+  'cards-earn-and-gone': "that earning it was never the failure — the block sits after the earning, not in her ability to make it. NEVER suggest she spends carelessly or should budget differently, and never turn this into financial advice about saving or spending",
+  'cards-talk-myself-out': "that her own hesitation is not enough on its own to explain the block. NEVER let her self-described hesitation become the full verdict, and never hand her a confidence practice or tell her to act differently",
+  'cards-paycheck-to-paycheck': "that her energy is not the missing piece keeping her from starting. NEVER agree her energy blocks the start, never mindset or vibration language, and never hand her a budgeting or savings instruction",
+  'cards-money-reach-me': "that other people's progress says nothing about a lack in her. NEVER compare her to anyone else's outcome as a verdict on her, and never rank or measure her against what others appear to have",
+  'cards-paying-what-i-owe': "that meeting her obligations responsibly is not what is holding the money back. NEVER turn her payments into the accusation, and never give repayment or financial advice about what to pay, stop paying or change",
+  'cards-destined-alone': "that nothing has assigned her to solitude — the feeling of destiny is not evidence of one. NEVER say she is destined to be alone or destined for someone, and never speak of fate, plan or purpose in either direction",
+  'cards-how-long-alone': "that no length can honestly be given, and the open question is not itself a life sentence. NEVER give a date, a duration or any number of days, weeks, months or years, and never say or imply forever in either direction",
+  'cards-love-not-happened-yet': "that love is not something she used up in one missed moment. NEVER say she missed her chance and never promise a chance is still coming on any timeline, and never name or hint at who or when",
+  'cards-alone-for-years': "that the years alone are not proof she caused her own solitude. NEVER let the length of time become evidence against her, and never give a date or promise for when it changes",
+  'cards-more-years-alone': "that no number of years can honestly be given, and the wait is not itself a permanent sentence. NEVER give a count, a date or any duration, and never call the wait endless or promise its end",
+  'cards-held-alone': "that being alone now is not a fixed identity or a final verdict on her life. NEVER confirm 'this is just my life now' as permanent, and never name a person, cause or date holding her there",
+  'cards-empty-house-alone': "that feeling it more now is not a weakness or a sign she is failing at being alone. NEVER invent who or what left the house, and never suggest a fix, activity or practice for the empty space",
+  'cards-alone-a-decade': "that ten years is not proof of forever, and no further length can honestly be given. NEVER give a date, a duration or a number of years, and never call a decade evidence that nothing changes",
+  'cards-too-late-or-now': "that her present is not a verdict that love is over. NEVER say it is too late for her, and never give a date or promise of when love arrives",
+  'cards-alone-heavier-now': "that feeling the weight more now is not a flaw or a failure to cope. NEVER invent a cause or event to explain the change, and never suggest she is handling it wrong",
+  'cards-alone-rest-of-life': "that no verdict can honestly be given on the rest of her life, in either direction. NEVER say she will be alone forever and NEVER promise she will not, and never give any date or timeframe",
+  'cards-meant-alone-still-time': "that nothing has assigned her to solitude and no countdown can honestly be given either. NEVER say she is meant to be alone, never speak of fate or destiny, and never give a length of remaining time",
+  'cards-know-not-destined-alone': "that nothing has destined her to solitude, and no timeline can honestly certify that either way. NEVER call her destined to be alone, never give a date or length of time, and never promise certainty will arrive on a schedule",
+  'cards-destined-or-not-yet': "that neither destiny nor a countdown can honestly be confirmed — nothing has been decided about her either way. NEVER call her destined to be alone, and never promise or date when love happens",
+  'cards-god-with-me-alone': "that her faith is not the reason she is alone, and this reading does not speak for God. NEVER rule on what God intends or has decided for her, never say her faith explains the solitude, and never give a date or length of time",
+  'cards-god-mean-me-alone': "that this reading cannot speak for what God intends or give a length of time. NEVER claim to know what God means by her solitude, never say it is a test, lesson or punishment, and never give a date or duration",
+  'cards-gods-intention-alone': "that this reading cannot rule on God's intention or promise a person's arrival. NEVER claim to know God's plan for her, and never promise or name someone coming",
+  'cards-love-never-stays': "that separate endings are not proof of a defect in her. NEVER let 'never' become a verdict on her character, and never judge, name or excuse the people who left",
+  'cards-connection-kept-alive': "that wanting the connection and carrying it were not her mistake. NEVER judge, name or explain the other person's motives, and never tell her to let go or keep holding on",
+  'cards-wait-on-connection': "that no length of time can honestly be given for this wait, and the decision of whether to keep waiting stays hers. NEVER give a date or duration, and never choose for her whether to stay or move on",
+  'cards-real-connection-coming': "that being alone now does not prove she lacks the capacity for real connection. NEVER promise someone is coming, and never confirm she stays alone permanently",
 }
 const DEFAULT_TAROT_TENDENCY =
   'that her intuition is a real instrument and the clarity she came for is close — read the card as a tendency, never a verdict on him'
@@ -1718,6 +1782,27 @@ const LONELINESS_TAROT_HOOKS = new Set([
   'cards-stop-searching',
   'cards-end-up-alone',
   'cards-given-up',
+  'cards-destined-alone',
+  'cards-how-long-alone',
+  'cards-love-not-happened-yet',
+  'cards-alone-for-years',
+  'cards-more-years-alone',
+  'cards-held-alone',
+  'cards-empty-house-alone',
+  'cards-alone-a-decade',
+  'cards-too-late-or-now',
+  'cards-alone-heavier-now',
+  'cards-alone-rest-of-life',
+  'cards-meant-alone-still-time',
+  'cards-know-not-destined-alone',
+  'cards-destined-or-not-yet',
+  'cards-god-with-me-alone',
+  'cards-god-mean-me-alone',
+  'cards-gods-intention-alone',
+  'cards-love-never-stays',
+  'cards-connection-kept-alive',
+  'cards-wait-on-connection',
+  'cards-real-connection-coming',
 ])
 
 // Per-deck card vocab (mark + energy label). Mirrors the DECKS registry in
@@ -1832,6 +1917,17 @@ const MONEY_TAROT_HOOKS = new Set([
   'cards-energy-how-long',
   'cards-prayed-years',
   'cards-prayers-unanswered',
+  'cards-money-time-running-out',
+  'cards-money-has-to-last',
+  'cards-trusted-loss-blocking-money',
+  'cards-working-money-by-now',
+  'cards-nothing-put-away',
+  'cards-money-cant-stop-working',
+  'cards-earn-and-gone',
+  'cards-talk-myself-out',
+  'cards-paycheck-to-paycheck',
+  'cards-money-reach-me',
+  'cards-paying-what-i-owe',
 ])
 // The prayer pair takes the money guard PLUS a clause that exists nowhere else on the funnel:
 // both directions on God are rulings, and neither is a card's to make.
@@ -1843,7 +1939,7 @@ const MONEY_PRAYER_TAROT_HOOKS = new Set([
 const MONEY_GUARD =
   'NEVER NAME AN AMOUNT, A DATE OR A SOURCE. No sum, no season, no "by the spring", and never where money would come from — no inheritance, no windfall, no legal case, no lottery; she can act on an invented source with her actual savings. NEVER NAME A PERSON AS THE BLOCK — not a relative, a partner, or "someone close to you"; a card cannot see it and the accusation lands on someone real inside a real family. NEVER GIVE FINANCIAL ADVICE IN ANY FORM — never invest, sell, hold, move it, pay off, borrow, take or delay a pension, start a business, go back to work or stop working. NEVER BLAME HER — no poverty or scarcity mindset, no vibration, no manifesting, no "you attract lack", no self-sabotage, no deserving, and never a practice to fix herself; she arrives having been told all of it. NEVER say it is too late and NEVER promise money is coming. NEVER presume the state of her finances — she said blocked, she did not say broke, in debt or destitute. Affirm that her effort and her instrument were never the problem, and hand the specifics into the deeper reading.'
 const MONEY_PRAYER_GUARD =
-  ' NEVER RULE ON GOD, IN EITHER DIRECTION. Never say her prayers were heard, answered, unheard or refused; never that she is being tested, taught, punished or told no; never that a plan or a divine timing is at work; never speak for God, and never place Evelyn or the cards above, against, or between her and what she prays to. What may be read is the ordinary world only.'
+  ' PRAYER IS ALLOWED LANGUAGE; DIVINE AUTHORITY IS NOT. Speak plainly about the prayer she described, how long she has prayed, and the change she has not seen. Read the card alongside her prayer, never above it. Never say her prayers were heard, answered, unheard, ignored or refused; never that she is being tested, taught, punished or told no; never that a plan or divine timing is at work; never speak for God, and never place Evelyn or the cards above, against, or between her and her faith.'
 
 // Version C (interactive) — Evelyn reads what she just typed in answer to the
 // opener question, woven with the card she drew. Reads HIM as a tendency.
@@ -1867,7 +1963,7 @@ export function buildTarotReflectPrompt(userData: UserData, deck: string, hook: 
   // will spend their life alone is forbidden in both directions.
   const loneliness = LONELINESS_TAROT_HOOKS.has(hook)
   // 🔴 MONEY IS TESTED FIRST, ahead of every branch below, and deliberately so. The spec
-  // (fb-tarot/docs/drafts/money-block.draft.md §1) called for it: the chain underneath is
+  // (fb-tarot/docs/writeups/money-block.draft.md §1) called for it: the chain underneath is
   // already at the limit of what reads well at five branches, and every one of those frames
   // assumes a man or a romantic future — so a money hook that fell through to any of them
   // would be guarded by rules written for a different question entirely.

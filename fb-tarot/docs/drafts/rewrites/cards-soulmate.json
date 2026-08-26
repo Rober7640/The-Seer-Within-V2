@@ -1,0 +1,65 @@
+{
+  "hook": "cards-soulmate",
+  "headline": "When is my soulmate coming?",
+  "note": "🔄 REWRITTEN 2026-08-19 to the Natural Tarot-Cut framework. Bubbles 3-6 run as ONE causal chain — so / and / but / that's why. This is a SELF-FRAME hook, so the hopeful yes is affirmed with certainty; the DATE stays banned. The art line and the bridge are unchanged.\n\nFace-UP decks only — arcana-mfh (Magician/Hanged Man/Fool) and arcana-eef (Emperor/Empress/Fool), so she CHOSE the card rather than turned it, and two card-sets means two sets of copy. The Fool copy is shared between them, verb already correct.\n\n⭐ THESE ARE THE ONLY TWO HOOKS ON THE FUNNEL THAT READ HER RATHER THAN HIM. SELF_FRAME_HOOKS swaps 'tendency, never a verdict' for 'affirm the hopeful yes with certainty' — which is safe here precisely because no specific man exists to be convicted or acquitted. So these are warmer than everything else in this batch, on purpose.\n\n⚠️ SEED FAMILY WITH NO GUARD FILE (`tests/tarot-self-frame-copy.test.ts` does not exist) — only the generic guards apply. 🔴 Still never tie it to one named person and 🔴 never give a date. cards-soulmate's tendency permits the 'when' to be answered only as a LEANING, never as a timeframe.\n\nFinding: the 'when' is answered only as a LEANING — close, closer than the fear admits — and never as a date. What gets certified with real warmth is that she has not been waiting on nothing.",
+  "decks": {
+    "arcana-mfh": {
+      "a": [
+        "You chose the Magician, dear. Look — his right hand holds a white rod straight at the sky.",
+        "You asked when your soulmate is coming. Your hand went to the man who makes things happen.",
+        "So yes, dear. Something is on its way to being made.",
+        "And his hand is up, dear, because a thing is being made now.",
+        "But no date from me, dear. Nobody honest would give one.",
+        "That's why the wait has felt so long, dear. No one gave you a marker.",
+        "Let me look closer at what still stands in the way…"
+      ],
+      "b": [
+        "You chose the Hanged Man, dear. Look — the tree he hangs in is still green and alive.",
+        "You asked when your soulmate is coming. Your hand went to the card of a last stretch.",
+        "So you're on the last stretch, dear. Not the whole road.",
+        "And the tree is still green, dear, right through the hanging.",
+        "But a pause isn't a stop, dear, and you have been in one.",
+        "That's why believing through it took so much, dear. It wasn't silly.",
+        "Let me look closer at what has been holding this pause open…"
+      ],
+      "c": [
+        "You chose the Fool, dear. Look — he's walking into open air with his chin up.",
+        "You asked when your soulmate is coming. Your hand went to the one who steps first.",
+        "So something begins here, dear. That is what this card is.",
+        "And he's already moving, dear, before he can see the end of it.",
+        "But no date, dear, and no name. That part isn't mine to give.",
+        "That's why the road looks empty, dear. You are already on it.",
+        "Let me look closer at what's standing on that road…"
+      ]
+    },
+    "arcana-eef": {
+      "a": [
+        "You chose the Emperor, dear. Look — he holds a gold ball in his left hand.",
+        "You asked when your soulmate is coming. Your hand went to the man who builds to last.",
+        "So what you're holding out for is solid, dear. It does exist.",
+        "And the gold in his hand is weighty, dear, and meant to keep.",
+        "But you've turned down things that wouldn't have lasted, dear.",
+        "That's why it has taken this long, dear. You knew your own worth.",
+        "Let me look closer at what still sits between you and it…"
+      ],
+      "b": [
+        "You chose the Empress, dear. Look — twelve stars in the crown on her head.",
+        "You asked when your soulmate is coming. Your hand went to the warmest woman in the deck.",
+        "So this card is full, dear. There's nothing empty in it.",
+        "And her crown has twelve stars, dear, and every one is lit.",
+        "But you've held the door open a long time, dear. That costs.",
+        "That's why waiting wears you, dear. The holding is the heavy part.",
+        "Let me look closer at what has been sitting in that doorway…"
+      ],
+      "c": [
+        "You chose the Fool, dear. Look — he's walking into open air with his chin up.",
+        "You asked when your soulmate is coming. Your hand went to the one who steps first.",
+        "So something begins here, dear. That is what this card is.",
+        "And he's already moving, dear, before he can see the end of it.",
+        "But no date, dear, and no name. That part isn't mine to give.",
+        "That's why the road looks empty, dear. You are already on it.",
+        "Let me look closer at what's standing on that road…"
+      ]
+    }
+  }
+}

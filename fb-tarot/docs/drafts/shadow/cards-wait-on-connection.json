@@ -1,0 +1,34 @@
+{
+  "hook": "cards-wait-on-connection",
+  "headline": "How much longer am I going to wait on this connection?",
+  "method": "inherited-shadow",
+  "note": "Wired 2026-08-25 from fb-tarot/docs/writeups/shadow/REVIEW-money-alone-commit-2026-08-25.md — approved copy, transferred verbatim. Reuses the existing LONELINESS_TAROT_HOOKS frame; no new guard.",
+  "decks": {
+    "return-mhf": {
+      "a": [
+        "You turned the Magician. The pictures were hidden, yet your hand found the one ready to act.",
+        "Every tool is out, and both hands are occupied.",
+        "You asked how much longer you will wait on this connection. The readiness for action is what catches me.",
+        "You are still waiting on the connection, and you're asking how much longer.",
+        "The thing that has hold of the connection keeps action from becoming an answer. I don't think this began with you.",
+        "Let me see what is holding the connection…"
+      ],
+      "b": [
+        "You turned the Hanged Man. You reached without seeing him and chose the card made still by one rope.",
+        "One rope holds one ankle. The rest of him hangs loose.",
+        "You asked for the length of the waiting. This card brings me to the single rope.",
+        "Still, the connection remains suspended, and the waiting belongs to your question.",
+        "At the point where suspension would become a decision, something appears. I don't think it started with you.",
+        "Let me see what's standing there…"
+      ],
+      "c": [
+        "You turned the Fool. The backs were identical, but your hand went to the one travelling light.",
+        "The small bundle on his stick is all he is carrying.",
+        "You asked how much longer you wait. The light bundle holds my eye.",
+        "But you're still waiting on the connection, and you're asking how long that continues.",
+        "Something stands between the open road and the connection. I don't think it began with you.",
+        "Now let's look at what's there…"
+      ]
+    }
+  }
+}

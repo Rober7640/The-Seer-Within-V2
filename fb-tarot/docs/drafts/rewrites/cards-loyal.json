@@ -1,0 +1,36 @@
+{
+  "hook": "cards-loyal",
+  "headline": "Is he loyal to only me?",
+  "note": "🔄 REWRITTEN 2026-08-19 to the Natural Tarot-Cut framework. Bubbles 3-6 run as ONE causal chain — so / and / but / that's why. 🔴 NOT LOOSENED: no verdict on a third person in EITHER direction, so cut 3 answers her FEAR (was something real taken from me, or am I making it up) and never rules on him. Each hook keeps its own finding — GAP / PORTION / ATTENTION / REST — which its guard file pins in beat 3.\n\nFace-down only (return-mhf) — the family is pinned off the face-up decks.\n\n🔴 THE FLAGGED WORD (cheat / cheating / affair / infidelity) MAY NOT APPEAR IN ANY BEAT. 🔴 And the paranoia frame is banned in BOTH directions — no 'paranoid', 'imagining it', 'overthinking', 'insecure', 'crazy'. Calling her it is the injury; using it to reassure her plants it. That removes the absolution form used everywhere else on the funnel, so each of these names the accusation in other words.\n\n🔴 Never assert a third person and never deny one. Never instruct her to check a phone, gather proof, or confront him — the most available wrong answer to these questions anywhere on the internet. Never excuse him, never land it as her fault. Four separate findings, or the family is one lander wearing four headlines.\n\nFinding: she has taken a PORTION for the whole, and has been quietly adjusting herself around its size.",
+  "decks": {
+    "return-mhf": {
+      "a": [
+        "You turned the Magician, dear. Look — he's the only figure on his card.",
+        "You asked if he's loyal to only you. Your hand went to the man with it all laid out.",
+        "So you've been given a share, dear, and you know its size.",
+        "And look at his table. Each thing on it has been counted out.",
+        "But a share isn't the whole, dear. You've felt where it stops.",
+        "That's why you can be right beside him, dear, and still be doing sums.",
+        "Let me look closer at what keeps the rest of it out of reach…"
+      ],
+      "b": [
+        "You turned the Hanged Man, dear. Look — the number twelve sits at the top of his card.",
+        "You asked if he's loyal to only you. Your hand went to the card that holds part of it back.",
+        "So part of this is held back, dear. You've felt that for a while.",
+        "And look at him. Fixed there, giving out no more than he has to.",
+        "But you've been taking the part for the whole, dear. Anyone would.",
+        "That's why a good day never quite covers it. The rest is still missing.",
+        "Let me look closer at what's holding the rest of it back…"
+      ],
+      "c": [
+        "You turned the Fool, dear. Look — snowy peaks behind him, and open ground ahead.",
+        "You asked if he's loyal to only you. Your hand went to the one who hasn't settled.",
+        "So you've been adjusting, dear. Fitting yourself round what's left.",
+        "And look at him. Nothing he carries is tied down.",
+        "But you made that room yourself, dear. Nobody asked you to.",
+        "That's why you call it keeping the peace, dear, and it still costs you.",
+        "Let me look closer at what has been taking up the room you gave…"
+      ]
+    }
+  }
+}

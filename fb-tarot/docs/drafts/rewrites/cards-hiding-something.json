@@ -1,0 +1,36 @@
+{
+  "hook": "cards-hiding-something",
+  "headline": "Is he hiding something from me?",
+  "note": "🔄 REWRITTEN 2026-08-19 to the Natural Tarot-Cut framework. Bubbles 3-6 run as ONE causal chain — so / and / but / that's why — and the read ANSWERS. The art line and the bridge are unchanged. Every ban in this note still stands.\n\nFace-down only (return-mhf). 🔴 NEVER CONVICT HIM and 🔴 never dismiss what she noticed — both doors are shut. 🔴🔴 AND NEVER NAME CONTENTS: no other woman, no affair, no money, no secret family, no messages from anyone. Naming a content is the single most harmful thing this pair could do, because she will go looking for it. 🔴 No surveillance and no 'confront him'.\n\nFinding: an omission is not a lie, and she has been asked to prove a negative — which cannot be done, which is why this has gone round and round. What can be certified is the noticing.",
+  "decks": {
+    "return-mhf": {
+      "a": [
+        "You turned the Magician, dear. Look — he stands where you can see him, and the table hides the rest.",
+        "You asked about him hiding something. Your hand went to the man who decides what's on show.",
+        "So you've been shown a front, dear. Fronts are chosen, and that's real.",
+        "And the table covers him from the waist down, dear.",
+        "But a thing left out isn't a lie told, dear. Those are different.",
+        "That's why you have no name for it, dear, and still feel it there.",
+        "Let me look closer at what has been standing in the covered part…"
+      ],
+      "b": [
+        "You turned the Hanged Man, dear. Look — his hands are behind him where the picture stops.",
+        "You asked about him hiding something. Your hand went to the card with a back you can't see.",
+        "So there's a back to this you can't reach, dear. You noticed that.",
+        "And the working half of him is out of the frame, dear.",
+        "But you've been asked to prove a thing isn't there, dear.",
+        "That's why it goes round and round, dear. Nobody can prove that.",
+        "Let me look closer at what keeps this half out of frame…"
+      ],
+      "c": [
+        "You turned the Fool, dear. Look — the bundle on his stick is closed and tied shut.",
+        "You asked about him hiding something. Your hand went to the one who carries a closed bag.",
+        "So there's a closed bag here, dear. That much is real.",
+        "And it's tied shut, dear, and I won't tell you what's inside.",
+        "But no honest reader names what's in a shut bag, dear.",
+        "That's why you circle it, dear. You saw the bag, and it stayed shut.",
+        "Let me look closer at what has been keeping that bag shut…"
+      ]
+    }
+  }
+}

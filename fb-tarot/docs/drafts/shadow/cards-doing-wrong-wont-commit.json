@@ -1,0 +1,34 @@
+{
+  "hook": "cards-doing-wrong-wont-commit",
+  "headline": "What am I doing wrong that he won't commit?",
+  "method": "inherited-shadow",
+  "note": "Wired 2026-08-25 from fb-tarot/docs/writeups/shadow/REVIEW-money-alone-commit-2026-08-25.md — approved copy, transferred verbatim. Reuses the existing default decode-him frame; no new guard.",
+  "decks": {
+    "return-mhf": {
+      "a": [
+        "You turned the Magician. The cards were face down, but your hand found the one who came with everything ready.",
+        "The cup, coin, blade and wand are all out on his table.",
+        "You asked what you are doing wrong because he will not commit. What catches me is that nothing on the table is missing.",
+        "He has not committed, and the question has turned his decision back on you.",
+        "I keep coming back to something between the complete table and his commitment. I don't think it began with you.",
+        "Let me look closer at what's behind this…"
+      ],
+      "b": [
+        "You turned the Hanged Man. Nothing revealed him, yet you chose the one held by a single thing.",
+        "One rope circles one ankle. The rest of him hangs free.",
+        "You asked what in you explains his lack of commitment. This card brings me to the one rope.",
+        "Still, the future is held, and you are asking whether you caused it.",
+        "Something is holding his decision tightly. I don't think this began with you.",
+        "Let me see what's holding his decision…"
+      ],
+      "c": [
+        "You turned the Fool. You couldn't see the picture, but your hand went to the one who began without carrying everything.",
+        "One small bundle is all he takes with him.",
+        "You asked what you did wrong. The small bundle at the beginning is where this card takes me.",
+        "But the commitment has not begun, and you are searching yourself for the reason.",
+        "At the point where the future would begin to settle, something appears. I don't think it started with you.",
+        "Now let's look at what's behind this…"
+      ]
+    }
+  }
+}

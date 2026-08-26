@@ -1,0 +1,41 @@
+{
+  "hook": "cards-missed-chance",
+  "headline": "Is my soulmate still coming, or have I already missed him?",
+  "method": "inherited-shadow",
+  "note": "FRAME: soulmate x age band. NO MAN EXISTS YET — she asks WHEN or WHETHER. Must not fall through to decode-him, which would have Evelyn invent a man.\n🔴 THE AGE BAND LIVES IN THE AD SET, NEVER IN THE COPY. No age, no number, no life-stage, nothing she could check.\n🔴 NO DURATION, forward or back. Every frame bans a DATE; this family's own gap was that 'not much longer' is a LENGTH, and a length is not a date. Nothing here gives one.\n⚠ SHE is the subject of beats 3-6; the male figure is described in beats 1-2 and retired there.\n⚠ NO FAMILY-LINE LANGUAGE anywhere in the read.\n\n⚠ The ad offers her the cruel half itself ('have I already missed him'). The read declines that half and never supplies a date for the other — 'nothing's over' is not 'he arrives in spring'.",
+  "readback": {
+    "1 would a person say this": "Yes. 'And you've begun to count it lost' is her own week.",
+    "2 is every noun real": "Unpacked table, green wood, mid-step feet — all on the card.",
+    "3 anything she could catch me getting wrong": "No. Beat 4 says nobody has come and she has begun to count it lost. Her ad asks exactly that.",
+    "4 does the symbol prove the line at a glance": "Yes. Work still out and nothing packed away proves 'nothing's been packed up'.",
+    "5 does the card mean what TAROT_CARD_VOCAB says": "Yes — and card c never gives the figure motion toward her; the line is about her, not about him arriving."
+  },
+  "decks": {
+    "return-mhf": {
+      "a": [
+        "You turned the Magician. You couldn't see the faces, and your hand found the one who came ready.",
+        "Look at his table. Nothing on it has been cleared away.",
+        "You asked if he's still coming, or if you've missed him. What catches me is that the table is still set.",
+        "The part that doesn't fit is that nobody has come. And you've put the harder half of that question to me yourself.",
+        "Whatever is in the way holds steady, and it doesn't come and go. I don't think this began with you.",
+        "Let me look closer at what's holding it…"
+      ],
+      "b": [
+        "You turned the Hanged Man. Nothing told them apart, and you found the calmest face in the deck.",
+        "One rope, one ankle, and he's upside down. His face, though — that's calm.",
+        "You asked if he's still coming, or if you've missed him. It's the single rope that holds my eye.",
+        "Still, nobody has come. And you've asked me to rule on it.",
+        "Something sits between you and the answer, close rather than far back. I don't think it started with you.",
+        "Let me look closer at what this is…"
+      ],
+      "c": [
+        "You turned the Fool. Face down, all three, and you took the one standing in full sun.",
+        "Look at the sky. It's gold, and there's not one cloud across it.",
+        "You asked if he's still coming, or if you've missed him. This card brings me to broad daylight, and a foot already moving.",
+        "But nobody has come. And you're the one carrying both halves of that question.",
+        "Something turns up at the point where this would come good. I don't think any of it began with you.",
+        "Let me look closer at what has hold of this…"
+      ]
+    }
+  }
+}

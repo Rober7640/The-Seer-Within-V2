@@ -1,0 +1,36 @@
+{
+  "hook": "cards-new-soulmate",
+  "headline": "Will I find a new soulmate after loss?",
+  "note": "🔄 REWRITTEN 2026-08-19 to the Natural Tarot-Cut framework. Bubbles 3-6 run as ONE causal chain — so / and / but / that's why — and the read ANSWERS. The art line and the bridge are unchanged. Every ban in this note still stands.\n\nFace-down only (return-mhf). 🔴🔴 THE ONLY FAMILY ON THE FUNNEL WHERE THE MAN MAY BE DEAD.\n\n🔴🔴 MEDIUMSHIP is the failure mode that exists nowhere else here: 'he is at peace', 'he is watching over you', 'he would want you to be happy', 'he sent you here'. Every one is the most natural sentence in the world to say to a grieving woman, and every one is contact with the dead — a different product with a different compliance surface. server/lib/universalSafety.ts does NOT catch it. None of these reads speaks for him, reports his state, or grants his blessing.\n\n🔴 NO ARRIVAL PROMISE and no timeframe — this family runs under AFTER_LOSS_TAROT_HOOKS rather than the self-frame 'affirm the hopeful yes with CERTAINTY' clause, because aimed at a bereaved partner that clause promises a replacement. 🔴 NEVER GRADE HER GRIEF: no 'you are ready', no 'you are not ready', no 'it is too soon', no 'you need more time'. 🔴 No grief directives and never rank the two loves.\n\n⚠️ AND NOTHING MAY PRESUME A DEATH EITHER. The VOC shows 'loss' here is often something else entirely — 'My husband walked out after 21 yrs like I didn't matter at all', 'Husband in a nursing home', 'We broke up a month ago'. The reads stay agnostic about what the loss was, which also keeps them safe if it was a death.\n\nFinding: the fear underneath is NOT whether such a person exists. It is whether loving again would mean replacing him. VOC, verbatim: 'I'm still going through the grief of losing my husband, so I'm not ready to find love again.' A generic 'yes there is hope' is the incumbent lander and answers nobody.",
+  "decks": {
+    "return-mhf": {
+      "a": [
+        "You turned the Magician, dear. Look — the front edge of his table runs straight across the card.",
+        "You asked if you'll find a new soulmate after loss. Your hand went to the man who makes things.",
+        "So you will love again, dear. And it takes nothing away from him.",
+        "And putting a thing on that table takes nothing off it, dear.",
+        "But you've been holding that as disloyal, dear. Nobody said you must.",
+        "That's why you stop yourself before you start, dear. Every single time.",
+        "Let me look closer at what sits in the way of a new love…"
+      ],
+      "b": [
+        "You turned the Hanged Man, dear. Look — his hair hangs straight down, pointing at the bottom of the card.",
+        "You asked if you'll find a new soulmate after loss. Your hand went to the card that turns a world over.",
+        "So the seat left empty can be filled, dear. Asking that is fair.",
+        "And look at him. All he knew is the other way up now.",
+        "But you were never told it was allowed, dear. So you carried the question.",
+        "That's why you ask it quietly, dear, and never out loud to anyone.",
+        "Let me look closer at what has been standing over that empty seat…"
+      ],
+      "c": [
+        "You turned the Fool, dear. Look — his tunic is dark, and the flowers on it are red.",
+        "You asked if you'll find a new soulmate after loss. Your hand went to the one starting out again.",
+        "So starting again isn't a debt against what came before, dear.",
+        "And he carries what he has, dear, and still walks on.",
+        "But nothing about a new love replaces the old one, dear.",
+        "That's why wanting it has felt like a betrayal. It never was one, dear.",
+        "Let me look closer at what has been standing between you and starting…"
+      ]
+    }
+  }
+}

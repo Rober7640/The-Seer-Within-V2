@@ -1,0 +1,94 @@
+{
+  "hook": "cards-feels",
+  "headline": "How does he really feel about you?",
+  "note": "⛔ The decode-him DECK was retired 2026-08-19 (operator call) — its strip art was the fb-palm thumb image and no ad ever pointed at it. Its block has been removed from this draft; the arcana and return-mhf decks are unaffected.\n\nCard-sets differ by deck, so the copy does too: Magician/Hanged Man/Fool (return-mhf + arcana-mfh), Sun/Moon/Tower (decode-him), Emperor/Empress/Fool (arcana-eef). The two Magician decks share one set, verb swapped. 🔴 decode-him's beat 1s are written fresh rather than kept: all four hooks on that deck currently open with the SAME line per card (no guard file catches it — see the duplication note in the checklist).\n\n🔴 BEAT 4 REWRITTEN 2026-08-19 — it must name an OBSTRUCTION, not an absence. Act 1 of the trilogy sells an Energy Clearing Ritual that removes \"the shadow that's been blocking your path\"; improve-v1/08-clearing-theme-coherence.md found that clearing is SPRUNG at the pitch rather than seeded. This is where it gets seeded, and the object goes between HER and what she wants — the love bucket frames every block as an impersonal thing in her path precisely so removing it blames nobody. \"What he never said\" cannot be cleared; \"what's sitting between you and the words\" can.\n\n🔴 BEAT 3 CORRECTED 2026-08-19. tests/tarot-real-feelings-copy.test.ts fired — a deliberate tripwire on this hook, because cards-feels is the CONTROL for two comparisons. The first rewrite dropped the old copy's \"leans toward\" hedge to reach grade 5, which turned a tendency into a flat verdict on his heart (\"He does feel it, dear\") — exactly what this hook's TAROT_HOOK_TENDENCY bans. Plain English did not require it: \"You haven't been reading coldness, dear. You've been reading a hold.\" says the same thing at the same grade, about HER reading rather than his interior. Rule applied: no sentence may take \"he\" as the subject of a feeling verb stated as fact; negations (\"doesn't mean he's cold\") and card-tendency forms (\"it reads as\") are fine.",
+  "decks": {
+    "return-mhf": {
+      "a": [
+        "You turned the Magician, dear. Look — a red robe over white, and a loop above his head with no end to it.",
+        "You asked how he really feels. Your hand went to the man who does nothing by accident.",
+        "So the warmth you felt was not made up, dear.",
+        "A man like this doesn't warm to someone by accident.",
+        "What he hasn't done is say it out loud.",
+        "That gap is real, dear. You've been reading it right.",
+        "Let me look closer at what's sitting between you and the words…"
+      ],
+      "b": [
+        "You turned the Hanged Man, dear. Look — he's upside down, and there's a light around his head.",
+        "You asked how he really feels. Your hand went to the man stuck between two things.",
+        "You haven't been reading coldness, dear. You've been reading a hold.",
+        "So the mixed signals were not you misreading him.",
+        "You were reading two true things at once.",
+        "That pull you sense is genuine. So is the hold.",
+        "Let me look closer at what's holding you both in the middle…"
+      ],
+      "c": [
+        "You turned the Fool, dear. Look — he's looking up at the sky, not down at the drop.",
+        "You asked how he really feels. Your hand went to the man living in the moment.",
+        "What you picked up was real, dear. It just lives in the moment.",
+        "But look where his eyes are. Up, not down the road.",
+        "So he hasn't worked out where this goes.",
+        "That's a different thing from not caring, dear. You've felt both at once.",
+        "Let me look closer at what keeps this from settling…"
+      ]
+    },
+    "arcana-mfh": {
+      "a": [
+        "You chose the Magician, dear. Look — a red robe over white, and a loop above his head with no end to it.",
+        "You asked how he really feels. Your hand went to the man who does nothing by accident.",
+        "So the warmth you felt was not made up, dear.",
+        "A man like this doesn't warm to someone by accident.",
+        "What he hasn't done is say it out loud.",
+        "That gap is real, dear. You've been reading it right.",
+        "Let me look closer at what's sitting between you and the words…"
+      ],
+      "b": [
+        "You chose the Hanged Man, dear. Look — he's upside down, and there's a light around his head.",
+        "You asked how he really feels. Your hand went to the man stuck between two things.",
+        "You haven't been reading coldness, dear. You've been reading a hold.",
+        "So the mixed signals were not you misreading him.",
+        "You were reading two true things at once.",
+        "That pull you sense is genuine. So is the hold.",
+        "Let me look closer at what's holding you both in the middle…"
+      ],
+      "c": [
+        "You chose the Fool, dear. Look — he's looking up at the sky, not down at the drop.",
+        "You asked how he really feels. Your hand went to the man living in the moment.",
+        "What you picked up was real, dear. It just lives in the moment.",
+        "But look where his eyes are. Up, not down the road.",
+        "So he hasn't worked out where this goes.",
+        "That's a different thing from not caring, dear. You've felt both at once.",
+        "Let me look closer at what keeps this from settling…"
+      ]
+    },
+    "arcana-eef": {
+      "a": [
+        "You chose the Emperor, dear. Look — a long white beard, a heavy crown, rams' heads carved in his chair.",
+        "You asked how he really feels. Your hand went to the man who keeps it behind his face.",
+        "The Emperor doesn't mean he feels little, dear.",
+        "It reads as a guarded man, dear. Not an empty one.",
+        "That steadiness is how it shows, dear. Not in words.",
+        "So there's more there than the restraint shows. You weren't wrong to feel it.",
+        "Let me look closer at what sits between you and what he holds back…"
+      ],
+      "b": [
+        "You chose the Empress, dear. Look — she rests on soft cushions, and a shield by her feet carries a heart.",
+        "You asked how he really feels. Your hand went to the warmest card in the deck.",
+        "The Empress leans tender, dear.",
+        "You've felt care that runs ahead of his words.",
+        "The warmth you feel is not one-sided.",
+        "You've known that. You just wanted it said by someone else.",
+        "Let me look closer at what's in the way of him saying it…"
+      ],
+      "c": [
+        "You chose the Fool, dear. Look — a white rose in his hand, and his eyes on the sky.",
+        "You asked how he really feels. Your hand went to the plainest card in the deck.",
+        "This card reads as right now, dear. Nothing put on.",
+        "What he hasn't done is think about where it leads.",
+        "Those are two different things.",
+        "The spark is real. The plan is what's missing.",
+        "Let me look closer at what sits between you and a plan…"
+      ]
+    }
+  }
+}

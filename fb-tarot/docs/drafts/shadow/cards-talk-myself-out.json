@@ -1,0 +1,34 @@
+{
+  "hook": "cards-talk-myself-out",
+  "headline": "I talk myself out of everything. What's blocking my money?",
+  "method": "inherited-shadow",
+  "note": "Wired 2026-08-25 from fb-tarot/docs/writeups/shadow/REVIEW-money-alone-commit-2026-08-25.md — approved copy, transferred verbatim. Reuses the existing MONEY_TAROT_HOOKS frame; no new guard.",
+  "decks": {
+    "return-mhf": {
+      "a": [
+        "You turned the Magician. The cards were face down, but your hand still found the one with every means available.",
+        "Look at his table. Every tool is out and within reach.",
+        "You said you talk yourself out of everything and asked what blocks your money. The available tools hold my attention.",
+        "And yet the money remains blocked, and your question has turned the cause back on you.",
+        "Something has hold of the result without disturbing the tools themselves. I don't think this began with you.",
+        "Let me see what is holding the result…"
+      ],
+      "b": [
+        "You turned the Hanged Man. You couldn't see the figure, yet you chose the calmest card here.",
+        "He hangs upside down by one ankle. His face is calm.",
+        "You put your own hesitation beside the money block. This card makes me look at the calm figure and the rope separately.",
+        "Still, the result is held, and you have made your own hesitation answer for it.",
+        "Something appears right where the result would move beyond hesitation. I don't think it started with you.",
+        "Let me look closer at what that is…"
+      ],
+      "c": [
+        "You turned the Fool. The picture was hidden, but your hand went to the one in full light.",
+        "The sky behind him is gold, without a cloud across it.",
+        "You asked what blocks the money after naming your second thoughts. The full light on this card catches me.",
+        "But the money remains blocked, though the whole card is in full light.",
+        "I keep coming back to something between what is visible and the money. I don't think it began with you.",
+        "Now let's look at what's there…"
+      ]
+    }
+  }
+}

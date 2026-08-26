@@ -1,0 +1,34 @@
+{
+  "hook": "cards-blocked-before",
+  "headline": "Why do I keep getting blocked before my soulmate arrives?",
+  "method": "inherited-shadow",
+  "note": "generated from REVIEW-new-voice.md — not a wired draft",
+  "decks": {
+    "return-mhf": {
+      "a": [
+        "You turned the Magician. You had nothing to go on, and you took the one who came ready.",
+        "Look at his table. Four things laid out, and every one within reach.",
+        "You asked why you keep getting blocked before your soulmate arrives. What catches me is that nothing on that table is held back.",
+        "And yet nobody has come. And it has gone this way before.",
+        "Something is sitting in the gap itself. I don't think this began with you.",
+        "Let me look closer at what's holding it…"
+      ],
+      "b": [
+        "You turned the Hanged Man. Nothing marked them apart, and you took the one held by a single thing.",
+        "Look at the rope. One ankle, and the rest of him hangs free.",
+        "You asked why you keep getting blocked before your soulmate arrives. This card shows how little it takes to hold all of it.",
+        "Still, nobody has come. And it stops just before the part you're waiting for.",
+        "The hold is even — it never tightens and it never slackens. I don't think it started with you.",
+        "Let me look closer at what's got hold of it…"
+      ],
+      "c": [
+        "You turned the Fool. Face down, all three, and you chose the one already stepping.",
+        "Look at his feet. One has left the ground, and the other is following.",
+        "You asked why you keep getting blocked before your soulmate arrives. This card brings me to a step in the middle of being taken.",
+        "But nobody has come. And the stop comes early, before it gets going.",
+        "Something turns up just before that would happen. I don't think any of it began with you.",
+        "Let me look closer at what's behind this…"
+      ]
+    }
+  }
+}

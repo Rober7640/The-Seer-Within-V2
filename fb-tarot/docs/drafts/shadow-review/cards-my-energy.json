@@ -1,0 +1,34 @@
+{
+  "hook": "cards-my-energy",
+  "headline": "Is my energy blocking my money?",
+  "method": "inherited-shadow",
+  "note": "generated from REVIEW-new-voice.md — not a wired draft",
+  "decks": {
+    "return-mhf": {
+      "a": [
+        "You turned the Magician. Nothing showed through, and your hand found the busiest of the three.",
+        "Look at his hands. One raised, one down, and both of them working.",
+        "You asked if your energy is blocking your money. What catches me is that both of those hands are moving.",
+        "And yet it hasn't landed. And you've come in blaming yourself for that.",
+        "Something stands in the gap between you and it. I don't think it started with you.",
+        "Let me look closer at what's doing that…"
+      ],
+      "b": [
+        "You turned the Hanged Man. The backs gave nothing away, and you found the calmest man in the deck.",
+        "He hangs by one ankle, upside down. Look at his face, though — it's calm.",
+        "You asked if your energy is blocking your money. So much of this picture is being held — that's what I keep coming back to.",
+        "Still, it hasn't come through. And the reason you're offering me is you.",
+        "Something arrives at the point where money would come in. I don't think any of it began with you.",
+        "Let me look closer at what that is…"
+      ],
+      "c": [
+        "You turned the Fool. Face down, all three, and yours was the one in full sun.",
+        "Look at the sky behind him. Gold, with not one cloud across it.",
+        "You asked if your energy is blocking your money. Open daylight, and a step already under way.",
+        "But it hasn't landed. And you're still the one asking what's wrong with yours.",
+        "The hold here is light, and it stays where it is. I don't think it began with you.",
+        "Let me look closer at what's holding this…"
+      ]
+    }
+  }
+}

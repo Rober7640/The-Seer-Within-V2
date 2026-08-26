@@ -43,6 +43,7 @@ import {
   type TarotAngle,
   type TarotDeck,
   type TarotHook,
+  type TarotMethod,
   type TarotOption,
   type TarotVersion,
 } from '../content/tarotReads'
@@ -67,6 +68,12 @@ export interface TarotEventProps {
   angle: TarotAngle
   /** Lander variant: 'a' = reveal card, 'b'/'c' = straight to chat. */
   version: TarotVersion
+  /**
+   * Which WRITTEN METHOD her Version-B read was in — 'natural' (today's read, the
+   * control) or 'shadow' (the Inherited Shadow). Assigned by the server at chat start;
+   * 'natural' everywhere the test does not apply, which includes versions A and C.
+   */
+  method: TarotMethod
   /** The card she DREW — drives the reveal, the read and the chat handoff. */
   card?: TarotOption
   /** The position she TAPPED. Differs from `card` on a shuffled face-down deck. */
@@ -77,6 +84,7 @@ interface StoredAttribution {
   deck: TarotDeck
   hook: TarotHook
   version: TarotVersion
+  method: TarotMethod
   card?: TarotOption
   panel?: TarotOption
 }
@@ -107,6 +115,10 @@ function readStored(): StoredAttribution | null {
       deck,
       hook,
       version: p.version === 'b' || p.version === 'c' ? p.version : 'a',
+      // Anything but the exact string 'shadow' is the natural read — a stored value
+      // from before this test shipped, a truncated write, or junk. Same default as
+      // every other failure path in this test.
+      method: p.method === 'shadow' ? 'shadow' : 'natural',
       card: typeof p.card === 'string' && isTarotCard(p.card) ? p.card : undefined,
       panel: typeof p.panel === 'string' && isTarotCard(p.panel) ? p.panel : undefined,
     }
@@ -135,6 +147,7 @@ function toProps(a: StoredAttribution): TarotEventProps {
     // tarotReads.ts, so nothing here changes when one is added.
     angle: angleForHook(a.hook),
     version: a.version,
+    method: a.method,
     ...(a.card ? { card: a.card } : {}),
     ...(a.panel ? { panel: a.panel } : {}),
   }
@@ -199,7 +212,13 @@ export function syncTarotAttribution(path: string, search: string): TarotEventPr
       : stored?.card
   const panel: TarotOption | undefined = bridge ? undefined : stored?.panel
 
-  const next: StoredAttribution = { deck, hook, version, card, panel }
+  // No URL param carries the method — it is assigned by the server at chat start, then
+  // written here by rememberTarotMethod. So off-bridge it is read back from the store,
+  // and on the bridge it RESETS to natural for the same reason `card` resets: landing on
+  // the bridge is a fresh quiz, and the previous visit's arm must not leak into it.
+  const method: TarotMethod = bridge ? 'natural' : (stored?.method ?? 'natural')
+
+  const next: StoredAttribution = { deck, hook, version, method, card, panel }
   writeStored(next)
   return toProps(next)
 }
@@ -231,25 +250,50 @@ export function rememberTarotVersion(version: TarotVersion): void {
 }
 
 /**
- * Ask the server which opener this visitor should get — Version B (smart template)
- * or Version C (LLM). See resolveTarotVersion in server/lib/experiments.ts.
+ * Record the assigned METHOD arm after the server hands it back.
  *
- * `urlVersion` is what the URL alone would have served, and is returned unchanged on
- * EVERY failure path: version A (never in the test), a non-OK response, a malformed
- * body, or a network error. So a draft experiment, a deploy mid-flight or an outage
- * all degrade to exactly today's funnel rather than to a broken chat.
+ * Same job as rememberTarotVersion, and the same reason it is not optional: the method
+ * has no URL param at all, so without this every tarot event for the rest of the session
+ * would report 'natural' — including for the 70% of Version-B visitors who read the
+ * shadow copy — while the database counted them in the shadow arm. PostHog and the
+ * exposure table would disagree and neither could be checked against the other.
+ */
+export function rememberTarotMethod(method: TarotMethod): void {
+  const stored = readStored()
+  if (!stored || stored.method === method) return
+  writeStored({ ...stored, method })
+}
+
+/** The two arms the server assigns at chat start, resolved together in one call. */
+export interface TarotArm {
+  /** Version B (smart template) or Version C (LLM). resolveTarotVersion. */
+  version: TarotVersion
+  /** The written method Version B delivers. resolveTarotMethod. */
+  method: TarotMethod
+}
+
+/**
+ * Ask the server which opener this visitor should get, and which read it should be
+ * written to. See resolveTarotVersion / resolveTarotMethod in server/lib/experiments.ts.
+ *
+ * `urlVersion` is what the URL alone would have served, and BOTH arms fall back on
+ * EVERY failure path — version A (never in either test), a non-OK response, a malformed
+ * body, or a network error all yield the URL's own version and the natural read. So a
+ * draft experiment, a deploy mid-flight or an outage degrade to exactly today's funnel
+ * rather than to a broken chat or to unproven copy.
  *
  * 🔴 AWAIT THIS BEFORE RENDERING THE OPENER, never in parallel with it. The server
- * logs the exposure as it answers, so a caller that renders first and reconciles
- * later would record an arm the visitor never saw — the one corruption this test
+ * logs both exposures as it answers, so a caller that renders first and reconciles
+ * later would record an arm the visitor never saw — the one corruption these tests
  * cannot recover from afterwards.
  */
-export async function fetchAssignedTarotVersion(
+export async function fetchAssignedTarotArm(
   deck: TarotDeck,
   hook: TarotHook,
   urlVersion: TarotVersion,
-): Promise<TarotVersion> {
-  if (urlVersion === 'a') return 'a'
+): Promise<TarotArm> {
+  if (urlVersion === 'a') return { version: 'a', method: 'natural' }
+  const fallback: TarotArm = { version: urlVersion, method: 'natural' }
   try {
     const qs = new URLSearchParams({
       v: urlVersion,
@@ -261,11 +305,17 @@ export async function fetchAssignedTarotVersion(
       angle: angleForHook(hook),
     })
     const r = await fetch(`/api/tarot/version?${qs.toString()}`)
-    if (!r.ok) return urlVersion
+    if (!r.ok) return fallback
     const data = await r.json()
-    return data?.version === 'b' || data?.version === 'c' ? data.version : urlVersion
+    const version: TarotVersion =
+      data?.version === 'b' || data?.version === 'c' ? data.version : urlVersion
+    // The method is only ever meaningful on Version B; on anything else the server
+    // already returned 'natural', and this re-checks it client-side so a stale or
+    // hand-crafted response cannot put shadow copy in front of a C visitor.
+    const method: TarotMethod = version === 'b' && data?.method === 'shadow' ? 'shadow' : 'natural'
+    return { version, method }
   } catch {
-    return urlVersion
+    return fallback
   }
 }
 

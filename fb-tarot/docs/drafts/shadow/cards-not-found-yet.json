@@ -1,0 +1,41 @@
+{
+  "hook": "cards-not-found-yet",
+  "headline": "Why haven't I found my soulmate where I am?",
+  "method": "inherited-shadow",
+  "note": "FRAME: soulmate x where. ⛔ THE DEFINING BAN IS THAT NO PLACE MAY BE NAMED — not a town, a room, a job, a website, a distance. This gap was found the hard way: every frame withheld 'a name, a date, or exactly who' and omitted WHERE.\n⛔ NO TACTIC. Nothing she could act on — no 'get out more', no 'look closer to home'. Never her fault.\n🔴 The method suits this frame unusually well: it answers about the BLOCK instead of the location, so the banned answer is never even approached.\n⚠ SHE is the subject of beats 3-6. ⚠ NO FAMILY-LINE LANGUAGE.\n\n🔴 THE HEADLINE PUTS HER PLACE ON TRIAL, so the read has two ways to fail: name a place, or agree that hers is wrong. It does neither — beat 5 says the place was never the thing.\n⛔ No tactic. Nothing here tells her to go anywhere, join anything, or look elsewhere.",
+  "readback": {
+    "1 would a person say this": "Yes. 'And you've turned it on yourself' is exactly what the ad invites.",
+    "2 is every noun real": "Working in the open, the fixed point, the mid-step feet — all on the card.",
+    "3 anything she could catch me getting wrong": "No. Beat 4 says nobody has come and that she has begun to blame where she is. The ad's own question does that.",
+    "4 does the symbol prove the line at a glance": "Yes. A man working out in the open who has not moved for it proves 'you're not in the wrong spot'.",
+    "5 does the card mean what TAROT_CARD_VOCAB says": "Yes."
+  },
+  "decks": {
+    "return-mhf": {
+      "a": [
+        "You turned the Magician. Three backs, nothing to go on, and yours was the one who came ready.",
+        "Look at his table. It's full, and it stands on open grass.",
+        "You asked why you haven't found your soulmate where you are. What catches me is that the table is full wherever it stands.",
+        "The part that doesn't fit is that nobody has come. And you've started to think the problem is where you are.",
+        "The hold is constant, and it doesn't come and go. I don't think it began with you.",
+        "Let me look closer at what this is…"
+      ],
+      "b": [
+        "You turned the Hanged Man. Nothing showed which was which, and you took the one held at one ankle.",
+        "Look at the rope. One ankle, and the rest of him is loose.",
+        "You asked why you haven't found your soulmate where you are. One rope holds the whole of it in place.",
+        "Still, nobody has come. And the question has turned into whether you're in the wrong spot.",
+        "Something is standing in the way of it, close in. I don't think this began with you.",
+        "Let me look closer at what's behind this…"
+      ],
+      "c": [
+        "You turned the Fool. Face down, all three, and you chose the one already walking.",
+        "Look at his feet. One is off the ground, and the other isn't far behind.",
+        "You asked why you haven't found your soulmate where you are. What I'm looking at is a step being taken.",
+        "But nobody has come. And you're the one asking whether you're standing in the wrong place.",
+        "Something turns up right as that step comes down. I don't think it started with you.",
+        "Let me look closer at what it is…"
+      ]
+    }
+  }
+}

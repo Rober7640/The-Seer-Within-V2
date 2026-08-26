@@ -1,0 +1,36 @@
+{
+  "hook": "cards-still-working",
+  "headline": "Why am I still working when the money should have come by now?",
+  "note": "🆕 TRACK B — the first NON-LOVE family on /fb-tarot. Face-down return-mhf, no new art. Written 2026-08-19 straight to the Natural Tarot-Cut framework, so bubbles 3-6 run as ONE causal chain (so / and / but / that's why). Money translation: cut 3 answers her fear about HERSELF (\"it was never you\"), cut 4 says where the thing in the way actually sits, cut 5 is EARNING against KEEPING, cut 6 is the NEAR-MISS.\n\n🔴 SEVEN BANS, three of which exist nowhere else on the funnel, and NONE was loosened with the love families. No amount, no date, no SOURCE (no inheritance, no windfall, no legal case — she can act on an invented source with her actual savings). 🔴🔴 Never name a person as the block: the accusation lands on someone real inside a real family. 🔴🔴 No financial advice in any form — invest, sell, hold, take the pension, delay it, go back to work, stop working. This is the one ban where the harm is measured in her money. 🔴🔴 Never blame her: no poverty mindset, no 'you attract lack', no vibration, no deserving. 🔴 Never 'too late' and never a promised arrival. 🔴 Never presume the state of her finances — she said blocked, not broke.\n\n📊 Built on the NEAR-MISS, not on poverty — docs/v1-money-bucket-voc.md §3 says so outright ('The near-miss is the hook, not the poverty'): \"I sometimes feel I am close to money only to have it vanish\", \"Everything appears to be reaching me but doesn't\". That clears ban 7 for free.\n\n✅ GUARDED: tests/tarot-money-block-copy.test.ts now exists and runs against these drafts directly (the drafts setup can only patch hooks that are already in the registry, so an unwired family would otherwise be checked by nothing at all).\n\nTendency: a lifetime of effort went in and did not come back out, which is a question about where it went rather than about how hard she tried. 🔴 NEVER name a person or a cause, and never suggest she keep working or stop.",
+  "decks": {
+    "return-mhf": {
+      "a": [
+        "You turned the Magician, dear. Look — a snake curls round his waist with its tail in its mouth.",
+        "You asked why you're still working. Your hand went to the card of a person who works.",
+        "So the fault was never yours, dear. The effort went in, every year.",
+        "And look at that belt. It goes round and comes back to itself.",
+        "But the work went in, dear, and it never once came back out.",
+        "That's why you're still at it, dear, with nothing to show for the years.",
+        "Let me look closer at where all that work has been going…"
+      ],
+      "b": [
+        "You turned the Hanged Man, dear. Look — his head hangs nearer the ground than his feet.",
+        "You asked why you're still working. Your hand went to the card of something stopped in the air.",
+        "So the rest you were owed is not gone, dear. It stalled.",
+        "And it hasn't fallen, dear, and it hasn't landed either.",
+        "But it stalled on the way to you, dear. Not before it set off.",
+        "That's why you're still working, dear, when you had planned to have stopped.",
+        "Let me look closer at where it stalled…"
+      ],
+      "c": [
+        "You turned the Fool, dear. Look — the stick over his shoulder is plain wood with no bark.",
+        "You asked why you're still working. Your hand went to the card of a fresh start.",
+        "So your years are not a debt, dear. This card doesn't read them that way.",
+        "And he sets out with a plain stick, dear, and nothing owed to anyone.",
+        "But it doesn't come as the settling-up you were promised, dear.",
+        "That's why the wait went on, dear. You watched for the wrong thing.",
+        "Let me look closer at what has been standing where that rest should be…"
+      ]
+    }
+  }
+}

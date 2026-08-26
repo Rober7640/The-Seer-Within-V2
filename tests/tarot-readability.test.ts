@@ -31,7 +31,24 @@ const { DECKS, openerB } = await import('@/content/tarotReads');
 // clears everywhere except the beat that ran away.
 const MAX_WORDS_PER_BUBBLE = 45;
 const MAX_WORDS_PER_SENTENCE = 25;
-const MAX_GRADE = 9;
+
+// ⛔ THE READING-GRADE GATE WAS REMOVED 2026-08-25 (operator: "remove the readability guard
+// rails"). It flagged 9 bubbles of the 36-lander Natural rewrite at grade 9.1-11.3 and was the
+// only thing blocking them.
+//
+// The file's own header already argued the grade number is the weak half of this check: it
+// passed "It is not a length" at grade 2 while being genuinely hard to follow, and it punishes
+// naming a real noun — "Something is holding your love life back" scores worse than the vaguer
+// "Something holds this". A score that rewards deleting the concrete word is not measuring
+// whether she can read it.
+//
+// 🔴 WHAT IS DELIBERATELY KEPT: the two BULK limits below. They are not about reading level.
+// A 45+ word bubble or a 25+ word sentence breaks the chat's typing pacing — client/src/lib/
+// typing.ts caps the pause at 5s (~83 characters), so an over-long bubble gets the same wait
+// however long it is and lands as a wall. That is a UI failure, not a style opinion.
+//
+// The `grade()` helper is kept because the diagnostic scripts still report it.
+// To restore the gate: re-add MAX_GRADE and its line in the failure sweep below.
 
 const words = (s: string) => s.match(/[A-Za-z']+/g) ?? [];
 const sentences = (s: string) => s.trim().split(/(?<=[.!?…])\s+/).filter(Boolean);
@@ -233,10 +250,9 @@ describe('tarot reads — readability', () => {
       if (GRANDFATHERED.has(key)) continue;
       const w = words(text).length;
       const longest = Math.max(...sentences(text).map((s) => words(s).length), 0);
-      const g = grade(text);
       if (w > MAX_WORDS_PER_BUBBLE) failures.push(`${key}: ${w} words in one bubble (max ${MAX_WORDS_PER_BUBBLE})`);
       if (longest > MAX_WORDS_PER_SENTENCE) failures.push(`${key}: ${longest}-word sentence (max ${MAX_WORDS_PER_SENTENCE})`);
-      if (g > MAX_GRADE) failures.push(`${key}: reading grade ${g.toFixed(1)} (max ${MAX_GRADE})`);
+      // reading-grade gate removed 2026-08-25 — see the note at the top of this file.
     }
     expect(failures, `unreadable copy:\n${failures.join('\n')}`).toEqual([]);
   });

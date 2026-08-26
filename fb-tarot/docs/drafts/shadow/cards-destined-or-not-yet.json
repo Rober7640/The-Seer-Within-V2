@@ -1,0 +1,34 @@
+{
+  "hook": "cards-destined-or-not-yet",
+  "headline": "Am I destined to be alone, or has it just not happened yet?",
+  "method": "inherited-shadow",
+  "note": "Wired 2026-08-25 from fb-tarot/docs/writeups/shadow/REVIEW-money-alone-commit-2026-08-25.md — approved copy, transferred verbatim. Reuses the existing LONELINESS_TAROT_HOOKS frame; no new guard.",
+  "decks": {
+    "return-mhf": {
+      "a": [
+        "You turned the Magician. The picture was hidden, but your hand found the card where nothing has been put away.",
+        "Every tool remains laid out on the open table.",
+        "You asked whether you are destined to be alone or love has simply not happened. The open table is the part I notice first.",
+        "Love has not happened, and destiny is the explanation pressing on the question.",
+        "Whatever is keeping connection away leaves the possibilities open. I don't think this began with you.",
+        "Let me see what is holding this…"
+      ],
+      "b": [
+        "You turned the Hanged Man. You chose without seeing him and found the one that's still growing.",
+        "Green leaves grow from the wood above the paused figure.",
+        "You asked whether the pause is destiny. This card brings me to the living growth inside it.",
+        "Still, you are alone, and the pause feels larger than a pause now.",
+        "Right where the pause would open into connection, something appears. I don't think it started with you.",
+        "Let me see what's holding this…"
+      ],
+      "c": [
+        "You turned the Fool. The cards were face down, yet you reached for the one in full light.",
+        "The full sun is high behind him.",
+        "You asked whether the road is fated or only unfinished. The full light on the card catches me.",
+        "But no one has joined the road, and the unknown has begun to feel decided.",
+        "Something sits between the open beginning and the relationship. I don't think it began with you.",
+        "Now let's look at what's there…"
+      ]
+    }
+  }
+}

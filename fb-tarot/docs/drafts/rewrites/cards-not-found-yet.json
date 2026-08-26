@@ -1,0 +1,36 @@
+{
+  "hook": "cards-not-found-yet",
+  "headline": "Why haven't I found my soulmate where I am?",
+  "note": "🔄 REWRITTEN 2026-08-19 to the Natural Tarot-Cut framework. Bubbles 3-6 run as ONE causal chain — so / and / but / that's why — and the read ANSWERS. The art line and the bridge are unchanged. Every ban in this note still stands.\n\nFace-down only (return-mhf). 🔴 NO LOCATION, EVER — never place him, never name a setting, never 'someone you already know', never 'crossed paths before'. 🔴 NO PROXIMITY CLAIM: 'closer than you think' is the INCUMBENT cards-soulmate's answer, and if this family repeats it the two landers are the same lander while the dashboard still shows two rows. 🔴 NO STRATEGY — get out there, put yourself out there, stop looking, work on yourself first, 'it will happen when you…' are all directives. 🔴 Never her fault: no walls, no baggage, no standards, no 'too picky'.\n\nFinding: an absence is not always CAUSED, so there is no culprit to hand her — and she has been the only suspect in her own case for a long time.",
+  "decks": {
+    "return-mhf": {
+      "a": [
+        "You turned the Magician, dear. Look — the cup on his table is gold, and it's empty.",
+        "You asked why you've not found your soulmate yet. Your hand went to the maker.",
+        "So there's no wrong turning to find, dear. You didn't miss it.",
+        "And look at the cup. It's empty, and nobody emptied it.",
+        "But you've been hunting for whose fault this is, dear.",
+        "That's why a quiet year feels like a mark against you, dear.",
+        "Let me look closer at what has been sitting in the empty place…"
+      ],
+      "b": [
+        "You turned the Hanged Man, dear. Look — there's nothing under his head but empty space.",
+        "You asked why you've not found your soulmate yet. Your hand went to the card that waits.",
+        "So a pause needs no guilty party, dear. Yours has none.",
+        "And nothing is happening on this card. Nobody made it stop, dear.",
+        "But you went looking for someone to blame, dear, and you picked you.",
+        "That's why you go over old choices at night, dear, one by one.",
+        "Let me look closer at what has been sitting across your path…"
+      ],
+      "c": [
+        "You turned the Fool, dear. Look — the cliff face below him is striped orange and grey.",
+        "You asked why you've not found your soulmate yet. Your hand went to the one still walking.",
+        "So you're still on the road, dear. That's all this card says.",
+        "And he's mid-walk, dear, and nobody has told him he's late.",
+        "But no one is to blame for a road that isn't finished, dear.",
+        "That's why the blame never fits. You've carried one that was never yours, dear.",
+        "Let me look closer at what has been weighing on this road…"
+      ]
+    }
+  }
+}

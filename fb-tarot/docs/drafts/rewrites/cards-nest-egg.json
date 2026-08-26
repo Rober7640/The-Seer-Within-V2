@@ -1,0 +1,36 @@
+{
+  "hook": "cards-nest-egg",
+  "headline": "How long has something been blocking me from a nest egg?",
+  "note": "🔄 REWRITTEN 2026-08-19 to the Natural Tarot-Cut framework. Money translation: cut 3 answers her fear about HERSELF (\"it was never you\"), cut 4 says where the thing in the way actually sits, cut 5 is EARNING against KEEPING, cut 6 is the NEAR-MISS. 🔴 NONE of the seven bans below was loosened with the love families — this is the one place where a wrong sentence costs her actual money.\n\n🆕 TRACK B — the first NON-LOVE family on /fb-tarot. Face-down return-mhf, no new art.\n\n🔴 SEVEN BANS, three of which exist nowhere else on the funnel. No amount, no date, no SOURCE (no inheritance, no windfall, no legal case — she can act on an invented source with her actual savings). 🔴🔴 Never name a person as the block: the accusation lands on someone real inside a real family. 🔴🔴 No financial advice in any form — invest, sell, hold, take the pension, delay it, go back to work, stop working. This is the one ban where the harm is measured in her money. 🔴🔴 Never blame her: no poverty mindset, no 'you attract lack', no vibration. 🔴 Never 'too late' and never a promised arrival. 🔴 Never presume the state of her finances — she said blocked, not broke.\n\n✅ GUARDED as of 2026-08-19: `tests/tarot-money-block-copy.test.ts` now exists and runs against these drafts DIRECTLY. It had to: the drafts setup can only patch a hook the registry already has, so an unwired family is checked by nothing at all and still prints a green tick. All seven bans were fed a deliberate violation and all seven fired.\n\n📊 WHAT THE VOC CHANGED. These hooks have never run, so there is no per-hook data. The nearest real corpus is docs/v1-money-bucket-voc.md — 10,514 V1 money concerns. Two themes matter here and they pull in different directions.\n**Retirement (554 concerns, the highest earner in the bucket at $15,146/1k):** the emotion is not panic, it is quiet arithmetic dread. 'I'm worried that I'll outlive my few savings.' 'Prices are going up but my pension is not.' 'I thought I would be set by now.'\n**The invisible block (1,208 concerns) — and its instruction is explicit: 'The near-miss is the hook, not the poverty.'** 'I keep trying to get ahead and no matter what I do nothing seems to work out, it's like something is holding me back.' 'I sometimes feel I am close to money only to have it vanish.' 'Everything appears to be reaching me but doesn't.'\nSo these reads are built on the NEAR-MISS, not on being short of money. That also satisfies ban 7 for free — nothing here presumes she is broke, only that she has got close and watched it go.\n\nTendency: long-standing rather than recent, and steady effort that never accumulates points at something in the way rather than at a failing in her. 🔴 NEVER give a length of time — the headline asks for one and it may not be supplied. Never tell her she should have saved differently.",
+  "decks": {
+    "return-mhf": {
+      "a": [
+        "You turned the Magician, dear. Look — he works standing at a low red table.",
+        "You asked how long something has been blocking a nest egg. Your hand went to the steady worker.",
+        "So this was never about you, dear. You've kept at it for years.",
+        "And there he still is, working at that table. The work went in.",
+        "But work going in and money staying are two different things, dear.",
+        "That's why the years of effort show nowhere, dear. Nothing gathered.",
+        "Let me look closer at what keeps stopping it from building…"
+      ],
+      "b": [
+        "You turned the Hanged Man, dear. Look — his face is calm, like he has hung there a long time.",
+        "You asked how long something has been blocking a nest egg. Your hand went to the card of long stops.",
+        "So this hold is old, dear. It isn't anything recent.",
+        "And look at his face. Calm, like he has hung there a long while.",
+        "But I won't count the years for you, dear. No one honestly could.",
+        "That's why you stopped noticing it, dear. It turned into normal.",
+        "Let me look closer at when it first went still…"
+      ],
+      "c": [
+        "You turned the Fool, dear. Look — his bag is small and it's not full.",
+        "You asked how long something has been blocking a nest egg. Your hand went to the one with an empty bag.",
+        "So nothing was taken from you, dear. This is a block, not a loss.",
+        "And his bag is small, dear, and it has never once been filled.",
+        "But a thing never laid down is not a thing taken, dear.",
+        "That's why nothing can be pointed at, dear. It simply never gathered.",
+        "Let me look closer at what has kept the ground bare…"
+      ]
+    }
+  }
+}

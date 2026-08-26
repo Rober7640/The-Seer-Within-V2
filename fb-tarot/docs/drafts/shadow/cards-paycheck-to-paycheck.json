@@ -1,0 +1,34 @@
+{
+  "hook": "cards-paycheck-to-paycheck",
+  "headline": "I'm living paycheck to paycheck and can't get started. Is my energy blocking my money?",
+  "method": "inherited-shadow",
+  "note": "Wired 2026-08-25 from fb-tarot/docs/writeups/shadow/REVIEW-money-alone-commit-2026-08-25.md — approved copy, transferred verbatim. Reuses the existing MONEY_TAROT_HOOKS frame; no new guard.",
+  "decks": {
+    "return-mhf": {
+      "a": [
+        "You turned the Magician. You couldn't see the cards, and your hand still found the one ready to begin.",
+        "A cup, a coin, a blade and a wand are laid out across his table.",
+        "You said you live paycheck to paycheck and cannot get started. What catches me is that the whole table is ready.",
+        "The financial beginning has not happened, and you are asking whether your energy is why.",
+        "Something turns up just where readiness should become a financial start. I don't think it started with you.",
+        "Let me look closer at what that is…"
+      ],
+      "b": [
+        "You turned the Hanged Man. The backs were alike, but you reached for the card where life continues inside the pause.",
+        "Green leaves grow from the wood above the still figure.",
+        "You asked whether your energy blocks the money. This card brings me to the living growth around the pause.",
+        "Still, the money is blocked while life continues around it.",
+        "Something sits between the living movement and the money. I don't think it began with you.",
+        "Let me see what's holding the money…"
+      ],
+      "c": [
+        "You turned the Fool. Nothing revealed the picture, yet you chose the one who had already set out.",
+        "The bundle on his stick is small enough to hold in one hand.",
+        "You asked whether your energy is stopping the beginning. The small bundle keeps drawing my eye.",
+        "But you cannot get started financially, though the card is already on its way.",
+        "Whatever has hold of the beginning holds it without stopping you altogether. I don't think this began with you.",
+        "Now let me look at what has hold of this…"
+      ]
+    }
+  }
+}

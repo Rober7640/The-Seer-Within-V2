@@ -1,0 +1,34 @@
+{
+  "hook": "cards-earn-and-gone",
+  "headline": "I earn it and it's gone. What's blocking my money?",
+  "method": "inherited-shadow",
+  "note": "Wired 2026-08-25 from fb-tarot/docs/writeups/shadow/REVIEW-money-alone-commit-2026-08-25.md — approved copy, transferred verbatim. Reuses the existing MONEY_TAROT_HOOKS frame; no new guard.",
+  "decks": {
+    "return-mhf": {
+      "a": [
+        "You turned the Magician. You reached without seeing the card and found the worker of the three.",
+        "Both hands are busy above a table where all four tools are ready.",
+        "You said you earn the money and then it is gone. The working hands are where this card makes me stop.",
+        "You do earn it, and the money still does not stay.",
+        "Something stands between earning the money and keeping it. I don't think it began with you.",
+        "Let me look closer at what's holding the money…"
+      ],
+      "b": [
+        "You turned the Hanged Man. The pictures were hidden, but your hand went to the one caught at one point.",
+        "One rope catches one ankle. Everything else hangs free.",
+        "You asked what blocks money that will not stay. This card brings me to the single place where movement is caught.",
+        "Still, the money meets a hold after the earning you described.",
+        "Something appears after the earning, just as the money should stay. I don't think it started with you.",
+        "Let me see what that obstruction is…"
+      ],
+      "c": [
+        "You turned the Fool. Nothing set the backs apart, yet you chose the one travelling with very little.",
+        "Look at the bundle on his stick. It is the only thing he carries.",
+        "You said you earn it and it goes. What catches me is the one small bundle that travels with him.",
+        "But what you earn is gone, while the card keeps carrying its bundle forward.",
+        "The thing that has hold of what you earn keeps it from travelling with you. I don't think this began with you.",
+        "Now let's look at what's behind this…"
+      ]
+    }
+  }
+}

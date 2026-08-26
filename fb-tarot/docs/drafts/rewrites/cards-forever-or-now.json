@@ -1,0 +1,36 @@
+{
+  "hook": "cards-forever-or-now",
+  "headline": "Am I his forever, or his now?",
+  "note": "🔄 REWRITTEN 2026-08-19 to the Natural Tarot-Cut framework. Bubbles 3-6 now run as ONE causal chain — so / and / but / that's why — and the read ANSWERS instead of certifying her. The art line and the bridge are unchanged. Every family ban below still stands; this family was NOT loosened.\n\nFACE-DOWN ONLY (return-mhf) — tests/tarot-his-other-life-copy.test.ts pins this family off the face-up decks.\n\n🔴 REFUSES ITS BINARY ON ITS OWN GROUNDS, and the test enforces it: beat 3 must still carry the permanence-is-BUILT finding (`not a condition` / `is built` / `only been felt` / `no such fact` / `never been named`), and must share no 6-word run with cards-moved-on, cards-imagining-it or cards-love-or-moved-on. Both poles stay banned — never \"you are his forever\" (a promise), never \"you are only his now\" (a dismissal).\n\nVOC: this family is 5 days old and has 14 quotes across all five hooks, so voc-by-hook could not do the job. Read 769 real V1 concerns on the married-man/other-woman theme instead (new scripts/voc-by-theme.mjs). What she types: \"he calls me his wife but there is no actions\", \"I'm tired of not being chosen\", \"I will no longer be a secret in his life\", \"he presented as though his relationship with his wife was over\". She has felt forever and never once been TOLD it. So the payoff certifies the feeling and the gap names the silence — she has been reading a silence as a verdict already passed on her.",
+  "decks": {
+    "return-mhf": {
+      "a": [
+        "You turned the Magician, dear. Look — red roses on the vine above his head.",
+        "You asked if you're his forever, or just his now. Your hand went to the man who makes things.",
+        "So the forever you felt was real, dear. The card doesn't argue with you there.",
+        "And look at his table, dear. Every tool to build one is already there.",
+        "But forever is built, dear. Here it has only been felt.",
+        "That's why you can feel certain of him, dear, and still have nothing to call it.",
+        "Let me look closer at what stands between you and a place with a name…"
+      ],
+      "b": [
+        "You turned the Hanged Man, dear. Look — green leaves still growing on the beam he hangs from.",
+        "You asked if you're his forever or his now. Your hand went to a man still hanging.",
+        "So no verdict was passed on you, dear. Look how he hangs — nothing is settled.",
+        "And the word for it has never been named in him either, dear.",
+        "But the leaves keep coming off that dead beam anyway, dear.",
+        "That's why you can be his whole world at the door, dear, and nothing past it.",
+        "Let me look closer at what sits between you and that word…"
+      ],
+      "c": [
+        "You turned the Fool, dear. Look — the sun behind him, big and low in the sky.",
+        "You asked if you're his forever or his now. Your hand went to the one with no map.",
+        "So he hasn't set you aside, dear. This card has settled nothing yet.",
+        "And look at his hand, dear. He walks out with no map in it.",
+        "But a man with no map can still walk beside you for years.",
+        "That's why every plan you make with him stops at next month, dear.",
+        "Let me look closer at what has been standing in the way of a straight answer…"
+      ]
+    }
+  }
+}

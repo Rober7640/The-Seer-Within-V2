@@ -1,0 +1,36 @@
+{
+  "hook": "cards-money-wont-stay",
+  "headline": "What does my energy say about why money won't stay?",
+  "note": "🆕 TRACK B — the first NON-LOVE family on /fb-tarot. Face-down return-mhf, no new art. Written 2026-08-19 straight to the Natural Tarot-Cut framework, so bubbles 3-6 run as ONE causal chain (so / and / but / that's why). Money translation: cut 3 answers her fear about HERSELF (\"it was never you\"), cut 4 says where the thing in the way actually sits, cut 5 is EARNING against KEEPING, cut 6 is the NEAR-MISS.\n\n🔴 SEVEN BANS, three of which exist nowhere else on the funnel, and NONE was loosened with the love families. No amount, no date, no SOURCE (no inheritance, no windfall, no legal case — she can act on an invented source with her actual savings). 🔴🔴 Never name a person as the block: the accusation lands on someone real inside a real family. 🔴🔴 No financial advice in any form — invest, sell, hold, take the pension, delay it, go back to work, stop working. This is the one ban where the harm is measured in her money. 🔴🔴 Never blame her: no poverty mindset, no 'you attract lack', no vibration, no deserving. 🔴 Never 'too late' and never a promised arrival. 🔴 Never presume the state of her finances — she said blocked, not broke.\n\n📊 Built on the NEAR-MISS, not on poverty — docs/v1-money-bucket-voc.md §3 says so outright ('The near-miss is the hook, not the poverty'): \"I sometimes feel I am close to money only to have it vanish\", \"Everything appears to be reaching me but doesn't\". That clears ban 7 for free.\n\n✅ GUARDED: tests/tarot-money-block-copy.test.ts now exists and runs against these drafts directly (the drafts setup can only patch hooks that are already in the registry, so an unwired family would otherwise be checked by nothing at all).\n\nTendency: the drawing-in half has always worked and what is at issue is everything after it arrives. 🔴 NEVER name who or what takes it, never call her careless with money, and never advise her on keeping it.",
+  "decks": {
+    "return-mhf": {
+      "a": [
+        "You turned the Magician, dear. Look — the table he works at is small and plain.",
+        "You asked why money won't stay. Your hand went to the card of a maker.",
+        "So the getting has always worked, dear. That half of it is sound.",
+        "And this card is all about bringing it in, dear. Look at the table.",
+        "But drawing it in is one job, dear. Keeping it is a second one.",
+        "That's why it arrives and goes, dear, and you never see it settle.",
+        "Let me look closer at the door it goes back out of…"
+      ],
+      "b": [
+        "You turned the Hanged Man, dear. Look — the beam above him is wider than he is.",
+        "You asked why money won't stay. Your hand went to the card of what won't let go.",
+        "So nothing is leaking out of you, dear. That's not what this shows.",
+        "And something further up has hold of it, dear. It never gets to you.",
+        "But a claim made further up takes its share first, dear.",
+        "That's why what lands is always less than what you earned, dear.",
+        "Let me look closer at what has the claim…"
+      ],
+      "c": [
+        "You turned the Fool, dear. Look — there's more sky on this card than ground.",
+        "You asked why money won't stay. Your hand went to the most open card in the deck.",
+        "So being open isn't a fault, dear. It's how you've been loved.",
+        "And this card gives as easily as it takes, dear. That's its nature.",
+        "But nothing has ever been built to hold what comes in, dear.",
+        "That's why it goes straight through, dear. However much comes in.",
+        "Let me look closer at what has never been built…"
+      ]
+    }
+  }
+}

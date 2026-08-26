@@ -1,0 +1,34 @@
+{
+  "hook": "cards-no-time-to-waste-commit",
+  "headline": "Why won't he commit when neither of us has time to waste?",
+  "method": "inherited-shadow",
+  "note": "Wired 2026-08-25 from fb-tarot/docs/writeups/shadow/REVIEW-money-alone-commit-2026-08-25.md — approved copy, transferred verbatim. Reuses the existing default decode-him frame; no new guard.",
+  "decks": {
+    "return-mhf": {
+      "a": [
+        "You turned the Magician. The cards were hidden, but your hand found the one ready to act now.",
+        "Both hands are occupied above a table with every tool.",
+        "You asked why he will not commit when there is no time to waste. The action on this card catches me.",
+        "He has not committed, and the urgency is already inside your question.",
+        "At the point where action would become commitment, something appears. I don't think it started with you.",
+        "Let me look closer at what's standing there…"
+      ],
+      "b": [
+        "You turned the Hanged Man. You reached without seeing him and chose the card held by one thing.",
+        "One rope holds one ankle. Everything else has room.",
+        "You asked why the commitment is held when time matters. This card makes me look at the one rope.",
+        "Still, the future remains held while time feels costly.",
+        "There's something between the relationship and its future. I don't think it began with you.",
+        "Let me see what's holding the future…"
+      ],
+      "c": [
+        "You turned the Fool. The backs were identical, yet your hand went to the one in full light.",
+        "The full sun is high behind him.",
+        "You asked why he has not committed. The full light on this card is the part I notice first.",
+        "But the commitment has not moved, though the relationship has no time to waste.",
+        "What has hold of the commitment keeps it separate from the movement already happening. I don't think this began with you.",
+        "Now let me look at what has hold of the commitment…"
+      ]
+    }
+  }
+}

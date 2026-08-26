@@ -1,0 +1,34 @@
+{
+  "hook": "cards-commit-or-company",
+  "headline": "Does he want to commit, or does he just want company?",
+  "method": "inherited-shadow",
+  "note": "Wired 2026-08-25 from fb-tarot/docs/writeups/shadow/REVIEW-money-alone-commit-2026-08-25.md — approved copy, transferred verbatim. Reuses the existing default decode-him frame; no new guard.",
+  "decks": {
+    "return-mhf": {
+      "a": [
+        "You turned the Magician. The pictures were hidden, but your hand found the one who chooses what to place in view.",
+        "His table is carefully arranged, with every object visible.",
+        "You asked whether he wants commitment or only company. What catches me is how deliberately the table is presented.",
+        "He is present, and the purpose of the relationship remains uncertain to you.",
+        "I keep coming back to something between his presence and a named commitment. I don't think it began with you.",
+        "Now let me look at what's doing this…"
+      ],
+      "b": [
+        "You turned the Hanged Man. You chose without seeing him and found the calmest figure here.",
+        "He hangs by one ankle. His face is calm.",
+        "You asked what future he wants. This card makes me look at the calm presence inside the pause.",
+        "Still, he is there while the commitment question stays held.",
+        "Something is holding the future quietly. I don't think this began with you.",
+        "Let me see what's holding the future…"
+      ],
+      "c": [
+        "You turned the Fool. Nothing revealed the card, yet your hand went to the one who hadn't packed for everything.",
+        "One small bundle is all he carries at the start.",
+        "You asked whether he wants a future or the comfort of now. The light bundle holds my attention.",
+        "But the connection exists now, and the future remains lightly carried.",
+        "Something appears right where company would need to become commitment. I don't think it started with you.",
+        "Now let's look at what's behind this…"
+      ]
+    }
+  }
+}

@@ -1,0 +1,34 @@
+{
+  "hook": "cards-alone-heavier-now",
+  "headline": "Why does being alone feel heavier now than it used to?",
+  "method": "inherited-shadow",
+  "note": "Wired 2026-08-25 from fb-tarot/docs/writeups/shadow/REVIEW-money-alone-commit-2026-08-25.md — approved copy, transferred verbatim. Reuses the existing LONELINESS_TAROT_HOOKS frame; no new guard.",
+  "decks": {
+    "return-mhf": {
+      "a": [
+        "You turned the Magician. You couldn't see the picture, yet your hand found the card with the fullest table.",
+        "A cup, a coin, a blade and a wand fill the table before him.",
+        "You asked why being alone feels heavier now. What catches me is the full table beside one figure.",
+        "The solitude is not new, but the weight of it has changed.",
+        "Something sits between what is available and company. I don't think it began with you.",
+        "Let me look closer at what's behind this…"
+      ],
+      "b": [
+        "You turned the Hanged Man. The card was hidden, but your hand went to the calmest figure here.",
+        "He hangs by one ankle. Look at his face — it is calm.",
+        "You asked why solitude carries more weight than it did. This card makes me stay with the calm inside the stillness.",
+        "Still, the same condition now feels harder to carry.",
+        "Whatever has hold of the solitude makes its weight harder to carry. I don't think this began with you.",
+        "Let me see what's holding this…"
+      ],
+      "c": [
+        "You turned the Fool. Nothing on the backs told you, but you chose the one travelling with one small bundle.",
+        "The bundle on his stick is small, and the sky around him is wide.",
+        "You asked why being alone feels heavier now. The small bundle in all that space holds my eye.",
+        "But the open space has become heavier than it used to feel.",
+        "At the point where open space should become movement, something appears. I don't think it started with you.",
+        "Now let's look at what's behind it…"
+      ]
+    }
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "hook": "cards-truth",
+  "headline": "Is he telling me the truth?",
+  "note": "🔄 REWRITTEN 2026-08-19 to the Natural Tarot-Cut framework. Bubbles 3-6 run as ONE causal chain — so / and / but / that's why — and the read ANSWERS. The art line and the bridge are unchanged. Every ban in this note still stands.\n\nFace-down only (return-mhf). 🔴 NO VERDICT IN EITHER DIRECTION. These three name an untruth outright, so both answers are live harms: 'he lied to you' is an accusation against a real man on no evidence, and 'he is telling you the truth' is a reassurance the funnel has no standing to give — and on this audience the second is the more dangerous of the two. 🔴 Never blame her judgment: naive, gullible, too trusting, 'should have known' are all out. 🔴 No timeframe.\n\nFinding: she is not short of instinct, she is short of a WHOLE ACCOUNT. What she has been given covers less than what she has lived, and she has been filling the difference herself.",
+  "decks": {
+    "return-mhf": {
+      "a": [
+        "You turned the Magician, dear. Look — his sleeve falls in heavy folds from the raised arm.",
+        "You asked about the truth of it. Your hand went to the man who chooses what to show.",
+        "So you've been given an account, dear. Not the whole of it.",
+        "And he shows exactly what he means to show, dear. No more.",
+        "But a tidy account can still miss pieces, dear.",
+        "That's why it sounds fine, dear, and something in it still catches.",
+        "Let me look closer at what stands between you and the whole of it…"
+      ],
+      "b": [
+        "You turned the Hanged Man, dear. Look — his tied foot is higher than his head.",
+        "You asked about the truth of it. Your hand went to the card that shows the other way up.",
+        "So there's another way up to this, dear. You've only had one.",
+        "And what's true from up there looks odd from down here, dear.",
+        "But two people can both be honest and still not match, dear.",
+        "That's why it stays open, dear, however long you sit with it.",
+        "Let me look closer at what keeps the two views apart…"
+      ],
+      "c": [
+        "You turned the Fool, dear. Look — the sun's rays are drawn as straight lines out from it.",
+        "You asked about the truth of it. Your hand went to the plainest card in the deck.",
+        "So you want it plain, dear. Straight lines, like those rays.",
+        "And nothing about him is put on for show, dear.",
+        "But what you've been handed is arranged, dear. That's the difference.",
+        "That's why plain talk feels like too much to ask. It isn't, dear.",
+        "Let me look closer at what has been bending this out of shape…"
+      ]
+    }
+  }
+}

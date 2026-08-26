@@ -1,0 +1,34 @@
+{
+  "hook": "cards-slow-commit-or-wasting-time",
+  "headline": "Is he slow to commit, or is he wasting my time?",
+  "method": "inherited-shadow",
+  "note": "Wired 2026-08-25 from fb-tarot/docs/writeups/shadow/REVIEW-money-alone-commit-2026-08-25.md — approved copy, transferred verbatim. Reuses the existing default decode-him frame; no new guard.",
+  "decks": {
+    "return-mhf": {
+      "a": [
+        "You turned the Magician. Nothing showed through the backs, but your hand found the one with everything arranged on purpose.",
+        "Every object has its place on the open table.",
+        "You asked whether he is slow to commit or wasting your time. The deliberate table is the part I keep returning to.",
+        "He has not committed, and the delay has left you choosing between two explanations.",
+        "Right where deliberate attention would become commitment, something appears. I don't think it started with you.",
+        "Now let me look at what's sitting there…"
+      ],
+      "b": [
+        "You turned the Hanged Man. You reached without seeing him and chose the calmest figure here.",
+        "He hangs by one ankle, and his face is calm.",
+        "You asked what his delay means. This card makes me look at the calm face inside the pause.",
+        "Still, the future is held, and you do not know why.",
+        "Something stands between his presence and a named future. I don't think it began with you.",
+        "Let me see what's holding the future…"
+      ],
+      "c": [
+        "You turned the Fool. The picture was hidden, yet your hand went to the one who hadn't packed for everything.",
+        "The bundle on his stick is small and lightly tied.",
+        "You asked whether the unsettled commitment hides a motive. The light bundle catches my attention.",
+        "But the commitment has not settled, and the time is yours to feel.",
+        "The thing that has hold of the future keeps it lightly carried. I don't think this began with you.",
+        "Now let me look at what has hold of this…"
+      ]
+    }
+  }
+}

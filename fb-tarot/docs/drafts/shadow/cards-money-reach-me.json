@@ -1,0 +1,34 @@
+{
+  "hook": "cards-money-reach-me",
+  "headline": "Everybody is getting ahead. Why won't the money reach me?",
+  "method": "inherited-shadow",
+  "note": "Wired 2026-08-25 from fb-tarot/docs/writeups/shadow/REVIEW-money-alone-commit-2026-08-25.md — approved copy, transferred verbatim. Reuses the existing MONEY_TAROT_HOOKS frame; no new guard.",
+  "decks": {
+    "return-mhf": {
+      "a": [
+        "You turned the Magician. The picture was hidden, but your hand went to the one standing openly with every tool.",
+        "He stands in the open behind a table where all four tools are visible.",
+        "You asked why money reaches everyone else and not you. The open, complete table is the part I keep coming back to.",
+        "And yet the money has not reached you, while everyone else appears ahead.",
+        "There's something between your complete table and the result. I don't think it began with you.",
+        "Let me look closer at what's holding your result…"
+      ],
+      "b": [
+        "You turned the Hanged Man. You chose without seeing him and found the card held by one thing.",
+        "One rope holds one ankle. The rest of the figure has room.",
+        "You asked why the money has not reached you. This card makes me look at the one point doing the holding.",
+        "Still, your result remains held beside the comparison in your question.",
+        "What has hold of your result keeps it from reaching you. I don't think this began with you.",
+        "Let me see what that obstruction is…"
+      ],
+      "c": [
+        "You turned the Fool. The cards were face down, yet you reached for the one in full light.",
+        "The full sun is high in the gold sky behind him.",
+        "You asked why others get ahead while the money does not reach you. The full light on this card catches me.",
+        "But the money has not reached you, while everyone else appears ahead.",
+        "Something appears right where the money would reach you. I don't think it started with you.",
+        "Now let's look at what's behind it…"
+      ]
+    }
+  }
+}

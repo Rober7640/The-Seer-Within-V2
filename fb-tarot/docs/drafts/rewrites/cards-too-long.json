@@ -1,0 +1,36 @@
+{
+  "hook": "cards-too-long",
+  "headline": "Have I already given him too long?",
+  "note": "🔄 REWRITTEN 2026-08-19 to the Natural Tarot-Cut framework. Bubbles 3-6 now run as ONE causal chain — so / and / but / that's why — and the read ANSWERS instead of certifying her. The art line and the bridge are unchanged. Every family ban below still stands; this family was NOT loosened.\n\n🔴 ASKS FOR A VERDICT ON HER OWN PAST, and BOTH poles are banned: \"yes, too long\" is a sentence a stranger has no standing to pass and she would carry it for years; \"no, it was worth it\" is a promise. Never grade her (naive, foolish, weak, a doormat), never a timeframe, never an hour to leave or stay, never \"you will know when\". The test pins both required findings in beat 3: the years-were-LIVED line (`not spend` / `waiting room` / `lived them` / `time given to a person` / `not the same as time lost`) AND the buried question (`allowed to want` / `am i allowed` / `entitled to want` / `permission`).\n\nVOC (861 V1 concerns on the years-given theme) is what makes the second one the real find. She does not want the years audited — she wants to be let off the toll she has been paying at her own gate. \"I'm far too patient with far too much for far too long.\" \"I have been stuck for 10 years and afraid to make the leap.\" \"How long should I wait?\" Every one of them is asking permission, not for a ruling. So card c hands the question back plainly and refuses the price: she does not have to call the past a mistake in order to be allowed to want something different now.",
+  "decks": {
+    "return-mhf": {
+      "a": [
+        "You turned the Magician, dear. Look — one arm raised high, a wide white sleeve falling from it.",
+        "You asked if you've already given him too long. Your hand went to the man who makes things.",
+        "So you didn't spend those years, dear. You lived them.",
+        "And nobody has ever told you what those years were for, dear.",
+        "But you've been paying a toll on them ever since, dear. At your own gate.",
+        "That's why you keep counting them, dear, and the count never gets smaller.",
+        "Let me look closer at what has been sitting in the way of a change…"
+      ],
+      "b": [
+        "You turned the Hanged Man, dear. Look — leaves growing out of the dead wood he hangs from.",
+        "You asked if you've given him too long. Your hand went to the man who isn't moving.",
+        "So the years weren't the trouble, dear. Nothing moved, and that's a different thing.",
+        "And look at him, dear. He has been still, not short of time.",
+        "But being still feels just like time when you're the one waiting, dear.",
+        "That's why you counted the years, dear. They were the only thing moving.",
+        "Let me look closer at what has been holding this still…"
+      ],
+      "c": [
+        "You turned the Fool, dear. Look — his front foot is already off the rock.",
+        "You asked if you've already given him too long. Your hand went to the one who set out with no promise.",
+        "So the answer you came for isn't a number, dear. There's a plainer question under it.",
+        "And yours is this. Am I allowed to want this to change?",
+        "But you've been waiting to call the years a mistake first, dear.",
+        "That's why permission never came, dear. You were waiting to give it to yourself.",
+        "Let me look closer at what stands between you and wanting more…"
+      ]
+    }
+  }
+}

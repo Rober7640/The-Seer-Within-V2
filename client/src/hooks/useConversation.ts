@@ -31,8 +31,9 @@ import { currentFunnel, funnelPath, getPostHogFunnel, linkParams, skipEmail } fr
 import { track as trackPH, identifyUser as identifyPH, getDistinctId } from '@/lib/posthog'
 import {
   tarotEventProps,
-  fetchAssignedTarotVersion,
+  fetchAssignedTarotArm,
   rememberTarotVersion,
+  rememberTarotMethod,
 } from '@/lib/tarotAttribution'
 import { trackGAdsLead, trackGAdsCheckout, getGclid } from '@/lib/gtm'
 import { isSlidingCloseVariant } from '@shared/types'
@@ -493,23 +494,26 @@ export function useConversation() {
         // (Version A already shows the card on the lander, so it isn't repeated here.)
         const art = tarotCardArtFor(tarot.deck, tarot.card)
 
-        // === /fb-tarot VERSION A/B (v1_tarot_version_bc_2026) ===
-        // Which opener she gets is decided by the SERVER, not by the /b vs /c path she
-        // clicked — the ad URLs all point at /c and the experiment splits them 70/30.
+        // === /fb-tarot ARM ASSIGNMENT — two experiments, one call ===
+        //   version (v1_tarot_version_bc_2026) — WHICH opener she gets. Decided by the
+        //     SERVER, not by the /b vs /c path she clicked; the ad URLs all point at /c.
+        //   method  (v1_tarot_shadow_2026) — which READ Version B delivers, natural
+        //     (today's) or the Inherited Shadow, split 70/30 across 37 landers.
         //
         // Awaited HERE, immediately before the opener is sent, because the server logs
-        // the exposure as it answers: assigned and shown are the same instant, so the
-        // log can never claim an arm she did not see. While the experiment is draft
-        // this returns her URL's own version and the two branches below are byte-
+        // both exposures as it answers: assigned and shown are the same instant, so the
+        // log can never claim an arm she did not see. While either experiment is draft
+        // that arm comes back as today's value, and the branches below are byte-
         // identical to what they were.
         //
-        // rememberTarotVersion keeps the PostHog attribution honest when the arm
-        // differs from the URL — without it every downstream event would report the
-        // version she clicked rather than the one she was shown.
-        const version = await fetchAssignedTarotVersion(tarot.deck, tarot.hook, tarot.version)
-        rememberTarotVersion(version)
+        // rememberTarotVersion / rememberTarotMethod keep the PostHog attribution honest
+        // when an arm differs from the URL — without them every downstream event would
+        // report the version she clicked and the read she did not get.
+        const arm = await fetchAssignedTarotArm(tarot.deck, tarot.hook, tarot.version)
+        rememberTarotVersion(arm.version)
+        rememberTarotMethod(arm.method)
 
-        if (version === 'c') {
+        if (arm.version === 'c') {
           // Version C — INTERACTIVE. Open with the card line + one open question,
           // then read HER answer with the LLM in handleTarotReflect.
           await sendBotMessages(tarotOpenerCStart(tarot.deck, tarot.hook, tarot.card), art)
@@ -520,8 +524,8 @@ export function useConversation() {
           })
           return
         }
-        if (version === 'b') {
-          await sendBotMessages(tarotOpenerB(tarot.deck, tarot.hook, tarot.card), art)
+        if (arm.version === 'b') {
+          await sendBotMessages(tarotOpenerB(tarot.deck, tarot.hook, tarot.card, arm.method), art)
         } else {
           await sendBotMessage(tarotGreetingA(tarot.deck, tarot.card))
         }

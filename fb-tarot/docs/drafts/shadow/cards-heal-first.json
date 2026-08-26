@@ -1,0 +1,34 @@
+{
+  "hook": "cards-heal-first",
+  "headline": "Do I need to heal before my soulmate arrives?",
+  "method": "inherited-shadow",
+  "note": "⭐ CANONICAL. These 18 bubbles are copied verbatim from fb-tarot/docs/inherited-shadow-cut.md §The current reference read. Do not edit here — edit the spec, then re-copy.\n\nFRAME: soulmate x keyword. NO PARTICULAR MAN EXISTS — the read must not fall through to decode-him.\n\n🔴 The ad already tells her she is the problem, which is the best fit on the funnel for this method: the card acquits her, and the block is what is left.\n\n⚠ SHE is the subject of beats 3-6. The return-mhf figures are all male, so he is DESCRIBED in beats 1-2 and retired there — never given intent or motion toward her, or a soulmate lander turns into reunion copy.\n\n⚠ NO FAMILY-LINE LANGUAGE anywhere in the read.\n\n🔴 THE READ MAY NOT RULE ON HER HEALING IN EITHER DIRECTION. 'Yes, heal first' is the sentence BLAME_BANS pins as gating love on her fixing herself; 'no, you don't need to' is a verdict on her state. The read refuses the SEQUENCE, not the healing — nothing here denies, minimises or prescribes it.\n\n⛔ NO HEALTH, THERAPY OR DIAGNOSIS LANGUAGE. No trauma, attachment, inner child, nervous system, shadow work.\n\n⚠ Worked as example 1 of inherited-shadow-cut.md. Written fresh here — the doc says copy the SHAPE, not the line, because only the Empress on cards-soulmate was signed off line by line.",
+  "decks": {
+    "return-mhf": {
+      "a": [
+        "You turned the Magician. You couldn't see the cards, and your hand went to the one who came ready.",
+        "Look at his table. A cup, a coin, a blade, a wand — all of it already out.",
+        "You asked whether you need to heal first. What catches me is that nothing on his table is missing.",
+        "And yet nobody has come. You've started to wonder whether the missing part is you.",
+        "Something stands between you and this, close in. I don't think it began with you.",
+        "Let me look closer at what's standing there…"
+      ],
+      "b": [
+        "You turned the Hanged Man. You couldn't see him, and your hand found the calmest man in the deck.",
+        "He's hanging upside down by one ankle. Look at his face, though — it's calm.",
+        "You asked whether you need to heal first, dear. This card makes me look at the waiting in your question.",
+        "Still, nobody has come. And somehow the question has turned back on you.",
+        "Whatever has hold of this holds it quietly. I don't think this began with you.",
+        "Let me look closer at what this is…"
+      ],
+      "c": [
+        "You turned the Fool. The cards were face down, but you still chose the one travelling light.",
+        "Look at the small bundle on his stick. That's all he's taking with him.",
+        "You asked whether you need to heal first. This card brings me to the very start of something.",
+        "But nobody has come. And you're still wondering whether you're ready.",
+        "Something turns up right where this would start. I don't think it started with you.",
+        "Let me look closer at what's behind this…"
+      ]
+    }
+  }
+}

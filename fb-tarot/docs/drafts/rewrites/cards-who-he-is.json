@@ -1,0 +1,65 @@
+{
+  "hook": "cards-who-he-is",
+  "headline": "Is he really who he says he is?",
+  "note": "Only on the two Magician/Hanged Man/Fool decks, so one set of copy, verb swapped. 🔴 REVISED 2026-08-19 after reading 200 real concerns from this lander. A large share of its traffic is women talking to men they have NEVER MET — dating-site and social-media contacts, some plainly being defrauded (\"I couldn't find him at that address\", \"I don't know who's real E, M, C or K\"). The first draft acquitted him (\"isn't a liar\", \"isn't pretending\", \"that's not the same as false\"), which breaches this hook's standing rule — NEVER state he is pretending OR that he is genuine as fact — and, to that reader, is a line that could cost her money. Every beat 3 now refuses BOTH verdicts and affirms her caution instead, the same stance cards-real-person takes.\n\n🔴 BEAT 4 REWRITTEN 2026-08-19 — it must name an OBSTRUCTION, not an absence. Act 1 of the trilogy sells an Energy Clearing Ritual that removes \"the shadow that's been blocking your path\"; improve-v1/08-clearing-theme-coherence.md found that clearing is SPRUNG at the pitch rather than seeded. This is where it gets seeded, and the object goes between HER and what she wants — the love bucket frames every block as an impersonal thing in her path precisely so removing it blames nobody. \"What he never said\" cannot be cleared; \"what's sitting between you and the words\" can.",
+  "decks": {
+    "return-mhf": {
+      "a": [
+        "You turned the Magician, dear. Look — roses and lilies at his feet, and one arm held straight up.",
+        "You asked if he's really who he says he is. Your hand went to the man who builds what you see.",
+        "The Magician builds what people see, dear. That is his craft.",
+        "So what he shows you was put together on purpose.",
+        "That doesn't tell me who stands behind it. It tells me there is a behind.",
+        "You already sensed that, dear. Keep hold of it.",
+        "Let me look closer at what sits between you and the man behind it…"
+      ],
+      "b": [
+        "You turned the Hanged Man, dear. Look — one leg tied to the branch, the other bent behind it, out of sight.",
+        "You asked if he's really who he says he is. Your hand went to the card of one hidden side.",
+        "The Hanged Man shows one side, dear. Never both.",
+        "You were given a part, and asked to judge the whole.",
+        "That is why you can't get a clean read on him.",
+        "The trouble isn't your judgement, dear. It's what you were handed.",
+        "Let me look closer at what stands between you and a straight answer…"
+      ],
+      "c": [
+        "You turned the Fool, dear. Look — all he owns is tied in one small bundle on a stick.",
+        "You asked if he's really who he says he is. Your hand went to the man still deciding.",
+        "The Fool travels light, dear. Nothing about him is settled yet.",
+        "So the man you met and the man now can both be him.",
+        "Or he has not shown you the whole road. The card won't say which.",
+        "Either way, you noticed the change. That is worth trusting.",
+        "Let me look closer at what keeps getting between you and all of him…"
+      ]
+    },
+    "arcana-mfh": {
+      "a": [
+        "You chose the Magician, dear. Look — roses and lilies at his feet, and one arm held straight up.",
+        "You asked if he's really who he says he is. Your hand went to the man who builds what you see.",
+        "The Magician builds what people see, dear. That is his craft.",
+        "So what he shows you was put together on purpose.",
+        "That doesn't tell me who stands behind it. It tells me there is a behind.",
+        "You already sensed that, dear. Keep hold of it.",
+        "Let me look closer at what sits between you and the man behind it…"
+      ],
+      "b": [
+        "You chose the Hanged Man, dear. Look — one leg tied to the branch, the other bent behind it, out of sight.",
+        "You asked if he's really who he says he is. Your hand went to the card of one hidden side.",
+        "The Hanged Man shows one side, dear. Never both.",
+        "You were given a part, and asked to judge the whole.",
+        "That is why you can't get a clean read on him.",
+        "The trouble isn't your judgement, dear. It's what you were handed.",
+        "Let me look closer at what stands between you and a straight answer…"
+      ],
+      "c": [
+        "You chose the Fool, dear. Look — all he owns is tied in one small bundle on a stick.",
+        "You asked if he's really who he says he is. Your hand went to the man still deciding.",
+        "The Fool travels light, dear. Nothing about him is settled yet.",
+        "So the man you met and the man now can both be him.",
+        "Or he has not shown you the whole road. The card won't say which.",
+        "Either way, you noticed the change. That is worth trusting.",
+        "Let me look closer at what keeps getting between you and all of him…"
+      ]
+    }
+  }
+}

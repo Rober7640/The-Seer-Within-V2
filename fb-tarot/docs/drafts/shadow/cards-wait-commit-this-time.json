@@ -1,0 +1,34 @@
+{
+  "hook": "cards-wait-commit-this-time",
+  "headline": "How long do I wait for him to commit this time?",
+  "method": "inherited-shadow",
+  "note": "Wired 2026-08-25 from fb-tarot/docs/writeups/shadow/REVIEW-money-alone-commit-2026-08-25.md — approved copy, transferred verbatim. Reuses the existing default decode-him frame; no new guard.",
+  "decks": {
+    "return-mhf": {
+      "a": [
+        "You turned the Magician. The picture was hidden, but your hand found the card ready to act.",
+        "Both hands are working above a table full of tools.",
+        "You asked how long to wait for him to commit this time. The action already on the table catches me.",
+        "He has not committed, and you are waiting for a limit the relationship has not given you.",
+        "Whatever has hold of the commitment keeps action separate from the answer. I don't think this began with you.",
+        "Let me see what is holding the commitment…"
+      ],
+      "b": [
+        "You turned the Hanged Man. The backs gave no clue, yet you reached for the one caught at one point.",
+        "One rope holds one ankle. Everything else hangs loose.",
+        "You asked for the length of the wait. This card makes me look at the single rope.",
+        "Still, the commitment remains suspended while you ask how long.",
+        "Just as the wait would become a decision, something appears. I don't think it started with you.",
+        "Let me look at what's holding this…"
+      ],
+      "c": [
+        "You turned the Fool. Nothing showed you the card, but your hand went to the one travelling light.",
+        "The small bundle on his stick is all he is carrying.",
+        "You asked how long you wait. The light bundle holds my attention.",
+        "But his answer has not come, and you are still asking how long to wait.",
+        "Something sits between the relationship and his commitment. I don't think it began with you.",
+        "Now let me see what's there…"
+      ]
+    }
+  }
+}

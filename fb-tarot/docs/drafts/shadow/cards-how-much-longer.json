@@ -1,0 +1,34 @@
+{
+  "hook": "cards-how-much-longer",
+  "headline": "How much longer will something keep blocking my money?",
+  "method": "inherited-shadow",
+  "note": "FRAME: money — the strictest guard on the funnel. No amount, no date, no source, no financial advice, never blames her, never 'too late', never presumes she is broke.\n\n🔴 Beat 4 says the money has not LANDED or not STAYED — never that she has none. Her own ad asserts the block, so restating it is her premise, not our claim.\n\n⚠ NO FAMILY-LINE LANGUAGE. The six beats never need it; naming an inheritance is the shortest path to the authorship ban.\n\nFINDING: 'a block does not run down, it gets moved' — beats 5a and 5b.\n\n🔴 She asks HOW LONG. No duration may be given, forward or back — 'not much longer' is a length, and a length is the gap that caught the soulmate age band. The read answers the SHAPE of the question instead: a block is not a timer, so the number she wants does not exist.",
+  "decks": {
+    "return-mhf": {
+      "a": [
+        "You turned the Magician. You had nothing to go on, and your hand found the worker of the three.",
+        "Look at his hands. Both of them are busy, and neither is idle.",
+        "You asked how much longer something will keep blocking your money. I keep going back to those two hands, both of them busy.",
+        "Still, it hasn't landed. And what you want from me is a number.",
+        "Something turns up at the point where it would come through. I don't think it began with you.",
+        "Let me look closer at what's doing the holding…"
+      ],
+      "b": [
+        "You turned the Hanged Man. Nothing showed through, and yours was the one held by a single rope.",
+        "Look at the rope. One ankle, and nothing else on him.",
+        "You asked how much longer something will keep blocking your money. One rope keeps this whole picture still.",
+        "And yet it hasn't landed. And you're asking me how long that lasts.",
+        "The hold is constant, and it doesn't ease at any point. I don't think this began with you.",
+        "Let me look closer at what's holding it…"
+      ],
+      "c": [
+        "You turned the Fool. Face down, all three, and you took the one travelling light.",
+        "Look at the bundle on his stick. That's all he's carrying.",
+        "You asked how much longer something will keep blocking your money. A start, and how little it needs — that's what I'm looking at.",
+        "But it still hasn't landed. And you're the one asking how much longer.",
+        "Something sits right where the money would land. I don't think it started with you.",
+        "Let me look closer at what's got hold of it…"
+      ]
+    }
+  }
+}

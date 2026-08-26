@@ -1,0 +1,34 @@
+{
+  "hook": "cards-still-working",
+  "headline": "Why am I still working when the money should have come by now?",
+  "method": "inherited-shadow",
+  "note": "FRAME: money — the strictest guard on the funnel. No amount, no date, no source, no financial advice, never blames her, never 'too late', never presumes she is broke.\n\n🔴 Beat 4 says the money has not LANDED or not STAYED — never that she has none. Her own ad asserts the block, so restating it is her premise, not our claim.\n\n⚠ NO FAMILY-LINE LANGUAGE. The six beats never need it; naming an inheritance is the shortest path to the authorship ban.\n\nFINDING: 'the effort went in and did not come back' — beat 3a 'the work went in' and beat 5b 'stalled'.\n\n⛔ No work advice: never 'keep working', 'stop working', 'go back to work'. The read never tells her what to do.",
+  "decks": {
+    "return-mhf": {
+      "a": [
+        "You turned the Magician. You couldn't see them, and your hand found the worker of the three.",
+        "Look at his hands. Both are busy, and neither has stopped.",
+        "You asked why you're still working when the money should have come. What catches me is that both of those hands are at work.",
+        "The part that doesn't fit is that nothing has come through. And you're the one still at it.",
+        "Something has a firm hold on this. I don't think this began with you.",
+        "Let me look closer at what's got hold of it…"
+      ],
+      "b": [
+        "You turned the Hanged Man. Nothing showed which was which, and you took the one held at one ankle.",
+        "Look at the rope. One ankle holds him, and nothing else does.",
+        "You asked why you're still working when the money should have come. What holds my eye is the one rope, and where it ends.",
+        "Still, nothing has come through. And you're the one carrying on regardless.",
+        "Something sits between the work and the pay, right in that gap. I don't think it started with you.",
+        "Let me look closer at what's holding this…"
+      ],
+      "c": [
+        "You turned the Fool. Face down, all three, and you chose the one already stepping out.",
+        "Look at his feet. One is lifted, and the other hasn't caught up.",
+        "You asked why you're still working when the money should have come. What I keep looking at is a step already made.",
+        "But nothing has come through. And you're still the one asking why.",
+        "Something turns up just when the money should land. I don't think any of it began with you.",
+        "Let me look closer at what's there…"
+      ]
+    }
+  }
+}

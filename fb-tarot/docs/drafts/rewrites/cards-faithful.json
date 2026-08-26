@@ -1,0 +1,36 @@
+{
+  "hook": "cards-faithful",
+  "headline": "Is he being faithful to me?",
+  "note": "🔄 REWRITTEN 2026-08-19 to the Natural Tarot-Cut framework. Bubbles 3-6 run as ONE causal chain — so / and / but / that's why. 🔴 NOT LOOSENED: no verdict on a third person in EITHER direction, so cut 3 answers her FEAR (was something real taken from me, or am I making it up) and never rules on him. Each hook keeps its own finding — GAP / PORTION / ATTENTION / REST — which its guard file pins in beat 3.\n\nFace-down only (return-mhf) — the family is pinned off the face-up decks.\n\n🔴 THE FLAGGED WORD (cheat / cheating / affair / infidelity) MAY NOT APPEAR IN ANY BEAT. 🔴 And the paranoia frame is banned in BOTH directions — no 'paranoid', 'imagining it', 'overthinking', 'insecure', 'crazy'. Calling her it is the injury; using it to reassure her plants it. That removes the absolution form used everywhere else on the funnel, so each of these names the accusation in other words.\n\n🔴 Never assert a third person and never deny one. Never instruct her to check a phone, gather proof, or confront him — the most available wrong answer to these questions anywhere on the internet. Never excuse him, never land it as her fault. Four separate findings, or the family is one lander wearing four headlines.\n\nFinding: it refuses the summary judgment and routes to HER NOT RESTING. She is not asking for a verdict — she is asking for permission to put it down, and no card can hand her the guarantee that would let her.",
+  "decks": {
+    "return-mhf": {
+      "a": [
+        "You turned the Magician, dear. Look — he stands square behind his table and doesn't lean.",
+        "You asked if he's being faithful to you. Your hand went to the steadiest man in this deck.",
+        "So you haven't had a moment's rest from this, dear. Not one.",
+        "And look at him. He stands square, and you have not been able to.",
+        "But no card gives you a guarantee, dear. This steady one won't either.",
+        "That's why you keep asking, dear. Asking is the only thing that quiets it.",
+        "Let me look closer at what keeps you from setting this down…"
+      ],
+      "b": [
+        "You turned the Hanged Man, dear. Look — the rope is on his right ankle, and it holds.",
+        "You asked if he's being faithful to you. Your hand went to the card that holds its breath.",
+        "So the question has stayed up, dear. Nothing has let it down.",
+        "And you've been holding it up on your own, dear. All of it.",
+        "But a thing held that long stops feeling like a question, dear.",
+        "That's why you're worn out, dear. You never once got to rest.",
+        "Let me look closer at what won't let this settle…"
+      ],
+      "c": [
+        "You turned the Fool, dear. Look — his stick rests on his shoulder, and the bundle swings behind.",
+        "You asked if he's being faithful to you. Your hand went to the one with no fixed ground.",
+        "So you've had no firm footing here, dear. Look at his feet.",
+        "And look — rock on one side of him, and air on the other.",
+        "But you've been standing on that all the same, dear.",
+        "That's why you can't put this down. There's been nothing to put it on.",
+        "Let me look closer at what has been keeping this off solid ground…"
+      ]
+    }
+  }
+}

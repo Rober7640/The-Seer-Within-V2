@@ -6,6 +6,39 @@ reveals) added via the `fb-tarot-add-card` skill. Drop raw card art per concept 
 
 Status: ✅ built & wired · ⬜ pending · ⛔ parked
 
+> 📋 **This file tracks DECKS — the card art.** For the LANDERS (one hook each, 104 of them)
+> see **`fb-tarot/docs/lander-registry.md`** — every lander, by category, with the method each one
+> runs. **Generated** (`npx tsx scripts/lander-registry.mts`), so it cannot drift from the code.
+
+## 🔑 EVERY LANDER IS ON `/fb-tarot/b` (2026-08-18)
+
+Two changes shipped to Production on 2026-08-18, and **every tarot visitor now gets Version B**:
+
+1. **`v1_tarot_version_bc_2026` concluded, winner B.** The four hooks that were server-assigned
+   B-or-C (`cards-will-commit`, `cards-return`, `cards-who-he-is`, `cards-feels`) now serve B.
+2. **`/fb-tarot/c` 302-redirects to `/fb-tarot/b`** (`server/lib/tarotRedirect.ts`). The query
+   string is forwarded verbatim, so `hook` / `card` / `deck` / `fbclid` all survive the hop.
+
+⇒ **Every ad URL in this file is now written as `/fb-tarot/b`.** Old `/c` links already running in
+live ads keep working — they redirect — so **nothing has to be edited in Facebook**.
+
+🔴 **This was a CONTENT change, not a routing tidy-up.** Only 4 of the 68 hooks were inside the
+version test. For the other 64 `matchesLanderScope` returns false and `resolveTarotVersion` hands
+back the URL's own version, so the redirect moved them from Version C's interactive LLM opener to
+Version B's whole pre-written read. That is the intended standardisation — but it means **the copy
+in this file is now the entire reading on every lander**, with no reflect prompt behind it. See
+"B makes NO model call" below; it now applies file-wide, not just to the soulmate-label family.
+
+🔴 **fb-palm is deliberately NOT redirected.** There is no palm version experiment — `parsePalmParams`
+reads the version straight off the URL and branches on it, so palm `/b` vs `/c` still differ.
+
+⚠️ **The test was concluded early and B did not win on the data.** Forced at 2,595 of a
+pre-registered 11,000 per arm; pooled p ≈ 0.54, and in the clean 50/50 cohort C was marginally
+ahead ($0.879 vs $0.847 per visitor). Standardising on B was a business decision, not a result —
+do not report it as a winning test. Numbers and the reversal SQL:
+`docs/2026-08-18-tarot-bc-declare-b.md`.
+
+
 ## 🔑 The card draw is SHUFFLED on face-down decks (2026-07-28)
 
 Originally the tapped panel decided the card: panel A always the first card, B always
@@ -56,9 +89,9 @@ because `DEFAULT_DECK = 'return-mhf'`:
 
 | Headline | Hook | URL |
 |---|---|---|
-| Is he really who he says he is? | `cards-who-he-is` | `/fb-tarot/c?hook=cards-who-he-is` |
-| Is he the real person, or just a picture? | `cards-real-person` | `/fb-tarot/c?hook=cards-real-person` |
-| Am I being misled? | `cards-misled` | `/fb-tarot/c?hook=cards-misled` |
+| Is he really who he says he is? | `cards-who-he-is` | `/fb-tarot/b?hook=cards-who-he-is` |
+| Is he the real person, or just a picture? | `cards-real-person` | `/fb-tarot/b?hook=cards-real-person` |
+| Am I being misled? | `cards-misled` | `/fb-tarot/b?hook=cards-misled` |
 
 **Reads are bespoke, NOT recycled** (operator instruction 7/30: *"don't reuse exact same
 wordings… stick to the headlines and generate appropriate relevant responses accordingly"*).
@@ -73,9 +106,9 @@ The same 3 headlines now run on `arcana-mfh` too. `&deck=arcana-mfh` is **load-b
 — unlike the face-down links, strip it and a face-up ad lands on face-DOWN backs:
 
 ```
-/fb-tarot/c?hook=cards-who-he-is&deck=arcana-mfh
-/fb-tarot/c?hook=cards-real-person&deck=arcana-mfh
-/fb-tarot/c?hook=cards-misled&deck=arcana-mfh
+/fb-tarot/b?hook=cards-who-he-is&deck=arcana-mfh
+/fb-tarot/b?hook=cards-real-person&deck=arcana-mfh
+/fb-tarot/b?hook=cards-misled&deck=arcana-mfh
 ```
 
 Reads are **ported card-for-card** from `return-mhf` — same three cards (Magician / Fool /
@@ -180,9 +213,9 @@ Own `honesty` angle (operator call — deliberately not folded into `trust`). Fa
 
 | Headline | Hook | URL |
 |---|---|---|
-| Am I being lied to? | `cards-lied-to` | `/fb-tarot/c?hook=cards-lied-to` |
-| Is he telling me the truth? | `cards-truth` | `/fb-tarot/c?hook=cards-truth` |
-| Am I being deceived? | `cards-deceived` | `/fb-tarot/c?hook=cards-deceived` |
+| Am I being lied to? | `cards-lied-to` | `/fb-tarot/b?hook=cards-lied-to` |
+| Is he telling me the truth? | `cards-truth` | `/fb-tarot/b?hook=cards-truth` |
+| Am I being deceived? | `cards-deceived` | `/fb-tarot/b?hook=cards-deceived` |
 
 🔴 The no-verdict rule runs BOTH ways here: "he lied" accuses a real man, and "he is
 telling the truth" is a reassurance the funnel can't give — and reassurance is the
@@ -200,9 +233,9 @@ Face-down `return-mhf` only, Version C, clean URLs, no new art.
 
 | Headline | Hook | URL |
 |---|---|---|
-| Will he come back? | `cards-come-back` | `/fb-tarot/c?hook=cards-come-back` |
-| Will he ever come back to me? | `cards-ever-back` | `/fb-tarot/c?hook=cards-ever-back` |
-| Is he coming back, or has he moved on? | `cards-moved-on` | `/fb-tarot/c?hook=cards-moved-on` |
+| Will he come back? | `cards-come-back` | `/fb-tarot/b?hook=cards-come-back` |
+| Will he ever come back to me? | `cards-ever-back` | `/fb-tarot/b?hook=cards-ever-back` |
+| Is he coming back, or has he moved on? | `cards-moved-on` | `/fb-tarot/b?hook=cards-moved-on` |
 
 ### ⭐⭐ `cards-come-back` deliberately shares a headline with the LIVE `cards-return`
 
@@ -211,8 +244,8 @@ live ad URLs, and **both stay exactly as they are** — same copy, same signed-o
 still in the `decode-him` angle:
 
 ```
-https://www.theseerwithin.com/fb-tarot/c?hook=cards-return                  ← untouched
-https://www.theseerwithin.com/fb-tarot/c?hook=cards-return&deck=arcana-mfh  ← untouched
+https://www.theseerwithin.com/fb-tarot/b?hook=cards-return                  ← untouched
+https://www.theseerwithin.com/fb-tarot/b?hook=cards-return&deck=arcana-mfh  ← untouched
 ```
 
 `HEADLINES` is keyed by HOOK, so two hooks may legally carry identical copy. The
@@ -246,9 +279,9 @@ Version C, clean URLs, no new art.
 
 | Headline | Hook | URL |
 |---|---|---|
-| Why can't I stop thinking about him? | `cards-cant-stop` | `/fb-tarot/c?hook=cards-cant-stop` |
-| Why is he always on my mind? | `cards-on-my-mind` | `/fb-tarot/c?hook=cards-on-my-mind` |
-| Why do I still think about someone who hurt me? | `cards-who-hurt-me` | `/fb-tarot/c?hook=cards-who-hurt-me` |
+| Why can't I stop thinking about him? | `cards-cant-stop` | `/fb-tarot/b?hook=cards-cant-stop` |
+| Why is he always on my mind? | `cards-on-my-mind` | `/fb-tarot/b?hook=cards-on-my-mind` |
+| Why do I still think about someone who hurt me? | `cards-who-hurt-me` | `/fb-tarot/b?hook=cards-who-hurt-me` |
 
 ### ⭐⭐ The first angle aimed at HER OWN MIND — and why it is still not `self-frame`
 
@@ -289,9 +322,9 @@ Face-down `return-mhf` only, Version C, clean URLs, no new art.
 
 | Headline | Hook | URL |
 |---|---|---|
-| Will I find a new soulmate after loss? | `cards-new-soulmate` | `/fb-tarot/c?hook=cards-new-soulmate` |
-| Is there still a soulmate out there for me? | `cards-soulmate-out-there` | `/fb-tarot/c?hook=cards-soulmate-out-there` |
-| Am I ready to love again after losing him? | `cards-ready-to-love` | `/fb-tarot/c?hook=cards-ready-to-love` |
+| Will I find a new soulmate after loss? | `cards-new-soulmate` | `/fb-tarot/b?hook=cards-new-soulmate` |
+| Is there still a soulmate out there for me? | `cards-soulmate-out-there` | `/fb-tarot/b?hook=cards-soulmate-out-there` |
+| Am I ready to love again after losing him? | `cards-ready-to-love` | `/fb-tarot/b?hook=cards-ready-to-love` |
 
 Commissioned off a buyer pull (operator brief 2026-08-07): 2,852 matching concerns, 436
 purchased, 100 verbatim quotes read. **~12–15% of that pull are people whose spouse or
@@ -370,9 +403,9 @@ Version C, clean URLs, no new art.
 
 | Headline | Hook | URL |
 |---|---|---|
-| Where is my soulmate right now? | `cards-where-soulmate` | `/fb-tarot/c?hook=cards-where-soulmate` |
-| Is my soulmate closer than I think? | `cards-soulmate-closer` | `/fb-tarot/c?hook=cards-soulmate-closer` |
-| Why haven't I found my soulmate where I am? | `cards-not-found-yet` | `/fb-tarot/c?hook=cards-not-found-yet` |
+| Where is my soulmate right now? | `cards-where-soulmate` | `/fb-tarot/b?hook=cards-where-soulmate` |
+| Is my soulmate closer than I think? | `cards-soulmate-closer` | `/fb-tarot/b?hook=cards-soulmate-closer` |
+| Why haven't I found my soulmate where I am? | `cards-not-found-yet` | `/fb-tarot/b?hook=cards-not-found-yet` |
 
 ### 🔴🔴 LOCATION — a failure mode with no guard anywhere before this family
 
@@ -430,9 +463,9 @@ Version C, clean URLs, no new art.
 
 | Headline | Hook | URL |
 |---|---|---|
-| Will I be alone forever? | `cards-alone-forever` | `/fb-tarot/c?hook=cards-alone-forever` |
-| Am I meant to be alone? | `cards-meant-alone` | `/fb-tarot/c?hook=cards-meant-alone` |
-| Is there really someone out there for me? | `cards-someone-for-me` | `/fb-tarot/c?hook=cards-someone-for-me` |
+| Will I be alone forever? | `cards-alone-forever` | `/fb-tarot/b?hook=cards-alone-forever` |
+| Am I meant to be alone? | `cards-meant-alone` | `/fb-tarot/b?hook=cards-meant-alone` |
+| Is there really someone out there for me? | `cards-someone-for-me` | `/fb-tarot/b?hook=cards-someone-for-me` |
 
 > ⚠️ Briefed as **"Loneliness/Timing"**, but none of the three headlines is about timing —
 > the slug reflects what actually shipped. A timing hook is still unbuilt.
@@ -504,10 +537,10 @@ URLs, no new art. Four landers, not three (`decode-him` already carries four).
 
 | Headline | Hook | URL |
 |---|---|---|
-| Is there someone else? | `cards-someone-else` | `/fb-tarot/c?hook=cards-someone-else` |
-| Is he talking to someone else? | `cards-talking-someone` | `/fb-tarot/c?hook=cards-talking-someone` |
-| Is he being faithful to me? | `cards-faithful` | `/fb-tarot/c?hook=cards-faithful` |
-| Is he loyal to only me? | `cards-loyal` | `/fb-tarot/c?hook=cards-loyal` |
+| Is there someone else? | `cards-someone-else` | `/fb-tarot/b?hook=cards-someone-else` |
+| Is he talking to someone else? | `cards-talking-someone` | `/fb-tarot/b?hook=cards-talking-someone` |
+| Is he being faithful to me? | `cards-faithful` | `/fb-tarot/b?hook=cards-faithful` |
+| Is he loyal to only me? | `cards-loyal` | `/fb-tarot/b?hook=cards-loyal` |
 
 ### 🔴🔴 The first family commissioned for COMPLIANCE, not for a new wound
 
@@ -570,9 +603,9 @@ URLs, no new art.
 
 | Headline | Hook | URL |
 |---|---|---|
-| I miss him so much — will this ever stop hurting? | `cards-stop-hurting` | `/fb-tarot/c?hook=cards-stop-hurting` |
-| Will I ever stop missing him? | `cards-stop-missing` | `/fb-tarot/c?hook=cards-stop-missing` |
-| Why do I still miss him after everything? | `cards-still-miss-him` | `/fb-tarot/c?hook=cards-still-miss-him` |
+| I miss him so much — will this ever stop hurting? | `cards-stop-hurting` | `/fb-tarot/b?hook=cards-stop-hurting` |
+| Will I ever stop missing him? | `cards-stop-missing` | `/fb-tarot/b?hook=cards-stop-missing` |
+| Why do I still miss him after everything? | `cards-still-miss-him` | `/fb-tarot/b?hook=cards-still-miss-him` |
 
 ### 🔴🔴 The TIMEFRAME ban is the whole discipline — two headlines ask for one outright
 
@@ -667,9 +700,9 @@ URLs, no new art.
 
 | Headline | Hook | URL |
 |---|---|---|
-| Why did he leave without a word? | `cards-left-without-word` | `/fb-tarot/c?hook=cards-left-without-word` |
-| Why did he ghost me? | `cards-ghosted` | `/fb-tarot/c?hook=cards-ghosted` |
-| Was I not enough for him to stay? | `cards-not-enough` | `/fb-tarot/c?hook=cards-not-enough` |
+| Why did he leave without a word? | `cards-left-without-word` | `/fb-tarot/b?hook=cards-left-without-word` |
+| Why did he ghost me? | `cards-ghosted` | `/fb-tarot/b?hook=cards-ghosted` |
+| Was I not enough for him to stay? | `cards-not-enough` | `/fb-tarot/b?hook=cards-not-enough` |
 
 ### 🔴🔴 The MOTIVE ban is the commission — and no live family carries it
 
@@ -764,8 +797,8 @@ Face-down `return-mhf` only. Clean URLs, no `&deck=`, Version C ads.
 
 | Headline | Hook | URL |
 |---|---|---|
-| Is he hiding something from me? | `cards-hiding-something` | `/fb-tarot/c?hook=cards-hiding-something` |
-| Something feels off — is my intuition right? | `cards-feels-off` | `/fb-tarot/c?hook=cards-feels-off` |
+| Is he hiding something from me? | `cards-hiding-something` | `/fb-tarot/b?hook=cards-hiding-something` |
+| Something feels off — is my intuition right? | `cards-feels-off` | `/fb-tarot/b?hook=cards-feels-off` |
 
 ### ⚠️ TWO landers, not three — deliberate
 
@@ -840,9 +873,9 @@ Face-down `return-mhf` only. Clean URLs, no `&deck=`, Version C ads.
 
 | Headline | Hook | URL |
 |---|---|---|
-| Does he really love me? | `cards-really-love` | `/fb-tarot/c?hook=cards-really-love` |
-| How does he really feel about me? | `cards-feel-about-me` | `/fb-tarot/c?hook=cards-feel-about-me` |
-| Does he love me, or am I imagining it? | `cards-imagining-it` | `/fb-tarot/c?hook=cards-imagining-it` |
+| Does he really love me? | `cards-really-love` | `/fb-tarot/b?hook=cards-really-love` |
+| How does he really feel about me? | `cards-feel-about-me` | `/fb-tarot/b?hook=cards-feel-about-me` |
+| Does he love me, or am I imagining it? | `cards-imagining-it` | `/fb-tarot/b?hook=cards-imagining-it` |
 
 ### ⭐⭐ This family asks the one thing the funnel most firmly refuses
 
@@ -901,9 +934,9 @@ Face-down `return-mhf` only. Clean URLs, no `&deck=`, Version C ads. All three h
 
 | Headline | Hook | URL |
 |---|---|---|
-| Does he still think about me? | `cards-still-think` | `/fb-tarot/c?hook=cards-still-think` |
-| Does he still love me? | `cards-still-love` | `/fb-tarot/c?hook=cards-still-love` |
-| Does he still love me, or has he moved on? | `cards-love-or-moved-on` | `/fb-tarot/c?hook=cards-love-or-moved-on` |
+| Does he still think about me? | `cards-still-think` | `/fb-tarot/b?hook=cards-still-think` |
+| Does he still love me? | `cards-still-love` | `/fb-tarot/b?hook=cards-still-love` |
+| Does he still love me, or has he moved on? | `cards-love-or-moved-on` | `/fb-tarot/b?hook=cards-love-or-moved-on` |
 
 ### ⭐⭐ The word STILL is the whole family — and it splits every headline into two tenses
 
@@ -985,11 +1018,11 @@ Face-down `return-mhf` only. Clean URLs, no `&deck=`, Version C ads. All five ho
 
 | Headline | Hook | URL |
 |---|---|---|
-| Am I his forever, or his now? | `cards-forever-or-now` | `/fb-tarot/c?hook=cards-forever-or-now` |
-| Why do his children come before me? | `cards-his-children` | `/fb-tarot/c?hook=cards-his-children` |
-| Am I living in her shadow? | `cards-her-shadow` | `/fb-tarot/c?hook=cards-her-shadow` |
-| Why do we still live apart? | `cards-live-apart` | `/fb-tarot/c?hook=cards-live-apart` |
-| Have I already given him too long? | `cards-too-long` | `/fb-tarot/c?hook=cards-too-long` |
+| Am I his forever, or his now? | `cards-forever-or-now` | `/fb-tarot/b?hook=cards-forever-or-now` |
+| Why do his children come before me? | `cards-his-children` | `/fb-tarot/b?hook=cards-his-children` |
+| Am I living in her shadow? | `cards-her-shadow` | `/fb-tarot/b?hook=cards-her-shadow` |
+| Why do we still live apart? | `cards-live-apart` | `/fb-tarot/b?hook=cards-live-apart` |
+| Have I already given him too long? | `cards-too-long` | `/fb-tarot/b?hook=cards-too-long` |
 
 ### ⭐⭐ The first commission that is a PERSONA, not a topic
 
@@ -1096,10 +1129,10 @@ version off the **route** (`TarotBridge.tsx:55`, `path.endsWith('/b')`) and forw
 unchanged** for any lander outside the `v1_tarot_version_bc_2026` scope. These three are outside
 it, so **B is what actually ships.**
 
-⚠️ **The `/b`-only policy is a no-op for the four hooks INSIDE that test** (`cards-will-commit`,
-`cards-return`, `cards-who-he-is`, `cards-feels`): those are server-assigned B-or-C regardless of
-the path clicked, so pointing their ads at `/b` changes nothing. Concluding that test is a
-separate decision and has not been taken.
+⚠️ **HISTORICAL — true only while the test ran.** The `/b`-only policy was a no-op for the four
+hooks INSIDE that test (`cards-will-commit`, `cards-return`, `cards-who-he-is`, `cards-feels`):
+those were server-assigned B-or-C regardless of the path clicked. **The test was concluded
+2026-08-18, winner B**, so they now serve B like everything else — see the banner at the top.
 
 ⭐⭐ **B makes NO model call.** `openerB` (`tarotReads.ts`) sends the whole static read then goes
 straight to name capture — so **the copy below IS the entire reading**, and every guard is

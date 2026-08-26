@@ -1,0 +1,34 @@
+{
+  "hook": "cards-love-not-happened-yet",
+  "headline": "Did I miss my chance, or has love just not happened yet?",
+  "method": "inherited-shadow",
+  "note": "Wired 2026-08-25 from fb-tarot/docs/writeups/shadow/REVIEW-money-alone-commit-2026-08-25.md — approved copy, transferred verbatim. Reuses the existing LONELINESS_TAROT_HOOKS frame; no new guard.",
+  "decks": {
+    "return-mhf": {
+      "a": [
+        "You turned the Magician. Nothing on the backs showed it, but your hand found the card where nothing has been taken away.",
+        "The cup, coin, blade and wand all remain on his table.",
+        "You asked whether you missed your chance or love has not happened yet. What catches me is that every tool remains.",
+        "Love has not happened, and you are searching for a chance you may have missed.",
+        "Just as possibility should become a meeting, something appears. I don't think it started with you.",
+        "Let me look closer at what that is…"
+      ],
+      "b": [
+        "You turned the Hanged Man. You chose without seeing him and found the figure who has not moved past.",
+        "He stays in the picture, held by one ankle.",
+        "You asked whether a chance passed you. This card makes me look at the pause itself.",
+        "Still, there is no relationship, and your question is looking backward for it.",
+        "There's something between the pause and the relationship. I don't think it began with you.",
+        "Let me see what's holding this…"
+      ],
+      "c": [
+        "You turned the Fool. The card was hidden, yet your hand went to the only one in full sun.",
+        "The full sun is high behind the Fool.",
+        "You asked whether the important moment is already behind you. The full light on this card holds my attention.",
+        "But love has not begun, and “missed” has placed the chance in the past.",
+        "What has hold of the beginning keeps it from taking shape. I don't think this began with you.",
+        "Now let me look at what has hold of this…"
+      ]
+    }
+  }
+}

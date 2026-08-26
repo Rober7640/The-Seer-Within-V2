@@ -1,0 +1,34 @@
+{
+  "hook": "cards-alone-a-decade",
+  "headline": "I've been alone a decade. How much longer?",
+  "method": "inherited-shadow",
+  "note": "Wired 2026-08-25 from fb-tarot/docs/writeups/shadow/REVIEW-money-alone-commit-2026-08-25.md — approved copy, transferred verbatim. Reuses the existing LONELINESS_TAROT_HOOKS frame; no new guard.",
+  "decks": {
+    "return-mhf": {
+      "a": [
+        "You turned the Magician. You couldn't see him, but your hand found the one whose table is still open.",
+        "Every tool remains laid out and ready for use.",
+        "You said you have been alone a decade and asked how much longer. The open table is where my eye goes.",
+        "Nobody has come, and the decade has made the question about what remains.",
+        "The thing that keeps connection away leaves the table open. I don't think this began with you.",
+        "Let me see what is holding the meeting…"
+      ],
+      "b": [
+        "You turned the Hanged Man. The backs gave nothing away, yet you chose the card held at one point.",
+        "One rope holds one ankle. Everything else hangs free.",
+        "You asked for the remaining length of a long pause. This card brings me to the single rope.",
+        "Still, the relationship is absent, and the waiting already has a long count behind it.",
+        "Something appears right where the pause would become a meeting. I don't think it started with you.",
+        "Let me see what's sitting there…"
+      ],
+      "c": [
+        "You turned the Fool. The picture was hidden, but your hand went to the one travelling light.",
+        "The small bundle on his stick is all he is carrying.",
+        "You asked how much longer after a decade alone. The light bundle catches my attention.",
+        "But the road has not brought connection, and you are asking how much more of it there is.",
+        "Something stands between the open road and connection. I don't think it began with you.",
+        "Now let's look at what's there…"
+      ]
+    }
+  }
+}

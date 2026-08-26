@@ -1,0 +1,36 @@
+{
+  "hook": "cards-end-up-alone",
+  "headline": "Why do I keep ending up alone?",
+  "note": "🔄 REWRITTEN 2026-08-19 to the Natural Tarot-Cut framework. Bubbles 3-6 run as ONE causal chain — so / and / but / that's why — and the read ANSWERS. The art line and the bridge are unchanged. Every ban in this note still stands.\n\nFace-down only (return-mhf). 🔴 NO KIND DIAGNOSIS — 'you love too much', 'you are too strong', 'your standards intimidate them' are the internet's stock answers and every one is a verdict wearing a compliment. 🔴 NO CAUSE asserted, 🔴 no prerequisite framing ('until you love yourself'), 🔴 no ruling that she has given up, and 🔴 no claiming access to her interior — 'deep down you', 'part of you knows', 'what you really want' are all banned.\n\nFinding: the question assumes a pattern with a cause, and the honest answer is that a mind will always find one. She has been the only suspect in her own case for years and nobody has ever told her it was not her.",
+  "decks": {
+    "return-mhf": {
+      "a": [
+        "You turned the Magician, dear. Look — his cloak falls open down one side.",
+        "You asked why you keep ending up alone. Your hand went to the man who looks for reasons.",
+        "So there's no reason to find here, dear. You've hunted for one for years.",
+        "And a mind like his can build a reason out of anything, dear.",
+        "But a reason you built yourself isn't a finding, dear.",
+        "That's why every answer you land on has your own name in it.",
+        "Let me look closer at what keeps landing in the same place…"
+      ],
+      "b": [
+        "You turned the Hanged Man, dear. Look — his knee makes a sharp corner against the beam.",
+        "You asked why you keep ending up alone. Your hand went to the card that hangs a why upside down.",
+        "So nothing falls out when you turn this over, dear. I've watched you try.",
+        "And he hangs there turned over, dear, and still no answer drops.",
+        "But some things just happen, dear. There's no reason underneath them.",
+        "That's why you've been the only suspect in your own case, dear.",
+        "Let me look closer at what has been standing in for an answer…"
+      ],
+      "c": [
+        "You turned the Fool, dear. Look — the dog's mouth is open, and it's right at his heel.",
+        "You asked why you keep ending up alone. Your hand went to the one who keeps setting out.",
+        "So you keep setting out again, dear. That is the part worth seeing.",
+        "And he takes the same step at the same edge, dear, and goes anyway.",
+        "But this card counts no failures, dear. It keeps no tally at all.",
+        "That's why the tally hurts, dear. Nobody else was keeping one.",
+        "Let me look closer at what keeps meeting you at the same edge…"
+      ]
+    }
+  }
+}
