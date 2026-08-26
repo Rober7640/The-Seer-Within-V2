@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "ask": [
+      "Bash(npm run dev*)",
+      "Bash(npm start*)",
+      "Bash(npm run test:e2e*)",
+      "Bash(npm run test:live-thread*)",
+      "Bash(npx tsx server/index.ts*)",
+      "Bash(npx tsx scripts/test-drip-lewis.ts*)",
+      "Bash(node scripts/verify-6-6-promo-pill.mjs*)"
+    ]
+  }
+}
