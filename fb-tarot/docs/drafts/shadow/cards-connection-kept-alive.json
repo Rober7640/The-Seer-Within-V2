@@ -1,0 +1,34 @@
+{
+  "hook": "cards-connection-kept-alive",
+  "headline": "Why have I kept this connection alive on my own?",
+  "method": "inherited-shadow",
+  "note": "Wired 2026-08-25 from fb-tarot/docs/drafts/shadow/REVIEW-money-alone-commit-2026-08-25.md — approved copy, transferred verbatim. Reuses the existing LONELINESS_TAROT_HOOKS frame; no new guard.",
+  "decks": {
+    "return-mhf": {
+      "a": [
+        "You turned the Magician. You couldn't see the cards, but your hand found the worker of the three.",
+        "Both hands are busy above a table full of tools.",
+        "You asked why you kept this connection alive on your own. The two working hands hold my attention.",
+        "The connection remained alive through your effort, and the other side did not carry it with you.",
+        "Something appears just where shared effort should begin. I don't think it started with you.",
+        "Let me look closer at what has hold of this…"
+      ],
+      "b": [
+        "You turned the Hanged Man. The backs gave no clue, yet you chose the one held by a single thing.",
+        "One rope holds the figure at one ankle.",
+        "You said the connection depended on you. This card makes me look at the one point carrying the suspension.",
+        "Still, the connection was held open by one side, according to the question you brought.",
+        "There's something between the connection and equal weight. I don't think it began with you.",
+        "Let me see what's holding the connection…"
+      ],
+      "c": [
+        "You turned the Fool. Nothing revealed the picture, but your hand went to the one carrying the whole load he has.",
+        "One small bundle rests on the stick over his shoulder.",
+        "You asked why you carried the connection alone. The single bundle is the part I cannot ignore.",
+        "But you were the one carrying it, and the connection did not move on its own.",
+        "What has hold of the bond leaves the carrying on one side. I don't think this began with you.",
+        "Now let me look at what has hold of the bond…"
+      ]
+    }
+  }
+}

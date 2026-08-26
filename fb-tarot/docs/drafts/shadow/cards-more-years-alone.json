@@ -1,0 +1,34 @@
+{
+  "hook": "cards-more-years-alone",
+  "headline": "How many more years alone before something changes?",
+  "method": "inherited-shadow",
+  "note": "Wired 2026-08-25 from fb-tarot/docs/drafts/shadow/REVIEW-money-alone-commit-2026-08-25.md — approved copy, transferred verbatim. Reuses the existing LONELINESS_TAROT_HOOKS frame; no new guard.",
+  "decks": {
+    "return-mhf": {
+      "a": [
+        "You turned the Magician. You reached without seeing him and found the worker of the three.",
+        "Both hands are busy above the full table.",
+        "You asked how many more years pass before something changes. The work already happening is the part I notice first.",
+        "The change has not come, and the waiting is already measured in years.",
+        "Something keeps the change away while everything else remains active. I don't think this began with you.",
+        "Let me see what is holding the change…"
+      ],
+      "b": [
+        "You turned the Hanged Man. The card was hidden, but your hand went to the one that's still growing.",
+        "Green leaves remain on the living wood above him.",
+        "You asked for a count of years. This card makes me look at the growth inside the stillness.",
+        "Still, you are alone, and the pause has become a question about years.",
+        "Right where the pause would open, something appears. I don't think it started with you.",
+        "Let me look closer at what that is…"
+      ],
+      "c": [
+        "You turned the Fool. Nothing on the backs told you, yet you chose the only card in full sun.",
+        "The full sun is high behind him.",
+        "You asked how many more years you will be alone. This card brings me to full light without a clock.",
+        "But connection has not joined the road, and you are asking for the remaining length.",
+        "I keep coming back to something between the open road and connection. I don't think it began with you.",
+        "Now let's look at what's there…"
+      ]
+    }
+  }
+}

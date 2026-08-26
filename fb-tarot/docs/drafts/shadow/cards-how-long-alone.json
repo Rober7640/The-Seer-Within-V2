@@ -1,0 +1,34 @@
+{
+  "hook": "cards-how-long-alone",
+  "headline": "How long am I going to be alone?",
+  "method": "inherited-shadow",
+  "note": "Wired 2026-08-25 from fb-tarot/docs/drafts/shadow/REVIEW-money-alone-commit-2026-08-25.md — approved copy, transferred verbatim. Reuses the existing LONELINESS_TAROT_HOOKS frame; no new guard.",
+  "decks": {
+    "return-mhf": {
+      "a": [
+        "You turned the Magician. The pictures were hidden, but your hand went to the one who came ready.",
+        "Every tool he needs is laid out across the table.",
+        "You asked how long you are going to be alone. The ready table is the part I keep coming back to.",
+        "Nobody has come, and the waiting is long enough for you to ask for a number.",
+        "Whatever keeps connection away does so without disturbing your readiness. I don't think this began with you.",
+        "Let me look closer at what is holding this…"
+      ],
+      "b": [
+        "You turned the Hanged Man. The backs were alike, yet you reached for the card held at one point.",
+        "One rope holds one ankle. The rest of him hangs loose.",
+        "You asked for the length of the waiting. This card makes me look at the one point carrying the pause.",
+        "Still, you are alone, and the length of the pause is the question.",
+        "Something reaches the question right where waiting would become a meeting. I don't think it started with you.",
+        "Let me see what that obstruction is…"
+      ],
+      "c": [
+        "You turned the Fool. You couldn't see him, but your hand found the one at the beginning.",
+        "The small bundle on his stick is all he has packed.",
+        "You asked how long being alone will last. The beginning on this card catches my attention.",
+        "But no one is moving with you, and you are asking how long that continues.",
+        "Something sits between the beginning and connection. I don't think it began with you.",
+        "Now let's look at what's there…"
+      ]
+    }
+  }
+}

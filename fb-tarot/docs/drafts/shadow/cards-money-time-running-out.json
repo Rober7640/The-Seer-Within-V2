@@ -1,0 +1,34 @@
+{
+  "hook": "cards-money-time-running-out",
+  "headline": "My time is running out. Is my energy blocking my money?",
+  "method": "inherited-shadow",
+  "note": "Wired 2026-08-25 from fb-tarot/docs/drafts/shadow/REVIEW-money-alone-commit-2026-08-25.md — approved copy, transferred verbatim. Reuses the existing MONEY_TAROT_HOOKS frame; no new guard.",
+  "decks": {
+    "return-mhf": {
+      "a": [
+        "You turned the Magician. You couldn't see the cards, but your hand found the one who came ready.",
+        "Look at his table. A cup, a coin, a blade and a wand are all laid out.",
+        "You asked whether your energy is blocking your money as time runs short. What catches me is the complete table.",
+        "And yet the money is blocked, and time is the fear in your question.",
+        "Something sits between all that readiness and the money. I don't think it began with you.",
+        "Let me look closer at what that obstruction is…"
+      ],
+      "b": [
+        "You turned the Hanged Man. The picture was hidden, and your hand still went to the one held by a single thing.",
+        "One rope circles one ankle. The rest of him hangs free.",
+        "You asked whether your energy is the block. This card makes me look at that single rope.",
+        "Still, the money has not reached you. You are asking whether your energy is holding it.",
+        "Whatever has hold of the result holds it quietly. I don't think this began with you.",
+        "Let me see what's holding the result…"
+      ],
+      "c": [
+        "You turned the Fool. Nothing showed you which was which, yet you chose the one travelling light.",
+        "Look at the small bundle on his stick. That is all he is carrying.",
+        "You asked whether your energy blocks the money. What catches me is how little he carries.",
+        "But the money is blocked, and you feel time running out.",
+        "Something meets the money just where movement should begin. I don't think it started with you.",
+        "Now let me look at what's behind this…"
+      ]
+    }
+  }
+}

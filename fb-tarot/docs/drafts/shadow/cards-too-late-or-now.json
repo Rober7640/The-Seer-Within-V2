@@ -1,0 +1,34 @@
+{
+  "hook": "cards-too-late-or-now",
+  "headline": "Is it too late for love, or is this only where I am now?",
+  "method": "inherited-shadow",
+  "note": "Wired 2026-08-25 from fb-tarot/docs/drafts/shadow/REVIEW-money-alone-commit-2026-08-25.md — approved copy, transferred verbatim. Reuses the existing LONELINESS_TAROT_HOOKS frame; no new guard.",
+  "decks": {
+    "return-mhf": {
+      "a": [
+        "You turned the Magician. Nothing showed through the backs, but your hand found the one with nothing put away.",
+        "The whole table is open, with every tool still out.",
+        "You asked whether it is too late for love or this is only where you are now. The open table catches me.",
+        "Love has not come, and “too late” is one of the answers you are considering.",
+        "Something turns up just where an open possibility would become love. I don't think it started with you.",
+        "Now let me look at what's doing this…"
+      ],
+      "b": [
+        "You turned the Hanged Man. You reached without seeing him and chose the card where life continues.",
+        "Green leaves grow from the wood above the paused figure.",
+        "You asked whether the pause has become a closing time. This card makes me look at the living leaves.",
+        "Still, you are alone, and the pause feels close to becoming final.",
+        "I keep coming back to something between the living pause and connection. I don't think it began with you.",
+        "Let me see what's holding this…"
+      ],
+      "c": [
+        "You turned the Fool. The cards were face down, yet your hand went to the only one in full sun.",
+        "The sky behind him is gold and clear.",
+        "You asked whether love is too late. The full light on this card is the part I keep coming back to.",
+        "But no one has come, and the present place feels like the end of the road.",
+        "Something has hold of the road without changing what is visible. I don't think this began with you.",
+        "Now let me look at what has hold of the result…"
+      ]
+    }
+  }
+}

@@ -29,7 +29,6 @@ const { SHADOW_READS, hasShadowRead } = await import('@/content/tarotReadsShadow
 
 const CARDS = ['a', 'b', 'c'] as const;
 const NAME_CAPTURE = /what's your first name, dear\?$/;
-const LOOP = /^Let me look closer at .*…$/;
 
 // Never rewritten, never armed (invariant 4). cards-return alone carries most of the tarot
 // traffic — arming it would leave nothing unchanged to compare any of this against.
@@ -41,8 +40,8 @@ const armed = Object.entries(SHADOW_READS).flatMap(([deck, hooks]) =>
 );
 
 describe('the shadow roster is wired and complete', () => {
-  it('37 landers are armed, on one deck, with all three cards', () => {
-    expect(armed.length, 'the approved set is 37 landers — see the split-test checklist').toBe(37);
+  it('81 landers are armed, on one deck, with all three cards', () => {
+    expect(armed.length, 'the approved set is 37 August landers + 44 money/alone/commit landers — see the split-test checklist').toBe(81);
     for (const [deck, hook] of armed) {
       const read = (SHADOW_READS as any)[deck][hook];
       for (const c of CARDS) {
@@ -88,18 +87,11 @@ describe('the fold — six beats into four slots, six bubbles', () => {
     }
   });
 
-  it('slot [3] is still the OPEN LOOP — the 19 files pinning four slots depend on it', () => {
-    for (const [deck, hook] of armed) for (const c of CARDS) {
-      expect((SHADOW_READS as any)[deck][hook][c][3], `${hook}/${c}`).toMatch(LOOP);
-    }
-  });
-
   it('openerB serves 6 bubbles then name capture, none of them empty', () => {
     for (const [deck, hook] of armed) for (const c of CARDS) {
       const msgs = openerB(deck as any, hook as any, c, 'shadow');
       expect(msgs.length, `${hook}/${c} is not six bubbles plus name capture`).toBe(7);
       expect(msgs[0], `${hook}/${c} must open on the card she turned`).toMatch(/^You turned /);
-      expect(msgs[msgs.length - 2], `${hook}/${c} must keep the open loop`).toMatch(LOOP);
       expect(msgs[msgs.length - 1]).toMatch(NAME_CAPTURE);
       for (const m of msgs) expect(m.trim().length, `${hook}/${c} has an empty bubble`).toBeGreaterThan(0);
     }

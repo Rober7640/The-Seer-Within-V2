@@ -1,0 +1,34 @@
+{
+  "hook": "cards-commitment-uncertain-years",
+  "headline": "Why is commitment still uncertain after all these years?",
+  "method": "inherited-shadow",
+  "note": "Wired 2026-08-25 from fb-tarot/docs/drafts/shadow/REVIEW-money-alone-commit-2026-08-25.md — approved copy, transferred verbatim. Reuses the existing default decode-him frame; no new guard.",
+  "decks": {
+    "return-mhf": {
+      "a": [
+        "You turned the Magician. You couldn't see the picture, but your hand found the card where everything is prepared.",
+        "The full set of tools is arranged across his table.",
+        "You asked why commitment remains uncertain after all these years. The prepared table is the part I keep coming back to.",
+        "The relationship has years behind it, and the commitment remains uncertain.",
+        "Something sits between what is already prepared and the named future. I don't think it began with you.",
+        "Now let me look at what has hold of this…"
+      ],
+      "b": [
+        "You turned the Hanged Man. The backs gave no hint, yet you reached for the one held at one point.",
+        "One rope holds one ankle. The rest of him hangs loose.",
+        "You asked why the future is still suspended. This card brings me to the single restraint.",
+        "Still, the future is held while the rest of the relationship continues.",
+        "Whatever has hold of the commitment keeps one question apart from the rest. I don't think this began with you.",
+        "Let me see what's holding the commitment…"
+      ],
+      "c": [
+        "You turned the Fool. Nothing showed you the card, but your hand went to the one travelling light.",
+        "The small bundle remains on his stick as he moves.",
+        "You asked why commitment has not settled. The bundle moving forward holds my eye.",
+        "But the years have moved, and the commitment has not settled with them.",
+        "Something appears right where the shared road would settle into commitment. I don't think it started with you.",
+        "Now let's look at what's behind this…"
+      ]
+    }
+  }
+}

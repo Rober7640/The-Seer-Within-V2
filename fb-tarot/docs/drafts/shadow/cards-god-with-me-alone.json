@@ -1,0 +1,34 @@
+{
+  "hook": "cards-god-with-me-alone",
+  "headline": "God is with me. Why am I still alone?",
+  "method": "inherited-shadow",
+  "note": "Wired 2026-08-25 from fb-tarot/docs/drafts/shadow/REVIEW-money-alone-commit-2026-08-25.md — approved copy, transferred verbatim. Reuses the existing LONELINESS_TAROT_HOOKS frame; no new guard.",
+  "decks": {
+    "return-mhf": {
+      "a": [
+        "You turned the Magician. You couldn't see him, but your hand found the one standing openly before a full table.",
+        "He stands out in the open, with every tool visible on the table.",
+        "You said God is with you and asked why you are still alone. What catches me is the fullness already in front of this figure.",
+        "You are still alone, and your faith has not removed that question.",
+        "Something turns up just where companionship should meet your life. I don't think it started with you.",
+        "Now let me look at what has hold of this…"
+      ],
+      "b": [
+        "You turned the Hanged Man. Nothing showed you the figure, yet you chose the calmest man here.",
+        "He hangs upside down by one ankle. His face is calm.",
+        "You said God is with you and asked about the solitude. This card makes me look at the calm inside the pause.",
+        "Still, the companionship you want is absent while the pause continues.",
+        "There's something between you and companionship. I don't think it began with you.",
+        "Let me see what's holding this…"
+      ],
+      "c": [
+        "You turned the Fool. The backs gave nothing away, but your hand went to the card in full light.",
+        "The sky behind him is gold, with no cloud in it.",
+        "You said God is with you and asked why no one is beside you. The full light on this card holds my eye.",
+        "But no one has joined the road, though you said God is with you.",
+        "What has hold of the companionship question keeps it apart from the light already here. I don't think this began with you.",
+        "Now let me look at what has hold of the question…"
+      ]
+    }
+  }
+}

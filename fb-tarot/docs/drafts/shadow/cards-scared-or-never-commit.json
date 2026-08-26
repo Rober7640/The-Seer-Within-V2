@@ -1,0 +1,34 @@
+{
+  "hook": "cards-scared-or-never-commit",
+  "headline": "Is he scared to commit, or just never going to?",
+  "method": "inherited-shadow",
+  "note": "Wired 2026-08-25 from fb-tarot/docs/drafts/shadow/REVIEW-money-alone-commit-2026-08-25.md — approved copy, transferred verbatim. Reuses the existing default decode-him frame; no new guard.",
+  "decks": {
+    "return-mhf": {
+      "a": [
+        "You turned the Magician. You couldn't see him, but your hand found the one who controls what is shown.",
+        "He stands openly behind a table he has arranged.",
+        "You asked whether he is scared to commit or never will. The deliberate presentation is what catches me.",
+        "He has not committed, and you have been left with two explanations for it.",
+        "There's something between what he presents and the commitment. I don't think it began with you.",
+        "Now let me look at what's standing there…"
+      ],
+      "b": [
+        "You turned the Hanged Man. The card was hidden, yet you chose the calmest figure in the deck.",
+        "He hangs by one ankle. His face is calm.",
+        "You asked what is happening inside his pause. This card makes me look at the calm face.",
+        "Still, the future is held, and his reason is not available to you.",
+        "What has hold of the future holds it quietly. I don't think this began with you.",
+        "Let me see what's holding the future…"
+      ],
+      "c": [
+        "You turned the Fool. The backs were alike, but your hand went to the one carrying almost nothing.",
+        "One small bundle is all he carries at the start.",
+        "You asked for a verdict on his fear and future. The lightly packed beginning holds my eye.",
+        "But commitment has not settled, and “never” has entered the question.",
+        "Something appears right where the beginning would need to become a decision. I don't think it started with you.",
+        "Now let's look at what's behind this…"
+      ]
+    }
+  }
+}

@@ -1,0 +1,34 @@
+{
+  "hook": "cards-held-alone",
+  "headline": "Is something holding me here alone, or is this just my life now?",
+  "method": "inherited-shadow",
+  "note": "Wired 2026-08-25 from fb-tarot/docs/drafts/shadow/REVIEW-money-alone-commit-2026-08-25.md — approved copy, transferred verbatim. Reuses the existing LONELINESS_TAROT_HOOKS frame; no new guard.",
+  "decks": {
+    "return-mhf": {
+      "a": [
+        "You turned the Magician. The pictures were hidden, but your hand found the one with a full table.",
+        "A cup, a coin, a blade and a wand are all laid out.",
+        "You asked whether something holds you alone or this is simply your life. What catches me is the full table.",
+        "You are alone now, and the question has grown large enough to describe your life.",
+        "Something reaches the question just where possibility would become connection. I don't think it started with you.",
+        "Let me look closer at what that is…"
+      ],
+      "b": [
+        "You turned the Hanged Man. You couldn't see the card, yet you reached for the one with room around the restraint.",
+        "One ankle is held. The rest of the figure hangs free.",
+        "You asked whether you are held here. This card makes me look at how small the restraint is beside the whole figure.",
+        "Still, connection is absent, and you are asking whether the hold is permanent.",
+        "Something sits between the free space and the relationship. I don't think it began with you.",
+        "Let me see what's holding this…"
+      ],
+      "c": [
+        "You turned the Fool. The backs were identical, but your hand went to the one carrying little.",
+        "One small bundle is tied to the stick over his shoulder.",
+        "You asked whether solitude is your life now. The light bundle brings me to what the Fool carries forward.",
+        "But you are alone, and the road ahead feels as though it carries the same answer.",
+        "Whatever has hold of this keeps the question narrowed to one answer. I don't think this began with you.",
+        "Now let me look at what has hold of the question…"
+      ]
+    }
+  }
+}

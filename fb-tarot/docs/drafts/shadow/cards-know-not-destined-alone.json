@@ -1,0 +1,34 @@
+{
+  "hook": "cards-know-not-destined-alone",
+  "headline": "How long before I know I'm not destined to be alone?",
+  "method": "inherited-shadow",
+  "note": "Wired 2026-08-25 from fb-tarot/docs/drafts/shadow/REVIEW-money-alone-commit-2026-08-25.md — approved copy, transferred verbatim. Reuses the existing LONELINESS_TAROT_HOOKS frame; no new guard.",
+  "decks": {
+    "return-mhf": {
+      "a": [
+        "You turned the Magician. You couldn't see the cards, yet your hand found the one with every possibility still on the table.",
+        "The cup, coin, blade and wand all remain in front of him.",
+        "You asked how long before you know you are not destined to be alone. The complete table catches me.",
+        "You are still alone, and you are waiting for time to disprove the fear.",
+        "I keep coming back to something between the open possibility and connection. I don't think it began with you.",
+        "Let me look closer at what's doing this…"
+      ],
+      "b": [
+        "You turned the Hanged Man. The backs hid him, but you reached for the one held by a single thing.",
+        "One rope holds one ankle. The rest of him hangs loose.",
+        "You asked for a length that would settle the destiny question. This card makes me look at the single rope.",
+        "Still, the pause has left the destiny question hanging.",
+        "Something has hold of the question and keeps it from resolving cleanly. I don't think this began with you.",
+        "Let me see what's holding the question…"
+      ],
+      "c": [
+        "You turned the Fool. Nothing gave the picture away, but your hand went to the open beginning.",
+        "The small bundle on his stick is all he has packed.",
+        "You asked when you can stop believing solitude is destined. The beginning on this card holds my attention.",
+        "But the road has no one else on it, and you are asking time to settle what that means.",
+        "Something appears just where a new answer would begin. I don't think it started with you.",
+        "Now let's look at what's behind this…"
+      ]
+    }
+  }
+}

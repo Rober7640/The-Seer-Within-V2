@@ -5,10 +5,11 @@
 //
 // WHY IT IS GENERATED. The same reason copy-migration-checklist.md is: a hand-kept list of a
 // hundred landers drifts within a fortnight, and this repo already has three tarot rosters that
-// fall out of sync with each other. Everything below is DERIVED — the categories from the frame
-// Sets in the server prompt, the landers from the registry, and the METHOD from the shape of the
-// wired read itself. Nobody has to remember to tick anything, so the file cannot claim a lander
-// is something the code says it is not.
+// fall out of sync with each other. The LIVE section below is DERIVED — the categories from the
+// frame Sets in the server prompt, the landers from the registry, and the METHOD from the shape of
+// the wired read itself. The DRAFT section is typed data in this generator. Keeping both sections
+// in the same generated document gives the operator one registry without pretending that an
+// unwritten hook is already routable or armed.
 //
 // 🔴 HOW THE METHOD IS DETECTED, and why it needs no new field: it is WHICH ROSTER carries the
 // hook. The Inherited Shadow ships as a SECOND roster beside the natural one rather than as an
@@ -46,6 +47,68 @@ const METHODS = {
   shadow: { name: 'the Inherited Shadow', bubbles: 6, doc: 'fb-tarot/docs/inherited-shadow-cut.md' },
 } as const
 type Method = keyof typeof METHODS
+
+// ── Draft candidates ─────────────────────────────────────────────────────────────────────────
+// These are registered for WRITING, not serving. Do not add them to TarotHook/TAROT_HOOKS,
+// HEADLINES, a read roster, a route allowlist or an experiment until BOTH manuscripts are
+// approved. `natural + shadow` without the word DRAFTED means armed everywhere else in this
+// document, so draft rows always say `drafted natural + shadow`.
+type DraftFrame = 'money' | 'loneliness' | 'connection' | 'commitment'
+type DraftGuard =
+  | 'TIME'
+  | 'ENERGY'
+  | 'SCAM'
+  | 'SELF-BLAME'
+  | 'EMPTY-HOUSE'
+  | 'FAITH'
+  | 'NO-MAN'
+  | 'MIND-READING'
+
+type DraftCandidate = {
+  hook: string
+  headline: string
+  frame: DraftFrame
+  source: string
+  guards: DraftGuard[]
+  relationship: string
+}
+
+const draft = (
+  hook: string,
+  headline: string,
+  frame: DraftFrame,
+  source: string,
+  guards: DraftGuard[] = [],
+  relationship = 'New',
+): DraftCandidate => ({ hook, headline, frame, source, guards, relationship })
+
+// 2026-08-26: the money-age-energy / alone-age-energy / commit-age-matrix batch (44 hooks) that
+// lived here was promoted to live per the operator's direct instruction — both methods wired,
+// both arms armed, added to the v1_tarot_shadow_2026 scope. Removed per the Draft-to-live
+// contract's own step 5 below. The per-hook guard labels those 44 carried (SCAM on the
+// trusted-loss money hook, NO-MAN on the Connection trio, FAITH on the God/Prayer trio, etc.)
+// were not carried into a new prompts.ts guard clause — they reuse MONEY_TAROT_HOOKS /
+// LONELINESS_TAROT_HOOKS as-is (operator: "no guard"). That per-hook detail lived only in this
+// array; it is not preserved elsewhere, flagged for the operator rather than silently dropped.
+const DRAFT_CANDIDATES: DraftCandidate[] = []
+
+const DRAFT_FRAME_RULES: Record<DraftFrame, string> = {
+  money: 'Her money, never love or a person. No amount, source, date, duration, person, cause, financial advice, presumed financial state, self-blame or promise.',
+  loneliness: 'No particular man. No fate, forever verdict, promised arrival, date, duration, tactic, self-blame, invented history or invented reason.',
+  connection: 'Only the connection she named. No certified bond, narrated feelings or motives, promised contact or commitment, duration, or wait/leave/reach-out advice.',
+  commitment: 'A real man, read only as a tendency or situation. No private thoughts, character, diagnosis, motive, future decision, duration, leave/stay advice, self-blame or promise.',
+}
+
+const DRAFT_GUARD_RULES: Record<DraftGuard, string> = {
+  TIME: 'No date, length, pace, “soon,” “not much longer,” or position on a timeline; visibly decline a requested length.',
+  ENERGY: 'Energy may be read but never scored as low, blocked, closed, wrong, misaligned, or something she must fix.',
+  SCAM: 'No accusation, identified person, predicted recovery or return, and no financial advice.',
+  'SELF-BLAME': 'Do not accept the headline’s case against her, even in sympathetic language.',
+  'EMPTY-HOUSE': 'Do not infer children, bereavement, divorce, estrangement, or why the house became empty.',
+  FAITH: 'Prayer and God may be discussed because she named them; never speak for God or declare a divine response, test, punishment, lesson, plan or promise.',
+  'NO-MAN': 'Do not invent a current or future person, their location, traits, feelings, or approach.',
+  'MIND-READING': 'The binary asks for an interior verdict; refuse to decide either motive from a card.',
+}
 
 const src = readFileSync(PROMPTS, 'utf8')
 
@@ -118,15 +181,35 @@ const methodLegend = (Object.keys(METHODS) as Method[])
   .map((m) => `\`${m}\` = ${METHODS[m].name}, ${METHODS[m].bubbles} bubbles`)
   .join(' · ')
 
+const draftHooks = DRAFT_CANDIDATES.map((candidate) => candidate.hook)
+const draftHeadlines = DRAFT_CANDIDATES.map((candidate) => candidate.headline)
+const liveHooks = new Set(TAROT_HOOKS as readonly string[])
+if (new Set(draftHooks).size !== draftHooks.length) throw new Error('draft roster contains a duplicate hook id')
+if (new Set(draftHeadlines).size !== draftHeadlines.length) throw new Error('draft roster contains a duplicate headline')
+const draftLiveCollisions = draftHooks.filter((hook) => liveHooks.has(hook))
+if (draftLiveCollisions.length) {
+  throw new Error(
+    `draft hooks are already live: ${draftLiveCollisions.join(', ')}. ` +
+      'Remove them from DRAFT_CANDIDATES only after both methods are approved and fully wired.',
+  )
+}
+const draftFrameOrder: DraftFrame[] = ['money', 'loneliness', 'connection', 'commitment']
+const draftByFrame = new Map(
+  draftFrameOrder.map((frame) => [frame, DRAFT_CANDIDATES.filter((candidate) => candidate.frame === frame)]),
+)
+
 const out: string[] = [
   '# /fb-tarot — every lander, by category',
   '',
   `> 🤖 **GENERATED — do not hand-edit.** Rewrite it with \`npx tsx ${SELF}\`.`,
   `> Categories come from the frame Sets in \`${PROMPTS}\`, landers from the registry in`,
   `> \`${REGISTRY}\`, and the METHOD from which roster carries the read —`,
-  '> so this file cannot claim a lander is something the code says it is not.',
+  '> so the live section cannot claim a lander is something the code says it is not.',
+  `> Draft candidates come from the typed \`DRAFT_CANDIDATES\` roster in \`${SELF}\`.`,
   '',
-  `**${total} landers.** ${tally}`,
+  `**${total} live landers.** ${tally}`,
+  '',
+  `**${DRAFT_CANDIDATES.length} draft candidates** with both Natural and Shadow manuscripts written for review. They are not routable or armed.`,
   '',
   `**${armed.length} armed** for the Inherited Shadow (\`natural + shadow\` below): ${ARMED_DOC}`,
   '',
@@ -138,6 +221,7 @@ const out: string[] = [
   '|---|---|',
   `| **Method** | ${methodLegend}. Derived from which roster carries the read, not from a field |`,
   '| `natural + shadow` | **ARMED** — both reads serve this lander while `v1_tarot_shadow_2026` runs, 70% shadow / 30% natural. Nothing was replaced |',
+  '| `drafted natural + shadow` | **DRAFT ONLY** — both manuscripts are written for review, but neither method is live and the hook is not routable |',
   '| **Decks** | every deck carrying this hook, in either roster |',
   '| ⛔ | a protected control — never rewritten, never armed (invariant 4) |',
   '| ✝ | carries an extra ban that exists nowhere else on the funnel |',
@@ -165,5 +249,69 @@ for (const f of order) {
   }
   out.push('')
 }
+
+out.push(
+  '## Draft — reading copy written, awaiting approval',
+  '',
+  `**${DRAFT_CANDIDATES.length} hooks awaiting approval.**`,
+  '',
+  '**Status for every row:** draft Natural Tarot-Cut (3 cards × 7 cuts) + draft Inherited Shadow (3 cards × 6 beats), awaiting operator approval.',
+  '',
+  '**Deck for every row:** `return-mhf` · face down · a Magician · b Hanged Man · c Fool.',
+  '',
+  '**Review manuscripts:** `fb-tarot/docs/drafts/natural/REVIEW-money-alone-commit-2026-08-25.md` · `fb-tarot/docs/drafts/shadow/REVIEW-money-alone-commit-2026-08-25.md`.',
+  '',
+  'These hooks have review copy only. They do not exist in `TarotHook`, `TAROT_HOOKS`,',
+  '`HEADLINES`, either read roster, route validation, the armed population, or experiment weights.',
+  '',
+  '### Draft frame rules',
+  '',
+  '| Frame | Shared rule for both methods |',
+  '|---|---|',
+  ...draftFrameOrder.map((frame) => `| \`${frame}\` | ${DRAFT_FRAME_RULES[frame]} |`),
+  '',
+  '### Additional guard labels',
+  '',
+  '| Label | Added requirement |',
+  '|---|---|',
+  ...(Object.keys(DRAFT_GUARD_RULES) as DraftGuard[]).map(
+    (guard) => `| \`${guard}\` | ${DRAFT_GUARD_RULES[guard]} |`,
+  ),
+  '',
+)
+
+for (const frame of draftFrameOrder) {
+  const candidates = draftByFrame.get(frame)!
+  out.push(`### ${frame} — ${candidates.length}`, '')
+  out.push(
+    '| Hook | Exact headline | Source placement | Planned method | Deck / facing | Added guards | Relationship / writing note |',
+    '|---|---|---|---|---|---|---|',
+  )
+  for (const candidate of candidates) {
+    const guards = candidate.guards.length
+      ? candidate.guards.map((guard) => `\`${guard}\``).join(' · ')
+      : '—'
+    out.push(
+      `| \`${candidate.hook}\` | ${candidate.headline} | ${candidate.source} | drafted natural + shadow | \`return-mhf\` · face down | ${guards} | ${candidate.relationship} |`,
+    )
+  }
+  out.push('')
+}
+
+out.push(
+  '### Draft-to-live contract',
+  '',
+  '1. Use the exact headline above in both manuscripts.',
+  '2. Write the two methods separately; never mechanically convert one into the other.',
+  '3. Approve all three Natural reads and all three Shadow reads before wiring a hook.',
+  '4. Wire the live type, headline, frame, reporting family, natural roster, shadow roster, route validation and safety tests in one pass.',
+  '5. Remove the hook from `DRAFT_CANDIDATES` in that same pass. Generation refuses a hook that appears in both draft and live rosters.',
+  '6. Regenerate this file. Only then does the hook move from this draft section into the live categories above.',
+  '7. Draft registration never changes experiment weights or the armed population.',
+  '',
+)
+
 writeFileSync(OUT, out.join('\n'))
-console.log(`wrote ${OUT} — ${total} landers across ${order.length} categories`)
+console.log(
+  `wrote ${OUT} — ${total} live landers across ${order.length} categories · ${DRAFT_CANDIDATES.length} draft candidates`,
+)

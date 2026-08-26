@@ -1,0 +1,34 @@
+{
+  "hook": "cards-alone-for-years",
+  "headline": "I've been alone for years. What's keeping me here?",
+  "method": "inherited-shadow",
+  "note": "Wired 2026-08-25 from fb-tarot/docs/drafts/shadow/REVIEW-money-alone-commit-2026-08-25.md — approved copy, transferred verbatim. Reuses the existing LONELINESS_TAROT_HOOKS frame; no new guard.",
+  "decks": {
+    "return-mhf": {
+      "a": [
+        "You turned the Magician. You couldn't see the picture, but your hand found the one with everything still available.",
+        "Every tool is out on the table, within reach.",
+        "You said you have been alone for years and asked what keeps you here. The complete table is what catches me.",
+        "And yet you are still alone after the years you named.",
+        "Something stands between all that possibility and the relationship. I don't think it began with you.",
+        "Let me look closer at what that obstruction is…"
+      ],
+      "b": [
+        "You turned the Hanged Man. The cards were face down, and you chose the one held by a single thing.",
+        "One rope circles one ankle. Nothing else is tied.",
+        "You asked what has kept you alone. This card brings me to the single rope.",
+        "Still, the relationship is absent, and the question feels held in place.",
+        "The thing that has hold of the meeting holds it tightly. I don't think this began with you.",
+        "Let me see what's holding the meeting…"
+      ],
+      "c": [
+        "You turned the Fool. The backs gave nothing away, yet you reached for the card in full light.",
+        "The full sun is high behind him.",
+        "You asked what keeps you here after years alone. The full light on the card holds my eye.",
+        "But the years have passed without the meeting you wanted.",
+        "Something turns up just where the open road would become connection. I don't think it started with you.",
+        "Now let's look at what's behind this…"
+      ]
+    }
+  }
+}

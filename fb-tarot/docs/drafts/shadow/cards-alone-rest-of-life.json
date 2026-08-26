@@ -1,0 +1,34 @@
+{
+  "hook": "cards-alone-rest-of-life",
+  "headline": "Will I be alone for the rest of my life?",
+  "method": "inherited-shadow",
+  "note": "Wired 2026-08-25 from fb-tarot/docs/drafts/shadow/REVIEW-money-alone-commit-2026-08-25.md — approved copy, transferred verbatim. Reuses the existing LONELINESS_TAROT_HOOKS frame; no new guard.",
+  "decks": {
+    "return-mhf": {
+      "a": [
+        "You turned the Magician. The pictures were hidden, but your hand found the one with every tool still available.",
+        "Every tool remains on the table, ready to be used.",
+        "You asked whether you will be alone for the rest of your life. The complete table is the part that stops me.",
+        "You are alone now, and the present has grown large enough to predict the whole future in your question.",
+        "What keeps connection away does so without emptying the table. I don't think this began with you.",
+        "Let me see what is holding this…"
+      ],
+      "b": [
+        "You turned the Hanged Man. You chose without seeing him and found the card with life around the pause.",
+        "Green leaves grow from the wood above the suspended figure.",
+        "You asked whether the pause lasts for life. This card brings me to the leaves still growing.",
+        "Still, there is no relationship, and the pause feels permanent from inside it.",
+        "Something reaches the question just where the pause would open. I don't think it started with you.",
+        "Let me see what has hold of this…"
+      ],
+      "c": [
+        "You turned the Fool. The backs were alike, yet your hand went to the beginning of the deck.",
+        "The small bundle on his stick is all he has packed.",
+        "You asked whether solitude fills the whole road. The Fool brings me to its beginning.",
+        "But the road is empty of company, and you are asking whether it stays that way.",
+        "There's something between the beginning and company. I don't think it began with you.",
+        "Now let's look at what's there…"
+      ]
+    }
+  }
+}

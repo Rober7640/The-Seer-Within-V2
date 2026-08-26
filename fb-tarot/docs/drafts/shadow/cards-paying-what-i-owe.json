@@ -1,0 +1,34 @@
+{
+  "hook": "cards-paying-what-i-owe",
+  "headline": "I keep paying what I owe. Why is my money still blocked?",
+  "method": "inherited-shadow",
+  "note": "Wired 2026-08-25 from fb-tarot/docs/drafts/shadow/REVIEW-money-alone-commit-2026-08-25.md — approved copy, transferred verbatim. Reuses the existing MONEY_TAROT_HOOKS frame; no new guard.",
+  "decks": {
+    "return-mhf": {
+      "a": [
+        "You turned the Magician. Nothing showed through the backs, but your hand still found the worker.",
+        "Both hands are busy above a table full of working tools.",
+        "You said you keep paying what you owe and asked why the money stays blocked. The work already happening catches my eye.",
+        "The payments continue, and the money remains blocked.",
+        "Something reaches the result just where the work should open it. I don't think it started with you.",
+        "Let me look closer at what that is…"
+      ],
+      "b": [
+        "You turned the Hanged Man. You couldn't see the card, yet you chose the one with a single restraint.",
+        "One rope circles one ankle. No other part of him is tied.",
+        "You asked why the money is held while you keep paying. This card brings me to that single rope.",
+        "Still, the action you named keeps happening while the result stays held.",
+        "Something stands between the payments and the money changing. I don't think it began with you.",
+        "Let me see what's holding the money…"
+      ],
+      "c": [
+        "You turned the Fool. The backs told you nothing, but your hand went to the one travelling light.",
+        "Look at the bundle on his stick. It moves with him.",
+        "You asked why the result has not moved with what you are paying. The carried bundle is where this card takes me.",
+        "And yet the money has not moved, though you keep carrying what you owe.",
+        "The thing that has hold of the money keeps it apart from what you already carry. I don't think this began with you.",
+        "Now let me look at what has hold of the result…"
+      ]
+    }
+  }
+}

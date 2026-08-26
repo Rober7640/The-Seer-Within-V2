@@ -1,0 +1,34 @@
+{
+  "hook": "cards-time-to-commit-before-moving-on",
+  "headline": "How long do I give him to commit before I move on?",
+  "method": "inherited-shadow",
+  "note": "Wired 2026-08-25 from fb-tarot/docs/drafts/shadow/REVIEW-money-alone-commit-2026-08-25.md — approved copy, transferred verbatim. Reuses the existing default decode-him frame; no new guard.",
+  "decks": {
+    "return-mhf": {
+      "a": [
+        "You turned the Magician. You couldn't see the picture, yet your hand found the one ready for action.",
+        "Every tool is out, and both hands are occupied.",
+        "You asked how long to give him before moving on. The readiness for action is what catches me.",
+        "He has not committed, and you are the one asking how long to keep the question open.",
+        "What has hold of the commitment keeps action from becoming a decision. I don't think this began with you.",
+        "Let me see what is holding the commitment…"
+      ],
+      "b": [
+        "You turned the Hanged Man. The backs were alike, but you reached for the card held at one point.",
+        "One rope holds one ankle. Nothing else is tied.",
+        "You asked for a limit on waiting for his commitment. This card brings me to the one rope.",
+        "Still, the commitment remains suspended while you wait for a limit.",
+        "Just as the wait would become an answer, something appears. I don't think it started with you.",
+        "Let me see what's doing this…"
+      ],
+      "c": [
+        "You turned the Fool. The card was hidden, yet your hand went to the one travelling light.",
+        "The small bundle on his stick is all he is carrying.",
+        "You asked when to move. The light bundle on this card holds my attention.",
+        "But his commitment has not moved, and your own movement is tied to the answer.",
+        "There's something between the open road and his commitment. I don't think it began with you.",
+        "Now let's look at what's there…"
+      ]
+    }
+  }
+}

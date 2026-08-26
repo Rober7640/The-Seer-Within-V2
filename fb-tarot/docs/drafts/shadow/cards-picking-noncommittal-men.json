@@ -1,0 +1,34 @@
+{
+  "hook": "cards-picking-noncommittal-men",
+  "headline": "Why do I keep picking non-committal men?",
+  "method": "inherited-shadow",
+  "note": "Wired 2026-08-25 from fb-tarot/docs/drafts/shadow/REVIEW-money-alone-commit-2026-08-25.md — approved copy, transferred verbatim. Reuses the existing default decode-him frame; no new guard.",
+  "decks": {
+    "return-mhf": {
+      "a": [
+        "You turned the Magician. The cards were hidden, but your hand found the one who decides what others see.",
+        "He stands behind a table arranged openly in front of him.",
+        "You asked why you keep picking non-committal men. What catches me is how carefully the table is presented.",
+        "The men you chose did not commit, and the pattern has turned back on your choice.",
+        "Something sits between what is presented and commitment. I don't think it began with you.",
+        "Let me look closer at what's holding this…"
+      ],
+      "b": [
+        "You turned the Hanged Man. You chose without seeing him and found the card with only one side facing you.",
+        "His front faces you, while his arms remain behind him.",
+        "You asked why the men you choose do not commit. This card makes me look at the one side you can see.",
+        "Still, the men you chose did not commit, and the question has turned back on you.",
+        "Whatever has hold of the future keeps part of it out of view. I don't think this began with you.",
+        "Let me see what's holding the future…"
+      ],
+      "c": [
+        "You turned the Fool. Nothing revealed the picture, yet your hand went to the one carrying very little at the start.",
+        "One small bundle is tied to the stick over his shoulder.",
+        "You asked why commitment stays unsettled after you choose. The small bundle is the part I notice first.",
+        "But the beginnings did not become commitment, and you are asking why you chose them.",
+        "Something appears just where a beginning would need to settle. I don't think it started with you.",
+        "Now let's look at what's behind this…"
+      ]
+    }
+  }
+}

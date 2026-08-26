@@ -1,0 +1,34 @@
+{
+  "hook": "cards-years-before-commitment",
+  "headline": "How many years together before he makes a commitment?",
+  "method": "inherited-shadow",
+  "note": "Wired 2026-08-25 from fb-tarot/docs/drafts/shadow/REVIEW-money-alone-commit-2026-08-25.md — approved copy, transferred verbatim. Reuses the existing default decode-him frame; no new guard.",
+  "decks": {
+    "return-mhf": {
+      "a": [
+        "You turned the Magician. Nothing showed through the backs, yet your hand found the one ready for a decision.",
+        "Every tool is out, and both hands are at work.",
+        "You asked how many years together come before commitment. The readiness on this table is what catches me.",
+        "He has not made the commitment, though the relationship has years behind it.",
+        "Something has hold of the decision, keeping readiness from becoming commitment. I don't think this began with you.",
+        "Let me see what is holding the decision…"
+      ],
+      "b": [
+        "You turned the Hanged Man. You chose without seeing the card and found the one made still by a single rope.",
+        "One rope circles one ankle. Nothing else is tied.",
+        "You asked for the length of the suspension. This card makes me look at the one rope.",
+        "Still, the future is held while the count grows in your question.",
+        "Right where the years would become an answer, something appears. I don't think it started with you.",
+        "Let me see what has hold of this…"
+      ],
+      "c": [
+        "You turned the Fool. The picture was hidden, but your hand went to the one already on the road.",
+        "The small bundle on his stick is all he is carrying.",
+        "You asked how many years pass before he decides. The beginning on this card holds my attention.",
+        "But the relationship moves through time without settling the commitment.",
+        "I keep coming back to something between the relationship and commitment. I don't think it began with you.",
+        "Now let me see what is doing this…"
+      ]
+    }
+  }
+}
