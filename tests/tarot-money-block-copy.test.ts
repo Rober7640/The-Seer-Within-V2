@@ -1,7 +1,7 @@
 // Copy guards for the /fb-tarot MONEY-BLOCK batch (2026-08-19).
 //
 // ELEVEN landers on the face-down `return-mhf` deck, across four angles — `money-retiring`,
-// `money-working`, `money-energy`, `money-prayer`. Spec: fb-tarot/docs/drafts/money-block.draft.md.
+// `money-working`, `money-energy`, `money-prayer`. Spec: fb-tarot/docs/writeups/money-block.draft.md.
 //
 // ⭐⭐ THE FIRST NON-LOVE FAMILY ON THE FUNNEL. Every one of the 21 families before it asks
 // about a man. This one asks about her money, and that changes what a wrong sentence costs:

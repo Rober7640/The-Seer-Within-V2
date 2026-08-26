@@ -89,7 +89,7 @@ const DECK_NOTES = {
 // Hard-coded because these hooks do NOT exist in the registry yet — the checklist has to
 // show work that is not built, or the operator sees "6/88" and thinks that is the job.
 // Every row moves to the generated section above the moment its hook is wired.
-// Source of truth: fb-tarot/docs/drafts/money-block.draft.md.
+// Source of truth: fb-tarot/docs/writeups/money-block.draft.md.
 const MONEY = [
   ['money-retiring (55–64)', [
     ['cards-blocked-retiring', 'Why is my money still blocked this close to retiring?'],
@@ -372,7 +372,7 @@ if (has('--checklist')) {
   out.push('# Track B — the money batch (not built yet)')
   out.push('')
   out.push('The first non-love territory on the funnel. Deck: `return-mhf`, face-down, no new art.')
-  out.push('Draft + the 7 bans + the wiring list: `fb-tarot/docs/drafts/money-block.draft.md`.')
+  out.push('Draft + the 7 bans + the wiring list: `fb-tarot/docs/writeups/money-block.draft.md`.')
   out.push('')
   out.push('🔴 **The 33 reveals in that draft must be REWRITTEN, not just wired.** Scored against this')
   out.push('gate they carry ~176 problems — the same failure rate `cards-return` had before its')

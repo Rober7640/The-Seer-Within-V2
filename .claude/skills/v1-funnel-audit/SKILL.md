@@ -208,7 +208,7 @@ and a $30 downsell. Two complementary layers:
 
 ## /fb-tarot both-arm smoke (`audit-tarot-shadow.mjs`)
 
-The Phase-4 gate of `fb-tarot/docs/shadow-split-test-checklist.md`. Walks the real
+The Phase-4 gate of `fb-tarot/docs/writeups/shadow-split-test-checklist.md`. Walks the real
 `/fb-tarot/b` bridge for three landers — one commitment, one money, one after-loss — **on
 each arm of `v1_tarot_shadow_2026`**, and asserts the six bubbles that arrive on screen are
 character-for-character what `openerB` says that arm should send.

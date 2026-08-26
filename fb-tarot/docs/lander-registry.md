@@ -10,7 +10,7 @@
 
 **0 draft candidates** with both Natural and Shadow manuscripts written for review. They are not routable or armed.
 
-**81 armed** for the Inherited Shadow (`natural + shadow` below): `fb-tarot/docs/shadow-split-test-checklist.md`
+**81 armed** for the Inherited Shadow (`natural + shadow` below): `fb-tarot/docs/writeups/shadow-split-test-checklist.md`
 
 **A lander is one hook.** Most live only on `return-mhf`, the face-down deck every live ad
 points at; some also have `arcana-mfh` / `arcana-eef` / `decode-him` variants, and an edit has
@@ -244,7 +244,7 @@ No frame Set — these fall through to the default `decode-him` clause.
 
 **Deck for every row:** `return-mhf` · face down · a Magician · b Hanged Man · c Fool.
 
-**Review manuscripts:** `fb-tarot/docs/drafts/natural/REVIEW-money-alone-commit-2026-08-25.md` · `fb-tarot/docs/drafts/shadow/REVIEW-money-alone-commit-2026-08-25.md`.
+**Review manuscripts:** `fb-tarot/docs/writeups/natural/REVIEW-money-alone-commit-2026-08-25.md` · `fb-tarot/docs/writeups/shadow/REVIEW-money-alone-commit-2026-08-25.md`.
 
 These hooks have review copy only. They do not exist in `TarotHook`, `TAROT_HOOKS`,
 `HEADLINES`, either read roster, route validation, the armed population, or experiment weights.

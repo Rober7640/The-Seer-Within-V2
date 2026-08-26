@@ -2,8 +2,8 @@ import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 
 const REGISTRY = readFileSync('fb-tarot/docs/lander-registry.md', 'utf8')
-const NATURAL = readFileSync('fb-tarot/docs/drafts/natural/REVIEW-money-alone-commit-2026-08-25.md', 'utf8')
-const SHADOW = readFileSync('fb-tarot/docs/drafts/shadow/REVIEW-money-alone-commit-2026-08-25.md', 'utf8')
+const NATURAL = readFileSync('fb-tarot/docs/writeups/natural/REVIEW-money-alone-commit-2026-08-25.md', 'utf8')
+const SHADOW = readFileSync('fb-tarot/docs/writeups/shadow/REVIEW-money-alone-commit-2026-08-25.md', 'utf8')
 
 type Read = Record<number, [string, string, string]>
 type Lander = { headline: string; read: Read }

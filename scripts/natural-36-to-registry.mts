@@ -1,5 +1,5 @@
 #!/usr/bin/env npx tsx
-// natural-36-to-registry — wire fb-tarot/docs/REVIEW-natural-36.md into the registry.
+// natural-36-to-registry — wire fb-tarot/docs/writeups/natural/REVIEW-natural-36.md into the registry.
 //
 //   npx tsx scripts/natural-36-to-registry.mts [--check]
 //
@@ -21,7 +21,7 @@
 //    Wire them only when the appendix exists. See the manuscript's own wiring contract, rule 5.
 import { readFileSync, writeFileSync } from 'node:fs'
 
-const MS = 'fb-tarot/docs/REVIEW-natural-36.md'
+const MS = 'fb-tarot/docs/writeups/natural/REVIEW-natural-36.md'
 const REG = 'client/src/content/tarotReads.ts'
 // Operator, 2026-08-25: "use my stuff verbatim." All 36 are wired, commitment included.
 // The three commitment hooks are patched on `return-mhf` ONLY — `arcana-mfh` (face up) has no

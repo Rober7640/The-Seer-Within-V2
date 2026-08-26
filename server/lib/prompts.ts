@@ -1963,7 +1963,7 @@ export function buildTarotReflectPrompt(userData: UserData, deck: string, hook: 
   // will spend their life alone is forbidden in both directions.
   const loneliness = LONELINESS_TAROT_HOOKS.has(hook)
   // 🔴 MONEY IS TESTED FIRST, ahead of every branch below, and deliberately so. The spec
-  // (fb-tarot/docs/drafts/money-block.draft.md §1) called for it: the chain underneath is
+  // (fb-tarot/docs/writeups/money-block.draft.md §1) called for it: the chain underneath is
   // already at the limit of what reads well at five branches, and every one of those frames
   // assumes a man or a romantic future — so a money hook that fell through to any of them
   // would be guarded by rules written for a different question entirely.

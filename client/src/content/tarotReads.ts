@@ -3170,7 +3170,7 @@ const RETURN_MHF: CardSetConfig = {
     // recycled from the decode-him or trust hooks (verified mechanically — no
     // shared 6-word run in beat 3).
     'cards-will-commit': {
-      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/REVIEW-natural-36.md — approved copy, folded verbatim:
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-natural-36.md — approved copy, folded verbatim:
       // cuts 3-6 become beat 3, joined by newlines, and Version B serves them as separate
       // chat messages with a typing pause between each.
       a: [
@@ -3196,7 +3196,7 @@ const RETURN_MHF: CardSetConfig = {
     // on his character, and letting the answer land as her fault. The reads route
     // the "why" to where HE is stuck and never to anything she did or is.
     'cards-wont-commit': {
-      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/REVIEW-natural-36.md — approved copy, folded verbatim:
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-natural-36.md — approved copy, folded verbatim:
       // cuts 3-6 become beat 3, joined by newlines, and Version B serves them as separate
       // chat messages with a typing pause between each.
       a: [
@@ -3219,7 +3219,7 @@ const RETURN_MHF: CardSetConfig = {
       ],
     },
     'cards-ready-commit': {
-      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/REVIEW-natural-36.md — approved copy, folded verbatim:
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-natural-36.md — approved copy, folded verbatim:
       // cuts 3-6 become beat 3, joined by newlines, and Version B serves them as separate
       // chat messages with a typing pause between each.
       a: [
@@ -3674,7 +3674,7 @@ const RETURN_MHF: CardSetConfig = {
     // 'Will I find a new soulmate after loss?' — THE WORD "NEW". The fear underneath is
     // not whether someone exists; it is whether loving again would mean replacing him.
     'cards-new-soulmate': {
-      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/REVIEW-natural-36.md — approved copy, folded verbatim:
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-natural-36.md — approved copy, folded verbatim:
       // cuts 3-6 become beat 3, joined by newlines, and Version B serves them as separate
       // chat messages with a typing pause between each.
       a: [
@@ -3700,7 +3700,7 @@ const RETURN_MHF: CardSetConfig = {
     // where someone is; she is asking whether her one was already issued and already spent.
     // The read answers the PREMISE, never the location, and never the timing.
     'cards-soulmate-out-there': {
-      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/REVIEW-natural-36.md — approved copy, folded verbatim:
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-natural-36.md — approved copy, folded verbatim:
       // cuts 3-6 become beat 3, joined by newlines, and Version B serves them as separate
       // chat messages with a typing pause between each.
       a: [
@@ -3728,7 +3728,7 @@ const RETURN_MHF: CardSetConfig = {
     // does the same thing wearing concern. The finding: she is asking for permission, and
     // permission was never in anyone else's keeping — which is why waiting has not worked.
     'cards-ready-to-love': {
-      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/REVIEW-natural-36.md — approved copy, folded verbatim:
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-natural-36.md — approved copy, folded verbatim:
       // cuts 3-6 become beat 3, joined by newlines, and Version B serves them as separate
       // chat messages with a typing pause between each.
       a: [
@@ -3775,7 +3775,7 @@ const RETURN_MHF: CardSetConfig = {
     // not a distance, and she has been treating an absence as a destination she keeps
     // failing to reach.
     'cards-where-soulmate': {
-      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/REVIEW-natural-36.md — approved copy, folded verbatim:
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-natural-36.md — approved copy, folded verbatim:
       // cuts 3-6 become beat 3, joined by newlines, and Version B serves them as separate
       // chat messages with a typing pause between each.
       a: [
@@ -3802,7 +3802,7 @@ const RETURN_MHF: CardSetConfig = {
     // finding here is NOT proximity: it is the bracing. She has been managing her own hope
     // downward to stay safe, and that guarding is what any felt "distance" is made of.
     'cards-soulmate-closer': {
-      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/REVIEW-natural-36.md — approved copy, folded verbatim:
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-natural-36.md — approved copy, folded verbatim:
       // cuts 3-6 become beat 3, joined by newlines, and Version B serves them as separate
       // chat messages with a typing pause between each.
       a: [
@@ -3831,7 +3831,7 @@ const RETURN_MHF: CardSetConfig = {
     // dangerous answer there is strategy she could act on (move, look elsewhere). A read
     // that declines to blame her surroundings covers the life-stage reading too.
     'cards-not-found-yet': {
-      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/REVIEW-natural-36.md — approved copy, folded verbatim:
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-natural-36.md — approved copy, folded verbatim:
       // cuts 3-6 become beat 3, joined by newlines, and Version B serves them as separate
       // chat messages with a typing pause between each.
       a: [
@@ -5140,7 +5140,7 @@ const RETURN_MHF: CardSetConfig = {
     // ── money-retiring (55-64) — retirement is close and the money is not there ──
     // Why is my money still blocked this close to retiring?
     'cards-blocked-retiring': {
-      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/REVIEW-natural-36.md — approved copy, folded verbatim:
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-natural-36.md — approved copy, folded verbatim:
       // cuts 3-6 become beat 3, joined by newlines, and Version B serves them as separate
       // chat messages with a typing pause between each.
       a: [
@@ -5164,7 +5164,7 @@ const RETURN_MHF: CardSetConfig = {
     },
     // How long has something been blocking me from a nest egg?
     'cards-nest-egg': {
-      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/REVIEW-natural-36.md — approved copy, folded verbatim:
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-natural-36.md — approved copy, folded verbatim:
       // cuts 3-6 become beat 3, joined by newlines, and Version B serves them as separate
       // chat messages with a typing pause between each.
       a: [
@@ -5188,7 +5188,7 @@ const RETURN_MHF: CardSetConfig = {
     },
     // Is something blocking my money, or did I just leave it too late?
     'cards-too-late': {
-      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/REVIEW-natural-36.md — approved copy, folded verbatim:
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-natural-36.md — approved copy, folded verbatim:
       // cuts 3-6 become beat 3, joined by newlines, and Version B serves them as separate
       // chat messages with a typing pause between each.
       a: [
@@ -5213,7 +5213,7 @@ const RETURN_MHF: CardSetConfig = {
     // ── money-working (65+) — past the age she expected to stop, and still working ──
     // Why am I still working when the money should have come by now?
     'cards-still-working': {
-      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/REVIEW-natural-36.md — approved copy, folded verbatim:
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-natural-36.md — approved copy, folded verbatim:
       // cuts 3-6 become beat 3, joined by newlines, and Version B serves them as separate
       // chat messages with a typing pause between each.
       a: [
@@ -5237,7 +5237,7 @@ const RETURN_MHF: CardSetConfig = {
     },
     // How much longer will something keep blocking my money?
     'cards-how-much-longer': {
-      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/REVIEW-natural-36.md — approved copy, folded verbatim:
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-natural-36.md — approved copy, folded verbatim:
       // cuts 3-6 become beat 3, joined by newlines, and Version B serves them as separate
       // chat messages with a typing pause between each.
       a: [
@@ -5261,7 +5261,7 @@ const RETURN_MHF: CardSetConfig = {
     },
     // Is something still blocking my money, or have I run out of time?
     'cards-out-of-time': {
-      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/REVIEW-natural-36.md — approved copy, folded verbatim:
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-natural-36.md — approved copy, folded verbatim:
       // cuts 3-6 become beat 3, joined by newlines, and Version B serves them as separate
       // chat messages with a typing pause between each.
       a: [
@@ -5286,7 +5286,7 @@ const RETURN_MHF: CardSetConfig = {
     // ── money-energy — she suspects herself, because the internet told her to ──
     // Is my energy blocking my money?
     'cards-my-energy': {
-      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/REVIEW-natural-36.md — approved copy, folded verbatim:
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-natural-36.md — approved copy, folded verbatim:
       // cuts 3-6 become beat 3, joined by newlines, and Version B serves them as separate
       // chat messages with a typing pause between each.
       a: [
@@ -5310,7 +5310,7 @@ const RETURN_MHF: CardSetConfig = {
     },
     // What does my energy say about why money won't stay?
     'cards-money-wont-stay': {
-      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/REVIEW-natural-36.md — approved copy, folded verbatim:
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-natural-36.md — approved copy, folded verbatim:
       // cuts 3-6 become beat 3, joined by newlines, and Version B serves them as separate
       // chat messages with a typing pause between each.
       a: [
@@ -5334,7 +5334,7 @@ const RETURN_MHF: CardSetConfig = {
     },
     // How long has my energy been working against my money?
     'cards-energy-how-long': {
-      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/REVIEW-natural-36.md — approved copy, folded verbatim:
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-natural-36.md — approved copy, folded verbatim:
       // cuts 3-6 become beat 3, joined by newlines, and Version B serves them as separate
       // chat messages with a typing pause between each.
       a: [
@@ -5359,7 +5359,7 @@ const RETURN_MHF: CardSetConfig = {
     // ── money-prayer — she has prayed for years. Never rule on God, in either direction ──
     // I've prayed about money for years. What's still blocking it?
     'cards-prayed-years': {
-      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/REVIEW-natural-36.md — approved copy, folded verbatim:
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-natural-36.md — approved copy, folded verbatim:
       // cuts 3-6 become beat 3, joined by newlines, and Version B serves them as separate
       // chat messages with a typing pause between each.
       a: [
@@ -5383,7 +5383,7 @@ const RETURN_MHF: CardSetConfig = {
     },
     // How long will my prayers for money keep going unanswered?
     'cards-prayers-unanswered': {
-      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/REVIEW-natural-36.md — approved copy, folded verbatim:
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-natural-36.md — approved copy, folded verbatim:
       // cuts 3-6 become beat 3, joined by newlines, and Version B serves them as separate
       // chat messages with a typing pause between each.
       a: [
@@ -5407,7 +5407,7 @@ const RETURN_MHF: CardSetConfig = {
     },
     // ── Soulmate age-band, test A (wired 2026-08-20) ──────────────────────────────────
     'cards-slipping-past': {
-      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/REVIEW-natural-36.md — approved copy, folded verbatim:
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-natural-36.md — approved copy, folded verbatim:
       // cuts 3-6 become beat 3, joined by newlines, and Version B serves them as separate
       // chat messages with a typing pause between each.
       a: [
@@ -5430,7 +5430,7 @@ const RETURN_MHF: CardSetConfig = {
       ],
     },
     'cards-choosing-wrong': {
-      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/REVIEW-natural-36.md — approved copy, folded verbatim:
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-natural-36.md — approved copy, folded verbatim:
       // cuts 3-6 become beat 3, joined by newlines, and Version B serves them as separate
       // chat messages with a typing pause between each.
       a: [
@@ -5453,7 +5453,7 @@ const RETURN_MHF: CardSetConfig = {
       ],
     },
     'cards-found-me-yet': {
-      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/REVIEW-natural-36.md — approved copy, folded verbatim:
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-natural-36.md — approved copy, folded verbatim:
       // cuts 3-6 become beat 3, joined by newlines, and Version B serves them as separate
       // chat messages with a typing pause between each.
       a: [
@@ -5476,7 +5476,7 @@ const RETURN_MHF: CardSetConfig = {
       ],
     },
     'cards-keeps-waiting': {
-      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/REVIEW-natural-36.md — approved copy, folded verbatim:
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-natural-36.md — approved copy, folded verbatim:
       // cuts 3-6 become beat 3, joined by newlines, and Version B serves them as separate
       // chat messages with a typing pause between each.
       a: [
@@ -5499,7 +5499,7 @@ const RETURN_MHF: CardSetConfig = {
       ],
     },
     'cards-missed-chance': {
-      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/REVIEW-natural-36.md — approved copy, folded verbatim:
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-natural-36.md — approved copy, folded verbatim:
       // cuts 3-6 become beat 3, joined by newlines, and Version B serves them as separate
       // chat messages with a typing pause between each.
       a: [
@@ -5522,7 +5522,7 @@ const RETURN_MHF: CardSetConfig = {
       ],
     },
     'cards-after-marriage': {
-      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/REVIEW-natural-36.md — approved copy, folded verbatim:
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-natural-36.md — approved copy, folded verbatim:
       // cuts 3-6 become beat 3, joined by newlines, and Version B serves them as separate
       // chat messages with a typing pause between each.
       a: [
@@ -5545,7 +5545,7 @@ const RETURN_MHF: CardSetConfig = {
       ],
     },
     'cards-second-time': {
-      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/REVIEW-natural-36.md — approved copy, folded verbatim:
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-natural-36.md — approved copy, folded verbatim:
       // cuts 3-6 become beat 3, joined by newlines, and Version B serves them as separate
       // chat messages with a typing pause between each.
       a: [
@@ -5568,7 +5568,7 @@ const RETURN_MHF: CardSetConfig = {
       ],
     },
     'cards-best-years': {
-      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/REVIEW-natural-36.md — approved copy, folded verbatim:
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-natural-36.md — approved copy, folded verbatim:
       // cuts 3-6 become beat 3, joined by newlines, and Version B serves them as separate
       // chat messages with a typing pause between each.
       a: [
@@ -5591,7 +5591,7 @@ const RETURN_MHF: CardSetConfig = {
       ],
     },
     'cards-too-late-love': {
-      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/REVIEW-natural-36.md — approved copy, folded verbatim:
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-natural-36.md — approved copy, folded verbatim:
       // cuts 3-6 become beat 3, joined by newlines, and Version B serves them as separate
       // chat messages with a typing pause between each.
       a: [
@@ -5614,7 +5614,7 @@ const RETURN_MHF: CardSetConfig = {
       ],
     },
     'cards-longer-to-wait': {
-      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/REVIEW-natural-36.md — approved copy, folded verbatim:
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-natural-36.md — approved copy, folded verbatim:
       // cuts 3-6 become beat 3, joined by newlines, and Version B serves them as separate
       // chat messages with a typing pause between each.
       a: [
@@ -5637,7 +5637,7 @@ const RETURN_MHF: CardSetConfig = {
       ],
     },
     'cards-allowed-to-want': {
-      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/REVIEW-natural-36.md — approved copy, folded verbatim:
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-natural-36.md — approved copy, folded verbatim:
       // cuts 3-6 become beat 3, joined by newlines, and Version B serves them as separate
       // chat messages with a typing pause between each.
       a: [
@@ -5661,7 +5661,7 @@ const RETURN_MHF: CardSetConfig = {
     },
     // ── Soulmate keyword, test B (wired 2026-08-20) ───────────────────────────────────
     'cards-blocking-soulmate': {
-      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/REVIEW-natural-36.md — approved copy, folded verbatim:
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-natural-36.md — approved copy, folded verbatim:
       // cuts 3-6 become beat 3, joined by newlines, and Version B serves them as separate
       // chat messages with a typing pause between each.
       a: [
@@ -5684,7 +5684,7 @@ const RETURN_MHF: CardSetConfig = {
       ],
     },
     'cards-blocked-before': {
-      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/REVIEW-natural-36.md — approved copy, folded verbatim:
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-natural-36.md — approved copy, folded verbatim:
       // cuts 3-6 become beat 3, joined by newlines, and Version B serves them as separate
       // chat messages with a typing pause between each.
       a: [
@@ -5755,7 +5755,7 @@ const RETURN_MHF: CardSetConfig = {
       ],
     },
     'cards-energy-away': {
-      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/REVIEW-natural-36.md — approved copy, folded verbatim:
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-natural-36.md — approved copy, folded verbatim:
       // cuts 3-6 become beat 3, joined by newlines, and Version B serves them as separate
       // chat messages with a typing pause between each.
       a: [
@@ -5778,7 +5778,7 @@ const RETURN_MHF: CardSetConfig = {
       ],
     },
     'cards-energy-soulmate': {
-      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/REVIEW-natural-36.md — approved copy, folded verbatim:
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-natural-36.md — approved copy, folded verbatim:
       // cuts 3-6 become beat 3, joined by newlines, and Version B serves them as separate
       // chat messages with a typing pause between each.
       a: [
@@ -5801,7 +5801,7 @@ const RETURN_MHF: CardSetConfig = {
       ],
     },
     'cards-waiting-to-heal': {
-      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/REVIEW-natural-36.md — approved copy, folded verbatim:
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-natural-36.md — approved copy, folded verbatim:
       // cuts 3-6 become beat 3, joined by newlines, and Version B serves them as separate
       // chat messages with a typing pause between each.
       a: [
@@ -5848,7 +5848,7 @@ const RETURN_MHF: CardSetConfig = {
       ],
     },
   'cards-money-time-running-out': {
-      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/drafts/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
       // folded verbatim: cuts 3-6 become beat 3, joined by newlines.
       a: [
         "All three cards were face down. You turned the Magician — look at the cup, coin, blade and wand laid across his table.",
@@ -5870,7 +5870,7 @@ const RETURN_MHF: CardSetConfig = {
       ],
     },
     'cards-money-has-to-last': {
-      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/drafts/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
       // folded verbatim: cuts 3-6 become beat 3, joined by newlines.
       a: [
         "You chose from three hidden pictures. You turned the Magician — his table is full, and every object is out where you can see it.",
@@ -5892,7 +5892,7 @@ const RETURN_MHF: CardSetConfig = {
       ],
     },
     'cards-trusted-loss-blocking-money': {
-      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/drafts/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
       // folded verbatim: cuts 3-6 become beat 3, joined by newlines.
       a: [
         "The card faces were hidden. You turned the Magician — see him standing in the open behind a table where every tool is still present.",
@@ -5914,7 +5914,7 @@ const RETURN_MHF: CardSetConfig = {
       ],
     },
     'cards-working-money-by-now': {
-      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/drafts/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
       // folded verbatim: cuts 3-6 become beat 3, joined by newlines.
       a: [
         "You couldn't see which card you reached for. You turned the Magician — both hands are occupied and every tool remains on the table.",
@@ -5936,7 +5936,7 @@ const RETURN_MHF: CardSetConfig = {
       ],
     },
     'cards-nothing-put-away': {
-      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/drafts/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
       // folded verbatim: cuts 3-6 become beat 3, joined by newlines.
       a: [
         "All three images were hidden. You turned the Magician — the cup, coin, blade and wand are already laid out in front of him.",
@@ -5958,7 +5958,7 @@ const RETURN_MHF: CardSetConfig = {
       ],
     },
     'cards-money-cant-stop-working': {
-      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/drafts/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
       // folded verbatim: cuts 3-6 become beat 3, joined by newlines.
       a: [
         "The pictures stayed hidden until you chose. You turned the Magician — look at both hands busy above a table full of tools.",
@@ -5980,7 +5980,7 @@ const RETURN_MHF: CardSetConfig = {
       ],
     },
     'cards-earn-and-gone': {
-      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/drafts/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
       // folded verbatim: cuts 3-6 become beat 3, joined by newlines.
       a: [
         "You had no picture to guide your hand. You turned the Magician — every tool is out and both hands are at work.",
@@ -6002,7 +6002,7 @@ const RETURN_MHF: CardSetConfig = {
       ],
     },
     'cards-talk-myself-out': {
-      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/drafts/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
       // folded verbatim: cuts 3-6 become beat 3, joined by newlines.
       a: [
         "Nothing on the backs gave the card away. You turned the Magician — the full set of tools is laid out in reach.",
@@ -6024,7 +6024,7 @@ const RETURN_MHF: CardSetConfig = {
       ],
     },
     'cards-paycheck-to-paycheck': {
-      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/drafts/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
       // folded verbatim: cuts 3-6 become beat 3, joined by newlines.
       a: [
         "The cards were face down. You turned the Magician — a cup, coin, blade and wand are waiting on the table in front of him.",
@@ -6046,7 +6046,7 @@ const RETURN_MHF: CardSetConfig = {
       ],
     },
     'cards-money-reach-me': {
-      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/drafts/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
       // folded verbatim: cuts 3-6 become beat 3, joined by newlines.
       a: [
         "You chose from three unseen cards. You turned the Magician — he stands in the open with every tool arranged before him.",
@@ -6068,7 +6068,7 @@ const RETURN_MHF: CardSetConfig = {
       ],
     },
     'cards-paying-what-i-owe': {
-      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/drafts/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
       // folded verbatim: cuts 3-6 become beat 3, joined by newlines.
       a: [
         "You couldn't see the card before choosing. You turned the Magician — both hands are working above a table where every tool is present.",
@@ -6090,7 +6090,7 @@ const RETURN_MHF: CardSetConfig = {
       ],
     },
     'cards-destined-alone': {
-      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/drafts/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
       // folded verbatim: cuts 3-6 become beat 3, joined by newlines.
       a: [
         "The pictures were hidden when you chose. You turned the Magician — every tool on his table is laid out in the open.",
@@ -6112,7 +6112,7 @@ const RETURN_MHF: CardSetConfig = {
       ],
     },
     'cards-how-long-alone': {
-      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/drafts/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
       // folded verbatim: cuts 3-6 become beat 3, joined by newlines.
       a: [
         "You reached for a card you could not see. You turned the Magician — the cup, coin, blade and wand are all ready on his table.",
@@ -6134,7 +6134,7 @@ const RETURN_MHF: CardSetConfig = {
       ],
     },
     'cards-love-not-happened-yet': {
-      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/drafts/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
       // folded verbatim: cuts 3-6 become beat 3, joined by newlines.
       a: [
         "Three hidden pictures, and you turned the Magician — none of the tools on his table has been taken away.",
@@ -6156,7 +6156,7 @@ const RETURN_MHF: CardSetConfig = {
       ],
     },
     'cards-alone-for-years': {
-      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/drafts/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
       // folded verbatim: cuts 3-6 become beat 3, joined by newlines.
       a: [
         "The card faces were hidden. You turned the Magician — he stands openly behind a table where every tool is within reach.",
@@ -6178,7 +6178,7 @@ const RETURN_MHF: CardSetConfig = {
       ],
     },
     'cards-more-years-alone': {
-      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/drafts/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
       // folded verbatim: cuts 3-6 become beat 3, joined by newlines.
       a: [
         "Nothing showed through the backs. You turned the Magician — every tool is out, and neither hand is idle.",
@@ -6200,7 +6200,7 @@ const RETURN_MHF: CardSetConfig = {
       ],
     },
     'cards-held-alone': {
-      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/drafts/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
       // folded verbatim: cuts 3-6 become beat 3, joined by newlines.
       a: [
         "The cards were hidden when you chose. You turned the Magician — a complete set of tools lies open on his table.",
@@ -6222,7 +6222,7 @@ const RETURN_MHF: CardSetConfig = {
       ],
     },
     'cards-empty-house-alone': {
-      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/drafts/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
       // folded verbatim: cuts 3-6 become beat 3, joined by newlines.
       a: [
         "You chose while every picture was hidden. You turned the Magician — his table is full, but he stands there by himself.",
@@ -6244,7 +6244,7 @@ const RETURN_MHF: CardSetConfig = {
       ],
     },
     'cards-alone-a-decade': {
-      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/drafts/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
       // folded verbatim: cuts 3-6 become beat 3, joined by newlines.
       a: [
         "You could not see which picture you chose. You turned the Magician — all four tools remain laid out and ready.",
@@ -6266,7 +6266,7 @@ const RETURN_MHF: CardSetConfig = {
       ],
     },
     'cards-too-late-or-now': {
-      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/drafts/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
       // folded verbatim: cuts 3-6 become beat 3, joined by newlines.
       a: [
         "The backs hid every symbol. You turned the Magician — nothing on his working table has been put away.",
@@ -6288,7 +6288,7 @@ const RETURN_MHF: CardSetConfig = {
       ],
     },
     'cards-alone-heavier-now': {
-      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/drafts/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
       // folded verbatim: cuts 3-6 become beat 3, joined by newlines.
       a: [
         "The cards were face down when your hand moved. You turned the Magician — both hands are occupied above a table full of tools.",
@@ -6310,7 +6310,7 @@ const RETURN_MHF: CardSetConfig = {
       ],
     },
     'cards-alone-rest-of-life': {
-      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/drafts/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
       // folded verbatim: cuts 3-6 become beat 3, joined by newlines.
       a: [
         "You reached for a face-down card. You turned the Magician — the complete set of tools is still spread across his table.",
@@ -6332,7 +6332,7 @@ const RETURN_MHF: CardSetConfig = {
       ],
     },
     'cards-meant-alone-still-time': {
-      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/drafts/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
       // folded verbatim: cuts 3-6 become beat 3, joined by newlines.
       a: [
         "The images were hidden. You turned the Magician — every tool remains laid out and ready for use.",
@@ -6354,7 +6354,7 @@ const RETURN_MHF: CardSetConfig = {
       ],
     },
     'cards-know-not-destined-alone': {
-      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/drafts/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
       // folded verbatim: cuts 3-6 become beat 3, joined by newlines.
       a: [
         "You reached for a picture you could not see. You turned the Magician — the cup, coin, blade and wand are all present on his table.",
@@ -6376,7 +6376,7 @@ const RETURN_MHF: CardSetConfig = {
       ],
     },
     'cards-destined-or-not-yet': {
-      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/drafts/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
       // folded verbatim: cuts 3-6 become beat 3, joined by newlines.
       a: [
         "The pictures stayed hidden until you chose. You turned the Magician — nothing on his complete table has been removed.",
@@ -6398,7 +6398,7 @@ const RETURN_MHF: CardSetConfig = {
       ],
     },
     'cards-god-with-me-alone': {
-      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/drafts/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
       // folded verbatim: cuts 3-6 become beat 3, joined by newlines.
       a: [
         "You could not see the card your hand found. You turned the Magician — every tool lies openly on the table before him.",
@@ -6420,7 +6420,7 @@ const RETURN_MHF: CardSetConfig = {
       ],
     },
     'cards-god-mean-me-alone': {
-      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/drafts/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
       // folded verbatim: cuts 3-6 become beat 3, joined by newlines.
       a: [
         "Nothing on the backs revealed the picture. You turned the Magician — his full set of tools remains ready on the table.",
@@ -6442,7 +6442,7 @@ const RETURN_MHF: CardSetConfig = {
       ],
     },
     'cards-gods-intention-alone': {
-      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/drafts/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
       // folded verbatim: cuts 3-6 become beat 3, joined by newlines.
       a: [
         "The images were hidden when you chose. You turned the Magician — a complete working table stands in front of him.",
@@ -6464,7 +6464,7 @@ const RETURN_MHF: CardSetConfig = {
       ],
     },
     'cards-love-never-stays': {
-      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/drafts/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
       // folded verbatim: cuts 3-6 become beat 3, joined by newlines.
       a: [
         "The card faces were hidden. You turned the Magician — all four tools remain on the table in front of him.",
@@ -6486,7 +6486,7 @@ const RETURN_MHF: CardSetConfig = {
       ],
     },
     'cards-connection-kept-alive': {
-      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/drafts/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
       // folded verbatim: cuts 3-6 become beat 3, joined by newlines.
       a: [
         "You reached before seeing the picture. You turned the Magician — both hands are working above the full table.",
@@ -6508,7 +6508,7 @@ const RETURN_MHF: CardSetConfig = {
       ],
     },
     'cards-wait-on-connection': {
-      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/drafts/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
       // folded verbatim: cuts 3-6 become beat 3, joined by newlines.
       a: [
         "All three pictures were hidden. You turned the Magician — every tool is ready, but no second person stands at the table.",
@@ -6530,7 +6530,7 @@ const RETURN_MHF: CardSetConfig = {
       ],
     },
     'cards-real-connection-coming': {
-      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/drafts/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
       // folded verbatim: cuts 3-6 become beat 3, joined by newlines.
       a: [
         "You chose from three hidden cards. You turned the Magician — the complete set of tools is open on his table.",
@@ -6552,7 +6552,7 @@ const RETURN_MHF: CardSetConfig = {
       ],
     },
     'cards-picking-noncommittal-men': {
-      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/drafts/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
       // folded verbatim: cuts 3-6 become beat 3, joined by newlines.
       a: [
         "The backs hid every picture. You turned the Magician — he stands in the open behind a table arranged to be seen.",
@@ -6574,7 +6574,7 @@ const RETURN_MHF: CardSetConfig = {
       ],
     },
     'cards-time-to-commit-before-moving-on': {
-      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/drafts/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
       // folded verbatim: cuts 3-6 become beat 3, joined by newlines.
       a: [
         "You reached for a card you could not see. You turned the Magician — every tool is out, and both hands are occupied.",
@@ -6596,7 +6596,7 @@ const RETURN_MHF: CardSetConfig = {
       ],
     },
     'cards-slow-commit-or-wasting-time': {
-      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/drafts/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
       // folded verbatim: cuts 3-6 become beat 3, joined by newlines.
       a: [
         "You could not see the picture before choosing. You turned the Magician — his table is deliberate, with every object placed in view.",
@@ -6618,7 +6618,7 @@ const RETURN_MHF: CardSetConfig = {
       ],
     },
     'cards-doing-wrong-wont-commit': {
-      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/drafts/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
       // folded verbatim: cuts 3-6 become beat 3, joined by newlines.
       a: [
         "The cards were face down. You turned the Magician — the cup, coin, blade and wand are all present on his table.",
@@ -6640,7 +6640,7 @@ const RETURN_MHF: CardSetConfig = {
       ],
     },
     'cards-wait-commit-this-time': {
-      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/drafts/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
       // folded verbatim: cuts 3-6 become beat 3, joined by newlines.
       a: [
         "The card faces were hidden. You turned the Magician — every tool remains available on the table.",
@@ -6662,7 +6662,7 @@ const RETURN_MHF: CardSetConfig = {
       ],
     },
     'cards-scared-or-never-commit': {
-      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/drafts/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
       // folded verbatim: cuts 3-6 become beat 3, joined by newlines.
       a: [
         "You picked from three hidden pictures. You turned the Magician — he stands openly behind a table arranged with care.",
@@ -6684,7 +6684,7 @@ const RETURN_MHF: CardSetConfig = {
       ],
     },
     'cards-wont-commit-years-together': {
-      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/drafts/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
       // folded verbatim: cuts 3-6 become beat 3, joined by newlines.
       a: [
         "The pictures were face down. You turned the Magician — every tool is laid out, and nothing has been put away.",
@@ -6706,7 +6706,7 @@ const RETURN_MHF: CardSetConfig = {
       ],
     },
     'cards-years-before-commitment': {
-      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/drafts/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
       // folded verbatim: cuts 3-6 become beat 3, joined by newlines.
       a: [
         "Nothing on the backs showed which card you chose. You turned the Magician — all four tools remain on the table.",
@@ -6728,7 +6728,7 @@ const RETURN_MHF: CardSetConfig = {
       ],
     },
     'cards-commitment-uncertain-years': {
-      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/drafts/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
       // folded verbatim: cuts 3-6 become beat 3, joined by newlines.
       a: [
         "You chose before seeing the image. You turned the Magician — his table is complete and arranged in plain sight.",
@@ -6750,7 +6750,7 @@ const RETURN_MHF: CardSetConfig = {
       ],
     },
     'cards-no-time-to-waste-commit': {
-      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/drafts/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
       // folded verbatim: cuts 3-6 become beat 3, joined by newlines.
       a: [
         "The card faces were hidden. You turned the Magician — everything needed for action is already on his table.",
@@ -6772,7 +6772,7 @@ const RETURN_MHF: CardSetConfig = {
       ],
     },
     'cards-how-much-longer-commit': {
-      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/drafts/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
       // folded verbatim: cuts 3-6 become beat 3, joined by newlines.
       a: [
         "You reached for a face-down card. You turned the Magician — every tool is present and both hands are ready to act.",
@@ -6794,7 +6794,7 @@ const RETURN_MHF: CardSetConfig = {
       ],
     },
     'cards-commit-or-company': {
-      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/drafts/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
+      // 🔄 Natural Tarot-Cut, wired 2026-08-25 from fb-tarot/docs/writeups/natural/REVIEW-money-alone-commit-2026-08-25.md — approved copy,
       // folded verbatim: cuts 3-6 become beat 3, joined by newlines.
       a: [
         "The pictures stayed hidden until you chose. You turned the Magician — his table is carefully arranged and fully visible.",

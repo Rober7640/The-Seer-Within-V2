@@ -13,7 +13,7 @@
 //
 // 🔴 HOW THE METHOD IS DETECTED, and why it needs no new field: it is WHICH ROSTER carries the
 // hook. The Inherited Shadow ships as a SECOND roster beside the natural one rather than as an
-// edit to it (option A, decided 2026-08-25 — see fb-tarot/docs/shadow-split-test-checklist.md):
+// edit to it (option A, decided 2026-08-25 — see fb-tarot/docs/writeups/shadow-split-test-checklist.md):
 //
 //   natural   DECKS[deck].reads[hook]          — what serves today, on every lander
 //   shadow    SHADOW_READS[deck][hook]         — the 70% arm of v1_tarot_shadow_2026
@@ -35,7 +35,7 @@ import { SHADOW_READS } from '../client/src/content/tarotReadsShadow'
 const PROMPTS = 'server/lib/prompts.ts'
 const REGISTRY = 'client/src/content/tarotReads.ts'
 const CHECKLIST = 'fb-tarot/docs/copy-migration-checklist.md'
-const ARMED_DOC = '`fb-tarot/docs/shadow-split-test-checklist.md`'
+const ARMED_DOC = '`fb-tarot/docs/writeups/shadow-split-test-checklist.md`'
 const SELF = 'scripts/lander-registry.mts'
 const OUT = 'fb-tarot/docs/lander-registry.md'
 
@@ -259,7 +259,7 @@ out.push(
   '',
   '**Deck for every row:** `return-mhf` · face down · a Magician · b Hanged Man · c Fool.',
   '',
-  '**Review manuscripts:** `fb-tarot/docs/drafts/natural/REVIEW-money-alone-commit-2026-08-25.md` · `fb-tarot/docs/drafts/shadow/REVIEW-money-alone-commit-2026-08-25.md`.',
+  '**Review manuscripts:** `fb-tarot/docs/writeups/natural/REVIEW-money-alone-commit-2026-08-25.md` · `fb-tarot/docs/writeups/shadow/REVIEW-money-alone-commit-2026-08-25.md`.',
   '',
   'These hooks have review copy only. They do not exist in `TarotHook`, `TAROT_HOOKS`,',
   '`HEADLINES`, either read roster, route validation, the armed population, or experiment weights.',

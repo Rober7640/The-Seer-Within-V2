@@ -55,7 +55,7 @@ one argument: **claim → proof → what it means for her → but → so → loo
 The live read is shown under each card. It is **not replaced** — arming a lander makes it the
 30% arm, so both run.
 
-⚠ Known blockers are tracked in \`fb-tarot/docs/shadow-split-test-checklist.md\`, not here. This
+⚠ Known blockers are tracked in \`fb-tarot/docs/writeups/shadow-split-test-checklist.md\`, not here. This
 file is the copy, so that reading it is reading the copy.
 `]
 

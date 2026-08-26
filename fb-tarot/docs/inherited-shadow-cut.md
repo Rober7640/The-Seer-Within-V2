@@ -251,7 +251,7 @@ shape into a current lander. Every bubble 1 below is taken from
 answer from beat 3 in places, omit the mandatory origin finding from beat 5, and let beat 6 carry
 a property. They remain as the development record for the claim/proof/contradiction logic only.
 For current shape and sound, use §The current reference read and the approved
-`fb-tarot/docs/drafts/shadow/REVIEW-new-voice.md`.
+`fb-tarot/docs/writeups/shadow/REVIEW-new-voice.md`.
 
 ### 🔴 Beat 5 is the OFFER, and a blank does not sell
 

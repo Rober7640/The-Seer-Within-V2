@@ -3,7 +3,7 @@
 **Status:** Draft manuscript. Do not wire.
 
 **Roster source:** hooks are restricted to the 36 landers in
-`fb-tarot/docs/drafts/shadow/REVIEW-new-voice.md`; exact current headlines come from
+`fb-tarot/docs/writeups/shadow/REVIEW-new-voice.md`; exact current headlines come from
 `fb-tarot/docs/lander-registry.md`. The separately frozen
 `cards-heal-first` reference lander is not part of this manuscript.
 

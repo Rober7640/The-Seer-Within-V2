@@ -17,7 +17,7 @@ import { readFileSync, writeFileSync, mkdirSync, rmSync, readdirSync } from 'nod
 import { fileURLToPath } from 'node:url'
 
 const EXPECT = { landers: 36, reads: 108, beats: 6, cards: 3 }
-const SRC = new URL('../fb-tarot/docs/drafts/shadow/REVIEW-new-voice.md', import.meta.url)
+const SRC = new URL('../fb-tarot/docs/writeups/shadow/REVIEW-new-voice.md', import.meta.url)
 const OUT = new URL('../fb-tarot/docs/drafts/shadow-review/', import.meta.url)
 
 const md = readFileSync(SRC, 'utf8')

@@ -2,7 +2,7 @@
   "hook": "cards-held-alone",
   "headline": "Is something holding me here alone, or is this just my life now?",
   "method": "inherited-shadow",
-  "note": "Wired 2026-08-25 from fb-tarot/docs/drafts/shadow/REVIEW-money-alone-commit-2026-08-25.md — approved copy, transferred verbatim. Reuses the existing LONELINESS_TAROT_HOOKS frame; no new guard.",
+  "note": "Wired 2026-08-25 from fb-tarot/docs/writeups/shadow/REVIEW-money-alone-commit-2026-08-25.md — approved copy, transferred verbatim. Reuses the existing LONELINESS_TAROT_HOOKS frame; no new guard.",
   "decks": {
     "return-mhf": {
       "a": [

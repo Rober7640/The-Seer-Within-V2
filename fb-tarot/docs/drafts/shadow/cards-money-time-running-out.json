@@ -2,7 +2,7 @@
   "hook": "cards-money-time-running-out",
   "headline": "My time is running out. Is my energy blocking my money?",
   "method": "inherited-shadow",
-  "note": "Wired 2026-08-25 from fb-tarot/docs/drafts/shadow/REVIEW-money-alone-commit-2026-08-25.md — approved copy, transferred verbatim. Reuses the existing MONEY_TAROT_HOOKS frame; no new guard.",
+  "note": "Wired 2026-08-25 from fb-tarot/docs/writeups/shadow/REVIEW-money-alone-commit-2026-08-25.md — approved copy, transferred verbatim. Reuses the existing MONEY_TAROT_HOOKS frame; no new guard.",
   "decks": {
     "return-mhf": {
       "a": [

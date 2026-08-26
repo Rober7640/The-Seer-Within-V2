@@ -9,8 +9,8 @@
 //   npx tsx scripts/wire-money-alone-commit-2026-08-25.mts [--check]
 import { readFileSync, writeFileSync } from 'node:fs'
 
-const NATURAL_MS = 'fb-tarot/docs/drafts/natural/REVIEW-money-alone-commit-2026-08-25.md'
-const SHADOW_MS = 'fb-tarot/docs/drafts/shadow/REVIEW-money-alone-commit-2026-08-25.md'
+const NATURAL_MS = 'fb-tarot/docs/writeups/natural/REVIEW-money-alone-commit-2026-08-25.md'
+const SHADOW_MS = 'fb-tarot/docs/writeups/shadow/REVIEW-money-alone-commit-2026-08-25.md'
 const REG = 'client/src/content/tarotReads.ts'
 const PROMPTS = 'server/lib/prompts.ts'
 const ROUTES = 'server/routes.ts'

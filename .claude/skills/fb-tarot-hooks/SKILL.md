@@ -369,7 +369,7 @@ lander: the ad, the fear, what cut 3 answers, the VOC behind it, the bans, and a
 
 ### 7 · Wire (only after approval)
 
-Per `fb-tarot/docs/drafts/money-block.draft.md` §7, the most recent worked example of adding a
+Per `fb-tarot/docs/writeups/money-block.draft.md` §7, the most recent worked example of adding a
 whole new family. Keep the un-synced rosters in step or the chat handoff 400s:
 
 - `client/src/content/tarotReads.ts` — the `TarotHook` union · `TAROT_HOOKS` · `HEADLINES` ·

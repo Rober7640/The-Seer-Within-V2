@@ -7,7 +7,7 @@
 // can compare the SCREEN against what openerB says should be there, and tarotReads.ts
 // imports through the `@shared/*` tsconfig alias, which bare node cannot resolve.
 //
-// Phase 4 of fb-tarot/docs/shadow-split-test-checklist.md. Everything before this
+// Phase 4 of fb-tarot/docs/writeups/shadow-split-test-checklist.md. Everything before this
 // proved the pieces in isolation: the generator proved the roster is the approved
 // copy, tarotMethod.test.ts proved the resolver, tarot-shadow-roster.test.ts proved
 // openerB reaches the right roster. NONE of them can see whether the six bubbles
