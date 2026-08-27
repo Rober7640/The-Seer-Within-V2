@@ -136,6 +136,28 @@ describe('the row it writes', () => {
     expect(state.inserted).toMatchObject({ treatment: null });
   });
 
+  it('falls back to the name Stripe collected on the card when the letter had no ?fn=', async () => {
+    await recordBackendOrder(
+      session({ customer_details: { email: 'she@example.com', name: 'Sarah Card' } }),
+    );
+    expect(state.inserted).toMatchObject({ firstName: 'Sarah Card' });
+  });
+
+  it('prefers the letter\'s ?fn= name over the card name', async () => {
+    await recordBackendOrder(
+      session(
+        { customer_details: { email: 'she@example.com', name: 'Card Name' } },
+        { firstName: 'Sarah' },
+      ),
+    );
+    expect(state.inserted).toMatchObject({ firstName: 'Sarah' });
+  });
+
+  it('is null only when neither ?fn= nor a card name exists', async () => {
+    await recordBackendOrder(session());
+    expect(state.inserted).toMatchObject({ firstName: null });
+  });
+
   it('prices the bump from the CATALOG, and only when checkout said she took it', async () => {
     await recordBackendOrder(
       session({ amount_total: 4777 }, { bump: '1', readingCents: '3500' }),
