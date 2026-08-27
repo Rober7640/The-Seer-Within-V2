@@ -40,8 +40,15 @@ const armed = Object.entries(SHADOW_READS).flatMap(([deck, hooks]) =>
 );
 
 describe('the shadow roster is wired and complete', () => {
-  it('81 landers are armed, on one deck, with all three cards', () => {
-    expect(armed.length, 'the approved set is 37 August landers + 44 money/alone/commit landers — see the split-test checklist').toBe(81);
+  // 🔴 ARMED IS NOT THE SAME AS IN THE TEST. This counts (deck, hook) pairs that HAVE a shadow
+  // read. Which of them the experiment actually serves is `scope.landers` in the database, so
+  // arming a lander cannot on its own put it in front of a visitor — readsForMethod falls back
+  // to the natural read for anything the scope has not approved.
+  //
+  // 87 = 37 August landers + 44 money/alone/commit (2026-08-26)
+  //    + 6 commitment age-matrix / connection-vocab (2026-08-27)
+  it('87 landers are armed, on one deck, with all three cards', () => {
+    expect(armed.length, 'the approved set is 37 August + 44 money/alone/commit + 6 commitment age/vocab landers — see the split-test checklist').toBe(87);
     for (const [deck, hook] of armed) {
       const read = (SHADOW_READS as any)[deck][hook];
       for (const c of CARDS) {

@@ -1,0 +1,45 @@
+{
+  "hook": "cards-connection-without-commitment",
+  "headline": "How long can a connection this strong go without commitment?",
+  "method": "natural-cut",
+  "note": "CONNECTION-VOCAB family (2026-08-27). Angle `commitment-connection`.\n\nShe asks for a LENGTH, so the duration ban is on: no number, no date, no season. Cut 3 refuses the number and moves the doubt off the connection itself.\n\n🔴 Same no-ongoing-contact rule as the rest of the family.\n\nVOC: fb-tarot/docs/drafts/rewrites/_voc-commit-vocab-2026-08-27.md\nManuscript: fb-tarot/docs/writeups/natural/REVIEW-commit-vocab-2026-08-27.md",
+  "voc": {
+    "pulled": "2026-08-27",
+    "pattern": "cv-connection",
+    "matched": 1759,
+    "buyers": 100,
+    "verdict": "ok",
+    "why": ""
+  },
+  "decks": {
+    "return-mhf": {
+      "a": [
+        "The cards were face down. You turned the Magician — look at the sideways eight above his head, with no end to it.",
+        "You asked how long this can go on. That sign above him doesn't measure anything.",
+        "I can't hand you a number, and the strength of it was never the doubt.",
+        "Means, yes — all of them. A date is the one thing nothing here carries.",
+        "The means are all here, and no one has said when.",
+        "You asked how long because no one has said when.",
+        "Let me look closer at what stops an end from being set…"
+      ],
+      "b": [
+        "You reached without seeing the figure. You turned the Hanged Man — held at one ankle, and his face perfectly calm.",
+        "You asked how much longer. This card shows suspension, and no release written on it.",
+        "No reader can set that length for you, dear.",
+        "A pause is what I'm shown. Where it ends isn't drawn on this card.",
+        "He's held and unhurt, while the time belongs to your life.",
+        "The strength was never in question. The limit is.",
+        "Let me see what has kept a limit from forming…"
+      ],
+      "c": [
+        "All three backs looked the same. You turned the Fool — his eyes are up, not on the ground ahead.",
+        "You asked how long. The Fool moves without checking the distance.",
+        "The strength you feel isn't what's unsettled here.",
+        "Movement, clearly. Arrival is nowhere on this card.",
+        "He keeps going, and nothing on this card names an end.",
+        "That's why you asked how long, dear.",
+        "Now let's look at what leaves it open-ended…"
+      ]
+    }
+  }
+}

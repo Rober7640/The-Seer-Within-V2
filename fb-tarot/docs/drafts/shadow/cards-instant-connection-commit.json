@@ -1,0 +1,42 @@
+{
+  "hook": "cards-instant-connection-commit",
+  "headline": "The connection was instant. So why won't he commit?",
+  "method": "inherited-shadow",
+  "note": "CONNECTION-VOCAB family (2026-08-27). NEW angle `commitment-connection` — one angle per keyword, per the soulmate-keyword convention.\n\nTHE FEAR: did I invent what that meant. Cut 3 affirms the speed was real without ruling on him.\n\n🔴 The corpus uses \"connection\" for men not seen in twenty years, so the read may NOT presume ongoing contact or a recent meeting.\n⚠ One buyer's own verdict is \"he uses women\" — the read does not adopt it.\n\nVOC: fb-tarot/docs/drafts/rewrites/_voc-commit-vocab-2026-08-27.md\nManuscript: fb-tarot/docs/writeups/shadow/REVIEW-commit-vocab-2026-08-27.md",
+  "voc": {
+    "pulled": "2026-08-27",
+    "pattern": "cv-connection",
+    "matched": 1759,
+    "buyers": 100,
+    "verdict": "ok",
+    "why": ""
+  },
+  "decks": {
+    "return-mhf": {
+      "a": [
+        "You turned the Magician. The cards were face down, and your hand went to the one who draws things to him.",
+        "Look at the flowers at his feet. They came up right where he stands.",
+        "You said the connection was instant. What catches me is that the ground answered him at once.",
+        "And yet nothing has been promised. The speed was on your side of it.",
+        "Something reaches this just as it would be spoken. I don't think it began with you.",
+        "Let me look closer at what reaches it…"
+      ],
+      "b": [
+        "You turned the Hanged Man. You couldn't see the cards, and you chose the one with a single tie on him.",
+        "One rope, one ankle. Everything else on him hangs loose.",
+        "You told me it was instant. This card puts one fixed thing in front of me.",
+        "Still, nothing has moved since. And the promise hasn't come.",
+        "There's something between the feeling and the word for it. I don't think this began with you.",
+        "Let me look closer at what's in that gap…"
+      ],
+      "c": [
+        "You turned the Fool. The backs looked identical, and your hand found the one out in full daylight.",
+        "Look at the sun behind him. It's full, and nothing on the card is in shadow.",
+        "You said it was instant, dear. This card brings me to a moment with nothing hidden in it.",
+        "But nothing was ever said out loud. And you're wondering what that speed meant.",
+        "What holds this back holds it out of sight. I don't think it started with you.",
+        "Let me look closer at what's behind it…"
+      ]
+    }
+  }
+}

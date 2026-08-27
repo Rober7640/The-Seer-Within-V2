@@ -1,0 +1,42 @@
+{
+  "hook": "cards-expecting-too-much",
+  "headline": "Am I expecting too much, or should he have committed by now?",
+  "method": "inherited-shadow",
+  "note": "Commitment AGE-MATRIX addition (2026-08-27). Angle `commitment-ageband`.\n\nTHE WORD DOING THE WORK: \"too\". Not whether she is expecting — whether her wanting is excessive.\n\nTHE FEAR: is my wanting the problem. The buyer who typed it indicts herself TWICE — \"Am I expecting too much? Did I jump in too soon?\" — so the read must refuse her WANTING and her TIMING, and rule on neither him nor her.\n\n🔴 \"too much\" is a whole-beat banned phrase on this angle (blames her, unavailable even inside a refusal). Beat 2 says her question back, so it PARAPHRASES and never quotes the ad.\n\nVOC: fb-tarot/docs/drafts/rewrites/_voc-commit-vocab-2026-08-27.md\nManuscript: fb-tarot/docs/writeups/shadow/REVIEW-commit-vocab-2026-08-27.md",
+  "voc": {
+    "pulled": "2026-08-27",
+    "pattern": "cv-expecting",
+    "matched": 5,
+    "buyers": 3,
+    "verdict": "thin",
+    "why": "Almost nobody phrases it as \"expecting too much\"; the corpus carries the same fear under \"what am I doing wrong\", already solved live on cards-doing-wrong-wont-commit. Inherited that finding. The 3 buyers who did type it indict their TIMING as well as their wanting."
+  },
+  "decks": {
+    "return-mhf": {
+      "a": [
+        "You turned the Magician. You couldn't see the cards, and your hand went to the one who came fully equipped.",
+        "Look at his table — a cup, a coin, a blade, a wand. All of it already out.",
+        "You asked whether you want more than is fair. What catches me is that nothing on that table is surplus.",
+        "And yet the future still hasn't been named. You've started to wonder if the fault is yours.",
+        "Something stands between you and the answer, near at hand. I don't think it began with you.",
+        "Let me look closer at what's standing there…"
+      ],
+      "b": [
+        "You turned the Hanged Man. The backs told you nothing, and you still found the calmest man in the deck.",
+        "He's held by one ankle. Look at his face, though — there's no distress in it.",
+        "You asked whether you rushed it, dear. This card puts the waiting itself in front of me.",
+        "Still, nothing has been settled. And the question has turned back on you.",
+        "Whatever has hold of this holds it lightly. I don't think this began with you.",
+        "Let me look closer at what has hold of it…"
+      ],
+      "c": [
+        "You turned the Fool. The cards were face down, and your hand chose the one already on his way.",
+        "Look at his eyes. They're up on the sky, not down on the road.",
+        "You asked whether you began this too early. This card brings me to the very start of a thing.",
+        "But nothing has been named since. And you're weighing your own timing.",
+        "Something turns up right where this would settle. I don't think it started with you.",
+        "Let me look closer at what turns up there…"
+      ]
+    }
+  }
+}
