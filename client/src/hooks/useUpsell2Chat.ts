@@ -36,7 +36,7 @@ import {
   UPSELL2_SOFT_DECLINE,
 } from "@/lib/upsell2Messages";
 import { upsell2Copy, displayName, type Upsell2Chain } from "@/lib/backendOffers";
-import { currentFunnel, getPostHogFunnel } from "@/lib/funnel";
+import { currentFunnel, getPostHogFunnel, isTwinFlameOffer } from "@/lib/funnel";
 import { track as trackPH } from "@/lib/posthog";
 import { tarotEventProps } from "@/lib/tarotAttribution";
 import { getTrackdeskClickId } from "@/lib/facebook";
@@ -107,6 +107,9 @@ export function useUpsell2Chat({
   const [isProcessing, setIsProcessing] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
   const [upsell2Bought, setUpsell2Bought] = useState(false);
+  // The backend charge's PaymentIntent id, so the BE shipping call can stamp the
+  // address onto it. Null on the V1 path (V1 saves shipping by session id instead).
+  const [upsell2PaymentId, setUpsell2PaymentId] = useState<string | null>(null);
   const [objectionCount, setObjectionCount] = useState(0);
 
   const [showContinue, setShowContinue] = useState(false);
@@ -493,25 +496,42 @@ export function useUpsell2Chat({
       ...(tarot ?? {}),
     });
 
+    // Backend charges its OWN endpoint (be_bracelet → list 6972556, no tracking),
+    // NO trackdeskClickId. V1's path/body is byte-identical.
+    const beFunnel = isTwinFlameOffer();
+
     try {
-      const response = await fetch("/api/upsell2/charge", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          checkoutSessionId: sessionId,
-          email: userData.email,
-          firstName: userData.firstName,
-          type: "full",
-          funnel: currentFunnel(),
-          trackdeskClickId: getTrackdeskClickId(),
-        }),
-      });
+      const response = await fetch(
+        beFunnel ? "/api/backend/upsell/charge" : "/api/upsell2/charge",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(
+            beFunnel
+              ? {
+                  checkoutSessionId: sessionId,
+                  email: userData.email,
+                  product: "be_bracelet",
+                  tier: "full",
+                }
+              : {
+                  checkoutSessionId: sessionId,
+                  email: userData.email,
+                  firstName: userData.firstName,
+                  type: "full",
+                  funnel: currentFunnel(),
+                  trackdeskClickId: getTrackdeskClickId(),
+                },
+          ),
+        },
+      );
 
       const result = await response.json();
 
       if (result.success) {
         setUpsell2Bought(true);
-        fireTrackdeskUpsell2(sessionId, 47, userData.email);
+        setUpsell2PaymentId(result.paymentIntentId ?? null);
+        if (!beFunnel) fireTrackdeskUpsell2(sessionId, 47, userData.email);
         if (isPathA && userData.hasShipping) {
           await sendBotMessages(p(copy.SUCCESS_HAS_SHIPPING));
           setIsProcessing(false);
@@ -522,6 +542,13 @@ export function useUpsell2Chat({
           setShowShippingForm(true);
           setStage("SHIPPING");
         }
+      } else if (result.fallback && beFunnel) {
+        // Backend, first build: no hosted BE fallback yet — let her retry.
+        await sendBotMessage(
+          "That didn't go through on your saved card, dear. Give it a moment and try once more.",
+        );
+        setIsProcessing(false);
+        setShowCTA(true);
       } else if (result.fallback) {
         // 1-click off-session charge declined → hosted Stripe checkout. See the
         // matching event in useUpsellChat: this is where a payment failure becomes
@@ -615,25 +642,41 @@ export function useUpsell2Chat({
       ...(tarot ?? {}),
     });
 
+    // Backend: downsell charge on be_bracelet at $30, no tracking / no trackdesk id.
+    const beFunnel = isTwinFlameOffer();
+
     try {
-      const response = await fetch("/api/upsell2/charge", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          checkoutSessionId: sessionId,
-          email: userData.email,
-          firstName: userData.firstName,
-          type: "downsell",
-          funnel: currentFunnel(),
-          trackdeskClickId: getTrackdeskClickId(),
-        }),
-      });
+      const response = await fetch(
+        beFunnel ? "/api/backend/upsell/charge" : "/api/upsell2/charge",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(
+            beFunnel
+              ? {
+                  checkoutSessionId: sessionId,
+                  email: userData.email,
+                  product: "be_bracelet",
+                  tier: "downsell",
+                }
+              : {
+                  checkoutSessionId: sessionId,
+                  email: userData.email,
+                  firstName: userData.firstName,
+                  type: "downsell",
+                  funnel: currentFunnel(),
+                  trackdeskClickId: getTrackdeskClickId(),
+                },
+          ),
+        },
+      );
 
       const result = await response.json();
 
       if (result.success) {
         setUpsell2Bought(true);
-        fireTrackdeskUpsell2(sessionId, 30, userData.email);
+        setUpsell2PaymentId(result.paymentIntentId ?? null);
+        if (!beFunnel) fireTrackdeskUpsell2(sessionId, 30, userData.email);
         if (isPathA && userData.hasShipping) {
           await sendBotMessages(p(copy.SUCCESS_HAS_SHIPPING));
           setIsProcessing(false);
@@ -644,6 +687,13 @@ export function useUpsell2Chat({
           setShowShippingForm(true);
           setStage("SHIPPING");
         }
+      } else if (result.fallback && beFunnel) {
+        // Backend, first build: no hosted BE fallback yet — let her retry.
+        await sendBotMessage(
+          "That didn't go through on your saved card, dear. Give it a moment and try once more.",
+        );
+        setIsProcessing(false);
+        setShowCTA(true);
       } else if (result.fallback) {
         trackPH("upsell_fallback_redirect", {
           funnel: getPostHogFunnel() ?? "v1",
@@ -717,11 +767,21 @@ export function useUpsell2Chat({
       setShowShippingForm(false);
 
       try {
-        await fetch("/api/upsell2/shipping", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ sessionId, address }),
-        });
+        // Backend stamps the address onto the upsell PaymentIntent (manual shipper
+        // reads it off Stripe); V1 saves by session id. Byte-identical for V1.
+        if (isTwinFlameOffer()) {
+          await fetch("/api/backend/upsell/shipping", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ paymentIntentId: upsell2PaymentId, address }),
+          });
+        } else {
+          await fetch("/api/upsell2/shipping", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ sessionId, address }),
+          });
+        }
 
         await processStage("COMPLETE");
       } catch (error) {
@@ -730,7 +790,7 @@ export function useUpsell2Chat({
         setIsComplete(true);
       }
     },
-    [sessionId, userData, processStage, sendBotMessage],
+    [sessionId, userData, processStage, sendBotMessage, upsell2PaymentId],
   );
 
   useEffect(() => {

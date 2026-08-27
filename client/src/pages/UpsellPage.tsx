@@ -94,7 +94,16 @@ export default function UpsellPage() {
     // Fetch user data from database
     async function fetchUserData() {
       try {
-        const response = await fetch(`/api/upsell/user-data?session_id=${sid}`);
+        // The backend funnel reads its own endpoint (Stripe-direct, no conversations)
+        // and — crucially — fires NONE of the V1 ad/affiliate tracking below: backend
+        // traffic is email, not Facebook, and its `be_` products are walled off from
+        // Meta/Google/Trackdesk everywhere else too. V1's path is unchanged.
+        const beFunnel = isTwinFlameOffer();
+        const response = await fetch(
+          beFunnel
+            ? `/api/backend/upsell/user-data?session_id=${sid}`
+            : `/api/upsell/user-data?session_id=${sid}`,
+        );
 
         if (!response.ok) {
           throw new Error("Order not found");
@@ -103,7 +112,7 @@ export default function UpsellPage() {
         const data = await response.json();
         setUserData(data);
 
-        if (shouldTrack) {
+        if (shouldTrack && !beFunnel) {
           const purchaseAmount = (data.mainPurchaseAmount || 3500) / 100;
           // Ad platforms get the TRUE order total (main + order bump). The
           // server-side CAPI fire already reports Stripe's amount_total, and both

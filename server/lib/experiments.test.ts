@@ -7,7 +7,7 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import crypto from 'crypto';
 
-import { experimentBucket, pickVariant, twoSidedP, shouldForceRunning, matchesFunnelScope, matchesLanderScope, PAYWALL_EXPERIMENT_KEY } from './experiments';
+import { experimentBucket, pickVariant, twoSidedP, shouldForceRunning, matchesFunnelScope, matchesLanderScope, bookingTreatmentOf, PAYWALL_EXPERIMENT_KEY } from './experiments';
 import type { ExperimentVariant } from '../../shared/schema';
 
 const ref = (id: string, key: string) =>
@@ -265,5 +265,23 @@ describe('twoSidedP', () => {
     const p = twoSidedP(1.959963985);
     assert.ok(p > 0.04 && p < 0.06, `p=${p}`);
     assert.ok(Math.abs(twoSidedP(2.3) - twoSidedP(-2.3)) < 1e-9);
+  });
+});
+
+describe('bookingTreatmentOf — which booking screen a BE assignment shows', () => {
+  it('shows the chat when the assigned arm carries treatment "chat"', () => {
+    assert.equal(bookingTreatmentOf({ payload: { treatment: 'chat' } }), 'chat');
+  });
+
+  it('shows the page when the arm carries treatment "page"', () => {
+    assert.equal(bookingTreatmentOf({ payload: { treatment: 'page' } }), 'page');
+  });
+
+  it('defaults to the page for a null assignment (no experiment / no subject)', () => {
+    assert.equal(bookingTreatmentOf(null), 'page');
+  });
+
+  it('defaults to the page when the arm names no treatment', () => {
+    assert.equal(bookingTreatmentOf({ payload: {} }), 'page');
   });
 });

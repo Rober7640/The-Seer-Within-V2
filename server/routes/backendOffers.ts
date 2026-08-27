@@ -1,12 +1,15 @@
 import { Router, type Request, type Response } from 'express';
 import { getStripe } from '../lib/stripeAccount';
 import {
+  backendOrderDescriptor,
   isBackendOfferKey,
   isBookingTreatment,
   resolveBackendCharge,
   type BookingTreatment,
 } from '@shared/backendOffers';
 import { getBeOrderBySession, recordBackendOrder, writeToCustomerList } from '../lib/beOrders';
+import { resolveBeBookingTreatment } from '../lib/experiments';
+import { BACKEND_UPSELLS } from '../lib/backendCustomerList';
 import logger from '../lib/logger';
 
 // Stripe Checkout for the one-time backend offers (02 Twin Flame, 03 Judgement Day, …).
@@ -45,6 +48,235 @@ function baseUrl(req: Request): string {
   const host = req.get('host');
   return `${proto}://${host}`;
 }
+
+// Which booking treatment (page vs chat) to show this visitor. The browser sends a
+// stable per-browser `subject` id; the A/B assignment is sticky to it and the
+// exposure is logged here. Always resolves to something ('page' on any miss), so a
+// booking screen never blocks on it.
+router.get('/booking-treatment', async (req: Request, res: Response) => {
+  const subject = typeof req.query.subject === 'string' ? req.query.subject : null;
+  const result = await resolveBeBookingTreatment(subject);
+  res.json(result);
+});
+
+// The 1-click upsell page loads with the BOOKING session id and asks for what it
+// needs to render + charge: the buyer's name, her email, the price, and whether a
+// saved card is on file. Reads the Stripe session DIRECTLY (the be_orders row may
+// not be written yet on the redirect) and only answers for a PAID backend order.
+//
+// ⛔ Unlike V1's /api/upsell/user-data, this does NO conversations lookup and NO
+// paid-list write and fires NO tracking — the backend funnel is walled off from
+// V1, and the customer-list write already happened at booking.
+router.get('/upsell/user-data', async (req: Request, res: Response) => {
+  const sessionId = typeof req.query.session_id === 'string' ? req.query.session_id : '';
+  if (!sessionId) return res.status(400).json({ error: 'Missing session_id' });
+
+  const stripe = getStripe();
+  if (!stripe) return res.status(503).json({ error: 'Temporarily unavailable.' });
+
+  try {
+    const session = await stripe.checkout.sessions.retrieve(sessionId, {
+      expand: ['payment_intent'],
+    });
+    const product = session.metadata?.product;
+    if (!product || !product.startsWith('be_') || session.payment_status !== 'paid') {
+      return res.status(404).json({ error: 'Order not found' });
+    }
+
+    const pi = typeof session.payment_intent === 'string' ? null : session.payment_intent;
+    const customerId =
+      typeof session.customer === 'string' ? session.customer : session.customer?.id ?? null;
+    const paymentMethodId =
+      pi && typeof pi.payment_method === 'string'
+        ? pi.payment_method
+        : (pi?.payment_method as { id?: string } | null | undefined)?.id ?? null;
+
+    return res.json({
+      firstName: session.metadata?.firstName || 'Friend',
+      email:
+        session.customer_details?.email ||
+        session.customer_email ||
+        session.metadata?.email ||
+        null,
+      offer: session.metadata?.offer ?? null,
+      // 02 collects no bucket / person — the twin-flame upsell copy needs neither.
+      bucket: null,
+      personName: null,
+      upsell1PriceCents: BACKEND_UPSELLS.be_protection_ritual.priceCents,
+      upsell2PriceCents: BACKEND_UPSELLS.be_bracelet.priceCents,
+      upsell2DownsellCents: BACKEND_UPSELLS.be_bracelet.downsellCents,
+      // The 1-click charge can only run with both. If false, the page should offer a
+      // hosted checkout rather than a button that silently does nothing.
+      hasSavedCard: Boolean(customerId && paymentMethodId),
+    });
+  } catch (err) {
+    logger.error('backend/upsell/user-data failed', {
+      session: sessionId,
+      err: err instanceof Error ? err.message : String(err),
+    });
+    return res.status(404).json({ error: 'Order not found' });
+  }
+});
+
+// 1-click upsell charge — off-session, on the card saved at booking, for the BE
+// upsell product. Mirrors V1's /api/upsell/charge, but the product is a `be_` key
+// so it is invisible to V1's webhook branches (no Meta CAPI / Google / Trackdesk),
+// and it routes to the BE lists. Any miss (no card, decline, unpaid) returns
+// `{ fallback: true }` so the page can send her to a hosted checkout instead of a
+// button that silently does nothing. Physical item → the shipping address rides on
+// the PaymentIntent, where the manual shipper reads it.
+router.post('/upsell/charge', async (req: Request, res: Response) => {
+  const sessionId =
+    typeof req.body?.checkoutSessionId === 'string' ? req.body.checkoutSessionId : '';
+  if (!sessionId) return res.status(400).json({ success: false, error: 'Missing checkoutSessionId' });
+
+  const email = typeof req.body?.email === 'string' ? req.body.email : null;
+  // Which upsell + tier. Defaults to Protection Ritual at full price, so U1's lean
+  // body ({checkoutSessionId,email}) keeps working; U2 sends product + optional
+  // tier:'downsell'. An unknown product falls back to U1 rather than 500-ing.
+  const productKey =
+    typeof req.body?.product === 'string' && BACKEND_UPSELLS[req.body.product]
+      ? (req.body.product as string)
+      : 'be_protection_ritual';
+  const upsell = BACKEND_UPSELLS[productKey];
+  const isDownsell = req.body?.tier === 'downsell' && typeof upsell.downsellCents === 'number';
+  const amountCents = isDownsell ? (upsell.downsellCents as number) : upsell.priceCents;
+
+  const stripe = getStripe();
+  if (!stripe) return res.json({ success: false, fallback: true });
+
+  try {
+    const session = await stripe.checkout.sessions.retrieve(sessionId, {
+      expand: ['payment_intent', 'payment_intent.payment_method'],
+    });
+
+    // Must be a PAID backend order — never charge off a V1 session or an unpaid one.
+    if (!session.metadata?.product?.startsWith('be_') || session.payment_status !== 'paid') {
+      return res.json({ success: false, fallback: true, error: 'not a paid backend order' });
+    }
+
+    // Ownership: the email the page holds must match the one on the paid session.
+    const sessionEmail = session.customer_details?.email || session.customer_email || null;
+    if (email && sessionEmail && sessionEmail.toLowerCase() !== email.toLowerCase()) {
+      return res.status(403).json({ success: false, error: 'ownership check failed' });
+    }
+
+    if (!session.customer || !session.payment_intent) {
+      return res.json({ success: false, fallback: true });
+    }
+    const customerId =
+      typeof session.customer === 'string' ? session.customer : session.customer.id;
+    const pi = session.payment_intent as import('stripe').Stripe.PaymentIntent;
+    if (pi.status !== 'succeeded') return res.json({ success: false, fallback: true });
+    const paymentMethodId =
+      typeof pi.payment_method === 'string' ? pi.payment_method : pi.payment_method?.id ?? null;
+    if (!paymentMethodId) return res.json({ success: false, fallback: true });
+
+    // Shipping (physical product). Collected on the page; ride it on the PI so the
+    // manual shipper reads it from the payment. Optional — a missing address must
+    // not block the charge; fulfilment can chase it, a failed charge cannot.
+    const s = req.body?.shipping;
+    const shipping =
+      s && typeof s === 'object' && typeof s.line1 === 'string' && typeof s.name === 'string'
+        ? {
+            name: String(s.name).slice(0, 200),
+            address: {
+              line1: String(s.line1).slice(0, 200),
+              ...(s.line2 ? { line2: String(s.line2).slice(0, 200) } : {}),
+              ...(s.city ? { city: String(s.city).slice(0, 100) } : {}),
+              ...(s.state ? { state: String(s.state).slice(0, 100) } : {}),
+              ...(s.postal ? { postal_code: String(s.postal).slice(0, 20) } : {}),
+              ...(s.country ? { country: String(s.country).slice(0, 2) } : {}),
+            },
+          }
+        : undefined;
+
+    const charge = await stripe.paymentIntents.create({
+      amount: amountCents,
+      currency: 'usd',
+      customer: customerId,
+      payment_method: paymentMethodId,
+      off_session: true,
+      confirm: true,
+      description: `BE 02 · ${upsell.name}${isDownsell ? ' (downsell)' : ''}`,
+      ...(shipping ? { shipping } : {}),
+      metadata: {
+        // ⛔ The `be_` key. Unknown to every V1 webhook branch → no Meta CAPI, no
+        // Google Ads, no Trackdesk. The BE webhook branch routes it to the offer's
+        // own list (be_protection_ritual→6972555, be_bracelet→6972556).
+        product: upsell.productKey,
+        offer: 'twin-flame',
+        originalSession: sessionId,
+        flow: '1click',
+        ...(isDownsell ? { type: 'downsell' } : {}),
+        // Carried so the webhook's payment_intent.succeeded can write her to the
+        // upsell list without re-fetching the booking session.
+        ...(sessionEmail ? { email: sessionEmail } : {}),
+        ...(session.metadata?.firstName ? { firstName: session.metadata.firstName } : {}),
+      },
+    });
+
+    return res.json({ success: true, paymentIntentId: charge.id });
+  } catch (err) {
+    // Off-session declines (card_declined / authentication_required) throw here —
+    // return fallback so the page can retry via a hosted checkout, not a dead button.
+    logger.warn('backend/upsell/charge fell back', {
+      session: sessionId,
+      err: err instanceof Error ? err.message : String(err),
+    });
+    return res.json({ success: false, fallback: true });
+  }
+});
+
+// The shipping address for a 1-click upsell, collected AFTER the charge (like V1's
+// flow). We stamp it onto the PaymentIntent so the manual shipper reads it straight
+// off the Stripe payment — no DB table, no n8n. Non-fatal: she has already paid, so
+// a save failure returns success:false but the client still completes; the address
+// can be chased. Verifies the PI is a `be_` order before touching it.
+router.post('/upsell/shipping', async (req: Request, res: Response) => {
+  const paymentIntentId =
+    typeof req.body?.paymentIntentId === 'string' ? req.body.paymentIntentId : '';
+  const a = req.body?.address;
+  if (!paymentIntentId || !a || typeof a !== 'object' || typeof a.line1 !== 'string') {
+    return res.status(400).json({ error: 'Missing paymentIntentId or address' });
+  }
+
+  const stripe = getStripe();
+  if (!stripe) return res.status(503).json({ error: 'Temporarily unavailable.' });
+
+  try {
+    const pi = await stripe.paymentIntents.retrieve(paymentIntentId);
+    if (!pi.metadata?.product?.startsWith('be_')) {
+      return res.status(404).json({ error: 'not a backend order' });
+    }
+
+    await stripe.paymentIntents.update(paymentIntentId, {
+      shipping: {
+        name: String(a.name || '').slice(0, 200),
+        address: {
+          line1: String(a.line1).slice(0, 200),
+          ...(a.line2 ? { line2: String(a.line2).slice(0, 200) } : {}),
+          city: String(a.city || '').slice(0, 100),
+          state: String(a.state || '').slice(0, 100),
+          postal_code: String(a.postal || '').slice(0, 20),
+          // Stripe wants ISO alpha-2. Include only when it looks like one, so a full
+          // country name never rejects the whole update and loses the address.
+          ...(typeof a.country === 'string' && a.country.trim().length === 2
+            ? { country: a.country.trim().toUpperCase() }
+            : {}),
+        },
+      },
+    });
+
+    return res.json({ success: true });
+  } catch (err) {
+    logger.error('backend/upsell/shipping failed (buyer paid; address can be chased)', {
+      pi: paymentIntentId,
+      err: err instanceof Error ? err.message : String(err),
+    });
+    return res.json({ success: false });
+  }
+});
 
 router.post('/checkout', async (req: Request, res: Response) => {
   try {
@@ -100,6 +332,11 @@ router.post('/checkout', async (req: Request, res: Response) => {
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',
       payment_method_types: ['card'],
+      // Create a Customer and save the card for OFF-SESSION reuse, exactly as V1's
+      // main checkout does — this is what lets the post-purchase upsells charge in
+      // one click. No email is known before Stripe (she enters it here), so we let
+      // Checkout mint the customer rather than looking one up.
+      customer_creation: 'always',
       line_items: charge.lines.map((line) => ({
         price_data: {
           currency: 'usd',
@@ -130,15 +367,22 @@ router.post('/checkout', async (req: Request, res: Response) => {
         // reused code sends her the wrong thing. Absent entirely when she declined.
         ...(charge.bumpPurchased ? { bumpProduct: offer.bump.productKey } : {}),
         ...(firstName ? { firstName } : {}),
+        // The booking-treatment A/B visitor subject, echoed back on the webhook so the
+        // purchase can be attributed to the arm she saw. ⚠ Not a funnel product key —
+        // nothing keys behaviour on it; it is read only by logBeBookingConversion.
+        ...(typeof req.body?.expSubject === 'string' && req.body.expSubject
+          ? { expSubject: req.body.expSubject.slice(0, 64) }
+          : {}),
       },
       payment_intent_data: {
-        // The Stripe Dashboard's Description column. The bump is named here so a
-        // two-product order is identifiable at a glance instead of only by amount
-        // — the same job V1's ` + Double Reading` marker does. NOT customer-facing:
-        // the line items above are what her receipt shows.
-        description: charge.bumpPurchased
-          ? `${offer.stripeName} + ${offer.bump.stripeName.replace(/^\+\s*/, '')}`
-          : offer.stripeName,
+        // The Stripe Dashboard's Description column, prefixed `BE <nn>` so a backend
+        // order is unmistakable among the six V1 funnels. The bump is named here too
+        // so a two-product order reads at a glance instead of only by amount. NOT
+        // customer-facing: the line items above are what her receipt shows.
+        description: backendOrderDescriptor(offer.key, charge.bumpPurchased),
+        // Save the card against the new Customer so the 1-click upsell can charge it
+        // off-session. Same setting V1's main checkout uses (server/routes.ts).
+        setup_future_usage: 'off_session',
         metadata: {
           product: offer.stripeProduct,
           offer: offer.key,

@@ -122,12 +122,19 @@ export default function Upsell2Page() {
           }
         }
 
-        let response = await fetch(`/api/upsell2/user-data?session_id=${sid}`);
+        // The backend funnel reads its own Stripe-direct endpoint and fires NONE of
+        // the V1 ad/affiliate tracking below. V1's path is unchanged.
+        const beFunnel = isTwinFlameOffer();
+        const userDataUrl = beFunnel
+          ? `/api/backend/upsell/user-data?session_id=${sid}`
+          : `/api/upsell2/user-data?session_id=${sid}`;
+
+        let response = await fetch(userDataUrl);
 
         // Retry once after 2s if first attempt fails (handles brief server delays)
         if (!response.ok) {
           await new Promise(r => setTimeout(r, 2000));
-          response = await fetch(`/api/upsell2/user-data?session_id=${sid}`);
+          response = await fetch(userDataUrl);
         }
 
         if (!response.ok) {
@@ -140,7 +147,7 @@ export default function Upsell2Page() {
         // Track Upsell 1 event on /welcome2 load (fires once per session).
         // Use the actual charged amount (varies by price-test variant); fall
         // back to $47 for pre-test conversations where it isn't recorded.
-        if (data.upsellPurchased) {
+        if (data.upsellPurchased && !beFunnel) {
           const upsell1Dollars = (data.upsellAmountCents ?? 4700) / 100;
           trackUpsellPurchase(upsell1Dollars, "USD", data.email, "Protection Ritual + Volcanic Stone", sid ?? undefined, 'u1', { skipServerRelay: true });
           trackGAdsPurchase("upsell1", upsell1Dollars, sid);
