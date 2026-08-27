@@ -6,10 +6,14 @@ import { getBackendVisitorId } from './backendVisitor';
 // Workflow: improve-v1/v1-one-time-BEs/docs/0-WORKFLOW.md — Phase A, assets S4/S5.
 // Server side: server/routes/backendOffers.ts.
 //
-// ── ⛔ THE DECK IS STILL PREVIEW-ONLY ────────────────────────────────────────────
-// `BACKEND_CHECKOUT_LIVE` is false, so every button below still LOGS and stops, exactly
-// as the workflow's A2 requires ("it logs instead of charging"). The whole live path
-// exists and is tested; this flag is the one line that turns it on.
+// ── ⛔ THE DECK SHIPS PREVIEW-ONLY BY DEFAULT ────────────────────────────────────
+// `BACKEND_CHECKOUT_LIVE` is false UNLESS the build sees `VITE_BACKEND_CHECKOUT_LIVE=true`.
+// Absent/anything-else ⇒ every button below still LOGS and stops (A2's preview). So it is
+// OFF on any deployment that does not explicitly set the var — production stays dark until
+// someone sets it there. Set it on DEV to walk the real (test-mode) flow.
+//
+// ⚠ It is a BUILD-time Vite var: set it in Railway, then REDEPLOY so the client is rebuilt
+// with it. Setting it without a rebuild changes nothing.
 //
 // ⚠ Before flipping it, in this order:
 //   1. run migrations/2026-08-10-be-orders.sql against the database (⛔ never db:push);
@@ -25,7 +29,8 @@ import { getBackendVisitorId } from './backendVisitor';
 // ⚠ 03 additionally must not go live before its thank-you/Entry form (A6) exists: it is
 // an ACT offer, nothing on the booking screens asks for the Entry, and a paid order we
 // cannot fulfil is the dispute code we lose.
-export const BACKEND_CHECKOUT_LIVE = false;
+export const BACKEND_CHECKOUT_LIVE =
+  import.meta.env.VITE_BACKEND_CHECKOUT_LIVE === 'true';
 
 export interface BackendCheckoutRequest {
   offer: BackendOfferKey;
