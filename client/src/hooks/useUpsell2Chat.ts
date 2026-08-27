@@ -533,6 +533,20 @@ export function useUpsell2Chat({
         setUpsell2PaymentId(result.paymentIntentId ?? null);
         if (!beFunnel) fireTrackdeskUpsell2(sessionId, 47, userData.email);
         if (isPathA && userData.hasShipping) {
+          // Backend Path A: she reused her Upsell 1 address, so no form showed —
+          // stamp it on THIS (bracelet) PaymentIntent too, so the shipper reads it
+          // off both payments. V1 keeps shipping in its DB, so it needs nothing here.
+          // Non-fatal: she has paid, and Upsell 1 already carries the address.
+          if (beFunnel && userData.shipping && result.paymentIntentId) {
+            await fetch("/api/backend/upsell/shipping", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                paymentIntentId: result.paymentIntentId,
+                address: userData.shipping,
+              }),
+            }).catch(() => {});
+          }
           await sendBotMessages(p(copy.SUCCESS_HAS_SHIPPING));
           setIsProcessing(false);
           await processStage("COMPLETE");
@@ -678,6 +692,20 @@ export function useUpsell2Chat({
         setUpsell2PaymentId(result.paymentIntentId ?? null);
         if (!beFunnel) fireTrackdeskUpsell2(sessionId, 30, userData.email);
         if (isPathA && userData.hasShipping) {
+          // Backend Path A: she reused her Upsell 1 address, so no form showed —
+          // stamp it on THIS (bracelet) PaymentIntent too, so the shipper reads it
+          // off both payments. V1 keeps shipping in its DB, so it needs nothing here.
+          // Non-fatal: she has paid, and Upsell 1 already carries the address.
+          if (beFunnel && userData.shipping && result.paymentIntentId) {
+            await fetch("/api/backend/upsell/shipping", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                paymentIntentId: result.paymentIntentId,
+                address: userData.shipping,
+              }),
+            }).catch(() => {});
+          }
           await sendBotMessages(p(copy.SUCCESS_HAS_SHIPPING));
           setIsProcessing(false);
           await processStage("COMPLETE");

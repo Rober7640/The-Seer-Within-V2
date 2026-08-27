@@ -91,8 +91,37 @@ router.get('/upsell/user-data', async (req: Request, res: Response) => {
         ? pi.payment_method
         : (pi?.payment_method as { id?: string } | null | undefined)?.id ?? null;
 
+    // Did she already buy Upsell 1 (Protection Ritual), and did she give a shipping
+    // address there? If so, Upsell 2 reuses it and does NOT ask again — V1's Path A.
+    // The address lives on the Upsell 1 PaymentIntent (see /upsell/shipping).
+    let upsellPurchased = false;
+    let shipping:
+      | { name: string; line1: string; line2?: string; city: string; state: string; postal: string; country: string }
+      | null = null;
+    if (customerId) {
+      const pis = await stripe.paymentIntents.list({ customer: customerId, limit: 10 });
+      const u1 = pis.data.find(
+        (p) => p.metadata?.product === 'be_protection_ritual' && p.status === 'succeeded',
+      );
+      if (u1) {
+        upsellPurchased = true;
+        const s = u1.shipping;
+        if (s?.address?.line1) {
+          shipping = {
+            name: s.name || '',
+            line1: s.address.line1,
+            ...(s.address.line2 ? { line2: s.address.line2 } : {}),
+            city: s.address.city || '',
+            state: s.address.state || '',
+            postal: s.address.postal_code || '',
+            country: s.address.country || '',
+          };
+        }
+      }
+    }
+
     return res.json({
-      firstName: session.metadata?.firstName || 'Friend',
+      firstName: session.metadata?.firstName || session.customer_details?.name || 'Friend',
       email:
         session.customer_details?.email ||
         session.customer_email ||
@@ -105,6 +134,10 @@ router.get('/upsell/user-data', async (req: Request, res: Response) => {
       upsell1PriceCents: BACKEND_UPSELLS.be_protection_ritual.priceCents,
       upsell2PriceCents: BACKEND_UPSELLS.be_bracelet.priceCents,
       upsell2DownsellCents: BACKEND_UPSELLS.be_bracelet.downsellCents,
+      // Upsell 2 (Path A): she bought U1 and has an address → reuse it, don't re-ask.
+      upsellPurchased,
+      hasShipping: Boolean(shipping),
+      shipping,
       // The 1-click charge can only run with both. If false, the page should offer a
       // hosted checkout rather than a button that silently does nothing.
       hasSavedCard: Boolean(customerId && paymentMethodId),
@@ -157,6 +190,9 @@ router.post('/upsell/charge', async (req: Request, res: Response) => {
 
     // Ownership: the email the page holds must match the one on the paid session.
     const sessionEmail = session.customer_details?.email || session.customer_email || null;
+    // Same name fallback as the order recorder: the letter's ?fn=, else the name
+    // Stripe collected on the card — so the upsell list write is never nameless.
+    const buyerName = session.metadata?.firstName || session.customer_details?.name || '';
     if (email && sessionEmail && sessionEmail.toLowerCase() !== email.toLowerCase()) {
       return res.status(403).json({ success: false, error: 'ownership check failed' });
     }
@@ -212,7 +248,7 @@ router.post('/upsell/charge', async (req: Request, res: Response) => {
         // Carried so the webhook's payment_intent.succeeded can write her to the
         // upsell list without re-fetching the booking session.
         ...(sessionEmail ? { email: sessionEmail } : {}),
-        ...(session.metadata?.firstName ? { firstName: session.metadata.firstName } : {}),
+        ...(buyerName ? { firstName: buyerName } : {}),
       },
     });
 
