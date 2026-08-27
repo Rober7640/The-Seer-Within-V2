@@ -195,6 +195,24 @@ export function backendOfferForStripeProduct(
   );
 }
 
+/**
+ * The Stripe Dashboard "Description" label for a backend order.
+ *
+ * ⚠ Operator-only — this feeds `payment_intent_data.description`, NOT the line
+ * items, so it never shows on the buyer's receipt. Prefixed `BE <nn>` so a
+ * backend sale is unmistakable at a glance among the six V1 funnels' orders.
+ * (Decision: identify BE in the dashboard, keep the buyer's receipt clean.)
+ */
+export function backendOrderDescriptor(
+  key: BackendOfferKey,
+  bumpPurchased: boolean,
+): string {
+  const offer = BACKEND_OFFER_CATALOG[key];
+  const base = `BE ${offer.number} · ${offer.stripeName}`;
+  if (!bumpPurchased) return base;
+  return `${base} + ${offer.bump.stripeName.replace(/^\+\s*/, '')}`;
+}
+
 // ─── What she is actually charged ──────────────────────────────────────────────
 
 export interface BackendChargeRequest {

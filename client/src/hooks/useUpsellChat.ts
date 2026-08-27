@@ -22,7 +22,7 @@ import {
 } from "@/lib/upsellMessages";
 import { getTrackdeskClickId } from "@/lib/facebook";
 import { upsell1Copy, displayName, type Upsell1Chain } from "@/lib/backendOffers";
-import { currentFunnel, getPostHogFunnel } from "@/lib/funnel";
+import { currentFunnel, getPostHogFunnel, isTwinFlameOffer } from "@/lib/funnel";
 import { track as trackPH } from "@/lib/posthog";
 import { tarotEventProps } from "@/lib/tarotAttribution";
 
@@ -393,18 +393,30 @@ export function useUpsellChat({
       ...(tarot ?? {}),
     });
 
+    // The backend funnel charges its OWN endpoint (the `be_` product → BE list, no
+    // Facebook/Google/Trackdesk) and sends NO trackdeskClickId (⛔ never on a backend
+    // sale). V1's path and body are byte-identical.
+    const beFunnel = isTwinFlameOffer();
+
     try {
-      const response = await fetch("/api/upsell/charge", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          checkoutSessionId: sessionId,
-          email: userData.email,
-          firstName: userData.firstName,
-          funnel: currentFunnel(),
-          trackdeskClickId: getTrackdeskClickId(),
-        }),
-      });
+      const response = await fetch(
+        beFunnel ? "/api/backend/upsell/charge" : "/api/upsell/charge",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(
+            beFunnel
+              ? { checkoutSessionId: sessionId, email: userData.email }
+              : {
+                  checkoutSessionId: sessionId,
+                  email: userData.email,
+                  firstName: userData.firstName,
+                  funnel: currentFunnel(),
+                  trackdeskClickId: getTrackdeskClickId(),
+                },
+          ),
+        },
+      );
 
       const result = await response.json();
 
@@ -414,6 +426,15 @@ export function useUpsellChat({
         setIsProcessing(false);
         setShowShippingForm(true);
         setStage("SHIPPING");
+      } else if (result.fallback && beFunnel) {
+        // Backend, first build: the off-session charge on her saved card was declined
+        // and there is no hosted BE upsell fallback yet (A7). Fail gracefully — let her
+        // retry rather than redirect to an endpoint that does not exist.
+        await sendBotMessage(
+          "That didn't go through on your saved card, dear. Give it another moment and try once more.",
+        );
+        setIsProcessing(false);
+        setShowCTA(true);
       } else if (result.fallback) {
         // The 1-click OFF-SESSION charge on the saved card was declined (Indian cards
         // reject off-session PIs outright), so she is bounced to a hosted Stripe
@@ -479,11 +500,19 @@ export function useUpsellChat({
       setShowShippingForm(false);
 
       try {
-        const res = await fetch("/api/shipping/save", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ sessionId, address }),
-        });
+        // Backend: stamp the address onto the upsell PaymentIntent (the manual shipper
+        // reads it off Stripe). V1: its own DB save. Byte-identical for V1.
+        const res = isTwinFlameOffer()
+          ? await fetch("/api/backend/upsell/shipping", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ paymentIntentId: upsellPaymentId, address }),
+            })
+          : await fetch("/api/shipping/save", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ sessionId, address }),
+            });
 
         if (!res.ok) {
           const errData = await res.json().catch(() => ({}));
@@ -497,7 +526,7 @@ export function useUpsellChat({
         setIsComplete(true);
       }
     },
-    [sessionId, userData, processStage, sendBotMessage],
+    [sessionId, userData, processStage, sendBotMessage, upsellPaymentId],
   );
 
   // Start on mount

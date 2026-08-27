@@ -10,6 +10,7 @@ import {
   type BackendOffer,
 } from '@shared/backendOffers';
 import { addBackendCustomer } from './aweber';
+import { logBeBookingConversion } from './experiments';
 import logger from './logger';
 
 // Persist a backend-deck purchase, then put her on the customer list.
@@ -45,6 +46,8 @@ interface BackendSessionMeta {
   readingCents?: string;
   bump?: string;
   bumpProduct?: string;
+  /** The booking-treatment A/B visitor subject, for purchase attribution. */
+  expSubject?: string;
 }
 
 function centsFrom(value: string | undefined): number | null {
@@ -160,6 +163,18 @@ export async function recordBackendOrder(
     amountCents,
     bump: bumpPurchased,
   });
+
+  // Attribute the sale to the booking-treatment A/B arm she saw (02 only, and only
+  // if she was enrolled). Non-blocking and self-guarding — a measurement miss must
+  // never cost her the order or her email.
+  if (offer.key === 'twin-flame' && metadata.expSubject) {
+    await logBeBookingConversion(metadata.expSubject, amountCents).catch((err) =>
+      logger.error('be_order: booking-conversion log failed (order still recorded)', {
+        session: session.id,
+        error: err instanceof Error ? err.message : String(err),
+      }),
+    );
+  }
 
   return writeToCustomerList(row, offer);
 }

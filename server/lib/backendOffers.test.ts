@@ -27,6 +27,7 @@ import {
   TWIN_FLAME_BUMP_CENTS,
   TWIN_FLAME_PRICE_CENTS,
   backendOfferForStripeProduct,
+  backendOrderDescriptor,
   isBackendOfferKey,
   priceBackendOffer,
   resolveBackendCharge,
@@ -183,5 +184,21 @@ describe('the catalog', () => {
     expect(new Set(keys).size).toBe(keys.length);
     // V1's key. Reusing it would post her a second V1 reading instead of the instructional.
     expect(keys).not.toContain('double_reading');
+  });
+});
+
+describe('backendOrderDescriptor — the Stripe Dashboard label', () => {
+  // Operator-only (the Dashboard "Description" column), never on the buyer's receipt.
+  // Prefixed "BE <nn>" so a backend order is unmistakable at a glance among V1 sales.
+  it('prefixes the offer with BE and its deck number', () => {
+    expect(backendOrderDescriptor('twin-flame', false)).toBe(
+      'BE 02 · The Twin Flame Tarot Reading',
+    );
+  });
+
+  it('names the bump too when she took it', () => {
+    expect(backendOrderDescriptor('twin-flame', true)).toBe(
+      'BE 02 · The Twin Flame Tarot Reading + Astro Force instructional',
+    );
   });
 });

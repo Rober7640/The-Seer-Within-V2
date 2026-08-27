@@ -1,4 +1,5 @@
 import type { BackendOfferKey, BookingTreatment } from '@shared/backendOffers';
+import { getBackendVisitorId } from './backendVisitor';
 
 // The one way a backend booking screen reaches Stripe.
 //
@@ -77,6 +78,9 @@ export async function beginBackendCheckout(
         bump: req.bump,
         amountCents: req.amountCents ?? undefined,
         firstName: req.firstName ?? undefined,
+        // The booking-treatment A/B subject, so the purchase attributes back to the
+        // arm she saw. Harmless when the test is off (no exposure → not counted).
+        expSubject: getBackendVisitorId(),
       }),
     });
 

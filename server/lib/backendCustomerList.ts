@@ -33,6 +33,25 @@ export interface BackendOfferListing {
   bumpTag: string;
   /** Applied when her reading is out. Fires the delivery email. */
   deliveredTag: string;
+  /**
+   * The AWeber list a reading buyer lands on, and where the delivery email fires.
+   * ⚠ Created BY HAND in the AWeber UI; this is the id it was given.
+   * Unset → falls back to AWEBER_BE_CUSTOMER_LIST_ID (the pre-per-product model).
+   */
+  initialListId?: string;
+  /**
+   * The separate AWeber list an ORDER-BUMP buyer also lands on. When set, a bump
+   * buyer gets a second write here; when unset, the bump tag is folded into the
+   * single initial write (the old one-list behaviour).
+   */
+  bumpListId?: string;
+}
+
+/** One AWeber write a purchase produces: which list, which tags, and its role. */
+export interface BackendListWrite {
+  listId: string;
+  tags: string[];
+  role: 'initial' | 'bump';
 }
 
 /** Applied to every backend buyer, whatever she bought. */
@@ -45,6 +64,12 @@ export const BACKEND_OFFERS: Record<BackendOfferKey, BackendOfferListing> = {
     tag: 'be-02-twin-flame',
     bumpTag: 'be-02-bump',
     deliveredTag: 'be-02-delivered',
+    // Per-product lists (operator, 2026-08-26): reading buyers to _be_customers,
+    // order-bump buyers also to _be_ob. Upsell lists exist too (6972555/6972556)
+    // but are NOT wired here — the upsells reuse V1 products; routing them is a
+    // separate decision. See docs/BE-offer-02-aweber-lists-spec.md.
+    initialListId: '6972552',
+    bumpListId: '6972554',
   },
   'judgement-day': {
     number: '03',
@@ -61,6 +86,93 @@ export function purchaseTags(offer: BackendOfferKey, bumpPurchased = false): str
   const tags = [BE_CUSTOMER_TAG, listing.tag];
   if (bumpPurchased) tags.push(listing.bumpTag);
   return tags;
+}
+
+/**
+ * The AWeber write(s) a purchase produces.
+ *
+ * An offer with its own `bumpListId` puts a bump buyer on TWO lists — the reading
+ * list and the order-bump list — each with its own tags. An offer without one
+ * keeps the original single write, with the bump tag folded in, so nothing about
+ * an un-split offer changes.
+ */
+export function purchaseListWrites(
+  offer: BackendOfferKey,
+  bumpPurchased = false,
+): BackendListWrite[] {
+  const listing = BACKEND_OFFERS[offer];
+  const readingListId = listing.initialListId || process.env.AWEBER_BE_CUSTOMER_LIST_ID || '';
+  const writes: BackendListWrite[] = [
+    { listId: readingListId, tags: [BE_CUSTOMER_TAG, listing.tag], role: 'initial' },
+  ];
+  if (bumpPurchased) {
+    if (listing.bumpListId) {
+      writes.push({
+        listId: listing.bumpListId,
+        tags: [BE_CUSTOMER_TAG, listing.tag, listing.bumpTag],
+        role: 'bump',
+      });
+    } else {
+      writes[0].tags.push(listing.bumpTag);
+    }
+  }
+  return writes;
+}
+
+/** The list a reading buyer lands on — and where her delivery email fires. */
+export function initialListId(offer: BackendOfferKey): string {
+  return BACKEND_OFFERS[offer].initialListId || process.env.AWEBER_BE_CUSTOMER_LIST_ID || '';
+}
+
+// ── Backend upsells: their OWN products, their OWN lists ──────────────────────
+// The BE upsells (Protection Ritual, Bracelet) are NEW products, deliberately NOT
+// V1's `protection_ritual` / `manifestation_bracelet`. So V1's webhook branches
+// never match them and the live V1 upsell flow is untouched; they route to their
+// own lists and fire no Facebook tracking. The physical items ship MANUALLY from
+// the saved shipping address, so a new product key costs no fulfilment change.
+export interface BackendUpsellListing {
+  /** The `be_` Stripe product key. ⛔ Never one of V1's keys. */
+  productKey: string;
+  name: string;
+  listId: string;
+  tag: string;
+  /** Full price in cents. Same as V1's ($47 / $47). */
+  priceCents: number;
+  /** The downsell price in cents, where the offer has one (Bracelet: $30). */
+  downsellCents?: number;
+}
+
+export const BACKEND_UPSELLS: Record<string, BackendUpsellListing> = {
+  be_protection_ritual: {
+    productKey: 'be_protection_ritual',
+    name: 'Protection Ritual',
+    listId: '6972555',
+    tag: 'be-02-upsell1-protection',
+    priceCents: 4700,
+  },
+  be_bracelet: {
+    productKey: 'be_bracelet',
+    name: 'Manifestation Bracelet',
+    listId: '6972556',
+    tag: 'be-02-upsell2-bracelet',
+    priceCents: 4700,
+    downsellCents: 3000,
+  },
+};
+
+/** The BE upsell for a Stripe product key, or null when it is not a BE upsell. */
+export function backendUpsellFor(
+  productKey: string | null | undefined,
+): BackendUpsellListing | null {
+  if (!productKey) return null;
+  return BACKEND_UPSELLS[productKey] ?? null;
+}
+
+/** Tags for a BE upsell buyer: the base pair (customer + offer 02) plus her product tag. */
+export function upsellPurchaseTags(productKey: string): string[] {
+  const listing = BACKEND_UPSELLS[productKey];
+  if (!listing) return [];
+  return [BE_CUSTOMER_TAG, BACKEND_OFFERS['twin-flame'].tag, listing.tag];
 }
 
 /** Tag to apply when her reading has been produced and can be linked. */
