@@ -1247,6 +1247,13 @@ const TAROT_HOOK_CONTEXT: Record<string, string> = {
   'cards-connection-kept-alive': "She has been the only one keeping a connection going and is asking why that fell to her alone.",
   'cards-wait-on-connection': "She is waiting on an uncertain connection and asking how much longer that wait continues.",
   'cards-real-connection-coming': "She is asking whether a real connection is on its way or whether she remains alone.",
+  // Commitment age-matrix + connection-vocab (2026-08-27).
+  'cards-expecting-too-much': "She is asking whether her own expectations are the problem, and usually indicts her timing in the same breath — whether she moved too early as well as whether she wants too much.",
+  'cards-played-the-wife': "She has carried the role of a wife without ever being given the title, and is asking why. She may be long-cohabiting, long-separated, or holding that role beside a woman who holds it in fact.",
+  'cards-instant-connection-commit': "The connection felt immediate to her and has not turned into anything he will name. She may not have seen or spoken to him for a long time.",
+  'cards-connection-without-commitment': "She is asking how much longer a strong connection can go on with nothing named, and is really asking whether to keep spending her life on it.",
+  'cards-connection-heading-commit': "She is asking whether this is moving toward something or staying exactly as it is, and is weighing whether to keep hoping.",
+  'cards-stopping-him-committing': "She has already decided something is in his way and wants it named. Underneath, she is asking whether that something is her.",
 }
 
 // The TENDENCY the reply may land, per hook. Reading HIM ⇒ NEVER a verdict:
@@ -1686,6 +1693,19 @@ const TAROT_HOOK_TENDENCY: Record<string, string> = {
   'cards-connection-kept-alive': "that wanting the connection and carrying it were not her mistake. NEVER judge, name or explain the other person's motives, and never tell her to let go or keep holding on",
   'cards-wait-on-connection': "that no length of time can honestly be given for this wait, and the decision of whether to keep waiting stays hers. NEVER give a date or duration, and never choose for her whether to stay or move on",
   'cards-real-connection-coming': "that being alone now does not prove she lacks the capacity for real connection. NEVER promise someone is coming, and never confirm she stays alone permanently",
+  // Commitment age-matrix + connection-vocab (2026-08-27).
+  //
+  // ⚠ The twelve age-matrix landers shipped on 2026-08-26 with NO entry here at all, so they
+  // inherit DEFAULT_TAROT_TENDENCY. These six do not, because four of them carry bans the
+  // default cannot express — no other woman, no length, no motive, no presumed contact — and a
+  // guard file stricter than the tendency means Version B and Version C contradict each other
+  // on the same lander.
+  'cards-expecting-too-much': "that what she wants is reasonable and her timing was not the mistake. NEVER rule that she expects too much and NEVER rule that he should have committed by now — the first blames her, the second is a verdict on a man you have never met. NEVER give a date. Route the \"why\" to where HE has not spoken, and affirm HER right to want a future named",
+  'cards-played-the-wife': "that the role she carried was real work and was never given a name. NEVER mention, imply or rule on another woman. NEVER predict a marriage, a proposal or an engagement. NEVER discuss money, property, a home or legal standing. NEVER rule that the years were wasted or that she has nothing to show. Read her POSITION — a role nobody put a word to — and affirm what she actually did",
+  'cards-instant-connection-commit': "that what she felt at the start was real and that the speed of a feeling is not a promise about his pace. NEVER assume they are still in contact, have met recently, or can speak — she may be describing a man she has not seen in years. NEVER convict him of using her and NEVER pronounce that he will never commit",
+  'cards-connection-without-commitment': "that the strength of the connection was never what was in doubt. NEVER supply a length, a number, a date or a season — refusing the number IS the answer here. NEVER assume ongoing contact. Affirm that the not-knowing is the weight she has been carrying, and that no reader can hand her a limit",
+  'cards-connection-heading-commit': "that a pause is not the same as a full stop, and that nothing has been decided out loud. NEVER answer either half of her question — do not promise it is heading for commitment and do not pronounce that it will stay as it is. NEVER assume ongoing contact. Read the fact that she has been given neither answer",
+  'cards-stopping-him-committing': "that whatever is in his way, it is not her. NEVER name his motive, his fear or his reason — the card cannot supply one. NEVER affirm that a man she has met only online is real or genuine. NEVER rule on another relationship he may be in. NEVER confirm what a previous reader told her. Answer the fear underneath, which is that she is the thing lacking",
 }
 const DEFAULT_TAROT_TENDENCY =
   'that her intuition is a real instrument and the clarity she came for is close — read the card as a tendency, never a verdict on him'
