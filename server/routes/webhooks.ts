@@ -13,6 +13,10 @@ import * as paypal from '../lib/paypal';
 import { fireV2PurchaseEvent, fireStripePurchaseEvent } from '../lib/facebook';
 import { buildPurchaseEvent } from '../lib/purchaseAnalytics';
 import { recordBraceletOrder } from '../lib/braceletOrders';
+import { recordBackendOrder } from '../lib/beOrders';
+import { addBackendUpsellCustomer } from '../lib/aweber';
+import { backendUpsellFor } from '../lib/backendCustomerList';
+import { BACKEND_STRIPE_PRODUCT_PREFIX } from '@shared/backendOffers';
 import { migrateAndEmailFunnelUser } from '../lib/funnelMigrationEmail';
 import { fireGoogleAdsConversion, gadsStepForProduct } from '../lib/googleAds';
 import { maybeSchedulePostPurchaseDrip } from '../lib/postPurchaseDripTrigger';
@@ -1010,6 +1014,43 @@ router.post('/stripe', async (req: Request, res: Response) => {
       );
     }
 
+    // The one-time BACKEND deck (02 Twin Flame, 03 Judgement Day, …). Records the order
+    // and puts her on the backend customer list — and that AWeber write IS her thank-you
+    // email, because an AWeber Campaign is triggered by the offer tag. So it happens on
+    // this server-side signal, not in a browser: a buyer who pays and closes the tab must
+    // still be emailed. (V1's addPaidSubscriber has exactly that hole; we are not
+    // repeating it here, where the cost is a paid customer who hears nothing.)
+    //
+    // Strictly name-gated on `be_*`, so it can never fire for a funnel product.
+    // Idempotent (stripe_session_id is UNIQUE, the write is an upsert, and AWeber
+    // upserts too), because Stripe retries this event and the thank-you page reads the
+    // same session. Awaited, but it swallows its own errors — a failure is recorded on
+    // the row (be_orders.customer_list_error) rather than failing the ack and making
+    // Stripe retry a charge we have already banked.
+    if (product?.startsWith(BACKEND_STRIPE_PRODUCT_PREFIX)) {
+      const beUpsell = backendUpsellFor(product);
+      if (beUpsell) {
+        // A BE UPSELL bought via HOSTED checkout (the 1-click fallback). The 1-click
+        // happy path writes from payment_intent.succeeded; this covers the fallback.
+        // recordBackendOrder is for BOOKING offers only and does not know upsell keys.
+        const upsellEmail =
+          session.customer_details?.email || session.customer_email || metadata.email || null;
+        if (upsellEmail) {
+          await addBackendUpsellCustomer({
+            email: upsellEmail,
+            firstName: metadata.firstName,
+            productKey: beUpsell.productKey,
+          }).catch((err) =>
+            logger.error('BE upsell fallback list write FAILED — buyer paid:', err),
+          );
+        }
+      } else {
+        await recordBackendOrder(session).catch((err) =>
+          logger.error('recordBackendOrder failed (non-blocking):', err),
+        );
+      }
+    }
+
     // Reliable, browser-independent "front-end payment completed" signal for the
     // /admin/price-test dashboard. checkout.session.completed fires server-side on
     // every paid front-end sale, so stamping here catches buyers who paid but
@@ -1179,6 +1220,24 @@ router.post('/stripe', async (req: Request, res: Response) => {
         gclidFromMeta: metadata.gclid,
         email: metadata.email,
       }).catch(() => { /* logged inside */ });
+    }
+
+    // Backend upsell (1-click): put her on the upsell's OWN list. The tracking above
+    // no-opped (a `be_` product is unknown to those mappers), and V1's own upsell
+    // products never match backendUpsellFor — so V1's flow is untouched.
+    const beUpsell = backendUpsellFor(metadata.product);
+    if (beUpsell && metadata.email) {
+      await addBackendUpsellCustomer({
+        email: metadata.email,
+        firstName: metadata.firstName,
+        productKey: beUpsell.productKey,
+      }).catch((err) =>
+        logger.error('BE upsell list write FAILED — buyer paid, may miss her email', {
+          pi: pi.id,
+          product: metadata.product,
+          error: err instanceof Error ? err.message : String(err),
+        }),
+      );
     }
   }
 

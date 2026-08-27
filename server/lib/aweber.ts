@@ -1,4 +1,13 @@
 import logger from './logger';
+import {
+  BACKEND_OFFERS,
+  backendUpsellFor,
+  deliveredTag,
+  initialListId,
+  purchaseListWrites,
+  upsellPurchaseTags,
+  type BackendOfferKey,
+} from './backendCustomerList';
 
 const AWEBER_API_BASE = 'https://api.aweber.com/1.0';
 
@@ -790,4 +799,244 @@ export async function addBumpPaidSubscriber(
     logger.error('AWeber bump list error:', error);
     return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
   }
+}
+
+// ============================================================================
+// THE BACKEND DECK'S CUSTOMER LIST
+// ============================================================================
+
+interface BackendCustomerParams {
+  email: string;
+  /** From `?fn=` → Stripe metadata. Absent is normal; AWeber falls back to "dear". */
+  firstName?: string;
+  offer: BackendOfferKey;
+  stripeOrderId: string;
+  bumpPurchased?: boolean;
+  /** 03 only — her Entry form, for the woman who leaves the thank-you page without filling it. */
+  entryUrl?: string;
+}
+
+interface BackendDeliveredParams {
+  email: string;
+  offer: BackendOfferKey;
+  stripeOrderId: string;
+  /** Where her finished PDF lives. Merged into the delivery email by AWeber. */
+  readingUrl: string;
+}
+
+/** One write path for the backend customer list, so auth, the "already
+ *  subscribed" 400 and the custom-fields landmine are handled in one place. */
+async function writeBackendCustomer(opts: {
+  label: string;
+  listId: string;
+  email: string;
+  name?: string;
+  customFields: Record<string, string>;
+  tags: string[];
+}): Promise<{ success: boolean; error?: string }> {
+  const accountId = process.env.AWEBER_ACCOUNT_ID;
+  const listId = opts.listId;
+
+  if (!accountId) {
+    logger.warn(`AWeber ${opts.label}: account not configured`);
+    return { success: false, error: 'AWeber not configured' };
+  }
+  if (!process.env.AWEBER_ACCESS_TOKEN || !process.env.AWEBER_REFRESH_TOKEN) {
+    logger.warn(`AWeber ${opts.label}: tokens not configured`);
+    return { success: false, error: 'AWeber tokens not configured' };
+  }
+  if (!listId) {
+    logger.warn(`AWeber ${opts.label}: no list id`);
+    return { success: false, error: 'List ID not configured' };
+  }
+
+  try {
+    const subscriberData: Record<string, unknown> = {
+      email: opts.email,
+      update_existing: true,
+    };
+    // ⛔ Only send custom_fields when there is at least one. AWeber reads
+    // `custom_fields: {}` with update_existing as "clear every custom field" —
+    // so a list with no fields (the bump/upsell lists) must get no key at all.
+    if (Object.keys(opts.customFields).length > 0) {
+      subscriberData.custom_fields = opts.customFields;
+    }
+    if (opts.name) subscriberData.name = opts.name;
+    if (opts.tags.length > 0) subscriberData.tags = opts.tags;
+
+    const response = await makeAWeberRequest(
+      `/accounts/${accountId}/lists/${listId}/subscribers`,
+      { method: 'POST', body: JSON.stringify(subscriberData) },
+    );
+
+    if (response.ok || response.status === 201) {
+      logger.info(`AWeber ${opts.label}: added/updated ${opts.email}`);
+      return { success: true };
+    }
+
+    const errorText = await response.text();
+    logger.error(`AWeber ${opts.label} failed: status=${response.status} body=${errorText}`);
+
+    // She bought a second backend offer, so she is already on the list. That is
+    // the normal case for a repeat buyer, and the tags still applied.
+    if (response.status === 400) {
+      try {
+        const errorData = JSON.parse(errorText);
+        if (errorData.error?.message?.includes('already subscribed')) {
+          logger.info(`AWeber ${opts.label}: ${opts.email} already on the list`);
+          return { success: true };
+        }
+      } catch {}
+    }
+
+    return { success: false, error: `AWeber API error: ${response.status} - ${errorText}` };
+  } catch (error) {
+    logger.error(`AWeber ${opts.label} error:`, error);
+    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+  }
+}
+
+/**
+ * Put a backend buyer on the customer list at the moment she pays.
+ *
+ * The offer tag is what SENDS her thank-you: an AWeber Campaign is triggered by
+ * it. So this call is not bookkeeping — it is the send. If it fails, a woman who
+ * paid gets no email at all, which is why the caller must log the failure
+ * loudly rather than swallowing it.
+ *
+ * 🔴 NEVER let `custom_fields` go out empty. AWeber reads `custom_fields: {}`
+ * with `update_existing` as "clear every custom field", so a second write would
+ * wipe the first one's values — that is how a soulmate buyer lost her
+ * `stripe_order_id` 11 seconds after paying. `stripe_order_id` and `offer` are
+ * always populated below, and the type makes `stripeOrderId` mandatory so it
+ * cannot go missing quietly.
+ *
+ * Idempotent by construction: `update_existing: true` upserts and AWeber's
+ * "already subscribed" 400 counts as success — both matter because Stripe
+ * retries `checkout.session.completed`.
+ */
+export async function addBackendCustomer(
+  params: BackendCustomerParams,
+): Promise<{ success: boolean; error?: string }> {
+  const listing = BACKEND_OFFERS[params.offer];
+  if (!listing) {
+    logger.error('AWeber BE customer list: unknown offer', { offer: params.offer });
+    return { success: false, error: `unknown offer: ${params.offer}` };
+  }
+
+  if (!params.stripeOrderId) {
+    logger.error('AWeber BE customer list: refusing to write without a stripe_order_id', {
+      email: params.email,
+      offer: params.offer,
+    });
+    return { success: false, error: 'missing stripeOrderId' };
+  }
+
+  const customFields: Record<string, string> = {
+    stripe_order_id: params.stripeOrderId,
+    offer: params.offer,
+  };
+  if (params.entryUrl) customFields.entry_url = params.entryUrl;
+
+  // A purchase can produce more than one write — the reading list always, and a
+  // separate order-bump list when she took the bump. Only the initial write
+  // carries custom fields; the bump/upsell lists hold none.
+  const writes = purchaseListWrites(params.offer, params.bumpPurchased);
+  let firstError: string | undefined;
+  for (const write of writes) {
+    const result = await writeBackendCustomer({
+      label: `BE customer (${listing.number}) → ${write.role}`,
+      listId: write.listId,
+      email: params.email,
+      name: params.firstName,
+      customFields: write.role === 'initial' ? customFields : {},
+      tags: write.tags,
+    });
+    if (!result.success && !firstError) firstError = result.error;
+  }
+
+  return firstError ? { success: false, error: firstError } : { success: true };
+}
+
+/**
+ * Hand AWeber the finished reading and let it send the delivery email.
+ *
+ * `reading_url` is a custom field on her subscriber record; the delivery email
+ * merges it. This is the only way one AWeber email can carry a different PDF to
+ * each buyer — the alternative is one PDF for everybody (decision D7).
+ *
+ * 🔴 `stripe_order_id` and `offer` are re-sent here on purpose, even though they
+ * have not changed. A `custom_fields` object is treated as the subscriber's
+ * whole custom-field state on write, so sending `{ reading_url }` alone risks
+ * clearing the other two. Re-sending costs nothing and cannot corrupt.
+ */
+export async function markBackendReadingDelivered(
+  params: BackendDeliveredParams,
+): Promise<{ success: boolean; error?: string }> {
+  const listing = BACKEND_OFFERS[params.offer];
+  if (!listing) {
+    logger.error('AWeber BE delivery: unknown offer', { offer: params.offer });
+    return { success: false, error: `unknown offer: ${params.offer}` };
+  }
+
+  if (!params.readingUrl) {
+    logger.error('AWeber BE delivery: refusing to tag a delivery with no reading URL', {
+      email: params.email,
+      offer: params.offer,
+    });
+    return { success: false, error: 'missing readingUrl' };
+  }
+  if (!params.stripeOrderId) {
+    logger.error('AWeber BE delivery: refusing to write without a stripe_order_id', {
+      email: params.email,
+      offer: params.offer,
+    });
+    return { success: false, error: 'missing stripeOrderId' };
+  }
+
+  return writeBackendCustomer({
+    label: `BE delivery (${listing.number})`,
+    // The delivery email fires from the reading list, where reading_url lives.
+    listId: initialListId(params.offer),
+    email: params.email,
+    customFields: {
+      stripe_order_id: params.stripeOrderId,
+      offer: params.offer,
+      reading_url: params.readingUrl,
+    },
+    tags: [deliveredTag(params.offer)],
+  });
+}
+
+/**
+ * Put a BE upsell buyer on that upsell's OWN list (6972555 Protection / 6972556
+ * Bracelet), with the base tags plus her product tag. No custom fields — the
+ * upsell lists hold none (the delivery link is hard-coded in their Campaign, and
+ * the physical item ships from the address on the Stripe payment).
+ *
+ * ⛔ Keyed on the `be_` upsell product, which V1's own upsell products never match,
+ * so a V1 bracelet/ritual sale can never land here. Returns a clear error for an
+ * unknown key rather than writing to the wrong list.
+ */
+export async function addBackendUpsellCustomer(params: {
+  email: string;
+  firstName?: string;
+  productKey: string;
+}): Promise<{ success: boolean; error?: string }> {
+  const listing = backendUpsellFor(params.productKey);
+  if (!listing) {
+    logger.error('AWeber BE upsell: unknown product, refusing to write', {
+      product: params.productKey,
+    });
+    return { success: false, error: `unknown upsell product: ${params.productKey}` };
+  }
+
+  return writeBackendCustomer({
+    label: `BE upsell (${listing.name})`,
+    listId: listing.listId,
+    email: params.email,
+    name: params.firstName,
+    customFields: {},
+    tags: upsellPurchaseTags(params.productKey),
+  });
 }

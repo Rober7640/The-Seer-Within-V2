@@ -6,9 +6,12 @@ interface UpsellCTAProps {
   onDecline: () => void
   isProcessing?: boolean
   priceLabel?: string
+  // Offer 02's buyer bought a tarot spread, not a clearing — "what we clear" is
+  // not a thing she did. Defaults to V1's exact label for every other funnel.
+  acceptLabel?: string
 }
 
-export function UpsellCTA({ onAccept, onDecline, isProcessing = false, priceLabel = '$47' }: UpsellCTAProps) {
+export function UpsellCTA({ onAccept, onDecline, isProcessing = false, priceLabel = '$47', acceptLabel = 'Yes, protect what we clear' }: UpsellCTAProps) {
   return (
     <div className="p-4 space-y-4" data-testid="container-upsell-cta">
       <p className="text-center text-sm text-muted-foreground italic">
@@ -30,7 +33,7 @@ export function UpsellCTA({ onAccept, onDecline, isProcessing = false, priceLabe
         ) : (
           <span className="flex items-center justify-center gap-2">
             <Shield className="w-5 h-5" data-testid="icon-shield" />
-            <span data-testid="text-accept-button">Yes, protect what we clear</span>
+            <span data-testid="text-accept-button">{acceptLabel}</span>
           </span>
         )}
       </Button>
