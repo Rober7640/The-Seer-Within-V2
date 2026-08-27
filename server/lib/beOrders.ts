@@ -78,7 +78,10 @@ export async function recordBackendOrder(
 
   const email =
     session.customer_details?.email || session.customer_email || metadata.email || null;
-  const firstName = metadata.firstName || null;
+  // Prefer the letter's ?fn= (metadata.firstName); fall back to the name Stripe
+  // Checkout collected on the card, so a buyer who arrived without ?fn= still gets
+  // her name on the AWeber list instead of a blank "Friend".
+  const firstName = metadata.firstName || session.customer_details?.name || null;
   const treatment = isBookingTreatment(metadata.treatment) ? metadata.treatment : null;
 
   const amountCents = session.amount_total ?? 0;
