@@ -350,7 +350,13 @@ router.post('/checkout', async (req: Request, res: Response) => {
       })),
       // Digital deliverable — no address to collect. Stripe still collects the email,
       // which is the one field fulfilment cannot do without.
-      success_url: `${origin}${offer.successPath}?s={CHECKOUT_SESSION_ID}`,
+      //
+      // If the offer has an upsell chain, land her on Upsell 1 with `?session_id=`
+      // (the param the upsell + thank-you pages read) — she then flows welcome1 →
+      // welcome2 → success. Otherwise straight to the receipt.
+      success_url: offer.upsellEntryPath
+        ? `${origin}${offer.upsellEntryPath}?session_id={CHECKOUT_SESSION_ID}`
+        : `${origin}${offer.successPath}?s={CHECKOUT_SESSION_ID}`,
       // ⚠ Back to the treatment she came from, with the door the booking copy expects.
       // Its resume copy is written for exactly this round-trip, and says that nothing
       // has been taken — which is her live question at that moment.
