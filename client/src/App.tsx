@@ -54,6 +54,15 @@ const SoulmateSalesPage = lazy(() => import("@/pages/SoulmateSalesPage"));
 const SoulmateUpsellPage = lazy(() => import("@/pages/SoulmateUpsellPage"));
 const SoulmateUpsell2Page = lazy(() => import("@/pages/SoulmateUpsell2Page"));
 const SoulmateThankYouPage = lazy(() => import("@/pages/SoulmateThankYouPage"));
+// Backend deck, offer 02 — the two booking treatments, PREVIEW ONLY. Lazy so
+// they cost the live funnels nothing. Deliberately absent from the FB PageView
+// list above: no traffic reaches these, and firing the pixel would pollute it.
+const TwinFlameBooking = lazy(() => import("@/pages/TwinFlameBooking"));
+const TwinFlameBookingPage = lazy(() => import("@/pages/TwinFlameBookingPage"));
+const TwinFlameBookingChat = lazy(() => import("@/pages/TwinFlameBookingChat"));
+const TwinFlameThankYouPage = lazy(() => import("@/pages/TwinFlameThankYouPage"));
+const JudgementBookingPage = lazy(() => import("@/pages/JudgementBookingPage"));
+const JudgementBookingChat = lazy(() => import("@/pages/JudgementBookingChat"));
 
 // Admin pages (lazy loaded)
 const AdminLogin = lazy(() => import("@/pages/admin/AdminLogin"));
@@ -279,6 +288,42 @@ function Router() {
         <Route path="/soulmate/gift" component={SoulmateUpsellPage} />
         <Route path="/soulmate/gift2" component={SoulmateUpsell2Page} />
         <Route path="/soulmate/thank-you" component={SoulmateThankYouPage} />
+
+        {/* Backend deck, offer 02 — the two candidate booking treatments, for
+            review only. Nothing links here and neither one charges: the button
+            logs and stops. Stripe gets wired to the winner in phase 2.
+            Spec: improve-v1/v1-one-time-BEs/copy/02/02-C1-booking-page.md */}
+        {/* LIVE entry: assigns page vs chat (be_02_booking_treatment_2026) and renders
+            the arm. The two /preview-* routes below stay for QA. */}
+        <Route path="/tarot/twin-flame" component={TwinFlameBooking} />
+        <Route path="/tarot/twin-flame/preview-page" component={TwinFlameBookingPage} />
+        <Route path="/tarot/twin-flame/preview-chat" component={TwinFlameBookingChat} />
+        {/* 02's upsells are V1's components, as every other funnel's are. Only
+            the opening beats differ (lib/upsellCopy/twinFlame.ts) — a tarot
+            buyer is never told her Energy Clearing Ritual is scheduled.
+            Deliberately absent from the FB PageView list above, like the two
+            preview routes: nothing links here yet and Stripe is unwired, so
+            there is no traffic to attribute. Preview with ?demo=true. */}
+        <Route path="/tarot/twin-flame/welcome1" component={UpsellPage} />
+        <Route path="/tarot/twin-flame/welcome2" component={Upsell2Page} />
+        {/* 02's own thank-you (02-T1). NOT V1's /success, which tells her an
+            "Energy Clearing Ritual" begins tonight — a product she never
+            bought. Receipt-shaped and sells nothing, by spec. */}
+        <Route path="/tarot/twin-flame/success" component={TwinFlameThankYouPage} />
+
+        {/* Backend deck, offer 03 — Judgement Day (ACT · pay-what-you-want ·
+            three nights · needs her reply). Review only, like 02: nothing links
+            here and nothing charges — the booking button logs and stops.
+            The booking page sits at the offer root because that is where the
+            letter's {{BOOKING_URL}} points; 02 has two preview paths only
+            because two treatments were competing.
+            Spec: improve-v1/v1-one-time-BEs/copy/03/03-C1-booking-page.md */}
+        {/* Two candidate treatments, as 02 has: the page at the offer root
+            (where the letter's {{BOOKING_URL}} points) and the chat beside it.
+            ⚠ 03's chat carries the deck's only text input — pay-what-you-want
+            has one thing only the buyer can supply. */}
+        <Route path="/wiccan/judgement-day/chat" component={JudgementBookingChat} />
+        <Route path="/wiccan/judgement-day" component={JudgementBookingPage} />
         <Route path="/soulmate" component={SoulmateLandingPage} />
 
         {/* Auth routes (no layout wrapper) */}

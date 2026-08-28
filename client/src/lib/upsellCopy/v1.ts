@@ -1,0 +1,131 @@
+// V1's U1 + U2 conversations, expressed in the shared copy shape.
+//
+// ⛔ This is the copy six LIVE funnels run (/, /fb, /fb2, /gdn, /fb-palm,
+// /fb-tarot). Nothing here may change. The chains are written out
+// stage-by-stage precisely so a backend offer diverges by shipping its own copy
+// object, never by editing anything V1 reads — and the unit suites assert this
+// table transition by transition.
+
+import {
+  UPSELL_CONFIRMATION,
+  UPSELL_GAP,
+  UPSELL_RISK,
+  UPSELL_QUESTION_1,
+  UPSELL_QUESTION_1_REPLIES,
+  UPSELL_AFTER_Q1,
+  UPSELL_SOLUTION,
+  UPSELL_LAVA_INTRO,
+  UPSELL_RITUAL,
+  UPSELL_FEEL,
+  UPSELL_BUCKET_MESSAGES,
+  UPSELL_DELIVERY,
+  UPSELL_OFFER,
+  UPSELL_SOFT_DECLINE,
+  UPSELL_SUCCESS,
+  UPSELL_SHIPPING_CONFIRMED,
+} from "@/lib/upsellMessages";
+import {
+  UPSELL2_PATH_A_OPEN,
+  UPSELL2_PATH_B_OPEN,
+  UPSELL2_GAP,
+  UPSELL2_INTRODUCE,
+  UPSELL2_STONES,
+  UPSELL2_RITUAL_INSTRUCTION,
+  UPSELL2_RITUAL_PATH_A_EXTRA,
+  UPSELL2_WHAT_RECEIVE,
+  UPSELL2_SOCIAL_PROOF,
+  UPSELL2_PRICE,
+  UPSELL2_URGENCY,
+  UPSELL2_DOWNSELL,
+  UPSELL2_SUCCESS,
+  UPSELL2_SUCCESS_HAS_SHIPPING,
+  UPSELL2_SUCCESS_NEEDS_SHIPPING,
+  UPSELL2_SHIPPING_CONFIRMED,
+  UPSELL2_SOFT_DECLINE,
+} from "@/lib/upsell2Messages";
+import type { Upsell1Chain, Upsell2Chain, Upsell1Copy, Upsell2Copy } from "./types";
+
+// V1's chain, written out so the hook has one code path. Every value is the
+// stage V1 already advanced to — this table changes nothing for a live funnel.
+export const V1_CHAIN_1: Upsell1Chain = {
+  CONFIRMATION: "GAP",
+  GAP: "RISK",
+  RISK: "QUESTION_1",
+  AFTER_Q1: "SOLUTION",
+  SOLUTION: "LAVA_INTRO",
+  LAVA_INTRO: "QUESTION_2",
+  AFTER_Q2: "RITUAL",
+  RITUAL: "FEEL",
+  FEEL: "QUESTION_3",
+  AFTER_Q3: "BUCKET",
+  BUCKET: "DELIVERY",
+  DELIVERY: "OFFER",
+};
+
+export const V1_CHAIN_2: Upsell2Chain = {
+  PATH_A_OPEN: "MANIFEST_REVEAL",
+  PATH_B_OPEN: "MANIFEST_REVEAL",
+  MANIFEST_REVEAL: "GAP",
+  GAP: "QUESTION_1",
+  AFTER_Q1: "INTRODUCE",
+  INTRODUCE: "STONES",
+  STONES: "QUESTION_2",
+  AFTER_Q2: "MANIFEST_PERSONALIZE",
+  MANIFEST_PERSONALIZE: "RITUAL_INSTRUCTION",
+  RITUAL_INSTRUCTION: "WHAT_RECEIVE",
+  WHAT_RECEIVE: "QUESTION_3",
+  AFTER_Q3: "SOCIAL_PROOF",
+  SOCIAL_PROOF: "PRICE",
+  PRICE: "URGENCY",
+};
+
+export const V1_UPSELL1: Upsell1Copy = {
+  CONFIRMATION: UPSELL_CONFIRMATION,
+  GAP: UPSELL_GAP,
+  RISK: UPSELL_RISK,
+  QUESTION_1: UPSELL_QUESTION_1,
+  QUESTION_1_REPLIES: UPSELL_QUESTION_1_REPLIES,
+  AFTER_Q1: UPSELL_AFTER_Q1,
+  SOLUTION: UPSELL_SOLUTION,
+  LAVA_INTRO: UPSELL_LAVA_INTRO,
+  RITUAL: UPSELL_RITUAL,
+  FEEL: UPSELL_FEEL,
+  DELIVERY: UPSELL_DELIVERY,
+  OFFER: UPSELL_OFFER,
+  SUCCESS: UPSELL_SUCCESS,
+  SHIPPING_CONFIRMED: UPSELL_SHIPPING_CONFIRMED,
+  SOFT_DECLINE: UPSELL_SOFT_DECLINE,
+  // Byte-identical to the hook's old inline lookup, including a missing
+  // personName, which personalizeMessage() still renders as "them".
+  bucketMessages: (bucket) => (bucket ? UPSELL_BUCKET_MESSAGES[bucket] : []) || [],
+  chain: V1_CHAIN_1,
+  pauses: {},
+  acceptLabel: "Yes, protect what we clear",
+  placeholderNames: [],
+};
+
+export const V1_UPSELL2: Upsell2Copy = {
+  PATH_A_OPEN: UPSELL2_PATH_A_OPEN,
+  PATH_B_OPEN: UPSELL2_PATH_B_OPEN,
+  REVEAL: null,
+  PERSONALIZE: null,
+  GAP: UPSELL2_GAP,
+  INTRODUCE: UPSELL2_INTRODUCE,
+  STONES: UPSELL2_STONES,
+  RITUAL_INSTRUCTION: UPSELL2_RITUAL_INSTRUCTION,
+  RITUAL_PATH_A_EXTRA: UPSELL2_RITUAL_PATH_A_EXTRA,
+  WHAT_RECEIVE: UPSELL2_WHAT_RECEIVE,
+  SOCIAL_PROOF: UPSELL2_SOCIAL_PROOF,
+  PRICE: UPSELL2_PRICE,
+  URGENCY: UPSELL2_URGENCY,
+  DOWNSELL: UPSELL2_DOWNSELL,
+  SUCCESS: UPSELL2_SUCCESS,
+  SUCCESS_HAS_SHIPPING: UPSELL2_SUCCESS_HAS_SHIPPING,
+  SUCCESS_NEEDS_SHIPPING: UPSELL2_SUCCESS_NEEDS_SHIPPING,
+  SHIPPING_CONFIRMED: UPSELL2_SHIPPING_CONFIRMED,
+  SOFT_DECLINE: UPSELL2_SOFT_DECLINE,
+  chain: V1_CHAIN_2,
+  pauses: {},
+  downsellDeclineLabel: "No thanks, just the clearing",
+  placeholderNames: [],
+};

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import type { Bucket } from "@shared/types";
 import { calculateTypingDelay, sleep, generateId } from "@/lib/typing";
 
@@ -10,8 +10,6 @@ import {
   detectU2Q1Intent,
   detectU2Q2Intent,
   detectU2Q3Intent,
-  UPSELL2_PATH_A_OPEN,
-  UPSELL2_PATH_B_OPEN,
   UPSELL2_GAP,
   UPSELL2_QUESTION_1,
   UPSELL2_QUESTION_1_REPLIES,
@@ -37,7 +35,8 @@ import {
   UPSELL2_SHIPPING_CONFIRMED,
   UPSELL2_SOFT_DECLINE,
 } from "@/lib/upsell2Messages";
-import { currentFunnel, getPostHogFunnel } from "@/lib/funnel";
+import { upsell2Copy, displayName, type Upsell2Chain } from "@/lib/backendOffers";
+import { currentFunnel, getPostHogFunnel, isTwinFlameOffer } from "@/lib/funnel";
 import { track as trackPH } from "@/lib/posthog";
 import { tarotEventProps } from "@/lib/tarotAttribution";
 import { getTrackdeskClickId } from "@/lib/facebook";
@@ -108,29 +107,45 @@ export function useUpsell2Chat({
   const [isProcessing, setIsProcessing] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
   const [upsell2Bought, setUpsell2Bought] = useState(false);
+  // The backend charge's PaymentIntent id, so the BE shipping call can stamp the
+  // address onto it. Null on the V1 path (V1 saves shipping by session id instead).
+  const [upsell2PaymentId, setUpsell2PaymentId] = useState<string | null>(null);
   const [objectionCount, setObjectionCount] = useState(0);
 
+  const [showContinue, setShowContinue] = useState(false);
+  const [continueLabel, setContinueLabel] = useState("");
+  const pendingStageRef = useRef<Upsell2Stage | null>(null);
+
   const hasStartedRef = useRef(false);
+
+  // Which funnel's path opens this page is running — V1's everywhere except the
+  // backend deck's offer 02. Everything from UPSELL2_GAP onward is V1's in both
+  // cases. Resolved once; the URL cannot change mid-chat.
+  const copy = useMemo(() => upsell2Copy(), []);
   const isPathA = userData?.upsellPurchased === true;
+
+  // "Friend" is the placeholder /api/upsell/user-data stamps when checkout
+  // carried no name — every offer-02 order. "dear" is the better fallback.
+  const firstName = displayName(userData?.firstName, copy.placeholderNames);
 
   const p = useCallback(
     (msgs: string[]) =>
       personalizeMessages(
         msgs,
-        userData?.firstName || "",
+        firstName,
         userData?.personName || undefined,
       ),
-    [userData],
+    [firstName, userData],
   );
 
   const pMsg = useCallback(
     (msg: string) =>
       personalizeMessage(
         msg,
-        userData?.firstName || "",
+        firstName,
         userData?.personName || undefined,
       ),
-    [userData],
+    [firstName, userData],
   );
 
   const sendBotMessage = useCallback(async (content: string) => {
@@ -172,6 +187,7 @@ export function useUpsell2Chat({
   }, []);
 
   const resetUI = useCallback(() => {
+    setShowContinue(false);
     setShowQuickReplies(false);
     setInputEnabled(false);
     setShowCTA(false);
@@ -216,36 +232,60 @@ export function useUpsell2Chat({
       setStage(targetStage);
       resetUI();
 
+      // Move on from `from` — unless the copy marks it as a pause, in which case
+      // hold and show a one-button CONTINUE tap. It asks nothing and branches
+      // nowhere; it exists so a ~50-message flow doesn't arrive as one broadcast.
+      const advance = (from: keyof Upsell2Chain) => {
+        const next = copy.chain[from];
+        const pause = copy.pauses[from];
+        if (pause) {
+          pendingStageRef.current = next;
+          setContinueLabel(pause);
+          setShowContinue(true);
+          return;
+        }
+        processStage(next);
+      };
+
       switch (targetStage) {
         case "PATH_A_OPEN":
-          await sendBotMessages(p(UPSELL2_PATH_A_OPEN));
-          processStage("MANIFEST_REVEAL");
+          await sendBotMessages(p(copy.PATH_A_OPEN));
+          advance("PATH_A_OPEN");
           break;
 
         case "PATH_B_OPEN":
-          await sendBotMessages(p(UPSELL2_PATH_B_OPEN));
-          processStage("MANIFEST_REVEAL");
+          await sendBotMessages(p(copy.PATH_B_OPEN));
+          advance("PATH_B_OPEN");
           break;
 
+        // ⚠ Offer 02 ships STATIC copy here instead of calling Claude. The
+        // prompt interpolates her stated desire, a field 02 never collects — it
+        // would go out as an empty string with the model left to invent one, and
+        // the prompt's own framing ("the clearing ritual she purchased") is
+        // wrong for a tarot buyer. Its reveal comes from the fixed spread.
         case "MANIFEST_REVEAL": {
           setStage("WAITING_REVEAL");
-          const revealMsgs = await fetchClaudeReading("manifest_reveal");
-          if (revealMsgs.length > 0) {
-            await sendBotMessages(p(revealMsgs));
+          if (copy.REVEAL) {
+            await sendBotMessages(p(copy.REVEAL));
           } else {
-            await sendBotMessage(
-              pMsg(
-                "I see something beyond the block, {firstName}... something trying to reach you.",
-              ),
-            );
+            const revealMsgs = await fetchClaudeReading("manifest_reveal");
+            if (revealMsgs.length > 0) {
+              await sendBotMessages(p(revealMsgs));
+            } else {
+              await sendBotMessage(
+                pMsg(
+                  "I see something beyond the block, {firstName}... something trying to reach you.",
+                ),
+              );
+            }
           }
-          processStage("GAP");
+          advance("MANIFEST_REVEAL");
           break;
         }
 
         case "GAP":
-          await sendBotMessages(p(UPSELL2_GAP));
-          processStage("QUESTION_1");
+          await sendBotMessages(p(copy.GAP));
+          advance("GAP");
           break;
 
         case "QUESTION_1":
@@ -261,21 +301,21 @@ export function useUpsell2Chat({
             UPSELL2_AFTER_Q1[responseKey || "default"] ||
             UPSELL2_AFTER_Q1.default;
           await sendBotMessages(p(q1Response));
-          processStage("INTRODUCE");
+          advance("AFTER_Q1");
           break;
         }
 
         case "INTRODUCE":
-          await sendBotMessages(p(UPSELL2_INTRODUCE));
+          await sendBotMessages(p(copy.INTRODUCE));
           if (braceletImage) {
             await sendImageMessage(braceletImage);
           }
-          processStage("STONES");
+          advance("INTRODUCE");
           break;
 
         case "STONES":
-          await sendBotMessages(p(UPSELL2_STONES));
-          processStage("QUESTION_2");
+          await sendBotMessages(p(copy.STONES));
+          advance("STONES");
           break;
 
         case "QUESTION_2":
@@ -291,39 +331,43 @@ export function useUpsell2Chat({
             UPSELL2_AFTER_Q2[responseKey || "default"] ||
             UPSELL2_AFTER_Q2.default;
           await sendBotMessages(p(q2Response));
-          processStage("MANIFEST_PERSONALIZE");
+          advance("AFTER_Q2");
           break;
         }
 
         case "MANIFEST_PERSONALIZE": {
           setStage("WAITING_PERSONALIZE");
-          const personalizeMsgs = await fetchClaudeReading(
-            "manifest_personalize",
-          );
-          if (personalizeMsgs.length > 0) {
-            await sendBotMessages(p(personalizeMsgs));
+          if (copy.PERSONALIZE) {
+            await sendBotMessages(p(copy.PERSONALIZE));
           } else {
-            await sendBotMessage(
-              pMsg(
-                "The stones that speak loudest to your energy are calling, {firstName}.",
-              ),
+            const personalizeMsgs = await fetchClaudeReading(
+              "manifest_personalize",
             );
+            if (personalizeMsgs.length > 0) {
+              await sendBotMessages(p(personalizeMsgs));
+            } else {
+              await sendBotMessage(
+                pMsg(
+                  "The stones that speak loudest to your energy are calling, {firstName}.",
+                ),
+              );
+            }
           }
-          processStage("RITUAL_INSTRUCTION");
+          advance("MANIFEST_PERSONALIZE");
           break;
         }
 
         case "RITUAL_INSTRUCTION":
-          await sendBotMessages(p(UPSELL2_RITUAL_INSTRUCTION));
+          await sendBotMessages(p(copy.RITUAL_INSTRUCTION));
           if (isPathA) {
-            await sendBotMessage(pMsg(UPSELL2_RITUAL_PATH_A_EXTRA));
+            await sendBotMessage(pMsg(copy.RITUAL_PATH_A_EXTRA));
           }
-          processStage("WHAT_RECEIVE");
+          advance("RITUAL_INSTRUCTION");
           break;
 
         case "WHAT_RECEIVE":
-          await sendBotMessages(p(UPSELL2_WHAT_RECEIVE));
-          processStage("QUESTION_3");
+          await sendBotMessages(p(copy.WHAT_RECEIVE));
+          advance("WHAT_RECEIVE");
           break;
 
         case "QUESTION_3":
@@ -339,22 +383,22 @@ export function useUpsell2Chat({
             UPSELL2_AFTER_Q3[responseKey || "default"] ||
             UPSELL2_AFTER_Q3.default;
           await sendBotMessages(p(q3Response));
-          processStage("SOCIAL_PROOF");
+          advance("AFTER_Q3");
           break;
         }
 
         case "SOCIAL_PROOF":
-          await sendBotMessages(p(UPSELL2_SOCIAL_PROOF));
-          processStage("PRICE");
+          await sendBotMessages(p(copy.SOCIAL_PROOF));
+          advance("SOCIAL_PROOF");
           break;
 
         case "PRICE":
-          await sendBotMessages(p(UPSELL2_PRICE));
-          processStage("URGENCY");
+          await sendBotMessages(p(copy.PRICE));
+          advance("PRICE");
           break;
 
         case "URGENCY":
-          await sendBotMessages(p(UPSELL2_URGENCY));
+          await sendBotMessages(p(copy.URGENCY));
           await sleep(800);
           setShowCTA(true);
           setStage("CTA");
@@ -362,25 +406,26 @@ export function useUpsell2Chat({
 
         case "OBJECTION_1":
           setObjectionCount(1);
-          await sendBotMessages(p(UPSELL2_DOWNSELL));
+          await sendBotMessages(p(copy.DOWNSELL));
           await sleep(800);
           setShowDownsellCTA(true);
           setStage("DOWNSELL_CTA");
           break;
 
         case "DECLINED":
-          await sendBotMessages(p(UPSELL2_SOFT_DECLINE));
+          await sendBotMessages(p(copy.SOFT_DECLINE));
           setIsComplete(true);
           break;
 
         case "COMPLETE":
-          await sendBotMessages(p(UPSELL2_SHIPPING_CONFIRMED));
+          await sendBotMessages(p(copy.SHIPPING_CONFIRMED));
           setIsComplete(true);
           break;
       }
     },
     [
       userData,
+      copy,
       p,
       pMsg,
       sendBotMessage,
@@ -412,6 +457,16 @@ export function useUpsell2Chat({
     [stage, addUserMessage, resetUI, processStage],
   );
 
+  // The CONTINUE tap — see useUpsellChat. Asks nothing, branches nowhere.
+  const handleContinue = useCallback(async () => {
+    const next = pendingStageRef.current;
+    if (!next) return;
+    pendingStageRef.current = null;
+    setShowContinue(false);
+    addUserMessage(continueLabel);
+    await processStage(next);
+  }, [continueLabel, addUserMessage, processStage]);
+
   const handleQuickReply = useCallback(
     (reply: QuickReply) => {
       handleUserInput(reply.text);
@@ -441,35 +496,73 @@ export function useUpsell2Chat({
       ...(tarot ?? {}),
     });
 
+    // Backend charges its OWN endpoint (be_bracelet → list 6972556, no tracking),
+    // NO trackdeskClickId. V1's path/body is byte-identical.
+    const beFunnel = isTwinFlameOffer();
+
     try {
-      const response = await fetch("/api/upsell2/charge", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          checkoutSessionId: sessionId,
-          email: userData.email,
-          firstName: userData.firstName,
-          type: "full",
-          funnel: currentFunnel(),
-          trackdeskClickId: getTrackdeskClickId(),
-        }),
-      });
+      const response = await fetch(
+        beFunnel ? "/api/backend/upsell/charge" : "/api/upsell2/charge",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(
+            beFunnel
+              ? {
+                  checkoutSessionId: sessionId,
+                  email: userData.email,
+                  product: "be_bracelet",
+                  tier: "full",
+                }
+              : {
+                  checkoutSessionId: sessionId,
+                  email: userData.email,
+                  firstName: userData.firstName,
+                  type: "full",
+                  funnel: currentFunnel(),
+                  trackdeskClickId: getTrackdeskClickId(),
+                },
+          ),
+        },
+      );
 
       const result = await response.json();
 
       if (result.success) {
         setUpsell2Bought(true);
-        fireTrackdeskUpsell2(sessionId, 47, userData.email);
+        setUpsell2PaymentId(result.paymentIntentId ?? null);
+        if (!beFunnel) fireTrackdeskUpsell2(sessionId, 47, userData.email);
         if (isPathA && userData.hasShipping) {
-          await sendBotMessages(p(UPSELL2_SUCCESS_HAS_SHIPPING));
+          // Backend Path A: she reused her Upsell 1 address, so no form showed —
+          // stamp it on THIS (bracelet) PaymentIntent too, so the shipper reads it
+          // off both payments. V1 keeps shipping in its DB, so it needs nothing here.
+          // Non-fatal: she has paid, and Upsell 1 already carries the address.
+          if (beFunnel && userData.shipping && result.paymentIntentId) {
+            await fetch("/api/backend/upsell/shipping", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                paymentIntentId: result.paymentIntentId,
+                address: userData.shipping,
+              }),
+            }).catch(() => {});
+          }
+          await sendBotMessages(p(copy.SUCCESS_HAS_SHIPPING));
           setIsProcessing(false);
           await processStage("COMPLETE");
         } else {
-          await sendBotMessages(p(UPSELL2_SUCCESS_NEEDS_SHIPPING));
+          await sendBotMessages(p(copy.SUCCESS_NEEDS_SHIPPING));
           setIsProcessing(false);
           setShowShippingForm(true);
           setStage("SHIPPING");
         }
+      } else if (result.fallback && beFunnel) {
+        // Backend, first build: no hosted BE fallback yet — let her retry.
+        await sendBotMessage(
+          "That didn't go through on your saved card, dear. Give it a moment and try once more.",
+        );
+        setIsProcessing(false);
+        setShowCTA(true);
       } else if (result.fallback) {
         // 1-click off-session charge declined → hosted Stripe checkout. See the
         // matching event in useUpsellChat: this is where a payment failure becomes
@@ -519,6 +612,7 @@ export function useUpsell2Chat({
     p,
     processStage,
     isPathA,
+    copy,
   ]);
 
   const handleDecline = useCallback(async () => {
@@ -562,35 +656,72 @@ export function useUpsell2Chat({
       ...(tarot ?? {}),
     });
 
+    // Backend: downsell charge on be_bracelet at $30, no tracking / no trackdesk id.
+    const beFunnel = isTwinFlameOffer();
+
     try {
-      const response = await fetch("/api/upsell2/charge", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          checkoutSessionId: sessionId,
-          email: userData.email,
-          firstName: userData.firstName,
-          type: "downsell",
-          funnel: currentFunnel(),
-          trackdeskClickId: getTrackdeskClickId(),
-        }),
-      });
+      const response = await fetch(
+        beFunnel ? "/api/backend/upsell/charge" : "/api/upsell2/charge",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(
+            beFunnel
+              ? {
+                  checkoutSessionId: sessionId,
+                  email: userData.email,
+                  product: "be_bracelet",
+                  tier: "downsell",
+                }
+              : {
+                  checkoutSessionId: sessionId,
+                  email: userData.email,
+                  firstName: userData.firstName,
+                  type: "downsell",
+                  funnel: currentFunnel(),
+                  trackdeskClickId: getTrackdeskClickId(),
+                },
+          ),
+        },
+      );
 
       const result = await response.json();
 
       if (result.success) {
         setUpsell2Bought(true);
-        fireTrackdeskUpsell2(sessionId, 30, userData.email);
+        setUpsell2PaymentId(result.paymentIntentId ?? null);
+        if (!beFunnel) fireTrackdeskUpsell2(sessionId, 30, userData.email);
         if (isPathA && userData.hasShipping) {
-          await sendBotMessages(p(UPSELL2_SUCCESS_HAS_SHIPPING));
+          // Backend Path A: she reused her Upsell 1 address, so no form showed —
+          // stamp it on THIS (bracelet) PaymentIntent too, so the shipper reads it
+          // off both payments. V1 keeps shipping in its DB, so it needs nothing here.
+          // Non-fatal: she has paid, and Upsell 1 already carries the address.
+          if (beFunnel && userData.shipping && result.paymentIntentId) {
+            await fetch("/api/backend/upsell/shipping", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                paymentIntentId: result.paymentIntentId,
+                address: userData.shipping,
+              }),
+            }).catch(() => {});
+          }
+          await sendBotMessages(p(copy.SUCCESS_HAS_SHIPPING));
           setIsProcessing(false);
           await processStage("COMPLETE");
         } else {
-          await sendBotMessages(p(UPSELL2_SUCCESS_NEEDS_SHIPPING));
+          await sendBotMessages(p(copy.SUCCESS_NEEDS_SHIPPING));
           setIsProcessing(false);
           setShowShippingForm(true);
           setStage("SHIPPING");
         }
+      } else if (result.fallback && beFunnel) {
+        // Backend, first build: no hosted BE fallback yet — let her retry.
+        await sendBotMessage(
+          "That didn't go through on your saved card, dear. Give it a moment and try once more.",
+        );
+        setIsProcessing(false);
+        setShowCTA(true);
       } else if (result.fallback) {
         trackPH("upsell_fallback_redirect", {
           funnel: getPostHogFunnel() ?? "v1",
@@ -637,6 +768,7 @@ export function useUpsell2Chat({
     p,
     processStage,
     isPathA,
+    copy,
   ]);
 
   const handleDownsellDecline = useCallback(async () => {
@@ -663,11 +795,21 @@ export function useUpsell2Chat({
       setShowShippingForm(false);
 
       try {
-        await fetch("/api/upsell2/shipping", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ sessionId, address }),
-        });
+        // Backend stamps the address onto the upsell PaymentIntent (manual shipper
+        // reads it off Stripe); V1 saves by session id. Byte-identical for V1.
+        if (isTwinFlameOffer()) {
+          await fetch("/api/backend/upsell/shipping", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ paymentIntentId: upsell2PaymentId, address }),
+          });
+        } else {
+          await fetch("/api/upsell2/shipping", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ sessionId, address }),
+          });
+        }
 
         await processStage("COMPLETE");
       } catch (error) {
@@ -676,7 +818,7 @@ export function useUpsell2Chat({
         setIsComplete(true);
       }
     },
-    [sessionId, userData, processStage, sendBotMessage],
+    [sessionId, userData, processStage, sendBotMessage, upsell2PaymentId],
   );
 
   useEffect(() => {
@@ -694,6 +836,10 @@ export function useUpsell2Chat({
 
   return {
     messages,
+    downsellDeclineLabel: copy.downsellDeclineLabel,
+    showContinue,
+    continueLabel,
+    handleContinue,
     stage,
     isTyping,
     showQuickReplies,

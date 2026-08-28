@@ -33,6 +33,7 @@ import astrologyRouter from "./routes/astrology";
 import quizRouter from "./routes/quiz";
 import evelynLanderRouter from "./routes/evelynLander";
 import productsRouter from "./routes/products";
+import backendOffersRouter from "./routes/backendOffers";
 import personaLanderRouter from "./routes/personaLander";
 import {
   runHealthCheck,
@@ -530,6 +531,12 @@ export async function registerRoutes(
   // Isolated from the funnels: it uses NEW `bracelet_*` product names, which every
   // branch of the Stripe webhook skips as unknown. See server/routes/products.ts.
   app.use("/api/products", productsRouter);
+  // Stripe Checkout for the one-time BACKEND offers (02 Twin Flame, 03 Judgement Day, …).
+  // One endpoint for the whole deck — each offer's price model is a catalog row in
+  // shared/backendOffers.ts. Isolated from the funnels the same way the storefront is:
+  // its `be_*` product names are unknown to every branch of the Stripe webhook.
+  // See server/routes/backendOffers.ts.
+  app.use("/api/backend", backendOffersRouter);
 
   // Public unsubscribe endpoint for partner emails (CAN-SPAM compliance).
   // Mounted at root so the URL is a clean https://www.theseerwithin.com/unsubscribe?email=...&src=...
