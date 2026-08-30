@@ -21,10 +21,18 @@ process.env.AWEBER_ACCESS_TOKEN = 'tok-test';
 process.env.AWEBER_REFRESH_TOKEN = 'refresh-test';
 process.env.AWEBER_BE_CUSTOMER_LIST_ID = 'list-test';
 
-const { BACKEND_OFFERS, BE_CUSTOMER_TAG, deliveredTag, purchaseTags } = await import(
-  './backendCustomerList'
+const {
+  BACKEND_OFFERS,
+  BE_CUSTOMER_TAG,
+  deliveredTag,
+  purchaseTags,
+  purchaseListWrites,
+  backendUpsellFor,
+  upsellPurchaseTags,
+} = await import('./backendCustomerList');
+const { addBackendCustomer, markBackendReadingDelivered, addBackendUpsellCustomer } = await import(
+  './aweber'
 );
-const { addBackendCustomer, markBackendReadingDelivered } = await import('./aweber');
 
 /** The JSON body of the single AWeber call made by the test. */
 function sentBody(fetchMock: ReturnType<typeof vi.fn>): any {
@@ -70,6 +78,61 @@ describe('the tag strings', () => {
   });
 });
 
+describe('purchaseListWrites — which list(s) she lands on', () => {
+  it('sends a Twin Flame reading buyer to the initial list only', () => {
+    expect(purchaseListWrites('twin-flame', false)).toEqual([
+      { listId: '6972552', tags: ['be-customer', 'be-02-twin-flame'], role: 'initial' },
+    ]);
+  });
+
+  it('adds a SECOND write to the order-bump list when she took the bump', () => {
+    expect(purchaseListWrites('twin-flame', true)).toEqual([
+      { listId: '6972552', tags: ['be-customer', 'be-02-twin-flame'], role: 'initial' },
+      { listId: '6972554', tags: ['be-customer', 'be-02-twin-flame', 'be-02-bump'], role: 'bump' },
+    ]);
+  });
+
+  it('folds the bump tag into one write for an offer with no separate bump list', () => {
+    // 03 keeps the old single-list behaviour: one write, all tags, no second list.
+    const writes = purchaseListWrites('judgement-day', true);
+    expect(writes).toHaveLength(1);
+    expect(writes[0].tags).toEqual(['be-customer', 'be-03-judgement-day', 'be-03-bump']);
+  });
+});
+
+describe('backend upsell routing — own products, own lists, walled off from V1', () => {
+  it('routes the BE Protection Ritual to list 6972555', () => {
+    const u = backendUpsellFor('be_protection_ritual');
+    expect(u?.listId).toBe('6972555');
+    expect(u?.tag).toBe('be-02-upsell1-protection');
+  });
+
+  it('routes the BE Bracelet to list 6972556', () => {
+    const u = backendUpsellFor('be_bracelet');
+    expect(u?.listId).toBe('6972556');
+    expect(u?.tag).toBe('be-02-upsell2-bracelet');
+  });
+
+  it('does NOT recognise V1s own upsell product keys — those stay on V1s lists', () => {
+    expect(backendUpsellFor('protection_ritual')).toBeNull();
+    expect(backendUpsellFor('manifestation_bracelet')).toBeNull();
+  });
+
+  it('tags an upsell buyer with the base tags plus her product tag', () => {
+    expect(upsellPurchaseTags('be_protection_ritual')).toEqual([
+      'be-customer',
+      'be-02-twin-flame',
+      'be-02-upsell1-protection',
+    ]);
+  });
+
+  it('prices the Protection Ritual at $47 and the Bracelet at $47 with a $30 downsell', () => {
+    expect(backendUpsellFor('be_protection_ritual')?.priceCents).toBe(4700);
+    expect(backendUpsellFor('be_bracelet')?.priceCents).toBe(4700);
+    expect(backendUpsellFor('be_bracelet')?.downsellCents).toBe(3000);
+  });
+});
+
 describe('addBackendCustomer', () => {
   it('writes to the list in AWEBER_BE_CUSTOMER_LIST_ID', async () => {
     const f = okFetch();
@@ -107,6 +170,35 @@ describe('addBackendCustomer', () => {
     expect(Object.keys(body.custom_fields).length).toBeGreaterThan(0);
     expect(body.custom_fields.stripe_order_id).toBe('cs_test_2');
     expect(body.custom_fields.offer).toBe('twin-flame');
+  });
+
+  it('writes a Twin Flame bump buyer to BOTH the initial list and the order-bump list', async () => {
+    const f = okFetch();
+    await addBackendCustomer({
+      email: 'she@example.com',
+      firstName: 'Sarah',
+      offer: 'twin-flame',
+      stripeOrderId: 'cs_bump_1',
+      bumpPurchased: true,
+    });
+    expect(f).toHaveBeenCalledTimes(2);
+    const urls = f.mock.calls.map((c) => c[0]);
+    expect(urls.some((u: string) => u.includes('/lists/6972552/'))).toBe(true);
+    expect(urls.some((u: string) => u.includes('/lists/6972554/'))).toBe(true);
+  });
+
+  it('does not send custom fields to the order-bump list (it has none to hold)', async () => {
+    const f = okFetch();
+    await addBackendCustomer({
+      email: 'she@example.com',
+      offer: 'twin-flame',
+      stripeOrderId: 'cs_bump_2',
+      bumpPurchased: true,
+    });
+    const obCall = f.mock.calls.find((c) => c[0].includes('/lists/6972554/'));
+    const obBody = JSON.parse(obCall![1].body);
+    expect(obBody).not.toHaveProperty('custom_fields');
+    expect(obBody.tags).toEqual(['be-customer', 'be-02-twin-flame', 'be-02-bump']);
   });
 
   it('carries 03s Entry link when there is one, and omits the field when there is not', async () => {
@@ -166,6 +258,31 @@ describe('addBackendCustomer', () => {
       stripeOrderId: 'cs_test_6',
     });
     expect(result.success).toBe(false);
+  });
+});
+
+describe('addBackendUpsellCustomer — the upsell lands on its OWN list', () => {
+  it('writes a Protection Ritual buyer to list 6972555 with her tags and NO custom fields', async () => {
+    const f = okFetch();
+    await addBackendUpsellCustomer({
+      email: 'she@example.com',
+      firstName: 'Sarah',
+      productKey: 'be_protection_ritual',
+    });
+    expect(f.mock.calls[0][0]).toContain('/lists/6972555/subscribers');
+    const body = sentBody(f);
+    expect(body.tags).toEqual(['be-customer', 'be-02-twin-flame', 'be-02-upsell1-protection']);
+    expect(body).not.toHaveProperty('custom_fields');
+  });
+
+  it('refuses to write for a V1 upsell key — those stay on V1s lists', async () => {
+    const f = okFetch();
+    const result = await addBackendUpsellCustomer({
+      email: 'she@example.com',
+      productKey: 'protection_ritual',
+    });
+    expect(result.success).toBe(false);
+    expect(f).not.toHaveBeenCalled();
   });
 });
 

@@ -57,6 +57,7 @@ const SoulmateThankYouPage = lazy(() => import("@/pages/SoulmateThankYouPage"));
 // Backend deck, offer 02 — the two booking treatments, PREVIEW ONLY. Lazy so
 // they cost the live funnels nothing. Deliberately absent from the FB PageView
 // list above: no traffic reaches these, and firing the pixel would pollute it.
+const TwinFlameBooking = lazy(() => import("@/pages/TwinFlameBooking"));
 const TwinFlameBookingPage = lazy(() => import("@/pages/TwinFlameBookingPage"));
 const TwinFlameBookingChat = lazy(() => import("@/pages/TwinFlameBookingChat"));
 const TwinFlameThankYouPage = lazy(() => import("@/pages/TwinFlameThankYouPage"));
@@ -292,6 +293,9 @@ function Router() {
             review only. Nothing links here and neither one charges: the button
             logs and stops. Stripe gets wired to the winner in phase 2.
             Spec: improve-v1/v1-one-time-BEs/copy/02/02-C1-booking-page.md */}
+        {/* LIVE entry: assigns page vs chat (be_02_booking_treatment_2026) and renders
+            the arm. The two /preview-* routes below stay for QA. */}
+        <Route path="/tarot/twin-flame" component={TwinFlameBooking} />
         <Route path="/tarot/twin-flame/preview-page" component={TwinFlameBookingPage} />
         <Route path="/tarot/twin-flame/preview-chat" component={TwinFlameBookingChat} />
         {/* 02's upsells are V1's components, as every other funnel's are. Only

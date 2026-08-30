@@ -799,6 +799,36 @@ export type TarotHook =
   | 'cards-no-time-to-waste-commit' // Why won't he commit when neither of us has time to waste?
   | 'cards-how-much-longer-commit' // How much longer do I wait for him to commit?
   | 'cards-commit-or-company' // Does he want to commit, or does he just want company?
+  // Commitment age-matrix additions (2026-08-27). Same angle as the twelve above.
+  //
+  // 🔴 'cards-expecting-too-much' carries a phrase its own guard bans. "too much" is on the
+  // whole-beat blame list for this angle, so the read PARAPHRASES her question rather than
+  // quoting the ad — the one lander on the funnel where message scent is deliberately inexact.
+  //
+  // 🔴 'cards-played-the-wife' reaches an audience its headline does not describe. The VOC pull
+  // (2026-08-27) is dominated by women whose rival holds the wife role in fact, marriages ended
+  // after decades, and live property disputes. Raised with the operator; he chose to keep the
+  // lander, so four bans carry the safety instead — see TAROT_HOOK_TENDENCY and
+  // tests/tarot-commit-vocab-manuscripts.test.ts.
+  | 'cards-expecting-too-much' // Am I expecting too much, or should he have committed by now?
+  | 'cards-played-the-wife' // I've played the wife without the commitment. Why?
+  // Commitment CONNECTION-VOCAB hooks (2026-08-27). Their own angle, 'commitment-connection' —
+  // one angle per keyword, the convention the soulmate keyword families already use, because
+  // there the keyword IS the variable under test.
+  //
+  // 🔴 NOT folded into 'commitment-ageband'. That family varies the AGE BAND, which lives in the
+  // ad set and never in the copy. This one varies a WORD, and the word is in every headline.
+  //
+  // 🔴 "this connection" is very often NOT a current relationship — the corpus uses it for men
+  // not seen in twenty years ("no contact between us for 20 years"). No read here may presume
+  // contact, a meeting, or that she can speak to him.
+  //
+  // ⚠ 'cards-stopping-him-committing' is the family's CONTROL: the same commitment-obstacle
+  // question with the keyword removed. It is deliberately the odd one out.
+  | 'cards-instant-connection-commit' // The connection was instant. So why won't he commit?
+  | 'cards-connection-without-commitment' // How long can a connection this strong go without commitment?
+  | 'cards-connection-heading-commit' // Is this connection heading for commitment, or staying as it is?
+  | 'cards-stopping-him-committing' // Something is stopping him from committing. What is it?
 export type TarotCard = 'a' | 'b' | 'c' // the option the visitor tapped (A/B/C)
 export type TarotOption = TarotCard
 export type TarotVersion = 'a' | 'b' | 'c'
@@ -1383,6 +1413,7 @@ export type TarotAngle =
   | 'money-ageband'
   | 'loneliness-ageband'
   | 'commitment-ageband'
+  | 'commitment-connection'
 
 export function angleForHook(hook: TarotHook): TarotAngle {
   if (SELF_FRAME_HOOKS.includes(hook)) return 'self-frame'
@@ -1426,6 +1457,7 @@ export function angleForHook(hook: TarotHook): TarotAngle {
   if (MONEY_AGEBAND_HOOKS.includes(hook)) return 'money-ageband'
   if (LONELINESS_AGEBAND_HOOKS.includes(hook)) return 'loneliness-ageband'
   if (COMMITMENT_AGEBAND_HOOKS.includes(hook)) return 'commitment-ageband'
+  if (COMMITMENT_CONNECTION_HOOKS.includes(hook)) return 'commitment-connection'
   return 'decode-him'
 }
 
@@ -1507,6 +1539,19 @@ export const COMMITMENT_AGEBAND_HOOKS: TarotHook[] = [
   'cards-no-time-to-waste-commit',
   'cards-how-much-longer-commit',
   'cards-commit-or-company',
+  'cards-expecting-too-much',
+  'cards-played-the-wife',
+]
+
+// The commitment CONNECTION-VOCAB roster (2026-08-27). Its own reporting label so it can be read
+// against the twelve age-matrix landers and the three original commitment hooks rather than
+// pooling into either. Without this array these fall through to 'decode-him' (see angleForHook)
+// and vanish as a family in PostHog and in the gate's per-lander table.
+export const COMMITMENT_CONNECTION_HOOKS: TarotHook[] = [
+  'cards-instant-connection-commit',
+  'cards-connection-without-commitment',
+  'cards-connection-heading-commit',
+  'cards-stopping-him-committing',
 ]
 
 export const TAROT_HOOKS: TarotHook[] = [
@@ -1658,6 +1703,12 @@ export const TAROT_HOOKS: TarotHook[] = [
   'cards-no-time-to-waste-commit',
   'cards-how-much-longer-commit',
   'cards-commit-or-company',
+  'cards-expecting-too-much',
+  'cards-played-the-wife',
+  'cards-instant-connection-commit',
+  'cards-connection-without-commitment',
+  'cards-connection-heading-commit',
+  'cards-stopping-him-committing',
 ]
 
 // Shown when /fb-tarot is hit without a recognized ?hook= / ?deck= (bare visit).
@@ -1884,6 +1935,13 @@ export const HEADLINES: Record<TarotHook, string> = {
   'cards-no-time-to-waste-commit': "Why won't he commit when neither of us has time to waste?",
   'cards-how-much-longer-commit': "How much longer do I wait for him to commit?",
   'cards-commit-or-company': "Does he want to commit, or does he just want company?",
+  // Commitment age-matrix + connection-vocab (2026-08-27).
+  'cards-expecting-too-much': "Am I expecting too much, or should he have committed by now?",
+  'cards-played-the-wife': "I've played the wife without the commitment. Why?",
+  'cards-instant-connection-commit': "The connection was instant. So why won't he commit?",
+  'cards-connection-without-commitment': "How long can a connection this strong go without commitment?",
+  'cards-connection-heading-commit': "Is this connection heading for commitment, or staying as it is?",
+  'cards-stopping-him-committing': "Something is stopping him from committing. What is it?",
 }
 
 // Version C opener question, per hook. C opens with the card line + this, then
@@ -2228,6 +2286,14 @@ const TAROT_QUESTION: Record<TarotHook, string> = {
   'cards-no-time-to-waste-commit': "Before I look closer, tell me… what makes the time feel like it's running out for you both?",
   'cards-how-much-longer-commit': "Before I look closer, tell me… what have you been telling yourself while you wait?",
   'cards-commit-or-company': "Before I look closer, tell me… what does he do that makes you wonder which one it is?",
+  // Commitment age-matrix + connection-vocab (2026-08-27). Every opener invites HER account
+  // rather than demanding proof, and echoes its headline without quoting a banned phrase.
+  'cards-expecting-too-much': "Before I look closer, tell me… what has he said about the future that you've been holding on to?",
+  'cards-played-the-wife': "Before I look closer, tell me… what did you find yourself doing that nobody ever asked you to do?",
+  'cards-instant-connection-commit': "Before I look closer, tell me… what was it about that first meeting that you still come back to?",
+  'cards-connection-without-commitment': "Before I look closer, tell me… what keeps you holding on to this one?",
+  'cards-connection-heading-commit': "Before I look closer, tell me… what would it take for you to call this settled?",
+  'cards-stopping-him-committing': "Before I look closer, tell me… when did you first notice him stop short of it?",
 }
 
 // ── Deck registry ────────────────────────────────────────────────────────────
@@ -2877,6 +2943,131 @@ const RETURN_MHF: CardSetConfig = {
     c: 'Look — one foot already over the cliff edge, eyes on the sky, everything they own tied in one small bundle.',
   },
   reads: {
+    // ── Commitment age-matrix + connection-vocab (2026-08-27) ────────────────────
+    // Natural Tarot-Cut. Seven authored cuts folded 1 | 2 | 3+4+5+6 | 7, from
+    // fb-tarot/docs/writeups/natural/REVIEW-commit-vocab-2026-08-27.md — approved copy,
+    // folded verbatim. Guarded by tests/tarot-commit-vocab-manuscripts.test.ts, every ban of
+    // which was proven to fire by scripts/guard-tripwire-commit-vocab.mjs.
+    'cards-expecting-too-much': {
+      a: [
+        "All three cards were face down. You turned the Magician — look at the cup, coin, blade and wand set out on his table.",
+        "You asked whether the fault is in what you want. Every tool on that table earns its place.",
+        "What you want isn't the excess here, dear.\nI can see the means on that table. What he's done with them isn't on the card.\nEach tool is laid out ready, and the future is still unnamed.\nThat's why the question turned back on you.",
+        "Let me look closer at what's kept that future unnamed…",
+      ],
+      b: [
+        "You couldn't see the cards when you chose. You turned the Hanged Man — see how calm his face is, even hanging there.",
+        "You asked whether you rushed it, or whether he should have committed by now. That calm says nothing about you is broken.",
+        "You didn't get the timing wrong.\nA pause is all this card gives me. Who set its end, it doesn't say.\nHis arms hang loose behind him, and one ankle holds the whole figure still.\nYou've gone back over when you started, looking for the mistake.",
+        "Let me see what has held this pause in place…",
+      ],
+      c: [
+        "Nothing on the backs gave the card away. You turned the Fool — notice his eyes are up on the sky, not the road.",
+        "You asked whether he should have committed by now. The Fool sets out with his eyes on what's ahead.",
+        "Looking ahead isn't the fault here.\nHe's moving, plainly. Where he settles isn't drawn here.\nHe travels light, and the thing you asked for still has no weight behind it.\nSo your own wanting became the thing to explain.",
+        "Now let's look at what keeps that answer from arriving…",
+      ],
+    },
+    'cards-played-the-wife': {
+      a: [
+        "The cards were face down. You turned the Magician — he's standing right out in the open behind his table.",
+        "You've played the wife without the commitment. This card holds nothing back from view.",
+        "What you carried was real, dear. It was simply never named.\nThe work is in plain sight. What he called it, the card leaves out.\nWhat was yours sat on that table, and the word for it never arrived.\nThat's the gap your question is built on — the doing, without the naming.",
+        "Let me look closer at why the naming never came…",
+      ],
+      b: [
+        "You chose without seeing them. You turned the Hanged Man — he hangs upside down, and the wood he hangs from is green and living.",
+        "You've held the role without the title. Leaves on that tree — this was never punishment.",
+        "Holding that role didn't make you less.\nHe's held, that much is clear. What put the rope there stays off the card.\nLife is still running through that wood, while one thing stays fixed in place.\nYou asked why. What you can point at is the position, not the reason.",
+        "Let me see what has kept that one thing fixed…",
+      ],
+      c: [
+        "You picked with all three backs facing you. You turned the Fool — see the one small bundle tied to his stick.",
+        "You've done the part without the promise. The Fool carries only what he picked up.",
+        "You weren't wrong to carry it.\nI can see what's in his hands. What he agreed to isn't among it.\nHe carries what he took up, and nothing here was ever promised back.\nSo the why you're asking is about a promise, not about the carrying.",
+        "Now let's look at where that promise stops short…",
+      ],
+    },
+    'cards-instant-connection-commit': {
+      a: [
+        "All three were face down. You turned the Magician — see the flowers growing right where he stands.",
+        "You said the connection was instant. Those grew where he was already standing.",
+        "What arrived that fast was real, dear.\nWhat's possible is right there. What he does with it, the card won't say.\nThe ground answered him at once, and the promise is still outstanding.\nThat's why the speed of it is the part you keep returning to.",
+        "Let me look closer at what slows on his side…",
+      ],
+      b: [
+        "You couldn't see them when you reached. You turned the Hanged Man — one rope, one ankle, and the rest of him loose.",
+        "You told me the connection was instant. This card shows one thing fixed and the rest of him free.",
+        "You didn't invent how quickly that landed.\nThere's a hold on him. What that hold is made of, I can't see from here.\nMost of him has room, and one point does not move.\nFast to feel, and nothing since has moved with it.",
+        "Let me see what that one point is holding…",
+      ],
+      c: [
+        "Nothing on the backs showed the card. You turned the Fool — that's a full sun behind him, nothing in shadow.",
+        "You said it was instant. Under that sun there's nothing hidden about the moment.",
+        "The moment was true as you felt it.\nThe card lights the start. It says nothing about the road after.\nIt's all daylight here, and the future is still unspoken.\nYou're asking whether something that quick was meant to go somewhere.",
+        "Now let's look at where it stops going anywhere…",
+      ],
+    },
+    'cards-connection-without-commitment': {
+      a: [
+        "The cards were face down. You turned the Magician — look at the sideways eight above his head, with no end to it.",
+        "You asked how long this can go on. That sign above him doesn't measure anything.",
+        "I can't hand you a number, and the strength of it was never the doubt.\nMeans, yes — all of them. A date is the one thing nothing here carries.\nThe means are all here, and no one has said when.\nYou asked how long because no one has said when.",
+        "Let me look closer at what stops an end from being set…",
+      ],
+      b: [
+        "You reached without seeing the figure. You turned the Hanged Man — held at one ankle, and his face perfectly calm.",
+        "You asked how much longer. This card shows suspension, and no release written on it.",
+        "No reader can set that length for you, dear.\nA pause is what I'm shown. Where it ends isn't drawn on this card.\nHe's held and unhurt, while the time belongs to your life.\nThe strength was never in question. The limit is.",
+        "Let me see what has kept a limit from forming…",
+      ],
+      c: [
+        "All three backs looked the same. You turned the Fool — his eyes are up, not on the ground ahead.",
+        "You asked how long. The Fool moves without checking the distance.",
+        "The strength you feel isn't what's unsettled here.\nMovement, clearly. Arrival is nowhere on this card.\nHe keeps going, and nothing on this card names an end.\nThat's why you asked how long, dear.",
+        "Now let's look at what leaves it open-ended…",
+      ],
+    },
+    'cards-connection-heading-commit': {
+      a: [
+        "The cards were face down. You turned the Magician — every item on his table has been set down on purpose.",
+        "You asked which way this is heading. Nothing there was placed by accident.",
+        "This isn't drifting, dear. It hasn't been decided out loud.\nIntent is all over that table. His own intent isn't.\nEach thing on that table was chosen, and your answer still hasn't been.\nThat's why you framed it as two options — you've had neither.",
+        "Let me look closer at what keeps it unsaid…",
+      ],
+      b: [
+        "You couldn't see them when you picked. You turned the Hanged Man — the whole world seen from the other way up.",
+        "You asked if it's heading somewhere or staying put. This card is the pause itself.",
+        "A pause and a full stop are different things, dear.\nThe moment is held here. What follows it stays out of the picture.\nHe hangs there unhurried, while the waiting sits with you.\nTwo options is how it looks from inside a pause.",
+        "Let me see what's holding the pause in place…",
+      ],
+      c: [
+        "The backs told you nothing. You turned the Fool — a white rose held loose in one hand.",
+        "You asked if this connection is heading somewhere. The Fool hasn't fixed his direction yet.",
+        "Nothing here says this is finished as it stands.\nHe's mid-journey, that much shows. The turn isn't drawn.\nThe road is open, and no one has named where it leads.\nYou asked for one of two answers. The card won't pick either.",
+        "Now let's look at what's keeping both open…",
+      ],
+    },
+    'cards-stopping-him-committing': {
+      a: [
+        "The cards were face down. You turned the Magician — cup, coin, blade and wand, and not one thing missing from his table.",
+        "You asked what's stopping him. The Magician shows me a full table, dear.",
+        "You're not the missing piece here.\nWhat's present is all there. What isn't, this card won't name.\nNothing is absent from that table, and the commitment is still absent from him.\nYou asked what it is, and the card answers what it isn't — you.",
+        "Let me look closer at what stands between him and the word…",
+      ],
+      b: [
+        "You reached without seeing him. You turned the Hanged Man — one rope at one ankle, nothing else tied.",
+        "You said something is stopping him from committing. Only one point on this figure is held.",
+        "It's one thing. Not the whole of him, and not you.\nThere's a hold. Whose hand tied it stays off the card.\nThe rest of him is free, and the one point stays exactly where it is.\nYou asked what it is. What I can see is that it's narrow.",
+        "Let me see what that one point is fixed to…",
+      ],
+      c: [
+        "The backs gave nothing away. You turned the Fool — the small white dog at his side, up on its back legs.",
+        "You asked what's stopping him. That dog isn't playing — it's trying to tell him something.",
+        "There's a warning on this card, and it isn't about you.\nI can see the dog. What he's heard of it isn't shown.\nSomething is trying to reach him, and he's still looking at the sky.\nYou asked what it is. He may not have it in words yet either.",
+        "Now let's look at what he hasn't taken in…",
+      ],
+    },
     // The ad's hook — "Will he come back?". Reads HIM as a tendency, never a verdict.
     // ── Rewritten for readability 2026-08-18 ────────────────────────────────
     // The funnel's highest-traffic lander (5,311 leads) and its worst converter at

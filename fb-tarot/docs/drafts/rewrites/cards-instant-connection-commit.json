@@ -1,0 +1,45 @@
+{
+  "hook": "cards-instant-connection-commit",
+  "headline": "The connection was instant. So why won't he commit?",
+  "method": "natural-cut",
+  "note": "CONNECTION-VOCAB family (2026-08-27). NEW angle `commitment-connection` — one angle per keyword, per the soulmate-keyword convention.\n\nTHE FEAR: did I invent what that meant. Cut 3 affirms the speed was real without ruling on him.\n\n🔴 The corpus uses \"connection\" for men not seen in twenty years, so the read may NOT presume ongoing contact or a recent meeting.\n⚠ One buyer's own verdict is \"he uses women\" — the read does not adopt it.\n\nVOC: fb-tarot/docs/drafts/rewrites/_voc-commit-vocab-2026-08-27.md\nManuscript: fb-tarot/docs/writeups/natural/REVIEW-commit-vocab-2026-08-27.md",
+  "voc": {
+    "pulled": "2026-08-27",
+    "pattern": "cv-connection",
+    "matched": 1759,
+    "buyers": 100,
+    "verdict": "ok",
+    "why": ""
+  },
+  "decks": {
+    "return-mhf": {
+      "a": [
+        "All three were face down. You turned the Magician — see the flowers growing right where he stands.",
+        "You said the connection was instant. Those grew where he was already standing.",
+        "What arrived that fast was real, dear.",
+        "What's possible is right there. What he does with it, the card won't say.",
+        "The ground answered him at once, and the promise is still outstanding.",
+        "That's why the speed of it is the part you keep returning to.",
+        "Let me look closer at what slows on his side…"
+      ],
+      "b": [
+        "You couldn't see them when you reached. You turned the Hanged Man — one rope, one ankle, and the rest of him loose.",
+        "You told me the connection was instant. This card shows one thing fixed and the rest of him free.",
+        "You didn't invent how quickly that landed.",
+        "There's a hold on him. What that hold is made of, I can't see from here.",
+        "Most of him has room, and one point does not move.",
+        "Fast to feel, and nothing since has moved with it.",
+        "Let me see what that one point is holding…"
+      ],
+      "c": [
+        "Nothing on the backs showed the card. You turned the Fool — that's a full sun behind him, nothing in shadow.",
+        "You said it was instant. Under that sun there's nothing hidden about the moment.",
+        "The moment was true as you felt it.",
+        "The card lights the start. It says nothing about the road after.",
+        "It's all daylight here, and the future is still unspoken.",
+        "You're asking whether something that quick was meant to go somewhere.",
+        "Now let's look at where it stops going anywhere…"
+      ]
+    }
+  }
+}

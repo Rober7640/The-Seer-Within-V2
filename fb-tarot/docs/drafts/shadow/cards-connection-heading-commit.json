@@ -1,0 +1,42 @@
+{
+  "hook": "cards-connection-heading-commit",
+  "headline": "Is this connection heading for commitment, or staying as it is?",
+  "method": "inherited-shadow",
+  "note": "CONNECTION-VOCAB family (2026-08-27). Angle `commitment-connection`.\n\nBoth halves of her fork are unsayable — a promise that it moves, or a verdict that it never will. Cut 3 refuses the FORK rather than picking a side.\n\n🔴 Same no-ongoing-contact rule as the rest of the family.\n\nVOC: fb-tarot/docs/drafts/rewrites/_voc-commit-vocab-2026-08-27.md\nManuscript: fb-tarot/docs/writeups/shadow/REVIEW-commit-vocab-2026-08-27.md",
+  "voc": {
+    "pulled": "2026-08-27",
+    "pattern": "cv-connection",
+    "matched": 1759,
+    "buyers": 100,
+    "verdict": "ok",
+    "why": ""
+  },
+  "decks": {
+    "return-mhf": {
+      "a": [
+        "You turned the Magician. The cards were face down, and your hand chose the one who places nothing by accident.",
+        "Every item on his table has been set down deliberately.",
+        "You asked which way this is heading. What catches me is that nothing there was placed by accident.",
+        "And yet no direction has been declared. You've been given neither answer.",
+        "What keeps this undeclared keeps it that way without a sound. I don't think it began with you.",
+        "Let me look closer at what that comes down to…"
+      ],
+      "b": [
+        "You turned the Hanged Man. You couldn't see them, and you found the one seeing it all the other way up.",
+        "He hangs the other way up, and his face is entirely calm.",
+        "You asked whether it moves or stays, dear. This card puts the pause itself in front of me.",
+        "Still, nothing has been decided. And you've been reading it two ways.",
+        "Something appears right where a direction would be chosen. I don't think this began with you.",
+        "Let me look closer at what appears there…"
+      ],
+      "c": [
+        "You turned the Fool. The backs gave nothing away, and your hand went to the one holding something lightly.",
+        "Look at the white rose in his hand. He's holding it loose.",
+        "You asked which way this goes. This card brings me to a direction that hasn't been fixed.",
+        "But nothing has been chosen out loud. And you're holding both possibilities.",
+        "There's something between this and either answer. I don't think it started with you.",
+        "Let me look closer at what's underneath it…"
+      ]
+    }
+  }
+}

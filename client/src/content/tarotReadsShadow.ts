@@ -12,6 +12,131 @@ import type { TarotDeck, TarotHook, TarotOption } from './tarotReads'
 
 export const SHADOW_READS: Partial<Record<TarotDeck, Partial<Record<TarotHook, Record<TarotOption, string[]>>>>> = {
   'return-mhf': {
+    // ── Commitment age-matrix + connection-vocab (2026-08-27) ────────────────────
+    // Inherited Shadow. Six authored beats folded 1+2 | 3 | 4+5 | 6, from
+    // fb-tarot/docs/writeups/shadow/REVIEW-commit-vocab-2026-08-27.md — approved copy,
+    // transferred verbatim. Beat 5 carries one handle (position, timing or manner, once each
+    // across the three cards) plus the mandatory origin finding.
+    'cards-expecting-too-much': {
+      a: [
+        "You turned the Magician. You couldn't see the cards, and your hand went to the one who came fully equipped.\nLook at his table — a cup, a coin, a blade, a wand. All of it already out.",
+        "You asked whether you want more than is fair. What catches me is that nothing on that table is surplus.",
+        "And yet the future still hasn't been named. You've started to wonder if the fault is yours.\nSomething stands between you and the answer, near at hand. I don't think it began with you.",
+        "Let me look closer at what's standing there…",
+      ],
+      b: [
+        "You turned the Hanged Man. The backs told you nothing, and you still found the calmest man in the deck.\nHe's held by one ankle. Look at his face, though — there's no distress in it.",
+        "You asked whether you rushed it, dear. This card puts the waiting itself in front of me.",
+        "Still, nothing has been settled. And the question has turned back on you.\nWhatever has hold of this holds it lightly. I don't think this began with you.",
+        "Let me look closer at what has hold of it…",
+      ],
+      c: [
+        "You turned the Fool. The cards were face down, and your hand chose the one already on his way.\nLook at his eyes. They're up on the sky, not down on the road.",
+        "You asked whether you began this too early. This card brings me to the very start of a thing.",
+        "But nothing has been named since. And you're weighing your own timing.\nSomething turns up right where this would settle. I don't think it started with you.",
+        "Let me look closer at what turns up there…",
+      ],
+    },
+    'cards-played-the-wife': {
+      a: [
+        "You turned the Magician. The cards were face down, and your hand found the one who hides nothing.\nHe's out in the open behind his table. Nothing about him is kept back.",
+        "You've played the wife without the commitment. What holds me is how visible the work is on this card.",
+        "And yet no word was ever put to it. The role was yours, and the naming never came.\nWhatever kept that word away kept it away steadily. I don't think it began with you.",
+        "Let me look closer at what that is…",
+      ],
+      b: [
+        "You turned the Hanged Man. You couldn't see him, and you reached for the one held in place.\nLook at the wood he hangs from — it's green, and it's living.",
+        "You've held a role without the title, dear. This card puts me on what keeps a thing in place.",
+        "Still, nothing was named. And you've been asking why for a long time.\nSomething meets this exactly at the naming. I don't think this began with you.",
+        "Let me look closer at what it's made of…",
+      ],
+      c: [
+        "You turned the Fool. Nothing on the backs gave him away, and you chose the one carrying his own load.\nLook at the bundle on his stick. Small, and it's all his.",
+        "You've done the part without the promise. This card brings me to what a person takes up.",
+        "But nothing was promised back. And you're left asking what it was for.\nI keep coming back to something between the doing and the word for it. I don't think it started with you.",
+        "Let me look closer at what's sitting in that gap…",
+      ],
+    },
+    'cards-instant-connection-commit': {
+      a: [
+        "You turned the Magician. The cards were face down, and your hand went to the one who draws things to him.\nLook at the flowers at his feet. They came up right where he stands.",
+        "You said the connection was instant. What catches me is that the ground answered him at once.",
+        "And yet nothing has been promised. The speed was on your side of it.\nSomething reaches this just as it would be spoken. I don't think it began with you.",
+        "Let me look closer at what reaches it…",
+      ],
+      b: [
+        "You turned the Hanged Man. You couldn't see the cards, and you chose the one with a single tie on him.\nOne rope, one ankle. Everything else on him hangs loose.",
+        "You told me it was instant. This card puts one fixed thing in front of me.",
+        "Still, nothing has moved since. And the promise hasn't come.\nThere's something between the feeling and the word for it. I don't think this began with you.",
+        "Let me look closer at what's in that gap…",
+      ],
+      c: [
+        "You turned the Fool. The backs looked identical, and your hand found the one out in full daylight.\nLook at the sun behind him. It's full, and nothing on the card is in shadow.",
+        "You said it was instant, dear. This card brings me to a moment with nothing hidden in it.",
+        "But nothing was ever said out loud. And you're wondering what that speed meant.\nWhat holds this back holds it out of sight. I don't think it started with you.",
+        "Let me look closer at what's behind it…",
+      ],
+    },
+    'cards-connection-without-commitment': {
+      a: [
+        "You turned the Magician. The cards were face down, and your hand found the one with no limit over him.\nLook above his head — a sideways eight, with no end drawn on it.",
+        "You asked how long this can go on. What catches me is that the card above him measures nothing.",
+        "And yet no one has said when. The strength is not what's in doubt.\nThe thing that keeps this open keeps it open quietly. I don't think it began with you.",
+        "Let me look closer at what it belongs to…",
+      ],
+      b: [
+        "You turned the Hanged Man. You couldn't see the figure, and you reached for the one in suspension.\nHe's held at one ankle, and his face is perfectly calm.",
+        "You asked how much longer, dear. This card puts a pause in front of me with no end written on it.",
+        "Still, no limit has been set. And the waiting has been yours to carry.\nSomething sits between this and any limit at all. I don't think this began with you.",
+        "Let me look closer at what's in the way…",
+      ],
+      c: [
+        "You turned the Fool. Nothing on the backs showed him, and you chose the one who keeps travelling.\nLook at his eyes, up on the sky. He isn't measuring the road.",
+        "You asked how long. This card brings me to movement without a destination on it.",
+        "But nothing has been named. And you're the one counting.\nSomething shows up wherever an end would be set. I don't think it started with you.",
+        "Let me look closer at what shows up there…",
+      ],
+    },
+    'cards-connection-heading-commit': {
+      a: [
+        "You turned the Magician. The cards were face down, and your hand chose the one who places nothing by accident.\nEvery item on his table has been set down deliberately.",
+        "You asked which way this is heading. What catches me is that nothing there was placed by accident.",
+        "And yet no direction has been declared. You've been given neither answer.\nWhat keeps this undeclared keeps it that way without a sound. I don't think it began with you.",
+        "Let me look closer at what that comes down to…",
+      ],
+      b: [
+        "You turned the Hanged Man. You couldn't see them, and you found the one seeing it all the other way up.\nHe hangs the other way up, and his face is entirely calm.",
+        "You asked whether it moves or stays, dear. This card puts the pause itself in front of me.",
+        "Still, nothing has been decided. And you've been reading it two ways.\nSomething appears right where a direction would be chosen. I don't think this began with you.",
+        "Let me look closer at what appears there…",
+      ],
+      c: [
+        "You turned the Fool. The backs gave nothing away, and your hand went to the one holding something lightly.\nLook at the white rose in his hand. He's holding it loose.",
+        "You asked which way this goes. This card brings me to a direction that hasn't been fixed.",
+        "But nothing has been chosen out loud. And you're holding both possibilities.\nThere's something between this and either answer. I don't think it started with you.",
+        "Let me look closer at what's underneath it…",
+      ],
+    },
+    'cards-stopping-him-committing': {
+      a: [
+        "You turned the Magician. The cards were face down, and your hand found the one with nothing missing.\nCup, coin, blade, wand — the whole set, already on his table.",
+        "You asked what's stopping him. What catches me is that the table in front of me is complete.",
+        "And yet the commitment hasn't come. And you've been asking what's lacking in you.\nSomething meets this at exactly the wrong turn. I don't think it began with you.",
+        "Let me look closer at what meets it…",
+      ],
+      b: [
+        "You turned the Hanged Man. You couldn't see him, and you chose the one with a single thing tied.\nOne rope at one ankle. Nothing else on him is bound.",
+        "You asked what's holding him back, dear. This card puts one narrow hold in front of me.",
+        "Still, nothing has changed. And the question has landed on you instead.\nI keep coming back to something between him and the word. I don't think this began with you.",
+        "Let me look closer at what's in that space…",
+      ],
+      c: [
+        "You turned the Fool. The backs told you nothing, and you reached for the one being warned.\nLook at the little white dog, up on its back legs at his side.",
+        "You asked what's stopping him. That dog isn't playing — it's trying to tell him something.",
+        "But nothing has reached him. And you've been treating yourself as the answer.\nWhatever is stopping him sits outside your reach. I don't think it started with you.",
+        "Let me look closer at what it is…",
+      ],
+    },
     // Is there a soulmate for me after the marriage ended?
     'cards-after-marriage': {
       a: [

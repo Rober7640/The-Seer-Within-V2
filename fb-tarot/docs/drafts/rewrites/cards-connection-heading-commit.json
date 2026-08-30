@@ -1,0 +1,45 @@
+{
+  "hook": "cards-connection-heading-commit",
+  "headline": "Is this connection heading for commitment, or staying as it is?",
+  "method": "natural-cut",
+  "note": "CONNECTION-VOCAB family (2026-08-27). Angle `commitment-connection`.\n\nBoth halves of her fork are unsayable — a promise that it moves, or a verdict that it never will. Cut 3 refuses the FORK rather than picking a side.\n\n🔴 Same no-ongoing-contact rule as the rest of the family.\n\nVOC: fb-tarot/docs/drafts/rewrites/_voc-commit-vocab-2026-08-27.md\nManuscript: fb-tarot/docs/writeups/natural/REVIEW-commit-vocab-2026-08-27.md",
+  "voc": {
+    "pulled": "2026-08-27",
+    "pattern": "cv-connection",
+    "matched": 1759,
+    "buyers": 100,
+    "verdict": "ok",
+    "why": ""
+  },
+  "decks": {
+    "return-mhf": {
+      "a": [
+        "The cards were face down. You turned the Magician — every item on his table has been set down on purpose.",
+        "You asked which way this is heading. Nothing there was placed by accident.",
+        "This isn't drifting, dear. It hasn't been decided out loud.",
+        "Intent is all over that table. His own intent isn't.",
+        "Each thing on that table was chosen, and your answer still hasn't been.",
+        "That's why you framed it as two options — you've had neither.",
+        "Let me look closer at what keeps it unsaid…"
+      ],
+      "b": [
+        "You couldn't see them when you picked. You turned the Hanged Man — the whole world seen from the other way up.",
+        "You asked if it's heading somewhere or staying put. This card is the pause itself.",
+        "A pause and a full stop are different things, dear.",
+        "The moment is held here. What follows it stays out of the picture.",
+        "He hangs there unhurried, while the waiting sits with you.",
+        "Two options is how it looks from inside a pause.",
+        "Let me see what's holding the pause in place…"
+      ],
+      "c": [
+        "The backs told you nothing. You turned the Fool — a white rose held loose in one hand.",
+        "You asked if this connection is heading somewhere. The Fool hasn't fixed his direction yet.",
+        "Nothing here says this is finished as it stands.",
+        "He's mid-journey, that much shows. The turn isn't drawn.",
+        "The road is open, and no one has named where it leads.",
+        "You asked for one of two answers. The card won't pick either.",
+        "Now let's look at what's keeping both open…"
+      ]
+    }
+  }
+}

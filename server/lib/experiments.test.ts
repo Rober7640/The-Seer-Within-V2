@@ -7,7 +7,7 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import crypto from 'crypto';
 
-import { experimentBucket, pickVariant, twoSidedP, shouldForceRunning, matchesFunnelScope, matchesLanderScope, experimentFunnel, PAYWALL_EXPERIMENT_KEY } from './experiments';
+import { experimentBucket, pickVariant, twoSidedP, shouldForceRunning, matchesFunnelScope, matchesLanderScope, bookingTreatmentOf, PAYWALL_EXPERIMENT_KEY } from './experiments';
 import type { ExperimentVariant } from '../../shared/schema';
 
 const ref = (id: string, key: string) =>
@@ -185,48 +185,6 @@ describe('matchesFunnelScope (funnel enrolment filter)', () => {
   });
 });
 
-describe('experimentFunnel (root sentinel)', () => {
-  it('absent funnel becomes the root sentinel', () => {
-    assert.equal(experimentFunnel(undefined), 'v1-root');
-    assert.equal(experimentFunnel(null), 'v1-root');
-    assert.equal(experimentFunnel(''), 'v1-root');
-  });
-
-  it('a real funnel param passes through untouched', () => {
-    for (const f of ['v1-fb', 'v1-fb2', 'v1-gdn', 'v1-palm', 'v1-tarot']) {
-      assert.equal(experimentFunnel(f), f);
-    }
-  });
-
-  it('an arbitrary non-enum string passes through unchanged too', () => {
-    // experimentFunnel has no enum check — it only asks "is this a non-empty
-    // string". That matters because the caller doesn't always hand it a
-    // FunnelParam: the resume path (server/routes.ts, ~line 1522) reads
-    // req.query.funnel raw, with only a length cap and no parseFunnel
-    // validation, so a junk or hand-edited ?funnel= value reaches this function
-    // directly in production. This case exists so an implementation that
-    // hardcodes the known funnel enum (and falls back to the root sentinel for
-    // anything else) cannot pass the suite.
-    assert.equal(experimentFunnel('anything'), 'anything');
-  });
-
-  it('the sentinel does NOT enrol root in a test scoped to other funnels', () => {
-    // Widening scope is what enrols root. The sentinel alone must change nothing —
-    // this is the property that makes tasks 1-4 a no-op until the SQL runs.
-    assert.equal(matchesFunnelScope(['v1-palm', 'v1-tarot'], experimentFunnel(undefined)), false);
-    assert.equal(matchesFunnelScope('v1-tarot', experimentFunnel(null)), false);
-  });
-
-  it('a scope listing the sentinel DOES enrol root, and nothing else changes', () => {
-    const scope = ['v1-palm', 'v1-tarot', 'v1-root'];
-    assert.equal(matchesFunnelScope(scope, experimentFunnel(undefined)), true);
-    assert.equal(matchesFunnelScope(scope, experimentFunnel('v1-tarot')), true);
-    for (const f of ['v1-fb', 'v1-fb2', 'v1-gdn']) {
-      assert.equal(matchesFunnelScope(scope, experimentFunnel(f)), false, `${f} must not leak in`);
-    }
-  });
-});
-
 describe('matchesLanderScope (/fb-tarot per-ad-URL enrolment filter)', () => {
   // The four clean ad URLs in the Version B-vs-C test (operator scope, 2026-08-10).
   // 'return-mhf' is DEFAULT_DECK — what a URL with no &deck= serves.
@@ -307,5 +265,23 @@ describe('twoSidedP', () => {
     const p = twoSidedP(1.959963985);
     assert.ok(p > 0.04 && p < 0.06, `p=${p}`);
     assert.ok(Math.abs(twoSidedP(2.3) - twoSidedP(-2.3)) < 1e-9);
+  });
+});
+
+describe('bookingTreatmentOf — which booking screen a BE assignment shows', () => {
+  it('shows the chat when the assigned arm carries treatment "chat"', () => {
+    assert.equal(bookingTreatmentOf({ payload: { treatment: 'chat' } }), 'chat');
+  });
+
+  it('shows the page when the arm carries treatment "page"', () => {
+    assert.equal(bookingTreatmentOf({ payload: { treatment: 'page' } }), 'page');
+  });
+
+  it('defaults to the page for a null assignment (no experiment / no subject)', () => {
+    assert.equal(bookingTreatmentOf(null), 'page');
+  });
+
+  it('defaults to the page when the arm names no treatment', () => {
+    assert.equal(bookingTreatmentOf({ payload: {} }), 'page');
   });
 });

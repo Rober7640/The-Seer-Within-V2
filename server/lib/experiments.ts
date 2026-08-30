@@ -19,6 +19,7 @@ import { db } from './db';
 import {
   experiments,
   experimentExposures,
+  experimentConversions,
   type Experiment,
   type ExperimentVariant,
 } from '@shared/schema';
@@ -1570,13 +1571,21 @@ export async function resolveV1DownsellBumpPrice(
   email: string | null | undefined,
   funnel?: string | null,
   key: string = V1_DOWNSELL_BUMP_PRICE_KEY, // overridable so tests never touch the live experiment
-): Promise<number | null> {
+): Promise<{ cents: number | null; variant: string | null; enrolled: boolean }> {
   const subject = typeof email === 'string' ? email.trim().toLowerCase() : null;
-  if (!subject) return null;
+  if (!subject) return { cents: null, variant: null, enrolled: false };
+  // experimentFunnel() (not `funnel ?? null`) so ROOT traffic carries 'v1-root'
+  // and can be scoped like any other funnel — see ROOT_FUNNEL above.
   const a = await assign(key, subject, { funnel: experimentFunnel(funnel) });
-  if (!a?.applied) return null;
+  if (!a) return { cents: null, variant: null, enrolled: false };
   const cents = (a.payload as { bumpCents?: unknown } | null)?.bumpCents;
-  return typeof cents === 'number' ? cents : null;
+  return {
+    // `applied` gates the PRICE exactly as before: a draft or out-of-scope arm must
+    // never reach a Stripe line, so it still falls back to the tier default.
+    cents: a.applied && typeof cents === 'number' ? cents : null,
+    variant: a.variant,
+    enrolled: a.enrolled,
+  };
 }
 
 // ── V1 CLOSE DEPTH — 140 words vs ~430 at the pitch ──────────────────────────
@@ -1871,4 +1880,86 @@ export async function resolvePaywallVariant(opts: {
     return opts.override;
   }
   return paywallVariant(opts.userId, opts.personaId);
+}
+
+
+// ── BE booking treatment A/B: the form-style PAGE vs the Evelyn CHAT ──────────
+// Offer 02's booking screen ships in two forms and we run them as a straight A/B
+// — show both as built, keep the winner. Arm 'A' (control) is the page, 'B' the
+// chat, carried in payload.treatment. Scored as an 'event' test (tallyEvent),
+// because a backend sale lands in be_orders, not conversations/credit_purchases.
+// The subject is a per-browser visitor id, threaded through checkout so the
+// purchase can be attributed back to the arm she saw.
+export const BE_BOOKING_EXPERIMENT_KEY = 'be_02_booking_treatment_2026';
+
+export type BookingTreatmentArm = 'page' | 'chat';
+
+/** Read the treatment off an assignment's payload, defaulting to the page. Pure. */
+export function bookingTreatmentOf(
+  assignment: { payload?: Record<string, unknown> | null } | null | undefined,
+): BookingTreatmentArm {
+  return assignment?.payload?.treatment === 'chat' ? 'chat' : 'page';
+}
+
+/**
+ * Assign a visitor to a booking treatment and log the exposure (idempotent).
+ *
+ * Mirrors resolvePalmGate — a thin wrapper over assign(). A missing subject, an
+ * off/out-of-scope test, or a draft all fall through to the page, so the booking
+ * screen always has something to render. The exposure is logged only for an
+ * enrolled subject, and onConflictDoNothing makes a re-open a no-op.
+ */
+export async function resolveBeBookingTreatment(
+  subjectId: string | null | undefined,
+  key: string = BE_BOOKING_EXPERIMENT_KEY,
+): Promise<{ treatment: BookingTreatmentArm; variant: string | null; enrolled: boolean }> {
+  const a = await assign(key, subjectId, {});
+  if (!a) return { treatment: 'page', variant: null, enrolled: false };
+  const treatment = bookingTreatmentOf(a);
+  if (a.enrolled && subjectId) {
+    await logExposure(key, subjectId, a.variant, 'be_02_booking', { treatment });
+  }
+  return { treatment, variant: a.variant, enrolled: a.enrolled };
+}
+
+/**
+ * Record a backend-booking purchase as this test's conversion, keyed on the SAME
+ * visitor subject that was exposed (threaded through checkout in Stripe metadata).
+ *
+ * No exposure for the subject → she was never in the test (bought from a /preview
+ * URL, or before it started), so nothing is logged and she is not counted. One
+ * conversion per subject, because Stripe retries checkout.session.completed.
+ * Failures are logged, never thrown: a measurement miss must not fail a paid order.
+ */
+export async function logBeBookingConversion(
+  subjectId: string | null | undefined,
+  valueCents: number,
+  key: string = BE_BOOKING_EXPERIMENT_KEY,
+): Promise<void> {
+  if (!subjectId) return;
+  try {
+    const [exposure] = await db
+      .select({ variant: experimentExposures.variant })
+      .from(experimentExposures)
+      .where(and(eq(experimentExposures.experimentKey, key), eq(experimentExposures.subjectId, subjectId)))
+      .limit(1);
+    if (!exposure) return; // not enrolled — do not manufacture a denominator-less conversion
+
+    const [existing] = await db
+      .select({ id: experimentConversions.id })
+      .from(experimentConversions)
+      .where(and(eq(experimentConversions.experimentKey, key), eq(experimentConversions.subjectId, subjectId)))
+      .limit(1);
+    if (existing) return;
+
+    await db.insert(experimentConversions).values({
+      experimentKey: key,
+      subjectId,
+      variant: exposure.variant,
+      event: 'be_02_booking_purchased',
+      value: Number.isFinite(valueCents) ? Math.round(valueCents) : 0,
+    });
+  } catch (err) {
+    logger.error('BE booking conversion insert failed', { key, error: (err as Error).message });
+  }
 }

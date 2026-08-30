@@ -6,6 +6,10 @@
 --   variants       A w50 ({"bumpCents":1277}) / B w50 ({"bumpCents":977})
 --   subject_type   email     ← the raw address, like the gate and the order bump
 --   scope          funnel ["v1-tarot"]
+--   conversion     v1_main_funnel   ← REQUIRED, and NOT null. A null conversion is
+--                  not "no dashboard": the results endpoint defaults it to
+--                  credit_purchase, the V2 CHAT conversion, and renders zeros
+--                  counted from chat-minute purchases. (Set 2026-08-25.)
 --   status         DRAFT  ← inert. Absent arm ⇒ resolveBumpCents falls back to 977.
 --
 -- WHAT CHANGED IN CODE (already deployed, and NOT gated on this row):
@@ -48,6 +52,34 @@
 -- 🔴 RUN ON DEV FIRST, THEN PROD. The databases were separated on 2026-08-05, so
 --    this row must be created twice. A "0 rows" surprise usually means the wrong DB.
 --
+-- ============================================================================
+-- ⛔ DO NOT START THIS EXPERIMENT YET — ARM A WOULD BILL THE WRONG PRICE.
+--    Found 2026-08-17 by .claude/skills/v1-funnel-audit/scripts/audit-downsell-bump.mjs
+--    plus a direct arm probe. Reproduced: 3 of 8 sample emails drew arm A and every
+--    one of them would be SHOWN $9.77 and CHARGED $12.77.
+--
+--    WHY. The price reaches the Stripe line and the offer card by two different
+--    routes, and only one of them exists:
+--      · CHARGE  server/routes.ts:809-815 — /api/checkout calls
+--                resolveV1DownsellBumpPrice() and charges the real arm. ✅ works
+--      · CARD    client reads userData.bumpCentsDownsell (chat.ts:141-145), which
+--                is documented as "Sent by /api/lead". IT IS NOT. /api/lead
+--                (routes.ts:1316-1343) sends commitmentGate/orderBump/bumpCopy/
+--                closeDepth and never this field, and useConversation.ts:967-982
+--                never captures it. So it is permanently undefined and
+--                resolveBumpCents(undefined,'downsell') pins the card at $9.77.
+--
+--    HARMLESS ONLY WHILE THIS ROW IS DRAFT: with no arm assigned both sides fall
+--    back to $9.77 and agree — which is exactly why the browser audit passes 13/13
+--    today. Pressing Start is what breaks them apart.
+--
+--    THE FIX is to send the arm at lead capture and capture it client-side, the
+--    same shape bumpCopy already uses. ⚠ Note the trade-off before doing it:
+--    resolving in /api/lead ENROLLS every tarot lead, not just the ~3% who reach
+--    the downsell, so the "exposed" column in §3 stops meaning "was offered the
+--    bump". The verdict metric (revenue per downsell BUYER) is unaffected.
+-- ============================================================================
+--
 -- 🔴 ORDER OF OPERATIONS:
 --      1. deploy the code   (downsell bumps begin at the default $9.77 — this is
 --                            already a live change, independent of this row)
@@ -75,31 +107,46 @@
 --   DOWNSELL render is genuinely separate. Believed separate; not confirmed.
 --
 -- ============================================================================
--- ⛔ DO NOT START THIS EXPERIMENT YET — ARM A WOULD BILL THE WRONG PRICE.
---    Found 2026-08-17 by .claude/skills/v1-funnel-audit/scripts/audit-downsell-bump.mjs
---    plus a direct arm probe. Reproduced: 3 of 8 sample emails drew arm A and every
---    one of them would be SHOWN $9.77 and CHARGED $12.77.
+-- ✅ THE CARD/CHARGE BLOCKER IS FIXED (2026-08-25). This test is safe to start.
 --
---    WHY. The price reaches the Stripe line and the offer card by two different
---    routes, and only one of them exists:
---      · CHARGE  server/routes.ts:809-815 — /api/checkout calls
---                resolveV1DownsellBumpPrice() and charges the real arm. ✅ works
---      · CARD    client reads userData.bumpCentsDownsell (chat.ts:141-145), which
---                is documented as "Sent by /api/lead". IT IS NOT. /api/lead
---                (routes.ts:1316-1343) sends commitmentGate/orderBump/bumpCopy/
---                closeDepth and never this field, and useConversation.ts:967-982
---                never captures it. So it is permanently undefined and
---                resolveBumpCents(undefined,'downsell') pins the card at $9.77.
+--    WHAT IT WAS. The price reached the Stripe line and the offer card by two
+--    different routes and only one of them existed:
+--      · CHARGE  /api/checkout called resolveV1DownsellBumpPrice() and charged the
+--                real arm. ✅ always worked
+--      · CARD    the client read userData.bumpCentsDownsell, documented as "Sent by
+--                /api/lead". IT WAS NOT. So it was permanently undefined and
+--                resolveBumpCents(undefined,'downsell') pinned every card at $9.77
+--                while arm A billed $12.77.
+--    Reproduced against a real server + real Stripe test sessions on 2026-08-25:
+--    7 of 16 sampled emails drew arm A and every one of them was shown $9.77.
 --
---    HARMLESS ONLY WHILE THIS ROW IS DRAFT: with no arm assigned both sides fall
---    back to $9.77 and agree — which is exactly why the browser audit passes 13/13
---    today. Pressing Start is what breaks them apart.
+--    THE FIX. assignVariantIfMissing now resolves the arm at lead capture, /api/lead
+--    and the resume endpoint send `bumpCentsDownsell`, and the client captures it
+--    through the same closed-set validation (977|1277) it already uses for bumpCopy.
+--    Both sides resolve the SAME arm from the SAME subject. Re-verified 16/16.
 --
---    THE FIX is to send the arm at lead capture and capture it client-side, the
---    same shape bumpCopy already uses. ⚠ Note the trade-off before doing it:
---    resolving in /api/lead ENROLLS every tarot lead, not just the ~3% who reach
---    the downsell, so the "exposed" column in §3 stops meaning "was offered the
---    bump". The verdict metric (revenue per downsell BUYER) is unaffected.
+--    ⚠️ ONE WINDOW REMAINS, BY DESIGN: this row carries no scope.freezeAssignment, so
+--    a WEIGHT EDIT landing between her offer and her click can still move her arm
+--    between the card and the charge. Do not re-weight this test while it runs.
+--
+-- ── EXPOSURES ARE LOGGED AT THE OFFER, NOT AT LEAD CAPTURE ───────────────────
+--    This test shipped with NO exposure logging at all, so /admin/experiments had no
+--    denominator. It now writes one from /api/checkout, surface
+--    'downsell_bump_assigned', carrying the conversationId the §3 query joins on.
+--
+--    🔴 SO ITS "exposed" COLUMN MEANS SOMETHING DIFFERENT FROM EVERY OTHER V1 TEST.
+--    The others enrol every LEAD. This one enrols only women actually OFFERED the
+--    downsell bump — ~3% as many rows, and a conversion rate an order of magnitude
+--    higher. Do NOT compare it arm-for-arm against the gate, the order bump or close
+--    depth. Its two arms are comparable with each other; that is all.
+--
+--    Deliberate, for two reasons. Enrolling every tarot lead would (a) make "exposed"
+--    mean "was a tarot lead" on a test about a $9.77 line, and (b) fill the bump
+--    take-rate block with MAIN-path bumps, because tallyV1BumpTakeRate counts
+--    conversations.bump_offered, which the main bump sets too.
+--
+--    It misses only women who abandon on the offer card itself — declining routes
+--    straight on to the same /api/checkout call, so decliners ARE counted.
 -- ============================================================================
 
 -- ── 0. PRE-FLIGHT ───────────────────────────────────────────────────────────
@@ -165,18 +212,24 @@ VALUES (
   '{
      "funnel": ["v1-tarot"]
    }'::jsonb,
+  -- 🔴 v1_main_funnel, NOT NULL. A null conversion is not "no dashboard" — the
+  -- results endpoint defaults it to credit_purchase (the V2 CHAT conversion) and
+  -- renders zeros counted from chat-minute purchases, which reads as a result. The
+  -- key is allowlisted for this type in server/routes/admin/experiments.ts
+  -- (V1_MAIN_FUNNEL_KEYS); without BOTH halves the page shows nothing useful.
+  --
   -- No targetN. This test does NOT stop on a sample size, because it cannot reach
   -- one that matters: it stops on 2026-11-17 by human decision. Leaving targetN
   -- null is deliberate — a number here would imply a fixed horizon this test does
   -- not have, and would light a "ready to declare" state that must never be trusted.
-  NULL::jsonb
+  '{"type": "v1_main_funnel"}'::jsonb
 );
 
 COMMIT;
 
 
 -- ── 2. VERIFY ───────────────────────────────────────────────────────────────
--- Expect exactly one row, status = draft, A first, conversion NULL.
+-- Expect exactly one row, status = draft, A first, conversion v1_main_funnel.
 SELECT key, status, subject_type, variants, scope, conversion
 FROM experiments
 WHERE key = 'v1_downsell_bump_price_2026';

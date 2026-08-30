@@ -1,0 +1,45 @@
+{
+  "hook": "cards-stopping-him-committing",
+  "headline": "Something is stopping him from committing. What is it?",
+  "method": "natural-cut",
+  "note": "CONNECTION-VOCAB family (2026-08-27), and its NO-VOCABULARY CONTROL — the same commitment-obstacle question without the word \"connection\" in it. Angle `commitment-connection`.\n\n🎯 A buyer types this headline almost verbatim, and the next one gives the real fear: \"I want to know what is holding him back. Am i not good enough?\" So cut 3 answers IT ISN'T YOU and never names his obstacle.\n\n🔴 Never name his motive · never affirm a man met only online is real · never rule on a third party's relationship · never confirm what a previous reader told her. \"not enough\" and \"good enough\" are banned as phrases; the acquittal is written without them.\n\nVOC: fb-tarot/docs/drafts/rewrites/_voc-commit-vocab-2026-08-27.md\nManuscript: fb-tarot/docs/writeups/natural/REVIEW-commit-vocab-2026-08-27.md",
+  "voc": {
+    "pulled": "2026-08-27",
+    "pattern": "cv-stopping",
+    "matched": 59,
+    "buyers": 6,
+    "verdict": "ok",
+    "why": ""
+  },
+  "decks": {
+    "return-mhf": {
+      "a": [
+        "The cards were face down. You turned the Magician — cup, coin, blade and wand, and not one thing missing from his table.",
+        "You asked what's stopping him. The Magician shows me a full table, dear.",
+        "You're not the missing piece here.",
+        "What's present is all there. What isn't, this card won't name.",
+        "Nothing is absent from that table, and the commitment is still absent from him.",
+        "You asked what it is, and the card answers what it isn't — you.",
+        "Let me look closer at what stands between him and the word…"
+      ],
+      "b": [
+        "You reached without seeing him. You turned the Hanged Man — one rope at one ankle, nothing else tied.",
+        "You said something is stopping him from committing. Only one point on this figure is held.",
+        "It's one thing. Not the whole of him, and not you.",
+        "There's a hold. Whose hand tied it stays off the card.",
+        "The rest of him is free, and the one point stays exactly where it is.",
+        "You asked what it is. What I can see is that it's narrow.",
+        "Let me see what that one point is fixed to…"
+      ],
+      "c": [
+        "The backs gave nothing away. You turned the Fool — the small white dog at his side, up on its back legs.",
+        "You asked what's stopping him. That dog isn't playing — it's trying to tell him something.",
+        "There's a warning on this card, and it isn't about you.",
+        "I can see the dog. What he's heard of it isn't shown.",
+        "Something is trying to reach him, and he's still looking at the sky.",
+        "You asked what it is. He may not have it in words yet either.",
+        "Now let's look at what he hasn't taken in…"
+      ]
+    }
+  }
+}

@@ -127,8 +127,11 @@ describe('root enrols when the scope lists v1-root', { skip: !hasDb }, () => {
   });
 
   it('resolveV1DownsellBumpPrice — root traffic resolves the arm price', async () => {
-    const cents = await resolveV1DownsellBumpPrice('root-ds@example.com', undefined, DOWNSELL_ROOT);
-    assert.equal(cents, 977);
+    // Returns { cents, variant, enrolled } since 2026-08-26 (development) — the
+    // arm id and enrolment are needed at checkout, not just the price.
+    const r = await resolveV1DownsellBumpPrice('root-ds@example.com', undefined, DOWNSELL_ROOT);
+    assert.equal(r.cents, 977);
+    assert.equal(r.enrolled, true);
   });
 
   it('resolveV1CloseDepth — root traffic resolves the deep arm', async () => {

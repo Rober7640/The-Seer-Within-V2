@@ -94,7 +94,16 @@ export default function UpsellPage() {
     // Fetch user data from database
     async function fetchUserData() {
       try {
-        const response = await fetch(`/api/upsell/user-data?session_id=${sid}`);
+        // The backend funnel reads its own endpoint (Stripe-direct, no conversations)
+        // and — crucially — fires NONE of the V1 ad/affiliate tracking below: backend
+        // traffic is email, not Facebook, and its `be_` products are walled off from
+        // Meta/Google/Trackdesk everywhere else too. V1's path is unchanged.
+        const beFunnel = isTwinFlameOffer();
+        const response = await fetch(
+          beFunnel
+            ? `/api/backend/upsell/user-data?session_id=${sid}`
+            : `/api/upsell/user-data?session_id=${sid}`,
+        );
 
         if (!response.ok) {
           throw new Error("Order not found");
@@ -103,7 +112,7 @@ export default function UpsellPage() {
         const data = await response.json();
         setUserData(data);
 
-        if (shouldTrack) {
+        if (shouldTrack && !beFunnel) {
           const purchaseAmount = (data.mainPurchaseAmount || 3500) / 100;
           // Ad platforms get the TRUE order total (main + order bump). The
           // server-side CAPI fire already reports Stripe's amount_total, and both
@@ -188,14 +197,9 @@ export default function UpsellPage() {
     lavaStoneImage,
   });
 
-  // Auto-scroll to bottom.
-  // ⚠ Deps include EVERY footer-visibility flag on purpose: quick replies, the
-  // continue tap, the CTA and the shipping form each GROW the footer, which
-  // shrinks the scroll container after this effect has already settled, leaving
-  // the newest bubble clipped behind it.
-  // Merge note (be-offers x development): development gated this on
-  // showQuickReplies and this branch on showContinue. The footer renders on
-  // EITHER, so both are required — each side had caught half the bug.
+  // Auto-scroll to bottom. The footer flags are deps on purpose: when the quick
+  // replies / continue tap, CTA or shipping form appear the footer grows and eats
+  // height off the message list, which would otherwise clip the newest bubble.
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTo({
@@ -203,6 +207,8 @@ export default function UpsellPage() {
         behavior: "smooth",
       });
     }
+    // showQuickReplies is V1's footer-grower; showContinue is twin-flame's — both
+    // shrink the scroll container, so both re-scroll (merge of development + 447bf74).
   }, [messages, isTyping, showQuickReplies, showContinue, showCTA, showShippingForm]);
 
   // Redirect to upsell2 immediately when complete

@@ -1,8 +1,11 @@
 import logger from './logger';
 import {
   BACKEND_OFFERS,
+  backendUpsellFor,
   deliveredTag,
-  purchaseTags,
+  initialListId,
+  purchaseListWrites,
+  upsellPurchaseTags,
   type BackendOfferKey,
 } from './backendCustomerList';
 
@@ -825,13 +828,14 @@ interface BackendDeliveredParams {
  *  subscribed" 400 and the custom-fields landmine are handled in one place. */
 async function writeBackendCustomer(opts: {
   label: string;
+  listId: string;
   email: string;
   name?: string;
   customFields: Record<string, string>;
   tags: string[];
 }): Promise<{ success: boolean; error?: string }> {
   const accountId = process.env.AWEBER_ACCOUNT_ID;
-  const listId = process.env.AWEBER_BE_CUSTOMER_LIST_ID;
+  const listId = opts.listId;
 
   if (!accountId) {
     logger.warn(`AWeber ${opts.label}: account not configured`);
@@ -842,7 +846,7 @@ async function writeBackendCustomer(opts: {
     return { success: false, error: 'AWeber tokens not configured' };
   }
   if (!listId) {
-    logger.warn(`AWeber ${opts.label}: AWEBER_BE_CUSTOMER_LIST_ID not set`);
+    logger.warn(`AWeber ${opts.label}: no list id`);
     return { success: false, error: 'List ID not configured' };
   }
 
@@ -850,8 +854,13 @@ async function writeBackendCustomer(opts: {
     const subscriberData: Record<string, unknown> = {
       email: opts.email,
       update_existing: true,
-      custom_fields: opts.customFields,
     };
+    // ⛔ Only send custom_fields when there is at least one. AWeber reads
+    // `custom_fields: {}` with update_existing as "clear every custom field" —
+    // so a list with no fields (the bump/upsell lists) must get no key at all.
+    if (Object.keys(opts.customFields).length > 0) {
+      subscriberData.custom_fields = opts.customFields;
+    }
     if (opts.name) subscriberData.name = opts.name;
     if (opts.tags.length > 0) subscriberData.tags = opts.tags;
 
@@ -929,13 +938,24 @@ export async function addBackendCustomer(
   };
   if (params.entryUrl) customFields.entry_url = params.entryUrl;
 
-  return writeBackendCustomer({
-    label: `BE customer (${listing.number})`,
-    email: params.email,
-    name: params.firstName,
-    customFields,
-    tags: purchaseTags(params.offer, params.bumpPurchased),
-  });
+  // A purchase can produce more than one write — the reading list always, and a
+  // separate order-bump list when she took the bump. Only the initial write
+  // carries custom fields; the bump/upsell lists hold none.
+  const writes = purchaseListWrites(params.offer, params.bumpPurchased);
+  let firstError: string | undefined;
+  for (const write of writes) {
+    const result = await writeBackendCustomer({
+      label: `BE customer (${listing.number}) → ${write.role}`,
+      listId: write.listId,
+      email: params.email,
+      name: params.firstName,
+      customFields: write.role === 'initial' ? customFields : {},
+      tags: write.tags,
+    });
+    if (!result.success && !firstError) firstError = result.error;
+  }
+
+  return firstError ? { success: false, error: firstError } : { success: true };
 }
 
 /**
@@ -976,6 +996,8 @@ export async function markBackendReadingDelivered(
 
   return writeBackendCustomer({
     label: `BE delivery (${listing.number})`,
+    // The delivery email fires from the reading list, where reading_url lives.
+    listId: initialListId(params.offer),
     email: params.email,
     customFields: {
       stripe_order_id: params.stripeOrderId,
@@ -983,5 +1005,38 @@ export async function markBackendReadingDelivered(
       reading_url: params.readingUrl,
     },
     tags: [deliveredTag(params.offer)],
+  });
+}
+
+/**
+ * Put a BE upsell buyer on that upsell's OWN list (6972555 Protection / 6972556
+ * Bracelet), with the base tags plus her product tag. No custom fields — the
+ * upsell lists hold none (the delivery link is hard-coded in their Campaign, and
+ * the physical item ships from the address on the Stripe payment).
+ *
+ * ⛔ Keyed on the `be_` upsell product, which V1's own upsell products never match,
+ * so a V1 bracelet/ritual sale can never land here. Returns a clear error for an
+ * unknown key rather than writing to the wrong list.
+ */
+export async function addBackendUpsellCustomer(params: {
+  email: string;
+  firstName?: string;
+  productKey: string;
+}): Promise<{ success: boolean; error?: string }> {
+  const listing = backendUpsellFor(params.productKey);
+  if (!listing) {
+    logger.error('AWeber BE upsell: unknown product, refusing to write', {
+      product: params.productKey,
+    });
+    return { success: false, error: `unknown upsell product: ${params.productKey}` };
+  }
+
+  return writeBackendCustomer({
+    label: `BE upsell (${listing.name})`,
+    listId: listing.listId,
+    email: params.email,
+    name: params.firstName,
+    customFields: {},
+    tags: upsellPurchaseTags(params.productKey),
   });
 }

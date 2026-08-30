@@ -327,6 +327,16 @@ export function useConversation() {
         restored.userData.bumpCopy = isBumpCopyVariant(data.userData?.bumpCopy)
           ? data.userData.bumpCopy
           : 'control'
+        // Downsell bump price, restored on the same terms and through the same
+        // closed-set validation. Dropping it here would redraw the card at the
+        // $9.77 default for a resumed session whose checkout still charges her
+        // assigned arm — the very mismatch this field exists to close.
+        if (typeof data.userData?.bumpCentsDownsell === 'number') {
+          restored.userData.bumpCentsDownsell = resolveBumpCents(
+            data.userData.bumpCentsDownsell,
+            'downsell',
+          )
+        }
 
         // Hand it to the welcome-back sequence, which greets her by name and
         // re-opens the input wherever she stopped.
@@ -1031,6 +1041,19 @@ export function useConversation() {
         // the same arm for the Stripe line, so a junk value here must fall back
         // to control instead of producing a blank card.
         if (isBumpCopyVariant(leadData?.bumpCopy)) patch.bumpCopy = leadData.bumpCopy
+        // What the DOWNSELL bump will cost (v1_downsell_bump_price_2026). The card
+        // could not read this anywhere until now — the field was declared and read
+        // but never sent, so it was permanently undefined and every card fell back
+        // to $9.77 while arm A charged $12.77.
+        //
+        // 🔴 VALIDATED, NOT TRUSTED — resolveBumpCents accepts only the closed set
+        // {1277, 977}. It is rendered into the offer card AND, more importantly, it
+        // is what she reads before consenting to a charge, so a junk value must land
+        // on the tier default rather than draw an arbitrary price. Absent ⇒ the key
+        // is simply not set and the card keeps today's $9.77 fallback.
+        if (typeof leadData?.bumpCentsDownsell === 'number') {
+          patch.bumpCentsDownsell = resolveBumpCents(leadData.bumpCentsDownsell, 'downsell')
+        }
         // Close-depth arm — framework-assigned at lead capture, same shape as
         // orderBump. Only ever set to 'deep'; absent ⇒ today's close, unchanged.
         // No preview guard is needed (unlike the ?close=55 price override above):

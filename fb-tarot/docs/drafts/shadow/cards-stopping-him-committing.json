@@ -1,0 +1,42 @@
+{
+  "hook": "cards-stopping-him-committing",
+  "headline": "Something is stopping him from committing. What is it?",
+  "method": "inherited-shadow",
+  "note": "CONNECTION-VOCAB family (2026-08-27), and its NO-VOCABULARY CONTROL — the same commitment-obstacle question without the word \"connection\" in it. Angle `commitment-connection`.\n\n🎯 A buyer types this headline almost verbatim, and the next one gives the real fear: \"I want to know what is holding him back. Am i not good enough?\" So cut 3 answers IT ISN'T YOU and never names his obstacle.\n\n🔴 Never name his motive · never affirm a man met only online is real · never rule on a third party's relationship · never confirm what a previous reader told her. \"not enough\" and \"good enough\" are banned as phrases; the acquittal is written without them.\n\nVOC: fb-tarot/docs/drafts/rewrites/_voc-commit-vocab-2026-08-27.md\nManuscript: fb-tarot/docs/writeups/shadow/REVIEW-commit-vocab-2026-08-27.md",
+  "voc": {
+    "pulled": "2026-08-27",
+    "pattern": "cv-stopping",
+    "matched": 59,
+    "buyers": 6,
+    "verdict": "ok",
+    "why": ""
+  },
+  "decks": {
+    "return-mhf": {
+      "a": [
+        "You turned the Magician. The cards were face down, and your hand found the one with nothing missing.",
+        "Cup, coin, blade, wand — the whole set, already on his table.",
+        "You asked what's stopping him. What catches me is that the table in front of me is complete.",
+        "And yet the commitment hasn't come. And you've been asking what's lacking in you.",
+        "Something meets this at exactly the wrong turn. I don't think it began with you.",
+        "Let me look closer at what meets it…"
+      ],
+      "b": [
+        "You turned the Hanged Man. You couldn't see him, and you chose the one with a single thing tied.",
+        "One rope at one ankle. Nothing else on him is bound.",
+        "You asked what's holding him back, dear. This card puts one narrow hold in front of me.",
+        "Still, nothing has changed. And the question has landed on you instead.",
+        "I keep coming back to something between him and the word. I don't think this began with you.",
+        "Let me look closer at what's in that space…"
+      ],
+      "c": [
+        "You turned the Fool. The backs told you nothing, and you reached for the one being warned.",
+        "Look at the little white dog, up on its back legs at his side.",
+        "You asked what's stopping him. That dog isn't playing — it's trying to tell him something.",
+        "But nothing has reached him. And you've been treating yourself as the answer.",
+        "Whatever is stopping him sits outside your reach. I don't think it started with you.",
+        "Let me look closer at what it is…"
+      ]
+    }
+  }
+}

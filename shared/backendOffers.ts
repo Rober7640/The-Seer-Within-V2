@@ -97,6 +97,13 @@ export interface BackendOffer {
   /** Where Stripe returns her after paying. Gets `?s=<session>` appended. */
   successPath: string;
   /**
+   * The post-purchase upsell chain's ENTRY (Upsell 1). When set, Stripe returns her
+   * HERE with `?session_id=` instead of straight to `successPath` — she then flows
+   * welcome1 → welcome2 → success (each hop wired via funnelPath). Undefined ⇒ no
+   * upsells, straight to the receipt (e.g. an ACT offer with nothing to sell after).
+   */
+  upsellEntryPath?: string;
+  /**
    * Does everything AFTER the money exist for this offer?
    *
    * 🔴 A per-offer gate, deliberately separate from the client's
@@ -138,6 +145,9 @@ export const BACKEND_OFFER_CATALOG: Record<BackendOfferKey, BackendOffer> = {
       chat: '/tarot/twin-flame/preview-chat',
     },
     successPath: '/tarot/twin-flame/success',
+    // After payment she enters the upsell chain (Protection Ritual → Bracelet →
+    // receipt) — the twin-flame pages, because the URL prefix drives isTwinFlameOffer().
+    upsellEntryPath: '/tarot/twin-flame/welcome1',
     // Its thank-you screen renders (TwinFlameThankYouPage, route registered) and 02 is
     // a READING offer, so nothing is needed from her before fulfilment can start.
     readyForMoney: true,
@@ -193,6 +203,24 @@ export function backendOfferForStripeProduct(
   return (
     Object.values(BACKEND_OFFER_CATALOG).find((o) => o.stripeProduct === product) ?? null
   );
+}
+
+/**
+ * The Stripe Dashboard "Description" label for a backend order.
+ *
+ * ⚠ Operator-only — this feeds `payment_intent_data.description`, NOT the line
+ * items, so it never shows on the buyer's receipt. Prefixed `BE <nn>` so a
+ * backend sale is unmistakable at a glance among the six V1 funnels' orders.
+ * (Decision: identify BE in the dashboard, keep the buyer's receipt clean.)
+ */
+export function backendOrderDescriptor(
+  key: BackendOfferKey,
+  bumpPurchased: boolean,
+): string {
+  const offer = BACKEND_OFFER_CATALOG[key];
+  const base = `BE ${offer.number} · ${offer.stripeName}`;
+  if (!bumpPurchased) return base;
+  return `${base} + ${offer.bump.stripeName.replace(/^\+\s*/, '')}`;
 }
 
 // ─── What she is actually charged ──────────────────────────────────────────────

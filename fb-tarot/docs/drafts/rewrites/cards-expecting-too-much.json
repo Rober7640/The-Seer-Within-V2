@@ -1,0 +1,45 @@
+{
+  "hook": "cards-expecting-too-much",
+  "headline": "Am I expecting too much, or should he have committed by now?",
+  "method": "natural-cut",
+  "note": "Commitment AGE-MATRIX addition (2026-08-27). Angle `commitment-ageband`.\n\nTHE WORD DOING THE WORK: \"too\". Not whether she is expecting — whether her wanting is excessive.\n\nTHE FEAR: is my wanting the problem. The buyer who typed it indicts herself TWICE — \"Am I expecting too much? Did I jump in too soon?\" — so the read must refuse her WANTING and her TIMING, and rule on neither him nor her.\n\n🔴 \"too much\" is a whole-beat banned phrase on this angle (blames her, unavailable even inside a refusal). Beat 2 says her question back, so it PARAPHRASES and never quotes the ad.\n\nVOC: fb-tarot/docs/drafts/rewrites/_voc-commit-vocab-2026-08-27.md\nManuscript: fb-tarot/docs/writeups/natural/REVIEW-commit-vocab-2026-08-27.md",
+  "voc": {
+    "pulled": "2026-08-27",
+    "pattern": "cv-expecting",
+    "matched": 5,
+    "buyers": 3,
+    "verdict": "thin",
+    "why": "Almost nobody phrases it as \"expecting too much\"; the corpus carries the same fear under \"what am I doing wrong\", already solved live on cards-doing-wrong-wont-commit. Inherited that finding. The 3 buyers who did type it indict their TIMING as well as their wanting."
+  },
+  "decks": {
+    "return-mhf": {
+      "a": [
+        "All three cards were face down. You turned the Magician — look at the cup, coin, blade and wand set out on his table.",
+        "You asked whether the fault is in what you want. Every tool on that table earns its place.",
+        "What you want isn't the excess here, dear.",
+        "I can see the means on that table. What he's done with them isn't on the card.",
+        "Each tool is laid out ready, and the future is still unnamed.",
+        "That's why the question turned back on you.",
+        "Let me look closer at what's kept that future unnamed…"
+      ],
+      "b": [
+        "You couldn't see the cards when you chose. You turned the Hanged Man — see how calm his face is, even hanging there.",
+        "You asked whether you rushed it, or whether he should have committed by now. That calm says nothing about you is broken.",
+        "You didn't get the timing wrong.",
+        "A pause is all this card gives me. Who set its end, it doesn't say.",
+        "His arms hang loose behind him, and one ankle holds the whole figure still.",
+        "You've gone back over when you started, looking for the mistake.",
+        "Let me see what has held this pause in place…"
+      ],
+      "c": [
+        "Nothing on the backs gave the card away. You turned the Fool — notice his eyes are up on the sky, not the road.",
+        "You asked whether he should have committed by now. The Fool sets out with his eyes on what's ahead.",
+        "Looking ahead isn't the fault here.",
+        "He's moving, plainly. Where he settles isn't drawn here.",
+        "He travels light, and the thing you asked for still has no weight behind it.",
+        "So your own wanting became the thing to explain.",
+        "Now let's look at what keeps that answer from arriving…"
+      ]
+    }
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "hook": "cards-connection-without-commitment",
+  "headline": "How long can a connection this strong go without commitment?",
+  "method": "inherited-shadow",
+  "note": "CONNECTION-VOCAB family (2026-08-27). Angle `commitment-connection`.\n\nShe asks for a LENGTH, so the duration ban is on: no number, no date, no season. Cut 3 refuses the number and moves the doubt off the connection itself.\n\n🔴 Same no-ongoing-contact rule as the rest of the family.\n\nVOC: fb-tarot/docs/drafts/rewrites/_voc-commit-vocab-2026-08-27.md\nManuscript: fb-tarot/docs/writeups/shadow/REVIEW-commit-vocab-2026-08-27.md",
+  "voc": {
+    "pulled": "2026-08-27",
+    "pattern": "cv-connection",
+    "matched": 1759,
+    "buyers": 100,
+    "verdict": "ok",
+    "why": ""
+  },
+  "decks": {
+    "return-mhf": {
+      "a": [
+        "You turned the Magician. The cards were face down, and your hand found the one with no limit over him.",
+        "Look above his head — a sideways eight, with no end drawn on it.",
+        "You asked how long this can go on. What catches me is that the card above him measures nothing.",
+        "And yet no one has said when. The strength is not what's in doubt.",
+        "The thing that keeps this open keeps it open quietly. I don't think it began with you.",
+        "Let me look closer at what it belongs to…"
+      ],
+      "b": [
+        "You turned the Hanged Man. You couldn't see the figure, and you reached for the one in suspension.",
+        "He's held at one ankle, and his face is perfectly calm.",
+        "You asked how much longer, dear. This card puts a pause in front of me with no end written on it.",
+        "Still, no limit has been set. And the waiting has been yours to carry.",
+        "Something sits between this and any limit at all. I don't think this began with you.",
+        "Let me look closer at what's in the way…"
+      ],
+      "c": [
+        "You turned the Fool. Nothing on the backs showed him, and you chose the one who keeps travelling.",
+        "Look at his eyes, up on the sky. He isn't measuring the road.",
+        "You asked how long. This card brings me to movement without a destination on it.",
+        "But nothing has been named. And you're the one counting.",
+        "Something shows up wherever an end would be set. I don't think it started with you.",
+        "Let me look closer at what shows up there…"
+      ]
+    }
+  }
+}
