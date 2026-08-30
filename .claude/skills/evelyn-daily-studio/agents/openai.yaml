@@ -1,0 +1,4 @@
+interface:
+  display_name: "Evelyn Daily Studio"
+  short_description: "Write multi-format Evelyn daily emails"
+  default_prompt: "Use $evelyn-daily-studio to draft the next Evelyn daily email in the revised conversational voice."

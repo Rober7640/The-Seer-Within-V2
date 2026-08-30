@@ -1,0 +1,4 @@
+{
+  "note": "Legacy ?campaign= link. The Continue Seed was removed so this HTML carries a link that works on production today with no minting step. Re-add it (and re-render with --mint-production) to turn on the arrival continuity + the card bubble.",
+  "sends": []
+}

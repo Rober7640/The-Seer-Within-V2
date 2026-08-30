@@ -1,15 +1,17 @@
 # Evelyn Daily — STATE
 
-Rolling memory for the `evelyn-daily` skill. Update after every email so batches don't repeat page types too close, reuse situations within ~30 days, recycle a close/CTA/sketch, or stall in one length/device/tone. **Next day index: 18.** Days 15–17 drafted + poured to HTML as test variants (15 = long-form/money/reply-bait; 16–17 = evening-letter evening-send tests), pending a live send.
+Rolling memory for the `evelyn-daily` skill. Update after every email so batches don't repeat page types too close, reuse situations within ~30 days, recycle a close/CTA/sketch, or stall in one length/device/tone. **Next day index: 20.** Days 15–17 drafted + poured to HTML as test variants (15 = long-form/money/reply-bait; 16–17 = evening-letter evening-send tests), pending a live send. Days 18, 19 and 43 are ALSO built (HTML, operator-supplied copy) and **not sent** — 43 is out of sequence, poured from the codex plan for days 25–44. ⚠ **Days 20–42 do not exist**: they are drafted only, in `REVIEW-days-20-24-codex-rewrite.md` and `REVIEW-days-25-44-codex.md`. ⛔ **No sketch art exists for 18, 19 or 43** — the hero block is commented out in all three files.
 
 ## Counters
-- **Last day written:** 17 *(15–17 are test variants, poured to HTML, pending live send)*
-- **Next day index:** 18
-- **Door days so far:** 6, 9, 12, 14, 16 (rhythm target: 3 per 7; never >3)
-- **Last door mechanic used:** teaching+personal-layer (day 16, late-night 3am-mind)
-- **Length register history (last 4):** long-form(15) · standard(16) · breather(17) → next: a **standard** is due (don't follow a breather with long-form/breather)
-- **Opening-device history (last 4):** scene/memory(15) · evening-letter(16) · evening-letter(17) → device used 2× running for the evening-send test; **vary next** (blunt-question / dialogue / contrarian-claim are fresh)
-- **Emotional-temperature history (last 3):** bracing(15) · steadying(16) · tender(17) → a **lighter/whimsical** day is overdue
+- **Last day written:** 43 *(out of sequence)*. Built + unsent: 15–19, 43. Last in-sequence day: 19
+- **Next day index:** 20 *(43 is already built; 20–42 are drafts only)*
+- **Door days so far:** 6, 9, 12, 14, 16, 18, 19, 43 (rhythm target: 3 per 7; never >3)
+  - 🔴 **RHYTHM BREACHED:** 16, 18, 19 is **3 doors in 4 days**, and 18→19 are back-to-back. Next in-sequence day must NOT be a door.
+- **Last door mechanic used:** the-page-that-turns (day 43, the unsent letter)
+  - ⚠ teaching+personal-layer ran **three times running** before it (16, 18, 19). Rotate to the-recurring-pull next.
+- **Length register history (last 4):** breather(17) · standard(18) · standard(19) · standard(43) → **three standards running; a breather or long-form is due**
+- **Opening-device history (last 4):** evening-letter(17) · folk-sign/question(18) · dated-fact(19) · dated-fact(43) → **dated-fact used 2× running; vary next** (dialogue / contrarian-claim / single-word are fresh)
+- **Emotional-temperature history (last 3):** steadying(18) · steadying(19) · steadying(43) → a **lighter/whimsical** day is now well overdue (last tender: 17)
 - **Last reply-bait day:** 15 · **Last pure-gift stretch:** none yet · **Evening-send variants:** 16, 17
 
 ## Rotation log (most recent 14)
@@ -32,12 +34,16 @@ Rolling memory for the `evelyn-daily` skill. Update after every email so batches
 | 15 | overheard memory / confession (**long-form**, scene-open, **reply-bait**) | reply-bait | — | money / inherited scarcity | table still-life: envelope, notes, coins, hands, margin sum (richer scene) | My mother counted the same money twice every Friday | — (reply-bait) | money |
 | 16 | **evening letter** (standard, **evening-send**) | **door** | teaching+personal-layer | the night-mind · a tool handed in the evening for the night ahead | a single lit window across darkening rooftops | I know what your mind will do the moment the light goes off | day16-nightmind | purpose |
 | 17 | **evening letter** (**breather**, **evening-send**) | soft | — | loneliness once the evening goes quiet | empty armchair by an evening window, moon | The feeling that waits for the day to go quiet | day17-nightquiet | love |
+| 18 | omen/folk-sign → observation (standard) | **door** | teaching+personal-layer | money-energy · dismissing what looks too small | ⛔ none (art not made) | {{first_name}}, have you ever walked past a penny? | day18-penny | money |
+| 19 | famous person / borrowed object (standard) | **door** | teaching+personal-layer | stalled direction · a phrase for the next step | ⛔ none (art not made) | {{first_name}}, Bruce Lee wrote two words on a business card | day19-walkon | purpose |
+| 43 | famous person / borrowed object (standard) | **door** | the-page-that-turns | the unsent message · writing vs sending | ⛔ none (art not made) | {{first_name}}, Lincoln wrote the letter. He never sent it. | day43-lincoln | someone |
 
 ## Used situations (30-day no-repeat window — don't reuse before day 44)
-over-giver/guilt-of-rest · strength-as-rigidity · self-last/permission · self-worth/enough · receiving/being-cared-for · comparison/behind-whom · letting-worries-pass · love-distance/cold-season · forgiveness/empty-boat · the-strong-one/unrelieved · quiet-love/maintenance · decision-paralysis/fork · grief-of-a-chapter/gold · the-locked-door · money-inherited-fear(d15) · night-3am-mind(d16) · night-loneliness(d17)
+over-giver/guilt-of-rest · strength-as-rigidity · self-last/permission · self-worth/enough · receiving/being-cared-for · comparison/behind-whom · letting-worries-pass · love-distance/cold-season · forgiveness/empty-boat · the-strong-one/unrelieved · quiet-love/maintenance · decision-paralysis/fork · grief-of-a-chapter/gold · the-locked-door · money-inherited-fear(d15) · night-3am-mind(d16) · night-loneliness(d17) · money-energy/too-small-to-count(d18) · stalled-direction/next-step(d19) · unsent-message/write-vs-send(d43)
 
 ## Used sketch subjects (avoid close repeats)
 two hands · oak & reed · flowers on shelf · ENOUGH (word) · open hand · two teacups · bird in doorway · two chairs · empty boat · woman at window · hand+handbag · forked road · pressed leaf+date · key in lock · money table still-life (d15) · lit window at night (d16) · armchair + night window (d17)
+> ⛔ **18, 19, 43 have NO sketch** — art was never generated, hero block commented out. If they are ever sent, either make the art or leave the block closed.
 
 ## Thread balance so far (CORRECT THIS AT SCALE)
 - **Over-weighted:** over-giver / strong-one / self-worth / rest → days 1,2,3,4,10 (clustered early). Ease off in the next batch.
@@ -47,5 +53,6 @@ two hands · oak & reed · flowers on shelf · ENOUGH (word) · open hand · two
 
 ## Closes already used (vary every time — never recycle a soft-sell line or CTA label)
 Soft anchors: come and sit with me a while · come and talk it through with me (d2) · come and tell me whose rule you're still keeping · say it to me · come and let me listen to you · come and talk it out with me (d7) · come and talk it over with me (d8) · let someone hold the reading for you · bring me what you do see · let me read it once · come and keep me company a while (d17)
-CTA labels: Come and work out whose pace it is (d6) · Come and talk it through with me (d9) · Come and talk your decision through (d12) · Come and find out if it's really locked (d14) · Come and set it down before bed (d16)
+CTA labels: Come and work out whose pace it is (d6) · Come and talk it through with me (d9) · Come and talk your decision through (d12) · Come and find out if it's really locked (d14) · Come and set it down before bed (d16) · Start my one-to-one money reading (d18) · Help me identify my next step (d19) · Help me decide what should be sent (d43)
+> 🔴 **CLOSE REPETITION — fix before any of 18/19/43 sends.** All three open the close with the SAME sentence shape, and 18 and 19 are word-for-word: *"come and speak with me one-to-one."* 18 and 19 also share *"I'll read your situation personally."* The rule on this file is never to recycle a close; three in a row is the worst run so far.
 > **Anchor/CTA rule:** clear + direct + lander-synced (every link signals a talk/reading with Evelyn); vary wording but never vague-metaphorical. The 4 door CTAs + d7/d8 were rewritten away from poetic-but-vague.
