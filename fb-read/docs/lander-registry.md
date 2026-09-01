@@ -9,11 +9,11 @@ page or route. `/fb-read` renders every device from `shared/readDevices.ts`.
 
 ## What exists
 
-| | `dream` | `tea` |
-|---|---|---|
-| **love-again** | ✅ 3/3 | ✅ 3/3 |
-| **still-think** | ✅ 3/3 | ✅ 3/3 |
-| **hiding-something** | ✅ 3/3 | ✅ 3/3 |
+| | `dream` | `tea` | `coffee` |
+|---|---|---|---|
+| **love-again** | ✅ 3/3 | ✅ 3/3 | — |
+| **still-think** | ✅ 3/3 | ✅ 3/3 | — |
+| **hiding-something** | ✅ 3/3 | ✅ 3/3 | — |
 
 ✅ all three panels written and servable · ◐ partial · — not built
 
@@ -127,6 +127,20 @@ NEVER state that he IS hiding something and NEVER state that he is not — both 
 | `a` | *the answered heart* | a bird halfway up the cup, over on the handle side |
 | `b` | *the rooted heart* | a tree halfway up the cup, its roots running toward the middle |
 | `c` | *the steadied heart* | an anchor halfway up the cup, on the far side from the handle |
+
+### `coffee` — The Cup Has Been Turned
+
+| | |
+|---|---|
+| Instruction | *"Look into the cup. Which of these do you see?"* |
+| Strip | `/read/coffee-cup.jpg` · 1254×1254 · 210 KB |
+| Reveal strip | `/read/coffee-reveal-strip.jpg` · 122 KB |
+
+| Panel | Archetype | The mark named in bubble 1 |
+|---|---|---|
+| `a` | *the moving heart* | a road running under the rim of the cup |
+| `b` | *the standing heart* | a tree halfway up the wall of the cup |
+| `c` | *the deep heart* | a lake in the bottom of the cup, where the grounds settled first |
 
 ---
 

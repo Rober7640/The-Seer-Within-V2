@@ -18,14 +18,14 @@
 // Adding a device = one entry in DEVICES + its strip art. Nothing to sync.
 //
 // Two axes, both from the URL:
-//   device  — ?device=  which instrument the ad quizzed (dream | tea)
+//   device  — ?device=  which instrument the ad quizzed (dream | tea | coffee)
 //   hook    — ?hook=    the question the ad asked (love-again)
 // Plus the VERSION, which comes from the route suffix, not a param:
 //   /fb-read → A · /fb-read/b → B · /fb-read/c → C
 
 import { READS } from "./readCopy";
 
-export type ReadDevice = "dream" | "tea";
+export type ReadDevice = "dream" | "tea" | "coffee";
 export type ReadHook = "love-again" | "still-think" | "hiding-something";
 export type ReadOption = "a" | "b" | "c";
 export type ReadVersion = "a" | "b" | "c";
@@ -306,9 +306,69 @@ const TEA: DeviceConfig = {
   },
 };
 
+// A SECOND device on the same three hooks, so the picture is the variable and no new
+// guard is needed. Same pick mechanic as tea, deliberately: change the picture AND how
+// she chooses and neither can be read as the cause.
+//
+// ⚠ Coffee uses coffee-native symbol names rather than reusing bird/tree/anchor
+// (operator call, 2026-09-01), so the option labels changed too. A coffee-vs-tea
+// result is therefore NOT cleanly attributable to the photograph alone. Recorded in
+// docs/superpowers/specs/2026-09-01-fb-read-coffee-device-design.md rather than left
+// for someone to rediscover from the numbers.
+//
+// 🔴 THE PHOTOGRAPH IS REAL, AND CC0. Not generated. Reference work found that a heavy
+// draw coats the cup in one unreadable mass and only a LIGHT draw leaves isolated marks
+// on near-bare porcelain; this is a light draw. Generating a cup with three separated
+// marks would have meant inventing a behaviour no real cup showed — the "logo with
+// coffee in it" failure the whole device exists to avoid. See
+// improve-v1/fb-read/images/coffee/SOURCE.md.
+const COFFEE: DeviceConfig = {
+  id: "coffee",
+  eyebrow: "The Cup Has Been Turned",
+  instruction: "Look into the cup. Which of these do you see?",
+  beatNoun: "cup",
+  continueCta: "There's more the cup is showing me — begin your free reading",
+  chooseMoment: "the moment you named it",
+  pick: "symbol",
+  cupImage: { url: "/read/coffee-cup.jpg", width: 1254, height: 1254 },
+  cupAlt: "The inside of a coffee cup, the grounds drained down its pale wall",
+  optionLabel: { a: "Road", b: "Tree", c: "Lake" },
+  // Unused while pick is 'symbol' — the lander reads cupImage. Kept pointing at the
+  // same file so a missing cupImage degrades to the right picture.
+  strip: { url: "/read/coffee-cup.jpg", width: 1254, height: 1254 },
+  // 1560×520, not tea's 1260×420. The road is a LONG mark — that is what makes it a
+  // road — and no useful length of it fits a 420 ring, so ring-read-cup.mjs refused
+  // the crop rather than cutting the ring in half. 520 still shows 41% of the cup.
+  revealStrip: { url: "/read/coffee-reveal-strip.jpg", width: 1560, height: 520 },
+  // Tea's grammar is SETTLING and leans on handle-side. Coffee's is the DRAIN, and
+  // DEPTH carries the meaning — which is why this cup needs no visible handle, and
+  // why its three marks say something tea's three (all mid-wall) cannot.
+  grammar:
+    "The cup was drunk down, turned upside down onto the saucer and left to drain, so the grounds ran DOWN the wall and settled as they went. Depth is the whole reading here. A mark high on the wall, just under the RIM, came to rest last and belongs to the weeks just ahead. A mark HALFWAY UP the wall is what is standing in her life now. A mark on the FLOOR of the cup settled first and belongs to what she was built on — the oldest thing, the ground under everything else. Grounds that run in a LINE are movement; grounds gathered in ONE PLACE are something settled and already hers. Use this; it is what makes a reading feel earned rather than guessed. Never explain the system to her — she should feel the position mean something, never be taught it.",
+  options: ["a", "b", "c"],
+  // Read OFF the photograph, not chosen in advance — see SOURCE.md for the geometry.
+  // 🔴 Depth here is OBSERVED, not computed: the cup is tilted, so its floor sits low
+  // in the frame rather than at the image centre. Re-derive these as
+  // distance-from-centre and the lake comes back as "near the rim", inverting the read.
+  //
+  // 🔴 These must carry the same content words as cut 1 of each reading, or the
+  // eval's art-coherence check fails the build.
+  mark: {
+    a: "a road running under the rim of the cup",
+    b: "a tree halfway up the wall of the cup",
+    c: "a lake in the bottom of the cup, where the grounds settled first",
+  },
+  reading: {
+    a: "the moving heart",
+    b: "the standing heart",
+    c: "the deep heart",
+  },
+};
+
 export const DEVICES: Record<ReadDevice, DeviceConfig> = {
   dream: DREAM,
   tea: TEA,
+  coffee: COFFEE,
 };
 
 // The roster, derived. Route validators and tests read THIS — never a literal
