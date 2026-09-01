@@ -18,7 +18,7 @@ export const READS: Partial<
     "hiding-something": {
       a: [
         "A road, yes. Running along under the rim of your cup, up where the grounds came to rest last.",
-        "You asked whether something's being kept from you. A road up near the rim is where the picture stops.",
+        "You asked whether he's hiding something from you. A road up near the rim is where the picture stops.",
         "You met a real edge. The road is there in your cup, dear, and you didn't put it there.",
         "The grounds don't say what's past it. They stop exactly where you stopped.",
         "So the road runs and then the grounds end, and you've been standing at that end on your own.",
@@ -27,7 +27,7 @@ export const READS: Partial<
       ],
       b: [
         "A tree, yes. Halfway up the wall of your cup, where the grounds caught and held.",
-        "You asked whether something's being kept from you. A tree halfway up is what's actually standing there.",
+        "You asked whether he's hiding something from you. A tree halfway up is what's actually standing there.",
         "It isn't nothing. Something is standing in that cup, and you were right to keep looking at it.",
         "The grounds don't say what it is. Nothing tells me what's behind it either.",
         "So there's something there, and you've had to keep pointing at it by yourself.",
@@ -36,7 +36,7 @@ export const READS: Partial<
       ],
       c: [
         "A lake, yes. Lying in the bottom of your cup, where the grounds settled first and stayed.",
-        "You asked whether something's being kept from you. A lake on the floor is how deep this has gone in you.",
+        "You asked whether he's hiding something from you. A lake on the floor is how deep this has gone in you.",
         "Your read on things is sound. What you're built on hasn't gone wrong, whatever you've been told.",
         "The grounds stop at the water. They don't tell me what's under it.",
         "So it's settled deep in you, and you've been carrying the doubt about yourself as well.",
@@ -76,25 +76,25 @@ export const READS: Partial<
     "still-think": {
       a: [
         "A road, yes. Running along under the rim of your cup, up where the grounds came to rest last.",
-        "You asked whether you still cross his mind. A road up near the rim is what's ahead of you.",
-        "The road ahead is yours. Not one bit of it waits on anyone else remembering you first.",
+        "You asked whether he still thinks about you. A road up near the rim is what's ahead of you.",
+        "The road ahead is yours. None of it waits on someone else to see it first.",
         "The grounds don't say who's on it. Nothing tells me when, either.",
         "So there's a road sitting in your cup, and none of it is his to walk.",
-        "You didn't ask for him back. You asked to be remembered, and that's a small thing to want.",
+        "You didn't ask for him back. You asked to be kept in mind, and that's a small thing to want.",
         "Let me look closer at what it's cost you, asking for so little…",
       ],
       b: [
         "A tree, yes. Halfway up the wall of your cup, where the grounds caught and held.",
-        "You asked whether you still cross his mind. A tree halfway up is what's still standing from it.",
+        "You asked whether he still thinks about you. A tree halfway up is what's still standing from it.",
         "It counted. Something from that time is still standing, and the cup shows me it's standing in you.",
         "The grounds don't say who tended it. Nothing tells me what comes of it either.",
-        "So it held, and it's gone on holding without anybody else needing to notice.",
+        "So it held, and it's gone on holding whether or not anyone else saw it.",
         "You've been told you should be past this by now. The cup doesn't show me a finished thing.",
         "Let me look closer at what's still standing in you from all of that…",
       ],
       c: [
         "A lake, yes. Lying in the bottom of your cup, where the grounds settled first and stayed.",
-        "You asked whether you still cross his mind. A lake on the floor is what settled deepest in you.",
+        "You asked whether he still thinks about you. A lake on the floor is what settled deepest in you.",
         "It's real because it settled in you. What happened isn't kept safe in one person's memory alone.",
         "The grounds stop at the water. They don't tell me what anyone else kept.",
         "So it's down there in you, settled, and it's been there whether or not anyone said so.",
