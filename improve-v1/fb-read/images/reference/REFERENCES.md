@@ -122,3 +122,74 @@ Straight from the Double Cup post, and it is the whole answer to the leaf proble
 - a plain cup with a **white interior** and a handle
 - swirl three times, invert onto the saucer, let it drain
 - shoot from **directly overhead**, cup filling a little over half the frame
+
+---
+
+# COFFEE — reference photographs, gathered 2026-09-01
+
+Gathered when coffee was proposed as a second `pick:'symbol'` device. **The licence
+position is much better than tea's — three CC0 and one public domain — and the
+finding is much worse.**
+
+| File | Source | Licence | May it ship? |
+|---|---|---|---|
+| `coffee/coffereading.jpg` | [Commons](https://commons.wikimedia.org/wiki/File:Coffereading.jpg), Temuri rajavi. 1529×1354 | **Public domain** | **Yes** |
+| `coffee/kahve-fali-1.jpg` | [Commons](https://commons.wikimedia.org/wiki/File:Kahve_falı_1.jpg), Basak. 5312×2988 | **CC0** | **Yes** |
+| `coffee/kahve-fali-2.jpg` | [Commons](https://commons.wikimedia.org/wiki/File:Kahve_falı_2.jpg), Basak. 5312×2988 | **CC0** | **Yes** |
+| `coffee/restos-cafe.jpg` | [Commons](https://commons.wikimedia.org/wiki/File:Restos_de_café_para_adivinar.jpg), Álvaro de la Paz Franco. 2592×1944 | **CC0** | **Yes** |
+| `Tasseography coffee grounds symbol - *.jpg` (~200 files) | Commons, "Coffee Insights / tasseography.org" | CC BY-SA 4.0 | **No.** The same atlas series already in this folder as `tasseo-*.jpg`. Share-alike is viral. Study only |
+| `El arte de la cafeomancia.jpg` | Commons, Palomaoleas | CC BY-SA 4.0 | **No** |
+| `Սուրճ կարդալ.jpeg` | Commons, Chaojoker | CC BY-SA 3.0 | **No** |
+| `Skräck o skrock 8a Spå i kaffesump.jpg` | Commons, Gunnar Creutz / Falbygdens museum | CC BY-SA 3.0 | **No** |
+| `Cup tossing.jpg` | Commons, Nicholas Joseph Crowley | Public domain | Shippable, but it is a 19th-century **genre painting**, not a cup. No documentary value |
+
+## 🔴 The finding: coffee COATS, it does not scatter
+
+`REFERENCES.md` above established for tea that **grade decides scatter** — fine
+dust/CTC drains into one mass, whole-leaf settles into separated constellations, and
+arm B needs the second behaviour. Turkish coffee is ground finer than tea dust, and
+all four licence-clean photographs show the predicted result.
+
+| Photograph | What the grounds do |
+|---|---|
+| `coffereading.jpg` — overhead, handled cup, cup fills the frame. **The single most useful reference we have for coffee** | ONE connected dark film over the entire interior. White porcelain shows only as **thin crazed channels** running through the mass, like a dried riverbed. Zero bare porcelain between "regions", because there are no regions |
+| `kahve-fali-1.jpg` — handheld, tilted, outdoors | Same connected coating, white at the rim and in streaks. One mass |
+| `kahve-fali-2.jpg` — cup **and saucer** together | Cup interior coated. **The SAUCER carries one bold, isolated dark arc on clean white** — see below |
+| `restos-cafe.jpg` — overhead, handled cup | The closest to usable. A **pale translucent wash** over most of the cup, carrying ONE genuinely dark isolated blot (a jagged vertical clot, upper-left of centre) and one dark pool at the floor — and the pool is residual liquid, not a formation. **Two dark features, not three** |
+
+### What this means for a `pick:'symbol'` coffee device
+
+`scripts/select-tea-cup.mjs` would reject every one of these. Three of the four sit
+far above the 42% "cup drowned" interior ceiling, and **none has three separated,
+comparably-weighted gatherings**. The arm-B premise, which needs exactly that, does
+not survive contact with real coffee.
+
+⚠ **A generated cup could be made to have three regions.** That is precisely the
+trap `art-selection-method.md` and `tea-leaf-reading-findings.md` §1 warn about: the
+ambiguity IS the practice, and a cup that does not behave like a real cup is a logo
+with coffee in it. Tea's shipped arm-B cup is generated too — but it is generated to
+match a REAL behaviour that reference work had found first (unstrained whole-leaf
+Assam). There is no equivalent real coffee behaviour to point at. Generating one
+would be inventing the practice rather than using it.
+
+### The one lead worth following: the SAUCER
+
+`kahve-fali-2.jpg` is the only image showing the saucer, and the saucer behaves
+nothing like the cup. The cup wall is coated; the saucer is **clean white porcelain
+carrying a bold, discrete, isolated dark run**. In Turkish practice the cup is
+inverted onto the saucer and the saucer is read as part of the fal, so this is
+authentic rather than a workaround.
+
+A flat, mostly-clean field where grounds land as **discrete runs** is a far better
+home for three separated marks than a coated cup wall.
+
+🔴 **This is a hypothesis from n=1, not a finding.** One saucer photograph shows one
+mark. Whether a saucer typically carries three separated runs needs its own
+reference pass before any art brief is written on it.
+
+### If a real cup is ever shot for coffee
+
+Do not copy the tea recipe. The open question is which grind, vessel and turn produce
+**separated** marks rather than a film — a coarser grind, a wider and shallower cup,
+a shorter drain, or the saucer instead of the cup. That question has to be answered
+by photographs before it is answered by a prompt.
