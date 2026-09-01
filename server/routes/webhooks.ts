@@ -16,7 +16,8 @@ import { recordBraceletOrder } from '../lib/braceletOrders';
 import { recordBackendOrder } from '../lib/beOrders';
 import { addBackendUpsellCustomer } from '../lib/aweber';
 import { backendUpsellFor } from '../lib/backendCustomerList';
-import { BACKEND_STRIPE_PRODUCT_PREFIX } from '@shared/backendOffers';
+import { BACKEND_STRIPE_PRODUCT_PREFIX, resolveOfferKey } from '@shared/backendOffers';
+import { recordBackendUpsellOrder } from '../lib/beUpsellOrders';
 import { migrateAndEmailFunnelUser } from '../lib/funnelMigrationEmail';
 import { fireGoogleAdsConversion, gadsStepForProduct } from '../lib/googleAds';
 import { maybeSchedulePostPurchaseDrip } from '../lib/postPurchaseDripTrigger';
@@ -1036,10 +1037,12 @@ router.post('/stripe', async (req: Request, res: Response) => {
         const upsellEmail =
           session.customer_details?.email || session.customer_email || metadata.email || null;
         if (upsellEmail) {
+          const offer = resolveOfferKey(metadata) ?? 'twin-flame';
           await addBackendUpsellCustomer({
             email: upsellEmail,
             firstName: metadata.firstName,
             productKey: beUpsell.productKey,
+            offer,
           }).catch((err) =>
             logger.error('BE upsell fallback list write FAILED — buyer paid:', err),
           );
@@ -1222,22 +1225,28 @@ router.post('/stripe', async (req: Request, res: Response) => {
       }).catch(() => { /* logged inside */ });
     }
 
-    // Backend upsell (1-click): put her on the upsell's OWN list. The tracking above
+    // Backend upsell (1-click): record the sale (per offer) and put her on the
+    // upsell's own list with her originating offer's tag. The tracking above
     // no-opped (a `be_` product is unknown to those mappers), and V1's own upsell
     // products never match backendUpsellFor — so V1's flow is untouched.
     const beUpsell = backendUpsellFor(metadata.product);
-    if (beUpsell && metadata.email) {
-      await addBackendUpsellCustomer({
-        email: metadata.email,
-        firstName: metadata.firstName,
-        productKey: beUpsell.productKey,
-      }).catch((err) =>
-        logger.error('BE upsell list write FAILED — buyer paid, may miss her email', {
-          pi: pi.id,
-          product: metadata.product,
-          error: err instanceof Error ? err.message : String(err),
-        }),
-      );
+    if (beUpsell) {
+      await recordBackendUpsellOrder(pi); // idempotent, self-logging, never throws
+      if (metadata.email) {
+        const offer = resolveOfferKey(metadata) ?? 'twin-flame';
+        await addBackendUpsellCustomer({
+          email: metadata.email,
+          firstName: metadata.firstName,
+          productKey: beUpsell.productKey,
+          offer,
+        }).catch((err) =>
+          logger.error('BE upsell list write FAILED — buyer paid, may miss her email', {
+            pi: pi.id,
+            product: metadata.product,
+            error: err instanceof Error ? err.message : String(err),
+          }),
+        );
+      }
     }
   }
 
