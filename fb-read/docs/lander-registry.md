@@ -114,7 +114,7 @@ NEVER state that he IS hiding something and NEVER state that he is not — both 
 | `b` | *the falling heart* | the one where you're falling with nothing underneath |
 | `c` | *the unmade heart* | the one where your teeth come loose into your palm |
 
-### `tea` — The Leaves Have Settled
+### `tea` — Your Free Tea Leaf Reading
 
 | | |
 |---|---|
@@ -128,7 +128,7 @@ NEVER state that he IS hiding something and NEVER state that he is not — both 
 | `b` | *the rooted heart* | a tree halfway up the cup, its roots running toward the middle |
 | `c` | *the steadied heart* | an anchor halfway up the cup, on the far side from the handle |
 
-### `coffee` — The Cup Has Been Turned
+### `coffee` — Your Free Turkish Coffee Reading
 
 | | |
 |---|---|

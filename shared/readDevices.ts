@@ -261,7 +261,9 @@ const DREAM: DeviceConfig = {
 
 const TEA: DeviceConfig = {
   id: "tea",
-  eyebrow: "The Leaves Have Settled",
+  // Benefit first, then the device named honestly. See the note on COFFEE.eyebrow —
+  // the SHAPE is held constant across devices on purpose.
+  eyebrow: "Your Free Tea Leaf Reading",
   instruction: "Look into the cup. Which of these do you see?",
   beatNoun: "cup",
   continueCta: "There's more the cup is showing me — begin your free reading",
@@ -324,7 +326,22 @@ const TEA: DeviceConfig = {
 // improve-v1/fb-read/images/coffee/SOURCE.md.
 const COFFEE: DeviceConfig = {
   id: "coffee",
-  eyebrow: "The Cup Has Been Turned",
+  // 🔴 THE OLD EYEBROW NAMED NOTHING. "The Cup Has Been Turned" is atmosphere, and it
+  // could just as easily have been tea — the device's own announcement did not announce
+  // the device. It was also the only line above the fold doing no work for her.
+  //
+  // "Turkish coffee reading" is the standard ENGLISH name for the practice (kahve falı
+  // in Turkish, tasseography as the umbrella term that covers tea and coffee alike), so
+  // it is both authentic and readable to a US/UK audience. `kahve falı` itself is a
+  // comprehension wall at the first line and is deliberately not used.
+  //
+  // 🔴 THE SHAPE IS HELD CONSTANT ACROSS DEVICES — tea is "Your Free Tea Leaf Reading".
+  // Only the device noun changes. Give coffee a benefit line while tea keeps atmosphere
+  // and the eyebrow becomes a FOURTH difference in a test meant to isolate the picture,
+  // on top of the photograph, the symbol names and the visual style.
+  //
+  // `dream` is frozen and deliberately left on its old eyebrow; nothing is built on it.
+  eyebrow: "Your Free Turkish Coffee Reading",
   instruction: "Look into the cup. Which of these do you see?",
   beatNoun: "cup",
   continueCta: "There's more the cup is showing me — begin your free reading",
