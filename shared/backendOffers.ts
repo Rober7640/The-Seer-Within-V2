@@ -223,6 +223,43 @@ export function backendOrderDescriptor(
   return `${base} + ${offer.bump.stripeName.replace(/^\+\s*/, '')}`;
 }
 
+/**
+ * The originating offer for a set of Stripe metadata: the explicit `offer` key if
+ * it is a known offer, else the offer that owns the `product`. Null when neither
+ * resolves — callers decide the fallback rather than guessing here.
+ */
+export function resolveOfferKey(
+  meta: { offer?: string | null; product?: string | null } | null | undefined,
+): BackendOfferKey | null {
+  const offer = meta?.offer;
+  if (isBackendOfferKey(offer)) return offer;
+  return backendOfferForStripeProduct(meta?.product ?? null)?.key ?? null;
+}
+
+/** The Stripe-dashboard description for an UPSELL charge: `BE 03 · Protection Ritual`. */
+export function backendUpsellDescriptor(
+  key: BackendOfferKey,
+  upsellName: string,
+  isDownsell: boolean,
+): string {
+  const offer = BACKEND_OFFER_CATALOG[key];
+  return `BE ${offer.number} · ${upsellName}${isDownsell ? ' (downsell)' : ''}`;
+}
+
+/**
+ * Resolve the offer + build the upsell charge description in one call. Defaults to
+ * twin-flame when the session metadata does not resolve, preserving the old
+ * behaviour rather than failing a charge she is entitled to.
+ */
+export function upsellChargeFields(
+  meta: { offer?: string | null; product?: string | null } | null | undefined,
+  upsellName: string,
+  isDownsell: boolean,
+): { offer: BackendOfferKey; description: string } {
+  const offer = resolveOfferKey(meta) ?? 'twin-flame';
+  return { offer, description: backendUpsellDescriptor(offer, upsellName, isDownsell) };
+}
+
 // ─── What she is actually charged ──────────────────────────────────────────────
 
 export interface BackendChargeRequest {

@@ -202,3 +202,40 @@ describe('backendOrderDescriptor — the Stripe Dashboard label', () => {
     );
   });
 });
+
+import {
+  resolveOfferKey,
+  backendUpsellDescriptor,
+  upsellChargeFields,
+} from '@shared/backendOffers';
+
+describe('upsell offer resolution + description', () => {
+  it('resolves the offer from metadata.offer when valid', () => {
+    expect(resolveOfferKey({ offer: 'judgement-day' })).toBe('judgement-day');
+  });
+
+  it('falls back to the offer that owns the Stripe product', () => {
+    expect(resolveOfferKey({ product: 'be_judgement_day' })).toBe('judgement-day');
+    expect(resolveOfferKey({ product: 'be_twin_flame' })).toBe('twin-flame');
+  });
+
+  it('returns null when nothing resolves', () => {
+    expect(resolveOfferKey({ offer: 'nope', product: 'be_unknown' })).toBeNull();
+    expect(resolveOfferKey(null)).toBeNull();
+  });
+
+  it('builds the BE <number> description per offer', () => {
+    expect(backendUpsellDescriptor('twin-flame', 'Protection Ritual', false))
+      .toBe('BE 02 · Protection Ritual');
+    expect(backendUpsellDescriptor('judgement-day', 'Manifestation Bracelet', true))
+      .toBe('BE 03 · Manifestation Bracelet (downsell)');
+  });
+
+  it('upsellChargeFields resolves offer + description together, defaulting to twin-flame', () => {
+    expect(upsellChargeFields({ offer: 'judgement-day' }, 'Protection Ritual', false))
+      .toEqual({ offer: 'judgement-day', description: 'BE 03 · Protection Ritual' });
+    // Unresolvable → the historical default, so a mis-stamped session never 500s.
+    expect(upsellChargeFields({}, 'Protection Ritual', false))
+      .toEqual({ offer: 'twin-flame', description: 'BE 02 · Protection Ritual' });
+  });
+});
