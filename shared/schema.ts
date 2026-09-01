@@ -1624,3 +1624,42 @@ export const beOrders = pgTable("be_orders", {
 
 export type BeOrder = typeof beOrders.$inferSelect;
 export type InsertBeOrder = typeof beOrders.$inferInsert;
+
+// ============================================================================
+// BACKEND DECK UPSELL ORDERS (be_upsell_orders)
+// One row per upsell PaymentIntent (Protection Ritual / Bracelet). Unlike
+// be_orders (one row per BOOKING checkout session), upsells are separate 1-click
+// PaymentIntents, so they get their own table keyed on the PI id. The `offer`
+// column is the whole point: it attributes the upsell to the lander it came from
+// (twin-flame vs judgement-day), which the shared physical product cannot.
+// ============================================================================
+export const beUpsellOrders = pgTable("be_upsell_orders", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+
+  // Stripe is the source of truth for money. UNIQUE => idempotent on webhook retry.
+  stripePaymentIntentId: text("stripe_payment_intent_id").notNull().unique(),
+  // The booking checkout session this upsell was charged off (metadata.originalSession).
+  bookingSessionId: text("booking_session_id"),
+
+  // The originating offer, in the deck's vocabulary — the attribution key.
+  offer: text("offer").notNull(),               // twin-flame | judgement-day
+  offerNumber: text("offer_number").notNull(),  // 02 | 03
+
+  // Which physical upsell, and whether it was the downsell price.
+  product: text("product").notNull(),           // be_protection_ritual | be_bracelet
+  tier: text("tier").notNull().default("full"), // full | downsell
+
+  amountCents: integer("amount_cents").notNull(),
+  currency: text("currency").notNull().default("usd"),
+
+  email: text("email"),
+  firstName: text("first_name"),
+
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("idx_be_upsell_orders_offer").on(table.offer, table.createdAt),
+  index("idx_be_upsell_orders_product").on(table.product),
+]);
+
+export type BeUpsellOrder = typeof beUpsellOrders.$inferSelect;
+export type InsertBeUpsellOrder = typeof beUpsellOrders.$inferInsert;
