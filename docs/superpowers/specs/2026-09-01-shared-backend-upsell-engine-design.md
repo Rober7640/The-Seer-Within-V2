@@ -178,6 +178,42 @@ No new upsell pages / charge / webhook / product / stats code.
   noisy against Joel's in-progress work, the fallback is to keep 03 at `/wiccan/…`
   and only share the upsell route — same engine, different booking prefix.
 
+## Confirmed refinements (2026-09-01, post-code-recon)
+
+Three-agent read of the current branch settled open details:
+
+- **Offer + copy are resolved from the booking SESSION, not the URL.** Because the
+  shared `/offers/upsell/*` URL cannot itself say which offer it is, the pages read
+  the offer from `GET /api/backend/upsell/user-data?session_id=` (which already
+  returns `offer`). The pitch registry is therefore keyed by **offer key**, not by
+  pathname:
+  `BACKEND_UPSELL_PITCH: Record<BackendOfferKey, { upsell1: Upsell1Copy; upsell2: Upsell2Copy }>`.
+  It reuses the EXISTING copy types `Upsell1Copy` / `Upsell2Copy`
+  (`client/src/lib/upsellCopy/types.ts`); `judgementUpsellCopy` implements the same
+  shape from `copy/03/03-U-upsell-beats.md`. (Note: the current pathname-based
+  resolver `upsell1Copy()/upsell2Copy()` in `client/src/lib/backendOffers.ts` stays
+  for 02's own pages; the new shared pages use the offer-keyed registry.)
+- **Attribution is URL-independent** — it comes from the booking Stripe session
+  (`session.metadata.offer`, else `backendOfferForStripeProduct(session.metadata.product).key`).
+  So the server/data work below is identical regardless of the URL layout.
+- **Reuse what's already generalized:** `funnel.ts` already has `isBackendOffer()`,
+  `isJudgementOffer()`, `backendOfferPrefix()`, `BACKEND_OFFER_PREFIXES`. The charge
+  already has `backendOrderDescriptor(key, bumpPurchased)` that builds `BE 03 · …`
+  from the catalog `number` — the upsell charge will use the same rather than a new
+  hardcode.
+- **Two offer maps exist and both matter:** `BACKEND_OFFER_CATALOG`
+  (`shared/backendOffers.ts`, pricing/routing) and `BACKEND_OFFERS`
+  (`server/lib/backendCustomerList.ts`, AWeber lists/tags — already has a
+  `judgement-day` entry with `be-03-*` tags but no upsell list wiring).
+
+### Decomposition into two implementation plans
+
+1. **`be-upsell-attribution-and-recording`** (server + data) — this spec's §3, §4,
+   §5. Independently shippable; also corrects 02's upsell attribution.
+2. **`shared-offers-upsell-pages`** (client) — this spec's §1, §2, §3-client, §6:
+   the `/offers/upsell/*` pages, offer-keyed pitch registry, `judgementUpsellCopy`,
+   and 03's `/offers/wiccan/judgement-day` URL move.
+
 ## Testing
 
 - **Unit:** pitch registry resolves per offer + default fallback; `upsellPurchaseTags`
