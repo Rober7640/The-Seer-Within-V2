@@ -12,8 +12,8 @@ page or route. `/fb-read` renders every device from `shared/readDevices.ts`.
 | | `dream` | `tea` | `coffee` |
 |---|---|---|---|
 | **love-again** | ✅ 3/3 | ✅ 3/3 | ✅ 3/3 |
-| **still-think** | ✅ 3/3 | ✅ 3/3 | — |
-| **hiding-something** | ✅ 3/3 | ✅ 3/3 | — |
+| **still-think** | ✅ 3/3 | ✅ 3/3 | ✅ 3/3 |
+| **hiding-something** | ✅ 3/3 | ✅ 3/3 | ✅ 3/3 |
 
 ✅ all three panels written and servable · ◐ partial · — not built
 
@@ -60,7 +60,7 @@ Affirm the hopeful yes with warmth and certainty; withhold ONLY the specifics �
 |---|---|
 | Mechanism | natural-cut |
 | Frame | `still-think` |
-| Devices built | `dream`, `tea` |
+| Devices built | `dream`, `tea`, `coffee` |
 | VOC | inherited — inherits the shipped tarot cards-still-think finding and its guard; reunion/return sub-group mined at n=2,345 / 21.0% conv in docs/fb-ad-question-testing-roadmap.md |
 
 **She is asking:** She is asking only whether she occasionally crosses a man's mind — not for his return, not for his love. That she has scaled her asking down to the smallest thing a person can request says a great deal about what she has been going without.
@@ -81,7 +81,7 @@ Affirm the hopeful yes with warmth and certainty; withhold ONLY the specifics �
 |---|---|
 | Mechanism | natural-cut |
 | Frame | `hiding-something` |
-| Devices built | `dream`, `tea` |
+| Devices built | `dream`, `tea`, `coffee` |
 | VOC | inherited — inherits the shipped tarot cards-hiding-something finding and guard; trust/honesty sub-group mined at n=2,289 / 20.1% conv, 'hiding something' recurring as a 2-gram n=42, in docs/fb-ad-question-testing-roadmap.md |
 
 **She is asking:** She keeps meeting a gap in what a man tells her — not a lie she has caught him in, but a place the picture stops — and is asking whether there is really something behind it. She has no proof and is uneasy about needing any.
@@ -162,10 +162,16 @@ https://www.theseerwithin.com/fb-read/c?hook=still-think&device=dream&utm_conten
 https://www.theseerwithin.com/fb-read/c?hook=still-think&device=tea&utm_content=<ad>
 ```
 ```
+https://www.theseerwithin.com/fb-read/c?hook=still-think&device=coffee&utm_content=<ad>
+```
+```
 https://www.theseerwithin.com/fb-read/c?hook=hiding-something&device=dream&utm_content=<ad>
 ```
 ```
 https://www.theseerwithin.com/fb-read/c?hook=hiding-something&device=tea&utm_content=<ad>
+```
+```
+https://www.theseerwithin.com/fb-read/c?hook=hiding-something&device=coffee&utm_content=<ad>
 ```
 
 Pricing is funnel-level — `35_read`, $35/$25 — so every device and hook is priced

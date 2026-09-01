@@ -15,6 +15,35 @@ export const READS: Partial<
   Record<ReadDevice, Partial<Record<ReadHook, Record<ReadOption, string[]>>>>
 > = {
   coffee: {
+    "hiding-something": {
+      a: [
+        "A road, yes. Running along under the rim of your cup, up where the grounds came to rest last.",
+        "You asked whether something's being kept from you. A road up near the rim is where the picture stops.",
+        "You met a real edge. The road is there in your cup, dear, and you didn't put it there.",
+        "The grounds don't say what's past it. They stop exactly where you stopped.",
+        "So the road runs and then the grounds end, and you've been standing at that end on your own.",
+        "You've been told you're making something out of nothing. The cup shows me you noticed something real.",
+        "Let me look closer at what the not-knowing has been costing you…",
+      ],
+      b: [
+        "A tree, yes. Halfway up the wall of your cup, where the grounds caught and held.",
+        "You asked whether something's being kept from you. A tree halfway up is what's actually standing there.",
+        "It isn't nothing. Something is standing in that cup, and you were right to keep looking at it.",
+        "The grounds don't say what it is. Nothing tells me what's behind it either.",
+        "So there's something there, and you've had to keep pointing at it by yourself.",
+        "You've been called the anxious one for noticing. Noticing isn't the same as inventing, dear.",
+        "Let me look closer at what it's taken out of you, being the only one who sees it…",
+      ],
+      c: [
+        "A lake, yes. Lying in the bottom of your cup, where the grounds settled first and stayed.",
+        "You asked whether something's being kept from you. A lake on the floor is how deep this has gone in you.",
+        "Your read on things is sound. What you're built on hasn't gone wrong, whatever you've been told.",
+        "The grounds stop at the water. They don't tell me what's under it.",
+        "So it's settled deep in you, and you've been carrying the doubt about yourself as well.",
+        "You've begun to doubt your own eyes. That's a heavy thing to be carrying, dear.",
+        "Let me look closer at what meeting that edge has cost you…",
+      ],
+    },
     "love-again": {
       a: [
         "A road, yes. Running along under the rim of your cup, up where the grounds came to rest last.",
@@ -42,6 +71,35 @@ export const READS: Partial<
         "So the deep part of you is sound, and you've spent a long time doubting that.",
         "You've gone looking for the fault in yourself, and you've always found one.",
         "Let me look closer at what's been keeping anyone from reaching that deep in you…",
+      ],
+    },
+    "still-think": {
+      a: [
+        "A road, yes. Running along under the rim of your cup, up where the grounds came to rest last.",
+        "You asked whether you still cross his mind. A road up near the rim is what's ahead of you.",
+        "The road ahead is yours. Not one bit of it waits on anyone else remembering you first.",
+        "The grounds don't say who's on it. Nothing tells me when, either.",
+        "So there's a road sitting in your cup, and none of it is his to walk.",
+        "You didn't ask for him back. You asked to be remembered, and that's a small thing to want.",
+        "Let me look closer at what it's cost you, asking for so little…",
+      ],
+      b: [
+        "A tree, yes. Halfway up the wall of your cup, where the grounds caught and held.",
+        "You asked whether you still cross his mind. A tree halfway up is what's still standing from it.",
+        "It counted. Something from that time is still standing, and the cup shows me it's standing in you.",
+        "The grounds don't say who tended it. Nothing tells me what comes of it either.",
+        "So it held, and it's gone on holding without anybody else needing to notice.",
+        "You've been told you should be past this by now. The cup doesn't show me a finished thing.",
+        "Let me look closer at what's still standing in you from all of that…",
+      ],
+      c: [
+        "A lake, yes. Lying in the bottom of your cup, where the grounds settled first and stayed.",
+        "You asked whether you still cross his mind. A lake on the floor is what settled deepest in you.",
+        "It's real because it settled in you. What happened isn't kept safe in one person's memory alone.",
+        "The grounds stop at the water. They don't tell me what anyone else kept.",
+        "So it's down there in you, settled, and it's been there whether or not anyone said so.",
+        "You've wondered whether you're the only one who still has it. That wondering has been lonely, dear.",
+        "Let me look closer at how long you've held that on your own…",
       ],
     },
   },
