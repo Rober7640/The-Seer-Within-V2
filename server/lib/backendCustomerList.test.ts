@@ -119,7 +119,7 @@ describe('backend upsell routing — own products, own lists, walled off from V1
   });
 
   it('tags an upsell buyer with the base tags plus her product tag', () => {
-    expect(upsellPurchaseTags('be_protection_ritual')).toEqual([
+    expect(upsellPurchaseTags('twin-flame', 'be_protection_ritual')).toEqual([
       'be-customer',
       'be-02-twin-flame',
       'be-02-upsell1-protection',
@@ -268,6 +268,7 @@ describe('addBackendUpsellCustomer — the upsell lands on its OWN list', () => 
       email: 'she@example.com',
       firstName: 'Sarah',
       productKey: 'be_protection_ritual',
+      offer: 'twin-flame',
     });
     expect(f.mock.calls[0][0]).toContain('/lists/6972555/subscribers');
     const body = sentBody(f);
@@ -280,9 +281,30 @@ describe('addBackendUpsellCustomer — the upsell lands on its OWN list', () => 
     const result = await addBackendUpsellCustomer({
       email: 'she@example.com',
       productKey: 'protection_ritual',
+      offer: 'twin-flame',
     });
     expect(result.success).toBe(false);
     expect(f).not.toHaveBeenCalled();
+  });
+});
+
+describe('per-offer upsell tags', () => {
+  it('keeps 02 tags byte-identical', () => {
+    expect(upsellPurchaseTags('twin-flame', 'be_protection_ritual'))
+      .toEqual(['be-customer', 'be-02-twin-flame', 'be-02-upsell1-protection']);
+    expect(upsellPurchaseTags('twin-flame', 'be_bracelet'))
+      .toEqual(['be-customer', 'be-02-twin-flame', 'be-02-upsell2-bracelet']);
+  });
+
+  it('emits be-03 tags for a judgement-day upsell buyer', () => {
+    expect(upsellPurchaseTags('judgement-day', 'be_protection_ritual'))
+      .toEqual(['be-customer', 'be-03-judgement-day', 'be-03-upsell1-protection']);
+    expect(upsellPurchaseTags('judgement-day', 'be_bracelet'))
+      .toEqual(['be-customer', 'be-03-judgement-day', 'be-03-upsell2-bracelet']);
+  });
+
+  it('returns [] for an unknown product', () => {
+    expect(upsellPurchaseTags('twin-flame', 'be_nope')).toEqual([]);
   });
 });
 
