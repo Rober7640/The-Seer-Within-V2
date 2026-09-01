@@ -1074,6 +1074,19 @@ export function useConversation() {
       // exposure row is written ONCE per subject and `conversations` has no deck/hook
       // column, so anything not sent here can never be recovered.
       const tarot = phFunnel === 'tarot' ? tarotEventProps() : undefined
+      // /fb-read: which DEVICE she came through (tea / dream / …). Sent so the lead
+      // can be TAGGED per device while the free list itself stays keyed on the
+      // FUNNEL (AWEBER_LIST_ID_READ) — a future device then needs a new tag value
+      // and no new list, no AWeber setup. Gated on the funnel exactly as `tarot`
+      // is: the params are tab-scoped and would otherwise tag a later non-read lead.
+      //
+      // 🔴 THIS IS THE DEVICE SHE WAS SHOWN, NOT THE RAW PARAM. parseReadParams
+      // already falls an unknown `?device=` back to DEFAULT_DEVICE, which is what
+      // the lander rendered from. Tagging the URL's claim instead would file her
+      // under a device whose reading she never actually saw.
+      const readDevice = phFunnel === 'read'
+        ? parseReadParams(window.location.search)?.device
+        : undefined
 
       const leadRes = await fetch('/api/lead', {
         method: 'POST',
@@ -1101,6 +1114,7 @@ export function useConversation() {
                 tarotAngle: tarot.angle,
               }
             : {}),
+          ...(readDevice ? { readDevice } : {}),
           fbp: fbpMatch ? decodeURIComponent(fbpMatch[1]) : undefined,
           fbc: fbcMatch ? decodeURIComponent(fbcMatch[1]) : undefined,
         }),

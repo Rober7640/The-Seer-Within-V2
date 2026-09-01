@@ -1413,6 +1413,12 @@ export async function registerRoutes(
               angle: str40(req.body?.tarotAngle),
             }
           : undefined;
+      // /fb-read device (tea / dream / …). Gated on the funnel for the same reason
+      // `tarotLander` is: the param is tab-scoped and would otherwise mislabel a
+      // later non-read lead. A LABEL ONLY — it selects no price, no list and no
+      // reading, so normalising + length-capping is validation enough; an
+      // unrecognised value can only mislabel its own AWeber tag.
+      const readDevice = funnel === "v1-read" ? str40(req.body?.readDevice) : undefined;
 
       logger.info("Lead captured:", { email, firstName, bucket, funnel, sign: palmSign ?? null });
 
@@ -1478,7 +1484,15 @@ export async function registerRoutes(
         email,
         name: firstName,
         listId: leadListId,
-        tags: fbifyAweberTags([bucket || "website", "seer-within"], funnel),
+        // Base tags, plus the /fb-read DEVICE as its OWN tag. Deliberately not a
+        // suffix on `seer-within-read`: the free list is keyed on the FUNNEL
+        // (AWEBER_LIST_ID_READ), so carrying the device as a separate tag means a
+        // future device needs no new list and no AWeber dashboard setup — AWeber
+        // creates tag values on the fly and merges them under update_existing.
+        tags: [
+          ...fbifyAweberTags([bucket || "website", "seer-within"], funnel),
+          ...(readDevice ? [`read-${readDevice}`] : []),
+        ],
         // Omitted entirely when we have no link — never `custom_fields: {}`,
         // which AWeber reads as "clear every custom field" on an
         // update_existing write.
