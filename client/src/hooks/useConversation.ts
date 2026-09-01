@@ -1143,9 +1143,12 @@ export function useConversation() {
       // already falls an unknown `?device=` back to DEFAULT_DEVICE, which is what
       // the lander rendered from. Tagging the URL's claim instead would file her
       // under a device whose reading she never actually saw.
-      const readDevice = phFunnel === 'read'
-        ? parseReadParams(window.location.search)?.device
-        : undefined
+      const readParams = phFunnel === 'read' ? parseReadParams(window.location.search) : null
+      const readDevice = readParams?.device
+      // Her ad HOOK, recorded on the gate + bump exposures so /fb-read breaks down
+      // per lander the way tarot and palm already do. One-shot: the exposure row is
+      // written once per subject and can never be back-filled.
+      const readHook = readParams?.hook
 
       const leadRes = await fetch('/api/lead', {
         method: 'POST',
@@ -1174,6 +1177,7 @@ export function useConversation() {
               }
             : {}),
           ...(readDevice ? { readDevice } : {}),
+          ...(readHook ? { readHook } : {}),
           fbp: fbpMatch ? decodeURIComponent(fbpMatch[1]) : undefined,
           fbc: fbcMatch ? decodeURIComponent(fbcMatch[1]) : undefined,
         }),
