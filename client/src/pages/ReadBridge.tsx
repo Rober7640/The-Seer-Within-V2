@@ -173,7 +173,7 @@ export default function ReadBridge() {
                     backgroundPosition: 'center',
                   }}
                   role="img"
-                  aria-label="The inside of a teacup, tea leaves settled in it"
+                  aria-label={cfg.cupAlt}
                   data-testid="read-cup"
                 />
                 <div className="grid grid-cols-3 gap-2 md:gap-3">

@@ -1,6 +1,6 @@
-// build-read-ad — compose the /fb-read Facebook ad from the arm-B cup.
+// build-read-ad — compose the /fb-read Facebook ad from a symbol device's cup.
 //
-//   npx tsx scripts/build-read-ad.mjs [hook] [--out <dir>]
+//   npx tsx scripts/build-read-ad.mjs [hook] [--device <id>] [--sub <text>] [--out <dir>]
 //
 // 🔴 THE HEADLINE IS NOT WRITTEN HERE. It is imported from HEADLINES in
 // shared/readDevices.ts — the same string the lander renders. The ad question and
@@ -17,17 +17,55 @@
 import sharp from 'sharp'
 import { mkdirSync, existsSync, statSync } from 'node:fs'
 import { join } from 'node:path'
-import { HEADLINES, READ_HOOKS, DEVICES } from '../shared/readDevices.ts'
+import { HEADLINES, READ_HOOKS, DEVICES, isReadDevice } from '../shared/readDevices.ts'
 
-const CUP = 'improve-v1/fb-read/images/armb/cup.png'
-const argHook = process.argv[2] && !process.argv[2].startsWith('--') ? process.argv[2] : 'love-again'
+// 🔴 THE AD IS COMPOSED FROM THE PNG MASTER, NOT THE SERVED JPEG. The ad is
+// re-cropped to 4:5 and 1:1 and re-compressed, so starting from an already-lossy
+// copy compounds artefacts on the one image she sees in the feed. Keyed by device
+// rather than read from cfg.cupImage for exactly that reason — the registry points
+// at what the LANDER serves, which is the wrong source here.
+const CUP_MASTER = {
+  tea: 'improve-v1/fb-read/images/armb/cup.png',
+  coffee: 'improve-v1/fb-read/images/coffee/cup.png',
+}
+
+const devAt = process.argv.indexOf('--device')
+const argDevice = devAt > -1 ? process.argv[devAt + 1] : 'tea'
+if (!isReadDevice(argDevice)) {
+  console.error(`unknown device "${argDevice}". known: ${Object.keys(DEVICES).join(', ')}`)
+  process.exit(2)
+}
+if (DEVICES[argDevice].pick !== 'symbol') {
+  // The whole layout is ONE photograph plus a lettered options row. A panel device
+  // has three different pictures and no single cup to compose over.
+  console.error(`device "${argDevice}" is not a pick:'symbol' device — this ad shape needs one cup`)
+  process.exit(2)
+}
+const CUP = CUP_MASTER[argDevice]
+if (!CUP) {
+  console.error(`no ad master registered for "${argDevice}" — add it to CUP_MASTER`)
+  process.exit(2)
+}
+
+// The first bare argument that is not a flag's VALUE. Without this,
+// `--device coffee love-again` reads "coffee" as the hook.
+const FLAG_VALUES = new Set(['--device', '--sub', '--out'])
+const bare = process.argv.slice(2).filter((a, i, all) => {
+  if (a.startsWith('--')) return false
+  const prev = all[i - 1]
+  return !(prev && FLAG_VALUES.has(prev))
+})
+const argHook = bare[0] ?? 'love-again'
 // --sub lets a candidate subheadline be tried without editing the registry. With
 // no override the ad uses the lander's own instruction, so the words under the
 // question in the feed are the words above the buttons on the page.
 const subAt = process.argv.indexOf('--sub')
 const SUB_OVERRIDE = subAt > -1 ? process.argv[subAt + 1] : null
 const outAt = process.argv.indexOf('--out')
-const OUT = outAt > -1 ? process.argv[outAt + 1] : 'improve-v1/fb-read/images/armb/ads'
+const OUT =
+  outAt > -1
+    ? process.argv[outAt + 1]
+    : `improve-v1/fb-read/images/${argDevice === 'tea' ? 'armb' : argDevice}/ads`
 
 if (!READ_HOOKS.includes(argHook)) {
   console.error(`unknown hook "${argHook}". known: ${READ_HOOKS.join(', ')}`)
@@ -61,7 +99,7 @@ const LETTER = { a: 'A', b: 'B', c: 'C' }
 // to. Pointing A at a spot in the cup hands her the answer's location before
 // Evelyn has said a word, which is the same mistake as generating a cup with a
 // visible bird in it.
-const DEVICE = DEVICES.tea
+const DEVICE = DEVICES[argDevice]
 
 // Wrap by estimated advance width. Playfair Display averages a little under half
 // the point size per character at this weight.

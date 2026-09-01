@@ -5,7 +5,7 @@
 // equal squares is what guarantees the taps land on the panels they belong to,
 // so the panel size is forced here rather than trusted from the source files.
 //
-//   node scripts/compose-read-strips.mjs <art-dir> <out-dir>
+//   npx tsx scripts/compose-read-strips.mjs <art-dir> <out-dir>
 //
 // Reads  <art-dir>/<device>-{a,b,c}.png         -> <out>/<device>-strip.jpg
 // and    <art-dir>/<device>-{a,b,c}-reveal.png  -> <out>/<device>-reveal-strip.jpg
@@ -18,19 +18,27 @@
 // See improve-v1/fb-read/tea-leaf-reading-findings.md.
 
 import sharp from 'sharp'
+import { DEVICE_IDS } from '../shared/readDevices.ts'
 import { mkdirSync, existsSync, statSync } from 'node:fs'
 import { join } from 'node:path'
 
 const ART = process.argv[2]
 const OUT = process.argv[3]
 if (!ART || !OUT) {
-  console.error('usage: node scripts/compose-read-strips.mjs <art-dir> <out-dir>')
+  console.error('usage: npx tsx scripts/compose-read-strips.mjs <art-dir> <out-dir>')
   process.exit(2)
 }
 
 const PANEL = 360
 const GROUND = { r: 10, g: 8, b: 8 }
-const DEVICES = ['candle', 'dream', 'tea']
+// 🔴 DERIVED, NOT TYPED. A hand-kept device list is the drift this whole funnel is
+// built to make impossible, and one had quietly grown here. `candle` is drawn but
+// unwired, so it is not in DEVICE_IDS — it is named separately as art that exists
+// AHEAD of its registry entry, which is a different thing from a roster.
+//
+// Importing a .ts module means this now runs under tsx, not bare node.
+const UNWIRED = ['candle']
+const DEVICES = [...new Set([...DEVICE_IDS, ...UNWIRED])]
 const OPTIONS = ['a', 'b', 'c']
 // Photographs, so JPEG. The 90 KB PNG ceiling was for flat vector art; these are
 // full-frame photos and compress on entirely different terms.

@@ -156,6 +156,19 @@ export interface DeviceConfig {
   // it by background-position, so unequal panels silently misalign every tap
   // target — the panel she sees is not the read she gets.
   strip: { url: string; width: number; height: number };
+  // The lander image's aria-label. DEVICE-LEVEL, and it lives here rather than in
+  // the bridge because it is a fact about the instrument.
+  //
+  // 🔴 IT WAS HARDCODED IN ReadBridge AS "The inside of a teacup, tea leaves settled
+  // in it". Only the 'symbol' branch renders it, so tea was the one device it was
+  // ever true for — and coffee is the second symbol device, which is where it would
+  // have started lying. Exactly the drift this registry exists to prevent, one level
+  // down and visible only to the people using a screen reader.
+  //
+  // Panel devices carry one too. Their buttons are labelled per option today, so it
+  // is unrendered — but a device's own description of itself is not the bridge's to
+  // invent later, and the test asserts every device has one.
+  cupAlt: string;
   // OPTIONAL second strip, shown in the CHAT instead of the lander's.
   //
   // 🔴 WHY tea HAS ONE AND THE OTHERS DO NOT. Tea-leaf reading is explicitly a
@@ -230,6 +243,7 @@ const DREAM: DeviceConfig = {
   continueCta: "There's more the dream is showing me — begin your free reading",
   chooseMoment: "the moment you knew which one was yours",
   strip: { url: "/read/dream-strip.jpg", width: 1080, height: 360 },
+  cupAlt: "Three dreams, side by side",
   options: ["a", "b", "c"],
   // The three most-reported recurring dreams among women (54.2% / 53.5% /
   // 31.9%). Chosen from survey data rather than invented — see the design doc.
@@ -269,6 +283,7 @@ const TEA: DeviceConfig = {
   // than to arm A's three-cup strip.
   strip: { url: "/read/armb-cup.jpg", width: 1254, height: 1254 },
   revealStrip: { url: "/read/armb-reveal-strip.jpg", width: 1260, height: 420 },
+  cupAlt: "The inside of a teacup, tea leaves settled in it",
   grammar:
     "The cup is read from directly above, and WHERE a thing sits is half its meaning. The RIM is the weeks just ahead. The MIDDLE is the bottom of the cup — far off, or the ground she was built on. The HANDLE SIDE is HER. The side OPPOSITE the handle is other people and things outside her. Use this; it is what makes a reading feel earned rather than guessed. Never explain the system to her — she should feel the position mean something, never be taught it.",
   options: ["a", "b", "c"],
