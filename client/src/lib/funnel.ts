@@ -203,7 +203,7 @@ export function funnelPath(v1Path: string, pathname?: string): string {
 // its "v1-fb" | "v1-fb2" | "v1-gdn" | undefined contract.
 
 export type PostHogFunnel =
-  | "soulmate" | "fb" | "fb2" | "gdn" | "palm" | "tarot" | "v1" | "evelyn" | "aiden"
+  | "soulmate" | "fb" | "fb2" | "gdn" | "palm" | "tarot" | "read" | "v1" | "evelyn" | "aiden"
   | "marcus" | "luna" | "nova" | "maren" | "seven-seven";
 
 // Generalized persona landers → their PostHog funnel name. One route each.
@@ -263,6 +263,7 @@ export function getPostHogStep(pathname?: string): string {
     case "fb2":
     case "gdn":
     case "palm":
+    case "read":
     case "tarot": {
       // Compute the step relative to the funnel's URL prefix so /fb, /fb2, /gdn,
       // /fb-palm and /fb-tarot share one mapping (e.g. /fb2/welcome1 → upsell1).

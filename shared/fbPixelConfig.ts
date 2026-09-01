@@ -43,6 +43,10 @@ export const FB_PIXEL_CONFIG: Record<string, FbPixelEntry> = {
   // no matching route, resolveFunnelFromUrl('/fb-palm') falls through to
   // 'default', and server-side CAPI routes the same way — so palm needs no
   // soulmate-pixel sGTM trigger (it mirrors /fb's setup, not /fb2's).
+  //
+  // /fb-read is deliberately absent for the same reason and follows the same
+  // path — DEFAULT pixel, falls through to 'default' on both client and CAPI.
+  // Adding a route here would silently move it onto another pixel.
 };
 
 export function resolveFunnelFromUrl(urlOrPath: string): string {

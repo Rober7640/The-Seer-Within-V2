@@ -1,0 +1,42 @@
+{
+  "device": "dream",
+  "hook": "hiding-something",
+  "headline": "Is he hiding something from me?",
+  "method": "natural-cut",
+  "frame": "hiding-something",
+  "note": "HIDING-SOMETHING. A real man exists here and may be referred to as she refers to him, but nothing in the read rules on him. The guard is inherited verbatim from the live tarot hook of the same headline. (1) NEVER STATE THAT HE IS HIDING SOMETHING AND NEVER STATE THAT HE IS NOT. Both are verdicts on a real man drawn off a dream she tapped on an ad, and the second one also tells her that what she noticed was never there — which is the exact thing she has already been told, by him or by friends. Cut 2 carries the word 'hiding' because it is quoting HER question back; no other bubble asserts anything about him. (2) NEVER NAME OR GUESS THE CONTENTS: not another woman, not money, not a secret past, not a feeling he won't admit. Supplying any of it is invention, and inventing it manufactures a crisis inside a relationship that is still running. (3) NEVER HAND HER A TACTIC. No checking his phone, messages, socials or whereabouts, no test, no trap, no catching him out, and equally no ultimatum and no stepping back to provoke a reaction. A tactic turns a reading into something she can carry out on a real man tonight, off a picture. (4) NEVER PATHOLOGISE HER WATCHFULNESS — no paranoid, insecure, anxious, obsessive, overthinking, reading too much into it — and never diagnose him as secretive, avoidant or dishonest as a character. Her noticing is the one thing in this read that is treated as sound. (5) THE ANSWER IS NOT A HEDGE. 'Only he knows' and 'the dream can't say' are evasion and she will feel conned. Cut 3 answers on the ground where an answer is possible: the edge she keeps meeting is real and she did not put it there. That convicts nobody, names nothing, and still answers her. The three cut-3 lines answer three different fears (there is a place and you didn't put it there / the unsteady feeling didn't start with you / what's in your hand is real and nobody gets to say it isn't) so the panels don't collapse into one sentence said three ways. (6) NOTHING INVENTED ABOUT HER LIFE — no habit, gesture, routine, count, age or event, no scene of anyone telling her she imagines it, and for this device nothing about how often the dream comes, when it comes, or what she does after it. (7) NO DATE, NO TIMEFRAME AND NO FORECAST of what he will admit or when. A date is the only claim she can check and a failed one is a refund. (8) CUT 6 USES THE CLOSED EVIDENCE SET ONLY — her question plus what cuts 1-5 established from the dream — and it RECOGNIZES what the not-knowing has cost her rather than re-asking, because cut 2 owns the echo. The three cut-6 lines open on three different moves: no rest from it, wanting solid ground not being an accusation, and being left to build a whole man out of what fits in one hand. (9) THE DREAM MEANS THE PLAIN THING IT MEANS. All three panels are control-loss dreams, and what she has lost control of on this hook is KNOWING — something behind her she never turns to see, ground she can't confirm is there, bits coming away in her hand she can't stop — so the read answers her anyway without straining the picture. The dream is a picture she is looking at: it never acquires intent or motion, and SHE is the subject from cut 3 on.",
+  "voc": {
+    "pulled": "none",
+    "verdict": "inherited",
+    "why": "inherits the shipped tarot cards-hiding-something finding and guard; trust/honesty sub-group mined at n=2,289 / 20.1% conv, 'hiding something' recurring as a 2-gram n=42, in docs/fb-ad-question-testing-roadmap.md"
+  },
+  "reads": {
+    "a": [
+      "You're running, and you never turn round to see what's behind you. Your legs won't move the way they should.",
+      "You asked whether he's hiding something from you. Never turning round is what it's like when the answer sits somewhere you can't get to.",
+      "There's a place where what he tells you stops. You keep meeting it, and you didn't put it there.",
+      "Knowing that place is there doesn't tell you a thing about what's in it.",
+      "You keep going forward as if there's nothing behind you. Your legs are the part that won't play along.",
+      "You don't get a minute's rest from this, dear. Not knowing has been taking it out of you the whole time.",
+      "Let me look closer at what's kept you from turning round…"
+    ],
+    "b": [
+      "You're falling. There's nothing underneath you, and you wake with that jolt just before you land.",
+      "You came asking whether he's hiding something from you. Nothing solid under you means you've had nothing you could put your weight on.",
+      "The drop didn't start with you. You've been standing on what you were given, and it doesn't take your weight.",
+      "You can feel where it stops, and that doesn't tell you what's underneath. You're awake again before you get that far down.",
+      "You've gone on standing on it anyway, and there's still nothing under there holding you up.",
+      "Wanting something solid under you isn't an accusation. You've been carrying it like one.",
+      "Let's see why solid ground stopped feeling like something you're allowed to want…"
+    ],
+    "c": [
+      "Your teeth have gone loose. You put your hand up and they come away, one after another, into your palm.",
+      "You asked if he's hiding something from you. Teeth in your palm are bits of a whole you can't put back.",
+      "Your hand isn't empty, dear. What's in it came away for real, and nobody gets to tell you it isn't there.",
+      "A handful of bits still isn't a picture. You can look at every one and still not know what they belong to.",
+      "You know exactly what's in your hand, and it still doesn't tell you what's missing. So you keep holding it.",
+      "You've been trying to make a whole man out of what fits in one hand. That's what you've been left with.",
+      "Now let me look at what's keeping those bits from adding up…"
+    ]
+  }
+}

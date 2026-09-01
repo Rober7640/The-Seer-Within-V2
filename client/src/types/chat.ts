@@ -8,6 +8,7 @@ export type ConversationState =
   | 'NAME_CAPTURE'
   | 'PALM_REFLECT'        // /fb-palm Version C: awaiting her answer to the opener question
   | 'TAROT_REFLECT'       // /fb-tarot Version C: awaiting her answer to the opener question
+  | 'READ_REFLECT'        // /fb-read Version C: awaiting her answer to the opener question
   | 'BUCKET_SELECTION'
   | 'BUCKET_CLARIFICATION'
   | 'PERSON_NAME_CAPTURE'
@@ -66,6 +67,16 @@ export interface Message {
     posPct: number
     aspect: number
     alt: string
+    // Render at the full width of the bubble instead of as a thumbnail.
+    //
+    // 🔴 A TAROT CARD AND A TEA-LEAF REVEAL ARE NOT THE SAME PICTURE. A card is
+    // recognisable at 112px — she has already seen it on the lander and only
+    // needs reminding which one she drew. A tea reveal is a ZOOM into one region
+    // of a cup with a thin gold ring drawn round it, and at 112px the ring is
+    // about four pixels across and the leaves are mush. The whole mechanism
+    // depends on her being able to see what was ringed, so it gets the full
+    // bubble.
+    wide?: boolean
   }
 }
 
