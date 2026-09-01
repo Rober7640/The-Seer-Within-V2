@@ -89,3 +89,9 @@ n8n-workflows/
 # laptop carries codes production has never seen. Committing one invites someone
 # to paste stale links into AWeber. Re-render instead.
 docs/aweber/*/sends/*/_build/
+
+# Rejected image generations from the /fb-read art rounds (81MB). The picked art
+# is committed under images/{armb,panels,strips}; the candidates are the ones it
+# was picked FROM, and are reproducible from the prompts in prompts/. No other
+# funnel tracks its candidates either.
+improve-v1/fb-read/images/candidates/

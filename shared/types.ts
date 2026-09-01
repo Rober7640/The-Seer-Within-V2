@@ -97,7 +97,7 @@ export interface ShippingAddress {
 }
 
 export interface ChatRequest {
-  action: 'reading' | 'reading1' | 'reading2' | 'futureValidation' | 'crisisReveal' | 'crisisCost' | 'crisisUrgency' | 'shadowSummary' | 'valueExplain' | 'crisis' | 'objection' | 'palmOpener' | 'palmReflect' | 'tarotReflect'
+  action: 'reading' | 'reading1' | 'reading2' | 'futureValidation' | 'crisisReveal' | 'crisisCost' | 'crisisUrgency' | 'shadowSummary' | 'valueExplain' | 'crisis' | 'objection' | 'palmOpener' | 'palmReflect' | 'tarotReflect' | 'readReflect'
   userData: UserData
   input: string
   objectionCount?: number
@@ -112,6 +112,12 @@ export interface ChatRequest {
   tarotDeck?: string
   tarotHook?: string
   tarotCard?: string
+  // /fb-read bridge Version C — the device + option + hook the visitor tapped.
+  // Validated on the server against shared/readDevices.ts, the same registry the
+  // lander renders from, so there is no second roster to keep in step.
+  readDevice?: string
+  readHook?: string
+  readCard?: string
 }
 
 export interface ChatResponse {

@@ -59,6 +59,7 @@ import {
   generatePalmOpener,
   generatePalmReflect,
   generateTarotReflect,
+  generateReadReflect,
 } from "./lib/claude";
 import {
   saveConversation,
@@ -109,6 +110,11 @@ import {
 } from "@shared/orderBump";
 import { fireGoogleAdsConversion } from "./lib/googleAds";
 import { funnelDefForParam, FUNNELS, type FunnelParam } from "@shared/funnelConfig";
+// /fb-read validates against the SAME registry the lander renders from, so the
+// route can never reject a device that is live on the page (the "v1-palm 400
+// bug" that both other bridges guard against by hand).
+import { isReadDevice, isReadHook, isReadOption } from "@shared/readDevices";
+import { isReadWritten } from "@shared/readCopy";
 import { moneyLanderListId } from "@shared/moneyLander";
 import { soulmateLanderListId } from "@shared/soulmateLander";
 import { bumpProductKeyFor } from "@shared/landerBumpRouting";
@@ -590,7 +596,7 @@ export async function registerRoutes(
   // Chat API - Claude integration
   app.post("/api/chat", async (req: Request, res: Response) => {
     try {
-      const { action, userData, input, objectionCount, palmSign, palmHook, palmThumb, tarotDeck, tarotHook, tarotCard } =
+      const { action, userData, input, objectionCount, palmSign, palmHook, palmThumb, tarotDeck, tarotHook, tarotCard, readDevice, readHook, readCard } =
         req.body as ChatRequest;
 
       // V1 price split test — enrich userData with the variant prices
@@ -689,6 +695,24 @@ export async function registerRoutes(
             return res.status(400).json({ error: "Invalid tarot params" });
           }
           result = await generateTarotReflect(userData, deck, tarotHook as string, tarotCard as string, input ?? "");
+          break;
+        }
+        case "readReflect": {
+          // Interactive Version C for the /fb-read bridge. Every check below reads
+          // the SHARED registry — there is deliberately no hand-typed list of
+          // device ids or hooks here, which is the whole reason this funnel cannot
+          // develop the drift that both other bridges have to guard against.
+          //
+          // isReadWritten is the last gate: a device can be in the registry with
+          // its art shipped while its readings are still at the review gate, and
+          // this is what stops a URL handed out early from serving placeholder copy.
+          if (!isReadDevice(readDevice) || !isReadHook(readHook) || !isReadOption(readCard)) {
+            return res.status(400).json({ error: "Invalid read params" });
+          }
+          if (!isReadWritten(readDevice, readHook, readCard)) {
+            return res.status(400).json({ error: "Reading not published" });
+          }
+          result = await generateReadReflect(readDevice, readHook, readCard, input ?? "");
           break;
         }
         case "valueExplain":

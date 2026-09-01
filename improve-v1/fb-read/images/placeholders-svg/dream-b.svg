@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 360" width="360" height="360">
+  <rect x="0" y="0" width="360" height="360" fill="#EFE7D6"/>
+
+  <!-- the height she fell from: the only spot colour in this panel -->
+  <g stroke="#3E5C76" stroke-width="6" stroke-linecap="round">
+    <line x1="126" y1="20" x2="123" y2="38"/>
+    <line x1="155" y1="16" x2="153" y2="36"/>
+    <line x1="184" y1="18" x2="182" y2="37"/>
+    <line x1="213" y1="21" x2="211" y2="39"/>
+  </g>
+
+  <g stroke="#1F1B16" fill="none" stroke-linecap="round" stroke-linejoin="round">
+
+    <!-- hair, dragged upward by the rush of air -->
+    <g stroke-width="5">
+      <path d="M162,86 Q152,62 158,44"/>
+      <path d="M180,79 Q179,54 187,38"/>
+      <path d="M198,86 Q209,64 217,50"/>
+    </g>
+
+    <!-- head and neck -->
+    <circle cx="180" cy="103" r="24" stroke-width="6"/>
+    <path d="M180,127 L180,137" stroke-width="6"/>
+
+    <!-- torso -->
+    <path d="M154,141 L164,183 L196,183 L206,141 Z" stroke-width="6"/>
+
+    <!-- arms flung up and out -->
+    <g stroke-width="6">
+      <path d="M156,145 L120,121 L100,87"/>
+      <path d="M204,145 L240,123 L262,91"/>
+    </g>
+
+    <!-- skirt, hem kicked upward -->
+    <path d="M164,183 Q142,207 134,235 Q180,219 226,235 Q218,207 196,183" stroke-width="6"/>
+
+    <!-- legs, bent -->
+    <g stroke-width="6">
+      <path d="M170,227 L162,247 L173,267"/>
+      <path d="M190,227 L200,247 L189,267"/>
+    </g>
+
+    <!-- hatching, 35 degrees, same as every other panel -->
+    <g stroke-width="2" opacity="0.5">
+      <path d="M146,207 L164,220"/>
+      <path d="M152,199 L176,216"/>
+      <path d="M161,193 L188,212"/>
+      <path d="M171,191 L198,210"/>
+      <path d="M183,191 L206,208"/>
+      <path d="M195,193 L213,206"/>
+      <path d="M161,151 L173,159"/>
+      <path d="M159,161 L177,173"/>
+      <path d="M161,171 L181,184"/>
+    </g>
+  </g>
+</svg>

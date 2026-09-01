@@ -23,7 +23,11 @@ import {
   buildPalmOpenerPrompt,
   buildPalmReflectPrompt,
   buildTarotReflectPrompt,
+  buildReadReflectPrompt,
 } from './prompts'
+import type { ReadDevice, ReadHook, ReadOption } from '../../shared/readDevices'
+import { remainingBubbles } from '../../shared/readDevices'
+import { readReplyHarms } from '../../shared/readGuards'
 
 interface ClaudeResponse {
   messages: string[]
@@ -181,4 +185,54 @@ export async function generatePalmReflect(userData: UserData, sign: string, hook
 export async function generateTarotReflect(userData: UserData, deck: string, hook: string, card: string, answer: string): Promise<ClaudeResponse> {
   const prompt = buildTarotReflectPrompt(userData, deck, hook, card, answer)
   return callClaude(prompt)
+}
+
+// /fb-read Version C. Takes no userData: at this point in the flow she has given
+// neither a name nor an email, and the prompt needs nothing else about her — her
+// answer is passed separately. device/hook/option are validated enums, so
+// buildReadReflectPrompt looks the opening bubble up itself rather than trusting
+// the client to send prompt text back to the server.
+// 🔴 THE ONLY PLACE A VERSION-C REPLY IS READ BEFORE SHE SEES IT.
+//
+// Until 2026-08-31 this function was three lines — build, call, return — and every
+// guard on this funnel lived in a test file. The eval knew that answering a woman
+// who had never mentioned a man with "…what you were before him" breached the
+// love-again frame. Production did not, and shipped it.
+//
+// Now: check, retry once, and if it still breaches, fall back to the WRITTEN read.
+// The fallback is not new machinery — `remainingBubbles` is already what Version C
+// serves when the model call fails, so a guard breach simply becomes another kind
+// of failure. She gets the real reading instead of a bad one, with no dead air and
+// nothing on screen to tell her anything went wrong.
+//
+// 🔴 A FALSE POSITIVE HERE COSTS HER THE GENERATED READING. In the eval it costs a
+// red line in a report. That asymmetry is why readGuards carries harms only and no
+// quality checks, and why its negation handling is the most-tested part of it.
+export async function generateReadReflect(device: ReadDevice, hook: ReadHook, option: ReadOption, answer: string): Promise<ClaudeResponse> {
+  const prompt = buildReadReflectPrompt(device, hook, option, answer)
+
+  const attempt = async (extra?: string): Promise<{ res: ClaudeResponse; harms: string[] }> => {
+    const res = await callClaude(extra ? `${prompt}\n\n${extra}` : prompt)
+    const messages = Array.isArray((res as any)?.messages) ? (res as any).messages as string[] : []
+    if (!messages.length) return { res, harms: [] }
+    return { res, harms: readReplyHarms({ device, hook, option, answer, messages }) }
+  }
+
+  let out = await attempt()
+  if (out.harms.length) {
+    console.warn(`[fb-read] reflect breached ${device}/${hook}/${option}: ${out.harms.join(' · ')} — retrying`)
+    // Name the breach rather than repeat the whole guard: the prompt already
+    // carries the frame, and the model missed it. Telling it which line it broke
+    // is a smaller ask than reciting the frame again.
+    out = await attempt(
+      `## YOUR LAST REPLY BROKE THE READING AND WAS NOT SENT\nIt did this: ${out.harms.join('; ')}.\nWrite the reply again without that. Change nothing else about your approach.`,
+    )
+  }
+
+  if (out.harms.length) {
+    console.error(`[fb-read] reflect FELL BACK ${device}/${hook}/${option}: ${out.harms.join(' · ')}`)
+    // The written read, minus the opening bubble she has already been shown.
+    return { messages: remainingBubbles(device, hook, option) } as ClaudeResponse
+  }
+  return out.res
 }
