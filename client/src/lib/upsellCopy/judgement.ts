@@ -1,46 +1,42 @@
 // Offer 03 — Judgement Day: the U1 and U2 conversations.
 //
-// Unlike offer 02 (Twin Flame), 03 KEEPS V1's shape almost entirely: it collects
-// a bucket + personName at booking, same as V1, and its own copy spec
-// (03-U-upsell-beats.md) says plainly "Everything not rewritten below is V1's
-// copy, unchanged." So this file only overrides what 03-U actually rewrote —
-// the opening beats of U1 (CONFIRMATION/GAP/RISK/QUESTION_1/AFTER_Q1), U1's
-// bucket block (messages 1 & 4 only — 2 & 3 stay V1's, they carry the
-// left-wrist mechanic UPSELL_DELIVERY depends on), and U2's two path opens.
-// Everything else — SOLUTION, LAVA_INTRO, RITUAL, FEEL, DELIVERY, OFFER,
-// SUCCESS, SOFT_DECLINE, REVEAL/PERSONALIZE, INTRODUCE, STONES, PRICE,
-// DOWNSELL, etc. — spreads straight from V1_UPSELL1 / V1_UPSELL2.
+// 03 upsells are de-personalized per Joel (2026-09-01): page-only collects no
+// bucket/person; mirrors how 02 removed personalization.
+//
+// Concretely, page-only 03's booking collects only checkboxes/amount/bump/
+// firstName, and /api/backend/upsell/user-data returns bucket:null,
+// personName:null. That forces two departures from V1's flow — the same two
+// twin-flame (02) had to make for the same reason:
+//
+//   1. bucketMessages must be UNIVERSAL. A null bucket makes V1's
+//      bucket-keyed lookup return [], which would send zero U1 bucket
+//      messages — and DELIVERY downstream depends on the LEFT-WRIST mechanic
+//      those messages carry. So this file ships ONE fixed block for every
+//      buyer, built around V1's bucket-invariant left-wrist line.
+//   2. U2 must not enter MANIFEST_REVEAL or MANIFEST_PERSONALIZE. Those two
+//      stages, when copy.REVEAL/PERSONALIZE are null (inherited from V1),
+//      fire a live Claude call that POSTs bucket:null to /api/upsell2/reading,
+//      whose Zod schema requires bucket: z.string() → 400 → generic fallback
+//      for EVERY 03 buyer. The fix is to route AROUND both stages in the
+//      chain so they are never reachable (see JD_CHAIN_2 below). The
+//      REVEAL/PERSONALIZE fields stay inherited/null purely to satisfy the
+//      type; they are dead code once the chain skips their stages.
+//
+// Everything 03-U did NOT rewrite spreads straight from V1_UPSELL1/V1_UPSELL2
+// ("Everything not rewritten below is V1's copy, unchanged" — 03-U).
 //
 // ⚠ 03-U1a retires the karmic-backlash premise ("strike at an enemy and their
-// energy strikes back") that an earlier draft opened on. The hinge is now
-// 03-P1's verdict 2 + section 8: closing the account settles what was owed,
-// but does not undo what carrying it cost her — the vigilance. The RISK beat
-// must stay about HER guard, never about a returning enemy; "old shadows try
-// to return" is V1's frame and would smuggle the backlash premise back in.
+// energy strikes back"). The hinge is 03-P1's verdict 2 + section 8: closing
+// the account settles what was owed, but does not undo what carrying it cost
+// her — the vigilance. The RISK beat stays about HER guard, never a returning
+// enemy ("old shadows try to return" is V1's frame and would smuggle the
+// backlash premise back in).
 //
 // ⚠ 03 KEEPS QUESTION_1 — 03-U calls it "the strongest question in the deck" —
-// so unlike twin-flame (which absorbs its questions into statements and skips
-// them via its own chain), judgement uses V1_CHAIN_1 unmodified: RISK routes
-// to QUESTION_1, same as V1.
-//
-// ⚠ REVEAL/PERSONALIZE: left un-overridden (inherited null from V1_UPSELL2).
-// 03, like V1 and unlike 02, collects a bucket + concern + personName at
-// booking, so the existing /api/upsell2/reading Claude call (which interpolates
-// those fields) is meaningful for a 03 buyer — there is no reason to fake a
-// static replacement the way 02 did (02 collects nothing, so null would have
-// gone out as an empty-string prompt).
-//
-// ⚠ {duration} token: 03-U2a's PATH_A_OPEN/PATH_B_OPEN reference "{duration}"
-// merging from intake ({{HOW_LONG}}), with an explicit build note: "If it's
-// missing, cut the clause rather than rendering a bare token." Neither
-// upsellMessages.ts's personalizeMessage (firstName/personName/upsellPrice)
-// nor upsell2Messages.ts's (firstName/personName) substitute a {duration}
-// token — confirmed by reading useUpsell2Chat.ts's p()/pMsg() wrappers, which
-// call only those two helpers. Since the token is never merged, the clauses
-// referencing it are rephrased to a safe, static form below rather than
-// shipped with a literal "{duration}" in the bubble.
+// so U1 uses V1_CHAIN_1 unmodified: RISK routes to QUESTION_1, same as V1.
+// (Only U2's chain is overridden, and only to skip the Claude stages.)
 
-import type { Upsell1Copy, Upsell2Copy } from "./types";
+import type { Upsell2Chain, Upsell1Copy, Upsell2Copy } from "./types";
 import { V1_UPSELL1, V1_UPSELL2, V1_CHAIN_1, V1_CHAIN_2 } from "./v1";
 
 // ============================================================================
@@ -101,44 +97,30 @@ const JD_AFTER_Q1: Record<string, string[]> = {
   ],
 };
 
-// 03-U1b: messages 2 & 3 of each bucket are V1's, unchanged (the left-wrist
-// mechanic UPSELL_DELIVERY depends on them). Messages 1 & 4 are 03's.
+// ONE universal block for every buyer — no bucket branching, no personName.
+// Page-only 03 has no bucket, so V1's bucket-keyed lookup would return [] and
+// send nothing; this must always return a non-empty set carrying the
+// LEFT-WRIST mechanic DELIVERY depends on.
 //
-// ⚠ Unlike V1's bucketMessages (which ignores personName and leaves
-// {personName}/{firstName} as raw tokens for the hook's p()/pMsg() to merge
-// later), the `someone` bucket's msg 1 here interpolates personName inline —
-// mirroring twinFlame's bucketMessages(), which takes the same params but
-// twin-flame doesn't need the substitution since it has no `someone` bucket
-// content. 03's msg 1 and 4 are new copy authored for this file, so they
-// interpolate personName directly rather than depending on a second pass.
-function judgementBucketMessages(
-  bucket: Parameters<Upsell1Copy["bucketMessages"]>[0],
-  personName: Parameters<Upsell1Copy["bucketMessages"]>[1],
-): string[] {
-  if (!bucket) return [];
-  const v1Msgs = V1_UPSELL1.bucketMessages(bucket, personName);
-  const [, v1Msg2, v1Msg3] = v1Msgs;
-  const person = personName || "them";
-
-  const openers: Record<string, string> = {
-    love: "Once charged, your stone will hold your heart steady while the account settles off you.",
-    money: "Once charged, your stone will guard what you rebuild.",
-    purpose: "Once charged, your stone will keep the new room yours while it clears.",
-    someone: `Once charged, your stone will settle whatever still runs between you and ${person}.`,
-  };
-  const closers: Record<string, string> = {
-    love: "You're about to be open again, {firstName}, and open is how this happened the first time. The stone is what decides who gets that close from here.",
-    money: "What was taken from you came in through a door you'd left open because you had no reason not to. You have a reason now, and the stone is how you keep it without becoming hard about it.",
-    purpose: "There's going to be room where that has been sitting, and room is disorienting before it's welcome. The stone buys you the time to decide what it's for before anyone fills it for you.",
-    someone: "The account closes on your side. The stone is what stops the next word from them landing the way the last ones did.",
-  };
-
-  const opener = openers[bucket];
-  const closer = closers[bucket];
-  if (!opener || !closer) return v1Msgs;
-
-  return [opener, v1Msg2, v1Msg3, closer].filter((m): m is string => Boolean(m));
-}
+// The left-wrist line (message 2) is V1's bucket-invariant line, verbatim:
+// UPSELL_BUCKET_MESSAGES[*][1] === "Wear it on your LEFT wrist — your
+// receiving hand." is byte-identical across all four V1 buckets, and
+// UPSELL_DELIVERY refers back to it.
+//
+// Messages 1, 3 and 4 are bucket-agnostic connective copy drawn from 03's own
+// GAP/RISK "guard / vigilance / what's opening" theme, so the block coheres in
+// 03's voice without naming a bucket. They are NEW lines authored for this
+// de-personalization — see the fix report for Joel to eyeball.
+const JD_UNIVERSAL_BLOCK: string[] = [
+  // NEW connective (03 voice — the opening/guard theme)
+  "Once your stone is charged, it stands guard over the side of you that's about to be open.",
+  // V1 bucket-invariant line, verbatim (the mechanic DELIVERY depends on)
+  "Wear it on your LEFT wrist — your receiving hand.",
+  // NEW connective (03 voice — the receiving-side mechanic, bucket-free)
+  "In this work the left side receives. Everyone who comes toward you — every person, every intention — passes through that hand before it reaches you.",
+  // NEW connective (03 voice — the "who gets that close" hinge from AFTER_Q1)
+  "The stone is what decides who gets that close from here — so the room you're clearing stays yours to give.",
+];
 
 export const JUDGEMENT_UPSELL1: Upsell1Copy = {
   ...V1_UPSELL1,
@@ -148,7 +130,8 @@ export const JUDGEMENT_UPSELL1: Upsell1Copy = {
   QUESTION_1: JD_QUESTION_1,
   QUESTION_1_REPLIES: JD_QUESTION_1_REPLIES,
   AFTER_Q1: JD_AFTER_Q1,
-  bucketMessages: judgementBucketMessages,
+  // Universal — ignores bucket + personName, always returns the fixed block.
+  bucketMessages: () => JD_UNIVERSAL_BLOCK,
   // Keeps the question — RISK routes to QUESTION_1, same as V1.
   chain: V1_CHAIN_1,
   acceptLabel: "Yes, guard what's opening",
@@ -159,9 +142,8 @@ export const JUDGEMENT_UPSELL1: Upsell1Copy = {
 // U2 — the Manifestation Bracelet
 // ============================================================================
 
-// {duration} merges from intake ({{HOW_LONG}}) per 03-U2a, but neither
-// personalizeMessage helper substitutes it (see file header) — cut the clause
-// to a safe static form rather than render a bare token.
+// De-personalized. No {duration}, no {personName}: page-only 03 supplies
+// neither, and the helpers wouldn't substitute {duration} anyway.
 const JD_PATH_A_OPEN = [
   "{firstName}... both are confirmed. The page and the stone.",
   "Your account closes on the third night, and you'll be guarded while it settles. That's the work done, and it's the right work.",
@@ -180,13 +162,28 @@ const JD_PATH_B_OPEN = [
   "I'd rather you were the one doing the choosing, {firstName}. That's a different piece of work from closing an account, and it's the one I'd want you walking into this with.",
 ];
 
+// Routes AROUND both Claude stages so neither is ever entered:
+//   - PATH_A_OPEN/PATH_B_OPEN → GAP (the stage V1 reaches AFTER MANIFEST_REVEAL)
+//   - AFTER_Q2 → RITUAL_INSTRUCTION (the stage V1 reaches AFTER
+//     MANIFEST_PERSONALIZE; AFTER_Q2 is MANIFEST_PERSONALIZE's only predecessor
+//     in V1_CHAIN_2)
+// With these two edges, nothing in the chain points at MANIFEST_REVEAL or
+// MANIFEST_PERSONALIZE, so useUpsell2Chat never runs their Claude fetch. The
+// interactive Q2 quick-reply is kept (it's not personalization).
+const JD_CHAIN_2: Upsell2Chain = {
+  ...V1_CHAIN_2,
+  PATH_A_OPEN: "GAP",
+  PATH_B_OPEN: "GAP",
+  AFTER_Q2: "RITUAL_INSTRUCTION",
+};
+
 export const JUDGEMENT_UPSELL2: Upsell2Copy = {
   ...V1_UPSELL2,
   PATH_A_OPEN: JD_PATH_A_OPEN,
   PATH_B_OPEN: JD_PATH_B_OPEN,
-  // REVEAL/PERSONALIZE stay V1's (null → live Claude call): 03 collects a
-  // bucket + concern + personName at booking same as V1, so the call is
-  // meaningful — see file header.
-  chain: V1_CHAIN_2,
+  // REVEAL/PERSONALIZE stay inherited (null) but are now UNREACHABLE — the
+  // chain skips MANIFEST_REVEAL and MANIFEST_PERSONALIZE, so no Claude call
+  // ever fires. Kept only to satisfy the Upsell2Copy type.
+  chain: JD_CHAIN_2,
   placeholderNames: ["Friend"],
 };
