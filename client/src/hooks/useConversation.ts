@@ -843,6 +843,65 @@ export function useConversation() {
       return
     }
 
+    // /fb-read bridge traffic: the same skip-the-bucket-picker shape as palm and
+    // tarot. Every read hook is a love question — readHookToBucket returns 'love'
+    // for all three — so the picker re-asks her the question the ad already asked.
+    //
+    // 🔴 THIS BRANCH WAS MISSING, AND ONLY A LIVE WALK FOUND IT (2026-09-01).
+    // readHookToBucket was imported at the top of this file and never called, so
+    // /fb-read fell straight through to the generic base-V1 path below and showed
+    // her the four topic cards after the cup. Palm and tarot each had their branch;
+    // read's was written as an import and never wired. An unused import is not a
+    // type error, and no test covered it, so nothing flagged it.
+    //
+    // The cost was not only the extra step: her AWeber bucket tag became whatever
+    // she clicked rather than what the ad asked, so a woman who came through a love
+    // ad could be filed under money.
+    //
+    // Deliberately IDENTICAL to the tarot branch above, including its two message
+    // pairs — Joel asked for /fb-read to behave as the tarot landers do.
+    const read = parseReadParams(window.location.search)
+    if (read) {
+      updateUserData({ bucket: readHookToBucket(read.hook) })
+
+      await sendBotMessages([
+        `It's lovely to meet you, ${capitalized}.`,
+        "Everything we discuss stays between us... our secret.",
+      ])
+      await sendBotMessages([
+        `I can feel warmth radiating from your heart, ${capitalized}...`,
+        "But there's a flicker of shadow there too...",
+      ])
+      // no-optin variant: skip the email anchor, go straight into the reading.
+      if (skipEmail()) {
+        await sendBotMessages([
+          "Let's look deeper together...",
+          "Tell me more about what's on your mind...",
+        ])
+        updateState({
+          state: 'DEEPENING_1',
+          inputEnabled: true,
+          inputPlaceholder: "Share what's in your heart...",
+          inputType: 'text',
+        })
+        return
+      }
+
+      await sendBotMessages([
+        "Before I look deeper, I need to anchor our connection...",
+        "Sometimes the visions continue after we speak...",
+        "Where should I send them if more is revealed?",
+      ])
+
+      updateState({
+        state: 'EMAIL_CAPTURE',
+        inputEnabled: true,
+        inputPlaceholder: 'Your email...',
+        inputType: 'email',
+      })
+      return
+    }
+
     await sendBotMessages([
       `It's lovely to meet you, ${capitalized}.`,
       "Everything we discuss stays between us... our secret.",

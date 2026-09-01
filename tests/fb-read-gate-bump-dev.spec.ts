@@ -121,7 +121,17 @@ test('a tea lander shows the commitment gate, then the Double-Strength bump', as
   for (let step = 0; step < 36; step++) {
     const state = await waitForTurnEnd(page);
     if (state === 'timeout') break;
-    if (state === 'bucket') { await page.getByRole('button', { name: /Love & Relationships/i }).click(); continue; }
+    // 🔴 THE TOPIC PICKER MUST NEVER APPEAR ON /fb-read. The ad already asked her
+    // ("Will I love again?") and readHookToBucket answers it, exactly as palm and
+    // tarot do. The first version of this walk CLICKED THROUGH the picker, which is
+    // precisely why it did not notice that /fb-read had no hook->bucket branch at
+    // all and was falling through to the generic base-V1 path. Found by Lewis on a
+    // live walk, 2026-09-01. Assert, never accommodate.
+    if (state === 'bucket') {
+      throw new Error(
+        'the topic picker appeared on /fb-read - the hook->bucket branch is missing again',
+      );
+    }
     if (state === 'perm') { await page.getByRole('button', { name: /Yes, please help me Evelyn/i }).click(); continue; }
     if (state === 'pitch') { reachedPitch = true; break; }
     if (typedTurns >= 20) break;
