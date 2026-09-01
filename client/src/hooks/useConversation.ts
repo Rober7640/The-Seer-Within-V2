@@ -7,6 +7,15 @@ import { calculateTypingDelay, sleep, generateId } from '@/lib/typing'
 import { getGeoData, getTimeMessage } from '@/lib/geolocation'
 import { parsePalmParams, greetingA, openerB, openerCStart, palmReflectFallback, hookToBucket, SIGNS } from '@/content/palmReads'
 import {
+  parseReadParams,
+  greetingA as readGreetingA,
+  openerB as readOpenerB,
+  openerCStart as readOpenerCStart,
+  readReflectFallback,
+  revealArtFor as readRevealArtFor,
+  hookToBucket as readHookToBucket,
+} from '@/content/readReads'
+import {
   parseTarotParams,
   greetingA as tarotGreetingA,
   openerB as tarotOpenerB,
@@ -483,6 +492,45 @@ export function useConversation() {
         return
       }
 
+      // /fb-read bridge traffic: the device-agnostic quiz bridge. Same three-version
+      // shape as palm and tarot, but ONE branch serves every instrument — the device
+      // is a registry lookup, not a code path — so adding a device needs no change
+      // here. Gated on hook+card+written-reads, so parseReadParams returns null
+      // everywhere else and no other funnel is affected.
+      const read = parseReadParams(window.location.search)
+      if (read) {
+        // Versions B and C skip the lander reveal, so without this she is TOLD what
+        // is in her cup and never shown it. On tea that matters more than anywhere
+        // else: the lander's cup is deliberately unreadable, so this traced version
+        // is the first time the shape is visible to her at all.
+        const readArt = readRevealArtFor(read.device, read.option)
+
+        if (read.version === 'c') {
+          // Version C — INTERACTIVE. Two written lines reach her: the opening
+          // bubble (the picture) and the open question. Then the LLM reads HER
+          // answer in handleReadReflect. Both of those lines are passed to the
+          // model server-side so it never re-describes what she has just read.
+          await sendBotMessages(readOpenerCStart(read.device, read.hook, read.option), readArt)
+          updateState({
+            state: 'READ_REFLECT',
+            inputEnabled: true,
+            inputPlaceholder: "Share what's on your heart…",
+          })
+          return
+        }
+        if (read.version === 'b') {
+          await sendBotMessages(readOpenerB(read.device, read.hook, read.option), readArt)
+        } else {
+          await sendBotMessage(readGreetingA(read.device, read.option))
+        }
+        updateState({
+          state: 'NAME_CAPTURE',
+          inputEnabled: true,
+          inputPlaceholder: 'Your name...',
+        })
+        return
+      }
+
       // Tarot "decode-him card" bridge traffic (/fb-tarot): same shape as the palm
       // opener, but the card reveal instead of the thumb read. Gated on hook+card →
       // zero impact on other funnels (parseTarotParams returns null everywhere else).
@@ -890,6 +938,50 @@ export function useConversation() {
 
     if (llm) await sendBotMessages(llm)
     else if (tarot) await sendBotMessages(tarotReflectFallback(tarot.deck, tarot.hook, tarot.card))
+
+    await sendBotMessage("Before we go deeper, tell me… what should I call you, dear?")
+    updateState({
+      state: 'NAME_CAPTURE',
+      inputEnabled: true,
+      inputPlaceholder: 'Your name...',
+    })
+  }, [chat.userData, sendBotMessage, sendBotMessages, updateState, updateUserData])
+
+  const handleReadReflect = useCallback(async (input: string) => {
+    const read = parseReadParams(window.location.search)
+    updateUserData({ concern: input })
+
+    let llm: string[] | null = null
+    if (read) {
+      try {
+        updateState({ isTyping: true })
+        const res = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'readReflect',
+            readDevice: read.device,
+            readHook: read.hook,
+            readCard: read.option,
+            userData: chat.userData,
+            input,
+          }),
+        })
+        if (res.ok) {
+          const data = await res.json()
+          if (Array.isArray(data.messages) && data.messages.length) llm = data.messages
+        }
+      } catch {
+        // ignore — fall back below
+      }
+      updateState({ isTyping: false })
+    }
+
+    // Fallback = the rest of the WRITTEN read, minus the opening bubble she has
+    // already seen. So a failed model call degrades to Version B's copy rather
+    // than to silence — which is why Version C still needs the read written out.
+    if (llm) await sendBotMessages(llm)
+    else if (read) await sendBotMessages(readReflectFallback(read.device, read.hook, read.option))
 
     await sendBotMessage("Before we go deeper, tell me… what should I call you, dear?")
     updateState({
@@ -1726,6 +1818,9 @@ export function useConversation() {
         break
       case 'PALM_REFLECT':
         await handlePalmReflect(input)
+        break
+      case 'READ_REFLECT':
+        await handleReadReflect(input)
         break
       case 'TAROT_REFLECT':
         await handleTarotReflect(input)

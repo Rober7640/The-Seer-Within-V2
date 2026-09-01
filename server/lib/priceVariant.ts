@@ -158,6 +158,12 @@ const FIXED_FUNNEL_PRICES: Record<string, { id: string; priceCents: number; down
   // test later, add funnel-scoped weighted variants to the system_config pool and
   // REMOVE this entry (a fixed entry shadows any matching weighted variants).
   'v1-tarot': { id: '35_tarot', priceCents: 3500, downsellCents: 2500, upsell1Cents: 4700 },
+  // The /fb-read bridge launches at the same flat single price as tarot. Priced at
+  // the FUNNEL level, so every device on it is priced correctly automatically and
+  // there is no per-device money-safety roster to keep in sync (unlike palm's
+  // OTHER_SIGNS). The '_read' token lets funnelParamFromPriceVariant attribute a
+  // stored variant back to v1-read.
+  'v1-read': { id: '35_read', priceCents: 3500, downsellCents: 2500, upsell1Cents: 4700 },
 };
 
 interface CachedVariants {
