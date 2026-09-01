@@ -207,14 +207,32 @@ through review on a funnel where that question runs.
 
 ### A new device — new artwork
 
-One `DeviceConfig` entry plus a strip image in `client/public/read/`. Nothing to sync
-— no route, no server list, no validator. `candle` is drawn and one entry from live.
+For a **panel** device (`dream`, `candle`): one `DeviceConfig` entry plus a strip in
+`client/public/read/`, composed by `npx tsx scripts/compose-read-strips.mjs`.
+
+A **`pick:'symbol'`** device (`tea`, `coffee`) needs more, because she taps a NAME over
+one photograph. This is what "one config entry plus its art" leaves out:
+
+1. **Licence-checked reference photography FIRST.** It decides the brief, and on coffee
+   it decided the whole device — a heavy draw coats the cup in one unreadable mass and
+   only a light draw leaves isolated marks.
+2. Find or generate the cup. Coffee ships a real **CC0** photograph; tea's is generated.
+   If generating, five candidates a round through `scripts/select-tea-cup.mjs --debug`,
+   and the floor stands: two failed rounds means shoot a real cup.
+3. **Assign the symbols by POSITION, after the art exists** — never choose them first
+   and then hunt for a picture that fits.
+4. `node scripts/ring-read-cup.mjs <rings.json> <out-dir>` — the ringed cup, the reveal
+   crops and the strip. Ring geometry lives in the per-device `rings.json` and belongs
+   to that ONE photograph. The crop size is per-device: tea 420, coffee 520, because a
+   long mark needs a wider ring than a compact one.
+5. Write `SOURCE.md`: provenance, licence, the geometry table, and what is never served.
+6. The config needs `pick`, `cupImage`, `cupAlt`, `optionLabel`, `revealStrip` and its
+   OWN `grammar`. `tests/fb-read-registry.test.ts` enforces every one of them.
+7. Then the readings, written TO the photograph — never before it.
 
 ⚠ **Fix candle's copy before wiring it.** The flame leans *right* while the draft says
 "pulls left"; the smoke is pale grey while the draft says "dark smoke". The picture
-should win — change the copy. The eval's art-coherence check requires the opening
-bubble to carry the mark's content words, so a mismatch fails the build rather than
-reaching a lander.
+should win — change the copy.
 
 ---
 
@@ -231,12 +249,19 @@ npx tsx scripts/read-registry.mjs
 npx tsx scripts/read-registry.mjs --check
 
 # build the Facebook ad images from the cup photograph
-npx tsx scripts/build-read-ad.mjs love-again
+npx tsx scripts/build-read-ad.mjs love-again --device coffee
 
 # copy quality — --dry makes no model calls, so it is free
 npx tsx improve-v1/fb-read/evals/run-eval.mjs --dry
 npx tsx improve-v1/fb-read/evals/run-eval.mjs --selftest
 npx tsx improve-v1/fb-read/evals/run-eval.mjs
+
+# the /fb-read guard file — registry freshness and per-device invariants
+npx vitest run tests/fb-read-registry.test.ts
+
+# reveal art for a pick:'symbol' device
+node scripts/ring-read-cup.mjs improve-v1/fb-read/images/coffee/rings.json \
+                               improve-v1/fb-read/images/coffee
 
 # walk all 7 personas end to end, then read them as one page
 node scripts/walk-read-all.mjs
@@ -244,7 +269,7 @@ open audit-runs/fb-read-walk/index.html
 ```
 
 **The generated files close their own loops.** `build-read-copy.mjs` calls the
-registry generator, and the test run calls `read-registry.mjs --check`, so editing a
+registry generator, and `tests/fb-read-registry.test.ts` calls `read-registry.mjs --check`, so editing a
 device, hook or guard without regenerating fails the tests rather than quietly
 drifting. The walk page rebuilds the same way, at the end of every walk. A generator
 nobody runs is a stale file with extra steps.

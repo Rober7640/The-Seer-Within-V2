@@ -25,25 +25,26 @@ registry. `candle` is finished as art and copy-ready; it is one entry away.
 
 ---
 
-## 🔴 SCOPE CHANGED 2026-08-31 — tea only
+## Scope — the device axis, closed and re-opened
 
-The operator has stopped work on `dream`. **All new hooks are built on `tea` alone.**
+**2026-08-31 — closed.** Work stopped on `dream` and all new hooks were built on `tea`
+alone, which made the HOOK the test variable rather than the picture.
 
-`dream` is FROZEN, not deleted: its three hooks are written, tested and passing, it
-stays registered, and it still serves. Nothing further gets built on it. Retiring it
-from the registry is a one-line change if that is wanted; nobody has asked for it.
+**2026-09-01 — re-opened, for `coffee`.** That closure was a scope call, not a result:
+nothing in `/fb-read` had ever been deployed, so no device had a single data point and
+there was no winner to protect. Coffee runs the same three hooks as tea, so it needed
+no new guard. Spec: `docs/superpowers/specs/2026-09-01-fb-read-coffee-device-design.md`.
 
-### What this changes about the test
+⚠ **Read a coffee-vs-tea result carefully.** Three things differ, not one: the
+photograph, the option names (coffee-native, operator call), and the look — tea's cup
+is a dark studio render and coffee's is a bright real snapshot. A winner is not
+cleanly attributable to the picture alone.
 
-The build was originally a DEVICE test — same hook on every device, so the picture
-was the only variable, which is why the headline is hook-level and identical across
-devices. On one device that framing no longer applies. **The variable is now the
-HOOK**, so different landers carry different headlines by design, and the thing being
-compared is which question earns most per 1,000 conversations.
+`dream` stays FROZEN, not deleted: its three hooks are written, tested and passing, it
+stays registered, and it still serves. Nothing further gets built on it.
 
-The headline stays hook-level in the code regardless — that is what stops a device
-ever quietly changing the question — but it is no longer the thing holding the test
-together.
+The headline stays hook-level in the code regardless — that is what stops a device ever
+quietly changing the question.
 
 ---
 
@@ -66,9 +67,9 @@ updating them and then lie confidently, so this one is generated and never edite
 | | |
 |---|---|
 | Hooks | 3 of 6 built. `love-again` — "Will I love again?" · `still-think` — "Does he still think about me?" · `hiding-something` — "Is he hiding something from me?" |
-| Devices | `dream`, `tea` (and `candle`, unwired) |
+| Devices | `dream` (frozen), `tea`, `coffee` (and `candle`, unwired) |
 | Held constant | the hook, the method, the version, the art style |
-| The only variable | **the picture** |
+| The only variable | **the picture** — plus coffee's own symbol names, see the caveat above |
 
 The headline is hook-level, never device-level. Swap the device and the headline
 must not move — that is what makes a winner readable. Run different questions per
@@ -208,7 +209,7 @@ moonlight"* fails with `mark words absent: ladder, against, wall, moonlight`.
 `--dry` runs the WRITTEN half only and makes no model calls, so copy edits can be
 checked for free. The generated half still needs a live run before shipping.
 
-**Last run: 18/18 clean, both halves** (3 hooks × 2 devices × 3 panels).
+**Last written-half run: 27/27 clean** (3 hooks × 3 devices × 3 panels). The live run is not deterministic — read the failures, never the total.
 
 ### 🔴 The eval has been loosened three times. Read this before loosening it again.
 
@@ -248,11 +249,10 @@ the real harms separately.
 
 ## Still missing before this ships
 
-- **No vitest guard file.** Every other funnel family has `tests/<family>-copy.test.ts`
-  plus tripwire rows; `/fb-read` has the eval and its self-test, but nothing in the
-  normal test run bites on this copy. Flagged by the agent that wrote the dream
-  readings, and it is right.
-- **Three hooks still to build, on `tea` only**: feelings/commitment (its own guard,
+- ~~**No vitest guard file.**~~ `tests/fb-read-registry.test.ts` now gates registry
+  staleness and the invariants a `pick:'symbol'` device needs. It does NOT check copy
+  quality — that stays the eval's job, deliberately.
+- **Three hooks still to build**: feelings/commitment (its own guard,
   closest to `hiding-something`), soulmate/destiny (self-frame, already exists), and
   loneliness/timing (needs its own frame — nothing fated, no forever ruled on in
   either direction).
