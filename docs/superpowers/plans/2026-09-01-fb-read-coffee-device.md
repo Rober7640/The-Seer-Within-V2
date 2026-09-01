@@ -32,7 +32,7 @@
 
 | Term | Meaning |
 |---|---|
-| `mark` | the concrete thing named in the opening bubble, e.g. *"a bird halfway up the cup, over on the handle side"*. Injected into the Version-C prompt AND rendered in the Version-A greeting |
+| `mark` | the concrete thing named in the opening bubble — for coffee, e.g. *"a tree halfway up the wall of the cup"*. Injected into the Version-C prompt AND rendered in the Version-A greeting |
 | `reading` | the archetype label, e.g. *"the answered heart"* |
 | `optionLabel` | the bare noun on the button — no article, no letter. Letters are derived at render time from the option key |
 | cut 1 | confirms and **places** the symbol she named. On a `symbol` device it does not reveal it — she already tapped the name |
@@ -48,16 +48,16 @@
 | Path | Responsibility |
 |---|---|
 | `tests/fb-read-registry.test.ts` | the missing guard: registry freshness + per-device invariants for a `pick:'symbol'` device |
-| `scripts/ring-read-cup.mjs` | device-agnostic ring/reveal tool — cup + ring specs → ringed cup, three 420² crops, one 1260×420 reveal strip |
-| `improve-v1/fb-read/images/coffee/rings.json` | coffee's ring geometry — the ONLY place those coordinates live |
-| `improve-v1/fb-read/images/coffee/SOURCE.md` | provenance, geometry table, licence status |
-| `improve-v1/fb-read/prompts/coffee.md` | the generation prompt, with negatives and per-round failure modes |
-| `improve-v1/fb-read/images/reference/coffee/` + rows in `REFERENCES.md` | licence-checked reference photographs |
+| `scripts/ring-read-cup.mjs` ✅ | device-agnostic ring/reveal tool — cup + ring specs → ringed cup, three crops, one reveal strip. Crop size comes from the spec file (coffee uses 520) |
+| `improve-v1/fb-read/images/coffee/rings.json` ✅ | coffee's ring geometry — the ONLY place those coordinates live |
+| `improve-v1/fb-read/images/coffee/SOURCE.md` ✅ | provenance, geometry table, licence status, and why depth is observed rather than computed |
+| `improve-v1/fb-read/images/coffee/cup.png` ✅ | the 1254² master, cropped from the CC0 original |
+| `improve-v1/fb-read/images/reference/coffee/` + rows in `REFERENCES.md` ✅ | four licence-checked reference photographs, and the heavy-draw / light-draw finding |
 | `fb-read/docs/drafts/coffee-love-again.json` | 3 reads × 7 cuts |
 | `fb-read/docs/drafts/coffee-still-think.json` | 3 reads × 7 cuts |
 | `fb-read/docs/drafts/coffee-hiding-something.json` | 3 reads × 7 cuts |
-| `client/public/read/coffee-cup.jpg` | the served lander photograph, 1254² |
-| `client/public/read/coffee-reveal-strip.jpg` | the served reveal strip, 1260×420 |
+| `client/public/read/coffee-cup.jpg` ✅ | the served lander photograph, 1254² |
+| `client/public/read/coffee-reveal-strip.jpg` ✅ | the served reveal strip, **1560×520** |
 
 **Modified:**
 
@@ -75,10 +75,15 @@
 
 | Phase | Tasks | Gate |
 |---|---|---|
-| **A — tooling** | 1–5 | all green with **no** coffee art and **no** coffee copy. Buildable today |
-| **B — art** | 6–8 | 🚦 **human picks the cup.** Nothing downstream can start until a photograph exists |
+| **A — tooling** | 1, 3, 4, 5 (2 ✅ done) | all green with no coffee copy |
+| **B — art** | ✅ **COMPLETE** | the operator picked `restos-cafe.jpg`, a real CC0 photograph |
 | **C — copy** | 9–11 | written to the photograph, not before |
 | **D — wire & verify** | 12–14 | eval, walks, ad, docs |
+
+> **Revised 2026-09-01.** Reference photography and the operator's pick overturned four
+> assumptions in the original plan. Phase B no longer generates a cup — it is done — and
+> the symbols are **Road / Tree / Lake**, read off the photograph. See the spec's
+> *What the photograph changed*.
 
 ---
 
@@ -286,7 +291,15 @@ Also lifts the cup aria-label out of ReadBridge, where it was hardcoded to
 
 ---
 
-### Task 2: `ring-read-cup.mjs` — the missing arm-B art tool
+### Task 2: `ring-read-cup.mjs` — the missing arm-B art tool ✅ DONE (`e393d9a`)
+
+> Written and proven on the coffee cup. Two rules changed from the draft below during
+> that first real use, and both are in the shipped script: **a ring must be inside the
+> photograph while the crop need only contain it** (the crop slides inward instead of
+> failing — demanding a centred crop rejected the lake purely for sitting low, a fact
+> about the box, not the cup), and **it refuses a ring wider than the reveal crop**,
+> which fired at once on the 880px road and is why coffee's crop is 520, not tea's 420.
+> The test below was not written; write it if this tool is touched again.
 
 Tea's seven `images/armb/` files were produced ad hoc on 2026-08-31 at 15:49 and **no script was kept**. `trace-tea-reveals.mjs` is stale against arm A: its rings are hardcoded to road/bird/heart and it reads three cups (`tea-{a,b,c}.png`), a mechanic tea no longer uses. There is no reusable way to ring a symbol-device cup.
 
@@ -867,248 +880,36 @@ no device had a data point to protect."
 
 ---
 
-## Phase B — the art
-
-🚦 **This phase has a human gate.** Nothing in Phase C can start until a photograph exists and its rings are measured. Do not write a single line of coffee copy before Task 8 is signed off — the method is *the image leads, the copy follows*, and copy written first produces a reading that names a position the picture denies, which `SOURCE.md` calls the one unrecoverable fault.
-
-### Task 6: Reference photography, licence-checked
-
-**Files:**
-- Create: `improve-v1/fb-read/images/reference/coffee/` (the images)
-- Modify: `improve-v1/fb-read/images/reference/REFERENCES.md` — add a coffee section and licence rows
-
-**Interfaces:**
-- Produces: a written finding on what real turned coffee cups do, which Task 7's prompt is built from
-
-- [ ] **Step 1: Gather candidates**
-
-Find photographs of **real turned Turkish/Greek/Armenian coffee cups**, shot into the cup. Prioritise Wikimedia Commons and other explicitly-licensed sources. For each, record source URL, author, licence, and dimensions.
-
-- [ ] **Step 2: Licence-check every one before it informs anything**
-
-Add a row per image to the table in `REFERENCES.md` using the existing four columns — `File | Source | Licence | May it ship?`.
-
-🔒 **Already known, do not re-litigate:**
-
-| Already in the repo | Licence | Status |
-|---|---|---|
-| `tasseo-{bird,heart,ring,tree}.jpg` | CC BY-SA 4.0, and **from a coffee-reading site** | **Study only.** Share-alike is viral — a derivative must carry the same licence |
-| `doublecup/*` | © all rights reserved | Study only |
-| `wiccan-watch-tea-reading-image1.png` | competitor creative | **Never** |
-
-Anything CC BY-SA or all-rights-reserved is **study only** and must never inform shipped pixels beyond general observation.
-
-- [ ] **Step 3: Write the finding**
-
-Add a section to `REFERENCES.md` headed `## What real turned COFFEE cups do`, answering these questions explicitly, because the whole art brief depends on them:
-
-1. Do the grounds run **down the wall in rivulets**, leaving bare porcelain between — or do they coat the wall as one connected film?
-2. Are there **three or more separated gatherings** in a typical cup, or one dominant mass?
-3. Do the cups **have handles**?
-4. What colour and texture are the grounds against the porcelain — and how does that differ from wet tea leaves?
-
-Question 2 is the one that decides whether this device is buildable. `REFERENCES.md` already established that grade decides scatter — fine dust drains into one mass, whole leaf scatters into constellations — and Turkish coffee is ground finer than tea dust.
-
-- [ ] **Step 4: 🚦 Report to the operator before generating anything**
-
-State plainly: whether real coffee cups scatter into three separable regions, whether handles are normal, and therefore whether the brief is viable as specced. **If the answer to question 2 is "one mass",** stop and raise it — the arm-B premise may not survive on coffee, and the spec's mitigation ladder (reference-led prompt, remedy table, two-round floor, then shoot a real cup) applies.
-
-- [ ] **Step 5: Commit**
-
-```bash
-git add improve-v1/fb-read/images/reference/
-git commit -m "docs(fb-read): licence-checked coffee reference photographs
-
-Records what real turned Turkish/Greek cups actually do, which decides
-whether a pick:'symbol' coffee device is buildable at all."
-```
-
----
-
-### Task 7: The generation prompt and round 1
-
-**Files:**
-- Create: `improve-v1/fb-read/prompts/coffee.md`
-- Create: `improve-v1/fb-read/images/candidates/coffee-r1/` (five candidates)
-
-**Interfaces:**
-- Consumes: Task 6's finding
-- Produces: candidate cups for `scripts/select-tea-cup.mjs`
-
-- [ ] **Step 1: Write the prompt**
-
-Create `improve-v1/fb-read/prompts/coffee.md`, modelled on `prompts/tea-arm-b.md`. It must specify:
-
-| Requirement | Value | Why |
-|---|---|---|
-| Framing | directly overhead, cup filling a little over half a square frame, 1254² | same as tea — the framing is held constant |
-| Cup | **must have a handle**, white or near-white interior | *handle side = her* is half the grammar. Traditional Turkish *fincan* often have none, so this is a hard requirement, not a preference |
-| Saucer | **out of frame** | a second changed variable, and it costs cup detail at 1254² |
-| Grounds | genuine drain-scatter as Task 6 documented — running down the wall, bare porcelain between | this is the whole finding |
-| Regions | leaf-equivalent in **three separated places**, ideally one **elongated**, one **compact**, one **spanning** | the shape targets from the spec; tea's three are all the same mid-wall blob |
-| Ground/lighting | dark ground, one low lamp from the upper left | matches tea, and the selector's cup-finding is tuned for a bright cup in a dark frame |
-| **Banned** | anything nameable — no bird, key, road, bridge, fish, door, heart, letter or face | a cup that visibly contains a key is a logo with coffee in it. She must pick a NAME and have Evelyn find it |
-
-- [ ] **Step 2: Generate five, not one**
-
-One task, five takes of the same shot, varying grounds density and distribution. Write them to `improve-v1/fb-read/images/candidates/coffee-r1/`.
-
-**Never generate one.** Generation is cheap; judgement is the bottleneck. With one candidate and a deadline the failure mode is rationalising the weak image.
-
-- [ ] **Step 3: Debug the selector on the first candidate BEFORE believing any number**
-
-```bash
-node scripts/select-tea-cup.mjs improve-v1/fb-read/images/candidates/coffee-r1 --debug
-```
-
-`--debug` writes the cup it found, the interior it analysed and the three crops it is about to cut, drawn over the photograph. **Look at them.** That harness printed confident wrong numbers five times — a mis-found circle, two reveals on one clump, a leaked hole-fill, silent rejections — and four of the five were visible only by looking.
-
-- [ ] **Step 4: Read the run**
-
-Expected on a good round: at least one candidate marked `✓` with three crops in the 8–62% band. The thresholds are set in the script before any candidate is seen, deliberately, so a weak one cannot be argued into passing later.
-
-🔴 **Do not loosen the thresholds.** If the round fails, use the script's own remedy table and **change the prompt, never just the seed** — re-rolling the same prompt is the treadmill the method exists to prevent.
-
-🔴 **The floor:** two failed rounds means a photograph cannot do this. Stop generating, tell the operator, and shoot a real cup.
-
-- [ ] **Step 5: Commit the round**
-
-```bash
-git add improve-v1/fb-read/prompts/coffee.md improve-v1/fb-read/images/candidates/coffee-r1/
-git commit -m "art(fb-read): coffee cup prompt and round 1 candidates"
-```
-
----
-
-### Task 8: 🚦 Pick, assign, ring, install
-
-**Files:**
-- Create: `improve-v1/fb-read/images/coffee/cup.png` (the master)
-- Create: `improve-v1/fb-read/images/coffee/rings.json`
-- Create: `improve-v1/fb-read/images/coffee/SOURCE.md`
-- Create: `client/public/read/coffee-cup.jpg`, `client/public/read/coffee-reveal-strip.jpg`
-
-**Interfaces:**
-- Consumes: `scripts/ring-read-cup.mjs` from Task 2; the selector's `--json` output
-- Produces: the photograph, the measured ring geometry and the three symbol assignments that **all nine readings are written against**
-
-- [ ] **Step 1: 🚦 Human picks, at zoom, from the crop strips**
-
-Review the strips the selector composed — **not the cups**. Five strips, not fifteen crops. The chat shows a zoomed crop, so zoom is the only scale she ever sees it at.
-
-Judge:
-- enough structure that a shape is **findable once named**
-- the three regions look **different from each other**
-- **nothing self-naming** at cup scale
-- one region **elongated**, one **compact**, one **spanning** — the shape targets
-- **the cup has a handle**
-
-- [ ] **Step 2: Assign three symbols to the three regions**
-
-From the spec's shortlist. Leading trio **Road / Key / Bridge**; **Fish** and **Door** are alternates, taken only if the photograph lacks a region of the shape their sibling needs.
-
-| Symbol | Wants | Position logic | `reading` archetype |
-|---|---|---|---|
-| Road | elongated run | toward the rim — the weeks ahead | the moving heart |
-| Key | compact | handle side — hers | the unlocking heart |
-| Bridge | spans two areas | between her side and the far side | the crossing heart |
-| Fish | rounded, low | near the base — what she was built on | the arriving heart |
-| Door | upright break | far side — from outside her | the opening heart |
-
-A cup with no elongated run **cannot carry a road**. Forcing one onto a blob is the stale-ring fault in slower motion.
-
-- [ ] **Step 3: Take the coordinates from the selector, not from your eye**
-
-```bash
-node scripts/select-tea-cup.mjs improve-v1/fb-read/images/candidates/coffee-r1 \
-  --json /tmp/coffee-clusters.json
-```
-
-Write `improve-v1/fb-read/images/coffee/rings.json` from that output — the same shape Task 2's tool consumes:
-
-```json
-{
-  "cup": "improve-v1/fb-read/images/coffee/cup.png",
-  "size": 1254,
-  "rings": {
-    "a": { "cx": 0, "cy": 0, "rx": 0, "ry": 0, "rot": 0, "label": "road" },
-    "b": { "cx": 0, "cy": 0, "rx": 0, "ry": 0, "rot": 0, "label": "key" },
-    "c": { "cx": 0, "cy": 0, "rx": 0, "ry": 0, "rot": 0, "label": "bridge" }
-  }
-}
-```
-
-Fill every `cx`/`cy` from the cluster centres and size `rx`/`ry` to the gathering. An **elongated** ring gets a long `rx`, a short `ry` and a `rot` along the run — that is what makes it read as a path rather than a spot.
-
-🔴 **The rings must sit on grounds genuinely present.** Ringing bare porcelain is worse than an obvious symbol, because it asks her to see nothing.
-
-- [ ] **Step 4: Ring it**
-
-```bash
-cp <winning-candidate>.png improve-v1/fb-read/images/coffee/cup.png
-node scripts/ring-read-cup.mjs \
-  improve-v1/fb-read/images/coffee/rings.json \
-  improve-v1/fb-read/images/coffee
-```
-
-Expected: `cup-ringed.png`, `cup-ringed-labelled.jpg`, three `reveal-<opt>-<label>.png` at 420², and `reveal-strip.jpg` at 1260×420.
-
-- [ ] **Step 5: 🚦 Look at `cup-ringed-labelled.jpg` before going further**
-
-Every ring on real grounds. Every crop mostly cup, not background. The three regions visibly different. If any ring floats on bare porcelain, fix `rings.json` and re-run — that is cheap now and unrecoverable later.
-
-- [ ] **Step 6: Install the served art**
-
-```bash
-# package.json is "type": "module", so -e runs as ESM and a dynamic import is the
-# portable way to reach sharp from a one-liner.
-node -e "import('sharp').then(async ({ default: sharp }) => {
-  await sharp('improve-v1/fb-read/images/coffee/cup.png')
-    .resize(1254, 1254, { fit: 'cover' })
-    .jpeg({ quality: 86, mozjpeg: true })
-    .toFile('client/public/read/coffee-cup.jpg')
-  console.log('coffee-cup.jpg written')
-})"
-cp improve-v1/fb-read/images/coffee/reveal-strip.jpg client/public/read/coffee-reveal-strip.jpg
-```
-
-Confirm both landed at the sizes the registry declares:
-
-```bash
-node -e "import('sharp').then(async ({ default: sharp }) => {
-  for (const f of ['coffee-cup.jpg', 'coffee-reveal-strip.jpg']) {
-    const m = await sharp('client/public/read/' + f).metadata()
-    console.log(f, m.width + 'x' + m.height)
-  }
-})"
-```
-
-Expected: `coffee-cup.jpg 1254x1254` and `coffee-reveal-strip.jpg 1260x420`. A size
-mismatch here misaligns every reveal, because the lander crops the strip into exact
-thirds by `background-position` and never inspects the artwork for seams.
-
-Note the lander serves the **JPEG**; the ad composes from the **PNG master** (`CUP_MASTER` in Task 4), so it never compounds compression on the one image she sees in the feed.
-
-- [ ] **Step 7: Write `SOURCE.md`**
-
-Create `improve-v1/fb-read/images/coffee/SOURCE.md`, modelled on `images/armb/SOURCE.md`. It must carry:
-
-- **Provenance** — which candidate, which round, which prompt, and an explicit statement of whether any licensed reference informed it and how (tea's says the Double Cup photo was *"used only as a reference for what whole-leaf tea looks like and never reproduced"*).
-- **A file table** — what each file is, and **`Served?` yes/no**. `cup-ringed-labelled.jpg` is **review only, never serve**.
-- **Geometry** — cup centre and radius, then a row per symbol: ring centre, `rx`×`ry`, clock position, depth, and the **position reading** it licenses.
-- **The stale-ring warning, verbatim in force:** these coordinates belong to THIS photograph; regenerate the cup and every one is wrong.
-- **Why the symbols were not asked for** — the generation prompt banned anything nameable. The ring supplies the where; the copy supplies the symbol; she does the seeing.
-
-- [ ] **Step 8: Commit**
-
-```bash
-git add improve-v1/fb-read/images/coffee/ client/public/read/coffee-cup.jpg \
-        client/public/read/coffee-reveal-strip.jpg
-git commit -m "art(fb-read): the coffee cup, its rings and its provenance
-
-Symbols assigned by POSITION after the photograph existed, per the method.
-Coordinates belong to this exact cup — regenerate it and every ring is wrong."
-```
+## Phase B — the art ✅ COMPLETE
+
+Tasks 6, 7 and 8 are done, and one of them no longer exists in the form planned.
+
+| Planned | Outcome |
+|---|---|
+| **Task 6** — licence-checked reference photography | ✅ `c1affef`. Four clean cups (3× CC0, 1× public domain) plus the finding that decided everything: **a heavy draw coats, a light draw leaves isolated marks** |
+| **Task 7** — write a prompt, generate five candidates a round, machine-select, two-round floor | ❌ **deleted.** A real CC0 photograph exists. Nothing is generated, and `select-tea-cup.mjs` is not used |
+| **Task 8** — pick, assign, ring, install | ✅ `e393d9a`. Cropped, ringed, installed, `SOURCE.md` written |
+
+**What shipped:** `improve-v1/fb-read/images/coffee/` — `cup.png` (1254² master),
+`rings.json` (the only home for the coordinates), `cup-ringed.png`,
+`cup-ringed-labelled.jpg` (**review only, never serve**), three 520² reveal crops and
+`reveal-strip.jpg` (1560×520). Served: `client/public/read/coffee-cup.jpg` and
+`coffee-reveal-strip.jpg`.
+
+**The symbols, read off the photograph:**
+
+| | Symbol | Where | Depth reading | Archetype |
+|---|---|---|---|---|
+| a | **Road** | high on the far wall, under the rim | the weeks just ahead | the moving heart |
+| b | **Tree** | mid-wall, left of centre | what is standing now | the standing heart |
+| c | **Lake** | the floor of the cup | what she was built on | the deep heart |
+
+🔴 **Two things a later session will get wrong unless it reads `SOURCE.md` first.**
+Depth on this cup is **observed, not computed** — the cup is tilted, so its floor is
+low in the frame and not at the image centre; recompute positions as
+distance-from-centre and the lake comes back as "near the rim", inverting the reading.
+And **there is no handle rule** for coffee: the handle is outside the crop, and the
+drain gives a cleaner axis than handle-side ever did.
 
 ---
 
@@ -1166,9 +967,9 @@ Tea's note is device-specific in ways that are wrong here. Carry over the hook-l
 
 Then replace tea's device paragraph with coffee's:
 
-> ARM B — SHE NAMES THE SYMBOL, SO CUT 1 CONFIRMS AND PLACES IT; IT DOES NOT REVEAL IT. She has already tapped the name on a lander showing one cup, so telling her it is there reveals nothing. Cut 1 agrees with her and adds the half she could not have: WHERE it sits. Every position word is measured off the actual photograph (`improve-v1/fb-read/images/coffee/SOURCE.md`) — never invented and never carried over from tea. DEVICE RULES: the cup was turned onto the saucer and drained, so the grounds ran DOWN the wall; near the rim came to rest last and is the weeks just ahead, low on the wall or the floor settled first and is what she was built on. The handle side is hers; the far side is what comes from outside her. Grounds in a line are movement; grounds in one place are something settled. The system is never explained to her — she should feel the position mean something, never be taught it. THE SYMBOL IS A PICTURE AND NEVER GETS INTENT OR MOTION: the road does not lead her anywhere while she watches, the key does not turn, the bridge does not carry anyone across. The moment any of them moves, the grounds have quietly become a man doing something. NOTHING INVENTED ABOUT HER WAKING LIFE: no gesture, habit, routine, count, age or event, and nothing about how she takes her coffee, how often, with whom, or whether she has had a reading before.
+> ARM B — SHE NAMES THE SYMBOL, SO CUT 1 CONFIRMS AND PLACES IT; IT DOES NOT REVEAL IT. She has already tapped the name on a lander showing one cup, so telling her it is there reveals nothing. Cut 1 agrees with her and adds the half she could not have: WHERE it sits. Every position word is read off the actual photograph (`improve-v1/fb-read/images/coffee/SOURCE.md`) — never invented and never carried over from tea. DEVICE RULES: the cup was turned onto the saucer and drained, so the grounds ran DOWN the wall, and DEPTH is the whole reading. The road sits high on the wall under the RIM — the weeks just ahead. The tree sits HALFWAY UP the wall — what is standing now. The lake lies on the FLOOR — what she was built on, the oldest thing. THERE IS NO HANDLE RULE ON THIS CUP: the handle is outside the crop, nothing may be read as her side or the far side, and depth carries everything. Grounds in a line are movement; grounds gathered in one place are something settled. The system is never explained to her — she should feel the position mean something, never be taught it. THE SYMBOL IS A PICTURE AND NEVER GETS INTENT OR MOTION: the road does not lead her anywhere while she watches, the tree does not grow, the lake does not rise. The moment any of them moves, the grounds have quietly become a man doing something. NOTHING INVENTED ABOUT HER WAKING LIFE: no gesture, habit, routine, count, age or event, and nothing about how she takes her coffee, how often, with whom, or whether she has had a reading before.
 
-Finish with the three fears, naming the symbols actually assigned in Task 8 — e.g. *"The three fears answered at cut 3 are: nothing is moving and I am stuck where this left me (road), the way back is shut to me now (key), the distance between me and anyone is too far to cross (bridge)."*
+Finish with the three fears, naming the symbols actually assigned in Task 8 — e.g. *"The three fears answered at cut 3 are: nothing is coming and the days ahead are just more of this (road), it broke me and there is nothing of me left standing (tree), something in me is wrong at the root and always was (lake)."*
 
 - [ ] **Step 4: Write the twenty-one bubbles**
 
@@ -1363,29 +1164,30 @@ const COFFEE: DeviceConfig = {
   chooseMoment: "the moment you named it",
   pick: "symbol",
   cupImage: { url: "/read/coffee-cup.jpg", width: 1254, height: 1254 },
-  cupAlt: "The inside of a coffee cup, the grounds drained down its wall",
-  optionLabel: { a: "Road", b: "Key", c: "Bridge" },
+  cupAlt: "The inside of a coffee cup, the grounds drained down its pale wall",
+  optionLabel: { a: "Road", b: "Tree", c: "Lake" },
   // Unused while pick is 'symbol' — the lander reads cupImage. Kept pointing at
   // the same file so a missing cupImage degrades to the right picture.
   strip: { url: "/read/coffee-cup.jpg", width: 1254, height: 1254 },
-  revealStrip: { url: "/read/coffee-reveal-strip.jpg", width: 1260, height: 420 },
-  // Tea's grammar is SETTLING; coffee's is the DRAIN. The cup was turned onto the
-  // saucer, so direction and running carry meaning tea's cannot express.
+  // 1560×520, not tea's 1260×420 — the road is a long mark and needs a wider reveal.
+  revealStrip: { url: "/read/coffee-reveal-strip.jpg", width: 1560, height: 520 },
+  // Tea's grammar is SETTLING and leans on handle-side; coffee's is the DRAIN, and
+  // DEPTH carries the meaning. No handle rule — the handle is outside the crop.
   grammar:
-    "The cup was drunk down, turned upside down onto the saucer and left to drain, so the grounds ran DOWN the wall and settled as they went. A thing near the RIM came to rest last and belongs to the weeks just ahead. A thing low on the wall or on the FLOOR of the cup settled first and belongs to what she was built on, or to what is far off. The HANDLE SIDE is HER. The side OPPOSITE the handle is other people and what arrives from outside her. Grounds that run in a LINE are movement; grounds that sit in ONE PLACE are something settled and already hers. Use this; it is what makes a reading feel earned rather than guessed. Never explain the system to her — she should feel the position mean something, never be taught it.",
+    "The cup was drunk down, turned upside down onto the saucer and left to drain, so the grounds ran DOWN the wall and settled as they went. Depth is the whole reading here. A mark high on the wall, just under the RIM, came to rest last and belongs to the weeks just ahead. A mark HALFWAY UP the wall is what is standing in her life now. A mark on the FLOOR of the cup settled first and belongs to what she was built on — the oldest thing, the ground under everything else. Grounds that run in a LINE are movement; grounds gathered in ONE PLACE are something settled and already hers. Use this; it is what makes a reading feel earned rather than guessed. Never explain the system to her — she should feel the position mean something, never be taught it.",
   options: ["a", "b", "c"],
   // Measured off the photograph — see improve-v1/fb-read/images/coffee/SOURCE.md.
   // 🔴 These must carry the same content words as cut 1 of each read, or the
   // eval's art-coherence check fails the build.
   mark: {
-    a: "REPLACE — the road's real position, from SOURCE.md",
-    b: "REPLACE — the key's real position, from SOURCE.md",
-    c: "REPLACE — the bridge's real position, from SOURCE.md",
+    a: "a road running under the rim of the cup",
+    b: "a tree halfway up the wall of the cup",
+    c: "a lake in the bottom of the cup, where the grounds settled first",
   },
   reading: {
     a: "the moving heart",
-    b: "the unlocking heart",
-    c: "the crossing heart",
+    b: "the standing heart",
+    c: "the deep heart",
   },
 };
 ```
