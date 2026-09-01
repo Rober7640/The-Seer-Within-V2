@@ -38,9 +38,17 @@ for (const p of PERSONAS as any[]) {
       // the current page URL inside a query parameter —
       // `...collect?dl=http%3A%2F%2Flocalhost%3A5000%2Ffb-read...`. Ten Google
       // requests per test sailed through a filter meant to exclude them.
+      // 🔴 THE HOST COMES FROM baseURL, NEVER A LITERAL. Hardcoded 'localhost'
+      // made both assertions at the end of this test VACUOUS the moment the spec
+      // was pointed at a deployed environment: every request is on the deploy's
+      // own hostname, so nothing was "ours", `failedRequests` stayed empty, and a
+      // 400 on the chat handoff — the exact bug this funnel's shared registry
+      // exists to prevent — would have reported green.
+      const base = testInfo.project.use.baseURL ?? 'http://localhost:5000'
+      const ourHost = new URL(base).hostname
       const isOurs = (url: string) => {
         try {
-          return new URL(url, 'http://localhost:5000').hostname === 'localhost'
+          return new URL(url, base).hostname === ourHost
         } catch {
           return false
         }
