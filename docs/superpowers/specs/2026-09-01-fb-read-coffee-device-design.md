@@ -345,7 +345,7 @@ npx tsx scripts/build-read-ad.mjs love-again --device coffee
 | **No handle** on traditional *fincan* | Mitigated: a handle is a hard requirement of the brief, enforced at candidate review |
 | **Audience fit is unknown.** Tea reads British/generic-Western; coffee reads Turkish/Greek/Armenian to US/UK women 45+ | Unresolved, and not a blocker. The lander never has to say "Turkish" — the eyebrow says *the cup has been turned*. Whether the **ad** should lean into the novelty is a separate decision, deliberately not taken here |
 | **`candle` still waits**, drawn and one entry from live, with two art/copy mismatches (flame leans right vs copy "pulls left"; pale smoke vs "dark smoke") | Out of scope. Coffee was chosen ahead of it |
-| **No vitest guard file for `/fb-read`** — every other funnel family has one | Pre-existing gap, unchanged by this work. Not fixed here |
+| **No vitest guard file for `/fb-read`** — every other funnel family has one | **Partly fixed here.** `tests/fb-read-registry.test.ts` gates registry staleness and the per-device invariants a `pick:'symbol'` device needs. It does NOT check copy quality — that stays the eval's job |
 
 ---
 
