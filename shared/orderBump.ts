@@ -219,6 +219,39 @@ export const V1_BUMP_PRODUCT_KEY_MONEY_LANDER = 'money_lander_addon';
  */
 export const V1_BUMP_PRODUCT_KEY_SOULMATE_LANDER = 'soulmate_lander_addon';
 
+/**
+ * `metadata.bumpProduct` for a bump bought on the /fb-read bridge (Lewis, 2026-09-01).
+ *
+ * WHY /fb-read GETS ITS OWN KEY. The winning copy arm sells a double-STRENGTH
+ * clearing ("twice the depth on tonight's clearing"), not a second reading, and Lewis
+ * asked for this funnel's buyers to be kept off `theseerwithin_money_ob_paid` — a list
+ * whose follow-up sequence promises a second reading. Same posture, and the same
+ * mechanism, as the money and soulmate lander keys.
+ *
+ * 🔴 IT DELIBERATELY DOES NOT CONTAIN `double_reading`. An EQUALS and a CONTAINS
+ * filter must BOTH fail, exactly as for the three keys above: a value like
+ * `double_reading_read` would still satisfy a contains-check and generate the PDF.
+ *
+ * 🔴 KEYED ON THE FUNNEL, SO IT COVERS EVERY /fb-read DEVICE. There is no
+ * per-device bump routing and this deliberately does not add one — `tea` is the only
+ * device live (Joel, 2026-09-01 call: dream is built but not launching), so
+ * funnel-level and device-level are the same set today. A future device inherits this
+ * key; if one ever needs its own, thread the device in here rather than adding a
+ * second place that believes it owns the answer.
+ *
+ * NO ENV SWITCH, unlike money and soulmate. Theirs exists to make a cutover
+ * reversible on a funnel that already had live buyers mid-flight. /fb-read has none —
+ * it ships with this key from its first bump order — so a switch would only add a
+ * half-on state that cannot occur.
+ *
+ * ⚠️ FULFILMENT CONSEQUENCE, KNOWN AND ACCEPTED (Lewis, 2026-09-01, after the
+ * trade-off was put to him). Mike's filter is an EQUALS on `double_reading`, so an
+ * /fb-read bump buyer reaches no branch and receives NO second-reading PDF until Mike
+ * adds one for this key. `product` stays `energy_clearing_ritual`, so her MAIN reading
+ * is unaffected. ▶️ MIKE MUST BE TOLD THIS KEY NAME.
+ */
+export const V1_BUMP_PRODUCT_KEY_READ_LANDER = 'read_lander_addon';
+
 
 /**
  * `metadata.bumpProduct` for a bump bought on the DOWNSELL checkout (Lewis,
