@@ -5,6 +5,7 @@ import {
   isBackendOfferKey,
   isBookingTreatment,
   resolveBackendCharge,
+  upsellChargeFields,
   type BookingTreatment,
 } from '@shared/backendOffers';
 import { getBeOrderBySession, recordBackendOrder, writeToCustomerList } from '../lib/beOrders';
@@ -227,6 +228,14 @@ router.post('/upsell/charge', async (req: Request, res: Response) => {
           }
         : undefined;
 
+    // Attribute the upsell to the offer she actually booked (from the booking
+    // session), not a hardcoded '02'. Defaults to twin-flame if unresolved.
+    const { offer: chargeOffer, description: chargeDescription } = upsellChargeFields(
+      session.metadata,
+      upsell.name,
+      isDownsell,
+    );
+
     const charge = await stripe.paymentIntents.create({
       amount: amountCents,
       currency: 'usd',
@@ -234,14 +243,14 @@ router.post('/upsell/charge', async (req: Request, res: Response) => {
       payment_method: paymentMethodId,
       off_session: true,
       confirm: true,
-      description: `BE 02 · ${upsell.name}${isDownsell ? ' (downsell)' : ''}`,
+      description: chargeDescription,
       ...(shipping ? { shipping } : {}),
       metadata: {
         // ⛔ The `be_` key. Unknown to every V1 webhook branch → no Meta CAPI, no
         // Google Ads, no Trackdesk. The BE webhook branch routes it to the offer's
         // own list (be_protection_ritual→6972555, be_bracelet→6972556).
         product: upsell.productKey,
-        offer: 'twin-flame',
+        offer: chargeOffer,
         originalSession: sessionId,
         flow: '1click',
         ...(isDownsell ? { type: 'downsell' } : {}),
