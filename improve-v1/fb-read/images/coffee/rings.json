@@ -1,0 +1,13 @@
+{
+  "_comment": "Ring geometry for the coffee cup. These coordinates belong to cup.png and to nothing else — re-crop the master and every one of them is wrong. Consumed by scripts/ring-read-cup.mjs.",
+  "_crop": "520, not tea's 420. The road is a LONG mark — that is what makes it a road — and a 420 square could not contain a ring around any useful length of it. 520 still zooms to 41% of the cup, so the reveal is a real zoom.",
+  "_road": "Rings a SEGMENT, not the whole run: the stretch under the rim where the line is clearest. The eye follows the line out past the ring, which is what a road should do. A ring around the entire arc would be an 880px ellipse and would read as a border, not as sight.",
+  "cup": "cup.png",
+  "size": 1254,
+  "crop": 520,
+  "rings": {
+    "a": { "cx": 549,  "cy": 228,  "rx": 240, "ry": 70,  "rot": -3, "label": "road" },
+    "b": { "cx": 383,  "cy": 790,  "rx": 163, "ry": 215, "rot": 0,  "label": "tree" },
+    "c": { "cx": 611,  "cy": 1105, "rx": 240, "ry": 130, "rot": 0,  "label": "lake" }
+  }
+}
