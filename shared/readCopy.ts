@@ -14,6 +14,37 @@ export const UNWRITTEN = "__UNWRITTEN__";
 export const READS: Partial<
   Record<ReadDevice, Partial<Record<ReadHook, Record<ReadOption, string[]>>>>
 > = {
+  coffee: {
+    "love-again": {
+      a: [
+        "A road, yes. Running along under the rim of your cup, up where the grounds came to rest last.",
+        "You asked whether you'll love again. A road up near the rim is the weeks just ahead of you.",
+        "Love is coming to you. The road's already in the cup, dear — it isn't waiting on you to find it.",
+        "No name comes with it. No face either, and nothing in the grounds tells me when.",
+        "So there's a road sitting in your cup, and you've felt none of it moving yet.",
+        "You've kept getting up for days that all looked the same. Nobody claps for that, dear.",
+        "Let me look closer at what's been keeping that road from reaching you…",
+      ],
+      b: [
+        "A tree, yes. Halfway up the wall of your cup, where the grounds caught and held.",
+        "You asked whether you'll love again. A tree halfway up is what's still standing in you now.",
+        "You came through it whole. Whatever you think it took from you, the cup still shows me a tree.",
+        "The grounds don't say who it's for. Nothing tells me what comes of it either.",
+        "So something in you held the whole way through, and it never once felt like it was holding.",
+        "You've been treating yourself like the thing that got broken. That isn't what I'm looking at.",
+        "Let me look closer at why you've had to hold all of that up on your own…",
+      ],
+      c: [
+        "A lake, yes. Lying in the bottom of your cup, where the grounds settled first and stayed.",
+        "You asked whether you'll love again. A lake on the floor of the cup is the ground you were built on.",
+        "There's nothing wrong down there. What you were built on is deep, dear, and it's still holding.",
+        "No name sits in it. The grounds stop at the water and tell me nothing past it.",
+        "So the deep part of you is sound, and you've spent a long time doubting that.",
+        "You've gone looking for the fault in yourself, and you've always found one.",
+        "Let me look closer at what's been keeping anyone from reaching that deep in you…",
+      ],
+    },
+  },
   dream: {
     "hiding-something": {
       a: [

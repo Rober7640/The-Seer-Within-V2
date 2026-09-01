@@ -11,7 +11,7 @@ page or route. `/fb-read` renders every device from `shared/readDevices.ts`.
 
 | | `dream` | `tea` | `coffee` |
 |---|---|---|---|
-| **love-again** | ✅ 3/3 | ✅ 3/3 | — |
+| **love-again** | ✅ 3/3 | ✅ 3/3 | ✅ 3/3 |
 | **still-think** | ✅ 3/3 | ✅ 3/3 | — |
 | **hiding-something** | ✅ 3/3 | ✅ 3/3 | — |
 
@@ -39,7 +39,7 @@ copy has to exist in full either way.
 |---|---|
 | Mechanism | natural-cut |
 | Frame | `self-frame` |
-| Devices built | `dream`, `tea` |
+| Devices built | `dream`, `tea`, `coffee` |
 | VOC | inherited — inherits the shipped palm love-again finding; the dream panels are survey-sourced, not VOC-sourced |
 
 **She is asking:** She is asking, after heartbreak, whether she will ever love again — worn down, but the hope is still there.
@@ -151,6 +151,9 @@ https://www.theseerwithin.com/fb-read/c?hook=love-again&device=dream&utm_content
 ```
 ```
 https://www.theseerwithin.com/fb-read/c?hook=love-again&device=tea&utm_content=<ad>
+```
+```
+https://www.theseerwithin.com/fb-read/c?hook=love-again&device=coffee&utm_content=<ad>
 ```
 ```
 https://www.theseerwithin.com/fb-read/c?hook=still-think&device=dream&utm_content=<ad>
