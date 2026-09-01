@@ -843,24 +843,23 @@ export function useConversation() {
       return
     }
 
-    // /fb-read bridge traffic: same skip-the-bucket-picker shape as tarot. The read
-    // identity already lives in the opener and in the server-side prompt, so the
-    // deeper flow stays the GENERIC engine — no palm-style identity is written to
-    // userData. One branch serves every device, because the device is a registry
-    // lookup rather than a code path.
+    // /fb-read bridge traffic: the same skip-the-bucket-picker shape as palm and
+    // tarot. Every read hook is a love question — readHookToBucket returns 'love'
+    // for all three — so the picker re-asks her the question the ad already asked.
     //
-    // 🔴 THIS BRANCH WAS MISSING AND THE FOUR BUCKETS CAME BACK. Every /fb-read
-    // version ends at NAME_CAPTURE, fell past palm and tarot, and landed on
-    // BUCKET_SELECTION — so a woman who had clicked an ad asking "Will I love
-    // again?", tapped a symbol and read a seven-bubble reading about it was then
-    // asked "what's weighing on your heart today, dear?" and offered Money and
-    // Purpose. `hookToBucket` was written for this and imported here, and nothing
-    // ever called it.
+    // 🔴 THIS BRANCH WAS MISSING, AND ONLY A LIVE WALK FOUND IT (2026-09-01).
+    // readHookToBucket was imported at the top of this file and never called, so
+    // /fb-read fell straight through to the generic base-V1 path below and showed
+    // her the four topic cards after the cup. Palm and tarot each had their branch;
+    // read's was written as an import and never wired. An unused import is not a
+    // type error, and no test covered it, so nothing flagged it.
     //
-    // It hid because scripts/walk-read-funnel.mjs DETECTS the picker and taps
-    // "Love & Relationships" on your behalf, so all seven personas reached the
-    // close and the redundant question read as a normal step in the transcript.
-    // The walker now fails on it instead.
+    // The cost was not only the extra step: her AWeber bucket tag became whatever
+    // she clicked rather than what the ad asked, so a woman who came through a love
+    // ad could be filed under money.
+    //
+    // Deliberately IDENTICAL to the tarot branch above, including its two message
+    // pairs — Joel asked for /fb-read to behave as the tarot landers do.
     const read = parseReadParams(window.location.search)
     if (read) {
       updateUserData({ bucket: readHookToBucket(read.hook) })
@@ -1134,6 +1133,22 @@ export function useConversation() {
       // exposure row is written ONCE per subject and `conversations` has no deck/hook
       // column, so anything not sent here can never be recovered.
       const tarot = phFunnel === 'tarot' ? tarotEventProps() : undefined
+      // /fb-read: which DEVICE she came through (tea / dream / …). Sent so the lead
+      // can be TAGGED per device while the free list itself stays keyed on the
+      // FUNNEL (AWEBER_LIST_ID_READ) — a future device then needs a new tag value
+      // and no new list, no AWeber setup. Gated on the funnel exactly as `tarot`
+      // is: the params are tab-scoped and would otherwise tag a later non-read lead.
+      //
+      // 🔴 THIS IS THE DEVICE SHE WAS SHOWN, NOT THE RAW PARAM. parseReadParams
+      // already falls an unknown `?device=` back to DEFAULT_DEVICE, which is what
+      // the lander rendered from. Tagging the URL's claim instead would file her
+      // under a device whose reading she never actually saw.
+      const readParams = phFunnel === 'read' ? parseReadParams(window.location.search) : null
+      const readDevice = readParams?.device
+      // Her ad HOOK, recorded on the gate + bump exposures so /fb-read breaks down
+      // per lander the way tarot and palm already do. One-shot: the exposure row is
+      // written once per subject and can never be back-filled.
+      const readHook = readParams?.hook
 
       const leadRes = await fetch('/api/lead', {
         method: 'POST',
@@ -1161,6 +1176,8 @@ export function useConversation() {
                 tarotAngle: tarot.angle,
               }
             : {}),
+          ...(readDevice ? { readDevice } : {}),
+          ...(readHook ? { readHook } : {}),
           fbp: fbpMatch ? decodeURIComponent(fbpMatch[1]) : undefined,
           fbc: fbcMatch ? decodeURIComponent(fbcMatch[1]) : undefined,
         }),

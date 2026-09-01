@@ -2,6 +2,7 @@ import {
   V1_BUMP_PRODUCT_KEY,
   V1_BUMP_PRODUCT_KEY_DOWNSELL,
   V1_BUMP_PRODUCT_KEY_MONEY_LANDER,
+  V1_BUMP_PRODUCT_KEY_READ_LANDER,
   V1_BUMP_PRODUCT_KEY_SOULMATE_LANDER,
   type BumpTier,
 } from './orderBump';
@@ -50,6 +51,13 @@ export function bumpProductKeyFor(
   // deliberately passes 'downsell' can reach the branch below.
   tier: BumpTier = 'main',
 ): string {
+  // /fb-read, every device. Disjoint from both tarot families by construction —
+  // they require funnel === 'v1-tarot' and this requires 'v1-read' — so its position
+  // in this chain is a formality, not a precedence rule. No env switch: see the key's
+  // own docs for why a brand-new funnel does not need a reversible cutover.
+  if (funnel === 'v1-read') {
+    return V1_BUMP_PRODUCT_KEY_READ_LANDER;
+  }
   if (moneyLanderSplitLive() && isTarotMoneyLead(funnel, bucket)) {
     return V1_BUMP_PRODUCT_KEY_MONEY_LANDER;
   }
@@ -77,6 +85,10 @@ export function bumpProductKeyFor(
 const BUMP_PAID_LIST_EXCLUDED_KEYS: readonly string[] = [
   V1_BUMP_PRODUCT_KEY_MONEY_LANDER,
   V1_BUMP_PRODUCT_KEY_SOULMATE_LANDER,
+  // /fb-read (Lewis, 2026-09-01). Its bump sells a double-STRENGTH clearing, so its
+  // buyers must not land on a list that follows up on a second reading. Mike's EQUALS
+  // filter on `double_reading` does not match this key either, so no PDF is sent.
+  V1_BUMP_PRODUCT_KEY_READ_LANDER,
   // The DOWNSELL bump is a double-STRENGTH clearing, not a second reading (Lewis,
   // 2026-08-25) — so its buyers must not land on a list that follows up on a second
   // reading. Consistent with Mike's EQUALS filter on `double_reading` not matching

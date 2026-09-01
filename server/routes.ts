@@ -1413,6 +1413,19 @@ export async function registerRoutes(
               angle: str40(req.body?.tarotAngle),
             }
           : undefined;
+      // /fb-read device (tea / dream / …). Gated on the funnel for the same reason
+      // `tarotLander` is: the param is tab-scoped and would otherwise mislabel a
+      // later non-read lead. A LABEL ONLY — it selects no price, no list and no
+      // reading, so normalising + length-capping is validation enough; an
+      // unrecognised value can only mislabel its own AWeber tag.
+      // /fb-read lander identity (device + ad hook). `device` also drives the
+      // AWeber tag below; BOTH are recorded on the gate + bump exposures, which is
+      // the /fb-read counterpart of `tarotLander` and is subject to the same
+      // one-shot rule — anything not written at assignment can never be added.
+      const readDevice = funnel === "v1-read" ? str40(req.body?.readDevice) : undefined;
+      const readHook = funnel === "v1-read" ? str40(req.body?.readHook) : undefined;
+      const readLander =
+        readDevice || readHook ? { device: readDevice, hook: readHook } : undefined;
 
       logger.info("Lead captured:", { email, firstName, bucket, funnel, sign: palmSign ?? null });
 
@@ -1450,7 +1463,9 @@ export async function registerRoutes(
       // "the test should go on to thumb"). Untrusted, so it's just normalized here;
       // it can only ever move a palm visitor between two legitimate configured arms,
       // and an unrecognized value simply falls through to the unscoped control.
-      const assigned = await assignVariantIfMissing(email, funnel, palmSign, tarotLander, palmHook);
+      const assigned = await assignVariantIfMissing(
+        email, funnel, palmSign, tarotLander, palmHook, readLander,
+      );
 
       // Add to AWeber email list (non-blocking). Per-lander FREE list when the
       // funnel's AWEBER_LIST_ID_* env is set, else the shared AWEBER_LIST_ID.
@@ -1478,7 +1493,15 @@ export async function registerRoutes(
         email,
         name: firstName,
         listId: leadListId,
-        tags: fbifyAweberTags([bucket || "website", "seer-within"], funnel),
+        // Base tags, plus the /fb-read DEVICE as its OWN tag. Deliberately not a
+        // suffix on `seer-within-read`: the free list is keyed on the FUNNEL
+        // (AWEBER_LIST_ID_READ), so carrying the device as a separate tag means a
+        // future device needs no new list and no AWeber dashboard setup — AWeber
+        // creates tag values on the fly and merges them under update_existing.
+        tags: [
+          ...fbifyAweberTags([bucket || "website", "seer-within"], funnel),
+          ...(readDevice ? [`read-${readDevice}`] : []),
+        ],
         // Omitted entirely when we have no link — never `custom_fields: {}`,
         // which AWeber reads as "clear every custom field" on an
         // update_existing write.
