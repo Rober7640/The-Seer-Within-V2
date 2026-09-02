@@ -19,15 +19,15 @@ def links(t, slug):
 
 def render(d):
     slug, out = d["slug"], []
-    def row(inner, pad="0 40px 0"):
+    def row(inner, pad="0 30px 0"):
         out.append(f'  <tr><td class="px" style="padding:{pad};">{inner}</td></tr>')
     for kind, val in d["blocks"]:
         if kind == "note":
             out.append(f'\n  <!-- {val} -->')
         elif kind == "h2":
-            row(f'<h2 style="margin:0 0 16px;font-size:21px;font-weight:bold;color:{INK};">{val}</h2>', "30px 40px 0")
+            row(f'<h2 style="margin:0 0 16px;font-size:21px;font-weight:bold;color:{INK};">{val}</h2>', "30px 30px 0")
         elif kind == "p":
-            row(f'<p style="margin:0;font-size:16.5px;line-height:1.62;color:{BODY};">{links(val, slug)}</p>', "0 40px 18px")
+            row(f'<p style="margin:0;font-size:16.5px;line-height:1.62;color:{BODY};">{links(val, slug)}</p>', "0 30px 18px")
         elif kind == "hero":
             # ⛔ No cloth panel behind them. The cards ARE the hero — big, on the sheet.
             card = (f'<td align="center" valign="top" style="padding:0 10px;">'
@@ -57,19 +57,19 @@ def render(d):
                     f'style="display:block;width:86px;max-width:100%;height:auto;border-radius:4px;margin:0 auto;">'
                     f'<div style="font-family:{F};font-size:10px;letter-spacing:.09em;text-transform:uppercase;'
                     f'color:{MUT};line-height:1.35;padding-top:9px;">{t}</div></td>'
-                    for n, t in items)
+                    for t in [(x[1] if isinstance(x, tuple) else x) for x in items])
                 lab = (f'<tr><td colspan="{len(items)}" style="font-family:{F};font-size:10px;letter-spacing:.16em;'
                        f'text-transform:uppercase;color:{OCH};font-weight:bold;padding:0 0 10px 5px;">{label}</td></tr>'
                        ) if label else ""
                 blocks.append(f'<table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" '
                               f'style="margin-bottom:22px;">{lab}<tr>{cells}</tr></table>')
-            row("".join(blocks), "26px 40px 8px")
+            row("".join(blocks), "26px 30px 8px")
         elif kind == "ps":
             out.append('\n  <!-- P.S. · permanent slot, ratified across all eight letters -->')
             row(f'''<table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation"><tr>
       <td width="3" bgcolor="{OCH}" style="background-color:{OCH};"></td>
       <td style="padding:13px 16px;font-size:15px;line-height:1.6;color:{BODY};background-color:#FAF7F1;"><b>P.S.</b> {links(val, slug)}</td>
-    </tr></table>''', "24px 40px 0")
+    </tr></table>''', "24px 30px 0")
     return "\n".join(out)
 
 def build(d):
@@ -94,7 +94,7 @@ def build(d):
   body,a{{word-break:break-word;}} table{{border-collapse:collapse;}}
   @media only screen and (max-width:600px){{
     .container{{width:100%!important;}} .px{{padding-left:18px!important;padding-right:18px!important;}}
-    .cardimg{{width:150px!important;}} .herocard{{width:140px!important;}} .backcell{{width:104px!important;height:170px!important;}}
+    .cardimg{{width:150px!important;}} .herocard{{width:140px!important;}}
   }}
 </style></head>
 <body style="margin:0;padding:0;background-color:#ffffff;">
