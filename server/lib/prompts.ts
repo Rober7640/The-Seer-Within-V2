@@ -428,6 +428,45 @@ She came to you from a reading that asked: "${guard.question}"
 ${guard.rule}`
 }
 
+// Returns '' unless the seeker arrived through /fb-tarot — so root / fb / fb2 / gdn /
+// palm prompts stay BYTE-IDENTICAL. Third sibling of palmDirective and readDirective.
+//
+// 🔴 WHY TAROT NEEDS THIS MOST. 132 of its 154 hooks bucket to 'love', so the deep
+// flow spoke to "will he commit?", "is he lying?" and "does he still think of me?"
+// with ONE set of 24 stock cold reads. Two of those answer the last question in the
+// way its own guard forbids, and the /fb-read persona walks produced one of them
+// near-verbatim twice out of two chances on the equivalent hook.
+//
+// TWO PARTS, deliberately, because the existing material is uneven:
+//
+//   1. A UNIVERSAL rule for every tarot love hook. The two bad stock lines are risky
+//      on ANY hook where she has named a specific man — which is most of the 132 —
+//      not only on the still-think family. This part does not depend on the tendency
+//      table being good.
+//   2. The hook's OWN tendency, for specificity. 141 of these are already written and
+//      reviewed and were being used by buildTarotReflectPrompt alone. But only 87
+//      carry an explicit NEVER; the other 54 are context. So the tendency is treated
+//      as useful colour on top of part 1, never as the guard itself.
+//
+// 🔴 NOT A BASE-PROMPT EDIT. The stock lines stay. They are good cold reads for the
+// traffic they were written for, and deleting them would change every V1 love
+// conversation on the live ROOT funnel to fix a defect that only shows on tarot.
+function tarotDirective(userData: UserData): string {
+  const hook = userData.tarotHook
+  if (!hook) return ''
+  const tendency = TAROT_HOOK_TENDENCY[hook]
+  return `
+
+## The question she arrived on — HONOR THIS
+She came to you from a tarot reading that asked her a specific question, and she chose a card against it.
+
+🔴 TWO LINES IN THE COLD READS ABOVE ARE BANNED FOR HER: "There's someone who already thinks of you in quiet moments" and "They think about you more than you know". She arrived naming a particular man. Those lines read as a verdict on what HE feels, which nobody can report, and it is the one claim she can later discover is false. Never state that he thinks of her and never state that he does not — including in softened form.${
+    tendency ? `
+
+Where her read should land: ${tendency}` : ''
+  }`
+}
+
 // Deep-flow guards, keyed by /fb-read hook. Deliberately SHORTER than the reflect
 // guards in shared/readDevices.ts: this rides on top of a long base prompt, and the
 // job here is to disarm the specific stock lines that contradict the hook, not to
@@ -459,7 +498,7 @@ export function buildReading1Prompt(userData: UserData, concern: string): string
 
   return `
 ${EVELYN_BASE_PROMPT}
-${bucketPrompt}${palmDirective(userData)}${readDirective(userData)}
+${bucketPrompt}${palmDirective(userData)}${readDirective(userData)}${tarotDirective(userData)}
 
 ## Current Session
 - User's name: ${userData.firstName}
@@ -518,7 +557,7 @@ export function buildReading2Prompt(userData: UserData, deeperResponse: string):
 
   return `
 ${EVELYN_BASE_PROMPT}
-${bucketPrompt}${palmDirective(userData)}${readDirective(userData)}
+${bucketPrompt}${palmDirective(userData)}${readDirective(userData)}${tarotDirective(userData)}
 
 ## Current Session
 - User's name: ${userData.firstName}
@@ -553,7 +592,7 @@ ${userData.personName ? `Continue using ${userData.personName}'s name where rele
 
 export function buildFutureValidationPrompt(userData: UserData, vision: string): string {
   return `
-${EVELYN_BASE_PROMPT}${palmDirective(userData)}${readDirective(userData)}
+${EVELYN_BASE_PROMPT}${palmDirective(userData)}${readDirective(userData)}${tarotDirective(userData)}
 
 ## Current Session
 - User's name: ${userData.firstName}
@@ -598,7 +637,7 @@ export function buildCrisisRevealPrompt(userData: UserData, emotionalResponse: s
 
   return `
 ${EVELYN_BASE_PROMPT}
-${bucketPrompt}${palmDirective(userData)}${readDirective(userData)}
+${bucketPrompt}${palmDirective(userData)}${readDirective(userData)}${tarotDirective(userData)}
 
 ## Current Session
 - User's name: ${userData.firstName}
@@ -662,7 +701,7 @@ ${userData.personName ? `Reference the interference between them and ${userData.
 
 export function buildCrisisCostPrompt(userData: UserData, sourceResponse: string): string {
   return `
-${EVELYN_BASE_PROMPT}${palmDirective(userData)}${readDirective(userData)}
+${EVELYN_BASE_PROMPT}${palmDirective(userData)}${readDirective(userData)}${tarotDirective(userData)}
 
 ## Current Session
 - User's name: ${userData.firstName}

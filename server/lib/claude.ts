@@ -27,7 +27,7 @@ import {
 } from './prompts'
 import type { ReadDevice, ReadHook, ReadOption } from '../../shared/readDevices'
 import { remainingBubbles } from '../../shared/readDevices'
-import { readReplyHarms } from '../../shared/readGuards'
+import { readReplyHarms, deepReplyHarms } from '../../shared/readGuards'
 
 interface ClaudeResponse {
   messages: string[]
@@ -98,30 +98,69 @@ function getFallbackMessages(): string[] {
   ]
 }
 
+// Deep-flow harm net for quiz-bridge traffic. check → retry once naming the breach →
+// drop the offending bubble if the retry still breaches and something clean remains.
+//
+// 🔴 A PROMPT INSTRUCTION IS A REQUEST; THIS IS THE NET. tarotDirective and
+// readDirective tell the model what not to say and the persona walks show it listens
+// — but that is evidence, not a guarantee, and this guard has been walked through
+// twice by a model that already had it. The prompt is the primary defence; this stops
+// the residue reaching her.
+//
+// Returns the response UNTOUCHED for root / fb / fb2 / gdn / palm, because
+// deepReplyHarms returns [] without a read or tarot hook on userData.
+async function callGuardedDeep(
+  userData: UserData,
+  prompt: string,
+  phase: string,
+): Promise<ClaudeResponse> {
+  const first = await callClaude(prompt)
+  const msgsOf = (r: ClaudeResponse): string[] =>
+    Array.isArray((r as any)?.messages) ? ((r as any).messages as string[]) : []
+
+  let harms = deepReplyHarms(userData, msgsOf(first))
+  if (!harms.length) return first
+
+  console.warn(`[deep-guard] ${phase} breached: ${harms.join(' · ')} — retrying`)
+  const retry = await callClaude(
+    `${prompt}\n\nYour previous reply broke a rule: ${harms.join('; ')}. Never state what a specific man thinks or feels about her — nobody can report a thought, and it is the one claim she can later find false. Say it again without that claim.`,
+  )
+  const retryMsgs = msgsOf(retry)
+  harms = deepReplyHarms(userData, retryMsgs)
+  if (!harms.length) return retry
+
+  // Still breaching. Drop only the offending bubbles, and only if something is left —
+  // a short reading is recoverable, a verdict on a real man is not.
+  const clean = retryMsgs.filter((m) => !deepReplyHarms(userData, [m]).length)
+  console.warn(`[deep-guard] ${phase} breached on retry too: ${harms.join(' · ')} — dropping ${retryMsgs.length - clean.length} bubble(s)`)
+  if (!clean.length) return retry
+  return { ...(retry as any), messages: clean } as ClaudeResponse
+}
+
 // New expanded flow functions
 export async function generateReading1(userData: UserData, concern: string): Promise<ClaudeResponse> {
   const prompt = buildReading1Prompt(userData, concern)
-  return callClaude(prompt)
+  return callGuardedDeep(userData, prompt, 'generateReading1')
 }
 
 export async function generateReading2(userData: UserData, deeperResponse: string): Promise<ClaudeResponse> {
   const prompt = buildReading2Prompt(userData, deeperResponse)
-  return callClaude(prompt)
+  return callGuardedDeep(userData, prompt, 'generateReading2')
 }
 
 export async function generateFutureValidation(userData: UserData, vision: string): Promise<ClaudeResponse> {
   const prompt = buildFutureValidationPrompt(userData, vision)
-  return callClaude(prompt)
+  return callGuardedDeep(userData, prompt, 'generateFutureValidation')
 }
 
 export async function generateCrisisReveal(userData: UserData, emotionalResponse: string): Promise<ClaudeResponse> {
   const prompt = buildCrisisRevealPrompt(userData, emotionalResponse)
-  return callClaude(prompt)
+  return callGuardedDeep(userData, prompt, 'generateCrisisReveal')
 }
 
 export async function generateCrisisCost(userData: UserData, durationResponse: string): Promise<ClaudeResponse> {
   const prompt = buildCrisisCostPrompt(userData, durationResponse)
-  return callClaude(prompt)
+  return callGuardedDeep(userData, prompt, 'generateCrisisCost')
 }
 
 export async function generateCrisisUrgency(userData: UserData, worthResponse: string): Promise<ClaudeResponse> {

@@ -803,7 +803,11 @@ export function useConversation() {
     // is written to userData. Tarot-only ⇒ no impact on other funnels.
     const tarot = parseTarotParams(window.location.search)
     if (tarot) {
-      updateUserData({ bucket: tarotHookToBucket(tarot.hook) })
+      // See the readHook note in the /fb-read branch below — same defect, same fix,
+      // except tarot is the funnel actually running ads. The hook is what lets
+      // tarotDirective() disarm the two base-prompt cold reads that answer a
+      // decode-him question in the way that hook's own guard forbids.
+      updateUserData({ bucket: tarotHookToBucket(tarot.hook), tarotHook: tarot.hook })
 
       await sendBotMessages([
         `It's lovely to meet you, ${capitalized}.`,

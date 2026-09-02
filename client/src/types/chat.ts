@@ -118,6 +118,14 @@ export interface UserData {
   // base prompt's SEEKING_LOVE cold reads that contradict that hook's guard. Only
   // /fb-read traffic sets it; every other funnel's prompt stays byte-identical.
   readHook?: string
+  // /fb-tarot identity carry — the HOOK she arrived on. Same job as readHook and set
+  // the same way, at tarot name-capture. Read by tarotDirective() in prompts.ts.
+  //
+  // 🔴 132 OF 154 TAROT HOOKS BUCKET TO 'love', so before this the deep flow spoke to
+  // "will he commit?", "is he lying?" and "does he still think of me?" with one
+  // identical set of 24 stock cold reads — two of which answer the last of those in
+  // the exact way its own guard forbids.
+  tarotHook?: string
   // fb-palm COMMITMENT GATE (v1_palm_commitment_gate_2026) — true when this lead
   // bucketed into the gated arm, so the close renders the 3-checkbox commitment
   // card instead of the plain purchase button. Assigned by the EXPERIMENT

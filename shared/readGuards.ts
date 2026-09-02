@@ -111,7 +111,15 @@ const MIND_CLAIM = /\b(he|they) (still )?(loves?|misses|regrets|thinks? about|wa
 // and the gentle one is not.
 const SOFTENED_MIND_CLAIMS = [
   /\bhe (still )?(thinks?|thought) (of|about) you\b/i,
-  /\bthinks? of you more than you know\b/i,
+  /\bthinks? (of|about) you more than you know\b/i,
+  // 🔴 "SOMEONE", NOT "HE" — and that is exactly why it slipped through.
+  // EVELYN_BASE_PROMPT's SEEKING_LOVE cold reads contain "There's someone who
+  // already thinks of you in quiet moments". Every mind-claim pattern here keyed on
+  // he/they, so this one sailed past the filter, and the /fb-read persona walks
+  // produced it twice out of two chances on still-think. To a woman who arrived from
+  // an ad naming a particular man, "someone" IS him.
+  /\b(someone|somebody) who (already )?(thinks?|dreams?) (of|about) you\b/i,
+  /\bthere'?s someone who (already )?thinks? (of|about) you\b/i,
   /\byou cross(es)? his mind\b/i,
   /\bpart of him still\b/i,
   /\bhe (hasn'?t|has not) forgotten\b/i,
@@ -230,5 +238,38 @@ export function readReplyHarms(args: {
   const wrong = namesWrongMark(device, option, joined);
   if (wrong.length) harms.push(`names a mark that is not in her cup (${wrong.join(", ")})`);
 
+  return harms;
+}
+
+// ── The deep flow ───────────────────────────────────────────────────────────
+//
+// 🔴 EVERYTHING ABOVE GUARDS ONE TURN. readReplyHarms is called only by
+// generateReadReflect; generateReading1/2, generateFutureValidation,
+// generateCrisisReveal and generateCrisisCost had no harm check at all, and neither
+// did generateTarotReflect. The /fb-read persona walks breached in exactly that gap —
+// three times in seven conversations, every one of them after email capture.
+//
+// This is deliberately NARROWER than readReplyHarms. It carries one harm, the one
+// that is unanswerable by anyone and checkable by her life: a verdict on what a
+// specific man feels. Word counts, restating the opening and the rest of the quality
+// checks stay in the eval, where the codebase already puts them — those are worth
+// failing a build over and not worth degrading a live reading over.
+//
+// Fires only for quiz-bridge traffic (a read or tarot hook on userData), so root, fb,
+// fb2, gdn and palm conversations are untouched.
+export function deepReplyHarms(
+  userData: { readHook?: string; tarotHook?: string },
+  messages: string[],
+): string[] {
+  if (!userData.readHook && !userData.tarotHook) return [];
+  const harms: string[] = [];
+  for (const m of messages) {
+    const flat = assertsAboutHim(m);
+    if (flat) harms.push(`speaks for him ("${flat}")`);
+    else {
+      const soft = assertsSoftened(m);
+      if (soft) harms.push(`speaks for him, softened ("${soft}")`);
+    }
+  }
   return harms;
 }

@@ -72,6 +72,14 @@ export interface UserData {
   // "someone" as a future stranger; a woman who came from an ad about a specific man
   // can only read it as him. The line is fine; it was just never scoped.
   readHook?: string
+  // /fb-tarot identity carry — the HOOK she arrived on. Same job as readHook and set
+  // the same way, at tarot name-capture. Read by tarotDirective() in prompts.ts.
+  //
+  // 🔴 132 OF 154 TAROT HOOKS BUCKET TO 'love', so before this the deep flow spoke to
+  // "will he commit?", "is he lying?" and "does he still think of me?" with one
+  // identical set of 24 stock cold reads — two of which answer the last of those in
+  // the exact way its own guard forbids.
+  tarotHook?: string
   // Close-depth A/B (v1_close_depth_2026) — 'deep' ⇒ the thickened pitch. Set
   // client-side from the /api/lead response (or the ?close_depth= preview
   // override) and carried here only because the client posts the whole userData
