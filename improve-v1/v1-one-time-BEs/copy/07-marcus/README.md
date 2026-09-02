@@ -10,6 +10,8 @@ event letters, 07 is a daily email programme. Everything here serves one mechani
 | Understand the whole offer | [`spec`](../../../docs/superpowers/specs/2026-09-02-marcus-daily-tarot-design.md) — funnel, list, warm-up ramp, n8n, risks |
 | Write a daily email | **This file**, then [`07-P1`](./07-P1-the-seven-spreads.md), then the day's slot below |
 | See the spreads at a glance | [`07-P1-preview.html`](./07-P1-preview.html) · [published](https://claude.ai/code/artifact/e9cf4176-0069-48b3-bb3f-d19bef380310) |
+| See what the market does | [`docs/07-marcus/market-research.md`](../../docs/07-marcus/market-research.md) — competitors, pricing, intake, disclosure |
+| Write a sentence | [`07-P2`](./07-P2-the-device-set.md) — the device set |
 | Check a draft | `node scripts/copy-check.cjs copy/07-marcus` |
 
 ## State
@@ -50,6 +52,14 @@ event letters, 07 is a daily email programme. Everything here serves one mechani
 9. **CTA button is constant** (*"Send Marcus your question"*); the line above it is not.
 10. **Link carries `&s=<spread>`.** ⛔ Never derive the spread from the clock — she may click
     Tuesday 11pm ET, which is Wednesday in SGT.
+
+## ⛔ Two decisions the market research reopened *(2026-09-02)*
+
+1. **The question box sits before payment.** Market research says *"pay first, ask second,
+   universally"* — and **offer 03 already moved its intake after the money** on the reasoning that a
+   buyer who abandons having paid is recoverable. Awaiting an operator call.
+2. **"No sugarcoating" is a crowded position**, used by a third of ~150 profiles sampled. Marcus's
+   register leans on it. Not wrong, but no longer a differentiator.
 
 ## Settled — do not re-open
 
