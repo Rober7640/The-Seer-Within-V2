@@ -173,14 +173,12 @@ export const BACKEND_OFFER_CATALOG: Record<BackendOfferKey, BackendOffer> = {
       chat: '/offers/wiccan/judgement-day/chat',
     },
     successPath: '/offers/wiccan/judgement-day/success',
+    upsellEntryPath: '/offers/upsell/welcome1',
     // entryPath: '/offers/wiccan/judgement-day/entry',  ← A6. See the field's note.
     //
-    // 🔴 FALSE UNTIL A6. Two reasons, either one sufficient: `successPath` above has no
-    // route yet, so a buyer would land on a 404 holding a receipt; and 03 is an ACT
-    // offer whose booking screens ask for the Entry NOWHERE, so we would be taking
-    // money for work that cannot be started. Flip this in the same commit that makes
-    // the thank-you/Entry screen render, and set `entryPath` with it.
-    readyForMoney: false,
+    // Thank-you screen renders (Task 6); upsell chain wired (Task 7). Entry form
+    // is out of scope — booking directs her to reply by email instead.
+    readyForMoney: true,
   },
 };
 
