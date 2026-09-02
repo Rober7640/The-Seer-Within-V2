@@ -543,22 +543,25 @@ split the list, we do not gate it, and we do not ask them who they are.
 tells us who these 76k are without a single survey. Click rate by topic **is** the segmentation, and
 it arrives for free while the programme runs.
 
-**The topics are the v1 buckets**, because those are already VOC-grounded in this repo and are what
-the chat funnel asks for anyway:
+**Two topics only — LOVE and MONEY** *(operator, 2026-09-02)*. Both are the repo's best-evidenced
+v1 buckets, and two is what makes the read clean.
 
 | Topic | The object it hands the copy |
 |---|---|
-| **Someone specific** | a person she keeps checking on, deciding about, waiting on |
-| **Money** | what isn't arriving, what's owed, what she's protecting |
-| **Work / purpose** | a thing outgrown, a call not answered, "what am I for" |
-| **A decision** | one re-made nine times and never taken |
+| **Love** | a person kept checked on, decided about, waited on |
+| **Money** | what isn't arriving, what's owed, what's being protected |
+
+⭐ **Two topics against seven spreads is a complete factorial in fourteen days** — every spread runs
+once with love and once with money, and strict daily alternation lands each topic on a different
+weekday in week two, so weekday and topic don't confound. Fourteen days gives a real read on which
+half of the list we actually have.
 
 ⛔ **The topic lives in beat 3, the deck line** — the same slot that carries the question and the
 window. One topic per send. The spread roster (§2) is independent of it, so Tuesday's Two Doors can
 read *someone specific* one week and *money* the next: fixed structure, genuinely new content.
 
 ⚠ **Rotate the topic against the spread deliberately**, and log which pair ran. A spread that only
-ever reads one topic teaches us nothing about the other three.
+ever reads one topic teaches us nothing about the other.
 
 **Warm-up, before daily goes wide:**
 
