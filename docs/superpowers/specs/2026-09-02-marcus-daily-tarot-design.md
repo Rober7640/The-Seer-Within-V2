@@ -83,17 +83,68 @@ a habit; a rhythm she can learn gives variety *and* gives the ask somewhere to l
 
 | Day | Draw | The read | The ask |
 |---|---|---|---|
-| Mon Tue Thu Fri | **2 cards** | The pull, and what it costs | Soft. One standing link |
-| Wed | **1 card + a practice** | Something to do tonight | **None.** Pure give |
-| Sat | **3 cards** | Full mini-reading — the week's best content | **Hard.** This is the sales email |
-| Sun | 2 cards | As Mon–Fri | Soft |
+| Mon Tue Thu Fri Sat | **2 cards** | The pull, and what it costs | **Soft.** The question, nothing else |
+| Wed | **1 card + a practice** | Something to do tonight | **Barest.** The question, no product around it |
+| **Sun** | **3 cards** | Full reading — the week's best content | **Hard.** This is the sales email |
 
-**Why Wednesday asks for nothing.** A $35 ask 365 times a year has no precedent in this deck. The
-give-day is one of the two things holding the model up. It is not a filler day — it should be the
-email people forward.
+### The spine: every email asks for her question
 
-**Why Saturday is the peak.** A 200-word daily cannot do what BE-02's 17-beat letter did. Saturday
-is the closest thing 07 has to that letter, and it carries the real argument.
+⭐ **This is the mechanic, and it governs every other decision below.** The free content's job is
+to build the **setup** — the frame that makes a personal reading the obvious next move. It does
+that by reading the card fully and truly, and then arriving at the one thing the card cannot answer
+from a distance: *what she brought to it.*
+
+So the ask is never "buy a reading." **It is "what would you ask?"** Every day, without exception.
+
+This is proven on Evelyn's list. Format 04, *the tell*, drove the most v2 sales in the reframe deck,
+and its CTA rule is a **tiny disclosure, not a purchase**. `PLAYBOOK.md:125`: interactive formats
+close with *"tell me yours"*, and reply-style is the **tone** — the click still goes to the one
+destination. 07 makes that the shape of every send rather than one format in seven.
+
+**Why it converts better than a purchase ask.** A question is free to give and she already has one.
+Typing it is the first yes, and it happens before any price is visible. By the time money appears
+at statement 6, she has told a stranger the thing she actually wants to know — and people do not
+walk away from that lightly.
+
+⛔ **The ask is card-specific, never generic.** Not *"what's your question?"* but *"what would you
+put to the Devil?"* The card sharpens the ask and gives it a reason to exist today.
+
+**Why Wednesday still asks.** It asks for the question and nothing else — no price, no product name,
+no reading offered. The give-day is one of two things holding a daily ask up, and it should be the
+email people forward. But an email with no ask at all breaks the habit the other six days build.
+
+**Why Sunday is the peak.** *(operator, 2026-09-02 — moved from Saturday.)* Sunday evening is when
+people take stock of the week behind and the week ahead, which is when a question surfaces on its
+own. A 250-word daily cannot do what BE-02's 17-beat letter did; Sunday is the closest thing 07 has
+to that letter, and it carries the real argument.
+
+### The two sells
+
+| | **Soft** — Mon–Sat | **Hard** — Sunday |
+|---|---|---|
+| **The ask** | Her question, card-specific | Her question, then the product named |
+| **Price** | Never appears | Stated plainly |
+| **What sells it** | The withhold. He read the card truly and hit the wall her question is on the other side of | **The reading itself is the pitch** — Sunday demonstrates the product by being it |
+| **Length** | ~250–320 words | ~550–650 |
+| **Devices** | One CTA | Week recap · precedent · one CTA · **P.S.** |
+
+`PLAYBOOK.md:124` — on conversion beats *"the CTA is the natural next step of the insight, never a
+bolted-on sell."* Sunday earns that by being a worked example of what she'd buy.
+
+### Sunday's closing device: the week, collected
+
+Mon–Sat each end on something the card **could not** tell him from a mass email. Sunday collects
+all six and shows they have the same missing piece:
+
+> Six days, six things I couldn't tell you. Every one of them was missing the same thing.
+
+⭐ **No other offer in the deck can do this.** It turns the whole week into a single argument that
+lands on Sunday, and it is the strongest reason 07 should exist as a daily rather than a weekly.
+
+### The strip-the-CTA test — inherited, and it applies to all seven days
+
+`PLAYBOOK.md:85`: remove the closing invitation. Is what's left still a complete, usable thing the
+reader is glad they read? **If not, it's an ad, not an email.** Sunday has to pass this too.
 
 ---
 
@@ -158,6 +209,15 @@ away with six short statements because a long letter had already done the persua
 Tuesday email has not. So 07's page carries a **short version of the argument above the
 statements**, and a Tuesday click has to convert on the page alone.
 
+⚠ **The question box comes FIRST, above the statements.** *(2026-09-02 — this reverses BE-02's
+order, deliberately.)* The CTA that brought her here said *"tell me what you'd ask."* A page that
+opens on six consent statements does not keep that promise, and she leaves. So the page opens with
+the box, she types her real question, and only then does the argument begin.
+
+This is also the strongest commitment device available: she discloses **before** any price is
+visible. The `docs/intel` teardown of the $60k astrology offer names commitment-before-checkout as
+its single biggest CRO lift.
+
 Everything else holds:
 
 - Statements are in **her** voice, first person. Marcus is named in the third person and never
@@ -172,7 +232,7 @@ Everything else holds:
 
 | Field | Why |
 |---|---|
-| Her question — free text | The core of the offer |
+| **Her question — free text** | **The core of the offer, and the first thing on the page** |
 | Her first name | Names her in the reading |
 | Her birth date | Sign and number |
 | His name | Most questions are about a specific person |
