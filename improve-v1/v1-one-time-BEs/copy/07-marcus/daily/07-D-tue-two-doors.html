@@ -2,126 +2,194 @@
 <html xmlns:v="urn:schemas-microsoft-com:vml"><head>
 <title></title><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<!-- 07-D Tuesday - The Two Doors. Marcus Stone daily. Spread: Tue, 2 face up + 6 face down = 8.
-     Subject: "{{ subscriber.first_name | capitalize }}, two doors this morning, and both of them are open"
-     Preheader: "The Devil and the Eight of Cups. One of them is the one you keep not walking through."
-     Sends 6pm SGT = 6am ET. CTA -> booking page, carries ?c= and &s=two-doors.
-     LIQUID name tag must reach AWeber INTACT. {{BOOKING_URL}} must be substituted BEFORE sending.
-     Never run a /\{\{[^}]*\}\}/ sweep - it eats the name tag. -->
+<!-- 07-D TUESDAY - The Two Doors. Marcus Stone daily. Spread: 2 face up + 6 face down = 8.
+     WRITTEN TO copy/02/02-E2-esl-v1.md - the proven letter, not the framework abstraction.
+     Beat numbers marked inline. Do NOT remove: the face-down hero, the per-card withhold
+     (each unit names one thing it cannot say and what the paid cards do say), the big idea,
+     the precedent, or the P.S. Each was missing from the first draft and each is proven.
+     ⛔ HERO IS FACE DOWN. 02-E2: "Never face-up ... hands her the whole draw before the first
+        sentence and there is nothing left to turn over." Faces appear only at their own unit.
+        No card-back art exists; the backs are rendered here. A photographed back is stronger.
+     ⚠ DIVERGENCE FROM 02: 02's letter never states price (it lives in booking statement 6).
+        07 states it, because a daily reader may only ever open one email. Operator, 2026-09-02.
+     Subject:   {{ subscriber.first_name | capitalize }}, I laid two cards for you before it got light - and nobody asked me to
+     Preheader: One of these doors costs you nothing. The other costs you something you spent years stacking.
+     Sends 6pm SGT = 6am ET.  4 CTAs -> booking page, ?c=1..4&s=two-doors.
+     TWO BRACE TOKENS, OPPOSITE MEANINGS: the Liquid name tag must reach AWeber INTACT;
+     {{BOOKING_URL}} must be substituted BEFORE sending. A brace sweep eats the name tag. -->
 <style>
-  body,a{word-break:break-word;}
-  table{border-collapse:collapse;}
-  .aw a{color:#A8721C;}
+  body,a{word-break:break-word;} table{border-collapse:collapse;}
   @media only screen and (max-width:600px){
-    .container{width:100%!important;}
-    .px{padding-left:20px!important;padding-right:20px!important;}
-    .cardimg{width:132px!important;}
+    .container{width:100%!important;} .px{padding-left:22px!important;padding-right:22px!important;}
+    .cardimg{width:150px!important;} .backcell{width:104px!important;height:170px!important;}
   }
-</style>
-</head>
+</style></head>
 <body style="margin:0;padding:0;background-color:#EEEFF2;">
-<div style="display:none;max-height:0;overflow:hidden;mso-hide:all;font-size:1px;line-height:1px;color:#EEEFF2;opacity:0;">The Devil and the Eight of Cups. One of them is the one you keep not walking through.</div>
+<div style="display:none;max-height:0;overflow:hidden;mso-hide:all;font-size:1px;line-height:1px;color:#EEEFF2;opacity:0;">One of these doors costs you nothing. The other costs you something you spent years stacking.</div>
 <center>
 <table align="center" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#EEEFF2;">
 <tr><td align="center" style="padding:24px 10px;">
-<table class="container aw" align="center" cellpadding="0" cellspacing="0" border="0" width="600" style="width:600px;max-width:600px;background-color:#FFFFFF;font-family:Helvetica,Arial,sans-serif;color:#16181D;font-size:16px;">
+<table class="container" align="center" cellpadding="0" cellspacing="0" border="0" width="600" style="width:600px;max-width:600px;background-color:#FFFFFF;font-family:Helvetica,Arial,sans-serif;">
 
-  <!-- wordmark -->
   <tr><td align="center" style="padding:30px 26px 0;">
     <p style="margin:0;font-size:19px;letter-spacing:.16em;text-transform:uppercase;color:#16181D;font-weight:bold;">Marcus Stone</p>
-    <p style="margin:7px 0 0;font-size:10px;letter-spacing:.26em;text-transform:uppercase;color:#8A909C;">Daily Tarot &middot; The Seer Within</p>
-  </td></tr>
+    <p style="margin:7px 0 0;font-size:10px;letter-spacing:.26em;text-transform:uppercase;color:#8A909C;">Daily Tarot &middot; The Seer Within</p></td></tr>
   <tr><td style="padding:20px 26px 0;"><table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation"><tr><td height="1" bgcolor="#DDE0E6" style="background-color:#DDE0E6;font-size:0;line-height:0;">&nbsp;</td></tr></table></td></tr>
+  <tr><td align="center" style="padding:18px 26px 0;">
+    <p style="margin:0;font-size:10.5px;letter-spacing:.2em;text-transform:uppercase;color:#A8721C;font-weight:bold;">Tuesday &middot; The Two Doors</p></td></tr>
 
-  <!-- eyebrow -->
-  <tr><td align="center" style="padding:20px 26px 0;">
-    <p style="margin:0;font-size:10.5px;letter-spacing:.2em;text-transform:uppercase;color:#A8721C;font-weight:bold;">Tuesday &middot; The Two Doors</p>
+  <!-- BEAT 2 · HEADLINE - names the act, done for her, unbidden -->
+  <tr><td class="px" style="padding:18px 40px 0;">
+    <h1 style="margin:0;font-size:29px;line-height:1.22;font-weight:bold;color:#16181D;">{{ subscriber.first_name | capitalize }}, I laid two cards for you before it got light &mdash; and nobody asked me to</h1></td></tr>
+
+  <!-- BEAT 3 · DECK - payoff + WINDOW -->
+  <tr><td class="px" style="padding:14px 40px 0;">
+    <p style="margin:0;font-size:16.5px;line-height:1.55;font-style:italic;color:#5C6270;">One of them is a door you can walk through for nothing. The other costs you something you spent years stacking. Which one is yours starts showing inside three or four days.</p></td></tr>
+
+  <!-- BEAT 1 · HERO - ⛔ FACE DOWN. Two backs off one cut. An unturned card is a question. -->
+  <tr><td align="center" style="padding:26px 20px 0;">
+    <table cellpadding="0" cellspacing="0" border="0" role="presentation" bgcolor="#1A2430" style="background-color:#1A2430;"><tr><td style="padding:26px 30px;">
+      <table cellpadding="0" cellspacing="0" border="0" role="presentation"><tr>
+        <td class="backcell" width="124" height="200" bgcolor="#2E4B6E" style="width:124px;height:200px;background-color:#2E4B6E;border:2px solid #3E5F86;">&nbsp;</td>
+        <td width="16">&nbsp;</td>
+        <td class="backcell" width="124" height="200" bgcolor="#2E4B6E" style="width:124px;height:200px;background-color:#2E4B6E;border:2px solid #3E5F86;">&nbsp;</td>
+      </tr></table>
+      <p style="margin:16px 0 0;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#8FA3BC;text-align:center;">Two off one cut &mdash; not yet turned</p>
+    </td></tr></table></td></tr>
+
+  <tr><td class="px" style="padding:28px 40px 0;">
+    <!-- BEAT 4 · SALUTATION -->
+    <p style="margin:0 0 6px;font-size:16.5px;line-height:1.62;color:#24262E;">{{ subscriber.first_name | capitalize }} &mdash;</p>
+    <p style="margin:0 0 18px;font-size:16.5px;line-height:1.62;color:#24262E;">Marcus Stone here.</p>
+    <!-- BEAT 5 · URGENCY OPENER -->
+    <p style="margin:0 0 18px;font-size:16.5px;line-height:1.62;color:#24262E;">I&rsquo;m writing before the day starts because this pair won&rsquo;t keep till tonight.</p>
+    <!-- BEAT 6 · ORIGIN - ⛔ UNINVITED, and Marcus's OWN act, not 02's cards-came-away device -->
+    <p style="margin:0 0 18px;font-size:16.5px;line-height:1.62;color:#24262E;">I don&rsquo;t choose the cards I lay in the morning. I want that clear before anything else, because it&rsquo;s the only reason this letter exists.</p>
+    <p style="margin:0 0 18px;font-size:16.5px;line-height:1.62;color:#24262E;">I cut the deck once, before it&rsquo;s light, and I read whatever is sitting on the cut. That&rsquo;s the whole method. No shuffling until something feels right, no second cut, no laying it again if I don&rsquo;t like what came up.</p>
+    <p style="margin:0 0 18px;font-size:16.5px;line-height:1.62;color:#24262E;">This morning the cut gave me two.</p>
+    <p style="margin:0 0 18px;font-size:16.5px;line-height:1.62;color:#24262E;">Not one card with another underneath it. Two, stuck face to face, come up off the cut together &mdash; which in fourteen years I have seen maybe a dozen times. Two cards off one cut is not a card about your day. It&rsquo;s a fork. It means you are standing at something, right now, and the deck knows it before you&rsquo;ve said it out loud.</p>
+    <!-- BEAT 7 · STAKES PREVIEW -->
+    <p style="margin:0 0 18px;font-size:16.5px;line-height:1.62;color:#24262E;">So here&rsquo;s how to read what&rsquo;s below. Take the first door and look at it honestly, because it&rsquo;s the one you&rsquo;re already in. Then read the second one twice &mdash; that&rsquo;s the one you keep deciding about and not deciding.</p>
+    <p style="margin:0 0 18px;font-size:16.5px;line-height:1.62;color:#24262E;">And look at who&rsquo;s in the picture with you. There&rsquo;s a second person in one of these frames, and they are not a stranger.</p>
+    <!-- BEAT 8 · PRECEDENT - one name, distant, BUYER-change. ⛔ 07's own story, never Ruth's -->
+    <p style="margin:0 0 18px;font-size:16.5px;line-height:1.62;color:#24262E;">The last time a cut handed me two like that, it was years ago, above a shop I used to read out of. A woman called Hester. Same shape &mdash; two doors, both of them open.</p>
+    <p style="margin:0 0 18px;font-size:16.5px;line-height:1.62;color:#24262E;">She&rsquo;d been standing between hers for nine years. That was the thing. Not that she couldn&rsquo;t decide. That she&rsquo;d been <i>deciding</i> for nine years and calling that a decision.</p>
+    <p style="margin:0 0 18px;font-size:16.5px;line-height:1.62;color:#24262E;">I laid her eight. And what the spread told her wasn&rsquo;t which door to walk through. It was that she&rsquo;d already walked through one, a long time back, and had been standing in the doorway ever since with one foot out, so she&rsquo;d never have to admit it.</p>
+    <p style="margin:0 0 18px;font-size:16.5px;line-height:1.62;color:#24262E;">She stopped rehearsing it after that. That&rsquo;s all that changed, and it changed everything.</p>
+    <!-- BEAT 9 · WITHHOLD + THE BIG IDEA - ⛔ Marcus's thesis, not 02's "your future is already drawn" -->
+    <p style="margin:0 0 18px;font-size:16.5px;line-height:1.62;color:#24262E;">I&rsquo;ll show you both doors in a moment, {{ subscriber.first_name | capitalize }}. But you should know what you&rsquo;re holding first.</p>
+    <p style="margin:0 0 18px;font-size:16.5px;line-height:1.62;color:#24262E;"><b>You have already chosen.</b> That&rsquo;s the part people fight me on. A choice isn&rsquo;t a thing waiting in front of you &mdash; it&rsquo;s a thing you&rsquo;ve been making, quietly, every morning for months. The spread doesn&rsquo;t decide it for you. The spread is how you find out what you already decided.</p>
+    <p style="margin:0 0 18px;font-size:16.5px;line-height:1.62;color:#24262E;">Right now you&rsquo;re being shown a quarter of that.</p>
+    <p style="margin:0 0 18px;font-size:16.5px;line-height:1.62;color:#24262E;">Because two cards is a quarter of an answer. The Two Doors is eight &mdash; the two you can see, and three behind each of them. Two cards tells you there&rsquo;s a fork. Eight tells you what each door costs, what it gives you, and who you turn into on the other side of it.</p>
+    <p style="margin:0;font-size:16.5px;line-height:1.62;color:#24262E;">I&rsquo;ll explain how we lay the eight at the end. First, your two.</p>
   </td></tr>
 
-  <!-- the two cards, face up -->
-  <tr><td align="center" style="padding:20px 20px 0;">
-    <table cellpadding="0" cellspacing="0" border="0" role="presentation"><tr>
-      <td align="center" valign="top" style="padding:0 8px;">
-        <img class="cardimg" src="https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/evelyn/tarot-rws/the-devil.jpg" alt="The Devil - a horned figure on a block, two people chained below, the chains hanging loose" width="176" style="display:block;width:176px;max-width:100%;height:auto;border:1px solid #DDE0E6;">
-        <p style="margin:9px 0 0;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:#A8721C;font-weight:bold;">Door one</p>
-      </td>
-      <td align="center" valign="top" style="padding:0 8px;">
-        <img class="cardimg" src="https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/evelyn/tarot-rws/eight-of-cups.jpg" alt="The Eight of Cups - a figure walking uphill away from eight stacked cups, under the moon" width="176" style="display:block;width:176px;max-width:100%;height:auto;border:1px solid #DDE0E6;">
-        <p style="margin:9px 0 0;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:#A8721C;font-weight:bold;">Door two</p>
-      </td>
-    </tr></table>
+  <!-- BEAT 10 · UNIT 1. The face is revealed HERE, at its own unit -->
+  <tr><td class="px" style="padding:30px 40px 0;">
+    <h2 style="margin:0 0 16px;font-size:21px;font-weight:bold;color:#16181D;">Door one: the Devil</h2></td></tr>
+  <tr><td align="center" style="padding:0 20px 0;">
+    <img class="cardimg" src="https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/evelyn/tarot-rws/the-devil.jpg" alt="The Devil - a horned figure on a block, two people chained below, the chains hanging loose" width="200" style="display:block;width:200px;max-width:100%;height:auto;border:1px solid #DDE0E6;"></td></tr>
+  <tr><td class="px" style="padding:20px 40px 0;">
+    <p style="margin:0 0 18px;font-size:16.5px;line-height:1.62;color:#24262E;">A horned figure squatting on a block. Two people chained at the neck below it. And the chains are loose &mdash; wide loops that would lift straight off over their heads if either of them stood up.</p>
+    <p style="margin:0 0 18px;font-size:16.5px;line-height:1.62;color:#24262E;">Nobody in that picture is trapped. They&rsquo;re staying.</p>
+    <p style="margin:0 0 18px;font-size:16.5px;line-height:1.62;color:#24262E;">That&rsquo;s what this card is for, and it&rsquo;s the door you&rsquo;re already standing in. <b>Nothing is holding you.</b> You&rsquo;re choosing it, every morning, and calling it something else &mdash; not the right time, not yet, not while things are like this.</p>
+    <p style="margin:0 0 18px;font-size:16.5px;line-height:1.62;color:#24262E;">Now look again, because there are <i>two</i> of them chained to that block. Not one. Somebody is down there beside you in this, and you knew their name before I said there was one.</p>
+    <!-- BEAT 10 · PER-CARD WITHHOLD - the engine. Names one thing this card cannot say. -->
+    <p style="margin:0 0 18px;font-size:16.5px;line-height:1.62;color:#24262E;">Here&rsquo;s what the Devil won&rsquo;t tell me.</p>
+    <p style="margin:0 0 18px;font-size:16.5px;line-height:1.62;color:#24262E;">It shows me you&rsquo;re staying. It doesn&rsquo;t show me <b>which of the two of you stands up first</b> &mdash; and that decides the whole shape of it. If it&rsquo;s you, this ends one way. If it&rsquo;s them, it ends another, and you find out by being left.</p>
+    <p style="margin:0;font-size:16.5px;line-height:1.62;color:#24262E;">The three cards behind this door tell me which. One card can&rsquo;t.</p>
   </td></tr>
 
-  <!-- the read -->
-  <tr><td class="px" style="padding:26px 40px 0;font-size:16px;line-height:1.62;color:#24262E;">
-    <p style="margin:0 0 16px;">{{ subscriber.first_name | capitalize }}, two doors on the table this morning, and you&rsquo;re standing between them.</p>
+  <!-- BEAT 11 · FIRST CTA at ~60%. A sentence with a permission verb. Never a button. -->
+  <tr><td class="px" style="padding:22px 40px 0;">
+    <p style="margin:0;font-size:16.5px;line-height:1.62;color:#24262E;">So <a href="{{BOOKING_URL}}?c=1&amp;s=two-doors" style="color:#A8721C;font-weight:bold;">let me lay the six behind these</a>, and I&rsquo;ll tell you which of you moves.</p></td></tr>
 
-    <p style="margin:0 0 16px;">Door one is the Devil. Look at what&rsquo;s painted there. A horned figure squatting on a block, two people chained at the neck below it. And the chains are loose &mdash; wide loops that&rsquo;d lift straight off over their heads if either of them stood up.</p>
-
-    <p style="margin:0 0 16px;">Nobody in that picture is trapped. They&rsquo;re staying. That&rsquo;s the door where nothing changes, and you already know exactly how it feels.</p>
-
-    <p style="margin:0 0 16px;">Door two is the Eight of Cups. A figure with a stick, walking uphill into rocky ground, away from eight cups stacked neat behind them. Not looking back. The moon&rsquo;s out.</p>
-
-    <p style="margin:0 0 16px;">That&rsquo;s the door where you go. And it costs you eight cups you stacked yourself.</p>
-
-    <p style="margin:0 0 16px;">Here&rsquo;s what I&rsquo;d have you carry today, and it costs you nothing. <b>Both doors are open.</b> That&rsquo;s the actual news in this pair. The Devil doesn&rsquo;t say you&rsquo;re trapped &mdash; it says you&rsquo;re choosing, every morning, and calling it something else.</p>
-
-    <p style="margin:0 0 16px;">Most people reading this are standing between the same two.</p>
-
-    <p style="margin:0;">What I can&rsquo;t tell you from here is what&rsquo;s behind either one.</p>
+  <!-- BEAT 10 · UNIT 2 -->
+  <tr><td class="px" style="padding:30px 40px 0;">
+    <h2 style="margin:0 0 16px;font-size:21px;font-weight:bold;color:#16181D;">Door two: the Eight of Cups</h2></td></tr>
+  <tr><td align="center" style="padding:0 20px 0;">
+    <img class="cardimg" src="https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/evelyn/tarot-rws/eight-of-cups.jpg" alt="The Eight of Cups - a figure walking uphill away from eight stacked cups, under the moon" width="200" style="display:block;width:200px;max-width:100%;height:auto;border:1px solid #DDE0E6;"></td></tr>
+  <tr><td class="px" style="padding:20px 40px 0;">
+    <p style="margin:0 0 18px;font-size:16.5px;line-height:1.62;color:#24262E;">A figure with a stick, walking uphill into rocky ground, away from eight cups stacked neat behind them. Not looking back. The moon&rsquo;s out.</p>
+    <p style="margin:0 0 18px;font-size:16.5px;line-height:1.62;color:#24262E;">Eight cups is not nothing. That&rsquo;s the point of the picture &mdash; they&rsquo;re upright, they&rsquo;re arranged, they took years. <b>This is the door where you go, and it costs you every one of them.</b></p>
+    <p style="margin:0 0 18px;font-size:16.5px;line-height:1.62;color:#24262E;">And it&rsquo;s the door you&rsquo;ve been standing at long enough that you&rsquo;ve stopped noticing you&rsquo;re at it.</p>
+    <!-- BEAT 10 · PER-CARD WITHHOLD, second firing -->
+    <p style="margin:0 0 18px;font-size:16.5px;line-height:1.62;color:#24262E;">What the Eight of Cups won&rsquo;t tell me is what&rsquo;s at the top of that hill.</p>
+    <p style="margin:0 0 18px;font-size:16.5px;line-height:1.62;color:#24262E;">The figure is walking into the dark and the card does not show you the other side. So I can&rsquo;t say from here whether this walk buys you a year or costs you one. Both look identical from the bottom of the hill, and women get that backwards constantly &mdash; they leave the thing that was working and stay in the thing that wasn&rsquo;t.</p>
+    <p style="margin:0;font-size:16.5px;line-height:1.62;color:#24262E;">Three cards behind this door say which you&rsquo;re looking at. Two can&rsquo;t.</p>
   </td></tr>
 
-  <!-- the six that are not laid -->
+  <!-- BEAT 12 · RE-READ. Deepen, do not repeat -->
+  <tr><td class="px" style="padding:30px 40px 0;">
+    <h2 style="margin:0 0 16px;font-size:21px;font-weight:bold;color:#16181D;">Back to the Devil, and the part I want you to sit with</h2>
+    <p style="margin:0 0 18px;font-size:16.5px;line-height:1.62;color:#24262E;">The loose chains are the whole card, {{ subscriber.first_name | capitalize }}.</p>
+    <p style="margin:0 0 18px;font-size:16.5px;line-height:1.62;color:#24262E;">This isn&rsquo;t a card about being held. Nothing in that picture is holding anybody. It&rsquo;s a card about <i>staying</i> &mdash; and staying is an act, done daily, by a person who could leave.</p>
+    <p style="margin:0 0 18px;font-size:16.5px;line-height:1.62;color:#24262E;">Which means the thing keeping you there was never the other person, and it was never the situation.</p>
+    <p style="margin:0 0 18px;font-size:16.5px;line-height:1.62;color:#24262E;">It&rsquo;s that walking out would mean admitting how long you stayed.</p>
+    <p style="margin:0;font-size:16.5px;line-height:1.62;color:#24262E;"><a href="{{BOOKING_URL}}?c=2&amp;s=two-doors" style="color:#A8721C;font-weight:bold;">Let me lay the eight</a> and I&rsquo;ll tell you what that admission actually costs, because it is almost never what people brace for.</p>
+  </td></tr>
+
+  <!-- BEAT 13 · CONCRETE ASK -->
+  <tr><td class="px" style="padding:30px 40px 0;">
+    <h2 style="margin:0 0 16px;font-size:21px;font-weight:bold;color:#16181D;">In concrete terms, what do you do now?</h2>
+    <p style="margin:0 0 18px;font-size:16.5px;line-height:1.62;color:#24262E;">Two things, and the first one is free.</p>
+    <p style="margin:0 0 18px;font-size:16.5px;line-height:1.62;color:#24262E;">Today, catch yourself at the one moment you&rsquo;d normally call it <i>not the right time</i>. Don&rsquo;t argue with it. Don&rsquo;t fix it. Just hear the sentence. That sentence is the chain, and hearing it once is more than most people manage in a year.</p>
+    <p style="margin:0;font-size:16.5px;line-height:1.62;color:#24262E;">The second is that you <a href="{{BOOKING_URL}}?c=3&amp;s=two-doors" style="color:#A8721C;font-weight:bold;">tell me what you&rsquo;re actually asking</a>. I don&rsquo;t lay somebody&rsquo;s eight off a guess &mdash; the six behind the doors are about <i>you</i>, and there&rsquo;s nothing for them to be about until you&rsquo;ve said what you want to know.</p>
+  </td></tr>
+
+  <!-- the withhold, made countable -->
   <tr><td class="px" style="padding:26px 40px 0;">
     <table width="100%" cellpadding="0" cellspacing="6" border="0" role="presentation" style="border-collapse:separate;border-spacing:6px;">
       <tr>
-        <td width="33%" valign="top" bgcolor="#2E4B6E" style="width:33%;background-color:#2E4B6E;padding:11px 10px;"><div style="font-size:10px;color:#EAEEF4;font-weight:bold;letter-spacing:.06em;">3</div><div style="font-size:12px;line-height:1.35;color:#EAEEF4;padding-top:4px;">Door one &mdash; what it costs</div></td>
-        <td width="33%" valign="top" bgcolor="#2E4B6E" style="width:33%;background-color:#2E4B6E;padding:11px 10px;"><div style="font-size:10px;color:#EAEEF4;font-weight:bold;letter-spacing:.06em;">4</div><div style="font-size:12px;line-height:1.35;color:#EAEEF4;padding-top:4px;">Door one &mdash; what it gives</div></td>
-        <td width="33%" valign="top" bgcolor="#2E4B6E" style="width:33%;background-color:#2E4B6E;padding:11px 10px;"><div style="font-size:10px;color:#EAEEF4;font-weight:bold;letter-spacing:.06em;">5</div><div style="font-size:12px;line-height:1.35;color:#EAEEF4;padding-top:4px;">Door one &mdash; who you become</div></td>
-      </tr>
-      <tr>
-        <td valign="top" bgcolor="#2E4B6E" style="background-color:#2E4B6E;padding:11px 10px;"><div style="font-size:10px;color:#EAEEF4;font-weight:bold;letter-spacing:.06em;">6</div><div style="font-size:12px;line-height:1.35;color:#EAEEF4;padding-top:4px;">Door two &mdash; what it costs</div></td>
-        <td valign="top" bgcolor="#2E4B6E" style="background-color:#2E4B6E;padding:11px 10px;"><div style="font-size:10px;color:#EAEEF4;font-weight:bold;letter-spacing:.06em;">7</div><div style="font-size:12px;line-height:1.35;color:#EAEEF4;padding-top:4px;">Door two &mdash; what it gives</div></td>
-        <td valign="top" bgcolor="#2E4B6E" style="background-color:#2E4B6E;padding:11px 10px;"><div style="font-size:10px;color:#EAEEF4;font-weight:bold;letter-spacing:.06em;">8</div><div style="font-size:12px;line-height:1.35;color:#EAEEF4;padding-top:4px;">Door two &mdash; who you become</div></td>
-      </tr>
-    </table>
-    <p style="margin:10px 0 0;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#8A909C;">These six are still in my hand</p>
-  </td></tr>
+        <td width="33%" valign="top" bgcolor="#2E4B6E" style="width:33%;background-color:#2E4B6E;padding:11px 10px;"><div style="font-size:10px;color:#EAEEF4;font-weight:bold;">3</div><div style="font-size:12px;line-height:1.35;color:#EAEEF4;padding-top:4px;">Door one &mdash; what it costs</div></td>
+        <td width="33%" valign="top" bgcolor="#2E4B6E" style="width:33%;background-color:#2E4B6E;padding:11px 10px;"><div style="font-size:10px;color:#EAEEF4;font-weight:bold;">4</div><div style="font-size:12px;line-height:1.35;color:#EAEEF4;padding-top:4px;">Door one &mdash; what it gives</div></td>
+        <td width="33%" valign="top" bgcolor="#2E4B6E" style="width:33%;background-color:#2E4B6E;padding:11px 10px;"><div style="font-size:10px;color:#EAEEF4;font-weight:bold;">5</div><div style="font-size:12px;line-height:1.35;color:#EAEEF4;padding-top:4px;">Door one &mdash; who you become</div></td>
+      </tr><tr>
+        <td valign="top" bgcolor="#2E4B6E" style="background-color:#2E4B6E;padding:11px 10px;"><div style="font-size:10px;color:#EAEEF4;font-weight:bold;">6</div><div style="font-size:12px;line-height:1.35;color:#EAEEF4;padding-top:4px;">Door two &mdash; what it costs</div></td>
+        <td valign="top" bgcolor="#2E4B6E" style="background-color:#2E4B6E;padding:11px 10px;"><div style="font-size:10px;color:#EAEEF4;font-weight:bold;">7</div><div style="font-size:12px;line-height:1.35;color:#EAEEF4;padding-top:4px;">Door two &mdash; what it gives</div></td>
+        <td valign="top" bgcolor="#2E4B6E" style="background-color:#2E4B6E;padding:11px 10px;"><div style="font-size:10px;color:#EAEEF4;font-weight:bold;">8</div><div style="font-size:12px;line-height:1.35;color:#EAEEF4;padding-top:4px;">Door two &mdash; who you become</div></td>
+      </tr></table>
+    <p style="margin:10px 0 0;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#8A909C;">These six are still in my hand</p></td></tr>
 
-  <!-- the ask -->
-  <tr><td class="px" style="padding:24px 40px 0;font-size:16px;line-height:1.62;color:#24262E;">
-    <p style="margin:0 0 16px;">Three cards go behind each door: what it costs, what it gives, and who you turn into on the other side. Six cards. They don&rsquo;t get laid on a guess.</p>
-    <p style="margin:0 0 16px;">So tell me. What are your two doors?</p>
-    <p style="margin:0;">Two cards are down. The other six don&rsquo;t go down until I know what you&rsquo;re asking. <b>$35</b>, back inside 24 hours.</p>
-  </td></tr>
+  <!-- BEAT 14 · AUTHORITY FLOURISH - craft knowledge + scarcity of access + the price -->
+  <tr><td class="px" style="padding:30px 40px 0;">
+    <h2 style="margin:0 0 16px;font-size:21px;font-weight:bold;color:#16181D;">Why yours is eight and not four</h2>
+    <p style="margin:0 0 18px;font-size:16.5px;line-height:1.62;color:#24262E;">Most readers answer a fork with a two-card cross. One card for this, one for that, done in ten minutes.</p>
+    <p style="margin:0 0 18px;font-size:16.5px;line-height:1.62;color:#24262E;">I don&rsquo;t, and here&rsquo;s why. A door isn&rsquo;t one thing. It&rsquo;s what it takes from you, what it hands you, and the person you are at the end of it &mdash; and those three can point in completely different directions. Plenty of doors cost you almost nothing and leave you someone you don&rsquo;t want to be. Plenty cost you everything and are still the right door.</p>
+    <p style="margin:0 0 18px;font-size:16.5px;line-height:1.62;color:#24262E;">So it&rsquo;s three to a door. Six behind the two, plus the two you&rsquo;re looking at. Eight.</p>
+    <p style="margin:0 0 18px;font-size:16.5px;line-height:1.62;color:#24262E;">It&rsquo;s the longest of the seven I lay, and I only lay it on a morning the cut gives me two. That happened today.</p>
+    <p style="margin:0;font-size:16.5px;line-height:1.62;color:#24262E;"><b>$35</b>, and it&rsquo;s back with you inside 24 hours.</p></td></tr>
 
-  <!-- CTA -->
-  <tr><td align="center" style="padding:26px 26px 0;">
+  <!-- BEAT 15 · FINAL CTA -->
+  <tr><td class="px" style="padding:26px 40px 0;">
+    <p style="margin:0;font-size:16.5px;line-height:1.62;color:#24262E;">So tell me. What are your two doors?</p></td></tr>
+  <tr><td align="center" style="padding:20px 26px 0;">
     <table cellpadding="0" cellspacing="0" border="0" role="presentation"><tr>
       <td align="center" bgcolor="#A8721C" style="background-color:#A8721C;">
-        <a href="{{BOOKING_URL}}?c=2&amp;s=two-doors" target="_blank" rel="noopener noreferrer" style="display:inline-block;padding:15px 34px;font-family:Helvetica,Arial,sans-serif;font-size:16px;font-weight:bold;color:#FFFFFF;text-decoration:none;letter-spacing:.02em;">Send Marcus your question &rarr;</a>
-      </td>
-    </tr></table>
-    <p style="margin:12px 0 0;font-size:12.5px;color:#8A909C;">One question. No account, no call.</p>
-  </td></tr>
+        <a href="{{BOOKING_URL}}?c=4&amp;s=two-doors" target="_blank" rel="noopener noreferrer" style="display:inline-block;padding:15px 34px;font-family:Helvetica,Arial,sans-serif;font-size:16px;font-weight:bold;color:#FFFFFF;text-decoration:none;">Send Marcus your question &rarr;</a>
+      </td></tr></table>
+    <p style="margin:12px 0 0;font-size:12.5px;color:#8A909C;">One question. No account, no call.</p></td></tr>
 
-  <!-- sign-off -->
-  <tr><td class="px" style="padding:26px 40px 0;font-size:16px;line-height:1.62;color:#24262E;">
-    <p style="margin:0;">&mdash; Marcus</p>
-    <p style="margin:14px 0 0;font-size:13.5px;font-style:italic;color:#8A909C;">Tomorrow &mdash; the Small Instruction, and one card for the thing to actually do.</p>
-  </td></tr>
+  <tr><td class="px" style="padding:24px 40px 0;">
+    <!-- BEAT 16 · TRANSFORMATION PROMISE -->
+    <p style="margin:0 0 18px;font-size:16.5px;line-height:1.62;color:#24262E;">Do that and you stop making this decision by default, at six in the morning, without noticing.</p>
+    <!-- BEAT 17 · SIGN-OFF - a relationship word, not a role -->
+    <p style="margin:0;font-size:16.5px;line-height:1.62;color:#24262E;">&mdash; Marcus, at the table most mornings</p>
+    <p style="margin:14px 0 0;font-size:13.5px;font-style:italic;color:#8A909C;">Tomorrow &mdash; the Small Instruction, and one card for the thing to actually do.</p></td></tr>
+
+  <!-- P.S. · permanent slot, ratified across all eight letters -->
+  <tr><td class="px" style="padding:24px 40px 0;">
+    <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation"><tr>
+      <td width="3" bgcolor="#A8721C" style="background-color:#A8721C;"></td>
+      <td style="padding:13px 16px;font-size:15px;line-height:1.6;color:#24262E;background-color:#FAF7F1;">
+        <b>P.S.</b> The two figures in the Devil aren&rsquo;t chained to each other. Each is chained to the block, separately. You can stand up without them and they can stand up without you &mdash; and one of you is going to go first. That&rsquo;s what people get wrong about this card, and it&rsquo;s why door one is a choice and not a sentence.</td>
+    </tr></table></td></tr>
 
   <tr><td style="padding:28px 26px 0;"><table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation"><tr><td height="1" bgcolor="#DDE0E6" style="background-color:#DDE0E6;font-size:0;line-height:0;">&nbsp;</td></tr></table></td></tr>
-
-  <!-- footer -->
   <tr><td align="center" style="padding:20px 26px 30px;font-size:12px;line-height:16px;color:#8A909C;">
     140 Broadway, Manhattan,<br>New York New York 10005<br>USA<br><br>
     <a href="https://www.aweber.com/z/r/?ThisIsATestEmail" target="_blank" rel="noopener noreferrer" style="color:#A8721C;text-decoration:underline;">Unsubscribe</a>
     &nbsp;|&nbsp;
-    <a href="https://www.aweber.com/z/r/?ThisIsATestEmail" target="_blank" rel="noopener noreferrer" style="color:#A8721C;text-decoration:underline;">Change Subscriber Options</a>
-  </td></tr>
+    <a href="https://www.aweber.com/z/r/?ThisIsATestEmail" target="_blank" rel="noopener noreferrer" style="color:#A8721C;text-decoration:underline;">Change Subscriber Options</a></td></tr>
 
-</table>
-</td></tr></table>
-</center>
-</body></html>
+</table></td></tr></table></center></body></html>
