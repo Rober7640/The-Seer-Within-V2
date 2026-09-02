@@ -15,7 +15,7 @@ INK, BODY, MUT, OCH, BLU, RULE, CLOTH = "#16181D", "#24262E", "#8A909C", "#A8721
 
 def links(t, slug):
     return re.sub(r'\[([^\]]+)\]\(c=(\d)\)',
-        lambda m: f'<a href="{{{{BOOKING_URL}}}}?c={m.group(2)}&amp;s={slug}" style="color:{OCH};font-weight:bold;">{m.group(1)}</a>', t)
+        lambda m: f'<a href="{{{{BOOKING_URL}}}}?c={m.group(2)}&amp;s={slug}" style="color:#0000ff;font-weight:bold;">{m.group(1)}</a>', t)
 
 def render(d):
     slug, out = d["slug"], []
@@ -93,16 +93,16 @@ def build(d):
 <style>
   body,a{{word-break:break-word;}} table{{border-collapse:collapse;}}
   @media only screen and (max-width:600px){{
-    .container{{width:100%!important;}} .px{{padding-left:22px!important;padding-right:22px!important;}}
+    .container{{width:100%!important;}} .px{{padding-left:18px!important;padding-right:18px!important;}}
     .cardimg{{width:150px!important;}} .herocard{{width:140px!important;}} .backcell{{width:104px!important;height:170px!important;}}
   }}
 </style></head>
-<body style="margin:0;padding:0;background-color:#EEEFF2;">
-<div style="display:none;max-height:0;overflow:hidden;mso-hide:all;font-size:1px;line-height:1px;color:#EEEFF2;opacity:0;">{d["preheader"]}</div>
+<body style="margin:0;padding:0;background-color:#ffffff;">
+<div style="display:none;max-height:0;overflow:hidden;mso-hide:all;font-size:1px;line-height:1px;color:#ffffff;opacity:0;">{d["preheader"]}</div>
 <center>
-<table align="center" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#EEEFF2;">
-<tr><td align="center" style="padding:24px 10px;">
-<table class="container" align="center" cellpadding="0" cellspacing="0" border="0" width="600" style="width:600px;max-width:600px;background-color:#FFFFFF;font-family:{F};">
+<table align="center" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#ffffff;">
+<tr><td align="center" style="padding:0;">
+<table class="container" align="center" cellpadding="0" cellspacing="0" border="0" width="600" style="max-width:600px;width:100%;background-color:#FFFFFF;font-family:{F};">
 
   <tr><td align="center" style="padding:30px 26px 0;">
     <p style="margin:0;font-size:19px;letter-spacing:.16em;text-transform:uppercase;color:{INK};font-weight:bold;">Marcus Stone</p>
@@ -112,20 +112,20 @@ def build(d):
     <p style="margin:0;font-size:10.5px;letter-spacing:.2em;text-transform:uppercase;color:{OCH};font-weight:bold;">{d["day"]} &middot; {d["spread"]}</p></td></tr>
 
   <!-- BEAT 2 · HEADLINE -->
-  <tr><td class="px" style="padding:18px 40px 0;">
+  <tr><td class="px" style="padding:18px 30px 0;">
     <h1 style="margin:0;font-size:29px;line-height:1.22;font-weight:bold;color:{INK};">{d["headline"]}</h1></td></tr>
 
   <!-- BEAT 3 · DECK - ⭐ the QUESTION the cards pose, plus the window -->
-  <tr><td class="px" style="padding:14px 40px 0;">
+  <tr><td class="px" style="padding:14px 30px 0;">
     <p style="margin:0;font-size:16.5px;line-height:1.55;font-style:italic;color:#5C6270;">{d["deck"]}</p></td></tr>
 '''
     foot = f'''
   <tr><td style="padding:28px 26px 0;"><table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation"><tr><td height="1" bgcolor="{RULE}" style="background-color:{RULE};font-size:0;line-height:0;">&nbsp;</td></tr></table></td></tr>
   <tr><td align="center" style="padding:20px 26px 30px;font-size:12px;line-height:16px;color:{MUT};">
     140 Broadway, Manhattan,<br>New York New York 10005<br>USA<br><br>
-    <a href="https://www.aweber.com/z/r/?ThisIsATestEmail" target="_blank" rel="noopener noreferrer" style="color:{OCH};text-decoration:underline;">Unsubscribe</a>
+    <a href="https://www.aweber.com/z/r/?ThisIsATestEmail" target="_blank" rel="noopener noreferrer" style="color:#0000ff;text-decoration:underline;">Unsubscribe</a>
     &nbsp;|&nbsp;
-    <a href="https://www.aweber.com/z/r/?ThisIsATestEmail" target="_blank" rel="noopener noreferrer" style="color:{OCH};text-decoration:underline;">Change Subscriber Options</a></td></tr>
+    <a href="https://www.aweber.com/z/r/?ThisIsATestEmail" target="_blank" rel="noopener noreferrer" style="color:#0000ff;text-decoration:underline;">Change Subscriber Options</a></td></tr>
 
 </table></td></tr></table></center></body></html>
 '''
