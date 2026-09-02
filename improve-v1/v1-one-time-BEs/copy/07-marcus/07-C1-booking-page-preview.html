@@ -178,7 +178,7 @@ button.go:hover{filter:brightness(1.07)}
       </button>
     </div>
 
-    <label class="bump"><input type="checkbox" id="bump">
+    <label class="bump" id="bumpRow" hidden><input type="checkbox" id="bump">
       <span><span class="t2">Back before tonight &mdash; $12.77</span>
       <span class="d">Yours goes to the front of the table and lands today instead of tomorrow.</span></span></label>
 
@@ -194,7 +194,8 @@ button.go:hover{filter:brightness(1.07)}
 const cks=[...document.querySelectorAll('.ck')], gate=document.getElementById('gate'),
       go=document.getElementById('go'), after=document.getElementById('after'),
       left=document.getElementById('left'), bump=document.getElementById('bump'),
-      hint=document.getElementById('hint'), q=document.getElementById('q');
+      hint=document.getElementById('hint'), q=document.getElementById('q'),
+      bumpRow=document.getElementById('bumpRow');
 let tier=null, price=0;
 
 document.querySelectorAll('.t').forEach(b=>b.addEventListener('click',()=>{
@@ -217,6 +218,9 @@ q.addEventListener('input',()=>{
 
 function sync(){
   const n=cks.filter(c=>c.checked).length, ready=(n===5&&tier);
+  // ⛔ the bump only exists once a reading is chosen. Before that it is a second
+  // product competing with the three, not an add-on to one of them.
+  bumpRow.hidden=!tier;
   left.textContent=(5-n)+' left'+(tier?'':' &middot; no reading chosen').replace('&middot;','·');
   gate.hidden=ready; go.hidden=!ready; after.hidden=!ready;
   if(ready){const tot=(price+(bump.checked?12.77:0)).toFixed(2).replace(/\.00$/,'');

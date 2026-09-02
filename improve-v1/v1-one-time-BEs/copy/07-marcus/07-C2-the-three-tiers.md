@@ -78,6 +78,9 @@ promises 24 hours.
 
 ## Rules
 
+- ⛔ **The bump does not appear until a tier is chosen** *(operator, 2026-09-02)*. Shown alongside
+  the three it is a fourth option competing with them; shown after, it is an add-on to the one
+  she has already picked — which is the only thing an order bump is.
 - ⛔ **Never pre-checked**, and the middle tier is not pre-selected either.
 - **The count is stated as a bare fact** in every tier — 8, 13, 18 — because she can check it and
   cannot check an adjective.
