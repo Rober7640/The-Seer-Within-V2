@@ -105,7 +105,7 @@ behind it is what a tarot master would lay; an arbitrary five is what a marketer
 | **Thu** | **The Undertow** | **2** — what you think it's about · what's under it | **+5** | **7** | the surface, the current, and what the current is fed by | ~300 |
 | **Fri** | **The Ledger** | **3** — the thing · what it cost · what it paid | **+6** | **9** | two columns, three rows each, and the balance | ~340 |
 | **Sat** | **The Other Chair** | **2** — what you see · what he's doing | **+5** | **7** | his side of the table, laid the way his would be | ~300 |
-| **Sun** | **The Long Look** | **3** — the week's three threads | **+9** | **12** | one card per house — the week laid out as a year | ~600 |
+| **Sun** | **The Zodiac Spread** | **3** — houses 1, 7 and 12 | **+9** | **12** | one card per house | ~600 |
 
 **⛔ Floor: no paid spread under 6 total.** Price is flat at $35 across all seven, so the smallest
 buy still has to feel substantial. A four-card Wednesday against a twelve-card Sunday is a 3× value
@@ -115,11 +115,16 @@ which matters, because repeat buyers are the LTV engine (§7).
 ⭐ **The variation makes Sunday the obvious best buy**, which is exactly where the hard sell already
 lives. The peak day is now the peak *product*, not just the longest email.
 
-⚠ **Sunday's twelve needs an operator decision before it is written.** Twelve cards to twelve houses
-is BE-02's product. The audiences don't overlap — 02 went to prior V1 buyers, 07 goes to Marcus's
-own list — but it would be the same spread sold under two names, which is the exact thing the
-device-variance rule exists to catch. Either give Sunday a twelve with a different logic, or decide
-deliberately that the reuse is fine.
+**Sunday reuses BE-02's Zodiac Spread, by name.** *(operator, 2026-09-02 — settled. ⛔ Do not
+re-flag this in a later audit pass; it is a decision, not an outstanding defect.)* The audiences do
+not overlap — 02 went to prior V1 buyers, 07 goes to Marcus's own list — and a zodiac is a real,
+named spread rather than an invented device, so two readers using it is what the craft looks like.
+
+⚠ **The spread is shared; the sentences are not.** `copy-check` compares literal sentences across
+offers, so any line lifted from `02-P1-the-twelve.md` will fail the gate — correctly. 02 already
+assigns specific cards to specific houses (the World's door in houses 2 and 8, the Lovers' fork as
+house 5 against house 7, the Tower's identity in house 12) and **those assignments are a contract
+with 02's letters**. 07 draws its own cards into its own houses and writes its own words.
 
 **Why this beats a complete free reading.** The withhold stops being a rhetorical move and becomes
 a **fact she can see**. Three cards are down. Five are still in his hand. Nothing is being kept from
@@ -147,15 +152,14 @@ practice, never sentiment. A spread with named positions does that by existing.
 two · what do I do today · what's really driving it · what is it costing me · what is he doing ·
 the whole picture.
 
-### Sunday's Long Look — the week's three threads
+### Sunday — the Zodiac Spread
 
-Sunday opens on **3** cards, and they are named as the three threads the week has been pulling on:
-what she carried in (Mon, Thu), what it has cost (Fri), and the door she is standing at (Tue, Sat).
-The *"six days, six things I couldn't tell you"* recap then lands on a spread the reader can see is
-three-eighths finished.
+Sunday opens **three houses** and leaves nine: **house 1** (her), **house 7** (the other person) and
+**house 12** (what's hidden). That trio names her, him and the thing she can't see, and the reader
+can count that the spread is a quarter finished.
 
-The five paid cards are the largest completion of the week, which is why Sunday carries the price
-argument in full.
+Nine paid houses is the largest completion of the week, which is why Sunday carries the price
+argument in full and why it is the best buy on the roster.
 
 ### ⛔ The spread is a contract between the email and the product
 
@@ -572,7 +576,6 @@ Saturday's, the page is the thing to fix, not the email.
 - [ ] Write the seven spreads properly — each needs its **opening positions**, its **paid
       positions**, the reason its total is that number, and one worked example, before any daily
       using it can be drafted
-- [ ] ⚠ **Decide Sunday's twelve** — reuse BE-02's zodiac houses, or give it a different logic
 - [ ] `be_orders` needs a `spread` column, and the booking page must persist `&s=` from the CTA
 - [ ] How many draws a day, and how the card state file avoids repeating a card too soon
 - [ ] Confirm `evelyn/tarot-rws/` has all 78 cards at usable size

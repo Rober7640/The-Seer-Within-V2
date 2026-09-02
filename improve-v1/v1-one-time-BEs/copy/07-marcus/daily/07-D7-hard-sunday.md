@@ -2,7 +2,9 @@
 
 | | |
 |---|---|
-| **Day type** | **Hard** — Sunday only. The week's sales email |
+| **Day type** | ⚠ **Written before the spread roster.** Sunday is now the **Zodiac Spread** — 3 free
+houses (1, 7, 12) and +9 paid. Its three cards need relaying to houses and its pitch needs the
+house count. Voice, recap device, precedent and P.S. all signed off and survive the relay |
 | **Draw** | 3 cards. The injury · what's already turning · what she does alone first |
 | **Devices** | Week recap · precedent · one CTA · **P.S.** |
 | **Ask** | Her question, then the product named. $35.00 · 24 hours |
