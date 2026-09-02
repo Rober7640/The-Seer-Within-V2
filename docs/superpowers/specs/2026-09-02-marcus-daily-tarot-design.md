@@ -34,7 +34,7 @@ hard once a week and absent once a week. Fulfil with n8n so volume costs nothing
 | **Persona** | Marcus Stone. Tarot master, shadow work. Direct, archetypal, plain-spoken. Not Evelyn's register |
 | **Audience** | `seerwithin_marcus_promo_66`, list id **6960130**, 76,718 subscribers. **This list only** |
 | **Gate** | **No women-only gate.** (BE-02 gated on `S7`; 07 does not) |
-| **Cadence** | One email a day |
+| **Cadence** | One email a day, **6pm SGT = 10:00 UTC = 6am ET** — she reads it at breakfast |
 | **Destination** | The booking page. **No chat handoff anywhere** — `/marcus` is not linked from the daily or the report |
 | **Front end** | **$35.00** — a reading of today's card against her question, then a fresh draw. ~1,000 words, PDF |
 | **Bump** | **$12.77** — the same reading at ~3,000 words |
@@ -113,10 +113,10 @@ put to the Devil?"* The card sharpens the ask and gives it a reason to exist tod
 no reading offered. The give-day is one of two things holding a daily ask up, and it should be the
 email people forward. But an email with no ask at all breaks the habit the other six days build.
 
-**Why Sunday is the peak.** *(operator, 2026-09-02 — moved from Saturday.)* Sunday evening is when
-people take stock of the week behind and the week ahead, which is when a question surfaces on its
-own. A 250-word daily cannot do what BE-02's 17-beat letter did; Sunday is the closest thing 07 has
-to that letter, and it carries the real argument.
+**Why Sunday is the peak.** *(operator, 2026-09-02 — moved from Saturday.)* It lands **6am ET on a
+Sunday**: home, unhurried, nobody at work. That is the best slot in the week for a long read and for
+a question to surface on its own. A 250-word daily cannot do what BE-02's 17-beat letter did; Sunday
+is the closest thing 07 has to that letter, and it carries the real argument.
 
 ### The two sells
 
@@ -168,6 +168,25 @@ meaning, click to `/marcus`). Substance instead of a trailer; booking page inste
 5. What the cards cannot tell him from here
 6. The link
 7. Sign-off, then **tomorrow's card named** — this is what trains the daily return
+
+### ⛔ Time of day — she reads this in the MORNING
+
+The send is 6pm SGT, which is **10:00 UTC and 6am ET**. On a US-weighted list she opens this at
+breakfast, not at night. Three different uses of night-words, and only one is wrong:
+
+| Use | Example | Verdict |
+|---|---|---|
+| **Narrating when she is reading** | *"Three up tonight"* | ❌ **Never.** A 12-hour miss, and it costs the intimacy the whole format runs on |
+| **A practice pointed at later** | *"notice this tonight"* | ⚠ Legal, but at 6am it is 14 hours away. **Say "today"** — actionable while she is holding the email |
+| **Describing the card, or quoting someone** | *"The moon's out"* (the Eight of Cups picture) · *"I check his profile every night"* (her words) | ✅ **Correct, leave alone.** The picture-before-meaning rule needs the art described as painted |
+
+⭐ **The morning slot is an advantage, not a constraint.** A card that arrives at the *start* of the
+day sets the day up rather than reviewing it — *"today's card"* is literally true at 6am, and she
+carries the question through the day before she clicks. A daily tarot that landed at 10pm would be
+a worse product.
+
+⚠ **Not everyone is on ET.** The UK reads at 11am, Australia at 8pm. So avoid hard claims about her
+surroundings (*"as you read this it's dark"*) even when they are right for most of the list.
 
 **Voice.** First person, direct, archetypal. No "dear". Marcus names the thing. Contractions at
 roughly the rate a person speaks. No aphorisms, no balanced clauses, no appositive tails.

@@ -8,11 +8,12 @@
 | **Ask** | Her question, then the product named. $35.00 · 24 hours |
 | **Art** | `evelyn/tarot-rws/{three-of-swords,the-star,the-hermit}.jpg` — read-only |
 | **Body** | 604 words |
+| **Lands** | 6pm SGT Sunday = **6am ET Sunday**. Home, unhurried, no work — the best slot in the week for a long read |
 | **Precedent** | ⛔ 07's own, derived from 07's mechanism — *a question sent on a day, read against that day's card.* Distinct from 02's repeated draw. Do not reuse across offers |
 
 **Subject** — `{{ subscriber.first_name | capitalize }}, six days, six things I couldn't tell you`
 
-**Preheader** — Three cards tonight, and the one piece all six were missing.
+**Preheader** — Three cards this morning, and the one piece all six were missing.
 
 ---
 
@@ -22,7 +23,7 @@ Monday I couldn't tell you which chain was yours. Tuesday I couldn't tell you wh
 
 Every one of those was missing the same thing, and it isn't the cards. It's your question.
 
-Three up tonight.
+Three up this morning.
 
 **Three of Swords.** Three blades straight through a red heart, grey rain behind it, no figure anywhere. Nobody's holding those swords. That's the card — the hurt that arrived, that no one is currently doing to you.
 
@@ -48,6 +49,6 @@ So — what would you put to these three?
 
 — Marcus
 
-*P.S. The thing about the Hermit's lamp is that it only lights one step. That's not a limit, it's the instruction. You don't need the whole road tonight. You need to know what the next thing is, and that's a question, not a mystery.*
+*P.S. The thing about the Hermit's lamp is that it only lights one step. That's not a limit, it's the instruction. You don't need the whole road today. You need to know what the next thing is, and that's a question, not a mystery.*
 
 *Tomorrow — the Ace of Wands, and why the first spark is the easy part.*

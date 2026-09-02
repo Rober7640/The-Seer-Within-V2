@@ -8,6 +8,7 @@
 | **Destination** | The booking page. `?c=` names the day and the slot |
 | **Art** | `evelyn/tarot-rws/the-devil.jpg` · `evelyn/tarot-rws/eight-of-cups.jpg` — read-only |
 | **Body** | 287 words |
+| **Lands** | 6pm SGT = **6am ET**. She reads this at breakfast — see the time-of-day rule in the spec §3 |
 
 **Subject** — `{{ subscriber.first_name | capitalize }}, the chains in this card are loose. That's the whole point.`
 
@@ -27,7 +28,7 @@ The second card is the Eight of Cups. A figure with a stick, walking uphill into
 
 So the pair says something specific. Today pulls you toward the thing you've already decided about — and the cost of it is the walk you keep not taking. Eight cups you stacked yourself. A hill you've looked at more than once.
 
-Here's what I'd have you notice tonight, and it costs you nothing. The chain is loose in the picture because it's loose in life. What holds you isn't the thing. It's that leaving would mean admitting how long you stayed.
+Here's what I'd have you carry today, and it costs you nothing. The chain is loose in the picture because it's loose in life. What holds you isn't the thing. It's that leaving would mean admitting how long you stayed.
 
 That's free, and it's true of most people reading this.
 
