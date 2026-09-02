@@ -64,6 +64,11 @@ const TwinFlameBookingChat = lazy(() => import("@/pages/TwinFlameBookingChat"));
 const TwinFlameThankYouPage = lazy(() => import("@/pages/TwinFlameThankYouPage"));
 const JudgementBookingPage = lazy(() => import("@/pages/JudgementBookingPage"));
 const JudgementBookingChat = lazy(() => import("@/pages/JudgementBookingChat"));
+// Shared /offers/upsell/ pages — offer + pitch resolved from the booking
+// SESSION rather than the URL prefix, so one route pair serves every backend
+// offer in the deck. Lazy for the same reason as the booking pages above.
+const OffersUpsell1 = lazy(() => import("@/pages/offers/OffersUpsell1"));
+const OffersUpsell2 = lazy(() => import("@/pages/offers/OffersUpsell2"));
 
 // Admin pages (lazy loaded)
 const AdminLogin = lazy(() => import("@/pages/admin/AdminLogin"));
@@ -337,6 +342,15 @@ function Router() {
             has one thing only the buyer can supply. */}
         <Route path="/wiccan/judgement-day/chat" component={JudgementBookingChat} />
         <Route path="/wiccan/judgement-day" component={JudgementBookingPage} />
+
+        {/* Shared /offers/upsell/ pages — the deck-wide Upsell 1 → Upsell 2
+            chain. Offer + pitch are resolved from the booking SESSION
+            (session_id), not this URL, so this one route pair works for every
+            backend offer (02, 03, …) without a per-offer prefix mount. Always
+            backend-mode; fires no V1 tracking. */}
+        <Route path="/offers/upsell/welcome1" component={OffersUpsell1} />
+        <Route path="/offers/upsell/welcome2" component={OffersUpsell2} />
+
         <Route path="/soulmate" component={SoulmateLandingPage} />
 
         {/* Auth routes (no layout wrapper) */}
