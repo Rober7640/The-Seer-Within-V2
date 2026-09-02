@@ -39,9 +39,10 @@ const OFFERS = {
   '06': { name: 'the Wishing Bracelet', sla: /\b(7 business days|1[-–]2 weeks)\b/i, prices: ['11.11'] },
   // 07 is the deck's first RECURRING offer — a daily email, not a one-off letter. Lives in
   // copy/07-marcus/ (see the offer-number regex below, which allows the label suffix).
-  '07': { name: 'Marcus Daily Tarot', sla: /\b24 hours?\b/i, prices: ['35.00', '35', '12.77'] },
+  // 07's booking page runs three tiers (The Spread / The Pattern / The Table) plus a speed bump.
+  '07': { name: 'Marcus Daily Tarot', sla: /\b24 hours?\b/i, prices: ['35.00', '35', '57', '87', '12.77'] },
 };
-const ALL_PRICES = ['35.00', '35', '47', '57', '67', '12.77', '300', '250', '11.11'];
+const ALL_PRICES = ['35.00', '35', '47', '57', '67', '87', '12.77', '300', '250', '11.11'];
 
 // ── per-file rules ─────────────────────────────────────────────────────────────────────────
 const BANNED = [
