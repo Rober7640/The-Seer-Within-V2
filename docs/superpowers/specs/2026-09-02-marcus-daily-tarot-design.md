@@ -32,7 +32,7 @@ hard once a week and absent once a week. Fulfil with n8n so volume costs nothing
 |---|---|
 | **Offer** | `07` — Marcus Daily Tarot |
 | **Persona** | Marcus Stone. Tarot master, shadow work. Direct, archetypal, plain-spoken. Not Evelyn's register |
-| **Audience** | `seerwithin_marcus_promo_66`, list id **6960130**, 76,718 subscribers. **This list only** |
+| **Audience** | `seerwithin_marcus_promo_66`, list id **6960130**, 76,718. **This list only.** ⚠ A 6/6 promo *segment*, not an audience — see §9 |
 | **Gate** | **No women-only gate.** (BE-02 gated on `S7`; 07 does not) |
 | **Cadence** | One email a day, **6pm SGT = 10:00 UTC = 6am ET** — she reads it at breakfast |
 | **Destination** | The booking page. **No chat handoff anywhere** — `/marcus` is not linked from the daily or the report |
@@ -512,6 +512,27 @@ email**, and have been sitting since opt-in.
 ⚠ **Do not blast 76.7k daily on day one.** The sending domain is shared with Evelyn's live
 thirteen-list daily programme. A complaint spike here damages a working revenue stream, and that is
 not easily undone.
+
+### ⛔ Who is actually on it — pulled 2026-09-02, and it changes the copy
+
+**This is not "Marcus's audience." It is a retargeting segment with no provenance.**
+
+| Fact | Evidence |
+|---|---|
+| All 76,718 joined on **one day**, 6 June 2026 | `subscribed_at` is `2026-06-06` on 100/100 sampled |
+| All carry **one tag**: `clicked_66_marcus_nonclickers` | 100/100. It is the 6/6 portal-date promo's non-click segment |
+| **No provenance at all** | `subscription_method`, `ad_tracking` and `custom_fields` are empty on every record |
+| **Not Evelyn's people** | 0/20 sampled are on `theseerwithin_free`. No double-mailing — the spec's assumption holds |
+| ⛔ **Not women-only** | **At least 28 of 100** first names are clearly men — Jason, Christopher, Jonathan, Samuel, Jamal, David, Richard, Harrison, Alfonso… |
+| The only two sends were **Evelyn-branded**, about a *date*, pointed at `/6-6` | Subjects: *"Evelyn gave me your name"*, *"The time Evelyn set for you"* |
+
+⚠ **This is why the drafts read abstract.** 07 inherits 02's *shape*, but 02's shape carries 02's
+*audience* — a woman, a specific man on her mind, a twin flame — and it is gated women-only (`S7`).
+Strip that out for a mixed list and the copy has no object: "which door", "an offer", "a current",
+about nothing and nobody. **The missing thing is a subject, not a gender.**
+
+⛔ **`S7`, the women-only gate, cannot be applied here** the way 02 applies it. Roughly a quarter of
+this list is men.
 
 **Warm-up, before daily goes wide:**
 
