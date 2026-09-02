@@ -9,7 +9,7 @@ before it ships — kept as-is because the voice, the ask and the pitch were sig
 | **Ask** | Her question, card-specific — then the pitch, written out of *these two cards*. Price and SLA named |
 | **Destination** | The booking page. `?c=` names the day and the slot |
 | **Art** | `evelyn/tarot-rws/the-devil.jpg` · `evelyn/tarot-rws/eight-of-cups.jpg` — read-only |
-| **Body** | 312 words |
+| **Body** | 316 words |
 | **Lands** | 6pm SGT = **6am ET**. She reads this at breakfast — see the time-of-day rule in the spec §3 |
 
 **Subject** — `{{ subscriber.first_name | capitalize }}, the chains in this card are loose. That's the whole point.`
@@ -38,7 +38,7 @@ What I can't tell you from here is which one it is for you. The cards don't work
 
 So tell me. What would you put to the Devil?
 
-Send it and I'll read it against him properly — which chain it is, and what it's really holding shut. Then I draw fresh on you. **$35**, back inside 24 hours.
+Two cards are down. The other five don't go down until I know what you're asking — which chain it is, and what's on the other side of standing up. **$35**, back inside 24 hours.
 
 **→ Send Marcus your question**
 

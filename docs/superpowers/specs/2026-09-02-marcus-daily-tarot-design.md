@@ -36,7 +36,7 @@ hard once a week and absent once a week. Fulfil with n8n so volume costs nothing
 | **Gate** | **No women-only gate.** (BE-02 gated on `S7`; 07 does not) |
 | **Cadence** | One email a day, **6pm SGT = 10:00 UTC = 6am ET** — she reads it at breakfast |
 | **Destination** | The booking page. **No chat handoff anywhere** — `/marcus` is not linked from the daily or the report |
-| **Front end** | **$35.00** — her question laid in **today's named spread**, then a fresh draw. ~1,000 words, PDF |
+| **Front end** | **$35.00** — **the rest of today's spread**, ~5 more cards laid on her question. ~1,000 words, PDF |
 | **Bump** | **$12.77** — the same reading at ~3,000 words |
 | **Upsells** | **None.** No U1, no U2 |
 | **SLA** | **24 hours** |
@@ -84,15 +84,41 @@ a habit; a rhythm she can learn gives variety *and* gives the ask somewhere to l
 *(operator, 2026-09-02 — replaces the bare card-counts. Each day is a **named spread**, not a number
 of cards.)*
 
-| Day | Spread | Cards | The positions | Body |
-|---|---|---|---|---|
-| **Mon** | **The Weight** | 2 | today's card = what's on you · **+1** = who put it there | ~280 |
-| **Tue** | **The Two Doors** | 3 | the choice as it stands · **door 1** · **door 2** | ~330 |
-| **Wed** | **The Small Instruction** | 2 | where you are · **+1** = the one thing to do today | ~250 |
-| **Thu** | **The Undertow** | 3 | what you think it's about · **the old thing** · **the live thing** | ~330 |
-| **Fri** | **The Ledger** | 3 | the thing itself · **what it's cost** · **what it's paid** | ~330 |
-| **Sat** | **The Other Chair** | 3 | what you see · **what he's doing** · **what he thinks he's doing** | ~330 |
-| **Sun** | **The Long Look** | **6** | the whole reading — see below | ~600 |
+### ⭐ One spread a day. The email opens it. Buying finishes it.
+
+*(operator, 2026-09-02 — this is the mechanic. Everything else serves it.)*
+
+The daily email is **not** a complete reading that happens to advertise a different product. It is
+the **first 1–3 cards of a single spread that stays unfinished**. The remaining ~5 go down only when
+she sends her question.
+
+| Day | Spread | **Free — laid in the email** | **Paid — laid on her question** | Total | Body |
+|---|---|---|---|---|---|
+| **Mon** | **The Weight** | **1** — what's on you | **+5** | 6 | ~260 |
+| **Tue** | **The Two Doors** | **2** — the two doors | **+5** | 7 | ~300 |
+| **Wed** | **The Small Instruction** | **1** — where you are | **+5** | 6 | ~250 |
+| **Thu** | **The Undertow** | **2** — what you think it's about · what's under it | **+5** | 7 | ~300 |
+| **Fri** | **The Ledger** | **3** — the thing · what it cost · what it paid | **+5** | 8 | ~340 |
+| **Sat** | **The Other Chair** | **2** — what you see · what he's doing | **+5** | 7 | ~300 |
+| **Sun** | **The Long Look** | **3** — the week's three threads | **+5** | 8 | ~600 |
+
+**Why this beats a complete free reading.** The withhold stops being a rhetorical move and becomes
+a **fact she can see**. Three cards are down. Five are still in his hand. Nothing is being kept from
+her that he could have told her — the rest of the spread genuinely cannot be laid without her
+question, because those positions are *about her*.
+
+⭐ **It also answers the operator's own framing exactly.** *"The free content frames the setup —
+what makes the product deliverable?"* The setup **is** the opening of the spread. The deliverable
+**is** its completion. There is no gap between the content and the offer to bridge with persuasion.
+
+**The pitch writes itself, card-native, every day** — which satisfies the no-boilerplate rule
+structurally rather than by discipline:
+
+> *"Two cards are down. The other five don't go down until I know what you're asking."*
+
+**⛔ The scarcity is now at its maximum, and still honest.** Today's spread was opened today. If she
+doesn't ask today, those cards are swept and tomorrow is a different spread with a different
+opening. Nothing has to be invented or exaggerated to say so.
 
 **A named spread is a mechanism, not more cards.** It is the thing she can learn and use, which is
 what the free content owes her. `copy-hook-and-substance`: every send must teach a mechanism or a
@@ -102,25 +128,15 @@ practice, never sentiment. A spread with named positions does that by existing.
 two · what do I do today · what's really driving it · what is it costing me · what is he doing ·
 the whole picture.
 
-### ⭐ Sunday's Long Look IS the week, collected
+### Sunday's Long Look — the week's three threads
 
-The six positions of Sunday's spread **are the six weekday spreads**:
+Sunday opens on **3** cards, and they are named as the three threads the week has been pulling on:
+what she carried in (Mon, Thu), what it has cost (Fri), and the door she is standing at (Tue, Sat).
+The *"six days, six things I couldn't tell you"* recap then lands on a spread the reader can see is
+three-eighths finished.
 
-| Position | Echoes |
-|---|---|
-| 1 · where you are | today's card |
-| 2 · what you carried in | Mon, The Weight |
-| 3 · what's moving under it | Thu, The Undertow |
-| 4 · what it's costing | Fri, The Ledger |
-| 5 · the door you're standing at | Tue, The Two Doors |
-| 6 · the next step | Wed, The Small Instruction |
-
-So the *"six days, six things I couldn't tell you"* device stops being rhetoric and becomes
-**structural**. Sunday literally lays the week out as one spread. Nothing else in the deck can do
-this, and it is now the single best argument for 07 running daily rather than weekly.
-
-*(Sat's Other Chair folds in wherever the question involves another person, rather than taking a
-fixed position.)*
+The five paid cards are the largest completion of the week, which is why Sunday carries the price
+argument in full.
 
 ### ⛔ The spread is a contract between the email and the product
 
@@ -183,8 +199,8 @@ being complete, not the pitch being absent**; an email can name a price and stil
 
 **Constant — three facts, every day, no exceptions:**
 
-1. Her question, read against the card that is up
-2. A fresh draw on her
+1. How many cards are already down, and that the rest are not
+2. That the remaining ~5 go down on **her question**
 3. **$35**, back inside **24 hours**
 
 **Variable — every word around them.** ⛔ **Never a pasted boilerplate line.** Every day is a
@@ -365,10 +381,10 @@ than you asked.* Not *we cut it short.*
 ⛔ **Copy rule for `07-C3`:** it must never say "full", "complete", "unabridged", "the whole
 reading", or anything that makes $35 sound partial.
 
-**Why the daily ask is honest.** *(upgraded 2026-09-02 by the spread roster.)* It is no longer just
-*today's card is only today's* — it is **today's SPREAD is only today's**. If she wants the Two
-Doors laid on her question, she has to ask on a Tuesday. That is a real reason to act today, it
-renews every day, and unlike BE-02's scarcity it requires no lie.
+**Why the daily ask is honest.** *(upgraded 2026-09-02 by the opening-spread mechanic.)* Today's
+spread was **opened today, in front of her**. If she doesn't ask today it is swept, and tomorrow is
+a different spread with a different opening. That is a real reason to act today, it renews every
+day, and unlike BE-02's scarcity nothing has to be invented to say it.
 
 ---
 
@@ -534,8 +550,8 @@ Saturday's, the page is the thing to fix, not the email.
 - [ ] Confirm the CAN-SPAM address is registered, not placeholder (§3a item 4)
 - [ ] Marcus's own palette and type, so his email is not Evelyn's twice (§3a item 5)
 - [ ] The grader rubric — what makes a reading fail
-- [ ] Write the seven spreads properly — each needs its positions, its job, and one worked
-      example before any daily using it can be drafted
+- [ ] Write the seven spreads properly — each needs its **opening positions**, its **five paid
+      positions**, its job, and one worked example before any daily using it can be drafted
 - [ ] `be_orders` needs a `spread` column, and the booking page must persist `&s=` from the CTA
 - [ ] How many draws a day, and how the card state file avoids repeating a card too soon
 - [ ] Confirm `evelyn/tarot-rws/` has all 78 cards at usable size
