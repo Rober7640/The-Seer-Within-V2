@@ -36,7 +36,7 @@ hard once a week and absent once a week. Fulfil with n8n so volume costs nothing
 | **Gate** | **No women-only gate.** (BE-02 gated on `S7`; 07 does not) |
 | **Cadence** | One email a day, **6pm SGT = 10:00 UTC = 6am ET** — she reads it at breakfast |
 | **Destination** | The booking page. **No chat handoff anywhere** — `/marcus` is not linked from the daily or the report |
-| **Front end** | **$35.00** — a reading of today's card against her question, then a fresh draw. ~1,000 words, PDF |
+| **Front end** | **$35.00** — her question laid in **today's named spread**, then a fresh draw. ~1,000 words, PDF |
 | **Bump** | **$12.77** — the same reading at ~3,000 words |
 | **Upsells** | **None.** No U1, no U2 |
 | **SLA** | **24 hours** |
@@ -81,11 +81,58 @@ slot earned the click.
 Card count rotates on a **fixed weekday rhythm**, not at random. Random rotation stops her forming
 a habit; a rhythm she can learn gives variety *and* gives the ask somewhere to live.
 
-| Day | Draw | The read | The ask |
-|---|---|---|---|
-| Mon Tue Thu Fri Sat | **2 cards** | The pull, and what it costs | Question + **one-line pitch**, both card-native |
-| Wed | **1 card + a practice** | Something to do today | Same as the others. The give is the *content* |
-| **Sun** | **3 cards** | Full reading — the week's best content | The full argument. This is the sales email |
+*(operator, 2026-09-02 — replaces the bare card-counts. Each day is a **named spread**, not a number
+of cards.)*
+
+| Day | Spread | Cards | The positions | Body |
+|---|---|---|---|---|
+| **Mon** | **The Weight** | 2 | today's card = what's on you · **+1** = who put it there | ~280 |
+| **Tue** | **The Two Doors** | 3 | the choice as it stands · **door 1** · **door 2** | ~330 |
+| **Wed** | **The Small Instruction** | 2 | where you are · **+1** = the one thing to do today | ~250 |
+| **Thu** | **The Undertow** | 3 | what you think it's about · **the old thing** · **the live thing** | ~330 |
+| **Fri** | **The Ledger** | 3 | the thing itself · **what it's cost** · **what it's paid** | ~330 |
+| **Sat** | **The Other Chair** | 3 | what you see · **what he's doing** · **what he thinks he's doing** | ~330 |
+| **Sun** | **The Long Look** | **6** | the whole reading — see below | ~600 |
+
+**A named spread is a mechanism, not more cards.** It is the thing she can learn and use, which is
+what the free content owes her. `copy-hook-and-substance`: every send must teach a mechanism or a
+practice, never sentiment. A spread with named positions does that by existing.
+
+**The seven cover the question-shapes this audience actually has** — what am I carrying · which of
+two · what do I do today · what's really driving it · what is it costing me · what is he doing ·
+the whole picture.
+
+### ⭐ Sunday's Long Look IS the week, collected
+
+The six positions of Sunday's spread **are the six weekday spreads**:
+
+| Position | Echoes |
+|---|---|
+| 1 · where you are | today's card |
+| 2 · what you carried in | Mon, The Weight |
+| 3 · what's moving under it | Thu, The Undertow |
+| 4 · what it's costing | Fri, The Ledger |
+| 5 · the door you're standing at | Tue, The Two Doors |
+| 6 · the next step | Wed, The Small Instruction |
+
+So the *"six days, six things I couldn't tell you"* device stops being rhetoric and becomes
+**structural**. Sunday literally lays the week out as one spread. Nothing else in the deck can do
+this, and it is now the single best argument for 07 running daily rather than weekly.
+
+*(Sat's Other Chair folds in wherever the question involves another person, rather than taking a
+fixed position.)*
+
+### ⛔ The spread is a contract between the email and the product
+
+If Tuesday's email teaches the Two Doors, **Tuesday's buyers must receive the Two Doors.** That is a
+data dependency, not a copy promise:
+
+- The CTA carries the **spread key** — `?c=` for the slot, plus `&s=two-doors`
+- The booking page stores it with her question
+- n8n reads it from the order, never from the clock
+
+⚠ **Never derive the spread from a timestamp.** She may click Tuesday 11pm ET, which is already
+Wednesday in SGT. She must get the spread from the email she actually read.
 
 ### The spine: every email asks for her question
 
@@ -318,8 +365,10 @@ than you asked.* Not *we cut it short.*
 ⛔ **Copy rule for `07-C3`:** it must never say "full", "complete", "unabridged", "the whole
 reading", or anything that makes $35 sound partial.
 
-**Why the daily ask is honest.** Today's card is only today's. Tomorrow is a different reading, not
-the same one she skipped. That is the scarcity, and unlike BE-02's it renews without lying.
+**Why the daily ask is honest.** *(upgraded 2026-09-02 by the spread roster.)* It is no longer just
+*today's card is only today's* — it is **today's SPREAD is only today's**. If she wants the Two
+Doors laid on her question, she has to ask on a Tuesday. That is a real reason to act today, it
+renews every day, and unlike BE-02's scarcity it requires no lie.
 
 ---
 
@@ -485,6 +534,9 @@ Saturday's, the page is the thing to fix, not the email.
 - [ ] Confirm the CAN-SPAM address is registered, not placeholder (§3a item 4)
 - [ ] Marcus's own palette and type, so his email is not Evelyn's twice (§3a item 5)
 - [ ] The grader rubric — what makes a reading fail
+- [ ] Write the seven spreads properly — each needs its positions, its job, and one worked
+      example before any daily using it can be drafted
+- [ ] `be_orders` needs a `spread` column, and the booking page must persist `&s=` from the CTA
 - [ ] How many draws a day, and how the card state file avoids repeating a card too soon
 - [ ] Confirm `evelyn/tarot-rws/` has all 78 cards at usable size
 - [ ] Extend `copy-check.cjs` to flag repeated sentences **within** one offer — today it only

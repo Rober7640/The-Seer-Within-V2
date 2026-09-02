@@ -2,7 +2,9 @@
 
 | | |
 |---|---|
-| **Day type** | Soft — Mon, Tue, Thu, Fri, Sat |
+| **Day type** | ⚠ **Written before the spread roster (2026-09-02).** Its 2-card pull/cost draw is
+closest to **Mon · The Weight**, but the positions were never named. Relay it to a roster slot
+before it ships — kept as-is because the voice, the ask and the pitch were signed off on it |
 | **Draw** | 2 cards. Card 1 the pull, card 2 what it costs |
 | **Ask** | Her question, card-specific — then the pitch, written out of *these two cards*. Price and SLA named |
 | **Destination** | The booking page. `?c=` names the day and the slot |
