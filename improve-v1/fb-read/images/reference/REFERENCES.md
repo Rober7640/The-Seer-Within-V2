@@ -193,3 +193,70 @@ Do not copy the tea recipe. The open question is which grind, vessel and turn pr
 **separated** marks rather than a film — a coarser grind, a wider and shallower cup,
 a shorter drain, or the saucer instead of the cup. That question has to be answered
 by photographs before it is answered by a prompt.
+
+---
+
+# EGG IN WATER — reference, gathered 2026-09-02
+
+Gathered while exploring a fourth device. **Nothing here may ship.**
+
+| File | Source | Licence | May it ship? |
+|---|---|---|---|
+| `egg/gingerwitch-oomancy.mp4` + frames | TikTok, @thegingerwitch11, posted 2022-02-20, 101s, 720×1280 | **© creator, all rights reserved** | **No. Study only.** Downloaded as reference the same way `doublecup/` was, and held to the same rule. Its captions stay on it — stripping them would remove the marks that say whose work it is, and it is not going into creative either way |
+
+## 🔴 Format proof, which is the reason it was pulled
+
+**237,300 views · 10,300 likes** on a 101-second, near-static shot of a glass of water.
+Her own on-screen prompt is *what do you see?* — so the exact interaction this funnel is
+built on already earns engagement on a cold feed, unprompted by us.
+
+That is the argument for video over a still, and it is stronger than an opinion:
+the transformation IS the hook. A photograph of a finished glass shows the result;
+the video shows it *becoming*, and that is what holds a thumb.
+
+## What the egg actually does
+
+Three mark types, and they differ in KIND, not merely in position:
+
+| Mark | What it looks like |
+|---|---|
+| **Spikes** | fine vertical needles rising from the mass toward the surface, sharply defined against clear water |
+| **Web / veil** | a spreading translucent cloud through the middle of the column, wispy at its edges |
+| **The yolk** | an intact coloured mass resting on the floor of the glass — the one warm colour in frame |
+
+🔴 **THE READING AXIS IS VERTICAL, AND THAT IS THE FINDING.** Height in the water
+column, not position on a wall. Coffee earned a depth grammar — rim / mid-wall /
+floor — but had to OBSERVE it off a tilted cup, and `SOURCE.md` carries a warning
+that recomputing it geometrically inverts the reading. In a glass shot from the side,
+depth is literal and unmistakable: surface, middle, floor. The same grammar, and it
+cannot be misread.
+
+So coffee's three-depth structure ports almost wholesale — which would make the nine
+readings unusually cheap to write.
+
+## Two departures from every device so far
+
+1. **Shot from the SIDE, through glass.** Tea and coffee are overhead into a vessel.
+   This is a cross-section of a water column. Nothing in the current art pipeline
+   assumes that, including the ring tool's square crops.
+2. **The whole egg goes in**, yolk included. The yolk is the only warm colour in an
+   otherwise colourless frame and it always sits at the bottom — a fixed anchor the
+   other devices have no equivalent of.
+
+## ⚠ Register
+
+The video is an **egg cleanse** (`#eggclense`, `#spiritualsafety`) — reading for
+spiritual harm, in the limpia tradition. That is not love divination. Same class of
+problem as coffee's evil-eye lineage: the practice is real, the vocabulary is real,
+but the emotional register has to be steered to the three love hooks deliberately
+rather than inherited. Egg cleansing is also a living practice in Latin American
+curanderismo with its own community, which is worth knowing before borrowing its
+language.
+
+## If it gets built
+
+Shoot it. It is an egg and a glass of water, it costs one kitchen and ten minutes, and
+shooting it means owning it outright with no licence question. Study this video for
+framing, water level, lighting and how long the whites take to congeal — then shoot to
+our own brief, with the three marks we want findable and the final frame composed to
+BE the lander photograph.
