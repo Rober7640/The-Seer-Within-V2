@@ -20,11 +20,11 @@
 // on this account. Our tooling reads lists and writes subscribers; it has never
 // created one. Its id then lands in AWEBER_BE_CUSTOMER_LIST_ID.
 
-export type BackendOfferKey = 'twin-flame' | 'judgement-day';
+export type BackendOfferKey = 'twin-flame' | 'judgement-day' | 'wishing-bracelet';
 
 export interface BackendOfferListing {
   /** The deck's number for the offer, as every doc cites it. */
-  number: '02' | '03';
+  number: '02' | '03' | '06';
   /** Human name, for logs. */
   name: string;
   /** Applied to every buyer of this offer. Fires her thank-you email. */
@@ -80,6 +80,21 @@ export const BACKEND_OFFERS: Record<BackendOfferKey, BackendOfferListing> = {
     // Operator (2026-09-02): 03 REUSES 02's AWeber lists — initial 6972552, bump
     // 6972554 — and is distinguished only by TAG (be-03-*). The 03 Campaigns are set
     // up on those lists, filtered on the be-03 tag, manually. Shared lists, per-offer tags.
+    initialListId: '6972552',
+    bumpListId: '6972554',
+  },
+  'wishing-bracelet': {
+    number: '06',
+    name: 'Wishing Bracelet',
+    tag: 'be-06-wishing-bracelet',
+    bumpTag: 'be-06-bump',
+    deliveredTag: 'be-06-delivered',
+    // Operator model (HANDOVER §4.4 Phase C): 06 REUSES the shared BE lists —
+    // initial 6972552, bump 6972554 — distinguished only by TAG (be-06-*), exactly
+    // as 03 does. The 06 Campaigns get set up on those lists, filtered on the be-06
+    // tag, by hand. ⚠ 06's delivered email (06-T4) is a real SHIPMENT-tracking email,
+    // fired on the be-06-delivered tag when the physical unit is posted, not on a
+    // reading being ready.
     initialListId: '6972552',
     bumpListId: '6972554',
   },
