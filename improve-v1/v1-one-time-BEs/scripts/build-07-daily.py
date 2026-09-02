@@ -29,15 +29,16 @@ def render(d):
         elif kind == "p":
             row(f'<p style="margin:0;font-size:16.5px;line-height:1.62;color:{BODY};">{links(val, slug)}</p>', "0 40px 18px")
         elif kind == "hero":
-            card = (f'<td align="center" style="padding:0 9px;"><img src="{S3ASSET}card-back.jpg" '
-                    f'alt="a face-down card" width="124" style="display:block;width:124px;max-width:100%;'
-                    f'height:auto;border-radius:5px;"></td>')
-            cap = "One off the cut &mdash; not yet turned" if val == 1 else ("Two" if val==2 else "Three") + " off one cut &mdash; not yet turned"
-            out.append(f'''  <tr><td align="center" style="padding:26px 20px 0;">
-    <table cellpadding="0" cellspacing="0" border="0" role="presentation" bgcolor="{CLOTH}" style="background-color:{CLOTH};"><tr><td style="padding:26px 26px;">
-      <table cellpadding="0" cellspacing="0" border="0" role="presentation"><tr>{card * val}</tr></table>
-      <p style="margin:16px 0 0;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#8FA3BC;text-align:center;">{cap}</p>
-    </td></tr></table></td></tr>''')
+            # ⛔ No cloth panel behind them. The cards ARE the hero — big, on the sheet.
+            card = (f'<td align="center" valign="top" style="padding:0 10px;">'
+                    f'<img class="herocard" src="{S3ASSET}card-back.jpg" alt="a face-down card" width="216" '
+                    f'style="display:block;width:216px;max-width:100%;height:auto;border-radius:7px;"></td>')
+            cap = ("One off the cut &mdash; not yet turned" if val == 1
+                   else ("Two" if val == 2 else "Three") + " off one cut &mdash; not yet turned")
+            out.append(f'  <tr><td align="center" style="padding:30px 20px 0;">\n'
+                       f'    <table cellpadding="0" cellspacing="0" border="0" role="presentation"><tr>{card * val}</tr></table>\n'
+                       f'    <p style="margin:18px 0 0;font-family:{F};font-size:11px;letter-spacing:.16em;'
+                       f'text-transform:uppercase;color:{MUT};">{cap}</p></td></tr>')
         elif kind == "img":
             card, alt = val
             out.append(f'''  <tr><td align="center" style="padding:0 20px 20px;">
@@ -93,7 +94,7 @@ def build(d):
   body,a{{word-break:break-word;}} table{{border-collapse:collapse;}}
   @media only screen and (max-width:600px){{
     .container{{width:100%!important;}} .px{{padding-left:22px!important;padding-right:22px!important;}}
-    .cardimg{{width:150px!important;}} .backcell{{width:104px!important;height:170px!important;}}
+    .cardimg{{width:150px!important;}} .herocard{{width:140px!important;}} .backcell{{width:104px!important;height:170px!important;}}
   }}
 </style></head>
 <body style="margin:0;padding:0;background-color:#EEEFF2;">
