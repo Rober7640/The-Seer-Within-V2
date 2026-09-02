@@ -53,6 +53,7 @@ def render(d):
             row(f'<table width="100%" cellpadding="0" cellspacing="6" border="0" role="presentation" style="border-collapse:separate;border-spacing:6px;">{"".join(rows)}</table>'
                 f'<p style="margin:10px 0 0;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:{MUT};">These {len(val)} are still in my hand</p>', "26px 40px 0")
         elif kind == "ps":
+            out.append('\n  <!-- P.S. · permanent slot, ratified across all eight letters -->')
             row(f'''<table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation"><tr>
       <td width="3" bgcolor="{OCH}" style="background-color:{OCH};"></td>
       <td style="padding:13px 16px;font-size:15px;line-height:1.6;color:{BODY};background-color:#FAF7F1;"><b>P.S.</b> {links(val, slug)}</td>
