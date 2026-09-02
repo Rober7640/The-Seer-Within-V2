@@ -101,7 +101,7 @@ export function skipEmail(search?: string): boolean {
 // The copy each prefix resolves to lives in lib/backendOffers.ts. This file
 // deliberately holds no copy, so routing can never depend on it.
 export const TWIN_FLAME_PREFIX = "/tarot/twin-flame"; // 02 Twin Flame Tarot
-export const JUDGEMENT_PREFIX = "/wiccan/judgement-day"; // 03 Judgement Day
+export const JUDGEMENT_PREFIX = "/offers/wiccan/judgement-day"; // 03 Judgement Day
 
 export const BACKEND_OFFER_PREFIXES = [
   TWIN_FLAME_PREFIX,

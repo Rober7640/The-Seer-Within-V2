@@ -327,8 +327,8 @@ function Router() {
             (where the letter's {{BOOKING_URL}} points) and the chat beside it.
             ⚠ 03's chat carries the deck's only text input — pay-what-you-want
             has one thing only the buyer can supply. */}
-        <Route path="/wiccan/judgement-day/chat" component={JudgementBookingChat} />
-        <Route path="/wiccan/judgement-day" component={JudgementBookingPage} />
+        <Route path="/offers/wiccan/judgement-day/chat" component={JudgementBookingChat} />
+        <Route path="/offers/wiccan/judgement-day" component={JudgementBookingPage} />
 
         {/* Shared /offers/upsell/ pages — the deck-wide Upsell 1 → Upsell 2
             chain. Offer + pitch are resolved from the booking SESSION
