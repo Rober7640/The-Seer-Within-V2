@@ -135,3 +135,106 @@ general. ✅ This validates the beat-13 question reframe in [`07-P2`](./07-P2-th
 
 **Etsy requires a tangible good** — *"photos of the tarot spread, audio/video, or text of the
 reading"*. Another reason the spread image matters if this ever lists there.
+
+
+---
+
+# The segue — how the limit is justified and the upgrade named
+
+*Third research lane, 2026-09-02. Marketplace sellers, ~250 verbatim quotes collected.*
+
+## ⭐ The best mechanic found: her question's SHAPE names the price
+
+Sellers count her question and route her on the arithmetic. Nobody has to argue for the upgrade.
+
+> *"Note: **A 'Should I do This or That?' reading is 2 questions.** Min. In-Depth package must be
+> purchased."* — Litorchidtarot, Fiverr
+>
+> *"**If you are asking about two different people, please book 2 questions.**"* — MysticsTarot, Etsy
+>
+> *"Please keep the question to one subject. **If the question contains several separate issues, a
+> Tier 2 reading will usually serve you better.**"* — Crossroads Occult
+
+And the framing that sells the tier as **protecting her from overpaying**:
+
+> *"organized into three tiers so you can **choose the amount of depth you need without paying for
+> more reading than your question requires.**"*
+
+⚠ **We have one price and one spread a day, so this cannot set a tier — but it can set the BUMP.**
+A two-part question ("should I stay or go") honestly needs more cards than a one-part question.
+That is a self-executing, checkable trigger. *(Recorded as information. The bump is decided —
+expansion by scope — and was reaffirmed by the operator.)*
+
+## ⭐ Arithmetic beats adjectives — the checkable limit
+
+The single best limit justification in the corpus, and it is pure arithmetic:
+
+> *"if you pay $18.75 for EACH choice, your reading will be in more detail because **each question
+> will have all the cards to itself.** Paying for one reading, each question will have three or six
+> cards, depending on how many questions there are."* — Tarot Verbatim
+
+> *"1 card = 1 specific question / 3 cards = up to 3 specific questions / 5 cards = up to 5 specific
+> questions. **Please note if you push beyond this boundary, your reading will not be accurate.**"*
+> — Ariesroh, Fiverr
+
+**The dividing line is not the category of reason, it's whether she can check it.** ✅ 07's per-card
+withhold is already arithmetic — *"three behind this door tell me which. One card can't."* Keep it
+that way and resist adjectives.
+
+## ⭐ Sell the paid thing on a DIFFERENT question, not more of the same
+
+> *"**Not just 'what's happening?' but 'why does this keep happening?'**"* — Love Unbound Tribe
+
+That is a sharper version of the beat-13 reframe in [`07-P2`](../../copy/07-marcus/07-P2-the-device-set.md).
+The free read answers *what*; the paid spread answers *why it keeps*.
+
+## ⚠ Correction to record: asking for her details is a POSITIONING CHOICE, not best practice
+
+A sizeable minority make *not* asking the trust signal:
+
+> *"I won't ask you anything other than your choice of numbers and the question... I don't need to
+> know your name, date of birth, job title or shoe size."* — Tarot by Email
+>
+> *"No background information or tools needed — I read your energy and question directly! **This is
+> how you will know I am a TRUE reader**"* — PsychicDevyn
+
+**The middle path, and probably the right shape for us:** no personal details, but the question must
+be exact.
+
+> *"Emily does not need names, birthdays, or any background... **Your Answer will be based on your
+> exact question. 'What's up?' isn't a question.**"* — Tarot Verbatim
+
+⚠ **07 currently collects her name, her DOB, his name and his DOB** — the maximum-intake position.
+The alternative is fewer fields and a stricter question. Simpler for n8n, less friction, and it
+makes the question itself the whole product input.
+
+## Lowering the barrier, when you want volume over precision
+
+> *"just tell me your situation and **I will help focus the reading for you**."* — Mar_kie
+>
+> *"**Names are not required. Initials or simple labels such as 'me' and 'the other person' are
+> enough.**"* — Isa_tarot
+>
+> *"Ask any 1 question, you can be **as vague or descriptive as you'd like**."* — Mentalhealthtarot
+
+## A question reframe we don't have — the conditional
+
+> *"instead of asking questions like 'Should I?' or 'Will I pass this test?', which imply a fixed
+> outcome, I encourage **'If I decide to...' or 'If I were to...'**, as your choices shape your
+> reality."* — TarotBoutique555
+
+## What the market actually sells as order bumps
+
+Follow-up question **+$10** · priority delivery **+$10** · voice note **+$9** · extra question
+**+$7** · *"**Double Check +$10** — additional insight on one question with a different divination
+system"* · extra questions at **+$15 each**.
+
+⚠ Every one is a **different object**, not a longer version of the same one. Recorded as
+information only — the bump is settled.
+
+## ⛔ Do not lift
+
+The lane also surfaced Maria Duval / Sara Freder / Tara Medium material from **DOJ-prosecuted
+operators**, OCR'd from court exhibits. Mechanism study only, not verified word-for-word, and not
+safe to reuse. The repo already flags the Duval construction as this category's documented failure
+mode.
