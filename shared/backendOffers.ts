@@ -137,6 +137,18 @@ export interface BackendOffer {
    * A6; set this the day it renders and the AWeber field starts filling itself.
    */
   entryPath?: string;
+  /**
+   * PHYSICAL offers only: collect a mailing address at checkout.
+   *
+   * When true, the checkout endpoint turns on Stripe Checkout's own
+   * `shipping_address_collection`, so she enters her address on the SAME secure
+   * page as her card — after the commitment ladder, never bolted onto it. The
+   * address then lands on the Stripe session / PaymentIntent (visible in the
+   * dashboard), which is the system of record fulfilment ships from — no new
+   * screen, no new column, no migration. Undefined/false ⇒ a digital offer that
+   * collects only the email (02, 03).
+   */
+  collectsShipping?: boolean;
 }
 
 export const BACKEND_OFFER_CATALOG: Record<BackendOfferKey, BackendOffer> = {
@@ -219,8 +231,14 @@ export const BACKEND_OFFER_CATALOG: Record<BackendOfferKey, BackendOffer> = {
     // ⚠ Physical-product shipping (the bracelet's own address) is collected AFTER
     // Stripe succeeds via the existing ShippingForm pattern — wired at page build.
     upsellEntryPath: '/offers/upsell/welcome1',
-    // 🔴 Stays false until the booking + thank-you screens render and shipping capture
-    // is wired. A paid physical product must never fail to arrive. Flip at Task 6.
+    // 06 is the deck's first PHYSICAL product — Stripe Checkout collects the
+    // mailing address (see collectsShipping's note). This is what a paid order
+    // must have before it can be fulfilled.
+    collectsShipping: true,
+    // 🔴 Stays false until real Stripe price IDs exist and a test order has been
+    // walked end to end. A paid physical product must never fail to arrive.
+    // The booking + thank-you screens render and shipping is now collected; the
+    // remaining gate is the Stripe-test paid walk (HANDOVER §5).
     readyForMoney: false,
   },
 };
