@@ -169,7 +169,16 @@ const tally = `${done}/${total} landers written across ${READ_HOOKS.length} hook
 
 if (process.argv.includes('--check')) {
   const onDisk = existsSync(OUT) ? readFileSync(OUT, 'utf8') : ''
-  if (onDisk !== md) {
+  // 🔴 COMPARE LINE-ENDING-INSENSITIVELY, or this check is a guaranteed red on
+  // Windows. The file is committed with LF, core.autocrlf=true rewrites it to CRLF on
+  // checkout, and `md` is always built with LF — so a byte compare reports STALE on a
+  // correct file on every Windows machine, and a guard that is always red protects
+  // nothing. Proven by converting the file to CRLF and re-running --check.
+  //
+  // Only the COMPARISON is normalized. The file is still written with LF below, so
+  // what lands in git and what CI sees are both unchanged.
+  const norm = (t) => t.split('\r\n').join('\n')
+  if (norm(onDisk) !== norm(md)) {
     console.error(`${OUT} is STALE.`)
     console.error('Something in the registry, the copy or the drafts changed without it being regenerated.')
     console.error('Fix: npx tsx scripts/read-registry.mjs')

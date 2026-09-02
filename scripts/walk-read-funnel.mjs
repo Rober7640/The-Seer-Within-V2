@@ -139,6 +139,7 @@ await snap('chat-opening')
 const input = page.locator('[data-testid="input-chat-message"]')
 const queue = [persona.answer, ...FOLLOWUPS]
 let typed = 0, reachedPitch = false, i = 0
+let bucketShown = false
 
 // 🔴 BOTH SIDES, INTERLEAVED. The first version pushed her turns into an array
 // and then wrote only the bot bubbles, so the saved transcript showed Evelyn
@@ -157,7 +158,24 @@ const flush = async () => {
 for (let step = 0; step < 40; step++) {
   const state = await waitForTurnEnd(page)
   if (state === 'timeout') { await snap('TIMEOUT'); break }
-  if (state === 'bucket') { await snap('bucket-choice'); await flush(); transcript.push(['TAPS', 'Love & Relationships']); await page.getByRole('button', { name: /Love & Relationships/i }).click(); continue }
+  // 🔴 THE BUCKET PICKER IS A DEFECT ON THIS FUNNEL, NOT A STEP.
+  //
+  // She arrived from an ad that already asked the question, tapped a symbol and read
+  // a seven-bubble reading about it. Being asked "what's weighing on your heart
+  // today?" and offered Money and Purpose throws all of that away.
+  //
+  // This used to TAP "Love & Relationships" and carry on, which is exactly how the
+  // missing read branch in handleNameCapture survived: all seven personas reached
+  // the close, and the redundant question read as an ordinary line in the
+  // transcript. Answering a question the funnel should never have asked is how a
+  // walker launders a bug into a passing run. Fail instead.
+  if (state === 'bucket') {
+    await snap('FAIL-bucket-picker-shown')
+    await flush()
+    transcript.push(['🔴 DEFECT', 'The four buckets were shown. She has already answered this — the ad hook, the symbol she tapped and the whole reading all say love. Expect a skip-the-bucket-picker branch in handleNameCapture.'])
+    bucketShown = true
+    break
+  }
   if (state === 'perm') { await snap('permission-ask'); await flush(); transcript.push(['TAPS', 'Yes, please help me Evelyn']); await page.getByRole('button', { name: /Yes, please help me Evelyn/i }).click(); continue }
   if (state === 'pitch') { reachedPitch = true; await snap('PITCH-checkout-cta'); break }
   if (typed >= 18) { await snap('gave-up'); break }
@@ -188,6 +206,7 @@ writeFileSync(
     `# ${persona.label} · taps ${symbol.toUpperCase()} · ${persona.hook}`,
     ``,
     `Reached pitch: **${reachedPitch ? 'yes' : 'NO'}** · turns typed: ${typed} · Meta requests blocked: ${pixelBlocked}`,
+    bucketShown ? `\n🔴 **DEFECT — the four buckets were shown.** She answered this question by clicking the ad. A skip-the-bucket-picker branch is missing in handleNameCapture.` : '',
     ``,
     `Evelyn's bubbles are bulleted. **SHE** lines are the persona — what the walker`,
     `typed or tapped at that point in the funnel.`,
@@ -202,10 +221,11 @@ writeFileSync(
 // re-parsing prose, so a wording change in the transcript cannot break the page.
 writeFileSync(
   `${OUT}/meta.json`,
-  JSON.stringify({ personaId, device, symbol, hook: persona.hook, reachedPitch, typed, bubbles: bubbleCount, walkedAt: new Date().toISOString() }, null, 2),
+  JSON.stringify({ personaId, device, symbol, hook: persona.hook, reachedPitch, bucketShown, typed, bubbles: bubbleCount, walkedAt: new Date().toISOString() }, null, 2),
 )
 
 console.log(`\n  ${reachedPitch ? '✓ reached the checkout CTA (not clicked)' : '✗ never reached a pitch'}`)
+if (bucketShown) console.log('  ✗ DEFECT: the four buckets were shown — she had already answered that question')
 console.log(`  turns typed: ${typed}   bot bubbles: ${bubbleCount}   Meta blocked: ${pixelBlocked}`)
 console.log(`  → ${OUT}/transcript.md`)
 
@@ -217,4 +237,7 @@ await browser.close()
 // transcript on disk, so the reading page cannot lag the walks.
 spawnSync('npx', ['tsx', 'scripts/build-walk-page.mjs'], { stdio: 'inherit' })
 
-process.exit(reachedPitch ? 0 : 1)
+// Either failure is a failing walk. The bucket picker is the louder of the two:
+// reaching the pitch while asking her a question she already answered is exactly
+// the passing run that hid this bug for the whole build.
+process.exit(reachedPitch && !bucketShown ? 0 : 1)
