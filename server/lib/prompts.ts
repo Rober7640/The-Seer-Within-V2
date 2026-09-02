@@ -404,6 +404,14 @@ Weave this identity naturally through your reads and call back to "${userData.pa
 // whether HE thinks of her, "someone" can only be read as him, and the hook's guard
 // bans exactly that in bold. Two of seven persona walks produced it near-verbatim.
 //
+// 🔴 AND IT IS NOT THE ONLY ONE. The love bucket splits into four sub-buckets by
+// keyword, and LOST_LOVE — triggered by "ex", "breakup", "left me", which is exactly
+// what a still-think seeker types — carries "They think about you more than you know".
+// The guard names that phrasing almost verbatim as a banned softened form, so
+// LOST_LOVE is the LIKELIER path to the breach, not the rarer one. Both lines are
+// named explicitly below rather than left to "any softened form" to cover, because
+// this guard has already been walked through twice by a model that had it.
+//
 // The guard itself lived only in buildTarotReflectPrompt — the reflect turn — so the
 // deep flow ran with no hook guard at all. This carries it the rest of the way.
 //
@@ -428,7 +436,7 @@ const READ_DEEP_GUARDS: Record<string, { question: string; rule: string }> = {
   'still-think': {
     question: 'Does he still think about me?',
     rule:
-      'NEVER state that he thinks of her and NEVER state that he does not — not in any softened form, and never "there\'s someone who already thinks of you", which reads as him. A thought cannot be reported by anyone. Affirm instead that what happened is not stored in his memory alone and does not shrink if he has put it down.',
+      'NEVER state that he thinks of her and NEVER state that he does not — not in any softened form. Two lines in the base prompt above say exactly this and are BANNED here: "There\'s someone who already thinks of you in quiet moments" (which on this question reads as him) and "They think about you more than you know". A thought cannot be reported by anyone. Affirm instead that what happened is not stored in his memory alone and does not shrink if he has put it down.',
   },
   'hiding-something': {
     question: 'Is he hiding something from me?',
