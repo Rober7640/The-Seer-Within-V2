@@ -391,6 +391,57 @@ This seeker came to you through a reading of their palm. Their mark: ${userData.
 Weave this identity naturally through your reads and call back to "${userData.palmReading}" at least once this phase, so the thread from the palm reading never breaks. Deepen it — never restate it mechanically.`
 }
 
+// Returns '' unless the seeker arrived through /fb-read — so every other funnel's
+// prompt (root / fb / fb2 / gdn / palm / tarot) stays BYTE-IDENTICAL. Mirrors
+// palmDirective above, and exists for a defect the persona walks caught.
+//
+// 🔴 THE BASE PROMPT TEACHES A SENTENCE THIS HOOK FORBIDS. EVELYN_BASE_PROMPT's
+// "Cold Reads by Sub-bucket: SEEKING_LOVE" list includes:
+//     "There's someone who already thinks of you in quiet moments"
+// Every /fb-read hook maps to the love bucket, so every /fb-read seeker is offered
+// that line. On generic love traffic it is a fine cold read — "someone" is a future
+// stranger. On still-think, where she has just named a specific man and asked
+// whether HE thinks of her, "someone" can only be read as him, and the hook's guard
+// bans exactly that in bold. Two of seven persona walks produced it near-verbatim.
+//
+// The guard itself lived only in buildTarotReflectPrompt — the reflect turn — so the
+// deep flow ran with no hook guard at all. This carries it the rest of the way.
+//
+// 🔴 SCOPED, NOT LOOSENED, AND NOT DELETED. The stock line is not wrong; it was
+// never scoped. Deleting it would change every V1 love conversation on the live root
+// and tarot funnels to fix a defect that only shows on one hook.
+function readDirective(userData: UserData): string {
+  const guard = userData.readHook ? READ_DEEP_GUARDS[userData.readHook] : undefined
+  if (!guard) return ''
+  return `
+
+## The question she arrived on — HONOR THIS
+She came to you from a reading that asked: "${guard.question}"
+${guard.rule}`
+}
+
+// Deep-flow guards, keyed by /fb-read hook. Deliberately SHORTER than the reflect
+// guards in shared/readDevices.ts: this rides on top of a long base prompt, and the
+// job here is to disarm the specific stock lines that contradict the hook, not to
+// restate the whole frame.
+const READ_DEEP_GUARDS: Record<string, { question: string; rule: string }> = {
+  'still-think': {
+    question: 'Does he still think about me?',
+    rule:
+      'NEVER state that he thinks of her and NEVER state that he does not — not in any softened form, and never "there\'s someone who already thinks of you", which reads as him. A thought cannot be reported by anyone. Affirm instead that what happened is not stored in his memory alone and does not shrink if he has put it down.',
+  },
+  'hiding-something': {
+    question: 'Is he hiding something from me?',
+    rule:
+      'NEVER rule on whether he is hiding something, in either direction. NEVER name or guess what sits behind the gap, and never hand her a tactic or a test to run on him. NEVER pathologise her for noticing. Read the shape of the gap and what the not-knowing has cost her.',
+  },
+  'love-again': {
+    question: 'Will I love again?',
+    rule:
+      'Affirm the hopeful yes with warmth. NEVER tie it to a specific man she did not name and NEVER time it, in any form. NEVER grade her — not closed off, not guarded, not walled, not loving too deeply, not unready. She arrives having been told all of it already.',
+  },
+}
+
 // ============================================
 // READING_1: First insights after initial concern
 // ============================================
@@ -400,7 +451,7 @@ export function buildReading1Prompt(userData: UserData, concern: string): string
 
   return `
 ${EVELYN_BASE_PROMPT}
-${bucketPrompt}${palmDirective(userData)}
+${bucketPrompt}${palmDirective(userData)}${readDirective(userData)}
 
 ## Current Session
 - User's name: ${userData.firstName}
@@ -459,7 +510,7 @@ export function buildReading2Prompt(userData: UserData, deeperResponse: string):
 
   return `
 ${EVELYN_BASE_PROMPT}
-${bucketPrompt}${palmDirective(userData)}
+${bucketPrompt}${palmDirective(userData)}${readDirective(userData)}
 
 ## Current Session
 - User's name: ${userData.firstName}
@@ -494,7 +545,7 @@ ${userData.personName ? `Continue using ${userData.personName}'s name where rele
 
 export function buildFutureValidationPrompt(userData: UserData, vision: string): string {
   return `
-${EVELYN_BASE_PROMPT}${palmDirective(userData)}
+${EVELYN_BASE_PROMPT}${palmDirective(userData)}${readDirective(userData)}
 
 ## Current Session
 - User's name: ${userData.firstName}
@@ -539,7 +590,7 @@ export function buildCrisisRevealPrompt(userData: UserData, emotionalResponse: s
 
   return `
 ${EVELYN_BASE_PROMPT}
-${bucketPrompt}${palmDirective(userData)}
+${bucketPrompt}${palmDirective(userData)}${readDirective(userData)}
 
 ## Current Session
 - User's name: ${userData.firstName}
@@ -603,7 +654,7 @@ ${userData.personName ? `Reference the interference between them and ${userData.
 
 export function buildCrisisCostPrompt(userData: UserData, sourceResponse: string): string {
   return `
-${EVELYN_BASE_PROMPT}${palmDirective(userData)}
+${EVELYN_BASE_PROMPT}${palmDirective(userData)}${readDirective(userData)}
 
 ## Current Session
 - User's name: ${userData.firstName}

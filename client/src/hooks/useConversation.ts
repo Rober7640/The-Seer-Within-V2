@@ -862,7 +862,14 @@ export function useConversation() {
     // pairs — Joel asked for /fb-read to behave as the tarot landers do.
     const read = parseReadParams(window.location.search)
     if (read) {
-      updateUserData({ bucket: readHookToBucket(read.hook) })
+      // 🔴 readHook IS THE DEEP FLOW'S ONLY CLUE. The symbol identity already rides in
+      // the opener and the reflect prompt, so tarot deliberately carries nothing past
+      // this point and /fb-read inherited that. But the base prompt's SEEKING_LOVE cold
+      // reads include "There's someone who already thinks of you in quiet moments" —
+      // the exact sentence still-think's guard forbids — and every read hook buckets to
+      // love, so every read seeker was being offered it. Two of seven persona walks
+      // produced it near-verbatim. readDirective() in prompts.ts reads this field.
+      updateUserData({ bucket: readHookToBucket(read.hook), readHook: read.hook })
 
       await sendBotMessages([
         `It's lovely to meet you, ${capitalized}.`,

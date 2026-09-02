@@ -113,6 +113,11 @@ export interface UserData {
   // funnel leaves them undefined, so those prompts stay byte-identical.
   palmReading?: string
   palmMark?: string
+  // /fb-read identity carry — the HOOK she arrived on. Set at read name-capture and
+  // read by readDirective() in server/lib/prompts.ts, which uses it to disarm the
+  // base prompt's SEEKING_LOVE cold reads that contradict that hook's guard. Only
+  // /fb-read traffic sets it; every other funnel's prompt stays byte-identical.
+  readHook?: string
   // fb-palm COMMITMENT GATE (v1_palm_commitment_gate_2026) — true when this lead
   // bucketed into the gated arm, so the close renders the 3-checkbox commitment
   // card instead of the plain purchase button. Assigned by the EXPERIMENT
