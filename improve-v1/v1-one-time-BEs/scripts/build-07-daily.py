@@ -135,6 +135,10 @@ def build(d):
     pv = html
     for c in d["cards"]:
         pv = pv.replace(S3 + c + ".jpg", "data:image/jpeg;base64," + base64.b64encode(urllib.request.urlopen(S3 + c + ".jpg").read()).decode())
+    # the card BACK too — it appears in the hero and once per face-down position, and the
+    # artifact viewer's CSP blocks every S3 request, so a preview without it renders empty boxes.
+    back = S3ASSET + "card-back.jpg"
+    pv = pv.replace(back, "data:image/jpeg;base64," + base64.b64encode(urllib.request.urlopen(back).read()).decode())
     pv = pv.replace("<title></title>", f'<title>{d["day"]} - {d["spread"]}</title>', 1)
     pv = pv.replace("<!-- 07-D", "<!-- PREVIEW COPY - art inlined for the artifact viewer. DO NOT SEND.\n     Sendable file: " + base.split("/")[-1] + ".html\n     07-D", 1)
     open(base + "-preview.html", "w").write(pv)
