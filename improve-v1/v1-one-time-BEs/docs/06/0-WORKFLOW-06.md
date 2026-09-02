@@ -3,6 +3,11 @@
 **This is 06's tick sheet.** The same shape as [`0-WORKFLOW-02`](../02/0-WORKFLOW-02.md) and
 [`0-WORKFLOW-03`](../03/0-WORKFLOW-03.md), against the master [`0-WORKFLOW`](../0-WORKFLOW.md).
 
+📋 **Picking up the actual BUILD (Phase A code), not the copy/decision history?** Read
+[`HANDOVER.md`](./HANDOVER.md) instead — written 2026-09-02 specifically for the developer taking
+this over, once all copy and every decision was finished. This file is the reasoning behind those
+decisions; `HANDOVER.md` is the "what to build" version.
+
 ⚠ **Created late — 2026-09-01, after the fact.** Copy work on 06 (the letter, both device
 candidates) started before this tick sheet existed. That's a gap in following the deck's own
 convention, not a decision — this file exists now to close it.
