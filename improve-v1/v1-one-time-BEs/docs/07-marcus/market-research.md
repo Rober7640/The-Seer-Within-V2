@@ -8,22 +8,21 @@ change a decision are here.**
 
 ## ⛔ Two findings that contradict decisions already taken
 
-### 1 · We collect the question BEFORE payment. Nobody does that — including us, on offer 03.
+### 1 · We collect the question BEFORE payment. Nobody in the market does.
 
-**The market is unanimous.** *"Pay first, ask second, universally. Nobody collects the question
-before payment. The intake form IS the post-purchase page."*
+**It is unanimous.** *"Pay first, ask second, universally. Nobody collects the question before
+payment. The intake form IS the post-purchase page."*
 
-**And this repo already learned it.** The 03 redesign (2026-08-09) moved the Entry form to the
-thank-you page, *after* the money, on the reasoning: **a buyer who abandons the intake having paid
-is recoverable; one who abandons it before paying is not.**
+⚠ 07's booking page currently opens with the question box — above the statements, above the price —
+a decision taken on 2026-09-02 for message-match with the CTA.
 
-⚠ 07's booking page currently opens with the question box, above the statements, above the price —
-a decision taken on 2026-09-02 for message-match with the CTA. **That is now contradicted by the
-market and by our own prior finding.** Operator decision needed; see §4 of the spec.
+**Both sides, fairly.** Asking first keeps the CTA's promise (*"tell me what you'd ask"*) and makes
+her type something real before any price appears, which is a genuine commitment device. Asking
+after means a buyer who stalls at the intake **has already paid and can be emailed back**, where one
+who stalls before paying is simply gone.
 
-*The counter-argument, stated fairly:* the CTA promises "tell me what you'd ask", and a page that
-opens on six consent statements breaks that promise. A two-step page (**Agree · Give**, which is
-exactly what 03 built) resolves both — ask for the question after the card clears.
+**A two-step page — Agree, then Give — takes both**: the promise is kept on step one, the money
+lands, and the question is asked on step two. Operator decision needed; see §4 of the spec.
 
 ### 2 · "No sugarcoating" is the crowded position now, not the differentiating one
 

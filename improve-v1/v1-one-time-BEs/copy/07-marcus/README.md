@@ -56,8 +56,9 @@ event letters, 07 is a daily email programme. Everything here serves one mechani
 ## ⛔ Two decisions the market research reopened *(2026-09-02)*
 
 1. **The question box sits before payment.** Market research says *"pay first, ask second,
-   universally"* — and **offer 03 already moved its intake after the money** on the reasoning that a
-   buyer who abandons having paid is recoverable. Awaiting an operator call.
+   universally"* — a buyer who stalls at the intake having paid can be emailed back; one who stalls
+   before paying is gone. A two-step page (Agree, then Give) keeps the CTA's promise and still takes
+   the money first. Awaiting an operator call.
 2. **"No sugarcoating" is a crowded position**, used by a third of ~150 profiles sampled. Marcus's
    register leans on it. Not wrong, but no longer a differentiator.
 
