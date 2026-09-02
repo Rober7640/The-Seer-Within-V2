@@ -329,15 +329,15 @@ as himself. The rebrand is not cosmetic; it is the thing that makes the list his
 | # | What | Where | Fix |
 |---|---|---|---|
 | 1 | **From-name and from-address** | Not in the HTML — set on the AWeber list | **Marcus Stone**, on a Marcus address. ⛔ The single most important item, and the easiest to forget because it is invisible in the file |
-| 2 | **Unsubscribe + subscriber-options links** are literal test placeholders — `aweber.com/z/r/?ThisIsATestEmail` | `the-moon.html:60,62` | Replace with AWeber's real merge tags. ⛔ **Blocker.** Shipping this to 76k means no working unsubscribe — a CAN-SPAM breach and a complaint spike on exactly the list we are trying to warm |
+| 2 | ~~Unsubscribe links are test placeholders~~ — **withdrawn 2026-09-02** | `the-moon.html:60,62` | ✅ **Not a defect.** `aweber.com/z/r/?ThisIsATestEmail` is AWeber's own placeholder, rewritten per subscriber at send. Verified against a *live* Evelyn send (`sends/cycle-1/_build/03-reframe-03-devil.html`) carrying byte-identical markup, sending for months. ⛔ Do not "fix" it — hand-writing a different URL would break the real unsubscribe |
 | 3 | **Card art served from Evelyn's namespace** — `…/evelyn/tarot/the-moon.jpg` | `the-moon.html:38` | Point at `evelyn/tarot-rws/`. ⛔ `evelyn/tarot/` is frozen — live broadcasts resolve against it and it must never be touched |
 | 4 | **CAN-SPAM address** — `140 Broadway, Manhattan, New York NY 10005` | `the-moon.html:58` | Byte-identical to Evelyn's live sends. Same company, so legally fine, but the kit README flags it as placeholder — **confirm it is the real registered address** before the ramp |
 | 5 | **Visual shell** — Georgia wordmark, Helvetica body, `#0000ff` links, `#8a8ca0` greys | throughout | Identical to Evelyn's reframe HTML. A reader on both lists sees the same email twice in a day. Marcus needs his own palette and type — his voice is already distinct, the design should be too |
 | 6 | **No name personalisation in the body** | throughout | Evelyn's programme uses `{{ subscriber.first_name \| capitalize }}` in the body. Marcus's has none. Decide deliberately — ⚠ there is no fallback filter live, so an empty name renders as a blank |
 | 7 | **CTA destination** — `/marcus` chat | `the-moon.html:37,49` | Goes to the **booking page**. §1 — there is no chat handoff in 07 |
 
-**The invisible-versus-visible split matters.** Items 1, 2 and 3 are invisible to a reader and are
-the ones that break things — the wrong sender, a dead unsubscribe, a frozen asset prefix. Items 5
+**The invisible-versus-visible split matters.** Items 1 and 3 are invisible to a reader and are the
+ones that break things — the wrong sender, and a frozen asset prefix. Items 5
 and 6 are what she actually sees. Do the invisible three first; they are blockers, not polish.
 
 ⚠ **`the-moon.html` is a teaser built to the old spec** (~55 words, click to chat). It is a useful
@@ -569,7 +569,6 @@ Saturday's, the page is the thing to fix, not the email.
       run is meaningless
 - [ ] `docs/07-marcus/0-WORKFLOW-07.md` — copy the master, then Step 0 worksheet
 - [ ] ⛔ **Marcus from-name and from-address on list 6960130** — §3a item 1
-- [ ] ⛔ **Real unsubscribe merge tags** — `the-moon.html` still ships `?ThisIsATestEmail` (§3a item 2)
 - [ ] Confirm the CAN-SPAM address is registered, not placeholder (§3a item 4)
 - [ ] Marcus's own palette and type, so his email is not Evelyn's twice (§3a item 5)
 - [ ] The grader rubric — what makes a reading fail

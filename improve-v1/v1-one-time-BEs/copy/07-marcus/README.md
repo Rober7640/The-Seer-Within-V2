@@ -60,12 +60,11 @@ event letters, 07 is a daily email programme. Everything here serves one mechani
 
 ## Before anything sends
 
-⛔ Two blockers, both invisible when reading the HTML:
+⛔ **One blocker, invisible when reading the HTML: the from-name and from-address** are set on
+AWeber list `6960130`, not in any file. Both prior sends to these people went out as **Evelyn**.
 
-1. **From-name and from-address** are set on AWeber list `6960130`, not in the file. Both prior
-   sends to these people went out as **Evelyn**.
-2. **Unsubscribe links** in `docs/kit/marcus-stone-emails/the-moon.html` are still the literal
-   `aweber.com/z/r/?ThisIsATestEmail` placeholders.
+✅ *Not* a blocker: `aweber.com/z/r/?ThisIsATestEmail` is AWeber's own placeholder, rewritten per
+subscriber at send — Evelyn's live sends carry the identical markup. Don't "fix" it.
 
 And the list is **dormant, not warm** — two sends ever, ~87 days ago, ~41k of the 76,718 never
 mailed at all. Spec §9 has the four-phase ramp and the complaint stop rule. It shares a sending
