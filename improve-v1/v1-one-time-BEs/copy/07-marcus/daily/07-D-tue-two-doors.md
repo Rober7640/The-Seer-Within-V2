@@ -8,7 +8,7 @@
 | **Written to** | ⭐ **`02-E2-esl-v1.md`** — the proven letter, not the framework abstraction of it |
 | **Lands** | 6pm SGT = **6am ET** |
 | **Art** | hero = **two backs, face down** · `evelyn/tarot-rws/the-devil.jpg` at unit 1 · `eight-of-cups.jpg` at unit 2 |
-| **Links** | 4 CTAs, all to the booking page, `?c=1…4&s=two-doors` |
+| **Links** | **3 text CTAs, no button.** All to the booking page, `?c=1…3&s=two-doors`, scattered across the final 40% — beat 11, beat 13, beat 15 |
 | **Body** | **1,367 words** — 02's letter is 2,644. Half, for 8 cards against 12 |
 
 ⛔ **The hero is FACE DOWN.** 02-E2: *"Never face-up… a hero showing all the faces hands her the
@@ -133,7 +133,7 @@ Which means the thing keeping you there was never the other person, and it was n
 
 It's that walking out would mean admitting how long you stayed.
 
-[Let me lay the eight]({{BOOKING_URL}}?c=2&s=two-doors) and I'll tell you what that admission actually costs. It is not the thing people brace for.
+And I can tell you what that admission actually costs. It is not the thing people brace for.
 
 <!-- BEAT 13 · concrete ask -->
 ### In concrete terms, what do you do now?
@@ -142,7 +142,7 @@ Two things, and the first one is free.
 
 Today, catch yourself at the one moment you'd normally call it *not the right time*. Don't argue with it. Don't fix it. Just hear the sentence. That sentence is the chain, and hearing it once is more than most people manage in a year.
 
-The second is that you [tell me what you're actually asking]({{BOOKING_URL}}?c=3&s=two-doors). I don't lay somebody's eight off a guess — the six behind the doors are about *you*, and there's nothing for them to be about until you've said what you want to know.
+The second is that you [tell me what you're actually asking]({{BOOKING_URL}}?c=2&s=two-doors). I don't lay somebody's eight off a guess — the six behind the doors are about *you*, and there's nothing for them to be about until you've said what you want to know.
 
 <!-- the withhold, made countable -->
 `[BLOCK — six face-down positions: 3 behind door one, 3 behind door two]`
@@ -161,9 +161,9 @@ So it's three to a door. Six behind the two, plus the two you're looking at. Eig
 It's the longest of the seven I lay, and I only lay it on a morning the cut gives me two. That happened today.
 
 <!-- BEAT 15 · final CTA -->
-So tell me. What are your two doors?
+So — what are your two doors?
 
-**→ [Send Marcus your question]({{BOOKING_URL}}?c=4&s=two-doors)**
+[Put the question in front of me]({{BOOKING_URL}}?c=3&s=two-doors), and I'll lay the other six.
 
 <!-- BEAT 16 · transformation promise -->
 Do that and you stop making this decision by default, at six in the morning, without noticing.
