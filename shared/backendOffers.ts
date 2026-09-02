@@ -169,11 +169,11 @@ export const BACKEND_OFFER_CATALOG: Record<BackendOfferKey, BackendOffer> = {
       stripeName: '+ The Unburdening instructional',
     },
     bookingPath: {
-      page: '/wiccan/judgement-day',
-      chat: '/wiccan/judgement-day/chat',
+      page: '/offers/wiccan/judgement-day',
+      chat: '/offers/wiccan/judgement-day/chat',
     },
-    successPath: '/wiccan/judgement-day/success',
-    // entryPath: '/wiccan/judgement-day/entry',  ← A6. See the field's note.
+    successPath: '/offers/wiccan/judgement-day/success',
+    // entryPath: '/offers/wiccan/judgement-day/entry',  ← A6. See the field's note.
     //
     // 🔴 FALSE UNTIL A6. Two reasons, either one sufficient: `successPath` above has no
     // route yet, so a buyer would land on a 404 holding a receipt; and 03 is an ACT
