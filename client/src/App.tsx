@@ -64,6 +64,7 @@ const TwinFlameBookingChat = lazy(() => import("@/pages/TwinFlameBookingChat"));
 const TwinFlameThankYouPage = lazy(() => import("@/pages/TwinFlameThankYouPage"));
 const JudgementBookingPage = lazy(() => import("@/pages/JudgementBookingPage"));
 const JudgementBookingChat = lazy(() => import("@/pages/JudgementBookingChat"));
+const JudgementThankYouPage = lazy(() => import("@/pages/JudgementThankYouPage"));
 // Shared /offers/upsell/ pages — offer + pitch resolved from the booking
 // SESSION rather than the URL prefix, so one route pair serves every backend
 // offer in the deck. Lazy for the same reason as the booking pages above.
@@ -342,6 +343,11 @@ function Router() {
             has one thing only the buyer can supply. */}
         <Route path="/offers/wiccan/judgement-day/chat" component={JudgementBookingChat} />
         <Route path="/offers/wiccan/judgement-day" component={JudgementBookingPage} />
+        {/* 03's own thank-you (03-T1) — an INTAKE GATE, not a receipt (P7).
+            Reached via successPath + `?s=<session_id>` (OffersUpsell2's
+            navigate call, BACKEND_OFFER_CATALOG['judgement-day'].successPath).
+            No bump delivery block here, unlike 02's — see JudgementThankYouPage. */}
+        <Route path="/offers/wiccan/judgement-day/success" component={JudgementThankYouPage} />
 
         {/* Shared /offers/upsell/ pages — the deck-wide Upsell 1 → Upsell 2
             chain. Offer + pitch are resolved from the booking SESSION
