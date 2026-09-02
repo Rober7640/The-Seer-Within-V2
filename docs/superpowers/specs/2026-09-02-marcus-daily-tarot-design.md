@@ -76,6 +76,81 @@ slot earned the click.
 
 ---
 
+## 1a · How the email actually leads to the offer
+
+⭐ **The governing rule: the booking page is the email's second half, not a separate destination.**
+She has just spent four minutes looking at two named cards. If she clicks and lands on a generic
+page, the thread snaps and she is being sold to by a stranger. **The page opens showing the same two
+cards face up and the same six face down** — the picture she was already holding.
+
+### The chain, end to end
+
+```mermaid
+flowchart TD
+    DRAW["<b>THE DAY'S DRAW RECORD</b><br/>date · spread key · the cards, in order<br/>⛔ ONE source for all three consumers"]
+
+    DRAW --> MAIL["<b>the daily email</b><br/>renders the free cards from the record<br/>3 text CTAs"]
+    DRAW -.-> PAGE
+    DRAW -.-> N8N
+
+    MAIL -->|"?c=1..3 &amp;s=two-doors<br/>&amp;d=2026-09-02 &amp;fn=Name"| PAGE
+
+    PAGE["<b>the booking page</b> — param-driven, ONE page for all seven spreads<br/>opens on HER two cards, face up · her six, face down<br/>the statements, in her voice"]
+    PAGE --> BUMP["the bump · never pre-checked"]
+    BUMP --> PAY{"SHE PAYS · Stripe"}
+    PAY -->|"cancels"| PAGE
+    PAY -->|"pays"| TY["thank-you = a RECEIPT<br/>names the email subject to watch for"]
+
+    PAY -.->|"webhook"| ROW["be_orders row<br/>+ spread key + draw date + her question"]
+    ROW --> TAG["AWeber: be-customer + be-07-marcus"]
+    TAG ==> T3["the thank-you EMAIL"]
+    ROW --> N8N["<b>n8n</b><br/>reads the SAME draw record<br/>lays the remaining cards on her question"]
+    N8N -.->|"24h"| DEL["AWeber: be-07-delivered + reading_url"]
+    DEL ==> T4["the delivery email + PDF"]
+
+    style DRAW fill:#A8721C,color:#fff
+    style PAY fill:#7c3aed,color:#fff
+    style N8N fill:#2E4B6E,color:#fff
+```
+
+### ⛔ The missing piece: the draw record
+
+**Three things must lay the identical cards** — the email, the booking page, and the reading n8n
+writes. If any of them draws its own, the promise breaks the moment she compares them, and she will
+compare them. So the day's draw is generated **once**, stored, and read by all three:
+
+| Field | |
+|---|---|
+| `date` | the send date, e.g. `2026-09-02` |
+| `spread` | `two-doors` |
+| `cards` | ordered list — `["the-devil","eight-of-cups", …the paid positions]` |
+| `topic` | `love` or `money` |
+
+⚠ **The paid cards are drawn at the same time as the free ones and stored with them.** Not drawn at
+fulfilment. Marcus cut the deck once, before it was light — if the other six are dealt two days
+later when she pays, that sentence was untrue.
+
+### What the CTA carries, and why each one
+
+| Param | Why |
+|---|---|
+| `?c=1…3` | which of the three CTAs earned the click. Tells us where in the email she converts |
+| `&s=two-doors` | which spread, so the page renders the right cards |
+| `&d=2026-09-02` | ⛔ **which day's draw.** She may open Tuesday's email on Friday, and she must get the spread she actually read. Never derive this from the clock |
+| `&fn=` | her first name from AWeber, so the page and Stripe carry it |
+
+### One page, seven spreads
+
+The booking page is **config-driven off `&s=`** — one page, not seven. It reads the draw record and
+renders: her face-up cards with their position names, her face-down cards with theirs, then the
+statements. Adding a spread to the roster adds a config entry, never a page.
+
+### What n8n is handed
+
+The order row, and nothing it has to guess: her question, her details, the **spread key**, and the
+**draw date** — from which it loads the exact cards, including the ones she never saw. It never
+draws, and it never reads the clock.
+
 ## 2 · The week
 
 Card count rotates on a **fixed weekday rhythm**, not at random. Random rotation stops her forming
