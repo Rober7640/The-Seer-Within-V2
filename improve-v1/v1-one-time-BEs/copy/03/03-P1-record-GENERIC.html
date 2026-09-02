@@ -19,15 +19,18 @@
     --soft: #5a5064;
     --gold: #9a7b3f;
     --rule: #dccfb6;
-    --sheet: #fbf7ef;
+    --sheet: #ffffff;
   }
   * { box-sizing: border-box; }
-  html, body { margin: 0; padding: 0; background: #efe9dd; }
+  /* Page background MATCHES the sheet, so the final (short) page shows no
+     coloured block below the sign-off. page.pdf() renders this base (screen)
+     background — not the @media print one — so the fix lives here. */
+  html, body { margin: 0; padding: 0; background: var(--sheet); }
   body {
     font-family: Georgia, "Times New Roman", serif;
     color: var(--ink);
-    line-height: 1.62;
-    font-size: 12.5pt;
+    line-height: 1.72;
+    font-size: 14pt;
   }
   .sheet {
     max-width: 720px;
@@ -37,24 +40,24 @@
   }
   header { text-align: center; margin-bottom: 30px; }
   .kicker {
-    font-size: 10pt; letter-spacing: 0.28em; text-transform: uppercase;
+    font-size: 11pt; letter-spacing: 0.28em; text-transform: uppercase;
     color: var(--gold); margin: 0 0 14px;
   }
   h1 {
-    font-size: 27pt; line-height: 1.15; margin: 0 0 6px; font-weight: 600;
+    font-size: 30pt; line-height: 1.15; margin: 0 0 6px; font-weight: 600;
     letter-spacing: 0.01em;
   }
-  .sub { color: var(--soft); font-style: italic; font-size: 12pt; margin: 0; }
-  .ornament { color: var(--gold); text-align: center; margin: 26px 0; letter-spacing: 0.5em; font-size: 13pt; }
+  .sub { color: var(--soft); font-style: italic; font-size: 13pt; margin: 0; }
+  .ornament { color: var(--gold); text-align: center; margin: 30px 0; letter-spacing: 0.5em; font-size: 14pt; }
   h2 {
-    font-size: 15.5pt; font-weight: 600; margin: 34px 0 10px;
+    font-size: 17.5pt; font-weight: 600; margin: 38px 0 12px;
     color: var(--ink); letter-spacing: 0.01em;
   }
   h3 {
-    font-size: 12.5pt; font-weight: 600; margin: 22px 0 4px; color: var(--gold);
+    font-size: 14pt; font-weight: 600; margin: 24px 0 5px; color: var(--gold);
     font-style: italic;
   }
-  p { margin: 0 0 13px; }
+  p { margin: 0 0 15px; }
   strong { color: var(--ink); }
   em { color: var(--soft); }
   blockquote {
@@ -62,12 +65,12 @@
     color: var(--soft); font-style: italic;
   }
   ul { margin: 4px 0 14px; padding-left: 22px; }
-  li { margin: 0 0 7px; }
+  li { margin: 0 0 8px; }
   .rule { border: none; border-top: 1px solid var(--rule); margin: 26px 0; }
   .signoff { margin-top: 26px; font-style: italic; }
-  .signoff .name { font-style: normal; font-size: 14pt; color: var(--gold); }
+  .signoff .name { font-style: normal; font-size: 15.5pt; color: var(--gold); }
   @page { size: A4; margin: 16mm; }
-  @media print { body { background: #fff; } .sheet { background: #fff; box-shadow: none; padding: 0; } }
+  @media print { body { background: var(--sheet); } .sheet { background: var(--sheet); box-shadow: none; padding: 0; } }
 </style>
 </head>
 <body>
