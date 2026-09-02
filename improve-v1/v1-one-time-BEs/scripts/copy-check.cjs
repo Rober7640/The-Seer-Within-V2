@@ -31,8 +31,17 @@ const OFFERS = {
   '03': { name: 'Judgement Day',    sla: /\b(three|3) (days|nights)\b/i, prices: ['12.77', '300', '250'] },
   '04': { name: 'The Turn',         sla: /\b24 hours?\b/i, prices: ['35', '47', '57', '67', '12.77'] },
   '05': { name: 'Cut the Cord',     sla: /\b24 hours?\b/i, prices: ['12.77'] },
+  // 06 is the deck's first physical offer — real manufacturing + shipping, not a digital SLA.
+  // Main price is `{{PRICE}}` (merge field, genuinely undecided — see docs/06/0-WORKFLOW-06.md),
+  // so it never matches the $-literal regex and needs no entry in `prices` here. The bump price
+  // ($11.11) IS a literal and IS proposed, not locked — added so copy-check can run at all while
+  // it's still a candidate offer; revisit if the operator picks a different number.
+  '06': { name: 'the Wishing Bracelet', sla: /\b(7 business days|1[-–]2 weeks)\b/i, prices: ['11.11'] },
+  // 07 is the deck's first RECURRING offer — a daily email, not a one-off letter. Lives in
+  // copy/07-marcus/ (see the offer-number regex below, which allows the label suffix).
+  '07': { name: 'Marcus Daily Tarot', sla: /\b24 hours?\b/i, prices: ['35.00', '35', '12.77'] },
 };
-const ALL_PRICES = ['35.00', '35', '47', '57', '67', '12.77', '300', '250'];
+const ALL_PRICES = ['35.00', '35', '47', '57', '67', '12.77', '300', '250', '11.11'];
 
 // ── per-file rules ─────────────────────────────────────────────────────────────────────────
 const BANNED = [
@@ -54,7 +63,7 @@ const BANNED = [
 
 // A leading "+" makes it a SEND DELAY, not a fulfilment SLA: "+1h" / "+24h" are the abandon
 // nudges' own names (02-E6). Only an unprefixed duration is a promise about when work arrives.
-const SLA_ANY = /(?<![+\d])\b(24 ?h(ours?)?|(three|3) (days|nights)|(sixteen|16|eight|8) hours?)\b/i;
+const SLA_ANY = /(?<![+\d])\b(24 ?h(ours?)?|(three|3) (days|nights)|(sixteen|16|eight|8) hours?|7 business days|1[-–]2 weeks)\b/i;
 
 // A letter is an ESL or a nudge: money first appears on the booking page, after five yeses.
 const isLetter = (id) => /-E[236]\b/.test(id) || /nudge/i.test(id);
@@ -105,7 +114,10 @@ const sentenceSource = new Map();     // normalised sentence -> "offer file"
 
 for (const file of files) {
   const rel = path.relative(ROOT, file);
-  const offer = (rel.match(/copy\/(\d{2})\//) || [])[1];
+  // A folder may carry a human label after the number — copy/07-marcus/ is still offer 07.
+  // Without the optional suffix the match fails, `offer` is undefined, and the price, SLA and
+  // device-variance checks below all silently skip. The script then prints PASS on anything.
+  const offer = (rel.match(/copy\/(\d{2})(?:-[a-z-]+)?\//) || [])[1];
   const id = path.basename(file, '.md');
   const body = bodyOf(fs.readFileSync(file, 'utf8'));
 
@@ -158,7 +170,7 @@ for (const file of files) {
   //     A ladder offer states it as a MERGE FIELD ({{TODAYS_RUNG}}) resolved server-side per S9 —
   //     hard-coding a number there breaks silently for anyone arriving from an older email.
   if (isBookingPage(id)) {
-    const statesPrice = /\$ ?[\d,]/.test(body) || /\{\{\s*TODAYS_RUNG\s*\}\}/.test(body);
+    const statesPrice = /\$ ?[\d,]/.test(body) || /\{\{\s*(TODAYS_RUNG|PRICE)\s*\}\}/.test(body);
     if (!statesPrice) findings.push({ file: rel, line: 0, rule: 'booking page states no price', detail: 'statement 6' });
     if (!SLA_ANY.test(body)) findings.push({ file: rel, line: 0, rule: 'booking page states no SLA', detail: 'statement 5' });
   }
@@ -191,7 +203,7 @@ for (const [norm, offers] of sentencesByOffer) {
 }
 
 // ── report ─────────────────────────────────────────────────────────────────────────────────
-const offersSeen = [...new Set(files.map((f) => (path.relative(ROOT, f).match(/copy\/(\d{2})\//) || [])[1]).filter(Boolean))];
+const offersSeen = [...new Set(files.map((f) => (path.relative(ROOT, f).match(/copy\/(\d{2})(?:-[a-z-]+)?\//) || [])[1]).filter(Boolean))];
 console.log(`copy-check — ${files.length} file(s), offers ${offersSeen.sort().join(', ') || '—'}\n`);
 
 if (!findings.length) {

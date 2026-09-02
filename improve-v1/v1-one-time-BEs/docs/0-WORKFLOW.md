@@ -701,7 +701,42 @@ can, and will, the first time a position is reassigned.
 | **03** Judgement Day *(Act)* | not a spread — the three nights. **Entry · Transfer · Closing**, and where her reply enters it |
 | **05** Cut the Cord | decide with its copy; it has none yet |
 
-⛔ **Draw it. Do not source it, and never scrape it.**
+⚠ **EXCEPTION — offer 06 (operator, 2026-09-01):** overridden by explicit operator instruction.
+06 uses real sourced photography instead of drawn diagrams — the operator's call, made knowingly
+against the reasoning below (no provenance trail on scraped commercial imagery; a photo cannot
+depict a bespoke reveal like a specific stick number or hexagram the way a drawing can). Record
+whatever source/licence info is actually available per image. This exception applies to 06 only —
+the rule below still holds for every other offer unless similarly overridden.
+
+📐 **General lesson from 06 — the deck's first offer with more than 2–3 images in one letter —
+kept here because it will hit every future physical-object offer, not just this one: size each
+image for its actual DISPLAY size, not its generation size, and host it instead of embedding it.**
+A part-by-part breakdown (anatomy crops, material shots, whatever the object's equivalent is)
+tempts you to generate everything at a large, detailed resolution — which is correct for quality,
+wrong for delivery. 06's 12 images were generated at 1080–1402px but only ever displayed at
+120px (paired, part-by-part) or 540px (full-width hero/product shot); base64-embedding them at
+full resolution in the preview HTML produced a 47MB file. The fix, now built into
+`render-be-esl-preview.mjs`:
+1. Resize each image to **2x its actual display width** (not its generation width) — `sips -Z
+   <target> -s format jpeg -s formatOptions 82-85`. A 240px display target needs a ~240px source
+   (paired crops); a 540px full-width slot needs a ~1080px source (hero, product shot).
+2. **Host, don't embed**, once a letter has more than a couple of images — `node
+   improve-v1/v1-one-time-BEs/scripts/host-be-asset.cjs file <resized.jpg> <new-prefix>/<name>.jpg`.
+   Use a **new prefix per offer** (06 used `backend-06/creature-a/`) — never write to
+   `evelyn/tarot/`, which serves live broadcasts, same rule as the tarot deck below.
+3. The render script accepts either a local path (still base64-embeds it — fine for a single hero
+   image) or an `http(s)://` URL in the images-JSON (links it directly, no embedding) — an
+   offer's images-JSON can mix both, but any letter with 8+ images should go straight to hosted
+   URLs rather than discover the file-size problem after the fact.
+
+Result on 06: 47MB → 20KB, images visually unchanged at their display size. See
+`docs/06/0-WORKFLOW-06.md`'s Fourth-round section for the full story, and that same section's
+Build notes on `06-E2-esl-product-creature-a-subhead-question.md` for two more physical-object
+lessons that are more craft than mechanics — worth reading before writing a future offer's own
+precedent/testimonial beat or fact-checking a symbolic object's specific variant, but not
+duplicated here because they're closer to copywriting judgment than a repeatable procedure.
+
+⛔ **Draw it. Do not source it, and never scrape it.** *(default rule — see exception above)*
 
 - **A paid product needs provenance.** The deck's standard is `assets/tarot-rws/index.json`
   — source and licence recorded per image. Scraped art cannot meet that, and once a PDF
