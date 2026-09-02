@@ -862,7 +862,14 @@ export function useConversation() {
     // pairs — Joel asked for /fb-read to behave as the tarot landers do.
     const read = parseReadParams(window.location.search)
     if (read) {
-      updateUserData({ bucket: readHookToBucket(read.hook) })
+      // 🔴 readHook IS THE DEEP FLOW’S ONLY CLUE. The symbol identity already rides in
+      // the opener and the reflect prompt, so nothing was carried past this point. But the
+      // base prompt’s SEEKING_LOVE cold reads include "There’s someone who already thinks
+      // of you in quiet moments" — the exact sentence still-think’s guard forbids — and
+      // every read hook buckets to love, so every read seeker was being offered it. Two of
+      // seven of Joel’s persona walks produced it near-verbatim. readDirective() in
+      // prompts.ts reads this field. Joel’s fix, taken as he wrote it.
+      updateUserData({ bucket: readHookToBucket(read.hook), readHook: read.hook })
 
       await sendBotMessages([
         `It's lovely to meet you, ${capitalized}.`,
@@ -2344,6 +2351,18 @@ export function useConversation() {
           // was resolved at lead capture even under a future sign-scoped test.
           ...(getPostHogFunnel() === 'palm'
             ? { sign: parsePalmParams(window.location.search)?.sign ?? 'thumb' }
+            : {}),
+          // /fb-read INSTRUMENT (tea | coffee | …), so Stripe bills " - TEA" / " - COFFEE"
+          // rather than one umbrella label for a funnel that serves several devices
+          // (Joel, 2026-09-02). Gated on the funnel exactly as `tarotHook` and `sign`
+          // above are, so no other funnel sends it and none can be affected.
+          //
+          // Read from the URL rather than from chat state: the chat page is reached as
+          // /fb-read/chat?hook=…&card=…&device=…, so the param is present for the whole
+          // session. The server re-validates against the device registry and falls back
+          // to " - TEA" if this is absent or unrecognized.
+          ...(getPostHogFunnel() === 'read'
+            ? { readDevice: parseReadParams(window.location.search)?.device }
             : {}),
           // Order bump. `bumpOffered` is sent even on a decline — it's the
           // take-rate denominator. The server treats both as a REQUEST only.

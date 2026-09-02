@@ -60,6 +60,22 @@ export interface UserData {
   // the physical tell (e.g. "a trident, three lines rising to one").
   palmReading?: string
   palmMark?: string
+  // /fb-read identity carry. Set at read name-capture from the URL the ad sent her
+  // to; honored by readDirective() in the shared reading/crisis builders. ONLY
+  // /fb-read traffic sets it, so every other funnel’s prompt stays byte-identical.
+  //
+  // 🔴 WHY THE HOOK AND NOT THE SYMBOL. The symbol identity already lives in the
+  // opener and the reflect turn. What the DEEP flow lacks is the knowledge of which
+  // QUESTION she arrived on — and the base prompt’s SEEKING_LOVE cold reads include
+  // "There’s someone who already thinks of you in quiet moments", which is exactly
+  // the sentence the still-think guard forbids. Generic love traffic reads that
+  // "someone" as a future stranger; a woman who came from an ad about a specific man
+  // can only read it as him. The line is fine; it was just never scoped.
+  //
+  // Joel’s branch adds a `tarotHook` twin beside this one. DELIBERATELY NOT TAKEN
+  // here: it changes the deep flow for 148 LIVE tarot landers, which is outside the
+  // coffee launch. It is a real fix and should ship on its own.
+  readHook?: string
   // Close-depth A/B (v1_close_depth_2026) — 'deep' ⇒ the thickened pitch. Set
   // client-side from the /api/lead response (or the ?close_depth= preview
   // override) and carried here only because the client posts the whole userData
@@ -142,6 +158,15 @@ export interface CheckoutRequest {
    * closed roster server-side; see the note at the /api/checkout call site.
    */
   tarotHook?: string
+  /**
+   * The /fb-read INSTRUMENT this order came from ('tea' | 'coffee' | …). Optional and
+   * absent on every non-read funnel. Read ONLY to pick the customer-facing Stripe
+   * product-name suffix (" - TEA" / " - COFFEE"), because /fb-read is the one funnel
+   * serving several instruments from a single param and a per-funnel suffix cannot
+   * tell them apart. Validated server-side against shared/readDevices.ts — the same
+   * registry the lander renders from — and falls back to " - TEA" when absent.
+   */
+  readDevice?: string
 }
 
 export interface CheckoutResponse {

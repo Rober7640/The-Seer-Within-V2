@@ -3,6 +3,14 @@ import { test, expect } from '@playwright/test'
 // two halves can never test different women.
 import { PERSONAS } from '../improve-v1/fb-read/evals/personas.mjs'
 
+// Which device these personas walk. Defaults to tea, the device they were written
+// against; READ_DEVICE=coffee runs the same seven women through the coffee cup.
+//
+// 🔴 A LITERAL WAS PINNED HERE. Every persona URL said device=tea, so a second
+// device could be fully written, registered and serving while this spec kept
+// reporting on the first one — green, and about the wrong funnel.
+const READ_DEVICE = process.env.READ_DEVICE ?? 'tea'
+
 // The seven, through a real browser: lander → tap → chat → type → read.
 //
 // 🔴 WHAT THIS CATCHES THAT THE EVAL CANNOT. run-personas.mjs posts to /api/chat
@@ -76,7 +84,7 @@ for (const p of PERSONAS as any[]) {
       })
 
       // ── the lander ────────────────────────────────────────────────────────
-      await page.goto(`/fb-read/c?hook=${p.hook}&device=tea`)
+      await page.goto(`/fb-read/c?hook=${p.hook}&device=${READ_DEVICE}`)
       await expect(page.getByTestId('read-cup')).toBeVisible()
 
       // The cup must actually be the arm-B photograph, not a broken background.

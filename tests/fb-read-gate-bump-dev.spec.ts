@@ -1,5 +1,11 @@
 import { test, expect, type Page } from '@playwright/test';
 
+// The gate and the bump are chosen by FUNNEL, not by device, so this spec proves the
+// same thing whichever device it walks. Parameterised anyway: the one literal in the
+// file was a device name, and a device name in a test is how a second device gets
+// silently left unproven.
+const READ_DEVICE = process.env.READ_DEVICE ?? 'tea';
+
 // ─────────────────────────────────────────────────────────────────────────────
 // /fb-read TEA LANDERS — commitment gate + "Double-Strength Clearing" order bump,
 // live smoke against the DEVELOPMENT deployment.
@@ -104,7 +110,7 @@ test('a tea lander shows the commitment gate, then the Double-Strength bump', as
   });
 
   // ── the tea lander ─────────────────────────────────────────────────────────
-  await page.goto('/fb-read/c?hook=love-again&device=tea', { waitUntil: 'domcontentloaded' });
+  await page.goto(`/fb-read/c?hook=love-again&device=${READ_DEVICE}`, { waitUntil: 'domcontentloaded' });
   await expect(page.getByTestId('read-cup'), 'the cup must render').toBeVisible({ timeout: 30000 });
   await page.getByTestId('read-card-a').click();
   await page.waitForURL(/\/fb-read\/chat\?/, { timeout: 30000 });

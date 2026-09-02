@@ -18,14 +18,14 @@
 // Adding a device = one entry in DEVICES + its strip art. Nothing to sync.
 //
 // Two axes, both from the URL:
-//   device  — ?device=  which instrument the ad quizzed (dream | tea)
+//   device  — ?device=  which instrument the ad quizzed (dream | tea | coffee)
 //   hook    — ?hook=    the question the ad asked (love-again)
 // Plus the VERSION, which comes from the route suffix, not a param:
 //   /fb-read → A · /fb-read/b → B · /fb-read/c → C
 
 import { READS } from "./readCopy";
 
-export type ReadDevice = "dream" | "tea";
+export type ReadDevice = "dream" | "tea" | "coffee";
 export type ReadHook = "love-again" | "still-think" | "hiding-something";
 export type ReadOption = "a" | "b" | "c";
 export type ReadVersion = "a" | "b" | "c";
@@ -156,6 +156,19 @@ export interface DeviceConfig {
   // it by background-position, so unequal panels silently misalign every tap
   // target — the panel she sees is not the read she gets.
   strip: { url: string; width: number; height: number };
+  // The lander image's aria-label. DEVICE-LEVEL, and it lives here rather than in
+  // the bridge because it is a fact about the instrument.
+  //
+  // 🔴 IT WAS HARDCODED IN ReadBridge AS "The inside of a teacup, tea leaves settled
+  // in it". Only the 'symbol' branch renders it, so tea was the one device it was
+  // ever true for — and coffee is the second symbol device, which is where it would
+  // have started lying. Exactly the drift this registry exists to prevent, one level
+  // down and visible only to the people using a screen reader.
+  //
+  // Panel devices carry one too. Their buttons are labelled per option today, so it
+  // is unrendered — but a device's own description of itself is not the bridge's to
+  // invent later, and the test asserts every device has one.
+  cupAlt: string;
   // OPTIONAL second strip, shown in the CHAT instead of the lander's.
   //
   // 🔴 WHY tea HAS ONE AND THE OTHERS DO NOT. Tea-leaf reading is explicitly a
@@ -230,6 +243,7 @@ const DREAM: DeviceConfig = {
   continueCta: "There's more the dream is showing me — begin your free reading",
   chooseMoment: "the moment you knew which one was yours",
   strip: { url: "/read/dream-strip.jpg", width: 1080, height: 360 },
+  cupAlt: "Three dreams, side by side",
   options: ["a", "b", "c"],
   // The three most-reported recurring dreams among women (54.2% / 53.5% /
   // 31.9%). Chosen from survey data rather than invented — see the design doc.
@@ -247,7 +261,9 @@ const DREAM: DeviceConfig = {
 
 const TEA: DeviceConfig = {
   id: "tea",
-  eyebrow: "The Leaves Have Settled",
+  // Benefit first, then the device named honestly. See the note on COFFEE.eyebrow —
+  // the SHAPE is held constant across devices on purpose.
+  eyebrow: "Your Free Tea Leaf Reading",
   instruction: "Look into the cup. Which of these do you see?",
   beatNoun: "cup",
   continueCta: "There's more the cup is showing me — begin your free reading",
@@ -269,6 +285,7 @@ const TEA: DeviceConfig = {
   // than to arm A's three-cup strip.
   strip: { url: "/read/armb-cup.jpg", width: 1254, height: 1254 },
   revealStrip: { url: "/read/armb-reveal-strip.jpg", width: 1260, height: 420 },
+  cupAlt: "The inside of a teacup, tea leaves settled in it",
   grammar:
     "The cup is read from directly above, and WHERE a thing sits is half its meaning. The RIM is the weeks just ahead. The MIDDLE is the bottom of the cup — far off, or the ground she was built on. The HANDLE SIDE is HER. The side OPPOSITE the handle is other people and things outside her. Use this; it is what makes a reading feel earned rather than guessed. Never explain the system to her — she should feel the position mean something, never be taught it.",
   options: ["a", "b", "c"],
@@ -291,14 +308,107 @@ const TEA: DeviceConfig = {
   },
 };
 
+// A SECOND device on the same three hooks, so the picture is the variable and no new
+// guard is needed. Same pick mechanic as tea, deliberately: change the picture AND how
+// she chooses and neither can be read as the cause.
+//
+// ⚠ Coffee uses coffee-native symbol names rather than reusing bird/tree/anchor
+// (operator call, 2026-09-01), so the option labels changed too. A coffee-vs-tea
+// result is therefore NOT cleanly attributable to the photograph alone. Recorded in
+// docs/superpowers/specs/2026-09-01-fb-read-coffee-device-design.md rather than left
+// for someone to rediscover from the numbers.
+//
+// 🔴 THE PHOTOGRAPH IS REAL, AND CC0. Not generated. Reference work found that a heavy
+// draw coats the cup in one unreadable mass and only a LIGHT draw leaves isolated marks
+// on near-bare porcelain; this is a light draw. Generating a cup with three separated
+// marks would have meant inventing a behaviour no real cup showed — the "logo with
+// coffee in it" failure the whole device exists to avoid. See
+// improve-v1/fb-read/images/coffee/SOURCE.md.
+const COFFEE: DeviceConfig = {
+  id: "coffee",
+  // 🔴 THE OLD EYEBROW NAMED NOTHING. "The Cup Has Been Turned" is atmosphere, and it
+  // could just as easily have been tea — the device's own announcement did not announce
+  // the device. It was also the only line above the fold doing no work for her.
+  //
+  // "Turkish coffee reading" is the standard ENGLISH name for the practice (kahve falı
+  // in Turkish, tasseography as the umbrella term that covers tea and coffee alike), so
+  // it is both authentic and readable to a US/UK audience. `kahve falı` itself is a
+  // comprehension wall at the first line and is deliberately not used.
+  //
+  // 🔴 THE SHAPE IS HELD CONSTANT ACROSS DEVICES — tea is "Your Free Tea Leaf Reading".
+  // Only the device noun changes. Give coffee a benefit line while tea keeps atmosphere
+  // and the eyebrow becomes a FOURTH difference in a test meant to isolate the picture,
+  // on top of the photograph, the symbol names and the visual style.
+  //
+  // `dream` is frozen and deliberately left on its old eyebrow; nothing is built on it.
+  eyebrow: "Your Free Turkish Coffee Reading",
+  instruction: "Look into the cup. Which of these do you see?",
+  beatNoun: "cup",
+  continueCta: "There's more the cup is showing me — begin your free reading",
+  chooseMoment: "the moment you named it",
+  pick: "symbol",
+  cupImage: { url: "/read/coffee-cup.jpg", width: 1254, height: 1254 },
+  cupAlt: "The inside of a coffee cup, the grounds drained down its pale wall",
+  optionLabel: { a: "Road", b: "Tree", c: "Lake" },
+  // Unused while pick is 'symbol' — the lander reads cupImage. Kept pointing at the
+  // same file so a missing cupImage degrades to the right picture.
+  strip: { url: "/read/coffee-cup.jpg", width: 1254, height: 1254 },
+  // 1560×520, not tea's 1260×420. The road is a LONG mark — that is what makes it a
+  // road — and no useful length of it fits a 420 ring, so ring-read-cup.mjs refused
+  // the crop rather than cutting the ring in half. 520 still shows 41% of the cup.
+  revealStrip: { url: "/read/coffee-reveal-strip.jpg", width: 1560, height: 520 },
+  // Tea's grammar is SETTLING and leans on handle-side. Coffee's is the DRAIN, and
+  // DEPTH carries the meaning — which is why this cup needs no visible handle, and
+  // why its three marks say something tea's three (all mid-wall) cannot.
+  grammar:
+    "The cup was drunk down, turned upside down onto the saucer and left to drain, so the grounds ran DOWN the wall and settled as they went. Depth is the whole reading here. A mark high on the wall, just under the RIM, came to rest last and belongs to the weeks just ahead. A mark HALFWAY UP the wall is what is standing in her life now. A mark on the FLOOR of the cup settled first and belongs to what she was built on — the oldest thing, the ground under everything else. Grounds that run in a LINE are movement; grounds gathered in ONE PLACE are something settled and already hers. Use this; it is what makes a reading feel earned rather than guessed. Never explain the system to her — she should feel the position mean something, never be taught it.",
+  options: ["a", "b", "c"],
+  // Read OFF the photograph, not chosen in advance — see SOURCE.md for the geometry.
+  // 🔴 Depth here is OBSERVED, not computed: the cup is tilted, so its floor sits low
+  // in the frame rather than at the image centre. Re-derive these as
+  // distance-from-centre and the lake comes back as "near the rim", inverting the read.
+  //
+  // 🔴 These must carry the same content words as cut 1 of each reading, or the
+  // eval's art-coherence check fails the build.
+  mark: {
+    a: "a road running under the rim of the cup",
+    b: "a tree halfway up the wall of the cup",
+    c: "a lake in the bottom of the cup, where the grounds settled first",
+  },
+  reading: {
+    a: "the moving heart",
+    b: "the standing heart",
+    c: "the deep heart",
+  },
+};
+
 export const DEVICES: Record<ReadDevice, DeviceConfig> = {
   dream: DREAM,
   tea: TEA,
+  coffee: COFFEE,
 };
 
 // The roster, derived. Route validators and tests read THIS — never a literal
 // array — so a new device cannot be live on the lander and rejected by the API.
 export const DEVICE_IDS = Object.keys(DEVICES) as ReadDevice[];
+
+// Customer-facing Stripe product-name suffix for a /fb-read order, e.g. " - TEA",
+// " - COFFEE". DERIVED FROM THE DEVICE ID, so a fourth device needs no edit here and
+// cannot silently inherit another instrument's label.
+//
+// 🔴 WHY THIS EXISTS AT ALL. Every other funnel's suffix is per-FUNNEL and lives in
+// shared/funnelConfig.ts. /fb-read is the one funnel that serves several instruments
+// from a single param, so a per-funnel suffix cannot tell a coffee order from a tea
+// one. Joel asked for exactly that separation on the 2026-09-02 call: "Let's not
+// reuse. Read is too big. If it's tea, let's call it tea" — and, read back to him,
+// "for coffee it should be coffee".
+//
+// The CALLER decides when to use this: routes.ts falls back to the funnel's own
+// productSuffix (" - TEA") whenever the device is absent or unrecognized, so a lost
+// device degrades to today's behaviour rather than to a blank or a wrong label.
+export function deviceProductSuffix(device: ReadDevice): string {
+  return ` - ${device.toUpperCase()}`;
+}
 
 export function isReadDevice(v: unknown): v is ReadDevice {
   return typeof v === "string" && Object.prototype.hasOwnProperty.call(DEVICES, v);

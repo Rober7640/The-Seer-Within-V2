@@ -9,11 +9,11 @@ page or route. `/fb-read` renders every device from `shared/readDevices.ts`.
 
 ## What exists
 
-| | `dream` | `tea` |
-|---|---|---|
-| **love-again** | ✅ 3/3 | ✅ 3/3 |
-| **still-think** | ✅ 3/3 | ✅ 3/3 |
-| **hiding-something** | ✅ 3/3 | ✅ 3/3 |
+| | `dream` | `tea` | `coffee` |
+|---|---|---|---|
+| **love-again** | ✅ 3/3 | ✅ 3/3 | ✅ 3/3 |
+| **still-think** | ✅ 3/3 | ✅ 3/3 | ✅ 3/3 |
+| **hiding-something** | ✅ 3/3 | ✅ 3/3 | ✅ 3/3 |
 
 ✅ all three panels written and servable · ◐ partial · — not built
 
@@ -39,7 +39,7 @@ copy has to exist in full either way.
 |---|---|
 | Mechanism | natural-cut |
 | Frame | `self-frame` |
-| Devices built | `dream`, `tea` |
+| Devices built | `dream`, `tea`, `coffee` |
 | VOC | inherited — inherits the shipped palm love-again finding; the dream panels are survey-sourced, not VOC-sourced |
 
 **She is asking:** She is asking, after heartbreak, whether she will ever love again — worn down, but the hope is still there.
@@ -60,7 +60,7 @@ Affirm the hopeful yes with warmth and certainty; withhold ONLY the specifics �
 |---|---|
 | Mechanism | natural-cut |
 | Frame | `still-think` |
-| Devices built | `dream`, `tea` |
+| Devices built | `dream`, `tea`, `coffee` |
 | VOC | inherited — inherits the shipped tarot cards-still-think finding and its guard; reunion/return sub-group mined at n=2,345 / 21.0% conv in docs/fb-ad-question-testing-roadmap.md |
 
 **She is asking:** She is asking only whether she occasionally crosses a man's mind — not for his return, not for his love. That she has scaled her asking down to the smallest thing a person can request says a great deal about what she has been going without.
@@ -81,7 +81,7 @@ Affirm the hopeful yes with warmth and certainty; withhold ONLY the specifics �
 |---|---|
 | Mechanism | natural-cut |
 | Frame | `hiding-something` |
-| Devices built | `dream`, `tea` |
+| Devices built | `dream`, `tea`, `coffee` |
 | VOC | inherited — inherits the shipped tarot cards-hiding-something finding and guard; trust/honesty sub-group mined at n=2,289 / 20.1% conv, 'hiding something' recurring as a 2-gram n=42, in docs/fb-ad-question-testing-roadmap.md |
 
 **She is asking:** She keeps meeting a gap in what a man tells her — not a lie she has caught him in, but a place the picture stops — and is asking whether there is really something behind it. She has no proof and is uneasy about needing any.
@@ -114,7 +114,7 @@ NEVER state that he IS hiding something and NEVER state that he is not — both 
 | `b` | *the falling heart* | the one where you're falling with nothing underneath |
 | `c` | *the unmade heart* | the one where your teeth come loose into your palm |
 
-### `tea` — The Leaves Have Settled
+### `tea` — Your Free Tea Leaf Reading
 
 | | |
 |---|---|
@@ -128,6 +128,20 @@ NEVER state that he IS hiding something and NEVER state that he is not — both 
 | `b` | *the rooted heart* | a tree halfway up the cup, its roots running toward the middle |
 | `c` | *the steadied heart* | an anchor halfway up the cup, on the far side from the handle |
 
+### `coffee` — Your Free Turkish Coffee Reading
+
+| | |
+|---|---|
+| Instruction | *"Look into the cup. Which of these do you see?"* |
+| Strip | `/read/coffee-cup.jpg` · 1254×1254 · 210 KB |
+| Reveal strip | `/read/coffee-reveal-strip.jpg` · 122 KB |
+
+| Panel | Archetype | The mark named in bubble 1 |
+|---|---|---|
+| `a` | *the moving heart* | a road running under the rim of the cup |
+| `b` | *the standing heart* | a tree halfway up the wall of the cup |
+| `c` | *the deep heart* | a lake in the bottom of the cup, where the grounds settled first |
+
 ---
 
 ## Live URLs
@@ -139,16 +153,25 @@ https://www.theseerwithin.com/fb-read/c?hook=love-again&device=dream&utm_content
 https://www.theseerwithin.com/fb-read/c?hook=love-again&device=tea&utm_content=<ad>
 ```
 ```
+https://www.theseerwithin.com/fb-read/c?hook=love-again&device=coffee&utm_content=<ad>
+```
+```
 https://www.theseerwithin.com/fb-read/c?hook=still-think&device=dream&utm_content=<ad>
 ```
 ```
 https://www.theseerwithin.com/fb-read/c?hook=still-think&device=tea&utm_content=<ad>
 ```
 ```
+https://www.theseerwithin.com/fb-read/c?hook=still-think&device=coffee&utm_content=<ad>
+```
+```
 https://www.theseerwithin.com/fb-read/c?hook=hiding-something&device=dream&utm_content=<ad>
 ```
 ```
 https://www.theseerwithin.com/fb-read/c?hook=hiding-something&device=tea&utm_content=<ad>
+```
+```
+https://www.theseerwithin.com/fb-read/c?hook=hiding-something&device=coffee&utm_content=<ad>
 ```
 
 Pricing is funnel-level — `35_read`, $35/$25 — so every device and hook is priced
