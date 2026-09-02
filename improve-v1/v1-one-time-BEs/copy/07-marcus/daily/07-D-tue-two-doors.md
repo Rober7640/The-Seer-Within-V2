@@ -29,6 +29,14 @@ completes."* The free read is the whole opening, not the first card of it.
 
 ---
 
+> ⛔ **THIS FILE IS STALE. The `.html` beside it is what ships.**
+> Tuesday was ported to `scripts/build-07-daily.py` on 2026-09-02 and its block list is the real
+> source — but that block list is not yet persisted to a file, so this markdown no longer matches
+> the built email. **`copy-check` reads `.md`, so the gate is currently checking copy that does not
+> ship.** Read the `.html`. Being fixed as part of the structure rework: the builder will emit both
+> from one persisted definition.
+
+
 <!-- BEAT 2 · headline -->
 # %FIRSTNAME%, I laid two cards for you before it got light — and nobody asked me to
 
