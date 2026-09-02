@@ -9,6 +9,7 @@ Emits the sendable file (S3 art) and a -preview file (art inlined for the artifa
 import re, sys, base64, urllib.request
 
 S3   = "https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/evelyn/tarot-rws/"
+S3ASSET = "https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/marcus/"
 F    = "Helvetica,Arial,sans-serif"
 INK, BODY, MUT, OCH, BLU, RULE, CLOTH = "#16181D", "#24262E", "#8A909C", "#A8721C", "#2E4B6E", "#DDE0E6", "#1A2430"
 
@@ -28,13 +29,13 @@ def render(d):
         elif kind == "p":
             row(f'<p style="margin:0;font-size:16.5px;line-height:1.62;color:{BODY};">{links(val, slug)}</p>', "0 40px 18px")
         elif kind == "hero":
-            cards = ('<td width="16">&nbsp;</td>'.join(
-                f'<td class="backcell" width="124" height="200" bgcolor="{BLU}" style="width:124px;height:200px;background-color:{BLU};border:2px solid #3E5F86;">&nbsp;</td>'
-                for _ in range(val)))
-            cap = "One off the cut &mdash; not yet turned" if val == 1 else f"{'Two' if val==2 else 'Three'} off one cut &mdash; not yet turned"
+            card = (f'<td align="center" style="padding:0 9px;"><img src="{S3ASSET}card-back.jpg" '
+                    f'alt="a face-down card" width="124" style="display:block;width:124px;max-width:100%;'
+                    f'height:auto;border-radius:5px;"></td>')
+            cap = "One off the cut &mdash; not yet turned" if val == 1 else ("Two" if val==2 else "Three") + " off one cut &mdash; not yet turned"
             out.append(f'''  <tr><td align="center" style="padding:26px 20px 0;">
-    <table cellpadding="0" cellspacing="0" border="0" role="presentation" bgcolor="{CLOTH}" style="background-color:{CLOTH};"><tr><td style="padding:26px 30px;">
-      <table cellpadding="0" cellspacing="0" border="0" role="presentation"><tr>{cards}</tr></table>
+    <table cellpadding="0" cellspacing="0" border="0" role="presentation" bgcolor="{CLOTH}" style="background-color:{CLOTH};"><tr><td style="padding:26px 26px;">
+      <table cellpadding="0" cellspacing="0" border="0" role="presentation"><tr>{card * val}</tr></table>
       <p style="margin:16px 0 0;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#8FA3BC;text-align:center;">{cap}</p>
     </td></tr></table></td></tr>''')
         elif kind == "img":
@@ -42,16 +43,26 @@ def render(d):
             out.append(f'''  <tr><td align="center" style="padding:0 20px 20px;">
     <img class="cardimg" src="{S3}{card}.jpg" alt="{alt}" width="200" style="display:block;width:200px;max-width:100%;height:auto;border:1px solid {RULE};"></td></tr>''')
         elif kind == "faces":
-            cells, rows = [], []
-            for n, t in val:
-                cells.append(f'<td width="33%" valign="top" bgcolor="{BLU}" style="width:33%;background-color:{BLU};padding:11px 10px;">'
-                             f'<div style="font-size:10px;color:#EAEEF4;font-weight:bold;">{n}</div>'
-                             f'<div style="font-size:12px;line-height:1.35;color:#EAEEF4;padding-top:4px;">{t}</div></td>')
-            for i in range(0, len(cells), 3):
-                chunk = cells[i:i+3]
-                rows.append("<tr>" + "".join(chunk) + '<td>&nbsp;</td>' * (3 - len(chunk)) + "</tr>")
-            row(f'<table width="100%" cellpadding="0" cellspacing="6" border="0" role="presentation" style="border-collapse:separate;border-spacing:6px;">{"".join(rows)}</table>'
-                f'<p style="margin:10px 0 0;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:{MUT};">These {len(val)} are still in my hand</p>', "26px 40px 0")
+            # A laid spread, not a table of blocks. Each position is a real card BACK image with
+            # its name UNDERNEATH, the way cards actually sit on a table — and grouped into the
+            # rows the spread has, so the shape of the reading is visible at a glance.
+            # `val` is [(group label or None, [(n, position name), ...]), ...]
+            groups = val if isinstance(val[0], tuple) and isinstance(val[0][1], list) else [(None, val)]
+            blocks = []
+            for label, items in groups:
+                cells = "".join(
+                    f'<td width="{100//max(len(items),1)}%" align="center" valign="top" style="padding:0 5px;">'
+                    f'<img src="{S3ASSET}card-back.jpg" alt="a face-down card" width="86" '
+                    f'style="display:block;width:86px;max-width:100%;height:auto;border-radius:4px;margin:0 auto;">'
+                    f'<div style="font-family:{F};font-size:10px;letter-spacing:.09em;text-transform:uppercase;'
+                    f'color:{MUT};line-height:1.35;padding-top:9px;">{t}</div></td>'
+                    for n, t in items)
+                lab = (f'<tr><td colspan="{len(items)}" style="font-family:{F};font-size:10px;letter-spacing:.16em;'
+                       f'text-transform:uppercase;color:{OCH};font-weight:bold;padding:0 0 10px 5px;">{label}</td></tr>'
+                       ) if label else ""
+                blocks.append(f'<table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" '
+                              f'style="margin-bottom:22px;">{lab}<tr>{cells}</tr></table>')
+            row("".join(blocks), "26px 40px 8px")
         elif kind == "ps":
             out.append('\n  <!-- P.S. · permanent slot, ratified across all eight letters -->')
             row(f'''<table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation"><tr>
