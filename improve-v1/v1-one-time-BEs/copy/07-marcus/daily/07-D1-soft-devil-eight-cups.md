@@ -4,10 +4,10 @@
 |---|---|
 | **Day type** | Soft — Mon, Tue, Thu, Fri, Sat |
 | **Draw** | 2 cards. Card 1 the pull, card 2 what it costs |
-| **Ask** | Her question, card-specific. ⛔ No price, no product name, no SLA |
+| **Ask** | Her question, card-specific — then the pitch, written out of *these two cards*. Price and SLA named |
 | **Destination** | The booking page. `?c=` names the day and the slot |
 | **Art** | `evelyn/tarot-rws/the-devil.jpg` · `evelyn/tarot-rws/eight-of-cups.jpg` — read-only |
-| **Body** | 287 words |
+| **Body** | 312 words |
 | **Lands** | 6pm SGT = **6am ET**. She reads this at breakfast — see the time-of-day rule in the spec §3 |
 
 **Subject** — `{{ subscriber.first_name | capitalize }}, the chains in this card are loose. That's the whole point.`
@@ -36,7 +36,9 @@ What I can't tell you from here is which one it is for you. The cards don't work
 
 So tell me. What would you put to the Devil?
 
-**→ Tell me what you'd ask him**
+Send it and I'll read it against him properly — which chain it is, and what it's really holding shut. Then I draw fresh on you. **$35**, back inside 24 hours.
+
+**→ Send Marcus your question**
 
 — Marcus
 

@@ -83,9 +83,9 @@ a habit; a rhythm she can learn gives variety *and* gives the ask somewhere to l
 
 | Day | Draw | The read | The ask |
 |---|---|---|---|
-| Mon Tue Thu Fri Sat | **2 cards** | The pull, and what it costs | **Soft.** The question, nothing else |
-| Wed | **1 card + a practice** | Something to do tonight | **Barest.** The question, no product around it |
-| **Sun** | **3 cards** | Full reading — the week's best content | **Hard.** This is the sales email |
+| Mon Tue Thu Fri Sat | **2 cards** | The pull, and what it costs | Question + **one-line pitch**, both card-native |
+| Wed | **1 card + a practice** | Something to do today | Same as the others. The give is the *content* |
+| **Sun** | **3 cards** | Full reading — the week's best content | The full argument. This is the sales email |
 
 ### The spine: every email asks for her question
 
@@ -109,22 +109,62 @@ walk away from that lightly.
 ⛔ **The ask is card-specific, never generic.** Not *"what's your question?"* but *"what would you
 put to the Devil?"* The card sharpens the ask and gives it a reason to exist today.
 
-**Why Wednesday still asks.** It asks for the question and nothing else — no price, no product name,
-no reading offered. The give-day is one of two things holding a daily ask up, and it should be the
-email people forward. But an email with no ask at all breaks the habit the other six days build.
+**Wednesday is not a "give day" any more.** It pitches like every other day. What makes it different
+is its **content** — one card and a practice, the forwardable one. The give lives in what she is
+handed, never in pretending nothing is for sale.
 
 **Why Sunday is the peak.** *(operator, 2026-09-02 — moved from Saturday.)* It lands **6am ET on a
 Sunday**: home, unhurried, nobody at work. That is the best slot in the week for a long read and for
 a question to surface on its own. A 250-word daily cannot do what BE-02's 17-beat letter did; Sunday
 is the closest thing 07 has to that letter, and it carries the real argument.
 
-### The two sells
+### Every email pitches — and the pitch is written out of that day's cards
 
-| | **Soft** — Mon–Sat | **Hard** — Sunday |
+⭐ *(operator, 2026-09-02 — this replaces the earlier soft-days-hide-the-price rule, which was
+wrong.)*
+
+**Why the earlier rule was wrong.** It designed the week as if it were one long letter with money
+appearing late, the way BE-02 does. But **she does not read the week — she reads Tuesday.** At ~25%
+opens on 76k, most people see a fraction of the sends. If only Sunday names the product, most of the
+list never learns what is for sale. She also meets the price on the booking page regardless, so
+withholding it in the email does not spare her; it makes the page a surprise, and a surprise is a
+bounce.
+
+⚠ Two things had been conflated. **The question-ask already IS the pitch** — the only thing soft
+days withheld was the price and the product name. And **the strip-the-CTA test is about the content
+being complete, not the pitch being absent**; an email can name a price and still pass it.
+
+**Constant — three facts, every day, no exceptions:**
+
+1. Her question, read against the card that is up
+2. A fresh draw on her
+3. **$35**, back inside **24 hours**
+
+**Variable — every word around them.** ⛔ **Never a pasted boilerplate line.** Every day is a
+different context, so the pitch is written out of *that day's draw*, in that card's own terms.
+
+> **D1 (the Devil):** *"Send it and I'll read it against him properly — which chain it is, and what
+> it's really holding shut. Then I draw fresh on you. $35, back inside 24 hours."*
+
+The three facts are all there. Not one word of it survives to another card.
+
+⚠ **`copy-check.cjs` cannot catch a violation of this.** Its device-variance check compares
+sentences *across* offers, never *within* one — so a line repeated 365 times inside 07 passes
+clean. Until the checker is extended, this rule is enforced by hand.
+
+**Position is fixed; words are not.** The pitch sits **after** the question-ask and **before** the
+CTA — the free, easy thing first, then price as a matter-of-fact detail.
+
+**The CTA button is the one constant.** *"Send Marcus your question"*, every day. It is furniture,
+not copy: she is scanning for where to click, and recognition beats novelty at that one spot. The
+day's language lives in the line above it. ⚠ Genuinely a 50/50 call and cheap to test either way.
+
+### What still differs between the days
+
+| | **Mon–Sat** | **Sunday** |
 |---|---|---|
-| **The ask** | Her question, card-specific | Her question, then the product named |
-| **Price** | Never appears | Stated plainly |
-| **What sells it** | The withhold. He read the card truly and hit the wall her question is on the other side of | **The reading itself is the pitch** — Sunday demonstrates the product by being it |
+| **Pitch** | ✅ Present. **One line** | ✅ Present. The full argument |
+| **What sells it** | The withhold — he read the card truly and hit the wall her question is on the other side of | **The reading itself is the pitch** — Sunday demonstrates the product by being it |
 | **Length** | ~250–320 words | ~550–650 |
 | **Devices** | One CTA | Week recap · precedent · one CTA · **P.S.** |
 
@@ -447,3 +487,5 @@ Saturday's, the page is the thing to fix, not the email.
 - [ ] The grader rubric — what makes a reading fail
 - [ ] How many draws a day, and how the card state file avoids repeating a card too soon
 - [ ] Confirm `evelyn/tarot-rws/` has all 78 cards at usable size
+- [ ] Extend `copy-check.cjs` to flag repeated sentences **within** one offer — today it only
+      compares across offers, so a daily programme reusing a line is invisible to the gate
