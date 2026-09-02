@@ -77,6 +77,11 @@ export const BACKEND_OFFERS: Record<BackendOfferKey, BackendOfferListing> = {
     tag: 'be-03-judgement-day',
     bumpTag: 'be-03-bump',
     deliveredTag: 'be-03-delivered',
+    // Operator (2026-09-02): 03 REUSES 02's AWeber lists — initial 6972552, bump
+    // 6972554 — and is distinguished only by TAG (be-03-*). The 03 Campaigns are set
+    // up on those lists, filtered on the be-03 tag, manually. Shared lists, per-offer tags.
+    initialListId: '6972552',
+    bumpListId: '6972554',
   },
 };
 
