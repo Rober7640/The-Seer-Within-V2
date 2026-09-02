@@ -224,7 +224,7 @@ being complete, not the pitch being absent**; an email can name a price and stil
 
 1. How many cards are already down, and that the rest are not
 2. That the remaining cards — **however many that day's spread takes** — go down on **her question**
-3. **$35**, back inside **24 hours**
+3. ⛔ **No price and no delivery promise.** Both live on the booking page, statements 5 and 6, exactly as 02's letter does it *(operator, 2026-09-02)*. `copy-check` enforces this on any `-D-` file
 
 **Variable — every word around them.** ⛔ **Never a pasted boilerplate line.** Every day is a
 different context, so the pitch is written out of *that day's draw*, in that card's own terms.
@@ -249,7 +249,7 @@ day's language lives in the line above it. ⚠ Genuinely a 50/50 call and cheap 
 
 | | **Mon–Sat** | **Sunday** |
 |---|---|---|
-| **Pitch** | ✅ Present. **One line** | ✅ Present. The full argument |
+| **Pitch** | ✅ Present. **One line**, no price | ✅ Present. The full argument, no price |
 | **What sells it** | The withhold — he read the card truly and hit the wall her question is on the other side of | **The reading itself is the pitch** — Sunday demonstrates the product by being it |
 | **Length** | ~250–320 words | ~550–650 |
 | **Devices** | One CTA | Week recap · precedent · one CTA · **P.S.** |

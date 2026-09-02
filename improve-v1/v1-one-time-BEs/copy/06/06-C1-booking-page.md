@@ -6,9 +6,9 @@
 | **Arrives from** | all six CTAs + P.S. in whichever `06-E2-esl-*` letter is chosen. `?c=` tells us which |
 | **Treatment** | Page (Treatment B), matching 02/03's incumbent shape. A chat variant can follow later, same as 02-C1b, once this is proven |
 | **Voice** | ⚠ **the BUYER's, first person, throughout.** Evelyn is named in the third person and never speaks on this page — deck-wide rule, unchanged for a physical offer |
-| **Written against** | `06-E2-esl-product-creature-a.md` specifically (dragon head/lion body/no-exit language) — the strongest candidate as of 2026-09-02. If a different letter wins, statement 1 and the request need rewording; statements 2, 5, 6 and the shipping consent are candidate-agnostic |
+| **Written against** | `06-E2-esl-product-creature-a-close-c.md` (the chosen letter, 2026-09-02) — dragon head/lion body/no-exit language. Statements 2, 5, 6 and the shipping consent are candidate-agnostic |
 | **Bump** | `06-C3` ("The Closed Purse"), rendered between statement 6 and the button |
-| **D1 (root URL)** | ⚠ **proposed, not locked:** `/charms/wishing-bracelet`. Not `/tarot/...` (no cards) or `/wiccan/...` (Pixiu is Chinese folk tradition, not Wiccan) — this offer needs its own namespace. Operator to confirm |
+| **D1 (root URL)** | ✅ **`/wiccan/wishing-bracelet`** — resolved 2026-09-02, matching 03/04/05's `/wiccan/<slug>` convention (see `docs/06/0-WORKFLOW-06.md`). Supersedes the earlier `/charms/...` proposal below, which was never locked |
 
 **This is the first time money is mentioned anywhere in the funnel** — unchanged rule. But 06 adds a
 statement no other offer has needed: a **real shipping wait**, not a digital SLA. That statement
@@ -35,9 +35,9 @@ note). Reuse that. The booking page's job stays what every other booking page's 
 
 ## The five statements
 
-<!-- STATEMENT 1 · the cheapest rung — P8. She already believes this; affirming it costs nothing.
+<!-- STATEMENT 1 · the cheapest rung — P8. The buyer already believes this; affirming it costs nothing.
      ⚠ Written against creature-a, which has no divination "reading" to be right about — the
-     cheapest-rung affirmation here is of her OWN words, echoed back, not Evelyn's accuracy. If a
+     cheapest-rung affirmation here is of their OWN words, echoed back, not Evelyn's accuracy. If a
      reading-led candidate wins instead, revert to "Yes — you were right, Evelyn" (02's pattern). -->
 
 **Yes — that's exactly it.**
@@ -45,16 +45,16 @@ note). Reuse that. The booking page's job stays what every other booking page's 
 Money has reached me before and not stayed. I've said as much myself, more than once, in my own
 words. I'm not imagining it.
 
-<!-- STATEMENT 2 · permission — the BIG IDEA, in her voice -->
+<!-- STATEMENT 2 · permission — the BIG IDEA, in the buyer's voice -->
 
 **Yes — I want the seal, not another reading.**
 
 I understand what's being sent isn't a prediction. It's a container — something built with no way
 out, so that what already reaches me stops leaking back before I've had the use of it.
 
-<!-- STATEMENT 3 · accept what's being asked of her — adapted from "done by a professional, not
+<!-- STATEMENT 3 · accept what's being asked of them — adapted from "done by a professional, not
      taken lightly" into the ritual's own terms, since 06 has no professional-craft framing to
-     borrow (nobody performs a reading FOR her; she performs the ritual herself) -->
+     borrow (nobody performs a reading FOR them; they perform the ritual themselves) -->
 
 **Yes — I understand this only works if I do my part.**
 
@@ -87,7 +87,7 @@ and carded — not a download that costs nothing to make, and that it's priced a
 
 ## The request
 
-<!-- STATEMENT 6 · her own ask, ends on the brief's PROMISE in her words -->
+<!-- STATEMENT 6 · their own ask, ends on the brief's PROMISE in their words -->
 
 Evelyn — send me the piece you told me about.
 
@@ -122,12 +122,12 @@ you 1–2 weeks after that. You'll give us your address on the next screen.*
    lines, city, state, postal, country) — new screen, not new component. Address + Stripe metadata,
    same as the Manifestation Bracelet flow.
 3. Thank-you page (`06-T1-thank-you-page.md`, written 2026-09-02) — a receipt, same archetype as 02/04 (Reading, not Act):
-   confirms the order, names the confirmation email's subject, and now **also confirms what she just
-   told the shipping form** ("sending it to [address]") so she isn't left wondering if it went
+   confirms the order, names the confirmation email's subject, and now **also confirms what they just
+   told the shipping form** ("sending it to [address]") so they aren't left wondering if it went
    through.
 4. Upsells (`06-U1`/`06-U2`) — per the settled decision, V1's Protection Ritual + Manifestation
    Bracelet, reused verbatim past the opening beats. Real question, not yet settled: does the
-   shipping address she just gave carry forward if she takes U2 (which ships its own bracelet)? V1's
+   shipping address they just gave carry forward if they take U2 (which ships its own bracelet)? V1's
    existing Path A/B logic already handles "reuse U1's address" vs. "collect fresh" — check whether
    a THIRD address (from this booking, not from U1) needs the same reuse option, or whether asking
    again here is fine because it's a different item.

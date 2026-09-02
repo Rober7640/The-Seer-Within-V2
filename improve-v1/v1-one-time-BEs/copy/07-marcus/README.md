@@ -31,8 +31,13 @@ event letters, 07 is a daily email programme. Everything here serves one mechani
    opens most people never see Sunday, so a product named only on Sunday is one most of the list
    never hears about.
 3. **The pitch is written out of that day's cards.** ⛔ Never boilerplate. Constant: how many are
-   down, how many aren't, that the rest need her question, **$35**, **24 hours**. Everything else
-   is fresh. `copy-check` **cannot** catch a violation — it only compares across offers.
+   down, how many aren't, and that the rest need her question. Everything else is fresh.
+4. ⛔ **No price, no delivery promise, ever.** 02's letter carries neither — they live on the
+   booking page, statements 5 and 6. `copy-check` now enforces this on any `-D-` file.
+5. ⛔ **The first CTA comes after the WHOLE free read**, not after the first card. `00e` beat 11.
+6. **Written to [`02-E2`](../02/02-E2-esl-v1.md), not to the framework.** Face-down hero · a
+   withhold on *each* card naming what it can't say and the count that resolves it · a stated big
+   idea · a precedent · flat claims · CTAs as sentences with permission verbs.
 4. **The ask is card-specific.** *"What would you put to the Devil?"* — never *"what's your
    question?"*
 5. **She reads at 6am ET** (6pm SGT send). Narrating a night-time read is a 12-hour miss.

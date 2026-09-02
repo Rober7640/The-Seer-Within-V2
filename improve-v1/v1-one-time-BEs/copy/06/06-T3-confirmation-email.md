@@ -4,7 +4,7 @@
 |---|---|
 | **Offer** | 06 the Wishing Bracelet — black agate + Pixiu, wealth · fixed price `{{PRICE}}` |
 | **Sends** | immediately on purchase. **It sells nothing** |
-| **Register** | P5 — a real physical wait (**7 business days** to prepare, **1–2 weeks** to arrive after that), not a same-day SLA. Hopeful and patient rather than urgent — `06-E2` already sold her on patience ("give it a season, not a fortnight"), so the wait-filler leans on that instead of arguing something new |
+| **Register** | P5 — a real physical wait (**7 business days** to prepare, **1–2 weeks** to arrive after that), not a same-day SLA. Hopeful and patient rather than urgent — `06-E2` already sold the buyer on patience ("give it a season, not a fortnight"), so the wait-filler leans on that instead of arguing something new |
 | **Component** | [00e §5](../../docs/00e-FRAMEWORK-BEs.md) |
 
 ---
@@ -20,7 +20,7 @@
 
 Dear %FIRSTNAME%,
 
-<!-- BEAT 2 · thanks as her good judgment, in fresh wording — do not reuse 02/03's exact sentence,
+<!-- BEAT 2 · thanks as their good judgment, in fresh wording — do not reuse 02/03's exact sentence,
      the corpus-wide device-variance check treats that as a reused device -->
 
 Thank you, %FIRSTNAME%. You didn't need much convincing once you understood what this actually
@@ -39,7 +39,7 @@ Here's the real timeline, because I'd rather you know it than wonder. It takes *
 to prepare properly, and then **1–2 weeks** to reach you after that — a real object, made and
 posted, not a download that shows up in your inbox by morning.
 
-<!-- BEAT 5 · P6, open a loop before the wait, AND the hard-constraint ask: tell her what signal to
+<!-- BEAT 5 · P6, open a loop before the wait, AND the hard-constraint ask: tell them what signal to
      watch for next (tracking), without inventing a date -->
 
 When it ships, I'll write to you again with the tracking number, so you know exactly what to
@@ -65,7 +65,7 @@ a packing schedule as something older and grander than it is. But there's someth
 back to anyway: the stone in your bracelet was never in a hurry to become itself. It had already
 finished waiting long before I ever held it.
 
-If patience is the hard part for you, %FIRSTNAME%, and for a lot of women it is, you're wearing
+If patience is the hard part for you, %FIRSTNAME%, and for a lot of people it is, you're wearing
 something that's had a great deal more practice at it than either of us.
 
 ---
@@ -90,12 +90,12 @@ I'll write again the moment it ships.
   "ships," never "prepared" in the reading sense and never a divination frame.
 - **SLA stated exactly as `06-C1` books it** — 7 business days to prepare, 1–2 weeks to arrive —
   matching `copy-check.cjs`'s `OFFERS['06'].sla` regex and the exact number on the booking page's
-  button subtext. No "US" qualifier, because the buyer-facing `06-C1` copy she actually saw doesn't
+  button subtext. No "US" qualifier, because the buyer-facing `06-C1` copy they actually saw doesn't
   carry one either (only the internal doc header does).
-- **No price anywhere**, matching `02-T3`/`03-T3`'s convention — money isn't restated once she's
-  already paid.
+- **No price anywhere**, matching `02-T3`/`03-T3`'s convention — money isn't restated once the
+  buyer has already paid.
 - **Tracking mention satisfies the delivery-email tease without inventing a date.** "When it
-  ships, I'll write to you again with the tracking number" tells her what signal to watch for
+  ships, I'll write to you again with the tracking number" tells them what signal to watch for
   next; nothing here promises a calendar date the fulfillment side hasn't committed to.
 - **The wait-filler is craft lore, not a recast fable** — closer to `03-T3`'s shape (a headed
   reflection, plain prose) than `02-T3`'s (an italicized parable with characters). Chosen because
@@ -106,7 +106,7 @@ I'll write again the moment it ships.
   outright ("those are ours, not the stone's") before drawing the parallel.
 - **Echoes, doesn't repeat, `06-E2`'s "give it a season, not a fortnight" beat** (Rosalind's
   precedent) — same idea (the object rewards patience), different image (the stone's own
-  formation, not her story), so a buyer who read the sales letter gets reinforcement, not a
+  formation, not their story), so a buyer who read the sales letter gets reinforcement, not a
   rerun.
 - **This email does not collect or confirm the shipping address.** That happens on the
   post-payment shipping form and on `06-T1` (not yet written) per `06-C1`'s "What happens after

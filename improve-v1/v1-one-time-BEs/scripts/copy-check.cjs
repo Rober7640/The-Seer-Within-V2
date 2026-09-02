@@ -66,7 +66,10 @@ const BANNED = [
 const SLA_ANY = /(?<![+\d])\b(24 ?h(ours?)?|(three|3) (days|nights)|(sixteen|16|eight|8) hours?|7 business days|1[-–]2 weeks)\b/i;
 
 // A letter is an ESL or a nudge: money first appears on the booking page, after five yeses.
-const isLetter = (id) => /-E[236]\b/.test(id) || /nudge/i.test(id);
+// 07's dailies (`07-D-<day>-<spread>`) are letters too: same rule, price and delivery
+// promise live on the booking page, never in the send. Without `-D-` here the check
+// silently skipped every daily — which is how a price reached one.
+const isLetter = (id) => /-E[236]\b/.test(id) || /nudge/i.test(id) || /-D-/.test(id);
 const isBookingPage = (id) => /-C1\b/.test(id);
 
 // Only these assets PROMISE a delivery time, so only these can state a wrong SLA. Inside a

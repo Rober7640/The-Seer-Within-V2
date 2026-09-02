@@ -3,7 +3,7 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>PREVIEW — 🐉 Sarah, tonight I want to tell you about a very strange creature</title>
+<title>PREVIEW — 🐉 {{ subscriber.first_name | capitalize }}, a very strange creature tonight</title>
 <style type="text/css">
   body{-webkit-font-smoothing:antialiased;font-weight:400;line-height:1.5;margin:0;padding:0;width:100%;background-color:#eee;}
   img{border:0;height:auto;line-height:100%;max-width:100%;outline:none;}
@@ -13,7 +13,7 @@
 </style>
 </head>
 <body>
-<div class="previewbar"><b>PREVIEW ONLY</b> — not the AWeber render. Subject: <b>🐉 Sarah, tonight I want to tell you about a very strange creature</b> &nbsp;·&nbsp; Preheader: Not a reading. Just something I think you should know about.</div>
+<div class="previewbar"><b>PREVIEW ONLY</b> — not the AWeber render. Subject: <b>🐉 {{ subscriber.first_name | capitalize }}, a very strange creature tonight</b> &nbsp;·&nbsp; Preheader: Not a reading. Just something I think you should know about.</div>
 <center>
 <table align="center" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#eee;">
   <tr><td align="center" style="padding:24px 0;">
@@ -21,11 +21,11 @@
       <tr><td align="center" style="padding:20px 0 12px;"><img src="https://hostedimages-cdn.aweber-static.com/NDQyNzMw/optimized/8bf6df906cab4e11b58e484fe450705a.png" alt="The Seer Within" width="499" height="166" style="display:block;height:166px;width:499px;max-width:100%;"></td></tr>
       <tr><td style="padding:0 0 6px;"><div style="border-top:1px solid #DEE0E8;height:1px;line-height:1px;font-size:1px;">&nbsp;</div></td></tr>
       <tr><td style="padding:14px 30px 30px;font-family:Helvetica,Arial,sans-serif;font-size:16px;color:#333333;line-height:1.6;text-align:left;">
-        <p style="margin:0 0 18px;font-size:24px;line-height:1.35;font-weight:bold;font-family:Georgia,'Times New Roman',serif;color:#2c2530;">Sarah, tonight I want to tell you about a very strange creature</p>
+        <p style="margin:0 0 18px;font-size:24px;line-height:1.35;font-weight:bold;font-family:Georgia,'Times New Roman',serif;color:#2c2530;">{{ subscriber.first_name | capitalize }}, tonight I want to tell you about a very strange creature</p>
         <p style="margin:0 0 16px;line-height:1.7;color:#4a414c;"><em>Not a card, not a spread, not a working. Just a creature I think you should know about — because
 by the end of this letter I think you'll understand exactly why I'm the one telling you.</em></p>
         <div style="max-width:540px;margin:0 auto 16px;"><img src="https://luna-assets-tsw.s3.ap-southeast-2.amazonaws.com/backend-06/creature-a/06-pixiu-gen-pencil.jpg" alt="" style="display:block;width:100%;border-radius:4px;"></div>
-        <p style="margin:0 0 16px;line-height:1.6;">Sarah —</p>
+        <p style="margin:0 0 16px;line-height:1.6;">{{ subscriber.first_name | capitalize }} —</p>
         <p style="margin:0 0 16px;line-height:1.6;">Evelyn here.</p>
         <p style="margin:0 0 16px;line-height:1.6;">I don't often write to you like this. Most nights it's cards on the table, or it's the reading
 itself. Tonight I want to do something closer to teaching you something, because I think you'll
@@ -127,7 +127,7 @@ it. What you've said is that it reaches you and then it doesn't stay — that it
 enough to nearly close your hand around it, and then it isn't there any more.</p>
         <p style="margin:0 0 16px;line-height:1.7;color:#4a414c;"><em>"Everything appears to be reaching me but doesn't."</em></p>
         <p style="margin:26px 0 14px;font-size:19px;line-height:1.4;font-weight:bold;color:#2c2530;">Attraction problem, or something else?</p>
-        <p style="margin:0 0 16px;line-height:1.6;">That's yours, Sarah, not mine. I'm only repeating it back to you, because it's exactly the
+        <p style="margin:0 0 16px;line-height:1.6;">That's yours, {{ subscriber.first_name | capitalize }}, not mine. I'm only repeating it back to you, because it's exactly the
 shape of the problem a creature with no way out was built to answer. You don't have an attraction
 problem. Attraction was never the part that failed. You have a containment problem, and until
 tonight I don't think anyone's ever handed you something built to hold.</p>
@@ -165,19 +165,19 @@ inside the capsule, the same seal the creature carries, the same seal the stone 
           </tr>
         </table>
         <p style="margin:26px 0 14px;font-size:19px;line-height:1.4;font-weight:bold;color:#2c2530;">What happened when I gave one to Rosalind?</p>
-        <p style="margin:0 0 16px;line-height:1.6;">I gave one of these to a woman a few years ago — Rosalind, though that's not quite her name. Her
-complaint was specific, not vague: a client finally paid what she was owed, and the same week her
-car needed a repair that ran almost exactly that amount. It kept happening that way — money
+        <p style="margin:0 0 16px;line-height:1.6;">I gave one of these to someone a few years ago — Rosalind, though that's not quite the name. Their
+complaint was specific, not vague: a client finally paid what they were owed, and the same week
+their car needed a repair that ran almost exactly that amount. It kept happening that way — money
 arriving, then something showing up right behind it to take the same amount back out, always for a
 reason that sounded reasonable enough at the time.</p>
-        <p style="margin:0 0 16px;line-height:1.6;">She wore it on her left wrist, the way I'm about to tell you to, and told me honestly that nothing
-seemed different after the first couple of weeks. I told her to give it a season, not a fortnight,
-before deciding.</p>
-        <p style="margin:0 0 16px;line-height:1.6;">I'm not going to tell you her whole life changed, because it didn't, and you'd be right not to
+        <p style="margin:0 0 16px;line-height:1.6;">They wore it on their left wrist, the way I'm about to tell you to, and told me honestly that
+nothing seemed different after the first couple of weeks. I told them to give it a season, not a
+fortnight, before deciding.</p>
+        <p style="margin:0 0 16px;line-height:1.6;">I'm not going to tell you their whole life changed, because it didn't, and you'd be right not to
 believe me if I said it had. What changed, within that season, is that the amount stopped shrinking
-on its way to her. Same work, same modest luck she'd always had — the payment came, and nothing
+on its way to them. Same work, same modest luck they'd always had — the payment came, and nothing
 arrived behind it to take the matching bite. It just stayed the size it came in at. "It's not
-more," she told me once. "It's just — still there."</p>
+more," they told me once. "It's just — still there."</p>
         <p style="margin:26px 0 14px;font-size:19px;line-height:1.4;font-weight:bold;color:#2c2530;">What this can't do</p>
         <p style="margin:0 0 16px;line-height:1.6;">I want to be equally honest with you about what this doesn't do. A creature with no exit can only
 keep what reaches him. He can't manufacture a fortune that was never coming. If nothing has come

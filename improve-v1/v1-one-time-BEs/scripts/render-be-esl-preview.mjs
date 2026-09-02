@@ -9,16 +9,16 @@
 // Writes <source>-PREVIEW.html beside the source.
 //
 // ⚠ PREVIEW ONLY — not the AWeber upload pipeline. That's `render-be-email.mjs`,
-// built for post-purchase emails (T3/T4), which deliberately DROPS image
-// placeholders and leaves %FIRSTNAME% as AWeber Liquid. This script exists
-// because neither behaviour is what a human comparing two ESL candidates wants:
-// here, %FIRSTNAME% becomes a real sample name and [IMG-n] becomes a real
-// image, so the file opens anywhere with no relative-path dependency and reads
-// the way a recipient would actually see it. An images-JSON entry that is a
-// URL (hosted on S3 via host-be-asset.cjs, resized to its actual display
-// size) is linked directly; a local path is still base64-embedded, which is
-// only viable for a handful of small/reference images — see the images-JSON
-// convention below.
+// built for post-purchase emails (T3/T4). Like that script, %FIRSTNAME% is left
+// as the raw AWeber Liquid merge tag here (changed 2026-09-02, operator: show
+// the real tag, not a sample name — a stand-in name risked reading as
+// something that might actually get sent to every buyer). [IMG-n] still
+// becomes a real image, so the file opens anywhere with no relative-path
+// dependency — that half of "preview" still matters. An images-JSON entry
+// that is a URL (hosted on S3 via host-be-asset.cjs, resized to its actual
+// display size) is linked directly; a local path is still base64-embedded,
+// which is only viable for a handful of small/reference images — see the
+// images-JSON convention below.
 //
 // Reuses the same visual shell (banner, colours, type) as render-be-email.mjs
 // so a preview here isn't lying about the house style.
@@ -26,7 +26,9 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-const SAMPLE_NAME = process.argv[4] || 'Sarah';
+// The real AWeber Liquid tag, matching what every 0X-E2 letter's own frontmatter
+// documents ("%FIRSTNAME% → {{ subscriber.first_name | capitalize }} on AWeber").
+const AWEBER_FIRSTNAME = '{{ subscriber.first_name | capitalize }}';
 
 const BANNER =
   'https://hostedimages-cdn.aweber-static.com/NDQyNzMw/optimized/8bf6df906cab4e11b58e484fe450705a.png';
@@ -102,7 +104,7 @@ function findSubjectPreheader(e2Path) {
   if (!leadRow) return null;
   const cells = leadRow.split('|').map((c) => c.trim()).filter(Boolean);
   // cells: [ "**1 ★**", subject, preheader ]
-  return { subject: cells[1]?.replace(/%FIRSTNAME%/g, SAMPLE_NAME), preheader: cells[2]?.replace(/%FIRSTNAME%/g, SAMPLE_NAME) };
+  return { subject: cells[1]?.replace(/%FIRSTNAME%/g, AWEBER_FIRSTNAME), preheader: cells[2]?.replace(/%FIRSTNAME%/g, AWEBER_FIRSTNAME) };
 }
 
 const renderBlock = (b) => {
@@ -156,7 +158,7 @@ const renderBlock = (b) => {
 // photo among a set of small part-crops deserves hero treatment, not to be
 // shrunk to the same size as an illustration of a bead.
 function bodyHtml(body, images, fullWidth) {
-  const merged = body.replace(/%FIRSTNAME%/g, SAMPLE_NAME);
+  const merged = body.replace(/%FIRSTNAME%/g, AWEBER_FIRSTNAME);
   const blocks = merged
     .split(/\n\s*\n/)
     .map((b) => b.trim())
@@ -243,7 +245,7 @@ const src = process.argv[2];
 const imgArg = process.argv[3];
 if (!src)
   die(
-    'usage: node render-be-esl-preview.mjs <copy/NN/NN-E2-*.md> <hero-image-path-OR-images.json> [sample-name]\n' +
+    'usage: node render-be-esl-preview.mjs <copy/NN/NN-E2-*.md> <hero-image-path-OR-images.json>\n' +
       '  A single image path maps to IMG-1 (backward compatible).\n' +
       '  A path ending in .json is read as {"1": "path/to/img.png", "2": "...", ...} for multi-image letters.',
   );

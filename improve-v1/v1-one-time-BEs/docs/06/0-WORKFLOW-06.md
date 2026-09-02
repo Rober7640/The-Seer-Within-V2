@@ -272,3 +272,56 @@ the first physical-object offer in the deck. Recorded here so they don't get re-
 2026-09-02.** It was true at the point this doc was first written; by the time creature-a was
 built, `codex exec` image-to-image (direct, not via `codex-rescue` — see the `clay-ad-codex-dispatch`
 skill and the Fourth round note above) was the actual generation path for all 12 images.
+
+---
+
+### ✅ Fifth round, operator, 2026-09-02 — de-gendered the whole offer, plus two small fixes
+
+**"Unnecessary to use women in the opening beats. We have men on the list too — the Pixiu offer is
+more for men than women."** Checked how far it ran before fixing anything: every one of the 8
+live copy files had *some* gendered language, but the actual severity varied a lot once checked
+line by line, not assumed from the grep count alone.
+
+- **Real buyer-facing problems, not just internal notes:** the letter's Rosalind precedent story
+  ("a woman," "she/her" throughout) and `06-U1a`'s entire RISK beat ("a woman who thinks she's
+  covered," "most women don't understand/notice" — actual quoted chat messages, not comments).
+  Rewritten: Rosalind's story to singular "someone... they," the RISK beat to direct "you" address
+  where it was already talking to `{firstName}`, and singular "they" where it was a third-person
+  illustrative pattern.
+- **Everywhere else, the buyer-facing copy was already neutral by construction** — `06-C1` and
+  `06-C3` are written in the BUYER's own first-person voice throughout ("I understand...", "I'll
+  send..."), and `06-T1`/`06-T3`/`06-T4`/`06-U2a` already used direct second-person "you" address.
+  The gendered language there was confined to internal comments and Build notes (never rendered to
+  a buyer) — cleaned up anyway, for consistency, not because it was customer-facing.
+- **Operator chose "neutral everywhere, all 8 files"** over two other options offered (lean male;
+  or fix only the 2 flagged upsell files) — see the actual `AskUserQuestion` exchange in the
+  session transcript if the reasoning behind the other two options is ever needed again.
+- **Two unrelated fixes landed in the same pass, caught while reading these files closely:**
+  1. The on-screen thank-you page had been written to `06-A6-thank-you-page.md`, but
+     `06-C1-booking-page.md` already forward-referenced it as `06-T1` (matching 02's and 03's own
+     `0X-T1-thank-you-page.md` convention). Renamed to `06-T1-thank-you-page.md` and fixed both the
+     file's own self-references and `06-C1`'s "not yet written" note.
+  2. `06-C1`'s D1 row still proposed `/charms/wishing-bracelet`, unaware the operator had since
+     resolved D1 to `/wiccan/wishing-bracelet` (Fourth round, above). Updated to match.
+- **Subject lines tightened in the same session, separate request.** "Subject lines are too long —
+  need curiosity yet self contained": the bank technically passed its own 120-byte cap but put the
+  actual hook past where mobile inboxes truncate (~40-45 visible characters), so the payoff never
+  showed. All 6 rewritten shorter with the hook front-loaded; one (the horn-count subject) was also
+  substantively wrong by then — it still hedged ("I haven't confirmed ours") after the horn beat
+  itself had already been resolved to a confirmed two-horned Bixie. Fixed in the same pass.
+- All 8 files re-verified with `copy-check.cjs` after every edit, individually and as a full-corpus
+  run — zero new findings introduced. The only corpus findings are the same pre-existing kaucim/
+  iching collisions already documented above (reference-only files, deliberately left as-is).
+
+### ✅ Sixth round, operator, 2026-09-02 — preview now shows the real AWeber tag, not a sample name
+
+`render-be-esl-preview.mjs` used to substitute a sample name ("Sarah") for `%FIRSTNAME%`, on
+purpose — the script's own original header comment argued a human reviewer wants to read the
+letter the way a recipient would, not stare at raw merge syntax. Operator overrode that: seeing a
+literal name in the rendered file read as something that might actually get sent to every buyer,
+which is a worse failure mode than slightly harder-to-read syntax. Now shows the real tag,
+`{{ subscriber.first_name | capitalize }}`, everywhere `%FIRSTNAME%` appears (body, subject,
+preheader) — matching what `render-be-email.mjs` (the T3/T4 renderer) already did. The now-unused
+`[sample-name]` CLI argument was removed from the usage string. This is a shared-script change, so
+it affects every offer's preview, not just 06's — re-rendered and confirmed correct on `close-c`
+and both kept reference candidates (kaucim, iching).

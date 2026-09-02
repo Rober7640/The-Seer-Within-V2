@@ -5,8 +5,8 @@
 | **Decision** | locked in [`../../docs/06/0-WORKFLOW-06.md`](../../docs/06/0-WORKFLOW-06.md)'s U1/U2 row, 2026-09-01: reuse V1's actual Protection Ritual + lava stone (U1) and Manifestation Bracelet (U2) verbatim — same pattern 02 already uses. Only the opening beats are rewritten; everything from `UPSELL2_GAP` onward is V1's, unchanged |
 | **Engine** | reuses `useUpsell2Chat.ts` unmodified — the same pattern `02-U2a-upsell2-path-opens.md`'s own frontmatter documents |
 | **Rewritten here** | `UPSELL2_PATH_A_OPEN` (bought U1, the Protection Ritual + lava stone) and `UPSELL2_PATH_B_OPEN` (declined it) |
-| **The argument** | Pixiu holds what reaches her — he has no way out. The Manifestation Bracelet calls what hasn't reached her yet. The same "arrives vs. calls" hinge 02 already uses, restated here as "what stays" vs. "what's found" |
-| **Product sold** | V1's actual Manifestation Bracelet, unchanged. The engine's owns-both suppression (skip straight to thank-you if she already has both) is 02's documented behaviour for this same engine — not yet given its own step number for 06, since Phase A hasn't started |
+| **The argument** | Pixiu holds what reaches the buyer — he has no way out. The Manifestation Bracelet calls what hasn't reached them yet. The same "arrives vs. calls" hinge 02 already uses, restated here as "what stays" vs. "what's found" |
+| **Product sold** | V1's actual Manifestation Bracelet, unchanged. The engine's owns-both suppression (skip straight to thank-you if the buyer already has both) is 02's documented behaviour for this same engine — not yet given its own step number for 06, since Phase A hasn't started |
 | **Source** | `client/src/lib/upsell2Messages.ts:51-71` — `UPSELL2_PATH_A_OPEN` / `UPSELL2_PATH_B_OPEN` are the two exports this file rewrites |
 | **Built** | ☐ not yet — 06 has zero funnel code (`0-WORKFLOW-06.md`: "A — the funnel: ☐ everything") |
 
@@ -15,7 +15,7 @@ stacks on both. **Path B** follows a decline and must not re-litigate it — it 
 thought already on the table (Beat 4's horn detail) rather than inventing a new one. 06 has no
 divination device the way 02's fixed twelve-card spread does, so there is no reveal to defer into
 this opening the way 02's Chariot-in-the-fifth-house line works; the "new" thing Path B produces is
-completing what the letter already told her, not a fresh claim about her.
+completing what the letter already told the buyer, not a fresh claim about them.
 
 ---
 
@@ -74,7 +74,7 @@ completing what the letter already told her, not a fresh claim about her.
   from — no cards, no reading, nothing that resolves later the way a spread does. Inventing a
   parallel "something is already travelling toward you" claim here would have no mechanism behind
   it. So Path B instead finishes Beat 4's horn detail — Bixie, the guardian, not the puller — which
-  she has already read and which the letter never followed to its own conclusion. That's honest,
+  the buyer has already read and which the letter never followed to its own conclusion. That's honest,
   already on the table, and it's the "natural next question," not new mythology.
 - **Both wrists line up on purpose.** Pixiu is worn on the left wrist (Beat 8, "the receiving
   side"), and V1's lava stone already guards "your left side — your receiving side" in its own
@@ -82,11 +82,11 @@ completing what the letter already told her, not a fresh claim about her.
   so the two guard-products read as the same kind of thing going into the pivot, not two unrelated
   rituals stacked at random.
 - ⚠ **Path A must not mention either product's price or re-describe Pixiu's anatomy/mythology or
-  the stone's ritual.** She just secured both. Message 1 acknowledges them in one line and moves
-  on; anything more reads as a receipt she didn't ask for.
-- **No third-party outcome in either path.** What calls toward her is described as *something*,
-  never as a named person doing a named thing — same rule 02 follows.
-- **No personal details used anywhere.** No situation, no concern, no name of anyone she asked
+  the stone's ritual.** The buyer just secured both. Message 1 acknowledges them in one line and
+  moves on; anything more reads as a receipt they didn't ask for.
+- **No third-party outcome in either path.** What calls toward the buyer is described as
+  *something*, never as a named person doing a named thing — same rule 02 follows.
+- **No personal details used anywhere.** No situation, no concern, no name of anyone they asked
   about — 06's booking page collects nothing, same as 02, so there is nothing to draw from even if
   the rule allowed it.
 - **No dollar figures.** Neither Pixiu nor the Protection Ritual is priced here. The Manifestation
@@ -94,3 +94,9 @@ completing what the letter already told her, not a fresh claim about her.
   `UPSELL2_DOWNSELL` blocks (from `UPSELL2_GAP` onward) — not repeated in this file.
 - **Verb is never "buy."** "confirmed," "secured," "decision," matching deck convention.
 - **`{firstName}` × 3 in A, × 2 in B**, matching 02-U2a's distribution.
+- **De-gendered, 2026-09-02 — operator: the be-customer list includes men, and this offer skews
+  more male than female.** Unlike `06-U1a`, the actual buyer-facing chat messages here were already
+  fully in direct "you" address — no fix needed there. The gendered language was confined to the
+  frontmatter table and Build notes (internal, never rendered to a buyer), fixed for consistency
+  anyway. Same pass applied across the whole offer — see `docs/06/0-WORKFLOW-06.md` for the full
+  file list.

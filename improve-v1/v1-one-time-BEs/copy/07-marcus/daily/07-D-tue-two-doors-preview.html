@@ -12,8 +12,10 @@
      ⛔ HERO IS FACE DOWN. 02-E2: "Never face-up ... hands her the whole draw before the first
         sentence and there is nothing left to turn over." Faces appear only at their own unit.
         No card-back art exists; the backs are rendered here. A photographed back is stronger.
-     ⚠ DIVERGENCE FROM 02: 02's letter never states price (it lives in booking statement 6).
-        07 states it, because a daily reader may only ever open one email. Operator, 2026-09-02.
+     ⛔ NO PRICE AND NO DELIVERY PROMISE. 02's letter carries neither; both live on the booking
+        page, statements 5 and 6. Operator, 2026-09-02. copy-check enforces this on any -D- file.
+     ⛔ FIRST CTA COMES AFTER BOTH CARDS. 00e beat 11: "Never before the free read completes."
+        The free read is the whole opening, not the first card of it.
      Subject:   {{ subscriber.first_name | capitalize }}, I laid two cards for you before it got light - and nobody asked me to
      Preheader: One of these doors costs you nothing. The other costs you something you spent years stacking.
      Sends 6pm SGT = 6am ET.  4 CTAs -> booking page, ?c=1..4&s=two-doors.
@@ -71,7 +73,7 @@
     <p style="margin:0 0 18px;font-size:16.5px;line-height:1.62;color:#24262E;">This morning the cut gave me two.</p>
     <p style="margin:0 0 18px;font-size:16.5px;line-height:1.62;color:#24262E;">Not one card with another underneath it. Two, stuck face to face, come up off the cut together &mdash; which in fourteen years I have seen maybe a dozen times. Two cards off one cut is not a card about your day. It&rsquo;s a fork. It means you are standing at something, right now, and the deck knows it before you&rsquo;ve said it out loud.</p>
     <!-- BEAT 7 · STAKES PREVIEW -->
-    <p style="margin:0 0 18px;font-size:16.5px;line-height:1.62;color:#24262E;">So here&rsquo;s how to read what&rsquo;s below. Take the first door and look at it honestly, because it&rsquo;s the one you&rsquo;re already in. Then read the second one twice &mdash; that&rsquo;s the one you keep deciding about and not deciding.</p>
+    <p style="margin:0 0 18px;font-size:16.5px;line-height:1.62;color:#24262E;">Read them in the order I&rsquo;ve laid them. The first door is the one you&rsquo;re already standing in, so look at it plainly. The second is the one you keep deciding about and not deciding &mdash; take that one twice.</p>
     <p style="margin:0 0 18px;font-size:16.5px;line-height:1.62;color:#24262E;">And look at who&rsquo;s in the picture with you. There&rsquo;s a second person in one of these frames, and they are not a stranger.</p>
     <!-- BEAT 8 · PRECEDENT - one name, distant, BUYER-change. ⛔ 07's own story, never Ruth's -->
     <p style="margin:0 0 18px;font-size:16.5px;line-height:1.62;color:#24262E;">The last time a cut handed me two like that, it was years ago, above a shop I used to read out of. A woman called Hester. Same shape &mdash; two doors, both of them open.</p>
@@ -79,7 +81,7 @@
     <p style="margin:0 0 18px;font-size:16.5px;line-height:1.62;color:#24262E;">I laid her eight. And what the spread told her wasn&rsquo;t which door to walk through. It was that she&rsquo;d already walked through one, a long time back, and had been standing in the doorway ever since with one foot out, so she&rsquo;d never have to admit it.</p>
     <p style="margin:0 0 18px;font-size:16.5px;line-height:1.62;color:#24262E;">She stopped rehearsing it after that. That&rsquo;s all that changed, and it changed everything.</p>
     <!-- BEAT 9 · WITHHOLD + THE BIG IDEA - ⛔ Marcus's thesis, not 02's "your future is already drawn" -->
-    <p style="margin:0 0 18px;font-size:16.5px;line-height:1.62;color:#24262E;">I&rsquo;ll show you both doors in a moment, {{ subscriber.first_name | capitalize }}. But you should know what you&rsquo;re holding first.</p>
+    <p style="margin:0 0 18px;font-size:16.5px;line-height:1.62;color:#24262E;">I&rsquo;ll show you both doors in a moment, {{ subscriber.first_name | capitalize }}. First, the thing that decides how you read them.</p>
     <p style="margin:0 0 18px;font-size:16.5px;line-height:1.62;color:#24262E;"><b>You have already chosen.</b> That&rsquo;s the part people fight me on. A choice isn&rsquo;t a thing waiting in front of you &mdash; it&rsquo;s a thing you&rsquo;ve been making, quietly, every morning for months. The spread doesn&rsquo;t decide it for you. The spread is how you find out what you already decided.</p>
     <p style="margin:0 0 18px;font-size:16.5px;line-height:1.62;color:#24262E;">Right now you&rsquo;re being shown a quarter of that.</p>
     <p style="margin:0 0 18px;font-size:16.5px;line-height:1.62;color:#24262E;">Because two cards is a quarter of an answer. The Two Doors is eight &mdash; the two you can see, and three behind each of them. Two cards tells you there&rsquo;s a fork. Eight tells you what each door costs, what it gives you, and who you turn into on the other side of it.</p>
@@ -102,10 +104,6 @@
     <p style="margin:0;font-size:16.5px;line-height:1.62;color:#24262E;">The three cards behind this door tell me which. One card can&rsquo;t.</p>
   </td></tr>
 
-  <!-- BEAT 11 · FIRST CTA at ~60%. A sentence with a permission verb. Never a button. -->
-  <tr><td class="px" style="padding:22px 40px 0;">
-    <p style="margin:0;font-size:16.5px;line-height:1.62;color:#24262E;">So <a href="{{BOOKING_URL}}?c=1&amp;s=two-doors" style="color:#A8721C;font-weight:bold;">let me lay the six behind these</a>, and I&rsquo;ll tell you which of you moves.</p></td></tr>
-
   <!-- BEAT 10 · UNIT 2 -->
   <tr><td class="px" style="padding:30px 40px 0;">
     <h2 style="margin:0 0 16px;font-size:21px;font-weight:bold;color:#16181D;">Door two: the Eight of Cups</h2></td></tr>
@@ -121,6 +119,10 @@
     <p style="margin:0;font-size:16.5px;line-height:1.62;color:#24262E;">Three cards behind this door say which you&rsquo;re looking at. Two can&rsquo;t.</p>
   </td></tr>
 
+  <!-- BEAT 11 · FIRST CTA at ~60%. A sentence with a permission verb. Never a button. -->
+  <tr><td class="px" style="padding:22px 40px 0;">
+    <p style="margin:0;font-size:16.5px;line-height:1.62;color:#24262E;">So <a href="{{BOOKING_URL}}?c=1&amp;s=two-doors" style="color:#A8721C;font-weight:bold;">let me lay the six behind these</a>, and I&rsquo;ll tell you which of you moves.</p></td></tr>
+
   <!-- BEAT 12 · RE-READ. Deepen, do not repeat -->
   <tr><td class="px" style="padding:30px 40px 0;">
     <h2 style="margin:0 0 16px;font-size:21px;font-weight:bold;color:#16181D;">Back to the Devil, and the part I want you to sit with</h2>
@@ -128,7 +130,7 @@
     <p style="margin:0 0 18px;font-size:16.5px;line-height:1.62;color:#24262E;">This isn&rsquo;t a card about being held. Nothing in that picture is holding anybody. It&rsquo;s a card about <i>staying</i> &mdash; and staying is an act, done daily, by a person who could leave.</p>
     <p style="margin:0 0 18px;font-size:16.5px;line-height:1.62;color:#24262E;">Which means the thing keeping you there was never the other person, and it was never the situation.</p>
     <p style="margin:0 0 18px;font-size:16.5px;line-height:1.62;color:#24262E;">It&rsquo;s that walking out would mean admitting how long you stayed.</p>
-    <p style="margin:0;font-size:16.5px;line-height:1.62;color:#24262E;"><a href="{{BOOKING_URL}}?c=2&amp;s=two-doors" style="color:#A8721C;font-weight:bold;">Let me lay the eight</a> and I&rsquo;ll tell you what that admission actually costs, because it is almost never what people brace for.</p>
+    <p style="margin:0;font-size:16.5px;line-height:1.62;color:#24262E;"><a href="{{BOOKING_URL}}?c=2&amp;s=two-doors" style="color:#A8721C;font-weight:bold;">Let me lay the eight</a> and I&rsquo;ll tell you what that admission actually costs. It is not the thing people brace for.</p>
   </td></tr>
 
   <!-- BEAT 13 · CONCRETE ASK -->
@@ -159,8 +161,7 @@
     <p style="margin:0 0 18px;font-size:16.5px;line-height:1.62;color:#24262E;">Most readers answer a fork with a two-card cross. One card for this, one for that, done in ten minutes.</p>
     <p style="margin:0 0 18px;font-size:16.5px;line-height:1.62;color:#24262E;">I don&rsquo;t, and here&rsquo;s why. A door isn&rsquo;t one thing. It&rsquo;s what it takes from you, what it hands you, and the person you are at the end of it &mdash; and those three can point in completely different directions. Plenty of doors cost you almost nothing and leave you someone you don&rsquo;t want to be. Plenty cost you everything and are still the right door.</p>
     <p style="margin:0 0 18px;font-size:16.5px;line-height:1.62;color:#24262E;">So it&rsquo;s three to a door. Six behind the two, plus the two you&rsquo;re looking at. Eight.</p>
-    <p style="margin:0 0 18px;font-size:16.5px;line-height:1.62;color:#24262E;">It&rsquo;s the longest of the seven I lay, and I only lay it on a morning the cut gives me two. That happened today.</p>
-    <p style="margin:0;font-size:16.5px;line-height:1.62;color:#24262E;"><b>$35</b>, and it&rsquo;s back with you inside 24 hours.</p></td></tr>
+    <p style="margin:0;font-size:16.5px;line-height:1.62;color:#24262E;">It&rsquo;s the longest of the seven I lay, and I only lay it on a morning the cut gives me two. That happened today.</p></td></tr>
 
   <!-- BEAT 15 · FINAL CTA -->
   <tr><td class="px" style="padding:26px 40px 0;">

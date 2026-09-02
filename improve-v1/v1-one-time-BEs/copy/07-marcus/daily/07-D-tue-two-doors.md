@@ -9,16 +9,19 @@
 | **Lands** | 6pm SGT = **6am ET** |
 | **Art** | hero = **two backs, face down** · `evelyn/tarot-rws/the-devil.jpg` at unit 1 · `eight-of-cups.jpg` at unit 2 |
 | **Links** | 4 CTAs, all to the booking page, `?c=1…4&s=two-doors` |
-| **Body** | **1,377 words** — 02's letter is 2,644. Half, for 8 cards against 12 |
+| **Body** | **1,367 words** — 02's letter is 2,644. Half, for 8 cards against 12 |
 
 ⛔ **The hero is FACE DOWN.** 02-E2: *"Never face-up… a hero showing all the faces hands her the
 whole draw before the first sentence and there is nothing left to turn over."* Each face appears
 only at its own unit. No card-back art exists yet — the hero is rendered in HTML. **A photographed
 back on real cloth would be stronger; commission it.**
 
-⚠ **One deliberate divergence from 02.** 02's letter never states price — it lives in booking
-statement 6. 07 states it, because a daily's reader may only ever open one email *(operator,
-2026-09-02)*.
+⛔ **No price and no delivery promise in the send.** 02's letter carries neither — both live on the
+booking page, statements 5 and 6. *(operator, 2026-09-02, overruling an earlier divergence.)*
+`copy-check` now enforces this on any `-D-` file.
+
+⛔ **The first CTA comes after BOTH cards.** `00e` §1 beat 11: *"Never before the free read
+completes."* The free read is the whole opening, not the first card of it.
 
 **Subject** — `{{ subscriber.first_name | capitalize }}, I laid two cards for you before it got light — and nobody asked me to`
 
@@ -52,7 +55,7 @@ This morning the cut gave me two.
 Not one card with another underneath it. Two, stuck face to face, come up off the cut together — which in fourteen years I have seen maybe a dozen times. Two cards off one cut is not a card about your day. It's a fork. It means you are standing at something, right now, and the deck knows it before you've said it out loud.
 
 <!-- BEAT 7 · stakes preview -->
-So here's how to read what's below. Take the first door and look at it honestly, because it's the one you're already in. Then read the second one twice — that's the one you keep deciding about and not deciding.
+Read them in the order I've laid them. The first door is the one you're already standing in, so look at it plainly. The second is the one you keep deciding about and not deciding — take that one twice.
 
 And look at who's in the picture with you. There's a second person in one of these frames, and they are not a stranger.
 
@@ -68,9 +71,7 @@ It was that she'd already walked through one, a long time back, and had been sta
 She stopped rehearsing it after that. That's all that changed, and it changed everything.
 
 <!-- BEAT 9 · withhold + THE BIG IDEA. ⛔ Marcus's own thesis, not 02's "your future is already drawn" -->
-I'll show you both doors in a moment, %FIRSTNAME%.
-
-But you should know what you're holding first.
+I'll show you both doors in a moment, %FIRSTNAME%. First, the thing that decides how you read them.
 
 **You have already chosen.** That's the part people fight me on. A choice isn't a thing waiting in front of you — it's a thing you've been making, quietly, every morning for months. The spread doesn't decide it for you. The spread is how you find out what you already decided.
 
@@ -101,9 +102,6 @@ It shows me you're staying. It doesn't show me **which of the two of you stands 
 
 The three cards behind this door tell me which. One card can't.
 
-<!-- BEAT 11 · FIRST CTA, ~60% in, permission verb, embedded in an instruction -->
-So [let me lay the six behind these]({{BOOKING_URL}}?c=1&s=two-doors), and I'll tell you which of you moves.
-
 <!-- BEAT 10 · UNIT 2 -->
 ### Door two: the Eight of Cups
 
@@ -121,6 +119,9 @@ The figure is walking into the dark and the card does not show you the other sid
 
 Three cards behind this door say which you're looking at. Two can't.
 
+<!-- BEAT 11 · FIRST CTA, ~60% in, permission verb, embedded in an instruction -->
+So [let me lay the six behind these]({{BOOKING_URL}}?c=1&s=two-doors), and I'll tell you which of you moves.
+
 <!-- BEAT 12 · re-read. Deepen -->
 ### Back to the Devil, and the part I want you to sit with
 
@@ -132,7 +133,7 @@ Which means the thing keeping you there was never the other person, and it was n
 
 It's that walking out would mean admitting how long you stayed.
 
-[Let me lay the eight]({{BOOKING_URL}}?c=2&s=two-doors) and I'll tell you what that admission actually costs, because it is almost never what people brace for.
+[Let me lay the eight]({{BOOKING_URL}}?c=2&s=two-doors) and I'll tell you what that admission actually costs. It is not the thing people brace for.
 
 <!-- BEAT 13 · concrete ask -->
 ### In concrete terms, what do you do now?
@@ -158,8 +159,6 @@ I don't, and here's why. A door isn't one thing. It's what it takes from you, wh
 So it's three to a door. Six behind the two, plus the two you're looking at. Eight.
 
 It's the longest of the seven I lay, and I only lay it on a morning the cut gives me two. That happened today.
-
-**$35**, and it's back with you inside 24 hours.
 
 <!-- BEAT 15 · final CTA -->
 So tell me. What are your two doors?
