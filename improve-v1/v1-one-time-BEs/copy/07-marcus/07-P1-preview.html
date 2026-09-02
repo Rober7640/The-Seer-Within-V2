@@ -1,0 +1,266 @@
+<title>The Seven Spreads</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:opsz,wght@6..96,400;6..96,600&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+:root{
+  --ground:#EDEEF1; --surface:#FAFAFB; --sunk:#E3E5EA;
+  --ink:#16181D; --muted:#616875; --faint:#8A909C;
+  --rule:#D4D8DF; --rule-soft:#E1E4EA;
+  --up:#A8721C; --up-soft:#F0E4CC;
+  --down:#2E4B6E; --down-ink:#EAEEF4;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --ground:#131519; --surface:#1B1E24; --sunk:#101216;
+    --ink:#E9EAED; --muted:#989EAA; --faint:#767D8A;
+    --rule:#2A2E37; --rule-soft:#23262D;
+    --up:#DBA648; --up-soft:#3A2E17;
+    --down:#4E749F; --down-ink:#0E1319;
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#131519; --surface:#1B1E24; --sunk:#101216;
+  --ink:#E9EAED; --muted:#989EAA; --faint:#767D8A;
+  --rule:#2A2E37; --rule-soft:#23262D;
+  --up:#DBA648; --up-soft:#3A2E17;
+  --down:#4E749F; --down-ink:#0E1319;
+}
+*{box-sizing:border-box}
+body{background:var(--ground);color:var(--ink);
+  font-family:"IBM Plex Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased}
+.wrap{max-width:940px;margin:0 auto;padding:48px 24px 96px}
+h1,h2,h3{text-wrap:balance;margin:0}
+.eyebrow{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:11px;
+  letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+
+/* ── masthead ─────────────────────────────── */
+.mast{border-bottom:2px solid var(--ink);padding-bottom:22px;margin-bottom:14px}
+.mast h1{font-family:"Bodoni Moda",Georgia,serif;font-weight:600;
+  font-size:clamp(38px,7vw,62px);line-height:1;letter-spacing:-.015em;margin:12px 0 14px}
+.thesis{font-family:"Bodoni Moda",Georgia,serif;font-size:clamp(17px,2.4vw,21px);
+  line-height:1.45;color:var(--muted);max-width:34ch;font-style:italic}
+.thesis b{color:var(--ink);font-style:normal;font-weight:600}
+.mast-note{font-size:13px;color:var(--faint);margin-top:18px;max-width:62ch}
+.mast-note code{font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--muted)}
+
+/* ── legend ───────────────────────────────── */
+.legend{display:flex;flex-wrap:wrap;gap:10px 26px;align-items:center;
+  padding:14px 0 0;margin-bottom:40px;font-size:13px;color:var(--muted)}
+.legend .k{display:flex;align-items:center;gap:9px}
+.chip{width:26px;height:36px;border-radius:3px;flex:none}
+.chip.up{background:var(--up-soft);border:1.5px solid var(--up);
+  box-shadow:inset 0 3px 0 var(--up)}
+.chip.down{background:var(--down);border:1.5px solid var(--down);
+  background-image:repeating-linear-gradient(45deg,transparent 0 3px,rgba(255,255,255,.16) 3px 6px)}
+
+/* ── summary table ────────────────────────── */
+.tablewrap{overflow-x:auto;margin-bottom:64px}
+table{border-collapse:collapse;width:100%;min-width:600px;font-size:14px}
+th{font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--muted);text-align:left;font-weight:500;
+  padding:0 14px 9px 0;border-bottom:1px solid var(--rule);white-space:nowrap}
+td{padding:11px 14px 11px 0;border-bottom:1px solid var(--rule-soft);vertical-align:baseline}
+tbody tr:last-child td{border-bottom:none}
+td.day{color:var(--muted);white-space:nowrap}
+td.nm{font-weight:600;white-space:nowrap}
+td.q{color:var(--muted)}
+.num{font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums;
+  font-size:13px;white-space:nowrap}
+.num.up{color:var(--up);font-weight:500}
+.num.down{color:var(--down)}
+.num.tot{font-weight:500}
+
+/* ── a spread ─────────────────────────────── */
+.spread{border-top:1px solid var(--rule);padding-top:30px;margin-bottom:58px}
+.sh{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 16px;margin-bottom:6px}
+.sh .day{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--up);font-weight:500}
+.sh h2{font-family:"Bodoni Moda",Georgia,serif;font-weight:600;font-size:30px;
+  letter-spacing:-.01em;line-height:1.1}
+.sh .count{font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--muted);
+  font-variant-numeric:tabular-nums;margin-left:auto}
+.q-line{font-family:"Bodoni Moda",Georgia,serif;font-style:italic;font-size:18px;
+  color:var(--muted);margin-bottom:4px}
+.why{font-size:13px;color:var(--faint);margin-bottom:26px;max-width:64ch}
+
+/* ── the card row ─────────────────────────── */
+.cards{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:26px}
+.card{width:112px;min-height:150px;border-radius:4px;padding:10px 9px;
+  display:flex;flex-direction:column;gap:7px;flex:none}
+.card .n{font-family:"IBM Plex Mono",monospace;font-size:11px;font-weight:500;
+  font-variant-numeric:tabular-nums}
+.card .t{font-size:12px;line-height:1.35}
+.card.up{background:var(--up-soft);border:1.5px solid var(--up);
+  box-shadow:inset 0 4px 0 var(--up)}
+.card.up .n{color:var(--up)}
+.card.up .t{color:var(--ink)}
+.card.down{background:var(--down);border:1.5px solid var(--down);
+  background-image:repeating-linear-gradient(45deg,transparent 0 5px,rgba(255,255,255,.13) 5px 10px);
+  justify-content:space-between}
+.card.down .n{color:var(--down-ink);opacity:.75}
+.card.down .t{color:var(--down-ink);font-size:11.5px;opacity:.92}
+.tag{font-family:"IBM Plex Mono",monospace;font-size:9.5px;letter-spacing:.12em;
+  text-transform:uppercase;margin-top:auto}
+.card.up .tag{color:var(--up)}
+.card.down .tag{color:var(--down-ink);opacity:.7}
+
+/* ── the zodiac wheel ─────────────────────── */
+.wheelrow{display:flex;flex-wrap:wrap;gap:34px;align-items:flex-start;margin-bottom:26px}
+.wheelrow svg{flex:none;width:300px;height:300px}
+.houses{flex:1;min-width:260px;display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));
+  gap:2px 26px;align-content:start}
+.house{display:flex;gap:10px;align-items:baseline;padding:5px 0;
+  border-bottom:1px solid var(--rule-soft);font-size:13px}
+.house .h{font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--faint);
+  font-variant-numeric:tabular-nums;width:20px;flex:none}
+.house.free{color:var(--ink);font-weight:500}
+.house.free .h{color:var(--up)}
+.house:not(.free){color:var(--muted)}
+
+/* ── notes ────────────────────────────────── */
+.note{border-left:2.5px solid var(--up);background:var(--surface);
+  padding:13px 16px;font-size:13.5px;color:var(--muted);border-radius:0 4px 4px 0;max-width:70ch}
+.note b{color:var(--ink)}
+.note.stop{border-left-color:#B4442E}
+
+/* ── pitch lines ──────────────────────────── */
+.pitches{border-top:2px solid var(--ink);padding-top:30px;margin-top:70px}
+.pitches h3{font-family:"Bodoni Moda",Georgia,serif;font-weight:600;font-size:26px;margin-bottom:8px}
+.pitches p.sub{font-size:13.5px;color:var(--muted);margin:0 0 24px;max-width:66ch}
+.pitch{display:flex;gap:16px;align-items:baseline;padding:14px 0;border-bottom:1px solid var(--rule-soft)}
+.pitch:last-of-type{border-bottom:none}
+.pitch .d{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--up);width:44px;flex:none;font-weight:500}
+.pitch q{font-family:"Bodoni Moda",Georgia,serif;font-size:17.5px;line-height:1.45;quotes:"\201C" "\201D"}
+footer{margin-top:60px;padding-top:20px;border-top:1px solid var(--rule);
+  font-size:12px;color:var(--faint)}
+footer code{font-family:"IBM Plex Mono",monospace}
+@media (max-width:620px){
+  .card{width:calc(50% - 5px)}
+  .sh .count{margin-left:0;width:100%}
+}
+</style>
+
+<div class="wrap">
+
+  <div class="mast">
+    <div class="eyebrow">Offer 07 · Marcus Stone · Daily Tarot</div>
+    <h1>The Seven Spreads</h1>
+    <p class="thesis">The email lays the opening.<br><b>Her question turns the rest over.</b></p>
+  </div>
+
+  <div class="legend">
+    <span class="k"><span class="chip up"></span> Face up — laid in the daily email, free</span>
+    <span class="k"><span class="chip down"></span> Face down — laid on her question, $35</span>
+  </div>
+
+  <p class="mast-note">One spread per weekday. Totals come from each spread&rsquo;s own structure, never a fixed
+  number &mdash; a zodiac has twelve houses because a zodiac <em>has</em> twelve houses. Floor of six on any paid
+  spread, because the price is flat at $35. Source of truth: <code>07-P1-the-seven-spreads.md</code>.</p>
+
+  <div class="tablewrap"><table>
+    <thead><tr><th>Day</th><th>Spread</th><th>Face up</th><th>Face down</th><th>Total</th><th>The question it answers</th></tr></thead>
+    <tbody id="summary"></tbody>
+  </table></div>
+
+  <div id="spreads"></div>
+
+  <div class="pitches">
+    <h3>The pitch, per spread</h3>
+    <p class="sub">Card-native every day, but the shape is fixed: <b>how many are down &middot; how many aren&rsquo;t &middot;
+    what the rest would answer &middot; $35 &middot; 24 hours.</b> The count falls out of the spread table, so it differs
+    by construction on most days &mdash; the no-boilerplate rule enforces itself.</p>
+    <div class="pitch"><span class="d">Tue</span><q>Two cards are down. The other six don&rsquo;t go down until I know what you&rsquo;re asking.</q></div>
+    <div class="pitch"><span class="d">Fri</span><q>Three down, six to go, and the six are the ones that add up.</q></div>
+    <div class="pitch"><span class="d">Sun</span><q>Three houses. Nine still empty, and they don&rsquo;t fill from a mass email.</q></div>
+  </div>
+
+  <footer>
+    Contract, not a suggestion &mdash; the daily may only read positions in its own face-up block, and the paid
+    reading must deliver every face-down one. The spread key rides the CTA as <code>&amp;s=</code>, never derived
+    from the clock.
+  </footer>
+</div>
+
+<script>
+const SPREADS = [
+  {day:"Mon", name:"The Weight", free:1, q:"What am I carrying that was never mine?",
+   why:"A weight has an origin, a purpose, a cost, a hold and a release. That is the six.",
+   pos:["What's on you","Whose hands it was in before yours","What it was for — it protected somebody, once","What it costs you now","What it's still protecting — why you haven't put it down","What puts it down"]},
+  {day:"Tue", name:"The Two Doors", free:2, q:"Which of these two?",
+   why:"Two doors, three cards behind each, and the two she has already seen.",
+   pos:["Door one, as it looks from here","Door two, as it looks from here","Door one — what it costs","Door one — what it gives","Door one — who she becomes","Door two — what it costs","Door two — what it gives","Door two — who she becomes"]},
+  {day:"Wed", name:"The Small Instruction", free:1, q:"What do I actually do today?",
+   why:"The light day. One step, and everything true about taking it.",
+   pos:["Where you are","The step — the one thing","What's in the way","What it asks of you","What changes if you take it","What it costs to keep not taking it"]},
+  {day:"Thu", name:"The Undertow", free:2, q:"What is really driving this?",
+   why:"A current has a surface, a pull, a source and something feeding it.",
+   pos:["What you think it's about","What's under it","When it started — the first time","What has kept it alive","Who it still serves","How you'd know it when it surfaces","What breaks the current"]},
+  {day:"Fri", name:"The Ledger", free:3, q:"What has it cost me, and what has it paid?",
+   why:"Two columns, three rows each, the balance, and the exit price.",
+   pos:["The thing itself","One thing it has cost","One thing it has paid","The second cost","The third cost","The second payment","The third payment","The balance — which column is heavier","What leaving would cost"]},
+  {day:"Sat", name:"The Other Chair", free:2, q:"What is he actually doing?",
+   why:"His side of the table, laid the way his would be.",
+   pos:["What you see","What he's doing","What he thinks he's doing — his story about it","What he's protecting","What he'd have to admit","What he's waiting on from you","What he does if nothing changes"],
+   note:"Marcus reads <b>the cards</b>, not the man. Every position is what the spread says &mdash; never a claim to know a real person&rsquo;s mind."},
+];
+const ZODIAC = {day:"Sun", name:"The Zodiac Spread", q:"All of it", free:3,
+  why:"One card per house. Operator-approved reuse of BE-02's spread — the spread is shared, the sentences are not.",
+  houses:["Her","What she holds","How she's been speaking","Where she's from","What she loves","Her days","The other person","What's shared, and what's ending","What she believes about it","How she's seen","Who's around her","What's hidden"],
+  freeHouses:[1,7,12]};
+
+const esc = s => s.replace(/&/g,"&amp;").replace(/</g,"&lt;");
+
+/* summary */
+document.getElementById("summary").innerHTML =
+  SPREADS.concat([{day:ZODIAC.day,name:ZODIAC.name,free:3,q:ZODIAC.q,pos:new Array(12)}])
+  .map(s=>`<tr><td class="day">${s.day}</td><td class="nm">${esc(s.name)}</td>`+
+    `<td class="num up">${s.free}</td><td class="num down">+${s.pos.length-s.free}</td>`+
+    `<td class="num tot">${s.pos.length}</td><td class="q">${esc(s.q)}</td></tr>`).join("");
+
+/* the six card-row spreads */
+document.getElementById("spreads").innerHTML = SPREADS.map(s=>{
+  const cards = s.pos.map((t,i)=>{
+    const up = i < s.free;
+    return `<div class="card ${up?"up":"down"}"><span class="n">${i+1}</span>`+
+      `<span class="t">${esc(t)}</span><span class="tag">${up?"in the email":"on her question"}</span></div>`;
+  }).join("");
+  return `<section class="spread"><div class="sh"><span class="day">${s.day}</span>`+
+    `<h2>${esc(s.name)}</h2><span class="count">${s.free} up &nbsp;·&nbsp; +${s.pos.length-s.free} down &nbsp;·&nbsp; ${s.pos.length} total</span></div>`+
+    `<p class="q-line">${esc(s.q)}</p><p class="why">${esc(s.why)}</p>`+
+    `<div class="cards">${cards}</div>`+
+    (s.note?`<div class="note">${s.note}</div>`:"")+`</section>`;
+}).join("");
+
+/* the zodiac wheel */
+(function(){
+  const cx=150, cy=150, ro=140, ri=80, rl=110, P=Math.PI/180;
+  const pt=(r,a)=>[cx+r*Math.cos(a*P), cy+r*Math.sin(a*P)];
+  let segs="";
+  for(let h=1;h<=12;h++){
+    const a1=-90+(h-1)*30, a2=a1+30, free=ZODIAC.freeHouses.includes(h);
+    const [x1,y1]=pt(ro,a1),[x2,y2]=pt(ro,a2),[x3,y3]=pt(ri,a2),[x4,y4]=pt(ri,a1);
+    const [lx,ly]=pt(rl,a1+15);
+    segs += `<path d="M${x1} ${y1} A${ro} ${ro} 0 0 1 ${x2} ${y2} L${x3} ${y3} A${ri} ${ri} 0 0 0 ${x4} ${y4} Z" `+
+      `fill="${free?"var(--up-soft)":"var(--down)"}" stroke="${free?"var(--up)":"var(--down)"}" stroke-width="1.5"`+
+      `${free?"":' style="opacity:.92"'}/>`+
+      `<text x="${lx}" y="${ly}" text-anchor="middle" dominant-baseline="central" `+
+      `font-family="IBM Plex Mono, monospace" font-size="13" font-weight="500" `+
+      `fill="${free?"var(--up)":"var(--down-ink)"}">${h}</text>`;
+  }
+  const houses = ZODIAC.houses.map((t,i)=>{
+    const h=i+1, free=ZODIAC.freeHouses.includes(h);
+    return `<div class="house ${free?"free":""}"><span class="h">${h}</span><span>${esc(t)}</span></div>`;
+  }).join("");
+  document.getElementById("spreads").insertAdjacentHTML("beforeend",
+    `<section class="spread"><div class="sh"><span class="day">${ZODIAC.day}</span>`+
+    `<h2>${esc(ZODIAC.name)}</h2><span class="count">3 up &nbsp;·&nbsp; +9 down &nbsp;·&nbsp; 12 total</span></div>`+
+    `<p class="q-line">${esc(ZODIAC.q)}</p><p class="why">${esc(ZODIAC.why)}</p>`+
+    `<div class="wheelrow"><svg viewBox="0 0 300 300" role="img" aria-label="Twelve houses; houses 1, 7 and 12 face up">`+
+    `<circle cx="150" cy="150" r="140" fill="none" stroke="var(--rule)" stroke-width="1"/>${segs}</svg>`+
+    `<div class="houses">${houses}</div></div>`+
+    `<div class="note stop"><b>02&rsquo;s house assignments are a contract with 02&rsquo;s letters</b> &mdash; the World&rsquo;s door in `+
+    `houses 2 and 8, the Lovers&rsquo; fork as house 5 against house 7, the Tower&rsquo;s identity in house 12. `+
+    `07 draws its own cards into its own houses and writes its own sentences.</div></section>`);
+})();
+</script>
