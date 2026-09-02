@@ -182,7 +182,14 @@ export default function OffersUpsell1() {
   return (
     <div className="h-dvh relative flex flex-col" data-testid="page-upsell">
       <CosmicBackground />
-      <BackgroundMusic />
+      {/* Pinned top-right, ALWAYS. These /offers/upsell/ pages always render in
+          the pinned h-dvh shell, so the toggle must sit clear of the footer —
+          at the default `fixed bottom-4 right-4` it overlaps and wins the tap on
+          the last ~11-13% of the decline / shipping-submit buttons (see
+          BackgroundMusic.tsx's doc comment). Unlike UpsellPage.tsx this is not
+          derived from isTwinFlameOffer(), which cannot resolve on a
+          prefix-agnostic route — the pinned shell is unconditional here. */}
+      <BackgroundMusic positionClass="absolute top-2 right-3" />
 
       {/* Header */}
       <div className="relative z-10 p-4 text-center border-b border-white/10 bg-black/20 backdrop-blur-sm">
