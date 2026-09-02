@@ -38,7 +38,7 @@ What I can't tell you from here is which one it is for you. The cards don't work
 
 So tell me. What would you put to the Devil?
 
-Two cards are down. The other five don't go down until I know what you're asking — which chain it is, and what's on the other side of standing up. **$35**, back inside 24 hours.
+Two cards are down. The other six don't go down until I know what you're asking — which chain it is, and what's on the other side of standing up. **$35**, back inside 24 hours.
 
 **→ Send Marcus your question**
 

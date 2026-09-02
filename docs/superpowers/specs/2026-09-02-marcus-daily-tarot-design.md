@@ -36,7 +36,7 @@ hard once a week and absent once a week. Fulfil with n8n so volume costs nothing
 | **Gate** | **No women-only gate.** (BE-02 gated on `S7`; 07 does not) |
 | **Cadence** | One email a day, **6pm SGT = 10:00 UTC = 6am ET** — she reads it at breakfast |
 | **Destination** | The booking page. **No chat handoff anywhere** — `/marcus` is not linked from the daily or the report |
-| **Front end** | **$35.00** — **the rest of today's spread**, ~5 more cards laid on her question. ~1,000 words, PDF |
+| **Front end** | **$35.00** flat — **the rest of today's spread**, 5–9 more cards by the day. ~1,000 words, PDF |
 | **Bump** | **$12.77** — the same reading at ~3,000 words |
 | **Upsells** | **None.** No U1, no U2 |
 | **SLA** | **24 hours** |
@@ -92,15 +92,34 @@ The daily email is **not** a complete reading that happens to advertise a differ
 the **first 1–3 cards of a single spread that stays unfinished**. The remaining ~5 go down only when
 she sends her question.
 
-| Day | Spread | **Free — laid in the email** | **Paid — laid on her question** | Total | Body |
-|---|---|---|---|---|---|
-| **Mon** | **The Weight** | **1** — what's on you | **+5** | 6 | ~260 |
-| **Tue** | **The Two Doors** | **2** — the two doors | **+5** | 7 | ~300 |
-| **Wed** | **The Small Instruction** | **1** — where you are | **+5** | 6 | ~250 |
-| **Thu** | **The Undertow** | **2** — what you think it's about · what's under it | **+5** | 7 | ~300 |
-| **Fri** | **The Ledger** | **3** — the thing · what it cost · what it paid | **+5** | 8 | ~340 |
-| **Sat** | **The Other Chair** | **2** — what you see · what he's doing | **+5** | 7 | ~300 |
-| **Sun** | **The Long Look** | **3** — the week's three threads | **+5** | 8 | ~600 |
+⛔ **The paid completion is NOT a fixed number.** *(operator, 2026-09-02.)* Its size comes from the
+spread's own structure — BE-02's Twin Flame Tarot is the **Zodiac Spread**, three cards shown in the
+letter and **+9** to fill twelve houses, because a zodiac has twelve houses. A total with a reason
+behind it is what a tarot master would lay; an arbitrary five is what a marketer would.
+
+| Day | Spread | **Free — in the email** | **Paid** | **Total** | Why that many | Body |
+|---|---|---|---|---|---|---|
+| **Mon** | **The Weight** | **1** — what's on you | **+5** | **6** | the weight, each hand it passed through, what it was for, what it costs now, what puts it down | ~260 |
+| **Tue** | **The Two Doors** | **2** — the two doors | **+6** | **8** | three behind each door — the cost, the gift, who she becomes | ~300 |
+| **Wed** | **The Small Instruction** | **1** — where you are | **+5** | **6** | the step, what's in the way, what it needs, what it changes, what it costs to keep not doing it | ~250 |
+| **Thu** | **The Undertow** | **2** — what you think it's about · what's under it | **+5** | **7** | the surface, the current, and what the current is fed by | ~300 |
+| **Fri** | **The Ledger** | **3** — the thing · what it cost · what it paid | **+6** | **9** | two columns, three rows each, and the balance | ~340 |
+| **Sat** | **The Other Chair** | **2** — what you see · what he's doing | **+5** | **7** | his side of the table, laid the way his would be | ~300 |
+| **Sun** | **The Long Look** | **3** — the week's three threads | **+9** | **12** | one card per house — the week laid out as a year | ~600 |
+
+**⛔ Floor: no paid spread under 6 total.** Price is flat at $35 across all seven, so the smallest
+buy still has to feel substantial. A four-card Wednesday against a twelve-card Sunday is a 3× value
+gap at one price, and a repeat buyer who takes Wednesday and then sees Sunday feels short-changed —
+which matters, because repeat buyers are the LTV engine (§7).
+
+⭐ **The variation makes Sunday the obvious best buy**, which is exactly where the hard sell already
+lives. The peak day is now the peak *product*, not just the longest email.
+
+⚠ **Sunday's twelve needs an operator decision before it is written.** Twelve cards to twelve houses
+is BE-02's product. The audiences don't overlap — 02 went to prior V1 buyers, 07 goes to Marcus's
+own list — but it would be the same spread sold under two names, which is the exact thing the
+device-variance rule exists to catch. Either give Sunday a twelve with a different logic, or decide
+deliberately that the reuse is fine.
 
 **Why this beats a complete free reading.** The withhold stops being a rhetorical move and becomes
 a **fact she can see**. Three cards are down. Five are still in his hand. Nothing is being kept from
@@ -114,7 +133,7 @@ what makes the product deliverable?"* The setup **is** the opening of the spread
 **The pitch writes itself, card-native, every day** — which satisfies the no-boilerplate rule
 structurally rather than by discipline:
 
-> *"Two cards are down. The other five don't go down until I know what you're asking."*
+> *"Two cards are down. The other six don't go down until I know what you're asking."*
 
 **⛔ The scarcity is now at its maximum, and still honest.** Today's spread was opened today. If she
 doesn't ask today, those cards are swept and tomorrow is a different spread with a different
@@ -200,7 +219,7 @@ being complete, not the pitch being absent**; an email can name a price and stil
 **Constant — three facts, every day, no exceptions:**
 
 1. How many cards are already down, and that the rest are not
-2. That the remaining ~5 go down on **her question**
+2. That the remaining cards — **however many that day's spread takes** — go down on **her question**
 3. **$35**, back inside **24 hours**
 
 **Variable — every word around them.** ⛔ **Never a pasted boilerplate line.** Every day is a
@@ -550,8 +569,10 @@ Saturday's, the page is the thing to fix, not the email.
 - [ ] Confirm the CAN-SPAM address is registered, not placeholder (§3a item 4)
 - [ ] Marcus's own palette and type, so his email is not Evelyn's twice (§3a item 5)
 - [ ] The grader rubric — what makes a reading fail
-- [ ] Write the seven spreads properly — each needs its **opening positions**, its **five paid
-      positions**, its job, and one worked example before any daily using it can be drafted
+- [ ] Write the seven spreads properly — each needs its **opening positions**, its **paid
+      positions**, the reason its total is that number, and one worked example, before any daily
+      using it can be drafted
+- [ ] ⚠ **Decide Sunday's twelve** — reuse BE-02's zodiac houses, or give it a different logic
 - [ ] `be_orders` needs a `spread` column, and the booking page must persist `&s=` from the CTA
 - [ ] How many draws a day, and how the card state file avoids repeating a card too soon
 - [ ] Confirm `evelyn/tarot-rws/` has all 78 cards at usable size
