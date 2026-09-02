@@ -534,6 +534,32 @@ about nothing and nobody. **The missing thing is a subject, not a gender.**
 ⛔ **`S7`, the women-only gate, cannot be applied here** the way 02 applies it. Roughly a quarter of
 this list is men.
 
+### ⭐ The answer: topics, not gender *(operator, 2026-09-02)*
+
+**Every daily is about a named topic, and the topic is the object the copy was missing.** We do not
+split the list, we do not gate it, and we do not ask them who they are.
+
+**Two jobs, one device.** The topic gives the copy something to be about — and *which topic pulls*
+tells us who these 76k are without a single survey. Click rate by topic **is** the segmentation, and
+it arrives for free while the programme runs.
+
+**The topics are the v1 buckets**, because those are already VOC-grounded in this repo and are what
+the chat funnel asks for anyway:
+
+| Topic | The object it hands the copy |
+|---|---|
+| **Someone specific** | a person she keeps checking on, deciding about, waiting on |
+| **Money** | what isn't arriving, what's owed, what she's protecting |
+| **Work / purpose** | a thing outgrown, a call not answered, "what am I for" |
+| **A decision** | one re-made nine times and never taken |
+
+⛔ **The topic lives in beat 3, the deck line** — the same slot that carries the question and the
+window. One topic per send. The spread roster (§2) is independent of it, so Tuesday's Two Doors can
+read *someone specific* one week and *money* the next: fixed structure, genuinely new content.
+
+⚠ **Rotate the topic against the spread deliberately**, and log which pair ran. A spread that only
+ever reads one topic teaches us nothing about the other three.
+
 **Warm-up, before daily goes wide:**
 
 | Phase | Segment | Size | When |
