@@ -392,6 +392,24 @@ export const DEVICES: Record<ReadDevice, DeviceConfig> = {
 // array — so a new device cannot be live on the lander and rejected by the API.
 export const DEVICE_IDS = Object.keys(DEVICES) as ReadDevice[];
 
+// Customer-facing Stripe product-name suffix for a /fb-read order, e.g. " - TEA",
+// " - COFFEE". DERIVED FROM THE DEVICE ID, so a fourth device needs no edit here and
+// cannot silently inherit another instrument's label.
+//
+// 🔴 WHY THIS EXISTS AT ALL. Every other funnel's suffix is per-FUNNEL and lives in
+// shared/funnelConfig.ts. /fb-read is the one funnel that serves several instruments
+// from a single param, so a per-funnel suffix cannot tell a coffee order from a tea
+// one. Joel asked for exactly that separation on the 2026-09-02 call: "Let's not
+// reuse. Read is too big. If it's tea, let's call it tea" — and, read back to him,
+// "for coffee it should be coffee".
+//
+// The CALLER decides when to use this: routes.ts falls back to the funnel's own
+// productSuffix (" - TEA") whenever the device is absent or unrecognized, so a lost
+// device degrades to today's behaviour rather than to a blank or a wrong label.
+export function deviceProductSuffix(device: ReadDevice): string {
+  return ` - ${device.toUpperCase()}`;
+}
+
 export function isReadDevice(v: unknown): v is ReadDevice {
   return typeof v === "string" && Object.prototype.hasOwnProperty.call(DEVICES, v);
 }

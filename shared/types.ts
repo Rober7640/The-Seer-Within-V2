@@ -162,6 +162,15 @@ export interface CheckoutRequest {
    * closed roster server-side; see the note at the /api/checkout call site.
    */
   tarotHook?: string
+  /**
+   * The /fb-read INSTRUMENT this order came from ('tea' | 'coffee' | …). Optional and
+   * absent on every non-read funnel. Read ONLY to pick the customer-facing Stripe
+   * product-name suffix (" - TEA" / " - COFFEE"), because /fb-read is the one funnel
+   * serving several instruments from a single param and a per-funnel suffix cannot
+   * tell them apart. Validated server-side against shared/readDevices.ts — the same
+   * registry the lander renders from — and falls back to " - TEA" when absent.
+   */
+  readDevice?: string
 }
 
 export interface CheckoutResponse {

@@ -2356,6 +2356,18 @@ export function useConversation() {
           ...(getPostHogFunnel() === 'palm'
             ? { sign: parsePalmParams(window.location.search)?.sign ?? 'thumb' }
             : {}),
+          // /fb-read INSTRUMENT (tea | coffee | …), so Stripe bills " - TEA" / " - COFFEE"
+          // rather than one umbrella label for a funnel that serves several devices
+          // (Joel, 2026-09-02). Gated on the funnel exactly as `tarotHook` and `sign`
+          // above are, so no other funnel sends it and none can be affected.
+          //
+          // Read from the URL rather than from chat state: the chat page is reached as
+          // /fb-read/chat?hook=…&card=…&device=…, so the param is present for the whole
+          // session. The server re-validates against the device registry and falls back
+          // to " - TEA" if this is absent or unrecognized.
+          ...(getPostHogFunnel() === 'read'
+            ? { readDevice: parseReadParams(window.location.search)?.device }
+            : {}),
           // Order bump. `bumpOffered` is sent even on a decline — it's the
           // take-rate denominator. The server treats both as a REQUEST only.
           ...(bump

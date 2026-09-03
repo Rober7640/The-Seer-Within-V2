@@ -30,7 +30,15 @@ describe('fb-read registry', () => {
   it('lander-registry.md is not stale', () => {
     // --check exits 1 with a message naming the fix, 0 with a tally.
     expect(() =>
-      execFileSync('npx', ['tsx', 'scripts/read-registry.mjs', '--check'], { stdio: 'pipe' }),
+      // shell:true so this resolves npx.cmd on Windows. Without it execFileSync throws
+      // `spawnSync npx ENOENT` on every Windows machine and the assertion fails for a
+      // reason that has nothing to do with the registry being stale — a red guard that
+      // protects nothing. The script needs tsx (it imports the TS registry), so plain
+      // node cannot stand in for it.
+      execFileSync('npx', ['tsx', 'scripts/read-registry.mjs', '--check'], {
+        stdio: 'pipe',
+        shell: true,
+      }),
     ).not.toThrow()
   })
 
