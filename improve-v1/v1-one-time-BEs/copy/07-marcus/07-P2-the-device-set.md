@@ -105,6 +105,42 @@ per email, never a run of them.
 | **Giving it all away** | They deliver the whole card. ⛔ 07's spread stays unfinished — that is the offer |
 | **"We" and "us"** | Their register is inclusive. Marcus is first person singular and speaks to one person |
 
+## ⛔ The art rule: every image shows the act as ALREADY DONE
+
+*(operator, 2026-09-03, after I got this exactly wrong.)*
+
+`02-E2` states it about its own hero and it generalises to every offer in the deck:
+
+> *"IMG-1 hero: three cards lying FACE-DOWN, side by side, on dark cloth. **Shot from above, a real
+> table and not a set.**"*
+
+**The hero is evidence.** Its job is to prove a physical thing happened before the letter says a
+word — Marcus cut a deck this morning and these came off it. A photograph proves that. **A flat
+graphic proves nothing**, because nobody laid it anywhere.
+
+### The distinction that decides which kind of image to use
+
+| The image is… | Treatment | Why |
+|---|---|---|
+| **A card's own artwork** — the Devil at its unit | the RWS scan | It *is* the card. A photograph of it would add nothing |
+| **A card on a table** — the hero, the face-down positions | ⛔ **a photograph** | It is a *moment*, and a moment has to have happened |
+
+### What a hero photograph has to have
+
+- **Real objects, sparsely placed** — a lit candle stub, two or three rough crystals, the squared
+  rest of the deck, dark cloth over wood. Lived-in, ⛔ never an evenly-spaced flatlay
+- **Low warm early light**, before sunrise, with deep soft shadows. It is a pre-dawn cut and the
+  picture should say so before the copy does
+- **Shot from above at a slight angle** — 70–80°, the way somebody standing at the table sees it
+- **Shallow depth of field.** Cards sharp, props soft
+- **Imperfection.** The two cards not parallel, slightly off-centre. Styled-to-death reads as stock
+- ⛔ **No hands, no people, no text, no face-up cards, no white product-shot ground**
+
+⛔ **A vector card-back, however handsome, cannot do this job.** It was the first thing generated
+for 07 and it was wrong — the sample the operator supplied for comparison was a real overhead photo
+of a real spread on a real cloth, and the difference is not stylistic. One shows a design; the
+other shows that something was done.
+
 ## The asset gap
 
 All four photograph a **real card on velvet, held in a hand, with a candle and stones** — a table,

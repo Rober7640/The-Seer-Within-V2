@@ -46,11 +46,14 @@ event letters, 07 is a daily email programme. Everything here serves one mechani
    Card art described as painted, and quoted speech, are exempt.
 6. **Strip-the-CTA test.** Remove the invitation — is it still worth having read? On a daily to
    76k this is the bar that keeps the list alive.
-7. **Picture before meaning.** Say what is *on* the card, then what it means. She is looking at it.
-8. **Marcus's voice.** First person, direct, archetypal, plain-spoken. Contractions. No "dear" —
+7. ⛔ **Every image shows the act as already done.** The hero is a PHOTOGRAPH of cards lying on a
+   real table — evidence that the cut happened. A flat graphic proves nothing. Card *artwork* is
+   the RWS scan; a card *on a table* is a photograph. See [`07-P2`](./07-P2-the-device-set.md).
+8. **Picture before meaning.** Say what is *on* the card, then what it means. She is looking at it.
+9. **Marcus's voice.** First person, direct, archetypal, plain-spoken. Contractions. No "dear" —
    that is Evelyn's. No aphorisms, no balanced clauses, no appositive tails.
-9. **CTA button is constant** (*"Send Marcus your question"*); the line above it is not.
-10. **Link carries `&s=<spread>`.** ⛔ Never derive the spread from the clock — she may click
+10. **CTA is a text link** (*"Send Marcus your question"*); the line above it is not.
+11. **Link carries `&s=<spread>`.** ⛔ Never derive the spread from the clock — she may click
     Tuesday 11pm ET, which is Wednesday in SGT.
 
 ## ⛔ Two decisions the market research reopened *(2026-09-02)*
