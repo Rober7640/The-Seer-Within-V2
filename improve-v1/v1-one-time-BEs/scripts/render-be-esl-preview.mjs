@@ -20,6 +20,13 @@
 // which is only viable for a handful of small/reference images — see the
 // images-JSON convention below.
 //
+// An images-JSON's optional `_sender` key ({"name": "...", "avatar": "https://..."})
+// swaps the default "The Seer Within" banner for that persona's own small
+// avatar+name header instead — added 2026-09-03 for cross-persona letters
+// (e.g. Aiden Powers introducing an Evelyn offer to his own list), where
+// sending under the generic banner would misrepresent who it's actually
+// from. Omit `_sender` and every letter renders exactly as before.
+//
 // Reuses the same visual shell (banner, colours, type) as render-be-email.mjs
 // so a preview here isn't lying about the house style.
 
@@ -206,7 +213,39 @@ function bodyHtml(body, images, fullWidth) {
   return out.join('\n        ');
 }
 
-const fullHtml = ({ subject, preheader, body, images, fullWidth }) => `<!DOCTYPE html>
+// Default header: the shared "The Seer Within" platform banner, used by every letter that
+// doesn't specify a `_sender`. A letter written to go out under a SPECIFIC persona's own
+// identity — e.g. Aiden Powers introducing an Evelyn offer to his own list — needs that
+// persona's actual header instead: a small circular avatar + name row, no big banner. That's
+// what Aiden's real daily emails use (see docs/aweber/aiden-blueprint-deck/emails/04-the-tell.html)
+// — sending a cross-persona letter under the generic banner would misrepresent who it's from.
+// `sender.title` is optional (e.g. a persona's real seeded tagline, trimmed) — the tagline row
+// is only emitted when present, so a `_sender` with just {name, avatar} still renders cleanly.
+const headerHtml = (sender) =>
+  sender
+    ? `<tr><td style="padding:30px 30px 16px;">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+          <tr>
+            <td width="54" style="vertical-align:middle;">
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr><td style="width:48px;height:48px;border-radius:50%;border:2px solid #3457D5;padding:2px;background:#ffffff;">
+                <img src="${esc(sender.avatar)}" width="44" height="44" alt="${esc(sender.name)}" style="display:block;width:44px;height:44px;border-radius:50%;">
+              </td></tr></table>
+            </td>
+            <td style="vertical-align:middle;padding-left:14px;">
+              <div style="font-family:-apple-system,BlinkMacSystemFont,Helvetica,Arial,sans-serif;font-size:16px;font-weight:700;color:#111111;line-height:1.3;">${esc(sender.name)}</div>${
+                sender.title
+                  ? `\n              <div style="font-family:-apple-system,BlinkMacSystemFont,Helvetica,Arial,sans-serif;font-size:11px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:#3457D5;line-height:1.5;margin-top:2px;">${esc(sender.title)}</div>`
+                  : ''
+              }
+            </td>
+          </tr>
+        </table>
+      </td></tr>
+      <tr><td style="padding:0 30px 6px;"><div style="border-top:1px solid #E4E4E1;height:1px;line-height:1px;font-size:1px;">&nbsp;</div></td></tr>`
+    : `<tr><td align="center" style="padding:20px 0 12px;"><img src="${BANNER}" alt="The Seer Within" width="499" height="166" style="display:block;height:166px;width:499px;max-width:100%;"></td></tr>
+      <tr><td style="padding:0 0 6px;"><div style="border-top:1px solid #DEE0E8;height:1px;line-height:1px;font-size:1px;">&nbsp;</div></td></tr>`;
+
+const fullHtml = ({ subject, preheader, body, images, fullWidth, sender }) => `<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
@@ -223,13 +262,14 @@ const fullHtml = ({ subject, preheader, body, images, fullWidth }) => `<!DOCTYPE
 <body>
 <div class="previewbar"><b>PREVIEW ONLY</b> — not the AWeber render. Subject: <b>${esc(
   subject || '(none found)',
-)}</b> &nbsp;·&nbsp; Preheader: ${esc(preheader || '(none found)')}</div>
+)}</b> &nbsp;·&nbsp; Preheader: ${esc(preheader || '(none found)')}${
+  sender ? ` &nbsp;·&nbsp; Header: <b>${esc(sender.name)}</b>` : ''
+}</div>
 <center>
 <table align="center" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#eee;">
   <tr><td align="center" style="padding:24px 0;">
     <table align="center" class="aw" cellpadding="0" cellspacing="0" border="0" width="600" style="max-width:600px;width:100%;background:#fff;">
-      <tr><td align="center" style="padding:20px 0 12px;"><img src="${BANNER}" alt="The Seer Within" width="499" height="166" style="display:block;height:166px;width:499px;max-width:100%;"></td></tr>
-      <tr><td style="padding:0 0 6px;"><div style="border-top:1px solid #DEE0E8;height:1px;line-height:1px;font-size:1px;">&nbsp;</div></td></tr>
+      ${headerHtml(sender)}
       <tr><td style="padding:14px 30px 30px;font-family:Helvetica,Arial,sans-serif;font-size:16px;color:#333333;line-height:1.6;text-align:left;">
         ${bodyHtml(body, images, fullWidth)}
       </td></tr>
@@ -253,11 +293,13 @@ if (!src)
 const m = parse(path.resolve(src));
 const images = {};
 let fullWidth = new Set();
+let sender = null;
 if (imgArg && imgArg.endsWith('.json')) {
   const map = JSON.parse(fs.readFileSync(path.resolve(imgArg), 'utf8'));
   if (Array.isArray(map._fullWidth)) fullWidth = new Set(map._fullWidth.map((n) => `IMG-${n}`));
+  if (map._sender && map._sender.name && map._sender.avatar) sender = map._sender;
   for (const [n, p] of Object.entries(map)) {
-    if (n === '_fullWidth') continue;
+    if (n === '_fullWidth' || n === '_sender') continue;
     images[`IMG-${n}`] = isUrl(p) ? p : loadImageDataUri(path.resolve(p));
   }
 } else if (imgArg) {
@@ -265,7 +307,7 @@ if (imgArg && imgArg.endsWith('.json')) {
 }
 
 const sp = findSubjectPreheader(path.resolve(src)) || {};
-const html = fullHtml({ subject: sp.subject, preheader: sp.preheader, body: m.body, images, fullWidth });
+const html = fullHtml({ subject: sp.subject, preheader: sp.preheader, body: m.body, images, fullWidth, sender });
 
 const outPath = path.resolve(src).replace(/\.md$/, '-PREVIEW.html');
 fs.writeFileSync(outPath, html);
