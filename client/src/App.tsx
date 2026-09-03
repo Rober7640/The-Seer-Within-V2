@@ -15,6 +15,7 @@ import NotFound from "@/pages/not-found";
 import LandingPage from "@/pages/LandingPage";
 import PalmBridge from "@/pages/PalmBridge";
 import TarotBridge from "@/pages/TarotBridge";
+import ReadBridge from "@/pages/ReadBridge";
 import ChatPage from "@/pages/ChatPage";
 import SuccessPage from "@/pages/SuccessPage";
 import UpsellTestPage from "@/pages/UpsellTestPage";
@@ -251,6 +252,18 @@ function Router() {
             funnel/route (not a palm sign): /fb-tarot root renders TarotBridge;
             chat + upsells reuse the shared V1 components and carry the "- TAROT"
             Stripe suffix. Version A/B/C split mirrors /fb-palm. */}
+        {/* V1-READ funnel — the device-agnostic quiz bridge. ONE component
+            renders every instrument (dream, tea, …) from the shared registry in
+            shared/readDevices.ts, chosen by ?device=. Adding a device needs no
+            change here. Version A/B/C split mirrors /fb-palm and /fb-tarot. */}
+        <Route path="/fb-read" component={ReadBridge} />
+        <Route path="/fb-read/b" component={ReadBridge} />
+        <Route path="/fb-read/c" component={ReadBridge} />
+        <Route path="/fb-read/chat" component={ChatPage} />
+        <Route path="/fb-read/welcome1" component={UpsellPage} />
+        <Route path="/fb-read/welcome2" component={Upsell2Page} />
+        <Route path="/fb-read/success" component={SuccessPage} />
+
         <Route path="/fb-tarot" component={TarotBridge} />
         <Route path="/fb-tarot/b" component={TarotBridge} />
         <Route path="/fb-tarot/c" component={TarotBridge} />

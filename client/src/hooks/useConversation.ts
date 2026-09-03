@@ -7,6 +7,15 @@ import { calculateTypingDelay, sleep, generateId } from '@/lib/typing'
 import { getGeoData, getTimeMessage } from '@/lib/geolocation'
 import { parsePalmParams, greetingA, openerB, openerCStart, palmReflectFallback, hookToBucket, SIGNS } from '@/content/palmReads'
 import {
+  parseReadParams,
+  greetingA as readGreetingA,
+  openerB as readOpenerB,
+  openerCStart as readOpenerCStart,
+  readReflectFallback,
+  revealArtFor as readRevealArtFor,
+  hookToBucket as readHookToBucket,
+} from '@/content/readReads'
+import {
   parseTarotParams,
   greetingA as tarotGreetingA,
   openerB as tarotOpenerB,
@@ -483,6 +492,45 @@ export function useConversation() {
         return
       }
 
+      // /fb-read bridge traffic: the device-agnostic quiz bridge. Same three-version
+      // shape as palm and tarot, but ONE branch serves every instrument — the device
+      // is a registry lookup, not a code path — so adding a device needs no change
+      // here. Gated on hook+card+written-reads, so parseReadParams returns null
+      // everywhere else and no other funnel is affected.
+      const read = parseReadParams(window.location.search)
+      if (read) {
+        // Versions B and C skip the lander reveal, so without this she is TOLD what
+        // is in her cup and never shown it. On tea that matters more than anywhere
+        // else: the lander's cup is deliberately unreadable, so this traced version
+        // is the first time the shape is visible to her at all.
+        const readArt = readRevealArtFor(read.device, read.option)
+
+        if (read.version === 'c') {
+          // Version C — INTERACTIVE. Two written lines reach her: the opening
+          // bubble (the picture) and the open question. Then the LLM reads HER
+          // answer in handleReadReflect. Both of those lines are passed to the
+          // model server-side so it never re-describes what she has just read.
+          await sendBotMessages(readOpenerCStart(read.device, read.hook, read.option), readArt)
+          updateState({
+            state: 'READ_REFLECT',
+            inputEnabled: true,
+            inputPlaceholder: "Share what's on your heart…",
+          })
+          return
+        }
+        if (read.version === 'b') {
+          await sendBotMessages(readOpenerB(read.device, read.hook, read.option), readArt)
+        } else {
+          await sendBotMessage(readGreetingA(read.device, read.option))
+        }
+        updateState({
+          state: 'NAME_CAPTURE',
+          inputEnabled: true,
+          inputPlaceholder: 'Your name...',
+        })
+        return
+      }
+
       // Tarot "decode-him card" bridge traffic (/fb-tarot): same shape as the palm
       // opener, but the card reveal instead of the thumb read. Gated on hook+card →
       // zero impact on other funnels (parseTarotParams returns null everywhere else).
@@ -795,6 +843,72 @@ export function useConversation() {
       return
     }
 
+    // /fb-read bridge traffic: the same skip-the-bucket-picker shape as palm and
+    // tarot. Every read hook is a love question — readHookToBucket returns 'love'
+    // for all three — so the picker re-asks her the question the ad already asked.
+    //
+    // 🔴 THIS BRANCH WAS MISSING, AND ONLY A LIVE WALK FOUND IT (2026-09-01).
+    // readHookToBucket was imported at the top of this file and never called, so
+    // /fb-read fell straight through to the generic base-V1 path below and showed
+    // her the four topic cards after the cup. Palm and tarot each had their branch;
+    // read's was written as an import and never wired. An unused import is not a
+    // type error, and no test covered it, so nothing flagged it.
+    //
+    // The cost was not only the extra step: her AWeber bucket tag became whatever
+    // she clicked rather than what the ad asked, so a woman who came through a love
+    // ad could be filed under money.
+    //
+    // Deliberately IDENTICAL to the tarot branch above, including its two message
+    // pairs — Joel asked for /fb-read to behave as the tarot landers do.
+    const read = parseReadParams(window.location.search)
+    if (read) {
+      // 🔴 readHook IS THE DEEP FLOW’S ONLY CLUE. The symbol identity already rides in
+      // the opener and the reflect prompt, so nothing was carried past this point. But the
+      // base prompt’s SEEKING_LOVE cold reads include "There’s someone who already thinks
+      // of you in quiet moments" — the exact sentence still-think’s guard forbids — and
+      // every read hook buckets to love, so every read seeker was being offered it. Two of
+      // seven of Joel’s persona walks produced it near-verbatim. readDirective() in
+      // prompts.ts reads this field. Joel’s fix, taken as he wrote it.
+      updateUserData({ bucket: readHookToBucket(read.hook), readHook: read.hook })
+
+      await sendBotMessages([
+        `It's lovely to meet you, ${capitalized}.`,
+        "Everything we discuss stays between us... our secret.",
+      ])
+      await sendBotMessages([
+        `I can feel warmth radiating from your heart, ${capitalized}...`,
+        "But there's a flicker of shadow there too...",
+      ])
+      // no-optin variant: skip the email anchor, go straight into the reading.
+      if (skipEmail()) {
+        await sendBotMessages([
+          "Let's look deeper together...",
+          "Tell me more about what's on your mind...",
+        ])
+        updateState({
+          state: 'DEEPENING_1',
+          inputEnabled: true,
+          inputPlaceholder: "Share what's in your heart...",
+          inputType: 'text',
+        })
+        return
+      }
+
+      await sendBotMessages([
+        "Before I look deeper, I need to anchor our connection...",
+        "Sometimes the visions continue after we speak...",
+        "Where should I send them if more is revealed?",
+      ])
+
+      updateState({
+        state: 'EMAIL_CAPTURE',
+        inputEnabled: true,
+        inputPlaceholder: 'Your email...',
+        inputType: 'email',
+      })
+      return
+    }
+
     await sendBotMessages([
       `It's lovely to meet you, ${capitalized}.`,
       "Everything we discuss stays between us... our secret.",
@@ -899,6 +1013,50 @@ export function useConversation() {
     })
   }, [chat.userData, sendBotMessage, sendBotMessages, updateState, updateUserData])
 
+  const handleReadReflect = useCallback(async (input: string) => {
+    const read = parseReadParams(window.location.search)
+    updateUserData({ concern: input })
+
+    let llm: string[] | null = null
+    if (read) {
+      try {
+        updateState({ isTyping: true })
+        const res = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'readReflect',
+            readDevice: read.device,
+            readHook: read.hook,
+            readCard: read.option,
+            userData: chat.userData,
+            input,
+          }),
+        })
+        if (res.ok) {
+          const data = await res.json()
+          if (Array.isArray(data.messages) && data.messages.length) llm = data.messages
+        }
+      } catch {
+        // ignore — fall back below
+      }
+      updateState({ isTyping: false })
+    }
+
+    // Fallback = the rest of the WRITTEN read, minus the opening bubble she has
+    // already seen. So a failed model call degrades to Version B's copy rather
+    // than to silence — which is why Version C still needs the read written out.
+    if (llm) await sendBotMessages(llm)
+    else if (read) await sendBotMessages(readReflectFallback(read.device, read.hook, read.option))
+
+    await sendBotMessage("Before we go deeper, tell me… what should I call you, dear?")
+    updateState({
+      state: 'NAME_CAPTURE',
+      inputEnabled: true,
+      inputPlaceholder: 'Your name...',
+    })
+  }, [chat.userData, sendBotMessage, sendBotMessages, updateState, updateUserData])
+
   const handlePersonNameCapture = useCallback(async (input: string) => {
     const personName = input.trim().split(' ')[0]
     const capitalized = personName.charAt(0).toUpperCase() + personName.slice(1).toLowerCase()
@@ -982,6 +1140,22 @@ export function useConversation() {
       // exposure row is written ONCE per subject and `conversations` has no deck/hook
       // column, so anything not sent here can never be recovered.
       const tarot = phFunnel === 'tarot' ? tarotEventProps() : undefined
+      // /fb-read: which DEVICE she came through (tea / dream / …). Sent so the lead
+      // can be TAGGED per device while the free list itself stays keyed on the
+      // FUNNEL (AWEBER_LIST_ID_READ) — a future device then needs a new tag value
+      // and no new list, no AWeber setup. Gated on the funnel exactly as `tarot`
+      // is: the params are tab-scoped and would otherwise tag a later non-read lead.
+      //
+      // 🔴 THIS IS THE DEVICE SHE WAS SHOWN, NOT THE RAW PARAM. parseReadParams
+      // already falls an unknown `?device=` back to DEFAULT_DEVICE, which is what
+      // the lander rendered from. Tagging the URL's claim instead would file her
+      // under a device whose reading she never actually saw.
+      const readParams = phFunnel === 'read' ? parseReadParams(window.location.search) : null
+      const readDevice = readParams?.device
+      // Her ad HOOK, recorded on the gate + bump exposures so /fb-read breaks down
+      // per lander the way tarot and palm already do. One-shot: the exposure row is
+      // written once per subject and can never be back-filled.
+      const readHook = readParams?.hook
 
       const leadRes = await fetch('/api/lead', {
         method: 'POST',
@@ -1009,6 +1183,8 @@ export function useConversation() {
                 tarotAngle: tarot.angle,
               }
             : {}),
+          ...(readDevice ? { readDevice } : {}),
+          ...(readHook ? { readHook } : {}),
           fbp: fbpMatch ? decodeURIComponent(fbpMatch[1]) : undefined,
           fbc: fbcMatch ? decodeURIComponent(fbcMatch[1]) : undefined,
         }),
@@ -1727,6 +1903,9 @@ export function useConversation() {
       case 'PALM_REFLECT':
         await handlePalmReflect(input)
         break
+      case 'READ_REFLECT':
+        await handleReadReflect(input)
+        break
       case 'TAROT_REFLECT':
         await handleTarotReflect(input)
         break
@@ -2172,6 +2351,18 @@ export function useConversation() {
           // was resolved at lead capture even under a future sign-scoped test.
           ...(getPostHogFunnel() === 'palm'
             ? { sign: parsePalmParams(window.location.search)?.sign ?? 'thumb' }
+            : {}),
+          // /fb-read INSTRUMENT (tea | coffee | …), so Stripe bills " - TEA" / " - COFFEE"
+          // rather than one umbrella label for a funnel that serves several devices
+          // (Joel, 2026-09-02). Gated on the funnel exactly as `tarotHook` and `sign`
+          // above are, so no other funnel sends it and none can be affected.
+          //
+          // Read from the URL rather than from chat state: the chat page is reached as
+          // /fb-read/chat?hook=…&card=…&device=…, so the param is present for the whole
+          // session. The server re-validates against the device registry and falls back
+          // to " - TEA" if this is absent or unrecognized.
+          ...(getPostHogFunnel() === 'read'
+            ? { readDevice: parseReadParams(window.location.search)?.device }
             : {}),
           // Order bump. `bumpOffered` is sent even on a decline — it's the
           // take-rate denominator. The server treats both as a REQUEST only.

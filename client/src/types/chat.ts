@@ -8,6 +8,7 @@ export type ConversationState =
   | 'NAME_CAPTURE'
   | 'PALM_REFLECT'        // /fb-palm Version C: awaiting her answer to the opener question
   | 'TAROT_REFLECT'       // /fb-tarot Version C: awaiting her answer to the opener question
+  | 'READ_REFLECT'        // /fb-read Version C: awaiting her answer to the opener question
   | 'BUCKET_SELECTION'
   | 'BUCKET_CLARIFICATION'
   | 'PERSON_NAME_CAPTURE'
@@ -66,6 +67,16 @@ export interface Message {
     posPct: number
     aspect: number
     alt: string
+    // Render at the full width of the bubble instead of as a thumbnail.
+    //
+    // 🔴 A TAROT CARD AND A TEA-LEAF REVEAL ARE NOT THE SAME PICTURE. A card is
+    // recognisable at 112px — she has already seen it on the lander and only
+    // needs reminding which one she drew. A tea reveal is a ZOOM into one region
+    // of a cup with a thin gold ring drawn round it, and at 112px the ring is
+    // about four pixels across and the leaves are mush. The whole mechanism
+    // depends on her being able to see what was ringed, so it gets the full
+    // bubble.
+    wide?: boolean
   }
 }
 
@@ -102,6 +113,16 @@ export interface UserData {
   // funnel leaves them undefined, so those prompts stay byte-identical.
   palmReading?: string
   palmMark?: string
+  // /fb-read identity carry — the HOOK she arrived on, set at read name-capture and
+  // read by readDirective() in server/lib/prompts.ts. ONLY /fb-read traffic sets it,
+  // so every other funnel’s deep-flow prompt stays byte-identical.
+  //
+  // 🔴 IT DISARMS A LINE THE BASE PROMPT TEACHES. EVELYN_BASE_PROMPT’s SEEKING_LOVE
+  // cold reads include "There’s someone who already thinks of you in quiet moments",
+  // which is exactly what still-think’s guard forbids — and every read hook buckets
+  // to love, so every read seeker was being offered it. Joel’s fix; his persona walks
+  // produced it near-verbatim twice out of seven.
+  readHook?: string
   // fb-palm COMMITMENT GATE (v1_palm_commitment_gate_2026) — true when this lead
   // bucketed into the gated arm, so the close renders the 3-checkbox commitment
   // card instead of the plain purchase button. Assigned by the EXPERIMENT

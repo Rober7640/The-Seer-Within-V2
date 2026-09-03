@@ -1,0 +1,42 @@
+{
+  "hook": "cards-played-the-wife",
+  "headline": "I've played the wife without the commitment. Why?",
+  "method": "inherited-shadow",
+  "note": "Commitment AGE-MATRIX addition (2026-08-27). Angle `commitment-ageband`.\n\nTHE FEAR: that it counted for nothing. The read answers that the work was real and was never named — her POSITION, which is sayable without any of the bans below.\n\n🔴🔴 THE PULL SAYS THIS HEADLINE SELECTS THREE AUDIENCES IT CANNOT SERVE, and none is the cohabiting-no-ring woman it pictures: (1) a rival who holds the wife role in fact — \"practically married in everything but name… she forbids him to have anything to do with me\"; (2) marriages ended after decades; (3) live divorce and property disputes. Flagged to the operator on 2026-08-27; he chose to keep the lander, so the bans carry the safety instead.\n\nBANS: never name or rule on another woman · never predict a marriage or a proposal · never touch money, property or legal standing · never rule that the years were wasted.\n\nVOC: fb-tarot/docs/drafts/rewrites/_voc-commit-vocab-2026-08-27.md\nManuscript: fb-tarot/docs/writeups/shadow/REVIEW-commit-vocab-2026-08-27.md",
+  "voc": {
+    "pulled": "2026-08-27",
+    "pattern": "cv-wife2",
+    "matched": 7567,
+    "buyers": 100,
+    "verdict": "ok",
+    "why": ""
+  },
+  "decks": {
+    "return-mhf": {
+      "a": [
+        "You turned the Magician. The cards were face down, and your hand found the one who hides nothing.",
+        "He's out in the open behind his table. Nothing about him is kept back.",
+        "You've played the wife without the commitment. What holds me is how visible the work is on this card.",
+        "And yet no word was ever put to it. The role was yours, and the naming never came.",
+        "Whatever kept that word away kept it away steadily. I don't think it began with you.",
+        "Let me look closer at what that is…"
+      ],
+      "b": [
+        "You turned the Hanged Man. You couldn't see him, and you reached for the one held in place.",
+        "Look at the wood he hangs from — it's green, and it's living.",
+        "You've held a role without the title, dear. This card puts me on what keeps a thing in place.",
+        "Still, nothing was named. And you've been asking why for a long time.",
+        "Something meets this exactly at the naming. I don't think this began with you.",
+        "Let me look closer at what it's made of…"
+      ],
+      "c": [
+        "You turned the Fool. Nothing on the backs gave him away, and you chose the one carrying his own load.",
+        "Look at the bundle on his stick. Small, and it's all his.",
+        "You've done the part without the promise. This card brings me to what a person takes up.",
+        "But nothing was promised back. And you're left asking what it was for.",
+        "I keep coming back to something between the doing and the word for it. I don't think it started with you.",
+        "Let me look closer at what's sitting in that gap…"
+      ]
+    }
+  }
+}

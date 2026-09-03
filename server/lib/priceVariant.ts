@@ -128,6 +128,21 @@ export interface TarotLanderContext {
   angle?: string;   // 'decode-him' | 'trust' | 'self-frame'
 }
 
+/**
+ * The /fb-read counterpart of TarotLanderContext — which tea/dream lander she
+ * came through. Subject to the SAME one-shot rule: recorded on the exposure now,
+ * or never (unique(key, subject_id) means it cannot be back-filled).
+ *
+ * 🔴 WHY THIS EXISTS. The gate and the bump were widened to v1-read on
+ * 2026-09-01. Extending a test to a new funnel means extending its REPORTING too:
+ * without this, every fb-read exposure carries only `funnel`, and "did the bump do
+ * better on love-again than on hiding-something?" is permanently unanswerable.
+ */
+export interface ReadLanderContext {
+  device?: string; // 'tea' | 'dream'
+  hook?: string;   // 'love-again' | 'still-think' | 'hiding-something'
+}
+
 const ENV_OVERRIDE_KEY = 'V1_PRICE_VARIANTS_JSON';
 
 export type VariantsSource = 'env' | 'db' | 'fallback';
@@ -157,6 +172,12 @@ const FIXED_FUNNEL_PRICES: Record<string, { id: string; priceCents: number; down
   // test later, add funnel-scoped weighted variants to the system_config pool and
   // REMOVE this entry (a fixed entry shadows any matching weighted variants).
   'v1-tarot': { id: '35_tarot', priceCents: 3500, downsellCents: 2500, upsell1Cents: 4700 },
+  // The /fb-read bridge launches at the same flat single price as tarot. Priced at
+  // the FUNNEL level, so every device on it is priced correctly automatically and
+  // there is no per-device money-safety roster to keep in sync (unlike palm's
+  // OTHER_SIGNS). The '_read' token lets funnelParamFromPriceVariant attribute a
+  // stored variant back to v1-read.
+  'v1-read': { id: '35_read', priceCents: 3500, downsellCents: 2500, upsell1Cents: 4700 },
 };
 
 interface CachedVariants {
@@ -280,6 +301,10 @@ export async function assignVariantIfMissing(
   // LABEL — recorded on the order-bump exposure so palm breaks down per hook the
   // way tarot already does, and it never participates in pricing or assignment.
   palmHook?: string | null,
+  // Which /fb-read lander she came through (device + ad hook). Appended last for
+  // the same reason as palmHook: every existing call site keeps working untouched.
+  // A pure LABEL — it never participates in pricing or assignment.
+  readLander?: ReadLanderContext | null,
 ): Promise<AssignedVariant | null> {
   try {
     const existing = await db
@@ -352,6 +377,11 @@ export async function assignVariantIfMissing(
         ...(tarotLander?.hook ? { hook: tarotLander.hook } : {}),
         ...(tarotLander?.facing ? { facing: tarotLander.facing } : {}),
         ...(tarotLander?.angle ? { angle: tarotLander.angle } : {}),
+        // /fb-read lander identity. `device` is this funnel's `deck`; `hook` shares
+        // its key with palm's and tarot's for the same reason those two share it —
+        // each is undefined off its own funnel, so they can never collide.
+        ...(readLander?.device ? { device: readLander.device } : {}),
+        ...(readLander?.hook ? { hook: readLander.hook } : {}),
       });
     }
 
@@ -389,6 +419,11 @@ export async function assignVariantIfMissing(
         ...(tarotLander?.hook ? { hook: tarotLander.hook } : {}),
         ...(tarotLander?.facing ? { facing: tarotLander.facing } : {}),
         ...(tarotLander?.angle ? { angle: tarotLander.angle } : {}),
+        // /fb-read lander identity. `device` is this funnel's `deck`; `hook` shares
+        // its key with palm's and tarot's for the same reason those two share it —
+        // each is undefined off its own funnel, so they can never collide.
+        ...(readLander?.device ? { device: readLander.device } : {}),
+        ...(readLander?.hook ? { hook: readLander.hook } : {}),
       });
     }
 
@@ -432,6 +467,11 @@ export async function assignVariantIfMissing(
         ...(tarotLander?.hook ? { hook: tarotLander.hook } : {}),
         ...(tarotLander?.facing ? { facing: tarotLander.facing } : {}),
         ...(tarotLander?.angle ? { angle: tarotLander.angle } : {}),
+        // /fb-read lander identity. `device` is this funnel's `deck`; `hook` shares
+        // its key with palm's and tarot's for the same reason those two share it —
+        // each is undefined off its own funnel, so they can never collide.
+        ...(readLander?.device ? { device: readLander.device } : {}),
+        ...(readLander?.hook ? { hook: readLander.hook } : {}),
       });
     }
 

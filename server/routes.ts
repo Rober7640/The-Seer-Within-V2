@@ -59,6 +59,7 @@ import {
   generatePalmOpener,
   generatePalmReflect,
   generateTarotReflect,
+  generateReadReflect,
 } from "./lib/claude";
 import {
   saveConversation,
@@ -109,6 +110,11 @@ import {
 } from "@shared/orderBump";
 import { fireGoogleAdsConversion } from "./lib/googleAds";
 import { funnelDefForParam, FUNNELS, type FunnelParam } from "@shared/funnelConfig";
+// /fb-read validates against the SAME registry the lander renders from, so the
+// route can never reject a device that is live on the page (the "v1-palm 400
+// bug" that both other bridges guard against by hand).
+import { isReadDevice, isReadHook, isReadOption, deviceProductSuffix } from "@shared/readDevices";
+import { isReadWritten } from "@shared/readCopy";
 import { moneyLanderListId } from "@shared/moneyLander";
 import { soulmateLanderListId } from "@shared/soulmateLander";
 import { bumpProductKeyFor } from "@shared/landerBumpRouting";
@@ -301,8 +307,49 @@ function isFbFunnel(funnel: FunnelId): boolean {
 }
 
 // Per-funnel product-name suffix (" - FB" / " - FB2" / " - GDN").
-function fbSuffix(funnel: FunnelId): string {
-  return funnelDefForParam(funnel)?.productSuffix ?? "";
+//
+// /fb-read is the ONE funnel that serves several instruments from a single param, so
+// it alone takes an optional device and bills " - TEA" / " - COFFEE" accordingly
+// (Joel, 2026-09-02: "Read is too big. If it's tea, let's call it tea"). Every other
+// funnel ignores the argument entirely and returns exactly what it returned before,
+// so PALM / TAROT / FB / FB2 / GDN cannot move.
+//
+// 🔴 TEA IS THE FALLBACK IN EVERY FAILURE PATH. Absent device, unrecognized device,
+// or a metadata read that comes back empty all fall through to the funnel's own
+// productSuffix, which is " - TEA". A lost device therefore degrades to the behaviour
+// that shipped this morning rather than to a blank or another instrument's label.
+//
+// 🔴 CLOSED CHECK, never a pass-through. `readDevice` reaches here from an untrusted
+// request body and is only ever accepted via isReadDevice() against the same registry
+// the lander renders from. The worst a forged value can do is put another real
+// instrument's word on its own receipt: it cannot change a price, a product, a list,
+// or anyone else's order.
+function fbSuffix(funnel: FunnelId, readDevice?: unknown): string {
+  const def = funnelDefForParam(funnel);
+  if (!def) return "";
+  if (def.param === "v1-read" && isReadDevice(readDevice)) {
+    return deviceProductSuffix(readDevice);
+  }
+  return def.productSuffix;
+}
+
+// The /fb-read instrument recorded on the ORIGINAL main-purchase session, for the
+// upsell charges. Their own request bodies cannot carry it: /fb-read/welcome1 and
+// /welcome2 are reached by Stripe redirect with only `session_id`, and the client's
+// parseReadParams reads `?device=` from the URL alone — so by upsell time the device
+// exists nowhere but here. All four charge paths already retrieve this session, and
+// /api/upsell/charge already reads metadata.noemail and metadata.src off it the same
+// way; this is that established pattern, not a new mechanism.
+//
+// Returns undefined for every non-read funnel and for any unrecognized value, which
+// makes fbSuffix() fall back to the funnel's own " - TEA". A tea buyer is therefore
+// bit-for-bit unaffected whether or not the stamp is present — which also means orders
+// placed BEFORE this shipped keep billing their upsells exactly as they do today.
+function readDeviceFromSession(session: {
+  metadata?: Stripe.Metadata | null;
+}): string | undefined {
+  const v = session?.metadata?.readDevice;
+  return isReadDevice(v) ? v : undefined;
 }
 
 // Per-funnel AWeber tag suffix ("-fb" / "-fb2" / "-gdn").
@@ -590,7 +637,7 @@ export async function registerRoutes(
   // Chat API - Claude integration
   app.post("/api/chat", async (req: Request, res: Response) => {
     try {
-      const { action, userData, input, objectionCount, palmSign, palmHook, palmThumb, tarotDeck, tarotHook, tarotCard } =
+      const { action, userData, input, objectionCount, palmSign, palmHook, palmThumb, tarotDeck, tarotHook, tarotCard, readDevice, readHook, readCard } =
         req.body as ChatRequest;
 
       // V1 price split test — enrich userData with the variant prices
@@ -682,13 +729,31 @@ export async function registerRoutes(
           // against fixed enums; tarotDeck defaults to 'decode-him'. Keep these
           // rosters in sync with client/src/content/tarotReads.ts (fb-tarot-add-card).
           const validDecks = ["arcana-mfh", "arcana-eef", "return-mhf"]; // decode-him retired 2026-08-19
-          const validHooks = ["cards-honest", "cards-return", "cards-feels", "cards-cheating", "cards-who-he-is", "cards-real-person", "cards-misled", "cards-will-commit", "cards-wont-commit", "cards-ready-commit", "cards-lied-to", "cards-truth", "cards-deceived", "cards-come-back", "cards-ever-back", "cards-moved-on", "cards-cant-stop", "cards-on-my-mind", "cards-who-hurt-me", "cards-pulling-away", "cards-gone-cold", "cards-losing-interest", "cards-back-together", "cards-still-a-chance", "cards-really-over", "cards-new-soulmate", "cards-soulmate-out-there", "cards-ready-to-love", "cards-where-soulmate", "cards-soulmate-closer", "cards-not-found-yet", "cards-alone-forever", "cards-meant-alone", "cards-someone-for-me", "cards-someone-else", "cards-talking-someone", "cards-faithful", "cards-loyal", "cards-stop-hurting", "cards-stop-missing", "cards-still-miss-him", "cards-left-without-word", "cards-ghosted", "cards-not-enough", "cards-stop-searching", "cards-end-up-alone", "cards-given-up", "cards-twin-ready", "cards-twin-feels", "cards-twin-back", "cards-hiding-something", "cards-feels-off", "cards-really-love", "cards-feel-about-me", "cards-imagining-it", "cards-still-think", "cards-still-love", "cards-love-or-moved-on", "cards-forever-or-now", "cards-his-children", "cards-her-shadow", "cards-live-apart", "cards-too-long", "cards-really-soulmate", "cards-twin-or-connection", "cards-met-already", "cards-find-closure", "cards-heart-heal", "cards-feel-like-myself", "cards-my-soulmate-back", "cards-twinflame-back", "cards-was-he-soulmate", "cards-love-again", "cards-soulmate", "cards-blocked-retiring", "cards-nest-egg", "cards-too-late", "cards-still-working", "cards-how-much-longer", "cards-out-of-time", "cards-my-energy", "cards-money-wont-stay", "cards-energy-how-long", "cards-prayed-years", "cards-prayers-unanswered", "cards-slipping-past", "cards-choosing-wrong", "cards-found-me-yet", "cards-keeps-waiting", "cards-missed-chance", "cards-after-marriage", "cards-second-time", "cards-best-years", "cards-too-late-love", "cards-longer-to-wait", "cards-allowed-to-want", "cards-blocking-soulmate", "cards-blocked-before", "cards-connection-soulmate", "cards-connection-nothing", "cards-energy-away", "cards-energy-soulmate", "cards-waiting-to-heal", "cards-heal-first", "cards-money-time-running-out", "cards-money-has-to-last", "cards-trusted-loss-blocking-money", "cards-working-money-by-now", "cards-nothing-put-away", "cards-money-cant-stop-working", "cards-earn-and-gone", "cards-talk-myself-out", "cards-paycheck-to-paycheck", "cards-money-reach-me", "cards-paying-what-i-owe", "cards-destined-alone", "cards-how-long-alone", "cards-love-not-happened-yet", "cards-alone-for-years", "cards-more-years-alone", "cards-held-alone", "cards-empty-house-alone", "cards-alone-a-decade", "cards-too-late-or-now", "cards-alone-heavier-now", "cards-alone-rest-of-life", "cards-meant-alone-still-time", "cards-know-not-destined-alone", "cards-destined-or-not-yet", "cards-god-with-me-alone", "cards-god-mean-me-alone", "cards-gods-intention-alone", "cards-love-never-stays", "cards-connection-kept-alive", "cards-wait-on-connection", "cards-real-connection-coming", "cards-picking-noncommittal-men", "cards-time-to-commit-before-moving-on", "cards-slow-commit-or-wasting-time", "cards-doing-wrong-wont-commit", "cards-wait-commit-this-time", "cards-scared-or-never-commit", "cards-wont-commit-years-together", "cards-years-before-commitment", "cards-commitment-uncertain-years", "cards-no-time-to-waste-commit", "cards-how-much-longer-commit", "cards-commit-or-company"];
+          const validHooks = ["cards-honest", "cards-return", "cards-feels", "cards-cheating", "cards-who-he-is", "cards-real-person", "cards-misled", "cards-will-commit", "cards-wont-commit", "cards-ready-commit", "cards-lied-to", "cards-truth", "cards-deceived", "cards-come-back", "cards-ever-back", "cards-moved-on", "cards-cant-stop", "cards-on-my-mind", "cards-who-hurt-me", "cards-pulling-away", "cards-gone-cold", "cards-losing-interest", "cards-back-together", "cards-still-a-chance", "cards-really-over", "cards-new-soulmate", "cards-soulmate-out-there", "cards-ready-to-love", "cards-where-soulmate", "cards-soulmate-closer", "cards-not-found-yet", "cards-alone-forever", "cards-meant-alone", "cards-someone-for-me", "cards-someone-else", "cards-talking-someone", "cards-faithful", "cards-loyal", "cards-stop-hurting", "cards-stop-missing", "cards-still-miss-him", "cards-left-without-word", "cards-ghosted", "cards-not-enough", "cards-stop-searching", "cards-end-up-alone", "cards-given-up", "cards-twin-ready", "cards-twin-feels", "cards-twin-back", "cards-hiding-something", "cards-feels-off", "cards-really-love", "cards-feel-about-me", "cards-imagining-it", "cards-still-think", "cards-still-love", "cards-love-or-moved-on", "cards-forever-or-now", "cards-his-children", "cards-her-shadow", "cards-live-apart", "cards-too-long", "cards-really-soulmate", "cards-twin-or-connection", "cards-met-already", "cards-find-closure", "cards-heart-heal", "cards-feel-like-myself", "cards-my-soulmate-back", "cards-twinflame-back", "cards-was-he-soulmate", "cards-love-again", "cards-soulmate", "cards-blocked-retiring", "cards-nest-egg", "cards-too-late", "cards-still-working", "cards-how-much-longer", "cards-out-of-time", "cards-my-energy", "cards-money-wont-stay", "cards-energy-how-long", "cards-prayed-years", "cards-prayers-unanswered", "cards-slipping-past", "cards-choosing-wrong", "cards-found-me-yet", "cards-keeps-waiting", "cards-missed-chance", "cards-after-marriage", "cards-second-time", "cards-best-years", "cards-too-late-love", "cards-longer-to-wait", "cards-allowed-to-want", "cards-blocking-soulmate", "cards-blocked-before", "cards-connection-soulmate", "cards-connection-nothing", "cards-energy-away", "cards-energy-soulmate", "cards-waiting-to-heal", "cards-heal-first", "cards-money-time-running-out", "cards-money-has-to-last", "cards-trusted-loss-blocking-money", "cards-working-money-by-now", "cards-nothing-put-away", "cards-money-cant-stop-working", "cards-earn-and-gone", "cards-talk-myself-out", "cards-paycheck-to-paycheck", "cards-money-reach-me", "cards-paying-what-i-owe", "cards-destined-alone", "cards-how-long-alone", "cards-love-not-happened-yet", "cards-alone-for-years", "cards-more-years-alone", "cards-held-alone", "cards-empty-house-alone", "cards-alone-a-decade", "cards-too-late-or-now", "cards-alone-heavier-now", "cards-alone-rest-of-life", "cards-meant-alone-still-time", "cards-know-not-destined-alone", "cards-destined-or-not-yet", "cards-god-with-me-alone", "cards-god-mean-me-alone", "cards-gods-intention-alone", "cards-love-never-stays", "cards-connection-kept-alive", "cards-wait-on-connection", "cards-real-connection-coming", "cards-picking-noncommittal-men", "cards-time-to-commit-before-moving-on", "cards-slow-commit-or-wasting-time", "cards-doing-wrong-wont-commit", "cards-wait-commit-this-time", "cards-scared-or-never-commit", "cards-wont-commit-years-together", "cards-years-before-commitment", "cards-commitment-uncertain-years", "cards-no-time-to-waste-commit", "cards-how-much-longer-commit", "cards-commit-or-company", "cards-expecting-too-much", "cards-played-the-wife", "cards-instant-connection-commit", "cards-connection-without-commitment", "cards-connection-heading-commit", "cards-stopping-him-committing"];
           const validCards = ["a", "b", "c"];
           const deck = tarotDeck ?? "decode-him";
           if (!validDecks.includes(deck) || !validHooks.includes(tarotHook ?? "") || !validCards.includes(tarotCard ?? "")) {
             return res.status(400).json({ error: "Invalid tarot params" });
           }
           result = await generateTarotReflect(userData, deck, tarotHook as string, tarotCard as string, input ?? "");
+          break;
+        }
+        case "readReflect": {
+          // Interactive Version C for the /fb-read bridge. Every check below reads
+          // the SHARED registry — there is deliberately no hand-typed list of
+          // device ids or hooks here, which is the whole reason this funnel cannot
+          // develop the drift that both other bridges have to guard against.
+          //
+          // isReadWritten is the last gate: a device can be in the registry with
+          // its art shipped while its readings are still at the review gate, and
+          // this is what stops a URL handed out early from serving placeholder copy.
+          if (!isReadDevice(readDevice) || !isReadHook(readHook) || !isReadOption(readCard)) {
+            return res.status(400).json({ error: "Invalid read params" });
+          }
+          if (!isReadWritten(readDevice, readHook, readCard)) {
+            return res.status(400).json({ error: "Reading not published" });
+          }
+          result = await generateReadReflect(readDevice, readHook, readCard, input ?? "");
           break;
         }
         case "valueExplain":
@@ -836,7 +901,17 @@ export async function registerRoutes(
         typeof req.body?.tarotHook === "string"
           ? req.body.tarotHook.trim().slice(0, 40) || undefined
           : undefined;
-      const productName = `Energy Clearing Ritual${fbSuffix(funnel)}`;
+      // /fb-read INSTRUMENT — the one funnel that serves several from a single param,
+      // so this is what tells a coffee order from a tea one on the Stripe line. Gated on
+      // funnel so no other funnel can set it, and validated against the SAME registry the
+      // lander renders from (shared/readDevices.ts) — never a pass-through. An absent or
+      // unrecognized value resolves to undefined and fbSuffix() falls back to " - TEA",
+      // i.e. exactly the behaviour that shipped on 2026-09-02 before coffee existed.
+      const readDevice =
+        funnel === "v1-read" && isReadDevice(req.body?.readDevice)
+          ? req.body.readDevice
+          : undefined;
+      const productName = `Energy Clearing Ritual${fbSuffix(funnel, readDevice)}`;
 
       // ── V1 ORDER BUMP ("double reading") ──────────────────────────────────
       // The client asks for the bump; the SERVER decides. `bumpAccepted` is only
@@ -1108,7 +1183,7 @@ export async function registerRoutes(
                       // client rendered her offer card from — never from the
                       // request body. A client that claims arm A cannot make
                       // Stripe bill arm A's line item.
-                      name: bumpProductName(fbSuffix(funnel), bumpArm.copy),
+                      name: bumpProductName(fbSuffix(funnel, readDevice), bumpArm.copy),
                       // Names the topic she is actually buying ("Money path"), so
                       // the extra line is self-explanatory on the checkout page
                       // and the receipt. bumpBucket is already validated against
@@ -1161,6 +1236,12 @@ export async function registerRoutes(
             product: "energy_clearing_ritual",
             priceVariant: variantId,
             ...(funnel && { funnel }),
+            // The instrument she was shown. THE UPSELLS HAVE NO OTHER SOURCE: their URLs
+            // carry only session_id, and parseReadParams reads ?device= from the URL
+            // alone, so without this a coffee buyer's upsell 1 and 2 would silently bill
+            // as " - TEA". Both upsell endpoints already retrieve this session and
+            // already read metadata.noemail / metadata.src the same way.
+            ...(readDevice && { readDevice }),
             ...(gclid && { gclid }),
             ...(noemail && { noemail: "1" }),
             ...(isRecovery && { src: "recovery" }),
@@ -1178,6 +1259,8 @@ export async function registerRoutes(
           product: "energy_clearing_ritual",
           priceVariant: variantId,
           ...(funnel && { funnel }),
+          // See the note on the PaymentIntent metadata above — same value, same reason.
+          ...(readDevice && { readDevice }),
           ...(trackdeskClickId && { trackdeskClickId }),
           // Browser PostHog id so the server-side purchase_completed event is
           // attributed to the SAME visitor as the funnel events (email_gate_*),
@@ -1389,6 +1472,19 @@ export async function registerRoutes(
               angle: str40(req.body?.tarotAngle),
             }
           : undefined;
+      // /fb-read device (tea / dream / …). Gated on the funnel for the same reason
+      // `tarotLander` is: the param is tab-scoped and would otherwise mislabel a
+      // later non-read lead. A LABEL ONLY — it selects no price, no list and no
+      // reading, so normalising + length-capping is validation enough; an
+      // unrecognised value can only mislabel its own AWeber tag.
+      // /fb-read lander identity (device + ad hook). `device` also drives the
+      // AWeber tag below; BOTH are recorded on the gate + bump exposures, which is
+      // the /fb-read counterpart of `tarotLander` and is subject to the same
+      // one-shot rule — anything not written at assignment can never be added.
+      const readDevice = funnel === "v1-read" ? str40(req.body?.readDevice) : undefined;
+      const readHook = funnel === "v1-read" ? str40(req.body?.readHook) : undefined;
+      const readLander =
+        readDevice || readHook ? { device: readDevice, hook: readHook } : undefined;
 
       logger.info("Lead captured:", { email, firstName, bucket, funnel, sign: palmSign ?? null });
 
@@ -1426,7 +1522,9 @@ export async function registerRoutes(
       // "the test should go on to thumb"). Untrusted, so it's just normalized here;
       // it can only ever move a palm visitor between two legitimate configured arms,
       // and an unrecognized value simply falls through to the unscoped control.
-      const assigned = await assignVariantIfMissing(email, funnel, palmSign, tarotLander, palmHook);
+      const assigned = await assignVariantIfMissing(
+        email, funnel, palmSign, tarotLander, palmHook, readLander,
+      );
 
       // Add to AWeber email list (non-blocking). Per-lander FREE list when the
       // funnel's AWEBER_LIST_ID_* env is set, else the shared AWEBER_LIST_ID.
@@ -1454,7 +1552,15 @@ export async function registerRoutes(
         email,
         name: firstName,
         listId: leadListId,
-        tags: fbifyAweberTags([bucket || "website", "seer-within"], funnel),
+        // Base tags, plus the /fb-read DEVICE as its OWN tag. Deliberately not a
+        // suffix on `seer-within-read`: the free list is keyed on the FUNNEL
+        // (AWEBER_LIST_ID_READ), so carrying the device as a separate tag means a
+        // future device needs no new list and no AWeber dashboard setup — AWeber
+        // creates tag values on the fly and merges them under update_existing.
+        tags: [
+          ...fbifyAweberTags([bucket || "website", "seer-within"], funnel),
+          ...(readDevice ? [`read-${readDevice}`] : []),
+        ],
         // Omitted entirely when we have no link — never `custom_fields: {}`,
         // which AWeber reads as "clear every custom field" on an
         // update_existing write.
@@ -2249,9 +2355,13 @@ export async function registerRoutes(
       // Ad funnels use the cleaner PRD-spec name with a per-funnel suffix; V1
       // keeps its historical "Volcanic Stone (aka Black Lava)" label so existing
       // email-traffic receipts stay byte-identical to today.
-      const upsell1ProductName = isFbFunnel(funnel)
-        ? `Protection Ritual + Volcanic Stone${fbSuffix(funnel)}`
-        : "Volcanic Stone (aka Black Lava)";
+      // LAZY because the /fb-read instrument lives on the ORIGINAL session, which is
+      // only retrieved further down. Every other funnel ignores the argument, so their
+      // names stay byte-identical to before.
+      const upsell1NameFor = (device?: unknown) =>
+        isFbFunnel(funnel)
+          ? `Protection Ritual + Volcanic Stone${fbSuffix(funnel, device)}`
+          : "Volcanic Stone (aka Black Lava)";
 
       // Price split test — the Upsell 1 price follows the variant assigned at
       // lead capture (falls back to 4700 for pre-test conversations or no email).
@@ -2340,7 +2450,7 @@ export async function registerRoutes(
         payment_method: paymentMethodId,
         off_session: true,
         confirm: true,
-        description: upsell1ProductName,
+        description: upsell1NameFor(readDeviceFromSession(session)),
         metadata: {
           product: "protection_ritual",
           originalSession: checkoutSessionId,
@@ -2477,9 +2587,12 @@ export async function registerRoutes(
         const { email, firstName, bucket, originalSessionId, funnel } =
           parseResult.data;
         const trackdeskClickId = req.body?.trackdeskClickId as string | undefined;
-        const upsell1ProductName = isFbFunnel(funnel)
-          ? `Protection Ritual + Volcanic Stone${fbSuffix(funnel)}`
-          : "Volcanic Stone (aka Black Lava)";
+        // LAZY, for the same reason as the 1-click path: the /fb-read instrument is
+        // inherited from the original session, retrieved below.
+        const upsell1NameFor = (device?: unknown) =>
+          isFbFunnel(funnel)
+            ? `Protection Ritual + Volcanic Stone${fbSuffix(funnel, device)}`
+            : "Volcanic Stone (aka Black Lava)";
 
         // Price split test — match the 1-click charge amount for this variant.
         const upsell1Cents = (await getVariantForEmail(email)).upsell1Cents;
@@ -2501,12 +2614,17 @@ export async function registerRoutes(
         // the campaign, which is the right direction to be wrong in.
         let inheritNoemail = false;
         let inheritSrc = false;
+        // The /fb-read instrument rides the SAME retrieve, and fails the same way: on a
+        // lookup error it stays undefined and fbSuffix() falls back to " - TEA", i.e.
+        // today's behaviour. Never fatal — a failed label lookup must not block a charge.
+        let inheritReadDevice: string | undefined;
         try {
           const orig = await stripe.checkout.sessions.retrieve(originalSessionId);
           inheritNoemail = orig.metadata?.noemail === "1";
           inheritSrc = orig.metadata?.src === "recovery";
+          inheritReadDevice = readDeviceFromSession(orig);
         } catch (e) {
-          logger.warn("Upsell fallback: noemail/src lookup failed (non-fatal)", e);
+          logger.warn("Upsell fallback: noemail/src/device lookup failed (non-fatal)", e);
         }
 
         const session = await stripe.checkout.sessions.create({
@@ -2517,7 +2635,7 @@ export async function registerRoutes(
               price_data: {
                 currency: "usd",
                 product_data: {
-                  name: upsell1ProductName,
+                  name: upsell1NameFor(inheritReadDevice),
                   description: "Charged black lava protection talisman",
                 },
                 unit_amount: upsell1Cents,
@@ -2527,7 +2645,7 @@ export async function registerRoutes(
           ],
           mode: "payment",
           payment_intent_data: {
-            description: upsell1ProductName,
+            description: upsell1NameFor(inheritReadDevice),
             metadata: {
               product: "protection_ritual",
               originalSession: originalSessionId,
@@ -2938,7 +3056,9 @@ export async function registerRoutes(
         type === "full"
           ? "Manifestation Bracelet"
           : "Manifestation Bracelet (Standard)";
-      const productName = `${baseProductName}${fbSuffix(funnel)}`;
+      // The session is already retrieved above, so the /fb-read instrument is read
+      // straight off it. Non-read funnels ignore the argument.
+      const productName = `${baseProductName}${fbSuffix(funnel, readDeviceFromSession(session))}`;
 
       const upsell2Payment = await stripe.paymentIntents.create({
         amount,
@@ -3198,7 +3318,6 @@ export async function registerRoutes(
           type === "full"
             ? "Manifestation Bracelet (Attuned)"
             : "Manifestation Bracelet (Standard)";
-        const productName = `${baseProductName}${fbSuffix(funnel)}`;
 
         // Inherit the no-optin flag from the original purchase so a fallback
         // upsell-2 charge is marked internally like the 1-click path. `src` rides
@@ -3206,13 +3325,19 @@ export async function registerRoutes(
         // the recovery campaign rather than over-claiming for it.
         let inheritNoemail = false;
         let inheritSrc = false;
+        // The /fb-read instrument rides the SAME retrieve and fails the same way: on a
+        // lookup error it stays undefined and fbSuffix() falls back to " - TEA".
+        let inheritReadDevice: string | undefined;
         try {
           const orig = await stripe.checkout.sessions.retrieve(originalSessionId);
           inheritNoemail = orig.metadata?.noemail === "1";
           inheritSrc = orig.metadata?.src === "recovery";
+          inheritReadDevice = readDeviceFromSession(orig);
         } catch (e) {
-          logger.warn("Upsell2 fallback: noemail/src lookup failed (non-fatal)", e);
+          logger.warn("Upsell2 fallback: noemail/src/device lookup failed (non-fatal)", e);
         }
+        // Built AFTER the retrieve so it can carry the instrument.
+        const productName = `${baseProductName}${fbSuffix(funnel, inheritReadDevice)}`;
 
         const session = await stripe.checkout.sessions.create({
           customer_email: email,

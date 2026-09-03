@@ -211,7 +211,7 @@ export default function ChatPage() {
                       data-testid={`message-card-art-${msg.id}`}
                       role="img"
                       aria-label={msg.cardArt.alt}
-                      className="w-28 md:w-32 mb-3 rounded-lg overflow-hidden border border-gray-200 shadow-sm"
+                      className={`${msg.cardArt.wide ? "w-full" : "w-28 md:w-32"} mb-3 rounded-lg overflow-hidden border border-gray-200 shadow-sm`}
                       style={{
                         aspectRatio: `${msg.cardArt.aspect}`,
                         backgroundImage: `url('${msg.cardArt.url}')`,

@@ -1,0 +1,14 @@
+{
+  "_comment": "Ring geometry for the coffee cup. These coordinates belong to cup.png and to nothing else — re-crop the master and every one of them is wrong. Consumed by scripts/ring-read-cup.mjs.",
+  "_crop": "520, not tea's 420. The road is a LONG mark — that is what makes it a road — and a 420 square could not contain a ring around any useful length of it. 520 still zooms to 41% of the cup, so the reveal is a real zoom.",
+  "_road": "Rings a SEGMENT, not the whole run: the stretch under the rim where the line is clearest. The eye follows the line out past the ring, which is what a road should do. A ring around the entire arc would be an 880px ellipse and would read as a border, not as sight.",
+  "cup": "cup.png",
+  "size": 1254,
+  "crop": 520,
+  "_letters": "A IS THE TREE, B IS THE ROAD. Swapped 2026-09-03 to match the ad creatives, which went out with A and B the other way round. The coordinates did NOT move — each ring is still the one measured off this photograph for its own symbol; only the option key it hangs on changed. ring-read-cup.mjs writes reveal-strip.jpg in a,b,c order and the lander crops it by options.indexOf(), so this key order IS the panel order.",
+  "rings": {
+    "a": { "cx": 383,  "cy": 790,  "rx": 163, "ry": 215, "rot": 0,  "label": "tree" },
+    "b": { "cx": 549,  "cy": 228,  "rx": 240, "ry": 70,  "rot": -3, "label": "road" },
+    "c": { "cx": 611,  "cy": 1105, "rx": 240, "ry": 130, "rot": 0,  "label": "lake" }
+  }
+}

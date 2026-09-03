@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 360" width="360" height="360">
+  <rect x="0" y="0" width="360" height="360" fill="#EFE7D6"/>
+  <defs>
+    <clipPath id="rightBody">
+      <path d="M180,253 A52,13 0 0 0 232,240 L232,300 A52,13 0 0 1 180,313 Z"/>
+    </clipPath>
+    <clipPath id="waxPool">
+      <path d="M139,243 A41,10 0 0 1 221,243 L211,248 A31,5 0 0 0 149,248 Z"/>
+    </clipPath>
+  </defs>
+  <g fill="none" stroke="#1F1B16" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
+    <line x1="128" y1="240" x2="128" y2="300"/>
+    <path d="M128,247 C118,258 116,273 122,282 C128,288 134,284 133,274 C132,265 130,257 128,252"/>
+    <line x1="232" y1="240" x2="232" y2="300"/>
+    <path d="M128,240 a52,13 0 1,0 104,0 a52,13 0 1,0 -104,0"/>
+    <path d="M232,300 A52,13 0 0 1 128,300"/>
+  </g>
+  <path d="M125,262 C122,270 123,277 126,281" fill="none" stroke="#1F1B16" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  <g clip-path="url(#rightBody)" stroke="#1F1B16" stroke-width="2" opacity="0.5" stroke-linecap="round">
+    <line x1="125.9" y1="262.2" x2="224.2" y2="193.4"/>
+    <line x1="131" y1="269.6" x2="229.3" y2="200.7"/>
+    <line x1="136.2" y1="276.9" x2="234.5" y2="208.1"/>
+    <line x1="141.4" y1="284.3" x2="239.7" y2="215.5"/>
+    <line x1="146.5" y1="291.7" x2="244.8" y2="222.8"/>
+    <line x1="151.7" y1="299" x2="250" y2="230.2"/>
+    <line x1="156.9" y1="306.4" x2="255.1" y2="237.6"/>
+    <line x1="162" y1="313.8" x2="260.3" y2="245"/>
+    <line x1="167.2" y1="321.2" x2="265.5" y2="252.3"/>
+    <line x1="172.3" y1="328.5" x2="270.6" y2="259.7"/>
+    <line x1="177.5" y1="335.9" x2="275.8" y2="267.1"/>
+    <line x1="182.7" y1="343.3" x2="281" y2="274.4"/>
+    <line x1="187.8" y1="350.6" x2="286.1" y2="281.8"/>
+  </g>
+  <g clip-path="url(#waxPool)" stroke="#1F1B16" stroke-width="2" opacity="0.5" stroke-linecap="round">
+    <line x1="119.4" y1="234.6" x2="194.7" y2="181.8"/>
+    <line x1="121.7" y1="237.9" x2="197" y2="185.1"/>
+    <line x1="124" y1="241.2" x2="199.3" y2="188.4"/>
+    <line x1="126.3" y1="244.4" x2="201.6" y2="191.7"/>
+    <line x1="128.6" y1="247.7" x2="203.9" y2="195"/>
+    <line x1="130.8" y1="251" x2="206.2" y2="198.2"/>
+    <line x1="133.1" y1="254.3" x2="208.5" y2="201.5"/>
+    <line x1="135.4" y1="257.6" x2="210.8" y2="204.8"/>
+    <line x1="137.7" y1="260.8" x2="213.1" y2="208.1"/>
+    <line x1="140" y1="264.1" x2="215.4" y2="211.3"/>
+    <line x1="142.3" y1="267.4" x2="217.7" y2="214.6"/>
+    <line x1="144.6" y1="270.7" x2="220" y2="217.9"/>
+    <line x1="146.9" y1="273.9" x2="222.3" y2="221.2"/>
+    <line x1="149.2" y1="277.2" x2="224.6" y2="224.4"/>
+    <line x1="151.5" y1="280.5" x2="226.9" y2="227.7"/>
+    <line x1="153.8" y1="283.8" x2="229.2" y2="231"/>
+    <line x1="156.1" y1="287" x2="231.4" y2="234.3"/>
+    <line x1="158.4" y1="290.3" x2="233.7" y2="237.6"/>
+    <line x1="160.7" y1="293.6" x2="236" y2="240.8"/>
+    <line x1="163" y1="296.9" x2="238.3" y2="244.1"/>
+    <line x1="165.3" y1="300.2" x2="240.6" y2="247.4"/>
+  </g>
+  <g fill="none" stroke="#1F1B16" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M139,243 A41,10 0 0 1 221,243"/>
+    <ellipse cx="180" cy="248" rx="31" ry="5"/>
+  </g>
+  <line x1="180" y1="250" x2="180" y2="236" stroke="#1F1B16" stroke-width="6" stroke-linecap="round"/>
+  <g fill="none" stroke="#B5651D" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M180,236 C169,228 169,218 180,210 C191,218 191,228 180,236 Z" stroke-width="6"/>
+    <path d="M180,231 C174,225 174,219 180,215 C186,219 186,225 180,231 Z" stroke-width="3"/>
+  </g>
+</svg>

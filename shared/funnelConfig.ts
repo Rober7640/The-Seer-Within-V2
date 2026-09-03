@@ -13,7 +13,7 @@
 // these helpers (product naming, AWeber tags, redirects, PostHog) updates
 // automatically.
 
-export type FunnelParam = "v1-fb" | "v1-fb2" | "v1-gdn" | "v1-palm" | "v1-tarot";
+export type FunnelParam = "v1-fb" | "v1-fb2" | "v1-gdn" | "v1-palm" | "v1-tarot" | "v1-read";
 
 export interface FunnelDef {
   // Value sent to the backend and stored in Stripe metadata.funnel.
@@ -42,6 +42,23 @@ export const FUNNELS: readonly FunnelDef[] = [
   // upsells reuse the V1 components and carry the "- TAROT" Stripe suffix.
   // "/fb-tarot" is distinct from "/fb" via the trailing-slash check.
   { param: "v1-tarot", prefix: "/fb-tarot", productSuffix: " - TAROT", aweberSuffix: "-tarot", posthog: "tarot" },
+  // The /fb-read quiz-bridge funnel. Unlike palm and tarot, this one is
+  // DEVICE-AGNOSTIC: a single bridge renders every instrument (dream, tea, …)
+  // from the shared registry in shared/readDevices.ts, so a new device is a
+  // config entry rather than a new funnel. Chat + upsells reuse the V1 engine.
+  // "/fb-read" stays distinct from "/fb" via the trailing-slash check.
+  //
+  // 🔴 productSuffix is " - TEA", NOT " - READ" — the only row where the Stripe
+  // suffix does not echo the funnel param. Joel asked for it on the 2026-09-02
+  // call: "read" is the umbrella name, so a dashboard full of "- READ" lines
+  // cannot be told apart once coffee (and any later instrument) ships. The
+  // suffix names the INSTRUMENT the buyer was shown. Every live /fb-read lander
+  // is tea today; if `dream` is ever launched on this same funnel its orders
+  // would read "- TEA" too, and the suffix must become device-aware then.
+  // Display-only: it reaches Stripe product_data.name and PaymentIntent
+  // description via fbSuffix() and nothing else. NOT metadata, NOT fulfilment
+  // routing, NOT the AWeber tag (aweberSuffix stays "-read"), NOT PostHog.
+  { param: "v1-read", prefix: "/fb-read", productSuffix: " - TEA", aweberSuffix: "-read", posthog: "read" },
 ];
 
 // Resolve the funnel that owns a URL path. The trailing-slash check means
