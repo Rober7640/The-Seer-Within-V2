@@ -169,18 +169,16 @@ export const BACKEND_OFFER_CATALOG: Record<BackendOfferKey, BackendOffer> = {
       stripeName: '+ The Unburdening instructional',
     },
     bookingPath: {
-      page: '/wiccan/judgement-day',
-      chat: '/wiccan/judgement-day/chat',
+      page: '/offers/wiccan/judgement-day',
+      chat: '/offers/wiccan/judgement-day/chat',
     },
-    successPath: '/wiccan/judgement-day/success',
-    // entryPath: '/wiccan/judgement-day/entry',  ← A6. See the field's note.
+    successPath: '/offers/wiccan/judgement-day/success',
+    upsellEntryPath: '/offers/upsell/welcome1',
+    // entryPath: '/offers/wiccan/judgement-day/entry',  ← A6. See the field's note.
     //
-    // 🔴 FALSE UNTIL A6. Two reasons, either one sufficient: `successPath` above has no
-    // route yet, so a buyer would land on a 404 holding a receipt; and 03 is an ACT
-    // offer whose booking screens ask for the Entry NOWHERE, so we would be taking
-    // money for work that cannot be started. Flip this in the same commit that makes
-    // the thank-you/Entry screen render, and set `entryPath` with it.
-    readyForMoney: false,
+    // Thank-you screen renders (Task 6); upsell chain wired (Task 7). Entry form
+    // is out of scope — booking directs her to reply by email instead.
+    readyForMoney: true,
   },
 };
 
@@ -221,6 +219,43 @@ export function backendOrderDescriptor(
   const base = `BE ${offer.number} · ${offer.stripeName}`;
   if (!bumpPurchased) return base;
   return `${base} + ${offer.bump.stripeName.replace(/^\+\s*/, '')}`;
+}
+
+/**
+ * The originating offer for a set of Stripe metadata: the explicit `offer` key if
+ * it is a known offer, else the offer that owns the `product`. Null when neither
+ * resolves — callers decide the fallback rather than guessing here.
+ */
+export function resolveOfferKey(
+  meta: { offer?: string | null; product?: string | null } | null | undefined,
+): BackendOfferKey | null {
+  const offer = meta?.offer;
+  if (isBackendOfferKey(offer)) return offer;
+  return backendOfferForStripeProduct(meta?.product ?? null)?.key ?? null;
+}
+
+/** The Stripe-dashboard description for an UPSELL charge: `BE 03 · Protection Ritual`. */
+export function backendUpsellDescriptor(
+  key: BackendOfferKey,
+  upsellName: string,
+  isDownsell: boolean,
+): string {
+  const offer = BACKEND_OFFER_CATALOG[key];
+  return `BE ${offer.number} · ${upsellName}${isDownsell ? ' (downsell)' : ''}`;
+}
+
+/**
+ * Resolve the offer + build the upsell charge description in one call. Defaults to
+ * twin-flame when the session metadata does not resolve, preserving the old
+ * behaviour rather than failing a charge she is entitled to.
+ */
+export function upsellChargeFields(
+  meta: { offer?: string | null; product?: string | null } | null | undefined,
+  upsellName: string,
+  isDownsell: boolean,
+): { offer: BackendOfferKey; description: string } {
+  const offer = resolveOfferKey(meta) ?? 'twin-flame';
+  return { offer, description: backendUpsellDescriptor(offer, upsellName, isDownsell) };
 }
 
 // ─── What she is actually charged ──────────────────────────────────────────────

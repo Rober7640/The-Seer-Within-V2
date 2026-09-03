@@ -18,6 +18,8 @@ import { backendOfferPrefix, TWIN_FLAME_PREFIX } from "@/lib/funnel";
 import type { Upsell1Copy, Upsell2Copy } from "./upsellCopy/types";
 import { V1_UPSELL1, V1_UPSELL2 } from "./upsellCopy/v1";
 import { TWIN_FLAME_UPSELL1, TWIN_FLAME_UPSELL2 } from "./upsellCopy/twinFlame";
+import type { BackendOfferKey } from "@shared/backendOffers";
+import { JUDGEMENT_UPSELL1, JUDGEMENT_UPSELL2 } from "./upsellCopy/judgement";
 
 interface BackendOfferCopy {
   upsell1: Upsell1Copy;
@@ -44,6 +46,24 @@ export function upsell1Copy(pathname?: string): Upsell1Copy {
 
 export function upsell2Copy(pathname?: string): Upsell2Copy {
   return offerFor(pathname)?.upsell2 ?? V1_UPSELL2;
+}
+
+/**
+ * The pitch registry keyed by OFFER, for the shared /offers/upsell/ pages, which
+ * resolve the offer from the booking session (not the URL). The pathname-based
+ * upsell1Copy/upsell2Copy above stay for 02's own prefix-mounted pages.
+ */
+export const BACKEND_UPSELL_PITCH: Record<BackendOfferKey, { upsell1: Upsell1Copy; upsell2: Upsell2Copy }> = {
+  'twin-flame': { upsell1: TWIN_FLAME_UPSELL1, upsell2: TWIN_FLAME_UPSELL2 },
+  'judgement-day': { upsell1: JUDGEMENT_UPSELL1, upsell2: JUDGEMENT_UPSELL2 },
+};
+
+export function upsell1CopyForOffer(offer: BackendOfferKey): Upsell1Copy {
+  return BACKEND_UPSELL_PITCH[offer].upsell1;
+}
+
+export function upsell2CopyForOffer(offer: BackendOfferKey): Upsell2Copy {
+  return BACKEND_UPSELL_PITCH[offer].upsell2;
 }
 
 export { displayName } from "./upsellCopy/types";

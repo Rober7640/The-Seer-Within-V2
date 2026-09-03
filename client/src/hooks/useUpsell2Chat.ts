@@ -35,7 +35,12 @@ import {
   UPSELL2_SHIPPING_CONFIRMED,
   UPSELL2_SOFT_DECLINE,
 } from "@/lib/upsell2Messages";
-import { upsell2Copy, displayName, type Upsell2Chain } from "@/lib/backendOffers";
+import {
+  upsell2Copy,
+  displayName,
+  type Upsell2Chain,
+  type Upsell2Copy,
+} from "@/lib/backendOffers";
 import { currentFunnel, getPostHogFunnel, isTwinFlameOffer } from "@/lib/funnel";
 import { track as trackPH } from "@/lib/posthog";
 import { tarotEventProps } from "@/lib/tarotAttribution";
@@ -87,6 +92,10 @@ interface UseUpsell2ChatProps {
   sessionId: string | null;
   enabled: boolean;
   braceletImage?: string;
+  // Injected copy/backend-mode for shared /offers/upsell/ pages. Both default to
+  // undefined, which preserves today's URL-based resolution exactly (V1 + 02).
+  copyOverride?: Upsell2Copy;
+  backendOverride?: boolean;
 }
 
 export function useUpsell2Chat({
@@ -94,6 +103,8 @@ export function useUpsell2Chat({
   sessionId,
   enabled,
   braceletImage,
+  copyOverride,
+  backendOverride,
 }: UseUpsell2ChatProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [stage, setStage] = useState<Upsell2Stage>("INIT");
@@ -121,7 +132,10 @@ export function useUpsell2Chat({
   // Which funnel's path opens this page is running — V1's everywhere except the
   // backend deck's offer 02. Everything from UPSELL2_GAP onward is V1's in both
   // cases. Resolved once; the URL cannot change mid-chat.
-  const copy = useMemo(() => upsell2Copy(), []);
+  const copy = useMemo(
+    () => copyOverride ?? upsell2Copy(),
+    [copyOverride],
+  );
   const isPathA = userData?.upsellPurchased === true;
 
   // "Friend" is the placeholder /api/upsell/user-data stamps when checkout
@@ -498,7 +512,7 @@ export function useUpsell2Chat({
 
     // Backend charges its OWN endpoint (be_bracelet → list 6972556, no tracking),
     // NO trackdeskClickId. V1's path/body is byte-identical.
-    const beFunnel = isTwinFlameOffer();
+    const beFunnel = backendOverride ?? isTwinFlameOffer();
 
     try {
       const response = await fetch(
@@ -613,6 +627,7 @@ export function useUpsell2Chat({
     processStage,
     isPathA,
     copy,
+    backendOverride,
   ]);
 
   const handleDecline = useCallback(async () => {
@@ -657,7 +672,7 @@ export function useUpsell2Chat({
     });
 
     // Backend: downsell charge on be_bracelet at $30, no tracking / no trackdesk id.
-    const beFunnel = isTwinFlameOffer();
+    const beFunnel = backendOverride ?? isTwinFlameOffer();
 
     try {
       const response = await fetch(
@@ -769,6 +784,7 @@ export function useUpsell2Chat({
     processStage,
     isPathA,
     copy,
+    backendOverride,
   ]);
 
   const handleDownsellDecline = useCallback(async () => {
@@ -797,7 +813,7 @@ export function useUpsell2Chat({
       try {
         // Backend stamps the address onto the upsell PaymentIntent (manual shipper
         // reads it off Stripe); V1 saves by session id. Byte-identical for V1.
-        if (isTwinFlameOffer()) {
+        if (backendOverride ?? isTwinFlameOffer()) {
           await fetch("/api/backend/upsell/shipping", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -818,7 +834,7 @@ export function useUpsell2Chat({
         setIsComplete(true);
       }
     },
-    [sessionId, userData, processStage, sendBotMessage, upsell2PaymentId],
+    [sessionId, userData, processStage, sendBotMessage, upsell2PaymentId, backendOverride],
   );
 
   useEffect(() => {
