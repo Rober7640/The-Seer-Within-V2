@@ -1251,6 +1251,20 @@ router.post('/stripe', async (req: Request, res: Response) => {
     // products never match backendUpsellFor — so V1's flow is untouched.
     const beUpsell = backendUpsellFor(metadata.product);
     if (beUpsell) {
+      // PostHog revenue (BE-only). Deterministic uuid = pi.id dedupes Stripe retries.
+      if (pi.amount > 0 && metadata.email) {
+        posthog.capture(
+          buildBackendPurchaseEvent({
+            product: metadata.product,
+            offer: resolveOfferKey(metadata) ?? 'twin-flame',
+            amountCents: pi.amount,
+            email: metadata.email,
+            distinctId: metadata.posthogDistinctId,
+            utm: utmsFromMetadata(metadata),
+            dedupeId: pi.id,
+          }),
+        );
+      }
       await recordBackendUpsellOrder(pi); // idempotent, self-logging, never throws
       if (metadata.email) {
         const offer = resolveOfferKey(metadata) ?? 'twin-flame';
