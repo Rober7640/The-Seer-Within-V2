@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { CosmicBackground } from '@/components/CosmicBackground'
 import { bookingFirstName } from '@/lib/funnel'
+import { track as trackPH } from '@/lib/posthog'
 import { beginBackendCheckout } from '@/lib/backendCheckout'
 import {
   CHAT_SCRIPT,
@@ -161,6 +162,19 @@ export default function TwinFlameBookingChat() {
     }
   }, [showGate])
 
+  // On this treatment the bump is its own turn — it is "offered" when that turn
+  // appears. Mirrors fb-read's `bump_offered` exposure. funnel:'twinflame' slots it
+  // into the Twin Flame dashboard alongside the page treatment's exposure.
+  useEffect(() => {
+    if (!showBump) return
+    trackPH('bump_offered', {
+      funnel: 'twinflame',
+      step: 'sales',
+      price_cents: TWIN_FLAME_BUMP_CENTS,
+      treatment: 'chat',
+    })
+  }, [showBump])
+
   // She has committed. The gate stays on screen as her record of what she
   // agreed to; Evelyn picks the conversation back up and the bump follows.
   const handleGateConfirm = () => {
@@ -176,6 +190,16 @@ export default function TwinFlameBookingChat() {
     if (busy) return
     setBusy(true)
     setCheckoutError(null)
+    // The bump answer IS the checkout on this treatment, so this is the moment she
+    // starts checkout — the counterpart to fb-read's `checkout_initiated`.
+    trackPH('checkout_initiated', {
+      funnel: 'twinflame',
+      step: 'sales',
+      product: 'be_twin_flame',
+      price_cents: TWIN_FLAME_PRICE_CENTS + (taken ? TWIN_FLAME_BUMP_CENTS : 0),
+      bump: taken,
+      treatment: 'chat',
+    })
     const result = await beginBackendCheckout({
       offer: 'twin-flame',
       treatment: 'chat',
