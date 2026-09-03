@@ -571,12 +571,30 @@ export function useUpsell2Chat({
           setStage("SHIPPING");
         }
       } else if (result.fallback && beFunnel) {
-        // Backend, first build: no hosted BE fallback yet — let her retry.
-        await sendBotMessage(
-          "That didn't go through on your saved card, dear. Give it a moment and try once more.",
-        );
-        setIsProcessing(false);
-        setShowCTA(true);
+        // Off-session charge on her saved card was declined (Indian/3DS cards) → send
+        // her to a HOSTED Stripe checkout for the SAME be_bracelet upsell, where she can
+        // authenticate and pay (A7). Webhook records + fires PostHog on success.
+        trackPH("upsell_fallback_redirect", {
+          funnel: getPostHogFunnel() ?? "twinflame",
+          step: "upsell2",
+          product: "be_bracelet",
+        });
+        await sendBotMessage("Let me set up a secure payment page for you...");
+        const fallbackResponse = await fetch("/api/backend/upsell/fallback-checkout", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ checkoutSessionId: sessionId, email: userData.email, product: "be_bracelet" }),
+        });
+        const { url } = await fallbackResponse.json().catch(() => ({}) as { url?: string });
+        if (url) {
+          window.location.href = url;
+        } else {
+          await sendBotMessage(
+            "That didn't go through, dear. Give it a moment and try once more.",
+          );
+          setIsProcessing(false);
+          setShowCTA(true);
+        }
       } else if (result.fallback) {
         // 1-click off-session charge declined → hosted Stripe checkout. See the
         // matching event in useUpsellChat: this is where a payment failure becomes
@@ -731,12 +749,30 @@ export function useUpsell2Chat({
           setStage("SHIPPING");
         }
       } else if (result.fallback && beFunnel) {
-        // Backend, first build: no hosted BE fallback yet — let her retry.
-        await sendBotMessage(
-          "That didn't go through on your saved card, dear. Give it a moment and try once more.",
-        );
-        setIsProcessing(false);
-        setShowCTA(true);
+        // Off-session charge declined (Indian/3DS cards) → hosted Stripe checkout for the
+        // be_bracelet DOWNSELL, where she can authenticate and pay (A7).
+        trackPH("upsell_fallback_redirect", {
+          funnel: getPostHogFunnel() ?? "twinflame",
+          step: "upsell2",
+          product: "be_bracelet",
+          price_tier: "downsell",
+        });
+        await sendBotMessage("Let me set up a secure payment page for you...");
+        const fallbackResponse = await fetch("/api/backend/upsell/fallback-checkout", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ checkoutSessionId: sessionId, email: userData.email, product: "be_bracelet", tier: "downsell" }),
+        });
+        const { url } = await fallbackResponse.json().catch(() => ({}) as { url?: string });
+        if (url) {
+          window.location.href = url;
+        } else {
+          await sendBotMessage(
+            "That didn't go through, dear. Give it a moment and try once more.",
+          );
+          setIsProcessing(false);
+          setShowCTA(true);
+        }
       } else if (result.fallback) {
         trackPH("upsell_fallback_redirect", {
           funnel: getPostHogFunnel() ?? "v1",
