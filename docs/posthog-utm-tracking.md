@@ -21,6 +21,8 @@ Keep the value lowercase, no spaces. One value = one row in the report. Whicheve
 parameter you put it in, PostHog captures it — just remember which one you used, because
 that's the field you break the report down by.
 
+**Put the tag on the entry link** — the one the buyer first clicks from your email. It's captured on their first pageload of the session, so tagging a later/mid-funnel link instead will show no attribution.
+
 ## Where to read it
 Replace `utm_campaign` below with whichever UTM param you actually used.
 - **Clicks:** PostHog → Product analytics → Trends → event `$pageview` (or `lander_view`),
