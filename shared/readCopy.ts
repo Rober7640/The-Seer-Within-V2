@@ -17,15 +17,6 @@ export const READS: Partial<
   coffee: {
     "hiding-something": {
       a: [
-        "A road, yes. Running along under the rim of your cup, up where the grounds came to rest last.",
-        "You asked whether he's hiding something from you. A road up near the rim is where the picture stops.",
-        "You met a real edge. The road is there in your cup, dear, and you didn't put it there.",
-        "The grounds don't say what's past it. They stop exactly where you stopped.",
-        "So the road runs and then the grounds end, and you've been standing at that end on your own.",
-        "You've been told you're making something out of nothing. The cup shows me you noticed something real.",
-        "Let me look closer at what the not-knowing has been costing you…",
-      ],
-      b: [
         "A tree, yes. Halfway up the wall of your cup, where the grounds caught and held.",
         "You asked whether he's hiding something from you. A tree halfway up is what's actually standing there.",
         "It isn't nothing. Something is standing in that cup, and you were right to keep looking at it.",
@@ -33,6 +24,15 @@ export const READS: Partial<
         "So there's something there, and you've had to keep pointing at it by yourself.",
         "You've been called the anxious one for noticing. Noticing isn't the same as inventing, dear.",
         "Let me look closer at what it's taken out of you, being the only one who sees it…",
+      ],
+      b: [
+        "A road, yes. Running along under the rim of your cup, up where the grounds came to rest last.",
+        "You asked whether he's hiding something from you. A road up near the rim is where the picture stops.",
+        "You met a real edge. The road is there in your cup, dear, and you didn't put it there.",
+        "The grounds don't say what's past it. They stop exactly where you stopped.",
+        "So the road runs and then the grounds end, and you've been standing at that end on your own.",
+        "You've been told you're making something out of nothing. The cup shows me you noticed something real.",
+        "Let me look closer at what the not-knowing has been costing you…",
       ],
       c: [
         "A lake, yes. Lying in the bottom of your cup, where the grounds settled first and stayed.",
@@ -46,15 +46,6 @@ export const READS: Partial<
     },
     "love-again": {
       a: [
-        "A road, yes. Running along under the rim of your cup, up where the grounds came to rest last.",
-        "You asked whether you'll love again. A road up near the rim is the weeks just ahead of you.",
-        "Love is coming to you. The road's already in the cup, dear — it isn't waiting on you to find it.",
-        "No name comes with it. No face either, and nothing in the grounds tells me when.",
-        "So there's a road sitting in your cup, and you've felt none of it moving yet.",
-        "You've kept getting up for days that all looked the same. Nobody claps for that, dear.",
-        "Let me look closer at what's been keeping that road from reaching you…",
-      ],
-      b: [
         "A tree, yes. Halfway up the wall of your cup, where the grounds caught and held.",
         "You asked whether you'll love again. A tree halfway up is what's still standing in you now.",
         "You came through it whole. Whatever you think it took from you, the cup still shows me a tree.",
@@ -62,6 +53,15 @@ export const READS: Partial<
         "So something in you held the whole way through, and it never once felt like it was holding.",
         "You've been treating yourself like the thing that got broken. That isn't what I'm looking at.",
         "Let me look closer at why you've had to hold all of that up on your own…",
+      ],
+      b: [
+        "A road, yes. Running along under the rim of your cup, up where the grounds came to rest last.",
+        "You asked whether you'll love again. A road up near the rim is the weeks just ahead of you.",
+        "Love is coming to you. The road's already in the cup, dear — it isn't waiting on you to find it.",
+        "No name comes with it. No face either, and nothing in the grounds tells me when.",
+        "So there's a road sitting in your cup, and you've felt none of it moving yet.",
+        "You've kept getting up for days that all looked the same. Nobody claps for that, dear.",
+        "Let me look closer at what's been keeping that road from reaching you…",
       ],
       c: [
         "A lake, yes. Lying in the bottom of your cup, where the grounds settled first and stayed.",
@@ -75,15 +75,6 @@ export const READS: Partial<
     },
     "still-think": {
       a: [
-        "A road, yes. Running along under the rim of your cup, up where the grounds came to rest last.",
-        "You asked whether he still thinks about you. A road up near the rim is what's ahead of you.",
-        "The road ahead is yours. None of it waits on someone else to see it first.",
-        "The grounds don't say who's on it. Nothing tells me when, either.",
-        "So there's a road sitting in your cup, and none of it is his to walk.",
-        "You didn't ask for him back. You asked to be kept in mind, and that's a small thing to want.",
-        "Let me look closer at what it's cost you, asking for so little…",
-      ],
-      b: [
         "A tree, yes. Halfway up the wall of your cup, where the grounds caught and held.",
         "You asked whether he still thinks about you. A tree halfway up is what's still standing from it.",
         "It counted. Something from that time is still standing, and the cup shows me it's standing in you.",
@@ -91,6 +82,15 @@ export const READS: Partial<
         "So it held, and it's gone on holding whether or not anyone else saw it.",
         "You've been told you should be past this by now. The cup doesn't show me a finished thing.",
         "Let me look closer at what's still standing in you from all of that…",
+      ],
+      b: [
+        "A road, yes. Running along under the rim of your cup, up where the grounds came to rest last.",
+        "You asked whether he still thinks about you. A road up near the rim is what's ahead of you.",
+        "The road ahead is yours. None of it waits on someone else to see it first.",
+        "The grounds don't say who's on it. Nothing tells me when, either.",
+        "So there's a road sitting in your cup, and none of it is his to walk.",
+        "You didn't ask for him back. You asked to be kept in mind, and that's a small thing to want.",
+        "Let me look closer at what it's cost you, asking for so little…",
       ],
       c: [
         "A lake, yes. Lying in the bottom of your cup, where the grounds settled first and stayed.",

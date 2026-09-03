@@ -138,8 +138,8 @@ NEVER state that he IS hiding something and NEVER state that he is not — both 
 
 | Panel | Archetype | The mark named in bubble 1 |
 |---|---|---|
-| `a` | *the moving heart* | a road running under the rim of the cup |
-| `b` | *the standing heart* | a tree halfway up the wall of the cup |
+| `a` | *the standing heart* | a tree halfway up the wall of the cup |
+| `b` | *the moving heart* | a road running under the rim of the cup |
 | `c` | *the deep heart* | a lake in the bottom of the cup, where the grounds settled first |
 
 ---
