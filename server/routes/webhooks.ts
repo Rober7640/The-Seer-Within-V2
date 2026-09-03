@@ -16,6 +16,7 @@ import { recordBraceletOrder } from '../lib/braceletOrders';
 import { recordBackendOrder } from '../lib/beOrders';
 import { addBackendUpsellCustomer } from '../lib/aweber';
 import { backendUpsellFor } from '../lib/backendCustomerList';
+import { buildBackendPurchaseEvent, utmsFromMetadata } from '../lib/backendPurchaseAnalytics';
 import { BACKEND_STRIPE_PRODUCT_PREFIX, resolveOfferKey } from '@shared/backendOffers';
 import { recordBackendUpsellOrder } from '../lib/beUpsellOrders';
 import { migrateAndEmailFunnelUser } from '../lib/funnelMigrationEmail';
@@ -1030,6 +1031,25 @@ router.post('/stripe', async (req: Request, res: Response) => {
     // Stripe retry a charge we have already banked.
     if (product?.startsWith(BACKEND_STRIPE_PRODUCT_PREFIX)) {
       const beUpsell = backendUpsellFor(product);
+
+      // PostHog revenue (BE-only; Meta/GAds/Trackdesk stay blind by design). Deterministic
+      // uuid = session.id so Stripe retries + the thank-you re-record dedupe. Browser-
+      // independent: a buyer who closes the tab still counts.
+      if ((session.amount_total ?? 0) > 0 && email) {
+        posthog.capture(
+          buildBackendPurchaseEvent({
+            product,
+            offer: resolveOfferKey(metadata) ?? 'twin-flame',
+            amountCents: session.amount_total ?? 0,
+            email,
+            distinctId: metadata.posthogDistinctId,
+            utm: utmsFromMetadata(metadata),
+            dedupeId: session.id,
+            bumpProduct: metadata.bumpProduct,
+          }),
+        );
+      }
+
       if (beUpsell) {
         // A BE UPSELL bought via HOSTED checkout (the 1-click fallback). The 1-click
         // happy path writes from payment_intent.succeeded; this covers the fallback.
