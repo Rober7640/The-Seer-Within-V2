@@ -116,6 +116,15 @@ function findSubjectPreheader(e2Path) {
 
 const renderBlock = (b) => {
   if (/^---+$/.test(b)) return `<hr style="background:#DEE0E8;border:0;height:1px;margin:22px 0;">`;
+  // A bare "## " (H2, exactly two hashes) is an internal structural marker, never buyer-facing
+  // content — e.g. "## P.S. *(ships on every letter — settled 2026-08-10, no A/B)*" right before
+  // the real P.S. paragraph. `## Build notes` gets stripped upstream in parse() (it truncates the
+  // whole rest of the file from there), but nothing was stripping THIS kind of one-line H2 marker,
+  // so it fell through to the generic paragraph case and rendered literally — "##" and the internal
+  // note both visible in the actual preview. Found 2026-09-03, present in every 06 letter that uses
+  // this "## P.S." convention (kaucim, iching, close-c, the Aiden variant). Suppressed here instead
+  // of just in one file, since the bug is in the shared renderer, not the copy.
+  if (/^##\s+/.test(b)) return '';
   if (/^#\s+/.test(b))
     return `<p style="margin:0 0 18px;font-size:24px;line-height:1.35;font-weight:bold;font-family:Georgia,'Times New Roman',serif;color:#2c2530;">${inlineHtml(
       b.replace(/^#\s+/, ''),

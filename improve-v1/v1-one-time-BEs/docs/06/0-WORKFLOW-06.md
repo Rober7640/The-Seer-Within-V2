@@ -195,9 +195,9 @@ page becomes an intake form; Reading = 02/04, no reply, thank-you page is a rece
   package the physical object, ship it. The delivery email (C2) carries **tracking info instead of
   a PDF link** — already anticipated as D8-equiv below, doesn't need a new decision, just execution.
 
-*(Nothing is blocking Phase A start any more, decision-wise. What's left is execution — see the
-punch list the next session should work from, or ask Claude to compile it fresh from this file's
-current state.)*
+*(True as of the Sixth round above. Superseded by the Seventh round below: `06-U2a`'s pitch is now
+inconsistent with the letter and needs a re-differentiation pass before Phase A wires the upsells —
+see that round's own flagged item. Everything else is still just execution.)*
 
 ---
 
@@ -330,3 +330,70 @@ preheader) — matching what `render-be-email.mjs` (the T3/T4 renderer) already 
 `[sample-name]` CLI argument was removed from the usage string. This is a shared-script change, so
 it affects every offer's preview, not just 06's — re-rendered and confirmed correct on `close-c`
 and both kept reference candidates (kaucim, iching).
+
+### ✅ Seventh round, operator, 2026-09-03 — an Aiden cross-promo variant, and a real mythology
+correction that touches the finished letter
+
+**Aiden Powers cross-promo letter built.** `06-E2-esl-AIDEN-close-c.md` — a new Beat 0 in Aiden's
+own voice (numerology specialist, peer to Evelyn, real persona already built for this platform)
+introduces the story and hands off; Beats 2–8 reuse the finished letter verbatim. Four iteration
+passes on Beat 0 alone (structural variations → a "secret lead" angle grounded in the one real
+Aiden email that exists in this codebase → tightened for fluff → added back a one-line "Evelyn
+here" bridge + a divider + moved the hero image, after operator feedback caught real flow problems
+a first pass missed). Also gave Aiden his own header (`render-be-esl-preview.mjs` now supports an
+optional `_sender` key — avatar + name + tagline — swapping the generic platform banner for a
+persona's own identity; every other letter using this script is unaffected). Full history in that
+file's own Build notes.
+
+**A real mythology correction, not a wording tweak.** Operator, as a firsthand cultural source (not
+web-verified — explicitly instructed to stop searching and take the lore directly): the creature is
+**Pi Chiu**, two-headed — one head pulls new wealth toward the buyer, the other keeps what arrives.
+This supersedes the whole horn/Bixie/Tianlu framing from earlier in this doc (Third/Fourth rounds
+above) — not a rename, a real change to what the product claims to do. Confirmed before writing
+anything: (1) this changes the product's actual function, both heads' jobs are real, not one real
+and one traditional-color; (2) checked the real product photo first — the second head is **not**
+visually distinct on this specific casting (one clear head, the other end reads as scrollwork/
+medallion, matching what Beat 3 already described), so **no new anatomy image was generated** and
+Beat 3's existing 7-crop walkthrough is untouched, still accurate to what's visibly on the piece.
+
+**What actually changed, in `06-E2-esl-product-creature-a-close-c.md` (and propagated identically
+to `06-E2-esl-AIDEN-close-c.md`, which duplicates the same beats):**
+- Beat 4 (was "How many horns does he actually have?") → "How many heads does he actually have?" —
+  states the two-headed pull-and-keep function directly, and can now CONFIRM the popular "Pixiu
+  attracts wealth" belief instead of denying it ("that's true of some of them, not this one" is
+  gone) — reads more honestly than the superseded version.
+- Beat 7 ("What this can't do") rewritten — "he can't manufacture a fortune that was never coming"
+  is no longer true of a creature that actively pulls new wealth toward her. New version keeps the
+  same honest-limit FUNCTION (still says plainly what it doesn't do: no conjuring, no multiplying)
+  using the two-headed frame.
+- Beat 8's close line changed for the same reason — "it doesn't put anything in front of you that
+  wasn't already finding its way to you" was the same now-false claim.
+- Beat 5 (the pivot — "you have a containment problem, not an attraction problem") is **untouched**
+  — that's a diagnosis of her own stated words, not a claim about the product's full capability,
+  and stays accurate regardless of what else the product does.
+- `06-E1-subject-lines-product-creature-a-close-c.md`'s subject 5 updated to match ("two heads, not
+  one").
+
+🔴 **Not yet propagated — flagged, not fixed:** `06-U2a-upsell2-opening-beats.md`'s entire pitch,
+both paths, is built on "Pixiu only guards, never calls new things toward you — the Manifestation
+Bracelet is the only thing that does that." That claim is now directly contradicted by Pi Chiu's
+pulling head. This needs a real re-differentiation pass (what does U2 offer that Pixiu's own
+pulling head doesn't?), not a quick word-swap — deliberately left open rather than rushed. Until
+this is resolved, `06-U2a` is inconsistent with the letter it follows.
+
+**Wired up Aiden's own subject line.** `06-E1-subject-lines-AIDEN-close-c.md` — the render was
+showing "subject: none found" because no E1 file existed yet for the Aiden variant, even though the
+subject/preheader text was already approved in-session (the "secret lead" copy). Created, matching
+the exact naming convention `render-be-esl-preview.mjs` looks for; confirmed the render now resolves
+it correctly.
+
+**Found and fixed a real cross-offer rendering bug, 2026-09-03.** Every letter's `## P.S. *(ships on
+every letter — settled 2026-08-10, no A/B)*` line — a structural marker in the markdown, same idea
+as `## Build notes` — was rendering LITERALLY in the preview HTML: the raw `##`, and the internal
+decision-tracking parenthetical, both visible as if they were part of the letter. Root cause:
+`parse()` specifically strips `## Build notes` (truncates the file from there), but nothing was
+stripping a one-line H2 like this — it fell through to the generic paragraph case. Fixed in
+`renderBlock()`: any bare `## ` line is now suppressed, matching how `## Build notes` already
+behaves. This is a shared-script fix, not offer-06-specific — confirmed present in and fixed across
+all 4 letters that carry this line (`close-c`, the Aiden variant, `kaucim`, `iching`); re-rendered
+all 4 and verified zero `##` leaks remain, with the real P.S. paragraph still rendering correctly.

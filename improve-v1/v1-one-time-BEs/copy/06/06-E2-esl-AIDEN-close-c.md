@@ -14,7 +14,7 @@ and the rest of the stuff flows."
 | **Device** | **none.** Same as `close-c` — no divination event |
 | **Structure** | Beat 0 (new, Aiden) → Beats 2–8 + P.S. (unchanged, Evelyn) — Beat 1 (Evelyn's own self-introduction) is dropped entirely; Aiden's handoff already does that job |
 | **Merge token** | `%FIRSTNAME%` → `{{ subscriber.first_name \| capitalize }}` on AWeber, same as every letter in this deck |
-| **Links** | two point to the booking page — `{{BOOKING_URL}}?c=1` (the close) and `?c=2` (the P.S.) — same numbering as `close-c`. Campaign-specific tracking params (to attribute conversions to this variant specifically) aren't added yet — a Phase A/analytics decision, not a copy one |
+| **Links** | three point to the booking page — `{{BOOKING_URL}}?c=1` (the close), `?c=2` (the P.S.), `?c=3` (the P.P.S., added 2026-09-03) — same numbering as `close-c`. Campaign-specific tracking params (to attribute conversions to this variant specifically) aren't added yet — a Phase A/analytics decision, not a copy one |
 | **Price** | never appears here — lives on the booking page |
 | **Base letter** | `06-E2-esl-product-creature-a-close-c.md` — read that file's own frontmatter + Build notes for the full history of everything from Beat 2 onward. This file's own Build notes only cover what's new: Beat 0 |
 
@@ -29,7 +29,7 @@ confirmed HTTP 200 before wiring it in). Every other letter using this script is
 `close-c`'s own render to confirm.
 
 **Images** — identical to `close-c`, same 12 files, same S3 hosting, but **its own images JSON**:
-`06-creature-a-images-aiden.json`, not the shared `06-creature-a-images.json` — same 12 image
+`06-creature-a-images-AIDEN.json`, not the shared `06-creature-a-images.json` — same 12 image
 mappings, plus the `_sender` key above. Kept separate on purpose, so adding Aiden's header here
 never affects how `close-c` itself renders. See `close-c`'s own image table for the file/provenance
 details; not reproduced here since nothing about the images changed.
@@ -51,23 +51,33 @@ details; not reproduced here since nothing about the images changed.
 
 Aiden here.
 
-Evelyn told me something last week she wasn't planning to tell anyone. I asked if I could send it
-to you anyway. She said yes.
+Evelyn Cross — a friend of mine, and one of the most trusted readers I know — told me something
+last week she wasn't planning to tell anyone. I asked if I could send it to you anyway. She said
+yes.
 
 I don't do myth — I calculate. This one isn't mine to explain. It's hers to tell, so here it is,
 exactly the way she told me.
 
+---
+
+<!-- HANDOFF · everything below the divider above is 06-E2-esl-product-creature-a-close-c.md's
+     Beat 2 onward, verbatim — copied, not rewritten, EXCEPT for the one-line bridge immediately
+     below, which is new (three passes). First draft dropped Evelyn's whole Beat 1 (the full
+     self-introduction paragraph, "I don't often write to you like this...") as redundant with
+     Aiden's handoff — operator feedback: without ANY marker, the myth reads as Aiden narrating in
+     detail right after he'd just said "I don't do myth," confusing, not just redundant. Second
+     pass added a bare "Evelyn here." — still a flow problem, jumped straight into the next `###`
+     heading with zero bridge. Third pass: a one-line bridge that calls back to what Aiden just
+     said, PLUS two structural fixes — (1) a `---` divider right at the actual handoff, so the two
+     voices are visually distinct, not just textually; (2) `[IMG-1]` moved from right after
+     Aiden's handoff line to right after Evelyn's own bridge line — it was appearing before she'd
+     said a word, which read as Aiden's image, not hers. The original letter always paired IMG-1
+     tightly with Evelyn's own voice; this restores that pairing. -->
+
+Evelyn here. Aiden wasn't supposed to send that — but since he did, let me tell it properly. It
+starts with this.
+
 `[IMG-1]`
-
-<!-- HANDOFF · everything below this line is 06-E2-esl-product-creature-a-close-c.md's Beat 2
-     onward, verbatim — copied, not rewritten, EXCEPT for the "Evelyn here." line immediately
-     below, which is new. First draft dropped Evelyn's whole Beat 1 (the full self-introduction
-     paragraph, "I don't often write to you like this...") as redundant with Aiden's handoff —
-     operator feedback: without ANY marker, the myth reads as Aiden narrating in detail right
-     after he'd just said "I don't do myth," which is confusing, not just redundant. Fix: keep the
-     bare minimum signal of the voice switch, not the whole paragraph. -->
-
-Evelyn here.
 
 ### What was this creature doing in the Emperor's court?
 
@@ -152,14 +162,17 @@ old telling I've ever read, and it's the reason the Emperor sealed him in the fi
 the entire reason he's worth anything to you at all. Wealth goes in. It does not come back out.
 Not because he's loyal. Because he's built that way.
 
-### How many horns does he actually have?
+### How many heads does he actually have?
 
 One more thing, worth pointing out before I go any further.
 
-You've probably heard that Pixiu attracts wealth — pulls it toward you. That's true of some of
-them. This one has two horns, though, and in the old tradition that makes him Bixie — the guardian,
-not the puller. He isn't built to chase down money that was never coming your way. He's built to
-guard what already reaches you, and once it's past him, it doesn't leave again.
+You've probably heard that Pixiu attracts wealth — pulls it toward you. You heard right. In the old
+tradition he's Pi Chiu, and he carries two heads for two different jobs. One head pulls: reaches
+out and draws toward you whatever's already somewhere within reach. The other keeps: takes what the
+first one pulls in and refuses to let it go again.
+
+Two heads, two jobs, one creature. He doesn't only hold on to what already finds you. He goes and
+finds more of it too.
 
 ### What have you actually told me?
 
@@ -230,10 +243,12 @@ more," they told me once. "It's just — still there."
 
 ### What this can't do
 
-I want to be equally honest with you about what this doesn't do. A creature with no exit can only
-keep what reaches him. He can't manufacture a fortune that was never coming. If nothing has come
-near you in a long while — no near-miss, nothing that got close and didn't land — this isn't what
-starts that. I think that's not you. I wouldn't have written all this if I thought it was.
+I want to be equally honest with you about what this doesn't do. Both heads work on what's real,
+not what's impossible. The pulling head draws toward you what's already somewhere within reach — it
+doesn't conjure a deal that was never going to happen for you at all. The keeping head only holds
+what actually arrives — it doesn't multiply it. If nothing has come near you in a long while, that's
+not something a season fixes. I think that's not you. I wouldn't have written all this if I thought
+it was.
 
 ### What happens after you say yes?
 
@@ -250,9 +265,9 @@ Here's what arrives, and how you wear it:
 Worn on the right, you'd be offering the seal to what you're sending out, not what's reaching you,
 which is the one way to take a thing built with no exit and hand it one anyway.
 
-I'm not going to tell you this fixes money in general. It doesn't put anything in front of you that
-wasn't already finding its way to you. What it does do: what already reaches you stops leaking back
-out before you've had the chance to close your hand around it.
+I'm not going to tell you this fixes money in general. It's not going to conjure a deal that was
+never realistically yours. What it does do: it pulls what's already somewhere in reach a little
+closer, and once it arrives, it doesn't let go again.
 
 [Let me send it]({{BOOKING_URL}}?c=1), and I'll walk you through the rest — where to send it, what
 to write on your one sentence, how to seal it in. Nothing complicated.
@@ -267,6 +282,9 @@ I hope this holds for you the way it was built to, dear.
 
 P.S. If you remember one thing from tonight, let it be this: he has no way out. That's not a
 detail, that's the whole mechanism. [It's ready to send whenever you are.]({{BOOKING_URL}}?c=2)
+
+P.P.S. Left wrist, %FIRSTNAME%, never the right — it's the one that receives.
+[Send it to me.]({{BOOKING_URL}}?c=3)
 
 ---
 
@@ -288,6 +306,20 @@ duplicating its history in this file would just be two copies to keep in sync.
   you that part too"), a Life Path/Pinnacle name-drop, and a closing line ("worth being let in
   on"). What survived is four lines: the claim, the ask-and-answer, the honest gap (calculates,
   doesn't do myth), the handoff.
+- **Evelyn given her full name + an authority marker, 2026-09-03 — operator: "lend authority to
+  Evelyn."** First draft just said "Evelyn," which means nothing to someone on Aiden's list who's
+  never heard of her — his subscribers know numerology, not her. Now: "Evelyn Cross — a friend of
+  mine, and one of the most trusted readers I know —" gives her full name (identifiable/credible)
+  and ties the trust specifically to her professional standing as a reader, not just personal
+  friendship, since that's the credibility that actually matters to a stranger deciding whether to
+  read further. Kept as one tight aside, not a fuller bio — the "no fluff" standing feedback still
+  applies.
+- **Proper lead-in to the image added, 2026-09-03 — operator: "need a proper way to segway to the
+  picture. its weird."** Real gap: nothing in Aiden's lead ever says "creature," "myth," or
+  anything else that tells the reader what's about to appear — his hook is about secrecy, not
+  content. So the labeled Pixiu diagram used to just appear with zero textual bridge. Fixed with
+  four words after Evelyn's bridge line: "It starts with this." — points at the image without
+  spoiling the "So. A very strange creature." reveal that still lands fresh right after it.
 - **The secrecy is honest, not invented.** "Evelyn wasn't going to tell anyone this" refers to the
   CONTEXT of the telling (not planned for a list) — not a claim that Pixiu mythology itself is
   secret knowledge. That distinction matters because Beat 4, a few paragraphs later, tells her
@@ -317,3 +349,13 @@ duplicating its history in this file would just be two copies to keep in sync.
   a full-corpus run to check Beat 0's new sentences don't collide with anything already in the
   corpus (the "the-tell" reference file isn't part of the checked corpus, so a echo of its specific
   phrasing wouldn't be caught automatically — worth a manual re-read against it before this ships).
+- **Beat 4/7/8 rewritten, 2026-09-03, to match `close-c.md`'s own two-headed Pi Chiu revision.**
+  Same change, same reasoning — see that file's own Build notes for the full explanation (operator
+  cultural source, checked against the real product photo first, Beat 3's anatomy untouched since
+  the second head isn't visually distinct on this casting). Applied here because this file
+  duplicates `close-c`'s Beats 2–8 verbatim; letting the two drift out of sync would mean the
+  "same letter, different sender" premise stops being true.
+- **A P.P.S. added, 2026-09-03 — operator: "add another PS. Remind them the left hand and add the
+  CTA there."** Third link, `c=3`, same wording as `close-c`'s own P.P.S. — reuses the established
+  left-wrist phrasing rather than inventing new copy for the same fact. Applied here for the same
+  sync reason as the Beat 4/7/8 change above.

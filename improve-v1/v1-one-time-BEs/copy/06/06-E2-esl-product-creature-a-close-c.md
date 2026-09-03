@@ -11,7 +11,7 @@ gets deleted). See `docs/06/0-WORKFLOW-06.md`'s Fourth-round section for why thi
 | **Device** | **none.** No divination event. The creature itself carries the letter — her problem doesn't arrive until late, after the anatomy and its symbolism are fully walked through |
 | **Structure** | creature-first symbolism reveal, her problem arrives late — operator direction, 2026-09-01. Rejects the earlier product-led hooks (the wrist instruction, the container-problem claim) as too weak to open on |
 | **Merge token** | `%FIRSTNAME%` → `{{ subscriber.first_name \| capitalize }}` on AWeber, as 02–04 |
-| **Links** | two point to the booking page — `{{BOOKING_URL}}?c=1` (the close) and `?c=2` (the P.S.) |
+| **Links** | three point to the booking page — `{{BOOKING_URL}}?c=1` (the close), `?c=2` (the P.S.), `?c=3` (the P.P.S., added 2026-09-03) |
 | **Price** | never appears here — lives on the booking page, statement 6 |
 | **Brief** | not yet merged into `docs/00a-BRIEFS-BEs.md` — see `docs/06/06-SPEC-wishing-bracelet.md` |
 | **Companion candidates** | `06-E2-esl-kaucim.md` / `06-E2-esl-iching.md` only — the reading-led direction, kept deliberately. Every product-led runner-up (5 named DR-architecture letters, creature-b, the unheaded original, 4 subheadline styles, close-a, close-b) was deleted 2026-09-02 once this file won — see `docs/06/0-WORKFLOW-06.md`'s Fourth-round audit note |
@@ -222,15 +222,18 @@ old telling I've ever read, and it's the reason the Emperor sealed him in the fi
 the entire reason he's worth anything to you at all. Wealth goes in. It does not come back out.
 Not because he's loyal. Because he's built that way.
 
-<!-- BEAT 4 · the horn detail, honest uncertainty -->
-### How many horns does he actually have?
+<!-- BEAT 4 · the two-headed reveal — Pi Chiu, one head pulls, one keeps, both real -->
+### How many heads does he actually have?
 
 One more thing, worth pointing out before I go any further.
 
-You've probably heard that Pixiu attracts wealth — pulls it toward you. That's true of some of
-them. This one has two horns, though, and in the old tradition that makes him Bixie — the guardian,
-not the puller. He isn't built to chase down money that was never coming your way. He's built to
-guard what already reaches you, and once it's past him, it doesn't leave again.
+You've probably heard that Pixiu attracts wealth — pulls it toward you. You heard right. In the old
+tradition he's Pi Chiu, and he carries two heads for two different jobs. One head pulls: reaches
+out and draws toward you whatever's already somewhere within reach. The other keeps: takes what the
+first one pulls in and refuses to let it go again.
+
+Two heads, two jobs, one creature. He doesn't only hold on to what already finds you. He goes and
+finds more of it too.
 
 <!-- BEAT 5 · pivot to her — VOC-grounded, arrives late on purpose -->
 ### What have you actually told me?
@@ -305,10 +308,12 @@ more," they told me once. "It's just — still there."
 
 ### What this can't do
 
-I want to be equally honest with you about what this doesn't do. A creature with no exit can only
-keep what reaches him. He can't manufacture a fortune that was never coming. If nothing has come
-near you in a long while — no near-miss, nothing that got close and didn't land — this isn't what
-starts that. I think that's not you. I wouldn't have written all this if I thought it was.
+I want to be equally honest with you about what this doesn't do. Both heads work on what's real,
+not what's impossible. The pulling head draws toward you what's already somewhere within reach — it
+doesn't conjure a deal that was never going to happen for you at all. The keeping head only holds
+what actually arrives — it doesn't multiply it. If nothing has come near you in a long while, that's
+not something a season fixes. I think that's not you. I wouldn't have written all this if I thought
+it was.
 
 <!-- BEAT 8 · offer + close — reorganized 2026-09-02, operator direction: fold the left-wrist
      ritual (previously its own mid-letter heading in Beat 6) into the close, and convert the
@@ -329,9 +334,9 @@ Here's what arrives, and how you wear it:
 Worn on the right, you'd be offering the seal to what you're sending out, not what's reaching you,
 which is the one way to take a thing built with no exit and hand it one anyway.
 
-I'm not going to tell you this fixes money in general. It doesn't put anything in front of you that
-wasn't already finding its way to you. What it does do: what already reaches you stops leaking back
-out before you've had the chance to close your hand around it.
+I'm not going to tell you this fixes money in general. It's not going to conjure a deal that was
+never realistically yours. What it does do: it pulls what's already somewhere in reach a little
+closer, and once it arrives, it doesn't let go again.
 
 [Let me send it]({{BOOKING_URL}}?c=1), and I'll walk you through the rest — where to send it, what
 to write on your one sentence, how to seal it in. Nothing complicated.
@@ -347,6 +352,9 @@ I hope this holds for you the way it was built to, dear.
 P.S. If you remember one thing from tonight, let it be this: he has no way out. That's not a
 detail, that's the whole mechanism. [It's ready to send whenever you are.]({{BOOKING_URL}}?c=2)
 
+P.P.S. Left wrist, %FIRSTNAME%, never the right — it's the one that receives.
+[Send it to me.]({{BOOKING_URL}}?c=3)
+
 ---
 
 ## Build notes
@@ -359,7 +367,7 @@ detail, that's the whole mechanism. [It's ready to send whenever you are.]({{BOO
 | 1 | Direct opening announcement | plain "tonight I want to tell you about a creature" register — no hook-device, no instruction, no claim |
 | 2 | Origin/myth | told with real fascination — the Jade Emperor's court, eating the treasury, the sealing |
 | 3 | Anatomy walkthrough | head → body → mouth → face → claws → tail → the sealed rear, each given its real symbolic meaning, building to the no-exit fact as the climax. Claws and tail added 2026-09-02 once independently verified — see below |
-| 4 | The horn detail | Confirmed two-horned Bixie (the guardian), stated plainly — no comparison to the one-horned Tianlu variant, 2026-09-02 |
+| 4 | The two-headed reveal | Pi Chiu, two heads — one pulls, one keeps. Superseded the horn/Bixie/Tianlu framing entirely, 2026-09-03 — see the newest Build notes bullet |
 | 5 | Pivot to her | VOC-grounded problem, arrives late on purpose — the creature has to be fully explained before it's relevant to her |
 | 6 | The object | materials, mantra, wish capsule. The left-wrist rule moved OUT of this beat, 2026-09-02 — see Beat 8 |
 | 7 | Precedent + honest limit | now two headed sub-sections ("Rosalind," "What this can't do") instead of unheaded paragraphs — added 2026-09-02, see below |
@@ -514,3 +522,40 @@ detail, that's the whole mechanism. [It's ready to send whenever you are.]({{BOO
   facts in the story changed. Same pass applied across the whole offer — booking page, order bump,
   thank-you page, both post-purchase emails, both upsell bridges — see
   `docs/06/0-WORKFLOW-06.md` for the full list.
+- **Beat 4 rewritten a fourth time, 2026-09-03 — operator, speaking as a firsthand cultural source
+  (not verified against external sources, per explicit instruction to stop searching and take the
+  lore directly): "the Chinese lore is Pi Chiu, since it's two headed, one captures wealth, the
+  other keeps wealth."** This supersedes the whole horn/Bixie/Tianlu framing from the three prior
+  Beat 4 rewrites above — not a terminology swap, a real change to what the product claims to do.
+  Confirmed through a short back-and-forth before writing anything: (1) this changes the product's
+  actual function, not just the mythological detail — the piece genuinely pulls new wealth toward
+  the buyer AND keeps what arrives, both real, not one real and one traditional-color; (2) checked
+  the real product photo (`assets/06-pixiu-product-real.png`) first, since the letter's whole
+  discipline has been "verified per-crop" for every other image — the second head is NOT visually
+  distinct on this specific casting (one clear head, the other end reads as scrollwork/medallion,
+  matching what Beat 3 already described), so no new anatomy image was generated or sourced; the
+  claim is functional/traditional, not something added to the anatomy walkthrough or its images.
+  Beat 3 (the physical anatomy walkthrough, all 7 crops) is untouched — still accurate to what's
+  visibly on the piece. Three things changed: Beat 4 now states the two-headed pull-and-keep
+  function directly (and can finally CONFIRM the popular "Pixiu attracts wealth" belief instead of
+  denying it, which reads more honestly than the old "that's true of some of them, not this one"
+  line); Beat 7's honest limit was rewritten because "he can't manufacture a fortune that was never
+  coming" is no longer true of a creature that actively pulls new wealth toward her — the new
+  version keeps the same honest-limit FUNCTION (still tells her plainly what it doesn't do — no
+  conjuring, no multiplying) using the two-headed frame instead; Beat 8's close line changed for the
+  same reason ("it doesn't put anything in front of you that wasn't already finding its way to you"
+  was the same now-false claim). Beat 5 (the pivot to her — "you have a containment problem, not an
+  attraction problem") is untouched: that's a diagnosis of HER stated words, not a claim about the
+  product's full capability, and stays accurate regardless of what else the product does.
+- ⚠ **Not yet propagated everywhere this assumption lived, as of this bullet.** `06-U2a-upsell2-opening-beats.md`'s
+  entire pitch, both paths, is built on "Pixiu only guards, never calls new things toward you — the
+  Manifestation Bracelet is the only thing that does that." That's now directly contradicted and
+  needs its own re-differentiation pass, not a quick patch — flagged, not fixed, as of this bullet.
+  `06-E1-subject-lines-product-creature-a-close-c.md`'s subject #5 also still says "two horns, not
+  one" and needs the same fix as this file's Beat 4. `06-E2-esl-AIDEN-close-c.md` duplicates this
+  letter's Beats 2–8 verbatim and needs the identical Beat 4/7/8 changes applied.
+- **A P.P.S. added, 2026-09-03 — operator: "add another PS. Remind them the left hand and add the
+  CTA there."** Third link in the letter, `c=3`. Reuses the exact left-wrist phrasing already
+  established in Beat 8 ("the one that receives") rather than inventing new wording for the same
+  fact — a callback for the reader who skims straight to the end, not a new claim. Same addition
+  applied to `06-E2-esl-AIDEN-close-c.md`, which shares this P.S. block verbatim.
