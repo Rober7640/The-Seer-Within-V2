@@ -21,7 +21,12 @@ import {
   formatUpsellPrice,
 } from "@/lib/upsellMessages";
 import { getTrackdeskClickId } from "@/lib/facebook";
-import { upsell1Copy, displayName, type Upsell1Chain } from "@/lib/backendOffers";
+import {
+  upsell1Copy,
+  displayName,
+  type Upsell1Chain,
+  type Upsell1Copy,
+} from "@/lib/backendOffers";
 import { currentFunnel, getPostHogFunnel, isTwinFlameOffer } from "@/lib/funnel";
 import { track as trackPH } from "@/lib/posthog";
 import { tarotEventProps } from "@/lib/tarotAttribution";
@@ -62,6 +67,10 @@ interface UseUpsellChatProps {
   sessionId: string | null;
   enabled: boolean;
   lavaStoneImage?: string;
+  // Injected copy/backend-mode for shared /offers/upsell/ pages. Both default to
+  // undefined, which preserves today's URL-based resolution exactly (V1 + 02).
+  copyOverride?: Upsell1Copy;
+  backendOverride?: boolean;
 }
 
 // ============================================
@@ -73,6 +82,8 @@ export function useUpsellChat({
   sessionId,
   enabled,
   lavaStoneImage,
+  copyOverride,
+  backendOverride,
 }: UseUpsellChatProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [stage, setStage] = useState<UpsellStage>("INIT");
@@ -96,7 +107,10 @@ export function useUpsellChat({
   // everywhere except the backend deck's offer 02, whose buyer bought a tarot
   // spread, never had an energy clearing, and is never asked a question.
   // Resolved once: the URL cannot change under a chat already in progress.
-  const copy = useMemo(() => upsell1Copy(), []);
+  const copy = useMemo(
+    () => copyOverride ?? upsell1Copy(),
+    [copyOverride],
+  );
 
   const upsellPriceLabel = formatUpsellPrice(userData?.upsell1PriceCents);
 
@@ -396,7 +410,7 @@ export function useUpsellChat({
     // The backend funnel charges its OWN endpoint (the `be_` product → BE list, no
     // Facebook/Google/Trackdesk) and sends NO trackdeskClickId (⛔ never on a backend
     // sale). V1's path and body are byte-identical.
-    const beFunnel = isTwinFlameOffer();
+    const beFunnel = backendOverride ?? isTwinFlameOffer();
 
     try {
       const response = await fetch(
@@ -475,7 +489,16 @@ export function useUpsellChat({
       setIsProcessing(false);
       setShowCTA(true);
     }
-  }, [sessionId, userData, copy, addUserMessage, sendBotMessage, sendBotMessages, p]);
+  }, [
+    sessionId,
+    userData,
+    copy,
+    addUserMessage,
+    sendBotMessage,
+    sendBotMessages,
+    p,
+    backendOverride,
+  ]);
 
   // Handle CTA Decline
   const handleDecline = useCallback(async () => {
@@ -502,7 +525,7 @@ export function useUpsellChat({
       try {
         // Backend: stamp the address onto the upsell PaymentIntent (the manual shipper
         // reads it off Stripe). V1: its own DB save. Byte-identical for V1.
-        const res = isTwinFlameOffer()
+        const res = (backendOverride ?? isTwinFlameOffer())
           ? await fetch("/api/backend/upsell/shipping", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -526,7 +549,7 @@ export function useUpsellChat({
         setIsComplete(true);
       }
     },
-    [sessionId, userData, processStage, sendBotMessage, upsellPaymentId],
+    [sessionId, userData, processStage, sendBotMessage, upsellPaymentId, backendOverride],
   );
 
   // Start on mount

@@ -101,7 +101,7 @@ export function skipEmail(search?: string): boolean {
 // The copy each prefix resolves to lives in lib/backendOffers.ts. This file
 // deliberately holds no copy, so routing can never depend on it.
 export const TWIN_FLAME_PREFIX = "/tarot/twin-flame"; // 02 Twin Flame Tarot
-export const JUDGEMENT_PREFIX = "/wiccan/judgement-day"; // 03 Judgement Day
+export const JUDGEMENT_PREFIX = "/offers/wiccan/judgement-day"; // 03 Judgement Day
 
 export const BACKEND_OFFER_PREFIXES = [
   TWIN_FLAME_PREFIX,
@@ -204,7 +204,7 @@ export function funnelPath(v1Path: string, pathname?: string): string {
 
 export type PostHogFunnel =
   | "soulmate" | "fb" | "fb2" | "gdn" | "palm" | "tarot" | "read" | "v1" | "evelyn" | "aiden"
-  | "marcus" | "luna" | "nova" | "maren" | "seven-seven";
+  | "marcus" | "luna" | "nova" | "maren" | "seven-seven" | "twinflame";
 
 // Generalized persona landers → their PostHog funnel name. One route each.
 const PERSONA_LANDER_FUNNELS: Record<string, PostHogFunnel> = {
@@ -222,6 +222,7 @@ function normalize(path: string): string {
 
 export function getPostHogFunnel(pathname?: string): PostHogFunnel | null {
   const p = normalize(pathname ?? currentPath());
+  if (p === TWIN_FLAME_PREFIX || p.startsWith(`${TWIN_FLAME_PREFIX}/`)) return "twinflame";
   if (p === "/soulmate" || p.startsWith("/soulmate/")) return "soulmate";
   const adDef = funnelDefForPath(p);
   if (adDef) return adDef.posthog as PostHogFunnel;
@@ -259,6 +260,14 @@ export function getPostHogStep(pathname?: string): string {
       if (p === "/welcome2") return "upsell2";
       if (p === "/success") return "thank_you";
       return "unknown";
+    case "twinflame": {
+      const sub = p.slice(TWIN_FLAME_PREFIX.length); // "" at the booking root
+      if (sub === "" || sub === "/preview-page" || sub === "/preview-chat") return "booking";
+      if (sub === "/welcome1") return "upsell1";
+      if (sub === "/welcome2") return "upsell2";
+      if (sub === "/success") return "thank_you";
+      return "unknown";
+    }
     case "fb":
     case "fb2":
     case "gdn":

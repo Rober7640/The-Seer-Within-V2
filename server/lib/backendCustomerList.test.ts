@@ -92,11 +92,19 @@ describe('purchaseListWrites — which list(s) she lands on', () => {
     ]);
   });
 
-  it('folds the bump tag into one write for an offer with no separate bump list', () => {
-    // 03 keeps the old single-list behaviour: one write, all tags, no second list.
-    const writes = purchaseListWrites('judgement-day', true);
-    expect(writes).toHaveLength(1);
-    expect(writes[0].tags).toEqual(['be-customer', 'be-03-judgement-day', 'be-03-bump']);
+  it('sends a Judgement Day buyer to 02s lists, distinguished only by the be-03 tags', () => {
+    // 03 REUSES 02's lists (6972552 initial / 6972554 bump); the operator sets up the
+    // 03 Campaign on those lists filtered on the be-03 tag. Two writes, like 02.
+    expect(purchaseListWrites('judgement-day', true)).toEqual([
+      { listId: '6972552', tags: ['be-customer', 'be-03-judgement-day'], role: 'initial' },
+      { listId: '6972554', tags: ['be-customer', 'be-03-judgement-day', 'be-03-bump'], role: 'bump' },
+    ]);
+  });
+
+  it('sends a Judgement Day reading buyer (no bump) to 02s initial list with the be-03 tag', () => {
+    expect(purchaseListWrites('judgement-day', false)).toEqual([
+      { listId: '6972552', tags: ['be-customer', 'be-03-judgement-day'], role: 'initial' },
+    ]);
   });
 });
 
@@ -119,7 +127,7 @@ describe('backend upsell routing — own products, own lists, walled off from V1
   });
 
   it('tags an upsell buyer with the base tags plus her product tag', () => {
-    expect(upsellPurchaseTags('be_protection_ritual')).toEqual([
+    expect(upsellPurchaseTags('twin-flame', 'be_protection_ritual')).toEqual([
       'be-customer',
       'be-02-twin-flame',
       'be-02-upsell1-protection',
@@ -134,14 +142,14 @@ describe('backend upsell routing — own products, own lists, walled off from V1
 });
 
 describe('addBackendCustomer', () => {
-  it('writes to the list in AWEBER_BE_CUSTOMER_LIST_ID', async () => {
+  it('writes a Judgement Day initial buyer to 02s initial list (6972552)', async () => {
     const f = okFetch();
     await addBackendCustomer({
       email: 'she@example.com',
       offer: 'judgement-day',
       stripeOrderId: 'cs_test_1',
     });
-    expect(f.mock.calls[0][0]).toContain('/accounts/acct-test/lists/list-test/subscribers');
+    expect(f.mock.calls[0][0]).toContain('/accounts/acct-test/lists/6972552/subscribers');
   });
 
   it('sends the offer tag that fires her thank-you', async () => {
@@ -151,12 +159,26 @@ describe('addBackendCustomer', () => {
       firstName: 'Sarah',
       offer: 'judgement-day',
       stripeOrderId: 'cs_test_1',
-      bumpPurchased: true,
     });
+    // No bump → the single initial write to 6972552 carries the thank-you tag.
     const body = sentBody(f);
-    expect(body.tags).toEqual(['be-customer', 'be-03-judgement-day', 'be-03-bump']);
+    expect(body.tags).toEqual(['be-customer', 'be-03-judgement-day']);
     expect(body.name).toBe('Sarah');
     expect(body.update_existing).toBe(true);
+  });
+
+  it('writes a bump buyer to BOTH 02s lists with the be-03 tags', async () => {
+    const f = okFetch();
+    await addBackendCustomer({
+      email: 'she@example.com',
+      offer: 'judgement-day',
+      stripeOrderId: 'cs_test_1b',
+      bumpPurchased: true,
+    });
+    expect(f).toHaveBeenCalledTimes(2);
+    expect(f.mock.calls[0][0]).toContain('/lists/6972552/subscribers'); // initial
+    expect(f.mock.calls[1][0]).toContain('/lists/6972554/subscribers'); // bump
+    expect(JSON.parse(f.mock.calls[1][1].body).tags).toEqual(['be-customer', 'be-03-judgement-day', 'be-03-bump']);
   });
 
   it('never sends an empty custom_fields object', async () => {
@@ -268,6 +290,7 @@ describe('addBackendUpsellCustomer — the upsell lands on its OWN list', () => 
       email: 'she@example.com',
       firstName: 'Sarah',
       productKey: 'be_protection_ritual',
+      offer: 'twin-flame',
     });
     expect(f.mock.calls[0][0]).toContain('/lists/6972555/subscribers');
     const body = sentBody(f);
@@ -280,9 +303,30 @@ describe('addBackendUpsellCustomer — the upsell lands on its OWN list', () => 
     const result = await addBackendUpsellCustomer({
       email: 'she@example.com',
       productKey: 'protection_ritual',
+      offer: 'twin-flame',
     });
     expect(result.success).toBe(false);
     expect(f).not.toHaveBeenCalled();
+  });
+});
+
+describe('per-offer upsell tags', () => {
+  it('keeps 02 tags byte-identical', () => {
+    expect(upsellPurchaseTags('twin-flame', 'be_protection_ritual'))
+      .toEqual(['be-customer', 'be-02-twin-flame', 'be-02-upsell1-protection']);
+    expect(upsellPurchaseTags('twin-flame', 'be_bracelet'))
+      .toEqual(['be-customer', 'be-02-twin-flame', 'be-02-upsell2-bracelet']);
+  });
+
+  it('emits be-03 tags for a judgement-day upsell buyer', () => {
+    expect(upsellPurchaseTags('judgement-day', 'be_protection_ritual'))
+      .toEqual(['be-customer', 'be-03-judgement-day', 'be-03-upsell1-protection']);
+    expect(upsellPurchaseTags('judgement-day', 'be_bracelet'))
+      .toEqual(['be-customer', 'be-03-judgement-day', 'be-03-upsell2-bracelet']);
+  });
+
+  it('returns [] for an unknown product', () => {
+    expect(upsellPurchaseTags('twin-flame', 'be_nope')).toEqual([]);
   });
 });
 

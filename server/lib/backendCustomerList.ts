@@ -77,6 +77,11 @@ export const BACKEND_OFFERS: Record<BackendOfferKey, BackendOfferListing> = {
     tag: 'be-03-judgement-day',
     bumpTag: 'be-03-bump',
     deliveredTag: 'be-03-delivered',
+    // Operator (2026-09-02): 03 REUSES 02's AWeber lists — initial 6972552, bump
+    // 6972554 — and is distinguished only by TAG (be-03-*). The 03 Campaigns are set
+    // up on those lists, filtered on the be-03 tag, manually. Shared lists, per-offer tags.
+    initialListId: '6972552',
+    bumpListId: '6972554',
   },
 };
 
@@ -136,6 +141,9 @@ export interface BackendUpsellListing {
   name: string;
   listId: string;
   tag: string;
+  /** The product half of the tag (`upsell1-protection`), joined to the offer's
+   *  number to make a per-offer tag: `be-03-upsell1-protection`. */
+  tagSuffix: string;
   /** Full price in cents. Same as V1's ($47 / $47). */
   priceCents: number;
   /** The downsell price in cents, where the offer has one (Bracelet: $30). */
@@ -148,6 +156,7 @@ export const BACKEND_UPSELLS: Record<string, BackendUpsellListing> = {
     name: 'Protection Ritual',
     listId: '6972555',
     tag: 'be-02-upsell1-protection',
+    tagSuffix: 'upsell1-protection',
     priceCents: 4700,
   },
   be_bracelet: {
@@ -155,6 +164,7 @@ export const BACKEND_UPSELLS: Record<string, BackendUpsellListing> = {
     name: 'Manifestation Bracelet',
     listId: '6972556',
     tag: 'be-02-upsell2-bracelet',
+    tagSuffix: 'upsell2-bracelet',
     priceCents: 4700,
     downsellCents: 3000,
   },
@@ -168,11 +178,13 @@ export function backendUpsellFor(
   return BACKEND_UPSELLS[productKey] ?? null;
 }
 
-/** Tags for a BE upsell buyer: the base pair (customer + offer 02) plus her product tag. */
-export function upsellPurchaseTags(productKey: string): string[] {
+/** Tags for a BE upsell buyer: the shared tag, her ORIGINATING offer's tag, and the
+ *  per-offer product tag (`be-03-upsell1-protection`). */
+export function upsellPurchaseTags(offer: BackendOfferKey, productKey: string): string[] {
   const listing = BACKEND_UPSELLS[productKey];
   if (!listing) return [];
-  return [BE_CUSTOMER_TAG, BACKEND_OFFERS['twin-flame'].tag, listing.tag];
+  const offerListing = BACKEND_OFFERS[offer];
+  return [BE_CUSTOMER_TAG, offerListing.tag, `be-${offerListing.number}-${listing.tagSuffix}`];
 }
 
 /** Tag to apply when her reading has been produced and can be linked. */

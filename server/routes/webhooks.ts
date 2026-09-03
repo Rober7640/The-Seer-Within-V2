@@ -16,7 +16,9 @@ import { recordBraceletOrder } from '../lib/braceletOrders';
 import { recordBackendOrder } from '../lib/beOrders';
 import { addBackendUpsellCustomer } from '../lib/aweber';
 import { backendUpsellFor } from '../lib/backendCustomerList';
-import { BACKEND_STRIPE_PRODUCT_PREFIX } from '@shared/backendOffers';
+import { buildBackendPurchaseEvent, utmsFromMetadata } from '../lib/backendPurchaseAnalytics';
+import { BACKEND_STRIPE_PRODUCT_PREFIX, resolveOfferKey } from '@shared/backendOffers';
+import { recordBackendUpsellOrder } from '../lib/beUpsellOrders';
 import { migrateAndEmailFunnelUser } from '../lib/funnelMigrationEmail';
 import { fireGoogleAdsConversion, gadsStepForProduct } from '../lib/googleAds';
 import { maybeSchedulePostPurchaseDrip } from '../lib/postPurchaseDripTrigger';
@@ -1029,6 +1031,25 @@ router.post('/stripe', async (req: Request, res: Response) => {
     // Stripe retry a charge we have already banked.
     if (product?.startsWith(BACKEND_STRIPE_PRODUCT_PREFIX)) {
       const beUpsell = backendUpsellFor(product);
+
+      // PostHog revenue (BE-only; Meta/GAds/Trackdesk stay blind by design). Deterministic
+      // uuid = session.id so Stripe retries + the thank-you re-record dedupe. Browser-
+      // independent: a buyer who closes the tab still counts.
+      if ((session.amount_total ?? 0) > 0 && email) {
+        posthog.capture(
+          buildBackendPurchaseEvent({
+            product,
+            offer: resolveOfferKey(metadata) ?? 'twin-flame',
+            amountCents: session.amount_total ?? 0,
+            email,
+            distinctId: metadata.posthogDistinctId,
+            utm: utmsFromMetadata(metadata),
+            dedupeId: session.id,
+            bumpProduct: metadata.bumpProduct,
+          }),
+        );
+      }
+
       if (beUpsell) {
         // A BE UPSELL bought via HOSTED checkout (the 1-click fallback). The 1-click
         // happy path writes from payment_intent.succeeded; this covers the fallback.
@@ -1036,10 +1057,12 @@ router.post('/stripe', async (req: Request, res: Response) => {
         const upsellEmail =
           session.customer_details?.email || session.customer_email || metadata.email || null;
         if (upsellEmail) {
+          const offer = resolveOfferKey(metadata) ?? 'twin-flame';
           await addBackendUpsellCustomer({
             email: upsellEmail,
             firstName: metadata.firstName,
             productKey: beUpsell.productKey,
+            offer,
           }).catch((err) =>
             logger.error('BE upsell fallback list write FAILED — buyer paid:', err),
           );
@@ -1222,22 +1245,42 @@ router.post('/stripe', async (req: Request, res: Response) => {
       }).catch(() => { /* logged inside */ });
     }
 
-    // Backend upsell (1-click): put her on the upsell's OWN list. The tracking above
+    // Backend upsell (1-click): record the sale (per offer) and put her on the
+    // upsell's own list with her originating offer's tag. The tracking above
     // no-opped (a `be_` product is unknown to those mappers), and V1's own upsell
     // products never match backendUpsellFor — so V1's flow is untouched.
     const beUpsell = backendUpsellFor(metadata.product);
-    if (beUpsell && metadata.email) {
-      await addBackendUpsellCustomer({
-        email: metadata.email,
-        firstName: metadata.firstName,
-        productKey: beUpsell.productKey,
-      }).catch((err) =>
-        logger.error('BE upsell list write FAILED — buyer paid, may miss her email', {
-          pi: pi.id,
-          product: metadata.product,
-          error: err instanceof Error ? err.message : String(err),
-        }),
-      );
+    if (beUpsell) {
+      // PostHog revenue (BE-only). Deterministic uuid = pi.id dedupes Stripe retries.
+      if (pi.amount > 0 && metadata.email) {
+        posthog.capture(
+          buildBackendPurchaseEvent({
+            product: metadata.product,
+            offer: resolveOfferKey(metadata) ?? 'twin-flame',
+            amountCents: pi.amount,
+            email: metadata.email,
+            distinctId: metadata.posthogDistinctId,
+            utm: utmsFromMetadata(metadata),
+            dedupeId: pi.id,
+          }),
+        );
+      }
+      await recordBackendUpsellOrder(pi); // idempotent, self-logging, never throws
+      if (metadata.email) {
+        const offer = resolveOfferKey(metadata) ?? 'twin-flame';
+        await addBackendUpsellCustomer({
+          email: metadata.email,
+          firstName: metadata.firstName,
+          productKey: beUpsell.productKey,
+          offer,
+        }).catch((err) =>
+          logger.error('BE upsell list write FAILED — buyer paid, may miss her email', {
+            pi: pi.id,
+            product: metadata.product,
+            error: err instanceof Error ? err.message : String(err),
+          }),
+        );
+      }
     }
   }
 

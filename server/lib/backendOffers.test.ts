@@ -117,30 +117,24 @@ describe('a pay-what-you-want offer (03)', () => {
 });
 
 describe('the after-the-money gate', () => {
-  // 🔴 The rule this exists for: a paid product must never fail to arrive. 03's
-  // thank-you screen does not render and its ACT intake does not exist, so it must
-  // refuse money however it is asked — including after somebody flips the client's
-  // BACKEND_CHECKOUT_LIVE switch for 02.
-  it('refuses an offer whose after-the-money screens do not exist yet', () => {
-    const r = resolveBackendCharge({ offer: 'judgement-day', amountCents: 4000 });
-    expect(r.ok).toBe(false);
-    if (!r.ok) expect(r.code).toBe('not_ready');
-  });
-
-  it('refuses it before pricing, so a perfectly valid amount still cannot pay', () => {
-    // Same amount that prices fine through the pure path above.
-    expect(charged(priceJudgement({ amountCents: 4000 })).totalCents).toBe(4000);
-    expect(resolveBackendCharge({ offer: 'judgement-day', amountCents: 4000 }).ok).toBe(false);
-  });
-
+  // The rule this exists for: a paid product must never fail to arrive. The gate
+  // refuses money when after-the-money screens do not exist yet (including thankyou
+  // and intake). Once screens render and flow exists, readyForMoney flips true.
   it('lets a ready offer through', () => {
     expect(resolveBackendCharge({ offer: 'twin-flame' }).ok).toBe(true);
+    // 03's thank-you renders (Task 6); upsell chain wired (Task 7). Intake is
+    // out of scope — booking directs her to reply by email instead.
+    expect(resolveBackendCharge({ offer: 'judgement-day', amountCents: 4000 }).ok).toBe(true);
   });
 
-  it('never marks an offer ready while its Entry form is missing on an ACT offer', () => {
-    // 03 is the deck's only ACT offer. If someone sets readyForMoney without setting
-    // entryPath, this catches it: fulfilment would have no way to ask for the Entry.
-    if (JUDGEMENT.readyForMoney) expect(JUDGEMENT.entryPath).toBeTruthy();
+  it('charges what an ACT offer giver chose, and allows the bump', () => {
+    // 03's arithmetic is provable long before 03 is allowed to take money. Now
+    // that readyForMoney is true, the gate does not refuse it — the amount gates.
+    const r = charged(resolveBackendCharge({ offer: 'judgement-day', amountCents: 4000 }));
+    expect(r.readingCents).toBe(4000);
+    expect(r.totalCents).toBe(4000);
+    const withBump = charged(resolveBackendCharge({ offer: 'judgement-day', amountCents: 4000, bump: true }));
+    expect(withBump.bumpCents).toBe(JUDGEMENT_BUMP_CENTS);
   });
 });
 
@@ -200,5 +194,42 @@ describe('backendOrderDescriptor — the Stripe Dashboard label', () => {
     expect(backendOrderDescriptor('twin-flame', true)).toBe(
       'BE 02 · The Twin Flame Tarot Reading + Astro Force instructional',
     );
+  });
+});
+
+import {
+  resolveOfferKey,
+  backendUpsellDescriptor,
+  upsellChargeFields,
+} from '@shared/backendOffers';
+
+describe('upsell offer resolution + description', () => {
+  it('resolves the offer from metadata.offer when valid', () => {
+    expect(resolveOfferKey({ offer: 'judgement-day' })).toBe('judgement-day');
+  });
+
+  it('falls back to the offer that owns the Stripe product', () => {
+    expect(resolveOfferKey({ product: 'be_judgement_day' })).toBe('judgement-day');
+    expect(resolveOfferKey({ product: 'be_twin_flame' })).toBe('twin-flame');
+  });
+
+  it('returns null when nothing resolves', () => {
+    expect(resolveOfferKey({ offer: 'nope', product: 'be_unknown' })).toBeNull();
+    expect(resolveOfferKey(null)).toBeNull();
+  });
+
+  it('builds the BE <number> description per offer', () => {
+    expect(backendUpsellDescriptor('twin-flame', 'Protection Ritual', false))
+      .toBe('BE 02 · Protection Ritual');
+    expect(backendUpsellDescriptor('judgement-day', 'Manifestation Bracelet', true))
+      .toBe('BE 03 · Manifestation Bracelet (downsell)');
+  });
+
+  it('upsellChargeFields resolves offer + description together, defaulting to twin-flame', () => {
+    expect(upsellChargeFields({ offer: 'judgement-day' }, 'Protection Ritual', false))
+      .toEqual({ offer: 'judgement-day', description: 'BE 03 · Protection Ritual' });
+    // Unresolvable → the historical default, so a mis-stamped session never 500s.
+    expect(upsellChargeFields({}, 'Protection Ritual', false))
+      .toEqual({ offer: 'twin-flame', description: 'BE 02 · Protection Ritual' });
   });
 });

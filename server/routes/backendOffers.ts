@@ -5,6 +5,7 @@ import {
   isBackendOfferKey,
   isBookingTreatment,
   resolveBackendCharge,
+  upsellChargeFields,
   type BookingTreatment,
 } from '@shared/backendOffers';
 import { getBeOrderBySession, recordBackendOrder, writeToCustomerList } from '../lib/beOrders';
@@ -42,6 +43,38 @@ const router = Router();
 /** Names have spaces and apostrophes; anything past this is somebody playing with the
  *  query string, not a name. Matches the client's own cap (lib/funnel.ts). */
 const MAX_FIRST_NAME = 40;
+
+// The attribution metadata keys we carry through Stripe. All five UTMs, because Joel
+// may put his tag in any one of them, plus the browser distinct id.
+const PH_UTM_KEYS = ['utm_campaign', 'utm_source', 'utm_medium', 'utm_content', 'utm_term'] as const;
+
+/** Pull the PostHog attribution fields off a request body (checkout) into a flat,
+ *  length-capped metadata patch. Only present keys are emitted, so Stripe metadata
+ *  stays lean and the purchase event's props are present-or-absent cleanly. */
+function posthogMetaFromBody(body: unknown): Record<string, string> {
+  const b = (body ?? {}) as { posthogDistinctId?: unknown; utm?: Record<string, unknown> };
+  const out: Record<string, string> = {};
+  if (typeof b.posthogDistinctId === 'string' && b.posthogDistinctId)
+    out.posthogDistinctId = b.posthogDistinctId.slice(0, 200);
+  const utm = b.utm && typeof b.utm === 'object' ? (b.utm as Record<string, unknown>) : {};
+  for (const k of PH_UTM_KEYS) {
+    const v = utm[k];
+    if (typeof v === 'string' && v) out[k] = v.slice(0, 200);
+  }
+  return out;
+}
+
+/** The same keys, copied off an existing Stripe metadata bag (the booking session),
+ *  so the 1-click upsell PI carries attribution without the browser re-sending it. */
+function posthogMetaFromStripe(meta: Record<string, string | undefined> | null | undefined): Record<string, string> {
+  const m = meta ?? {};
+  const out: Record<string, string> = {};
+  for (const k of ['posthogDistinctId', ...PH_UTM_KEYS]) {
+    const v = m[k];
+    if (typeof v === 'string' && v) out[k] = v;
+  }
+  return out;
+}
 
 function baseUrl(req: Request): string {
   const proto = (req.headers['x-forwarded-proto'] as string) || req.protocol || 'https';
@@ -227,6 +260,14 @@ router.post('/upsell/charge', async (req: Request, res: Response) => {
           }
         : undefined;
 
+    // Attribute the upsell to the offer she actually booked (from the booking
+    // session), not a hardcoded '02'. Defaults to twin-flame if unresolved.
+    const { offer: chargeOffer, description: chargeDescription } = upsellChargeFields(
+      session.metadata,
+      upsell.name,
+      isDownsell,
+    );
+
     const charge = await stripe.paymentIntents.create({
       amount: amountCents,
       currency: 'usd',
@@ -234,14 +275,14 @@ router.post('/upsell/charge', async (req: Request, res: Response) => {
       payment_method: paymentMethodId,
       off_session: true,
       confirm: true,
-      description: `BE 02 · ${upsell.name}${isDownsell ? ' (downsell)' : ''}`,
+      description: chargeDescription,
       ...(shipping ? { shipping } : {}),
       metadata: {
         // ⛔ The `be_` key. Unknown to every V1 webhook branch → no Meta CAPI, no
         // Google Ads, no Trackdesk. The BE webhook branch routes it to the offer's
         // own list (be_protection_ritual→6972555, be_bracelet→6972556).
         product: upsell.productKey,
-        offer: 'twin-flame',
+        offer: chargeOffer,
         originalSession: sessionId,
         flow: '1click',
         ...(isDownsell ? { type: 'downsell' } : {}),
@@ -249,6 +290,9 @@ router.post('/upsell/charge', async (req: Request, res: Response) => {
         // upsell list without re-fetching the booking session.
         ...(sessionEmail ? { email: sessionEmail } : {}),
         ...(buyerName ? { firstName: buyerName } : {}),
+        // Attribution copied off the booking session so payment_intent.succeeded can
+        // fire the BE revenue event with the same distinct id + UTM as the booking.
+        ...posthogMetaFromStripe(session.metadata),
       },
     });
 
@@ -415,6 +459,9 @@ router.post('/checkout', async (req: Request, res: Response) => {
         ...(typeof req.body?.expSubject === 'string' && req.body.expSubject
           ? { expSubject: req.body.expSubject.slice(0, 64) }
           : {}),
+        // PostHog attribution — distinct id + link UTM, read back by the webhook's
+        // BE revenue event. NOT a product/behaviour key; nothing branches on these.
+        ...posthogMetaFromBody(req.body),
       },
       payment_intent_data: {
         // The Stripe Dashboard's Description column, prefixed `BE <nn>` so a backend

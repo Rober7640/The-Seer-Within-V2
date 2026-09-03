@@ -44,7 +44,7 @@ import {
 // deep link, a shared URL — is sent back to step 1. Consent that was not given
 // in this page's lifetime is not assumed.
 
-const BOOKING_PATH = '/wiccan/judgement-day'
+const BOOKING_PATH = '/offers/wiccan/judgement-day'
 
 function centsToDollars(cents: number): string {
   return `$${(cents / 100).toFixed(2)}`
