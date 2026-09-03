@@ -1,6 +1,7 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { CosmicBackground } from '@/components/CosmicBackground'
 import { bookingFirstName } from '@/lib/funnel'
+import { track as trackPH } from '@/lib/posthog'
 import { beginBackendCheckout } from '@/lib/backendCheckout'
 import {
   PAGE_HEADER,
@@ -59,6 +60,18 @@ export default function TwinFlameBookingPage() {
   // so every screen after the money greets her properly.
   const firstName = useMemo(() => bookingFirstName(), [])
 
+  // The order bump is inline on this treatment, so it is "offered" the moment the
+  // page renders. Mirrors fb-read's `bump_offered` exposure so the two funnels line
+  // up in PostHog. funnel:'twinflame' slots it straight into the Twin Flame dashboard.
+  useEffect(() => {
+    trackPH('bump_offered', {
+      funnel: 'twinflame',
+      step: 'sales',
+      price_cents: TWIN_FLAME_BUMP_CENTS,
+      treatment: 'page',
+    })
+  }, [])
+
   const toggle = (index: number) =>
     setChecked((prev) => prev.map((v, i) => (i === index ? !v : v)))
 
@@ -68,6 +81,16 @@ export default function TwinFlameBookingPage() {
     if (busy) return
     setBusy(true)
     setCheckoutError(null)
+    // She has started the checkout — the counterpart to fb-read's `checkout_initiated`,
+    // so the Twin Flame funnel gets a lander_view → checkout_initiated → purchase step.
+    trackPH('checkout_initiated', {
+      funnel: 'twinflame',
+      step: 'sales',
+      product: 'be_twin_flame',
+      price_cents: totalCents,
+      bump: bumpTaken,
+      treatment: 'page',
+    })
     const result = await beginBackendCheckout({
       offer: 'twin-flame',
       treatment: 'page',
