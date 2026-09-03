@@ -1,6 +1,7 @@
 import { Router, type Request, type Response } from 'express';
 import { getStripe } from '../lib/stripeAccount';
 import {
+  BACKEND_OFFER_CATALOG,
   backendOrderDescriptor,
   isBackendOfferKey,
   isBookingTreatment,
@@ -305,6 +306,124 @@ router.post('/upsell/charge', async (req: Request, res: Response) => {
       err: err instanceof Error ? err.message : String(err),
     });
     return res.json({ success: false, fallback: true });
+  }
+});
+
+// Hosted-checkout FALLBACK for a BE upsell (A7). The 1-click OFF-SESSION charge on the
+// card saved at booking is declined by cards that reject off-session PIs — Indian cards
+// outright, and any card that needs 3DS/SCA, which cannot be authenticated off-session.
+// Without this she loops on "that didn't go through" forever. This mirrors V1's
+// /api/upsell/fallback-checkout: build a HOSTED Stripe Checkout Session for the SAME
+// `be_` upsell product, where she authenticates and pays. On success the webhook's
+// checkout.session.completed `be_` branch records the sale + fires PostHog (already
+// built — no webhook change). ⛔ Still a `be_` product → invisible to Meta/Google/
+// Trackdesk; 🔴 NEVER carry trackdeskClickId here.
+router.post('/upsell/fallback-checkout', async (req: Request, res: Response) => {
+  const sessionId =
+    typeof req.body?.checkoutSessionId === 'string' ? req.body.checkoutSessionId : '';
+  if (!sessionId) return res.status(400).json({ error: 'Missing checkoutSessionId' });
+
+  const bodyEmail = typeof req.body?.email === 'string' ? req.body.email : null;
+
+  // Same product/tier resolution as /upsell/charge: U1's lean body defaults to the
+  // Protection Ritual at full price; U2 sends product:'be_bracelet' + optional tier.
+  const productKey =
+    typeof req.body?.product === 'string' && BACKEND_UPSELLS[req.body.product]
+      ? (req.body.product as string)
+      : 'be_protection_ritual';
+  const upsell = BACKEND_UPSELLS[productKey];
+  const isDownsell = req.body?.tier === 'downsell' && typeof upsell.downsellCents === 'number';
+  const amountCents = isDownsell ? (upsell.downsellCents as number) : upsell.priceCents;
+
+  const stripe = getStripe();
+  if (!stripe) return res.status(503).json({ error: 'Checkout is temporarily unavailable.' });
+
+  try {
+    const booking = await stripe.checkout.sessions.retrieve(sessionId);
+    // Must be a PAID backend booking — never build a fallback off a V1 or unpaid session.
+    if (!booking.metadata?.product?.startsWith('be_') || booking.payment_status !== 'paid') {
+      return res.status(404).json({ error: 'not a paid backend order' });
+    }
+
+    // Ownership: the email the page holds must match the one on the paid session
+    // (mirrors /upsell/charge). A mismatch means someone else's session id was supplied.
+    const sessionEmail = booking.customer_details?.email || booking.customer_email || null;
+    if (bodyEmail && sessionEmail && sessionEmail.toLowerCase() !== bodyEmail.toLowerCase()) {
+      return res.status(403).json({ error: 'ownership check failed' });
+    }
+    const email = bodyEmail || sessionEmail || '';
+    const firstName = booking.metadata?.firstName || booking.customer_details?.name || 'Friend';
+    const offer = isBackendOfferKey(booking.metadata?.offer) ? booking.metadata.offer : 'twin-flame';
+    const catalog = BACKEND_OFFER_CATALOG[offer];
+    if (!catalog.upsellEntryPath) {
+      return res.status(400).json({ error: 'offer has no upsell chain' });
+    }
+
+    // The upsell chain lives under the offer's upsell entry (…/welcome1); welcome2 is
+    // its sibling. After U1 she flows on to U2 (welcome2); after U2 she reaches the
+    // receipt. The next page reads the BOOKING session_id, exactly as the 1-click path.
+    const upsellBase = catalog.upsellEntryPath.replace(/\/welcome1$/, '');
+    const isUpsell2 = productKey === 'be_bracelet';
+    const origin = baseUrl(req);
+    const sid = encodeURIComponent(sessionId);
+    const successUrl = isUpsell2
+      // The two offers' thank-you pages read different params by design — Judgement Day
+      // reads `s`, Twin Flame reads `session_id`. Carry BOTH so either resolves the order.
+      ? `${origin}${catalog.successPath}?s=${sid}&session_id=${sid}&fallback_session_id={CHECKOUT_SESSION_ID}`
+      : `${origin}${upsellBase}/welcome2?session_id=${sid}&fallback_session_id={CHECKOUT_SESSION_ID}`;
+    const cancelUrl = isUpsell2
+      ? `${origin}${upsellBase}/welcome2?session_id=${sid}&declined=true`
+      : `${origin}${upsellBase}/welcome1?session_id=${sid}&declined=true`;
+
+    const { description } = upsellChargeFields(booking.metadata, upsell.name, isDownsell);
+    // Inherit PostHog attribution (distinct id + UTM) off the booking session so a
+    // fallback purchase still attributes to her originating link. Reuses the helper the
+    // booking + 1-click paths already use.
+    const phMeta = posthogMetaFromStripe(booking.metadata);
+
+    const beMeta: Record<string, string> = {
+      product: productKey,
+      offer,
+      originalSession: sessionId,
+      ...(isDownsell ? { type: 'downsell' } : {}),
+      ...(email ? { email } : {}),
+      ...(firstName ? { firstName } : {}),
+    };
+
+    const session = await stripe.checkout.sessions.create({
+      mode: 'payment',
+      payment_method_types: ['card'],
+      ...(email ? { customer_email: email } : {}),
+      line_items: [
+        {
+          price_data: {
+            currency: 'usd',
+            product_data: { name: upsell.name },
+            unit_amount: amountCents,
+          },
+          quantity: 1,
+        },
+      ],
+      // Physical item — collect the shipping address on the hosted page; the manual
+      // shipper reads it off the Stripe payment (same as the 1-click path's shipping).
+      shipping_address_collection: {
+        allowed_countries: ['US', 'CA', 'GB', 'AU', 'NZ', 'SG', 'IN'],
+      },
+      success_url: successUrl,
+      cancel_url: cancelUrl,
+      payment_intent_data: { description, metadata: beMeta },
+      // ⛔ `be_` product → unknown to every V1 webhook branch. 🔴 NEVER trackdeskClickId.
+      metadata: { app: 'the-seer-within', ...beMeta, ...phMeta },
+    });
+
+    if (!session.url) {
+      logger.error('backend/upsell/fallback-checkout: Stripe returned no url', { offer, productKey });
+      return res.status(502).json({ error: 'Checkout could not be started. Please try again.' });
+    }
+    return res.json({ url: session.url });
+  } catch (err) {
+    logger.error('backend/upsell/fallback-checkout failed:', err);
+    return res.status(500).json({ error: 'Checkout failed' });
   }
 });
 

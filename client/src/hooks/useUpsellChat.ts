@@ -441,14 +441,32 @@ export function useUpsellChat({
         setShowShippingForm(true);
         setStage("SHIPPING");
       } else if (result.fallback && beFunnel) {
-        // Backend, first build: the off-session charge on her saved card was declined
-        // and there is no hosted BE upsell fallback yet (A7). Fail gracefully — let her
-        // retry rather than redirect to an endpoint that does not exist.
-        await sendBotMessage(
-          "That didn't go through on your saved card, dear. Give it another moment and try once more.",
-        );
-        setIsProcessing(false);
-        setShowCTA(true);
+        // The off-session charge on her saved card was declined (Indian cards reject
+        // off-session PIs; 3DS cards can't authenticate off-session). Send her to a
+        // HOSTED Stripe checkout where she can authenticate and pay — the BE equivalent
+        // of V1's fallback (A7). The webhook records the sale + fires PostHog on success.
+        trackPH("upsell_fallback_redirect", {
+          funnel: getPostHogFunnel() ?? "twinflame",
+          step: "upsell1",
+          product: "be_protection_ritual",
+        });
+        await sendBotMessage("Let me set up a secure payment page for you...");
+        const fallbackResponse = await fetch("/api/backend/upsell/fallback-checkout", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ checkoutSessionId: sessionId, email: userData.email }),
+        });
+        const { url } = await fallbackResponse.json().catch(() => ({}) as { url?: string });
+        if (url) {
+          window.location.href = url;
+        } else {
+          // Even the hosted page could not be created — let her retry rather than strand her.
+          await sendBotMessage(
+            "That didn't go through, dear. Give it another moment and try once more.",
+          );
+          setIsProcessing(false);
+          setShowCTA(true);
+        }
       } else if (result.fallback) {
         // The 1-click OFF-SESSION charge on the saved card was declined (Indian cards
         // reject off-session PIs outright), so she is bounced to a hosted Stripe
