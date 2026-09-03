@@ -1948,3 +1948,28 @@ Not covered — needs a real Stripe session, so it waits on 02's checkout:
 - [ ] **The $30 downsell arm** and its 02 decline label ("No thanks, just my twelve")
 - [ ] **⚠ PRE-EXISTING, ALL SIX LIVE FUNNELS:** the chat pages never scroll internally (`flex-1 overflow-y-auto` under `min-h-screen`, no `min-h-0`), so `scrollHeight === clientHeight`, the auto-scroll effect is dead, and from ~bubble 8 every message AND every footer button sits below the fold. Measured: 12 bubbles ⇒ 1188px document vs 880px viewport, `scrollY` 0. Offer 02 opts into the `h-screen` + `min-h-0` fix; rolling it out to V1/fb/fb2/fb-palm/fb-tarot/gdn is an operator decision. A regression test should assert the CTA is in-viewport when it appears, on every funnel
 - [ ] The Purchase pixel on 02's `/welcome1` — `UpsellPage` fires `trackPurchase(..., "Energy Clearing Ritual")` on load regardless of route, and PostHog labels 02's upsell events `"v1"`. Settle BEFORE the letter's CTA points at this arm
+
+## /fb-read coffee — A/B option swap to match the ad creatives (2026-09-03)
+
+The coffee ad creatives went out with **A. Tree · B. Road · C. Lake**; the lander was
+serving **A. Road · B. Tree**. The letters are DERIVED from the option keys
+(`OPTION_LABEL` in `ReadBridge.tsx`, `LETTER` in `build-read-ad.mjs`), so there is no
+letter to edit — the fix moves everything hanging off the key. Five places, all of
+which fail *silently* and *independently*, because the page renders perfectly with any
+one of them stale.
+
+Covered by `tests/fb-read-coffee-options.test.ts` (both failure directions proven by
+deliberate sabotage before the guard was accepted):
+
+- [x] `optionLabel` is A=Tree, B=Road, C=Lake
+- [x] label, `mark` and written bubble 1 all name the SAME symbol, for all 3 hooks × 3 options
+- [x] each archetype stays with its own symbol (`the standing heart` = tree, `the moving heart` = road)
+- [x] **`rings.json` key order matches `optionLabel`** — this is the one that catches a half-done swap, because `ring-read-cup.mjs` writes `reveal-strip.jpg` in `a,b,c` order and both the lander and the chat crop it by `options.indexOf()`. Code swapped + art not swapped ⇒ she taps "A. Tree" and is shown a ringed road
+- [x] the reveal strip divides into three equal panels (`width / options.length === height`)
+
+Not covered — needs a browser or a live walk:
+
+- [ ] **A real `/fb-read/c?device=coffee` walk per hook**, asserting the ringed panel she is shown matches the symbol she tapped. The unit guard proves the registry, the copy and the ring geometry agree; it cannot prove the JPEG on disk was actually regenerated from that geometry
+- [ ] The Version-A lander (`/fb-read?device=coffee`) result card — same check on the `phase: 'result'` reveal
+- [ ] Regenerated ad creatives from `build-read-ad.mjs` render `A. Tree / B. Road / C. Lake` (the media team's current ads were made by hand)
+- [ ] **A generic version of the rings-vs-labels guard for every `pick: 'symbol'` device** — tea has the identical coupling (`armb` rings vs `optionLabel`) and nothing checks it today

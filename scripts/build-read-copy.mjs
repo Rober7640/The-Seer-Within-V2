@@ -113,7 +113,7 @@ console.log(`\n-> ${OUT}`)
 // can forget. tests/fb-read.test.ts then re-checks it, for the paths that do not
 // come through here (a new device, a changed guard).
 try {
-  execFileSync('npx', ['tsx', 'scripts/read-registry.mjs'], { stdio: 'inherit' })
+  execFileSync('npx', ['tsx', 'scripts/read-registry.mjs'], { stdio: 'inherit', shell: true })
 } catch {
   console.error('\nregistry regeneration failed — run: npx tsx scripts/read-registry.mjs')
   process.exit(1)
