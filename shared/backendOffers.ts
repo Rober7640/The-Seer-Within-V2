@@ -235,11 +235,12 @@ export const BACKEND_OFFER_CATALOG: Record<BackendOfferKey, BackendOffer> = {
     // mailing address (see collectsShipping's note). This is what a paid order
     // must have before it can be fulfilled.
     collectsShipping: true,
-    // 🔴 Stays false until real Stripe price IDs exist and a test order has been
-    // walked end to end. A paid physical product must never fail to arrive.
-    // The booking + thank-you screens render and shipping is now collected; the
-    // remaining gate is the Stripe-test paid walk (HANDOVER §5).
-    readyForMoney: false,
+    // LIVE (2026-09-04, Mayur): opened so the pixiu funnel can take payment on
+    // Production for a real test purchase. ⚠ No traffic reaches the booking page
+    // until Joel mails the ESL, so this does not expose it to random buyers — but
+    // outstanding ops (be_upsell_orders migration, AWeber campaigns, the Closed
+    // Purse bump deliverable) should be finished before real traffic runs.
+    readyForMoney: true,
   },
 };
 
