@@ -1,3 +1,5 @@
+import { createHash } from 'node:crypto';
+
 //
 // PostHog `purchase_completed` for BACKEND (`be_*`) offers ONLY. Kept in its own file,
 // deliberately separate from purchaseAnalytics.ts: that builder is shared across six
@@ -50,6 +52,28 @@ export interface BackendPurchaseEvent {
   properties: Record<string, unknown>;
 }
 
+// PostHog's ingestion requires the event `uuid` to be a REAL UUID (it lands in a ClickHouse
+// UUID column). Passing the raw Stripe id (`cs_live_…` booking / `pi_…` 1-click) as the uuid
+// makes PostHog SILENTLY DROP the event on ingest — the 200-OK webhook fires, the be_orders
+// row + AWeber thank-you still write, but the revenue event never appears. That is exactly
+// why BE purchases were invisible in PostHog while every other funnel (which sets no uuid and
+// lets PostHog auto-generate one) landed fine.
+//
+// So derive a STABLE, VALID UUID from the Stripe id instead: same id → same uuid, so Stripe
+// retries and the browser thank-you re-record still dedupe to one event, but the value is now
+// a real UUID PostHog accepts. Deterministic UUIDv5 (name-based, SHA-1; RFC 4122 §4.3),
+// implemented inline to avoid adding the `uuid` dependency for one call site.
+const BE_DEDUPE_NAMESPACE = '6f9b1c2e-7a4d-4b8f-9c3a-1e2d3f4a5b6c';
+
+export function dedupeUuid(dedupeId: string): string {
+  const ns = Buffer.from(BE_DEDUPE_NAMESPACE.replace(/-/g, ''), 'hex');
+  const bytes = createHash('sha1').update(ns).update(dedupeId, 'utf8').digest().subarray(0, 16);
+  bytes[6] = (bytes[6] & 0x0f) | 0x50; // version 5
+  bytes[8] = (bytes[8] & 0x3f) | 0x80; // RFC 4122 variant
+  const h = bytes.toString('hex');
+  return `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20, 32)}`;
+}
+
 // be_* product → funnel step. Unknown be_ products still emit (revenue is never dropped)
 // with step 'other'.
 const BACKEND_STEP: Record<string, string> = {
@@ -76,7 +100,9 @@ export function buildBackendPurchaseEvent(input: BackendPurchaseInput): BackendP
   return {
     distinctId: input.distinctId || input.email,
     event: 'purchase_completed',
-    uuid: input.dedupeId,
+    // Deterministic, VALID UUID derived from the Stripe id — NOT the raw id (PostHog drops
+    // events whose uuid is not a real UUID). Stable per session/PI, so retries dedupe.
+    uuid: dedupeUuid(input.dedupeId),
     properties: {
       funnel,
       step,
@@ -87,6 +113,9 @@ export function buildBackendPurchaseEvent(input: BackendPurchaseInput): BackendP
       is_backend: true,
       bump: !!input.bumpProduct,
       bump_product: input.bumpProduct ?? null,
+      // Raw Stripe id kept as a filterable property for debugging/reconciliation (the uuid
+      // above is now a hash, no longer the cs_/pi_ id at a glance).
+      dedupe_ref: input.dedupeId,
       ...utmProps,
     },
   };
