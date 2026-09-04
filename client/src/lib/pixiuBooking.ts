@@ -67,8 +67,8 @@ export const PAGE_STATEMENTS: PageStatement[] = [
     lead:
       'Yes — I understand this is a real, physical object, made and posted, not a file that arrives tonight.',
     body:
-      'It isn’t typed and sent. It’s prepared and shipped, and I understand that takes ' +
-      '7 business days to prepare, and 1–2 weeks to reach me after that. I’d rather wait ' +
+      'It isn’t typed and sent. It’s prepared and shipped, and I understand it ' +
+      'ships within 48 hours and reaches me within 7–10 days. I’d rather wait ' +
       'for the real thing than get a fast version of nothing.',
   },
   {
@@ -116,7 +116,8 @@ export const CHECKOUT = {
   lockedHint: 'Agree to all five above to continue',
   // 06-C1's under-button line. ⚠ States the real SLA and that the address is
   // collected on the NEXT screen (never bolted onto the commitment ladder).
+  // SLA per Joel (2026-09-04): ships within 48h, arrives within 7–10 days.
   reassurance:
-    'One payment. Nothing recurring. Ships within 7 business days; reaches you 1–2 weeks after ' +
-    'that. You’ll give us your address on the next screen.',
+    'One payment. Nothing recurring. Ships within 48 hours; reaches you within 7–10 days. ' +
+    'You’ll give us your address on the next screen.',
 } as const;

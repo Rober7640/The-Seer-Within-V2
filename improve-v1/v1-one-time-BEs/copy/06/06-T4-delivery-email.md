@@ -26,9 +26,7 @@ notice. The ritual gets one short paragraph, not a second telling.
 
 Dear %FIRSTNAME%,
 
-He's shipped, dear.
-
-**Track him here → [Track your order]({{AWEBER_TRACKING_URL}})**
+He's shipped, dear — on his way to you now, and he should reach you within 7–10 days.
 
 When he arrives, here's what to do.
 
