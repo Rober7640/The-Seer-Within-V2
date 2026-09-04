@@ -27,7 +27,7 @@
 // Trackdesk branch defaults an unrecognised product to conversionType 'sale', which
 // would book a backend reading as a main-funnel affiliate sale.
 
-export type BackendOfferKey = 'twin-flame' | 'judgement-day' | 'wishing-bracelet';
+export type BackendOfferKey = 'twin-flame' | 'judgement-day' | 'pixiu-bracelet';
 
 /** Which of the two booking treatments sold it — decides where a cancel returns to. */
 export type BookingTreatment = 'page' | 'chat';
@@ -59,15 +59,15 @@ export const JUDGEMENT_BUMP_PRODUCT_KEY = 'unburdening';
 
 // 06 — fixed price, decision D2 (2026-09-02, HANDOVER §2). A real physical object
 // (black agate + cast Pixiu + sealed capsule), priced accordingly. No PWYW, no ladder.
-export const WISHING_BRACELET_PRICE_CENTS = 4900;
+export const PIXIU_BRACELET_PRICE_CENTS = 4900;
 
 // 06's bump — "The Closed Purse", $11.11 (06-C3, confirmed 2026-09-02). The repeating
 // 1s are a deliberate numerology touch on a money offer, same spirit as 02's $12.77.
-export const WISHING_BRACELET_BUMP_CENTS = 1111;
+export const PIXIU_BRACELET_BUMP_CENTS = 1111;
 
 // ⛔ 06's bump key — see the note on 02's above. A text-only self-performed noticing
 // practice (06-C3), NOT a shipped companion piece — never reuse a physical product key.
-export const WISHING_BRACELET_BUMP_PRODUCT_KEY = 'closed_purse';
+export const PIXIU_BRACELET_BUMP_PRODUCT_KEY = 'closed_purse';
 
 /**
  * The ceiling on a pay-what-you-want amount.
@@ -204,27 +204,27 @@ export const BACKEND_OFFER_CATALOG: Record<BackendOfferKey, BackendOffer> = {
     // is out of scope — booking directs her to reply by email instead.
     readyForMoney: true,
   },
-  'wishing-bracelet': {
-    key: 'wishing-bracelet',
+  'pixiu-bracelet': {
+    key: 'pixiu-bracelet',
     number: '06',
     // Deck-wide rule: the verb is never "buy". Stripe's own label stays a plain noun.
     stripeName: 'The Wishing Bracelet',
     stripeDescription: 'A black agate Pixiu bracelet with a sealed wish capsule, made and posted to you.',
-    stripeProduct: 'be_wishing_bracelet',
-    pricing: { model: 'fixed', priceCents: WISHING_BRACELET_PRICE_CENTS },
+    stripeProduct: 'be_pixiu_bracelet',
+    pricing: { model: 'fixed', priceCents: PIXIU_BRACELET_PRICE_CENTS },
     bump: {
-      productKey: WISHING_BRACELET_BUMP_PRODUCT_KEY,
-      cents: WISHING_BRACELET_BUMP_CENTS,
+      productKey: PIXIU_BRACELET_BUMP_PRODUCT_KEY,
+      cents: PIXIU_BRACELET_BUMP_CENTS,
       stripeName: '+ The Closed Purse instructional',
     },
     // 06 is page-only (no chat variant — a physical object has no AI conversation,
     // just five static statements). Both treatment keys point at the one booking page
     // so a Stripe cancel always returns somewhere real.
     bookingPath: {
-      page: '/offers/wiccan/wishing-bracelet',
-      chat: '/offers/wiccan/wishing-bracelet',
+      page: '/offers/wiccan/pixiu-bracelet',
+      chat: '/offers/wiccan/pixiu-bracelet',
     },
-    successPath: '/offers/wiccan/wishing-bracelet/success',
+    successPath: '/offers/wiccan/pixiu-bracelet/success',
     // Shared upsell chain (Protection Ritual → Manifestation Bracelet → receipt),
     // resolved from the booking session — same engine 03 uses. 06's upsells reuse
     // V1's products verbatim past their opening beats (HANDOVER §2).
@@ -239,7 +239,11 @@ export const BACKEND_OFFER_CATALOG: Record<BackendOfferKey, BackendOffer> = {
     // walked end to end. A paid physical product must never fail to arrive.
     // The booking + thank-you screens render and shipping is now collected; the
     // remaining gate is the Stripe-test paid walk (HANDOVER §5).
-    readyForMoney: false,
+    // ⚠ TEMP for dev testing — flipped true so checkout opens on the dev site.
+    // 🔴 MUST be reverted to false for the Production merge until real launch
+    // (bump deliverable + AWeber campaigns must exist first). This commit is
+    // deliberately separate so it can be dropped from the prod PR.
+    readyForMoney: true,
   },
 };
 

@@ -20,9 +20,9 @@
 // also what the checkout endpoint charges from, so the page and the card can
 // never disagree. Re-exported so a screen needs only this one import.
 export {
-  WISHING_BRACELET_PRICE_CENTS,
-  WISHING_BRACELET_BUMP_CENTS,
-  WISHING_BRACELET_BUMP_PRODUCT_KEY,
+  PIXIU_BRACELET_PRICE_CENTS,
+  PIXIU_BRACELET_BUMP_CENTS,
+  PIXIU_BRACELET_BUMP_PRODUCT_KEY,
 } from '@shared/backendOffers';
 
 export const TAB_TITLE = 'The Wishing Bracelet — your booking';

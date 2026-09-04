@@ -20,7 +20,7 @@
 // on this account. Our tooling reads lists and writes subscribers; it has never
 // created one. Its id then lands in AWEBER_BE_CUSTOMER_LIST_ID.
 
-export type BackendOfferKey = 'twin-flame' | 'judgement-day' | 'wishing-bracelet';
+export type BackendOfferKey = 'twin-flame' | 'judgement-day' | 'pixiu-bracelet';
 
 export interface BackendOfferListing {
   /** The deck's number for the offer, as every doc cites it. */
@@ -83,10 +83,10 @@ export const BACKEND_OFFERS: Record<BackendOfferKey, BackendOfferListing> = {
     initialListId: '6972552',
     bumpListId: '6972554',
   },
-  'wishing-bracelet': {
+  'pixiu-bracelet': {
     number: '06',
     name: 'Wishing Bracelet',
-    tag: 'be-06-wishing-bracelet',
+    tag: 'be-06-pixiu-bracelet',
     bumpTag: 'be-06-bump',
     deliveredTag: 'be-06-delivered',
     // Operator model (HANDOVER §4.4 Phase C): 06 REUSES the shared BE lists —
