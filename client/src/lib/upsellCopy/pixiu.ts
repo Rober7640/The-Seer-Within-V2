@@ -133,7 +133,8 @@ const PX_U1_SHIPPING_CONFIRMED = [
   "That seals the bond.",
   "Tonight, as I work, you may feel warmth or have vivid dreams. That's normal. That's me.",
   // was "your clearing reading arrives within 24 hours" — no reading; a real object ships.
-  "Your stone ships within 48 hours, and Bixie follows in the weeks after. Watch for both.",
+  // Joel (2026-09-04): stone + Bixie ship TOGETHER, not weeks apart.
+  "Your stone ships within 48 hours, together with the Bixie. Watch for both.",
   "Thank you for trusting me with this sacred work, {firstName}.",
   "The universe is already responding to your decision. I can feel it shifting.",
 ];
