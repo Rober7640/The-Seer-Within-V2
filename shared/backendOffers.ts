@@ -221,10 +221,10 @@ export const BACKEND_OFFER_CATALOG: Record<BackendOfferKey, BackendOffer> = {
     // just five static statements). Both treatment keys point at the one booking page
     // so a Stripe cancel always returns somewhere real.
     bookingPath: {
-      page: '/offers/wiccan/wishing-bracelet',
-      chat: '/offers/wiccan/wishing-bracelet',
+      page: '/offers/wiccan/pixiu-bracelet',
+      chat: '/offers/wiccan/pixiu-bracelet',
     },
-    successPath: '/offers/wiccan/wishing-bracelet/success',
+    successPath: '/offers/wiccan/pixiu-bracelet/success',
     // Shared upsell chain (Protection Ritual → Manifestation Bracelet → receipt),
     // resolved from the booking session — same engine 03 uses. 06's upsells reuse
     // V1's products verbatim past their opening beats (HANDOVER §2).
