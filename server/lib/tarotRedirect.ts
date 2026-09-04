@@ -70,3 +70,106 @@ export function tarotBTarget(originalUrl: string): string {
   const q = originalUrl.indexOf('?');
   return q === -1 ? TAROT_B_PATH : `${TAROT_B_PATH}${originalUrl.slice(q)}`;
 }
+
+// ── VERSION C CAMPAIGN EXEMPTION (2026-09-04) ────────────────────────────────
+//
+// Operator decision (Joel, via Lewis): Rubie is running a paid campaign that must
+// actually deliver VERSION C — the interactive opener that asks one question and
+// writes the reading live from her answer — not Version B's pre-written read. The
+// redirect above would otherwise swallow those ads, because /c has been folded into
+// /b since 2026-08-18 and every /c URL currently lands on B.
+//
+// 🔴 THIS IS AN EXEMPTION, NOT A ROLLBACK. Every hook NOT listed here still
+// redirects to /b exactly as before, so the older live ads — the ones whose Facebook
+// URLs cannot be edited without losing their engagement — are untouched. Turning the
+// redirect off wholesale would have flipped all of them back to C in one go, which is
+// a funnel-wide content change nobody asked for.
+//
+// ⚠️ THE LIST IS KEYED ON `hook` ALONE, not (hook, deck). The ad URLs carry no
+// `deck` param — the deck is resolved client-side — so hook is the only thing the
+// server can match on here. Consequence worth knowing: ANY /c ad on one of these
+// hooks now serves C, not only Rubie's new ones.
+//
+// ✅ Verified before shipping, for all 45: each is a live registry hook, each is in
+// the `validHooks` roster in routes.ts (so the chat handoff cannot 400 on the Version
+// C reflect step), each has a crafted TAROT_QUESTION opener rather than a
+// type-checker placeholder, and each carries its own TAROT_HOOK_CONTEXT and
+// TAROT_HOOK_TENDENCY entry — so the live-written reading keeps its family's bans
+// instead of falling back to the generic default. Version C generates copy at
+// request time, so those bans are the only guard it has.
+//
+// 🔴 `cards-will-commit` is DELIBERATELY ABSENT though it was on the campaign list.
+// It is one of the four landers inside the concluded v1_tarot_version_bc_2026, where
+// the winner rollout in assign() overrides whatever the URL says — so exempting it
+// here would have changed nothing, and freeing it properly would mean either
+// re-opening that test (restarting a live split on three landers nobody asked about)
+// or removing a lander from a scope the admin guard holds append-only. One hook was
+// not worth either.
+export const TAROT_C_EXEMPT_HOOKS: ReadonlySet<string> = new Set([
+  'cards-after-marriage',
+  'cards-allowed-to-want',
+  'cards-alone-a-decade',
+  'cards-alone-for-years',
+  'cards-alone-heavier-now',
+  'cards-alone-rest-of-life',
+  'cards-best-years',
+  'cards-blocked-before',
+  'cards-blocking-soulmate',
+  'cards-choosing-wrong',
+  'cards-come-back',
+  'cards-connection-kept-alive',
+  'cards-connection-nothing',
+  'cards-connection-soulmate',
+  'cards-destined-alone',
+  'cards-destined-or-not-yet',
+  'cards-empty-house-alone',
+  'cards-energy-away',
+  'cards-energy-soulmate',
+  'cards-ever-back',
+  'cards-found-me-yet',
+  'cards-god-mean-me-alone',
+  'cards-gods-intention-alone',
+  'cards-god-with-me-alone',
+  'cards-heal-first',
+  'cards-held-alone',
+  'cards-how-long-alone',
+  'cards-keeps-waiting',
+  'cards-know-not-destined-alone',
+  'cards-longer-to-wait',
+  'cards-love-never-stays',
+  'cards-love-not-happened-yet',
+  'cards-meant-alone-still-time',
+  'cards-met-already',
+  'cards-missed-chance',
+  'cards-more-years-alone',
+  'cards-moved-on',
+  'cards-real-connection-coming',
+  'cards-second-time',
+  'cards-slipping-past',
+  'cards-too-late-love',
+  'cards-too-late-or-now',
+  'cards-waiting-to-heal',
+  'cards-wait-on-connection',
+  'cards-wont-commit',
+])
+
+/**
+ * Should this /fb-tarot/c request be redirected to /b?
+ *
+ * True for everything except the campaign hooks above, which must reach the Version C
+ * bridge intact. Parsing is deliberately forgiving in the directions that fail SAFE:
+ * a missing, unparseable or unknown `hook` redirects, which is today's behaviour.
+ * Only an exact, known hook opts out.
+ *
+ * `hook` is read off the raw `originalUrl` rather than `req.query` so this stays a
+ * pure function of the request target and can be unit-tested without an Express
+ * request object. Repeated `hook` params take the FIRST value, matching how the
+ * bridge reads it client-side.
+ */
+export function shouldRedirectTarotC(originalUrl: string): boolean {
+  const q = originalUrl.indexOf('?')
+  if (q === -1) return true
+  const hook = new URLSearchParams(originalUrl.slice(q + 1)).get('hook')
+  if (!hook) return true
+  return !TAROT_C_EXEMPT_HOOKS.has(hook.trim().toLowerCase())
+}
