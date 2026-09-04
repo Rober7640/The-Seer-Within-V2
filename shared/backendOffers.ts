@@ -27,7 +27,7 @@
 // Trackdesk branch defaults an unrecognised product to conversionType 'sale', which
 // would book a backend reading as a main-funnel affiliate sale.
 
-export type BackendOfferKey = 'twin-flame' | 'judgement-day';
+export type BackendOfferKey = 'twin-flame' | 'judgement-day' | 'pixiu-bracelet';
 
 /** Which of the two booking treatments sold it — decides where a cancel returns to. */
 export type BookingTreatment = 'page' | 'chat';
@@ -57,6 +57,18 @@ export const JUDGEMENT_BUMP_CENTS = 1277;
 // ⛔ 03's bump key — see the note on 02's above.
 export const JUDGEMENT_BUMP_PRODUCT_KEY = 'unburdening';
 
+// 06 — fixed price, decision D2 (2026-09-02, HANDOVER §2). A real physical object
+// (black agate + cast Pixiu + sealed capsule), priced accordingly. No PWYW, no ladder.
+export const PIXIU_BRACELET_PRICE_CENTS = 4900;
+
+// 06's bump — "The Closed Purse", $11.11 (06-C3, confirmed 2026-09-02). The repeating
+// 1s are a deliberate numerology touch on a money offer, same spirit as 02's $12.77.
+export const PIXIU_BRACELET_BUMP_CENTS = 1111;
+
+// ⛔ 06's bump key — see the note on 02's above. A text-only self-performed noticing
+// practice (06-C3), NOT a shipped companion piece — never reuse a physical product key.
+export const PIXIU_BRACELET_BUMP_PRODUCT_KEY = 'closed_purse';
+
 /**
  * The ceiling on a pay-what-you-want amount.
  *
@@ -84,7 +96,7 @@ export interface BackendOfferBump {
 export interface BackendOffer {
   key: BackendOfferKey;
   /** The deck's number, as every doc cites it. */
-  number: '02' | '03';
+  number: '02' | '03' | '06';
   /** What Stripe shows her at checkout. */
   stripeName: string;
   stripeDescription: string;
@@ -125,6 +137,18 @@ export interface BackendOffer {
    * A6; set this the day it renders and the AWeber field starts filling itself.
    */
   entryPath?: string;
+  /**
+   * PHYSICAL offers only: collect a mailing address at checkout.
+   *
+   * When true, the checkout endpoint turns on Stripe Checkout's own
+   * `shipping_address_collection`, so she enters her address on the SAME secure
+   * page as her card — after the commitment ladder, never bolted onto it. The
+   * address then lands on the Stripe session / PaymentIntent (visible in the
+   * dashboard), which is the system of record fulfilment ships from — no new
+   * screen, no new column, no migration. Undefined/false ⇒ a digital offer that
+   * collects only the email (02, 03).
+   */
+  collectsShipping?: boolean;
 }
 
 export const BACKEND_OFFER_CATALOG: Record<BackendOfferKey, BackendOffer> = {
@@ -178,6 +202,44 @@ export const BACKEND_OFFER_CATALOG: Record<BackendOfferKey, BackendOffer> = {
     //
     // Thank-you screen renders (Task 6); upsell chain wired (Task 7). Entry form
     // is out of scope — booking directs her to reply by email instead.
+    readyForMoney: true,
+  },
+  'pixiu-bracelet': {
+    key: 'pixiu-bracelet',
+    number: '06',
+    // Deck-wide rule: the verb is never "buy". Stripe's own label stays a plain noun.
+    stripeName: 'The Wishing Bracelet',
+    stripeDescription: 'A black agate Pixiu bracelet with a sealed wish capsule, made and posted to you.',
+    stripeProduct: 'be_pixiu_bracelet',
+    pricing: { model: 'fixed', priceCents: PIXIU_BRACELET_PRICE_CENTS },
+    bump: {
+      productKey: PIXIU_BRACELET_BUMP_PRODUCT_KEY,
+      cents: PIXIU_BRACELET_BUMP_CENTS,
+      stripeName: '+ The Closed Purse instructional',
+    },
+    // 06 is page-only (no chat variant — a physical object has no AI conversation,
+    // just five static statements). Both treatment keys point at the one booking page
+    // so a Stripe cancel always returns somewhere real.
+    bookingPath: {
+      page: '/offers/wiccan/pixiu-bracelet',
+      chat: '/offers/wiccan/pixiu-bracelet',
+    },
+    successPath: '/offers/wiccan/pixiu-bracelet/success',
+    // Shared upsell chain (Protection Ritual → Manifestation Bracelet → receipt),
+    // resolved from the booking session — same engine 03 uses. 06's upsells reuse
+    // V1's products verbatim past their opening beats (HANDOVER §2).
+    // ⚠ Physical-product shipping (the bracelet's own address) is collected AFTER
+    // Stripe succeeds via the existing ShippingForm pattern — wired at page build.
+    upsellEntryPath: '/offers/upsell/welcome1',
+    // 06 is the deck's first PHYSICAL product — Stripe Checkout collects the
+    // mailing address (see collectsShipping's note). This is what a paid order
+    // must have before it can be fulfilled.
+    collectsShipping: true,
+    // LIVE (2026-09-04, Mayur): opened so the pixiu funnel can take payment on
+    // Production for a real test purchase. ⚠ No traffic reaches the booking page
+    // until Joel mails the ESL, so this does not expose it to random buyers — but
+    // outstanding ops (be_upsell_orders migration, AWeber campaigns, the Closed
+    // Purse bump deliverable) should be finished before real traffic runs.
     readyForMoney: true,
   },
 };
