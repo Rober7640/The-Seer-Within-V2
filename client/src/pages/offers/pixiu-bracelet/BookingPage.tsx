@@ -9,8 +9,8 @@ import {
   BUMP,
   CHECKOUT,
   TAB_TITLE,
-  WISHING_BRACELET_PRICE_CENTS,
-  WISHING_BRACELET_BUMP_CENTS,
+  PIXIU_BRACELET_PRICE_CENTS,
+  PIXIU_BRACELET_BUMP_CENTS,
 } from '@/lib/pixiuBooking'
 
 // Offer 06 — the Wishing Bracelet (Pixiu) booking page. PAGE treatment.
@@ -45,7 +45,7 @@ export default function PixiuBookingPage() {
   const [busy, setBusy] = useState(false)
   const [checkoutError, setCheckoutError] = useState<string | null>(null)
   const allChecked = checked.every(Boolean)
-  const totalCents = WISHING_BRACELET_PRICE_CENTS + (bumpTaken ? WISHING_BRACELET_BUMP_CENTS : 0)
+  const totalCents = PIXIU_BRACELET_PRICE_CENTS + (bumpTaken ? PIXIU_BRACELET_BUMP_CENTS : 0)
 
   // Read once per mount: the letter's ?fn=. Nothing on this page displays it —
   // the page is HER voice and never addresses her — but checkout carries it into
@@ -64,7 +64,7 @@ export default function PixiuBookingPage() {
     setBusy(true)
     setCheckoutError(null)
     const result = await beginBackendCheckout({
-      offer: 'wishing-bracelet',
+      offer: 'pixiu-bracelet',
       treatment: 'page',
       bump: bumpTaken,
       firstName,
