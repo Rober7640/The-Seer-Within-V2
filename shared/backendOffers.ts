@@ -239,7 +239,11 @@ export const BACKEND_OFFER_CATALOG: Record<BackendOfferKey, BackendOffer> = {
     // walked end to end. A paid physical product must never fail to arrive.
     // The booking + thank-you screens render and shipping is now collected; the
     // remaining gate is the Stripe-test paid walk (HANDOVER §5).
-    readyForMoney: false,
+    // ⚠ TEMP for dev testing — flipped true so checkout opens on the dev site.
+    // 🔴 MUST be reverted to false for the Production merge until real launch
+    // (bump deliverable + AWeber campaigns must exist first). This commit is
+    // deliberately separate so it can be dropped from the prod PR.
+    readyForMoney: true,
   },
 };
 
