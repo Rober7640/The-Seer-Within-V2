@@ -359,8 +359,8 @@ function Router() {
             root (where the letter's booking URL points); the success page is a
             RECEIPT (06-T1), reached via successPath + `?s=` from OffersUpsell2.
             Spec: improve-v1/v1-one-time-BEs/docs/06/HANDOVER.md */}
-        <Route path="/offers/wiccan/wishing-bracelet" component={PixiuBookingPage} />
-        <Route path="/offers/wiccan/wishing-bracelet/success" component={PixiuThankYouPage} />
+        <Route path="/offers/wiccan/pixiu-bracelet" component={PixiuBookingPage} />
+        <Route path="/offers/wiccan/pixiu-bracelet/success" component={PixiuThankYouPage} />
 
         {/* Shared /offers/upsell/ pages — the deck-wide Upsell 1 → Upsell 2
             chain. Offer + pitch are resolved from the booking SESSION
