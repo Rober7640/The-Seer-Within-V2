@@ -20,6 +20,7 @@ import { V1_UPSELL1, V1_UPSELL2 } from "./upsellCopy/v1";
 import { TWIN_FLAME_UPSELL1, TWIN_FLAME_UPSELL2 } from "./upsellCopy/twinFlame";
 import type { BackendOfferKey } from "@shared/backendOffers";
 import { JUDGEMENT_UPSELL1, JUDGEMENT_UPSELL2 } from "./upsellCopy/judgement";
+import { PIXIU_UPSELL1, PIXIU_UPSELL2 } from "./upsellCopy/pixiu";
 
 interface BackendOfferCopy {
   upsell1: Upsell1Copy;
@@ -56,6 +57,7 @@ export function upsell2Copy(pathname?: string): Upsell2Copy {
 export const BACKEND_UPSELL_PITCH: Record<BackendOfferKey, { upsell1: Upsell1Copy; upsell2: Upsell2Copy }> = {
   'twin-flame': { upsell1: TWIN_FLAME_UPSELL1, upsell2: TWIN_FLAME_UPSELL2 },
   'judgement-day': { upsell1: JUDGEMENT_UPSELL1, upsell2: JUDGEMENT_UPSELL2 },
+  'wishing-bracelet': { upsell1: PIXIU_UPSELL1, upsell2: PIXIU_UPSELL2 },
 };
 
 export function upsell1CopyForOffer(offer: BackendOfferKey): Upsell1Copy {

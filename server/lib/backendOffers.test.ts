@@ -26,6 +26,8 @@ import {
   JUDGEMENT_MIN_CENTS,
   TWIN_FLAME_BUMP_CENTS,
   TWIN_FLAME_PRICE_CENTS,
+  WISHING_BRACELET_BUMP_CENTS,
+  WISHING_BRACELET_PRICE_CENTS,
   backendOfferForStripeProduct,
   backendOrderDescriptor,
   isBackendOfferKey,
@@ -69,6 +71,41 @@ describe('a fixed-price offer (02)', () => {
       .toBe(false);
     expect(charged(resolveBackendCharge({ offer: 'twin-flame', bump: false })).bumpPurchased)
       .toBe(false);
+  });
+});
+
+describe('a fixed-price PHYSICAL offer (06 — the Wishing Bracelet)', () => {
+  // 06's arithmetic is provable now, months before readyForMoney flips true —
+  // so, like 03, these price it directly (past the readiness gate that
+  // resolveBackendCharge applies). See "the after-the-money gate" below.
+  const WISHING = BACKEND_OFFER_CATALOG['wishing-bracelet'];
+  const priceWishing = (req: { amountCents?: number | null; bump?: boolean }) =>
+    priceBackendOffer(WISHING, req);
+
+  it('charges the catalog price and ignores a browser-posted amount', () => {
+    expect(charged(priceWishing({})).readingCents).toBe(WISHING_BRACELET_PRICE_CENTS);
+    expect(charged(priceWishing({ amountCents: 1 })).totalCents).toBe(WISHING_BRACELET_PRICE_CENTS);
+  });
+
+  it('adds The Closed Purse bump only when taken, at the catalog price', () => {
+    expect(charged(priceWishing({})).bumpCents).toBe(0);
+    const withBump = charged(priceWishing({ bump: true }));
+    expect(withBump.bumpCents).toBe(WISHING_BRACELET_BUMP_CENTS);
+    expect(withBump.totalCents).toBe(WISHING_BRACELET_PRICE_CENTS + WISHING_BRACELET_BUMP_CENTS);
+  });
+
+  it('is gated shut until its Stripe-test paid walk (readyForMoney false)', () => {
+    expect(resolveBackendCharge({ offer: 'wishing-bracelet' }).ok).toBe(false);
+  });
+
+  it('is the only offer that collects shipping — the digital ones do not', () => {
+    expect(BACKEND_OFFER_CATALOG['wishing-bracelet'].collectsShipping).toBe(true);
+    expect(BACKEND_OFFER_CATALOG['twin-flame'].collectsShipping).toBeFalsy();
+    expect(BACKEND_OFFER_CATALOG['judgement-day'].collectsShipping).toBeFalsy();
+  });
+
+  it('resolves from its own be_ Stripe product', () => {
+    expect(backendOfferForStripeProduct('be_wishing_bracelet')?.key).toBe('wishing-bracelet');
   });
 });
 
