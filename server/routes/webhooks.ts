@@ -1032,16 +1032,25 @@ router.post('/stripe', async (req: Request, res: Response) => {
     if (product?.startsWith(BACKEND_STRIPE_PRODUCT_PREFIX)) {
       const beUpsell = backendUpsellFor(product);
 
+      // ⚠ The handler-level `email` (defined above) reads session.customer_email — which
+      // Stripe leaves NULL on a hosted BE checkout with customer_creation:'always'; the
+      // address lands in customer_details.email instead. Resolve it the SAME way the BE
+      // list-write below does, or the guard is empty and the purchase event is silently
+      // skipped while recordBackendOrder (which reads customer_details) still records the
+      // order — exactly the "order saved, no analytics" symptom.
+      const beEmail =
+        session.customer_details?.email || session.customer_email || metadata.email || '';
+
       // PostHog revenue (BE-only; Meta/GAds/Trackdesk stay blind by design). Deterministic
       // uuid = session.id so Stripe retries + the thank-you re-record dedupe. Browser-
       // independent: a buyer who closes the tab still counts.
-      if ((session.amount_total ?? 0) > 0 && email) {
+      if ((session.amount_total ?? 0) > 0 && beEmail) {
         posthog.capture(
           buildBackendPurchaseEvent({
             product,
             offer: resolveOfferKey(metadata) ?? 'twin-flame',
             amountCents: session.amount_total ?? 0,
-            email,
+            email: beEmail,
             distinctId: metadata.posthogDistinctId,
             utm: utmsFromMetadata(metadata),
             dedupeId: session.id,
