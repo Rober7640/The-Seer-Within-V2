@@ -15,10 +15,14 @@ function createNoopClient(): PostHogLike {
   };
 }
 
+// ⚠ enableExceptionAutocapture was REMOVED: posthog-node v5.21.2's exception capture
+// emits a batch item with no event name, so PostHog rejects the WHOLE /batch/ request
+// with HTTP 400 ("non-engage request missing event name attribute") — silently dropping
+// every valid event (page views, purchases) batched alongside it. Server errors are
+// already captured by Sentry (server/index.ts) and the logger, so nothing is lost.
 export const posthog: PostHogLike = apiKey
   ? new PostHog(apiKey, {
       ...(host ? { host } : {}),
-      enableExceptionAutocapture: true,
     })
   : createNoopClient();
 
