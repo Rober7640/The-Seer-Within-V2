@@ -260,3 +260,98 @@ shooting it means owning it outright with no licence question. Study this video 
 framing, water level, lighting and how long the whites take to congeal — then shoot to
 our own brief, with the three marks we want findable and the final frame composed to
 BE the lander photograph.
+
+---
+
+# THE DEVICE SCOUT — first run, 2026-09-05
+
+The method in `docs/superpowers/specs/2026-09-02-fb-read-device-scout-design.md`, run end
+to end for the first time. **Nothing was gathered and nothing may ship — this is a
+measurement pass.** Method: Wikipedia enumerates the residue family; YouTube search
+sorted by view count (`&sp=CAM%3D`), **no upload-date filter, ever**.
+
+## 🔴 The finding: the catalogue is exhausted, and we already own all of it
+
+The Wikipedia residue family — every practice where something is poured, dropped,
+floated, burned or scattered and the pattern it makes on its own is read — contains
+**exactly three practices with a real video audience. They are tea, coffee and egg.**
+
+## The calibration table, which is the reusable part
+
+Two of these devices are SHIPPED, so this is a bar, not a ranking in the abstract.
+
+| Practice | Top result | 2nd | Age of top | Verdict |
+|---|---|---|---|---|
+| Egg in water | **1.3M** | 605K | 5 yrs | researched, brief written |
+| **Turkish coffee — SHIPPED** | **803K** | 463K | **12 yrs** | — |
+| **Tea leaf — SHIPPED** | **228K** | 81K | **9 yrs** | — |
+| Wax poured into water | 89K | 15K | 7 yrs | below the floor, and see the confound |
+| Water scrying | 71K | 52K | 5 yrs | rejected on structure — no physical marks |
+| Molybdomancy, English | 1K | 817 | 4 yrs | dead |
+| *Bleigießen*, German native name | 99 | 17 | 9 mo | dead — the native check CONFIRMED it |
+| Ash reading | 237 | — | 3 mo | dead |
+| Flour / aleuromancy | **no results at all** | — | — | dead |
+| Oil into water | not measured | — | — | rejected at the gate |
+| Incense ash | not measured | — | — | rejected at the gate |
+
+**Tea shipped at 228K, so the floor is ~200K — not 1.3M.** That reframes everything: wax
+at 89K is marginal rather than absurd, and molybdomancy at 1K is 200× under and simply dead.
+
+## 🔴 Every top result is years old. Every one.
+
+12 years, 9 years, 16 years, 5 years, 7 years. Across shipped devices and rejected
+candidates alike. **The no-date-filter rule is not an egg quirk** — a recency window
+would have scored coffee, tea and egg all at approximately zero.
+
+## A third rejection class, found by running this
+
+`fb-read-device-classes` had two: **visible-sign** (candle, dream — she already saw it,
+so no reveal) and, from the coffee pass, **coating** (the field drains into one mass with
+no separated marks). This run added a third.
+
+**BINARY-OUTCOME.** The oil-into-water malocchio test is a genuinely hidden field with a
+real tutorial body — and its reading is *"oil spreads = evil eye present; oil stays
+compact = not present."* One question, two answers. `pick:'symbol'` needs three options
+against ONE photograph, and a yes/no test cannot carry three readings. The field can be
+hidden and still yield only one bit.
+
+## The one that got closest, and why it still failed
+
+**Beeswax poured into cold water.** On the texture lane it was the best candidate of the
+whole run, and it merged two catalogue entries: the Finnish New Year tin-pouring custom
+has *itself* already migrated to beeswax because lead is toxic
+([@herfinland](https://www.tiktok.com/@herfinland/video/7317235157155597600)), which
+solves the "you cannot melt lead in a kitchen" problem authentically rather than as a
+workaround. It reads shape **and cast shadow** — hidden-field twice over. And unlike egg
+(limpia) and coffee (evil eye), its vocabulary is **natively about love**: *"lace-like
+edges mean admirers and suitors are in your future."* Its marks differ in KIND for free —
+ribbons, rugged texture, lace edges, broken-piece counts, tear-shapes.
+
+Then the metric lane scored it 89K / 1K / 99.
+
+🔴 **This is the whole argument for keeping the two lanes separate.** The texture lane
+said *strong pass, best vocabulary in the run*. The metric lane said *nobody watches it*.
+Both were right about different things, and a system with only the first would have sent
+someone to shoot wax for a week.
+
+Second problem, recorded so it is not rediscovered: on both lanes, "wax reading" returns
+**candle** wax overwhelmingly — the visible-sign device already rejected. The pour-into-
+water variant appears as a 2-minute chapter inside candle videos, not as its own genre.
+Anyone building it would be one art brief away from accidentally rebuilding candle.
+
+## What this run says to do
+
+Nothing new is worth building. **The egg is device #4 and it is already researched,
+already top of this table at 1.3M, and its shoot brief is written.** Shoot the egg.
+
+If a device #5 is ever wanted, the catalogue cannot supply it — this run closed it. The
+search would have to change shape: high-volume "reading" formats that are not named
+`-mancy` practices at all, which is a different method than this one.
+
+## ⚠ One thing this run did NOT establish
+
+That YouTube view count predicts ad performance. It is a demand proxy and nothing more.
+There is a free test sitting in the funnel: **coffee outscores tea 3.5× here (803K vs
+228K), and coffee-vs-tea is already a live device test.** If coffee out-converts tea, the
+metric has some predictive value; if it does not, the metric is weaker than this table
+makes it look. Check it when that test reads out rather than assuming either way.

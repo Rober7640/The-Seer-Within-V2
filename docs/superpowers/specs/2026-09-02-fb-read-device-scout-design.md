@@ -1,6 +1,13 @@
 # The /fb-read device scout — design
 
-**Date:** 2026-09-02 · **Status:** designed, not built · **Branch:** `coffee-cup`
+**Date:** 2026-09-02 · **Status:** designed, and RUN once (2026-09-05) · **Branch:** `coffee-cup`
+
+> **First run is complete.** Results, the calibration table and the verdict are in
+> `improve-v1/fb-read/images/reference/REFERENCES.md` § *THE DEVICE SCOUT — first run*.
+> Headline: the catalogue is exhausted and we already own all three practices in it
+> (tea, coffee, egg). The method worked; the answer was "there is no device #5 here."
+> Not packaged as a skill — a method that closes its own search space once does not
+> need re-running.
 
 How we find device #5. Devices 1–4 (dream, tea, coffee, egg) were each found by hand,
 and coffee cost most of a week because the question *"is this field even readable?"*
