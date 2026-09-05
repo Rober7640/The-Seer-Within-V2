@@ -355,3 +355,77 @@ There is a free test sitting in the funnel: **coffee outscores tea 3.5× here (8
 228K), and coffee-vs-tea is already a live device test.** If coffee out-converts tea, the
 metric has some predictive value; if it does not, the metric is weaker than this table
 makes it look. Check it when that test reads out rather than assuming either way.
+
+---
+
+## 🔴 CORRECTION to the run above, 2026-09-05 — the catalogue was NOT closed
+
+The section above says the catalogue is exhausted. **That claim was built on a bad
+enumeration and is withdrawn.**
+
+**What went wrong.** Stage 0 was run as a single `WebFetch` of the Wikipedia page, and
+the summarised result *said in its own output* that it was partial — "approximately 430+"
+and "the article extends beyond the sections shown, with entries continuing through
+letters T–Z". It returned 20 residue-family entries. That number was then used as the
+candidate universe and a closure claim was made on top of it.
+
+**The real numbers**, from the raw wikitext with no summarizer in the loop
+(`?action=raw`, parsed on `: by`):
+
+| | |
+|---|---|
+| Entries with a "by …" gloss | **268** |
+| Residue / vessel family | **26**, not 20 |
+
+Six were never tested. Three were worth testing:
+
+| Missed | Gloss |
+|---|---|
+| **encromancy** | by oil **ink stains** |
+| **oinomancy / oenomancy** | by **wine** |
+| **cyclicomancy** | by **swirling water in a cup** |
+| alomancy · abacomancy · cottabomancy · styramancy | salt · dust · wine in a brass bowl · gum-wax patterns |
+
+**A second harness fault, same session.** The first ink and wine queries were long and
+specific and both returned **"No results found."** Shortened, the same searches returned
+41K and 54K. A long query's zero is not evidence of absence — always retry short before
+recording a dead row.
+
+### Ink divination — measured, and it does not change the recommendation
+
+| Query | Top | 2nd | Age of top |
+|---|---|---|---|
+| `ink divination` (English) | 54K | 41K | **7 days** |
+| `гадание на чернилах` (Russian, native) | **115K** | 44K | 6 months |
+| `oinomancy wine divination` | 6.8K | 310 | 4 yrs — dead |
+
+Four things, and the last one is decisive:
+
+1. **The register is natively ours.** Titles translate as *"THE MAN DESTINED BY FATE,
+   Future Husband"* and *"WHO IS HE? The man of destiny, His Portrait, Character."* That
+   is `still-think` and `hiding-something` with no steering at all — better than egg
+   (limpia) or coffee (evil eye).
+2. **The age signal inverts.** Every other practice measured peaks 5–16 years back. Ink's
+   top English result is **7 days old**. That is a rising practice, and the "old + high =
+   good" rule under-rates it. Both shapes can be good; they are not the same shape.
+3. **115K is still under the ~228K tea floor**, and it is one dominant creator (Leyla
+   Intuitive Realm, across two channels) with one other found (Школа Таро AL_VN).
+4. 🔴 **It probably fails the gate.** The titles read *Чернильное Гадание **Таро Расклад***
+   — "ink divination **tarot spread**" — and one description says it combines "the ancient
+   practice of 'Divine writing' **with tarot card interpretation**". This looks like a
+   tarot reading wearing ink as a costume, not a physical field being read. The word "ink"
+   in a title is not a hidden field. **Verify by watching before anyone builds on it.**
+
+### Still untested, so no closure claim this time
+
+alomancy (salt) · abacomancy (dust) · cyclicomancy (swirling water in a cup) ·
+cottabomancy (wine in a brass bowl) · styramancy (gum wax) · encromancy as distinct from
+generic ink. All look low-probability. **None has been measured, and this section does not
+claim they are dead.**
+
+### What still stands from the original run
+
+Everything except the closure claim. The calibration table, the ~200K floor, the
+universal 5–16-year age of top results, the binary-outcome reject class, and the
+wax/molybdomancy verdict are all unaffected — and **the egg at 1.3M is still the highest
+number measured anywhere in this project.** Shoot the egg. But the catalogue stays open.
