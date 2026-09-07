@@ -204,7 +204,7 @@ export function funnelPath(v1Path: string, pathname?: string): string {
 
 export type PostHogFunnel =
   | "soulmate" | "fb" | "fb2" | "gdn" | "palm" | "tarot" | "read" | "v1" | "evelyn" | "aiden"
-  | "marcus" | "luna" | "nova" | "maren" | "seven-seven" | "twinflame";
+  | "marcus" | "luna" | "nova" | "maren" | "seven-seven" | "twinflame" | "judgement";
 
 // Generalized persona landers → their PostHog funnel name. One route each.
 const PERSONA_LANDER_FUNNELS: Record<string, PostHogFunnel> = {
@@ -223,6 +223,13 @@ function normalize(path: string): string {
 export function getPostHogFunnel(pathname?: string): PostHogFunnel | null {
   const p = normalize(pathname ?? currentPath());
   if (p === TWIN_FLAME_PREFIX || p.startsWith(`${TWIN_FLAME_PREFIX}/`)) return "twinflame";
+  // 03 Judgement Day. Its funnel is split across two prefixes: booking + thank-you
+  // under JUDGEMENT_PREFIX, and the upsells on the SHARED /offers/upsell/* pages.
+  // Both map to "judgement" so clicks group under the same funnel its revenue uses.
+  // ⚠ /offers/upsell/* is 03-only today; when another backend offer adopts those
+  // shared pages, resolve the funnel from the session offer, not the path.
+  if (p === JUDGEMENT_PREFIX || p.startsWith(`${JUDGEMENT_PREFIX}/`)) return "judgement";
+  if (p === "/offers/upsell" || p.startsWith("/offers/upsell/")) return "judgement";
   if (p === "/soulmate" || p.startsWith("/soulmate/")) return "soulmate";
   const adDef = funnelDefForPath(p);
   if (adDef) return adDef.posthog as PostHogFunnel;
@@ -265,6 +272,16 @@ export function getPostHogStep(pathname?: string): string {
       if (sub === "" || sub === "/preview-page" || sub === "/preview-chat") return "booking";
       if (sub === "/welcome1") return "upsell1";
       if (sub === "/welcome2") return "upsell2";
+      if (sub === "/success") return "thank_you";
+      return "unknown";
+    }
+    case "judgement": {
+      // Split across two prefixes: booking/thank-you under JUDGEMENT_PREFIX, upsells on
+      // the shared /offers/upsell/* pages. Map both into one step vocabulary.
+      if (p === "/offers/upsell/welcome1") return "upsell1";
+      if (p === "/offers/upsell/welcome2") return "upsell2";
+      const sub = p.slice(JUDGEMENT_PREFIX.length); // "" at the booking root
+      if (sub === "" || sub === "/chat") return "booking";
       if (sub === "/success") return "thank_you";
       return "unknown";
     }
