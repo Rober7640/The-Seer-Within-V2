@@ -36,11 +36,24 @@ Establish four things before touching a script, and say them back to the operato
 | entry route | `/tarot/twin-flame` |
 | PostHog funnel name | `twinflame` |
 | backend offer key (BE offers only) | `twin-flame` |
-| the events this funnel should fire | `lander_view` → `checkout_initiated` → `purchase_completed` → `upsell_accepted` |
+| the events this funnel should fire | see the event contract below |
 
 The **entry route** is the one the buyer first clicks from the email. It matters more than it
 looks: the UTM tag is captured on her first pageload, so tagging a mid-funnel link records
 nothing.
+
+⭐⭐ **The event contract — which events a funnel MUST fire.** Wiring the funnel *name* is not
+the same as firing the *events* an insight needs: Pixiu passed "0 critical" while
+`checkout_initiated` was missing entirely. `audit-wiring.mjs` now carries a per-funnel event
+registry and checks the source for each one (override with `--events=a,b`):
+
+| family | expected events |
+|---|---|
+| **V1 + ad funnels** (`v1`, `fb`, `fb2`, `gdn`, `palm`, `tarot`, `read`, `evelyn`, `aiden`, `soulmate`) | `lead_captured` (the email capture — this is the V1 "lead"), `checkout_initiated`, `purchase_completed` |
+| **BE booking offers** (`twinflame`, `judgement`, `pixiu`) | `lander_view`, `checkout_initiated`, `purchase_completed` (upsell views/purchases reuse the same two event names, keyed by `step`) |
+
+The V1 lead is spelled **`lead_captured`**, fired from `useConversation.ts` at email capture —
+not `lead`. If you add a funnel, add its row to `EXPECTED_EVENTS` in `audit-wiring.mjs`.
 
 ### 2 · Audit the wiring
 
@@ -53,6 +66,13 @@ MSYS_NO_PATHCONV=1 node .claude/skills/posthog-track-funnel/scripts/audit-wiring
 MSYS_NO_PATHCONV=1 node .claude/skills/posthog-track-funnel/scripts/audit-wiring.mjs \
   --route=/tarot/twin-flame --funnel=twinflame --offer=twin-flame
 ```
+
+The audit checks the funnel-name plumbing (below), the silent killers (§3), AND the event
+contract (§1). One subtlety in the event check worth knowing: a bare event name appears
+tree-wide (`checkout_initiated` lives in V1's shared hook and Twin Flame's page), so for a **BE
+offer** it only counts an event that is co-located with a literal `funnel: '<name>'` — that is
+what catches "the page never fires it for THIS offer". **V1** funnels fire from one shared hook
+with a computed funnel, so there a tree-wide presence check is the correct signal.
 
 🔴 **Two Windows traps, both of which produce a confident wrong answer:**
 
@@ -197,8 +217,9 @@ expected exit codes are part of the contract:
 
 | case | expected |
 |---|---|
-| `audit-wiring --ref=origin/Production` twin-flame | 8 wired, 0 critical, **exit 0** |
-| `audit-wiring --ref=origin/development` judgement-day | catches the missing client half, **exit 1** |
+| `audit-wiring --ref=origin/Production` twin-flame | 11 wired (incl. the 3 event checks), 0 critical, **exit 0** |
+| `audit-wiring` Pixiu at the commit before `checkout_initiated` shipped | event contract flags `checkout_initiated fires but NOT for "pixiu"` (**warn**), everything else clean |
+| `audit-wiring --route=/ --funnel=v1` | event contract confirms `lead_captured` fires for V1, **exit 0** |
 | `audit-wiring` on `/fb-tarot`, `/fb-palm`, `/fb-read`, `/soulmate` | all clean, **exit 0** |
 | `audit-wiring --route=/fb-tarot --funnel=palm` (deliberate mismatch) | catches it, **exit 1** |
 | `audit-wiring --route=/tarot/…` under Git Bash without `MSYS_NO_PATHCONV=1` | refuses, **exit 2** |

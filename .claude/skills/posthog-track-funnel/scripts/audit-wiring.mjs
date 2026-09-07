@@ -23,7 +23,7 @@
 
 import { readFileSync, existsSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { execSync } from 'node:child_process';
+import { execSync, execFileSync } from 'node:child_process';
 
 const ROOT = process.cwd();
 
@@ -35,6 +35,29 @@ const FILES = {
   webhooks: 'server/routes/webhooks.ts',
   app: 'client/src/App.tsx',
   funnelConfig: 'shared/funnelConfig.ts',
+};
+
+// Per-funnel EVENT CONTRACT. The rest of this audit proves the funnel NAME is wired; it does
+// NOT prove the funnel fires the EVENTS an insight needs — which is exactly how Pixiu passed
+// "0 critical" while checkout_initiated was missing. --events overrides this.
+//   V1 + ad funnels: the LEAD is the email capture (lead_captured), then checkout, then the
+//     server-side purchase. BE booking offers: a lander_view from the emailed link, then
+//     checkout, then the server purchase (upsell views/purchases reuse the same event NAMES).
+const V1_EVENTS = ['lead_captured', 'checkout_initiated', 'purchase_completed'];
+const BE_EVENTS = ['lander_view', 'checkout_initiated', 'purchase_completed'];
+const EXPECTED_EVENTS = {
+  v1: V1_EVENTS, fb: V1_EVENTS, fb2: V1_EVENTS, gdn: V1_EVENTS,
+  palm: V1_EVENTS, tarot: V1_EVENTS, read: V1_EVENTS,
+  evelyn: V1_EVENTS, aiden: V1_EVENTS, soulmate: V1_EVENTS,
+  twinflame: BE_EVENTS, judgement: BE_EVENTS, pixiu: BE_EVENTS,
+};
+// Where each event is fired, so a missing one points at the right file. purchase_completed is
+// SERVER-side; the rest are client-side.
+const EVENT_HINTS = {
+  lead_captured: 'fire trackPH("lead_captured", { funnel, step }) at the email capture (V1: client/src/hooks/useConversation.ts).',
+  checkout_initiated: 'fire trackPH("checkout_initiated", { funnel, step }) in the checkout/booking handler, before redirect.',
+  lander_view: 'fired centrally by App.tsx when getPostHogFunnel() is non-null; the shared /offers/upsell/* pages fire their own (OffersUpsell*.tsx).',
+  purchase_completed: 'emitted server-side by buildBackendPurchaseEvent()/posthog.capture() from the Stripe webhook.',
 };
 
 // ---------------------------------------------------------------- args
@@ -254,6 +277,86 @@ if (offer) {
       );
     }
   }
+}
+
+// ---------------------------------------------------------------- 2b. the event contract
+// Files matching an ERE across the given pathspecs, ref-aware. `git grep -l` prefixes each
+// line with "<ref>:" when a ref is given, so strip that for a clean path.
+function grepFiles(pattern, pathspecs) {
+  const gitArgs = ['grep', '-lE', pattern];
+  if (ref) gitArgs.push(ref);
+  gitArgs.push('--', ...pathspecs);
+  try {
+    const out = execFileSync('git', gitArgs, { cwd: ROOT, stdio: ['ignore', 'pipe', 'ignore'] }).toString().trim();
+    return (out ? out.split('\n').map((l) => (ref ? l.slice(l.indexOf(':') + 1) : l)) : [])
+      .filter((f) => !/\.(test|spec)\./.test(f)); // a name in a test file is not a wired call site
+
+  } catch {
+    return []; // git grep exits 1 on no match
+  }
+}
+
+// A tree-wide grep for an event name answers "does SOME funnel fire it", not "does THIS funnel
+// fire it" — checkout_initiated lives in V1's shared hook and Twin Flame's page, so a naive grep
+// falsely passes it for Pixiu. So:
+//   · central events (lander_view, purchase_completed) are already bound to the funnel by the
+//     route/offer checks above — presence is enough.
+//   · V1 + ad funnels fire from ONE shared hook with a COMPUTED funnel, so tree-wide presence
+//     is the correct signal (the literal "v1" never appears in a track call).
+//   · a BE offer fires page-level events with a LITERAL funnel: '<name>', so the event must be
+//     co-located with that literal — this is what catches Pixiu's missing checkout_initiated.
+const CENTRAL = new Set(['lander_view', '$pageview', 'purchase_completed']);
+const BE_FUNNELS = new Set(['twinflame', 'judgement', 'pixiu']);
+const isBE = BE_FUNNELS.has(funnel) || Boolean(offer);
+
+function checkEvent(ev) {
+  const pathspecs = ev === 'purchase_completed' ? ['server/lib', 'server/routes'] : ['client/src'];
+  const eventFiles = grepFiles(`["']${ev}["']`, pathspecs);
+  if (!eventFiles.length) return { verdict: 'missing' };
+  if (CENTRAL.has(ev)) return { verdict: 'central', file: eventFiles[0] };
+  if (!isBE) return { verdict: 'present', file: eventFiles[0] };
+  const funnelFiles = grepFiles(`funnel:[[:space:]]*["']${funnel}["']`, ['client/src']);
+  const both = eventFiles.filter((f) => funnelFiles.includes(f));
+  return both.length ? { verdict: 'present', file: both[0] } : { verdict: 'wrongfunnel', file: eventFiles[0] };
+}
+
+const expectedEvents = args.events
+  ? String(args.events).split(',').map((s) => s.trim()).filter(Boolean)
+  : EXPECTED_EVENTS[funnel] ?? null;
+
+if (expectedEvents) {
+  for (const ev of expectedEvents) {
+    const r = checkEvent(ev);
+    if (r.verdict === 'present') {
+      pass(`event: "${ev}" fires for "${funnel}"`, r.file);
+    } else if (r.verdict === 'central') {
+      pass(`event: "${ev}" present (funnel binding checked above)`, r.file);
+    } else if (r.verdict === 'wrongfunnel') {
+      fail(
+        'warn',
+        `event: "${ev}" fires in the app but NOT for "${funnel}"`,
+        FILES.app,
+        `No track("${ev}", { funnel: "${funnel}" }) exists — it fires for other funnels only. ` +
+          (EVENT_HINTS[ev] ?? ''),
+      );
+    } else {
+      fail(
+        'warn',
+        `event: "${ev}" is never fired anywhere`,
+        ev === 'purchase_completed' ? FILES.webhooks : FILES.app,
+        (EVENT_HINTS[ev] ?? `Add a track("${ev}", …) call.`) +
+          ' Without it the funnel/insight step for this event stays empty.',
+      );
+    }
+  }
+} else {
+  fail(
+    'info',
+    `no expected-events profile for funnel "${funnel}"`,
+    FILES.clientFunnel,
+    'Pass --events=a,b,c to audit specific events. Profiles exist for: ' +
+      Object.keys(EXPECTED_EVENTS).join(', ') + '.',
+  );
 }
 
 // ---------------------------------------------------------------- 3. the silent killers
