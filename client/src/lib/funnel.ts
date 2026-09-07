@@ -244,6 +244,20 @@ export function getPostHogFunnel(pathname?: string): PostHogFunnel | null {
   return null;
 }
 
+// Client mirror of the server's BACKEND_FUNNEL (server/lib/backendPurchaseAnalytics.ts).
+// The SHARED /offers/upsell/* pages learn their offer from the booking session
+// (async), not the URL, so App.tsx's path-based lander_view can't tag them — they
+// call this and fire their own offer-aware lander_view. Returns a plain string so
+// callers needn't widen PostHogFunnel per offer. Keep in sync with the server map.
+export function backendOfferFunnel(offer: string): string {
+  switch (offer) {
+    case "twin-flame": return "twinflame";
+    case "judgement-day": return "judgement";
+    case "pixiu-bracelet": return "pixiu";
+    default: return offer;
+  }
+}
+
 export function getPostHogStep(pathname?: string): string {
   const p = normalize(pathname ?? currentPath());
   const funnel = getPostHogFunnel(p);
