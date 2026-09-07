@@ -6,6 +6,8 @@ import { Upsell2CTA, Upsell2DownsellCTA, ShippingForm, QuickReplies } from "../.
 import { useUpsell2Chat } from "../../hooks/useUpsell2Chat";
 import { upsell2CopyForOffer } from "../../lib/backendOffers";
 import { isBackendOfferKey, BACKEND_OFFER_CATALOG, type BackendOfferKey } from "@shared/backendOffers";
+import { track as trackPH } from "../../lib/posthog";
+import { backendOfferFunnel } from "../../lib/funnel";
 import { Volume2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -85,6 +87,13 @@ export default function OffersUpsell2() {
         }
 
         setOffer(data.offer);
+        // Offer-aware lander_view: this shared page only knows its funnel once the
+        // session resolves, so it fires here (App.tsx's path-based tracker can't).
+        trackPH("lander_view", {
+          funnel: backendOfferFunnel(data.offer),
+          step: "upsell2",
+          path: "/offers/upsell/welcome2",
+        });
         setUserData(data);
       } catch (err) {
         setError("Could not load your session");
