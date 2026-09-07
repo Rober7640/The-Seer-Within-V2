@@ -311,9 +311,8 @@ export function useUpsell2Chat({
           break;
 
         case "AFTER_Q1": {
-          const q1Response =
-            UPSELL2_AFTER_Q1[responseKey || "default"] ||
-            UPSELL2_AFTER_Q1.default;
+          const after1 = copy.AFTER_Q1 ?? UPSELL2_AFTER_Q1;
+          const q1Response = after1[responseKey || "default"] || after1.default;
           await sendBotMessages(p(q1Response));
           advance("AFTER_Q1");
           break;
@@ -341,9 +340,8 @@ export function useUpsell2Chat({
           break;
 
         case "AFTER_Q2": {
-          const q2Response =
-            UPSELL2_AFTER_Q2[responseKey || "default"] ||
-            UPSELL2_AFTER_Q2.default;
+          const after2 = copy.AFTER_Q2 ?? UPSELL2_AFTER_Q2;
+          const q2Response = after2[responseKey || "default"] || after2.default;
           await sendBotMessages(p(q2Response));
           advance("AFTER_Q2");
           break;
@@ -393,9 +391,8 @@ export function useUpsell2Chat({
           break;
 
         case "AFTER_Q3": {
-          const q3Response =
-            UPSELL2_AFTER_Q3[responseKey || "default"] ||
-            UPSELL2_AFTER_Q3.default;
+          const after3 = copy.AFTER_Q3 ?? UPSELL2_AFTER_Q3;
+          const q3Response = after3[responseKey || "default"] || after3.default;
           await sendBotMessages(p(q3Response));
           advance("AFTER_Q3");
           break;

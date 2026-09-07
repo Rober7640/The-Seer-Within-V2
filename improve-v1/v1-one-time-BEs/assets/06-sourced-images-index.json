@@ -1,0 +1,64 @@
+{
+  "offer": "06 — the Wishing Bracelet",
+  "note": "EXCEPTION to the deck's D12 rule (draw, don't source) — operator override, 2026-09-01. See improve-v1/v1-one-time-BEs/docs/0-WORKFLOW.md, D12 section. Recorded here in the same spirit as assets/tarot-rws/index.json even though the rule itself was waived.",
+  "images": [
+    {
+      "file": "06-kaucim-hero.jpg",
+      "used_for": "06-E2-esl-kaucim.md [IMG-1] hero — pre-money, does not reveal stick 17 or its poem",
+      "depicts": "Chien Tung sticks, cylindrical bamboo container with 18 inscribed sticks, China, 1800-1920",
+      "source": "Wikimedia Commons, via Wellcome Collection",
+      "source_url": "https://commons.wikimedia.org/wiki/File:Chien_Tung_sticks,_cylindrical_container_with_18_inscribed_s_Wellcome_L0057487.jpg",
+      "file_url": "https://upload.wikimedia.org/wikipedia/commons/9/95/Chien_Tung_sticks%2C_cylindrical_container_with_18_inscribed_s_Wellcome_L0057487.jpg",
+      "license": "CC BY 4.0",
+      "attribution_required": "Credit: Science Museum, London. Wellcome Images — https://creativecommons.org/licenses/by/4.0/",
+      "fetched": "2026-09-01",
+      "fit_note": "Angled studio shot on white, not overhead on dark cloth; no single stick shown fallen clear. Accepted as close-enough real object rather than the exact staged beat — see build notes."
+    },
+    {
+      "file": "06-iching-hero.jpg",
+      "used_for": "06-E2-esl-iching.md [IMG-1] hero — pre-money, does not show the completed hexagram",
+      "depicts": "Three antique Chinese coins used for I Ching divination, square center holes",
+      "source": "Wikimedia Commons",
+      "source_url": "https://commons.wikimedia.org/wiki/File:Ichingcoins.JPG",
+      "file_url": "https://upload.wikimedia.org/wikipedia/commons/9/92/Ichingcoins.JPG",
+      "license": "Public domain",
+      "attribution_required": "None required; credited to CD343 as courtesy",
+      "fetched": "2026-09-01",
+      "fit_note": "Coins at rest, not mid-throw/motion-blurred. Accepted as close-enough real object rather than the exact staged beat — see build notes."
+    },
+    {
+      "file": "06-pixiu-statue.jpg",
+      "used_for": "06-E2-esl-product.md [IMG-1] hero — the product-led, no-divination-device candidate",
+      "depicts": "One of a pair of ~1,500-year-old stone Pixiu statues, Yongning Tomb of Emperor Wen, Chen Dynasty, Qixia District, Nanjing",
+      "source": "Wikimedia Commons",
+      "source_url": "https://commons.wikimedia.org/wiki/File:Tomb_Yongning_of_the_Ts%27en_Dynasty.JPG",
+      "file_url": "https://upload.wikimedia.org/wikipedia/commons/3/3e/Tomb_Yongning_of_the_Ts%27en_Dynasty.JPG",
+      "license": "CC BY-SA 3.0 (also GFDL)",
+      "attribution_required": "Credit: Shallowell, with a link to the CC BY-SA 3.0 license",
+      "fetched": "2026-09-01",
+      "fit_note": "This is the mythological creature (a real ancient statue), NOT our shipped product — no photo of the actual bracelet exists yet, pending the open fulfillment/sourcing decision. Illustrates the myth being told in the letter rather than standing in for the product photo."
+    },
+    {
+      "file": "06-pixiu-reference.jpg",
+      "used_for": "06-pixiu-anatomy-annotated.png — real-photo anatomy plate, cropped to and annotated on the left creature",
+      "depicts": "A pair of bronze Pixiu incense censers from the Qianlong period, in side profile on a neutral gray background",
+      "source": "Wikimedia Commons",
+      "source_url": "https://commons.wikimedia.org/wiki/File:Pixiu_qianlong.jpg",
+      "file_url": "https://upload.wikimedia.org/wikipedia/commons/d/da/Pixiu_qianlong.jpg",
+      "license": "CC BY-SA 4.0",
+      "attribution_required": "Credit: Sol lc, with a link to the CC BY-SA 4.0 license; adapted as an annotated crop",
+      "fetched": "2026-09-01",
+      "fit_note": "Licensed real reference photo. The output uses only the left creature and adds labels and leader lines; the creature itself is not illustrated or regenerated."
+    }
+  ],
+  "rejected_candidates": [
+    {
+      "file": "Kaucim.jpg (Wong Tai Sin temple)",
+      "reason": "Low resolution (512x384), casual tourist snapshot, plastic canister — doesn't read as premium",
+      "license": "CC BY-SA 3.0 / GFDL"
+    },
+    {
+      "reason": "Searched for a closer match to the exact staged beats (stick fallen clear overhead on dark cloth; coins mid-throw with motion blur). Nothing free/legally clear turned up — remaining candidates were paywalled stock libraries (Dreamstime, iStock, Shutterstock, Adobe Stock) or a blocked site (StockCake, 403). Did not pull from any of these."
+    }
+  ]
+}

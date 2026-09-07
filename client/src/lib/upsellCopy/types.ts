@@ -79,6 +79,13 @@ export interface Upsell1Copy {
 export interface Upsell2Copy {
   PATH_A_OPEN: string[];
   PATH_B_OPEN: string[];
+  // Q&A responses. Optional: when unset the hook falls back to the shared
+  // UPSELL2_AFTER_Q* imports (V1/02 behaviour, unchanged). An offer that reuses
+  // V1's bracelet copy but not its "clearing" premise (06 Pixiu, 03) overrides
+  // these to re-point the wording. The QUESTION text itself stays shared.
+  AFTER_Q1?: Record<string, string[]>;
+  AFTER_Q2?: Record<string, string[]>;
+  AFTER_Q3?: Record<string, string[]>;
   // When present, played instead of calling Claude for that segment.
   REVEAL: string[] | null;
   PERSONALIZE: string[] | null;

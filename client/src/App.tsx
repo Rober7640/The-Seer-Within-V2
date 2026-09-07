@@ -66,6 +66,8 @@ const TwinFlameThankYouPage = lazyWithRetry(() => import("@/pages/TwinFlameThank
 const JudgementBookingPage = lazyWithRetry(() => import("@/pages/JudgementBookingPage"));
 const JudgementBookingChat = lazyWithRetry(() => import("@/pages/JudgementBookingChat"));
 const JudgementThankYouPage = lazyWithRetry(() => import("@/pages/JudgementThankYouPage"));
+const PixiuBookingPage = lazyWithRetry(() => import("@/pages/offers/pixiu-bracelet/BookingPage"));
+const PixiuThankYouPage = lazyWithRetry(() => import("@/pages/offers/pixiu-bracelet/ThankYouPage"));
 // Shared /offers/upsell/ pages — offer + pitch resolved from the booking
 // SESSION rather than the URL prefix, so one route pair serves every backend
 // offer in the deck. Lazy for the same reason as the booking pages above.
@@ -349,6 +351,16 @@ function Router() {
             navigate call, BACKEND_OFFER_CATALOG['judgement-day'].successPath).
             No bump delivery block here, unlike 02's — see JudgementThankYouPage. */}
         <Route path="/offers/wiccan/judgement-day/success" component={JudgementThankYouPage} />
+
+        {/* Backend deck, offer 06 — the Wishing Bracelet (Pixiu). Reading-shaped
+            funnel, Object-shaped product: fixed $49, a real physical item that
+            ships. PAGE treatment only (no chat variant — no AI conversation,
+            just five static statements + the bump). Booking sits at the offer
+            root (where the letter's booking URL points); the success page is a
+            RECEIPT (06-T1), reached via successPath + `?s=` from OffersUpsell2.
+            Spec: improve-v1/v1-one-time-BEs/docs/06/HANDOVER.md */}
+        <Route path="/offers/wiccan/pixiu-bracelet" component={PixiuBookingPage} />
+        <Route path="/offers/wiccan/pixiu-bracelet/success" component={PixiuThankYouPage} />
 
         {/* Shared /offers/upsell/ pages — the deck-wide Upsell 1 → Upsell 2
             chain. Offer + pitch are resolved from the booking SESSION

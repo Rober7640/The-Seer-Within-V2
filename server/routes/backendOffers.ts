@@ -1,4 +1,5 @@
 import { Router, type Request, type Response } from 'express';
+import type Stripe from 'stripe';
 import { getStripe } from '../lib/stripeAccount';
 import {
   BACKEND_OFFER_CATALOG,
@@ -76,6 +77,15 @@ function posthogMetaFromStripe(meta: Record<string, string | undefined> | null |
   }
   return out;
 }
+
+/**
+ * Countries a physical backend offer ships to. Kept identical to the funnel's
+ * Manifestation Bracelet (client/src/components/upsell/ShippingForm.tsx) so the
+ * main product and its shipped upsell accept the same destinations. Add codes
+ * here as fulfilment expands; Stripe requires an explicit allow-list.
+ */
+const BACKEND_SHIPPING_COUNTRIES: Stripe.Checkout.SessionCreateParams.ShippingAddressCollection['allowed_countries'] =
+  ['US', 'CA', 'GB', 'AU', 'NZ', 'IE', 'SG'];
 
 function baseUrl(req: Request): string {
   const proto = (req.headers['x-forwarded-proto'] as string) || req.protocol || 'https';
@@ -531,6 +541,14 @@ router.post('/checkout', async (req: Request, res: Response) => {
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',
       payment_method_types: ['card'],
+      // Physical offers (06+) collect a mailing address on Stripe's own checkout
+      // page, after the commitment ladder. Stripe stamps it onto the session /
+      // PaymentIntent — the record fulfilment ships from. Digital offers (02, 03)
+      // skip this and collect only the email. Matches the countries the funnel's
+      // Manifestation Bracelet already ships to (ShippingForm.tsx).
+      ...(offer.collectsShipping
+        ? { shipping_address_collection: { allowed_countries: BACKEND_SHIPPING_COUNTRIES } }
+        : {}),
       // Create a Customer and save the card for OFF-SESSION reuse, exactly as V1's
       // main checkout does — this is what lets the post-purchase upsells charge in
       // one click. No email is known before Stripe (she enters it here), so we let

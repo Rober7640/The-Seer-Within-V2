@@ -12,7 +12,7 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import express from 'express';
 import type { Server } from 'node:http';
-import { TAROT_C_PATH, tarotBTarget } from './tarotRedirect';
+import { TAROT_C_PATH, shouldRedirectTarotC, tarotBTarget } from './tarotRedirect';
 
 let server: Server;
 let base = '';
@@ -20,7 +20,10 @@ let base = '';
 beforeAll(async () => {
   const app = express();
   // Mounted exactly as in registerRoutes.
-  app.get(TAROT_C_PATH, (req, res) => res.redirect(302, tarotBTarget(req.originalUrl)));
+  app.get(TAROT_C_PATH, (req, res, next) => {
+    if (!shouldRedirectTarotC(req.originalUrl)) return next();
+    return res.redirect(302, tarotBTarget(req.originalUrl));
+  });
   // Stand-ins for the SPA catch-all, so "was NOT redirected" is observable.
   app.get('/fb-tarot/b', (_req, res) => { res.status(200).send('bridge-b'); });
   app.get('/fb-palm/c', (_req, res) => { res.status(200).send('palm-c'); });
@@ -127,5 +130,41 @@ describe('URL variants Express still matches', () => {
     const other = await hop('/some/other/page');
     expect(other.status).toBe(200);
     expect(await other.text()).toBe('spa-catch-all');
+  });
+});
+
+// The exemption, driven over real HTTP. The unit tests prove the PREDICATE; these
+// prove Express actually falls through to the SPA when it says false — next() past a
+// matched route is framework behaviour, not ours, and is the half that would strand a
+// paid campaign on a blank response if it were wrong.
+describe('GET /fb-tarot/c for a Version C campaign hook', () => {
+  it('is not redirected', async () => {
+    const r = await hop('/fb-tarot/c?hook=cards-ever-back');
+    expect(r.status).not.toBe(302);
+  });
+
+  it('falls through to the SPA so the /c bridge can render', async () => {
+    const r = await hop('/fb-tarot/c?hook=cards-ever-back');
+    expect(r.status).toBe(200);
+    expect(await r.text()).toBe('spa-catch-all');
+  });
+
+  it('keeps redirecting every hook that is not on the campaign', async () => {
+    const r = await hop('/fb-tarot/c?hook=cards-honest&fbclid=IwAR9');
+    expect(r.status).toBe(302);
+    expect(r.headers.get('location')).toBe('/fb-tarot/b?hook=cards-honest&fbclid=IwAR9');
+  });
+
+  it('still redirects a bare /c with no hook', async () => {
+    const r = await hop('/fb-tarot/c');
+    expect(r.status).toBe(302);
+  });
+
+  // fb-palm has no version experiment and was never redirected; the exemption must
+  // not have taught it one.
+  it('leaves /fb-palm/c alone', async () => {
+    const r = await hop('/fb-palm/c?hook=cards-ever-back');
+    expect(r.status).toBe(200);
+    expect(await r.text()).toBe('palm-c');
   });
 });

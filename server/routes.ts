@@ -1,5 +1,5 @@
 // Force server restart
-import type { Express, Request, Response } from "express";
+import type { Express, NextFunction, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import path from "path";
 import express from "express";
@@ -92,7 +92,7 @@ import {
   V1_TAROT_SHADOW_EXPERIMENT_KEY,
   type TarotVersion,
 } from "./lib/experiments";
-import { TAROT_C_PATH, tarotBTarget } from "./lib/tarotRedirect";
+import { TAROT_C_PATH, shouldRedirectTarotC, tarotBTarget } from "./lib/tarotRedirect";
 import { ensureVisitorId, readVisitorId } from "./lib/visitorCookie";
 import {
   V1_BUMP_CENTS,
@@ -491,9 +491,14 @@ export async function registerRoutes(
   // index.ts) ever sees the request. The full rationale — why 302, why the query
   // string is forwarded verbatim, and why fb-palm is deliberately excluded — is
   // in server/lib/tarotRedirect.ts.
-  app.get(TAROT_C_PATH, (req: Request, res: Response) =>
-    res.redirect(302, tarotBTarget(req.originalUrl)),
-  );
+  //
+  // The Version C campaign hooks are EXEMPT and fall through to the SPA, so those
+  // ads reach the /c bridge and get the interactive opener rather than B's
+  // pre-written read. shouldRedirectTarotC holds that list and the reasoning.
+  app.get(TAROT_C_PATH, (req: Request, res: Response, next: NextFunction) => {
+    if (!shouldRedirectTarotC(req.originalUrl)) return next();
+    return res.redirect(302, tarotBTarget(req.originalUrl));
+  });
 
   // Health check endpoint - visit this URL to verify production server is running
   app.get("/api/health-check", async (req: Request, res: Response) => {
