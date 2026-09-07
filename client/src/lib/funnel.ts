@@ -224,13 +224,11 @@ function normalize(path: string): string {
 export function getPostHogFunnel(pathname?: string): PostHogFunnel | null {
   const p = normalize(pathname ?? currentPath());
   if (p === TWIN_FLAME_PREFIX || p.startsWith(`${TWIN_FLAME_PREFIX}/`)) return "twinflame";
-  // 03 Judgement Day. Its funnel is split across two prefixes: booking + thank-you
-  // under JUDGEMENT_PREFIX, and the upsells on the SHARED /offers/upsell/* pages.
-  // Both map to "judgement" so clicks group under the same funnel its revenue uses.
-  // ⚠ /offers/upsell/* is 03-only today; when another backend offer adopts those
-  // shared pages, resolve the funnel from the session offer, not the path.
+  // 03 Judgement Day booking + thank-you under JUDGEMENT_PREFIX. Its upsells (and
+  // 06's) live on the SHARED /offers/upsell/* pages, which now fire their OWN
+  // offer-aware lander_view (see backendOfferFunnel) because they resolve the offer
+  // from the session, not the path — so they are deliberately NOT matched here.
   if (p === JUDGEMENT_PREFIX || p.startsWith(`${JUDGEMENT_PREFIX}/`)) return "judgement";
-  if (p === "/offers/upsell" || p.startsWith("/offers/upsell/")) return "judgement";
   // 06 Pixiu Bracelet — email → booking page + /success (page-only, no chat, no
   // welcome1/2 of its own). Registering it here is all App.tsx needs to fire
   // lander_view with the letter's utm_* attached, so a mailed Pixiu link reports
@@ -250,6 +248,20 @@ export function getPostHogFunnel(pathname?: string): PostHogFunnel | null {
     return "v1";
   }
   return null;
+}
+
+// Client mirror of the server's BACKEND_FUNNEL (server/lib/backendPurchaseAnalytics.ts).
+// The SHARED /offers/upsell/* pages learn their offer from the booking session
+// (async), not the URL, so App.tsx's path-based lander_view can't tag them — they
+// call this and fire their own offer-aware lander_view. Returns a plain string so
+// callers needn't widen PostHogFunnel per offer. Keep in sync with the server map.
+export function backendOfferFunnel(offer: string): string {
+  switch (offer) {
+    case "twin-flame": return "twinflame";
+    case "judgement-day": return "judgement";
+    case "pixiu-bracelet": return "pixiu";
+    default: return offer;
+  }
 }
 
 export function getPostHogStep(pathname?: string): string {
@@ -282,10 +294,9 @@ export function getPostHogStep(pathname?: string): string {
       return "unknown";
     }
     case "judgement": {
-      // Split across two prefixes: booking/thank-you under JUDGEMENT_PREFIX, upsells on
-      // the shared /offers/upsell/* pages. Map both into one step vocabulary.
-      if (p === "/offers/upsell/welcome1") return "upsell1";
-      if (p === "/offers/upsell/welcome2") return "upsell2";
+      // Booking/thank-you under JUDGEMENT_PREFIX. The shared /offers/upsell/* pages
+      // fire their own lander_view with step upsell1/upsell2 (see OffersUpsell*.tsx),
+      // so they are not handled here.
       const sub = p.slice(JUDGEMENT_PREFIX.length); // "" at the booking root
       if (sub === "" || sub === "/chat") return "booking";
       if (sub === "/success") return "thank_you";
