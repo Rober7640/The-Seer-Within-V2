@@ -102,6 +102,7 @@ export function skipEmail(search?: string): boolean {
 // deliberately holds no copy, so routing can never depend on it.
 export const TWIN_FLAME_PREFIX = "/tarot/twin-flame"; // 02 Twin Flame Tarot
 export const JUDGEMENT_PREFIX = "/offers/wiccan/judgement-day"; // 03 Judgement Day
+export const PIXIU_PREFIX = "/offers/wiccan/pixiu-bracelet"; // 06 Pixiu (Wishing) Bracelet
 
 export const BACKEND_OFFER_PREFIXES = [
   TWIN_FLAME_PREFIX,
@@ -204,7 +205,7 @@ export function funnelPath(v1Path: string, pathname?: string): string {
 
 export type PostHogFunnel =
   | "soulmate" | "fb" | "fb2" | "gdn" | "palm" | "tarot" | "read" | "v1" | "evelyn" | "aiden"
-  | "marcus" | "luna" | "nova" | "maren" | "seven-seven" | "twinflame";
+  | "marcus" | "luna" | "nova" | "maren" | "seven-seven" | "twinflame" | "pixiu";
 
 // Generalized persona landers → their PostHog funnel name. One route each.
 const PERSONA_LANDER_FUNNELS: Record<string, PostHogFunnel> = {
@@ -223,6 +224,10 @@ function normalize(path: string): string {
 export function getPostHogFunnel(pathname?: string): PostHogFunnel | null {
   const p = normalize(pathname ?? currentPath());
   if (p === TWIN_FLAME_PREFIX || p.startsWith(`${TWIN_FLAME_PREFIX}/`)) return "twinflame";
+  // 06 Pixiu Bracelet — email → booking page + /success. Registering it here is
+  // all App.tsx needs to fire lander_view with the letter's utm_* attached, so a
+  // mailed Pixiu link reports clicks (revenue is grouped server-side, BACKEND_FUNNEL).
+  if (p === PIXIU_PREFIX || p.startsWith(`${PIXIU_PREFIX}/`)) return "pixiu";
   if (p === "/soulmate" || p.startsWith("/soulmate/")) return "soulmate";
   const adDef = funnelDefForPath(p);
   if (adDef) return adDef.posthog as PostHogFunnel;
@@ -265,6 +270,13 @@ export function getPostHogStep(pathname?: string): string {
       if (sub === "" || sub === "/preview-page" || sub === "/preview-chat") return "booking";
       if (sub === "/welcome1") return "upsell1";
       if (sub === "/welcome2") return "upsell2";
+      if (sub === "/success") return "thank_you";
+      return "unknown";
+    }
+    case "pixiu": {
+      // 06 is page-only (no chat variant): just the booking root and /success.
+      const sub = p.slice(PIXIU_PREFIX.length); // "" at the booking root
+      if (sub === "") return "booking";
       if (sub === "/success") return "thank_you";
       return "unknown";
     }
