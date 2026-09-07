@@ -66,6 +66,28 @@ describe('buildBackendPurchaseEvent', () => {
     assert.equal(ev.properties.step, 'upsell2');
   });
 
+  it('judgement-day (03) maps to funnel judgement across booking + both upsells', () => {
+    const booking = buildBackendPurchaseEvent({
+      product: 'be_judgement_day', offer: 'judgement-day',
+      amountCents: 4577, email: 'x@y.com', dedupeId: 'cs_j', bumpProduct: 'be_unburdening',
+    });
+    assert.equal(booking.properties.funnel, 'judgement');
+    assert.equal(booking.properties.step, 'sales');
+    assert.equal(booking.properties.bump, true);
+    const u1 = buildBackendPurchaseEvent({
+      product: 'be_protection_ritual', offer: 'judgement-day',
+      amountCents: 4700, email: 'x@y.com', dedupeId: 'pi_ju1',
+    });
+    assert.equal(u1.properties.funnel, 'judgement');
+    assert.equal(u1.properties.step, 'upsell1');
+    const u2 = buildBackendPurchaseEvent({
+      product: 'be_bracelet', offer: 'judgement-day',
+      amountCents: 4700, email: 'x@y.com', dedupeId: 'pi_ju2',
+    });
+    assert.equal(u2.properties.funnel, 'judgement');
+    assert.equal(u2.properties.step, 'upsell2');
+  });
+
   it('falls back to email as distinctId when none threaded', () => {
     const ev = buildBackendPurchaseEvent({
       product: 'be_twin_flame', offer: 'twin-flame',

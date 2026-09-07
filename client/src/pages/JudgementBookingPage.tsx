@@ -4,6 +4,7 @@ import { CosmicBackground } from '@/components/CosmicBackground'
 import { useFloorSpoken } from '@/hooks/useFloorSpoken'
 import { bookingFirstName } from '@/lib/funnel'
 import { beginBackendCheckout } from '@/lib/backendCheckout'
+import { track as trackPH } from '@/lib/posthog'
 import {
   PAGE_HEADER,
   PAGE_STEP_ONE,
@@ -121,6 +122,17 @@ export default function JudgementBookingPage() {
     if (busy) return
     setBusy(true)
     setCheckoutError(null)
+    // She has started the checkout — the counterpart to Twin Flame's `checkout_initiated`,
+    // so the Judgement funnel gets a lander_view → checkout_initiated → purchase step.
+    // UTMs ride along automatically as PostHog super-properties (registerUTMs on entry).
+    trackPH('checkout_initiated', {
+      funnel: 'judgement',
+      step: 'sales',
+      product: 'be_judgement_day',
+      price_cents: totalCents,
+      bump: bumpTaken,
+      treatment: 'page',
+    })
     const result = await beginBackendCheckout({
       offer: 'judgement-day',
       treatment: 'page',
