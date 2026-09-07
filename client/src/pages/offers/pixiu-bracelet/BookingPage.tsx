@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { CosmicBackground } from '@/components/CosmicBackground'
 import { bookingFirstName } from '@/lib/funnel'
 import { beginBackendCheckout } from '@/lib/backendCheckout'
+import { track as trackPH } from '@/lib/posthog'
 import {
   PAGE_HEADER,
   PAGE_STATEMENTS,
@@ -63,6 +64,16 @@ export default function PixiuBookingPage() {
     if (busy) return
     setBusy(true)
     setCheckoutError(null)
+    // She has started the checkout — the counterpart to Twin Flame's, so the
+    // Pixiu funnel gets a lander_view → checkout_initiated → purchase step.
+    trackPH('checkout_initiated', {
+      funnel: 'pixiu',
+      step: 'sales',
+      product: 'be_pixiu_bracelet',
+      price_cents: totalCents,
+      bump: bumpTaken,
+      treatment: 'page',
+    })
     const result = await beginBackendCheckout({
       offer: 'pixiu-bracelet',
       treatment: 'page',
