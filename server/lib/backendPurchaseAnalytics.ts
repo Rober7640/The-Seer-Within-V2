@@ -79,6 +79,7 @@ export function dedupeUuid(dedupeId: string): string {
 const BACKEND_STEP: Record<string, string> = {
   be_twin_flame: 'sales',
   be_judgement_day: 'sales',
+  be_pixiu_bracelet: 'sales',
   be_protection_ritual: 'upsell1',
   be_bracelet: 'upsell2',
 };
@@ -87,6 +88,7 @@ const BACKEND_STEP: Record<string, string> = {
 const BACKEND_FUNNEL: Record<string, string> = {
   'twin-flame': 'twinflame',
   'judgement-day': 'judgement',
+  'pixiu-bracelet': 'pixiu',
 };
 
 export function buildBackendPurchaseEvent(input: BackendPurchaseInput): BackendPurchaseEvent {
