@@ -98,13 +98,31 @@ export function tarotBTarget(originalUrl: string): string {
 // instead of falling back to the generic default. Version C generates copy at
 // request time, so those bans are the only guard it has.
 //
-// 🔴 `cards-will-commit` is DELIBERATELY ABSENT though it was on the campaign list.
-// It is one of the four landers inside the concluded v1_tarot_version_bc_2026, where
-// the winner rollout in assign() overrides whatever the URL says — so exempting it
-// here would have changed nothing, and freeing it properly would mean either
-// re-opening that test (restarting a live split on three landers nobody asked about)
-// or removing a lander from a scope the admin guard holds append-only. One hook was
-// not worth either.
+// ── 2026-09-07: THE THREE COMMITMENT HOOKS, AND WHY THIS LIST ALONE IS NOT ENOUGH ──
+//
+// Operator decision (Joel, via Lewis): a /c URL must serve Version C. `cards-ready-commit`
+// and `cards-will-commit` were added here so all three commitment ads — alongside
+// `cards-wont-commit`, exempt since 2026-09-04 — deliver the interactive opener rather
+// than one of the three serving C and the other two silently serving B.
+//
+// 🔴 `cards-will-commit` NEEDED A SECOND CHANGE, and an entry here on its own would have
+// LIED about it. It is one of the four landers inside the CONCLUDED
+// v1_tarot_version_bc_2026, and assign() applies a concluded test's winner (B) BEFORE the
+// URL is consulted (experiments.ts, the status===done branch) — which is exactly why it
+// was left out on 2026-09-04. resolveTarotVersion() now consults this set and returns
+// 'c' before assignment; THAT is what frees it. See the block there — the two changes
+// only work as a pair.
+//
+// Both alternatives were rejected: re-opening that test restarts a live split on
+// cards-return / cards-who-he-is / cards-feels, three landers nobody asked to change;
+// and removing a lander from scope.landers needs direct SQL against prod, because the
+// admin guard holds the list append-only once exposures exist (see assertOnlyLiveEdits
+// in routes/admin/experiments.ts). ✅ Live scope re-read before this change: still those
+// four, so nothing else moves.
+//
+// ⚠️ B WON that test. Serving C on cards-will-commit knowingly serves the LOSING arm on
+// a high-traffic lander. That is the point — the campaign exists to put B against C on
+// paid traffic again — but it is a CONTENT change, not a routing tidy-up.
 export const TAROT_C_EXEMPT_HOOKS: ReadonlySet<string> = new Set([
   'cards-after-marriage',
   'cards-allowed-to-want',
@@ -144,12 +162,14 @@ export const TAROT_C_EXEMPT_HOOKS: ReadonlySet<string> = new Set([
   'cards-more-years-alone',
   'cards-moved-on',
   'cards-real-connection-coming',
+  'cards-ready-commit',
   'cards-second-time',
   'cards-slipping-past',
   'cards-too-late-love',
   'cards-too-late-or-now',
   'cards-waiting-to-heal',
   'cards-wait-on-connection',
+  'cards-will-commit',
   'cards-wont-commit',
 ])
 

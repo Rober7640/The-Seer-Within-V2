@@ -121,16 +121,18 @@ describe('shouldRedirectTarotC', () => {
 });
 
 describe('TAROT_C_EXEMPT_HOOKS', () => {
-  it('holds exactly the 45 campaign landers', () => {
-    expect(TAROT_C_EXEMPT_HOOKS.size).toBe(45);
+  it('holds exactly the 47 campaign landers', () => {
+    expect(TAROT_C_EXEMPT_HOOKS.size).toBe(47);
   });
 
-  // cards-will-commit was ON the campaign list but is deliberately NOT exempt: it sits
-  // inside the concluded v1_tarot_version_bc_2026, whose winner rollout overrides the
-  // URL, so exempting it would promise Version C and still serve B. Pinned so a future
-  // edit has to confront that rather than "fix" the omission.
-  it('deliberately excludes cards-will-commit', () => {
-    expect(TAROT_C_EXEMPT_HOOKS.has('cards-will-commit')).toBe(false);
+  // All three commitment ads run on /c and must serve Version C (operator decision,
+  // 2026-09-07). cards-wont-commit has been exempt since 2026-09-04; the other two were
+  // added then — cards-will-commit only became honest at the same time, see the
+  // resolveTarotVersion block below.
+  it('exempts all three commitment hooks', () => {
+    for (const h of ['cards-will-commit', 'cards-wont-commit', 'cards-ready-commit']) {
+      expect(TAROT_C_EXEMPT_HOOKS.has(h), `${h} must be exempt`).toBe(true);
+    }
   });
 
   it('is stored lower-case, since lookups normalise', () => {
@@ -155,5 +157,54 @@ describe('exempt hooks are accepted by the tarot chat handoff', () => {
     expect(roster, 'tarot validHooks array not found in routes.ts').toBeTruthy();
     const missing = [...TAROT_C_EXEMPT_HOOKS].filter((h) => !roster![0].includes(`"${h}"`));
     expect(missing, `exempt but not in validHooks: ${missing.join(', ')}`).toEqual([]);
+  });
+});
+
+// ── The exemption is only HONEST while resolveTarotVersion enforces it ─────────
+//
+// cards-will-commit sits inside the CONCLUDED v1_tarot_version_bc_2026, and a concluded
+// test's winner (B) is applied BEFORE the URL is consulted. Membership of the set above
+// is therefore NOT on its own enough to serve Version C — between 2026-09-04 and
+// 2026-09-07 that is exactly why this hook was left OUT rather than added. What makes it
+// honest is a second change: resolveTarotVersion() short-circuits to 'c' for an exempt
+// hook BEFORE assign() runs. The two only work as a pair, and this pins the pair.
+//
+// 🔴 TWO WAYS THIS TEST TRIED TO BE USELESS, BOTH FOUND BY DELETING THE GUARD AND
+// RE-RUNNING IT. Recorded because neither is visible by reading it.
+//   1. Calling resolveTarotVersion for real proves nothing. It degrades to the URL’s own
+//      version whenever assignment is unavailable, and on a /c URL that fallback is 'c' —
+//      the very answer the guard produces. With no DB in the suite it returned C whether
+//      the guard was present or deleted.
+//   2. Searching the source for the constant passes on the COMMENT above the guard, which
+//      names it several times. So comments are stripped before the search, and the match
+//      is on the call `TAROT_C_EXEMPT_HOOKS.has(`, not the bare identifier.
+describe('resolveTarotVersion honours the exemption before assignment', () => {
+  it('calls TAROT_C_EXEMPT_HOOKS.has() inside resolveTarotVersion, ahead of assign()', () => {
+    const src = readFileSync(
+      fileURLToPath(new URL('./experiments.ts', import.meta.url)),
+      'utf8',
+    );
+    const start = src.indexOf('export async function resolveTarotVersion');
+    expect(start, 'resolveTarotVersion not found in experiments.ts').toBeGreaterThan(-1);
+    // Bounded by the next top-level export, so this reads that one function body.
+    const end = src.indexOf('\nexport ', start + 1);
+    const body = src.slice(start, end === -1 ? undefined : end);
+    const code = body
+      .split(/\r?\n/)
+      .filter((line) => !line.trim().startsWith('//'))
+      .join('\n');
+    const guardAt = code.indexOf('TAROT_C_EXEMPT_HOOKS.has(');
+    const assignAt = code.indexOf('await assign(');
+    expect(
+      guardAt,
+      'resolveTarotVersion no longer consults TAROT_C_EXEMPT_HOOKS — a /c ad on an exempt ' +
+        'hook inside a concluded test will silently serve Version B again. Either restore ' +
+        'the guard, or take cards-will-commit off the exemption set in the same commit.',
+    ).toBeGreaterThan(-1);
+    expect(assignAt, 'assign() call not found in resolveTarotVersion').toBeGreaterThan(-1);
+    expect(
+      guardAt,
+      'the exemption check must run BEFORE assign(), or a concluded test still overrides the URL',
+    ).toBeLessThan(assignAt);
   });
 });
