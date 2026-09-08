@@ -218,9 +218,16 @@ export default function PriceTestDashboard() {
                   funnel. "All funnels" mixes every test together and is only for a broad sweep.
                 </div>
                 <div>
-                  2. Set <span className="font-semibold">From</span> to the date the test started.
-                  Returning visitors keep the price they were first quoted and never enter a new test,
-                  so without this they pile into the control arm and flatter it.
+                  2. Set <span className="font-semibold">From</span> to the{" "}
+                  <span className="font-semibold">first full day AFTER</span> the test started — not the
+                  start date itself. This filter works in whole days, so if the test was switched on
+                  mid-day, picking that day sweeps in the hours before it went live. Those visitors
+                  could never have drawn the new arm, so every one of them lands in the control.
+                </div>
+                <div className="text-gray-400">
+                  The date matters for a second reason: returning visitors keep the price they were
+                  first quoted and never enter a new test, so with no From date they pile into the
+                  control arm too. Both effects flatter the control — never the new arm.
                 </div>
                 <div>
                   3. Compare the <span className="font-semibold">Live</span> rows only, on{" "}
