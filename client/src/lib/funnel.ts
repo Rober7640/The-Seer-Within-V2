@@ -205,7 +205,7 @@ export function funnelPath(v1Path: string, pathname?: string): string {
 
 export type PostHogFunnel =
   | "soulmate" | "fb" | "fb2" | "gdn" | "palm" | "tarot" | "read" | "v1" | "evelyn" | "aiden"
-  | "marcus" | "luna" | "nova" | "maren" | "seven-seven" | "twinflame" | "pixiu";
+  | "marcus" | "luna" | "nova" | "maren" | "seven-seven" | "twinflame" | "pixiu" | "judgement";
 
 // Generalized persona landers → their PostHog funnel name. One route each.
 const PERSONA_LANDER_FUNNELS: Record<string, PostHogFunnel> = {
@@ -228,6 +228,10 @@ export function getPostHogFunnel(pathname?: string): PostHogFunnel | null {
   // all App.tsx needs to fire lander_view with the letter's utm_* attached, so a
   // mailed Pixiu link reports clicks (revenue is grouped server-side, BACKEND_FUNNEL).
   if (p === PIXIU_PREFIX || p.startsWith(`${PIXIU_PREFIX}/`)) return "pixiu";
+  // 03 Judgement Day — booking (chat default at the root, page fallback at /page) +
+  // /success under JUDGEMENT_PREFIX. Its upsells are on the SHARED /offers/upsell/*
+  // pages, which self-report via backendOfferFunnel (session offer), not by path.
+  if (p === JUDGEMENT_PREFIX || p.startsWith(`${JUDGEMENT_PREFIX}/`)) return "judgement";
   if (p === "/soulmate" || p.startsWith("/soulmate/")) return "soulmate";
   const adDef = funnelDefForPath(p);
   if (adDef) return adDef.posthog as PostHogFunnel;
@@ -291,6 +295,15 @@ export function getPostHogStep(pathname?: string): string {
       // 06 is page-only (no chat variant): just the booking root and /success.
       const sub = p.slice(PIXIU_PREFIX.length); // "" at the booking root
       if (sub === "") return "booking";
+      if (sub === "/success") return "thank_you";
+      return "unknown";
+    }
+    case "judgement": {
+      // Booking under JUDGEMENT_PREFIX: chat is the default (root), page fallback at
+      // /page, /chat also serves the chat. The shared /offers/upsell/* pages self-report
+      // (backendOfferFunnel), so they are not handled here.
+      const sub = p.slice(JUDGEMENT_PREFIX.length); // "" at the booking root (chat, default)
+      if (sub === "" || sub === "/chat" || sub === "/page") return "booking";
       if (sub === "/success") return "thank_you";
       return "unknown";
     }

@@ -4,6 +4,7 @@ import { CosmicBackground } from '@/components/CosmicBackground'
 import { useFloorSpoken } from '@/hooks/useFloorSpoken'
 import { bookingFirstName } from '@/lib/funnel'
 import { beginBackendCheckout } from '@/lib/backendCheckout'
+import { track as trackPH } from '@/lib/posthog'
 import {
   PAGE_HEADER,
   PAGE_STEP_ONE,
@@ -44,7 +45,10 @@ import {
 // deep link, a shared URL — is sent back to step 1. Consent that was not given
 // in this page's lifetime is not assumed.
 
-const BOOKING_PATH = '/offers/wiccan/judgement-day'
+// The page is the FALLBACK treatment, mounted at /page (the chat owns the root).
+// Its two-step ?step=give flow must stay on this path, so it is /page — not the
+// root, which now serves the chat.
+const BOOKING_PATH = '/offers/wiccan/judgement-day/page'
 
 function centsToDollars(cents: number): string {
   return `$${(cents / 100).toFixed(2)}`
@@ -121,6 +125,17 @@ export default function JudgementBookingPage() {
     if (busy) return
     setBusy(true)
     setCheckoutError(null)
+    // She has started the checkout — the counterpart to Twin Flame's `checkout_initiated`,
+    // so the Judgement funnel gets a lander_view → checkout_initiated → purchase step.
+    // UTMs ride along automatically as PostHog super-properties (registerUTMs on entry).
+    trackPH('checkout_initiated', {
+      funnel: 'judgement',
+      step: 'sales',
+      product: 'be_judgement_day',
+      price_cents: totalCents,
+      bump: bumpTaken,
+      treatment: 'page',
+    })
     const result = await beginBackendCheckout({
       offer: 'judgement-day',
       treatment: 'page',

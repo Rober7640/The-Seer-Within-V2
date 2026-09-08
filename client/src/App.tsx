@@ -340,17 +340,22 @@ function Router() {
             letter's {{BOOKING_URL}} points; 02 has two preview paths only
             because two treatments were competing.
             Spec: improve-v1/v1-one-time-BEs/copy/03/03-C1-booking-page.md */}
-        {/* Two candidate treatments, as 02 has: the page at the offer root
-            (where the letter's {{BOOKING_URL}} points) and the chat beside it.
-            ⚠ 03's chat carries the deck's only text input — pay-what-you-want
-            has one thing only the buyer can supply. */}
+        {/* 03 ships the CHAT as its default treatment (operator, 2026-09): no
+            page-vs-chat A/B — the letter's {{BOOKING_URL}} (the offer root) serves
+            the chat, and the page is kept at /page as a fallback so a split test
+            can be turned on later without rebuilding it. ⚠ 03's chat carries the
+            deck's only text input — pay-what-you-want has one thing only the buyer
+            can supply. Route order: specific paths before the root. */}
         <Route path="/offers/wiccan/judgement-day/chat" component={JudgementBookingChat} />
-        <Route path="/offers/wiccan/judgement-day" component={JudgementBookingPage} />
+        <Route path="/offers/wiccan/judgement-day/page" component={JudgementBookingPage} />
         {/* 03's own thank-you (03-T1) — an INTAKE GATE, not a receipt (P7).
             Reached via successPath + `?s=<session_id>` (OffersUpsell2's
             navigate call, BACKEND_OFFER_CATALOG['judgement-day'].successPath).
             No bump delivery block here, unlike 02's — see JudgementThankYouPage. */}
         <Route path="/offers/wiccan/judgement-day/success" component={JudgementThankYouPage} />
+        {/* Offer root — the default treatment. Serves the chat (see note above);
+            last so the /chat, /page and /success paths match first. */}
+        <Route path="/offers/wiccan/judgement-day" component={JudgementBookingChat} />
 
         {/* Backend deck, offer 06 — the Wishing Bracelet (Pixiu). Reading-shaped
             funnel, Object-shaped product: fixed $49, a real physical item that
