@@ -42,3 +42,56 @@ missing tag on the link, or a tracking outage. Check the tag first.
   the same one across a campaign so its clicks and revenue line up on one row.
 - Backend offers are invisible to Facebook/Google/TrackDesk by design — this PostHog
   view is the source of truth for them.
+
+---
+
+## The two saved insights (per BE offer)
+
+Each backend offer gets **two** saved insights, both broken down by **UTM campaign**:
+
+1. **`<Offer> — revenue per link by step`** (Trends) — money per link, split by step.
+2. **`<Offer> — full funnel`** (Funnel) — lander_view → checkout → purchase → upsells.
+
+Twin Flame's are the reference (`funnel = twinflame`). Every other offer is the **same two
+insights with the funnel filter swapped** — the event names and `step` values are identical
+across offers, so nothing else changes.
+
+| offer | funnel filter | booking entry route |
+|---|---|---|
+| Twin Flame (02) | `twinflame` | `/tarot/twin-flame` |
+| Judgement Day (03) | `judgement` | `/offers/wiccan/judgement-day` |
+| Pixiu (06) | `pixiu` | `/offers/wiccan/pixiu-bracelet` |
+
+`step` values (same for every offer): `sales` (initial reading), `upsell1`, `upsell2`.
+
+### Insight 1 — revenue per link by step (Trends)
+Three series, all event **`purchase_completed`**, measured **Property value sum → `amount_cents`**
+(÷100 for dollars), each named + filtered by step:
+
+| series name | filters |
+|---|---|
+| `(Initial)`  | `funnel = <name>` + `step = sales` |
+| `(Upsell 1)` | `funnel = <name>` + `step = upsell1` |
+| `(Upsell 2)` | `funnel = <name>` + `step = upsell2` |
+
+Breakdown: **UTM campaign** · group remaining under "Other" · limit 50 · Last 30 days.
+
+### Insight 2 — full funnel (7 steps)
+`lander_view` → `checkout_initiated` → `purchase_completed`(step=sales) →
+`upsell_accepted`(upsell1) → `purchase_completed`(upsell1) →
+`upsell_accepted`(upsell2) → `purchase_completed`(upsell2). Every step filtered
+`funnel = <name>`. Breakdown: **UTM campaign**, attribution **First touchpoint** · Last 30 days.
+
+## Recipe: make a new offer's insights (e.g. Judgement Day 03)
+
+Don't rebuild — **duplicate and swap one word**:
+
+1. Open **`Twin Flame — revenue per link by step`** → **⋯ → Duplicate** → rename
+   **`Judgement Day — revenue per link by step`**. In each of the 3 series change the
+   `funnel` filter `twinflame → judgement`. Leave the `step` values and everything else. Save.
+2. Open **`Twin Flame — full funnel`** → **⋯ → Duplicate** → rename
+   **`Judgement Day — full funnel`**. In every step change `funnel` `twinflame → judgement`. Save.
+3. Add both to the dashboard.
+
+Judgement Day's operator link:
+`https://www.theseerwithin.com/offers/wiccan/judgement-day?utm_campaign=judgement_<source>`
