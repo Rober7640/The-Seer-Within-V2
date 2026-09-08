@@ -46,9 +46,20 @@ const money = (c) => `$${(c / 100).toFixed(2)}`;
 
 // The funnel matrix under test. Prices are whatever the served pool assigns; the
 // audit never hard-codes them (except the root sanity), it asserts charge==quote.
-// `expectDeterministic` pins the root funnel, whose pool has a single weighted arm.
+// `expectDeterministic` pins a funnel that serves exactly ONE price — used for the
+// FIXED_FUNNEL_PRICES funnels (tarot/read), never for a weighted pool.
+//
+// 🔴 ROOT IS NO LONGER DETERMINISTIC (2026-09-08). It used to pin `35 @ $35/$25`,
+// because root's pool had a single weighted arm. The moment the $55/$35 split went
+// live that assertion became false BY DESIGN, and the audit exited 1 on every run —
+// a red that says nothing about the money path is worse than no check, because it
+// trains the operator to ignore the exit code. Replaced with `expectArmsWithin`,
+// which survives a weight change: it asserts only that root draws root's OWN arms.
+// That still catches the failure the pin was really guarding — the
+// scopeVariantsToFunnel full-pool fallback handing root another funnel's variant.
+// `n` is raised so a 50/50 actually exercises both arms through Stripe.
 const CASES = [
-  { funnel: undefined, sign: undefined, label: 'root',          n: 1, expectDeterministic: { variant: '35', main: 3500, downsell: 2500 } },
+  { funnel: undefined, sign: undefined, label: 'root',          n: 6, expectArmsWithin: ['35', '45', '59', '55-35'] },
   { funnel: 'v1-fb',    sign: undefined, label: 'fb',            n: 3 },
   { funnel: 'v1-fb2',   sign: undefined, label: 'fb2',           n: 3 },
   { funnel: 'v1-gdn',   sign: undefined, label: 'gdn',           n: 3 },
@@ -203,6 +214,19 @@ async function main() {
       mismatches.filter((m) => /DOWNSELL/.test(m)).join(' · ') || `variants: ${distStr}`);
     check(`[${c.label}] Stripe metadata.priceVariant == assigned variant`,
       metaMismatches.length === 0, metaMismatches.join(' · ') || `variants: ${distStr}`);
+
+    // Weight-agnostic scoping guard. Every arm drawn must belong to THIS funnel's
+    // own pool — which is exactly what breaks if scopeVariantsToFunnel ever falls
+    // through to the full pool and hands this funnel someone else's variant.
+    // Unlike a pinned variant+price, this stays true across any reweight.
+    if (c.expectArmsWithin) {
+      const strays = Object.keys(dist).filter((v) => !c.expectArmsWithin.includes(v));
+      check(`[${c.label}] every drawn arm belongs to this funnel's own pool`,
+        strays.length === 0,
+        strays.length
+          ? `🔴 STRAY ARM(S): ${strays.join(', ')} — expected one of ${c.expectArmsWithin.join(', ')}`
+          : `variants: ${distStr}`);
+    }
 
     if (c.expectProductSuffix) {
       check(`[${c.label}] Stripe line item carries "${c.expectProductSuffix}" (fulfilment routes on it)`,
