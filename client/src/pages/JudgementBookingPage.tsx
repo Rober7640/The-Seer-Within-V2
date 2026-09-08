@@ -45,7 +45,10 @@ import {
 // deep link, a shared URL — is sent back to step 1. Consent that was not given
 // in this page's lifetime is not assumed.
 
-const BOOKING_PATH = '/offers/wiccan/judgement-day'
+// The page is the FALLBACK treatment, mounted at /page (the chat owns the root).
+// Its two-step ?step=give flow must stay on this path, so it is /page — not the
+// root, which now serves the chat.
+const BOOKING_PATH = '/offers/wiccan/judgement-day/page'
 
 function centsToDollars(cents: number): string {
   return `$${(cents / 100).toFixed(2)}`

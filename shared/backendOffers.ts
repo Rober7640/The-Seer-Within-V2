@@ -193,7 +193,9 @@ export const BACKEND_OFFER_CATALOG: Record<BackendOfferKey, BackendOffer> = {
       stripeName: '+ The Unburdening instructional',
     },
     bookingPath: {
-      page: '/offers/wiccan/judgement-day',
+      // Chat is the default treatment and owns the offer root; the page is the
+      // fallback at /page. Used for the Stripe cancel_url per treatment.
+      page: '/offers/wiccan/judgement-day/page',
       chat: '/offers/wiccan/judgement-day/chat',
     },
     successPath: '/offers/wiccan/judgement-day/success',

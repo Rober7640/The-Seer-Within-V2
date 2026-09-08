@@ -296,9 +296,10 @@ export function getPostHogStep(pathname?: string): string {
     case "judgement": {
       // Booking/thank-you under JUDGEMENT_PREFIX. The shared /offers/upsell/* pages
       // fire their own lander_view with step upsell1/upsell2 (see OffersUpsell*.tsx),
-      // so they are not handled here.
-      const sub = p.slice(JUDGEMENT_PREFIX.length); // "" at the booking root
-      if (sub === "" || sub === "/chat") return "booking";
+      // so they are not handled here. Chat is the default treatment (root); the page
+      // fallback lives at /page.
+      const sub = p.slice(JUDGEMENT_PREFIX.length); // "" at the booking root (chat, the default)
+      if (sub === "" || sub === "/chat" || sub === "/page") return "booking";
       if (sub === "/success") return "thank_you";
       return "unknown";
     }
