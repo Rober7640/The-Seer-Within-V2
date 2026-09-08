@@ -4,6 +4,7 @@ import { useFloorSpoken } from '@/hooks/useFloorSpoken'
 import { typingPace, BETWEEN_LINES_MS, BEFORE_CARD_MS } from '@/lib/chatPace'
 import { bookingFirstName } from '@/lib/funnel'
 import { beginBackendCheckout } from '@/lib/backendCheckout'
+import { track as trackPH } from '@/lib/posthog'
 import {
   CHAT_SCRIPT,
   CHAT_GATE,
@@ -218,6 +219,17 @@ export default function JudgementBookingChat() {
     if (busy) return
     setBusy(true)
     setCheckoutError(null)
+    // She has committed — the bump answer is the last turn before the money, so this
+    // is the chat's checkout_initiated (counterpart to the page's). Chat is 03's
+    // default treatment; UTMs ride along as PostHog super-properties.
+    trackPH('checkout_initiated', {
+      funnel: 'judgement',
+      step: 'sales',
+      product: 'be_judgement_day',
+      price_cents: (amountCents ?? 0) + (taken ? JUDGEMENT_BUMP_CENTS : 0),
+      bump: taken,
+      treatment: 'chat',
+    })
     const result = await beginBackendCheckout({
       offer: 'judgement-day',
       treatment: 'chat',
