@@ -121,8 +121,30 @@ describe('shouldRedirectTarotC', () => {
 });
 
 describe('TAROT_C_EXEMPT_HOOKS', () => {
-  it('holds exactly the 47 campaign landers', () => {
-    expect(TAROT_C_EXEMPT_HOOKS.size).toBe(47);
+  it('holds exactly the 49 campaign landers', () => {
+    expect(TAROT_C_EXEMPT_HOOKS.size).toBe(49);
+  });
+
+  // 2026-09-08: a new /c batch. Both of these 302'd to /b in production — the ads
+  // would have served Version B's pre-written read while looking perfectly healthy.
+  //
+  // 🔴 cards-meant-alone is the one that matters here. Its NEAR TWIN
+  // cards-meant-alone-still-time was already exempt, which is precisely how the gap
+  // survived review: the list reads as though the hook is covered. Assert BOTH, so
+  // deleting either one fails loudly instead of silently reinstating the redirect.
+  it('exempts the 2026-09-08 batch, and its near-twin neighbour', () => {
+    for (const h of ['cards-really-over', 'cards-meant-alone', 'cards-meant-alone-still-time']) {
+      expect(TAROT_C_EXEMPT_HOOKS.has(h), `${h} must be exempt`).toBe(true);
+    }
+  });
+
+  // The behaviour the batch was actually asked for, asserted end-to-end on the URL
+  // rather than on the Set — a hook can be in the list and still redirect if
+  // shouldRedirectTarotC ever stops consulting it.
+  it('serves Version C for the 2026-09-08 batch URLs', () => {
+    for (const h of ['cards-really-over', 'cards-meant-alone']) {
+      expect(shouldRedirectTarotC(`/fb-tarot/c?hook=${h}`), `${h} must reach C`).toBe(false);
+    }
   });
 
   // All three commitment ads run on /c and must serve Version C (operator decision,

@@ -123,6 +123,42 @@ export function tarotBTarget(originalUrl: string): string {
 // ⚠️ B WON that test. Serving C on cards-will-commit knowingly serves the LOSING arm on
 // a high-traffic lander. That is the point — the campaign exists to put B against C on
 // paid traffic again — but it is a CONTENT change, not a routing tidy-up.
+// ── 2026-09-08: TWO REUNION/ALONE HOOKS ADDED FOR A NEW /c CAMPAIGN ──────────
+//
+// Operator decision (Joel, via Lewis): a new batch of /c ads must serve Version C.
+// Eight lander URLs were checked; six already behaved correctly. `cards-really-over`
+// and `cards-meant-alone` did NOT — both 302'd to /b, so the ads would have loaded
+// fine and silently served B's pre-written read instead of C's interactive opener.
+// Verified live before the change (302 on both) and after (200 on both).
+//
+// ⚠️ `cards-meant-alone` is a NEAR TWIN of `cards-meant-alone-still-time`, which was
+// already exempt. That is exactly why it was missed: the list looked like it covered
+// the hook. Brief designers and media buyers with the SLUG, never the headline.
+//
+// ✅ SAFE TO ADD, and measured rather than assumed. Neither hook had a single
+// experiment exposure in the 14 days before this change (a control query over the
+// same window returned the busiest hooks, so the zero is a real zero, not a broken
+// filter). Nothing was live on either, so no running ad flips from B to C — this
+// reaches only the new campaign. Contrast `cards-will-commit` above, which was a
+// deliberate content change on live traffic.
+//
+// ✅ Neither is inside the CONCLUDED v1_tarot_version_bc_2026 (live scope re-read
+// 2026-09-08: cards-will-commit / cards-return / cards-who-he-is / cards-feels only),
+// so the list ALONE is sufficient here — no companion guard in resolveTarotVersion is
+// needed, unlike the commitment-hook change above.
+//
+// ✅ Both already carry every Version C prerequisite: a live registry hook, a slot in
+// the `validHooks` roster in routes.ts (so the chat handoff cannot 400 on the reflect
+// step), a crafted TAROT_QUESTION opener, and their own hook context + tendency entries
+// so the live-written reading keeps its family's bans.
+//
+// 🔴 NOT DONE, DELIBERATELY: the same campaign listed two SOULMATE landers
+// (`cards-met-already`, `cards-after-marriage`) on /b URLs. They are NOT fixed here.
+// Both hooks are already exempt, so pointing the new ads at /c serves C today with no
+// code change — whereas a /b→/c redirect keyed on hook would also flip the media
+// team's EXISTING /b ads on those hooks, and cards-met-already was the single busiest
+// tarot lander at the time (582 exposures/14d). The URL is the ad's to choose; the
+// server cannot tell two ads on the same hook apart.
 export const TAROT_C_EXEMPT_HOOKS: ReadonlySet<string> = new Set([
   'cards-after-marriage',
   'cards-allowed-to-want',
@@ -156,6 +192,7 @@ export const TAROT_C_EXEMPT_HOOKS: ReadonlySet<string> = new Set([
   'cards-longer-to-wait',
   'cards-love-never-stays',
   'cards-love-not-happened-yet',
+  'cards-meant-alone',
   'cards-meant-alone-still-time',
   'cards-met-already',
   'cards-missed-chance',
@@ -163,6 +200,7 @@ export const TAROT_C_EXEMPT_HOOKS: ReadonlySet<string> = new Set([
   'cards-moved-on',
   'cards-real-connection-coming',
   'cards-ready-commit',
+  'cards-really-over',
   'cards-second-time',
   'cards-slipping-past',
   'cards-too-late-love',
