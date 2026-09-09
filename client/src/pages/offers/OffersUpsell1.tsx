@@ -125,6 +125,7 @@ export default function OffersUpsell1() {
     lavaStoneImage,
     copyOverride: copy ?? undefined,
     backendOverride: true,
+    offer: offer ?? undefined, // so PostHog events carry funnel = this offer, not the URL path
   });
 
   // Auto-scroll to bottom. Same footer-grower deps as UpsellPage.tsx.
