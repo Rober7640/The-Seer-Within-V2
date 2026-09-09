@@ -138,6 +138,7 @@ export default function OffersUpsell2() {
     braceletImage: "/manifestation_bracelet.png",
     copyOverride: copy ?? undefined,
     backendOverride: true,
+    offer: offer ?? undefined, // so PostHog events carry funnel = this offer, not the URL path
   });
 
   // Auto-scroll to bottom. Same footer-grower deps as Upsell2Page.tsx.

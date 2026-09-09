@@ -41,7 +41,8 @@ import {
   type Upsell2Chain,
   type Upsell2Copy,
 } from "@/lib/backendOffers";
-import { currentFunnel, getPostHogFunnel, isTwinFlameOffer } from "@/lib/funnel";
+import { backendOfferFunnel, currentFunnel, getPostHogFunnel, isTwinFlameOffer } from "@/lib/funnel";
+import type { BackendOfferKey } from "@shared/backendOffers";
 import { track as trackPH } from "@/lib/posthog";
 import { tarotEventProps } from "@/lib/tarotAttribution";
 import { getTrackdeskClickId } from "@/lib/facebook";
@@ -96,6 +97,10 @@ interface UseUpsell2ChatProps {
   // undefined, which preserves today's URL-based resolution exactly (V1 + 02).
   copyOverride?: Upsell2Copy;
   backendOverride?: boolean;
+  // The booking-session offer, so PostHog events carry the RIGHT funnel derived from
+  // the offer (not the URL path). Shared /offers/upsell/ pages pass this; V1/legacy
+  // callers omit it and fall back to path-based resolution.
+  offer?: BackendOfferKey;
 }
 
 export function useUpsell2Chat({
@@ -105,6 +110,7 @@ export function useUpsell2Chat({
   braceletImage,
   copyOverride,
   backendOverride,
+  offer,
 }: UseUpsell2ChatProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [stage, setStage] = useState<Upsell2Stage>("INIT");
@@ -497,7 +503,7 @@ export function useUpsell2Chat({
     const tarot = getPostHogFunnel() === "tarot" ? tarotEventProps() : undefined;
 
     trackPH("upsell_accepted", {
-      funnel: getPostHogFunnel() ?? "v1",
+      funnel: offer ? backendOfferFunnel(offer) : (getPostHogFunnel() ?? "unknown"),
       step: "upsell2",
       product: "manifestation_bracelet",
       // U2 has two prices ($47 full / $30 downsell) that were previously
@@ -572,7 +578,7 @@ export function useUpsell2Chat({
         // her to a HOSTED Stripe checkout for the SAME be_bracelet upsell, where she can
         // authenticate and pay (A7). Webhook records + fires PostHog on success.
         trackPH("upsell_fallback_redirect", {
-          funnel: getPostHogFunnel() ?? "twinflame",
+          funnel: offer ? backendOfferFunnel(offer) : (getPostHogFunnel() ?? "unknown"),
           step: "upsell2",
           product: "be_bracelet",
         });
@@ -597,7 +603,7 @@ export function useUpsell2Chat({
         // matching event in useUpsellChat: this is where a payment failure becomes
         // distinguishable from an abandoned page.
         trackPH("upsell_fallback_redirect", {
-          funnel: getPostHogFunnel() ?? "v1",
+          funnel: offer ? backendOfferFunnel(offer) : (getPostHogFunnel() ?? "unknown"),
           step: "upsell2",
           product: "manifestation_bracelet",
           price_tier: "full",
@@ -655,7 +661,7 @@ export function useUpsell2Chat({
       addUserMessage("No thanks");
       const tarot = getPostHogFunnel() === "tarot" ? tarotEventProps() : undefined;
       trackPH("upsell_declined", {
-        funnel: getPostHogFunnel() ?? "v1",
+        funnel: offer ? backendOfferFunnel(offer) : (getPostHogFunnel() ?? "unknown"),
         step: "upsell2",
         product: "manifestation_bracelet",
         price_tier: "full",
@@ -678,7 +684,7 @@ export function useUpsell2Chat({
     // full-vs-downsell take-rate was not measurable before the charge.
     const tarot = getPostHogFunnel() === "tarot" ? tarotEventProps() : undefined;
     trackPH("upsell_accepted", {
-      funnel: getPostHogFunnel() ?? "v1",
+      funnel: offer ? backendOfferFunnel(offer) : (getPostHogFunnel() ?? "unknown"),
       step: "upsell2",
       product: "manifestation_bracelet",
       price_tier: "downsell",
@@ -749,7 +755,7 @@ export function useUpsell2Chat({
         // Off-session charge declined (Indian/3DS cards) → hosted Stripe checkout for the
         // be_bracelet DOWNSELL, where she can authenticate and pay (A7).
         trackPH("upsell_fallback_redirect", {
-          funnel: getPostHogFunnel() ?? "twinflame",
+          funnel: offer ? backendOfferFunnel(offer) : (getPostHogFunnel() ?? "unknown"),
           step: "upsell2",
           product: "be_bracelet",
           price_tier: "downsell",
@@ -772,7 +778,7 @@ export function useUpsell2Chat({
         }
       } else if (result.fallback) {
         trackPH("upsell_fallback_redirect", {
-          funnel: getPostHogFunnel() ?? "v1",
+          funnel: offer ? backendOfferFunnel(offer) : (getPostHogFunnel() ?? "unknown"),
           step: "upsell2",
           product: "manifestation_bracelet",
           price_tier: "downsell",
@@ -827,7 +833,7 @@ export function useUpsell2Chat({
     // untracked, so the funnel just ended with no event.
     const tarot = getPostHogFunnel() === "tarot" ? tarotEventProps() : undefined;
     trackPH("upsell_declined", {
-      funnel: getPostHogFunnel() ?? "v1",
+      funnel: offer ? backendOfferFunnel(offer) : (getPostHogFunnel() ?? "unknown"),
       step: "upsell2",
       product: "manifestation_bracelet",
       price_tier: "downsell",

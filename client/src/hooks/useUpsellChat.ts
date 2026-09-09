@@ -27,7 +27,8 @@ import {
   type Upsell1Chain,
   type Upsell1Copy,
 } from "@/lib/backendOffers";
-import { currentFunnel, getPostHogFunnel, isTwinFlameOffer } from "@/lib/funnel";
+import { backendOfferFunnel, currentFunnel, getPostHogFunnel, isTwinFlameOffer } from "@/lib/funnel";
+import type { BackendOfferKey } from "@shared/backendOffers";
 import { track as trackPH } from "@/lib/posthog";
 import { tarotEventProps } from "@/lib/tarotAttribution";
 
@@ -71,6 +72,10 @@ interface UseUpsellChatProps {
   // undefined, which preserves today's URL-based resolution exactly (V1 + 02).
   copyOverride?: Upsell1Copy;
   backendOverride?: boolean;
+  // The booking-session offer, so PostHog events carry the RIGHT funnel derived from
+  // the offer (not the URL path). Shared /offers/upsell/ pages pass this; V1/legacy
+  // callers omit it and fall back to path-based resolution.
+  offer?: BackendOfferKey;
 }
 
 // ============================================
@@ -84,6 +89,7 @@ export function useUpsellChat({
   lavaStoneImage,
   copyOverride,
   backendOverride,
+  offer,
 }: UseUpsellChatProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [stage, setStage] = useState<UpsellStage>("INIT");
@@ -400,7 +406,7 @@ export function useUpsellChat({
     const tarot = getPostHogFunnel() === "tarot" ? tarotEventProps() : undefined;
 
     trackPH("upsell_accepted", {
-      funnel: getPostHogFunnel() ?? "v1",
+      funnel: offer ? backendOfferFunnel(offer) : (getPostHogFunnel() ?? "unknown"),
       step: "upsell1",
       product: "protection_ritual",
       sign: tarot?.deck,
@@ -446,7 +452,7 @@ export function useUpsellChat({
         // HOSTED Stripe checkout where she can authenticate and pay — the BE equivalent
         // of V1's fallback (A7). The webhook records the sale + fires PostHog on success.
         trackPH("upsell_fallback_redirect", {
-          funnel: getPostHogFunnel() ?? "twinflame",
+          funnel: offer ? backendOfferFunnel(offer) : (getPostHogFunnel() ?? "unknown"),
           step: "upsell1",
           product: "be_protection_ritual",
         });
@@ -474,7 +480,7 @@ export function useUpsellChat({
         // either a purchase appeared or it didn't, with no way to tell a payment
         // failure apart from an abandoned page. This is the drop-off point.
         trackPH("upsell_fallback_redirect", {
-          funnel: getPostHogFunnel() ?? "v1",
+          funnel: offer ? backendOfferFunnel(offer) : (getPostHogFunnel() ?? "unknown"),
           step: "upsell1",
           product: "protection_ritual",
           sign: tarot?.deck,
@@ -524,7 +530,7 @@ export function useUpsellChat({
     addUserMessage("Not right now");
     const tarot = getPostHogFunnel() === "tarot" ? tarotEventProps() : undefined;
     trackPH("upsell_declined", {
-      funnel: getPostHogFunnel() ?? "v1",
+      funnel: offer ? backendOfferFunnel(offer) : (getPostHogFunnel() ?? "unknown"),
       step: "upsell1",
       product: "protection_ritual",
       sign: tarot?.deck,
