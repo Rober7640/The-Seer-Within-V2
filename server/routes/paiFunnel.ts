@@ -14,10 +14,22 @@
  * byte-identical to what it was. This router refuses to mount unless it is
  * explicitly switched on in a non-production environment.
  *
- * ── THREE GUARDS, ALL OF WHICH MUST PASS TO MOUNT ─────────────────────────────
- *   1. NODE_ENV must not be "production"
- *   2. PAI_DEV_FUNNEL must be "1"          (explicit opt-in, per environment)
- *   3. PAYMENTSAI_BASE must contain "staging"  (enforced in lib/paymentsai.ts)
+ * ── THREE GUARDS, ALL OF WHICH MUST PASS TO SERVE ─────────────────────────────
+ *   1. PAI_DEV_FUNNEL must be "1"              (explicit opt-in, per environment)
+ *   2. PAYMENTSAI_BASE must contain "staging"  (enforced in lib/paymentsai.ts)
+ *   3. the request host must not be a production domain
+ *
+ * 🔴 NOT NODE_ENV. The obvious guard — refuse when NODE_ENV==="production" — is
+ * USELESS on Railway: the dev environment reports environment:"production" on
+ * /api/health too, because the runtime needs the production build. Guarding on it
+ * blocked dev while providing no protection that distinguishes the two.
+ *
+ * What actually protects us, in order of strength:
+ *   - the STAGING BASE check is unconditional and is the one that matters. Even if
+ *     this router were somehow enabled on the live site, it can only ever reach
+ *     Payments.AI's sandbox. It cannot move real money.
+ *   - PAI_DEV_FUNNEL is opt-in per environment and is simply never set on prod.
+ *   - the host check refuses the live domains outright.
  *
  * ── WHAT IT WILL TELL US ──────────────────────────────────────────────────────
  *   - which of the 17 metadata keys survive a real charge (12 expected, 5 known lost)
@@ -49,10 +61,20 @@ const PAI_TAG = 'paymentsAI';
 const PAI_HOOK = 'cards-after-marriage';
 const PAI_FUNNEL = 'fb-tarot';
 
+/** Hosts this must never serve on, whatever the environment claims to be. */
+const FORBIDDEN_HOSTS = [
+  'theseerwithin.com',
+  'www.theseerwithin.com',
+  'the-seer-within-v2-production.up.railway.app',
+];
+
+export function hostIsForbidden(host: string | undefined): boolean {
+  if (!host) return false;
+  const h = host.split(':')[0].toLowerCase();
+  return FORBIDDEN_HOSTS.includes(h);
+}
+
 export function paiFunnelEnabled(): { enabled: boolean; reason: string } {
-  if (process.env.NODE_ENV === 'production') {
-    return { enabled: false, reason: 'NODE_ENV is production' };
-  }
   if (process.env.PAI_DEV_FUNNEL !== '1') {
     return { enabled: false, reason: 'PAI_DEV_FUNNEL is not 1' };
   }
@@ -61,11 +83,18 @@ export function paiFunnelEnabled(): { enabled: boolean; reason: string } {
   return { enabled: true, reason: 'enabled' };
 }
 
-/** Belt and braces: re-checked per request, not just at mount. */
+/** Re-checked per request, not just at mount. */
 router.use((req: Request, res: Response, next) => {
+  if (hostIsForbidden(req.headers.host)) {
+    logger.error(`[pai] REFUSED on a production host: ${req.headers.host}`);
+    return res.status(404).json({ error: 'not found' });
+  }
   const gate = paiFunnelEnabled();
   if (!gate.enabled) {
-    return res.status(404).json({ error: 'not found' });
+    // The reason is safe to surface here precisely because we have already
+    // established this is not a production host — and without it a misconfigured
+    // dev environment is undiagnosable from outside.
+    return res.status(404).json({ error: 'not found', reason: gate.reason });
   }
   next();
 });
