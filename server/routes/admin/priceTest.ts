@@ -16,6 +16,11 @@ interface VariantStats {
   downsellPriceDollars: number;
   upsell1PriceDollars: number;
   funnel: string | null;
+  // Is this arm being served RIGHT NOW (pool weight > 0)? Retired arms keep their
+  // historical row but are excluded from the live head-to-head and the readiness
+  // banner — otherwise a long-retired arm sitting at 0 visitors pins the banner on
+  // "not enough data" forever, which is exactly what it did before 2026-09-08.
+  isLive: boolean;
   visitorsAssigned: number;
   mainPurchases: number;
   downsellPurchases: number;
@@ -69,6 +74,19 @@ router.get('/v1', async (req: Request, res: Response) => {
     // being mixed with the non-FB baseline. Empty = all variants.
     const funnelParam =
       typeof req.query.funnel === 'string' && req.query.funnel ? req.query.funnel : null;
+
+    // 🔴 ROOT NEEDED A SENTINEL, and this is why it had none until 2026-09-08.
+    // The base Evelyn funnel at `/` has NO funnel id — its variants carry
+    // `funnel: null` — but "no funnel param" ALREADY means "show everything". The
+    // two states collided, so root was the one scope this dashboard could not
+    // express: an operator running a root price test had to find it inside a
+    // 14-variant table mixed with every other funnel, under a pairwise table of
+    // ~120 cross-funnel rows. `?funnel=root` breaks the tie — the sentinel is
+    // truthy (so we DO scope) and resolves to null (so we scope to the unscoped
+    // pool). Every other value keeps its exact previous meaning.
+    const ROOT_SCOPE = 'root';
+    const scopeIsRoot = funnelParam === ROOT_SCOPE;
+    const targetFunnel: string | null = scopeIsRoot ? null : funnelParam;
 
     // Build the date-range WHERE fragment cleanly. Drizzle's tagged
     // template doesn't always interpolate conditional empty `sql\`\``
@@ -125,8 +143,12 @@ router.get('/v1', async (req: Request, res: Response) => {
 
     const activeVariants = await getActiveVariants();
     const scopedVariants = funnelParam
-      ? activeVariants.filter((v) => (v.funnel ?? null) === funnelParam)
+      ? activeVariants.filter((v) => (v.funnel ?? null) === targetFunnel)
       : activeVariants;
+    // Which arms are actually BEING SERVED right now. A weight-0 arm is retired:
+    // it can still hold historical data, but it draws no new traffic, so it must
+    // never gate the readiness banner or appear in a live head-to-head.
+    const liveArmIds = new Set(scopedVariants.filter((v) => v.weight > 0).map((v) => v.id));
     const priceLookup = new Map(scopedVariants.map((v) => [v.id, v]));
     const allowedIds = new Set(scopedVariants.map((v) => v.id));
 
@@ -143,6 +165,7 @@ router.get('/v1', async (req: Request, res: Response) => {
         downsellPriceDollars: cfg ? Math.round(cfg.downsellCents / 100) : 0,
         upsell1PriceDollars: cfg ? Math.round((cfg.upsell1Cents ?? 4700) / 100) : 0,
         funnel: cfg?.funnel ?? null,
+        isLive: liveArmIds.has(row.price_variant),
         visitorsAssigned: visitors,
         mainPurchases: row.main_purchases,
         downsellPurchases: row.downsell_purchases,
@@ -165,6 +188,7 @@ router.get('/v1', async (req: Request, res: Response) => {
           downsellPriceDollars: Math.round(cfg.downsellCents / 100),
           upsell1PriceDollars: Math.round((cfg.upsell1Cents ?? 4700) / 100),
           funnel: cfg.funnel ?? null,
+          isLive: liveArmIds.has(cfg.id),
           visitorsAssigned: 0,
           mainPurchases: 0,
           downsellPurchases: 0,
@@ -191,6 +215,25 @@ router.get('/v1', async (req: Request, res: Response) => {
       for (let j = i + 1; j < variantStats.length; j++) {
         const a = variantStats[i];
         const b = variantStats[j];
+
+        // 🔴 ONLY COMPARE ARMS THAT ARE ACTUALLY COMPARABLE. Before 2026-09-08 this
+        // loop paired EVERY variant with every other, which produced ~120 rows the
+        // moment six funnels were live — and most were not merely noise, they were
+        // WRONG:
+        //
+        //   · CROSS-FUNNEL (`35_fb` vs `35_palm`): different traffic sources,
+        //     different landers, different intent. Neither arm was ever randomised
+        //     against the other, so the z-test has no randomisation to lean on. It
+        //     still printed a confidence and stamped "Winner 95%+" on the result.
+        //   · RETIRED arms (weight 0): their data comes from an ERA that ended,
+        //     often months ago and at a different price. Grading a live arm against
+        //     one compares two time periods, not two prices.
+        //
+        // Same funnel + both live is precisely the set that shares one randomised
+        // pool over one window — the only set a z-test is entitled to speak about.
+        if (!a.isLive || !b.isLive) continue;
+        if ((a.funnel ?? null) !== (b.funnel ?? null)) continue;
+
         const meanA = a.visitorsAssigned ? a.totalRevenueCents / a.visitorsAssigned : 0;
         const meanB = b.visitorsAssigned ? b.totalRevenueCents / b.visitorsAssigned : 0;
         const varA =
@@ -242,20 +285,38 @@ router.get('/v1', async (req: Request, res: Response) => {
     }
 
     // Recommendation banner — pick the leader, summarise vs the lowest.
-    const sortedByRpv = [...variantStats].sort(
+    //
+    // 🔴 JUDGED OVER THE LIVE ARMS ONLY. This used to run over every variant in the
+    // table, retired ones included — and a retired arm sits at 0 visitors forever,
+    // so `minimumSampleMet` could never become true. The banner was permanently
+    // stuck on "Not enough data yet — smallest variant has 0 visitors" no matter how
+    // much traffic the running test had collected, which is worse than no banner:
+    // it reads as a live verdict about the test in front of you.
+    const liveStats = variantStats.filter((v) => v.isLive);
+    const sortedByRpv = [...liveStats].sort(
       (a, b) => b.revenuePerVisitorCents - a.revenuePerVisitorCents,
     );
     const leader = sortedByRpv[0];
     const trailing = sortedByRpv[sortedByRpv.length - 1];
-    const minVisitors = Math.min(...variantStats.map((v) => v.visitorsAssigned));
-    const minimumSampleMet = variantStats.every((v) => v.visitorsAssigned >= MIN_SAMPLE_PER_VARIANT);
+    const minVisitors = liveStats.length
+      ? Math.min(...liveStats.map((v) => v.visitorsAssigned))
+      : 0;
+    const minimumSampleMet =
+      liveStats.length > 0 &&
+      liveStats.every((v) => v.visitorsAssigned >= MIN_SAMPLE_PER_VARIANT);
 
     const winnerCalled = pairwise.some(
       (p) => p.a === leader?.variant && p.significant,
     );
 
     let recommendation = '';
-    if (!leader || leader.visitorsAssigned === 0) {
+    if (liveStats.length === 0) {
+      recommendation = 'No arm is being served on this scope — every variant here is retired (weight 0).';
+    } else if (liveStats.length === 1) {
+      // One live arm is not a test. Say so, rather than declaring it the "winner"
+      // of a race it is running alone.
+      recommendation = `No split test running here — ${liveStats[0].variant} is the only arm being served (a single arm at $${(liveStats[0].revenuePerVisitorCents / 100).toFixed(2)}/visitor). Give a second arm weight > 0 to start a test.`;
+    } else if (!leader || leader.visitorsAssigned === 0) {
       recommendation = 'No variant data yet — insert the v1_price_variants config row and start sending traffic.';
     } else if (!minimumSampleMet) {
       recommendation = `Not enough data yet — smallest variant has ${minVisitors} visitors, need ${MIN_SAMPLE_PER_VARIANT} per variant before trusting the numbers.`;

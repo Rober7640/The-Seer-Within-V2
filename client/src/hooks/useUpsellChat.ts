@@ -21,8 +21,14 @@ import {
   formatUpsellPrice,
 } from "@/lib/upsellMessages";
 import { getTrackdeskClickId } from "@/lib/facebook";
-import { upsell1Copy, displayName, type Upsell1Chain } from "@/lib/backendOffers";
-import { currentFunnel, getPostHogFunnel, isTwinFlameOffer } from "@/lib/funnel";
+import {
+  upsell1Copy,
+  displayName,
+  type Upsell1Chain,
+  type Upsell1Copy,
+} from "@/lib/backendOffers";
+import { backendOfferFunnel, currentFunnel, getPostHogFunnel, isTwinFlameOffer } from "@/lib/funnel";
+import type { BackendOfferKey } from "@shared/backendOffers";
 import { track as trackPH } from "@/lib/posthog";
 import { tarotEventProps } from "@/lib/tarotAttribution";
 
@@ -62,6 +68,14 @@ interface UseUpsellChatProps {
   sessionId: string | null;
   enabled: boolean;
   lavaStoneImage?: string;
+  // Injected copy/backend-mode for shared /offers/upsell/ pages. Both default to
+  // undefined, which preserves today's URL-based resolution exactly (V1 + 02).
+  copyOverride?: Upsell1Copy;
+  backendOverride?: boolean;
+  // The booking-session offer, so PostHog events carry the RIGHT funnel derived from
+  // the offer (not the URL path). Shared /offers/upsell/ pages pass this; V1/legacy
+  // callers omit it and fall back to path-based resolution.
+  offer?: BackendOfferKey;
 }
 
 // ============================================
@@ -73,6 +87,9 @@ export function useUpsellChat({
   sessionId,
   enabled,
   lavaStoneImage,
+  copyOverride,
+  backendOverride,
+  offer,
 }: UseUpsellChatProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [stage, setStage] = useState<UpsellStage>("INIT");
@@ -96,7 +113,10 @@ export function useUpsellChat({
   // everywhere except the backend deck's offer 02, whose buyer bought a tarot
   // spread, never had an energy clearing, and is never asked a question.
   // Resolved once: the URL cannot change under a chat already in progress.
-  const copy = useMemo(() => upsell1Copy(), []);
+  const copy = useMemo(
+    () => copyOverride ?? upsell1Copy(),
+    [copyOverride],
+  );
 
   const upsellPriceLabel = formatUpsellPrice(userData?.upsell1PriceCents);
 
@@ -386,7 +406,7 @@ export function useUpsellChat({
     const tarot = getPostHogFunnel() === "tarot" ? tarotEventProps() : undefined;
 
     trackPH("upsell_accepted", {
-      funnel: getPostHogFunnel() ?? "v1",
+      funnel: offer ? backendOfferFunnel(offer) : (getPostHogFunnel() ?? "unknown"),
       step: "upsell1",
       product: "protection_ritual",
       sign: tarot?.deck,
@@ -396,7 +416,7 @@ export function useUpsellChat({
     // The backend funnel charges its OWN endpoint (the `be_` product → BE list, no
     // Facebook/Google/Trackdesk) and sends NO trackdeskClickId (⛔ never on a backend
     // sale). V1's path and body are byte-identical.
-    const beFunnel = isTwinFlameOffer();
+    const beFunnel = backendOverride ?? isTwinFlameOffer();
 
     try {
       const response = await fetch(
@@ -427,14 +447,32 @@ export function useUpsellChat({
         setShowShippingForm(true);
         setStage("SHIPPING");
       } else if (result.fallback && beFunnel) {
-        // Backend, first build: the off-session charge on her saved card was declined
-        // and there is no hosted BE upsell fallback yet (A7). Fail gracefully — let her
-        // retry rather than redirect to an endpoint that does not exist.
-        await sendBotMessage(
-          "That didn't go through on your saved card, dear. Give it another moment and try once more.",
-        );
-        setIsProcessing(false);
-        setShowCTA(true);
+        // The off-session charge on her saved card was declined (Indian cards reject
+        // off-session PIs; 3DS cards can't authenticate off-session). Send her to a
+        // HOSTED Stripe checkout where she can authenticate and pay — the BE equivalent
+        // of V1's fallback (A7). The webhook records the sale + fires PostHog on success.
+        trackPH("upsell_fallback_redirect", {
+          funnel: offer ? backendOfferFunnel(offer) : (getPostHogFunnel() ?? "unknown"),
+          step: "upsell1",
+          product: "be_protection_ritual",
+        });
+        await sendBotMessage("Let me set up a secure payment page for you...");
+        const fallbackResponse = await fetch("/api/backend/upsell/fallback-checkout", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ checkoutSessionId: sessionId, email: userData.email }),
+        });
+        const { url } = await fallbackResponse.json().catch(() => ({}) as { url?: string });
+        if (url) {
+          window.location.href = url;
+        } else {
+          // Even the hosted page could not be created — let her retry rather than strand her.
+          await sendBotMessage(
+            "That didn't go through, dear. Give it another moment and try once more.",
+          );
+          setIsProcessing(false);
+          setShowCTA(true);
+        }
       } else if (result.fallback) {
         // The 1-click OFF-SESSION charge on the saved card was declined (Indian cards
         // reject off-session PIs outright), so she is bounced to a hosted Stripe
@@ -442,7 +480,7 @@ export function useUpsellChat({
         // either a purchase appeared or it didn't, with no way to tell a payment
         // failure apart from an abandoned page. This is the drop-off point.
         trackPH("upsell_fallback_redirect", {
-          funnel: getPostHogFunnel() ?? "v1",
+          funnel: offer ? backendOfferFunnel(offer) : (getPostHogFunnel() ?? "unknown"),
           step: "upsell1",
           product: "protection_ritual",
           sign: tarot?.deck,
@@ -475,7 +513,16 @@ export function useUpsellChat({
       setIsProcessing(false);
       setShowCTA(true);
     }
-  }, [sessionId, userData, copy, addUserMessage, sendBotMessage, sendBotMessages, p]);
+  }, [
+    sessionId,
+    userData,
+    copy,
+    addUserMessage,
+    sendBotMessage,
+    sendBotMessages,
+    p,
+    backendOverride,
+  ]);
 
   // Handle CTA Decline
   const handleDecline = useCallback(async () => {
@@ -483,7 +530,7 @@ export function useUpsellChat({
     addUserMessage("Not right now");
     const tarot = getPostHogFunnel() === "tarot" ? tarotEventProps() : undefined;
     trackPH("upsell_declined", {
-      funnel: getPostHogFunnel() ?? "v1",
+      funnel: offer ? backendOfferFunnel(offer) : (getPostHogFunnel() ?? "unknown"),
       step: "upsell1",
       product: "protection_ritual",
       sign: tarot?.deck,
@@ -502,7 +549,7 @@ export function useUpsellChat({
       try {
         // Backend: stamp the address onto the upsell PaymentIntent (the manual shipper
         // reads it off Stripe). V1: its own DB save. Byte-identical for V1.
-        const res = isTwinFlameOffer()
+        const res = (backendOverride ?? isTwinFlameOffer())
           ? await fetch("/api/backend/upsell/shipping", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -526,7 +573,7 @@ export function useUpsellChat({
         setIsComplete(true);
       }
     },
-    [sessionId, userData, processStage, sendBotMessage, upsellPaymentId],
+    [sessionId, userData, processStage, sendBotMessage, upsellPaymentId, backendOverride],
   );
 
   // Start on mount

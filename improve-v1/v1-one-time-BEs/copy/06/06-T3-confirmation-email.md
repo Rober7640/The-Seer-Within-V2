@@ -35,16 +35,15 @@ later date to start this. It's happening now.
 <!-- BEAT 4 · restate the SLA, exactly as booked on 06-C1 statement 4. Do not soften ("soon") or
      invent a faster number -->
 
-Here's the real timeline, because I'd rather you know it than wonder. It takes **7 business days**
-to prepare properly, and then **1–2 weeks** to reach you after that — a real object, made and
-posted, not a download that shows up in your inbox by morning.
+Here's the real timeline, because I'd rather you know it than wonder. It **ships within the next 48
+hours**, and reaches you **within 7–10 days** — a real object, made and posted, not a download that
+shows up in your inbox by morning.
 
 <!-- BEAT 5 · P6, open a loop before the wait, AND the hard-constraint ask: tell them what signal to
      watch for next (tracking), without inventing a date -->
 
-When it ships, I'll write to you again with the tracking number, so you know exactly what to
-watch for and when. Until then there's nothing you need to do — I have your order, and I'm already
-working through it.
+When it ships, I'll write to you again to let you know it's on its way. Until then there's nothing
+you need to do — I have your order, and I'm already working through it.
 
 ---
 
@@ -60,7 +59,7 @@ Agate doesn't form the way most stone does — cut in one piece out of a bigger 
 bands, one thin ring of mineral laid down over the last, inside a hollow space in rock, over a
 stretch of time nobody alive was there to watch start or finish.
 
-That's not why your seven days exist, dear — those are ours, not the stone's, and I won't dress up
+That's not why your wait exists, dear — it's ours, not the stone's, and I won't dress up
 a packing schedule as something older and grander than it is. But there's something I keep coming
 back to anyway: the stone in your bracelet was never in a hurry to become itself. It had already
 finished waiting long before I ever held it.

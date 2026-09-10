@@ -32,6 +32,10 @@ import {
   resolveBumpExperimentKey,
   type BumpCopyVariant,
 } from '@shared/orderBump';
+// The /c → /b exemption roster. Imported for resolveTarotVersion, which must not let
+// the version test overrule a URL the redirect deliberately let through. tarotRedirect
+// imports nothing, so this adds no import cycle.
+import { TAROT_C_EXEMPT_HOOKS } from './tarotRedirect';
 
 // ── Paywall test constants (the one experiment Phase 1 folds in) ──────────────
 export const PAYWALL_EXPERIMENT_KEY = 'paywall_copy_2026';
@@ -1702,6 +1706,35 @@ export async function resolveTarotVersion(
 ): Promise<{ version: TarotVersion; variant: string | null; enrolled: boolean; applied: boolean }> {
   const notEnrolled = { version: fallbackVersion, variant: null, enrolled: false, applied: false };
   if (fallbackVersion === 'a') return notEnrolled;
+
+  // ── /c IS A PROMISE, AND THIS IS WHAT KEEPS IT ────────────────────────
+  // A hook on TAROT_C_EXEMPT_HOOKS reaches the /c bridge instead of being 302'd to /b
+  // (server/lib/tarotRedirect.ts). That exemption only decides which PAGE she lands on;
+  // without this check the version test can still overrule the URL once she is there,
+  // and a paid /c ad shows B's pre-written read instead of the interactive opener.
+  //
+  // 🔴 THIS IS A NO-OP FOR 46 OF THE 47 EXEMPT HOOKS, BY CONSTRUCTION — that is the
+  // whole reason it is safe. v1_tarot_version_bc_2026 scopes to four landers
+  // (cards-will-commit, cards-return, cards-who-he-is, cards-feels — LIVE scope re-read
+  // against prod 2026-09-07, still exactly those four), and only cards-will-commit is
+  // exempt. For every other exempt hook matchesLanderScope already returns false,
+  // assign() already hands back the control arm with applied:false, and the code below
+  // already returns the URL's own version. This early return gives the identical answer,
+  // minus a DB round-trip.
+  //
+  // The one hook it changes is cards-will-commit: that test is done with winner B, and a
+  // concluded test's winner is applied BEFORE the URL is consulted, so it served B on a
+  // /c URL from 2026-09-04 until today.
+  //
+  // enrolled:false loses no data. The version test is CONCLUDED — it enrols nobody, so no
+  // exposure was written for these hooks before this change either, and
+  // /api/tarot/version only calls logExposure when enrolled is true.
+  //
+  // ⚠️ Keep this AFTER the fallbackVersion === 'a' guard: A is a third experience shown
+  // on the lander, and is never something a /c URL asks for.
+  if (fallbackVersion === 'c' && hook && TAROT_C_EXEMPT_HOOKS.has(hook.trim().toLowerCase())) {
+    return { version: 'c', variant: null, enrolled: false, applied: false };
+  }
 
   const subject = typeof visitorId === 'string' && visitorId.trim() ? visitorId.trim() : null;
   const a = await assign(key, subject, {

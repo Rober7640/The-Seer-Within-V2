@@ -101,7 +101,8 @@ export function skipEmail(search?: string): boolean {
 // The copy each prefix resolves to lives in lib/backendOffers.ts. This file
 // deliberately holds no copy, so routing can never depend on it.
 export const TWIN_FLAME_PREFIX = "/tarot/twin-flame"; // 02 Twin Flame Tarot
-export const JUDGEMENT_PREFIX = "/wiccan/judgement-day"; // 03 Judgement Day
+export const JUDGEMENT_PREFIX = "/offers/wiccan/judgement-day"; // 03 Judgement Day
+export const PIXIU_PREFIX = "/offers/wiccan/pixiu-bracelet"; // 06 Pixiu (Wishing) Bracelet
 
 export const BACKEND_OFFER_PREFIXES = [
   TWIN_FLAME_PREFIX,
@@ -204,7 +205,7 @@ export function funnelPath(v1Path: string, pathname?: string): string {
 
 export type PostHogFunnel =
   | "soulmate" | "fb" | "fb2" | "gdn" | "palm" | "tarot" | "read" | "v1" | "evelyn" | "aiden"
-  | "marcus" | "luna" | "nova" | "maren" | "seven-seven";
+  | "marcus" | "luna" | "nova" | "maren" | "seven-seven" | "twinflame" | "judgement" | "pixiu";
 
 // Generalized persona landers → their PostHog funnel name. One route each.
 const PERSONA_LANDER_FUNNELS: Record<string, PostHogFunnel> = {
@@ -222,6 +223,17 @@ function normalize(path: string): string {
 
 export function getPostHogFunnel(pathname?: string): PostHogFunnel | null {
   const p = normalize(pathname ?? currentPath());
+  if (p === TWIN_FLAME_PREFIX || p.startsWith(`${TWIN_FLAME_PREFIX}/`)) return "twinflame";
+  // 03 Judgement Day booking + thank-you under JUDGEMENT_PREFIX. Its upsells (and
+  // 06's) live on the SHARED /offers/upsell/* pages, which now fire their OWN
+  // offer-aware lander_view (see backendOfferFunnel) because they resolve the offer
+  // from the session, not the path — so they are deliberately NOT matched here.
+  if (p === JUDGEMENT_PREFIX || p.startsWith(`${JUDGEMENT_PREFIX}/`)) return "judgement";
+  // 06 Pixiu Bracelet — email → booking page + /success (page-only, no chat, no
+  // welcome1/2 of its own). Registering it here is all App.tsx needs to fire
+  // lander_view with the letter's utm_* attached, so a mailed Pixiu link reports
+  // clicks (revenue is grouped server-side via BACKEND_FUNNEL['pixiu-bracelet']).
+  if (p === PIXIU_PREFIX || p.startsWith(`${PIXIU_PREFIX}/`)) return "pixiu";
   if (p === "/soulmate" || p.startsWith("/soulmate/")) return "soulmate";
   const adDef = funnelDefForPath(p);
   if (adDef) return adDef.posthog as PostHogFunnel;
@@ -236,6 +248,20 @@ export function getPostHogFunnel(pathname?: string): PostHogFunnel | null {
     return "v1";
   }
   return null;
+}
+
+// Client mirror of the server's BACKEND_FUNNEL (server/lib/backendPurchaseAnalytics.ts).
+// The SHARED /offers/upsell/* pages learn their offer from the booking session
+// (async), not the URL, so App.tsx's path-based lander_view can't tag them — they
+// call this and fire their own offer-aware lander_view. Returns a plain string so
+// callers needn't widen PostHogFunnel per offer. Keep in sync with the server map.
+export function backendOfferFunnel(offer: string): string {
+  switch (offer) {
+    case "twin-flame": return "twinflame";
+    case "judgement-day": return "judgement";
+    case "pixiu-bracelet": return "pixiu";
+    default: return offer;
+  }
 }
 
 export function getPostHogStep(pathname?: string): string {
@@ -259,6 +285,31 @@ export function getPostHogStep(pathname?: string): string {
       if (p === "/welcome2") return "upsell2";
       if (p === "/success") return "thank_you";
       return "unknown";
+    case "twinflame": {
+      const sub = p.slice(TWIN_FLAME_PREFIX.length); // "" at the booking root
+      if (sub === "" || sub === "/preview-page" || sub === "/preview-chat") return "booking";
+      if (sub === "/welcome1") return "upsell1";
+      if (sub === "/welcome2") return "upsell2";
+      if (sub === "/success") return "thank_you";
+      return "unknown";
+    }
+    case "judgement": {
+      // Booking/thank-you under JUDGEMENT_PREFIX. The shared /offers/upsell/* pages
+      // fire their own lander_view with step upsell1/upsell2 (see OffersUpsell*.tsx),
+      // so they are not handled here. Chat is the default treatment (root); the page
+      // fallback lives at /page.
+      const sub = p.slice(JUDGEMENT_PREFIX.length); // "" at the booking root (chat, the default)
+      if (sub === "" || sub === "/chat" || sub === "/page") return "booking";
+      if (sub === "/success") return "thank_you";
+      return "unknown";
+    }
+    case "pixiu": {
+      // 06 is page-only (no chat variant): just the booking root and /success.
+      const sub = p.slice(PIXIU_PREFIX.length); // "" at the booking root
+      if (sub === "") return "booking";
+      if (sub === "/success") return "thank_you";
+      return "unknown";
+    }
     case "fb":
     case "fb2":
     case "gdn":

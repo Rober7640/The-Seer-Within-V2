@@ -10,7 +10,6 @@
 import { Router } from 'express';
 import * as Sentry from '@sentry/node';
 import { resolveEmailLinkCode } from '../lib/emailLinkCodes';
-import { posthog } from '../lib/posthog';
 import logger from '../lib/logger';
 
 // Only Evelyn is wired for this rollout slice; Aiden/Luna are added here
@@ -37,7 +36,6 @@ emailLinkRedirectRouter.get('/e/:code', async (req, res) => {
     if (process.env.SENTRY_DSN) {
       Sentry.captureException(error);
     }
-    posthog.captureException(error);
     logger.error('email-link-redirect: resolveEmailLinkCode failed', {
       error: error?.message,
     });

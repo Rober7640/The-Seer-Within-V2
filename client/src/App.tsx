@@ -1,4 +1,5 @@
-import { useEffect, lazy, Suspense } from "react";
+import { useEffect, Suspense } from "react";
+import { lazyWithRetry } from "@/lib/lazyWithRetry";
 import { Switch, Route, useLocation, Redirect } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -30,64 +31,72 @@ import RefundPage from "@/pages/RefundPage";
 import FAQPage from "@/pages/FAQPage";
 
 // Chat service pages (lazy loaded)
-const LoginPage = lazy(() => import("@/pages/LoginPage"));
-const ChatServicePage = lazy(() => import("@/pages/ChatServicePage"));
-const CreditsPage = lazy(() => import("@/pages/CreditsPage"));
-const PersonasDirectory = lazy(() => import("@/pages/PersonasDirectory"));
-const Dashboard = lazy(() => import("@/pages/Dashboard"));
-const WelcomeChatPage = lazy(() => import("@/pages/WelcomeChatPage"));
-const ForgotPasswordPage = lazy(() => import("@/pages/ForgotPasswordPage"));
-const ResetPasswordPage = lazy(() => import("@/pages/ResetPasswordPage"));
-const MagicAuthPage = lazy(() => import("@/pages/MagicAuthPage"));
-const SetPasswordPage = lazy(() => import("@/pages/SetPasswordPage"));
-const AidenQuizPage = lazy(() => import("@/pages/AidenQuizPage"));
-const EvelynLanderPage = lazy(() => import("@/pages/EvelynLanderPage"));
-const PersonaLanderPage = lazy(() => import("@/pages/PersonaLanderPage"));
+const LoginPage = lazyWithRetry(() => import("@/pages/LoginPage"));
+const ChatServicePage = lazyWithRetry(() => import("@/pages/ChatServicePage"));
+const CreditsPage = lazyWithRetry(() => import("@/pages/CreditsPage"));
+const PersonasDirectory = lazyWithRetry(() => import("@/pages/PersonasDirectory"));
+const Dashboard = lazyWithRetry(() => import("@/pages/Dashboard"));
+const WelcomeChatPage = lazyWithRetry(() => import("@/pages/WelcomeChatPage"));
+const ForgotPasswordPage = lazyWithRetry(() => import("@/pages/ForgotPasswordPage"));
+const ResetPasswordPage = lazyWithRetry(() => import("@/pages/ResetPasswordPage"));
+const MagicAuthPage = lazyWithRetry(() => import("@/pages/MagicAuthPage"));
+const SetPasswordPage = lazyWithRetry(() => import("@/pages/SetPasswordPage"));
+const AidenQuizPage = lazyWithRetry(() => import("@/pages/AidenQuizPage"));
+const EvelynLanderPage = lazyWithRetry(() => import("@/pages/EvelynLanderPage"));
+const PersonaLanderPage = lazyWithRetry(() => import("@/pages/PersonaLanderPage"));
 
 // DEV-only paywall design preview (Problem 4). Gated below by import.meta.env.DEV
 // so it is excluded from the production bundle.
-const PaywallPreviewPage = lazy(() => import("@/pages/PaywallPreviewPage"));
+const PaywallPreviewPage = lazyWithRetry(() => import("@/pages/PaywallPreviewPage"));
 
 // Soulmate Sketch funnel pages (lazy loaded)
-const SoulmateLandingPage = lazy(() => import("@/pages/SoulmateLandingPage"));
-const SoulmateProcessPage = lazy(() => import("@/pages/SoulmateProcessPage"));
-const SoulmateSalesPage = lazy(() => import("@/pages/SoulmateSalesPage"));
-const SoulmateUpsellPage = lazy(() => import("@/pages/SoulmateUpsellPage"));
-const SoulmateUpsell2Page = lazy(() => import("@/pages/SoulmateUpsell2Page"));
-const SoulmateThankYouPage = lazy(() => import("@/pages/SoulmateThankYouPage"));
+const SoulmateLandingPage = lazyWithRetry(() => import("@/pages/SoulmateLandingPage"));
+const SoulmateProcessPage = lazyWithRetry(() => import("@/pages/SoulmateProcessPage"));
+const SoulmateSalesPage = lazyWithRetry(() => import("@/pages/SoulmateSalesPage"));
+const SoulmateUpsellPage = lazyWithRetry(() => import("@/pages/SoulmateUpsellPage"));
+const SoulmateUpsell2Page = lazyWithRetry(() => import("@/pages/SoulmateUpsell2Page"));
+const SoulmateThankYouPage = lazyWithRetry(() => import("@/pages/SoulmateThankYouPage"));
 // Backend deck, offer 02 — the two booking treatments, PREVIEW ONLY. Lazy so
 // they cost the live funnels nothing. Deliberately absent from the FB PageView
 // list above: no traffic reaches these, and firing the pixel would pollute it.
-const TwinFlameBooking = lazy(() => import("@/pages/TwinFlameBooking"));
-const TwinFlameBookingPage = lazy(() => import("@/pages/TwinFlameBookingPage"));
-const TwinFlameBookingChat = lazy(() => import("@/pages/TwinFlameBookingChat"));
-const TwinFlameThankYouPage = lazy(() => import("@/pages/TwinFlameThankYouPage"));
-const JudgementBookingPage = lazy(() => import("@/pages/JudgementBookingPage"));
-const JudgementBookingChat = lazy(() => import("@/pages/JudgementBookingChat"));
+const TwinFlameBooking = lazyWithRetry(() => import("@/pages/TwinFlameBooking"));
+const TwinFlameBookingPage = lazyWithRetry(() => import("@/pages/TwinFlameBookingPage"));
+const TwinFlameBookingChat = lazyWithRetry(() => import("@/pages/TwinFlameBookingChat"));
+const TwinFlameThankYouPage = lazyWithRetry(() => import("@/pages/TwinFlameThankYouPage"));
+const JudgementBookingPage = lazyWithRetry(() => import("@/pages/JudgementBookingPage"));
+const JudgementBookingChat = lazyWithRetry(() => import("@/pages/JudgementBookingChat"));
+const JudgementThankYouPage = lazyWithRetry(() => import("@/pages/JudgementThankYouPage"));
+const PixiuBookingPage = lazyWithRetry(() => import("@/pages/offers/pixiu-bracelet/BookingPage"));
+const PixiuThankYouPage = lazyWithRetry(() => import("@/pages/offers/pixiu-bracelet/ThankYouPage"));
+// Shared /offers/upsell/ pages — offer + pitch resolved from the booking
+// SESSION rather than the URL prefix, so one route pair serves every backend
+// offer in the deck. Lazy for the same reason as the booking pages above.
+const OffersUpsell1 = lazyWithRetry(() => import("@/pages/offers/OffersUpsell1"));
+const OffersUpsell2 = lazyWithRetry(() => import("@/pages/offers/OffersUpsell2"));
 
 // Admin pages (lazy loaded)
-const AdminLogin = lazy(() => import("@/pages/admin/AdminLogin"));
-const PersonasDashboard = lazy(() => import("@/pages/admin/PersonasDashboard"));
-const PersonaEditor = lazy(() => import("@/pages/admin/PersonaEditor"));
-const PromptsEditor = lazy(() => import("@/pages/admin/PromptsEditor"));
-const AnalyticsDashboard = lazy(() => import("@/pages/admin/AnalyticsDashboard"));
-const UsersList = lazy(() => import("@/pages/admin/UsersList"));
-const UserDetail = lazy(() => import("@/pages/admin/UserDetail"));
-const SafetyDashboard = lazy(() => import("@/pages/admin/SafetyDashboard"));
-const IntentConfigEditor = lazy(() => import("@/pages/admin/IntentConfigEditor"));
-const FollowUpsDashboard = lazy(() => import("@/pages/admin/FollowUpsDashboard"));
-const EmailDripMigratedV1 = lazy(() => import("@/pages/admin/EmailDripMigratedV1"));
-const EmailDripNewV1 = lazy(() => import("@/pages/admin/EmailDripNewV1"));
-const AidenFollowUpsPage = lazy(() => import("@/pages/admin/AidenFollowUpsPage"));
-const EvelynFollowUpsPage = lazy(() => import("@/pages/admin/EvelynFollowUpsPage"));
-const PersonaFollowUpsPage = lazy(() => import("@/pages/admin/PersonaFollowUpsPage"));
-const MarketplacePage = lazy(() => import("@/pages/admin/MarketplacePage"));
-const SettingsPage = lazy(() => import("@/pages/admin/SettingsPage"));
+const AdminLogin = lazyWithRetry(() => import("@/pages/admin/AdminLogin"));
+const PersonasDashboard = lazyWithRetry(() => import("@/pages/admin/PersonasDashboard"));
+const PersonaEditor = lazyWithRetry(() => import("@/pages/admin/PersonaEditor"));
+const PromptsEditor = lazyWithRetry(() => import("@/pages/admin/PromptsEditor"));
+const AnalyticsDashboard = lazyWithRetry(() => import("@/pages/admin/AnalyticsDashboard"));
+const UsersList = lazyWithRetry(() => import("@/pages/admin/UsersList"));
+const UserDetail = lazyWithRetry(() => import("@/pages/admin/UserDetail"));
+const SafetyDashboard = lazyWithRetry(() => import("@/pages/admin/SafetyDashboard"));
+const IntentConfigEditor = lazyWithRetry(() => import("@/pages/admin/IntentConfigEditor"));
+const FollowUpsDashboard = lazyWithRetry(() => import("@/pages/admin/FollowUpsDashboard"));
+const EmailDripMigratedV1 = lazyWithRetry(() => import("@/pages/admin/EmailDripMigratedV1"));
+const EmailDripNewV1 = lazyWithRetry(() => import("@/pages/admin/EmailDripNewV1"));
+const AidenFollowUpsPage = lazyWithRetry(() => import("@/pages/admin/AidenFollowUpsPage"));
+const EvelynFollowUpsPage = lazyWithRetry(() => import("@/pages/admin/EvelynFollowUpsPage"));
+const PersonaFollowUpsPage = lazyWithRetry(() => import("@/pages/admin/PersonaFollowUpsPage"));
+const MarketplacePage = lazyWithRetry(() => import("@/pages/admin/MarketplacePage"));
+const SettingsPage = lazyWithRetry(() => import("@/pages/admin/SettingsPage"));
 // Kept until the live V1 main-price split (system_config.v1_price_variants) is
 // migrated onto the experiments framework — it's the only readout for that
 // still-live test (the framework's v1_main_price_2026 ships draft/OFF).
-const PriceTestDashboard = lazy(() => import("@/pages/admin/PriceTestDashboard"));
-const ExperimentsDashboard = lazy(() => import("@/pages/admin/ExperimentsDashboard"));
+const PriceTestDashboard = lazyWithRetry(() => import("@/pages/admin/PriceTestDashboard"));
+const ExperimentsDashboard = lazyWithRetry(() => import("@/pages/admin/ExperimentsDashboard"));
 
 function LazyFallback() {
   return (
@@ -331,12 +340,41 @@ function Router() {
             letter's {{BOOKING_URL}} points; 02 has two preview paths only
             because two treatments were competing.
             Spec: improve-v1/v1-one-time-BEs/copy/03/03-C1-booking-page.md */}
-        {/* Two candidate treatments, as 02 has: the page at the offer root
-            (where the letter's {{BOOKING_URL}} points) and the chat beside it.
-            ⚠ 03's chat carries the deck's only text input — pay-what-you-want
-            has one thing only the buyer can supply. */}
-        <Route path="/wiccan/judgement-day/chat" component={JudgementBookingChat} />
-        <Route path="/wiccan/judgement-day" component={JudgementBookingPage} />
+        {/* 03 ships the CHAT as its default treatment (operator, 2026-09): no
+            page-vs-chat A/B — the letter's {{BOOKING_URL}} (the offer root) serves
+            the chat, and the page is kept at /page as a fallback so a split test
+            can be turned on later without rebuilding it. ⚠ 03's chat carries the
+            deck's only text input — pay-what-you-want has one thing only the buyer
+            can supply. Route order: specific paths before the root. */}
+        <Route path="/offers/wiccan/judgement-day/chat" component={JudgementBookingChat} />
+        <Route path="/offers/wiccan/judgement-day/page" component={JudgementBookingPage} />
+        {/* 03's own thank-you (03-T1) — an INTAKE GATE, not a receipt (P7).
+            Reached via successPath + `?s=<session_id>` (OffersUpsell2's
+            navigate call, BACKEND_OFFER_CATALOG['judgement-day'].successPath).
+            No bump delivery block here, unlike 02's — see JudgementThankYouPage. */}
+        <Route path="/offers/wiccan/judgement-day/success" component={JudgementThankYouPage} />
+        {/* Offer root — the default treatment. Serves the chat (see note above);
+            last so the /chat, /page and /success paths match first. */}
+        <Route path="/offers/wiccan/judgement-day" component={JudgementBookingChat} />
+
+        {/* Backend deck, offer 06 — the Wishing Bracelet (Pixiu). Reading-shaped
+            funnel, Object-shaped product: fixed $49, a real physical item that
+            ships. PAGE treatment only (no chat variant — no AI conversation,
+            just five static statements + the bump). Booking sits at the offer
+            root (where the letter's booking URL points); the success page is a
+            RECEIPT (06-T1), reached via successPath + `?s=` from OffersUpsell2.
+            Spec: improve-v1/v1-one-time-BEs/docs/06/HANDOVER.md */}
+        <Route path="/offers/wiccan/pixiu-bracelet" component={PixiuBookingPage} />
+        <Route path="/offers/wiccan/pixiu-bracelet/success" component={PixiuThankYouPage} />
+
+        {/* Shared /offers/upsell/ pages — the deck-wide Upsell 1 → Upsell 2
+            chain. Offer + pitch are resolved from the booking SESSION
+            (session_id), not this URL, so this one route pair works for every
+            backend offer (02, 03, …) without a per-offer prefix mount. Always
+            backend-mode; fires no V1 tracking. */}
+        <Route path="/offers/upsell/welcome1" component={OffersUpsell1} />
+        <Route path="/offers/upsell/welcome2" component={OffersUpsell2} />
+
         <Route path="/soulmate" component={SoulmateLandingPage} />
 
         {/* Auth routes (no layout wrapper) */}

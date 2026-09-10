@@ -1022,6 +1022,7 @@ export async function addBackendUpsellCustomer(params: {
   email: string;
   firstName?: string;
   productKey: string;
+  offer: BackendOfferKey;
 }): Promise<{ success: boolean; error?: string }> {
   const listing = backendUpsellFor(params.productKey);
   if (!listing) {
@@ -1037,6 +1038,6 @@ export async function addBackendUpsellCustomer(params: {
     email: params.email,
     name: params.firstName,
     customFields: {},
-    tags: upsellPurchaseTags(params.productKey),
+    tags: upsellPurchaseTags(params.offer, params.productKey),
   });
 }

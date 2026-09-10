@@ -5,9 +5,10 @@
   "cup": "cup.png",
   "size": 1254,
   "crop": 520,
+  "_letters": "A IS THE TREE, B IS THE ROAD. Swapped 2026-09-03 to match the ad creatives, which went out with A and B the other way round. The coordinates did NOT move — each ring is still the one measured off this photograph for its own symbol; only the option key it hangs on changed. ring-read-cup.mjs writes reveal-strip.jpg in a,b,c order and the lander crops it by options.indexOf(), so this key order IS the panel order.",
   "rings": {
-    "a": { "cx": 549,  "cy": 228,  "rx": 240, "ry": 70,  "rot": -3, "label": "road" },
-    "b": { "cx": 383,  "cy": 790,  "rx": 163, "ry": 215, "rot": 0,  "label": "tree" },
+    "a": { "cx": 383,  "cy": 790,  "rx": 163, "ry": 215, "rot": 0,  "label": "tree" },
+    "b": { "cx": 549,  "cy": 228,  "rx": 240, "ry": 70,  "rot": -3, "label": "road" },
     "c": { "cx": 611,  "cy": 1105, "rx": 240, "ry": 130, "rot": 0,  "label": "lake" }
   }
 }

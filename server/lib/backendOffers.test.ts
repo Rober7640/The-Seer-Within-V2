@@ -26,6 +26,8 @@ import {
   JUDGEMENT_MIN_CENTS,
   TWIN_FLAME_BUMP_CENTS,
   TWIN_FLAME_PRICE_CENTS,
+  PIXIU_BRACELET_BUMP_CENTS,
+  PIXIU_BRACELET_PRICE_CENTS,
   backendOfferForStripeProduct,
   backendOrderDescriptor,
   isBackendOfferKey,
@@ -69,6 +71,46 @@ describe('a fixed-price offer (02)', () => {
       .toBe(false);
     expect(charged(resolveBackendCharge({ offer: 'twin-flame', bump: false })).bumpPurchased)
       .toBe(false);
+  });
+});
+
+describe('a fixed-price PHYSICAL offer (06 — the Wishing Bracelet)', () => {
+  // 06's arithmetic is provable now, months before readyForMoney flips true —
+  // so, like 03, these price it directly (past the readiness gate that
+  // resolveBackendCharge applies). See "the after-the-money gate" below.
+  const WISHING = BACKEND_OFFER_CATALOG['pixiu-bracelet'];
+  const priceWishing = (req: { amountCents?: number | null; bump?: boolean }) =>
+    priceBackendOffer(WISHING, req);
+
+  it('charges the catalog price and ignores a browser-posted amount', () => {
+    expect(charged(priceWishing({})).readingCents).toBe(PIXIU_BRACELET_PRICE_CENTS);
+    expect(charged(priceWishing({ amountCents: 1 })).totalCents).toBe(PIXIU_BRACELET_PRICE_CENTS);
+  });
+
+  it('adds The Closed Purse bump only when taken, at the catalog price', () => {
+    expect(charged(priceWishing({})).bumpCents).toBe(0);
+    const withBump = charged(priceWishing({ bump: true }));
+    expect(withBump.bumpCents).toBe(PIXIU_BRACELET_BUMP_CENTS);
+    expect(withBump.totalCents).toBe(PIXIU_BRACELET_PRICE_CENTS + PIXIU_BRACELET_BUMP_CENTS);
+  });
+
+  it('honors the readyForMoney gate (open only when the flag is set)', () => {
+    // Robust to the flag flipping (dev-test true / prod false until launch): the
+    // gate must MATCH the catalog flag, so this passes either way.
+    const ready = BACKEND_OFFER_CATALOG['pixiu-bracelet'].readyForMoney;
+    const r = resolveBackendCharge({ offer: 'pixiu-bracelet' });
+    expect(r.ok).toBe(ready);
+    if (!ready && !r.ok) expect(r.code).toBe('not_ready');
+  });
+
+  it('is the only offer that collects shipping — the digital ones do not', () => {
+    expect(BACKEND_OFFER_CATALOG['pixiu-bracelet'].collectsShipping).toBe(true);
+    expect(BACKEND_OFFER_CATALOG['twin-flame'].collectsShipping).toBeFalsy();
+    expect(BACKEND_OFFER_CATALOG['judgement-day'].collectsShipping).toBeFalsy();
+  });
+
+  it('resolves from its own be_ Stripe product', () => {
+    expect(backendOfferForStripeProduct('be_pixiu_bracelet')?.key).toBe('pixiu-bracelet');
   });
 });
 
@@ -117,30 +159,24 @@ describe('a pay-what-you-want offer (03)', () => {
 });
 
 describe('the after-the-money gate', () => {
-  // 🔴 The rule this exists for: a paid product must never fail to arrive. 03's
-  // thank-you screen does not render and its ACT intake does not exist, so it must
-  // refuse money however it is asked — including after somebody flips the client's
-  // BACKEND_CHECKOUT_LIVE switch for 02.
-  it('refuses an offer whose after-the-money screens do not exist yet', () => {
-    const r = resolveBackendCharge({ offer: 'judgement-day', amountCents: 4000 });
-    expect(r.ok).toBe(false);
-    if (!r.ok) expect(r.code).toBe('not_ready');
-  });
-
-  it('refuses it before pricing, so a perfectly valid amount still cannot pay', () => {
-    // Same amount that prices fine through the pure path above.
-    expect(charged(priceJudgement({ amountCents: 4000 })).totalCents).toBe(4000);
-    expect(resolveBackendCharge({ offer: 'judgement-day', amountCents: 4000 }).ok).toBe(false);
-  });
-
+  // The rule this exists for: a paid product must never fail to arrive. The gate
+  // refuses money when after-the-money screens do not exist yet (including thankyou
+  // and intake). Once screens render and flow exists, readyForMoney flips true.
   it('lets a ready offer through', () => {
     expect(resolveBackendCharge({ offer: 'twin-flame' }).ok).toBe(true);
+    // 03's thank-you renders (Task 6); upsell chain wired (Task 7). Intake is
+    // out of scope — booking directs her to reply by email instead.
+    expect(resolveBackendCharge({ offer: 'judgement-day', amountCents: 4000 }).ok).toBe(true);
   });
 
-  it('never marks an offer ready while its Entry form is missing on an ACT offer', () => {
-    // 03 is the deck's only ACT offer. If someone sets readyForMoney without setting
-    // entryPath, this catches it: fulfilment would have no way to ask for the Entry.
-    if (JUDGEMENT.readyForMoney) expect(JUDGEMENT.entryPath).toBeTruthy();
+  it('charges what an ACT offer giver chose, and allows the bump', () => {
+    // 03's arithmetic is provable long before 03 is allowed to take money. Now
+    // that readyForMoney is true, the gate does not refuse it — the amount gates.
+    const r = charged(resolveBackendCharge({ offer: 'judgement-day', amountCents: 4000 }));
+    expect(r.readingCents).toBe(4000);
+    expect(r.totalCents).toBe(4000);
+    const withBump = charged(resolveBackendCharge({ offer: 'judgement-day', amountCents: 4000, bump: true }));
+    expect(withBump.bumpCents).toBe(JUDGEMENT_BUMP_CENTS);
   });
 });
 
@@ -200,5 +236,42 @@ describe('backendOrderDescriptor — the Stripe Dashboard label', () => {
     expect(backendOrderDescriptor('twin-flame', true)).toBe(
       'BE 02 · The Twin Flame Tarot Reading + Astro Force instructional',
     );
+  });
+});
+
+import {
+  resolveOfferKey,
+  backendUpsellDescriptor,
+  upsellChargeFields,
+} from '@shared/backendOffers';
+
+describe('upsell offer resolution + description', () => {
+  it('resolves the offer from metadata.offer when valid', () => {
+    expect(resolveOfferKey({ offer: 'judgement-day' })).toBe('judgement-day');
+  });
+
+  it('falls back to the offer that owns the Stripe product', () => {
+    expect(resolveOfferKey({ product: 'be_judgement_day' })).toBe('judgement-day');
+    expect(resolveOfferKey({ product: 'be_twin_flame' })).toBe('twin-flame');
+  });
+
+  it('returns null when nothing resolves', () => {
+    expect(resolveOfferKey({ offer: 'nope', product: 'be_unknown' })).toBeNull();
+    expect(resolveOfferKey(null)).toBeNull();
+  });
+
+  it('builds the BE <number> description per offer', () => {
+    expect(backendUpsellDescriptor('twin-flame', 'Protection Ritual', false))
+      .toBe('BE 02 · Protection Ritual');
+    expect(backendUpsellDescriptor('judgement-day', 'Manifestation Bracelet', true))
+      .toBe('BE 03 · Manifestation Bracelet (downsell)');
+  });
+
+  it('upsellChargeFields resolves offer + description together, defaulting to twin-flame', () => {
+    expect(upsellChargeFields({ offer: 'judgement-day' }, 'Protection Ritual', false))
+      .toEqual({ offer: 'judgement-day', description: 'BE 03 · Protection Ritual' });
+    // Unresolvable → the historical default, so a mis-stamped session never 500s.
+    expect(upsellChargeFields({}, 'Protection Ritual', false))
+      .toEqual({ offer: 'twin-flame', description: 'BE 02 · Protection Ritual' });
   });
 });

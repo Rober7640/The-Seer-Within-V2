@@ -349,7 +349,16 @@ const COFFEE: DeviceConfig = {
   pick: "symbol",
   cupImage: { url: "/read/coffee-cup.jpg", width: 1254, height: 1254 },
   cupAlt: "The inside of a coffee cup, the grounds drained down its pale wall",
-  optionLabel: { a: "Road", b: "Tree", c: "Lake" },
+  // 🔴 A IS THE TREE, B IS THE ROAD — AND THAT ORDER IS LOAD-BEARING, NOT COSMETIC.
+  // The letters are DERIVED from these keys (ReadBridge's OPTION_LABEL, and LETTER in
+  // build-read-ad.mjs), so the key IS the letter she sees in the ad and on the button.
+  // Swapped on 2026-09-03 to match the coffee ad creatives, which went out with A and
+  // B the other way round. Everything per-option moved together — this table, `mark`,
+  // `reading`, the 21 bubbles in the drafts, AND the two reveal-strip panels — because
+  // the strip is cropped by options.indexOf(). Change one of them alone and she taps
+  // "A. Tree" and is shown a ringed road while Evelyn describes a tree.
+  // Pinned by tests/fb-read-coffee-options.test.ts.
+  optionLabel: { a: "Tree", b: "Road", c: "Lake" },
   // Unused while pick is 'symbol' — the lander reads cupImage. Kept pointing at the
   // same file so a missing cupImage degrades to the right picture.
   strip: { url: "/read/coffee-cup.jpg", width: 1254, height: 1254 },
@@ -371,13 +380,13 @@ const COFFEE: DeviceConfig = {
   // 🔴 These must carry the same content words as cut 1 of each reading, or the
   // eval's art-coherence check fails the build.
   mark: {
-    a: "a road running under the rim of the cup",
-    b: "a tree halfway up the wall of the cup",
+    a: "a tree halfway up the wall of the cup",
+    b: "a road running under the rim of the cup",
     c: "a lake in the bottom of the cup, where the grounds settled first",
   },
   reading: {
-    a: "the moving heart",
-    b: "the standing heart",
+    a: "the standing heart",
+    b: "the moving heart",
     c: "the deep heart",
   },
 };

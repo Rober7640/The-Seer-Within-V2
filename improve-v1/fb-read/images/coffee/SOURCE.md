@@ -9,7 +9,7 @@ Selected 2026-09-01 from four licence-clean references (see `../reference/REFERE
 | `rings.json` | the ring geometry. The ONLY place these coordinates live | — |
 | `cup-ringed.png` | all three rings, no text | reference |
 | `cup-ringed-labelled.jpg` | rings plus letters and names | **review only — never serve** |
-| `reveal-{a-road,b-tree,c-lake}.png` | 520² ringed reveal crops, one per symbol | source |
+| `reveal-{a-tree,b-road,c-lake}.png` | 520² ringed reveal crops, one per symbol | source |
 | `reveal-strip.jpg` | 1560×520, the three crops 3-up | **yes** — `revealStrip`, cropped by `background-position` |
 
 ## Provenance
@@ -38,9 +38,23 @@ Tea's cup is generated because reference work found a *real* tea behaviour to ma
 
 | | Symbol | Ring centre | Size | Where it sits | Position reading |
 |---|---|---|---|---|---|
-| A | road | `(549, 228)` | `240×70` r `-3°` | high on the far wall, just under the rim | **the weeks just ahead** — the last thing to come to rest |
-| B | tree | `(383, 790)` | `163×215` | mid-wall, left of centre | **what is standing now** |
+| A | tree | `(383, 790)` | `163×215` | mid-wall, left of centre | **what is standing now** |
+| B | road | `(549, 228)` | `240×70` r `-3°` | high on the far wall, just under the rim | **the weeks just ahead** — the last thing to come to rest |
 | C | lake | `(611, 1105)` | `240×130` | the floor of the cup | **what she was built on** — the first thing to settle |
+
+🔴 **A AND B WERE SWAPPED ON 2026-09-03, AND NO COORDINATE MOVED.** The ad creatives
+went out with A as the tree and B as the road, so the lander was brought into line with
+them rather than the other way round. Each ring is still the one measured off this
+photograph for its own symbol — only the option key it hangs on changed. Verified by
+regenerating and comparing decoded pixels against the pre-swap crops: ~25 differing
+subpixels per 520² crop, max delta 1, i.e. JPEG/PNG rounding and nothing else.
+
+The letters are **derived** from the option keys (`OPTION_LABEL` in `ReadBridge.tsx`,
+`LETTER` in `build-read-ad.mjs`), so the key *is* the letter she sees. Everything
+per-option therefore had to move together — `rings.json`, this table,
+`shared/readDevices.ts` (`optionLabel` / `mark` / `reading`), the 21 bubbles in
+`fb-read/docs/drafts/coffee-*.json`, and the two reveal-strip panels. Pinned against
+regression by `tests/fb-read-coffee-options.test.ts`.
 
 🔴 **Depth here is OBSERVED, not computed.** The cup is tilted toward the camera, so
 the floor of the cup is *low in the frame*, not at the image centre. Distance from the

@@ -27,7 +27,7 @@
 // Trackdesk branch defaults an unrecognised product to conversionType 'sale', which
 // would book a backend reading as a main-funnel affiliate sale.
 
-export type BackendOfferKey = 'twin-flame' | 'judgement-day';
+export type BackendOfferKey = 'twin-flame' | 'judgement-day' | 'pixiu-bracelet';
 
 /** Which of the two booking treatments sold it — decides where a cancel returns to. */
 export type BookingTreatment = 'page' | 'chat';
@@ -57,6 +57,18 @@ export const JUDGEMENT_BUMP_CENTS = 1277;
 // ⛔ 03's bump key — see the note on 02's above.
 export const JUDGEMENT_BUMP_PRODUCT_KEY = 'unburdening';
 
+// 06 — fixed price, decision D2 (2026-09-02, HANDOVER §2). A real physical object
+// (black agate + cast Pixiu + sealed capsule), priced accordingly. No PWYW, no ladder.
+export const PIXIU_BRACELET_PRICE_CENTS = 4900;
+
+// 06's bump — "The Closed Purse", $11.11 (06-C3, confirmed 2026-09-02). The repeating
+// 1s are a deliberate numerology touch on a money offer, same spirit as 02's $12.77.
+export const PIXIU_BRACELET_BUMP_CENTS = 1111;
+
+// ⛔ 06's bump key — see the note on 02's above. A text-only self-performed noticing
+// practice (06-C3), NOT a shipped companion piece — never reuse a physical product key.
+export const PIXIU_BRACELET_BUMP_PRODUCT_KEY = 'closed_purse';
+
 /**
  * The ceiling on a pay-what-you-want amount.
  *
@@ -84,7 +96,7 @@ export interface BackendOfferBump {
 export interface BackendOffer {
   key: BackendOfferKey;
   /** The deck's number, as every doc cites it. */
-  number: '02' | '03';
+  number: '02' | '03' | '06';
   /** What Stripe shows her at checkout. */
   stripeName: string;
   stripeDescription: string;
@@ -125,6 +137,18 @@ export interface BackendOffer {
    * A6; set this the day it renders and the AWeber field starts filling itself.
    */
   entryPath?: string;
+  /**
+   * PHYSICAL offers only: collect a mailing address at checkout.
+   *
+   * When true, the checkout endpoint turns on Stripe Checkout's own
+   * `shipping_address_collection`, so she enters her address on the SAME secure
+   * page as her card — after the commitment ladder, never bolted onto it. The
+   * address then lands on the Stripe session / PaymentIntent (visible in the
+   * dashboard), which is the system of record fulfilment ships from — no new
+   * screen, no new column, no migration. Undefined/false ⇒ a digital offer that
+   * collects only the email (02, 03).
+   */
+  collectsShipping?: boolean;
 }
 
 export const BACKEND_OFFER_CATALOG: Record<BackendOfferKey, BackendOffer> = {
@@ -169,18 +193,59 @@ export const BACKEND_OFFER_CATALOG: Record<BackendOfferKey, BackendOffer> = {
       stripeName: '+ The Unburdening instructional',
     },
     bookingPath: {
-      page: '/wiccan/judgement-day',
-      chat: '/wiccan/judgement-day/chat',
+      // Chat is the default treatment and owns the offer root; the page is the
+      // fallback at /page. Used for the Stripe cancel_url per treatment.
+      page: '/offers/wiccan/judgement-day/page',
+      chat: '/offers/wiccan/judgement-day/chat',
     },
-    successPath: '/wiccan/judgement-day/success',
-    // entryPath: '/wiccan/judgement-day/entry',  ← A6. See the field's note.
+    successPath: '/offers/wiccan/judgement-day/success',
+    upsellEntryPath: '/offers/upsell/welcome1',
+    // entryPath: '/offers/wiccan/judgement-day/entry',  ← A6. See the field's note.
     //
-    // 🔴 FALSE UNTIL A6. Two reasons, either one sufficient: `successPath` above has no
-    // route yet, so a buyer would land on a 404 holding a receipt; and 03 is an ACT
-    // offer whose booking screens ask for the Entry NOWHERE, so we would be taking
-    // money for work that cannot be started. Flip this in the same commit that makes
-    // the thank-you/Entry screen render, and set `entryPath` with it.
-    readyForMoney: false,
+    // Thank-you screen renders (Task 6); upsell chain wired (Task 7). Entry form
+    // is out of scope — booking directs her to reply by email instead.
+    readyForMoney: true,
+  },
+  'pixiu-bracelet': {
+    key: 'pixiu-bracelet',
+    number: '06',
+    // Deck-wide rule: the verb is never "buy". Stripe's own label stays a plain noun.
+    stripeName: 'The Wishing Bracelet',
+    stripeDescription: 'A black agate Pixiu bracelet with a sealed wish capsule, made and posted to you.',
+    stripeProduct: 'be_pixiu_bracelet',
+    pricing: { model: 'fixed', priceCents: PIXIU_BRACELET_PRICE_CENTS },
+    bump: {
+      productKey: PIXIU_BRACELET_BUMP_PRODUCT_KEY,
+      cents: PIXIU_BRACELET_BUMP_CENTS,
+      stripeName: '+ The Closed Purse instructional',
+    },
+    // 06 is page-only (no chat variant — a physical object has no AI conversation,
+    // just five static statements). Both treatment keys point at the one booking page
+    // so a Stripe cancel always returns somewhere real.
+    bookingPath: {
+      page: '/offers/wiccan/pixiu-bracelet',
+      chat: '/offers/wiccan/pixiu-bracelet',
+    },
+    successPath: '/offers/wiccan/pixiu-bracelet/success',
+    // Shared upsell chain (Protection Ritual → Manifestation Bracelet → receipt),
+    // resolved from the booking session — same engine 03 uses. 06's upsells reuse
+    // V1's products verbatim past their opening beats (HANDOVER §2).
+    // ⚠ Physical-product shipping (the bracelet's own address) is collected AFTER
+    // Stripe succeeds via the existing ShippingForm pattern — wired at page build.
+    upsellEntryPath: '/offers/upsell/welcome1',
+    // 06 is the deck's first PHYSICAL product — Stripe Checkout collects the
+    // mailing address (see collectsShipping's note). This is what a paid order
+    // must have before it can be fulfilled.
+    collectsShipping: true,
+    // 🔴 Stays false until real Stripe price IDs exist and a test order has been
+    // walked end to end. A paid physical product must never fail to arrive.
+    // The booking + thank-you screens render and shipping is now collected; the
+    // remaining gate is the Stripe-test paid walk (HANDOVER §5).
+    // ⚠ TEMP for dev testing — flipped true so checkout opens on the dev site.
+    // 🔴 MUST be reverted to false for the Production merge until real launch
+    // (bump deliverable + AWeber campaigns must exist first). This commit is
+    // deliberately separate so it can be dropped from the prod PR.
+    readyForMoney: true,
   },
 };
 
@@ -221,6 +286,43 @@ export function backendOrderDescriptor(
   const base = `BE ${offer.number} · ${offer.stripeName}`;
   if (!bumpPurchased) return base;
   return `${base} + ${offer.bump.stripeName.replace(/^\+\s*/, '')}`;
+}
+
+/**
+ * The originating offer for a set of Stripe metadata: the explicit `offer` key if
+ * it is a known offer, else the offer that owns the `product`. Null when neither
+ * resolves — callers decide the fallback rather than guessing here.
+ */
+export function resolveOfferKey(
+  meta: { offer?: string | null; product?: string | null } | null | undefined,
+): BackendOfferKey | null {
+  const offer = meta?.offer;
+  if (isBackendOfferKey(offer)) return offer;
+  return backendOfferForStripeProduct(meta?.product ?? null)?.key ?? null;
+}
+
+/** The Stripe-dashboard description for an UPSELL charge: `BE 03 · Protection Ritual`. */
+export function backendUpsellDescriptor(
+  key: BackendOfferKey,
+  upsellName: string,
+  isDownsell: boolean,
+): string {
+  const offer = BACKEND_OFFER_CATALOG[key];
+  return `BE ${offer.number} · ${upsellName}${isDownsell ? ' (downsell)' : ''}`;
+}
+
+/**
+ * Resolve the offer + build the upsell charge description in one call. Defaults to
+ * twin-flame when the session metadata does not resolve, preserving the old
+ * behaviour rather than failing a charge she is entitled to.
+ */
+export function upsellChargeFields(
+  meta: { offer?: string | null; product?: string | null } | null | undefined,
+  upsellName: string,
+  isDownsell: boolean,
+): { offer: BackendOfferKey; description: string } {
+  const offer = resolveOfferKey(meta) ?? 'twin-flame';
+  return { offer, description: backendUpsellDescriptor(offer, upsellName, isDownsell) };
 }
 
 // ─── What she is actually charged ──────────────────────────────────────────────

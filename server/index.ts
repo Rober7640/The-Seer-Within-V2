@@ -8,7 +8,6 @@ import { startHeartbeat, recoverActiveSessions, startInactiveSessionCleanup } fr
 import { shouldRunBackgroundJobs } from "./lib/backgroundJobsGate";
 import { initializeCronJobs } from "./lib/cronJobs";
 import logger, { requestIdMiddleware } from "./lib/logger";
-import { posthog } from "./lib/posthog";
 
 // Initialize Sentry for server-side error monitoring
 if (process.env.SENTRY_DSN) {
@@ -67,8 +66,6 @@ app.use(requestIdMiddleware);
     if (process.env.SENTRY_DSN) {
       Sentry.captureException(err);
     }
-
-    posthog.captureException(err);
 
     logger.error("Internal Server Error", { error: err.message, stack: err.stack, status });
 

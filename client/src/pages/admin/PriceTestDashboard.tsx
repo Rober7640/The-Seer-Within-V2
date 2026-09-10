@@ -11,6 +11,10 @@ interface VariantStats {
   downsellPriceDollars: number;
   upsell1PriceDollars: number;
   funnel: string | null;
+  // Served right now (pool weight > 0). Retired arms stay visible for their history
+  // but must be visually separated — otherwise a reader cannot tell which two rows
+  // are the test in front of them.
+  isLive: boolean;
   visitorsAssigned: number;
   mainPurchases: number;
   downsellPurchases: number;
@@ -159,11 +163,17 @@ export default function PriceTestDashboard() {
                 style={{ colorScheme: "dark" }}
                 className="rounded border border-gray-700 bg-gray-900 px-3 py-2 text-sm text-white"
               >
-                <option value="">All funnels</option>
+                <option value="">All funnels (everything — noisy)</option>
+                {/* `root` is a SENTINEL, not a funnel id: the base Evelyn funnel at
+                    `/` has no funnel id at all, and "" already means "show all", so
+                    the server maps this one value to the null-funnel pool. */}
+                <option value="root">Root / (the main funnel)</option>
                 <option value="v1-fb">FB (v1-fb)</option>
                 <option value="v1-fb2">FB2 (v1-fb2)</option>
                 <option value="v1-gdn">GDN (v1-gdn)</option>
                 <option value="v1-palm">Palm (v1-palm)</option>
+                <option value="v1-tarot">Tarot (v1-tarot)</option>
+                <option value="v1-read">Read (v1-read)</option>
               </select>
             </div>
             <div className="ml-auto text-xs text-gray-500">
@@ -197,6 +207,40 @@ export default function PriceTestDashboard() {
               </CardHeader>
             </Card>
 
+            {/* HOW TO READ THIS. The page defaults to every funnel at once, which is
+                the noisiest view it can show and the one most likely to be screenshotted
+                and misread. Two sentences here save a wrong decision later. */}
+            <Card className="border-sky-800 bg-sky-950/20">
+              <CardContent className="space-y-1 py-4 text-sm text-gray-300">
+                <div className="font-semibold text-sky-300">How to read this</div>
+                <div>
+                  1. Pick your funnel above — <span className="font-semibold">Root /</span> for the main
+                  funnel. "All funnels" mixes every test together and is only for a broad sweep.
+                </div>
+                <div>
+                  2. Set <span className="font-semibold">From</span> to the{" "}
+                  <span className="font-semibold">first full day AFTER</span> the test started — not the
+                  start date itself. This filter works in whole days, so if the test was switched on
+                  mid-day, picking that day sweeps in the hours before it went live. Those visitors
+                  could never have drawn the new arm, so every one of them lands in the control.
+                </div>
+                <div className="text-gray-400">
+                  The date matters for a second reason: returning visitors keep the price they were
+                  first quoted and never enter a new test, so with no From date they pile into the
+                  control arm too. Both effects flatter the control — never the new arm.
+                </div>
+                <div>
+                  3. Compare the <span className="font-semibold">Live</span> rows only, on{" "}
+                  <span className="font-semibold">$ / visitor</span> — not conversion rate. A higher
+                  price is expected to lower CR while raising revenue per visitor.
+                </div>
+                <div className="text-gray-400">
+                  Rows marked <span className="text-gray-300">Retired</span> draw no traffic; they are
+                  history and are excluded from the significance test and the banner above.
+                </div>
+              </CardContent>
+            </Card>
+
             {/* Variants table */}
             <Card>
               <CardHeader>
@@ -221,20 +265,36 @@ export default function PriceTestDashboard() {
                     </tr>
                   </thead>
                   <tbody>
-                    {data.variants.map((v) => {
+                    {/* LIVE ARMS FIRST, retired below and dimmed. The rows that answer
+                        "how is my test doing?" are the served ones; a retired arm is
+                        history and was previously interleaved alphabetically with them. */}
+                    {[...data.variants]
+                      .sort((a, b) =>
+                        a.isLive === b.isLive
+                          ? a.variant.localeCompare(b.variant)
+                          : a.isLive
+                            ? -1
+                            : 1,
+                      )
+                      .map((v) => {
                       const isLeader = v.variant === data.summary.leadingVariant;
                       return (
                         <tr
                           key={v.variant}
-                          className={`border-b border-gray-800 ${isLeader ? "bg-emerald-950/30" : ""}`}
+                          className={`border-b border-gray-800 ${isLeader ? "bg-emerald-950/30" : ""} ${v.isLive ? "" : "opacity-40"}`}
                         >
                           <td className="py-2 pr-4 font-semibold">
                             {v.variant}
+                            {v.isLive ? (
+                              <Badge className="ml-2 bg-sky-600">Live</Badge>
+                            ) : (
+                              <Badge className="ml-2 bg-gray-700 text-gray-300">Retired</Badge>
+                            )}
                             {isLeader && (
                               <Badge className="ml-2 bg-emerald-600">Leader</Badge>
                             )}
                           </td>
-                          <td className="py-2 pr-4 text-gray-400">{v.funnel ?? "—"}</td>
+                          <td className="py-2 pr-4 text-gray-400">{v.funnel ?? "root /"}</td>
                           <td className="py-2 pr-4">${v.mainPriceDollars}</td>
                           <td className="py-2 pr-4">${v.downsellPriceDollars}</td>
                           <td className="py-2 pr-4">${v.upsell1PriceDollars}</td>
@@ -258,7 +318,12 @@ export default function PriceTestDashboard() {
             {/* Pairwise significance */}
             <Card>
               <CardHeader>
-                <CardTitle>Pairwise significance (z-test on $ / visitor)</CardTitle>
+                <CardTitle>
+                  Pairwise significance (z-test on $ / visitor)
+                  <span className="ml-2 text-xs font-normal text-gray-400">
+                    — live arms within the same funnel only
+                  </span>
+                </CardTitle>
               </CardHeader>
               <CardContent className="overflow-x-auto">
                 <table className="w-full text-sm">

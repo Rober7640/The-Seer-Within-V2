@@ -69,8 +69,8 @@ wear it. I understand a sealed capsule with nothing specific inside it is just a
 **Yes — I understand this is a real, physical object, made and posted, not a file that arrives
 tonight.**
 
-It isn't typed and sent. It's prepared and shipped, and I understand that takes **7 business days
-to prepare**, and **1–2 weeks to reach me** after that. I'd rather wait for the real thing than get
+It isn't typed and sent. It's prepared and shipped, and I understand it **ships within 48 hours**,
+and **reaches me within 7–10 days**. I'd rather wait for the real thing than get
 a fast version of nothing.
 
 <!-- STATEMENT 5 · the price. `{{PRICE}}` is a merge field, not a hardcoded number — pricing is
@@ -110,8 +110,8 @@ Send it to me, and I'll do the rest — write my one sentence, seal it in, wear 
 <!-- The button completes the request's own sentence, same as 02's LAY MY TWELVE pattern. Verb
      is "send," not "buy," matching the deck-wide rule. -->
 
-**Under the button, small:** *One payment. Nothing recurring. Ships within 7 business days; reaches
-you 1–2 weeks after that. You'll give us your address on the next screen.*
+**Under the button, small:** *One payment. Nothing recurring. Ships within 48 hours; reaches
+you within 7–10 days. You'll give us your address on the next screen.*
 
 ---
 

@@ -88,7 +88,10 @@ export default function Upsell2Page() {
 
     async function fetchUserData() {
       try {
-        if (fallbackSessionId) {
+        // ⛔ Backend (twin-flame) fallbacks are recorded by the webhook, not this V1
+        // endpoint — /api/upsell/confirm-fallback hard-checks product==='protection_ritual'
+        // and always 403s for a `be_` order, burning ~3s of retries. Skip it for BE.
+        if (fallbackSessionId && !isTwinFlameOffer()) {
           const confirmFallback = async (attempt = 1): Promise<boolean> => {
             try {
               const res = await fetch('/api/upsell/confirm-fallback', {

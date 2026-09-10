@@ -1,5 +1,6 @@
 import type { BackendOfferKey, BookingTreatment } from '@shared/backendOffers';
 import { getBackendVisitorId } from './backendVisitor';
+import { getDistinctId, getUTMs } from './posthog';
 
 // The one way a backend booking screen reaches Stripe.
 //
@@ -86,6 +87,11 @@ export async function beginBackendCheckout(
         // The booking-treatment A/B subject, so the purchase attributes back to the
         // arm she saw. Harmless when the test is off (no exposure → not counted).
         expSubject: getBackendVisitorId(),
+        // PostHog attribution: the browser distinct id + the entry link's UTM tag, so
+        // the server-side revenue event stitches to her click and lands on the right
+        // link in Joel's clicks+revenue readout. Both optional; absent → no-op.
+        posthogDistinctId: getDistinctId(),
+        utm: getUTMs(),
       }),
     });
 

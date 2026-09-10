@@ -47,6 +47,9 @@ export function identifyUser(distinctId: string, properties: Record<string, unkn
   }
 }
 
+/** The five standard UTM params. Single source of truth for register + read. */
+export const UTM_PARAMS = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term'] as const;
+
 /**
  * Register UTM params from the current URL as super-properties (task 1.6) so every
  * subsequent event — pageviews, signup, purchase — carries the traffic source,
@@ -59,7 +62,7 @@ export function registerUTMs() {
   try {
     const params = new URLSearchParams(window.location.search);
     const utm: Record<string, string> = {};
-    for (const key of ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term']) {
+    for (const key of UTM_PARAMS) {
       const value = params.get(key);
       if (value) utm[key] = value;
     }
@@ -75,5 +78,25 @@ export function getDistinctId(): string | undefined {
     return posthog.get_distinct_id();
   } catch {
     return undefined;
+  }
+}
+
+/**
+ * The UTMs registered as super-properties on entry (registerUTMs). Read from PostHog's
+ * persistence, NOT window.location — the entry URL's utm_* survive navigation to the
+ * booking screen and the Stripe redirect. Joel may put his tag in ANY of the five, so
+ * all five are read; only present keys are returned.
+ */
+export function getUTMs(): Record<string, string> {
+  if (!initialized) return {};
+  try {
+    const out: Record<string, string> = {};
+    for (const key of UTM_PARAMS) {
+      const value = posthog.get_property(key);
+      if (typeof value === 'string' && value) out[key] = value;
+    }
+    return out;
+  } catch {
+    return {};
   }
 }

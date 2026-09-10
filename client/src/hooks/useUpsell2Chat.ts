@@ -35,8 +35,14 @@ import {
   UPSELL2_SHIPPING_CONFIRMED,
   UPSELL2_SOFT_DECLINE,
 } from "@/lib/upsell2Messages";
-import { upsell2Copy, displayName, type Upsell2Chain } from "@/lib/backendOffers";
-import { currentFunnel, getPostHogFunnel, isTwinFlameOffer } from "@/lib/funnel";
+import {
+  upsell2Copy,
+  displayName,
+  type Upsell2Chain,
+  type Upsell2Copy,
+} from "@/lib/backendOffers";
+import { backendOfferFunnel, currentFunnel, getPostHogFunnel, isTwinFlameOffer } from "@/lib/funnel";
+import type { BackendOfferKey } from "@shared/backendOffers";
 import { track as trackPH } from "@/lib/posthog";
 import { tarotEventProps } from "@/lib/tarotAttribution";
 import { getTrackdeskClickId } from "@/lib/facebook";
@@ -87,6 +93,14 @@ interface UseUpsell2ChatProps {
   sessionId: string | null;
   enabled: boolean;
   braceletImage?: string;
+  // Injected copy/backend-mode for shared /offers/upsell/ pages. Both default to
+  // undefined, which preserves today's URL-based resolution exactly (V1 + 02).
+  copyOverride?: Upsell2Copy;
+  backendOverride?: boolean;
+  // The booking-session offer, so PostHog events carry the RIGHT funnel derived from
+  // the offer (not the URL path). Shared /offers/upsell/ pages pass this; V1/legacy
+  // callers omit it and fall back to path-based resolution.
+  offer?: BackendOfferKey;
 }
 
 export function useUpsell2Chat({
@@ -94,6 +108,9 @@ export function useUpsell2Chat({
   sessionId,
   enabled,
   braceletImage,
+  copyOverride,
+  backendOverride,
+  offer,
 }: UseUpsell2ChatProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [stage, setStage] = useState<Upsell2Stage>("INIT");
@@ -121,7 +138,10 @@ export function useUpsell2Chat({
   // Which funnel's path opens this page is running — V1's everywhere except the
   // backend deck's offer 02. Everything from UPSELL2_GAP onward is V1's in both
   // cases. Resolved once; the URL cannot change mid-chat.
-  const copy = useMemo(() => upsell2Copy(), []);
+  const copy = useMemo(
+    () => copyOverride ?? upsell2Copy(),
+    [copyOverride],
+  );
   const isPathA = userData?.upsellPurchased === true;
 
   // "Friend" is the placeholder /api/upsell/user-data stamps when checkout
@@ -297,9 +317,8 @@ export function useUpsell2Chat({
           break;
 
         case "AFTER_Q1": {
-          const q1Response =
-            UPSELL2_AFTER_Q1[responseKey || "default"] ||
-            UPSELL2_AFTER_Q1.default;
+          const after1 = copy.AFTER_Q1 ?? UPSELL2_AFTER_Q1;
+          const q1Response = after1[responseKey || "default"] || after1.default;
           await sendBotMessages(p(q1Response));
           advance("AFTER_Q1");
           break;
@@ -327,9 +346,8 @@ export function useUpsell2Chat({
           break;
 
         case "AFTER_Q2": {
-          const q2Response =
-            UPSELL2_AFTER_Q2[responseKey || "default"] ||
-            UPSELL2_AFTER_Q2.default;
+          const after2 = copy.AFTER_Q2 ?? UPSELL2_AFTER_Q2;
+          const q2Response = after2[responseKey || "default"] || after2.default;
           await sendBotMessages(p(q2Response));
           advance("AFTER_Q2");
           break;
@@ -379,9 +397,8 @@ export function useUpsell2Chat({
           break;
 
         case "AFTER_Q3": {
-          const q3Response =
-            UPSELL2_AFTER_Q3[responseKey || "default"] ||
-            UPSELL2_AFTER_Q3.default;
+          const after3 = copy.AFTER_Q3 ?? UPSELL2_AFTER_Q3;
+          const q3Response = after3[responseKey || "default"] || after3.default;
           await sendBotMessages(p(q3Response));
           advance("AFTER_Q3");
           break;
@@ -486,7 +503,7 @@ export function useUpsell2Chat({
     const tarot = getPostHogFunnel() === "tarot" ? tarotEventProps() : undefined;
 
     trackPH("upsell_accepted", {
-      funnel: getPostHogFunnel() ?? "v1",
+      funnel: offer ? backendOfferFunnel(offer) : (getPostHogFunnel() ?? "unknown"),
       step: "upsell2",
       product: "manifestation_bracelet",
       // U2 has two prices ($47 full / $30 downsell) that were previously
@@ -498,7 +515,7 @@ export function useUpsell2Chat({
 
     // Backend charges its OWN endpoint (be_bracelet → list 6972556, no tracking),
     // NO trackdeskClickId. V1's path/body is byte-identical.
-    const beFunnel = isTwinFlameOffer();
+    const beFunnel = backendOverride ?? isTwinFlameOffer();
 
     try {
       const response = await fetch(
@@ -557,18 +574,36 @@ export function useUpsell2Chat({
           setStage("SHIPPING");
         }
       } else if (result.fallback && beFunnel) {
-        // Backend, first build: no hosted BE fallback yet — let her retry.
-        await sendBotMessage(
-          "That didn't go through on your saved card, dear. Give it a moment and try once more.",
-        );
-        setIsProcessing(false);
-        setShowCTA(true);
+        // Off-session charge on her saved card was declined (Indian/3DS cards) → send
+        // her to a HOSTED Stripe checkout for the SAME be_bracelet upsell, where she can
+        // authenticate and pay (A7). Webhook records + fires PostHog on success.
+        trackPH("upsell_fallback_redirect", {
+          funnel: offer ? backendOfferFunnel(offer) : (getPostHogFunnel() ?? "unknown"),
+          step: "upsell2",
+          product: "be_bracelet",
+        });
+        await sendBotMessage("Let me set up a secure payment page for you...");
+        const fallbackResponse = await fetch("/api/backend/upsell/fallback-checkout", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ checkoutSessionId: sessionId, email: userData.email, product: "be_bracelet" }),
+        });
+        const { url } = await fallbackResponse.json().catch(() => ({}) as { url?: string });
+        if (url) {
+          window.location.href = url;
+        } else {
+          await sendBotMessage(
+            "That didn't go through, dear. Give it a moment and try once more.",
+          );
+          setIsProcessing(false);
+          setShowCTA(true);
+        }
       } else if (result.fallback) {
         // 1-click off-session charge declined → hosted Stripe checkout. See the
         // matching event in useUpsellChat: this is where a payment failure becomes
         // distinguishable from an abandoned page.
         trackPH("upsell_fallback_redirect", {
-          funnel: getPostHogFunnel() ?? "v1",
+          funnel: offer ? backendOfferFunnel(offer) : (getPostHogFunnel() ?? "unknown"),
           step: "upsell2",
           product: "manifestation_bracelet",
           price_tier: "full",
@@ -613,6 +648,7 @@ export function useUpsell2Chat({
     processStage,
     isPathA,
     copy,
+    backendOverride,
   ]);
 
   const handleDecline = useCallback(async () => {
@@ -625,7 +661,7 @@ export function useUpsell2Chat({
       addUserMessage("No thanks");
       const tarot = getPostHogFunnel() === "tarot" ? tarotEventProps() : undefined;
       trackPH("upsell_declined", {
-        funnel: getPostHogFunnel() ?? "v1",
+        funnel: offer ? backendOfferFunnel(offer) : (getPostHogFunnel() ?? "unknown"),
         step: "upsell2",
         product: "manifestation_bracelet",
         price_tier: "full",
@@ -648,7 +684,7 @@ export function useUpsell2Chat({
     // full-vs-downsell take-rate was not measurable before the charge.
     const tarot = getPostHogFunnel() === "tarot" ? tarotEventProps() : undefined;
     trackPH("upsell_accepted", {
-      funnel: getPostHogFunnel() ?? "v1",
+      funnel: offer ? backendOfferFunnel(offer) : (getPostHogFunnel() ?? "unknown"),
       step: "upsell2",
       product: "manifestation_bracelet",
       price_tier: "downsell",
@@ -657,7 +693,7 @@ export function useUpsell2Chat({
     });
 
     // Backend: downsell charge on be_bracelet at $30, no tracking / no trackdesk id.
-    const beFunnel = isTwinFlameOffer();
+    const beFunnel = backendOverride ?? isTwinFlameOffer();
 
     try {
       const response = await fetch(
@@ -716,15 +752,33 @@ export function useUpsell2Chat({
           setStage("SHIPPING");
         }
       } else if (result.fallback && beFunnel) {
-        // Backend, first build: no hosted BE fallback yet — let her retry.
-        await sendBotMessage(
-          "That didn't go through on your saved card, dear. Give it a moment and try once more.",
-        );
-        setIsProcessing(false);
-        setShowCTA(true);
+        // Off-session charge declined (Indian/3DS cards) → hosted Stripe checkout for the
+        // be_bracelet DOWNSELL, where she can authenticate and pay (A7).
+        trackPH("upsell_fallback_redirect", {
+          funnel: offer ? backendOfferFunnel(offer) : (getPostHogFunnel() ?? "unknown"),
+          step: "upsell2",
+          product: "be_bracelet",
+          price_tier: "downsell",
+        });
+        await sendBotMessage("Let me set up a secure payment page for you...");
+        const fallbackResponse = await fetch("/api/backend/upsell/fallback-checkout", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ checkoutSessionId: sessionId, email: userData.email, product: "be_bracelet", tier: "downsell" }),
+        });
+        const { url } = await fallbackResponse.json().catch(() => ({}) as { url?: string });
+        if (url) {
+          window.location.href = url;
+        } else {
+          await sendBotMessage(
+            "That didn't go through, dear. Give it a moment and try once more.",
+          );
+          setIsProcessing(false);
+          setShowCTA(true);
+        }
       } else if (result.fallback) {
         trackPH("upsell_fallback_redirect", {
-          funnel: getPostHogFunnel() ?? "v1",
+          funnel: offer ? backendOfferFunnel(offer) : (getPostHogFunnel() ?? "unknown"),
           step: "upsell2",
           product: "manifestation_bracelet",
           price_tier: "downsell",
@@ -769,6 +823,7 @@ export function useUpsell2Chat({
     processStage,
     isPathA,
     copy,
+    backendOverride,
   ]);
 
   const handleDownsellDecline = useCallback(async () => {
@@ -778,7 +833,7 @@ export function useUpsell2Chat({
     // untracked, so the funnel just ended with no event.
     const tarot = getPostHogFunnel() === "tarot" ? tarotEventProps() : undefined;
     trackPH("upsell_declined", {
-      funnel: getPostHogFunnel() ?? "v1",
+      funnel: offer ? backendOfferFunnel(offer) : (getPostHogFunnel() ?? "unknown"),
       step: "upsell2",
       product: "manifestation_bracelet",
       price_tier: "downsell",
@@ -797,7 +852,7 @@ export function useUpsell2Chat({
       try {
         // Backend stamps the address onto the upsell PaymentIntent (manual shipper
         // reads it off Stripe); V1 saves by session id. Byte-identical for V1.
-        if (isTwinFlameOffer()) {
+        if (backendOverride ?? isTwinFlameOffer()) {
           await fetch("/api/backend/upsell/shipping", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -818,7 +873,7 @@ export function useUpsell2Chat({
         setIsComplete(true);
       }
     },
-    [sessionId, userData, processStage, sendBotMessage, upsell2PaymentId],
+    [sessionId, userData, processStage, sendBotMessage, upsell2PaymentId, backendOverride],
   );
 
   useEffect(() => {
