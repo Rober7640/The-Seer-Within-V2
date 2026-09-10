@@ -238,6 +238,13 @@ router.post('/checkout', async (req: Request, res: Response) => {
     const approved = String(settled.result ?? '').toLowerCase() === 'approved';
     const audit = auditMetadata(metadata, settled.metadata);
     const instrumentId = instrumentIdOf(settled);
+    // Reported in the response so a chain run can PROVE the AWeber write landed.
+    // Without this the only evidence is a server log nobody outside Railway sees.
+    let aweber: { success: boolean; error?: string } = {
+      success: false,
+      error: 'not attempted',
+    };
+    let dbWritten = false;
 
     // DB row — dev Supabase, separate from production.
     if (approved) {
@@ -262,6 +269,7 @@ router.post('/checkout', async (req: Request, res: Response) => {
           },
           { firstName, bucket },
         );
+        dbWritten = true;
       } catch (err) {
         logger.error(`[pai] DB write failed: ${String(err)}`);
       }
@@ -269,7 +277,7 @@ router.post('/checkout', async (req: Request, res: Response) => {
       // AWeber — the REAL soulmate lists, with the paymentsAI tag added
       // alongside the existing ones. Safe because those lists carry thank-you
       // emails only and the address is +pai on a domain we own.
-      await writeSoulmateSubscriber({
+      aweber = await writeSoulmateSubscriber({
         listId: process.env.AWEBER_SOULMATE_PAID_LIST_ID || '',
         listLabel: 'Soulmate Sketch Buyers (PAI dev)',
         email,
@@ -295,6 +303,13 @@ router.post('/checkout', async (req: Request, res: Response) => {
       email,
       gateway: { name: settled.gatewayName, slug: settled.gatewaySlug },
       metadataAudit: audit,
+      dbWritten,
+      aweber: {
+        attempted: approved,
+        ...aweber,
+        listConfigured: Boolean(process.env.AWEBER_SOULMATE_PAID_LIST_ID),
+        tag: PAI_TAG,
+      },
     });
   } catch (err) {
     logger.error(`[pai] checkout error: ${String(err)}`);
@@ -367,6 +382,7 @@ async function chargeUpsell(
 
   const settled = (await settleTransaction(tx.data.id)) ?? tx.data;
   const approved = String(settled.result ?? '').toLowerCase() === 'approved';
+  let aweber: { success: boolean; error?: string } = { success: false, error: 'not attempted' };
 
   if (approved) {
     try {
@@ -374,7 +390,7 @@ async function chargeUpsell(
     } catch (err) {
       logger.error(`[pai] ${opts.label} DB write failed: ${String(err)}`);
     }
-    await writeSoulmateSubscriber({
+    aweber = await writeSoulmateSubscriber({
       listId: opts.awebeListId || '',
       listLabel: `${opts.label} (PAI dev)`,
       email,
@@ -398,6 +414,12 @@ async function chargeUpsell(
     // seen it come back null in every sandbox round. Reported so we can see it.
     parentTransactionId: settled.parentTransactionId ?? null,
     metadataAudit: auditMetadata(metadata, settled.metadata),
+    aweber: {
+      attempted: approved,
+      ...aweber,
+      listConfigured: Boolean(opts.awebeListId),
+      tag: PAI_TAG,
+    },
   });
 }
 
