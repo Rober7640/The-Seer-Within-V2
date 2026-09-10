@@ -186,7 +186,14 @@ router.get('/config', async (_req: Request, res: Response) => {
  * Storage is in-memory and capped — this is a diagnostic, not a queue. A restart
  * loses it, which is acceptable because we read it minutes after the charge.
  */
-const RECEIVED: Array<{ at: string; type?: string; authOk: boolean; body: unknown }> = [];
+const RECEIVED: Array<{
+  at: string;
+  type?: string;
+  authOk: boolean;
+  authHeaderPresent?: boolean;
+  authUser?: string | null;
+  body: unknown;
+}> = [];
 const MAX_RECEIVED = 50;
 
 router.post('/webhook', (req: Request, res: Response) => {
@@ -199,11 +206,21 @@ router.post('/webhook', (req: Request, res: Response) => {
     authOk = u === expectUser && !!expectPass && p === expectPass;
   }
 
+  // Record whether an Authorization header was sent AT ALL, separately from
+  // whether it matched. Without this split we cannot tell "they sent no auth"
+  // from "our expected password is unset", and the second is our own config.
+  const authHeaderPresent = header.startsWith('Basic ');
+  const authUser = authHeaderPresent
+    ? Buffer.from(header.slice(6), 'base64').toString('utf8').split(':')[0]
+    : null;
+
   const body: any = req.body;
   RECEIVED.unshift({
     at: new Date().toISOString(),
     type: body?.type ?? body?.meta?.eventType,
     authOk,
+    authHeaderPresent,
+    authUser,
     body,
   });
   if (RECEIVED.length > MAX_RECEIVED) RECEIVED.length = MAX_RECEIVED;
@@ -226,6 +243,8 @@ router.get('/webhook/received', (req: Request, res: Response) => {
             at: e.at,
             type: e.type,
             authOk: e.authOk,
+            authHeaderPresent: e.authHeaderPresent,
+            authUser: e.authUser,
             // The two fields we are actually here to read.
             amount: (e.body as any)?.meta?.metadata?.transaction?.amount,
             metadataKeys: Object.keys(
