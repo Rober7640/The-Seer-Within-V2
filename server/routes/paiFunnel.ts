@@ -308,7 +308,8 @@ router.post('/checkout', async (req: Request, res: Response) => {
         attempted: approved,
         ...aweber,
         listConfigured: Boolean(process.env.AWEBER_SOULMATE_PAID_LIST_ID),
-        tag: PAI_TAG,
+        listId: process.env.AWEBER_SOULMATE_PAID_LIST_ID || null,
+        tags: ['soulmate-sketch-buyer', PAI_TAG],
       },
     });
   } catch (err) {
@@ -326,7 +327,20 @@ async function chargeUpsell(
     defaultCents: number;
     label: string;
     markPurchased: (txId: string, cents: number, mainTxId: string) => Promise<void>;
+    /**
+     * 🔴 EACH FUNNEL STAGE HAS ITS OWN AWEBER LIST. Getting this wrong does not
+     * just misfile the subscriber: writeSoulmateSubscriber sends
+     * update_existing:true, so sending two stages to the SAME list makes the
+     * second overwrite the first's custom fields. That is exactly what happened
+     * on the first dev run — main, upsell 1 and upsell 2 all went to the paid
+     * list, and the main purchase's $44.77 / energy_clearing_ritual were
+     * replaced by upsell 2's $47 / manifestation_bracelet.
+     */
     awebeListId: string;
+    /** The live tag for this stage — NOT a generated one. */
+    awebeTag: string;
+    awebeProduct: string;
+    awebeLabel: string;
   },
 ) {
   const { customerId, instrumentId, mainTransactionId, amountCents, firstName = 'PaiTest', email: rawEmail } =
@@ -392,15 +406,17 @@ async function chargeUpsell(
     }
     aweber = await writeSoulmateSubscriber({
       listId: opts.awebeListId || '',
-      listLabel: `${opts.label} (PAI dev)`,
+      listLabel: `${opts.awebeLabel} (PAI dev)`,
       email,
       name: firstName,
       customFields: {
         stripe_order_id: settled.id,
         purchase_amount_usd: String(cents / 100),
-        product: opts.product,
+        product: opts.awebeProduct,
       },
-      tags: [`soulmate-${opts.label}-buyer`, PAI_TAG],
+      // The live tag for this stage, plus our marker. Must match what the live
+      // funnel writes, or any automation keyed on the tag will not fire.
+      tags: [opts.awebeTag, PAI_TAG],
     });
   }
 
@@ -418,7 +434,8 @@ async function chargeUpsell(
       attempted: approved,
       ...aweber,
       listConfigured: Boolean(opts.awebeListId),
-      tag: PAI_TAG,
+      listId: opts.awebeListId || null,
+      tags: [opts.awebeTag, PAI_TAG],
     },
   });
 }
@@ -429,7 +446,11 @@ router.post('/upsell/charge', (req, res) =>
     defaultCents: 4700,
     label: 'upsell1',
     markPurchased: (txId, cents, mainTxId) => markUpsellPurchased(mainTxId, txId, cents),
-    awebeListId: process.env.AWEBER_SOULMATE_PAID_LIST_ID || '',
+    // Its OWN list and the live tag — see the note on awebeListId above.
+    awebeListId: process.env.AWEBER_SOULMATE_UPSELL1_LIST_ID || '',
+    awebeTag: 'soulmate-bracelet-buyer',
+    awebeProduct: 'soulmate_bracelet',
+    awebeLabel: 'Soulmate Bracelet Buyers',
   }),
 );
 
@@ -440,7 +461,10 @@ router.post('/upsell2/charge', (req, res) =>
     label: 'upsell2',
     markPurchased: (txId, cents, mainTxId) =>
       markUpsell2Purchased(mainTxId, txId, cents, 'manifestation_bracelet'),
-    awebeListId: process.env.AWEBER_SOULMATE_PAID_LIST_ID || '',
+    awebeListId: process.env.AWEBER_SOULMATE_UPSELL2_LIST_ID || '',
+    awebeTag: 'soulmate-love-tuner-buyer',
+    awebeProduct: 'soulmate_love_tuner',
+    awebeLabel: 'Soulmate Love Tuner Buyers',
   }),
 );
 
