@@ -209,8 +209,11 @@ export const BACKEND_OFFER_CATALOG: Record<BackendOfferKey, BackendOffer> = {
   'pixiu-bracelet': {
     key: 'pixiu-bracelet',
     number: '06',
-    // Deck-wide rule: the verb is never "buy". Stripe's own label stays a plain noun.
-    stripeName: 'The Wishing Bracelet',
+    // Deck-wide rule: the verb is never "buy". This label is deliberately DESCRIPTIVE
+    // (material + creature + intent), not the short "The Wishing Bracelet": it is the
+    // checkout line item AND the PI description ("BE 06 · …") that fulfilment reads to
+    // pick the right bracelet — a short name got the wrong one shipped. Keep it specific.
+    stripeName: 'Wishing Bracelet Black Agate Pixiu Wealth',
     stripeDescription: 'A black agate Pixiu bracelet with a sealed wish capsule, made and posted to you.',
     stripeProduct: 'be_pixiu_bracelet',
     pricing: { model: 'fixed', priceCents: PIXIU_BRACELET_PRICE_CENTS },
