@@ -192,6 +192,7 @@ const RECEIVED: Array<{
   authOk: boolean;
   authHeaderPresent?: boolean;
   authUser?: string | null;
+  sourceIp?: string | null;
   body: unknown;
 }> = [];
 const MAX_RECEIVED = 50;
@@ -209,6 +210,13 @@ router.post('/webhook', (req: Request, res: Response) => {
   // Record whether an Authorization header was sent AT ALL, separately from
   // whether it matched. Without this split we cannot tell "they sent no auth"
   // from "our expected password is unset", and the second is our own config.
+  // Record the SOURCE IP so we can check their section 25b answer (a single
+  // address, 34.203.5.234) against what actually connects, rather than asking
+  // them to confirm something we can observe. Railway sits behind a proxy, so
+  // x-forwarded-for is the real client; req.ip would be the proxy.
+  const fwd = String(req.headers['x-forwarded-for'] ?? '');
+  const sourceIp = fwd.split(',')[0].trim() || req.socket?.remoteAddress || null;
+
   const authHeaderPresent = header.startsWith('Basic ');
   const authUser = authHeaderPresent
     ? Buffer.from(header.slice(6), 'base64').toString('utf8').split(':')[0]
@@ -221,6 +229,7 @@ router.post('/webhook', (req: Request, res: Response) => {
     authOk,
     authHeaderPresent,
     authUser,
+    sourceIp,
     body,
   });
   if (RECEIVED.length > MAX_RECEIVED) RECEIVED.length = MAX_RECEIVED;
@@ -245,6 +254,7 @@ router.get('/webhook/received', (req: Request, res: Response) => {
             authOk: e.authOk,
             authHeaderPresent: e.authHeaderPresent,
             authUser: e.authUser,
+            sourceIp: e.sourceIp,
             // The two fields we are actually here to read.
             amount: (e.body as any)?.meta?.metadata?.transaction?.amount,
             metadataKeys: Object.keys(
