@@ -448,7 +448,12 @@ interface SoulmateDeclinedParams {
 // Generic soulmate-list write — every soulmate AWeber call goes through here
 // so we have one place to handle auth, retry-on-401, and "already subscribed"
 // edge cases consistently.
-async function writeSoulmateSubscriber(opts: {
+//
+// Exported so the DEV-ONLY Payments.AI dummy funnel (server/routes/paiFunnel.ts)
+// can write to these same lists with an extra `paymentsAI` tag, rather than
+// duplicating the auth / retry / already-subscribed handling below. This is an
+// export-only change: behaviour is identical for every existing caller.
+export async function writeSoulmateSubscriber(opts: {
   listId: string;
   listLabel: string;
   email: string;

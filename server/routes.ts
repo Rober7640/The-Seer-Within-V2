@@ -31,6 +31,10 @@ import userStatsRouter from "./routes/userStats";
 import migrateRouter from "./routes/migrate";
 import astrologyRouter from "./routes/astrology";
 import quizRouter from "./routes/quiz";
+// DEV-ONLY Payments.AI dummy funnel. Self-gating: the router 404s everything
+// unless NODE_ENV!=production AND PAI_DEV_FUNNEL=1 AND the base is staging.
+// Never reached by the live Stripe funnel below.
+import paiFunnelRouter from "./routes/paiFunnel";
 import evelynLanderRouter from "./routes/evelynLander";
 import productsRouter from "./routes/products";
 import backendOffersRouter from "./routes/backendOffers";
@@ -576,6 +580,7 @@ export async function registerRoutes(
   app.use("/api/migrate", migrateRouter);
   app.use("/api/astrology", astrologyRouter);
   app.use("/api/quiz", quizRouter);
+  app.use("/api/pai", paiFunnelRouter);
   app.use("/api/evelyn-lander", evelynLanderRouter);
   // Generalized lander for the additional personas (Marcus, Luna, Nova, Maren).
   app.use("/api/persona-lander/:persona", personaLanderRouter);

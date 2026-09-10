@@ -16,6 +16,9 @@ import NotFound from "@/pages/not-found";
 import LandingPage from "@/pages/LandingPage";
 import PalmBridge from "@/pages/PalmBridge";
 import TarotBridge from "@/pages/TarotBridge";
+// DEV-ONLY Payments.AI dummy funnel. Its server routes 404 unless
+// PAI_DEV_FUNNEL=1 on a non-production env, so this page is inert in prod.
+import PaiFunnelPage from "@/pages/PaiFunnelPage";
 import ReadBridge from "@/pages/ReadBridge";
 import ChatPage from "@/pages/ChatPage";
 import SuccessPage from "@/pages/SuccessPage";
@@ -270,6 +273,9 @@ function Router() {
         <Route path="/fb-tarot" component={TarotBridge} />
         <Route path="/fb-tarot/b" component={TarotBridge} />
         <Route path="/fb-tarot/c" component={TarotBridge} />
+        {/* DEV-ONLY Payments.AI mirror of /fb-tarot/c. Deliberately a separate
+            path: the live lander above is untouched. */}
+        <Route path="/fb-tarot/pai" component={PaiFunnelPage} />
         <Route path="/fb-tarot/chat" component={ChatPage} />
         <Route path="/fb-tarot/welcome1" component={UpsellPage} />
         <Route path="/fb-tarot/welcome2" component={Upsell2Page} />
