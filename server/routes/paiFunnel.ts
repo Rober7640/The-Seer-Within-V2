@@ -161,6 +161,82 @@ router.get('/config', async (_req: Request, res: Response) => {
 });
 
 /**
+ * WEBHOOK RECEIVER — so we can answer questions ourselves instead of asking.
+ *
+ * Two things we would otherwise have to ask Payments.AI are answerable by simply
+ * receiving ONE real delivery:
+ *   1. the AMOUNT SCALE on the webhook. Their API takes and returns decimal
+ *      dollars (we send 44.77, read back 44.77) but their sample payload shows
+ *      "amount": 2000 for a $20 charge, which reads as minor units. Getting this
+ *      wrong is a 100x billing error.
+ *   2. how an ORDER BUMP is represented. Our bump is a second line item on one
+ *      Stripe Checkout session; here it is one combined charge, and we need to
+ *      see what actually arrives.
+ *
+ * Their destinations are NOT per-event subscriptions — "once registered, it
+ * receives the event stream for your account and you filter on type" — so this
+ * receives everything and records it.
+ *
+ * SECURITY. Basic auth, matching what we set on the destination. Their own answer
+ * is explicit that this is a shared secret, not a signature: it "doesn't prove
+ * payload integrity or block replay". Fine for a dev receiver whose only job is to
+ * record what arrives; NOT a template for production fulfilment, which must
+ * re-fetch and confirm state via the authenticated API before acting.
+ *
+ * Storage is in-memory and capped — this is a diagnostic, not a queue. A restart
+ * loses it, which is acceptable because we read it minutes after the charge.
+ */
+const RECEIVED: Array<{ at: string; type?: string; authOk: boolean; body: unknown }> = [];
+const MAX_RECEIVED = 50;
+
+router.post('/webhook', (req: Request, res: Response) => {
+  const expectUser = process.env.PAI_WEBHOOK_USER || 'paymentsai';
+  const expectPass = process.env.PAI_WEBHOOK_PASS || '';
+  const header = req.headers.authorization || '';
+  let authOk = false;
+  if (header.startsWith('Basic ')) {
+    const [u, p] = Buffer.from(header.slice(6), 'base64').toString('utf8').split(':');
+    authOk = u === expectUser && !!expectPass && p === expectPass;
+  }
+
+  const body: any = req.body;
+  RECEIVED.unshift({
+    at: new Date().toISOString(),
+    type: body?.type ?? body?.meta?.eventType,
+    authOk,
+    body,
+  });
+  if (RECEIVED.length > MAX_RECEIVED) RECEIVED.length = MAX_RECEIVED;
+
+  logger.info(`[pai] webhook ${body?.type ?? 'unknown'} authOk=${authOk}`);
+  // Always 200: a non-2xx may make them retry, and we want a clean record of what
+  // was sent, not a redelivery storm. Auth failures are recorded, not rejected.
+  res.status(200).json({ received: true });
+});
+
+/** Read what has arrived, newest first. */
+router.get('/webhook/received', (req: Request, res: Response) => {
+  const full = req.query.full === '1';
+  res.json({
+    count: RECEIVED.length,
+    events: RECEIVED.map((e) =>
+      full
+        ? e
+        : {
+            at: e.at,
+            type: e.type,
+            authOk: e.authOk,
+            // The two fields we are actually here to read.
+            amount: (e.body as any)?.meta?.metadata?.transaction?.amount,
+            metadataKeys: Object.keys(
+              (e.body as any)?.meta?.metadata?.transaction?.metadata ?? {},
+            ),
+          },
+    ),
+  });
+});
+
+/**
  * MAIN + ORDER BUMP — the customer-initiated transaction.
  *
  * On Stripe this is a hosted Checkout redirect. Payments.AI has no hosted
