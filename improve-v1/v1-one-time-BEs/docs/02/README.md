@@ -97,6 +97,8 @@ These remain outside the n8n workspace:
 
 ## Workflows and generated artifacts
 
+**Quick access: [the two n8n workflow links](N8N-WORKFLOW-LINKS.md).**
+
 | Workflow | Link | Generated local artifact under `n8n/docs/02/` |
 | --- | --- | --- |
 | Main definition | [5QkhGbpsusvIfh6j](https://ezyabsorb.app.n8n.cloud/workflow/5QkhGbpsusvIfh6j) | `02-fulfilment-OPENAI.n8n.json` |
